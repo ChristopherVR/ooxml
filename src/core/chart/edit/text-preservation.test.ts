@@ -5,6 +5,9 @@ import { writeChartSpace } from '../write-space';
 import { applyChartAppearance } from './apply-appearance';
 import { setChartPointLabel } from './point-label';
 import { setChartDisplayUnitsLabel } from './axis-label';
+import { setChartDataLabels } from './legend-labels';
+import { setChartDataLabelFormatting } from './label-format';
+import { chartTargetTextFormatting, setChartTargetText } from './text';
 
 const outline = (token: string) =>
 	`<a:ln w="12700"><a:solidFill><a:schemeClr val="${token}"><a:lumMod val="60000"/></a:schemeClr></a:solidFill><a:round/><a:tailEnd type="arrow" w="lg"/><a:extLst><a:ext uri="line-private"/></a:extLst></a:ln>`;
@@ -122,5 +125,28 @@ describe('resolved text edits preserve each authored rich run', () => {
 		expect(writeChartSpace(changed)).toContain('point-private');
 		expect(writeChartSpace(changed)).toContain('units-private');
 		expect(body.sourceXml).toContain('sz="1400"');
+	});
+});
+
+describe('chart text wrap', () => {
+	const labelsTxPr = (xml: string) => xml.slice(xml.lastIndexOf('<c:dLbls>'));
+
+	it('writes a:bodyPr wrap on data labels through both label text paths', () => {
+		const shown = setChartDataLabels(columnChart(), { show: true });
+		const off = setChartDataLabelFormatting(shown, { font: { wrap: false, rotation: -45 } });
+		expect(labelsTxPr(writeChartSpace(off))).toMatch(/<a:bodyPr rot="-2700000" wrap="none"/);
+		const on = setChartTargetText(off, { kind: 'dataLabels' }, { wrap: true });
+		expect(labelsTxPr(writeChartSpace(on))).toMatch(/<a:bodyPr rot="-2700000" wrap="square"/);
+		const back = parseChartSpace(writeChartSpace(on)).chartSpace;
+		expect(chartTargetTextFormatting(back, { kind: 'dataLabels' }).wrap).toBe(true);
+		const reset = setChartTargetText(on, { kind: 'dataLabels' }, { wrap: null });
+		expect(labelsTxPr(writeChartSpace(reset))).not.toContain('wrap=');
+	});
+
+	it('refuses a wrap that is not a boolean', () => {
+		const shown = setChartDataLabels(columnChart(), { show: true });
+		expect(() =>
+			setChartTargetText(shown, { kind: 'dataLabels' }, { wrap: 'none' as unknown as boolean }),
+		).toThrow(/Invalid chart text wrap/);
 	});
 });

@@ -158,12 +158,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			result.gapWidth = gapWidth;
 		}
 
-		// c:serLines may appear multiple times per spec; presence is what matters.
-		const serLinesArr = this.xmlLookupService.getChildrenArrayByLocalName(
-			ofPieContainer,
-			'serLines',
-		);
-		if (serLinesArr.length > 0) {
+		// c:serLines may appear multiple times per spec; presence is what matters, an empty
+		// `<c:serLines/>` (parsed as '') included.
+		if (this.xmlLookupService.hasChildByLocalName(ofPieContainer, 'serLines')) {
 			result.serLines = true;
 		}
 

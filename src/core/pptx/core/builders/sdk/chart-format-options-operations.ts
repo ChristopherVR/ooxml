@@ -9,6 +9,7 @@
  *
  * @module sdk/chart-format-options-operations
  */
+import { assertChartModelLabelPosition } from '../../utils/chart-label-positions';
 import type {
 	PptxChartAxisFormatting,
 	PptxChartData,
@@ -166,12 +167,19 @@ export interface ChartDataLabelOptionsEdit {
 	position?: PptxChartDataLabelPosition | null;
 }
 
-/** Apply a Label Options edit to the chart-wide data labels. */
+/**
+ * Apply a Label Options edit to the chart-wide data labels, or to series
+ * `seriesIndex`'s own.
+ *
+ * @throws {RangeError} A `position` the chart type (or the series' type) does
+ *   not offer, which PowerPoint would repair.
+ */
 export function withChartDataLabelOptions(
 	data: PptxChartData,
 	edit: ChartDataLabelOptionsEdit,
 	seriesIndex?: number,
 ): PptxChartData {
+	assertChartModelLabelPosition(data, edit.position, seriesIndex);
 	if (seriesIndex !== undefined) {
 		return withSeriesDataLabelOptions(data, edit, seriesIndex);
 	}

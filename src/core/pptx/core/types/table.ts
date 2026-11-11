@@ -12,7 +12,7 @@
 import type { PptxThemeColorRef } from './color-ref';
 import type { PptxCustomDashSegment } from './shape-style';
 import type { ParsedTableStyleEffect } from './table-style-edit';
-import type { TextStyle } from './text';
+import type { TextSegment, TextStyle } from './text';
 
 /**
  * Per-cell visual style for a table cell.
@@ -355,6 +355,15 @@ export interface PptxTableCell {
 	 * string), so an edit path must clear them alongside setting `text`.
 	 */
 	textRuns?: PptxTableCellTextRun[];
+	/**
+	 * Rich text of a cell made in code, written as given: one `a:r` per
+	 * segment with its own `a:rPr` (font, size in px as in shape text, strike,
+	 * spacing, hyperlink or slide jump), a `\n` starting a new `a:p`, and
+	 * `isLineBreak` segments as `a:br`. The save uses it only while {@link text}
+	 * equals the segments' text, so an edit through `text` wins. The loader
+	 * never sets it; a loaded cell's runs are {@link textRuns}.
+	 */
+	textSegments?: TextSegment[];
 	/**
 	 * Each paragraph's own layout, one entry per `a:p` in source order (the
 	 * paragraphs {@link textRuns} separates with `isParagraphBreak`). An entry

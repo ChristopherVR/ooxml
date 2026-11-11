@@ -1,4 +1,9 @@
-import { applyChartAppearance, parseChartFormatTargetKey } from '../../../chart';
+import {
+	applyChartAppearance,
+	chartSeriesEntryAt,
+	editChartSpace,
+	parseChartFormatTargetKey,
+} from '../../../chart';
 import type { PptxChartData } from '../types';
 import type { NeutralChartEdit } from './chart-neutral-save-plan';
 import { same } from './chart-neutral-save-common';
@@ -35,6 +40,23 @@ function claimMirrors(
 	}
 }
 
+/**
+ * `edit` with the points of series `seriesIndex` kept as they are. A series fill set through the
+ * shared operation clears the points' own fills, as Office's Format pane does, but the model
+ * states point overrides on their own (`dataPoints`, written by the point family before this
+ * one), so a series format keeps them, as the series colour does (`keepPointColors`).
+ */
+function keepingSeriesPoints(seriesIndex: number, edit: NeutralChartEdit): NeutralChartEdit {
+	return (space) => {
+		const points = chartSeriesEntryAt(space, seriesIndex).series.dataPoints;
+		const next = edit(space);
+		if (points.length === 0) return next;
+		return editChartSpace(next, (draft) => {
+			chartSeriesEntryAt(draft, seriesIndex).series.dataPoints = structuredClone(points);
+		});
+	};
+}
+
 /** The compatibility record is already shaped like the shared appearance contract. */
 export function planNeutralChartFormats(
 	before: PptxChartData,
@@ -50,7 +72,9 @@ export function planNeutralChartFormats(
 		if (!target || !format) continue;
 		const source = old[key];
 		const appearance = readChartElementFormat(before, target);
-		edits.push((space) => applyChartAppearance(space, target, appearance, format));
+		const apply: NeutralChartEdit = (space) =>
+			applyChartAppearance(space, target, appearance, format);
+		edits.push(target.kind === 'series' ? keepingSeriesPoints(target.seriesIndex, apply) : apply);
 		let mirror = mirrorFlatFields(before, target, format.fill, format.line);
 		if (format.text) mirror = mirrorTextColor(mirror, target, format.text);
 		claimMirrors(

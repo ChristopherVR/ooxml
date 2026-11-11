@@ -4,7 +4,8 @@ import { parseChartSpace } from '../parse-space';
 import { writeChartSpace } from '../write-space';
 import { setChartAxis } from './axes';
 import { setChartDataLabels } from './legend-labels';
-import { setChartGroupOptions } from './group-options';
+import { setChartGroupOptions, setChartScatterStyle } from './group-options';
+import { setChartType } from './type';
 import { applyChartEditIntent } from './intent';
 import { chartFormatTargetKey, parseChartFormatTargetKey } from './target';
 import { chartTargetShape, setChartTargetFill, setChartTargetLine } from './target-paint';
@@ -88,6 +89,22 @@ describe('group options', () => {
 		expect(() => setChartGroupOptions(columnChart(), 5, { gapWidth: 10 })).toThrow(
 			/No chart series/,
 		);
+	});
+
+	it('sets the scatter style of a scatter group only', () => {
+		const scatter = setChartType(columnChart(), { kind: 'scatter' });
+		expect(scatter.plotArea.groups[0]!.scatterStyle).toBe('lineMarker');
+		const smooth = setChartScatterStyle(scatter, 1, 'smoothMarker');
+		expect(writeChartSpace(smooth)).toContain('<c:scatterStyle val="smoothMarker"/>');
+		expect(reload(smooth).plotArea.groups[0]!.scatterStyle).toBe('smoothMarker');
+		expect(scatter.plotArea.groups[0]!.scatterStyle).toBe('lineMarker');
+		expect(() => setChartScatterStyle(scatter, 0, 'dotted' as 'marker')).toThrow(
+			/Invalid chart scatter style/,
+		);
+		expect(() => setChartScatterStyle(columnChart(), 0, 'marker')).toThrow(
+			/barChart has no scatterStyle/,
+		);
+		expect(() => setChartScatterStyle(scatter, 9, 'marker')).toThrow(/No chart series/);
 	});
 });
 

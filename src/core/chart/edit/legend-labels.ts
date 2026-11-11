@@ -4,6 +4,7 @@
 // labels that say nothing turns the value on), with Office's explicit switches on new labels.
 import type { ChartSpace } from '../model';
 import type { ChartDataLabels } from '../model-series';
+import { assertChartLabelPosition } from '../label-positions';
 import { assignOrDelete, chartSeriesEntryAt, chartSpaceSeries, editChartSpace } from './draft';
 
 /** ST_LegendPos. */
@@ -103,6 +104,7 @@ function applyLabels(current: ChartDataLabels | undefined, edit: ChartDataLabels
  * Edits the data labels of the whole chart (every group's `c:dLbls`) or of one series. Hiding the
  * chart's labels also removes every series' own labels, as Office's Chart Elements box does; hiding
  * one series' labels writes switched-off labels on it so the group's labels do not show through.
+ * A position must be one every edited group accepts (`label-positions.ts`).
  */
 export function setChartDataLabels(
 	space: ChartSpace,
@@ -111,11 +113,15 @@ export function setChartDataLabels(
 ): ChartSpace {
 	return editChartSpace(space, (draft) => {
 		if (target.series !== undefined) {
-			const { series } = chartSeriesEntryAt(draft, target.series);
+			const { group, series } = chartSeriesEntryAt(draft, target.series);
+			if (edit.position) assertChartLabelPosition(group, edit.position);
 			const next = applyLabels(series.dataLabels, edit);
 			assignOrDelete(series, 'dataLabels', next);
 			return;
 		}
+		if (edit.position)
+			for (const group of draft.plotArea.groups)
+				if (group.kind !== 'surface') assertChartLabelPosition(group, edit.position);
 		for (const group of draft.plotArea.groups) {
 			if (group.kind === 'surface') continue;
 			if (edit.show === false && !edit.preserveHiddenContent && !group.dataLabels) continue;

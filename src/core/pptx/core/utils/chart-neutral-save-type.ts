@@ -7,7 +7,8 @@ import {
 import type { PptxChartData } from '../types';
 import type { NeutralChartEdit } from './chart-neutral-save-plan';
 
-const TYPES: Readonly<Record<string, ChartTypeTarget>> = {
+/** The shared-core type of each classic PowerPoint chart type (`combo` and ChartEx types have none). */
+export const NEUTRAL_CHART_TYPE_TARGETS: Readonly<Record<string, ChartTypeTarget>> = {
 	bar: { kind: 'bar', is3D: false },
 	bar3D: { kind: 'bar', is3D: true },
 	line: { kind: 'line', is3D: false },
@@ -33,7 +34,7 @@ export function planNeutralChartType(
 	const defaultType = probe.chartType;
 	const wholeChanged = probe.chartType !== before.chartType;
 	if (probe.chartType !== before.chartType) {
-		const target = TYPES[probe.chartType];
+		const target = NEUTRAL_CHART_TYPE_TARGETS[probe.chartType];
 		if (!target) return;
 		const to = {
 			...target,
@@ -52,7 +53,7 @@ export function planNeutralChartType(
 				!(wholeChanged && series.seriesChartType !== undefined)
 			)
 				return;
-			const target = TYPES[series.seriesChartType ?? defaultType];
+			const target = NEUTRAL_CHART_TYPE_TARGETS[series.seriesChartType ?? defaultType];
 			if (!target) return;
 			const to = {
 				...target,

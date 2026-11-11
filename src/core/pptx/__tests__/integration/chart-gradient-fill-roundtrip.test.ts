@@ -88,8 +88,10 @@ describe('chart gradient fills: new charts', () => {
 			{ name: 'Revenue', values: [1, 2, 3], color: '#FF0000', gradientFill: topToBottom },
 		]);
 		const spPr = seriesSpPr(seriesXml(await readPart(saved))[0]);
+		// Written through the shared chart core, whose gradient leaves `rotWithShape` out: a chart
+		// series never rotates (the legacy generator wrote `rotWithShape="1"`).
 		expect(spPr).toBe(
-			'<c:spPr><a:gradFill rotWithShape="1"><a:gsLst>' +
+			'<c:spPr><a:gradFill><a:gsLst>' +
 				'<a:gs pos="0"><a:srgbClr val="60A5FA"></a:srgbClr></a:gs>' +
 				'<a:gs pos="100000"><a:srgbClr val="1E3A8A"></a:srgbClr></a:gs>' +
 				'</a:gsLst><a:lin ang="5400000" scaled="0"></a:lin></a:gradFill></c:spPr>',

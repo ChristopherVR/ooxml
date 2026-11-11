@@ -225,6 +225,7 @@ export function chartTextEditsFromAppearance(value: ChartTextAppearance): ChartT
 		'rotation',
 		'direction',
 		'anchor',
+		'wrap',
 		'typeface',
 		'eastAsiaTypeface',
 		'sizePt',

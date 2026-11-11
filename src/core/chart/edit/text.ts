@@ -37,6 +37,8 @@ export interface ChartTextEdit {
 	rotation?: number | null;
 	direction?: string | null;
 	anchor?: string | null;
+	/** `a:bodyPr/@wrap`: true wraps text in its box (`square`), false never wraps (`none`). */
+	wrap?: boolean | null;
 	sizePt?: number | null;
 	typeface?: string | null;
 	eastAsiaTypeface?: string | null;
@@ -89,6 +91,8 @@ export function chartTargetTextFormatting(
 	if (direction !== null && direction !== undefined) result.direction = direction;
 	const anchor = body?.getAttribute('anchor');
 	if (anchor !== null && anchor !== undefined) result.anchor = anchor;
+	const wrap = body?.getAttribute('wrap');
+	if (wrap === 'square' || wrap === 'none') result.wrap = wrap === 'square';
 	return result;
 }
 
@@ -284,6 +288,8 @@ export function editChartTextBody(
 				String(typeof value === 'number' ? Math.round(value * 60000) : value),
 			);
 	}
+	if (edit.wrap === null) bodyPr.removeAttribute('wrap');
+	else if (edit.wrap !== undefined) bodyPr.setAttribute('wrap', edit.wrap ? 'square' : 'none');
 	const runs = descendants(root, ['defRPr', 'rPr', 'endParaRPr']);
 	if (!runs.length) {
 		let paragraph = first(root, 'p', NS.a);

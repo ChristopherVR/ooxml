@@ -9,6 +9,7 @@
  * @module sdk/chart-operations
  */
 
+import { assertChartModelLabelPosition } from '../../utils/chart-label-positions';
 import type {
 	PptxChartAxisFormatting,
 	PptxChartDataLabel,
@@ -21,7 +22,13 @@ import type {
 	PptxChartTrendline,
 	PptxChartType,
 } from '../../types/chart';
+import type { PptxChartTickMark } from '../../types/chart-axis';
 import type { ChartPptxElement } from '../../types/elements';
+import type { ChartAxisLineInput } from './chart-axis-input';
+import { withChartAxisAppearance } from './chart-axis-input';
+import { applyChartAxisPlacement, chartGridlinesLine } from './chart-axis-placement';
+import type { ChartFontInput } from './chart-content-input';
+import { chartFontInput } from './chart-input-values';
 import { clearChartSeriesPointPaint } from './chart-series-point-paint';
 
 // ---------------------------------------------------------------------------
@@ -233,6 +240,9 @@ export function setChartLegend(
  * @param edit - `show` toggles all data labels; the `show*` flags pick which
  *   content appears; `position` sets placement. Setting any content flag or a
  *   position turns labels on when not already set.
+ * @throws {RangeError} A `position` the chart type does not offer (a line
+ *   chart's `outEnd`, any position on an area chart): PowerPoint repairs a
+ *   file whose labels sit where its Format pane offers no such place.
  *
  * @example
  * ```ts
@@ -253,6 +263,7 @@ export function setChartDataLabels(
 	},
 ): void {
 	ensureChartData(element);
+	assertChartModelLabelPosition(element.chartData, edit.position);
 	const style = (element.chartData.style ??= {});
 	if (edit.show !== undefined) {
 		style.hasDataLabels = edit.show;
@@ -375,6 +386,38 @@ export interface ChartAxisEdit {
 	displayUnitsLabel?: PptxChartAxisFormatting['displayUnitsLabel'];
 	/** Show or hide (`c:delete`) the axis. */
 	visible?: boolean;
+	/**
+	 * Axis font, sizes in points. The model keeps one font per axis, so `family`,
+	 * `size`, `bold` and `color` style the tick labels and the axis title together
+	 * (as {@link setChartAxisTitleStyle}); `italic` styles the tick labels.
+	 */
+	font?: ChartFontInput;
+	/** Tick label angle in degrees, -90..90 (`c:txPr/a:bodyPr/@rot`); `null` clears it. */
+	rotation?: number | null;
+	/** Axis line (`c:spPr/a:ln`): a colour, width in points and dash, or `'none'` to hide it. */
+	line?: ChartAxisLineInput;
+	/**
+	 * Major gridline line (`c:majorGridlines/c:spPr/a:ln`). A line shows the major gridlines
+	 * unless `majorGridlines` is `false`; `'none'` hides them unless `majorGridlines` is `true`.
+	 */
+	majorGridlinesLine?: ChartAxisLineInput;
+	/**
+	 * Minor gridline line (`c:minorGridlines/c:spPr/a:ln`). A line shows the minor gridlines
+	 * unless `minorGridlines` is `false`; `'none'` hides them unless `minorGridlines` is `true`.
+	 */
+	minorGridlinesLine?: ChartAxisLineInput;
+	/** Major tick marks (`c:majorTickMark`). */
+	majorTickMark?: PptxChartTickMark;
+	/** Minor tick marks (`c:minorTickMark`). */
+	minorTickMark?: PptxChartTickMark;
+	/**
+	 * Where this axis sits on the axis it crosses (`c:crosses`, or `c:crossesAt` for a number):
+	 * the position is read on the OTHER axis. `catAx: { crosses: 15 }` draws the category axis at
+	 * value 15; `valAx: { crosses: 2 }` draws the value axis at the second category.
+	 */
+	crosses?: 'autoZero' | 'min' | 'max' | number;
+	/** Whether a value axis crosses between categories or on them (`c:crossBetween`). */
+	crossBetween?: 'between' | 'midCat';
 }
 
 /**
@@ -383,9 +426,14 @@ export interface ChartAxisEdit {
  * `c:tickLblPos`, `c:delete` via `visible`).
  *
  * Finds the first axis of `axisType` in `chartData.axes`, creating an entry
- * if none exists. Note that newly created axes only serialize for charts that
- * already contain a matching axis in the source XML (the save pipeline links
- * edits by the parsed axis id), which is the normal case for loaded charts.
+ * (with no `axisId`) if none exists. A loaded chart links the entry to its
+ * axis by the parsed axis id. A new chart's part is written with fixed axis
+ * ids, and an entry without one is matched to the written axis of its type
+ * (the first `catAx`, `valAx`, `dateAx` or `serAx`; for scatter and bubble
+ * charts the first and second `valAx`), so every edit, the title and number
+ * format included, is saved. An entry the chart type has no axis for (a pie
+ * chart's) is not written and is reported as a `CHART_FIELDS_NOT_WRITTEN`
+ * save warning.
  *
  * @example
  * ```ts
@@ -450,6 +498,34 @@ export function setChartAxis(
 	}
 	if (edit.visible !== undefined) {
 		axis.deleted = !edit.visible;
+	}
+	if (edit.font) {
+		const font = chartFontInput(edit.font, 'Axis font');
+		setChartAxisTitleStyle(element, axisType, {
+			...(font.fontFamily !== undefined ? { fontFamily: font.fontFamily } : {}),
+			...(font.fontSize !== undefined ? { fontSize: font.fontSize } : {}),
+			...(font.bold !== undefined ? { fontBold: font.bold } : {}),
+			...(font.color !== undefined ? { fontColor: font.color } : {}),
+		});
+	}
+	applyChartAxisPlacement(axis, edit);
+	const majorGridlinesLine = chartGridlinesLine(axis, edit, 'majorGridlines');
+	const minorGridlinesLine = chartGridlinesLine(axis, edit, 'minorGridlines');
+	const italic = edit.font?.italic;
+	if (
+		edit.rotation !== undefined ||
+		italic !== undefined ||
+		edit.line !== undefined ||
+		majorGridlinesLine !== undefined ||
+		minorGridlinesLine !== undefined
+	) {
+		element.chartData = withChartAxisAppearance(element.chartData, axes.indexOf(axis), {
+			...(edit.rotation !== undefined ? { rotation: edit.rotation } : {}),
+			...(italic !== undefined ? { italic } : {}),
+			...(edit.line !== undefined ? { line: edit.line } : {}),
+			...(majorGridlinesLine !== undefined ? { majorGridlinesLine } : {}),
+			...(minorGridlinesLine !== undefined ? { minorGridlinesLine } : {}),
+		});
 	}
 }
 
@@ -764,7 +840,13 @@ export function setChartSeriesMarker(
  * `bar` chart). Pass `null` to clear it so the series uses the chart-level type.
  *
  * Setting a per-series type also promotes the chart to `combo` so that the save
- * pipeline emits multiple chart-type containers.
+ * pipeline emits multiple chart-type containers; the other series then keep
+ * the chart's former type as their own, so a line chart with one column
+ * series stays a line chart for the rest. In a combination chart a series
+ * with no type of its own is drawn as columns. A new chart's part holds the
+ * combinations of 2-D column, line and area series; other mixes are saved by
+ * the legacy generator as a single chart type, with a
+ * `CHART_WRITTEN_BY_LEGACY_GENERATOR` save warning.
  *
  * @example
  * ```ts
@@ -784,7 +866,9 @@ export function setChartSeriesChartType(
 	const effective = new Set(
 		data.series.map((s) => s.seriesChartType ?? data.chartType).filter((t) => t !== 'combo'),
 	);
-	if (effective.size > 1) {
+	if (effective.size > 1 && data.chartType !== 'combo') {
+		const former = data.chartType;
+		for (const series of data.series) series.seriesChartType ??= former;
 		data.chartType = 'combo';
 	}
 }
@@ -1011,7 +1095,8 @@ function applyLabelEdit(label: PptxChartDataLabel, edit: ChartDataPointLabelEdit
  * @param seriesIndex - Zero-based index of the series.
  * @param pointIndex - Zero-based index of the data point (category).
  * @param edit - The label fields to set, or `null` to remove the override.
- * @throws {RangeError} If `seriesIndex` is out of bounds.
+ * @throws {RangeError} If `seriesIndex` is out of bounds, or `position` is one
+ *   the series' chart type does not offer.
  *
  * @example
  * ```ts
@@ -1027,6 +1112,7 @@ export function setChartDataPointLabel(
 	edit: ChartDataPointLabelEdit | null,
 ): void {
 	validateSeriesIndex(element, seriesIndex);
+	assertChartModelLabelPosition(element.chartData!, edit?.position, seriesIndex);
 	const series = element.chartData!.series[seriesIndex];
 	if (edit === null) {
 		if (!series.dataLabels) {

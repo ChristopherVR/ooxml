@@ -156,7 +156,7 @@ describe('chart edits reach the saved package', () => {
 		});
 		const before = await text(await JSZip.loadAsync(deck), 'ppt/charts/chart1.xml');
 		expect(before).not.toContain('<c:title');
-		expect(before).toContain('<c:autoTitleDeleted val="1">');
+		expect(before).toMatch(/<c:autoTitleDeleted val="1"\s*\/?>/u);
 
 		const saved = await editAndSave(deck, (chart) => {
 			chart.title = 'Added later';

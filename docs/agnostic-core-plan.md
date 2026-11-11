@@ -386,7 +386,9 @@ is the acceptance bar), and the area has its own tests and real parts from `src/
   switch. It found two type-switch differences, fixed in the neutral op (series colour moving to the line,
   `crossBetween` kept). The data sheet maps onto the series operations (`chart/edit/data-sheet.ts`), and
   `chart/edit/new-chart.ts` builds a new chart part through `setChartType`.
-  **Remains:** the operations have no per-series combination type (`setChartSeriesChartType`), no trendline or
+  The per-series combination type (`setChartSeriesType`) joins a converted series to a neighbouring group of its type,
+  so a combination built series by series keeps one group per type and axis pair, as Office writes it.
+  **Remains:** no trendline or
   error-bar setters, no marker or point-label edits, and no axis title font styling or user shapes; the type switch
   does not build stock, surface or 3-D line charts and makes a combination chart one group; the neutral ops edit only
   the chart part's caches, never an embedded workbook (`chart/workbook` writes that, see C6); the colour style part
@@ -447,6 +449,13 @@ is the acceptance bar), and the area has its own tests and real parts from `src/
   not a native rendering oracle. The 300-test classic corpus and five sequential native PowerPoint
   edit/reopen/workbook checks pass. See [the delivery ledger](office-shared-parity-delivery.md) for evidence;
   no claim is made that every object-tree serializer can already be deleted.
+  New classic charts (`addChart`, `createChartElement`, `ChartBuilder`, Insert Chart) are written the
+  same way (`chart-new-part.ts`): `newChartSpace` builds a minimal part with literal data, and the
+  planner turns the rest of the model into operations. A part it cannot write keeps the legacy
+  generator (`chart-xml-generator.ts`), and the save reports `CHART_WRITTEN_BY_LEGACY_GENERATOR`
+  with the fields it may drop; fields a new part cannot hold are reported as
+  `CHART_FIELDS_NOT_WRITTEN`. `chart-new-part-parity.test.ts` compares both writers over the 24
+  classic type variants; native opening of fresh SDK decks is not claimed.
 - **C4, `PptxChartData` as a compatibility adapter (shared projections implemented).** Classic
   facts and supported formatting come from `ChartSpace` through `chart-from-neutral*.ts`; saved
   parts refresh compatibility views with scoped host theme and relationship context. Remaining
@@ -477,7 +486,9 @@ is the acceptance bar), and the area has its own tests and real parts from `src/
   `chart-external-workbook-save`), ported to the shared DOM; pptx forwards to it. Beside it: the standard data layout
   (`layout.ts`), the writes a `ChartSpace` implies (`space-writes.ts`) and a new embedded workbook (`create.ts`).
   `chart/edit/data-sheet.ts` maps the data sheet onto the series operations (formulas follow the table in the standard
-  layout) and `chart/edit/new-chart.ts` builds a new chart part. Word inserts, edits, formats, resizes and saves charts
+  layout) and `chart/edit/new-chart.ts` builds a new chart part. `new-part.ts` writes a new chart part with its
+  embedded workbook (`writeChartPartWithWorkbook`, used by Word's insert and by PowerPoint's `embedWorkbook`), and
+  `new-layout.ts` turns a part's literal data into sheet references. Word inserts, edits, formats, resizes and saves charts
   (`docx/chart-edit.ts`, `docx/chart-save.ts`, `docx/ui/chart-commands.ts`); its Format pane is the shared pane (U2) and
   its charts can be resized with the shared drawing handle. Desktop Word checks the results in the acceptance script. Visio
   edits the data and format of an inserted chart object (`src/ui/src/visio/viewer-chart-editor.ts`) through the embedded

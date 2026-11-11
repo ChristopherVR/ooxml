@@ -52,10 +52,23 @@ export function chartDataWorksheetXml(sheet: ChartDataSheet): string {
 const STYLES = `${DECLARATION}<styleSheet xmlns="${MAIN}"><fonts count="1"><font><sz val="11"/><color theme="1"/><name val="Calibri"/><family val="2"/><scheme val="minor"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
 
 /** A new `.xlsx` package holding `sheet` on one worksheet named `sheetName`. */
-export async function createChartWorkbook(
+export function createChartWorkbook(
 	sheet: ChartDataSheet,
 	sheetName = DEFAULT_CHART_SHEET_NAME,
 ): Promise<Uint8Array> {
+	return workbookPackage(chartDataWorksheetXml(sheet), sheetName);
+}
+
+/** A new `.xlsx` package holding `rows` (from row 1, `null` an empty cell) on one worksheet. */
+export function createChartWorkbookFromRows(
+	rows: readonly (readonly (string | number | null)[])[],
+	sheetName = DEFAULT_CHART_SHEET_NAME,
+): Promise<Uint8Array> {
+	return workbookPackage(chartWorkbookRowsXml(rows), sheetName);
+}
+
+/** The one-sheet package around `worksheetXml`. */
+function workbookPackage(worksheetXml: string, sheetName: string): Promise<Uint8Array> {
 	const zip = new JSZip();
 	zip.file(
 		'[Content_Types].xml',
@@ -73,7 +86,7 @@ export async function createChartWorkbook(
 		'xl/_rels/workbook.xml.rels',
 		`${DECLARATION}<Relationships xmlns="${PKG_REL}"><Relationship Id="rId1" Type="${REL}/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="${REL}/styles" Target="styles.xml"/></Relationships>`,
 	);
-	zip.file('xl/worksheets/sheet1.xml', chartDataWorksheetXml(sheet));
+	zip.file('xl/worksheets/sheet1.xml', worksheetXml);
 	zip.file('xl/styles.xml', STYLES);
 	return zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
 }

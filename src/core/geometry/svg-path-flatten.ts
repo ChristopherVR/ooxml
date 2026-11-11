@@ -17,28 +17,7 @@ import type { Point2 } from './svg-path-types';
 export type { Point2 } from './svg-path-types';
 import { sampleCubic, sampleQuadratic, sampleArc } from './svg-path-curves';
 import { at } from './indexed';
-
-const COMMAND_RE = /[MLCQZAHVSmlcqzahvs][^MLCQZAHVSmlcqzahvs]*/gu;
-const NUMBER_RE = /-?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/gu;
-
-interface Token {
-	type: string;
-	values: number[];
-}
-
-function tokenize(d: string): Token[] {
-	const tokens: Token[] = [];
-	const matches = d.match(COMMAND_RE);
-	if (!matches) {
-		return tokens;
-	}
-	for (const raw of matches) {
-		const type = raw.charAt(0);
-		const nums = raw.slice(1).match(NUMBER_RE);
-		tokens.push({ type, values: nums ? nums.map((n) => Number.parseFloat(n)) : [] });
-	}
-	return tokens;
-}
+import { tokenizeSvgPath } from './svg-path-tokens';
 
 /**
  * Flatten an SVG path `d` string into one or more closed polygon loops.
@@ -51,7 +30,7 @@ function tokenize(d: string): Token[] {
 export function flattenSvgPath(d: string, curveSegments = 16): Point2[][] {
 	if (!Number.isFinite(curveSegments) || curveSegments < 1) curveSegments = 16;
 	curveSegments = Math.min(4096, Math.floor(curveSegments));
-	const tokens = tokenize(d);
+	const tokens = tokenizeSvgPath(d);
 	const loops: Point2[][] = [];
 	let current: Point2[] = [];
 	let cursor: Point2 = { x: 0, y: 0 };

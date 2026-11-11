@@ -1,6 +1,7 @@
 import type { ChartSpace } from '../model';
 import type { ChartDataLabelOptions } from '../model-series';
 import type { ChartManualLayout } from '../manual-layout';
+import { assertChartLabelPosition } from '../label-positions';
 import { assignOrDelete, chartSeriesEntryAt, editChartSpace } from './draft';
 import { chartTitleWithText } from './title';
 import { editChartTextBody, type ChartTextEdit } from './text';
@@ -17,7 +18,10 @@ export interface ChartPointLabelEdit extends Omit<
 	layout?: ChartManualLayout | null;
 }
 
-/** Patch a point override, or remove it to inherit the series/group defaults. */
+/**
+ * Patch a point override, or remove it to inherit the series/group defaults. A position must be one
+ * the series' group accepts (`label-positions.ts`).
+ */
 export function setChartPointLabel(
 	space: ChartSpace,
 	seriesIndex: number,
@@ -30,6 +34,7 @@ export function setChartPointLabel(
 		const entry = chartSeriesEntryAt(draft, seriesIndex);
 		if (entry.group.kind === 'surface') throw new RangeError('Surface charts have no data labels');
 		const series = entry.series;
+		if (edit?.position) assertChartLabelPosition(entry.group, edit.position);
 		if (!edit) {
 			if (series.dataLabels)
 				series.dataLabels.labels = series.dataLabels.labels.filter(

@@ -67,4 +67,6 @@ export interface ChartTextAppearance {
 	rotation?: number | null;
 	direction?: string | null;
 	anchor?: string | null;
+	/** True wraps text in its box, false never wraps; null restores the default. */
+	wrap?: boolean | null;
 }

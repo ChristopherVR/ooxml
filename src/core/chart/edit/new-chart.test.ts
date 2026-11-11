@@ -78,6 +78,7 @@ describe('newChartSpace: the minimal profile', () => {
 		for (const absent of [
 			'gapWidth',
 			'overlap',
+			'smooth',
 			'roundedCorners',
 			'majorGridlines',
 			'majorTickMark',
@@ -91,6 +92,24 @@ describe('newChartSpace: the minimal profile', () => {
 		expect(xml).toContain(
 			'<c:catAx><c:axId val="500000001"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="b"/><c:crossAx val="500000002"/></c:catAx>',
 		);
+	});
+
+	it('writes what Office reads differently when absent: smoothing off, stacked bars overlapping', () => {
+		const line = reread({ kind: 'line' }).plotArea.groups[0]!;
+		expect(line.series.map((series) => series.smooth)).toStrictEqual([false, false, false]);
+		expect(reread({ kind: 'stock' }).plotArea.groups[0]!.series[0]!.smooth).toBe(false);
+		expect(reread({ kind: 'scatter' }).plotArea.groups[0]!.series[0]!.smooth).toBe(false);
+		expect(
+			reread({ kind: 'line', is3D: true }).plotArea.groups[0]!.series[0]!.smooth,
+		).toBeUndefined();
+		expect(reread({ kind: 'bar', grouping: 'stacked' }).plotArea.groups[0]!.overlap).toBe(100);
+		expect(reread({ kind: 'bar', grouping: 'percentStacked' }).plotArea.groups[0]!.overlap).toBe(
+			100,
+		);
+		expect(reread({ kind: 'bar' }).plotArea.groups[0]!.overlap).toBeUndefined();
+		expect(
+			reread({ kind: 'bar', grouping: 'stacked', is3D: true }).plotArea.groups[0]!.overlap,
+		).toBeUndefined();
 	});
 
 	it('places the axes of horizontal bars at the left and the bottom', () => {

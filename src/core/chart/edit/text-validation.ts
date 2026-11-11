@@ -20,6 +20,8 @@ export function validateChartTextEdit(edit: ChartTextEdit): void {
 		!['t', 'ctr', 'b', 'just', 'dist'].includes(edit.anchor)
 	)
 		throw new RangeError('Invalid chart text anchor');
+	if (edit.wrap !== undefined && edit.wrap !== null && typeof edit.wrap !== 'boolean')
+		throw new RangeError('Invalid chart text wrap');
 	if (
 		edit.direction !== undefined &&
 		edit.direction !== null &&
