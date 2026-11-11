@@ -19,8 +19,8 @@
  * - a data label position the chart type does not offer is left out and
  *   reported (`chart-label-positions.ts`).
  *
- * A bar series with no `invertIfNegative` of its own is written as not inverted, so its negative
- * bars keep the series colour.
+ * The part states what PowerPoint would read differently if it were left out: bar series not
+ * inverted, the 1900 date system and square corners (`withAbsentDefaults`).
  *
  * Anything the shared core cannot write leaves `xml` undefined with the fields
  * that need the legacy generator, which then writes the part as before.
@@ -124,12 +124,19 @@ function startingPart(chart: PptxChartData, axes: ReturnType<typeof newChartAxes
 }
 
 /**
- * Bar series that say nothing about negative values are written as not inverted
- * (`c:invertIfNegative val="0"`, as PowerPoint writes them): PowerPoint draws the negative bars
- * of a series without the element in white, whatever the series colour.
+ * What PowerPoint reads differently when the part leaves it out, stated once every edit has run
+ * (PowerPoint takes an absent element as switched on):
+ * - bar series that say nothing about negative values are not inverted
+ *   (`c:invertIfNegative val="0"`): without it their negative bars are drawn in white;
+ * - the 1900 date system (`c:date1904 val="0"`): without it a date axis shows every date four
+ *   years and a day late, with literal data and with an embedded workbook alike;
+ * - square corners (`c:roundedCorners val="0"`): without it a chart area border is rounded.
+ * A value the model or an edit states is kept.
  */
-function withBarsNotInverted(space: ChartSpace): ChartSpace {
+function withAbsentDefaults(space: ChartSpace): ChartSpace {
 	return editChartSpace(space, (draft) => {
+		draft.date1904 ??= false;
+		draft.roundedCorners ??= false;
 		for (const group of draft.plotArea.groups)
 			if (group.kind === 'bar')
 				for (const series of group.series) series.invertIfNegative ??= false;
@@ -152,7 +159,7 @@ function writeThroughCore(chart: PptxChartData): NewChartPart {
 	let space = startingPart(after, axes);
 	for (const edit of plan.edits) space = edit(space);
 	// One group per type and axis pair, once no edit addresses series by position any more.
-	space = withBarsNotInverted(joinChartGroups(space));
+	space = withAbsentDefaults(joinChartGroups(space));
 	const xml = writeChartSpace(space);
 	const lost = chartIssuesLostOnWrite(parseChartSpace(xml).issues);
 	if (lost.length > 0)

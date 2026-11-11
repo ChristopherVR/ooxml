@@ -5,7 +5,9 @@
  *
  * Intentional differences, asserted where they show: the axes of horizontal bars sit at the left
  * (category) and bottom (value) as Office places them, where the generator wrote bottom and left
- * for every chart.
+ * for every chart; and the part states square corners and the 1900 date system
+ * (`c:roundedCorners val="0"`, `c:date1904 val="0"`), which the generator left out and PowerPoint
+ * then reads as rounded corners and the 1904 date system.
  */
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
@@ -142,7 +144,6 @@ function comparable(chart: PptxChartData, horizontal: boolean) {
 			chart.wireframe,
 			chart.surfaceTopView,
 			chart.hiLowLines,
-			chart.roundedCorners,
 			chart.chartChrome,
 		],
 	};
@@ -152,11 +153,12 @@ describe('new classic charts: shared core against the legacy generator', () => {
 	it.each(CASES)('$name reloads as the legacy part did', async (item) => {
 		const { core, legacy, xml } = await decks(item);
 		expect(xml).not.toMatch(/<c:f\s*\/?>/u);
-		expect(xml).not.toContain('roundedCorners');
+		expect(xml).toMatch(/<c:chartSpace[^>]*><c:date1904 val="0"\/><c:roundedCorners val="0"\/>/u);
 		expect(xml).toMatch(/<c:legendPos val="r"\s*(?:\/>|><\/c:legendPos>)/u);
 		const horizontal = item.input?.barDirection === 'bar';
 		const [fromCore, fromLegacy] = [await reload(core), await reload(legacy)];
 		expect(comparable(fromCore, horizontal)).toStrictEqual(comparable(fromLegacy, horizontal));
+		expect([fromCore.roundedCorners, fromLegacy.roundedCorners]).toStrictEqual([false, undefined]);
 		if (horizontal) expect(fromCore.axes?.map((axis) => axis.axPos)).toStrictEqual(['l', 'b']);
 	});
 });

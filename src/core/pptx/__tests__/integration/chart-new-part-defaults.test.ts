@@ -148,6 +148,25 @@ describe('new chart group option boundaries', () => {
 		expect(byName('I')).toContain('<c:invertIfNegative val="1"/>');
 	});
 
+	it('states the 1900 date system and square corners, which PowerPoint reads otherwise when absent', async () => {
+		const plain = await (await newChartDeck('line')).save();
+		expect(plain.xml).toMatch(
+			/<c:chartSpace[^>]*><c:date1904 val="0"\/><c:roundedCorners val="0"\/>/u,
+		);
+		expect(plain.chart.roundedCorners).toBe(false);
+
+		// The model's own values are kept.
+		const own = await newChartDeck('line', { chartArea: { roundedCorners: true } });
+		own.element.chartData!.date1904 = true;
+		const saved = await own.save();
+		expect(saved.warnings).toStrictEqual([]);
+		expect(saved.xml).toMatch(
+			/<c:chartSpace[^>]*><c:date1904 val="1"\/><c:roundedCorners val="1"\/>/u,
+		);
+		expect(saved.chart.roundedCorners).toBe(true);
+		expect(saved.chart.date1904).toBe(true);
+	});
+
 	it('keeps the legacy generator from writing clustered into a line chart', () => {
 		const element = createChartElement('line', { ...NEW_CHART_INPUT, grouping: 'clustered' });
 		const xml = new PptxRuntimeDependencyFactory()

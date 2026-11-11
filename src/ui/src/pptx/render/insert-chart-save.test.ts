@@ -34,7 +34,8 @@ describe('Insert Chart: saved through the shared chart core', () => {
 			const { xml, chart, warnings } = await saveInserted(kind);
 			expect(warnings).toStrictEqual([]);
 			expect(xml).not.toContain('<c:f>');
-			expect(xml).not.toContain('roundedCorners');
+			// Stated, since PowerPoint reads a part without them as rounded and in the 1904 date system.
+			expect(xml).toContain('<c:date1904 val="0"/><c:roundedCorners val="0"/>');
 			expect(xml).toContain('<c:legendPos val="r"/>');
 			expect(chart.title).toBe('Chart Title');
 			expect(chart.series.map((series) => [series.name, series.values])).toStrictEqual([
