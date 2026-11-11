@@ -147,6 +147,13 @@ export function applyChartFontsInput(element: ChartPptxElement, input: ChartInpu
 	if (!input.titleFont) return;
 	const font = chartFontInput(input.titleFont, 'Title font');
 	if (font.fontFamily !== undefined) style.titleFontFamily = font.fontFamily;
+	if (data.titleRuns) {
+		// A run's own size, weight, slant and colour win; the title font fills in what a run leaves
+		// out. Written on the runs, since the title's own style would be stamped over every run.
+		const { fontFamily: _family, ...defaults } = font;
+		data.titleRuns = data.titleRuns.map((run) => ({ ...defaults, ...run }));
+		return;
+	}
 	if (font.fontSize !== undefined) style.titleFontSize = font.fontSize;
 	if (font.bold !== undefined) style.titleFontBold = font.bold;
 	if (font.color !== undefined) style.titleFontColor = font.color;

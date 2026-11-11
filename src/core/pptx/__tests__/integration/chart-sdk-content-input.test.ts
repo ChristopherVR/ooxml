@@ -264,6 +264,53 @@ describe('declarative chart inputs', () => {
 	});
 });
 
+describe('title runs beside a title font', () => {
+	const runsXml = (xml: string): string[] =>
+		element(xml, 'title').match(/<a:r>.*?<\/a:r>/gsu) ?? [];
+
+	it("lets a run's own size, weight, slant and colour win over the title font", async () => {
+		const { xml, chart } = await save('bar', {
+			categories: CATEGORIES,
+			titleRuns: [
+				{ text: 'Own ', size: 10, bold: false, italic: false, color: '#112233' },
+				{ text: 'font' },
+			],
+			titleFont: { size: 14, bold: true, italic: true, color: '#445566', family: 'Georgia' },
+			series: [{ name: 'A', values: [1, 2, 3] }],
+		});
+		const [own, inherited] = runsXml(xml);
+		expect(own).toMatch(/sz="1000"/u);
+		expect(own).toMatch(/ b="0"/u);
+		expect(own).toMatch(/ i="0"/u);
+		expect(own).toMatch(/<a:srgbClr val="112233"\s*\/?>/u);
+		expect(own).not.toContain('445566');
+		// A run that says nothing takes the title font.
+		expect(inherited).toMatch(/sz="1400"/u);
+		expect(inherited).toMatch(/ b="1"/u);
+		expect(inherited).toMatch(/ i="1"/u);
+		expect(inherited).toMatch(/<a:srgbClr val="445566"\s*\/?>/u);
+		// The typeface is the whole title's.
+		expect(own).toContain('typeface="Georgia"');
+		expect(inherited).toContain('typeface="Georgia"');
+		expect(chart.titleRuns).toStrictEqual([
+			{ text: 'Own ', bold: false, italic: false, fontSize: 10, color: '#112233' },
+			{ text: 'font', bold: true, italic: true, fontSize: 14, color: '#445566' },
+		]);
+	});
+
+	it('writes runs as given when no title font is set', async () => {
+		const { xml, chart } = await save('bar', {
+			categories: CATEGORIES,
+			titleRuns: [{ text: 'Plain ' }, { text: 'big', size: 20 }],
+			series: [{ name: 'A', values: [1, 2, 3] }],
+		});
+		const [plain, big] = runsXml(xml);
+		expect(plain).not.toMatch(/sz=/u);
+		expect(big).toMatch(/sz="2000"/u);
+		expect(chart.titleRuns).toStrictEqual([{ text: 'Plain ' }, { text: 'big', fontSize: 20 }]);
+	});
+});
+
 describe('declarative chart inputs for generated report charts', () => {
 	it('writes one series label group with every flag, one line, centred and turned', async () => {
 		const { xml } = await save('bar', {
