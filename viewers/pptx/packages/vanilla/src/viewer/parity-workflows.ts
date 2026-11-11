@@ -14,12 +14,14 @@ import {
 	applyAcceptSlide,
 	applyRehearsalTimings,
 	compareSlides,
+	firstShowSlideIndex,
 	isDialogAvailable,
 	isPanelVisible,
 	openPptxFile,
 	resolveAllowExternalContent,
 	resolveAuthoredCustomShowId,
 	resolveDefaultPrintSettings,
+	resolveShowSlideIndexes,
 } from 'ooxml-ui/pptx';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 import type { PptxSlide } from 'pptx-viewer-core';
@@ -318,8 +320,10 @@ export function createParityWorkflows(host: ParityWorkflowHost): ParityWorkflows
 				// must not enter the undo history or mark the file dirty.
 				onSetActive: (id) => host.store.set({ activeCustomShowId: id }),
 				onRun: (show) => {
-					const first = state().slides.findIndex(({ rId }) => show.slideRIds.includes(rId));
-					if (first >= 0) {
+					// The show's own first slide, not its first slide in deck order: "Reverse"
+					// (3, 2, 1) opens on slide 3, as in every other binding.
+					const first = firstShowSlideIndex(resolveShowSlideIndexes(state().slides, show));
+					if (first !== undefined) {
 						host.goToSlide(first);
 					}
 					void host.enterPresentation();
