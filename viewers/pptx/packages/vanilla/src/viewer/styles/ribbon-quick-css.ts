@@ -111,4 +111,79 @@ export const RIBBON_QUICK_CSS = `
 }
 .pptxv-tabrow-record:hover { background: var(--pptx-accent); color: var(--pptx-foreground); }
 .pptxv-tabrow-record-dot { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; }
+/* ── Ribbon Display Options (Always show Ribbon / Show tabs only / Full-screen mode) ── */
+.pptxv-ribbon-display-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	border: none;
+	border-radius: 3px;
+	background: transparent;
+	color: var(--pptx-muted-foreground);
+	cursor: pointer;
+}
+.pptxv-ribbon-display-btn:hover, .pptxv-ribbon-display-btn.is-active { background: var(--pptx-accent); color: var(--pptx-foreground); }
+/* Collapsed to the tab row, the chevron points the other way, as PowerPoint's pin does. */
+.pptxv-ribbon[data-ribbon-display='tabs'] .pptxv-ribbon-display-btn svg { transform: rotate(180deg); }
+/* The menu hangs under the right end of the tab row; the row itself scrolls and would clip it. */
+.pptxv-ribbon-display-anchor { position: relative; height: 0; }
+.pptxv-ribbon-display-menu { top: 2px; right: 6px; }
+.pptxv-ribbon-display-menu .pptxv-primary-menu-item { padding-left: 26px; position: relative; }
+.pptxv-ribbon-display-menu .pptxv-primary-menu-item[aria-checked='true']::before {
+	content: '';
+	position: absolute;
+	left: 9px;
+	top: 50%;
+	width: 9px;
+	height: 5px;
+	border-left: 1.5px solid currentColor;
+	border-bottom: 1.5px solid currentColor;
+	transform: translateY(-70%) rotate(-45deg);
+}
+/* "Show tabs only": a chosen tab lays its commands over the slide instead of pushing it down. */
+.pptxv-ribbon > [data-ribbon-overlay] {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: var(--pptxv-ribbon-overlay-top, 0);
+	z-index: 35;
+	border-bottom: 1px solid var(--pptx-border);
+	/* Opaque: some themes make the card colour translucent, and this lies over the slide. */
+	background: linear-gradient(var(--pptx-card), var(--pptx-card)), var(--pptx-background);
+	box-shadow: 0 8px 20px rgb(0 0 0 / 0.2);
+}
+/* Full-screen mode: the title bar and the ribbon leave; the strip brings the ribbon back over the slide. */
+.pptxv[data-ribbon-display='fullScreen'] > .pptxv-titlebar,
+.pptxv[data-ribbon-display='fullScreen'] > .pptxv-qat-row,
+.pptxv-ribbon[data-ribbon-display='fullScreen']:not([data-ribbon-peek]) { display: none; }
+.pptxv-ribbon[data-ribbon-display='fullScreen'][data-ribbon-peek] {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 35;
+	background: linear-gradient(var(--pptx-card), var(--pptx-card)), var(--pptx-background);
+	box-shadow: 0 8px 20px rgb(0 0 0 / 0.2);
+}
+.pptxv-ribbon-reveal {
+	flex: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 14px;
+	padding: 0;
+	border: none;
+	border-bottom: 1px solid var(--pptx-border);
+	background: var(--pptx-card);
+	color: var(--pptx-muted-foreground);
+	font: inherit;
+	font-size: 14px;
+	line-height: 1;
+	letter-spacing: 2px;
+	cursor: pointer;
+}
+.pptxv-ribbon-reveal:hover { background: var(--pptx-accent); color: var(--pptx-foreground); }
 `;

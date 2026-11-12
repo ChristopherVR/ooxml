@@ -1,6 +1,7 @@
 import type {
 	AccountAuthConfig,
 	CanvasSize,
+	RibbonDisplayController,
 	ToolbarActionId,
 	ViewerPreferences,
 } from 'ooxml-ui/pptx';
@@ -20,6 +21,8 @@ import type { ChromeUiState } from '../../state/chrome-ui.svelte';
 
 export interface RibbonProps {
 	fileName?: string;
+	/** Ribbon Display Options: the viewer's one controller (menu, peek, collapse). */
+	ribbonDisplay: RibbonDisplayController;
 	/** History-tracked editor state; Home/Insert tab groups read/write it directly. */
 	editor: EditorState;
 	/** Reactive Find & Replace panel state, owned by the host so it can navigate the viewer. */

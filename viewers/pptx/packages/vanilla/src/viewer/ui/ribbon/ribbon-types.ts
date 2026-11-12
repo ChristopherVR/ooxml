@@ -69,6 +69,8 @@ export interface RibbonNavHandlers {
 	toggleMasterView?(): void;
 	/** Show/hide the right-hand property inspector (React's panel toggle). */
 	toggleInspector?(): void;
+	/** The viewer's Ribbon Display Options state (the shared headless controller). */
+	getRibbonDisplay?(): import('ooxml-ui/pptx').RibbonDisplayController;
 	/**
 	 * Drop the current selection. Design > Slide Size needs it: the slide-size
 	 * fields live on the inspector's DECK panel, which only renders when nothing

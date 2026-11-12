@@ -157,6 +157,7 @@ import { useRecentColorsSync } from './hooks/useRecentColorsSync';
 import { useReducedMotion } from './hooks/useReducedMotion';
 import { useReportOnChange } from './hooks/useReportOnChange';
 import { useResizablePanels } from './hooks/useResizablePanels';
+import { useRibbonDisplayController } from './hooks/useRibbonDisplayController';
 import { useRibbonGalleryCommands } from './hooks/useRibbonGalleryCommands';
 import { useRunProgramNoticesState } from './hooks/useRunProgramNoticesState';
 import { useShapeFormatCommands } from './hooks/useShapeFormatCommands';
@@ -220,6 +221,8 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 		const {
 			content: incomingContent,
 			fonts = [],
+			ribbonDisplay,
+			onRibbonDisplayChange,
 			filePath: hostFilePath,
 			fileName: hostFileName,
 			canEdit: canEditProp = false,
@@ -548,6 +551,14 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			activeSlide,
 			selectedElement,
 		} = state;
+
+		// ── Ribbon Display Options (one controller per viewer) ─────────
+		const ribbonDisplayController = useRibbonDisplayController({
+			ribbonDisplay,
+			onRibbonDisplayChange,
+			collapseRibbonAutomatically: viewerOptions.general.collapseRibbonAutomatically,
+			rootRef: containerRef,
+		});
 
 		// Host `onLoad` / `onError` (the Svelte and vanilla bindings' load notifications).
 		useLoadNotifications({
@@ -1515,6 +1526,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 												? handleEnableEditing
 												: undefined
 										}
+										ribbonDisplay={ribbonDisplayController}
 										onSetSnapToGrid={viewPreferencesSync.handleSetSnapToGrid}
 										onSetSnapToShape={viewPreferencesSync.handleSetSnapToShape}
 										onSetShowGuides={viewPreferencesSync.handleSetShowGuides}

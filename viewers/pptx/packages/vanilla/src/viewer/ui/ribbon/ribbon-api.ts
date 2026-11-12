@@ -57,6 +57,11 @@ export interface Ribbon {
 	 * left out; removing the tab that is showing falls back to the default tab.
 	 */
 	setRibbonAddIns(tabs: readonly RibbonAddInTab[]): void;
+	/**
+	 * Draw the Ribbon Display Options state again. Call it once the ribbon is in the document:
+	 * full-screen mode puts its strip beside the ribbon, which needs the ribbon's parent.
+	 */
+	syncRibbonDisplay(): void;
 	/** Leave the File backstage and show the normal default ribbon tab. */
 	showDefaultTab(): void;
 	/** Apply Options > General ScreenTip style to the tab-bar tooltips. */

@@ -45,6 +45,7 @@
 	import { createViewerState } from './state/create-viewer-state.svelte';
 	import { ThemeLocaleState } from './state/theme-locale.svelte';
 	import { controllerState } from './state/controller-state';
+	import { createRibbonDisplayController, RIBBON_AUTO_COLLAPSE_MEDIA } from 'ooxml-ui/pptx';
 	import { resolveViewerDocument, toViewerStateOptions } from './state/viewer-state-options';
 	import { provideRibbonAddIns } from './state/ribbon-add-ins';
 	import { provideRegionBase } from './state/viewer-regions';
@@ -152,6 +153,63 @@
 		});
 	});
 	useCustomizationConstraints(customization, vm.optionsState);
+
+	// Ribbon Display Options: one controller per viewer, created here and never per render.
+	// The host's `ribbonDisplay` prop and File > Options > "Collapse the ribbon automatically"
+	// are pushed into it; the user's own picks come back through `onribbondisplaychange`.
+	const ribbonDisplayController = createRibbonDisplayController({
+		initial: props.ribbonDisplay,
+		onChange: (mode) => props.onribbondisplaychange?.(mode),
+	});
+	$effect(() => {
+		ribbonDisplayController.setMode(props.ribbonDisplay);
+	});
+	$effect(() => {
+		ribbonDisplayController.setAutoCollapse(Boolean(vm.optionsState.options.general.collapseRibbonAutomatically));
+	});
+	$effect(() => {
+		if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+			return;
+		}
+		const short = window.matchMedia(RIBBON_AUTO_COLLAPSE_MEDIA);
+		const onShort = (): void => ribbonDisplayController.setShortViewport(short.matches);
+		onShort();
+		short.addEventListener('change', onShort);
+		return () => short.removeEventListener('change', onShort);
+	});
+	$effect(() => {
+		if (typeof document === 'undefined') {
+			return;
+		}
+		// A press outside the ribbon and its reveal strip puts the peeked commands away; a press
+		// inside it, but outside the menu and its button, closes the menu.
+		const onPointerDown = (event: PointerEvent): void => {
+			const path = event.composedPath();
+			const inside = (selector: string): boolean =>
+				path.some((node) => node instanceof Element && node.matches(selector));
+			if (!inside('[data-pptx-chrome="ribbon"]') && !inside('[data-pptx-chrome="ribbon-reveal"]')) {
+				ribbonDisplayController.dismiss();
+			} else if (
+				!inside('[data-pptx-chrome="ribbon-display-menu"]') &&
+				!inside('[data-pptx-chrome="ribbon-display-options"]')
+			) {
+				ribbonDisplayController.setMenuOpen(false);
+			}
+		};
+		// Only this viewer's shortcuts: the focus is inside its root, or nowhere in particular.
+		const onKeydown = (event: KeyboardEvent): void => {
+			const target = event.target as Node | null;
+			if (rootEl && (target === document.body || (target !== null && rootEl.contains(target)))) {
+				ribbonDisplayController.handleKeydown(event);
+			}
+		};
+		document.addEventListener('pointerdown', onPointerDown);
+		document.addEventListener('keydown', onKeydown);
+		return () => {
+			document.removeEventListener('pointerdown', onPointerDown);
+			document.removeEventListener('keydown', onKeydown);
+		};
+	});
 	const aiEnabled = $derived(Boolean(props.ai) && customization.isFeatureEnabled('ai'));
 	// A handle from `pptx-svelte-viewer/ai` brings its config and panel loader; any other
 	// value is a plain config for the viewer's own lazy panel, as before.
@@ -391,6 +449,7 @@
 	{#if showToolbar && vm.chromeVisible}
 		<ViewerChrome
 			{vm}
+			ribbonDisplay={ribbonDisplayController}
 			fileName={documentView.fileName}
 			{showNotes}
 			{hiddenActions}

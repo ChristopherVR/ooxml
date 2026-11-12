@@ -25,6 +25,8 @@ export interface RibbonTabBarProps {
 	addInTabs?: readonly RibbonAddInTab[];
 	activeAddIn?: string | null;
 	onSelectAddIn?: (id: string) => void;
+	/** A double click on a tab other than File: switches between the docked ribbon and the tab row. */
+	onToggleCollapsed?: () => void;
 	/** Right-side tab-row content (Record / Share, the compact toggle). */
 	children?: React.ReactNode;
 }
@@ -58,6 +60,7 @@ export function RibbonTabBar(p: RibbonTabBarProps): React.ReactElement {
 						aria-selected={selected}
 						title={resolveScreenTip(viewerOptions, t(s.labelKey))}
 						onClick={() => p.onSelectSection(s.id)}
+						onDoubleClick={s.id === 'file' ? undefined : () => p.onToggleCollapsed?.()}
 						className={cn(
 							TAB_BASE,
 							selected
@@ -84,6 +87,7 @@ export function RibbonTabBar(p: RibbonTabBarProps): React.ReactElement {
 						{...{ [RIBBON_ADD_IN_TAB_ATTR]: tab.id }}
 						title={resolveScreenTip(viewerOptions, tab.label)}
 						onClick={() => p.onSelectAddIn?.(tab.id)}
+						onDoubleClick={() => p.onToggleCollapsed?.()}
 						className={cn(
 							TAB_BASE,
 							selected
@@ -107,6 +111,7 @@ export function RibbonTabBar(p: RibbonTabBarProps): React.ReactElement {
 						{...{ [RIBBON_CONTEXTUAL_TAB_ATTR]: id }}
 						title={resolveScreenTip(viewerOptions, label)}
 						onClick={() => p.onSelectContextual(id)}
+						onDoubleClick={() => p.onToggleCollapsed?.()}
 						className={cn(
 							TAB_BASE,
 							'text-primary',

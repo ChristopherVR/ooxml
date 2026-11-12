@@ -67,8 +67,14 @@ import {
 	viewPropertiesPatchFromPreferences,
 	writeStoredViewerPrefs,
 	installSvgIdScope,
+	createRibbonDisplayController,
 } from 'ooxml-ui/pptx';
-import type { GoogleFontsOption, ListConversionScope, PptxLoadLimits } from 'ooxml-ui/pptx';
+import type {
+	GoogleFontsOption,
+	ListConversionScope,
+	PptxLoadLimits,
+	RibbonDisplayMode,
+} from 'ooxml-ui/pptx';
 import type {
 	AutosaveRecord,
 	InlineTextDraft,
@@ -202,6 +208,7 @@ import {
 	nextRibbonScope,
 	RibbonCustomizationStyleDirective,
 } from './ribbon-customization-style.directive';
+import { listenRibbonDisplayGestures } from './ribbon-display-listeners';
 import { performResetSlide } from './ribbon-home-section.component';
 import { RibbonLayoutGalleryComponent } from './ribbon-layout-gallery.component';
 import { layoutOptionsFrom } from './ribbon-layout-options';
@@ -415,7 +422,9 @@ const noopClose = (): void => undefined;
 					/>
 				}
 				@if (!mobile.isMobile() && toolbarVisible()) {
-					@if (customizationService.panelVisible('titleBar')) {
+					@if (
+						customizationService.panelVisible('titleBar') && ribbonDisplayState().layout.titleBar
+					) {
 						<pptx-title-bar
 							[canEdit]="canEdit()"
 							[fileName]="fileName()"
@@ -446,6 +455,8 @@ const noopClose = (): void => undefined;
 						[selectedElement]="selectedElement()"
 						[hiddenActions]="effectiveHiddenActions()"
 						[zoomPercent]="zoomSvc.zoomPercent()"
+						[displayState]="ribbonDisplayState()"
+						[displayController]="ribbonDisplayController"
 						[formatPainterActive]="formatPainter.active()"
 						[canActivateFormatPainter]="formatPainter.canActivate()"
 						[exporting]="xport.exporting()"
@@ -1803,6 +1814,13 @@ export class PowerPointViewerComponent
 	 */
 	readonly showToolbar = input<boolean | undefined>(undefined);
 	/**
+	 * Ribbon Display Options: how much of the ribbon stays on screen. `always` (the default)
+	 * docks the tabs and commands; `tabs` shows only the tab row, and a chosen tab lays its
+	 * commands over the slide; `fullScreen` hides the title bar and the ribbon behind a strip.
+	 * Changing it from the host does not fire `ribbonDisplayChange`.
+	 */
+	readonly ribbonDisplay = input<RibbonDisplayMode | undefined>(undefined);
+	/**
 	 * Show the slide thumbnail pane. Default `true`. The pane still follows
 	 * the user's own collapse toggle and the `slidesPane` customisation panel.
 	 */
@@ -1907,6 +1925,11 @@ export class PowerPointViewerComponent
 	readonly collaborationStatus = output<ConnectionStatus>();
 	/** Fired when the zoom level changes. */
 	readonly zoomChange = output<number>();
+	/**
+	 * Fired when the user picks a Ribbon Display Options mode (the menu, Ctrl+F1, a double click
+	 * on a tab). Not fired for a change of the `ribbonDisplay` input.
+	 */
+	readonly ribbonDisplayChange = output<RibbonDisplayMode>();
 	/** Fired when element selection changes. */
 	readonly selectionChange = output<string[]>();
 	/** Fired when the total slide count changes (slide added/deleted). */
@@ -1976,6 +1999,17 @@ export class PowerPointViewerComponent
 	private readonly destroyRef = inject(DestroyRef);
 	protected readonly dialogs = inject(ViewerDialogsService);
 	protected readonly viewerOpts = inject(ViewerOptionsService);
+	/**
+	 * One Ribbon Display Options controller per viewer, created once here: the ribbon and its tab
+	 * row read it, and it outlives any ribbon rebuild.
+	 */
+	protected readonly ribbonDisplayController = createRibbonDisplayController({
+		onChange: (mode) => this.ribbonDisplayChange.emit(mode),
+	});
+	protected readonly ribbonDisplayState = controllerSignal(
+		this.ribbonDisplayController,
+		this.destroyRef,
+	);
 	private readonly masterInlineEditor = viewChild(MasterViewCanvasComponent);
 	private readonly compareSvc = inject(ViewerCompareService);
 	protected readonly xport = inject(ViewerExportService);
@@ -2836,6 +2870,22 @@ export class PowerPointViewerComponent
 						? 'edit'
 						: 'preview';
 			this.modeChange.emit(mode);
+		});
+
+		// Ribbon Display Options: the host's mode and the File > Options "collapse automatically"
+		// setting drive the controller; the gestures are document listeners removed on destroy.
+		effect(() => {
+			this.ribbonDisplayController.setMode(this.ribbonDisplay());
+		});
+		effect(() => {
+			this.ribbonDisplayController.setAutoCollapse(
+				this.viewerOpts.options().general.collapseRibbonAutomatically === true,
+			);
+		});
+		listenRibbonDisplayGestures({
+			controller: this.ribbonDisplayController,
+			root: () => this.viewerRoot()?.nativeElement,
+			destroyRef: this.destroyRef,
 		});
 
 		// Emit zoom changes.

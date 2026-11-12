@@ -47,6 +47,8 @@ export interface ViewerOptionsHost {
 	setAutosaveIntervalMs(ms: number): void;
 	setHistoryDepth(depth: number): void;
 	setRibbonHiddenTabs(tabIds: readonly ToolbarTabId[]): void;
+	/** Options > General > "Collapse the ribbon automatically" (on a short viewport). */
+	setRibbonAutoCollapse(enabled: boolean): void;
 	refreshQuickAccess(): void;
 	applyScreenTips(): void;
 	/**
@@ -118,6 +120,7 @@ export function createViewerOptionsController(
 			host.setAutosaveIntervalMs(resolveAutosaveIntervalSeconds(options) * 1000);
 			host.setHistoryDepth(resolveHistoryDepth(options));
 			host.setRibbonHiddenTabs(options.ribbon.hiddenTabIds);
+			host.setRibbonAutoCollapse(options.general.collapseRibbonAutomatically);
 			host.refreshQuickAccess();
 			host.applyScreenTips();
 			host.renderStage();

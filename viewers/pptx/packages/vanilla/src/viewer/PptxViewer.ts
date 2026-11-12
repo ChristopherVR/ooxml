@@ -66,6 +66,7 @@ import {
 	writeStoredViewerPrefs,
 	confirmExternalHyperlinkDialog,
 	installSvgIdScope,
+	createRibbonDisplayController,
 } from 'ooxml-ui/pptx';
 import type {
 	CloudDocumentHostValues,
@@ -81,6 +82,8 @@ import type {
 	Rendering3DFlags,
 	ResolvedCustomization,
 	RibbonAddInTab,
+	RibbonDisplayController,
+	RibbonDisplayMode,
 	RunProgramNotice,
 	ThemeCatalogEntry,
 	ViewerMode,
@@ -268,6 +271,8 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	private optionsController!: ViewerOptionsController;
 	/** The host's ribbon tabs (`ribbonAddIns` option, `setRibbonAddIns`). */
 	private ribbonAddIns: readonly RibbonAddInTab[];
+	/** Ribbon Display Options; owned here so the state survives a chrome rebuild. */
+	readonly ribbonDisplay: RibbonDisplayController;
 	/** The host `customization` option + the imperative API's live edits. */
 	protected readonly customization: ViewerCustomizationLifecycle;
 	/** Region context + subscription for host-replaced regions (built on first use). */
@@ -285,6 +290,10 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.options = options;
 		this.customization = createViewerCustomizationLifecycle(options);
 		this.ribbonAddIns = options.ribbonAddIns ?? [];
+		this.ribbonDisplay = createRibbonDisplayController({
+			initial: options.ribbonDisplay,
+			onChange: (mode) => this.options.onRibbonDisplayChange?.(mode),
+		});
 		// `readOnly` is AND-ed in: it can only take editing away.
 		this.requestedEditable = options.editable ?? false;
 		this.requestedReadOnly = Boolean(options.readOnly);
@@ -471,6 +480,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		}
 		this.lifecycle = mountChrome(buildMountChromeDeps(this));
 		this.lifecycle.chrome.ribbon?.setRibbonAddIns(this.ribbonAddIns);
+		this.lifecycle.chrome.ribbon?.syncRibbonDisplay();
 		this.editor = createEditorController({
 			doc: this.doc,
 			store: this.store,
@@ -558,6 +568,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 				setAutosaveIntervalMs: (ms) => this.sessions?.setAutosaveIntervalMs(ms),
 				setHistoryDepth: (depth) => this.editor?.setHistoryDepth(depth),
 				setRibbonHiddenTabs: (tabIds) => this.lifecycle?.chrome.ribbon?.setHiddenOptionTabs(tabIds),
+				setRibbonAutoCollapse: (enabled) => this.ribbonDisplay.setAutoCollapse(enabled),
 				refreshQuickAccess: () => {
 					this.lifecycle?.chrome.titleBar?.refreshQuickAccess();
 					this.lifecycle?.chrome.setQuickAccessPosition(this.getQuickAccessOptions().position);
@@ -1942,6 +1953,17 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		}
 	}
 
+	/**
+	 * Show or hide the toolbar (the `showToolbar` option) on a live viewer. Only
+	 * the chrome is rebuilt, as for a locale switch: the deck, the selection's
+	 * slide, unsaved edits and the undo history stay as they are.
+	 */
+	setShowToolbar(show: boolean): void {
+		if (this.customization.setShowToolbar(show)) {
+			this.rebuildChrome();
+		}
+	}
+
 	setEditable(editable: boolean): void {
 		this.requestedEditable = editable;
 		this.applyEditable(this.effectiveEditable());
@@ -2427,6 +2449,19 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		return this.customization.getChromeOptions();
 	}
 
+	/**
+	 * Set PowerPoint's Ribbon Display Options from the host: `always` (the docked ribbon), `tabs`
+	 * (the tab row; a tab shows its commands over the slide) or `fullScreen` (no title bar or
+	 * ribbon until the strip at the top is pressed). `onRibbonDisplayChange` is not called.
+	 */
+	setRibbonDisplay(mode: RibbonDisplayMode): void {
+		this.ribbonDisplay.setMode(mode);
+	}
+
+	getRibbonDisplay(): RibbonDisplayMode {
+		return this.ribbonDisplay.getSnapshot().mode;
+	}
+
 	/** Replace the host's ribbon tabs (the `ribbonAddIns` option); an empty list removes them. */
 	setRibbonAddIns(tabs: readonly RibbonAddInTab[]): void {
 		this.ribbonAddIns = tabs ?? [];
@@ -2478,6 +2513,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		unmountChrome(this.lifecycle, () => this.editor?.detachChrome(), { keepRegions: true });
 		this.lifecycle = mountChrome(buildMountChromeDeps(this));
 		this.lifecycle.chrome.ribbon?.setRibbonAddIns(this.ribbonAddIns);
+		this.lifecycle.chrome.ribbon?.syncRibbonDisplay();
 		// Re-apply option-driven chrome behavior (ribbon visibility, ScreenTips,
 		// quick access) against the freshly mounted chrome.
 		this.optionsController.applyAll();

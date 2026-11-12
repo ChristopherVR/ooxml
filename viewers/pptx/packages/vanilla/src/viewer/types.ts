@@ -21,6 +21,7 @@ import type {
 	ViewerTheme,
 	ViewportFitOptions,
 	RibbonAddInTab,
+	RibbonDisplayMode,
 } from 'ooxml-ui/pptx';
 import type { GoogleFontsOption, ListConversionScope, PptxLoadLimits } from 'ooxml-ui/pptx';
 import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
@@ -73,6 +74,12 @@ export interface PptxViewerCallbacks {
 	onSlideChange?: (index: number) => void;
 	/** Fired when the effective zoom scale changes (1 = 100%). */
 	onZoomChange?: (scale: number) => void;
+	/**
+	 * Fired when the user picks a Ribbon Display Options mode (the menu at the right end of the
+	 * tab row, Ctrl+F1 or a double click on a tab). Not fired for `setRibbonDisplay`. The viewer
+	 * keeps the choice for its own lifetime only; store it here to bring it back next time.
+	 */
+	onRibbonDisplayChange?: (mode: RibbonDisplayMode) => void;
 	/** Fired when presentation (fullscreen) mode is entered or exited. */
 	onPresentationChange?: (presenting: boolean) => void;
 	/** Fired after any document mutation (move, resize, edit, undo, ...). */
@@ -303,6 +310,13 @@ export interface PptxViewerOptions extends PptxViewerCallbacks, ViewportFitOptio
 	 */
 	ribbonAddIns?: readonly RibbonAddInTab[];
 	/**
+	 * PowerPoint's Ribbon Display Options at start (default `'always'`): `'always'` docks tabs
+	 * and commands, `'tabs'` shows the tab row and lays a tab's commands over the slide when it
+	 * is chosen, `'fullScreen'` hides the title bar and the ribbon behind a strip at the top.
+	 * The user changes it from the ribbon; `setRibbonDisplay` changes it from the host.
+	 */
+	ribbonDisplay?: RibbonDisplayMode;
+	/**
 	 * Custom element-renderer registry. Defaults to `createDefaultRegistry()`;
 	 * pass your own (or mutate the default via `getRegistry()`) to add or
 	 * override element renderers.
@@ -519,6 +533,11 @@ export interface PptxViewerInstance extends PowerPointViewerAPI, ViewerCustomiza
 	setTheme(theme: ViewerTheme | undefined): void;
 	/** Switch the UI locale (rebuilds the chrome labels). */
 	setLocale(locale: string): void;
+	/**
+	 * Show or hide the toolbar at runtime (the `showToolbar` option). Rebuilds the
+	 * chrome only: the deck, unsaved edits and the undo history are kept.
+	 */
+	setShowToolbar(show: boolean): void;
 	/** Enter presentation mode (real Fullscreen API). */
 	enterPresentation(): Promise<void>;
 	/** Exit presentation mode. */
@@ -615,6 +634,13 @@ export interface PptxViewerInstance extends PowerPointViewerAPI, ViewerCustomiza
 	 * Removing the tab that is showing returns the ribbon to its default tab.
 	 */
 	setRibbonAddIns(tabs: readonly RibbonAddInTab[]): void;
+	/**
+	 * Set the Ribbon Display Options mode (`'always'`, `'tabs'` or `'fullScreen'`) from the host.
+	 * `onRibbonDisplayChange` is not called for it.
+	 */
+	setRibbonDisplay(mode: RibbonDisplayMode): void;
+	/** The current Ribbon Display Options mode. */
+	getRibbonDisplay(): RibbonDisplayMode;
 	/** Tear down DOM, listeners, Blob URLs, and the core handler. */
 	destroy(): void;
 }

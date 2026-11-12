@@ -298,6 +298,19 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	onModeChange?: (mode: import('ooxml-ui/pptx').ViewerMode) => void;
 	/** Callback when the zoom level changes. */
 	onZoomChange?: (zoom: number) => void;
+	/**
+	 * Ribbon Display Options, the starting mode: `always` docks the tabs and commands above the
+	 * slide (the default), `tabs` shows only the tab row (a chosen tab lays its commands over the
+	 * slide until a press elsewhere or Escape), `fullScreen` hides the title bar and the ribbon
+	 * until the strip at the top is pressed. Changing it later applies the mode without calling
+	 * `onRibbonDisplayChange`.
+	 */
+	ribbonDisplay?: import('ooxml-ui/pptx').RibbonDisplayMode;
+	/**
+	 * Called when the user picks a Ribbon Display Option (the menu, Ctrl+F1, a double click on a
+	 * tab). Not called when the host changes `ribbonDisplay`.
+	 */
+	onRibbonDisplayChange?: (mode: import('ooxml-ui/pptx').RibbonDisplayMode) => void;
 	/** Callback when element selection changes. */
 	onSelectionChange?: (elementIds: string[]) => void;
 	/** Callback when the total slide count changes (slide added/deleted). */

@@ -5,7 +5,7 @@
  * Renders: the scrollable tab strip (File/Home/Insert/.../Help, filtered by
  * `hiddenActions`), the pinned tab-row actions (Record, then Comments and Share
  * drawn by the shared `pptx-ui-ribbon-actions`, the element Word and Excel put
- * at the same place), and the ribbon expand/collapse toggle. Behaviour and markup are unchanged
+ * at the same place), and the Ribbon Display Options menu button. Behaviour and markup are unchanged
  * from the original inline tab-bar `<div>` in `ribbon.component.ts`.
  */
 import { NgClass } from '@angular/common';
@@ -19,18 +19,26 @@ import {
 	output,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { LucideChevronDown, LucideChevronUp } from '@lucide/angular';
+import { LucideChevronDown } from '@lucide/angular';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
 	buildTabRowActionsState,
 	contextualTabLabelKey,
 	filterVisibleTabs,
+	RIBBON_DISPLAY_OPTIONS_LABEL_KEY,
 	TAB_ROW_ACTION_CLASSES,
 	TOOLBAR_TABS,
 } from 'ooxml-ui/pptx';
-import type { RibbonAddInTab, RibbonContextualTabId, ToolbarActionId } from 'ooxml-ui/pptx';
+import type {
+	RibbonAddInTab,
+	RibbonContextualTabId,
+	RibbonDisplayController,
+	RibbonDisplayState,
+	ToolbarActionId,
+} from 'ooxml-ui/pptx';
 import { map, merge, startWith } from 'rxjs';
 
+import { RibbonDisplayMenuComponent } from './ribbon-display-menu.component';
 import type { RibbonTab } from './ribbon-types';
 import { toolbarVisibility } from './toolbar-visibility';
 import { ViewerOptionsService } from './viewer-options.service';
@@ -39,7 +47,7 @@ import { ViewerOptionsService } from './viewer-options.service';
 	selector: 'pptx-ribbon-tab-list',
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	imports: [NgClass, TranslatePipe, LucideChevronUp, LucideChevronDown],
+	imports: [NgClass, TranslatePipe, LucideChevronDown, RibbonDisplayMenuComponent],
 	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	template: `
 		<div
@@ -61,6 +69,7 @@ import { ViewerOptionsService } from './viewer-options.service';
 						[attr.aria-selected]="!activeAddIn() && activeTab() === t.id"
 						[title]="tabTip(t.labelKey)"
 						(click)="selectTab.emit(t.id)"
+						(dblclick)="tabDoubleClick(t.id)"
 						class="relative whitespace-nowrap px-3.5 py-2 text-[12px] font-medium transition-colors"
 						[ngClass]="
 							!activeAddIn() && activeTab() === t.id
@@ -84,6 +93,7 @@ import { ViewerOptionsService } from './viewer-options.service';
 						[attr.aria-selected]="activeAddIn() === tab.id"
 						[title]="addInTip(tab.label)"
 						(click)="selectAddIn.emit(tab.id)"
+						(dblclick)="tabDoubleClick(tab.id)"
 						class="relative whitespace-nowrap px-3.5 py-2 text-[12px] font-medium transition-colors"
 						[ngClass]="
 							activeAddIn() === tab.id
@@ -103,6 +113,7 @@ import { ViewerOptionsService } from './viewer-options.service';
 						[attr.aria-selected]="!activeAddIn() && activeTab() === id"
 						[title]="tabTip(contextualLabelKey(id))"
 						(click)="selectTab.emit(id)"
+						(dblclick)="tabDoubleClick(id)"
 						class="relative whitespace-nowrap px-3.5 py-2 text-[12px] font-medium text-primary transition-colors"
 						[ngClass]="
 							!activeAddIn() && activeTab() === id
@@ -152,20 +163,24 @@ import { ViewerOptionsService } from './viewer-options.service';
 
 			<button
 				type="button"
-				class="mr-1 shrink-0 rounded px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
-				[attr.aria-pressed]="!ribbonExpanded()"
-				[title]="
-					(ribbonExpanded() ? 'pptx.ribbon.collapseRibbon' : 'pptx.ribbon.expandRibbon') | translate
-				"
-				(click)="toggleRibbonExpanded.emit()"
+				data-pptx-chrome="ribbon-display-options"
+				class="mr-1 inline-flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent/30 hover:text-foreground"
+				aria-haspopup="menu"
+				[attr.aria-expanded]="menuOpen()"
+				[attr.aria-label]="displayOptionsKey | translate"
+				[title]="displayOptionsKey | translate"
+				(click)="displayController()?.toggleMenu()"
 			>
-				@if (ribbonExpanded()) {
-					<svg lucideChevronUp class="h-3.5 w-3.5"></svg>
-				} @else {
-					<svg lucideChevronDown class="h-3.5 w-3.5"></svg>
-				}
+				<svg
+					lucideChevronDown
+					class="h-3 w-3 transition-transform"
+					[class.rotate-180]="effectiveMode() === 'tabs'"
+					aria-hidden="true"
+				></svg>
 			</button>
 		</div>
+		<!-- After the tab row, so the menu hangs under the tabs rather than inside the scroller. -->
+		<pptx-ribbon-display-menu [state]="displayState()" [controller]="displayController()" />
 	`,
 })
 export class RibbonTabListComponent {
@@ -176,7 +191,10 @@ export class RibbonTabListComponent {
 	/** Comments pane state and the current slide's comment count (Comments' badge). */
 	readonly commentsOpen = input<boolean>(false);
 	readonly commentCount = input<number>(0);
-	readonly ribbonExpanded = input<boolean>(true);
+	/** Ribbon Display Options state (null: the docked ribbon, menu closed). */
+	readonly displayState = input<RibbonDisplayState | null>(null);
+	/** The shared Ribbon Display Options controller the menu and the tabs call. */
+	readonly displayController = input<RibbonDisplayController | null>(null);
 	/** Toolbar tabs/buttons the host wants hidden (filters the tab strip; gates Record/Share). */
 	readonly hiddenActions = input<ToolbarActionId[]>([]);
 	/** Contextual tabs the selection brings up, appended after the fixed tabs. */
@@ -191,9 +209,11 @@ export class RibbonTabListComponent {
 	readonly record = output<void>();
 	readonly share = output<void>();
 	readonly toggleComments = output<void>();
-	readonly toggleRibbonExpanded = output<void>();
 
 	protected readonly toolbar = toolbarVisibility(this.hiddenActions);
+	protected readonly displayOptionsKey = RIBBON_DISPLAY_OPTIONS_LABEL_KEY;
+	protected readonly menuOpen = computed(() => this.displayState()?.menuOpen ?? false);
+	protected readonly effectiveMode = computed(() => this.displayState()?.effectiveMode ?? 'always');
 	protected readonly tra = TAB_ROW_ACTION_CLASSES;
 	protected readonly contextualLabelKey = contextualTabLabelKey;
 	protected readonly visibleTabs = computed(() =>
@@ -224,6 +244,13 @@ export class RibbonTabListComponent {
 	});
 	/** Optional so the tab strip renders outside a full viewer host too. */
 	private readonly viewerOpts = inject(ViewerOptionsService, { optional: true });
+
+	/** Double click on a tab (not File) switches the ribbon between docked and tabs only. */
+	protected tabDoubleClick(tab: string): void {
+		if (tab !== 'file') {
+			this.displayController()?.toggleCollapsed();
+		}
+	}
 
 	/** ScreenTip-styled tooltip of a host tab: its label is the host's own text, not a key. */
 	protected addInTip(label: string): string | null {

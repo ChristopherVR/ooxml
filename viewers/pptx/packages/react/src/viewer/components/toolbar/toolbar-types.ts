@@ -2,6 +2,7 @@ import type {
 	AnimationApplyGroup,
 	FreeformToolKind,
 	InsertChartKind,
+	RibbonDisplayController,
 	ReviewCommentsHost,
 	SlideTemplateId,
 	ToolbarActionId,
@@ -41,6 +42,11 @@ export interface ToolbarProps {
 	isProtectedView?: boolean;
 	/** Drops the Protected View override for this session. Only offered when `isProtectedView` is true. */
 	onEnableEditing?: () => void;
+	/**
+	 * The viewer's Ribbon Display Options controller. Optional: a ribbon rendered on its own
+	 * stays in the default "always" mode.
+	 */
+	ribbonDisplay?: RibbonDisplayController;
 	isNarrowViewport: boolean;
 	isSidebarCollapsed: boolean;
 	isInspectorPaneOpen: boolean;

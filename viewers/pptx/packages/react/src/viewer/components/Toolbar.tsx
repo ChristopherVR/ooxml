@@ -1,6 +1,8 @@
 import { attachRibbonOverflow, homeLaunchers, isPanelVisible } from 'ooxml-ui/pptx';
 import React, { useCallback, useMemo, useRef } from 'react';
 
+import { useController } from '../hooks/useController';
+import { useRibbonDisplayFallback } from '../hooks/useRibbonDisplayController';
 import { useToolbarVisibility } from '../hooks/useToolbarVisibility';
 import { useTranslation } from '../i18n/use-translation';
 import type { ToolbarSection } from '../types';
@@ -16,6 +18,13 @@ import { FileSection } from './toolbar/FileSection';
 import { HomeSection } from './toolbar/HomeSection';
 import { InsertSection } from './toolbar/InsertSection';
 import { RibbonAddInSection, useRibbonAddInTabs } from './toolbar/ribbon-add-ins';
+import {
+	RIBBON_OVERLAY_CLASS,
+	RIBBON_PEEK_ROOT_CLASS,
+	RibbonDisplayButton,
+	RibbonDisplayMenu,
+	RibbonRevealStrip,
+} from './toolbar/RibbonDisplayControls';
 import { RibbonTabBar } from './toolbar/RibbonTabBar';
 import { TabRowActions } from './toolbar/TabRowActions';
 import { TextSection } from './toolbar/TextSection';
@@ -49,6 +58,10 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 	const fallBackHome = useCallback(() => onSetToolbarSection('home'), [onSetToolbarSection]);
 	const contextual = useContextualRibbonTab(p.selectedElement, customization, fallBackHome);
 	const addIns = useRibbonAddInTabs(fallBackHome);
+	// Ribbon Display Options: the viewer's controller (a private one when rendered on its own).
+	const ribbon = useRibbonDisplayFallback(p.ribbonDisplay);
+	const ribbonState = useController(ribbon);
+	const { layout, effectiveMode, peek } = ribbonState;
 	// Groups collapse into popup buttons when the window is too narrow, as in Office.
 	const detachOverflow = useRef<(() => void) | null>(null);
 	// Font, Paragraph and Drawing launchers open the Properties pane (there are no modal dialogs).
@@ -99,280 +112,313 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 	const sDes = section === 'design';
 
 	const showRibbon = mode === 'edit' || mode === 'master';
+	// Ribbon Display Options. The File backstage is never hidden or laid over the slide.
+	const commandsShown = sFil ? layout.tabs : layout.commands !== 'hidden';
+	const commandsOverlaid = commandsShown && layout.commands === 'overlay' && !sFil;
+	const rootShown = layout.tabs || commandsShown;
+	const peekedFullScreen = effectiveMode === 'fullScreen' && peek;
+	// Full-screen mode keeps the strip in the layout, so a peeked ribbon moves nothing.
+	const showStrip = layout.reveal || effectiveMode === 'fullScreen';
 
 	return (
-		<div
-			role='toolbar'
-			data-pptx-scope=''
-			data-pptx-chrome='ribbon'
-			aria-label={t('pptx.toolbar.presentationToolbarAria')}
-			className='relative z-20 border-b border-border bg-secondary/50 overflow-visible'
-		>
-			{/* Quick Access Row: undo/redo + spacer + mode/toggles */}
-			<ToolbarPrimaryRow {...p} />
+		<div className='relative'>
+			{showStrip && <RibbonRevealStrip ribbon={ribbon} />}
+			<div
+				role='toolbar'
+				data-pptx-scope=''
+				data-pptx-chrome='ribbon'
+				data-ribbon-display={effectiveMode}
+				data-ribbon-peek={peek ? '' : undefined}
+				aria-label={t('pptx.toolbar.presentationToolbarAria')}
+				className={cn(
+					peekedFullScreen
+						? RIBBON_PEEK_ROOT_CLASS
+						: 'relative z-20 border-b border-border bg-secondary/50 overflow-visible',
+					!rootShown && 'hidden',
+				)}
+			>
+				{/* Quick Access Row: undo/redo + spacer + mode/toggles */}
+				{layout.tabs && <ToolbarPrimaryRow {...p} />}
 
-			{/* Ribbon Tab Bar */}
-			{showRibbon && (
-				<RibbonTabBar
-					isTabVisible={isTabVisible}
-					activeSection={extraTab ? null : section}
-					contextualTabs={contextual.visible}
-					activeContextual={addIns.active ? null : contextual.active}
-					onSelectSection={(id) => {
-						contextual.select(null);
-						addIns.select(null);
-						onSetToolbarSection(id);
-					}}
-					onSelectContextual={(id) => {
-						addIns.select(null);
-						contextual.select(id);
-					}}
-					addInTabs={addIns.visible}
-					activeAddIn={addIns.active?.id ?? null}
-					onSelectAddIn={(id) => {
-						contextual.select(null);
-						addIns.select(id);
-					}}
-				>
-					<TabRowActions
-						onEnterRehearsalMode={p.canEdit ? p.onEnterRehearsalMode : undefined}
-						onOpenShareDialog={p.onOpenShareDialog}
-						onToggleComments={p.onToggleComments}
-						isCommentsPanelOpen={p.isCommentsPanelOpen}
-						slideCommentCount={p.slideCommentCount}
-						hiddenActions={p.hiddenActions}
-					/>
-					{isNarrowViewport && (
-						<button
-							type='button'
-							onClick={p.onToggleCompactToolbar}
-							className={cn(
-								'px-2 py-1 rounded text-[11px] transition-colors mr-1',
-								isCompactToolbarOpen
-									? 'bg-primary/80 text-white'
-									: 'text-muted-foreground hover:text-foreground',
-							)}
-							title={t(
-								isCompactToolbarOpen ? 'pptx.ribbon.collapseRibbon' : 'pptx.ribbon.expandRibbon',
-							)}
+				{/* Ribbon Tab Bar */}
+				{showRibbon && layout.tabs && (
+					<>
+						<RibbonTabBar
+							onToggleCollapsed={() => ribbon.toggleCollapsed()}
+							isTabVisible={isTabVisible}
+							activeSection={extraTab ? null : section}
+							contextualTabs={contextual.visible}
+							activeContextual={addIns.active ? null : contextual.active}
+							onSelectSection={(id) => {
+								contextual.select(null);
+								addIns.select(null);
+								onSetToolbarSection(id);
+								ribbon.tabChosen(id);
+							}}
+							onSelectContextual={(id) => {
+								addIns.select(null);
+								contextual.select(id);
+								ribbon.tabChosen(id);
+							}}
+							addInTabs={addIns.visible}
+							activeAddIn={addIns.active?.id ?? null}
+							onSelectAddIn={(id) => {
+								contextual.select(null);
+								addIns.select(id);
+								ribbon.tabChosen(id);
+							}}
 						>
-							{t(isCompactToolbarOpen ? 'pptx.ribbon.collapseRibbon' : 'pptx.ribbon.expandRibbon')}
-						</button>
-					)}
-				</RibbonTabBar>
-			)}
-
-			{/*
-			 * Quick Access strip, relocated: Options > Quick Access Toolbar >
-			 * position = "below" moves the configured commands (beyond the
-			 * dedicated Save/Undo/Redo trio, which always stays in the title
-			 * bar) into their own row under the ribbon tabs instead of the
-			 * title bar's inline strip, which suppresses itself for the same
-			 * condition (see `TitleBar`).
-			 */}
-			{showRibbon &&
-				viewerOptions.quickAccess.position === 'below' &&
-				isPanelVisible(customization, 'quickAccessToolbar') && (
-					<TitleBarElement
-						placement='belowRibbon'
-						input={belowInput}
-						onQuickCommand={p.onQuickCommand}
-					/>
+							<TabRowActions
+								onEnterRehearsalMode={p.canEdit ? p.onEnterRehearsalMode : undefined}
+								onOpenShareDialog={p.onOpenShareDialog}
+								onToggleComments={p.onToggleComments}
+								isCommentsPanelOpen={p.isCommentsPanelOpen}
+								slideCommentCount={p.slideCommentCount}
+								hiddenActions={p.hiddenActions}
+							/>
+							<RibbonDisplayButton ribbon={ribbon} state={ribbonState} />
+							{isNarrowViewport && (
+								<button
+									type='button'
+									onClick={p.onToggleCompactToolbar}
+									className={cn(
+										'px-2 py-1 rounded text-[11px] transition-colors mr-1',
+										isCompactToolbarOpen
+											? 'bg-primary/80 text-white'
+											: 'text-muted-foreground hover:text-foreground',
+									)}
+									title={t(
+										isCompactToolbarOpen
+											? 'pptx.ribbon.collapseRibbon'
+											: 'pptx.ribbon.expandRibbon',
+									)}
+								>
+									{t(
+										isCompactToolbarOpen
+											? 'pptx.ribbon.collapseRibbon'
+											: 'pptx.ribbon.expandRibbon',
+									)}
+								</button>
+							)}
+						</RibbonTabBar>
+						{ribbonState.menuOpen && <RibbonDisplayMenu ribbon={ribbon} state={ribbonState} />}
+					</>
 				)}
 
-			{/* Ribbon Content */}
-			{showRibbon && (
-				<div
-					ref={attachOverflow}
-					data-pptx-chrome='ribbon-content'
-					className={cn(
-						// Plain controls stay compact; labelled RibbonGroups opt into stretching.
-						// `RibbonGroupScope` wraps controls in a `display: contents` div, so its
-						// children are this row's flex items too and must not shrink (a shrunk
-						// "Text Box" pill wraps its caption onto two lines).
-						'flex min-h-[82px] items-center gap-0 overflow-x-auto px-1 py-0.5 max-md:min-h-0 max-md:px-1 max-md:py-0.5 flex-nowrap [&>*]:shrink-0 [&>.contents>*]:shrink-0',
-						isNarrowViewport && !isCompactToolbarOpen && 'hidden',
-					)}
-				>
-					{sFil && (
-						<FileSection
-							fileName={p.fileName}
-							onClose={() => p.onSetToolbarSection('home')}
-							onCreatePresentation={p.onCreatePresentation}
-							onOpenFile={p.onOpenFile}
-							onOpenRecentFile={p.onOpenRecentFile}
-							onExportPng={p.onExportPng}
-							onExportPdf={p.onExportPdf}
-							onExportVideo={p.onExportVideo}
-							onExportGif={p.onExportGif}
-							onExportJson={p.onExportJson}
-							onSave={p.onSave}
-							onSaveAsPptx={p.onSaveAsPptx}
-							onSaveAsPpsx={p.onSaveAsPpsx}
-							onSaveAsPptm={p.onSaveAsPptm}
-							onSaveAsPpt={p.onSaveAsPpt}
-							hasMacros={p.hasMacros}
-							onCopySlideAsImage={p.onCopySlideAsImage}
-							onPrint={p.onPrint}
-							onOpenSettings={p.onOpenSettings}
-							onOpenShareDialog={p.onOpenShareDialog}
-							onOpenDocumentProperties={p.onOpenDocumentProperties}
-							onOpenPasswordProtection={p.onOpenPasswordProtection}
-							onOpenFontEmbedding={p.onOpenFontEmbedding}
-							onOpenDigitalSignatures={p.onOpenDigitalSignatures}
-							onOpenVersionHistory={p.onToggleVersionHistory}
-							hiddenActions={p.hiddenActions}
-							recentPresentationsCount={p.recentPresentationsCount}
+				{/*
+				 * Quick Access strip, relocated: Options > Quick Access Toolbar >
+				 * position = "below" moves the configured commands (beyond the
+				 * dedicated Save/Undo/Redo trio, which always stays in the title
+				 * bar) into their own row under the ribbon tabs instead of the
+				 * title bar's inline strip, which suppresses itself for the same
+				 * condition (see `TitleBar`).
+				 */}
+				{showRibbon &&
+					viewerOptions.quickAccess.position === 'below' &&
+					isPanelVisible(customization, 'quickAccessToolbar') && (
+						<TitleBarElement
+							placement='belowRibbon'
+							input={belowInput}
+							onQuickCommand={p.onQuickCommand}
 						/>
 					)}
 
-					{sHome && (
-						<HomeSection
-							canEdit={p.canEdit}
-							clipboardPayload={p.clipboardPayload}
-							formatPainterActive={p.formatPainterActive}
-							canActivateFormatPainter={p.canActivateFormatPainter}
-							onCopy={p.onCopy}
-							onCut={p.onCut}
-							onPaste={p.onPaste}
-							onToggleFormatPainter={p.onToggleFormatPainter}
-							layoutOptions={p.layoutOptions}
-							currentLayoutPath={p.currentLayoutPath}
-							loadLayoutPreviews={p.loadLayoutPreviews}
-							onInsertSlideFromLayout={p.onInsertSlideFromLayout}
-							onApplyLayout={p.onApplyLayout}
-							onInsertSlideFromTemplate={p.onInsertSlideFromTemplate}
-							templateScheme={p.templateScheme}
-							selectedElement={p.selectedElement}
-							onResetSlide={p.onResetSlide}
-							onAddSection={p.onAddSection}
-						/>
-					)}
+				{/* Ribbon Content */}
+				{showRibbon && (
+					<div
+						ref={attachOverflow}
+						data-pptx-chrome='ribbon-content'
+						className={cn(
+							// Plain controls stay compact; labelled RibbonGroups opt into stretching.
+							// `RibbonGroupScope` wraps controls in a `display: contents` div, so its
+							// children are this row's flex items too and must not shrink (a shrunk
+							// "Text Box" pill wraps its caption onto two lines).
+							'flex min-h-[82px] items-center gap-0 overflow-x-auto px-1 py-0.5 max-md:min-h-0 max-md:px-1 max-md:py-0.5 flex-nowrap [&>*]:shrink-0 [&>.contents>*]:shrink-0',
+							isNarrowViewport && !isCompactToolbarOpen && 'hidden',
+							!commandsShown && 'hidden',
+							commandsOverlaid && RIBBON_OVERLAY_CLASS,
+						)}
+					>
+						{sFil && (
+							<FileSection
+								fileName={p.fileName}
+								onClose={() => p.onSetToolbarSection('home')}
+								onCreatePresentation={p.onCreatePresentation}
+								onOpenFile={p.onOpenFile}
+								onOpenRecentFile={p.onOpenRecentFile}
+								onExportPng={p.onExportPng}
+								onExportPdf={p.onExportPdf}
+								onExportVideo={p.onExportVideo}
+								onExportGif={p.onExportGif}
+								onExportJson={p.onExportJson}
+								onSave={p.onSave}
+								onSaveAsPptx={p.onSaveAsPptx}
+								onSaveAsPpsx={p.onSaveAsPpsx}
+								onSaveAsPptm={p.onSaveAsPptm}
+								onSaveAsPpt={p.onSaveAsPpt}
+								hasMacros={p.hasMacros}
+								onCopySlideAsImage={p.onCopySlideAsImage}
+								onPrint={p.onPrint}
+								onOpenSettings={p.onOpenSettings}
+								onOpenShareDialog={p.onOpenShareDialog}
+								onOpenDocumentProperties={p.onOpenDocumentProperties}
+								onOpenPasswordProtection={p.onOpenPasswordProtection}
+								onOpenFontEmbedding={p.onOpenFontEmbedding}
+								onOpenDigitalSignatures={p.onOpenDigitalSignatures}
+								onOpenVersionHistory={p.onToggleVersionHistory}
+								hiddenActions={p.hiddenActions}
+								recentPresentationsCount={p.recentPresentationsCount}
+							/>
+						)}
 
-					{sIns && (
-						<InsertSection
-							canEdit={p.canEdit}
-							onInsertSlideFromTemplate={p.onInsertSlideFromTemplate}
-							templateScheme={p.templateScheme}
-							newShapeType={p.newShapeType}
-							onSetNewShapeType={p.onSetNewShapeType}
-							activeFreeformTool={p.activeFreeformTool}
-							onArmFreeformTool={p.onArmFreeformTool}
-							onAddTextBox={p.onAddTextBox}
-							onAddShape={p.onAddShape}
-							onAddTable={p.onAddTable}
-							onAddChart={p.onAddChart}
-							onOpenChartDialog={p.onOpenChartDialog}
-							onAddSmartArt={p.onAddSmartArt}
-							onAddEquation={p.onAddEquation}
-							onAddActionButton={p.onAddActionButton}
-							onInsertField={p.onInsertField}
-							onOpenHeaderFooter={p.onOpenHeaderFooter}
-							onOpenImagePicker={p.onOpenImagePicker}
-							onOpenMediaPicker={p.onOpenMediaPicker}
-							hasSelection={Boolean(p.selectedElement)}
-							onOpenHyperlinkDialog={p.onOpenHyperlinkDialog}
-							layoutOptions={p.layoutOptions}
-							currentLayoutPath={p.currentLayoutPath}
-							onInsertSlideFromLayout={p.onInsertSlideFromLayout}
-							onToggleComments={p.onToggleComments}
-							isCommentsPanelOpen={p.isCommentsPanelOpen}
-						/>
-					)}
+						{sHome && (
+							<HomeSection
+								canEdit={p.canEdit}
+								clipboardPayload={p.clipboardPayload}
+								formatPainterActive={p.formatPainterActive}
+								canActivateFormatPainter={p.canActivateFormatPainter}
+								onCopy={p.onCopy}
+								onCut={p.onCut}
+								onPaste={p.onPaste}
+								onToggleFormatPainter={p.onToggleFormatPainter}
+								layoutOptions={p.layoutOptions}
+								currentLayoutPath={p.currentLayoutPath}
+								loadLayoutPreviews={p.loadLayoutPreviews}
+								onInsertSlideFromLayout={p.onInsertSlideFromLayout}
+								onApplyLayout={p.onApplyLayout}
+								onInsertSlideFromTemplate={p.onInsertSlideFromTemplate}
+								templateScheme={p.templateScheme}
+								selectedElement={p.selectedElement}
+								onResetSlide={p.onResetSlide}
+								onAddSection={p.onAddSection}
+							/>
+						)}
 
-					{sTxt && (
-						<TextSection
-							canEdit={p.canEdit}
-							selectedElement={p.selectedElement}
-							tableEditorState={p.tableEditorState}
-							onUpdateTextStyle={p.onUpdateTextStyle}
-							onToggleBullets={p.onToggleBullets}
-							onTransformTextCase={p.onTransformTextCase}
-							themeFonts={p.themeFonts}
-							embeddedFontFamilies={p.embeddedFontFamilies}
-							customFontFamilies={p.customFontFamilies}
-						/>
-					)}
+						{sIns && (
+							<InsertSection
+								canEdit={p.canEdit}
+								onInsertSlideFromTemplate={p.onInsertSlideFromTemplate}
+								templateScheme={p.templateScheme}
+								newShapeType={p.newShapeType}
+								onSetNewShapeType={p.onSetNewShapeType}
+								activeFreeformTool={p.activeFreeformTool}
+								onArmFreeformTool={p.onArmFreeformTool}
+								onAddTextBox={p.onAddTextBox}
+								onAddShape={p.onAddShape}
+								onAddTable={p.onAddTable}
+								onAddChart={p.onAddChart}
+								onOpenChartDialog={p.onOpenChartDialog}
+								onAddSmartArt={p.onAddSmartArt}
+								onAddEquation={p.onAddEquation}
+								onAddActionButton={p.onAddActionButton}
+								onInsertField={p.onInsertField}
+								onOpenHeaderFooter={p.onOpenHeaderFooter}
+								onOpenImagePicker={p.onOpenImagePicker}
+								onOpenMediaPicker={p.onOpenMediaPicker}
+								hasSelection={Boolean(p.selectedElement)}
+								onOpenHyperlinkDialog={p.onOpenHyperlinkDialog}
+								layoutOptions={p.layoutOptions}
+								currentLayoutPath={p.currentLayoutPath}
+								onInsertSlideFromLayout={p.onInsertSlideFromLayout}
+								onToggleComments={p.onToggleComments}
+								isCommentsPanelOpen={p.isCommentsPanelOpen}
+							/>
+						)}
 
-					{sHome && (
-						<DrawingGroup
-							canEdit={p.canEdit}
-							selectedElement={p.selectedElement}
-							newShapeType={p.newShapeType}
-							onSetNewShapeType={p.onSetNewShapeType}
-							onAddShape={p.onAddShape}
-							onMoveLayer={p.onMoveLayer}
-							onMoveLayerToEdge={p.onMoveLayerToEdge}
-							onUpdateElementStyle={p.onUpdateElementStyle}
-						/>
-					)}
+						{sTxt && (
+							<TextSection
+								canEdit={p.canEdit}
+								selectedElement={p.selectedElement}
+								tableEditorState={p.tableEditorState}
+								onUpdateTextStyle={p.onUpdateTextStyle}
+								onToggleBullets={p.onToggleBullets}
+								onTransformTextCase={p.onTransformTextCase}
+								themeFonts={p.themeFonts}
+								embeddedFontFamilies={p.embeddedFontFamilies}
+								customFontFamilies={p.customFontFamilies}
+							/>
+						)}
 
-					{sHome && (
-						<EditingSection
-							onToggleFindReplace={p.onToggleFindReplace}
-							onSelectAll={p.onSelectAll}
-						/>
-					)}
+						{sHome && (
+							<DrawingGroup
+								canEdit={p.canEdit}
+								selectedElement={p.selectedElement}
+								newShapeType={p.newShapeType}
+								onSetNewShapeType={p.onSetNewShapeType}
+								onAddShape={p.onAddShape}
+								onMoveLayer={p.onMoveLayer}
+								onMoveLayerToEdge={p.onMoveLayerToEdge}
+								onUpdateElementStyle={p.onUpdateElementStyle}
+							/>
+						)}
 
-					{sDrw && (
-						<DrawSection
-							canEdit={p.canEdit}
-							activeTool={p.activeTool}
-							drawingColor={p.drawingColor}
-							drawingWidth={p.drawingWidth}
-							onSetActiveTool={p.onSetActiveTool}
-							onSetDrawingColor={p.onSetDrawingColor}
-							onSetDrawingWidth={p.onSetDrawingWidth}
-						/>
-					)}
+						{sHome && (
+							<EditingSection
+								onToggleFindReplace={p.onToggleFindReplace}
+								onSelectAll={p.onSelectAll}
+							/>
+						)}
 
-					{sArr && (
-						<ArrangeSection
-							canEdit={p.canEdit}
-							selectedElement={p.selectedElement}
-							selectedCount={p.selectedCount}
-							selectionGroupable={p.selectionGroupable}
-							onAlignElements={p.onAlignElements}
-							onDistributeElements={p.onDistributeElements}
-							canDistribute={p.canDistribute}
-							onFlip={p.onFlip}
-							onMoveLayer={p.onMoveLayer}
-							onMoveLayerToEdge={p.onMoveLayerToEdge}
-							onGroupElements={p.onGroupElements}
-							onUngroupElement={p.onUngroupElement}
-							onUpdateElementStyle={p.onUpdateElementStyle}
-							onDuplicate={p.onDuplicate}
-							onDelete={p.onDelete}
-							formatPainterActive={p.formatPainterActive}
-							onToggleFormatPainter={p.onToggleFormatPainter}
-							canActivateFormatPainter={p.canActivateFormatPainter}
-							hiddenActions={p.hiddenActions}
-						/>
-					)}
+						{sDrw && (
+							<DrawSection
+								canEdit={p.canEdit}
+								activeTool={p.activeTool}
+								drawingColor={p.drawingColor}
+								drawingWidth={p.drawingWidth}
+								onSetActiveTool={p.onSetActiveTool}
+								onSetDrawingColor={p.onSetDrawingColor}
+								onSetDrawingWidth={p.onSetDrawingWidth}
+							/>
+						)}
 
-					{sDes && (
-						<DesignSection
-							canEdit={p.canEdit}
-							onToggleThemeGallery={p.onToggleThemeGallery}
-							isThemeGalleryOpen={p.isThemeGalleryOpen}
-							onToggleThemeEditor={p.onToggleThemeEditor}
-							isThemeEditorOpen={p.isThemeEditorOpen}
-							onOpenDocumentProperties={p.onOpenDocumentProperties}
-							onOpenSlideSize={p.onOpenSlideSize}
-							onToggleInspector={p.onToggleInspector}
-							isInspectorPaneOpen={p.isInspectorPaneOpen}
-						/>
-					)}
+						{sArr && (
+							<ArrangeSection
+								canEdit={p.canEdit}
+								selectedElement={p.selectedElement}
+								selectedCount={p.selectedCount}
+								selectionGroupable={p.selectionGroupable}
+								onAlignElements={p.onAlignElements}
+								onDistributeElements={p.onDistributeElements}
+								canDistribute={p.canDistribute}
+								onFlip={p.onFlip}
+								onMoveLayer={p.onMoveLayer}
+								onMoveLayerToEdge={p.onMoveLayerToEdge}
+								onGroupElements={p.onGroupElements}
+								onUngroupElement={p.onUngroupElement}
+								onUpdateElementStyle={p.onUpdateElementStyle}
+								onDuplicate={p.onDuplicate}
+								onDelete={p.onDelete}
+								formatPainterActive={p.formatPainterActive}
+								onToggleFormatPainter={p.onToggleFormatPainter}
+								canActivateFormatPainter={p.canActivateFormatPainter}
+								hiddenActions={p.hiddenActions}
+							/>
+						)}
 
-					<ToolbarLateTabs p={p} section={section} />
+						{sDes && (
+							<DesignSection
+								canEdit={p.canEdit}
+								onToggleThemeGallery={p.onToggleThemeGallery}
+								isThemeGalleryOpen={p.isThemeGalleryOpen}
+								onToggleThemeEditor={p.onToggleThemeEditor}
+								isThemeEditorOpen={p.isThemeEditorOpen}
+								onOpenDocumentProperties={p.onOpenDocumentProperties}
+								onOpenSlideSize={p.onOpenSlideSize}
+								onToggleInspector={p.onToggleInspector}
+								isInspectorPaneOpen={p.isInspectorPaneOpen}
+							/>
+						)}
 
-					{contextual.active && !addIns.active && (
-						<ContextualTabSection tab={contextual.active} hiddenActions={p.hiddenActions} />
-					)}
+						<ToolbarLateTabs p={p} section={section} />
 
-					{addIns.active && <RibbonAddInSection tab={addIns.active} />}
-				</div>
-			)}
+						{contextual.active && !addIns.active && (
+							<ContextualTabSection tab={contextual.active} hiddenActions={p.hiddenActions} />
+						)}
+
+						{addIns.active && <RibbonAddInSection tab={addIns.active} />}
+					</div>
+				)}
+			</div>
 		</div>
 	);
 }

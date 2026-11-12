@@ -8,6 +8,7 @@ import type {
 } from 'ooxml-ui/pptx';
 import {
 	attachRibbonOverflow,
+	createRibbonDisplayController,
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	homeLaunchers,
 	filterVisibleTabs,
@@ -34,6 +35,7 @@ import { createPictureSizeStrip } from './gallery/picture-size-strip';
 import type { HomeTab } from './home/home-tab';
 import { createHomeTab } from './home/home-tab';
 import type { Ribbon } from './ribbon-api';
+import { createRibbonDisplay } from './ribbon-display';
 import { buildHomeSyncState } from './ribbon-home-sync';
 import { createRibbonPrimaryRow } from './ribbon-primary-row';
 import { createRibbonTabBar } from './ribbon-tab-bar';
@@ -83,12 +85,32 @@ export function createRibbon(
 	const primary = createRibbonPrimaryRow(doc, t, handlers, hiddenActions);
 	el.append(primary.el);
 
-	const tabBar = createRibbonTabBar(doc, t, (tab) => setActiveTab(tab), hiddenActions, {
-		startRecording: () => handlers.slideShow.startRehearsal(),
-		openComments: () => handlers.nav.openComments(),
-	});
+	const tabBar = createRibbonTabBar(
+		doc,
+		t,
+		(tab) => {
+			setActiveTab(tab);
+			displayState.tabChosen(tab);
+		},
+		hiddenActions,
+		{
+			startRecording: () => handlers.slideShow.startRehearsal(),
+			openComments: () => handlers.nav.openComments(),
+		},
+	);
 	tabBar.el.hidden = true;
 	el.appendChild(tabBar.el);
+	// Ribbon Display Options sit at the right end of the tab row, as in PowerPoint. The viewer
+	// owns the state (it survives a chrome rebuild); a ribbon built on its own gets a private one.
+	const displayState = handlers.nav.getRibbonDisplay?.() ?? createRibbonDisplayController();
+	const display = createRibbonDisplay(doc, t, {
+		controller: displayState,
+		ribbon: el,
+		tabBar: tabBar.el,
+		onLayout: () => applyPanes(),
+	});
+	(tabBar.el.querySelector('.pptxv-tabrow-actions') ?? tabBar.el).appendChild(display.button);
+	el.appendChild(display.menuAnchor);
 
 	// The host can remove the Find and Equation panels outright; every path that
 	// opens them (ribbon, keyboard, context menu) goes through these guards.
@@ -271,16 +293,28 @@ export function createRibbon(
 		activeTab = tab;
 		tabBar.setActive(tab);
 		fileTab?.setVisible(tab === 'file');
+		// "Show tabs only" keeps the commands away until a tab is chosen, then lays them over the
+		// slide; the File backstage is never part of that.
+		const { effectiveMode, layout } = displayState.getSnapshot();
+		const commands = layout.commands;
 		for (const id of Object.keys(panes) as AnyTabId[]) {
 			const pane = panes[id];
 			if (pane) {
-				pane.hidden = id !== tab;
+				const collapsible = id !== 'file';
+				pane.hidden = id !== tab || (collapsible && commands === 'hidden');
+				pane.toggleAttribute(
+					'data-ribbon-overlay',
+					id === tab && collapsible && commands === 'overlay' && effectiveMode === 'tabs',
+				);
 			}
 		}
 		// The galleries of the tab now showing build the tiles they put off while it was hidden.
 		galleryHub.reveal();
 	}
 	setActiveTab(activeTab);
+	function applyPanes(): void {
+		setActiveTab(activeTab);
+	}
 
 	// A gallery out of sight puts off building its tiles; the desktop layout brings the ribbon back.
 	const revealGalleries = (): void => galleryHub.reveal();
@@ -386,6 +420,7 @@ export function createRibbon(
 		el,
 		destroy() {
 			phoneLayout?.removeEventListener('change', revealGalleries);
+			display.destroy();
 			for (const detach of detachOverflow.splice(0)) {
 				detach();
 			}
@@ -460,6 +495,7 @@ export function createRibbon(
 		showDefaultTab: () => setActiveTab(defaultVisibleTab),
 		setHiddenOptionTabs,
 		setRibbonAddIns,
+		syncRibbonDisplay: () => display.sync(),
 		applyScreenTips: (tip) => tabBar.applyScreenTips(tip),
 		updateSelection(selectedElement, extra) {
 			latestSelected = selectedElement;

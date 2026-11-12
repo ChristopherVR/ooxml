@@ -5,6 +5,7 @@ import type {
 	GoogleFontsOption,
 	ListConversionScope,
 	PptxLoadLimits,
+	RibbonDisplayMode,
 } from 'ooxml-ui/pptx';
 import type {
 	AccountAuthConfig,
@@ -301,6 +302,14 @@ export interface PowerPointViewerProps {
 	 */
 	showToolbar?: boolean;
 	/**
+	 * Ribbon Display Options: the starting mode. `always` (the default) docks
+	 * the tabs and commands above the slide; `tabs` shows only the tab row and
+	 * lays a chosen tab's commands over the slide; `fullScreen` hides the title
+	 * bar and the ribbon behind a strip. A later change from the host applies
+	 * without firing `ribbon-display-change`.
+	 */
+	ribbonDisplay?: RibbonDisplayMode;
+	/**
 	 * Show the slide thumbnail pane. Default `true`. The pane still follows
 	 * the user's own collapse toggle and the `slidesPane` customisation panel.
 	 */
@@ -394,6 +403,7 @@ export interface PowerPointViewerProps {
  *  - `onActiveSlideChange` → `@active-slide-change`
  *  - `onModeChange`        → `@mode-change`
  *  - `onZoomChange`        → `@zoom-change`
+ *  - `onRibbonDisplayChange` → `@ribbon-display-change`
  *  - `onSelectionChange`   → `@selection-change`
  *  - `onSlideCountChange`  → `@slide-count-change`
  *  - `onLoad`              → `@load`
@@ -409,6 +419,11 @@ export interface PowerPointViewerEmits {
 	(e: 'content-change' | 'autosave', content: Uint8Array): void;
 	/** Fired when the active slide, zoom level, or slide count changes. */
 	(e: 'active-slide-change' | 'zoom-change' | 'slide-count-change', value: number): void;
+	/**
+	 * Fired only when the user picks a Ribbon Display Options mode (the menu,
+	 * Ctrl+F1, a double click on a tab), never for a change of the `ribbonDisplay` prop.
+	 */
+	(e: 'ribbon-display-change', mode: RibbonDisplayMode): void;
 	/** Fired when the viewer mode changes. */
 	(e: 'mode-change', mode: string): void;
 	/** Fired when element selection changes. */

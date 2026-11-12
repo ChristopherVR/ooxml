@@ -6,7 +6,12 @@ import {
 	resetSlideLayoutPath,
 	templateSchemeFromTheme,
 } from 'ooxml-ui/pptx';
-import type { AnimationApplyGroup, FreeformToolKind, ToolbarActionId } from 'ooxml-ui/pptx';
+import type {
+	AnimationApplyGroup,
+	FreeformToolKind,
+	RibbonDisplayController,
+	ToolbarActionId,
+} from 'ooxml-ui/pptx';
 import type {
 	PptxElement,
 	PptxEmbeddedFont,
@@ -28,6 +33,7 @@ import React, { useCallback } from 'react';
 import { Toolbar, SignatureStatusBadge } from '.';
 import { createReviewCommentsHost } from '../hooks/createReviewCommentsHost';
 import type { AutosaveStatus } from '../hooks/useAutosave';
+import { useController } from '../hooks/useController';
 import type { EditorHistoryResult } from '../hooks/useEditorHistory';
 import type { ElementManipulationHandlers } from '../hooks/useElementManipulation';
 import type { ElementOperations } from '../hooks/useElementOperations';
@@ -35,6 +41,7 @@ import type { ExportHandlersResult } from '../hooks/useExportHandlers';
 import type { InsertElementHandlers } from '../hooks/useInsertElements';
 import type { PrintHandlersResult } from '../hooks/usePrintHandlers';
 import type { PropertyHandlersResult } from '../hooks/usePropertyHandlers';
+import { useRibbonDisplayFallback } from '../hooks/useRibbonDisplayController';
 import { scopeLayoutOptionsToActiveSlide } from '../hooks/useScopedLayoutOptions';
 import type { SlideManagementHandlers } from '../hooks/useSlideManagement';
 import type { ViewerDialogsResult } from '../hooks/useViewerDialogs';
@@ -212,6 +219,11 @@ export interface ViewerToolbarSectionProps {
 	onSetSnapToGrid?: (value: boolean) => void;
 	onSetSnapToShape?: (value: boolean) => void;
 	onSetShowGuides?: (value: boolean) => void;
+	/**
+	 * The viewer's Ribbon Display Options controller: it decides whether the title bar and the
+	 * ribbon's tab row show (full-screen mode hides them).
+	 */
+	ribbonDisplay?: RibbonDisplayController;
 }
 
 // ---------------------------------------------------------------------------
@@ -266,10 +278,13 @@ export function ViewerToolbarSection(props: ViewerToolbarSectionProps) {
 		onSetSnapToGrid,
 		onSetSnapToShape,
 		onSetShowGuides,
+		ribbonDisplay,
 	} = props;
 
 	const { t } = useTranslation();
 	const customization = useViewerCustomizationContext();
+	const ribbon = useRibbonDisplayFallback(ribbonDisplay);
+	const ribbonLayout = useController(ribbon).layout;
 
 	const handleAddAnimation = useCallback(
 		(preset: string, group: AnimationApplyGroup) => {
@@ -548,36 +563,39 @@ export function ViewerToolbarSection(props: ViewerToolbarSectionProps) {
 
 	return (
 		<>
-			{!dialogs.isNarrowViewport && isPanelVisible(customization, 'titleBar') && (
-				<TitleBar
-					mode={mode}
-					canEdit={canEdit}
-					fileName={fileName}
-					isDirty={s.isDirty}
-					autosaveStatus={autosaveStatus}
-					autosaveEnabled={autosaveEnabled}
-					autosaveToggleAvailable={autosaveToggleAvailable}
-					onToggleAutosave={onToggleAutosave ?? (() => {})}
-					canUndo={history.canUndo}
-					canRedo={history.canRedo}
-					undoLabel={history.undoLabel}
-					redoLabel={history.redoLabel}
-					onUndo={history.handleUndo}
-					onRedo={history.handleRedo}
-					onSave={exportHandlers.handleSave}
-					findReplaceOpen={findReplace.findReplaceOpen}
-					onToggleFindReplace={() => findReplace.setFindReplaceOpen(!findReplace.findReplaceOpen)}
-					onCommandSearch={handleCommandSearch}
-					onQuickCommand={handleQuickAccessCommand}
-					hiddenActions={hiddenActions}
-				/>
-			)}
+			{!dialogs.isNarrowViewport &&
+				isPanelVisible(customization, 'titleBar') &&
+				ribbonLayout.titleBar && (
+					<TitleBar
+						mode={mode}
+						canEdit={canEdit}
+						fileName={fileName}
+						isDirty={s.isDirty}
+						autosaveStatus={autosaveStatus}
+						autosaveEnabled={autosaveEnabled}
+						autosaveToggleAvailable={autosaveToggleAvailable}
+						onToggleAutosave={onToggleAutosave ?? (() => {})}
+						canUndo={history.canUndo}
+						canRedo={history.canRedo}
+						undoLabel={history.undoLabel}
+						redoLabel={history.redoLabel}
+						onUndo={history.handleUndo}
+						onRedo={history.handleRedo}
+						onSave={exportHandlers.handleSave}
+						findReplaceOpen={findReplace.findReplaceOpen}
+						onToggleFindReplace={() => findReplace.setFindReplaceOpen(!findReplace.findReplaceOpen)}
+						onCommandSearch={handleCommandSearch}
+						onQuickCommand={handleQuickAccessCommand}
+						hiddenActions={hiddenActions}
+					/>
+				)}
 			<Toolbar
 				fileName={fileName}
 				mode={mode}
 				canEdit={canEdit}
 				isProtectedView={isProtectedView}
 				onEnableEditing={onEnableEditing}
+				ribbonDisplay={ribbon}
 				// Below-ribbon Quick Access strip (Options > Quick Access Toolbar >
 				// position = "below"); same dispatcher the title bar's inline strip
 				// uses when position is "above".

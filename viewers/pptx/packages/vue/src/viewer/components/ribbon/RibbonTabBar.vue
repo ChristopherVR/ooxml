@@ -7,10 +7,12 @@
  * `RibbonToolbar` already reads off `RibbonProps`.
  */
 import { ChevronDown, ChevronUp } from 'lucide-vue-next';
-import { contextualTabLabelKey } from 'ooxml-ui/pptx';
+import { contextualTabLabelKey, RIBBON_DISPLAY_OPTIONS_LABEL_KEY } from 'ooxml-ui/pptx';
 import type {
 	RibbonAddInTab,
 	RibbonContextualTabId,
+	RibbonDisplayController,
+	RibbonDisplayState,
 	ToolbarActionId,
 	ToolbarTabDefinition,
 } from 'ooxml-ui/pptx';
@@ -45,11 +47,27 @@ interface Props {
 	hiddenActions?: ToolbarActionId[];
 	isCompactToolbarOpen: boolean;
 	onToggleCompactToolbar: () => void;
+	/** Ribbon Display Options state (absent: the menu button is not drawn). */
+	ribbonDisplay?: RibbonDisplayState;
+	ribbonDisplayController?: RibbonDisplayController;
 }
 
 const props = defineProps<Props>();
 const { t } = useI18n();
 const screenTip = inject(ScreenTipKey, (label: string) => label);
+
+/** A tab was chosen: the binding's own switch runs first, then the display controller peeks. */
+function chooseTab(id: string, select: () => void): void {
+	select();
+	props.ribbonDisplayController?.tabChosen(id);
+}
+
+/** Ctrl+F1 is the keyboard route; a double click on any tab but File does the same. */
+function onTabDoubleClick(id: string): void {
+	if (id !== 'file') {
+		props.ribbonDisplayController?.toggleCollapsed();
+	}
+}
 </script>
 
 <template>
@@ -77,7 +95,8 @@ const screenTip = inject(ScreenTipKey, (label: string) => label);
 							: 'text-muted-foreground hover:text-foreground hover:bg-accent/30',
 				)
 			"
-			@click="props.onSetToolbarSection(sec.id)"
+			@click="chooseTab(sec.id, () => props.onSetToolbarSection(sec.id))"
+			@dblclick="onTabDoubleClick(sec.id)"
 		>
 			{{ t(sec.labelKey) }}
 		</button>
@@ -97,7 +116,8 @@ const screenTip = inject(ScreenTipKey, (label: string) => label);
 						: 'text-muted-foreground hover:text-foreground hover:bg-accent/30',
 				)
 			"
-			@click="props.onSelectAddIn?.(tab.id)"
+			@click="chooseTab(tab.id, () => props.onSelectAddIn?.(tab.id))"
+			@dblclick="onTabDoubleClick(tab.id)"
 		>
 			{{ tab.label }}
 		</button>
@@ -117,7 +137,8 @@ const screenTip = inject(ScreenTipKey, (label: string) => label);
 						'after:absolute after:-bottom-px after:left-0 after:right-0 after:h-[2.5px] after:bg-amber-500',
 				)
 			"
-			@click="props.onSetToolbarSection(tab)"
+			@click="chooseTab(tab, () => props.onSetToolbarSection(tab))"
+			@dblclick="onTabDoubleClick(tab)"
 		>
 			{{ t(contextualTabLabelKey(tab)) }}
 		</button>
@@ -137,6 +158,35 @@ const screenTip = inject(ScreenTipKey, (label: string) => label);
 			:hidden-actions="props.hiddenActions"
 		/>
 		<button
+			v-if="props.ribbonDisplayController"
+			type="button"
+			data-pptx-chrome="ribbon-display-options"
+			aria-haspopup="menu"
+			:aria-expanded="props.ribbonDisplay?.menuOpen ?? false"
+			:aria-label="t(RIBBON_DISPLAY_OPTIONS_LABEL_KEY)"
+			:title="t(RIBBON_DISPLAY_OPTIONS_LABEL_KEY)"
+			:class="
+				cn(
+					'mr-1 inline-flex items-center justify-center rounded px-1.5 py-1 transition-colors',
+					props.ribbonDisplay?.menuOpen
+						? 'bg-primary text-white'
+						: 'text-muted-foreground hover:text-foreground hover:bg-accent/30',
+				)
+			"
+			@click="props.ribbonDisplayController?.toggleMenu()"
+		>
+			<ChevronDown
+				:class="[
+					'h-3.5 w-3.5 transition-transform',
+					props.ribbonDisplay?.effectiveMode === 'tabs' ? 'rotate-180' : '',
+				]"
+				aria-hidden="true"
+			/>
+		</button>
+		<!-- The plain collapse toggle of a tab row used without Ribbon Display Options; the
+		     menu above replaces it in the viewer (one arrow, as in PowerPoint). -->
+		<button
+			v-else
 			type="button"
 			class="mr-1 inline-flex items-center justify-center rounded px-2 py-1 text-muted-foreground transition-colors hover:text-foreground"
 			:aria-pressed="!props.isCompactToolbarOpen"

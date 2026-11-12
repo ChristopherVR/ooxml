@@ -73,7 +73,8 @@ import {
 	shouldShowAutosaveRecoveryPrompt,
 } from 'ooxml-ui/pptx';
 import type { CloudFileProvider, CloudOpenedFile, ViewerAddinStatus } from 'ooxml-ui/pptx';
-import { installSvgIdScope } from 'ooxml-ui/pptx';
+import { createRibbonDisplayController, installSvgIdScope } from 'ooxml-ui/pptx';
+import type { RibbonDisplayMode } from 'ooxml-ui/pptx';
 import { hasShapeProperties, PptxHandler } from 'pptx-viewer-core';
 import type {
 	PptxElement,
@@ -106,6 +107,7 @@ import MasterViewOverlay from './components/MasterViewOverlay.vue';
 import MobileToolbar from './components/MobileToolbar.vue';
 import NotesPanel from './components/NotesPanel.vue';
 import ReadOnlyBanner from './components/ReadOnlyBanner.vue';
+import RibbonRevealStrip from './components/ribbon/RibbonRevealStrip.vue';
 import RibbonToolbar from './components/ribbon/RibbonToolbar.vue';
 import TitleBar from './components/ribbon/TitleBar.vue';
 import SlideCanvas from './components/SlideCanvas.vue';
@@ -194,6 +196,7 @@ import {
 	RibbonCustomizationStyle,
 	useRibbonCustomizationStyle,
 } from './composables/useRibbonCustomizationStyle';
+import { useRibbonDisplayListeners } from './composables/useRibbonDisplayListeners';
 import { provideRibbonGalleryHost } from './composables/useRibbonGalleryHost';
 import { useRibbonUiState } from './composables/useRibbonUiState';
 import { useSectionOperations } from './composables/useSectionOperations';
@@ -1437,6 +1440,26 @@ async function compareWithPresentation(): Promise<void> {
 // other consumers; it just is not fed into breakpoint derivation any more.
 const viewerRootRef = ref<HTMLElement | null>(null);
 
+// -- Ribbon Display Options (one controller per viewer) ----------------
+// It outlives the ribbon: the host's `ribbonDisplay` prop sets the starting mode, a later
+// change goes through `setMode` (no `ribbon-display-change`), and only a pick by the user
+// (menu, Ctrl+F1, double click on a tab) is emitted.
+const ribbonDisplay = createRibbonDisplayController({
+	initial: props.ribbonDisplay,
+	onChange: (mode: RibbonDisplayMode) => emit('ribbon-display-change', mode),
+});
+const ribbonDisplayState = useController(ribbonDisplay);
+watch(
+	() => props.ribbonDisplay,
+	(mode) => ribbonDisplay.setMode(mode),
+);
+watch(
+	() => viewerOptions.value.general.collapseRibbonAutomatically,
+	(enabled) => ribbonDisplay.setAutoCollapse(enabled),
+	{ immediate: true },
+);
+useRibbonDisplayListeners(ribbonDisplay, () => viewerRootRef.value);
+
 watchEffect(
 	(onCleanup) => {
 		const root = viewerRootRef.value;
@@ -2166,7 +2189,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 				     role="toolbar" ribbon element (which e2e measures for height
 				     parity), gated like React on desktop + non-present. -->
 				<TitleBar
-					v-if="!isMobile && panelVisible('titleBar')"
+					v-if="!isMobile && panelVisible('titleBar') && ribbonDisplayState.layout.titleBar"
 					:mode="chromeMode"
 					:can-edit="canEditEffective"
 					:file-name="cloudView.fileName"
@@ -2199,8 +2222,16 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 				     configured (the default), covering the ribbon and swallowing
 				     clicks meant for it. -->
 				<template v-if="!isMobile">
+					<!-- Ribbon Display Options, full-screen mode: the strip that brings the ribbon back.
+					     It stays in the layout while the ribbon is peeked, so nothing jumps. -->
+					<RibbonRevealStrip
+						v-if="ribbonDisplayState.effectiveMode === 'fullScreen'"
+						:controller="ribbonDisplay"
+					/>
 					<RibbonToolbar
 						v-bind="ribbonProps"
+						:ribbon-display="ribbonDisplayState"
+						:ribbon-display-controller="ribbonDisplay"
 						:hidden-actions="effectiveHiddenActions"
 						:recent-presentations-count="viewerOptions.advanced.recentPresentationsCount"
 						:ai-enabled="aiEnabled"
@@ -2209,6 +2240,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 					/>
 					<!-- Options > Quick Access Toolbar > "below the Ribbon" -->
 					<TitleBar
+						v-if="ribbonDisplayState.layout.tabs"
 						placement="belowRibbon"
 						:mode="chromeMode"
 						:can-edit="canEditEffective"

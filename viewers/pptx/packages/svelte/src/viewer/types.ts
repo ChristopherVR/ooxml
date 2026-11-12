@@ -16,6 +16,7 @@ import type {
 	PptxLoadLimits,
 	ThemeCatalogEntry,
 	RibbonAddInTab,
+	RibbonDisplayMode,
 	ToolbarActionId,
 	ViewerAutosaveStatus,
 	ViewerCustomization,
@@ -198,6 +199,13 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 */
 	ribbonAddIns?: readonly RibbonAddInTab[];
 	/**
+	 * Starting Ribbon Display Options mode: `always` (Always show Ribbon, the
+	 * default), `tabs` (Show tabs only) or `fullScreen` (Full-screen mode).
+	 * Changing it from the host applies the mode; the user's own choices are
+	 * reported through `onribbondisplaychange`.
+	 */
+	ribbonDisplay?: RibbonDisplayMode;
+	/**
 	 * Framework-neutral UI customisation. See docs/guide/customization.md.
 	 *
 	 * Hides ribbon tabs, toolbar buttons, Options pages / sections / settings,
@@ -329,6 +337,12 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	/** Fired before following a link; return false to cancel its default action. */
 	onhyperlinkclick?: import('ooxml-ui/pptx').HyperlinkClickHandler;
 	onzoomchange?: (zoom: number) => void;
+	/**
+	 * Fired when the user picks a Ribbon Display Options mode (the menu on the
+	 * tab row, Ctrl+F1, or a double click on a tab). Not fired when the host
+	 * changes `ribbonDisplay`.
+	 */
+	onribbondisplaychange?: (mode: RibbonDisplayMode) => void;
 	onselectionchange?: (elementIds: string[]) => void;
 	onslidecountchange?: (count: number) => void;
 	/** Host override for the File > Open action. */

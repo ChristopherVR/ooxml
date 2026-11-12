@@ -91,6 +91,8 @@ export interface ChromeCallbackDeps {
 	toggleMasterNavigation(): void;
 	/** Show/hide the right-hand property inspector panel. */
 	toggleInspector(): void;
+	/** The viewer's Ribbon Display Options state. */
+	getRibbonDisplay(): import('ooxml-ui/pptx').RibbonDisplayController;
 	/** Select a single element by id (inspector Elements tab). */
 	selectElement(id: string): void;
 	/** Drop the current selection (Design > Slide Size opens the deck panel). */
@@ -212,6 +214,7 @@ export function buildChromeCallbacks(
 			toggleTemplateEditing: () => deps.toggleTemplateEditing(),
 			toggleMasterView: () => deps.toggleMasterNavigation(),
 			toggleInspector: () => deps.toggleInspector(),
+			getRibbonDisplay: () => deps.getRibbonDisplay(),
 			clearSelection: () => deps.clearSelection(),
 			toggleViewOption: (option) => deps.getEditActions().toggleViewOption(option),
 			addGuide: (axis) => deps.getEditActions().addGuide(axis),

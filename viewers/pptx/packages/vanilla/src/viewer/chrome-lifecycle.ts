@@ -813,6 +813,8 @@ export interface ChromeHost {
 	getThemeColorMap(): Record<string, string> | undefined;
 	toggleTemplateEditing(): void;
 	toggleMasterNavigation(): void;
+	/** Ribbon Display Options state; it survives a chrome rebuild. */
+	readonly ribbonDisplay: import('ooxml-ui/pptx').RibbonDisplayController;
 	selectElements(ids: string[]): void;
 	exportSlidePng(): Promise<void>;
 	copySlideAsImage(): Promise<void>;
@@ -910,6 +912,7 @@ export function buildMountChromeDeps(host: ChromeHost): MountChromeDeps {
 		toggleTemplateEditing: () => host.toggleTemplateEditing(),
 		toggleMasterNavigation: () => host.toggleMasterNavigation(),
 		toggleInspector: () => host.store.set({ inspectorOpen: !host.store.get().inspectorOpen }),
+		getRibbonDisplay: () => host.ribbonDisplay,
 		selectElement: (id) => host.selectElements([id]),
 		clearSelection: () => host.selectElements([]),
 		// Plain store reads: the ribbon builds (and first reads) before the editor

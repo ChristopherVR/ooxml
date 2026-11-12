@@ -4,6 +4,16 @@ export const EDITOR_RIBBON_CSS = `
     background: color-mix(in oklab, var(--pptx-secondary) 50%, transparent);
     color: var(--pptx-foreground); border-bottom: 1px solid var(--pptx-border);
   }
+  /* Full-screen mode lays the whole ribbon over the slide: the half-transparent fill above
+     would let the slide show through, so the page background goes underneath it. */
+  [data-pptx-editor-chrome] [data-pptx-chrome="ribbon"][data-ribbon-display="fullScreen"][data-ribbon-peek] {
+    background:
+      linear-gradient(
+        color-mix(in oklab, var(--pptx-secondary) 50%, transparent),
+        color-mix(in oklab, var(--pptx-secondary) 50%, transparent)
+      ),
+      var(--pptx-background);
+  }
   [data-pptx-editor-chrome] [data-pptx-chrome="ribbon-primary"] {
     min-height: 32px; height: 32px; padding: 2px 6px; gap: 2px;
     border: 0; box-sizing: border-box;

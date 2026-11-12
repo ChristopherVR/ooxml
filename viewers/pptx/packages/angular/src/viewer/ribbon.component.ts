@@ -10,18 +10,24 @@
  * here is unchanged from before the split, so `PowerPointViewerComponent`'s
  * bindings to `<pptx-ribbon>` did not need to change.
  */
+import { NgClass } from '@angular/common';
 import {
 	ChangeDetectionStrategy,
 	Component,
+	computed,
 	CUSTOM_ELEMENTS_SCHEMA,
 	inject,
 	input,
 	output,
-	signal,
 } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { homeLaunchers } from 'ooxml-ui/pptx';
-import type { AccountAuthConfig, ToolbarActionId } from 'ooxml-ui/pptx';
+import { homeLaunchers, ribbonDisplayLayout } from 'ooxml-ui/pptx';
+import type {
+	AccountAuthConfig,
+	RibbonDisplayController,
+	RibbonDisplayState,
+	ToolbarActionId,
+} from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 
 import { RibbonAddInsService } from './ribbon-add-ins.service';
@@ -31,6 +37,7 @@ import { createRibbonTabState } from './ribbon-contextual-tabs';
 import type { DrawToolState } from './ribbon-draw-section.component';
 import { RibbonOverflowDirective } from './ribbon-overflow.directive';
 import { RibbonPrimaryRowComponent } from './ribbon-primary-row.component';
+import { RibbonRevealStripComponent } from './ribbon-reveal-strip.component';
 import { RibbonTabListComponent } from './ribbon-tab-list.component';
 import type { RibbonTab } from './ribbon-types';
 import { injectResolvedCustomization } from './viewer-customization.service';
@@ -42,9 +49,11 @@ import { injectResolvedCustomization } from './viewer-customization.service';
 	host: { 'data-pptx-scope': '' },
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	imports: [
+		NgClass,
 		TranslatePipe,
 		RibbonPrimaryRowComponent,
 		RibbonTabListComponent,
+		RibbonRevealStripComponent,
 		RibbonContentComponent,
 		RibbonContentSecondaryComponent,
 		RibbonOverflowDirective,
@@ -52,185 +61,204 @@ import { injectResolvedCustomization } from './viewer-customization.service';
 	// The host's add-in tab is drawn by the shared `pptx-ui-ribbon-add-in` element.
 	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	template: `
-		<div
-			role="toolbar"
-			data-pptx-chrome="ribbon"
-			[attr.aria-label]="'pptx.toolbar.presentationToolbarAria' | translate"
-			class="relative z-20 overflow-visible border-b border-border bg-secondary/50"
-		>
-			<pptx-ribbon-primary-row
-				[slideCount]="slideCount()"
-				[canEdit]="canEdit()"
-				[sidebarCollapsed]="sidebarCollapsed()"
-				[inspectorOpen]="inspectorOpen()"
-				[hiddenActions]="hiddenActions()"
-				[aiEnabled]="aiEnabled()"
-				[aiPanelOpen]="aiPanelOpen()"
-				(toggleAiPanel)="toggleAiPanel.emit()"
-				(toggleSidebar)="toggleSidebar.emit()"
-				(present)="present.emit()"
-				(presenter)="presenter.emit()"
-				(broadcast)="broadcast.emit()"
-				(openCustomShows)="openCustomShows.emit()"
-				(toggleInspector)="toggleInspector.emit()"
-				(openSettings)="requestSettings()"
-				(exportPng)="exportPng.emit()"
-				(exportPdf)="exportPdf.emit()"
-				(exportGif)="exportGif.emit()"
-				(exportVideo)="exportVideo.emit()"
-				(print)="print.emit()"
-				(info)="info.emit()"
-				(a11y)="a11y.emit()"
-				(save)="save.emit()"
-				(savePpsx)="savePpsx.emit()"
-				(savePptm)="savePptm.emit()"
-				(savePpt)="savePpt.emit()"
-				(copySlideAsImage)="copySlideAsImage.emit()"
-				(shortcuts)="shortcuts.emit()"
-				(versionHistory)="versionHistory.emit()"
-				(passwordProtection)="passwordProtection.emit()"
-				(fontEmbedding)="fontEmbedding.emit()"
-				(digitalSignatures)="signatures.emit()"
-			/>
-
-			<pptx-ribbon-tab-list
-				[activeTab]="activeTab()"
-				[contextualTabs]="contextualTabs()"
-				[addInTabs]="addInTabs()"
-				[activeAddIn]="activeAddIn()?.id ?? null"
-				(selectAddIn)="selectAddIn($event)"
-				[canEdit]="canEdit()"
-				[collabConnected]="collabConnected()"
-				[connectedCount]="connectedCount()"
-				[commentsOpen]="commentsOpen()"
-				[commentCount]="commentCount()"
-				[ribbonExpanded]="ribbonExpanded()"
-				[hiddenActions]="hiddenActions()"
-				(selectTab)="selectTab($event)"
-				(record)="record.emit()"
-				(share)="share.emit()"
-				(toggleComments)="comments.emit()"
-				(toggleRibbonExpanded)="ribbonExpanded.set(!ribbonExpanded())"
-			/>
-
+		<div class="relative" data-pptx-chrome="ribbon-frame">
+			@if (fullScreen()) {
+				<pptx-ribbon-reveal-strip [controller]="displayController()" />
+			}
 			<div
-				[pptxRibbonOverflow]="launchers"
-				data-pptx-chrome="ribbon-content"
-				class="flex min-h-[82px] flex-nowrap items-center gap-0 overflow-x-auto px-1 py-0.5 [&>*]:shrink-0"
-				[style.display]="ribbonExpanded() ? null : 'none'"
+				role="toolbar"
+				data-pptx-chrome="ribbon"
+				[attr.data-ribbon-display]="effectiveMode()"
+				[attr.data-ribbon-peek]="peek() ? '' : null"
+				[attr.aria-label]="'pptx.toolbar.presentationToolbarAria' | translate"
+				[ngClass]="
+					floating()
+						? 'absolute inset-x-0 top-0 z-[35] bg-background bg-[image:linear-gradient(var(--color-secondary),var(--color-secondary))] shadow-[0_8px_20px_rgb(0_0_0_/_0.2)]'
+						: 'relative z-20 bg-secondary/50'
+				"
+				class="overflow-visible border-b border-border"
+				[style.display]="layout().reveal ? 'none' : null"
 			>
-				@if (activeAddIn(); as addIn) {
-					<pptx-ui-ribbon-add-in [tab]="addIn"></pptx-ui-ribbon-add-in>
-				}
-				<pptx-ribbon-content
-					[style.display]="activeAddIn() ? 'none' : null"
-					[activeTab]="activeTab()"
-					[slideIndex]="slideIndex()"
+				<pptx-ribbon-primary-row
 					[slideCount]="slideCount()"
 					[canEdit]="canEdit()"
-					[selectedElement]="selectedElement()"
-					[formatPainterActive]="formatPainterActive()"
-					[canActivateFormatPainter]="canActivateFormatPainter()"
-					[exporting]="exporting()"
-					[hasMacros]="hasMacros()"
+					[sidebarCollapsed]="sidebarCollapsed()"
+					[inspectorOpen]="inspectorOpen()"
 					[hiddenActions]="hiddenActions()"
-					[accountAuth]="accountAuth()"
-					[commentsOpen]="commentsOpen()"
-					(comments)="comments.emit()"
-					(selectTab)="selectTab($event)"
-					(find)="find.emit()"
-					(share)="share.emit()"
-					(openFile)="openFile.emit()"
-					(openRecentFile)="openRecentFile.emit($event)"
-					(createPresentation)="createPresentation.emit($event)"
-					(save)="save.emit()"
-					(savePptx)="savePptx.emit()"
-					(savePpsx)="savePpsx.emit()"
-					(savePptm)="savePptm.emit()"
-					(savePpt)="savePpt.emit()"
-					(signatures)="signatures.emit()"
-					(info)="info.emit()"
-					(print)="print.emit()"
-					(toggleFormatPainter)="toggleFormatPainter.emit()"
+					[aiEnabled]="aiEnabled()"
+					[aiPanelOpen]="aiPanelOpen()"
+					(toggleAiPanel)="toggleAiPanel.emit()"
+					(toggleSidebar)="toggleSidebar.emit()"
+					(present)="present.emit()"
+					(presenter)="presenter.emit()"
+					(broadcast)="broadcast.emit()"
+					(openCustomShows)="openCustomShows.emit()"
+					(toggleInspector)="toggleInspector.emit()"
+					(openSettings)="requestSettings()"
 					(exportPng)="exportPng.emit()"
 					(exportPdf)="exportPdf.emit()"
 					(exportGif)="exportGif.emit()"
 					(exportVideo)="exportVideo.emit()"
-					(exportJson)="exportJson.emit()"
-					(copySlideAsImage)="copySlideAsImage.emit()"
-					(replace)="replace.emit()"
-					(openSmartArtDialog)="openSmartArtDialog.emit()"
-					(openChartDialog)="openChartDialog.emit()"
-					(openEquationDialog)="openEquationDialog.emit()"
-					(openTemplateGallery)="openTemplateGallery.emit()"
-					(openPassword)="openPassword.emit()"
-					(openFontEmbedding)="openFontEmbedding.emit()"
-					(openVersionHistory)="openVersionHistory.emit()"
-					(link)="link.emit()"
-					(openSettings)="requestSettings()"
-				/>
-				<pptx-ribbon-content-secondary
-					[style.display]="activeAddIn() ? 'none' : null"
-					[activeTab]="activeTab()"
-					[slideIndex]="slideIndex()"
-					[slideCount]="slideCount()"
-					[canEdit]="canEdit()"
-					[selectedElement]="selectedElement()"
-					[inspectorOpen]="inspectorOpen()"
-					[showGrid]="showGrid()"
-					[showRulers]="showRulers()"
-					[showGuides]="showGuides()"
-					[snapToGrid]="snapToGrid()"
-					[snapToShape]="snapToShape()"
-					[eyedropperActive]="eyedropperActive()"
-					[themeGalleryOpen]="themeGalleryOpen()"
-					[spellCheckEnabled]="spellCheckEnabled()"
-					[showSubtitles]="showSubtitles()"
-					[hiddenActions]="hiddenActions()"
-					(present)="present.emit()"
-					(presenter)="presenter.emit()"
-					(record)="record.emit()"
-					(presentFromBeginning)="presentFromBeginning.emit()"
-					(rehearseTimings)="rehearseTimings.emit()"
-					(toggleSubtitles)="toggleSubtitles.emit()"
-					(openSubtitleSettings)="openSubtitleSettings.emit()"
-					(recordFromBeginning)="recordFromBeginning.emit()"
-					(recordFromCurrent)="recordFromCurrent.emit()"
-					(spellCheckChange)="setSpellCheck($event)"
-					(broadcast)="broadcast.emit()"
 					(print)="print.emit()"
-					(comments)="comments.emit()"
+					(info)="info.emit()"
 					(a11y)="a11y.emit()"
-					(link)="link.emit()"
-					(goToNormalView)="goToNormalView.emit()"
-					(openSorter)="openSorter.emit()"
-					(openReadingView)="openReadingView.emit()"
-					(openOutlineView)="openOutlineView.emit()"
-					(openMasterView)="openMasterView.emit()"
-					(toggleNotes)="toggleNotes.emit()"
-					(toggleInspector)="toggleInspector.emit()"
-					(openAnimationPanel)="openAnimationPanel.emit()"
-					(drawToolChange)="drawToolChange.emit($event)"
-					(toggleThemeGallery)="toggleThemeGallery.emit()"
-					(editTheme)="editTheme.emit()"
-					(openSlideSize)="openSlideSize.emit()"
-					(toggleGrid)="toggleGrid.emit()"
-					(toggleRulers)="toggleRulers.emit()"
-					(toggleGuides)="toggleGuides.emit()"
-					(toggleSelectionPane)="toggleSelectionPane.emit()"
-					(openCustomShows)="openCustomShows.emit()"
-					(toggleSnapToGrid)="toggleSnapToGrid.emit()"
-					(toggleSnapToShape)="toggleSnapToShape.emit()"
-					(addGuide)="addGuide.emit($event)"
-					(zoomToFit)="zoomToFit.emit()"
-					(toggleEyedropper)="toggleEyedropper.emit()"
-					(openSetUpSlideShow)="openSetUpSlideShow.emit()"
-					[activeSlideHidden]="activeSlideHidden()"
-					(toggleHideSlide)="toggleHideSlide.emit()"
-					(openCompare)="openCompare.emit()"
-					(openShortcuts)="openShortcuts.emit()"
-					(openSettings)="requestSettings()"
+					(save)="save.emit()"
+					(savePpsx)="savePpsx.emit()"
+					(savePptm)="savePptm.emit()"
+					(savePpt)="savePpt.emit()"
+					(copySlideAsImage)="copySlideAsImage.emit()"
+					(shortcuts)="shortcuts.emit()"
+					(versionHistory)="versionHistory.emit()"
+					(passwordProtection)="passwordProtection.emit()"
+					(fontEmbedding)="fontEmbedding.emit()"
+					(digitalSignatures)="signatures.emit()"
 				/>
+
+				<pptx-ribbon-tab-list
+					[activeTab]="activeTab()"
+					[contextualTabs]="contextualTabs()"
+					[addInTabs]="addInTabs()"
+					[activeAddIn]="activeAddIn()?.id ?? null"
+					(selectAddIn)="selectAddIn($event)"
+					[canEdit]="canEdit()"
+					[collabConnected]="collabConnected()"
+					[connectedCount]="connectedCount()"
+					[commentsOpen]="commentsOpen()"
+					[commentCount]="commentCount()"
+					[displayState]="displayState()"
+					[displayController]="displayController()"
+					[style.display]="layout().tabs ? null : 'none'"
+					[hiddenActions]="hiddenActions()"
+					(selectTab)="selectTab($event)"
+					(record)="record.emit()"
+					(share)="share.emit()"
+					(toggleComments)="comments.emit()"
+				/>
+
+				<div
+					[pptxRibbonOverflow]="launchers"
+					data-pptx-chrome="ribbon-content"
+					[ngClass]="
+						commandsOverlay()
+							? 'absolute inset-x-0 top-full z-[35] border-b border-border bg-background bg-[image:linear-gradient(var(--color-card),var(--color-card))] shadow-[0_8px_20px_rgb(0_0_0_/_0.2)]'
+							: ''
+					"
+					class="flex min-h-[82px] flex-nowrap items-center gap-0 overflow-x-auto px-1 py-0.5 [&>*]:shrink-0"
+					[style.display]="ribbonExpanded() ? null : 'none'"
+				>
+					@if (activeAddIn(); as addIn) {
+						<pptx-ui-ribbon-add-in [tab]="addIn"></pptx-ui-ribbon-add-in>
+					}
+					<pptx-ribbon-content
+						[style.display]="activeAddIn() ? 'none' : null"
+						[activeTab]="activeTab()"
+						[slideIndex]="slideIndex()"
+						[slideCount]="slideCount()"
+						[canEdit]="canEdit()"
+						[selectedElement]="selectedElement()"
+						[formatPainterActive]="formatPainterActive()"
+						[canActivateFormatPainter]="canActivateFormatPainter()"
+						[exporting]="exporting()"
+						[hasMacros]="hasMacros()"
+						[hiddenActions]="hiddenActions()"
+						[accountAuth]="accountAuth()"
+						[commentsOpen]="commentsOpen()"
+						(comments)="comments.emit()"
+						(selectTab)="selectTab($event)"
+						(find)="find.emit()"
+						(share)="share.emit()"
+						(openFile)="openFile.emit()"
+						(openRecentFile)="openRecentFile.emit($event)"
+						(createPresentation)="createPresentation.emit($event)"
+						(save)="save.emit()"
+						(savePptx)="savePptx.emit()"
+						(savePpsx)="savePpsx.emit()"
+						(savePptm)="savePptm.emit()"
+						(savePpt)="savePpt.emit()"
+						(signatures)="signatures.emit()"
+						(info)="info.emit()"
+						(print)="print.emit()"
+						(toggleFormatPainter)="toggleFormatPainter.emit()"
+						(exportPng)="exportPng.emit()"
+						(exportPdf)="exportPdf.emit()"
+						(exportGif)="exportGif.emit()"
+						(exportVideo)="exportVideo.emit()"
+						(exportJson)="exportJson.emit()"
+						(copySlideAsImage)="copySlideAsImage.emit()"
+						(replace)="replace.emit()"
+						(openSmartArtDialog)="openSmartArtDialog.emit()"
+						(openChartDialog)="openChartDialog.emit()"
+						(openEquationDialog)="openEquationDialog.emit()"
+						(openTemplateGallery)="openTemplateGallery.emit()"
+						(openPassword)="openPassword.emit()"
+						(openFontEmbedding)="openFontEmbedding.emit()"
+						(openVersionHistory)="openVersionHistory.emit()"
+						(link)="link.emit()"
+						(openSettings)="requestSettings()"
+					/>
+					<pptx-ribbon-content-secondary
+						[style.display]="activeAddIn() ? 'none' : null"
+						[activeTab]="activeTab()"
+						[slideIndex]="slideIndex()"
+						[slideCount]="slideCount()"
+						[canEdit]="canEdit()"
+						[selectedElement]="selectedElement()"
+						[inspectorOpen]="inspectorOpen()"
+						[showGrid]="showGrid()"
+						[showRulers]="showRulers()"
+						[showGuides]="showGuides()"
+						[snapToGrid]="snapToGrid()"
+						[snapToShape]="snapToShape()"
+						[eyedropperActive]="eyedropperActive()"
+						[themeGalleryOpen]="themeGalleryOpen()"
+						[spellCheckEnabled]="spellCheckEnabled()"
+						[showSubtitles]="showSubtitles()"
+						[hiddenActions]="hiddenActions()"
+						(present)="present.emit()"
+						(presenter)="presenter.emit()"
+						(record)="record.emit()"
+						(presentFromBeginning)="presentFromBeginning.emit()"
+						(rehearseTimings)="rehearseTimings.emit()"
+						(toggleSubtitles)="toggleSubtitles.emit()"
+						(openSubtitleSettings)="openSubtitleSettings.emit()"
+						(recordFromBeginning)="recordFromBeginning.emit()"
+						(recordFromCurrent)="recordFromCurrent.emit()"
+						(spellCheckChange)="setSpellCheck($event)"
+						(broadcast)="broadcast.emit()"
+						(print)="print.emit()"
+						(comments)="comments.emit()"
+						(a11y)="a11y.emit()"
+						(link)="link.emit()"
+						(goToNormalView)="goToNormalView.emit()"
+						(openSorter)="openSorter.emit()"
+						(openReadingView)="openReadingView.emit()"
+						(openOutlineView)="openOutlineView.emit()"
+						(openMasterView)="openMasterView.emit()"
+						(toggleNotes)="toggleNotes.emit()"
+						(toggleInspector)="toggleInspector.emit()"
+						(openAnimationPanel)="openAnimationPanel.emit()"
+						(drawToolChange)="drawToolChange.emit($event)"
+						(toggleThemeGallery)="toggleThemeGallery.emit()"
+						(editTheme)="editTheme.emit()"
+						(openSlideSize)="openSlideSize.emit()"
+						(toggleGrid)="toggleGrid.emit()"
+						(toggleRulers)="toggleRulers.emit()"
+						(toggleGuides)="toggleGuides.emit()"
+						(toggleSelectionPane)="toggleSelectionPane.emit()"
+						(openCustomShows)="openCustomShows.emit()"
+						(toggleSnapToGrid)="toggleSnapToGrid.emit()"
+						(toggleSnapToShape)="toggleSnapToShape.emit()"
+						(addGuide)="addGuide.emit($event)"
+						(zoomToFit)="zoomToFit.emit()"
+						(toggleEyedropper)="toggleEyedropper.emit()"
+						(openSetUpSlideShow)="openSetUpSlideShow.emit()"
+						[activeSlideHidden]="activeSlideHidden()"
+						(toggleHideSlide)="toggleHideSlide.emit()"
+						(openCompare)="openCompare.emit()"
+						(openShortcuts)="openShortcuts.emit()"
+						(openSettings)="requestSettings()"
+					/>
+				</div>
 			</div>
 		</div>
 	`,
@@ -417,6 +445,27 @@ export class RibbonComponent {
 	readonly openShortcuts = output<void>();
 	/** Emitted when the user opens viewer preferences from the Help tab. */
 	readonly openSettings = output<void>();
+	/**
+	 * Ribbon Display Options state from the viewer's shared controller. Null (a ribbon used on its
+	 * own) draws the docked ribbon.
+	 */
+	readonly displayState = input<RibbonDisplayState | null>(null);
+	/** The viewer's shared Ribbon Display Options controller, for the menu, tabs and strip. */
+	readonly displayController = input<RibbonDisplayController | null>(null);
+
+	/** The docked ribbon, drawn when no display state is given. */
+	private static readonly DOCKED_LAYOUT = ribbonDisplayLayout('always', false);
+	protected readonly layout = computed(
+		() => this.displayState()?.layout ?? RibbonComponent.DOCKED_LAYOUT,
+	);
+	protected readonly effectiveMode = computed(() => this.displayState()?.effectiveMode ?? 'always');
+	protected readonly peek = computed(() => this.displayState()?.peek ?? false);
+	protected readonly fullScreen = computed(() => this.effectiveMode() === 'fullScreen');
+	/** Full-screen mode with the ribbon called up: laid over the top of the viewer. */
+	protected readonly floating = computed(() => this.fullScreen() && this.peek());
+	protected readonly commandsOverlay = computed(() => this.layout().commands === 'overlay');
+	/** The active tab's commands show (docked or laid over the slide). */
+	protected readonly ribbonExpanded = computed(() => this.layout().commands !== 'hidden');
 
 	/** Active tab + the selection's contextual tabs (falls back to Home when one disappears). */
 	private readonly tabState = createRibbonTabState(
@@ -438,6 +487,7 @@ export class RibbonComponent {
 	protected selectTab(tab: RibbonTab): void {
 		this.addIns?.select(null);
 		this.activeTab.set(tab);
+		this.displayController()?.tabChosen(tab);
 	}
 
 	/**
@@ -447,10 +497,8 @@ export class RibbonComponent {
 	protected selectAddIn(id: string): void {
 		this.activeTab.set('home');
 		this.addIns?.select(id);
+		this.displayController()?.tabChosen(id);
 	}
-
-	/** Ribbon content expanded (true) vs collapsed to just the tab bar (false). */
-	protected readonly ribbonExpanded = signal(true);
 
 	/** Route both File Options and Review Language to the real Settings dialog. */
 	protected requestSettings(): void {

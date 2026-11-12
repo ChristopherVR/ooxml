@@ -74,6 +74,12 @@ export interface ViewerCustomizationLifecycle {
 	 * customisation), `showThumbnails` and `showInspector`.
 	 */
 	getChromeOptions(): PptxViewerOptions;
+	/**
+	 * Replace the host's `showToolbar` option after the viewer was created. The
+	 * next chrome mount reads it: returns whether the value changed, so the
+	 * caller knows to rebuild the chrome.
+	 */
+	setShowToolbar(show: boolean): boolean;
 	/** The host configured `ai` AND the customisation keeps the AI feature. */
 	isAiEnabled(): boolean;
 	isDialogAvailable(dialog: ViewerDialogId): boolean;
@@ -96,6 +102,8 @@ export function createViewerCustomizationLifecycle(
 	controller.setGoogleFonts(options.googleFonts);
 	let cachedFor: ResolvedCustomization | null = null;
 	let cachedOptions: PptxViewerOptions = options;
+	// `setShowToolbar` overrides the option the host passed at creation.
+	let showToolbar = options.showToolbar;
 	let unsubscribe: (() => void) | null = null;
 
 	const getChromeOptions = (): PptxViewerOptions => {
@@ -104,6 +112,7 @@ export function createViewerCustomizationLifecycle(
 			cachedFor = resolved;
 			cachedOptions = {
 				...options,
+				...(showToolbar === undefined ? {} : { showToolbar }),
 				hiddenActions: resolveEffectiveHiddenActions(resolved, options.hiddenActions),
 				showThumbnails:
 					resolveViewerRootOptions(options).showThumbnails &&
@@ -123,6 +132,14 @@ export function createViewerCustomizationLifecycle(
 		controller,
 		getResolved: () => controller.getResolved(),
 		getChromeOptions,
+		setShowToolbar(show) {
+			if ((showToolbar ?? resolveViewerRootOptions(options).showToolbar) === show) {
+				return false;
+			}
+			showToolbar = show;
+			cachedFor = null;
+			return true;
+		},
 		isAiEnabled: () => options.ai !== undefined && isFeatureEnabled(controller.getResolved(), 'ai'),
 		isDialogAvailable: (dialog) => isDialogAvailable(controller.getResolved(), dialog),
 		bind(optionsStore, onChange) {

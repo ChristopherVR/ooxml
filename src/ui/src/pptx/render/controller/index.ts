@@ -6,6 +6,16 @@
  */
 export { createControllerStore } from './controller';
 export type { ControllerStore, PptxController } from './controller';
+export {
+	createRibbonDisplayController,
+	RIBBON_AUTO_COLLAPSE_MEDIA,
+} from './ribbon-display-controller';
+export type {
+	RibbonDisplayController,
+	RibbonDisplayControllerOptions,
+	RibbonDisplayKey,
+	RibbonDisplayState,
+} from './ribbon-display-controller';
 export { createEditorHistoryController } from './history-controller';
 export type {
 	EditorHistoryController,

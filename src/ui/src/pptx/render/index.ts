@@ -1882,6 +1882,7 @@ export * from './slide-sorter-state';
 export * from './inserted-slide-layout';
 
 export * from './viewer-root-options';
+export * from './ribbon-display';
 export * from './viewer-hyperlinks';
 export * from './viewer-dialogs';
 export * from './slide-package-clipboard';

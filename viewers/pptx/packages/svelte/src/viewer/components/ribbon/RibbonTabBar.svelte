@@ -11,9 +11,18 @@
 		filterVisibleTabs,
 		isActionHidden,
 	} from 'ooxml-ui/pptx';
-	import type { RibbonAddInTab, RibbonContextualTabId, ToolbarActionId } from 'ooxml-ui/pptx';
+	import {
+		RIBBON_DISPLAY_OPTIONS_LABEL_KEY,
+	} from 'ooxml-ui/pptx';
+	import type {
+		RibbonAddInTab,
+		RibbonContextualTabId,
+		RibbonDisplayController,
+		ToolbarActionId,
+	} from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../i18n/context';
 	import type { ChromeUiState } from '../../state/chrome-ui.svelte';
+	import { controllerState } from '../../state/controller-state';
 	import { useViewerOptions } from '../../state/viewer-options-context';
 	import { RIBBON_TABS } from './ribbon-tabs';
 	import type { RibbonTabId } from './ribbon-tabs';
@@ -29,6 +38,7 @@
 		addInTabs = [],
 		chromeUi,
 		commentCount = 0,
+		ribbonDisplay,
 	}: {
 		active: RibbonTabId | RibbonContextualTabId | string;
 		onselect: (id: RibbonTabId | RibbonContextualTabId | string) => void;
@@ -44,10 +54,22 @@
 		chromeUi?: ChromeUiState;
 		/** Comments on the current slide, shown as a badge. */
 		commentCount?: number;
+		/** Ribbon Display Options: the menu button, and a double click on a tab collapses the ribbon. */
+		ribbonDisplay?: RibbonDisplayController;
 	} = $props();
 
 	const t = useTranslator();
 	const optionsState = useViewerOptions();
+	// svelte-ignore state_referenced_locally
+	const displayState = ribbonDisplay ? controllerState(ribbonDisplay) : undefined;
+	const displayLabel = $derived(t(RIBBON_DISPLAY_OPTIONS_LABEL_KEY));
+
+	/** A double click on a tab other than File switches between the docked ribbon and the tab row. */
+	function onTabDoubleClick(id: string): void {
+		if (id !== 'file') {
+			ribbonDisplay?.toggleCollapsed();
+		}
+	}
 	const visibleTabs = $derived(filterVisibleTabs(RIBBON_TABS, hiddenActions));
 	const actionsState = $derived(
 		buildTabRowActionsState({
@@ -72,6 +94,7 @@
 				aria-selected={active === tab.id}
 				title={optionsState.screenTip(t(tab.labelKey))}
 				onclick={() => onselect(tab.id)}
+				ondblclick={() => onTabDoubleClick(tab.id)}
 			>
 				{t(tab.labelKey)}
 			</button>
@@ -86,6 +109,7 @@
 				data-ribbon-add-in-tab={tab.id}
 				title={optionsState.screenTip(tab.label)}
 				onclick={() => onselect(tab.id)}
+				ondblclick={() => onTabDoubleClick(tab.id)}
 			>
 				{tab.label}
 			</button>
@@ -100,6 +124,7 @@
 				data-ribbon-contextual-tab={tab}
 				title={optionsState.screenTip(t(contextualTabLabelKey(tab)))}
 				onclick={() => onselect(tab)}
+				ondblclick={() => onTabDoubleClick(tab)}
 			>
 				{t(contextualTabLabelKey(tab))}
 			</button>
@@ -124,6 +149,24 @@
 			oncomments-toggle={() => chromeUi?.toggleComments()}
 			onshare-request={() => onshare?.()}
 		></pptx-ui-ribbon-actions>
+		{#if ribbonDisplay && displayState}
+			<button
+				type="button"
+				class="pptx-svelte-ribbon-display-btn"
+				class:pptx-svelte-ribbon-display-btn-open={displayState.current.menuOpen}
+				class:pptx-svelte-ribbon-display-btn-collapsed={displayState.current.effectiveMode === 'tabs'}
+				data-pptx-chrome="ribbon-display-options"
+				aria-haspopup="menu"
+				aria-expanded={displayState.current.menuOpen}
+				aria-label={displayLabel}
+				title={displayLabel}
+				onclick={() => ribbonDisplay.toggleMenu()}
+			>
+				<svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+					<path d="m4 6 4 4 4-4" />
+				</svg>
+			</button>
+		{/if}
 	</div>
 </div>
 
@@ -187,6 +230,32 @@
 		height: 7px;
 		border-radius: 50%;
 		background: #ef4444;
+	}
+
+	/* Ribbon Display Options: a small chevron that points the other way when the ribbon is
+	   collapsed to its tab row, as PowerPoint's pin does. */
+	.pptx-svelte-ribbon-display-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 22px;
+		height: 22px;
+		padding: 0;
+		border: none;
+		border-radius: 3px;
+		background: transparent;
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
+		cursor: pointer;
+	}
+
+	.pptx-svelte-ribbon-display-btn:hover,
+	.pptx-svelte-ribbon-display-btn-open {
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
+	}
+
+	.pptx-svelte-ribbon-display-btn-collapsed svg {
+		transform: rotate(180deg);
 	}
 
 	.pptx-svelte-ribbon-tab {

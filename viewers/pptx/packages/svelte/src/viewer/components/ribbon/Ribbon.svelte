@@ -18,9 +18,12 @@
 		visibleRibbonAddIns,
 	} from 'ooxml-ui/pptx';
 	import type { RibbonContextualTabId } from 'ooxml-ui/pptx';
+	import { controllerState } from '../../state/controller-state';
 	import { useRibbonAddIns } from '../../state/ribbon-add-ins';
 	import { useViewerCustomization } from '../../state/viewer-customization.svelte';
 	import FileTab from './file/FileTab.svelte';
+	import RibbonDisplayMenu from './RibbonDisplayMenu.svelte';
+	import RibbonDisplayReveal from './RibbonDisplayReveal.svelte';
 	import DocumentPropertiesDialog from './file/DocumentPropertiesDialog.svelte';
 	import DigitalSignaturesDialog from './file/DigitalSignaturesDialog.svelte';
 	import FontEmbeddingPanel from './file/FontEmbeddingPanel.svelte';
@@ -36,6 +39,11 @@
 
 	const props: RibbonProps = $props();
 	const t = useTranslator();
+	// Ribbon Display Options: the layout decides what shows (tab row, docked or overlaid commands,
+	// reveal strip); the controller is owned by the viewer root and read through the adapter.
+	// svelte-ignore state_referenced_locally
+	const displayState = controllerState(props.ribbonDisplay);
+	const displayLayout = $derived(displayState.current.layout);
 
 	// A host's add-in tab (`ribbonAddIns`) is any other id.
 	let activeTab = $state<RibbonTabId | RibbonContextualTabId | string>(DEFAULT_RIBBON_TAB);
@@ -93,6 +101,7 @@
 
 	function selectTab(id: typeof activeTab): void {
 		activeTab = id;
+		props.ribbonDisplay.tabChosen(id);
 	}
 
 	function setPropertiesOpen(open: boolean): void {
@@ -115,46 +124,71 @@
 	}
 </script>
 
-<div class="pptx-svelte-ribbon" data-pptx-chrome="ribbon" role="toolbar" aria-label={t('pptx.toolbar.presentationToolbarAria')}>
-	<RibbonPrimaryRow
-		chromeUi={props.chromeUi}
-		readOnly={props.readOnly}
-		onpresent={props.onfromcurrent}
-		onpresenter={props.onpresenter}
-		onrehearse={props.onrehearse}
-		onsetup={props.onsetupslideshow}
-		onbroadcast={props.onbroadcast && !isActionHidden('broadcast', props.hiddenActions) ? props.onbroadcast : undefined}
-		onsubtitles={props.onsubtitles}
-		subtitlesEnabled={props.subtitlesEnabled}
-		oncustomshows={props.oncustomshows}
-		onsettings={props.onsettings}
-		onai={props.onai}
-		aiActive={props.aiActive}
-		exportUi={props.exportUi}
-		hiddenActions={props.hiddenActions}
-		onsaveppsx={props.ondownloadppsx}
-		onsavepptm={props.ondownloadpptm}
-		onsaveppt={props.ondownloadppt}
-		oninfo={() => setPropertiesOpen(true)}
-		ona11y={() => (activeTab = 'review')}
-		onshortcuts={props.onshortcuts}
-		onversionhistory={props.onversionhistory}
-		onprotect={() => (protectionOpen = true)}
-		onfonts={() => (fontsOpen = true)}
-		onsignatures={() => (signaturesOpen = true)}
-	/>
-	<RibbonTabBar
-		active={shownTab}
-		onselect={selectTab}
-		{contextualTabs}
-		{addInTabs}
-		onrecord={props.onrehearse}
-		onshare={props.onshare}
-		collabActive={props.collabActive}
-		hiddenActions={props.hiddenActions}
-		chromeUi={props.chromeUi}
-		commentCount={slideCommentCount}
-	/>
+{#snippet commandsContent()}
+	<RibbonTabContent ribbon={props} tab={shownTab} addIn={shownAddIn} onselecttab={selectTab} onslidesize={openSlideSize} />
+{/snippet}
+<RibbonDisplayReveal ribbonDisplay={props.ribbonDisplay} />
+<div
+	class="pptx-svelte-ribbon"
+	class:pptx-svelte-ribbon-away={!displayLayout.tabs && displayLayout.commands === 'hidden'}
+	data-pptx-chrome="ribbon"
+	data-ribbon-display={displayState.current.effectiveMode}
+	data-ribbon-peek={displayState.current.peek ? '' : undefined}
+	role="toolbar"
+	aria-label={t('pptx.toolbar.presentationToolbarAria')}
+>
+	{#if displayLayout.tabs}
+		<RibbonPrimaryRow
+			chromeUi={props.chromeUi}
+			readOnly={props.readOnly}
+			onpresent={props.onfromcurrent}
+			onpresenter={props.onpresenter}
+			onrehearse={props.onrehearse}
+			onsetup={props.onsetupslideshow}
+			onbroadcast={props.onbroadcast && !isActionHidden('broadcast', props.hiddenActions) ? props.onbroadcast : undefined}
+			onsubtitles={props.onsubtitles}
+			subtitlesEnabled={props.subtitlesEnabled}
+			oncustomshows={props.oncustomshows}
+			onsettings={props.onsettings}
+			onai={props.onai}
+			aiActive={props.aiActive}
+			exportUi={props.exportUi}
+			hiddenActions={props.hiddenActions}
+			onsaveppsx={props.ondownloadppsx}
+			onsavepptm={props.ondownloadpptm}
+			onsaveppt={props.ondownloadppt}
+			oninfo={() => setPropertiesOpen(true)}
+			ona11y={() => (activeTab = 'review')}
+			onshortcuts={props.onshortcuts}
+			onversionhistory={props.onversionhistory}
+			onprotect={() => (protectionOpen = true)}
+			onfonts={() => (fontsOpen = true)}
+			onsignatures={() => (signaturesOpen = true)}
+		/>
+		<RibbonTabBar
+			active={shownTab}
+			onselect={selectTab}
+			{contextualTabs}
+			{addInTabs}
+			onrecord={props.onrehearse}
+			onshare={props.onshare}
+			collabActive={props.collabActive}
+			hiddenActions={props.hiddenActions}
+			chromeUi={props.chromeUi}
+			commentCount={slideCommentCount}
+			ribbonDisplay={props.ribbonDisplay}
+		/>
+		<!-- Zero-height anchor right under the tab row: the menu and the overlaid commands hang from
+		     it, so the scrolling tab row never clips them. -->
+		<div class="pptx-svelte-ribbon-anchor">
+			<RibbonDisplayMenu ribbonDisplay={props.ribbonDisplay} />
+			{#if displayLayout.commands === 'overlay'}
+				<div class="pptx-svelte-ribbon-overlay" data-ribbon-overlay>
+					{@render commandsContent()}
+				</div>
+			{/if}
+		</div>
+	{/if}
 	{#if custom.isPanelVisible('findReplace')}<FindReplacePanel findReplace={props.findReplace} editable={props.editor.editable} />{/if}
 	<!-- The File backstage is a full-screen `position: fixed` overlay, not a row
 	     of ribbon groups, so it is deliberately a sibling of
@@ -186,7 +220,9 @@
 			hiddenActions={props.hiddenActions}
 		/>
 	{/if}
-	<RibbonTabContent ribbon={props} tab={shownTab} addIn={shownAddIn} onselecttab={selectTab} onslidesize={openSlideSize} />
+	{#if displayLayout.commands === 'docked'}
+		{@render commandsContent()}
+	{/if}
 </div>
 
 {#if fontsOpen}
@@ -211,6 +247,51 @@
 		border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		font-family: system-ui, sans-serif;
 		flex: none;
+	}
+
+	/* Ribbon Display Options. Nothing shown (full-screen mode, not peeked): the root keeps no
+	   height, border or fill, and the File backstage, which is fixed, still works. */
+	.pptx-svelte-ribbon.pptx-svelte-ribbon-away {
+		height: 0;
+		border-bottom: none;
+		background: none;
+	}
+
+	/* Full-screen mode, peeked: the whole ribbon hangs over the top of the slide. The solid page
+	   background sits under the translucent fill so the slide does not show through. */
+	.pptx-svelte-ribbon[data-ribbon-display='fullScreen'][data-ribbon-peek] {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		z-index: 35;
+		background:
+			linear-gradient(
+				color-mix(in srgb, var(--pptx-secondary, var(--office-surface, #f3f4f6)) 50%, transparent),
+				color-mix(in srgb, var(--pptx-secondary, var(--office-surface, #f3f4f6)) 50%, transparent)
+			),
+			var(--pptx-background, var(--office-background, #ffffff));
+		box-shadow: 0 8px 20px rgb(0 0 0 / 0.2);
+	}
+
+	/* Show tabs only, a chosen tab: its commands lie over the slide, below the tab row. The
+	   anchor is zero-height and positioned, so `top: 0` is the bottom of the tab row. */
+	.pptx-svelte-ribbon-anchor {
+		position: relative;
+		height: 0;
+	}
+
+	.pptx-svelte-ribbon-overlay {
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: 0;
+		z-index: 35;
+		border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		background:
+			linear-gradient(var(--pptx-card, var(--office-surface, #ffffff)), var(--pptx-card, var(--office-surface, #ffffff))),
+			var(--pptx-background, var(--office-background, #ffffff));
+		box-shadow: 0 8px 20px rgb(0 0 0 / 0.2);
 	}
 
 	/* Shared compact dark select for ribbon dropdowns (font family, change
