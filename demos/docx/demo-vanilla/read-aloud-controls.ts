@@ -22,7 +22,12 @@ export function mountHostReadAloud(host: HTMLElement): () => void {
 	let disposed = false;
 	let element: HTMLElement | null = null;
 	const render = () => {
-		const props = window.nativeWord?.toolbar();
+		let props: ReturnType<NativeHarness['toolbar']> | undefined;
+		try {
+			props = window.nativeWord?.toolbar();
+		} catch {
+			props = null;
+		}
 		if (!props) {
 			button.disabled = true;
 			state.textContent = 'none';
@@ -48,7 +53,13 @@ export function mountHostReadAloud(host: HTMLElement): () => void {
 	});
 	const attach = () => {
 		if (disposed) return;
-		const next = (window.nativeWord as NativeHarness | undefined)?.handle?.element ?? null;
+		let next: HTMLElement | null = null;
+		try {
+			// The handle throws while no editor is mounted (before the first mount, after destroy).
+			next = (window.nativeWord as NativeHarness | undefined)?.handle?.element ?? null;
+		} catch {
+			next = null;
+		}
 		if (next && next !== element) {
 			element?.removeEventListener('editor-state-change', render);
 			element = next;
