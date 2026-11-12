@@ -72,10 +72,12 @@ export type {
 	InformationValidationAlert,
 } from './surface-actions';
 export type {
+	ContextMenuCustomization,
 	ContextMenuItem,
 	ContextMenuKind,
 	ContextMenuModel,
 	ContextMenuRequest,
+	HostContextMenuItem,
 	FindOperations,
 	FindReplaceRequest,
 	FormatCellsOperations,

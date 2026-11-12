@@ -107,6 +107,7 @@ const SURFACE_ACTION_KEYS = [
 	'onOpenInsertFunction',
 	'onOpenValidationAlert',
 	'onContextMenu',
+	'onContextMenuItems',
 ] as const satisfies readonly (keyof SurfaceHostActions)[];
 
 /** Framework-neutral composition API, shared by every adapter. Choose before mount. */

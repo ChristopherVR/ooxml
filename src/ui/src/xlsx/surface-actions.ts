@@ -4,6 +4,7 @@
  * workflow as not enabled when the host gave none.
  */
 import type {
+	ContextMenuCustomization,
 	ContextMenuRequest,
 	FindReplaceRequest,
 	FormatCellsRequest,
@@ -38,6 +39,16 @@ export interface SurfaceHostActions {
 	 */
 	onContextMenu?: ((request: ContextMenuRequest) => boolean | void) | undefined;
 	/**
+	 * Filters and extends the NATIVE menu, which still draws. Runs for the same menus as
+	 * `onContextMenu` when that callback did not take the menu over. Return `{ hide, add }`:
+	 * `hide` lists native item ids (see `request.items`) to leave out, `add` lists host items with
+	 * an id, label, enabled state and `onSelect`. Native items keep their disabled state and
+	 * read-only checks; host items are rechecked when they run.
+	 */
+	onContextMenuItems?:
+		| ((request: ContextMenuRequest) => ContextMenuCustomization | void)
+		| undefined;
+	/**
 	 * The data-validation alert of a cell edit that was refused. The host shows it (any UI) and
 	 * resolves the request with one of its methods; the grid never draws its own alert here.
 	 * Without this callback the edit stays open as if Retry was chosen (see `ValidationAlertRequest`).
@@ -47,7 +58,7 @@ export interface SurfaceHostActions {
 /** The workflows that receive a `SurfaceActionContext` (the validation alert has its own request). */
 export type SurfaceActionName = Exclude<
 	keyof SurfaceHostActions,
-	'onOpenValidationAlert' | 'onContextMenu'
+	'onOpenValidationAlert' | 'onContextMenu' | 'onContextMenuItems'
 >;
 
 interface ValidationAlertBase {

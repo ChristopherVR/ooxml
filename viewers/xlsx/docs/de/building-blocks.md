@@ -120,7 +120,7 @@ verhalten sich wie in der mitgelieferten Oberfläche) und meldet eine Ablehnung 
 - `workflows.find`: `findAll(query)`, `findNext(query, { backwards })`, `select(match)`,
   `replace(query, text)`, `replaceAll(query, text)` und `canReplace()`. Suchen funktioniert auch in
   einer schreibgeschützten Arbeitsmappe; Ersetzen wird dort abgelehnt, durch Blattschutz gesperrte
-  Zellen werden übersprungen.
+  Zellen werden übersprungen. Wie das Ersetzen in Excel selbst wenden `replace` und `replaceAll` keine Datenüberprüfung an: Ein Ersatzwert wird auch geschrieben, wenn die Regel der Zelle ihn bei der Eingabe ablehnen würde.
 - `workflows.insertFunction`: `categories()`, `search({ text, category })` (dokumentierte `name`,
   `category`, `syntax` und eine lokalisierte `description`), `canInsert()` und `insert(name, args?)`.
   Es fügt `NAME(` an der Einfügemarke des aktiven Formelentwurfs ein (und startet bei Bedarf einen)
@@ -137,8 +137,16 @@ ein Host mit eigenen Blattregistern das Registermenü. Eine Oberfläche registri
 Befehle, daher stehen die meisten Einträge mit `enabled: false` in der Liste; Format Cells ist
 aktiv, wenn `onOpenFormatCells` gesetzt und die Arbeitsmappe bearbeitbar ist. `enabled.contextMenu`,
 `enabled.find`, `enabled.replace`, `enabled.applyFormatCells` und `enabled.insertFunctionCall`
-zeigen, was jetzt funktioniert. Das native Menü zu filtern oder zu erweitern gehört nicht zu dieser
-API: Verwenden Sie `hiddenActions` und `contextMenu.extraCommands` in `customization`.
+zeigen, was jetzt funktioniert. Um das native Menü zu behalten und zu ändern, übergeben Sie stattdessen
+`onContextMenuItems(request)` (läuft nur, wenn `onContextMenu` nicht `true` zurückgab) und geben
+`{ hide, add }` zurück. `hide` listet native Eintrags-IDs aus `request.items`; `add` listet
+Host-Einträge `{ id, label, enabled, requiresEdit, checked, separatorBefore, position,
+onSelect(request) }`, die oberhalb (`position: 'top'`, Standard) oder unterhalb (`'bottom'`) der
+nativen Einträge stehen. `enabled` darf eine Funktion sein. Native Einträge behalten ihren
+deaktivierten Zustand und werden bei der Ausführung erneut geprüft; ein Host-Eintrag ebenfalls
+(sein `enabled` und `requiresEdit` gegen eine schreibgeschützte Arbeitsmappe), sodass ein offen
+gelassenes Menü keine veraltete Auswahl ausführen kann. Es ergänzt `hiddenActions` und
+`contextMenu.extraCommands` in `customization`, die für die mitgelieferte Anwendung gelten.
 
 ## Validierungsfehler {#validation-failures}
 

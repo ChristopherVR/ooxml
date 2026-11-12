@@ -9,7 +9,8 @@ import type { MenuEntry } from 'ooxml-core/xlsx/ui';
 import { visibleMenuEntries } from './hidden';
 import type { ExcelMenuCommand, ExcelMenuContext } from 'ooxml-core/xlsx/ui';
 import { withHostMenuItems } from '../../embedding/host-menu';
-import { offerToHost, type MenuInputs } from './host-api';
+import { nativeMenuChange, offerToHost, type MenuInputs } from './host-api';
+import { withoutHiddenEntries } from 'ooxml-core/embedding';
 
 export interface ContextMenuHandle {
 	close(): void;
@@ -55,8 +56,15 @@ export function openContextMenu(
 		return { close: () => {}, element: ctx.host.ownerDocument.createElement('div') };
 	}
 	// Entries whose action the host hid are not offered, so they cannot run from the menu either.
-	const entries = visibleMenuEntries(all, (id) => ctx.commands.isHidden(id));
-	if (entries.length === 0 && !options.host?.commands.length) {
+	const change = options.offer
+		? nativeMenuChange(ctx, options.offer.input, options.offer.build, x, y)
+		: undefined;
+	const shown = visibleMenuEntries(all, (id) => ctx.commands.isHidden(id));
+	const entries = change?.hidden.size
+		? withoutHiddenEntries(shown, (entry) => change.hidden.has(entry.id))
+		: shown;
+	const hostCommands = [...(options.host?.commands ?? []), ...(change?.commands ?? [])];
+	if (entries.length === 0 && hostCommands.length === 0) {
 		options.restoreFocus?.();
 		return { close: () => {}, element: ctx.host.ownerDocument.createElement('div') };
 	}
@@ -88,8 +96,8 @@ export function openContextMenu(
 		...(entry.checked === undefined ? {} : { checked: entry.checked }),
 		...(entry.shortcut ? { shortcut: entry.shortcut } : {}),
 	}));
-	const extra = options.host
-		? withHostMenuItems(rows, options.host.commands, options.host.context)
+	const extra = hostCommands.length
+		? withHostMenuItems(rows, hostCommands, options.host?.context as ExcelMenuContext)
 		: { items: rows, run: () => false };
 	element.state = { x, y, label: ctx.t('Context menu'), items: extra.items };
 	element.addEventListener('office-menu-request', (event) => {
@@ -100,7 +108,8 @@ export function openContextMenu(
 			return;
 		}
 		const entry = entries.find((candidate) => candidate.id === id);
-		if (!entry) return;
+		// Read-only and command state are checked again when the item runs, not when it was drawn.
+		if (!entry || entryDisabled(ctx, entry)) return;
 		close(true);
 		if (entry.command) void ctx.commands.run(entry.command, entry.arg);
 		else void entry.action?.();

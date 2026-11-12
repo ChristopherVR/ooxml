@@ -92,7 +92,7 @@ useViewerBuildingBlocks({
   共有属性和不一致的属性名）、`numFmt` 和 `fill`（混合时为 null）以及 `complete`（选区过大时为 false）。
   `canApply()` 和 `apply(patch)` 将样式补丁作为一个撤销步骤应用到选区。
 - `workflows.find`：`findAll(query)`、`findNext(query, { backwards })`、`select(match)`、`replace(query, text)`、
-  `replaceAll(query, text)` 和 `canReplace()`。查找在只读工作簿中可用；替换在只读时被拒绝，被工作表保护锁定的单元格会被跳过。
+  `replaceAll(query, text)` 和 `canReplace()`。查找在只读工作簿中可用；替换在只读时被拒绝，被工作表保护锁定的单元格会被跳过。与 Excel 自带的替换一样，`replace` 和 `replaceAll` 不应用数据验证：即使单元格的规则在键入时会拒绝该值，替换结果也会写入。
 - `workflows.insertFunction`：`categories()`、`search({ text, category })`（包含 `name`、`category`、`syntax` 和本地化的
   `description`）、`canInsert()` 和 `insert(name, args?)`。它在当前公式草稿的插入点插入 `NAME(`（没有草稿时新建），
   并返回 `{ text, caret }` 以便您的输入框同步。纯文本草稿会被拒绝。
@@ -104,7 +104,7 @@ useViewerBuildingBlocks({
 返回同样的模型，拥有自己工作表标签的宿主可据此获得标签菜单。表面模式只注册少量命令，因此多数项以 `enabled: false` 列出；
 当安装了 `onOpenFormatCells` 且工作簿可编辑时，Format Cells 为可用。`enabled.contextMenu`、`enabled.find`、
 `enabled.replace`、`enabled.applyFormatCells` 和 `enabled.insertFunctionCall` 反映当前可用的功能。
-过滤或扩展原生菜单不属于此 API：请使用 `customization` 中的 `hiddenActions` 和 `contextMenu.extraCommands`。
+若要保留原生菜单并修改它，请改为传入 `onContextMenuItems(request)`（仅当 `onContextMenu` 未返回 `true` 时运行），并返回 `{ hide, add }`。`hide` 列出 `request.items` 中要隐藏的原生项 id；`add` 列出宿主项 `{ id, label, enabled, requiresEdit, checked, separatorBefore, position, onSelect(request) }`，放在原生项上方（`position: 'top'`，默认）或下方（`'bottom'`）。`enabled` 可以是函数。原生项保持其禁用状态并在执行时重新检查；宿主项同样会重新检查（其 `enabled`，以及 `requiresEdit` 相对于只读工作簿），因此遗留的打开菜单无法执行过时的选择。它补充了 `customization` 中的 `hiddenActions` 和 `contextMenu.extraCommands`（适用于随附的应用程序）。
 
 ## 验证失败 {#validation-failures}
 

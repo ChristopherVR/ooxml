@@ -163,6 +163,7 @@ export class EditorCore {
 		provideCustomization(this.ctx, () => this.customization);
 		provideContextMenuHost(this.ctx, {
 			handler: () => this.surfaceActions.onContextMenu,
+			itemsHook: () => this.surfaceActions.onContextMenuItems,
 			available: (name) => workflowAvailable(this, name),
 			delegate: (name) => openWorkflow(this, name),
 		});

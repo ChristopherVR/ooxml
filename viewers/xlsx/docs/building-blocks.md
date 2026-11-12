@@ -111,7 +111,7 @@ return value.
   `apply(patch)` apply a style patch to the selection as one undo step.
 - `workflows.find`: `findAll(query)`, `findNext(query, { backwards })`, `select(match)`,
   `replace(query, text)`, `replaceAll(query, text)` and `canReplace()`. Finding works in a
-  read-only workbook; replacing is refused there, and cells locked by sheet protection are skipped.
+  read-only workbook; replacing is refused there, and cells locked by sheet protection are skipped. Like Excel's own Replace, `replace` and `replaceAll` do not apply data validation: a replacement is written even when the cell's rule would refuse it typed in.
 - `workflows.insertFunction`: `categories()`, `search({ text, category })` (documented `name`,
   `category`, `syntax` and a localized `description`), `canInsert()` and `insert(name, args?)`,
   which inserts `NAME(` at the caret of the active formula draft (starting one when none is open)
@@ -127,8 +127,15 @@ is how a host with its own sheet tabs gets the tab menu. A surface registers few
 items are listed with `enabled: false` rather than pretended to work; Format Cells is enabled when
 `onOpenFormatCells` is installed and the workbook is editable. `enabled.contextMenu`,
 `enabled.find`, `enabled.replace`, `enabled.applyFormatCells` and `enabled.insertFunctionCall`
-report what works now. Filtering or extending the native menu is not part of this API: use
-`hiddenActions` and `contextMenu.extraCommands` in `customization`.
+report what works now. To keep the native menu and change it, pass `onContextMenuItems(request)` instead (it runs only
+when `onContextMenu` did not return `true`) and return `{ hide, add }`. `hide` lists native item
+ids from `request.items`; `add` lists host items `{ id, label, enabled, requiresEdit, checked,
+separatorBefore, position, onSelect(request) }`, placed above (`position: 'top'`, the default) or
+below (`'bottom'`) the native items. `enabled` may be a function. Native items keep their
+disabled state and are rechecked when they run; a host item is rechecked too (its `enabled`, and
+`requiresEdit` against a read-only workbook), so a menu left open cannot run a stale choice. It
+complements `hiddenActions` and `contextMenu.extraCommands` in `customization`, which apply to
+the bundled application.
 
 ## Validation failures
 

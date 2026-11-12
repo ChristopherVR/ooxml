@@ -113,7 +113,7 @@ de retour.
 - `workflows.find` : `findAll(query)`, `findNext(query, { backwards })`, `select(match)`,
   `replace(query, text)`, `replaceAll(query, text)` et `canReplace()`. La recherche fonctionne dans
   un classeur en lecture seule ; le remplacement y est refusé et les cellules verrouillées par la
-  protection sont ignorées.
+  protection sont ignorées. Comme le Remplacer d’Excel lui-même, `replace` et `replaceAll` n’appliquent pas la validation des données : le remplacement est écrit même si la règle de la cellule le refuserait à la saisie.
 - `workflows.insertFunction` : `categories()`, `search({ text, category })` (avec `name`,
   `category`, `syntax` et une `description` localisée), `canInsert()` et `insert(name, args?)`, qui
   insère `NAME(` au curseur du brouillon de formule actif (en créant un si besoin) et renvoie
@@ -129,9 +129,15 @@ renvoie le même modèle, ce qui permet à un hôte avec ses propres onglets d�
 Une surface enregistre peu de commandes : la plupart des éléments sont listés avec `enabled: false` ;
 Format Cells est activé si `onOpenFormatCells` est installé et le classeur modifiable.
 `enabled.contextMenu`, `enabled.find`, `enabled.replace`, `enabled.applyFormatCells` et
-`enabled.insertFunctionCall` indiquent ce qui fonctionne maintenant. Filtrer ou étendre le menu natif
-ne fait pas partie de cette API : utilisez `hiddenActions` et `contextMenu.extraCommands` dans
-`customization`.
+`enabled.insertFunctionCall` indiquent ce qui fonctionne maintenant. Pour conserver le menu natif et le modifier, passez plutôt `onContextMenuItems(request)` (il ne
+s’exécute que si `onContextMenu` n’a pas renvoyé `true`) et renvoyez `{ hide, add }`. `hide` liste
+les id d’éléments natifs de `request.items` ; `add` liste des éléments de l’hôte `{ id, label,
+enabled, requiresEdit, checked, separatorBefore, position, onSelect(request) }`, placés au-dessus
+(`position: 'top'`, par défaut) ou au-dessous (`'bottom'`) des éléments natifs. `enabled` peut être
+une fonction. Les éléments natifs gardent leur état désactivé et sont revérifiés à l’exécution ; un
+élément de l’hôte l’est aussi (son `enabled` et `requiresEdit` face à un classeur en lecture seule),
+donc un menu resté ouvert ne peut pas exécuter un choix périmé. Il complète `hiddenActions` et
+`contextMenu.extraCommands` de `customization`, qui s’appliquent à l’application fournie.
 
 ## Échecs de validation {#validation-failures}
 

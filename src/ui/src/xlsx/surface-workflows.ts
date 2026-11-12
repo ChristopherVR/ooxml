@@ -45,6 +45,32 @@ export interface ContextMenuRequest extends ContextMenuModel {
 	y: number;
 }
 
+/** An item a host adds to the native menu (`onContextMenuItems`). */
+export interface HostContextMenuItem {
+	/** Unique among the host items of one menu; an empty or repeated id is ignored. */
+	id: string;
+	label: string;
+	/** False greys the item out. A function is evaluated again when the item runs. Default true. */
+	enabled?: boolean | (() => boolean);
+	/** The item changes the workbook: it is disabled (and refused when run) in a read-only workbook. */
+	requiresEdit?: boolean;
+	checked?: boolean;
+	/** A separator belongs above this item. */
+	separatorBefore?: boolean;
+	/** `top` (the default) is a group above the native items, `bottom` one below them. */
+	position?: 'top' | 'bottom';
+	/** Runs after the menu closes, unless the item is disabled by then. */
+	onSelect(request: ContextMenuRequest): void | Promise<void>;
+}
+
+/** What `onContextMenuItems` returns to filter and extend the native menu. */
+export interface ContextMenuCustomization {
+	/** Ids of native items (from `request.items`) to leave out of the menu. */
+	hide?: readonly string[];
+	/** Items to add around the native ones. */
+	add?: readonly HostContextMenuItem[];
+}
+
 export interface FormatCellsOperations {
 	/** The formatting of the selection: shared properties, and the names of the mixed ones. */
 	getState(): FormatCellsState;

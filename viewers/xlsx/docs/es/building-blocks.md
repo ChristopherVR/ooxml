@@ -108,7 +108,7 @@ valor de retorno.
   `canApply()` y `apply(patch)` aplican un parche de estilo a la selección como un paso de deshacer.
 - `workflows.find`: `findAll(query)`, `findNext(query, { backwards })`, `select(match)`,
   `replace(query, text)`, `replaceAll(query, text)` y `canReplace()`. Buscar funciona en un libro de
-  solo lectura; reemplazar se rechaza allí y se omiten las celdas bloqueadas por la protección.
+  solo lectura; reemplazar se rechaza allí y se omiten las celdas bloqueadas por la protección. Igual que Reemplazar en el propio Excel, `replace` y `replaceAll` no aplican la validación de datos: el reemplazo se escribe aunque la regla de la celda lo rechazaría al escribirlo.
 - `workflows.insertFunction`: `categories()`, `search({ text, category })` (con `name`, `category`,
   `syntax` y una `description` localizada), `canInsert()` e `insert(name, args?)`, que inserta
   `NAME(` en el cursor del borrador de fórmula activo (iniciando uno si no hay) y devuelve
@@ -124,8 +124,16 @@ modelo, así un host con sus propias pestañas obtiene el menú de pestaña. Una
 pocos comandos, por lo que la mayoría de los elementos aparecen con `enabled: false`; Format Cells
 se habilita si `onOpenFormatCells` está instalado y el libro es editable. `enabled.contextMenu`,
 `enabled.find`, `enabled.replace`, `enabled.applyFormatCells` y `enabled.insertFunctionCall`
-indican lo que funciona ahora. Filtrar o ampliar el menú nativo no forma parte de esta API: use
-`hiddenActions` y `contextMenu.extraCommands` en `customization`.
+indican lo que funciona ahora. Para conservar el menú nativo y modificarlo, pase en su lugar `onContextMenuItems(request)` (solo se
+ejecuta si `onContextMenu` no devolvió `true`) y devuelva `{ hide, add }`. `hide` lista los id de
+elementos nativos de `request.items`; `add` lista elementos del host `{ id, label, enabled,
+requiresEdit, checked, separatorBefore, position, onSelect(request) }`, situados encima
+(`position: 'top'`, por defecto) o debajo (`'bottom'`) de los nativos. `enabled` puede ser una
+función. Los elementos nativos conservan su estado deshabilitado y se comprueban de nuevo al
+ejecutarse; un elemento del host también (su `enabled` y `requiresEdit` frente a un libro de solo
+lectura), así que un menú que quedó abierto no puede ejecutar una elección obsoleta. Complementa
+`hiddenActions` y `contextMenu.extraCommands` de `customization`, que se aplican a la aplicación
+incluida.
 
 ## Fallos de validación {#validation-failures}
 

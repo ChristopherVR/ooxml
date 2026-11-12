@@ -10,7 +10,9 @@ import {
 	selectionRef,
 	tabMenu,
 } from 'ooxml-core/xlsx/ui';
+import type { ExcelMenuCommand } from 'ooxml-core/xlsx/ui';
 import type {
+	ContextMenuCustomization,
 	ContextMenuItem,
 	ContextMenuKind,
 	ContextMenuModel,
@@ -19,6 +21,7 @@ import type {
 import { visibleMenuEntries } from './hidden';
 
 type Handler = (request: ContextMenuRequest) => boolean | void;
+type ItemsHook = (request: ContextMenuRequest) => ContextMenuCustomization | void;
 /** Names of the host callbacks a surface-only editor delegates a menu command to. */
 export type DelegatedAction = 'onOpenFormatCells';
 
@@ -26,6 +29,8 @@ export type DelegatedAction = 'onOpenFormatCells';
 export interface ContextMenuHost {
 	/** The host's `onContextMenu`, if installed. */
 	handler(): Handler | undefined;
+	/** The host's `onContextMenuItems`, if installed. */
+	itemsHook?(): ItemsHook | undefined;
 	/** Whether the host callback is installed and the workbook can be edited. */
 	available(name: DelegatedAction): boolean;
 	/** Runs the callback with its request; false when unavailable. */
@@ -183,4 +188,49 @@ export function offerToHost(
 	const handler = hosts.get(ctx)?.handler();
 	if (!handler) return false;
 	return handler({ ...contextMenuModel(ctx, input, build), x, y }) === true;
+}
+
+/** What the host did to a native menu: native ids left out and its own items as menu commands. */
+export interface NativeMenuChange {
+	hidden: ReadonlySet<string>;
+	commands: ExcelMenuCommand[];
+}
+
+/**
+ * Asks the host's `onContextMenuItems` how to filter and extend the native menu about to open.
+ * Host items are disabled when their `enabled` says so or they need edit rights in a read-only
+ * workbook, and both are checked again when one runs.
+ */
+export function nativeMenuChange(
+	ctx: EditorContext,
+	input: MenuInputs,
+	build: () => MenuEntry[],
+	x: number,
+	y: number,
+): NativeMenuChange {
+	const none: NativeMenuChange = { hidden: new Set(), commands: [] };
+	const hook = hosts.get(ctx)?.itemsHook?.();
+	if (!hook) return none;
+	const request: ContextMenuRequest = { ...contextMenuModel(ctx, input, build), x, y };
+	const result = hook(request);
+	if (!result) return none;
+	const seen = new Set<string>();
+	const commands: ExcelMenuCommand[] = [];
+	for (const item of result.add ?? []) {
+		if (!item.id || seen.has(item.id)) continue;
+		seen.add(item.id);
+		const disabled = (): boolean =>
+			(item.requiresEdit === true && ctx.readOnly()) ||
+			(typeof item.enabled === 'function' ? !item.enabled() : item.enabled === false);
+		commands.push({
+			id: item.id,
+			label: item.label,
+			group: item.position ?? 'top',
+			disabled,
+			onSelect: () => {
+				if (!disabled()) void item.onSelect(request);
+			},
+		});
+	}
+	return { hidden: new Set(result.hide ?? []), commands };
 }

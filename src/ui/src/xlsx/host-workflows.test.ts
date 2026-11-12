@@ -187,3 +187,78 @@ it('passes operations with the callback request', async () => {
 	expect(typeof request.findAll).toBe('function');
 	expect(request.canReplace()).toBe(false);
 });
+
+function rowsOf(ctx: EditorContext): Array<{ id: string; disabled?: boolean }> {
+	const menu = ctx.root.querySelector('office-ui-context-menu') as unknown as {
+		state: { items: Array<{ id: string; disabled?: boolean }> };
+	};
+	return menu.state.items;
+}
+
+function open(ctx: EditorContext): void {
+	const input = { kind: 'cell', sheet: 0 } as const;
+	const build = () => menuEntries(ctx, input);
+	openContextMenu(ctx, build(), 10, 20, { offer: { input, build } });
+}
+
+it('filters and extends the native menu through onContextMenuItems', () => {
+	const { editor } = mount();
+	const ctx = (editor as unknown as { core: { ctx: EditorContext } }).core.ctx;
+	const picked: string[] = [];
+	let enabled = true;
+	editor.surfaceActions = {
+		onContextMenuItems: (request) => {
+			expect(request.items.map((i) => i.id)).toContain('copy');
+			return {
+				hide: ['copy'],
+				add: [
+					{ id: 'top', label: 'Top', onSelect: () => void picked.push('top') },
+					{
+						id: 'edit',
+						label: 'Edit',
+						requiresEdit: true,
+						enabled: () => enabled,
+						position: 'bottom',
+						onSelect: () => void picked.push('edit'),
+					},
+				],
+			};
+		},
+	};
+	open(ctx);
+	let ids = rowsOf(ctx).map((row) => row.id);
+	expect(ids).not.toContain('copy');
+	expect(ids[0]).toBe('host:top');
+	expect(ids.at(-1)).toBe('host:edit');
+	const menu = ctx.root.querySelector('office-ui-context-menu')!;
+	const choose = (id: string) =>
+		menu.dispatchEvent(new CustomEvent('office-menu-request', { detail: { id } }));
+	// Host items are rechecked when they run: disabled by then, nothing happens.
+	enabled = false;
+	choose('host:edit');
+	expect(picked).toEqual([]);
+	choose('host:top');
+	expect(picked).toEqual(['top']);
+	// A hidden native item cannot run, and a read-only workbook refuses requiresEdit items.
+	open(ctx);
+	enabled = true;
+	editor.readOnly = true;
+	const again = ctx.root.querySelector('office-ui-context-menu')!;
+	again.dispatchEvent(new CustomEvent('office-menu-request', { detail: { id: 'host:edit' } }));
+	expect(picked).toEqual(['top']);
+	editor.readOnly = false;
+	open(ctx);
+	ids = rowsOf(ctx).map((row) => row.id);
+	expect(rowsOf(ctx).find((row) => row.id === 'host:edit')?.disabled).toBeUndefined();
+	expect(ids).toContain('host:edit');
+});
+
+it('onContextMenu still wins over onContextMenuItems', () => {
+	const { editor } = mount();
+	const ctx = (editor as unknown as { core: { ctx: EditorContext } }).core.ctx;
+	const items = vi.fn(() => ({ hide: ['copy'] }));
+	editor.surfaceActions = { onContextMenu: () => true, onContextMenuItems: items };
+	open(ctx);
+	expect(ctx.root.querySelector('office-ui-context-menu')).toBeNull();
+	expect(items).not.toHaveBeenCalled();
+});
