@@ -25,13 +25,13 @@ with a warning, for local development. It is configured through the environment 
 `--insecure-dev`, `--trust-proxy[=N]` and `--insecure` (see `TEAMS_INSECURE` and `TEAMS_TRUST_PROXY` in the
 [deployment guide](./deploy.md)). `SIGTERM` and `SIGINT` save every room before exit.
 
-| Variable        | Default     | Meaning                                                                                                            |
-| --------------- | ----------- | ------------------------------------------------------------------------------------------------------------------ |
-| `PORT`          | `8787`      | Listen port.                                                                                                       |
-| `HOST`          | `127.0.0.1` | Listen address. Bind `0.0.0.0` only behind TLS.                                                                    |
-| `TEAMS_TOKEN`   | none        | If set, sockets take it as `?token=` and file requests as `Authorization: Bearer`.                                 |
-| `TEAMS_ORIGINS` | none        | Comma-separated allowed `Origin`s for sockets and files. None: any origin with a token, loopback only without one. |
-| `TEAMS_DATA`    | `./data`    | Data directory: `rooms/<room>.bin` snapshots and `files/<workspace>/`.                                             |
+| Variable        | Default     | Meaning                                                                                                                                     |
+| --------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PORT`          | `8787`      | Listen port.                                                                                                                                |
+| `HOST`          | `127.0.0.1` | Listen address. Bind `0.0.0.0` only behind TLS.                                                                                             |
+| `TEAMS_TOKEN`   | none        | If set, sockets take it in the `Sec-WebSocket-Protocol` header (`?token=` only as a fallback) and file requests as `Authorization: Bearer`. |
+| `TEAMS_ORIGINS` | none        | Comma-separated allowed `Origin`s for sockets and files. None: any origin with a token, loopback only without one.                          |
+| `TEAMS_DATA`    | `./data`    | Data directory: `rooms/<room>.bin` snapshots and `files/<workspace>/`.                                                                      |
 
 The server reads more variables for accounts (`TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`, `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`) and for limits (`TEAMS_INSECURE`, `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`, `TEAMS_MAX_ROOMS`, `TEAMS_MAX_DOC_MB`, `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`, `TEAMS_FILES_QUOTA_MB`, `TEAMS_WORKSPACE_QUOTA_MB`, `TEAMS_COMPACT_INTERVAL_MIN`, `TEAMS_METRICS_TOKEN`, `TEAMS_LOG_FORMAT`). The [deployment guide](./deploy.md) lists the limits; the server's README is the full reference. The `createTeamsServer` options for them are `users`, `authenticate`, `sessionSecret`, `adminToken`, `sessionRate`, `authorizeSync`, `maxConnections`, `maxRooms`, `messageRate`, `filesQuotaBytes`, `workspaceQuotaBytes`, `metricsToken`, `compactIntervalMs`, `insecure`, `insecureDev` and `trustProxy`.
 
@@ -83,7 +83,7 @@ const config = {
 | `POST /auth/check`, `/auth/signout`   | Check a `{ session }` (204 or 401); sign out, which revokes the user's sessions.                                                                  |
 | `POST /auth/revoke`                   | Operator revocation of `{ user }` with `TEAMS_ADMIN_TOKEN`; a 404 without an admin token.                                                         |
 
-Room names must match `^[\w-]{1,128}$` and workspace ids in file paths `^[\w-]{1,64}$`; file names
+Room names must match `^[\w-]{1,128}$` and workspace ids in file paths `^[\w-]{1,128}$`; file names
 are sanitised to letters, digits, `.`, `-`, `_`, spaces and parentheses, and capped at 120
 characters.
 
@@ -122,8 +122,9 @@ signed session in an `X-Teams-Session` header on every file request (a server wi
 claimed user from `X-Teams-User`); the client sends both. Also optional: `GET <origin>/files/<scope>` to list and
 `DELETE <origin>/files/<scope>/<name>` for the uploader or a moderator.
 
-Both sockets receive `?token=<token>` when a token is configured, because a browser cannot set
-headers on a WebSocket. Enforce it, and an origin allowlist, on the server.
+Both sockets receive the token in the `Sec-WebSocket-Protocol` header when a token is configured,
+because a browser cannot set other headers on a WebSocket. The query string (`?token=`) is only a
+fallback for a token the header cannot carry. Enforce it, and an origin allowlist, on the server.
 
 ## Calls: STUN and TURN
 

@@ -152,8 +152,23 @@ composable per site; the hub in `site/docs/docs.css`.
   app plus "Open a file"), the library below it in a framed table. The sidebar groups Workspace,
   Apps and Resources (Documentation, Product sites and demos; hidden in an installed app, which has
   no browser chrome to come back through).
-- **Documentation hub** (`site/docs/`): one page that links every manual: the core library, the UI
-  package, the MCP server, the suite, the desktop build and each product site, as tool cards.
+- **Simple view** (the suite's default for an open document): one 44 px bar on the surface colour replaces the
+  command row and each app's ribbon. Left to right: the app tile and file name (the extension
+  muted), Save, undo and redo, bold, italic and underline drawn as the letters themselves (Word
+  and Excel; a pressed one takes the selected tint), the slide or page in view in a hairline box,
+  then the saved state, **Show ribbon** (the one outlined button), the assistant, the More menu
+  and focus. Icon buttons are 30 px and muted until hovered. Nothing is added inside an editor:
+  Word's and Excel's own title bars are hidden through their `title-bar` part while the bar
+  stands in for them.
+- **Documentation hub** (`site/docs/`): one page in three columns. A 272 px sidebar on the rail
+  colour holds the brand, a search field (`/` focuses it; it searches every guide the page links
+  to), three shortcuts and every manual grouped under sentence-case captions; the active item has
+  the selected tint and the 3 px accent bar. The article opens with a breadcrumb, the title, a
+  lead and two buttons, then section bars: the three ways in as a joined grid, Simple view with a
+  drawn (never screenshotted) app frame, an "I want to / Use" table in a framed panel, and the
+  manuals as tool cards. The right column lists the sections and marks the one in view. Under
+  1180 px the outline goes; under 820 px the sidebar becomes a header whose menu button opens
+  the list.
 - **Product docs landing**: hero with the product frame, the live demo (with its language select
   where the demo supports one), features as tool cards, status, quick start, FAQ, finale. The
   accent is the product colour. Every site keeps this order so the five landings read as one

@@ -26,7 +26,7 @@ npm install openteams-svelte-viewer svelte
 ```
 
 It takes the same props as every binding (`workspaceId`, `userName`, `userId`, `config`,
-`uploadFile`, `openers`, `onReady`, `onOpenFile`, `onConfigChange`).
+`uploadFile`, `openers`, `embeds`, `locale`, `onReady`, `onOpenFile`, `onConfigChange`).
 
 ## The store
 

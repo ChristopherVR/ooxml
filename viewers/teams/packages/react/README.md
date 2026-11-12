@@ -33,6 +33,7 @@ import { Teams } from 'openteams-react-viewer';
 		mode: 'server',
 		syncUrl: 'wss://teams.example.com/sync',
 		signalingUrl: 'wss://teams.example.com/signal',
+		iceServers: [{ urls: 'stun:stun.example.com:3478' }],
 	}}
 	onOpenFile={(detail) => window.open(detail.url)}
 />;

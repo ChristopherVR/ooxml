@@ -69,7 +69,7 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md#commit-conventions). The `PR hygiene / 
 
 ## The release workflow
 
-`.github/workflows/release.yml` has the jobs `ci-gate`, `release`, `publish-plan`, `build-core`, `build-packages`, `publish`, `verify-published` and `sign-release`, and two ways to start (hourly schedule, manual dispatch).
+`.github/workflows/release.yml` has the jobs `ci-gate`, `release`, `publish-plan`, `build-core`, `build-packages`, `publish`, `verify-published`, `sign-release` and `announce-discord`, and two ways to start (hourly schedule, manual dispatch).
 
 **Scheduled or manual run without input** (`release` job, then the publish stage):
 
@@ -120,7 +120,7 @@ outside user gets; run it locally (`bun run test:packages`, `bun run pack:smoke`
 view.
 
 `scripts/verify.mjs` runs the packing steps only with `--full`, except the steps a browser suite
-needs, which `--browser` runs. Each viewer browser suite gets its own `PLAYWRIGHT_PORT`, so the
+needs, which `--browser` runs. Each viewer browser suite gets its own port (`PLAYWRIGHT_PORT`; the pptx suite reads `PPTX_E2E_PORT_OFFSET`), so the
 suites can run side by side, and Visio's browser suite ends with the packed-package check in a
 browser.
 

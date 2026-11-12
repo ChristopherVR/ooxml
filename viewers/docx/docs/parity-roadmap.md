@@ -35,8 +35,9 @@ language and spelling. Spelling uses the browser service; there is no bundled
 Word-equivalent grammar or proofing engine.
 
 Imported inline and display equations now render through native MathML using
-`ooxml-core/math`. They remain display-only: the original OMML is preserved when
-surrounding text is edited and saved. Unsupported equation previews show a visible
+`ooxml-core/math`. Insert > Equation adds new equations from LaTeX or the gallery, and the
+selected equation can be edited. An imported equation that is not edited keeps its original
+OMML when surrounding text is edited and saved. Unsupported equation previews show a visible
 notice. Print Layout draws equations as SVG from the shared `ooxml-core/math` box model
 (the `[Equation]` placeholder appears only when no drawn object is available); this does
 not reproduce Word's equation layout.

@@ -58,6 +58,23 @@ forms).
   `collaborationState` reads the current state, and `reconnectCollaboration()` and
   `stopCollaboration()` act on it. See [collaboration](collaboration.md).
 
+## Element-only members
+
+These `<visio-viewer>` members are not part of the shared binding contract (see [bindings](bindings.md)); use them on the element.
+
+| Member                         | Type                             | Description                                                                                                                                             |
+| ------------------------------ | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `googleFonts`                  | `GoogleFontsOption \| undefined` | Webfont fallback for drawing fonts that are not installed: `false` (off), `{ baseUrl }` (a CSS2 mirror), or unset for the reader's Trust Center choice. |
+| `pdfFonts`                     | `readonly PdfFontFile[]`         | TrueType files the host supplies, which File > Export > PDF embeds as subsets. Nothing is bundled.                                                      |
+| `createFromTemplate(template)` | `Promise<void>`                  | Creates a drawing from a File > New template (Blank Drawing, flowcharts, org chart).                                                                    |
+| `openBackstage(page?)`         | `void`                           | Opens Visio's File backstage at a page (Info by default).                                                                                               |
+| `closeBackstage()`             | `void`                           | Leaves the File backstage and returns to the drawing.                                                                                                   |
+| `startPresentation()`          | `void`                           | Starts Presentation Mode on the current foreground page (F5).                                                                                           |
+| `exitPresentation()`           | `void`                           | Leaves Presentation Mode; the page, zoom and selection are unchanged.                                                                                   |
+| `presenting`                   | `boolean` (read-only)            | True while Presentation Mode is on.                                                                                                                     |
+| `fileName`                     | `string` (read-only)             | Name of the last opened local file, or empty for bytes, models and closed drawings.                                                                     |
+| `renderWarnings`               | `readonly string[]` (read-only)  | Warnings the last page render reported.                                                                                                                 |
+
 ## Select shapes
 
 Every mounted/native handle exposes `selectShapes(targets)`, `selectAll()` and
@@ -250,8 +267,8 @@ offered for Visio yet. All products side by side are mapped in the [embedding gu
 
 ## Host-owned storage and file commands
 
-New, Open and Save (the backstage, the Quick Access Toolbar and Ctrl+N) first raise the
-cancelable `file-command` event with `{ command: 'new' | 'open' | 'save' }`, the same contract as
+New, Open, Save and Share (the backstage, the Quick Access Toolbar and Ctrl+N) first raise the
+cancelable `file-command` event with `{ command: 'new' | 'open' | 'save' | 'share' }`, the same contract as
 Word and Excel. Call `preventDefault()` on the DOM event, or return `false` from the binding
 callback `events['file-command']`, to handle the command yourself; the viewer then does nothing.
 The Angular `(fileCommand)` output only reports the command, so an Angular host cancels through
@@ -295,8 +312,7 @@ The UTF-8 ceiling is 16 MiB; callers can lower it. Conservative preflight checks
 can reject content whose eventual serialization would be smaller. Fonts are not
 embedded and text/layout remain approximate. Physical page dimensions are
 preserved; downstream rasterizers must cap their output dimensions and pixel area
-before allocating an image surface. PDF, bitmap export and print layout remain
-unimplemented.
+before allocating an image surface. This function writes SVG only; File > Export in the viewer writes picture-page PNG and PDF. Print layout remains unimplemented.
 
 Optional Linux secondary pixel tests run with
 `node scripts/test-svg-rasterization.mjs` after building, using system Python 3,

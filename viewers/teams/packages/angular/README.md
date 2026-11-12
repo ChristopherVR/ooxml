@@ -37,6 +37,7 @@ export class AppComponent {
 		mode: 'server' as const,
 		syncUrl: 'wss://teams.example.com/sync',
 		signalingUrl: 'wss://teams.example.com/signal',
+		iceServers: [{ urls: 'stun:stun.example.com:3478' }],
 	};
 }
 ```

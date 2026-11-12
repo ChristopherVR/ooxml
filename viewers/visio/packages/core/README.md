@@ -45,7 +45,7 @@ For headless MCP access, use `visio-viewer-mcp`.
 
 ## Privacy and network use
 
-The Visio packages make no network request when opening, rendering, editing or saving a document: linked pictures are not fetched, linked data is not refreshed, and fonts come from the device only (nothing is downloaded from Google Fonts or any other font service). Hyperlinks open only when the reader follows them. Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+The Visio packages make no network request when opening, rendering, editing or saving a document, unless Google Fonts is turned on: linked pictures are not fetched, linked data is not refreshed, and fonts come from the device. Google Fonts is off until the host sets `googleFonts` or the reader turns on the Trust Center toggle; then only public catalogue family names are requested, never document text. Hyperlinks open only when the reader follows them. Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
 
 ## License
 

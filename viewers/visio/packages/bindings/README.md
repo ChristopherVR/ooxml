@@ -32,6 +32,7 @@ All adapters accept the same properties:
 - `ribbonAddIns`: tabs the host adds after Help (see [Ribbon add-in tabs](../../docs/api.md#ribbon-add-in-tabs))
 - `collaboration`: shares the open drawing in a room while set, `null` leaves it (see [collaboration](../../docs/collaboration.md))
 - `storage` and `customization`: host-owned save and open, and the shared customization object (see [Customization](../../docs/api.md#customization))
+- `fileProviders`: cloud places for File > Open, such as OneDrive (see [OneDrive](../../docs/onedrive.md))
 - `events`: typed callback map using literal event names
 
 The event map currently contains `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change` and `file-command`. It is derived from the canonical contract. All adapters pass every event; none parse documents or own another renderer.

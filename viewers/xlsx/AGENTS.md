@@ -32,7 +32,7 @@ element, forward props and options, call `load` when new bytes arrive, and
 re-emit its events as callbacks.
 
 - A behaviour bug (grid, ribbon, dialog, editing, rendering, keyboard) is fixed
-  in `web-component`, once, and reaches all six bindings automatically.
+  in `ooxml-ui/xlsx` (`src/ui/src/xlsx`), once, and reaches all six bindings automatically.
 - A binding-only bug is almost always prop, event or lifecycle wiring. When you
   fix one, grep the other adapters in `packages/bindings/src` for the same
   pattern and fix them in the same change; the binding contract tests in
@@ -83,8 +83,8 @@ re-emit its events as callbacks.
 - `ole2` (legacy compound-file codecs) reaches this repository only through
   `ooxml-core/xlsx/load`, which inlines it. Never add `@christophervr/ole2` or an
   internal package to a manifest here, and never fork its code.
-- The browser text measurer (column auto-fit, overflow) stays in
-  `packages/web-component` and is injected into the core's layout functions; it
+- The browser text measurer (column auto-fit, overflow) lives in
+  `src/ui/src/xlsx/grid/measure.ts` (ooxml repository) and is injected into the core's layout functions; it
   is the one piece of layout that needs a DOM.
 - Unsupported workbook features must be reported honestly (for example pivots from
   external or OLAP sources and Power Query are preserved but not shown or refreshed, the sparkline style

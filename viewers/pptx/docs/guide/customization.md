@@ -182,8 +182,8 @@ a stable id from one shared catalogue: `<tab>.<group>` for a group and
 `<tab>.<group>.<control>` for a control, named after PowerPoint's own
 captions (`home.font`, `home.font.bold`, `insert.media.media`,
 `view.show.ruler`). The contextual tabs that appear for a selection
-(`shapeFormat`, `pictureFormat`, `tableDesign`, `chartDesign`,
-`smartArtDesign`) are addressed the same way, and their tab ids are accepted
+(`shapeFormat`, `pictureFormat`, `tableDesign`, `tableLayout`, `chartDesign`,
+`chartFormat`, `smartArtDesign`) are addressed the same way, and their tab ids are accepted
 by `ribbon.hiddenTabs`.
 
 ```ts

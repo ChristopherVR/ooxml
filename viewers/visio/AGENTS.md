@@ -63,11 +63,9 @@ it is next changed.
 - **One module per ribbon tab** (`ribbon-home.ts`, `ribbon-view.ts`), assembled
   by `createRibbon()` in `ribbon.ts`. The status bar and page tabs have their
   own builder modules.
-- **Styles are CSS files.** Write them under `styles/*.css`, import them with
-  `?inline` and join them in `styles/index.ts`. Theme tokens come from a typed
-  `theme/` module (defaults to CSS variables, with `theme` set to
-  `light`, `dark` or `auto`), and shared controls read them through
-  `--office-*` aliases.
+- **Styles are CSS files.** Write them under `styles/*.css` in `src/ui/src/visio`, import them
+  with `?raw` and join them in `styles/index.ts`. Colours follow the shared `--office-*` tokens
+  through the aliases in `styles/theme.ts` (optional `--vv-*` host overrides).
 - **Vite builds all JavaScript; `tsc` only type-checks and emits declarations.**
   The root package (`vite.lib.config.ts`) and the framework packages
   (`scripts/build-packages.mjs`) are Vite library builds; workers land in
@@ -77,7 +75,7 @@ it is next changed.
   (`@oxc-angular/vite`) is still experimental; adopt it when it is stable or
   when the binding needs AOT templates. Never add a `tsc` JavaScript emit step.
 - **Typed element surface.** Keep a typed event map with a runtime list
-  (`events.ts`), observed attributes (`editor-attributes`-style) and the public
+  (`eventKeys` in `src/core/visio/ui/contract.ts`), observed attributes (`editor-attributes`-style) and the public
   API (`element-api`-style) in separate small modules. Tests sit next to the
   code.
 
@@ -156,7 +154,7 @@ must update `PROVENANCE.md` and retain licenses.
 - The root implementation and bindings remain private build inputs; never put them in a published manifest.
 - The shared contract (`propertyKeys` and `eventKeys` in `src/core/visio/ui/contract.ts`) has the
   properties `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `ribbonAddIns`,
-  `collaboration`, `storage` and `customization`, and the events listed there, including
+  `collaboration`, `storage`, `fileProviders` and `customization`, and the events listed there, including
   `collaboration-change` and `file-command`. A contract change updates every adapter, the
   contract-parity test and `docs/bindings.md`. The
   building blocks are read-only unless the host passes `canEdit: true` (`docs/building-blocks.md`),

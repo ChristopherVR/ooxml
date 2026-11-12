@@ -42,7 +42,7 @@ app.addEventListener('teams-open-file', (event) => console.log(event.detail.url)
 ```
 
 Attributes: `workspace-id`, `user-name`, `user-id` and `server-config` (JSON). Properties:
-`config`, `uploadFile`, `openers`. Events: `teams-ready`, `teams-open-file` (cancelable) and
+`config`, `uploadFile`, `openers`, `embeds`, `locale`. Events: `teams-ready`, `teams-open-file` (cancelable) and
 `teams-config-change`.
 
 ## The raw client

@@ -124,7 +124,7 @@ button.addEventListener('office-command', (event) => console.log(event.detail));
 document.body.append(button);
 ```
 
-## API: entries (ESM only)
+## API: entries (ESM, plus CJS for PowerPoint)
 
 The shared `office-ui-gallery` also supports `mode="panel"` for modal pickers.
 It displays labelled preview tiles directly, keeps focus when a pick refreshes the
@@ -152,7 +152,7 @@ uses it for Text Warp and Quick Styles, whose picks apply at once.
 | `ooxml-ui/visio`                | the Visio editor and viewer elements (`<visio-viewer>`)                                                      |
 | `ooxml-ui/pptx`                 | the PowerPoint renderer, editor and web components; also `/pptx/theme`, `/loader`, `/i18n`, `/ai`, `/dom`    |
 
-Every entry declares an `import` and a `default` export condition, so CommonJS consumers on Node 20.19+ or 22.12+ load it through `require(esm)`.
+Most entries declare an `import` and a `default` export condition, so CommonJS consumers on Node 20.19+ or 22.12+ load them through `require(esm)`; the `ooxml-ui/pptx` entries also declare a `require` condition for the CJS build.
 
 `installOfficeUiTheme()` installs one theme stylesheet in the document by default. Pass a
 `ShadowRoot` to install scoped mode and control rules inside an embedding app's shadow tree.

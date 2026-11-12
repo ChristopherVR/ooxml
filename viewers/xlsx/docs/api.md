@@ -26,17 +26,21 @@ await editor.load(bytes, 'Budget.xlsx');
 
 Properties only:
 
-| Property             | Type                                 | Notes                                                                                  |
-| -------------------- | ------------------------------------ | -------------------------------------------------------------------------------------- |
-| `themeColors`        | `Partial<Record<...>>`               | Token overrides applied as `--xve-*` custom properties ([theming](/theming)).          |
-| `hiddenActions`      | `string[]`                           | Ribbon controls, title-bar items and context-menu entries to hide, by stable id.       |
-| `ribbonAddIns`       | `RibbonAddInTab[]`                   | Tabs the host adds after the built-in ones ([bindings](/bindings#ribbon-add-in-tabs)). |
-| `workbook`           | `Workbook \| null`                   | Get the open workbook, or set one to replace it.                                       |
-| `dirty`              | `boolean` (read only)                | Unsaved edits.                                                                         |
-| `activeSheet`        | `number`                             | Zero-based index of the visible sheet.                                                 |
-| `collaboration`      | `XlsxCollaborationOptions \| null`   | Shares the open workbook in a room while set ([collaboration](/collaboration)).        |
-| `collaborationState` | `XlsxCollaborationState` (read only) | Whether sharing, the connection status and who is in the room.                         |
-| `customization`      | `ExcelCustomization \| null`         | Capabilities, host File tab pages and host menu commands ([below](#customization)).    |
+| Property             | Type                                 | Notes                                                                                                                                                        |
+| -------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `themeColors`        | `Partial<Record<...>>`               | Token overrides applied as `--xve-*` custom properties ([theming](/theming)).                                                                                |
+| `hiddenActions`      | `string[]`                           | Ribbon controls, title-bar items and context-menu entries to hide, by stable id.                                                                             |
+| `ribbonAddIns`       | `RibbonAddInTab[]`                   | Tabs the host adds after the built-in ones ([bindings](/bindings#ribbon-add-in-tabs)).                                                                       |
+| `workbook`           | `Workbook \| null`                   | Get the open workbook, or set one to replace it.                                                                                                             |
+| `dirty`              | `boolean` (read only)                | Unsaved edits.                                                                                                                                               |
+| `activeSheet`        | `number`                             | Zero-based index of the visible sheet.                                                                                                                       |
+| `collaboration`      | `XlsxCollaborationOptions \| null`   | Shares the open workbook in a room while set ([collaboration](/collaboration)).                                                                              |
+| `collaborationState` | `XlsxCollaborationState` (read only) | Whether sharing, the connection status and who is in the room.                                                                                               |
+| `customization`      | `ExcelCustomization \| null`         | Capabilities, host File tab pages and host menu commands ([below](#customization)).                                                                          |
+| `googleFonts`        | `false \| { baseUrl }`               | Webfont fallback for fonts the reader has neither installed nor embedded. Unset, the reader's Trust Center choice applies (off by default).                  |
+| `surfaceOnly`        | boolean                              | Set before mounting to omit application UI; pair it with `surfaceActions`.                                                                                   |
+| `surfaceActions`     | `SurfaceHostActions`                 | Host callbacks that stand in for dialogs when `surfaceOnly` is set. A workflow without a callback is reported as not enabled in `getToolbarProps().enabled`. |
+| `loading`            | `boolean` (read only)                | Whether a workbook is being opened.                                                                                                                          |
 
 ## Customization
 
@@ -62,42 +66,47 @@ editor.customization = {
 
 ## Methods
 
-| Method                        | Returns               | Notes                                                                                                                           |
-| ----------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `load(bytes, fileName?)`      | `Promise<void>`       | `.xlsx`, `.xlsm`, `.xltx`, `.xls`, `.csv`; the format is sniffed from the bytes. Emits `workbook-error` and rejects on failure. |
-| `newWorkbook()`               | `void`                | A blank workbook named `Book1.xlsx`.                                                                                            |
-| `save()`                      | `Promise<Blob>`       | `.xlsx`. Does not clear `dirty`.                                                                                                |
-| `saveBytes(format?)`          | `Promise<Uint8Array>` | `'xlsx'` (default) or `'csv'` (the active sheet, formatted values).                                                             |
-| `download(name?)`             | `Promise<void>`       | Saves, downloads, then `markClean()`.                                                                                           |
-| `markClean()`                 | `void`                |                                                                                                                                 |
-| `select(ref)`                 | `void`                | An A1 cell or range on the active sheet (`'C3'`, `'A1:D20'`).                                                                   |
-| `getSelection()`              | `string`              | The current selection as an A1 reference.                                                                                       |
-| `setActiveSheet(index)`       | `void`                |                                                                                                                                 |
-| `undo()`, `redo()`            | `void`                | While shared, only this window's edits are undone.                                                                              |
-| `startCollaboration(options)` | `Promise<void>`       | Joins a room; rejects when already sharing or no workbook is open.                                                              |
-| `stopCollaboration()`         | `void`                | Leaves the room and clears `collaboration`; the workbook stays as it is.                                                        |
-| `reconnectCollaboration()`    | `void`                | Restarts the connection, keeping changes made offline.                                                                          |
-| `share()`                     | `void`                | Opens the Share dialog.                                                                                                         |
-| `focusGrid()`                 | `void`                | Moves keyboard focus to the grid so typing edits the active cell.                                                               |
+| Method                           | Returns                   | Notes                                                                                                                                                                                               |
+| -------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `load(bytes, fileName?)`         | `Promise<void>`           | `.xlsx`, `.xlsm`, `.xltx`, `.xls`, `.csv`; the format is sniffed from the bytes. Emits `workbook-error` and rejects on failure.                                                                     |
+| `newWorkbook()`                  | `void`                    | A blank workbook named `Book1.xlsx`.                                                                                                                                                                |
+| `save()`                         | `Promise<Blob>`           | `.xlsx`. Does not clear `dirty`.                                                                                                                                                                    |
+| `saveBytes(format?)`             | `Promise<Uint8Array>`     | `'xlsx'` (default) or `'csv'` (the active sheet, formatted values).                                                                                                                                 |
+| `download(name?)`                | `Promise<void>`           | Saves, downloads, then `markClean()`.                                                                                                                                                               |
+| `markClean()`                    | `void`                    |                                                                                                                                                                                                     |
+| `select(ref)`                    | `void`                    | An A1 cell or range on the active sheet (`'C3'`, `'A1:D20'`).                                                                                                                                       |
+| `getSelection()`                 | `string`                  | The current selection as an A1 reference.                                                                                                                                                           |
+| `setActiveSheet(index)`          | `void`                    |                                                                                                                                                                                                     |
+| `undo()`, `redo()`               | `void`                    | While shared, only this window's edits are undone.                                                                                                                                                  |
+| `startCollaboration(options)`    | `Promise<void>`           | Joins a room; rejects when already sharing or no workbook is open.                                                                                                                                  |
+| `stopCollaboration()`            | `void`                    | Leaves the room and clears `collaboration`; the workbook stays as it is.                                                                                                                            |
+| `reconnectCollaboration()`       | `void`                    | Restarts the connection, keeping changes made offline.                                                                                                                                              |
+| `share()`                        | `void`                    | Opens the Share dialog.                                                                                                                                                                             |
+| `focusGrid()`                    | `void`                    | Moves keyboard focus to the grid so typing edits the active cell.                                                                                                                                   |
+| `openCloudFile(file)`            | `Promise<void>`           | Opens a file a host got from a `CloudFileProvider`, as File > Open > OneDrive does: read-only when `file.canEdit` is false, Save and Save As routed to `file.storage`. Rejects when the load fails. |
+| `commitEdit()`                   | `boolean`                 | Commits an in-progress cell edit before a host navigates or persists. `false` means validation blocked it.                                                                                          |
+| `getToolbarProps()`              | `SpreadsheetToolbarProps` | The headless toolbar state and `enabled` flags for custom controls ([building blocks](/building-blocks)).                                                                                           |
+| `subscribeEditorState(listener)` | `() => void`              | Calls `listener` on each editor state change; returns the unsubscribe function.                                                                                                                     |
 
 ## Events
 
 All events are `CustomEvent`s that bubble and cross the shadow boundary (`composed`).
 
-| Event                  | `detail`                                                                                   | Notes                                                                                 |
-| ---------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| `workbook-change`      | `{ workbook }`                                                                             | After an edit, a load or a new workbook.                                              |
-| `workbook-error`       | `{ error, message }`                                                                       | A load or save failed.                                                                |
-| `workbook-warning`     | `{ warnings }`                                                                             | Content the loader read but could not model.                                          |
-| `readonly-change`      | `{ readOnly }`                                                                             |                                                                                       |
-| `ribbon-action`        | `{ id }`                                                                                   | A ribbon command ran.                                                                 |
-| `file-command`         | `{ command: 'new' \| 'open' \| 'save' \| 'saveAs' \| 'export' \| 'exportCsv' \| 'print' }` | **Cancelable**: `preventDefault()` to handle it yourself.                             |
-| `selection-change`     | `{ sheet, ref, active }`                                                                   | `ref` is the selected range, `active` the active cell.                                |
-| `sheet-change`         | `{ index, name }`                                                                          |                                                                                       |
-| `dirty-change`         | `{ dirty }`                                                                                |                                                                                       |
-| `office-ribbon-add-in` | `{ tab, command }`                                                                         | A command of a host tab (`ribbonAddIns`) was chosen.                                  |
-| `collaboration-change` | `{ active, roomId, status, synced, people }`                                               | Sharing started or stopped, the connection changed, or someone joined or left.        |
-| `validation-error`     | `{ message, title?, ref, style? }`                                                         | A cell edit in progress failed validation and stays open until corrected or canceled. |
+| Event                  | `detail`                                                                                              | Notes                                                                                                                     |
+| ---------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `workbook-change`      | `{ workbook }`                                                                                        | After an edit, a load or a new workbook.                                                                                  |
+| `workbook-error`       | `{ error, message }`                                                                                  | A load or save failed.                                                                                                    |
+| `workbook-warning`     | `{ warnings }`                                                                                        | Content the loader read but could not model.                                                                              |
+| `readonly-change`      | `{ readOnly, locked, hostReadOnly }`                                                                  | The effective read-only state. `locked` is set by a collaboration `viewer` role; `hostReadOnly` is the host's own switch. |
+| `ribbon-action`        | `{ id }`                                                                                              | A ribbon command ran.                                                                                                     |
+| `ribbon-customize`     | `{ hiddenActions }`                                                                                   | The user changed which ribbon commands are shown (File > Options > Customize Ribbon).                                     |
+| `file-command`         | `{ command: 'new' \| 'open' \| 'save' \| 'saveAs' \| 'export' \| 'exportCsv' \| 'print' \| 'share' }` | **Cancelable**: `preventDefault()` to handle it yourself.                                                                 |
+| `selection-change`     | `{ sheet, ref, active }`                                                                              | `ref` is the selected range, `active` the active cell.                                                                    |
+| `sheet-change`         | `{ index, name }`                                                                                     |                                                                                                                           |
+| `dirty-change`         | `{ dirty }`                                                                                           |                                                                                                                           |
+| `office-ribbon-add-in` | `{ tab, command }`                                                                                    | A command of a host tab (`ribbonAddIns`) was chosen.                                                                      |
+| `collaboration-change` | `{ active, roomId, status, synced, people }`                                                          | Sharing started or stopped, the connection changed, or someone joined or left.                                            |
+| `validation-error`     | `{ message, title?, ref, style? }`                                                                    | A cell edit in progress failed validation and stays open until corrected or canceled.                                     |
 
 The framework bindings forward `file-command`, `workbook-warning`, `ribbon-action` and `sheet-change` as well (for example `onFileCommand`, `fileCommand` and `onfilecommand`); see [framework bindings](/bindings#callbacks-and-events).
 
@@ -175,4 +184,4 @@ editor.fileProviders = [
 
 ## Shadow parts
 
-The element exposes its regions as CSS shadow parts, for styling with `xlsx-editor::part(grid)` and for tests: `ribbon`, `name-box`, `formula-bar`, `grid`, `sheet-tabs` and `status-bar`.
+The element exposes its regions as CSS shadow parts, for styling with `xlsx-editor::part(grid)` and for tests: `ribbon`, `name-box`, `formula-bar`, `grid`, `sheet-tabs`, `status-bar`, `title-bar`, `backstage` and `page-layout` (Page Layout view).

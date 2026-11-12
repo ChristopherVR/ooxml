@@ -6,10 +6,13 @@
 cd server && node index.mjs          # PORT=8787 HOST=127.0.0.1 by default
 ```
 
+The server refuses to start without accounts: set `TEAMS_USERS_FILE` (see below), or pass
+`--insecure-dev` for local development only.
+
 | Variable                                                | Meaning                                                                                                                                                                                                             |
 | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `PORT`, `HOST`                                          | Listen address. Bind `0.0.0.0` only behind TLS.                                                                                                                                                                     |
-| `TEAMS_TOKEN`                                           | If set, sockets take it as `?token=` and file requests as `Authorization: Bearer`.                                                                                                                                  |
+| `TEAMS_TOKEN`                                           | If set, sockets take it in the `Sec-WebSocket-Protocol` header (`?token=` only as a fallback) and file requests as `Authorization: Bearer`.                                                                         |
 | `TEAMS_ORIGINS`                                         | Comma-separated allowed `Origin`s for sockets and files. Empty: any origin when a token is set; without a token only loopback origins and clients that send no `Origin`.                                            |
 | `TEAMS_DATA`                                            | Data directory (default `./data`): `rooms/<room>.bin` snapshots and `files/`.                                                                                                                                       |
 | `TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`              | Path to a JSON object of user id to credential, or `{ credential, role }` (enables accounts); the secret that signs sessions.                                                                                       |

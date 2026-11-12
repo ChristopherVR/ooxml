@@ -236,6 +236,15 @@ and switches to the master view; `'preview'` leaves presentation/master mode and
 | `setTheme`  | `(theme: ViewerTheme \| undefined) => void` | Apply a new viewer theme (pass `undefined` to reset to defaults). See [Theming](/vanilla/theming). |
 | `setLocale` | `(locale: string) => void`                  | Switch the UI locale (rebuilds the chrome labels).                                                 |
 
+## Chrome
+
+| Method             | Signature                                            | Description                                                                                                                                                                                      |
+| ------------------ | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `setShowToolbar`   | `(show: boolean) => void`                            | Show or hide the toolbar on a live viewer (the [`showToolbar`](/vanilla/options) option). Only the chrome is rebuilt, as for `setLocale`: the deck, unsaved edits and the undo history are kept. |
+| `setRibbonDisplay` | `(mode: 'always' \| 'tabs' \| 'fullScreen') => void` | Set PowerPoint's Ribbon Display Options from the host: the docked ribbon, the tab row alone, or full-screen mode. `onRibbonDisplayChange` is not called for it.                                  |
+| `setRibbonAddIns`  | `(tabs: readonly RibbonAddInTab[]) => void`          | Replace the host's ribbon tabs (the `ribbonAddIns` option); an empty list removes them.                                                                                                          |
+| `getRibbonDisplay` | `() => 'always' \| 'tabs' \| 'fullScreen'`           | The current Ribbon Display Options mode.                                                                                                                                                         |
+
 ## Presentation mode
 
 | Method              | Signature             | Description                                    |
@@ -251,16 +260,17 @@ Pass `editable: true` in the options (or call `setEditable(true)`) to turn on cl
 drag-to-move, resize/rotate handles, and double-click inline text editing directly in the DOM.
 These methods are the programmatic entry points around that interaction:
 
-| Method                 | Signature                     | Description                                                            |
-| ---------------------- | ----------------------------- | ---------------------------------------------------------------------- |
-| `setEditable`          | `(editable: boolean) => void` | Enable or disable editing at runtime (disabling clears the selection). |
-| `setEditTemplateMode`  | `(enabled: boolean) => void`  | Target inherited master/layout elements on the current slide.          |
-| `undo`                 | `() => void`                  | Undo the last edit (no-op when the undo stack is empty).               |
-| `redo`                 | `() => void`                  | Redo the last undone edit (no-op when the redo stack is empty).        |
-| `canUndo` / `canRedo`  | `() => boolean`               | Whether `undo()` / `redo()` would do anything.                         |
-| `deleteSelected`       | `() => void`                  | Delete the selected element (no-op without a selection).               |
-| `getSelectedElementId` | `() => string \| null`        | Id of the selected element, or `null`.                                 |
-| `isDirty`              | `() => boolean`               | Whether the document has unsaved changes.                              |
+| Method                 | Signature                     | Description                                                                                |
+| ---------------------- | ----------------------------- | ------------------------------------------------------------------------------------------ |
+| `setEditable`          | `(editable: boolean) => void` | Enable or disable editing at runtime (disabling clears the selection).                     |
+| `setReadOnly`          | `(readOnly: boolean) => void` | Make the deck read-only (`true` wins over `editable`) or lift that restriction at runtime. |
+| `setEditTemplateMode`  | `(enabled: boolean) => void`  | Target inherited master/layout elements on the current slide.                              |
+| `undo`                 | `() => void`                  | Undo the last edit (no-op when the undo stack is empty).                                   |
+| `redo`                 | `() => void`                  | Redo the last undone edit (no-op when the redo stack is empty).                            |
+| `canUndo` / `canRedo`  | `() => boolean`               | Whether `undo()` / `redo()` would do anything.                                             |
+| `deleteSelected`       | `() => void`                  | Delete the selected element (no-op without a selection).                                   |
+| `getSelectedElementId` | `() => string \| null`        | Id of the selected element, or `null`.                                                     |
+| `isDirty`              | `() => boolean`               | Whether the document has unsaved changes.                                                  |
 
 `onChange` fires after any mutation (move, resize, rotate, text edit, delete, undo, redo);
 `onDirtyChange` fires when the unsaved-edits flag flips; `onSelectionChange` fires when the
@@ -272,15 +282,15 @@ duplicate, arrow keys nudge 1px (`Shift`+arrow for 10px), `Escape` deselect.
 
 ## Saving & downloads
 
-| Method         | Signature                                                      | Description                                                                      |
-| -------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `save`         | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | Serialise the (edited) presentation (default `'pptx'`) and clear the dirty flag. |
-| `getContent`   | `() => Promise<Uint8Array>`                                    | Alias of `save()`: the serialized `.pptx` bytes (shared-API name).               |
-| `downloadAs`   | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | Save and trigger a browser download in a supported OpenXML format.               |
-| `downloadPptx` | `(fileName?: string) => Promise<void>`                         | `save()` plus trigger a browser download (default `presentation.pptx`).          |
+| Method         | Signature                                                      | Description                                                                                   |
+| -------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `save`         | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | Serialise the (edited) presentation (default `'pptx'`) and clear the dirty flag.              |
+| `getContent`   | `() => Promise<Uint8Array>`                                    | Alias of `save()`: the serialized `.pptx` bytes (shared-API name).                            |
+| `downloadAs`   | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | Save and trigger a browser download in a supported format (OpenXML, or legacy binary `.ppt`). |
+| `downloadPptx` | `(fileName?: string) => Promise<void>`                         | `save()` plus trigger a browser download (default `presentation.pptx`).                       |
 
 ```ts
-type PptxSaveFormat = 'pptx' | 'ppsx' | 'pptm';
+type PptxSaveFormat = 'pptx' | 'ppsx' | 'pptm' | 'ppt';
 ```
 
 ```ts
@@ -297,14 +307,15 @@ Raster export renders each slide off-screen at scale 1 and rasterises it with `h
 (dynamically imported, so the first call pays a one-time load cost). `jspdf` and the GIF encoder are
 also lazy-loaded. Only one export runs at a time; a call while one is in flight resolves as a no-op.
 
-| Method             | Signature                                         | Description                                                                                          |
-| ------------------ | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `exportSlidePng`   | `(index?: number) => Promise<void>`               | Export a slide as a PNG download (defaults to the current slide).                                    |
-| `copySlideAsImage` | `(index?: number) => Promise<void>`               | Copy a slide to the system clipboard as a PNG image.                                                 |
-| `exportPdf`        | `(options?: ExportPdfOptions) => Promise<void>`   | Export every slide as a multi-page PDF download (one slide per page).                                |
-| `exportGif`        | `(options?: ExportGifOptions) => Promise<void>`   | Export every slide as an animated GIF download (one frame per slide, shared pure-JS GIF89a encoder). |
-| `exportVideo`      | `(options?: ExportVideoOptions) => Promise<void>` | Export every slide as a WebM video download (canvas stream recorded by `MediaRecorder`).             |
-| `print`            | `(options?: PrintOptions) => Promise<boolean>`    | Assemble the printable document and open it in a print window; `false` = popup blocked.              |
+| Method             | Signature                                         | Description                                                                                               |
+| ------------------ | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `exportSlidePng`   | `(index?: number) => Promise<void>`               | Export a slide as a PNG download (defaults to the current slide).                                         |
+| `copySlideAsImage` | `(index?: number) => Promise<void>`               | Copy a slide to the system clipboard as a PNG image.                                                      |
+| `exportPdf`        | `(options?: ExportPdfOptions) => Promise<void>`   | Export every slide as a multi-page PDF download (one slide per page).                                     |
+| `exportGif`        | `(options?: ExportGifOptions) => Promise<void>`   | Export every slide as an animated GIF download (one frame per slide, shared pure-JS GIF89a encoder).      |
+| `exportVideo`      | `(options?: ExportVideoOptions) => Promise<void>` | Export every slide as a WebM video download (canvas stream recorded by `MediaRecorder`).                  |
+| `exportJson`       | `() => void`                                      | Serialize the deck to `pptx-viewer-json` and trigger a browser download (File > Export > Export as JSON). |
+| `print`            | `(options?: PrintOptions) => Promise<boolean>`    | Assemble the printable document and open it in a print window; `false` = popup blocked.                   |
 
 All option interfaces are exported from the package root:
 
@@ -496,6 +507,7 @@ image format round-trips in PowerPoint. No automatic paste listener is installed
 | ------------------------ | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | `startCollaboration`     | `(config: CollaborationInput) => Promise<void>` | Start (or restart) a real-time session; resolves once the transport is created. Status arrives via `onCollaborationStatus`. |
 | `stopCollaboration`      | `() => void`                                    | Stop the active session (no-op when none is running).                                                                       |
+| `getCollaborationState`  | `() => CollaborationState`                      | The shared collaboration state (the off state when no session is active).                                                   |
 | `getCollaborationStatus` | `() => ConnectionStatus`                        | Current status: `'disconnected' \| 'connecting' \| 'connected' \| 'error'` (`'disconnected'` when inactive).                |
 
 See [Options](/vanilla/options#collaboration) for `CollaborationConfig` and the wire-format caveat.
@@ -639,16 +651,17 @@ import {
 } from 'pptx-vanilla-viewer';
 ```
 
-| Export                         | Type                                                                  | Description                                                                                                           |
-| ------------------------------ | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `PPTX_OPEN_ACCEPT`             | `string`                                                              | Ready-made `<input type="file" accept>` value: `.pptx,.ppsx,.pptm,.potx,.ppt,.json`.                                  |
-| `PRESENTATION_OPEN_EXTENSIONS` | `readonly string[]`                                                   | The same list unjoined, for a drop target that wants to test extensions itself.                                       |
-| `isSupportedPresentationFile`  | `(name?: string \| null) => boolean`                                  | Cheap pre-filter for a picked or dropped file name. Extension-only; the real answer is the loader's sniff.            |
-| `isLegacyBinaryPresentation`   | `(name?: string \| null) => boolean`                                  | True for the binary PowerPoint 97-2003 family (`.ppt` / `.pps` / `.pot`), which the viewer reads but never writes.    |
-| `presentationBaseName`         | `(name?: string \| null, fallback?: string) => string`                | The file-name stem, directories and any loadable extension removed (a path like `decks/report.ppt` becomes `report`). |
-| `savedPresentationFileName`    | `(name?: string \| null, format?: SavedPresentationFormat) => string` | The name a saved copy should be offered under: `report.ppt` becomes `report.pptx`.                                    |
-| `SavedPresentationFormat`      | `'pptx' \| 'ppsx' \| 'pptm'`                                          | The formats the save path can produce. Binary `.ppt` is deliberately absent: output is always OpenXML.                |
+| Export                         | Type                                                                  | Description                                                                                                                                              |
+| ------------------------------ | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PPTX_OPEN_ACCEPT`             | `string`                                                              | Ready-made `<input type="file" accept>` value: `.pptx,.ppsx,.pptm,.potx,.ppt,.json`.                                                                     |
+| `PRESENTATION_OPEN_EXTENSIONS` | `readonly string[]`                                                   | The same list unjoined, for a drop target that wants to test extensions itself.                                                                          |
+| `isSupportedPresentationFile`  | `(name?: string \| null) => boolean`                                  | Cheap pre-filter for a picked or dropped file name. Extension-only; the real answer is the loader's sniff.                                               |
+| `isLegacyBinaryPresentation`   | `(name?: string \| null) => boolean`                                  | True for the binary PowerPoint 97-2003 family (`.ppt` / `.pps` / `.pot`). The viewer reads all three and writes `.ppt`; `.pps` and `.pot` are read-only. |
+| `presentationBaseName`         | `(name?: string \| null, fallback?: string) => string`                | The file-name stem, directories and any loadable extension removed (a path like `decks/report.ppt` becomes `report`).                                    |
+| `savedPresentationFileName`    | `(name?: string \| null, format?: SavedPresentationFormat) => string` | The name a saved copy should be offered under: `report.ppt` becomes `report.pptx`.                                                                       |
+| `SavedPresentationFormat`      | `'pptx' \| 'ppsx' \| 'pptm' \| 'ppt'`                                 | The formats the save path can produce. Binary `.ppt` is a save target, chosen explicitly; `.pps` and `.pot` are never written.                           |
 
-`savedPresentationFileName` is the one that matters on Save As. Output is always an OpenXML
-package, so keeping a legacy source extension would hand the user a `.ppt` whose bytes are a ZIP,
-which PowerPoint refuses to open.
+`savedPresentationFileName` is the one that matters on Save As. A regular Save As writes an OpenXML
+package under a `.pptx` name, so a legacy source extension is replaced: keeping `.ppt` would hand
+the user a `.ppt` whose bytes are a ZIP, which PowerPoint refuses to open. Choosing `'ppt'`
+explicitly writes the binary format under the `.ppt` name.

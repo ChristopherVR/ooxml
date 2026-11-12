@@ -11,16 +11,16 @@ modal and cancellation) and programmatically on the [component instance](/svelte
 
 ## Supported formats
 
-| Format | Pipeline                                                                                            |
-| ------ | --------------------------------------------------------------------------------------------------- |
-| PNG    | `html2canvas-pro` rasterisation (dynamically imported on first use)                                 |
-| PDF    | `jspdf` (dynamically imported) + rasterisation, multi-page, one slide per page                      |
-| GIF    | Animated GIF frame encoder over rasterised frames                                                   |
-| WebM   | `MediaRecorder` over a canvas capture stream (codec picked from the shared WebM candidates)         |
-| SVG    | Vector export straight from the parsed data model (no rasterisation), via standalone functions      |
-| Print  | Shared print document (slides / handouts / notes / outline) in a hidden same-origin iframe          |
-| JSON   | `exportToJson` (core model serializer): a portable JSON document that re-imports with full fidelity |
-| PPTX   | Core serializer via `save(format)`, `downloadAs`, `downloadPptx` (`'pptx' \| 'ppsx' \| 'pptm'`)     |
+| Format | Pipeline                                                                                                 |
+| ------ | -------------------------------------------------------------------------------------------------------- |
+| PNG    | `html2canvas-pro` rasterisation (dynamically imported on first use)                                      |
+| PDF    | `jspdf` (dynamically imported) + rasterisation, multi-page, one slide per page                           |
+| GIF    | Animated GIF frame encoder over rasterised frames                                                        |
+| WebM   | `MediaRecorder` over a canvas capture stream (codec picked from the shared WebM candidates)              |
+| SVG    | Vector export straight from the parsed data model (no rasterisation), via standalone functions           |
+| Print  | Shared print document (slides / handouts / notes / outline) in a hidden same-origin iframe               |
+| JSON   | `exportToJson` (core model serializer): a portable JSON document that re-imports with full fidelity      |
+| PPTX   | Core serializer via `save(format)`, `downloadAs`, `downloadPptx` (`'pptx' \| 'ppsx' \| 'pptm' \| 'ppt'`) |
 
 ::: tip Lazy dependencies
 `html2canvas-pro` and `jspdf` are dynamic imports: the first raster/PDF export pays a one-time
@@ -142,12 +142,12 @@ The default iframe surface is immune to popup blockers. A custom `window.open`-b
 
 ## Saving the document
 
-| Method         | Signature                                                      | Description                                           |
-| -------------- | -------------------------------------------------------------- | ----------------------------------------------------- |
-| `save`         | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | Serialise the (edited) slides via the core handler.   |
-| `getContent`   | `() => Promise<Uint8Array>`                                    | Alias of `save()` from the shared viewer contract.    |
-| `downloadAs`   | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | Save + browser download in `pptx`, `ppsx`, or `pptm`. |
-| `downloadPptx` | `(fileName?: string) => Promise<void>`                         | Save + download as `.pptx` with a default name.       |
+| Method         | Signature                                                      | Description                                                  |
+| -------------- | -------------------------------------------------------------- | ------------------------------------------------------------ |
+| `save`         | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | Serialise the (edited) slides via the core handler.          |
+| `getContent`   | `() => Promise<Uint8Array>`                                    | Alias of `save()` from the shared viewer contract.           |
+| `downloadAs`   | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | Save + browser download in `pptx`, `ppsx`, `pptm`, or `ppt`. |
+| `downloadPptx` | `(fileName?: string) => Promise<void>`                         | Save + download as `.pptx` with a default name.              |
 
 ## SVG: standalone functions {#svg-standalone-functions}
 

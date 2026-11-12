@@ -36,6 +36,7 @@ The earlier `--vv-*` tokens still work. Each one, when set, wins over the `--off
 
 | Token              | Falls back to                | Role                                  |
 | ------------------ | ---------------------------- | ------------------------------------- |
+| `--vv-font`        | `--office-font`              | Font family                           |
 | `--vv-background`  | `--office-surface`           | Window background                     |
 | `--vv-surface`     | `--office-background`        | Ribbon and panel surface              |
 | `--vv-secondary`   | `--office-surface`           | Secondary surface                     |
@@ -49,11 +50,11 @@ The earlier `--vv-*` tokens still work. Each one, when set, wins over the `--off
 | `--vv-focus`       | `--office-ring`              | Focus ring                            |
 | `--vv-danger`      | `--office-danger`            | Destructive and error states          |
 
-The playground sets `data-theme="light" | "dark"` on the document root and supplies matching `--vv-*` values in `demo/workspace.css` for its own page chrome (start screen, workspace shell); that file keeps working because `--vv-*` overrides still apply.
+The playground sets `data-theme="light" | "dark"` on the document root and supplies matching `--vv-*` values in `demos/visio/demo/workspace.css` for its own page chrome (start screen, workspace shell); that file keeps working because `--vv-*` overrides still apply.
 
 ## Following the docs site theme
 
-This site stores the visitor's appearance choice in `localStorage` under the VitePress key `vitepress-theme-appearance` (`light`, `dark` or no value, which follows the system). All the viewer sites share the `christophervr.github.io` origin, and the playground (`demo/suite-theme.js`) reads the same key at start-up and updates live on the `storage` event, so toggling the theme on this site restyles an embedded viewer without reloading it or replacing its diagram.
+This site stores the visitor's appearance choice in `localStorage` under the VitePress key `vitepress-theme-appearance` (`light`, `dark` or no value, which follows the system). All the viewer sites share the `christophervr.github.io` origin, and the playground (`demos/visio/demo/suite-theme.js`) reads the same key at start-up and updates live on the `storage` event, so toggling the theme on this site restyles an embedded viewer without reloading it or replacing its diagram.
 
 ```ts
 const key = 'vitepress-theme-appearance';
@@ -76,7 +77,7 @@ window.addEventListener('storage', (event) => {
 The status bar is neutral by default, like the other editors in the suite. Desktop Visio's
 "Colorful" Office theme fills it with the product colour instead. There are three ways to choose:
 
-- **The user**: File > Options > General > Office Theme (Colorful or White). The choice is kept
+- **The user**: File > Options > General > Office Theme (Colorful, White or Black, which is the dark theme). The choice is kept
   on the device.
 - **The host**: the `status-bar` attribute (`colorful` or `neutral`), or the `statusBar` property,
   on `<visio-viewer>`. A host's attribute wins over the saved choice.

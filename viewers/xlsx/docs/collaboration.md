@@ -39,7 +39,7 @@ Undo (Ctrl+Z, the ribbon and the Quick Access Toolbar) undoes only your own edit
 
 ## What is not shared
 
-Charts, pictures and other drawings, comments, hyperlinks, conditional formats, data validation, tables and filters, pivots, freeze panes and other view settings, page setup, protection, document properties and calculation settings stay in each window and are saved from there. Row and column inserts and deletes travel as the cells they move, so a concurrent edit to a moved cell lands at its old address. A formula a collaborator typed with a sheet name that was renamed at the same time keeps the old name. The conflict rules are listed in the `ooxml` repository (`docs/collab-area.md`).
+Notes and replies, hyperlinks, conditional formats, data validation, tables and charts are shared per item (a chart is last-writer-wins). Pictures and other drawings, pivots, filters, freeze panes and other view settings, page setup, protection, document properties and calculation settings stay in each window and are saved from there. Row and column inserts and deletes travel as the cells they move, so a concurrent edit to a moved cell lands at its old address. A formula a collaborator typed with a sheet name that was renamed at the same time keeps the old name. The conflict rules are listed in the `ooxml` repository (`docs/collab-area.md`).
 
 ## What the host owns
 

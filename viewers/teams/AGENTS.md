@@ -78,8 +78,8 @@ the registry's `ooxml-core` and `ooxml-ui`, as an outside user would.
 
 TypeScript strict (`exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`), tabs, single quotes.
 **No em-dashes** (U+2014) anywhere: source, comments, docs, commits, UI copy. Commits follow
-Conventional Commits with the area as scope (`web-component`, `react`, `server`, `demo`, `docs`,
-`ci`, `release`, `deps`); the type sets the version bump, so see `CONTRIBUTING.md`. Trunk-based:
+Conventional Commits with the area as scope (`teams` for this viewer; the root `AGENTS.md` lists the
+others, such as `docs`, `ci` and `deps`); the type sets the version bump, so see `CONTRIBUTING.md`. Trunk-based:
 commit to `main`.
 
 ## Honesty

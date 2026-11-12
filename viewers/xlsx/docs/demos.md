@@ -36,7 +36,8 @@ The demo has no separate collaboration page: co-editing is built into the editor
 ## Run them locally
 
 ```bash
-bun install
+bun install   # at the repository root
+cd viewers/xlsx
 bun run demo
 ```
 

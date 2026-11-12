@@ -25,8 +25,9 @@ npm install ooxml-mcp docx-viewer-mcp xlsx-viewer-mcp visio-viewer-mcp pptx-view
 
 ## Quick start
 
-Run `ooxml-tools /path/to/documents` for all four formats, or
-`ooxml-tools /path/to/documents docx,xlsx,visio` for a selected set.
+Run `ooxml-tools --root /path/to/documents` for all four formats, or
+`ooxml-tools --root /path/to/documents --formats docx,xlsx,visio` for a selected set
+(`--name=value` works too; the older `ooxml-tools /path/to/documents docx,xlsx,visio` form still works).
 A missing selected package is a startup error, so tools are never silently omitted.
 `ooxml-core` is a dependency of this package, so the format servers always share one core.
 

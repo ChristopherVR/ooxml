@@ -106,7 +106,7 @@ Or plain markup, after calling `defineTeamsApp()` from `openteams-vanilla-viewer
 
 Every binding takes the same props: `workspaceId` (the shared room: letters, digits, `-` and `_`),
 `userName`, `userId` (a stable id; defaults to one remembered in this browser), `config`,
-`uploadFile` (where attachments go), `openers` (per-Office-type handlers), and three events:
+`uploadFile` (where attachments go), `openers` (per-Office-type handlers), `embeds` (viewer pages per file kind), `locale` (a BCP 47 tag such as `de`), and three events:
 ready, open file (call `preventDefault()` on it to open the file yourself) and config change
 (`onReady`, `onOpenFile`, `onConfigChange` in React, Solid, Svelte and vanilla; `@ready`,
 `@open-file`, `@config-change` in Vue; `(ready)`, `(openFile)`, `(configChange)` in Angular). See the

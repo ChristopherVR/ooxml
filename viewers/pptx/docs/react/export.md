@@ -60,7 +60,7 @@ interface ExportHandlersResult {
 	handleCopySlideAsImage: () => Promise<void>; // current slide → clipboard PNG
 	handleExportVideo: () => Promise<void>; // all slides → WebM
 	handleExportGif: () => Promise<void>; // all slides → GIF
-	handleSaveAsFormat: (format: PptxSaveFormat) => Promise<void>; // 'pptx' | 'ppsx' | 'pptm'
+	handleSaveAsFormat: (format: PptxSaveFormat) => Promise<void>; // 'pptx' | 'ppsx' | 'pptm' | 'ppt'
 	handleSaveAsPptx: () => void;
 	handleSaveAsPpsx: () => void;
 	handleSaveAsPptm: () => void;

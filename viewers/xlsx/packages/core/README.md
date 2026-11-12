@@ -39,7 +39,7 @@ The main entry handles `.xlsx`, `.xlsm` and `.xltx`. The `/load` entry also open
 
 ## Privacy and network use
 
-The Excel packages make no network request when opening, rendering, editing or saving a document: linked pictures are not fetched, linked data is not refreshed, and fonts come from the device only (nothing is downloaded from Google Fonts or any other font service). Hyperlinks open only when the reader follows them. Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+The Excel packages make no network request when opening, rendering, editing or saving a document: linked pictures are not fetched, linked data is not refreshed, and fonts come from the device only, unless a reader turns on the Trust Center font download (off by default) or the host sets `googleFonts`. Hyperlinks open only when the reader follows them. Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
 
 ## License
 

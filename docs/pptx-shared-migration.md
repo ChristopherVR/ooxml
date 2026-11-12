@@ -8,7 +8,7 @@ viewer packages contain framework adapters and consume `ooxml-ui/pptx`.
 ## Public entries
 
 - `ooxml-ui/pptx`: rendering and web-control APIs.
-- `ooxml-ui/pptx/theme`, `/loader`, `/i18n`, `/ai`: focused entries.
+- `ooxml-ui/pptx/theme`, `/loader`, `/i18n`, `/ai`, `/onedrive`, `/dom`: focused entries.
 - `ooxml-ui/pptx/<module>`: explicit renderer/export leaf entries needed by
   Angular; only built modules are public.
 - `ooxml-core/pptx/editor/<module>`: DOM-free editing, loading and collaboration

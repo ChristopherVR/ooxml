@@ -6,8 +6,9 @@ and saves edited native Office bytes to the same drive item. OpenTeams can share
 item; it is not another Office document editor.
 
 This is explicit file storage and sharing. It does not connect Microsoft Office coauthoring to
-the viewers' collaboration rooms, merge independently edited Office packages, or continuously
-refresh an open document when another person saves it.
+the viewers' collaboration rooms or continuously refresh an open document when another person saves
+it. On Save it can combine independent edits to a package when a format's merger is configured
+(see [Automatically combine concurrent edits during Save](#automatically-combine-concurrent-edits-during-save)).
 
 New to this? The [OneDrive quick start](onedrive-quickstart.md) walks through app registration,
 sign-in, choosing a file and a complete React PowerPoint example, with screenshots.

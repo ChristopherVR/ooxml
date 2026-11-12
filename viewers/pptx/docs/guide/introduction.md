@@ -60,7 +60,7 @@ The monorepo ships eight published packages.
 | [**Angular**](/angular/)         | `pptx-angular-viewer`        | Angular viewer/editor built on the same engine, with the same feature set.                                 |
 | [**Vanilla JS**](/vanilla/)      | `pptx-vanilla-viewer`        | Zero-framework binding built on the same engine: plain DOM, one factory function, no framework dependency. |
 | [**Svelte**](/svelte/)           | `pptx-svelte-viewer`         | Svelte 5 component built on the same engine, with the same feature set.                                    |
-| [**Tools / MCP**](/packages/mcp) | `pptx-viewer-mcp`            | 73 PPTX tool functions, an MCP server for AI agents, and the Y.Doc collaboration codec.                    |
+| [**Tools / MCP**](/packages/mcp) | `pptx-viewer-mcp`            | 74 PPTX tool functions, an MCP server for AI agents, and the Y.Doc collaboration codec.                    |
 | **Installer**                    | `@christophervr/pptx-viewer` | Interactive CLI that scaffolds the right viewer package into your project.                                 |
 
 ### How the pieces fit

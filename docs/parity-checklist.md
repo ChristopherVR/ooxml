@@ -529,6 +529,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Convert are disabled (`ribbon-galleries/smartart-commands.ts`).
 - [ ] **P2** Table Design lacks Shading, Borders, Effects and Draw Borders; Table Layout's Select,
       View Gridlines, Cell Margins, Table Size and Arrange are disabled.
+- [x] **P2** Ribbon Display Options (Always show Ribbon, Show tabs only, Full-screen mode,
+      Ctrl+F1, double click on a tab) and Options > General > "Collapse the ribbon
+      automatically", in all five bindings on the shared `createRibbonDisplayController`.
+- [ ] **P2** Options > General > "Collapse the search box by default" is stored but nothing
+      reads it, in any binding.
+- [ ] **P2** Ribbon Display Options: PowerPoint's fourth menu entry (Show or Hide Quick Access
+      Toolbar) is not in the menu; it stays under Options > Quick Access Toolbar. The peeked
+      ribbon closes on a press outside or Escape, not after a command as in PowerPoint.
 - [ ] **P2** Home: Align Text and Convert to SmartArt; Review: Thesaurus, Translate, Mark All as
       Read, Restrict Permission, Hide Ink; View: Zoom and Macros are placeholders.
 

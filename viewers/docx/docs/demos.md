@@ -36,7 +36,8 @@ Add `?room=<session>` to a demo URL to join a shared session of the same browser
 ## Run them locally
 
 ```bash
-bun install
+bun install          # from the repository root
+cd viewers/docx
 bun run demo
 ```
 

@@ -67,7 +67,6 @@ import { useEditorHistory, useAlignGroup } from 'pptx-vue-viewer/internals';
 | `useSmartArtHoverRect`       | Hover-highlight rectangle for a SmartArt node.                            |
 | `useSmartArtNodeEditContext` | Provide/inject context for inline SmartArt node text/fill editing.        |
 | `useSmartArtInlineEditState` | Inline SmartArt node editor open/close state (`smartart-inline-edit.ts`). |
-| `useSmartArt3D`              | Reads the `smartArt3D` opt-in flag via inject (`smart-art-3d.ts`).        |
 
 ## Tables
 

@@ -36,7 +36,6 @@ each service's own `bind()` handoff of host accessors.
 | `FieldContextService`               | Field/placeholder context (date, slide number, ...) for text rendering.             |
 | `InkDrawingService`                 | Freehand ink stroke state for the drawing tools.                                    |
 | `RulerGuidesService`                | Ruler tick and guide-line state for the editor canvas.                              |
-| `SmartArt3DService`                 | Gates the opt-in Three.js SmartArt renderer via the `smartArt3D` input.             |
 | `ViewerCanvasEditingService`        | Canvas editing orchestration: element select, transform, text/ink/table-cell edits. |
 | `ViewerCollabCursorService`         | Local pointer tracking for broadcasting the user's cursor position.                 |
 | `ViewerCollaborationSessionService` | Share/Broadcast dialog state and session connect/disconnect orchestration.          |

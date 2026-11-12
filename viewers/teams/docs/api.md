@@ -6,9 +6,10 @@ Every binding wraps the same `<teams-app>` custom element. The bindings forward 
 
 | Property        | Attribute       | Description                                                                                                                  |
 | --------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `workspaceId`   | `workspace-id`  | The shared room: 1 to 128 characters of letters, digits, `-` and `_`.                                                        |
+| `workspaceId`   | `workspace-id`  | The shared room: 1 to 100 characters of letters, digits, `-` and `_`; any other value falls back to `demo`.                  |
 | `userName`      | `user-name`     | Display name.                                                                                                                |
 | `userId`        | `user-id`       | Stable id; defaults to one remembered in this browser.                                                                       |
+| `locale`        | `locale`        | Display language: a BCP 47 tag such as `de` or `zh-CN`. Unknown or empty means English.                                      |
 | `config`        | `server-config` | `{ mode: 'local' \| 'server', syncUrl?, signalingUrl?, iceServers, iceTransportPolicy?, token? }`. The attribute takes JSON. |
 | `uploadFile`    |                 | Where attachments go; defaults to the server's `/files` endpoint.                                                            |
 | `openers`       |                 | Per-Office-type handlers (`docx`, `xlsx`, `pptx`, `vsdx`).                                                                   |
@@ -24,7 +25,7 @@ the native editor elements, initially read-only; Visio uses its viewer. Markdown
 subset renderer; text files show literal text; HTML and websites use sandboxed
 frames. `openers` and the cancelable `teams-open-file` event still take precedence.
 
-PowerPoint requires an embedding page supplied by the host:
+PowerPoint opens in a native presentation preview. A host can instead supply an embedding page:
 
 ```ts
 const embeds = {
@@ -35,8 +36,8 @@ const embeds = {
 
 Pass `embeds` to any component binding. The page must understand the file URL and
 support a sandbox with scripts/forms but no same-origin permission. File fetches
-omit credentials; cross-origin file servers must allow CORS. Without a configured
-PowerPoint viewer, the pane reports that limitation and offers external open.
+omit credentials; cross-origin file servers must allow CORS. Without an `embeds` entry
+for PowerPoint, the native preview opens.
 
 The element's `previewContent({ attachment, url })` method opens host-provided
 content locally. For a website use `attachment: { name: 'Project site', kind:
@@ -80,7 +81,7 @@ Both Files views offer upload, blank Excel workbook creation and search. Uploads
 and new workbooks target the selected channel, which is named beside the controls.
 They need configured storage; failures can be retried in the original channel.
 Same-name files use separate storage URLs. Uploads accept up to 20 files of 32 MiB
-each (the reference server's own cap is 25 MB per file unless you raise `maxFileBytes`); the UI reports activity but does not offer byte progress or cancellation.
+each (the reference server's own cap is 25 MB per file unless you raise `maxFileBytes`); the UI reports activity and can cancel it, but does not offer byte progress.
 
 ```ts
 await teams.uploadFiles(channelId, files);

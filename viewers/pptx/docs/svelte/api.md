@@ -155,16 +155,16 @@ image format round-trips in PowerPoint. No automatic paste listener is installed
 
 Active when `editable` is set (see [Getting Started > Editing](/svelte/getting-started#editing)).
 
-| Method           | Signature                                                      | Description                                                          |
-| ---------------- | -------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `undo`           | `() => void`                                                   | Undo the last committed edit.                                        |
-| `redo`           | `() => void`                                                   | Redo the last undone edit.                                           |
-| `canUndo`        | `() => boolean`                                                | Whether an undo step is available (snapshot; not reactive).          |
-| `canRedo`        | `() => boolean`                                                | Whether a redo step is available.                                    |
-| `deleteSelected` | `() => void`                                                   | Delete the selected element (no-op when nothing is selected).        |
-| `save`           | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | Serialise the edited slides to bytes (`'pptx' \| 'ppsx' \| 'pptm'`). |
-| `downloadAs`     | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | Save + trigger a browser download in the given format.               |
-| `downloadPptx`   | `(fileName?: string) => Promise<void>`                         | Save + download as `.pptx` (default name).                           |
+| Method           | Signature                                                      | Description                                                                   |
+| ---------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `undo`           | `() => void`                                                   | Undo the last committed edit.                                                 |
+| `redo`           | `() => void`                                                   | Redo the last undone edit.                                                    |
+| `canUndo`        | `() => boolean`                                                | Whether an undo step is available (snapshot; not reactive).                   |
+| `canRedo`        | `() => boolean`                                                | Whether a redo step is available.                                             |
+| `deleteSelected` | `() => void`                                                   | Delete the selected element (no-op when nothing is selected).                 |
+| `save`           | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | Serialise the edited slides to bytes (`'pptx' \| 'ppsx' \| 'pptm' \| 'ppt'`). |
+| `downloadAs`     | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | Save + trigger a browser download in the given format.                        |
+| `downloadPptx`   | `(fileName?: string) => Promise<void>`                         | Save + download as `.pptx` (default name).                                    |
 
 Keyboard shortcuts, active whenever editing is enabled: `Ctrl`/`Cmd+Z` undo,
 `Ctrl`/`Cmd+Shift+Z` redo, `Delete`/`Backspace` delete, `Ctrl`/`Cmd+D` duplicate, arrow keys
@@ -395,16 +395,16 @@ import {
 } from 'pptx-svelte-viewer';
 ```
 
-| Export                         | Type                                                                  | Description                                                                                                           |
-| ------------------------------ | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `PPTX_OPEN_ACCEPT`             | `string`                                                              | Ready-made `<input type="file" accept>` value: `.pptx,.ppsx,.pptm,.potx,.ppt,.json`.                                  |
-| `PRESENTATION_OPEN_EXTENSIONS` | `readonly string[]`                                                   | The same list unjoined, for a drop target that wants to test extensions itself.                                       |
-| `isSupportedPresentationFile`  | `(name?: string \| null) => boolean`                                  | Cheap pre-filter for a picked or dropped file name. Extension-only; the real answer is the loader's sniff.            |
-| `isLegacyBinaryPresentation`   | `(name?: string \| null) => boolean`                                  | True for the binary PowerPoint 97-2003 family (`.ppt` / `.pps` / `.pot`), which the viewer reads but never writes.    |
-| `presentationBaseName`         | `(name?: string \| null, fallback?: string) => string`                | The file-name stem, directories and any loadable extension removed (a path like `decks/report.ppt` becomes `report`). |
-| `savedPresentationFileName`    | `(name?: string \| null, format?: SavedPresentationFormat) => string` | The name a saved copy should be offered under: `report.ppt` becomes `report.pptx`.                                    |
-| `SavedPresentationFormat`      | `'pptx' \| 'ppsx' \| 'pptm'`                                          | The formats the save path can produce. Binary `.ppt` is deliberately absent: output is always OpenXML.                |
+| Export                         | Type                                                                  | Description                                                                                                                     |
+| ------------------------------ | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `PPTX_OPEN_ACCEPT`             | `string`                                                              | Ready-made `<input type="file" accept>` value: `.pptx,.ppsx,.pptm,.potx,.ppt,.json`.                                            |
+| `PRESENTATION_OPEN_EXTENSIONS` | `readonly string[]`                                                   | The same list unjoined, for a drop target that wants to test extensions itself.                                                 |
+| `isSupportedPresentationFile`  | `(name?: string \| null) => boolean`                                  | Cheap pre-filter for a picked or dropped file name. Extension-only; the real answer is the loader's sniff.                      |
+| `isLegacyBinaryPresentation`   | `(name?: string \| null) => boolean`                                  | True for the binary PowerPoint 97-2003 family (`.ppt` / `.pps` / `.pot`). `.ppt` can be saved; `.pps` and `.pot` are read-only. |
+| `presentationBaseName`         | `(name?: string \| null, fallback?: string) => string`                | The file-name stem, directories and any loadable extension removed (a path like `decks/report.ppt` becomes `report`).           |
+| `savedPresentationFileName`    | `(name?: string \| null, format?: SavedPresentationFormat) => string` | The name a saved copy should be offered under: `report.ppt` becomes `report.pptx`.                                              |
+| `SavedPresentationFormat`      | `'pptx' \| 'ppsx' \| 'pptm' \| 'ppt'`                                 | The formats the save path can produce, including the binary 97-2003 `.ppt`.                                                     |
 
-`savedPresentationFileName` is the one that matters on Save As. Output is always an OpenXML
-package, so keeping a legacy source extension would hand the user a `.ppt` whose bytes are a ZIP,
+`savedPresentationFileName` is the one that matters on Save As. Output is an OpenXML
+package unless 97-2003 `.ppt` is picked, so keeping a legacy source extension would hand the user a `.ppt` whose bytes are a ZIP,
 which PowerPoint refuses to open.

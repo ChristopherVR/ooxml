@@ -4,22 +4,25 @@ All bindings mount `<xlsx-editor>` through the same `mountEditor` function in `p
 
 ## Props
 
-| Prop             | Type                          | Default      | Notes                                                                                                                   |
-| ---------------- | ----------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| `workbook`       | `Workbook`                    | none         | Shown when a **new object** is passed. The workbook the editor emits is never assigned back (no loop).                  |
-| `bytes`          | `Uint8Array \| ArrayBuffer`   | none         | File bytes; loaded again whenever a new array is passed.                                                                |
-| `src`            | `string`                      | none         | URL fetched and loaded when the string changes; the file name defaults to the URL's last segment.                       |
-| `fileName`       | `string`                      | `Book1.xlsx` | Forwarded only when the parent changes it, so File > Open in the editor can rename the workbook.                        |
-| `readOnly`       | `boolean`                     | `false`      |                                                                                                                         |
-| `locale`         | `string`                      | `en`         | `en`, `fr`, `de`, `es`, `zh-CN` or a tag that maps to one (`de-DE`).                                                    |
-| `theme`          | `'light' \| 'dark' \| 'auto'` | `auto`       | `auto` follows the operating system.                                                                                    |
-| `authorName`     | `string`                      | `Author`     | Recorded on new comments.                                                                                               |
-| `showToolbar`    | `boolean`                     | `true`       | The ribbon.                                                                                                             |
-| `showFormulaBar` | `boolean`                     | `true`       | The name box and formula bar.                                                                                           |
-| `hiddenActions`  | `string[]`                    | `[]`         | Ribbon controls, title-bar items and context-menu entries to hide, by stable id.                                        |
-| `ribbonAddIns`   | `RibbonAddInTab[]`            | none         | Tabs the host adds after the built-in ones; see [Ribbon add-in tabs](#ribbon-add-in-tabs).                              |
-| `themeColors`    | `Partial<Record<...>>`        | `{}`         | Token overrides, see [theming](/theming).                                                                               |
-| `collaboration`  | `XlsxCollaborationOptions`    | none         | Shares the open workbook in a room while set; a new object rejoins, `null` leaves. See [collaboration](/collaboration). |
+| Prop             | Type                          | Default      | Notes                                                                                                                             |
+| ---------------- | ----------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| `workbook`       | `Workbook`                    | none         | Shown when a **new object** is passed. The workbook the editor emits is never assigned back (no loop).                            |
+| `bytes`          | `Uint8Array \| ArrayBuffer`   | none         | File bytes; loaded again whenever a new array is passed.                                                                          |
+| `src`            | `string`                      | none         | URL fetched and loaded when the string changes; the file name defaults to the URL's last segment.                                 |
+| `fileName`       | `string`                      | `Book1.xlsx` | Forwarded only when the parent changes it, so File > Open in the editor can rename the workbook.                                  |
+| `readOnly`       | `boolean`                     | `false`      |                                                                                                                                   |
+| `locale`         | `string`                      | `en`         | `en`, `fr`, `de`, `es`, `zh-CN` or a tag that maps to one (`de-DE`).                                                              |
+| `theme`          | `'light' \| 'dark' \| 'auto'` | `auto`       | `auto` follows the operating system.                                                                                              |
+| `authorName`     | `string`                      | `Author`     | Recorded on new comments.                                                                                                         |
+| `showToolbar`    | `boolean`                     | `true`       | The ribbon.                                                                                                                       |
+| `showFormulaBar` | `boolean`                     | `true`       | The name box and formula bar.                                                                                                     |
+| `hiddenActions`  | `string[]`                    | `[]`         | Ribbon controls, title-bar items and context-menu entries to hide, by stable id.                                                  |
+| `ribbonAddIns`   | `RibbonAddInTab[]`            | none         | Tabs the host adds after the built-in ones; see [Ribbon add-in tabs](#ribbon-add-in-tabs).                                        |
+| `themeColors`    | `Partial<Record<...>>`        | `{}`         | Token overrides, see [theming](/theming).                                                                                         |
+| `collaboration`  | `XlsxCollaborationOptions`    | none         | Shares the open workbook in a room while set; a new object rejoins, `null` leaves. See [collaboration](/collaboration).           |
+| `storage`        | `DocumentStorage`             | none         | Host-owned storage: Save and Save As go to `storage.save()`, and File > Open to `storage.open()` when it has one.                 |
+| `fileProviders`  | `CloudFileProvider[]`         | none         | Cloud places File > Open offers next to "This device"; a workbook opened from one saves back to that file. Keep the array stable. |
+| `customization`  | `ExcelCustomization`          | none         | `capabilities`, `backstage.extraPages` and `contextMenu.extraCommands`; keep the object stable (`null` restores the defaults).    |
 
 ## Callbacks and events
 
@@ -41,7 +44,7 @@ All bindings mount `<xlsx-editor>` through the same `mountEditor` function in `p
 
 Load failures (corrupt, encrypted or unsupported files) reach `onWorkbookError`; a failed `src` fetch does too. A `src` fetch still in flight is dropped when new `bytes` or a new `workbook` arrive, or `src` is cleared or changed.
 
-`onFileCommand` receives the cancelable `file-command` event itself, not its detail: call `event.preventDefault()` to take a File command (New, Open, Save, Save As, Export, Export CSV, Print) over, and read `event.detail.command` to see which one. Vue, Angular and Svelte emit or call back with the same event object. Every other callback receives its payload directly. See the [element API](/api).
+`onFileCommand` receives the cancelable `file-command` event itself, not its detail: call `event.preventDefault()` to take a File command (New, Open, Save, Save As, Export, Export CSV, Print, Share) over, and read `event.detail.command` to see which one. Vue, Angular and Svelte emit or call back with the same event object. Every other callback receives its payload directly. See the [element API](/api).
 
 Every prop is forwarded only when its value changes (`hiddenActions` and `themeColors` are compared by value), so a parent re-render never undoes what the user changed inside the editor: Editing / Viewing, File > Options theme or language, or Customize Ribbon. A controlled parent keeps its state in step through `onReadOnlyChange` and `onRibbonCustomize` (in Angular, `[(readOnly)]`).
 
@@ -86,19 +89,20 @@ Excel, PowerPoint and Visio editors. No add-in tab ships with the editor.
 
 Every adapter exposes the same handle: React through `ref`, Vue through the template ref, Angular through the component instance, Solid through `editorRef`, Svelte through the component's exports and vanilla as the return value of `mountEditor`.
 
-| Member                          | Effect                                                                |
-| ------------------------------- | --------------------------------------------------------------------- |
-| `element`                       | The mounted `<xlsx-editor>`.                                          |
-| `load(bytes, fileName?)`        | Opens `.xlsx`, `.xlsm`, `.xls` or `.csv` bytes; rejects on failure.   |
-| `newWorkbook()`                 | Replaces the workbook with a blank one.                               |
-| `save()`                        | Resolves to an `.xlsx` Blob. Does not clear `dirty`.                  |
-| `saveBytes(format?)`            | `'xlsx'` (default) or `'csv'` (active sheet) bytes.                   |
-| `download(fileName?)`           | Saves, downloads in the browser and marks the workbook clean.         |
-| `markClean()`                   | Clears `dirty` after you persisted a saved Blob yourself.             |
-| `select(ref)`, `getSelection()` | Selection as an A1 reference (`'B2:D8'`).                             |
-| `setActiveSheet(index)`         | Switches sheet.                                                       |
-| `share()`                       | Opens the Share dialog. Unmounting the editor leaves any shared room. |
-| `dirty`                         | Unsaved edits (Svelte: `isDirty()`).                                  |
+| Member                          | Effect                                                                                                                  |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `element`                       | The mounted `<xlsx-editor>`.                                                                                            |
+| `load(bytes, fileName?)`        | Opens `.xlsx`, `.xlsm`, `.xls` or `.csv` bytes; rejects on failure.                                                     |
+| `newWorkbook()`                 | Replaces the workbook with a blank one.                                                                                 |
+| `save()`                        | Resolves to an `.xlsx` Blob. Does not clear `dirty`.                                                                    |
+| `saveBytes(format?)`            | `'xlsx'` (default) or `'csv'` (active sheet) bytes.                                                                     |
+| `download(fileName?)`           | Saves, downloads in the browser and marks the workbook clean.                                                           |
+| `markClean()`                   | Clears `dirty` after you persisted a saved Blob yourself.                                                               |
+| `select(ref)`, `getSelection()` | Selection as an A1 reference (`'B2:D8'`).                                                                               |
+| `setActiveSheet(index)`         | Switches sheet.                                                                                                         |
+| `share()`                       | Opens the Share dialog. Unmounting the editor leaves any shared room.                                                   |
+| `openCloudFile(file)`           | Opens a file from a `CloudFileProvider` as File > Open > OneDrive does: its name, read-only state and storage for Save. |
+| `dirty`                         | Unsaved edits. Svelte's `isDirty()` is deprecated; read `dirty`.                                                        |
 
 Calling a handle method before the editor is mounted throws `Editor is not mounted`.
 

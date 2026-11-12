@@ -39,7 +39,7 @@ export class WorkspaceComponent {
 }
 ```
 
-Inputs: `workspaceId`, `userName`, `userId`, `config`, `uploadFile`, `openers`. Outputs: `ready`,
+Inputs: `workspaceId`, `userName`, `userId`, `config`, `uploadFile`, `openers`, `embeds`, `locale`. Outputs: `ready`,
 `openFile` (`{ detail, event }`), `configChange`.
 
 ## The service

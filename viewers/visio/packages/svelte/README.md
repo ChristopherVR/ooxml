@@ -46,7 +46,7 @@ npm install visio-svelte-viewer
 The shared properties are `document` (a parsed `VisioDocument`, or `null` to clear),
 `pageIndex` (zero-based), `zoom` (`1` means 100%), `showToolbar`, `ribbonAddIns` (tabs the host adds
 after Help), `canEdit` (editing permission; the viewer is editable unless you pass `false`),
-`readOnly` (a restriction of its own), `storage` and `customization` (host-owned save and open), `collaboration` (shares the open drawing in a room while set; `null` leaves it) and `events`.
+`readOnly` (a restriction of its own), `storage`, `fileProviders` (cloud places for File > Open) and `customization` (host-owned save and open), `collaboration` (shares the open drawing in a room while set; `null` leaves it) and `events`.
 The callback map uses `document-load`, `document-change` (`{ document, dirty, kind }` with kind
 `edit`, `undo`, `redo`, `remote` or `save`), `document-error`, `page-change`, `zoom-change`,
 `shape-select`, `selection-change`, `office-ribbon-add-in` and `collaboration-change`. File loading uses the imperative
@@ -91,7 +91,7 @@ The package supplies the Svelte component through its `svelte` export condition.
 
 ## Privacy and network use
 
-The Visio packages make no network request when opening, rendering, editing or saving a document: linked pictures are not fetched, linked data is not refreshed, and fonts come from the device only (nothing is downloaded from Google Fonts or any other font service). Hyperlinks open only when the reader follows them. Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+The Visio packages make no network request when opening, rendering, editing or saving a document, unless Google Fonts is turned on: linked pictures are not fetched, linked data is not refreshed, and fonts come from the device. Google Fonts is off until the host sets `googleFonts` or the reader turns on the Trust Center toggle; then only public catalogue family names are requested, never document text. Hyperlinks open only when the reader follows them. Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
 
 ## License
 

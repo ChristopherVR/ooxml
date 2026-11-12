@@ -33,7 +33,7 @@ Core unit and fixture tests establish their asserted parse/model cases. Viewer t
 
 ## Website
 
-Static multi-page Vite build: home, guide, capability ledger, architecture and a separate playground. Links are relative and assets local. No third-party fonts or scripts. No parser bundle on the landing page.
+VitePress documentation site (`docs/`): home, guide, capability ledger, architecture and a separate playground, which Vite builds from `demos/visio/demo/`. Links are relative and assets local. No third-party fonts or scripts. No parser bundle on the landing page.
 
 ## Publication
 

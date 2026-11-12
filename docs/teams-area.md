@@ -91,7 +91,7 @@ core only decides and emits; showing a toast, a browser `Notification` or a soun
 ## Shared assistant chats
 
 `createSharedChat({ roomId, user, config })` joins one assistant conversation that lives in its own
-room (`sharedChatRoomId()` makes an unguessable `aiaichat-<32 hex>` id), over the same sync transport
+room (`sharedChatRoomId()` makes an unguessable `aichat-<32 hex>` id), over the same sync transport
 the workspace uses (`createSyncTransport`). `store.put` adds or replaces a message by id (unchanged
 rows are not written again), `store.truncateFrom` removes a message and everything after it, and
 `store.messages()` re-validates every row: role, length caps, author name and a JSON-only `data`
@@ -137,8 +137,8 @@ throws):
 
 Private chats add one rule to the sync contract: a room named `chat-<16 hex>-<chat id>` admits a socket only when its `?user=<id>` is in the room's `teams:chat-members` map (a Yjs map of user id to `true`). A room that has no members yet is created by its first socket, which passes `?members=<id>,<id>` and must be one of them; a 1:1 room (`dm-<hash>`) must list exactly the two people the id was derived from. The server closes the sockets of people removed from the map. Identity is a claim unless the server has accounts (see Authentication below).
 
-Both sockets receive `?token=<token>` when a token is configured (a browser cannot set headers on
-a WebSocket); enforce it, and an origin allowlist, on the server. Validate room names (`^[\w-]{1,128}$`) and cap message sizes.
+Both sockets send the token in the `Sec-WebSocket-Protocol` header (`openteams.token.<token>`) when
+one is configured, with `?token=<token>` as the fallback for values the header cannot carry; enforce it, and an origin allowlist, on the server. Validate room names (`^[\w-]{1,128}$`) and cap message sizes.
 
 ### Authentication
 
@@ -146,7 +146,7 @@ Optional, and off by default. A server with accounts exposes `POST <origin>/auth
 `{ user, credential }`, the workspace token in `Authorization` when one is set) and answers
 `{ session, user, expiresAt }`: a signed, expiring token that binds one user id.
 `requestTeamsSession(config, { userId, credential })` calls it; pass the result as
-`config.sessionToken` and both sockets send `?session=<token>`. The server then takes the user id
+`config.sessionToken` and both sockets send it in `Sec-WebSocket-Protocol` (`openteams.session.<token>`), or as `?session=<token>` when the header cannot carry it. The server then takes the user id
 from the session and ignores the claimed `?user=`, so holding the shared token no longer lets a
 client join another person's chats. With accounts the server refuses sockets that have no valid
 session (401).
@@ -322,7 +322,7 @@ entry `{ "credential": "...", "role": "moderator" }`, or `role: 'moderator'` ret
 large package with its own dependency tree, whose `dist` must be built before the server's tests
 can run) to a small server, `viewers/teams/scripts/bundle-validator.mjs` bundles
 `validate-update.ts` and `protocol.ts` with esbuild into the committed
-`server/validator.generated.mjs` (about 9 KB, `yjs`, `lib0` and `y-protocols` external, which the
+`server/validator.generated.mjs` (about 12 KB, `yjs`, `lib0` and `y-protocols` external, which the
 server already depends on). A script test fails when the committed file is stale, so a change to the
 validator must be followed by `bun run bundle:validator` in `viewers/teams`; the commit then touches
 `server/` and releases `openteams-server`.

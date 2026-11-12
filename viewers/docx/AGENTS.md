@@ -88,11 +88,12 @@ the element, forward props and options, and re-emit its events.
   element that is missing something (a translatable label, a tooltip) gets an
   additive option in `src/ui`, not a copy.
 - Still hand-built in `src/ui/src/docx`, pending a move to shared `ooxml-ui`
-  controls: the Word ribbon (native controls and its own overflow folding, see
-  `ribbon-tabs.ts` and `ribbon-home.ts`), the indent ruler (`ruler.ts`;
-  draggable markers; the shared ruler is decorative) and the comments panel
-  (`comments-panel.ts`). Move one only when `ooxml-ui` can carry its behaviour
-  without a test-visible regression.
+  controls: the Word ribbon (native controls, see `ribbon-tabs.ts` and
+  `ribbon-home.ts`; its group overflow uses the shared `ribbon/overflow.ts`). The
+  indent ruler (`ruler.ts`) mounts the shared `office-ui-ruler`, but Word's draggable
+  indent markers stay its own since the shared ruler is decorative. The comments pane
+  (`comments-panel.ts`) mounts the shared `office-ui-comments-pane`. Move a control
+  only when `ooxml-ui` can carry its behaviour without a test-visible regression.
 - `ole2` (legacy compound-file codecs) reaches this repository only through
   `ooxml-core/docx/load`, which inlines it. Never add `@christophervr/ole2` or an
   internal package to a manifest here, and never fork its code.
@@ -101,7 +102,7 @@ the element, forward props and options, and re-emit its events.
   engine; it is the one piece of layout that needs a DOM.
 - Unsupported document features must be reported honestly. SmartArt that Word has
   not laid out (inserted, edited, or saved without a cached drawing) is drawn with
-  an approximate layout, not Word's, and its styles and colours are not editable.
+  an approximate layout, not Word's.
   Charts paint from their cached values; classic charts can be inserted, edited
   (type, legend, data, the shared Format pane's fills, outlines and options) and
   resized through the shared chart core. Admitted ChartEx charts are editable through the same core: waterfall,

@@ -96,7 +96,7 @@ Sessions start only when the user (or host) starts one.
   room id (hashed), the participants' IP addresses and the connection offers; document content
   then flows directly between peers, encrypted by WebRTC. Pass a `signaling` list (or
   `?signaling=` in a share link) to use your own server.
-- Sessions within one browser use `BroadcastChannel` and leave the device.
+- Sessions within one browser use `BroadcastChannel`, which never leaves the device.
 
 ### Digital signature inspection (Node only)
 

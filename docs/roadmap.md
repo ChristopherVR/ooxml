@@ -17,7 +17,7 @@ from PowerPoint-only binding consolidation.
 
 ## Done
 
-- **Shared areas:** `xml`, `opc`, `units`, `color`, `geometry`, `drawingml`, `diagram` (SmartArt), `chart` (model, parser, writer and SVG painter), `digest`, `crypto` (package encryption), `math`, `text`, `i18n`, `ribbon`, `collab` (Yjs real-time collaboration), `teams` and `automation`. `AGENTS.md` has the authoritative list.
+- **Shared areas:** `xml`, `opc`, `units`, `color`, `geometry`, `drawingml`, `diagram` (SmartArt), `chart` (model, parser, writer and SVG painter), `digest`, `crypto` (package encryption), `math`, `text`, `i18n`, `ribbon`, `collab` (Yjs real-time collaboration), `teams`, `automation` and `embedding`. `AGENTS.md` has the authoritative list.
 - **Formats as areas:** `docx`, `xlsx`, `pptx` and `visio`, each with its own parser and writer (Visio edits are bounded, and legacy `.vsd` is preview only).
 - **Products:** the PowerPoint, Word, Excel, Visio and OpenTeams viewers and the shared `ooxml-ui` elements live in this repository and are released from one pipeline.
 - **Wave 6 (2026-10-23):** one binding kit in `ooxml-ui/bindings`, pptx headless controllers, and chart and SmartArt editing shared across products. Word and Excel insert and edit SmartArt; Word, Excel and Visio edit charts; pptx saves classic chart title, legend, axis and series edits and ChartEx title, legend, label and series edits through the neutral writers. Details are in [structure-plan.md](structure-plan.md) section 5 and [agnostic-core-plan.md](agnostic-core-plan.md).

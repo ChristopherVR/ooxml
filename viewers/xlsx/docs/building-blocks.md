@@ -46,7 +46,7 @@ to custom controls. Formatting fields are null for mixed values. Formatting insp
 bounded to 4096 cells: larger selections return null and `formattingComplete=false`.
 
 `enabled` has one flag per callback: `bold`, `italic`, `underline`, `fontFamily`, `fontSize`,
-`alignment`, `numberFormat`, `undo`, `redo` and the host workflows `share`, `settings`,
+`alignment`, `numberFormat`, `undo`, `redo` and the host workflows `openShareDialog`, `settings`,
 `formatCells`, `findReplace` and `insertFunction`. `canUndo` and `canRedo` repeat the undo and
 redo flags. `options` lists the choices a custom font, size, alignment or number format control
 can offer (`fontFamilies`, `fontSizes`, `alignments`, `numberFormats`), and `labels` holds the

@@ -305,7 +305,6 @@ import { SlideCanvas, RibbonToolbar } from 'pptx-vue-viewer';
 import {
 	useRibbonProps,
 	useEditorHistory,
-	useSelection,
 	// ...plus whichever other composables you need to build the
 	// `UseRibbonPropsInput` state/action fields (see ribbon-props-types.ts).
 } from 'pptx-vue-viewer/internals';

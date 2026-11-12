@@ -68,7 +68,7 @@ has the bytes you handed the editor; if a document must not be copied or exporte
 the browser.
 
 ```ts
-import type { WordCustomization } from 'docx-core';
+import type { WordCustomization } from 'ooxml-ui/docx';
 
 editor.customization = {
 	capabilities: { print: false, export: false, copy: false },
@@ -363,7 +363,7 @@ chrome, and `customization` trims it. To compose your own layout, each product a
 toolbar, canvas and panes separately (React: `useViewerBuildingBlocks` plus the element components).
 Building blocks are read-only until the host passes `canEdit: true`, and take no `readOnly`,
 `customization` or `storage`: you own the chrome, so you own those decisions. See
-`viewers/<product>/docs/building-blocks.md`.
+`viewers/<product>/docs/building-blocks.md` (Word, Excel and Visio; PowerPoint's chrome is described in `viewers/pptx/docs/guide/customization.md`).
 
 ## Known limits
 

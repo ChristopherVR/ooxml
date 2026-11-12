@@ -244,7 +244,7 @@ line/marker swatches and position-authoring controls remain incomplete.
   edits to revision-tagged groups need a distinct revision UID, which the commands supply. Group and
   Ungroup (`edit/sparkline-grouping.ts`) merge the touched groups into the first one or split each
   into one group per sparkline. The style gallery (no ground truth for Excel's 36 colour sets could
-  be read through COM), date-axis authoring and individual source-range editing remain; existing
+  be read through COM) and individual source-range editing remain (the date axis is switched on and off in Sparkline Settings); existing
   date-axis metadata is preserved.
 
 ## Calculation: lookups and regular expressions
@@ -348,7 +348,7 @@ line/marker swatches and position-authoring controls remain incomplete.
     Flash Fill, Subtotal, Consolidate and Advanced filter have no commands. Formula auditing (Trace
     Precedents and Dependents, Remove Arrows, Evaluate Formula with Step In and Step Out, Error
     Checking and the Watch Window) exists. Error Checking covers seven rules (not the two-digit-year
-    and list data validation ones) and has no green-triangle indicators; OFFSET and INDIRECT targets
+    and list data validation ones); formula cells with an error value show a green-triangle mark; OFFSET and INDIRECT targets
     are not traced. Text to Columns splits at
     delimiters or typed fixed-width break positions (no per-column data format step), and
     Page Layout > Themes > Colors only reports that changing the

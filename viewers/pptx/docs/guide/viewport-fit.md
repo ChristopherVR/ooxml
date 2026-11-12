@@ -15,21 +15,25 @@ Omitting these options preserves the existing fit policy.
 `fitPadding` is an unscaled CSS-pixel allowance **on each side**: `8` reserves
 16 pixels in each axis; `{ horizontal: 4, vertical: 16 }` reserves 8 pixels
 horizontally and 32 vertically. `maxFitScale` is a positive fit-factor ceiling;
-`null` means unlimited. Invalid values fall back to the binding's defaults.
+`null` means unlimited. Invalid values fall back to the shared defaults.
+
+All five bindings use the same defaults, which are the React editor's: a desktop
+viewport (768 px or wider) reserves 4 / 16 px per side and caps the fit scale at 1.
+A viewport narrower than 768 px reserves 12 / 12 px per side instead.
 
 | Binding | Per-side horizontal / vertical padding | Maximum fit scale |
 | ------- | -------------------------------------- | ----------------- |
-| React   | 4 / 16 px                              | 1                 |
-| Vue     | 8 / 16 px                              | 1                 |
-| Angular | 8 / 16 px                              | 1                 |
-| Svelte  | 24 / 24 px                             | Unlimited         |
-| Vanilla | 16 / 16 px                             | Unlimited         |
+| React   | 4 / 16 px (12 / 12 px below 768 px)    | 1                 |
+| Vue     | 4 / 16 px (12 / 12 px below 768 px)    | 1                 |
+| Angular | 4 / 16 px (12 / 12 px below 768 px)    | 1                 |
+| Svelte  | 4 / 16 px (12 / 12 px below 768 px)    | 1                 |
+| Vanilla | 4 / 16 px (12 / 12 px below 768 px)    | 1                 |
 
 Each UI package exports the `ViewportFitOptions` and `ViewportFitPadding` types.
 These options affect ordinary viewer fitting, not authored slide dimensions,
 saved content, thumbnails, export, presentation mode, or the separate user zoom
-setting. Vanilla preserves its existing mobile CSS padding when `fitPadding`
-is omitted.
+setting. Vanilla always writes the resolved padding inline on its viewport, so a
+stylesheet padding rule on that element has no effect; use `fitPadding` instead.
 
 ## Measurement
 

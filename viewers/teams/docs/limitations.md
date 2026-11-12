@@ -25,15 +25,15 @@ It does **not** implement recording, background blur, live captions, push or ema
 
 Word previews read-only; Excel offers local editing and saving new channel copies
 when storage is configured; Visio uses its existing viewer.
-There is no coediting, overwrite or versioned save-back. PowerPoint needs a
-host-configured embedded viewer page. Missing integrations are reported in the pane.
+There is no coediting, overwrite or versioned save-back. PowerPoint opens in a
+native preview; a host can supply an embedded viewer page instead. Missing integrations are reported in the pane.
 Text reads are limited to 2 MiB and native Office reads to 32 MiB. The interface is available in
 English, German, Spanish, French and Simplified Chinese (the `locale` prop); text people wrote is
 never translated.
 
 Files views support direct upload, blank Excel creation and metadata search when
-storage is configured. Uploads show a busy state and allow retry, with no byte
-progress or cancellation. A failed batch can leave files that were uploaded before the failure and are not
+storage is configured. Uploads show a busy state and allow cancellation and retry, with no byte
+progress. A failed batch can leave files that were uploaded before the failure and are not
 referenced by any message; the reference server removes its partial uploads and lets the uploader or a
 moderator delete the rest (`DELETE /files/<scope>/<name>`), but does not remove them on its own.
 The reference server limits private chat files to the chat's members and counts storage per
@@ -72,7 +72,7 @@ in the client and require server authorization to become enforceable.
 
 - **Mesh calls** connect every participant to every other one. That needs no media server and
   works for a handful of people (the default cap is 12), not a webinar.
-- **History grows.** The reference server keeps one snapshot per room and never compacts it.
+- **History grows.** The reference server keeps one snapshot per room and compacts it when the room loads and every 6 hours by default (`TEAMS_COMPACT_INTERVAL_MIN`).
 - **One server process.** The reference server keeps rooms in memory and does not scale
   horizontally.
 

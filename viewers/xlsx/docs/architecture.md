@@ -38,7 +38,7 @@ A loaded workbook keeps the parts the model does not represent in `workbook.sour
 
 ## The web component paints
 
-`packages/web-component` is the only editing UI: it creates an edit session over the workbook, paints what the core's layout functions return, routes keyboard, mouse and ribbon input to editing commands, and owns styling, locales and dialogs. Shadow DOM scopes its styles; registration is browser-only and idempotent. Browser tests exercise the same contract through every binding.
+`<xlsx-editor>` is the only editing UI; it lives in the ooxml repository (`src/ui/src/xlsx`, `ooxml-ui/xlsx`), and `packages/web-component` only re-exports it. It creates an edit session over the workbook, paints what the core's layout functions return, routes keyboard, mouse and ribbon input to editing commands, and owns styling, locales and dialogs. Shadow DOM scopes its styles; registration is browser-only and idempotent. Browser tests exercise the same contract through every binding.
 
 `packages/bindings` owns framework integration only: mount and unmount, property updates, event forwarding and imperative handles. New editor features belong in the web component (or in the core); a binding change is justified only by a framework lifecycle or API requirement.
 

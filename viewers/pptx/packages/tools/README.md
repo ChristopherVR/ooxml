@@ -3,7 +3,7 @@
 [![npm](https://img.shields.io/npm/v/pptx-viewer-mcp.svg)](https://www.npmjs.com/package/pptx-viewer-mcp)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](../../LICENSE)
 
-Edit PowerPoint files from an AI agent. It ships a ready-to-run [MCP](https://modelcontextprotocol.io) server with 73 PowerPoint editing tools, including adding slides, replacing text, editing charts, and updating embedded objects. The same operations are available as plain functions you can call yourself, alongside their Zod input schemas and a codec for real-time collaboration (Y.Doc). The [`pptx-viewer-core`](https://www.npmjs.com/package/pptx-viewer-core) engine is a dependency, so one install provides the complete editing stack.
+Edit PowerPoint files from an AI agent. It ships a ready-to-run [MCP](https://modelcontextprotocol.io) server with 74 PowerPoint editing tools, including adding slides, replacing text, editing charts, and updating embedded objects. The same operations are available as plain functions you can call yourself, alongside their Zod input schemas and a codec for real-time collaboration (Y.Doc). The [`pptx-viewer-core`](https://www.npmjs.com/package/pptx-viewer-core) engine is a dependency, so one install provides the complete editing stack.
 
 ![An AI agent calling validated MCP tools to edit and save a PowerPoint file](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/mcp-tools.svg)
 
@@ -33,7 +33,7 @@ No clone, no build, no separate core install. Point your MCP client at the publi
 
 That is the entire setup. `npx` downloads `pptx-viewer-mcp` and its bundled `pptx-viewer-core` engine on first run, so there is nothing else to install. Add the config above, restart your client, and the tools are available.
 
-This works in Claude Desktop, Claude Code, Cursor, and any MCP-compatible client. All 73 tools are exposed over stdio in snake_case (for example `add_slide`, `batch_update_elements`). Every tool takes a `filePath` argument and the server handles loading and saving internally. File access is scoped to a root directory (`PPTX_TOOLS_ROOT`, defaulting to the process working directory) and restricted to `.pptx` and `.ppt` files; edits write `.pptx` only. The tools themselves are `pptxTools` in `ooxml-core/pptx/automation`, registered with the same `registerAutomationTools` call as the Word, Excel and Visio servers.
+This works in Claude Desktop, Claude Code, Cursor, and any MCP-compatible client. All 74 tools are exposed over stdio in snake_case (for example `add_slide`, `batch_update_elements`). Every tool takes a `filePath` argument and the server handles loading and saving internally. File access is scoped to a root directory (`PPTX_TOOLS_ROOT`, defaulting to the process working directory) and restricted to `.pptx` and `.ppt` files; edits write `.pptx` only. The tools themselves are `pptxTools` in `ooxml-core/pptx/automation`, registered with the same `registerAutomationTools` call as the Word, Excel and Visio servers.
 
 > If you prefer a global install (`npm i -g pptx-viewer-mcp`), the same server is available as the `pptx-tools` binary. Point `command` at `pptx-tools` with no args.
 

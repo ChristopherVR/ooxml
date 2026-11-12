@@ -29,6 +29,7 @@ const teams = mountTeams(document.querySelector('#teams')!, {
 		mode: 'server',
 		syncUrl: 'wss://teams.example.com/sync',
 		signalingUrl: 'wss://teams.example.com/signal',
+		iceServers: [{ urls: 'stun:stun.example.com:3478' }],
 	},
 });
 teams.update({ workspaceId: 'acme', userName: 'Ada Lovelace' });

@@ -165,7 +165,7 @@ unsupported.
 ## Why the Excel packages keep the `@christophervr` scope
 
 The unscoped npm names `xlsx-core` and `xlsx-viewer` belong to other people, so the Excel
-packages stay `@christophervr/xlsx-core` and the other `@christophervr/xlsx-*` names at 1.0 and
+packages stay `@christophervr/xlsx-core` and `@christophervr/xlsx-react-viewer` at 1.0 and
 afterwards. Renaming them would break every consumer for no gain, and the scope is part of the
 public API like any other name. The Word packages are unscoped (`docx-core`) and stay so.
 

@@ -589,8 +589,7 @@ an explicit Angle and one local MoveTo/LineTo geometry section. Length, angle,
 local rotation pins and flips remain fixed. Horizontal, diagonal, vertical and
 reversed native DrawLine cases match native caches after save/core reparse;
 all six demos cover controls, undo/redo, download and reload. Native Office
-reopening remains unverified. Broader 1D movement formulas and routing/glue
-remain unsupported. Endpoint LockBegin/LockEnd caches and style
+reopening remains unverified. Broader 1D movement formulas remain unsupported, and so do routing and glue on these local lines (connector routing is a separate edit family). Endpoint LockBegin/LockEnd caches and style
 ancestry participate in the shared movement protection checks.
 
 Unreferenced top-level local lines also admit `delete-shape` through the same
@@ -610,7 +609,7 @@ dependency proof and cache writeback are reused. Resized lines can move and
 resize again. Four native orientations verify caches and XYToPage poses; all
 six routes cover controls/history/download/reload, plus native PNG interior
 comparisons for resized gradient paint. Nonzero line Height,
-broader 1D resize formulas, routing/glue and native reopening remain open.
+broader 1D resize formulas, routing and glue on these local lines, and native reopening remain open.
 
 `move-line-endpoint` assigns either `endpoint: 'begin'` or `'end'` to drawing-inch
 `x`/`y` coordinates on proven local unglued straight lines. Native midpoint,

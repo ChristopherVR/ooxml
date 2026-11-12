@@ -178,7 +178,7 @@ bun run test:scripts   # this folder's script tests (published-reference and wor
 bun run build:packages # dist/ for the six bindings (web component inlined); the server needs no build
 bun run check:published && bun run pack:smoke
 bun run pack:smoke --workspace-runtime   # also packs this checkout's ooxml-core and ooxml-ui (what CI runs)
-bun install --cwd docs && bun run build:pages   # the docs site and both demos, as deployed
+bun install --cwd docs && bun run build:pages   # the docs site and the demos of all six bindings, as deployed
 bun run docs:dev       # the docs site with hot reload
 ```
 

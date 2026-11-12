@@ -75,6 +75,7 @@ formatting still takes precedence. Choosing a style changes its reference, witho
 flattening inherited properties into every paragraph.
 
 The original styles part is preserved when saving the loaded document. Creating or
-editing style definitions, character styles, inherited run formatting and theme
-resolution are not supported yet. Exporting a new package whose style catalog differs from the built-in
+editing style definitions is not supported yet. Character styles can be applied from the
+character style picker, and inherited run formatting and theme colours are resolved when
+the document is displayed. Exporting a new package whose style catalog differs from the built-in
 defaults is rejected; use Save on the loaded document to preserve its original style definitions.
