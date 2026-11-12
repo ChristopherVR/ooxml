@@ -131,8 +131,10 @@ try {
 		'16px',
 	);
 	await page.locator('.form-footer [data-cancel]').click();
+	// Since 31228c879c the grid button opens the navigation drawer on a phone (the app launcher
+	// popover is for wide screens); the drawer lists the apps in #rail.
 	await page.locator('#launcher-toggle').click();
-	await page.locator('#app-launcher [data-app=xlsx]').click();
+	await page.locator('#rail [data-app=xlsx]').click();
 	await page.getByRole('heading', { name: 'Excel', exact: true }).waitFor();
 	assert.deepEqual(errors, []);
 	console.log(

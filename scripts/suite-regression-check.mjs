@@ -100,7 +100,10 @@ try {
 		await page.locator('#settings-dialog').getByRole('button', { name: 'OK', exact: true }).click();
 		for (let i = 0; i < 2; i++) {
 			await page.locator('.pptxv button[title="Settings & Shortcuts"]').click();
-			const dialog = page.locator('.pptxv-options-dialog');
+			// Since df1bcf527 the options dialog is the shared <pptx-ui-options-dialog>; its panel is
+			// the role=dialog box inside the shadow roots (Playwright locators pierce them).
+			const host = page.locator('pptx-ui-options-dialog');
+			const dialog = host.getByRole('dialog');
 			await expect(dialog).toBeVisible();
 			const palette = await dialog.evaluate((el) => ({
 				bg: getComputedStyle(el).backgroundColor,
@@ -108,8 +111,8 @@ try {
 			}));
 			assert.equal(palette.bg, mode === 'dark' ? 'rgb(32, 34, 40)' : 'rgb(255, 255, 255)');
 			assert.equal(palette.token, mode === 'dark' ? '#54b054' : '#107c41');
-			await dialog.getByRole('button', { name: 'OK', exact: true }).click();
-			await expect(dialog).toHaveCount(0);
+			await host.getByRole('button', { name: 'OK', exact: true }).click();
+			await expect(host).toHaveCount(0);
 			assert.equal(await page.locator('.pptxv-parity-backdrop').count(), 0);
 		}
 		const overflow = await page.locator('.pptxv').evaluate((el) =>
@@ -127,7 +130,7 @@ try {
 	await page.screenshot({ path: join(process.env.TEMP, 'suite-pptx-dark-fixed.png') });
 	await page.locator('.pptxv button[title="Settings & Shortcuts"]').click();
 	await page.setViewportSize({ width: 390, height: 844 });
-	const box = await page.locator('.pptxv-options-dialog').boundingBox();
+	const box = await page.locator('pptx-ui-options-dialog').getByRole('dialog').boundingBox();
 	assert(box.x >= 0 && box.x + box.width <= 391 && box.y + box.height <= 844);
 	await page.screenshot({ path: join(process.env.TEMP, 'suite-pptx-settings-phone.png') });
 	await page.keyboard.press('Escape');
@@ -205,33 +208,33 @@ try {
 	const fresh = await browser.newContext();
 	const visitor = await fresh.newPage();
 	await visitor.goto(base + '/');
-	await visitor.locator('#dialog [data-start=vsdx]').click();
+	await visitor.locator('#start-screen [data-start=vsdx]').click();
 	await visitor.waitForURL(base + '/visio/');
 	await visitor.goto(base + '/');
-	await visitor.locator('#dialog [data-start=office]').click();
-	await expect(visitor.locator('#dialog')).not.toBeVisible();
+	await visitor.locator('#start-screen [data-start=office]').click();
+	await expect(visitor.locator('#start-screen')).not.toBeVisible();
 	// The suite opens on chat; its rail leads to the file home.
 	await expect(visitor.locator('#chat-input')).toBeVisible();
 	await visitor.locator('#rail [data-home]').click();
 	await visitor.locator('[data-create=docx]').click();
 	await expect(visitor.locator('docx-editor')).toBeVisible();
 	await visitor.reload();
-	await expect(visitor.locator('#dialog [data-start=office]')).toBeVisible();
+	await expect(visitor.locator('#start-screen [data-start=office]')).toBeVisible();
 	assert.equal(await visitor.evaluate(() => sessionStorage.length), 0);
 	await visitor.goto(base + '/?suite#/');
 	await expect(visitor.locator('[data-create=docx]')).toBeVisible();
-	await expect(visitor.locator('#dialog')).not.toBeVisible();
+	await expect(visitor.locator('#start-screen')).not.toBeVisible();
 	// Every new visit asks again, and nothing of the suite shows or loads until it is picked.
 	const again = await fresh.newPage();
 	const editorChunks = [];
 	again.on('request', (r) => /suite-assets\/main-/.test(r.url()) && editorChunks.push(r.url()));
 	await again.goto(base + '/');
-	await expect(again.locator('#dialog [data-start=office]')).toBeVisible();
+	await expect(again.locator('#start-screen [data-start=office]')).toBeVisible();
 	await expect(again.locator('#upload')).not.toBeVisible();
 	assert.deepEqual(editorChunks, []);
 	await again.keyboard.press('Escape');
-	await expect(again.locator('#dialog')).toBeVisible();
-	await again.locator('#dialog [data-start=office]').click();
+	await expect(again.locator('#start-screen')).toBeVisible();
+	await again.locator('#start-screen [data-start=office]').click();
 	// Each app's view has its own create button beside Upload.
 	await again.locator('#rail [data-app=xlsx]').click();
 	await expect(again.locator('#create-new')).toHaveText('New workbook');
