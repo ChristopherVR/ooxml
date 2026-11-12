@@ -74,6 +74,8 @@ export function createTitleBar(handlers: TitleBarHandlers): TitleBar {
 	defineTitleBar();
 	const element = document.createElement('office-ui-title-bar') as TitleBarElement;
 	element.className = 'dve-titlebar';
+	// A host that draws its own document bar hides this one: `docx-editor::part(title-bar)`.
+	element.setAttribute('part', 'title-bar');
 
 	const model = {
 		fileName: '',

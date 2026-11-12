@@ -60,6 +60,13 @@ describe('Word window chrome', () => {
 	});
 	afterEach(() => document.body.replaceChildren());
 
+	it('exposes the title bar as a part, so a host with its own document bar can hide it', () => {
+		const editor = mount();
+		expect(root(editor).querySelector('office-ui-title-bar')?.getAttribute('part')).toBe(
+			'title-bar',
+		);
+	});
+
 	it('shows the file name and tracks unsaved changes in the title bar', async () => {
 		const editor = mount();
 		const bar = await inner(editor, 'office-ui-title-bar');
