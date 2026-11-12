@@ -5,6 +5,8 @@ import type {
 	FindReplaceOptions,
 	FindResult,
 	HostFileLimits,
+	InsertChartKind,
+	InsertChartOptions,
 } from 'ooxml-ui/pptx';
 import type { PptxLayoutOption, SmartArtLayout } from 'pptx-viewer-core';
 
@@ -20,6 +22,7 @@ export type BuildingBlockRequest =
 	| { kind: 'media' }
 	| { kind: 'hyperlink' }
 	| { kind: 'smartArt' }
+	| { kind: 'chart' }
 	/** `existingOmml` is the equation being edited (a double-click), null for a new one. */
 	| { kind: 'equation'; existingOmml: Record<string, unknown> | null };
 
@@ -94,6 +97,13 @@ export interface ViewerBuildingBlockActions {
 	};
 	smartArt: {
 		insert: (layout: SmartArtLayout, items: string[]) => BuildingBlockResult;
+	};
+	chart: {
+		/**
+		 * Insert a chart of `kind` (the Insert Chart dialog's entries, for example 'column' or
+		 * 'pie') with optional title, grouping, legend and data (otherwise sample data).
+		 */
+		insert: (kind: InsertChartKind, options?: InsertChartOptions) => BuildingBlockResult;
 	};
 	equation: {
 		/** The selected element's equation (OMML object), null when it has none. */

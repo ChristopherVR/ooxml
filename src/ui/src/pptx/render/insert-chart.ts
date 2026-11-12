@@ -161,6 +161,28 @@ export interface InsertChartOptions {
 	grouping?: InsertChartGrouping;
 	/** Show the legend (default true). */
 	hasLegend?: boolean;
+	/** Host-supplied data in place of the sample categories and series. */
+	data?: InsertChartData;
+}
+
+/** Categories and series a host inserts instead of the sample data. */
+export interface InsertChartData {
+	categories: readonly string[];
+	series: ReadonlyArray<{ name: string; values: readonly number[] }>;
+}
+
+/** Whether host chart data can be inserted: named series of finite numbers, one value per category. */
+export function isValidInsertChartData(data: InsertChartData | undefined): boolean {
+	return (
+		data !== undefined &&
+		data.categories.length > 0 &&
+		data.series.length > 0 &&
+		data.series.every(
+			(series) =>
+				series.values.length === data.categories.length &&
+				series.values.every((value) => Number.isFinite(value)),
+		)
+	);
 }
 
 /** Optional position overrides when inserting a chart. */
@@ -202,12 +224,19 @@ export function createDefaultChartElement(
 	// `buildChartExInsertData`'s `default: return undefined` case just as they
 	// did when this dispatched on `chartType`.
 	const chartExData = buildChartExInsertData((option?.id ?? chartKind) as ChartExInsertKind);
+	const hostData = isValidInsertChartData(options.data) ? options.data : undefined;
 	return createChartElement(
 		chartType,
 		{
-			categories: chartExData?.categories ?? [...DEFAULT_CATEGORIES],
-			series: chartExData?.series ?? [{ name: 'Series 1', values: [...DEFAULT_SERIES_VALUES] }],
-			...(chartExData?.categoryLevels ? { categoryLevels: chartExData.categoryLevels } : {}),
+			categories: hostData
+				? [...hostData.categories]
+				: (chartExData?.categories ?? [...DEFAULT_CATEGORIES]),
+			series: hostData
+				? hostData.series.map((s) => ({ name: s.name, values: [...s.values] }))
+				: (chartExData?.series ?? [{ name: 'Series 1', values: [...DEFAULT_SERIES_VALUES] }]),
+			...(!hostData && chartExData?.categoryLevels
+				? { categoryLevels: chartExData.categoryLevels }
+				: {}),
 			...(options.title === undefined
 				? { title: 'Chart Title' }
 				: options.title.trim()

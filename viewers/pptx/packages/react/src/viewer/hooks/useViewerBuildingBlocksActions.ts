@@ -4,6 +4,7 @@ import {
 	buildingBlockFailure,
 	createImageElementFromFile,
 	describeBuildingBlockActions,
+	isValidInsertChartData,
 	resetSlideLayoutPath,
 	validateHostImageFile,
 	validateHostMediaFile,
@@ -157,6 +158,14 @@ export function useViewerBuildingBlocksActions(
 		}
 	}, [isEquationDialogOpen, dialogs, request]);
 
+	const { isChartDialogOpen } = dialogs;
+	useEffect(() => {
+		if (isChartDialogOpen) {
+			dialogs.setIsChartDialogOpen(false);
+			request({ kind: 'chart' }, 'insertChart');
+		}
+	}, [isChartDialogOpen, dialogs, request]);
+
 	const insertImage = useCallback(async (file: File): Promise<BuildingBlockResult> => {
 		const denied = refuse('insertImage');
 		if (denied) {
@@ -269,6 +278,14 @@ export function useViewerBuildingBlocksActions(
 				gated('insertSmartArt', 'smartArt', () =>
 					insertHandlers.handleInsertSmartArt(layout, items),
 				),
+		},
+		chart: {
+			insert: (kind, options) => {
+				if (options?.data !== undefined && !isValidInsertChartData(options.data)) {
+					return refuse('insertChart') ?? buildingBlockFailure('invalid-data');
+				}
+				return gated('insertChart', 'chart', () => insertHandlers.handleAddChart(kind, options));
+			},
 		},
 		equation: {
 			current: equation,

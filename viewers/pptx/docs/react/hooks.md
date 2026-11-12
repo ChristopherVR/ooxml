@@ -204,9 +204,9 @@ const blocks = useViewerBuildingBlocks({
 const { actions } = blocks;
 ```
 
-- **Requests.** The toolbar's Picture, Video, Link, SmartArt and Equation controls, and
+- **Requests.** The toolbar's Picture, Video, Link, SmartArt, Chart and Equation controls, and
   double-clicking an equation on the canvas, raise a `BuildingBlockRequest`
-  (`{ kind: 'image' | 'media' | 'hyperlink' | 'smartArt' }` or
+  (`{ kind: 'image' | 'media' | 'hyperlink' | 'smartArt' | 'chart' }` or
   `{ kind: 'equation', existingOmml }`). It is passed to `onRequest` and kept in
   `actions.pending` until a matching operation succeeds or you call `actions.cancel()`. A request is
   not raised when the action is unavailable.
@@ -219,6 +219,11 @@ const { actions } = blocks;
 - **Hyperlinks.** `actions.hyperlink.current` is the selected element's link as editor values (or
   `null`), `slideCount` bounds a slide-target picker, `apply(data)` sets it (`'unsafe-url'` for
   script-like schemes, `'invalid-target'` for an empty target) and `remove()` clears it.
+- **Charts.** The Insert Chart control raises `{ kind: 'chart' }`. Finish it with
+  `actions.chart.insert(kind, options?)`, where `kind` is an Insert Chart entry (`'column'`, `'bar'`,
+  `'line'`, `'pie'`, ...) and `options` takes `title`, `grouping`, `hasLegend` and `data`
+  (`{ categories, series: [{ name, values }] }`, one value per category). Without `data` the usual
+  sample data is used; data that does not fit returns `'invalid-data'`.
 - **SmartArt and equations.** `actions.smartArt.insert(layout, items)`;
   `actions.equation.insert(omml)`, `update(omml)` for the selected element and `current` for its
   OMML.
@@ -233,16 +238,13 @@ const { actions } = blocks;
   (`'unknown-layout'` for a path that is not listed) and `reset()` (`'no-layout'` when the slide
   records none).
 - **Which actions can run.** `actions.availability[id]` is `{ available, reason?, needsHostUi }` for
-  `insertImage`, `insertMedia`, `hyperlink`, `removeHyperlink`, `insertSmartArt`, `insertEquation`,
-  `editEquation`, `replace`, `applyLayout` and `resetLayout`. `needsHostUi` is true for the controls
+  `insertImage`, `insertMedia`, `hyperlink`, `removeHyperlink`, `insertSmartArt`, `insertChart`,
+  `insertEquation`, `editEquation`, `replace`, `applyLayout` and `resetLayout`. `needsHostUi` is true for the controls
   that only raise a request. `actions.unmountedDialogActions` lists the other `toolbarProps`
-  handlers (`onOpenChartDialog`, `onOpenPasswordProtection`, `onOpenDocumentProperties`,
+  handlers (`onOpenPasswordProtection`, `onOpenDocumentProperties`,
   `onOpenFontEmbedding`, `onOpenDigitalSignatures`, `onOpenSetUpSlideShow`, `onOpenCustomShows`,
   `onOpenBroadcastDialog`, `onToggleShortcuts`) that set state for a dialog nothing renders here;
   hide them with `hiddenActions` or show your own.
-
-One limit: the Insert Chart dialog has no operation of its own yet (`toolbarProps.onAddChart(kind)`
-inserts a default chart; hide `onOpenChartDialog`).
 
 ### `useThemeSwitching`
 

@@ -363,7 +363,7 @@ chrome, and `customization` trims it. To compose your own layout, each product a
 toolbar, canvas and panes separately (React: `useViewerBuildingBlocks` plus the element components).
 Building blocks are read-only until the host passes `canEdit: true`, and take no `readOnly`,
 `customization` or `storage`: you own the chrome, so you own those decisions. React's PowerPoint
-building blocks also return `actions` (host-owned image, media, hyperlink, SmartArt, equation,
+building blocks also return `actions` (host-owned image, media, hyperlink, SmartArt, chart, equation,
 Find / Replace and layout operations, and which toolbar actions need UI you render; see
 `viewers/pptx/docs/react/hooks.md`). See
 `viewers/<product>/docs/building-blocks.md` (Word, Excel and Visio; PowerPoint's chrome is described in `viewers/pptx/docs/guide/customization.md`).

@@ -81,6 +81,7 @@ describe('describeBuildingBlockActions', () => {
 		expect(state.insertImage).toStrictEqual({ available: true, needsHostUi: true });
 		expect(state.hyperlink.needsHostUi).toBeTruthy();
 		expect(state.insertSmartArt.needsHostUi).toBeTruthy();
+		expect(state.insertChart).toStrictEqual({ available: true, needsHostUi: true });
 		expect(state.editEquation.needsHostUi).toBeTruthy();
 		expect(state.applyLayout).toStrictEqual({ available: true, needsHostUi: false });
 		expect(state.replace).toStrictEqual({ available: true, needsHostUi: false });

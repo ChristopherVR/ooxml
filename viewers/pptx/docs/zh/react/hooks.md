@@ -152,15 +152,14 @@ const blocks = useViewerBuildingBlocks({
 const { actions } = blocks;
 ```
 
-- **请求。** 工具栏的图片、视频、链接、SmartArt 和公式控件，以及在画布上双击公式，都会产生一个 `BuildingBlockRequest`（`{ kind: 'image' | 'media' | 'hyperlink' | 'smartArt' }` 或 `{ kind: 'equation', existingOmml }`）。它会传给 `onRequest`，并保留在 `actions.pending` 中，直到对应操作成功或你调用 `actions.cancel()`。操作不可用时不会产生请求。
+- **请求。** 工具栏的图片、视频、链接、SmartArt、图表和公式控件，以及在画布上双击公式，都会产生一个 `BuildingBlockRequest`（`{ kind: 'image' | 'media' | 'hyperlink' | 'smartArt' | 'chart' }` 或 `{ kind: 'equation', existingOmml }`）。它会传给 `onRequest`，并保留在 `actions.pending` 中，直到对应操作成功或你调用 `actions.cancel()`。操作不可用时不会产生请求。
 - **图片和媒体。** `actions.insertImage(file)` 和 `actions.insertMedia(file)` 接收你自己的选择器返回的 `File`。它们会校验类型、是否为空和大小（`'unsupported-type'`、`'empty-file'`、`'file-too-large'`、`'decode-failed'`），把元素居中插入幻灯片并选中。如果在图片解码或视频尺寸探测期间演示文稿、当前幻灯片或其位置发生了变化，两者都会返回 `'stale-target'` 且不添加任何内容，因此元素不会落到错误的幻灯片上。
 - **超链接。** `actions.hyperlink.current` 是所选元素当前链接的编辑器值（或 `null`），`slideCount` 用于限定幻灯片目标选择器，`apply(data)` 设置链接（脚本类协议返回 `'unsafe-url'`，空目标返回 `'invalid-target'`），`remove()` 清除链接。
+- **图表。** “插入图表”控件会产生 `{ kind: 'chart' }`。用 `actions.chart.insert(kind, options?)` 完成：`kind` 是“插入图表”中的类型（`'column'`、`'bar'`、`'line'`、`'pie'` 等），`options` 支持 `title`、`grouping`、`hasLegend` 和 `data`（`{ categories, series: [{ name, values }] }`，每个类别一个值）。不提供 `data` 时使用默认示例数据；数据不匹配时返回 `'invalid-data'`。
 - **SmartArt 和公式。** `actions.smartArt.insert(layout, items)`；`actions.equation.insert(omml)`、针对所选元素的 `update(omml)`，以及其 OMML 的 `current`。
 - **查找/替换。** `actions.findReplace` 提供 `query`、`replacement`、`options`（`matchCase`、`includeNotes`、`includeChartTitles`、`includeChartData`）、`matches`、`currentIndex`、`currentMatch`、`setQuery`、`setReplacement`、`setOptions`、`find`、`next`、`previous`、`replaceCurrent()` 和 `replaceAll()`（没有可替换内容时返回 `'no-match'`），以及用于查找栏的 `open` 和 `setOpen`（Ctrl+F 和 Ctrl+H 可切换）。只读查看器中仍可搜索，但不能替换。`next` 和 `previous` 会显示匹配项所在的幻灯片并选中其元素。
 - **版式。** `toolbarProps` 现已接通“开始”>“版式”和“重置”。`actions.layout` 提供 `current`、`currentPath`、`available`（当前幻灯片所属母版的版式）、`apply(path)`（路径不在列表中时返回 `'unknown-layout'`）和 `reset()`（幻灯片未记录版式时返回 `'no-layout'`）。
-- **哪些操作可以运行。** `actions.availability[id]` 为 `{ available, reason?, needsHostUi }`，涵盖 `insertImage`、`insertMedia`、`hyperlink`、`removeHyperlink`、`insertSmartArt`、`insertEquation`、`editEquation`、`replace`、`applyLayout` 和 `resetLayout`。`needsHostUi` 为 true 表示该控件只会产生请求。`actions.unmountedDialogActions` 列出其余会为此处无人渲染的对话框设置状态的 `toolbarProps` 处理函数（`onOpenChartDialog`、`onOpenPasswordProtection`、`onOpenDocumentProperties`、`onOpenFontEmbedding`、`onOpenDigitalSignatures`、`onOpenSetUpSlideShow`、`onOpenCustomShows`、`onOpenBroadcastDialog`、`onToggleShortcuts`）；请用 `hiddenActions` 隐藏它们，或显示你自己的界面。
-
-一个限制：“插入图表”对话框暂时没有对应的操作（`toolbarProps.onAddChart(kind)` 会插入默认图表；请隐藏 `onOpenChartDialog`）。
+- **哪些操作可以运行。** `actions.availability[id]` 为 `{ available, reason?, needsHostUi }`，涵盖 `insertImage`、`insertMedia`、`hyperlink`、`removeHyperlink`、`insertSmartArt`、`insertChart`、`insertEquation`、`editEquation`、`replace`、`applyLayout` 和 `resetLayout`。`needsHostUi` 为 true 表示该控件只会产生请求。`actions.unmountedDialogActions` 列出其余会为此处无人渲染的对话框设置状态的 `toolbarProps` 处理函数（`onOpenPasswordProtection`、`onOpenDocumentProperties`、`onOpenFontEmbedding`、`onOpenDigitalSignatures`、`onOpenSetUpSlideShow`、`onOpenCustomShows`、`onOpenBroadcastDialog`、`onToggleShortcuts`）；请用 `hiddenActions` 隐藏它们，或显示你自己的界面。
 
 ### `useThemeSwitching` {#usethemeswitching}
 

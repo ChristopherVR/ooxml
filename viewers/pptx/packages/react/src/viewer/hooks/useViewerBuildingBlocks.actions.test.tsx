@@ -236,6 +236,44 @@ test('SmartArt and equation inserts add a selected element; the dialog requests 
 	expect(latest.actions.equation.current).toStrictEqual({ 'm:oMath': { x: 1 } });
 });
 
+test('the Insert Chart control raises a request and chart.insert adds the chosen chart with data', async () => {
+	await mount();
+	expect(latest.actions.availability.insertChart).toStrictEqual({
+		available: true,
+		needsHostUi: true,
+	});
+	await act(async () => latest.toolbarProps.onOpenChartDialog?.());
+	expect(onRequest).toHaveBeenLastCalledWith({ kind: 'chart' });
+	expect(latest.actions.pending).toStrictEqual({ kind: 'chart' });
+	const before = latest.canvasProps.activeSlide?.elements.length ?? 0;
+	expect(
+		latest.actions.chart.insert('pie', {
+			data: { categories: ['A', 'B'], series: [{ name: 'S', values: [1] }] },
+		}),
+	).toStrictEqual({ ok: false, code: 'invalid-data' });
+	await act(async () => {
+		expect(
+			latest.actions.chart.insert('pie', {
+				title: 'Mix',
+				data: { categories: ['A', 'B'], series: [{ name: 'S', values: [1, 2] }] },
+			}),
+		).toStrictEqual({ ok: true });
+	});
+	expect(latest.actions.pending).toBeNull();
+	const elements = latest.canvasProps.activeSlide?.elements ?? [];
+	expect(elements).toHaveLength(before + 1);
+	expect(elements.at(-1)).toMatchObject({
+		type: 'chart',
+		chartData: { chartType: 'pie', title: 'Mix', categories: ['A', 'B'] },
+	});
+	expect(onDirtyChange).toHaveBeenCalledWith(true);
+});
+
+test('chart.insert is refused in a view-only viewer', async () => {
+	await mount({ canEdit: false });
+	expect(latest.actions.chart.insert('column')).toStrictEqual({ ok: false, code: 'read-only' });
+});
+
 test('find and replace expose options, matches, the current match, navigation and both replaces', async () => {
 	await mount();
 	expect(latest.actions.findReplace.replaceAll()).toStrictEqual({ ok: false, code: 'no-match' });
@@ -301,7 +339,8 @@ test('layout apply and reset are wired, validated against the slide master, and 
 
 test('unmounted dialog toolbar actions are listed so a shell can hide or replace them', async () => {
 	await mount();
-	expect(latest.actions.unmountedDialogActions).toContain('onOpenChartDialog');
+	expect(latest.actions.unmountedDialogActions).toContain('onOpenDocumentProperties');
+	expect(latest.actions.unmountedDialogActions).not.toContain('onOpenChartDialog');
 	for (const name of latest.actions.unmountedDialogActions) {
 		expect(Object.keys(latest.toolbarProps)).toContain(name);
 	}

@@ -37,6 +37,8 @@ export type BuildingBlockFailureCode =
 	| 'no-match'
 	/** The layout is not one of the active slide's master's layouts. */
 	| 'unknown-layout'
+	/** Chart data with no categories or series, or a series that does not match them. */
+	| 'invalid-data'
 	| 'no-layout';
 
 export type BuildingBlockResult = { ok: true } | { ok: false; code: BuildingBlockFailureCode };
@@ -104,6 +106,7 @@ export type BuildingBlockActionId =
 	| 'hyperlink'
 	| 'removeHyperlink'
 	| 'insertSmartArt'
+	| 'insertChart'
 	| 'insertEquation'
 	| 'editEquation'
 	| 'replace'
@@ -147,7 +150,6 @@ export interface BuildingBlockAvailabilityInput {
  * and nothing appears. A custom shell hides them (`hiddenActions`) or supplies its own UI.
  */
 export const BUILDING_BLOCK_UNMOUNTED_DIALOG_ACTIONS = [
-	'onOpenChartDialog',
 	'onOpenPasswordProtection',
 	'onOpenDocumentProperties',
 	'onOpenFontEmbedding',
@@ -191,6 +193,7 @@ export function describeBuildingBlockActions(
 			input.selectionHasHyperlink ? undefined : 'no-hyperlink',
 		),
 		insertSmartArt: state(true, slide),
+		insertChart: state(true, slide),
 		insertEquation: state(true, slide),
 		editEquation: state(true, selection, input.selectionHasEquation ? undefined : 'no-equation'),
 		replace: state(false),

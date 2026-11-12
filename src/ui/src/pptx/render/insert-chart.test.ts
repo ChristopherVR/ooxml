@@ -6,6 +6,7 @@ import {
 	DEFAULT_INSERT_CHART_KIND,
 	DEFAULT_INSERT_CHART_TYPE,
 	INSERT_CHART_TYPES,
+	isValidInsertChartData,
 } from './insert-chart';
 
 describe('insert-chart', () => {
@@ -203,5 +204,20 @@ describe('insert-chart', () => {
 		// Pie has no grouping to offer.
 		expect(untitled.chartData?.grouping).toBeUndefined();
 		expect(createDefaultChartElement('line').chartData?.title).toBe('Chart Title');
+	});
+});
+
+describe('host chart data', () => {
+	it('replaces the sample data when valid and ignores it when not', () => {
+		const data = { categories: ['x', 'y'], series: [{ name: 'S', values: [1, 2] }] };
+		expect(isValidInsertChartData(data)).toBe(true);
+		const chart = createDefaultChartElement('line', undefined, { data });
+		expect(chart.chartData?.categories).toStrictEqual(['x', 'y']);
+		expect(chart.chartData?.series[0]?.values).toStrictEqual([1, 2]);
+		const bad = { categories: ['x'], series: [{ name: 'S', values: [Number.NaN] }] };
+		expect(isValidInsertChartData(bad)).toBe(false);
+		expect(
+			createDefaultChartElement('line', undefined, { data: bad }).chartData?.categories,
+		).toStrictEqual(['Category 1', 'Category 2', 'Category 3']);
 	});
 });
