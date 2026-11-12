@@ -738,14 +738,25 @@ p:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 	color: var(--muted);
 }
 
+/* Tab strip and command bar: one row. In the office layout the bar sits at the right end of the
+   tabs; in Simple view it wraps onto a line of its own (workspace-simple.css). */
+.tab-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: stretch;
+	flex: none;
+	border-bottom: 1px solid var(--line);
+	background: var(--canvas);
+}
+
 /* Tabs */
 .tabs {
 	display: flex;
 	align-items: stretch;
 	height: 38px;
-	flex: none;
+	flex: 1 1 0;
+	min-width: 0;
 	overflow: auto;
-	border-bottom: 1px solid var(--line);
 	background: var(--canvas);
 	padding: 4px 8px 0;
 	gap: 2px;
@@ -841,6 +852,26 @@ p:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 	padding: 0 8px;
 	overflow: auto;
 	white-space: nowrap;
+}
+/* The bar belongs to the open document: it is not shown on the start page, chat, cloud or Teams. */
+body:not([data-view='editor']) .document-commandbar {
+	display: none;
+}
+/* Office layout: the bar is the right end of the tab row, under the app's own title bar and
+   ribbon. Its file commands move into the More menu. */
+body[data-layout='office'] .document-commandbar {
+	flex: none;
+	height: auto;
+	border-bottom: 0;
+	background: transparent;
+	padding: 0 6px;
+	overflow: visible;
+}
+body[data-layout='office'] .document-commandbar [data-menu] {
+	display: none;
+}
+body[data-layout='office'] #actions-more {
+	display: inline-flex;
 }
 .document-commandbar button {
 	font-size: 10.5px;

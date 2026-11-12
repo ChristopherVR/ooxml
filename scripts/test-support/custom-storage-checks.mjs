@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
+import { fileCommand } from '../suite-check-init.mjs';
 const require = createRequire(new URL('../../e2e/docx/package.json', import.meta.url));
 const { expect } = require('@playwright/test');
 const { inspectDocx, setDocxRunText } = await import('../../src/core/dist/automation/index.mjs');
@@ -109,14 +110,14 @@ export async function checkCustomStorage({ browser, base, bytes }) {
 			).bytes,
 		);
 		revision++;
-		await page.locator('#save').click();
+		await fileCommand(page, 'save');
 		await expect.poll(() => writes).toBe(1);
 		await expect(page.locator('#save-state')).toHaveText('Saved to Company Files');
 		const saved = JSON.stringify(await inspectDocx(data));
 		assert.match(saved, /Custom provider local edit/u);
 		assert.match(saved, /Remote company edit/u);
 		await expect(editor).toContainText('Remote company edit');
-		await page.locator('#share').click();
+		await fileCommand(page, 'share');
 		await expect(page.locator('#onedrive-share-form select')).toHaveCount(1);
 		await page.locator('#onedrive-share-form button').click();
 		await expect(page.locator('#onedrive-share-link')).toHaveValue(

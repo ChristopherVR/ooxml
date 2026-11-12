@@ -37,6 +37,14 @@
 	.document-commandbar {
 		overflow: visible;
 	}
+	/* A phone gives the bar its own full-width line in both layouts (the office and Simple
+	   rules are less specific than this). */
+	html body[data-layout] .document-commandbar {
+		flex: 1 0 100%;
+		border-top: 1px solid var(--line);
+		border-bottom: 0;
+		background: var(--surface);
+	}
 }
 
 /* A single open document needs no tab strip on a phone; the brand returns home. */

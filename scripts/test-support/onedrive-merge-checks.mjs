@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
+import { fileCommand } from '../suite-check-init.mjs';
 const require = createRequire(new URL('../../e2e/docx/package.json', import.meta.url));
 const { expect } = require('@playwright/test');
 const { inspectDocx, setDocxRunText, readXlsxRange, setXlsxCells } =
@@ -52,7 +53,7 @@ export async function checkConcurrentMerges({ page, cloud, openCloud, edit }) {
 		}
 		remote.revision++;
 		const writes = cloud.writes.length;
-		await page.locator('#save').click();
+		await fileCommand(page, 'save');
 		await expect.poll(() => cloud.writes.length).toBe(writes + 1);
 		await expect(page.locator('#save-state')).toHaveText('Saved to OneDrive');
 		await expect(page.locator('#onedrive-conflict')).toHaveCount(0);

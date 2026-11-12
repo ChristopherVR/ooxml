@@ -10,7 +10,7 @@ import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { ribbonLayoutInit } from './suite-check-init.mjs';
+import { fileCommand, ribbonLayoutInit } from './suite-check-init.mjs';
 const require = createRequire(new URL('../e2e/docx/package.json', import.meta.url));
 const { chromium, expect } = require('@playwright/test');
 const base = process.env.SUITE_URL || 'http://127.0.0.1:8123';
@@ -100,10 +100,10 @@ try {
 	await page.screenshot({ path: join(process.env.TEMP ?? '.', 'suite-pptx-chart-styling.png') });
 
 	// Save, download, reopen: the recoloured chart comes back.
-	await page.locator('#save').click();
+	await fileCommand(page, 'save');
 	await expect(page.locator('#save-state')).toHaveText('Saved to this device');
 	const download = page.waitForEvent('download');
-	await page.locator('#download').click();
+	await fileCommand(page, 'download');
 	const saved = await readFile(await (await download).path());
 	await openDeck('Chart styling reopened.pptx', saved);
 	await expect.poll(firstMarkFill).toBe(recoloured);

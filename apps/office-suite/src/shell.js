@@ -75,13 +75,15 @@ function mountMoreMenu() {
 	const menu = $('actions-menu');
 	const more = $('actions-more');
 	more.addEventListener('click', () => {
+		// Commands the bar shows (Save in Simple view) stay on the bar; the rest are listed here.
 		const items = [...document.querySelectorAll('.document-commandbar [data-menu]')]
-			.filter((button) => !button.hidden)
+			.filter((button) => !button.hidden && getComputedStyle(button).display === 'none')
 			.map((button) => {
 				const item = document.createElement('button');
 				item.type = 'button';
 				item.setAttribute('role', 'menuitem');
 				item.textContent = button.textContent;
+				item.disabled = button.disabled;
 				item.addEventListener('click', () => {
 					menu.hidePopover();
 					button.click();

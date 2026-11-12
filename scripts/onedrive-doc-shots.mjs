@@ -14,6 +14,7 @@
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { interceptOneDrive } from './test-support/onedrive-http.mjs';
+import { fileCommand } from './suite-check-init.mjs';
 
 const require = createRequire(new URL('../e2e/docx/package.json', import.meta.url));
 const { chromium, expect } = require('@playwright/test');
@@ -130,7 +131,7 @@ try {
 		const remote = cloud.files.get('docx');
 		remote.bytes = Buffer.from(await createDocx(['Plan, version saved by a colleague.']));
 		remote.revision++;
-		await page.locator('#save').click();
+		await fileCommand(page, 'save');
 		await expect(page.locator('#onedrive-conflict')).toBeVisible();
 		await page.locator('#dialog').screenshot({ path: out('suite-conflict.png') });
 		await context.close();

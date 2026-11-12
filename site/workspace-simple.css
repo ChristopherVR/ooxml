@@ -14,10 +14,15 @@
 	flex: none;
 }
 
+/* Its own line under the tabs: the tab row's bottom border closes the bar, and the bar's top
+   border separates it from the tabs. */
 body[data-layout='simple'] .document-commandbar {
+	flex: 1 0 100%;
 	height: 44px;
 	gap: 6px;
 	padding: 0 10px 0 14px;
+	border-top: 1px solid var(--line);
+	border-bottom: 0;
 }
 body[data-layout='simple'] .doc-title {
 	display: flex;
@@ -57,7 +62,7 @@ body[data-layout='simple'] :is(docx-editor, xlsx-editor)::part(title-bar) {
 }
 
 /* The file commands move into the More menu; Save stays on the bar. */
-body[data-layout='simple'] .document-commandbar [data-menu] {
+body[data-layout='simple'] .document-commandbar [data-menu]:not(#save) {
 	display: none;
 }
 body[data-layout='simple'] #actions-more {
@@ -194,6 +199,10 @@ body[data-layout='simple'][data-view='editor'][data-focus='true'] .suite-layout 
 	/* The status text is hidden here, so the right-hand cluster needs its own push. */
 	#layout-toggle {
 		margin-left: auto;
+	}
+	/* One push for the whole cluster: More follows the toggle instead of splitting the room. */
+	#layout-toggle ~ #actions-more {
+		margin-left: 0;
 	}
 	body[data-layout='simple'] .document-commandbar {
 		padding-left: 10px;

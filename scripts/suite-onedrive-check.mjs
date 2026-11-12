@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { readFile } from 'node:fs/promises';
+import { fileCommand } from './suite-check-init.mjs';
 import { interceptOneDrive } from './test-support/onedrive-http.mjs';
 import { checkConcurrentMerges } from './test-support/onedrive-merge-checks.mjs';
 import { checkCustomStorage } from './test-support/custom-storage-checks.mjs';
@@ -138,7 +139,7 @@ try {
 		await expect.poll(() => cloud.writes.filter((id) => id === kind).length).toBe(1);
 		await expect(page.locator('#save-state')).toContainText('Saved to OneDrive');
 		assert.notDeepEqual(cloud.files.get(kind).bytes, Buffer.from(fixtures[kind]));
-		await page.locator('#share').click();
+		await fileCommand(page, 'share');
 		const share = page.locator('#onedrive-share-form');
 		await share.getByRole('button', { name: 'Get OneDrive link', exact: true }).click();
 		await expect(page.locator('#onedrive-share-link')).toHaveValue(/\/documents\//u);
@@ -172,7 +173,7 @@ try {
 	const remote = cloud.files.get('docx');
 	remote.bytes = Buffer.from(await createDocx(['Remote version retained.']));
 	remote.revision++;
-	await page.locator('#save').click();
+	await fileCommand(page, 'save');
 	await expect(page.locator('#onedrive-conflict')).toBeVisible();
 	assert.match(JSON.stringify(await inspectDocx(remote.bytes)), /Remote version retained/u);
 	await page.locator('[data-cloud-recovery=copy]').click();
@@ -195,7 +196,7 @@ try {
 		).bytes,
 	);
 	remoteExcel.revision++;
-	await page.locator('#save').click();
+	await fileCommand(page, 'save');
 	await expect(page.locator('#onedrive-conflict')).toBeVisible();
 	const downloaded = page.waitForEvent('download');
 	await page.locator('[data-cloud-recovery=download-latest]').click();
@@ -237,13 +238,13 @@ try {
 	await page.evaluate(() => {
 		globalThis.__oneDriveAuthFail = true;
 	});
-	await page.locator('#save').click();
+	await fileCommand(page, 'save');
 	await expect(page.locator('#save-state')).toContainText('OneDrive save pending');
 	await expect(page.locator(':light(#status)')).toContainText('Sign in to Microsoft again');
 	await expect(page.locator(':light(#status)')).not.toContainText('Private token provider failure');
 	await page.reload();
 	await expect(page.locator('#save-state')).toContainText('OneDrive save pending');
-	await page.locator('#save').click();
+	await fileCommand(page, 'save');
 	await expect(page.locator('#save-state')).toHaveText('Saved to OneDrive');
 	assert.equal(
 		(await readXlsxRange(remoteExcel.bytes, 0, 'A1')).cells[0].value,

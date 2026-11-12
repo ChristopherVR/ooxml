@@ -124,7 +124,55 @@
 				</div>
 			</aside>
 			<div class="suite-body">
-				<div id="tabs" class="tabs" role="tablist" aria-label="Open documents"></div>
+				<div class="tab-row">
+					<div id="tabs" class="tabs" role="tablist" aria-label="Open documents"></div>
+					<div class="document-commandbar">
+						<button id="back-teams" hidden>‹ Back to Teams</button
+						><button id="back-parent" hidden>‹ Parent document</button>
+						<div id="doc-title" class="doc-title"></div>
+						<button id="save" data-menu>Save</button><button id="rename" data-menu>Rename</button
+						><button id="download" data-menu>Download</button
+						><button id="embedded" data-menu>Embedded files</button
+						><button id="versions" data-menu>Versions</button>
+						<div id="doc-view" class="doc-view" role="group" aria-label="Document view">
+							<button id="doc-undo" aria-label="Undo" title="Undo (Ctrl+Z)"></button
+							><button id="doc-redo" aria-label="Redo" title="Redo (Ctrl+Y)"></button>
+							<div id="doc-format" class="doc-format" role="group" aria-label="Formatting">
+								<button
+									data-format="bold"
+									aria-label="Bold"
+									aria-pressed="false"
+									title="Bold (Ctrl+B)"
+								>
+									B</button
+								><button
+									data-format="italic"
+									aria-label="Italic"
+									aria-pressed="false"
+									title="Italic (Ctrl+I)"
+								>
+									I</button
+								><button
+									data-format="underline"
+									aria-label="Underline"
+									aria-pressed="false"
+									title="Underline (Ctrl+U)"
+								>
+									U
+								</button>
+							</div>
+							<div id="doc-nav" class="doc-nav">
+								<button id="doc-previous"></button
+								><output id="doc-position" aria-live="off"></output><button id="doc-next"></button>
+							</div>
+						</div>
+						<span id="save-state" role="status"></span><button id="layout-toggle"></button
+						><button id="ask-ai" class="ask-ai ai-only" aria-label="Ask AI about this file"></button
+						><button id="share" class="primary" data-menu>Share in Teams</button
+						><button id="actions-more" aria-label="More actions" aria-haspopup="menu"></button
+						><button id="focus-toggle" aria-pressed="false"></button>
+					</div>
+				</div>
 				<div class="work-row">
 					<main class="work-main">
 						<section id="chat" class="chat-view" aria-label="Chat" hidden></section>
@@ -222,57 +270,6 @@
 						</section>
 						<section id="teams-host" class="teams-host" hidden></section>
 						<section id="editor-area" class="editor-area" hidden>
-							<div class="document-commandbar">
-								<button id="back-teams" hidden>‹ Back to Teams</button
-								><button id="back-parent" hidden>‹ Parent document</button>
-								<div id="doc-title" class="doc-title"></div>
-								<button id="save">Save</button><button id="rename" data-menu>Rename</button
-								><button id="download" data-menu>Download</button
-								><button id="embedded" data-menu>Embedded files</button
-								><button id="versions" data-menu>Versions</button>
-								<div id="doc-view" class="doc-view" role="group" aria-label="Document view">
-									<button id="doc-undo" aria-label="Undo" title="Undo (Ctrl+Z)"></button
-									><button id="doc-redo" aria-label="Redo" title="Redo (Ctrl+Y)"></button>
-									<div id="doc-format" class="doc-format" role="group" aria-label="Formatting">
-										<button
-											data-format="bold"
-											aria-label="Bold"
-											aria-pressed="false"
-											title="Bold (Ctrl+B)"
-										>
-											B</button
-										><button
-											data-format="italic"
-											aria-label="Italic"
-											aria-pressed="false"
-											title="Italic (Ctrl+I)"
-										>
-											I</button
-										><button
-											data-format="underline"
-											aria-label="Underline"
-											aria-pressed="false"
-											title="Underline (Ctrl+U)"
-										>
-											U
-										</button>
-									</div>
-									<div id="doc-nav" class="doc-nav">
-										<button id="doc-previous"></button
-										><output id="doc-position" aria-live="off"></output
-										><button id="doc-next"></button>
-									</div>
-								</div>
-								<span id="save-state" role="status"></span><button id="layout-toggle"></button
-								><button
-									id="ask-ai"
-									class="ask-ai ai-only"
-									aria-label="Ask AI about this file"
-								></button
-								><button id="share" class="primary" data-menu>Share in Teams</button
-								><button id="actions-more" aria-label="More actions" aria-haspopup="menu"></button
-								><button id="focus-toggle" aria-pressed="false"></button>
-							</div>
 							<div id="editors"></div>
 						</section>
 					</main>
