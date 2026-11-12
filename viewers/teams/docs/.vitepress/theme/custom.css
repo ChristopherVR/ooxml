@@ -410,3 +410,248 @@
 		transition-duration: 0.12s;
 	}
 }
+
+/* ---- Wide screens: the sidebar carries the header (docs/pages-design.md, Docs nav) ----
+   From 960px a page with a sidebar drops the top bar: the sidebar's head (DocsSidebarTop.vue)
+   holds the product, the search, the shortcuts and the language, as on the documentation hub.
+   Narrow screens and the landing page keep the default header. */
+
+.pv-side-top {
+	display: none;
+}
+
+@media (min-width: 60rem) {
+	.Layout:has(> .VPSidebar) {
+		--vp-nav-height: 0px;
+	}
+
+	.Layout:has(> .VPSidebar) > .VPNav {
+		display: none;
+	}
+
+	.Layout:has(> .VPSidebar) .VPSidebar {
+		padding: 0 0.75rem 3rem;
+		border-inline-end: 1px solid var(--vp-c-divider);
+		scrollbar-width: thin;
+	}
+
+	.pv-side-top {
+		position: sticky;
+		top: 0;
+		z-index: 2;
+		display: grid;
+		gap: 0.6rem;
+		margin: 0 -0.75rem 0.5rem;
+		padding: 0.9rem 0.75rem 0.75rem;
+		border-bottom: 1px solid var(--vp-c-divider);
+		background: var(--vp-sidebar-bg-color);
+	}
+
+	.Layout:has(> .VPSidebar) .VPSidebar .group {
+		padding-inline: 0.5rem;
+	}
+
+	.pv-side-brand-row {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		padding-inline-start: 0.35rem;
+	}
+
+	.pv-side-brand {
+		display: flex;
+		align-items: center;
+		gap: 0.55rem;
+		min-width: 0;
+		margin-inline-end: auto;
+		color: var(--vp-c-text-1);
+		font-family: var(--pvd-display);
+		font-size: 0.95rem;
+		font-weight: 680;
+		letter-spacing: -0.01em;
+		white-space: nowrap;
+	}
+
+	.pv-side-badge {
+		display: grid;
+		place-items: center;
+		flex: none;
+		width: 1.4rem;
+		height: 1.4rem;
+		border-radius: 4px;
+		background: var(--vp-button-brand-bg);
+		color: var(--vp-button-brand-text);
+		font-family: var(--vp-font-family-base);
+		font-size: 0.78rem;
+		font-weight: 700;
+		letter-spacing: 0;
+	}
+
+	.pv-side-name {
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.pv-side-icon {
+		display: grid;
+		place-items: center;
+		flex: none;
+		width: 1.9rem;
+		height: 1.9rem;
+		border-radius: 4px;
+		color: var(--vp-c-text-2);
+	}
+
+	.pv-side-icon:hover {
+		background: var(--vp-c-bg-alt);
+		color: var(--vp-c-text-1);
+	}
+
+	.pv-side-top svg {
+		flex: none;
+		width: 1rem;
+		height: 1rem;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 1.6;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.pv-side-search {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		width: 100%;
+		height: 2.15rem;
+		padding: 0 0.5rem 0 0.65rem;
+		border: 1px solid var(--vp-c-divider);
+		border-radius: 4px;
+		background: var(--vp-c-bg);
+		color: var(--vp-c-text-2);
+		font-size: 0.85rem;
+		text-align: start;
+		cursor: text;
+	}
+
+	.pv-side-search:hover {
+		border-color: var(--vp-c-brand-1);
+	}
+
+	.pv-side-search span {
+		flex: 1;
+	}
+
+	.pv-side-search kbd {
+		padding: 0 0.35rem;
+		border: 1px solid var(--vp-c-divider);
+		border-radius: 3px;
+		font-family: var(--vp-font-family-mono);
+		font-size: 0.7rem;
+		line-height: 1.5;
+	}
+
+	.pv-side-shortcuts {
+		display: grid;
+		gap: 1px;
+	}
+
+	.pv-side-shortcuts a,
+	.pv-side-locale {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		min-height: 1.9rem;
+		padding: 0 0.6rem;
+		border-radius: 4px;
+		color: var(--vp-c-text-2);
+		font-size: 0.85rem;
+		font-weight: 500;
+	}
+
+	.pv-side-shortcuts a:hover,
+	.pv-side-locale:hover {
+		background: var(--vp-c-bg-alt);
+		color: var(--vp-c-text-1);
+	}
+
+	.pv-side-locale select {
+		flex: 1;
+		min-width: 0;
+		padding: 0;
+		border: 0;
+		background: none;
+		color: inherit;
+		font: inherit;
+		cursor: pointer;
+		appearance: auto;
+	}
+
+	.pv-side-locale option {
+		background: var(--vp-c-bg-soft);
+		color: var(--vp-c-text-1);
+	}
+}
+
+/* ---- Large screens: the article and the outline grow with the window --------------------
+   The sidebar stays at the left edge. The article and the outline form one group that widens
+   with the window up to a comfortable measure and sits centred in what the sidebar leaves, so a
+   wide screen has even margins instead of an empty half. */
+
+@media (min-width: 90rem) {
+	.Layout:has(> .VPSidebar) {
+		--pv-article: clamp(43rem, 42vw, 60rem);
+		--pv-outline: 16rem;
+		--pv-outline-gap: clamp(0rem, 3vw, 5rem);
+	}
+
+	.Layout:has(> .VPSidebar) .VPSidebar {
+		width: var(--vp-sidebar-width);
+	}
+
+	.Layout:has(> .VPSidebar) .VPContent.has-sidebar {
+		padding-inline: var(--vp-sidebar-width) 0;
+	}
+
+	/* The article's own 2rem side padding is the 4rem. */
+	.Layout:has(> .VPSidebar) .VPDoc.has-aside .container {
+		max-width: calc(var(--pv-article) + 4rem + var(--pv-outline-gap) + var(--pv-outline));
+		column-gap: var(--pv-outline-gap);
+	}
+
+	.Layout:has(> .VPSidebar) .VPDoc.has-aside .content-container {
+		max-width: var(--pv-article);
+	}
+
+	.Layout:has(> .VPSidebar) .VPDoc .aside {
+		flex: none;
+		width: var(--pv-outline);
+		max-width: none;
+	}
+
+	.Layout:has(> .VPSidebar) .VPDoc .aside-container,
+	.Layout:has(> .VPSidebar) .VPDoc .aside-curtain {
+		width: calc(var(--pv-outline) - 2rem);
+	}
+}
+
+@media (min-width: 112.5rem) {
+	.Layout:has(> .VPSidebar) {
+		--vp-sidebar-width: 300px;
+		--pv-outline: 18rem;
+	}
+
+	.Layout:has(> .VPSidebar) .vp-doc {
+		font-size: 1.0625rem;
+	}
+}
+
+@media (min-width: 143.75rem) {
+	.Layout:has(> .VPSidebar) {
+		--vp-sidebar-width: 320px;
+	}
+
+	.Layout:has(> .VPSidebar) .vp-doc {
+		font-size: 1.125rem;
+	}
+}

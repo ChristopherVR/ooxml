@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import DefaultTheme from 'vitepress/theme';
 
+import DocsSidebarTop from './DocsSidebarTop.vue';
 import PageMotion from './PageMotion.vue';
 
 const { Layout } = DefaultTheme;
@@ -9,5 +10,6 @@ const { Layout } = DefaultTheme;
 <template>
 	<Layout>
 		<template #layout-top><PageMotion /></template>
+		<template #sidebar-nav-before><DocsSidebarTop letter="X" /></template>
 	</Layout>
 </template>
