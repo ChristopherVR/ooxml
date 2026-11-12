@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 
 import type { HostOwnedShellHandle } from '../shared/host-owned-shell-controls';
 import { hostThumbnailStripRequested } from '../shared/host-thumbnail-strip';
+import { HostOwnedWorkflows } from './HostOwnedWorkflows';
 import { HostSlideStrip } from './HostSlideStrip';
 
 /** A custom host shell uses the same collaboration session as the full editor. */
@@ -53,6 +54,7 @@ export const HostOwnedHeadlessEditor = forwardRef<
 					{describeCollaborationShellState(blocks.shellState, t)}
 				</output>
 				<Toolbar {...blocks.toolbarProps} />
+				<HostOwnedWorkflows blocks={blocks} />
 				{blocks.error && <p role='alert'>{blocks.error}</p>}
 				<div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
 					{hostThumbnailStripRequested() ? (
