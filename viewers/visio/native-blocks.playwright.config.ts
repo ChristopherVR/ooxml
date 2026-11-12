@@ -2,7 +2,12 @@ import { defineConfig } from '@playwright/test';
 const port = Number(process.env.PLAYWRIGHT_PORT ?? 14450);
 export default defineConfig({
 	testDir: '../../e2e/visio',
-	testMatch: ['native-building-blocks.spec.ts', 'native-theme.spec.ts', 'shadow-theme.spec.ts'],
+	testMatch: [
+		'native-building-blocks.spec.ts',
+		'native-text-commit.spec.ts',
+		'native-theme.spec.ts',
+		'shadow-theme.spec.ts',
+	],
 	workers: 2,
 	use: {
 		baseURL: `http://127.0.0.1:${port}`,

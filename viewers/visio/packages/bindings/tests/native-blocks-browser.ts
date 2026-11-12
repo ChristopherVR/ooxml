@@ -15,6 +15,7 @@ import * as angular from '../../angular/src/building-blocks';
 import { createViewerBuildingBlocks as vanillaBlocks } from '../src/vanilla-building-blocks';
 import SvelteHarness from '../../svelte/src/BuildingBlocksHarness.svelte';
 import type { BuildingBlockOptions, ViewerController } from '../src/building-blocks';
+import type { TextEditOutcome } from 'ooxml-ui/visio';
 let controller!: ViewerController;
 let update!: (options: BuildingBlockOptions) => void;
 let dispose!: () => void;
@@ -196,10 +197,39 @@ document.querySelector<HTMLButtonElement>('#edit')!.onclick = () => {
 };
 document.querySelector<HTMLButtonElement>('#host-zoom')!.onclick = () => controller.setZoom(2);
 document.querySelector<HTMLButtonElement>('#unmount')!.onclick = dispose;
+/**
+ * A host-owned Save: await the canvas's inline text commit (no blur needed), report the outcome,
+ * then export the drawing and report its size. Ctrl+S runs the same Save from the keyboard.
+ */
+let lastExport: Uint8Array | undefined;
+async function hostSave(): Promise<{ outcome: TextEditOutcome; bytes: number }> {
+	const outcome = await controller.commitTextEdit();
+	const bytes = controller.exportVsdx().bytes;
+	lastExport = bytes;
+	const status = document.querySelector<HTMLElement>('#save-status')!;
+	status.textContent = JSON.stringify({ ...outcome, exportedBytes: bytes.length });
+	status.dataset.status = outcome.status;
+	return { outcome, bytes: bytes.length };
+}
+document.querySelector<HTMLButtonElement>('#save')!.onclick = () => void hostSave();
+window.addEventListener(
+	'keydown',
+	(event) => {
+		if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+			event.preventDefault();
+			void hostSave();
+		}
+	},
+	true,
+);
 Object.assign(window, {
 	nativeBlocks: {
 		get controller() {
 			return controller;
+		},
+		save: hostSave,
+		get lastExport() {
+			return lastExport ? Array.from(lastExport) : undefined;
 		},
 	},
 });
