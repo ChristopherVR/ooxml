@@ -213,8 +213,9 @@ const { actions } = blocks;
 - **Images and media.** `actions.insertImage(file)` and `actions.insertMedia(file)` take the `File`
   your own picker returned. They validate type, emptiness and size (`'unsupported-type'`,
   `'empty-file'`, `'file-too-large'`, `'decode-failed'`), insert the element centred on the slide
-  and select it. `insertImage` returns `'stale-target'` if the deck or slide changed while the
-  picture decoded.
+  and select it. Both return `'stale-target'` and add nothing if the deck, the active slide or its
+  position changed while the picture decoded or the video's size was probed, so an element is never
+  dropped onto the wrong slide.
 - **Hyperlinks.** `actions.hyperlink.current` is the selected element's link as editor values (or
   `null`), `slideCount` bounds a slide-target picker, `apply(data)` sets it (`'unsafe-url'` for
   script-like schemes, `'invalid-target'` for an empty target) and `remove()` clears it.
@@ -240,9 +241,8 @@ const { actions } = blocks;
   `onOpenBroadcastDialog`, `onToggleShortcuts`) that set state for a dialog nothing renders here;
   hide them with `hiddenActions` or show your own.
 
-Two limits: a video or audio file is inserted once its size has been probed, so it lands on the
-slide that was active when it finished; and the Insert Chart dialog has no operation of its own
-yet (`toolbarProps.onAddChart(kind)` inserts a default chart; hide `onOpenChartDialog`).
+One limit: the Insert Chart dialog has no operation of its own yet (`toolbarProps.onAddChart(kind)`
+inserts a default chart; hide `onOpenChartDialog`).
 
 ### `useThemeSwitching`
 

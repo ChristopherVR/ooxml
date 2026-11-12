@@ -44,7 +44,7 @@ function Harness({
 }
 
 async function mount(options: Partial<UseViewerBuildingBlocksInput> = {}) {
-	const { handler, data } = await PptxHandler.create({ initialSlideCount: 1 });
+	const { handler, data } = await PptxHandler.create({ initialSlideCount: 2 });
 	data.slides[0].elements = [
 		{ id: 'title', type: 'text', x: 67, y: 40, width: 400, height: 60, text: 'Alpha beta alpha' },
 	];
@@ -305,4 +305,38 @@ test('unmounted dialog toolbar actions are listed so a shell can hide or replace
 	for (const name of latest.actions.unmountedDialogActions) {
 		expect(Object.keys(latest.toolbarProps)).toContain(name);
 	}
+});
+
+test('a video whose size probe finishes after the slide changed is not added to the wrong slide', async () => {
+	await mount();
+	const probes: Array<{ onloadedmetadata?: () => void; videoWidth: number; videoHeight: number }> =
+		[];
+	const realCreate = document.createElement.bind(document);
+	vi.spyOn(document, 'createElement').mockImplementation(((tag: string) => {
+		if (tag !== 'video') {
+			return realCreate(tag);
+		}
+		const probe = { videoWidth: 320, videoHeight: 180 } as (typeof probes)[number];
+		probes.push(probe);
+		return probe as unknown as HTMLVideoElement;
+	}) as typeof document.createElement);
+	const firstSlideId = latest.canvasProps.activeSlide!.id;
+	const before = latest.canvasProps.activeSlide!.elements.length;
+	let result: unknown;
+	let pending: Promise<unknown> | undefined;
+	await act(async () => {
+		pending = latest.actions.insertMedia(new File(['x'], 'a.mp4', { type: 'video/mp4' }));
+		await vi.waitFor(() => expect(probes).toHaveLength(1));
+	});
+	await act(async () => latest.slidesPaneProps.onSelectSlide(1));
+	expect(latest.canvasProps.activeSlide!.id).not.toBe(firstSlideId);
+	await act(async () => {
+		probes[0]!.onloadedmetadata?.();
+		result = await pending;
+	});
+	vi.restoreAllMocks();
+	expect(result).toStrictEqual({ ok: false, code: 'stale-target' });
+	expect(latest.canvasProps.activeSlide!.elements.some((e) => e.type === 'media')).toBeFalsy();
+	await act(async () => latest.slidesPaneProps.onSelectSlide(0));
+	expect(latest.canvasProps.activeSlide!.elements).toHaveLength(before);
 });

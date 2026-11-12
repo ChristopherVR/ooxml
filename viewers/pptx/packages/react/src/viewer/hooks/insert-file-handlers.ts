@@ -19,7 +19,11 @@ export interface FileHandlers {
 	handleImageFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 	handleMediaFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 	/** Insert an audio or video file chosen by the host's own picker. */
-	insertMediaFile: (file: File) => Promise<BuildingBlockResult>;
+	/**
+	 * `shouldInsert` is asked once the media is ready (after a video size probe); when it says no
+	 * nothing is added and the result is `stale-target`.
+	 */
+	insertMediaFile: (file: File, shouldInsert?: () => boolean) => Promise<BuildingBlockResult>;
 }
 
 export function createFileHandlers(deps: FileHandlerDeps): FileHandlers {
@@ -79,7 +83,10 @@ export function createFileHandlers(deps: FileHandlerDeps): FileHandlers {
 	 * probing a video's size) or with the reason it was not; the toolbar's hidden input and a host's
 	 * own picker both end here.
 	 */
-	const insertMediaFile = (file: File): Promise<BuildingBlockResult> => {
+	const insertMediaFile = (
+		file: File,
+		shouldInsert?: () => boolean,
+	): Promise<BuildingBlockResult> => {
 		if (!activeSlide) {
 			return Promise.resolve(buildingBlockFailure('no-slide'));
 		}
@@ -91,6 +98,10 @@ export function createFileHandlers(deps: FileHandlerDeps): FileHandlers {
 
 		return new Promise((resolve) => {
 			const insertMediaElement = (mediaSourceUrl: string, width: number, height: number) => {
+				if (shouldInsert && !shouldInsert()) {
+					resolve(buildingBlockFailure('stale-target'));
+					return;
+				}
 				addElement({
 					id: generateElementId(),
 					type: 'media',

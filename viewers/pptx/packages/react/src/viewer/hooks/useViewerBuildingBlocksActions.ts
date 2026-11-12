@@ -26,6 +26,10 @@ import type {
 	UseViewerBuildingBlocksActionsOptions,
 	ViewerBuildingBlockActions,
 } from './useViewerBuildingBlocks-actions-types';
+import {
+	buildFindReplaceActions,
+	buildLayoutActions,
+} from './useViewerBuildingBlocks-find-layout-actions';
 import type { ViewerDialogsResult } from './useViewerDialogs';
 import type { ViewerState } from './useViewerState';
 
@@ -191,7 +195,23 @@ export function useViewerBuildingBlocksActions(
 		if (!checked.ok) {
 			return checked;
 		}
-		return complete('media', await latest.current.editorOps.insertHandlers.insertMediaFile(file));
+		const handler = latest.current.handlerRef.current;
+		const slideId = latest.current.activeSlide?.id;
+		const slideIndex = latest.current.activeSlideIndex;
+		// A video's size is probed first; the deck, slide or its position may change meanwhile.
+		const sameTarget = (): boolean => {
+			const now = latest.current;
+			return (
+				now.handlerRef.current === handler &&
+				now.activeSlide?.id === slideId &&
+				now.activeSlideIndex === slideIndex &&
+				now.availability.insertMedia.available
+			);
+		};
+		return complete(
+			'media',
+			await latest.current.editorOps.insertHandlers.insertMediaFile(file, sameTarget),
+		);
 		// oxlint-disable-next-line react/memo-dependencies -- reads `latest`
 	}, []);
 
@@ -227,40 +247,14 @@ export function useViewerBuildingBlocksActions(
 		return complete(kind, BUILDING_BLOCK_OK);
 	};
 
-	const applyLayoutChecked = async (
-		path: string,
-		requireListed: boolean,
-	): Promise<BuildingBlockResult> => {
-		const denied = refuse('applyLayout');
-		if (denied) {
-			return denied;
-		}
-		if (requireListed && !latest.current.scopedLayouts.some((layout) => layout.path === path)) {
-			return buildingBlockFailure('unknown-layout');
-		}
-		try {
-			await latest.current.layoutSwitching.applyLayout(path);
-			return BUILDING_BLOCK_OK;
-		} catch {
-			return buildingBlockFailure('unknown-layout');
-		}
-	};
-	const resetLayout = async (): Promise<BuildingBlockResult> => {
-		const path = resetSlideLayoutPath(latest.current.activeSlide);
-		if (path === undefined) {
-			return buildingBlockFailure('no-layout');
-		}
-		return refuse('resetLayout') ?? applyLayoutChecked(path, false);
-	};
-
-	const matches = findReplace.findResults;
-	const currentIndex = findReplace.findResultIndex;
-	const options: FindReplaceOptions = {
-		matchCase: findReplace.findMatchCase,
-		includeNotes: findReplace.findIncludeNotes,
-		includeChartTitles: findReplace.findIncludeChartTitles,
-		includeChartData: findReplace.findIncludeChartData,
-	};
+	const layoutActions = buildLayoutActions({
+		activeSlide,
+		scopedLayouts,
+		getScopedLayouts: () => latest.current.scopedLayouts,
+		getActiveSlide: () => latest.current.activeSlide,
+		refuse: (id) => refuse(id),
+		applyLayout: (path) => latest.current.layoutSwitching.applyLayout(path),
+	});
 
 	const actions: ViewerBuildingBlockActions = {
 		availability,
@@ -283,60 +277,16 @@ export function useViewerBuildingBlocksActions(
 			update: (omml) =>
 				gated('editEquation', 'equation', () => insertHandlers.handleUpdateEquation(omml)),
 		},
-		findReplace: {
-			open: findReplace.findReplaceOpen,
-			setOpen: findReplace.setFindReplaceOpen,
-			query: findReplace.findQuery,
-			replacement: findReplace.replaceQuery,
-			options,
-			matches,
-			currentIndex,
-			currentMatch: matches[currentIndex] ?? null,
-			setQuery: findReplace.setFindQuery,
-			setReplacement: findReplace.setReplaceQuery,
-			setOptions: (change) => {
-				if (change.matchCase !== undefined) {
-					findReplace.setFindMatchCase(change.matchCase);
-				}
-				if (change.includeNotes !== undefined) {
-					findReplace.setFindIncludeNotes(change.includeNotes);
-				}
-				if (change.includeChartTitles !== undefined) {
-					findReplace.setFindIncludeChartTitles(change.includeChartTitles);
-				}
-				if (change.includeChartData !== undefined) {
-					findReplace.setFindIncludeChartData(change.includeChartData);
-				}
-			},
-			find: findReplace.performFind,
-			next: () => findReplace.navigateFindResult(1),
-			previous: () => findReplace.navigateFindResult(-1),
-			replaceCurrent: () =>
-				refuse('replace') ??
-				(matches[currentIndex] === undefined
-					? buildingBlockFailure('no-match')
-					: (findReplace.handleReplace(), BUILDING_BLOCK_OK)),
-			replaceAll: () =>
-				refuse('replace') ??
-				(matches.length === 0
-					? buildingBlockFailure('no-match')
-					: (findReplace.handleReplaceAll(), BUILDING_BLOCK_OK)),
-		},
-		layout: {
-			current: scopedLayouts.find((layout) => layout.path === activeSlide?.layoutPath),
-			currentPath: activeSlide?.layoutPath,
-			available: scopedLayouts,
-			apply: (path) => applyLayoutChecked(path, true),
-			reset: resetLayout,
-		},
+		findReplace: buildFindReplaceActions(findReplace, () => refuse('replace')),
+		layout: layoutActions.layout,
 	};
 
 	return {
 		actions,
 		requestImagePicker: () => request({ kind: 'image' }, 'insertImage'),
 		requestMediaPicker: () => request({ kind: 'media' }, 'insertMedia'),
-		applyLayout: (path) => void applyLayoutChecked(path, true),
-		resetSlide: () => void resetLayout(),
+		applyLayout: (path) => void layoutActions.apply(path, true),
+		resetSlide: () => void layoutActions.reset(),
 		loadLayoutPreviews: layoutSwitching.loadLayoutPreviews,
 	};
 }

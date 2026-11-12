@@ -54,7 +54,7 @@ export interface InsertElementHandlers {
 	handleEraseInkElement: (elementId: string) => void;
 	handleImageFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 	handleMediaFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-	insertMediaFile: (file: File) => Promise<BuildingBlockResult>;
+	insertMediaFile: (file: File, shouldInsert?: () => boolean) => Promise<BuildingBlockResult>;
 }
 
 export function useInsertElements(input: UseInsertElementsInput): InsertElementHandlers {
