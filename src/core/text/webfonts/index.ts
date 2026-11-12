@@ -5,6 +5,7 @@
  */
 export { GOOGLE_FONTS_CATALOGUE_DATE, GOOGLE_FONTS_FAMILIES } from './google-fonts-catalogue';
 export { findGoogleFontsFamily } from './google-fonts-lookup';
+export { getGoogleFontsVariants, type GoogleFontsVariant } from './google-fonts-variants';
 export { findMetricCompatibleGoogleFontsFamily } from './metric-clones';
 export * from './font-weight-names';
 export * from './google-fonts-request';

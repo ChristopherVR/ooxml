@@ -51,6 +51,36 @@ resolves each family in this order:
 5. **Substituted.** The CSS list continues with the metric-compatible clone and the substitutes
    from `ooxml-core/text`, then a PANOSE-based generic family.
 
+### Font-picker weights
+
+All five PowerPoint bindings list supported upright weights beside each Google Fonts family
+in the Home font dropdown, for example `DM Sans Light`, `DM Sans Medium` and `DM Sans SemiBold`.
+The regular face keeps the plain family name. Picking a row writes that PowerPoint-style
+family name, so the implied weight renders and survives saving. Unknown, embedded and custom
+families are not assigned weights from Google's catalogue; a family such as `Archivo Black`
+that is independently catalogued is not offered as another family's weight alias.
+
+Custom hosts can use the DOM-free runtime entry without importing the editor:
+
+```ts
+import { buildFontCatalog } from 'ooxml-ui/pptx/render/font-catalog';
+
+const groups = buildFontCatalog({ allFonts: ['DM Sans'], includeWeightVariants: true });
+const faces = groups[0].entries[0].variants;
+// [{ family: 'DM Sans Thin', weight: 100 }, ..., { family: 'DM Sans', weight: 400 }, ...]
+```
+
+| Field                                    | Default | Meaning                                                                                                   |
+| ---------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------- |
+| `FontCatalogInput.includeWeightVariants` | `false` | Add supported upright weight descriptors to catalogue entries; existing output is unchanged when omitted. |
+| `FontCatalogEntry.variants`              | absent  | Supported `{ family, weight }` faces; absent for unknown or locally supplied families.                    |
+
+`getGoogleFontsVariants(family)` from `ooxml-core/text` exposes the underlying immutable
+`{ weight, italic }` faces at supported standard weights 100 through 900. This metadata is
+bundled from Google Fonts, including variable weight ranges, and needs no network request.
+It describes catalogue availability, not which faces the device has installed. It does not
+turn font downloads on or change the privacy controls below.
+
 ### The webfont fallback
 
 `ooxml-core/text` (`text/webfonts/`) builds one Google Fonts CSS2 stylesheet URL for the

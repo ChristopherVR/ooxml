@@ -43,6 +43,14 @@ translation and focus-restoration policies. Dispose owned font scopes and sessio
 when the host unmounts. Font selection and script segmentation are DOM-free APIs
 in `ooxml-core/text`.
 
+PowerPoint hosts can import `buildFontCatalog` from the DOM-free
+`ooxml-ui/pptx/render/font-catalog` runtime entry. Set `includeWeightVariants: true`
+to add `entry.variants` with supported `{ family, weight }` faces, for example
+`DM Sans Medium` at 500; the 400 face keeps the plain family name. Omit the option
+for the existing output. Embedded/custom and unknown families do not inherit Google
+Fonts weights. All five PowerPoint dropdowns use the shared variant rows.
+See [font loading](../../docs/font-loading.md#font-picker-weights) for the input/output table.
+
 ## How the elements are built
 
 `office-ui-smartart` accepts `schemeFonts` (`major` and `minor` Latin typefaces)

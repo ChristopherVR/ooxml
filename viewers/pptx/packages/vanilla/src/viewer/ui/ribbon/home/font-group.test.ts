@@ -72,6 +72,28 @@ describe('createFontGroup shared pickers and menus', () => {
 		select.dispatchEvent(new Event('change', { bubbles: true }));
 	};
 
+	it('offers real weight faces and forwards Medium and regular family choices', () => {
+		const h = handlers();
+		const group = createFontGroup(document, createTranslator(), h);
+		group.update({
+			canFormat: true,
+			editable: true,
+			text: readTextFormatState({ ...element, textStyle: { fontFamily: 'DM Sans' } }),
+			themeFonts: { heading: 'DM Sans', body: 'ADLaM Display' },
+		});
+		const familyPicker = group.el.querySelector('[data-font-picker="family"]')!;
+		const families = Array.from(familyPicker.querySelectorAll('option'), (row) => row.value);
+		for (const family of ['DM Sans', 'DM Sans Light', 'DM Sans Medium', 'DM Sans SemiBold']) {
+			expect(families).toContain(family);
+		}
+		expect(families).not.toContain('DM Sans Regular');
+		expect(families).toContain('ADLaM Display');
+		expect(families).not.toContain('ADLaM Display Medium');
+		pick(group.el, 'fontFamily', 'DM Sans Medium');
+		pick(group.el, 'fontFamily', 'DM Sans');
+		expect(h.setFontFamily.mock.calls).toStrictEqual([['DM Sans Medium'], ['DM Sans']]);
+	});
+
 	it('renders the family and size fields on the shared select and routes changes', () => {
 		const h = handlers();
 		const group = createFontGroup(document, createTranslator(), h);

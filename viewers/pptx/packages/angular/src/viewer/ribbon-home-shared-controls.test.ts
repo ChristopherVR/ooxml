@@ -7,7 +7,7 @@
  * change re-translates the shared labels.
  */
 import { signal } from '@angular/core';
-import type { Type } from '@angular/core';
+import type { Provider, Type } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
@@ -21,6 +21,7 @@ import {
 	resolveViewerComponentResources,
 } from './component-resources.test-support';
 import { EditorStateService } from './editor-state.service';
+import { LoadContentService } from './load-content.service';
 import { RibbonEditingSectionComponent } from './ribbon-editing-section.component';
 import { RibbonFontControlsComponent } from './ribbon-font-controls.component';
 import { RibbonParagraphControlsComponent } from './ribbon-paragraph-controls.component';
@@ -46,10 +47,15 @@ const text = (): PptxElement =>
 		textStyle: { lineSpacing: 1.5, fontFamily: 'Arial' },
 	}) as unknown as PptxElement;
 
-function mount<T>(component: Type<T>, inputs: Record<string, unknown>, templateFile?: string) {
+function mount<T>(
+	component: Type<T>,
+	inputs: Record<string, unknown>,
+	templateFile?: string,
+	providers: Provider[] = [],
+) {
 	TestBed.configureTestingModule({
 		imports: [component],
-		providers: [provideTranslateService({ fallbackLang: 'en' }), EditorStateService],
+		providers: [provideTranslateService({ fallbackLang: 'en' }), EditorStateService, ...providers],
 	});
 	TestBed.overrideComponent(
 		component,
@@ -89,6 +95,48 @@ const event = (host: Element, detail: Record<string, unknown>) =>
 	host.dispatchEvent(new CustomEvent('home-request', { detail, bubbles: true }));
 
 describe('shared Home adapters', () => {
+	it('offers real weight faces and edits Medium and regular family choices', () => {
+		const { root, editor } = mount(
+			RibbonFontControlsComponent,
+			{ canEdit: true, slideIndex: 0, selectedElement: text() },
+			'ribbon-font-controls.component.html',
+			[
+				{
+					provide: LoadContentService,
+					useValue: {
+						theme: signal({
+							fontScheme: {
+								majorFont: { latin: 'DM Sans' },
+								minorFont: { latin: 'ADLaM Display' },
+							},
+						}),
+						embeddedFonts: signal([]),
+						themeColorMap: signal({}),
+						headerFooter: signal({}),
+						slideMasters: signal([]),
+					},
+				},
+			],
+		);
+		const picker = root.querySelector<HTMLElement & { value: string }>(
+			'[data-font-picker="family"]',
+		)!;
+		const families = Array.from(picker.querySelectorAll('option'), (row) => row.value);
+		for (const family of ['DM Sans', 'DM Sans Light', 'DM Sans Medium', 'DM Sans SemiBold']) {
+			expect(families).toContain(family);
+		}
+		expect(families).not.toContain('DM Sans Regular');
+		expect(families).toContain('ADLaM Display');
+		expect(families).not.toContain('ADLaM Display Medium');
+		for (const family of ['DM Sans Medium', 'DM Sans']) {
+			picker.value = family;
+			picker.dispatchEvent(new Event('change', { bubbles: true }));
+			expect(editor.slides()[0].elements[0]).toMatchObject({
+				textStyle: { fontFamily: family },
+			});
+		}
+	});
+
 	it('renders the Select menu and re-translates it on a runtime language change', async () => {
 		const { root, translate, detect } = mount(RibbonEditingSectionComponent, {});
 		const trigger = root.querySelector<HTMLElement>(

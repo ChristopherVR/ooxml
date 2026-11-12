@@ -25,6 +25,14 @@ A browser has no font catalogue of its own to draw on the way the desktop app do
 
 While a deck loads, the viewer waits briefly (150 ms) for the Google Fonts faces its slides draw, so cached faces never appear in a stand-in first. A first download on a slow network does not hold the deck back: after 150 ms, or at once when the request fails (offline, blocked), the deck is shown with metric-compatible substitutes, the status bar reads "Downloading fonts (1 of 2)" while the download runs, and a late face is laid out again when it arrives. Installed and embedded fonts need no wait.
 
+The Home font dropdown in all five bindings also lists supported Google Fonts weights,
+for example `DM Sans Light`, `DM Sans Medium` and `DM Sans SemiBold`. Regular keeps the
+plain family name; choosing a weight preserves that name on save. The bundled metadata
+does not invent faces for unknown, embedded or custom fonts. Hosts can opt into the same
+`{ family, weight }` variants with `buildFontCatalog({ includeWeightVariants: true })` from
+`ooxml-ui/pptx/render/font-catalog`, without importing the editor. The default catalogue
+output is unchanged. See the [font-picker API table](https://github.com/ChristopherVR/ooxml/blob/main/docs/font-loading.md#font-picker-weights).
+
 ### Fonts and privacy {#fonts-and-privacy}
 
 Fetching a clone from Google Fonts means the reader's browser contacts `fonts.googleapis.com` and `fonts.gstatic.com`, which reveals the reader's IP address to Google. By default the reader decides with the File > Options > Trust Center option "Download fonts that are not installed or embedded (Google Fonts)", which is on. Turning it off applies at once to the open deck (the viewer removes its webfont stylesheet) and to every later load, and the choice is saved with the other options. A host can decide instead with the `googleFonts` option, available on every binding:

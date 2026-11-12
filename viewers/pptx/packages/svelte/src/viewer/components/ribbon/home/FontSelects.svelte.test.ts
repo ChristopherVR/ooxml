@@ -32,6 +32,47 @@ function choose(select: Field, value: string): void {
 }
 
 describe('shared font controls in Svelte', () => {
+	it('offers real weight faces and patches Medium and regular family choices', async () => {
+		const patchSelected = vi.fn();
+		const target = document.createElement('div');
+		document.body.append(target);
+		const instance = mount(FontPickerGroup, {
+			target,
+			props: {
+				editor: {
+					editable: true,
+					selectedElement: { ...text, textStyle: { fontFamily: 'DM Sans' } },
+					patchSelected,
+					theme: {
+						fontScheme: {
+							majorFont: { latin: 'DM Sans' },
+							minorFont: { latin: 'ADLaM Display' },
+						},
+					},
+				} as unknown as EditorState,
+			},
+		});
+		try {
+			flushSync();
+			const select = picker(target, 'family');
+			const families = Array.from(select.querySelectorAll('option'), (row) => row.value);
+			for (const family of ['DM Sans', 'DM Sans Light', 'DM Sans Medium', 'DM Sans SemiBold']) {
+				expect(families).toContain(family);
+			}
+			expect(families).not.toContain('DM Sans Regular');
+			expect(families).toContain('ADLaM Display');
+			expect(families).not.toContain('ADLaM Display Medium');
+			choose(select, 'DM Sans Medium');
+			choose(select, 'DM Sans');
+			expect(patchSelected).toHaveBeenCalledTimes(2);
+			expect(patchSelected.mock.calls[0][0](text).textStyle.fontFamily).toBe('DM Sans Medium');
+			expect(patchSelected.mock.calls[1][0](text).textStyle.fontFamily).toBe('DM Sans');
+		} finally {
+			await unmount(instance);
+			target.remove();
+		}
+	});
+
 	it('joins disabled formatting actions over their shared canonical artwork', async () => {
 		const target = document.createElement('div');
 		document.body.append(target);

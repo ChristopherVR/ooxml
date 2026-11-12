@@ -69,14 +69,27 @@ export function fontFamilyItems(
 	catalog: FontCatalogInput,
 	t: (key: string) => string,
 ): RibbonHomeItem[] {
-	return buildFontCatalog(catalog).flatMap((group) =>
-		group.entries.map((entry) => ({
-			value: entry.family,
-			label: entry.family,
-			group: t(group.labelKey),
-			fontFamily: entry.family,
-			...(entry.themeRole && { description: t(`pptx.font.role.${entry.themeRole}`) }),
-		})),
+	const groups = buildFontCatalog({ ...catalog, includeWeightVariants: true });
+	const claimed = new Set(
+		groups.flatMap((group) => group.entries.map((entry) => entry.family.toLowerCase())),
+	);
+	return groups.flatMap((group) =>
+		group.entries.flatMap((entry) => {
+			const row = {
+				value: entry.family,
+				label: entry.family,
+				group: t(group.labelKey),
+				fontFamily: entry.family,
+				...(entry.themeRole && { description: t(`pptx.font.role.${entry.themeRole}`) }),
+			};
+			const variants = (entry.variants ?? []).flatMap(({ family }) => {
+				const key = family.toLowerCase();
+				if (claimed.has(key)) return [];
+				claimed.add(key);
+				return [{ value: family, label: family, group: row.group, fontFamily: family }];
+			});
+			return [row, ...variants];
+		}),
 	);
 }
 

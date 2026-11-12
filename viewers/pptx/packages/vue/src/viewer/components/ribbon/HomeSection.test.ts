@@ -55,6 +55,29 @@ function mountHome(overrides: Record<string, unknown> = {}) {
  * ribbon box rather than only unit-testing the shared function.
  */
 describe('homeSection - font size box (shared fontSizeOf)', () => {
+	it('offers real weight faces and forwards Medium and regular family choices', async () => {
+		const onUpdateTextStyle = vi.fn();
+		const wrapper = mountHome({
+			selectedElement: textShape({ textStyle: { fontFamily: 'DM Sans' } }),
+			themeFonts: { heading: 'DM Sans', body: 'ADLaM Display' },
+			onUpdateTextStyle,
+		});
+		const picker = wrapper.get('[data-font-picker="family"]').element;
+		const families = Array.from(picker.querySelectorAll('option'), (row) => row.value);
+		for (const family of ['DM Sans', 'DM Sans Light', 'DM Sans Medium', 'DM Sans SemiBold']) {
+			expect(families).toContain(family);
+		}
+		expect(families).not.toContain('DM Sans Regular');
+		expect(families).toContain('ADLaM Display');
+		expect(families).not.toContain('ADLaM Display Medium');
+		await choose(picker, 'DM Sans Medium');
+		await choose(picker, 'DM Sans');
+		expect(onUpdateTextStyle.mock.calls).toStrictEqual([
+			[{ fontFamily: 'DM Sans Medium' }],
+			[{ fontFamily: 'DM Sans' }],
+		]);
+	});
+
 	it('renders the shared font-step artwork and forwards each action once', async () => {
 		const onAction = vi.fn();
 		const wrapper = mount(FontHomeControls, {
