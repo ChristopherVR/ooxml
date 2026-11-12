@@ -253,7 +253,8 @@ export function createViewerControls(
 			presentationEntrySlideIndex(store.get().currentSlide, showOrder()),
 		slideCount: () => store.get().slides.length,
 		currentSlide: () => store.get().currentSlide,
-		zoom: () => renderer.effectiveScale(),
+		// The editing zoom, also during a show, as the other bindings report it.
+		zoom: () => renderer.editingScale(),
 		setZoom,
 		// The shared store already holds the fit-relative user factor, so a step is
 		// just a command. Re-measuring first keeps the absolute value it projects

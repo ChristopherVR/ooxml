@@ -72,7 +72,7 @@ export interface PptxViewerCallbacks {
 	onError?: (message: string, error: unknown) => void;
 	/** Fired when the active slide changes (zero-based index). */
 	onSlideChange?: (index: number) => void;
-	/** Fired when the effective zoom scale changes (1 = 100%). */
+	/** Fired when the editing zoom scale changes (1 = 100%); reports the editing zoom during a show too. */
 	onZoomChange?: (scale: number) => void;
 	/**
 	 * Fired when the user picks a Ribbon Display Options mode (the menu at the right end of the
@@ -522,7 +522,7 @@ export interface PptxViewerInstance extends PowerPointViewerAPI, ViewerCustomiza
 	 * again; pass `showCompatibilityToasts: false` to never show the stack.
 	 */
 	dismissAllCompatToasts(): void;
-	/** Effective zoom scale (1 = 100%), after fit resolution. */
+	/** Editing zoom scale (1 = 100%), after fit resolution, also during a show. */
 	getZoom(): number;
 	/** Set an explicit zoom scale, or `'fit'` for fit-to-viewport. */
 	setZoom(zoom: number): void;

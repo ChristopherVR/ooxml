@@ -159,6 +159,11 @@ export interface RenderController {
 	/** Resolve the requested zoom into a concrete scale factor. */
 	effectiveScale(): number;
 	/**
+	 * The editing canvas's scale, also during a slide show, which draws at its own
+	 * fit instead: the stored zoom, or at fit the editing canvas's last fit.
+	 */
+	editingScale(): number;
+	/**
 	 * Scale at which the slide exactly fits the viewport, i.e. the scale that
 	 * {@link zoomPercent} reports as 100%. The zoom controls need it because the
 	 * stored zoom is an ABSOLUTE scale while the shared zoom step is expressed
@@ -279,7 +284,9 @@ export function createRenderController(deps: RenderControllerDeps): RenderContro
 	};
 	const effectiveScaleFor = (canvasSize: { width: number; height: number }): number => {
 		const state = store.get();
-		return state.zoom !== 'fit' ? state.zoom : fitScaleFor(canvasSize);
+		// The zoom belongs to the editing canvas: the show always fits the slide to the
+		// screen, and the editing zoom is still there when the show ends.
+		return state.zoom !== 'fit' && !state.presenting ? state.zoom : fitScaleFor(canvasSize);
 	};
 
 	const effectiveScale = (): number => {
@@ -288,6 +295,17 @@ export function createRenderController(deps: RenderControllerDeps): RenderContro
 
 	const fitScale = (): number => {
 		return fitScaleFor(store.get().canvasSize);
+	};
+
+	// The editing canvas's fit when the stage last drew outside a show. During a show
+	// the viewport has the show's layout, so the editing fit cannot be measured then.
+	let lastEditingFit: number | undefined;
+	const editingScale = (): number => {
+		const state = store.get();
+		if (state.zoom !== 'fit') {
+			return state.zoom;
+		}
+		return state.presenting ? (lastEditingFit ?? fitScale()) : fitScale();
 	};
 
 	const zoomPercent = (): number => {
@@ -319,6 +337,9 @@ export function createRenderController(deps: RenderControllerDeps): RenderContro
 		const hasContent = specialMaster || Boolean(slide);
 		chrome.setEmpty(!hasContent);
 		const scale = effectiveScaleFor(pageSize);
+		if (!state.presenting) {
+			lastEditingFit = fitScaleFor(state.canvasSize);
+		}
 		chrome.stageWrap.style.width = `${pageSize.width * scale}px`;
 		chrome.stageWrap.style.height = `${pageSize.height * scale}px`;
 		// A live editor owns native selection/history. Repaint its model underneath
@@ -552,6 +573,7 @@ export function createRenderController(deps: RenderControllerDeps): RenderContro
 		renderThumbnails,
 		renderSlideNode: (slide, scale) => renderStageFor(slide, scale),
 		effectiveScale,
+		editingScale,
 		fitScale,
 		zoomPercent,
 		presentationPlayback,

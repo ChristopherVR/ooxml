@@ -15,9 +15,10 @@ export interface TouchGestureHandlers {
 }
 
 /**
- * Attach React-parity touch gestures to the stable viewport node. Pinching is
- * available in every mode; slide swipes deliberately stay disabled while
- * editing so they cannot steal element move/resize gestures.
+ * Attach React-parity touch gestures to the stable viewport node. Every pinch
+ * reaches `onPinchZoom` (the viewer ignores it during a slide show); slide
+ * swipes deliberately stay disabled while editing so they cannot steal element
+ * move/resize gestures.
  */
 export function attachTouchGestures(
 	target: HTMLElement,

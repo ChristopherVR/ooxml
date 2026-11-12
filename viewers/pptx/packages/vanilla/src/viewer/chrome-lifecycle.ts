@@ -382,7 +382,13 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 		// zoom model (and its bounds) lives in the shared zoom store now, and a
 		// raw store write would bypass it - which is how the pinch gesture ended
 		// up as the one zoom entry point with no clamping at all.
-		onPinchZoom: (zoom) => deps.setZoom(zoom * renderer.fitScale()),
+		// Inert during a show, as in the other bindings: the show always fits the
+		// screen, so a pinch there would only change the editing zoom unseen.
+		onPinchZoom: (zoom) => {
+			if (!store.get().presenting) {
+				deps.setZoom(zoom * renderer.fitScale());
+			}
+		},
 		isSwipeEnabled: () => {
 			const state = store.get();
 			return state.presenting || !state.editable;
