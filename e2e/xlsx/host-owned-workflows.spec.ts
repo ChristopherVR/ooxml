@@ -49,6 +49,13 @@ const gridBox = async (page: Page) => {
 	const grid = editor(page).getByRole('grid', { name: 'Spreadsheet grid' });
 	// Some demos stack a tall toolbar above the canvas: bring the grid into the viewport first.
 	await grid.scrollIntoViewIfNeeded();
+	// Let the scroll event of that call land now: one delivered after a click would be mistaken
+	// for the user scrolling, which dismisses an open menu by design.
+	await grid
+		.page()
+		.evaluate(
+			() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+		);
 	return (await grid.boundingBox())!;
 };
 /** Clicks at an offset inside the grid, measured when the click happens (the page may scroll). */
@@ -56,17 +63,10 @@ const clickGrid = async (page: Page, at: { x: number; y: number }, button: 'left
 	const box = await gridBox(page);
 	await page.mouse.click(box.x + at.x, box.y + at.y, { button });
 };
-/**
- * Opens the native menu. A page that scrolls to focus the grid fires a scroll event that dismisses
- * a menu opened a frame earlier (by design), so retry until the menu stays.
- */
-const openNative = (page: Page) =>
-	expect(async () => {
-		await clickGrid(page, { x: 160, y: 80 }, 'right');
-		await expect(editor(page).locator('office-ui-context-menu')).toHaveCount(1, { timeout: 1000 });
-		await page.waitForTimeout(200);
-		await expect(editor(page).locator('office-ui-context-menu')).toHaveCount(1, { timeout: 1000 });
-	}).toPass();
+const openNative = async (page: Page) => {
+	await clickGrid(page, { x: 160, y: 80 }, 'right');
+	await expect(editor(page).locator('office-ui-context-menu')).toHaveCount(1);
+};
 const cellValue = (page: Page, ref: string) =>
 	page.evaluate((r) => {
 		const workbook = window.xlsxNativeBlocks.handle.element.workbook!;
