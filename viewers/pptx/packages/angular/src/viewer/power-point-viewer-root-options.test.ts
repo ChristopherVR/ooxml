@@ -75,8 +75,9 @@ describe('powerPointViewerComponent root display inputs', () => {
 		);
 		expect(gateBefore('pptx-ng-protected-view-banner')).toContain('toolbarVisible()');
 		expect(gateBefore('<pptx-readonly-banner')).toContain('toolbarVisible()');
-		expect(gateBefore("@if (customizationService.panelVisible('titleBar'))")).toContain(
-			'!mobile.isMobile() && toolbarVisible()',
+		// The title bar sits in an outer desktop-and-toolbar block, then its own panel and ribbon gate.
+		expect(source).toMatch(
+			/@if \(!mobile\.isMobile\(\) && toolbarVisible\(\)\) \{\s*@if \(\s*customizationService\.panelVisible\('titleBar'\)/u,
 		);
 		expect(gateBefore('<pptx-mobile-toolbar')).toContain('toolbarVisible()');
 		expect(gateBefore('<pptx-status-bar')).toContain('toolbarVisible()');

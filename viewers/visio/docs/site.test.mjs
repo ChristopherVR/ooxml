@@ -82,10 +82,10 @@ describe('documentation site build', () => {
 		assert.match(home, /not Microsoft Visio parity/i);
 		assert.match(home, /npm install visio-react-viewer/);
 		const start = text('getting-started');
-		assert.match(start, /General drawing/);
+		assert.match(start, /general drawing/i);
 		assert.match(
 			start,
-			/Native Visio reopening and lossless round-trip fidelity remain unverified/,
+			/Native Visio reopening is verified only for the recorded cases.*lossless round-trip fidelity remains unverified/,
 		);
 		assert.doesNotMatch(home + start, /private and unpublished|MIT license/i);
 		assert.match(text('parity'), /parity is a target, not a current claim/i);
