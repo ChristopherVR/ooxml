@@ -9,7 +9,7 @@ import {
 	validateHostImageFile,
 	validateHostMediaFile,
 } from 'ooxml-ui/pptx';
-import type { BuildingBlockActionId, BuildingBlockResult, FindReplaceOptions } from 'ooxml-ui/pptx';
+import type { BuildingBlockActionId, BuildingBlockResult } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxHandler, PptxSlide } from 'pptx-viewer-core';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
