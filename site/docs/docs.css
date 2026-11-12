@@ -65,14 +65,17 @@ code {
 	grid-template-columns: var(--side-w) minmax(0, 1fr);
 	min-height: 100vh;
 }
+/* The article and the outline share what the sidebar leaves: they grow with the window up to a
+   comfortable measure, then stay centred, so a wide screen has even margins and no empty half. */
 .docs-main {
 	display: grid;
-	grid-template-columns: minmax(0, 1fr) 208px;
-	column-gap: clamp(28px, 4vw, 56px);
+	grid-template-columns: minmax(0, 1fr) clamp(208px, 14vw, 272px);
+	column-gap: clamp(28px, 4vw, 80px);
 	align-content: start;
 	width: 100%;
-	max-width: 1220px;
-	padding: 44px clamp(20px, 4vw, 56px) 0;
+	max-width: 1560px;
+	margin-inline: auto;
+	padding: 44px clamp(20px, 4vw, 64px) 0;
 }
 .docs-article {
 	min-width: 0;
@@ -809,6 +812,45 @@ code {
 	border-top: 1px solid var(--line);
 }
 
+/* Large and very large screens: a slightly bigger type size and a wider sidebar keep the three
+   columns in proportion, and the card grids take a fourth column when there is room for it. */
+@media (min-width: 1800px) {
+	:root {
+		--side-w: 300px;
+		font-size: 16px;
+	}
+	.docs-main {
+		padding-top: 56px;
+	}
+	.docs-article > p,
+	.hub-section > p {
+		max-width: 82ch;
+	}
+	.mock {
+		font-size: 12px;
+	}
+	.mock-slide {
+		max-width: 520px;
+	}
+}
+@media (min-width: 2300px) {
+	:root {
+		--side-w: 320px;
+		font-size: 17px;
+	}
+	.docs-main {
+		max-width: 1840px;
+	}
+	.hub-grid {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+	.mock-body {
+		grid-template-columns: 112px minmax(0, 1fr) 220px;
+	}
+	.mock-slide {
+		max-width: 640px;
+	}
+}
 @media (max-width: 1180px) {
 	.docs-main {
 		grid-template-columns: minmax(0, 1fr);
