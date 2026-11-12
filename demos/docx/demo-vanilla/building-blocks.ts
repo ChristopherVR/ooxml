@@ -1,6 +1,7 @@
 import { createDocument } from '../../../viewers/docx/packages/core/src/index';
 import type { BuildingBlockOptions } from '../../../viewers/docx/packages/bindings/src/building-blocks';
 import type { NativeHarness } from './building-blocks-types';
+import { mountHostReadAloud } from './read-aloud-controls';
 const host = document.querySelector<HTMLElement>('#native-host')!;
 const model = createDocument();
 model.blocks = [
@@ -255,4 +256,5 @@ async function mountNative() {
 	}
 }
 window.remountNativeWord = mountNative;
+mountHostReadAloud(host);
 void mountNative();
