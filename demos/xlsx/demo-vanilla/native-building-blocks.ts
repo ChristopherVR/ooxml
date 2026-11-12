@@ -22,7 +22,11 @@ export async function mountNativeBlocks(
 	framework: string,
 ): Promise<EditorHandle> {
 	// The building blocks are read-only unless the host grants editing; the demo grants it.
-	const initial: BuildingBlockOptions = { canEdit: true, ...supplied };
+	const hostUi = new URLSearchParams(location.search).has('hostui');
+	const hostOptions: Partial<BuildingBlockOptions> = hostUi
+		? (await import('./host-workflows')).hostCallbacks()
+		: {};
+	const initial: BuildingBlockOptions = { canEdit: true, ...hostOptions, ...supplied };
 	let harness: NativeHarness;
 	if (framework === 'react') {
 		const { createElement, createRef, useState, useEffect } = await import('react');
@@ -254,6 +258,17 @@ export async function mountNativeBlocks(
 	} else {
 		throw new Error('Choose angular, vue, svelte, solid or vanilla for native composition.');
 	}
+	if (hostUi) {
+		// Host callbacks survive `update` calls that only change other options.
+		const update = harness.update;
+		const destroy = harness.destroy;
+		harness.update = (next) => update({ ...hostOptions, ...next });
+		harness.destroy = async () => {
+			unmountPanels();
+			await destroy();
+		};
+	}
 	window.xlsxNativeBlocks = harness;
+	const unmountPanels = hostUi ? (await import('./host-workflows')).mountHostPanels() : () => {};
 	return harness.handle;
 }
