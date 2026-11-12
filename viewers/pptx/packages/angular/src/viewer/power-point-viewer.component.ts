@@ -22,7 +22,6 @@ import {
 	autosaveStatusKind,
 	createSlidePackageClipboard,
 	commitElementUpdateBatch,
-	createSaveRevisionController,
 	attachViewerHyperlinks,
 	applyPreferenceToOptions,
 	buildRasterPictureElement,
@@ -3252,6 +3251,14 @@ export class PowerPointViewerComponent
 			// A save that lands with no edit in flight leaves the document clean.
 			changeSources: () => this.saveChangeSources(),
 			markSaved: () => this.editor.dirty.set(false),
+			discardRecovery: () => {
+				const filePath = this.filePath();
+				if (filePath && this.viewerOpts.shouldDiscardAutosaveOnSave()) {
+					void deleteAutosaveSnapshot(filePath, this.storage()).catch(() => {
+						// The host save succeeded; recovery cleanup is best-effort here.
+					});
+				}
+			},
 			afterSuccessfulSave: (format) => {
 				this.viewerOpts.playFeedback();
 				const filePath = this.filePath();
@@ -3885,34 +3892,19 @@ export class PowerPointViewerComponent
 		return this.editor.dirty();
 	}
 
-	/** Revision tracker behind {@link getSaveRevision}, {@link getSaveSnapshot} and {@link acknowledgeSave}. */
-	private readonly saveRevision = createSaveRevisionController({
-		getSources: () => this.saveChangeSources(),
-		serialize: () => this.fileIO.getContent(),
-		markClean: () => this.editor.dirty.set(false),
-		discardRecovery: () => {
-			const filePath = this.filePath();
-			if (filePath && this.viewerOpts.shouldDiscardAutosaveOnSave()) {
-				void deleteAutosaveSnapshot(filePath, this.storage()).catch(() => {
-					// The host save succeeded; recovery cleanup is best-effort here.
-				});
-			}
-		},
-	});
-
 	/** The revision of the document as it is now; changes after every edit. */
 	getSaveRevision(): number {
-		return this.saveRevision.getRevision();
+		return this.fileIO.getSaveRevision();
 	}
 
 	/** Serialise for a host that persists the deck itself; the document stays dirty. */
 	getSaveSnapshot(): Promise<PptxSaveSnapshot> {
-		return this.saveRevision.snapshot();
+		return this.fileIO.getSaveSnapshot();
 	}
 
 	/** The host persisted `revision`: the document is clean only if it is still current. */
 	acknowledgeSave(revision: number): PptxSaveAcknowledgement {
-		return this.saveRevision.acknowledge(revision);
+		return this.fileIO.acknowledgeSave(revision);
 	}
 
 	/**

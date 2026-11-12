@@ -93,17 +93,10 @@ describe('powerPointViewerComponent API conformance', () => {
 		);
 	});
 
-	it('acknowledges a host-persisted save through the shared revision controller', () => {
-		const wiring = source.slice(
-			source.indexOf('private readonly saveRevision ='),
-			source.indexOf('getSaveRevision(): number'),
-		);
-		// The revision follows the same change sources File > Save compares.
-		expect(wiring).toContain('getSources: () => this.saveChangeSources()');
-		expect(wiring).toContain('markClean: () => this.editor.dirty.set(false)');
-		expect(wiring).toContain('shouldDiscardAutosaveOnSave()');
-		expect(source).toContain('return this.saveRevision.acknowledge(revision);');
-		expect(source).toContain('return this.saveRevision.snapshot();');
+	it('delegates the save revision methods to the file IO service', () => {
+		expect(source).toContain('return this.fileIO.acknowledgeSave(revision);');
+		expect(source).toContain('return this.fileIO.getSaveSnapshot();');
+		expect(source).toContain('return this.fileIO.getSaveRevision();');
 	});
 
 	it('selects the collaborative live model even when the host disables editing', () => {

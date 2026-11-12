@@ -12,6 +12,11 @@ export interface UseSaveRevisionInput {
 	getContent: () => Promise<Uint8Array>;
 	/** Clear the unsaved-changes state. */
 	markClean: () => void;
+	/**
+	 * Raise the unsaved-changes state. Here `isDirty` is the autosave engine's flag, which a
+	 * landed recovery snapshot also clears, so the revision (not the flag) decides what is saved.
+	 */
+	markDirty: () => void;
 	filePath: () => string | undefined;
 	storage: () => DocumentStorage | undefined;
 	getOptions: () => ViewerOptions | undefined;
@@ -23,7 +28,7 @@ export interface UseSaveRevisionInput {
  * binding's dirty flag and recovery cleanup.
  */
 export function useSaveRevision(input: UseSaveRevisionInput): SaveRevisionController {
-	return createSaveRevisionController({
+	const controller = createSaveRevisionController({
 		getSources: input.changeSources,
 		serialize: input.getContent,
 		markClean: input.markClean,
@@ -37,4 +42,16 @@ export function useSaveRevision(input: UseSaveRevisionInput): SaveRevisionContro
 			}
 		},
 	});
+	return {
+		...controller,
+		acknowledge(revision) {
+			const result = controller.acknowledge(revision);
+			// Edits newer than the persisted snapshot are unsaved, even if a recovery snapshot
+			// that landed meanwhile already cleared the autosave flag.
+			if (result.status === 'pending') {
+				input.markDirty();
+			}
+			return result;
+		},
+	};
 }

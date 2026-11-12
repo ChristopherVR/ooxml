@@ -14,6 +14,9 @@ function setup() {
 		markClean: () => {
 			isDirty.value = false;
 		},
+		markDirty: () => {
+			isDirty.value = true;
+		},
 		filePath: () => undefined,
 		storage: () => undefined,
 		getOptions: () => undefined,
@@ -47,6 +50,16 @@ describe('Vue host-persisted save acknowledgement', () => {
 		slides.value = [{}, {}];
 		expect(api.acknowledgeSave(first.revision).status).toBe('stale');
 		expect(api.acknowledgeSave(12345).status).toBe('unknown');
+		expect(isDirty.value).toBe(true);
+	});
+
+	it('stays pending and dirty when a recovery snapshot cleared the flag after a newer edit', async () => {
+		const { api, slides, isDirty } = setup();
+		const snapshot = await api.getSaveSnapshot();
+		slides.value = [{ id: 'edited after the host snapshot' }];
+		// The autosave engine writes a recovery snapshot and clears its (shared) dirty flag.
+		isDirty.value = false;
+		expect(api.acknowledgeSave(snapshot.revision).status).toBe('pending');
 		expect(isDirty.value).toBe(true);
 	});
 });

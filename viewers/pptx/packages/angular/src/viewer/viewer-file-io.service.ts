@@ -18,6 +18,8 @@
 
 import { inject, Injectable, signal } from '@angular/core';
 import type {
+	PptxSaveAcknowledgement,
+	PptxSaveSnapshot,
 	CloudDocumentHostValues,
 	CloudFileProvider,
 	CloudOpenedFile,
@@ -27,6 +29,7 @@ import type {
 } from 'ooxml-ui/pptx';
 import {
 	createCloudDocumentController,
+	createSaveRevisionController,
 	resolveCloudDocumentView,
 	deliverSavedPresentation,
 	isCleanAfterSave,
@@ -86,6 +89,8 @@ interface FileIOHost {
 	readonly changeSources?: () => readonly unknown[];
 	/** A Save / Save As landed with no edit while it was in flight: the document is clean. */
 	readonly markSaved?: () => void;
+	/** The host acknowledged the current save revision: drop the crash-recovery copy. */
+	readonly discardRecovery?: () => void;
 }
 
 @Injectable()
@@ -144,6 +149,38 @@ export class ViewerFileIOService {
 	 * serialises the editor's edited deck so changes persist.
 	 */
 	async getContent(): Promise<Uint8Array> {
+		const data = await this.serialize();
+		// Mirror React's imperative handle: serialising the deck also notifies the
+		// host so listeners wired to (contentChange) receive the latest bytes.
+		this.requireHost().emitContentChange(data);
+		return data;
+	}
+
+	/** Revision tracker behind {@link getSaveRevision}, {@link getSaveSnapshot} and {@link acknowledgeSave}. */
+	private readonly saveRevision = createSaveRevisionController({
+		getSources: () => this.host?.changeSources?.() ?? [],
+		serialize: () => this.serialize(),
+		markClean: () => this.host?.markSaved?.(),
+		discardRecovery: () => this.host?.discardRecovery?.(),
+	});
+
+	/** The revision of the document as it is now; changes after every edit. */
+	getSaveRevision(): number {
+		return this.saveRevision.getRevision();
+	}
+
+	/** Serialise for a host that persists the deck itself: no `contentChange`, still dirty. */
+	getSaveSnapshot(): Promise<PptxSaveSnapshot> {
+		return this.saveRevision.snapshot();
+	}
+
+	/** The host persisted `revision`: the document is clean only if it is still current. */
+	acknowledgeSave(revision: number): PptxSaveAcknowledgement {
+		return this.saveRevision.acknowledge(revision);
+	}
+
+	/** The deck as `.pptx` bytes, without notifying the host. */
+	private async serialize(): Promise<Uint8Array> {
 		const host = this.requireHost();
 		const intent = host.saveIntent();
 		const data = host.canEdit()
@@ -154,9 +191,6 @@ export class ViewerFileIOService {
 					intent,
 				)
 			: await this.loader.getContent(intent);
-		// Mirror React's imperative handle: serialising the deck also notifies the
-		// host so listeners wired to (contentChange) receive the latest bytes.
-		host.emitContentChange(data);
 		return data;
 	}
 

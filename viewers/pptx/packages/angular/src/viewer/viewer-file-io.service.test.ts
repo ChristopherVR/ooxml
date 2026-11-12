@@ -19,6 +19,8 @@ function harness(storage: DocumentStorage | undefined) {
 	const savePresentation = vi.fn();
 	const afterSuccessfulSave = vi.fn();
 	const onSaveError = vi.fn();
+	const emitContentChange = vi.fn();
+	const discardRecovery = vi.fn();
 	const injector = Injector.create({
 		providers: [
 			{ provide: LoadContentService, useValue: { saveSlides: vi.fn(async () => bytes) } },
@@ -34,7 +36,8 @@ function harness(storage: DocumentStorage | undefined) {
 		slides: () => [],
 		sections: () => [],
 		templateElementsBySlideId: () => ({}),
-		emitContentChange: () => {},
+		emitContentChange,
+		discardRecovery,
 		saveIntent: () => ({}),
 		afterSuccessfulSave,
 		onSaveError,
@@ -46,7 +49,16 @@ function harness(storage: DocumentStorage | undefined) {
 	const edit = () => {
 		sources = [[]];
 	};
-	return { service, savePresentation, afterSuccessfulSave, onSaveError, markSaved, edit };
+	return {
+		service,
+		savePresentation,
+		afterSuccessfulSave,
+		onSaveError,
+		markSaved,
+		edit,
+		emitContentChange,
+		discardRecovery,
+	};
 }
 
 describe('ViewerFileIOService host storage', () => {
@@ -114,5 +126,34 @@ describe('ViewerFileIOService dirty state after a save', () => {
 		edit = wired.edit;
 		await wired.service.save();
 		expect(wired.markSaved).not.toHaveBeenCalled();
+	});
+});
+
+describe('ViewerFileIOService host-persisted save acknowledgement', () => {
+	it('snapshots without emitting contentChange or cleaning, then cleans the current revision', async () => {
+		const { service, markSaved, emitContentChange, discardRecovery } = harness(undefined);
+		const snapshot = await service.getSaveSnapshot();
+		expect(snapshot.content).toBe(bytes);
+		expect(emitContentChange).not.toHaveBeenCalled();
+		expect(markSaved).not.toHaveBeenCalled();
+		expect(service.acknowledgeSave(snapshot.revision).status).toBe('clean');
+		expect(markSaved).toHaveBeenCalledOnce();
+		expect(discardRecovery).toHaveBeenCalledOnce();
+	});
+
+	it('keeps an edit made during persistence dirty and ignores a stale acknowledgement', async () => {
+		const { service, markSaved, discardRecovery, edit } = harness(undefined);
+		const first = await service.getSaveSnapshot();
+		edit();
+		expect(service.getSaveRevision()).toBeGreaterThan(first.revision);
+		expect(service.acknowledgeSave(first.revision).status).toBe('pending');
+		expect(markSaved).not.toHaveBeenCalled();
+		expect(discardRecovery).not.toHaveBeenCalled();
+		const second = await service.getSaveSnapshot();
+		expect(service.acknowledgeSave(second.revision).status).toBe('clean');
+		edit();
+		expect(service.acknowledgeSave(first.revision).status).toBe('stale');
+		expect(service.acknowledgeSave(9999).status).toBe('unknown');
+		expect(markSaved).toHaveBeenCalledOnce();
 	});
 });

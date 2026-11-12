@@ -199,6 +199,7 @@ import {
 import { useRibbonDisplayListeners } from './composables/useRibbonDisplayListeners';
 import { provideRibbonGalleryHost } from './composables/useRibbonGalleryHost';
 import { useRibbonUiState } from './composables/useRibbonUiState';
+import { useSaveRevision } from './composables/useSaveRevision';
 import { useSectionOperations } from './composables/useSectionOperations';
 import { useSelectionModel } from './composables/useSelectionModel';
 import { useSelectionPaneWiring } from './composables/useSelectionPaneWiring';
@@ -217,7 +218,6 @@ import { useThemeEditing } from './composables/useThemeEditing';
 import { useTouchGestures } from './composables/useTouchGestures';
 import { useVersionHistoryWiring } from './composables/useVersionHistoryWiring';
 import { useViewerApi } from './composables/useViewerApi';
-import { useSaveRevision } from './composables/useSaveRevision';
 import { useViewerCustomization } from './composables/useViewerCustomization';
 import { useViewerOptionsStore } from './composables/useViewerOptionsStore';
 import { useViewerPreferences } from './composables/useViewerPreferences';
@@ -2045,6 +2045,9 @@ const saveRevision = useSaveRevision({
 	getContent,
 	markClean: () => {
 		autosave.isDirty.value = false;
+	},
+	markDirty: () => {
+		autosave.isDirty.value = true;
 	},
 	filePath: documentPath,
 	storage: () => cloudView.value.storage,
