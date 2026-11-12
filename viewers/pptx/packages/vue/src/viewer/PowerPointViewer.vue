@@ -875,6 +875,19 @@ const presentation = usePresentationControls({
 	pushHistory: history.pushHistory,
 });
 
+// The editing canvas stays mounted (hidden) while a show runs, so it draws no
+// slide then: the show stage is the one surface the user acts on, and it keeps
+// the `data-element-id` markers. A hidden copy kept a second marked node per
+// element (and a second media player) through the whole show. The canvas
+// redraws the active slide when the show ends.
+const NO_ELEMENTS: PptxElement[] = [];
+const editingCanvasSlide = computed(() =>
+	presentation.presenting.value ? undefined : activeSlide.value,
+);
+const editingCanvasTemplateElements = computed(() =>
+	presentation.presenting.value ? NO_ELEMENTS : activeTemplateElements.value,
+);
+
 // Direct on-canvas chart editing context (mirrors the SmartArt node-edit
 // context above): gates mark interactivity to the selected chart in edit
 // mode, carries the canvas <-> inspector part selection, and routes commits
@@ -2380,7 +2393,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 					@touchend="swipe.onTouchEnd"
 				>
 					<SlideCanvas
-						:slide="activeSlide"
+						:slide="editingCanvasSlide"
 						:canvas-size="canvasSize"
 						:media-data-urls="mediaDataUrls"
 						:zoom="effectiveZoom"
@@ -2389,7 +2402,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 						:show-rulers="showRulers && !presentation.presenting.value"
 						:ruler-selected-bounds="selection.rulerSelectedBounds.value"
 						:can-drag-guides="canEditEffective && !presentation.presenting.value"
-						:template-elements="activeTemplateElements"
+						:template-elements="editingCanvasTemplateElements"
 						:edit-template-mode="editTemplateMode && !presentation.presenting.value"
 						:inline-editing-element-id="inlineEdit.inlineEditingElementId.value"
 						:selected-element-ids="selection.selectedElementIds.value"

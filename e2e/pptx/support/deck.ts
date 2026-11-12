@@ -155,6 +155,11 @@ async function uploadDeck(page: Page, fixturePath: string, timeout?: number): Pr
  * Thumbnails carry the same roledescription, so the first match is the contract
  * for "the slide the user is editing" - the bindings all render the main canvas
  * ahead of the thumbnail rail in DOM order.
+ *
+ * Not a probe for the running show's slide: some bindings present on a separate
+ * show stage and keep this canvas mounted under it, hidden and drawing no slide.
+ * Read the shown slide through `presentingStageText` (`./slide-text`) or the
+ * `[data-pptx-presenting]` stage instead.
  */
 export function slideStage(page: Page): Locator {
 	return page.locator('[aria-roledescription="slide"]').first();

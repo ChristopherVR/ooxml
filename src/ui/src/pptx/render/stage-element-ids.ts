@@ -26,6 +26,15 @@
  * `SlideCanvasComponent` decides it with the same rule and hands it to every
  * element renderer (`exposeElementId`), each per-type renderer included.
  *
+ * During a show the editing canvas is not the surface the user acts on. React
+ * replaces it with the show stage, and Svelte and vanilla present on it; Vue
+ * keeps it mounted but hidden, and Angular keeps it mounted under its show
+ * overlay and its presenter console, and both draw no slide on it while a show
+ * or the presenter console is up. With the static stages unmarked, a show and
+ * its presenter view, too, have one marked node per element outside a running
+ * transition, except Angular's presenter view: its stages are all previews, so
+ * it has none.
+ *
  * @module render/stage-element-ids
  */
 
