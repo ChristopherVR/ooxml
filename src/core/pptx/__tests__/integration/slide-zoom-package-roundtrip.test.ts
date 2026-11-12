@@ -1,6 +1,9 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 
+import { NS } from '../../../xml/namespaces';
+import { parseXml } from '../../../xml/xml';
+import { pptxTools } from '../../automation/catalogue/index';
 import { PresentationBuilder } from '../../core/builders/sdk/PresentationBuilder';
 import { PptxHandler } from '../../core/PptxHandler';
 import type { ZoomPptxElement } from '../../core/types';
@@ -110,6 +113,38 @@ describe('slide zoom package integration', () => {
 			width: 240,
 			imagePath: 'ppt/media/zoom-preview.png',
 		});
+	});
+
+	it('preserves the Slide Zoom envelope when an automation tool edits speaker notes', async () => {
+		const input = new Uint8Array(await buildSlideZoomPackage());
+		const tool = pptxTools.find((candidate) => candidate.name === 'update_slide_properties');
+		if (tool?.kind !== 'edit') throw new Error('Missing update_slide_properties tool');
+		const notes = 'Describe the menu before following the Slide Zoom.';
+		const { bytes } = await tool.run(input, { slideIndex: 0, notes });
+		if (!bytes) throw new Error('The tool did not save the deck');
+
+		const zip = await JSZip.loadAsync(bytes);
+		const slideXml = await zip.file('ppt/slides/slide1.xml')!.async('string');
+		const slide = parseXml(slideXml);
+		const envelope = slide.getElementsByTagNameNS(NS.mc, 'AlternateContent')[0];
+		const choice = envelope?.getElementsByTagNameNS(NS.mc, 'Choice')[0];
+		const fallback = envelope?.getElementsByTagNameNS(NS.mc, 'Fallback')[0];
+		expect(choice?.getAttribute('Requires')).toBe('pslz');
+		expect(choice?.getElementsByTagNameNS(NS.p, 'vendorData')[0]?.getAttribute('val')).toBe('keep');
+		expect(fallback?.getElementsByTagNameNS(NS.p, 'pic')[0]).toBeDefined();
+
+		const handler = new PptxHandler();
+		try {
+			const reloaded = await handler.load(new Uint8Array(bytes).buffer);
+			expect(reloaded.slides[0].notes).toBe(notes);
+			expect(reloaded.slides[0].elements.find((element) => element.type === 'zoom')).toMatchObject({
+				zoomType: 'slide',
+				targetSlideIndex: 2,
+				imagePath: 'ppt/media/zoom-preview.png',
+			});
+		} finally {
+			handler.dispose();
+		}
 	});
 
 	it('serializes a new typed slide Zoom with preview relationship and content type', async () => {

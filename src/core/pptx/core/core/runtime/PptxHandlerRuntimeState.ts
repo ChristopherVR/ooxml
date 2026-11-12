@@ -69,6 +69,10 @@ import type { IPptxRuntimeDependencyFactory } from '../factories';
 import { LoadPartReader, readPartText, readPartXml } from './load-part-reader';
 import { TemplateElementBaselineTracker } from './template-element-baselines';
 
+// Automation can save elements parsed by a different handler. Keep the
+// original Choice and Fallback with the raw node for as long as it is retained.
+const alternateContentBlocks = new WeakMap<XmlObject, AlternateContentBlock>();
+
 /**
  * Root state class for the PptxHandlerRuntime mixin chain.
  *
@@ -419,20 +423,8 @@ export class PptxHandlerRuntime {
 	/** Custom XML data parts parsed from `customXml/` in the OPC package. */
 	protected customXmlParts: PptxCustomXmlPart[] = [];
 
-	/**
-	 * Maps an element's `rawXml` reference to the `mc:AlternateContent`
-	 * envelope that originally wrapped it (CC-4).  Populated during slide
-	 * (and `p:grpSp`) parsing; consulted at save time to re-emit the
-	 * original `<mc:Choice>` / `<mc:Fallback>` shape so legacy renderers
-	 * keep their fallback content.
-	 *
-	 * Multiple sibling elements may share the same `AlternateContentBlock`
-	 * value (a single AC envelope often wraps several child shapes — e.g.
-	 * `p14:media` + its `p:pic` fallback nest one each).  WeakMap so AC
-	 * envelopes are GC'd if the parsed XmlObject is dropped.
-	 */
-	protected alternateContentBlockByRawXml: WeakMap<XmlObject, AlternateContentBlock> =
-		new WeakMap();
+	/** The original compatibility envelope for a parsed `rawXml` node. */
+	protected readonly alternateContentBlockByRawXml = alternateContentBlocks;
 
 	/** Embedded fonts extracted during load, preserved for automatic re-embedding on save. */
 	protected loadedEmbeddedFonts: PptxEmbeddedFont[] = [];
