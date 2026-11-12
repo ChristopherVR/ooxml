@@ -208,7 +208,7 @@ shared `PowerPointViewerAPI` and behave identically to the vanilla-native names.
 
 | Method      | Signature                | Description                                                         |
 | ----------- | ------------------------ | ------------------------------------------------------------------- |
-| `getZoom`   | `() => number`           | Effective zoom scale (1 = 100%), after fit resolution.              |
+| `getZoom`   | `() => number`           | Editing zoom (1 = 100%) after fit resolution, also during a show.   |
 | `setZoom`   | `(zoom: number) => void` | Set an explicit zoom scale, clamped to 0.1 - 5 times the fit scale. |
 | `zoomIn`    | `() => void`             | Zoom in by one step.                                                |
 | `zoomOut`   | `() => void`             | Zoom out by one step.                                               |

@@ -100,6 +100,35 @@ async function zoomIn(page: Page): Promise<void> {
 		.toBeGreaterThan(before * 1.5);
 }
 
+/** Laid-out width of the running show's slide (the widest presenting stage), 0 before it draws. */
+function showSlideWidth(page: Page): Promise<number> {
+	return page.evaluate(() =>
+		Math.max(
+			0,
+			...[...document.querySelectorAll('[data-pptx-presenting]')].map(
+				(node) => node.getBoundingClientRect().width,
+			),
+		),
+	);
+}
+
+/** Start the show from the current slide, measure its slide once it settles, and leave it. */
+async function showSlideWidthOnEntry(page: Page): Promise<number> {
+	const slideShow = page.getByRole('button', { name: /^slide show$/iu });
+	await (
+		(await slideShow.count()) > 0
+			? slideShow.last()
+			: page.getByRole('button', { name: /present/iu }).first()
+	).click();
+	await expect.poll(() => page.evaluate(() => window.__pptxViewer.getMode())).toBe('present');
+	await expect.poll(() => showSlideWidth(page)).toBeGreaterThan(0);
+	await page.waitForTimeout(500);
+	const width = await showSlideWidth(page);
+	await page.keyboard.press('Escape');
+	await expect.poll(() => page.evaluate(() => window.__pptxViewer.getMode())).not.toBe('present');
+	return width;
+}
+
 /** Positions of the active slide's elements, to show a drag moved none of them. */
 function elementPositions(page: Page): Promise<string> {
 	return page.evaluate(() =>
@@ -270,5 +299,21 @@ test.describe('viewport navigation', () => {
 		// Zoom to fit still lands on the same fit.
 		await zoomFitButton(page).click();
 		await expect.poll(async () => Math.abs((await slideWidth(page)) - fitted)).toBeLessThan(1);
+	});
+
+	test('the slide show does not take the editing zoom', async ({ page }) => {
+		test.setTimeout(180_000);
+		const fitted = await slideWidth(page);
+		const showAtFit = await showSlideWidthOnEntry(page);
+
+		const zoomOut = page.getByRole('button', { name: /^zoom out$/iu }).first();
+		for (let i = 0; i < 12; i++) {
+			await zoomOut.click();
+		}
+		await expect.poll(async () => (await slideWidth(page)) / fitted).toBeLessThan(0.25);
+
+		expect(Math.abs((await showSlideWidthOnEntry(page)) - showAtFit)).toBeLessThan(1);
+		// The editing zoom is still there after the show.
+		await expect.poll(async () => (await slideWidth(page)) / fitted).toBeLessThan(0.25);
 	});
 });

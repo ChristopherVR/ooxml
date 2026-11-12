@@ -197,6 +197,89 @@ describe('createPptxViewer', () => {
 		expect(concrete.renderer.effectiveScale()).toBe(2);
 	});
 
+	it('fits the show to the screen whatever the editing zoom, and keeps that zoom for after', () => {
+		const { viewer, container } = mount({ fitPadding: 0, maxFitScale: null });
+		const concrete = viewer as PptxViewer;
+		const viewport = container.querySelector<HTMLElement>('.pptxv-viewport')!;
+		Object.defineProperties(viewport, {
+			clientWidth: { value: 1920 },
+			clientHeight: { value: 1080 },
+		});
+		concrete.store.set({ canvasSize: { width: 960, height: 540 } });
+		viewer.setZoom(0.2);
+		expect(concrete.renderer.effectiveScale()).toBe(0.2);
+
+		concrete.store.set({ presenting: true });
+		expect(concrete.renderer.effectiveScale()).toBe(2);
+		expect(concrete.lifecycle.chrome.stageWrap.style.width).toBe('1920px');
+		// The host still reads the editing zoom, as in the other bindings.
+		expect(viewer.getZoom()).toBe(0.2);
+
+		concrete.store.set({ presenting: false });
+		expect(concrete.renderer.effectiveScale()).toBe(0.2);
+		expect(concrete.lifecycle.chrome.stageWrap.style.width).toBe('192px');
+	});
+
+	it('reports the editing zoom at fit during a show, and a zoom the host sets there', () => {
+		const onZoomChange = vi.fn();
+		// The editor caps its fit at 1; the show does not.
+		const { viewer, container } = mount({ fitPadding: 0, maxFitScale: 1, onZoomChange });
+		const concrete = viewer as PptxViewer;
+		const viewport = container.querySelector<HTMLElement>('.pptxv-viewport')!;
+		Object.defineProperties(viewport, {
+			clientWidth: { value: 1920 },
+			clientHeight: { value: 1080 },
+		});
+		concrete.store.set({ canvasSize: { width: 960, height: 540 } });
+		expect(viewer.getZoom()).toBe(1);
+
+		concrete.store.set({ presenting: true });
+		expect(concrete.renderer.effectiveScale()).toBe(2);
+		expect(viewer.getZoom()).toBe(1);
+
+		viewer.setZoom(1.5);
+		expect(concrete.renderer.effectiveScale()).toBe(2);
+		expect(viewer.getZoom()).toBe(1.5);
+		expect(onZoomChange).toHaveBeenLastCalledWith(1.5);
+	});
+
+	it('leaves the editing zoom alone when the show is pinched, and pinches it after', () => {
+		const pinch = (target: EventTarget, from: number, to: number): void => {
+			for (const [type, distance] of [
+				['touchstart', from],
+				['touchmove', to],
+				['touchend', to],
+			] as const) {
+				const touches = [100, 100 + distance].map((clientX) => ({ clientX, clientY: 300 }));
+				const event = new Event(type, { bubbles: true, cancelable: true });
+				Object.defineProperties(event, {
+					touches: { value: type === 'touchend' ? [] : touches },
+					changedTouches: { value: touches },
+				});
+				target.dispatchEvent(event);
+			}
+		};
+		const { viewer, container } = mount({ fitPadding: 0, maxFitScale: null });
+		const concrete = viewer as PptxViewer;
+		const viewport = container.querySelector<HTMLElement>('.pptxv-viewport')!;
+		Object.defineProperties(viewport, {
+			clientWidth: { value: 1920 },
+			clientHeight: { value: 1080 },
+		});
+		concrete.store.set({ canvasSize: { width: 960, height: 540 } });
+		viewer.setZoom(0.2);
+
+		concrete.store.set({ presenting: true });
+		pinch(concrete.lifecycle.chrome.root, 100, 200);
+		expect(concrete.store.get().zoom).toBe(0.2);
+		expect(concrete.lifecycle.chrome.stageWrap.style.width).toBe('1920px');
+
+		concrete.store.set({ presenting: false });
+		expect(concrete.renderer.effectiveScale()).toBe(0.2);
+		pinch(concrete.lifecycle.chrome.root, 100, 200);
+		expect(concrete.renderer.effectiveScale()).toBeCloseTo(0.4);
+	});
+
 	it('uses shared editor padding and ignores editor caps while presenting', () => {
 		const normal = mount();
 		const normalViewport = normal.container.querySelector<HTMLElement>('.pptxv-viewport')!;

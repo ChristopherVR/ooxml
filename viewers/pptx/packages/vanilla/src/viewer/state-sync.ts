@@ -146,7 +146,7 @@ export function createStateSync(deps: StateSyncDeps): StoreListener<ViewerState>
 			);
 		}
 		if (state.zoom !== previous.zoom) {
-			callbacks.onZoomChange?.(renderer.effectiveScale());
+			callbacks.onZoomChange?.(renderer.editingScale());
 		}
 		if (state.selectedElementId !== previous.selectedElementId) {
 			callbacks.onSelectionChange?.(state.selectedElementId);

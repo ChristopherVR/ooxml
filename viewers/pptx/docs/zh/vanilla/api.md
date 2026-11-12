@@ -142,7 +142,7 @@ function drawStrip(strip: HTMLElement, paneOptions: SlidesPaneOptions): void {
 
 | 方法        | 签名                     | 说明                                                   |
 | ----------- | ------------------------ | ------------------------------------------------------ |
-| `getZoom`   | `() => number`           | 计算适应比例后的实际缩放比例，1 表示 100%。            |
+| `getZoom`   | `() => number`           | 编辑画布的实际缩放比例，1 表示 100%，放映中不变。      |
 | `setZoom`   | `(zoom: number) => void` | 设置明确的缩放比例，限制在适应比例的 0.1 至 5 倍之间。 |
 | `zoomIn`    | `() => void`             | 放大一级。                                             |
 | `zoomOut`   | `() => void`             | 缩小一级。                                             |
