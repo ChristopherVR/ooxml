@@ -81,6 +81,31 @@ useViewerBuildingBlocks({
 `handle.share()` 会调用 `onOpenShareDialog`；如果没有该回调，它什么也不做，且 `enabled.openShareDialog` 为 false。
 没有回调的工作流是无法触发的，绝不会被静默挂载。希望使用内置对话框的宿主应改为渲染完整的 `SpreadsheetEditor`。
 
+## 上下文菜单和工作流操作
+
+`onOpenFormatCells`、`onOpenFindReplace` 和 `onOpenInsertFunction` 除了上述上下文外，还会收到用于完成工作流的操作。
+相同的操作也在 `toolbarProps.workflows` 上，因此始终打开的面板无需回调。每个操作在执行时都会重新读取只读状态、
+工作表保护和进行中的单元格编辑，并通过编辑会话执行（撤销、重做、脏状态和 `onWorkbookChange` 与内置界面一致），
+拒绝时通过返回值报告。
+
+- `workflows.formatCells`：`getState()` 返回 `{ font, alignment, border, protection }`（各为 `{ value, mixed }`：
+  共有属性和不一致的属性名）、`numFmt` 和 `fill`（混合时为 null）以及 `complete`（选区过大时为 false）。
+  `canApply()` 和 `apply(patch)` 将样式补丁作为一个撤销步骤应用到选区。
+- `workflows.find`：`findAll(query)`、`findNext(query, { backwards })`、`select(match)`、`replace(query, text)`、
+  `replaceAll(query, text)` 和 `canReplace()`。查找在只读工作簿中可用；替换在只读时被拒绝，被工作表保护锁定的单元格会被跳过。
+- `workflows.insertFunction`：`categories()`、`search({ text, category })`（包含 `name`、`category`、`syntax` 和本地化的
+  `description`）、`canInsert()` 和 `insert(name, args?)`。它在当前公式草稿的插入点插入 `NAME(`（没有草稿时新建），
+  并返回 `{ text, caret }` 以便您的输入框同步。纯文本草稿会被拒绝。
+
+要绘制自己的上下文菜单，请传入 `onContextMenu(request)`。在单元格、行或列标题以及（挂载了标签栏时）工作表标签上右键时触发。
+返回 `true` 可抑制原生菜单，并在 `request.x`、`request.y` 处渲染 `request.items`
+（`id`、`label`、`command`、`enabled`、`checked`、`shortcut`、`separatorBefore`）；用 `request.execute(id)` 执行所选项。
+返回其他值则显示原生菜单。没有右键事件时，`toolbarProps.contextMenu('cell' | 'row' | 'column' | 'tab', sheet?)`
+返回同样的模型，拥有自己工作表标签的宿主可据此获得标签菜单。表面模式只注册少量命令，因此多数项以 `enabled: false` 列出；
+当安装了 `onOpenFormatCells` 且工作簿可编辑时，Format Cells 为可用。`enabled.contextMenu`、`enabled.find`、
+`enabled.replace`、`enabled.applyFormatCells` 和 `enabled.insertFunctionCall` 反映当前可用的功能。
+过滤或扩展原生菜单不属于此 API：请使用 `customization` 中的 `hiddenActions` 和 `contextMenu.extraCommands`。
+
 ## 验证失败 {#validation-failures}
 
 在格式设置、导航或保存之前，必须先提交正在进行的单元格编辑。当数据验证拒绝该编辑时，回调返回 `false`，编辑保持打开，

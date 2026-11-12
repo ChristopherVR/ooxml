@@ -104,6 +104,42 @@ auf; ohne Callback tut es nichts, und `enabled.openShareDialog` ist false. Ein A
 Callback ist nicht erreichbar und wird nie stillschweigend eingebunden. Hosts, die die mitgelieferten
 Dialoge wünschen, rendern stattdessen den vollständigen `SpreadsheetEditor`.
 
+## Kontextmenüs und Workflow-Operationen
+
+`onOpenFormatCells`, `onOpenFindReplace` und `onOpenInsertFunction` erhalten zusätzlich zum obigen
+Kontext die Operationen, um den Ablauf abzuschließen. Dieselben Operationen stehen in
+`toolbarProps.workflows`, ein dauerhaft geöffnetes Panel braucht also keinen Callback. Jede
+Operation prüft beim Ausführen Schreibschutz, Blattschutz und die laufende Zellbearbeitung neu,
+läuft über die Bearbeitungssitzung (Rückgängig, Wiederholen, Dirty-Status und `onWorkbookChange`
+verhalten sich wie in der mitgelieferten Oberfläche) und meldet eine Ablehnung über den Rückgabewert.
+
+- `workflows.formatCells`: `getState()` liefert `{ font, alignment, border, protection }` (jeweils
+  `{ value, mixed }`: gemeinsame Eigenschaften und die Namen abweichender), `numFmt` und `fill`
+  (null bei gemischten Werten) sowie `complete` (false bei zu großer Auswahl). `canApply()` und
+  `apply(patch)` wenden einen Stil-Patch als einen Rückgängig-Schritt auf die Auswahl an.
+- `workflows.find`: `findAll(query)`, `findNext(query, { backwards })`, `select(match)`,
+  `replace(query, text)`, `replaceAll(query, text)` und `canReplace()`. Suchen funktioniert auch in
+  einer schreibgeschützten Arbeitsmappe; Ersetzen wird dort abgelehnt, durch Blattschutz gesperrte
+  Zellen werden übersprungen.
+- `workflows.insertFunction`: `categories()`, `search({ text, category })` (dokumentierte `name`,
+  `category`, `syntax` und eine lokalisierte `description`), `canInsert()` und `insert(name, args?)`.
+  Es fügt `NAME(` an der Einfügemarke des aktiven Formelentwurfs ein (und startet bei Bedarf einen)
+  und liefert `{ text, caret }`, damit Ihr Eingabefeld folgen kann. Ein Klartext-Entwurf wird abgelehnt.
+
+Für ein eigenes Kontextmenü übergeben Sie `onContextMenu(request)`. Es läuft bei einem Rechtsklick
+auf eine Zelle, eine Zeilen- oder Spaltenüberschrift und (bei eingebundener Registerleiste) ein
+Blattregister. Geben Sie `true` zurück, um das native Menü zu unterdrücken, und zeigen Sie
+`request.items` (`id`, `label`, `command`, `enabled`, `checked`, `shortcut`, `separatorBefore`) bei
+`request.x`, `request.y` an; eine Auswahl führen Sie mit `request.execute(id)` aus. Jeder andere
+Rückgabewert zeigt das native Menü. Ohne Rechtsklick liefert
+`toolbarProps.contextMenu('cell' | 'row' | 'column' | 'tab', sheet?)` dasselbe Modell, so erhält
+ein Host mit eigenen Blattregistern das Registermenü. Eine Oberfläche registriert nur wenige
+Befehle, daher stehen die meisten Einträge mit `enabled: false` in der Liste; Format Cells ist
+aktiv, wenn `onOpenFormatCells` gesetzt und die Arbeitsmappe bearbeitbar ist. `enabled.contextMenu`,
+`enabled.find`, `enabled.replace`, `enabled.applyFormatCells` und `enabled.insertFunctionCall`
+zeigen, was jetzt funktioniert. Das native Menü zu filtern oder zu erweitern gehört nicht zu dieser
+API: Verwenden Sie `hiddenActions` und `contextMenu.extraCommands` in `customization`.
+
 ## Validierungsfehler {#validation-failures}
 
 Eine laufende Zellbearbeitung muss vor dem Formatieren, Navigieren oder Speichern übernommen werden. Lehnt

@@ -9,6 +9,7 @@ import type { MenuEntry } from 'ooxml-core/xlsx/ui';
 import { visibleMenuEntries } from './hidden';
 import type { ExcelMenuCommand, ExcelMenuContext } from 'ooxml-core/xlsx/ui';
 import { withHostMenuItems } from '../../embedding/host-menu';
+import { offerToHost, type MenuInputs } from './host-api';
 
 export interface ContextMenuHandle {
 	close(): void;
@@ -21,6 +22,11 @@ export interface OpenMenuOptions {
 	restoreFocus?: () => void;
 	/** Host commands (`contextMenu.extraCommands`) and the context they run with. */
 	host?: { commands: readonly ExcelMenuCommand[]; context: ExcelMenuContext };
+	/**
+	 * Lets the host replace this menu (`surfaceActions.onContextMenu`): which menu it is, and how to
+	 * rebuild its entries when a choice runs.
+	 */
+	offer?: { input: MenuInputs; build: () => MenuEntry[] };
 }
 
 const openMenus = new WeakMap<EditorContext, ContextMenuHandle>();
@@ -44,6 +50,10 @@ export function openContextMenu(
 	options: OpenMenuOptions = {},
 ): ContextMenuHandle {
 	openMenus.get(ctx)?.close();
+	if (options.offer && offerToHost(ctx, options.offer.input, options.offer.build, x, y)) {
+		options.restoreFocus?.();
+		return { close: () => {}, element: ctx.host.ownerDocument.createElement('div') };
+	}
 	// Entries whose action the host hid are not offered, so they cannot run from the menu either.
 	const entries = visibleMenuEntries(all, (id) => ctx.commands.isHidden(id));
 	if (entries.length === 0 && !options.host?.commands.length) {

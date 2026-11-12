@@ -3,6 +3,13 @@
  * editor never mounts those dialogs: it calls the host's callback instead, and reports the
  * workflow as not enabled when the host gave none.
  */
+import type {
+	ContextMenuRequest,
+	FindReplaceRequest,
+	FormatCellsRequest,
+	InsertFunctionRequest,
+} from './surface-workflows';
+
 export interface SurfaceActionContext {
 	sheet: number;
 	sheetName: string;
@@ -18,11 +25,18 @@ export interface SurfaceHostActions {
 	/** Application settings and options. */
 	onOpenSettings?: ((context: SurfaceActionContext) => void) | undefined;
 	/** The Format Cells dialog. */
-	onOpenFormatCells?: ((context: SurfaceActionContext) => void) | undefined;
+	onOpenFormatCells?: ((request: FormatCellsRequest) => void) | undefined;
 	/** Find and Replace. */
-	onOpenFindReplace?: ((context: SurfaceActionContext) => void) | undefined;
+	onOpenFindReplace?: ((request: FindReplaceRequest) => void) | undefined;
 	/** Insert Function. */
-	onOpenInsertFunction?: ((context: SurfaceActionContext) => void) | undefined;
+	onOpenInsertFunction?: ((request: InsertFunctionRequest) => void) | undefined;
+	/**
+	 * A right click on a cell, a row or column header or a sheet tab (and Shift+F10 or the menu key
+	 * on the grid). Return true to show your own menu and suppress the native one; build it from
+	 * `request.items` and run a choice with `request.execute(id)`. Any other return value shows
+	 * the native menu.
+	 */
+	onContextMenu?: ((request: ContextMenuRequest) => boolean | void) | undefined;
 	/**
 	 * The data-validation alert of a cell edit that was refused. The host shows it (any UI) and
 	 * resolves the request with one of its methods; the grid never draws its own alert here.
@@ -31,7 +45,10 @@ export interface SurfaceHostActions {
 	onOpenValidationAlert?: ((request: ValidationAlertRequest) => void) | undefined;
 }
 /** The workflows that receive a `SurfaceActionContext` (the validation alert has its own request). */
-export type SurfaceActionName = Exclude<keyof SurfaceHostActions, 'onOpenValidationAlert'>;
+export type SurfaceActionName = Exclude<
+	keyof SurfaceHostActions,
+	'onOpenValidationAlert' | 'onContextMenu'
+>;
 
 interface ValidationAlertBase {
 	/** The cell being edited, as A1 text. */

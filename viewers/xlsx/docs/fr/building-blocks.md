@@ -96,6 +96,43 @@ appelle `onOpenShareDialog` ; sans ce rappel, il ne fait rien, et `enabled.openS
 flux de travail sans rappel est inaccessible, il n’est jamais monté en silence. Les hôtes qui veulent les
 dialogues intégrés affichent à la place le `SpreadsheetEditor` complet.
 
+## Menus contextuels et opérations de flux
+
+`onOpenFormatCells`, `onOpenFindReplace` et `onOpenInsertFunction` reçoivent, en plus du contexte
+ci-dessus, les opérations pour terminer le flux. Les mêmes opérations sont dans
+`toolbarProps.workflows` : un panneau toujours ouvert n’a donc pas besoin de rappel. Chaque
+opération relit à l’exécution la lecture seule, la protection de la feuille et la modification de
+cellule en cours, passe par la session d’édition (annuler, rétablir, état modifié et
+`onWorkbookChange` se comportent comme dans l’interface fournie) et signale un refus par sa valeur
+de retour.
+
+- `workflows.formatCells` : `getState()` renvoie `{ font, alignment, border, protection }` (chacun
+  `{ value, mixed }` : les propriétés communes et les noms qui diffèrent), `numFmt` et `fill`
+  (null si mixte) et `complete` (false si la sélection est trop grande). `canApply()` et
+  `apply(patch)` appliquent un correctif de style à la sélection en une seule étape d’annulation.
+- `workflows.find` : `findAll(query)`, `findNext(query, { backwards })`, `select(match)`,
+  `replace(query, text)`, `replaceAll(query, text)` et `canReplace()`. La recherche fonctionne dans
+  un classeur en lecture seule ; le remplacement y est refusé et les cellules verrouillées par la
+  protection sont ignorées.
+- `workflows.insertFunction` : `categories()`, `search({ text, category })` (avec `name`,
+  `category`, `syntax` et une `description` localisée), `canInsert()` et `insert(name, args?)`, qui
+  insère `NAME(` au curseur du brouillon de formule actif (en créant un si besoin) et renvoie
+  `{ text, caret }` pour que votre champ suive. Un brouillon en texte simple est refusé.
+
+Pour afficher votre propre menu contextuel, passez `onContextMenu(request)`. Il est appelé lors d’un
+clic droit sur une cellule, un en-tête de ligne ou de colonne et (si une barre d’onglets est montée)
+un onglet de feuille. Renvoyez `true` pour supprimer le menu natif et affichez `request.items`
+(`id`, `label`, `command`, `enabled`, `checked`, `shortcut`, `separatorBefore`) à `request.x`,
+`request.y` ; exécutez un choix avec `request.execute(id)`. Toute autre valeur affiche le menu
+natif. Sans clic droit, `toolbarProps.contextMenu('cell' | 'row' | 'column' | 'tab', sheet?)`
+renvoie le même modèle, ce qui permet à un hôte avec ses propres onglets d’obtenir le menu d’onglet.
+Une surface enregistre peu de commandes : la plupart des éléments sont listés avec `enabled: false` ;
+Format Cells est activé si `onOpenFormatCells` est installé et le classeur modifiable.
+`enabled.contextMenu`, `enabled.find`, `enabled.replace`, `enabled.applyFormatCells` et
+`enabled.insertFunctionCall` indiquent ce qui fonctionne maintenant. Filtrer ou étendre le menu natif
+ne fait pas partie de cette API : utilisez `hiddenActions` et `contextMenu.extraCommands` dans
+`customization`.
+
 ## Échecs de validation {#validation-failures}
 
 Une modification de cellule en cours doit être validée avant la mise en forme, la navigation ou l’enregistrement. Lorsque la

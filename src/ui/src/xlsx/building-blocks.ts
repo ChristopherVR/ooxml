@@ -10,7 +10,13 @@ import {
 	FONT_SIZES,
 	numberFormatOptions,
 } from 'ooxml-core/xlsx/ui';
-import type { SurfaceActionContext, SurfaceActionName } from './surface-actions';
+import type { SurfaceActionName } from './surface-actions';
+import { canEditNow, commitPending, formatCellsOperations } from './host-workflows';
+import { findOperations } from './host-find';
+import { insertFunctionOperations } from './host-function';
+import { openWorkflow, workflowAvailable } from './host-open';
+import { contextMenuModel, menuEntries } from './context-menu/host-api';
+import type { ContextMenuKind } from './surface-workflows';
 
 const LABELS = [
 	'Bold',
@@ -48,46 +54,24 @@ export function spreadsheetToolbarProps(core: EditorCore) {
 		core.requestRender();
 		return true;
 	};
-	/** Commits the cell edit in progress; a refusal is reported as `validation-error`. */
-	const commit = (): boolean => {
-		if (!core.host.isConnected) return false;
-		const grid = ctx.grid();
-		if (!grid?.isEditing() || grid.commitEdit()) return true;
-		if (!core.editError)
-			ctx.emit('validation-error', {
-				message: ctx.t('The current cell edit failed validation.'),
-				ref: activeRef(core.selection.get()),
-			});
-		return false;
-	};
+	const commit = (): boolean => commitPending(core);
 	const run = async (id: string, arg?: unknown): Promise<boolean> => {
 		if (core.loading || !commit()) return false;
 		return core.commands.run(id, arg);
 	};
-	const canEdit = Boolean(core.host.isConnected && core.session && !core.readOnly && !core.loading);
-	const actionContext = (): SurfaceActionContext => {
-		const current = core.selection.get();
-		return {
-			sheet: core.activeSheet,
-			sheetName: core.workbook?.sheets[core.activeSheet]?.name ?? '',
-			selection: selectionRef(current),
-			activeCell: activeRef(current),
-		};
-	};
-	const hostAction = (name: SurfaceActionName, needsEdit: boolean) => ({
-		enabled: Boolean(core.host.isConnected && core.surfaceActions[name] && (!needsEdit || canEdit)),
-		run: async (): Promise<boolean> => {
-			const callback = core.surfaceActions[name];
-			if (!callback || (needsEdit && !canEdit) || core.loading || !commit()) return false;
-			callback(actionContext());
-			return true;
-		},
+	const canEdit = canEditNow(core);
+	const hostAction = (name: SurfaceActionName) => ({
+		enabled: workflowAvailable(core, name),
+		run: async (): Promise<boolean> => openWorkflow(core, name),
 	});
-	const share = hostAction('onOpenShareDialog', false);
-	const settings = hostAction('onOpenSettings', false);
-	const formatCells = hostAction('onOpenFormatCells', true);
-	const findReplace = hostAction('onOpenFindReplace', false);
-	const insertFunction = hostAction('onOpenInsertFunction', true);
+	const share = hostAction('onOpenShareDialog');
+	const settings = hostAction('onOpenSettings');
+	const formatCells = hostAction('onOpenFormatCells');
+	const findReplace = hostAction('onOpenFindReplace');
+	const insertFunction = hostAction('onOpenInsertFunction');
+	const find = findOperations(core);
+	const insertOps = insertFunctionOperations(core);
+	const formatOps = formatCellsOperations(core);
 	const canUndo = core.commands.isEnabled('edit.undo');
 	const canRedo = core.commands.isEnabled('edit.redo');
 	return {
@@ -108,6 +92,28 @@ export function spreadsheetToolbarProps(core: EditorCore) {
 			insertFunction: insertFunction.enabled,
 			/** The host owns the validation alert; false means a refused edit just stays open (Retry). */
 			validationAlert: Boolean(core.host.isConnected && core.surfaceActions.onOpenValidationAlert),
+			/** The host replaces the native context menus (`onContextMenu`). */
+			contextMenu: Boolean(core.host.isConnected && core.surfaceActions.onContextMenu),
+			/** Finding needs no edit rights and no host callback. */
+			find: Boolean(core.host.isConnected && core.session && !core.loading),
+			replace: find.canReplace(),
+			applyFormatCells: formatOps.canApply(),
+			insertFunctionCall: insertOps.canInsert(),
+		},
+		/**
+		 * The operations behind Format Cells, Find and Replace and Insert Function, usable without
+		 * the matching `onOpen...` callback. Each re-reads read-only state, protection and the
+		 * pending cell edit when it runs.
+		 */
+		workflows: { formatCells: formatOps, find, insertFunction: insertOps },
+		/**
+		 * The entries of a context menu as data, with an `execute(id)` that re-checks the item when
+		 * it runs. `sheet` is the tab a `tab` menu is for. Entries whose command is not available in
+		 * surface mode are listed with `enabled: false`.
+		 */
+		contextMenu: (menu: ContextMenuKind, sheet = core.activeSheet) => {
+			const input = { kind: menu, sheet } as const;
+			return contextMenuModel(ctx, input, () => menuEntries(ctx, input));
 		},
 		...selectionFormatting(core.workbook, core.activeSheet, selection.ranges),
 		labels: Object.fromEntries(LABELS.map((label) => [label, ctx.t(label)])),

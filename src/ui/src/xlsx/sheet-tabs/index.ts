@@ -3,7 +3,8 @@
 import { nextSheetName } from 'ooxml-core/xlsx';
 import { sheetBaseName } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { openContextMenu, tabMenu } from '../context-menu/index';
+import { openContextMenu } from '../context-menu/index';
+import { menuEntries } from '../context-menu/host-api';
 import { ensureStyle, h } from '../grid/dom';
 import { wireTabDrag } from './drag';
 import { startRename, type RenameHandle } from './rename';
@@ -89,21 +90,12 @@ export function mountSheetTabs(ctx: EditorContext, container: HTMLElement): () =
 
 	const openMenu = (sheet: number, x: number, y: number) => {
 		activate(sheet);
-		const workbook = ctx.workbook();
-		if (!workbook) return;
-		const visible = visibleSheetIndices(workbook).length;
-		const entries = tabMenu(
-			{
-				readOnly: ctx.readOnly(),
-				structureLocked: workbook.structureLocked === true,
-				visibleSheets: visible,
-				hiddenSheets: workbook.sheets.length - visible,
-				protected: workbook.sheets[sheet]?.protection?.sheet === true,
-			},
-			{ rename: () => rename(sheet) },
-		);
-		openContextMenu(ctx, entries, x, y, {
+		if (!ctx.workbook()) return;
+		const input = { kind: 'tab', sheet, rename: () => rename(sheet) } as const;
+		const build = () => menuEntries(ctx, input);
+		openContextMenu(ctx, build(), x, y, {
 			restoreFocus: () => tabFor(strip, sheet)?.focus(),
+			offer: { input, build },
 			...hostMenu(ctx, 'sheetTab', sheet),
 		});
 	};

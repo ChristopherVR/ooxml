@@ -80,6 +80,27 @@ export async function nativeBuildingBlockContract(framework: string) {
 		).toBeNull();
 		blocks.update({ workbook, canEdit: true, onWorkbookError: errors });
 		await vi.waitFor(() => expect(snapshot().toolbarProps?.enabled.validationAlert).toBe(false));
+		// Host-owned context menus and workflow operations reach every binding.
+		expect(snapshot().toolbarProps?.enabled.contextMenu).toBe(false);
+		const onContextMenu = vi.fn(() => true);
+		blocks.update({ workbook, canEdit: true, onWorkbookError: errors, onContextMenu });
+		await vi.waitFor(() => expect(snapshot().toolbarProps?.enabled.contextMenu).toBe(true));
+		const menu = snapshot().toolbarProps!.contextMenu('cell');
+		expect(menu.items.map((item) => item.id)).toContain('copy');
+		expect(await menu.execute('missing')).toBe(false);
+		const operations = snapshot().toolbarProps!.workflows;
+		expect(operations.find.findAll({ text: 'no such text' })).toEqual([]);
+		expect(operations.insertFunction.search({ text: 'sum' }).map((f) => f.name)).toContain('SUM');
+		expect(operations.formatCells.getState().complete).toBe(true);
+		expect(operations.formatCells.apply({ font: { bold: true } })).toBe(true);
+		blocks.update({ workbook, canEdit: false, onWorkbookError: errors, onContextMenu });
+		await vi.waitFor(() => expect(snapshot().mode).toBe('view'));
+		expect(snapshot().toolbarProps?.workflows.find.canReplace()).toBe(false);
+		expect(snapshot().toolbarProps?.workflows.formatCells.apply({ font: { italic: true } })).toBe(
+			false,
+		);
+		blocks.update({ workbook, canEdit: true, onWorkbookError: errors });
+		await vi.waitFor(() => expect(snapshot().toolbarProps?.enabled.contextMenu).toBe(false));
 		expect(snapshot().collaboration.active).toBe(false);
 		expect(snapshot().selection).toBe('A1');
 		await expect(blocks.handle.load(new Uint8Array([0x50, 0x4b, 3, 4]))).rejects.toThrow(/./);

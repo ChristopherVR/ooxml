@@ -96,6 +96,40 @@ calls `onOpenShareDialog`; without one it does nothing, and `enabled.openShareDi
 workflow without a callback is unreachable, never silently mounted. Hosts that want the
 bundled dialogs render the full `SpreadsheetEditor` instead.
 
+## Context menus and workflow operations
+
+`onOpenFormatCells`, `onOpenFindReplace` and `onOpenInsertFunction` receive the context above plus
+the operations to finish the workflow. The same operations are on `toolbarProps.workflows`, so a
+panel that is always open needs no callback. Every operation re-reads read-only state, sheet
+protection and the pending cell edit when it runs, goes through the edit session (undo, redo,
+dirty state and `onWorkbookChange` behave as for the bundled UI) and reports a refusal by its
+return value.
+
+- `workflows.formatCells`: `getState()` returns `{ font, alignment, border, protection }` (each
+  `{ value, mixed }`, the shared properties and the names that differ), `numFmt` and `fill` (null
+  when mixed) and `complete` (false for a selection too large to examine). `canApply()` and
+  `apply(patch)` apply a style patch to the selection as one undo step.
+- `workflows.find`: `findAll(query)`, `findNext(query, { backwards })`, `select(match)`,
+  `replace(query, text)`, `replaceAll(query, text)` and `canReplace()`. Finding works in a
+  read-only workbook; replacing is refused there, and cells locked by sheet protection are skipped.
+- `workflows.insertFunction`: `categories()`, `search({ text, category })` (documented `name`,
+  `category`, `syntax` and a localized `description`), `canInsert()` and `insert(name, args?)`,
+  which inserts `NAME(` at the caret of the active formula draft (starting one when none is open)
+  and returns `{ text, caret }` so your input can follow. A plain-text draft is refused.
+
+To draw your own context menu, pass `onContextMenu(request)`. It runs for a right click on a cell,
+a row or column header, and (when a tab strip is mounted) a sheet tab. Return `true` to suppress
+the native menu and render `request.items` (`id`, `label`, `command`, `enabled`, `checked`,
+`shortcut`, `separatorBefore`) at `request.x`, `request.y`; run a choice with
+`request.execute(id)`. Any other return value shows the native menu. Without a right click,
+`toolbarProps.contextMenu('cell' | 'row' | 'column' | 'tab', sheet?)` returns the same model, which
+is how a host with its own sheet tabs gets the tab menu. A surface registers few commands, so most
+items are listed with `enabled: false` rather than pretended to work; Format Cells is enabled when
+`onOpenFormatCells` is installed and the workbook is editable. `enabled.contextMenu`,
+`enabled.find`, `enabled.replace`, `enabled.applyFormatCells` and `enabled.insertFunctionCall`
+report what works now. Filtering or extending the native menu is not part of this API: use
+`hiddenActions` and `contextMenu.extraCommands` in `customization`.
+
 ## Validation failures
 
 A cell edit in progress must be committed before formatting, navigation or saving. When data

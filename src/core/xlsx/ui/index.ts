@@ -62,3 +62,6 @@ export * from './theme/defaults';
 export * from './theme/element';
 export * from './theme/types';
 export { selectionFormatting } from './selection-format';
+export { formatCellsState, FORMAT_CELLS_SAMPLE } from './format-cells-state';
+export type { FormatAspect, FormatCellsState } from './format-cells-state';
+export { orderFrom, stepMatch } from './find-order';

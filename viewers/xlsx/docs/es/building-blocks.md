@@ -92,6 +92,41 @@ llama a `onOpenShareDialog`; sin él no hace nada, y `enabled.openShareDialog` e
 flujo sin callback es inalcanzable, nunca se monta en silencio. Los hosts que quieran los
 diálogos incluidos renderizan en su lugar el `SpreadsheetEditor` completo.
 
+## Menús contextuales y operaciones de flujo
+
+`onOpenFormatCells`, `onOpenFindReplace` y `onOpenInsertFunction` reciben, además del contexto
+anterior, las operaciones para completar el flujo. Las mismas operaciones están en
+`toolbarProps.workflows`, de modo que un panel siempre abierto no necesita callback. Cada
+operación vuelve a leer el modo de solo lectura, la protección de la hoja y la edición de celda
+pendiente al ejecutarse, pasa por la sesión de edición (deshacer, rehacer, estado de cambios y
+`onWorkbookChange` se comportan como en la interfaz incluida) e informa de un rechazo mediante su
+valor de retorno.
+
+- `workflows.formatCells`: `getState()` devuelve `{ font, alignment, border, protection }` (cada uno
+  `{ value, mixed }`: las propiedades compartidas y los nombres que difieren), `numFmt` y `fill`
+  (null si hay valores mixtos) y `complete` (false si la selección es demasiado grande).
+  `canApply()` y `apply(patch)` aplican un parche de estilo a la selección como un paso de deshacer.
+- `workflows.find`: `findAll(query)`, `findNext(query, { backwards })`, `select(match)`,
+  `replace(query, text)`, `replaceAll(query, text)` y `canReplace()`. Buscar funciona en un libro de
+  solo lectura; reemplazar se rechaza allí y se omiten las celdas bloqueadas por la protección.
+- `workflows.insertFunction`: `categories()`, `search({ text, category })` (con `name`, `category`,
+  `syntax` y una `description` localizada), `canInsert()` e `insert(name, args?)`, que inserta
+  `NAME(` en el cursor del borrador de fórmula activo (iniciando uno si no hay) y devuelve
+  `{ text, caret }` para que su campo lo siga. Un borrador de texto simple se rechaza.
+
+Para dibujar su propio menú contextual, pase `onContextMenu(request)`. Se ejecuta con el clic
+derecho en una celda, un encabezado de fila o columna y (si hay barra de pestañas) una pestaña de
+hoja. Devuelva `true` para suprimir el menú nativo y muestre `request.items` (`id`, `label`,
+`command`, `enabled`, `checked`, `shortcut`, `separatorBefore`) en `request.x`, `request.y`; ejecute
+una elección con `request.execute(id)`. Cualquier otro valor muestra el menú nativo. Sin clic
+derecho, `toolbarProps.contextMenu('cell' | 'row' | 'column' | 'tab', sheet?)` devuelve el mismo
+modelo, así un host con sus propias pestañas obtiene el menú de pestaña. Una superficie registra
+pocos comandos, por lo que la mayoría de los elementos aparecen con `enabled: false`; Format Cells
+se habilita si `onOpenFormatCells` está instalado y el libro es editable. `enabled.contextMenu`,
+`enabled.find`, `enabled.replace`, `enabled.applyFormatCells` y `enabled.insertFunctionCall`
+indican lo que funciona ahora. Filtrar o ampliar el menú nativo no forma parte de esta API: use
+`hiddenActions` y `contextMenu.extraCommands` en `customization`.
+
 ## Fallos de validación {#validation-failures}
 
 Una edición de celda en curso debe confirmarse antes de dar formato, navegar o guardar. Cuando la validación de datos la rechaza, los callbacks devuelven `false`, la edición sigue abierta y el fallo se comunica de tres formas:

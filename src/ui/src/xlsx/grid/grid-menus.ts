@@ -1,7 +1,9 @@
 // Opens the cell / row header / column header context menus from right click, Shift+F10 or the
 // ContextMenu key, with the state the item builders need.
-import { MAX_COL, MAX_ROW, rangeContains, validationAt } from 'ooxml-core/xlsx';
-import { cellMenu, columnHeaderMenu, openContextMenu, rowHeaderMenu } from '../context-menu/index';
+import { MAX_COL, MAX_ROW } from 'ooxml-core/xlsx';
+import type { MenuEntry } from 'ooxml-core/xlsx/ui';
+import { openContextMenu } from '../context-menu/index';
+import { menuEntries } from '../context-menu/host-api';
 import type { GridView } from './grid-view';
 import { hostMenu } from '../customization';
 
@@ -49,29 +51,17 @@ export function openGridMenu(
 	refocus: () => void,
 ): void {
 	const ctx = view.ctx;
-	const readOnly = ctx.readOnly();
-	let entries;
-	if (kind === 'row')
-		entries = rowHeaderMenu({ readOnly, hiddenInSelection: hiddenInSelection(view, 'row') });
-	else if (kind === 'col')
-		entries = columnHeaderMenu({ readOnly, hiddenInSelection: hiddenInSelection(view, 'col') });
-	else {
-		const sheet = view.sheet();
-		const workbook = view.workbook();
-		const at = ctx.selection.get().active;
-		const rule = workbook ? validationAt(workbook, view.sheetIndex(), at.row, at.col) : undefined;
-		entries = cellMenu({
-			readOnly,
-			hasComment: Boolean(
-				sheet?.comments.some((c) => c.address.row === at.row && c.address.col === at.col),
-			),
-			hasLink: Boolean(sheet?.hyperlinks.some((l) => rangeContains(l.range, at))),
-			hasList: rule?.type === 'list',
-		});
-	}
 	const menu = kind === 'col' ? 'column' : kind;
-	openContextMenu(ctx, entries, x, y, {
+	// The grid measures hidden rows and columns (including filtered ones) itself.
+	const build = (): MenuEntry[] =>
+		menuEntries(ctx, {
+			kind: menu,
+			sheet: view.sheetIndex(),
+			...(kind === 'cell' ? {} : { hiddenInSelection: hiddenInSelection(view, kind) }),
+		});
+	openContextMenu(ctx, build(), x, y, {
 		restoreFocus: refocus,
+		offer: { input: { kind: menu, sheet: view.sheetIndex() }, build },
 		...hostMenu(ctx, menu, view.sheetIndex()),
 	});
 }

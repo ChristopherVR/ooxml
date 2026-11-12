@@ -40,6 +40,8 @@ import { XlsxWebfonts } from './webfonts';
 import { collaborationFor, type XlsxCollaboration } from './collaboration';
 import type { EditorThemeMode, XlsxTheme } from './theme';
 import type { ExcelCustomization } from 'ooxml-core/xlsx/ui';
+import { provideContextMenuHost } from './context-menu/host-api';
+import { openWorkflow, workflowAvailable } from './host-open';
 import {
 	EMPTY_EXCEL_CUSTOMIZATION,
 	provideCustomization,
@@ -159,6 +161,11 @@ export class EditorCore {
 		});
 		this.ctx = this.createContext();
 		provideCustomization(this.ctx, () => this.customization);
+		provideContextMenuHost(this.ctx, {
+			handler: () => this.surfaceActions.onContextMenu,
+			available: (name) => workflowAvailable(this, name),
+			delegate: (name) => openWorkflow(this, name),
+		});
 		editBridge(this.ctx).onChange(() => {
 			const draft = editBridge(this.ctx).state();
 			if (this.editError && (!draft.editing || draft.text !== this.editError.text))

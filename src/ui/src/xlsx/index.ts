@@ -71,6 +71,19 @@ export type {
 	WarningValidationAlert,
 	InformationValidationAlert,
 } from './surface-actions';
+export type {
+	ContextMenuItem,
+	ContextMenuKind,
+	ContextMenuModel,
+	ContextMenuRequest,
+	FindOperations,
+	FindReplaceRequest,
+	FormatCellsOperations,
+	FormatCellsRequest,
+	FunctionDoc,
+	InsertFunctionOperations,
+	InsertFunctionRequest,
+} from './surface-workflows';
 export { EXCEL_CAPABILITY_IDS } from 'ooxml-core/xlsx/ui';
 export type {
 	ExcelBackstagePage,

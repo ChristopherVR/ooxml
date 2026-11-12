@@ -1,7 +1,7 @@
 // Find and Replace: Find / Replace tabs, options, Find All results, Find Next, Replace and
 // Replace All, all through the core session's find API.
 import { type FindMatch, type FindQuery, formatAddress, getCell } from 'ooxml-core/xlsx';
-import type { EditorContext } from 'ooxml-core/xlsx/ui';
+import { orderFrom, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { checkbox, el, field, row, select, tabs, textInput } from './fields';
 import { button, showDialog } from './frame';
 import { selectOn } from './go-to';
@@ -10,23 +10,7 @@ export interface FindReplaceProps {
 	tab?: 'find' | 'replace';
 }
 
-/** Matches after the active cell first (wrapping), as Find Next walks them. */
-export function orderFrom(
-	matches: FindMatch[],
-	sheet: number,
-	row: number,
-	col: number,
-	byColumns: boolean,
-): FindMatch[] {
-	const after = (m: FindMatch): boolean =>
-		m.sheet > sheet ||
-		(m.sheet === sheet &&
-			(byColumns
-				? m.col > col || (m.col === col && m.row > row)
-				: m.row > row || (m.row === row && m.col > col)));
-	const index = matches.findIndex(after);
-	return index < 0 ? matches : [...matches.slice(index), ...matches.slice(0, index)];
-}
+export { orderFrom };
 
 export function openFindReplace(
 	ctx: EditorContext,
