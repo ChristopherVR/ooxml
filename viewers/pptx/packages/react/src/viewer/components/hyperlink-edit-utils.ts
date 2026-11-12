@@ -92,3 +92,28 @@ export function resolveHyperlinkEditResult(data: HyperlinkEditData): {
 			return { url: data.url, tooltip };
 	}
 }
+
+/**
+ * The editor values for an element's current link, detected the way the hyperlink dialog seeds
+ * its fields from it. A host-rendered editor starts from this and passes the edited value back.
+ */
+export function hyperlinkEditDataFromAction(
+	actionClick: { url?: string; action?: string; tooltip?: string } | undefined,
+): HyperlinkEditData | null {
+	if (!actionClick || (!actionClick.url && !actionClick.action)) {
+		return null;
+	}
+	const { url, action, tooltip } = actionClick;
+	const targetType = detectTargetType(url, action);
+	const email = parseEmailUrl(url ?? '');
+	return {
+		targetType,
+		url: targetType === 'url' ? (url ?? '') : '',
+		tooltip: tooltip ?? '',
+		emailAddress: targetType === 'email' ? email.address : '',
+		emailSubject: targetType === 'email' ? email.subject : '',
+		slideNumber: parseSlideFromUrl(url, action),
+		filePath: targetType === 'file' ? (url ?? '') : '',
+		actionVerb: (action && ACTION_VERB_MAP[action.toLowerCase()]) || 'nextSlide',
+	};
+}

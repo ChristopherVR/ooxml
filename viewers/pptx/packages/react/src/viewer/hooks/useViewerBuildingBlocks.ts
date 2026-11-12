@@ -51,12 +51,15 @@ import type {
 	UseViewerBuildingBlocksInput,
 	ViewerBuildingBlocksResult,
 } from './useViewerBuildingBlocks-types';
+import { useViewerBuildingBlocksActions } from './useViewerBuildingBlocksActions';
 import { useViewerBuildingBlocksCollaboration } from './useViewerBuildingBlocksCollaboration';
 import { useViewerBuildingBlocksCore } from './useViewerBuildingBlocksCore';
 import { useViewerBuildingBlocksState } from './useViewerBuildingBlocksState';
 
 export type {
+	BuildingBlockRequest,
 	UseViewerBuildingBlocksInput,
+	ViewerBuildingBlockActions,
 	ViewerBuildingBlocksResult,
 } from './useViewerBuildingBlocks-types';
 
@@ -161,6 +164,8 @@ export function useViewerBuildingBlocks(
 	const {
 		dialogs,
 		loadVersion,
+		canInsertElement,
+		handlerRef,
 		editorOps,
 		exportHandlers,
 		printHandlers,
@@ -203,6 +208,21 @@ export function useViewerBuildingBlocks(
 		embedFonts: dialogs.embedFontsEnabled,
 		onReadOnlyChange: setCollaborationReadOnly,
 	});
+	const blockActions = useViewerBuildingBlocksActions({
+		state,
+		canEdit,
+		canInsert: canInsertElement,
+		mode,
+		slides,
+		activeSlide,
+		activeSlideIndex,
+		dialogs,
+		editorOps,
+		history,
+		handlerRef,
+		onRequest: input.onRequest,
+		fileLimits: input.fileLimits,
+	});
 	const toolbarProps = buildToolbarProps({
 		mode,
 		canEdit,
@@ -234,6 +254,11 @@ export function useViewerBuildingBlocks(
 		autosaveEnabled,
 		hiddenActions,
 		viewPreferencesSync,
+		onOpenImagePicker: blockActions.requestImagePicker,
+		onOpenMediaPicker: blockActions.requestMediaPicker,
+		onApplyLayout: blockActions.applyLayout,
+		onResetSlide: blockActions.resetSlide,
+		loadLayoutPreviews: blockActions.loadLayoutPreviews,
 	});
 
 	const canvasProps = buildCanvasProps({
@@ -304,5 +329,6 @@ export function useViewerBuildingBlocks(
 		autosaveStatus,
 		collaboration,
 		shellState,
+		actions: blockActions.actions,
 	};
 }

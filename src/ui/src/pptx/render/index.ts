@@ -1548,6 +1548,7 @@ export * from './image-file-insertion';
 export * from './editor-image-paste';
 export * from './header-footer-dialog';
 export * from './media-file-type';
+export * from './building-block-actions';
 export * from './template-background-rows';
 export * from './template-editing';
 export * from './transition-template-elements';

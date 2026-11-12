@@ -1,4 +1,5 @@
-import { buildSmartArtPresetData } from 'ooxml-ui/pptx';
+import { BUILDING_BLOCK_OK, buildSmartArtPresetData, buildingBlockFailure } from 'ooxml-ui/pptx';
+import type { BuildingBlockResult } from 'ooxml-ui/pptx';
 /**
  * insert-structured-elements: Factory for SmartArt, equation, hyperlink,
  * field, and action-button insertion handlers used by useInsertElements.
@@ -39,6 +40,10 @@ export interface StructuredElementHandlers {
 	handleInsertEquation: (omml: Record<string, unknown>) => void;
 	handleUpdateEquation: (omml: Record<string, unknown>) => void;
 	handleHyperlinkConfirm: (data: HyperlinkEditData) => void;
+	/** As `handleHyperlinkConfirm`, but reports why a link was not applied. */
+	applyHyperlink: (data: HyperlinkEditData) => BuildingBlockResult;
+	/** Clear the selected element's link. */
+	removeHyperlink: () => BuildingBlockResult;
 	handleInsertField: (fieldType: string, value?: string) => void;
 	handleAddActionButton: (shapeType: string) => void;
 }
@@ -106,10 +111,10 @@ export function createStructuredElementHandlers(
 		history.markDirty();
 	};
 
-	const handleHyperlinkConfirm = (data: HyperlinkEditData) => {
+	const applyHyperlink = (data: HyperlinkEditData): BuildingBlockResult => {
 		const sel = selectedElements[0];
 		if (!sel) {
-			return;
+			return buildingBlockFailure('no-selection');
 		}
 		const resolved = resolveHyperlinkEditResult(data);
 		// Block unsafe URL schemes (javascript:, data:, vbscript:, mhtml:) before
@@ -118,7 +123,7 @@ export function createStructuredElementHandlers(
 		// instead), so isUrlSafe only gates the url/email/slide/file cases that
 		// actually carry a navigable URL.
 		if (resolved.url && !isUrlSafe(resolved.url)) {
-			return;
+			return buildingBlockFailure('unsafe-url');
 		}
 		const actionClick = {
 			url: resolved.url || undefined,
@@ -127,6 +132,24 @@ export function createStructuredElementHandlers(
 		};
 		ops.updateElementById(sel.id, { actionClick });
 		history.markDirty();
+		return BUILDING_BLOCK_OK;
+	};
+
+	const handleHyperlinkConfirm = (data: HyperlinkEditData) => {
+		applyHyperlink(data);
+	};
+
+	const removeHyperlink = (): BuildingBlockResult => {
+		const sel = selectedElements[0];
+		if (!sel) {
+			return buildingBlockFailure('no-selection');
+		}
+		if (!sel.actionClick) {
+			return buildingBlockFailure('no-hyperlink');
+		}
+		ops.updateElementById(sel.id, { actionClick: undefined });
+		history.markDirty();
+		return BUILDING_BLOCK_OK;
 	};
 
 	const handleInsertField = (fieldType: string, value?: string) => {
@@ -216,6 +239,8 @@ export function createStructuredElementHandlers(
 		handleInsertEquation,
 		handleUpdateEquation,
 		handleHyperlinkConfirm,
+		applyHyperlink,
+		removeHyperlink,
 		handleInsertField,
 		handleAddActionButton,
 	};

@@ -79,6 +79,15 @@ export interface BuildToolbarPropsInput {
 	 * raw state setter (no write-back) when omitted.
 	 */
 	viewPreferencesSync?: UseViewPreferencesSyncResult;
+	/**
+	 * Raise a host request instead of clicking the (unmounted) hidden file inputs. Falls back to the
+	 * input refs when omitted.
+	 */
+	onOpenImagePicker?: () => void;
+	onOpenMediaPicker?: () => void;
+	/** Home > Layout and Reset; both are inert when omitted. */
+	onApplyLayout?: (path: string) => void;
+	onResetSlide?: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -190,8 +199,8 @@ export function buildToolbarProps(input: BuildToolbarPropsInput): ToolbarProps {
 		onAddActionButton: insertHandlers.handleAddActionButton,
 		onInsertField: insertHandlers.handleInsertField,
 		onOpenHeaderFooter,
-		onOpenImagePicker: () => s.imageInputRef.current?.click(),
-		onOpenMediaPicker: () => s.mediaInputRef.current?.click(),
+		onOpenImagePicker: input.onOpenImagePicker ?? (() => s.imageInputRef.current?.click()),
+		onOpenMediaPicker: input.onOpenMediaPicker ?? (() => s.mediaInputRef.current?.click()),
 		onSetActiveTool: s.setActiveTool,
 		onSetDrawingColor: s.setDrawingColor,
 		onSetDrawingWidth: s.setDrawingWidth,
@@ -339,9 +348,8 @@ export function buildToolbarProps(input: BuildToolbarPropsInput): ToolbarProps {
 		activeSlide,
 		onTransitionChange: handleTransitionChange,
 		onApplyTransitionToAll: handleApplyTransitionToAll,
-		// No `onResetSlide` here: this building-blocks surface supplies no
-		// `onApplyLayout` either, so there is no layout to reset to. The mounted
-		// viewer (`ViewerToolbarSection`) wires both.
+		onApplyLayout: input.onApplyLayout,
+		onResetSlide: input.onResetSlide,
 		onSelectAll: () => {
 			const allIds = activeSlide?.elements.map((element) => element.id) ?? [];
 			if (allIds.length > 0) {

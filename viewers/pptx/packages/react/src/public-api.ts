@@ -32,6 +32,17 @@ export type { SlideCanvasProps } from './viewer/components/SlideCanvas';
 export { SlidesPaneSidebar as SlidesPane } from './viewer/components/SlidesPaneSidebar';
 export type { SlidesPaneSidebarProps as SlidesPaneProps } from './viewer/components/SlidesPaneSidebar';
 export type { SlidesPaneLayoutGalleryRequest } from './viewer/hooks/useViewerBuildingBlocks-slides-pane-props';
+export type {
+	BuildingBlockFindReplace,
+	BuildingBlockLayoutActions,
+} from './viewer/hooks/useViewerBuildingBlocks-actions-types';
+export type {
+	BuildingBlockActionId,
+	BuildingBlockActionState,
+	BuildingBlockFailureCode,
+	BuildingBlockResult,
+	HostFileLimits,
+} from 'ooxml-ui/pptx';
 // `SlideThumbnail` draws one slide the way `SlidesPane` does, for hosts that keep their own
 // thumbnail strip. Feed it from `slidesPaneProps`, so it follows unsaved edits.
 export { SlideThumbnail } from './viewer/components/SlideThumbnail';
@@ -40,6 +51,8 @@ export { useViewerBuildingBlocks } from './viewer/hooks/useViewerBuildingBlocks'
 export type {
 	UseViewerBuildingBlocksInput,
 	ViewerBuildingBlocksResult,
+	BuildingBlockRequest,
+	ViewerBuildingBlockActions,
 } from './viewer/hooks/useViewerBuildingBlocks';
 
 // ── Shared API types ──

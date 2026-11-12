@@ -16,9 +16,17 @@ import type { PowerPointViewerHandle } from '../types';
 import type { ViewerMode } from '../types-core';
 import type { CollaborationContextValue } from './collaboration/types';
 import type { AutosaveStatus } from './useAutosave';
+import type {
+	BuildingBlockRequest,
+	UseViewerBuildingBlocksActionsOptions,
+	ViewerBuildingBlockActions,
+} from './useViewerBuildingBlocks-actions-types';
 import type { SlidesPaneLayoutGalleryRequest } from './useViewerBuildingBlocks-slides-pane-props';
 
-export interface UseViewerBuildingBlocksInput extends ViewportFitOptions {
+export type { BuildingBlockRequest, ViewerBuildingBlockActions };
+
+export interface UseViewerBuildingBlocksInput
+	extends ViewportFitOptions, UseViewerBuildingBlocksActionsOptions {
 	/** Optional collaboration, including a host-owned document and presence session. */
 	collaboration?: CollaborationInput;
 	/** PPTX content as ArrayBuffer/Uint8Array, or null/undefined while no file is loaded. */
@@ -114,4 +122,10 @@ export interface ViewerBuildingBlocksResult {
 	error: string | null;
 	/** Current autosave-to-localStorage recovery status. */
 	autosaveStatus: AutosaveStatus;
+	/**
+	 * Operations and state for finishing picker, dialog and layout workflows from host-rendered
+	 * controls: image / media insertion, hyperlink, SmartArt and equation editing, Find / Replace
+	 * and layout apply / reset, plus which actions can run now. See `docs/react/hooks.md`.
+	 */
+	actions: ViewerBuildingBlockActions;
 }

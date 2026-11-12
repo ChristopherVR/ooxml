@@ -18,6 +18,7 @@ import {
 	resolveAllowExternalContent,
 	resolveEffectiveGoogleFonts,
 } from 'ooxml-ui/pptx';
+import type { PptxHandler } from 'pptx-viewer-core';
 import { useLayoutEffect, useRef } from 'react';
 
 import type { PowerPointViewerHandle } from '../types';
@@ -73,6 +74,10 @@ export interface UseViewerBuildingBlocksStateInput {
 
 export interface ViewerBuildingBlocksState {
 	loadVersion: number;
+	/** False while read-only recommended or in Protected View, which blocks inserting. */
+	canInsertElement: boolean;
+	/** The loaded deck's handler (null before a deck loads). */
+	handlerRef: { readonly current: PptxHandler | null };
 	dialogs: ViewerDialogsResult;
 	editorOps: EditorOperationsResult;
 	exportHandlers: ExportHandlersResult;
@@ -221,6 +226,7 @@ export function useViewerBuildingBlocksState(
 		listConversionScope,
 	});
 
+	const canInsertElement = !readOnlyRec.locked && !viewerOptions.trust.openInProtectedView;
 	const {
 		exportHandlers,
 		printHandlers,
@@ -230,6 +236,7 @@ export function useViewerBuildingBlocksState(
 		handleEnterRehearsalMode,
 		autosaveStatus,
 		loadVersion,
+		handlerRef: integrationHandlerRef,
 	} = useViewerIntegration({
 		state,
 		zoom,
@@ -253,7 +260,7 @@ export function useViewerBuildingBlocksState(
 		allowExternalImages: resolveAllowExternalContent(allowExternalContent, viewerOptions),
 		setReadOnlyRecommendation: readOnlyRec.setRecommendation,
 		setModifyVerifier: readOnlyRec.setModifyVerifier,
-		canInsertElement: !readOnlyRec.locked && !viewerOptions.trust.openInProtectedView,
+		canInsertElement,
 		setCompatToasts: compatToastsState.setToasts,
 		canEdit,
 		promptKeepInkAnnotations: viewerOptions.advanced.slideShowPromptKeepInkAnnotations,
@@ -295,6 +302,8 @@ export function useViewerBuildingBlocksState(
 
 	return {
 		loadVersion,
+		canInsertElement,
+		handlerRef: integrationHandlerRef,
 		dialogs,
 		editorOps,
 		exportHandlers,

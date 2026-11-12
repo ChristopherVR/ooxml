@@ -1,5 +1,5 @@
 import { createDefaultChartElement, newTableElement } from 'ooxml-ui/pptx';
-import type { InsertChartKind, InsertChartOptions } from 'ooxml-ui/pptx';
+import type { BuildingBlockResult, InsertChartKind, InsertChartOptions } from 'ooxml-ui/pptx';
 /**
  * useInsertElements: Handlers for inserting new elements (text, shape,
  * table, SmartArt, equation, field, action button, ink, freeform)
@@ -45,6 +45,8 @@ export interface InsertElementHandlers {
 	handleInsertEquation: (omml: Record<string, unknown>) => void;
 	handleUpdateEquation: (omml: Record<string, unknown>) => void;
 	handleHyperlinkConfirm: (data: HyperlinkEditData) => void;
+	applyHyperlink: (data: HyperlinkEditData) => BuildingBlockResult;
+	removeHyperlink: () => BuildingBlockResult;
 	handleInsertField: (fieldType: string, value?: string) => void;
 	handleAddActionButton: (shapeType: string) => void;
 	handleAddInkElement: (ink: InkPptxElement) => void;
@@ -52,6 +54,7 @@ export interface InsertElementHandlers {
 	handleEraseInkElement: (elementId: string) => void;
 	handleImageFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 	handleMediaFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+	insertMediaFile: (file: File) => Promise<BuildingBlockResult>;
 }
 
 export function useInsertElements(input: UseInsertElementsInput): InsertElementHandlers {

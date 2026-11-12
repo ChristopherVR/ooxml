@@ -183,6 +183,67 @@ const blocks = useViewerBuildingBlocks({ content, initialSlide: 4 });
 Changing `initialSlide` later applies to the next load, not the open deck; use the handle's
 `goTo(index)` to move the current slide.
 
+### Picker, dialog and layout workflows from your own controls
+
+The building blocks mount no file inputs, dialogs or panes. `blocks.actions` is how a custom shell
+finishes those workflows from host-rendered controls. Every operation runs the viewer's own insert,
+find / replace and layout code, so selection, history (undo) and `onDirtyChange` behave as in
+`PowerPointViewer`. Every operation returns `{ ok: true }` or `{ ok: false, code }` and is refused
+with `'read-only'` (view-only, not in edit mode, no edit permission), `'protected'` (read-only
+recommended or Protected View) or `'not-ready'` (loading or failed). The codes are not English
+text: render the feedback in your own language.
+
+```tsx
+const blocks = useViewerBuildingBlocks({
+	content,
+	canEdit: true,
+	// Called when a toolbar control or a canvas gesture needs UI you own.
+	onRequest: (request) => openMyDialog(request.kind),
+	fileLimits: { imageBytes: 10_000_000 }, // defaults: 25 MiB image, 100 MiB audio/video
+});
+const { actions } = blocks;
+```
+
+- **Requests.** The toolbar's Picture, Video, Link, SmartArt and Equation controls, and
+  double-clicking an equation on the canvas, raise a `BuildingBlockRequest`
+  (`{ kind: 'image' | 'media' | 'hyperlink' | 'smartArt' }` or
+  `{ kind: 'equation', existingOmml }`). It is passed to `onRequest` and kept in
+  `actions.pending` until a matching operation succeeds or you call `actions.cancel()`. A request is
+  not raised when the action is unavailable.
+- **Images and media.** `actions.insertImage(file)` and `actions.insertMedia(file)` take the `File`
+  your own picker returned. They validate type, emptiness and size (`'unsupported-type'`,
+  `'empty-file'`, `'file-too-large'`, `'decode-failed'`), insert the element centred on the slide
+  and select it. `insertImage` returns `'stale-target'` if the deck or slide changed while the
+  picture decoded.
+- **Hyperlinks.** `actions.hyperlink.current` is the selected element's link as editor values (or
+  `null`), `slideCount` bounds a slide-target picker, `apply(data)` sets it (`'unsafe-url'` for
+  script-like schemes, `'invalid-target'` for an empty target) and `remove()` clears it.
+- **SmartArt and equations.** `actions.smartArt.insert(layout, items)`;
+  `actions.equation.insert(omml)`, `update(omml)` for the selected element and `current` for its
+  OMML.
+- **Find / Replace.** `actions.findReplace` has `query`, `replacement`, `options` (`matchCase`,
+  `includeNotes`, `includeChartTitles`, `includeChartData`), `matches`, `currentIndex`,
+  `currentMatch`, `setQuery`, `setReplacement`, `setOptions`, `find`, `next`, `previous`,
+  `replaceCurrent()` and `replaceAll()` (`'no-match'` when there is nothing to replace), plus `open`
+  and `setOpen` for the bar (Ctrl+F and Ctrl+H toggle it). Searching works in a view-only viewer;
+  replacing does not. `next` and `previous` show the match's slide and select its element.
+- **Layouts.** `toolbarProps` now wires Home > Layout and Reset. `actions.layout` has `current`,
+  `currentPath`, `available` (the active slide's master's layouts), `apply(path)`
+  (`'unknown-layout'` for a path that is not listed) and `reset()` (`'no-layout'` when the slide
+  records none).
+- **Which actions can run.** `actions.availability[id]` is `{ available, reason?, needsHostUi }` for
+  `insertImage`, `insertMedia`, `hyperlink`, `removeHyperlink`, `insertSmartArt`, `insertEquation`,
+  `editEquation`, `replace`, `applyLayout` and `resetLayout`. `needsHostUi` is true for the controls
+  that only raise a request. `actions.unmountedDialogActions` lists the other `toolbarProps`
+  handlers (`onOpenChartDialog`, `onOpenPasswordProtection`, `onOpenDocumentProperties`,
+  `onOpenFontEmbedding`, `onOpenDigitalSignatures`, `onOpenSetUpSlideShow`, `onOpenCustomShows`,
+  `onOpenBroadcastDialog`, `onToggleShortcuts`) that set state for a dialog nothing renders here;
+  hide them with `hiddenActions` or show your own.
+
+Two limits: a video or audio file is inserted once its size has been probed, so it lands on the
+slide that was active when it finished; and the Insert Chart dialog has no operation of its own
+yet (`toolbarProps.onAddChart(kind)` inserts a default chart; hide `onOpenChartDialog`).
+
 ### `useThemeSwitching`
 
 Switches the loaded **document's** PowerPoint theme (the OOXML color/font scheme, not the viewer
