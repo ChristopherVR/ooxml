@@ -8,6 +8,7 @@ import { translate } from './localization';
 import { undo, redo } from 'prosemirror-history';
 import { wordYjsPluginKey, wordYjsUndo, wordYjsRedo } from 'ooxml-core/docx/ui';
 import { wordHostActionProps } from './building-blocks-actions';
+import { wordReadAloudProps } from './building-blocks-read-aloud';
 
 export type WordAlignment = 'left' | 'center' | 'right' | 'justify';
 /** The list kinds a control can apply; `remove` takes a paragraph out of its list. */
@@ -42,6 +43,7 @@ const TOOLBAR_LABELS = [
 	'Insert link',
 	'Find',
 	'Insert picture',
+	'Read aloud',
 ] as const;
 
 function listState(kind: ReturnType<typeof listKindOf>): WordListState {
@@ -121,6 +123,7 @@ export function wordToolbarProps(core: EditorCore) {
 		onUndo: () => run({ type: 'history', key: 'undo' }),
 		onRedo: () => run({ type: 'history', key: 'redo' }),
 		...wordHostActionProps(core),
+		...wordReadAloudProps(core),
 	};
 }
 export type WordToolbarProps = ReturnType<typeof wordToolbarProps>;

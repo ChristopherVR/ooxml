@@ -90,6 +90,27 @@ Si se omite un callback, `canInsertLink`, `canFindReplace` o `canInsertPicture` 
 botón devuelve `false`. Las solicitudes vuelven a comprobar el permiso al usarse, de modo que un diálogo
 dejado abierto al cambiar a solo lectura no puede editar.
 
+## Lectura en voz alta {#read-aloud}
+
+`toolbarProps` incluye un control de lectura en voz alta que usa la implementación del propio editor
+(la síntesis de voz del navegador; no se envía nada). Lee la selección o, sin selección, desde el
+cursor hasta el final del documento, y funciona en un documento de solo lectura: nunca lo edita ni lo
+marca como modificado. Llamarlo no mueve la selección ni el foco, así que un botón de su interfaz
+puede recibir el foco antes.
+
+| Propiedad o callback | Significado                                                                                              |
+| -------------------- | -------------------------------------------------------------------------------------------------------- |
+| `canReadAloud`       | Hay un documento en pantalla y el navegador puede hablar                                                 |
+| `readingAloud`       | Este editor está leyendo ahora                                                                           |
+| `readAloudIssue`     | `'unsupported'` (sin síntesis de voz), `'empty'` (nada que leer), `'error'` o `null`                     |
+| `onReadAloud()`      | Inicia la lectura (reinicia si hace falta); devuelve `'started'`, `'unsupported'`, `'empty'` o `'error'` |
+| `onStopReadAloud()`  | Detiene la reproducción de este editor; devuelve si estaba leyendo                                       |
+
+El navegador tiene una sola voz. Al iniciar en un editor se la quita a otro, cuyo `readingAloud`
+pasa a `false`. Un editor deja de leer cuando se edita o reemplaza su documento, se carga un archivo
+o se desmonta. Redacte usted los avisos; la biblioteca solo aporta los códigos. La `Toolbar`
+opcional dibuja un interruptor «Read aloud» y lo omite donde no hay síntesis de voz.
+
 ## Componentes de la biblioteca {#library-components}
 
 `Toolbar` dibuja deshacer y rehacer, familia y tamaño de fuente, negrita, cursiva, subrayado, cuatro

@@ -38,6 +38,7 @@ import type { DocxChartFormatPane } from './chart-format-pane';
 import { HEADER_FOOTER_INPUT, locksStories } from 'ooxml-core/docx/ui';
 import { newPicturePartName } from './picture-commands';
 import { ViewOptions } from './view-options';
+import { ReadAloudSession } from './read-aloud-session';
 import { DocxWebfonts } from './docx-webfonts';
 import { currentSectionIndex } from './section-commands';
 import { syncHeaderFooterRibbon } from './header-footer-ribbon';
@@ -178,6 +179,8 @@ export class EditorCore {
 	readonly parts: PartsController;
 	readonly pages: PageController;
 	readonly viewOptions = new ViewOptions();
+	/** This editor's Read Aloud playback; the browser's one voice is shared with other editors. */
+	readonly readAloud = new ReadAloudSession(this);
 	/** The `googleFonts` option and this editor's webfont `<link>`. */
 	readonly webfonts = new DocxWebfonts();
 	readonly dirtyState: DirtyState;
@@ -381,6 +384,7 @@ export class EditorCore {
 					: assignMissingParagraphIds(applied);
 		view.updateState(repaired ? applied.apply(repaired) : applied);
 		if (docChanged) {
+			this.readAloud.stop();
 			this.model = docToModel(view.state.doc, this.model, previousDoc);
 			if (previousComments !== view.state.doc.attrs.commentThreads)
 				this.shell.review?.commentsPanel.refresh();

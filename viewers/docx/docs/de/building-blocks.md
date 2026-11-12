@@ -70,6 +70,28 @@ Eine Oberfläche bindet keinen eigenen Dialog ein. Diese Abläufe gehören dem H
 
 Wenn ein Callback fehlt, ist `canInsertLink`, `canFindReplace` oder `canInsertPicture` false, und der Öffner gibt `false` zurück. Anfragen prüfen die Berechtigung bei der Verwendung erneut. So kann ein Dialog, der bei einem Wechsel in den Schreibschutz offen geblieben ist, nicht mehr bearbeiten.
 
+## Vorlesen {#read-aloud}
+
+`toolbarProps` enthält eine Vorlesen-Steuerung, die die Implementierung des Editors nutzt (die
+Sprachsynthese des Browsers; nichts wird gesendet). Sie liest die Auswahl oder, ohne Auswahl, von der
+Einfügemarke bis zum Dokumentende, und funktioniert in einem schreibgeschützten Dokument: Sie ändert
+nichts und markiert das Dokument nicht als geändert. Der Aufruf verschiebt weder Auswahl noch Fokus,
+eine Schaltfläche Ihrer Oberfläche darf also zuvor den Fokus erhalten.
+
+| Eigenschaft oder Callback | Bedeutung                                                                                                 |
+| ------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `canReadAloud`            | Ein Dokument ist sichtbar und der Browser kann sprechen                                                   |
+| `readingAloud`            | Dieser Editor liest gerade vor                                                                            |
+| `readAloudIssue`          | `'unsupported'` (keine Sprachsynthese), `'empty'` (nichts zu lesen), `'error'` oder `null`                |
+| `onReadAloud()`           | Startet das Vorlesen (bei Bedarf neu); gibt `'started'`, `'unsupported'`, `'empty'` oder `'error'` zurück |
+| `onStopReadAloud()`       | Beendet die Wiedergabe dieses Editors; gibt zurück, ob sie lief                                           |
+
+Der Browser hat nur eine Stimme. Wer in einem Editor startet, übernimmt sie von einem anderen,
+dessen `readingAloud` dann `false` wird. Ein Editor hört auf, wenn sein Dokument bearbeitet oder
+ersetzt wird, eine Datei geladen wird oder er entfernt wird. Formulieren Sie die Meldungen selbst;
+die Bibliothek liefert nur die Codes. Die optionale `Toolbar` zeigt einen Schalter „Read aloud“ und
+blendet ihn aus, wo keine Sprachausgabe möglich ist.
+
 ## Bibliothekskomponenten {#library-components}
 
 `Toolbar` zeichnet Rückgängig und Wiederholen, Schriftart und Schriftgröße, Fett, Kursiv, Unterstrichen, vier Ausrichtungen, Aufzählungs- und nummerierte Listen sowie eine Schaltfläche für jeden Host-Ablauf, den Sie übergeben haben. `PageNavigation` zeichnet die vorherige Seite, "Page n of m", die nächste Seite und den Umschalter Entwurf bzw. Drucklayout. `StatusBar` zeichnet die Wortanzahl und eine Zoom-Auswahl. Alle sind optional und durch Props gesteuert. Jedes Steuerelement hat einen stabilen Knoten, sodass der Tastaturfokus Formatierungsaktualisierungen übersteht. Sie verwenden die gemeinsamen Office-Stile. Eigene Steuerelemente brauchen sie nie.

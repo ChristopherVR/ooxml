@@ -13,7 +13,7 @@ import { openGoToPanel } from './go-to-panel';
 import { selectNextObject } from './go-to';
 import { closeRibbonPopover } from './ribbon-popover';
 import { setHeadingLevel } from './heading-commands';
-import { readAloudAvailable, textToRead, toggleReadAloud } from './read-aloud';
+import { readAloudAvailable } from './read-aloud';
 import { showWordCount } from './word-count-panel';
 import { syncSpellingButton } from './spelling';
 import { applyParagraphFormat, readParagraphFormat } from './paragraph-format';
@@ -147,16 +147,9 @@ export function routeRibbonAction(core: EditorCore, action: RibbonAction): void 
 			emit(core.element, 'document-warning', 'This document has no heading styles to apply.');
 		focusView(target);
 	} else if (action.type === 'readAloud' && target) {
-		const button = () =>
-			shell.toolbar?.querySelector(
-				'[aria-label="Read aloud"], [data-localearialabel="Read aloud"]',
-			);
 		if (!readAloudAvailable())
 			emit(core.element, 'document-warning', 'This browser cannot read text aloud.');
-		else
-			toggleReadAloud(textToRead(target), (on) =>
-				button()?.setAttribute('aria-pressed', String(on)),
-			);
+		else core.readAloud.toggle();
 	} else if (action.type === 'zoomFit') pages.zoomTo(action.mode);
 	else if (action.type === 'wordCount') {
 		const anchor = shell.toolbar?.querySelector<HTMLElement>(

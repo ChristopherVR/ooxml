@@ -209,6 +209,7 @@ export class DocxEditorElement extends DocxEditorApi {
 
 	disconnectedCallback() {
 		const { core } = this;
+		core.readAloud.stop();
 		core.shell.surfaceNavigation?.();
 		delete core.shell.surfaceNavigation;
 		core.shell.printStoryEditing?.();
@@ -231,6 +232,7 @@ export class DocxEditorElement extends DocxEditorApi {
 		this.assertDocumentReplaceable();
 		const generation = ++core.loadGeneration;
 		core.loading = true;
+		core.readAloud.stop();
 		core.refreshControls();
 		try {
 			// The file's fonts start downloading while it parses.
@@ -310,6 +312,7 @@ export class DocxEditorElement extends DocxEditorApi {
 	/** Swaps in a new model (and the session that produced it) and invalidates in-flight loads. */
 	private replaceDocument(model: DocumentModel, session?: LoadedDocument, bumpGeneration = true) {
 		const { core } = this;
+		core.readAloud.stop();
 		core.detachedState = undefined;
 		if (bumpGeneration) core.loadGeneration++;
 		if (bumpGeneration) core.loading = false;

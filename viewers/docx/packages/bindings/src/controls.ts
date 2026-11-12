@@ -157,6 +157,16 @@ export function toolbarControls(props: WordToolbarProps): ControlGroup[] {
 	if (findReplace) host.push(action('find', 'Find', !props.canFindReplace, props.openFindReplace));
 	if (picture)
 		host.push(action('picture', 'Insert picture', !props.canInsertPicture, props.openImagePicker));
+	// Read Aloud reads the document, so it works read-only; hidden where the browser cannot speak.
+	if (props.readAloudIssue !== 'unsupported')
+		host.push({
+			kind: 'toggle',
+			id: 'readAloud',
+			label: label(labels, 'Read aloud'),
+			disabled: !props.canReadAloud,
+			pressed: props.readingAloud,
+			run: () => void (props.readingAloud ? props.onStopReadAloud() : props.onReadAloud()),
+		});
 	if (host.length) groups.push(host);
 	return groups;
 }

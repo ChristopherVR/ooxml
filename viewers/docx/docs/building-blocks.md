@@ -89,6 +89,27 @@ With a callback omitted, `canInsertLink`, `canFindReplace` or `canInsertPicture`
 opener returns `false`. Requests re-check permission when used, so a dialog left open across a
 switch to read-only cannot edit.
 
+## Read Aloud {#read-aloud}
+
+`toolbarProps` carries a Read Aloud control that uses the editor's own implementation (the browser's
+speech synthesis; nothing is sent anywhere). It reads the selection, or from the caret to the end
+of the document when nothing is selected, and works in a read-only document: it never edits or
+marks the document dirty. Calling it does not move the selection or focus, so a button in your own
+UI can take focus first.
+
+| Property or callback | Meaning                                                                                             |
+| -------------------- | --------------------------------------------------------------------------------------------------- |
+| `canReadAloud`       | A document is on screen and the browser can speak                                                   |
+| `readingAloud`       | This editor is reading now                                                                          |
+| `readAloudIssue`     | `'unsupported'` (no speech synthesis), `'empty'` (nothing to read), `'error'` or `null`             |
+| `onReadAloud()`      | Starts reading (restarting if needed); returns `'started'`, `'unsupported'`, `'empty'` or `'error'` |
+| `onStopReadAloud()`  | Stops this editor's playback; returns whether it was playing                                        |
+
+The browser has one voice. Starting in one editor takes it over from another, whose `readingAloud`
+becomes `false`. An editor stops reading when its document is edited or replaced, a file loads, or
+it unmounts. Word the issues yourself; the library supplies the codes only. The optional `Toolbar`
+draws a "Read aloud" toggle and omits it where speech is unsupported.
+
 ## Library components
 
 `Toolbar` draws undo and redo, font family and size, bold, italic, underline, four alignments,

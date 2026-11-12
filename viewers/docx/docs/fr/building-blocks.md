@@ -70,6 +70,28 @@ Une surface n'affiche aucune boîte de dialogue propre. Ces workflows appartienn
 
 Si un callback est omis, `canInsertLink`, `canFindReplace` ou `canInsertPicture` vaut faux et le déclencheur renvoie `false`. Les requêtes revérifient l'autorisation à leur utilisation, de sorte qu'une boîte de dialogue restée ouverte lors d'un passage en lecture seule ne puisse pas modifier le document.
 
+## Lecture à voix haute {#read-aloud}
+
+`toolbarProps` fournit un contrôle de lecture à voix haute qui utilise l'implémentation de l'éditeur
+(la synthèse vocale du navigateur ; rien n'est envoyé). Il lit la sélection ou, sans sélection, du
+point d'insertion à la fin du document, et fonctionne dans un document en lecture seule : il ne le
+modifie jamais et ne le marque pas comme modifié. L'appel ne déplace ni la sélection ni le focus ;
+un bouton de votre interface peut donc prendre le focus avant.
+
+| Propriété ou callback | Signification                                                                                          |
+| --------------------- | ------------------------------------------------------------------------------------------------------ |
+| `canReadAloud`        | Un document est affiché et le navigateur peut parler                                                   |
+| `readingAloud`        | Cet éditeur lit en ce moment                                                                           |
+| `readAloudIssue`      | `'unsupported'` (pas de synthèse vocale), `'empty'` (rien à lire), `'error'` ou `null`                 |
+| `onReadAloud()`       | Lance la lecture (la relance si besoin) ; renvoie `'started'`, `'unsupported'`, `'empty'` ou `'error'` |
+| `onStopReadAloud()`   | Arrête la lecture de cet éditeur ; renvoie s'il lisait                                                 |
+
+Le navigateur n'a qu'une voix. Démarrer dans un éditeur la prend à un autre, dont `readingAloud`
+devient `false`. Un éditeur cesse de lire quand son document est modifié ou remplacé, qu'un fichier
+se charge ou qu'il est démonté. Formulez les messages vous-même ; la bibliothèque ne fournit que les
+codes. La `Toolbar` optionnelle dessine un bouton à bascule « Read aloud » et l'omet là où la
+synthèse vocale n'existe pas.
+
 ## Composants de bibliothèque {#library-components}
 
 `Toolbar` affiche annuler et rétablir, la police et sa taille, gras, italique, souligné, quatre alignements, les listes à puces et numérotées, et un bouton pour chaque workflow de l'hôte que vous avez fourni. `PageNavigation` affiche la page précédente, « Page n sur m », la page suivante et le sélecteur Brouillon ou Mise en page Impression. `StatusBar` affiche le nombre de mots et une liste de zoom. Tous sont facultatifs et pilotés par leurs propriétés ; chaque contrôle a un nœud stable, de sorte que le focus clavier survit aux mises à jour de mise en forme. Ils utilisent les styles Office partagés. Les contrôles personnalisés n'en ont jamais besoin.
