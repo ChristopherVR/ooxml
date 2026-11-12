@@ -49,6 +49,7 @@ import type { PresentationSetupResult } from './usePresentationSetup';
 import { useRecoveryDetection } from './useRecoveryDetection';
 import type { UseRecoveryDetectionResult } from './useRecoveryDetection';
 import { useReportOnChange } from './useReportOnChange';
+import { useSaveRevision } from './useSaveRevision';
 import type { ViewerState } from './useViewerState';
 import type { UseZoomViewportResult } from './useZoomViewport';
 import type { ViewerDialogsResult } from './viewer-dialog-types';
@@ -106,6 +107,11 @@ export interface UseViewerIntegrationInput {
 	/** Forwarded to `useContentLifecycle` -> `useLoadContent`: see `useCompatibilityToastsState`. */
 	setCompatToasts: Dispatch<SetStateAction<CompatibilityWarningToast[]>>;
 	canEdit: boolean;
+	/**
+	 * Drop the crash-recovery copy once the host acknowledged the current revision (honours
+	 * Options > Save > "keep the last AutoRecover version"). Default: keep it.
+	 */
+	discardRecoveryOnHostSave?: () => void;
 	/** Additional insertion gate for a headless host's loaded read-only recommendation. */
 	canInsertElement?: boolean;
 	/**
@@ -379,6 +385,18 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 		input.customizationApi ??
 		(fallbackCustomizationRef.current ??= createCustomizationController().api);
 
+	// Revision-aware acknowledgement of a Save the host persists itself (shared controller).
+	const saveRevision = useSaveRevision({
+		getSources: getChangeSources,
+		// Not `getContent`: that one announces `onContentChange`; a host save is not an edit feed.
+		serialize: async () => (await serializeSlides()) ?? new Uint8Array(0),
+		markClean: () => {
+			history.markSaved();
+			state.setIsDirty(false);
+		},
+		discardRecovery: input.discardRecoveryOnHostSave ?? (() => undefined),
+	});
+
 	// The public handle, also handed to host region renderers as `context.viewer`
 	// through a stable proxy, so a re-render never counts as a context change.
 	const latestHandleRef = useRef<PowerPointViewerHandle | null>(null);
@@ -461,6 +479,9 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 					isDirty() {
 						return state.isDirty;
 					},
+					getSaveRevision: () => saveRevision.getRevision(),
+					getSaveSnapshot: () => saveRevision.snapshot(),
+					acknowledgeSave: (revision: number) => saveRevision.acknowledge(revision),
 					getSelectedElementIds() {
 						return state.effectiveSelectedIds;
 					},

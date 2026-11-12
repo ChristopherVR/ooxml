@@ -51,6 +51,9 @@ const API_MEMBERS = [
 	'setActiveSlideIndex',
 	'getSlideCount',
 	'isDirty',
+	'getSaveRevision',
+	'getSaveSnapshot',
+	'acknowledgeSave',
 	'getSlides',
 	'getSlide',
 	'getActiveSlide',
@@ -88,6 +91,19 @@ describe('powerPointViewerComponent API conformance', () => {
 		expect(fileIO).toMatch(
 			/canEdit: \(\) => this\.hasEditPermission\(\) \|\| this\.collab\.active\(\)/u,
 		);
+	});
+
+	it('acknowledges a host-persisted save through the shared revision controller', () => {
+		const wiring = source.slice(
+			source.indexOf('private readonly saveRevision ='),
+			source.indexOf('getSaveRevision(): number'),
+		);
+		// The revision follows the same change sources File > Save compares.
+		expect(wiring).toContain('getSources: () => this.saveChangeSources()');
+		expect(wiring).toContain('markClean: () => this.editor.dirty.set(false)');
+		expect(wiring).toContain('shouldDiscardAutosaveOnSave()');
+		expect(source).toContain('return this.saveRevision.acknowledge(revision);');
+		expect(source).toContain('return this.saveRevision.snapshot();');
 	});
 
 	it('selects the collaborative live model even when the host disables editing', () => {

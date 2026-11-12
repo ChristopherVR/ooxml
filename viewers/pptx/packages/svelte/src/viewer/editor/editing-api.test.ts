@@ -130,3 +130,30 @@ describe('createEditingApi dirty state after a save', () => {
 		expect(onSavedClean).not.toHaveBeenCalled();
 	});
 });
+
+describe('createEditingApi host-persisted save acknowledgement', () => {
+	it('cleans the document only when the acknowledged revision is still current', async () => {
+		const editor = stubEditor();
+		const onSavedClean = vi.fn();
+		const discardRecovery = vi.fn();
+		const api = createEditingApi(editor, undefined, onSavedClean, discardRecovery);
+		const snapshot = await api.getSaveSnapshot();
+		expect([...snapshot.content]).toEqual([1, 2, 3]);
+		// The snapshot itself never clears the dirty flag.
+		expect(editor.dirty).toBe(true);
+		(editor as { slides: unknown[] }).slides = [{ id: 'edited while saving' }];
+		expect(api.acknowledgeSave(snapshot.revision).status).toBe('pending');
+		expect(editor.dirty).toBe(true);
+		expect(discardRecovery).not.toHaveBeenCalled();
+		const latest = await api.getSaveSnapshot();
+		expect(api.acknowledgeSave(latest.revision).status).toBe('clean');
+		expect(editor.dirty).toBe(false);
+		expect(onSavedClean).toHaveBeenCalledOnce();
+		expect(discardRecovery).toHaveBeenCalledOnce();
+		// A late acknowledgement of the older snapshot changes nothing.
+		(editor as { slides: unknown[] }).slides = [{ id: 'edited again' }];
+		editor.dirty = true;
+		expect(api.acknowledgeSave(snapshot.revision).status).toBe('stale');
+		expect(editor.dirty).toBe(true);
+	});
+});

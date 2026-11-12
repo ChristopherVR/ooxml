@@ -92,6 +92,29 @@ import type { ViewerMode, PowerPointViewerAPI } from 'pptx-react-viewer';
 | `getSlideCount`       | `() => number`            | 获取幻灯片总数。                |
 | `isDirty`             | `() => boolean`           | 文档是否存在未保存修改。        |
 
+### 宿主持久化保存
+
+宿主自行序列化并异步存储演示文稿时，请使用修订号，使上传过程中产生的修改保持为未保存状态。
+不会重新加载文档，撤销历史也会保留。
+
+| 方法              | 签名                                                       | 说明                                               |
+| ----------------- | ---------------------------------------------------------- | -------------------------------------------------- |
+| `getSaveRevision` | `() => number`                                             | 文档当前的修订号，每次修改后都会变化。             |
+| `getSaveSnapshot` | `() => Promise<{ revision: number; content: Uint8Array }>` | 为宿主序列化文档。文档保持未保存，不触发保存事件。 |
+| `acknowledgeSave` | `(revision: number) => PptxSaveAcknowledgement`            | 通知查看器宿主已持久化 `revision`。                |
+
+`acknowledgeSave` 返回以下之一：
+
+- `{ status: 'clean' }`：`revision` 仍是当前修订号。文档变为已保存，触发 `onDirtyChange(false)`，
+  并丢弃崩溃恢复副本（除非选项 > 保存 中选择保留上次自动恢复版本）。
+- `{ status: 'pending', currentRevision }`：已接受该修订号，但之后又有修改。文档保持未保存，
+  可能包含这些修改的恢复副本也会保留。
+- `{ status: 'stale' }`：早于已确认的修订号，忽略。
+- `{ status: 'unknown' }`：并非该查看器发出的修订号，忽略。
+
+保存失败时不要调用确认，文档会保持未保存。撤销到已保存内容同样算一次修改，因此在下次保存前文档仍为未保存。
+与 Svelte 和原生版的 `getContent()` 不同，`getSaveSnapshot()` 不会清除未保存标记。
+
 ### 访问幻灯片 {#slide-access}
 
 所有幻灯片方法都返回 `pptx-viewer-core` 中完整的 `PptxSlide` 对象，包含元素、备注、切换和动画等完整类型信息。

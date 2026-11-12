@@ -81,6 +81,41 @@ viewer?.setMode('present'); // start presenting; Esc exits
 | `toggleHideSlides` | `(indexes: number[]) => void`                  | Toggle the hidden flag on slides.                           |
 | `isDirty`          | `() => boolean`                                | Whether the document has unsaved changes.                   |
 
+### Host-persisted Save
+
+When the host serialises the deck and stores it itself (possibly slowly), use a revision token so
+edits made while the upload is in flight stay unsaved. Nothing reloads and undo history is kept.
+
+| Method            | Signature                                                  | Description                                                                        |
+| ----------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `getSaveRevision` | `() => number`                                             | The revision of the document now. It changes after every edit.                     |
+| `getSaveSnapshot` | `() => Promise<{ revision: number; content: Uint8Array }>` | Serialise the deck for the host. The document stays dirty and no save event fires. |
+| `acknowledgeSave` | `(revision: number) => PptxSaveAcknowledgement`            | Tell the viewer the host persisted `revision`.                                     |
+
+`acknowledgeSave` returns one of:
+
+- `{ status: 'clean' }`: `revision` is still current. The document is clean, `onDirtyChange(false)`
+  fires and the crash-recovery copy is discarded (unless Options > Save keeps the last AutoRecover
+  version).
+- `{ status: 'pending', currentRevision }`: the revision is accepted but edits were made since.
+  The document stays dirty and the recovery copy, which may hold those edits, is kept.
+- `{ status: 'stale' }`: older than a revision already acknowledged. Ignored.
+- `{ status: 'unknown' }`: not a revision this viewer issued. Ignored.
+
+Never acknowledge a failed save: the document then simply stays dirty. Undoing back to the saved
+content is an edit like any other, so the document is dirty until the next save. Unlike
+`getContent()` in Svelte and vanilla, `getSaveSnapshot()` never clears the dirty flag.
+
+```ts
+const { revision, content } = await viewer.getSaveSnapshot();
+try {
+	await host.persist(content);
+	viewer.acknowledgeSave(revision);
+} catch {
+	// not acknowledged: the document stays dirty
+}
+```
+
 ## Element access and manipulation
 
 | Method             | Signature                                                                              | Description                                                                      |

@@ -217,6 +217,7 @@ import { useThemeEditing } from './composables/useThemeEditing';
 import { useTouchGestures } from './composables/useTouchGestures';
 import { useVersionHistoryWiring } from './composables/useVersionHistoryWiring';
 import { useViewerApi } from './composables/useViewerApi';
+import { useSaveRevision } from './composables/useSaveRevision';
 import { useViewerCustomization } from './composables/useViewerCustomization';
 import { useViewerOptionsStore } from './composables/useViewerOptionsStore';
 import { useViewerPreferences } from './composables/useViewerPreferences';
@@ -2038,8 +2039,21 @@ useCanvasImagePaste(viewerRootRef, {
 	insertElement: ops.addElement,
 });
 
+// Host-persisted Save: revision token + acknowledgement (shared controller).
+const saveRevision = useSaveRevision({
+	changeSources: () => [slides.value, templateElementsBySlideId.value],
+	getContent,
+	markClean: () => {
+		autosave.isDirty.value = false;
+	},
+	filePath: documentPath,
+	storage: () => cloudView.value.storage,
+	getOptions: () => viewerOptions.value,
+});
+
 const exposedHandle: PowerPointViewerExpose = {
 	...useViewerApi({
+		saveRevision,
 		slides,
 		activeSlide,
 		activeSlideIndex,

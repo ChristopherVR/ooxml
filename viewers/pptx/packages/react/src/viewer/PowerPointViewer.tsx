@@ -1075,6 +1075,15 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			filePath,
 			fileName,
 			storage,
+			// The host persisted the current revision: its work is in the file, so the recovery
+			// copy goes unless Options > Save asks to keep the last AutoRecover version.
+			discardRecoveryOnHostSave: () => {
+				if (filePath && shouldDiscardAutosaveOnSuccessfulSave(viewerOptions)) {
+					void deleteAutosaveSnapshot(filePath, storage).catch(() => {
+						// The host save succeeded; recovery cleanup is best-effort here.
+					});
+				}
+			},
 			// A failed Save / Save As: the host's `onError`, and the save-failed notice for the user.
 			onSaveError: (saveError) => {
 				onError?.(saveFailureMessage(saveError));

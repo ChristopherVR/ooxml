@@ -69,6 +69,8 @@ import {
 	createRibbonDisplayController,
 } from 'ooxml-ui/pptx';
 import type {
+	PptxSaveAcknowledgement,
+	PptxSaveSnapshot,
 	CloudDocumentHostValues,
 	CloudOpenedFile,
 	DocumentStorage,
@@ -489,6 +491,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			getDialogRegions: () => this.getDialogRegions(),
 			getScale: () => this.renderer.effectiveScale(),
 			getStorage: () => this.documentView().storage,
+			discardRecoveryOnHostSave: () => this.discardRecoveryAfterHostSave(),
 			getHandler: () => this.loading.getHandler(),
 			setHandler: (handler, keepPrevious) => this.loading.setHandler(handler, keepPrevious),
 			getUserName: () =>
@@ -1193,6 +1196,13 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	getActiveSlideIndex = (): number => this.getCurrentSlide();
 	setActiveSlideIndex = (index: number): void => this.goToSlide(index);
 	isDirty = (): boolean => this.store.get().dirty;
+	/** The revision of the document as it is now; changes after every edit. */
+	getSaveRevision = (): number => this.editor.getSaveRevision();
+	/** Serialise for a host that persists the deck itself; the document stays dirty. */
+	getSaveSnapshot = (): Promise<PptxSaveSnapshot> => this.editor.getSaveSnapshot();
+	/** The host persisted `revision`: the document is clean only if it is still current. */
+	acknowledgeSave = (revision: number): PptxSaveAcknowledgement =>
+		this.editor.acknowledgeSave(revision);
 	getSlides = (): readonly PptxSlide[] => this.store.get().slides;
 	getSlide = (index: number): PptxSlide | undefined => this.store.get().slides[index];
 	getActiveSlide = (): PptxSlide | undefined => this.getSlide(this.getCurrentSlide());
@@ -2259,6 +2269,16 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	 * the crash-recovery snapshot for this file is stale (the real file already
 	 * has the work), so it is discarded unless the user asked to keep it.
 	 */
+	private discardRecoveryAfterHostSave(): void {
+		if (shouldDiscardAutosaveOnSuccessfulSave(this.optionsController.getOptions())) {
+			void deleteAutosaveSnapshot(this.autosaveFilePath(), this.documentView().storage).catch(
+				() => {
+					// The host save succeeded; recovery cleanup is best-effort here.
+				},
+			);
+		}
+	}
+
 	private afterSuccessfulSave(format: PptxSaveFormat): void {
 		this.optionsController.notifyActionSuccess();
 		if (

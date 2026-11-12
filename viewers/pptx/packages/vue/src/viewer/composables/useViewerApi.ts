@@ -5,7 +5,7 @@ import {
 	prepareElementForInsertion,
 	slideSpaceElement,
 } from 'ooxml-ui/pptx';
-import type { ViewerCustomizationApi, ViewerMode } from 'ooxml-ui/pptx';
+import type { SaveRevisionController, ViewerCustomizationApi, ViewerMode } from 'ooxml-ui/pptx';
 /**
  * useViewerApi: assemble the imperative handle the SFC hands to
  * `defineExpose`.
@@ -22,6 +22,8 @@ import type { ComputedRef, Ref, ShallowRef } from 'vue';
 import type { PowerPointViewerExpose } from '../types';
 
 export interface UseViewerApiOptions {
+	/** Revision tracker behind `getSaveRevision`, `getSaveSnapshot` and `acknowledgeSave`. */
+	saveRevision: SaveRevisionController;
 	slides: ShallowRef<PptxSlide[]>;
 	activeSlide: ComputedRef<PptxSlide | undefined>;
 	activeSlideIndex: Ref<number>;
@@ -135,6 +137,9 @@ export function useViewerApi(options: UseViewerApiOptions): ViewerApiHandle {
 			setActiveSlideIndex: (index: number) => options.goTo(index),
 			getSlideCount: () => slideCount.value,
 			isDirty: () => options.isDirty.value,
+			getSaveRevision: () => options.saveRevision.getRevision(),
+			getSaveSnapshot: () => options.saveRevision.snapshot(),
+			acknowledgeSave: (revision: number) => options.saveRevision.acknowledge(revision),
 			// -- Slide access --
 			getSlides: () => slides.value,
 			getSlide: (index: number) => slides.value[index],

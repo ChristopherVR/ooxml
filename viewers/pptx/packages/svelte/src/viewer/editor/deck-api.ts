@@ -21,7 +21,14 @@ import type { EditorState } from './editor-state.svelte';
  */
 export type DeckApi = Omit<
 	PowerPointViewerAPI,
-	'getContent' | 'undo' | 'redo' | 'canUndo' | 'canRedo'
+	| 'getContent'
+	| 'undo'
+	| 'redo'
+	| 'canUndo'
+	| 'canRedo'
+	| 'getSaveRevision'
+	| 'getSaveSnapshot'
+	| 'acknowledgeSave'
 >;
 
 /** Live viewer accessors the deck API closes over (all read from viewer runes). */

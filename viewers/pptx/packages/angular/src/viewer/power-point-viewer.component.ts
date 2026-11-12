@@ -22,6 +22,7 @@ import {
 	autosaveStatusKind,
 	createSlidePackageClipboard,
 	commitElementUpdateBatch,
+	createSaveRevisionController,
 	attachViewerHyperlinks,
 	applyPreferenceToOptions,
 	buildRasterPictureElement,
@@ -90,6 +91,8 @@ import type {
 	MasterViewTarget,
 	PasteSpecialFormat,
 	PowerPointViewerAPI,
+	PptxSaveAcknowledgement,
+	PptxSaveSnapshot,
 	SlideTemplateId,
 	ThemeCatalogEntry,
 	RibbonAddInTab,
@@ -3880,6 +3883,36 @@ export class PowerPointViewerComponent
 
 	isDirty(): boolean {
 		return this.editor.dirty();
+	}
+
+	/** Revision tracker behind {@link getSaveRevision}, {@link getSaveSnapshot} and {@link acknowledgeSave}. */
+	private readonly saveRevision = createSaveRevisionController({
+		getSources: () => this.saveChangeSources(),
+		serialize: () => this.fileIO.getContent(),
+		markClean: () => this.editor.dirty.set(false),
+		discardRecovery: () => {
+			const filePath = this.filePath();
+			if (filePath && this.viewerOpts.shouldDiscardAutosaveOnSave()) {
+				void deleteAutosaveSnapshot(filePath, this.storage()).catch(() => {
+					// The host save succeeded; recovery cleanup is best-effort here.
+				});
+			}
+		},
+	});
+
+	/** The revision of the document as it is now; changes after every edit. */
+	getSaveRevision(): number {
+		return this.saveRevision.getRevision();
+	}
+
+	/** Serialise for a host that persists the deck itself; the document stays dirty. */
+	getSaveSnapshot(): Promise<PptxSaveSnapshot> {
+		return this.saveRevision.snapshot();
+	}
+
+	/** The host persisted `revision`: the document is clean only if it is still current. */
+	acknowledgeSave(revision: number): PptxSaveAcknowledgement {
+		return this.saveRevision.acknowledge(revision);
 	}
 
 	/**

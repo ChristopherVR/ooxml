@@ -10,6 +10,7 @@ import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
 import type { ProviderFactory, WebrtcOptions, WriteBackRetry } from 'ooxml-core/collab';
 import type { ExternalCollaborationSession } from './render/collaboration-external-session';
 import type { ElementUpdate, ElementUpdateOptions } from './render/element-update-batch';
+import type { PptxSaveAcknowledgement, PptxSaveSnapshot } from './render/controller/save-revision';
 
 /** Canvas dimensions in pixels. */
 export interface CanvasSize {
@@ -85,6 +86,27 @@ export interface PowerPointViewerAPI {
 	getSlideCount: () => number;
 	/** Whether the document has unsaved changes. */
 	isDirty: () => boolean;
+
+	// -- Host persistence (revision-aware Save) --
+	/**
+	 * The revision of the document as it is now: a positive integer that changes after every
+	 * edit. Pair it with {@link acknowledgeSave}.
+	 */
+	getSaveRevision: () => number;
+	/**
+	 * Serialise the presentation for the host to persist, tagged with the revision it was taken
+	 * at. Unlike a viewer-driven Save it leaves the document dirty and fires no save event; the
+	 * host calls {@link acknowledgeSave} with `revision` once the bytes are stored.
+	 */
+	getSaveSnapshot: () => Promise<PptxSaveSnapshot>;
+	/**
+	 * Tell the viewer the host persisted a snapshot. The document becomes clean (and its
+	 * crash-recovery copy is dropped, unless the user chose to keep it) only when `revision` is
+	 * still the current one; edits made while the host was saving stay dirty, a revision older
+	 * than one already acknowledged is ignored, and nothing reloads or resets undo history. A
+	 * failed save is simply not acknowledged. Returns what happened.
+	 */
+	acknowledgeSave: (revision: number) => PptxSaveAcknowledgement;
 
 	// -- Slide access --
 	/**

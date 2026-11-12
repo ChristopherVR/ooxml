@@ -84,3 +84,10 @@ export type {
 	SaveProgressState,
 	SaveProgressStatus,
 } from './save-progress-controller';
+export { createSaveRevisionController } from './save-revision';
+export type {
+	PptxSaveAcknowledgement,
+	PptxSaveSnapshot,
+	SaveRevisionController,
+	SaveRevisionControllerDeps,
+} from './save-revision';

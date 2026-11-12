@@ -359,6 +359,14 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 		editor,
 		() => options.getStorage?.(),
 		() => collabCluster.autosaveCtl.markSaved(),
+		() => {
+			const filePath = options.getFilePath();
+			if (filePath && editorUi.optionsState.shouldDiscardAutosaveOnSave) {
+				void deleteAutosaveSnapshot(filePath, options.getStorage?.()).catch(() => {
+					// The host save succeeded; recovery cleanup is best-effort here.
+				});
+			}
+		},
 	);
 	// Options > Accessibility > "feedback with sound", and Options > Save >
 	// "keep the last AutoRecover version": once a `.pptx` Save/Save-As download

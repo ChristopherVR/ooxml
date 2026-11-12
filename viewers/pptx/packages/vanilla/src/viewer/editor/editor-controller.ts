@@ -1,5 +1,6 @@
 import {
 	armEditorKeyboard,
+	createSaveRevisionController,
 	cycleSelectableElement,
 	deliverSavedPresentation,
 	isCleanAfterSave,
@@ -14,6 +15,8 @@ import {
 } from 'ooxml-ui/pptx';
 import type {
 	CollaborationHistoryTarget,
+	PptxSaveAcknowledgement,
+	PptxSaveSnapshot,
 	FreeformToolKind,
 	ResolvedCustomization,
 	ResolvedKeyboardCustomization,
@@ -86,6 +89,8 @@ export interface EditorControllerDeps {
 	getHandler(): PptxHandler | null;
 	/** Host `storage` option: Save / Save As go to `storage.save()` instead of a download. */
 	getStorage?(): import('ooxml-ui/pptx').DocumentStorage | undefined;
+	/** The host acknowledged the current save revision: drop the crash-recovery copy. */
+	discardRecoveryOnHostSave?(): void;
 	/** Adopt a handler produced by an in-session mutation (Slide Master view CRUD). */
 	setHandler(handler: PptxHandler, keepPrevious?: boolean): void;
 	/** Options > General > "User name" override for new comment/reply authorship. */
@@ -169,6 +174,12 @@ export interface EditorController {
 	save(format?: PptxSaveFormat): Promise<Uint8Array>;
 	downloadAs(format: PptxSaveFormat, fileName?: string): Promise<void>;
 	downloadPptx(fileName?: string): Promise<void>;
+	/** The revision of the document as it is now (see `createSaveRevisionController`). */
+	getSaveRevision(): number;
+	/** Serialise for a host that persists the deck itself; the document stays dirty. */
+	getSaveSnapshot(): Promise<PptxSaveSnapshot>;
+	/** The host persisted `revision`: clean only if it is still current. */
+	acknowledgeSave(revision: number): PptxSaveAcknowledgement;
 	destroy(): void;
 }
 
@@ -705,6 +716,12 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		const state = store.get();
 		return [state.slides, state.templateElementsBySlideId, state.slideMasters, state.sections];
 	};
+	const saveRevision = createSaveRevisionController({
+		getSources: saveChangeSources,
+		serialize: () => ops.serialize('pptx'),
+		markClean: () => store.set({ dirty: false }),
+		discardRecovery: () => deps.discardRecoveryOnHostSave?.(),
+	});
 	const deliverSave = async (
 		format: PptxSaveFormat,
 		fileName: string,
@@ -876,6 +893,9 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		updateHeaderFooter: (value) => ops.updateHeaderFooter(value),
 		updateCustomShows: (value) => ops.updateCustomShows(value),
 		save: (format) => ops.save(format),
+		getSaveRevision: () => saveRevision.getRevision(),
+		getSaveSnapshot: () => saveRevision.snapshot(),
+		acknowledgeSave: (revision) => saveRevision.acknowledge(revision),
 		// Every name below goes through the shared save-name decision, so a host
 		// that passes the deck it opened (`report.ppt`) gets `report.pptx` back
 		// rather than a `.ppt` whose bytes are an OpenXML package. With a host
