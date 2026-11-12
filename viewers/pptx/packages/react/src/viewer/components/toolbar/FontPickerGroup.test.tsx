@@ -28,6 +28,34 @@ const field = (name: 'family' | 'size') =>
 	container.querySelector<Field>(`[data-font-picker="${name}"]`)!;
 
 describe('shared font picker group', () => {
+	it('offers real weight faces and forwards Medium and regular family choices', () => {
+		const onFamily = vi.fn();
+		act(() =>
+			root.render(
+				<FontPickerGroup
+					enabled
+					fontFamily='DM Sans'
+					fontSize='24'
+					themeFonts={{ heading: 'DM Sans', body: 'ADLaM Display' }}
+					onFamily={onFamily}
+					onSize={vi.fn()}
+				/>,
+			),
+		);
+		const families = Array.from(field('family').querySelectorAll('option'), (row) => row.value);
+		for (const family of ['DM Sans', 'DM Sans Light', 'DM Sans Medium', 'DM Sans SemiBold']) {
+			expect(families).toContain(family);
+		}
+		expect(families).not.toContain('DM Sans Regular');
+		expect(families).toContain('ADLaM Display');
+		expect(families).not.toContain('ADLaM Display Medium');
+		for (const family of ['DM Sans Medium', 'DM Sans']) {
+			field('family').value = family;
+			act(() => void field('family').dispatchEvent(new Event('change', { bubbles: true })));
+		}
+		expect(onFamily.mock.calls).toStrictEqual([['DM Sans Medium'], ['DM Sans']]);
+	});
+
 	it('shows fractional sizes and forwards a change exactly once', () => {
 		const onFamily = vi.fn();
 		const onSize = vi.fn();

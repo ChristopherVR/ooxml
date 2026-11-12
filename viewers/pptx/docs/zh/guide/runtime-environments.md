@@ -25,6 +25,8 @@ description: 了解 pptx-viewer 在浏览器、Node.js 和 Web Worker 中的支�
 
 加载演示文稿时，查看器会短暂等待（150 毫秒）幻灯片所用的 Google Fonts 字体，使已缓存的字体不会先以替代字体显示。首次下载在慢速网络上不会拖延演示文稿：超过 150 毫秒，或请求失败（离线、被拦截）时立即以度量兼容的替代字体显示演示文稿，下载期间状态栏显示“正在下载字体（1/2）”，迟到的字体在到达后重新排版。已安装和嵌入的字体无需等待。
 
+所有五种绑定的“开始”字体下拉框还会列出 Google Fonts 实际支持的字重，例如 `DM Sans Light`、`DM Sans Medium` 和 `DM Sans SemiBold`。常规字重保留原字体名；选择字重后，保存文件也保留该名称。内置元数据不会为未知、嵌入或自定义字体虚构字重。宿主可从不依赖 DOM 的运行时入口 `ooxml-ui/pptx/render/font-catalog` 导入 `buildFontCatalog`，并设置 `{ includeWeightVariants: true }` 获取相同的 `{ family, weight }` 变体，无需导入编辑器。省略该选项时，目录输出保持不变。参见[字体选择器 API 表](https://github.com/ChristopherVR/ooxml/blob/main/docs/font-loading.md#font-picker-weights)。
+
 ### 字体与隐私 {#fonts-and-privacy}
 
 从 Google Fonts 获取替代字体时，读者的浏览器会访问 `fonts.googleapis.com` 和 `fonts.gstatic.com`，从而向 Google 暴露读者的 IP 地址。默认情况下由读者通过 文件 > 选项 > 信任中心 选项“下载未安装或未嵌入的字体（Google Fonts）”决定，该选项默认开启。关闭后立即作用于当前打开的演示文稿（查看器会移除其网络字体样式表）以及之后的每次加载，并与其他选项一起保存。宿主可以改用 `googleFonts` 选项来决定，所有绑定均支持：
