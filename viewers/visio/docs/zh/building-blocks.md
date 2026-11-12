@@ -73,7 +73,7 @@ function EmbeddedDiagram({ content, canEdit, handle }) {
 - `refused`（`reason`：`read-only` 或 `rejected`）：编辑器拒绝；`message` 说明原因，`text` 保留草稿以便恢复。
 - `cancelled`（`reason`：`stale-document`、`superseded` 或 `destroyed`）：草稿所属文档已不存在，或该编辑已被取代；`text` 为草稿。
 
-每个结果都带有 `sourceGeneration` 和 `documentGeneration`，有草稿时还有 `pageId` 和 `shapeId`。草稿属于输入它的那个文档：加载其他文件或卸载画布会丢弃草稿，因此它绝不会应用到另一个文档。验证和撤销/重做走正常的编辑路径。
+每个结果都带有 `sourceGeneration` 和 `documentGeneration`，有草稿时还有 `pageId` 和 `shapeId`。草稿属于输入它的那个文档：加载其他文件或卸载画布会丢弃草稿，因此它绝不会应用到另一个文档。如果加载丢弃了未保存的草稿，下一次调用 `commitTextEdit()` 会一次性以 `cancelled` / `stale-document` 返回它，并带有 `text`、`pageId`、`shapeId` 以及旧的 `sourceGeneration`，这样与文档切换同时发生的保存也能找回已输入的内容。验证和撤销/重做走正常的编辑路径。
 
 ## 软件包 {#packages}
 

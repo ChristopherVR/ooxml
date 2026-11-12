@@ -33,6 +33,8 @@ export class ViewerInlineText {
 	#session: Session | undefined;
 	#request = 0;
 	#inflight: Promise<TextEditOutcome> | undefined;
+	/** A draft dropped by a source change, reported once by the next commit and never applied. */
+	#stale: { session: Session; text: string } | undefined;
 	constructor(
 		private readonly viewport: HTMLElement,
 		private readonly controller: ViewerController,
@@ -102,6 +104,7 @@ export class ViewerInlineText {
 			events.abort();
 			unregister();
 			++this.#request;
+			this.#stale = undefined;
 			this.#close();
 			input.remove();
 		};
@@ -132,6 +135,7 @@ export class ViewerInlineText {
 			`svg.paper [data-shape-id="${CSS.escape(shape.id)}"]`,
 		);
 		const initial = shape.text?.plainText ?? '';
+		this.#stale = undefined;
 		this.#session = {
 			pageId: page.id,
 			shapeId: shape.id,
@@ -163,7 +167,20 @@ export class ViewerInlineText {
 	 * `unchanged`. The draft is bound to the document it was typed in and never applied to another.
 	 */
 	commitDraft(focusCanvas = false): Promise<TextEditOutcome> {
-		if (!this.#session) return this.#inflight ?? Promise.resolve(this.#outcome('unchanged'));
+		if (!this.#session) {
+			if (this.#inflight) return this.#inflight;
+			const stale = this.#stale;
+			this.#stale = undefined;
+			return Promise.resolve(
+				stale
+					? this.#outcome(
+							'cancelled',
+							{ reason: 'stale-document', text: stale.text },
+							stale.session,
+						)
+					: this.#outcome('unchanged'),
+			);
+		}
 		const run = this.#commit(focusCanvas);
 		this.#inflight = run;
 		void run.then(() => {
@@ -177,7 +194,7 @@ export class ViewerInlineText {
 		session?: Session,
 	): TextEditOutcome {
 		// A destroyed controller has no generations to report.
-		const alive = !this.#destroyed();
+		const alive = !this.controller.destroyed;
 		const generations = {
 			sourceGeneration: session?.generation ?? (alive ? this.controller.sourceGeneration : -1),
 			documentGeneration: alive ? this.controller.documentGeneration : -1,
@@ -224,20 +241,12 @@ export class ViewerInlineText {
 			return this.#outcome('committed', { text: draft }, session);
 		} catch (error) {
 			if (isEditCancellation(error)) {
-				const reason = this.#destroyed() ? 'destroyed' : 'superseded';
+				const reason = this.controller.destroyed ? 'destroyed' : 'superseded';
 				return this.#outcome('cancelled', { reason, text: draft }, session);
 			}
 			const message = editErrorMessage(error);
 			if (request === this.#request) this.announce(message);
 			return this.#outcome('refused', { reason: 'rejected', message, text: draft }, session);
-		}
-	}
-	#destroyed(): boolean {
-		try {
-			void this.controller.sourceGeneration;
-			return false;
-		} catch {
-			return true;
 		}
 	}
 	/**
@@ -254,6 +263,8 @@ export class ViewerInlineText {
 		const page = state.document?.pages[state.pageIndex];
 		const shape = page?.id === session.pageId ? visioTextShape(page, session.shapeId) : undefined;
 		if (this.controller.sourceGeneration !== session.generation || !state.document) {
+			// Keep what was typed so a Save racing the switch can recover it; it is never applied.
+			if (this.input.value !== session.initial) this.#stale = { session, text: this.input.value };
 			this.#close();
 			return;
 		}

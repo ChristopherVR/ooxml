@@ -115,8 +115,11 @@ the draft's edit completed, including one a blur or Esc already started, and ret
 | `cancelled` | `stale-document`, `superseded`, `destroyed` | The draft's document went away or the edit was superseded; `text` is the draft.  |
 
 Every outcome carries `sourceGeneration` and `documentGeneration`, and `pageId` and `shapeId` when
-a draft existed. A draft belongs to the document it was typed in: loading another file or
-unmounting the canvas drops it, so it is never applied to a different document. Validation and
+a draft existed. A draft belongs to the document it was typed in: loading another file drops it and unmounting
+the canvas discards it, so it is never applied to a different document. When a load dropped an
+unsaved draft, the next `commitTextEdit()` returns it once as `cancelled` / `stale-document` with
+its `text`, `pageId`, `shapeId` and the old `sourceGeneration`, so a Save racing a document switch
+can recover what was typed. Validation and
 undo/redo are the normal edit path. Save only when `status` is `committed` or `unchanged`.
 
 ```ts

@@ -75,7 +75,7 @@ Si l'utilisateur appuie sur un Enregistrer géré par l'hôte pendant qu'il tape
 - `refused` (`reason` : `read-only` ou `rejected`) : l'éditeur l'a refusé ; `message` donne la raison et `text` conserve le brouillon pour le récupérer.
 - `cancelled` (`reason` : `stale-document`, `superseded` ou `destroyed`) : le document du brouillon a disparu ou la modification a été remplacée ; `text` est le brouillon.
 
-Chaque résultat contient `sourceGeneration` et `documentGeneration`, ainsi que `pageId` et `shapeId` lorsqu'il y avait un brouillon. Un brouillon appartient au document dans lequel il a été tapé : charger un autre fichier ou démonter le canevas l'abandonne, il n'est donc jamais appliqué à un autre document. La validation et l'annulation/rétablissement suivent le chemin de modification normal.
+Chaque résultat contient `sourceGeneration` et `documentGeneration`, ainsi que `pageId` et `shapeId` lorsqu'il y avait un brouillon. Un brouillon appartient au document dans lequel il a été tapé : charger un autre fichier ou démonter le canevas l'abandonne, il n'est donc jamais appliqué à un autre document. Si un chargement a abandonné un brouillon non enregistré, le prochain appel à `commitTextEdit()` le renvoie une seule fois comme `cancelled` / `stale-document` avec son `text`, son `pageId`, son `shapeId` et l'ancienne `sourceGeneration`, afin qu'un Enregistrer concurrent d'un changement de document puisse récupérer ce qui a été tapé. La validation et l'annulation/rétablissement suivent le chemin de modification normal.
 
 ## Paquets {#packages}
 

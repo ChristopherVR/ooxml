@@ -73,7 +73,7 @@ Si el usuario pulsa un Guardar gestionado por el anfitrión mientras escribe den
 - `refused` (`reason`: `read-only` o `rejected`): el editor lo rechazó; `message` explica el motivo y `text` conserva el borrador para recuperarlo.
 - `cancelled` (`reason`: `stale-document`, `superseded` o `destroyed`): el documento del borrador ya no existe o la edición fue reemplazada; `text` es el borrador.
 
-Cada resultado incluye `sourceGeneration` y `documentGeneration`, y `pageId` y `shapeId` cuando había un borrador. Un borrador pertenece al documento en el que se escribió: cargar otro archivo o desmontar el lienzo lo descarta, por lo que nunca se aplica a otro documento. La validación y deshacer/rehacer siguen la vía de edición normal.
+Cada resultado incluye `sourceGeneration` y `documentGeneration`, y `pageId` y `shapeId` cuando había un borrador. Un borrador pertenece al documento en el que se escribió: cargar otro archivo o desmontar el lienzo lo descarta, por lo que nunca se aplica a otro documento. Si una carga descartó un borrador sin guardar, la siguiente llamada a `commitTextEdit()` lo devuelve una sola vez como `cancelled` / `stale-document` con su `text`, `pageId`, `shapeId` y la `sourceGeneration` anterior, para que un Guardar que coincida con un cambio de documento pueda recuperar lo escrito. La validación y deshacer/rehacer siguen la vía de edición normal.
 
 ## Paquetes {#packages}
 

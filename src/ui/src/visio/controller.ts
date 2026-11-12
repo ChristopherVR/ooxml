@@ -223,6 +223,10 @@ export class ViewerController {
 	get state(): ViewerState {
 		return this.#state;
 	}
+	/** True once `destroy()` ran; most members then throw. */
+	get destroyed(): boolean {
+		return this.#destroyed;
+	}
 	/** Accepted document replacements, including the same object, invalidate captured artifacts. */
 	get documentGeneration(): number {
 		this.#assertAlive();

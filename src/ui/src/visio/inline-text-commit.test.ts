@@ -147,8 +147,19 @@ it('never applies an old draft to another document', async () => {
 	await ui.controller.load(await createVsdxFixture('Other'));
 	expect(ui.controller.sourceGeneration).not.toBe(before);
 	const outcome = await ui.controller.commitTextEdit();
-	expect(outcome.status).toBe('unchanged');
-	expect(outcome.sourceGeneration).toBe(ui.controller.sourceGeneration);
+	// The dropped draft is reported once, with its old identity, and never applied.
+	expect(outcome).toMatchObject({
+		status: 'cancelled',
+		reason: 'stale-document',
+		text: 'Old draft',
+		pageId: '1',
+		shapeId: '1',
+		sourceGeneration: before,
+	});
+	expect(await ui.controller.commitTextEdit()).toMatchObject({
+		status: 'unchanged',
+		reason: 'no-draft',
+	});
 	expect(ui.edits).toEqual([]);
 	ui.stop();
 	ui.controller.destroy();

@@ -74,7 +74,7 @@ Drückt der Benutzer ein vom Host verwaltetes Speichern, während er in einer Fo
 - `refused` (`reason`: `read-only` oder `rejected`): Der Editor hat abgelehnt; `message` nennt den Grund, `text` behält den Entwurf zur Wiederherstellung.
 - `cancelled` (`reason`: `stale-document`, `superseded` oder `destroyed`): Das Dokument des Entwurfs ist weg oder die Änderung wurde ersetzt; `text` ist der Entwurf.
 
-Jedes Ergebnis enthält `sourceGeneration` und `documentGeneration`, sowie `pageId` und `shapeId`, wenn es einen Entwurf gab. Ein Entwurf gehört zu dem Dokument, in dem er getippt wurde: Wird eine andere Datei geladen oder die Canvas entfernt, verfällt er und wird nie auf ein anderes Dokument angewendet. Validierung und Rückgängig/Wiederholen laufen über den normalen Änderungsweg.
+Jedes Ergebnis enthält `sourceGeneration` und `documentGeneration`, sowie `pageId` und `shapeId`, wenn es einen Entwurf gab. Ein Entwurf gehört zu dem Dokument, in dem er getippt wurde: Wird eine andere Datei geladen oder die Canvas entfernt, verfällt er und wird nie auf ein anderes Dokument angewendet. Hat ein Ladevorgang einen ungespeicherten Entwurf verworfen, gibt der nächste Aufruf von `commitTextEdit()` ihn einmalig als `cancelled` / `stale-document` mit `text`, `pageId`, `shapeId` und der alten `sourceGeneration` zurück, damit ein Speichern, das mit einem Dokumentwechsel zusammenfällt, das Getippte wiederherstellen kann. Validierung und Rückgängig/Wiederholen laufen über den normalen Änderungsweg.
 
 ## Pakete {#packages}
 
