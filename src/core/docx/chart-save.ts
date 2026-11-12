@@ -11,66 +11,25 @@ import type JSZip from 'jszip';
 import { applyChartExPartEdits } from './chart-ex-save';
 import {
 	writeChartSpaceOverSource,
-	chartSpaceDataSheet,
 	chartSpaceWorkbookWrites,
-	createChartWorkbook,
-	parseChartFormulaRange,
 	saveChartWorkbookUpdates,
-	writeChartSpace,
+	writeChartPartWithWorkbook,
 	type ChartSpace,
 	type ChartWorkbookIssue,
 } from '../chart/index';
-import { ensureContentTypeOverride, relationshipsPartFor } from '../opc/index';
-import { buildRelationshipsXml } from './package-parts';
 import { chartsIn, documentDrawingBlocks, type DocxChart } from './chart';
 import type { DocumentModel } from './model';
 import { isNewDocxChart } from './chart-edit';
-
-const CHART_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.drawingml.chart+xml';
-const XLSX_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-const PACKAGE_RELATIONSHIP_TYPE =
-	'http://schemas.openxmlformats.org/officeDocument/2006/relationships/package';
-
-/** The first `<folder><stem><n>.<ext>` the package does not hold (`n` from `start`, 0 written as none). */
-function freePartName(zip: JSZip, folder: string, stem: string, ext: string, start: number) {
-	const taken = new Set(Object.keys(zip.files).map((name) => name.toLowerCase()));
-	for (let n = start; ; n++) {
-		const name = `${folder}${stem}${n || ''}.${ext}`;
-		if (!taken.has(name.toLowerCase())) return name;
-	}
-}
 
 /**
  * Writes the parts of a chart inserted in this session: the chart part, its relationships, its
  * embedded workbook and their content types. Returns the new chart part's name.
  */
 export async function writeNewChartPart(zip: JSZip, space: ChartSpace): Promise<string> {
-	const partName = freePartName(zip, 'word/charts/', 'chart', 'xml', 1);
-	const workbook = freePartName(zip, 'word/embeddings/', 'Microsoft_Excel_Worksheet', 'xlsx', 0);
-	const firstFormula = space.plotArea.groups[0]?.series[0]?.values?.formula;
-	const sheetName = (firstFormula && parseChartFormulaRange(firstFormula)?.sheetName) || undefined;
-	zip.file(
-		partName,
-		writeChartSpace({ ...space, externalDataRelId: 'rId1', externalDataAutoUpdate: false }),
-	);
-	zip.file(
-		relationshipsPartFor(partName),
-		buildRelationshipsXml(
-			new Map([
-				[
-					'rId1',
-					{
-						type: PACKAGE_RELATIONSHIP_TYPE,
-						target: `../embeddings/${workbook.slice('word/embeddings/'.length)}`,
-						mode: 'Internal' as const,
-					},
-				],
-			]),
-		),
-	);
-	zip.file(workbook, await createChartWorkbook(chartSpaceDataSheet(space), sheetName));
-	await ensureContentTypeOverride(zip, partName, CHART_CONTENT_TYPE);
-	await ensureContentTypeOverride(zip, workbook, XLSX_CONTENT_TYPE);
+	const { partName } = await writeChartPartWithWorkbook(zip, space, {
+		chartFolder: 'word/charts/',
+		embeddingsFolder: 'word/embeddings/',
+	});
 	return partName;
 }
 

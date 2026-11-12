@@ -1,8 +1,39 @@
-import type { ChartSpace } from '../model';
+import type { ChartPlotGroup, ChartSpace } from '../model';
 import { chartSeriesEntryAt, editChartSpace } from './draft';
 import { setChartType, type ChartTypeTarget } from './type';
 
-/** Changes one category-axis combo series without changing document-order selections or axis ids. */
+/** Whether two groups differ only in their series, so one group can hold both. */
+function sameGroupSettings(a: ChartPlotGroup, b: ChartPlotGroup): boolean {
+	const { series: _a, ...first } = a;
+	const { series: _b, ...second } = b;
+	return JSON.stringify(first) === JSON.stringify(second);
+}
+
+/**
+ * The plot area with every group that differs from an earlier one only in its series joined into
+ * it. Office writes one group per type, settings and axis pair, and PowerPoint draws two column
+ * groups on the same axes over each other, so a combination built series by series
+ * (`setChartSeriesType`, `setChartSeriesSecondaryAxis`, which split groups to keep flattened series
+ * positions) is joined before it is written. The flattened series order changes when groups that
+ * were not neighbours join, so this runs after the edits that address series by position.
+ */
+export function joinChartGroups(space: ChartSpace): ChartSpace {
+	return editChartSpace(space, (draft) => {
+		const groups: ChartPlotGroup[] = [];
+		for (const group of draft.plotArea.groups) {
+			const same = groups.find((kept) => sameGroupSettings(kept, group));
+			if (same) same.series.push(...group.series);
+			else groups.push(group);
+		}
+		draft.plotArea.groups = groups;
+	});
+}
+
+/**
+ * Changes one category-axis combo series without changing document-order selections or axis ids.
+ * The series joins a neighbouring group of the type it takes when the two would differ only in
+ * their series, as Office keeps one group per type and axis pair.
+ */
 export function setChartSeriesType(
 	space: ChartSpace,
 	index: number,
@@ -57,5 +88,16 @@ export function setChartSeriesType(
 			{ ...structuredClone(current), series: current.series.slice(at + 1) },
 		].filter((part) => part.series.length);
 		draft.plotArea.groups.splice(groupIndex, 1, ...fragments);
+		// The converted group, then its neighbours of the same type.
+		const groups = draft.plotArea.groups;
+		const placed = groupIndex + (at > 0 ? 1 : 0);
+		const join = (first: number) => {
+			const [a, b] = [groups[first], groups[first + 1]];
+			if (!a || !b || !sameGroupSettings(a, b)) return;
+			a.series.push(...b.series);
+			groups.splice(first + 1, 1);
+		};
+		join(placed);
+		if (placed > 0) join(placed - 1);
 	});
 }

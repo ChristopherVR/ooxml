@@ -77,6 +77,18 @@ export { setChartSeriesGradient, setChartDataPointGradient } from './chart-gradi
 export { toChartGradientFill } from './chart-gradient-input';
 export { setChartGroupOptions, setChartAreaFormat } from './chart-layout-operations';
 export type { ChartGroupOptionsInput, ChartAreaFormatInput } from './chart-layout-input';
+export type {
+	ChartComboSeriesType,
+	ChartContentInput,
+	ChartDataLabelsInput,
+	ChartDisplayBlanksAs,
+	ChartFontInput,
+	ChartSeriesContentInput,
+	ChartSeriesLineInput,
+	ChartSeriesMarkerInput,
+	ChartTitleRunInput,
+} from './chart-content-input';
+export type { ChartAxisLineInput } from './chart-axis-input';
 export {
 	withChartElementFormat,
 	resetChartElementFormat,
@@ -270,6 +282,7 @@ export type {
 	ElementFlipInput,
 	TextBodyInput,
 	LinkInput,
+	CustomPathInput,
 } from './types';
 
 export { importSlidePackage } from './import-slide-package';

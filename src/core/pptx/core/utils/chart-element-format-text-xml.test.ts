@@ -36,6 +36,17 @@ describe('chart Text Options XML', () => {
 		expect(read(owner)).toMatchObject({ rotation: 30, fill: { kind: 'solid' } });
 	});
 
+	it('writes the wrap setting and italic text', () => {
+		const owner: XmlObject = {};
+		applyChartTextFormat(owner, { wrap: false, italic: true }, [], local);
+		const txPr = owner['c:txPr'] as XmlObject;
+		expect(txPr['a:bodyPr']).toEqual({ '@_wrap': 'none' });
+		const pPr = (txPr['a:p'] as XmlObject)['a:pPr'] as XmlObject;
+		expect(pPr['a:defRPr']).toEqual({ '@_i': '1' });
+		applyChartTextFormat(owner, { wrap: null }, [], local);
+		expect((owner['c:txPr'] as XmlObject)['a:bodyPr']).toEqual({});
+	});
+
 	it('leaves a rich title paragraph without defaults without them, so its size is kept', () => {
 		const title: XmlObject = {
 			'c:tx': { 'c:rich': { 'a:bodyPr': {}, 'a:p': { 'a:r': { 'a:t': 'Sales' } } } },

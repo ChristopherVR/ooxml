@@ -24,9 +24,15 @@ import type {
 } from '../../types/elements';
 import type { PptxAction } from '../../types/actions';
 import type { ShapeStyle } from '../../types/shape-style';
-import type { PptxTableData, PptxTableRow, PptxTableCell } from '../../types/table';
+import type {
+	PptxTableData,
+	PptxTableRow,
+	PptxTableCell,
+	PptxTableCellStyle,
+} from '../../types/table';
 import type { TextStyle, TextSegment } from '../../types/text';
 import { chartSeriesGradientFromInput } from './chart-gradient-input';
+import { applyChartContentInput, chartSeriesValuesFromInput } from './chart-content-operations';
 import { applyChartInputLayout } from './chart-layout-operations';
 import { mapPictureLayoutInput } from './picture-layout-input';
 import { mapLinkToAction, mapLinkToRunStyle } from './link-input';
@@ -35,7 +41,9 @@ import { pictureEffectsFromInput } from './picture-effects-input';
 import { tableCellStyle } from './table-cell-input';
 import { columnFractions, placeTableCells } from './table-merge-input';
 import { characterSpacingToSpc, mapTextBodyInput } from './text-body-input';
+import { tableCellRunsFromSegments } from './table-cell-runs-input';
 import { elementStyleForSegments } from './text-segment-style';
+import { customGeometryFromInput } from './custom-path-input';
 import {
 	buildShapeStyle,
 	connectorLineEndOverride,
@@ -336,6 +344,9 @@ export function createShapeElement(
 		),
 		...withAction(options?.link),
 	};
+	if (options?.paths && options.paths.length > 0) {
+		Object.assign(el, customGeometryFromInput(options.paths, p.width, p.height));
+	}
 	applyShapeText(el, options);
 	return el;
 }
@@ -442,11 +453,53 @@ export function createImageElement(source: string, options?: ImageOptions): Imag
 
 /** A table cell from its input: the text with the cell style and fill. */
 function createTableCell(cellInput: TableCellInput): PptxTableCell {
+	if (cellInput.runs && cellInput.runs.length > 0) {
+		return createRichTableCell(cellInput);
+	}
 	return {
-		text: cellInput.text,
+		text: cellInput.text ?? '',
 		gridSpan: cellInput.gridSpan,
 		rowSpan: cellInput.rowSpan,
 		style: tableCellStyle(cellInput),
+	};
+}
+
+/**
+ * A cell with rich text: the runs become `textSegments` (written as given)
+ * and `textRuns` (what the table renderers draw). The cell style keeps only
+ * what is not run formatting, so the save does not stamp one run's format
+ * over the others.
+ */
+function createRichTableCell(cellInput: TableCellInput): PptxTableCell {
+	const { fontSize, ...rest } = cellInput.style ?? {};
+	// Cell `style.fontSize` is points; runs, like all text segments, take px.
+	const base: Partial<TextStyleInput> = {
+		...rest,
+		...(fontSize !== undefined ? { fontSize: (fontSize * 96) / 72 } : {}),
+	};
+	const textSegments = buildTextSegments(cellInput.runs ?? [], base);
+	const text = textSegments.map((segment) => segment.text).join('');
+	if (cellInput.text !== undefined && cellInput.text !== text) {
+		throw new RangeError(
+			`A table cell gives both text "${cellInput.text}" and runs that spell "${text}"`,
+		);
+	}
+	// The fill, borders and alignment of the cell, without the run formatting.
+	const style: PptxTableCellStyle = { ...tableCellStyle(cellInput) };
+	delete style.fontSize;
+	delete style.bold;
+	delete style.italic;
+	delete style.color;
+	if (cellInput.style?.verticalAlignment !== undefined) {
+		style.vAlign = cellInput.style.verticalAlignment;
+	}
+	return {
+		text,
+		textSegments,
+		textRuns: tableCellRunsFromSegments(textSegments),
+		...(cellInput.gridSpan !== undefined ? { gridSpan: cellInput.gridSpan } : {}),
+		...(cellInput.rowSpan !== undefined ? { rowSpan: cellInput.rowSpan } : {}),
+		...(Object.keys(style).length > 0 ? { style } : {}),
 	};
 }
 
@@ -547,7 +600,7 @@ export function createChartElement(
 
 	const series: PptxChartSeries[] = input.series.map((s, index) => ({
 		name: s.name,
-		values: s.values,
+		...chartSeriesValuesFromInput(s.values),
 		color: s.color,
 		...chartSeriesGradientFromInput(chartType, s.gradientFill, index),
 		...(s.boxWhiskerOptions ? { boxWhiskerOptions: { ...s.boxWhiskerOptions } } : {}),
@@ -596,6 +649,7 @@ export function createChartElement(
 		chartData,
 	};
 	applyChartInputLayout(element, input);
+	applyChartContentInput(element, input);
 	return element;
 }
 

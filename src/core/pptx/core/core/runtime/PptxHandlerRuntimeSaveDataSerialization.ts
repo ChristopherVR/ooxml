@@ -9,6 +9,7 @@ import type {
 	PptxChartSeries,
 	PptxChartView3D,
 	PptxTableData,
+	PptxTableCell,
 } from '../../types';
 import { applyChartAxisDisplayUnitsToXml } from '../../utils/chart-axis-dispunits-serializer';
 import { applyChartAxisGridlinesToXml } from '../../utils/chart-axis-gridlines-serializer';
@@ -168,7 +169,18 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 * `<a:tr>` elements are rebuilt from scratch. Otherwise, the method
 	 * updates cells in place, preserving the original XML structure.
 	 */
-	protected serializeTableDataToXml(shape: XmlObject, tableData: PptxTableData): void {
+	protected serializeTableDataToXml(
+		shape: XmlObject,
+		tableData: PptxTableData,
+		writeRichCellText?: (xmlCell: XmlObject, cell: PptxTableCell) => boolean,
+	): void {
+		// A cell made in code with rich segments is written from them (see
+		// `PptxTableCell.textSegments`); any other cell from its flat text.
+		const writeCellText = (xmlCell: XmlObject, cell: PptxTableCell): void => {
+			if (!writeRichCellText?.(xmlCell, cell)) {
+				this.writeTableCellText(xmlCell, cell.text);
+			}
+		};
 		try {
 			const graphicData = xmlPath(shape, 'a:graphic', 'a:graphicData');
 			const tbl = xmlChild(graphicData, 'a:tbl');
@@ -225,7 +237,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						}
 
 						if (cell.text !== undefined) {
-							this.writeTableCellText(xmlCell, cell.text);
+							writeCellText(xmlCell, cell);
 						}
 						if (styleChanged) {
 							clearCellFormattingForStyleChange(xmlCell, cell.style);
@@ -260,7 +272,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 					// Update text
 					if (cell.text !== undefined) {
-						this.writeTableCellText(xmlCell, cell.text);
+						writeCellText(xmlCell, cell);
 					}
 
 					// Update cell style

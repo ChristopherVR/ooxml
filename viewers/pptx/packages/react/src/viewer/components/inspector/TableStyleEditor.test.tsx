@@ -8,10 +8,10 @@
  */
 import type { ParsedTableStyleMap } from 'pptx-viewer-core';
 import React, { act } from 'react';
-import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { createMarkedRoot, marked } from '../../i18n/marking-translator.test-support';
 import { TableStyleEditor } from './TableStyleEditor';
 import { ThemeColorMapProvider } from './ThemeColorMapContext';
 
@@ -59,7 +59,7 @@ let root: Root;
 beforeEach(() => {
 	container = document.createElement('div');
 	document.body.appendChild(container);
-	root = createRoot(container);
+	root = createMarkedRoot(container);
 });
 
 afterEach(() => {
@@ -82,7 +82,7 @@ describe('tableStyleEditor', () => {
 				/>,
 			);
 		});
-		expect(container.textContent).toContain('pptx.tableStyleEditor.noStyleSelected');
+		expect(container.textContent).toContain(marked('pptx.tableStyleEditor.noStyleSelected'));
 	});
 
 	it('lists all 14 parts and edits the fill colour of the selected one', () => {
@@ -100,7 +100,7 @@ describe('tableStyleEditor', () => {
 			);
 		});
 		const partButtons = Array.from(container.querySelectorAll('button')).filter((b) =>
-			b.textContent?.includes('pptx.tableStyleEditor.part.'),
+			b.textContent?.includes(marked('pptx.tableStyleEditor.part.')),
 		);
 		expect(partButtons).toHaveLength(14);
 
@@ -133,7 +133,7 @@ describe('tableStyleEditor', () => {
 			);
 		});
 		const createButton = Array.from(container.querySelectorAll('button')).find((b) =>
-			b.textContent?.includes('pptx.tableStyleEditor.newFromCurrent'),
+			b.textContent?.includes(marked('pptx.tableStyleEditor.newFromCurrent')),
 		) as HTMLButtonElement;
 		act(() => {
 			createButton.click();
@@ -168,9 +168,9 @@ describe('tableStyleEditor', () => {
 				/>,
 			);
 		});
-		expect(container.textContent).toContain('pptx.tableStyleEditor.noStyleSelected');
+		expect(container.textContent).toContain(marked('pptx.tableStyleEditor.noStyleSelected'));
 		const createButton = Array.from(container.querySelectorAll('button')).find((b) =>
-			b.textContent?.includes('pptx.tableStyleEditor.newStyle'),
+			b.textContent?.includes(marked('pptx.tableStyleEditor.newStyle')),
 		) as HTMLButtonElement;
 		expect(createButton).toBeTruthy();
 		expect(createButton.disabled).toBeFalsy();
@@ -205,7 +205,7 @@ describe('tableStyleEditor', () => {
 			);
 		});
 		const deleteButton = Array.from(container.querySelectorAll('button')).find((b) =>
-			b.textContent?.includes('pptx.tableStyleEditor.deleteStyle'),
+			b.textContent?.includes(marked('pptx.tableStyleEditor.deleteStyle')),
 		) as HTMLButtonElement;
 		act(() => {
 			deleteButton.click();
@@ -234,7 +234,7 @@ describe('tableStyleEditor', () => {
 			);
 		});
 		const deleteButton = Array.from(container.querySelectorAll('button')).find((b) =>
-			b.textContent?.includes('pptx.tableStyleEditor.deleteStyle'),
+			b.textContent?.includes(marked('pptx.tableStyleEditor.deleteStyle')),
 		) as HTMLButtonElement;
 		act(() => {
 			deleteButton.click();

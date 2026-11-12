@@ -132,7 +132,25 @@ export function applyChartGroupOptionsInput(
 	}
 }
 
-function toPaint(value: string, name: string): string {
+/**
+ * The group options `ChartInput` documents a default for (gap width 150, doughnut hole 50), for
+ * the options the chart type has: what a new chart starts with when the input leaves them out.
+ */
+export function documentedChartGroupOptionDefaults(
+	chartData: PptxChartData,
+): ChartGroupOptionsInput {
+	const defaults: ChartGroupOptionsInput = {};
+	for (const spec of CHART_GROUP_OPTIONS) {
+		if (spec.generatedDefault === undefined) continue;
+		const allowed = allowedTypes(spec.element);
+		if (drawnTypes(chartData).some((type) => allowed.includes(type)))
+			defaults[INPUT_KEYS[spec.element]] = spec.generatedDefault;
+	}
+	return defaults;
+}
+
+/** A 6-digit hex colour as `#RRGGBB`, or `'none'`. @throws {Error} Anything else. */
+export function toPaint(value: string, name: string): string {
 	const trimmed = value.trim();
 	if (trimmed === 'none') {
 		return 'none';

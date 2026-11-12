@@ -205,6 +205,11 @@ export interface ChartFormatLabelsView {
 	showPercent?: boolean;
 	showLegendKey?: boolean;
 	position?: string;
+	/**
+	 * The `c:dLblPos` values the edited labels accept (`chartLabelPositions`): the pane offers only
+	 * these, since the core refuses any other. Unset, the chart family's list is offered.
+	 */
+	positions?: readonly string[];
 }
 
 /** How an axis reads in a caption ("Secondary Vertical (Value) Axis"). */

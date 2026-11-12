@@ -26,7 +26,7 @@ viewer.destroy(); // idempotent; later commands reject
 
 | 接口 | 约定                                                                                                                                                                                   |
 | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 属性 | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `ribbonAddIns`, `collaboration`, `storage`, `customization`                                                     |
+| 属性 | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `ribbonAddIns`, `collaboration`, `storage`, `fileProviders`, `customization`                                    |
 | 事件 | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change`, `file-command` |
 
 - `canEdit`（布尔值）是编辑权限。完整查看器默认可编辑，`canEdit: false` 使其只读；[构建模块](/building-blocks)在宿主传入 `true` 之前是只读的。没有包字节的图纸（作为 `document` 传入的模型、旧版 `.vsd`）无论 `canEdit` 取何值都是只读的。

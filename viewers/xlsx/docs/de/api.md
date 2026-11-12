@@ -75,7 +75,7 @@ editor.customization = {
 | `startCollaboration(options)` | `Promise<void>`       | Tritt einem Raum bei; wird abgelehnt, wenn bereits freigegeben wird oder keine Arbeitsmappe geöffnet ist.                                       |
 | `stopCollaboration()`         | `void`                | Verlässt den Raum und leert `collaboration`; die Arbeitsmappe bleibt unverändert.                                                               |
 | `reconnectCollaboration()`    | `void`                | Startet die Verbindung neu und behält offline vorgenommene Änderungen.                                                                          |
-| `share()`                     | `void`                | Öffnet Datei > Freigeben.                                                                                                                       |
+| `share()`                     | `void`                | Öffnet das Dialogfeld Freigeben.                                                                                                                |
 | `focusGrid()`                 | `void`                | Setzt den Tastaturfokus auf das Raster, sodass Eingaben die aktive Zelle bearbeiten.                                                            |
 
 ## Ereignisse
@@ -107,6 +107,73 @@ editor.addEventListener('file-command', (event) => {
 			.then(() => editor.markClean());
 	}
 });
+```
+
+## Speicher des Hosts {#host-owned-storage}
+
+`storage` (eine Eigenschaft des Elements und eine Prop jedes Bindings) nimmt ein `DocumentStorage` aus
+`ooxml-core/embedding` entgegen. Ist sie gesetzt:
+
+- Datei > Speichern, Speichern unter und Strg+S übergeben die gespeicherte Arbeitsmappe an
+  `storage.save(bytes, meta)`, statt sie herunterzuladen. `meta` ist `{ fileName, mimeType, reason }`,
+  mit `reason` `'save'` oder `'saveAs'`; Quellen im Format `.xls` und `.csv` werden wie beim Download
+  als `.xlsx` gespeichert. Sobald das Promise erfüllt ist, gilt die Arbeitsmappe als unverändert; wird
+  es mit `{ fileName }` erfüllt, übernimmt die Titelleiste diesen Namen. Eine Ablehnung wird als
+  `workbook-error` gemeldet, und die Arbeitsmappe bleibt geändert.
+- Datei > Öffnen ruft `storage.open()` auf, wenn der Speicher diese Methode hat, und öffnet das
+  `{ bytes, fileName }`, mit dem sie erfüllt wird (`undefined` bedeutet, dass der Benutzer abgebrochen
+  hat). Ohne `open` wird die Dateiauswahl verwendet.
+- Es läuft immer nur ein Speichervorgang: Speichern während eines laufenden Speichervorgangs wird
+  ignoriert, nicht eingereiht. Eine Bearbeitung während des Speicherns beim Host lässt die Arbeitsmappe
+  geändert, da die gespeicherten Bytes sie nicht enthalten.
+- `file-command` wird weiterhin zuerst ausgelöst; ein Host, der `preventDefault()` aufruft, führt den
+  Befehl selbst aus, und `storage` wird nicht aufgerufen.
+
+Exportieren, Als CSV speichern und Drucken laden weiterhin im Browser herunter bzw. drucken dort. Excel
+hat keine AutoWiederherstellung, daher werden die Wiederherstellungsmethoden von `DocumentStorage`
+nicht verwendet.
+
+```ts
+editor.storage = {
+	save: (bytes, { fileName }) => myDrive.put(fileName, bytes),
+	open: () => myDrive.pick(), // resolves { bytes, fileName } or undefined
+};
+```
+
+## Cloud-Speicherorte in Datei > Öffnen {#cloud-places-in-file-open}
+
+`fileProviders` (eine Eigenschaft des Elements und eine Prop jedes Bindings) nimmt ein Array von
+`CloudFileProvider` (`ooxml-core/embedding`) entgegen, zum Beispiel `createOneDriveFileProvider` aus
+`ooxml-core/embedding/onedrive`. Leer oder weggelassen bleibt Datei > Öffnen unverändert. Mit Providern
+listet Datei > Öffnen "Dieses Gerät" (Durchsuchen) und einen Speicherort pro Provider auf, der den
+gemeinsamen Browser `<office-ui-cloud-files>` zeigt, beschränkt auf `.xlsx`. Seine Texte folgen dem
+`locale` des Editors.
+
+- Beim Öffnen einer Datei wird wie bei Öffnen gefragt, ob ungespeicherte Änderungen verworfen werden
+  sollen; dann werden die Bytes über den normalen Ladeweg geladen, der Name der Datei übernommen und
+  die Datei-Ansicht geschlossen.
+- Die Arbeitsmappe speichert danach über den eigenen `storage` der Datei, nicht über den `storage` des
+  Hosts: Speichern und Strg+S schreiben in dasselbe Element, Speichern unter schreibt eine Kopie, und
+  die Arbeitsmappe gilt erst als unverändert, wenn der Provider erfüllt hat. Ein abgelehnter
+  Speichervorgang wird als `workbook-error` gemeldet, und die Arbeitsmappe bleibt geändert. Das Öffnen,
+  Erstellen oder Laden einer anderen Arbeitsmappe gibt Speichern an den `storage` des Hosts zurück.
+- Eine Datei, die der Provider mit `canEdit: false` meldet, wird schreibgeschützt geöffnet (`readOnly`
+  ist true, ein `readonly-change`-Ereignis wird ausgelöst). Es gilt das Strengere aus dem `readOnly`
+  des Hosts und der Datei, und der eigene Wert des Hosts wird nicht geändert.
+
+```ts
+import { createOneDriveFileProvider } from 'ooxml-core/embedding/onedrive';
+import { mergeWorkbookSnapshots } from 'ooxml-core/xlsx/collab';
+
+editor.fileProviders = [
+	createOneDriveFileProvider({
+		getAccessToken,
+		signIn,
+		mergers: {
+			xlsx: ({ base, local, remote }) => mergeWorkbookSnapshots(base.bytes, local, remote.bytes),
+		},
+	}),
+];
 ```
 
 ## Shadow Parts

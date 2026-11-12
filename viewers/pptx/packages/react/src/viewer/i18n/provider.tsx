@@ -57,6 +57,16 @@ function withEnglishFallback(translate: PptxTranslate): ViewerT {
 }
 
 /**
+ * The viewer's own English text, for a component with neither a `PptxI18nProvider` nor a
+ * registered react-i18next source (`./host-i18next`): the provider's fallback chain over a host
+ * that translates nothing.
+ */
+export const BUILT_IN_ENGLISH: ViewerI18nState = {
+	t: withEnglishFallback(() => undefined),
+	locale: 'en',
+};
+
+/**
  * Translates every viewer component below it (`PowerPointViewer` and the standalone building
  * blocks) through the host's own i18n library instead of react-i18next. A `PowerPointViewer`
  * reads the provider nearest above it; a provider rendered inside the viewer is ignored, so the

@@ -13,3 +13,5 @@ export { validateAtomicChartWorkbookWrites } from './validation';
 
 export * from './append-sheet';
 export * from './rebase-data';
+export * from './new-layout';
+export * from './new-part';

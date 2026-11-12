@@ -9,6 +9,7 @@
  */
 import type { PptxChartData } from 'ooxml-core/pptx';
 import {
+	chartModelLabelPositions,
 	chartSupportsSecondaryAxis,
 	isChartSeriesOnSecondaryAxis,
 	readChartElementFormat,
@@ -93,7 +94,13 @@ export function pptxChartFormatSource(data: PptxChartData): ChartFormatSource {
 				showPercent: labels.showPercent,
 				showLegendKey: labels.showLegendKey,
 				position: labels.position,
+				...positionsOf(chartModelLabelPositions(data, seriesIndex)),
 			};
 		},
 	};
+}
+
+/** The accepted label positions as an optional view field (unset when the table has no entry). */
+function positionsOf(positions: readonly string[] | undefined): { positions?: readonly string[] } {
+	return positions ? { positions } : {};
 }

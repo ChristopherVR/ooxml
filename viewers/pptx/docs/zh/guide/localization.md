@@ -81,6 +81,8 @@ import i18nInstance from './i18n';
 
 调用 `i18nInstance.changeLanguage('fr')` 切换语言。
 
+请在首次渲染之前配置好 react-i18next（`initReactI18next` 加 `init`，或 `I18nextProvider`）。react-i18next 首次获得实例时不会触发任何事件，因此在没有实例时已渲染的查看器只有在其父组件重新渲染它时才会切换：在此之前它显示内置英文文本，之后才使用该实例，并应用已保存的语言选择或 `defaultLocale`。
+
 #### 使用自己的 i18n 库 {#use-your-own-i18n-library}
 
 如果要用 Lingui、FormatJS 或其他任意库代替 react-i18next 翻译查看器，请用 `PptxI18nProvider` 包裹它，并传入 `translate(key, params)` 函数和当前的 `locale`。它覆盖 `PowerPointViewer` 以及独立的构建块（`Toolbar`、`SlideCanvas`、`SlideTemplateGalleryDialog` 等）：
@@ -113,7 +115,45 @@ function TranslatedViewer({ content }: { content: Uint8Array }) {
 
 `translate` 会原样收到组件传入的参数：`defaultValue`、`count` 以及 `{{name}}` 占位符的值。请在目录中使用相同的名称（ICU 语法中写作 `{name}`）；`count` 只是普通的值，复数形式需要在你的目录中处理。返回文本中残留的 `{{name}}` 占位符同样会被填充，因此随包提供的字典可以直接使用：`const translate: PptxTranslate = (key) => translationsFr[key];`。当 `translate` 返回键本身、空字符串或不返回内容，或者抛出异常时，组件会依次显示内置英文文本、调用中的默认文本和由键生成的标签，因此不完整的目录也不会显示原始的 `pptx.*` 键。请保持 `translate` 的引用稳定（模块级函数或 `useCallback`）：`translate` 或 `locale` 一旦变化，组件就会重新翻译。
 
-在 Provider 内，语言由宿主掌控：组件从不调用 `changeLanguage`，忽略 `defaultLocale`，也不会恢复已保存的语言选择。只有同时传入 `onLocaleChange` 和至少两个 `availableLocales` 时，“文件 > 选项 > 语言”才会出现；选择语言会调用 `onLocaleChange`，选中项跟随 `locale`（`fr-CA` 这类地区代码会选中列表中的 `fr`）。`locale` 不会设置文字方向。`PowerPointViewer` 读取其上方最近的 Provider；放在组件内部的 Provider 会被忽略，因此整个组件使用同一种语言。`i18next` 和 `react-i18next` 在 4.x 中仍是必需的 peer 依赖：需要安装，但在 Provider 内组件不会使用它们。`PptxI18nProvider` 仅适用于 React；其他组件包的翻译方式见下文。
+在 Provider 内，语言由宿主掌控：组件从不调用 `changeLanguage`，忽略 `defaultLocale`，也不会恢复已保存的语言选择。只有同时传入 `onLocaleChange` 和至少两个 `availableLocales` 时，“文件 > 选项 > 语言”才会出现；选择语言会调用 `onLocaleChange`，选中项跟随 `locale`（`fr-CA` 这类地区代码会选中列表中的 `fr`）。`locale` 不会设置文字方向。`PowerPointViewer` 读取其上方最近的 Provider；放在组件内部的 Provider 会被忽略，因此整个组件使用同一种语言。`i18next` 和 `react-i18next` 在 4.x 中仍是必需的 peer 依赖：需要安装，但在 Provider 内组件不会使用它们。如果要在不安装它们的情况下构建，请从 `pptx-react-viewer/no-i18next` 导入（[见下文](#without-react-i18next)）。`PptxI18nProvider` 仅适用于 React；其他组件包的翻译方式见下文。
+
+#### 不使用 react-i18next {#without-react-i18next}
+
+即使所有组件都位于 `PptxI18nProvider` 内，主入口仍会导入 `react-i18next`，因此未安装它时打包工具会报错 "Can't resolve 'react-i18next'"。只通过 `PptxI18nProvider` 翻译的宿主可以改为从 `pptx-react-viewer/no-i18next` 导入。它的导出和类型与 `pptx-react-viewer` 完全相同，而且它加载的任何模块都不会导入 `i18next` 或 `react-i18next`：
+
+```bash
+npm install pptx-react-viewer react react-dom
+```
+
+由于 `i18next` 和 `react-i18next` 是声明的 peer 依赖，npm 7 及以上、pnpm 8 及以上和 Bun 执行此命令时仍会安装它们；该入口不会使用它们，也不会将它们打包。
+
+```tsx
+import { PowerPointViewer, PptxI18nProvider } from 'pptx-react-viewer/no-i18next';
+```
+
+npm 的 `--legacy-peer-deps` 等选项可以不安装它们，但会跳过所有 peer 依赖：此时还需自行安装其他必需的 peer 依赖（`framer-motion`、`lucide-react`、`react-icons`、`jspdf`、`jszip` 和 `fast-xml-parser`），否则构建会失败。
+
+- 在 `PptxI18nProvider` 内，该入口的行为与主入口完全相同。Provider 和组件可以分别来自任一入口：它们共享同一个上下文。
+- 在 Provider 外，`PowerPointViewer` 和独立的构建块显示内置英文文本，报告的语言为 `en`。“文件 > 选项 > 语言”不会出现，`defaultLocale`、`availableLocales` 和 `onLocaleChange` 不起作用，也不会读取或保存语言选择。
+- 这一回退行为由整个应用决定，而不是由单次导入决定：只要应用中有任何模块还导入了 `pptx-react-viewer`、`pptx-react-viewer/viewer` 或 `pptx-react-viewer/internals`，react-i18next 就会被打包，位于 Provider 外的组件（无论来自哪个入口）都会读取它。已配置 react-i18next（`initReactI18next` 或 `I18nextProvider`）时通过它翻译，否则仍显示内置英文文本（react-i18next 会提示没有实例）。
+- `pptx-react-viewer/viewer`（可选用的 hooks 和协作组件）和 `pptx-react-viewer/internals` 目前还没有不依赖 react-i18next 的对应入口：导入其中任何一个都需要安装 `i18next` 和 `react-i18next`，与主入口相同。
+
+Provider 外的内置文本只有英文。如果不使用 i18next 而要显示其他语言，请通过 `PptxI18nProvider` 传入随包提供的字典：
+
+```tsx
+import { translationsFr } from 'pptx-react-viewer/i18n/fr';
+import { PowerPointViewer, PptxI18nProvider } from 'pptx-react-viewer/no-i18next';
+
+const translate = (key: string) => translationsFr[key];
+
+function FrenchViewer({ content }: { content: Uint8Array }) {
+	return (
+		<PptxI18nProvider translate={translate} locale='fr'>
+			<PowerPointViewer content={content} />
+		</PptxI18nProvider>
+	);
+}
+```
 
 ### Vue 3 {#vue-3}
 

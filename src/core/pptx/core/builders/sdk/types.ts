@@ -20,8 +20,10 @@ import type {
 } from '../../types/chart';
 import type { PptxThemeColorRef } from '../../types/color-ref';
 import type { StrokeDashType, ConnectorArrowType } from '../../types/common';
+import type { CustomGeometrySegment } from '../../types/geometry';
 import type { PptxTransitionType } from '../../types/transition';
 import type { ChartGradientInput } from './chart-gradient-input';
+import type { ChartContentInput, ChartSeriesContentInput } from './chart-content-input';
 import type { ChartAreaFormatInput } from './chart-layout-input';
 import type { ChartAxisEdit, PptxChartAxisType } from './chart-operations';
 import type { PresentationAppPropertiesInput } from './presentation-app-properties';
@@ -44,6 +46,15 @@ export type {
 	ReflectionInput,
 	RelativeRectInput,
 } from './shape-style-input-types';
+export type {
+	ChartComboSeriesType,
+	ChartDataLabelsInput,
+	ChartDisplayBlanksAs,
+	ChartFontInput,
+	ChartSeriesLineInput,
+	ChartSeriesMarkerInput,
+	ChartTitleRunInput,
+} from './chart-content-input';
 
 // ---------------------------------------------------------------------------
 // Position & layout
@@ -298,6 +309,26 @@ export interface TextOptions extends Partial<ElementPosition>, ElementFlipInput,
 // Shape input
 // ---------------------------------------------------------------------------
 
+/**
+ * One `a:path` of a custom geometry. Its `width` x `height` box is stretched
+ * over the shape (`a:path/@w`, `@h`). Give `d` (SVG path data: any command,
+ * absolute or relative, arcs written as cubic Beziers) or `segments`, not
+ * both. A path starts with a moveto (`M`, or a `moveTo` segment). Path data
+ * that cannot be read throws a `SyntaxError`; an empty path, segments that do
+ * not start with a `moveTo`, a box that is not positive, or a coordinate that
+ * is not finite throws a `RangeError`.
+ */
+export interface CustomPathInput {
+	d?: string;
+	segments?: CustomGeometrySegment[];
+	width: number;
+	height: number;
+	/** How the path is filled (`a:path/@fill`); `'none'` for an outline-only path. Default: filled. */
+	fill?: 'norm' | 'lighten' | 'lightenLess' | 'darken' | 'darkenLess' | 'none';
+	/** Whether the path is stroked (`a:path/@stroke`). Default: stroked. */
+	stroke?: boolean;
+}
+
 export interface ShapeOptions extends Partial<ElementPosition>, ElementFlipInput, TextBodyInput {
 	fill?: FillInput;
 	stroke?: StrokeInput;
@@ -317,6 +348,12 @@ export interface ShapeOptions extends Partial<ElementPosition>, ElementFlipInput
 	opacity?: number;
 	/** What clicking the shape does (`p:cNvPr/a:hlinkClick`). */
 	link?: LinkInput;
+	/**
+	 * A custom geometry (`a:custGeom`) instead of the preset: one `a:path` per
+	 * entry. The shape type argument is then not used. An empty list is no
+	 * custom geometry.
+	 */
+	paths?: CustomPathInput[];
 }
 
 // ---------------------------------------------------------------------------
@@ -396,8 +433,22 @@ export interface TableRowInput {
 }
 
 export interface TableCellInput {
-	text: string;
+	/** Plain text of the cell; may be left out when {@link runs} gives the text. */
+	text?: string;
+	/**
+	 * Cell text style. Its `fontSize` is in POINTS (cells always took points),
+	 * unlike every other SDK text input, which takes px; inside {@link runs}
+	 * `fontSize` is px as in `addText`.
+	 */
 	style?: Partial<TextStyleInput>;
+	/**
+	 * Rich text written as given: one `a:r` per segment, each with its own
+	 * style on top of {@link style} (font, size in px, strike, link or slide
+	 * jump); a `\n` in a segment's text starts a new paragraph. An empty list
+	 * is no runs. Giving both `text` and `runs` whose text differs throws a
+	 * `RangeError`.
+	 */
+	runs?: TextSegmentInput[];
 	/**
 	 * The cell's own fill, written in `a:tcPr` over the table style's. Solid
 	 * (no opacity below 1), gradient (no `tile`, `scaled: false` or
@@ -444,9 +495,11 @@ export interface TableOptions extends Partial<ElementPosition> {}
 // Chart input
 // ---------------------------------------------------------------------------
 
-export interface ChartSeriesInput {
+export interface ChartSeriesInput extends ChartSeriesContentInput {
 	name: string;
-	values: number[];
+	/** One value per category; `null` is a blank point, drawn as `ChartInput.dispBlanksAs` says. */
+	values: (number | null)[];
+	/** Series colour, a hex colour (`#RRGGBB` or `RRGGBB`). */
 	color?: string;
 	/**
 	 * Gradient fill for the whole series, written as `c:ser/c:spPr/a:gradFill`.
@@ -462,7 +515,7 @@ export interface ChartSeriesInput {
 	treemapOptions?: PptxChartTreemapOptions;
 }
 
-export interface ChartInput {
+export interface ChartInput extends ChartContentInput {
 	series: ChartSeriesInput[];
 	categories: string[];
 	/** ChartEx hierarchy levels in leaf-to-root XML order. */
@@ -475,7 +528,11 @@ export interface ChartInput {
 	barDirection?: 'col' | 'bar';
 	/** Bar cluster gap, % of bar width (`c:gapWidth`, 0..500; default 150). Bar, bar3D, ofPie. */
 	gapWidth?: number;
-	/** Bar overlap within a cluster, % (`c:overlap`, -100..100). 2-D bar only. */
+	/**
+	 * Bar overlap within a cluster, % (`c:overlap`, -100..100). 2-D bar only. When omitted,
+	 * stacked and 100% stacked bars overlap fully (100, as PowerPoint draws them) and other bars
+	 * write none.
+	 */
 	overlap?: number;
 	/** First slice angle in degrees (`c:firstSliceAng`, 0..360). Pie, doughnut. */
 	firstSliceAngle?: number;
@@ -487,6 +544,15 @@ export interface ChartInput {
 	plotArea?: ChartAreaFormatInput;
 	/** Axis edits by axis type, as `setChartAxis` takes them (e.g. `{ valAx: { visible: false } }`). */
 	axes?: Partial<Record<PptxChartAxisType, ChartAxisEdit>>;
+	/**
+	 * Writes the chart's data to an embedded workbook (`ppt/embeddings/*.xlsx`)
+	 * that the chart reads through cell references, so PowerPoint's Edit Data
+	 * opens it; blank (`null`) values are empty cells. Classic charts only: an
+	 * extended chart type throws here, and a chart the shared chart core cannot
+	 * write with references fails the save with the reason. Default: literal
+	 * data, no workbook.
+	 */
+	embedWorkbook?: boolean;
 }
 
 export interface ChartOptions extends Partial<ElementPosition> {}

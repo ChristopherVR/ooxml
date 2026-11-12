@@ -1,9 +1,11 @@
 // The `minimal` profile of a new chart part (`new-chart.ts`): the group and axes of the picked type
 // with only what the schema requires (ECMA-376 Part 1, 21.2.2: CT_BarChart's `c:barDir`,
 // CT_LineChart's `c:grouping`, CT_ScatterChart's `c:scatterStyle`, CT_RadarChart's `c:radarStyle`,
-// CT_OfPieChart's `c:ofPieType`, every axis's id, scaling, position and crossing axis), plus
-// `c:varyColors` and `c:delete`, whose absence Office reads differently from a written default.
-// Nothing Office adds on its own (gap widths, overlaps, markers, gridlines, tick marks, a 3-D view,
+// CT_OfPieChart's `c:ofPieType`, every axis's id, scaling, position and crossing axis), plus what
+// Office reads differently when it is absent: `c:varyColors`, `c:delete`, a 2-D line, stock or scatter
+// series' `c:smooth` (PowerPoint smooths a series without one) and a stacked bar group's full `c:overlap`
+// (PowerPoint staggers stacked bars without one).
+// Nothing else Office adds on its own (gap widths, markers, gridlines, tick marks, a 3-D view,
 // the title's paragraph and run properties) is written: a host states its own defaults through the
 // group settings and the edit operations.
 import type { ChartAxis, ChartAxisKind, ChartPlotGroup } from '../model';
@@ -39,6 +41,11 @@ export function minimalChartGroup(
 	if (target.kind === 'bar') group.barDirection = target.barDirection ?? 'col';
 	if (allowed.includes('grouping')) group.grouping = schemaGrouping(element, target.grouping);
 	if (allowed.includes('varyColors')) group.varyColors = VARIED.has(target.kind);
+	if (element === 'barChart' && group.grouping !== 'clustered' && group.grouping !== 'standard')
+		group.overlap = 100;
+	// The scatter style is `lineMarker`, a straight line.
+	if ((target.kind === 'line' && !is3D) || target.kind === 'stock' || target.kind === 'scatter')
+		for (const item of own) item.smooth = false;
 	if (target.kind === 'ofPie') group.ofPieType = 'pie';
 	if (target.kind === 'scatter') group.scatterStyle = 'lineMarker';
 	if (target.kind === 'radar') group.radarStyle = 'marker';

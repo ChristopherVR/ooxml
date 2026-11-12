@@ -1,5 +1,5 @@
-import type { ChartMarker, ChartSpaceSeries } from '../../../chart/index';
-import type { PptxChartDataPoint, PptxChartMarker, XmlObject } from '../types';
+import type { ChartMarker, ChartShapeProperties, ChartSpaceSeries } from '../../../chart/index';
+import type { PptxChartDataPoint, PptxChartMarker, PptxChartShapeProps, XmlObject } from '../types';
 import { markerFromNeutral } from './chart-from-neutral-labels';
 import { chartGradientFromNeutral, chartShapeFromNeutral } from './chart-from-neutral-paint';
 import {
@@ -20,6 +20,17 @@ export function neutralChartMarker(
 	return result;
 }
 
+/**
+ * A point's `a:noFill` as `fillColor: 'none'`, which `setChartDataPointFill` and `pointColors`
+ * write, so the reloaded point keeps it (series and other shapes keep their own reading).
+ */
+function withNoFill(
+	shape: PptxChartShapeProps | undefined,
+	source: ChartShapeProperties | undefined,
+): PptxChartShapeProps | undefined {
+	return source?.fill?.kind === 'none' ? { ...shape, fillColor: 'none' } : shape;
+}
+
 /** Only picture host references and extension identities need the retained compatibility tree. */
 export function neutralChartPoints(
 	series: Pick<ChartSpaceSeries, 'dataPoints'>,
@@ -35,7 +46,7 @@ export function neutralChartPoints(
 		);
 		const node = at >= 0 ? nodes.splice(at, 1)[0] : undefined;
 		const result: PptxChartDataPoint = { idx };
-		const shape = chartShapeFromNeutral(point.spPr, reader);
+		const shape = withNoFill(chartShapeFromNeutral(point.spPr, reader), point.spPr);
 		if (shape) result.spPr = shape;
 		const gradient = chartGradientFromNeutral(point.spPr?.fill, reader);
 		if (gradient) result.gradientFill = gradient;
@@ -54,7 +65,11 @@ export function neutralChartPoints(
 			result.explosion = point.explosion;
 		if (point.invertIfNegative !== undefined) result.invertIfNegative = point.invertIfNegative;
 		const marker = neutralChartMarker(point.marker, reader);
-		if (marker) result.marker = marker;
+		if (marker) {
+			const markerShape = withNoFill(marker.spPr, point.marker?.spPr);
+			if (markerShape) marker.spPr = markerShape;
+			result.marker = marker;
+		}
 		if (point.bubble3D !== undefined) result.bubble3D = point.bubble3D;
 		const uniqueId = node ? parseChartUniqueId(node, reader.localName) : undefined;
 		if (uniqueId !== undefined) result.uniqueId = uniqueId;

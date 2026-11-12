@@ -98,7 +98,7 @@ describe('chart layout: new charts', () => {
 		const saved = await createDeck('bar', reportLike);
 		const xml = await readPart(saved);
 		expect(xml).toMatch(
-			/<c:chartSpace[^>]*><c:roundedCorners val="0"><\/c:roundedCorners><c:chart>/u,
+			/<c:chartSpace[^>]*><c:date1904 val="0"><\/c:date1904><c:roundedCorners val="0"><\/c:roundedCorners><c:chart>/u,
 		);
 		expect(xml).toMatch(
 			/<c:gapWidth val="35"><\/c:gapWidth><c:overlap val="10"><\/c:overlap><c:axId /u,

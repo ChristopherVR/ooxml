@@ -1,9 +1,9 @@
 # Colaboración {#collaboration}
 
-Archivo > Compartir inicia una sesión en vivo entre ventanas de un mismo navegador. Una aplicación anfitriona puede compartir también entre dispositivos mediante la propiedad `collaboration`, que admite las mismas opciones que cualquier otro editor de Office.
+El botón Compartir (o Archivo > Compartir > Compartir con otras personas) abre el cuadro de diálogo Compartir que usan todos los editores de Office: inicie una sesión (nombre de sesión, su nombre y un servidor opcional) o únase a una con un vínculo de invitación o un nombre de sesión; después copie el vínculo de invitación, vea quién está en la sesión y deje de compartir. Sin un servidor la sesión se ejecuta entre ventanas de un mismo navegador; con una URL de servidor (escrita en el cuadro de diálogo o definida por el anfitrión) se ejecuta entre dispositivos. Un anfitrión también puede definir la propiedad `collaboration`, que admite las mismas opciones que cualquier otro editor de Office, o cancelar el `file-command` `share` para compartir a su manera.
 
 ::: warning Parcial
-En esta compilación no hay ningún servicio alojado. Con Archivo > Compartir nada sale de su navegador. Entre dispositivos usted aporta su propio servidor (una URL compatible con y-websocket), proveedor o sesión de Yjs; las páginas y las formas se combinan elemento a elemento y todo lo demás se comparte entero (véase más abajo).
+En esta compilación no hay ningún servicio alojado. Sin un servidor nada sale de su navegador. Entre dispositivos usted aporta su propio servidor (una URL compatible con y-websocket), proveedor o sesión de Yjs; las páginas y las formas se combinan elemento a elemento y todo lo demás se comparte entero (véase más abajo).
 :::
 
 ## Integración: la propiedad `collaboration` {#embedding-the-collaboration-property}
@@ -27,7 +27,7 @@ viewer.stopCollaboration(); // or: viewer.collaboration = null
 - **Declarativo**: mientras `collaboration` esté definida se comparte el dibujo abierto, y también uno cargado después. Con `null` se abandona la sala. Una sesión que el visor abrió por sí mismo se destruye al salir; una `session` del anfitrión no.
 - **Intención (`intent`)**: con `join`, una sala vacía no se rellena con el dibujo local, de modo que quien se une tarde no pueda sobrescribir una sala que aún no ha cargado. Un dibujo cargado o editado después sí se publica. El valor predeterminado es `create`.
 - **Roles**: `role: 'viewer'` deja el visor en solo lectura mientras está en la sala (`canEdit` se restablece al salir). El rol es solo orientativo; un servidor debe hacerlo cumplir.
-- **Eventos**: `collaboration-change` entrega un `CollaborationState` cuando el uso compartido empieza o termina y cuando cambian el estado de la conexión, la primera sincronización o las personas. Una unión fallida se notifica como `document-error`. Archivo > Compartir usa el mismo controlador, así que también emite el evento.
+- **Eventos**: `collaboration-change` entrega un `CollaborationState` cuando el uso compartido empieza o termina y cuando cambian el estado de la conexión, la primera sincronización o las personas. Una unión fallida se notifica como `document-error`. El cuadro de diálogo Compartir usa el mismo controlador, así que iniciar desde él también notifica el estado y emite el evento.
 - **Bindings**: todos los bindings reenvían una propiedad `collaboration` (React, Vue, Solid, Svelte, `mountViewer`/`update` de vanilla, `[collaboration]` de Angular) y retransmiten `collaboration-change` (`events['collaboration-change']`, `@collaboration-change` en Vue, `(collaborationChange)` en Angular). Al desmontar se abandona la sala.
 - **Tipos**: `VisioCollaborationOptions` (las opciones compartidas más `onWriteBack`, `writeBackDebounceMs` y `writeBackRetry`) y `VisioCollaborationState` se exportan desde `ooxml-ui/visio`.
 
@@ -109,11 +109,11 @@ Una sesión de uso compartido es solo un nombre. Los dos paneles de abajo son á
 
 ### Combine dos frameworks cualesquiera {#pair-any-two-frameworks}
 
-Todas las áreas de pruebas aceptan `?share=<session>`, que rellena Archivo > Compartir y lo inicia. Solo importa el nombre de la sesión, así que sirve cualquier combinación: la [demostración en vivo](/es/#live-demo) de la página de inicio tiene un selector de framework para cada ventana, y en dos pestañas puede abrir, por ejemplo, `/demo-vue/?sample=1&share=my-room` y `/demo-angular/?share=my-room`. También puede hacerlo a mano en dos ventanas cualesquiera: Archivo, luego Compartir, y el mismo nombre de sesión.
+Todas las áreas de pruebas aceptan `?share=<session>`, que se une a esa sesión al cargar. Solo importa el nombre de la sesión, así que sirve cualquier combinación: la [demostración en vivo](/es/#live-demo) de la página de inicio tiene un selector de framework para cada ventana, y en dos pestañas puede abrir, por ejemplo, `/demo-vue/?sample=1&share=my-room` y `/demo-angular/?share=my-room`. También puede hacerlo a mano en dos ventanas cualesquiera: Compartir en una y, en la otra, Unirse a una sesión con su vínculo de invitación o su nombre de sesión.
 
-### Por qué Archivo > Compartir solo funciona en el mismo navegador {#why-it-is-same-browser-only}
+### Por qué compartir sin servidor solo funciona en el mismo navegador {#why-sharing-without-a-server-is-same-browser-only}
 
-El panel usa un `BroadcastChannel`, que conecta ventanas, pestañas y marcos de un perfil de navegador en un origen, con independencia del framework, y nada más. Dos equipos distintos no pueden encontrarse así; para ello un anfitrión define `collaboration` con `serverUrl`, `provider` o `session`, y esta compilación no incluye ningún servidor.
+Sin un servidor la sesión usa un `BroadcastChannel`, que conecta ventanas, pestañas y marcos de un perfil de navegador en un origen, con independencia del framework, y nada más. Dos equipos distintos no pueden encontrarse así; para ello escriba una URL de servidor en el cuadro de diálogo Compartir o deje que el anfitrión defina `collaboration` con `serverUrl`, `provider` o `session`; esta compilación no incluye ningún servidor.
 
 ## Qué se admite y qué no {#what-is-and-is-not-supported}
 

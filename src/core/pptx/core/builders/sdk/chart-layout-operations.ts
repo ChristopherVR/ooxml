@@ -11,7 +11,11 @@
 
 import type { ChartPptxElement } from '../../types/elements';
 import type { ChartAreaFormatInput, ChartGroupOptionsInput } from './chart-layout-input';
-import { applyChartAreaFormatInput, applyChartGroupOptionsInput } from './chart-layout-input';
+import {
+	applyChartAreaFormatInput,
+	applyChartGroupOptionsInput,
+	documentedChartGroupOptionDefaults,
+} from './chart-layout-input';
 import { ensureChartData, setChartAxis } from './chart-operations';
 import type { ChartInput } from './types';
 
@@ -65,9 +69,13 @@ export function setChartAreaFormat(
 /**
  * Apply the layout fields of a {@link ChartInput} (group options, area
  * formats, axis edits) to a chart element `createChartElement` just built.
+ * An omitted gap width or hole size takes the default `ChartInput` documents
+ * (150 and 50) on the types that have one.
  */
 export function applyChartInputLayout(element: ChartPptxElement, input: ChartInput): void {
+	ensureChartData(element);
 	setChartGroupOptions(element, {
+		...documentedChartGroupOptionDefaults(element.chartData),
 		...(input.gapWidth !== undefined ? { gapWidth: input.gapWidth } : {}),
 		...(input.overlap !== undefined ? { overlap: input.overlap } : {}),
 		...(input.firstSliceAngle !== undefined ? { firstSliceAngle: input.firstSliceAngle } : {}),

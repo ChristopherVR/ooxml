@@ -11,6 +11,7 @@
 import type { ChartAxis, ChartFormatTarget, ChartSpace, ChartSpaceSeries } from 'ooxml-core/chart';
 import {
 	chartGroupPaintsLine,
+	chartLabelPositions,
 	chartSeriesEntries,
 	chartTargetShape,
 	resolveChartGradient,
@@ -258,6 +259,14 @@ export function chartSpaceFormatSource(
 		set('showPercent', pick('showPercent'));
 		set('showLegendKey', pick('showLegendKey'));
 		set('position', pick('position'));
+		// One series' labels take what its group accepts; the chart's what every labelled group does.
+		const edited = entry
+			? [entry.group]
+			: space.plotArea.groups.filter((item) => item.kind !== 'surface');
+		if (edited.length > 0)
+			view.positions = edited
+				.map((item) => chartLabelPositions(item.element, item.grouping))
+				.reduce((all, own) => all.filter((value) => own.includes(value)));
 		return view;
 	};
 	return {

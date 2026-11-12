@@ -75,7 +75,7 @@ editor.customization = {
 | `startCollaboration(options)` | `Promise<void>`       | Rejoint une salle ; rejette si le partage est déjà actif ou si aucun classeur n’est ouvert.                                            |
 | `stopCollaboration()`         | `void`                | Quitte la salle et efface `collaboration` ; le classeur reste tel quel.                                                                |
 | `reconnectCollaboration()`    | `void`                | Relance la connexion en conservant les modifications faites hors ligne.                                                                |
-| `share()`                     | `void`                | Ouvre Fichier > Partager.                                                                                                              |
+| `share()`                     | `void`                | Ouvre la boîte de dialogue Partager.                                                                                                   |
 | `focusGrid()`                 | `void`                | Place le focus clavier sur la grille pour que la saisie modifie la cellule active.                                                     |
 
 ## Événements
@@ -107,6 +107,73 @@ editor.addEventListener('file-command', (event) => {
 			.then(() => editor.markClean());
 	}
 });
+```
+
+## Stockage de l'hôte {#host-owned-storage}
+
+`storage` (une propriété de l'élément et une prop de chaque binding) accepte un `DocumentStorage` de
+`ooxml-core/embedding`. Lorsqu'elle est définie :
+
+- Fichier > Enregistrer, Enregistrer sous et Ctrl+S transmettent le classeur enregistré à
+  `storage.save(bytes, meta)` au lieu de le télécharger. `meta` vaut `{ fileName, mimeType, reason }`,
+  avec `reason` égal à `'save'` ou `'saveAs'` ; les sources `.xls` et `.csv` sont enregistrées en
+  `.xlsx`, comme pour un téléchargement. Une fois la promesse résolue, le classeur est marqué comme non
+  modifié ; si elle est résolue avec `{ fileName }`, la barre de titre prend ce nom. Un rejet est
+  signalé par `workbook-error` et le classeur reste modifié.
+- Fichier > Ouvrir appelle `storage.open()` lorsque le stockage en dispose et ouvre le
+  `{ bytes, fileName }` avec lequel elle est résolue (`undefined` signifie que l'utilisateur a annulé).
+  Sans `open`, le sélecteur de fichiers est utilisé.
+- Un seul enregistrement s'exécute à la fois : Enregistrer pendant un enregistrement en cours est
+  ignoré, pas mis en file d'attente. Une modification faite pendant l'enregistrement de l'hôte laisse
+  le classeur modifié, puisque les octets enregistrés ne la contiennent pas.
+- `file-command` est toujours déclenché en premier ; un hôte qui appelle `preventDefault()` gère la
+  commande lui-même et `storage` n'est pas appelé.
+
+Exporter, Enregistrer au format CSV et Imprimer continuent de télécharger ou d'imprimer dans le
+navigateur. Excel n'a pas de récupération automatique, donc les méthodes de récupération de
+`DocumentStorage` ne sont pas utilisées.
+
+```ts
+editor.storage = {
+	save: (bytes, { fileName }) => myDrive.put(fileName, bytes),
+	open: () => myDrive.pick(), // resolves { bytes, fileName } or undefined
+};
+```
+
+## Emplacements cloud dans Fichier > Ouvrir {#cloud-places-in-file-open}
+
+`fileProviders` (une propriété de l'élément et une prop de chaque binding) accepte un tableau de
+`CloudFileProvider` (`ooxml-core/embedding`), par exemple `createOneDriveFileProvider` de
+`ooxml-core/embedding/onedrive`. Vide ou omis, Fichier > Ouvrir reste inchangé. Avec des fournisseurs,
+Fichier > Ouvrir liste "Cet appareil" (Parcourir) et un emplacement par fournisseur, qui affiche le
+navigateur partagé `<office-ui-cloud-files>` limité aux fichiers `.xlsx`. Ses textes suivent la
+`locale` de l'éditeur.
+
+- L'ouverture d'un fichier demande s'il faut abandonner les modifications non enregistrées, comme
+  Ouvrir, puis charge les octets par le chemin de chargement normal, reprend le nom du fichier et ferme
+  la vue Fichier.
+- Le classeur s'enregistre ensuite via le `storage` propre au fichier, et non le `storage` de l'hôte :
+  Enregistrer et Ctrl+S écrivent dans le même élément, Enregistrer sous écrit une copie, et le classeur
+  n'est marqué comme non modifié qu'une fois la promesse du fournisseur résolue. Un enregistrement
+  rejeté est signalé par `workbook-error` et le classeur reste modifié. Ouvrir, créer ou charger un
+  autre classeur rend Enregistrer au `storage` de l'hôte.
+- Un fichier que le fournisseur indique comme `canEdit: false` s'ouvre en lecture seule (`readOnly`
+  vaut true, un événement `readonly-change` est déclenché). Le plus strict entre le `readOnly` de
+  l'hôte et celui du fichier l'emporte, et la valeur propre de l'hôte n'est pas modifiée.
+
+```ts
+import { createOneDriveFileProvider } from 'ooxml-core/embedding/onedrive';
+import { mergeWorkbookSnapshots } from 'ooxml-core/xlsx/collab';
+
+editor.fileProviders = [
+	createOneDriveFileProvider({
+		getAccessToken,
+		signIn,
+		mergers: {
+			xlsx: ({ base, local, remote }) => mergeWorkbookSnapshots(base.bytes, local, remote.bytes),
+		},
+	}),
+];
 ```
 
 ## Parties shadow

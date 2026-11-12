@@ -64,20 +64,66 @@ editor.customization = {
 
 Todos los eventos burbujean y son compuestos, por lo que atraviesan el límite del shadow DOM.
 
-| Evento                 | Detalle                  | Significado                                                                                    |
-| ---------------------- | ------------------------ | ---------------------------------------------------------------------------------------------- |
-| `document-change`      | `DocumentModel`          | El documento cambió mediante acciones de edición o de revisión.                                |
-| `document-error`       | `Error`                  | Falló la carga, el guardado, la impresión o una edición.                                       |
-| `document-warning`     | `string`                 | Aviso no fatal.                                                                                |
-| `readonly-change`      | `boolean`                | El usuario alternó Edición/Visualización en la interfaz.                                       |
-| `file-command`         | `{ command }`            | Cancelable. `command` es `new`, `open`, `save`, `export`, `print` o `share`.                   |
-| `dirty-change`         | `boolean`                | Cambió el estado de cambios sin guardar.                                                       |
-| `page-change`          | `{ page, pageCount }`    | Cambió la página o el número de páginas en Diseño de impresión (paginación aproximada).        |
-| `ribbon-action`        | `RibbonAction`           | Se activó un control de la cinta.                                                              |
-| `ribbon-customize`     | `readonly string[]`      | El usuario cambió los comandos visibles de la cinta; persista los identificadores si lo desea. |
-| `office-ribbon-add-in` | `{ tab, command }`       | Se eligió un comando de una pestaña del host (`ribbonAddIns`).                                 |
-| `presence-send`        | `PresenceMessage`        | Cambió la presencia local; transpórtela a los demás clientes.                                  |
-| `collaboration-send`   | `StepBatch`              | Hay pasos locales pendientes; transpórtelos a la autoridad.                                    |
-| `collaboration-change` | `DocxCollaborationState` | Cambió el estado de la colaboración: `{ active, roomId, status, synced, people }`.             |
+| Evento                 | Detalle                              | Significado                                                                                          |
+| ---------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `document-change`      | `DocumentModel`                      | El documento cambió mediante acciones de edición o de revisión.                                      |
+| `document-error`       | `Error`                              | Falló la carga, el guardado, la impresión o una edición.                                             |
+| `document-warning`     | `string`                             | Aviso no fatal.                                                                                      |
+| `readonly-change`      | `{ readOnly, locked, hostReadOnly }` | El usuario alternó Edición/Visualización en la interfaz.                                             |
+| `file-command`         | `{ command, fileName? }`             | Cancelable. `command` es `new`, `open`, `save`, `saveAs`, `export`, `exportText`, `print` o `share`. |
+| `dirty-change`         | `boolean`                            | Cambió el estado de cambios sin guardar.                                                             |
+| `page-change`          | `{ page, pageCount }`                | Cambió la página o el número de páginas en Diseño de impresión (paginación aproximada).              |
+| `ribbon-action`        | `RibbonAction`                       | Se activó un control de la cinta.                                                                    |
+| `ribbon-customize`     | `readonly string[]`                  | El usuario cambió los comandos visibles de la cinta; persista los identificadores si lo desea.       |
+| `office-ribbon-add-in` | `{ tab, command }`                   | Se eligió un comando de una pestaña del host (`ribbonAddIns`).                                       |
+| `presence-send`        | `PresenceMessage`                    | Cambió la presencia local; transpórtela a los demás clientes.                                        |
+| `collaboration-send`   | `StepBatch`                          | Hay pasos locales pendientes; transpórtelos a la autoridad.                                          |
+| `collaboration-change` | `DocxCollaborationState`             | Cambió el estado de la colaboración: `{ active, roomId, status, synced, people }`.                   |
 
 El paquete exporta el mapa de eventos tipado (`DocxEditorEventMap`) y la lista en tiempo de ejecución `DOCX_EDITOR_EVENTS`.
+
+Los adaptadores de framework reenvían las props `fileName`, `reviewAuthor` y `themeColors`, y los eventos `file-command`, `document-warning`, `readonly-change`, `ribbon-action` y `ribbon-customize`, con los nombres de su framework (por ejemplo `onFileCommand`, `fileCommand` y `onfilecommand`). La tabla está en [adaptadores de framework](/bindings#binding-props-and-events).
+
+## Ubicaciones en la nube en Archivo > Abrir
+
+`fileProviders` (una propiedad del elemento y una prop de cada adaptador) acepta
+`CloudFileProvider`s de `ooxml-core/embedding`, por ejemplo `createOneDriveFileProvider`. Archivo >
+Abrir muestra entonces "Este dispositivo" y una ubicación por proveedor. Un archivo abierto desde
+una ubicación se guarda mediante su propio almacenamiento y es de solo lectura cuando el proveedor
+indica que no se puede editar; consulte [integración con OneDrive](/onedrive#open-from-onedrive-in-file-open).
+
+## Almacenamiento del host
+
+`storage` (una propiedad del elemento y una prop de cada adaptador) acepta un `DocumentStorage` de
+`ooxml-core/embedding`. Cuando está definido:
+
+- Archivo > Guardar, Guardar como y Ctrl+S entregan los bytes guardados a
+  `storage.save(bytes, meta)` en lugar de descargarlos. `meta` es `{ fileName, mimeType, reason }`,
+  con `reason` igual a `'save'` o `'saveAs'`. Cuando se resuelve, el documento se marca como
+  guardado; si se resuelve con `{ fileName }`, la barra de título adopta ese nombre. Un rechazo se
+  notifica como `document-error` y el documento sigue con cambios sin guardar.
+- Archivo > Abrir llama a `storage.open()` cuando el almacenamiento lo ofrece y abre el
+  `{ bytes, fileName }` con el que se resuelve (`undefined` significa que el usuario canceló). Sin
+  `open` se usa el selector de archivos.
+- Solo se ejecuta un guardado a la vez: Guardar mientras hay un guardado pendiente se ignora, no se
+  pone en cola. Una edición hecha mientras se ejecuta el guardado del host mantiene el documento
+  con cambios sin guardar, ya que los bytes guardados no la contienen.
+- `file-command` sigue emitiéndose primero. Un host que llama a `preventDefault()` gestiona el
+  comando por sí mismo y no se llama a `storage`. Guardar como anuncia `saveAs` y después `save`.
+- Un host que eliminó Guardar (`customization.capabilities.save: false`) no recibe ni el evento
+  `save` ni `storage.save`; Guardar como (la capacidad `export`) entonces solo descarga.
+
+Exportar, Exportar como texto e Imprimir siguen usando el navegador. Word no tiene
+Autorrecuperación, así que los métodos de recuperación de `DocumentStorage` no se usan.
+
+```ts
+editor.storage = {
+	async save(bytes, { fileName, mimeType }) {
+		await fetch(`/files/${encodeURIComponent(fileName)}`, {
+			method: 'PUT',
+			headers: { 'content-type': mimeType },
+			body: bytes,
+		});
+	},
+};
+```

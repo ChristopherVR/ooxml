@@ -64,20 +64,69 @@ editor.customization = {
 
 Alle Ereignisse sind bubbling und composed und überschreiten daher die Shadow-Grenze.
 
-| Ereignis               | Detail                   | Bedeutung                                                                                    |
-| ---------------------- | ------------------------ | -------------------------------------------------------------------------------------------- |
-| `document-change`      | `DocumentModel`          | Das Dokument wurde durch Bearbeiten oder Überarbeitungsaktionen geändert.                    |
-| `document-error`       | `Error`                  | Laden, Speichern, Drucken oder eine Bearbeitung ist fehlgeschlagen.                          |
-| `document-warning`     | `string`                 | Nicht schwerwiegender Hinweis.                                                               |
-| `readonly-change`      | `boolean`                | Der Benutzer hat in der Oberfläche zwischen Bearbeiten und Anzeigen umgeschaltet.            |
-| `file-command`         | `{ command }`            | Abbrechbar. `command` ist `new`, `open`, `save`, `export`, `print` oder `share`.             |
-| `dirty-change`         | `boolean`                | Der Zustand „ungespeicherte Änderungen“ hat sich umgekehrt.                                  |
-| `page-change`          | `{ page, pageCount }`    | Seite oder Seitenanzahl im Drucklayout hat sich geändert (näherungsweise Paginierung).       |
-| `ribbon-action`        | `RibbonAction`           | Ein Menübandsteuerelement wurde aktiviert.                                                   |
-| `ribbon-customize`     | `readonly string[]`      | Der Benutzer hat die angezeigten Menübandbefehle geändert; speichern Sie die IDs bei Bedarf. |
-| `office-ribbon-add-in` | `{ tab, command }`       | Ein Befehl eines Host-Registers (`ribbonAddIns`) wurde gewählt.                              |
-| `presence-send`        | `PresenceMessage`        | Die lokale Präsenz hat sich geändert; übertragen Sie sie an andere Clients.                  |
-| `collaboration-send`   | `StepBatch`              | Lokale Schritte stehen aus; übertragen Sie sie an die Autorität.                             |
-| `collaboration-change` | `DocxCollaborationState` | Der Zusammenarbeitsstatus hat sich geändert: `{ active, roomId, status, synced, people }`.   |
+| Ereignis               | Detail                               | Bedeutung                                                                                                |
+| ---------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| `document-change`      | `DocumentModel`                      | Das Dokument wurde durch Bearbeiten oder Überarbeitungsaktionen geändert.                                |
+| `document-error`       | `Error`                              | Laden, Speichern, Drucken oder eine Bearbeitung ist fehlgeschlagen.                                      |
+| `document-warning`     | `string`                             | Nicht schwerwiegender Hinweis.                                                                           |
+| `readonly-change`      | `{ readOnly, locked, hostReadOnly }` | Der Benutzer hat in der Oberfläche zwischen Bearbeiten und Anzeigen umgeschaltet.                        |
+| `file-command`         | `{ command, fileName? }`             | Abbrechbar. `command` ist `new`, `open`, `save`, `saveAs`, `export`, `exportText`, `print` oder `share`. |
+| `dirty-change`         | `boolean`                            | Der Zustand „ungespeicherte Änderungen“ hat sich umgekehrt.                                              |
+| `page-change`          | `{ page, pageCount }`                | Seite oder Seitenanzahl im Drucklayout hat sich geändert (näherungsweise Paginierung).                   |
+| `ribbon-action`        | `RibbonAction`                       | Ein Menübandsteuerelement wurde aktiviert.                                                               |
+| `ribbon-customize`     | `readonly string[]`                  | Der Benutzer hat die angezeigten Menübandbefehle geändert; speichern Sie die IDs bei Bedarf.             |
+| `office-ribbon-add-in` | `{ tab, command }`                   | Ein Befehl eines Host-Registers (`ribbonAddIns`) wurde gewählt.                                          |
+| `presence-send`        | `PresenceMessage`                    | Die lokale Präsenz hat sich geändert; übertragen Sie sie an andere Clients.                              |
+| `collaboration-send`   | `StepBatch`                          | Lokale Schritte stehen aus; übertragen Sie sie an die Autorität.                                         |
+| `collaboration-change` | `DocxCollaborationState`             | Der Zusammenarbeitsstatus hat sich geändert: `{ active, roomId, status, synced, people }`.               |
 
 Das Paket exportiert die typisierte Ereigniszuordnung (`DocxEditorEventMap`) und die Laufzeitliste `DOCX_EDITOR_EVENTS`.
+
+Die Framework-Bindings leiten die Props `fileName`, `reviewAuthor` und `themeColors` sowie die Ereignisse `file-command`, `document-warning`, `readonly-change`, `ribbon-action` und `ribbon-customize` unter den Namen ihres Frameworks weiter (zum Beispiel `onFileCommand`, `fileCommand` und `onfilecommand`). Die Tabelle steht unter [Framework-Bindings](/bindings#binding-props-and-events).
+
+## Cloud-Orte in Datei > Öffnen
+
+`fileProviders` (eine Eigenschaft des Elements und eine Prop jedes Bindings) nimmt
+`CloudFileProvider`s aus `ooxml-core/embedding` entgegen, zum Beispiel `createOneDriveFileProvider`.
+Datei > Öffnen listet dann „Dieses Gerät“ und einen Ort pro Provider auf. Eine von einem Ort
+geöffnete Datei wird über dessen eigenen Speicher gespeichert und ist schreibgeschützt, wenn der
+Provider meldet, dass sie nicht bearbeitet werden kann; siehe
+[OneDrive-Integration](/onedrive#open-from-onedrive-in-file-open).
+
+## Speicher des Hosts
+
+`storage` (eine Eigenschaft des Elements und eine Prop jedes Bindings) nimmt einen `DocumentStorage`
+aus `ooxml-core/embedding` entgegen. Ist er gesetzt:
+
+- Datei > Speichern, Speichern unter und Strg+S übergeben die gespeicherten Bytes an
+  `storage.save(bytes, meta)`, statt sie herunterzuladen. `meta` ist `{ fileName, mimeType, reason }`,
+  mit `reason` `'save'` oder `'saveAs'`. Sobald das Promise erfüllt ist, gilt das Dokument als
+  gespeichert; wird es mit `{ fileName }` erfüllt, übernimmt die Titelleiste diesen Namen. Eine
+  Ablehnung wird als `document-error` gemeldet, und das Dokument bleibt geändert (dirty).
+- Datei > Öffnen ruft `storage.open()` auf, wenn der Speicher diese Methode hat, und öffnet das
+  zurückgegebene `{ bytes, fileName }` (`undefined` bedeutet, dass der Benutzer abgebrochen hat). Ohne
+  `open` wird die Dateiauswahl verwendet.
+- Es läuft immer nur ein Speichervorgang: Speichern während eines laufenden Speicherns wird
+  ignoriert, nicht eingereiht. Eine Änderung während des Speicherns durch den Host lässt das Dokument
+  geändert, da die gespeicherten Bytes sie nicht enthalten.
+- `file-command` wird weiterhin zuerst ausgelöst. Ein Host, der `preventDefault()` aufruft,
+  behandelt den Befehl selbst, und `storage` wird nicht aufgerufen. Speichern unter meldet `saveAs`
+  und dann `save`.
+- Ein Host, der Speichern entfernt hat (`customization.capabilities.save: false`), erhält weder das
+  Ereignis `save` noch `storage.save`; Speichern unter (die Capability `export`) lädt dann nur herunter.
+
+Exportieren, Als Text exportieren und Drucken verwenden weiterhin den Browser. Word hat keine
+AutoWiederherstellung, daher werden die Wiederherstellungsmethoden von `DocumentStorage` nicht
+verwendet.
+
+```ts
+editor.storage = {
+	async save(bytes, { fileName, mimeType }) {
+		await fetch(`/files/${encodeURIComponent(fileName)}`, {
+			method: 'PUT',
+			headers: { 'content-type': mimeType },
+			body: bytes,
+		});
+	},
+};
+```

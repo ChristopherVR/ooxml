@@ -3,15 +3,14 @@
  * #398: the inspector reset and clear actions share one gating contract
  * (`inspector-reset-actions` in pptx-viewer-shared) across all five bindings.
  *
- * @vitest-own-worker: it finds buttons by raw i18n key, which only render while the (global)
- * react-i18next instance is uninitialized, and a shared worker may have initialized it.
+ * Rendered under a marking translator, so each button is found by the key it translates.
  */
 import type { MediaPptxElement, PptxChartData, PptxSlide } from 'pptx-viewer-core';
 import React, { act } from 'react';
-import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { createMarkedRoot, marked } from '../../i18n/marking-translator.test-support';
 import { ChartSeriesColorOptions } from './ChartSeriesColorOptions';
 import { ImageCropSection } from './ImageCropSection';
 import { ImagePropertiesPanel } from './ImagePropertiesPanel';
@@ -24,14 +23,15 @@ let root: Root;
 beforeEach(() => {
 	container = document.createElement('div');
 	document.body.appendChild(container);
-	root = createRoot(container);
+	root = createMarkedRoot(container);
 });
 afterEach(() => {
 	act(() => root.unmount());
 	container.remove();
 });
 
-function button(name: string): HTMLButtonElement | undefined {
+function button(key: string): HTMLButtonElement | undefined {
+	const name = marked(key);
 	return [...container.querySelectorAll('button')].find(
 		(b) => b.textContent === name || b.title === name,
 	);
@@ -167,7 +167,9 @@ describe('react inspector reset and clear actions', () => {
 				/>,
 			),
 		);
-		const clears = container.querySelectorAll('button[title="pptx.chart.clearSeriesColor"]');
+		const clears = container.querySelectorAll(
+			`button[title="${marked('pptx.chart.clearSeriesColor')}"]`,
+		);
 		expect(clears).toHaveLength(1);
 		act(() => (clears[0] as HTMLButtonElement).click());
 		expect(onSetColor).toHaveBeenCalledWith(0, null);

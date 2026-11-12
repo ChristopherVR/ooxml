@@ -1,9 +1,9 @@
 # Zusammenarbeit {#collaboration}
 
-Datei > Freigeben startet eine Live-Sitzung zwischen Fenstern eines Browsers. Eine Host-Anwendung kann über die Eigenschaft `collaboration` auch geräteübergreifend teilen; sie nimmt dieselben Optionen wie jeder andere Office-Editor.
+Die Schaltfläche „Freigeben“ (oder Datei > Freigeben > Für Personen freigeben) öffnet das Dialogfeld „Freigeben“, das jeder Office-Editor verwendet: eine Sitzung starten (Sitzungsname, Ihr Name und ein optionaler Server) oder einer Sitzung über einen Einladungslink oder Sitzungsnamen beitreten, dann den Einladungslink kopieren, sehen, wer in der Sitzung ist, und die Freigabe beenden. Ohne Server läuft die Sitzung zwischen Fenstern eines Browsers; mit einer Server-URL (im Dialogfeld eingegeben oder vom Host gesetzt) läuft sie geräteübergreifend. Ein Host kann außerdem die Eigenschaft `collaboration` setzen, die dieselben Optionen wie jeder andere Office-Editor nimmt, oder den `share`-`file-command` abbrechen, um auf eigene Weise zu teilen.
 
 ::: warning Teilweise umgesetzt
-In diesem Build gibt es keinen gehosteten Dienst. Mit Datei > Freigeben verlässt nichts Ihren Browser. Für den Austausch zwischen Geräten bringen Sie Ihren eigenen Server (eine y-websocket-kompatible URL), Provider oder Yjs-Sitzung mit; Seiten und Formen werden elementweise zusammengeführt, alles andere wird als Ganzes geteilt (siehe unten).
+In diesem Build gibt es keinen gehosteten Dienst. Ohne Server verlässt nichts Ihren Browser. Für den Austausch zwischen Geräten bringen Sie Ihren eigenen Server (eine y-websocket-kompatible URL), Provider oder Yjs-Sitzung mit; Seiten und Formen werden elementweise zusammengeführt, alles andere wird als Ganzes geteilt (siehe unten).
 :::
 
 ## Einbettung: die Eigenschaft `collaboration` {#embedding-the-collaboration-property}
@@ -27,7 +27,7 @@ viewer.stopCollaboration(); // or: viewer.collaboration = null
 - **Deklarativ**: Solange `collaboration` gesetzt ist, wird die geöffnete Zeichnung geteilt, ebenso eine später geladene. Mit `null` verlässt der Viewer den Raum. Eine vom Viewer selbst geöffnete Sitzung wird beim Verlassen zerstört, eine `session` des Hosts nicht.
 - **Absicht (`intent`)**: Mit `join` wird ein leerer Raum nicht mit der lokalen Zeichnung befüllt, sodass ein später Beitretender keinen noch nicht geladenen Raum überschreiben kann. Eine danach geladene oder bearbeitete Zeichnung wird weiterhin veröffentlicht. Standard ist `create`.
 - **Rollen**: `role: 'viewer'` macht den Viewer im Raum schreibgeschützt (`canEdit` wird beim Verlassen wiederhergestellt). Die Rolle ist nur ein Hinweis; ein Server muss sie durchsetzen.
-- **Ereignisse**: `collaboration-change` liefert einen `CollaborationState`, wenn das Teilen beginnt oder endet und wenn sich Verbindungsstatus, erste Synchronisierung oder Teilnehmer ändern. Ein fehlgeschlagener Beitritt wird als `document-error` gemeldet. Datei > Freigeben nutzt denselben Controller und löst daher ebenfalls das Ereignis aus.
+- **Ereignisse**: `collaboration-change` liefert einen `CollaborationState`, wenn das Teilen beginnt oder endet und wenn sich Verbindungsstatus, erste Synchronisierung oder Teilnehmer ändern. Ein fehlgeschlagener Beitritt wird als `document-error` gemeldet. Das Dialogfeld „Freigeben“ nutzt denselben Controller, sodass ein Start von dort ebenfalls Status und Ereignis meldet.
 - **Bindings**: Jedes Binding reicht eine Eigenschaft `collaboration` durch (React, Vue, Solid, Svelte, Vanilla `mountViewer`/`update`, Angular `[collaboration]`) und leitet `collaboration-change` weiter (`events['collaboration-change']`, Vue `@collaboration-change`, Angular `(collaborationChange)`). Das Unmounten verlässt den Raum.
 - **Typen**: `VisioCollaborationOptions` (die gemeinsamen Optionen plus `onWriteBack`, `writeBackDebounceMs` und `writeBackRetry`) und `VisioCollaborationState` werden aus `ooxml-ui/visio` exportiert.
 
@@ -109,11 +109,11 @@ Eine Freigabesitzung ist nur ein Name. Beide Bereiche unten sind eigenständige 
 
 ### Zwei beliebige Frameworks koppeln {#pair-any-two-frameworks}
 
-Jedes Playground akzeptiert `?share=<session>`, das Datei > Freigeben ausfüllt und startet. Nur der Sitzungsname zählt, daher funktioniert jede Kombination: Die [Live-Demo](/de/#live-demo) auf der Startseite bietet für jedes Fenster eine Framework-Auswahl, und in zwei Tabs können Sie zum Beispiel `/demo-vue/?sample=1&share=my-room` und `/demo-angular/?share=my-room` öffnen. Sie können es auch von Hand in zwei beliebigen Fenstern tun: Datei, dann Freigeben, dann derselbe Sitzungsname.
+Jedes Playground akzeptiert `?share=<session>`, das dieser Sitzung beim Laden beitritt. Nur der Sitzungsname zählt, daher funktioniert jede Kombination: Die [Live-Demo](/de/#live-demo) auf der Startseite bietet für jedes Fenster eine Framework-Auswahl, und in zwei Tabs können Sie zum Beispiel `/demo-vue/?sample=1&share=my-room` und `/demo-angular/?share=my-room` öffnen. Sie können es auch von Hand in zwei beliebigen Fenstern tun: Freigeben im einen, dann im anderen „Einer Sitzung beitreten“ mit dem Einladungslink oder Sitzungsnamen.
 
-### Warum Datei > Freigeben nur im selben Browser funktioniert {#why-it-is-same-browser-only}
+### Warum Teilen ohne Server nur im selben Browser funktioniert {#why-sharing-without-a-server-is-same-browser-only}
 
-Das Menü nutzt einen `BroadcastChannel`. Er verbindet Fenster, Tabs und Frames eines Browserprofils auf einer Origin, unabhängig vom verwendeten Framework, und sonst nichts. Zwei verschiedene Rechner können sich so nicht treffen; dafür setzt ein Host `collaboration` mit `serverUrl`, `provider` oder `session`, und dieser Build liefert keinen Server mit.
+Ohne Server nutzt die Sitzung einen `BroadcastChannel`. Er verbindet Fenster, Tabs und Frames eines Browserprofils auf einer Origin, unabhängig vom verwendeten Framework, und sonst nichts. Zwei verschiedene Rechner können sich so nicht treffen; geben Sie dafür eine Server-URL im Dialogfeld „Freigeben“ ein oder lassen Sie den Host `collaboration` mit `serverUrl`, `provider` oder `session` setzen; dieser Build liefert keinen Server mit.
 
 ## Was unterstützt wird und was nicht {#what-is-and-is-not-supported}
 

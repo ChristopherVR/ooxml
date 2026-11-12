@@ -716,7 +716,9 @@ export interface PptxChartSeries {
 	 * normal case for measurement data). Reading the x values off the first
 	 * series and reusing them everywhere plotted every series against series 1's
 	 * x axis. Absent for category-axis chart kinds, where
-	 * {@link PptxChartData.categories} is the x axis.
+	 * {@link PptxChartData.categories} is the x axis. A NEW chart without them
+	 * plots each category read as a number, or its 1-based position when the
+	 * category is not a number.
 	 */
 	xValues?: number[];
 	/**
@@ -724,7 +726,8 @@ export interface PptxChartSeries {
 	 * aligned index-for-index with {@link values}.
 	 *
 	 * `CT_BubbleSer` carries x, y AND size, so a one-series bubble chart is fully
-	 * specified. Absent when the source omits `c:bubbleSize`.
+	 * specified. Absent when the source omits `c:bubbleSize`. A NEW bubble chart
+	 * without them draws every bubble at size 1.
 	 */
 	bubbleSizes?: number[];
 	/**
@@ -747,7 +750,9 @@ export interface PptxChartSeries {
 	/**
 	 * Series line width in points (`c:ser/c:spPr/a:ln/@w`, EMU / 12700).
 	 * `undefined` when the series authors none; the renderer then keeps its
-	 * own default width.
+	 * own default width. `0` is written as `w="0"`, the thinnest line Office
+	 * draws, and reads back as `undefined` (the loader treats a zero width as
+	 * no width of its own).
 	 */
 	lineWidth?: number;
 	/**
@@ -783,12 +788,18 @@ export interface PptxChartSeries {
 	 * Series-level `c:invertIfNegative`: when true, bar/column data points with a
 	 * negative value are drawn with an inverted (lightened) fill. A per-point
 	 * `c:dPt/c:invertIfNegative` overrides this for that point. Absent when the
-	 * source XML omits the flag.
+	 * source XML omits the flag. A NEW bar series without it is written as not
+	 * inverted: PowerPoint draws the negative bars of a series with no such
+	 * element in white.
 	 */
 	invertIfNegative?: boolean;
 	/**
 	 * Whether this line/scatter series is drawn with bezier smoothing
 	 * (`c:ser/c:smooth/@val`). Absent when the source XML omits `c:smooth`.
+	 * A NEW 2-D line or stock series without it is written as not smoothed,
+	 * and a new scatter series as its chart's `scatterStyle` draws it
+	 * (smoothed for `smoothMarker` only): PowerPoint smooths a series that
+	 * writes no `c:smooth`.
 	 */
 	smooth?: boolean;
 	/** Axis ID this series is plotted against (links to PptxChartAxisFormatting.axisId). */
@@ -1412,8 +1423,9 @@ export interface PptxChartData {
 	/**
 	 * Clustered bar/column overlap between series within a category as a
 	 * percentage (`c:overlap/@val`, `ST_Overlap`, -100 through 100). Absent
-	 * uses 0. `c:bar3DChart` has no overlap. Written for generated charts and
-	 * reconciled on save for loaded ones.
+	 * uses 0; a generated chart with stacked or 100% stacked bars writes 100
+	 * when it is absent. `c:bar3DChart` has no overlap. Written for generated
+	 * charts and reconciled on save for loaded ones.
 	 */
 	barOverlap?: number;
 	/** Internal: path to the chart XML part in the PPTX archive (for round-trip save). */
@@ -1445,6 +1457,17 @@ export interface PptxChartData {
 	 * a fallback when the chart XML's cached series data is empty or incomplete.
 	 */
 	embeddedWorkbookData?: PptxEmbeddedWorkbookData;
+
+	/**
+	 * Creation hint for a chart that has no chart part yet (SDK `addChart`): when
+	 * `true`, the first save writes its data to a new embedded workbook
+	 * (`ppt/embeddings/Microsoft_Excel_Worksheet{N}.xlsx`) and the chart reads it
+	 * through cell references, so PowerPoint's Edit Data opens it. A chart the
+	 * shared chart core cannot write that way fails the save instead of losing
+	 * the workbook. Never set by the loader; a reloaded chart carries
+	 * {@link externalData} instead.
+	 */
+	embedWorkbook?: boolean;
 
 	/**
 	 * Pivot table data source reference (c:pivotSource).

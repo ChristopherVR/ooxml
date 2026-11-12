@@ -235,7 +235,7 @@ AI 代码不会进入关键加载路径。只有传入 `ai` 配置，并且用�
 - `/ai` 入口是稳定的：`createAiAssistant`、`PptxAiAssistant` 和 `PptxAi*` 配置类型。
 - 普通的 `PptxAiConfig` 继续受支持，不会被弃用。预览器会把任何不是句柄的值（包括形状与句柄相同的对象）当作普通配置，并像以前一样不经校验地交给面板；面板无法使用的配置会让面板进入错误状态。
 - 由另一个绑定或另一份包副本（第二次安装，或混用 ESM 与 CommonJS 构建）创建的句柄也按同样方式处理。在开发环境中，预览器会对此警告一次（`process.env.NODE_ENV !== 'production'`；Angular 使用 `isDevMode()`）。
-- 主入口仍然会到达惰性面板加载器。`pptx-react-viewer`、`pptx-vue-viewer`、`pptx-svelte-viewer` 及其 `/viewer` 入口，`pptx-angular-viewer`（以及同一文件的 `/internals`）和 `pptx-vanilla-viewer`，都通过与 `/ai` 相同的动态导入到达该绑定的 SDK 包和 `ooxml-ui/pptx/ai`。它们的初始代码块都不包含 `ai` SDK、`@ai-sdk/*`、`zod` 或自动化工具目录。因此句柄不会改变加载的内容和加载时机。
+- 主入口仍然会到达惰性面板加载器。`pptx-react-viewer`（以及导出相同的 `/no-i18next`）、`pptx-vue-viewer`、`pptx-svelte-viewer` 及其 `/viewer` 入口，`pptx-angular-viewer`（以及同一文件的 `/internals`）和 `pptx-vanilla-viewer`，都通过与 `/ai` 相同的动态导入到达该绑定的 SDK 包和 `ooxml-ui/pptx/ai`。它们的初始代码块都不包含 `ai` SDK、`@ai-sdk/*`、`zod` 或自动化工具目录。因此句柄不会改变加载的内容和加载时机。
 
 ### 为什么现在提供句柄 {#why-the-handle-ships-now}
 
@@ -246,7 +246,7 @@ AI 代码不会进入关键加载路径。只有传入 `ai` 配置，并且用�
 
 在每个绑定中满足以下全部条件时，主入口才不再包含助手运行时：
 
-- 主入口（`pptx-react-viewer`、`pptx-vue-viewer`、`pptx-svelte-viewer` 及其 `/viewer` 入口，`pptx-angular-viewer` 及其 `/internals`，`pptx-vanilla-viewer`）的源码与构建产物模块图，无论静态导入还是动态导入，都不会到达 `ai`、`@ai-sdk/*`、`zod`、`ooxml-ui/pptx/ai` 或 `ooxml-core/pptx/automation` 模块。
+- 主入口（`pptx-react-viewer` 及其 `/no-i18next`、`pptx-vue-viewer`、`pptx-svelte-viewer` 及其 `/viewer` 入口，`pptx-angular-viewer` 及其 `/internals`，`pptx-vanilla-viewer`）的源码与构建产物模块图，无论静态导入还是动态导入，都不会到达 `ai`、`@ai-sdk/*`、`zod`、`ooxml-ui/pptx/ai` 或 `ooxml-core/pptx/automation` 模块。
 - 它们的 `.d.ts` 文件不会引用 `ai` 或 `@ai-sdk/*` 的任何类型。
 - 打包绑定检查（`check-binding-packages.mjs`）要求每个绑定的入口中只有 `./ai` 会到达该绑定的 SDK 包（`@ai-sdk/react`、`@ai-sdk/vue`、`@ai-sdk/svelte`）和 `ooxml-ui/pptx/ai`。
 - 主入口 `ai` 的类型中移除普通配置；运行时传入普通配置会抛出错误，并提示改用 `createAiAssistant`。

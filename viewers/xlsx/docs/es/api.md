@@ -75,7 +75,7 @@ editor.customization = {
 | `startCollaboration(options)` | `Promise<void>`       | Se une a una sala; se rechaza si ya se está compartiendo o no hay ningún libro abierto.                                               |
 | `stopCollaboration()`         | `void`                | Abandona la sala y borra `collaboration`; el libro queda como está.                                                                   |
 | `reconnectCollaboration()`    | `void`                | Reinicia la conexión conservando los cambios hechos sin conexión.                                                                     |
-| `share()`                     | `void`                | Abre Archivo > Compartir.                                                                                                             |
+| `share()`                     | `void`                | Abre el cuadro de diálogo Compartir.                                                                                                  |
 | `focusGrid()`                 | `void`                | Mueve el foco del teclado a la cuadrícula para que al escribir se edite la celda activa.                                              |
 
 ## Eventos
@@ -107,6 +107,70 @@ editor.addEventListener('file-command', (event) => {
 			.then(() => editor.markClean());
 	}
 });
+```
+
+## Almacenamiento del host {#host-owned-storage}
+
+`storage` (una propiedad del elemento y una prop de cada binding) recibe un `DocumentStorage` de
+`ooxml-core/embedding`. Cuando está definida:
+
+- Archivo > Guardar, Guardar como y Ctrl+S entregan el libro guardado a `storage.save(bytes, meta)` en
+  lugar de descargarlo. `meta` es `{ fileName, mimeType, reason }`, con `reason` `'save'` o `'saveAs'`;
+  los orígenes `.xls` y `.csv` se guardan como `.xlsx`, igual que en una descarga. Cuando la promesa se
+  resuelve, el libro queda marcado como sin cambios; si se resuelve con `{ fileName }`, la barra de
+  título adopta ese nombre. Un rechazo se notifica como `workbook-error` y el libro sigue con cambios.
+- Archivo > Abrir llama a `storage.open()` cuando el almacenamiento lo tiene y abre el
+  `{ bytes, fileName }` con el que se resuelve (`undefined` significa que el usuario canceló). Sin
+  `open` se usa el selector de archivos.
+- Solo se ejecuta un guardado a la vez: Guardar mientras hay un guardado pendiente se ignora, no se
+  encola. Una edición hecha mientras se ejecuta el guardado del host mantiene el libro con cambios, ya
+  que los bytes guardados no la contienen.
+- `file-command` se sigue disparando primero; un host que llama a `preventDefault()` gestiona el comando
+  por su cuenta y no se llama a `storage`.
+
+Exportar, Guardar como CSV e Imprimir siguen descargando o imprimiendo en el navegador. Excel no tiene
+Autorrecuperación, por lo que no se usan los métodos de recuperación de `DocumentStorage`.
+
+```ts
+editor.storage = {
+	save: (bytes, { fileName }) => myDrive.put(fileName, bytes),
+	open: () => myDrive.pick(), // resolves { bytes, fileName } or undefined
+};
+```
+
+## Ubicaciones en la nube en Archivo > Abrir {#cloud-places-in-file-open}
+
+`fileProviders` (una propiedad del elemento y una prop de cada binding) recibe un array de
+`CloudFileProvider` (`ooxml-core/embedding`), por ejemplo `createOneDriveFileProvider` de
+`ooxml-core/embedding/onedrive`. Vacío u omitido, Archivo > Abrir no cambia. Con proveedores, Archivo >
+Abrir muestra "Este dispositivo" (Examinar) y una ubicación por proveedor, que muestra el explorador
+compartido `<office-ui-cloud-files>` limitado a `.xlsx`. Sus textos siguen el `locale` del editor.
+
+- Al abrir un archivo se pregunta si descartar los cambios sin guardar, como hace Abrir; después se
+  cargan los bytes por la ruta de carga normal, se adopta el nombre del archivo y se cierra la vista
+  Archivo.
+- A partir de ahí el libro se guarda a través del `storage` propio del archivo, no del `storage` del
+  host: Guardar y Ctrl+S escriben en el mismo elemento, Guardar como escribe una copia, y el libro solo
+  queda marcado como sin cambios cuando el proveedor se ha resuelto. Un guardado rechazado se notifica
+  como `workbook-error` y el libro sigue con cambios. Abrir, crear o cargar otro libro devuelve Guardar
+  al `storage` del host.
+- Un archivo que el proveedor indica como `canEdit: false` se abre en solo lectura (`readOnly` es true,
+  se dispara un evento `readonly-change`). Prevalece el más estricto entre el `readOnly` del host y el
+  del archivo, y el valor propio del host no se modifica.
+
+```ts
+import { createOneDriveFileProvider } from 'ooxml-core/embedding/onedrive';
+import { mergeWorkbookSnapshots } from 'ooxml-core/xlsx/collab';
+
+editor.fileProviders = [
+	createOneDriveFileProvider({
+		getAccessToken,
+		signIn,
+		mergers: {
+			xlsx: ({ base, local, remote }) => mergeWorkbookSnapshots(base.bytes, local, remote.bytes),
+		},
+	}),
+];
 ```
 
 ## Partes del shadow DOM
