@@ -1,6 +1,7 @@
 /**
  * The suite's own preferences that every editor it opens honours: who you are when you comment,
- * the display language, which parts of each editor's chrome show, the corner style and motion of
+ * the display language, the layout around a document (each app's ribbon, or Simple view), which
+ * parts of each editor's chrome show, the corner style and motion of
  * the workspace, and the privacy switches the editors expose. Appearance (`themes.js`, key
  * `ooxml-suite-theme`, read before first paint) and font downloads (`font-downloads.js`, key
  * `ooxml-suite-fonts`) keep their own keys; this module owns `ooxml-suite-settings`.
@@ -29,6 +30,10 @@ export const CORNERS = {
 export const DEFAULT_SETTINGS = Object.freeze({
 	authorName: '',
 	locale: 'auto',
+	// The suite opens documents in Simple view. The editor packages are not affected: on their
+	// own they keep their full ribbon.
+	layout: 'simple',
+	ribbonDisplay: 'always',
 	showRibbon: true,
 	showFormulaBar: true,
 	showThumbnails: true,
@@ -41,6 +46,9 @@ export const DEFAULT_SETTINGS = Object.freeze({
 
 const choices = {
 	locale: ['auto', ...LOCALES.map(([code]) => code)],
+	layout: ['office', 'simple'],
+	// PowerPoint's Ribbon Display Options; its Full-screen mode is Simple view here.
+	ribbonDisplay: ['always', 'tabs'],
 	measurementUnit: ['inches', 'centimetres'],
 	corners: Object.keys(CORNERS),
 };
@@ -111,6 +119,12 @@ export function onSettings(listener) {
 
 /** The locale to pass to the editors, or `undefined` to keep each one's own choice. */
 export const editorLocale = (s = current) => (s.locale === 'auto' ? undefined : s.locale);
+
+/**
+ * Whether the editors show their ribbon. Simple view keeps the document and a short command bar
+ * (`document-bar.js`) and holds every ribbon back, whatever the Ribbon switch says.
+ */
+export const ribbonShown = (s = current) => s.layout !== 'simple' && s.showRibbon;
 
 /** The author name for comments and tracked changes: the setting, else the profile's name. */
 export const authorName = (profileName, s = current) =>

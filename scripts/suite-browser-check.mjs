@@ -3,6 +3,7 @@ import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
+import { ribbonLayoutInit } from './suite-check-init.mjs';
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const require = createRequire(join(root, 'e2e/docx/package.json'));
 const { chromium, expect } = require('@playwright/test');
@@ -12,7 +13,7 @@ const JSZip = require('jszip');
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1440, height: 960 } });
 // Skip the start chooser; these checks drive the whole suite.
-await page.addInitScript(() => (globalThis.ooxmlSkipStart = true));
+await page.addInitScript(ribbonLayoutInit);
 const errors = [];
 page.on('pageerror', (error) => errors.push(error.message));
 page.on('console', (message) => {
@@ -276,7 +277,7 @@ try {
 	console.log('Visio parsed, edited and saved through shared suite storage');
 	// A managed deployment: its ai-config.json decides the models, features and instructions.
 	const managed = await browser.newPage({ viewport: { width: 1440, height: 960 } });
-	await managed.addInitScript(() => (globalThis.ooxmlSkipStart = true));
+	await managed.addInitScript(ribbonLayoutInit);
 	await managed.route('**/ai-config.json', (route) =>
 		route.fulfill({
 			json: {

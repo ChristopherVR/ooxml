@@ -26,6 +26,10 @@ export class SuiteSessions {
 				}
 			},
 			(command) => this.command(command, doc.id),
+			// The slide or page in view, or the selection's formatting, changed (Simple view's bar).
+			() => {
+				if (!session.loading) this.moved?.();
+			},
 		)
 			.then(async (editor) => {
 				session.editor = editor;

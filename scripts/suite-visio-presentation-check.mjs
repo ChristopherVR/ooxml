@@ -9,13 +9,14 @@
  */
 import { createRequire } from 'node:module';
 import assert from 'node:assert/strict';
+import { ribbonLayoutInit } from './suite-check-init.mjs';
 const require = createRequire(new URL('../e2e/docx/package.json', import.meta.url));
 const { chromium, expect } = require('@playwright/test');
 const base = process.env.SUITE_URL || 'http://127.0.0.1:8171';
 const browser = await chromium.launch();
 const context = await browser.newContext({ viewport: { width: 1440, height: 960 } });
 // Skip the start chooser; this check drives the whole suite.
-await context.addInitScript(() => (globalThis.ooxmlSkipStart = true));
+await context.addInitScript(ribbonLayoutInit);
 const page = await context.newPage();
 page.setDefaultTimeout(20000);
 const errors = [];

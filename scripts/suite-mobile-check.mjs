@@ -8,6 +8,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
+import { ribbonLayoutInit } from './suite-check-init.mjs';
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const require = createRequire(join(root, 'e2e/docx/package.json'));
 const { chromium } = require('@playwright/test');
@@ -32,7 +33,7 @@ try {
 				isMobile: true,
 				colorScheme: scheme,
 			});
-			await context.addInitScript(() => (globalThis.ooxmlSkipStart = true));
+			await context.addInitScript(ribbonLayoutInit);
 			// The suite opens dark; choose the mode through its own appearance preference.
 			await context.addInitScript(
 				(mode) =>

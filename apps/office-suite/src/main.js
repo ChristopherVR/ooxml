@@ -18,6 +18,7 @@ import { mountDiskSearch } from './disk-search.js';
 import { mountPwa } from './pwa.js';
 import { mountResources, mountStart } from './start.js';
 import { mountShell } from './shell.js';
+import { mountDocumentBar } from './document-bar.js';
 import { icon } from './icons.js';
 import { localAttachmentId, showAttachment } from './attachments.js';
 import { mountOneDrive } from './onedrive.js';
@@ -122,6 +123,7 @@ function chooseBlank() {
 	choose('Create something new', content);
 }
 let applyShell = () => {};
+let renderDocumentBar = () => {};
 function renderTabs() {
 	document.body.dataset.view = view;
 	$('tabs').hidden = !teamsTabOpen && !chatTabOpen && !sessions.sessions.size;
@@ -181,6 +183,7 @@ function renderTabs() {
 					(view === 'editor' && button.dataset.app === sessions.sessions.get(active)?.doc.kind),
 			),
 		);
+	renderDocumentBar();
 	applyShell();
 }
 /**
@@ -635,6 +638,10 @@ applyShell = mountShell(() => ({
 	documents: sessions.sessions.size,
 	teamsOpen: teamsTabOpen,
 }));
+renderDocumentBar = mountDocumentBar({
+	sessions,
+	active: () => (view === 'editor' ? active : null),
+});
 mountPwa({ idle: () => sessions.sessions.size === 0 && view === 'home' });
 mountStart();
 mountResources();

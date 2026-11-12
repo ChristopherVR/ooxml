@@ -68,12 +68,43 @@ export function settingsCategories({ profileName = '', assistant = false } = {})
 			description: 'Choose what the apps show around your documents.',
 			sections: [
 				{
+					id: 'layout',
+					title: 'Layout',
+					description:
+						'Simple view shows the document under one short command bar and keeps the ribbon a click away. Open documents change at once and keep their edits and undo history.',
+					controls: [
+						{
+							kind: 'select',
+							key: 'layout',
+							label: 'Around a document',
+							choices: [
+								{ value: 'office', label: "Each app's ribbon" },
+								{ value: 'simple', label: 'Simple view' },
+							],
+						},
+						{
+							kind: 'select',
+							key: 'ribbonDisplay',
+							label: 'PowerPoint ribbon',
+							info: "PowerPoint's Ribbon Display Options. The menu at the right end of its tab row changes the same setting; Word, Excel and Visio collapse from the chevron in their own ribbon.",
+							choices: [
+								{ value: 'always', label: 'Always show ribbon' },
+								{ value: 'tabs', label: 'Show tabs only' },
+							],
+						},
+					],
+				},
+				{
 					id: 'chrome',
 					title: 'Show',
 					description:
 						'Open documents change at once where the app allows it; the rest follow the next time you open a document.',
 					controls: [
-						toggle('showRibbon', 'Ribbon', 'Word, Excel, PowerPoint and Visio.'),
+						toggle(
+							'showRibbon',
+							'Ribbon',
+							'Word, Excel, PowerPoint and Visio. Simple view hides it whatever this says.',
+						),
 						toggle('showThumbnails', 'Page and slide thumbnails', 'Word and PowerPoint.'),
 						toggle('showFormulaBar', 'Formula bar', 'Excel.'),
 					],

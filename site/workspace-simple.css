@@ -1,0 +1,228 @@
+/* Simple view (Settings > View > Layout, or the button on the document bar): the document under
+   one short command bar, with each app's ribbon held back. apps/office-suite/src/document-bar.js
+   sets body[data-layout] and fills the title and the view controls. */
+.doc-title,
+.doc-view,
+#focus-toggle {
+	display: none;
+}
+#layout-toggle .ui-icon,
+#focus-toggle .ui-icon,
+.doc-view .ui-icon {
+	width: 15px;
+	height: 15px;
+	flex: none;
+}
+
+body[data-layout='simple'] .document-commandbar {
+	height: 44px;
+	gap: 6px;
+	padding: 0 10px 0 14px;
+}
+body[data-layout='simple'] .doc-title {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+	max-width: 38ch;
+	padding-right: 12px;
+	margin-right: 4px;
+	border-right: 1px solid var(--line);
+	font-size: 13px;
+	line-height: 28px;
+}
+.doc-title .app-badge {
+	width: 18px;
+	height: 18px;
+	font-size: 10px;
+	flex: none;
+}
+.doc-name {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 600;
+	color: var(--ink-strong);
+}
+.doc-extension {
+	font-weight: 400;
+	color: var(--muted);
+}
+
+/* Word and Excel draw a title bar of their own (file name, save, undo); the bar above replaces
+   it here. The ribbon brings it back with everything else. */
+body[data-layout='simple'] :is(docx-editor, xlsx-editor)::part(title-bar) {
+	display: none;
+}
+
+/* The file commands move into the More menu; Save stays on the bar. */
+body[data-layout='simple'] .document-commandbar [data-menu] {
+	display: none;
+}
+body[data-layout='simple'] #actions-more {
+	display: inline-flex;
+	margin-left: 0;
+}
+body[data-layout='simple'] #focus-toggle {
+	display: inline-flex;
+}
+body[data-layout='simple'] .document-commandbar button {
+	font-size: 12px;
+}
+body[data-layout='simple'] #actions-more,
+body[data-layout='simple'] #focus-toggle,
+.doc-view button {
+	width: 30px;
+	height: 30px;
+	min-width: 0;
+	padding: 0;
+	color: var(--muted);
+}
+body[data-layout='simple'] #actions-more:hover,
+body[data-layout='simple'] #focus-toggle:hover,
+.doc-view button:hover:not(:disabled) {
+	color: var(--text);
+}
+#focus-toggle[aria-pressed='true'] {
+	background: var(--selected);
+	color: var(--accent-ink);
+}
+
+/* Undo, redo and the slide or page in view. */
+body[data-layout='simple'] .doc-view:not([hidden]) {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	padding-left: 6px;
+	margin-left: 2px;
+	border-left: 1px solid var(--line);
+}
+.doc-nav:not([hidden]) {
+	display: flex;
+	align-items: center;
+	margin-left: 8px;
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+}
+.doc-nav button {
+	width: 26px;
+	height: 26px;
+	border-radius: 0;
+}
+.doc-nav output {
+	min-width: 84px;
+	padding: 0 4px;
+	text-align: center;
+	font-size: 12px;
+	font-variant-numeric: tabular-nums;
+	color: var(--text);
+	white-space: nowrap;
+}
+
+/* Bold, italic and underline for the selection (Word, Excel), drawn as the letters themselves. */
+.doc-format:not([hidden]) {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	margin-left: 6px;
+	padding-left: 8px;
+	border-left: 1px solid var(--line);
+}
+body[data-layout='simple'] .doc-format button {
+	font-size: 13.5px;
+	font-weight: 500;
+	line-height: 1;
+	color: var(--text);
+}
+body[data-layout='simple'] .doc-format [data-format='bold'] {
+	font-weight: 700;
+}
+body[data-layout='simple'] .doc-format [data-format='italic'] {
+	font-style: italic;
+	font-family: Georgia, 'Times New Roman', serif;
+}
+body[data-layout='simple'] .doc-format [data-format='underline'] {
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+body[data-layout='simple'] .doc-format [aria-pressed='true'] {
+	background: var(--selected);
+	color: var(--accent-ink);
+}
+body[data-layout='simple'] .doc-format [aria-pressed='mixed'] {
+	background: var(--hover);
+}
+
+/* The way back to the ribbon (and, with the ribbon on, the way here). */
+.document-commandbar button#layout-toggle {
+	gap: 6px;
+	font-weight: 500;
+	color: var(--muted);
+}
+.document-commandbar button#layout-toggle:hover {
+	color: var(--text);
+}
+body[data-layout='simple'] .document-commandbar button#layout-toggle {
+	border-color: var(--line-strong);
+	color: var(--text);
+}
+
+/* Focus: only the bar and the document, until the same button is pressed again. */
+body[data-layout='simple'][data-view='editor'][data-focus='true']
+	:is(.suite-header, .tabs, .workspace-sidebar, .statusbar) {
+	display: none;
+}
+body[data-layout='simple'][data-view='editor'][data-focus='true'] .suite-layout {
+	height: var(--app-h, 100dvh);
+}
+
+@media (max-width: 900px) {
+	#layout-toggle span {
+		display: none;
+	}
+	.document-commandbar button#layout-toggle {
+		width: 30px;
+		height: 30px;
+		padding: 0;
+	}
+	body[data-layout='simple'] .doc-title {
+		max-width: 22ch;
+	}
+}
+@media (max-width: 640px) {
+	/* The status text is hidden here, so the right-hand cluster needs its own push. */
+	#layout-toggle {
+		margin-left: auto;
+	}
+	body[data-layout='simple'] .document-commandbar {
+		padding-left: 10px;
+	}
+	body[data-layout='simple'] .doc-title {
+		max-width: 14ch;
+		border-right: 0;
+		padding-right: 0;
+	}
+	body[data-layout='simple'] :is(#doc-undo, #doc-redo, #doc-format) {
+		display: none;
+	}
+	body[data-layout='simple'] .doc-view:not([hidden]) {
+		border-left: 0;
+		padding-left: 0;
+	}
+	.doc-nav output {
+		min-width: 0;
+	}
+}
+@media (pointer: coarse) {
+	body[data-layout='simple'] .document-commandbar {
+		height: 52px;
+	}
+	body[data-layout='simple'] #actions-more,
+	body[data-layout='simple'] #focus-toggle,
+	.doc-view button,
+	.document-commandbar button#layout-toggle {
+		width: 44px;
+		height: 44px;
+	}
+}

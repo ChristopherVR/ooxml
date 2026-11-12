@@ -44,6 +44,11 @@ const context = await browser.newContext({
 });
 await context.addInitScript(() => {
 	globalThis.ooxmlSkipStart = true;
+	// These checks press the ribbon layout's controls; the suite's default is Simple view.
+	try {
+		if (!localStorage.getItem('ooxml-suite-settings'))
+			localStorage.setItem('ooxml-suite-settings', JSON.stringify({ layout: 'office' }));
+	} catch {}
 	globalThis.ooxmlOneDriveOptions = {
 		getAccessToken: async () => {
 			if (globalThis.__oneDriveAuthFail) throw new Error('Private token provider failure');

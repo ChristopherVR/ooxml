@@ -3,13 +3,14 @@ import { join } from 'node:path';
 import assert from 'node:assert/strict';
 import { mkdtemp, writeFile, unlink, rmdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
+import { ribbonLayoutInit } from './suite-check-init.mjs';
 const require = createRequire(new URL('../e2e/docx/package.json', import.meta.url));
 const { chromium, expect } = require('@playwright/test');
 const { createDocx } = await import('../src/core/dist/automation/index.mjs');
 const browser = await chromium.launch({ channel: 'chromium' });
 const context = await browser.newContext({ viewport: { width: 1440, height: 960 } });
 // Skip the start chooser; these checks drive the whole suite.
-await context.addInitScript(() => (globalThis.ooxmlSkipStart = true));
+await context.addInitScript(ribbonLayoutInit);
 const page = await context.newPage();
 page.setDefaultTimeout(15000);
 const errors = [];

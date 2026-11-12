@@ -10,6 +10,7 @@ import {
 	normalizeSettings,
 	onSettings,
 	resetSettings,
+	ribbonShown,
 	settings,
 	updateSettings,
 } from './settings.js';
@@ -51,6 +52,21 @@ test('updates notify with the changed keys only, and reset restores the defaults
 	resetSettings();
 	assert.deepEqual(settings(), DEFAULT_SETTINGS);
 	stop();
+});
+
+test('Simple view holds every ribbon back, whatever the Ribbon switch says', () => {
+	// Simple view is the suite's default; an unknown stored value falls back to it.
+	assert.equal(DEFAULT_SETTINGS.layout, 'simple');
+	assert.equal(ribbonShown(DEFAULT_SETTINGS), false);
+	const office = { ...DEFAULT_SETTINGS, layout: 'office' };
+	assert.equal(ribbonShown(office), true);
+	assert.equal(ribbonShown({ ...office, showRibbon: false }), false);
+	assert.equal(normalizeSettings({ layout: 'compact' }).layout, 'simple');
+	assert.equal(normalizeSettings({ layout: 'office' }).layout, 'office');
+	// PowerPoint's ribbon mode is remembered; its full-screen mode is Simple view, never stored.
+	assert.equal(DEFAULT_SETTINGS.ribbonDisplay, 'always');
+	assert.equal(normalizeSettings({ ribbonDisplay: 'tabs' }).ribbonDisplay, 'tabs');
+	assert.equal(normalizeSettings({ ribbonDisplay: 'fullScreen' }).ribbonDisplay, 'always');
 });
 
 test('the author is the setting, else the profile name, else nothing', () => {

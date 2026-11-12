@@ -17,6 +17,7 @@ for (const name of [
 	'workspace-files.css',
 	'workspace-chat.css',
 	'workspace-settings.css',
+	'workspace-simple.css',
 	'ai-config.json',
 	'profile-form.css',
 	'workspace-responsive.css',

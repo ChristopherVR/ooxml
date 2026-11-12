@@ -6,6 +6,7 @@ import { createRequire } from 'node:module';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
+import { ribbonLayoutInit } from './suite-check-init.mjs';
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const require = createRequire(join(root, 'e2e/docx/package.json'));
 const { chromium } = require('@playwright/test');
@@ -18,7 +19,7 @@ try {
 	// Without a configuration the suite has no assistant and opens on its files.
 	const plain = await browser.newContext({ viewport: { width: 1280, height: 900 } });
 	await plain.route('**/ai-config.json', (route) => route.fulfill({ status: 404, body: '' }));
-	await plain.addInitScript(() => (globalThis.ooxmlSkipStart = true));
+	await plain.addInitScript(ribbonLayoutInit);
 	const off = await plain.newPage();
 	watch(off);
 	await off.goto(base);
@@ -32,7 +33,7 @@ try {
 	console.log('No configuration: no assistant, the suite opens on its files');
 
 	const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-	await context.addInitScript(() => (globalThis.ooxmlSkipStart = true));
+	await context.addInitScript(ribbonLayoutInit);
 	const page = await context.newPage();
 	watch(page);
 	await page.goto(base);
