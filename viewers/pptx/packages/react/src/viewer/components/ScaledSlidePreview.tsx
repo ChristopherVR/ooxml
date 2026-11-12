@@ -10,6 +10,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import type { CanvasSize } from '../types';
 import { normalizeHexColor } from '../utils';
+import type { ElementRenderErrorHandler } from './ElementErrorBoundary';
 import { StaticElementRenderer } from './StaticElementRenderer';
 
 // ---------------------------------------------------------------------------
@@ -17,6 +18,7 @@ import { StaticElementRenderer } from './StaticElementRenderer';
 // ---------------------------------------------------------------------------
 
 export interface ScaledSlidePreviewProps {
+	onElementRenderError?: ElementRenderErrorHandler;
 	slide: PptxSlide;
 	templateElements: PptxElement[];
 	canvasSize: CanvasSize;
@@ -32,6 +34,7 @@ function ScaledSlidePreviewImpl({
 	templateElements,
 	canvasSize,
 	className,
+	onElementRenderError,
 }: ScaledSlidePreviewProps): React.ReactElement {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [containerWidth, setContainerWidth] = useState(0);
@@ -102,6 +105,7 @@ function ScaledSlidePreviewImpl({
 						activeSlide={slide}
 						allSlides={[slide]}
 						zIndex={index}
+						onElementRenderError={onElementRenderError}
 					/>
 				))}
 			</div>
@@ -119,6 +123,9 @@ export function scaledSlidePreviewPropsEqual(
 	prev: ScaledSlidePreviewProps,
 	next: ScaledSlidePreviewProps,
 ): boolean {
+	if (prev.onElementRenderError !== next.onElementRenderError) {
+		return false;
+	}
 	if (prev.slide !== next.slide) {
 		return false;
 	}

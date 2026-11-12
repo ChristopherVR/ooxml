@@ -10,6 +10,7 @@ import type {
 import type React from 'react';
 
 import type { SlideCanvasProps } from '../components/canvas/canvas-types';
+import type { ElementRenderErrorHandler } from '../components/ElementErrorBoundary';
 import type { SlidesPaneSidebarProps } from '../components/slides-pane/types';
 import type { ToolbarProps } from '../components/toolbar/toolbar-types';
 import type { PowerPointViewerHandle } from '../types';
@@ -19,6 +20,8 @@ import type { AutosaveStatus } from './useAutosave';
 import type { SlidesPaneLayoutGalleryRequest } from './useViewerBuildingBlocks-slides-pane-props';
 
 export interface UseViewerBuildingBlocksInput extends ViewportFitOptions {
+	/** Reports an element omitted after a React render/lifecycle error; defaults to console.error. */
+	onElementRenderError?: ElementRenderErrorHandler;
 	/** Optional collaboration, including a host-owned document and presence session. */
 	collaboration?: CollaborationInput;
 	/** PPTX content as ArrayBuffer/Uint8Array, or null/undefined while no file is loaded. */

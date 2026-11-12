@@ -65,6 +65,51 @@ alongside the standalone `Toolbar`, `SlideCanvas` and `SlidesPane` components.
 import { useThemeSwitching, useCollaborativeState } from 'pptx-react-viewer/viewer';
 ```
 
+### Element render errors
+
+The React canvas, thumbnails and static preview/transition renderers isolate client
+render and lifecycle errors per element. A failed element renders nothing; neighboring
+content and editor chrome remain mounted. This does not modify or remove the element
+from the document. Missing 3D dependencies and pending scenes retain their poster
+fallback; a 3D scene render error is reported and omitted like any other failed element.
+
+Pass an optional `onElementRenderError` to `useViewerBuildingBlocks` to report failures
+from both returned `canvasProps` and `slidesPaneProps`:
+
+```tsx
+import { SlideCanvas, SlidesPane, useViewerBuildingBlocks } from 'pptx-react-viewer';
+import type { ElementRenderErrorHandler } from 'pptx-react-viewer';
+
+const reportElementError: ElementRenderErrorHandler = (error, context) => {
+	console.error('Element could not be rendered', error, context);
+};
+
+function Editor({ content }) {
+	const blocks = useViewerBuildingBlocks({ content, onElementRenderError: reportElementError });
+	return (
+		<>
+			<SlidesPane {...blocks.slidesPaneProps} />
+			<SlideCanvas {...blocks.canvasProps} />
+		</>
+	);
+}
+```
+
+The exported `ElementRenderErrorContext` contains `elementId`, `elementType` and an
+optional `slideId` (when an owning slide is supplied). Without a callback, the viewer
+calls `console.error(error, context)`. A throwing callback falls back to that logger
+without taking down the viewer. React's development build may also log the caught error.
+An element rendered in multiple surfaces can report once per failed mounted instance.
+
+Standalone `SlideCanvas`, `SlidesPane`, `SlideThumbnail`, `ScaledSlidePreview`,
+`SlideTemplatePreview`, `PresentationStage`, `ReadingViewStage` and
+`PresentationTransitionOverlay` also accept `onElementRenderError`. This is not a new
+`PowerPointViewer` prop. Replacing a failed element object, even with the same id, retries
+its rendering; changing its id remounts its boundary. Rerendering the same failed object
+does not retry, so in-place mutation alone does not clear the failure. These boundaries
+do not catch event-handler errors, arbitrary asynchronous/timer errors, or server-render
+errors. They are React-specific; other bindings do not gain this callback or guarantee.
+
 ### Custom editor collaboration
 
 `useViewerBuildingBlocks` accepts the same optional `collaboration` configuration

@@ -29,6 +29,7 @@ import type { DrawingTool } from '../../types-ui';
 import type { ElementAnimationState } from '../../utils/animation-timeline';
 import type { TableStyleContext } from '../../utils/table-parse';
 import type { FieldSubstitutionContext } from '../../utils/text-field-substitution';
+import type { ElementRenderErrorHandler } from '../ElementErrorBoundary';
 import type { OutlineAuthoringProps } from './OutlineAuthoringLayer';
 import type { RulerUnit } from './ruler-utils';
 
@@ -66,6 +67,8 @@ export function getElementIdFromEvent(e: React.MouseEvent): string | null {
 /* ------------------------------------------------------------------ */
 
 export interface SlideCanvasProps {
+	/** Reports an element omitted after a React render/lifecycle error; defaults to console.error. */
+	onElementRenderError?: ElementRenderErrorHandler;
 	/** The viewer-owned live channel; absent for static/custom non-collaborative canvases. */
 	livePatcher?: CollaborationLivePatcher;
 	registerInlineEditReader?: (elementId: string, read: () => InlineListReadResult) => () => void;

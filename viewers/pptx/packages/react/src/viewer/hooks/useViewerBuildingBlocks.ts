@@ -260,6 +260,7 @@ export function useViewerBuildingBlocks(
 	});
 
 	canvasProps.collaborationOverlay = overlay;
+	canvasProps.onElementRenderError = input.onElementRenderError;
 	const slidesPaneProps = useSlidesPaneProps({
 		state,
 		slides,
@@ -271,6 +272,7 @@ export function useViewerBuildingBlocks(
 		recordedTimings: presentation.recordedTimings,
 		onOpenLayoutGallery,
 	});
+	slidesPaneProps.onElementRenderError = input.onElementRenderError;
 	// The same shell projection the other bindings hand their custom chrome.
 	const shellState = useMemo(
 		() =>

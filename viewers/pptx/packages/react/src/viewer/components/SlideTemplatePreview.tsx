@@ -11,6 +11,7 @@ import type { SlideTemplateId } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import React, { useMemo } from 'react';
 
+import type { ElementRenderErrorHandler } from './ElementErrorBoundary';
 import { StaticElementRenderer } from './StaticElementRenderer';
 
 /** Full-size stage the template is built at (standard 16:9 canvas). */
@@ -22,6 +23,7 @@ const PREVIEW_SCALE = PREVIEW_TILE_WIDTH / PREVIEW_CANVAS_WIDTH;
 const PREVIEW_TILE_HEIGHT = Math.round(PREVIEW_CANVAS_HEIGHT * PREVIEW_SCALE);
 
 export interface SlideTemplatePreviewProps {
+	onElementRenderError?: ElementRenderErrorHandler;
 	templateId: SlideTemplateId;
 	/** Optional deck scheme so the preview shows the deck's theme colours. */
 	scheme?: Record<string, string>;
@@ -30,6 +32,7 @@ export interface SlideTemplatePreviewProps {
 export function SlideTemplatePreview({
 	templateId,
 	scheme,
+	onElementRenderError,
 }: SlideTemplatePreviewProps): React.ReactElement {
 	const previewSlide: PptxSlide = useMemo(() => {
 		const content = buildSlideTemplateContent(templateId, {
@@ -74,6 +77,7 @@ export function SlideTemplatePreview({
 						activeSlide={previewSlide}
 						allSlides={[previewSlide]}
 						zIndex={index}
+						onElementRenderError={onElementRenderError}
 					/>
 				))}
 			</div>

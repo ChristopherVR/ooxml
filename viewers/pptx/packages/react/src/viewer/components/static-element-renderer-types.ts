@@ -2,9 +2,11 @@ import type { PptxElement, PptxSlide, ShapeStyle } from 'pptx-viewer-core';
 
 import type { TableStyleContext } from '../utils/table-band-style';
 import type { FieldSubstitutionContext } from '../utils/text-field-substitution';
+import type { ElementRenderErrorHandler } from './ElementErrorBoundary';
 
 export interface StaticElementRendererProps {
 	element: PptxElement;
+	onElementRenderError?: ElementRenderErrorHandler;
 	activeSlide?: PptxSlide;
 	allSlides?: readonly PptxSlide[];
 	mediaDataUrls?: Map<string, string>;

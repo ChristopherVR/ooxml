@@ -14,9 +14,11 @@ import React from 'react';
 
 import type { CanvasSize } from '../../types';
 import { normalizeHexColor } from '../../utils';
+import type { ElementRenderErrorHandler } from '../ElementErrorBoundary';
 import { StaticElementRenderer } from '../StaticElementRenderer';
 
 export interface ReadingViewStageProps {
+	onElementRenderError?: ElementRenderErrorHandler;
 	slide: PptxSlide;
 	templateElements: PptxElement[];
 	canvasSize: CanvasSize;
@@ -29,6 +31,7 @@ export function ReadingViewStage({
 	templateElements,
 	canvasSize,
 	scale,
+	onElementRenderError,
 }: ReadingViewStageProps): React.ReactElement | null {
 	if (scale <= 0) {
 		// Before the first layout pass there is no honest size to draw at.
@@ -73,6 +76,7 @@ export function ReadingViewStage({
 						activeSlide={slide}
 						allSlides={[slide]}
 						zIndex={index}
+						onElementRenderError={onElementRenderError}
 					/>
 				))}
 			</div>

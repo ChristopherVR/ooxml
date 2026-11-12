@@ -6,6 +6,7 @@ import { DEFAULT_SECTION_GROUP_ID } from '../constants';
 import { useVirtualizedSlides } from '../hooks/useVirtualizedSlides';
 import { useTranslation } from '../i18n/use-translation';
 import { useCollaboration } from './collaboration';
+import { ElementRenderErrorReportingContext } from './ElementErrorBoundary';
 import { SectionContextMenu } from './slides-pane/SectionContextMenu';
 import { SectionHeader } from './slides-pane/SectionHeader';
 import { SlideContextMenu } from './slides-pane/SlideContextMenu';
@@ -34,7 +35,19 @@ export const VIRTUALIZATION_THRESHOLD = SLIDE_VIRTUALIZATION_THRESHOLD;
 // Component
 // ---------------------------------------------------------------------------
 
-export function SlidesPaneSidebar({
+export function SlidesPaneSidebar(props: SlidesPaneSidebarProps): React.ReactElement {
+	const errorReporting = useMemo(
+		() => ({ onElementRenderError: props.onElementRenderError }),
+		[props.onElementRenderError],
+	);
+	return (
+		<ElementRenderErrorReportingContext.Provider value={errorReporting}>
+			<SlidesPaneSidebarContent {...props} />
+		</ElementRenderErrorReportingContext.Provider>
+	);
+}
+
+function SlidesPaneSidebarContent({
 	slides,
 	templateElementsBySlideId,
 	activeSlideIndex,
