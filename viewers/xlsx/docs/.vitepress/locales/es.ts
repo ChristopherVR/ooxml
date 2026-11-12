@@ -6,28 +6,28 @@ const sidebar: DefaultTheme.SidebarItem[] = [
 		items: [
 			{ text: 'Resumen', link: '/es/' },
 			{ text: 'Primeros pasos', link: '/es/getting-started' },
-			{ text: 'Las demos en vivo', link: '/demos' },
+			{ text: 'Las demos en vivo', link: '/es/demos' },
 			{ text: 'Arquitectura', link: '/es/architecture' },
-			{ text: 'Enlaces de framework', link: '/bindings' },
+			{ text: 'Enlaces de framework', link: '/es/bindings' },
 		],
 	},
 	{
 		text: 'Referencia',
 		items: [
 			{ text: 'API del elemento', link: '/es/api' },
-			{ text: 'Temas', link: '/theming' },
-			{ text: 'Localización', link: '/localization' },
+			{ text: 'Temas', link: '/es/theming' },
+			{ text: 'Localización', link: '/es/localization' },
 		],
 	},
 	{
 		text: 'Guías por framework',
 		items: [
-			{ text: 'React', link: '/frameworks/react' },
-			{ text: 'Vue', link: '/frameworks/vue' },
-			{ text: 'Angular', link: '/frameworks/angular' },
-			{ text: 'Vanilla JS', link: '/frameworks/vanilla' },
-			{ text: 'Svelte', link: '/frameworks/svelte' },
-			{ text: 'Solid', link: '/frameworks/solid' },
+			{ text: 'React', link: '/es/frameworks/react' },
+			{ text: 'Vue', link: '/es/frameworks/vue' },
+			{ text: 'Angular', link: '/es/frameworks/angular' },
+			{ text: 'Vanilla JS', link: '/es/frameworks/vanilla' },
+			{ text: 'Svelte', link: '/es/frameworks/svelte' },
+			{ text: 'Solid', link: '/es/frameworks/solid' },
 		],
 	},
 	{
@@ -35,7 +35,7 @@ const sidebar: DefaultTheme.SidebarItem[] = [
 		items: [
 			{ text: 'Funciones y limitaciones', link: '/es/features' },
 			{ text: 'Colaboración', link: '/es/collaboration' },
-			{ text: 'Publicación de paquetes', link: '/releasing' },
+			{ text: 'Publicación de paquetes', link: '/es/releasing' },
 			{
 				text: 'Registro de cambios',
 				link: 'https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/CHANGELOG.md',
@@ -83,7 +83,7 @@ export const es = {
 				target: '_self',
 				rel: '',
 			},
-			{ text: 'Versiones', link: '/releasing', activeMatch: '/releasing' },
+			{ text: 'Versiones', link: '/es/releasing', activeMatch: '/releasing' },
 		],
 		search: {
 			provider: 'local',

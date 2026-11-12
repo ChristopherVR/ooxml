@@ -6,9 +6,9 @@ const sidebar: DefaultTheme.Sidebar = [
 		items: [
 			{ text: 'Überblick', link: '/de/' },
 			{ text: 'Erste Schritte', link: '/de/getting-started' },
-			{ text: 'Die Live-Demos', link: '/demos' },
+			{ text: 'Die Live-Demos', link: '/de/demos' },
 			{ text: 'Zusammenarbeit (Live-Demo)', link: '/de/collaboration' },
-			{ text: 'Architektur', link: '/architecture' },
+			{ text: 'Architektur', link: '/de/architecture' },
 			{ text: 'Einschränkungen', link: '/de/limitations' },
 		],
 	},
@@ -16,18 +16,18 @@ const sidebar: DefaultTheme.Sidebar = [
 		text: 'Referenz',
 		items: [
 			{ text: 'Element-API und Ereignisse', link: '/de/api' },
-			{ text: 'Theming', link: '/theming' },
+			{ text: 'Theming', link: '/de/theming' },
 		],
 	},
 	{
 		text: 'Framework-Anleitungen',
 		items: [
-			{ text: 'React', link: '/frameworks/react' },
-			{ text: 'Vue', link: '/frameworks/vue' },
-			{ text: 'Angular', link: '/frameworks/angular' },
-			{ text: 'Svelte', link: '/frameworks/svelte' },
-			{ text: 'Solid', link: '/frameworks/solid' },
-			{ text: 'Vanilla JS', link: '/frameworks/vanilla' },
+			{ text: 'React', link: '/de/frameworks/react' },
+			{ text: 'Vue', link: '/de/frameworks/vue' },
+			{ text: 'Angular', link: '/de/frameworks/angular' },
+			{ text: 'Svelte', link: '/de/frameworks/svelte' },
+			{ text: 'Solid', link: '/de/frameworks/solid' },
+			{ text: 'Vanilla JS', link: '/de/frameworks/vanilla' },
 		],
 	},
 	{
@@ -46,12 +46,12 @@ const sidebar: DefaultTheme.Sidebar = [
 			{ text: 'Angular-Demo', link: '/demo-angular/', target: '_self' },
 			{ text: 'Svelte-Demo', link: '/demo-svelte/', target: '_self' },
 			{ text: 'Solid-Demo', link: '/demo-solid/', target: '_self' },
-			{ text: 'Über die Demos', link: '/demos' },
+			{ text: 'Über die Demos', link: '/de/demos' },
 		],
 	},
 	{
 		text: 'Projekt',
-		items: [{ text: 'Pakete veröffentlichen', link: '/releasing' }],
+		items: [{ text: 'Pakete veröffentlichen', link: '/de/releasing' }],
 	},
 ];
 
@@ -94,7 +94,7 @@ export const de = {
 				target: '_self',
 				rel: '',
 			},
-			{ text: 'Versionen', link: '/releasing', activeMatch: '/releasing' },
+			{ text: 'Versionen', link: '/de/releasing', activeMatch: '/releasing' },
 		],
 		search: {
 			provider: 'local',

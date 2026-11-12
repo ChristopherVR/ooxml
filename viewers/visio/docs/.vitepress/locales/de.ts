@@ -38,7 +38,7 @@ export const de = {
 				target: '_self',
 				rel: '',
 			},
-			{ text: 'Versionen', link: '/releasing', activeMatch: '/releasing' },
+			{ text: 'Versionen', link: '/de/releasing', activeMatch: '/releasing' },
 		],
 		sidebar: [
 			{
@@ -46,34 +46,34 @@ export const de = {
 				items: [
 					{ text: 'Übersicht', link: '/de/' },
 					{ text: 'Erste Schritte', link: '/de/getting-started' },
-					{ text: 'Die Live-Demos', link: '/demos' },
+					{ text: 'Die Live-Demos', link: '/de/demos' },
 					{ text: 'Architektur', link: '/de/architecture' },
-					{ text: 'Framework-Bindings', link: '/bindings' },
+					{ text: 'Framework-Bindings', link: '/de/bindings' },
 				],
 			},
 			{
 				text: 'Referenz',
 				items: [
 					{ text: 'Viewer-API', link: '/de/api' },
-					{ text: 'Theming', link: '/theming' },
+					{ text: 'Theming', link: '/de/theming' },
 				],
 			},
 			{
 				text: 'Den Viewer verwenden',
 				items: [
-					{ text: 'Bausteine', link: '/building-blocks' },
+					{ text: 'Bausteine', link: '/de/building-blocks' },
 					{ text: 'Zusammenarbeit (Freigabe)', link: '/de/collaboration' },
 				],
 			},
 			{
 				text: 'Framework-Anleitungen',
 				items: [
-					{ text: 'React', link: '/frameworks/react' },
-					{ text: 'Vue', link: '/frameworks/vue' },
-					{ text: 'Angular', link: '/frameworks/angular' },
-					{ text: 'Vanilla JS', link: '/frameworks/vanilla' },
-					{ text: 'Svelte', link: '/frameworks/svelte' },
-					{ text: 'Solid', link: '/frameworks/solid' },
+					{ text: 'React', link: '/de/frameworks/react' },
+					{ text: 'Vue', link: '/de/frameworks/vue' },
+					{ text: 'Angular', link: '/de/frameworks/angular' },
+					{ text: 'Vanilla JS', link: '/de/frameworks/vanilla' },
+					{ text: 'Svelte', link: '/de/frameworks/svelte' },
+					{ text: 'Solid', link: '/de/frameworks/solid' },
 				],
 			},
 			{
@@ -83,7 +83,7 @@ export const de = {
 					{ text: 'Verifikationsprotokoll', link: '/verification' },
 					{ text: 'Korpusprüfungen', link: '/corpus' },
 					{ text: 'Quellen des Suite-Erscheinungsbilds', link: '/suite-provenance' },
-					{ text: 'Paketversionen', link: '/releasing' },
+					{ text: 'Paketversionen', link: '/de/releasing' },
 				],
 			},
 		],

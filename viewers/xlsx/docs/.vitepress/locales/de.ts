@@ -38,7 +38,7 @@ export const de = {
 				target: '_self',
 				rel: '',
 			},
-			{ text: 'Versionen', link: '/releasing', activeMatch: '/releasing' },
+			{ text: 'Versionen', link: '/de/releasing', activeMatch: '/releasing' },
 		],
 		sidebar: [
 			{
@@ -46,28 +46,28 @@ export const de = {
 				items: [
 					{ text: 'Überblick', link: '/de/' },
 					{ text: 'Erste Schritte', link: '/de/getting-started' },
-					{ text: 'Die Live-Demos', link: '/demos' },
+					{ text: 'Die Live-Demos', link: '/de/demos' },
 					{ text: 'Architektur', link: '/de/architecture' },
-					{ text: 'Framework-Bindings', link: '/bindings' },
+					{ text: 'Framework-Bindings', link: '/de/bindings' },
 				],
 			},
 			{
 				text: 'Referenz',
 				items: [
 					{ text: 'Element-API', link: '/de/api' },
-					{ text: 'Themes', link: '/theming' },
-					{ text: 'Lokalisierung', link: '/localization' },
+					{ text: 'Themes', link: '/de/theming' },
+					{ text: 'Lokalisierung', link: '/de/localization' },
 				],
 			},
 			{
 				text: 'Framework-Anleitungen',
 				items: [
-					{ text: 'React', link: '/frameworks/react' },
-					{ text: 'Vue', link: '/frameworks/vue' },
-					{ text: 'Angular', link: '/frameworks/angular' },
-					{ text: 'Vanilla JS', link: '/frameworks/vanilla' },
-					{ text: 'Svelte', link: '/frameworks/svelte' },
-					{ text: 'Solid', link: '/frameworks/solid' },
+					{ text: 'React', link: '/de/frameworks/react' },
+					{ text: 'Vue', link: '/de/frameworks/vue' },
+					{ text: 'Angular', link: '/de/frameworks/angular' },
+					{ text: 'Vanilla JS', link: '/de/frameworks/vanilla' },
+					{ text: 'Svelte', link: '/de/frameworks/svelte' },
+					{ text: 'Solid', link: '/de/frameworks/solid' },
 				],
 			},
 			{
@@ -75,7 +75,7 @@ export const de = {
 				items: [
 					{ text: 'Funktionen und Einschränkungen', link: '/de/features' },
 					{ text: 'Zusammenarbeit', link: '/de/collaboration' },
-					{ text: 'Paketversionen', link: '/releasing' },
+					{ text: 'Paketversionen', link: '/de/releasing' },
 					{
 						text: 'Änderungsprotokoll',
 						link: 'https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/CHANGELOG.md',

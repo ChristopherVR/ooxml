@@ -38,7 +38,7 @@ export const fr = {
 				target: '_self',
 				rel: '',
 			},
-			{ text: 'Versions', link: '/releasing', activeMatch: '/releasing' },
+			{ text: 'Versions', link: '/fr/releasing', activeMatch: '/releasing' },
 		],
 		sidebar: [
 			{
@@ -46,34 +46,34 @@ export const fr = {
 				items: [
 					{ text: 'Vue d’ensemble', link: '/fr/' },
 					{ text: 'Prise en main', link: '/fr/getting-started' },
-					{ text: 'Les démos en direct', link: '/demos' },
+					{ text: 'Les démos en direct', link: '/fr/demos' },
 					{ text: 'Architecture', link: '/fr/architecture' },
-					{ text: 'Liaisons de frameworks', link: '/bindings' },
+					{ text: 'Liaisons de frameworks', link: '/fr/bindings' },
 				],
 			},
 			{
 				text: 'Référence',
 				items: [
 					{ text: 'API du visualiseur', link: '/fr/api' },
-					{ text: 'Thèmes', link: '/theming' },
+					{ text: 'Thèmes', link: '/fr/theming' },
 				],
 			},
 			{
 				text: 'Utiliser le visualiseur',
 				items: [
-					{ text: 'Blocs de construction', link: '/building-blocks' },
+					{ text: 'Blocs de construction', link: '/fr/building-blocks' },
 					{ text: 'Collaboration (partage)', link: '/fr/collaboration' },
 				],
 			},
 			{
 				text: 'Guides par framework',
 				items: [
-					{ text: 'React', link: '/frameworks/react' },
-					{ text: 'Vue', link: '/frameworks/vue' },
-					{ text: 'Angular', link: '/frameworks/angular' },
-					{ text: 'Vanilla JS', link: '/frameworks/vanilla' },
-					{ text: 'Svelte', link: '/frameworks/svelte' },
-					{ text: 'Solid', link: '/frameworks/solid' },
+					{ text: 'React', link: '/fr/frameworks/react' },
+					{ text: 'Vue', link: '/fr/frameworks/vue' },
+					{ text: 'Angular', link: '/fr/frameworks/angular' },
+					{ text: 'Vanilla JS', link: '/fr/frameworks/vanilla' },
+					{ text: 'Svelte', link: '/fr/frameworks/svelte' },
+					{ text: 'Solid', link: '/fr/frameworks/solid' },
 				],
 			},
 			{
@@ -83,7 +83,7 @@ export const fr = {
 					{ text: 'Registre de vérification', link: '/verification' },
 					{ text: 'Vérifications du corpus', link: '/corpus' },
 					{ text: 'Sources de l’apparence de la suite', link: '/suite-provenance' },
-					{ text: 'Versions des paquets', link: '/releasing' },
+					{ text: 'Versions des paquets', link: '/fr/releasing' },
 				],
 			},
 		],

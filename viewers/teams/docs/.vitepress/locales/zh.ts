@@ -6,9 +6,9 @@ const sidebar: DefaultTheme.SidebarItem[] = [
 		items: [
 			{ text: '概览', link: '/zh/' },
 			{ text: '快速开始', link: '/zh/getting-started' },
-			{ text: '在线演示', link: '/demos' },
+			{ text: '在线演示', link: '/zh/demos' },
 			{ text: '协作（在线演示）', link: '/zh/collaboration' },
-			{ text: '架构', link: '/architecture' },
+			{ text: '架构', link: '/zh/architecture' },
 			{ text: '局限性', link: '/zh/limitations' },
 		],
 	},
@@ -16,18 +16,18 @@ const sidebar: DefaultTheme.SidebarItem[] = [
 		text: '参考',
 		items: [
 			{ text: '元素 API 与事件', link: '/zh/api' },
-			{ text: '主题定制', link: '/theming' },
+			{ text: '主题定制', link: '/zh/theming' },
 		],
 	},
 	{
 		text: '框架指南',
 		items: [
-			{ text: 'React', link: '/frameworks/react' },
-			{ text: 'Vue', link: '/frameworks/vue' },
-			{ text: 'Angular', link: '/frameworks/angular' },
-			{ text: 'Svelte', link: '/frameworks/svelte' },
-			{ text: 'Solid', link: '/frameworks/solid' },
-			{ text: '原生 JS', link: '/frameworks/vanilla' },
+			{ text: 'React', link: '/zh/frameworks/react' },
+			{ text: 'Vue', link: '/zh/frameworks/vue' },
+			{ text: 'Angular', link: '/zh/frameworks/angular' },
+			{ text: 'Svelte', link: '/zh/frameworks/svelte' },
+			{ text: 'Solid', link: '/zh/frameworks/solid' },
+			{ text: '原生 JS', link: '/zh/frameworks/vanilla' },
 		],
 	},
 	{
@@ -46,12 +46,12 @@ const sidebar: DefaultTheme.SidebarItem[] = [
 			{ text: 'Angular 演示', link: '/demo-angular/', target: '_self' },
 			{ text: 'Svelte 演示', link: '/demo-svelte/', target: '_self' },
 			{ text: 'Solid 演示', link: '/demo-solid/', target: '_self' },
-			{ text: '关于演示', link: '/demos' },
+			{ text: '关于演示', link: '/zh/demos' },
 		],
 	},
 	{
 		text: '项目',
-		items: [{ text: '发布软件包', link: '/releasing' }],
+		items: [{ text: '发布软件包', link: '/zh/releasing' }],
 	},
 ];
 
@@ -95,7 +95,7 @@ export const zh = {
 				target: '_self',
 				rel: '',
 			},
-			{ text: '版本发布', link: '/releasing', activeMatch: '/releasing' },
+			{ text: '版本发布', link: '/zh/releasing', activeMatch: '/releasing' },
 		],
 		search: {
 			provider: 'local',

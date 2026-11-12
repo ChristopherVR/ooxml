@@ -38,7 +38,7 @@ export const fr = {
 				target: '_self',
 				rel: '',
 			},
-			{ text: 'Versions', link: '/releasing', activeMatch: '/releasing' },
+			{ text: 'Versions', link: '/fr/releasing', activeMatch: '/releasing' },
 		],
 		sidebar: [
 			{
@@ -46,18 +46,18 @@ export const fr = {
 				items: [
 					{ text: 'Vue d’ensemble', link: '/fr/' },
 					{ text: 'Prise en main', link: '/fr/getting-started' },
-					{ text: 'Les démos en direct', link: '/demos' },
+					{ text: 'Les démos en direct', link: '/fr/demos' },
 					{ text: 'Architecture', link: '/fr/architecture' },
-					{ text: 'Adaptateurs de frameworks', link: '/bindings' },
-					{ text: 'Blocs de construction', link: '/building-blocks' },
-					{ text: 'Unités du modèle', link: '/model-units' },
+					{ text: 'Adaptateurs de frameworks', link: '/fr/bindings' },
+					{ text: 'Blocs de construction', link: '/fr/building-blocks' },
+					{ text: 'Unités du modèle', link: '/fr/model-units' },
 				],
 			},
 			{
 				text: 'Référence',
 				items: [
 					{ text: 'API de l’élément et événements', link: '/fr/api' },
-					{ text: 'Thèmes', link: '/theming' },
+					{ text: 'Thèmes', link: '/fr/theming' },
 				],
 			},
 			{
@@ -70,12 +70,12 @@ export const fr = {
 			{
 				text: 'Guides par framework',
 				items: [
-					{ text: 'React', link: '/frameworks/react' },
-					{ text: 'Vue', link: '/frameworks/vue' },
-					{ text: 'Angular', link: '/frameworks/angular' },
-					{ text: 'JS vanilla', link: '/frameworks/vanilla' },
-					{ text: 'Svelte', link: '/frameworks/svelte' },
-					{ text: 'Solid', link: '/frameworks/solid' },
+					{ text: 'React', link: '/fr/frameworks/react' },
+					{ text: 'Vue', link: '/fr/frameworks/vue' },
+					{ text: 'Angular', link: '/fr/frameworks/angular' },
+					{ text: 'JS vanilla', link: '/fr/frameworks/vanilla' },
+					{ text: 'Svelte', link: '/fr/frameworks/svelte' },
+					{ text: 'Solid', link: '/fr/frameworks/solid' },
 				],
 			},
 			{
@@ -83,7 +83,7 @@ export const fr = {
 				items: [
 					{ text: 'Feuille de route de la prise en charge', link: '/parity-roadmap' },
 					{ text: 'Travaux restants', link: '/outstanding-work' },
-					{ text: 'Publication des paquets', link: '/releasing' },
+					{ text: 'Publication des paquets', link: '/fr/releasing' },
 				],
 			},
 		],

@@ -38,7 +38,7 @@ export const zh = {
 				target: '_self',
 				rel: '',
 			},
-			{ text: '版本发布', link: '/releasing', activeMatch: '/releasing' },
+			{ text: '版本发布', link: '/zh/releasing', activeMatch: '/releasing' },
 		],
 		sidebar: [
 			{
@@ -46,18 +46,18 @@ export const zh = {
 				items: [
 					{ text: '概览', link: '/zh/' },
 					{ text: '快速开始', link: '/zh/getting-started' },
-					{ text: '在线演示', link: '/demos' },
+					{ text: '在线演示', link: '/zh/demos' },
 					{ text: '架构', link: '/zh/architecture' },
-					{ text: '框架绑定', link: '/bindings' },
-					{ text: '构建块', link: '/building-blocks' },
-					{ text: '模型单位', link: '/model-units' },
+					{ text: '框架绑定', link: '/zh/bindings' },
+					{ text: '构建块', link: '/zh/building-blocks' },
+					{ text: '模型单位', link: '/zh/model-units' },
 				],
 			},
 			{
 				text: '参考',
 				items: [
 					{ text: '元素 API 与事件', link: '/zh/api' },
-					{ text: '主题', link: '/theming' },
+					{ text: '主题', link: '/zh/theming' },
 				],
 			},
 			{
@@ -70,12 +70,12 @@ export const zh = {
 			{
 				text: '框架指南',
 				items: [
-					{ text: 'React', link: '/frameworks/react' },
-					{ text: 'Vue', link: '/frameworks/vue' },
-					{ text: 'Angular', link: '/frameworks/angular' },
-					{ text: '原生 JS', link: '/frameworks/vanilla' },
-					{ text: 'Svelte', link: '/frameworks/svelte' },
-					{ text: 'Solid', link: '/frameworks/solid' },
+					{ text: 'React', link: '/zh/frameworks/react' },
+					{ text: 'Vue', link: '/zh/frameworks/vue' },
+					{ text: 'Angular', link: '/zh/frameworks/angular' },
+					{ text: '原生 JS', link: '/zh/frameworks/vanilla' },
+					{ text: 'Svelte', link: '/zh/frameworks/svelte' },
+					{ text: 'Solid', link: '/zh/frameworks/solid' },
 				],
 			},
 			{
@@ -83,7 +83,7 @@ export const zh = {
 				items: [
 					{ text: '支持路线图', link: '/parity-roadmap' },
 					{ text: '待完成工作', link: '/outstanding-work' },
-					{ text: '软件包发布', link: '/releasing' },
+					{ text: '软件包发布', link: '/zh/releasing' },
 				],
 			},
 		],

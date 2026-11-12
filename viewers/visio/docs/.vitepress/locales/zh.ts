@@ -38,7 +38,7 @@ export const zh = {
 				target: '_self',
 				rel: '',
 			},
-			{ text: '版本发布', link: '/releasing', activeMatch: '/releasing' },
+			{ text: '版本发布', link: '/zh/releasing', activeMatch: '/releasing' },
 		],
 		sidebar: [
 			{
@@ -46,34 +46,34 @@ export const zh = {
 				items: [
 					{ text: '概览', link: '/zh/' },
 					{ text: '快速开始', link: '/zh/getting-started' },
-					{ text: '在线演示（英文）', link: '/demos' },
+					{ text: '在线演示（英文）', link: '/zh/demos' },
 					{ text: '架构', link: '/zh/architecture' },
-					{ text: '框架绑定（英文）', link: '/bindings' },
+					{ text: '框架绑定（英文）', link: '/zh/bindings' },
 				],
 			},
 			{
 				text: '参考',
 				items: [
 					{ text: '查看器 API', link: '/zh/api' },
-					{ text: '主题（英文）', link: '/theming' },
+					{ text: '主题（英文）', link: '/zh/theming' },
 				],
 			},
 			{
 				text: '使用查看器',
 				items: [
-					{ text: '构建模块', link: '/building-blocks' },
+					{ text: '构建模块', link: '/zh/building-blocks' },
 					{ text: '协作（共享）', link: '/zh/collaboration' },
 				],
 			},
 			{
 				text: '框架指南',
 				items: [
-					{ text: 'React（英文）', link: '/frameworks/react' },
-					{ text: 'Vue（英文）', link: '/frameworks/vue' },
-					{ text: 'Angular（英文）', link: '/frameworks/angular' },
-					{ text: '原生 JS（英文）', link: '/frameworks/vanilla' },
-					{ text: 'Svelte（英文）', link: '/frameworks/svelte' },
-					{ text: 'Solid（英文）', link: '/frameworks/solid' },
+					{ text: 'React（英文）', link: '/zh/frameworks/react' },
+					{ text: 'Vue（英文）', link: '/zh/frameworks/vue' },
+					{ text: 'Angular（英文）', link: '/zh/frameworks/angular' },
+					{ text: '原生 JS（英文）', link: '/zh/frameworks/vanilla' },
+					{ text: 'Svelte（英文）', link: '/zh/frameworks/svelte' },
+					{ text: 'Solid（英文）', link: '/zh/frameworks/solid' },
 				],
 			},
 			{
@@ -83,7 +83,7 @@ export const zh = {
 					{ text: '验证记录（英文）', link: '/verification' },
 					{ text: '语料库检查（英文）', link: '/corpus' },
 					{ text: '套件外观来源（英文）', link: '/suite-provenance' },
-					{ text: '包发布（英文）', link: '/releasing' },
+					{ text: '包发布（英文）', link: '/zh/releasing' },
 				],
 			},
 		],

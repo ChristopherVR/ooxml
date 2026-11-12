@@ -97,13 +97,38 @@ tab) and `Releases`. Everything else (user guide, demos, packages, API, theming,
 the sidebar. Locales translate the labels but keep the three entries. The appearance switch and
 the GitHub link stay visible at 1280 px; nothing falls into the overflow menu.
 
+**Docs sidebar head.** From 960 px, a docs page with a sidebar has no top bar: the head of the
+sidebar (`DocsSidebarTop.vue` in each site's theme, mounted through the `sidebar-nav-before` slot)
+carries what the bar held, in the hub's order: the product's letter on its accent tile and the
+site name, the source link and the appearance switch as 30 px icon buttons, a search field that
+opens the site's own search (`/` and Ctrl+K still work), the three nav entries as shortcut rows
+and the language select. It stays pinned while the page list scrolls under it. Narrower screens
+and the landing page keep the default header, so the phone menu is unchanged. The five themes
+hold the same component and the same CSS block; change them together.
+
+**Wide screens.** The sidebar stays at the left edge (272 px, 300 px from 1800 px, 320 px from
+2300 px). The article and its outline are one group, centred in what the sidebar leaves: the
+article grows from 688 px to 960 px with the window, the outline from 256 px to 288 px, and the
+body text steps up to 17 px and 18 px at the same two widths. The hub follows the same rule, so
+no docs page leaves half a large monitor empty.
+
 **Languages.** Every docs site has the same five languages (English, French, Spanish, German,
-Simplified Chinese) in the nav's language menu. Each locale translates the landing copy, the nav,
-the sidebar and the site strings, plus the core pages (getting started, the user-facing guide,
-collaboration, architecture, API); the other pages stay English and the locale sidebar links to
-them. A language-menu link from an untranslated page leads to a missing locale URL, which the
-site's one `404.html` (`site/404.html`, served by GitHub Pages for every missing path) sends to the
-English page.
+Simplified Chinese) in the language menu (the sidebar head on wide screens, the nav elsewhere).
+Each locale translates the landing copy, the nav, the sidebar and the site strings, and every
+page a reader works from: getting started, the user-facing guide, architecture, API,
+collaboration, framework bindings and the per-framework guides, building blocks, theming,
+OneDrive, demos, preservation and releasing. These stay English in every locale, and the locale
+sidebar links to the English page: generated lists (Excel's function list, PowerPoint's
+customization reference) and the project trackers that change with every parity commit (parity
+and roadmap pages, verification, outstanding work, research notes, the ribbon parity and UI
+migration logs). On the PowerPoint site, French, Spanish and German cover the guide and the user
+guide (`translationScope` in `scripts/check-docs.config.json`); its binding, core and package
+reference sections are translated into Chinese only. A translated page keeps the English heading
+ids (`## Titre {#english-slug}`) so links into it work from every language, links to the locale's
+copy of a page when one exists (`/fr/bindings`), and keeps code blocks identical to English,
+comments included. A language-menu link from an untranslated page leads to a missing locale URL,
+which the site's one `404.html` (`site/404.html`, served by GitHub Pages for every missing path)
+sends to the English page.
 
 **Docs pages move too.** Each docs site mounts `Layout.vue` with `PageMotion.vue`: on every page
 change the article and its outline rise 12 px and fade in; sidebar and nav links, pager links and
@@ -152,8 +177,12 @@ composable per site; the hub in `site/docs/docs.css`.
   app plus "Open a file"), the library below it in a framed table. The sidebar groups Workspace,
   Apps and Resources (Documentation, Product sites and demos; hidden in an installed app, which has
   no browser chrome to come back through).
-- **Simple view** (the suite's default for an open document): one 44 px bar on the surface colour replaces the
-  command row and each app's ribbon. Left to right: the app tile and file name (the extension
+- **Document commands in the ribbon layout**: there is no command row. The saved state,
+  **Simple view**, the assistant and the More menu (Save, Rename, Download, Embedded files,
+  Versions, Share in Teams) sit at the right end of the tab strip, so the tabs are the only suite
+  line above an app's own title bar. On a phone the cluster takes a line of its own.
+- **Simple view** (the suite's default for an open document): one 44 px bar on the surface colour, under the
+  tabs, replaces each app's ribbon. Left to right: the app tile and file name (the extension
   muted), Save, undo and redo, bold, italic and underline drawn as the letters themselves (Word
   and Excel; a pressed one takes the selected tint), the slide or page in view in a hairline box,
   then the saved state, **Show ribbon** (the one outlined button), the assistant, the More menu
@@ -166,9 +195,10 @@ composable per site; the hub in `site/docs/docs.css`.
   the selected tint and the 3 px accent bar. The article opens with a breadcrumb, the title, a
   lead and two buttons, then section bars: the three ways in as a joined grid, Simple view with a
   drawn (never screenshotted) app frame, an "I want to / Use" table in a framed panel, and the
-  manuals as tool cards. The right column lists the sections and marks the one in view. Under
-  1180 px the outline goes; under 820 px the sidebar becomes a header whose menu button opens
-  the list.
+  manuals as tool cards. The right column lists the sections and marks the one in view. The
+  article and the outline grow with the window up to 1560 px together (1840 px from 2300 px) and
+  stay centred in what the sidebar leaves. Under 1180 px the outline goes; under 820 px the
+  sidebar becomes a header whose menu button opens the list.
 - **Product docs landing**: hero with the product frame, the live demo (with its language select
   where the demo supports one), features as tool cards, status, quick start, FAQ, finale. The
   accent is the product colour. Every site keeps this order so the five landings read as one

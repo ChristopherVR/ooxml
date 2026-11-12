@@ -6,28 +6,28 @@ const sidebar: DefaultTheme.SidebarItem[] = [
 		items: [
 			{ text: '概览', link: '/zh/' },
 			{ text: '快速开始', link: '/zh/getting-started' },
-			{ text: '在线演示（英文）', link: '/demos' },
+			{ text: '在线演示（英文）', link: '/zh/demos' },
 			{ text: '架构', link: '/zh/architecture' },
-			{ text: '框架绑定（英文）', link: '/bindings' },
+			{ text: '框架绑定（英文）', link: '/zh/bindings' },
 		],
 	},
 	{
 		text: '参考',
 		items: [
 			{ text: '元素 API', link: '/zh/api' },
-			{ text: '主题（英文）', link: '/theming' },
-			{ text: '本地化（英文）', link: '/localization' },
+			{ text: '主题（英文）', link: '/zh/theming' },
+			{ text: '本地化（英文）', link: '/zh/localization' },
 		],
 	},
 	{
 		text: '框架指南',
 		items: [
-			{ text: 'React（英文）', link: '/frameworks/react' },
-			{ text: 'Vue（英文）', link: '/frameworks/vue' },
-			{ text: 'Angular（英文）', link: '/frameworks/angular' },
-			{ text: '原生 JS（英文）', link: '/frameworks/vanilla' },
-			{ text: 'Svelte（英文）', link: '/frameworks/svelte' },
-			{ text: 'Solid（英文）', link: '/frameworks/solid' },
+			{ text: 'React（英文）', link: '/zh/frameworks/react' },
+			{ text: 'Vue（英文）', link: '/zh/frameworks/vue' },
+			{ text: 'Angular（英文）', link: '/zh/frameworks/angular' },
+			{ text: '原生 JS（英文）', link: '/zh/frameworks/vanilla' },
+			{ text: 'Svelte（英文）', link: '/zh/frameworks/svelte' },
+			{ text: 'Solid（英文）', link: '/zh/frameworks/solid' },
 		],
 	},
 	{
@@ -35,7 +35,7 @@ const sidebar: DefaultTheme.SidebarItem[] = [
 		items: [
 			{ text: '功能与限制', link: '/zh/features' },
 			{ text: '协作', link: '/zh/collaboration' },
-			{ text: '软件包发布（英文）', link: '/releasing' },
+			{ text: '软件包发布（英文）', link: '/zh/releasing' },
 			{
 				text: '更新日志（英文）',
 				link: 'https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/CHANGELOG.md',
@@ -83,7 +83,7 @@ export const zh = {
 				target: '_self',
 				rel: '',
 			},
-			{ text: '版本发布', link: '/releasing', activeMatch: '/releasing' },
+			{ text: '版本发布', link: '/zh/releasing', activeMatch: '/releasing' },
 		],
 		search: {
 			provider: 'local',

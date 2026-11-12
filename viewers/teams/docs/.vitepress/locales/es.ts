@@ -6,9 +6,9 @@ const sidebar: DefaultTheme.SidebarItem[] = [
 		items: [
 			{ text: 'Resumen', link: '/es/' },
 			{ text: 'Primeros pasos', link: '/es/getting-started' },
-			{ text: 'Las demos en vivo', link: '/demos' },
+			{ text: 'Las demos en vivo', link: '/es/demos' },
 			{ text: 'Colaboración (demo en vivo)', link: '/es/collaboration' },
-			{ text: 'Arquitectura', link: '/architecture' },
+			{ text: 'Arquitectura', link: '/es/architecture' },
 			{ text: 'Limitaciones', link: '/es/limitations' },
 		],
 	},
@@ -16,18 +16,18 @@ const sidebar: DefaultTheme.SidebarItem[] = [
 		text: 'Referencia',
 		items: [
 			{ text: 'API del elemento y eventos', link: '/es/api' },
-			{ text: 'Temas', link: '/theming' },
+			{ text: 'Temas', link: '/es/theming' },
 		],
 	},
 	{
 		text: 'Guías por framework',
 		items: [
-			{ text: 'React', link: '/frameworks/react' },
-			{ text: 'Vue', link: '/frameworks/vue' },
-			{ text: 'Angular', link: '/frameworks/angular' },
-			{ text: 'Svelte', link: '/frameworks/svelte' },
-			{ text: 'Solid', link: '/frameworks/solid' },
-			{ text: 'JS puro', link: '/frameworks/vanilla' },
+			{ text: 'React', link: '/es/frameworks/react' },
+			{ text: 'Vue', link: '/es/frameworks/vue' },
+			{ text: 'Angular', link: '/es/frameworks/angular' },
+			{ text: 'Svelte', link: '/es/frameworks/svelte' },
+			{ text: 'Solid', link: '/es/frameworks/solid' },
+			{ text: 'JS puro', link: '/es/frameworks/vanilla' },
 		],
 	},
 	{
@@ -47,12 +47,12 @@ const sidebar: DefaultTheme.SidebarItem[] = [
 			{ text: 'Demo de Angular', link: '/demo-angular/', target: '_self' },
 			{ text: 'Demo de Svelte', link: '/demo-svelte/', target: '_self' },
 			{ text: 'Demo de Solid', link: '/demo-solid/', target: '_self' },
-			{ text: 'Acerca de las demos', link: '/demos' },
+			{ text: 'Acerca de las demos', link: '/es/demos' },
 		],
 	},
 	{
 		text: 'Proyecto',
-		items: [{ text: 'Publicación de paquetes', link: '/releasing' }],
+		items: [{ text: 'Publicación de paquetes', link: '/es/releasing' }],
 	},
 ];
 
@@ -96,7 +96,7 @@ export const es = {
 				target: '_self',
 				rel: '',
 			},
-			{ text: 'Versiones', link: '/releasing', activeMatch: '/releasing' },
+			{ text: 'Versiones', link: '/es/releasing', activeMatch: '/releasing' },
 		],
 		search: {
 			provider: 'local',
