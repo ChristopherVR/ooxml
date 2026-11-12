@@ -54,6 +54,8 @@ export function useViewerBuildingBlocks(options: MaybeRefOrGetter<BuildingBlockO
 		})),
 		/** Acknowledge a host save: clears dirty and fires `onDirtyChange(false)`. */
 		markClean: () => session.markClean(),
+		/** Commit the text being typed into a shape (call before exporting); see the building-blocks docs. */
+		commitTextEdit: () => session.commitTextEdit(),
 		loading: computed(() => state.value.loading),
 		error: computed(() => state.value.error ?? state.value.edit.error),
 		/** Effective permission: host `canEdit` and a drawing that can be saved back. */

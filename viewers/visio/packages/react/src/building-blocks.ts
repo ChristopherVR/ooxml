@@ -139,6 +139,8 @@ export function useViewerBuildingBlocks(options: BuildingBlockOptions = {}) {
 		mode: effectiveMode(state),
 		/** Acknowledge a host save: clears dirty and fires `onDirtyChange(false)`. */
 		markClean: () => controller.markClean(),
+		/** Commit the text being typed into a shape (call before exporting); resolves with the typed outcome. */
+		commitTextEdit: () => controller.commitTextEdit(),
 	};
 }
 

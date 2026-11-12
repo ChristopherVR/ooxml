@@ -44,6 +44,8 @@ export function createViewerBuildingBlocks(
 		})),
 		/** Acknowledge a host save: clears dirty and fires `onDirtyChange(false)`. */
 		markClean: () => session.markClean(),
+		/** Commit the text being typed into a shape (call before exporting); see the building-blocks docs. */
+		commitTextEdit: () => session.commitTextEdit(),
 		update,
 	};
 }

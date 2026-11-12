@@ -64,6 +64,17 @@ Como en los callbacks `onOpen...` de PowerPoint, los diálogos pertenecen al anf
 
 `controller.exportVsdx()` devuelve los bytes y nunca cambia `dirty`. Después de que el anfitrión los haya guardado, llama a `markClean()` (en el resultado del hook, en el controlador o en el handle). Eso borra `state.edit.dirty`, dispara `onDirtyChange(false)` y un evento `document-change` de tipo `save`. Las ediciones y los pasos de deshacer posteriores se miden a partir de ese punto guardado.
 
+## Guardar mientras se edita el texto de una forma {#saving-while-editing-text}
+
+Si el usuario pulsa un Guardar gestionado por el anfitrión mientras escribe dentro de una forma, el borrador aún no está en el documento. Llame primero a `await commitTextEdit()` (en el resultado del hook, la sesión, los bloques vanilla, el servicio de Angular o el controlador/handle) y después a `exportVsdx()`. Solo se resuelve cuando termina la edición del borrador, también si un blur o Esc ya la había iniciado, y devuelve un `TextEditOutcome`:
+
+- `committed`: el borrador se aplicó como una edición que se puede deshacer; `text` es lo aplicado.
+- `unchanged` (`reason`: `no-draft` o `same-text`): no hay nada que aplicar.
+- `refused` (`reason`: `read-only` o `rejected`): el editor lo rechazó; `message` explica el motivo y `text` conserva el borrador para recuperarlo.
+- `cancelled` (`reason`: `stale-document`, `superseded` o `destroyed`): el documento del borrador ya no existe o la edición fue reemplazada; `text` es el borrador.
+
+Cada resultado incluye `sourceGeneration` y `documentGeneration`, y `pageId` y `shapeId` cuando había un borrador. Un borrador pertenece al documento en el que se escribió: cargar otro archivo o desmontar el lienzo lo descarta, por lo que nunca se aplica a otro documento. La validación y deshacer/rehacer siguen la vía de edición normal.
+
 ## Paquetes {#packages}
 
 Cada paquete de framework reexporta `ooxml-ui/visio`, de modo que `mountDiagramCanvas(host, controller)`, `mountDiagramInspector(host, controller)`, `mountDiagramShapes(host, controller, { locale? })`, `diagramToolbarProps(controller, fit, locale?, hostCallbacks?)` y `fitDiagramCanvas` están disponibles desde cualquiera de ellos. Suscríbase a través del controlador existente y llame a los disposers devueltos al desmontar. No se introduce un segundo almacén de estado.

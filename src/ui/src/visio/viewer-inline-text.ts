@@ -8,6 +8,7 @@ import {
 	visioTextShape,
 } from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
+import type { TextEditOutcome } from './text-edit-outcome';
 
 interface Session {
 	pageId: string;
@@ -31,6 +32,7 @@ export class ViewerInlineText {
 	readonly input: HTMLTextAreaElement;
 	#session: Session | undefined;
 	#request = 0;
+	#inflight: Promise<TextEditOutcome> | undefined;
 	constructor(
 		private readonly viewport: HTMLElement,
 		private readonly controller: ViewerController,
@@ -95,8 +97,10 @@ export class ViewerInlineText {
 			},
 			{ ...options, capture: true },
 		);
+		const unregister = this.controller.registerTextCommitter(() => this.commitDraft(false));
 		return () => {
 			events.abort();
+			unregister();
 			++this.#request;
 			this.#close();
 			input.remove();
@@ -151,23 +155,60 @@ export class ViewerInlineText {
 	}
 	/** Save the draft as one edit; `focusCanvas` returns keyboard focus to the drawing. */
 	async commit(focusCanvas: boolean): Promise<void> {
-		const session = this.#session;
-		if (!session) return;
+		await this.commitDraft(focusCanvas);
+	}
+	/**
+	 * Save the draft and resolve once its edit completed. A commit already in flight (a blur, Esc
+	 * or tool change got there first) is awaited rather than repeated; with no draft the outcome is
+	 * `unchanged`. The draft is bound to the document it was typed in and never applied to another.
+	 */
+	commitDraft(focusCanvas = false): Promise<TextEditOutcome> {
+		if (!this.#session) return this.#inflight ?? Promise.resolve(this.#outcome('unchanged'));
+		const run = this.#commit(focusCanvas);
+		this.#inflight = run;
+		void run.then(() => {
+			if (this.#inflight === run) this.#inflight = undefined;
+		});
+		return run;
+	}
+	#outcome<S extends TextEditOutcome['status']>(
+		status: S,
+		extra: Record<string, unknown> = {},
+		session?: Session,
+	): TextEditOutcome {
+		// A destroyed controller has no generations to report.
+		const alive = !this.#destroyed();
+		const generations = {
+			sourceGeneration: session?.generation ?? (alive ? this.controller.sourceGeneration : -1),
+			documentGeneration: alive ? this.controller.documentGeneration : -1,
+			...(session ? { pageId: session.pageId, shapeId: session.shapeId } : {}),
+		};
+		return {
+			status,
+			...(status === 'unchanged' ? { reason: 'no-draft' } : {}),
+			...generations,
+			...extra,
+		} as TextEditOutcome;
+	}
+	async #commit(focusCanvas: boolean): Promise<TextEditOutcome> {
+		const session = this.#session!;
+		const draft = this.input.value;
 		if (!this.controller.canEdit) {
 			this.#close();
-			return;
+			return this.#outcome(
+				'refused',
+				{ reason: 'read-only', message: 'The drawing is read-only.', text: draft },
+				session,
+			);
 		}
-		const draft = this.input.value;
 		this.#close();
 		if (focusCanvas) this.viewport.focus({ preventScroll: true });
 		const state = this.controller.state;
 		const page = state.document?.pages.find((item) => item.id === session.pageId);
-		if (
-			!page ||
-			this.controller.sourceGeneration !== session.generation ||
-			draft === session.initial
-		)
-			return;
+		if (!page || this.controller.sourceGeneration !== session.generation)
+			return this.#outcome('cancelled', { reason: 'stale-document', text: draft }, session);
+		if (draft === session.initial)
+			return this.#outcome('unchanged', { reason: 'same-text' }, session);
 		const request = ++this.#request;
 		try {
 			// A local shape with several formatting runs keeps them: only the changed span is
@@ -175,10 +216,28 @@ export class ViewerInlineText {
 			const shape = visioTextShape(page, session.shapeId);
 			const rich = !!shape && shape.masterId === undefined && shape.text.runs.length > 1;
 			const edit = visioTextDraftEdit(page, session.shapeId, draft, rich ? { ranges: true } : {});
-			if (edit) await this.controller.applyEdits([edit]);
+			if (!edit) return this.#outcome('unchanged', { reason: 'same-text' }, session);
+			await this.controller.applyEdits([edit]);
+			// Another source took over while the edit ran: report it as the old document's.
+			if (this.controller.sourceGeneration !== session.generation)
+				return this.#outcome('cancelled', { reason: 'stale-document', text: draft }, session);
+			return this.#outcome('committed', { text: draft }, session);
 		} catch (error) {
-			if (request === this.#request && !isEditCancellation(error))
-				this.announce(editErrorMessage(error));
+			if (isEditCancellation(error)) {
+				const reason = this.#destroyed() ? 'destroyed' : 'superseded';
+				return this.#outcome('cancelled', { reason, text: draft }, session);
+			}
+			const message = editErrorMessage(error);
+			if (request === this.#request) this.announce(message);
+			return this.#outcome('refused', { reason: 'rejected', message, text: draft }, session);
+		}
+	}
+	#destroyed(): boolean {
+		try {
+			void this.controller.sourceGeneration;
+			return false;
+		} catch {
+			return true;
 		}
 	}
 	/**

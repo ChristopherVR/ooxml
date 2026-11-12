@@ -67,6 +67,10 @@ export class ViewerBuildingBlocks {
 	markClean() {
 		this.session.markClean();
 	}
+	/** Commit the text being typed into a shape (call before exporting); resolves with the typed outcome. */
+	commitTextEdit() {
+		return this.session.commitTextEdit();
+	}
 	update(options: BuildingBlockOptions) {
 		this.latest.set(options);
 		this.session.update({

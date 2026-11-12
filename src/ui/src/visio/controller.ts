@@ -88,6 +88,7 @@ import {
 	type VisioTextOccurrence,
 	type VisioTextReplacePlan,
 } from 'ooxml-core/visio/ui';
+import type { TextEditCommitter, TextEditOutcome } from './text-edit-outcome';
 
 export interface ViewerState {
 	/** Host permission, independent of source-format editing support. */
@@ -171,6 +172,7 @@ export class ViewerController {
 	#revision = 0;
 	#documentGeneration = 0;
 	#sourceGeneration = 0;
+	#textCommitter: TextEditCommitter | undefined;
 	#searchIndex: DocumentTextIndex | null = null;
 	#history: DocumentHistory | null = null;
 	#undoLevels: number | undefined;
@@ -657,6 +659,35 @@ export class ViewerController {
 			return preview(undefined);
 		}
 		return this.#preview(commands, preview);
+	}
+	/** The mounted canvas registers how its inline text draft is committed; see `commitTextEdit`. */
+	registerTextCommitter(committer: TextEditCommitter): () => void {
+		this.#textCommitter = committer;
+		return () => {
+			if (this.#textCommitter === committer) this.#textCommitter = undefined;
+		};
+	}
+	/**
+	 * Commit the text being typed into a shape on the mounted canvas, so a host Save sees it. Resolves
+	 * after the edit completed (also one already being committed) with a typed outcome; with no draft
+	 * or no canvas it is `unchanged`. A draft of another document is never applied.
+	 */
+	async commitTextEdit(): Promise<TextEditOutcome> {
+		if (this.#destroyed)
+			return {
+				status: 'cancelled',
+				reason: 'destroyed',
+				sourceGeneration: this.#sourceGeneration,
+				documentGeneration: this.#documentGeneration,
+			};
+		const committer = this.#textCommitter;
+		if (committer) return committer();
+		return {
+			status: 'unchanged',
+			reason: 'no-draft',
+			sourceGeneration: this.#sourceGeneration,
+			documentGeneration: this.#documentGeneration,
+		};
 	}
 	/** True while `previewing` runs, so a caller that wraps edits can skip its own follow-up work. */
 	get isPreviewing(): boolean {

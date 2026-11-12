@@ -66,6 +66,17 @@ Comme les rappels `onOpen...` de PowerPoint, les boîtes de dialogue appartienne
 
 `controller.exportVsdx()` renvoie les octets et ne modifie jamais `dirty`. Une fois que l'hôte les a enregistrés, il appelle `markClean()` (sur le résultat du hook, sur le contrôleur ou sur le handle). Cela efface `state.edit.dirty`, déclenche `onDirtyChange(false)` et un événement `document-change` de type `save`. Les modifications et étapes d'annulation ultérieures sont mesurées à partir de ce point enregistré.
 
+## Enregistrer pendant la modification du texte d'une forme {#saving-while-editing-text}
+
+Si l'utilisateur appuie sur un Enregistrer géré par l'hôte pendant qu'il tape dans une forme, le brouillon n'est pas encore dans le document. Appelez d'abord `await commitTextEdit()` (sur le résultat du hook, la session, les blocs vanilla, le service Angular ou le contrôleur/handle), puis `exportVsdx()`. L'appel ne se résout qu'une fois la modification du brouillon terminée, y compris si un blur ou Échap l'avait déjà lancée, et renvoie un `TextEditOutcome` :
+
+- `committed` : le brouillon a été appliqué comme une modification annulable ; `text` est ce qui a été appliqué.
+- `unchanged` (`reason` : `no-draft` ou `same-text`) : rien à appliquer.
+- `refused` (`reason` : `read-only` ou `rejected`) : l'éditeur l'a refusé ; `message` donne la raison et `text` conserve le brouillon pour le récupérer.
+- `cancelled` (`reason` : `stale-document`, `superseded` ou `destroyed`) : le document du brouillon a disparu ou la modification a été remplacée ; `text` est le brouillon.
+
+Chaque résultat contient `sourceGeneration` et `documentGeneration`, ainsi que `pageId` et `shapeId` lorsqu'il y avait un brouillon. Un brouillon appartient au document dans lequel il a été tapé : charger un autre fichier ou démonter le canevas l'abandonne, il n'est donc jamais appliqué à un autre document. La validation et l'annulation/rétablissement suivent le chemin de modification normal.
+
 ## Paquets {#packages}
 
 Chaque paquet de framework réexporte `ooxml-ui/visio`, de sorte que `mountDiagramCanvas(host, controller)`, `mountDiagramInspector(host, controller)`, `mountDiagramShapes(host, controller, { locale? })`, `diagramToolbarProps(controller, fit, locale?, hostCallbacks?)` et `fitDiagramCanvas` sont disponibles depuis n'importe lequel d'entre eux. Abonnez-vous via le contrôleur existant et appelez les fonctions de désabonnement renvoyées au démontage. Aucun second magasin d'état n'est introduit.

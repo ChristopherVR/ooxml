@@ -65,6 +65,17 @@ Wie die `onOpen...`-Callbacks in PowerPoint gehören Dialoge dem Host; die Bibli
 
 `controller.exportVsdx()` liefert die Bytes und ändert `dirty` nie. Nachdem der Host sie gespeichert hat, ruft er `markClean()` auf (am Hook-Ergebnis, am Controller oder am Handle). Das leert `state.edit.dirty`, löst `onDirtyChange(false)` und ein `document-change`-Ereignis der Art `save` aus. Spätere Änderungen und Schritte zum Rückgängigmachen werden ab diesem gespeicherten Stand gezählt.
 
+## Speichern während der Text einer Form bearbeitet wird {#saving-while-editing-text}
+
+Drückt der Benutzer ein vom Host verwaltetes Speichern, während er in einer Form tippt, ist der Entwurf noch nicht im Dokument. Rufen Sie zuerst `await commitTextEdit()` auf (am Hook-Ergebnis, an der Session, an den Vanilla-Blöcken, am Angular-Dienst oder am Controller/Handle) und danach `exportVsdx()`. Der Aufruf endet erst, wenn die Änderung des Entwurfs abgeschlossen ist, auch wenn Blur oder Esc sie bereits gestartet haben, und liefert ein `TextEditOutcome`:
+
+- `committed`: Der Entwurf wurde als eine rückgängig machbare Änderung angewendet; `text` ist der angewendete Text.
+- `unchanged` (`reason`: `no-draft` oder `same-text`): Nichts anzuwenden.
+- `refused` (`reason`: `read-only` oder `rejected`): Der Editor hat abgelehnt; `message` nennt den Grund, `text` behält den Entwurf zur Wiederherstellung.
+- `cancelled` (`reason`: `stale-document`, `superseded` oder `destroyed`): Das Dokument des Entwurfs ist weg oder die Änderung wurde ersetzt; `text` ist der Entwurf.
+
+Jedes Ergebnis enthält `sourceGeneration` und `documentGeneration`, sowie `pageId` und `shapeId`, wenn es einen Entwurf gab. Ein Entwurf gehört zu dem Dokument, in dem er getippt wurde: Wird eine andere Datei geladen oder die Canvas entfernt, verfällt er und wird nie auf ein anderes Dokument angewendet. Validierung und Rückgängig/Wiederholen laufen über den normalen Änderungsweg.
+
 ## Pakete {#packages}
 
 Jedes Framework-Paket exportiert `ooxml-ui/visio` erneut, sodass `mountDiagramCanvas(host, controller)`, `mountDiagramInspector(host, controller)`, `mountDiagramShapes(host, controller, { locale? })`, `diagramToolbarProps(controller, fit, locale?, hostCallbacks?)` und `fitDiagramCanvas` aus jedem von ihnen verfügbar sind. Abonnieren Sie über den vorhandenen Controller und rufen Sie die zurückgegebenen Disposer beim Aushängen auf. Es wird kein zweiter Zustandsspeicher eingeführt.

@@ -1,5 +1,10 @@
 import * as officeTheme from 'ooxml-ui/theme';
-import { ViewerController, createWorkerParser, type VsdxSource } from 'ooxml-ui/visio';
+import {
+	ViewerController,
+	createWorkerParser,
+	type TextEditOutcome,
+	type VsdxSource,
+} from 'ooxml-ui/visio';
 import * as ui from 'ooxml-ui/visio';
 /** Host-owned dialogs, as in the PowerPoint building blocks; omitted ones report not-enabled. */
 export interface BuildingBlockHostCallbacks {
@@ -82,6 +87,14 @@ export function createBuildingBlockSession(initial: BuildingBlockOptions = {}) {
 		markClean() {
 			controller.markClean();
 		},
+		/**
+		 * Commit the text being typed into a shape so a host Save sees it. Resolves after the edit
+		 * completed (also one already committing) with a typed outcome: committed, unchanged,
+		 * refused (the rejected text stays on it) or cancelled (stale document, destroyed).
+		 */
+		commitTextEdit(): Promise<TextEditOutcome> {
+			return controller.commitTextEdit();
+		},
 		update(next: BuildingBlockOptions) {
 			if (destroyed) return;
 			options = next;
@@ -113,6 +126,8 @@ export function createBuildingBlockSession(initial: BuildingBlockOptions = {}) {
 }
 export type BuildingBlockSession = ReturnType<typeof createBuildingBlockSession>;
 export type {
+	TextEditOutcome,
+	TextEditIdentity,
 	DiagramToolbarProps,
 	DiagramToolbarLabels,
 	DiagramToolbarHostCallbacks,

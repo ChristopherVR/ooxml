@@ -64,6 +64,17 @@ function EmbeddedDiagram({ content, canEdit, handle }) {
 
 `controller.exportVsdx()` 返回字节，并且从不更改 `dirty`。宿主完成持久化后，调用 `markClean()`（可在 Hook 结果、控制器或句柄上调用）。这会清除 `state.edit.dirty`，触发 `onDirtyChange(false)` 以及 `kind` 为 `save` 的 `document-change` 事件。此后的编辑和撤销步骤都以该保存点为基准计算。
 
+## 编辑形状文字时保存 {#saving-while-editing-text}
+
+当用户在形状内输入时按下宿主自有的“保存”，草稿尚未进入文档。请先调用 `await commitTextEdit()`（可在 Hook 结果、会话、vanilla 构建块、Angular 服务或控制器/句柄上调用），再调用 `exportVsdx()`。它只在草稿的编辑完成后才会兑现，即使失焦或 Esc 已经启动了该编辑，并返回 `TextEditOutcome`：
+
+- `committed`：草稿已作为一次可撤销的编辑应用；`text` 为已应用的文字。
+- `unchanged`（`reason`：`no-draft` 或 `same-text`）：无需应用。
+- `refused`（`reason`：`read-only` 或 `rejected`）：编辑器拒绝；`message` 说明原因，`text` 保留草稿以便恢复。
+- `cancelled`（`reason`：`stale-document`、`superseded` 或 `destroyed`）：草稿所属文档已不存在，或该编辑已被取代；`text` 为草稿。
+
+每个结果都带有 `sourceGeneration` 和 `documentGeneration`，有草稿时还有 `pageId` 和 `shapeId`。草稿属于输入它的那个文档：加载其他文件或卸载画布会丢弃草稿，因此它绝不会应用到另一个文档。验证和撤销/重做走正常的编辑路径。
+
 ## 软件包 {#packages}
 
 每个框架软件包都会重新导出 `ooxml-ui/visio`，因此任何一个都可以使用 `mountDiagramCanvas(host, controller)`、`mountDiagramInspector(host, controller)`、`mountDiagramShapes(host, controller, { locale? })`、`diagramToolbarProps(controller, fit, locale?, hostCallbacks?)` 和 `fitDiagramCanvas`。请通过现有的控制器订阅，并在卸载时调用返回的清理函数。这里不会引入第二个状态存储。

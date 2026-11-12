@@ -1,4 +1,5 @@
 export { ViewerController, type ViewerState } from './controller';
+export type { TextEditOutcome, TextEditIdentity, TextEditCommitter } from './text-edit-outcome';
 export {
 	mountDiagramCanvas,
 	fitDiagramCanvas,
