@@ -39,7 +39,7 @@
 
 ## 公式
 
-计算引擎位于 `ooxml-core`，每次编辑后会重新计算依赖单元格。其函数目录包含 497 个函数（2026-10-15 根据 `FUNCTION_CATALOG` 统计），涵盖数学和三角函数、统计（包括反分布以及 `LINEST`、`LOGEST`、`TREND` 和 `GROWTH` 系列）、逻辑、文本（包括 `REGEXTEST`、`REGEXEXTRACT` 和 `REGEXREPLACE`）、日期、查找（包括 `XLOOKUP` 以及 `FILTER`、`SORT`、`UNIQUE` 和 `SEQUENCE` 等动态数组）、信息、财务（包括债券、息票、不规则周期证券函数（`ODDFPRICE`、`ODDFYIELD`、`ODDLPRICE`、`ODDLYIELD`）、贴现证券和国库券函数，以及 `AMORDEGRC`、`VDB` 和 `XIRR`）、工程（包括 `COMPLEX`、`IM` 系列函数、`CONVERT` 和 `BESSEL` 函数）和数据库（`DSUM`、`DCOUNT`、`DGET` 等）。“插入函数”按类别列出这些函数。
+计算引擎位于 `ooxml-core`，每次编辑后会重新计算依赖单元格。其函数目录包含 502 个函数（见生成的列表），涵盖数学和三角函数、统计（包括反分布以及 `LINEST`、`LOGEST`、`TREND` 和 `GROWTH` 系列）、逻辑、文本（包括 `REGEXTEST`、`REGEXEXTRACT` 和 `REGEXREPLACE`）、日期、查找（包括 `XLOOKUP` 以及 `FILTER`、`SORT`、`UNIQUE` 和 `SEQUENCE` 等动态数组）、信息、财务（包括债券、息票、不规则周期证券函数（`ODDFPRICE`、`ODDFYIELD`、`ODDLPRICE`、`ODDLYIELD`）、贴现证券和国库券函数，以及 `AMORDEGRC`、`VDB` 和 `XIRR`）、工程（包括 `COMPLEX`、`IM` 系列函数、`CONVERT` 和 `BESSEL` 函数）和数据库（`DSUM`、`DCOUNT`、`DGET` 等）。“插入函数”按类别列出这些函数。
 
 并非所有 Excel 函数都存在：未知函数会显示 `#NAME?`。以下函数尚未实现：`ASC`、`DBCS`、`JIS`、`PHONETIC`、`INFO` 和 `WEBSERVICE`。`GETPIVOTDATA` 从缓存记录中读取本编辑器的数据透视表（工作表区域透视表），无法解析的内容返回 `#REF!`。`GROUPBY` 和 `PIVOTBY` 是子集：仅一个聚合函数（`SUM` 或 `PERCENTOF` 等函数名，或 `LAMBDA`），仅总计（总计深度 0、1 或 -1，无分类汇总），字段标题 0、1 或 3，不支持函数数组，输出为重复行标签的扁平分组；`PIVOTBY` 仅接受一个列字段。`TRIMRANGE` 以数组而非引用返回裁剪后的值。`BESSELJ(1.9,2)` 返回精确值 0.3299257277，与 Microsoft 文档中的 0.329925829 不同（Excel 本身在此处约有 1e-7 的偏差）。不规则周期证券函数使用准息票方法，并能重现 Microsoft 的示例；较长的不规则首期尚未与 Excel 核对。外部工作簿引用会保留，但不会解析。
 
@@ -78,7 +78,7 @@ Excel 2010 的迷你图绘制在其所在单元格中，位于单元格文本之
 
 “插入 > 迷你图”根据数据区域和位置区域创建折线、柱形和盈亏组。纵向的位置区域将数据行对应到各个迷你图；横向的位置区域则对应数据列。选中宿主单元格并选择“迷你图设置”，即可更改整个组的类型、标记、系列和负点颜色、线条粗细、空单元格和隐藏单元格的处理、坐标轴可见性、方向，以及各自、共享或自定义的纵向范围。“清除所选迷你图”会移除所选宿主；“清除迷你图组”会移除其整个组。这些更改支持撤销以及保存和加载。
 
-不提供样式图库、分组和取消分组。日期轴可在迷你图设置中打开或关闭。不会匹配 Excel 的精确像素输出（标记大小、柱间距和线条抗锯齿），数据区域中的非数值单元格按空处理。
+不提供样式图库。日期轴可在迷你图设置中打开或关闭。不会匹配 Excel 的精确像素输出（标记大小、柱间距和线条抗锯齿），数据区域中的非数值单元格按空处理。
 
 ## 不支持的内容（尽可能保留）
 

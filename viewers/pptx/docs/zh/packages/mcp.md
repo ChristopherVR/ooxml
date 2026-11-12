@@ -1,11 +1,11 @@
 ---
 title: MCP 与工具
-description: pptx-viewer-mcp 基于 pptx-viewer-core，提供 73 个 PPTX 操作工具、Zod 输入模式、MCP 服务器和 Y.Doc 协作编解码器。
+description: pptx-viewer-mcp 基于 pptx-viewer-core，提供 74 个 PPTX 操作工具、Zod 输入模式、MCP 服务器和 Y.Doc 协作编解码器。
 ---
 
 # MCP 与工具 {#mcp-tools}
 
-`pptx-viewer-mcp`（源码位于 `packages/tools`）为 AI 智能体和协作运行时驱动 PPTX 编辑提供工具：**73 个工具函数**、每个工具输入的 **Zod 模式**、一个 **MCP 服务器**，以及 **Y.Doc 协作编解码器**。它完全基于 [`pptx-viewer-core`](/zh/core/) 构建。
+`pptx-viewer-mcp`（源码位于 `packages/tools`）为 AI 智能体和协作运行时驱动 PPTX 编辑提供工具：**74 个工具函数**、每个工具输入的 **Zod 模式**、一个 **MCP 服务器**，以及 **Y.Doc 协作编解码器**。它完全基于 [`pptx-viewer-core`](/zh/core/) 构建。
 
 ::: tip 适用位置
 工具接受核心引擎生成的 [`PptxData` 模型](/zh/guide/data-model)，将其作为普通内存数据修改，再交还给调用方。工具本身不引入文件 I/O 或框架依赖；由你或所提供的 MCP 服务器、执行流程决定如何加载和持久化。
@@ -25,14 +25,14 @@ npm install yjs
 
 | 入口                      | 内容                                                                                                        |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `pptx-viewer-mcp`         | 73 个工具函数、提供程序类型和执行流程（`loadPresentation`、`savePresentation`、`executeToolWithContext`）。 |
+| `pptx-viewer-mcp`         | 74 个工具函数、提供程序类型和执行流程（`loadPresentation`、`savePresentation`、`executeToolWithContext`）。 |
 | `pptx-viewer-mcp/schemas` | 每个工具输入的 Zod 模式。                                                                                   |
 | `pptx-viewer-mcp/codec`   | `PptxCodec`，Y.Doc 与 PPTX 字节之间的编解码器。                                                             |
 | `pptx-viewer-mcp/mcp`     | `createServer()`，以编程方式创建 MCP 服务器的工厂函数。                                                     |
 
-## 73 个工具函数 {#the-73-tool-functions}
+## 74 个工具函数 {#the-74-tool-functions}
 
-每个工具都是**纯函数**：接收 `ToolContext`，返回 `ToolResult`，不执行文件 I/O。下表按职责列出前 67 个，表后接着列出 6 个嵌入对象工具：
+每个工具都是**纯函数**：接收 `ToolContext`，返回 `ToolResult`，不执行文件 I/O。下表按职责列出前 68 个，表后接着列出 6 个嵌入对象工具：
 
 | 分组             | 数量 | 工具                                                                                                                                                                                                                                                                                                                    |
 | ---------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -45,6 +45,7 @@ npm install yjs
 | **布局与模板**   | 4    | `applyLayout`, `getLayouts`, `applyTemplateT`, `findPlaceholdersT`                                                                                                                                                                                                                                                      |
 | **内容**         | 5    | `findText`, `replaceText`, `manageComments`, `manageHyperlinks`, `manageSmartArt`                                                                                                                                                                                                                                       |
 | **节**           | 1    | `manageSections`                                                                                                                                                                                                                                                                                                        |
+| **自定义放映**   | 1    | `manageCustomShows`                                                                                                                                                                                                                                                                                                     |
 | **元数据与属性** | 4    | `getMetadata`, `updateMetadata`, `getPresentationProperties`, `updatePresentationProperties`                                                                                                                                                                                                                            |
 | **验证与修复**   | 3    | `runAccessibilityCheck`, `validatePresentation`, `repairPresentation`                                                                                                                                                                                                                                                   |
 | **转换与导出**   | 5    | `convertToMarkdown`, `exportToSvg`, `exportSlideSvg`, `exportToJson`, `importFromJson`                                                                                                                                                                                                                                  |

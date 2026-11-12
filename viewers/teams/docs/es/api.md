@@ -6,9 +6,10 @@ Todos los bindings envuelven el mismo elemento personalizado `<teams-app>`. Los 
 
 | Propiedad          | Atributo        | Descripción                                                                                                                 |
 | ------------------ | --------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `workspaceId`      | `workspace-id`  | La sala compartida: de 1 a 128 caracteres entre letras, dígitos, `-` y `_`.                                                 |
+| `workspaceId`      | `workspace-id`  | La sala compartida: de 1 a 100 caracteres entre letras, dígitos, `-` y `_`; cualquier otro valor vuelve a `demo`.           |
 | `userName`         | `user-name`     | Nombre para mostrar.                                                                                                        |
 | `userId`           | `user-id`       | Id estable; por defecto usa uno recordado en este navegador.                                                                |
+| `locale`           | `locale`        | Idioma de la interfaz: una etiqueta BCP 47 como `de` o `zh-CN`. Un valor desconocido o vacío es inglés.                     |
 | `config`           | `server-config` | `{ mode: 'local' \| 'server', syncUrl?, signalingUrl?, iceServers, iceTransportPolicy?, token? }`. El atributo acepta JSON. |
 | `uploadFile`       |                 | Adónde van los adjuntos; por defecto, el endpoint `/files` del servidor.                                                    |
 | `openers`          |                 | Manejadores por tipo de archivo de Office (`docx`, `xlsx`, `pptx`, `vsdx`).                                                 |
@@ -21,7 +22,7 @@ Si omites `config`, el elemento ofrece un cuadro de diálogo de ajustes (recorda
 
 Al abrir un adjunto se muestra por defecto una vista previa del espacio de trabajo. Word y Excel usan los elementos de editor nativos, inicialmente en solo lectura; Visio usa su visor. Markdown tiene un renderizador de un subconjunto seguro; los archivos de texto muestran el texto literal; HTML y los sitios web usan marcos en sandbox. `openers` y el evento cancelable `teams-open-file` siguen teniendo prioridad.
 
-PowerPoint requiere una página de incrustación proporcionada por el anfitrión:
+PowerPoint se abre en una vista previa nativa de presentaciones. El anfitrión puede proporcionar en su lugar una página de incrustación:
 
 ```ts
 const embeds = {
@@ -30,7 +31,7 @@ const embeds = {
 };
 ```
 
-Pasa `embeds` a cualquier binding de componente. La página debe entender la URL del archivo y admitir un sandbox con scripts y formularios pero sin permiso de mismo origen. Las descargas de archivos omiten las credenciales; los servidores de archivos de origen cruzado deben permitir CORS. Sin un visor de PowerPoint configurado, el panel indica esa limitación y ofrece la apertura externa.
+Pasa `embeds` a cualquier binding de componente. La página debe entender la URL del archivo y admitir un sandbox con scripts y formularios pero sin permiso de mismo origen. Las descargas de archivos omiten las credenciales; los servidores de archivos de origen cruzado deben permitir CORS. Sin una entrada en `embeds` para PowerPoint, se abre la vista previa nativa.
 
 El método `previewContent({ attachment, url })` del elemento abre localmente contenido proporcionado por el anfitrión. Para un sitio web usa `attachment: { name: 'Project site', kind:
 'other', mime: 'text/html' }`. Esto no crea una pestaña de canal compartida. La vista de archivos también ofrece **Preview website**. Los sitios que rechazan ser enmarcados pueden abrirse externamente.
@@ -55,7 +56,7 @@ await teams.saveFileCopy(channelId, file);
 
 ## Creación, subida y búsqueda de archivos
 
-Ambas vistas de archivos ofrecen subida, creación de un libro de Excel en blanco y búsqueda. Las subidas y los libros nuevos tienen como destino el canal seleccionado, que aparece nombrado junto a los controles. Necesitan almacenamiento configurado; los fallos pueden reintentarse en el canal original. Los archivos con el mismo nombre usan URL de almacenamiento separadas. Las subidas aceptan hasta 20 archivos de 32 MiB cada uno (el límite propio del servidor de referencia es de 25 MB por archivo salvo que aumente `maxFileBytes`); la interfaz informa de la actividad pero no ofrece progreso en bytes ni cancelación.
+Ambas vistas de archivos ofrecen subida, creación de un libro de Excel en blanco y búsqueda. Las subidas y los libros nuevos tienen como destino el canal seleccionado, que aparece nombrado junto a los controles. Necesitan almacenamiento configurado; los fallos pueden reintentarse en el canal original. Los archivos con el mismo nombre usan URL de almacenamiento separadas. Las subidas aceptan hasta 20 archivos de 32 MiB cada uno (el límite propio del servidor de referencia es de 25 MB por archivo salvo que aumente `maxFileBytes`); la interfaz informa de la actividad y permite cancelarla, pero no ofrece progreso en bytes.
 
 ```ts
 await teams.uploadFiles(channelId, files);

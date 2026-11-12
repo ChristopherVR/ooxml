@@ -41,14 +41,14 @@ type PptxViewerSource = ArrayBuffer | Uint8Array | Blob | string;
 | `allowExternalContent`    | `boolean`                      | 未设置        | 演示文稿从其他服务器链接的内容（http(s) 目标）的宿主开关：图片、图片填充和项目符号、视频、音频和海报帧。`false` 不获取任何此类内容，`true` 允许获取；两者都会将 文件 > 选项 > 信任中心 >“允许外部内容”锁定为对应值。未设置时由用户在该处的选择决定。更改从下一次加载起生效。Google Fonts 请求由 `googleFonts` 单独控制。参见[外部内容与隐私](../guide/runtime-environments.md#external-content-and-privacy)。                                | 未安装也未嵌入的字体的 Google Fonts 回退。未设置时由 文件 > 选项 > 信任中心 >“下载未安装或未嵌入的字体”决定（默认开启：从 `fonts.googleapis.com` 加载）；`false` 不向 Google 发送任何请求（文字使用已安装、嵌入或回退字体），并将该选项锁定为关闭；`{ baseUrl }` 改为向自托管镜像发送 CSS2 请求，并将该选项锁定为开启（无效的 `baseUrl` 会关闭回退并将其锁定为关闭）。参见[字体与隐私](../guide/runtime-environments.md#fonts-and-privacy)。 |
 | `listConversionScope`     | `'paragraph' \| 'list'`        | `'paragraph'` | 光标未选中文本时“项目符号”/“编号”的作用范围。`'paragraph'` 只转换光标所在段落，与 PowerPoint 一致。`'list'` 表示光标在列表段落中于项目符号和编号之间切换时，转换其所在的整个列表（同级相邻项及其间嵌套的更深层项），与 Word 和 Google 文档一致。关闭列表、为普通段落添加列表以及选中文本范围时，两种模式的行为相同。                                                                                                                         |
 | `limits`                  | `PptxLoadLimits`               | 未设置        | 加载演示文稿的工作量上限，供显示不受信任演示文稿的宿主使用：`maxInputBytes`、`maxUncompressedBytes`、`maxEntries`、`maxSlides`、`maxShapes`。未设置时保留核心默认值（解压后 500 MiB、65,536 个 ZIP 条目，其他不限）。超出限制的演示文稿会显示错误浮层（`onError` 收到同一条消息），并给出限制值和演示文稿的实际值。每次加载时读取。参见[加载限制](../guide/runtime-environments.md#load-limits)。                                            |
-| `showToolbar`             | `boolean`                      | `true`        | 显示导航、缩放和全屏工具栏。                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `showToolbar`             | `boolean`                      | `true`        | 显示标题栏、功能区、状态栏，以及受保护视图和只读横幅。`setShowToolbar` 可在查看器运行时修改该值。                                                                                                                                                                                                                                                                                                                                            |
 | `showThumbnails`          | `boolean`                      | `true`        | 显示缩略图侧边栏。                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `showCompatibilityToasts` | `boolean`                      | `true`        | 加载后显示兼容性警告提示堆栈。`false` 只隐藏堆栈，警告仍会被收集。不受 `showToolbar` 影响。                                                                                                                                                                                                                                                                                                                                                  |
 | `showFormatToolbar`       | `boolean`                      | `true`        | 构建编辑格式工具栏行，包括粗体、填充、插入和层叠顺序。该行仅在启用编辑时*可见*。                                                                                                                                                                                                                                                                                                                                                             |
-| `showInspector`           | `boolean`                      | `true`        | 构建属性检查器面板，包括位置、尺寸、填充和线条。仅在启用编辑时*可见*。                                                                                                                                                                                                                                                                                                                                                                       |
+| `showInspector`           | `boolean`                      | `true`        | **已弃用**：请改用 `customization.hiddenPanels` 隐藏检查器，与其他绑定一致。构建属性检查器面板，包括位置、尺寸、填充和线条。仅在启用编辑时*可见*。                                                                                                                                                                                                                                                                                           |
 | `hiddenActions`           | `ToolbarActionId[]`            | -             | 单独隐藏工具栏按钮或功能区选项卡，见下文。                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `editable`                | `boolean`                      | `false`       | 启用编辑，包括点击选择、拖动、缩放、旋转、内联文本编辑、键盘快捷键、撤销和重做，以及工具栏保存按钮。稍后可通过 [`setEditable`](/zh/vanilla/api#editing) 切换。                                                                                                                                                                                                                                                                               |
-| `readOnly`                | `boolean`                      | -             | 已由 `editable` 替代的旧标记，保留它是为了让已有选项对象继续通过类型检查，不再产生效果。                                                                                                                                                                                                                                                                                                                                                     |
+| `readOnly`                | `boolean`                      | -             | 强制文稿只读。`true` 优先于 `editable`；`false` 只取消该限制，并且协作 `viewer` 角色不会因此获得编辑权限。`setReadOnly` 可在查看器运行时修改该值。                                                                                                                                                                                                                                                                                           |
 | `inspectorInitiallyOpen`  | `boolean`                      | -             | 检查器的初始可见性；省略时保持桌面端或移动端的默认值。                                                                                                                                                                                                                                                                                                                                                                                       |
 | `rulerUnit`               | `RulerUnit`                    | `'inches'`    | “视图 > 标尺”刻度标签的单位制（`'centimetres'` 在各绑定中标签一致）。                                                                                                                                                                                                                                                                                                                                                                        |
 
@@ -56,7 +56,7 @@ type PptxViewerSource = ArrayBuffer | Uint8Array | Blob | string;
 
 `ToolbarActionId` 中每个 ID 控制一个快速访问按钮、一个控件组或整个功能区选项卡。与 `showToolbar` 不同，它可以隐藏单个部分，而不是整个界面：
 
-- **按钮或控件组**：`'share'`、`'broadcast'`、`'export'`、`'undo'`、`'redo'`、`'record'`、`'notes'`、`'fullscreen'`、`'zoom'`（放大、缩小和适应作为一组）、`'navigation'`（上一张和下一张作为一组）。
+- **按钮或控件组**：`'share'`、`'broadcast'`、`'export'`、`'undo'`、`'redo'`、`'record'`、`'notes'`、`'fullscreen'`、`'zoom'`（放大、缩小和适应作为一组）、`'navigation'`（上一张和下一张作为一组）、`'mergeShapes'`、`'crop'`。
 - **功能区选项卡**：`'file'`、`'home'`、`'insert'`、`'draw'`、`'design'`、`'transitions'`、`'animations'`、`'slideShow'`、`'record'`、`'review'`、`'view'`、`'help'`。
 
 `'record'` 同时隐藏快速访问录制控件和录制功能区选项卡，因为它们提供相同功能。
@@ -99,23 +99,26 @@ createPptxViewer(el, {
 
 ## 扩展 {#extension}
 
-| 选项                                                                       | 类型                              | 默认值                    | 说明                                                                                                                                                                                               |
-| -------------------------------------------------------------------------- | --------------------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `registry`                                                                 | `ElementRendererRegistry`         | `createDefaultRegistry()` | 自定义元素渲染器注册表。传入自己的注册表，或通过 `getRegistry()` 修改默认注册表，以添加或覆盖元素渲染器。参见[元素渲染器](/zh/vanilla/renderers)。                                                 |
-| `smartArt3D`                                                               | `boolean`                         | `false`                   | 可选的 WebGL SmartArt 渲染器，将 `smartArt` 元素渲染为拉伸的 Three.js 场景。`three` 是可选 peer 依赖，仅当值为 `true` 时延迟导入；不可用时使用 SVG 渲染器。仅在构造时设置一次，没有运行时 setter。 |
-| `surfaceChart3D`, `barChart3D`, `lineChart3D`, `areaChart3D`, `pieChart3D` | `boolean`                         | `false`                   | 分别启用对应三维图表类型的交互式 Three.js 渲染器。缺少 `three`，或图表无法渲染为 WebGL 场景时，均回退为 SVG。                                                                                      |
-| `ai`                                                                       | `PptxAiAssistant \| PptxAiConfig` | -                         | 启用可选智能助手：传入 `pptx-vanilla-viewer/ai` 中的 `createAiAssistant(config)`，或普通的 `PptxAiConfig`。SDK 同级依赖只在打开面板时加载，省略此选项则不提供助手。                                |
-| `ribbonAddIns`                                                             | `readonly RibbonAddInTab[]`       | -                         | 宿主在“帮助”之后添加的功能区选项卡。每个命令运行其 `run` 回调，并分发一个冒泡的 `office-ribbon-add-in` 事件。实例上的 `setRibbonAddIns` 可实时更改它们。                                           |
+| 选项                                                                       | 类型                                 | 默认值                    | 说明                                                                                                                                                                                                                                                                                                      |
+| -------------------------------------------------------------------------- | ------------------------------------ | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `registry`                                                                 | `ElementRendererRegistry`            | `createDefaultRegistry()` | 自定义元素渲染器注册表。传入自己的注册表，或通过 `getRegistry()` 修改默认注册表，以添加或覆盖元素渲染器。参见[元素渲染器](/zh/vanilla/renderers)。                                                                                                                                                        |
+| `smartArt3D`                                                               | `boolean`                            | `false`                   | 可选的 WebGL SmartArt 渲染器，将 `smartArt` 元素渲染为拉伸的 Three.js 场景。`three` 是可选 peer 依赖，仅当值为 `true` 时延迟导入；不可用时使用 SVG 渲染器。仅在构造时设置一次，没有运行时 setter。                                                                                                        |
+| `surfaceChart3D`, `barChart3D`, `lineChart3D`, `areaChart3D`, `pieChart3D` | `boolean`                            | `false`                   | 分别启用对应三维图表类型的交互式 Three.js 渲染器。缺少 `three`，或图表无法渲染为 WebGL 场景时，均回退为 SVG。                                                                                                                                                                                             |
+| `ai`                                                                       | `PptxAiAssistant \| PptxAiConfig`    | -                         | 启用可选智能助手：传入 `pptx-vanilla-viewer/ai` 中的 `createAiAssistant(config)`，或普通的 `PptxAiConfig`。SDK 同级依赖只在打开面板时加载，省略此选项则不提供助手。                                                                                                                                       |
+| `ribbonAddIns`                                                             | `readonly RibbonAddInTab[]`          | -                         | 宿主在“帮助”之后添加的功能区选项卡。每个命令运行其 `run` 回调，并分发一个冒泡的 `office-ribbon-add-in` 事件。实例上的 `setRibbonAddIns` 可实时更改它们。                                                                                                                                                  |
+| `ribbonDisplay`                                                            | `'always' \| 'tabs' \| 'fullScreen'` | `'always'`                | PowerPoint 的“功能区显示选项”（启动时）：`'always'` 固定显示选项卡和命令；`'tabs'` 只显示选项卡行，选中某个选项卡时其命令叠加在幻灯片上；`'fullScreen'` 隐藏标题栏和功能区，仅在顶部保留一条可展开的条带。用户可通过选项卡行右端的菜单、Ctrl+F1 或双击选项卡切换；`setRibbonDisplay` 可由宿主修改该模式。 |
 
 ## 自动保存 {#autosave}
 
 在共享 IndexedDB 存储中保存崩溃恢复快照，有未保存修改时每个间隔写入一次。自动保存不会替代用户真正的保存操作，只在下次启动时提供恢复保障。
 
-| 选项                 | 类型      | 默认值                | 说明                                                                                       |
-| -------------------- | --------- | --------------------- | ------------------------------------------------------------------------------------------ |
-| `autosave`           | `boolean` | `true`                | 用于恢复的自动保存，工具栏显示小型状态标记。它是标题栏开关可启用范围的策略上限，详见下文。 |
-| `autosaveIntervalMs` | `number`  | “文件 > 选项”中的间隔 | 有未保存修改时，两次恢复快照之间的间隔，单位为毫秒。显式值优先于用户的自动恢复设置。       |
-| `autosaveFilePath`   | `string`  | `'presentation.pptx'` | 自动保存使用的 IndexedDB 恢复键。                                                          |
+| 选项                 | 类型                  | 默认值                                   | 说明                                                                                                                                              |
+| -------------------- | --------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `autosave`           | `boolean`             | `true`                                   | 用于恢复的自动保存，工具栏显示小型状态标记。它是标题栏开关可启用范围的策略上限，详见下文。                                                        |
+| `autosaveIntervalMs` | `number`              | “文件 > 选项”中的间隔                    | 有未保存修改时，两次恢复快照之间的间隔，单位为毫秒。显式值优先于用户的自动恢复设置。                                                              |
+| `filePath`           | `string`              | `fileName`，否则为 `'presentation.pptx'` | 原始文件路径，用作 IndexedDB 恢复键。                                                                                                             |
+| `fileProviders`      | `CloudFileProvider[]` | 未设置                                   | “文件 > 打开”中的云端位置（例如来自 `ooxml-core/embedding/onedrive` 的 OneDrive）。从其中打开的文件会保存回其自身的存储位置，直到加载另一份文档。 |
+| `autosaveFilePath`   | `string`              | `'presentation.pptx'`                    | **已弃用**：请改用 `filePath`；两者都设置时以 `filePath` 为准。自动保存使用的 IndexedDB 恢复键。                                                  |
 
 运行时控制由实例提供：[`autosaveNow` / `setAutosaveEnabled` / `isAutosaveEnabled`](/zh/vanilla/api#autosave)。
 
@@ -182,6 +185,7 @@ createPptxViewer(el, { collaboration: { roomId: 'deck-review', user: { name: 'Ad
 | `onError`               | `(message: string, error: unknown) => void`                      | 加载失败时触发，消息已经尽可能本地化。                                                                                                                                                             |
 | `onSlideChange`         | `(index: number) => void`                                        | 当前幻灯片变化时触发，索引从 0 开始。                                                                                                                                                              |
 | `onZoomChange`          | `(scale: number) => void`                                        | 实际缩放比例变化时触发，1 表示 100%。                                                                                                                                                              |
+| `onRibbonDisplayChange` | `(mode: 'always' \| 'tabs' \| 'fullScreen') => void`             | 用户选择“功能区显示选项”模式时触发。通过 `setRibbonDisplay` 修改时不触发。查看器只在本次生命周期内保留这一选择；如需下次访问时恢复，请自行保存。                                                   |
 | `onPresentationChange`  | `(presenting: boolean) => void`                                  | 进入或退出全屏放映模式时触发。                                                                                                                                                                     |
 | `onChange`              | `() => void`                                                     | 任何文档修改后触发，例如移动、缩放、编辑和撤销。                                                                                                                                                   |
 | `onDirtyChange`         | `(dirty: boolean) => void`                                       | 未保存编辑标记变化时触发，保存会重置该标记。                                                                                                                                                       |
@@ -211,6 +215,7 @@ interface PptxViewerCallbacks {
 	onError?: (message: string, error: unknown) => void;
 	onSlideChange?: (index: number) => void;
 	onZoomChange?: (scale: number) => void;
+	onRibbonDisplayChange?: (mode: 'always' | 'tabs' | 'fullScreen') => void;
 	onPresentationChange?: (presenting: boolean) => void;
 	onChange?: () => void;
 	onDirtyChange?: (dirty: boolean) => void;
@@ -228,7 +233,7 @@ interface PptxViewerCallbacks {
 	onHyperlinkClick?: HyperlinkClickHandler;
 }
 
-interface PptxViewerOptions extends PptxViewerCallbacks {
+interface PptxViewerOptions extends PptxViewerCallbacks, ViewportFitOptions {
 	source?: PptxViewerSource;
 	fonts?: ViewerFontSource[];
 	theme?: ViewerTheme;
@@ -254,11 +259,13 @@ interface PptxViewerOptions extends PptxViewerCallbacks {
 	showThumbnails?: boolean;
 	showCompatibilityToasts?: boolean;
 	showFormatToolbar?: boolean;
+	/** @deprecated Use `customization.hiddenPanels`. */
 	showInspector?: boolean;
 	inspectorInitiallyOpen?: boolean;
 	rulerUnit?: RulerUnit;
 	customization?: ViewerCustomization;
 	ribbonAddIns?: readonly RibbonAddInTab[];
+	ribbonDisplay?: 'always' | 'tabs' | 'fullScreen';
 	hiddenActions?: ToolbarActionId[];
 	registry?: ElementRendererRegistry;
 	smartArt3D?: boolean;
@@ -267,10 +274,14 @@ interface PptxViewerOptions extends PptxViewerCallbacks {
 	lineChart3D?: boolean;
 	areaChart3D?: boolean;
 	pieChart3D?: boolean;
-	ai?: PptxAiConfig;
+	ai?: PptxAiConfig | PptxAiAssistant;
 	autosave?: boolean;
 	onToggleAutosave?: (enabled: boolean) => void;
 	autosaveIntervalMs?: number;
+	storage?: DocumentStorage;
+	fileProviders?: readonly CloudFileProvider[];
+	filePath?: string;
+	/** @deprecated Use `filePath`. */
 	autosaveFilePath?: string;
 	collaboration?: CollaborationInput;
 	shareDefaults?: ShareDefaults;
@@ -293,7 +304,7 @@ const viewer = createPptxViewer(document.getElementById('host')!, {
 	showThumbnails: true,
 	hiddenActions: ['broadcast', 'record'],
 	autosave: true,
-	autosaveFilePath: 'quarterly.pptx',
+	filePath: 'quarterly.pptx',
 	onLoad: ({ slideCount }) => console.log(`${slideCount} slides`),
 	onSlideChange: (index) => console.log('slide', index + 1),
 	onZoomChange: (scale) => console.log(`${Math.round(scale * 100)}%`),

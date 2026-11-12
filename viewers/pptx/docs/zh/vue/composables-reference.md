@@ -60,7 +60,6 @@ import { useEditorHistory, useAlignGroup } from 'pptx-vue-viewer/internals';
 | `useSmartArtHoverRect`       | SmartArt 节点的悬停高亮矩形。                                          |
 | `useSmartArtNodeEditContext` | 通过 provide/inject 为 SmartArt 节点的内联文本和填充编辑提供上下文。   |
 | `useSmartArtInlineEditState` | SmartArt 内联节点编辑器的打开和关闭状态（`smartart-inline-edit.ts`）。 |
-| `useSmartArt3D`              | 通过 inject 读取可选的 `smartArt3D` 标记（`smart-art-3d.ts`）。        |
 
 ## 表格 {#tables}
 

@@ -6,9 +6,10 @@ Toutes les intégrations enveloppent le même élément personnalisé `<teams-ap
 
 | Propriété       | Attribut        | Description                                                                                                                    |
 | --------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `workspaceId`   | `workspace-id`  | La salle partagée : 1 à 128 caractères parmi lettres, chiffres, `-` et `_`.                                                    |
+| `workspaceId`   | `workspace-id`  | La salle partagée : 1 à 100 caractères parmi lettres, chiffres, `-` et `_` ; toute autre valeur revient à `demo`.              |
 | `userName`      | `user-name`     | Nom affiché.                                                                                                                   |
 | `userId`        | `user-id`       | Identifiant stable ; par défaut, un identifiant mémorisé dans ce navigateur.                                                   |
+| `locale`        | `locale`        | Langue d’affichage : une étiquette BCP 47 comme `de` ou `zh-CN`. Valeur inconnue ou vide : anglais.                            |
 | `config`        | `server-config` | `{ mode: 'local' \| 'server', syncUrl?, signalingUrl?, iceServers, iceTransportPolicy?, token? }`. L’attribut accepte du JSON. |
 | `uploadFile`    |                 | La destination des pièces jointes ; par défaut, le point d’accès `/files` du serveur.                                          |
 | `openers`       |                 | Gestionnaires par type Office (`docx`, `xlsx`, `pptx`, `vsdx`).                                                                |
@@ -25,7 +26,7 @@ Markdown dispose d’un moteur de rendu à sous-ensemble sûr ; les fichiers tex
 littéral ; HTML et les sites web utilisent des cadres en bac à sable. `openers` et l’événement
 annulable `teams-open-file` restent prioritaires.
 
-PowerPoint exige une page d’intégration fournie par l’hôte :
+PowerPoint s’ouvre dans un aperçu natif de présentation. Un hôte peut à la place fournir une page d’intégration :
 
 ```ts
 const embeds = {
@@ -37,8 +38,8 @@ const embeds = {
 Transmettez `embeds` à n’importe quelle intégration de composant. La page doit comprendre l’URL du
 fichier et prendre en charge un bac à sable avec scripts et formulaires mais sans permission de même
 origine. Les récupérations de fichiers omettent les identifiants ; les serveurs de fichiers
-d’autres origines doivent autoriser CORS. Sans visionneuse PowerPoint configurée, le volet signale
-cette limite et propose l’ouverture externe.
+d’autres origines doivent autoriser CORS. Sans entrée `embeds` pour PowerPoint, l’aperçu natif
+s’ouvre.
 
 La méthode `previewContent({ attachment, url })` de l’élément ouvre localement un contenu fourni
 par l’hôte. Pour un site web, utilisez `attachment: { name: 'Project site', kind:
@@ -83,8 +84,7 @@ Les deux vues Fichiers proposent l’envoi, la création d’un classeur Excel v
 Les envois et les nouveaux classeurs ciblent le canal sélectionné, nommé à côté des commandes. Ils
 exigent un stockage configuré ; les échecs peuvent être réessayés dans le canal d’origine. Les
 fichiers de même nom utilisent des URL de stockage distinctes. Les envois acceptent jusqu’à 20
-fichiers de 32 Mio chacun (le plafond propre au serveur de référence est de 25 Mo par fichier, sauf si vous relevez `maxFileBytes`) ; l’interface signale l’activité mais n’offre ni progression en octets ni
-annulation.
+fichiers de 32 Mio chacun (le plafond propre au serveur de référence est de 25 Mo par fichier, sauf si vous relevez `maxFileBytes`) ; l’interface signale l’activité et permet de l’annuler, mais n’offre pas de progression en octets.
 
 ```ts
 await teams.uploadFiles(channelId, files);

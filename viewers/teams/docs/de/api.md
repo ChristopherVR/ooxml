@@ -6,9 +6,10 @@ Jedes Binding umhüllt dasselbe Custom Element `<teams-app>`. Die Bindings leite
 
 | Eigenschaft     | Attribut        | Beschreibung                                                                                                                         |
 | --------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `workspaceId`   | `workspace-id`  | Der gemeinsame Raum: 1 bis 128 Zeichen aus Buchstaben, Ziffern, `-` und `_`.                                                         |
+| `workspaceId`   | `workspace-id`  | Der gemeinsame Raum: 1 bis 100 Zeichen aus Buchstaben, Ziffern, `-` und `_`; jeder andere Wert fällt auf `demo` zurück.              |
 | `userName`      | `user-name`     | Anzeigename.                                                                                                                         |
 | `userId`        | `user-id`       | Stabile ID; standardmäßig eine, die in diesem Browser gespeichert ist.                                                               |
+| `locale`        | `locale`        | Anzeigesprache: ein BCP-47-Tag wie `de` oder `zh-CN`. Unbekannt oder leer bedeutet Englisch.                                         |
 | `config`        | `server-config` | `{ mode: 'local' \| 'server', syncUrl?, signalingUrl?, iceServers, iceTransportPolicy?, token? }`. Das Attribut nimmt JSON entgegen. |
 | `uploadFile`    |                 | Wohin Anhänge gehen; standardmäßig der `/files`-Endpunkt des Servers.                                                                |
 | `openers`       |                 | Handler je Office-Typ (`docx`, `xlsx`, `pptx`, `vsdx`).                                                                              |
@@ -24,7 +25,7 @@ die nativen Editor-Elemente, zunächst schreibgeschützt; Visio nutzt seinen Vie
 für eine sichere Teilmenge; Textdateien zeigen den Text unverändert; HTML und Websites nutzen Sandbox-
 Frames. `openers` und das abbrechbare Ereignis `teams-open-file` haben weiterhin Vorrang.
 
-PowerPoint benötigt eine vom Host bereitgestellte Einbettungsseite:
+PowerPoint öffnet sich in einer nativen Präsentationsvorschau. Ein Host kann stattdessen eine Einbettungsseite bereitstellen:
 
 ```ts
 const embeds = {
@@ -35,8 +36,8 @@ const embeds = {
 
 Übergeben Sie `embeds` an ein beliebiges Komponenten-Binding. Die Seite muss die Datei-URL verstehen und
 eine Sandbox mit Skripten/Formularen, aber ohne Same-Origin-Berechtigung unterstützen. Dateiabrufe
-senden keine Zugangsdaten mit; Dateiserver auf anderen Origins müssen CORS erlauben. Ohne konfigurierten
-PowerPoint-Viewer meldet der Bereich diese Einschränkung und bietet das externe Öffnen an.
+senden keine Zugangsdaten mit; Dateiserver auf anderen Origins müssen CORS erlauben. Ohne einen Eintrag
+in `embeds` für PowerPoint öffnet sich die native Vorschau.
 
 Die Methode `previewContent({ attachment, url })` des Elements öffnet vom Host bereitgestellte
 Inhalte lokal. Für eine Website verwenden Sie `attachment: { name: 'Project site', kind:
@@ -80,7 +81,7 @@ Beide Dateiansichten bieten Hochladen, das Anlegen leerer Excel-Arbeitsmappen un
 und neue Arbeitsmappen gehen in den ausgewählten Kanal, der neben den Bedienelementen genannt wird.
 Sie benötigen konfigurierten Speicher; Fehler können im ursprünglichen Kanal wiederholt werden.
 Gleichnamige Dateien erhalten getrennte Speicher-URLs. Uploads akzeptieren bis zu 20 Dateien zu je 32 MiB (das Limit des Referenzservers liegt bei 25 MB pro Datei, solange Sie `maxFileBytes` nicht erhöhen);
-die Oberfläche meldet Aktivität, bietet aber weder Byte-Fortschritt noch Abbruch.
+die Oberfläche meldet Aktivität und erlaubt den Abbruch, bietet aber keinen Byte-Fortschritt.
 
 ```ts
 await teams.uploadFiles(channelId, files);

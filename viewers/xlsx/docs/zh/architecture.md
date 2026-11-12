@@ -38,7 +38,7 @@ published, one per framework (self-contained bundles)
 
 ## Web 组件负责绘制
 
-`packages/web-component` 是唯一的编辑界面：它在工作簿之上创建编辑会话，绘制核心布局函数返回的内容，把键盘、鼠标和功能区输入路由到编辑命令，并负责样式、语言区域和对话框。Shadow DOM 限定其样式作用域；注册只在浏览器中进行，且是幂等的。浏览器测试通过每一种绑定验证同一份契约。
+`<xlsx-editor>` 是唯一的编辑界面，位于 `ooxml` 仓库中（`src/ui/src/xlsx`、`ooxml-ui/xlsx`），`packages/web-component` 仅对其重新导出。它在工作簿之上创建编辑会话，绘制核心布局函数返回的内容，把键盘、鼠标和功能区输入路由到编辑命令，并负责样式、语言区域和对话框。Shadow DOM 限定其样式作用域；注册只在浏览器中进行，且是幂等的。浏览器测试通过每一种绑定验证同一份契约。
 
 `packages/bindings` 只负责框架集成：挂载与卸载、属性更新、事件转发和命令式句柄。新的编辑器功能应放在 Web 组件（或核心）中；只有出于框架生命周期或 API 的需要，才应修改绑定。
 

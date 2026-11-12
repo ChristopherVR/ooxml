@@ -38,7 +38,7 @@ Eine geladene Arbeitsmappe behält die Teile, die das Modell nicht abbildet, in 
 
 ## Die Web Component zeichnet
 
-`packages/web-component` ist die einzige Bearbeitungsoberfläche: Sie erzeugt eine Bearbeitungssitzung über der Arbeitsmappe, zeichnet, was die Layoutfunktionen des Cores liefern, leitet Tastatur-, Maus- und Menüband-Eingaben an Bearbeitungsbefehle weiter und besitzt Styling, Sprachen und Dialoge. Das Shadow DOM begrenzt ihre Stile; die Registrierung findet nur im Browser statt und ist idempotent. Browsertests prüfen denselben Vertrag über jedes Binding.
+`<xlsx-editor>` ist die einzige Bearbeitungsoberfläche; sie liegt im Repository `ooxml` (`src/ui/src/xlsx`, `ooxml-ui/xlsx`), und `packages/web-component` exportiert sie nur erneut. Sie erzeugt eine Bearbeitungssitzung über der Arbeitsmappe, zeichnet, was die Layoutfunktionen des Cores liefern, leitet Tastatur-, Maus- und Menüband-Eingaben an Bearbeitungsbefehle weiter und besitzt Styling, Sprachen und Dialoge. Das Shadow DOM begrenzt ihre Stile; die Registrierung findet nur im Browser statt und ist idempotent. Browsertests prüfen denselben Vertrag über jedes Binding.
 
 `packages/bindings` ist ausschließlich für die Framework-Integration zuständig: Einbinden und Entfernen, Aktualisierung von Eigenschaften, Weiterleitung von Ereignissen und imperative Handles. Neue Editorfunktionen gehören in die Web Component (oder in den Core); eine Änderung an einem Binding ist nur durch eine Anforderung des Framework-Lebenszyklus oder der Framework-API gerechtfertigt.
 

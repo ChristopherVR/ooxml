@@ -120,7 +120,7 @@ const customization: ViewerCustomization = {
 
 ### 功能区组和控件 {#ribbon-groups-and-controls}
 
-在标签页层级之下，每个功能区组和组内的每个控件都在一个共享目录中拥有稳定的 id：组为 `<tab>.<group>`，控件为 `<tab>.<group>.<control>`，按 PowerPoint 自身的标题命名（`home.font`、`home.font.bold`、`insert.media.media`、`view.show.ruler`）。因选择而出现的上下文标签页（`shapeFormat`、`pictureFormat`、`tableDesign`、`chartDesign`、`smartArtDesign`）以同样方式寻址，其标签页 id 可用于 `ribbon.hiddenTabs`。
+在标签页层级之下，每个功能区组和组内的每个控件都在一个共享目录中拥有稳定的 id：组为 `<tab>.<group>`，控件为 `<tab>.<group>.<control>`，按 PowerPoint 自身的标题命名（`home.font`、`home.font.bold`、`insert.media.media`、`view.show.ruler`）。因选择而出现的上下文标签页（`shapeFormat`、`pictureFormat`、`tableDesign`、`tableLayout`、`chartDesign`、`chartFormat`、`smartArtDesign`）以同样方式寻址，其标签页 id 可用于 `ribbon.hiddenTabs`。
 
 ```ts
 const customization: ViewerCustomization = {

@@ -106,7 +106,7 @@ Oder als reines Markup, nachdem Sie `defineTeamsApp()` aus `openteams-vanilla-vi
 
 Jedes Binding nimmt dieselben Props entgegen: `workspaceId` (der gemeinsame Raum: Buchstaben, Ziffern, `-` und `_`),
 `userName`, `userId` (eine stabile ID; standardmäßig eine, die in diesem Browser gespeichert ist), `config`,
-`uploadFile` (wohin Anhänge gehen), `openers` (Handler je Office-Typ) und drei Ereignisse:
+`uploadFile` (wohin Anhänge gehen), `openers` (Handler je Office-Typ), `embeds` (Viewer-Seiten je Dateityp), `locale` (ein BCP-47-Tag wie `de`) und drei Ereignisse:
 bereit, Datei öffnen (rufen Sie darauf `preventDefault()` auf, um die Datei selbst zu öffnen) und Konfigurationsänderung
 (`onReady`, `onOpenFile`, `onConfigChange` in React, Solid, Svelte und Vanilla; `@ready`,
 `@open-file`, `@config-change` in Vue; `(ready)`, `(openFile)`, `(configChange)` in Angular). Die
@@ -154,7 +154,7 @@ gehören `select`, `createChannel`, `send`, `startReply`, `startEdit`, `deleteMe
 `toggleReaction`, `search`, `openCall`, `joinCall`, `leaveCall`, `toggleMic`, `toggleCamera`,
 `toggleScreenShare` und `toggleHand`. Die React-Demo zeigt beide Stile nebeneinander.
 
-## Aus dem Quellcode starten
+## Aus dem Quellcode starten {#run-it-from-source}
 
 Erfordert Node 22+ und Bun. Dieser Ordner ist `viewers/teams` des Repositorys
 [`ooxml`](https://github.com/ChristopherVR/ooxml): Führen Sie `bun install` im Repository-Root aus, dann

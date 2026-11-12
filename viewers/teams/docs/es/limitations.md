@@ -18,9 +18,9 @@ OpenTeams no es Microsoft Teams, no está afiliado a Microsoft y no afirma tener
 
 ## Espacio de contenido
 
-Word se previsualiza en solo lectura; Excel ofrece edición local y guardado de nuevas copias en el canal cuando hay almacenamiento configurado; Visio usa su visor existente. No hay coedición, sobrescritura ni guardado con control de versiones. PowerPoint necesita una página de visor incrustado configurada por el anfitrión. Las integraciones que faltan se indican en el panel. Las lecturas de texto se limitan a 2 MiB y las lecturas nativas de Office a 32 MiB. La interfaz está disponible en inglés, alemán, español, francés y chino simplificado (propiedad `locale`); el texto escrito por las personas nunca se traduce.
+Word se previsualiza en solo lectura; Excel ofrece edición local y guardado de nuevas copias en el canal cuando hay almacenamiento configurado; Visio usa su visor existente. No hay coedición, sobrescritura ni guardado con control de versiones. PowerPoint se abre en una vista previa nativa; el anfitrión también puede proporcionar una página de visor incrustado. Las integraciones que faltan se indican en el panel. Las lecturas de texto se limitan a 2 MiB y las lecturas nativas de Office a 32 MiB. La interfaz está disponible en inglés, alemán, español, francés y chino simplificado (propiedad `locale`); el texto escrito por las personas nunca se traduce.
 
-Las vistas de archivos admiten subida directa, creación de Excel en blanco y búsqueda de metadatos cuando hay almacenamiento configurado. Las subidas muestran un estado de ocupado y permiten reintentar, sin progreso en bytes ni cancelación. Un lote fallido puede dejar archivos subidos antes del fallo que ningún mensaje referencia; el servidor de referencia elimina sus subidas incompletas y deja que quien subió el archivo o un moderador borre el resto (`DELETE /files/<scope>/<name>`), pero no lo hace por sí solo. El servidor de referencia limita los archivos de los chats privados a sus miembros y cuenta el almacenamiento por espacio de trabajo; los archivos de canal los puede leer cualquier usuario con sesión del servidor. No están implementados las carpetas, la indexación del contenido de los documentos ni el historial de versiones de archivos.
+Las vistas de archivos admiten subida directa, creación de Excel en blanco y búsqueda de metadatos cuando hay almacenamiento configurado. Las subidas muestran un estado de ocupado y permiten cancelar y reintentar, sin progreso en bytes. Un lote fallido puede dejar archivos subidos antes del fallo que ningún mensaje referencia; el servidor de referencia elimina sus subidas incompletas y deja que quien subió el archivo o un moderador borre el resto (`DELETE /files/<scope>/<name>`), pero no lo hace por sí solo. El servidor de referencia limita los archivos de los chats privados a sus miembros y cuenta el almacenamiento por espacio de trabajo; los archivos de canal los puede leer cualquier usuario con sesión del servidor. No están implementados las carpetas, la indexación del contenido de los documentos ni el historial de versiones de archivos.
 
 Markdown admite encabezados, viñetas, citas, código delimitado, énfasis básico, enlaces web, listas de tareas planas, tablas de nivel superior y enlaces web relativos al archivo. No implementa CommonMark/GFM completo, estructuras anidadas ni enlaces de referencia. El HTML sin procesar se muestra como texto.
 
@@ -37,7 +37,7 @@ Los sitios web y los adjuntos HTML usan un sandbox sin permiso de mismo origen, 
 ## Escala
 
 - **Las llamadas en malla** conectan a cada participante con todos los demás. No necesita servidor multimedia y funciona para un puñado de personas (el límite por defecto es 12), no para un webinar.
-- **El historial crece.** El servidor de referencia mantiene una instantánea por sala y nunca la compacta.
+- **El historial crece.** El servidor de referencia mantiene una instantánea por sala y la compacta al cargar la sala y cada 6 horas por defecto (`TEAMS_COMPACT_INTERVAL_MIN`).
 - **Un solo proceso de servidor.** El servidor de referencia mantiene las salas en memoria y no escala horizontalmente.
 
 ## Modo local y las demos en vivo

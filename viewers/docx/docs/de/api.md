@@ -4,22 +4,29 @@ Jeder Framework-Adapter umhüllt dasselbe Custom Element `<docx-editor>`. Die Ad
 
 ## Attribute und Eigenschaften
 
-| Eigenschaft      | Attribut          | Beschreibung                                                                                                                                  |
-| ---------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `documentModel`  |                   | Das angezeigte `DocumentModel`. Eine Zuweisung ist ein externer Austausch, kein Bearbeitungsereignis.                                         |
-| `readOnly`       | `read-only`       | Blockiert lokale Änderungen. Stapel der Zusammenarbeit von anderen Teilnehmern werden weiter angewendet.                                      |
-| `locale`         | `locale`          | Oberflächensprache: `en`, `fr`, `de`, `es` oder `zh-CN`. Dokumentinhalte werden nie übersetzt.                                                |
-| `fileName`       | `file-name`       | Name des geöffneten Dokuments (Standard `Document1.docx`).                                                                                    |
-| `reviewAuthor`   | `review-author`   | Autor, der bei nachverfolgten Änderungen und Kommentaren erfasst wird (Standard `Author`).                                                    |
-| `theme`          | `theme`           | `light`, `dark` oder `auto`. Siehe [Theming](/theming).                                                                                       |
-| `themeColors`    |                   | Teilweise Token-Überschreibungen, angewendet als benutzerdefinierte Eigenschaften `--dve-*`.                                                  |
-| `showThumbnails` | `show-thumbnails` | Linke Leiste mit Seitenminiaturen (nur Drucklayout).                                                                                          |
-| `showToolbar`    | `show-toolbar`    | `false` blendet das Menüband aus; Titelleiste und Statusleiste bleiben.                                                                       |
-| `hiddenActions`  |                   | Auszublendende Menübandbefehle nach stabiler ID; siehe die Tabelle unter [Bindings](/bindings).                                               |
-| `ribbonAddIns`   |                   | Register, die der Host nach den eingebauten hinzufügt; siehe [Bindings](/bindings#ribbon-add-in-tabs).                                        |
-| `collaboration`  |                   | Deklarative Zusammenarbeit (`DocxCollaborationOptions` oder `null`); siehe [Zusammenarbeit](/de/collaboration#die-eigenschaft-collaboration). |
-| `customization`  |                   | Capabilities, Host-Seiten im Datei-Register und Host-Menübefehle (siehe [Anpassung](#customization)).                                         |
-| `dirty` (lesen)  |                   | True nach einer Änderung, false nach Speichern, Laden oder `markClean()`.                                                                     |
+| Eigenschaft                  | Attribut          | Beschreibung                                                                                                                                                                                                                   |
+| ---------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `documentModel`              |                   | Das angezeigte `DocumentModel`. Eine Zuweisung ist ein externer Austausch, kein Bearbeitungsereignis.                                                                                                                          |
+| `readOnly`                   | `read-only`       | Blockiert lokale Änderungen. Stapel der Zusammenarbeit von anderen Teilnehmern werden weiter angewendet.                                                                                                                       |
+| `locale`                     | `locale`          | Oberflächensprache: `en`, `fr`, `de`, `es` oder `zh-CN`. Dokumentinhalte werden nie übersetzt.                                                                                                                                 |
+| `fileName`                   | `file-name`       | Name des geöffneten Dokuments (Standard `Document1.docx`).                                                                                                                                                                     |
+| `reviewAuthor`               | `review-author`   | Autor, der bei nachverfolgten Änderungen und Kommentaren erfasst wird (Standard `Author`).                                                                                                                                     |
+| `theme`                      | `theme`           | `light`, `dark` oder `auto`. Siehe [Theming](/theming).                                                                                                                                                                        |
+| `themeColors`                |                   | Teilweise Token-Überschreibungen, angewendet als benutzerdefinierte Eigenschaften `--dve-*`.                                                                                                                                   |
+| `showThumbnails`             | `show-thumbnails` | Linke Leiste mit Seitenminiaturen (nur Drucklayout).                                                                                                                                                                           |
+| `showToolbar`                | `show-toolbar`    | `false` blendet das Menüband aus; Titelleiste und Statusleiste bleiben.                                                                                                                                                        |
+| `hiddenActions`              |                   | Auszublendende Menübandbefehle nach stabiler ID; siehe die Tabelle unter [Bindings](/bindings).                                                                                                                                |
+| `ribbonAddIns`               |                   | Register, die der Host nach den eingebauten hinzufügt; siehe [Bindings](/bindings#ribbon-add-in-tabs).                                                                                                                         |
+| `collaboration`              |                   | Deklarative Zusammenarbeit (`DocxCollaborationOptions` oder `null`); siehe [Zusammenarbeit](/de/collaboration#die-eigenschaft-collaboration).                                                                                  |
+| `customization`              |                   | Capabilities, Host-Seiten im Datei-Register und Host-Menübefehle (siehe [Anpassung](#customization)).                                                                                                                          |
+| `surfaceOnly`                |                   | Bindet nur das Dokument und seine Bearbeitungsfläche ein. Vor dem Verbinden des Elements wählen.                                                                                                                               |
+| `surfaceActions`             |                   | Host-Dialoge für den Oberflächenmodus: `onOpenHyperlinkDialog`, `onOpenFindReplace` und `onOpenImagePicker`.                                                                                                                   |
+| `googleFonts`                |                   | Webfonts für Dokumentschriften, die weder installiert noch eingebettet sind. Ohne Wert gilt Datei > Optionen > Trust Center (aus, bis es eingeschaltet wird); `false` schaltet sie aus; `{ baseUrl }` setzt den CSS2-Endpunkt. |
+| `storage`                    |                   | Vom Host verwalteter Speicher für Speichern, Speichern unter und Öffnen; siehe „Speicher des Hosts“ weiter unten.                                                                                                              |
+| `fileProviders`              |                   | Cloud-Orte für Datei > Öffnen; siehe „Cloud-Orte in Datei > Öffnen“ weiter unten.                                                                                                                                              |
+| `loading` (lesen)            |                   | True, während ein Dokument geladen wird.                                                                                                                                                                                       |
+| `collaborationState` (lesen) |                   | Der Zusammenarbeitsraum: ob er aktiv ist, seine Raum-ID, Status, Synchronisationszustand und Personen.                                                                                                                         |
+| `dirty` (lesen)              |                   | True nach einer Änderung, false nach Speichern, Laden oder `markClean()`.                                                                                                                                                      |
 
 ## Anpassung {#customization}
 
@@ -45,20 +52,24 @@ editor.customization = {
 
 ## Methoden
 
-| Methode                                               | Beschreibung                                                                                      |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `load(bytes)`                                         | Lädt DOCX- oder ältere DOC-Bytes. Bei einem Fehler wird abgelehnt und `document-error` ausgelöst. |
-| `save()`                                              | Liefert einen `Blob` des serialisierten Dokuments.                                                |
-| `saveBytes()`                                         | Liefert das rohe `Uint8Array`.                                                                    |
-| `download(fileName?)`                                 | Speichert und startet einen Browser-Download.                                                     |
-| `markClean()`                                         | Setzt das Dirty-Flag zurück, nachdem der Host das Dokument gespeichert hat.                       |
-| `startCollaboration(config)`                          | Tritt einer Sitzung zur Zusammenarbeit bei; siehe [Zusammenarbeit](/de/collaboration).            |
-| `startYjsCollaboration(session, options)`             | Tritt einem synchronisierten Yjs-Raum mit dem passenden Quellpaket bei.                           |
-| `reconnectCollaboration()`, `resyncCollaboration()`   | Stellt die Yjs-Verbindung wieder her oder fordert einen Zustandsaustausch des Providers an.       |
-| `getPendingCollaboration()`                           | Der ausstehende Schrittstapel oder `null`.                                                        |
-| `receiveCollaboration(batch)`                         | Wendet einen von der Autorität akzeptierten Stapel an.                                            |
-| `stopCollaboration(discardPending?)`                  | Verlässt die Sitzung; ausstehende Änderungen müssen bestätigt oder ausdrücklich verworfen werden. |
-| `publishPresence`, `receivePresence`, `leavePresence` | Flüchtiger Präsenzkanal; siehe [Zusammenarbeit](/de/collaboration#präsenz).                       |
+| Methode                                                         | Beschreibung                                                                                                                                                    |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `load(bytes)`                                                   | Lädt DOCX- oder ältere DOC-Bytes. Bei einem Fehler wird abgelehnt und `document-error` ausgelöst.                                                               |
+| `save()`                                                        | Liefert einen `Blob` des serialisierten Dokuments.                                                                                                              |
+| `saveBytes()`                                                   | Liefert das rohe `Uint8Array`.                                                                                                                                  |
+| `download(fileName?)`                                           | Speichert und startet einen Browser-Download.                                                                                                                   |
+| `markClean()`                                                   | Setzt das Dirty-Flag zurück, nachdem der Host das Dokument gespeichert hat.                                                                                     |
+| `setLoadedDocument(session)`                                    | Bindet ein von `loadDocument` bereits geparstes `LoadedDocument` ein.                                                                                           |
+| `openCloudFile(file)`                                           | Öffnet eine Datei aus einem `CloudFileProvider`, wie Datei > Öffnen > OneDrive.                                                                                 |
+| `getToolbarProps()`, `getNavigationProps()`, `getStatusProps()` | Zustand und Callbacks für vom Host gebaute Werkzeugleisten-, Navigations- und Statussteuerelemente.                                                             |
+| `subscribeEditorState(listener)`                                | Ruft `listener` bei Auswahl- und Formatänderungen auf, auch bei solchen, die das Dokument nicht als geändert markieren. Gibt eine Funktion zum Abmelden zurück. |
+| `startCollaboration(config)`                                    | Tritt einer Sitzung zur Zusammenarbeit bei; siehe [Zusammenarbeit](/de/collaboration).                                                                          |
+| `startYjsCollaboration(session, options)`                       | Tritt einem synchronisierten Yjs-Raum mit dem passenden Quellpaket bei.                                                                                         |
+| `reconnectCollaboration()`, `resyncCollaboration()`             | Stellt die Yjs-Verbindung wieder her oder fordert einen Zustandsaustausch des Providers an.                                                                     |
+| `getPendingCollaboration()`                                     | Der ausstehende Schrittstapel oder `null`.                                                                                                                      |
+| `receiveCollaboration(batch)`                                   | Wendet einen von der Autorität akzeptierten Stapel an.                                                                                                          |
+| `stopCollaboration(discardPending?)`                            | Verlässt die Sitzung; ausstehende Änderungen müssen bestätigt oder ausdrücklich verworfen werden.                                                               |
+| `publishPresence`, `receivePresence`, `leavePresence`           | Flüchtiger Präsenzkanal; siehe [Zusammenarbeit](/de/collaboration#präsenz).                                                                                     |
 
 ## Ereignisse
 
@@ -83,6 +94,12 @@ Alle Ereignisse sind bubbling und composed und überschreiten daher die Shadow-G
 Das Paket exportiert die typisierte Ereigniszuordnung (`DocxEditorEventMap`) und die Laufzeitliste `DOCX_EDITOR_EVENTS`.
 
 Die Framework-Bindings leiten die Props `fileName`, `reviewAuthor` und `themeColors` sowie die Ereignisse `file-command`, `document-warning`, `readonly-change`, `ribbon-action` und `ribbon-customize` unter den Namen ihres Frameworks weiter (zum Beispiel `onFileCommand`, `fileCommand` und `onfilecommand`). Die Tabelle steht unter [Framework-Bindings](/bindings#binding-props-and-events).
+
+## Shadow-Parts
+
+Die Titelleiste (Dateiname, Speicherstatus, Schnellzugriff und „Was möchten Sie tun?“) ist der Shadow-Part `title-bar`.
+Ein Host, der seine eigene Dokumentleiste zeichnet, blendet sie mit `docx-editor::part(title-bar) { display: none; }` aus;
+Menüband und Statusleiste bleiben.
 
 ## Cloud-Orte in Datei > Öffnen
 

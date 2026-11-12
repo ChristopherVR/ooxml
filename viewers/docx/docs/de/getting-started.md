@@ -58,7 +58,7 @@ Die anderen Frameworks verwenden dieselben Optionen: siehe die [Framework-Leitf�
 
 ## 3. Dateien laden und speichern
 
-Die Komponenten-Referenz (oder das Vanilla-Handle) stellt `load(bytes)` und `save()` bereit. Beim Laden werden DOCX und das ältere `.doc` erkannt; passwortgeschützte Dateien werden nicht unterstützt.
+Die Komponenten-Referenz (oder das Vanilla-Handle) stellt `load(bytes)` und `save()` bereit. Beim Laden werden DOCX und das ältere `.doc` erkannt. Passwortgeschützte Dateien werden nur über `loadDocument(bytes, { password })` aus `ooxml-core/docx/load` geöffnet; `load()` des Elements nimmt kein Passwort entgegen und meldet eine solche Datei daher als `document-error`.
 
 ```ts
 const bytes = new Uint8Array(await file.arrayBuffer());
@@ -76,7 +76,8 @@ const blob = await editor.save(); // Blob of the serialized .docx
 - So starten Sie die Demo aus einem Klon des Repositorys (Bun erforderlich):
 
 ```bash
-bun install
+bun install          # from the repository root
+cd viewers/docx
 bun run demo
 ```
 

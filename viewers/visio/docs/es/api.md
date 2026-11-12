@@ -42,6 +42,23 @@ Todos los bindings aceptan las mismas propiedades y notifican los mismos eventos
 - `markClean()` (en `viewer.controller` y en los bloques de construcción) declara guardado el contenido actual. Un anfitrión que guarda `exportVsdx()` por su cuenta lo llama después: `edit.dirty` pasa a `false`, se emite un `document-change` de tipo `save`, y las ediciones y pasos de deshacer posteriores se miden desde ese punto. No hace nada con un dibujo que no se puede guardar de vuelta.
 - `collaboration` (`VisioCollaborationOptions | null`) comparte el dibujo abierto en una sala mientras esté definida. `collaboration-change` entrega un `CollaborationState` cuando el uso compartido empieza o termina y cuando cambian el estado, la sincronización o las personas. En el elemento (`viewer.element` de un handle), `collaborationState` lee el estado actual, y `reconnectCollaboration()` y `stopCollaboration()` actúan sobre él. Véase [Colaboración](/es/collaboration).
 
+## Miembros solo del elemento {#element-only-members}
+
+Estos miembros de `<visio-viewer>` no forman parte del contrato de enlace compartido (véase [bindings](/bindings)); úselos en el elemento.
+
+| Miembro                        | Tipo                               | Descripción                                                                                                                                                                                           |
+| ------------------------------ | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `googleFonts`                  | `GoogleFontsOption \| undefined`   | Alternativa de fuentes web para las fuentes de dibujo que no están instaladas: `false` (desactivada), `{ baseUrl }` (un espejo CSS2) o sin definir para la opción del Centro de confianza del lector. |
+| `pdfFonts`                     | `readonly PdfFontFile[]`           | Archivos TrueType que proporciona el anfitrión y que Archivo > Exportar > PDF incrusta como subconjuntos. No se incluye ninguno.                                                                      |
+| `createFromTemplate(template)` | `Promise<void>`                    | Crea un dibujo a partir de una plantilla de Archivo > Nuevo (Dibujo en blanco, diagramas de flujo, organigrama).                                                                                      |
+| `openBackstage(page?)`         | `void`                             | Abre la vista Backstage de Archivo de Visio en una página (Información por defecto).                                                                                                                  |
+| `closeBackstage()`             | `void`                             | Sale de la vista Backstage de Archivo y vuelve al dibujo.                                                                                                                                             |
+| `startPresentation()`          | `void`                             | Inicia el modo Presentación en la página en primer plano actual (F5).                                                                                                                                 |
+| `exitPresentation()`           | `void`                             | Sale del modo Presentación; la página, el zoom y la selección no cambian.                                                                                                                             |
+| `presenting`                   | `boolean` (solo lectura)           | Verdadero mientras el modo Presentación está activo.                                                                                                                                                  |
+| `fileName`                     | `string` (solo lectura)            | Nombre del último archivo local abierto, o vacío para bytes, modelos y dibujos cerrados.                                                                                                              |
+| `renderWarnings`               | `readonly string[]` (solo lectura) | Advertencias que informó el último renderizado de página.                                                                                                                                             |
+
 ## Seleccionar formas {#select-shapes}
 
 Todo manejador montado o nativo expone `selectShapes(targets)`, `selectAll()` y
@@ -233,8 +250,7 @@ El límite en UTF-8 es de 16 MiB; quien llama puede reducirlo. Las comprobacione
 pueden rechazar contenido cuya serialización final sería menor. Las fuentes no se incrustan y
 el texto y la maquetación siguen siendo aproximados. Se conservan las dimensiones físicas de la página;
 los rasterizadores posteriores deben limitar las dimensiones y el área en píxeles de su salida
-antes de reservar una superficie de imagen. El PDF, la exportación a mapa de bits y la maquetación de impresión siguen
-sin implementarse.
+antes de reservar una superficie de imagen. Esta función solo escribe SVG; Archivo > Exportar en el visor escribe páginas como imagen en PNG y PDF. La maquetación de impresión sigue sin implementarse.
 
 Las pruebas secundarias opcionales de píxeles en Linux se ejecutan con
 `node scripts/test-svg-rasterization.mjs` tras compilar, con Python 3 del sistema,

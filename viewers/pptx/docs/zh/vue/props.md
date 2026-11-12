@@ -38,16 +38,17 @@ import type { PowerPointViewerProps } from 'pptx-vue-viewer';
 
 这些属性与 Svelte 和原生绑定一致，默认值和范围限制由共享代码统一处理。
 
-| 属性                      | 类型                           | 默认值        | 说明                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| ------------------------- | ------------------------------ | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `initialSlide`            | `number`                       | `0`           | 每次加载后显示的幻灯片，索引从 0 开始，自动限制在有效范围内。之后修改只对下一次加载生效。                                                                                                                                                                                                                                                                                                                                                    |
-| `googleFonts`             | `false \| { baseUrl: string }` | 未设置        | 未安装也未嵌入的字体的 Google Fonts 回退。未设置时由 文件 > 选项 > 信任中心 >“下载未安装或未嵌入的字体”决定（默认开启：从 `fonts.googleapis.com` 加载）；`false` 不向 Google 发送任何请求（文字使用已安装、嵌入或回退字体），并将该选项锁定为关闭；`{ baseUrl }` 改为向自托管镜像发送 CSS2 请求，并将该选项锁定为开启（无效的 `baseUrl` 会关闭回退并将其锁定为关闭）。参见[字体与隐私](../guide/runtime-environments.md#fonts-and-privacy)。 |
-| `allowExternalContent`    | `boolean`                      | 未设置        | 演示文稿从其他服务器链接的内容（http(s) 目标）的宿主开关：图片、图片填充和项目符号、视频、音频和海报帧。`false` 不获取任何此类内容，`true` 允许获取；两者都会将 文件 > 选项 > 信任中心 >“允许外部内容”锁定为对应值。未设置时由用户在该处的选择决定。更改从下一次加载起生效。Google Fonts 请求由 `googleFonts` 单独控制。参见[外部内容与隐私](../guide/runtime-environments.md#external-content-and-privacy)。                                | 未安装也未嵌入的字体的 Google Fonts 回退。未设置时由 文件 > 选项 > 信任中心 >“下载未安装或未嵌入的字体”决定（默认开启：从 `fonts.googleapis.com` 加载）；`false` 不向 Google 发送任何请求（文字使用已安装、嵌入或回退字体），并将该选项锁定为关闭；`{ baseUrl }` 改为向自托管镜像发送 CSS2 请求，并将该选项锁定为开启（无效的 `baseUrl` 会关闭回退并将其锁定为关闭）。参见[字体与隐私](../guide/runtime-environments.md#fonts-and-privacy)。 |
-| `listConversionScope`     | `'paragraph' \| 'list'`        | `'paragraph'` | 光标未选中文本时“项目符号”/“编号”的作用范围。`'paragraph'` 只转换光标所在段落，与 PowerPoint 一致。`'list'` 表示光标在列表段落中于项目符号和编号之间切换时，转换其所在的整个列表（同级相邻项及其间嵌套的更深层项），与 Word 和 Google 文档一致。关闭列表、为普通段落添加列表以及选中文本范围时，两种模式的行为相同。                                                                                                                         |
-| `limits`                  | `PptxLoadLimits`               | 未设置        | 加载演示文稿的工作量上限，供显示不受信任演示文稿的宿主使用：`maxInputBytes`、`maxUncompressedBytes`、`maxEntries`、`maxSlides`、`maxShapes`。未设置时保留核心默认值（解压后 500 MiB、65,536 个 ZIP 条目，其他不限）。超出限制的演示文稿会显示加载错误界面，并给出限制值和演示文稿的实际值。更改从下一次加载起生效。参见[加载限制](../guide/runtime-environments.md#load-limits)。                                                            |
-| `showToolbar`             | `boolean`                      | `true`        | 显示编辑器外框：标题栏、功能区和工具栏、受保护视图与只读横幅、移动端工具栏和状态栏。为 `false` 时只保留画布（以及显示中的缩略图窗格）。                                                                                                                                                                                                                                                                                                      |
-| `showThumbnails`          | `boolean`                      | `true`        | 显示幻灯片缩略图窗格。仍受用户自己的折叠开关和 `slidesPane` 自定义面板控制。                                                                                                                                                                                                                                                                                                                                                                 |
-| `showCompatibilityToasts` | `boolean`                      | `true`        | 加载后显示兼容性警告提示堆栈。`false` 只隐藏堆栈，警告仍会被收集。不受 `showToolbar` 影响。                                                                                                                                                                                                                                                                                                                                                  |
+| 属性                      | 类型                                 | 默认值        | 说明                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------- | ------------------------------------ | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `initialSlide`            | `number`                             | `0`           | 每次加载后显示的幻灯片，索引从 0 开始，自动限制在有效范围内。之后修改只对下一次加载生效。                                                                                                                                                                                                                                                                                                                                                    |
+| `googleFonts`             | `false \| { baseUrl: string }`       | 未设置        | 未安装也未嵌入的字体的 Google Fonts 回退。未设置时由 文件 > 选项 > 信任中心 >“下载未安装或未嵌入的字体”决定（默认开启：从 `fonts.googleapis.com` 加载）；`false` 不向 Google 发送任何请求（文字使用已安装、嵌入或回退字体），并将该选项锁定为关闭；`{ baseUrl }` 改为向自托管镜像发送 CSS2 请求，并将该选项锁定为开启（无效的 `baseUrl` 会关闭回退并将其锁定为关闭）。参见[字体与隐私](../guide/runtime-environments.md#fonts-and-privacy)。 |
+| `allowExternalContent`    | `boolean`                            | 未设置        | 演示文稿从其他服务器链接的内容（http(s) 目标）的宿主开关：图片、图片填充和项目符号、视频、音频和海报帧。`false` 不获取任何此类内容，`true` 允许获取；两者都会将 文件 > 选项 > 信任中心 >“允许外部内容”锁定为对应值。未设置时由用户在该处的选择决定。更改从下一次加载起生效。Google Fonts 请求由 `googleFonts` 单独控制。参见[外部内容与隐私](../guide/runtime-environments.md#external-content-and-privacy)。                                | 未安装也未嵌入的字体的 Google Fonts 回退。未设置时由 文件 > 选项 > 信任中心 >“下载未安装或未嵌入的字体”决定（默认开启：从 `fonts.googleapis.com` 加载）；`false` 不向 Google 发送任何请求（文字使用已安装、嵌入或回退字体），并将该选项锁定为关闭；`{ baseUrl }` 改为向自托管镜像发送 CSS2 请求，并将该选项锁定为开启（无效的 `baseUrl` 会关闭回退并将其锁定为关闭）。参见[字体与隐私](../guide/runtime-environments.md#fonts-and-privacy)。 |
+| `listConversionScope`     | `'paragraph' \| 'list'`              | `'paragraph'` | 光标未选中文本时“项目符号”/“编号”的作用范围。`'paragraph'` 只转换光标所在段落，与 PowerPoint 一致。`'list'` 表示光标在列表段落中于项目符号和编号之间切换时，转换其所在的整个列表（同级相邻项及其间嵌套的更深层项），与 Word 和 Google 文档一致。关闭列表、为普通段落添加列表以及选中文本范围时，两种模式的行为相同。                                                                                                                         |
+| `limits`                  | `PptxLoadLimits`                     | 未设置        | 加载演示文稿的工作量上限，供显示不受信任演示文稿的宿主使用：`maxInputBytes`、`maxUncompressedBytes`、`maxEntries`、`maxSlides`、`maxShapes`。未设置时保留核心默认值（解压后 500 MiB、65,536 个 ZIP 条目，其他不限）。超出限制的演示文稿会显示加载错误界面，并给出限制值和演示文稿的实际值。更改从下一次加载起生效。参见[加载限制](../guide/runtime-environments.md#load-limits)。                                                            |
+| `showToolbar`             | `boolean`                            | `true`        | 显示编辑器外框：标题栏、功能区和工具栏、受保护视图与只读横幅、移动端工具栏和状态栏。为 `false` 时只保留画布（以及显示中的缩略图窗格）。                                                                                                                                                                                                                                                                                                      |
+| `ribbonDisplay`           | `'always' \| 'tabs' \| 'fullScreen'` | `'always'`    | PowerPoint 的“功能区显示选项”：`'always'` 固定显示选项卡和命令；`'tabs'` 只显示选项卡行，选中某个选项卡时其命令叠加在幻灯片上；`'fullScreen'` 隐藏标题栏和功能区，仅在顶部保留一条可展开的条带。用户可通过选项卡行右端的菜单、Ctrl+F1 或双击选项卡切换；宿主修改此值会切换模式。                                                                                                                                                             |
+| `showThumbnails`          | `boolean`                            | `true`        | 显示幻灯片缩略图窗格。仍受用户自己的折叠开关和 `slidesPane` 自定义面板控制。                                                                                                                                                                                                                                                                                                                                                                 |
+| `showCompatibilityToasts` | `boolean`                            | `true`        | 加载后显示兼容性警告提示堆栈。`false` 只隐藏堆栈，警告仍会被收集。不受 `showToolbar` 影响。                                                                                                                                                                                                                                                                                                                                                  |
 
 ```vue
 <PowerPointViewer
@@ -60,21 +61,22 @@ import type { PowerPointViewerProps } from 'pptx-vue-viewer';
 
 ## 事件 {#events}
 
-| 事件                    | 载荷                          | 说明                                                                    |
-| ----------------------- | ----------------------------- | ----------------------------------------------------------------------- |
-| `@dirty-change`         | `isDirty: boolean`            | 未保存修改标记变化时触发。                                              |
-| `@content-change`       | `content: Uint8Array`         | 内容变化时触发，携带重新序列化的文档字节。                              |
-| `@autosave`             | `content: Uint8Array`         | 每个自动保存周期触发，携带重新序列化的字节，参见[自动保存](#autosave)。 |
-| `@active-slide-change`  | `slideIndex: number`          | 当前幻灯片变化时触发。                                                  |
-| `@zoom-change`          | `zoom: number`                | 缩放级别变化时触发。                                                    |
-| `@slide-count-change`   | `count: number`               | 幻灯片总数变化时触发，例如添加或删除幻灯片。                            |
-| `@selection-change`     | `elementIds: string[]`        | 元素选区变化时触发。                                                    |
-| `@mode-change`          | `mode: string`                | 查看器模式变化时触发，例如从编辑切换到放映。                            |
-| `@start-collaboration`  | `config: CollaborationConfig` | 用户从共享对话框启动会话时触发。                                        |
-| `@collaboration-change` | `state: CollaborationState`   | 会话启动或停止，以及其状态、同步标记或人员变化时触发。                  |
-| `@load`                 | `detail: ViewerLoadDetail`    | 每次演示文稿无错误加载完成时触发（`slideCount`、`canvasSize`）。        |
-| `@error`                | `message: string`             | 每种不同的加载失败触发一次，携带便于阅读的消息。                        |
-| `@stop-collaboration`   | -                             | 用户从共享对话框停止会话时触发。                                        |
+| 事件                     | 载荷                                       | 说明                                                                                                                             |
+| ------------------------ | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `@dirty-change`          | `isDirty: boolean`                         | 未保存修改标记变化时触发。                                                                                                       |
+| `@content-change`        | `content: Uint8Array`                      | 内容变化时触发，携带重新序列化的文档字节。                                                                                       |
+| `@autosave`              | `content: Uint8Array`                      | 每个自动保存周期触发，携带重新序列化的字节，参见[自动保存](#autosave)。                                                          |
+| `@active-slide-change`   | `slideIndex: number`                       | 当前幻灯片变化时触发。                                                                                                           |
+| `@zoom-change`           | `zoom: number`                             | 缩放级别变化时触发。                                                                                                             |
+| `@ribbon-display-change` | `mode: 'always' \| 'tabs' \| 'fullScreen'` | 用户选择“功能区显示选项”模式时触发。宿主修改该值时不触发。查看器只在本次生命周期内保留这一选择；如需下次访问时恢复，请自行保存。 |
+| `@slide-count-change`    | `count: number`                            | 幻灯片总数变化时触发，例如添加或删除幻灯片。                                                                                     |
+| `@selection-change`      | `elementIds: string[]`                     | 元素选区变化时触发。                                                                                                             |
+| `@mode-change`           | `mode: string`                             | 查看器模式变化时触发，例如从编辑切换到放映。                                                                                     |
+| `@start-collaboration`   | `config: CollaborationConfig`              | 用户从共享对话框启动会话时触发。                                                                                                 |
+| `@collaboration-change`  | `state: CollaborationState`                | 会话启动或停止，以及其状态、同步标记或人员变化时触发。                                                                           |
+| `@load`                  | `detail: ViewerLoadDetail`                 | 每次演示文稿无错误加载完成时触发（`slideCount`、`canvasSize`）。                                                                 |
+| `@error`                 | `message: string`                          | 每种不同的加载失败触发一次，携带便于阅读的消息。                                                                                 |
+| `@stop-collaboration`    | -                                          | 用户从共享对话框停止会话时触发。                                                                                                 |
 
 在底层 `PowerPointViewerEmits` 类型中，`content` 和 `autosave` 共用一个签名，载荷为 `Uint8Array`；`active-slide-change`、`zoom-change` 和 `slide-count-change` 也共用一个签名，载荷均为 `number`。
 
@@ -163,6 +165,7 @@ interface PowerPointViewerProps {
 	listConversionScope?: 'paragraph' | 'list';
 	limits?: PptxLoadLimits;
 	showToolbar?: boolean;
+	ribbonDisplay?: 'always' | 'tabs' | 'fullScreen';
 	showThumbnails?: boolean;
 	showCompatibilityToasts?: boolean;
 	autosave?: boolean;
@@ -215,10 +218,12 @@ interface PowerPointViewerEmits {
 
 `pptx-vue-viewer` 在有未保存修改时每个间隔将崩溃恢复快照写入共享 IndexedDB 存储，并通过 `@autosave` 将序列化后的字节交给宿主。
 
-| 属性                 | 类型      | 默认值                | 说明                                                                                 |
-| -------------------- | --------- | --------------------- | ------------------------------------------------------------------------------------ |
-| `autosave`           | `boolean` | `true`                | 用于恢复的自动保存，是标题栏开关可启用范围的策略上限，详见下文。                     |
-| `autosaveIntervalMs` | `number`  | “文件 > 选项”中的间隔 | 有未保存修改时，两次恢复快照之间的间隔，单位为毫秒。显式值优先于用户的自动恢复设置。 |
+| 属性                 | 类型                           | 默认值                | 说明                                                                                           |
+| -------------------- | ------------------------------ | --------------------- | ---------------------------------------------------------------------------------------------- |
+| `autosave`           | `boolean`                      | `true`                | 用于恢复的自动保存，是标题栏开关可启用范围的策略上限，详见下文。                               |
+| `autosaveIntervalMs` | `number`                       | “文件 > 选项”中的间隔 | 有未保存修改时，两次恢复快照之间的间隔，单位为毫秒。显式值优先于用户的自动恢复设置。           |
+| `readOnly`           | `boolean`                      | `false`               | 使文稿只读。`true` 优先于 `canEdit`；`false` 只取消此限制。                                    |
+| `fileProviders`      | `readonly CloudFileProvider[]` | -                     | “文件 > 打开”中的云端位置（例如 OneDrive）。从其中打开的文件会保存回该位置，而不是 `storage`。 |
 
 ### autosave 属性和自动保存开关，谁优先 {#autosave-policy}
 

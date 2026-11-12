@@ -95,7 +95,7 @@ teams.destroy();
 ></teams-app>
 ```
 
-所有绑定接受相同的属性：`workspaceId`（共享房间：字母、数字、`-` 和 `_`）、`userName`、`userId`（稳定的 id；默认使用此浏览器中记住的 id）、`config`、`uploadFile`（附件的去向）、`openers`（按 Office 类型区分的处理程序），以及三个事件：就绪、打开文件（对其调用 `preventDefault()` 可自行打开文件）和配置变更（React、Solid、Svelte 和原生 JavaScript 中为 `onReady`、`onOpenFile`、`onConfigChange`；Vue 中为 `@ready`、`@open-file`、`@config-change`；Angular 中为 `(ready)`、`(openFile)`、`(configChange)`）。各绑定的详情请参阅[框架指南](/frameworks/react)。
+所有绑定接受相同的属性：`workspaceId`（共享房间：字母、数字、`-` 和 `_`）、`userName`、`userId`（稳定的 id；默认使用此浏览器中记住的 id）、`config`、`uploadFile`（附件的去向）、`openers`（按 Office 类型区分的处理程序）、`embeds`（按文件类型区分的查看器页面）、`locale`（BCP 47 标签，例如 `de`），以及三个事件：就绪、打开文件（对其调用 `preventDefault()` 可自行打开文件）和配置变更（React、Solid、Svelte 和原生 JavaScript 中为 `onReady`、`onOpenFile`、`onConfigChange`；Vue 中为 `@ready`、`@open-file`、`@config-change`；Angular 中为 `(ready)`、`(openFile)`、`(configChange)`）。各绑定的详情请参阅[框架指南](/frameworks/react)。
 
 省略 `config` 时，该元素会提供一个设置对话框（保存在此浏览器中），或以本地模式运行。
 
@@ -131,7 +131,7 @@ state?.channels.map((c) => <button onClick={() => client!.select(c.id)}>{c.name}
 
 `state` 是一个不可变的 `TeamsState` 快照（连接状态、带未读计数的频道、所选频道的消息和文件、成员、输入状态、搜索结果、通话）。动作包括 `select`、`createChannel`、`send`、`startReply`、`startEdit`、`deleteMessage`、`toggleReaction`、`search`、`openCall`、`joinCall`、`leaveCall`、`toggleMic`、`toggleCamera`、`toggleScreenShare` 和 `toggleHand`。React 演示并排展示了这两种方式。
 
-## 从源码运行
+## 从源码运行 {#run-it-from-source}
 
 需要 Node 22+ 和 Bun。本文件夹是 [`ooxml`](https://github.com/ChristopherVR/ooxml) 仓库的 `viewers/teams`：先在仓库根目录运行 `bun install`，再在此处运行下面的命令。演示（根目录下的 `demos/teams/*`）和测试使用同一棵树中 `ooxml-core` 和 `ooxml-ui` 的源码。
 

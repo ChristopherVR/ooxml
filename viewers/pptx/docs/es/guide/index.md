@@ -36,7 +36,7 @@ Si ningún camino encaja todavía, lea estas tres páginas en orden:
 | **[Core](/core/)**                                                                                                     | Desarrolladores                   | El motor sin interfaz: cargar, editar, construir, guardar, convertir, cifrar. Sin UI.                    |
 | **[React](/react/)** / **[Vue](/vue/)** / **[Angular](/angular/)** / **[Svelte](/svelte/)** / **[Vanilla](/vanilla/)** | Desarrolladores                   | Una sección por enlace de interfaz: primeros pasos, props/API, temas, exportación, colaboración.         |
 | **[Guía de usuario](/es/user/)**                                                                                       | Usuarios finales del editor       | Cómo ver, editar, presentar, exportar y colaborar en la interfaz del editor. Sin código.                 |
-| **[MCP y herramientas](/packages/mcp)**                                                                                | Autores de agentes/automatización | El servidor MCP, sus 73 herramientas y la CLI.                                                           |
+| **[MCP y herramientas](/packages/mcp)**                                                                                | Autores de agentes/automatización | El servidor MCP, sus 74 herramientas y la CLI.                                                           |
 | **[Versiones](/releases/)**                                                                                            | Todos                             | Notas de versión por paquete.                                                                            |
 
 ::: info Idioma

@@ -98,7 +98,7 @@ O con marcado simple, tras llamar a `defineTeamsApp()` desde `openteams-vanilla-
 ></teams-app>
 ```
 
-Todos los bindings aceptan las mismas props: `workspaceId` (la sala compartida: letras, dígitos, `-` y `_`), `userName`, `userId` (un id estable; por defecto usa uno recordado en este navegador), `config`, `uploadFile` (adónde van los adjuntos), `openers` (manejadores por tipo de archivo de Office) y tres eventos: listo, abrir archivo (llama a `preventDefault()` sobre él para abrir el archivo por tu cuenta) y cambio de configuración (`onReady`, `onOpenFile`, `onConfigChange` en React, Solid, Svelte y vanilla; `@ready`, `@open-file`, `@config-change` en Vue; `(ready)`, `(openFile)`, `(configChange)` en Angular). Consulta las
+Todos los bindings aceptan las mismas props: `workspaceId` (la sala compartida: letras, dígitos, `-` y `_`), `userName`, `userId` (un id estable; por defecto usa uno recordado en este navegador), `config`, `uploadFile` (adónde van los adjuntos), `openers` (manejadores por tipo de archivo de Office), `embeds` (páginas de visor por tipo de archivo), `locale` (una etiqueta BCP 47 como `de`) y tres eventos: listo, abrir archivo (llama a `preventDefault()` sobre él para abrir el archivo por tu cuenta) y cambio de configuración (`onReady`, `onOpenFile`, `onConfigChange` en React, Solid, Svelte y vanilla; `@ready`, `@open-file`, `@config-change` en Vue; `(ready)`, `(openFile)`, `(configChange)` en Angular). Consulta las
 [guías por framework](/frameworks/react) para cada binding.
 
 Si omites `config`, el elemento ofrece un cuadro de diálogo de ajustes (recordado en este navegador) o funciona en modo local.
@@ -135,7 +135,7 @@ state?.channels.map((c) => <button onClick={() => client!.select(c.id)}>{c.name}
 
 `state` es una instantánea inmutable de `TeamsState` (estado de la conexión, canales con contadores de no leídos, los mensajes y archivos del canal seleccionado, personas, escritura, resultados de búsqueda, la llamada). Las acciones incluyen `select`, `createChannel`, `send`, `startReply`, `startEdit`, `deleteMessage`, `toggleReaction`, `search`, `openCall`, `joinCall`, `leaveCall`, `toggleMic`, `toggleCamera`, `toggleScreenShare` y `toggleHand`. La demo de React muestra ambos estilos lado a lado.
 
-## Ejecútalo desde el código fuente
+## Ejecútalo desde el código fuente {#run-it-from-source}
 
 Requiere Node 22+ y Bun. Esta carpeta es `viewers/teams` del repositorio [`ooxml`](https://github.com/ChristopherVR/ooxml): ejecuta `bun install` en la raíz del repositorio y luego los comandos siguientes aquí. Las demos (`demos/teams/*` en la raíz) y las pruebas usan el código fuente de `ooxml-core` y `ooxml-ui` del mismo árbol.
 

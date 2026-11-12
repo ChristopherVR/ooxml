@@ -58,7 +58,7 @@ Los demás frameworks usan las mismas opciones: consulte las [guías por framewo
 
 ## 3. Cargar y guardar archivos
 
-La referencia al componente (o el manejador de la versión vanilla) expone `load(bytes)` y `save()`. La carga detecta DOCX y el formato `.doc` heredado; los archivos protegidos con contraseña no son compatibles.
+La referencia al componente (o el manejador de la versión vanilla) expone `load(bytes)` y `save()`. La carga detecta DOCX y el formato `.doc` heredado. Los archivos protegidos con contraseña solo se abren mediante `loadDocument(bytes, { password })` de `ooxml-core/docx/load`; el `load()` del elemento no admite contraseña, así que informa de ese archivo como `document-error`.
 
 ```ts
 const bytes = new Uint8Array(await file.arrayBuffer());
@@ -76,7 +76,8 @@ const blob = await editor.save(); // Blob of the serialized .docx
 - Para ejecutar la demo desde un clon del repositorio (requiere Bun):
 
 ```bash
-bun install
+bun install          # from the repository root
+cd viewers/docx
 bun run demo
 ```
 

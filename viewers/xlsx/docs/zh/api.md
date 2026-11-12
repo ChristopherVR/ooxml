@@ -26,17 +26,21 @@ await editor.load(bytes, 'Budget.xlsx');
 
 仅属性：
 
-| 属性                 | 类型                               | 说明                                                                                         |
-| -------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------- |
-| `themeColors`        | `Partial<Record<...>>`             | 以 `--xve-*` 自定义属性应用的令牌覆盖（[主题](/theming)）。                                  |
-| `hiddenActions`      | `string[]`                         | 按稳定 ID 隐藏的功能区控件、标题栏项目和右键菜单项。                                         |
-| `ribbonAddIns`       | `RibbonAddInTab[]`                 | 宿主在内置选项卡之后添加的选项卡（[绑定](/bindings#ribbon-add-in-tabs)）。                   |
-| `customization`      | `ExcelCustomization \| null`       | 能力（capabilities）、宿主的“文件”选项卡页面和宿主菜单命令（参见[自定义](#customization)）。 |
-| `workbook`           | `Workbook \| null`                 | 获取已打开的工作簿，或设置一个工作簿以替换它。                                               |
-| `dirty`              | `boolean`（只读）                  | 存在未保存的编辑。                                                                           |
-| `activeSheet`        | `number`                           | 当前可见工作表的从零开始的索引。                                                             |
-| `collaboration`      | `XlsxCollaborationOptions \| null` | 设置期间在房间中共享已打开的工作簿（[协作](/zh/collaboration)）。                            |
-| `collaborationState` | `XlsxCollaborationState`（只读）   | 是否正在共享、连接状态以及房间中的人员。                                                     |
+| 属性                 | 类型                               | 说明                                                                                                               |
+| -------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `themeColors`        | `Partial<Record<...>>`             | 以 `--xve-*` 自定义属性应用的令牌覆盖（[主题](/theming)）。                                                        |
+| `hiddenActions`      | `string[]`                         | 按稳定 ID 隐藏的功能区控件、标题栏项目和右键菜单项。                                                               |
+| `ribbonAddIns`       | `RibbonAddInTab[]`                 | 宿主在内置选项卡之后添加的选项卡（[绑定](/bindings#ribbon-add-in-tabs)）。                                         |
+| `customization`      | `ExcelCustomization \| null`       | 能力（capabilities）、宿主的“文件”选项卡页面和宿主菜单命令（参见[自定义](#customization)）。                       |
+| `workbook`           | `Workbook \| null`                 | 获取已打开的工作簿，或设置一个工作簿以替换它。                                                                     |
+| `dirty`              | `boolean`（只读）                  | 存在未保存的编辑。                                                                                                 |
+| `activeSheet`        | `number`                           | 当前可见工作表的从零开始的索引。                                                                                   |
+| `collaboration`      | `XlsxCollaborationOptions \| null` | 设置期间在房间中共享已打开的工作簿（[协作](/zh/collaboration)）。                                                  |
+| `collaborationState` | `XlsxCollaborationState`（只读）   | 是否正在共享、连接状态以及房间中的人员。                                                                           |
+| `googleFonts`        | `false \| { baseUrl }`             | 对读取器既未安装也未嵌入的字体，回退到网页字体。未设置时，采用读取器“信任中心”的选择（默认关闭）。                 |
+| `surfaceOnly`        | 布尔值                             | 挂载前设置，以省略应用界面；与 `surfaceActions` 配合使用。                                                         |
+| `surfaceActions`     | `SurfaceHostActions`               | 当设置了 `surfaceOnly` 时，代替对话框的宿主回调。没有回调的工作流会在 `getToolbarProps().enabled` 中报告为未启用。 |
+| `loading`            | `boolean`（只读）                  | 工作簿是否正在打开。                                                                                               |
 
 ## 自定义 {#customization}
 
@@ -60,42 +64,47 @@ editor.customization = {
 
 ## 方法
 
-| 方法                          | 返回值                | 说明                                                                                                 |
-| ----------------------------- | --------------------- | ---------------------------------------------------------------------------------------------------- |
-| `load(bytes, fileName?)`      | `Promise<void>`       | `.xlsx`、`.xlsm`、`.xltx`、`.xls`、`.csv`；格式从字节中嗅探。失败时触发 `workbook-error` 并 reject。 |
-| `newWorkbook()`               | `void`                | 一个名为 `Book1.xlsx` 的空白工作簿。                                                                 |
-| `save()`                      | `Promise<Blob>`       | `.xlsx`。不会清除 `dirty`。                                                                          |
-| `saveBytes(format?)`          | `Promise<Uint8Array>` | `'xlsx'`（默认）或 `'csv'`（当前工作表，已格式化的值）。                                             |
-| `download(name?)`             | `Promise<void>`       | 保存、下载，然后 `markClean()`。                                                                     |
-| `markClean()`                 | `void`                |                                                                                                      |
-| `select(ref)`                 | `void`                | 当前工作表上的 A1 单元格或区域（`'C3'`、`'A1:D20'`）。                                               |
-| `getSelection()`              | `string`              | 以 A1 引用表示的当前选区。                                                                           |
-| `setActiveSheet(index)`       | `void`                |                                                                                                      |
-| `undo()`, `redo()`            | `void`                | 共享期间，只撤销本窗口的编辑。                                                                       |
-| `startCollaboration(options)` | `Promise<void>`       | 加入房间；如果已在共享或没有打开的工作簿，则 reject。                                                |
-| `stopCollaboration()`         | `void`                | 离开房间并清除 `collaboration`；工作簿保持原样。                                                     |
-| `reconnectCollaboration()`    | `void`                | 重新启动连接，并保留离线时所做的更改。                                                               |
-| `share()`                     | `void`                | 打开“共享”对话框。                                                                                   |
-| `focusGrid()`                 | `void`                | 将键盘焦点移到网格，使输入编辑当前单元格。                                                           |
+| 方法                             | 返回值                    | 说明                                                                                                                                                                             |
+| -------------------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `load(bytes, fileName?)`         | `Promise<void>`           | `.xlsx`、`.xlsm`、`.xltx`、`.xls`、`.csv`；格式从字节中嗅探。失败时触发 `workbook-error` 并 reject。                                                                             |
+| `newWorkbook()`                  | `void`                    | 一个名为 `Book1.xlsx` 的空白工作簿。                                                                                                                                             |
+| `save()`                         | `Promise<Blob>`           | `.xlsx`。不会清除 `dirty`。                                                                                                                                                      |
+| `saveBytes(format?)`             | `Promise<Uint8Array>`     | `'xlsx'`（默认）或 `'csv'`（当前工作表，已格式化的值）。                                                                                                                         |
+| `download(name?)`                | `Promise<void>`           | 保存、下载，然后 `markClean()`。                                                                                                                                                 |
+| `markClean()`                    | `void`                    |                                                                                                                                                                                  |
+| `select(ref)`                    | `void`                    | 当前工作表上的 A1 单元格或区域（`'C3'`、`'A1:D20'`）。                                                                                                                           |
+| `getSelection()`                 | `string`                  | 以 A1 引用表示的当前选区。                                                                                                                                                       |
+| `setActiveSheet(index)`          | `void`                    |                                                                                                                                                                                  |
+| `undo()`, `redo()`               | `void`                    | 共享期间，只撤销本窗口的编辑。                                                                                                                                                   |
+| `startCollaboration(options)`    | `Promise<void>`           | 加入房间；如果已在共享或没有打开的工作簿，则 reject。                                                                                                                            |
+| `stopCollaboration()`            | `void`                    | 离开房间并清除 `collaboration`；工作簿保持原样。                                                                                                                                 |
+| `reconnectCollaboration()`       | `void`                    | 重新启动连接，并保留离线时所做的更改。                                                                                                                                           |
+| `share()`                        | `void`                    | 打开“共享”对话框。                                                                                                                                                               |
+| `focusGrid()`                    | `void`                    | 将键盘焦点移到网格，使输入编辑当前单元格。                                                                                                                                       |
+| `openCloudFile(file)`            | `Promise<void>`           | 打开宿主从 `CloudFileProvider` 获得的文件，类似“文件 > 打开 > OneDrive”：当 `file.canEdit` 为 false 时以只读方式打开，“保存”和“另存为”路由到 `file.storage`。加载失败时 reject。 |
+| `commitEdit()`                   | `boolean`                 | 在宿主导航或持久化之前提交正在进行的单元格编辑。`false` 表示校验阻止了提交。                                                                                                     |
+| `getToolbarProps()`              | `SpreadsheetToolbarProps` | 无界面的工具栏状态以及供自定义控件使用的 `enabled` 标志（[构建模块](/building-blocks)）。                                                                                        |
+| `subscribeEditorState(listener)` | `() => void`              | 每次编辑器状态变化时调用 `listener`；返回取消订阅函数。                                                                                                                          |
 
 ## 事件
 
 所有事件都是会冒泡并穿越 shadow 边界（`composed`）的 `CustomEvent`。
 
-| 事件                   | `detail`                                                                                   | 说明                                                 |
-| ---------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
-| `workbook-change`      | `{ workbook }`                                                                             | 编辑、加载或新建工作簿之后。                         |
-| `workbook-error`       | `{ error, message }`                                                                       | 加载或保存失败。                                     |
-| `workbook-warning`     | `{ warnings }`                                                                             | 加载器读取到但无法建模的内容。                       |
-| `readonly-change`      | `{ readOnly }`                                                                             |                                                      |
-| `ribbon-action`        | `{ id }`                                                                                   | 执行了一个功能区命令。                               |
-| `file-command`         | `{ command: 'new' \| 'open' \| 'save' \| 'saveAs' \| 'export' \| 'exportCsv' \| 'print' }` | **可取消**：调用 `preventDefault()` 以自行处理。     |
-| `selection-change`     | `{ sheet, ref, active }`                                                                   | `ref` 为所选区域，`active` 为活动单元格。            |
-| `sheet-change`         | `{ index, name }`                                                                          |                                                      |
-| `dirty-change`         | `{ dirty }`                                                                                |                                                      |
-| `office-ribbon-add-in` | `{ tab, command }`                                                                         | 选择了宿主选项卡（`ribbonAddIns`）的一个命令。       |
-| `collaboration-change` | `{ active, roomId, status, synced, people }`                                               | 共享开始或停止、连接变化，或有人加入或离开。         |
-| `validation-error`     | `{ message, title?, ref, style? }`                                                         | 单元格编辑未通过校验，保持打开状态，直到更正或取消。 |
+| 事件                   | `detail`                                                                                              | 说明                                                           |
+| ---------------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `workbook-change`      | `{ workbook }`                                                                                        | 编辑、加载或新建工作簿之后。                                   |
+| `workbook-error`       | `{ error, message }`                                                                                  | 加载或保存失败。                                               |
+| `workbook-warning`     | `{ warnings }`                                                                                        | 加载器读取到但无法建模的内容。                                 |
+| `readonly-change`      | `{ readOnly, locked, hostReadOnly }`                                                                  |                                                                |
+| `ribbon-action`        | `{ id }`                                                                                              | 执行了一个功能区命令。                                         |
+| `ribbon-customize`     | `{ hiddenActions }`                                                                                   | 用户更改了显示哪些功能区命令（“文件 > 选项 > 自定义功能区”）。 |
+| `file-command`         | `{ command: 'new' \| 'open' \| 'save' \| 'saveAs' \| 'export' \| 'exportCsv' \| 'print' \| 'share' }` | **可取消**：调用 `preventDefault()` 以自行处理。               |
+| `selection-change`     | `{ sheet, ref, active }`                                                                              | `ref` 为所选区域，`active` 为活动单元格。                      |
+| `sheet-change`         | `{ index, name }`                                                                                     |                                                                |
+| `dirty-change`         | `{ dirty }`                                                                                           |                                                                |
+| `office-ribbon-add-in` | `{ tab, command }`                                                                                    | 选择了宿主选项卡（`ribbonAddIns`）的一个命令。                 |
+| `collaboration-change` | `{ active, roomId, status, synced, people }`                                                          | 共享开始或停止、连接变化，或有人加入或离开。                   |
+| `validation-error`     | `{ message, title?, ref, style? }`                                                                    | 单元格编辑未通过校验，保持打开状态，直到更正或取消。           |
 
 ```ts
 editor.addEventListener('file-command', (event) => {
@@ -152,4 +161,4 @@ editor.fileProviders = [
 
 ## Shadow part
 
-该元素将其各个区域公开为 CSS shadow part，可用 `xlsx-editor::part(grid)` 设置样式，也可用于测试：`ribbon`、`name-box`、`formula-bar`、`grid`、`sheet-tabs` 和 `status-bar`。
+该元素将其各个区域公开为 CSS shadow part，可用 `xlsx-editor::part(grid)` 设置样式，也可用于测试：`ribbon`、`name-box`、`formula-bar`、`grid`、`sheet-tabs`、`status-bar`、`title-bar`、`backstage` 和 `page-layout`（页面布局视图）。

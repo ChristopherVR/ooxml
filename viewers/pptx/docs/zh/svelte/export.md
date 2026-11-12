@@ -9,16 +9,16 @@ Svelte 查看器可以将幻灯片转换为多种格式，也可以将文档保�
 
 ## 支持的格式 {#supported-formats}
 
-| 格式 | 处理流程                                                                                           |
-| ---- | -------------------------------------------------------------------------------------------------- |
-| PNG  | `html2canvas-pro` 栅格化，首次使用时动态导入                                                       |
-| PDF  | `jspdf`（动态导入）加栅格化，生成多页文档，每页一张幻灯片                                          |
-| GIF  | 对栅格化图像帧使用动态 GIF 帧编码器                                                                |
-| WebM | 对画布捕获流使用 `MediaRecorder`，编码格式从共享的 WebM 候选列表中选择                             |
-| SVG  | 通过独立函数直接从解析后的数据模型导出矢量图，不进行栅格化                                         |
-| 打印 | 在隐藏的同源 iframe 中打开共享打印文档，支持幻灯片、讲义、备注和大纲                               |
-| JSON | 核心模型序列化器 `exportToJson`，生成可完整重新导入的可移植 JSON 文档                              |
-| PPTX | 通过 `save(format)`、`downloadAs`、`downloadPptx` 使用核心序列化器（`'pptx' \| 'ppsx' \| 'pptm'`） |
+| 格式 | 处理流程                                                                                                    |
+| ---- | ----------------------------------------------------------------------------------------------------------- |
+| PNG  | `html2canvas-pro` 栅格化，首次使用时动态导入                                                                |
+| PDF  | `jspdf`（动态导入）加栅格化，生成多页文档，每页一张幻灯片                                                   |
+| GIF  | 对栅格化图像帧使用动态 GIF 帧编码器                                                                         |
+| WebM | 对画布捕获流使用 `MediaRecorder`，编码格式从共享的 WebM 候选列表中选择                                      |
+| SVG  | 通过独立函数直接从解析后的数据模型导出矢量图，不进行栅格化                                                  |
+| 打印 | 在隐藏的同源 iframe 中打开共享打印文档，支持幻灯片、讲义、备注和大纲                                        |
+| JSON | 核心模型序列化器 `exportToJson`，生成可完整重新导入的可移植 JSON 文档                                       |
+| PPTX | 通过 `save(format)`、`downloadAs`、`downloadPptx` 使用核心序列化器（`'pptx' \| 'ppsx' \| 'pptm' \| 'ppt'`） |
 
 ::: tip 延迟加载依赖
 `html2canvas-pro` 和 `jspdf` 采用动态导入，首次栅格图或 PDF 导出有一次性加载开销；从不导出的应用不会将它们发送到客户端。
@@ -131,12 +131,12 @@ await viewer?.print({
 
 ## 保存文档 {#saving-the-document}
 
-| 方法           | 签名                                                           | 说明                                                   |
-| -------------- | -------------------------------------------------------------- | ------------------------------------------------------ |
-| `save`         | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | 通过核心处理器序列化幻灯片，包括编辑后的内容。         |
-| `getContent`   | `() => Promise<Uint8Array>`                                    | 共享查看器约定中 `save()` 的别名。                     |
-| `downloadAs`   | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | 保存并以 `pptx`、`ppsx` 或 `pptm` 格式触发浏览器下载。 |
-| `downloadPptx` | `(fileName?: string) => Promise<void>`                         | 保存并使用默认名称下载 `.pptx`。                       |
+| 方法           | 签名                                                           | 说明                                                          |
+| -------------- | -------------------------------------------------------------- | ------------------------------------------------------------- |
+| `save`         | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | 通过核心处理器序列化幻灯片，包括编辑后的内容。                |
+| `getContent`   | `() => Promise<Uint8Array>`                                    | 共享查看器约定中 `save()` 的别名。                            |
+| `downloadAs`   | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | 保存并以 `pptx`、`ppsx`、`pptm` 或 `ppt` 格式触发浏览器下载。 |
+| `downloadPptx` | `(fileName?: string) => Promise<void>`                         | 保存并使用默认名称下载 `.pptx`。                              |
 
 ## SVG：独立函数 {#svg-standalone-functions}
 

@@ -95,9 +95,9 @@ Verwenden Sie die von Vite ausgegebene lokale URL. Dies startet einen Entwicklun
 
 Laden Sie ein lokales Quellpaket, wählen Sie eine unterstützte Form aus und nutzen Sie deren Textsteuerelemente. `replacePlainText(pageId, shapeId, text)`, `undo()` und `redo()` stellen dieselben Operationen über jedes Handle bereit. Ein mit `document` zugewiesenes Modell hat keine Paketbytes und bleibt schreibgeschützt.
 
-Die Bearbeitung lehnt Text mit Masterverknüpfung, Rich Text, Felder, signierte Pakete und Makroinhalte ab. Der Verlauf ist begrenzt und kann alte Rückgängig-Zustände verwerfen. Gespeicherte Formel-Caches werden nicht neu berechnet. Allgemeine Zeichen- und Stilbearbeitung sind nicht implementiert.
+Die Bearbeitung lehnt Text mit Masterverknüpfung, Rich Text, Felder, signierte Pakete und Makroinhalte ab. Der Verlauf ist begrenzt und kann alte Rückgängig-Zustände verwerfen. Gespeicherte Formel-Caches werden nicht neu berechnet. Grenzen für Formatierung, Geometrie und Zeichenbefehle stehen in der [Viewer-API](/de/api).
 
-`exportVsdx()` liefert die ursprünglichen oder bearbeiteten Paketbytes samt Diagnosen für einen ausdrücklichen Kopie-Download. Die Eingabedatei wird nie überschrieben. Das Wiederöffnen in nativem Visio und eine verlustfreie Round-Trip-Treue sind weiterhin nicht verifiziert.
+`exportVsdx()` liefert die ursprünglichen oder bearbeiteten Paketbytes samt Diagnosen für einen ausdrücklichen Kopie-Download. Die Eingabedatei wird nie überschrieben. Das Wiederöffnen in nativem Visio ist nur für die im [Verifikationsprotokoll](/verification) erfassten Fälle verifiziert, und eine verlustfreie Round-Trip-Treue bleibt nicht verifiziert.
 
 ## Ein statisches SVG exportieren {#export}
 
@@ -113,7 +113,7 @@ Unterstützte Hintergrundinhalte und validierte Rasterbilder werden eingebettet.
 
 | Oberfläche    | Aktueller Vertrag                                                                                                                                                                      |
 | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Eigenschaften | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `ribbonAddIns`, `collaboration`, `storage`, `customization`                                                     |
+| Eigenschaften | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `ribbonAddIns`, `collaboration`, `storage`, `fileProviders`, `customization`                                    |
 | Ereignisse    | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change`, `file-command` |
 | Lebenszyklus  | `update`, `load`, `fit`, `exportSvg`, `createPrintSnapshot`, `replacePlainText`, `undo`, `redo`, `cancelEdit`, `exportVsdx`, `destroy`                                                 |
 

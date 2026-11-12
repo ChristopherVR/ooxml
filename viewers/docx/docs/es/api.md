@@ -4,22 +4,29 @@ Todos los adaptadores de framework envuelven el mismo elemento personalizado `<d
 
 ## Atributos y propiedades
 
-| Propiedad         | Atributo          | Descripción                                                                                                                            |
-| ----------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `documentModel`   |                   | El `DocumentModel` mostrado. Asignarlo es una sustitución externa, no un evento de edición.                                            |
-| `readOnly`        | `read-only`       | Bloquea las ediciones locales. Los lotes de colaboración remotos se siguen aplicando.                                                  |
-| `locale`          | `locale`          | Idioma de la interfaz: `en`, `fr`, `de`, `es` o `zh-CN`. El contenido del documento nunca se traduce.                                  |
-| `fileName`        | `file-name`       | Nombre del documento abierto (por defecto `Document1.docx`).                                                                           |
-| `reviewAuthor`    | `review-author`   | Autor registrado en los cambios con seguimiento y en los comentarios (por defecto `Author`).                                           |
-| `theme`           | `theme`           | `light`, `dark` o `auto`. Consulte [temas](/theming).                                                                                  |
-| `themeColors`     |                   | Sustituciones parciales de tokens, aplicadas como propiedades personalizadas `--dve-*`.                                                |
-| `showThumbnails`  | `show-thumbnails` | Panel izquierdo de miniaturas de página (solo en Diseño de impresión).                                                                 |
-| `showToolbar`     | `show-toolbar`    | `false` oculta la cinta de opciones; la barra de título y la barra de estado permanecen.                                               |
-| `hiddenActions`   |                   | Controles de la cinta que se ocultan por identificador estable; consulte la tabla en [adaptadores](/bindings).                         |
-| `ribbonAddIns`    |                   | Pestañas que el host añade tras las integradas; consulte [adaptadores](/bindings#ribbon-add-in-tabs).                                  |
-| `collaboration`   |                   | Colaboración declarativa (`DocxCollaborationOptions` o `null`); consulte [colaboración](/es/collaboration#la-propiedad-collaboration). |
-| `customization`   |                   | Capacidades, páginas del host en la pestaña Archivo y comandos de menú del host (consulte [Personalización](#customization)).          |
-| `dirty` (lectura) |                   | Verdadero tras una edición; falso tras guardar, cargar o llamar a `markClean()`.                                                       |
+| Propiedad                      | Atributo          | Descripción                                                                                                                                                                                                                                |
+| ------------------------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `documentModel`                |                   | El `DocumentModel` mostrado. Asignarlo es una sustitución externa, no un evento de edición.                                                                                                                                                |
+| `readOnly`                     | `read-only`       | Bloquea las ediciones locales. Los lotes de colaboración remotos se siguen aplicando.                                                                                                                                                      |
+| `locale`                       | `locale`          | Idioma de la interfaz: `en`, `fr`, `de`, `es` o `zh-CN`. El contenido del documento nunca se traduce.                                                                                                                                      |
+| `fileName`                     | `file-name`       | Nombre del documento abierto (por defecto `Document1.docx`).                                                                                                                                                                               |
+| `reviewAuthor`                 | `review-author`   | Autor registrado en los cambios con seguimiento y en los comentarios (por defecto `Author`).                                                                                                                                               |
+| `theme`                        | `theme`           | `light`, `dark` o `auto`. Consulte [temas](/theming).                                                                                                                                                                                      |
+| `themeColors`                  |                   | Sustituciones parciales de tokens, aplicadas como propiedades personalizadas `--dve-*`.                                                                                                                                                    |
+| `showThumbnails`               | `show-thumbnails` | Panel izquierdo de miniaturas de página (solo en Diseño de impresión).                                                                                                                                                                     |
+| `showToolbar`                  | `show-toolbar`    | `false` oculta la cinta de opciones; la barra de título y la barra de estado permanecen.                                                                                                                                                   |
+| `hiddenActions`                |                   | Controles de la cinta que se ocultan por identificador estable; consulte la tabla en [adaptadores](/bindings).                                                                                                                             |
+| `ribbonAddIns`                 |                   | Pestañas que el host añade tras las integradas; consulte [adaptadores](/bindings#ribbon-add-in-tabs).                                                                                                                                      |
+| `collaboration`                |                   | Colaboración declarativa (`DocxCollaborationOptions` o `null`); consulte [colaboración](/es/collaboration#la-propiedad-collaboration).                                                                                                     |
+| `customization`                |                   | Capacidades, páginas del host en la pestaña Archivo y comandos de menú del host (consulte [Personalización](#customization)).                                                                                                              |
+| `surfaceOnly`                  |                   | Monta solo el documento y su superficie de edición. Elíjalo antes de que el elemento se conecte.                                                                                                                                           |
+| `surfaceActions`               |                   | Diálogos del host para el modo superficie: `onOpenHyperlinkDialog`, `onOpenFindReplace` y `onOpenImagePicker`.                                                                                                                             |
+| `googleFonts`                  |                   | Fuentes web para las fuentes del documento que no están instaladas ni incrustadas. Sin definir, sigue Archivo > Opciones > Centro de confianza (desactivado hasta activarlo); `false` lo desactiva; `{ baseUrl }` define el endpoint CSS2. |
+| `storage`                      |                   | Almacenamiento propio del host para Guardar, Guardar como y Abrir; consulte «Almacenamiento del host» más abajo.                                                                                                                           |
+| `fileProviders`                |                   | Ubicaciones en la nube para Archivo > Abrir; consulte «Ubicaciones en la nube en Archivo > Abrir» más abajo.                                                                                                                               |
+| `loading` (lectura)            |                   | Verdadero mientras se carga un documento.                                                                                                                                                                                                  |
+| `collaborationState` (lectura) |                   | La sala de colaboración: si está activa, su id de sala, estado, estado de sincronización y personas.                                                                                                                                       |
+| `dirty` (lectura)              |                   | Verdadero tras una edición; falso tras guardar, cargar o llamar a `markClean()`.                                                                                                                                                           |
 
 ## Personalización {#customization}
 
@@ -45,20 +52,24 @@ editor.customization = {
 
 ## Métodos
 
-| Método                                                | Descripción                                                                                  |
-| ----------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `load(bytes)`                                         | Carga bytes de DOCX o DOC heredado. Se rechaza y emite `document-error` si falla.            |
-| `save()`                                              | Se resuelve con un `Blob` del documento serializado.                                         |
-| `saveBytes()`                                         | Se resuelve con el `Uint8Array` sin procesar.                                                |
-| `download(fileName?)`                                 | Guarda e inicia una descarga del navegador.                                                  |
-| `markClean()`                                         | Borra el indicador de cambios sin guardar cuando el host ha persistido el documento.         |
-| `startCollaboration(config)`                          | Se une a una sesión de colaboración; consulte [colaboración](/es/collaboration).             |
-| `startYjsCollaboration(session, options)`             | Se une a una sala Yjs sincronizada con su paquete de origen correspondiente.                 |
-| `reconnectCollaboration()`, `resyncCollaboration()`   | Recuperan la conexión Yjs o solicitan un intercambio de estado con el proveedor.             |
-| `getPendingCollaboration()`                           | El lote de pasos pendiente, o `null`.                                                        |
-| `receiveCollaboration(batch)`                         | Aplica un lote aceptado por la autoridad.                                                    |
-| `stopCollaboration(discardPending?)`                  | Abandona la sesión; las ediciones pendientes deben confirmarse o descartarse explícitamente. |
-| `publishPresence`, `receivePresence`, `leavePresence` | Canal de presencia transitoria; consulte [colaboración](/es/collaboration#presencia).        |
+| Método                                                          | Descripción                                                                                                                                             |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `load(bytes)`                                                   | Carga bytes de DOCX o DOC heredado. Se rechaza y emite `document-error` si falla.                                                                       |
+| `save()`                                                        | Se resuelve con un `Blob` del documento serializado.                                                                                                    |
+| `saveBytes()`                                                   | Se resuelve con el `Uint8Array` sin procesar.                                                                                                           |
+| `download(fileName?)`                                           | Guarda e inicia una descarga del navegador.                                                                                                             |
+| `markClean()`                                                   | Borra el indicador de cambios sin guardar cuando el host ha persistido el documento.                                                                    |
+| `setLoadedDocument(session)`                                    | Monta un `LoadedDocument` ya analizado por `loadDocument`.                                                                                              |
+| `openCloudFile(file)`                                           | Abre un archivo de un `CloudFileProvider`, como hace Archivo > Abrir > OneDrive.                                                                        |
+| `getToolbarProps()`, `getNavigationProps()`, `getStatusProps()` | Estado y callbacks para los controles de barra de herramientas, navegación y estado que construye el host.                                              |
+| `subscribeEditorState(listener)`                                | Llama a `listener` ante cambios de selección y formato, incluidos los que no modifican el documento. Devuelve una función para cancelar la suscripción. |
+| `startCollaboration(config)`                                    | Se une a una sesión de colaboración; consulte [colaboración](/es/collaboration).                                                                        |
+| `startYjsCollaboration(session, options)`                       | Se une a una sala Yjs sincronizada con su paquete de origen correspondiente.                                                                            |
+| `reconnectCollaboration()`, `resyncCollaboration()`             | Recuperan la conexión Yjs o solicitan un intercambio de estado con el proveedor.                                                                        |
+| `getPendingCollaboration()`                                     | El lote de pasos pendiente, o `null`.                                                                                                                   |
+| `receiveCollaboration(batch)`                                   | Aplica un lote aceptado por la autoridad.                                                                                                               |
+| `stopCollaboration(discardPending?)`                            | Abandona la sesión; las ediciones pendientes deben confirmarse o descartarse explícitamente.                                                            |
+| `publishPresence`, `receivePresence`, `leavePresence`           | Canal de presencia transitoria; consulte [colaboración](/es/collaboration#presencia).                                                                   |
 
 ## Eventos
 
@@ -83,6 +94,12 @@ Todos los eventos burbujean y son compuestos, por lo que atraviesan el límite d
 El paquete exporta el mapa de eventos tipado (`DocxEditorEventMap`) y la lista en tiempo de ejecución `DOCX_EDITOR_EVENTS`.
 
 Los adaptadores de framework reenvían las props `fileName`, `reviewAuthor` y `themeColors`, y los eventos `file-command`, `document-warning`, `readonly-change`, `ribbon-action` y `ribbon-customize`, con los nombres de su framework (por ejemplo `onFileCommand`, `fileCommand` y `onfilecommand`). La tabla está en [adaptadores de framework](/bindings#binding-props-and-events).
+
+## Partes shadow
+
+La barra de título (nombre del archivo, estado de guardado, acceso rápido y «Dígame») es la parte shadow `title-bar`.
+Un host que dibuja su propia barra de documento la oculta con `docx-editor::part(title-bar) { display: none; }`;
+la cinta y la barra de estado siguen visibles.
 
 ## Ubicaciones en la nube en Archivo > Abrir
 

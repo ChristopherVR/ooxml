@@ -27,13 +27,13 @@ démarrer. `--insecure-dev` (option `insecureDev: true`) le démarre quand même
 par l’environnement, plus les indicateurs `--insecure-dev`, `--trust-proxy[=N]` et `--insecure` (voir `TEAMS_INSECURE` et `TEAMS_TRUST_PROXY` dans le
 [guide de déploiement](./deploy.md)). `SIGTERM` et `SIGINT` enregistrent chaque salle avant la sortie.
 
-| Variable        | Valeur par défaut | Signification                                                                                                                                               |
-| --------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PORT`          | `8787`            | Port d’écoute.                                                                                                                                              |
-| `HOST`          | `127.0.0.1`       | Adresse d’écoute. N’utilisez `0.0.0.0` que derrière TLS.                                                                                                    |
-| `TEAMS_TOKEN`   | aucune            | Si définie, les sockets la reçoivent via `?token=` et les requêtes de fichiers via `Authorization: Bearer`.                                                 |
-| `TEAMS_ORIGINS` | aucune            | `Origin` autorisées pour les sockets et les fichiers, séparées par des virgules. Sans valeur : toute origine avec un jeton, loopback uniquement sans jeton. |
-| `TEAMS_DATA`    | `./data`          | Répertoire de données : instantanés `rooms/<room>.bin` et `files/<workspace>/`.                                                                             |
+| Variable        | Valeur par défaut | Signification                                                                                                                                                        |
+| --------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PORT`          | `8787`            | Port d’écoute.                                                                                                                                                       |
+| `HOST`          | `127.0.0.1`       | Adresse d’écoute. N’utilisez `0.0.0.0` que derrière TLS.                                                                                                             |
+| `TEAMS_TOKEN`   | aucune            | Si définie, les sockets la reçoivent dans l’en-tête `Sec-WebSocket-Protocol` (`?token=` seulement en repli) et les requêtes de fichiers via `Authorization: Bearer`. |
+| `TEAMS_ORIGINS` | aucune            | `Origin` autorisées pour les sockets et les fichiers, séparées par des virgules. Sans valeur : toute origine avec un jeton, loopback uniquement sans jeton.          |
+| `TEAMS_DATA`    | `./data`          | Répertoire de données : instantanés `rooms/<room>.bin` et `files/<workspace>/`.                                                                                      |
 
 Le serveur lit d’autres variables pour les comptes (`TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`, `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`) et pour les limites (`TEAMS_INSECURE`, `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`, `TEAMS_MAX_ROOMS`, `TEAMS_MAX_DOC_MB`, `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`, `TEAMS_FILES_QUOTA_MB`, `TEAMS_WORKSPACE_QUOTA_MB`, `TEAMS_COMPACT_INTERVAL_MIN`, `TEAMS_METRICS_TOKEN`, `TEAMS_LOG_FORMAT`). Le [guide de déploiement](/fr/deploy) liste les limites ; le README du serveur est la référence complète. Les options correspondantes de `createTeamsServer` sont `users`, `authenticate`, `sessionSecret`, `adminToken`, `sessionRate`, `authorizeSync`, `maxConnections`, `maxRooms`, `messageRate`, `filesQuotaBytes`, `workspaceQuotaBytes`, `metricsToken`, `compactIntervalMs`, `insecure`, `insecureDev` et `trustProxy`.
 
@@ -86,7 +86,7 @@ const config = {
 | `POST /auth/revoke`                   | Révocation par l’opérateur de `{ user }` avec `TEAMS_ADMIN_TOKEN` ; un 404 sans jeton d’administration.                                                                                                        |
 
 Les noms de salle doivent correspondre à `^[\w-]{1,128}$` et les identifiants d’espace de travail
-dans les chemins de fichiers à `^[\w-]{1,64}$` ; les noms de fichiers sont assainis pour ne garder
+dans les chemins de fichiers à `^[\w-]{1,128}$` ; les noms de fichiers sont assainis pour ne garder
 que lettres, chiffres, `.`, `-`, `_`, espaces et parenthèses, et sont limités à 120 caractères.
 
 ## Les contrats
@@ -122,8 +122,9 @@ attend la session signée dans l'en-tête `X-Teams-Session` à chaque requête d
 déclaré dans `X-Teams-User`) ; le client envoie les deux. Également facultatifs : `GET <origin>/files/<scope>` pour lister et
 `DELETE <origin>/files/<scope>/<name>` pour la personne qui l'a envoyé ou un modérateur.
 
-Les deux sockets reçoivent `?token=<token>` lorsqu’un jeton est configuré, car un navigateur ne
-peut pas définir d’en-têtes sur un WebSocket. Appliquez-le, ainsi qu’une liste d’origines
+Les deux sockets reçoivent le jeton dans l’en-tête `Sec-WebSocket-Protocol` lorsqu’un jeton est
+configuré, car un navigateur ne peut pas définir d’autres en-têtes sur un WebSocket. La chaîne de
+requête (`?token=`) ne sert que de repli pour un jeton que l’en-tête ne peut pas porter. Appliquez-le, ainsi qu’une liste d’origines
 autorisées, côté serveur.
 
 ## Appels : STUN et TURN

@@ -95,9 +95,9 @@ bun run dev
 
 加载本地源包，选择受支持的形状，然后使用其文本控件。`replacePlainText(pageId, shapeId, text)`、`undo()` 和 `redo()` 通过每个句柄提供相同的操作。通过 `document` 赋值的模型没有包字节，保持只读。
 
-编辑会拒绝与母版关联的文本、富文本、字段、已签名的包以及宏内容。历史记录有上限，可能会丢弃较早的撤销状态。已保存的公式缓存不会被重新计算。尚未实现通用绘图和样式编辑。
+编辑会拒绝与母版关联的文本、富文本、字段、已签名的包以及宏内容。历史记录有上限，可能会丢弃较早的撤销状态。已保存的公式缓存不会被重新计算。图形格式、几何和绘图命令的限制列于[查看器 API](/zh/api)中。
 
-`exportVsdx()` 返回原始或已编辑的包字节以及诊断信息，用于明确的副本下载。它绝不会覆盖输入文件。在原生 Visio 中重新打开以及无损往返保真度仍未得到验证。
+`exportVsdx()` 返回原始或已编辑的包字节以及诊断信息，用于明确的副本下载。它绝不会覆盖输入文件。在原生 Visio 中重新打开仅对[验证记录](/verification)中列出的情形得到验证，无损往返保真度仍未得到验证。
 
 ## 导出静态 SVG {#export}
 
@@ -113,7 +113,7 @@ bun run dev
 
 | 接口     | 当前约定                                                                                                                                                                               |
 | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 属性     | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `ribbonAddIns`, `collaboration`, `storage`, `customization`                                                     |
+| 属性     | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `ribbonAddIns`, `collaboration`, `storage`, `fileProviders`, `customization`                                    |
 | 事件     | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change`, `file-command` |
 | 生命周期 | `update`, `load`, `fit`, `exportSvg`, `createPrintSnapshot`, `replacePlainText`, `undo`, `redo`, `cancelEdit`, `exportVsdx`, `destroy`                                                 |
 

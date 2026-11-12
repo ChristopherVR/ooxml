@@ -76,7 +76,8 @@ prioridad. Elegir un estilo cambia su referencia, sin aplanar las propiedades he
 en cada párrafo.
 
 La parte de estilos original se conserva al guardar el documento cargado. Todavía no se
-admite crear ni editar definiciones de estilo, estilos de carácter, formato de fragmento
-heredado ni la resolución de temas. Se rechaza la exportación de un paquete nuevo cuyo
+admite crear ni editar definiciones de estilo. Los estilos de carácter se pueden aplicar desde
+el selector de estilos de carácter, y el formato de fragmento heredado y los colores del
+tema se resuelven al mostrar el documento. Se rechaza la exportación de un paquete nuevo cuyo
 catálogo de estilos difiere de los valores predeterminados integrados; use Guardar sobre el documento cargado para conservar sus
 definiciones de estilo originales.

@@ -33,7 +33,7 @@ Les tests unitaires et de fixtures du cœur établissent les cas d'analyse et de
 
 ## Site web {#website}
 
-Build Vite statique multipage : accueil, guide, registre des capacités, architecture et un terrain de jeu séparé. Les liens sont relatifs et les ressources locales. Aucune police ni aucun script tiers. Aucun bundle d'analyseur sur la page d'accueil.
+Site de documentation VitePress (`docs/`) : accueil, guide, registre des capacités, architecture et un terrain de jeu séparé, que Vite compile depuis `demos/visio/demo/`. Les liens sont relatifs et les ressources locales. Aucune police ni aucun script tiers. Aucun bundle d'analyseur sur la page d'accueil.
 
 ## Publication {#publication}
 

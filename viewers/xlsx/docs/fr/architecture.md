@@ -38,7 +38,7 @@ Un classeur chargé conserve dans `workbook.source` les parties que le modèle n
 
 ## Le composant web dessine
 
-`packages/web-component` est la seule interface d’édition : il crée une session d’édition sur le classeur, dessine ce que renvoient les fonctions de mise en page du cœur, achemine le clavier, la souris et le ruban vers les commandes d’édition, et gère les styles, les langues et les boîtes de dialogue. Le Shadow DOM limite la portée de ses styles ; l’enregistrement n’a lieu que dans le navigateur et est idempotent. Les tests de navigateur exercent le même contrat à travers chaque liaison.
+`<xlsx-editor>` est l’unique interface d’édition ; il vit dans le dépôt `ooxml` (`src/ui/src/xlsx`, `ooxml-ui/xlsx`), et `packages/web-component` se contente de le réexporter. Il crée une session d’édition sur le classeur, dessine ce que renvoient les fonctions de mise en page du cœur, achemine le clavier, la souris et le ruban vers les commandes d’édition, et gère les styles, les langues et les boîtes de dialogue. Le Shadow DOM limite la portée de ses styles ; l’enregistrement n’a lieu que dans le navigateur et est idempotent. Les tests de navigateur exercent le même contrat à travers chaque liaison.
 
 `packages/bindings` ne gère que l’intégration aux frameworks : montage et démontage, mises à jour des propriétés, transmission des événements et handles impératifs. Les nouvelles fonctionnalités de l’éditeur appartiennent au composant web (ou au cœur) ; une modification d’une liaison ne se justifie que par une contrainte de cycle de vie ou d’API du framework.
 

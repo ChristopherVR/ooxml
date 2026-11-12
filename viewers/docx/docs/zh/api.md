@@ -4,22 +4,29 @@
 
 ## 特性与属性
 
-| 属性             | 特性              | 说明                                                                                                   |
-| ---------------- | ----------------- | ------------------------------------------------------------------------------------------------------ |
-| `documentModel`  |                   | 当前显示的 `DocumentModel`。对其赋值属于外部替换，不会触发编辑事件。                                   |
-| `readOnly`       | `read-only`       | 阻止本地编辑。远程协作批次仍会应用。                                                                   |
-| `locale`         | `locale`          | 界面语言：`en`、`fr`、`de`、`es` 或 `zh-CN`。文档内容绝不会被翻译。                                    |
-| `fileName`       | `file-name`       | 当前打开文档的名称（默认为 `Document1.docx`）。                                                        |
-| `reviewAuthor`   | `review-author`   | 记录在修订和批注上的作者（默认为 `Author`）。                                                          |
-| `theme`          | `theme`           | `light`、`dark` 或 `auto`。参见[主题](/theming)。                                                      |
-| `themeColors`    |                   | 以 `--dve-*` 自定义属性形式应用的部分令牌覆盖。                                                        |
-| `showThumbnails` | `show-thumbnails` | 左侧的页面缩略图栏（仅限打印布局）。                                                                   |
-| `showToolbar`    | `show-toolbar`    | 设为 `false` 会隐藏功能区；标题栏和状态栏仍保留。                                                      |
-| `hiddenActions`  |                   | 要按稳定 ID 隐藏的功能区控件；参见[绑定](/bindings)中的表格。                                          |
-| `ribbonAddIns`   |                   | 宿主在内置选项卡之后添加的选项卡；参见[绑定](/bindings#ribbon-add-in-tabs)。                           |
-| `collaboration`  |                   | 声明式协作（`DocxCollaborationOptions` 或 `null`）；参见[协作](/zh/collaboration#collaboration-属性)。 |
-| `customization`  |                   | 能力（capabilities）、宿主的“文件”选项卡页面和宿主菜单命令（参见[自定义](#customization)）。           |
-| `dirty`（只读）  |                   | 编辑后为 true，保存、加载或 `markClean()` 之后为 false。                                               |
+| 属性                         | 特性              | 说明                                                                                                                                                   |
+| ---------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `documentModel`              |                   | 当前显示的 `DocumentModel`。对其赋值属于外部替换，不会触发编辑事件。                                                                                   |
+| `readOnly`                   | `read-only`       | 阻止本地编辑。远程协作批次仍会应用。                                                                                                                   |
+| `locale`                     | `locale`          | 界面语言：`en`、`fr`、`de`、`es` 或 `zh-CN`。文档内容绝不会被翻译。                                                                                    |
+| `fileName`                   | `file-name`       | 当前打开文档的名称（默认为 `Document1.docx`）。                                                                                                        |
+| `reviewAuthor`               | `review-author`   | 记录在修订和批注上的作者（默认为 `Author`）。                                                                                                          |
+| `theme`                      | `theme`           | `light`、`dark` 或 `auto`。参见[主题](/theming)。                                                                                                      |
+| `themeColors`                |                   | 以 `--dve-*` 自定义属性形式应用的部分令牌覆盖。                                                                                                        |
+| `showThumbnails`             | `show-thumbnails` | 左侧的页面缩略图栏（仅限打印布局）。                                                                                                                   |
+| `showToolbar`                | `show-toolbar`    | 设为 `false` 会隐藏功能区；标题栏和状态栏仍保留。                                                                                                      |
+| `hiddenActions`              |                   | 要按稳定 ID 隐藏的功能区控件；参见[绑定](/bindings)中的表格。                                                                                          |
+| `ribbonAddIns`               |                   | 宿主在内置选项卡之后添加的选项卡；参见[绑定](/bindings#ribbon-add-in-tabs)。                                                                           |
+| `collaboration`              |                   | 声明式协作（`DocxCollaborationOptions` 或 `null`）；参见[协作](/zh/collaboration#collaboration-属性)。                                                 |
+| `customization`              |                   | 能力（capabilities）、宿主的“文件”选项卡页面和宿主菜单命令（参见[自定义](#customization)）。                                                           |
+| `surfaceOnly`                |                   | 只挂载文档及其编辑界面。须在元素连接之前选择。                                                                                                         |
+| `surfaceActions`             |                   | 宿主为表面模式提供的对话框：`onOpenHyperlinkDialog`、`onOpenFindReplace` 和 `onOpenImagePicker`。                                                      |
+| `googleFonts`                |                   | 为既未安装也未嵌入的文档字体提供网页字体。未设置时遵循“文件 > 选项 > 信任中心”（默认关闭，直到开启）；`false` 将其关闭；`{ baseUrl }` 设置 CSS2 端点。 |
+| `storage`                    |                   | 宿主管理的存储，用于保存、另存为和打开；见下方“由宿主管理的存储”。                                                                                     |
+| `fileProviders`              |                   | “文件 > 打开”的云位置；见下方“‘文件 > 打开’中的云位置”。                                                                                               |
+| `loading`（只读）            |                   | 文档加载期间为 true。                                                                                                                                  |
+| `collaborationState`（只读） |                   | 协作房间：是否处于活动状态、房间 ID、状态、同步状态和参与者。                                                                                          |
+| `dirty`（只读）              |                   | 编辑后为 true，保存、加载或 `markClean()` 之后为 false。                                                                                               |
 
 ## 自定义 {#customization}
 
@@ -45,20 +52,24 @@ editor.customization = {
 
 ## 方法
 
-| 方法                                                  | 说明                                                           |
-| ----------------------------------------------------- | -------------------------------------------------------------- |
-| `load(bytes)`                                         | 加载 DOCX 或旧版 DOC 字节。失败时拒绝并触发 `document-error`。 |
-| `save()`                                              | 解析为已序列化文档的 `Blob`。                                  |
-| `saveBytes()`                                         | 解析为原始的 `Uint8Array`。                                    |
-| `download(fileName?)`                                 | 保存并启动浏览器下载。                                         |
-| `markClean()`                                         | 在宿主持久化文档之后清除脏标记。                               |
-| `startCollaboration(config)`                          | 加入协作会话；参见[协作](/zh/collaboration)。                  |
-| `startYjsCollaboration(session, options)`             | 加入同步的 Yjs 房间及其匹配的源包。                            |
-| `reconnectCollaboration()`, `resyncCollaboration()`   | 恢复 Yjs 连接，或请求提供方交换状态。                          |
-| `getPendingCollaboration()`                           | 待发送的步骤批次，或 `null`。                                  |
-| `receiveCollaboration(batch)`                         | 应用权威端已接受的批次。                                       |
-| `stopCollaboration(discardPending?)`                  | 离开会话；待处理的编辑必须被确认，或被显式丢弃。               |
-| `publishPresence`, `receivePresence`, `leavePresence` | 临时在线状态通道；参见[协作](/zh/collaboration#在线状态)。     |
+| 方法                                                            | 说明                                                                          |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `load(bytes)`                                                   | 加载 DOCX 或旧版 DOC 字节。失败时拒绝并触发 `document-error`。                |
+| `save()`                                                        | 解析为已序列化文档的 `Blob`。                                                 |
+| `saveBytes()`                                                   | 解析为原始的 `Uint8Array`。                                                   |
+| `download(fileName?)`                                           | 保存并启动浏览器下载。                                                        |
+| `markClean()`                                                   | 在宿主持久化文档之后清除脏标记。                                              |
+| `setLoadedDocument(session)`                                    | 挂载由 `loadDocument` 已解析的 `LoadedDocument`。                             |
+| `openCloudFile(file)`                                           | 打开来自 `CloudFileProvider` 的文件，与“文件 > 打开 > OneDrive”相同。         |
+| `getToolbarProps()`、`getNavigationProps()`、`getStatusProps()` | 宿主自建工具栏、页面导航和状态控件所需的状态与回调。                          |
+| `subscribeEditorState(listener)`                                | 选区和格式变化时调用 `listener`，包括不会使文档变脏的变化。返回取消订阅函数。 |
+| `startCollaboration(config)`                                    | 加入协作会话；参见[协作](/zh/collaboration)。                                 |
+| `startYjsCollaboration(session, options)`                       | 加入同步的 Yjs 房间及其匹配的源包。                                           |
+| `reconnectCollaboration()`, `resyncCollaboration()`             | 恢复 Yjs 连接，或请求提供方交换状态。                                         |
+| `getPendingCollaboration()`                                     | 待发送的步骤批次，或 `null`。                                                 |
+| `receiveCollaboration(batch)`                                   | 应用权威端已接受的批次。                                                      |
+| `stopCollaboration(discardPending?)`                            | 离开会话；待处理的编辑必须被确认，或被显式丢弃。                              |
+| `publishPresence`, `receivePresence`, `leavePresence`           | 临时在线状态通道；参见[协作](/zh/collaboration#在线状态)。                    |
 
 ## 事件
 
@@ -83,6 +94,11 @@ editor.customization = {
 该包导出了类型化的事件映射（`DocxEditorEventMap`）和运行时列表 `DOCX_EDITOR_EVENTS`。
 
 各框架绑定以其框架的命名方式（例如 `onFileCommand`、`fileCommand` 和 `onfilecommand`）转发 props `fileName`、`reviewAuthor` 和 `themeColors`，以及事件 `file-command`、`document-warning`、`readonly-change`、`ribbon-action` 和 `ribbon-customize`。对照表见[框架绑定](/bindings#binding-props-and-events)。
+
+## Shadow 部件
+
+标题栏（文件名、保存状态、快速访问和“告诉我”）是 shadow 部件 `title-bar`。
+自行绘制文档栏的宿主可用 `docx-editor::part(title-bar) { display: none; }` 将其隐藏；功能区和状态栏保持显示。
 
 ## “文件 > 打开”中的云位置
 

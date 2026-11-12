@@ -109,7 +109,8 @@ Ou simplement du balisage, après avoir appelé `defineTeamsApp()` depuis `opent
 Toutes les intégrations acceptent les mêmes propriétés : `workspaceId` (la salle partagée : lettres,
 chiffres, `-` et `_`), `userName`, `userId` (un identifiant stable ; par défaut, un identifiant
 mémorisé dans ce navigateur), `config`, `uploadFile` (la destination des pièces jointes), `openers`
-(des gestionnaires par type Office) et trois événements : prêt, ouverture de fichier (appelez
+(des gestionnaires par type Office), `embeds` (pages de visionneuse par type de fichier), `locale`
+(une étiquette BCP 47 comme `de`) et trois événements : prêt, ouverture de fichier (appelez
 `preventDefault()` dessus pour ouvrir le fichier vous-même) et changement de configuration
 (`onReady`, `onOpenFile`, `onConfigChange` en React, Solid, Svelte et JS natif ; `@ready`,
 `@open-file`, `@config-change` en Vue ; `(ready)`, `(openFile)`, `(configChange)` en Angular).
@@ -160,7 +161,7 @@ recherche, l’appel). Les actions comprennent `select`, `createChannel`, `send`
 `toggleMic`, `toggleCamera`, `toggleScreenShare` et `toggleHand`. La démo React montre les deux
 styles côte à côte.
 
-## Exécuter depuis les sources
+## Exécuter depuis les sources {#run-it-from-source}
 
 Nécessite Node 22+ et Bun. Ce dossier est `viewers/teams` du dépôt
 [`ooxml`](https://github.com/ChristopherVR/ooxml) : exécutez `bun install` à la racine du dépôt, puis les

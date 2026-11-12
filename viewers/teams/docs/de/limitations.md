@@ -24,13 +24,13 @@ Es implementiert **nicht** Aufzeichnung, Hintergrundunschärfe, Live-Untertitel,
 
 Word zeigt eine schreibgeschützte Vorschau; Excel bietet lokales Bearbeiten und das Speichern neuer Kanalkopien,
 wenn Speicher konfiguriert ist; Visio nutzt den vorhandenen Viewer.
-Es gibt kein gemeinsames Bearbeiten, kein Überschreiben und kein versioniertes Zurückspeichern. PowerPoint benötigt eine
-vom Host konfigurierte eingebettete Viewer-Seite. Fehlende Integrationen werden im Bereich gemeldet.
+Es gibt kein gemeinsames Bearbeiten, kein Überschreiben und kein versioniertes Zurückspeichern. PowerPoint öffnet sich in einer
+nativen Vorschau; ein Host kann stattdessen eine eingebettete Viewer-Seite bereitstellen. Fehlende Integrationen werden im Bereich gemeldet.
 Textlesevorgänge sind auf 2 MiB und native Office-Lesevorgänge auf 32 MiB begrenzt. Die Oberfläche gibt es auf Englisch, Deutsch, Spanisch, Französisch und in vereinfachtem Chinesisch (Eigenschaft `locale`); von Personen geschriebener Text wird nie übersetzt.
 
 Die Dateiansichten unterstützen direktes Hochladen, das Anlegen leerer Excel-Dateien und die Metadatensuche, wenn
-Speicher konfiguriert ist. Uploads zeigen einen Beschäftigt-Zustand und erlauben Wiederholen, ohne Byte-
-Fortschritt oder Abbruch. Ein fehlgeschlagener Stapel kann Dateien hinterlassen, die vor dem Fehler hochgeladen wurden und an keiner Nachricht
+Speicher konfiguriert ist. Uploads zeigen einen Beschäftigt-Zustand und erlauben Abbruch und Wiederholen, ohne Byte-
+Fortschritt. Ein fehlgeschlagener Stapel kann Dateien hinterlassen, die vor dem Fehler hochgeladen wurden und an keiner Nachricht
 hängen; der Referenzserver entfernt seine unvollständigen Uploads und lässt die hochladende Person oder einen
 Moderator den Rest löschen (`DELETE /files/<scope>/<name>`), tut das aber nicht von selbst. Der Referenzserver
 beschränkt Dateien privater Chats auf deren Mitglieder und zählt den Speicher pro Workspace; Kanaldateien kann jede
@@ -63,7 +63,7 @@ im Client und benötigen eine Serverautorisierung, um durchsetzbar zu werden.
 
 - **Mesh-Anrufe** verbinden jeden Teilnehmer mit jedem anderen. Das braucht keinen Medienserver und
   funktioniert für eine Handvoll Personen (die Obergrenze ist standardmäßig 12), nicht für ein Webinar.
-- **Der Verlauf wächst.** Der Referenzserver hält einen Snapshot pro Raum und verdichtet ihn nie.
+- **Der Verlauf wächst.** Der Referenzserver hält einen Snapshot pro Raum und verdichtet ihn beim Laden des Raums und standardmäßig alle 6 Stunden (`TEAMS_COMPACT_INTERVAL_MIN`).
 - **Ein Serverprozess.** Der Referenzserver hält Räume im Arbeitsspeicher und skaliert nicht
   horizontal.
 

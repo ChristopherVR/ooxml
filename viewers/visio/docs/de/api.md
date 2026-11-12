@@ -44,6 +44,23 @@ Jedes Binding akzeptiert dieselben Eigenschaften und meldet dieselben Ereignisse
 - `markClean()` (auf `viewer.controller` und auf den Bausteinen) erklärt den aktuellen Inhalt für gespeichert. Ein Host, der `exportVsdx()` selbst speichert, ruft es danach auf: `edit.dirty` wird `false`, ein `document-change` der Art `save` wird ausgelöst, und spätere Bearbeitungen und Rückgängig-Schritte werden ab diesem Punkt gemessen. Bei einer Zeichnung, die nicht zurückgespeichert werden kann, bewirkt es nichts.
 - `collaboration` (`VisioCollaborationOptions | null`) teilt die geöffnete Zeichnung in einem Raum, solange sie gesetzt ist. `collaboration-change` liefert einen `CollaborationState`, wenn das Teilen beginnt oder endet und sich Status, Synchronisierung oder Teilnehmer ändern. Am Element (`viewer.element` eines Handles) liest `collaborationState` den aktuellen Zustand, und `reconnectCollaboration()` und `stopCollaboration()` wirken darauf. Siehe [Zusammenarbeit](/de/collaboration).
 
+## Nur am Element verfügbare Member {#element-only-members}
+
+Diese Member von `<visio-viewer>` gehören nicht zum gemeinsamen Bindungsvertrag (siehe [Bindings](/bindings)); verwenden Sie sie direkt am Element.
+
+| Member                         | Typ                              | Beschreibung                                                                                                                                                                   |
+| ------------------------------ | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `googleFonts`                  | `GoogleFontsOption \| undefined` | Webfont-Ersatz für nicht installierte Zeichnungsschriften: `false` (aus), `{ baseUrl }` (ein CSS2-Spiegel) oder nicht gesetzt für die Entscheidung im Trust Center des Lesers. |
+| `pdfFonts`                     | `readonly PdfFontFile[]`         | Vom Host bereitgestellte TrueType-Dateien, die Datei > Exportieren > PDF als Teilmengen einbettet. Es wird nichts mitgeliefert.                                                |
+| `createFromTemplate(template)` | `Promise<void>`                  | Erstellt eine Zeichnung aus einer Vorlage von Datei > Neu (Leere Zeichnung, Flussdiagramme, Organigramm).                                                                      |
+| `openBackstage(page?)`         | `void`                           | Öffnet Visios Backstage-Ansicht „Datei“ auf einer Seite (standardmäßig Info).                                                                                                  |
+| `closeBackstage()`             | `void`                           | Verlässt die Backstage-Ansicht „Datei“ und kehrt zur Zeichnung zurück.                                                                                                         |
+| `startPresentation()`          | `void`                           | Startet den Präsentationsmodus auf der aktuellen Vordergrundseite (F5).                                                                                                        |
+| `exitPresentation()`           | `void`                           | Beendet den Präsentationsmodus; Seite, Zoom und Auswahl bleiben unverändert.                                                                                                   |
+| `presenting`                   | `boolean` (nur lesen)            | True, solange der Präsentationsmodus aktiv ist.                                                                                                                                |
+| `fileName`                     | `string` (nur lesen)             | Name der zuletzt geöffneten lokalen Datei, leer bei Bytes, Modellen und geschlossenen Zeichnungen.                                                                             |
+| `renderWarnings`               | `readonly string[]` (nur lesen)  | Warnungen, die das letzte Seitenrendering gemeldet hat.                                                                                                                        |
+
 ## Formen auswählen {#select-shapes}
 
 Jedes eingehängte bzw. native Handle stellt `selectShapes(targets)`,
@@ -261,8 +278,7 @@ Vorabprüfungen können Inhalte ablehnen, deren spätere Serialisierung kleiner
 wäre. Schriften werden nicht eingebettet, und Text und Layout bleiben
 näherungsweise. Die physischen Seitenabmessungen bleiben erhalten; nachgelagerte
 Rasterisierer müssen ihre Ausgabeabmessungen und Pixelfläche begrenzen, bevor
-sie eine Bildfläche anlegen. PDF, Bitmap-Export und Drucklayout bleiben
-unimplementiert.
+sie eine Bildfläche anlegen. Diese Funktion schreibt nur SVG; Datei > Exportieren im Viewer schreibt Bildseiten als PNG und PDF. Das Drucklayout bleibt unimplementiert.
 
 Optionale sekundäre Pixeltests unter Linux laufen nach dem Build mit
 `node scripts/test-svg-rasterization.mjs`, mit dem System-Python 3,

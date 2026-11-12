@@ -169,6 +169,15 @@ type ViewerMode = 'preview' | 'edit' | 'present' | 'master';
 | `setTheme`  | `(theme: ViewerTheme \| undefined) => void` | 应用新的查看器主题，传入 `undefined` 恢复默认值。参见[主题](/zh/vanilla/theming)。 |
 | `setLocale` | `(locale: string) => void`                  | 切换界面语言，重新构建界面标签。                                                   |
 
+## 界面外壳 {#chrome}
+
+| 方法               | 签名                                                 | 说明                                                                                                                                                          |
+| ------------------ | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `setShowToolbar`   | `(show: boolean) => void`                            | 在运行中的查看器上显示或隐藏工具栏（即 [`showToolbar`](/zh/vanilla/options) 选项）。与 `setLocale` 一样只重建外壳，演示文稿、未保存的编辑和撤销历史都会保留。 |
+| `setRibbonDisplay` | `(mode: 'always' \| 'tabs' \| 'fullScreen') => void` | 由宿主设置 PowerPoint 的“功能区显示选项”：固定显示功能区、只显示选项卡行或全屏模式。调用它不会触发 `onRibbonDisplayChange`。                                  |
+| `setRibbonAddIns`  | `(tabs: readonly RibbonAddInTab[]) => void`          | 替换宿主的功能区选项卡（即 `ribbonAddIns` 选项）；传入空列表会移除它们。                                                                                      |
+| `getRibbonDisplay` | `() => 'always' \| 'tabs' \| 'fullScreen'`           | 当前的“功能区显示选项”模式。                                                                                                                                  |
+
 ## 放映模式 {#presentation-mode}
 
 | 方法                | 签名                  | 说明                                   |
@@ -182,16 +191,17 @@ type ViewerMode = 'preview' | 'edit' | 'present' | 'master';
 
 在选项中传入 `editable: true`，或调用 `setEditable(true)`，即可直接在 DOM 中启用点击选择、拖动移动、缩放和旋转控点、双击内联文本编辑。以下方法是这些交互对应的编程入口：
 
-| 方法                   | 签名                          | 说明                                           |
-| ---------------------- | ----------------------------- | ---------------------------------------------- |
-| `setEditable`          | `(editable: boolean) => void` | 运行时启用或禁用编辑，禁用时清空选区。         |
-| `setEditTemplateMode`  | `(enabled: boolean) => void`  | 将当前幻灯片继承的母版和布局元素作为编辑目标。 |
-| `undo`                 | `() => void`                  | 撤销上一次编辑，撤销栈为空时不执行操作。       |
-| `redo`                 | `() => void`                  | 重做上一次撤销的编辑，重做栈为空时不执行操作。 |
-| `canUndo` / `canRedo`  | `() => boolean`               | `undo()` / `redo()` 是否存在可执行操作。       |
-| `deleteSelected`       | `() => void`                  | 删除选中元素，没有选区时不执行操作。           |
-| `getSelectedElementId` | `() => string \| null`        | 选中元素的 ID，未选中时为 `null`。             |
-| `isDirty`              | `() => boolean`               | 文档是否存在未保存修改。                       |
+| 方法                   | 签名                          | 说明                                                               |
+| ---------------------- | ----------------------------- | ------------------------------------------------------------------ |
+| `setEditable`          | `(editable: boolean) => void` | 运行时启用或禁用编辑，禁用时清空选区。                             |
+| `setReadOnly`          | `(readOnly: boolean) => void` | 在运行时将文稿设为只读（`true` 优先于 `editable`），或取消该限制。 |
+| `setEditTemplateMode`  | `(enabled: boolean) => void`  | 将当前幻灯片继承的母版和布局元素作为编辑目标。                     |
+| `undo`                 | `() => void`                  | 撤销上一次编辑，撤销栈为空时不执行操作。                           |
+| `redo`                 | `() => void`                  | 重做上一次撤销的编辑，重做栈为空时不执行操作。                     |
+| `canUndo` / `canRedo`  | `() => boolean`               | `undo()` / `redo()` 是否存在可执行操作。                           |
+| `deleteSelected`       | `() => void`                  | 删除选中元素，没有选区时不执行操作。                               |
+| `getSelectedElementId` | `() => string \| null`        | 选中元素的 ID，未选中时为 `null`。                                 |
+| `isDirty`              | `() => boolean`               | 文档是否存在未保存修改。                                           |
 
 任何修改后都会触发 `onChange`，包括移动、缩放、旋转、文本编辑、删除、撤销和重做；未保存编辑标记变化时触发 `onDirtyChange`；选中元素 ID 变化时触发 `onSelectionChange`。
 
@@ -203,11 +213,11 @@ type ViewerMode = 'preview' | 'edit' | 'present' | 'master';
 | -------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | `save`         | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | 序列化演示文稿，包括编辑后的内容，默认格式为 `'pptx'`，并清除未保存修改标记。 |
 | `getContent`   | `() => Promise<Uint8Array>`                                    | `save()` 的别名，返回序列化的 `.pptx` 字节，是共享 API 中的名称。             |
-| `downloadAs`   | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | 保存并以支持的 OpenXML 格式触发浏览器下载。                                   |
+| `downloadAs`   | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | 保存并以支持的格式触发浏览器下载（OpenXML，或旧版二进制 `.ppt`）。            |
 | `downloadPptx` | `(fileName?: string) => Promise<void>`                         | 调用 `save()` 并触发浏览器下载，默认文件名为 `presentation.pptx`。            |
 
 ```ts
-type PptxSaveFormat = 'pptx' | 'ppsx' | 'pptm';
+type PptxSaveFormat = 'pptx' | 'ppsx' | 'pptm' | 'ppt';
 ```
 
 ```ts
@@ -229,6 +239,7 @@ saveButton.addEventListener('click', () => void viewer.downloadPptx('edited.pptx
 | `exportPdf`        | `(options?: ExportPdfOptions) => Promise<void>`   | 将所有幻灯片导出为多页 PDF 并下载，每页一张幻灯片。                                        |
 | `exportGif`        | `(options?: ExportGifOptions) => Promise<void>`   | 将所有幻灯片导出为动态 GIF 并下载，每张幻灯片一帧，使用共享的纯 JavaScript GIF89a 编码器。 |
 | `exportVideo`      | `(options?: ExportVideoOptions) => Promise<void>` | 将所有幻灯片导出为 WebM 视频并下载，通过 `MediaRecorder` 录制画布流。                      |
+| `exportJson`       | `() => void`                                      | 将演示文稿序列化为 `pptx-viewer-json` 并触发浏览器下载（文件 > 导出 > 导出为 JSON）。      |
 | `print`            | `(options?: PrintOptions) => Promise<boolean>`    | 组装可打印文档并在打印窗口中打开，`false` 表示弹窗被拦截。                                 |
 
 所有选项接口均从包根入口导出：
@@ -386,6 +397,7 @@ const image = await createImageElementFromFile(file, canvasSize, signal);
 | ------------------------ | ----------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | `startCollaboration`     | `(config: CollaborationInput) => Promise<void>` | 启动或重新启动实时会话，传输创建后解析 Promise。状态通过 `onCollaborationStatus` 传递。             |
 | `stopCollaboration`      | `() => void`                                    | 停止当前会话，没有活动会话时不执行操作。                                                            |
+| `getCollaborationState`  | `() => CollaborationState`                      | 共享的协作状态（未激活会话时为关闭状态）。                                                          |
 | `getCollaborationStatus` | `() => ConnectionStatus`                        | 当前状态：`'disconnected' \| 'connecting' \| 'connected' \| 'error'`，未激活时为 `'disconnected'`。 |
 
 `CollaborationConfig` 及通信格式注意事项请参见[选项](/zh/vanilla/options#collaboration)。
@@ -504,14 +516,14 @@ import {
 } from 'pptx-vanilla-viewer';
 ```
 
-| 导出项                         | 类型                                                                  | 说明                                                                                                           |
-| ------------------------------ | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `PPTX_OPEN_ACCEPT`             | `string`                                                              | 可直接用于 `<input type="file" accept>`：`.pptx,.ppsx,.pptm,.potx,.ppt,.json`。                                |
-| `PRESENTATION_OPEN_EXTENSIONS` | `readonly string[]`                                                   | 未拼接的同一扩展名列表，供拖放区域自行判断。                                                                   |
-| `isSupportedPresentationFile`  | `(name?: string \| null) => boolean`                                  | 根据选择或拖入的文件名进行快速预筛选，只检查扩展名，最终格式由加载器检测。                                     |
-| `isLegacyBinaryPresentation`   | `(name?: string \| null) => boolean`                                  | 判断是否属于 PowerPoint 97-2003 二进制格式（`.ppt`、`.pps`、`.pot`），这些格式可读取，不属于此保存接口的输出。 |
-| `presentationBaseName`         | `(name?: string \| null, fallback?: string) => string`                | 去除目录和可加载扩展名，得到文件主名，例如 `decks/report.ppt` 变为 `report`。                                  |
-| `savedPresentationFileName`    | `(name?: string \| null, format?: SavedPresentationFormat) => string` | 生成保存副本时提供的文件名，例如 `report.ppt` 变为 `report.pptx`。                                             |
-| `SavedPresentationFormat`      | `'pptx' \| 'ppsx' \| 'pptm'`                                          | 此保存路径可生成的格式，不包含二进制 `.ppt`，输出始终为 OpenXML。                                              |
+| 导出项                         | 类型                                                                  | 说明                                                                                                                                     |
+| ------------------------------ | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `PPTX_OPEN_ACCEPT`             | `string`                                                              | 可直接用于 `<input type="file" accept>`：`.pptx,.ppsx,.pptm,.potx,.ppt,.json`。                                                          |
+| `PRESENTATION_OPEN_EXTENSIONS` | `readonly string[]`                                                   | 未拼接的同一扩展名列表，供拖放区域自行判断。                                                                                             |
+| `isSupportedPresentationFile`  | `(name?: string \| null) => boolean`                                  | 根据选择或拖入的文件名进行快速预筛选，只检查扩展名，最终格式由加载器检测。                                                               |
+| `isLegacyBinaryPresentation`   | `(name?: string \| null) => boolean`                                  | 判断是否属于 PowerPoint 97-2003 二进制格式（`.ppt`、`.pps`、`.pot`）。查看器读取这三种格式，并可写出 `.ppt`；`.pps` 和 `.pot` 仅可读取。 |
+| `presentationBaseName`         | `(name?: string \| null, fallback?: string) => string`                | 去除目录和可加载扩展名，得到文件主名，例如 `decks/report.ppt` 变为 `report`。                                                            |
+| `savedPresentationFileName`    | `(name?: string \| null, format?: SavedPresentationFormat) => string` | 生成保存副本时提供的文件名，例如 `report.ppt` 变为 `report.pptx`。                                                                       |
+| `SavedPresentationFormat`      | `'pptx' \| 'ppsx' \| 'pptm' \| 'ppt'`                                 | 保存路径可生成的格式。二进制 `.ppt` 是需要显式选择的保存目标；`.pps` 和 `.pot` 从不写出。                                                |
 
-“另存为”时应使用 `savedPresentationFileName`。此路径输出的是 OpenXML 包，如果保留旧版源扩展名，会得到扩展名为 `.ppt`、内容却是 ZIP 的文件，PowerPoint 会拒绝打开。
+“另存为”时应使用 `savedPresentationFileName`。普通“另存为”会以 `.pptx` 文件名写出 OpenXML 包，因此旧版源扩展名会被替换：如果保留 `.ppt`，用户得到的将是内容为 ZIP 的 `.ppt` 文件，PowerPoint 会拒绝打开。显式选择 `'ppt'` 时，才会以 `.ppt` 文件名写出二进制格式。

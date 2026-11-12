@@ -6,9 +6,10 @@
 
 | 属性             | 特性            | 说明                                                                                                                 |
 | ---------------- | --------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `workspaceId`    | `workspace-id`  | 共享房间：1 到 128 个字符，由字母、数字、`-` 和 `_` 组成。                                                           |
+| `workspaceId`    | `workspace-id`  | 共享房间：1 到 100 个字符，由字母、数字、`-` 和 `_` 组成；其他任何值都回退为 `demo`。                                |
 | `userName`       | `user-name`     | 显示名称。                                                                                                           |
 | `userId`         | `user-id`       | 稳定的 id；默认使用此浏览器中记住的 id。                                                                             |
+| `locale`         | `locale`        | 显示语言：BCP 47 标签，例如 `de` 或 `zh-CN`。未知或为空时使用英语。                                                  |
 | `config`         | `server-config` | `{ mode: 'local' \| 'server', syncUrl?, signalingUrl?, iceServers, iceTransportPolicy?, token? }`。该特性接受 JSON。 |
 | `uploadFile`     |                 | 附件的去向；默认为服务器的 `/files` 端点。                                                                           |
 | `openers`        |                 | 按 Office 类型区分的处理程序（`docx`、`xlsx`、`pptx`、`vsdx`）。                                                     |
@@ -21,7 +22,7 @@
 
 打开附件时默认显示工作区预览。Word 和 Excel 使用原生编辑器元素，起初为只读；Visio 使用其查看器。Markdown 使用安全子集渲染器；文本文件显示字面文本；HTML 和网站使用沙盒框架。`openers` 和可取消的 `teams-open-file` 事件仍然优先。
 
-PowerPoint 需要由宿主提供嵌入页面：
+PowerPoint 会在原生演示文稿预览中打开。宿主也可以改为提供嵌入页面：
 
 ```ts
 const embeds = {
@@ -30,7 +31,7 @@ const embeds = {
 };
 ```
 
-将 `embeds` 传给任何组件绑定。该页面必须能理解文件 URL，并支持允许脚本和表单但不含同源权限的沙盒。文件获取不携带凭据；跨源的文件服务器必须允许 CORS。没有配置 PowerPoint 查看器时，窗格会报告这一局限并提供外部打开。
+将 `embeds` 传给任何组件绑定。该页面必须能理解文件 URL，并支持允许脚本和表单但不含同源权限的沙盒。文件获取不携带凭据；跨源的文件服务器必须允许 CORS。若未为 PowerPoint 提供 `embeds` 条目，则会打开原生预览。
 
 元素的 `previewContent({ attachment, url })` 方法会在本地打开由宿主提供的内容。对于网站，请使用 `attachment: { name: 'Project site', kind: 'other', mime: 'text/html' }`。这不会创建共享的频道标签页。文件视图还提供**预览网站**。拒绝被嵌入框架的网站可以在外部打开。
 
@@ -54,7 +55,7 @@ await teams.saveFileCopy(channelId, file);
 
 ## 文件创建、上传与搜索
 
-两个文件视图都提供上传、新建空白 Excel 工作簿和搜索。上传和新建工作簿以所选频道为目标，该频道的名称显示在控件旁边。它们需要配置存储；失败后可在原频道重试。同名文件使用各自独立的存储 URL。上传最多接受 20 个文件，每个 32 MiB（参考服务器自身的上限为每个文件 25 MB，除非您调高 `maxFileBytes`）；界面会报告活动状态，但不提供字节级进度或取消。
+两个文件视图都提供上传、新建空白 Excel 工作簿和搜索。上传和新建工作簿以所选频道为目标，该频道的名称显示在控件旁边。它们需要配置存储；失败后可在原频道重试。同名文件使用各自独立的存储 URL。上传最多接受 20 个文件，每个 32 MiB（参考服务器自身的上限为每个文件 25 MB，除非您调高 `maxFileBytes`）；界面会报告活动状态并可取消，但不提供字节级进度。
 
 ```ts
 await teams.uploadFiles(channelId, files);

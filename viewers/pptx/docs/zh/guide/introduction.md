@@ -60,7 +60,7 @@ CSS 无法逐像素还原所有 PowerPoint 效果，而 `html2canvas-pro` 回退
 | [**Angular**](/zh/angular/)         | `pptx-angular-viewer`        | 基于同一引擎的 Angular 预览和编辑组件，功能保持一致。                        |
 | [**原生 JavaScript**](/zh/vanilla/) | `pptx-vanilla-viewer`        | 基于同一引擎的无框架版本，使用原生 DOM，通过一个工厂函数创建，无需框架依赖。 |
 | [**Svelte**](/zh/svelte/)           | `pptx-svelte-viewer`         | 基于同一引擎的 Svelte 5 组件，功能保持一致。                                 |
-| [**工具与 MCP**](/zh/packages/mcp)  | `pptx-viewer-mcp`            | 73 个 PPTX 工具函数、面向 AI 智能体的 MCP 服务器，以及 Y.Doc 协作编解码器。  |
+| [**工具与 MCP**](/zh/packages/mcp)  | `pptx-viewer-mcp`            | 74 个 PPTX 工具函数、面向 AI 智能体的 MCP 服务器，以及 Y.Doc 协作编解码器。  |
 | **安装工具**                        | `@christophervr/pptx-viewer` | 交互式命令行工具，帮助项目接入合适的预览组件包。                             |
 
 ### 包之间的关系 {#how-the-pieces-fit}

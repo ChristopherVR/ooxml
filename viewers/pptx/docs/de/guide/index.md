@@ -36,7 +36,7 @@ Wenn noch kein Pfad passt, lesen Sie diese drei Seiten in dieser Reihenfolge:
 | **[Core](/core/)**                                                                                                     | Entwickler                          | Die Headless-Engine: laden, bearbeiten, erstellen, speichern, konvertieren, verschlüsseln. Keine UI.      |
 | **[React](/react/)** / **[Vue](/vue/)** / **[Angular](/angular/)** / **[Svelte](/svelte/)** / **[Vanilla](/vanilla/)** | Entwickler                          | Ein Abschnitt pro UI-Binding: Einstieg, Props/API, Theming, Export, Zusammenarbeit.                       |
 | **[Benutzerhandbuch](/de/user/)**                                                                                      | Endanwender des Editors             | Anzeigen, Bearbeiten, Präsentieren, Exportieren und Zusammenarbeiten in der Editor-Oberfläche. Kein Code. |
-| **[MCP und Werkzeuge](/packages/mcp)**                                                                                 | Autoren von Agenten/Automatisierung | Der MCP-Server, seine 73 Werkzeuge und die CLI.                                                           |
+| **[MCP und Werkzeuge](/packages/mcp)**                                                                                 | Autoren von Agenten/Automatisierung | Der MCP-Server, seine 74 Werkzeuge und die CLI.                                                           |
 | **[Releases](/releases/)**                                                                                             | Alle                                | Versionshinweise pro Paket.                                                                               |
 
 ::: info Sprache

@@ -17,13 +17,13 @@ npx openteams-server --insecure-dev     # 仅用于本地开发：监听 127.0.0
 
 服务器**默认安全**：没有账户文件（`TEAMS_USERS_FILE`）、`authenticate` 钩子或 `authorizeSync` 钩子时，它会拒绝启动。`--insecure-dev`（选项 `insecureDev: true`）会在带警告的情况下仍然启动，供本地开发使用。它通过环境变量配置，并支持 `--insecure-dev`、`--trust-proxy[=N]` 和 `--insecure` 这些标志（参见[部署指南](./deploy.md)中的 `TEAMS_INSECURE` 和 `TEAMS_TRUST_PROXY`）。`SIGTERM` 和 `SIGINT` 会在退出前保存每个房间。
 
-| 变量            | 默认值      | 含义                                                                                                    |
-| --------------- | ----------- | ------------------------------------------------------------------------------------------------------- |
-| `PORT`          | `8787`      | 监听端口。                                                                                              |
-| `HOST`          | `127.0.0.1` | 监听地址。仅在 TLS 之后才绑定 `0.0.0.0`。                                                               |
-| `TEAMS_TOKEN`   | 无          | 若设置，套接字通过 `?token=` 携带它，文件请求通过 `Authorization: Bearer` 携带它。                      |
-| `TEAMS_ORIGINS` | 无          | 以逗号分隔的、允许访问套接字和文件的 `Origin`。未设置时：有令牌则允许任意来源，无令牌则仅允许回环地址。 |
-| `TEAMS_DATA`    | `./data`    | 数据目录：`rooms/<room>.bin` 快照和 `files/<workspace>/`。                                              |
+| 变量            | 默认值      | 含义                                                                                                                            |
+| --------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `PORT`          | `8787`      | 监听端口。                                                                                                                      |
+| `HOST`          | `127.0.0.1` | 监听地址。仅在 TLS 之后才绑定 `0.0.0.0`。                                                                                       |
+| `TEAMS_TOKEN`   | 无          | 若设置，套接字通过 `Sec-WebSocket-Protocol` 请求头携带它（`?token=` 仅作为备用），文件请求通过 `Authorization: Bearer` 携带它。 |
+| `TEAMS_ORIGINS` | 无          | 以逗号分隔的、允许访问套接字和文件的 `Origin`。未设置时：有令牌则允许任意来源，无令牌则仅允许回环地址。                         |
+| `TEAMS_DATA`    | `./data`    | 数据目录：`rooms/<room>.bin` 快照和 `files/<workspace>/`。                                                                      |
 
 服务器还会读取用于账户的变量（`TEAMS_USERS_FILE`、`TEAMS_SESSION_SECRET`、`TEAMS_ADMIN_TOKEN`、`TEAMS_AUTH_RATE_*`）和用于限制的变量（`TEAMS_INSECURE`、`TEAMS_MAX_CONNECTIONS`、`TEAMS_MAX_CONNECTIONS_PER_IP`、`TEAMS_MAX_ROOMS`、`TEAMS_MAX_DOC_MB`、`TEAMS_MESSAGE_RATE`、`TEAMS_MESSAGE_BURST`、`TEAMS_FILES_QUOTA_MB`、`TEAMS_WORKSPACE_QUOTA_MB`、`TEAMS_COMPACT_INTERVAL_MIN`、`TEAMS_METRICS_TOKEN`、`TEAMS_LOG_FORMAT`）。限制见[部署指南](/zh/deploy)；服务器的 README 是完整参考。对应的 `createTeamsServer` 选项有 `users`、`authenticate`、`sessionSecret`、`adminToken`、`sessionRate`、`authorizeSync`、`maxConnections`、`maxRooms`、`messageRate`、`filesQuotaBytes`、`workspaceQuotaBytes`、`metricsToken`、`compactIntervalMs`、`insecure`、`insecureDev` 和 `trustProxy`。
 
@@ -75,7 +75,7 @@ const config = {
 | `POST /auth/check`, `/auth/signout`   | 检查 `{ session }`（204 或 401）；登出，会撤销该用户的会话。                                                             |
 | `POST /auth/revoke`                   | 运营者使用 `TEAMS_ADMIN_TOKEN` 撤销 `{ user }`；没有管理员令牌时为 404。                                                 |
 
-房间名必须匹配 `^[\w-]{1,128}$`，文件路径中的工作空间 id 必须匹配 `^[\w-]{1,64}$`；文件名会被清理为仅含字母、数字、`.`、`-`、`_`、空格和括号，并截断为 120 个字符。
+房间名必须匹配 `^[\w-]{1,128}$`，文件路径中的工作空间 id 必须匹配 `^[\w-]{1,128}$`；文件名会被清理为仅含字母、数字、`.`、`-`、`_`、空格和括号，并截断为 120 个字符。
 
 ## 约定
 
@@ -97,7 +97,7 @@ const config = {
 启用账户的服务器要求每个文件请求都在 `X-Teams-Session` 头中携带已签名会话（未启用账户的服务器则读取 `X-Teams-User` 中声明的用户）；
 客户端两者都会发送。另有可选接口：`GET <origin>/files/<scope>` 用于列出，`DELETE <origin>/files/<scope>/<name>` 供上传者或版主使用。
 
-配置了令牌时，两个套接字都会收到 `?token=<token>`，因为浏览器无法为 WebSocket 设置请求头。请在服务器端强制校验它以及来源白名单。
+配置了令牌时，两个套接字都会在 `Sec-WebSocket-Protocol` 请求头中收到令牌，因为浏览器无法为 WebSocket 设置其他请求头。查询字符串（`?token=`）仅作为令牌请求头无法承载时的备用方式。请在服务器端强制校验它以及来源白名单。
 
 ## 通话：STUN 与 TURN {#calls-stun-and-turn}
 

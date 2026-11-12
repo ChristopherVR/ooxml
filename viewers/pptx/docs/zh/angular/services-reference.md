@@ -27,7 +27,6 @@ import { AutosaveService, ViewerExportService } from 'pptx-angular-viewer/intern
 | `FieldContextService`               | 文本渲染的字段和占位符上下文，例如日期、幻灯片编号等。              |
 | `InkDrawingService`                 | 绘图工具的自由墨迹笔画状态。                                        |
 | `RulerGuidesService`                | 编辑器画布的标尺刻度和参考线状态。                                  |
-| `SmartArt3DService`                 | 通过 `smartArt3D` 输入控制可选的 Three.js SmartArt 渲染器。         |
 | `ViewerCanvasEditingService`        | 画布编辑编排，包括元素选择、变换、文本、墨迹和表格单元格编辑。      |
 | `ViewerCollabCursorService`         | 跟踪本地指针，用于广播用户光标位置。                                |
 | `ViewerCollaborationSessionService` | 共享和广播对话框状态，以及会话连接和断开的编排。                    |

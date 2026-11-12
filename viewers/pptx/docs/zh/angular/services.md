@@ -44,33 +44,33 @@ export class HeadlessDeckComponent {
 
 这些服务说明了查看器的组装方式。此表用于理解架构，并非 API 兼容性约定。
 
-| 服务                                                                                                  | 职责                                                                                               |
-| ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `EditorStateService`                                                                                  | 文档状态，包括幻灯片、选区、撤销和重做历史、模板元素。                                             |
-| `LoadContentService`                                                                                  | 加载时解析 `.pptx` 缓冲区，并管理画布尺寸、媒体 data URL 和嵌入字体。                              |
-| `ViewerFileIOService`                                                                                 | “文件 > 打开 / 另存为”编排、内容覆盖和 `getContent()`。                                            |
-| `AutosaveService`                                                                                     | 周期性自动保存调度和状态，将恢复快照写入 IndexedDB。                                               |
-| `ViewerZoomService`                                                                                   | 缩放级别状态，包括 `zoom`、`zoomPercent`、`zoomIn`、`zoomOut` 和 `zoomReset`。                     |
-| `ZoomNavigationService`                                                                               | PowerPoint“缩放定位”（摘要缩放定位或节缩放定位）的导航目标。                                       |
-| `ZoomTargetService`                                                                                   | 从当前文稿解析缩放定位磁贴的回退缩略图信息，包括背景、编号和节。                                   |
-| `ViewerCanvasEditingService`                                                                          | 画布编辑编排，包括元素选择、背景点击、变换、文本、墨迹和表格单元格编辑。                           |
-| `ViewerInspectorPanelService`                                                                         | 右侧检查器面板切换，包括元素、幻灯片、批注、签名、无障碍和选区。                                   |
-| `ViewerFormatPainterService`                                                                          | 格式刷和吸管工具状态。                                                                             |
-| `ViewerFindReplaceService`                                                                            | 查找和替换栏状态，以及搜索和替换操作。                                                             |
-| `ViewerKeyboardService`                                                                               | 组件文档级 keydown 监听器的键盘快捷键分发。                                                        |
-| `ViewerTouchGesturesService`                                                                          | 画布宿主上的双指缩放、滑动导航和长按手势接线。                                                     |
-| `ViewerMobileSheetService`                                                                            | 移动端底部面板状态（幻灯片、菜单、备注）和快速插入操作。                                           |
-| `ViewerPresentationModeService`                                                                       | 放映模式编排，包括进入、退出、演示者视图和观众窗口。                                               |
-| `ViewerCustomShowsService`                                                                            | 自定义放映状态，用于放映幻灯片子集，以及放映幻灯片选择。                                           |
-| `ViewerDocumentPropertiesService`                                                                     | 文档信息对话框和超链接对话框状态。                                                                 |
-| `ViewerThemeGalleryService`                                                                           | 主题库对话框状态和主题预设应用。                                                                   |
-| `ViewerExportService`                                                                                 | PNG、PDF、GIF、视频导出和打印编排，包含进度报告和取消。                                            |
-| `CollaborationService`                                                                                | 会话的 Yjs CRDT 连接、同步和在线状态。                                                             |
-| `ViewerCollaborationSessionService`                                                                   | 共享和广播对话框状态，以及会话连接和断开的编排。                                                   |
-| `ViewerCollabCursorService`                                                                           | 跟踪本地指针，用于广播用户光标位置。                                                               |
-| `TableSelectionService`                                                                               | 表格编辑器的单元格选区状态。                                                                       |
-| `EmbeddedFontsService`                                                                                | 将演示文稿的嵌入字体注入为受管理的 `@font-face` 规则。                                             |
-| `AccessibilityService`, `PrintService`, `IsMobileService`, `SmartArt3DService`, `FieldContextService` | 分别用于无障碍问题扫描、打印任务、设备和视口分类、可选三维 SmartArt 开关，以及字段和占位符上下文。 |
+| 服务                                                                             | 职责                                                                           |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `EditorStateService`                                                             | 文档状态，包括幻灯片、选区、撤销和重做历史、模板元素。                         |
+| `LoadContentService`                                                             | 加载时解析 `.pptx` 缓冲区，并管理画布尺寸、媒体 data URL 和嵌入字体。          |
+| `ViewerFileIOService`                                                            | “文件 > 打开 / 另存为”编排、内容覆盖和 `getContent()`。                        |
+| `AutosaveService`                                                                | 周期性自动保存调度和状态，将恢复快照写入 IndexedDB。                           |
+| `ViewerZoomService`                                                              | 缩放级别状态，包括 `zoom`、`zoomPercent`、`zoomIn`、`zoomOut` 和 `zoomReset`。 |
+| `ZoomNavigationService`                                                          | PowerPoint“缩放定位”（摘要缩放定位或节缩放定位）的导航目标。                   |
+| `ZoomTargetService`                                                              | 从当前文稿解析缩放定位磁贴的回退缩略图信息，包括背景、编号和节。               |
+| `ViewerCanvasEditingService`                                                     | 画布编辑编排，包括元素选择、背景点击、变换、文本、墨迹和表格单元格编辑。       |
+| `ViewerInspectorPanelService`                                                    | 右侧检查器面板切换，包括元素、幻灯片、批注、签名、无障碍和选区。               |
+| `ViewerFormatPainterService`                                                     | 格式刷和吸管工具状态。                                                         |
+| `ViewerFindReplaceService`                                                       | 查找和替换栏状态，以及搜索和替换操作。                                         |
+| `ViewerKeyboardService`                                                          | 组件文档级 keydown 监听器的键盘快捷键分发。                                    |
+| `ViewerTouchGesturesService`                                                     | 画布宿主上的双指缩放、滑动导航和长按手势接线。                                 |
+| `ViewerMobileSheetService`                                                       | 移动端底部面板状态（幻灯片、菜单、备注）和快速插入操作。                       |
+| `ViewerPresentationModeService`                                                  | 放映模式编排，包括进入、退出、演示者视图和观众窗口。                           |
+| `ViewerCustomShowsService`                                                       | 自定义放映状态，用于放映幻灯片子集，以及放映幻灯片选择。                       |
+| `ViewerDocumentPropertiesService`                                                | 文档信息对话框和超链接对话框状态。                                             |
+| `ViewerThemeGalleryService`                                                      | 主题库对话框状态和主题预设应用。                                               |
+| `ViewerExportService`                                                            | PNG、PDF、GIF、视频导出和打印编排，包含进度报告和取消。                        |
+| `CollaborationService`                                                           | 会话的 Yjs CRDT 连接、同步和在线状态。                                         |
+| `ViewerCollaborationSessionService`                                              | 共享和广播对话框状态，以及会话连接和断开的编排。                               |
+| `ViewerCollabCursorService`                                                      | 跟踪本地指针，用于广播用户光标位置。                                           |
+| `TableSelectionService`                                                          | 表格编辑器的单元格选区状态。                                                   |
+| `EmbeddedFontsService`                                                           | 将演示文稿的嵌入字体注入为受管理的 `@font-face` 规则。                         |
+| `AccessibilityService`, `PrintService`, `IsMobileService`, `FieldContextService` | 分别用于无障碍问题扫描、打印任务、设备和视口分类，以及字段和占位符上下文。     |
 
 此外还有墨迹绘制、标尺参考线和画布适应尺寸等服务。按职责分组的完整列表请参见 **[完整服务参考](/zh/angular/services-reference)** 。
 

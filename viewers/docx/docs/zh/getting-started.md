@@ -58,7 +58,7 @@ export function Editor() {
 
 ## 3. 加载和保存文件
 
-组件引用（或原生 JS 的句柄）提供 `load(bytes)` 和 `save()`。加载时会识别 DOCX 和旧版 `.doc`；不支持受密码保护的文件。
+组件引用（或原生 JS 的句柄）提供 `load(bytes)` 和 `save()`。加载时会识别 DOCX 和旧版 `.doc`。受密码保护的文件只能通过 `ooxml-core/docx/load` 中的 `loadDocument(bytes, { password })` 打开；元素的 `load()` 不接受密码，因此会将此类文件报告为 `document-error`。
 
 ```ts
 const bytes = new Uint8Array(await file.arrayBuffer());
@@ -76,7 +76,8 @@ const blob = await editor.save(); // Blob of the serialized .docx
 - 要在仓库克隆中运行演示（需要 Bun）：
 
 ```bash
-bun install
+bun install          # from the repository root
+cd viewers/docx
 bun run demo
 ```
 

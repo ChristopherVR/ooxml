@@ -127,16 +127,16 @@ const image = await createImageElementFromFile(file, canvasSize, signal);
 
 设置 `editable` 时启用，参见[快速上手 > 编辑](/zh/svelte/getting-started#editing)。
 
-| 方法             | 签名                                                           | 说明                                                           |
-| ---------------- | -------------------------------------------------------------- | -------------------------------------------------------------- |
-| `undo`           | `() => void`                                                   | 撤销上一次提交的编辑。                                         |
-| `redo`           | `() => void`                                                   | 重做上一次撤销的编辑。                                         |
-| `canUndo`        | `() => boolean`                                                | 是否存在可撤销步骤，返回快照，不具备响应性。                   |
-| `canRedo`        | `() => boolean`                                                | 是否存在可重做步骤。                                           |
-| `deleteSelected` | `() => void`                                                   | 删除选中元素，未选中时不执行操作。                             |
-| `save`           | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | 将编辑后的幻灯片序列化为字节（`'pptx' \| 'ppsx' \| 'pptm'`）。 |
-| `downloadAs`     | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | 保存并以指定格式触发浏览器下载。                               |
-| `downloadPptx`   | `(fileName?: string) => Promise<void>`                         | 保存并以默认名称下载 `.pptx`。                                 |
+| 方法             | 签名                                                           | 说明                                                                    |
+| ---------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `undo`           | `() => void`                                                   | 撤销上一次提交的编辑。                                                  |
+| `redo`           | `() => void`                                                   | 重做上一次撤销的编辑。                                                  |
+| `canUndo`        | `() => boolean`                                                | 是否存在可撤销步骤，返回快照，不具备响应性。                            |
+| `canRedo`        | `() => boolean`                                                | 是否存在可重做步骤。                                                    |
+| `deleteSelected` | `() => void`                                                   | 删除选中元素，未选中时不执行操作。                                      |
+| `save`           | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | 将编辑后的幻灯片序列化为字节（`'pptx' \| 'ppsx' \| 'pptm' \| 'ppt'`）。 |
+| `downloadAs`     | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | 保存并以指定格式触发浏览器下载。                                        |
+| `downloadPptx`   | `(fileName?: string) => Promise<void>`                         | 保存并以默认名称下载 `.pptx`。                                          |
 
 启用编辑时可使用以下键盘快捷键：`Ctrl` / `Cmd+Z` 撤销，`Ctrl` / `Cmd+Shift+Z` 重做，`Delete` / `Backspace` 删除，`Ctrl` / `Cmd+D` 复制，方向键微移（配合 `Shift` 使用更大步长），`Escape` 取消选择。
 
@@ -309,14 +309,14 @@ import {
 } from 'pptx-svelte-viewer';
 ```
 
-| 导出项                         | 类型                                                                  | 说明                                                                                                           |
-| ------------------------------ | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `PPTX_OPEN_ACCEPT`             | `string`                                                              | 可直接用于 `<input type="file" accept>`：`.pptx,.ppsx,.pptm,.potx,.ppt,.json`。                                |
-| `PRESENTATION_OPEN_EXTENSIONS` | `readonly string[]`                                                   | 未拼接的同一扩展名列表，供拖放区域自行判断。                                                                   |
-| `isSupportedPresentationFile`  | `(name?: string \| null) => boolean`                                  | 根据选择或拖入的文件名进行快速预筛选，只检查扩展名，最终格式由加载器检测。                                     |
-| `isLegacyBinaryPresentation`   | `(name?: string \| null) => boolean`                                  | 判断是否属于 PowerPoint 97-2003 二进制格式（`.ppt`、`.pps`、`.pot`），这些格式可读取，不属于此保存接口的输出。 |
-| `presentationBaseName`         | `(name?: string \| null, fallback?: string) => string`                | 去除目录和可加载扩展名，得到文件主名，例如 `decks/report.ppt` 变为 `report`。                                  |
-| `savedPresentationFileName`    | `(name?: string \| null, format?: SavedPresentationFormat) => string` | 生成保存副本时提供的文件名，例如 `report.ppt` 变为 `report.pptx`。                                             |
-| `SavedPresentationFormat`      | `'pptx' \| 'ppsx' \| 'pptm'`                                          | 此保存路径可生成的格式，不包含二进制 `.ppt`，输出始终为 OpenXML。                                              |
+| 导出项                         | 类型                                                                  | 说明                                                                                                               |
+| ------------------------------ | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `PPTX_OPEN_ACCEPT`             | `string`                                                              | 可直接用于 `<input type="file" accept>`：`.pptx,.ppsx,.pptm,.potx,.ppt,.json`。                                    |
+| `PRESENTATION_OPEN_EXTENSIONS` | `readonly string[]`                                                   | 未拼接的同一扩展名列表，供拖放区域自行判断。                                                                       |
+| `isSupportedPresentationFile`  | `(name?: string \| null) => boolean`                                  | 根据选择或拖入的文件名进行快速预筛选，只检查扩展名，最终格式由加载器检测。                                         |
+| `isLegacyBinaryPresentation`   | `(name?: string \| null) => boolean`                                  | 判断是否属于 PowerPoint 97-2003 二进制格式（`.ppt`、`.pps`、`.pot`）。`.ppt` 可以保存；`.pps` 和 `.pot` 仅可读取。 |
+| `presentationBaseName`         | `(name?: string \| null, fallback?: string) => string`                | 去除目录和可加载扩展名，得到文件主名，例如 `decks/report.ppt` 变为 `report`。                                      |
+| `savedPresentationFileName`    | `(name?: string \| null, format?: SavedPresentationFormat) => string` | 生成保存副本时提供的文件名，例如 `report.ppt` 变为 `report.pptx`。                                                 |
+| `SavedPresentationFormat`      | `'pptx' \| 'ppsx' \| 'pptm' \| 'ppt'`                                 | 此保存路径可生成的格式，包括二进制 97-2003 `.ppt`。                                                                |
 
-“另存为”时应使用 `savedPresentationFileName`。此路径输出的是 OpenXML 包，如果保留旧版源扩展名，会得到扩展名为 `.ppt`、内容却是 ZIP 的文件，PowerPoint 会拒绝打开。
+“另存为”时应使用 `savedPresentationFileName`。除非选择 97-2003 `.ppt`，输出都是 OpenXML 包；因此如果保留旧版源扩展名，会得到扩展名为 `.ppt`、内容却是 ZIP 的文件，PowerPoint 会拒绝打开。

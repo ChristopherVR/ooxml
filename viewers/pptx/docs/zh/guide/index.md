@@ -36,5 +36,5 @@ description: 按照你的目标查找 pptx-viewer 文档：接入预览组件、
 | **[核心引擎](/zh/core/)**                                                                                                                     | 开发者                   | 无界面的处理引擎：加载、编辑、构建、保存、转换和加密     |
 | **[React](/zh/react/)** / **[Vue](/zh/vue/)** / **[Angular](/zh/angular/)** / **[Svelte](/zh/svelte/)** / **[原生 JavaScript](/zh/vanilla/)** | 开发者                   | 各框架组件的接入指南、属性或 API、主题、导出和协作       |
 | **[使用指南](/zh/user/)**                                                                                                                     | 编辑器使用者             | 通过界面查看、编辑、放映、导出和协作，无需编写代码       |
-| **[MCP 与工具](/zh/packages/mcp)**                                                                                                            | 智能体和自动化应用开发者 | MCP 服务器、73 个工具以及命令行工具                      |
+| **[MCP 与工具](/zh/packages/mcp)**                                                                                                            | 智能体和自动化应用开发者 | MCP 服务器、74 个工具以及命令行工具                      |
 | **[版本发布](/zh/releases/)**                                                                                                                 | 所有用户                 | 各个包的更新日志                                         |

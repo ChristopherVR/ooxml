@@ -8,7 +8,7 @@ description: Instale los paquetes pptx-viewer desde npm, configure las dependenc
 Los paquetes `pptx-viewer` se publican de forma independiente en npm. Instale solo lo que necesite: el [motor core](/core/) independiente del framework o uno de los paquetes de visualizador por framework.
 
 ::: tip Versión de Node
-Se requiere Node.js **18 o superior** para la compilación de TypeScript y para ejecutar los paquetes fuera del navegador.
+Se requiere Node.js **22 o superior** para la compilación de TypeScript y para ejecutar los paquetes fuera del navegador.
 :::
 
 ## Elija su framework
@@ -21,7 +21,7 @@ Se requiere Node.js **18 o superior** para la compilación de TypeScript y para 
 | Svelte 5                    | `pptx-svelte-viewer`  | Mismo motor y conjunto de funciones que el enlace de React   |
 | Sin framework               | `pptx-vanilla-viewer` | Mismo motor, DOM puro: sin ninguna dependencia de framework  |
 | Headless (Node / navegador) | `pptx-viewer-core`    | Sin interfaz, sin dependencia de framework                   |
-| Herramientas IA / MCP       | `pptx-viewer-mcp`     | 73 herramientas MCP + CLI + códec Y.Doc                      |
+| Herramientas IA / MCP       | `pptx-viewer-mcp`     | 74 herramientas MCP + CLI + códec Y.Doc                      |
 
 ## Instalación desde npm
 
@@ -60,19 +60,19 @@ El componente visualizador de Vue 3, publicado como **`pptx-vue-viewer`**. El mo
 ::: code-group
 
 ```bash [npm]
-npm install pptx-vue-viewer vue
+npm install pptx-vue-viewer vue vue-i18n
 ```
 
 ```bash [pnpm]
-pnpm add pptx-vue-viewer vue
+pnpm add pptx-vue-viewer vue vue-i18n
 ```
 
 ```bash [yarn]
-yarn add pptx-vue-viewer vue
+yarn add pptx-vue-viewer vue vue-i18n
 ```
 
 ```bash [bun]
-bun add pptx-vue-viewer vue
+bun add pptx-vue-viewer vue vue-i18n
 ```
 
 :::
@@ -97,19 +97,19 @@ El componente visualizador de Angular, publicado como **`pptx-angular-viewer`**.
 ::: code-group
 
 ```bash [npm]
-npm install pptx-angular-viewer @angular/core @angular/common
+npm install pptx-angular-viewer @angular/core @angular/common @angular/platform-browser @ngx-translate/core rxjs
 ```
 
 ```bash [pnpm]
-pnpm add pptx-angular-viewer @angular/core @angular/common
+pnpm add pptx-angular-viewer @angular/core @angular/common @angular/platform-browser @ngx-translate/core rxjs
 ```
 
 ```bash [yarn]
-yarn add pptx-angular-viewer @angular/core @angular/common
+yarn add pptx-angular-viewer @angular/core @angular/common @angular/platform-browser @ngx-translate/core rxjs
 ```
 
 ```bash [bun]
-bun add pptx-angular-viewer @angular/core @angular/common
+bun add pptx-angular-viewer @angular/core @angular/common @angular/platform-browser @ngx-translate/core rxjs
 ```
 
 :::
@@ -232,7 +232,7 @@ bun add pptx-viewer-core
 
 ### Servidor MCP y herramientas
 
-73 funciones de herramientas de manipulación de PPTX, un servidor MCP para agentes de IA y el códec de colaboración Y.Doc, todo construido sobre el motor core.
+74 funciones de herramientas de manipulación de PPTX, un servidor MCP para agentes de IA y el códec de colaboración Y.Doc, todo construido sobre el motor core.
 
 ::: code-group
 

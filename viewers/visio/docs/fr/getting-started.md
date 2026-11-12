@@ -95,9 +95,9 @@ Utilisez l'URL locale affichée par Vite. Cette commande démarre un serveur de 
 
 Chargez un paquet source local, sélectionnez une forme prise en charge et utilisez ses commandes de texte. `replacePlainText(pageId, shapeId, text)`, `undo()` et `redo()` exposent les mêmes opérations via chaque handle. Un modèle affecté avec `document` n'a pas d'octets de paquet et reste en lecture seule.
 
-L'édition refuse le texte lié à un masque, le texte enrichi, les champs, les paquets signés et le contenu de macros. L'historique est borné et peut écarter d'anciens états d'annulation. Les caches de formules enregistrés ne sont pas recalculés. Le dessin général et l'édition des styles ne sont pas implémentés.
+L'édition refuse le texte lié à un masque, le texte enrichi, les champs, les paquets signés et le contenu de macros. L'historique est borné et peut écarter d'anciens états d'annulation. Les caches de formules enregistrés ne sont pas recalculés. Les limites de la mise en forme, de la géométrie et des commandes de dessin sont listées dans l'[API du visualiseur](/fr/api).
 
-`exportVsdx()` renvoie les octets du paquet d'origine ou modifié, ainsi que des diagnostics, pour un téléchargement explicite de copie. Il n'écrase jamais le fichier d'entrée. La réouverture dans Visio natif et la fidélité d'un aller-retour sans perte restent non vérifiées.
+`exportVsdx()` renvoie les octets du paquet d'origine ou modifié, ainsi que des diagnostics, pour un téléchargement explicite de copie. Il n'écrase jamais le fichier d'entrée. La réouverture dans Visio natif n'est vérifiée que pour les cas enregistrés dans le [registre de vérification](/verification), et la fidélité d'un aller-retour sans perte reste non vérifiée.
 
 ## Exporter un SVG statique {#export}
 
@@ -113,7 +113,7 @@ Le contenu d'arrière-plan pris en charge et les images raster validées sont in
 
 | Surface      | Contrat actuel                                                                                                                                                                         |
 | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Propriétés   | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `ribbonAddIns`, `collaboration`, `storage`, `customization`                                                     |
+| Propriétés   | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `ribbonAddIns`, `collaboration`, `storage`, `fileProviders`, `customization`                                    |
 | Événements   | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change`, `file-command` |
 | Cycle de vie | `update`, `load`, `fit`, `exportSvg`, `createPrintSnapshot`, `replacePlainText`, `undo`, `redo`, `cancelEdit`, `exportVsdx`, `destroy`                                                 |
 

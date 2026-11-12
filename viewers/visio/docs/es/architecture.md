@@ -33,7 +33,7 @@ Las pruebas unitarias y de fixtures del núcleo establecen los casos de análisi
 
 ## Sitio web {#website}
 
-Compilación estática multipágina con Vite: inicio, guía, registro de capacidades, arquitectura y un área de pruebas independiente. Los enlaces son relativos y los recursos locales. Sin fuentes ni scripts de terceros. Sin paquete del analizador en la página de inicio.
+Sitio de documentación VitePress (`docs/`): inicio, guía, registro de capacidades, arquitectura y un área de pruebas independiente, que Vite compila desde `demos/visio/demo/`. Los enlaces son relativos y los recursos locales. Sin fuentes ni scripts de terceros. Sin paquete del analizador en la página de inicio.
 
 ## Publicación {#publication}
 

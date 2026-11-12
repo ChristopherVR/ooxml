@@ -26,13 +26,13 @@ Il n’implémente **pas** l’enregistrement, le flou d’arrière-plan, les so
 
 Word s’affiche en lecture seule ; Excel permet l’édition locale et l’enregistrement de nouvelles
 copies dans le canal lorsque le stockage est configuré ; Visio utilise sa visionneuse existante.
-Il n’y a ni co-édition, ni écrasement, ni réenregistrement versionné. PowerPoint nécessite une page
-de visionneuse intégrée configurée par l’hôte. Les intégrations manquantes sont signalées dans le
+Il n’y a ni co-édition, ni écrasement, ni réenregistrement versionné. PowerPoint s’ouvre dans un
+aperçu natif ; un hôte peut aussi fournir une page de visionneuse intégrée. Les intégrations manquantes sont signalées dans le
 volet. La lecture de texte est limitée à 2 Mio et celle des fichiers Office natifs à 32 Mio. L’interface existe en anglais, allemand, espagnol, français et chinois simplifié (propriété `locale`) ; le texte écrit par les personnes n’est jamais traduit.
 
 Les vues Fichiers permettent l’envoi direct, la création d’un classeur Excel vierge et la recherche
 dans les métadonnées lorsque le stockage est configuré. Les envois affichent un état d’occupation et
-permettent de réessayer, sans progression en octets ni annulation. Un lot en échec peut laisser des fichiers envoyés avant l'échec que aucun message ne référence ; le serveur de
+permettent d’annuler et de réessayer, sans progression en octets. Un lot en échec peut laisser des fichiers envoyés avant l'échec que aucun message ne référence ; le serveur de
 référence supprime ses envois partiels et laisse la personne qui a envoyé le fichier ou un modérateur supprimer le reste
 (`DELETE /files/<scope>/<name>`), mais ne le fait pas de lui-même. Le serveur de référence limite les fichiers des chats
 privés à leurs membres et compte le stockage par espace de travail ; les fichiers de canal sont lisibles par tout
@@ -70,8 +70,8 @@ une autorisation côté serveur pour devenir applicables.
 - **Les appels en maillage** connectent chaque participant à tous les autres. Cela ne nécessite
   aucun serveur média et convient à une poignée de personnes (le plafond par défaut est de 12),
   pas à un webinaire.
-- **L’historique grossit.** Le serveur de référence conserve un instantané par salle et ne le
-  compacte jamais.
+- **L’historique grossit.** Le serveur de référence conserve un instantané par salle et le
+  compacte au chargement de la salle et toutes les 6 heures par défaut (`TEAMS_COMPACT_INTERVAL_MIN`).
 - **Un seul processus serveur.** Le serveur de référence garde les salles en mémoire et ne passe
   pas à l’échelle horizontalement.
 

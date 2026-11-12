@@ -39,7 +39,7 @@ Rückgängig (Strg+Z, das Menüband und die Symbolleiste für den Schnellzugriff
 
 ## Was nicht geteilt wird
 
-Diagramme, Bilder und andere Zeichnungen, Kommentare, Hyperlinks, bedingte Formate, Datenüberprüfung, Tabellen und Filter, Pivot-Tabellen, fixierte Bereiche und andere Ansichtseinstellungen, Seiteneinrichtung, Schutz, Dokumenteigenschaften und Berechnungseinstellungen bleiben in jedem Fenster lokal und werden von dort gespeichert. Das Einfügen und Löschen von Zeilen und Spalten wird als die Zellen übertragen, die dabei verschoben werden; eine gleichzeitige Änderung an einer verschobenen Zelle landet daher an ihrer alten Adresse. Eine Formel, die eine andere Person mit einem Blattnamen eingegeben hat, der gleichzeitig umbenannt wurde, behält den alten Namen. Die Konfliktregeln sind im Repository `ooxml` aufgeführt (`docs/collab-area.md`).
+Kommentare und Antworten, Hyperlinks, bedingte Formate, Datenüberprüfung, Tabellen und Diagramme werden je Element geteilt (bei einem Diagramm gewinnt die letzte Schreibaktion). Bilder und andere Zeichnungen, Pivot-Tabellen, Filter, fixierte Bereiche und andere Ansichtseinstellungen, Seiteneinrichtung, Schutz, Dokumenteigenschaften und Berechnungseinstellungen bleiben in jedem Fenster lokal und werden von dort gespeichert. Das Einfügen und Löschen von Zeilen und Spalten wird als die Zellen übertragen, die dabei verschoben werden; eine gleichzeitige Änderung an einer verschobenen Zelle landet daher an ihrer alten Adresse. Eine Formel, die eine andere Person mit einem Blattnamen eingegeben hat, der gleichzeitig umbenannt wurde, behält den alten Namen. Die Konfliktregeln sind im Repository `ooxml` aufgeführt (`docs/collab-area.md`).
 
 ## Was der Host verantwortet
 

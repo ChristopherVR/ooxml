@@ -38,7 +38,7 @@ Un libro cargado conserva en `workbook.source` las partes que el modelo no repre
 
 ## El componente web dibuja
 
-`packages/web-component` es la única interfaz de edición: crea una sesión de edición sobre el libro, dibuja lo que devuelven las funciones de diseño del núcleo, dirige la entrada del teclado, el ratón y la cinta de opciones hacia los comandos de edición, y se encarga de los estilos, las configuraciones regionales y los cuadros de diálogo. El Shadow DOM acota sus estilos; el registro solo se produce en el navegador y es idempotente. Las pruebas de navegador ejercitan el mismo contrato a través de cada enlace.
+`<xlsx-editor>` es la única interfaz de edición; vive en el repositorio `ooxml` (`src/ui/src/xlsx`, `ooxml-ui/xlsx`), y `packages/web-component` solo lo reexporta. Crea una sesión de edición sobre el libro, dibuja lo que devuelven las funciones de diseño del núcleo, dirige la entrada del teclado, el ratón y la cinta de opciones hacia los comandos de edición, y se encarga de los estilos, las configuraciones regionales y los cuadros de diálogo. El Shadow DOM acota sus estilos; el registro solo se produce en el navegador y es idempotente. Las pruebas de navegador ejercitan el mismo contrato a través de cada enlace.
 
 `packages/bindings` se encarga únicamente de la integración con el framework: montaje y desmontaje, actualización de propiedades, reenvío de eventos y manejadores imperativos. Las nuevas funciones del editor pertenecen al componente web (o al núcleo); un cambio en un enlace solo se justifica por un requisito del ciclo de vida o de la API del framework.
 

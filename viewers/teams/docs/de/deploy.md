@@ -6,10 +6,13 @@
 cd server && node index.mjs          # PORT=8787 HOST=127.0.0.1 by default
 ```
 
+Der Server startet nicht ohne Konten: Setzen Sie `TEAMS_USERS_FILE` (siehe unten) oder übergeben
+Sie `--insecure-dev`, nur für die lokale Entwicklung.
+
 | Variable                                                | Bedeutung                                                                                                                                                                                                                                                                     |
 | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `PORT`, `HOST`                                          | Listen-Adresse. Binden Sie `0.0.0.0` nur hinter TLS.                                                                                                                                                                                                                          |
-| `TEAMS_TOKEN`                                           | Falls gesetzt, erwarten Sockets es als `?token=` und Dateianfragen als `Authorization: Bearer`.                                                                                                                                                                               |
+| `TEAMS_TOKEN`                                           | Falls gesetzt, erwarten Sockets es im Header `Sec-WebSocket-Protocol` (`?token=` nur als Ausweichlösung) und Dateianfragen als `Authorization: Bearer`.                                                                                                                       |
 | `TEAMS_ORIGINS`                                         | Kommagetrennte erlaubte `Origin`s für Sockets und Dateien. Leer: jede Origin, wenn ein Token gesetzt ist; ohne Token nur Loopback-Origins und Clients ohne `Origin`.                                                                                                          |
 | `TEAMS_DATA`                                            | Datenverzeichnis (Standard `./data`): `rooms/<room>.bin`-Snapshots und `files/`.                                                                                                                                                                                              |
 | `TEAMS_TRUST_PROXY`, `--trust-proxy[=N]`                | Schlüsselt den Auth-Ratenbegrenzer und die Verbindungsgrenze pro Adresse auf `X-Forwarded-For` (den Eintrag des N-ten vertrauenswürdigen Proxys, Standard 1). Standardmäßig aus; nur hinter einem Proxy aktivieren, der den Header setzt, sonst kann ein Client ihn fälschen. |

@@ -33,7 +33,7 @@ Unit- und Fixture-Tests des Kerns belegen die jeweils geprüften Parse- und Mode
 
 ## Website {#website}
 
-Statischer mehrseitiger Vite-Build: Startseite, Leitfaden, Funktionsverzeichnis, Architektur und ein separates Playground. Links sind relativ und Assets lokal. Keine Schriften oder Skripte von Drittanbietern. Kein Parser-Bundle auf der Startseite.
+VitePress-Dokumentationsseite (`docs/`): Startseite, Leitfaden, Funktionsverzeichnis, Architektur und ein separates Playground, das Vite aus `demos/visio/demo/` baut. Links sind relativ und Assets lokal. Keine Schriften oder Skripte von Drittanbietern. Kein Parser-Bundle auf der Startseite.
 
 ## Veröffentlichung {#publication}
 

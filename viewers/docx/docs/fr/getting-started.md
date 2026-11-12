@@ -58,7 +58,7 @@ Les autres frameworks utilisent les mêmes options : consultez les [guides par f
 
 ## 3. Charger et enregistrer des fichiers
 
-La référence du composant (ou le handle vanilla) expose `load(bytes)` et `save()`. Le chargement détecte le DOCX et l'ancien format `.doc` ; les fichiers protégés par mot de passe ne sont pas pris en charge.
+La référence du composant (ou le handle vanilla) expose `load(bytes)` et `save()`. Le chargement détecte le DOCX et l'ancien format `.doc`. Les fichiers protégés par mot de passe s'ouvrent uniquement via `loadDocument(bytes, { password })` depuis `ooxml-core/docx/load` ; `load()` de l'élément ne prend pas de mot de passe et signale donc un tel fichier comme `document-error`.
 
 ```ts
 const bytes = new Uint8Array(await file.arrayBuffer());
@@ -76,7 +76,8 @@ const blob = await editor.save(); // Blob of the serialized .docx
 - Pour lancer la démo depuis un clone du dépôt (Bun requis) :
 
 ```bash
-bun install
+bun install          # from the repository root
+cd viewers/docx
 bun run demo
 ```
 
