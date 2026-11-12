@@ -7,6 +7,22 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.75.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.75.0) - 2026-11-12
+
+### Features
+
+- **pptx:** Add rich table cells, custom geometry and new chart parts ([#278](https://github.com/ChristopherVR/ooxml/issues/278)) ([d6c6786](https://github.com/ChristopherVR/ooxml/commit/d6c6786b56b4642eaec1af6c78cd21a067eb0c17))
+- **react:** Add a no-i18next entry for hosts using PptxI18nProvider ([eee7d7c](https://github.com/ChristopherVR/ooxml/commit/eee7d7c169447c5378205455a0ec3f4e6025f674))
+
+### Bug Fixes
+
+- **chart:** Offer only the label positions a chart group accepts ([c6894c9](https://github.com/ChristopherVR/ooxml/commit/c6894c9b2bda96dc49b77a0a9e76b48e9903f2bd))
+- **react:** Show built-in English when react-i18next has no instance ([7d825a3](https://github.com/ChristopherVR/ooxml/commit/7d825a34a496f1684300827c9357a334c3525960))
+
+### Testing
+
+- **react:** Give the cold no-i18next imports a 60s hook budget ([3df9e20](https://github.com/ChristopherVR/ooxml/commit/3df9e209401d79d0d6b4ea5456cbd2ef5ac9de92))
+
 ## [4.74.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.74.0) - 2026-11-11
 
 ### Features

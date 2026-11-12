@@ -7,6 +7,17 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [3.74.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.74.0) - 2026-11-12
+
+### Features
+
+- **pptx:** Add rich table cells, custom geometry and new chart parts ([#278](https://github.com/ChristopherVR/ooxml/issues/278)) ([d6c6786](https://github.com/ChristopherVR/ooxml/commit/d6c6786b56b4642eaec1af6c78cd21a067eb0c17))
+
+### Bug Fixes
+
+- **pptx:** Start a vanilla custom show on its own first slide ([5317151](https://github.com/ChristopherVR/ooxml/commit/531715174fcb7f0cb2ba1f8b14a01f6fdd8c71c8))
+- **chart:** Offer only the label positions a chart group accepts ([c6894c9](https://github.com/ChristopherVR/ooxml/commit/c6894c9b2bda96dc49b77a0a9e76b48e9903f2bd))
+
 ## [3.73.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.73.0) - 2026-11-11
 
 ### Features

@@ -7,6 +7,17 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.74.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.74.0) - 2026-11-12
+
+### Features
+
+- **pptx:** Add rich table cells, custom geometry and new chart parts ([#278](https://github.com/ChristopherVR/ooxml/issues/278)) ([d6c6786](https://github.com/ChristopherVR/ooxml/commit/d6c6786b56b4642eaec1af6c78cd21a067eb0c17))
+
+### Bug Fixes
+
+- **deps:** Match the three peer range of the angular and vue viewers ([3cb53c3](https://github.com/ChristopherVR/ooxml/commit/3cb53c328e7357839fa71bbb7c49cf6b86ed772e))
+- **chart:** Offer only the label positions a chart group accepts ([c6894c9](https://github.com/ChristopherVR/ooxml/commit/c6894c9b2bda96dc49b77a0a9e76b48e9903f2bd))
+
 ## [4.73.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.73.0) - 2026-11-11
 
 ### Features
