@@ -134,8 +134,16 @@ it('refuses with the draft when permission was withdrawn', async () => {
 	ui.type('Late');
 	ui.controller.canEdit = false;
 	const outcome = await ui.controller.commitTextEdit();
-	expect(outcome.status === 'refused' || outcome.status === 'unchanged').toBe(true);
+	expect(outcome).toMatchObject({
+		status: 'refused',
+		reason: 'read-only',
+		text: 'Late',
+		pageId: '1',
+		shapeId: '1',
+	});
 	expect(ui.edits).toEqual([]);
+	// Reported once; the rejected text is not applied if editing comes back.
+	expect(await ui.controller.commitTextEdit()).toMatchObject({ status: 'unchanged' });
 	ui.stop();
 	ui.controller.destroy();
 });

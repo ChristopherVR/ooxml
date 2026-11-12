@@ -33,8 +33,11 @@ export class ViewerInlineText {
 	#session: Session | undefined;
 	#request = 0;
 	#inflight: Promise<TextEditOutcome> | undefined;
-	/** A draft dropped by a source change, reported once by the next commit and never applied. */
-	#stale: { session: Session; text: string } | undefined;
+	/**
+	 * A draft dropped by a source change or by the drawing turning read-only, reported once by the
+	 * next commit and never applied.
+	 */
+	#stale: { session: Session; text: string; reason: 'stale-document' | 'read-only' } | undefined;
 	constructor(
 		private readonly viewport: HTMLElement,
 		private readonly controller: ViewerController,
@@ -172,13 +175,19 @@ export class ViewerInlineText {
 			const stale = this.#stale;
 			this.#stale = undefined;
 			return Promise.resolve(
-				stale
-					? this.#outcome(
-							'cancelled',
-							{ reason: 'stale-document', text: stale.text },
-							stale.session,
-						)
-					: this.#outcome('unchanged'),
+				!stale
+					? this.#outcome('unchanged')
+					: stale.reason === 'read-only'
+						? this.#outcome(
+								'refused',
+								{ reason: 'read-only', message: 'The drawing is read-only.', text: stale.text },
+								stale.session,
+							)
+						: this.#outcome(
+								'cancelled',
+								{ reason: 'stale-document', text: stale.text },
+								stale.session,
+							),
 			);
 		}
 		const run = this.#commit(focusCanvas);
@@ -257,6 +266,7 @@ export class ViewerInlineText {
 		const session = this.#session;
 		if (!session) return;
 		if (!this.controller.canEdit) {
+			this.#keepDraft(session, 'read-only');
 			this.#close();
 			return;
 		}
@@ -264,7 +274,7 @@ export class ViewerInlineText {
 		const shape = page?.id === session.pageId ? visioTextShape(page, session.shapeId) : undefined;
 		if (this.controller.sourceGeneration !== session.generation || !state.document) {
 			// Keep what was typed so a Save racing the switch can recover it; it is never applied.
-			if (this.input.value !== session.initial) this.#stale = { session, text: this.input.value };
+			this.#keepDraft(session, 'stale-document');
 			this.#close();
 			return;
 		}
@@ -303,6 +313,11 @@ export class ViewerInlineText {
 		}
 		this.#layout();
 	}
+	/** Remember a typed draft that is being dropped so the next commit can hand its text back. */
+	#keepDraft(session: Session, reason: 'stale-document' | 'read-only'): void {
+		if (this.input.value !== session.initial)
+			this.#stale = { session, text: this.input.value, reason };
+	}
 	#close(): void {
 		const session = this.#session;
 		this.#session = undefined;
@@ -327,6 +342,7 @@ export class ViewerInlineText {
 		const session = this.#session;
 		if (!session) return;
 		if (!this.controller.canEdit) {
+			this.#keepDraft(session, 'read-only');
 			this.#close();
 			return;
 		}

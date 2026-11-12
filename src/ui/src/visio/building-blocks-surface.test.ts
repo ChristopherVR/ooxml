@@ -226,6 +226,31 @@ it('offers resize and rotate handles and inline text only when editing is allowe
 	}
 });
 
+it('opens inline text on double-click and F2 for the selected shape, only when editable', async () => {
+	for (const canEdit of [true, false]) {
+		const ui = await surface(canEdit);
+		try {
+			const input = () =>
+				ui.viewport.querySelector<HTMLTextAreaElement>('textarea.inline-text:not([hidden])');
+			ui.select();
+			const group = ui.viewport.querySelector<SVGGElement>('svg.paper [data-shape-id="1"]')!;
+			group.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }));
+			expect(input() !== null).toBe(canEdit);
+			if (!canEdit) continue;
+			// Esc closes the draft; F2 then opens it again.
+			input()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+			await ui.controller.commitTextEdit();
+			expect(input()).toBeNull();
+			const f2 = new KeyboardEvent('keydown', { key: 'F2', bubbles: true, cancelable: true });
+			ui.viewport.dispatchEvent(f2);
+			expect(f2.defaultPrevented).toBe(true);
+			expect(input()).not.toBeNull();
+		} finally {
+			ui.dispose();
+		}
+	}
+});
+
 it('deletes the selection from the toolbar callback and the Delete key, gated by permission', async () => {
 	const ui = await surface(true);
 	try {

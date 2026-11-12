@@ -42,7 +42,10 @@ export function wireCanvasKeys(
 		if (typing || event.isComposing || editing.edit.editing) return;
 		const state = controller.state;
 		const control = event.ctrlKey || event.metaKey;
-		if (event.key === 'Escape' && state.tool !== 'pointer') {
+		if (event.key === 'F2' && !control && state.tool === 'pointer') {
+			// Visio's Edit Text: the selected shape's text opens in place.
+			if (editing.edit.start()) event.preventDefault();
+		} else if (event.key === 'Escape' && state.tool !== 'pointer') {
 			editing.cancelTools();
 			controller.setTool('pointer');
 		} else if ((event.key === 'Delete' || event.key === 'Backspace') && !control) {
@@ -57,6 +60,16 @@ export function wireCanvasKeys(
 			void attempt(() => (redo ? controller.redo() : controller.undo()), announce);
 		}
 	};
+	// Double-clicking a shape edits its text in place (the first click of the pair selected it).
+	const onDoubleClick = (event: MouseEvent) => {
+		if (controller.state.tool !== 'pointer' || editing.edit.editing) return;
+		const group = (event.target as Element | null)?.closest?.('[data-shape-id]');
+		if (group) editing.edit.start();
+	};
 	viewport.addEventListener('keydown', onKey);
-	return () => viewport.removeEventListener('keydown', onKey);
+	viewport.addEventListener('dblclick', onDoubleClick);
+	return () => {
+		viewport.removeEventListener('keydown', onKey);
+		viewport.removeEventListener('dblclick', onDoubleClick);
+	};
 }
