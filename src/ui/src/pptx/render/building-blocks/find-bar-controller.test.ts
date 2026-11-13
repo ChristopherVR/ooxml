@@ -42,9 +42,10 @@ describe('createFindBarController', () => {
 		expect(buildFindReplaceActions(bar.port(), () => undefined).replaceAll()).toEqual({
 			ok: true,
 		});
-		expect(
-			(slides[0]?.elements[0] as { textSegments: Array<{ text: string }> }).textSegments[0]?.text,
-		).toBe('bar bar');
+		const replaced = slides[0]?.elements[0] as
+			| { textSegments?: Array<{ text: string }> }
+			| undefined;
+		expect(replaced?.textSegments?.[0]?.text).toBe('bar bar');
 		bar.toggle();
 		expect(bar.getSnapshot().open).toBe(false);
 		expect(bar.getSnapshot().session.matches).toHaveLength(0);

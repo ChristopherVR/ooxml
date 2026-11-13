@@ -6,6 +6,7 @@
  *
  * @module render/building-blocks/hyperlink-edit-data
  */
+import { isUrlSafe } from '../hyperlink-security';
 
 /** The type of hyperlink target. */
 export type HyperlinkTargetType = 'url' | 'email' | 'slide' | 'file' | 'action';
@@ -155,4 +156,32 @@ export function hyperlinkEditDataFromAction(
 		filePath: targetType === 'file' ? (url ?? '') : '',
 		actionVerb: (action && HYPERLINK_ACTION_VERB_MAP[action.toLowerCase()]) || 'nextSlide',
 	};
+}
+
+/** The `actionClick` for edited values, or why it may not be stored. */
+export type HyperlinkEditPatch =
+	| { ok: true; actionClick: { url?: string; action?: string; tooltip?: string } }
+	| { ok: false; code: 'unsafe-url' };
+
+/**
+ * The `actionClick` an element stores for edited values. Unsafe URL schemes (javascript:, data:,
+ * vbscript:, mhtml:) are refused before they reach the element; the `action` target type carries
+ * its verb in `action` and no URL.
+ */
+export function hyperlinkEditPatch(data: HyperlinkEditData): HyperlinkEditPatch {
+	const resolved = resolveHyperlinkEditResult(data);
+	if (resolved.url && !isUrlSafe(resolved.url)) {
+		return { ok: false, code: 'unsafe-url' };
+	}
+	const actionClick: { url?: string; action?: string; tooltip?: string } = {};
+	if (resolved.url) {
+		actionClick.url = resolved.url;
+	}
+	if (resolved.action !== undefined) {
+		actionClick.action = resolved.action;
+	}
+	if (resolved.tooltip !== undefined) {
+		actionClick.tooltip = resolved.tooltip;
+	}
+	return { ok: true, actionClick };
 }
