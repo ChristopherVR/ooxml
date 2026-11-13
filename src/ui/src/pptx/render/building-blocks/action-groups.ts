@@ -10,30 +10,53 @@
  *
  * @module render/building-blocks/action-groups
  */
-import type { BuildingBlockActionId, BuildingBlockResult } from '../building-block-actions';
+import type { BuildingBlockResult } from '../building-block-actions';
+import type { DocumentPropertiesActions } from '../building-block-document-properties';
+import type { FontEmbeddingActions } from '../building-block-font-embedding';
+import type { PasswordProtectionActions } from '../building-block-password';
+import type { BroadcastSupport } from '../building-block-show-dialogs';
+import type { SignatureActions } from '../building-block-signatures';
 import type {
+	BuildingBlockCustomShows,
+	BuildingBlockSetUpSlideShow,
+	BuildingBlockShortcuts,
+} from './groups/show-dialog-groups';
+import type {
+	BuildingBlockAvailabilityId,
 	BuildingBlockRequest,
 	BuildingBlockRequestKind,
 	BuildingBlockRequests,
 } from './requests';
 
 /**
- * The type of each registered group's operations, keyed by its `actions` key. Empty until a
- * group adds its key here (for example `documentProperties: DocumentPropertiesActions`).
+ * The type of each group's operations, keyed by its `actions` key. A new group adds its key here;
+ * the built-in groups are in `groups/` and every binding registers them all
+ * (`registerBuildingBlockGroups`).
  */
-// oxlint-disable-next-line typescript/no-empty-object-type -- extended by each registered group
-export interface BuildingBlockActionGroupMap {}
+export interface BuildingBlockActionGroupMap {
+	passwordProtection: PasswordProtectionActions;
+	documentProperties: DocumentPropertiesActions;
+	fontEmbedding: FontEmbeddingActions;
+	digitalSignatures: SignatureActions;
+	setUpSlideShow: BuildingBlockSetUpSlideShow;
+	customShows: BuildingBlockCustomShows;
+	/** Broadcast cannot be completed by the building blocks; see `BroadcastSupport`. */
+	broadcast: BroadcastSupport;
+	shortcuts: BuildingBlockShortcuts;
+}
 
 export type BuildingBlockActionGroupId = keyof BuildingBlockActionGroupMap & string;
 
 /** What a group's operations may use from the session: gating, requests and their completion. */
 export interface BuildingBlockGroupContext {
 	/** The failure to return when `id` may not run now, otherwise undefined. */
-	refuse(id: BuildingBlockActionId): BuildingBlockResult | undefined;
+	refuse(id: BuildingBlockAvailabilityId): BuildingBlockResult | undefined;
 	/** Raise a host request (gated by its action's availability). */
 	request(next: BuildingBlockRequest): boolean;
 	/** Settle the pending request of `kind` when `result` succeeded; returns `result`. */
 	complete(kind: BuildingBlockRequestKind, result: BuildingBlockResult): BuildingBlockResult;
+	/** Whether the deck is loaded without error (some reads need no edit permission). */
+	ready(): boolean;
 }
 
 /**
@@ -55,10 +78,12 @@ export function defineBuildingBlockActionGroup<K extends BuildingBlockActionGrou
 /** The group context over a session's request controller and its availability. */
 export function createBuildingBlockGroupContext(
 	requests: BuildingBlockRequests,
-	refuse: (id: BuildingBlockActionId) => BuildingBlockResult | undefined,
+	refuse: (id: BuildingBlockAvailabilityId) => BuildingBlockResult | undefined,
+	ready: () => boolean,
 ): BuildingBlockGroupContext {
 	return {
 		refuse,
+		ready,
 		request: (next) => requests.request(next),
 		complete: (kind, result) => requests.complete(kind, result),
 	};

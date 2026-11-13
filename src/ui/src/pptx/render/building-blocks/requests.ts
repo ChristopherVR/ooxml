@@ -9,7 +9,12 @@
  *
  * @module render/building-blocks/requests
  */
-import type { BuildingBlockActionId, BuildingBlockResult } from '../building-block-actions';
+import type {
+	BuildingBlockActionId,
+	BuildingBlockActionState,
+	BuildingBlockResult,
+} from '../building-block-actions';
+import type { ShowDialogActionId } from '../building-block-show-dialogs';
 import { createControllerStore } from '../controller/controller';
 import type { PptxController } from '../controller/controller';
 
@@ -26,7 +31,28 @@ export interface BuildingBlockRequestMap {
 	chart: Record<never, never>;
 	/** `existingOmml` is the equation being edited (a double-click), null for a new one. */
 	equation: { existingOmml: Record<string, unknown> | null };
+	/** Open password, Mark as Final: render your own UI from `actions.passwordProtection`. */
+	passwordProtection: Record<never, never>;
+	/** Render your own editor from `actions.documentProperties`. */
+	documentProperties: Record<never, never>;
+	/** Render your own options from `actions.fontEmbedding`. */
+	fontEmbedding: Record<never, never>;
+	/** Render your own list from `actions.digitalSignatures`. */
+	digitalSignatures: Record<never, never>;
+	setUpSlideShow: Record<never, never>;
+	customShows: Record<never, never>;
+	/** The shortcut help was opened (`open`) or closed; the host shows or hides its own. */
+	shortcuts: { open: boolean };
 }
+
+/** Every availability id: the core workflows and the slide show dialogs. */
+export type BuildingBlockAvailabilityId = BuildingBlockActionId | ShowDialogActionId;
+
+/** What each workflow can do right now, as `actions.availability` reports it. */
+export type BuildingBlockAvailability = Record<
+	BuildingBlockAvailabilityId,
+	BuildingBlockActionState
+>;
 
 export type BuildingBlockRequestKind = keyof BuildingBlockRequestMap;
 
@@ -42,7 +68,7 @@ export type BuildingBlockRequest = {
 export const BUILDING_BLOCK_REQUEST_ACTIONS: {
 	[K in BuildingBlockRequestKind]: (
 		request: Extract<BuildingBlockRequest, { kind: K }>,
-	) => BuildingBlockActionId;
+	) => BuildingBlockAvailabilityId;
 } = {
 	image: () => 'insertImage',
 	media: () => 'insertMedia',
@@ -50,19 +76,39 @@ export const BUILDING_BLOCK_REQUEST_ACTIONS: {
 	smartArt: () => 'insertSmartArt',
 	chart: () => 'insertChart',
 	equation: (request) => (request.existingOmml ? 'editEquation' : 'insertEquation'),
+	passwordProtection: () => 'passwordProtection',
+	documentProperties: () => 'documentProperties',
+	fontEmbedding: () => 'fontEmbedding',
+	digitalSignatures: () => 'digitalSignatures',
+	setUpSlideShow: () => 'setUpSlideShow',
+	customShows: () => 'customShows',
+	shortcuts: () => 'shortcuts',
 };
 
+/**
+ * Requests that show state as well as change it: they are raised whenever the deck is loaded
+ * (also read-only or protected); applying is refused by the operations themselves.
+ */
+export const BUILDING_BLOCK_VIEWABLE_REQUESTS: ReadonlySet<BuildingBlockRequestKind> = new Set([
+	'passwordProtection',
+	'documentProperties',
+	'fontEmbedding',
+	'digitalSignatures',
+]);
+
 /** The action id that gates `request`. */
-export function buildingBlockRequestAction(request: BuildingBlockRequest): BuildingBlockActionId {
+export function buildingBlockRequestAction(
+	request: BuildingBlockRequest,
+): BuildingBlockAvailabilityId {
 	const resolve = BUILDING_BLOCK_REQUEST_ACTIONS[request.kind] as (
 		value: BuildingBlockRequest,
-	) => BuildingBlockActionId;
+	) => BuildingBlockAvailabilityId;
 	return resolve(request);
 }
 
 export interface BuildingBlockRequestsDeps {
-	/** Whether the action is available now (read at call time). */
-	isAvailable(id: BuildingBlockActionId): boolean;
+	/** The action's state now (read at call time). */
+	state(id: BuildingBlockAvailabilityId): BuildingBlockActionState;
 	/** The host's `onRequest`, read at call time so a changed callback is used. */
 	onRequest?(request: BuildingBlockRequest): void;
 }
@@ -78,6 +124,11 @@ export interface BuildingBlockRequests extends PptxController<BuildingBlockReque
 	complete(kind: BuildingBlockRequestKind, result: BuildingBlockResult): BuildingBlockResult;
 	/** Abandon the pending request without changing the deck. */
 	cancel(): void;
+	/**
+	 * A toggle the host mirrors changed (the shortcut help): an open request becomes pending, a
+	 * close settles a pending request of its kind, and `onRequest` hears both.
+	 */
+	announce(next: BuildingBlockRequest, open: boolean): void;
 }
 
 export function createBuildingBlockRequests(
@@ -88,7 +139,11 @@ export function createBuildingBlockRequests(
 		getSnapshot: store.getSnapshot,
 		subscribe: store.subscribe,
 		request(next) {
-			if (!deps.isAvailable(buildingBlockRequestAction(next))) {
+			const { available, reason } = deps.state(buildingBlockRequestAction(next));
+			const allowed = BUILDING_BLOCK_VIEWABLE_REQUESTS.has(next.kind)
+				? reason !== 'not-ready'
+				: available;
+			if (!allowed) {
 				return false;
 			}
 			store.set(next);
@@ -102,5 +157,13 @@ export function createBuildingBlockRequests(
 			return result;
 		},
 		cancel: () => store.set(null),
+		announce(next, open) {
+			if (open) {
+				store.set(next);
+			} else {
+				store.update((current) => (current?.kind === next.kind ? null : current));
+			}
+			deps.onRequest?.(next);
+		},
 	};
 }

@@ -70,6 +70,35 @@ export function buildFindReplaceActions(
 	};
 }
 
+/** One element of the active slide holding find matches, for a canvas highlight. */
+export interface FindHighlightTarget {
+	elementId: string;
+	/** The current match is in this element. */
+	current: boolean;
+}
+
+/**
+ * The elements of slide `slideIndex` a canvas outlines for the host find bar's matches, the one
+ * with the current match marked. Ports whose text renderer has no run-level highlight (vanilla,
+ * and the others until theirs does) outline these elements.
+ */
+export function findHighlightTargets(
+	matches: readonly FindResult[],
+	currentIndex: number,
+	slideIndex: number,
+): FindHighlightTarget[] {
+	const targets = new Map<string, boolean>();
+	matches.forEach((match, index) => {
+		if (match.slideIndex === slideIndex) {
+			targets.set(
+				match.elementId,
+				(targets.get(match.elementId) ?? false) || index === currentIndex,
+			);
+		}
+	});
+	return [...targets].map(([elementId, current]) => ({ elementId, current }));
+}
+
 export interface LayoutActionDeps {
 	activeSlide: PptxSlide | undefined;
 	scopedLayouts: PptxLayoutOption[];

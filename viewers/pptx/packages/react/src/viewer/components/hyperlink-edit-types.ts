@@ -1,25 +1,11 @@
-/** The type of hyperlink target. */
-export type HyperlinkTargetType = 'url' | 'email' | 'slide' | 'file' | 'action';
+import type { HyperlinkEditData } from 'ooxml-ui/pptx';
 
-/** Supported action verbs for action hyperlinks. */
-export type HyperlinkActionVerb =
-	| 'nextSlide'
-	| 'prevSlide'
-	| 'firstSlide'
-	| 'lastSlide'
-	| 'endShow';
-
-/** Data model for the hyperlink editor dialog. */
-export interface HyperlinkEditData {
-	targetType: HyperlinkTargetType;
-	url: string;
-	tooltip: string;
-	emailAddress: string;
-	emailSubject: string;
-	slideNumber: number;
-	filePath: string;
-	actionVerb: HyperlinkActionVerb;
-}
+// The editor values are shared by every binding's building blocks (`ooxml-ui/pptx`).
+export type { HyperlinkActionVerb, HyperlinkEditData, HyperlinkTargetType } from 'ooxml-ui/pptx';
+export {
+	HYPERLINK_ACTION_VERB_MAP as ACTION_VERB_MAP,
+	HYPERLINK_ACTION_VERB_TO_PPACTION as ACTION_VERB_TO_PPACTION,
+} from 'ooxml-ui/pptx';
 
 export interface HyperlinkEditDialogProps {
 	open: boolean;
@@ -30,19 +16,3 @@ export interface HyperlinkEditDialogProps {
 	onConfirm: (data: HyperlinkEditData) => void;
 	onCancel: () => void;
 }
-
-export const ACTION_VERB_MAP: Record<string, HyperlinkActionVerb> = {
-	'ppaction://hlinkshowjump?jump=nextslide': 'nextSlide',
-	'ppaction://hlinkshowjump?jump=previousslide': 'prevSlide',
-	'ppaction://hlinkshowjump?jump=firstslide': 'firstSlide',
-	'ppaction://hlinkshowjump?jump=lastslide': 'lastSlide',
-	'ppaction://hlinkshowjump?jump=endshow': 'endShow',
-};
-
-export const ACTION_VERB_TO_PPACTION: Record<HyperlinkActionVerb, string> = {
-	nextSlide: 'ppaction://hlinkshowjump?jump=nextslide',
-	prevSlide: 'ppaction://hlinkshowjump?jump=previousslide',
-	firstSlide: 'ppaction://hlinkshowjump?jump=firstslide',
-	lastSlide: 'ppaction://hlinkshowjump?jump=lastslide',
-	endShow: 'ppaction://hlinkshowjump?jump=endshow',
-};

@@ -17,15 +17,16 @@ import {
 	BUILDING_BLOCK_OK,
 	BUILDING_BLOCK_UNMOUNTED_DIALOG_ACTIONS,
 	buildingBlockFailure,
+	describeBuildingBlockActions,
 	validateHostImageFile,
 	validateHostMediaFile,
 } from '../building-block-actions';
 import type {
-	BuildingBlockActionId,
-	BuildingBlockActionState,
+	BuildingBlockAvailabilityInput,
 	BuildingBlockResult,
 	HostFileLimits,
 } from '../building-block-actions';
+import { describeShowDialogActions } from '../building-block-show-dialogs';
 import { createImageElementFromFile } from '../image-file-insertion';
 import { isValidInsertChartData } from '../insert-chart';
 import type { InsertChartKind, InsertChartOptions } from '../insert-chart';
@@ -42,7 +43,12 @@ import type { BuildingBlockFindReplacePort } from './find-layout';
 import { hyperlinkEditDataFromAction, resolveHyperlinkEditResult } from './hyperlink-edit-data';
 import type { HyperlinkEditData } from './hyperlink-edit-data';
 import { createBuildingBlockRequests } from './requests';
-import type { BuildingBlockRequest, BuildingBlockRequests } from './requests';
+import type {
+	BuildingBlockAvailability,
+	BuildingBlockAvailabilityId,
+	BuildingBlockRequest,
+	BuildingBlockRequests,
+} from './requests';
 
 /** The deck, slide and slide position an asynchronous insert must still target when it lands. */
 export interface BuildingBlockTarget {
@@ -54,7 +60,8 @@ export interface BuildingBlockTarget {
 
 /** What a binding supplies; every member is read at call time. */
 export interface BuildingBlockSessionPort {
-	availability(): Record<BuildingBlockActionId, BuildingBlockActionState>;
+	/** The binding's state as `describeBuildingBlockActions` reads it; the session derives the rest. */
+	availabilityInput(): BuildingBlockAvailabilityInput;
 	fileLimits(): HostFileLimits | undefined;
 	onRequest?(request: BuildingBlockRequest): void;
 	target(): BuildingBlockTarget;
@@ -81,6 +88,15 @@ export interface BuildingBlockSessionPort {
 	applyLayout(path: string): Promise<void>;
 	/** Decode a picked image; defaults to `createImageElementFromFile`. */
 	decodeImage?(file: File, canvasSize: CanvasSize): Promise<PptxElement | null>;
+	/** `actions.cancel()` ran: close what the binding mirrors (the shortcut help). */
+	onCancel?(): void;
+}
+
+/** Every availability entry for a binding's state: the core workflows and the slide show dialogs. */
+export function describeBuildingBlockAvailability(
+	input: BuildingBlockAvailabilityInput,
+): BuildingBlockAvailability {
+	return { ...describeBuildingBlockActions(input), ...describeShowDialogActions(input) };
 }
 
 /** The OMML of the element's first equation run, null when it has none. */
@@ -103,6 +119,8 @@ export interface PptxBuildingBlockSession {
 	/** Home > Layout (any path the handler accepts) and Reset, as the toolbar runs them. */
 	applyLayout(path: string): Promise<BuildingBlockResult>;
 	resetSlide(): Promise<BuildingBlockResult>;
+	/** Mirror a toggle the host shows (the shortcut help opening or closing); see `announce`. */
+	announce(next: BuildingBlockRequest, open: boolean): void;
 	/** Add a group's operations under its `actions` key. Returns the unregister function. */
 	register<K extends BuildingBlockActionGroupId, Port>(
 		group: BuildingBlockActionGroup<K, Port>,
@@ -113,18 +131,23 @@ export interface PptxBuildingBlockSession {
 export function createPptxBuildingBlockSession(
 	port: BuildingBlockSessionPort,
 ): PptxBuildingBlockSession {
-	const refuse = (id: BuildingBlockActionId): BuildingBlockResult | undefined => {
-		const { available, reason } = port.availability()[id];
+	const availability = () => describeBuildingBlockAvailability(port.availabilityInput());
+	const refuse = (id: BuildingBlockAvailabilityId): BuildingBlockResult | undefined => {
+		const { available, reason } = availability()[id];
 		return available ? undefined : buildingBlockFailure(reason ?? 'not-ready');
 	};
 	const requests = createBuildingBlockRequests({
-		isAvailable: (id) => port.availability()[id].available,
+		state: (id) => availability()[id],
 		onRequest: (request) => port.onRequest?.(request),
 	});
-	const context = createBuildingBlockGroupContext(requests, refuse);
+	const context = createBuildingBlockGroupContext(
+		requests,
+		refuse,
+		() => port.availabilityInput().ready,
+	);
 	const groups = new Map<string, () => unknown>();
 	const gated = (
-		id: BuildingBlockActionId,
+		id: BuildingBlockAvailabilityId,
 		kind: BuildingBlockRequest['kind'],
 		run: () => void,
 	): BuildingBlockResult => {
@@ -181,7 +204,7 @@ export function createPptxBuildingBlockSession(
 				now.deck === before.deck &&
 				now.slideId === before.slideId &&
 				now.slideIndex === before.slideIndex &&
-				port.availability().insertMedia.available
+				availability().insertMedia.available
 			);
 		};
 		return requests.complete('media', await port.insertMediaFile(file, sameTarget));
@@ -222,12 +245,16 @@ export function createPptxBuildingBlockSession(
 		gated('insertEquation', 'equation', () => port.insertEquation(omml));
 	const equationUpdate = (omml: Record<string, unknown>) =>
 		gated('editEquation', 'equation', () => port.updateEquation(omml));
-	const cancel = () => requests.cancel();
+	const cancel = () => {
+		requests.cancel();
+		port.onCancel?.();
+	};
 
 	return {
 		requests,
 		context,
 		request: (next) => requests.request(next),
+		announce: (next, open) => requests.announce(next, open),
 		applyLayout: (path) => layoutActions().apply(path, true),
 		resetSlide: () => layoutActions().reset(),
 		register(group, groupPort) {
@@ -246,8 +273,8 @@ export function createPptxBuildingBlockSession(
 				Reflect.set(extensions, id, create());
 			}
 			return {
-				...extensions,
-				availability: port.availability(),
+				...(extensions as BuildingBlockActionGroupMap),
+				availability: availability(),
 				unmountedDialogActions: BUILDING_BLOCK_UNMOUNTED_DIALOG_ACTIONS,
 				pending: requests.getSnapshot(),
 				cancel,

@@ -1,7 +1,6 @@
 import type { PptxElement, PptxLayoutOption, PptxSlide } from 'ooxml-core/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
-import { describeBuildingBlockActions } from '../building-block-actions';
 import type { BuildingBlockAvailabilityInput } from '../building-block-actions';
 import type { BuildingBlockFindReplacePort } from './find-layout';
 import { buildingBlockRequestAction } from './requests';
@@ -48,7 +47,7 @@ function findPort(overrides: Partial<BuildingBlockFindReplacePort> = {}) {
 }
 
 function setup(input: Partial<BuildingBlockAvailabilityInput> = {}) {
-	let availability = describeBuildingBlockActions({ ...READY, ...input });
+	let availability: BuildingBlockAvailabilityInput = { ...READY, ...input };
 	const slide = { id: 's1', elements: [], layoutPath: 'l1' } as unknown as PptxSlide;
 	const layouts = [
 		{ path: 'l1', name: 'Title' },
@@ -56,7 +55,7 @@ function setup(input: Partial<BuildingBlockAvailabilityInput> = {}) {
 	] as PptxLayoutOption[];
 	let target = { deck: {}, slideId: 's1' as string | undefined, slideIndex: 0 };
 	const port = {
-		availability: () => availability,
+		availabilityInput: () => availability,
 		fileLimits: () => undefined,
 		onRequest: vi.fn(),
 		target: () => target,
@@ -85,7 +84,7 @@ function setup(input: Partial<BuildingBlockAvailabilityInput> = {}) {
 		port,
 		session,
 		setAvailability: (next: Partial<BuildingBlockAvailabilityInput>) => {
-			availability = describeBuildingBlockActions({ ...READY, ...next });
+			availability = { ...READY, ...next };
 		},
 		moveTo: (slideId: string) => {
 			target = { ...target, slideId };

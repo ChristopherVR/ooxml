@@ -7,18 +7,13 @@
  */
 import type { PptxLayoutOption, SmartArtLayout } from 'ooxml-core/pptx';
 
-import type {
-	BuildingBlockActionId,
-	BuildingBlockActionState,
-	BuildingBlockResult,
-	HostFileLimits,
-} from '../building-block-actions';
+import type { BuildingBlockResult, HostFileLimits } from '../building-block-actions';
 import type { FindResult } from '../find-replace';
 import type { FindReplaceOptions } from '../find-replace-session';
 import type { InsertChartKind, InsertChartOptions } from '../insert-chart';
 import type { BuildingBlockActionGroupMap } from './action-groups';
 import type { HyperlinkEditData } from './hyperlink-edit-data';
-import type { BuildingBlockRequest } from './requests';
+import type { BuildingBlockAvailability, BuildingBlockRequest } from './requests';
 
 export interface UseViewerBuildingBlocksActionsOptions {
 	/**
@@ -85,7 +80,7 @@ export interface BuildingBlockEquationActions {
 /** The workflows every binding exposes; registered groups add their own keys beside these. */
 export interface ViewerBuildingBlockCoreActions {
 	/** What each workflow can do right now and whether its toolbar control needs host UI. */
-	availability: Record<BuildingBlockActionId, BuildingBlockActionState>;
+	availability: BuildingBlockAvailability;
 	/**
 	 * Toolbar handlers that open a dialog or pane the building blocks do not mount (set internal
 	 * state, show nothing). Hide them with `hiddenActions` or render the dialog yourself.
@@ -115,6 +110,9 @@ export interface ViewerBuildingBlockCoreActions {
 	layout: BuildingBlockLayoutActions;
 }
 
-/** `actions` as every binding returns it: the core workflows plus every registered group. */
+/**
+ * `actions` as every binding returns it: the core workflows plus every built-in group. A binding
+ * registers each group (`registerBuildingBlockGroups`); the parity contract checks that it did.
+ */
 export type ViewerBuildingBlockActions = ViewerBuildingBlockCoreActions &
-	Partial<BuildingBlockActionGroupMap>;
+	BuildingBlockActionGroupMap;
