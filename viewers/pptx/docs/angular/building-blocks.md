@@ -90,8 +90,7 @@ you finish it with the matching operation or call `actions().cancel()`.
 | `{ kind: 'shortcuts', open }`        | `?`, Ctrl+/, `actions().shortcuts.setOpen` | render `actions().shortcuts.catalogue`     |
 
 Ctrl+F and Ctrl+H on the canvas open your find bar (`actions().findReplace.open`); render it from
-`actions().findReplace`. The canvas outlines the elements holding matches (`data-pptx-find-match`,
-`current` for the current one). Keyboard shortcuts act while focus is in the canvas or on the page
+`actions().findReplace`. The canvas marks the matched text itself, as the full viewer and React do: each match is a `<mark data-pptx-find-match>` (`current` for the current match, `match` for the others) inside the run, decided by the shared `findTextHighlightsByElement` / `highlightFindMatches`. Keyboard shortcuts act while focus is in the canvas or on the page
 body.
 
 The file and slide show dialogs are groups on `actions()` too: `passwordProtection`,

@@ -72,8 +72,7 @@ you finish it with the matching operation or call `actions.cancel()`.
 
 Ctrl+F and Ctrl+H on the canvas toggle your find bar (`actions.findReplace.open`); render it from
 `actions.findReplace` (query, options, matches, `next`, `previous`, `replaceCurrent`,
-`replaceAll`). The canvas outlines the elements holding matches (`data-pptx-find-match`, `current`
-for the current one).
+`replaceAll`). The canvas marks the matched text itself, as the full viewer and React do: each match is a `<mark data-pptx-find-match>` (`current` for the current match, `match` for the others) inside the run, decided by the shared `findTextHighlightsByElement` / `highlightFindMatches`.
 
 The file and slide show dialogs are groups on `actions` too, with the same shape as React's:
 `passwordProtection`, `documentProperties`, `fontEmbedding`, `digitalSignatures`, `setUpSlideShow`,

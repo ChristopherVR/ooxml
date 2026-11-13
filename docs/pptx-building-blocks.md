@@ -31,7 +31,7 @@ Strict TypeScript, DOM-free apart from `File`, exported from `ooxml-ui/pptx`.
 | `requests.ts`            | `BuildingBlockRequest` (from `BuildingBlockRequestMap`), `BUILDING_BLOCK_REQUEST_ACTIONS` (the availability id gating each kind), `BUILDING_BLOCK_VIEWABLE_REQUESTS`, `BuildingBlockAvailability` and `createBuildingBlockRequests` (a controller whose snapshot is the pending request). |
 | `groups/`                | The built-in action groups (below), `BuildingBlockGroupPorts`, `BUILDING_BLOCK_GROUP_IDS` and `registerBuildingBlockGroups(session, ports)`.                                                                                                                                              |
 | `actions-types.ts`       | The public `ViewerBuildingBlockActions` type every binding returns, and `UseViewerBuildingBlocksActionsOptions` (`onRequest`, `fileLimits`).                                                                                                                                              |
-| `find-layout.ts`         | `BuildingBlockFindReplacePort`, `buildFindReplaceActions`, `buildLayoutActions` and `findHighlightTargets` (the elements a canvas outlines for the host find bar's matches).                                                                                                              |
+| `find-layout.ts`         | `BuildingBlockFindReplacePort`, `buildFindReplaceActions`, and `buildLayoutActions`.                                                                                                                                                                                                      |
 | `find-bar-controller.ts` | `createFindBarController(host)`: the host find bar's open flag plus the shared `find-replace-session`, as a controller, for ports that keep no find state of their own.                                                                                                                   |
 | `hyperlink-edit-data.ts` | `HyperlinkEditData` (the hyperlink dialog's values), its conversions to and from `actionClick`, and `hyperlinkEditPatch` (refuses unsafe URL schemes).                                                                                                                                    |
 | `toolbar.ts`             | `describeBuildingBlockToolbar(input)`: the compact toolbar's groups and controls (existing dictionary keys, so no new strings), and `runBuildingBlockToolbarControl(id, session, view)`.                                                                                                  |
@@ -110,10 +110,18 @@ contract asserts `preview`, then `edit`, then `preview` again.
   `BuildingBlocksViewer`). A port does the same at its own openers: hyperlink (Ctrl+K, the element
   menu), equation (double-click), find (Ctrl+F / Ctrl+H toggle the find bar controller), shortcuts
   (`?`, Ctrl+/ toggle the shortcut flag), and the Insert, File and Slide Show controls.
-- **Find highlights.** React's text renderer highlights the matched runs. The other bindings
-  outline the matching elements with the shared `syncFindHighlights(root, matches, current,
-  slide)` / `markFindHighlights(root, targets)` (`find-highlight-dom.ts`, the
-  `data-pptx-find-match` attribute), reapplied after every paint and styled by their own sheet.
+- **Find highlights.** Every binding marks the matched text, in the blocks and in its full viewer.
+  The decision is shared (`render/find-text-highlight.ts`): `findTextHighlightsByElement(matches,
+  current, slide)` groups the matches of the active slide by element and segment, and
+  `highlightFindMatches(paragraphs, highlights)` splits the runs of `buildParagraphs` at the match
+  boundaries, setting `findMatch` (`match` or `current`) on the highlighted pieces (React splits
+  its segment text with `splitTextByFindHighlights`, the same rule). A binding's text renderer
+  only wraps such a piece in `<mark data-pptx-find-match="match|current">` styled with
+  `findMatchMarkStyle`. Only the editing canvas passes highlights (React and vanilla through
+  props, Vue through an injection, Svelte through a context, Angular through a provider on
+  `SlideCanvasComponent`), so thumbnails and the show stage draw none. As in React, only a
+  shape's own text is marked; matches in tables, SmartArt, group members, charts and notes still
+  select their element but draw no mark. No element is outlined.
 - **Media from a host file.** Ports whose editor has no file-based media insert use the shared
   `mediaElementFromFile(file, canvasSize, doc?)` (`media-element-from-file.ts`).
 - **Dialog flag routing.** A flag that becomes a request is handled by an effect or watcher that
@@ -173,9 +181,9 @@ Every entry:
 - `viewer-options.ts`: the viewer's options as a live view (a `Proxy`) of the latest building-block
   options, and the options `update()` pushes explicitly.
 - `create-viewer-building-blocks.ts`: the session, group registration, the find bar controller
-  (committing replaces through `editor.commitElementUpdates`), the shortcut flag, `subscribe`,
+  (committing replaces through `editor.commitElementUpdates`, its matches copied to the viewer
+  store's `findMatches` / `findMatchIndex`, which the canvas marks), the shortcut flag, `subscribe`,
   `update` and the three `mount...` helpers.
-- `find-highlight.ts`: the canvas outline of the host find bar's matches.
 - `toolbar-view.ts`: keyed DOM for the toolbar descriptor, updated in place so focus survives.
 - `slides-pane-block.ts`: `createSlidesPane` fed from the store.
 
@@ -190,7 +198,7 @@ Every entry:
 2. Route the binding's dialog openers to `session.request`, Ctrl+F to the find bar, `?` / Ctrl+/ to
    the shortcut flag plus `session.announce`, and drop the Broadcast flag.
 3. Report `mode` with `resolveBuildingBlockMode`, render the compact toolbar from
-   `describeBuildingBlockToolbar`, outline find matches with `syncFindHighlights`, and set the
+   `describeBuildingBlockToolbar`, pass the find bar's `findTextHighlightsByElement` to the canvas, and set the
    `data-pptx-block` and `data-control` markers. Route dialog flags as described above.
 4. Export the entry, its option and state types and the shared `ViewerBuildingBlockActions`,
    `BuildingBlockRequest` and `BuildingBlockResult` types from the package root. The full viewer's
@@ -258,7 +266,5 @@ in `viewers/pptx`. `e2e/pptx/host-owned-*.spec.ts` keep covering React's collabo
 
 - Vanilla's state has no `shellState` or `collaboration` object; use `blocks.viewer` for
   collaboration. Follow-up: map `getCollaborationState()` onto `resolveCollaborationShellState`.
-- Find highlights differ in kind: React highlights the matched text runs, the other bindings
-  outline the matching elements.
 - The compact toolbar has no controls for the File and Slide Show dialogs; a host raises
   those workflows from its own controls and the `actions` groups.
