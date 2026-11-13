@@ -16,11 +16,11 @@ import { createTranslator } from '../i18n/translator';
 import { createSlidesPaneProps } from '../viewer/components/slides-pane-props';
 import { controllerState } from '../viewer/state/controller-state';
 import { createViewerState } from '../viewer/state/create-viewer-state.svelte';
+import { provideElementRenderErrorReporter } from '../viewer/state/element-render-errors';
 import {
 	useCustomizationConstraints,
 	useViewerCustomizationRoot,
 } from '../viewer/state/viewer-customization.svelte';
-import { provideElementRenderErrorReporter } from '../viewer/state/element-render-errors';
 import { toViewerStateOptions } from '../viewer/state/viewer-state-options';
 import { createSvelteGroupPorts } from './group-ports';
 import { routeDialogFlag } from './route-dialog-flag.svelte';
