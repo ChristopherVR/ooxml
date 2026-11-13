@@ -1,6 +1,11 @@
 // @vitest-environment happy-dom
 import type { PptxElement, TextSegment, TextStyle } from 'ooxml-core/pptx';
-import { buildParagraphs } from '../../index';
+import {
+	buildParagraphs,
+	FIND_MATCH_ATTRIBUTE,
+	findTextHighlightsByElement,
+	highlightFindMatches,
+} from '../../index';
 import { describe, expect, it } from 'vitest';
 
 import { renderTextBlock } from './text-block';
@@ -163,5 +168,36 @@ describe('renderTextBlock - u="words" on tab pieces and ruby runs', () => {
 		const ruby = block.querySelector('ruby');
 		expect(ruby?.textContent).toContain('two words');
 		expect(ruby?.closest('[style*="underline"]')).not.toBeNull();
+	});
+});
+
+describe('renderTextBlock - Find marks', () => {
+	it('wraps the matched text in a mark, the current match apart', () => {
+		const el = {
+			...element(),
+			textSegments: [{ text: 'Alpha beta alpha', style: {} }],
+		} as PptxElement;
+		const highlights = findTextHighlightsByElement(
+			[
+				{ slideIndex: 0, elementId: 'el-1', segmentIndex: 0, startOffset: 0, length: 5 },
+				{ slideIndex: 0, elementId: 'el-1', segmentIndex: 0, startOffset: 11, length: 5 },
+			],
+			1,
+			0,
+		).get('el-1');
+		const block = renderTextBlock(
+			document,
+			highlightFindMatches(buildParagraphs(el), highlights),
+			{},
+		);
+		const marks = [...block.querySelectorAll(`mark[${FIND_MATCH_ATTRIBUTE}]`)].map((mark) => [
+			mark.getAttribute(FIND_MATCH_ATTRIBUTE),
+			mark.textContent,
+		]);
+		expect(marks).toEqual([
+			['match', 'Alpha'],
+			['current', 'alpha'],
+		]);
+		expect(block.textContent).toBe('Alpha beta alpha');
 	});
 });

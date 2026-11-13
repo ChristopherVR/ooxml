@@ -102,6 +102,12 @@ export interface ParagraphRun {
 	 * `getTextReflectionWrapperStyle`.
 	 */
 	reflection?: ReflectionWrapperStyle;
+	/**
+	 * Set on a piece of a run the Find bar highlights (`current` for the current match), by
+	 * `highlightFindMatches` (`find-text-highlight.ts`). A binding wraps the run's content in
+	 * `<mark data-pptx-find-match>` styled with `findMatchMarkStyle`.
+	 */
+	findMatch?: 'match' | 'current';
 }
 
 /** A rendered paragraph: runs plus resolved bullet + hanging-indent metadata. */

@@ -6,6 +6,7 @@ import {
 	getOverflowSegments,
 	getBackgroundAnimationState,
 	getBackgroundAnimationLayers,
+	highlightFindMatches,
 	placeholderPromptDescriptor,
 } from '../../index';
 
@@ -141,7 +142,10 @@ export const renderTextShapeElement: ElementRenderer = (element, zIndex, context
 		// siblings on the slide being rendered. Returns undefined (and costs one
 		// field check) for the overwhelmingly common non-chain element.
 		const linkedSegments = getOverflowSegments(element, context.slide?.elements);
-		const paragraphs = buildParagraphs(element, context.fieldContext, linkedSegments);
+		const paragraphs = highlightFindMatches(
+			buildParagraphs(element, context.fieldContext, linkedSegments),
+			context.findHighlights?.get(element.id),
+		);
 		const hasText = paragraphs.some((p) => p.runs.length > 0 || p.bulletMarker !== undefined);
 		if (hasText) {
 			el.appendChild(

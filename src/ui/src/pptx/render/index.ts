@@ -1372,6 +1372,7 @@ export * from './image-duotone-canvas';
 export * from './hyperlink-dialog';
 // Find & replace across slide text segments (immutable transforms).
 export * from './find-replace';
+export * from './find-text-highlight';
 // Accessibility issue aggregation over a slide array (mirrors core's
 // `checkPresentation`) + severity grouping/labels for the panel.
 export * from './accessibility-issues';

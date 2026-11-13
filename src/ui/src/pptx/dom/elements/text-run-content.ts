@@ -1,3 +1,4 @@
+import { FIND_MATCH_ATTRIBUTE, findMatchMarkStyle } from '../../index';
 import type { ParagraphRun } from '../../index';
 
 import { createEl } from '../dom';
@@ -16,6 +17,18 @@ import { createEl } from '../dom';
  * all three carry the same content logic.
  */
 export function appendRunContent(doc: Document, host: HTMLElement, run: ParagraphRun): void {
+	// A piece of a Find match (shared `highlightFindMatches`) sits inside a `<mark>`.
+	if (run.findMatch) {
+		const mark = createEl(doc, 'mark', undefined, findMatchMarkStyle(run.findMatch));
+		mark.setAttribute(FIND_MATCH_ATTRIBUTE, run.findMatch);
+		host.appendChild(mark);
+		appendRunPieces(doc, mark, run);
+		return;
+	}
+	appendRunPieces(doc, host, run);
+}
+
+function appendRunPieces(doc: Document, host: HTMLElement, run: ParagraphRun): void {
 	if (run.tabLines) {
 		appendTabLines(doc, host, run.tabLines);
 		return;

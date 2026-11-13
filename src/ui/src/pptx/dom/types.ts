@@ -14,6 +14,7 @@ import type {
 	CssStyleMap,
 	ElementAnimationState,
 	FieldSubstitutionContext,
+	SlideFindHighlights,
 	ZoomNavigationTarget,
 } from '../index';
 
@@ -81,6 +82,8 @@ export interface ElementRenderContext {
 	/** Parsed `ppt/tableStyles.xml` definitions used by table band/header styling. */
 	readonly tableStyleMap?: ParsedTableStyleMap;
 	readonly fieldContext?: FieldSubstitutionContext;
+	/** The Find bar's matches the text renderer marks (`findTextHighlightsByElement`); editing canvas only. */
+	readonly findHighlights?: SlideFindHighlights;
 	/** Shared-dictionary translator (`pptx.*` keys). */
 	readonly t: Translator;
 	/**

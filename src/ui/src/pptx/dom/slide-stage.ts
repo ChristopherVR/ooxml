@@ -15,6 +15,7 @@ import type {
 	ChartPartRef,
 	ElementAnimationState,
 	FieldSubstitutionContext,
+	SlideFindHighlights,
 	ZoomNavigationTarget,
 } from '../index';
 import {
@@ -53,6 +54,8 @@ export interface SlideStageOptions {
 	/** Optional parsed table-style definitions for theme-aware table rendering. */
 	tableStyleMap?: ParsedTableStyleMap;
 	fieldContext?: FieldSubstitutionContext;
+	/** The Find bar's matches, marked in the elements' text (`findTextHighlightsByElement`). */
+	findHighlights?: SlideFindHighlights;
 	registry: ElementRendererRegistry;
 	t: Translator;
 	/** Scale applied via CSS transform (default 1). */
@@ -193,6 +196,7 @@ export function renderSlideStage(options: SlideStageOptions): HTMLElement {
 		formatScheme: options.formatScheme,
 		tableStyleMap: options.tableStyleMap,
 		fieldContext: options.fieldContext,
+		findHighlights: options.findHighlights,
 		presentationStates: options.presentationStates,
 		t,
 		smartArt3D: options.smartArt3D ?? false,
