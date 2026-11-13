@@ -121,6 +121,19 @@ watch(
 `<span data-group="...">`, so you can style them or replace the toolbar with your own buttons that
 call `actions` and `blocks.viewer`.
 
+## Element render errors
+
+A slide element whose renderer throws is left out on its own: its neighbours, the slide and the
+viewer stay, on the canvas, the thumbnails, the slide show, the reading view and the previews.
+The document is not changed. Pass `onElementRenderError` (in the `useViewerBuildingBlocks` options; it reaches the canvas and slides pane blocks) to hear about it; the full
+viewer takes the same option. It receives the error and an `ElementRenderErrorContext`
+(`elementId`, `elementType` and, where the surface knows it, `slideId`; both types are exported).
+Without it the viewer calls `console.error(error, context)`, which is also the fallback when the
+callback throws, so a failing reporter never takes the viewer down.
+
+Each element sits in an `ElementBoundary` (`onErrorCaptured`), which catches setup, render and lifecycle hook errors. Replacing the failed element object (even with the same id) or changing its id renders
+it again; re-rendering the same failed object does not retry. Event handler errors are not caught, as in React.
+
 ## Not included
 
 The blocks render no dialogs, panes, ribbon, status bar, notes or presentation chrome. Broadcast

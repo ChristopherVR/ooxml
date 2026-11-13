@@ -95,6 +95,14 @@ export interface PowerPointViewerProps {
 	/** Fired before following a link; return false to cancel its default action. */
 	onHyperlinkClick?: import('ooxml-ui/pptx').HyperlinkClickHandler;
 	/**
+	 * Reports a slide element omitted after a render, setup or lifecycle error, on every surface
+	 * of the viewer (canvas, thumbnails, slide show, reading view, previews), with
+	 * `{ elementId, elementType, slideId }`. A prop, not an emit, so `@element-render-error` binds
+	 * it too and its absence keeps the default: `console.error(error, context)`, also used when
+	 * this callback throws.
+	 */
+	onElementRenderError?: import('ooxml-ui/pptx').ElementRenderErrorHandler;
+	/**
 	 * Recovery autosave: after an edit the deck is re-serialised (always as a
 	 * plain, unencrypted package, because recovery has no password), stashed in
 	 * the shared IndexedDB store keyed by {@link filePath}, and emitted as

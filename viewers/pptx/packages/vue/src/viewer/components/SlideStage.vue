@@ -15,10 +15,12 @@ import type { CSSProperties } from 'vue';
 import { computed, ref, watchPostEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { provideElementRenderSlide } from '../composables/element-render-errors';
 import { provideSlideFieldContext } from '../composables/field-context';
 import { useRendering3DFlags } from '../composables/rendering-3d-flags';
 import { provideSlideElements } from '../composables/slide-elements';
 import type { CanvasSize } from '../types';
+import ElementBoundary from './ElementBoundary.vue';
 import ElementRenderer from './ElementRenderer.vue';
 
 /**
@@ -128,6 +130,8 @@ const templateElements = computed<PptxElement[]>(() => [
 // find the rest of its chain and render only its own slice of the overflow.
 // Template elements are included because a chain may be authored on a layout.
 provideSlideElements(() => [...templateElements.value, ...(props.slide?.elements ?? [])]);
+// Element render errors on this stage report the slide it paints.
+provideElementRenderSlide(() => props.slide?.id);
 
 /**
  * Boxes that grow under an abutting opaque box to close the anti-aliasing seam
@@ -250,31 +254,39 @@ const stageStyle = computed<CSSProperties>(() => ({
 		     `marked` keeps the data-pptx-element contract on these elements even
 		     while they are interaction-locked (outside edit-template mode): the
 		     marker means "rendered slide element", not "editable right now". -->
-		<ElementRenderer
+		<ElementBoundary
 			v-for="(element, index) in templateElements"
 			:key="element.id"
 			:element="element"
-			:media-data-urls="mediaDataUrls"
-			:z-index="index"
-			:edge-bleed="edgeBleeds.get(element.id)"
-			:interactive="templateLayerInteractive"
-			:marked="interactive ?? false"
-			:template-editing="editTemplateMode ?? false"
-			:inline-editing-element-id="inlineEditingElementId"
-		/>
+		>
+			<ElementRenderer
+				:element="element"
+				:media-data-urls="mediaDataUrls"
+				:z-index="index"
+				:edge-bleed="edgeBleeds.get(element.id)"
+				:interactive="templateLayerInteractive"
+				:marked="interactive ?? false"
+				:template-editing="editTemplateMode ?? false"
+				:inline-editing-element-id="inlineEditingElementId"
+			/>
+		</ElementBoundary>
 		<!-- Slide content (template-free after the load-time partition). -->
-		<ElementRenderer
+		<ElementBoundary
 			v-for="(element, index) in slide?.elements ?? []"
 			:key="element.id"
 			:element="element"
-			:media-data-urls="mediaDataUrls"
-			:z-index="index + templateCount"
-			:edge-bleed="edgeBleeds.get(element.id)"
-			:interactive="interactive ?? false"
-			:presenting="presenting ?? false"
-			:selected="selectedElementIds?.includes(element.id) ?? false"
-			:inline-editing-element-id="inlineEditingElementId"
-		/>
+		>
+			<ElementRenderer
+				:element="element"
+				:media-data-urls="mediaDataUrls"
+				:z-index="index + templateCount"
+				:edge-bleed="edgeBleeds.get(element.id)"
+				:interactive="interactive ?? false"
+				:presenting="presenting ?? false"
+				:selected="selectedElementIds?.includes(element.id) ?? false"
+				:inline-editing-element-id="inlineEditingElementId"
+			/>
+		</ElementBoundary>
 		<!-- Optional editing overlay (selection handles, etc.) shares this scaled space -->
 		<slot />
 	</div>

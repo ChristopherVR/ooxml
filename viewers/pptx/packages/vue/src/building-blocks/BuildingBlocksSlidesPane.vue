@@ -6,10 +6,13 @@
 import { computed } from 'vue';
 
 import SlidesPane from '../viewer/components/SlidesPane.vue';
+import { provideElementRenderErrorReporter } from '../viewer/composables/element-render-errors';
 import type { ViewerBuildingBlocks } from './types';
 
 const props = defineProps<{ blocks: ViewerBuildingBlocks }>();
 const pane = computed(() => props.blocks.bridge.engine.value?.slidesPane() ?? null);
+// The rail renders outside the canvas block's viewer, so it takes the reporter itself.
+provideElementRenderErrorReporter(() => props.blocks.options.value.onElementRenderError);
 
 function openLayoutGallery(request: { slideIndex: number; x: number; y: number }): void {
 	props.blocks.options.value.onOpenLayoutGallery?.(request);

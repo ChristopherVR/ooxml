@@ -15,11 +15,12 @@ import {
 	isElementRendered,
 	isEquationOnlyText,
 	placeholderPromptDescriptor,
+	probeElementRenderFault,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import { hasShapeProperties, hasTextProperties } from 'pptx-viewer-core';
 import type { CSSProperties } from 'vue';
-import { computed } from 'vue';
+import { computed, onBeforeUpdate } from 'vue';
 
 import { useElementHitTargetStyle } from '../composables/element-hit-target';
 import {
@@ -37,6 +38,7 @@ import ChartRenderer from './ChartRenderer.vue';
 import ConnectorRenderer from './ConnectorRenderer.vue';
 import ContentPartRenderer from './ContentPartRenderer.vue';
 import DuotoneFilterDefs from './DuotoneFilterDefs.vue';
+import ElementBoundary from './ElementBoundary.vue';
 import ElementImageBox from './ElementImageBox.vue';
 import ElementMediaBox from './ElementMediaBox.vue';
 import EquationRenderer from './EquationRenderer.vue';
@@ -112,6 +114,9 @@ const props = defineProps<{
 	 */
 	inlineEditingElementId?: string | null;
 }>();
+// Test-only fault hook (inert unless a test page sets it), inside this element's `ElementBoundary`.
+probeElementRenderFault(props.element);
+onBeforeUpdate(() => probeElementRenderFault(props.element));
 
 /** Host opt-in to the Three.js SmartArt renderer (provided by PowerPointViewer). */
 const rendering3DFlags = useRendering3DFlags();
@@ -402,18 +407,18 @@ const hitTargetStyle = useElementHitTargetStyle(
 		     `ShapeEffectOverlay`'s doc comment), but `p:grpSpPr/a:effectLst/a:reflection`
 		     mirrors the whole group subtree, so this still needs mounting. -->
 		<ShapeEffectOverlay :element="element" :media-data-urls="mediaDataUrls" />
-		<ElementRenderer
-			v-for="(child, i) in element.children ?? []"
-			:key="child.id"
-			:element="child"
-			:media-data-urls="mediaDataUrls"
-			:z-index="i"
-			:interactive="interactive"
-			:marked="marked"
-			:presenting="presenting"
-			:parent-group-fill="childParentGroupFill"
-			:inline-editing-element-id="inlineEditingElementId"
-		/>
+		<ElementBoundary v-for="(child, i) in element.children ?? []" :key="child.id" :element="child">
+			<ElementRenderer
+				:element="child"
+				:media-data-urls="mediaDataUrls"
+				:z-index="i"
+				:interactive="interactive"
+				:marked="marked"
+				:presenting="presenting"
+				:parent-group-fill="childParentGroupFill"
+				:inline-editing-element-id="inlineEditingElementId"
+			/>
+		</ElementBoundary>
 	</div>
 
 	<!-- Image / picture -->

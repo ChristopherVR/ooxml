@@ -135,6 +135,7 @@ import { useChartFormatPane } from './composables/chart-format-pane';
 import { useChartCanvasEditContext } from './composables/chart-part-selection';
 import { useCustomizedRibbonProps } from './composables/customization-ribbon-gates';
 import { readDeckData } from './composables/deck-data';
+import { provideElementRenderErrorReporter } from './composables/element-render-errors';
 import { FieldContextKey } from './composables/field-context';
 import { InspectorPreviewKey } from './composables/inspector-preview-context';
 import { MergeCropKey } from './composables/merge-crop-context';
@@ -500,6 +501,9 @@ function createPresentation(templateId: string): void {
 // provide/inject, avoiding theme prop-threading through the hot
 // SlideStage -> ElementRenderer chain.
 provide(TableThemeKey, () => tableThemeContextFor(pptxTheme.value, tableStyleMap.value));
+
+// The host's element render error reporter, read by every `ElementBoundary` on every surface.
+provideElementRenderErrorReporter(() => props.onElementRenderError);
 
 // "Recent colours" (`p:clrMru`): one shared list every colour-picking panel
 // in the inspector reads and pushes to, so a colour picked in Fill shows up
