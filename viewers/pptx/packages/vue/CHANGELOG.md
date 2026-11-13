@@ -7,6 +7,19 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.76.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@4.76.0) - 2026-11-13
+
+### Features
+
+- **vue:** Highlight the matched find text on the canvas ([a1e07ec](https://github.com/ChristopherVR/ooxml/commit/a1e07ec0ff297984224d9a279bc5c3abc0c95a65))
+- **vue:** Report shell state from the building blocks ([29a9aba](https://github.com/ChristopherVR/ooxml/commit/29a9aba5cb48c4884746fba3e73a65359f23cc51))
+- **vue:** Contain element render errors per element ([8b3f4e5](https://github.com/ChristopherVR/ooxml/commit/8b3f4e542aa348d9cb38cde2d135801cd3a904bd))
+
+### Testing
+
+- **shared:** Prove shell state, collaboration and live options in blocks ([b26b465](https://github.com/ChristopherVR/ooxml/commit/b26b4656dd1520992f33da6d67cf7c5dffcab39d))
+- **shared:** Add the element render error parity contract ([4781f2f](https://github.com/ChristopherVR/ooxml/commit/4781f2fe6d34356cb233d8d4211bcc751b9ab613))
+
 ## [4.75.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@4.75.0) - 2026-11-13
 
 ### Features

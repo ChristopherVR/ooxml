@@ -7,6 +7,22 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.77.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.77.0) - 2026-11-13
+
+### Features
+
+- **react:** Report collaborationState from useViewerBuildingBlocks ([8fe9e9f](https://github.com/ChristopherVR/ooxml/commit/8fe9e9fd1f2b69485e023cd8f414342fc0f5eee1))
+- **react:** Take onElementRenderError on PowerPointViewer ([716a537](https://github.com/ChristopherVR/ooxml/commit/716a5373a6e00d03f66bb9ef06886b0580a92ea0))
+
+### Refactor
+
+- **react:** Mark find matches through the shared highlight rule ([42010a2](https://github.com/ChristopherVR/ooxml/commit/42010a259e759e7dae003efeb415de611c54d716))
+
+### Testing
+
+- **shared:** Prove shell state, collaboration and live options in blocks ([b26b465](https://github.com/ChristopherVR/ooxml/commit/b26b4656dd1520992f33da6d67cf7c5dffcab39d))
+- **shared:** Add the element render error parity contract ([4781f2f](https://github.com/ChristopherVR/ooxml/commit/4781f2fe6d34356cb233d8d4211bcc751b9ab613))
+
 ## [4.76.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.76.0) - 2026-11-13
 
 ### Features

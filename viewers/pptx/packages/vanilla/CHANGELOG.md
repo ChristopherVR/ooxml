@@ -7,6 +7,23 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [3.76.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.76.0) - 2026-11-13
+
+### Features
+
+- **vanilla:** Highlight the matched find text on the canvas ([2e7e163](https://github.com/ChristopherVR/ooxml/commit/2e7e1637d7ed92855b45d187abd9a67f47d6cef4))
+- **vanilla:** Report shell state and apply options live in the blocks ([34cc41d](https://github.com/ChristopherVR/ooxml/commit/34cc41d538a4746f23ef4f587f0da628a4fc5ecc))
+
+### Bug Fixes
+
+- **vanilla:** Keep the canvas and omit only a failing element ([d22c848](https://github.com/ChristopherVR/ooxml/commit/d22c848aad72eabc5c9710e0e8687359bafd5d2f))
+
+### Testing
+
+- **shared:** Prove shell state, collaboration and live options in blocks ([b26b465](https://github.com/ChristopherVR/ooxml/commit/b26b4656dd1520992f33da6d67cf7c5dffcab39d))
+- **shared:** Add the element render error parity contract ([4781f2f](https://github.com/ChristopherVR/ooxml/commit/4781f2fe6d34356cb233d8d4211bcc751b9ab613))
+- **vanilla:** Type the render error harness options like the contract harness ([67f6475](https://github.com/ChristopherVR/ooxml/commit/67f6475016e6087de39ebcb273c1582970760057))
+
 ## [3.75.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.75.0) - 2026-11-13
 
 ### Features

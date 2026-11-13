@@ -7,6 +7,22 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.51.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.51.0) - 2026-11-13
+
+### Features
+
+- **ui:** Share the find text highlight decision ([3d84b82](https://github.com/ChristopherVR/ooxml/commit/3d84b8209865d05777c795c215f5d9a4adc9dbd9))
+- **ui:** Add the building-block shell state and live-option rules ([59b0a9d](https://github.com/ChristopherVR/ooxml/commit/59b0a9d4d85c055733c492bb2c06c29f88b0c849))
+- **ui:** Share per-element render error containment for pptx ([cd574ab](https://github.com/ChristopherVR/ooxml/commit/cd574ab53e4e5eb5edfbfc39d315d0fec28f765e))
+
+### Refactor
+
+- **ui:** Drop the building-blocks find element outline ([8ce58cd](https://github.com/ChristopherVR/ooxml/commit/8ce58cd0b7a765909d5cfaa977f31ed9df10e42f))
+
+### Testing
+
+- **pptx:** Prove element render error containment in every demo ([baa7417](https://github.com/ChristopherVR/ooxml/commit/baa7417cc2adfcd005d322dffc00028dbb75cee2))
+
 ## [1.50.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.50.0) - 2026-11-13
 
 ### Features

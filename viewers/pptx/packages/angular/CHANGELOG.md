@@ -7,6 +7,23 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.76.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.76.0) - 2026-11-13
+
+### Features
+
+- **angular:** Highlight the matched find text on the canvas ([2bb6410](https://github.com/ChristopherVR/ooxml/commit/2bb641011fa93cd8f89af18651984597796bdebb))
+- **angular:** Report shell state and lock trust options in the blocks ([d83c5fd](https://github.com/ChristopherVR/ooxml/commit/d83c5fd5916b48aabef51d31bfc10ed2f7d963b8))
+- **angular:** Contain element render errors per element ([7f49a09](https://github.com/ChristopherVR/ooxml/commit/7f49a09663b8a91cfec26228c850826458fb6566))
+
+### Testing
+
+- **shared:** Prove shell state, collaboration and live options in blocks ([b26b465](https://github.com/ChristopherVR/ooxml/commit/b26b4656dd1520992f33da6d67cf7c5dffcab39d))
+- **shared:** Add the element render error parity contract ([4781f2f](https://github.com/ChristopherVR/ooxml/commit/4781f2fe6d34356cb233d8d4211bcc751b9ab613))
+
+### Styling
+
+- **pptx:** Format the find highlight changes ([f9ad9a3](https://github.com/ChristopherVR/ooxml/commit/f9ad9a3a10dc4693855a4a1321c1d92dab7d6f8b))
+
 ## [4.75.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.75.0) - 2026-11-13
 
 ### Features

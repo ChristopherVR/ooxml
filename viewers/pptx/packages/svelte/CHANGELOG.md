@@ -7,6 +7,23 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.76.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.76.0) - 2026-11-13
+
+### Features
+
+- **svelte:** Highlight the matched find text on the canvas ([0383ab4](https://github.com/ChristopherVR/ooxml/commit/0383ab407950450bd45bdace54b9d795d1fecb54))
+- **svelte:** Report shell state and lock trust options in the blocks ([bf9c50d](https://github.com/ChristopherVR/ooxml/commit/bf9c50de79b9d270beca71dc1030e4736e5ec91f))
+- **svelte:** Contain element render errors per element ([e0fbd3c](https://github.com/ChristopherVR/ooxml/commit/e0fbd3c8a95ecc6c2e9366827dff66ea5e256a80))
+
+### Testing
+
+- **shared:** Prove shell state, collaboration and live options in blocks ([b26b465](https://github.com/ChristopherVR/ooxml/commit/b26b4656dd1520992f33da6d67cf7c5dffcab39d))
+- **shared:** Add the element render error parity contract ([4781f2f](https://github.com/ChristopherVR/ooxml/commit/4781f2fe6d34356cb233d8d4211bcc751b9ab613))
+
+### Styling
+
+- **pptx:** Format the parity and render containment changes ([9385503](https://github.com/ChristopherVR/ooxml/commit/93855030363b6c1f2471f1082416c2764216183c))
+
 ## [4.75.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.75.0) - 2026-11-13
 
 ### Features
