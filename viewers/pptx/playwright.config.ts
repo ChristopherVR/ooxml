@@ -162,6 +162,8 @@ export default defineConfig({
 		},
 		{
 			name: 'vue',
+			// Has the `?blocks=1` building-blocks page (`e2e/pptx/building-blocks.spec.ts`).
+			metadata: { buildingBlocks: true },
 			use: { ...devices['Desktop Chrome'], baseURL: `http://localhost:${VUE_PORT}` },
 		},
 		{

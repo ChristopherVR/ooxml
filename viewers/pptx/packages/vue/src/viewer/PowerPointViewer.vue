@@ -86,6 +86,7 @@ import type {
 } from 'pptx-viewer-core';
 import {
 	computed,
+	inject,
 	onBeforeUnmount,
 	onMounted,
 	provide,
@@ -96,6 +97,8 @@ import {
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { BuildingBlocksBridgeKey } from '../building-blocks/bridge';
+import { useBuildingBlocksEngine } from '../building-blocks/engine';
 import { provideViewerTheme, useThemeStyle } from '../theme';
 import AutosaveRecoveryDialog from './components/AutosaveRecoveryDialog.vue';
 import CollaborationStatusIndicator from './components/CollaborationStatusIndicator.vue';
@@ -2095,6 +2098,74 @@ const exposedHandle: PowerPointViewerExpose = {
 	...customization.api,
 };
 defineExpose<PowerPointViewerExpose>(exposedHandle);
+// Inside a building-blocks canvas the viewer's dialogs become host requests (see `building-blocks`).
+const blocksBridge = inject(BuildingBlocksBridgeKey, null);
+if (blocksBridge) {
+	useBuildingBlocksEngine(blocksBridge, {
+		t: (key) => t(key),
+		slides,
+		mergedSlides,
+		activeSlide,
+		activeSlideIndex,
+		slideCount,
+		canvasSize,
+		mediaDataUrls,
+		loading,
+		error,
+		handler,
+		layoutOptions: deck.layoutOptions,
+		selectedElements,
+		ops,
+		insertion,
+		insertDialogs,
+		hyperlink,
+		find,
+		findOpen,
+		mode: ribbonMode,
+		canEdit: canEditEffective,
+		canEditBase: () =>
+			cloudView.value.canEdit &&
+			editingRequested.value &&
+			isEditingAllowed(customization.resolved.value) &&
+			!collaborationReadOnly.value,
+		canInsert: () => !protectedViewActive.value && !readOnlyRec.locked.value,
+		presenting: presentation.presenting,
+		showMasterView: masterView.showMasterView,
+		history,
+		isDirty: autosave.isDirty,
+		goPrev,
+		goNext,
+		zoomIn,
+		zoomOut,
+		zoomReset,
+		password,
+		readOnlyRecommendation: readOnlyRec.recommendation,
+		modifyVerifier,
+		customProperties,
+		coreProperties,
+		appProperties,
+		documentProperties,
+		deckActions,
+		fontEmbedding,
+		signatureWorkflow,
+		signatures,
+		activeContent,
+		slideShow,
+		presentationProperties,
+		customShows,
+		customShowsWiring,
+		broadcastOpen: collaboration.broadcastOpen,
+		showShortcuts,
+		slideOps,
+		sectionOps,
+		hasSections,
+		toggleSlideHidden,
+		headerFooter,
+		firstSlideNumber: deck.firstSlideNumber,
+		theme: pptxTheme,
+		tableStyleMap,
+	});
+}
 // Host region renderers (`customization.regions`) read this base context.
 provide(
 	ViewerRegionBaseKey,
@@ -2337,7 +2408,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 
 			<!-- Find & replace bar -->
 			<FindReplaceBar
-				v-if="canEditEffective && findOpen && panelVisible('findReplace')"
+				v-if="canEditEffective && findOpen && panelVisible('findReplace') && !blocksBridge"
 				v-model:query="find.query.value"
 				v-model:replacement="find.replacement.value"
 				v-model:match-case="find.matchCase.value"
@@ -2627,7 +2698,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 				:version-history="versionHistoryWiring"
 				:printer="printer"
 				:header-footer-dialog="headerFooterDialog"
-				:show-shortcuts="showShortcuts"
+				:show-shortcuts="showShortcuts && !blocksBridge"
 				:on-close-shortcuts="() => (showShortcuts = false)"
 				:show-settings="showSettings && dialogAvailable('options')"
 				:on-close-settings="() => (showSettings = false)"

@@ -123,7 +123,7 @@ The names follow docx, xlsx and visio.
 | ------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | React   | `useViewerBuildingBlocks(input)` returning `{ toolbarProps, canvasProps, slidesPaneProps, actions, mode, loading, error }` | `Toolbar` (full ribbon), `SlideCanvas`, `SlidesPane`, `SlideThumbnail`                                     | existing `packages/react/src/viewer/hooks/useViewerBuildingBlocks*.ts` |
 | Vanilla | `createViewerBuildingBlocks(options)` returning `ViewerBuildingBlocks`                                                     | `mountCanvas(host)`, `mountToolbar(host, groups?)`, `mountSlidesPane(host)`                                | `packages/vanilla/src/building-blocks/`                                |
-| Vue     | `useViewerBuildingBlocks(options: MaybeRefOrGetter<ViewerBuildingBlocksOptions>)` composable                               | `<SlideCanvas>`, `<BuildingBlocksToolbar>`, `<SlidesPane>` components taking the composable's result       | `packages/vue/src/building-blocks/`                                    |
+| Vue     | `useViewerBuildingBlocks(options: MaybeRefOrGetter<ViewerBuildingBlocksOptions>)` composable                               | `<BuildingBlocksCanvas>`, `<BuildingBlocksToolbar>`, `<BuildingBlocksSlidesPane>` components taking the composable's result (`blocks`); `SlideCanvas` and `SlidesPane` are already exported low-level Vue components       | `packages/vue/src/building-blocks/`                                    |
 | Svelte  | `createViewerBuildingBlocks(() => options)` returning an object with runes-backed getters (`.actions`, `.state`)           | `SlideCanvas.svelte`, `BuildingBlocksToolbar.svelte`, `SlidesPane.svelte` taking `blocks`                  | `packages/svelte/src/building-blocks/`                                 |
 | Angular | `ViewerBuildingBlocks` injectable plus `createViewerBuildingBlocks(() => options)`; `actions()` and `state()` are signals  | `pptx-slide-canvas`, `pptx-building-blocks-toolbar`, `pptx-slides-pane` standalone components (`[blocks]`) | `packages/angular/src/building-blocks/`, exported from `public-api.ts` |
 
@@ -238,8 +238,8 @@ taking permission away again, and for compact-toolbar ports the block markers an
 
 The browser side is `e2e/pptx/building-blocks.spec.ts`: it drives each demo's `?blocks=1` page
 (the binding's own blocks plus the shared host panel) for every project with
-`metadata.buildingBlocks`, today React and vanilla. Run it with
-`PPTX_E2E_PORT_OFFSET=500 bun run e2e -- --project=react --project=vanilla building-blocks.spec.ts`
+`metadata.buildingBlocks`, today React, vanilla and Vue. Run it with
+`PPTX_E2E_PORT_OFFSET=500 bun run e2e -- --project=react --project=vanilla --project=vue building-blocks.spec.ts`
 in `viewers/pptx`. `e2e/pptx/host-owned-*.spec.ts` keep covering React's collaboration-room shell.
 
 ## Known gaps

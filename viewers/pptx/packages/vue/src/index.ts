@@ -192,3 +192,21 @@ export type { SavedPresentationFormat } from 'ooxml-ui/pptx';
 // theme tokens are authored in). React and Angular have always exported this;
 // the other three did not, which is the asymmetry this closes.
 export { renderToCanvas } from './lib/canvas-export';
+
+// ── Building blocks: compose your own shell from the canvas, toolbar and slides pane ──
+export {
+	BuildingBlocksCanvas,
+	BuildingBlocksSlidesPane,
+	BuildingBlocksToolbar,
+	useViewerBuildingBlocks,
+} from './building-blocks';
+export type {
+	ViewerBuildingBlocks,
+	ViewerBuildingBlocksOptions,
+	ViewerBuildingBlocksState,
+} from './building-blocks';
+export type {
+	BuildingBlockRequest,
+	BuildingBlockResult,
+	ViewerBuildingBlockActions,
+} from 'ooxml-ui/pptx';

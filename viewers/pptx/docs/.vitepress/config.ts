@@ -409,6 +409,7 @@ export default defineConfig({
 						{ text: 'Getting Started', link: '/vue/getting-started' },
 						{ text: 'Component Props', link: '/vue/props' },
 						{ text: 'Imperative Handle', link: '/vue/handle' },
+						{ text: 'Building Blocks', link: '/vue/building-blocks' },
 					],
 				},
 				{
