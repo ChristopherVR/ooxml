@@ -1564,6 +1564,8 @@ export * from './transition-template-elements';
 // Ordered + capped element composition for slide previews / sidebar thumbnails,
 // mirroring `buildSaveSlides` (template elements first, then slide-owned).
 export * from './preview-elements';
+// Per-element render error containment: the report payload, the safe reporter, the retry key.
+export * from './element-render-error';
 // Insert > Shape picker catalogue: preset geometry types + labels/i18n keys +
 // framework-neutral glyph descriptors; each binding maps glyphs to its icons.
 export * from './shape-preset-catalog';

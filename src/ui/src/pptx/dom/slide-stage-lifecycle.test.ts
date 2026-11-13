@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createTranslator } from '../i18n/translator';
 import { ensureBarFacePicturePixelSampled } from '../render/chart-bar3d-face-picture-sample';
 import { releasePptxRenderCaches } from '../render/render-cache-lifecycle';
@@ -63,7 +63,7 @@ describe('slide stage disposal', () => {
 		expect(live.querySelector('svg')).not.toBe(liveSvg);
 	});
 
-	it('cleans up charts constructed inside a group when a later renderer throws', async () => {
+	it('cleans up charts constructed inside a group whose renderer then throws', async () => {
 		const opts = options();
 		let orphan: HTMLElement | null = null;
 		const renderChart = opts.registry.resolve('chart');
@@ -71,9 +71,12 @@ describe('slide stage disposal', () => {
 			orphan = renderChart(...args) as HTMLElement;
 			return orphan;
 		});
-		opts.registry.register('shape', () => {
+		const renderGroup = opts.registry.resolve('group');
+		opts.registry.register('group', (...args) => {
+			renderGroup(...args);
 			throw new Error('host renderer failed');
 		});
+		const log = vi.spyOn(console, 'error').mockImplementation(() => {});
 		opts.slide = {
 			...slide,
 			elements: [
@@ -84,11 +87,19 @@ describe('slide stage disposal', () => {
 					y: 0,
 					width: 800,
 					height: 600,
-					children: [chart, { type: 'shape', id: 'error', x: 0, y: 0, width: 1, height: 1 }],
+					children: [chart],
 				},
 			],
 		};
-		expect(() => renderSlideStage(opts)).toThrow('host renderer failed');
+		// The failed group alone is omitted (and reported); the stage still renders.
+		const stage = renderSlideStage(opts);
+		mounted.add(stage);
+		expect(stage.querySelector('[data-element-id="group"]')).toBeNull();
+		expect(log).toHaveBeenCalledWith(
+			expect.any(Error),
+			expect.objectContaining({ elementId: 'group' }),
+		);
+		log.mockRestore();
 		expect(orphan).not.toBeNull();
 		const node = orphan! as HTMLElement;
 		mounted.add(node);

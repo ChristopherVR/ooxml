@@ -21,6 +21,7 @@ import type {
 import {
 	actionAffordanceLabels,
 	applyElementActionAffordances,
+	guardElementRender,
 	applyRenderedElementAccessibility,
 	deviceStrokeStageStyle,
 	elementHitTargetStyle,
@@ -31,6 +32,7 @@ import {
 	shouldRenderHitTarget,
 	stripElementIdMarkers,
 } from '../index';
+import type { ElementRenderErrorHandler, ElementRenderFailures } from '../index';
 
 import type { Translator } from '../i18n/translator';
 import { buildActiveXControlsOverlay } from './activex-controls-overlay';
@@ -140,6 +142,16 @@ export interface SlideStageOptions {
 	 * build, `p:animClr` fill / stroke) in place without rebuilding the stage.
 	 */
 	captureContext?: (context: ElementRenderContext) => void;
+	/**
+	 * Reports an element omitted because its renderer threw (`console.error` when absent). The
+	 * failed element renders nothing; its neighbours and the stage still render.
+	 */
+	onElementRenderError?: ElementRenderErrorHandler;
+	/**
+	 * Failures remembered across rebuilds of the same surface, so an unchanged failed element is
+	 * neither retried nor reported again on every repaint (`createElementRenderFailures`).
+	 */
+	elementRenderFailures?: ElementRenderFailures;
 }
 
 /**
@@ -227,7 +239,23 @@ export function renderSlideStage(options: SlideStageOptions): HTMLElement {
 			if (!isElementRendered(element)) {
 				return null;
 			}
-			const node = registry.resolve(element.type)(element, zIndex, context);
+			// One element's failure omits only that element (group children included): the
+			// stage, its neighbours and the canvas stay.
+			const before = renderedNodes?.length ?? 0;
+			const node = guardElementRender(
+				element,
+				() => registry.resolve(element.type)(element, zIndex, context),
+				{
+					slideId: slide.id,
+					onElementRenderError: options.onElementRenderError,
+					failures: options.elementRenderFailures,
+					onFailure: () => {
+						for (const orphan of renderedNodes?.splice(before) ?? []) {
+							disposeChartPixelSubscriptions(orphan);
+						}
+					},
+				},
+			);
 			if (node) renderedNodes?.push(node);
 			if (node && interactive && 'setAttribute' in node) {
 				// The element marker means "rendered slide element carrying the
