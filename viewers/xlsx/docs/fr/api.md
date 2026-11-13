@@ -185,6 +185,224 @@ editor.fileProviders = [
 ];
 ```
 
+## Menus et flux de travail gérés par l’hôte {#host-menus-and-workflows}
+
+Une surface gérée par l’hôte (les [blocs de construction](/fr/building-blocks), ou `<xlsx-editor>` avec `surfaceOnly` et `surfaceActions`) n’a pas de menus contextuels ni de boîtes de dialogue propres pour Format de cellule, Rechercher et remplacer ou Insérer une fonction. L’hôte les dessine à l’aide des callbacks ci-dessous ou des opérations de `toolbarProps`. Le comportement est décrit dans [Menus contextuels et opérations de flux](/fr/building-blocks#context-menus-and-workflow-operations) ; cette section donne les types et les conditions de refus.
+
+Les callbacks se définissent dans `surfaceActions` ou se passent comme options à `useViewerBuildingBlocks`, `createViewerBuildingBlocks` et `mountEditorSurface`.
+
+### Callbacks de menu contextuel {#context-menu-callbacks}
+
+```ts
+onContextMenu?: (request: ContextMenuRequest) => boolean | void;
+onContextMenuItems?: (request: ContextMenuRequest) => ContextMenuCustomization | void;
+```
+
+`onContextMenu` s’exécute lors d’un clic droit ou de Maj+F10 sur une cellule, un en-tête de ligne, un en-tête de colonne ou un onglet de feuille. Renvoyez `true` pour supprimer le menu natif et dessiner le vôtre ; toute autre valeur affiche le menu natif. `onContextMenuItems` ne s’exécute que lorsque `onContextMenu` n’a pas renvoyé `true`. Il filtre et étend le menu natif, qui reste dessiné par Excel.
+
+```ts
+type ContextMenuKind = 'cell' | 'row' | 'column' | 'tab';
+
+interface SurfaceActionContext {
+	sheet: number;
+	sheetName: string;
+	selection: string; // texte A1
+	activeCell: string; // texte A1
+}
+
+interface ContextMenuItem {
+	id: string;
+	label: string; // localisé
+	command?: string;
+	enabled: boolean;
+	checked?: boolean;
+	shortcut?: string;
+	separatorBefore?: boolean;
+}
+
+interface ContextMenuModel extends SurfaceActionContext {
+	menu: ContextMenuKind;
+	menuSheet: number; // l’onglet cliqué pour 'tab', sinon la feuille active
+	readOnly: boolean;
+	items: ContextMenuItem[];
+	execute(id: string): Promise<boolean>;
+}
+
+interface ContextMenuRequest extends ContextMenuModel {
+	x: number; // coordonnées client du clic droit
+	y: number;
+}
+
+interface HostContextMenuItem {
+	id: string; // unique parmi les éléments de l’hôte d’un menu ; un identifiant vide ou répété est ignoré
+	label: string;
+	enabled?: boolean | (() => boolean); // une fonction est réévaluée à l’exécution de l’élément
+	requiresEdit?: boolean; // désactivé, et refusé à l’exécution, dans un classeur en lecture seule
+	checked?: boolean;
+	separatorBefore?: boolean;
+	position?: 'top' | 'bottom'; // 'top' par défaut
+	onSelect(request: ContextMenuRequest): void | Promise<void>;
+}
+
+interface ContextMenuCustomization {
+	hide?: readonly string[]; // identifiants des éléments natifs de request.items
+	add?: readonly HostContextMenuItem[];
+}
+```
+
+`request.execute(id)` résout `true` lorsque l’élément a été exécuté. Elle résout `false` lorsque la modification de cellule en cours ne passe pas la validation (la modification reste ouverte), lorsque `id` ne figure pas dans `items`, ou lorsque l’élément ne peut pas être exécuté à cet instant (lecture seule, protection de feuille, ou commande indisponible sur la surface). Un menu d’onglet active d’abord sa feuille. Les éléments de l’hôte de `onContextMenuItems` exécutent `onSelect(request)` après la fermeture du menu, sauf s’ils sont désactivés entre-temps.
+
+### toolbarProps.contextMenu {#toolbarprops-contextmenu}
+
+```ts
+contextMenu(menu: ContextMenuKind, sheet?: number): ContextMenuModel;
+```
+
+Renvoie le même modèle sans clic droit, par exemple pour un hôte qui dessine ses propres onglets de feuille ou sa barre d’outils. `sheet` vaut par défaut la feuille active et désigne l’onglet concerné par un menu `'tab'`. Les commandes indisponibles sur la surface figurent avec `enabled: false`. Format de cellule est activé lorsque `onOpenFormatCells` est installé et que le classeur est modifiable. Les entrées qui exécutent une action de la barre d’onglets intégrée, comme Renommer, figurent désactivées.
+
+### Callbacks de flux {#workflow-callbacks}
+
+```ts
+onOpenFormatCells?: (request: FormatCellsRequest) => void;
+onOpenFindReplace?: (request: FindReplaceRequest) => void;
+onOpenInsertFunction?: (request: InsertFunctionRequest) => void;
+
+interface FormatCellsRequest extends SurfaceActionContext, FormatCellsOperations {}
+interface FindReplaceRequest extends SurfaceActionContext, FindOperations {}
+interface InsertFunctionRequest extends SurfaceActionContext, InsertFunctionOperations {}
+```
+
+Chaque requête contient le contexte ci-dessus plus les opérations de ce flux, décrites plus bas. Le callback ne s’exécute que si le flux est disponible : Format de cellule et Insérer une fonction exigent les droits de modification, Rechercher et remplacer non. La modification de cellule en attente est d’abord validée. Les fonctions `onOpen*` de `toolbarProps` renvoient un `Promise<boolean>`, valant `false` lorsque le callback manque, que les droits de modification manquent ou que la modification en attente ne passe pas la validation.
+
+### toolbarProps.workflows {#toolbarprops-workflows}
+
+`toolbarProps.workflows` expose les mêmes opérations sans callback, donc un panneau toujours ouvert n’a pas besoin de callback `onOpen*`. Chaque opération relit l’état de lecture seule, la protection de feuille et la modification de cellule en attente au moment de son exécution.
+
+#### Format de cellule {#format-cells-operations}
+
+```ts
+interface FormatCellsOperations {
+	getState(): FormatCellsState;
+	canApply(): boolean;
+	apply(patch: StylePatch): boolean;
+}
+
+interface FormatAspect<T> {
+	value: T; // les propriétés sur lesquelles toutes les cellules examinées s’accordent
+	mixed: string[]; // les noms des propriétés qui diffèrent
+}
+
+interface FormatCellsState {
+	font: FormatAspect<Font>;
+	alignment: FormatAspect<Alignment>;
+	border: FormatAspect<Border>;
+	protection: FormatAspect<Protection>;
+	numFmt: string | null; // null lorsque la sélection mélange des formats
+	fill: Fill | null; // null lorsque la sélection mélange des remplissages
+	complete: boolean; // false lorsque la sélection compte plus de 4096 cellules
+}
+```
+
+- `getState()` renvoie la mise en forme de la sélection. Lorsque `complete` vaut `false`, les listes de propriétés mixtes sont partielles.
+- `canApply()` vaut true lorsque le classeur est modifiable et que la protection de feuille autorise la mise en forme.
+- `apply(patch)` applique un `StylePatch` à la sélection en une seule étape d’annulation. Il renvoie `false`, sans rien modifier, lorsque `canApply()` vaut `false` ou que la modification de cellule en attente ne passe pas la validation.
+
+#### Rechercher et remplacer {#find-and-replace-operations}
+
+```ts
+interface FindQuery {
+	text: string;
+	sheet?: number;
+	range?: CellRange; // uniquement avec sheet
+	matchCase?: boolean;
+	wholeCell?: boolean;
+	lookIn?: 'formulas' | 'values' | 'comments';
+	wildcards?: boolean; // true par défaut
+	order?: 'rows' | 'columns';
+}
+
+interface FindMatch {
+	sheet: number;
+	row: number;
+	col: number;
+	text: string;
+}
+
+interface FindOperations {
+	canReplace(): boolean;
+	findAll(query: FindQuery): FindMatch[];
+	findNext(query: FindQuery, options?: { backwards?: boolean }): FindMatch | undefined;
+	select(match: FindMatch): boolean;
+	replace(query: FindQuery, replacement: string): boolean;
+	replaceAll(query: FindQuery, replacement: string): number;
+}
+```
+
+- `canReplace()` vaut true lorsque le classeur est modifiable. La recherche n’exige jamais de droits de modification.
+- `findAll(query)` renvoie toutes les correspondances et fonctionne dans un classeur en lecture seule. Il renvoie `[]` pour un `text` vide, ou lorsque l’éditeur n’est pas connecté ou charge encore.
+- `findNext(query, { backwards })` sélectionne la correspondance suivante (ou précédente) après la cellule active, en reprenant au début si besoin. Il renvoie `undefined` lorsqu’il n’y a pas de correspondance ou que la modification de cellule en attente ne passe pas la validation.
+- `select(match)` sélectionne une correspondance issue de `findAll`. Il renvoie `false` lorsque l’éditeur n’est pas prêt ou que la feuille n’existe pas.
+- `replace(query, replacement)` remplace la correspondance de la cellule active, s’il y en a une, puis sélectionne la suivante. Il renvoie `true` uniquement si une cellule a été remplacée. Il renvoie `false` lorsque le classeur est en lecture seule, que la modification en attente ne passe pas la validation, ou que la cellule active est une cellule verrouillée d’une feuille protégée. Comme le Remplacer d’Excel, il n’applique pas la validation des données.
+- `replaceAll(query, replacement)` renvoie le nombre de cellules modifiées. Il renvoie `0` lorsque le classeur est en lecture seule ou que la modification en attente ne passe pas la validation. Les cellules verrouillées par la protection de feuille sont ignorées. La validation des données n’est pas appliquée.
+
+#### Insérer une fonction {#insert-function-operations}
+
+```ts
+interface FunctionDoc {
+	name: string;
+	category: string;
+	syntax: string; // par exemple SUM(number1, [number2], ...)
+	description: string; // localisé
+}
+
+interface InsertFunctionOperations {
+	categories(): string[];
+	search(options?: { text?: string; category?: 'all' | 'recent' | string }): FunctionDoc[];
+	canInsert(): boolean;
+	insert(name: string, args?: string): { text: string; caret: number } | undefined;
+}
+```
+
+- `categories()` renvoie les noms de catégories distincts, triés.
+- `search(options)` compare `text` d’abord au nom, puis aux mots de la description. `category` vaut `'all'` (par défaut), `'recent'` pour les fonctions utilisées récemment, ou un nom de catégorie.
+- `canInsert()` vaut true lorsque le classeur est modifiable.
+- `insert(name, args?)` insère `NAME(`, ou `NAME(args)` lorsque `args` est fourni, au point d’insertion du brouillon de formule ouvert. Si aucun brouillon n’est ouvert, il démarre `=NAME(`. L’insertion ne se fait jamais avant le `=` initial. Il renvoie le `text` et le `caret` du brouillon après l’insertion, pour que la saisie puisse continuer à partir de là. Il renvoie `undefined`, sans rien modifier, lorsque le classeur est en lecture seule, que `name` n’est pas une fonction documentée, ou que le brouillon ouvert est du texte brut (il ne commence pas par `=`).
+
+### Indicateurs toolbarProps.enabled {#toolbarprops-enabled}
+
+| Indicateur           | Vrai lorsque                                                                                                                                    |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `contextMenu`        | `onContextMenu` est installé et l’éditeur est connecté.                                                                                         |
+| `find`               | L’éditeur est connecté, chargé et dispose d’une session. Aucun droit de modification requis.                                                    |
+| `replace`            | Le classeur est modifiable (`workflows.find.canReplace()`).                                                                                     |
+| `applyFormatCells`   | La mise en forme peut être appliquée maintenant : classeur modifiable et protection de feuille autorisant (`workflows.formatCells.canApply()`). |
+| `insertFunctionCall` | Le classeur est modifiable (`workflows.insertFunction.canInsert()`).                                                                            |
+| `formatCells`        | `onOpenFormatCells` est installé et le classeur est modifiable.                                                                                 |
+| `findReplace`        | `onOpenFindReplace` est installé.                                                                                                               |
+| `insertFunction`     | `onOpenInsertFunction` est installé et le classeur est modifiable.                                                                              |
+
+Les indicateurs sont calculés pour chaque instantané de `toolbarProps`. Chaque opération revérifie son état au moment de son exécution.
+
+### Exemple {#host-menus-and-workflows-example}
+
+```tsx
+import { useViewerBuildingBlocks } from '@christophervr/xlsx-react-viewer';
+
+const { toolbarProps } = useViewerBuildingBlocks({
+	workbook,
+	canEdit: true,
+	onContextMenu(request) {
+		if (request.menu !== 'cell') return; // les en-têtes et les onglets gardent le menu natif
+		showMyMenu(request.x, request.y, request.items, (id) => request.execute(id));
+		return true; // supprime le menu natif
+	},
+	onOpenFindReplace: ({ findAll, select }) => showFindPanel({ findAll, select }),
+});
+
+// Plus tard, depuis un panneau à vous (toolbarProps est null tant que la zone n’est pas montée) :
+toolbarProps?.workflows.formatCells.apply({ font: { bold: true } });
+```
+
 ## Parties shadow
 
 L’élément expose ses régions sous forme de parties shadow CSS, pour les styler avec `xlsx-editor::part(grid)` et pour les tests : `ribbon`, `name-box`, `formula-bar`, `grid`, `sheet-tabs`, `status-bar`, `title-bar`, `backstage` et `page-layout` (vue Mise en page).

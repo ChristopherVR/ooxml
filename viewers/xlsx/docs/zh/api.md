@@ -159,6 +159,224 @@ editor.fileProviders = [
 ];
 ```
 
+## 宿主自有的菜单与工作流 {#host-menus-and-workflows}
+
+由宿主掌控的表面（[构建模块](/zh/building-blocks)，或设置了 `surfaceOnly` 和 `surfaceActions` 的 `<xlsx-editor>`）没有自己的右键菜单，也没有设置单元格格式、查找和替换或插入函数对话框。宿主通过下面的回调，或通过 `toolbarProps` 上的操作来绘制它们。行为说明见 [上下文菜单和工作流操作](/zh/building-blocks#context-menus-and-workflow-operations)；本节列出类型和拒绝执行的条件。
+
+回调可以在 `surfaceActions` 上设置，也可以作为选项传给 `useViewerBuildingBlocks`、`createViewerBuildingBlocks` 和 `mountEditorSurface`。
+
+### 上下文菜单回调 {#context-menu-callbacks}
+
+```ts
+onContextMenu?: (request: ContextMenuRequest) => boolean | void;
+onContextMenuItems?: (request: ContextMenuRequest) => ContextMenuCustomization | void;
+```
+
+在单元格、行标题、列标题或工作表标签上右键单击，或按 Shift+F10 时，会运行 `onContextMenu`。返回 `true` 可抑制原生菜单并绘制自己的菜单；返回其他值则显示原生菜单。只有当 `onContextMenu` 没有返回 `true` 时，才会运行 `onContextMenuItems`。它用于过滤和扩展原生菜单，原生菜单仍由表面绘制。
+
+```ts
+type ContextMenuKind = 'cell' | 'row' | 'column' | 'tab';
+
+interface SurfaceActionContext {
+	sheet: number;
+	sheetName: string;
+	selection: string; // A1 文本
+	activeCell: string; // A1 文本
+}
+
+interface ContextMenuItem {
+	id: string;
+	label: string; // 本地化
+	command?: string;
+	enabled: boolean;
+	checked?: boolean;
+	shortcut?: string;
+	separatorBefore?: boolean;
+}
+
+interface ContextMenuModel extends SurfaceActionContext {
+	menu: ContextMenuKind;
+	menuSheet: number; // 'tab' 时为被点击的标签，否则为活动工作表
+	readOnly: boolean;
+	items: ContextMenuItem[];
+	execute(id: string): Promise<boolean>;
+}
+
+interface ContextMenuRequest extends ContextMenuModel {
+	x: number; // 右键单击的客户端坐标
+	y: number;
+}
+
+interface HostContextMenuItem {
+	id: string; // 在同一菜单的宿主项中须唯一；空或重复的 id 会被忽略
+	label: string;
+	enabled?: boolean | (() => boolean); // 函数会在项目运行时重新求值
+	requiresEdit?: boolean; // 只读工作簿中禁用，运行时也会被拒绝
+	checked?: boolean;
+	separatorBefore?: boolean;
+	position?: 'top' | 'bottom'; // 默认 'top'
+	onSelect(request: ContextMenuRequest): void | Promise<void>;
+}
+
+interface ContextMenuCustomization {
+	hide?: readonly string[]; // request.items 中的原生项 id
+	add?: readonly HostContextMenuItem[];
+}
+```
+
+`request.execute(id)` 在项目已运行时解析为 `true`。以下情况解析为 `false`：正在进行的单元格编辑未通过验证（编辑保持打开）；`id` 不在 `items` 中；或该项此时无法运行（只读、工作表保护，或表面中不可用的命令）。工作表标签菜单会先激活其工作表。来自 `onContextMenuItems` 的宿主项在菜单关闭后运行 `onSelect(request)`，除非到那时已被禁用。
+
+### toolbarProps.contextMenu {#toolbarprops-contextmenu}
+
+```ts
+contextMenu(menu: ContextMenuKind, sheet?: number): ContextMenuModel;
+```
+
+在不发生右键单击的情况下返回同一模型，适用于绘制自己工作表标签或工具栏的宿主。`sheet` 默认为活动工作表，也是 `'tab'` 菜单所对应的标签。表面中不可用的命令会以 `enabled: false` 列出。当安装了 `onOpenFormatCells` 且工作簿可编辑时，“设置单元格格式”为可用。运行内置工作表标签操作（例如重命名）的条目会以禁用状态列出。
+
+### 工作流回调 {#workflow-callbacks}
+
+```ts
+onOpenFormatCells?: (request: FormatCellsRequest) => void;
+onOpenFindReplace?: (request: FindReplaceRequest) => void;
+onOpenInsertFunction?: (request: InsertFunctionRequest) => void;
+
+interface FormatCellsRequest extends SurfaceActionContext, FormatCellsOperations {}
+interface FindReplaceRequest extends SurfaceActionContext, FindOperations {}
+interface InsertFunctionRequest extends SurfaceActionContext, InsertFunctionOperations {}
+```
+
+每个请求包含上述上下文，以及该工作流的操作（见下文）。只有工作流可用时才会运行回调：设置单元格格式和插入函数需要编辑权限，查找和替换则不需要。运行前会先提交正在进行的单元格编辑。`toolbarProps` 上的 `onOpen*` 函数返回 `Promise<boolean>`，当回调缺失、缺少编辑权限或正在进行的编辑未通过验证时为 `false`。
+
+### toolbarProps.workflows {#toolbarprops-workflows}
+
+`toolbarProps.workflows` 提供相同的操作但不需要回调，因此一直打开的面板无需 `onOpen*` 回调。每个操作在运行时都会重新读取只读状态、工作表保护和正在进行的单元格编辑。
+
+#### 设置单元格格式 {#format-cells-operations}
+
+```ts
+interface FormatCellsOperations {
+	getState(): FormatCellsState;
+	canApply(): boolean;
+	apply(patch: StylePatch): boolean;
+}
+
+interface FormatAspect<T> {
+	value: T; // 所有被检查单元格一致的属性
+	mixed: string[]; // 存在差异的属性名
+}
+
+interface FormatCellsState {
+	font: FormatAspect<Font>;
+	alignment: FormatAspect<Alignment>;
+	border: FormatAspect<Border>;
+	protection: FormatAspect<Protection>;
+	numFmt: string | null; // 选区混合了多种格式时为 null
+	fill: Fill | null; // 选区混合了多种填充时为 null
+	complete: boolean; // 选区超过 4096 个单元格时为 false
+}
+```
+
+- `getState()` 返回选区的格式。当 `complete` 为 `false` 时，混合属性列表是不完整的。
+- `canApply()` 在工作簿可编辑且工作表保护允许设置格式时为 true。
+- `apply(patch)` 将一个 `StylePatch` 作为单个撤销步骤应用到选区。当 `canApply()` 为 `false` 或正在进行的单元格编辑未通过验证时返回 `false`，且不做任何更改。
+
+#### 查找和替换 {#find-and-replace-operations}
+
+```ts
+interface FindQuery {
+	text: string;
+	sheet?: number;
+	range?: CellRange; // 仅与 sheet 一起使用
+	matchCase?: boolean;
+	wholeCell?: boolean;
+	lookIn?: 'formulas' | 'values' | 'comments';
+	wildcards?: boolean; // 默认 true
+	order?: 'rows' | 'columns';
+}
+
+interface FindMatch {
+	sheet: number;
+	row: number;
+	col: number;
+	text: string;
+}
+
+interface FindOperations {
+	canReplace(): boolean;
+	findAll(query: FindQuery): FindMatch[];
+	findNext(query: FindQuery, options?: { backwards?: boolean }): FindMatch | undefined;
+	select(match: FindMatch): boolean;
+	replace(query: FindQuery, replacement: string): boolean;
+	replaceAll(query: FindQuery, replacement: string): number;
+}
+```
+
+- `canReplace()` 在工作簿可编辑时为 true。查找从不需要编辑权限。
+- `findAll(query)` 返回所有匹配项，在只读工作簿中也可用。当 `text` 为空，或编辑器未连接或正在加载时，返回 `[]`。
+- `findNext(query, { backwards })` 选中活动单元格之后的下一个（或上一个）匹配项，并在必要时回绕。没有匹配项或正在进行的单元格编辑未通过验证时返回 `undefined`。
+- `select(match)` 选中 `findAll` 返回的匹配项。编辑器未就绪或工作表不存在时返回 `false`。
+- `replace(query, replacement)` 替换活动单元格中的匹配项（如果有），并选中下一个匹配项。只有在确实替换了一个单元格时才返回 `true`。工作簿为只读、正在进行的编辑未通过验证，或活动单元格是受保护工作表中的锁定单元格时，返回 `false`。与 Excel 自身的替换一样，它不应用数据验证。
+- `replaceAll(query, replacement)` 返回被更改的单元格数量。工作簿为只读或正在进行的编辑未通过验证时返回 `0`。被工作表保护锁定的单元格会被跳过。不应用数据验证。
+
+#### 插入函数 {#insert-function-operations}
+
+```ts
+interface FunctionDoc {
+	name: string;
+	category: string;
+	syntax: string; // 例如 SUM(number1, [number2], ...)
+	description: string; // 本地化
+}
+
+interface InsertFunctionOperations {
+	categories(): string[];
+	search(options?: { text?: string; category?: 'all' | 'recent' | string }): FunctionDoc[];
+	canInsert(): boolean;
+	insert(name: string, args?: string): { text: string; caret: number } | undefined;
+}
+```
+
+- `categories()` 返回去重并排序后的类别名称。
+- `search(options)` 先将 `text` 与名称比对，再与说明中的词语比对。`category` 可以是 `'all'`（默认）、`'recent'`（最近使用的函数）或某个类别名称。
+- `canInsert()` 在工作簿可编辑时为 true。
+- `insert(name, args?)` 在已打开的公式草稿的插入点插入 `NAME(`；若给出 `args`，则插入 `NAME(args)`。若没有打开的草稿，则新建 `=NAME(`。插入位置永远不会在开头的 `=` 之前。它返回插入后草稿的 `text` 和 `caret`，便于输入从那里继续。工作簿为只读、`name` 不是已记录的函数，或打开的草稿是纯文本（不以 `=` 开头）时，返回 `undefined` 且不做任何更改。
+
+### toolbarProps.enabled 标志 {#toolbarprops-enabled}
+
+| 标志                 | 为 true 的条件                                                                         |
+| -------------------- | -------------------------------------------------------------------------------------- |
+| `contextMenu`        | 已安装 `onContextMenu` 且编辑器已连接。                                                |
+| `find`               | 编辑器已连接、已加载并有会话。不需要编辑权限。                                         |
+| `replace`            | 工作簿可编辑（`workflows.find.canReplace()`）。                                        |
+| `applyFormatCells`   | 现在可以设置格式：工作簿可编辑且工作表保护允许（`workflows.formatCells.canApply()`）。 |
+| `insertFunctionCall` | 工作簿可编辑（`workflows.insertFunction.canInsert()`）。                               |
+| `formatCells`        | 已安装 `onOpenFormatCells` 且工作簿可编辑。                                            |
+| `findReplace`        | 已安装 `onOpenFindReplace`。                                                           |
+| `insertFunction`     | 已安装 `onOpenInsertFunction` 且工作簿可编辑。                                         |
+
+每个 `toolbarProps` 快照都会计算这些标志。每个操作在运行时都会重新检查其状态。
+
+### 示例 {#host-menus-and-workflows-example}
+
+```tsx
+import { useViewerBuildingBlocks } from '@christophervr/xlsx-react-viewer';
+
+const { toolbarProps } = useViewerBuildingBlocks({
+	workbook,
+	canEdit: true,
+	onContextMenu(request) {
+		if (request.menu !== 'cell') return; // 标题和标签保留原生菜单
+		showMyMenu(request.x, request.y, request.items, (id) => request.execute(id));
+		return true; // 抑制原生菜单
+	},
+	onOpenFindReplace: ({ findAll, select }) => showFindPanel({ findAll, select }),
+});
+
+// 之后，从你自己的面板中调用（在画布挂载之前 toolbarProps 为 null）：
+toolbarProps?.workflows.formatCells.apply({ font: { bold: true } });
+```
+
 ## Shadow part
 
 该元素将其各个区域公开为 CSS shadow part，可用 `xlsx-editor::part(grid)` 设置样式，也可用于测试：`ribbon`、`name-box`、`formula-bar`、`grid`、`sheet-tabs`、`status-bar`、`title-bar`、`backstage` 和 `page-layout`（页面布局视图）。

@@ -104,7 +104,9 @@ auf; ohne Callback tut es nichts, und `enabled.openShareDialog` ist false. Ein A
 Callback ist nicht erreichbar und wird nie stillschweigend eingebunden. Hosts, die die mitgelieferten
 Dialoge wünschen, rendern stattdessen den vollständigen `SpreadsheetEditor`.
 
-## Kontextmenüs und Workflow-Operationen
+## Kontextmenüs und Workflow-Operationen {#context-menus-and-workflow-operations}
+
+Die Typen, Signaturen und Ablehnungsbedingungen stehen in der [Element-API-Referenz](/de/api#host-menus-and-workflows).
 
 `onOpenFormatCells`, `onOpenFindReplace` und `onOpenInsertFunction` erhalten zusätzlich zum obigen
 Kontext die Operationen, um den Ablauf abzuschließen. Dieselben Operationen stehen in

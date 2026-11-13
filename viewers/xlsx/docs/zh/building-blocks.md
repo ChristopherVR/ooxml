@@ -81,7 +81,9 @@ useViewerBuildingBlocks({
 `handle.share()` 会调用 `onOpenShareDialog`；如果没有该回调，它什么也不做，且 `enabled.openShareDialog` 为 false。
 没有回调的工作流是无法触发的，绝不会被静默挂载。希望使用内置对话框的宿主应改为渲染完整的 `SpreadsheetEditor`。
 
-## 上下文菜单和工作流操作
+## 上下文菜单和工作流操作 {#context-menus-and-workflow-operations}
+
+类型、签名和拒绝执行的条件见 [元素 API 参考](/zh/api#host-menus-and-workflows)。
 
 `onOpenFormatCells`、`onOpenFindReplace` 和 `onOpenInsertFunction` 除了上述上下文外，还会收到用于完成工作流的操作。
 相同的操作也在 `toolbarProps.workflows` 上，因此始终打开的面板无需回调。每个操作在执行时都会重新读取只读状态、

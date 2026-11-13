@@ -96,7 +96,9 @@ appelle `onOpenShareDialog` ; sans ce rappel, il ne fait rien, et `enabled.openS
 flux de travail sans rappel est inaccessible, il n’est jamais monté en silence. Les hôtes qui veulent les
 dialogues intégrés affichent à la place le `SpreadsheetEditor` complet.
 
-## Menus contextuels et opérations de flux
+## Menus contextuels et opérations de flux {#context-menus-and-workflow-operations}
+
+Les types, signatures et conditions de refus sont dans la [référence de l’API de l’élément](/fr/api#host-menus-and-workflows).
 
 `onOpenFormatCells`, `onOpenFindReplace` et `onOpenInsertFunction` reçoivent, en plus du contexte
 ci-dessus, les opérations pour terminer le flux. Les mêmes opérations sont dans

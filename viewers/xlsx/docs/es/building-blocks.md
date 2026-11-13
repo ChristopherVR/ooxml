@@ -92,7 +92,9 @@ llama a `onOpenShareDialog`; sin él no hace nada, y `enabled.openShareDialog` e
 flujo sin callback es inalcanzable, nunca se monta en silencio. Los hosts que quieran los
 diálogos incluidos renderizan en su lugar el `SpreadsheetEditor` completo.
 
-## Menús contextuales y operaciones de flujo
+## Menús contextuales y operaciones de flujo {#context-menus-and-workflow-operations}
+
+Los tipos, las firmas y las condiciones de rechazo están en la [referencia de la API del elemento](/es/api#host-menus-and-workflows).
 
 `onOpenFormatCells`, `onOpenFindReplace` y `onOpenInsertFunction` reciben, además del contexto
 anterior, las operaciones para completar el flujo. Las mismas operaciones están en

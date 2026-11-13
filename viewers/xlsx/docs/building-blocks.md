@@ -96,7 +96,9 @@ calls `onOpenShareDialog`; without one it does nothing, and `enabled.openShareDi
 workflow without a callback is unreachable, never silently mounted. Hosts that want the
 bundled dialogs render the full `SpreadsheetEditor` instead.
 
-## Context menus and workflow operations
+## Context menus and workflow operations {#context-menus-and-workflow-operations}
+
+The types, signatures and refusal conditions are in the [Element API reference](/api#host-menus-and-workflows).
 
 `onOpenFormatCells`, `onOpenFindReplace` and `onOpenInsertFunction` receive the context above plus
 the operations to finish the workflow. The same operations are on `toolbarProps.workflows`, so a
