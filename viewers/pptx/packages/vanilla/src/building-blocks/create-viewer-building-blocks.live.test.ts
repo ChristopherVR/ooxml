@@ -1,10 +1,10 @@
+import { FIND_MATCH_ATTRIBUTE } from 'ooxml-ui/pptx';
 // @vitest-own-worker: mounts a full viewer.
 import { PptxHandler } from 'pptx-viewer-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { buildingBlocksContractDeck } from '../../../shared/test-utils/building-blocks-contract.mjs';
 import { createViewerBuildingBlocks } from './create-viewer-building-blocks';
-import { FIND_MATCH_ATTRIBUTE } from 'ooxml-ui/pptx';
 import type { ViewerBuildingBlocksOptions } from './types';
 
 async function mounted(options: ViewerBuildingBlocksOptions = {}) {

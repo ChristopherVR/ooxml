@@ -11,6 +11,7 @@ import type {
 	BuildingBlockSessionPort,
 	FindBarController,
 } from 'ooxml-ui/pptx';
+import { mediaElementFromFile } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxLayoutOption } from 'pptx-viewer-core';
 
 import { newChartElement } from '../viewer/editor-insert';
@@ -19,7 +20,6 @@ import { buildSmartArtInsertElement } from '../viewer/smart-art-insert-helpers';
 import type { ViewerCollaborationShellService } from '../viewer/viewer-collaboration-shell.service';
 import { buildEquationElement, buildEquationSegment } from '../viewer/viewer-extra-dialogs-helpers';
 import { insertPublicElement } from '../viewer/viewer-public-insertion';
-import { mediaElementFromFile } from 'ooxml-ui/pptx';
 import type { ViewerBuildingBlocksOptions } from './types';
 
 /** What the ports read: the shell's services plus the blocks' own options and find bar. */

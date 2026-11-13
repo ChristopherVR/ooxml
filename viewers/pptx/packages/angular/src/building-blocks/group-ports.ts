@@ -2,10 +2,10 @@ import { collectUsedFonts } from 'ooxml-ui/pptx';
 import type { BuildingBlockGroupPorts } from 'ooxml-ui/pptx';
 import type { PptxCustomProperty } from 'pptx-viewer-core';
 
+import type { LoadNoticesService } from '../viewer/load-notices.service';
 import type { ViewerCollaborationShellService } from '../viewer/viewer-collaboration-shell.service';
 import type { ViewerCustomShowsService } from '../viewer/viewer-custom-shows.service';
 import type { ViewerDialogsService } from '../viewer/viewer-dialogs.service';
-import type { LoadNoticesService } from '../viewer/load-notices.service';
 
 export interface AngularGroupSource {
 	shell: ViewerCollaborationShellService;

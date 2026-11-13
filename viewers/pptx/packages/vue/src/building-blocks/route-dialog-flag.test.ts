@@ -1,6 +1,6 @@
 import { createBuildingBlockRequests } from 'ooxml-ui/pptx';
-import { effectScope, nextTick, ref, watch } from 'vue';
 import { expect, test, vi } from 'vitest';
+import { effectScope, nextTick, ref, watch } from 'vue';
 
 import { useController } from '../viewer/composables/useController';
 import { routeDialogFlag } from './engine';

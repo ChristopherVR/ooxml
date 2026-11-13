@@ -23,9 +23,9 @@ import { ViewerFindReplaceService } from '../viewer/viewer-find-replace.service'
 import { ViewerKeyboardService } from '../viewer/viewer-keyboard.service';
 import { ViewerZoomService } from '../viewer/viewer-zoom.service';
 import { createAngularGroupPorts } from './group-ports';
+import { routeDialogFlag } from './route-dialog-flag';
 import { createAngularPort } from './session-port';
 import type { ViewerBuildingBlocksOptions, ViewerBuildingBlocksState } from './types';
-import { routeDialogFlag } from './route-dialog-flag';
 
 const bytesOf = (source: ViewerBuildingBlocksOptions['content']) =>
 	source instanceof ArrayBuffer || source instanceof Uint8Array ? source : null;

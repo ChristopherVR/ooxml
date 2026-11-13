@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
-import { SlidesPanelComponent } from '../viewer/slides-panel.component';
 import { createSlidesPanelEditorCommands } from '../viewer/slides-panel-commands';
+import { SlidesPanelComponent } from '../viewer/slides-panel.component';
 import type { ViewerBuildingBlocks } from './viewer-building-blocks';
 
 /** The slide thumbnail rail block, fed from the blocks' own deck and active slide. */

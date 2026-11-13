@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { syncFindHighlights } from 'ooxml-ui/pptx';
 /**
  * BuildingBlocksCanvas: the slide canvas block. It runs the full `PowerPointViewer` with its chrome
  * turned off (no ribbon, rail, status bar, inspector, notes, title bar, toasts or dialogs); the
@@ -9,7 +10,6 @@ import { computed, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
 import PowerPointViewer from '../viewer/PowerPointViewer.vue';
 import type { PowerPointViewerExpose } from '../viewer/types';
 import { BuildingBlocksBridgeKey } from './bridge';
-import { syncFindHighlights } from 'ooxml-ui/pptx';
 import type { ViewerBuildingBlocks } from './types';
 
 const props = defineProps<{ blocks: ViewerBuildingBlocks }>();

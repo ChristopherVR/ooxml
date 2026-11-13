@@ -10,6 +10,7 @@ import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
+import { FIND_MATCH_ATTRIBUTE } from 'ooxml-ui/pptx';
 import { PptxHandler } from 'pptx-viewer-core';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
@@ -26,7 +27,6 @@ import * as publicApi from '../public-api';
 import { resolveViewerComponentResources } from '../viewer/component-resources.test-support';
 import { declareSignalFields } from '../viewer/signal-inputs.test-support';
 import { BuildingBlocksCanvasComponent } from './canvas.component';
-import { FIND_MATCH_ATTRIBUTE } from 'ooxml-ui/pptx';
 import { BuildingBlocksSlidesPaneComponent } from './slides-pane.component';
 import { BuildingBlocksToolbarComponent } from './toolbar.component';
 import type { ViewerBuildingBlocksOptions } from './types';
