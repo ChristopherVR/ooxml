@@ -299,6 +299,77 @@ the `events` input.
 />
 ```
 
+## Awaited inline text commit {#awaited-text-commit}
+
+`commitTextEdit(): Promise<TextEditOutcome>` applies the text being typed into a shape on the
+mounted canvas, so a host Save exports it. It resolves only after the draft's edit completed. A
+commit a blur or Esc already started is awaited, not repeated. The workflow is in
+[Saving while a shape's text is being edited](building-blocks.md#saving-while-editing-text).
+
+Where it is available:
+
+| Surface                                                                                       | Call                          |
+| --------------------------------------------------------------------------------------------- | ----------------------------- |
+| `ViewerController` (the React `handle` prop receives it, and `viewer.controller` of a handle) | `controller.commitTextEdit()` |
+| React `useViewerBuildingBlocks` result                                                        | `commitTextEdit()`            |
+| Vue `useViewerBuildingBlocks` result                                                          | `commitTextEdit()`            |
+| Solid and Svelte `createViewerBuildingBlocks` result                                          | `commitTextEdit()`            |
+| Angular `createViewerBuildingBlocks` (the `ViewerBuildingBlocks` service)                     | `commitTextEdit()`            |
+| Vanilla `createViewerBuildingBlocks` result                                                   | `commitTextEdit()`            |
+
+The canvas registers its committer with `ViewerController.registerTextCommitter`; hosts do not call
+it. `ViewerController.destroyed` is `true` after `destroy()`.
+
+The types are exported from `ooxml-ui/visio`, together with `TextEditCommitter`:
+
+```ts
+interface TextEditIdentity {
+	readonly sourceGeneration: number;
+	readonly documentGeneration: number;
+	readonly pageId?: string;
+	readonly shapeId?: string;
+}
+
+type TextEditOutcome =
+	| (TextEditIdentity & { readonly status: 'committed'; readonly text: string })
+	| (TextEditIdentity & { readonly status: 'unchanged'; readonly reason: 'no-draft' | 'same-text' })
+	| (TextEditIdentity & {
+			readonly status: 'refused';
+			readonly reason: 'read-only' | 'rejected';
+			readonly message: string;
+			readonly text: string;
+	  })
+	| (TextEditIdentity & {
+			readonly status: 'cancelled';
+			readonly reason: 'stale-document' | 'superseded' | 'destroyed';
+			readonly text?: string;
+	  });
+```
+
+`sourceGeneration` is the loaded source's generation (the draft's own when there was a draft) and
+`documentGeneration` the accepted-document generation when the outcome was decided. `pageId` and
+`shapeId` are present when a draft existed.
+
+| `status`    | `reason`         | Fields                | When it occurs                                                                                                                                                             |
+| ----------- | ---------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `committed` |                  | `text`                | The draft was applied as one undoable edit through the normal edit path, so validation and undo/redo are unchanged.                                                        |
+| `unchanged` | `no-draft`       |                       | No draft was open, or no canvas is mounted.                                                                                                                                |
+| `unchanged` | `same-text`      |                       | The draft equals the shape's text.                                                                                                                                         |
+| `refused`   | `read-only`      | `message`, `text`     | The drawing is read-only when the commit runs, or it turned read-only while the draft was open. `message` is "The drawing is read-only."                                   |
+| `refused`   | `rejected`       | `message`, `text`     | The edit failed validation. `message` is the editor's message and `text` keeps the draft for recovery.                                                                     |
+| `cancelled` | `stale-document` | `text`                | The loaded source changed while the draft was open, or while the edit ran. A draft a load dropped is returned once, with its old `sourceGeneration`, and is never applied. |
+| `cancelled` | `superseded`     | `text`                | Another edit superseded this one while it ran.                                                                                                                             |
+| `cancelled` | `destroyed`      | `text` (with a draft) | The controller was destroyed: a call on a destroyed controller returns this without `text`, and a draft in progress is cancelled with its `text`.                          |
+
+Save only when `status` is `committed` or `unchanged`:
+
+```ts
+const outcome = await controller.commitTextEdit();
+if (outcome.status === 'refused') showError(outcome.message, outcome.text);
+else if (outcome.status === 'cancelled') showError(`Not saved: ${outcome.reason}`, outcome.text);
+else save(controller.exportVsdx().bytes);
+```
+
 ## Static SVG export
 
 `exportPageSvg(model, pageIndex, { maxBytes })` and each mounted/native handle's

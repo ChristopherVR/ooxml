@@ -263,6 +263,78 @@ const customization = {
 
 `edit: false` ist eine eigene Schreibsperre neben dem schreibgeschützten Schalter des Hosts und einer Zusammenarbeitsrolle `viewer`: Keine hebt eine andere auf. Capabilities sind eine UI-Richtlinie, kein Dokumentschutz. Das Ersetzen von Bereichen (Optionsdialog, Bereiche) wird für Visio noch nicht angeboten. Alle Produkte im Überblick: [Einbettungsleitfaden](https://github.com/ChristopherVR/ooxml/blob/main/docs/embedding.md).
 
+## Auf die Übernahme des Formtexts warten {#awaited-text-commit}
+
+`commitTextEdit(): Promise<TextEditOutcome>` übernimmt den Text, der gerade in eine Form auf der
+eingebundenen Zeichenfläche getippt wird, damit ein Speichern des Hosts ihn exportiert. Der Aufruf
+wird erst aufgelöst, wenn die Bearbeitung des Entwurfs abgeschlossen ist. Ein Commit, den ein
+Verlassen des Feldes oder Esc bereits gestartet hat, wird abgewartet und nicht wiederholt. Der
+Ablauf steht unter [Speichern während der Text einer Form bearbeitet wird](building-blocks.md#saving-while-editing-text).
+
+Verfügbarkeit:
+
+| Oberfläche                                                                                     | Aufruf                        |
+| ---------------------------------------------------------------------------------------------- | ----------------------------- |
+| `ViewerController` (die React-Prop `handle` erhält ihn, und `viewer.controller` eines Handles) | `controller.commitTextEdit()` |
+| Ergebnis von React `useViewerBuildingBlocks`                                                   | `commitTextEdit()`            |
+| Ergebnis von Vue `useViewerBuildingBlocks`                                                     | `commitTextEdit()`            |
+| Ergebnis von Solid und Svelte `createViewerBuildingBlocks`                                     | `commitTextEdit()`            |
+| Angular `createViewerBuildingBlocks` (der Dienst `ViewerBuildingBlocks`)                       | `commitTextEdit()`            |
+| Ergebnis von Vanilla `createViewerBuildingBlocks`                                              | `commitTextEdit()`            |
+
+Die Zeichenfläche registriert ihren Committer bei `ViewerController.registerTextCommitter`; Hosts
+rufen es nicht auf. `ViewerController.destroyed` ist nach `destroy()` `true`.
+
+Die Typen werden zusammen mit `TextEditCommitter` von `ooxml-ui/visio` exportiert:
+
+```ts
+interface TextEditIdentity {
+	readonly sourceGeneration: number;
+	readonly documentGeneration: number;
+	readonly pageId?: string;
+	readonly shapeId?: string;
+}
+
+type TextEditOutcome =
+	| (TextEditIdentity & { readonly status: 'committed'; readonly text: string })
+	| (TextEditIdentity & { readonly status: 'unchanged'; readonly reason: 'no-draft' | 'same-text' })
+	| (TextEditIdentity & {
+			readonly status: 'refused';
+			readonly reason: 'read-only' | 'rejected';
+			readonly message: string;
+			readonly text: string;
+	  })
+	| (TextEditIdentity & {
+			readonly status: 'cancelled';
+			readonly reason: 'stale-document' | 'superseded' | 'destroyed';
+			readonly text?: string;
+	  });
+```
+
+`sourceGeneration` ist die Generation der geladenen Quelle (die des Entwurfs, falls es einen gab),
+`documentGeneration` die Generation des akzeptierten Dokuments zum Zeitpunkt der Entscheidung.
+`pageId` und `shapeId` sind vorhanden, wenn ein Entwurf existierte.
+
+| `status`    | `reason`         | Felder               | Wann es auftritt                                                                                                                                                                                                            |
+| ----------- | ---------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `committed` |                  | `text`               | Der Entwurf wurde als eine rückgängig machbare Bearbeitung über den üblichen Bearbeitungsweg übernommen, Prüfung und Rückgängig/Wiederholen bleiben unverändert.                                                            |
+| `unchanged` | `no-draft`       |                      | Es war kein Entwurf offen oder keine Zeichenfläche eingebunden.                                                                                                                                                             |
+| `unchanged` | `same-text`      |                      | Der Entwurf ist gleich dem Text der Form.                                                                                                                                                                                   |
+| `refused`   | `read-only`      | `message`, `text`    | Die Zeichnung ist beim Commit schreibgeschützt oder wurde während eines offenen Entwurfs schreibgeschützt. `message` lautet „The drawing is read-only.“.                                                                    |
+| `refused`   | `rejected`       | `message`, `text`    | Die Bearbeitung ist bei der Prüfung gescheitert. `message` ist die Meldung des Editors, `text` behält den Entwurf zur Wiederherstellung.                                                                                    |
+| `cancelled` | `stale-document` | `text`               | Die geladene Quelle hat sich geändert, während der Entwurf offen war oder die Bearbeitung lief. Ein Entwurf, den ein Laden verworfen hat, wird einmal mit seiner alten `sourceGeneration` zurückgegeben und nie übernommen. |
+| `cancelled` | `superseded`     | `text`               | Eine andere Bearbeitung hat diese während ihrer Ausführung ersetzt.                                                                                                                                                         |
+| `cancelled` | `destroyed`      | `text` (mit Entwurf) | Der Controller wurde zerstört: Ein Aufruf auf einem zerstörten Controller liefert dies ohne `text`, ein laufender Entwurf wird mit seinem `text` abgebrochen.                                                               |
+
+Nur bei `status` `committed` oder `unchanged` speichern:
+
+```ts
+const outcome = await controller.commitTextEdit();
+if (outcome.status === 'refused') showError(outcome.message, outcome.text);
+else if (outcome.status === 'cancelled') showError(`Not saved: ${outcome.reason}`, outcome.text);
+else save(controller.exportVsdx().bytes);
+```
+
 ## Statischer SVG-Export {#static-svg-export}
 
 `exportPageSvg(model, pageIndex, { maxBytes })` und das `exportSvg()` jedes

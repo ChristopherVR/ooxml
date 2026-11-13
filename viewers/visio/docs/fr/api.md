@@ -237,6 +237,77 @@ const customization = {
 
 `edit: false` est un verrouillage en lecture seule à part entière, à côté de l’interrupteur de lecture seule de l’hôte et d’un rôle de collaboration `viewer` : aucun ne lève un autre. Les capacités sont une politique d’interface, pas une protection du document. Le remplacement de régions (boîte d’options, volets) n’est pas encore proposé pour Visio. Tous les produits réunis : [guide d’intégration](https://github.com/ChristopherVR/ooxml/blob/main/docs/embedding.md).
 
+## Attendre la validation du texte en ligne {#awaited-text-commit}
+
+`commitTextEdit(): Promise<TextEditOutcome>` applique le texte en cours de saisie dans une forme du
+canevas monté, afin qu'un Enregistrer de l'hôte l'exporte. Elle ne se résout qu'une fois la
+modification du brouillon terminée. Une validation déjà lancée par une perte de focus ou Échap est
+attendue, pas relancée. Le déroulement est décrit dans [Enregistrer pendant la modification du texte d'une forme](building-blocks.md#saving-while-editing-text).
+
+Où elle est disponible :
+
+| Surface                                                                                      | Appel                         |
+| -------------------------------------------------------------------------------------------- | ----------------------------- |
+| `ViewerController` (la prop `handle` de React le reçoit, et `viewer.controller` d'un handle) | `controller.commitTextEdit()` |
+| Résultat de `useViewerBuildingBlocks` de React                                               | `commitTextEdit()`            |
+| Résultat de `useViewerBuildingBlocks` de Vue                                                 | `commitTextEdit()`            |
+| Résultat de `createViewerBuildingBlocks` de Solid et Svelte                                  | `commitTextEdit()`            |
+| `createViewerBuildingBlocks` d'Angular (le service `ViewerBuildingBlocks`)                   | `commitTextEdit()`            |
+| Résultat de `createViewerBuildingBlocks` de Vanilla                                          | `commitTextEdit()`            |
+
+Le canevas enregistre son committer auprès de `ViewerController.registerTextCommitter` ; les hôtes
+ne l'appellent pas. `ViewerController.destroyed` vaut `true` après `destroy()`.
+
+Les types sont exportés depuis `ooxml-ui/visio`, avec `TextEditCommitter` :
+
+```ts
+interface TextEditIdentity {
+	readonly sourceGeneration: number;
+	readonly documentGeneration: number;
+	readonly pageId?: string;
+	readonly shapeId?: string;
+}
+
+type TextEditOutcome =
+	| (TextEditIdentity & { readonly status: 'committed'; readonly text: string })
+	| (TextEditIdentity & { readonly status: 'unchanged'; readonly reason: 'no-draft' | 'same-text' })
+	| (TextEditIdentity & {
+			readonly status: 'refused';
+			readonly reason: 'read-only' | 'rejected';
+			readonly message: string;
+			readonly text: string;
+	  })
+	| (TextEditIdentity & {
+			readonly status: 'cancelled';
+			readonly reason: 'stale-document' | 'superseded' | 'destroyed';
+			readonly text?: string;
+	  });
+```
+
+`sourceGeneration` est la génération de la source chargée (celle du brouillon, s'il y en avait un) et
+`documentGeneration` la génération du document accepté au moment de la décision. `pageId` et
+`shapeId` sont présents lorsqu'un brouillon existait.
+
+| `status`    | `reason`         | Champs                  | Quand il survient                                                                                                                                                                                                      |
+| ----------- | ---------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `committed` |                  | `text`                  | Le brouillon a été appliqué comme une seule modification annulable par le chemin de modification habituel ; la validation et annuler/rétablir ne changent pas.                                                         |
+| `unchanged` | `no-draft`       |                         | Aucun brouillon n'était ouvert, ou aucun canevas n'est monté.                                                                                                                                                          |
+| `unchanged` | `same-text`      |                         | Le brouillon est identique au texte de la forme.                                                                                                                                                                       |
+| `refused`   | `read-only`      | `message`, `text`       | Le dessin est en lecture seule au moment de la validation, ou l'est devenu pendant que le brouillon était ouvert. `message` vaut « The drawing is read-only. ».                                                        |
+| `refused`   | `rejected`       | `message`, `text`       | La modification a échoué à la validation. `message` est le message de l'éditeur et `text` conserve le brouillon pour récupération.                                                                                     |
+| `cancelled` | `stale-document` | `text`                  | La source chargée a changé pendant que le brouillon était ouvert ou pendant la modification. Un brouillon écarté par un chargement est renvoyé une fois, avec son ancien `sourceGeneration`, et n'est jamais appliqué. |
+| `cancelled` | `superseded`     | `text`                  | Une autre modification a remplacé celle-ci pendant son exécution.                                                                                                                                                      |
+| `cancelled` | `destroyed`      | `text` (avec brouillon) | Le contrôleur a été détruit : un appel sur un contrôleur détruit renvoie ce résultat sans `text`, et un brouillon en cours est annulé avec son `text`.                                                                 |
+
+N'enregistrez que lorsque `status` vaut `committed` ou `unchanged` :
+
+```ts
+const outcome = await controller.commitTextEdit();
+if (outcome.status === 'refused') showError(outcome.message, outcome.text);
+else if (outcome.status === 'cancelled') showError(`Not saved: ${outcome.reason}`, outcome.text);
+else save(controller.exportVsdx().bytes);
+```
+
 ## Export SVG statique {#static-svg-export}
 
 `exportPageSvg(model, pageIndex, { maxBytes })` et la méthode `exportSvg()` de chaque handle monté ou natif

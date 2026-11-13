@@ -122,6 +122,75 @@ const customization = {
 
 `edit: false` 是独立的只读锁，与宿主的只读开关和协作角色 `viewer` 并存：彼此互不解除。能力是界面策略，而不是文档保护。Visio 暂不提供区域替换（选项对话框、窗格）。各产品汇总：[嵌入指南](https://github.com/ChristopherVR/ooxml/blob/main/docs/embedding.md)。
 
+## 等待内联文本提交 {#awaited-text-commit}
+
+`commitTextEdit(): Promise<TextEditOutcome>` 将正在挂载画布的形状中输入的文本应用到文档，使宿主的保存
+能导出它。它只在草稿的编辑完成后才解析。失焦或 Esc 已经开始的提交会被等待，而不会重复执行。流程见
+[编辑形状文字时保存](building-blocks.md#saving-while-editing-text)。
+
+可用位置：
+
+| 接口                                                                                  | 调用                          |
+| ------------------------------------------------------------------------------------- | ----------------------------- |
+| `ViewerController`（React 的 `handle` 属性会收到它，句柄的 `viewer.controller` 也是） | `controller.commitTextEdit()` |
+| React `useViewerBuildingBlocks` 的返回值                                              | `commitTextEdit()`            |
+| Vue `useViewerBuildingBlocks` 的返回值                                                | `commitTextEdit()`            |
+| Solid 与 Svelte `createViewerBuildingBlocks` 的返回值                                 | `commitTextEdit()`            |
+| Angular `createViewerBuildingBlocks`（即 `ViewerBuildingBlocks` 服务）                | `commitTextEdit()`            |
+| Vanilla `createViewerBuildingBlocks` 的返回值                                         | `commitTextEdit()`            |
+
+画布通过 `ViewerController.registerTextCommitter` 注册其提交器，宿主无需调用它。`destroy()` 之后
+`ViewerController.destroyed` 为 `true`。
+
+这些类型与 `TextEditCommitter` 一起从 `ooxml-ui/visio` 导出：
+
+```ts
+interface TextEditIdentity {
+	readonly sourceGeneration: number;
+	readonly documentGeneration: number;
+	readonly pageId?: string;
+	readonly shapeId?: string;
+}
+
+type TextEditOutcome =
+	| (TextEditIdentity & { readonly status: 'committed'; readonly text: string })
+	| (TextEditIdentity & { readonly status: 'unchanged'; readonly reason: 'no-draft' | 'same-text' })
+	| (TextEditIdentity & {
+			readonly status: 'refused';
+			readonly reason: 'read-only' | 'rejected';
+			readonly message: string;
+			readonly text: string;
+	  })
+	| (TextEditIdentity & {
+			readonly status: 'cancelled';
+			readonly reason: 'stale-document' | 'superseded' | 'destroyed';
+			readonly text?: string;
+	  });
+```
+
+`sourceGeneration` 是已加载源的代次（若存在草稿则为草稿自身的代次），`documentGeneration` 是做出判定时已接受文档的代次。
+存在草稿时才包含 `pageId` 和 `shapeId`。
+
+| `status`    | `reason`         | 字段               | 出现时机                                                                                                           |
+| ----------- | ---------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `committed` |                  | `text`             | 草稿已作为一次可撤销的编辑应用，走常规编辑路径，校验与撤销/重做不变。                                              |
+| `unchanged` | `no-draft`       |                    | 没有打开的草稿，或没有挂载画布。                                                                                   |
+| `unchanged` | `same-text`      |                    | 草稿与形状的文本相同。                                                                                             |
+| `refused`   | `read-only`      | `message`, `text`  | 提交时绘图为只读，或草稿打开期间变为只读。`message` 为 "The drawing is read-only."。                               |
+| `refused`   | `rejected`       | `message`, `text`  | 编辑未通过校验。`message` 为编辑器的消息，`text` 保留草稿以便恢复。                                                |
+| `cancelled` | `stale-document` | `text`             | 草稿打开期间或编辑运行期间，已加载源发生变化。被加载丢弃的草稿会以其旧的 `sourceGeneration` 返回一次，且绝不应用。 |
+| `cancelled` | `superseded`     | `text`             | 运行期间被另一次编辑取代。                                                                                         |
+| `cancelled` | `destroyed`      | `text`（有草稿时） | 控制器已被销毁：对已销毁控制器的调用返回此结果且不含 `text`；进行中的草稿以其 `text` 被取消。                      |
+
+仅当 `status` 为 `committed` 或 `unchanged` 时才保存：
+
+```ts
+const outcome = await controller.commitTextEdit();
+if (outcome.status === 'refused') showError(outcome.message, outcome.text);
+else if (outcome.status === 'cancelled') showError(`Not saved: ${outcome.reason}`, outcome.text);
+else save(controller.exportVsdx().bytes);
+```
+
 ## 静态 SVG 导出 {#static-svg-export}
 
 `exportPageSvg(model, pageIndex, { maxBytes })` 以及每个已挂载的/原生句柄的 `exportSvg()` 都会返回当前页面的快照，而不改变文档、选择或视口。导出包括受支持的背景、嵌入的栅格资源，以及位于 SVG 描述/元数据中的可见兼容性说明。SVG 导出没有远程资源，也没有自动下载。演示仅在明确按下按钮后才会下载。

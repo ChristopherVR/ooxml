@@ -237,6 +237,77 @@ const customization = {
 
 `edit: false` es un bloqueo de solo lectura propio, junto al interruptor de solo lectura del host y un rol de colaboración `viewer`: ninguno anula a otro. Las capacidades son una política de interfaz, no protección del documento. El reemplazo de regiones (cuadro de opciones, paneles) aún no se ofrece para Visio. Todos los productos juntos: [guía de integración](https://github.com/ChristopherVR/ooxml/blob/main/docs/embedding.md).
 
+## Esperar la confirmación del texto en línea {#awaited-text-commit}
+
+`commitTextEdit(): Promise<TextEditOutcome>` aplica el texto que se escribe en una forma del lienzo
+montado, para que un Guardar del host lo exporte. Se resuelve solo cuando terminó la edición del
+borrador. Una confirmación que ya inició un desenfoque o Esc se espera, no se repite. El flujo está
+en [Guardar mientras se edita el texto de una forma](building-blocks.md#saving-while-editing-text).
+
+Dónde está disponible:
+
+| Superficie                                                                                   | Llamada                       |
+| -------------------------------------------------------------------------------------------- | ----------------------------- |
+| `ViewerController` (la prop `handle` de React lo recibe, y `viewer.controller` de un handle) | `controller.commitTextEdit()` |
+| Resultado de `useViewerBuildingBlocks` de React                                              | `commitTextEdit()`            |
+| Resultado de `useViewerBuildingBlocks` de Vue                                                | `commitTextEdit()`            |
+| Resultado de `createViewerBuildingBlocks` de Solid y Svelte                                  | `commitTextEdit()`            |
+| `createViewerBuildingBlocks` de Angular (el servicio `ViewerBuildingBlocks`)                 | `commitTextEdit()`            |
+| Resultado de `createViewerBuildingBlocks` de Vanilla                                         | `commitTextEdit()`            |
+
+El lienzo registra su committer con `ViewerController.registerTextCommitter`; los hosts no lo llaman.
+`ViewerController.destroyed` es `true` después de `destroy()`.
+
+Los tipos se exportan desde `ooxml-ui/visio`, junto con `TextEditCommitter`:
+
+```ts
+interface TextEditIdentity {
+	readonly sourceGeneration: number;
+	readonly documentGeneration: number;
+	readonly pageId?: string;
+	readonly shapeId?: string;
+}
+
+type TextEditOutcome =
+	| (TextEditIdentity & { readonly status: 'committed'; readonly text: string })
+	| (TextEditIdentity & { readonly status: 'unchanged'; readonly reason: 'no-draft' | 'same-text' })
+	| (TextEditIdentity & {
+			readonly status: 'refused';
+			readonly reason: 'read-only' | 'rejected';
+			readonly message: string;
+			readonly text: string;
+	  })
+	| (TextEditIdentity & {
+			readonly status: 'cancelled';
+			readonly reason: 'stale-document' | 'superseded' | 'destroyed';
+			readonly text?: string;
+	  });
+```
+
+`sourceGeneration` es la generación de la fuente cargada (la del borrador, si lo había) y
+`documentGeneration` la generación del documento aceptado cuando se decidió el resultado. `pageId` y
+`shapeId` están presentes cuando existía un borrador.
+
+| `status`    | `reason`         | Campos                | Cuándo ocurre                                                                                                                                                                                     |
+| ----------- | ---------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `committed` |                  | `text`                | El borrador se aplicó como una sola edición deshacible por la ruta de edición normal, así que la validación y deshacer/rehacer no cambian.                                                        |
+| `unchanged` | `no-draft`       |                       | No había borrador abierto, o no hay lienzo montado.                                                                                                                                               |
+| `unchanged` | `same-text`      |                       | El borrador es igual al texto de la forma.                                                                                                                                                        |
+| `refused`   | `read-only`      | `message`, `text`     | El dibujo es de solo lectura al ejecutarse la confirmación, o pasó a solo lectura mientras el borrador estaba abierto. `message` es "The drawing is read-only.".                                  |
+| `refused`   | `rejected`       | `message`, `text`     | La edición no pasó la validación. `message` es el mensaje del editor y `text` conserva el borrador para recuperarlo.                                                                              |
+| `cancelled` | `stale-document` | `text`                | La fuente cargada cambió mientras el borrador estaba abierto o durante la edición. Un borrador que una carga descartó se devuelve una vez, con su `sourceGeneration` anterior, y nunca se aplica. |
+| `cancelled` | `superseded`     | `text`                | Otra edición reemplazó a esta mientras se ejecutaba.                                                                                                                                              |
+| `cancelled` | `destroyed`      | `text` (con borrador) | El controlador fue destruido: una llamada sobre un controlador destruido devuelve esto sin `text`, y un borrador en curso se cancela con su `text`.                                               |
+
+Guarde solo cuando `status` sea `committed` o `unchanged`:
+
+```ts
+const outcome = await controller.commitTextEdit();
+if (outcome.status === 'refused') showError(outcome.message, outcome.text);
+else if (outcome.status === 'cancelled') showError(`Not saved: ${outcome.reason}`, outcome.text);
+else save(controller.exportVsdx().bytes);
+```
+
 ## Exportación SVG estática {#static-svg-export}
 
 `exportPageSvg(model, pageIndex, { maxBytes })` y el `exportSvg()` de cada manejador montado o nativo
