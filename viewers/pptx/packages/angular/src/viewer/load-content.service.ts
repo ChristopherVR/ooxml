@@ -60,11 +60,7 @@ import type {
 	PptxViewProperties,
 	ParsedTableStyleMap,
 } from 'pptx-viewer-core';
-import {
-	EncryptedFileError,
-	parseSignaturesFromBuffer,
-	PptxHandler,
-} from 'pptx-viewer-core';
+import { EncryptedFileError, parseSignaturesFromBuffer, PptxHandler } from 'pptx-viewer-core';
 
 import { GOOGLE_WEBFONTS_LINK_ID } from './google-webfonts.service';
 import { ViewerOptionsService } from './viewer-options.service';
