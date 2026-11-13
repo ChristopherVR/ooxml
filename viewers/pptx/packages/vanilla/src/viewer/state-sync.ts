@@ -97,6 +97,9 @@ export function createStateSync(deps: StateSyncDeps): StoreListener<ViewerState>
 			state.headerFooter !== previous.headerFooter ||
 			state.customProperties !== previous.customProperties ||
 			state.tableStyleMap !== previous.tableStyleMap ||
+			// The Find bar's marks are painted into the text.
+			state.findMatches !== previous.findMatches ||
+			state.findMatchIndex !== previous.findMatchIndex ||
 			// Glyph outlines landed: the canvas's WordArt envelope glyphs warp too,
 			// not only the thumbnails'. Not mid-gesture, as for the thumbnails.
 			(state.outlineFontsTick !== previous.outlineFontsTick && !state.interactionActive) ||

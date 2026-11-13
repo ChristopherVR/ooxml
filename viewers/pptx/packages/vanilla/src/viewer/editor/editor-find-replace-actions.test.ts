@@ -76,6 +76,18 @@ function fakeOps(): EditorOps {
 }
 
 describe('editor-find-replace-actions', () => {
+	it('publishes the matches the canvas marks, and drops them on close', () => {
+		const store = createStore({ ...createInitialViewerState(), slides: twoSlides() });
+		const actions = createFindReplaceActions({ store, ops: fakeOps() });
+		actions.search('foo', false);
+		expect(store.get().findMatches).toHaveLength(3);
+		expect(store.get().findMatchIndex).toBe(0);
+		actions.next?.();
+		expect(store.get().findMatchIndex).toBe(1);
+		actions.close?.();
+		expect(store.get().findMatches).toHaveLength(0);
+	});
+
 	it('counts matches without mutating', () => {
 		const store = createStore({
 			...createInitialViewerState(),

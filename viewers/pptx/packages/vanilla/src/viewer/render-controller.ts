@@ -8,6 +8,7 @@ import type {
 import {
 	computeGridSpacingPx,
 	DEFAULT_MASTER_PAGE_SIZE,
+	findTextHighlightsByElement,
 	masterViewCrudActions,
 	masterViewPseudoSlide,
 	stageKeepsElementIds,
@@ -222,6 +223,11 @@ export function createRenderController(deps: RenderControllerDeps): RenderContro
 			formatScheme: state.formatScheme,
 			tableStyleMap: state.tableStyleMap,
 			fieldContext: buildRenderFieldContext(state, slide),
+			// Only the editing canvas marks the Find bar's matches.
+			findHighlights:
+				interactive && !presenting
+					? findTextHighlightsByElement(state.findMatches, state.findMatchIndex, state.currentSlide)
+					: undefined,
 			registry,
 			t: deps.getTranslator(),
 			scale,

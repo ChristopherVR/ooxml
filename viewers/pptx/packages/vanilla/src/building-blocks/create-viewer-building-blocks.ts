@@ -5,8 +5,8 @@ import {
 	describeBuildingBlockToolbar,
 	registerBuildingBlockGroups,
 	runBuildingBlockToolbarControl,
-	syncFindHighlights,
 } from 'ooxml-ui/pptx';
+import type { FindResult } from 'ooxml-ui/pptx';
 
 import { createTranslator } from '../viewer/i18n';
 import type { PptxViewerSource } from '../viewer/load';
@@ -35,6 +35,9 @@ const bytesOf = (source: PptxViewerSource | null | undefined) =>
  * gestures that need one raise a request (`onRequest`, `actions.pending`) the host finishes with
  * `actions`.
  */
+/** The matches a closed host find bar marks: none (one array, so the store sees no change). */
+const NO_MATCHES: readonly FindResult[] = [];
+
 export function createViewerBuildingBlocks(
 	initial: ViewerBuildingBlocksOptions = {},
 ): ViewerBuildingBlocks {
@@ -173,17 +176,19 @@ export function createViewerBuildingBlocks(
 			},
 		);
 		viewer = mounted;
-		// The stage is repainted on change: outline the find matches again after every paint.
+		// The host find bar's matches: the viewer's text renderer marks them on the canvas.
 		const highlight = () => {
-			const { matches, current } = findBar.getSnapshot().session;
-			syncFindHighlights(host, matches, current, mounted.store.get().currentSlide);
+			const { open, session: find } = findBar.getSnapshot();
+			const matches = open ? find.matches : NO_MATCHES;
+			const state = mounted.store.get();
+			if (state.findMatches !== matches || state.findMatchIndex !== find.current) {
+				mounted.store.set({ findMatches: matches, findMatchIndex: find.current });
+			}
 		};
-		const observer = new MutationObserver(highlight);
-		observer.observe(host, { childList: true, subtree: true });
+		highlight();
 		const stopStore = mounted.store.subscribe(notify);
 		const stopFind = findBar.subscribe(highlight);
 		stopViewer = () => {
-			observer.disconnect();
 			stopStore();
 			stopFind();
 		};

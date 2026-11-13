@@ -5,6 +5,7 @@ import type {
 	CompatibilityWarningToast,
 	CropSession,
 	ElementClipboardPayload,
+	FindResult,
 	FreeformToolKind,
 	InlineTextSelection,
 	Guide,
@@ -246,6 +247,13 @@ export interface ViewerState {
 	 */
 	chartPartSelection: ChartPartSelection | null;
 	/**
+	 * The Find bar's matches and current match, which the editing canvas marks in
+	 * the text (`findTextHighlightsByElement`). Set by the ribbon's Find & Replace
+	 * session, or by a host find bar (the building blocks).
+	 */
+	findMatches: readonly FindResult[];
+	findMatchIndex: number;
+	/**
 	 * The chart element Chart Format > Current Selection and the chart Format pane
 	 * target (`chartArea`, `series:0`, ...), for the chart `elementId`. Read it
 	 * through `chartFormatTargetOf`, which falls back to the chart area once
@@ -437,6 +445,8 @@ export function createInitialViewerState(inspectorInitiallyOpen?: boolean): View
 		selectedTableCells: [],
 		selectedTextRange: null,
 		chartPartSelection: null,
+		findMatches: [],
+		findMatchIndex: -1,
 		chartFormat: null,
 		chartFormatPaneOpen: false,
 		formatPainterSourceId: null,

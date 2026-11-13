@@ -7,9 +7,6 @@
  * theme custom properties.
  */
 export const EDITOR_CSS = `
-/* Building blocks: elements holding the host find bar's matches (the current one solid). */
-.pptxv [data-pptx-find-match] { outline: 2px dashed var(--pptx-primary); outline-offset: 2px; }
-.pptxv [data-pptx-find-match='current'] { outline-style: solid; }
 .pptxv-marquee { position: absolute; z-index: 4; border: 1px solid var(--pptx-primary); background: color-mix(in srgb, var(--pptx-primary) 14%, transparent); pointer-events: none; }
 /* --pptxv-grid-size is set inline on .pptxv-stage from the deck's authored
    viewProperties.gridSpacing (via computeGridSpacingPx); 10px matches this

@@ -22,15 +22,30 @@ afterEach(() => {
 });
 
 describe('vanilla building blocks, live behaviour', () => {
-	it('outlines the elements holding the host find bar matches', async () => {
+	it('marks the matched text of the host find bar, the current match apart', async () => {
 		const { blocks, canvas } = await mounted();
+		const marks = () =>
+			[...canvas.querySelectorAll(`mark[${FIND_MATCH_ATTRIBUTE}]`)].map((mark) => [
+				mark.getAttribute(FIND_MATCH_ATTRIBUTE),
+				mark.textContent,
+			]);
 		blocks.actions.findReplace.setOpen(true);
 		blocks.actions.findReplace.setQuery('alpha');
 		await vi.waitFor(() =>
-			expect(canvas.querySelector(`[${FIND_MATCH_ATTRIBUTE}="current"]`)).not.toBeNull(),
+			expect(marks()).toEqual([
+				['current', 'Alpha'],
+				['match', 'alpha'],
+			]),
+		);
+		blocks.actions.findReplace.next();
+		await vi.waitFor(() =>
+			expect(marks()).toEqual([
+				['match', 'Alpha'],
+				['current', 'alpha'],
+			]),
 		);
 		blocks.actions.findReplace.setOpen(false);
-		await vi.waitFor(() => expect(canvas.querySelector(`[${FIND_MATCH_ATTRIBUTE}]`)).toBeNull());
+		await vi.waitFor(() => expect(marks()).toEqual([]));
 		blocks.destroy();
 	}, 30000);
 
