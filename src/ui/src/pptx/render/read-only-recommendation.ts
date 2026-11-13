@@ -95,7 +95,8 @@ function isTruthyCustomPropertyValue(value: string): boolean {
 	return normalized === 'true' || normalized === '1' || normalized === 'yes';
 }
 
-function isMarkedAsFinal(
+/** Whether `_MarkAsFinal` is set in the deck's custom properties. */
+export function isMarkedAsFinal(
 	customProperties: ReadOnlyRecommendationSource['customProperties'],
 ): boolean {
 	if (!customProperties) {

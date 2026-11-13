@@ -45,7 +45,13 @@ export type {
 	BuildingBlockActionState,
 	BuildingBlockFailureCode,
 	BuildingBlockResult,
+	DocumentPropertiesActions,
+	DocumentPropertiesPatch,
+	FontEmbeddingActions,
 	HostFileLimits,
+	HostSignatureInfo,
+	PasswordProtectionActions,
+	SignatureActions,
 } from 'ooxml-ui/pptx';
 // `SlideThumbnail` draws one slide the way `SlidesPane` does, for hosts that keep their own
 // thumbnail strip. Feed it from `slidesPaneProps`, so it follows unsaved edits.

@@ -384,6 +384,12 @@ export { computeDigestBase64 as computeDigestBase64WebCrypto } from './signature
 export { decodeXmlEntities, encodeXmlAttributeValue, encodeXmlTextValue } from './xml-entities';
 
 export {
+	inspectSignaturesFromBuffer,
+	parseSignaturesFromBuffer,
+	type PackageSignatureInfo,
+} from './signature-package-list';
+
+export {
 	preservesSpreadsheetXmlWhitespace,
 	preservesXmlWhitespace,
 	WHITESPACE_PRESERVING_TAGS,

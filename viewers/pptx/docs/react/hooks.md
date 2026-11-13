@@ -251,8 +251,8 @@ const { actions } = blocks;
 
 - **Requests.** The toolbar's Picture, Video, Link, SmartArt, Chart and Equation controls, and
   double-clicking an equation on the canvas, raise a `BuildingBlockRequest`
-  (`{ kind: 'image' | 'media' | 'hyperlink' | 'smartArt' | 'chart' }` or
-  `{ kind: 'equation', existingOmml }`). It is passed to `onRequest` and kept in
+  (`{ kind: 'image' | 'media' | 'hyperlink' | 'smartArt' | 'chart' | 'passwordProtection' |
+  'documentProperties' | 'fontEmbedding' | 'digitalSignatures' }` or `{ kind: 'equation', existingOmml }`). It is passed to `onRequest` and kept in
   `actions.pending` until a matching operation succeeds or you call `actions.cancel()`. A request is
   not raised when the action is unavailable.
 - **Images and media.** `actions.insertImage(file)` and `actions.insertMedia(file)` take the `File`
@@ -282,12 +282,39 @@ const { actions } = blocks;
   `currentPath`, `available` (the active slide's master's layouts), `apply(path)`
   (`'unknown-layout'` for a path that is not listed) and `reset()` (`'no-layout'` when the slide
   records none).
+- **File dialogs.** File > Info > Protect, Properties, Fonts and Signatures raise
+  `{ kind: 'passwordProtection' | 'documentProperties' | 'fontEmbedding' | 'digitalSignatures' }`.
+  The request is also raised while the viewer is read-only or in Protected View, so you can show the
+  state; `availability[id]` says whether applying is allowed, and every operation checks that again
+  when it runs. Changes mark the deck dirty and are saved with it.
+  - `actions.passwordProtection`: `state` is `{ openPassword, modifyPassword, readOnlyRecommended,
+    markedFinal, supported }` and never contains a password or hash. `setOpenPassword(password,
+    confirmation)` (`'password-required'`, `'password-mismatch'`, `'password-too-short'`) encrypts
+    the next save; `clearOpenPassword()`; `setMarkedFinal(boolean)` writes or removes `_MarkAsFinal`.
+    `setModifyPassword()` always returns `'unsupported'`: the viewer preserves a modify password and
+    the read-only recommendation the deck arrived with and cannot write them.
+  - `actions.documentProperties`: `current` is `{ core, custom, app }` (copies). `apply({ core?, app?,
+    custom?: { set?, remove? } })` patches the Summary fields (title, subject, creator, keywords,
+    description, category), company and manager, and custom properties by name. A malformed patch
+    (blank name, unknown type, a value that does not parse as its type) returns `'invalid-data'` and
+    changes nothing.
+  - `actions.fontEmbedding`: `state` is `{ embedFonts, embeddedFamilies, usedFamilies, canEmbed,
+    unavailableReasonKey? }`; `setEmbedFonts(enabled)` keeps or strips the deck's embedded fonts on
+    save. Turning it on for a deck that embeds nothing returns `'unsupported'`: a browser cannot read
+    the bytes of an installed font, so the viewer cannot add one.
+  - `actions.digitalSignatures`: `state` is `{ signed, count, removedOnSave, supported }`. `list()`
+    reads the signatures from the loaded package (signer, issuer, validity dates, `expired`, and
+    `integrity`: `'digestsMatch' | 'invalid' | 'unverified'` for the parts each signature covers).
+    That is an integrity check only: the signature value, certificate chain and revocation are not
+    evaluated, so nothing is reported as trusted. `remove()` marks the deck changed so the saved file
+    carries no signatures (saving always drops them; `'no-signatures'` when there are none).
+    `sign()` always returns `'unsupported'`: the viewer cannot create a signature.
 - **Which actions can run.** `actions.availability[id]` is `{ available, reason?, needsHostUi }` for
   `insertImage`, `insertMedia`, `hyperlink`, `removeHyperlink`, `insertSmartArt`, `insertChart`,
-  `insertEquation`, `editEquation`, `replace`, `applyLayout` and `resetLayout`. `needsHostUi` is true for the controls
+  `insertEquation`, `editEquation`, `replace`, `applyLayout`, `resetLayout`, `passwordProtection`,
+  `documentProperties`, `fontEmbedding` and `digitalSignatures`. `needsHostUi` is true for the controls
   that only raise a request. `actions.unmountedDialogActions` lists the other `toolbarProps`
-  handlers (`onOpenPasswordProtection`, `onOpenDocumentProperties`,
-  `onOpenFontEmbedding`, `onOpenDigitalSignatures`, `onOpenSetUpSlideShow`, `onOpenCustomShows`,
+  handlers (`onOpenSetUpSlideShow`, `onOpenCustomShows`,
   `onOpenBroadcastDialog`, `onToggleShortcuts`) that set state for a dialog nothing renders here;
   hide them with `hiddenActions` or show your own.
 

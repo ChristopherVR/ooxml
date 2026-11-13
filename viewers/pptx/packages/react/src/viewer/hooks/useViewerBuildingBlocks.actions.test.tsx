@@ -339,7 +339,7 @@ test('layout apply and reset are wired, validated against the slide master, and 
 
 test('unmounted dialog toolbar actions are listed so a shell can hide or replace them', async () => {
 	await mount();
-	expect(latest.actions.unmountedDialogActions).toContain('onOpenDocumentProperties');
+	expect(latest.actions.unmountedDialogActions).not.toContain('onOpenDocumentProperties');
 	expect(latest.actions.unmountedDialogActions).not.toContain('onOpenChartDialog');
 	for (const name of latest.actions.unmountedDialogActions) {
 		expect(Object.keys(latest.toolbarProps)).toContain(name);

@@ -1,3 +1,4 @@
+import { passwordStrength, validateOpenPassword } from 'ooxml-ui/pptx';
 import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { LuLock, LuShieldCheck, LuX, LuEye, LuEyeOff } from 'react-icons/lu';
 
@@ -17,33 +18,11 @@ export interface PasswordProtectionDialogProps {
 	onRemovePassword: () => void;
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/** Returns a strength score 0-4 for a password. */
-function getPasswordStrength(password: string): number {
-	if (!password) {
-		return 0;
-	}
-	let score = 0;
-	if (password.length >= 8) {
-		score++;
-	}
-	if (password.length >= 12) {
-		score++;
-	}
-	if (/[A-Z]/u.test(password) && /[a-z]/u.test(password)) {
-		score++;
-	}
-	if (/\d/u.test(password)) {
-		score++;
-	}
-	if (/[^A-Za-z0-9]/u.test(password)) {
-		score++;
-	}
-	return Math.min(score, 4);
-}
+const PASSWORD_ERROR_KEYS: Record<string, string> = {
+	'password-required': 'pptx.security.errorPasswordRequired',
+	'password-mismatch': 'pptx.security.errorPasswordMismatch',
+	'password-too-short': 'pptx.security.errorPasswordTooShort',
+};
 
 const STRENGTH_COLORS = [
 	'bg-red-500',
@@ -73,7 +52,7 @@ export function PasswordProtectionDialog({
 	const dialogRef = useRef<HTMLDivElement>(null);
 	const passwordRef = useRef<HTMLInputElement>(null);
 
-	const strength = useMemo(() => getPasswordStrength(password), [password]);
+	const strength = useMemo(() => passwordStrength(password), [password]);
 
 	const strengthLabel = useMemo(() => {
 		const labels = [
@@ -88,16 +67,9 @@ export function PasswordProtectionDialog({
 
 	const handleSubmit = useCallback(() => {
 		setError('');
-		if (!password) {
-			setError(t('pptx.security.errorPasswordRequired'));
-			return;
-		}
-		if (password !== confirmPassword) {
-			setError(t('pptx.security.errorPasswordMismatch'));
-			return;
-		}
-		if (password.length < 4) {
-			setError(t('pptx.security.errorPasswordTooShort'));
+		const checked = validateOpenPassword(password, confirmPassword);
+		if (!checked.ok) {
+			setError(t(PASSWORD_ERROR_KEYS[checked.code] ?? 'pptx.security.errorPasswordRequired'));
 			return;
 		}
 		onSetPassword(password);

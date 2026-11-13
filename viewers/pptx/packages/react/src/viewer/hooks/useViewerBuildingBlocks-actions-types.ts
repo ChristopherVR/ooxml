@@ -11,6 +11,7 @@ import type {
 import type { PptxLayoutOption, SmartArtLayout } from 'pptx-viewer-core';
 
 import type { HyperlinkEditData } from '../components/hyperlink-edit-types';
+import type { FileDialogActions } from './useViewerBuildingBlocks-file-dialog-actions';
 
 /**
  * A toolbar control or canvas gesture asked for UI the building blocks never mount (a file picker,
@@ -23,6 +24,14 @@ export type BuildingBlockRequest =
 	| { kind: 'hyperlink' }
 	| { kind: 'smartArt' }
 	| { kind: 'chart' }
+	/** Open password, Mark as Final: render your own UI from `actions.passwordProtection`. */
+	| { kind: 'passwordProtection' }
+	/** Render your own editor from `actions.documentProperties`. */
+	| { kind: 'documentProperties' }
+	/** Render your own options from `actions.fontEmbedding`. */
+	| { kind: 'fontEmbedding' }
+	/** Render your own list from `actions.digitalSignatures`. */
+	| { kind: 'digitalSignatures' }
 	/** `existingOmml` is the equation being edited (a double-click), null for a new one. */
 	| { kind: 'equation'; existingOmml: Record<string, unknown> | null };
 
@@ -71,7 +80,7 @@ export interface BuildingBlockLayoutActions {
 	reset: () => Promise<BuildingBlockResult>;
 }
 
-export interface ViewerBuildingBlockActions {
+export interface ViewerBuildingBlockActions extends FileDialogActions {
 	/** What each workflow can do right now and whether its toolbar control needs host UI. */
 	availability: Record<BuildingBlockActionId, BuildingBlockActionState>;
 	/**

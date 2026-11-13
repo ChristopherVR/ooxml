@@ -73,6 +73,8 @@ export function useReadOnlyRecommendationState(content: unknown) {
 		recommendation,
 		setRecommendation,
 		setModifyVerifier,
+		/** The deck's raw `p:modifyVerifier`, for reporting protection state. */
+		modifyVerifier,
 		/** Whether the viewer's `canEdit` should be forced off. */
 		locked: readOnlyLocked(recommendation, session),
 		bannerVisible: readOnlyBannerVisible(recommendation, session),

@@ -1,3 +1,4 @@
+import { appPropertiesChanged, documentPropertiesChanged } from 'ooxml-ui/pptx';
 import type { PptxAppProperties, PptxCoreProperties, PptxCustomProperty } from 'pptx-viewer-core';
 import React, { useState, useCallback, useMemo } from 'react';
 import { LuFileText, LuX } from 'react-icons/lu';
@@ -111,37 +112,21 @@ export function DocumentPropertiesDialog({
 		setDraftCore((prev) => ({ ...prev, [key]: value }));
 	}, []);
 
-	const isDirty = useMemo(() => {
-		const coreChanged = SUMMARY_FIELDS.some(
-			({ key }) => (draftCore[key] ?? '') !== (coreProperties[key] ?? ''),
-		);
-		if (coreChanged) {
-			return true;
-		}
-		const appCompanyChanged = (draftApp.company ?? '') !== (appProperties?.company ?? '');
-		const appManagerChanged = (draftApp.manager ?? '') !== (appProperties?.manager ?? '');
-		if (appCompanyChanged || appManagerChanged) {
-			return true;
-		}
-		if (draftCustom.length !== customProperties.length) {
-			return true;
-		}
-		return draftCustom.some(
-			(p, i) =>
-				p.name !== customProperties[i]?.name ||
-				p.value !== customProperties[i]?.value ||
-				p.type !== customProperties[i]?.type,
-		);
-	}, [draftCore, draftCustom, draftApp, coreProperties, customProperties, appProperties]);
+	const isDirty = useMemo(
+		() =>
+			documentPropertiesChanged(
+				{ core: coreProperties, custom: customProperties, app: appProperties },
+				{ core: draftCore, custom: draftCustom, app: draftApp },
+			),
+		[draftCore, draftCustom, draftApp, coreProperties, customProperties, appProperties],
+	);
 
 	const handleUpdateDraftApp = useCallback((updates: Partial<PptxAppProperties>) => {
 		setDraftApp((prev) => ({ ...prev, ...updates }));
 	}, []);
 
 	const handleSave = useCallback(() => {
-		const appChanged =
-			(draftApp.company ?? '') !== (appProperties?.company ?? '') ||
-			(draftApp.manager ?? '') !== (appProperties?.manager ?? '');
+		const appChanged = appPropertiesChanged(appProperties, draftApp);
 		onSave(draftCore, draftCustom, appChanged ? draftApp : undefined);
 		onClose();
 	}, [draftCore, draftCustom, draftApp, appProperties, onSave, onClose]);

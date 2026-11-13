@@ -1,4 +1,9 @@
-import type { GoogleFontsOption, ListConversionScope, PptxLoadLimits } from 'ooxml-ui/pptx';
+import type {
+	GoogleFontsOption,
+	ListConversionScope,
+	PptxLoadLimits,
+	ReadOnlyRecommendation,
+} from 'ooxml-ui/pptx';
 /**
  * useViewerBuildingBlocksState: The dialogs / editor-operations /
  * integration half of `useViewerBuildingBlocks`'s hook wiring, split out
@@ -76,6 +81,10 @@ export interface ViewerBuildingBlocksState {
 	loadVersion: number;
 	/** False while read-only recommended or in Protected View, which blocks inserting. */
 	canInsertElement: boolean;
+	/** Whether the loaded deck recommends read-only (modify verifier or Mark as Final). */
+	readOnlyRecommendation: ReadOnlyRecommendation;
+	/** The loaded deck carries a modify verifier. */
+	hasModifyVerifier: boolean;
 	/** The loaded deck's handler (null before a deck loads). */
 	handlerRef: { readonly current: PptxHandler | null };
 	dialogs: ViewerDialogsResult;
@@ -303,6 +312,8 @@ export function useViewerBuildingBlocksState(
 	return {
 		loadVersion,
 		canInsertElement,
+		readOnlyRecommendation: readOnlyRec.recommendation,
+		hasModifyVerifier: readOnlyRec.modifyVerifier !== undefined,
 		handlerRef: integrationHandlerRef,
 		dialogs,
 		editorOps,

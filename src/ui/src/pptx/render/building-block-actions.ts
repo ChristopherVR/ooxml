@@ -39,7 +39,15 @@ export type BuildingBlockFailureCode =
 	| 'unknown-layout'
 	/** Chart data with no categories or series, or a series that does not match them. */
 	| 'invalid-data'
-	| 'no-layout';
+	| 'no-layout'
+	/** The deck cannot do this (for example embedding a font it does not carry, or creating a signature). */
+	| 'unsupported'
+	/** An open password that is empty, shorter than four characters. */
+	| 'password-required'
+	| 'password-too-short'
+	| 'password-mismatch'
+	/** The package carries no signature to remove. */
+	| 'no-signatures';
 
 export type BuildingBlockResult = { ok: true } | { ok: false; code: BuildingBlockFailureCode };
 
@@ -111,7 +119,11 @@ export type BuildingBlockActionId =
 	| 'editEquation'
 	| 'replace'
 	| 'applyLayout'
-	| 'resetLayout';
+	| 'resetLayout'
+	| 'passwordProtection'
+	| 'documentProperties'
+	| 'fontEmbedding'
+	| 'digitalSignatures';
 
 export interface BuildingBlockActionState {
 	/** The operation would run now; when false, `reason` says why. */
@@ -150,10 +162,6 @@ export interface BuildingBlockAvailabilityInput {
  * and nothing appears. A custom shell hides them (`hiddenActions`) or supplies its own UI.
  */
 export const BUILDING_BLOCK_UNMOUNTED_DIALOG_ACTIONS = [
-	'onOpenPasswordProtection',
-	'onOpenDocumentProperties',
-	'onOpenFontEmbedding',
-	'onOpenDigitalSignatures',
 	'onOpenSetUpSlideShow',
 	'onOpenCustomShows',
 	'onOpenBroadcastDialog',
@@ -207,5 +215,10 @@ export function describeBuildingBlockActions(
 			slide,
 			input.hasHandler && input.hasCurrentLayout ? undefined : 'no-layout',
 		),
+		// Apply is gated like an edit; the request itself also fires read-only (see the file dialogs).
+		passwordProtection: state(true),
+		documentProperties: state(true),
+		fontEmbedding: state(true),
+		digitalSignatures: state(true),
 	};
 }

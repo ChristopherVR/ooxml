@@ -9,7 +9,11 @@ import {
 	validateHostImageFile,
 	validateHostMediaFile,
 } from 'ooxml-ui/pptx';
-import type { BuildingBlockActionId, BuildingBlockResult } from 'ooxml-ui/pptx';
+import type {
+	BuildingBlockActionId,
+	BuildingBlockResult,
+	ReadOnlyRecommendation,
+} from 'ooxml-ui/pptx';
 import type { PptxElement, PptxHandler, PptxSlide } from 'pptx-viewer-core';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -21,12 +25,14 @@ import {
 import type { EditorHistoryResult } from './useEditorHistory';
 import type { EditorOperationsResult } from './useEditorOperations';
 import { useLayoutSwitching } from './useLayoutSwitching';
+import type { PropertyHandlersResult } from './usePropertyHandlers';
 import { scopeLayoutOptionsToActiveSlide } from './useScopedLayoutOptions';
 import type {
 	BuildingBlockRequest,
 	UseViewerBuildingBlocksActionsOptions,
 	ViewerBuildingBlockActions,
 } from './useViewerBuildingBlocks-actions-types';
+import { useFileDialogActions } from './useViewerBuildingBlocks-file-dialog-actions';
 import {
 	buildFindReplaceActions,
 	buildLayoutActions,
@@ -47,6 +53,10 @@ export interface UseViewerBuildingBlocksActionsInput extends UseViewerBuildingBl
 	editorOps: EditorOperationsResult;
 	history: EditorHistoryResult;
 	handlerRef: { readonly current: PptxHandler | null };
+	propertyHandlers: PropertyHandlersResult;
+	content: ArrayBuffer | Uint8Array | null | undefined;
+	readOnlyRecommendation: Pick<ReadOnlyRecommendation, 'kind'>;
+	hasModifyVerifier: boolean;
 }
 
 export interface ViewerBuildingBlocksActionsResult {
@@ -120,13 +130,18 @@ export function useViewerBuildingBlocksActions(
 		return available ? undefined : buildingBlockFailure(reason ?? 'not-ready');
 	};
 
-	const request = useCallback((next: BuildingBlockRequest, id: BuildingBlockActionId) => {
-		if (!latest.current.availability[id].available) {
-			return;
-		}
-		setPending(next);
-		latest.current.onRequest?.(next);
-	}, []);
+	const request = useCallback(
+		(next: BuildingBlockRequest, id: BuildingBlockActionId, viewable = false) => {
+			const { available, reason } = latest.current.availability[id];
+			// A viewable request (a state panel) only needs a loaded deck; applying is refused later.
+			if (viewable ? reason === 'not-ready' : !available) {
+				return;
+			}
+			setPending(next);
+			latest.current.onRequest?.(next);
+		},
+		[],
+	);
 	const complete = (kind: BuildingBlockRequest['kind'], result: BuildingBlockResult) => {
 		if (result.ok) {
 			setPending((current) => (current?.kind === kind ? null : current));
@@ -265,7 +280,21 @@ export function useViewerBuildingBlocksActions(
 		applyLayout: (path) => latest.current.layoutSwitching.applyLayout(path),
 	});
 
+	const fileDialogs = useFileDialogActions({
+		state,
+		dialogs,
+		propertyHandlers: input.propertyHandlers,
+		history,
+		content: input.content,
+		recommendation: input.readOnlyRecommendation,
+		hasModifyVerifier: input.hasModifyVerifier,
+		refuse,
+		request,
+		complete,
+	});
+
 	const actions: ViewerBuildingBlockActions = {
+		...fileDialogs,
 		availability,
 		unmountedDialogActions: BUILDING_BLOCK_UNMOUNTED_DIALOG_ACTIONS,
 		pending,
