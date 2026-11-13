@@ -40,11 +40,12 @@
  * `googleFontsBaseUrl` can be pointed at a self-hosted mirror of the CSS2 API
  * (see {@link resolveGoogleWebfontHref}), otherwise nothing is fetched and
  * the CSS chain falls through to its next, non-metric-matched entry as it
- * already did.
+ * already did. PowerPoint prefers a measured look-alike over the clone where
+ * there is one (Aptos: Gantari), see {@link PPTX_WEBFONT_SERVE}.
  */
 
 import type { PptxEmbeddedFont, PptxSlide } from 'ooxml-core/pptx';
-import { GOOGLE_FONTS_CSS2_BASE } from 'ooxml-core/text';
+import { GOOGLE_FONTS_CSS2_BASE, type WebfontServeOptions } from 'ooxml-core/text';
 
 import {
 	isFontFamilyInstalledLocally,
@@ -71,6 +72,15 @@ export {
 	type GoogleFontsOption,
 } from 'ooxml-core/text';
 export { isFontFamilyInstalledLocally } from '../../fonts/webfonts';
+
+/**
+ * PowerPoint requests a font's measured look-alike (Aptos: Gantari, `ooxml-core/text`'s
+ * `look-alikes.ts`) rather than its metric clone: `text-design-tracking.ts` restores the deck
+ * font's widths over whatever face is painted, so the stand-in is chosen by its shapes. The CSS
+ * stack (`getSubstituteFontFamily` from `ooxml-core/pptx`) lists the same look-alike right after
+ * the deck font.
+ */
+export const PPTX_WEBFONT_SERVE: WebfontServeOptions = { lookAlikes: true };
 
 /**
  * Collect all unique font family names referenced across slide elements,
@@ -103,7 +113,7 @@ export function resetGoogleWebfontSessionCache(): void {
  * installed one on the next call.
  */
 export function matchGoogleWebfontFragments(families: readonly string[]): string[] {
-	return matchWebfontFragments(families);
+	return matchWebfontFragments(families, PPTX_WEBFONT_SERVE);
 }
 
 /**
@@ -128,7 +138,7 @@ export async function resolveGoogleWebfontHref(
 		return null;
 	}
 	const candidates = selectGoogleWebfontCandidates(slides, embeddedFonts, isLocallyInstalled);
-	return webfontHref(candidates, googleFontsBaseUrl ?? GOOGLE_FONTS_CSS2_BASE);
+	return webfontHref(candidates, googleFontsBaseUrl ?? GOOGLE_FONTS_CSS2_BASE, PPTX_WEBFONT_SERVE);
 }
 
 /**

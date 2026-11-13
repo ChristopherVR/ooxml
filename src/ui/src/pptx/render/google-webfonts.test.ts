@@ -227,11 +227,20 @@ describe('matchGoogleWebfontFragments', () => {
 		]);
 	});
 
-	it('dedupes two families that resolve to the same clone into one fragment', () => {
-		// Aptos and Calibri both resolve to Carlito; the request should not
+	it('dedupes two families that resolve to the same stand-in into one fragment', () => {
+		// Aptos and Aptos Display share their look-alike; the request should not
 		// ask Google Fonts for the same family twice.
+		expect(matchGoogleWebfontFragments(['Aptos', 'Aptos Display'])).toStrictEqual([
+			buildGoogleFontsFragment('Gantari'),
+		]);
+	});
+
+	it('requests the look-alike of Aptos, not the Calibri clone (issue #249)', () => {
+		// The deck font's widths are restored by text-design-tracking, so the
+		// stand-in is the face that looks like Aptos; Calibri keeps its clone.
 		expect(matchGoogleWebfontFragments(['Aptos', 'Calibri'])).toStrictEqual([
 			buildGoogleFontsFragment('Carlito'),
+			buildGoogleFontsFragment('Gantari'),
 		]);
 	});
 });
@@ -337,6 +346,12 @@ describe('resolveGoogleWebfontHref', () => {
 	it('resolves an unembedded Office font to its metric-compatible clone', async () => {
 		const href = await resolveGoogleWebfontHref([slide(textEl('Calibri'))], []);
 		expect(href).toContain('family=Carlito%3Aital');
+	});
+
+	it('resolves an unembedded Aptos to its look-alike', async () => {
+		const href = await resolveGoogleWebfontHref([slide(textEl('Aptos'))], [], () => false);
+		expect(href).toContain('family=Gantari%3Aital');
+		expect(href).not.toContain('Carlito');
 	});
 
 	it('an embedded Office font is NOT redirected to its clone', async () => {

@@ -25,8 +25,10 @@
  * failure (network, parse, no match) resolves to `undefined`; the caller
  * simply keeps the existing affine-transform fallback for that glyph.
  */
-import { resolveFontItalic, resolveFontWeight, resolveGoogleFontsFace } from './font-weight-names';
-import { findMetricCompatibleGoogleFontsFamily } from './google-webfonts-metric-clones';
+import { servedGoogleFontsFamily } from 'ooxml-core/text';
+
+import { resolveFontItalic, resolveFontWeight } from './font-weight-names';
+import { PPTX_WEBFONT_SERVE } from './google-webfonts';
 
 interface ParsedFontFaceBlock {
 	family: string;
@@ -146,7 +148,7 @@ function fetchOnce(
  * Fetch the outline-ready bytes for `referencedFamily` (the family as
  * referenced in the deck, e.g. "Calibri") at `cssHref` (the same href
  * `resolveGoogleWebfontHref` built), resolving through the same
- * canonical/metric-clone lookup `matchGoogleWebfontFragments` used to decide
+ * canonical/stand-in lookup `matchGoogleWebfontFragments` used to decide
  * what the stylesheet actually serves.
  *
  * Returns `undefined` on any failure; never throws.
@@ -158,9 +160,7 @@ export async function fetchGoogleWebfontOutlineBytes(
 	italic: boolean,
 	fetchImpl: FetchLike,
 ): Promise<Uint8Array | undefined> {
-	const canonical =
-		resolveGoogleFontsFace(referencedFamily)?.family ??
-		findMetricCompatibleGoogleFontsFamily(referencedFamily);
+	const canonical = servedGoogleFontsFamily(referencedFamily, PPTX_WEBFONT_SERVE);
 	if (!canonical) {
 		return undefined;
 	}

@@ -39,6 +39,7 @@ import {
 } from '../../fonts/webfonts';
 import {
 	isFontFamilyInstalledLocally,
+	PPTX_WEBFONT_SERVE,
 	resolveGoogleWebfontHref,
 	selectGoogleWebfontCandidates,
 } from './google-webfonts';
@@ -145,7 +146,7 @@ export function collectDeckWebfontFaces(
 	slides: readonly PptxSlide[],
 	candidates: readonly string[],
 ): { faces: Map<string, WebfontFace[]>; unavailable: string[] } {
-	return collectWebfontFaces(collectDeckWebfontRuns(slides), candidates);
+	return collectWebfontFaces(collectDeckWebfontRuns(slides), candidates, PPTX_WEBFONT_SERVE);
 }
 
 /** Every text run the slides draw, for the shared webfont loader. */
@@ -175,6 +176,7 @@ export function prefetchDeckWebfonts(options: {
 		linkId: options.linkId,
 		bytes: options.bytes,
 		base: options.googleFontsBase,
+		lookAlikes: PPTX_WEBFONT_SERVE.lookAlikes === true,
 	});
 }
 

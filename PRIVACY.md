@@ -47,7 +47,9 @@ as Aptos, or a template's display face. PowerPoint downloads those from Microsof
 viewer does the same from Google Fonts, so the text keeps its intended look and line breaks.
 
 - **Trigger:** opening a deck that uses such a font, when the bundled Google Fonts catalogue
-  serves that family or a metric-compatible clone of it (for example Carlito for Calibri).
+  serves that family or a stand-in for it: a metric-compatible clone (for example Carlito for
+  Calibri) or, for Aptos and Aptos Display, the measured look-alike Gantari, whose widths the
+  viewer corrects to Aptos's own.
 - **Sent:** a request to `https://fonts.googleapis.com/css2` whose query names the families
   (and weights) the deck needs, then requests to `fonts.gstatic.com` for the font files. To save
   time, a first request is made while the deck is still opening, naming the catalogue families

@@ -19,6 +19,7 @@ import {
 	selectGoogleWebfontFamilies,
 	type WebfontFace,
 	type WebfontRun,
+	type WebfontServeOptions,
 } from 'ooxml-core/text';
 
 /**
@@ -116,14 +117,21 @@ export function selectWebfontCandidates(
 }
 
 /** The CSS2 fragments for the candidates, recording each match in the session cache. */
-export function matchWebfontFragments(candidates: readonly string[]): string[] {
-	return matchGoogleWebfontFragments(candidates, (family) => resolvedFamilies.add(family));
+export function matchWebfontFragments(
+	candidates: readonly string[],
+	options?: WebfontServeOptions,
+): string[] {
+	return matchGoogleWebfontFragments(candidates, (family) => resolvedFamilies.add(family), options);
 }
 
 /** The stylesheet href for the candidates, or `null` (also when `base` is `null`: off). */
-export function webfontHref(candidates: readonly string[], base: string | null): string | null {
+export function webfontHref(
+	candidates: readonly string[],
+	base: string | null,
+	options?: WebfontServeOptions,
+): string | null {
 	if (base === null) return null;
-	return buildGoogleFontsHref(matchWebfontFragments(candidates), base);
+	return buildGoogleFontsHref(matchWebfontFragments(candidates, options), base);
 }
 
 export interface PrefetchWebfontsOptions {
@@ -135,6 +143,8 @@ export interface PrefetchWebfontsOptions {
 	/** From `resolveGoogleFontsCss2Base`; `null` (off) removes any early stylesheet. */
 	base: string | null;
 	isLocallyInstalled?: (family: string) => boolean;
+	/** Request measured look-alikes rather than metric clones (see `WebfontServeOptions`). */
+	lookAlikes?: boolean;
 }
 
 /**
@@ -161,7 +171,7 @@ export function prefetchWebfonts(options: PrefetchWebfontsOptions): string | nul
 			declared.embedded,
 			options.isLocallyInstalled ?? isFontFamilyInstalledLocally,
 		);
-		const href = webfontHref(candidates, base);
+		const href = webfontHref(candidates, base, { lookAlikes: options.lookAlikes });
 		const link = syncGoogleWebfontStylesheet(doc, id, href);
 		if (link) link.dataset['pending'] = '1';
 		return href;

@@ -25,7 +25,8 @@ import { findGoogleFontsFamily } from './google-fonts-lookup';
  * with Calibri-close metrics; the measured per-glyph error against the real,
  * COM-measured Aptos advance table is the smallest among every candidate
  * this repo has real measurements for (see `font-substitution.test.ts`'s
- * "aptos metric-compatible match" suite).
+ * "aptos metric-compatible match" suite). Its letterforms differ, though; PowerPoint, which
+ * corrects widths itself, asks for the look-alike in `look-alikes.ts` instead.
  */
 const METRIC_COMPATIBLE_CLONES: Readonly<Record<string, string>> = {
 	Calibri: 'Carlito',

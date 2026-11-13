@@ -93,6 +93,15 @@ faces. PowerPoint reaches them through `src/ui/src/pptx/render/google-webfonts.t
 - A family Google does not serve under its own name is requested as its verified
   metric-compatible clone (`metric-clones.ts`: Calibri and Aptos as Carlito,
   Cambria as Caladea, Arial as Arimo, Times New Roman as Tinos, and so on), so line breaks match.
+- PowerPoint instead asks for the measured look-alike when there is one (`look-alikes.ts`: Aptos
+  and Aptos Display as Gantari), and lists it right after the deck font in the CSS stack. It can,
+  because it gives each run the letter-spacing that restores the deck font's measured width over
+  whatever face is painted (`text-design-tracking.ts`), so the stand-in is chosen by its shapes.
+  Gantari was picked by rendering sixteen words in Aptos through PowerPoint and in about 80 open
+  families in Chromium, spread to the same width, and comparing the inked pixels (issue #249).
+  When a face loads after a slide is built, `text-tracking-settle.ts` recomputes the marked
+  runs' letter-spacing in place. Word, Excel and Visio keep the metric clone, since the browser's
+  own measurement breaks their lines.
 - A weight named as its own family ("DM Sans Light") requests the base family with that weight.
 - Fragments are sorted, so the same deck always produces the same URL and the stylesheet is
   fetched once.

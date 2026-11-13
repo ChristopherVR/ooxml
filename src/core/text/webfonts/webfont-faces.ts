@@ -9,7 +9,7 @@
  * @module text/webfonts/webfont-faces
  */
 import { resolveFontItalic, resolveFontWeight } from './font-weight-names';
-import { servedGoogleFontsFamily } from './google-fonts-request';
+import { servedGoogleFontsFamily, type WebfontServeOptions } from './google-fonts-request';
 
 /** One run of text: its family, emphasis and characters. */
 export interface WebfontRun {
@@ -48,15 +48,18 @@ export function collectRunFamilies(runs: Iterable<WebfontRun>): Set<string> {
 export function collectWebfontFaces(
 	runs: Iterable<WebfontRun>,
 	candidates: readonly string[],
+	options?: WebfontServeOptions,
 ): { faces: Map<string, WebfontFace[]>; unavailable: string[] } {
 	const wanted = new Set(candidates);
-	const unavailable = candidates.filter((family) => servedGoogleFontsFamily(family) === null);
+	const unavailable = candidates.filter(
+		(family) => servedGoogleFontsFamily(family, options) === null,
+	);
 	const faces = new Map<string, WebfontFace[]>();
 	const byFont = new Map<string, WebfontFace>();
 	for (const run of runs) {
 		const family = run.family?.trim();
 		if (!family || !wanted.has(family)) continue;
-		const served = servedGoogleFontsFamily(family);
+		const served = servedGoogleFontsFamily(family, options);
 		if (served === null) continue;
 		const weight = resolveFontWeight(family, run.bold);
 		const style = resolveFontItalic(family, run.italic) ? 'italic ' : '';

@@ -16,6 +16,7 @@
  * @module text/webfonts/google-fonts-request
  */
 import { resolveGoogleFontsFace } from './font-weight-names';
+import { findLookAlikeGoogleFontsFamily } from './look-alikes';
 import { findMetricCompatibleGoogleFontsFamily } from './metric-clones';
 
 /** Base URL of the Google Fonts CSS2 API. */
@@ -128,14 +129,31 @@ export function buildGoogleFontsHref(
 	return `${baseUrl}?${query}&${DISPLAY_PARAM}`;
 }
 
-/** The family the stylesheet serves for `family` (itself or its clone), or `null`. */
-export function servedGoogleFontsFamily(family: string): string | null {
-	return resolveGoogleFontsFace(family)?.family ?? findMetricCompatibleGoogleFontsFamily(family);
+/** How a family the catalogue does not serve under its own name is stood in for. */
+export interface WebfontServeOptions {
+	/**
+	 * Serve the family's measured look-alike (`look-alikes.ts`) rather than its metric clone. Only
+	 * for a product that corrects the stand-in's widths itself (PowerPoint); others keep the clone,
+	 * whose advances already match.
+	 */
+	readonly lookAlikes?: boolean | undefined;
+}
+
+/** The family the stylesheet serves for `family` (itself or its stand-in), or `null`. */
+export function servedGoogleFontsFamily(
+	family: string,
+	options?: WebfontServeOptions,
+): string | null {
+	return (
+		resolveGoogleFontsFace(family)?.family ??
+		(options?.lookAlikes ? findLookAlikeGoogleFontsFamily(family) : null) ??
+		findMetricCompatibleGoogleFontsFamily(family)
+	);
 }
 
 /**
  * The query fragments for the candidate families the catalogue knows, under their canonical
- * spelling or as their metric-compatible clone; families resolving to one served family give one
+ * spelling or as their stand-in ({@link servedGoogleFontsFamily}); families resolving to one served family give one
  * fragment. A weight variant named as its own family ("DM Sans Light") requests its base family
  * with that weight on the axis. Unmatched families are dropped without any request. Sorted, so
  * the href depends only on which families a document uses. `onResolved` hears every candidate
@@ -144,11 +162,12 @@ export function servedGoogleFontsFamily(family: string): string | null {
 export function matchGoogleWebfontFragments(
 	families: readonly string[],
 	onResolved?: (family: string) => void,
+	options?: WebfontServeOptions,
 ): string[] {
 	const weightsByFamily = new Map<string, Set<number>>();
 	for (const family of families) {
 		const face = resolveGoogleFontsFace(family);
-		const canonical = face?.family ?? findMetricCompatibleGoogleFontsFamily(family);
+		const canonical = face?.family ?? servedGoogleFontsFamily(family, options);
 		if (canonical === null) continue;
 		onResolved?.(family);
 		let weights = weightsByFamily.get(canonical);
