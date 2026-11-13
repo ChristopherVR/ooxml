@@ -85,6 +85,8 @@ function installFontLoadHook(): void {
 		trackingCache = new Map();
 	});
 }
+// Ahead of any binding's own `loadingdone` listener, so a re-render on that event measures afresh.
+installFontLoadHook();
 
 function getMeasureContext(): CanvasRenderingContext2D | null {
 	if (measureContext !== undefined) {

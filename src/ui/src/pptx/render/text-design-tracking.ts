@@ -20,6 +20,21 @@ const MAX_TRACKING_EM = 0.15;
 
 const paintedCache = new Map<string, boolean>();
 let hookInstalled = false;
+let probeContext: CanvasRenderingContext2D | null | undefined;
+
+/**
+ * A face that finishes loading can turn a stand-in into the painted deck font, so the answers are
+ * dropped. Installed when the module loads, ahead of any binding's own `loadingdone` listener, so
+ * a binding that re-renders on that event never reads an answer about the old face.
+ */
+function installFontLoadHook(): void {
+	if (hookInstalled || typeof document === 'undefined') {
+		return;
+	}
+	hookInstalled = true;
+	document.fonts?.addEventListener?.('loadingdone', () => paintedCache.clear());
+}
+installFontLoadHook();
 
 /** The deck font: the first family of the resolved CSS list, unquoted. */
 export function deckFamilyOf(fontFamily: string | undefined): string | undefined {
@@ -41,10 +56,7 @@ export function isFamilyPainted(ctx: CanvasRenderingContext2D, family: string): 
 	if (cached !== undefined) {
 		return cached;
 	}
-	if (!hookInstalled && typeof document !== 'undefined') {
-		hookInstalled = true;
-		document.fonts?.addEventListener?.('loadingdone', () => paintedCache.clear());
-	}
+	installFontLoadHook();
 	const probe = 'mmmmmmmmmmlliWW1234';
 	const width = (font: string): number => {
 		ctx.font = font;
@@ -55,6 +67,23 @@ export function isFamilyPainted(ctx: CanvasRenderingContext2D, family: string): 
 		width(`72px "${family}", serif`) !== width('72px serif');
 	paintedCache.set(family, painted);
 	return painted;
+}
+
+/**
+ * Whether a run in `fontFamily` (a CSS list, deck font first) takes its width from the deck
+ * font's measured advances because the browser paints a stand-in: then its spacing depends on
+ * which stand-in is loaded (see `text-tracking-settle.ts`).
+ */
+export function isDeckFontSubstituted(fontFamily: string | undefined): boolean {
+	const deckFamily = deckFamilyOf(fontFamily);
+	if (!deckFamily || !hasDesignAdvances(deckFamily)) {
+		return false;
+	}
+	if (probeContext === undefined) {
+		probeContext =
+			typeof document === 'undefined' ? null : document.createElement('canvas').getContext('2d');
+	}
+	return probeContext !== null && !isFamilyPainted(probeContext, deckFamily);
 }
 
 /**
@@ -91,4 +120,5 @@ export function resolveDesignTrackingPx(
 /** Test hook. */
 export function resetDesignTrackingCache(): void {
 	paintedCache.clear();
+	probeContext = undefined;
 }

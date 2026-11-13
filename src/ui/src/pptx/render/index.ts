@@ -767,6 +767,7 @@ export * from './text-paragraphs';
 // re-export shim.
 export * from './paragraph-baseline';
 export * from './paragraph-baseline-settle';
+export * from './text-tracking-settle';
 export * from './paragraph-spacing';
 export * from './paragraph-strut';
 // `a:spAutoFit` editor-time shape resize: the pure height decision plus the

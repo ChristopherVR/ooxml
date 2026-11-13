@@ -4,6 +4,7 @@ import {
 	pieceLetterSpacing,
 	splitEastAsianBreaks,
 	splitRunForMetrics,
+	trackingPendingStyle,
 } from 'ooxml-ui/pptx';
 import React from 'react';
 
@@ -99,6 +100,8 @@ export function renderMetricPieces(
 		const style: React.CSSProperties = {
 			...metric.nestedStyle,
 			letterSpacing: pieceLetterSpacing(metric.authoredPx, piece.tracking),
+			// Redone in place when a webfont replaces the stand-in it was measured on.
+			...trackingPendingStyle(metric.font, metric.authoredPx),
 		};
 		return (
 			<span key={key} style={style}>

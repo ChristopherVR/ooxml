@@ -26,6 +26,7 @@ import { resolveMetricTrackingPx } from './text-metric-tracking';
 import { resolveTextOutlineDashCss } from './text-outline-dash';
 import { hollowTextFillStyle } from './text-run-hollow';
 import { authoredLetterSpacingPx, pieceLetterSpacing } from './text-run-spacing';
+import { trackingPendingStyle } from './text-tracking-settle';
 import { scaleFontSizeForAutoFit } from './text-style-helpers';
 
 /** A plain CSS style map (keys are CSS properties; binding-agnostic). */
@@ -109,6 +110,8 @@ function applyExtraRunProps(
 	if (letterSpacing !== undefined) {
 		style.letterSpacing = letterSpacing;
 	}
+	// Spacing measured against a stand-in face is redone in place when the webfont loads.
+	Object.assign(style, trackingPendingStyle(font, authoredLetterSpacingPx(s)));
 	// Kerning (`a:rPr/@kern`) is a THRESHOLD, not a boolean: see `resolveFontKerning`.
 	const fontKerning = resolveFontKerning(s.kerning, font.fontSizePx);
 	if (fontKerning !== undefined) {
