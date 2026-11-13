@@ -36,6 +36,8 @@ Strict TypeScript, DOM-free apart from `File`, exported from `ooxml-ui/pptx`.
 | `hyperlink-edit-data.ts` | `HyperlinkEditData` (the hyperlink dialog's values), its conversions to and from `actionClick`, and `hyperlinkEditPatch` (refuses unsafe URL schemes).                                                                                                                                    |
 | `toolbar.ts`             | `describeBuildingBlockToolbar(input)`: the compact toolbar's groups and controls (existing dictionary keys, so no new strings), and `runBuildingBlockToolbarControl(id, session, view)`.                                                                                                  |
 | `mode.ts`                | `resolveBuildingBlockMode(mode, canEdit)`: the `mode` every binding reports (below).                                                                                                                                                                                                      |
+| `shell.ts`               | `createBuildingBlockShell(read)` and `describeBuildingBlockShell`: the `shellState` (`resolveCollaborationShellState`) and `collaborationState` (`buildCollaborationState`) every binding reports, `BUILDING_BLOCK_SHELL_IDLE` before a canvas mounts, and the identity rule (below).     |
+| `live-options.ts`        | `BUILDING_BLOCK_LIVE_OPTIONS`, `collaborationOptionChange`, `googleFontsOptionChanged` and `applyBuildingBlockLiveOptions(previous, next, port)`: how an imperative engine (vanilla) applies the options it reads once.                                                                   |
 | `action-groups.ts`       | `BuildingBlockActionGroupMap`, `defineBuildingBlockActionGroup` and the group context.                                                                                                                                                                                                    |
 
 `building-block-actions.ts` (beside the folder) keeps `describeBuildingBlockActions`, the failure
@@ -84,6 +86,28 @@ operations are refused there. The other requests need their action to be availab
 help is a toggle the host mirrors: every change of the binding's flag (`?`, Ctrl+/, `setOpen`) is
 passed to `session.announce(request, open)`, which makes an open request pending, settles it on
 close and calls `onRequest` for both.
+
+### Shell state and collaboration
+
+Every binding's state carries `shellState` (`{ canEdit, status, remoteUsers, connectedCount }`) and
+`collaborationState` (the shared `CollaborationState`, `COLLABORATION_OFF` while not sharing).
+The binding reads the raw inputs from its own collaboration session (the room's status, read-only
+role or readiness, remote presences, the host's `canEdit`, whether a source is loading or failed)
+and the shared shell derives both: vanilla and Svelte call `createBuildingBlockShell` over their
+session, Vue over the engine's `shell()` (its viewer's `useCollaboration` result), React
+`describeBuildingBlockShell` in a memo, and Angular maps its custom-shell service's `state()` and
+`collaboration.state()` signals, which run the same two functions. The shell keeps its identity
+while nothing a shell shows changed (cursor moves alone keep it), so a computed, signal or getter
+only re-renders on real changes.
+
+Collaboration is an option: setting `collaboration` joins the room, a new config object rejoins
+(compared by `resolveCollaborationConfig` identity), clearing it leaves, and none of these remounts
+the canvas or reloads the deck. React, Vue, Svelte and Angular run their viewer's own collaboration
+wiring (the `createCollaborationSessionController` lifecycle, the document sync and the cursor and
+remote-selection overlays); vanilla's `update()` calls `applyBuildingBlockLiveOptions`, which
+starts or stops its viewer's session. A `viewer` role or an unsynced room takes editing away
+(`mode` reads `preview`); the host's `canEdit` stays a ceiling. Nothing connects unless the host
+passes a `collaboration` config.
 
 ### Mode
 
@@ -149,7 +173,10 @@ Every entry:
 - takes `content`, `canEdit` (view-only until `true`), `onRequest`, `fileLimits`, `hiddenActions`,
   `onDirtyChange`, `onOpenLayoutGallery` and the binding's viewer options;
 - returns `actions: ViewerBuildingBlockActions` (the shared type, re-exported) with every group,
-  and a state with the effective `mode`, `loading`, `error` and the slide count;
+  and a state with the effective `mode`, `loading`, `error`, the slide count, `shellState` and
+  `collaborationState`;
+- takes `collaboration` (joined, rejoined and left live) and `googleFonts` / `allowExternalContent`
+  (applied live, locking their Trust Center settings);
 - renders the compact toolbar from `describeBuildingBlockToolbar` and runs its controls with
   `runBuildingBlockToolbarControl` (React keeps its ribbon `Toolbar`);
 - marks its blocks with `data-pptx-block="canvas" | "toolbar" | "slides-pane"` and each toolbar
@@ -158,15 +185,26 @@ Every entry:
 
 ### Which options apply without a remount
 
-| Option                                                                               | React                      | Vanilla                                                  |
-| ------------------------------------------------------------------------------------ | -------------------------- | -------------------------------------------------------- |
-| `content`, `canEdit`, every callback, `onRequest`, `fileLimits`, `hiddenActions`     | at once                    | at once                                                  |
-| `listConversionScope`, `userName` / `authorName`                                     | at once                    | at once (read live)                                      |
-| `limits`, `initialSlide`                                                             | next load                  | next load (read live)                                    |
-| `locale`, `theme`, `customization`                                                   | at once                    | at once (`setLocale`, `setTheme`, `setCustomization`)    |
-| `googleFonts`, `allowExternalContent`                                                | at once (locks the option) | next canvas mount (the vanilla viewer reads them once)   |
-| `collaboration`                                                                      | at once                    | next canvas mount; or `blocks.viewer.startCollaboration` |
-| `fonts`, `registry`, `availableThemes`, `availableLocales`, `inspectorInitiallyOpen` | not offered                | next canvas mount                                        |
+`BUILDING_BLOCK_LIVE_OPTIONS` lists the options every binding applies at once; "at once" means the
+mounted canvas, the open deck, its edits and undo history stay.
+
+| Option                                                                               | React                      | Vanilla                                               | Vue                        | Svelte                     | Angular                    |
+| ------------------------------------------------------------------------------------ | -------------------------- | ----------------------------------------------------- | -------------------------- | -------------------------- | -------------------------- |
+| `content`, `canEdit`, every callback, `onRequest`, `fileLimits`, `hiddenActions`     | at once                    | at once                                               | at once                    | at once                    | at once                    |
+| `listConversionScope`, `userName` / `authorName`                                     | at once                    | at once (read live)                                   | at once                    | at once                    | at once                    |
+| `limits`, `initialSlide`                                                             | next load                  | next load (read live)                                 | next load                  | next load                  | next load                  |
+| `locale`, `theme`, `customization`                                                   | at once                    | at once (`setLocale`, `setTheme`, `setCustomization`) | at once                    | `locale` at once           | not offered                |
+| `googleFonts`, `allowExternalContent`                                                | at once (locks the option) | at once (locks the option)                            | at once (locks the option) | at once (locks the option) | at once (locks the option) |
+| `collaboration`                                                                      | at once                    | at once (`applyBuildingBlockLiveOptions`)             | at once                    | at once                    | at once                    |
+| `fonts`, `registry`, `availableThemes`, `availableLocales`, `inspectorInitiallyOpen` | not offered                | next canvas mount                                     | as the viewer              | not offered                | not offered                |
+
+"Locks the option" means the host value also locks the Trust Center setting
+(`trust.allowFontDownloads`, `trust.allowExternalContent`), as the full viewer does. Each binding
+has a test for it (React `useViewerBuildingBlocks.google-fonts.test.tsx`, vanilla
+`create-viewer-building-blocks.live.test.ts`, Svelte `create-viewer-building-blocks.svelte.test.ts`,
+Angular `viewer-building-blocks.contract.test.ts`; Vue forwards both to its viewer, whose
+`useViewerCustomization` watchers apply them). The contract checks every binding keeps the deck
+across these updates.
 
 ## How the vanilla reference port is built
 
@@ -179,7 +217,9 @@ Every entry:
 - `session-port.ts`: the session port over the viewer's store and editor controller.
 - `group-ports.ts`: the ports of the dialog groups over the same.
 - `viewer-options.ts`: the viewer's options as a live view (a `Proxy`) of the latest building-block
-  options, and the options `update()` pushes explicitly.
+  options (its collaboration callbacks also notify the blocks), and the options `update()` pushes
+  explicitly, including `applyBuildingBlockLiveOptions` over `BuildingBlocksViewer.liveOptionPort`.
+- `shell-state.ts`: `createBuildingBlockShell` over the viewer's store and collaboration session.
 - `create-viewer-building-blocks.ts`: the session, group registration, the find bar controller
   (committing replaces through `editor.commitElementUpdates`, its matches copied to the viewer
   store's `findMatches` / `findMatchIndex`, which the canvas marks), the shortcut flag, `subscribe`,
@@ -245,26 +285,35 @@ group (password, document properties, font embedding, signatures, set up slide s
 broadcast, shortcuts with its announced request and cancel), a toolbar request and its cancel,
 validation, an insert that marks the deck dirty, Find / Replace with the host bar, layout refusal,
 taking permission away again, and for compact-toolbar ports the block markers and the control order
-(`COMPACT_TOOLBAR_CONTROLS`).
+(`COMPACT_TOOLBAR_CONTROLS`). Its shell part (`building-blocks-contract-shell.mjs`) checks the shell
+state while not sharing, live `googleFonts` / `allowExternalContent` updates that keep the deck
+(its edited title, custom show and dirty flag), joining a host-owned room through the options
+(`contractRoom(Y)`: an `externalSession` on the binding's own `Y.Doc` with a dependency-free
+awareness, connected and synced), a `viewer` role taking editing away, and leaving again with the
+deck kept.
 
 - React: `packages/react/src/viewer/hooks/useViewerBuildingBlocks.contract.test.tsx`.
 - Vanilla: `packages/vanilla/src/building-blocks/create-viewer-building-blocks.test.ts`.
 - Vue: `packages/vue/src/building-blocks/useViewerBuildingBlocks.test.ts`.
 - Svelte: `packages/svelte/src/building-blocks/create-viewer-building-blocks.svelte.test.ts`.
 - Angular: `packages/angular/src/building-blocks/viewer-building-blocks.contract.test.ts`.
-- Each port adds one test that builds a harness (`mount`, `update`, `actions`, `state`,
-  `clickPictures`, `settle`, `destroy`, `toolbar: true`) and calls `runBuildingBlocksContract`. It
+- Each port adds one test that builds a harness (`mount`, `update`, `actions`, `state` with
+  `shellState` and `collaborationState`, `clickPictures`, `settle`, `destroy`, `toolbar: true`) and
+  calls `runBuildingBlocksContract` with its own `yjs` (`Y`). It
   must pass unchanged; a port that needs the contract changed is a design change for this note.
 
 The browser side is `e2e/pptx/building-blocks.spec.ts`: it drives each demo's `?blocks=1` page
 (the binding's own blocks plus the shared host panel) for every project with
 `metadata.buildingBlocks`, all five bindings. Run it with
 `PPTX_E2E_PORT_OFFSET=500 bun run e2e -- --project=react --project=vue --project=angular --project=vanilla --project=svelte building-blocks.spec.ts`
-in `viewers/pptx`. `e2e/pptx/host-owned-*.spec.ts` keep covering React's collaboration-room shell.
+in `viewers/pptx`. `e2e/pptx/building-blocks-collaboration.spec.ts` runs collaboration through the blocks on the same
+projects: two `?blocks=1` pages join one host-owned room on the local relay (the panel's
+"Host join room", `demos/pptx/shared/building-blocks-room.ts`: a Y.Doc, awareness and
+`y-websocket` provider the page owns, handed over as `externalSession`), see each other in
+`shellState.connectedCount`, share an insert, and one leaves with its deck kept. Nothing connects
+until the button is pressed. `e2e/pptx/host-owned-*.spec.ts` keep covering the custom-shell demos.
 
 ## Known gaps
 
-- Vanilla's state has no `shellState` or `collaboration` object; use `blocks.viewer` for
-  collaboration. Follow-up: map `getCollaborationState()` onto `resolveCollaborationShellState`.
 - The compact toolbar has no controls for the File and Slide Show dialogs; a host raises
   those workflows from its own controls and the `actions` groups.

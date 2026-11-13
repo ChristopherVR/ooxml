@@ -114,8 +114,10 @@ errors. They are React-specific; other bindings do not gain this callback or gua
 
 `useViewerBuildingBlocks` accepts the same optional `collaboration` configuration
 as `PowerPointViewer`, including a [host-owned Yjs session](/guide/host-owned-collaboration).
-It returns `collaboration` connection/presence state for a custom status bar and
-includes cursor and remote-selection overlays in `canvasProps`. No extra collaboration provider is needed.
+It returns `collaboration` connection/presence state for a custom status bar,
+the same `shellState` and `collaborationState` (the shared `CollaborationState`) every binding's
+building blocks report, and includes cursor and remote-selection overlays in `canvasProps`.
+Changing `collaboration` joins, rejoins or leaves without remounting the canvas. No extra collaboration provider is needed.
 
 ```tsx
 import { SlideCanvas, Toolbar, useViewerBuildingBlocks } from 'pptx-react-viewer';

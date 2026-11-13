@@ -34,14 +34,34 @@ blocks.mountCanvas(document.querySelector('#canvas')!);
 ```
 
 The blocks are view-only until `canEdit: true`, as in every binding, and `mode` reads `preview`
-until then. `update(options)` applies `content`, `canEdit`, `locale`, `theme`, `customization` and
-every callback at once, and options the viewer reads when it uses them (`listConversionScope`,
-`limits` on the next load) follow too. `googleFonts`, `allowExternalContent`, `collaboration`,
-`fonts`, `registry`, `availableThemes` and `availableLocales` apply the next time the canvas mounts.
+until then. `update(options)` applies `content`, `canEdit`, `locale`, `theme`, `customization`,
+`googleFonts`, `allowExternalContent`, `collaboration` and every callback to the mounted canvas at
+once, keeping the open deck, and options the viewer reads when it uses them
+(`listConversionScope`, `limits` on the next load) follow too. `fonts`, `registry`,
+`availableThemes` and `availableLocales` apply the next time the canvas mounts.
 `subscribe(listener)` calls `listener` after every change, and `getState()` returns
-`{ mode, loading, error, slideIndex, slideCount, canUndo, canRedo, dirty }` for your status line.
+`{ mode, loading, error, slideIndex, slideCount, canUndo, canRedo, dirty, shellState, collaborationState }`
+for your status line (see below).
 `blocks.viewer` is the full [viewer instance](/vanilla/api) behind the canvas (null until it
 mounts), for saving, export and everything else.
+
+## Collaboration and shell state
+
+`collaboration` takes the same configuration as the full viewer, including a
+[host-owned Yjs session](/guide/host-owned-collaboration) (`externalSession`). Setting it joins the
+room, a new configuration object rejoins, and clearing it leaves; the open deck, its edits and the
+canvas stay. Remote cursors and selections draw on the canvas. `getState()` also carries the shell:
+
+- `shellState`: `{ canEdit, status, remoteUsers, connectedCount }`, the effective edit permission
+  (your `canEdit` is a ceiling; a `viewer` role or a room that has not synced yet takes it away, and
+  `mode` reads `preview` then) and the connection. Pass it to `describeCollaborationShellState` for a
+  localised status line.
+- `collaborationState`: the shared `CollaborationState` (`active`, `roomId`, `status`, `synced`,
+  `people`), `status: 'off'` while not sharing; the value the full viewer's collaboration-change
+  event reports.
+
+`blocks.viewer.startCollaboration` and `stopCollaboration` still work; prefer the option, so `update` and the
+viewer never disagree about the room.
 
 ## Host-owned workflows
 
@@ -96,7 +116,7 @@ call `actions` and `blocks.viewer`.
 
 ## Not included
 
-The blocks render no dialogs, panes, ribbon, status bar, notes or presentation chrome, and have no
-`shellState` or collaboration status object yet (use `blocks.viewer`). Broadcast cannot be run from
+The blocks render no dialogs, panes, ribbon, status bar, notes or presentation chrome (no Share
+dialog: join a room through `collaboration`). Broadcast cannot be run from
 the building blocks (`actions.unmountedDialogActions`). Hosts that need the bundled chrome should
 use `createPptxViewer`.

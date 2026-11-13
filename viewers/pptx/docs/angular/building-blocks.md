@@ -60,18 +60,35 @@ or constructor); it keeps the options in step with the signals the function read
 does the same by hand. The blocks are view-only until `canEdit: true`, as in every binding.
 
 `content`, `canEdit`, every callback, `onRequest`, `fileLimits`, `hiddenActions`,
-`listConversionScope`, `googleFonts` and `allowExternalContent` apply at once; `limits` and
+`listConversionScope`, `googleFonts`, `allowExternalContent` (both also lock their Trust Center
+settings) and `collaboration` apply at once, without remounting the canvas; `limits` and
 `initialSlide` apply to the next load. Changing `content` to a different file reloads the deck.
 
 ## State and actions
 
 Both are signals:
 
-- `blocks.state()` is `{ mode, loading, error, slideIndex, slideCount, canUndo, canRedo, dirty }`
-  (`mode` reads `preview` until editing is granted); `blocks.mode()`, `blocks.loading()` and
-  `blocks.error()` are computed from it.
+- `blocks.state()` is
+  `{ mode, loading, error, slideIndex, slideCount, canUndo, canRedo, dirty, shellState, collaborationState }`
+  (`mode` reads `preview` until editing is granted); `blocks.mode()`, `blocks.loading()`,
+  `blocks.error()`, `blocks.shellState()` and `blocks.collaborationState()` are computed from it.
 - `blocks.actions()` is the shared `ViewerBuildingBlockActions` (a new object whenever anything it
   reports changes), identical in shape to every other binding's.
+
+## Collaboration and shell state
+
+`collaboration` takes the same configuration as the full viewer, including a
+[host-owned Yjs session](/guide/host-owned-collaboration) (`externalSession`). Setting it joins the
+room, a new configuration object rejoins, and clearing it leaves; the open deck, its edits and the
+canvas stay. Remote cursors and selections draw on the canvas. `blocks.state()` also carries the shell:
+
+- `shellState`: `{ canEdit, status, remoteUsers, connectedCount }`, the effective edit permission
+  (your `canEdit` is a ceiling; a `viewer` role or a room that has not synced yet takes it away, and
+  `mode` reads `preview` then) and the connection. Pass it to `describeCollaborationShellState` for a
+  localised status line.
+- `collaborationState`: the shared `CollaborationState` (`active`, `roomId`, `status`, `synced`,
+  `people`), `status: 'off'` while not sharing; the value the full viewer's collaboration-change
+  event reports.
 
 ## Host-owned workflows
 

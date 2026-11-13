@@ -48,11 +48,27 @@ const blocks = useViewerBuildingBlocks(() => ({
 
 The options may be an object, a ref or a getter. The blocks are view-only until `canEdit: true`,
 and `mode` reads `preview` until then. Every option applies at once, the `limits` and
-`initialSlide` ones from the next load. The result holds `actions`, `state`
-(`{ mode, loading, error, slideIndex, slideCount, canUndo, canRedo, dirty }`), `mode`, `loading`
-and `error` as computed refs, and `viewer`, the full viewer's imperative handle (saving, export;
+`initialSlide` ones from the next load; none of them remounts the canvas. The result holds
+`actions`, `state`
+(`{ mode, loading, error, slideIndex, slideCount, canUndo, canRedo, dirty, shellState, collaborationState }`),
+`mode`, `loading`, `error`, `shellState` and `collaborationState` as computed refs, and `viewer`, the full viewer's imperative handle (saving, export;
 null until the canvas mounts). The blocks need the `vue-i18n` plugin installed, as the full viewer
 does.
+
+## Collaboration and shell state
+
+`collaboration` takes the same configuration as the full viewer, including a
+[host-owned Yjs session](/guide/host-owned-collaboration) (`externalSession`). Setting it joins the
+room, a new configuration object rejoins, and clearing it leaves; the open deck, its edits and the
+canvas stay. Remote cursors and selections draw on the canvas. `state` also carries the shell:
+
+- `shellState`: `{ canEdit, status, remoteUsers, connectedCount }`, the effective edit permission
+  (your `canEdit` is a ceiling; a `viewer` role or a room that has not synced yet takes it away, and
+  `mode` reads `preview` then) and the connection. Pass it to `describeCollaborationShellState` for a
+  localised status line.
+- `collaborationState`: the shared `CollaborationState` (`active`, `roomId`, `status`, `synced`,
+  `people`), `status: 'off'` while not sharing; the value the full viewer's collaboration-change
+  event reports.
 
 ## Host-owned workflows
 
