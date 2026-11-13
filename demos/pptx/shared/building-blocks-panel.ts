@@ -120,6 +120,7 @@ export function mountBuildingBlocksPanel(
 			actions().findReplace.setQuery(query.value);
 		}),
 		button('Host next match', () => actions().findReplace.next()),
+		button('Host close find', () => actions().findReplace.setOpen(false)),
 		button('Host set title', () =>
 			show(actions().documentProperties.apply({ core: { title: 'Blocks title' } })),
 		),

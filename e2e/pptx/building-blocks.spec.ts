@@ -83,8 +83,36 @@ test.describe('building blocks', () => {
 			.poll(async () => Number(await out(page, 'Blocks matches').textContent()))
 			.toBeGreaterThan(1);
 		await expect(out(page, 'Blocks current match')).toHaveText('0');
+		// The canvas marks the matched TEXT (as React always did), not the element holding it.
+		const marks = page.locator('[data-pptx-viewport] mark[data-pptx-find-match]');
+		const current = page.locator('[data-pptx-viewport] mark[data-pptx-find-match="current"]');
+		await expect.poll(() => marks.count()).toBeGreaterThan(0);
+		expect(new Set((await marks.allTextContents()).map((text) => text.toLowerCase()))).toEqual(
+			new Set(['e']),
+		);
+		await expect(current).toHaveCount(1);
+		await expect(page.locator('[data-element-id][data-pptx-find-match]')).toHaveCount(0);
+		const first = await current.evaluate(
+			(node) => node.closest('[data-element-id]')?.getAttribute('data-element-id') ?? '',
+		);
+		const firstIndex = await marks.evaluateAll((nodes) =>
+			nodes.findIndex((node) => node.getAttribute('data-pptx-find-match') === 'current'),
+		);
 		await press(page, 'Host next match');
 		await expect(out(page, 'Blocks current match')).toHaveText('1');
+		await expect(current).toHaveCount(1);
+		await expect
+			.poll(async () => [
+				await current.evaluate(
+					(node) => node.closest('[data-element-id]')?.getAttribute('data-element-id') ?? '',
+				),
+				await marks.evaluateAll((nodes) =>
+					nodes.findIndex((node) => node.getAttribute('data-pptx-find-match') === 'current'),
+				),
+			])
+			.not.toEqual([first, firstIndex]);
+		await press(page, 'Host close find');
+		await expect(marks).toHaveCount(0);
 	});
 
 	test('the dialog groups apply through actions', async ({ page }) => {
