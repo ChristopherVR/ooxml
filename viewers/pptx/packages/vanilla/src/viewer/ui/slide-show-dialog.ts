@@ -1,3 +1,4 @@
+import { applySlideShowSettingsPatch } from 'ooxml-ui/pptx';
 import type { PptxCustomShow, PptxPresentationProperties } from 'pptx-viewer-core';
 
 import type { Translator } from '../i18n';
@@ -32,6 +33,10 @@ export function openSlideShowDialog(
 		regions && { regions },
 	);
 	const draft = { ...properties };
+	// The shared rules: a kiosk show loops, a range defaults to the deck, a custom show to the first.
+	const apply = (patch: Partial<PptxPresentationProperties>): void => {
+		Object.assign(draft, applySlideShowSettingsPatch(draft, patch, { slideCount, customShows }));
+	};
 	const group = (legend: string): HTMLFieldSetElement => {
 		const fieldset = createEl(doc, 'fieldset');
 		const title = createEl(doc, 'legend');
@@ -54,10 +59,7 @@ export function openSlideShowDialog(
 			(draft.showType ?? 'presented') === value,
 		);
 		input.addEventListener('change', () => {
-			draft.showType = value;
-			if (value === 'kiosk') {
-				draft.loopContinuously = true;
-			}
+			apply({ showType: value });
 		});
 	}
 	const range = group(t('pptx.slideShow.showSlides'));
@@ -69,7 +71,7 @@ export function openSlideShowDialog(
 		(draft.showSlidesMode ?? 'all') === 'all',
 	);
 	all.addEventListener('change', () => {
-		draft.showSlidesMode = 'all';
+		apply({ showSlidesMode: 'all' });
 	});
 	const from = doc.createElement('input');
 	from.type = 'number';
@@ -94,7 +96,7 @@ export function openSlideShowDialog(
 	);
 	range.appendChild(rangeRow);
 	selected.addEventListener('change', () => {
-		draft.showSlidesMode = 'range';
+		apply({ showSlidesMode: 'range' });
 	});
 	// `p:showPr/p:custShow/@id`. Offered only when the deck defines a show,
 	// exactly like the other four bindings, so the radio can never name nothing.
@@ -114,8 +116,7 @@ export function openSlideShowDialog(
 		}
 		picker.value = draft.showSlidesCustomShowId ?? customShows[0].id;
 		const selectShow = (): void => {
-			draft.showSlidesMode = 'customShow';
-			draft.showSlidesCustomShowId = picker.value;
+			apply({ showSlidesMode: 'customShow', showSlidesCustomShowId: picker.value });
 		};
 		showRadio.addEventListener('change', selectShow);
 		picker.addEventListener('change', () => {

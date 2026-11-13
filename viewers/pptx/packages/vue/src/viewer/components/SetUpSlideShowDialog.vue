@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { applySlideShowSettingsPatch } from 'ooxml-ui/pptx';
 import type { PptxCustomShow, PptxPresentationProperties } from 'pptx-viewer-core';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -49,11 +50,15 @@ const showType = computed(() => draft.value.showType ?? 'presented');
 const showSlidesMode = computed(() => draft.value.showSlidesMode ?? 'all');
 
 function update(patch: Partial<PptxPresentationProperties>): void {
-	draft.value = { ...draft.value, ...patch };
+	// The shared rules: a kiosk show loops, a range defaults to the deck, a custom show to the first.
+	draft.value = applySlideShowSettingsPatch(draft.value, patch, {
+		slideCount: props.slideCount,
+		customShows: props.customShows,
+	});
 }
 
 function setShowType(value: 'presented' | 'browsed' | 'kiosk'): void {
-	update({ showType: value, ...(value === 'kiosk' ? { loopContinuously: true } : {}) });
+	update({ showType: value });
 }
 
 function onSave(): void {

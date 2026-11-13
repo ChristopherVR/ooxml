@@ -25,6 +25,7 @@ import {
 	signal,
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
+import { applySlideShowSettingsPatch } from 'ooxml-ui/pptx';
 import type { PptxCustomShow, PptxPresentationProperties } from 'pptx-viewer-core';
 
 import type { DialogFooterActionSpec } from './dialog-footer.component';
@@ -81,7 +82,7 @@ import { ShowSlidesFieldsetComponent } from './show-slides-fieldset.component';
 							class="pptx-ng-sss-radio"
 							value="kiosk"
 							[checked]="showType() === 'kiosk'"
-							(change)="update({ showType: 'kiosk', loopContinuously: true })"
+							(change)="update({ showType: 'kiosk' })"
 						/>
 						<span>{{ 'pptx.slideShow.browsedAtKiosk' | translate }}</span>
 					</label>
@@ -225,7 +226,12 @@ export class SetUpSlideShowDialogComponent {
 
 	/** Merge a partial patch into the current draft. */
 	update(patch: Partial<PptxPresentationProperties>): void {
-		this.draft.update((prev) => ({ ...prev, ...patch }));
+		this.draft.update((prev) =>
+			applySlideShowSettingsPatch(prev, patch, {
+				slideCount: this.slideCount(),
+				customShows: this.customShows(),
+			}),
+		);
 	}
 
 	onClose(): void {

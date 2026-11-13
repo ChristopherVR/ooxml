@@ -1,5 +1,6 @@
 <script lang="ts">
 	import DialogFooter from './DialogFooter.svelte';
+	import { applySlideShowSettingsPatch } from 'ooxml-ui/pptx';
 	import type { PptxCustomShow, PptxPresentationProperties } from 'pptx-viewer-core';
 	import { untrack } from 'svelte';
 	import { useTranslator } from '../../i18n/context';
@@ -10,10 +11,13 @@
 	} = $props();
 	const t = useTranslator();
 	let draft = $state<PptxPresentationProperties>(structuredClone(untrack(() => properties)));
-	const option = (key: keyof PptxPresentationProperties, value: boolean) => {
-		draft = { ...draft, [key]: value };
+	const patch = (next: Partial<PptxPresentationProperties>) => {
+		draft = applySlideShowSettingsPatch(draft, next, { slideCount, customShows });
 	};
-	function save(): void { onsave(structuredClone(draft)); onclose(); }
+	const option = (key: keyof PptxPresentationProperties, value: boolean) => {
+		patch({ [key]: value });
+	};
+	function save(): void { onsave($state.snapshot(draft)); onclose(); }
 </script>
 
 <div class="backdrop" role="presentation">
@@ -24,14 +28,14 @@
 		<div class="body">
 			<fieldset><legend>{t('pptx.slideShow.showType')}</legend>
 				{#each [['presented', 'pptx.slideShow.presentedBySpeaker'], ['browsed', 'pptx.slideShow.browsedByIndividual'], ['kiosk', 'pptx.slideShow.browsedAtKiosk']] as item}
-					<label><pptx-ui-radio name="show-type" value={item[0]} checked={(draft.showType ?? 'presented') === item[0]} onchange={() => { draft = { ...draft, showType: item[0] as 'presented' | 'browsed' | 'kiosk', ...(item[0] === 'kiosk' ? { loopContinuously: true } : {}) }; }}></pptx-ui-radio>{t(item[1])}</label>
+					<label><pptx-ui-radio name="show-type" value={item[0]} checked={(draft.showType ?? 'presented') === item[0]} onchange={() => { patch({ showType: item[0] as 'presented' | 'browsed' | 'kiosk' }); }}></pptx-ui-radio>{t(item[1])}</label>
 				{/each}
 			</fieldset>
 			<fieldset><legend>{t('pptx.slideShow.showSlides')}</legend>
-				<label><pptx-ui-radio name="range" checked={(draft.showSlidesMode ?? 'all') === 'all'} onchange={() => (draft = { ...draft, showSlidesMode: 'all' })}></pptx-ui-radio>{t('pptx.slideShow.allSlides')}</label>
-				<label><pptx-ui-radio name="range" checked={draft.showSlidesMode === 'range'} onchange={() => (draft = { ...draft, showSlidesMode: 'range' })}></pptx-ui-radio>{t('pptx.slideShow.fromTo')}</label>
+				<label><pptx-ui-radio name="range" checked={(draft.showSlidesMode ?? 'all') === 'all'} onchange={() => patch({ showSlidesMode: 'all' })}></pptx-ui-radio>{t('pptx.slideShow.allSlides')}</label>
+				<label><pptx-ui-radio name="range" checked={draft.showSlidesMode === 'range'} onchange={() => patch({ showSlidesMode: 'range' })}></pptx-ui-radio>{t('pptx.slideShow.fromTo')}</label>
 				<div class="range"><input aria-label={t('pptx.slideShow.from')} type="number" min="1" max={slideCount} value={draft.showSlidesFrom ?? 1} oninput={(event) => (draft = { ...draft, showSlidesFrom: Number(event.currentTarget.value) })} /><span>{t('pptx.slideShow.to')}</span><input aria-label={t('pptx.slideShow.to')} type="number" min="1" max={slideCount} value={draft.showSlidesTo ?? slideCount} oninput={(event) => (draft = { ...draft, showSlidesTo: Number(event.currentTarget.value) })} /></div>
-				{#if customShows.length}<label><pptx-ui-radio name="range" checked={draft.showSlidesMode === 'customShow'} onchange={() => (draft = { ...draft, showSlidesMode: 'customShow' })}></pptx-ui-radio>{t('pptx.slideShow.customShow')}<pptx-ui-select aria-label={t('pptx.slideShow.customShow')} value={draft.showSlidesCustomShowId ?? customShows[0]?.id} onchange={(event) => (draft = { ...draft, showSlidesCustomShowId: event.currentTarget.value })}>{#each customShows as show}<option value={show.id}>{show.name}</option>{/each}</pptx-ui-select></label>{/if}
+				{#if customShows.length}<label><pptx-ui-radio name="range" checked={draft.showSlidesMode === 'customShow'} onchange={() => patch({ showSlidesMode: 'customShow' })}></pptx-ui-radio>{t('pptx.slideShow.customShow')}<pptx-ui-select aria-label={t('pptx.slideShow.customShow')} value={draft.showSlidesCustomShowId ?? customShows[0]?.id} onchange={(event) => (draft = { ...draft, showSlidesCustomShowId: event.currentTarget.value })}>{#each customShows as show}<option value={show.id}>{show.name}</option>{/each}</pptx-ui-select></label>{/if}
 			</fieldset>
 			<fieldset><legend>{t('pptx.slideShow.advanceSlides')}</legend>
 				<label><pptx-ui-radio name="advance" checked={draft.advanceMode === 'manual'} onchange={() => (draft = { ...draft, advanceMode: 'manual' })}></pptx-ui-radio>{t('pptx.slideShow.manually')}</label>
