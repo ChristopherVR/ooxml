@@ -1556,6 +1556,7 @@ export * from './building-block-signatures';
 export * from './building-block-show-settings';
 export * from './building-block-custom-shows';
 export * from './building-block-show-dialogs';
+export * from './building-blocks';
 export * from './template-background-rows';
 export * from './template-editing';
 export * from './transition-template-elements';
