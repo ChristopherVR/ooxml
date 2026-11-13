@@ -128,7 +128,9 @@ export interface EditorControllerDeps {
 export type HostDialogRequest =
 	| { kind: 'hyperlink' }
 	| { kind: 'equation'; existingOmml: Record<string, unknown> | null }
-	| { kind: 'find' };
+	| { kind: 'find' }
+	/** The keyboard shortcut help (`?`, Ctrl+/) toggled. */
+	| { kind: 'shortcuts' };
 
 export interface EditorController {
 	hasActivePointerInteraction(): boolean;
@@ -589,7 +591,11 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 			store.set({ formatPainterSourceId: null });
 			return true;
 		},
-		toggleShortcuts: () => deps.getChrome().shortcuts.toggle(),
+		toggleShortcuts: () => {
+			if (!deps.requestHostDialog?.({ kind: 'shortcuts' })) {
+				deps.getChrome().shortcuts.toggle();
+			}
+		},
 		// Same action as Home > Editing > Find. Null when the host disabled the
 		// ribbon, in which case there is no find panel to open and the chord
 		// correctly does nothing.

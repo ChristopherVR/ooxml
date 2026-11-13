@@ -30,6 +30,7 @@ export interface BuildingBlocksContractHarness {
 }
 
 export const COMPACT_TOOLBAR_CONTROLS: readonly string[];
+export const BUILDING_BLOCK_GROUP_IDS: readonly string[];
 export function buildingBlocksContractDeck(Handler: typeof PptxHandler): Promise<Uint8Array>;
 export function runBuildingBlocksContract(input: {
 	harness: BuildingBlocksContractHarness;

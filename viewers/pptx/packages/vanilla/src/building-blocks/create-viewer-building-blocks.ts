@@ -1,16 +1,19 @@
 import {
+	createControllerStore,
 	createFindBarController,
 	createPptxBuildingBlockSession,
 	describeBuildingBlockToolbar,
+	registerBuildingBlockGroups,
 	runBuildingBlockToolbarControl,
 } from 'ooxml-ui/pptx';
-import type { ViewerMode } from 'ooxml-ui/pptx';
 
 import { createTranslator } from '../viewer/i18n';
 import type { PptxViewerSource } from '../viewer/load';
 import { clampSlideIndex as clampIndex } from '../viewer/state';
-import type { PptxViewerOptions } from '../viewer/types';
+import { viewerModeOf } from '../viewer/state-sync';
 import { BuildingBlocksViewer } from './blocks-viewer';
+import { syncFindHighlights } from './find-highlight';
+import { createVanillaGroupPorts } from './group-ports';
 import { createVanillaPort } from './session-port';
 import { mountSlidesPaneBlock } from './slides-pane-block';
 import { createToolbarView } from './toolbar-view';
@@ -19,35 +22,10 @@ import type {
 	ViewerBuildingBlocksOptions,
 	ViewerBuildingBlocksState,
 } from './types';
+import { applyOptionChanges, liveViewerOptions, loadSource } from './viewer-options';
 
-/** The regions the canvas block leaves out: the host composes its own shell around it. */
-const BLOCK_HIDDEN_PANELS = ['statusBar', 'inspector', 'notes', 'titleBar', 'quickAccessToolbar'];
-
-function viewerOptions(options: ViewerBuildingBlocksOptions): PptxViewerOptions {
-	// The building-block-only options never reach the viewer.
-	const {
-		content,
-		canEdit,
-		onRequest: _onRequest,
-		fileLimits: _fileLimits,
-		onOpenLayoutGallery: _onOpenLayoutGallery,
-		...rest
-	} = options;
-	const hiddenPanels = [...(rest.customization?.hiddenPanels ?? []), ...BLOCK_HIDDEN_PANELS];
-	return {
-		...rest,
-		...(content ? { source: content } : {}),
-		editable: canEdit === true,
-		showToolbar: false,
-		showThumbnails: false,
-		showCompatibilityToasts: false,
-		customization: { ...rest.customization, hiddenPanels } as PptxViewerOptions['customization'],
-	};
-}
-
-async function load(viewer: BuildingBlocksViewer, source: PptxViewerSource): Promise<void> {
-	await (typeof source === 'string' ? viewer.loadUrl(source) : viewer.loadFile(source));
-}
+const bytesOf = (source: PptxViewerSource | null | undefined) =>
+	source instanceof ArrayBuffer || source instanceof Uint8Array ? source : null;
 
 /**
  * The vanilla building blocks: the shared building-blocks session (`ooxml-ui/pptx`) over the
@@ -86,11 +64,39 @@ export function createViewerBuildingBlocks(
 			viewer.editor.selectElements(elementId ? [elementId] : []);
 		},
 	});
+	// The shortcut help is the host's: the blocks keep only whether it is open.
+	const shortcuts = createControllerStore(false);
+	const translate = (key: string) =>
+		(viewer?.t ?? createTranslator(options.locale ?? 'en', options.messages))(key);
 	const session = createPptxBuildingBlockSession(
-		createVanillaPort({ viewer: () => viewer, options: () => options, findBar }),
+		createVanillaPort({
+			viewer: () => viewer,
+			options: () => options,
+			findBar,
+			onCancel: () => setShortcutsOpen(false),
+		}),
 	);
-	const stopRequests = session.requests.subscribe(notify);
-	const stopFind = findBar.subscribe(notify);
+	const setShortcutsOpen = (open: boolean) => {
+		if (shortcuts.getSnapshot() !== open) {
+			shortcuts.set(open);
+			session.announce({ kind: 'shortcuts', open }, open);
+		}
+	};
+	registerBuildingBlockGroups(
+		session,
+		createVanillaGroupPorts({
+			viewer: () => viewer,
+			content: () => bytesOf(loaded),
+			shortcutsOpen: shortcuts.getSnapshot,
+			setShortcutsOpen,
+			translate,
+		}),
+	);
+	const stops = [
+		session.requests.subscribe(notify),
+		findBar.subscribe(notify),
+		shortcuts.subscribe(notify),
+	];
 	const subscribe = (listener: () => void) => {
 		listeners.add(listener);
 		return () => {
@@ -121,14 +127,9 @@ export function createViewerBuildingBlocks(
 			};
 		}
 		const state = viewer.store.get();
-		let mode: ViewerMode = state.editable ? 'edit' : 'preview';
-		if (state.presenting) {
-			mode = 'present';
-		} else if (state.masterViewTarget !== null) {
-			mode = 'master';
-		}
 		return {
-			mode,
+			// Already the effective mode (`preview` while not editable), as `resolveBuildingBlockMode`.
+			mode: viewerModeOf(state),
 			loading: state.loading,
 			error: state.error,
 			slideIndex: state.slides.length ? state.currentSlide : -1,
@@ -145,14 +146,57 @@ export function createViewerBuildingBlocks(
 		}
 		loaded = options.content;
 		if (loaded) {
-			void load(viewer, loaded).catch(() => {
+			void loadSource(viewer, loaded).catch(() => {
 				/* The viewer reports load errors through its state and `onError`. */
 			});
 		}
 	};
 
-	const translate = (key: string) =>
-		(viewer?.t ?? createTranslator(options.locale ?? 'en', options.messages))(key);
+	const mountCanvas = (host: HTMLElement) => {
+		stopViewer?.();
+		viewer?.destroy();
+		host.dataset.pptxBlock = 'canvas';
+		loaded = options.content;
+		// Permission is part of the first options, so the canvas is never briefly editable.
+		const mounted = new BuildingBlocksViewer(
+			host,
+			liveViewerOptions(() => options),
+			(request) => {
+				if (request.kind === 'find') {
+					findBar.toggle();
+				} else if (request.kind === 'shortcuts') {
+					setShortcutsOpen(!shortcuts.getSnapshot());
+				} else {
+					session.request(request);
+				}
+				return true;
+			},
+		);
+		viewer = mounted;
+		// The stage is repainted on change: outline the find matches again after every paint.
+		const highlight = () => {
+			const { matches, current } = findBar.getSnapshot().session;
+			syncFindHighlights(host, matches, current, mounted.store.get().currentSlide);
+		};
+		const observer = new MutationObserver(highlight);
+		observer.observe(host, { childList: true, subtree: true });
+		const stopStore = mounted.store.subscribe(notify);
+		const stopFind = findBar.subscribe(highlight);
+		stopViewer = () => {
+			observer.disconnect();
+			stopStore();
+			stopFind();
+		};
+		notify();
+		return track(() => {
+			stopViewer?.();
+			stopViewer = undefined;
+			viewer?.destroy();
+			viewer = null;
+			loaded = undefined;
+			notify();
+		});
+	};
 
 	return {
 		get actions() {
@@ -167,39 +211,15 @@ export function createViewerBuildingBlocks(
 		},
 		subscribe,
 		update(next) {
-			const permission = (next.canEdit === true) !== (options.canEdit === true);
+			const previous = options;
 			options = next;
-			if (viewer && permission) {
-				viewer.setEditable(next.canEdit === true);
+			if (viewer) {
+				applyOptionChanges(viewer, previous, next);
 			}
 			syncContent();
 			notify();
 		},
-		mountCanvas(host) {
-			stopViewer?.();
-			viewer?.destroy();
-			host.dataset.pptxBlock = 'canvas';
-			loaded = options.content;
-			// Permission is part of the first options, so the canvas is never briefly editable.
-			viewer = new BuildingBlocksViewer(host, viewerOptions(options), (request) => {
-				if (request.kind === 'find') {
-					findBar.toggle();
-				} else {
-					session.request(request);
-				}
-				return true;
-			});
-			stopViewer = viewer.store.subscribe(notify);
-			notify();
-			return track(() => {
-				stopViewer?.();
-				stopViewer = undefined;
-				viewer?.destroy();
-				viewer = null;
-				loaded = undefined;
-				notify();
-			});
-		},
+		mountCanvas,
 		mountToolbar(host, include) {
 			host.dataset.pptxBlock = 'toolbar';
 			host.classList.add('pptxv-bb-toolbar');
@@ -244,8 +264,9 @@ export function createViewerBuildingBlocks(
 			for (const dispose of [...disposers]) {
 				dispose();
 			}
-			stopRequests();
-			stopFind();
+			for (const stop of stops) {
+				stop();
+			}
 			listeners.clear();
 		},
 	};

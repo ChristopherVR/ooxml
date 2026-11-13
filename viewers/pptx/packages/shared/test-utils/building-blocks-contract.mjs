@@ -26,6 +26,18 @@ export const COMPACT_TOOLBAR_CONTROLS = [
 	'nextSlide',
 ];
 
+/** The `actions` keys of the built-in groups (`BUILDING_BLOCK_GROUP_IDS` in `ooxml-ui/pptx`). */
+export const BUILDING_BLOCK_GROUP_IDS = [
+	'passwordProtection',
+	'documentProperties',
+	'fontEmbedding',
+	'digitalSignatures',
+	'setUpSlideShow',
+	'customShows',
+	'broadcast',
+	'shortcuts',
+];
+
 /** A two-slide deck whose first slide reads "Alpha beta alpha". */
 export async function buildingBlocksContractDeck(Handler) {
 	const { handler, data } = await Handler.create({ initialSlideCount: 2 });
@@ -78,8 +90,28 @@ export async function runBuildingBlocksContract({ harness, expect, vi, Handler }
 		await harness.mount(host, options(false));
 		await until(harness, expect, () => expect(harness.state().slideCount).toBe(2), 'the deck');
 		expect(harness.state().error).toBeNull();
-		// `mode` is not part of the contract: React reports 'edit' for a view-only deck (its mode is
-		// the viewer's mode, permission is `canEdit`), vanilla 'preview'. See the design note.
+		// The effective mode: `preview` while the blocks may not edit.
+		expect(harness.state().mode).toBe('preview');
+		// Every built-in action group is registered.
+		for (const id of BUILDING_BLOCK_GROUP_IDS) {
+			expect(harness.actions()[id], `actions.${id}`).toBeDefined();
+		}
+		// Read-only, the dialog groups still describe the deck but refuse to change it.
+		expect(harness.actions().passwordProtection.state.openPassword).toBe(false);
+		expect(harness.actions().passwordProtection.setOpenPassword('abcd', 'abcd')).toEqual({
+			ok: false,
+			code: 'read-only',
+		});
+		expect(harness.actions().customShows.create('Contract')).toEqual({
+			ok: false,
+			code: 'read-only',
+		});
+		expect(harness.actions().availability.shortcuts.available).toBe(true);
+		expect(harness.actions().availability.broadcast).toEqual({
+			available: false,
+			reason: 'unsupported',
+			needsHostUi: true,
+		});
 		expect(harness.actions().availability.insertImage).toEqual({
 			available: false,
 			reason: 'read-only',
@@ -90,7 +122,7 @@ export async function runBuildingBlocksContract({ harness, expect, vi, Handler }
 			ok: false,
 			code: 'read-only',
 		});
-		expect(harness.actions().unmountedDialogActions).toContain('onOpenPasswordProtection');
+		expect(harness.actions().unmountedDialogActions).toEqual(['onOpenBroadcastDialog']);
 
 		// 2. Granting edit permission opens the workflows; selection-bound ones still say why not.
 		await harness.update(options(true));
@@ -108,6 +140,7 @@ export async function runBuildingBlocksContract({ harness, expect, vi, Handler }
 		expect(harness.actions().hyperlink.current).toBeNull();
 		expect(harness.actions().hyperlink.slideCount).toBe(2);
 		expect(harness.actions().equation.current).toBeNull();
+		expect(harness.state().mode).toBe('edit');
 
 		// 3. The toolbar's Pictures control raises a host request instead of a picker.
 		await harness.clickPictures();
@@ -162,7 +195,75 @@ export async function runBuildingBlocksContract({ harness, expect, vi, Handler }
 		);
 		expect(harness.actions().findReplace.replaceAll()).toEqual({ ok: false, code: 'no-match' });
 
-		// 7. Layouts: only the active slide's master's layouts apply.
+		// 7. One operation per dialog group, with the same codes everywhere.
+		const actions = () => harness.actions();
+		expect(actions().passwordProtection.setOpenPassword('ab', 'ab')).toEqual({
+			ok: false,
+			code: 'password-too-short',
+		});
+		expect(actions().passwordProtection.setModifyPassword('abcd')).toEqual({
+			ok: false,
+			code: 'unsupported',
+		});
+		expect(actions().passwordProtection.setMarkedFinal(true)).toEqual({ ok: true });
+		await until(
+			harness,
+			expect,
+			() => expect(actions().passwordProtection.state.markedFinal).toBe(true),
+			'Mark as Final',
+		);
+		expect(actions().passwordProtection.setMarkedFinal(false)).toEqual({ ok: true });
+		expect(actions().documentProperties.apply({ core: { title: 'Contract title' } })).toEqual({
+			ok: true,
+		});
+		await until(
+			harness,
+			expect,
+			() => expect(actions().documentProperties.current.core.title).toBe('Contract title'),
+			'the document title',
+		);
+		expect(actions().fontEmbedding.state.canEmbed).toBe(false);
+		expect(actions().fontEmbedding.setEmbedFonts(true)).toEqual({ ok: false, code: 'unsupported' });
+		expect(actions().digitalSignatures.state.signed).toBe(false);
+		expect(actions().digitalSignatures.remove()).toEqual({ ok: false, code: 'no-signatures' });
+		expect(actions().digitalSignatures.sign()).toEqual({ ok: false, code: 'unsupported' });
+		expect(actions().setUpSlideShow.current.loop).toBe(false);
+		expect(actions().setUpSlideShow.apply({ loopContinuously: true })).toEqual({ ok: true });
+		expect(actions().setUpSlideShow.apply({ showSlidesMode: 'range', showSlidesFrom: 9 })).toEqual({
+			ok: false,
+			code: 'invalid-range',
+		});
+		await until(
+			harness,
+			expect,
+			() => expect(actions().setUpSlideShow.current.loop).toBe(true),
+			'the slide show settings',
+		);
+		expect(actions().customShows.create('Contract')).toEqual({ ok: true });
+		await until(
+			harness,
+			expect,
+			() => expect(actions().customShows.shows).toHaveLength(1),
+			'the show',
+		);
+		expect(actions().customShows.slides).toHaveLength(2);
+		expect(actions().customShows.start('not-a-show')).toEqual({ ok: false, code: 'unknown-show' });
+		expect(actions().broadcast.supported).toBe(false);
+		expect(actions().shortcuts.catalogue.length).toBeGreaterThan(0);
+		actions().shortcuts.setOpen(true);
+		await until(
+			harness,
+			expect,
+			() => expect(actions().shortcuts.open).toBe(true),
+			'the shortcut help',
+		);
+		expect(onRequest).toHaveBeenCalledWith({ kind: 'shortcuts', open: true });
+		expect(actions().pending).toEqual({ kind: 'shortcuts', open: true });
+		actions().cancel();
+		await until(harness, expect, () => expect(actions().shortcuts.open).toBe(false), 'cancel');
+		expect(actions().pending).toBeNull();
+
+		// 8. Layouts: only the active slide's master's layouts apply.
 		const layout = harness.actions().layout;
 		const unknown = await layout.apply('ppt/slideLayouts/not-a-layout.xml');
 		expect(unknown).toEqual({
@@ -170,7 +271,7 @@ export async function runBuildingBlocksContract({ harness, expect, vi, Handler }
 			code: layout.available.length > 0 ? 'unknown-layout' : 'no-layout',
 		});
 
-		// 8. Taking permission away again refuses at once.
+		// 9. Taking permission away again refuses at once.
 		await harness.update(options(false));
 		await until(
 			harness,
@@ -179,8 +280,9 @@ export async function runBuildingBlocksContract({ harness, expect, vi, Handler }
 			'view-only again',
 		);
 		expect(harness.actions().equation.insert({})).toEqual({ ok: false, code: 'read-only' });
+		expect(harness.state().mode).toBe('preview');
 
-		// 9. Ports with the compact toolbar render the same controls in the same order.
+		// 10. Ports with the compact toolbar render the same controls in the same order.
 		if (harness.toolbar) {
 			const toolbar = host.querySelector('[data-pptx-block="toolbar"]');
 			expect(toolbar).not.toBeNull();

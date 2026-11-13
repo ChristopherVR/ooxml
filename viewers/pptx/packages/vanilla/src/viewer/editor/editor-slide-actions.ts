@@ -41,9 +41,10 @@ export interface SlideActions {
 	getTemplateScheme(): Record<string, string>;
 	/**
 	 * Re-key the current slide onto another layout (React's Layout button). Settles once the
-	 * layout landed (or could not be resolved).
+	 * layout landed: true when it was applied, false when it could not be (not editable, no deck,
+	 * or a layout the deck cannot resolve).
 	 */
-	applyLayout(layoutPath: string): Promise<void>;
+	applyLayout(layoutPath: string): Promise<boolean>;
 	/** Reset the current slide to its own layout's defaults (React's Reset). */
 	resetSlide(): void;
 }
@@ -76,10 +77,10 @@ export function createSlideActions(deps: SlideActionsDeps): SlideActions {
 		layoutPath: string,
 		expectedId: string,
 		placed?: PptxSlide,
-	): Promise<void> {
+	): Promise<boolean> {
 		const handler = deps.getHandler();
 		if (!handler) {
-			return Promise.resolve();
+			return Promise.resolve(false);
 		}
 		return handler
 			.applyLayoutToSlide(index, layoutPath, [...store.get().slides])
@@ -116,11 +117,11 @@ export function createSlideActions(deps: SlideActionsDeps): SlideActions {
 				() => {
 					// Layout couldn't be resolved; the slide keeps its layoutPath so the
 					// renderer can still resolve placeholders.
-					return undefined;
+					return false;
 				},
 			)
-			.then(() => undefined)
-			.catch(() => undefined);
+			.then((outcome) => outcome !== false)
+			.catch(() => false);
 	}
 
 	return {
@@ -255,7 +256,7 @@ export function createSlideActions(deps: SlideActionsDeps): SlideActions {
 			const state = store.get();
 			const target = state.slides[state.currentSlide];
 			if (!state.editable || !target || !layoutPath) {
-				return Promise.resolve();
+				return Promise.resolve(false);
 			}
 			return resolveLayout(state.currentSlide, layoutPath, target.id);
 		},

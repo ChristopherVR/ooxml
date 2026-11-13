@@ -1,15 +1,13 @@
 import {
 	BUILDING_BLOCK_OK,
 	buildingBlockFailure,
-	describeBuildingBlockActions,
 	hyperlinkEditPatch,
 	resetSlideLayoutPath,
 	scopeLayoutOptionsToSlide,
 	selectionEquation,
 } from 'ooxml-ui/pptx';
 import type {
-	BuildingBlockActionId,
-	BuildingBlockActionState,
+	BuildingBlockAvailabilityInput,
 	BuildingBlockSessionPort,
 	FindBarController,
 } from 'ooxml-ui/pptx';
@@ -27,9 +25,11 @@ export interface VanillaPortSource {
 	viewer(): PptxViewer | null;
 	options(): ViewerBuildingBlocksOptions;
 	findBar: FindBarController;
+	/** `actions.cancel()` ran: close the shortcut help the host mirrors. */
+	onCancel(): void;
 }
 
-const NOT_MOUNTED = describeBuildingBlockActions({
+const NOT_MOUNTED: BuildingBlockAvailabilityInput = {
 	ready: false,
 	hasActiveSlide: false,
 	canEdit: false,
@@ -41,7 +41,7 @@ const NOT_MOUNTED = describeBuildingBlockActions({
 	layoutCount: 0,
 	hasCurrentLayout: false,
 	hasHandler: false,
-});
+};
 
 function activeSlide(state: ViewerState): PptxSlide | undefined {
 	return state.slides[state.currentSlide];
@@ -60,16 +60,16 @@ function scopedLayouts(state: ViewerState): PptxLayoutOption[] {
 }
 
 /** The availability input of the vanilla viewer, gathered from its store. */
-export function vanillaAvailability(
+export function vanillaAvailabilityInput(
 	viewer: PptxViewer | null,
-): Record<BuildingBlockActionId, BuildingBlockActionState> {
+): BuildingBlockAvailabilityInput {
 	if (!viewer) {
 		return NOT_MOUNTED;
 	}
 	const state = viewer.store.get();
 	const element = selected(state);
 	const slide = activeSlide(state);
-	return describeBuildingBlockActions({
+	return {
 		ready: !state.loading && !state.error,
 		hasActiveSlide: slide !== undefined,
 		canEdit: state.editable,
@@ -81,7 +81,7 @@ export function vanillaAvailability(
 		layoutCount: scopedLayouts(state).length,
 		hasCurrentLayout: resetSlideLayoutPath(slide) !== undefined,
 		hasHandler: viewer.getHandler() !== null,
-	});
+	};
 }
 
 /** The shared session's port over the vanilla viewer, read at call time. */
@@ -99,7 +99,8 @@ export function createVanillaPort(source: VanillaPortSource): BuildingBlockSessi
 		return BUILDING_BLOCK_OK;
 	};
 	return {
-		availability: () => vanillaAvailability(source.viewer()),
+		availabilityInput: () => vanillaAvailabilityInput(source.viewer()),
+		onCancel: () => source.onCancel(),
 		fileLimits: () => source.options().fileLimits,
 		onRequest: (request) => source.options().onRequest?.(request),
 		target: () => {
@@ -164,7 +165,10 @@ export function createVanillaPort(source: VanillaPortSource): BuildingBlockSessi
 		},
 		findReplace: () => source.findBar.port(),
 		applyLayout: async (path) => {
-			await edit()?.applyLayout(path);
+			// A layout the handler cannot resolve rejects, so the session reports `unknown-layout`.
+			if (!(await edit()?.applyLayout(path))) {
+				throw new Error(`Layout ${path} was not applied`);
+			}
 		},
 	};
 }
