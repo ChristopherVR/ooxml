@@ -90,7 +90,8 @@ Der Browser hat nur eine Stimme. Wer in einem Editor startet, übernimmt sie von
 dessen `readingAloud` dann `false` wird. Ein Editor hört auf, wenn sein Dokument bearbeitet oder
 ersetzt wird, eine Datei geladen wird oder er entfernt wird. Formulieren Sie die Meldungen selbst;
 die Bibliothek liefert nur die Codes. Die optionale `Toolbar` zeigt einen Schalter „Read aloud“ und
-blendet ihn aus, wo keine Sprachausgabe möglich ist.
+blendet ihn aus, wo keine Sprachausgabe möglich ist. Die Feldübersicht mit Typen und Beispiel steht in der
+[Element-API](/de/api#read-aloud).
 
 ## Bibliothekskomponenten {#library-components}
 

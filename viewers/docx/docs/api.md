@@ -154,3 +154,61 @@ editor.storage = {
 	},
 };
 ```
+
+## Read Aloud {#read-aloud}
+
+The building-blocks hook (`useViewerBuildingBlocks`) puts five Read Aloud fields on `toolbarProps`.
+They are not element properties or events. They use the editor's own implementation (the browser's
+speech synthesis; nothing is sent anywhere), and the [building-blocks guide](/building-blocks#read-aloud)
+describes how they behave.
+
+| Field             | Type                     | Behaviour                                                                                                                                                    |
+| ----------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `canReadAloud`    | `boolean`                | True when a document is on screen and the browser can speak. Read-only documents count.                                                                      |
+| `readingAloud`    | `boolean`                | True only in the editor that owns the voice. Another editor reading leaves it false.                                                                         |
+| `readAloudIssue`  | `ReadAloudIssue \| null` | The last problem: `'unsupported'` while the browser has no speech synthesis, `'empty'` or `'error'`. `null` when there is none.                              |
+| `onReadAloud`     | `() => ReadAloudStart`   | Reads the selection, or from the caret to the end when nothing is selected. Restarts if already reading. Returns `'started'`, or the reason nothing started. |
+| `onStopReadAloud` | `() => boolean`          | Stops this editor's playback. Returns whether it was playing.                                                                                                |
+
+The codes are plain string unions. The library supplies the codes only; the host words the message.
+
+```ts
+type ReadAloudIssue = 'unsupported' | 'empty' | 'error';
+type ReadAloudStart = 'started' | ReadAloudIssue;
+```
+
+`'error'` means the voice failed. A cancelled or interrupted utterance is not reported as an error.
+
+A React host button that toggles reading and words the empty case:
+
+```tsx
+import { DocumentCanvas, useViewerBuildingBlocks } from 'docx-react-viewer';
+
+function EmbeddedWord({ documentModel }) {
+	const { canvasProps, toolbarProps } = useViewerBuildingBlocks({ documentModel });
+	return (
+		<>
+			{toolbarProps && toolbarProps.readAloudIssue !== 'unsupported' && (
+				<>
+					<button
+						disabled={!toolbarProps.canReadAloud}
+						aria-pressed={toolbarProps.readingAloud}
+						onClick={() =>
+							toolbarProps.readingAloud
+								? toolbarProps.onStopReadAloud()
+								: toolbarProps.onReadAloud()
+						}
+					>
+						{toolbarProps.readingAloud ? 'Stop reading' : 'Read aloud'}
+					</button>
+					{toolbarProps.readAloudIssue === 'empty' && <span role="status">Nothing to read.</span>}
+				</>
+			)}
+			<DocumentCanvas {...canvasProps} />
+		</>
+	);
+}
+```
+
+Playback also stops when the document is edited or replaced and when the editor unmounts. The
+optional `Toolbar` draws its own "Read aloud" toggle from the same fields.

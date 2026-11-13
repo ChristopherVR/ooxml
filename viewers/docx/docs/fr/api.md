@@ -147,3 +147,61 @@ editor.storage = {
 	},
 };
 ```
+
+## Lecture à voix haute {#read-aloud}
+
+Le hook des blocs de construction (`useViewerBuildingBlocks`) ajoute cinq champs de lecture à voix haute à
+`toolbarProps`. Ce ne sont pas des propriétés ni des événements de l'élément. Ils utilisent l'implémentation
+propre de l'éditeur (la synthèse vocale du navigateur ; rien n'est envoyé). Le
+[guide des blocs de construction](/fr/building-blocks#read-aloud) décrit leur comportement.
+
+| Champ             | Type                     | Comportement                                                                                                                                                                 |
+| ----------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `canReadAloud`    | `boolean`                | Vrai quand un document est affiché et que le navigateur peut parler. Les documents en lecture seule comptent.                                                                |
+| `readingAloud`    | `boolean`                | Vrai uniquement dans l'éditeur qui possède la voix. Si un autre éditeur lit, il vaut faux.                                                                                   |
+| `readAloudIssue`  | `ReadAloudIssue \| null` | Le dernier problème : `'unsupported'` tant que le navigateur n'a pas de synthèse vocale, `'empty'` ou `'error'`. `null` quand il n'y en a pas.                               |
+| `onReadAloud`     | `() => ReadAloudStart`   | Lit la sélection, ou du point d'insertion à la fin sans sélection. Relance si la lecture est déjà en cours. Renvoie `'started'` ou la raison pour laquelle rien n'a démarré. |
+| `onStopReadAloud` | `() => boolean`          | Arrête la lecture de cet éditeur. Renvoie s'il lisait.                                                                                                                       |
+
+Les codes sont de simples unions de chaînes. La bibliothèque ne fournit que les codes ; l'hôte formule le message.
+
+```ts
+type ReadAloudIssue = 'unsupported' | 'empty' | 'error';
+type ReadAloudStart = 'started' | ReadAloudIssue;
+```
+
+`'error'` signifie que la voix a échoué. Un énoncé annulé ou interrompu n'est pas signalé comme une erreur.
+
+Un bouton React de l'hôte qui bascule la lecture et formule le cas vide :
+
+```tsx
+import { DocumentCanvas, useViewerBuildingBlocks } from 'docx-react-viewer';
+
+function EmbeddedWord({ documentModel }) {
+	const { canvasProps, toolbarProps } = useViewerBuildingBlocks({ documentModel });
+	return (
+		<>
+			{toolbarProps && toolbarProps.readAloudIssue !== 'unsupported' && (
+				<>
+					<button
+						disabled={!toolbarProps.canReadAloud}
+						aria-pressed={toolbarProps.readingAloud}
+						onClick={() =>
+							toolbarProps.readingAloud
+								? toolbarProps.onStopReadAloud()
+								: toolbarProps.onReadAloud()
+						}
+					>
+						{toolbarProps.readingAloud ? 'Stop reading' : 'Read aloud'}
+					</button>
+					{toolbarProps.readAloudIssue === 'empty' && <span role="status">Nothing to read.</span>}
+				</>
+			)}
+			<DocumentCanvas {...canvasProps} />
+		</>
+	);
+}
+```
+
+La lecture s'arrête aussi quand le document est modifié ou remplacé, et quand l'éditeur est démonté.
+La `Toolbar` optionnelle dessine son propre bouton à bascule « Read aloud » à partir des mêmes champs.

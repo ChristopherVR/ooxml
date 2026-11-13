@@ -128,3 +128,59 @@ editor.storage = {
 	},
 };
 ```
+
+## 朗读 {#read-aloud}
+
+Building Blocks 的钩子（`useViewerBuildingBlocks`）在 `toolbarProps` 上提供五个朗读字段。
+它们不是元素的属性或事件。它们使用编辑器自身的实现（浏览器的语音合成；不会发送任何数据）。
+[Building Blocks 指南](/zh/building-blocks#read-aloud)说明了它们的行为。
+
+| 字段              | 类型                     | 行为                                                                                                     |
+| ----------------- | ------------------------ | -------------------------------------------------------------------------------------------------------- |
+| `canReadAloud`    | `boolean`                | 屏幕上有文档且浏览器可以朗读时为 true。只读文档同样计入。                                                |
+| `readingAloud`    | `boolean`                | 仅在持有语音的编辑器中为 true。若另一个编辑器正在朗读，则为 false。                                      |
+| `readAloudIssue`  | `ReadAloudIssue \| null` | 最近的问题：浏览器没有语音合成时为 `'unsupported'`，否则为 `'empty'` 或 `'error'`。没有问题时为 `null`。 |
+| `onReadAloud`     | `() => ReadAloudStart`   | 朗读所选内容；未选择时从插入点朗读到末尾。若已在朗读则重新开始。返回 `'started'`，或未能开始的原因。     |
+| `onStopReadAloud` | `() => boolean`          | 停止此编辑器的朗读。返回此前是否在朗读。                                                                 |
+
+这些代码是简单的字符串联合类型。库只提供代码；提示文字由宿主编写。
+
+```ts
+type ReadAloudIssue = 'unsupported' | 'empty' | 'error';
+type ReadAloudStart = 'started' | ReadAloudIssue;
+```
+
+`'error'` 表示语音失败。被取消或中断的朗读不会报告为错误。
+
+一个切换朗读并提示空内容情况的宿主 React 按钮：
+
+```tsx
+import { DocumentCanvas, useViewerBuildingBlocks } from 'docx-react-viewer';
+
+function EmbeddedWord({ documentModel }) {
+	const { canvasProps, toolbarProps } = useViewerBuildingBlocks({ documentModel });
+	return (
+		<>
+			{toolbarProps && toolbarProps.readAloudIssue !== 'unsupported' && (
+				<>
+					<button
+						disabled={!toolbarProps.canReadAloud}
+						aria-pressed={toolbarProps.readingAloud}
+						onClick={() =>
+							toolbarProps.readingAloud
+								? toolbarProps.onStopReadAloud()
+								: toolbarProps.onReadAloud()
+						}
+					>
+						{toolbarProps.readingAloud ? 'Stop reading' : 'Read aloud'}
+					</button>
+					{toolbarProps.readAloudIssue === 'empty' && <span role="status">Nothing to read.</span>}
+				</>
+			)}
+			<DocumentCanvas {...canvasProps} />
+		</>
+	);
+}
+```
+
+文档被编辑或替换时，以及编辑器卸载时，朗读也会停止。可选的 `Toolbar` 会使用同样的字段绘制它自己的“Read aloud”开关。

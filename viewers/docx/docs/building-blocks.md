@@ -108,7 +108,8 @@ UI can take focus first.
 The browser has one voice. Starting in one editor takes it over from another, whose `readingAloud`
 becomes `false`. An editor stops reading when its document is edited or replaced, a file loads, or
 it unmounts. Word the issues yourself; the library supplies the codes only. The optional `Toolbar`
-draws a "Read aloud" toggle and omits it where speech is unsupported.
+draws a "Read aloud" toggle and omits it where speech is unsupported. The field reference, with
+the types and an example, is in the [element API](/api#read-aloud).
 
 ## Library components
 

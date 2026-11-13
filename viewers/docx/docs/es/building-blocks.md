@@ -109,7 +109,8 @@ puede recibir el foco antes.
 El navegador tiene una sola voz. Al iniciar en un editor se la quita a otro, cuyo `readingAloud`
 pasa a `false`. Un editor deja de leer cuando se edita o reemplaza su documento, se carga un archivo
 o se desmonta. Redacte usted los avisos; la biblioteca solo aporta los códigos. La `Toolbar`
-opcional dibuja un interruptor «Read aloud» y lo omite donde no hay síntesis de voz.
+opcional dibuja un interruptor «Read aloud» y lo omite donde no hay síntesis de voz. La referencia de campos, con tipos y un ejemplo, está en la
+[API del elemento](/es/api#read-aloud).
 
 ## Componentes de la biblioteca {#library-components}
 

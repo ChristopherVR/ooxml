@@ -147,3 +147,63 @@ editor.storage = {
 	},
 };
 ```
+
+## Vorlesen {#read-aloud}
+
+Der Building-Blocks-Hook (`useViewerBuildingBlocks`) legt fünf Felder zum Vorlesen auf `toolbarProps` ab.
+Sie sind keine Eigenschaften oder Ereignisse des Elements. Sie nutzen die eigene Implementierung des Editors
+(die Sprachsynthese des Browsers; nichts wird gesendet). Das Verhalten beschreibt der
+[Building-Blocks-Leitfaden](/de/building-blocks#read-aloud).
+
+| Feld              | Typ                      | Verhalten                                                                                                                                                                            |
+| ----------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `canReadAloud`    | `boolean`                | Wahr, wenn ein Dokument angezeigt wird und der Browser sprechen kann. Schreibgeschützte Dokumente zählen mit.                                                                        |
+| `readingAloud`    | `boolean`                | Wahr nur in dem Editor, der die Stimme besitzt. Liest ein anderer Editor, ist er falsch.                                                                                             |
+| `readAloudIssue`  | `ReadAloudIssue \| null` | Das letzte Problem: `'unsupported'`, solange der Browser keine Sprachsynthese hat, sonst `'empty'` oder `'error'`. `null`, wenn keines vorliegt.                                     |
+| `onReadAloud`     | `() => ReadAloudStart`   | Liest die Auswahl oder vom Cursor bis zum Ende, wenn nichts markiert ist. Startet neu, wenn bereits gelesen wird. Gibt `'started'` zurück oder den Grund, warum nichts begonnen hat. |
+| `onStopReadAloud` | `() => boolean`          | Beendet die Wiedergabe dieses Editors. Gibt zurück, ob sie lief.                                                                                                                     |
+
+Die Codes sind einfache Zeichenkettenvereinigungen. Die Bibliothek liefert nur die Codes; die Meldung
+formuliert der Host.
+
+```ts
+type ReadAloudIssue = 'unsupported' | 'empty' | 'error';
+type ReadAloudStart = 'started' | ReadAloudIssue;
+```
+
+`'error'` bedeutet, dass die Stimme ausgefallen ist. Ein abgebrochener oder unterbrochener Vortrag wird
+nicht als Fehler gemeldet.
+
+Ein React-Schaltknopf des Hosts, der das Vorlesen umschaltet und den leeren Fall formuliert:
+
+```tsx
+import { DocumentCanvas, useViewerBuildingBlocks } from 'docx-react-viewer';
+
+function EmbeddedWord({ documentModel }) {
+	const { canvasProps, toolbarProps } = useViewerBuildingBlocks({ documentModel });
+	return (
+		<>
+			{toolbarProps && toolbarProps.readAloudIssue !== 'unsupported' && (
+				<>
+					<button
+						disabled={!toolbarProps.canReadAloud}
+						aria-pressed={toolbarProps.readingAloud}
+						onClick={() =>
+							toolbarProps.readingAloud
+								? toolbarProps.onStopReadAloud()
+								: toolbarProps.onReadAloud()
+						}
+					>
+						{toolbarProps.readingAloud ? 'Stop reading' : 'Read aloud'}
+					</button>
+					{toolbarProps.readAloudIssue === 'empty' && <span role="status">Nothing to read.</span>}
+				</>
+			)}
+			<DocumentCanvas {...canvasProps} />
+		</>
+	);
+}
+```
+
+Die Wiedergabe endet außerdem, wenn das Dokument bearbeitet oder ersetzt wird und wenn der Editor entfernt
+wird. Die optionale `Toolbar` zeichnet mit denselben Feldern ihren eigenen Schalter „Read aloud“.

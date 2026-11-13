@@ -90,7 +90,8 @@ Le navigateur n'a qu'une voix. Démarrer dans un éditeur la prend à un autre, 
 devient `false`. Un éditeur cesse de lire quand son document est modifié ou remplacé, qu'un fichier
 se charge ou qu'il est démonté. Formulez les messages vous-même ; la bibliothèque ne fournit que les
 codes. La `Toolbar` optionnelle dessine un bouton à bascule « Read aloud » et l'omet là où la
-synthèse vocale n'existe pas.
+synthèse vocale n'existe pas. La référence des champs, avec les types et un exemple, se trouve dans
+l'[API de l'élément](/fr/api#read-aloud).
 
 ## Composants de bibliothèque {#library-components}
 

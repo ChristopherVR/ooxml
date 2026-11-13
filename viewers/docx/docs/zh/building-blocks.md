@@ -86,7 +86,7 @@ function EmbeddedWord({ documentModel, canEdit, handle }) {
 
 浏览器只有一个语音。在一个编辑器中开始朗读会从另一个编辑器接管，后者的 `readingAloud` 变为 `false`。
 编辑器在其文档被编辑或替换、加载文件或卸载时停止朗读。提示文字由您自行编写；库只提供代码。
-可选的 `Toolbar` 会绘制一个“Read aloud”开关，并在不支持语音的环境中省略它。
+可选的 `Toolbar` 会绘制一个“Read aloud”开关，并在不支持语音的环境中省略它。字段说明（含类型和示例）见[元素 API](/zh/api#read-aloud)。
 
 ## 库组件 {#library-components}
 
