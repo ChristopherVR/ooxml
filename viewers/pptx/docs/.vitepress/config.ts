@@ -455,6 +455,7 @@ export default defineConfig({
 						{ text: 'Getting Started', link: '/vanilla/getting-started' },
 						{ text: 'Options & Callbacks', link: '/vanilla/options' },
 						{ text: 'Instance API', link: '/vanilla/api' },
+						{ text: 'Building Blocks', link: '/vanilla/building-blocks' },
 					],
 				},
 				{

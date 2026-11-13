@@ -122,6 +122,7 @@ import type { ViewerCustomizationLifecycle } from './customization-lifecycle';
 import { createViewerCustomizationLifecycle } from './customization-lifecycle';
 import type { EditorController } from './editor';
 import { createEditorController } from './editor';
+import type { HostDialogRequest } from './editor/editor-controller';
 import type { ExportLifecycle } from './export-lifecycle';
 import { createExportLifecycle } from './export-lifecycle';
 import { glyphOutlineFontCache } from './glyph-outline-cache';
@@ -282,6 +283,15 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	/** Host-replaced dialog bodies (Options, Share, Broadcast, Print); destroyed with the viewer. */
 	private dialogRegions: RegionSet | null = null;
 	private chromeRegions: RegionSet | null = null;
+
+	/**
+	 * Offered every dialog the editor would open (hyperlink, equation, find) before it opens its
+	 * own; true means the host took it. The full viewer keeps its dialogs; the building blocks
+	 * override this to raise host requests.
+	 */
+	protected requestHostDialog(_request: HostDialogRequest): boolean {
+		return false;
+	}
 
 	constructor(container: HTMLElement, options: PptxViewerOptions = {}) {
 		super();
@@ -511,6 +521,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			flushInlineTextInput: () => this.sessions.flushCollaborationLivePatch(),
 			getKeyboardCustomization: () => this.customization.getResolved().keyboard,
 			getCustomization: () => this.customization.getResolved(),
+			requestHostDialog: (request) => this.requestHostDialog(request),
 		});
 		this.editor.attachChrome();
 		this.rulers = createRulerController({

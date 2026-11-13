@@ -109,6 +109,22 @@ export {
 	renderSlideStage,
 } from './viewer';
 
+// ── Building blocks (compose your own shell from canvas, toolbar and slides pane) ─
+export { createViewerBuildingBlocks } from './building-blocks';
+export type {
+	ViewerBuildingBlocks,
+	ViewerBuildingBlocksOptions,
+	ViewerBuildingBlocksState,
+} from './building-blocks';
+export type {
+	BuildingBlockFailureCode,
+	BuildingBlockRequest,
+	BuildingBlockResult,
+	BuildingBlockToolbarGroupId,
+	HyperlinkEditData,
+	ViewerBuildingBlockActions,
+} from 'ooxml-ui/pptx';
+
 // ── Slide thumbnail rail (place it beside your own `renderSlideStage` canvas) ─
 export type { SlidesPane, SlidesPaneLayoutGalleryRequest, SlidesPaneOptions } from './viewer';
 export { createSlidesPane } from './viewer';

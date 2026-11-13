@@ -116,7 +116,19 @@ export interface EditorControllerDeps {
 	getKeyboardCustomization?: () => ResolvedKeyboardCustomization | undefined;
 	/** The host's resolved UI customisation (Edit Points gating, hidden commands). */
 	getCustomization?: () => ResolvedCustomization | undefined;
+	/**
+	 * Offer a dialog to the host before the viewer opens its own: the building blocks
+	 * (`createViewerBuildingBlocks`) turn these into host requests. Returns true when the host
+	 * took it, so the viewer opens nothing. Unset for the full viewer.
+	 */
+	requestHostDialog?: (request: HostDialogRequest) => boolean;
 }
+
+/** A dialog the viewer would open, offered to the host first (see `requestHostDialog`). */
+export type HostDialogRequest =
+	| { kind: 'hyperlink' }
+	| { kind: 'equation'; existingOmml: Record<string, unknown> | null }
+	| { kind: 'find' };
 
 export interface EditorController {
 	hasActivePointerInteraction(): boolean;
@@ -249,6 +261,13 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		ops.commitChange();
 	};
 
+	/** Ctrl+F / Ctrl+H: the host's find bar when it takes it, else the ribbon's panel. */
+	const toggleFindReplace = (): void => {
+		if (!deps.requestHostDialog?.({ kind: 'find' })) {
+			deps.getChrome().ribbon?.toggleFindReplace();
+		}
+	};
+
 	/** Ctrl+K: open the hyperlink dialog for the currently selected element. */
 	const openHyperlinkForSelection = (): void => {
 		const customization = deps.getCustomization?.();
@@ -259,7 +278,7 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		const element = state.selectedElementId
 			? findActiveElement(state, state.selectedElementId)
 			: undefined;
-		if (!element) {
+		if (!element || deps.requestHostDialog?.({ kind: 'hyperlink' })) {
 			return;
 		}
 		openHyperlinkEditDialog(
@@ -344,7 +363,7 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 				return true;
 			case 'find':
 			case 'findReplace':
-				deps.getChrome().ribbon?.toggleFindReplace();
+				toggleFindReplace();
 				return true;
 			default:
 				return false;
@@ -402,7 +421,11 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		onCursorMove: deps.onCursorMove,
 		onInlineTextInput: deps.onInlineTextInput,
 		flushInlineTextInput: deps.flushInlineTextInput,
-		onEditEquation: (id, omml) => deps.getChrome().ribbon?.openEquationEditor(id, omml),
+		onEditEquation: (id, omml) => {
+			if (!deps.requestHostDialog?.({ kind: 'equation', existingOmml: omml ?? null })) {
+				deps.getChrome().ribbon?.openEquationEditor(id, omml);
+			}
+		},
 		onEyedropper: (color) => editActions.setShapeFill(color),
 		onInlineLiveFormatKey,
 	});
@@ -570,7 +593,7 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		// Same action as Home > Editing > Find. Null when the host disabled the
 		// ribbon, in which case there is no find panel to open and the chord
 		// correctly does nothing.
-		toggleFind: () => deps.getChrome().ribbon?.toggleFindReplace(),
+		toggleFind: () => toggleFindReplace(),
 		closeShortcuts: () => {
 			const panel = deps.getChrome().shortcuts;
 			if (!panel.isOpen()) {
@@ -585,7 +608,7 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		pasteFormat: pasteFormatOntoSelection,
 		addSlide: () => editActions.addSlide(),
 		openHyperlink: openHyperlinkForSelection,
-		toggleFindReplace: () => deps.getChrome().ribbon?.toggleFindReplace(),
+		toggleFindReplace: () => toggleFindReplace(),
 		clearFormatting: () => editActions.clearFormatting(),
 		cycleSelection: (direction) => {
 			const state = store.get();

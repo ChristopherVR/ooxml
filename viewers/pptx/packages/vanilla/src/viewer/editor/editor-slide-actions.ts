@@ -39,8 +39,11 @@ export interface SlideActions {
 	insertSlideFromTemplate(templateId: SlideTemplateId): void;
 	/** Resolved deck theme scheme map for template builds and gallery previews. */
 	getTemplateScheme(): Record<string, string>;
-	/** Re-key the current slide onto another layout (React's Layout button). */
-	applyLayout(layoutPath: string): void;
+	/**
+	 * Re-key the current slide onto another layout (React's Layout button). Settles once the
+	 * layout landed (or could not be resolved).
+	 */
+	applyLayout(layoutPath: string): Promise<void>;
 	/** Reset the current slide to its own layout's defaults (React's Reset). */
 	resetSlide(): void;
 }
@@ -73,12 +76,12 @@ export function createSlideActions(deps: SlideActionsDeps): SlideActions {
 		layoutPath: string,
 		expectedId: string,
 		placed?: PptxSlide,
-	): void {
+	): Promise<void> {
 		const handler = deps.getHandler();
 		if (!handler) {
-			return;
+			return Promise.resolve();
 		}
-		void handler
+		return handler
 			.applyLayoutToSlide(index, layoutPath, [...store.get().slides])
 			.then(
 				async (updated) => {
@@ -116,6 +119,7 @@ export function createSlideActions(deps: SlideActionsDeps): SlideActions {
 					return undefined;
 				},
 			)
+			.then(() => undefined)
 			.catch(() => undefined);
 	}
 
@@ -214,7 +218,7 @@ export function createSlideActions(deps: SlideActionsDeps): SlideActions {
 				selectedElementIds: [],
 			});
 			ops.commitChange();
-			resolveLayout(insertAt, layoutPath, draft.id, store.get().slides[insertAt]);
+			void resolveLayout(insertAt, layoutPath, draft.id, store.get().slides[insertAt]);
 		},
 
 		insertSlideFromTemplate(templateId) {
@@ -251,9 +255,9 @@ export function createSlideActions(deps: SlideActionsDeps): SlideActions {
 			const state = store.get();
 			const target = state.slides[state.currentSlide];
 			if (!state.editable || !target || !layoutPath) {
-				return;
+				return Promise.resolve();
 			}
-			resolveLayout(state.currentSlide, layoutPath, target.id);
+			return resolveLayout(state.currentSlide, layoutPath, target.id);
 		},
 
 		resetSlide() {
@@ -267,7 +271,7 @@ export function createSlideActions(deps: SlideActionsDeps): SlideActions {
 			if (!state.editable || !target || !path) {
 				return;
 			}
-			resolveLayout(state.currentSlide, path, target.id);
+			void resolveLayout(state.currentSlide, path, target.id);
 		},
 	};
 }

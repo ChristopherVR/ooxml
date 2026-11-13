@@ -68,36 +68,50 @@ export function pickMediaElement(
 				resolve(null);
 				return;
 			}
-			const mediaType = classifyMediaType(file.type);
-			if (!mediaType) {
+			void mediaElementFromFile(doc, file, canvasSize).then(resolve);
+		});
+		input.click();
+	});
+}
+
+/**
+ * A centred media element for an audio or video file the host already holds (its own picker):
+ * read as a data URL and sized as the picker sizes it. Resolves null for an unsupported type or
+ * an unreadable file.
+ */
+export function mediaElementFromFile(
+	doc: Document,
+	file: File,
+	canvasSize: CanvasSize,
+): Promise<PptxElement | null> {
+	const mediaType = classifyMediaType(file.type);
+	if (!mediaType) {
+		return Promise.resolve(null);
+	}
+	return new Promise((resolve) => {
+		const reader = new FileReader();
+		reader.onload = async () => {
+			const dataUrl = typeof reader.result === 'string' ? reader.result : '';
+			if (!dataUrl) {
 				resolve(null);
 				return;
 			}
-			const reader = new FileReader();
-			reader.onload = async () => {
-				const dataUrl = typeof reader.result === 'string' ? reader.result : '';
-				if (!dataUrl) {
-					resolve(null);
-					return;
-				}
-				const size = mediaType === 'audio' ? AUDIO_SIZE : await probeVideoSize(doc, dataUrl);
-				const el = {
-					id: createEditorId('media'),
-					type: 'media',
-					mediaType,
-					mediaMimeType: file.type || undefined,
-					mediaData: dataUrl,
-					x: 0,
-					y: 0,
-					width: size.width,
-					height: size.height,
-				} as unknown as PptxElement;
-				centerOnCanvas(el, canvasSize);
-				resolve(el);
-			};
-			reader.onerror = () => resolve(null);
-			reader.readAsDataURL(file);
-		});
-		input.click();
+			const size = mediaType === 'audio' ? AUDIO_SIZE : await probeVideoSize(doc, dataUrl);
+			const el = {
+				id: createEditorId('media'),
+				type: 'media',
+				mediaType,
+				mediaMimeType: file.type || undefined,
+				mediaData: dataUrl,
+				x: 0,
+				y: 0,
+				width: size.width,
+				height: size.height,
+			} as unknown as PptxElement;
+			centerOnCanvas(el, canvasSize);
+			resolve(el);
+		};
+		reader.onerror = () => resolve(null);
+		reader.readAsDataURL(file);
 	});
 }

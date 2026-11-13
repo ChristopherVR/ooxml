@@ -1,0 +1,40 @@
+import type { PptxHandler } from 'pptx-viewer-core';
+
+export interface BuildingBlocksContractOptions {
+	content: Uint8Array;
+	canEdit: boolean;
+	onRequest: (request: unknown) => void;
+	onDirtyChange: (dirty: boolean) => void;
+}
+
+/** What a binding supplies to run the contract against its building blocks. */
+export interface BuildingBlocksContractHarness {
+	readonly name: string;
+	/**
+	 * Whether the binding renders the compact toolbar (`describeBuildingBlockToolbar`) and marks its
+	 * blocks with `data-pptx-block="canvas" | "toolbar" | "slides-pane"`. React's full ribbon does not.
+	 */
+	readonly toolbar: boolean;
+	/** Mount the canvas, toolbar and slides pane into `host` with `options`. */
+	mount(host: HTMLElement, options: BuildingBlocksContractOptions): Promise<void>;
+	/** Apply new options the way a host does (a prop change, `update`, a signal). */
+	update(options: BuildingBlocksContractOptions): Promise<void>;
+	/** The current `actions` object (`ViewerBuildingBlockActions` from `ooxml-ui/pptx`). */
+	actions(): unknown;
+	state(): { mode: string; loading: boolean; error: string | null; slideCount: number };
+	/** Press the toolbar's Pictures control. */
+	clickPictures(): Promise<void>;
+	/** Let the binding flush pending updates (React `act`, Angular change detection). */
+	settle(): Promise<void>;
+	destroy(): void;
+}
+
+export const COMPACT_TOOLBAR_CONTROLS: readonly string[];
+export function buildingBlocksContractDeck(Handler: typeof PptxHandler): Promise<Uint8Array>;
+export function runBuildingBlocksContract(input: {
+	harness: BuildingBlocksContractHarness;
+	/** The caller's Vitest `expect` and `vi` (kept structural so no Vitest copy is pinned here). */
+	expect: (actual: unknown, message?: string) => unknown;
+	vi: { fn: () => unknown };
+	Handler: typeof PptxHandler;
+}): Promise<void>;
