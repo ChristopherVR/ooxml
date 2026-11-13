@@ -76,6 +76,33 @@ afterEach(() => {
 });
 
 describe('createFindReplacePanel', () => {
+	it('hands focus back to the viewer when it closes, so shortcuts keep working', () => {
+		const viewer = document.createElement('div');
+		viewer.dataset.pptxEditorChrome = '';
+		viewer.tabIndex = 0;
+		document.body.append(viewer);
+		const p = panel();
+		viewer.append(p.view.el);
+		p.view.el
+			.querySelector<HTMLButtonElement>('button[aria-label="Close find and replace"]')!
+			.focus();
+		p.view.setOpen(false);
+		expect(document.activeElement).toBe(viewer);
+	});
+
+	it('leaves focus alone when it closes while focus is elsewhere', () => {
+		const viewer = document.createElement('div');
+		viewer.dataset.pptxEditorChrome = '';
+		viewer.tabIndex = 0;
+		const outside = document.createElement('input');
+		document.body.append(viewer, outside);
+		const p = panel();
+		viewer.append(p.view.el);
+		outside.focus();
+		p.view.setOpen(false);
+		expect(document.activeElement).toBe(outside);
+	});
+
 	it('next and previous move through the matches with a real n of N, wrapping around', () => {
 		const p = panel();
 		p.type('quarter');

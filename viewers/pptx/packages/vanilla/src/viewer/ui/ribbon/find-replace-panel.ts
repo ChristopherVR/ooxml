@@ -221,8 +221,14 @@ export function createFindReplacePanel(
 			return;
 		}
 		open = next;
+		const hadFocus = el.contains(doc.activeElement);
 		el.hidden = !open;
 		if (!open) {
+			// Focus left on a now-hidden control falls to <body> on the next re-render, outside the
+			// viewer's key handler, so shortcuts such as Ctrl+H would stop working. Hand it back.
+			if (hadFocus) {
+				el.closest<HTMLElement>('[data-pptx-editor-chrome]')?.focus({ preventScroll: true });
+			}
 			// Closing drops the matches; the fields stay for the next open.
 			actions.close?.();
 			render();
