@@ -1,5 +1,7 @@
 import type {
 	BuildingBlockToolbarControlId,
+	CollaborationShellState,
+	CollaborationState,
 	BuildingBlockToolbarGroup,
 	SlideFindHighlights,
 	PptxBuildingBlockSession,
@@ -68,6 +70,13 @@ export interface ViewerBuildingBlocksState {
 	readonly canUndo: boolean;
 	readonly canRedo: boolean;
 	readonly dirty: boolean;
+	/**
+	 * Effective edit permission plus connection and presence counts, as React's `shellState`;
+	 * pass it to `describeCollaborationShellState` for a localised status line.
+	 */
+	readonly shellState: CollaborationShellState;
+	/** The shared `CollaborationState` of the room the canvas is in (`COLLABORATION_OFF` when none). */
+	readonly collaborationState: CollaborationState;
 }
 
 /** The DOM handles the canvas block reports back (the viewer state measures and listens through them). */

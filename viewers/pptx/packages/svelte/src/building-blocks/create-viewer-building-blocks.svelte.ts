@@ -1,9 +1,11 @@
 import {
+	createBuildingBlockShell,
 	createPptxBuildingBlockSession,
 	describeBuildingBlockToolbar,
 	findTextHighlightsByElement,
 	registerBuildingBlockGroups,
 	resolveBuildingBlockMode,
+	resolveCollaborationConfig,
 	runBuildingBlockToolbarControl,
 } from 'ooxml-ui/pptx';
 import type { BuildingBlockToolbarControlId } from 'ooxml-ui/pptx';
@@ -14,8 +16,11 @@ import { createTranslator } from '../i18n/translator';
 import { createSlidesPaneProps } from '../viewer/components/slides-pane-props';
 import { controllerState } from '../viewer/state/controller-state';
 import { createViewerState } from '../viewer/state/create-viewer-state.svelte';
+import {
+	useCustomizationConstraints,
+	useViewerCustomizationRoot,
+} from '../viewer/state/viewer-customization.svelte';
 import { toViewerStateOptions } from '../viewer/state/viewer-state-options';
-import type { PowerPointViewerProps } from '../viewer/types';
 import { createSvelteGroupPorts } from './group-ports';
 import { routeDialogFlag } from './route-dialog-flag.svelte';
 import { canEditOf, createSveltePort } from './session-port';
@@ -24,80 +29,7 @@ import type {
 	ViewerBuildingBlocksOptions,
 	ViewerBuildingBlocksState,
 } from './types';
-
-/**
- * The viewer props the blocks hand to the viewer state (the blocks mount no chrome), as getters
- * over the live options. `content` and `canEdit` are `$derived`, so the load effect only re-runs
- * when the deck itself changes, not on every option update.
- */
-function viewerProps(getOptions: () => ViewerBuildingBlocksOptions): PowerPointViewerProps {
-	const content = $derived(getOptions().content);
-	const canEdit = $derived(getOptions().canEdit === true);
-	const option = <K extends keyof ViewerBuildingBlocksOptions>(key: K) => getOptions()[key];
-	return {
-		get source() {
-			return content;
-		},
-		get editable() {
-			return canEdit;
-		},
-		// Recovery snapshots are the host's to opt into; the blocks never write them by default.
-		get autosave() {
-			return option('autosave') === true;
-		},
-		get fileName() {
-			return option('fileName');
-		},
-		get filePath() {
-			return option('filePath');
-		},
-		get initialSlide() {
-			return option('initialSlide');
-		},
-		get googleFonts() {
-			return option('googleFonts');
-		},
-		get listConversionScope() {
-			return option('listConversionScope');
-		},
-		get allowExternalContent() {
-			return option('allowExternalContent');
-		},
-		get limits() {
-			return option('limits');
-		},
-		get collaboration() {
-			return option('collaboration');
-		},
-		get fitPadding() {
-			return option('fitPadding');
-		},
-		get maxFitScale() {
-			return option('maxFitScale');
-		},
-		get authorName() {
-			return option('authorName') ?? option('userName');
-		},
-		get onload() {
-			return option('onLoad');
-		},
-		get onerror() {
-			return option('onError');
-		},
-		get onslidechange() {
-			return option('onSlideChange');
-		},
-		get ondirtychange() {
-			return option('onDirtyChange');
-		},
-		get oncontentchange() {
-			return option('onContentChange');
-		},
-		get onselectionchange() {
-			return option('onSelectionChange');
-		},
-	} as PowerPointViewerProps;
-}
+import { viewerProps } from './viewer-props.svelte';
 
 const bytesOf = (source: ViewerBuildingBlocksOptions['content']) =>
 	source instanceof ArrayBuffer || source instanceof Uint8Array ? source : null;
@@ -123,6 +55,12 @@ export function createViewerBuildingBlocks(
 	const t = createTranslator(() => getOptions().locale ?? 'en');
 
 	const props = viewerProps(getOptions);
+	// The host `allowExternalContent` and `googleFonts` lock their Trust Center settings, live.
+	const customization = useViewerCustomizationRoot(
+		() => undefined,
+		() => getOptions().allowExternalContent,
+		() => getOptions().googleFonts,
+	);
 	const viewerState = createViewerState(
 		toViewerStateOptions(() => props, {
 			t,
@@ -134,6 +72,7 @@ export function createViewerBuildingBlocks(
 		}),
 	);
 	const { editor } = viewerState;
+	useCustomizationConstraints(customization, viewerState.optionsState);
 
 	const session = createPptxBuildingBlockSession(
 		createSveltePort({ state: viewerState, options: getOptions, layouts: () => layouts }),
@@ -211,7 +150,27 @@ export function createViewerBuildingBlocks(
 	};
 	onDestroy(destroy);
 
+	// The shell over the viewer state's collaboration session; the same object until it changes.
+	const shell = createBuildingBlockShell(() => {
+		const { collab, loader } = viewerState;
+		return {
+			shell: {
+				authorizedCanEdit: getOptions().canEdit === true,
+				configured:
+					Boolean(collab.activeCollaboration) ||
+					Boolean(resolveCollaborationConfig(getOptions().collaboration)),
+				readOnly: collab.readOnly,
+				sourcePending: Boolean(getOptions().content) && loader.loading,
+				sourceError: Boolean(loader.error),
+				status: collab.status,
+				remoteUsers: collab.remotePresences,
+			},
+			collaboration: collab.state,
+		};
+	});
+
 	const getState = (): ViewerBuildingBlocksState => ({
+		...shell.current(),
 		mode: resolveBuildingBlockMode(viewerState.viewerMode, canEditOf(viewerState)),
 		loading: viewerState.loader.loading,
 		error: viewerState.loader.error,
