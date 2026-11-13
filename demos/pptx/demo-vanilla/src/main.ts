@@ -24,6 +24,7 @@ import { externalSessionRequested } from '../../shared/host-owned-collaboration'
 import { currentDemo3DFlags } from '../../shared/rendering-3d-flags';
 import { sameBrowserRoom } from '../../shared/same-browser-collaboration';
 import { buildViewerAi } from './ai-config';
+import { mountBuildingBlocksDemo } from './building-blocks-demo';
 import { buildRoomConfig, readRoomFromUrl, resolveAutoName } from './collab';
 import { getLanguage, onLanguageChange, t, viewerMessages } from './demo-i18n';
 import { createDropzone } from './dropzone';
@@ -252,6 +253,10 @@ const joinRoom = readRoomFromUrl();
 const wantSample = new URLSearchParams(window.location.search).get('sample') === '1';
 if (completeDemoSignInPopup()) {
 	// The MSAL sign-in popup: the response is handed back, the app does not boot here.
+} else if (new URLSearchParams(window.location.search).get('blocks') === '1') {
+	void mountBuildingBlocksDemo(app).catch((error: unknown) => {
+		app.textContent = String(error);
+	});
 } else if (externalSessionRequested()) {
 	void mountHostOwnedDemo(app).catch((error: unknown) => {
 		app.textContent = String(error);

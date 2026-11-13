@@ -156,6 +156,8 @@ export default defineConfig({
 	projects: [
 		{
 			name: 'react',
+			// Has the `?blocks=1` building-blocks page (`e2e/pptx/building-blocks.spec.ts`).
+			metadata: { buildingBlocks: true },
 			use: { ...devices['Desktop Chrome'], baseURL: `http://localhost:${REACT_PORT}` },
 		},
 		{
@@ -168,6 +170,8 @@ export default defineConfig({
 		},
 		{
 			name: 'vanilla',
+			// Has the `?blocks=1` building-blocks page (`e2e/pptx/building-blocks.spec.ts`).
+			metadata: { buildingBlocks: true },
 			use: { ...devices['Desktop Chrome'], baseURL: `http://localhost:${VANILLA_PORT}` },
 		},
 		{

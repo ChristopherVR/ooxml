@@ -47,6 +47,7 @@ import { externalSessionRequested } from '../shared/host-owned-collaboration';
 import { currentDemo3DFlags } from '../shared/rendering-3d-flags';
 import { sameBrowserRoom } from '../shared/same-browser-collaboration';
 import { useDemoAiAssistant } from './ai-config';
+import { BuildingBlocksDemoApp, buildingBlocksRequested } from './BuildingBlocksDemo';
 import { HostOwnedDemoApp } from './HostOwnedDemo';
 import i18nInstance from './i18n'; // Initialises i18next before any component renders
 import { SameBrowserDemoApp } from './SameBrowserDemo';
@@ -1113,7 +1114,9 @@ if (rootEl) {
 		hot.data.root = root;
 	}
 	root.render(
-		externalSessionRequested() ? (
+		buildingBlocksRequested() ? (
+			<BuildingBlocksDemoApp />
+		) : externalSessionRequested() ? (
 			<HostOwnedDemoApp />
 		) : sameBrowserRoom() ? (
 			<SameBrowserDemoApp />
