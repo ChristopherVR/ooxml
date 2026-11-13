@@ -238,6 +238,10 @@ with `'read-only'` (view-only, not in edit mode, no edit permission), `'protecte
 recommended or Protected View) or `'not-ready'` (loading or failed). The codes are not English
 text: render the feedback in your own language.
 
+The `actions` object is the shared building-blocks session (`ooxml-ui/pptx`), so it has the same
+shape in every binding; the vanilla [`createViewerBuildingBlocks`](/vanilla/building-blocks)
+returns the same `actions`.
+
 ```tsx
 const blocks = useViewerBuildingBlocks({
 	content,
