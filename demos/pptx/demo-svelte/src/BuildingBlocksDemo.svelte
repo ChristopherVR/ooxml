@@ -30,6 +30,12 @@
 				setCanEdit: (canEdit) => {
 					options = { ...options, canEdit };
 				},
+				setCollaboration: (collaboration) => {
+					options = {
+						...options,
+						collaboration: collaboration as ViewerBuildingBlocksOptions['collaboration'],
+					};
+				},
 			});
 		}
 	});

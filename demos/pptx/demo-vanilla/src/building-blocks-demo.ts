@@ -36,6 +36,13 @@ export async function mountBuildingBlocksDemo(root: HTMLElement): Promise<void> 
 			options = { ...options, canEdit };
 			blocks.update(options);
 		},
+		setCollaboration: (collaboration) => {
+			options = {
+				...options,
+				collaboration: collaboration as ViewerBuildingBlocksOptions['collaboration'],
+			};
+			blocks.update(options);
+		},
 	});
 	blocks.subscribe(() => host.refresh());
 	blocks.mountToolbar(toolbar);

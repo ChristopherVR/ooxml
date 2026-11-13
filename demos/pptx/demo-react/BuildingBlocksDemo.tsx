@@ -1,13 +1,18 @@
 import { SlideCanvas, SlidesPane, Toolbar, useViewerBuildingBlocks } from 'pptx-react-viewer';
+import type { UseViewerBuildingBlocksInput } from 'pptx-react-viewer';
 import React, { useEffect, useRef, useState } from 'react';
+
+type CollaborationInput = UseViewerBuildingBlocksInput['collaboration'];
 
 import { mountBuildingBlocksPanel } from '../shared/building-blocks-panel';
 
 function Blocks({ content }: { content: Uint8Array }) {
 	const [canEdit, setCanEdit] = useState(false);
+	const [collaboration, setCollaboration] = useState<CollaborationInput | undefined>(undefined);
 	const blocks = useViewerBuildingBlocks({
 		content,
 		canEdit,
+		collaboration,
 		fileName: 'sample-deck.pptx',
 		autosaveEnabled: false,
 	});
@@ -24,8 +29,11 @@ function Blocks({ content }: { content: Uint8Array }) {
 			state: () => ({
 				mode: latest.current.mode,
 				slideCount: latest.current.slidesPaneProps.slides.length,
+				shellState: latest.current.shellState,
+				collaborationState: latest.current.collaborationState,
 			}),
 			setCanEdit,
+			setCollaboration: (value) => setCollaboration(value as CollaborationInput | undefined),
 		});
 	}, []);
 	// The panel is plain DOM: refresh it after every render of the blocks.

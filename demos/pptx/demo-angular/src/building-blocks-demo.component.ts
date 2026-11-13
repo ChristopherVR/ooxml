@@ -71,6 +71,11 @@ export class BuildingBlocksDemoComponent implements AfterViewInit {
 			actions: () => this.blocks.actions(),
 			state: () => this.blocks.state(),
 			setCanEdit: (canEdit) => this.options.update((o) => ({ ...o, canEdit })),
+			setCollaboration: (collaboration) =>
+				this.options.update((o) => ({
+					...o,
+					collaboration: collaboration as ViewerBuildingBlocksOptions['collaboration'],
+				})),
 		});
 		this.host.refresh();
 	}

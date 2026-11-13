@@ -5,6 +5,7 @@ import {
 	BuildingBlocksToolbar,
 	useViewerBuildingBlocks,
 } from 'pptx-vue-viewer';
+import type { ViewerBuildingBlocksOptions } from 'pptx-vue-viewer';
 import { onMounted, ref, shallowRef, watchEffect } from 'vue';
 
 import { mountBuildingBlocksPanel } from '../../shared/building-blocks-panel';
@@ -18,12 +19,14 @@ import 'pptx-vue-viewer/styles';
  */
 const content = shallowRef<Uint8Array | null>(null);
 const canEdit = ref(false);
+const collaboration = shallowRef<unknown>(undefined);
 const panel = ref<HTMLElement | null>(null);
 const failure = ref('');
 const blocks = useViewerBuildingBlocks(() => ({
 	content: content.value,
 	canEdit: canEdit.value,
 	fileName: 'sample-deck.pptx',
+	collaboration: collaboration.value as ViewerBuildingBlocksOptions['collaboration'],
 }));
 
 onMounted(async () => {
@@ -38,6 +41,9 @@ onMounted(async () => {
 		state: () => blocks.state.value,
 		setCanEdit: (value) => {
 			canEdit.value = value;
+		},
+		setCollaboration: (value) => {
+			collaboration.value = value;
 		},
 	});
 	watchEffect(() => {

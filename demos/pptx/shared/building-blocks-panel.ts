@@ -5,6 +5,9 @@
  * A binding only supplies the adapter and re-renders by calling `refresh()`.
  */
 
+import { openBuildingBlocksRoom } from './building-blocks-room';
+import type { BuildingBlocksRoom } from './building-blocks-room';
+
 type Result = { ok: true } | { ok: false; code: string };
 
 /** The slice of a binding's building blocks the panel drives (structural, no package import). */
@@ -34,8 +37,15 @@ export interface BuildingBlocksPanelAdapter {
 		customShows: { shows: readonly unknown[]; create(name: string): Result };
 		shortcuts: { open: boolean; toggle(): void };
 	};
-	state(): { mode: string; slideCount: number };
+	state(): {
+		mode: string;
+		slideCount: number;
+		shellState: { canEdit: boolean; status: string; connectedCount: number };
+		collaborationState: { active: boolean; status: string };
+	};
 	setCanEdit(canEdit: boolean): void;
+	/** Set the blocks' `collaboration` option (undefined leaves the room). */
+	setCollaboration(collaboration: unknown): void;
 }
 
 const LINK = {
@@ -81,7 +91,22 @@ export function mountBuildingBlocksPanel(
 		loop: labelled(doc, 'output', 'Blocks loop'),
 		shows: labelled(doc, 'output', 'Blocks custom shows'),
 		shortcuts: labelled(doc, 'output', 'Blocks shortcuts'),
+		collaboration: labelled(doc, 'output', 'Blocks collaboration'),
+		connected: labelled(doc, 'output', 'Blocks connected'),
+		shellEditable: labelled(doc, 'output', 'Blocks shell editable'),
 	};
+	// The host-owned room: opened on "Host join room", released on the next join or page hide
+	// (the blocks may still be detaching from it when "Host leave room" returns).
+	let room: BuildingBlocksRoom | undefined;
+	let left: BuildingBlocksRoom | undefined;
+	const release = () => {
+		left?.destroy();
+		left = undefined;
+	};
+	doc.defaultView?.addEventListener('pagehide', () => {
+		release();
+		room?.destroy();
+	});
 	const show = (result: Result) => {
 		outputs.result.textContent = result.ok ? 'ok' : result.code;
 	};
@@ -130,6 +155,19 @@ export function mountBuildingBlocksPanel(
 		button('Host add show', () => show(actions().customShows.create('Host show'))),
 		button('Host shortcuts', () => actions().shortcuts.toggle()),
 		button('Host cancel', () => actions().cancel()),
+		button('Host join room', () => {
+			release();
+			void openBuildingBlocksRoom().then((opened) => {
+				room = opened;
+				adapter.setCollaboration(opened.config);
+				return undefined;
+			});
+		}),
+		button('Host leave room', () => {
+			adapter.setCollaboration(undefined);
+			left = room;
+			room = undefined;
+		}),
 	);
 	const refresh = () => {
 		const now = actions();
@@ -145,6 +183,9 @@ export function mountBuildingBlocksPanel(
 		outputs.loop.textContent = String(now.setUpSlideShow.current.loop);
 		outputs.shows.textContent = String(now.customShows.shows.length);
 		outputs.shortcuts.textContent = now.shortcuts.open ? 'open' : 'closed';
+		outputs.collaboration.textContent = state.collaborationState.status;
+		outputs.connected.textContent = String(state.shellState.connectedCount);
+		outputs.shellEditable.textContent = String(state.shellState.canEdit);
 	};
 	refresh();
 	return { refresh };
