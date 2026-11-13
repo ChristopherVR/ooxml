@@ -125,7 +125,7 @@ try {
 
 ## 版式模板图片 {#layout-template-images}
 
-`await handler.getTemplateElementsForSlide(slideId)` 为所请求的版式和母版元素解析嵌入图片，包括插入幻灯片或应用此前未使用的版式之后的图片。初次加载不会解码所有未使用的版式。解析复用处理器的媒体缓存，原地更新模板对象并保留其 `rawXml` 引用。缺失资源仍保持未解析状态，`allowExternalImages` 策略不变。
+`await handler.getTemplateElementsForSlide(slideId)` 为所请求的版式和母版元素解析嵌入图片及其 SVG 变体，包括插入幻灯片或应用此前未使用的版式之后的图片。初次加载不会解码所有未使用的版式。解析复用处理器的媒体缓存，原地更新模板对象并保留其 `rawXml` 引用。缺失资源仍保持未解析状态，`allowExternalImages` 策略不变。
 
 ## 嵌入字体 {#embedded-fonts}
 

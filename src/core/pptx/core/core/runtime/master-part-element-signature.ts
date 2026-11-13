@@ -23,6 +23,7 @@ const SIGNATURE_SKIP_KEYS: ReadonlySet<string> = new Set([
 	'rawXml',
 	'src',
 	'imageData',
+	'svgData',
 	'embeddedData',
 	'posterSrc',
 	'thumbnailSrc',
