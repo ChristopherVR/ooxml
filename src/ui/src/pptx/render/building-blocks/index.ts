@@ -7,7 +7,6 @@
 export * from './action-groups';
 export * from './actions-types';
 export * from './find-bar-controller';
-export * from './find-highlight-dom';
 export * from './find-layout';
 export * from './groups';
 export * from './hyperlink-edit-data';
