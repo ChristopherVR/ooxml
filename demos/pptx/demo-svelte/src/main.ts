@@ -4,6 +4,7 @@ import { mount } from 'svelte';
 import { externalSessionRequested } from '../../shared/host-owned-collaboration';
 import { sameBrowserRoom } from '../../shared/same-browser-collaboration';
 import App from './App.svelte';
+import BuildingBlocksDemo from './BuildingBlocksDemo.svelte';
 import HostOwnedDemo from './HostOwnedDemo.svelte';
 import SameBrowserDemo from './SameBrowserDemo.svelte';
 
@@ -17,7 +18,16 @@ if (!appRoot) {
 }
 
 if (!completeDemoSignInPopup()) {
-	mount(externalSessionRequested() ? HostOwnedDemo : sameBrowserRoom() ? SameBrowserDemo : App, {
-		target: appRoot,
-	});
+	mount(
+		new URLSearchParams(window.location.search).get('blocks') === '1'
+			? BuildingBlocksDemo
+			: externalSessionRequested()
+				? HostOwnedDemo
+				: sameBrowserRoom()
+					? SameBrowserDemo
+					: App,
+		{
+			target: appRoot,
+		},
+	);
 }

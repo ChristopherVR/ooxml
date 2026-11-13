@@ -178,6 +178,8 @@ export default defineConfig({
 		},
 		{
 			name: 'svelte',
+			// Has the `?blocks=1` building-blocks page (`e2e/pptx/building-blocks.spec.ts`).
+			metadata: { buildingBlocks: true },
 			use: { ...devices['Desktop Chrome'], baseURL: `http://localhost:${SVELTE_PORT}` },
 		},
 		...Object.entries({
