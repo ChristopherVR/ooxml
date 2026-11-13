@@ -15,7 +15,11 @@
  * @module render/text-tracking-settle
  */
 import { isDeckFontSubstituted } from './text-design-tracking';
-import { resolveMetricTrackingPx, type RunFontSpec } from './text-metric-tracking';
+import {
+	resetMetricTrackingCache,
+	resolveMetricTrackingPx,
+	type RunFontSpec,
+} from './text-metric-tracking';
 import { pieceLetterSpacing } from './text-run-spacing';
 
 /** Marks a run whose tracking was measured against a stand-in face; holds the authored px. */
@@ -86,23 +90,45 @@ function schedule(): void {
 		return;
 	}
 	scheduled = true;
-	const run = () => {
+	// A microtask, not the next frame: the browser paints with a face as soon as it has loaded, and
+	// `loadingdone` only arrives after that paint. Settling from the face's own `loaded` promise
+	// runs in the same task the face became usable in, so no frame shows the new face with the old
+	// face's spacing (the lines ran long for a frame or two and then jumped back: a flicker).
+	queueMicrotask(() => {
 		scheduled = false;
+		resetMetricTrackingCache();
 		settleTracking();
-	};
-	// After the frame: a binding that does re-render on the same event has done so by then.
-	if (typeof requestAnimationFrame === 'function') {
-		requestAnimationFrame(run);
-	} else {
-		setTimeout(run, 0);
+	});
+}
+
+const watchedFaces = new WeakSet<FontFace>();
+
+/** Settle as soon as `face` finishes loading. */
+function watchFace(face: FontFace): void {
+	if (watchedFaces.has(face)) {
+		return;
 	}
+	watchedFaces.add(face);
+	face.loaded.then(schedule, () => undefined);
 }
 
 /** Start watching for loaded fonts (once per page). Costs nothing before a run is marked. */
 export function armTrackingSettle(): void {
-	if (armed || typeof document === 'undefined') {
+	if (armed || typeof document === 'undefined' || !document.fonts) {
 		return;
 	}
 	armed = true;
-	document.fonts?.addEventListener?.('loadingdone', schedule);
+	const fonts = document.fonts;
+	fonts.forEach?.((face) => {
+		if (face.status === 'loading') {
+			watchFace(face);
+		}
+	});
+	fonts.addEventListener?.('loading', (event) => {
+		for (const face of (event as FontFaceSetLoadEvent).fontfaces) {
+			watchFace(face);
+		}
+	});
+	// A backstop for a face this missed (one that started loading before the watch was armed).
+	fonts.addEventListener?.('loadingdone', schedule);
 }
