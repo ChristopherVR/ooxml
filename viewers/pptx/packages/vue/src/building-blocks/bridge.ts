@@ -1,6 +1,5 @@
 import type {
 	BuildingBlockGroupPorts,
-	FindResult,
 	BuildingBlockRequest,
 	BuildingBlockSessionPort,
 	BuildingBlockToolbarView,
@@ -36,14 +35,6 @@ export interface BuildingBlocksEngine {
 	closeShortcuts(): void;
 	/** What the slides pane block draws and which operations it maps its events onto. */
 	slidesPane(): SlidesPaneBinding;
-	/** The matches the canvas outlines for the host find bar. */
-	findHighlights(): FindHighlightState;
-}
-
-export interface FindHighlightState {
-	matches: readonly FindResult[];
-	current: number;
-	slideIndex: number;
 }
 
 /** The viewer's slide rail inputs and operations, as `ViewerSlideRail` reads them. */

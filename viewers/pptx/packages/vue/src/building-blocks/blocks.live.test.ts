@@ -61,13 +61,26 @@ test('the shortcut chord and Ctrl+F reach the host instead of opening dialogs', 
 	expect(document.querySelector('[role="dialog"]')).toBeNull();
 });
 
-test('find matches outline their elements on the canvas', async () => {
+test('find marks the matched text on the canvas, the current match apart', async () => {
 	const blocks = await mountCanvas();
 	blocks.actions.value.findReplace.setOpen(true);
 	blocks.actions.value.findReplace.setQuery('alpha');
-	await expect
-		.poll(() => document.querySelectorAll('[data-pptx-find-match]').length, { timeout: 5000 })
-		.toBeGreaterThan(0);
+	const marks = () =>
+		[...document.querySelectorAll('mark[data-pptx-find-match]')].map((mark) => [
+			mark.getAttribute('data-pptx-find-match'),
+			mark.textContent,
+		]);
+	await expect.poll(marks, { timeout: 5000 }).toEqual([
+		['current', 'Alpha'],
+		['match', 'alpha'],
+	]);
+	blocks.actions.value.findReplace.next();
+	await expect.poll(marks, { timeout: 5000 }).toEqual([
+		['match', 'Alpha'],
+		['current', 'alpha'],
+	]);
+	blocks.actions.value.findReplace.setOpen(false);
+	await expect.poll(marks, { timeout: 5000 }).toEqual([]);
 });
 
 test('a layout the master does not list is refused', async () => {

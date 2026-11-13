@@ -160,11 +160,6 @@ function createEngine(c: Context): BuildingBlocksEngine {
 			slideOps: c.slideOps,
 			sectionOps: c.sectionOps,
 		}),
-		findHighlights: () => ({
-			matches: c.find.matches.value,
-			current: c.find.currentMatch.value,
-			slideIndex: c.activeSlideIndex.value,
-		}),
 	};
 }
 

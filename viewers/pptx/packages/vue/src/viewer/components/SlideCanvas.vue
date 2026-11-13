@@ -6,12 +6,13 @@ import {
 	measureViewportClientSize,
 	observeViewportClientSize,
 } from 'ooxml-ui/pptx';
-import type { ViewportClientSize, ViewportFitPadding } from 'ooxml-ui/pptx';
+import type { SlideFindHighlights, ViewportClientSize, ViewportFitPadding } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import type { CSSProperties } from 'vue';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { provideFindHighlights } from '../composables/find-highlights';
 import { RULER_THICKNESS } from '../composables/ruler-utils';
 import type { RulerUnit } from '../composables/ruler-utils';
 import type { CanvasSize } from '../types';
@@ -68,7 +69,11 @@ const props = defineProps<{
 	inlineEditingElementId?: string | null;
 	/** The selection, whose boxes {@link SlideStage} keeps exact while it is edited. */
 	selectedElementIds?: readonly string[];
+	/** The Find bar's matches on this slide, marked in the text (`findTextHighlightsByElement`). */
+	findHighlights?: SlideFindHighlights;
 }>();
+
+provideFindHighlights(() => props.findHighlights);
 
 const emit = defineEmits<{
 	'update:fitScale': [number];

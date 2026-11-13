@@ -3,6 +3,7 @@ import type { AbuttingEdgeBleed } from 'ooxml-ui/pptx';
 import {
 	abuttingEdgeBleedStyle,
 	buildParagraphs,
+	highlightFindMatches,
 	buildTextBody3DSceneStyle,
 	buildTextStyleOverrideCss,
 	getGroupChildParentFill,
@@ -27,6 +28,7 @@ import {
 	getTextBlockStyle,
 } from '../composables/element-style';
 import { injectFieldContext, resolveFieldContext } from '../composables/field-context';
+import { injectElementFindHighlights } from '../composables/find-highlights';
 import { injectPresentationElementStates } from '../composables/presentation-element-states';
 import { useRendering3DFlags } from '../composables/rendering-3d-flags';
 import { injectSlideElements, resolveSlideElements } from '../composables/slide-elements';
@@ -120,6 +122,8 @@ const fieldContextSource = injectFieldContext();
 
 /** Sibling elements of the slide being painted, used to resolve linked text box chains. */
 const slideElementsSource = injectSlideElements();
+/** The Find bar's marks in this element's text (editing canvas only). */
+const findHighlights = injectElementFindHighlights(() => props.element.id);
 
 /**
  * Native-animation playback state for this element (present only during a running
@@ -260,7 +264,10 @@ const linkedSegments = computed(() =>
 
 /** Rendered paragraphs (runs + bullet/indent), built by shared logic. */
 const paragraphs = computed(() =>
-	buildParagraphs(props.element, resolveFieldContext(fieldContextSource), linkedSegments.value),
+	highlightFindMatches(
+		buildParagraphs(props.element, resolveFieldContext(fieldContextSource), linkedSegments.value),
+		findHighlights(),
+	),
 );
 const hasText = computed(() =>
 	paragraphs.value.some((p) => p.runs.length > 0 || p.bulletMarker !== undefined),

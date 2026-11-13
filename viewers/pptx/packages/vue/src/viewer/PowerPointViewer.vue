@@ -73,7 +73,11 @@ import {
 	shouldShowAutosaveRecoveryPrompt,
 } from 'ooxml-ui/pptx';
 import type { CloudFileProvider, CloudOpenedFile, ViewerAddinStatus } from 'ooxml-ui/pptx';
-import { createRibbonDisplayController, installSvgIdScope } from 'ooxml-ui/pptx';
+import {
+	createRibbonDisplayController,
+	findTextHighlightsByElement,
+	installSvgIdScope,
+} from 'ooxml-ui/pptx';
 import type { RibbonDisplayMode } from 'ooxml-ui/pptx';
 import { hasShapeProperties, PptxHandler } from 'pptx-viewer-core';
 import type {
@@ -941,6 +945,10 @@ const find = useFindReplace({
 	pushHistory: history.pushHistory,
 	open: findOpen,
 });
+/** The matches the editing canvas marks in the text (shared `find-text-highlight`). */
+const findHighlights = computed(() =>
+	findTextHighlightsByElement(find.matches.value, find.currentMatch.value, activeSlideIndex.value),
+);
 
 // -- Export (PNG / PDF) + print ----------------------------------------
 const exporter = useExportWiring({
@@ -2494,6 +2502,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 						:edit-template-mode="editTemplateMode && !presentation.presenting.value"
 						:inline-editing-element-id="inlineEdit.inlineEditingElementId.value"
 						:selected-element-ids="selection.selectedElementIds.value"
+						:find-highlights="findHighlights"
 						@update:fit-scale="fitScale = $event"
 						@create-guide="drag.addGuide"
 					>

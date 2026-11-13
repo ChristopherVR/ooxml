@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { syncFindHighlights } from 'ooxml-ui/pptx';
 /**
  * BuildingBlocksCanvas: the slide canvas block. It runs the full `PowerPointViewer` with its chrome
  * turned off (no ribbon, rail, status bar, inspector, notes, title bar, toasts or dialogs); the
  * viewer's own dialogs become host requests through the bridge it is given.
  */
-import { computed, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, provide, ref, watch } from 'vue';
 
 import PowerPointViewer from '../viewer/PowerPointViewer.vue';
 import type { PowerPointViewerExpose } from '../viewer/types';
@@ -29,7 +28,6 @@ const BLOCK_HIDDEN_PANELS = [
 
 provide(BuildingBlocksBridgeKey, props.blocks.bridge);
 
-const root = ref<HTMLElement | null>(null);
 const viewer = ref<PowerPointViewerExpose | null>(null);
 watch(viewer, (handle) => {
 	props.blocks.bridge.viewer.value = handle;
@@ -61,30 +59,14 @@ const viewerProps = computed(() => {
 	return rest;
 });
 
-// The stage is repainted on change: outline the find matches again after every paint.
-let observer: MutationObserver | undefined;
-const highlight = () => {
-	const engine = props.blocks.bridge.engine.value;
-	if (root.value && engine) {
-		const { matches, current, slideIndex } = engine.findHighlights();
-		syncFindHighlights(root.value, matches, current, slideIndex);
-	}
-};
-onMounted(() => {
-	if (root.value) {
-		observer = new MutationObserver(highlight);
-		observer.observe(root.value, { childList: true, subtree: true });
-	}
-});
+// The viewer's own text renderer marks the find matches (shared `find-text-highlight`).
 onBeforeUnmount(() => {
-	observer?.disconnect();
 	props.blocks.bridge.viewer.value = null;
 });
-watch(() => props.blocks.bridge.engine.value?.findHighlights(), highlight, { flush: 'post' });
 </script>
 
 <template>
-	<div ref="root" data-pptx-block="canvas" class="pptx-vue-bb-canvas">
+	<div data-pptx-block="canvas" class="pptx-vue-bb-canvas">
 		<PowerPointViewer
 			ref="viewer"
 			v-bind="viewerProps"
@@ -110,12 +92,5 @@ watch(() => props.blocks.bridge.engine.value?.findHighlights(), highlight, { flu
 	position: relative;
 	width: 100%;
 	height: 100%;
-}
-.pptx-vue-bb-canvas [data-pptx-find-match] {
-	outline: 2px dashed var(--pptx-primary, #d24726);
-	outline-offset: 2px;
-}
-.pptx-vue-bb-canvas [data-pptx-find-match='current'] {
-	outline-style: solid;
 }
 </style>
