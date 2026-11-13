@@ -11,7 +11,14 @@ import { downloadBytes } from './support/exports';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 async function present(page: Parameters<typeof loadDeck>[0]) {
+	// A show just left with Escape may still be tearing down, and its editor buttons come back
+	// only then; choosing a button before that picks the hidden Presenter View control instead.
+	await expect(page.locator('pptx-ui-present-toolbar:visible')).toHaveCount(0);
 	const show = page.getByRole('button', { name: /^slide show$/iu });
+	await show
+		.last()
+		.waitFor({ timeout: 2_000 })
+		.catch(() => undefined);
 	if (await show.count()) await show.last().click();
 	else
 		await page
