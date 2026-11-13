@@ -7,6 +7,8 @@
  */
 export * from './viewer';
 export * from './theme';
+// Building blocks: the canvas, toolbar and slides pane a host composes into its own shell.
+export * from './building-blocks';
 export { cn, type ClassValue } from './utils';
 export { keyToLabel, translationsEn, LOCALE_CATALOG } from 'ooxml-ui/pptx/i18n';
 export type { TranslationKey, LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';

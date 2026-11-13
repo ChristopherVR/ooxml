@@ -16,6 +16,7 @@ import { completeDemoSignInPopup } from 'ooxml-demo-onedrive';
 import { externalSessionRequested } from '../../shared/host-owned-collaboration';
 import { sameBrowserRoom } from '../../shared/same-browser-collaboration';
 import { AppComponent } from './app.component';
+import { BuildingBlocksDemoComponent } from './building-blocks-demo.component';
 import { HostOwnedDemoComponent } from './host-owned-demo.component';
 import { i18nProviders } from './i18n';
 import { SameBrowserDemoComponent } from './same-browser-demo.component';
@@ -24,11 +25,13 @@ import '../../shared/dropzone.css';
 
 if (!completeDemoSignInPopup()) {
 	bootstrapApplication(
-		externalSessionRequested()
-			? HostOwnedDemoComponent
-			: sameBrowserRoom()
-				? SameBrowserDemoComponent
-				: AppComponent,
+		new URLSearchParams(location.search).get('blocks') === '1'
+			? BuildingBlocksDemoComponent
+			: externalSessionRequested()
+				? HostOwnedDemoComponent
+				: sameBrowserRoom()
+					? SameBrowserDemoComponent
+					: AppComponent,
 		{ providers: [i18nProviders] },
 	).catch((err) => console.error(err));
 }

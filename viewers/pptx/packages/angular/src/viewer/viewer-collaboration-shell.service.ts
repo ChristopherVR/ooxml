@@ -1,5 +1,9 @@
 import { computed, effect, inject, Injectable, signal, untracked } from '@angular/core';
-import { resolveCollaborationConfig, resolveCollaborationShellState } from 'ooxml-ui/pptx';
+import {
+	resolveCollaborationConfig,
+	resolveCollaborationShellState,
+	resolveInitialSlideIndex,
+} from 'ooxml-ui/pptx';
 import type { CollaborationShellState } from 'ooxml-ui/pptx';
 
 import { CollaborationService } from './collaboration.service';
@@ -19,6 +23,8 @@ export interface ViewerCollaborationShellOptions {
 	canEdit: () => boolean;
 	/** The scaled slide stage, not its outer scroll container. */
 	stageElement: () => HTMLElement | undefined;
+	/** Zero-based slide shown after each load, clamped into the deck (default: the first). */
+	initialSlide?: () => number | undefined;
 }
 
 /**
@@ -42,15 +48,18 @@ export class ViewerCollaborationShellService {
 	readonly activeTemplateElements = computed(
 		() => this.editor.templateElementsBySlideId()[this.activeSlide()?.id ?? ''] ?? [],
 	);
+	/** A real source is set and has not finished loading (a blank document is not pending). */
+	readonly sourcePending = computed(() => {
+		const content = this.options()?.content();
+		return Boolean(content) && (this.loader.loading() || content !== this.loadedContent());
+	});
 	readonly state = computed<CollaborationShellState>(() => {
 		const host = this.options();
-		const content = host?.content();
 		return resolveCollaborationShellState({
 			authorizedCanEdit: host?.canEdit() ?? false,
 			configured: Boolean(resolveCollaborationConfig(host?.collaboration())),
 			readOnly: this.collaboration.readOnly(),
-			sourcePending:
-				Boolean(content) && (this.loader.loading() || content !== this.loadedContent()),
+			sourcePending: this.sourcePending(),
 			sourceError: Boolean(this.loader.error()),
 			status: this.collaboration.status(),
 			remoteUsers: this.collaboration.presence(),
@@ -111,7 +120,9 @@ export class ViewerCollaborationShellService {
 			const slides = this.loader.slides();
 			untracked(() => {
 				this.editor.setSlides(slides, this.loader.sections());
-				this.activeSlideIndex.set(0);
+				this.activeSlideIndex.set(
+					resolveInitialSlideIndex(this.options()?.initialSlide?.(), slides.length),
+				);
 				this.collaboration.adoptDocSlidesAfterLoad('bootstrap');
 			});
 		});

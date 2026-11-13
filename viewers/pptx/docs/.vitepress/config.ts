@@ -433,6 +433,7 @@ export default defineConfig({
 						{ text: 'Getting Started', link: '/angular/getting-started' },
 						{ text: 'Component Inputs & Outputs', link: '/angular/props' },
 						{ text: 'Public API', link: '/angular/api' },
+						{ text: 'Building Blocks', link: '/angular/building-blocks' },
 					],
 				},
 				{
