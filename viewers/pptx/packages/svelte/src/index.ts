@@ -178,3 +178,26 @@ export {
 	VIEWER_FEATURE_IDS,
 	VIEWER_PANEL_IDS,
 } from 'ooxml-ui/pptx';
+
+// ── Building blocks ────────────────────────────────────────────────────
+// Compose a custom PowerPoint shell: `createViewerBuildingBlocks(() => options)` plus the
+// canvas, compact toolbar and slides pane blocks, with host-owned workflows in `actions`.
+export {
+	BuildingBlocksCanvas,
+	BuildingBlocksSlidesPane,
+	BuildingBlocksToolbar,
+	createViewerBuildingBlocks,
+} from './building-blocks';
+export type {
+	BuildingBlocksCanvasProps,
+	BuildingBlocksSlidesPaneProps,
+	BuildingBlocksToolbarProps,
+	ViewerBuildingBlocks,
+	ViewerBuildingBlocksOptions,
+	ViewerBuildingBlocksState,
+} from './building-blocks';
+export type {
+	BuildingBlockRequest,
+	BuildingBlockResult,
+	ViewerBuildingBlockActions,
+} from 'ooxml-ui/pptx';
