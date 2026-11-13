@@ -40,14 +40,20 @@ export type BuildingBlockFailureCode =
 	/** Chart data with no categories or series, or a series that does not match them. */
 	| 'invalid-data'
 	| 'no-layout'
-	/** The deck cannot do this (for example embedding a font it does not carry, or creating a signature). */
-	| 'unsupported'
 	/** An open password that is empty, shorter than four characters. */
 	| 'password-required'
 	| 'password-too-short'
 	| 'password-mismatch'
 	/** The package carries no signature to remove. */
-	| 'no-signatures';
+	| 'no-signatures'
+	/** A slide range that is empty or outside the deck. */
+	| 'invalid-range'
+	/** A custom show that does not exist. */
+	| 'unknown-show'
+	| 'unknown-slide'
+	| 'invalid-name'
+	/** Not possible here: the deck cannot carry it, or it needs a service the building blocks do not run. */
+	| 'unsupported';
 
 export type BuildingBlockResult = { ok: true } | { ok: false; code: BuildingBlockFailureCode };
 
@@ -162,10 +168,10 @@ export interface BuildingBlockAvailabilityInput {
  * and nothing appears. A custom shell hides them (`hiddenActions`) or supplies its own UI.
  */
 export const BUILDING_BLOCK_UNMOUNTED_DIALOG_ACTIONS = [
-	'onOpenSetUpSlideShow',
-	'onOpenCustomShows',
+	// The other dialogs raise host requests now (`actions.passwordProtection`, `.documentProperties`,
+	// `.fontEmbedding`, `.digitalSignatures`, `.setUpSlideShow`, `.customShows`, `.shortcuts`);
+	// Broadcast cannot be completed.
 	'onOpenBroadcastDialog',
-	'onToggleShortcuts',
 ] as const;
 
 export function describeBuildingBlockActions(

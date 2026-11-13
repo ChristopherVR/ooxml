@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import type { HostOwnedShellHandle } from '../shared/host-owned-shell-controls';
 import { hostThumbnailStripRequested } from '../shared/host-thumbnail-strip';
 import { HostOwnedFileDialogs } from './HostOwnedFileDialogs';
+import { HostOwnedShowDialogs } from './HostOwnedShowDialogs';
 import { HostOwnedWorkflows } from './HostOwnedWorkflows';
 import { HostSlideStrip } from './HostSlideStrip';
 
@@ -57,6 +58,7 @@ export const HostOwnedHeadlessEditor = forwardRef<
 				<Toolbar {...blocks.toolbarProps} />
 				<HostOwnedWorkflows blocks={blocks} />
 				<HostOwnedFileDialogs blocks={blocks} />
+				<HostOwnedShowDialogs blocks={blocks} />
 				{blocks.error && <p role='alert'>{blocks.error}</p>}
 				<div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
 					{hostThumbnailStripRequested() ? (

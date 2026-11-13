@@ -226,6 +226,7 @@ export function useViewerBuildingBlocks(
 		content,
 		readOnlyRecommendation,
 		hasModifyVerifier,
+		presentation,
 		onRequest: input.onRequest,
 		fileLimits: input.fileLimits,
 	});

@@ -365,7 +365,9 @@ Building blocks are read-only until the host passes `canEdit: true`, and take no
 `customization` or `storage`: you own the chrome, so you own those decisions. React's PowerPoint
 building blocks also return `actions` (host-owned image, media, hyperlink, SmartArt, chart, equation,
 Find / Replace and layout operations, the password protection, document properties, font
-embedding and digital signature state and operations, and which toolbar actions need UI you render; see
+embedding and digital signature state and operations, Set Up Slide Show, Custom Shows and the
+shortcut catalogue (Broadcast is reported unsupported: it needs a collaboration service), and which
+toolbar actions need UI you render; see
 `viewers/pptx/docs/react/hooks.md`). See
 `viewers/<product>/docs/building-blocks.md` (Word, Excel and Visio; PowerPoint's chrome is described in `viewers/pptx/docs/guide/customization.md`).
 

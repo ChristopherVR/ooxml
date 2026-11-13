@@ -5,6 +5,8 @@ import type {
 	FindReplaceOptions,
 	FindResult,
 	HostFileLimits,
+	ShowDialogActionId,
+	ShowDialogRequest,
 	InsertChartKind,
 	InsertChartOptions,
 } from 'ooxml-ui/pptx';
@@ -12,6 +14,7 @@ import type { PptxLayoutOption, SmartArtLayout } from 'pptx-viewer-core';
 
 import type { HyperlinkEditData } from '../components/hyperlink-edit-types';
 import type { FileDialogActions } from './useViewerBuildingBlocks-file-dialog-actions';
+import type { ShowDialogActions } from './useViewerBuildingBlocks-show-dialog-actions';
 
 /**
  * A toolbar control or canvas gesture asked for UI the building blocks never mount (a file picker,
@@ -33,7 +36,9 @@ export type BuildingBlockRequest =
 	/** Render your own list from `actions.digitalSignatures`. */
 	| { kind: 'digitalSignatures' }
 	/** `existingOmml` is the equation being edited (a double-click), null for a new one. */
-	| { kind: 'equation'; existingOmml: Record<string, unknown> | null };
+	| { kind: 'equation'; existingOmml: Record<string, unknown> | null }
+	/** Set Up Slide Show, Custom Shows, or the shortcut help opening or closing. */
+	| ShowDialogRequest;
 
 export interface UseViewerBuildingBlocksActionsOptions {
 	/**
@@ -80,9 +85,9 @@ export interface BuildingBlockLayoutActions {
 	reset: () => Promise<BuildingBlockResult>;
 }
 
-export interface ViewerBuildingBlockActions extends FileDialogActions {
+export interface ViewerBuildingBlockActions extends FileDialogActions, ShowDialogActions {
 	/** What each workflow can do right now and whether its toolbar control needs host UI. */
-	availability: Record<BuildingBlockActionId, BuildingBlockActionState>;
+	availability: Record<BuildingBlockActionId | ShowDialogActionId, BuildingBlockActionState>;
 	/**
 	 * `ToolbarProps` handlers that open a dialog or pane the building blocks do not mount (set
 	 * internal state, show nothing). Hide them with `hiddenActions` or render the dialog yourself.

@@ -25,6 +25,7 @@ import {
 import type { EditorHistoryResult } from './useEditorHistory';
 import type { EditorOperationsResult } from './useEditorOperations';
 import { useLayoutSwitching } from './useLayoutSwitching';
+import type { UsePresentationModeResult } from './usePresentationMode';
 import type { PropertyHandlersResult } from './usePropertyHandlers';
 import { scopeLayoutOptionsToActiveSlide } from './useScopedLayoutOptions';
 import type {
@@ -37,6 +38,7 @@ import {
 	buildFindReplaceActions,
 	buildLayoutActions,
 } from './useViewerBuildingBlocks-find-layout-actions';
+import { useViewerBuildingBlocksShowDialogActions } from './useViewerBuildingBlocks-show-dialog-actions';
 import type { ViewerDialogsResult } from './useViewerDialogs';
 import type { ViewerState } from './useViewerState';
 
@@ -57,6 +59,7 @@ export interface UseViewerBuildingBlocksActionsInput extends UseViewerBuildingBl
 	content: ArrayBuffer | Uint8Array | null | undefined;
 	readOnlyRecommendation: Pick<ReadOnlyRecommendation, 'kind'>;
 	hasModifyVerifier: boolean;
+	presentation: UsePresentationModeResult;
 }
 
 export interface ViewerBuildingBlocksActionsResult {
@@ -108,7 +111,7 @@ export function useViewerBuildingBlocksActions(
 	});
 
 	const equation = equationOf(selectedElement);
-	const availability = describeBuildingBlockActions({
+	const availabilityInput = {
 		ready: !state.loading && !state.error,
 		hasActiveSlide: Boolean(activeSlide),
 		canEdit: input.canEdit,
@@ -120,7 +123,18 @@ export function useViewerBuildingBlocksActions(
 		layoutCount: scopedLayouts.length,
 		hasCurrentLayout: resetSlideLayoutPath(activeSlide) !== undefined,
 		hasHandler: handlerRef.current !== null,
+	};
+	const baseAvailability = describeBuildingBlockActions(availabilityInput);
+	const showDialogs = useViewerBuildingBlocksShowDialogActions({
+		state,
+		dialogs,
+		history,
+		presentation: input.presentation,
+		slides: input.slides,
+		availabilityInput,
+		onRequest: input.onRequest,
 	});
+	const availability = { ...baseAvailability, ...showDialogs.availability };
 
 	// Operations run long after the render that made them: they read the latest of everything.
 	const latest = useRef({ ...input, availability, scopedLayouts, layoutSwitching });
@@ -297,8 +311,12 @@ export function useViewerBuildingBlocksActions(
 		...fileDialogs,
 		availability,
 		unmountedDialogActions: BUILDING_BLOCK_UNMOUNTED_DIALOG_ACTIONS,
-		pending,
-		cancel: () => setPending(null),
+		pending: pending ?? showDialogs.pending,
+		cancel: () => {
+			setPending(null);
+			showDialogs.cancel();
+		},
+		...showDialogs.actions,
 		insertImage,
 		insertMedia,
 		hyperlink,

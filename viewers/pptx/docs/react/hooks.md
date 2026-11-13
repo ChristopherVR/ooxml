@@ -309,14 +309,47 @@ const { actions } = blocks;
     evaluated, so nothing is reported as trusted. `remove()` marks the deck changed so the saved file
     carries no signatures (saving always drops them; `'no-signatures'` when there are none).
     `sign()` always returns `'unsupported'`: the viewer cannot create a signature.
+- **Slide show dialogs.** Slide Show > Set Up Slide Show, Custom Slide Show, Broadcast and the
+  shortcut help (`?` or Ctrl+/) are host-owned too. The first two raise `{ kind: 'setUpSlideShow' }`
+  and `{ kind: 'customShows' }`; the shortcut help raises `{ kind: 'shortcuts', open }` every time it
+  opens or closes (and keeps it in `actions.pending` while open).
+  - `actions.setUpSlideShow.current` has the settings with defaults resolved (`showType`, `loop`,
+    `playNarration`, `playAnimation`, `subtitles`, `advanceMode`, `slidesMode`, `rangeFrom`,
+    `rangeTo`, `customShowId`, `penColor`, `kioskRestartTime`, `showScrollbar`, `slideCount`,
+    `customShows`). `apply(patch)` takes the changed fields as the deck stores them
+    (`showType`, `loopContinuously`, `showWithNarration`, `showWithAnimation`, `showSubtitles`,
+    `advanceMode`, `showSlidesMode`, `showSlidesFrom`, `showSlidesTo`, `showSlidesCustomShowId`,
+    `penColor`, `kioskRestartTime`, `showScrollbar`) and applies the bundled dialog's rules (a kiosk
+    show loops, a range defaults to the whole deck). It returns `'invalid-range'`,
+    `'unknown-show'` or `'invalid-data'` for a patch the deck cannot hold. The monitor and a laser
+    colour are not modelled by the deck, so they are not offered.
+  - `actions.customShows` has `shows` (`id`, `name`, `slideRIds`, `slideCount`), `slides` (the deck's
+    `rId` and number), `activeId`, and `create(name, slideRIds?)`, `rename(id, name)`,
+    `setSlides(id, slideRIds)`, `copy(id, name?)`, `remove(id)` (jumps into the show are cleared) and
+    `start(id)`, which selects the show and starts the slide show from its first slide. Each edit is
+    stored at once. Codes: `'unknown-show'`, `'unknown-slide'`, `'invalid-name'`, `'no-slide'` (a show
+    with no slide to play).
+  - `actions.shortcuts` has `open`, `setOpen`, `toggle` and `catalogue`: the keymap as data, one entry
+    per shortcut with `id`, `descriptionKey`, the translated `description`, `keys`, `alternatives`,
+    `group` and the translated `groupLabel`.
+  - **Broadcast is not supported.** It streams the presenter to viewers through a collaboration
+    service the building blocks do not run, so `availability.broadcast` is
+    `{ available: false, reason: 'unsupported', needsHostUi: true }`, `actions.broadcast` is
+    `{ supported: false, reason: 'unsupported', requires: 'collaboration-service' }`, and the
+    toolbar's Broadcast control raises no request. A host with its own service passes `collaboration`
+    (role `owner`) and presents with its own controls; `onOpenBroadcastDialog` stays in
+    `unmountedDialogActions`.
+  - The edits need the same edit permission as the other workflows (`'read-only'`, `'protected'`,
+    `'not-ready'`, checked again when they run), and mark the deck dirty and update history like the
+    bundled dialogs. Reading the settings, the shows and the catalogue always works.
 - **Which actions can run.** `actions.availability[id]` is `{ available, reason?, needsHostUi }` for
   `insertImage`, `insertMedia`, `hyperlink`, `removeHyperlink`, `insertSmartArt`, `insertChart`,
-  `insertEquation`, `editEquation`, `replace`, `applyLayout`, `resetLayout`, `passwordProtection`,
-  `documentProperties`, `fontEmbedding` and `digitalSignatures`. `needsHostUi` is true for the controls
-  that only raise a request. `actions.unmountedDialogActions` lists the other `toolbarProps`
-  handlers (`onOpenSetUpSlideShow`, `onOpenCustomShows`,
-  `onOpenBroadcastDialog`, `onToggleShortcuts`) that set state for a dialog nothing renders here;
-  hide them with `hiddenActions` or show your own.
+  `insertEquation`, `editEquation`, `replace`, `applyLayout`, `resetLayout`, the file dialogs
+  `passwordProtection`, `documentProperties`, `fontEmbedding` and `digitalSignatures`, and the slide
+  show dialogs `setUpSlideShow`, `customShows`, `broadcast` and `shortcuts`. `needsHostUi` is true for
+  the controls that only raise a request. `actions.unmountedDialogActions` lists the `toolbarProps`
+  handler that still sets state for a dialog nothing renders here (`onOpenBroadcastDialog`);
+  hide it with `hiddenActions` or show your own.
 
 The exact options, request kinds, operation signatures, availability ids and failure codes are in
 [`useViewerBuildingBlocks: host workflows`](/react/hooks-reference#building-block-host-workflows).
