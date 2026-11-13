@@ -334,8 +334,8 @@ interface FindOperations {
 	findAll(query: FindQuery): FindMatch[];
 	findNext(query: FindQuery, options?: { backwards?: boolean }): FindMatch | undefined;
 	select(match: FindMatch): boolean;
-	replace(query: FindQuery, replacement: string): boolean;
-	replaceAll(query: FindQuery, replacement: string): number;
+	replace(query: FindQuery, replacement: string, options?: ReplaceOptions): boolean;
+	replaceAll(query: FindQuery, replacement: string, options?: ReplaceOptions): number;
 }
 ```
 
@@ -345,6 +345,8 @@ interface FindOperations {
 - `select(match)` sélectionne une correspondance issue de `findAll`. Il renvoie `false` lorsque l’éditeur n’est pas prêt ou que la feuille n’existe pas.
 - `replace(query, replacement)` remplace la correspondance de la cellule active, s’il y en a une, puis sélectionne la suivante. Il renvoie `true` uniquement si une cellule a été remplacée. Il renvoie `false` lorsque le classeur est en lecture seule, que la modification en attente ne passe pas la validation, ou que la cellule active est une cellule verrouillée d’une feuille protégée. Comme le Remplacer d’Excel, il n’applique pas la validation des données.
 - `replaceAll(query, replacement)` renvoie le nombre de cellules modifiées. Il renvoie `0` lorsque le classeur est en lecture seule ou que la modification en attente ne passe pas la validation. Les cellules verrouillées par la protection de feuille sont ignorées. La validation des données n’est pas appliquée.
+
+Les deux acceptent un troisième argument facultatif `{ validate?, onRefused? }` (`ReplaceOptions`). Avec `validate: true`, ou l'option d'éditeur `validateReplace`, une valeur refusée par la validation des données de la cellule reste inchangée et est signalée une fois par appel à `onRefused` sous la forme `{ sheet, row, col, ref, value, message, title? }` ; `validate: false` soustrait un appel à l'option de l'éditeur.
 
 #### Insérer une fonction {#insert-function-operations}
 

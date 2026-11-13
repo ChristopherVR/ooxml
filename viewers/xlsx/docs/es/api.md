@@ -331,8 +331,8 @@ interface FindOperations {
 	findAll(query: FindQuery): FindMatch[];
 	findNext(query: FindQuery, options?: { backwards?: boolean }): FindMatch | undefined;
 	select(match: FindMatch): boolean;
-	replace(query: FindQuery, replacement: string): boolean;
-	replaceAll(query: FindQuery, replacement: string): number;
+	replace(query: FindQuery, replacement: string, options?: ReplaceOptions): boolean;
+	replaceAll(query: FindQuery, replacement: string, options?: ReplaceOptions): number;
 }
 ```
 
@@ -342,6 +342,8 @@ interface FindOperations {
 - `select(match)` selecciona una coincidencia de `findAll`. Devuelve `false` cuando el editor no está listo o la hoja no existe.
 - `replace(query, replacement)` reemplaza la coincidencia de la celda activa, si la hay, y selecciona la siguiente. Devuelve `true` solo si se reemplazó una celda. Devuelve `false` cuando el libro es de solo lectura, la edición pendiente no supera la validación o la celda activa es una celda bloqueada de una hoja protegida. Como el propio Reemplazar de Excel, no aplica la validación de datos.
 - `replaceAll(query, replacement)` devuelve cuántas celdas cambiaron. Devuelve `0` cuando el libro es de solo lectura o la edición pendiente no supera la validación. Las celdas bloqueadas por la protección de hoja se omiten. No se aplica la validación de datos.
+
+Ambos aceptan un tercer argumento opcional `{ validate?, onRefused? }` (`ReplaceOptions`). Con `validate: true`, o la opción del editor `validateReplace`, un valor que la validación de datos de la celda rechaza se deja sin cambios y se notifica una vez por llamada a `onRefused` como `{ sheet, row, col, ref, value, message, title? }`; `validate: false` excluye una llamada de la opción del editor.
 
 #### Insertar función {#insert-function-operations}
 

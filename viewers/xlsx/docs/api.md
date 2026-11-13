@@ -331,8 +331,8 @@ interface FindOperations {
 	findAll(query: FindQuery): FindMatch[];
 	findNext(query: FindQuery, options?: { backwards?: boolean }): FindMatch | undefined;
 	select(match: FindMatch): boolean;
-	replace(query: FindQuery, replacement: string): boolean;
-	replaceAll(query: FindQuery, replacement: string): number;
+	replace(query: FindQuery, replacement: string, options?: ReplaceOptions): boolean;
+	replaceAll(query: FindQuery, replacement: string, options?: ReplaceOptions): number;
 }
 ```
 
@@ -342,6 +342,8 @@ interface FindOperations {
 - `select(match)` selects a match from `findAll`. It returns `false` when the editor is not ready or the sheet does not exist.
 - `replace(query, replacement)` replaces the match at the active cell, if there is one, and selects the next match. It returns `true` only when a cell was replaced. It returns `false` when the workbook is read-only, the pending edit fails validation, or the active cell is a locked cell on a protected sheet. Like Excel's own Replace, it does not apply data validation.
 - `replaceAll(query, replacement)` returns how many cells changed. It returns `0` when the workbook is read-only or the pending edit fails validation. Cells locked by sheet protection are skipped. Data validation is not applied.
+
+Both take an optional third argument `{ validate?, onRefused? }` (`ReplaceOptions`). With `validate: true`, or the editor's `validateReplace` option, a value the cell's data validation refuses is left unchanged and reported once per call to `onRefused` as `{ sheet, row, col, ref, value, message, title? }`; `validate: false` opts one call out of the editor option.
 
 #### Insert Function {#insert-function-operations}
 

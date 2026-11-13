@@ -308,8 +308,8 @@ interface FindOperations {
 	findAll(query: FindQuery): FindMatch[];
 	findNext(query: FindQuery, options?: { backwards?: boolean }): FindMatch | undefined;
 	select(match: FindMatch): boolean;
-	replace(query: FindQuery, replacement: string): boolean;
-	replaceAll(query: FindQuery, replacement: string): number;
+	replace(query: FindQuery, replacement: string, options?: ReplaceOptions): boolean;
+	replaceAll(query: FindQuery, replacement: string, options?: ReplaceOptions): number;
 }
 ```
 
@@ -319,6 +319,8 @@ interface FindOperations {
 - `select(match)` 选中 `findAll` 返回的匹配项。编辑器未就绪或工作表不存在时返回 `false`。
 - `replace(query, replacement)` 替换活动单元格中的匹配项（如果有），并选中下一个匹配项。只有在确实替换了一个单元格时才返回 `true`。工作簿为只读、正在进行的编辑未通过验证，或活动单元格是受保护工作表中的锁定单元格时，返回 `false`。与 Excel 自身的替换一样，它不应用数据验证。
 - `replaceAll(query, replacement)` 返回被更改的单元格数量。工作簿为只读或正在进行的编辑未通过验证时返回 `0`。被工作表保护锁定的单元格会被跳过。不应用数据验证。
+
+两者都接受可选的第三个参数 `{ validate?, onRefused? }`（`ReplaceOptions`）。设置 `validate: true` 或编辑器选项 `validateReplace` 后，单元格数据验证拒绝的值保持不变，并在每次调用时以 `{ sheet, row, col, ref, value, message, title? }` 的形式一次性报告给 `onRefused`；`validate: false` 可让单次调用不受编辑器选项影响。
 
 #### 插入函数 {#insert-function-operations}
 

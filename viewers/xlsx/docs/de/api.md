@@ -334,8 +334,8 @@ interface FindOperations {
 	findAll(query: FindQuery): FindMatch[];
 	findNext(query: FindQuery, options?: { backwards?: boolean }): FindMatch | undefined;
 	select(match: FindMatch): boolean;
-	replace(query: FindQuery, replacement: string): boolean;
-	replaceAll(query: FindQuery, replacement: string): number;
+	replace(query: FindQuery, replacement: string, options?: ReplaceOptions): boolean;
+	replaceAll(query: FindQuery, replacement: string, options?: ReplaceOptions): number;
 }
 ```
 
@@ -345,6 +345,8 @@ interface FindOperations {
 - `select(match)` wählt einen Treffer aus `findAll`. Es liefert `false`, wenn der Editor nicht bereit ist oder das Blatt nicht existiert.
 - `replace(query, replacement)` ersetzt den Treffer in der aktiven Zelle, falls es einen gibt, und wählt den nächsten Treffer. Es liefert `true` nur, wenn eine Zelle ersetzt wurde. Es liefert `false`, wenn die Arbeitsmappe schreibgeschützt ist, die laufende Bearbeitung die Prüfung nicht besteht oder die aktive Zelle eine gesperrte Zelle auf einem geschützten Blatt ist. Wie beim eigenen Ersetzen von Excel wird keine Datenüberprüfung angewendet.
 - `replaceAll(query, replacement)` liefert die Anzahl geänderter Zellen. Es liefert `0`, wenn die Arbeitsmappe schreibgeschützt ist oder die laufende Bearbeitung die Prüfung nicht besteht. Durch Blattschutz gesperrte Zellen werden übersprungen. Datenüberprüfung wird nicht angewendet.
+
+Beide akzeptieren ein optionales drittes Argument `{ validate?, onRefused? }` (`ReplaceOptions`). Mit `validate: true` oder der Editor-Option `validateReplace` bleibt ein Wert, den die Datenüberprüfung der Zelle ablehnt, unverändert und wird pro Aufruf einmal an `onRefused` gemeldet, als `{ sheet, row, col, ref, value, message, title? }`; `validate: false` nimmt einen Aufruf von der Editor-Option aus.
 
 #### Funktion einfügen {#insert-function-operations}
 
