@@ -8,7 +8,7 @@ import type { BuildingBlocksContractHarness } from '../../../shared/test-utils/b
 import { runElementRenderErrorContract } from '../../../shared/test-utils/element-render-error-contract.mjs';
 import { PptxViewer } from '../viewer/PptxViewer';
 import { createViewerBuildingBlocks } from './create-viewer-building-blocks';
-import type { ViewerBuildingBlocks } from './types';
+import type { ViewerBuildingBlocks, ViewerBuildingBlocksOptions } from './types';
 
 const tick = () =>
 	new Promise<void>((resolve) => {
@@ -21,7 +21,7 @@ function vanillaHarness(): BuildingBlocksContractHarness {
 		name: 'vanilla',
 		toolbar: true,
 		async mount(target, options) {
-			blocks = createViewerBuildingBlocks(options);
+			blocks = createViewerBuildingBlocks(options as ViewerBuildingBlocksOptions);
 			const pane = document.createElement('div');
 			const canvas = document.createElement('div');
 			target.append(pane, canvas);
@@ -30,7 +30,7 @@ function vanillaHarness(): BuildingBlocksContractHarness {
 			await tick();
 		},
 		async update(options) {
-			blocks!.update(options);
+			blocks!.update(options as ViewerBuildingBlocksOptions);
 			await tick();
 		},
 		actions: () => blocks!.actions,
