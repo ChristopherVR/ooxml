@@ -104,7 +104,9 @@ describe('elementRenderer linked text box wiring', () => {
 	// override; passing it anywhere else (or rebuilding paragraphs locally) is
 	// how this binding drifted from the other four before.
 	it('builds its paragraphs from shared buildParagraphs, not a local copy', () => {
-		expect(shapeSource).toMatch(/buildAngularParagraphs\(\s*el,\s*this\.fieldContext\(\),\s*segments,/u);
+		expect(shapeSource).toMatch(
+			/buildAngularParagraphs\(\s*el,\s*this\.fieldContext\(\),\s*segments,/u,
+		);
 		expect(shapeSource).not.toContain('resolveParagraphSpacing');
 		expect(shapeSource).not.toContain('splitStyledRun');
 	});
