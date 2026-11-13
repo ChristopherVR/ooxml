@@ -16,6 +16,7 @@ import type {
 } from 'pptx-viewer-core';
 import type { ComputedRef, Ref, ShallowRef } from 'vue';
 
+import type { UseCollaborationResult } from '../viewer/composables/collaboration-types';
 import type { UseCustomShowsWiringResult } from '../viewer/composables/useCustomShowsWiring';
 import type { UseDocumentPropertiesDialogResult } from '../viewer/composables/useDocumentPropertiesDialog';
 import type { EditorOperations } from '../viewer/composables/useEditorOperations';
@@ -93,6 +94,8 @@ export interface BuildingBlocksEngineContext {
 	customShows: Ref<PptxCustomShow[]>;
 	customShowsWiring: UseCustomShowsWiringResult;
 	broadcastOpen: Ref<boolean>;
+	/** The viewer's collaboration session (shell state and the shared `CollaborationState`). */
+	collab: UseCollaborationResult;
 	showShortcuts: Ref<boolean>;
 	slideOps: UseSlideOperationsResult;
 	sectionOps: UseSectionOperationsResult;

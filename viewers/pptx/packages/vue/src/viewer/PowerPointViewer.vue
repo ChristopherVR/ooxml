@@ -2163,6 +2163,7 @@ if (blocksBridge) {
 		customShows,
 		customShowsWiring,
 		broadcastOpen: collaboration.broadcastOpen,
+		collab: collaboration.collab,
 		showShortcuts,
 		slideOps,
 		sectionOps,

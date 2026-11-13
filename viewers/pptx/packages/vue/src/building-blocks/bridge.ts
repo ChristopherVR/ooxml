@@ -1,4 +1,5 @@
 import type {
+	BuildingBlockShellInput,
 	BuildingBlockGroupPorts,
 	BuildingBlockRequest,
 	BuildingBlockSessionPort,
@@ -29,12 +30,17 @@ export interface BuildingBlocksEngine {
 	/** The members of the session port the viewer owns (the host's options are added around them). */
 	readonly session: Omit<BuildingBlockSessionPort, 'fileLimits' | 'onRequest' | 'onCancel'>;
 	readonly groups: BuildingBlockGroupPorts;
-	state(): Omit<ViewerBuildingBlocksState, 'mode'> & { mode: string; canEdit: boolean };
+	state(): Omit<ViewerBuildingBlocksState, 'mode' | 'shellState' | 'collaborationState'> & {
+		mode: string;
+		canEdit: boolean;
+	};
 	readonly view: BuildingBlockToolbarView;
 	/** The shortcut help flag's mirror: close it (`actions.cancel()`). */
 	closeShortcuts(): void;
 	/** What the slides pane block draws and which operations it maps its events onto. */
 	slidesPane(): SlidesPaneBinding;
+	/** The shell inputs from the viewer's collaboration session (`host` is the host's permission and config). */
+	shell(host: { canEdit: boolean; configured: boolean }): BuildingBlockShellInput;
 }
 
 /** The viewer's slide rail inputs and operations, as `ViewerSlideRail` reads them. */

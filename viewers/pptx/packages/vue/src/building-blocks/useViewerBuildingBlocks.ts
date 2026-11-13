@@ -1,4 +1,9 @@
-import { createPptxBuildingBlockSession, registerBuildingBlockGroups } from 'ooxml-ui/pptx';
+import {
+	createBuildingBlockShell,
+	createPptxBuildingBlockSession,
+	registerBuildingBlockGroups,
+	resolveCollaborationConfig,
+} from 'ooxml-ui/pptx';
 import type {
 	BuildingBlockAvailabilityInput,
 	BuildingBlockGroupPorts,
@@ -167,10 +172,21 @@ export function useViewerBuildingBlocks(
 		void bridge.engine.value;
 		return session.actions();
 	});
+	const shell = createBuildingBlockShell(
+		() =>
+			engine()?.shell({
+				canEdit: options.value.canEdit === true,
+				configured: Boolean(resolveCollaborationConfig(options.value.collaboration)),
+			}) ?? null,
+	);
+	const shellView = computed(() => shell.current());
 	const state = computed<ViewerBuildingBlocksState>(() => {
 		const current = engine()?.state();
+		const { shellState, collaborationState } = shellView.value;
 		if (!current) {
 			return {
+				shellState,
+				collaborationState,
 				mode: 'preview',
 				loading: Boolean(options.value.content),
 				error: null,
@@ -182,7 +198,7 @@ export function useViewerBuildingBlocks(
 			};
 		}
 		const { canEdit: _canEdit, ...rest } = current;
-		return { ...rest, mode: current.mode as ViewerMode };
+		return { ...rest, mode: current.mode as ViewerMode, shellState, collaborationState };
 	});
 	return {
 		actions,
@@ -190,6 +206,8 @@ export function useViewerBuildingBlocks(
 		mode: computed(() => state.value.mode),
 		loading: computed(() => state.value.loading),
 		error: computed(() => state.value.error),
+		shellState: computed(() => shellView.value.shellState),
+		collaborationState: computed(() => shellView.value.collaborationState),
 		viewer: bridge.viewer,
 		options,
 		session,

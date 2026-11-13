@@ -1,5 +1,7 @@
 import type {
 	BuildingBlockToolbarGroupId,
+	CollaborationShellState,
+	CollaborationState,
 	UseViewerBuildingBlocksActionsOptions,
 	ViewerBuildingBlockActions,
 	PptxBuildingBlockSession,
@@ -52,6 +54,13 @@ export interface ViewerBuildingBlocksState {
 	canUndo: boolean;
 	canRedo: boolean;
 	dirty: boolean;
+	/**
+	 * Effective edit permission plus connection and presence counts, as React's `shellState`;
+	 * pass it to `describeCollaborationShellState` for a localised status line.
+	 */
+	shellState: CollaborationShellState;
+	/** The shared `CollaborationState` of the room the canvas is in (`COLLABORATION_OFF` when none). */
+	collaborationState: CollaborationState;
 }
 
 export interface ViewerBuildingBlocks {
@@ -63,6 +72,10 @@ export interface ViewerBuildingBlocks {
 	readonly mode: ComputedRef<ViewerMode>;
 	readonly loading: ComputedRef<boolean>;
 	readonly error: ComputedRef<string | null>;
+	/** `state.shellState`, as its own ref. */
+	readonly shellState: ComputedRef<CollaborationShellState>;
+	/** `state.collaborationState`, as its own ref. */
+	readonly collaborationState: ComputedRef<CollaborationState>;
 	/** The viewer's imperative handle (save, export, zoom, ...); null until the canvas mounts. */
 	readonly viewer: Readonly<ShallowRef<PowerPointViewerExpose | null>>;
 	/** The options the blocks currently run with. */

@@ -160,6 +160,18 @@ function createEngine(c: Context): BuildingBlocksEngine {
 			slideOps: c.slideOps,
 			sectionOps: c.sectionOps,
 		}),
+		shell: (host) => ({
+			shell: {
+				authorizedCanEdit: host.canEdit,
+				configured: host.configured || Boolean(c.collab.activeCollaboration.value),
+				readOnly: c.collab.readOnly.value,
+				sourcePending: Boolean(c.activeContent.value) && c.loading.value,
+				sourceError: Boolean(c.error.value),
+				status: c.collab.status.value,
+				remoteUsers: c.collab.shellState.value.remoteUsers,
+			},
+			collaboration: c.collab.state.value,
+		}),
 	};
 }
 
