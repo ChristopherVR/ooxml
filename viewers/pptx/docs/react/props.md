@@ -175,13 +175,14 @@ the full flow and the `CollaborationConfig` shape.
 
 ## Events, hooks and host extensions
 
-| Prop                     | Type                                 | Description                                                                                                                                             |
-| ------------------------ | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `onLoad`                 | `(detail: ViewerLoadDetail) => void` | Fired each time a presentation finishes loading without an error, with the slide count and canvas size.                                                 |
-| `onError`                | `(message: string) => void`          | Fired once per distinct load failure, with a human-readable message.                                                                                    |
-| `onHyperlinkClick`       | `HyperlinkClickHandler`              | Fired before following a link; return `false` to cancel the default action.                                                                             |
-| `ribbonAddIns`           | `readonly RibbonAddInTab[]`          | Ribbon tabs the host adds after Help. Each command runs its `run` callback and dispatches a bubbling `office-ribbon-add-in` event. Desktop ribbon only. |
-| `inspectorInitiallyOpen` | `boolean`                            | Initial inspector visibility; omitted keeps the desktop/mobile default.                                                                                 |
+| Prop                     | Type                                                         | Description                                                                                                                                                                                                                                                                                                  |
+| ------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `onLoad`                 | `(detail: ViewerLoadDetail) => void`                         | Fired each time a presentation finishes loading without an error, with the slide count and canvas size.                                                                                                                                                                                                      |
+| `onError`                | `(message: string) => void`                                  | Fired once per distinct load failure, with a human-readable message.                                                                                                                                                                                                                                         |
+| `onElementRenderError`   | `(error: Error, context: ElementRenderErrorContext) => void` | A slide element was omitted because its renderer threw; `context` is `{ elementId, elementType, slideId }`. Only that element is left out, on every surface. Defaults to `console.error(error, context)`, also used when the callback throws. See [Element render errors](./hooks.md#element-render-errors). |
+| `onHyperlinkClick`       | `HyperlinkClickHandler`                                      | Fired before following a link; return `false` to cancel the default action.                                                                                                                                                                                                                                  |
+| `ribbonAddIns`           | `readonly RibbonAddInTab[]`                                  | Ribbon tabs the host adds after Help. Each command runs its `run` callback and dispatches a bubbling `office-ribbon-add-in` event. Desktop ribbon only.                                                                                                                                                      |
+| `inspectorInitiallyOpen` | `boolean`                                                    | Initial inspector visibility; omitted keeps the desktop/mobile default.                                                                                                                                                                                                                                      |
 
 ## Interface sketch
 
@@ -215,6 +216,7 @@ interface PowerPointViewerProps {
 	onOpenFile?: () => void;
 	onLoad?: (detail: ViewerLoadDetail) => void;
 	onError?: (message: string) => void;
+	onElementRenderError?: ElementRenderErrorHandler;
 	onHyperlinkClick?: HyperlinkClickHandler;
 	ribbonAddIns?: readonly RibbonAddInTab[];
 	inspectorInitiallyOpen?: boolean;

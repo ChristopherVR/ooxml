@@ -10,6 +10,7 @@ import {
 	resolveElementAriaAttributes,
 	isElementRendered,
 	inlineElementPointerEvents,
+	probeElementRenderFault,
 	LINK_TOOLTIP_HOST_CLASS,
 	resolveElementInteractivity,
 	shouldRenderHitTarget,
@@ -114,6 +115,8 @@ const ElementRendererImpl: React.FC<ElementRendererProps> = /* @__PURE__ */ Reac
 		fieldContext,
 		tableStyleContext,
 	}) {
+		// Test-only fault hook (inert unless a test page sets it); inside the element boundary.
+		probeElementRenderFault(el);
 		const {
 			cellSelectHandler,
 			cellCommitHandler,

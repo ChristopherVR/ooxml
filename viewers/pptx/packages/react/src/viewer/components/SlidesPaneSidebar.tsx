@@ -1,5 +1,5 @@
 import { editorThumbnailWidth, SLIDE_VIRTUALIZATION_THRESHOLD } from 'ooxml-ui/pptx';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import { LuPlus } from 'react-icons/lu';
 
 import { DEFAULT_SECTION_GROUP_ID } from '../constants';
@@ -36,10 +36,9 @@ export const VIRTUALIZATION_THRESHOLD = SLIDE_VIRTUALIZATION_THRESHOLD;
 // ---------------------------------------------------------------------------
 
 export function SlidesPaneSidebar(props: SlidesPaneSidebarProps): React.ReactElement {
-	const errorReporting = useMemo(
-		() => ({ onElementRenderError: props.onElementRenderError }),
-		[props.onElementRenderError],
-	);
+	const inherited = useContext(ElementRenderErrorReportingContext);
+	const reporter = props.onElementRenderError ?? inherited?.onElementRenderError;
+	const errorReporting = useMemo(() => ({ onElementRenderError: reporter }), [reporter]);
 	return (
 		<ElementRenderErrorReportingContext.Provider value={errorReporting}>
 			<SlidesPaneSidebarContent {...props} />

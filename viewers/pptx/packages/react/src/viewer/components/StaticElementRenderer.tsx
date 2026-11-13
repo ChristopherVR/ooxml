@@ -4,6 +4,7 @@ import {
 	getGroupChildParentFill,
 	getShapeEffectLayerPlacement,
 	isElementRendered,
+	probeElementRenderFault,
 } from 'ooxml-ui/pptx';
 import type { GroupPptxElement } from 'pptx-viewer-core';
 import { hasTextProperties } from 'pptx-viewer-core';
@@ -51,6 +52,8 @@ function StaticElementRendererImpl({
 	exposeElementId = false,
 	suppressReflection = false,
 }: StaticElementRendererProps): React.ReactElement | null {
+	// Test-only fault hook (inert unless a test page sets it); inside the element boundary.
+	probeElementRenderFault(element);
 	// Selection-Pane-hidden elements are not drawn on any surface, so the static
 	// path (thumbnails, presenter previews, transition ghosts, export rasters)
 	// skips them too. This function holds no hooks, so the guard can lead.

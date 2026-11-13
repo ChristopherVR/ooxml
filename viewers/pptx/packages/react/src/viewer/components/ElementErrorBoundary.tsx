@@ -1,14 +1,15 @@
+import { elementRenderErrorContext, reportElementRenderError } from 'ooxml-ui/pptx';
+import type {
+	ElementRenderErrorContext as SharedElementRenderErrorContext,
+	ElementRenderErrorHandler as SharedElementRenderErrorHandler,
+} from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import React, { createContext, useContext, useMemo } from 'react';
 
 /** Identifies the element omitted after a React client render or lifecycle error. */
-export interface ElementRenderErrorContext {
-	elementId: string;
-	elementType: PptxElement['type'];
-	slideId?: string;
-}
+export type ElementRenderErrorContext = SharedElementRenderErrorContext;
 
-export type ElementRenderErrorHandler = (error: Error, context: ElementRenderErrorContext) => void;
+export type ElementRenderErrorHandler = SharedElementRenderErrorHandler;
 
 interface ReportingScope {
 	slideId?: string;
@@ -46,25 +47,38 @@ class ElementErrorBoundaryState extends React.Component<ElementErrorBoundaryProp
 
 	componentDidCatch(error: Error): void {
 		const { element, slideId, onElementRenderError } = this.props;
-		const context: ElementRenderErrorContext = {
-			elementId: element.id,
-			elementType: element.type,
-			...(slideId === undefined ? {} : { slideId }),
-		};
-		if (onElementRenderError) {
-			try {
-				onElementRenderError(error, context);
-				return;
-			} catch {
-				// A host reporter must not turn an isolated render error into a viewer crash.
-			}
-		}
-		console.error(error, context);
+		// The shared payload and safe reporter: a throwing host reporter falls back to console.error.
+		reportElementRenderError(
+			onElementRenderError,
+			error,
+			elementRenderErrorContext(element, slideId),
+		);
 	}
 
 	render(): React.ReactNode {
 		return this.state.failed ? null : this.props.children;
 	}
+}
+
+/** Gives every element boundary below a viewer-wide reporter (PowerPointViewer's prop). */
+export function ElementRenderErrorScope({
+	onElementRenderError,
+	children,
+}: {
+	onElementRenderError?: ElementRenderErrorHandler | undefined;
+	children: React.ReactNode;
+}): React.ReactElement {
+	const inherited = useContext(ElementRenderErrorReportingContext);
+	const reporter = onElementRenderError ?? inherited?.onElementRenderError;
+	const scope = useMemo(
+		() => ({ slideId: inherited?.slideId, onElementRenderError: reporter }),
+		[inherited?.slideId, reporter],
+	);
+	return (
+		<ElementRenderErrorReportingContext.Provider value={scope}>
+			{children}
+		</ElementRenderErrorReportingContext.Provider>
+	);
 }
 
 /** Omits only the failed element; a replacement element object retries rendering. */

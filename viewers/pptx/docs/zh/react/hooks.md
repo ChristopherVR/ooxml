@@ -76,7 +76,7 @@ function Editor({ content }) {
 
 导出的 `ElementRenderErrorContext` 包含 `elementId`、`elementType`，以及提供所属幻灯片时的可选 `slideId`。没有回调时调用 `console.error(error, context)`；回调抛出错误时也回退到该日志，不会让查看器崩溃。React 开发版本还可能自行输出捕获的错误。同一元素出现在多个界面中时，每个失败的已挂载实例都可能各自上报。
 
-独立的 `SlideCanvas`、`SlidesPane`、`SlideThumbnail`、`ScaledSlidePreview`、`SlideTemplatePreview`、`PresentationStage`、`ReadingViewStage` 和 `PresentationTransitionOverlay` 也接受 `onElementRenderError`。这不是新增的 `PowerPointViewer` 属性。替换失败元素的对象（即使 id 不变）会重试渲染；改变 id 会重新挂载边界。相同失败对象的重复渲染不会重试，仅原地修改对象不能清除失败状态。边界不捕获事件处理器、任意异步/定时器或服务端渲染错误。此行为仅适用于 React，其他绑定并未获得该回调或隔离保证。
+独立的 `SlideCanvas`、`SlidesPane`、`SlideThumbnail`、`ScaledSlidePreview`、`SlideTemplatePreview`、`PresentationStage`、`ReadingViewStage` 和 `PresentationTransitionOverlay` 也接受 `onElementRenderError`。`PowerPointViewer` 也接受该属性，作用于它渲染的所有界面（组件自身传入的回调优先）。替换失败元素的对象（即使 id 不变）会重试渲染；改变 id 会重新挂载边界。相同失败对象的重复渲染不会重试，仅原地修改对象不能清除失败状态。边界不捕获事件处理器、任意异步/定时器或服务端渲染错误。Vue、Svelte、Angular 和原生 JavaScript 的查看器与构建块接受同样的 `onElementRenderError`，负载和重试规则相同。
 
 ### 自定义编辑器的协作 {#custom-editor-collaboration}
 

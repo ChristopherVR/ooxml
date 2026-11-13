@@ -2,6 +2,7 @@ import type { CollaborationState } from 'ooxml-core/collab';
 import type {
 	CloudFileProvider,
 	DocumentStorage,
+	ElementRenderErrorHandler,
 	GoogleFontsOption,
 	ListConversionScope,
 	PptxLoadLimits,
@@ -322,6 +323,12 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	onLoad?: (detail: ViewerLoadDetail) => void;
 	/** Fired once per distinct load failure, and for each failed Save / Save As, with a human-readable message. */
 	onError?: (message: string) => void;
+	/**
+	 * Reports a slide element omitted after a render or lifecycle error, on every surface of the
+	 * viewer (canvas, thumbnails, slide show, reading view, previews). Defaults to
+	 * `console.error(error, context)`, also used when this callback throws.
+	 */
+	onElementRenderError?: ElementRenderErrorHandler;
 	/**
 	 * Host override for the File ▸ Open action. When provided, the built-in
 	 * native file picker is bypassed and this is invoked instead; the host is

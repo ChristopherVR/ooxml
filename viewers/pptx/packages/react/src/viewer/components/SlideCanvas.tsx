@@ -8,7 +8,7 @@ import {
 	shouldShowElementHandles,
 	slideSpaceElement,
 } from 'ooxml-ui/pptx';
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useContext, useMemo, useRef } from 'react';
 
 import type { ShapeAdjustmentHandleDescriptor } from '../types';
 import { getShapeAdjustmentHandleDescriptors, isConnectorOrLineElement } from '../utils';
@@ -82,10 +82,11 @@ export function SlideCanvas(props: SlideCanvasProps) {
 			props.registerInlineEditReader,
 		],
 	);
-	const errorReporting = useMemo(
-		() => ({ onElementRenderError: props.onElementRenderError }),
-		[props.onElementRenderError],
-	);
+	// A viewer-level reporter (PowerPointViewer's `onElementRenderError`) applies unless the
+	// canvas is given its own.
+	const inherited = useContext(ElementRenderErrorReportingContext);
+	const reporter = props.onElementRenderError ?? inherited?.onElementRenderError;
+	const errorReporting = useMemo(() => ({ onElementRenderError: reporter }), [reporter]);
 	return (
 		<ElementRenderErrorReportingContext.Provider value={errorReporting}>
 			<InlineCollaborationContext.Provider value={value}>

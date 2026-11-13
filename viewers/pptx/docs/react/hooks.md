@@ -103,12 +103,13 @@ An element rendered in multiple surfaces can report once per failed mounted inst
 
 Standalone `SlideCanvas`, `SlidesPane`, `SlideThumbnail`, `ScaledSlidePreview`,
 `SlideTemplatePreview`, `PresentationStage`, `ReadingViewStage` and
-`PresentationTransitionOverlay` also accept `onElementRenderError`. This is not a new
-`PowerPointViewer` prop. Replacing a failed element object, even with the same id, retries
+`PresentationTransitionOverlay` also accept `onElementRenderError`, and so does
+`PowerPointViewer`, for every surface it renders (a component's own reporter wins). Replacing a failed element object, even with the same id, retries
 its rendering; changing its id remounts its boundary. Rerendering the same failed object
 does not retry, so in-place mutation alone does not clear the failure. These boundaries
 do not catch event-handler errors, arbitrary asynchronous/timer errors, or server-render
-errors. They are React-specific; other bindings do not gain this callback or guarantee.
+errors. The Vue, Svelte, Angular and vanilla viewers and building blocks take the same
+`onElementRenderError` with the same payload and retry rules (`docs/pptx-building-blocks.md`).
 
 ### Custom editor collaboration
 

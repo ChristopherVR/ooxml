@@ -107,6 +107,7 @@ import {
 } from './components/collaboration';
 import { CompatibilityToasts } from './components/CompatibilityToasts';
 import { EditorChromeStyle } from './components/EditorChromeStyle';
+import { ElementRenderErrorScope } from './components/ElementErrorBoundary';
 import { Rendering3DFlagsContext } from './components/elements/rendering-3d-flags-context';
 import { HeaderFooterPanel } from './components/HeaderFooterPanel';
 import { RecentColorsProvider } from './components/inspector/RecentColorsContext';
@@ -205,7 +206,9 @@ const PowerPointViewerComponent = /* @__PURE__ */ forwardRef<
 				availableLocales={props.availableLocales}
 				onLocaleChange={props.onLocaleChange}
 			>
-				<PowerPointViewerBody {...props} ref={ref} />
+				<ElementRenderErrorScope onElementRenderError={props.onElementRenderError}>
+					<PowerPointViewerBody {...props} ref={ref} />
+				</ElementRenderErrorScope>
 			</ViewerI18nRoot>
 		);
 	},
