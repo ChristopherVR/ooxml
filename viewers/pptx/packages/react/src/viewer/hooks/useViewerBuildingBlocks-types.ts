@@ -1,6 +1,7 @@
 import type {
 	CollaborationInput,
 	CollaborationShellState,
+	CollaborationState,
 	GoogleFontsOption,
 	ListConversionScope,
 	PptxLoadLimits,
@@ -107,6 +108,11 @@ export interface ViewerBuildingBlocksResult {
 	 * `describeCollaborationShellState` for a localised status line.
 	 */
 	shellState: CollaborationShellState;
+	/**
+	 * The shared `CollaborationState` of the room (`COLLABORATION_OFF` when not sharing), the
+	 * value `PowerPointViewer`'s `onCollaborationChange` reports, in every binding's blocks.
+	 */
+	collaborationState: CollaborationState;
 	/** Flat, self-contained props for the standalone `<Toolbar>` component. */
 	toolbarProps: ToolbarProps;
 	/** Flat, self-contained props for the standalone `<SlideCanvas>` component. */

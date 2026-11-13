@@ -4,7 +4,8 @@ import {
 	resolveCollaborationConfig,
 	resolveCollaborationShellEditability,
 	resolveBuildingBlockMode,
-	resolveCollaborationShellState,
+	describeBuildingBlockShell,
+	writeBackReport,
 } from 'ooxml-ui/pptx';
 import type { CollabLoadOrigin } from 'ooxml-ui/pptx';
 /**
@@ -306,17 +307,30 @@ export function useViewerBuildingBlocks(
 		onOpenLayoutGallery,
 	});
 	slidesPaneProps.onElementRenderError = input.onElementRenderError;
-	// The same shell projection the other bindings hand their custom chrome.
-	const shellState = useMemo(
+	// The same shell (projection and shared state) every binding hands its custom chrome.
+	const { shellState, collaborationState } = useMemo(
 		() =>
-			resolveCollaborationShellState({
-				authorizedCanEdit: requestedCanEdit,
-				configured: Boolean(collaborationConfig),
-				readOnly: collaborationReadOnly,
-				sourcePending: Boolean(content) && loading,
-				sourceError: Boolean(error),
-				status: collaboration?.status ?? 'disconnected',
-				remoteUsers: collaboration?.remoteUsers ?? [],
+			describeBuildingBlockShell({
+				shell: {
+					authorizedCanEdit: requestedCanEdit,
+					configured: Boolean(collaborationConfig),
+					readOnly: collaborationReadOnly,
+					sourcePending: Boolean(content) && loading,
+					sourceError: Boolean(error),
+					status: collaboration?.status ?? 'disconnected',
+					remoteUsers: collaboration?.remoteUsers ?? [],
+				},
+				collaboration: {
+					active: Boolean(collaboration?.config),
+					roomId: collaboration?.config.roomId,
+					status: collaboration?.status ?? 'disconnected',
+					synced: collaboration?.synced ?? false,
+					clientId: collaboration?.clientId,
+					userName: collaboration?.config.userName,
+					userColor: collaboration?.config.userColor,
+					remoteUsers: collaboration?.remoteUsers ?? [],
+					writeBack: writeBackReport(collaboration?.config, collaboration?.writeBack),
+				},
 			}),
 		[
 			requestedCanEdit,
@@ -327,6 +341,10 @@ export function useViewerBuildingBlocks(
 			error,
 			collaboration?.status,
 			collaboration?.remoteUsers,
+			collaboration?.config,
+			collaboration?.synced,
+			collaboration?.clientId,
+			collaboration?.writeBack,
 		],
 	);
 	return {
@@ -340,6 +358,7 @@ export function useViewerBuildingBlocks(
 		autosaveStatus,
 		collaboration,
 		shellState,
+		collaborationState,
 		// Read last, so action groups registered by the hooks above are included.
 		actions: blockActions.session.actions(),
 	};
