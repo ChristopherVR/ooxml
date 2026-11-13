@@ -108,7 +108,7 @@ find and layout code, so history and `onDirtyChange` behave as in the full viewe
 </script>
 ```
 
-## Toolbar controls
+## Toolbar groups and hidden controls
 
 The toolbar renders `<button data-control="...">` elements inside `<span data-group="...">`, so you
 can style them, or skip `BuildingBlocksToolbar` and draw your own buttons from `blocks.toolbar` (the

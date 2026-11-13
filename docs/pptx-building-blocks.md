@@ -1,9 +1,8 @@
 # PowerPoint building blocks in every binding
 
-Status: the shared session with every dialog group, React on it, the vanilla reference port, the
-parity contract and the framework-neutral browser spec are in place. Vue, Svelte and Angular are
-ported from this note (see "Porting a binding"). It is the contract those ports follow; change it
-in the same commit as a change to the contract.
+Status: all five bindings (React, Vue, Svelte, Angular, vanilla) have building blocks on the
+shared session, pass the parity contract and run `e2e/pptx/building-blocks.spec.ts`. This note is
+the contract they follow; change it in the same commit as a change to the contract.
 
 Building blocks let a host compose its own PowerPoint shell from the slide canvas, a toolbar and
 the slide thumbnail rail, and finish picker and dialog workflows (pictures, media, hyperlinks,
@@ -111,21 +110,31 @@ contract asserts `preview`, then `edit`, then `preview` again.
   `BuildingBlocksViewer`). A port does the same at its own openers: hyperlink (Ctrl+K, the element
   menu), equation (double-click), find (Ctrl+F / Ctrl+H toggle the find bar controller), shortcuts
   (`?`, Ctrl+/ toggle the shortcut flag), and the Insert, File and Slide Show controls.
-- **Find highlights.** React's text renderer highlights the matched runs. A port whose renderer
-  cannot outlines the elements `findHighlightTargets` returns (vanilla sets `data-pptx-find-match`
-  on each, styled in `editor-css.ts` and reapplied after every paint).
+- **Find highlights.** React's text renderer highlights the matched runs. The other bindings
+  outline the matching elements with the shared `syncFindHighlights(root, matches, current,
+  slide)` / `markFindHighlights(root, targets)` (`find-highlight-dom.ts`, the
+  `data-pptx-find-match` attribute), reapplied after every paint and styled by their own sheet.
+- **Media from a host file.** Ports whose editor has no file-based media insert use the shared
+  `mediaElementFromFile(file, canvasSize, doc?)` (`media-element-from-file.ts`).
+- **Dialog flag routing.** A flag that becomes a request is handled by an effect or watcher that
+  tracks the flag alone, clears it and then raises: React `useDialogFlagRequest`, Vue
+  `routeDialogFlag` (a sync watcher, `engine.ts`), Svelte `routeDialogFlag`
+  (`route-dialog-flag.svelte.ts`), Angular `routeDialogFlag` (`route-dialog-flag.ts`). Raising
+  notifies the session's store; an effect that also tracked the render's objects re-ran with the
+  flag still set and looped under React 18. Each binding has a regression test that drives a flag
+  through a real request store and its store adapter.
 
 ## Public contract per binding
 
 The names follow docx, xlsx and visio.
 
-| Binding | Entry                                                                                                                      | Blocks                                                                                                     | Package path (new files)                                               |
-| ------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| React   | `useViewerBuildingBlocks(input)` returning `{ toolbarProps, canvasProps, slidesPaneProps, actions, mode, loading, error }` | `Toolbar` (full ribbon), `SlideCanvas`, `SlidesPane`, `SlideThumbnail`                                     | existing `packages/react/src/viewer/hooks/useViewerBuildingBlocks*.ts` |
-| Vanilla | `createViewerBuildingBlocks(options)` returning `ViewerBuildingBlocks`                                                     | `mountCanvas(host)`, `mountToolbar(host, groups?)`, `mountSlidesPane(host)`                                | `packages/vanilla/src/building-blocks/`                                |
-| Vue     | `useViewerBuildingBlocks(options: MaybeRefOrGetter<ViewerBuildingBlocksOptions>)` composable                               | `<BuildingBlocksCanvas>`, `<BuildingBlocksToolbar>`, `<BuildingBlocksSlidesPane>` components taking the composable's result (`blocks`); `SlideCanvas` and `SlidesPane` are already exported low-level Vue components       | `packages/vue/src/building-blocks/`                                    |
-| Svelte  | `createViewerBuildingBlocks(() => options)` returning an object with runes-backed getters (`.actions`, `.state`)           | `SlideCanvas.svelte`, `BuildingBlocksToolbar.svelte`, `SlidesPane.svelte` taking `blocks`                  | `packages/svelte/src/building-blocks/`                                 |
-| Angular | `ViewerBuildingBlocks` injectable plus `createViewerBuildingBlocks(() => options)`; `actions()` and `state()` are signals  | `pptx-building-blocks-canvas` (`pptx-slide-canvas` is the public canvas's tag), `pptx-building-blocks-toolbar`, `pptx-slides-pane` standalone components (`[blocks]`) | `packages/angular/src/building-blocks/`, exported from `public-api.ts` |
+| Binding | Entry                                                                                                                                                            | Blocks (exported names)                                                                                                                                                                                       | Files                                                                  |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| React   | `useViewerBuildingBlocks(input)` returning `{ toolbarProps, canvasProps, slidesPaneProps, actions, mode, loading, error, ... }`                                  | `Toolbar` (full ribbon), `SlideCanvas`, `SlidesPane`, `SlideThumbnail`, spread with the hook's props                                                                                                          | `packages/react/src/viewer/hooks/useViewerBuildingBlocks*.ts`          |
+| Vanilla | `createViewerBuildingBlocks(options)` returning `ViewerBuildingBlocks` (`actions`, `getState()`, `subscribe`, `update`)                                          | `mountCanvas(host)`, `mountToolbar(host, groups?)`, `mountSlidesPane(host)`                                                                                                                                   | `packages/vanilla/src/building-blocks/`                                |
+| Vue     | `useViewerBuildingBlocks(options: MaybeRefOrGetter<ViewerBuildingBlocksOptions>)`; `actions` and `state` are refs                                                | `BuildingBlocksCanvas`, `BuildingBlocksToolbar`, `BuildingBlocksSlidesPane` (`:blocks`)                                                                                                                       | `packages/vue/src/building-blocks/`                                    |
+| Svelte  | `createViewerBuildingBlocks(() => options)` with runes-backed getters (`.actions`, `.state`)                                                                     | `BuildingBlocksCanvas`, `BuildingBlocksToolbar`, `BuildingBlocksSlidesPane` (`blocks` prop)                                                                                                                   | `packages/svelte/src/building-blocks/`                                 |
+| Angular | `ViewerBuildingBlocks` (provided with `VIEWER_BUILDING_BLOCKS_PROVIDERS`) and `createViewerBuildingBlocks(() => options)`; `actions()` and `state()` are signals | `BuildingBlocksCanvasComponent` (`pptx-building-blocks-canvas`), `BuildingBlocksToolbarComponent` (`pptx-building-blocks-toolbar`), `BuildingBlocksSlidesPaneComponent` (`pptx-slides-pane`), each `[blocks]` | `packages/angular/src/building-blocks/`, exported from `public-api.ts` |
 
 Every entry:
 
@@ -170,7 +179,7 @@ Every entry:
 - `toolbar-view.ts`: keyed DOM for the toolbar descriptor, updated in place so focus survives.
 - `slides-pane-block.ts`: `createSlidesPane` fed from the store.
 
-## Porting a binding (Vue, Svelte, Angular)
+## Porting a binding (how Vue, Svelte and Angular were ported)
 
 1. Create `packages/<binding>/src/building-blocks/` with the session port over the binding's editor
    (`session-port.ts`, mirror vanilla's), the group ports (`group-ports.ts`), the entry
@@ -181,8 +190,8 @@ Every entry:
 2. Route the binding's dialog openers to `session.request`, Ctrl+F to the find bar, `?` / Ctrl+/ to
    the shortcut flag plus `session.announce`, and drop the Broadcast flag.
 3. Report `mode` with `resolveBuildingBlockMode`, render the compact toolbar from
-   `describeBuildingBlockToolbar`, outline find matches with `findHighlightTargets`, and set the
-   `data-pptx-block` and `data-control` markers.
+   `describeBuildingBlockToolbar`, outline find matches with `syncFindHighlights`, and set the
+   `data-pptx-block` and `data-control` markers. Route dialog flags as described above.
 4. Export the entry, its option and state types and the shared `ViewerBuildingBlockActions`,
    `BuildingBlockRequest` and `BuildingBlockResult` types from the package root. The full viewer's
    props do not change, so `viewer-props-manifest.ts` stays as it is.
@@ -232,21 +241,24 @@ taking permission away again, and for compact-toolbar ports the block markers an
 
 - React: `packages/react/src/viewer/hooks/useViewerBuildingBlocks.contract.test.tsx`.
 - Vanilla: `packages/vanilla/src/building-blocks/create-viewer-building-blocks.test.ts`.
+- Vue: `packages/vue/src/building-blocks/useViewerBuildingBlocks.test.ts`.
+- Svelte: `packages/svelte/src/building-blocks/create-viewer-building-blocks.svelte.test.ts`.
+- Angular: `packages/angular/src/building-blocks/viewer-building-blocks.contract.test.ts`.
 - Each port adds one test that builds a harness (`mount`, `update`, `actions`, `state`,
   `clickPictures`, `settle`, `destroy`, `toolbar: true`) and calls `runBuildingBlocksContract`. It
   must pass unchanged; a port that needs the contract changed is a design change for this note.
 
 The browser side is `e2e/pptx/building-blocks.spec.ts`: it drives each demo's `?blocks=1` page
 (the binding's own blocks plus the shared host panel) for every project with
-`metadata.buildingBlocks`, today React, vanilla and Vue. Run it with
-`PPTX_E2E_PORT_OFFSET=500 bun run e2e -- --project=react --project=vanilla --project=vue building-blocks.spec.ts`
+`metadata.buildingBlocks`, all five bindings. Run it with
+`PPTX_E2E_PORT_OFFSET=500 bun run e2e -- --project=react --project=vue --project=angular --project=vanilla --project=svelte building-blocks.spec.ts`
 in `viewers/pptx`. `e2e/pptx/host-owned-*.spec.ts` keep covering React's collaboration-room shell.
 
 ## Known gaps
 
 - Vanilla's state has no `shellState` or `collaboration` object; use `blocks.viewer` for
   collaboration. Follow-up: map `getCollaborationState()` onto `resolveCollaborationShellState`.
-- Find highlights differ in kind: React highlights the matched text runs, vanilla outlines the
-  matching elements.
-- The vanilla compact toolbar has no controls for the File and Slide Show dialogs; a host raises
+- Find highlights differ in kind: React highlights the matched text runs, the other bindings
+  outline the matching elements.
+- The compact toolbar has no controls for the File and Slide Show dialogs; a host raises
   those workflows from its own controls and the `actions` groups.
