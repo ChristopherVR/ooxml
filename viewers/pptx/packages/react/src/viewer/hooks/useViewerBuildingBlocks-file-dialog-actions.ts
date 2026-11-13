@@ -3,8 +3,9 @@ import type {
 	BuildingBlockRequest,
 	ReadOnlyRecommendation,
 } from 'ooxml-ui/pptx';
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 
+import { useDialogFlagRequest } from './useDialogFlagRequest';
 import type { EditorHistoryResult } from './useEditorHistory';
 import type { PropertyHandlersResult } from './usePropertyHandlers';
 import type { ViewerDialogsResult } from './useViewerDialogs';
@@ -28,21 +29,6 @@ export interface UseFileDialogPortsInput {
 }
 
 /**
- * A toolbar control opened an internal dialog by flag: clear the flag and raise the host request.
- * Viewing is allowed read-only; applying is refused by the operations themselves.
- */
-function useOpenFlagRequest(isOpen: boolean, setOpen: (open: boolean) => void, raise: () => void) {
-	const raiseRef = useRef(raise);
-	raiseRef.current = raise;
-	useEffect(() => {
-		if (isOpen) {
-			setOpen(false);
-			raiseRef.current();
-		}
-	}, [isOpen, setOpen]);
-}
-
-/**
  * Password protection, document properties, font embedding and digital signatures: the ports of
  * the shared action groups (`ooxml-ui/pptx`, `render/building-blocks/groups`) over this binding's
  * state, plus the effects that turn the toolbar's dialog flags into host requests. The ports are
@@ -52,18 +38,22 @@ export function useFileDialogPorts(input: UseFileDialogPortsInput): FileDialogPo
 	const latest = useRef(input);
 	latest.current = input;
 	const { dialogs, request } = input;
-	useOpenFlagRequest(dialogs.isPasswordDialogOpen, dialogs.setIsPasswordDialogOpen, () =>
-		request({ kind: 'passwordProtection' }),
-	);
-	useOpenFlagRequest(dialogs.isDocPropsDialogOpen, dialogs.setIsDocPropsDialogOpen, () =>
-		request({ kind: 'documentProperties' }),
-	);
-	useOpenFlagRequest(dialogs.isFontEmbeddingOpen, dialogs.setIsFontEmbeddingOpen, () =>
-		request({ kind: 'fontEmbedding' }),
-	);
-	useOpenFlagRequest(dialogs.isDigitalSigDialogOpen, dialogs.setIsDigitalSigDialogOpen, () =>
-		request({ kind: 'digitalSignatures' }),
-	);
+	useDialogFlagRequest(dialogs.isPasswordDialogOpen, () => {
+		dialogs.setIsPasswordDialogOpen(false);
+		request({ kind: 'passwordProtection' });
+	});
+	useDialogFlagRequest(dialogs.isDocPropsDialogOpen, () => {
+		dialogs.setIsDocPropsDialogOpen(false);
+		request({ kind: 'documentProperties' });
+	});
+	useDialogFlagRequest(dialogs.isFontEmbeddingOpen, () => {
+		dialogs.setIsFontEmbeddingOpen(false);
+		request({ kind: 'fontEmbedding' });
+	});
+	useDialogFlagRequest(dialogs.isDigitalSigDialogOpen, () => {
+		dialogs.setIsDigitalSigDialogOpen(false);
+		request({ kind: 'digitalSignatures' });
+	});
 
 	// Created once; every member reads the latest render through `latest`.
 	const ports = useRef<FileDialogPorts | null>(null);

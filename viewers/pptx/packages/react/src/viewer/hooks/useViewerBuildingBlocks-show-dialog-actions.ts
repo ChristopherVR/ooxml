@@ -3,6 +3,7 @@ import type { PptxSlide } from 'pptx-viewer-core';
 import { useEffect, useRef, useState } from 'react';
 
 import { useTranslation } from '../i18n/use-translation';
+import { useDialogFlagRequest } from './useDialogFlagRequest';
 import type { UsePresentationModeResult } from './usePresentationMode';
 import type { ViewerDialogsResult } from './useViewerDialogs';
 import type { ViewerState } from './useViewerState';
@@ -37,25 +38,18 @@ export function useShowDialogPorts(input: UseShowDialogPortsInput): ShowDialogPo
 	const [startRequest, setStartRequest] = useState(0);
 
 	// The toolbar opens its dialogs by flag and nothing renders them here: each becomes a request.
-	const { isSetUpSlideShowOpen, isCustomShowsOpen, isBroadcastDialogOpen } = dialogs;
-	useEffect(() => {
-		if (isSetUpSlideShowOpen) {
-			dialogs.setIsSetUpSlideShowOpen(false);
-			session.request({ kind: 'setUpSlideShow' });
-		}
-	}, [isSetUpSlideShowOpen, dialogs, session]);
-	useEffect(() => {
-		if (isCustomShowsOpen) {
-			dialogs.setIsCustomShowsOpen(false);
-			session.request({ kind: 'customShows' });
-		}
-	}, [isCustomShowsOpen, dialogs, session]);
-	useEffect(() => {
-		// Broadcast is unsupported (`actions.broadcast`): the flag is dropped, no request is raised.
-		if (isBroadcastDialogOpen) {
-			dialogs.setIsBroadcastDialogOpen(false);
-		}
-	}, [isBroadcastDialogOpen, dialogs]);
+	useDialogFlagRequest(dialogs.isSetUpSlideShowOpen, () => {
+		dialogs.setIsSetUpSlideShowOpen(false);
+		session.request({ kind: 'setUpSlideShow' });
+	});
+	useDialogFlagRequest(dialogs.isCustomShowsOpen, () => {
+		dialogs.setIsCustomShowsOpen(false);
+		session.request({ kind: 'customShows' });
+	});
+	// Broadcast is unsupported (`actions.broadcast`): the flag is dropped, no request is raised.
+	useDialogFlagRequest(dialogs.isBroadcastDialogOpen, () =>
+		dialogs.setIsBroadcastDialogOpen(false),
+	);
 
 	// The shortcut help is a toggle: every change of its flag (toolbar, `?`, Ctrl+/) is an event.
 	const shortcutsOpen = state.isShortcutHelpOpen;

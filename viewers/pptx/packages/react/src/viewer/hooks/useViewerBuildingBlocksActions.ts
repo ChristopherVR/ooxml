@@ -11,9 +11,10 @@ import type {
 	ReadOnlyRecommendation,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxHandler, PptxSlide } from 'pptx-viewer-core';
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 
 import { useController } from './useController';
+import { useDialogFlagRequest } from './useDialogFlagRequest';
 import type { EditorHistoryResult } from './useEditorHistory';
 import type { EditorOperationsResult } from './useEditorOperations';
 import { useLayoutSwitching } from './useLayoutSwitching';
@@ -152,34 +153,24 @@ export function useViewerBuildingBlocksActions(
 
 	// The toolbar and the canvas (double-clicking an equation, a link's context menu entry) open the
 	// internal dialogs by flag; nothing renders them here, so each flag becomes a host request.
-	const { isHyperlinkDialogOpen, isSmartArtDialogOpen, isEquationDialogOpen } = dialogs;
-	useEffect(() => {
-		if (isHyperlinkDialogOpen) {
-			dialogs.setIsHyperlinkDialogOpen(false);
-			session.request({ kind: 'hyperlink' });
-		}
-	}, [isHyperlinkDialogOpen, dialogs, session]);
-	useEffect(() => {
-		if (isSmartArtDialogOpen) {
-			dialogs.setIsSmartArtDialogOpen(false);
-			session.request({ kind: 'smartArt' });
-		}
-	}, [isSmartArtDialogOpen, dialogs, session]);
-	useEffect(() => {
-		if (isEquationDialogOpen) {
-			const existingOmml = dialogs.editingEquationOmml;
-			dialogs.setIsEquationDialogOpen(false);
-			dialogs.setEditingEquationOmml(null);
-			session.request({ kind: 'equation', existingOmml });
-		}
-	}, [isEquationDialogOpen, dialogs, session]);
-	const { isChartDialogOpen } = dialogs;
-	useEffect(() => {
-		if (isChartDialogOpen) {
-			dialogs.setIsChartDialogOpen(false);
-			session.request({ kind: 'chart' });
-		}
-	}, [isChartDialogOpen, dialogs, session]);
+	useDialogFlagRequest(dialogs.isHyperlinkDialogOpen, () => {
+		dialogs.setIsHyperlinkDialogOpen(false);
+		session.request({ kind: 'hyperlink' });
+	});
+	useDialogFlagRequest(dialogs.isSmartArtDialogOpen, () => {
+		dialogs.setIsSmartArtDialogOpen(false);
+		session.request({ kind: 'smartArt' });
+	});
+	useDialogFlagRequest(dialogs.isEquationDialogOpen, () => {
+		const existingOmml = dialogs.editingEquationOmml;
+		dialogs.setIsEquationDialogOpen(false);
+		dialogs.setEditingEquationOmml(null);
+		session.request({ kind: 'equation', existingOmml });
+	});
+	useDialogFlagRequest(dialogs.isChartDialogOpen, () => {
+		dialogs.setIsChartDialogOpen(false);
+		session.request({ kind: 'chart' });
+	});
 
 	return {
 		actions: session.actions(),
