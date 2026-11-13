@@ -477,6 +477,7 @@ export default defineConfig({
 						{ text: 'Getting Started', link: '/svelte/getting-started' },
 						{ text: 'Component Props', link: '/svelte/props' },
 						{ text: 'Instance API', link: '/svelte/api' },
+						{ text: 'Building Blocks', link: '/svelte/building-blocks' },
 					],
 				},
 				{
