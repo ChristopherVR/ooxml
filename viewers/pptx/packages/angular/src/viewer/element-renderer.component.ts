@@ -1,5 +1,6 @@
 import { NgStyle } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
+import type { DoCheck } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { TranslateService } from '@ngx-translate/core';
 import {
@@ -8,6 +9,7 @@ import {
 	getBackgroundAnimationState,
 	isElementHidden,
 	inlineElementPointerEvents,
+	probeElementRenderFault,
 } from 'ooxml-ui/pptx';
 import type {
 	AbuttingEdgeBleed,
@@ -21,6 +23,7 @@ import { resolveBevelLightingFilter } from './bevel-lighting-filter';
 import type { BevelLightingFilterDef } from './bevel-lighting-filter';
 import { ConnectorRendererComponent } from './connector-renderer.component';
 import type { Rect } from './connector-routing';
+import { ElementBoundaryDirective } from './element-boundary.directive';
 import { getReflectionOverlay, getSoftEdgeFilterDef } from './element-effect-defs';
 import type { ReflectionOverlay, SoftEdgeFilterDef } from './element-effect-defs';
 import { ElementRendererGraphicsComponent } from './element-renderer-graphics.component';
@@ -60,6 +63,7 @@ export { shouldPreventHyperlinkNavigation } from './hyperlink-confirm';
 	host: { class: 'contents' },
 	imports: [
 		NgStyle,
+		ElementBoundaryDirective,
 		ConnectorRendererComponent,
 		ElementRendererGraphicsComponent,
 		ElementRendererShapeComponent,
@@ -68,8 +72,13 @@ export { shouldPreventHyperlinkNavigation } from './hyperlink-confirm';
 	],
 	templateUrl: './element-renderer.component.html',
 })
-export class ElementRendererComponent {
+export class ElementRendererComponent implements DoCheck {
 	readonly element = input.required<PptxElement>();
+
+	/** Test-only fault hook (inert unless a test page sets it), inside this element's boundary. */
+	ngDoCheck(): void {
+		probeElementRenderFault(this.element());
+	}
 	readonly mediaDataUrls = input<Map<string, string>>(new Map());
 	readonly zIndex = input<number>(0);
 	/** Grow under an abutting opaque box (shared `resolveAbuttingEdgeBleeds`). */

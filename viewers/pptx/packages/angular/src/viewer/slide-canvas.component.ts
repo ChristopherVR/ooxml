@@ -91,6 +91,7 @@ import { CollaborationService } from './collaboration.service';
 import { CropOverlayComponent } from './crop-overlay.component';
 import { applyResize, marqueeHitIds } from './drag-resize';
 import type { Box, ResizeHandle } from './drag-resize';
+import { ElementBoundaryDirective, ElementRenderErrors } from './element-boundary.directive';
 import { ElementRendererComponent } from './element-renderer.component';
 import type { StyleMap } from './element-style';
 import { FieldContextService } from './field-context.service';
@@ -182,6 +183,8 @@ function plainText(el: PptxElement): string {
 	providers: [
 		CanvasFindHighlights,
 		CanvasFitService,
+		// Element render errors on this canvas report the slide it paints.
+		ElementRenderErrors,
 		InkDrawingService,
 		RulerGuidesService,
 		// Expose which slide this canvas renders to leaf renderers (chart /
@@ -190,6 +193,7 @@ function plainText(el: PptxElement): string {
 		{ provide: SLIDE_CONTEXT, useExisting: forwardRef(() => SlideCanvasComponent) },
 	],
 	imports: [
+		ElementBoundaryDirective,
 		NgStyle,
 		ElementRendererComponent,
 		TranslatePipe,
@@ -553,6 +557,7 @@ export class SlideCanvasComponent implements SlideContext {
 
 	constructor() {
 		inject(CanvasFindHighlights, { self: true }).bind(this.findHighlights);
+		inject(ElementRenderErrors, { self: true }).slideId = () => this.slide()?.id;
 		effect(() => {
 			const id = this.editable() ? this.editingId() : null;
 			if (id === this.listSessionId && this.inlineListSeed()) {

@@ -1,6 +1,7 @@
 import type {
 	CollaborationShellState,
 	CollaborationState,
+	ElementRenderErrorHandler,
 	GoogleFontsOption,
 	ListConversionScope,
 	PptxLoadLimits,
@@ -30,6 +31,12 @@ export interface ViewerBuildingBlocksOptions extends UseViewerBuildingBlocksActi
 	/** Toolbar controls to hide (`undo`, `redo`, `insert`, `zoom`, `navigation` apply). */
 	hiddenActions?: readonly ToolbarActionId[] | undefined;
 	onDirtyChange?: ((dirty: boolean) => void) | undefined;
+	/**
+	 * Reports a slide element omitted after a creation, template or lifecycle error in the canvas
+	 * or slides pane block, with `{ elementId, elementType, slideId }`. Defaults to
+	 * `console.error(error, context)`, also used when this callback throws.
+	 */
+	onElementRenderError?: ElementRenderErrorHandler | undefined;
 	/** Fired by the "Layout" entry of a slide's context menu in the slides pane. */
 	onOpenLayoutGallery?: ((request: SlidesPaneLayoutGalleryRequest) => void) | undefined;
 }

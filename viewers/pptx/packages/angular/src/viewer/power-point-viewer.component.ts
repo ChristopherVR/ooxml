@@ -157,6 +157,7 @@ import { EditorContextMenuComponent } from './editor-context-menu.component';
 import { newChartElement, newShapeElement, newTableElement, newTextElement } from './editor-insert';
 import { EditorStateService } from './editor-state.service';
 import { EditorToolbarComponent } from './editor-toolbar.component';
+import { ElementRenderErrors } from './element-boundary.directive';
 import { EmbeddedFontsService } from './embedded-fonts.service';
 import { ExportProgressModalComponent } from './export-progress-modal.component';
 import { renderElementPngBlob, renderElementPngDataUrl } from './export-raster-tiles';
@@ -288,7 +289,7 @@ const noopClose = (): void => undefined;
 	// The scoped Tailwind reset of the viewer stylesheet applies inside this element only.
 	host: { 'data-pptx-scope': '' },
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	providers: [...POWER_POINT_VIEWER_PROVIDERS],
+	providers: [...POWER_POINT_VIEWER_PROVIDERS, ElementRenderErrors],
 	imports: [
 		NgClass,
 		NgStyle,
@@ -1516,6 +1517,13 @@ export class PowerPointViewerComponent
 	readonly readOnlyInput = input<boolean>(false, { alias: 'readOnly' });
 	/** Fired before following a link; return false to cancel its default action. */
 	readonly onHyperlinkClick = input<import('ooxml-ui/pptx').HyperlinkClickHandler>();
+	/**
+	 * Reports a slide element omitted after a creation, template or lifecycle error, on every
+	 * surface of the viewer (canvas, thumbnails, slide show, reading view, previews), with
+	 * `{ elementId, elementType, slideId }`. An input like `onHyperlinkClick`, so its absence keeps
+	 * the default: `console.error(error, context)`, also used when this callback throws.
+	 */
+	readonly onElementRenderError = input<import('ooxml-ui/pptx').ElementRenderErrorHandler>();
 	/** Optional class applied to the root element. */
 	readonly class = input<string>('');
 	/** Theme configuration for customising the viewer's appearance. Always wins over a File > Options > Appearance selection; see {@link defaultThemeKey}. */
@@ -2632,6 +2640,7 @@ export class PowerPointViewerComponent
 
 	constructor() {
 		super();
+		inject(ElementRenderErrors, { self: true }).reporter = () => this.onElementRenderError();
 		this.regions.attach(() => ({
 			viewer: this,
 			mode: this.getMode(),

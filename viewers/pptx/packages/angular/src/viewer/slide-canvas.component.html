@@ -28,6 +28,7 @@
 			-->
 			@for (element of visibleTemplateElements(); track element.id; let i = $index) {
 				<pptx-element-renderer
+					*pptxElementBoundary="element"
 					[element]="element"
 					[mediaDataUrls]="mediaDataUrls()"
 					[zIndex]="i"
@@ -49,6 +50,7 @@
 			}
 			@for (element of elements(); track element.id; let i = $index) {
 				<pptx-element-renderer
+					*pptxElementBoundary="element"
 					[element]="element"
 					[mediaDataUrls]="mediaDataUrls()"
 					[zIndex]="visibleTemplateElements().length + i"

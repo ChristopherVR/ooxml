@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 
+import { ElementRenderErrors } from '../viewer/element-boundary.directive';
 import { createSlidesPanelEditorCommands } from '../viewer/slides-panel-commands';
 import { SlidesPanelComponent } from '../viewer/slides-panel.component';
 import type { ViewerBuildingBlocks } from './viewer-building-blocks';
@@ -11,6 +12,7 @@ import type { ViewerBuildingBlocks } from './viewer-building-blocks';
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	imports: [SlidesPanelComponent],
 	host: { 'data-pptx-block': 'slides-pane' },
+	providers: [ElementRenderErrors],
 	styles: `
 		:host {
 			display: block;
@@ -51,6 +53,11 @@ import type { ViewerBuildingBlocks } from './viewer-building-blocks';
 })
 export class BuildingBlocksSlidesPaneComponent {
 	readonly blocks = input.required<ViewerBuildingBlocks>();
+
+	constructor() {
+		inject(ElementRenderErrors, { self: true }).reporter = () =>
+			this.blocks().options().onElementRenderError;
+	}
 
 	protected readonly commands = computed(() => {
 		const { shell } = this.blocks();

@@ -81,6 +81,7 @@
 			}
 			@for (child of children(); track child.id) {
 				<pptx-element-renderer
+					*pptxElementBoundary="child"
 					[element]="child"
 					[mediaDataUrls]="mediaDataUrls()"
 					[zIndex]="$index"

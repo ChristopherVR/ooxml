@@ -125,6 +125,19 @@ for each operation.
 `navigation`. Controls are plain `<button data-control="...">` elements inside
 `<span data-group="...">`.
 
+## Element render errors
+
+A slide element whose renderer throws is left out on its own: its neighbours, the slide and the
+viewer stay, on the canvas, the thumbnails, the slide show, the reading view and the previews.
+The document is not changed. Pass `onElementRenderError` (in the `createViewerBuildingBlocks` options; it reaches the canvas and slides pane blocks) to hear about it; the full
+viewer takes the same option. It receives the error and an `ElementRenderErrorContext`
+(`elementId`, `elementType` and, where the surface knows it, `slideId`; both types are exported).
+Without it the viewer calls `console.error(error, context)`, which is also the fallback when the
+callback throws, so a failing reporter never takes the viewer down.
+
+Angular has no error boundaries, so each element is rendered through `*pptxElementBoundary`, which creates and checks the element view inside a try/catch whenever the slide is checked. Replacing the failed element object (even with the same id) or changing its id renders
+it again; re-rendering the same failed object does not retry. Not caught: event handler errors (as in React), and an error thrown when Angular refreshes only that element because a signal inside it changed; those reach your `ErrorHandler`.
+
 ## Not included
 
 The blocks render no dialogs, panes, ribbon, status bar, notes or presentation chrome. Starting a

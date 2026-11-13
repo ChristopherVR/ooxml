@@ -18,6 +18,7 @@ import { buildSlideTemplateContent } from 'ooxml-ui/pptx';
 import type { SlideTemplateId } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 
+import { ElementBoundaryDirective } from './element-boundary.directive';
 import { ElementRendererComponent } from './element-renderer.component';
 
 /** Full-size stage the template is built at (standard 16:9 canvas). */
@@ -34,7 +35,7 @@ interface TemplatePreviewContent {
 	selector: 'pptx-slide-template-preview',
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	imports: [ElementRendererComponent],
+	imports: [ElementRendererComponent, ElementBoundaryDirective],
 	template: `
 		<div
 			class="pptx-tpl-preview"
@@ -44,6 +45,7 @@ interface TemplatePreviewContent {
 			<div class="pptx-tpl-preview__stage">
 				@for (element of content().elements; track element.id; let i = $index) {
 					<pptx-element-renderer
+						*pptxElementBoundary="element"
 						[element]="element"
 						[zIndex]="i"
 						[interactive]="false"

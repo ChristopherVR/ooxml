@@ -5,6 +5,7 @@ import { buildLayoutPreviewGeometry } from 'ooxml-ui/pptx/render/layout-preview'
 import type { LayoutPreviewGeometry } from 'ooxml-ui/pptx/render/layout-preview';
 import type { PptxLayoutOption, PptxLayoutPreview } from 'pptx-viewer-core';
 
+import { ElementBoundaryDirective } from './element-boundary.directive';
 import { ElementRendererComponent } from './element-renderer.component';
 
 /** Thumbnail box size, matching PowerPoint's gallery tiles. */
@@ -32,7 +33,7 @@ interface LayoutTile {
 @Component({
 	selector: 'pptx-ribbon-layout-gallery',
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	imports: [TranslatePipe, ElementRendererComponent],
+	imports: [TranslatePipe, ElementRendererComponent, ElementBoundaryDirective],
 	template: `
 		<div
 			data-testid="layout-gallery-menu"
@@ -69,6 +70,7 @@ interface LayoutTile {
 						>
 							@for (element of tile.elements; track element.id; let i = $index) {
 								<pptx-element-renderer
+									*pptxElementBoundary="element"
 									[element]="element"
 									[zIndex]="i"
 									[interactive]="false"

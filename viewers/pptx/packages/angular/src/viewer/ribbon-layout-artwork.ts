@@ -9,6 +9,7 @@ import type { ApplicationRef, EnvironmentInjector, Injector } from '@angular/cor
 import type { HomeLayoutArtwork } from 'ooxml-ui/pptx';
 import type { PptxLayoutPreview } from 'pptx-viewer-core';
 
+import { ElementBoundaryDirective } from './element-boundary.directive';
 import { ElementRendererComponent } from './element-renderer.component';
 
 /** Cap on artwork drawn per thumbnail; layouts never legitimately exceed this. */
@@ -17,10 +18,11 @@ const MAX_PREVIEW_ELEMENTS = 100;
 @Component({
 	selector: 'pptx-ribbon-layout-artwork',
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	imports: [ElementRendererComponent],
+	imports: [ElementRendererComponent, ElementBoundaryDirective],
 	template: `
 		@for (element of elements(); track element.id; let i = $index) {
 			<pptx-element-renderer
+				*pptxElementBoundary="element"
 				[element]="element"
 				[zIndex]="i"
 				[interactive]="false"

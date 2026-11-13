@@ -13,6 +13,7 @@ import {
 import { findTextHighlightsByElement } from 'ooxml-ui/pptx';
 
 import { CollaborationCursorsComponent } from '../viewer/collaboration-cursors.component';
+import { ElementRenderErrors } from '../viewer/element-boundary.directive';
 import { RemoteSelectionOverlayComponent } from '../viewer/remote-selection-overlay.component';
 import { SlideCanvasComponent } from '../viewer/slide-canvas.component';
 import type { ViewerBuildingBlocks } from './viewer-building-blocks';
@@ -29,6 +30,7 @@ import type { ViewerBuildingBlocks } from './viewer-building-blocks';
 	encapsulation: ViewEncapsulation.None,
 	imports: [SlideCanvasComponent, CollaborationCursorsComponent, RemoteSelectionOverlayComponent],
 	host: { 'data-pptx-block': 'canvas' },
+	providers: [ElementRenderErrors],
 	styles: `
 		[data-pptx-block='canvas'] {
 			display: block;
@@ -98,6 +100,8 @@ export class BuildingBlocksCanvasComponent {
 	});
 
 	constructor() {
+		inject(ElementRenderErrors, { self: true }).reporter = () =>
+			this.blocks().options().onElementRenderError;
 		effect((onCleanup) => {
 			const canvas = this.canvas();
 			if (canvas) {
