@@ -20,6 +20,7 @@ import {
 	useCustomizationConstraints,
 	useViewerCustomizationRoot,
 } from '../viewer/state/viewer-customization.svelte';
+import { provideElementRenderErrorReporter } from '../viewer/state/element-render-errors';
 import { toViewerStateOptions } from '../viewer/state/viewer-state-options';
 import { createSvelteGroupPorts } from './group-ports';
 import { routeDialogFlag } from './route-dialog-flag.svelte';
@@ -73,6 +74,8 @@ export function createViewerBuildingBlocks(
 	);
 	const { editor } = viewerState;
 	useCustomizationConstraints(customization, viewerState.optionsState);
+	// Context of the creating component, so the canvas and slides pane blocks below report here.
+	provideElementRenderErrorReporter(() => getOptions().onElementRenderError);
 
 	const session = createPptxBuildingBlockSession(
 		createSveltePort({ state: viewerState, options: getOptions, layouts: () => layouts }),

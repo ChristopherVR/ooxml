@@ -7,7 +7,7 @@
 	 * `unknown` still falls through to the typed placeholder.
 	 */
 	import { hasShapeProperties, hasTextProperties } from 'pptx-viewer-core';
-	import { getBackgroundAnimationLayers, getBackgroundAnimationState, build3DExtrusionData, buildParagraphs, highlightFindMatches, buildTextStyleOverrideCss, getGroupChildParentFill, getOverflowSegments, hasTextWarp, inlineElementPointerEvents, isElementHidden, isEquationOnlyText, isTemplateElement, placeholderPromptDescriptor, shouldRenderHitTarget } from 'ooxml-ui/pptx';
+	import { getBackgroundAnimationLayers, getBackgroundAnimationState, build3DExtrusionData, buildParagraphs, highlightFindMatches, buildTextStyleOverrideCss, getGroupChildParentFill, getOverflowSegments, hasTextWarp, inlineElementPointerEvents, isElementHidden, isEquationOnlyText, isTemplateElement, placeholderPromptDescriptor, shouldRenderHitTarget, probeElementRenderFault } from 'ooxml-ui/pptx';
 
 	import { getContainerStyle, getElementHitTargetStyle, getShapeBoxStyle, getShapeFillStrokeStyle, getTextBlockStyle, mergeStyles, styleToString } from '../style';
 	import { getFieldContextGetter } from '../state/field-context';
@@ -20,6 +20,7 @@
 	// Self-import: groups recurse into this same component (Svelte 5 pattern).
 	// eslint-disable-next-line import/no-self-import
 	import ElementRenderer from './ElementRenderer.svelte';
+	import ElementBoundary from './ElementBoundary.svelte';
 	import ChartView from './ChartView.svelte';
 	import ConnectorView from './ConnectorView.svelte';
 	import DuotoneFilterDefs from './DuotoneFilterDefs.svelte';
@@ -44,6 +45,8 @@
 
 	const { element, mediaDataUrls, zIndex, edgeBleed, presenting = false, interactive = false, marked = false, editTemplateMode = false, editingElementId = null, editable = false, selectedElementIds, parentGroupFill, ontablecellcommit, onsmartartnodecommit, onsmartartnodefill, onchartpointcommit, ontableresizecolumns, ontableresizerow }: ElementRendererProps =
 		$props();
+	// Test-only fault hook (inert unless a test page sets it), inside this element's `ElementBoundary`.
+	$effect.pre(() => probeElementRenderFault(element));
 	/** Whether THIS element is part of the current selection; see `ElementRendererProps.selectedElementIds`. */
 	const isSelected = $derived(selectedElementIds?.includes(element.id) ?? false);
 	/** This exact element is open in the element-level inline text editor right now. */
@@ -251,7 +254,9 @@
 			     children to this group for the device-pixel stroke snap, and a child that never
 			     reads its `parentGroupFill` prop (a connector) would otherwise never trigger it. -->
 			{@const parentFill = childParentGroupFill}
-			<ElementRenderer element={child} {mediaDataUrls} zIndex={i} {presenting} {interactive} {marked} {editTemplateMode} {editingElementId} {editable} {selectedElementIds} parentGroupFill={parentFill} {ontablecellcommit} {onsmartartnodecommit} {onsmartartnodefill} {onchartpointcommit} {ontableresizecolumns} {ontableresizerow} />
+			<ElementBoundary element={child}>
+				<ElementRenderer element={child} {mediaDataUrls} zIndex={i} {presenting} {interactive} {marked} {editTemplateMode} {editingElementId} {editable} {selectedElementIds} parentGroupFill={parentFill} {ontablecellcommit} {onsmartartnodecommit} {onsmartartnodefill} {onchartpointcommit} {ontableresizecolumns} {ontableresizerow} />
+			</ElementBoundary>
 		{/each}
 	</div>
 {:else if isImageLike}

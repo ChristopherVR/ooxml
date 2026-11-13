@@ -201,3 +201,5 @@ export type {
 	BuildingBlockResult,
 	ViewerBuildingBlockActions,
 } from 'ooxml-ui/pptx';
+// The reporter every viewer and building-blocks entry takes as `onElementRenderError`.
+export type { ElementRenderErrorContext, ElementRenderErrorHandler } from 'ooxml-ui/pptx';

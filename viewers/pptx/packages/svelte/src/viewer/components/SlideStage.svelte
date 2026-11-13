@@ -23,10 +23,12 @@
 	import { useTranslator } from '../../i18n/context';
 	import { getFieldContextGetter, provideFieldContext } from '../state/field-context';
 	import { useRendering3DFlags } from '../state/rendering-3d-flags-context';
+	import { provideElementRenderSlide } from '../state/element-render-errors';
 	import { provideSlideElements } from '../state/slide-elements';
 	import { styleToString } from '../style';
 	import ActiveXOverlay from './ActiveXOverlay.svelte';
 	import CommentMarkersOverlay from './CommentMarkersOverlay.svelte';
+	import ElementBoundary from './ElementBoundary.svelte';
 	import ElementRenderer from './ElementRenderer.svelte';
 	import type { SlideStageProps } from './props';
 
@@ -75,6 +77,8 @@
 	// can find the rest of its chain and render only its own slice of the
 	// overflow. Also a getter, for the same init-time capture reason as above.
 	provideSlideElements(() => slide?.elements);
+	// Element render errors on this stage report the slide it paints.
+	provideElementRenderSlide(() => slide?.id);
 
 	const stageStyle = $derived(
 		styleToString({
@@ -185,7 +189,9 @@
 	aria-label={interactive ? t('pptx.canvas.slide') : undefined}
 >
 	{#each slide?.elements ?? [] as element, index (element.id)}
-		<ElementRenderer {element} {mediaDataUrls} zIndex={index} edgeBleed={edgeBleeds.get(element.id)} {presenting} {interactive} {editTemplateMode} {editingElementId} {editable} {selectedElementIds} {ontablecellcommit} {onsmartartnodecommit} {onsmartartnodefill} {onchartpointcommit} {ontableresizecolumns} {ontableresizerow} />
+		<ElementBoundary {element}>
+			<ElementRenderer {element} {mediaDataUrls} zIndex={index} edgeBleed={edgeBleeds.get(element.id)} {presenting} {interactive} {editTemplateMode} {editingElementId} {editable} {selectedElementIds} {ontablecellcommit} {onsmartartnodecommit} {onsmartartnodefill} {onchartpointcommit} {ontableresizecolumns} {ontableresizerow} />
+		</ElementBoundary>
 	{/each}
 	{#if slide?.activeXControls && slide.activeXControls.length > 0}
 		<ActiveXOverlay controls={slide.activeXControls} {canvasSize} />

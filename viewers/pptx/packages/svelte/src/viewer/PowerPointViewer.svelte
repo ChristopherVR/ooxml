@@ -47,6 +47,7 @@
 	import { controllerState } from './state/controller-state';
 	import { createRibbonDisplayController, RIBBON_AUTO_COLLAPSE_MEDIA } from 'ooxml-ui/pptx';
 	import { resolveViewerDocument, toViewerStateOptions } from './state/viewer-state-options';
+	import { provideElementRenderErrorReporter } from './state/element-render-errors';
 	import { provideRibbonAddIns } from './state/ribbon-add-ins';
 	import { provideRegionBase } from './state/viewer-regions';
 	import { effectiveHiddenActions, nextRibbonScopeToken, useCustomizationConstraints, useViewerCustomizationRoot } from './state/viewer-customization.svelte';
@@ -112,6 +113,8 @@
 		() => props.googleFonts,
 	);
 	provideRibbonAddIns(() => props.ribbonAddIns);
+	// The host's element render error reporter, read by every `ElementBoundary` on every surface.
+	provideElementRenderErrorReporter(() => props.onElementRenderError);
 	const ribbonScope = nextRibbonScopeToken();
 	// A file opened from a File > Open cloud place brings its own storage, name and edit right
 	// until another document is loaded (shared `render/cloud-open`).

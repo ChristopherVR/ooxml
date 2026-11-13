@@ -7,6 +7,7 @@
 	import type { EditorState } from '../editor/editor-state.svelte';
 	import { selectedMasterSlide } from '../master/master-view';
 	import EditorLayer from './EditorLayer.svelte';
+	import ElementBoundary from './ElementBoundary.svelte';
 	import ElementRenderer from './ElementRenderer.svelte';
 	import HandoutMasterCanvas from './HandoutMasterCanvas.svelte';
 	import InkDrawingOverlay from './InkDrawingOverlay.svelte';
@@ -119,7 +120,9 @@
 						<HandoutMasterCanvas handoutMaster={editor.handoutMaster} canvasSize={activeCanvasSize} slidesPerPage={editor.handoutMaster?.slidesPerPage ?? 6} />
 					{/if}
 					{#each activeMaster.elements ?? [] as element, index (element.id)}
-						<ElementRenderer {element} {mediaDataUrls} zIndex={index + 1} interactive editTemplateMode />
+						<ElementBoundary {element}>
+							<ElementRenderer {element} {mediaDataUrls} zIndex={index + 1} interactive editTemplateMode />
+						</ElementBoundary>
 					{/each}
 				</div>
 				<EditorLayer {controller} {scale} />

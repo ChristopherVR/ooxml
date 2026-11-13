@@ -106,6 +106,14 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 */
 	onThemeChange?: (themeKey: string) => void;
 	/**
+	 * Reports a slide element omitted after a render or effect error, on every surface of the
+	 * viewer (canvas, thumbnails, slide show, reading view, previews), with
+	 * `{ elementId, elementType, slideId }`. Camel-cased like `onThemeChange` because it is the
+	 * same reporter option the building blocks take. Defaults to `console.error(error, context)`,
+	 * also used when this callback throws.
+	 */
+	onElementRenderError?: import('ooxml-ui/pptx').ElementRenderErrorHandler;
+	/**
 	 * Initial File > Options > Language selection (locale code). Falls back to
 	 * a value persisted in `localStorage`, then the `locale` prop. Once the
 	 * user picks a language from Options, that choice always wins over `locale`

@@ -31,7 +31,8 @@ type ForwardedProps =
 	| 'authorName'
 	| 'collaboration'
 	| 'fitPadding'
-	| 'maxFitScale';
+	| 'maxFitScale'
+	| 'onElementRenderError';
 
 export interface ViewerBuildingBlocksOptions
 	extends Pick<PowerPointViewerProps, ForwardedProps>, UseViewerBuildingBlocksActionsOptions {

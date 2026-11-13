@@ -132,6 +132,19 @@ shared descriptor: groups, controls, labels as dictionary keys, `disabled` and `
 them with `blocks.runToolbarControl(id)`. `hiddenActions` removes controls as in the full viewer:
 `undo`, `redo`, `insert` (every insert control), `zoom` and `navigation`.
 
+## Element render errors
+
+A slide element whose renderer throws is left out on its own: its neighbours, the slide and the
+viewer stay, on the canvas, the thumbnails, the slide show, the reading view and the previews.
+The document is not changed. Pass `onElementRenderError` (in the `createViewerBuildingBlocks` options; it reaches the canvas and slides pane blocks) to hear about it; the full
+viewer takes the same option. It receives the error and an `ElementRenderErrorContext`
+(`elementId`, `elementType` and, where the surface knows it, `slideId`; both types are exported).
+Without it the viewer calls `console.error(error, context)`, which is also the fallback when the
+callback throws, so a failing reporter never takes the viewer down.
+
+Each element sits in a `<svelte:boundary>`, which catches render and effect errors. Replacing the failed element object (even with the same id) or changing its id renders
+it again; re-rendering the same failed object does not retry. Event handler errors are not caught, as in React.
+
 ## Not included
 
 The blocks render no dialogs, panes, ribbon, status bar, notes or presentation chrome, and the
