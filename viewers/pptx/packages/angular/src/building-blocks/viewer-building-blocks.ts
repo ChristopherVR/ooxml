@@ -25,6 +25,7 @@ import { ViewerZoomService } from '../viewer/viewer-zoom.service';
 import { createAngularGroupPorts } from './group-ports';
 import { createAngularPort } from './session-port';
 import type { ViewerBuildingBlocksOptions, ViewerBuildingBlocksState } from './types';
+import { routeDialogFlag } from './route-dialog-flag';
 
 const bytesOf = (source: ViewerBuildingBlocksOptions['content']) =>
 	source instanceof ArrayBuffer || source instanceof Uint8Array ? source : null;
@@ -167,25 +168,23 @@ export class ViewerBuildingBlocks {
 			}),
 		);
 		// The editor opens its own dialogs by flag; nothing renders them here, so each becomes a request.
-		effect(() => {
-			if (this.docProps.showHyperlink()) {
-				untracked(() => {
-					this.docProps.showHyperlink.set(false);
-					this.session.request({ kind: 'hyperlink' });
-				});
-			}
-		});
-		effect(() => {
-			if (dialogs.showEquation()) {
-				untracked(() => {
-					const existingOmml = dialogs.editingEquationOmml();
-					dialogs.showEquation.set(false);
-					dialogs.editingEquationOmml.set(null);
-					dialogs.editingEquationElementId.set(null);
-					this.session.request({ kind: 'equation', existingOmml });
-				});
-			}
-		});
+		routeDialogFlag(
+			() => this.docProps.showHyperlink(),
+			() => {
+				this.docProps.showHyperlink.set(false);
+				this.session.request({ kind: 'hyperlink' });
+			},
+		);
+		routeDialogFlag(
+			() => dialogs.showEquation(),
+			() => {
+				const existingOmml = dialogs.editingEquationOmml();
+				dialogs.showEquation.set(false);
+				dialogs.editingEquationOmml.set(null);
+				dialogs.editingEquationElementId.set(null);
+				this.session.request({ kind: 'equation', existingOmml });
+			},
+		);
 		// Ctrl+F toggles the host find bar, Ctrl+H opens it.
 		effect(() => {
 			const find = this.findService.showFind();

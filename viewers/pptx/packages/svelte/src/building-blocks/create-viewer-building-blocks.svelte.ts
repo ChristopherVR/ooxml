@@ -17,6 +17,7 @@ import { createViewerState } from '../viewer/state/create-viewer-state.svelte';
 import { toViewerStateOptions } from '../viewer/state/viewer-state-options';
 import type { PowerPointViewerProps } from '../viewer/types';
 import { createSvelteGroupPorts } from './group-ports';
+import { routeDialogFlag } from './route-dialog-flag.svelte';
 import { canEditOf, createSveltePort } from './session-port';
 import type {
 	ViewerBuildingBlocks,
@@ -176,21 +177,21 @@ export function createViewerBuildingBlocks(
 
 	// The canvas opens its dialogs by flag (Ctrl+K, double-clicking an equation, `?`): nothing
 	// renders them here, so each flag becomes a host request and is cleared.
-	$effect(() => {
-		if (viewerState.controller.hyperlinkOpen) {
+	routeDialogFlag(
+		() => viewerState.controller.hyperlinkOpen,
+		() => {
 			viewerState.controller.hyperlinkOpen = false;
-			untrack(() => session.request({ kind: 'hyperlink' }));
-		}
-	});
-	$effect(() => {
-		if (editor.equationOps.editingId) {
-			untrack(() => {
-				const existingOmml = editor.equationOps.omml;
-				editor.equationOps.close();
-				session.request({ kind: 'equation', existingOmml });
-			});
-		}
-	});
+			session.request({ kind: 'hyperlink' });
+		},
+	);
+	routeDialogFlag(
+		() => Boolean(editor.equationOps.editingId),
+		() => {
+			const existingOmml = editor.equationOps.omml;
+			editor.equationOps.close();
+			session.request({ kind: 'equation', existingOmml });
+		},
+	);
 	// The shortcut help is a toggle the host mirrors: every change of its flag is an event.
 	let shortcutsShown = false;
 	$effect(() => {

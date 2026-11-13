@@ -11,18 +11,27 @@ import { createEngineGroupPorts, createEngineSessionPort } from './engine-ports'
  * slide show dialogs): the building blocks mount none, so each flag is cleared at once and raised
  * as a host request instead. Sync watchers, so the dialog never renders.
  */
+/**
+ * Clear a dialog flag and raise its host request when it turns on. A sync watcher on the flag
+ * alone: raising notifies the session's store, and a watcher that also tracked anything that
+ * notification touches could run again while the flag is still on (the loop React 18 hit). The
+ * flag is cleared first, so the request is raised once per opening.
+ */
+export function routeDialogFlag(flag: () => boolean, clear: () => void, raise: () => void) {
+	return watch(
+		flag,
+		(open) => {
+			if (open) {
+				clear();
+				raise();
+			}
+		},
+		{ flush: 'sync', immediate: true },
+	);
+}
+
 function routeDialogFlags(c: Context, bridge: BuildingBlocksBridge): void {
-	const route = (flag: () => boolean, clear: () => void, raise: () => void) =>
-		watch(
-			flag,
-			(open) => {
-				if (open) {
-					raise();
-					clear();
-				}
-			},
-			{ flush: 'sync', immediate: true },
-		);
+	const route = routeDialogFlag;
 	const { request } = bridge.host;
 	route(
 		() => c.hyperlink.hyperlinkOpen.value,
@@ -31,10 +40,15 @@ function routeDialogFlags(c: Context, bridge: BuildingBlocksBridge): void {
 		},
 		() => request({ kind: 'hyperlink' }),
 	);
+	// The equation being edited is read before the editor is closed (closing clears it).
+	let existingOmml: Record<string, unknown> | null = null;
 	route(
 		() => c.insertDialogs.showEquationEditor.value,
-		c.insertDialogs.closeEquationEditor,
-		() => request({ kind: 'equation', existingOmml: c.insertDialogs.editingEquationOmml.value }),
+		() => {
+			existingOmml = c.insertDialogs.editingEquationOmml.value ?? null;
+			c.insertDialogs.closeEquationEditor();
+		},
+		() => request({ kind: 'equation', existingOmml }),
 	);
 	route(
 		() => c.insertDialogs.showInsertSmartArt.value,
