@@ -123,6 +123,10 @@ try {
 
 不是正有限数的值，或大于 65,536 的 `maxEntries`，会在任何工作开始前抛出 `RangeError`。幻灯片或形状限制使加载停止时，处理器会释放已解析的内容，之后仍可释放或加载其他演示文稿。
 
+## 版式模板图片 {#layout-template-images}
+
+`await handler.getTemplateElementsForSlide(slideId)` 为所请求的版式和母版元素解析嵌入图片，包括插入幻灯片或应用此前未使用的版式之后的图片。初次加载不会解码所有未使用的版式。解析复用处理器的媒体缓存，原地更新模板对象并保留其 `rawXml` 引用。缺失资源仍保持未解析状态，`allowExternalImages` 策略不变。
+
 ## 嵌入字体 {#embedded-fonts}
 
 `data.embeddedFonts` 按字体族和样式变体列出 `PptxEmbeddedFont`。默认情况下，加载读取字体部件，但直到首次读取 `dataUrl`、`format` 或 `rawFontData` 才解压或去混淆；读取名称、样式和原始部件等元数据不会触发解码。

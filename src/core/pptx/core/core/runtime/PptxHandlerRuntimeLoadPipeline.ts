@@ -29,6 +29,7 @@ import {
 import { enrichEmptyPlaceholderPrompts } from './layout-switch-placeholder-prompts';
 import type { LoadPartReader } from './load-part-reader';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeLoadSession';
+import { resolveTemplateImages } from './resolve-template-images';
 import { recordSlideFingerprints } from './slide-fingerprint';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
@@ -477,7 +478,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		if (slideXml && this.extractShowMasterShapes(slideXml) === false) {
 			return [];
 		}
-		return this.getLayoutElements(slideId);
+		return resolveTemplateImages(await this.getLayoutElements(slideId), (path) =>
+			this.getImageData(path),
+		);
 	}
 
 	/**

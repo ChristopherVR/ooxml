@@ -123,6 +123,10 @@ try {
 
 A value that is not a positive finite number, or a `maxEntries` above 65,536, throws `RangeError` before any work. When a slide or shape limit stops a load, the handler releases what it had parsed; it can still be disposed or load another deck.
 
+## Layout template images
+
+`await handler.getTemplateElementsForSlide(slideId)` resolves embedded image assets for the requested layout and master elements, including a previously unused layout after inserting a slide or applying that layout. Unused layouts are not all decoded during the initial load. Resolution uses the handler's media cache and updates the existing template objects without replacing their `rawXml` references. Missing assets remain unresolved, and the `allowExternalImages` policy is unchanged.
+
 ## Embedded fonts
 
 `data.embeddedFonts` lists one `PptxEmbeddedFont` per embedded family and style variant. By default `load()` reads each font part but does not decompress (EOT/MicroType Express) or de-obfuscate it: a variant's `dataUrl`, `format` and `rawFontData` are decoded the first time one of them is read, so existing synchronous code keeps working. Metadata (`name`, `bold`, `italic`, `partPath`, `fontGuid`, `originalRId`, `originalPartBytes`) never triggers decoding.
