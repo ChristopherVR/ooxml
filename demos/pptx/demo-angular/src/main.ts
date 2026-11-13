@@ -13,6 +13,8 @@ import '@angular/compiler';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { completeDemoSignInPopup } from 'ooxml-demo-onedrive';
 
+// Test-only: `?elementRenderFault=<id>` makes that element's renderer throw (e2e).
+import '../../shared/element-render-fault';
 import { externalSessionRequested } from '../../shared/host-owned-collaboration';
 import { sameBrowserRoom } from '../../shared/same-browser-collaboration';
 import { AppComponent } from './app.component';

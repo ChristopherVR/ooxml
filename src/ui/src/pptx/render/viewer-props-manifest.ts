@@ -150,6 +150,17 @@ export const VIEWER_EVENTS: readonly ViewerSurfaceEntry[] = [
 	{ id: 'slideCountChange' },
 	{ id: 'load' },
 	{ id: 'error' },
+	// The element render error reporter (`ElementRenderErrorHandler`). A callback prop or input in
+	// every binding, spelled as the building blocks spell it, so its absence keeps the
+	// `console.error` default.
+	{
+		id: 'elementRenderError',
+		names: {
+			vue: 'onElementRenderError',
+			angular: 'onElementRenderError',
+			svelte: 'onElementRenderError',
+		},
+	},
 	{ id: 'startCollaboration' },
 	{ id: 'stopCollaboration' },
 	// The shared `CollaborationState` every Office editor reports (`collaboration-change`).

@@ -156,6 +156,49 @@ contract asserts `preview`, then `edit`, then `preview` again.
   flag still set and looped under React 18. Each binding has a regression test that drives a flag
   through a real request store and its store adapter.
 
+## Element render errors
+
+A slide element whose render or lifecycle throws is omitted on its own in every binding, on every
+surface (canvas, thumbnails and slides pane, presentation and transition layers, reading view,
+template and layout previews); the viewer and its other elements stay. The decision is shared,
+in `src/ui/src/pptx/render/element-render-error.ts` (strict, framework-free):
+
+- `ElementRenderErrorContext` (`elementId`, `elementType`, `slideId` when the surface knows it) and
+  `ElementRenderErrorHandler`, the `onElementRenderError` option every viewer and building-blocks
+  entry takes (the viewer-props manifest entry `elementRenderError`, spelled `onElementRenderError`
+  in all five).
+- `reportElementRenderError(handler, error, context)`: calls the host reporter, and falls back to
+  `console.error(error, context)` when there is none or it throws, so a reporter can never crash
+  the viewer.
+- `elementRenderRetryKey` / `shouldRetryElementRender`: a failed element is tried again only when
+  the element object is replaced or its id changes; re-rendering the same failed object does not.
+- `mergeElementRenderErrorScope`: the reporter and slide id a surface hands its boundaries (an
+  inner surface's own values win). `createElementRenderFailures` and `guardElementRender` are the
+  try/catch and per-surface memory of a binding without component boundaries (vanilla's
+  `renderSlideStage` in `ooxml-ui/pptx/dom`).
+- `probeElementRenderFault(element)`: a test hook, not an API. Every binding's element renderer
+  calls it; it throws only when a page sets `Symbol.for(ELEMENT_RENDER_FAULT_KEY)` to that
+  element's id, which the demos do for `?elementRenderFault=<id>`
+  (`demos/pptx/shared/element-render-fault.ts`, used by `e2e/pptx/element-render-errors.spec.ts`).
+
+Each binding keeps only its native boundary and carries the reporter and the slide id down its own
+way:
+
+| Binding | Boundary                                                                                                     | Scope                                                                                                                      |
+| ------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| React   | `ElementErrorBoundary` around `ElementRenderer` and `StaticElementRenderer`                                  | `ElementRenderErrorReportingContext`; `PowerPointViewer` provides it through `ElementRenderErrorScope`                     |
+| Vue     | `ElementBoundary.vue` (`onErrorCaptured`, event handler errors excluded) around each `ElementRenderer`       | `provideElementRenderErrorReporter` (viewer, slides pane block), `provideElementRenderSlide` (stage)                       |
+| Svelte  | `ElementBoundary.svelte` (`<svelte:boundary>`, reset on a replaced element)                                  | Svelte context (`state/element-render-errors.ts`), set by the viewer, `createViewerBuildingBlocks` and each `SlideStage`   |
+| Angular | `*pptxElementBoundary`: creates and checks the element view in a try/catch on every check of its host        | `ElementRenderErrors`, provided by `pptx-viewer`, the canvas and slides pane blocks and each `pptx-slide-canvas`           |
+| Vanilla | `guardElementRender` in `renderSlideStage`'s `renderElement` (group children included), failures per surface | `SlideStageOptions.onElementRenderError` / `elementRenderFailures`; a stage rebuild is built before the old one is removed |
+
+Angular cannot catch an error thrown when it refreshes only one element view because a signal inside
+it changed (that reaches the app's `ErrorHandler`); everything driven by its host (creation, a new
+element, selection, the slide) is contained. No binding catches event handler errors.
+`packages/shared/test-utils/element-render-error-contract.mjs` is the parity contract: each
+binding runs it over its building blocks (`*element-render-errors*` / `*element-errors.contract*`
+tests), beside one boundary regression test per binding.
+
 ## Public contract per binding
 
 The names follow docx, xlsx and visio.
@@ -171,7 +214,7 @@ The names follow docx, xlsx and visio.
 Every entry:
 
 - takes `content`, `canEdit` (view-only until `true`), `onRequest`, `fileLimits`, `hiddenActions`,
-  `onDirtyChange`, `onOpenLayoutGallery` and the binding's viewer options;
+  `onDirtyChange`, `onOpenLayoutGallery`, `onElementRenderError` and the binding's viewer options;
 - returns `actions: ViewerBuildingBlockActions` (the shared type, re-exported) with every group,
   and a state with the effective `mode`, `loading`, `error`, the slide count, `shellState` and
   `collaborationState`;

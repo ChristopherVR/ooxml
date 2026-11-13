@@ -1,4 +1,7 @@
 import { completeDemoSignInPopup } from 'ooxml-demo-onedrive';
+
+// Test-only: `?elementRenderFault=<id>` makes that element's renderer throw (e2e).
+import '../shared/element-render-fault';
 import type { PowerPointViewerHandle, ViewerCustomization } from 'pptx-react-viewer';
 /* oxlint-disable eslint/one-var -- pervasive pre-existing pattern in this file
    (many independent short-lived `const`s per hook/handler, several separated
