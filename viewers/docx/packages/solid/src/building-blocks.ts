@@ -15,6 +15,7 @@ import {
 	type ControlGroup,
 } from '../../bindings/src/controls';
 import { createControlsView } from '../../bindings/src/controls-dom';
+export type { ReadAloudIssue, ReadAloudStart } from '../../bindings/src/building-blocks';
 export type {
 	BuildingBlockOptions,
 	CanvasProps,

@@ -18,6 +18,7 @@ import {
 } from '../../bindings/src/building-blocks';
 import { navigationControls, statusControls, toolbarControls } from '../../bindings/src/controls';
 import { renderControlGroups } from './controls';
+export type { ReadAloudIssue, ReadAloudStart } from '../../bindings/src/building-blocks';
 export type { CanvasProps } from '../../bindings/src/building-blocks';
 export interface BuildingBlockOptions extends SessionOptions {
 	handle?: Ref<EditorHandle> | undefined;

@@ -32,6 +32,7 @@ import {
 } from '../../bindings/src/controls';
 import type { PageChangeDetail } from 'docx-web-component';
 import type { DocumentModel } from 'docx-core';
+export type { ReadAloudIssue, ReadAloudStart } from '../../bindings/src/building-blocks';
 export type {
 	BuildingBlockOptions,
 	CanvasProps,

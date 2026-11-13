@@ -5,6 +5,7 @@ import {
 	type BuildingBlockOptions,
 	type CanvasProps,
 } from '../../bindings/src/building-blocks';
+export type { ReadAloudIssue, ReadAloudStart } from '../../bindings/src/building-blocks';
 export type {
 	BuildingBlockOptions,
 	CanvasProps,

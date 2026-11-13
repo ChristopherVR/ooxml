@@ -152,7 +152,13 @@ export function createBuildingBlockSession(initial: BuildingBlockOptions = {}) {
 		},
 	};
 }
-export type { WordNavigationProps, WordStatusProps, WordToolbarProps } from 'docx-web-component';
+export type {
+	ReadAloudIssue,
+	ReadAloudStart,
+	WordNavigationProps,
+	WordStatusProps,
+	WordToolbarProps,
+} from 'docx-web-component';
 
 /** Keep optional native controls on the shared Office styles without making old viewer imports fail. */
 export function prepareWordToolbar(host: HTMLElement | null): void {
