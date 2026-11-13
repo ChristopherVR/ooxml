@@ -28,6 +28,14 @@ function paneOptions(
 		headerFooter: state.headerFooter,
 		customProperties: state.customProperties,
 		t: viewer.t,
+		onElementRenderError: (error, context) => {
+			const report = options.onElementRenderError;
+			if (report) {
+				report(error, context);
+			} else {
+				console.error(error, context);
+			}
+		},
 		onSelectSlide: (index) => viewer.goToSlide(index),
 		onAddSlide: () => viewer.editor.getEditActions().addSlide(),
 		onDuplicateSlides: (indexes) => viewer.duplicateSlides(indexes),

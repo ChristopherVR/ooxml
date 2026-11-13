@@ -70,6 +70,14 @@ export interface PptxViewerCallbacks {
 	onLoad?: (info: { slideCount: number; canvasSize: CanvasSize }) => void;
 	/** Fired when a load fails, and for each failed Save / Save As (message is best-effort). */
 	onError?: (message: string, error: unknown) => void;
+	/**
+	 * Reports a slide element omitted because its renderer threw, with
+	 * `{ elementId, elementType, slideId }`. Only that element is left out; the slide, its other
+	 * elements and the viewer stay. Defaults to `console.error(error, context)`, which is also
+	 * used when this callback throws. An unchanged failed element is not retried or reported
+	 * again on each repaint; a replacement element object (or a changed id) is tried again.
+	 */
+	onElementRenderError?: import('ooxml-ui/pptx').ElementRenderErrorHandler;
 	/** Fired when the active slide changes (zero-based index). */
 	onSlideChange?: (index: number) => void;
 	/** Fired when the editing zoom scale changes (1 = 100%); reports the editing zoom during a show too. */

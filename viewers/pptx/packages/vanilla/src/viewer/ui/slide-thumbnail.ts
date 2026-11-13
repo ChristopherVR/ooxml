@@ -39,6 +39,7 @@ export interface SlideThumbnailOptions extends Pick<
 	| 'tableStyleMap'
 	| 't'
 	| 'registry'
+	| 'onElementRenderError'
 > {
 	/** The document the thumbnail's nodes are created in. */
 	document: Document;
@@ -135,6 +136,7 @@ export function renderSlideThumbnail(options: SlideThumbnailOptions): HTMLElemen
 		slides: options.slides,
 		currentSlideIndex: currentSlideIndex >= 0 ? currentSlideIndex : undefined,
 		exposeElementIds: false,
+		onElementRenderError: options.onElementRenderError,
 	});
 	stage.inert = true;
 	const box = createEl(doc, 'div', 'pptxv-slide-thumbnail', {

@@ -19,12 +19,14 @@
  */
 import {
 	buildSlidesPaneFieldContext,
+	createElementRenderFailures,
 	deriveSlideFieldContext,
 	openSlidesPaneLayoutGallery,
 	visibleTemplateElements,
 } from 'ooxml-ui/pptx';
 import type {
 	CanvasSize,
+	ElementRenderErrorHandler,
 	FieldSubstitutionContext,
 	SlidesPaneLayoutGalleryRequest,
 } from 'ooxml-ui/pptx';
@@ -100,6 +102,11 @@ export interface SlidesPaneOptions {
 	t?: Translator;
 	/** Element renderers; pass the canvas's registry so custom renderers show in thumbnails too. */
 	registry?: ElementRendererRegistry;
+	/**
+	 * Reports a thumbnail element omitted because its renderer threw (`console.error` when
+	 * absent); the rest of the thumbnail still draws.
+	 */
+	onElementRenderError?: ElementRenderErrorHandler;
 	/** A thumbnail was clicked: show that slide. Selecting never edits the deck. */
 	onSelectSlide(index: number): void;
 	/** The footer's "New slide" button. */
@@ -201,6 +208,8 @@ export function createSlidesPane(container: HTMLElement, initial: SlidesPaneOpti
 	let deckFieldContext: FieldSubstitutionContext = buildSlidesPaneFieldContext({});
 
 	const select = (index: number): void => options.onSelectSlide(index);
+	// Remembered across repaints, so an unchanged failed element is not reported on each one.
+	const elementRenderFailures = createElementRenderFailures();
 
 	const renderStage = (slide: PptxSlide, scale: number): HTMLElement => {
 		const template = visibleTemplateElements(
@@ -224,6 +233,8 @@ export function createSlidesPane(container: HTMLElement, initial: SlidesPaneOpti
 			currentSlideIndex: options.activeSlideIndex,
 			// Static thumbnails: element ids stay unique to the host's canvas.
 			exposeElementIds: false,
+			onElementRenderError: options.onElementRenderError,
+			elementRenderFailures,
 		});
 	};
 

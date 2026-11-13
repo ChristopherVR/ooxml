@@ -1,5 +1,7 @@
 import type {
 	ChartPartRef,
+	ElementRenderErrorHandler,
+	ElementRenderFailures,
 	MasterViewCrudAction,
 	MasterViewCrudActionId,
 	ViewportFitOptions,
@@ -7,6 +9,7 @@ import type {
 } from 'ooxml-ui/pptx';
 import {
 	computeGridSpacingPx,
+	createElementRenderFailures,
 	DEFAULT_MASTER_PAGE_SIZE,
 	findTextHighlightsByElement,
 	masterViewCrudActions,
@@ -140,6 +143,8 @@ export interface RenderControllerDeps {
 	 * `replaceChildren`); the editor re-mounts its overlay layer here.
 	 */
 	onStageRendered?(): void;
+	/** The host's `onElementRenderError`, read at render time (`console.error` when absent). */
+	getElementRenderErrorHandler?(): ElementRenderErrorHandler | undefined;
 }
 
 export interface RenderController {
@@ -196,6 +201,18 @@ export function createRenderController(deps: RenderControllerDeps): RenderContro
 	let presentationStageNode: HTMLElement | null = null;
 	const captureContext = (context: ElementRenderContext): void => {
 		presentationContext = context;
+	};
+	// Failed elements per kind of surface (canvas, show, stills): an unchanged failed element is
+	// neither retried nor reported again on every rebuild; a replaced element object retries.
+	const failuresBySurface = new Map<string, ElementRenderFailures>();
+	const failuresFor = (presenting: boolean, interactive: boolean): ElementRenderFailures => {
+		const key = `${presenting}:${interactive}`;
+		let failures = failuresBySurface.get(key);
+		if (!failures) {
+			failures = createElementRenderFailures();
+			failuresBySurface.set(key, failures);
+		}
+		return failures;
 	};
 
 	const renderStageFor = (
@@ -262,6 +279,8 @@ export function createRenderController(deps: RenderControllerDeps): RenderContro
 			// stage; the editor canvas and thumbnails render statically.
 			presentationStates: presenting ? presentationPlayback.elementStates : undefined,
 			captureContext: presenting ? captureContext : undefined,
+			onElementRenderError: deps.getElementRenderErrorHandler?.(),
+			elementRenderFailures: failuresFor(presenting, interactive),
 		});
 	};
 
@@ -361,16 +380,9 @@ export function createRenderController(deps: RenderControllerDeps): RenderContro
 		// Keep the outgoing stage's live 3D views for the rebuild below
 		// (render/elements/three-view-reuse.ts).
 		const liveThreeViews = collectThreeViews(chrome.stageWrap);
-		disposePptxRenderStage(chrome.stageWrap);
-		if (liveOverlay) {
-			for (const child of Array.from(chrome.stageWrap.childNodes)) {
-				if (child !== liveOverlay) {
-					child.remove();
-				}
-			}
-		} else {
-			chrome.stageWrap.replaceChildren();
-		}
+		// Build the new stage before clearing the old one: a rebuild that throws leaves the last
+		// good canvas on screen instead of an empty one (a failing element alone is omitted by
+		// the stage itself).
 		let stageNode: HTMLElement | null = null;
 		if (specialMaster) {
 			const selectedMaster =
@@ -428,6 +440,16 @@ export function createRenderController(deps: RenderControllerDeps): RenderContro
 					deps.onCommentMarkerClick,
 				);
 			}
+		}
+		disposePptxRenderStage(chrome.stageWrap);
+		if (liveOverlay) {
+			for (const child of Array.from(chrome.stageWrap.childNodes)) {
+				if (child !== liveOverlay) {
+					child.remove();
+				}
+			}
+		} else {
+			chrome.stageWrap.replaceChildren();
 		}
 		if (stageNode && slide) {
 			chrome.stageWrap.insertBefore(stageNode, liveOverlay ?? null);

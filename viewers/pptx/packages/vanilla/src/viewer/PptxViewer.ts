@@ -383,6 +383,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			getAreaChart3D: () => this.effective3DFlags().areaChart3D,
 			getPieChart3D: () => this.effective3DFlags().pieChart3D,
 			// Read lazily: the options controller is constructed further down.
+			getElementRenderErrorHandler: () => this.options.onElementRenderError,
 			getPixelateMosaicAnimation: () =>
 				this.optionsController?.getOptions().advanced.pixelateMosaicAnimation ?? false,
 			onHandoutSlidesPerPageChange: (count) => this.editor?.setHandoutSlidesPerPage(count),

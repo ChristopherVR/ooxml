@@ -124,6 +124,8 @@ export type {
 	HyperlinkEditData,
 	ViewerBuildingBlockActions,
 } from 'ooxml-ui/pptx';
+// The reporter every viewer and building-blocks entry takes as `onElementRenderError`.
+export type { ElementRenderErrorContext, ElementRenderErrorHandler } from 'ooxml-ui/pptx';
 
 // ── Slide thumbnail rail (place it beside your own `renderSlideStage` canvas) ─
 export type { SlidesPane, SlidesPaneLayoutGalleryRequest, SlidesPaneOptions } from './viewer';
