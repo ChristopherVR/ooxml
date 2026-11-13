@@ -82,6 +82,9 @@ export function createRibbon(
 	el.setAttribute('role', 'toolbar');
 	el.setAttribute('aria-label', t('pptx.toolbar.presentationToolbarAria'));
 
+	// A short window collapses the ribbon while it is still being built, before the panes and the
+	// active tab exist; the first `setActiveTab` below applies that layout instead.
+	let panesReady = false;
 	const primary = createRibbonPrimaryRow(doc, t, handlers, hiddenActions);
 	el.append(primary.el);
 
@@ -107,7 +110,11 @@ export function createRibbon(
 		controller: displayState,
 		ribbon: el,
 		tabBar: tabBar.el,
-		onLayout: () => applyPanes(),
+		onLayout: () => {
+			if (panesReady) {
+				applyPanes();
+			}
+		},
 	});
 	(tabBar.el.querySelector('.pptxv-tabrow-actions') ?? tabBar.el).appendChild(display.button);
 	el.appendChild(display.menuAnchor);
@@ -312,6 +319,7 @@ export function createRibbon(
 		galleryHub.reveal();
 	}
 	setActiveTab(activeTab);
+	panesReady = true;
 	function applyPanes(): void {
 		setActiveTab(activeTab);
 	}

@@ -166,6 +166,22 @@ describe('createRibbon', () => {
 		expect(badge.hidden).toBe(true);
 	});
 
+	it('builds in a window short enough to collapse the ribbon', () => {
+		// Every media query matches, so the auto-collapse query fires while the ribbon is built.
+		vi.stubGlobal('matchMedia', (media: string) => ({
+			matches: true,
+			media,
+			addEventListener: vi.fn(),
+			removeEventListener: vi.fn(),
+		}));
+		try {
+			const ribbon = createRibbon(document, createTranslator(), buildHandlers());
+			expect(ribbon.el.querySelectorAll('.pptxv-ribbon-tab-content').length).toBeGreaterThan(0);
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+
 	it('defaults to the Home tab visible, others hidden', () => {
 		const t = createTranslator();
 		const ribbon = createRibbon(document, t, buildHandlers());
