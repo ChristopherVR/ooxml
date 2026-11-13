@@ -7,6 +7,40 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.76.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.76.0) - 2026-11-13
+
+### Features
+
+- **pptx:** Add ribbon display options to every binding ([b374382](https://github.com/ChristopherVR/ooxml/commit/b374382d21e8d1c1e23068c339883ec4cff2849a))
+- **pptx:** Zoom at the pointer and drag to pan the slide viewport ([73bc446](https://github.com/ChristopherVR/ooxml/commit/73bc4465d33c6c9ba2e2b77b3b36a77dde37a658))
+- **pptx:** Zoom out to 10% and show a new slide from its top-left ([20cbb04](https://github.com/ChristopherVR/ooxml/commit/20cbb044810058cf282af27efd387bd4983f3375))
+- **pptx:** Offer supported font weight variants ([#280](https://github.com/ChristopherVR/ooxml/issues/280)) ([c66bb54](https://github.com/ChristopherVR/ooxml/commit/c66bb54b85a8165969f6e4a6549ddd53b00fcc09))
+- **pptx:** Host-owned workflows in useViewerBuildingBlocks ([781b14f](https://github.com/ChristopherVR/ooxml/commit/781b14f0d2e1c07746b9d9da9afedf499e30fc02))
+- **pptx:** Acknowledge asynchronous saves by revision ([7a581e9](https://github.com/ChristopherVR/ooxml/commit/7a581e9436000ee16ac8612f7fa8b6d6b20086be))
+- **pptx:** Host-owned chart insertion in useViewerBuildingBlocks ([24b8ad6](https://github.com/ChristopherVR/ooxml/commit/24b8ad6b9144f01f26d79e0ad02178becedcbed7))
+- **pptx:** Host operations for protection, properties, fonts and signatures ([6bb4c28](https://github.com/ChristopherVR/ooxml/commit/6bb4c28a12b00e709aec5daf3a679910915bf98a))
+- **pptx:** Host-owned slide show dialogs in building blocks ([e758425](https://github.com/ChristopherVR/ooxml/commit/e7584257450d4042d8099cf386e2b23dd75fd0fe))
+- **vanilla:** Add building blocks on the shared session ([a96b599](https://github.com/ChristopherVR/ooxml/commit/a96b5992770d4c9a3aa4d082735a76a18de24789))
+- **ui:** Register the pptx dialog operations as building-block groups ([2226646](https://github.com/ChristopherVR/ooxml/commit/2226646334bc76e04d722d8d93207117501883df))
+- **vanilla:** Add dialog groups and live options to building blocks ([2e6355e](https://github.com/ChristopherVR/ooxml/commit/2e6355eaa4702910224319274a5d2184880563dd))
+
+### Bug Fixes
+
+- **pptx:** Preserve slide zoom when saving tool edits ([#282](https://github.com/ChristopherVR/ooxml/issues/282)) ([7af7b5e](https://github.com/ChristopherVR/ooxml/commit/7af7b5ea3c9d4c5c30aefe7ccfb9c5955058fabb))
+- **pptx:** Guard stale media inserts and mirror hooks docs in zh ([89adf24](https://github.com/ChristopherVR/ooxml/commit/89adf24d14c24414e49b4a7fb478b4ca52b219c9))
+- **pptx:** Drop an unused import in the building-block actions ([5e2db99](https://github.com/ChristopherVR/ooxml/commit/5e2db99face2b5d837ff0fbc324ddec3df12b937))
+- **react:** Isolate element rendering failures ([#288](https://github.com/ChristopherVR/ooxml/issues/288)) ([1d62335](https://github.com/ChristopherVR/ooxml/commit/1d62335c3b565610f5d5dd912037a62b528bb43a))
+- **react:** Stop dialog flag requests from looping under React 18 ([f6bf9b9](https://github.com/ChristopherVR/ooxml/commit/f6bf9b9add8171e184c6c5bee862aed081ec1903))
+
+### Refactor
+
+- **pptx:** Share signature parsing and password rules across bindings ([234881c](https://github.com/ChristopherVR/ooxml/commit/234881cd9d4d147fb297c73f66b3fc3116aae4e2))
+- **react:** Run building blocks on the shared session and groups ([7501b95](https://github.com/ChristopherVR/ooxml/commit/7501b951fc6d97a20f21401b32d574104aef8d89))
+
+### Testing
+
+- **react:** Run building blocks against the shared parity contract ([daf3d35](https://github.com/ChristopherVR/ooxml/commit/daf3d3583e42fd01900c16ecf526b9cb2fcbd82a))
+
 ## [4.75.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.75.0) - 2026-11-12
 
 ### Features

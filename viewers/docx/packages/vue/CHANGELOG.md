@@ -7,6 +7,18 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.4.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-vue-viewer@1.4.0) - 2026-11-13
+
+### Features
+
+- **docx:** Expose read aloud through the building blocks ([01dc2ed](https://github.com/ChristopherVR/ooxml/commit/01dc2edb2618a74273841147670dd2fd4976b128))
+- **docx:** Export the read aloud result types ([d33509f](https://github.com/ChristopherVR/ooxml/commit/d33509f5fbcd68d94c6e600c6b94cd0ad9b1fcba))
+- **docx:** Make read aloud stop on edit configurable ([cf73e1b](https://github.com/ChristopherVR/ooxml/commit/cf73e1bf4165f7244b336939f09c711a0f2c8cf4))
+
+### Documentation
+
+- Correct outdated statements across the repository ([6ea98f5](https://github.com/ChristopherVR/ooxml/commit/6ea98f59c35894f7c2dc3e1037d82b17a482a80c))
+
 ## [1.3.1](https://github.com/ChristopherVR/ooxml/releases/tag/docx-vue-viewer@1.3.1) - 2026-11-06
 
 ### Documentation

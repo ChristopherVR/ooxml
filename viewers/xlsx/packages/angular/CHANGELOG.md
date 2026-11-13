@@ -7,6 +7,18 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.5.0](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-angular-viewer@1.5.0) - 2026-11-13
+
+### Features
+
+- **xlsx:** Host-owned context menus and workflow operations ([18854c4](https://github.com/ChristopherVR/ooxml/commit/18854c444095dfaea70f087f3c868211316436a7))
+- **xlsx:** Filter and extend the native context menu ([554d354](https://github.com/ChristopherVR/ooxml/commit/554d354d5f2ec8ce9146ce43645301b379f71d11))
+- **xlsx:** Make replace validation configurable ([093f478](https://github.com/ChristopherVR/ooxml/commit/093f4782640506ab8274134f70ad4abb8a2e4e50))
+
+### Documentation
+
+- Correct outdated statements across the repository ([6ea98f5](https://github.com/ChristopherVR/ooxml/commit/6ea98f59c35894f7c2dc3e1037d82b17a482a80c))
+
 ## [1.4.1](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-angular-viewer@1.4.1) - 2026-11-06
 
 ### Documentation

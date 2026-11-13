@@ -7,6 +7,16 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.4.0](https://github.com/ChristopherVR/ooxml/releases/tag/visio-solid-viewer@1.4.0) - 2026-11-13
+
+### Features
+
+- **visio:** Expose an awaited inline text commit ([8e3a23b](https://github.com/ChristopherVR/ooxml/commit/8e3a23b58cb054f8ab51f0e74e0f681bea47d659))
+
+### Documentation
+
+- Correct outdated statements across the repository ([6ea98f5](https://github.com/ChristopherVR/ooxml/commit/6ea98f59c35894f7c2dc3e1037d82b17a482a80c))
+
 ## [1.3.2](https://github.com/ChristopherVR/ooxml/releases/tag/visio-solid-viewer@1.3.2) - 2026-11-09
 
 ### Dependencies

@@ -7,6 +7,47 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.50.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.50.0) - 2026-11-13
+
+### Features
+
+- **ui:** Expose the word title bar as a css part ([cc98936](https://github.com/ChristopherVR/ooxml/commit/cc98936da0766c8bbe29c5dcbeacd74510633e8b))
+- **pptx:** Add ribbon display options to every binding ([b374382](https://github.com/ChristopherVR/ooxml/commit/b374382d21e8d1c1e23068c339883ec4cff2849a))
+- **pptx:** Zoom at the pointer and drag to pan the slide viewport ([73bc446](https://github.com/ChristopherVR/ooxml/commit/73bc4465d33c6c9ba2e2b77b3b36a77dde37a658))
+- **pptx:** Zoom out to 10% and show a new slide from its top-left ([20cbb04](https://github.com/ChristopherVR/ooxml/commit/20cbb044810058cf282af27efd387bd4983f3375))
+- **pptx:** Offer supported font weight variants ([#280](https://github.com/ChristopherVR/ooxml/issues/280)) ([c66bb54](https://github.com/ChristopherVR/ooxml/commit/c66bb54b85a8165969f6e4a6549ddd53b00fcc09))
+- **docx:** Expose read aloud through the building blocks ([01dc2ed](https://github.com/ChristopherVR/ooxml/commit/01dc2edb2618a74273841147670dd2fd4976b128))
+- **xlsx:** Host-owned context menus and workflow operations ([18854c4](https://github.com/ChristopherVR/ooxml/commit/18854c444095dfaea70f087f3c868211316436a7))
+- **pptx:** Host-owned workflows in useViewerBuildingBlocks ([781b14f](https://github.com/ChristopherVR/ooxml/commit/781b14f0d2e1c07746b9d9da9afedf499e30fc02))
+- **pptx:** Acknowledge asynchronous saves by revision ([7a581e9](https://github.com/ChristopherVR/ooxml/commit/7a581e9436000ee16ac8612f7fa8b6d6b20086be))
+- **visio:** Expose an awaited inline text commit ([8e3a23b](https://github.com/ChristopherVR/ooxml/commit/8e3a23b58cb054f8ab51f0e74e0f681bea47d659))
+- **xlsx:** Filter and extend the native context menu ([554d354](https://github.com/ChristopherVR/ooxml/commit/554d354d5f2ec8ce9146ce43645301b379f71d11))
+- **pptx:** Host-owned chart insertion in useViewerBuildingBlocks ([24b8ad6](https://github.com/ChristopherVR/ooxml/commit/24b8ad6b9144f01f26d79e0ad02178becedcbed7))
+- **docx:** Export the read aloud result types ([d33509f](https://github.com/ChristopherVR/ooxml/commit/d33509f5fbcd68d94c6e600c6b94cd0ad9b1fcba))
+- **xlsx:** Make replace validation configurable ([093f478](https://github.com/ChristopherVR/ooxml/commit/093f4782640506ab8274134f70ad4abb8a2e4e50))
+- **docx:** Make read aloud stop on edit configurable ([cf73e1b](https://github.com/ChristopherVR/ooxml/commit/cf73e1bf4165f7244b336939f09c711a0f2c8cf4))
+- **pptx:** Host operations for protection, properties, fonts and signatures ([6bb4c28](https://github.com/ChristopherVR/ooxml/commit/6bb4c28a12b00e709aec5daf3a679910915bf98a))
+- **pptx:** Host-owned slide show dialogs in building blocks ([e758425](https://github.com/ChristopherVR/ooxml/commit/e7584257450d4042d8099cf386e2b23dd75fd0fe))
+- **ui:** Add the shared pptx building-blocks session ([c7001c3](https://github.com/ChristopherVR/ooxml/commit/c7001c316a12e3afbb0aa6627bf55dc331a02370))
+- **ui:** Add the shared hyperlink patch for building blocks ([e7dbebb](https://github.com/ChristopherVR/ooxml/commit/e7dbebb11501c2dd88b90e468542389a03534559))
+- **ui:** Register the pptx dialog operations as building-block groups ([2226646](https://github.com/ChristopherVR/ooxml/commit/2226646334bc76e04d722d8d93207117501883df))
+
+### Bug Fixes
+
+- **pptx:** Draw no slide on the hidden editing canvas during a show ([#279](https://github.com/ChristopherVR/ooxml/issues/279)) ([25f963b](https://github.com/ChristopherVR/ooxml/commit/25f963ba9a91666fcc1d1f0c9173e385cac84cf0))
+- **pptx:** Bring the viewer props manifest and two tests back in step ([8d88acc](https://github.com/ChristopherVR/ooxml/commit/8d88accd078305ed0b772bdec354966ddf226004))
+- **visio:** Report a draft dropped by a document switch ([bfd488e](https://github.com/ChristopherVR/ooxml/commit/bfd488e4412caf80a2cb8b4bf9d4d9330104ae7a))
+- **visio:** Open inline text on double-click and keep read-only drafts ([513291c](https://github.com/ChristopherVR/ooxml/commit/513291cf9a805ec862361366350501f3f8c081a3))
+
+### Refactor
+
+- **pptx:** Share signature parsing and password rules across bindings ([234881c](https://github.com/ChristopherVR/ooxml/commit/234881cd9d4d147fb297c73f66b3fc3116aae4e2))
+- **pptx:** Share the find outline and media file helpers ([13b7962](https://github.com/ChristopherVR/ooxml/commit/13b796295cd1ddb543b5e658cf53ea912ea18394))
+
+### Documentation
+
+- Correct outdated statements across the repository ([6ea98f5](https://github.com/ChristopherVR/ooxml/commit/6ea98f59c35894f7c2dc3e1037d82b17a482a80c))
+
 ## [1.49.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.49.1) - 2026-11-12
 
 ### Features

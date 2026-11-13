@@ -7,6 +7,23 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.50.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.50.0) - 2026-11-13
+
+### Features
+
+- **pptx:** Offer supported font weight variants ([#280](https://github.com/ChristopherVR/ooxml/issues/280)) ([c66bb54](https://github.com/ChristopherVR/ooxml/commit/c66bb54b85a8165969f6e4a6549ddd53b00fcc09))
+- **xlsx:** Host-owned context menus and workflow operations ([18854c4](https://github.com/ChristopherVR/ooxml/commit/18854c444095dfaea70f087f3c868211316436a7))
+- **xlsx:** Make replace validation configurable ([093f478](https://github.com/ChristopherVR/ooxml/commit/093f4782640506ab8274134f70ad4abb8a2e4e50))
+- **pptx:** Host operations for protection, properties, fonts and signatures ([6bb4c28](https://github.com/ChristopherVR/ooxml/commit/6bb4c28a12b00e709aec5daf3a679910915bf98a))
+
+### Bug Fixes
+
+- **pptx:** Preserve slide zoom when saving tool edits ([#282](https://github.com/ChristopherVR/ooxml/issues/282)) ([7af7b5e](https://github.com/ChristopherVR/ooxml/commit/7af7b5ea3c9d4c5c30aefe7ccfb9c5955058fabb))
+
+### Documentation
+
+- Correct outdated statements across the repository ([6ea98f5](https://github.com/ChristopherVR/ooxml/commit/6ea98f59c35894f7c2dc3e1037d82b17a482a80c))
+
 ## [1.49.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.49.0) - 2026-11-12
 
 ### Features

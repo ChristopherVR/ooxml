@@ -7,6 +7,46 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.75.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@4.75.0) - 2026-11-13
+
+### Features
+
+- **pptx:** Add ribbon display options to every binding ([b374382](https://github.com/ChristopherVR/ooxml/commit/b374382d21e8d1c1e23068c339883ec4cff2849a))
+- **pptx:** Zoom at the pointer and drag to pan the slide viewport ([73bc446](https://github.com/ChristopherVR/ooxml/commit/73bc4465d33c6c9ba2e2b77b3b36a77dde37a658))
+- **pptx:** Zoom out to 10% and show a new slide from its top-left ([20cbb04](https://github.com/ChristopherVR/ooxml/commit/20cbb044810058cf282af27efd387bd4983f3375))
+- **pptx:** Offer supported font weight variants ([#280](https://github.com/ChristopherVR/ooxml/issues/280)) ([c66bb54](https://github.com/ChristopherVR/ooxml/commit/c66bb54b85a8165969f6e4a6549ddd53b00fcc09))
+- **pptx:** Acknowledge asynchronous saves by revision ([7a581e9](https://github.com/ChristopherVR/ooxml/commit/7a581e9436000ee16ac8612f7fa8b6d6b20086be))
+- **pptx:** Host operations for protection, properties, fonts and signatures ([6bb4c28](https://github.com/ChristopherVR/ooxml/commit/6bb4c28a12b00e709aec5daf3a679910915bf98a))
+- **vanilla:** Add building blocks on the shared session ([a96b599](https://github.com/ChristopherVR/ooxml/commit/a96b5992770d4c9a3aa4d082735a76a18de24789))
+- **vanilla:** Add dialog groups and live options to building blocks ([2e6355e](https://github.com/ChristopherVR/ooxml/commit/2e6355eaa4702910224319274a5d2184880563dd))
+- **vue:** Add the PowerPoint building blocks on the shared session ([214cad9](https://github.com/ChristopherVR/ooxml/commit/214cad972a9849770b9c85d988e7ca560bff465a))
+
+### Bug Fixes
+
+- **pptx:** Preserve slide zoom when saving tool edits ([#282](https://github.com/ChristopherVR/ooxml/issues/282)) ([7af7b5e](https://github.com/ChristopherVR/ooxml/commit/7af7b5ea3c9d4c5c30aefe7ccfb9c5955058fabb))
+- **pptx:** Draw no slide on the hidden editing canvas during a show ([#279](https://github.com/ChristopherVR/ooxml/issues/279)) ([25f963b](https://github.com/ChristopherVR/ooxml/commit/25f963ba9a91666fcc1d1f0c9173e385cac84cf0))
+- **pptx:** Keep host save snapshots side-effect free in angular and vue ([5f262ce](https://github.com/ChristopherVR/ooxml/commit/5f262ceafb3ec30cabb7f214ec515f9e8add1879))
+- **pptx:** Wrap the shared signature parser instead of re-exporting it ([2f0e5a1](https://github.com/ChristopherVR/ooxml/commit/2f0e5a15c4ff72b620ba0beeb62c5433759fd709))
+- **pptx:** Route dialog flags on the flag alone in the block ports ([8ccadb4](https://github.com/ChristopherVR/ooxml/commit/8ccadb4f017d59ee12eed35d3328301e86994388))
+
+### Refactor
+
+- **pptx:** Share signature parsing and password rules across bindings ([234881c](https://github.com/ChristopherVR/ooxml/commit/234881cd9d4d147fb297c73f66b3fc3116aae4e2))
+- **pptx:** Share the Set Up Slide Show rules across all bindings ([74d53c0](https://github.com/ChristopherVR/ooxml/commit/74d53c0d8f81808f2131123944e8425c77270786))
+- **pptx:** Share the find outline and media file helpers ([13b7962](https://github.com/ChristopherVR/ooxml/commit/13b796295cd1ddb543b5e658cf53ea912ea18394))
+
+### Documentation
+
+- Correct outdated statements across the repository ([6ea98f5](https://github.com/ChristopherVR/ooxml/commit/6ea98f59c35894f7c2dc3e1037d82b17a482a80c))
+
+### Testing
+
+- **vue:** Run the building-blocks parity contract on the Vue blocks ([6b51ea9](https://github.com/ChristopherVR/ooxml/commit/6b51ea942dd54d1830ecd57cf7b63d0a2adcf55a))
+
+### Styling
+
+- **pptx:** Format the building-block ports ([5887368](https://github.com/ChristopherVR/ooxml/commit/5887368f63662635dcf4f445aca2f55f80985e7e))
+
 ## [4.74.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@4.74.0) - 2026-11-12
 
 ### Features
