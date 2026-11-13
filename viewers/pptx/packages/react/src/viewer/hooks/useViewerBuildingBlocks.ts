@@ -3,6 +3,7 @@ import {
 	readBackstageRecentFile,
 	resolveCollaborationConfig,
 	resolveCollaborationShellEditability,
+	resolveBuildingBlockMode,
 	resolveCollaborationShellState,
 } from 'ooxml-ui/pptx';
 import type { CollabLoadOrigin } from 'ooxml-ui/pptx';
@@ -332,12 +333,14 @@ export function useViewerBuildingBlocks(
 		toolbarProps,
 		canvasProps,
 		slidesPaneProps,
-		mode,
+		// The effective mode: `preview` while the blocks may not edit, as in every binding.
+		mode: resolveBuildingBlockMode(mode, canEdit),
 		loading,
 		error,
 		autosaveStatus,
 		collaboration,
 		shellState,
-		actions: blockActions.actions,
+		// Read last, so action groups registered by the hooks above are included.
+		actions: blockActions.session.actions(),
 	};
 }

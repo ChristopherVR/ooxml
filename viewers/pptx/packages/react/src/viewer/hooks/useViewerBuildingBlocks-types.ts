@@ -117,7 +117,11 @@ export interface ViewerBuildingBlocksResult {
 	 * Its open state is the toolbar's sidebar toggle.
 	 */
 	slidesPaneProps: SlidesPaneSidebarProps;
-	/** Current viewer mode (edit, view, present, master). */
+	/**
+	 * The effective mode, as every binding's building blocks report it: `preview` while the blocks
+	 * may not edit (no `canEdit`, a collaboration viewer role), otherwise the viewer's mode (`edit`,
+	 * `present`, `master`). `toolbarProps.mode` and `canvasProps.mode` keep the viewer's own mode.
+	 */
 	mode: ViewerMode;
 	/** True while the initial parse of `content` is in progress. */
 	loading: boolean;

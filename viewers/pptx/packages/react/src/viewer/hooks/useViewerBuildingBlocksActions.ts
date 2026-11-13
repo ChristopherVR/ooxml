@@ -1,27 +1,19 @@
 import {
-	BUILDING_BLOCK_OK,
-	BUILDING_BLOCK_UNMOUNTED_DIALOG_ACTIONS,
-	buildingBlockFailure,
-	createImageElementFromFile,
-	describeBuildingBlockActions,
-	isValidInsertChartData,
+	createPptxBuildingBlockSession,
+	registerBuildingBlockGroups,
 	resetSlideLayoutPath,
-	validateHostImageFile,
-	validateHostMediaFile,
+	selectionEquation,
 } from 'ooxml-ui/pptx';
 import type {
-	BuildingBlockActionId,
-	BuildingBlockResult,
+	BuildingBlockAvailabilityInput,
+	BuildingBlockSessionPort,
+	PptxBuildingBlockSession,
 	ReadOnlyRecommendation,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxHandler, PptxSlide } from 'pptx-viewer-core';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
-import type { HyperlinkEditData } from '../components/hyperlink-edit-types';
-import {
-	hyperlinkEditDataFromAction,
-	resolveHyperlinkEditResult,
-} from '../components/hyperlink-edit-utils';
+import { useController } from './useController';
 import type { EditorHistoryResult } from './useEditorHistory';
 import type { EditorOperationsResult } from './useEditorOperations';
 import { useLayoutSwitching } from './useLayoutSwitching';
@@ -29,16 +21,12 @@ import type { UsePresentationModeResult } from './usePresentationMode';
 import type { PropertyHandlersResult } from './usePropertyHandlers';
 import { scopeLayoutOptionsToActiveSlide } from './useScopedLayoutOptions';
 import type {
-	BuildingBlockRequest,
 	UseViewerBuildingBlocksActionsOptions,
 	ViewerBuildingBlockActions,
 } from './useViewerBuildingBlocks-actions-types';
-import { useFileDialogActions } from './useViewerBuildingBlocks-file-dialog-actions';
-import {
-	buildFindReplaceActions,
-	buildLayoutActions,
-} from './useViewerBuildingBlocks-find-layout-actions';
-import { useViewerBuildingBlocksShowDialogActions } from './useViewerBuildingBlocks-show-dialog-actions';
+import { useFileDialogPorts } from './useViewerBuildingBlocks-file-dialog-actions';
+import { findReplacePort } from './useViewerBuildingBlocks-find-layout-actions';
+import { useShowDialogPorts } from './useViewerBuildingBlocks-show-dialog-actions';
 import type { ViewerDialogsResult } from './useViewerDialogs';
 import type { ViewerState } from './useViewerState';
 
@@ -64,6 +52,11 @@ export interface UseViewerBuildingBlocksActionsInput extends UseViewerBuildingBl
 
 export interface ViewerBuildingBlocksActionsResult {
 	actions: ViewerBuildingBlockActions;
+	/**
+	 * The shared session, for hooks that register further action groups
+	 * (`session.register(group, port)`); read `session.actions()` after they ran.
+	 */
+	session: PptxBuildingBlockSession;
 	/** Raise an image / media picker request (what the toolbar's Picture and Video controls call). */
 	requestImagePicker: () => void;
 	requestMediaPicker: () => void;
@@ -73,28 +66,27 @@ export interface ViewerBuildingBlocksActionsResult {
 	loadLayoutPreviews: ReturnType<typeof useLayoutSwitching>['loadLayoutPreviews'];
 }
 
-function equationOf(element: PptxElement | null): Record<string, unknown> | null {
-	const segments = (element as { textSegments?: Array<{ equationXml?: unknown }> } | null)
-		?.textSegments;
-	const found = segments?.find((segment) => segment.equationXml)?.equationXml;
-	return found ? (found as Record<string, unknown>) : null;
-}
+type Latest = UseViewerBuildingBlocksActionsInput & {
+	availabilityInput: BuildingBlockAvailabilityInput;
+	scopedLayouts: ReturnType<typeof scopeLayoutOptionsToActiveSlide>;
+	layoutSwitching: ReturnType<typeof useLayoutSwitching>;
+	selectedElement: PptxElement | null;
+};
 
 /**
- * The host-owned workflows of the building-block API: operations a custom shell calls from its own
- * pickers and dialogs, plus the requests that tell it when to show them. Every operation runs the
- * viewer's existing insert, find / replace and layout code, so selection, history and dirty
- * notifications behave as for the bundled viewer, and is refused with a code when the viewer is
- * read-only, protected or not ready.
+ * The host-owned workflows of the building-block API, as the React store adapter of the shared
+ * session (`createPptxBuildingBlockSession` in `ooxml-ui/pptx`): this hook gathers the
+ * availability input and the editor operations into the session's port, registers the built-in
+ * dialog groups and reads the pending request through `useController`. Every operation runs the
+ * viewer's existing code, so selection, history and dirty notifications behave as for the bundled
+ * viewer, and is refused with a code when the viewer is read-only, protected or not ready.
  */
 export function useViewerBuildingBlocksActions(
 	input: UseViewerBuildingBlocksActionsInput,
 ): ViewerBuildingBlocksActionsResult {
-	const { state, dialogs, editorOps, history, activeSlide, handlerRef } = input;
+	const { state, dialogs, activeSlide, handlerRef } = input;
 	// The first of the effective selection (a plain click selects through the id set), as the insert handlers read it.
 	const selectedElement: PptxElement | null = state.selectedElements[0] ?? null;
-	const { insertHandlers, findReplace } = editorOps;
-	const [pending, setPending] = useState<BuildingBlockRequest | null>(null);
 
 	const scopedLayouts = useMemo(
 		() => scopeLayoutOptionsToActiveSlide(state.layoutOptions, activeSlide),
@@ -104,14 +96,13 @@ export function useViewerBuildingBlocksActions(
 		handler: handlerRef.current,
 		slides: input.slides,
 		activeSlideIndex: input.activeSlideIndex,
-		ops: editorOps.ops,
-		history,
+		ops: input.editorOps.ops,
+		history: input.history,
 		onTemplateElementsChanged: (slideId, elements) =>
 			state.setTemplateElementsBySlideId((prev) => ({ ...prev, [slideId]: elements })),
 	});
 
-	const equation = equationOf(selectedElement);
-	const availabilityInput = {
+	const availabilityInput: BuildingBlockAvailabilityInput = {
 		ready: !state.loading && !state.error,
 		hasActiveSlide: Boolean(activeSlide),
 		canEdit: input.canEdit,
@@ -119,49 +110,45 @@ export function useViewerBuildingBlocksActions(
 		canInsert: input.canInsert,
 		hasSelection: selectedElement !== null,
 		selectionHasHyperlink: Boolean(selectedElement?.actionClick),
-		selectionHasEquation: equation !== null,
+		selectionHasEquation: selectionEquation(selectedElement) !== null,
 		layoutCount: scopedLayouts.length,
 		hasCurrentLayout: resetSlideLayoutPath(activeSlide) !== undefined,
 		hasHandler: handlerRef.current !== null,
 	};
-	const baseAvailability = describeBuildingBlockActions(availabilityInput);
-	const showDialogs = useViewerBuildingBlocksShowDialogActions({
+
+	// Operations run long after the render that made them: the port reads the latest of everything.
+	const next = { ...input, availabilityInput, scopedLayouts, layoutSwitching, selectedElement };
+	const latest = useRef<Latest>(next);
+	latest.current = next;
+	const sessionRef = useRef<PptxBuildingBlockSession | null>(null);
+	sessionRef.current ??= createPptxBuildingBlockSession(createReactPort(latest));
+	const session = sessionRef.current;
+	// Subscribes this hook to the pending request; `session.actions()` reads it below.
+	useController(session.requests);
+
+	const fileDialogPorts = useFileDialogPorts({
 		state,
 		dialogs,
-		history,
+		propertyHandlers: input.propertyHandlers,
+		history: input.history,
+		content: input.content,
+		recommendation: input.readOnlyRecommendation,
+		hasModifyVerifier: input.hasModifyVerifier,
+		request: (request) => void session.request(request),
+	});
+	const showDialogPorts = useShowDialogPorts({
+		state,
+		dialogs,
 		presentation: input.presentation,
 		slides: input.slides,
-		availabilityInput,
-		onRequest: input.onRequest,
+		session,
 	});
-	const availability = { ...baseAvailability, ...showDialogs.availability };
-
-	// Operations run long after the render that made them: they read the latest of everything.
-	const latest = useRef({ ...input, availability, scopedLayouts, layoutSwitching });
-	latest.current = { ...input, availability, scopedLayouts, layoutSwitching };
-	const refuse = (id: BuildingBlockActionId): BuildingBlockResult | undefined => {
-		const { available, reason } = latest.current.availability[id];
-		return available ? undefined : buildingBlockFailure(reason ?? 'not-ready');
-	};
-
-	const request = useCallback(
-		(next: BuildingBlockRequest, id: BuildingBlockActionId, viewable = false) => {
-			const { available, reason } = latest.current.availability[id];
-			// A viewable request (a state panel) only needs a loaded deck; applying is refused later.
-			if (viewable ? reason === 'not-ready' : !available) {
-				return;
-			}
-			setPending(next);
-			latest.current.onRequest?.(next);
-		},
-		[],
-	);
-	const complete = (kind: BuildingBlockRequest['kind'], result: BuildingBlockResult) => {
-		if (result.ok) {
-			setPending((current) => (current?.kind === kind ? null : current));
-		}
-		return result;
-	};
+	// The built-in dialog groups, registered once for the session's lifetime (their ports are stable).
+	const registered = useRef(false);
+	if (!registered.current) {
+		registered.current = true;
+		registerBuildingBlockGroups(session, { ...fileDialogPorts, ...showDialogPorts });
+	}
 
 	// The toolbar and the canvas (double-clicking an equation, a link's context menu entry) open the
 	// internal dialogs by flag; nothing renders them here, so each flag becomes a host request.
@@ -169,188 +156,69 @@ export function useViewerBuildingBlocksActions(
 	useEffect(() => {
 		if (isHyperlinkDialogOpen) {
 			dialogs.setIsHyperlinkDialogOpen(false);
-			request({ kind: 'hyperlink' }, 'hyperlink');
+			session.request({ kind: 'hyperlink' });
 		}
-	}, [isHyperlinkDialogOpen, dialogs, request]);
+	}, [isHyperlinkDialogOpen, dialogs, session]);
 	useEffect(() => {
 		if (isSmartArtDialogOpen) {
 			dialogs.setIsSmartArtDialogOpen(false);
-			request({ kind: 'smartArt' }, 'insertSmartArt');
+			session.request({ kind: 'smartArt' });
 		}
-	}, [isSmartArtDialogOpen, dialogs, request]);
+	}, [isSmartArtDialogOpen, dialogs, session]);
 	useEffect(() => {
 		if (isEquationDialogOpen) {
 			const existingOmml = dialogs.editingEquationOmml;
 			dialogs.setIsEquationDialogOpen(false);
 			dialogs.setEditingEquationOmml(null);
-			request({ kind: 'equation', existingOmml }, existingOmml ? 'editEquation' : 'insertEquation');
+			session.request({ kind: 'equation', existingOmml });
 		}
-	}, [isEquationDialogOpen, dialogs, request]);
-
+	}, [isEquationDialogOpen, dialogs, session]);
 	const { isChartDialogOpen } = dialogs;
 	useEffect(() => {
 		if (isChartDialogOpen) {
 			dialogs.setIsChartDialogOpen(false);
-			request({ kind: 'chart' }, 'insertChart');
+			session.request({ kind: 'chart' });
 		}
-	}, [isChartDialogOpen, dialogs, request]);
-
-	const insertImage = useCallback(async (file: File): Promise<BuildingBlockResult> => {
-		const denied = refuse('insertImage');
-		if (denied) {
-			return denied;
-		}
-		const checked = validateHostImageFile(file, latest.current.fileLimits?.imageBytes);
-		if (!checked.ok) {
-			return checked;
-		}
-		const handler = latest.current.handlerRef.current;
-		const slideId = latest.current.activeSlide?.id;
-		const element = await createImageElementFromFile(file, latest.current.state.canvasSize);
-		if (!element) {
-			return buildingBlockFailure('decode-failed');
-		}
-		// The deck or slide may have changed while the picture decoded.
-		const now = latest.current;
-		if (now.handlerRef.current !== handler || now.activeSlide?.id !== slideId) {
-			return buildingBlockFailure('stale-target');
-		}
-		const stillDenied = refuse('insertImage');
-		if (stillDenied) {
-			return stillDenied;
-		}
-		now.editorOps.insertHandlers.addElement(element);
-		return complete('image', BUILDING_BLOCK_OK);
-		// oxlint-disable-next-line react/memo-dependencies -- reads `latest`
-	}, []);
-
-	const insertMedia = useCallback(async (file: File): Promise<BuildingBlockResult> => {
-		const denied = refuse('insertMedia');
-		if (denied) {
-			return denied;
-		}
-		const checked = validateHostMediaFile(file, latest.current.fileLimits?.mediaBytes);
-		if (!checked.ok) {
-			return checked;
-		}
-		const handler = latest.current.handlerRef.current;
-		const slideId = latest.current.activeSlide?.id;
-		const slideIndex = latest.current.activeSlideIndex;
-		// A video's size is probed first; the deck, slide or its position may change meanwhile.
-		const sameTarget = (): boolean => {
-			const now = latest.current;
-			return (
-				now.handlerRef.current === handler &&
-				now.activeSlide?.id === slideId &&
-				now.activeSlideIndex === slideIndex &&
-				now.availability.insertMedia.available
-			);
-		};
-		return complete(
-			'media',
-			await latest.current.editorOps.insertHandlers.insertMediaFile(file, sameTarget),
-		);
-		// oxlint-disable-next-line react/memo-dependencies -- reads `latest`
-	}, []);
-
-	const hyperlinkCurrent = hyperlinkEditDataFromAction(selectedElement?.actionClick);
-	const hyperlink = {
-		current: hyperlinkCurrent,
-		slideCount: input.slides.length,
-		apply: (data: HyperlinkEditData): BuildingBlockResult => {
-			const denied = refuse('hyperlink');
-			if (denied) {
-				return denied;
-			}
-			const resolved = resolveHyperlinkEditResult(data);
-			if (!resolved.url && !resolved.action) {
-				return buildingBlockFailure('invalid-target');
-			}
-			return complete('hyperlink', insertHandlers.applyHyperlink(data));
-		},
-		remove: (): BuildingBlockResult =>
-			refuse('removeHyperlink') ?? insertHandlers.removeHyperlink(),
-	};
-
-	const gated = (
-		id: BuildingBlockActionId,
-		kind: BuildingBlockRequest['kind'],
-		run: () => void,
-	): BuildingBlockResult => {
-		const denied = refuse(id);
-		if (denied) {
-			return denied;
-		}
-		run();
-		return complete(kind, BUILDING_BLOCK_OK);
-	};
-
-	const layoutActions = buildLayoutActions({
-		activeSlide,
-		scopedLayouts,
-		getScopedLayouts: () => latest.current.scopedLayouts,
-		getActiveSlide: () => latest.current.activeSlide,
-		refuse: (id) => refuse(id),
-		applyLayout: (path) => latest.current.layoutSwitching.applyLayout(path),
-	});
-
-	const fileDialogs = useFileDialogActions({
-		state,
-		dialogs,
-		propertyHandlers: input.propertyHandlers,
-		history,
-		content: input.content,
-		recommendation: input.readOnlyRecommendation,
-		hasModifyVerifier: input.hasModifyVerifier,
-		refuse,
-		request,
-		complete,
-	});
-
-	const actions: ViewerBuildingBlockActions = {
-		...fileDialogs,
-		availability,
-		unmountedDialogActions: BUILDING_BLOCK_UNMOUNTED_DIALOG_ACTIONS,
-		pending: pending ?? showDialogs.pending,
-		cancel: () => {
-			setPending(null);
-			showDialogs.cancel();
-		},
-		...showDialogs.actions,
-		insertImage,
-		insertMedia,
-		hyperlink,
-		smartArt: {
-			insert: (layout, items) =>
-				gated('insertSmartArt', 'smartArt', () =>
-					insertHandlers.handleInsertSmartArt(layout, items),
-				),
-		},
-		chart: {
-			insert: (kind, options) => {
-				if (options?.data !== undefined && !isValidInsertChartData(options.data)) {
-					return refuse('insertChart') ?? buildingBlockFailure('invalid-data');
-				}
-				return gated('insertChart', 'chart', () => insertHandlers.handleAddChart(kind, options));
-			},
-		},
-		equation: {
-			current: equation,
-			insert: (omml) =>
-				gated('insertEquation', 'equation', () => insertHandlers.handleInsertEquation(omml)),
-			update: (omml) =>
-				gated('editEquation', 'equation', () => insertHandlers.handleUpdateEquation(omml)),
-		},
-		findReplace: buildFindReplaceActions(findReplace, () => refuse('replace')),
-		layout: layoutActions.layout,
-	};
+	}, [isChartDialogOpen, dialogs, session]);
 
 	return {
-		actions,
-		requestImagePicker: () => request({ kind: 'image' }, 'insertImage'),
-		requestMediaPicker: () => request({ kind: 'media' }, 'insertMedia'),
-		applyLayout: (path) => void layoutActions.apply(path, true),
-		resetSlide: () => void layoutActions.reset(),
+		actions: session.actions(),
+		session,
+		requestImagePicker: () => void session.request({ kind: 'image' }),
+		requestMediaPicker: () => void session.request({ kind: 'media' }),
+		applyLayout: (path) => void session.applyLayout(path),
+		resetSlide: () => void session.resetSlide(),
 		loadLayoutPreviews: layoutSwitching.loadLayoutPreviews,
+	};
+}
+
+/** The shared session's port over this binding's editor, read through `latest` at call time. */
+function createReactPort(latest: { readonly current: Latest }): BuildingBlockSessionPort {
+	const insert = () => latest.current.editorOps.insertHandlers;
+	return {
+		availabilityInput: () => latest.current.availabilityInput,
+		fileLimits: () => latest.current.fileLimits,
+		onRequest: (request) => latest.current.onRequest?.(request),
+		onCancel: () => latest.current.state.setIsShortcutHelpOpen(false),
+		target: () => ({
+			deck: latest.current.handlerRef.current,
+			slideId: latest.current.activeSlide?.id,
+			slideIndex: latest.current.activeSlideIndex,
+		}),
+		canvasSize: () => latest.current.state.canvasSize,
+		selectedElement: () => latest.current.selectedElement,
+		slideCount: () => latest.current.slides.length,
+		activeSlide: () => latest.current.activeSlide,
+		scopedLayouts: () => latest.current.scopedLayouts,
+		addElement: (element) => insert().addElement(element),
+		insertMediaFile: (file, sameTarget) => insert().insertMediaFile(file, sameTarget),
+		applyHyperlink: (data) => insert().applyHyperlink(data),
+		removeHyperlink: () => insert().removeHyperlink(),
+		insertSmartArt: (layout, items) => insert().handleInsertSmartArt(layout, items),
+		insertChart: (kind, options) => insert().handleAddChart(kind, options),
+		insertEquation: (omml) => insert().handleInsertEquation(omml),
+		updateEquation: (omml) => insert().handleUpdateEquation(omml),
+		findReplace: () => findReplacePort(latest.current.editorOps.findReplace),
+		applyLayout: (path) => latest.current.layoutSwitching.applyLayout(path),
 	};
 }
