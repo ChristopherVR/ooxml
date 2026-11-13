@@ -10,9 +10,12 @@
 	 * Arabic, Hebrew and Thai text rendered in the wrong typeface here; the tab
 	 * layout was likewise React-only, so a TOC-style row lost its leader dots
 	 * and right-aligned page number). Used inside `TextRun`'s span / anchor /
-	 * ruby base text, so all three carry the same content logic.
+	 * ruby base text, so all three carry the same content logic. A run shared
+	 * `highlightFindMatches` marked as (part of) a Find match sits inside a
+	 * `<mark data-pptx-find-match>`.
 	 */
 	import type { ParagraphRun } from 'ooxml-ui/pptx';
+	import { findMatchMarkStyle } from 'ooxml-ui/pptx';
 
 	import { styleToString } from '../style';
 
@@ -20,7 +23,7 @@
 	const pieces = $derived(run.scriptRuns ?? run.underlineWordPieces);
 </script>
 
-{#if run.tabLines}{#each run.tabLines as line, li (li)}<span
+{#snippet content()}{#if run.tabLines}{#each run.tabLines as line, li (li)}<span
 			style="display: inline-block; white-space: nowrap"
 			>{#each line.pieces as piece, pi (pi)}{#if piece.leaderStyle}<span
 						aria-hidden="true"
@@ -31,4 +34,7 @@
 					>{/if}{/each}</span
 		>{#if li < run.tabLines.length - 1}<br />{/if}{/each}{:else if pieces}{#each pieces as piece, i (i)}{#if piece.style}<span
 				style={styleToString(piece.style)}>{piece.text}</span
-			>{:else}{piece.text}{/if}{/each}{:else}{run.text}{/if}
+			>{:else}{piece.text}{/if}{/each}{:else}{run.text}{/if}{/snippet}{#if run.findMatch}<mark
+	data-pptx-find-match={run.findMatch}
+	style={styleToString(findMatchMarkStyle(run.findMatch))}>{@render content()}</mark
+>{:else}{@render content()}{/if}

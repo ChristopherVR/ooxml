@@ -12,7 +12,13 @@
 	 * to stay owned by the component that constructed it.
 	 */
 	import type { Translator } from '../../i18n/translator';
-	import { computeGridSpacingPx, createGuide, moveGuide, removeGuide } from 'ooxml-ui/pptx';
+	import {
+		computeGridSpacingPx,
+		createGuide,
+		findTextHighlightsByElement,
+		moveGuide,
+		removeGuide,
+	} from 'ooxml-ui/pptx';
 	import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
 
 	import type { ViewerStateBag } from '../state/create-viewer-state-types';
@@ -163,6 +169,11 @@
 		aiPickMode={ai ? vm.ai.panel.pickMode : false}
 		aiActive={ai ? vm.ai.panel.canvasAnimating : false}
 		aiHighlights={vm.ai.canvasHighlights}
+		findHighlights={findTextHighlightsByElement(
+			vm.findReplace.results,
+			vm.findReplace.index,
+			viewer.current,
+		)}
 		aiChangeBatch={ai ? vm.ai.panel.changeBatch : null}
 		onaipickelement={ai ? (elementId) => vm.ai.panel.addPick(viewer.current, elementId) : undefined}
 		onaskai={ai && editor.selectedElement ? () => vm.ai.panel.askAboutSelection() : undefined}

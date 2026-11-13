@@ -85,6 +85,7 @@
 		aiActive = false,
 		aiHighlights = [],
 		aiChangeBatch = null,
+		findHighlights,
 		onaipickelement,
 		onaskai,
 		onfixai,
@@ -267,6 +268,7 @@
 				{aiActive}
 				{aiHighlights}
 				{aiChangeBatch}
+				{findHighlights}
 				{onaipickelement}
 				{onaskai}
 				{onfixai}

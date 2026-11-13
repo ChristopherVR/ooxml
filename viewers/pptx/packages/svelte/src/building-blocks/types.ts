@@ -1,7 +1,7 @@
 import type {
 	BuildingBlockToolbarControlId,
 	BuildingBlockToolbarGroup,
-	FindHighlightTarget,
+	SlideFindHighlights,
 	PptxBuildingBlockSession,
 	ToolbarActionId,
 	UseViewerBuildingBlocksActionsOptions,
@@ -93,8 +93,8 @@ export interface ViewerBuildingBlocks {
 	runToolbarControl(id: BuildingBlockToolbarControlId): void;
 	/** Props for the slides pane block (`createSlidesPaneProps` over the viewer state). */
 	readonly slidesPaneProps: SlidesPaneProps;
-	/** The elements of the active slide holding find matches, for the canvas outline. */
-	readonly findHighlights: readonly FindHighlightTarget[];
+	/** The find matches of the active slide the canvas marks in the text, by element. */
+	readonly findHighlights: SlideFindHighlights;
 	/** Translate a dictionary key with the blocks' locale. */
 	t(key: string): string;
 	/** The viewer state behind the blocks, for the imperative API (`deck`, `editingApi`, ...). */

@@ -16,6 +16,7 @@
 	 * are instantiated by the host and passed in as `children`, not by this
 	 * component.
 	 */
+	import { provideFindHighlights } from '../state/find-highlights';
 	import type { SlideCanvasProps } from './props';
 	import SlideStage from './SlideStage.svelte';
 
@@ -30,6 +31,7 @@
 		editTemplateMode = false,
 		editingElementId = null,
 		selectedElementIds,
+		findHighlights,
 		ontablecellcommit,
 		onsmartartnodecommit,
 		onsmartartnodefill,
@@ -49,6 +51,9 @@
 		onaipickelement,
 		children,
 	}: SlideCanvasProps = $props();
+
+	// Only this canvas marks the Find bar's matches; thumbnails and the show stage are not under it.
+	provideFindHighlights(() => findHighlights);
 
 	/** Reports the stage-holder node to the host on mount/teardown. */
 	function attachStageHolder(node: HTMLDivElement, callback: ((el: HTMLDivElement | null) => void) | undefined) {

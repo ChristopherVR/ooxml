@@ -5,8 +5,7 @@
 	 * its size back (the fit scale reads it). It mounts no ribbon, thumbnails, status bar, notes or
 	 * dialogs: gestures that need a dialog raise a building-block request instead.
 	 */
-	import { markFindHighlights, themeToCssVars } from 'ooxml-ui/pptx';
-	import { tick } from 'svelte';
+	import { themeToCssVars } from 'ooxml-ui/pptx';
 	import type { ViewerTheme } from '../viewer/types';
 
 	import CollaborationCursors from '../viewer/collab/components/CollaborationCursors.svelte';
@@ -30,33 +29,11 @@
 	const vs = $derived(blocks.viewerState);
 	const commits = $derived(createEditCommits(vs.editor));
 	const rootStyle = $derived(theme ? styleToString(themeToCssVars(theme)) : undefined);
-	let holder = $state.raw<HTMLDivElement>();
 
 	function register(node: HTMLDivElement) {
 		blocks.canvas.setRoot(node);
 		return { destroy: () => blocks.canvas.setRoot(undefined) };
 	}
-
-	// Outline the elements holding the host find bar's matches (the current one heavier).
-	$effect(() => {
-		const targets = blocks.findHighlights;
-		void vs.activeSlide;
-		if (!holder || targets.length === 0) {
-			return;
-		}
-		const root = holder;
-		let stale = false;
-		void tick().then(() => {
-			if (!stale) {
-				markFindHighlights(root, targets);
-			}
-			return undefined;
-		});
-		return () => {
-			stale = true;
-			markFindHighlights(root, []);
-		};
-	});
 </script>
 
 <!-- The canvas is keyboard-focusable for native selection and arrow-key commands. -->
@@ -87,6 +64,7 @@
 			editTemplateMode={vs.editor.editTemplateMode}
 			editingElementId={vs.controller.editingId}
 			selectedElementIds={vs.editor.selection.ids}
+			findHighlights={blocks.findHighlights}
 			ontablecellcommit={vs.editingActive ? commits.commitTableCell : undefined}
 			onsmartartnodecommit={vs.editingActive ? commits.commitSmartArtNode : undefined}
 			onsmartartnodefill={vs.editingActive ? commits.commitSmartArtFill : undefined}
@@ -94,7 +72,6 @@
 			ontableresizecolumns={vs.editingActive ? commits.commitTableResizeColumns : undefined}
 			ontableresizerow={vs.editingActive ? commits.commitTableResizeRow : undefined}
 			onstageholder={(element) => {
-				holder = element ?? undefined;
 				blocks.canvas.setStageHolder(element ?? undefined);
 			}}
 			onstagepointerdown={vs.controller.onStagePointerDown}
@@ -134,16 +111,5 @@
 		overflow: auto;
 		padding: 16px;
 		box-sizing: border-box;
-	}
-
-	/* The elements holding the host find bar's matches; reapplied by the effect above. */
-	:global(.pptx-svelte-blocks-canvas [data-pptx-find-match]) {
-		outline: 2px dashed var(--pptx-primary, var(--office-primary, #2563eb));
-		outline-offset: 2px;
-	}
-
-	:global(.pptx-svelte-blocks-canvas [data-pptx-find-match='current']) {
-		outline-style: solid;
-		outline-width: 3px;
 	}
 </style>

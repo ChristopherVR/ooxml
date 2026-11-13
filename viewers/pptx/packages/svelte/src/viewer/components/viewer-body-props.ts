@@ -6,6 +6,7 @@ import type {
 	RemoteCursor,
 	RulerUnit,
 	SanitizedPresence,
+	SlideFindHighlights,
 } from 'ooxml-ui/pptx';
 import type { AiChangeBatch } from 'ooxml-ui/pptx/ai';
 import type { PptxHandler, PptxSlide, PptxTheme, TextSegment } from 'pptx-viewer-core';
@@ -138,6 +139,8 @@ export interface ViewerBodyProps {
 	aiActive?: boolean;
 	/** Rings the AI focus overlay should draw on the active slide. */
 	aiHighlights?: readonly AiCanvasHighlight[];
+	/** The Find bar's matches the canvas marks in the text (`findTextHighlightsByElement`). */
+	findHighlights?: SlideFindHighlights;
 	/** Just-applied AI change batch the canvas should animate (glide/fade/glow). */
 	aiChangeBatch?: AiChangeBatch | null;
 	/** Route a picked canvas element to the AI focus (pick mode). */
@@ -199,6 +202,7 @@ export type ViewerStageProps = Pick<
 	| 'onaipickelement'
 	| 'onaskai'
 	| 'onfixai'
+	| 'findHighlights'
 >;
 
 /**

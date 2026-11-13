@@ -142,7 +142,7 @@ describe('svelte building blocks', () => {
 		});
 	}, 40000);
 
-	it('outlines the elements holding find matches and applies hidden toolbar actions live', async () => {
+	it('marks the matched find text and applies hidden toolbar actions live', async () => {
 		const content = await buildingBlocksContractDeck(PptxHandler);
 		const target = document.createElement('div');
 		document.body.append(target);
@@ -155,9 +155,25 @@ describe('svelte building blocks', () => {
 		expect(blocks().state.slideCount).toBe(2);
 		blocks().actions.findReplace.setOpen(true);
 		blocks().actions.findReplace.setQuery('alpha');
+		const marks = () =>
+			[...target.querySelectorAll('mark[data-pptx-find-match]')].map((mark) => [
+				mark.getAttribute('data-pptx-find-match'),
+				mark.textContent,
+			]);
 		await vi.waitFor(
-			() => expect(target.querySelector('[data-pptx-find-match="current"]')).not.toBeNull(),
+			() =>
+				expect(marks()).toEqual([
+					['current', 'Alpha'],
+					['match', 'alpha'],
+				]),
 			{ timeout: 5000 },
+		);
+		blocks().actions.findReplace.next();
+		await vi.waitFor(() =>
+			expect(marks()).toEqual([
+				['match', 'Alpha'],
+				['current', 'alpha'],
+			]),
 		);
 		blocks().actions.findReplace.setOpen(false);
 		await vi.waitFor(() => expect(target.querySelector('[data-pptx-find-match]')).toBeNull());

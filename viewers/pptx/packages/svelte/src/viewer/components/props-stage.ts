@@ -1,4 +1,4 @@
-import type { CanvasSize } from 'ooxml-ui/pptx';
+import type { CanvasSize, SlideFindHighlights } from 'ooxml-ui/pptx';
 import type { PptxChartData, PptxComment, PptxSlide } from 'pptx-viewer-core';
 
 /**
@@ -97,6 +97,8 @@ export interface SlideCanvasProps {
 	editingElementId?: string | null;
 	/** Forwarded to `SlideStage`; see `SlideStageProps.selectedElementIds`. */
 	selectedElementIds?: readonly string[];
+	/** The Find bar's matches, marked in the elements' text (`findTextHighlightsByElement`). */
+	findHighlights?: SlideFindHighlights;
 	ontablecellcommit?: (
 		elementId: string,
 		rowIndex: number,

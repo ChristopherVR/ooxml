@@ -1,7 +1,7 @@
 import {
 	createPptxBuildingBlockSession,
 	describeBuildingBlockToolbar,
-	findHighlightTargets,
+	findTextHighlightsByElement,
 	registerBuildingBlockGroups,
 	resolveBuildingBlockMode,
 	runBuildingBlockToolbarControl,
@@ -261,7 +261,7 @@ export function createViewerBuildingBlocks(
 			onopenlayoutgallery: (request) => getOptions().onOpenLayoutGallery?.(request),
 		}),
 		get findHighlights() {
-			return findHighlightTargets(
+			return findTextHighlightsByElement(
 				viewerState.findReplace.results,
 				viewerState.findReplace.index,
 				viewerState.viewer.current,

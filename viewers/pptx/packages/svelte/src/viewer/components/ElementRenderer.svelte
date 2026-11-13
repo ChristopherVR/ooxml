@@ -7,10 +7,11 @@
 	 * `unknown` still falls through to the typed placeholder.
 	 */
 	import { hasShapeProperties, hasTextProperties } from 'pptx-viewer-core';
-	import { getBackgroundAnimationLayers, getBackgroundAnimationState, build3DExtrusionData, buildParagraphs, buildTextStyleOverrideCss, getGroupChildParentFill, getOverflowSegments, hasTextWarp, inlineElementPointerEvents, isElementHidden, isEquationOnlyText, isTemplateElement, placeholderPromptDescriptor, shouldRenderHitTarget } from 'ooxml-ui/pptx';
+	import { getBackgroundAnimationLayers, getBackgroundAnimationState, build3DExtrusionData, buildParagraphs, highlightFindMatches, buildTextStyleOverrideCss, getGroupChildParentFill, getOverflowSegments, hasTextWarp, inlineElementPointerEvents, isElementHidden, isEquationOnlyText, isTemplateElement, placeholderPromptDescriptor, shouldRenderHitTarget } from 'ooxml-ui/pptx';
 
 	import { getContainerStyle, getElementHitTargetStyle, getShapeBoxStyle, getShapeFillStrokeStyle, getTextBlockStyle, mergeStyles, styleToString } from '../style';
 	import { getFieldContextGetter } from '../state/field-context';
+	import { getElementFindHighlightsGetter } from '../state/find-highlights';
 	import { getSlideElementsGetter } from '../state/slide-elements';
 	import {
 		getPresentationElementStatesGetter,
@@ -155,7 +156,11 @@
 	const linkedSegments = $derived(getOverflowSegments(element, getSlideElements?.()));
 
 	/** Rendered paragraphs (runs + bullet/indent), built by shared logic. */
-	const paragraphs = $derived(buildParagraphs(element, fieldContext, linkedSegments));
+	// Captured at init, like the getters above: the Find bar's marks in this text (editing canvas only).
+	const getFindHighlights = getElementFindHighlightsGetter(() => element.id);
+	const paragraphs = $derived(
+		highlightFindMatches(buildParagraphs(element, fieldContext, linkedSegments), getFindHighlights()),
+	);
 	const hasText = $derived(
 		paragraphs.some((p) => p.runs.length > 0 || p.bulletMarker !== undefined),
 	);

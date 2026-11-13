@@ -75,6 +75,7 @@
 		aiActive = false,
 		aiHighlights = [],
 		aiChangeBatch = null,
+		findHighlights,
 		onaipickelement,
 		onaskai,
 		onfixai,
@@ -239,6 +240,7 @@
 			editTemplateMode={editor.editTemplateMode}
 			editingElementId={controller.editingId}
 			selectedElementIds={editor.selection.ids}
+			{findHighlights}
 			ontablecellcommit={editingActive ? commits.commitTableCell : undefined}
 			onsmartartnodecommit={editingActive ? commits.commitSmartArtNode : undefined}
 			onsmartartnodefill={editingActive ? commits.commitSmartArtFill : undefined}
