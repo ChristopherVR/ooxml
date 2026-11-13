@@ -1,5 +1,11 @@
-import type { RunStyle } from 'ooxml-ui/pptx';
-import { followingText, sanitizeMathMl, splitRunByScriptFont } from 'ooxml-ui/pptx';
+import type { ElementFindHighlights, FindTextHighlight, RunStyle } from 'ooxml-ui/pptx';
+import {
+	findMatchMarkStyle,
+	followingText,
+	sanitizeMathMl,
+	splitRunByScriptFont,
+	splitTextByFindHighlights,
+} from 'ooxml-ui/pptx';
 import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React from 'react';
 
@@ -13,15 +19,11 @@ import type { TabRenderContext } from './text-tab-layout';
 export { renderMetricPieces } from './text-metric-pieces';
 export type { MetricTextContext } from './text-metric-pieces';
 
-/* Highlight info for a single segment, used by Find & Replace */
-export interface TextSegmentHighlight {
-	startOffset: number;
-	length: number;
-	isCurrent: boolean; // true for the currently focused match
-}
+/* Highlight info for a single segment, used by Find & Replace (shared `find-text-highlight`) */
+export type TextSegmentHighlight = FindTextHighlight;
 
 /* Highlights grouped by segment index for an element */
-export type ElementFindHighlights = Map<number, TextSegmentHighlight[]>;
+export type { ElementFindHighlights };
 
 /** Per-script font family set used by script-aware text rendering. */
 export interface ScriptFonts {
@@ -130,46 +132,17 @@ export function renderSegmentContent(
 		});
 	}
 
-	// Split the entire segment text into highlighted/plain chunks
-	const sorted = [...segHl].sort((a, b) => a.startOffset - b.startOffset);
-	const chunks: Array<{
-		text: string;
-		highlighted: boolean;
-		isCurrent: boolean;
-	}> = [];
-	let cursor = 0;
-	for (const hl of sorted) {
-		if (hl.startOffset > cursor) {
-			chunks.push({
-				text: textValue.slice(cursor, hl.startOffset),
-				highlighted: false,
-				isCurrent: false,
-			});
-		}
-		chunks.push({
-			text: textValue.slice(hl.startOffset, hl.startOffset + hl.length),
-			highlighted: true,
-			isCurrent: hl.isCurrent,
-		});
-		cursor = hl.startOffset + hl.length;
-	}
-	if (cursor < textValue.length) {
-		chunks.push({
-			text: textValue.slice(cursor),
-			highlighted: false,
-			isCurrent: false,
-		});
-	}
+	// Split the entire segment text into highlighted/plain chunks (shared decision).
+	const chunks = splitTextByFindHighlights(textValue, segHl);
 	return chunks.map((chunk, ci) => {
 		const chunkKey = `${elementId}-seg-${segmentIndex}-hl-${ci}`;
-		return chunk.highlighted ? (
+		return chunk.match ? (
 			<mark
 				key={chunkKey}
+				data-pptx-find-match={chunk.match}
 				style={{
 					...metric?.nestedStyle,
-					backgroundColor: chunk.isCurrent ? '#f97316' : '#facc15',
-					color: 'inherit',
-					borderRadius: 2,
+					...(findMatchMarkStyle(chunk.match) as React.CSSProperties),
 				}}
 			>
 				{renderLeaf(chunk.text, chunkKey, followingText(chunks, ci, metric?.following))}
