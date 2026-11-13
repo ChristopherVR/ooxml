@@ -90,4 +90,31 @@ describe('vanilla building blocks, live behaviour', () => {
 		expect(onRequest).toHaveBeenCalledWith({ kind: 'shortcuts', open: true });
 		blocks.destroy();
 	}, 30000);
+
+	it('locks the Trust Center settings from googleFonts and allowExternalContent live', async () => {
+		const { blocks, content } = await mounted();
+		const viewer = blocks.viewer!;
+		const locks = () =>
+			(
+				viewer as unknown as {
+					customization: { getResolved(): { lockedSettings: Record<string, unknown> } };
+				}
+			).customization.getResolved().lockedSettings;
+		const webfonts = vi.spyOn(viewer as unknown as { refreshWebfonts(): void }, 'refreshWebfonts');
+		blocks.update({ content, canEdit: true, googleFonts: false, allowExternalContent: false });
+		expect(locks()).toMatchObject({
+			'trust.allowFontDownloads': false,
+			'trust.allowExternalContent': false,
+		});
+		expect(webfonts).toHaveBeenCalledTimes(1);
+		// The same policy in a new options object changes nothing.
+		blocks.update({ content, canEdit: true, googleFonts: false, allowExternalContent: false });
+		expect(webfonts).toHaveBeenCalledTimes(1);
+		blocks.update({ content, canEdit: true });
+		expect(locks()['trust.allowFontDownloads']).toBeUndefined();
+		expect(locks()['trust.allowExternalContent']).toBeUndefined();
+		expect(blocks.viewer).toBe(viewer);
+		blocks.destroy();
+		vi.restoreAllMocks();
+	}, 30000);
 });

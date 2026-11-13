@@ -5,6 +5,27 @@ export interface BuildingBlocksContractOptions {
 	canEdit: boolean;
 	onRequest: (request: unknown) => void;
 	onDirtyChange: (dirty: boolean) => void;
+	/** A host-owned room (`externalSession`) the contract joins and leaves through the options. */
+	collaboration?: unknown;
+	googleFonts?: false | { baseUrl: string };
+	allowExternalContent?: boolean;
+}
+
+/** `CollaborationShellState` from `ooxml-ui/pptx`, structurally. */
+export interface BuildingBlocksContractShellState {
+	canEdit: boolean;
+	status: string;
+	remoteUsers: readonly unknown[];
+	connectedCount: number;
+}
+
+/** `CollaborationState` from `ooxml-ui/pptx`, structurally. */
+export interface BuildingBlocksContractCollaborationState {
+	active: boolean;
+	roomId: string | undefined;
+	status: string;
+	synced: boolean;
+	people: readonly { clientId: number; name: string; self: boolean }[];
 }
 
 /** What a binding supplies to run the contract against its building blocks. */
@@ -21,7 +42,14 @@ export interface BuildingBlocksContractHarness {
 	update(options: BuildingBlocksContractOptions): Promise<void>;
 	/** The current `actions` object (`ViewerBuildingBlockActions` from `ooxml-ui/pptx`). */
 	actions(): unknown;
-	state(): { mode: string; loading: boolean; error: string | null; slideCount: number };
+	state(): {
+		mode: string;
+		loading: boolean;
+		error: string | null;
+		slideCount: number;
+		shellState: BuildingBlocksContractShellState;
+		collaborationState: BuildingBlocksContractCollaborationState;
+	};
 	/** Press the toolbar's Pictures control. */
 	clickPictures(): Promise<void>;
 	/** Let the binding flush pending updates (React `act`, Angular change detection). */
@@ -38,4 +66,6 @@ export function runBuildingBlocksContract(input: {
 	expect: (actual: unknown, message?: string) => unknown;
 	vi: { fn: () => unknown };
 	Handler: typeof PptxHandler;
+	/** The binding's own `yjs` (the room's document must be the binding's `Y.Doc` class). */
+	Y: { Doc: new () => { clientID: number; destroy(): void } };
 }): Promise<void>;

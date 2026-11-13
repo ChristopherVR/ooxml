@@ -4,6 +4,7 @@ import type { VueWrapper } from '@vue/test-utils';
 import { PptxHandler } from 'pptx-viewer-core';
 import { afterEach, expect, test, vi } from 'vitest';
 import { defineComponent, h, shallowRef } from 'vue';
+import * as Y from 'yjs';
 
 import { runBuildingBlocksContract } from '../../../shared/test-utils/building-blocks-contract.mjs';
 import type {
@@ -24,9 +25,9 @@ function vueHarness(): BuildingBlocksContractHarness {
 	const Host = defineComponent({
 		setup() {
 			blocks = useViewerBuildingBlocks(() => ({
+				googleFonts: false,
 				...options.value!,
 				autosave: false,
-				googleFonts: false,
 			}));
 			return () =>
 				h('div', [
@@ -67,5 +68,5 @@ afterEach(() => {
 });
 
 test('passes the shared building-blocks contract', async () => {
-	await runBuildingBlocksContract({ harness: vueHarness(), expect, vi, Handler: PptxHandler });
+	await runBuildingBlocksContract({ harness: vueHarness(), expect, vi, Handler: PptxHandler, Y });
 }, 60000);

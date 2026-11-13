@@ -1,6 +1,7 @@
 // @vitest-own-worker: mounts a full viewer.
 import { PptxHandler } from 'pptx-viewer-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import * as Y from 'yjs';
 
 import {
 	buildingBlocksContractDeck,
@@ -8,7 +9,7 @@ import {
 } from '../../../shared/test-utils/building-blocks-contract.mjs';
 import type { BuildingBlocksContractHarness } from '../../../shared/test-utils/building-blocks-contract.mjs';
 import { createViewerBuildingBlocks } from './create-viewer-building-blocks';
-import type { ViewerBuildingBlocks } from './types';
+import type { ViewerBuildingBlocks, ViewerBuildingBlocksOptions } from './types';
 
 const tick = () =>
 	new Promise<void>((resolve) => {
@@ -23,7 +24,8 @@ function vanillaHarness(): BuildingBlocksContractHarness {
 		toolbar: true,
 		async mount(target, options) {
 			host = target;
-			blocks = createViewerBuildingBlocks(options);
+			// The contract's room is structural; it is a `CollaborationInput`.
+			blocks = createViewerBuildingBlocks(options as ViewerBuildingBlocksOptions);
 			const toolbar = document.createElement('div');
 			const pane = document.createElement('div');
 			const canvas = document.createElement('div');
@@ -34,7 +36,7 @@ function vanillaHarness(): BuildingBlocksContractHarness {
 			await tick();
 		},
 		async update(options) {
-			blocks!.update(options);
+			blocks!.update(options as ViewerBuildingBlocksOptions);
 			await tick();
 		},
 		actions: () => blocks!.actions,
@@ -59,6 +61,7 @@ describe('vanilla building blocks', () => {
 			expect,
 			vi,
 			Handler: PptxHandler,
+			Y,
 		});
 	}, 60000);
 

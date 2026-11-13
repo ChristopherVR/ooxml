@@ -13,6 +13,7 @@ import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { FIND_MATCH_ATTRIBUTE } from 'ooxml-ui/pptx';
 import { PptxHandler } from 'pptx-viewer-core';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import * as Y from 'yjs';
 
 import { translationsEn } from '../../../../../../src/ui/src/pptx/i18n/translations-en';
 import {
@@ -26,6 +27,7 @@ import type {
 import * as publicApi from '../public-api';
 import { resolveViewerComponentResources } from '../viewer/component-resources.test-support';
 import { declareSignalFields } from '../viewer/signal-inputs.test-support';
+import { ViewerOptionsService } from '../viewer/viewer-options.service';
 import { BuildingBlocksCanvasComponent } from './canvas.component';
 import { BuildingBlocksSlidesPaneComponent } from './slides-pane.component';
 import { BuildingBlocksToolbarComponent } from './toolbar.component';
@@ -139,6 +141,7 @@ describe('angular building blocks', () => {
 			expect,
 			vi,
 			Handler: PptxHandler,
+			Y,
 		});
 	}, 60000);
 
@@ -229,6 +232,28 @@ describe('angular building blocks', () => {
 		created.componentInstance.options.set({ content, canEdit: false, onDirtyChange: second });
 		await settle();
 		expect(blocks.state().mode).toBe('preview');
+	}, 30000);
+
+	it('locks the Trust Center settings from googleFonts and allowExternalContent live', async () => {
+		const { created, blocks, content } = await mounted();
+		const store = created.debugElement.injector.get(ViewerOptionsService).store;
+		const locked = () => ({
+			fonts: store.isLocked('trust', 'allowFontDownloads'),
+			external: store.isLocked('trust', 'allowExternalContent'),
+		});
+		expect(locked()).toEqual({ fonts: false, external: false });
+		created.componentInstance.options.set({
+			content,
+			canEdit: true,
+			googleFonts: false,
+			allowExternalContent: false,
+		});
+		await settle();
+		expect(locked()).toEqual({ fonts: true, external: true });
+		created.componentInstance.options.set({ content, canEdit: true });
+		await settle();
+		expect(locked()).toEqual({ fonts: false, external: false });
+		expect(blocks.state().slideCount).toBe(2);
 	}, 30000);
 
 	it('turns the find and shortcut chords into the host find bar and shortcut help', async () => {

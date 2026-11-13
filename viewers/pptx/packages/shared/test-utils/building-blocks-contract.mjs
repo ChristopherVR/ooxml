@@ -6,6 +6,7 @@
  * them, so a port that drifts from the shared session fails here. See
  * `docs/pptx-building-blocks.md` at the repository root.
  */
+import { runShellContract } from './building-blocks-contract-shell.mjs';
 
 /** The compact toolbar's controls, in order, for ports that render it. */
 export const COMPACT_TOOLBAR_CONTROLS = [
@@ -78,13 +79,19 @@ async function until(harness, expect, check, label) {
  * Run the contract against `harness`. `expect` and `vi` are the caller's Vitest, so the contract
  * has no dependency of its own.
  */
-export async function runBuildingBlocksContract({ harness, expect, vi, Handler }) {
+export async function runBuildingBlocksContract({ harness, expect, vi, Handler, Y }) {
 	const content = await buildingBlocksContractDeck(Handler);
 	const onRequest = vi.fn();
 	const onDirtyChange = vi.fn();
 	const host = document.createElement('div');
 	document.body.append(host);
-	const options = (canEdit) => ({ content, canEdit, onRequest, onDirtyChange });
+	const options = (canEdit, extra = {}) => ({
+		content,
+		canEdit,
+		onRequest,
+		onDirtyChange,
+		...extra,
+	});
 	try {
 		// 1. View-only by default: every edit workflow is refused with a code, nothing changes.
 		await harness.mount(host, options(false));
@@ -92,6 +99,9 @@ export async function runBuildingBlocksContract({ harness, expect, vi, Handler }
 		expect(harness.state().error).toBeNull();
 		// The effective mode: `preview` while the blocks may not edit.
 		expect(harness.state().mode).toBe('preview');
+		// The shell state: view-only, not sharing.
+		expect(harness.state().shellState).toMatchObject({ canEdit: false, status: 'disconnected' });
+		expect(harness.state().collaborationState).toMatchObject({ active: false, status: 'off' });
 		// Every built-in action group is registered.
 		for (const id of BUILDING_BLOCK_GROUP_IDS) {
 			expect(harness.actions()[id], `actions.${id}`).toBeDefined();
@@ -269,6 +279,16 @@ export async function runBuildingBlocksContract({ harness, expect, vi, Handler }
 		expect(unknown).toEqual({
 			ok: false,
 			code: layout.available.length > 0 ? 'unknown-layout' : 'no-layout',
+		});
+
+		// 8b. Shell state, a host-owned room joined and left, and live options (no remount).
+		await runShellContract({
+			harness,
+			expect,
+			until: (check, label) => until(harness, expect, check, label),
+			options: (extra) => options(true, extra),
+			Y,
+			onDirtyChange,
 		});
 
 		// 9. Taking permission away again refuses at once.

@@ -2,6 +2,7 @@
 import { PptxHandler } from 'pptx-viewer-core';
 import { flushSync, mount, tick, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import * as Y from 'yjs';
 
 import {
 	buildingBlocksContractDeck,
@@ -96,8 +97,31 @@ describe('svelte building blocks', () => {
 			expect,
 			vi,
 			Handler: PptxHandler,
+			Y,
 		});
 	}, 60000);
+
+	it('locks the Trust Center settings from googleFonts and allowExternalContent live', async () => {
+		const content = await buildingBlocksContractDeck(PptxHandler);
+		const target = document.createElement('div');
+		document.body.append(target);
+		const { blocks, set } = mountBlocks(target, { content, canEdit: true });
+		await vi.waitFor(() => expect(blocks().state.slideCount).toBe(2), { timeout: 20000 });
+		const viewerState = blocks().viewerState;
+		const locked = () => ({
+			fonts: viewerState.optionsState.isLocked('trust', 'allowFontDownloads'),
+			external: viewerState.optionsState.isLocked('trust', 'allowExternalContent'),
+		});
+		expect(locked()).toEqual({ fonts: false, external: false });
+		set({ content, canEdit: true, googleFonts: false, allowExternalContent: false });
+		await settle();
+		expect(locked()).toEqual({ fonts: true, external: true });
+		set({ content, canEdit: true });
+		await settle();
+		expect(locked()).toEqual({ fonts: false, external: false });
+		expect(blocks().viewerState).toBe(viewerState);
+		expect(blocks().state.slideCount).toBe(2);
+	}, 40000);
 
 	it('mounts no ribbon, status bar or dialogs and reports not-ready before a deck loads', async () => {
 		const target = document.createElement('div');

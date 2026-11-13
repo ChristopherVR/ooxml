@@ -8,6 +8,7 @@ import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
 import { expect, test, vi } from 'vitest';
+import * as Y from 'yjs';
 
 import { runBuildingBlocksContract } from '../../../../shared/test-utils/building-blocks-contract.mjs';
 import type {
@@ -44,6 +45,8 @@ function reactHarness(): BuildingBlocksContractHarness {
 			loading: latest!.loading,
 			error: latest!.error,
 			slideCount: latest!.slidesPaneProps.slides.length,
+			shellState: latest!.shellState,
+			collaborationState: latest!.collaborationState,
 		}),
 		async clickPictures() {
 			await act(async () => latest!.toolbarProps.onOpenImagePicker?.());
@@ -60,5 +63,5 @@ function reactHarness(): BuildingBlocksContractHarness {
 }
 
 test('passes the shared building-blocks contract', async () => {
-	await runBuildingBlocksContract({ harness: reactHarness(), expect, vi, Handler: PptxHandler });
+	await runBuildingBlocksContract({ harness: reactHarness(), expect, vi, Handler: PptxHandler, Y });
 }, 60000);
