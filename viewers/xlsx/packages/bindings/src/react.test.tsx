@@ -20,10 +20,17 @@ describe('React editor adapter', () => {
 		const onDirtyChange = vi.fn();
 		const render = (props: SpreadsheetEditorProps) =>
 			act(() => root.render(createElement(SpreadsheetEditor, { ...props, ref })));
-		render({ className: 'sheet', locale: 'de-DE', onWorkbookChange, onDirtyChange });
+		render({
+			className: 'sheet',
+			locale: 'de-DE',
+			validateReplace: true,
+			onWorkbookChange,
+			onDirtyChange,
+		});
 		const editor = container.querySelector('xlsx-editor') as XlsxEditorElement;
 		expect(editor.parentElement?.className).toBe('sheet');
 		expect(editor.locale).toBe('de');
+		expect(editor.validateReplace).toBe(true);
 		expect(ref.current?.element).toBe(editor);
 		render({ className: 'sheet', readOnly: true, onWorkbookChange, onDirtyChange });
 		expect(container.querySelectorAll('xlsx-editor')).toHaveLength(1);

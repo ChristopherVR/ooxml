@@ -51,6 +51,7 @@ export class SpreadsheetEditorComponent implements AfterViewInit, OnChanges, OnD
 	@Input() locale = 'en';
 	@Input() theme: EditorThemeMode = 'auto';
 	@Input() authorName = 'Author';
+	@Input() validateReplace = false;
 	@Input() showToolbar = true;
 	@Input() showFormulaBar = true;
 	@Input() hiddenActions: readonly string[] = [];

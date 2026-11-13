@@ -78,6 +78,8 @@ export class EditorCore {
 	theme: EditorThemeMode = 'auto';
 	showToolbar = true;
 	showFormulaBar = true;
+	/** Replace and Replace All check data validation (`validateReplace`); Excel's do not. */
+	validateReplace = false;
 	themeColors: Partial<XlsxTheme> = {};
 	appliedThemeVars: string[] = [];
 	hiddenActions: string[] = [];
@@ -229,6 +231,7 @@ export class EditorCore {
 				return emitEvent(core.host, type, detail);
 			},
 			authorName: () => core.authorName,
+			validateReplace: () => core.validateReplace,
 			locale: () => core.locale,
 			history: () => core.collab.history() ?? core.session,
 			remoteSelections: () => core.collab.remoteSelections(),

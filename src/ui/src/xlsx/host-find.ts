@@ -1,11 +1,13 @@
 // Find and Replace for a host's own UI. Finding never needs edit rights; replacing re-reads
 // read-only state and sheet protection and only touches cells the user could type into.
-import { effectiveStyleId, styleAt, type FindMatch } from 'ooxml-core/xlsx';
-import { stepMatch } from 'ooxml-core/xlsx/ui';
+import { effectiveStyleId, styleAt, type FindMatch, type FindQuery } from 'ooxml-core/xlsx';
+import { stepMatch, validateReplacements, type ReplaceOptions } from 'ooxml-core/xlsx/ui';
 import type { EditorCore } from './editor-core';
 import { selectOn } from './dialogs/go-to';
 import { canEditNow, commitPending } from './host-workflows';
 import type { FindOperations } from './surface-workflows';
+
+const keyOf = (match: FindMatch): string => `${match.sheet}:${match.row}:${match.col}`;
 
 export function findOperations(core: EditorCore): FindOperations {
 	const ctx = core.ctx;
@@ -31,6 +33,27 @@ export function findOperations(core: EditorCore): FindOperations {
 	};
 	const findAll: FindOperations['findAll'] = (query) =>
 		available() && query.text ? (core.session?.findAll(query) ?? []) : [];
+	/** Cells (as `sheet:row:col`) whose replaced value data validation refuses, when it is on. */
+	const refusals = (
+		query: FindQuery,
+		replacement: string,
+		options: ReplaceOptions | undefined,
+		candidates: readonly FindMatch[],
+	) => {
+		const session = core.session;
+		if (!(options?.validate ?? core.validateReplace) || !session) return undefined;
+		// A replace edits the formula-bar text, so validate the formulas-based matches.
+		const typed: FindQuery = query.lookIn === 'comments' ? query : { ...query, lookIn: 'formulas' };
+		const wanted = new Set(candidates.map(keyOf));
+		const result = validateReplacements(
+			session,
+			typed,
+			replacement,
+			findAll(typed).filter((match) => wanted.has(keyOf(match))),
+		);
+		if (result.refused.length) options?.onRefused?.(result.refused);
+		return new Set(result.refused.map((cell) => keyOf({ ...cell, text: cell.value })));
+	};
 	const findNext: FindOperations['findNext'] = (query, options) => {
 		if (!commitPending(core)) return undefined;
 		const active = core.selection.get().active;
@@ -49,27 +72,36 @@ export function findOperations(core: EditorCore): FindOperations {
 		findAll,
 		findNext,
 		select,
-		replace(query, replacement) {
+		replace(query, replacement, options) {
 			if (!canEditNow(core) || !commitPending(core) || !canEditNow(core)) return false;
 			const current = findAll(query).find((match) => at(match) && replaceable(match));
-			const replaced = current
-				? Boolean(core.session?.replaceOne(query, replacement, current))
-				: false;
+			const refused = current ? refusals(query, replacement, options, [current]) : undefined;
+			const replaced =
+				current && !refused?.has(keyOf(current))
+					? Boolean(core.session?.replaceOne(query, replacement, current))
+					: false;
 			if (replaced) core.requestRender();
 			findNext(query);
 			return replaced;
 		},
-		replaceAll(query, replacement) {
+		replaceAll(query, replacement, options) {
 			if (!canEditNow(core) || !commitPending(core) || !canEditNow(core)) return 0;
 			const session = core.session;
 			if (!session) return 0;
 			const matches = findAll(query);
 			let count = 0;
-			if (matches.every(replaceable)) count = session.replaceAll(query, replacement);
+			const refused = refusals(query, replacement, options, matches.filter(replaceable));
+			if (!refused?.size && matches.every(replaceable))
+				count = session.replaceAll(query, replacement);
 			else
 				session.batch('Replace All', () => {
 					for (const match of matches)
-						if (replaceable(match) && session.replaceOne(query, replacement, match)) count++;
+						if (
+							replaceable(match) &&
+							!refused?.has(keyOf(match)) &&
+							session.replaceOne(query, replacement, match)
+						)
+							count++;
 				});
 			if (count) core.requestRender();
 			return count;

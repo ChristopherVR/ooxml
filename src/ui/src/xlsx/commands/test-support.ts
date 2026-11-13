@@ -22,7 +22,7 @@ export interface TestContext extends EditorContext {
 
 export function createTestContext(
 	workbook: Workbook = createWorkbook(),
-	options: { grid?: Partial<GridController>; dom?: boolean } = {},
+	options: { grid?: Partial<GridController>; dom?: boolean; validateReplace?: boolean } = {},
 ): TestContext {
 	let session: EditSession | undefined = createEditSession(workbook);
 	let readOnly = false;
@@ -102,6 +102,7 @@ export function createTestContext(
 			return true;
 		},
 		authorName: () => 'Tester',
+		validateReplace: () => options.validateReplace === true,
 		locale: () => 'en',
 		select(ref) {
 			const range: CellRange | undefined = parseRange(ref);

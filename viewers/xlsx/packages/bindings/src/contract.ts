@@ -48,6 +48,11 @@ export interface EditorProps {
 	theme?: EditorThemeMode | undefined;
 	/** Author recorded on new comments. Default `Author`. */
 	authorName?: string | undefined;
+	/**
+	 * Replace and Replace All check each new value against the cell's data validation and leave
+	 * cells it refuses unchanged. Default false: like Excel, Replace does not apply data validation.
+	 */
+	validateReplace?: boolean | undefined;
 	/** Ribbon visibility. Default true. */
 	showToolbar?: boolean | undefined;
 	/** Formula bar and name box visibility. Default true. */
@@ -131,6 +136,7 @@ export const EDITOR_PROP_KEYS = [
 	'locale',
 	'theme',
 	'authorName',
+	'validateReplace',
 	'showToolbar',
 	'showFormulaBar',
 	'hiddenActions',
@@ -225,6 +231,7 @@ export const EDITOR_CONTRACT: BindingContract<
 		readOnly: { forward: 'changed', fallback: false },
 		theme: { forward: 'changed', fallback: 'auto' },
 		authorName: { forward: 'changed', fallback: 'Author' },
+		validateReplace: { forward: 'changed', fallback: false },
 		showToolbar: { forward: 'changed', fallback: true },
 		showFormulaBar: { forward: 'changed', fallback: true },
 		hiddenActions: {

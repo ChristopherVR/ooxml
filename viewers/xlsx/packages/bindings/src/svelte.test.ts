@@ -40,7 +40,12 @@ describe('Svelte editor adapter', () => {
 		document.body.append(target);
 		const onreadonlychange = vi.fn();
 		const onribboncustomize = vi.fn();
-		const props = reactiveProps({ authorName: 'Ada', onreadonlychange, onribboncustomize });
+		const props = reactiveProps({
+			authorName: 'Ada',
+			validateReplace: true,
+			onreadonlychange,
+			onribboncustomize,
+		});
 		const component = mount(XlsxEditor, { target, props });
 		flushSync();
 		const editor = target.querySelector('xlsx-editor') as XlsxEditorElement;
@@ -51,6 +56,7 @@ describe('Svelte editor adapter', () => {
 		);
 		emit(editor, 'ribbon-customize', { hiddenActions: ['italic'] });
 		expect(onribboncustomize).toHaveBeenCalledWith(['italic']);
+		expect((target.querySelector('xlsx-editor') as XlsxEditorElement).validateReplace).toBe(true);
 		props.authorName = 'Grace';
 		flushSync();
 		expect(editor.authorName).toBe('Grace');

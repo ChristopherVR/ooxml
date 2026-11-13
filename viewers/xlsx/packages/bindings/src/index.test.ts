@@ -141,6 +141,7 @@ describe('props, attributes and defaults', () => {
 			showToolbar: false,
 			showFormulaBar: false,
 			authorName: 'Ada',
+			validateReplace: true,
 			hiddenActions: ['bold'],
 			themeColors,
 		});
@@ -150,12 +151,14 @@ describe('props, attributes and defaults', () => {
 		expect(element.getAttribute('show-toolbar')).toBe('false');
 		expect(element.getAttribute('show-formula-bar')).toBe('false');
 		expect(element.authorName).toBe('Ada');
+		expect(element.validateReplace).toBe(true);
 		expect(element.hiddenActions).toEqual(['bold']);
 		expect(element.themeColors).toEqual(themeColors);
 		binding.update({});
 		expect(element.showToolbar).toBe(true);
 		expect(element.showFormulaBar).toBe(true);
 		expect(element.authorName).toBe('Author');
+		expect(element.validateReplace).toBe(false);
 		expect(element.hiddenActions).toEqual([]);
 		expect(element.themeColors).toEqual({});
 		binding.destroy();

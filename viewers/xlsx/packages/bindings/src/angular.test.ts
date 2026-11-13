@@ -20,6 +20,7 @@ describe('Angular editor adapter', () => {
 		});
 		ref.setInput('locale', 'zh-Hans');
 		ref.setInput('authorName', 'Grace');
+		ref.setInput('validateReplace', true);
 		const onChange = vi.fn();
 		const onDirty = vi.fn();
 		ref.instance.workbookChange.subscribe(onChange);
@@ -30,6 +31,7 @@ describe('Angular editor adapter', () => {
 		expect(editor).not.toBeNull();
 		expect(editor.locale).toBe('zh-CN');
 		expect(editor.authorName).toBe('Grace');
+		expect(editor.validateReplace).toBe(true);
 		expect(ref.instance.element).toBe(editor);
 		ref.setInput('readOnly', true);
 		ref.changeDetectorRef.detectChanges();

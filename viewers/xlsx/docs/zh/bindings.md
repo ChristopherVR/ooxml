@@ -4,25 +4,26 @@
 
 ## 属性 {#props}
 
-| 属性             | 类型                          | 默认值       | 说明                                                                                                                  |
-| ---------------- | ----------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
-| `workbook`       | `Workbook`                    | 无           | 传入**新对象**时显示。编辑器发出的工作簿不会回写到该属性（不会形成循环）。                                            |
-| `bytes`          | `Uint8Array \| ArrayBuffer`   | 无           | 文件字节；每次传入新数组时都会重新加载。                                                                              |
-| `src`            | `string`                      | 无           | 字符串变化时获取并加载的 URL；文件名默认为 URL 的最后一段。                                                           |
-| `fileName`       | `string`                      | `Book1.xlsx` | 仅在父组件修改时转发，因此编辑器中的“文件 > 打开”可以重命名工作簿。                                                   |
-| `readOnly`       | `boolean`                     | `false`      |                                                                                                                       |
-| `locale`         | `string`                      | `en`         | `en`、`fr`、`de`、`es`、`zh-CN`，或映射到其中之一的标签（如 `de-DE`）。                                               |
-| `theme`          | `'light' \| 'dark' \| 'auto'` | `auto`       | `auto` 跟随操作系统。                                                                                                 |
-| `authorName`     | `string`                      | `Author`     | 记录在新批注上。                                                                                                      |
-| `showToolbar`    | `boolean`                     | `true`       | 功能区。                                                                                                              |
-| `showFormulaBar` | `boolean`                     | `true`       | 名称框和编辑栏。                                                                                                      |
-| `hiddenActions`  | `string[]`                    | `[]`         | 按稳定 id 隐藏的功能区控件、标题栏项和右键菜单项。                                                                    |
-| `ribbonAddIns`   | `RibbonAddInTab[]`            | 无           | 宿主在内置选项卡之后添加的选项卡；参见[功能区加载项选项卡](#ribbon-add-in-tabs)。                                     |
-| `themeColors`    | `Partial<Record<...>>`        | `{}`         | 令牌覆盖，参见[主题](/zh/theming)。                                                                                   |
-| `collaboration`  | `XlsxCollaborationOptions`    | 无           | 设置后会在房间中共享打开的工作簿；传入新对象即重新加入，传入 `null` 即离开。参见[协作](/zh/collaboration)。           |
-| `storage`        | `DocumentStorage`             | 无           | 宿主自有的存储：“保存”和“另存为”调用 `storage.save()`，若存在则“文件 > 打开”调用 `storage.open()`。                   |
-| `fileProviders`  | `CloudFileProvider[]`         | 无           | “文件 > 打开”中“此设备”旁边显示的云端位置；从其中打开的工作簿会保存回该文件。请保持该数组稳定。                       |
-| `customization`  | `ExcelCustomization`          | 无           | `capabilities`、`backstage.extraPages` 和 `contextMenu.extraCommands`；请保持该对象稳定（传入 `null` 可恢复默认值）。 |
+| 属性              | 类型                          | 默认值       | 说明                                                                                                                  |
+| ----------------- | ----------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `workbook`        | `Workbook`                    | 无           | 传入**新对象**时显示。编辑器发出的工作簿不会回写到该属性（不会形成循环）。                                            |
+| `bytes`           | `Uint8Array \| ArrayBuffer`   | 无           | 文件字节；每次传入新数组时都会重新加载。                                                                              |
+| `src`             | `string`                      | 无           | 字符串变化时获取并加载的 URL；文件名默认为 URL 的最后一段。                                                           |
+| `fileName`        | `string`                      | `Book1.xlsx` | 仅在父组件修改时转发，因此编辑器中的“文件 > 打开”可以重命名工作簿。                                                   |
+| `readOnly`        | `boolean`                     | `false`      |                                                                                                                       |
+| `locale`          | `string`                      | `en`         | `en`、`fr`、`de`、`es`、`zh-CN`，或映射到其中之一的标签（如 `de-DE`）。                                               |
+| `theme`           | `'light' \| 'dark' \| 'auto'` | `auto`       | `auto` 跟随操作系统。                                                                                                 |
+| `authorName`      | `string`                      | `Author`     | 记录在新批注上。                                                                                                      |
+| `validateReplace` | `boolean`                     | `false`      | 在“替换”和“全部替换”中按单元格的数据验证检查每个替换，并让被拒绝的单元格保持不变。Excel 不会这样做。                  |
+| `showToolbar`     | `boolean`                     | `true`       | 功能区。                                                                                                              |
+| `showFormulaBar`  | `boolean`                     | `true`       | 名称框和编辑栏。                                                                                                      |
+| `hiddenActions`   | `string[]`                    | `[]`         | 按稳定 id 隐藏的功能区控件、标题栏项和右键菜单项。                                                                    |
+| `ribbonAddIns`    | `RibbonAddInTab[]`            | 无           | 宿主在内置选项卡之后添加的选项卡；参见[功能区加载项选项卡](#ribbon-add-in-tabs)。                                     |
+| `themeColors`     | `Partial<Record<...>>`        | `{}`         | 令牌覆盖，参见[主题](/zh/theming)。                                                                                   |
+| `collaboration`   | `XlsxCollaborationOptions`    | 无           | 设置后会在房间中共享打开的工作簿；传入新对象即重新加入，传入 `null` 即离开。参见[协作](/zh/collaboration)。           |
+| `storage`         | `DocumentStorage`             | 无           | 宿主自有的存储：“保存”和“另存为”调用 `storage.save()`，若存在则“文件 > 打开”调用 `storage.open()`。                   |
+| `fileProviders`   | `CloudFileProvider[]`         | 无           | “文件 > 打开”中“此设备”旁边显示的云端位置；从其中打开的工作簿会保存回该文件。请保持该数组稳定。                       |
+| `customization`   | `ExcelCustomization`          | 无           | `capabilities`、`backstage.extraPages` 和 `contextMenu.extraCommands`；请保持该对象稳定（传入 `null` 可恢复默认值）。 |
 
 ## 回调与事件 {#callbacks-and-events}
 

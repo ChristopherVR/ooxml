@@ -44,6 +44,16 @@ export async function nativeBuildingBlockContract(framework: string) {
 		await vi.waitFor(() => expect(snapshot().mode).toBe('view'));
 		expect(await retained.onItalic()).toBe(false);
 		expect(editor.readOnly).toBe(true);
+		// Replace and Replace All skip Excel's default of ignoring data validation only on request.
+		expect((editor as unknown as { validateReplace: boolean }).validateReplace).toBe(false);
+		blocks.update({ workbook, canEdit: true, validateReplace: true, onWorkbookError: errors });
+		await vi.waitFor(() =>
+			expect((editor as unknown as { validateReplace: boolean }).validateReplace).toBe(true),
+		);
+		blocks.update({ workbook, canEdit: true, onWorkbookError: errors });
+		await vi.waitFor(() =>
+			expect((editor as unknown as { validateReplace: boolean }).validateReplace).toBe(false),
+		);
 		const onOpenShareDialog = vi.fn();
 		blocks.update({ workbook, canEdit: true, onWorkbookError: errors });
 		await vi.waitFor(() => expect(snapshot().toolbarProps?.canEdit).toBe(true));

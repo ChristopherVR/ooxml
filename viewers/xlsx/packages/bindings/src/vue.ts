@@ -25,6 +25,7 @@ export const SpreadsheetEditor = defineVueBinding({
 		locale: String,
 		theme: String as PropType<EditorThemeMode>,
 		authorName: String,
+		validateReplace: Boolean,
 		showToolbar: { type: Boolean, default: true },
 		showFormulaBar: { type: Boolean, default: true },
 		hiddenActions: Array as PropType<readonly string[]>,

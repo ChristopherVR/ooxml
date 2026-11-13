@@ -64,6 +64,14 @@ function findPanel(): HTMLElement {
 	const replace = el('input', { 'aria-label': 'Host replace with' });
 	const status = el('output', { 'aria-label': 'Host find status' });
 	const query = () => ({ text: find.value });
+	// Unchecked boxes pass no option, so the editor's `validateReplace` decides.
+	const validate = el('input', { type: 'checkbox', 'aria-label': 'Host validate replace' });
+	const skip = el('input', { type: 'checkbox', 'aria-label': 'Host skip validation' });
+	let refused: string[] = [];
+	const options = () => ({
+		onRefused: (cells: Array<{ ref: string }>) => (refused = cells.map((cell) => cell.ref)),
+		...(validate.checked ? { validate: true } : skip.checked ? { validate: false } : {}),
+	});
 	const buttons: Array<[string, () => string]> = [
 		['Host find all', () => `${props().workflows.find.findAll(query()).length} found`],
 		[
@@ -73,17 +81,22 @@ function findPanel(): HTMLElement {
 				return match ? `at ${match.row},${match.col}` : 'none';
 			},
 		],
-		['Host replace', () => `replaced ${props().workflows.find.replace(query(), replace.value)}`],
+		[
+			'Host replace',
+			() => `replaced ${props().workflows.find.replace(query(), replace.value, options())}`,
+		],
 		[
 			'Host replace all',
-			() => `replaced ${props().workflows.find.replaceAll(query(), replace.value)}`,
+			() => `replaced ${props().workflows.find.replaceAll(query(), replace.value, options())}`,
 		],
 	];
-	panel.append(find, replace);
+	panel.append(find, replace, validate, skip);
 	for (const [label, run] of buttons) {
 		const button = el('button', {}, label);
 		button.addEventListener('click', () => {
-			status.textContent = `${run()}; canReplace=${props().workflows.find.canReplace()}`;
+			refused = [];
+			const result = run();
+			status.textContent = `${result}; refused=${refused.join(',')}; canReplace=${props().workflows.find.canReplace()}`;
 		});
 		panel.append(button);
 	}

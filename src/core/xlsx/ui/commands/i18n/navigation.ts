@@ -103,6 +103,12 @@ export const NAVIGATION_STRINGS: Translations = {
 		'Listo. Hemos realizado {count} reemplazos.',
 		'全部完成。完成 {count} 处替换。',
 	],
+	'{count} cell(s) were not replaced because the new value does not match their data validation.': [
+		'{count} cellule(s) n’ont pas été remplacées car la nouvelle valeur ne respecte pas leur validation des données.',
+		'{count} Zelle(n) wurden nicht ersetzt, da der neue Wert ihrer Datenüberprüfung nicht entspricht.',
+		'No se reemplazaron {count} celda(s) porque el nuevo valor no cumple su validación de datos.',
+		'有 {count} 个单元格未替换，因为新值不符合其数据验证。',
+	],
 	// Go To and Go To Special
 	'Go To': ['Atteindre', 'Gehe zu', 'Ir a', '定位'],
 	'Go to:': ['Atteindre :', 'Gehe zu:', 'Ir a:', '定位:'],

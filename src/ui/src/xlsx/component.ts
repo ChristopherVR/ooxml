@@ -169,6 +169,18 @@ export class XlsxEditorElement extends XlsxEditorApi {
 		reflectAttribute(this, 'author-name', this.core.authorName);
 	}
 
+	/**
+	 * Check data validation when Replace and Replace All (the Find and Replace dialog and the
+	 * `workflows.find` operations) write a value, and leave cells it refuses unchanged. Default
+	 * false: like Excel, Replace does not apply data validation. A call can override it.
+	 */
+	get validateReplace(): boolean {
+		return this.core.validateReplace;
+	}
+	set validateReplace(value: boolean) {
+		this.core.validateReplace = value === true;
+	}
+
 	/** `light`, `dark` or `auto` (default, inherits the Office scope and system appearance). */
 	get theme(): EditorThemeMode {
 		return this.core.theme;

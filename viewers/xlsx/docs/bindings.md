@@ -4,25 +4,26 @@ All bindings mount `<xlsx-editor>` through the same `mountEditor` function in `p
 
 ## Props
 
-| Prop             | Type                          | Default      | Notes                                                                                                                             |
-| ---------------- | ----------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| `workbook`       | `Workbook`                    | none         | Shown when a **new object** is passed. The workbook the editor emits is never assigned back (no loop).                            |
-| `bytes`          | `Uint8Array \| ArrayBuffer`   | none         | File bytes; loaded again whenever a new array is passed.                                                                          |
-| `src`            | `string`                      | none         | URL fetched and loaded when the string changes; the file name defaults to the URL's last segment.                                 |
-| `fileName`       | `string`                      | `Book1.xlsx` | Forwarded only when the parent changes it, so File > Open in the editor can rename the workbook.                                  |
-| `readOnly`       | `boolean`                     | `false`      |                                                                                                                                   |
-| `locale`         | `string`                      | `en`         | `en`, `fr`, `de`, `es`, `zh-CN` or a tag that maps to one (`de-DE`).                                                              |
-| `theme`          | `'light' \| 'dark' \| 'auto'` | `auto`       | `auto` follows the operating system.                                                                                              |
-| `authorName`     | `string`                      | `Author`     | Recorded on new comments.                                                                                                         |
-| `showToolbar`    | `boolean`                     | `true`       | The ribbon.                                                                                                                       |
-| `showFormulaBar` | `boolean`                     | `true`       | The name box and formula bar.                                                                                                     |
-| `hiddenActions`  | `string[]`                    | `[]`         | Ribbon controls, title-bar items and context-menu entries to hide, by stable id.                                                  |
-| `ribbonAddIns`   | `RibbonAddInTab[]`            | none         | Tabs the host adds after the built-in ones; see [Ribbon add-in tabs](#ribbon-add-in-tabs).                                        |
-| `themeColors`    | `Partial<Record<...>>`        | `{}`         | Token overrides, see [theming](/theming).                                                                                         |
-| `collaboration`  | `XlsxCollaborationOptions`    | none         | Shares the open workbook in a room while set; a new object rejoins, `null` leaves. See [collaboration](/collaboration).           |
-| `storage`        | `DocumentStorage`             | none         | Host-owned storage: Save and Save As go to `storage.save()`, and File > Open to `storage.open()` when it has one.                 |
-| `fileProviders`  | `CloudFileProvider[]`         | none         | Cloud places File > Open offers next to "This device"; a workbook opened from one saves back to that file. Keep the array stable. |
-| `customization`  | `ExcelCustomization`          | none         | `capabilities`, `backstage.extraPages` and `contextMenu.extraCommands`; keep the object stable (`null` restores the defaults).    |
+| Prop              | Type                          | Default      | Notes                                                                                                                                   |
+| ----------------- | ----------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `workbook`        | `Workbook`                    | none         | Shown when a **new object** is passed. The workbook the editor emits is never assigned back (no loop).                                  |
+| `bytes`           | `Uint8Array \| ArrayBuffer`   | none         | File bytes; loaded again whenever a new array is passed.                                                                                |
+| `src`             | `string`                      | none         | URL fetched and loaded when the string changes; the file name defaults to the URL's last segment.                                       |
+| `fileName`        | `string`                      | `Book1.xlsx` | Forwarded only when the parent changes it, so File > Open in the editor can rename the workbook.                                        |
+| `readOnly`        | `boolean`                     | `false`      |                                                                                                                                         |
+| `locale`          | `string`                      | `en`         | `en`, `fr`, `de`, `es`, `zh-CN` or a tag that maps to one (`de-DE`).                                                                    |
+| `theme`           | `'light' \| 'dark' \| 'auto'` | `auto`       | `auto` follows the operating system.                                                                                                    |
+| `authorName`      | `string`                      | `Author`     | Recorded on new comments.                                                                                                               |
+| `validateReplace` | `boolean`                     | `false`      | Check each replacement against the cell's data validation in Replace and Replace All and leave refused cells unchanged. Excel does not. |
+| `showToolbar`     | `boolean`                     | `true`       | The ribbon.                                                                                                                             |
+| `showFormulaBar`  | `boolean`                     | `true`       | The name box and formula bar.                                                                                                           |
+| `hiddenActions`   | `string[]`                    | `[]`         | Ribbon controls, title-bar items and context-menu entries to hide, by stable id.                                                        |
+| `ribbonAddIns`    | `RibbonAddInTab[]`            | none         | Tabs the host adds after the built-in ones; see [Ribbon add-in tabs](#ribbon-add-in-tabs).                                              |
+| `themeColors`     | `Partial<Record<...>>`        | `{}`         | Token overrides, see [theming](/theming).                                                                                               |
+| `collaboration`   | `XlsxCollaborationOptions`    | none         | Shares the open workbook in a room while set; a new object rejoins, `null` leaves. See [collaboration](/collaboration).                 |
+| `storage`         | `DocumentStorage`             | none         | Host-owned storage: Save and Save As go to `storage.save()`, and File > Open to `storage.open()` when it has one.                       |
+| `fileProviders`   | `CloudFileProvider[]`         | none         | Cloud places File > Open offers next to "This device"; a workbook opened from one saves back to that file. Keep the array stable.       |
+| `customization`   | `ExcelCustomization`          | none         | `capabilities`, `backstage.extraPages` and `contextMenu.extraCommands`; keep the object stable (`null` restores the defaults).          |
 
 ## Callbacks and events
 

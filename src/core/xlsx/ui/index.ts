@@ -65,3 +65,11 @@ export { selectionFormatting } from './selection-format';
 export { formatCellsState, FORMAT_CELLS_SAMPLE } from './format-cells-state';
 export type { FormatAspect, FormatCellsState } from './format-cells-state';
 export { orderFrom, stepMatch } from './find-order';
+export {
+	replaceAllValidated,
+	replaceOneValidated,
+	validateReplacements,
+	type RefusedReplacement,
+	type ReplaceOptions,
+	type ValidatedMatches,
+} from './replace-validation';

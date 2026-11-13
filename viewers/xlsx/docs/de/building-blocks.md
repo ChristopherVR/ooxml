@@ -122,7 +122,7 @@ verhalten sich wie in der mitgelieferten Oberfläche) und meldet eine Ablehnung 
 - `workflows.find`: `findAll(query)`, `findNext(query, { backwards })`, `select(match)`,
   `replace(query, text)`, `replaceAll(query, text)` und `canReplace()`. Suchen funktioniert auch in
   einer schreibgeschützten Arbeitsmappe; Ersetzen wird dort abgelehnt, durch Blattschutz gesperrte
-  Zellen werden übersprungen. Wie das Ersetzen in Excel selbst wenden `replace` und `replaceAll` keine Datenüberprüfung an: Ein Ersatzwert wird auch geschrieben, wenn die Regel der Zelle ihn bei der Eingabe ablehnen würde.
+  Zellen werden übersprungen. Wie das Ersetzen in Excel selbst wenden `replace` und `replaceAll` standardmäßig keine Datenüberprüfung an: Ein Ersatzwert wird auch geschrieben, wenn die Regel der Zelle ihn bei der Eingabe ablehnen würde. Zum Prüfen übergeben Sie `{ validate: true, onRefused }` als dritten Parameter oder setzen die Editor-Option `validateReplace` (Prop `validateReplace` jeder Bindung und Eigenschaft von `<xlsx-editor>`), die auch der mitgelieferte Dialog Suchen und Ersetzen beachtet. Ein von der Regel abgelehnter Wert lässt seine Zelle unverändert und wird in `onRefused(cells)` aufgeführt (`{ sheet, row, col, ref, value, message, title? }`); der Dialog zeigt einen Hinweis mit der Anzahl. Mit `{ validate: false }` nimmt ein Aufruf die Editor-Option zurück.
 - `workflows.insertFunction`: `categories()`, `search({ text, category })` (dokumentierte `name`,
   `category`, `syntax` und eine lokalisierte `description`), `canInsert()` und `insert(name, args?)`.
   Es fügt `NAME(` an der Einfügemarke des aktiven Formelentwurfs ein (und startet bei Bedarf einen)

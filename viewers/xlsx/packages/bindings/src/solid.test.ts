@@ -63,6 +63,7 @@ describe('Solid editor adapter', () => {
 		document.body.append(host);
 		const props = {
 			readOnly: false,
+			validateReplace: true,
 			get authorName() {
 				return author();
 			},
@@ -81,6 +82,7 @@ describe('Solid editor adapter', () => {
 		);
 		emit(editor, 'ribbon-customize', { hiddenActions: ['italic'] });
 		expect(onRibbonCustomize).toHaveBeenCalledWith(['italic']);
+		expect(editor.validateReplace).toBe(true);
 		setAuthor('Grace');
 		expect(editor.authorName).toBe('Grace');
 		expect(editor.readOnly).toBe(true);

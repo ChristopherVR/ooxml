@@ -115,7 +115,7 @@ de retour.
 - `workflows.find` : `findAll(query)`, `findNext(query, { backwards })`, `select(match)`,
   `replace(query, text)`, `replaceAll(query, text)` et `canReplace()`. La recherche fonctionne dans
   un classeur en lecture seule ; le remplacement y est refusé et les cellules verrouillées par la
-  protection sont ignorées. Comme le Remplacer d’Excel lui-même, `replace` et `replaceAll` n’appliquent pas la validation des données : le remplacement est écrit même si la règle de la cellule le refuserait à la saisie.
+  protection sont ignorées. Comme le Remplacer d’Excel lui-même, `replace` et `replaceAll` n’appliquent pas la validation des données par défaut : le remplacement est écrit même si la règle de la cellule le refuserait à la saisie. Pour la vérifier, passez `{ validate: true, onRefused }` en troisième argument ou activez l’option d’éditeur `validateReplace` (prop `validateReplace` de chaque liaison et propriété de `<xlsx-editor>`), que la boîte de dialogue Rechercher et remplacer fournie respecte aussi. Une valeur refusée par la règle laisse sa cellule inchangée et figure dans `onRefused(cells)` (`{ sheet, row, col, ref, value, message, title? }`) ; la boîte de dialogue affiche un avis avec le nombre. `{ validate: false }` exclut un appel de l’option d’éditeur.
 - `workflows.insertFunction` : `categories()`, `search({ text, category })` (avec `name`,
   `category`, `syntax` et une `description` localisée), `canInsert()` et `insert(name, args?)`, qui
   insère `NAME(` au curseur du brouillon de formule actif (en créant un si besoin) et renvoie

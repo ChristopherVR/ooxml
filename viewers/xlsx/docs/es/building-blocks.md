@@ -110,7 +110,7 @@ valor de retorno.
   `canApply()` y `apply(patch)` aplican un parche de estilo a la selección como un paso de deshacer.
 - `workflows.find`: `findAll(query)`, `findNext(query, { backwards })`, `select(match)`,
   `replace(query, text)`, `replaceAll(query, text)` y `canReplace()`. Buscar funciona en un libro de
-  solo lectura; reemplazar se rechaza allí y se omiten las celdas bloqueadas por la protección. Igual que Reemplazar en el propio Excel, `replace` y `replaceAll` no aplican la validación de datos: el reemplazo se escribe aunque la regla de la celda lo rechazaría al escribirlo.
+  solo lectura; reemplazar se rechaza allí y se omiten las celdas bloqueadas por la protección. Igual que Reemplazar en el propio Excel, `replace` y `replaceAll` no aplican la validación de datos por defecto: el reemplazo se escribe aunque la regla de la celda lo rechazaría al escribirlo. Para comprobarla, pase `{ validate: true, onRefused }` como tercer argumento o active la opción del editor `validateReplace` (prop `validateReplace` de cada enlace y propiedad de `<xlsx-editor>`), que también respeta el cuadro de diálogo Buscar y reemplazar incluido. Un valor que la regla rechaza deja su celda sin cambios y aparece en `onRefused(cells)` (`{ sheet, row, col, ref, value, message, title? }`); el cuadro de diálogo muestra un aviso con el recuento. `{ validate: false }` excluye una llamada de la opción del editor.
 - `workflows.insertFunction`: `categories()`, `search({ text, category })` (con `name`, `category`,
   `syntax` y una `description` localizada), `canInsert()` e `insert(name, args?)`, que inserta
   `NAME(` en el cursor del borrador de fórmula activo (iniciando uno si no hay) y devuelve

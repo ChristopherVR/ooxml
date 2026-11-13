@@ -262,3 +262,69 @@ it('onContextMenu still wins over onContextMenuItems', () => {
 	expect(ctx.root.querySelector('office-ui-context-menu')).toBeNull();
 	expect(items).not.toHaveBeenCalled();
 });
+
+/** A sheet where A1:A4 only accept whole numbers above 10 (stop alert on). */
+function validatedWorkbook() {
+	const { editor, workbook } = mount();
+	const session = (editor as unknown as { core: { session: { setCellInput: Function } } }).core
+		.session;
+	session.setCellInput(0, 0, 0, '5x');
+	session.setCellInput(0, 1, 0, '5y');
+	session.setCellInput(0, 2, 1, 'free');
+	workbook.sheets[0]!.dataValidations.push({
+		ranges: [{ start: { row: 0, col: 0 }, end: { row: 3, col: 0 } }],
+		type: 'whole',
+		operator: 'greaterThan',
+		formula1: '10',
+		showErrorMessage: true,
+		error: 'Too small',
+	});
+	return { editor, workbook, sheet: workbook.sheets[0]! };
+}
+
+it('replaces without data validation by default, like Excel', () => {
+	const { editor, sheet } = validatedWorkbook();
+	const ops = editor.getToolbarProps().workflows.find;
+	expect(ops.replaceAll({ text: 'x' }, '')).toBe(1);
+	expect(getCell(sheet, 0, 0)?.value).toBe(5);
+});
+
+it('replaceAll skips values data validation refuses when asked to validate', () => {
+	const { editor, sheet } = validatedWorkbook();
+	const ops = editor.getToolbarProps().workflows.find;
+	const onRefused = vi.fn();
+	expect(ops.replaceAll({ text: '5', matchCase: true }, '7', { validate: true, onRefused })).toBe(
+		0,
+	);
+	expect(onRefused).toHaveBeenCalledTimes(1);
+	expect(onRefused.mock.calls[0]![0]).toMatchObject([
+		{ ref: 'A1', value: '7x', message: 'Too small' },
+		{ ref: 'A2', value: '7y' },
+	]);
+	expect(getCell(sheet, 0, 0)?.value).toBe('5x');
+});
+
+it('validateReplace on the editor turns validation on for every call', () => {
+	const { editor, sheet } = validatedWorkbook();
+	editor.validateReplace = true;
+	const ops = editor.getToolbarProps().workflows.find;
+	expect(ops.replaceAll({ text: 'free' }, 'ok')).toBe(1);
+	expect(ops.replaceAll({ text: '5x' }, '9')).toBe(0);
+	expect(getCell(sheet, 0, 0)?.value).toBe('5x');
+	// A call can still opt out.
+	expect(ops.replaceAll({ text: '5x' }, '9', { validate: false })).toBe(1);
+	expect(getCell(sheet, 0, 0)?.value).toBe(9);
+});
+
+it('replace checks the active cell against its validation', () => {
+	const { editor, sheet } = validatedWorkbook();
+	const ops = editor.getToolbarProps().workflows.find;
+	const onRefused = vi.fn();
+	expect(ops.findNext({ text: '5x' })).toMatchObject({ row: 0, col: 0 });
+	expect(ops.replace({ text: '5x' }, '3', { validate: true, onRefused })).toBe(false);
+	expect(onRefused).toHaveBeenCalledTimes(1);
+	expect(getCell(sheet, 0, 0)?.value).toBe('5x');
+	expect(ops.findNext({ text: '5x' })).toMatchObject({ row: 0, col: 0 });
+	expect(ops.replace({ text: '5x' }, '30', { validate: true })).toBe(true);
+	expect(getCell(sheet, 0, 0)?.value).toBe(30);
+});

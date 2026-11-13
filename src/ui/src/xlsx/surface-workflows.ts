@@ -6,7 +6,7 @@
  * its return value.
  */
 import type { FindMatch, FindQuery, StylePatch } from 'ooxml-core/xlsx';
-import type { FormatCellsState } from 'ooxml-core/xlsx/ui';
+import type { FormatCellsState, ReplaceOptions } from 'ooxml-core/xlsx/ui';
 import type { SurfaceActionContext } from './surface-actions';
 
 export type ContextMenuKind = 'cell' | 'row' | 'column' | 'tab';
@@ -92,11 +92,17 @@ export interface FindOperations {
 	select(match: FindMatch): boolean;
 	/**
 	 * Replaces the match at the active cell (when there is one) and selects the next; without a
-	 * match there it only moves on. True when a cell was replaced.
+	 * match there it only moves on. True when a cell was replaced. Like Excel, it does not apply
+	 * data validation unless `options.validate` (or the editor's `validateReplace`) is true; then a
+	 * value the cell's rule refuses is left alone and reported to `options.onRefused`.
 	 */
-	replace(query: FindQuery, replacement: string): boolean;
-	/** Replaces every match in cells that may be edited; returns how many cells changed. */
-	replaceAll(query: FindQuery, replacement: string): number;
+	replace(query: FindQuery, replacement: string, options?: ReplaceOptions): boolean;
+	/**
+	 * Replaces every match in cells that may be edited; returns how many cells changed. With
+	 * validation on (see `replace`), cells whose new value fails their rule are skipped and listed
+	 * in `options.onRefused`.
+	 */
+	replaceAll(query: FindQuery, replacement: string, options?: ReplaceOptions): number;
 }
 export interface FindReplaceRequest extends SurfaceActionContext, FindOperations {}
 

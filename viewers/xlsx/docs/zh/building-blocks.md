@@ -94,7 +94,7 @@ useViewerBuildingBlocks({
   共有属性和不一致的属性名）、`numFmt` 和 `fill`（混合时为 null）以及 `complete`（选区过大时为 false）。
   `canApply()` 和 `apply(patch)` 将样式补丁作为一个撤销步骤应用到选区。
 - `workflows.find`：`findAll(query)`、`findNext(query, { backwards })`、`select(match)`、`replace(query, text)`、
-  `replaceAll(query, text)` 和 `canReplace()`。查找在只读工作簿中可用；替换在只读时被拒绝，被工作表保护锁定的单元格会被跳过。与 Excel 自带的替换一样，`replace` 和 `replaceAll` 不应用数据验证：即使单元格的规则在键入时会拒绝该值，替换结果也会写入。
+  `replaceAll(query, text)` 和 `canReplace()`。查找在只读工作簿中可用；替换在只读时被拒绝，被工作表保护锁定的单元格会被跳过。与 Excel 自带的替换一样，`replace` 和 `replaceAll` 默认不应用数据验证：即使单元格的规则在键入时会拒绝该值，替换结果也会写入。若要检查，请将 `{ validate: true, onRefused }` 作为第三个参数传入，或设置编辑器选项 `validateReplace`（每个绑定的 `validateReplace` 属性，以及 `<xlsx-editor>` 的同名属性），内置的“查找和替换”对话框同样遵循它。被规则拒绝的值会使其单元格保持不变，并列在 `onRefused(cells)` 中（`{ sheet, row, col, ref, value, message, title? }`）；对话框会显示带数量的提示。`{ validate: false }` 可让单个调用不受编辑器选项影响。
 - `workflows.insertFunction`：`categories()`、`search({ text, category })`（包含 `name`、`category`、`syntax` 和本地化的
   `description`）、`canInsert()` 和 `insert(name, args?)`。它在当前公式草稿的插入点插入 `NAME(`（没有草稿时新建），
   并返回 `{ text, caret }` 以便您的输入框同步。纯文本草稿会被拒绝。

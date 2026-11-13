@@ -78,6 +78,8 @@ export interface EditorContext {
 	/** Dispatches a public CustomEvent on the host; returns `!defaultPrevented`. */
 	emit(type: string, detail: unknown): boolean;
 	authorName(): string;
+	/** Whether Replace and Replace All check data validation (`validateReplace`; default false). */
+	validateReplace?(): boolean;
 	locale(): string;
 	/**
 	 * The undo history Ctrl+Z, the ribbon and the Quick Access Toolbar drive: the edit session's

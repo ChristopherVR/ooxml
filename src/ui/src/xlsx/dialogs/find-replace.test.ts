@@ -77,6 +77,51 @@ describe('find and replace dialog', () => {
 		expect(await done).toBe(2);
 	});
 
+	describe('data validation', () => {
+		function validated(validateReplace: boolean) {
+			const ctx = createTestContext(createWorkbook({ sheets: ['Sheet1'] }), { validateReplace });
+			registerNavigationDialogs(ctx);
+			const s = ctx.session()!;
+			s.setCellInput(0, 0, 0, 'a1');
+			s.setCellInput(0, 1, 0, 'a2');
+			s.setCellInput(0, 2, 0, 'a3');
+			ctx.workbook()!.sheets[0]!.dataValidations.push({
+				ranges: [{ start: { row: 0, col: 0 }, end: { row: 0, col: 0 } }],
+				type: 'whole',
+				operator: 'greaterThan',
+				formula1: '10',
+				showErrorMessage: true,
+			});
+			return ctx;
+		}
+		const replaceAllWith = (ctx: ReturnType<typeof validated>, value: string) => {
+			void ctx.dialogs.open('find-replace', { tab: 'replace' });
+			const dialog = dialogEl(ctx, 'find-replace');
+			setValue(inputByLabel(dialog, 'Find what:'), 'a');
+			setValue(inputByLabel(dialog, 'Replace with:'), value);
+			clickButton(dialog, 'Replace All');
+		};
+
+		it('does not apply data validation by default, like Excel', () => {
+			const ctx = validated(false);
+			replaceAllWith(ctx, '');
+			expect(getCell(ctx.workbook()!.sheets[0]!, 0, 0)?.value).toBe(1);
+			expect(ctx.toasts.at(-1)?.message).toBe('All done. We made 3 replacements.');
+		});
+
+		it('skips cells whose new value fails validation when the editor opts in', () => {
+			const ctx = validated(true);
+			replaceAllWith(ctx, '');
+			const ws = ctx.workbook()!.sheets[0]!;
+			expect(getCell(ws, 0, 0)?.value).toBe('a1');
+			expect(getCell(ws, 1, 0)?.value).toBe(2);
+			expect(ctx.toasts.map((t) => t.message)).toContain(
+				'1 cell(s) were not replaced because the new value does not match their data validation.',
+			);
+			expect(ctx.toasts.at(-1)?.message).toBe('All done. We made 2 replacements.');
+		});
+	});
+
 	it('Replace replaces the current match and moves on', () => {
 		const ctx = setup();
 		void ctx.dialogs.open('find-replace', { tab: 'replace' });

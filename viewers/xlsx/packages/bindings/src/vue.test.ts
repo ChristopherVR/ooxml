@@ -22,6 +22,7 @@ describe('Vue editor adapter', () => {
 					ref: exposed,
 					readOnly: readOnly.value,
 					locale: 'es-MX',
+					validateReplace: true,
 					showToolbar: false,
 					'onWorkbook-change': onChange,
 					'onSelection-change': onSelection,
@@ -33,6 +34,7 @@ describe('Vue editor adapter', () => {
 		expect(editor.locale).toBe('es');
 		expect(editor.showToolbar).toBe(false);
 		expect(editor.showFormulaBar).toBe(true);
+		expect(editor.validateReplace).toBe(true);
 		expect(onReady).toHaveBeenCalledWith(editor);
 		expect(exposed.value?.element).toBe(editor);
 		readOnly.value = true;

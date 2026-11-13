@@ -24,6 +24,15 @@ async function seedBytes(): Promise<number[]> {
 	);
 	data.rows.set(1, new Map([[0, { value: 'apple pie' }]]));
 	data.rows.set(2, new Map([[0, { value: 'pear' }]]));
+	// B1 only accepts whole numbers above 10, so replacing its 5 with 7 breaks the rule.
+	data.dataValidations.push({
+		ranges: [{ start: { row: 0, col: 1 }, end: { row: 0, col: 1 } }],
+		type: 'whole',
+		operator: 'greaterThan',
+		formula1: '10',
+		showErrorMessage: true,
+		error: 'Too small',
+	});
 	const locked = workbook.sheets[1]!;
 	locked.rows.set(0, new Map([[0, { value: 'secret apple' }]]));
 	locked.protection = { sheet: true } as SheetProtection;
@@ -195,6 +204,51 @@ for (const framework of FRAMEWORKS) {
 			expect(await cellValue(page, 'A2')).toBe('fig');
 			await page.evaluate(() => window.xlsxNativeBlocks.handle.element.undo());
 			expect(await cellValue(page, 'A2')).toBe('apple pie');
+		});
+
+		test('replace ignores data validation by default, like Excel', async ({ page }) => {
+			await open(page, framework);
+			await page.getByLabel('Host find what').fill('5');
+			await page.getByLabel('Host replace with').fill('7');
+			await page.getByRole('button', { name: 'Host replace all' }).click();
+			await expect(page.getByLabel('Host find status')).toContainText('replaced 1; refused=;');
+			expect(await cellValue(page, 'B1')).toBe(7);
+		});
+
+		test('a call can ask replace to validate and reports the refused cells', async ({ page }) => {
+			await open(page, framework);
+			await page.getByLabel('Host find what').fill('5');
+			await page.getByLabel('Host replace with').fill('7');
+			await page.getByLabel('Host validate replace').check();
+			await page.getByRole('button', { name: 'Host replace all' }).click();
+			await expect(page.getByLabel('Host find status')).toContainText('replaced 0; refused=B1;');
+			expect(await cellValue(page, 'B1')).toBe(5);
+			// A value the rule accepts goes through.
+			await page.getByLabel('Host replace with').fill('70');
+			await page.getByRole('button', { name: 'Host replace all' }).click();
+			await expect(page.getByLabel('Host find status')).toContainText('replaced 1; refused=;');
+			expect(await cellValue(page, 'B1')).toBe(70);
+		});
+
+		test('the validateReplace option applies to every call and a call can opt out', async ({
+			page,
+		}) => {
+			await open(page, framework);
+			await page.evaluate(() =>
+				window.xlsxNativeBlocks.update({ canEdit: true, validateReplace: true }),
+			);
+			await expect
+				.poll(() => page.evaluate(() => window.xlsxNativeBlocks.handle.element.validateReplace))
+				.toBe(true);
+			await page.getByLabel('Host find what').fill('5');
+			await page.getByLabel('Host replace with').fill('7');
+			await page.getByRole('button', { name: 'Host replace all' }).click();
+			await expect(page.getByLabel('Host find status')).toContainText('replaced 0; refused=B1;');
+			expect(await cellValue(page, 'B1')).toBe(5);
+			await page.getByLabel('Host skip validation').check();
+			await page.getByRole('button', { name: 'Host replace all' }).click();
+			await expect(page.getByLabel('Host find status')).toContainText('replaced 1; refused=;');
+			expect(await cellValue(page, 'B1')).toBe(7);
 		});
 
 		test('Insert Function inserts at the caret of an active formula draft', async ({ page }) => {

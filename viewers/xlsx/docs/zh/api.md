@@ -29,6 +29,7 @@ await editor.load(bytes, 'Budget.xlsx');
 | 属性                 | 类型                               | 说明                                                                                                               |
 | -------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `themeColors`        | `Partial<Record<...>>`             | 以 `--xve-*` 自定义属性应用的令牌覆盖（[主题](/theming)）。                                                        |
+| `validateReplace`    | `boolean`                          | “替换”和“全部替换”会检查数据验证；被拒绝的单元格保持不变（默认 `false`，与 Excel 一致）。                          |
 | `hiddenActions`      | `string[]`                         | 按稳定 ID 隐藏的功能区控件、标题栏项目和右键菜单项。                                                               |
 | `ribbonAddIns`       | `RibbonAddInTab[]`                 | 宿主在内置选项卡之后添加的选项卡（[绑定](/bindings#ribbon-add-in-tabs)）。                                         |
 | `customization`      | `ExcelCustomization \| null`       | 能力（capabilities）、宿主的“文件”选项卡页面和宿主菜单命令（参见[自定义](#customization)）。                       |
