@@ -17,6 +17,7 @@ import { LoadNoticesService } from '../viewer/load-notices.service';
 import { POWER_POINT_VIEWER_PROVIDERS } from '../viewer/power-point-viewer.providers';
 import { ViewerCollaborationShellService } from '../viewer/viewer-collaboration-shell.service';
 import { ViewerCustomShowsService } from '../viewer/viewer-custom-shows.service';
+import { ViewerCustomizationService } from '../viewer/viewer-customization.service';
 import { ViewerDialogsService } from '../viewer/viewer-dialogs.service';
 import { ViewerDocumentPropertiesService } from '../viewer/viewer-document-properties.service';
 import { ViewerFindReplaceService } from '../viewer/viewer-find-replace.service';
@@ -112,11 +113,18 @@ export class ViewerBuildingBlocks {
 			canUndo: shell.editor.canUndo(),
 			canRedo: shell.editor.canRedo(),
 			dirty: shell.editor.dirty(),
+			// The shared shell derivations the custom-shell service already keeps as signals.
+			shellState: shell.state(),
+			collaborationState: shell.collaboration.state(),
 		};
 	});
 	readonly mode = computed(() => this.state().mode);
 	readonly loading = computed(() => this.state().loading);
 	readonly error = computed(() => this.state().error);
+	/** `state().shellState`, as its own signal. */
+	readonly shellState = computed(() => this.shell.state());
+	/** `state().collaborationState`, as its own signal. */
+	readonly collaborationState = computed(() => this.shell.collaboration.state());
 	readonly options: Signal<ViewerBuildingBlocksOptions> = this.optionsSignal.asReadonly();
 
 	constructor() {
@@ -136,6 +144,10 @@ export class ViewerBuildingBlocks {
 		shell.loader.bindHostLimits(() => options().limits);
 		shell.loader.bindHostGoogleFonts(() => options().googleFonts);
 		shell.loader.bindHostAllowExternalContent(() => options().allowExternalContent);
+		// Both host options also lock their Trust Center settings, live (as the full viewer).
+		const customization = inject(ViewerCustomizationService);
+		customization.bindGoogleFonts(() => options().googleFonts);
+		customization.bindAllowExternalContent(() => options().allowExternalContent);
 		inject(ListConversionScopeService).bind(computed(() => options().listConversionScope));
 		this.customShows.bind({
 			activeSlideIndex: shell.activeSlideIndex,

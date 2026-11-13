@@ -1,4 +1,6 @@
 import type {
+	CollaborationShellState,
+	CollaborationState,
 	GoogleFontsOption,
 	ListConversionScope,
 	PptxLoadLimits,
@@ -44,4 +46,11 @@ export interface ViewerBuildingBlocksState {
 	canUndo: boolean;
 	canRedo: boolean;
 	dirty: boolean;
+	/**
+	 * Effective edit permission plus connection and presence counts, as React's `shellState`;
+	 * pass it to `describeCollaborationShellState` for a localised status line.
+	 */
+	shellState: CollaborationShellState;
+	/** The shared `CollaborationState` of the room the canvas is in (`COLLABORATION_OFF` when none). */
+	collaborationState: CollaborationState;
 }
