@@ -26,13 +26,15 @@ import type { PptxAction, PptxElement, PptxSlide } from 'pptx-viewer-core';
  * slide box so they share its origin and scale; anchoring them to the container
  * instead leaves them offset by the letterbox margins.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { CanvasSize } from '../../types';
 import type { ElementAnimationState } from '../../utils/animation-timeline';
 import { getReactSlideBackgroundStyle } from '../../utils/slide-background-style';
 import type { TableStyleContext } from '../../utils/table-parse';
 import type { FieldSubstitutionContext } from '../../utils/text-field-substitution';
+import { ElementRenderErrorReportingContext } from '../ElementErrorBoundary';
+import type { ElementRenderErrorHandler } from '../ElementErrorBoundary';
 import { ElementRenderer } from '../ElementRenderer';
 import { SlideBackgroundImageLayer } from '../SlideBackgroundImageLayer';
 import { useStageAnimationTriggers } from './useStageAnimationTriggers';
@@ -43,6 +45,7 @@ import type { StageAnimationTriggers } from './useStageAnimationTriggers';
 // ---------------------------------------------------------------------------
 
 export interface PresentationStageProps {
+	onElementRenderError?: ElementRenderErrorHandler;
 	activeSlide: PptxSlide | undefined;
 	templateElements: PptxElement[];
 	canvasSize: CanvasSize;
@@ -81,7 +84,18 @@ export interface PresentationStageProps {
 // Component
 // ---------------------------------------------------------------------------
 
-export function PresentationStage({
+export function PresentationStage(props: PresentationStageProps) {
+	const inherited = useContext(ElementRenderErrorReportingContext);
+	const reporter = props.onElementRenderError ?? inherited?.onElementRenderError;
+	const errorReporting = useMemo(() => ({ onElementRenderError: reporter }), [reporter]);
+	return (
+		<ElementRenderErrorReportingContext.Provider value={errorReporting}>
+			<PresentationStageContent {...props} />
+		</ElementRenderErrorReportingContext.Provider>
+	);
+}
+
+function PresentationStageContent({
 	activeSlide,
 	templateElements,
 	canvasSize,

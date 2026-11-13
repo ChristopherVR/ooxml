@@ -10,10 +10,12 @@ import React from 'react';
 
 import type { CanvasSize } from '../types';
 import { normalizeHexColor } from '../utils';
+import type { ElementRenderErrorHandler } from './ElementErrorBoundary';
 import { SlideBackgroundImageLayer } from './SlideBackgroundImageLayer';
 import { StaticElementRenderer } from './StaticElementRenderer';
 
 export interface SlideLayerProps {
+	onElementRenderError?: ElementRenderErrorHandler;
 	slide: PptxSlide;
 	templateElements: PptxElement[];
 	canvasSize: CanvasSize;
@@ -23,6 +25,7 @@ export function SlideLayer({
 	slide,
 	templateElements,
 	canvasSize,
+	onElementRenderError,
 }: SlideLayerProps): React.ReactElement {
 	const safeWidth = Math.max(canvasSize.width, 1);
 	const safeHeight = Math.max(canvasSize.height, 1);
@@ -54,6 +57,7 @@ export function SlideLayer({
 					activeSlide={slide}
 					allSlides={[slide]}
 					zIndex={index}
+					onElementRenderError={onElementRenderError}
 				/>
 			))}
 		</div>

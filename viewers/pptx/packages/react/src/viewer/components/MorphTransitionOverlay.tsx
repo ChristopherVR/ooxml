@@ -20,9 +20,11 @@ import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import React from 'react';
 
 import type { CanvasSize } from '../types';
+import type { ElementRenderErrorHandler } from './ElementErrorBoundary';
 import { StaticElementRenderer } from './StaticElementRenderer';
 
 export interface MorphTransitionOverlayProps {
+	onElementRenderError?: ElementRenderErrorHandler;
 	canvasSize: CanvasSize;
 	scale: number;
 	morphPlan: MorphTransitionPlan;
@@ -65,6 +67,7 @@ export function MorphTransitionOverlay({
 	outgoingSlide,
 	incomingSlide,
 	containerRef,
+	onElementRenderError,
 }: MorphTransitionOverlayProps): React.ReactElement {
 	// Each group's slot in the plan's one back-to-front stack, so a dissolving
 	// pair stays under whatever the incoming slide stacks above it.
@@ -130,6 +133,7 @@ export function MorphTransitionOverlay({
 								    centre and double-apply the static transform. */}
 								<StaticElementRenderer
 									element={element}
+									onElementRenderError={onElementRenderError}
 									activeSlide={outgoingSlide}
 									allSlides={[outgoingSlide]}
 									zIndex={zIndex}
@@ -146,6 +150,7 @@ export function MorphTransitionOverlay({
 								>
 									<StaticElementRenderer
 										element={element}
+										onElementRenderError={onElementRenderError}
 										activeSlide={incomingSlide}
 										allSlides={[incomingSlide]}
 										zIndex={zIndex}
@@ -187,6 +192,7 @@ export function MorphTransitionOverlay({
 								>
 									<StaticElementRenderer
 										element={group.outgoing}
+										onElementRenderError={onElementRenderError}
 										activeSlide={outgoingSlide}
 										allSlides={[outgoingSlide]}
 										zIndex={0}
@@ -200,6 +206,7 @@ export function MorphTransitionOverlay({
 								>
 									<StaticElementRenderer
 										element={group.incoming}
+										onElementRenderError={onElementRenderError}
 										activeSlide={incomingSlide}
 										allSlides={[incomingSlide]}
 										zIndex={0}

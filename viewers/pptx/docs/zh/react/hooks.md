@@ -49,6 +49,35 @@ description: 了解 PowerPointViewer 的 hooks 架构、/viewer 提供的稳定�
 import { useThemeSwitching, useCollaborativeState } from 'pptx-react-viewer/viewer';
 ```
 
+### 元素渲染错误 {#element-render-errors}
+
+React 画布、缩略图和静态预览/切换渲染器会在每个元素处隔离客户端渲染和生命周期错误。失败的元素不输出内容，相邻元素和编辑器界面仍保持挂载；文档中的元素不会因此被删除或修改。缺少 3D 依赖或场景仍在加载时保留海报回退；3D 场景渲染错误则与其他元素错误一样上报并省略。
+
+可向 `useViewerBuildingBlocks` 传入可选的 `onElementRenderError`，同时接收返回的 `canvasProps` 和 `slidesPaneProps` 中发生的错误：
+
+```tsx
+import { SlideCanvas, SlidesPane, useViewerBuildingBlocks } from 'pptx-react-viewer';
+import type { ElementRenderErrorHandler } from 'pptx-react-viewer';
+
+const reportElementError: ElementRenderErrorHandler = (error, context) => {
+	console.error('Element could not be rendered', error, context);
+};
+
+function Editor({ content }) {
+	const blocks = useViewerBuildingBlocks({ content, onElementRenderError: reportElementError });
+	return (
+		<>
+			<SlidesPane {...blocks.slidesPaneProps} />
+			<SlideCanvas {...blocks.canvasProps} />
+		</>
+	);
+}
+```
+
+导出的 `ElementRenderErrorContext` 包含 `elementId`、`elementType`，以及提供所属幻灯片时的可选 `slideId`。没有回调时调用 `console.error(error, context)`；回调抛出错误时也回退到该日志，不会让查看器崩溃。React 开发版本还可能自行输出捕获的错误。同一元素出现在多个界面中时，每个失败的已挂载实例都可能各自上报。
+
+独立的 `SlideCanvas`、`SlidesPane`、`SlideThumbnail`、`ScaledSlidePreview`、`SlideTemplatePreview`、`PresentationStage`、`ReadingViewStage` 和 `PresentationTransitionOverlay` 也接受 `onElementRenderError`。这不是新增的 `PowerPointViewer` 属性。替换失败元素的对象（即使 id 不变）会重试渲染；改变 id 会重新挂载边界。相同失败对象的重复渲染不会重试，仅原地修改对象不能清除失败状态。边界不捕获事件处理器、任意异步/定时器或服务端渲染错误。此行为仅适用于 React，其他绑定并未获得该回调或隔离保证。
+
 ### 自定义编辑器的协作 {#custom-editor-collaboration}
 
 `useViewerBuildingBlocks` 接受与 `PowerPointViewer` 相同的可选 `collaboration` 配置，包括[宿主自有的 Yjs 会话](/zh/guide/host-owned-collaboration)。它返回可用于自定义状态栏的 `collaboration` 连接和在线状态，并在 `canvasProps` 中包含光标和远程选择叠加层，无需额外的协作 provider。

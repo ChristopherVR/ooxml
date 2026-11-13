@@ -14,6 +14,7 @@ import type { CanvasSize } from '../types';
 import { getReactSlideBackgroundStyle } from '../utils/slide-background-style';
 import type { TableStyleContext } from '../utils/table-band-style';
 import type { FieldSubstitutionContext } from '../utils/text-field-substitution';
+import type { ElementRenderErrorHandler } from './ElementErrorBoundary';
 import { deriveSlideFieldContext } from './slide-field-context';
 import { SlideBackgroundImageLayer } from './SlideBackgroundImageLayer';
 import { StaticElementRenderer } from './StaticElementRenderer';
@@ -24,6 +25,8 @@ import { StaticElementRenderer } from './StaticElementRenderer';
  * `templateElementsBySlideId[slide.id]`, `canvasSize`, `fieldContext` and `tableStyleContext`.
  */
 export interface SlideThumbnailProps {
+	/** Reports an element omitted from this preview; defaults to console.error. */
+	onElementRenderError?: ElementRenderErrorHandler;
 	/** The slide to draw. A different slide object (every edit makes one) redraws it. */
 	slide: PptxSlide;
 	/** The slide's inherited layout and master elements, drawn beneath its own. */
@@ -47,6 +50,7 @@ function SlideThumbnailImpl({
 	previewWidth,
 	fieldContext,
 	tableStyleContext,
+	onElementRenderError,
 }: SlideThumbnailProps): React.ReactElement {
 	const safeCanvasWidth = Math.max(canvasSize.width, 1);
 	const safeCanvasHeight = Math.max(canvasSize.height, 1);
@@ -96,6 +100,7 @@ function SlideThumbnailImpl({
 						zIndex={index}
 						fieldContext={slideFieldContext}
 						tableStyleContext={tableStyleContext}
+						onElementRenderError={onElementRenderError}
 					/>
 				))}
 			</div>
@@ -124,6 +129,9 @@ export function slideThumbnailPropsEqual(
 	prev: SlideThumbnailProps,
 	next: SlideThumbnailProps,
 ): boolean {
+	if (prev.onElementRenderError !== next.onElementRenderError) {
+		return false;
+	}
 	if (prev.previewWidth !== next.previewWidth) {
 		return false;
 	}

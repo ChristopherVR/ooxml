@@ -6,8 +6,10 @@
  *
  * Falls back to the poster/preview image when:
  * - Three.js is not installed
- * - The model data is missing or invalid
- * - An error occurs during rendering
+ * - The model data is missing or cannot be converted to a blob URL
+ * - Three.js availability is still being checked or the scene is loading
+ *
+ * Render errors are handled by the enclosing element error boundary.
  *
  * @module Model3DRenderer
  */
@@ -20,22 +22,7 @@ import React, { Suspense, useState, useEffect, useMemo } from 'react';
 // Lazy-loaded Three.js scene (only resolved when three is installed)
 // ---------------------------------------------------------------------------
 
-/** Stub component rendered when the dynamic import fails. */
-function FailedToLoad() {
-	return null;
-}
-
-const LazyModel3DScene = /* @__PURE__ */ React.lazy(
-	async (): Promise<{
-		default: React.ComponentType<import('./Model3DScene').Model3DSceneProps>;
-	}> => {
-		try {
-			return await import('./Model3DScene');
-		} catch {
-			return { default: FailedToLoad };
-		}
-	},
-);
+const LazyModel3DScene = /* @__PURE__ */ React.lazy(() => import('./Model3DScene'));
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -113,38 +100,6 @@ function PosterFallback({
 }
 
 // ---------------------------------------------------------------------------
-// Error boundary
-// ---------------------------------------------------------------------------
-
-interface ErrorBoundaryState {
-	hasError: boolean;
-}
-
-class Model3DErrorBoundary extends React.Component<
-	{
-		children: React.ReactNode;
-		fallback: React.ReactNode;
-	},
-	ErrorBoundaryState
-> {
-	constructor(props: { children: React.ReactNode; fallback: React.ReactNode }) {
-		super(props);
-		this.state = { hasError: false };
-	}
-
-	static getDerivedStateFromError(): ErrorBoundaryState {
-		return { hasError: true };
-	}
-
-	render() {
-		if (this.state.hasError) {
-			return this.props.fallback;
-		}
-		return this.props.children;
-	}
-}
-
-// ---------------------------------------------------------------------------
 // Main renderer
 // ---------------------------------------------------------------------------
 
@@ -206,16 +161,14 @@ export function Model3DRenderer({ element, width, height, interactive }: Model3D
 	}
 
 	return (
-		<Model3DErrorBoundary fallback={posterFallback}>
-			<Suspense fallback={posterFallback}>
-				<LazyModel3DScene
-					modelUrl={blobUrl}
-					interactive={interactive}
-					width={width}
-					height={height}
-					scene={element.scene}
-				/>
-			</Suspense>
-		</Model3DErrorBoundary>
+		<Suspense fallback={posterFallback}>
+			<LazyModel3DScene
+				modelUrl={blobUrl}
+				interactive={interactive}
+				width={width}
+				height={height}
+				scene={element.scene}
+			/>
+		</Suspense>
 	);
 }

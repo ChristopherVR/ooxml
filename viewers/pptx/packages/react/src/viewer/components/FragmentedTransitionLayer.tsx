@@ -17,9 +17,11 @@ import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import React from 'react';
 
 import type { CanvasSize } from '../types';
+import type { ElementRenderErrorHandler } from './ElementErrorBoundary';
 import { SlideLayer } from './SlideTransitionSlideLayer';
 
 export interface FragmentedTransitionLayerProps {
+	onElementRenderError?: ElementRenderErrorHandler;
 	layer: FragmentedLayer;
 	slide: PptxSlide;
 	templateElements: PptxElement[];
@@ -37,6 +39,7 @@ export function FragmentedTransitionLayer({
 	scale,
 	zIndex,
 	layerName,
+	onElementRenderError,
 }: FragmentedTransitionLayerProps): React.ReactElement {
 	return (
 		<div
@@ -72,7 +75,12 @@ export function FragmentedTransitionLayer({
 							...deviceStrokeStageStyle(scale),
 						}}
 					>
-						<SlideLayer slide={slide} templateElements={templateElements} canvasSize={canvasSize} />
+						<SlideLayer
+							slide={slide}
+							templateElements={templateElements}
+							canvasSize={canvasSize}
+							onElementRenderError={onElementRenderError}
+						/>
 					</div>
 				</div>
 			))}

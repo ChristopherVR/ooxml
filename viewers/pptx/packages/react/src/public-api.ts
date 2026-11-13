@@ -29,6 +29,10 @@ export { Toolbar } from './viewer/components/Toolbar';
 export type { ToolbarProps } from './viewer/components/Toolbar';
 export { SlideCanvas } from './viewer/components/SlideCanvas';
 export type { SlideCanvasProps } from './viewer/components/SlideCanvas';
+export type {
+	ElementRenderErrorContext,
+	ElementRenderErrorHandler,
+} from './viewer/components/ElementErrorBoundary';
 export { SlidesPaneSidebar as SlidesPane } from './viewer/components/SlidesPaneSidebar';
 export type { SlidesPaneSidebarProps as SlidesPaneProps } from './viewer/components/SlidesPaneSidebar';
 export type { SlidesPaneLayoutGalleryRequest } from './viewer/hooks/useViewerBuildingBlocks-slides-pane-props';

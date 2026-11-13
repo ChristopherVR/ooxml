@@ -10,6 +10,7 @@ import type { ElementAnimationState } from '../../utils/animation-timeline';
 import type { TableStyleContext } from '../../utils/table-parse';
 import type { FieldSubstitutionContext } from '../../utils/text-field-substitution';
 import type { ElementFindHighlights } from '../../utils/text-segment-helpers';
+import type { ElementRenderErrorHandler } from '../ElementErrorBoundary';
 
 export interface ConnectorRendererProps {
 	el: PptxElement;
@@ -40,6 +41,7 @@ export interface ConnectorRendererProps {
 
 export interface ElementRendererProps {
 	element: PptxElement;
+	onElementRenderError?: ElementRenderErrorHandler;
 	activeSlide?: PptxSlide | undefined;
 	isSelected: boolean;
 	isInlineEditing: boolean;

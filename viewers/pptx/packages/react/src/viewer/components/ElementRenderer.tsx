@@ -32,6 +32,7 @@ import {
 	renderVectorShape,
 } from '../utils';
 import { build3DExtrusionData } from '../utils/shape-visual-3d';
+import { ElementErrorBoundary } from './ElementErrorBoundary';
 import { ActionAffordances, useActionAffordance } from './elements/ActionAffordance';
 import { ConnectorElementRenderer } from './elements/ConnectorElementRenderer';
 import { getElementInteractionProps } from './elements/element-interaction-props';
@@ -53,7 +54,23 @@ export { shapeParams } from './elements/element-shape-params';
 
 export const ElementRenderer: React.FC<ElementRendererProps> = /* @__PURE__ */ React.memo(
 	// oxlint-disable-next-line prefer-arrow-callback -- named fn gives the memo component its displayName
-	function ElementRendererInner({
+	function ElementRendererInner(props) {
+		return (
+			<ElementErrorBoundary
+				key={props.element.id}
+				element={props.element}
+				slideId={props.activeSlide?.id}
+				onElementRenderError={props.onElementRenderError}
+			>
+				<ElementRendererImpl {...props} />
+			</ElementErrorBoundary>
+		);
+	},
+);
+
+const ElementRendererImpl: React.FC<ElementRendererProps> = /* @__PURE__ */ React.memo(
+	// oxlint-disable-next-line prefer-arrow-callback -- keep the implementation named in React stacks
+	function ElementRendererImpl({
 		element: el,
 		activeSlide,
 		isSelected,

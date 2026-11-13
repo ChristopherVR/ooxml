@@ -4,12 +4,15 @@ import type React from 'react';
 import type { CanvasSize, SlideSectionGroup } from '../../types';
 import type { TableStyleContext } from '../../utils/table-band-style';
 import type { FieldSubstitutionContext } from '../../utils/text-field-substitution';
+import type { ElementRenderErrorHandler } from '../ElementErrorBoundary';
 
 // ---------------------------------------------------------------------------
 // SlidesPaneSidebar props
 // ---------------------------------------------------------------------------
 
 export interface SlidesPaneSidebarProps {
+	/** Reports an element omitted from a thumbnail; defaults to console.error. */
+	onElementRenderError?: ElementRenderErrorHandler;
 	slides: PptxSlide[];
 	templateElementsBySlideId: Record<string, PptxElement[]>;
 	activeSlideIndex: number;

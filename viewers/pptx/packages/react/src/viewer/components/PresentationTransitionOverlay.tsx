@@ -16,6 +16,8 @@ import {
 	SLIDE_TRANSITION_KEYFRAMES,
 } from '../utils/slide-transitions';
 import type { SlideTransitionAnimations } from '../utils/slide-transitions';
+import { ElementRenderErrorReportingContext } from './ElementErrorBoundary';
+import type { ElementRenderErrorHandler } from './ElementErrorBoundary';
 import { FragmentedTransitionLayer } from './FragmentedTransitionLayer';
 import { MorphTransitionOverlay } from './MorphTransitionOverlay';
 import { SlideLayer } from './SlideTransitionSlideLayer';
@@ -25,6 +27,7 @@ import { SlideLayer } from './SlideTransitionSlideLayer';
 // ---------------------------------------------------------------------------
 
 export interface PresentationTransitionOverlayProps {
+	onElementRenderError?: ElementRenderErrorHandler;
 	/** The outgoing (old) slide to render in the overlay layer. */
 	outgoingSlide: PptxSlide;
 	/** Template/master elements that belong to the outgoing slide. */
@@ -79,7 +82,20 @@ export interface PresentationTransitionOverlayProps {
 // Component
 // ---------------------------------------------------------------------------
 
-export function PresentationTransitionOverlay({
+export function PresentationTransitionOverlay(
+	props: PresentationTransitionOverlayProps,
+): React.ReactElement {
+	const inherited = React.useContext(ElementRenderErrorReportingContext);
+	const reporter = props.onElementRenderError ?? inherited?.onElementRenderError;
+	const errorReporting = useMemo(() => ({ onElementRenderError: reporter }), [reporter]);
+	return (
+		<ElementRenderErrorReportingContext.Provider value={errorReporting}>
+			<PresentationTransitionOverlayContent {...props} />
+		</ElementRenderErrorReportingContext.Provider>
+	);
+}
+
+function PresentationTransitionOverlayContent({
 	outgoingSlide,
 	templateElements,
 	canvasSize,

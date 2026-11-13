@@ -18,6 +18,7 @@ import {
 	renderVectorShape,
 } from '../utils';
 import { withDisplayName } from '../utils/display-name';
+import { ElementErrorBoundary } from './ElementErrorBoundary';
 import { renderBody } from './elements/ElementBody';
 import { ShapeEffectOverlay } from './elements/ShapeEffectOverlay';
 import type { StaticElementRendererProps } from './static-element-renderer-types';
@@ -242,6 +243,20 @@ function StaticElementRendererImpl({
  * this memoized export so nested group children stay memoized too.
  */
 export const StaticElementRenderer = /* @__PURE__ */ withDisplayName(
-	/* @__PURE__ */ React.memo(StaticElementRendererImpl),
+	/* @__PURE__ */ React.memo(
+		// oxlint-disable-next-line prefer-arrow-callback -- keep the wrapper named in React stacks
+		function StaticElementRendererBoundary(props: StaticElementRendererProps) {
+			return (
+				<ElementErrorBoundary
+					key={props.element.id}
+					element={props.element}
+					slideId={props.activeSlide?.id}
+					onElementRenderError={props.onElementRenderError}
+				>
+					<StaticElementRendererImpl {...props} />
+				</ElementErrorBoundary>
+			);
+		},
+	),
 	'StaticElementRenderer',
 );

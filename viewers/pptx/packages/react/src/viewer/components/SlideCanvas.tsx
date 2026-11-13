@@ -33,6 +33,7 @@ import { useConnectorCreation } from './canvas/useConnectorCreation';
 import { useDrawingOverlay } from './canvas/useDrawingOverlay';
 import { useSlideCanvasImagePaste } from './canvas/useSlideCanvasImagePaste';
 import { useStableCallbacks } from './canvas/useStableCallbacks';
+import { ElementRenderErrorReportingContext } from './ElementErrorBoundary';
 import { ElementRenderer } from './ElementRenderer';
 import { ActiveXControlOverlay } from './elements/ActiveXControlOverlay';
 import { InlineCollaborationContext } from './elements/InlineCollaborationContext';
@@ -81,10 +82,16 @@ export function SlideCanvas(props: SlideCanvasProps) {
 			props.registerInlineEditReader,
 		],
 	);
+	const errorReporting = useMemo(
+		() => ({ onElementRenderError: props.onElementRenderError }),
+		[props.onElementRenderError],
+	);
 	return (
-		<InlineCollaborationContext.Provider value={value}>
-			<SlideCanvasContent {...props} />
-		</InlineCollaborationContext.Provider>
+		<ElementRenderErrorReportingContext.Provider value={errorReporting}>
+			<InlineCollaborationContext.Provider value={value}>
+				<SlideCanvasContent {...props} />
+			</InlineCollaborationContext.Provider>
+		</ElementRenderErrorReportingContext.Provider>
 	);
 }
 
