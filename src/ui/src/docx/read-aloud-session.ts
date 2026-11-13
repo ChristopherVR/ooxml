@@ -11,6 +11,19 @@ import {
 } from './read-aloud';
 
 /**
+ * Host options for Read Aloud. Playback always stops when the document is replaced or reloaded and
+ * when the editor unmounts; this only decides what an ordinary edit does.
+ */
+export interface ReadAloudOptions {
+	/**
+	 * Stop playback when the document is edited, locally or by a collaborator. Default false:
+	 * Microsoft's public Word documentation does not say that editing stops Read Aloud, so playback
+	 * carries on with the text it started with.
+	 */
+	stopOnEdit?: boolean | undefined;
+}
+
+/**
  * One editor's Read Aloud: the playback it owns, and the last problem it ran into. The browser has
  * a single voice, so starting here takes it over from another editor, and this session lets go of
  * it when its document changes or the editor leaves the page.
@@ -60,6 +73,11 @@ export class ReadAloudSession {
 			this.changed();
 		}
 		return was;
+	}
+
+	/** The document was edited: stops only when the host chose `readAloud.stopOnEdit`. */
+	documentEdited(): void {
+		if (this.core.viewOptions.readAloud?.stopOnEdit === true) this.stop();
 	}
 
 	/** Starts, or stops when already playing. Returns whether it is playing now. */

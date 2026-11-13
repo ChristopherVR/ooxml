@@ -39,3 +39,23 @@ it('exposes Read Aloud state and a toggle control, in a read-only document', () 
 		blocks.destroy();
 	}
 });
+
+it('forwards readAloud.stopOnEdit to the editor and clears it', () => {
+	const model = createDocument();
+	const blocks = createViewerBuildingBlocks({
+		documentModel: model,
+		readAloud: { stopOnEdit: true },
+	});
+	const canvas = document.createElement('div');
+	document.body.append(canvas);
+	const stop = mountDocumentCanvas(canvas, blocks);
+	try {
+		const editor = canvas.querySelector('docx-editor') as unknown as { readAloud: unknown };
+		expect(editor.readAloud).toEqual({ stopOnEdit: true });
+		blocks.update({ documentModel: model, readAloud: null });
+		expect(editor.readAloud).toBeNull();
+	} finally {
+		stop();
+		blocks.destroy();
+	}
+});

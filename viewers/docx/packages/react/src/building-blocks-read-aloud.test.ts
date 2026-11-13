@@ -47,3 +47,23 @@ it('exposes Read Aloud state, a control, and stops on unmount', async () => {
 	await act(async () => root.unmount());
 	expect(speechSynthesis.cancel).toHaveBeenCalled();
 });
+
+it('forwards readAloud.stopOnEdit to the editor and clears it', async () => {
+	vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+	const host = document.createElement('div');
+	document.body.append(host);
+	const root = createRoot(host);
+	function Host(props: { stopOnEdit: boolean | null }) {
+		const blocks = useViewerBuildingBlocks({
+			documentModel: createDocument(),
+			readAloud: props.stopOnEdit === null ? null : { stopOnEdit: props.stopOnEdit },
+		});
+		return createElement(DocumentCanvas, blocks.canvasProps);
+	}
+	const editor = () => host.querySelector('docx-editor') as unknown as { readAloud: unknown };
+	await act(async () => root.render(createElement(Host, { stopOnEdit: true })));
+	expect(editor().readAloud).toEqual({ stopOnEdit: true });
+	await act(async () => root.render(createElement(Host, { stopOnEdit: null })));
+	expect(editor().readAloud).toBeNull();
+	await act(async () => root.unmount());
+});

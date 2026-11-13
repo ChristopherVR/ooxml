@@ -29,3 +29,22 @@ it('exposes Read Aloud state through the Svelte canvas action and stops on destr
 		session.destroy();
 	}
 });
+
+it('forwards readAloud.stopOnEdit to the editor and clears it', () => {
+	const session = createBuildingBlockSession({
+		documentModel: createDocument(),
+		readAloud: { stopOnEdit: true },
+	});
+	const host = document.createElement('div');
+	document.body.append(host);
+	const action = documentCanvas(host, session.canvasProps);
+	try {
+		const editor = host.querySelector('docx-editor') as unknown as { readAloud: unknown };
+		expect(editor.readAloud).toEqual({ stopOnEdit: true });
+		session.update({ documentModel: createDocument(), readAloud: null });
+		expect(editor.readAloud).toBeNull();
+	} finally {
+		action.destroy();
+		session.destroy();
+	}
+});

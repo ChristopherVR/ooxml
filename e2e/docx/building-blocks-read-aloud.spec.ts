@@ -67,11 +67,13 @@ async function stubSpeech(page: Page, supported: boolean) {
 	}, supported);
 }
 
-async function open(page: Page, framework: string, supported = true) {
+async function open(page: Page, framework: string, supported = true, stopOnEdit = false) {
 	const errors: string[] = [];
 	page.on('pageerror', (error) => errors.push(error.message));
 	await stubSpeech(page, supported);
-	await page.goto(`/building-blocks.html?framework=${framework}`);
+	await page.goto(
+		`/building-blocks.html?framework=${framework}${stopOnEdit ? '&stopOnEdit=1' : ''}`,
+	);
 	await expect(page.locator('.ProseMirror')).toContainText(TEXT);
 	await expect(page.getByRole('button', { name: 'Bold', exact: true })).toBeVisible();
 	return errors;
@@ -181,8 +183,20 @@ for (const framework of FRAMEWORKS) {
 			).toBe(true);
 		});
 
-		test('an edit stops playback', async ({ page }) => {
+		test('an edit keeps playing by default', async ({ page }) => {
 			await open(page, framework);
+			await page.locator('.ProseMirror p').click({ position: { x: 5, y: 8 } });
+			await page.keyboard.press('Home');
+			await hostButton(page).click();
+			await expect(hostState(page)).toHaveText('reading');
+			await page.keyboard.type('x');
+			await expect(page.locator('.ProseMirror')).toContainText('xNative');
+			await expect(hostState(page)).toHaveText('reading');
+			expect(await props(page, (toolbar) => toolbar.readingAloud)).toBe(true);
+		});
+
+		test('an edit stops playback when readAloud.stopOnEdit is set', async ({ page }) => {
+			await open(page, framework, true, true);
 			await page.locator('.ProseMirror p').click({ position: { x: 5, y: 8 } });
 			await page.keyboard.press('Home');
 			await hostButton(page).click();

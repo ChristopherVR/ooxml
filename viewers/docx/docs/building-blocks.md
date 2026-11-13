@@ -106,10 +106,17 @@ UI can take focus first.
 | `onStopReadAloud()`  | Stops this editor's playback; returns whether it was playing                                        |
 
 The browser has one voice. Starting in one editor takes it over from another, whose `readingAloud`
-becomes `false`. An editor stops reading when its document is edited or replaced, a file loads, or
-it unmounts. Word the issues yourself; the library supplies the codes only. The optional `Toolbar`
+becomes `false`. An editor always stops reading when its document is replaced, a file loads, or it unmounts. Word the issues yourself; the library supplies the codes only. The optional `Toolbar`
 draws a "Read aloud" toggle and omits it where speech is unsupported. The field reference, with
 the types and an example, is in the [element API](/api#read-aloud).
+
+An ordinary edit (local or from a collaborator) does not stop playback by default: Microsoft's public Word
+documentation (support.microsoft.com, "Listen to your Word documents" and "Use Immersive Reader in Word")
+describes starting and exiting Read Aloud, and says you can click into the document to read or edit, but
+does not say that editing stops it. Playback therefore carries on with the text it started with. Pass
+`readAloud: { stopOnEdit: true }` as a building-blocks option (or set the editor's `readAloud` property) to stop
+on every edit instead. Every binding forwards it: the `readAloud` prop in React, Vue, Solid, Angular and
+Svelte, and the option of the vanilla building blocks.
 
 ## Library components
 

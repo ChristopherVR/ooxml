@@ -14,6 +14,7 @@ Chaque adaptateur de framework encapsule le même élément personnalisé `<docx
 | `theme`                        | `theme`           | `light`, `dark` ou `auto`. Voir les [thèmes](/theming).                                                                                                                                                                                                                            |
 | `themeColors`                  |                   | Remplacements partiels de jetons, appliqués comme propriétés personnalisées `--dve-*`.                                                                                                                                                                                             |
 | `showThumbnails`               | `show-thumbnails` | Rail de vignettes de pages à gauche (mise en page Impression uniquement).                                                                                                                                                                                                          |
+| `readAloud`                    |                   | Options de la lecture à voix haute. `stopOnEdit` (`false` par défaut) arrête aussi la lecture lorsque le document est modifié ; le remplacement, le chargement ou le démontage l'arrête toujours.                                                                                  |
 | `showToolbar`                  | `show-toolbar`    | `false` masque le ruban ; la barre de titre et la barre d'état restent affichées.                                                                                                                                                                                                  |
 | `hiddenActions`                |                   | Commandes du ruban à masquer par identifiant stable ; voir le tableau dans les [adaptateurs](/bindings).                                                                                                                                                                           |
 | `ribbonAddIns`                 |                   | Onglets ajoutés par l'hôte après les onglets intégrés ; voir les [adaptateurs](/bindings#ribbon-add-in-tabs).                                                                                                                                                                      |
@@ -203,5 +204,5 @@ function EmbeddedWord({ documentModel }) {
 }
 ```
 
-La lecture s'arrête aussi quand le document est modifié ou remplacé, et quand l'éditeur est démonté.
+La lecture s'arrête quand le document est remplacé ou rechargé et quand l'éditeur est démonté ; une modification ordinaire ne l'arrête qu'avec `readAloud: { stopOnEdit: true }`.
 La `Toolbar` optionnelle dessine son propre bouton à bascule « Read aloud » à partir des mêmes champs.

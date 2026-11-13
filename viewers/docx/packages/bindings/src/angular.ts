@@ -24,6 +24,7 @@ import type {
 	RibbonAddInCommandDetail,
 	RibbonAddInTab,
 	WordCustomization,
+	ReadAloudOptions,
 } from 'docx-web-component';
 import { angularOutputs, installHandle } from 'ooxml-ui/bindings';
 import {
@@ -52,6 +53,7 @@ export class WordEditorComponent implements AfterViewInit, OnChanges, OnDestroy 
 	@Input() locale = 'en';
 	@Input() theme: EditorThemeMode = 'auto';
 	@Input() showThumbnails = false;
+	@Input() readAloud?: ReadAloudOptions | null;
 	@Input() showToolbar = true;
 	@Input() hiddenActions: readonly RibbonActionInput[] = [];
 	@Input() ribbonAddIns?: readonly RibbonAddInTab[];

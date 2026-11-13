@@ -48,3 +48,28 @@ it('exposes Read Aloud state through the signal and stops on destroy', async () 
 		host.remove();
 	}
 });
+
+it('forwards readAloud.stopOnEdit to the editor and clears it', async () => {
+	const host = document.createElement('div');
+	document.body.append(host);
+	const app = await createApplication({ providers: [provideZonelessChangeDetection()] });
+	const component = createComponent(Owner, {
+		environmentInjector: app.injector,
+		hostElement: host,
+	});
+	app.attachView(component.hostView);
+	try {
+		component.changeDetectorRef.detectChanges();
+		const { blocks } = component.instance;
+		const model = createDocument();
+		blocks.update({ documentModel: model, readAloud: { stopOnEdit: true } });
+		const editor = host.querySelector('docx-editor') as unknown as { readAloud: unknown };
+		expect(editor.readAloud).toEqual({ stopOnEdit: true });
+		blocks.update({ documentModel: model, readAloud: null });
+		expect(editor.readAloud).toBeNull();
+	} finally {
+		if (!component.hostView.destroyed) component.destroy();
+		app.destroy();
+		host.remove();
+	}
+});

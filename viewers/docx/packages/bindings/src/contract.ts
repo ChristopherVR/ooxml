@@ -13,6 +13,7 @@ import {
 	type EditorThemeMode,
 	type FileCommandDetail,
 	type PageChangeDetail,
+	type ReadAloudOptions,
 	type RibbonAction,
 	type RibbonActionInput,
 	type RibbonAddInCommandDetail,
@@ -54,6 +55,11 @@ export interface EditorProps {
 	themeColors?: Partial<EditorTheme> | undefined;
 	/** Left rail of page thumbnails (needs Print Layout). Default false. */
 	showThumbnails?: boolean | undefined;
+	/**
+	 * Read Aloud behaviour. `stopOnEdit` (default false) also stops playback when the document is
+	 * edited; replacing or reloading the document and unmounting always stop it.
+	 */
+	readAloud?: ReadAloudOptions | null | undefined;
 	/** Ribbon visibility. Default true. */
 	showToolbar?: boolean | undefined;
 	/** Ribbon controls to hide, by stable id (`RIBBON_ACTION_IDS`). Old English labels still work but warn. */
@@ -146,6 +152,7 @@ export const EDITOR_PROP_KEYS = [
 	'locale',
 	'theme',
 	'showThumbnails',
+	'readAloud',
 	'showToolbar',
 	'hiddenActions',
 	'ribbonAddIns',
@@ -201,6 +208,12 @@ export const EDITOR_CONTRACT: BindingContract<
 		},
 		theme: { forward: 'always', fallback: 'auto' },
 		showThumbnails: { forward: 'always', fallback: false },
+		readAloud: {
+			forward: 'changed',
+			fallback: null,
+			same: shallowEqual,
+			apply: (element, value) => (element.readAloud = value ?? null),
+		},
 		showToolbar: { forward: 'always', fallback: true },
 		hiddenActions: {
 			forward: 'always',

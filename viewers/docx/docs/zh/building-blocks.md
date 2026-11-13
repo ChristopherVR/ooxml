@@ -85,8 +85,14 @@ function EmbeddedWord({ documentModel, canEdit, handle }) {
 | `onStopReadAloud()` | 停止此编辑器的朗读；返回此前是否在朗读                                                |
 
 浏览器只有一个语音。在一个编辑器中开始朗读会从另一个编辑器接管，后者的 `readingAloud` 变为 `false`。
-编辑器在其文档被编辑或替换、加载文件或卸载时停止朗读。提示文字由您自行编写；库只提供代码。
+编辑器在其文档被替换、加载文件或卸载时一律停止朗读。提示文字由您自行编写；库只提供代码。
 可选的 `Toolbar` 会绘制一个“Read aloud”开关，并在不支持语音的环境中省略它。字段说明（含类型和示例）见[元素 API](/zh/api#read-aloud)。
+
+普通编辑（本地或协作者所做）默认不会停止朗读：Microsoft 关于 Word 的公开文档（support.microsoft.com，
+“Listen to your Word documents”和“Use Immersive Reader in Word”）描述了如何开始和退出朗读，并说明可以点击文档进行阅读或编辑，
+但并未说明编辑会使其停止。因此朗读会继续使用开始时的文本。将 `readAloud: { stopOnEdit: true }` 作为构建块选项传入
+（或设置编辑器的 `readAloud` 属性），即可改为每次编辑都停止。所有绑定都会转发它：React、Vue、Solid、Angular 和 Svelte
+中的 `readAloud` 属性，以及 vanilla 构建块的选项。
 
 ## 库组件 {#library-components}
 

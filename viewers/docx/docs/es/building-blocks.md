@@ -107,10 +107,17 @@ puede recibir el foco antes.
 | `onStopReadAloud()`  | Detiene la reproducción de este editor; devuelve si estaba leyendo                                       |
 
 El navegador tiene una sola voz. Al iniciar en un editor se la quita a otro, cuyo `readingAloud`
-pasa a `false`. Un editor deja de leer cuando se edita o reemplaza su documento, se carga un archivo
-o se desmonta. Redacte usted los avisos; la biblioteca solo aporta los códigos. La `Toolbar`
+pasa a `false`. Un editor deja de leer siempre cuando se reemplaza su documento, se carga un archivo o se desmonta. Redacte usted los avisos; la biblioteca solo aporta los códigos. La `Toolbar`
 opcional dibuja un interruptor «Read aloud» y lo omite donde no hay síntesis de voz. La referencia de campos, con tipos y un ejemplo, está en la
 [API del elemento](/es/api#read-aloud).
+
+Una edición normal (local o de un colaborador) no detiene la reproducción por defecto: la documentación pública de
+Microsoft sobre Word (support.microsoft.com, «Listen to your Word documents» y «Use Immersive Reader in Word») describe
+cómo iniciar y salir de Leer en voz alta, y dice que puede hacer clic en el documento para leer o editar, pero no dice
+que editar la detenga. Por eso la reproducción continúa con el texto con el que empezó. Pase
+`readAloud: { stopOnEdit: true }` como opción de los bloques de construcción (o asigne la propiedad `readAloud` del
+editor) para detenerla en cada edición. Todos los enlaces la reenvían: la prop `readAloud` en React, Vue, Solid, Angular
+y Svelte, y la opción de los bloques de construcción de vanilla.
 
 ## Componentes de la biblioteca {#library-components}
 

@@ -118,12 +118,32 @@ it('lets one editor own the voice at a time', () => {
 	stopReadAloud((second.editor as unknown as { core: { readAloud: object } }).core.readAloud);
 });
 
-it('stops when the document changes, is replaced, or the editor unmounts', () => {
+it('keeps playing through an ordinary edit by default', () => {
 	const { editor, view } = mounted('Alpha beta');
 	select(view, 1, 3);
 	editor.getToolbarProps().onReadAloud();
 	view.dispatch(view.state.tr.insertText('x', 1));
+	expect(editor.getToolbarProps().readingAloud).toBe(true);
+	expect(editor.getToolbarProps().onStopReadAloud()).toBe(true);
+});
+
+it('stops on an ordinary edit when readAloud.stopOnEdit is set', () => {
+	const { editor, view } = mounted('Alpha beta');
+	editor.readAloud = { stopOnEdit: true };
+	expect(editor.readAloud).toEqual({ stopOnEdit: true });
+	select(view, 1, 3);
+	editor.getToolbarProps().onReadAloud();
+	view.dispatch(view.state.tr.insertText('x', 1));
 	expect(editor.getToolbarProps().readingAloud).toBe(false);
+	editor.readAloud = null;
+	select(view, 1, 3);
+	editor.getToolbarProps().onReadAloud();
+	view.dispatch(view.state.tr.insertText('y', 1));
+	expect(editor.getToolbarProps().readingAloud).toBe(true);
+});
+
+it('always stops when the document is replaced or the editor unmounts', () => {
+	const { editor, view } = mounted('Alpha beta');
 	select(view, 1, 3);
 	editor.getToolbarProps().onReadAloud();
 	const model = createDocument();

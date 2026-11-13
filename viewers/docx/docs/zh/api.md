@@ -14,6 +14,7 @@
 | `theme`                      | `theme`           | `light`、`dark` 或 `auto`。参见[主题](/theming)。                                                                                                      |
 | `themeColors`                |                   | 以 `--dve-*` 自定义属性形式应用的部分令牌覆盖。                                                                                                        |
 | `showThumbnails`             | `show-thumbnails` | 左侧的页面缩略图栏（仅限打印布局）。                                                                                                                   |
+| `readAloud`                  |                   | 朗读选项。`stopOnEdit`（默认 `false`）会在文档被编辑时同时停止朗读；替换、加载或卸载总是会停止朗读。                                                   |
 | `showToolbar`                | `show-toolbar`    | 设为 `false` 会隐藏功能区；标题栏和状态栏仍保留。                                                                                                      |
 | `hiddenActions`              |                   | 要按稳定 ID 隐藏的功能区控件；参见[绑定](/bindings)中的表格。                                                                                          |
 | `ribbonAddIns`               |                   | 宿主在内置选项卡之后添加的选项卡；参见[绑定](/bindings#ribbon-add-in-tabs)。                                                                           |
@@ -183,4 +184,4 @@ function EmbeddedWord({ documentModel }) {
 }
 ```
 
-文档被编辑或替换时，以及编辑器卸载时，朗读也会停止。可选的 `Toolbar` 会使用同样的字段绘制它自己的“Read aloud”开关。
+文档被替换或重新加载时，以及编辑器卸载时，朗读会停止；普通编辑只有在设置 `readAloud: { stopOnEdit: true }` 时才会停止朗读。可选的 `Toolbar` 会使用同样的字段绘制它自己的“Read aloud”开关。

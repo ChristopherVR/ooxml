@@ -14,6 +14,7 @@ Todos los adaptadores de framework envuelven el mismo elemento personalizado `<d
 | `theme`                        | `theme`           | `light`, `dark` o `auto`. Consulte [temas](/theming).                                                                                                                                                                                      |
 | `themeColors`                  |                   | Sustituciones parciales de tokens, aplicadas como propiedades personalizadas `--dve-*`.                                                                                                                                                    |
 | `showThumbnails`               | `show-thumbnails` | Panel izquierdo de miniaturas de página (solo en Diseño de impresión).                                                                                                                                                                     |
+| `readAloud`                    |                   | Opciones de Leer en voz alta. `stopOnEdit` (por defecto `false`) detiene también la reproducción al editar el documento; reemplazar, cargar o desmontar siempre la detiene.                                                                |
 | `showToolbar`                  | `show-toolbar`    | `false` oculta la cinta de opciones; la barra de título y la barra de estado permanecen.                                                                                                                                                   |
 | `hiddenActions`                |                   | Controles de la cinta que se ocultan por identificador estable; consulte la tabla en [adaptadores](/bindings).                                                                                                                             |
 | `ribbonAddIns`                 |                   | Pestañas que el host añade tras las integradas; consulte [adaptadores](/bindings#ribbon-add-in-tabs).                                                                                                                                      |
@@ -200,5 +201,5 @@ function EmbeddedWord({ documentModel }) {
 }
 ```
 
-La reproducción también se detiene cuando el documento se edita o se reemplaza, y cuando el editor se desmonta.
+La reproducción se detiene cuando el documento se reemplaza o se vuelve a cargar y cuando el editor se desmonta; una edición normal solo la detiene con `readAloud: { stopOnEdit: true }`.
 La `Toolbar` opcional dibuja su propio interruptor «Read aloud» a partir de los mismos campos.

@@ -87,11 +87,19 @@ eine Schaltfläche Ihrer Oberfläche darf also zuvor den Fokus erhalten.
 | `onStopReadAloud()`       | Beendet die Wiedergabe dieses Editors; gibt zurück, ob sie lief                                           |
 
 Der Browser hat nur eine Stimme. Wer in einem Editor startet, übernimmt sie von einem anderen,
-dessen `readingAloud` dann `false` wird. Ein Editor hört auf, wenn sein Dokument bearbeitet oder
-ersetzt wird, eine Datei geladen wird oder er entfernt wird. Formulieren Sie die Meldungen selbst;
+dessen `readingAloud` dann `false` wird. Ein Editor hört immer auf, wenn sein Dokument ersetzt wird, eine Datei geladen wird oder er entfernt wird. Formulieren Sie die Meldungen selbst;
 die Bibliothek liefert nur die Codes. Die optionale `Toolbar` zeigt einen Schalter „Read aloud“ und
 blendet ihn aus, wo keine Sprachausgabe möglich ist. Die Feldübersicht mit Typen und Beispiel steht in der
 [Element-API](/de/api#read-aloud).
+
+Eine gewöhnliche Bearbeitung (lokal oder durch einen Mitarbeitenden) beendet die Wiedergabe standardmäßig nicht:
+Die öffentliche Microsoft-Dokumentation zu Word (support.microsoft.com, „Listen to your Word documents“ und „Use
+Immersive Reader in Word“) beschreibt das Starten und Beenden des Vorlesens und sagt, dass Sie in das Dokument klicken
+können, um zu lesen oder zu bearbeiten, nennt aber nicht, dass Bearbeiten es beendet. Die Wiedergabe läuft daher mit
+dem Text weiter, mit dem sie begonnen hat. Übergeben Sie `readAloud: { stopOnEdit: true }` als Building-Blocks-Option
+(oder setzen Sie die Eigenschaft `readAloud` des Editors), um stattdessen bei jeder Bearbeitung zu stoppen. Jede
+Bindung leitet sie weiter: die Prop `readAloud` in React, Vue, Solid, Angular und Svelte sowie die Option der
+Vanilla-Building-Blocks.
 
 ## Bibliothekskomponenten {#library-components}
 

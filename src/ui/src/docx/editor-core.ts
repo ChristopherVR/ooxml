@@ -384,7 +384,7 @@ export class EditorCore {
 					: assignMissingParagraphIds(applied);
 		view.updateState(repaired ? applied.apply(repaired) : applied);
 		if (docChanged) {
-			this.readAloud.stop();
+			this.readAloud.documentEdited();
 			this.model = docToModel(view.state.doc, this.model, previousDoc);
 			if (previousComments !== view.state.doc.attrs.commentThreads)
 				this.shell.review?.commentsPanel.refresh();

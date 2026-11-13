@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { createComponent, createRoot } from 'solid-js';
+import { createComponent, createRoot, createSignal } from 'solid-js';
 import { render } from 'solid-js/web';
 import { afterEach, expect, it, vi } from 'vitest';
 import { DocumentCanvas, createViewerBuildingBlocks } from './building-blocks';
@@ -36,4 +36,31 @@ it('exposes Read Aloud state through the accessor and stops on dispose', async (
 		dispose();
 	}
 	expect(speechSynthesis.cancel).toHaveBeenCalled();
+});
+
+it('forwards readAloud.stopOnEdit to the editor and clears it', async () => {
+	const host = document.createElement('div');
+	document.body.append(host);
+	const [readAloud, setReadAloud] = createSignal<{ stopOnEdit: boolean } | null>({
+		stopOnEdit: true,
+	});
+	let dispose = () => {};
+	createRoot((stop) => {
+		dispose = stop;
+		render(() => {
+			const blocks = createViewerBuildingBlocks(() => ({
+				documentModel: createDocument(),
+				readAloud: readAloud(),
+			}));
+			return createComponent(DocumentCanvas, blocks.canvasProps) as Node;
+		}, host);
+	});
+	try {
+		const editor = () => host.querySelector('docx-editor') as unknown as { readAloud: unknown };
+		await vi.waitFor(() => expect(editor().readAloud).toEqual({ stopOnEdit: true }));
+		setReadAloud(null);
+		await vi.waitFor(() => expect(editor().readAloud).toBeNull());
+	} finally {
+		dispose();
+	}
 });

@@ -31,6 +31,7 @@ import {
 import type { SurfaceHostActions } from './building-blocks-actions';
 import type { GoogleFontsOption } from 'ooxml-core/text';
 import { refreshDocxWebfonts } from './docx-webfonts';
+import type { ReadAloudOptions } from './read-aloud-session';
 
 const HTMLElementBase: typeof HTMLElement =
 	typeof HTMLElement === 'undefined' ? (class {} as typeof HTMLElement) : HTMLElement;
@@ -184,6 +185,17 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 			applyViewOptions(this.core);
 		}
 		reflectAttribute(this, 'show-thumbnails', this.showThumbnails);
+	}
+
+	/**
+	 * Read Aloud options. `stopOnEdit` (default false) also stops playback when the document is
+	 * edited; replacing or reloading the document and unmounting always stop it.
+	 */
+	get readAloud(): ReadAloudOptions | null {
+		return this.core.viewOptions.readAloud;
+	}
+	set readAloud(value: ReadAloudOptions | null | undefined) {
+		this.core.viewOptions.readAloud = value ? { ...value } : null;
 	}
 
 	/**

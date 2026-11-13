@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from 'vitest';
-import { createApp, defineComponent, h, nextTick } from 'vue';
+import { createApp, defineComponent, h, nextTick, ref } from 'vue';
 import { DocumentCanvas, Toolbar, useViewerBuildingBlocks } from './building-blocks';
 import { stubSpeech } from '../../bindings/src/speech-stub';
 import { createDocument } from '../../core/src/index';
@@ -38,4 +38,29 @@ it('exposes Read Aloud state, a control, and stops on unmount', async () => {
 	expect(blocks.toolbarProps.value?.readingAloud).toBe(true);
 	app.unmount();
 	expect(speechSynthesis.cancel).toHaveBeenCalled();
+});
+
+it('forwards readAloud.stopOnEdit to the editor and clears it', async () => {
+	const host = document.createElement('div');
+	document.body.append(host);
+	const readAloud = ref<{ stopOnEdit: boolean } | null>({ stopOnEdit: true });
+	const app = createApp(
+		defineComponent({
+			setup() {
+				const blocks = useViewerBuildingBlocks(() => ({
+					documentModel: createDocument(),
+					readAloud: readAloud.value,
+				}));
+				return () => h(DocumentCanvas, { ...blocks.canvasProps });
+			},
+		}),
+	);
+	app.mount(host);
+	await nextTick();
+	const editor = () => host.querySelector('docx-editor') as unknown as { readAloud: unknown };
+	expect(editor().readAloud).toEqual({ stopOnEdit: true });
+	readAloud.value = null;
+	await nextTick();
+	expect(editor().readAloud).toBeNull();
+	app.unmount();
 });

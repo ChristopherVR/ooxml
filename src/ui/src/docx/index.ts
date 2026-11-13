@@ -59,6 +59,7 @@ export {
 	type RibbonAddInGroup,
 	type RibbonAddInTab,
 } from '../ribbon/add-in-tabs';
+export type { ReadAloudOptions } from './read-aloud-session';
 export type {
 	WordBackstagePage,
 	WordCustomization,

@@ -1,4 +1,5 @@
 import type { EditorCore } from './editor-core';
+import type { ReadAloudOptions } from './read-aloud-session';
 import { findLocalizedControl } from './localization';
 import type { RibbonActionId } from 'ooxml-core/docx/ui';
 import { applyRibbonVisibility } from './ribbon-visibility';
@@ -13,6 +14,8 @@ import {
 export class ViewOptions {
 	showThumbnails = false;
 	showToolbar = true;
+	/** The host's Read Aloud options (`readAloud`); none keeps the defaults. */
+	readAloud: ReadAloudOptions | null = null;
 	hiddenActions: readonly RibbonActionId[] = [];
 	/** The host's `customization` object, as given. */
 	customizationInput: WordCustomization | null = null;

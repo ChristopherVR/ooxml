@@ -3,6 +3,7 @@ import type { DocumentModel } from 'docx-core';
 import type { CloudFileProvider, DocumentStorage } from 'ooxml-core/embedding';
 import type {
 	DocxCollaborationOptions,
+	ReadAloudOptions,
 	EditorTheme,
 	EditorThemeMode,
 	RibbonActionInput,
@@ -26,6 +27,7 @@ export const WordEditor = defineVueBinding({
 		locale: String,
 		theme: String as PropType<EditorThemeMode>,
 		showThumbnails: Boolean,
+		readAloud: Object as PropType<ReadAloudOptions | null>,
 		showToolbar: { type: Boolean, default: true },
 		hiddenActions: Array as PropType<readonly RibbonActionInput[]>,
 		ribbonAddIns: Array as unknown as PropType<readonly RibbonAddInTab[]>,

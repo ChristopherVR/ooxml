@@ -14,6 +14,7 @@ Every framework adapter wraps the same `<docx-editor>` custom element. The adapt
 | `theme`                     | `theme`           | `light`, `dark` or `auto`. See [theming](/theming).                                                                                                                                                   |
 | `themeColors`               |                   | Partial token overrides applied as `--dve-*` custom properties.                                                                                                                                       |
 | `showThumbnails`            | `show-thumbnails` | Left rail of page thumbnails (Print Layout only).                                                                                                                                                     |
+| `readAloud`                 |                   | Read Aloud options. `stopOnEdit` (default `false`) also stops playback when the document is edited; replacing, loading or unmounting always stops it.                                                 |
 | `showToolbar`               | `show-toolbar`    | `false` hides the ribbon; the title bar and status bar remain.                                                                                                                                        |
 | `hiddenActions`             |                   | Ribbon controls to hide by stable id; see the table in [bindings](/bindings).                                                                                                                         |
 | `ribbonAddIns`              |                   | Tabs the host adds after the built-in ones; see [bindings](/bindings#ribbon-add-in-tabs).                                                                                                             |
@@ -210,5 +211,5 @@ function EmbeddedWord({ documentModel }) {
 }
 ```
 
-Playback also stops when the document is edited or replaced and when the editor unmounts. The
+Playback stops when the document is replaced or reloaded and when the editor unmounts; an ordinary edit stops it only with `readAloud: { stopOnEdit: true }`. The
 optional `Toolbar` draws its own "Read aloud" toggle from the same fields.

@@ -14,7 +14,7 @@
     onribbonaddin?: EditorEventHandlers['office-ribbon-add-in'];
     oncollaborationchange?: EditorEventHandlers['collaboration-change'];
   };
-  let { documentModel, fileName, reviewAuthor, themeColors, readOnly = false, locale = 'en', theme = 'auto', showThumbnails = false, showToolbar = true, hiddenActions = [], ribbonAddIns, collaboration, customization, storage, fileProviders, ondocumentchange, ondocumenterror, ondocumentwarning, onpagechange, ondirtychange, onfilecommand, onreadonlychange, onribbonaction, onribboncustomize, onribbonaddin, oncollaborationchange }: Props = $props();
+  let { documentModel, fileName, reviewAuthor, themeColors, readOnly = false, locale = 'en', theme = 'auto', showThumbnails = false, readAloud, showToolbar = true, hiddenActions = [], ribbonAddIns, collaboration, customization, storage, fileProviders, ondocumentchange, ondocumenterror, ondocumentwarning, onpagechange, ondirtychange, onfilecommand, onreadonlychange, onribbonaction, onribboncustomize, onribbonaddin, oncollaborationchange }: Props = $props();
   let binding: EditorBinding | undefined;
   const handle = deferredHandle(() => binding);
   // Live `element` and `dirty`, the same handle vocabulary as the other frameworks (`EDITOR_HANDLE_KEYS`).
@@ -39,4 +39,4 @@
   export function isDirty() { return handle.dirty; }
   export { element, dirty };
 </script>
-<div use:attach={{ documentModel, fileName, reviewAuthor, themeColors, readOnly, locale, theme, showThumbnails, showToolbar, hiddenActions, ribbonAddIns, collaboration, customization, storage, fileProviders, ondocumentchange, ondocumenterror, ondocumentwarning, onpagechange, ondirtychange, onfilecommand, onreadonlychange, onribbonaction, onribboncustomize, onribbonaddin, oncollaborationchange }}></div>
+<div use:attach={{ documentModel, fileName, reviewAuthor, themeColors, readOnly, locale, theme, showThumbnails, readAloud, showToolbar, hiddenActions, ribbonAddIns, collaboration, customization, storage, fileProviders, ondocumentchange, ondocumenterror, ondocumentwarning, onpagechange, ondirtychange, onfilecommand, onreadonlychange, onribbonaction, onribboncustomize, onribbonaddin, oncollaborationchange }}></div>

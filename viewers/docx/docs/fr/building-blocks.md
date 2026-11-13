@@ -87,11 +87,18 @@ un bouton de votre interface peut donc prendre le focus avant.
 | `onStopReadAloud()`   | Arrête la lecture de cet éditeur ; renvoie s'il lisait                                                 |
 
 Le navigateur n'a qu'une voix. Démarrer dans un éditeur la prend à un autre, dont `readingAloud`
-devient `false`. Un éditeur cesse de lire quand son document est modifié ou remplacé, qu'un fichier
-se charge ou qu'il est démonté. Formulez les messages vous-même ; la bibliothèque ne fournit que les
+devient `false`. Un éditeur cesse toujours de lire quand son document est remplacé, qu'un fichier se charge ou qu'il est démonté. Formulez les messages vous-même ; la bibliothèque ne fournit que les
 codes. La `Toolbar` optionnelle dessine un bouton à bascule « Read aloud » et l'omet là où la
 synthèse vocale n'existe pas. La référence des champs, avec les types et un exemple, se trouve dans
 l'[API de l'élément](/fr/api#read-aloud).
+
+Une modification ordinaire (locale ou d'un collaborateur) n'arrête pas la lecture par défaut : la documentation
+publique de Microsoft sur Word (support.microsoft.com, « Listen to your Word documents » et « Use Immersive Reader in
+Word ») décrit le démarrage et la sortie de la lecture à voix haute, et indique qu'on peut cliquer dans le document pour
+lire ou modifier, mais ne dit pas que modifier l'arrête. La lecture continue donc avec le texte du départ. Passez
+`readAloud: { stopOnEdit: true }` comme option des blocs de construction (ou renseignez la propriété `readAloud` de
+l'éditeur) pour l'arrêter à chaque modification. Chaque liaison la transmet : la prop `readAloud` dans React, Vue,
+Solid, Angular et Svelte, et l'option des blocs vanilla.
 
 ## Composants de bibliothèque {#library-components}
 

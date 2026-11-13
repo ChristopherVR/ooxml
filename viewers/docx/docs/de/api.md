@@ -14,6 +14,7 @@ Jeder Framework-Adapter umhüllt dasselbe Custom Element `<docx-editor>`. Die Ad
 | `theme`                      | `theme`           | `light`, `dark` oder `auto`. Siehe [Theming](/theming).                                                                                                                                                                        |
 | `themeColors`                |                   | Teilweise Token-Überschreibungen, angewendet als benutzerdefinierte Eigenschaften `--dve-*`.                                                                                                                                   |
 | `showThumbnails`             | `show-thumbnails` | Linke Leiste mit Seitenminiaturen (nur Drucklayout).                                                                                                                                                                           |
+| `readAloud`                  |                   | Optionen für Vorlesen. `stopOnEdit` (Standard `false`) beendet die Wiedergabe auch bei einer Bearbeitung des Dokuments; Ersetzen, Laden oder Entfernen beendet sie immer.                                                      |
 | `showToolbar`                | `show-toolbar`    | `false` blendet das Menüband aus; Titelleiste und Statusleiste bleiben.                                                                                                                                                        |
 | `hiddenActions`              |                   | Auszublendende Menübandbefehle nach stabiler ID; siehe die Tabelle unter [Bindings](/bindings).                                                                                                                                |
 | `ribbonAddIns`               |                   | Register, die der Host nach den eingebauten hinzufügt; siehe [Bindings](/bindings#ribbon-add-in-tabs).                                                                                                                         |
@@ -205,5 +206,5 @@ function EmbeddedWord({ documentModel }) {
 }
 ```
 
-Die Wiedergabe endet außerdem, wenn das Dokument bearbeitet oder ersetzt wird und wenn der Editor entfernt
-wird. Die optionale `Toolbar` zeichnet mit denselben Feldern ihren eigenen Schalter „Read aloud“.
+Die Wiedergabe endet, wenn das Dokument ersetzt oder neu geladen wird und wenn der Editor entfernt
+wird; eine gewöhnliche Bearbeitung beendet sie nur mit `readAloud: { stopOnEdit: true }`. Die optionale `Toolbar` zeichnet mit denselben Feldern ihren eigenen Schalter „Read aloud“.
