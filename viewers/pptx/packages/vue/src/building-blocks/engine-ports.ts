@@ -16,7 +16,7 @@ import { createEditorId } from 'pptx-viewer-core';
 import type { PptxElement, PptxLayoutOption } from 'pptx-viewer-core';
 
 import type { BuildingBlocksEngineContext as Context } from './engine-context';
-import { mediaElementFromFile } from './media-element';
+import { mediaElementFromFile } from 'ooxml-ui/pptx';
 
 export type EngineSessionPort = Omit<
 	BuildingBlockSessionPort,

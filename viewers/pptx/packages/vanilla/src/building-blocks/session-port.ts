@@ -2,6 +2,7 @@ import {
 	BUILDING_BLOCK_OK,
 	buildingBlockFailure,
 	hyperlinkEditPatch,
+	mediaElementFromFile,
 	resetSlideLayoutPath,
 	scopeLayoutOptionsToSlide,
 	selectionEquation,
@@ -15,7 +16,6 @@ import type { PptxElement, PptxLayoutOption, PptxSlide } from 'pptx-viewer-core'
 
 import { collectLayoutOptions } from '../viewer/editor/editing-chrome-sync';
 import { findActiveElement } from '../viewer/editor/editor-active-elements';
-import { mediaElementFromFile } from '../viewer/editor/editor-insert-media';
 import type { PptxViewer } from '../viewer/PptxViewer';
 import type { ViewerState } from '../viewer/state';
 import type { ViewerBuildingBlocksOptions } from './types';
@@ -131,7 +131,7 @@ export function createVanillaPort(source: VanillaPortSource): BuildingBlockSessi
 			if (!viewer) {
 				return buildingBlockFailure('not-ready');
 			}
-			const element = await mediaElementFromFile(viewer.doc, file, viewer.store.get().canvasSize);
+			const element = await mediaElementFromFile(file, viewer.store.get().canvasSize, viewer.doc);
 			if (!element) {
 				return buildingBlockFailure('decode-failed');
 			}

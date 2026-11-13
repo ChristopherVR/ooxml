@@ -26,7 +26,7 @@ import * as publicApi from '../public-api';
 import { resolveViewerComponentResources } from '../viewer/component-resources.test-support';
 import { declareSignalFields } from '../viewer/signal-inputs.test-support';
 import { BuildingBlocksCanvasComponent } from './canvas.component';
-import { FIND_MATCH_ATTRIBUTE } from './find-highlight';
+import { FIND_MATCH_ATTRIBUTE } from 'ooxml-ui/pptx';
 import { BuildingBlocksSlidesPaneComponent } from './slides-pane.component';
 import { BuildingBlocksToolbarComponent } from './toolbar.component';
 import type { ViewerBuildingBlocksOptions } from './types';

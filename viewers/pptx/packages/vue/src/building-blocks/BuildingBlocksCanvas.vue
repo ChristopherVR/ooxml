@@ -9,7 +9,7 @@ import { computed, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
 import PowerPointViewer from '../viewer/PowerPointViewer.vue';
 import type { PowerPointViewerExpose } from '../viewer/types';
 import { BuildingBlocksBridgeKey } from './bridge';
-import { syncFindHighlights } from './find-highlight';
+import { syncFindHighlights } from 'ooxml-ui/pptx';
 import type { ViewerBuildingBlocks } from './types';
 
 const props = defineProps<{ blocks: ViewerBuildingBlocks }>();

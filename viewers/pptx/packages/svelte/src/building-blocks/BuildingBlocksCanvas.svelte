@@ -5,7 +5,7 @@
 	 * its size back (the fit scale reads it). It mounts no ribbon, thumbnails, status bar, notes or
 	 * dialogs: gestures that need a dialog raise a building-block request instead.
 	 */
-	import { themeToCssVars } from 'ooxml-ui/pptx';
+	import { markFindHighlights, themeToCssVars } from 'ooxml-ui/pptx';
 	import { tick } from 'svelte';
 	import type { ViewerTheme } from '../viewer/types';
 
@@ -45,28 +45,16 @@
 			return;
 		}
 		const root = holder;
-		let marked: HTMLElement[] = [];
 		let stale = false;
 		void tick().then(() => {
-			if (stale) {
-				return undefined;
-			}
-			for (const target of targets) {
-				for (const node of root.querySelectorAll<HTMLElement>(
-					`[data-element-id="${CSS.escape(target.elementId)}"]`,
-				)) {
-					node.setAttribute('data-pptx-find-match', target.current ? 'current' : 'match');
-					marked.push(node);
-				}
+			if (!stale) {
+				markFindHighlights(root, targets);
 			}
 			return undefined;
 		});
 		return () => {
 			stale = true;
-			for (const node of marked) {
-				node.removeAttribute('data-pptx-find-match');
-			}
-			marked = [];
+			markFindHighlights(root, []);
 		};
 	});
 </script>

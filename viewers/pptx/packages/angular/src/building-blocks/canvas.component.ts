@@ -13,7 +13,7 @@ import {
 import { CollaborationCursorsComponent } from '../viewer/collaboration-cursors.component';
 import { RemoteSelectionOverlayComponent } from '../viewer/remote-selection-overlay.component';
 import { SlideCanvasComponent } from '../viewer/slide-canvas.component';
-import { syncFindHighlights } from './find-highlight';
+import { syncFindHighlights } from 'ooxml-ui/pptx';
 import type { ViewerBuildingBlocks } from './viewer-building-blocks';
 
 /**

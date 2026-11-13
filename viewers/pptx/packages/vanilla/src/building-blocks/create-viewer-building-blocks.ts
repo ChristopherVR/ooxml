@@ -5,6 +5,7 @@ import {
 	describeBuildingBlockToolbar,
 	registerBuildingBlockGroups,
 	runBuildingBlockToolbarControl,
+	syncFindHighlights,
 } from 'ooxml-ui/pptx';
 
 import { createTranslator } from '../viewer/i18n';
@@ -12,7 +13,6 @@ import type { PptxViewerSource } from '../viewer/load';
 import { clampSlideIndex as clampIndex } from '../viewer/state';
 import { viewerModeOf } from '../viewer/state-sync';
 import { BuildingBlocksViewer } from './blocks-viewer';
-import { syncFindHighlights } from './find-highlight';
 import { createVanillaGroupPorts } from './group-ports';
 import { createVanillaPort } from './session-port';
 import { mountSlidesPaneBlock } from './slides-pane-block';
