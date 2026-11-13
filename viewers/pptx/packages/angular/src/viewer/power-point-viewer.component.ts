@@ -39,6 +39,7 @@ import {
 	saveFailureMessage,
 	readStoredViewerPrefs,
 	findCanvasElementNode,
+	findTextHighlightsByElement,
 	recoverySnapshotIntent,
 	resolve3DRenderingFlags,
 	resolveAllowExternalContent,
@@ -648,6 +649,7 @@ const noopClose = (): void => undefined;
 							[maxFitScale]="maxFitScale()"
 							[editable]="canEdit()"
 							[selectedIds]="outlineAuthoring.canvasSelectedIds()"
+							[findHighlights]="canvasFindHighlights()"
 							[showGrid]="showGrid()"
 							[showRulers]="showRulers()"
 							[showGuides]="showGuides()"
@@ -2017,6 +2019,14 @@ export class PowerPointViewerComponent
 	private readonly compareSvc = inject(ViewerCompareService);
 	protected readonly xport = inject(ViewerExportService);
 	protected readonly findReplace = inject(ViewerFindReplaceService);
+	/** The find matches the editing canvas marks in the text (shared `find-text-highlight`). */
+	protected readonly canvasFindHighlights = computed(() =>
+		findTextHighlightsByElement(
+			this.findReplace.results(),
+			this.findReplace.activeIndex(),
+			this.activeSlideIndex(),
+		),
+	);
 	protected readonly customShowsCtl = inject(ViewerCustomShowsService);
 	protected readonly recentColors = inject(RecentColorsService);
 	/**

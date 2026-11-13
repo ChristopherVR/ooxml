@@ -1,6 +1,7 @@
 import {
 	ChangeDetectionStrategy,
 	Component,
+	computed,
 	effect,
 	ElementRef,
 	HostListener,
@@ -9,7 +10,7 @@ import {
 	viewChild,
 	ViewEncapsulation,
 } from '@angular/core';
-import { syncFindHighlights } from 'ooxml-ui/pptx';
+import { findTextHighlightsByElement } from 'ooxml-ui/pptx';
 
 import { CollaborationCursorsComponent } from '../viewer/collaboration-cursors.component';
 import { RemoteSelectionOverlayComponent } from '../viewer/remote-selection-overlay.component';
@@ -35,13 +36,6 @@ import type { ViewerBuildingBlocks } from './viewer-building-blocks';
 			min-width: 0;
 			min-height: 0;
 		}
-		[data-pptx-block='canvas'] [data-pptx-find-match] {
-			outline: 2px solid #f5a623;
-			outline-offset: 1px;
-		}
-		[data-pptx-block='canvas'] [data-pptx-find-match='current'] {
-			outline: 3px solid #e53935;
-		}
 	`,
 	template: `
 		@let shell = blocks().shell;
@@ -53,6 +47,7 @@ import type { ViewerBuildingBlocks } from './viewer-building-blocks';
 			[editable]="shell.canEdit()"
 			[zoom]="blocks().zoom.zoom()"
 			[selectedIds]="shell.editor.selectedIds()"
+			[findHighlights]="findHighlights()"
 			[editingId]="shell.canvasEditing.editingId()"
 			[templateElements]="shell.activeTemplateElements()"
 			(pointermove)="shell.cursor.onPointerMove($event)"
@@ -91,6 +86,16 @@ export class BuildingBlocksCanvasComponent {
 	readonly blocks = input.required<ViewerBuildingBlocks>();
 	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 	private readonly canvas = viewChild(SlideCanvasComponent);
+	/** The host find bar's matches, marked in the text by the canvas's renderers. */
+	protected readonly findHighlights = computed(() => {
+		const blocks = this.blocks();
+		const { session, open } = blocks.findBarState();
+		return findTextHighlightsByElement(
+			open ? session.matches : [],
+			session.current,
+			blocks.shell.activeSlideIndex(),
+		);
+	});
 
 	constructor() {
 		effect((onCleanup) => {
@@ -100,23 +105,6 @@ export class BuildingBlocksCanvasComponent {
 					this.blocks().attachCanvas(this.host.nativeElement, () => canvas.getStageElement()),
 				);
 			}
-		});
-		// The stage repaints on change: outline the find matches again after every paint.
-		effect((onCleanup) => {
-			const blocks = this.blocks();
-			const { session, open } = blocks.findBarState();
-			const slideIndex = blocks.shell.activeSlideIndex();
-			const draw = () =>
-				syncFindHighlights(
-					this.host.nativeElement,
-					open ? session.matches : [],
-					session.current,
-					slideIndex,
-				);
-			draw();
-			const observer = new MutationObserver(draw);
-			observer.observe(this.host.nativeElement, { childList: true, subtree: true });
-			onCleanup(() => observer.disconnect());
 		});
 	}
 

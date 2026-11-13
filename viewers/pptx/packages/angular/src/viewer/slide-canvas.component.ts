@@ -30,6 +30,7 @@ import type {
 	ConnectorEndpointKind,
 	RulerUnit,
 	ShapeAdjustmentDragState,
+	SlideFindHighlights,
 	Tick,
 	ViewportFitPadding,
 } from 'ooxml-ui/pptx';
@@ -83,6 +84,7 @@ import { hasTextProperties } from 'pptx-viewer-core';
 import { ActiveXControlsOverlayComponent } from './activex-controls-overlay.component';
 import { AiChangeOverlayComponent } from './ai/ai-change-overlay.component';
 import { AiFocusHighlightOverlayComponent } from './ai/ai-focus-highlight-overlay.component';
+import { CanvasFindHighlights } from './canvas-find-highlights';
 import { CanvasFitService } from './canvas-fit.service';
 import { ChartQuickActionsOverlayComponent } from './chart-quick-actions-overlay.component';
 import { CollaborationService } from './collaboration.service';
@@ -178,6 +180,7 @@ function plainText(el: PptxElement): string {
 	host: { 'data-pptx-scope': '' },
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	providers: [
+		CanvasFindHighlights,
 		CanvasFitService,
 		InkDrawingService,
 		RulerGuidesService,
@@ -333,6 +336,8 @@ export class SlideCanvasComponent implements SlideContext {
 	readonly presenting = input<boolean>(false);
 	/** Ids of currently-selected elements (drawn with a selection outline). */
 	readonly selectedIds = input<readonly string[]>([]);
+	/** The Find bar's matches, marked in the elements' text (`findTextHighlightsByElement`). */
+	readonly findHighlights = input<SlideFindHighlights | undefined>(undefined);
 	/** Id of the element currently being text-edited inline (or null). */
 	readonly editingId = input<string | null>(null);
 	/**
@@ -547,6 +552,7 @@ export class SlideCanvasComponent implements SlideContext {
 	private lastGuideCommandId = 0;
 
 	constructor() {
+		inject(CanvasFindHighlights, { self: true }).bind(this.findHighlights);
 		effect(() => {
 			const id = this.editable() ? this.editingId() : null;
 			if (id === this.listSessionId && this.inlineListSeed()) {

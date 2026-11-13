@@ -1,6 +1,6 @@
 import { NgStyle, NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
-import { isRunHyperlinkClickable, safeOpenUrl } from 'ooxml-ui/pptx';
+import { findMatchMarkStyle, isRunHyperlinkClickable, safeOpenUrl } from 'ooxml-ui/pptx';
 
 import { EquationRendererComponent } from './equation-renderer.component';
 import { shouldPreventHyperlinkNavigation } from './hyperlink-confirm';
@@ -100,7 +100,18 @@ import { ViewerOptionsService } from './viewer-options.service';
 			typeface here; the tab layout was likewise React-only, so a
 			TOC-style row lost its leader dots and right-aligned page number).
 		-->
+		<!-- A piece of a Find match (shared highlightFindMatches) sits inside a <mark>. -->
 		<ng-template #runContent let-r="r">
+			@if (r.findMatch) {
+				<mark [attr.data-pptx-find-match]="r.findMatch" [ngStyle]="findMatchMarkStyle(r.findMatch)"
+					><ng-container [ngTemplateOutlet]="runPieces" [ngTemplateOutletContext]="{ r: r }"
+				/></mark>
+			} @else {
+				<ng-container [ngTemplateOutlet]="runPieces" [ngTemplateOutletContext]="{ r: r }" />
+			}
+		</ng-template>
+
+		<ng-template #runPieces let-r="r">
 			@if (r.tabLines; as lines) {
 				@for (line of lines; track $index) {
 					<span style="display: inline-block; white-space: nowrap">
@@ -142,6 +153,7 @@ import { ViewerOptionsService } from './viewer-options.service';
 })
 export class SlideTextRunComponent {
 	protected readonly isRunHyperlinkClickable = isRunHyperlinkClickable;
+	protected readonly findMatchMarkStyle = findMatchMarkStyle;
 	readonly run = input.required<TextRun>();
 	/**
 	 * `false` (the default) renders the hyperlink anchor with no click

@@ -170,22 +170,33 @@ describe('angular building blocks', () => {
 		expect(root.querySelector('pptx-ribbon')).toBeNull();
 	}, 30000);
 
-	it('outlines the elements holding the host find bar matches', async () => {
+	it('marks the matched text of the host find bar, the current match apart', async () => {
 		const { created, blocks } = await mounted();
+		const marks = () =>
+			[
+				...(created.nativeElement as HTMLElement).querySelectorAll(`mark[${FIND_MATCH_ATTRIBUTE}]`),
+			].map((mark) => [mark.getAttribute(FIND_MATCH_ATTRIBUTE), mark.textContent]);
 		blocks.actions().findReplace.setOpen(true);
 		blocks.actions().findReplace.setQuery('alpha');
 		await vi.waitFor(async () => {
 			await settle();
-			expect(
-				(created.nativeElement as HTMLElement).querySelector(`[${FIND_MATCH_ATTRIBUTE}="current"]`),
-			).not.toBeNull();
+			expect(marks()).toEqual([
+				['current', 'Alpha'],
+				['match', 'alpha'],
+			]);
+		});
+		blocks.actions().findReplace.next();
+		await vi.waitFor(async () => {
+			await settle();
+			expect(marks()).toEqual([
+				['match', 'Alpha'],
+				['current', 'alpha'],
+			]);
 		});
 		blocks.actions().findReplace.setOpen(false);
 		await vi.waitFor(async () => {
 			await settle();
-			expect(
-				(created.nativeElement as HTMLElement).querySelector(`[${FIND_MATCH_ATTRIBUTE}]`),
-			).toBeNull();
+			expect(marks()).toEqual([]);
 		});
 	}, 30000);
 

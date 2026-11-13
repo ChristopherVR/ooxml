@@ -1,5 +1,6 @@
-import { buildParagraphs } from 'ooxml-ui/pptx';
+import { buildParagraphs, highlightFindMatches } from 'ooxml-ui/pptx';
 import type {
+	ElementFindHighlights,
 	FieldSubstitutionContext,
 	PictureBulletMarker,
 	ReflectionWrapperStyle,
@@ -82,6 +83,8 @@ export interface TextRun {
 	 * (Firefox never implemented that property).
 	 */
 	reflection?: ReflectionWrapperStyle;
+	/** A piece of a Find match (`current` for the current one), drawn inside a `<mark>`. */
+	findMatch?: 'match' | 'current';
 }
 
 /** A rendered paragraph: runs plus bullet + indent + spacing metadata. */
@@ -130,8 +133,13 @@ export function buildAngularParagraphs(
 	element: PptxElement,
 	fieldContext?: FieldSubstitutionContext,
 	segmentOverrides?: readonly TextSegment[],
+	/** The Find bar's matches in this element (`findTextHighlightsByElement`). */
+	findHighlights?: ElementFindHighlights,
 ): Paragraph[] {
-	return buildParagraphs(element, fieldContext, segmentOverrides).map((para) => ({
+	return highlightFindMatches(
+		buildParagraphs(element, fieldContext, segmentOverrides),
+		findHighlights,
+	).map((para) => ({
 		runs: para.runs.map((run) => {
 			const out: TextRun = { text: run.text, style: run.style };
 			out.hyperlink = run.hyperlink;
@@ -162,6 +170,9 @@ export function buildAngularParagraphs(
 			}
 			if (run.reflection) {
 				out.reflection = run.reflection;
+			}
+			if (run.findMatch) {
+				out.findMatch = run.findMatch;
 			}
 			return out;
 		}),
