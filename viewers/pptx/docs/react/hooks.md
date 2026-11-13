@@ -246,6 +246,9 @@ const { actions } = blocks;
   `onOpenBroadcastDialog`, `onToggleShortcuts`) that set state for a dialog nothing renders here;
   hide them with `hiddenActions` or show your own.
 
+The exact options, request kinds, operation signatures, availability ids and failure codes are in
+[`useViewerBuildingBlocks: host workflows`](/react/hooks-reference#building-block-host-workflows).
+
 ### `useThemeSwitching`
 
 Switches the loaded **document's** PowerPoint theme (the OOXML color/font scheme, not the viewer

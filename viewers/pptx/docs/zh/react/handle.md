@@ -103,6 +103,21 @@ import type { ViewerMode, PowerPointViewerAPI } from 'pptx-react-viewer';
 | `getSaveSnapshot` | `() => Promise<{ revision: number; content: Uint8Array }>` | 为宿主序列化文档。文档保持未保存，不触发保存事件。 |
 | `acknowledgeSave` | `(revision: number) => PptxSaveAcknowledgement`            | 通知查看器宿主已持久化 `revision`。                |
 
+结果类型：
+
+```ts
+interface PptxSaveSnapshot {
+	readonly revision: number;
+	readonly content: Uint8Array;
+}
+
+type PptxSaveAcknowledgement =
+	| { readonly status: 'clean'; readonly revision: number }
+	| { readonly status: 'pending'; readonly revision: number; readonly currentRevision: number }
+	| { readonly status: 'stale'; readonly revision: number; readonly savedRevision: number }
+	| { readonly status: 'unknown'; readonly revision: number };
+```
+
 `acknowledgeSave` 返回以下之一：
 
 - `{ status: 'clean' }`：`revision` 仍是当前修订号。文档变为已保存，触发 `onDirtyChange(false)`，

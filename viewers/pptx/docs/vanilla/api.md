@@ -283,6 +283,21 @@ edits made while the upload is in flight stay unsaved. Nothing reloads and undo 
 | `getSaveSnapshot` | `() => Promise<{ revision: number; content: Uint8Array }>` | Serialise the deck for the host. The document stays dirty and no save event fires. |
 | `acknowledgeSave` | `(revision: number) => PptxSaveAcknowledgement`            | Tell the viewer the host persisted `revision`.                                     |
 
+Result types:
+
+```ts
+interface PptxSaveSnapshot {
+	readonly revision: number;
+	readonly content: Uint8Array;
+}
+
+type PptxSaveAcknowledgement =
+	| { readonly status: 'clean'; readonly revision: number }
+	| { readonly status: 'pending'; readonly revision: number; readonly currentRevision: number }
+	| { readonly status: 'stale'; readonly revision: number; readonly savedRevision: number }
+	| { readonly status: 'unknown'; readonly revision: number };
+```
+
 `acknowledgeSave` returns one of:
 
 - `{ status: 'clean' }`: `revision` is still current. The document is clean, `onDirtyChange(false)`
