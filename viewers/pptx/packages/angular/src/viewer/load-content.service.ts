@@ -1,7 +1,5 @@
 import { DestroyRef, Injectable, computed, inject, signal, untracked } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
-import { XMLParser } from 'fast-xml-parser';
-import JSZip from 'jszip';
 import {
 	DEFAULT_CANVAS_HEIGHT,
 	DEFAULT_CANVAS_WIDTH,
@@ -61,12 +59,10 @@ import type {
 	PptxThemeOption,
 	PptxViewProperties,
 	ParsedTableStyleMap,
-	XmlObject,
 } from 'pptx-viewer-core';
 import {
 	EncryptedFileError,
-	decodeXmlEntities,
-	parseSignatureXml,
+	parseSignaturesFromBuffer,
 	PptxHandler,
 } from 'pptx-viewer-core';
 
@@ -764,54 +760,5 @@ export class LoadContentService {
 	}
 }
 
-/**
- * Parse digital signatures from a `.pptx` ZIP buffer (best-effort; returns an
- * empty array when there are none or parsing fails). Mirrors the Vue port's
- * `parseSignaturesFromBuffer`.
- *
- * `jszip`/`fast-xml-parser` are imported statically on purpose: `PptxHandler`
- * (imported above) already pulls both into the same chunk, so a dynamic import
- * here cannot move them anywhere. It only made bundlers emit
- * INEFFECTIVE_DYNAMIC_IMPORT.
- *
- * The parser options mirror core's loader parser rather than taking
- * fast-xml-parser's defaults, identically to the Vue copy. fast-xml-parser
- * decodes the five predefined entities but NOT numeric character references,
- * so a certificate DN written `CN=M&#xFC;ller CA` was rendered verbatim in the
- * signatures panel instead of `CN=Müller CA` - and non-ASCII signer names are
- * exactly the ones a producer escapes that way. `processEntities: false` then
- * takes DTD handling out of a path that reads attacker-supplied bytes (nothing
- * was exploitable at fast-xml-parser 5.9.2, which expands no entities and
- * rejects external ones, so this is forward-stability) and stops a package
- * carrying a large DTD entity, which the default rejects with a size-cap
- * throw, from collapsing every signature to "none found" via the catch below.
- *
- * Vue and Angular are the only bindings that read signatures at all; React,
- * Svelte and Vanilla render no signature panel, so this pair is the whole
- * surface. Both copies must move together until it is lifted into core.
- */
-export async function parseSignaturesFromBuffer(buffer: ArrayBuffer): Promise<ParsedSignature[]> {
-	try {
-		const zip = await JSZip.loadAsync(buffer);
-		const parser = new XMLParser({
-			ignoreAttributes: false,
-			attributeNamePrefix: '@_',
-			parseAttributeValue: false,
-			parseTagValue: false,
-			processEntities: false,
-			tagValueProcessor: (_tagName: string, tagValue: string) => decodeXmlEntities(tagValue),
-			attributeValueProcessor: (_attrName: string, attrValue: string) =>
-				decodeXmlEntities(attrValue),
-		});
-		const result: ParsedSignature[] = [];
-		for (const path of Object.keys(zip.files)) {
-			if (path.startsWith('_xmlsignatures/') && path.endsWith('.xml')) {
-				const xml = await zip.files[path].async('string');
-				result.push(parseSignatureXml(parser.parse(xml) as XmlObject, path));
-			}
-		}
-		return result;
-	} catch {
-		return [];
-	}
-}
+// Signature parsing is shared in the core (`ooxml-core/pptx`); kept exported here for callers and tests.
+export { parseSignaturesFromBuffer };

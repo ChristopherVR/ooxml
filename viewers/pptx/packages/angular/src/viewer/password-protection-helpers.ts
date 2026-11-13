@@ -12,7 +12,7 @@
 import type { TranslateService } from '@ngx-translate/core';
 // Password strength scoring is shared, so every binding grades a password the
 // same way.
-import { getPasswordStrength } from 'ooxml-ui/pptx';
+import { getPasswordStrength, validatePasswordPair } from 'ooxml-ui/pptx';
 
 export { getPasswordStrength };
 
@@ -50,13 +50,14 @@ export function validatePassword(
 	confirmPassword: string,
 	translate?: TranslateService,
 ): string {
-	if (!password) {
+	const invalid = validatePasswordPair(password, confirmPassword);
+	if (invalid === 'required') {
 		return translate ? translate.instant('pptx.password.errorEnter') : 'Please enter a password.';
 	}
-	if (password !== confirmPassword) {
+	if (invalid === 'mismatch') {
 		return translate ? translate.instant('pptx.password.errorMismatch') : 'Passwords do not match.';
 	}
-	if (password.length < 4) {
+	if (invalid === 'tooShort') {
 		return translate
 			? translate.instant('pptx.password.errorTooShort')
 			: 'Password must be at least 4 characters.';

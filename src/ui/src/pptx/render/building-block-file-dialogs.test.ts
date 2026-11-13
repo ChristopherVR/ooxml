@@ -17,7 +17,6 @@ import {
 	buildPasswordProtectionActions,
 	describePasswordProtection,
 	markAsFinalProperties,
-	passwordStrength,
 	validateOpenPassword,
 } from './building-block-password';
 import { buildSignatureActions, describeSignaturesState } from './building-block-signatures';
@@ -33,8 +32,6 @@ test('open passwords are validated in the bundled dialog order', () => {
 	expect(validateOpenPassword('abcd', 'abce')).toEqual({ ok: false, code: 'password-mismatch' });
 	expect(validateOpenPassword('abc', 'abc')).toEqual({ ok: false, code: 'password-too-short' });
 	expect(validateOpenPassword('abcd', 'abcd')).toEqual(BUILDING_BLOCK_OK);
-	expect(passwordStrength('')).toBe(0);
-	expect(passwordStrength('Abcdefgh1!xyz')).toBe(4);
 });
 
 test('protection state reports flags and never a secret', () => {

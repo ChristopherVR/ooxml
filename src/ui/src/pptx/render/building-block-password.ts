@@ -5,6 +5,8 @@ import {
 	buildingBlockFailure,
 	type BuildingBlockResult,
 } from './building-block-actions';
+import { validatePasswordPair } from './password-protection';
+import type { PasswordValidationError } from './password-protection';
 import { isMarkedAsFinal, type ReadOnlyRecommendation } from './read-only-recommendation';
 
 /**
@@ -15,44 +17,19 @@ import { isMarkedAsFinal, type ReadOnlyRecommendation } from './read-only-recomm
 /** Open passwords shorter than this are refused (the bundled dialog's rule). */
 export const MIN_OPEN_PASSWORD_LENGTH = 4;
 
+const PASSWORD_CODES = {
+	required: 'password-required',
+	mismatch: 'password-mismatch',
+	tooShort: 'password-too-short',
+} as const satisfies Record<NonNullable<PasswordValidationError>, string>;
+
 /** `docProps/custom.xml`'s well-known "Mark as Final" property. */
 const MARK_AS_FINAL_PROPERTY = '_MarkAsFinal';
 
-/** A strength score from 0 (empty or trivial) to 4, for a strength meter. */
-export function passwordStrength(password: string): number {
-	if (!password) {
-		return 0;
-	}
-	let score = 0;
-	if (password.length >= 8) {
-		score++;
-	}
-	if (password.length >= 12) {
-		score++;
-	}
-	if (/[A-Z]/u.test(password) && /[a-z]/u.test(password)) {
-		score++;
-	}
-	if (/\d/u.test(password)) {
-		score++;
-	}
-	if (/[^A-Za-z0-9]/u.test(password)) {
-		score++;
-	}
-	return Math.min(score, 4);
-}
-
-/** The bundled dialog's checks, in its order: required, confirmed, long enough. */
+/** The bundled dialog's checks (the shared `validatePasswordPair`), as operation result codes. */
 export function validateOpenPassword(password: string, confirmation: string): BuildingBlockResult {
-	if (!password) {
-		return buildingBlockFailure('password-required');
-	}
-	if (password !== confirmation) {
-		return buildingBlockFailure('password-mismatch');
-	}
-	return password.length < MIN_OPEN_PASSWORD_LENGTH
-		? buildingBlockFailure('password-too-short')
-		: BUILDING_BLOCK_OK;
+	const invalid = validatePasswordPair(password, confirmation);
+	return invalid === null ? BUILDING_BLOCK_OK : buildingBlockFailure(PASSWORD_CODES[invalid]);
 }
 
 /** What the deck is protected with, as state only (never a password or hash). */

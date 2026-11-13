@@ -36,4 +36,29 @@ describe('file info dialogs', () => {
 		footerAction(target, 'submit')!.click();
 		expect(onset).toHaveBeenCalledWith('Safe123!');
 	});
+
+	it('refuses a mismatched or too short password with the shared rule', () => {
+		const target = document.createElement('div');
+		const onset = vi.fn();
+		const instance = mount(PasswordProtectionDialog, {
+			target,
+			props: { protected: false, onset, onremove: vi.fn(), onclose: vi.fn() },
+		});
+		cleanups.push(() => unmount(instance));
+		const inputs = target.querySelectorAll<HTMLInputElement>('input');
+		const enter = (first: string, second: string) => {
+			inputs[0].value = first;
+			inputs[0].dispatchEvent(new Event('input', { bubbles: true }));
+			inputs[1].value = second;
+			inputs[1].dispatchEvent(new Event('input', { bubbles: true }));
+			flushSync();
+			footerAction(target, 'submit')!.click();
+			flushSync();
+		};
+		enter('Safe123!', 'Other456!');
+		expect(target.querySelector('[role="alert"]')).not.toBeNull();
+		enter('abc', 'abc');
+		expect(target.querySelector('[role="alert"]')).not.toBeNull();
+		expect(onset).not.toHaveBeenCalled();
+	});
 });

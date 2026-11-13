@@ -1,4 +1,4 @@
-import { passwordStrength, validateOpenPassword } from 'ooxml-ui/pptx';
+import { getPasswordStrength, validatePasswordPair } from 'ooxml-ui/pptx';
 import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { LuLock, LuShieldCheck, LuX, LuEye, LuEyeOff } from 'react-icons/lu';
 
@@ -18,11 +18,11 @@ export interface PasswordProtectionDialogProps {
 	onRemovePassword: () => void;
 }
 
-const PASSWORD_ERROR_KEYS: Record<string, string> = {
-	'password-required': 'pptx.security.errorPasswordRequired',
-	'password-mismatch': 'pptx.security.errorPasswordMismatch',
-	'password-too-short': 'pptx.security.errorPasswordTooShort',
-};
+const PASSWORD_ERROR_KEYS = {
+	required: 'pptx.security.errorPasswordRequired',
+	mismatch: 'pptx.security.errorPasswordMismatch',
+	tooShort: 'pptx.security.errorPasswordTooShort',
+} as const;
 
 const STRENGTH_COLORS = [
 	'bg-red-500',
@@ -52,7 +52,7 @@ export function PasswordProtectionDialog({
 	const dialogRef = useRef<HTMLDivElement>(null);
 	const passwordRef = useRef<HTMLInputElement>(null);
 
-	const strength = useMemo(() => passwordStrength(password), [password]);
+	const strength = useMemo(() => getPasswordStrength(password), [password]);
 
 	const strengthLabel = useMemo(() => {
 		const labels = [
@@ -67,9 +67,9 @@ export function PasswordProtectionDialog({
 
 	const handleSubmit = useCallback(() => {
 		setError('');
-		const checked = validateOpenPassword(password, confirmPassword);
-		if (!checked.ok) {
-			setError(t(PASSWORD_ERROR_KEYS[checked.code] ?? 'pptx.security.errorPasswordRequired'));
+		const invalid = validatePasswordPair(password, confirmPassword);
+		if (invalid) {
+			setError(t(PASSWORD_ERROR_KEYS[invalid]));
 			return;
 		}
 		onSetPassword(password);

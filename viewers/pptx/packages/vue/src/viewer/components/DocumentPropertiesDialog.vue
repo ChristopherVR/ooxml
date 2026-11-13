@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { appPropertiesChanged, documentPropertiesChanged } from 'ooxml-ui/pptx';
 import type {
 	PptxAppProperties,
 	PptxCoreProperties,
@@ -112,44 +113,21 @@ function updateCustom(next: PptxCustomProperty[]): void {
 	draftCustom.value = next;
 }
 
-const isDirty = computed<boolean>(() => {
-	const core = props.coreProperties ?? {};
-	const coreKeys: GeneralCoreKey[] = [
-		'title',
-		'subject',
-		'creator',
-		'keywords',
-		'description',
-		'category',
-	];
-	const coreChanged = coreKeys.some((key) => (draftCore.value[key] ?? '') !== (core[key] ?? ''));
-	if (coreChanged) {
-		return true;
-	}
+const draftApp = computed(() => ({ manager: draftManager.value, company: draftCompany.value }));
 
-	if (draftManager.value !== (props.appProperties?.manager ?? '')) {
-		return true;
-	}
-	if (draftCompany.value !== (props.appProperties?.company ?? '')) {
-		return true;
-	}
-
-	const original = props.customProperties ?? [];
-	if (draftCustom.value.length !== original.length) {
-		return true;
-	}
-	return draftCustom.value.some(
-		(p, i) =>
-			p.name !== original[i]?.name ||
-			p.value !== original[i]?.value ||
-			p.type !== original[i]?.type,
-	);
-});
+const isDirty = computed<boolean>(() =>
+	documentPropertiesChanged(
+		{
+			core: props.coreProperties ?? {},
+			custom: props.customProperties ?? [],
+			app: props.appProperties,
+		},
+		{ core: draftCore.value, custom: draftCustom.value, app: draftApp.value },
+	),
+);
 
 function handleSave(): void {
-	const appChanged =
-		draftManager.value !== (props.appProperties?.manager ?? '') ||
-		draftCompany.value !== (props.appProperties?.company ?? '');
+	const appChanged = appPropertiesChanged(props.appProperties, draftApp.value);
 
 	const patch: DocumentPropertiesSavePatch = {
 		core: { ...draftCore.value },

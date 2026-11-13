@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { getPasswordStrength, validatePasswordPair } from 'ooxml-ui/pptx';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -41,30 +42,13 @@ watch(
 	},
 );
 
-/** Returns a strength score 0-4 for the current password. */
-const strength = computed(() => {
-	const value = password.value;
-	if (!value) {
-		return 0;
-	}
-	let score = 0;
-	if (value.length >= 8) {
-		score++;
-	}
-	if (value.length >= 12) {
-		score++;
-	}
-	if (/[A-Z]/u.test(value) && /[a-z]/u.test(value)) {
-		score++;
-	}
-	if (/\d/u.test(value)) {
-		score++;
-	}
-	if (/[^A-Za-z0-9]/u.test(value)) {
-		score++;
-	}
-	return Math.min(score, 4);
-});
+const strength = computed(() => getPasswordStrength(password.value));
+
+const PASSWORD_ERROR_KEYS = {
+	required: 'pptx.password.errorEnter',
+	mismatch: 'pptx.password.errorMismatch',
+	tooShort: 'pptx.password.errorTooShort',
+} as const;
 
 const strengthColors = [
 	'bg-red-500',
@@ -84,16 +68,9 @@ const strengthLabel = computed(() => (password.value ? strengthLabels.value[stre
 
 function onSubmit(): void {
 	error.value = '';
-	if (!password.value) {
-		error.value = t('pptx.password.errorEnter');
-		return;
-	}
-	if (password.value !== confirmPassword.value) {
-		error.value = t('pptx.password.errorMismatch');
-		return;
-	}
-	if (password.value.length < 4) {
-		error.value = t('pptx.password.errorTooShort');
+	const invalid = validatePasswordPair(password.value, confirmPassword.value);
+	if (invalid) {
+		error.value = t(PASSWORD_ERROR_KEYS[invalid]);
 		return;
 	}
 	emit('setPassword', password.value);

@@ -78,4 +78,25 @@ describe('file info dialogs', () => {
 		save.click();
 		expect(onSet).toHaveBeenCalledWith('Safe123!');
 	});
+
+	it('refuses a mismatched or too short password with the shared rule', () => {
+		const onSet = vi.fn();
+		const t = createTranslator();
+		const protection = openPasswordProtectionDialog(document, t, {
+			protected: false,
+			onSet,
+			onRemove: vi.fn(),
+		});
+		const inputs = protection.querySelectorAll<HTMLInputElement>('input');
+		const save = allButtons(protection).find((button) => button.textContent === 'Set Password')!;
+		inputs[0].value = 'Safe123!';
+		inputs[1].value = 'Other456!';
+		save.click();
+		expect(protection.textContent).toContain(t('pptx.security.errorPasswordMismatch'));
+		inputs[0].value = 'abc';
+		inputs[1].value = 'abc';
+		save.click();
+		expect(protection.textContent).toContain(t('pptx.security.errorPasswordTooShort'));
+		expect(onSet).not.toHaveBeenCalled();
+	});
 });
