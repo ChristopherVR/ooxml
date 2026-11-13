@@ -1,5 +1,7 @@
 import type {
 	BuildingBlockToolbarGroupId,
+	CollaborationShellState,
+	CollaborationState,
 	UseViewerBuildingBlocksActionsOptions,
 	ViewerBuildingBlockActions,
 	ViewerMode,
@@ -46,6 +48,13 @@ export interface ViewerBuildingBlocksState {
 	canUndo: boolean;
 	canRedo: boolean;
 	dirty: boolean;
+	/**
+	 * Effective edit permission plus connection and presence counts, as React's `shellState`;
+	 * pass it to `describeCollaborationShellState` for a localised status line.
+	 */
+	shellState: CollaborationShellState;
+	/** The shared `CollaborationState` of the room the canvas is in (`COLLABORATION_OFF` when none). */
+	collaborationState: CollaborationState;
 }
 
 export interface ViewerBuildingBlocks {
@@ -58,7 +67,11 @@ export interface ViewerBuildingBlocks {
 	readonly viewer: PptxViewer | null;
 	/** Call `listener` after every change of state, actions or options; returns the unsubscribe. */
 	subscribe(listener: () => void): () => void;
-	/** Apply new options: `content`, `canEdit` and callbacks apply at once, the rest on remount. */
+	/**
+	 * Apply new options to the mounted canvas, keeping the open deck: `content`, `canEdit`,
+	 * callbacks, `locale`, `theme`, `customization`, `googleFonts`, `allowExternalContent` and
+	 * `collaboration` (join, rejoin or leave) at once; `limits` and `initialSlide` on the next load.
+	 */
 	update(next: ViewerBuildingBlocksOptions): void;
 	/** Mount the slide canvas (the deck loads here). Returns its disposer. */
 	mountCanvas(host: HTMLElement): () => void;

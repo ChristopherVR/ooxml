@@ -15,6 +15,7 @@ import { viewerModeOf } from '../viewer/state-sync';
 import { BuildingBlocksViewer } from './blocks-viewer';
 import { createVanillaGroupPorts } from './group-ports';
 import { createVanillaPort } from './session-port';
+import { createVanillaShell } from './shell-state';
 import { mountSlidesPaneBlock } from './slides-pane-block';
 import { createToolbarView } from './toolbar-view';
 import type {
@@ -116,9 +117,17 @@ export function createViewerBuildingBlocks(
 		return once;
 	};
 
+	const shell = createVanillaShell(
+		() => viewer,
+		() => options,
+	);
+
 	const getState = (): ViewerBuildingBlocksState => {
+		const { shellState, collaborationState } = shell.current();
 		if (!viewer) {
 			return {
+				shellState,
+				collaborationState,
 				mode: 'preview',
 				loading: Boolean(options.content),
 				error: null,
@@ -140,6 +149,8 @@ export function createViewerBuildingBlocks(
 			canUndo: viewer.canUndo(),
 			canRedo: viewer.canRedo(),
 			dirty: state.dirty,
+			shellState,
+			collaborationState,
 		};
 	};
 
@@ -163,7 +174,7 @@ export function createViewerBuildingBlocks(
 		// Permission is part of the first options, so the canvas is never briefly editable.
 		const mounted = new BuildingBlocksViewer(
 			host,
-			liveViewerOptions(() => options),
+			liveViewerOptions(() => options, { onCollaborationChange: notify }),
 			(request) => {
 				if (request.kind === 'find') {
 					findBar.toggle();

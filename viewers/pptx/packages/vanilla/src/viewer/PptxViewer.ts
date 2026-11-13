@@ -898,6 +898,17 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	 * and the glyph outlines for a deck. Each run is tagged, so a superseded
 	 * run's late result never applies.
 	 */
+	/** Resolve the open deck's webfonts again (after the host `googleFonts` policy changed). */
+	protected refreshWebfonts(): void {
+		const state = this.store.get();
+		this.syncWebfonts(state.slides, state.embeddedFonts);
+	}
+
+	/** Whether the collaboration session (its role or readiness) currently blocks editing. */
+	protected isCollaborationReadOnly(): boolean {
+		return this.sessions?.isCollaborationReadOnly() ?? false;
+	}
+
 	private syncWebfonts(
 		slides: readonly PptxSlide[],
 		embeddedFonts: readonly PptxEmbeddedFont[],
