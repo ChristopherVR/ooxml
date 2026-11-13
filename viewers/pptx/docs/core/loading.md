@@ -125,7 +125,7 @@ A value that is not a positive finite number, or a `maxEntries` above 65,536, th
 
 ## Layout template images
 
-`await handler.getTemplateElementsForSlide(slideId)` resolves embedded image assets for the requested layout and master elements, including a previously unused layout after inserting a slide or applying that layout. Unused layouts are not all decoded during the initial load. Resolution uses the handler's media cache and updates the existing template objects without replacing their `rawXml` references. Missing assets remain unresolved, and the `allowExternalImages` policy is unchanged.
+`await handler.getTemplateElementsForSlide(slideId)` resolves embedded pictures and their SVG variants for the requested layout and master elements, including a previously unused layout after inserting a slide or applying that layout. Unused layouts are not all decoded during the initial load. Resolution uses the handler's media cache and updates the existing template objects without replacing their `rawXml` references. Missing assets remain unresolved, and the `allowExternalImages` policy is unchanged.
 
 ## Embedded fonts
 

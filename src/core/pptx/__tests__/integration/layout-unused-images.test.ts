@@ -2,6 +2,10 @@ import JSZip from 'jszip';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { createDefaultPptxHandlerRuntime } from '../../core/core';
+import {
+	masterPartElementSignature,
+	templateElementSignature,
+} from '../../core/core/runtime/master-part-element-signature';
 import { resolveTemplateImages } from '../../core/core/runtime/resolve-template-images';
 import { PptxHandler } from '../../core/PptxHandler';
 import type {
@@ -39,6 +43,39 @@ function attachTemplate(slide: PptxSlide, template: PptxElement[]): PptxSlide {
 			...slide.elements.filter((element) => !/^(?:layout|master)-/u.test(element.id)),
 		],
 	};
+}
+
+async function withSvg(bytes: Uint8Array): Promise<Uint8Array> {
+	const zip = await JSZip.loadAsync(bytes);
+	zip.file(
+		USED_LAYOUT_PATH,
+		(await zip.file(USED_LAYOUT_PATH)!.async('string')).replace(
+			'<a:blip r:embed="rIdLogo"/>',
+			'<a:blip r:embed="rIdLogo"><a:extLst><a:ext uri="{96DAC541-7B7A-43D3-8B79-37D633B846F1}">' +
+				'<asvg:svgBlip xmlns:asvg="http://schemas.microsoft.com/office/drawing/2016/SVG/main" r:embed="rIdSvg"/>' +
+				'</a:ext></a:extLst></a:blip>',
+		),
+	);
+	const rels = 'ppt/slideLayouts/_rels/slideLayout1.xml.rels';
+	zip.file(
+		rels,
+		(await zip.file(rels)!.async('string')).replace(
+			'</Relationships>',
+			'<Relationship Id="rIdSvg" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/logo.svg"/></Relationships>',
+		),
+	);
+	zip.file(
+		'ppt/media/logo.svg',
+		'<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10" fill="orange"/></svg>',
+	);
+	zip.file(
+		'[Content_Types].xml',
+		(await zip.file('[Content_Types].xml')!.async('string')).replace(
+			'</Types>',
+			'<Default Extension="svg" ContentType="image/svg+xml"/></Types>',
+		),
+	);
+	return zip.generateAsync({ type: 'uint8array' });
 }
 
 describe('images from layouts not used by a loaded slide', () => {
@@ -107,36 +144,39 @@ describe('images from layouts not used by a loaded slide', () => {
 		});
 	}
 
-	it('hydrates shared cached objects without breaking template edit writeback', async () => {
-		const handler = newHandler();
-		const data = await handler.load(arrayBuffer(bytes));
-		const first = data.slides[0];
-		const logo = picture(first.elements, 'Used Layout Logo');
-		const rawXml = logo.rawXml;
-		const template = await handler.getTemplateElementsForSlide(first.id);
-		expect(picture(template, 'Used Layout Logo')).toBe(logo);
-		expect(logo.rawXml).toBe(rawXml);
-		expect(logo.imageData).toBeTruthy();
-		await handler.getLayoutPreview(USED_LAYOUT_PATH);
-		const sibling = [syntheticSlide()];
-		await handler.applyLayoutToSlide(0, USED_LAYOUT_PATH, sibling);
-		const siblingTemplate = await handler.getTemplateElementsForSlide(sibling[0].id);
-		expect(picture(siblingTemplate, 'Used Layout Logo').rawXml).toBe(rawXml);
-		const edited = {
-			...first,
-			isDirty: true,
-			elements: first.elements.map((element) =>
-				element === logo ? { ...element, x: 900 } : element,
-			),
-		};
-		const saved = await handler.save([edited, attachTemplate(sibling[0], siblingTemplate)]);
-		const result = await newHandler().load(arrayBuffer(saved));
-		for (const slide of result.slides) {
-			expect(picture(slide.elements, 'Used Layout Logo').x).toBe(900);
-		}
-	});
+	for (const svg of [false, true]) {
+		it(`preserves shared ${svg ? 'SVG' : 'PNG'} template identities and edit writeback`, async () => {
+			const handler = newHandler();
+			const data = await handler.load(arrayBuffer(svg ? await withSvg(bytes) : bytes));
+			const first = data.slides[0];
+			const logo = picture(first.elements, 'Used Layout Logo');
+			const rawXml = logo.rawXml;
+			const template = await handler.getTemplateElementsForSlide(first.id);
+			expect(picture(template, 'Used Layout Logo')).toBe(logo);
+			expect(logo.rawXml).toBe(rawXml);
+			expect(logo.imageData).toBeTruthy();
+			if (svg) expect(logo.svgData).toBeTruthy();
+			await handler.getLayoutPreview(USED_LAYOUT_PATH);
+			const sibling = [syntheticSlide()];
+			await handler.applyLayoutToSlide(0, USED_LAYOUT_PATH, sibling);
+			const siblingTemplate = await handler.getTemplateElementsForSlide(sibling[0].id);
+			expect(picture(siblingTemplate, 'Used Layout Logo').rawXml).toBe(rawXml);
+			const edited = {
+				...first,
+				isDirty: true,
+				elements: first.elements.map((element) =>
+					element === logo ? { ...element, x: 900 } : element,
+				),
+			};
+			const saved = await handler.save([edited, attachTemplate(sibling[0], siblingTemplate)]);
+			const result = await newHandler().load(arrayBuffer(saved));
+			for (const slide of result.slides) {
+				expect(picture(slide.elements, 'Used Layout Logo').x).toBe(900);
+			}
+		});
+	}
 
-	it('resolves nested image/fill/SVG references once, preserving missing and already usable data', async () => {
+	it('resolves nested pictures/SVGs once without changing editable fill URLs', async () => {
 		const base = { x: 0, y: 0, width: 11, height: 13 };
 		const logo: PicturePptxElement = {
 			...base,
@@ -177,10 +217,15 @@ describe('images from layouts not used by a loaded slide', () => {
 		const resolve = vi.fn(async (path: string) =>
 			path === 'ppt/missing.png' ? undefined : `blob:${path}`,
 		);
+		const baseline = templateElementSignature(logo);
+		const partBaseline = masterPartElementSignature(elements);
 		expect(await resolveTemplateImages(elements, resolve)).toBe(elements);
+		expect(templateElementSignature(logo)).toBe(baseline);
+		expect(masterPartElementSignature(elements)).toBe(partBaseline);
+		expect(templateElementSignature({ ...logo, svgPath: 'ppt/changed.svg' })).not.toBe(baseline);
 		expect(logo.imageData).toBe('blob:ppt/logo.png');
 		expect(logo.svgData).toBe('blob:ppt/logo.svg');
-		expect(shape.shapeStyle?.fillImageUrl).toBe(logo.imageData);
+		expect(shape.shapeStyle?.fillImageUrl).toBe('ppt/logo.png');
 		expect(group.groupFill).toBe(fill);
 		expect(missing.imageData).toBeUndefined();
 		expect(loaded.imageData).toBe('blob:existing');
