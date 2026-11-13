@@ -54,7 +54,11 @@ import type {
 	PptxThemeOption,
 	PptxViewProperties,
 } from 'pptx-viewer-core';
-import { PptxHandler, EncryptedFileError, parseSignaturesFromBuffer } from 'pptx-viewer-core';
+import {
+	PptxHandler,
+	EncryptedFileError,
+	parseSignaturesFromBuffer as parseCoreSignatures,
+} from 'pptx-viewer-core';
 import { onScopeDispose, ref, shallowRef, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, Ref, ShallowRef } from 'vue';
 
@@ -71,7 +75,12 @@ import { buildSaveSlides, partitionTemplateElements } from './template-editing';
 import { VUE_GOOGLE_FONTS_LINK_ID } from './useGoogleWebfonts';
 
 // Signature parsing is shared in the core (`ooxml-core/pptx`); kept exported here for callers and tests.
-export { parseSignaturesFromBuffer };
+// A local function, not a re-export: re-exporting an external binding breaks the CommonJS bundle.
+export function parseSignaturesFromBuffer(
+	buffer: Parameters<typeof parseCoreSignatures>[0],
+): ReturnType<typeof parseCoreSignatures> {
+	return parseCoreSignatures(buffer);
+}
 
 /**
  * `useLoadContent`: Vue port of the React hook of the same name.
@@ -510,7 +519,7 @@ export function useLoadContent(
 
 			const nextSignatures =
 				parsed.hasDigitalSignatures && signatureBuffer instanceof ArrayBuffer
-					? await parseSignaturesFromBuffer(signatureBuffer)
+					? await parseCoreSignatures(signatureBuffer)
 					: [];
 			if (token !== renderToken) {
 				return;

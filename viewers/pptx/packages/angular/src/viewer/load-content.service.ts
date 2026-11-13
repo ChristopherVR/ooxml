@@ -60,7 +60,11 @@ import type {
 	PptxViewProperties,
 	ParsedTableStyleMap,
 } from 'pptx-viewer-core';
-import { EncryptedFileError, parseSignaturesFromBuffer, PptxHandler } from 'pptx-viewer-core';
+import {
+	EncryptedFileError,
+	parseSignaturesFromBuffer as parseCoreSignatures,
+	PptxHandler,
+} from 'pptx-viewer-core';
 
 import { GOOGLE_WEBFONTS_LINK_ID } from './google-webfonts.service';
 import { ViewerOptionsService } from './viewer-options.service';
@@ -684,7 +688,7 @@ export class LoadContentService {
 			// main chunk). Only commit if this load is still current.
 			this.signatures.set([]);
 			if (parsed.hasDigitalSignatures) {
-				const sigs = await parseSignaturesFromBuffer(sigBuffer);
+				const sigs = await parseCoreSignatures(sigBuffer);
 				if (token === this.renderToken) {
 					this.signatures.set(sigs);
 				}
@@ -757,4 +761,9 @@ export class LoadContentService {
 }
 
 // Signature parsing is shared in the core (`ooxml-core/pptx`); kept exported here for callers and tests.
-export { parseSignaturesFromBuffer };
+// A local function, not a re-export: re-exporting an external binding breaks the CommonJS bundle.
+export function parseSignaturesFromBuffer(
+	buffer: Parameters<typeof parseCoreSignatures>[0],
+): ReturnType<typeof parseCoreSignatures> {
+	return parseCoreSignatures(buffer);
+}
