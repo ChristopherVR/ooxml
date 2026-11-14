@@ -234,7 +234,8 @@ describe('createExportWiring', () => {
 		vi.clearAllMocks();
 		renderToCanvas.mockResolvedValue(fakeCanvas());
 
-		await wiring.controller.exportPdf();
+		// The picture export is the compatibility option; vector pages are the default.
+		await wiring.controller.exportPdf({ mode: 'pictures' });
 		expect(rasterizeElementTiles).toHaveBeenCalledOnce();
 		expect(rasterizeElement).not.toHaveBeenCalled();
 		expect(rasterizeElementTiledToCanvas).not.toHaveBeenCalled();

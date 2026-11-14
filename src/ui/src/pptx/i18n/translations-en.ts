@@ -3539,6 +3539,11 @@ export const translationsEn: Record<string, string> = {
 	'pptx.options.advanced.printHiddenSlides': 'Print hidden slides',
 	'pptx.options.advanced.printScaleToFit': 'Scale to fit paper',
 	'pptx.options.advanced.printFrameSlides': 'Frame slides',
+	'pptx.options.advanced.pdf': 'Save as PDF',
+	'pptx.options.advanced.pdfIncludeHiddenSlides': 'Include hidden slides',
+	'pptx.options.advanced.pdfSlidesAsPictures': 'Save slides as pictures',
+	'pptx.options.advanced.pdfSlidesAsPicturesInfo':
+		'Writes each slide as one picture, as earlier versions of this viewer did. The text in the PDF is then not selectable or searchable. Leave this off to save shapes and text as vector graphics with the embedded fonts.',
 	'pptx.options.ribbon.label': 'Customize Ribbon',
 	'pptx.options.ribbon.description': 'Customize the ribbon.',
 	'pptx.options.ribbon.tabsTitle': 'Main Tabs',

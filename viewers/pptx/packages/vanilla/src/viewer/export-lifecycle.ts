@@ -1,3 +1,5 @@
+import type { PdfExportSettings } from 'ooxml-ui/pptx';
+
 import type {
 	ExportController,
 	ExportGifOptions,
@@ -52,6 +54,8 @@ export interface ExportLifecycleDeps {
 	 * notes/handouts fallback path, read fresh on every print.
 	 */
 	getPrintHighQuality?(): boolean;
+	/** Options > Advanced > Save as PDF, read on every PDF export. */
+	getPdfExportSettings?(): PdfExportSettings;
 	/** Source file name (title-bar name); drives export download names. */
 	fileName?: string;
 	/** The open document's name, read on every export (wins over {@link fileName}). */
@@ -137,6 +141,9 @@ export function createExportLifecycle(deps: ExportLifecycleDeps): ExportLifecycl
 		rasterizeSlide: rasterizer.rasterizeSlide,
 		rasterizeSlideToRaster: rasterizer.rasterizeSlideToRaster,
 		rasterizeSlideToTiles: rasterizer.rasterizeSlideToTiles,
+		mountSlide: (index) => rasterizer.mountSlide(index),
+		getPdfExportSettings: deps.getPdfExportSettings,
+		getImageResolutionScale: () => deps.getImageResolutionScale(),
 		fileName: deps.fileName,
 		...(deps.getFileName ? { getFileName: () => deps.getFileName?.() } : {}),
 		getTranslator: deps.getTranslator,

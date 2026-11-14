@@ -19,6 +19,12 @@ const exportMocks = vi.hoisted(() => ({
 	exportAllSlidesAsVideo: vi.fn<ExportFunctions['exportAllSlidesAsVideo']>(async () => new Blob()),
 }));
 vi.mock(import('../utils/export'), () => exportMocks);
+const pdfMock = vi.hoisted(() => ({
+	exportPresentationPdf: vi.fn<typeof import('../utils/export-pdf-vector').exportPresentationPdf>(
+		async () => undefined,
+	),
+}));
+vi.mock(import('../utils/export-pdf-vector'), () => pdfMock);
 vi.mock(import('../utils/dom-helpers'), () => ({ downloadBlob: vi.fn() }));
 
 let root: Root | undefined;
@@ -85,7 +91,6 @@ describe('export callbacks after replacing a deck', () => {
 	it.each([
 		['handleExportPng', 'exportSlideAsPng'],
 		['handleCopySlideAsImage', 'copySlideToClipboard'],
-		['handleExportPdf', 'exportAllSlidesAsPdf'],
 		['handleExportGif', 'exportAllSlidesAsGif'],
 		['handleExportVideo', 'exportAllSlidesAsVideo'],
 	] as const)('%s does not read the previous deck', async (handler, exporter) => {
@@ -104,6 +109,30 @@ describe('export callbacks after replacing a deck', () => {
 		await act(async () => api[handler]());
 		expect(exportMocks[exporter]).toHaveBeenCalledOnce();
 		expect(error).not.toHaveBeenCalled();
+	});
+
+	it('pdf export reads the replacement deck and settings at invocation', async () => {
+		const input = exportInput([slide('old')]);
+		render(input);
+		input.canvasStageRef.current = document.createElement('div');
+		const replacement = [slide('first'), { ...slide('second'), hidden: true }];
+		render({
+			...input,
+			slides: replacement,
+			activeSlide: replacement[1],
+			activeSlideIndex: 1,
+			pdfExportSettings: { mode: 'pictures', includeHiddenSlides: true },
+		});
+		await act(async () => api.handleExportPdf());
+		const [ref, setActive, index, name, options] = pdfMock.exportPresentationPdf.mock.calls[0]!;
+		expect([ref, setActive, index, name]).toStrictEqual([
+			input.canvasStageRef,
+			input.setActiveSlideIndex,
+			1,
+			'presentation.pdf',
+		]);
+		expect(options.slides).toBe(replacement);
+		expect(options.settings).toStrictEqual({ mode: 'pictures', includeHiddenSlides: true });
 	});
 
 	it('notes PDF reads the replacement notes at invocation time', async () => {
@@ -150,7 +179,6 @@ describe('export callbacks after replacing a deck', () => {
 	});
 
 	it.each([
-		['handleExportPdf', 'exportAllSlidesAsPdf'],
 		['handleExportGif', 'exportAllSlidesAsGif'],
 		['handleExportVideo', 'exportAllSlidesAsVideo'],
 	] as const)(

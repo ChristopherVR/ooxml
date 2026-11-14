@@ -3,7 +3,7 @@
  * `sh` inside the filled path's clip, so it needs no pattern matrix: the matrices below are
  * applied with `cm` first (bounding-box units, then `gradientTransform`).
  */
-import type { PdfShading } from '../export/pdf-vector';
+import type { PdfShading } from './pdf-vector';
 import type { PathSegment } from './pdf-path';
 import { number, parseColor, parseTransform } from './pdf-svg-style';
 

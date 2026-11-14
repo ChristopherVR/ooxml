@@ -142,6 +142,11 @@ export const translations = {
 	'pptx.options.advanced.printHiddenSlides': '打印隐藏的幻灯片',
 	'pptx.options.advanced.printScaleToFit': '缩放以适合纸张',
 	'pptx.options.advanced.printFrameSlides': '幻灯片加框',
+	'pptx.options.advanced.pdf': '另存为 PDF',
+	'pptx.options.advanced.pdfIncludeHiddenSlides': '包括隐藏的幻灯片',
+	'pptx.options.advanced.pdfSlidesAsPictures': '将幻灯片另存为图片',
+	'pptx.options.advanced.pdfSlidesAsPicturesInfo':
+		'像此查看器的早期版本一样，将每张幻灯片写为一张图片。这样 PDF 中的文本将无法选择或搜索。保持关闭可将形状和文本另存为带有嵌入字体的矢量图形。',
 	'pptx.options.ribbon.label': '自定义功能区',
 	'pptx.options.ribbon.description': '自定义功能区。',
 	'pptx.options.ribbon.tabsTitle': '主要选项卡',

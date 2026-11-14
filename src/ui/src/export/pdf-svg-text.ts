@@ -1,7 +1,6 @@
-import type { PdfVectorPage } from '../export/pdf-vector';
-import type { PdfEmbeddedFont, PdfFontSet } from '../export/pdf-embedded-font';
-import { encodeWinAnsi, pdfBaseFont, pdfTextWidth } from '../export/pdf-fonts';
-import { primaryFontFamily, visioFontStack } from './font-stack';
+import type { PdfVectorPage } from './pdf-vector';
+import type { PdfEmbeddedFont, PdfFontSet } from './pdf-embedded-font';
+import { encodeWinAnsi, pdfBaseFont, pdfTextWidth } from './pdf-fonts';
 import { inherited, number, parseColor, PdfFallback } from './pdf-svg-style';
 
 interface Run {
@@ -20,14 +19,28 @@ interface Run {
 
 const MAX_RUNS = 100_000;
 
-/**
- * The renderer paints a drawing family as its substitute list (`font-stack.ts`); the PDF keeps
- * choosing its standard or supplied font by the drawing's own family, as before that list
- * existed. Any other list (a converted metafile's) is read as written.
- */
-function drawingFontFamily(value: string): string {
-	const primary = primaryFontFamily(value);
-	return visioFontStack(primary) === value ? primary : value;
+/** Maps a `font-family` value to the family the PDF matches fonts by (default: as written). */
+export type SvgFontFamilyMapper = (value: string) => string;
+
+const asWritten: SvgFontFamilyMapper = (value) => value;
+
+/** Baseline offset, in em, for a `dominant-baseline` other than the alphabetic default. */
+function baselineShift(value: string | null): number {
+	switch (value) {
+		case 'middle':
+		case 'central':
+			return 0.35;
+		case 'hanging':
+		case 'text-before-edge':
+		case 'text-top':
+			return 0.8;
+		case 'text-after-edge':
+		case 'ideographic':
+		case 'text-bottom':
+			return -0.2;
+		default:
+			return 0;
+	}
 }
 
 /**
@@ -40,10 +53,11 @@ export function drawSvgText(
 	text: Element,
 	alpha: number,
 	fonts?: PdfFontSet,
+	familyOf: SvgFontFamilyMapper = asWritten,
 ): void {
 	const rows = Array.from(text.children).filter((child) => child.localName === 'tspan');
 	if (!rows.length) {
-		if (text.textContent) drawRow(page, text, [text], alpha, fonts);
+		if (text.textContent) drawRow(page, text, [text], alpha, fonts, familyOf);
 		return;
 	}
 	let count = 0;
@@ -51,7 +65,7 @@ export function drawSvgText(
 		const spans = Array.from(row.children).filter((child) => child.localName === 'tspan');
 		count += spans.length || 1;
 		if (count > MAX_RUNS) throw new PdfFallback('too much text');
-		drawRow(page, row, spans.length ? spans : [row], alpha, fonts);
+		drawRow(page, row, spans.length ? spans : [row], alpha, fonts, familyOf);
 	}
 }
 
@@ -60,7 +74,8 @@ function drawRow(
 	row: Element,
 	spans: Element[],
 	alpha: number,
-	fonts?: PdfFontSet,
+	fonts: PdfFontSet | undefined,
+	familyOf: SvgFontFamilyMapper,
 ): void {
 	let shift = 0;
 	let total = 0;
@@ -75,7 +90,7 @@ function drawRow(
 		if (!color) continue;
 		const size = number(inherited(span, 'font-size'), 12);
 		const weight = inherited(span, 'font-weight') ?? '';
-		const family = drawingFontFamily(inherited(span, 'font-family') ?? '');
+		const family = familyOf(inherited(span, 'font-family') ?? '');
 		const bold = weight === 'bold' || number(weight) >= 600;
 		const italic = (inherited(span, 'font-style') ?? '') === 'italic';
 		const font = pdfBaseFont(family, bold, italic);
@@ -117,7 +132,9 @@ function drawRow(
 	total += wordSpacing * spaces + distribute * chars;
 	const anchor = row.getAttribute('text-anchor');
 	let x = number(row.getAttribute('x'), 0);
-	const y = number(row.getAttribute('y'), 0);
+	const y =
+		number(row.getAttribute('y'), 0) +
+		baselineShift(inherited(row, 'dominant-baseline')) * runs[0]!.size;
 	if (anchor === 'middle') x -= total / 2;
 	else if (anchor === 'end') x -= total;
 	for (const run of runs) {

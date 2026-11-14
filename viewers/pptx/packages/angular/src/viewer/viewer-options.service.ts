@@ -26,6 +26,7 @@ import {
 	pruneExpiredAutosaveSnapshots,
 	resolveHistoryDepth,
 	resolveImageResolutionScale,
+	resolvePdfExportSettings,
 	resolveOptionRootClasses,
 	resolveScreenTip,
 	shouldClearAutosaveCacheOnClose,
@@ -35,6 +36,7 @@ import {
 	shouldOpenInProtectedView,
 } from 'ooxml-ui/pptx';
 import type {
+	PdfExportSettings,
 	DocumentStorage,
 	PrintSettings,
 	ToolbarTabId,
@@ -142,6 +144,11 @@ export class ViewerOptionsService {
 	 */
 	imageResolutionScale(): number {
 		return resolveImageResolutionScale(this.options());
+	}
+
+	/** Options > Advanced > Save as PDF (vector pages or pictures, hidden slides). */
+	pdfExportSettings(): PdfExportSettings {
+		return resolvePdfExportSettings(this.options());
 	}
 
 	/** Print-dialog seed; `undefined` keeps the dialog's own recents. */

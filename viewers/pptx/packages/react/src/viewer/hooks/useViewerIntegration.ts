@@ -1,4 +1,9 @@
-import type { DocumentStorage, GoogleFontsOption, PptxLoadLimits } from 'ooxml-ui/pptx';
+import type {
+	DocumentStorage,
+	GoogleFontsOption,
+	PdfExportSettings,
+	PptxLoadLimits,
+} from 'ooxml-ui/pptx';
 import type {
 	AutosaveRecord,
 	CompatibilityWarningToast,
@@ -132,6 +137,8 @@ export interface UseViewerIntegrationInput {
 	 * matching field on `UseExportHandlersInput`.
 	 */
 	imageResolutionScale?: number;
+	/** File > Options > Advanced > Save as PDF (vector pages or pictures, hidden slides). */
+	pdfExportSettings?: PdfExportSettings;
 	mode: ViewerState['mode'];
 	slides: PptxSlide[];
 	activeSlide: PptxSlide | undefined;
@@ -234,6 +241,7 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 		promptKeepInkAnnotations,
 		imageExportScale,
 		imageResolutionScale,
+		pdfExportSettings,
 		mode,
 		slides,
 		activeSlide,
@@ -341,6 +349,7 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 		allowExternalImages,
 		imageExportScale,
 		imageResolutionScale,
+		pdfExportSettings,
 	});
 
 	// ── Mode switching with annotation awareness ──────────────────

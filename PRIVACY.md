@@ -60,7 +60,10 @@ viewer does the same from Google Fonts, so the text keeps its intended look and 
   viewer never probes Google for families its catalogue does not list, so the names of private
   or corporate fonts are not sent.
 - **Also covered by the same setting:** the WordArt glyph-outline download (only for warped
-  WordArt in such a font) and the fonts inlined into slide image exports.
+  WordArt in such a font) and the fonts inlined into slide image exports (including the effects
+  a vector PDF export draws as pictures). The vector PDF export itself requests nothing: it
+  embeds only fonts the page already holds (the deck's embedded fonts, from `data:` or `blob:`
+  URLs) and fonts a host passes to `exportSlidesVectorPdf`.
 - **Off or redirected:**
   - the host option `googleFonts: false` turns it off; `googleFonts: { baseUrl }` sends the
     same requests to a self-hosted mirror instead;

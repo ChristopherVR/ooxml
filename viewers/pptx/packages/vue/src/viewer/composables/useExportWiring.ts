@@ -12,6 +12,7 @@ import {
 	exportDeckJson,
 	isCleanAfterSave,
 	playFeedbackSound,
+	resolvePdfExportSettings,
 	rasterResultToPngBlob,
 	savedPresentationFileName,
 	savedPresentationRevision,
@@ -124,12 +125,13 @@ export function useExportWiring(input: UseExportWiringInput): UseExportWiringRes
 	// the on-screen presentation and the saved file.
 	const exportSlide = computed(() => mergedSlides.value[exportIndex.value]);
 
-	const { rasterizeSlide, rasterizeSlideToRaster, rasterizeSlideToTiles } = useExportRasterize({
-		exportStageRef,
-		exportIndex,
-		canvasSize,
-		imageExportScale,
-	});
+	const { rasterizeSlide, rasterizeSlideToRaster, rasterizeSlideToTiles, mountSlide } =
+		useExportRasterize({
+			exportStageRef,
+			exportIndex,
+			canvasSize,
+			imageExportScale,
+		});
 
 	const exporter = useExport({
 		slides,
@@ -137,6 +139,14 @@ export function useExportWiring(input: UseExportWiringInput): UseExportWiringRes
 		rasterizeSlide,
 		rasterizeSlideToRaster,
 		rasterizeSlideToTiles,
+		mountSlide,
+		getPdfExportSettings: () => {
+			const options = input.getOptions?.();
+			return options
+				? resolvePdfExportSettings(options)
+				: { mode: 'vector', includeHiddenSlides: false };
+		},
+		...(imageExportScale ? { imageExportScale } : {}),
 	});
 	const mediaExport = useMediaExport({ slideCount, rasterizeSlide });
 	const exportProgressCtl = useExportProgress({ exporter, mediaExport });

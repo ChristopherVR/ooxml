@@ -36,6 +36,28 @@ export const COPY_IMAGE_CARD = /copy as image/iu;
  */
 export const EXPORT_DOWNLOAD_TIMEOUT_MS = 120_000;
 
+/**
+ * Seed File > Options > Advanced values before the app boots, through the `pptx-viewer-prefs`
+ * entry the Options dialog persists to (`{ options: { advanced: { <key>: value } } }`).
+ */
+export async function seedAdvancedOptions(
+	page: Page,
+	patch: Record<string, string | number | boolean>,
+): Promise<void> {
+	await page.addInitScript((values) => {
+		try {
+			const raw = localStorage.getItem('pptx-viewer-prefs');
+			const prefs: Record<string, unknown> = raw ? JSON.parse(raw) : {};
+			const options = (prefs.options as Record<string, unknown> | undefined) ?? {};
+			const advanced = (options.advanced as Record<string, unknown> | undefined) ?? {};
+			prefs.options = { ...options, advanced: { ...advanced, ...values } };
+			localStorage.setItem('pptx-viewer-prefs', JSON.stringify(prefs));
+		} catch {
+			// Private-browsing/quota edge case; the test's own assertions surface it.
+		}
+	}, patch);
+}
+
 /** The backstage dialog (shared `aria-label="File"` contract). */
 export function backstage(page: Page): Locator {
 	return page.locator('[role="dialog"][aria-label="File"]');

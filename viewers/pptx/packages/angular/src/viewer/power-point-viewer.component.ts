@@ -3091,6 +3091,7 @@ export class PowerPointViewerComponent
 			resolveStage: () => this.stageElement(),
 			imageExportScale: () => this.viewerOpts.imageExportScale(),
 			imageResolutionScale: () => this.viewerOpts.imageResolutionScale(),
+			pdfExportSettings: () => this.viewerOpts.pdfExportSettings(),
 		});
 
 		// Hand the find/replace controller a slide-navigation callback so a match

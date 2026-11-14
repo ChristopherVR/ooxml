@@ -87,6 +87,7 @@ import {
 	pdfImageXObjectCount,
 	pdfPageCount,
 	PNG_CARD,
+	seedAdvancedOptions,
 	pngDimensions,
 	VIDEO_CARD,
 } from './support/exports';
@@ -324,6 +325,8 @@ test.describe('PDF export tiles beyond the browser canvas cap', () => {
 		page,
 	}) => {
 		await maximizeExportResolution(page);
+		// The tiling path is the picture export (Options > Advanced > Save slides as pictures).
+		await seedAdvancedOptions(page, { pdfSlidesAsPictures: true });
 		await stubLowCanvasCap(page);
 		await loadDeck(page, EXPORT_DECK);
 		await openBackstageExport(page);
@@ -351,6 +354,7 @@ test.describe('PDF export tiles beyond the browser canvas cap', () => {
 			testInfo,
 			async (page, origin) => {
 				await maximizeExportResolution(page);
+				await seedAdvancedOptions(page, { pdfSlidesAsPictures: true });
 				await stubLowCanvasCap(page);
 				await loadDeckAt(page, origin, EXPORT_DECK);
 				await openBackstageExport(page);

@@ -18,14 +18,18 @@ import { inject, Injectable, signal } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import {
 	EXPORT_ASSEMBLING_PERCENT,
+	downloadBlob,
 	EXPORT_DONE_PERCENT,
 	isExportAbortError,
+	runPdfExport,
+	slideProgressPercent,
 	recordProgressPercent,
 	resolveExportCaptureDecision,
 	slideStatusLabel,
 } from 'ooxml-ui/pptx';
 
 import { slideFileName } from './export-helpers';
+import { html2canvasFallbackFor } from './export-raster-tiles';
 import { ExportService } from './export.service';
 import { LoadContentService } from './load-content.service';
 import type { PrintSettings } from './print-helpers';
@@ -34,6 +38,7 @@ import {
 	captureSlideCanvases,
 	captureSlideDataUrl,
 	captureSlideTiles,
+	flipToSlide,
 } from './viewer-export-capture';
 import type { ExportHost } from './viewer-export-capture';
 
@@ -118,6 +123,45 @@ export class ViewerExportService {
 		}
 		const controller = this.beginExport(this.translate.instant('pptx.mobileMenu.exportPdf'));
 		const { width, height } = this.loader.canvasSize();
+		const settings = host.pdfExportSettings?.() ?? { mode: 'vector', includeHiddenSlides: false };
+		if (settings.mode === 'vector') {
+			const original = host.activeSlideIndex();
+			const slides = host.slides?.() ?? host.mergedSlides();
+			try {
+				await runPdfExport({
+					settings,
+					vector: {
+						document,
+						slides,
+						canvasSize: { width, height },
+						mountSlide: async (index) => {
+							const stage = await flipToSlide(host, index);
+							return stage ? { stage, html2canvasFallback: html2canvasFallbackFor(stage) } : null;
+						},
+						rasterScale: host.imageExportScale?.() ?? 2,
+						title: 'presentation',
+						signal: controller.signal,
+						onProgress: (done, total) => {
+							this.progress.set(slideProgressPercent(done, total, 90));
+							this.statusMessage.set(
+								slideStatusLabel(this.translate.instant('pptx.export.rendering'), done, total),
+							);
+						},
+					},
+					pictures: () => Promise.resolve(),
+					save: (blob) => downloadBlob(blob, 'presentation.pdf'),
+				});
+				this.progress.set(EXPORT_DONE_PERCENT);
+			} catch (err) {
+				if (!isExportAbortError(err)) {
+					console.error('[PowerPointViewer] PDF export failed:', err);
+				}
+			} finally {
+				host.activeSlideIndex.set(original);
+				this.endExport();
+			}
+			return;
+		}
 		try {
 			const pages = await captureSlideTiles(
 				this.exportSvc,

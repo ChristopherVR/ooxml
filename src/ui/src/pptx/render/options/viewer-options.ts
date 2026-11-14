@@ -138,6 +138,10 @@ export interface ViewerAdvancedOptions {
 	printHiddenSlides: boolean;
 	printScaleToFit: boolean;
 	printFrameSlides: boolean;
+	/** File > Save as PDF: include slides marked hidden (PowerPoint's "Include hidden slides"). */
+	pdfIncludeHiddenSlides: boolean;
+	/** File > Save as PDF: one picture per slide (the earlier export) instead of vector pages. */
+	pdfSlidesAsPictures: boolean;
 }
 
 export interface ViewerRibbonOptions {
@@ -248,6 +252,8 @@ export const DEFAULT_VIEWER_OPTIONS: ViewerOptions = {
 		printHiddenSlides: false,
 		printScaleToFit: false,
 		printFrameSlides: false,
+		pdfIncludeHiddenSlides: false,
+		pdfSlidesAsPictures: false,
 	},
 	ribbon: { hiddenTabIds: [] },
 	quickAccess: {
