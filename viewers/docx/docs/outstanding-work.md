@@ -426,7 +426,7 @@ Still not at parity:
   automatic updating of `REF`, `PAGEREF` and `SEQ` results (Update Fields refreshes them on request; inserting a caption
   also renumbers the label's captions and refreshes `REF` results that quote a caption, in the same undo step; `PAGEREF`, table of contents and
   other results change only through Update Fields).
-- **Review and View:** Editor pane, Thesaurus, Translate, Accessibility, Compare, Protect, Ink;
+- **Review and View:** Editor pane, Thesaurus, Translate, Accessibility, Compare (the core `compareDocuments` exists, with no UI), Protect, Ink;
   Read Mode, Web and Outline views, New Window,
   Split and Macros.
 - **Dropdown galleries:** Margins, Size, Orientation, Vertical alignment, Columns, Page Number, Borders and Line

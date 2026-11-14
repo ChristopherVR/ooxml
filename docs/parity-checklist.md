@@ -84,8 +84,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       (`diagram/builtin/catalog.ts`), not yet checked against Office's gallery.
 - [ ] **P1** Proofing is the browser's `spellcheck` attribute everywhere: no grammar, thesaurus,
       custom dictionary, ignore list or proofing-language engine.
-- [ ] **P1** Picture Format and Shape Format contextual tabs: missing in Excel (both) and Word
-      (Picture Format); partial in Word and PowerPoint Shape Format (no Arrange, Size or Alt Text).
+- [ ] **P1** Picture Format and Shape Format contextual tabs: missing in Excel (both); partial in
+      Word Picture Format (Wrap Text, Crop and Format only), and in Word and PowerPoint Shape
+      Format (no Arrange, Size or Alt Text).
 - [ ] **P2** `c:userShapes` (shapes over a chart) is parsed but not drawn; surface charts have no
       dedicated painter.
 - [x] **P2** Equation ownership audited: all 11 non-test `latex-*` and `omml-*` modules in
@@ -413,7 +414,7 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P1** Table tab (Table Design and Layout merged) lacks table styles and style options, Cell
       Size and AutoFit, cell alignment and margins, Repeat Header Rows, Formula, Convert to Text,
       Select and Draw Borders.
-- [ ] **P1** Missing tabs: Draw, Picture Format, Equation.
+- [ ] **P1** Missing tabs: Draw and Equation; Picture Format has only Wrap Text, Crop and Format.
 - [ ] **P1** Layout: the Arrange group (Position, Wrap Text, order, Selection Pane, Align, Group,
       Rotate) and Text Direction.
 - [ ] **P1** Insert: WordArt, Quick Parts, Signature Line, Object, Icons, 3D Models, Screenshot,
