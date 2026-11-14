@@ -1,5 +1,5 @@
 import type { DOMOutputSpec, MarkSpec } from 'prosemirror-model';
-import { isWordHighlightToken, type WordHighlightToken } from '../index';
+import { isWordHighlightToken, wordHighlightColors } from '../index';
 import { reviewMarks } from './review-schema';
 import { runPropertiesMark } from './run-extra-mark';
 import { linkMarkSpec } from './inline-content-schema';
@@ -48,25 +48,7 @@ function parseFontSize(value: string): number | null {
 	return Number.isFinite(size) && size > 0 ? size : null;
 }
 
-/** Word's highlight palette tokens mapped to stable browser colors. */
-export const wordHighlightColors = {
-	black: '#000000',
-	blue: '#0000ff',
-	cyan: '#00ffff',
-	green: '#00ff00',
-	magenta: '#ff00ff',
-	red: '#ff0000',
-	yellow: '#ffff00',
-	white: '#ffffff',
-	darkBlue: '#000080',
-	darkCyan: '#008080',
-	darkGreen: '#008000',
-	darkMagenta: '#800080',
-	darkRed: '#800000',
-	darkYellow: '#808000',
-	darkGray: '#808080',
-	lightGray: '#c0c0c0',
-} satisfies Record<Exclude<WordHighlightToken, 'none'>, string>;
+export { wordHighlightColors };
 
 /** The span a content control's text sits in; its outline, title tab and placeholder are CSS. */
 function contentControlDom(data: string): DOMOutputSpec {

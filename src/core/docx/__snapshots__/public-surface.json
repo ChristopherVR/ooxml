@@ -149,6 +149,7 @@
 	"changeDocxDiagramLayout",
 	"chartsIn",
 	"checkboxState",
+	"clipboardFragment",
 	"columnPreset",
 	"columnTextWidth",
 	"computeListLabels",
@@ -317,6 +318,7 @@
 	"isStZoom",
 	"isThemeColorToken",
 	"isValidLanguageTag",
+	"isWordClipboardHtml",
 	"isWordHighlightToken",
 	"isWordUnderlineStyle",
 	"lineSpacingLabel",
@@ -330,6 +332,7 @@
 	"newChartImage",
 	"newDocxChart",
 	"newShape",
+	"normalizeWordClipboardHtml",
 	"numberNotesInOrder",
 	"onOffAttribute",
 	"onOffElement",
@@ -413,6 +416,8 @@
 	"signedTwipsAttr",
 	"signedTwipsFromPixels",
 	"signedTwipsFromPoints",
+	"styleIdForName",
+	"styleNameFromClass",
 	"styleRefSource",
 	"tableOfFiguresInstruction",
 	"themeCatalogColorScheme",
@@ -444,5 +449,6 @@
 	"withParseWarnings",
 	"withSection",
 	"withTocBookmarks",
-	"withValue"
+	"withValue",
+	"wordHighlightColors"
 ]
