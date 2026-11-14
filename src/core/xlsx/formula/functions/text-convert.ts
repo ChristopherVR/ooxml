@@ -4,41 +4,9 @@ import { ERR, fail, isError } from '../values';
 import { bool, int, num, optNum, scalar, spec, str } from './helpers';
 import { roundTo } from './math';
 import type { FunctionSpec } from './types';
+import { windows1252CodePoint, windows1252HighByte } from '../../../text/windows-1252';
 
 const C = 'Text';
-
-/** Windows-1252 characters for codes 128-159 (CHAR and CODE use the ANSI code page). */
-const CP1252: Record<number, number> = {
-	128: 0x20ac,
-	130: 0x201a,
-	131: 0x0192,
-	132: 0x201e,
-	133: 0x2026,
-	134: 0x2020,
-	135: 0x2021,
-	136: 0x02c6,
-	137: 0x2030,
-	138: 0x0160,
-	139: 0x2039,
-	140: 0x0152,
-	142: 0x017d,
-	145: 0x2018,
-	146: 0x2019,
-	147: 0x201c,
-	148: 0x201d,
-	149: 0x2022,
-	150: 0x2013,
-	151: 0x2014,
-	152: 0x02dc,
-	153: 0x2122,
-	154: 0x0161,
-	155: 0x203a,
-	156: 0x0153,
-	158: 0x017e,
-	159: 0x0178,
-};
-
-const CP1252_REVERSE = new Map(Object.entries(CP1252).map(([k, v]) => [v, Number(k)]));
 
 /** Formats with thousands separators and fixed decimals (FIXED, DOLLAR). */
 function fixed(value: number, decimals: number, commas: boolean): string {
@@ -130,13 +98,13 @@ export const TEXT_CONVERT: FunctionSpec[] = [
 	spec('CHAR', C, 'CHAR(number)', 'The character for a code (Windows-1252).', 1, 1, (args) => {
 		const n = int(args[0]);
 		if (n < 1 || n > 255) fail(ERR.VALUE);
-		return String.fromCharCode(CP1252[n] ?? n);
+		return String.fromCharCode(windows1252CodePoint(n));
 	}),
 	spec('CODE', C, 'CODE(text)', 'The code of the first character (Windows-1252).', 1, 1, (args) => {
 		const text = str(args[0]);
 		if (text === '') fail(ERR.VALUE);
 		const code = text.charCodeAt(0);
-		return CP1252_REVERSE.get(code) ?? (code <= 255 ? code : 63);
+		return windows1252HighByte(code) ?? (code <= 255 ? code : 63);
 	}),
 	spec('UNICHAR', C, 'UNICHAR(number)', 'The Unicode character for a code point.', 1, 1, (args) => {
 		const n = int(args[0]);

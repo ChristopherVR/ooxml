@@ -1,6 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // The fields whose results this package computes from the document itself: DOCPROPERTY, the
-// AUTONUM fields and LISTNUM. Layout draws these results, Update Fields writes them into the editor and a
+// AUTONUM fields, LISTNUM and SYMBOL. Layout draws these results, Update Fields writes them into the editor and a
 // save writes them back as the fields' cached results, so all three read them from here.
 import {
 	AUTO_NUMBER_FIELDS,
@@ -11,6 +11,7 @@ import {
 import { docPropertyResult, fieldProperties } from './doc-property-field';
 import type { ListNumberFields } from './list-number-fields';
 import { computeListNumbering } from './numbering-format';
+import { symbolFieldResult } from './symbol-field';
 import { fieldName } from './field-runs';
 import { withFieldResults, type FieldResultSpan } from './field-result-spans';
 import { withStoryBlocks } from './field-stories';
@@ -45,6 +46,7 @@ export const COMPUTED_FIELD_NAMES: ReadonlySet<string> = new Set([
 	'DOCPROPERTY',
 	...AUTO_NUMBER_FIELDS,
 	'LISTNUM',
+	'SYMBOL',
 ]);
 
 /** Reads `model`'s computed fields; what each needs is worked out once, when first asked for. */
@@ -63,6 +65,16 @@ export function computedFields(model: DocumentModel): ComputedFields {
 				const state = (autoNumbers ??= autoNumberStates(model)).get(paragraph.id);
 				const text = state && autoNumberResult(field.instr, state);
 				return text === undefined ? undefined : { text };
+			}
+			if (name === 'SYMBOL') {
+				const symbol = symbolFieldResult(field.instr);
+				return (
+					symbol && {
+						text: symbol.text,
+						...(symbol.fontFamily ? { fontFamily: symbol.fontFamily } : {}),
+						...(symbol.fontSizePt ? { fontSizePt: symbol.fontSizePt } : {}),
+					}
+				);
 			}
 			if (name === 'LISTNUM') {
 				listNumbers ??= computeListNumbering(model).listNumbers;
