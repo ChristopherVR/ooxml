@@ -1,9 +1,13 @@
 import type { PptxElement } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
-import { formatMixedValue, isFormatSectionMixed } from './format-section-mixed';
 import {
-	FORMAT_PANEL_SECTIONS,
+	formatMixedValue,
+	formatSelectionElements,
+	isFormatSectionMixed,
+} from './format-section-mixed';
+import { FORMAT_PANEL_SECTIONS } from './format-panel-sections';
+import {
 	FORMAT_SECTION_IDS,
 	resolveFormatCategory,
 	resolveFormatSections,
@@ -161,5 +165,14 @@ describe('mixed values', () => {
 		expect(isFormatSectionMixed([a, c], 'fill')).toBe(false);
 		expect(isFormatSectionMixed([a], 'fill')).toBe(false);
 		expect(isFormatSectionMixed([a, b], 'outline')).toBe(false);
+	});
+});
+
+describe('formatSelectionElements', () => {
+	it('puts the primary first and resolves the other ids', () => {
+		const a = el({ id: 'a', type: 'text' });
+		const b = el({ id: 'b', type: 'text' });
+		expect(formatSelectionElements(null, ['a'], [a])).toEqual([]);
+		expect(formatSelectionElements(b, ['a', 'b', 'missing'], [a, b])).toEqual([b, a]);
 	});
 });

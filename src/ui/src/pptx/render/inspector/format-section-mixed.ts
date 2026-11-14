@@ -87,3 +87,24 @@ export function isFormatSectionMixed(
 	const read = SECTION_READERS[section];
 	return !!read && elements.length > 1 && formatMixedValue(elements, read).mixed;
 }
+
+/**
+ * The selection the Format pane formats: the primary element first, then the
+ * other selected ids found in `elements` (the active slide's, or the edited
+ * layout's). Empty when nothing is selected.
+ */
+export function formatSelectionElements(
+	primary: PptxElement | null | undefined,
+	ids: readonly string[] | undefined,
+	elements: readonly PptxElement[] | undefined,
+): PptxElement[] {
+	if (!primary) {
+		return [];
+	}
+	const byId = new Map((elements ?? []).map((el) => [el.id, el]));
+	const others = (ids ?? [])
+		.filter((id) => id !== primary.id)
+		.map((id) => byId.get(id))
+		.filter((el): el is PptxElement => !!el);
+	return [primary, ...others];
+}
