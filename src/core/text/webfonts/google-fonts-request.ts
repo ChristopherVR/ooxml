@@ -16,7 +16,7 @@
  * @module text/webfonts/google-fonts-request
  */
 import { resolveGoogleFontsFace } from './font-weight-names';
-import { findLookAlikeGoogleFontsFamily } from './look-alikes';
+import { findLookAlikeBoldWeight, findLookAlikeGoogleFontsFamily } from './look-alikes';
 import { findMetricCompatibleGoogleFontsFamily } from './metric-clones';
 
 /** Base URL of the Google Fonts CSS2 API. */
@@ -110,9 +110,18 @@ export function selectGoogleWebfontFamilies(
 /**
  * The CSS2 query fragment for one family. Word separators stay literal spaces: the fragment goes
  * through `encodeURIComponent`, and an encoded `+` reaches Google as a literal plus it rejects.
+ * `bold` is the weight requested for bold runs (a look-alike may ask for a lighter one).
  */
-export function buildGoogleFontsFragment(family: string, weights?: Iterable<number>): string {
-	const sorted = [...new Set([400, 700, ...(weights ?? [])])].sort((a, b) => a - b);
+export function buildGoogleFontsFragment(
+	family: string,
+	weights?: Iterable<number>,
+	bold = 700,
+): string {
+	const sorted = [...new Set([400, bold, ...(weights ?? [])])].sort((a, b) => a - b);
+	if (bold !== 700 && sorted.length === 2) {
+		const tuples = [0, 1].flatMap((ital) => sorted.map((weight) => `${ital},${weight}`));
+		return `${family}:ital,wght@${tuples.join(';')}`;
+	}
 	if (sorted.length === 2) return `${family}:${GOOGLE_WEBFONT_AXIS}`;
 	// The API wants the tuples sorted: every upright weight, then every italic.
 	const tuples = [0, 1].flatMap((ital) => sorted.map((weight) => `${ital},${weight}`));
@@ -165,11 +174,18 @@ export function matchGoogleWebfontFragments(
 	options?: WebfontServeOptions,
 ): string[] {
 	const weightsByFamily = new Map<string, Set<number>>();
+	// A family requested only as a look-alike takes the look-alike's bold weight; one the document
+	// also names directly keeps 700.
+	const boldByFamily = new Map<string, number>();
 	for (const family of families) {
 		const face = resolveGoogleFontsFace(family);
 		const canonical = face?.family ?? servedGoogleFontsFamily(family, options);
 		if (canonical === null) continue;
 		onResolved?.(family);
+		const lookAlikeBold =
+			!face && options?.lookAlikes ? findLookAlikeBoldWeight(family) : undefined;
+		const bold = lookAlikeBold ?? 700;
+		boldByFamily.set(canonical, Math.max(boldByFamily.get(canonical) ?? 0, bold));
 		let weights = weightsByFamily.get(canonical);
 		if (!weights) {
 			weights = new Set();
@@ -183,5 +199,7 @@ export function matchGoogleWebfontFragments(
 	}
 	return [...weightsByFamily]
 		.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-		.map(([family, weights]) => buildGoogleFontsFragment(family, weights));
+		.map(([family, weights]) =>
+			buildGoogleFontsFragment(family, weights, boldByFamily.get(family) ?? 700),
+		);
 }

@@ -81,11 +81,14 @@ function pickBlock(
 ): ParsedFontFaceBlock | undefined {
 	const byFamily = blocks.filter((b) => b.family.toLowerCase() === family.toLowerCase());
 	const pool = byFamily.length > 0 ? byFamily : blocks;
-	const byStyle = pool.filter((b) => b.weight === targetWeight && b.italic === italic);
-	const candidates = byStyle.length > 0 ? byStyle : pool.filter((b) => b.italic === italic);
-	if (candidates.length === 0) {
+	const sameStyle = pool.filter((b) => b.italic === italic);
+	if (sameStyle.length === 0) {
 		return pool[0];
 	}
+	// The nearest weight, as the browser's own matching picks it: a look-alike's bold can be
+	// served at a lighter weight than 700 (Gantari 650 for Aptos Bold).
+	const distance = Math.min(...sameStyle.map((b) => Math.abs(b.weight - targetWeight)));
+	const candidates = sameStyle.filter((b) => Math.abs(b.weight - targetWeight) === distance);
 	return candidates.find((b) => coversBasicLatin(b.unicodeRange)) ?? candidates[0];
 }
 

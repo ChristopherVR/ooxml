@@ -23,13 +23,25 @@
  * than Aptos in the regular weight. Gantari is also within 2% of Aptos's x-height and cap height,
  * 3% of its stem and 4% of its ink weight, and only 2.3% wider, so the correction is small.
  *
+ * Its bold is heavier than Aptos Bold, though: at slide size (24 pt) Gantari 700 laid down 7.6%
+ * more ink than PowerPoint's Aptos Bold, which read as a heavier weight. Gantari is a variable
+ * font, so the bold face is requested at 650, which matches Aptos Bold's ink; with only the 400
+ * and 650 faces declared, the browser's weight matching paints every bold (700) run with the
+ * 650 face, so the runs' own styles stay `font-weight: bold`.
+ *
  * @module text/webfonts/look-alikes
  */
 import { findGoogleFontsFamily } from './google-fonts-lookup';
 
-const LOOK_ALIKES: Readonly<Record<string, string>> = {
-	aptos: 'Gantari',
-	'aptos display': 'Gantari',
+interface LookAlike {
+	readonly family: string;
+	/** The weight whose face bold runs paint with: the one that matches the font's bold. */
+	readonly boldWeight: number;
+}
+
+const LOOK_ALIKES: Readonly<Record<string, LookAlike>> = {
+	aptos: { family: 'Gantari', boldWeight: 650 },
+	'aptos display': { family: 'Gantari', boldWeight: 650 },
 };
 
 /**
@@ -41,5 +53,15 @@ export function findLookAlikeGoogleFontsFamily(family: string): string | null {
 		return null;
 	}
 	const lookAlike = LOOK_ALIKES[family.trim().toLowerCase()];
-	return lookAlike ? findGoogleFontsFamily(lookAlike) : null;
+	return lookAlike ? findGoogleFontsFamily(lookAlike.family) : null;
+}
+
+/**
+ * The weight to request for bold runs drawn in `family`'s look-alike, or `undefined` when
+ * {@link findLookAlikeGoogleFontsFamily} has none for it.
+ */
+export function findLookAlikeBoldWeight(family: string): number | undefined {
+	return findLookAlikeGoogleFontsFamily(family) === null
+		? undefined
+		: LOOK_ALIKES[family.trim().toLowerCase()]?.boldWeight;
 }

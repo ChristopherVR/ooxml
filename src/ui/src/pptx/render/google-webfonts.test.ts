@@ -231,7 +231,7 @@ describe('matchGoogleWebfontFragments', () => {
 		// Aptos and Aptos Display share their look-alike; the request should not
 		// ask Google Fonts for the same family twice.
 		expect(matchGoogleWebfontFragments(['Aptos', 'Aptos Display'])).toStrictEqual([
-			buildGoogleFontsFragment('Gantari'),
+			'Gantari:ital,wght@0,400;0,650;1,400;1,650',
 		]);
 	});
 
@@ -240,6 +240,13 @@ describe('matchGoogleWebfontFragments', () => {
 		// stand-in is the face that looks like Aptos; Calibri keeps its clone.
 		expect(matchGoogleWebfontFragments(['Aptos', 'Calibri'])).toStrictEqual([
 			buildGoogleFontsFragment('Carlito'),
+			'Gantari:ital,wght@0,400;0,650;1,400;1,650',
+		]);
+	});
+
+	it('asks for the look-alike bold at the weight that matches Aptos Bold, unless named directly', () => {
+		// Gantari 700 is 7.6% heavier than Aptos Bold at slide size; 650 matches it.
+		expect(matchGoogleWebfontFragments(['Gantari', 'Aptos'])).toStrictEqual([
 			buildGoogleFontsFragment('Gantari'),
 		]);
 	});
@@ -350,7 +357,9 @@ describe('resolveGoogleWebfontHref', () => {
 
 	it('resolves an unembedded Aptos to its look-alike', async () => {
 		const href = await resolveGoogleWebfontHref([slide(textEl('Aptos'))], [], () => false);
-		expect(href).toContain('family=Gantari%3Aital');
+		expect(href).toContain(
+			`family=${encodeURIComponent('Gantari:ital,wght@0,400;0,650;1,400;1,650')}`,
+		);
 		expect(href).not.toContain('Carlito');
 	});
 
