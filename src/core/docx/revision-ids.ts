@@ -1,6 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Word requires decimal revision ids (`w:ins/@w:id`, `w:del/@w:id`, …; ST_DecimalNumber).
-import type { DocumentModel, Paragraph, Revision } from './model';
+import type { DocumentModel, Paragraph, Revision, Table } from './model';
 import {
 	documentBlockLists,
 	mapBlockParagraphs,
@@ -27,6 +27,8 @@ export function numberRevisionIds(model: DocumentModel, reservedMax = -1): Docum
 			}
 			return paragraph;
 		});
+	for (const table of documentTables(model))
+		for (const row of table.rowProperties ?? []) collect(row.revision);
 	const invalid = [...ids].filter((id) => !DECIMAL_ID.test(id));
 	if (!invalid.length) return model;
 	let next =
@@ -50,7 +52,21 @@ export function numberRevisionIds(model: DocumentModel, reservedMax = -1): Docum
 			...(run.formatRevision ? { formatRevision: rename(run.formatRevision) } : {}),
 		})),
 	});
-	return mapDocumentParagraphs(model, paragraph);
+	const result = mapDocumentParagraphs(model, paragraph);
+	// mapDocumentParagraphs copies every table, so its row properties can be replaced in place.
+	for (const table of documentTables(result))
+		if (table.rowProperties?.some((row) => row.revision))
+			table.rowProperties = table.rowProperties.map((row) =>
+				row.revision ? { ...row, revision: rename(row.revision) } : row,
+			);
+	return result;
+}
+
+/** Every table of every story, with row revisions to number. */
+function documentTables(model: DocumentModel): Table[] {
+	return documentBlockLists(model).flatMap((blocks) =>
+		blocks.filter((block): block is Table => block.type === 'table'),
+	);
 }
 
 /** The largest decimal `w:id` in a part's XML, so new ids never collide with existing markers. */

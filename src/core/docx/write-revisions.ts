@@ -122,6 +122,13 @@ export function convertToDeleteText(doc: XmlDocument, run: XmlElement): void {
 	}
 }
 
+/** A row's tracked insertion or deletion marker (`w:trPr/w:ins|w:del`). */
+export function rowRevisionElement(doc: XmlDocument, revision: Revision): XmlElement {
+	const element = makeW(doc, revision.kind === 'delete' ? 'del' : 'ins');
+	writeRevisionMetadata(element, revision);
+	return element;
+}
+
 /** Writes/clears the paragraph mark's own tracked insertion/deletion (`w:pPr/w:rPr/w:ins|w:del`). */
 export function writeParagraphMarkRevision(
 	doc: XmlDocument,

@@ -4,6 +4,7 @@ import type { Paragraph, Table } from './model';
 import { children, first, getW, type XmlElement, WORD_NS } from './xml';
 import { canEditTableStructure, canRestructureTable } from './table-structure-check';
 import { tableGrid } from './table-grid';
+import { rowRevision } from './parse-revisions';
 import type { ContentControl } from './content-control-model';
 import { flatCellParagraphs, flatCells, flatRows } from './parse-content-control';
 import { isStJcTable, isStVerticalJc } from './generated/wml-simple-types';
@@ -143,6 +144,8 @@ function parseRowProperties(row: XmlElement): TableRowProperties {
 	}
 	if (onOffElement(first(trPr, 'cantSplit'))) result.cantSplit = true;
 	if (onOffElement(first(trPr, 'tblHeader'))) result.header = true;
+	const revision = rowRevision(trPr);
+	if (revision) result.revision = revision;
 	return result;
 }
 

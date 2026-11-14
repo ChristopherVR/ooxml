@@ -29,7 +29,8 @@ export function canEditTableStructure(table: XmlElement): boolean {
 	if (!width) return false;
 	if (grid && children(grid, 'gridCol').length !== width) return false;
 	for (const row of rows) {
-		if (!only(row, ['trPr', 'tc']) || children(row, 'tc').length !== width) return false;
+		// Row-level table property exceptions (w:tblPrEx, which Word writes) stay on their row.
+		if (!only(row, ['tblPrEx', 'trPr', 'tc']) || children(row, 'tc').length !== width) return false;
 		const rowProps = first(row, 'trPr');
 		if (rowProps && ['gridBefore', 'gridAfter', 'trPrChange'].some((key) => first(rowProps, key)))
 			return false;

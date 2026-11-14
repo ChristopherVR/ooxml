@@ -5,6 +5,7 @@ import type { TableCell } from './model';
 import type { TableRowProperties } from './table-model';
 import { fractionToThemeByte } from './theme-color';
 import { buildBorders, buildMargins } from './table-defaults';
+import { rowRevisionElement } from './write-revisions';
 import { makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml';
 
 const setW = (element: XmlElement, name: string, value: string): void =>
@@ -77,5 +78,6 @@ export function buildRowProperties(
 		trPr.appendChild(height);
 	}
 	if (row?.header) trPr.appendChild(makeW(doc, 'tblHeader'));
+	if (row?.revision) trPr.appendChild(rowRevisionElement(doc, row.revision));
 	return trPr.childNodes.length ? trPr : undefined;
 }

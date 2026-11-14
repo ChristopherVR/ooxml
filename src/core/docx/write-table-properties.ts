@@ -59,13 +59,16 @@ export function patchRowProperties(
 	let props = first(tr, 'trPr');
 	if (!props) {
 		props = makeW(doc, 'trPr');
-		tr.insertBefore(props, tr.firstChild);
+		// CT_Row: w:tblPrEx, then w:trPr, then the cells.
+		tr.insertBefore(props, first(tr, 'tblPrEx')?.nextSibling ?? tr.firstChild);
 	}
 	const built = buildRowProperties(doc, next, 0);
 	for (const [name, changed] of [
 		['cantSplit', Boolean(next?.cantSplit) !== Boolean(base?.cantSplit)],
 		['tblHeader', Boolean(next?.header) !== Boolean(base?.header)],
 		['trHeight', next?.heightTwips !== base?.heightTwips || next?.heightRule !== base?.heightRule],
+		['ins', JSON.stringify(next?.revision) !== JSON.stringify(base?.revision)],
+		['del', JSON.stringify(next?.revision) !== JSON.stringify(base?.revision)],
 	] as const) {
 		if (!changed) continue;
 		for (const old of children(props, name)) props.removeChild(old);

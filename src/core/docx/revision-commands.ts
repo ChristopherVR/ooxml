@@ -14,6 +14,8 @@ export interface RevisionEntry {
 	runIndex?: number;
 	/** The move a `moveFrom`/`moveTo` revision belongs to; both sides resolve together. */
 	move?: { name: string; rangeId?: string };
+	/** A whole-row insertion or deletion (`w:trPr/w:ins|w:del`): the table and its row. */
+	row?: { tableId: string; index: number };
 }
 
 function paragraphsOf(blocks: Block[]): Paragraph[] {
@@ -28,10 +30,31 @@ function documentParagraphs(model: DocumentModel): Paragraph[] {
 	return documentBlockLists(model).flatMap(paragraphsOf);
 }
 
-/** Lists every run/paragraph revision in document order, for navigation and enumeration. */
+/** Row revisions of a story's tables, keyed by the first paragraph of the row. */
+function rowEntries(blocks: Block[]): Map<string, RevisionEntry> {
+	const entries = new Map<string, RevisionEntry>();
+	for (const block of blocks)
+		if (block.type === 'table')
+			block.rows.forEach((row, index) => {
+				const revision = block.rowProperties?.[index]?.revision;
+				const paragraphId = row[0]?.paragraphs[0]?.id;
+				if (revision && paragraphId)
+					entries.set(paragraphId, {
+						...revision,
+						paragraphId,
+						row: { tableId: block.id, index },
+					});
+			});
+	return entries;
+}
+
+/** Lists every row/run/paragraph revision in document order, for navigation and enumeration. */
 export function listRevisions(model: DocumentModel): RevisionEntry[] {
 	const entries: RevisionEntry[] = [];
+	const rows = new Map(documentBlockLists(model).flatMap((blocks) => [...rowEntries(blocks)]));
 	for (const paragraph of documentParagraphs(model)) {
+		const row = rows.get(paragraph.id);
+		if (row) entries.push(row);
 		if (paragraph.markRevision)
 			entries.push({ ...paragraph.markRevision, paragraphId: paragraph.id });
 		if (paragraph.formatRevision)
@@ -106,8 +129,13 @@ export function resolveParagraphMark(
 					: [],
 			),
 		];
-		for (const list of lists) {
+		for (const [index, list] of lists.entries()) {
 			if (!list.includes(paragraph)) continue;
+			// A cell's last mark ends the cell: Word never merges it away, so the break stays.
+			if (index > 0 && list.at(-1) === paragraph) {
+				delete paragraph.markRevision;
+				return next;
+			}
 			const merged = mergeIntoNext(list, paragraph.id);
 			list.splice(0, list.length, ...merged);
 			return next;
@@ -154,9 +182,30 @@ function clearRunRevision(paragraph: Paragraph, runIndex: number): void {
 	if (run) delete run.revision;
 }
 
+/** Keeps (`remove` false) or removes a tracked row; a table left without rows goes too. */
+function resolveRow(model: DocumentModel, id: string, remove: boolean): DocumentModel {
+	const next = structuredClone(model);
+	for (const blocks of documentBlockLists(next))
+		for (const [blockIndex, table] of blocks.entries()) {
+			if (table.type !== 'table') continue;
+			const index = table.rowProperties?.findIndex((row) => row.revision?.id === id) ?? -1;
+			if (index < 0) continue;
+			if (!remove) {
+				delete table.rowProperties![index]!.revision;
+				return next;
+			}
+			table.rows.splice(index, 1);
+			table.rowProperties!.splice(index, 1);
+			if (!table.rows.length) blocks.splice(blockIndex, 1);
+			return next;
+		}
+	throw new Error(`No table row revision with id ${id} was found.`);
+}
+
 function acceptOne(model: DocumentModel, id: string): DocumentModel {
 	const entry = findRevision(model, id);
 	if (!entry) throw new Error(`No revision with id ${id} was found.`);
+	if (entry.row) return resolveRow(model, id, entry.kind === 'delete');
 	if (entry.kind === 'formatChange')
 		return updateRuns(model, id, (paragraph, runIndex) => {
 			const run = paragraph.runs[runIndex]!;
@@ -182,6 +231,7 @@ function acceptOne(model: DocumentModel, id: string): DocumentModel {
 function rejectOne(model: DocumentModel, id: string): DocumentModel {
 	const entry = findRevision(model, id);
 	if (!entry) throw new Error(`No revision with id ${id} was found.`);
+	if (entry.row) return resolveRow(model, id, entry.kind === 'insert');
 	if (entry.kind === 'formatChange')
 		return updateRuns(model, id, (paragraph, index) =>
 			restoreRunFormatting(paragraph.runs[index]!),
@@ -207,7 +257,9 @@ function applyAll(
 	apply: (model: DocumentModel, id: string) => DocumentModel,
 ): DocumentModel {
 	let current = model;
-	for (const entry of listRevisions(model).reverse()) {
+	// Whole rows first: a removed row takes the revisions inside it along.
+	const entries = listRevisions(model).reverse();
+	for (const entry of [...entries.filter((item) => item.row), ...entries]) {
 		if (!findRevision(current, entry.id)) continue;
 		current = apply(current, entry.id);
 	}
