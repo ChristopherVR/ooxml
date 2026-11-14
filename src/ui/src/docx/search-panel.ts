@@ -281,6 +281,8 @@ export function createSearchPanel(
 		},
 		close: closePanel,
 		refresh() {
+			// The editor refreshes on every change; a closed panel has nothing to show.
+			if (!isOpen) return;
 			controller.search(findInput.value, currentOptions());
 			renderStatus(controller.status);
 		},

@@ -51,7 +51,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 	});
 }
 
-test('find and replace walk the body, notes, text boxes and headers in story order', async ({
+test('find and replace walk the body, headers, notes and text boxes in story order', async ({
 	page,
 }) => {
 	const errors: string[] = [];
@@ -63,6 +63,19 @@ test('find and replace walk the body, notes, text boxes and headers in story ord
 		const host = element as HTMLElement & { documentModel: Record<string, unknown> };
 		const model = host.documentModel;
 		const paragraph = (id: string, text: string) => ({ type: 'paragraph', id, runs: [{ text }] });
+		const section = (endsAtBlockId: string, partName: string, text: string) => ({
+			type: 'nextPage',
+			orientation: 'portrait',
+			pageWidthTwips: 12240,
+			pageHeightTwips: 15840,
+			marginTopTwips: 1440,
+			marginLeftTwips: 1440,
+			marginRightTwips: 1440,
+			marginBottomTwips: 1440,
+			columns: { count: 1, equalWidth: true },
+			endsAtBlockId,
+			headers: { default: { partName, blocks: [paragraph(`${endsAtBlockId}-h`, text)] } },
+		});
 		host.documentModel = {
 			...model,
 			blocks: [
@@ -88,6 +101,7 @@ test('find and replace walk the body, notes, text boxes and headers in story ord
 						},
 					],
 				},
+				paragraph('body2', 'second body'),
 			],
 			footnotes: [
 				{
@@ -102,21 +116,8 @@ test('find and replace walk the body, notes, text boxes and headers in story ord
 				},
 			],
 			sections: [
-				{
-					type: 'nextPage',
-					orientation: 'portrait',
-					pageWidthTwips: 12240,
-					pageHeightTwips: 15840,
-					marginTopTwips: 1440,
-					marginLeftTwips: 1440,
-					marginRightTwips: 1440,
-					marginBottomTwips: 1440,
-					columns: { count: 1, equalWidth: true },
-					endsAtBlockId: 'body',
-					headers: {
-						default: { partName: 'word/header1.xml', blocks: [paragraph('h', 'zq header')] },
-					},
-				},
+				section('body', 'word/header1.xml', 'zq header'),
+				section('body2', 'word/header2.xml', 'zq second'),
 			],
 		};
 	});
@@ -133,42 +134,73 @@ test('find and replace walk the body, notes, text boxes and headers in story ord
 	await find.fill('zq');
 	const status = editor.getByRole('status', { name: 'Search results' });
 	const where = editor.getByLabel('Search location', { exact: true });
-	await expect(status).toHaveText('4 matches');
+	const headerEditor = editor.locator('.dve-header .ProseMirror');
+	const noteEditor = editor.locator('.dve-notes-container .ProseMirror');
+	await expect(status).toHaveText('5 matches');
 	await find.press('Enter');
-	await expect(status).toHaveText('1 of 4 matches');
+	await expect(status).toHaveText('1 of 5 matches');
 	await expect(where).toHaveText('Main Document');
-	// A note match opens the note's editor with the match selected; the focus stays in Find.
+	// A header match opens that section's header with the match selected; the focus stays in Find.
 	await find.press('Enter');
-	await expect(where).toHaveText('Footnotes');
-	const note = editor.locator('.dve-notes-container .ProseMirror');
-	await expect(note).toContainText('zq note');
+	await expect(where).toHaveText('Header -Section 1-');
+	await expect(headerEditor).toContainText('zq header');
 	await expect(find).toBeFocused();
 	await find.press('Enter');
-	await expect(where).toHaveText('Text Boxes');
-	await expect(note).toHaveCount(0);
+	await expect(where).toHaveText('Header -Section 2-');
+	await expect(headerEditor).toContainText('zq second');
 	await editor.getByRole('button', { name: 'Find next', exact: true }).click();
-	await expect(status).toHaveText('4 of 4 matches');
-	await expect(where).toHaveText('Header -Section 1-');
-	const header = editor.locator('.dve-header');
-	await expect(header.locator('.ProseMirror')).toContainText('zq header');
-	await editor.getByRole('button', { name: 'Find next', exact: true }).click();
-	await expect(where).toHaveText('Main Document');
-	await expect(header.locator('.ProseMirror')).toHaveCount(0);
-
+	await expect(status).toHaveText('4 of 5 matches');
+	await expect(where).toHaveText('Footnotes');
+	await expect(headerEditor).toHaveCount(0);
+	await expect(noteEditor).toContainText('zq note');
+	// Replace changes the match in the open note.
 	await editor.getByLabel('Replace with', { exact: true }).fill('ok');
+	await editor
+		.getByRole('region', { name: 'Find and replace' })
+		.getByRole('button', { name: 'Replace', exact: true })
+		.click();
+	await expect(noteEditor).toContainText('ok note');
+	await expect(status).toHaveText('4 matches');
+	await find.press('Enter');
+	await expect(where).toHaveText('Text Boxes');
+	await expect(noteEditor).toHaveCount(0);
+	await find.press('Enter');
+	await expect(where).toHaveText('Main Document');
+	// Closing Find leaves the caret in the story it opened, so typing goes there.
+	await find.press('Enter');
+	await expect(where).toHaveText('Header -Section 1-');
+	await find.press('Escape');
+	await expect(find).toBeHidden();
+	await page.keyboard.type('X');
+	await expect(headerEditor).toContainText('X header');
+	await expect(surface).not.toContainText('X');
+
+	await surface
+		.locator('p')
+		.first()
+		.click({ position: { x: 2, y: 4 } });
+	await expect(headerEditor).toHaveCount(0);
+	await page.keyboard.press('Control+f');
+	await expect(status).toHaveText('3 matches');
 	await editor.getByRole('button', { name: 'Replace all', exact: true }).click();
 	await expect(status).toHaveText('0 matches');
 	await expect(surface).toContainText('ok body');
-	await expect(header).toContainText('ok header');
-	await expect(editor.locator('.dve-notes-container')).toContainText('ok note');
 	await expect(surface.locator('.dve-textbox-line')).toHaveText('ok box');
-	// One undo step per story: the header goes back first and the body last.
+	// One undo step per story: the text boxes, replaced last, come back first.
 	await editor.getByRole('button', { name: 'Undo', exact: true }).click();
-	await expect(header).toContainText('zq header');
+	await expect(surface.locator('.dve-textbox-line')).toHaveText('zq box');
 	await expect(surface).toContainText('ok body');
 	await expect(status).toHaveText('1 match');
 	await editor.getByRole('button', { name: 'Redo', exact: true }).click();
-	await expect(header).toContainText('ok header');
+	await expect(surface.locator('.dve-textbox-line')).toHaveText('ok box');
+
+	// From Print Layout, a header match opens the header on the continuous (Draft) surface.
+	await editor.getByRole('button', { name: 'Print Layout', exact: true }).click();
+	await page.keyboard.press('Control+f');
+	await find.fill('ok second');
+	await find.press('Enter');
+	await expect(where).toHaveText('Header -Section 2-');
+	await expect(headerEditor).toContainText('ok second');
 
 	const pending = page.waitForEvent('download');
 	await saveButton(page).click();
@@ -176,9 +208,10 @@ test('find and replace walk the body, notes, text boxes and headers in story ord
 	const names = Object.keys(zip.files).filter((name) =>
 		/^word\/(document|footnotes|header\d+)\.xml$/.test(name),
 	);
-	expect(names).toHaveLength(3);
+	expect(names).toHaveLength(4);
 	const xml = (await Promise.all(names.map((name) => zip.file(name)!.async('string')))).join('');
 	expect(xml).not.toContain('zq');
-	for (const text of ['ok body', 'ok box', 'ok note', 'ok header']) expect(xml).toContain(text);
+	for (const text of ['ok body', 'ok box', 'ok note', 'X header', 'ok second'])
+		expect(xml).toContain(text);
 	expect(errors).toEqual([]);
 });

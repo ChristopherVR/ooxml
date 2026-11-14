@@ -127,7 +127,7 @@ const text = (blocks: readonly Block[] | undefined) =>
 afterEach(() => document.body.replaceChildren());
 
 describe('Find across stories', () => {
-	it('walks the body, footnotes, endnotes, text boxes, then headers and footers, and wraps', () => {
+	it('walks the body, headers and footers, footnotes, endnotes, then text boxes, and wraps', () => {
 		const { search, shown, view } = fixture();
 		expect(search.search('zq').count).toBe(8);
 		const kinds: string[] = [];
@@ -137,32 +137,32 @@ describe('Find across stories', () => {
 		}
 		expect(kinds).toEqual([
 			'main',
+			'header',
+			'footer',
 			'footnote',
 			'footnote',
 			'endnote',
 			'textBoxes',
 			'textBoxes',
-			'header',
-			'footer',
 			'main',
 		]);
 		// The linked second section's header is the same part: it is searched once.
-		expect(shown).toEqual(['footnote', 'footnote', 'endnote', 'header', 'footer']);
+		expect(shown).toEqual(['header', 'footer', 'footnote', 'footnote', 'endnote']);
 		search.findPrevious();
-		expect(search.status).toMatchObject({ active: 8, story: { kind: 'footer', slot: 'first' } });
+		expect(search.status).toMatchObject({ active: 8, story: { kind: 'textBoxes' } });
 		view.destroy();
 	});
 
 	it('selects a text box match as the box, and the next Find moves on from it', () => {
 		const { search, view } = fixture();
 		search.search('zq');
-		for (let step = 0; step < 5; step++) search.findNext();
+		for (let step = 0; step < 7; step++) search.findNext();
 		expect(view.state.selection).toBeInstanceOf(NodeSelection);
-		expect(search.status).toMatchObject({ active: 5, story: { kind: 'textBoxes' } });
+		expect(search.status).toMatchObject({ active: 7, story: { kind: 'textBoxes' } });
 		search.refresh();
-		expect(search.status.active).toBe(5);
+		expect(search.status.active).toBe(7);
 		search.findNext();
-		expect(search.status).toMatchObject({ active: 6, story: { kind: 'textBoxes' } });
+		expect(search.status).toMatchObject({ active: 8, story: { kind: 'textBoxes' } });
 		view.destroy();
 	});
 
@@ -218,13 +218,13 @@ describe('Find across stories', () => {
 		const editor = openStory('endnote:3', [para('e1', ' zq end')]);
 		editor.dispatch(editor.state.tr.setSelection(TextSelection.create(editor.state.doc, 2, 4)));
 		search.search('zq');
-		expect(search.status).toMatchObject({ active: 4, story: { kind: 'endnote' } });
+		expect(search.status).toMatchObject({ active: 6, story: { kind: 'endnote' } });
 		expect(search.replaceOne('ok')).toBe(true);
 		expect(editor.state.doc.textContent).toBe(' ok end');
 		expect(host.writeNotes).not.toHaveBeenCalled();
 		expect(search.status).toMatchObject({ count: 7, active: 0 });
 		search.findNext();
-		expect(search.status).toMatchObject({ active: 4, story: { kind: 'textBoxes' } });
+		expect(search.status).toMatchObject({ active: 6, story: { kind: 'textBoxes' } });
 		editor.destroy();
 		view.destroy();
 	});

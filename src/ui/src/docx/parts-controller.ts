@@ -158,10 +158,10 @@ export class PartsController {
 		);
 		return true;
 	}
-	/** Closes the open header, footer or note editor, leaving the body focused. */
-	closeOpenStory(): void {
+	/** Closes the open header, footer or note editor, leaving the body focused unless told not to. */
+	closeOpenStory(focusBody = true): void {
 		this.closeActive?.();
-		this.host.view()?.focus();
+		if (focusBody) this.host.view()?.focus();
 	}
 	closeHeaderFooter(canvas?: HTMLElement, paper?: HTMLElement): void {
 		this.closeActive?.();

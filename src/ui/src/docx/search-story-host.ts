@@ -19,10 +19,25 @@ export function editorSearchStories(core: EditorCore): SearchStoryHost {
 			parts.showStory(story, from, to, core.shell.canvas, core.shell.paper);
 		},
 		closeStory: () => {
-			if (parts.activeView()) parts.closeOpenStory();
+			if (parts.activeView()) parts.closeOpenStory(false);
 		},
 		canEditStories: () => core.host.canEditOutsideBody(),
 		writeHeaderFooter: (story, blocks) => parts.writeHeaderFooter(story, blocks),
 		writeNotes: (kind, notes) => parts.writeNotes(kind, notes),
 	};
+}
+
+/**
+ * A story editor Find opened keeps its selection while the focus stays in Find. When the focus
+ * leaves Find for anywhere but that editor or the ribbon, the editor closes, as it does when it
+ * loses the focus itself.
+ */
+export function closeStoryWhenFindBlurs(core: EditorCore, panel: HTMLElement): void {
+	panel.addEventListener('focusout', (event) => {
+		const story = core.parts.activeView();
+		const next = event.relatedTarget instanceof Node ? event.relatedTarget : null;
+		if (!story || panel.contains(next) || story.dom.contains(next)) return;
+		if (core.shell.toolbar?.contains(next)) return;
+		core.parts.closeOpenStory(false);
+	});
 }
