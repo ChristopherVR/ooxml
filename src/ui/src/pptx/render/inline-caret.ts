@@ -7,6 +7,7 @@
  * Vue and Angular behaviour, now shared by all five) is caret at the END so
  * typing appends. Framework-agnostic: DOM globals only.
  */
+import { placeCaretAtTextOffset, takePendingCaretOffset } from './inline-caret-offset';
 
 /**
  * Focus behaviour helper: collapse the selection to the very end of `el`'s
@@ -87,6 +88,12 @@ function caretRangeAt(doc: Document, x: number, y: number): Range | null {
  * {@link placeCaretAtEnd} contract.
  */
 export function placeCaretAt(el: HTMLElement, point: CaretPoint | null | undefined): void {
+	// A reopened editor after a rich paste puts the caret after the pasted text.
+	const offset = takePendingCaretOffset();
+	if (offset !== null) {
+		placeCaretAtTextOffset(el, offset);
+		return;
+	}
 	if (point) {
 		const range = caretRangeAt(el.ownerDocument, point.clientX, point.clientY);
 		const selection = el.ownerDocument.defaultView?.getSelection();
