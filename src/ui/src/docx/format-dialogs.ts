@@ -21,6 +21,7 @@ import { createZoomDialog, type ZoomHost } from './zoom-dialog';
 import { createTablePropertiesDialog } from './table-properties-dialog';
 import { createLineNumberDialog, type LineNumberHost } from './line-number-dialog';
 import { createDropCapDialog } from './drop-cap-dialog';
+import { createConvertNotesDialog, type ConvertNotesHost } from './convert-notes-dialog';
 import { createSplitCellsDialog } from './split-cells-dialog';
 import { createPasteSpecialDialog } from './paste-special-dialog';
 import { createColumnsDialog, type ColumnsHost } from './columns-dialog';
@@ -47,6 +48,7 @@ export type FormatDialogKind =
 	| 'pageBorders'
 	| 'watermark'
 	| 'dropCap'
+	| 'convertNotes'
 	| 'columns'
 	| 'multilevelList'
 	| 'tracking'
@@ -72,6 +74,8 @@ export interface FormatDialogsHost {
 	pageBorders?: Omit<PageBordersHost, 'restoreFocus'>;
 	watermark?: Omit<WatermarkHost, 'restoreFocus'>;
 	columns?: Omit<ColumnsHost, 'restoreFocus'>;
+	/** References > Footnotes > Convert Notes. */
+	convertNotes?: Omit<ConvertNotesHost, 'restoreFocus'>;
 	/** Review > Restrict Editing: the document's protection and how to change it. */
 	restrictEditing?: Omit<RestrictEditingHost, 'view'>;
 	/** The document theme, for chart previews. */
@@ -140,6 +144,14 @@ export class FormatDialogs {
 				restoreFocus: () => focusView(host.view()),
 			}),
 			dropCap: createDropCapDialog(() => host.view()),
+			convertNotes: createConvertNotesDialog({
+				...(host.convertNotes ?? {
+					counts: () => ({ footnotes: 0, endnotes: 0 }),
+					canEdit: () => false,
+					apply: () => {},
+				}),
+				restoreFocus: () => focusView(host.view()),
+			}),
 			columns: createColumnsDialog({
 				...(host.columns ?? { section: () => undefined, canEdit: () => false, apply: () => {} }),
 				restoreFocus: () => focusView(host.view()),

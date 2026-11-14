@@ -2,13 +2,23 @@ import { Plugin } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import {
 	formatNoteNumber,
+	planNoteConversion,
+	retargetNoteReference,
 	type DocumentModel,
 	type Note,
+	type NoteConversionPlan,
+	type NoteSelection,
 	type Paragraph,
 	type TextRun,
 } from 'ooxml-core/docx';
 import { schema } from './schema';
-import { notePartsJson } from 'ooxml-core/docx/ui';
+import {
+	inlineNodeRun,
+	notePartsJson,
+	NotePartsStep,
+	restoreNoteParts,
+	runToInlineNodes,
+} from 'ooxml-core/docx/ui';
 
 export type NoteKind = 'footnote' | 'endnote';
 
@@ -72,6 +82,50 @@ export function insertNote(
 			.scrollIntoView(),
 	);
 	return { model: next, id };
+}
+
+/** The note reference touching the caret (a right-click beside it), or undefined. */
+export function noteReferenceAtSelection(
+	view: EditorView,
+): { kind: NoteKind; id: string } | undefined {
+	const { $from, empty } = view.state.selection;
+	if (!empty) return undefined;
+	for (const node of [$from.nodeAfter, $from.nodeBefore])
+		if (node?.type === schema.nodes.noteReference)
+			return {
+				kind: node.attrs.kind === 'endnote' ? 'endnote' : 'footnote',
+				id: String(node.attrs.id),
+			};
+	return undefined;
+}
+
+/**
+ * Word's Convert Notes and "Convert to Endnote/Footnote": moves the selected notes to the other
+ * part and retargets their references in one undoable transaction. `reservedIds` are the ids
+ * each part holds on disk, so a moved note never takes over a deleted note's element.
+ */
+export function convertNotesInView(
+	view: EditorView,
+	model: DocumentModel,
+	selection: NoteSelection,
+	reservedIds?: Partial<Record<NoteKind, Iterable<string>>>,
+): NoteConversionPlan {
+	const parts = restoreNoteParts(view.state.doc.attrs.noteParts, model);
+	const plan = planNoteConversion(parts, selection, model, reservedIds);
+	if (!plan.moved.size) return plan;
+	const tr = view.state.tr;
+	view.state.doc.descendants((node, pos) => {
+		if (node.type !== schema.nodes.noteReference) return true;
+		const run = inlineNodeRun(node);
+		const next = run && retargetNoteReference(run, plan, model);
+		if (next && next !== run) {
+			const [replacement] = runToInlineNodes(next, schema);
+			if (replacement) tr.setNodeMarkup(pos, undefined, replacement.attrs);
+		}
+		return false;
+	});
+	view.dispatch(tr.step(new NotePartsStep(notePartsJson(plan))).scrollIntoView());
+	return plan;
 }
 
 /** Keeps note reference numbers in document order, as Word renumbers notes after every change. */

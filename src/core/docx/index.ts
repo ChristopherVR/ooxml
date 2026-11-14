@@ -103,6 +103,15 @@ export {
 	type ListKind,
 } from './numbering-editing';
 export { formatNoteNumber, numberNotesInOrder } from './notes';
+export {
+	convertNoteRun,
+	convertNotes,
+	planNoteConversion,
+	retargetNoteReference,
+	type NoteConversion,
+	type NoteConversionPlan,
+	type NoteSelection,
+} from './note-convert';
 export * from './review-formatting-display';
 export * from './review-document-formatting';
 export {

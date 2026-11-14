@@ -4,6 +4,7 @@ import { selectedChart } from 'ooxml-core/docx/ui';
 import type { DrawingWrap } from 'ooxml-core/docx';
 import { linkAtSelection } from './link-commands';
 import { pictureWrapOf, selectedPicturePos } from './picture-format-commands';
+import { noteReferenceAtSelection, type NoteKind } from './note-commands';
 import type { LocalizationKey } from './localization';
 import type { RibbonAction } from './ribbon-action';
 import { schema } from './schema';
@@ -38,6 +39,8 @@ export interface MenuState {
 	onChart?: boolean;
 	/** The Wrap Text choice of the selected picture; set only while a picture is selected. */
 	pictureWrap?: DrawingWrap;
+	/** The caret touches a note reference: Convert to Endnote/Footnote appears. */
+	onNote?: { kind: NoteKind; id: string } | undefined;
 	/** The browser exposes an async clipboard read API. */
 	canReadClipboard: boolean;
 	canTable(command: TableCommand): boolean;
@@ -103,6 +106,15 @@ export function computeMenuItems(state: MenuState): MenuItem[] {
 			action: { type: 'comments', key: 'add' },
 		}),
 	]);
+	if (state.onNote) {
+		const { kind, id } = state.onNote;
+		groups.push([
+			link('note-convert', kind === 'footnote' ? 'Convert to Endnote' : 'Convert to Footnote', {
+				kind: 'ribbon',
+				action: { type: 'convertNotes', selection: { kind, id } },
+			}),
+		]);
+	}
 	if (state.onChart)
 		groups.push([
 			link('chart-data', 'Edit Data', {
@@ -169,6 +181,7 @@ export function menuStateFromView(view: EditorView, readOnly: boolean): MenuStat
 		inTable: selectionInTable(view),
 		onChart: Boolean(selectedChart(view.state)?.editable),
 		...pictureWrapState(view),
+		onNote: noteReferenceAtSelection(view),
 		canReadClipboard:
 			typeof navigator !== 'undefined' &&
 			(typeof navigator.clipboard?.read === 'function' ||

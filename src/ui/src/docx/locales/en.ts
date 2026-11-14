@@ -13,6 +13,7 @@ import { enDropCap } from './drop-cap';
 import { enFindStories } from './find-stories';
 import { enPasteOptions } from './paste-options';
 import { enPicture } from './picture';
+import { enConvertNotes } from './convert-notes';
 import { enLineNumbers } from './line-numbers';
 import { enApp } from './en-app';
 import { enTableProperties } from './table-properties';
@@ -32,6 +33,7 @@ export const en = {
 	...enFindStories,
 	...enPasteOptions,
 	...enPicture,
+	...enConvertNotes,
 	...enNavigation,
 	...enColumns,
 	...enSplitCells,

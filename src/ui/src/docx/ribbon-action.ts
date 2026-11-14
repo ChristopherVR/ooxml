@@ -171,6 +171,8 @@ export type RibbonAction =
 	| { type: 'showHidden' }
 	| { type: 'thumbnails' }
 	| { type: 'insertNote'; kind: 'footnote' | 'endnote' }
+	/** Convert Notes, or Convert to Endnote/Footnote on one note. */
+	| { type: 'convertNotes'; selection: import('ooxml-core/docx').NoteSelection }
 	| {
 			type: 'toc';
 			key: 'insert' | 'update' | 'remove' | 'fields' | 'figures' | 'updateFigures';

@@ -232,6 +232,14 @@ export class EditorCore {
 				canEdit: () => !this.readOnly && !this.collab.active,
 				apply: (spec) => this.pages.applyWatermark(spec),
 			},
+			convertNotes: {
+				counts: () => ({
+					footnotes: this.model.footnotes?.length ?? 0,
+					endnotes: this.model.endnotes?.length ?? 0,
+				}),
+				canEdit: () => this.host.canEditOutsideBody(),
+				apply: (conversion) => this.parts.convertNotes(conversion),
+			},
 			pageBorders: {
 				section: () => this.pages.currentSection(),
 				canEdit: () => !this.readOnly && !this.collab.active,
@@ -275,6 +283,7 @@ export class EditorCore {
 		this.parts = new PartsController({
 			...this.host,
 			reviewDisplayMode: () => this.reviewDisplayMode,
+			savedModel: () => this.loaded?.model,
 			images: () => this.imageMedia,
 			plugins: () => this.inserts.plugins(),
 			sectionIndex: () => (this.view ? currentSectionIndex(this.view, this.model) : 0),

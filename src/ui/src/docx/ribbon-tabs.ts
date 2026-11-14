@@ -311,6 +311,12 @@ export function buildOtherPanels(panels: Map<string, HTMLElement>): void {
 				{ type: 'insertNote', kind: 'endnote' },
 				{ large: true, caption: 'Endnote' },
 			),
+			tool(
+				'Convert notes',
+				'convertNotes',
+				{ type: 'formatDialog', kind: 'convertNotes' },
+				{ inline: true, caption: 'Convert Notes…' },
+			),
 		),
 	);
 	panels.get('Layout')!.append(

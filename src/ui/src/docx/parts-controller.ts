@@ -1,4 +1,4 @@
-import type { Block, ReviewDisplayMode } from 'ooxml-core/docx';
+import type { Block, DocumentModel, Note, NoteSelection, ReviewDisplayMode } from 'ooxml-core/docx';
 import type { FindStory } from 'ooxml-core/docx/ui';
 import { TextSelection, type Plugin } from 'prosemirror-state';
 import { closeHistory, undo, redo } from 'prosemirror-history';
@@ -19,7 +19,7 @@ import {
 import { imageNodeView, type ImageMediaCache } from './image-media';
 import { buildNotesElement } from './notes-view';
 import { attachNoteEditing, withMark, withoutMark } from './note-editor';
-import { insertNote, type NoteKind } from './note-commands';
+import { convertNotesInView, insertNote, type NoteKind } from './note-commands';
 import { sectionPartsJson, HEADER_FOOTER_INPUT } from 'ooxml-core/docx/ui';
 import { effectiveHeaderFooter, withHeaderFooterLink } from './header-footer-link';
 import type { HeaderFooterContext } from './header-footer-ribbon';
@@ -40,6 +40,8 @@ export interface PartsControllerHost extends EditorHost {
 	sectionIndex?(): number;
 	refreshControls?(): void;
 	reviewDisplayMode?(): ReviewDisplayMode;
+	/** The model as last loaded or saved, whose note ids a conversion must not reuse. */
+	savedModel?(): DocumentModel | undefined;
 }
 
 /** Headers, footers, footnotes and endnotes around the continuous editing surface. */
@@ -375,6 +377,26 @@ export class PartsController {
 		item?.scrollIntoView?.({ block: 'center' });
 		item?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
 		this.host.edited();
+	}
+
+	/** References > Convert Notes, or Convert to Endnote/Footnote on one note's reference. */
+	convertNotes(selection: NoteSelection): void {
+		const view = this.host.view();
+		if (!view?.editable || !this.host.canEditOutsideBody()) return;
+		this.closeActive?.();
+		const saved = this.host.savedModel?.();
+		const ids = (notes: Note[] | undefined) => (notes ?? []).map((note) => note.id);
+		const plan = convertNotesInView(view, this.host.model(), selection, {
+			footnote: ids(saved?.footnotes),
+			endnote: ids(saved?.endnotes),
+		});
+		if (plan.moved.size) this.host.edited();
+		if (plan.skipped.length)
+			this.host.reportError(
+				new Error(
+					`${plan.skipped.length} note(s) hold charts, shapes or floating pictures and were not converted.`,
+				),
+			);
 	}
 
 	/** Replaces one footnote's or endnote's blocks. */
