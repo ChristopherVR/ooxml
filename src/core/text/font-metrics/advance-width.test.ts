@@ -19,4 +19,14 @@ describe('design advance widths', () => {
 		expect(designTextWidthEm('a\nb', 'Calibri')).toBeUndefined();
 		expect(designTextWidthEm('P', 'constructor')).toBeUndefined();
 	});
+
+	it('also knows the fonts measured through PowerPoint', () => {
+		// Consolas is monospaced at 0.55 em, regular and bold; Aptos "H" is 707.5 units.
+		expect(designTextWidthEm('Hi!', 'Consolas')).toBeCloseTo(3 * 0.55, 6);
+		expect(designTextWidthEm('Hi!', 'consolas', true)).toBeCloseTo(3 * 0.55, 6);
+		expect(designTextWidthEm('H', 'Aptos')).toBeCloseTo(0.7075, 6);
+		for (const family of ['Aptos Display', 'Aptos Mono', 'Comic Sans MS', 'Garamond', 'Impact']) {
+			expect(hasDesignAdvances(family)).toBe(true);
+		}
+	});
 });

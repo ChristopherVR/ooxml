@@ -5,11 +5,13 @@
 
 .DESCRIPTION
   Same method as make-font-advance-table.ps1: one non-wrapping zero-inset text box at 100pt,
-  advance(g) = BoundWidth("H" + g + "H") - BoundWidth("HH"). Used for the theme fonts Visio
-  does not have (Aptos), so the DOM text layer can give a stand-in font the deck font's widths.
-  Requires a local PowerPoint install (Windows).
+  advance(g) = BoundWidth("H" + g + "H") - BoundWidth("HH"). Used for the fonts Visio does not
+  measure (the Aptos cloud fonts, and the fonts PowerPoint draws with a look-alike), so the DOM
+  text layer can give a stand-in font the deck font's widths. Pipe the JSON to
+  make-pptx-design-advances.mjs, which writes design-advances-powerpoint.generated.ts; pass every
+  font that table holds. Requires a local PowerPoint install (Windows).
 #>
-param([string[]]$Fonts = @('Aptos', 'Aptos Display'))
+param([string[]]$Fonts = @('Aptos', 'Aptos Display', 'Aptos Mono', 'Consolas', 'Comic Sans MS', 'Garamond', 'Impact'))
 $ErrorActionPreference = 'Stop'
 $ppt = New-Object -ComObject PowerPoint.Application
 $deck = $ppt.Presentations.Add($false)

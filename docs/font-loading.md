@@ -94,11 +94,19 @@ faces. PowerPoint reaches them through `src/ui/src/pptx/render/google-webfonts.t
   metric-compatible clone (`metric-clones.ts`: Calibri and Aptos as Carlito,
   Cambria as Caladea, Arial as Arimo, Times New Roman as Tinos, and so on), so line breaks match.
 - PowerPoint instead asks for the measured look-alike when there is one (`look-alikes.ts`: Aptos
-  and Aptos Display as Gantari), and lists it right after the deck font in the CSS stack. It can,
+  and Aptos Display as Gantari, Aptos Mono as Sometype Mono, Consolas as Overpass Mono, Comic Sans
+  MS as Comic Relief, Garamond as EB Garamond, Impact as Anton), at the weights that match the
+  font's regular and bold, and lists it right after the deck font in the CSS stack. It can,
   because it gives each run the letter-spacing that restores the deck font's measured width over
   whatever face is painted (`text-design-tracking.ts`), so the stand-in is chosen by its shapes.
   Gantari was picked by rendering sixteen words in Aptos through PowerPoint and in about 80 open
-  families in Chromium, spread to the same width, and comparing the inked pixels (issue #249).
+  families in Chromium, spread to the same width, and comparing the inked pixels (issue #249); the
+  others by the same test, with every weight of each candidate tried. The deck fonts' own widths
+  come from Visio's measurements or, for these fonts, from PowerPoint
+  (`design-advances-powerpoint.generated.ts`, recorded by
+  `src/core/scripts/pptx/record-pptx-design-advances.ps1`). Franklin Gothic has no look-alike yet:
+  its theme pairs Book and Medium, which one family cannot tell apart while both ask for the
+  regular face.
   When a face loads after a slide is built, `text-tracking-settle.ts` recomputes the marked
   runs' letter-spacing in place. Word, Excel and Visio keep the metric clone, since the browser's
   own measurement breaks their lines.

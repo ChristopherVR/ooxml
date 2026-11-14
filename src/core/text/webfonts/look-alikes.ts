@@ -29,19 +29,37 @@
  * and 650 faces declared, the browser's weight matching paints every bold (700) run with the
  * 650 face, so the runs' own styles stay `font-weight: bold`.
  *
+ * The same test, against PowerPoint's renders of each font's words and with every weight of each
+ * candidate tried, picked the other look-alikes (intersection over union, regular and bold
+ * averaged; the installed original itself scored 0.85 to 0.95, which is the ceiling):
+ * Comic Sans MS as Comic Relief (0.821; Comic Neue, the name the CSS chain listed, did not reach
+ * the top seven), Consolas as Overpass Mono at 500 and 700 (0.750), Aptos Mono as Sometype Mono at
+ * 500 and 700 (0.672), Garamond as EB Garamond at 400 and 600 (0.633) and Impact as Anton (0.749;
+ * Anton has one weight). Each of these fonts' own widths are measured through PowerPoint too
+ * (`design-advances-powerpoint.generated.ts`), so the stand-in breaks lines where PowerPoint does.
+ * Franklin Gothic is left out: its theme pairs Book and Medium, which one look-alike family cannot
+ * tell apart by weight while both runs ask for the regular face.
+ *
  * @module text/webfonts/look-alikes
  */
 import { findGoogleFontsFamily } from './google-fonts-lookup';
 
 interface LookAlike {
 	readonly family: string;
+	/** The weight whose face regular runs paint with (the browser's weight matching picks it). */
+	readonly regularWeight: number;
 	/** The weight whose face bold runs paint with: the one that matches the font's bold. */
 	readonly boldWeight: number;
 }
 
 const LOOK_ALIKES: Readonly<Record<string, LookAlike>> = {
-	aptos: { family: 'Gantari', boldWeight: 650 },
-	'aptos display': { family: 'Gantari', boldWeight: 650 },
+	aptos: { family: 'Gantari', regularWeight: 400, boldWeight: 650 },
+	'aptos display': { family: 'Gantari', regularWeight: 400, boldWeight: 650 },
+	'aptos mono': { family: 'Sometype Mono', regularWeight: 500, boldWeight: 700 },
+	consolas: { family: 'Overpass Mono', regularWeight: 500, boldWeight: 700 },
+	'comic sans ms': { family: 'Comic Relief', regularWeight: 400, boldWeight: 700 },
+	garamond: { family: 'EB Garamond', regularWeight: 400, boldWeight: 600 },
+	impact: { family: 'Anton', regularWeight: 400, boldWeight: 400 },
 };
 
 /**
@@ -56,12 +74,18 @@ export function findLookAlikeGoogleFontsFamily(family: string): string | null {
 	return lookAlike ? findGoogleFontsFamily(lookAlike.family) : null;
 }
 
+/** The weights to request for `family`'s look-alike: the faces regular and bold runs paint with. */
+export interface LookAlikeWeights {
+	readonly regular: number;
+	readonly bold: number;
+}
+
 /**
- * The weight to request for bold runs drawn in `family`'s look-alike, or `undefined` when
+ * The weights to request for `family`'s look-alike, or `undefined` when
  * {@link findLookAlikeGoogleFontsFamily} has none for it.
  */
-export function findLookAlikeBoldWeight(family: string): number | undefined {
-	return findLookAlikeGoogleFontsFamily(family) === null
-		? undefined
-		: LOOK_ALIKES[family.trim().toLowerCase()]?.boldWeight;
+export function findLookAlikeWeights(family: string): LookAlikeWeights | undefined {
+	if (findLookAlikeGoogleFontsFamily(family) === null) return undefined;
+	const lookAlike = LOOK_ALIKES[family.trim().toLowerCase()];
+	return lookAlike ? { regular: lookAlike.regularWeight, bold: lookAlike.boldWeight } : undefined;
 }

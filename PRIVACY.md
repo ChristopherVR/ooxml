@@ -48,8 +48,9 @@ viewer does the same from Google Fonts, so the text keeps its intended look and 
 
 - **Trigger:** opening a deck that uses such a font, when the bundled Google Fonts catalogue
   serves that family or a stand-in for it: a metric-compatible clone (for example Carlito for
-  Calibri) or, for Aptos and Aptos Display, the measured look-alike Gantari, whose widths the
-  viewer corrects to Aptos's own.
+  Calibri) or a measured look-alike whose widths the viewer corrects to the deck font's own
+  (Aptos and Aptos Display as Gantari, Aptos Mono as Sometype Mono, Consolas as Overpass Mono,
+  Comic Sans MS as Comic Relief, Garamond as EB Garamond, Impact as Anton).
 - **Sent:** a request to `https://fonts.googleapis.com/css2` whose query names the families
   (and weights) the deck needs, then requests to `fonts.gstatic.com` for the font files. To save
   time, a first request is made while the deck is still opening, naming the catalogue families

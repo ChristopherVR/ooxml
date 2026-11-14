@@ -1,4 +1,5 @@
 import { DESIGN_ADVANCES } from './design-advances.generated';
+import { POWERPOINT_DESIGN_ADVANCES } from './design-advances-powerpoint.generated';
 
 const FIRST = 32;
 const decoded = new Map<string, readonly number[]>();
@@ -8,7 +9,13 @@ function advances(family: string, bold: boolean): readonly number[] | undefined 
 	const key = `${name}|${bold ? 'b' : 'r'}`;
 	const known = decoded.get(key);
 	if (known) return known;
-	const table = Object.hasOwn(DESIGN_ADVANCES, name) ? DESIGN_ADVANCES[name] : undefined;
+	// Visio's measurements first, then the fonts measured through PowerPoint (cloud fonts, and the
+	// fonts PowerPoint draws with a look-alike).
+	const table = Object.hasOwn(DESIGN_ADVANCES, name)
+		? DESIGN_ADVANCES[name]
+		: Object.hasOwn(POWERPOINT_DESIGN_ADVANCES, name)
+			? POWERPOINT_DESIGN_ADVANCES[name]
+			: undefined;
 	if (!table) return undefined;
 	const values = (bold ? table.bold : table.regular).split(' ').map(Number);
 	decoded.set(key, values);

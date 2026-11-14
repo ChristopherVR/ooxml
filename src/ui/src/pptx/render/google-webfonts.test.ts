@@ -247,7 +247,7 @@ describe('matchGoogleWebfontFragments', () => {
 	it('asks for the look-alike bold at the weight that matches Aptos Bold, unless named directly', () => {
 		// Gantari 700 is 7.6% heavier than Aptos Bold at slide size; 650 matches it.
 		expect(matchGoogleWebfontFragments(['Gantari', 'Aptos'])).toStrictEqual([
-			buildGoogleFontsFragment('Gantari'),
+			buildGoogleFontsFragment('Gantari', [650]),
 		]);
 	});
 });
