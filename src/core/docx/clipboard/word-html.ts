@@ -48,8 +48,8 @@ const KEPT_CONDITIONS = new Set(['!vml']);
 interface Open {
 	/** The source tag the entry closes on. */
 	source: string;
-	/** The tag written for it, or `null` when the element was unwrapped. */
-	output: string | null;
+	/** The end tags written for it (empty when the element was unwrapped). */
+	closing: string;
 	props: PastedRunProperties;
 }
 
@@ -81,8 +81,30 @@ function paragraphAttributes(
 	};
 }
 
-/** The tag and attributes written for one run element (or `null` to unwrap it). */
+/**
+ * The markup written for one run element. Formatting the editor reads from spans only (fonts,
+ * colour, highlight, run properties) goes on a span, inside the emphasis tag when there is one.
+ */
 function runElement(
+	token: Extract<HtmlToken, { kind: 'open' }>,
+	inherited: PastedRunProperties,
+	sheet: ReturnType<typeof readWordStyleSheet>,
+	options: WordClipboardOptions,
+): { opening: string; closing: string; props: PastedRunProperties } {
+	const { tag, attrs, props } = runTag(token, inherited, sheet, options);
+	const span = Object.values(attrs).some(Boolean);
+	const tags = [...(tag ? [tag] : []), ...(span ? ['span'] : [])];
+	return {
+		opening: (tag ? `<${tag}>` : '') + (span ? startTag('span', attrs) : ''),
+		closing: tags
+			.reverse()
+			.map((name) => `</${name}>`)
+			.join(''),
+		props,
+	};
+}
+
+function runTag(
 	token: Extract<HtmlToken, { kind: 'open' }>,
 	inherited: PastedRunProperties,
 	sheet: ReturnType<typeof readWordStyleSheet>,
@@ -112,9 +134,8 @@ function runElement(
 		'data-run-props': own ? JSON.stringify(props) : undefined,
 		'data-docx-style': characterStyle,
 	};
-	const tag = EMPHASIS.has(name) && !(name === 's' && run.dropStrike) ? name : 'span';
-	const meaningful = tag !== 'span' || Object.values(attrs).some(Boolean);
-	return { tag: meaningful ? tag : null, attrs, props };
+	const tag = EMPHASIS.has(name) && !(name === 's' && run.dropStrike) ? name : null;
+	return { tag, attrs, props };
 }
 
 /** Whether a Word footnote or endnote reference anchor (`mso-footnote-id:ftn1`). */
@@ -152,7 +173,7 @@ export function normalizeWordClipboardHtml(
 	const fields = new FieldTracker();
 	const props = (): PastedRunProperties => stack.at(-1)?.props ?? {};
 	const close = (entry: Open) => {
-		if (entry.output) out += `</${entry.output}>`;
+		out += entry.closing;
 	};
 	for (let index = 0; index < tokens.length; index++) {
 		const token = tokens[index]!;
@@ -216,27 +237,27 @@ export function normalizeWordClipboardHtml(
 				index = end - 1;
 				continue;
 			}
-			entry = { source: name, output: null, props: props() };
+			entry = { source: name, closing: '', props: props() };
 		} else if (PARAGRAPHS.test(name)) {
 			out += startTag('p', paragraphAttributes(token, sheet, options, numIds));
-			entry = { source: name, output: 'p', props: {} };
+			entry = { source: name, closing: '</p>', props: {} };
 		} else if (RUNS.has(name)) {
 			const run = runElement(token, props(), sheet, options);
-			if (run.tag) out += startTag(run.tag, run.attrs);
-			entry = { source: name, output: run.tag, props: run.props };
+			out += run.opening;
+			entry = { source: name, closing: run.closing, props: run.props };
 		} else if (name === 'a') {
 			const link = linkAttributes(token);
 			if (link) out += startTag('a', link);
-			entry = { source: name, output: link ? 'a' : null, props: props() };
+			entry = { source: name, closing: link ? '</a>' : '', props: props() };
 		} else if (STRUCTURE.has(name)) {
 			out += startTag(name, {
 				colspan: token.attrs.get('colspan'),
 				rowspan: token.attrs.get('rowspan'),
 			});
-			entry = { source: name, output: name, props: {} };
+			entry = { source: name, closing: `</${name}>`, props: {} };
 		} else {
 			// Word's wrappers (`div`, `font`, `o:`/`w:`/`v:` tags) carry nothing the editor reads.
-			entry = { source: name, output: null, props: props() };
+			entry = { source: name, closing: '', props: props() };
 		}
 		stack.push(entry);
 	}

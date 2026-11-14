@@ -127,7 +127,7 @@ describe('Word clipboard HTML', () => {
 			'<span data-run-props="{&quot;doubleStrike&quot;:true}">double struck</span>',
 		);
 		expect(html).toContain(
-			'<u data-run-props="{&quot;underlineStyle&quot;:&quot;double&quot;}">double underline</u>',
+			'<u><span data-run-props="{&quot;underlineStyle&quot;:&quot;double&quot;}">double underline</span></u>',
 		);
 		expect(html).toContain('<span style="color:#ff0000">red</span>');
 		expect(html).not.toContain('mso-');

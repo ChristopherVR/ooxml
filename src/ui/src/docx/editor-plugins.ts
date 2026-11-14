@@ -24,6 +24,7 @@ import { runStylesPlugin } from './run-styles';
 import { sectionBreaksPlugin } from './section-commands';
 import { trackChangesPlugin } from './track-changes-mode';
 import { reviewRunMarksPlugin } from './review-run-marks';
+import { wordPastePlugin } from './word-paste';
 
 /** What the body editor's plugins read from the editor element. */
 export interface BodyPluginHost {
@@ -47,6 +48,7 @@ export function bodyPlugins(host: BodyPluginHost): Plugin[] {
 	return [
 		...(host.yjs ? [] : [history()]),
 		...host.extraPlugins,
+		wordPastePlugin(() => host.model()),
 		noteNumberingPlugin(),
 		sectionBreaksPlugin(),
 		fieldGuardPlugin(),

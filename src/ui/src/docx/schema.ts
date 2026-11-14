@@ -187,7 +187,8 @@ export const schema = new Schema({
 						align: (el as HTMLElement).style.textAlign || null,
 						direction: (el as HTMLElement).dir || (el as HTMLElement).style.direction || null,
 						id: (el as HTMLElement).dataset.id || '',
-						style: '',
+						// Set by the Word clipboard reader to a style the document defines.
+						style: (el as HTMLElement).dataset.docxParagraphStyle || '',
 						spacingBeforeTwips: null,
 						spacingAfterTwips: null,
 						lineSpacingTwips: null,
