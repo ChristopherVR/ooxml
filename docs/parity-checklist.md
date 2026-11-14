@@ -303,10 +303,26 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P1** Find & Replace: formatting search (Format > Font, Paragraph, Style) remains. Wildcards,
       whole words, prefix and suffix, the ignore options and the Special codes are done
       (`src/core/docx/find-pattern.ts`, `src/ui/src/docx/search-panel.ts`).
+- [ ] **P1** Find searches the main body only, as far as a code search shows: headers, footers,
+      footnotes, endnotes and text boxes are not matched (`src/ui/src/docx/search-document.ts`).
 - [ ] **P1** Only Draft and Print Layout views: no Read Mode, Web Layout, Outline or Focus.
 - [ ] **P1** Index, citations and bibliography, Table of Authorities.
 - [ ] **P1** Compare and Combine; accessibility checker.
-- [ ] **P1** Paste options (Keep Source, Merge, Text Only) and Paste Special.
+- [ ] **P1** Paste options (Keep Source, Merge, Text Only) and Paste Special. HTML copied from
+      Word goes through the generic ProseMirror parser: `mso-` list levels, styles, notes and
+      fields are not read (`src/ui/src/docx/context-menu-actions.ts`).
+- [ ] **P1** Pictures: no crop editing (the picture dialog covers size and alt text), no Wrap Text
+      menu, and no handler found for dropping an image file on the page
+      (`src/ui/src/docx/picture-dialog.ts`).
+- [ ] **P2** Footnotes and endnotes cannot be converted into each other
+      (`src/ui/src/docx/note-commands.ts`); watermarks are text only (`docx/watermark.ts`).
+- [ ] **P2** Inspect Document only lists counts: no removal of comments, revisions, hidden text,
+      document properties or personal information (`src/ui/src/docx/backstage-pages.ts`).
+- [ ] **P2** Content controls: picture, building-block gallery and repeating-section controls are
+      kept but cannot be inserted, and repeating items cannot be added or removed
+      (`docx/content-control-model.ts`).
+- [ ] **P2** Hyperlinks open only `http`, `https` and `mailto` targets; `tel` and `ftp` are refused
+      (`docx/ui/link-commands.ts`).
 - [ ] **P1** No AutoCorrect or AutoFormat as you type (smart quotes, automatic lists).
 - [ ] **P1** Collaboration covers the body and comments; headers, footers and notes are
       incomplete, table commands are off during collaboration, and there are no mentions.
@@ -315,6 +331,22 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 ### Layout and rendering
 
 - [ ] **P1** Hyphenation: `autoHyphenation` is read but never applied by `src/core/docx/layout`.
+- [ ] **P1** Compatibility mode: mode 15 versus 14 and earlier changes only page-break spacing and
+      footnote separators and columns (`docx/document-parts.ts`, `layout/adapter.ts`). The other
+      mode-dependent layout rules and most `w:compat` options are not applied.
+- [ ] **P1** Floating tables (`w:tblpPr`) are kept but laid out in the flow: no position and no
+      text wrap (`layout/table-layout.ts`).
+- [ ] **P1** Text frames (`w:framePr`) other than drop caps are laid out as ordinary paragraphs.
+- [ ] **P1** East Asian layout: line-start and line-end rules (`w:kinsoku`,
+      `w:noLineBreaksBefore`/`After`), `w:autoSpaceDE`/`DN`, punctuation compression
+      (`w:characterSpacingControl`) and hanging punctuation (`w:overflowPunct`) are read but not
+      applied (`layout/text-breaks.ts`).
+- [ ] **P1** Thai, Lao, Khmer and Myanmar text has no line-break opportunities except spaces
+      (`layout/paragraph-tokens.ts`).
+- [ ] **P1** Fields LISTNUM, AUTONUM, AUTONUMLGL, AUTONUMOUT, DOCPROPERTY and SYMBOL show their
+      saved result instead of a computed one (`layout/page-fields.ts`).
+- [ ] **P1** Right-to-left text: paragraph direction is applied but runs are not reordered by
+      the bidirectional algorithm, and the Word UI has no right-to-left locale or mirrored chrome.
 - [ ] **P1** Tight and through wrapping use the object's rectangle, not its wrap polygon, and only
       the larger side gets text (`layout/floats.ts`).
 - [ ] **P1** Table autofit (`tblLayout`) is not applied; merged cells are read-only on Print Layout
