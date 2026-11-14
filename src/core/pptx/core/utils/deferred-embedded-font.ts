@@ -28,6 +28,13 @@ export interface EmbeddedFontPartSource {
 	originalPartBytes: Uint8Array;
 	/** The variant's `fontKey` attribute, when declared. */
 	fontKey?: string | undefined;
+	/** The face's OS/2 `fsType`, when it could be read from the part. */
+	fsType?: number | undefined;
+}
+
+/** The optional `fsType` field, placed last so eager and deferred keys match. */
+function fsTypeField(source: EmbeddedFontPartSource): Pick<PptxEmbeddedFont, 'fsType'> {
+	return source.fsType === undefined ? {} : { fsType: source.fsType };
 }
 
 /** The fields decoding produces. */
@@ -176,6 +183,7 @@ export function decodeEmbeddedFontPart(source: EmbeddedFontPartSource): PptxEmbe
 			fontGuid,
 			originalRId: source.originalRId,
 			originalPartBytes,
+			...fsTypeField(source),
 		};
 	} catch {
 		return null;
@@ -195,9 +203,14 @@ export function decodeEmbeddedFontPart(source: EmbeddedFontPartSource): PptxEmbe
  * data. A part that fails to decode keeps its metadata and has an empty
  * `dataUrl` and no `rawFontData`, the same as an absent font to renderers.
  */
-export function createDeferredEmbeddedFont(source: EmbeddedFontPartSource): PptxEmbeddedFont {
+export function createDeferredEmbeddedFont(
+	source: EmbeddedFontPartSource,
+	options: { withheld?: boolean } = {},
+): PptxEmbeddedFont {
 	const fontGuid = resolveEmbeddedFontGuid(source);
-	let fields: DecodedFields | undefined;
+	let fields: DecodedFields | undefined = options.withheld
+		? { dataUrl: '', format: undefined, rawFontData: undefined }
+		: undefined;
 	let pending: Promise<PptxEmbeddedFont | null> | undefined;
 	const decode = (): DecodedFields => {
 		if (!fields) {
@@ -236,6 +249,7 @@ export function createDeferredEmbeddedFont(source: EmbeddedFontPartSource): Pptx
 		fontGuid,
 		originalRId: source.originalRId,
 		originalPartBytes: source.originalPartBytes,
+		...fsTypeField(source),
 	};
 	Object.defineProperties(font, {
 		load: {
@@ -250,17 +264,27 @@ export function createDeferredEmbeddedFont(source: EmbeddedFontPartSource): Pptx
 }
 
 /**
+ * A variant whose licence forbids activating it (a restricted-licence face):
+ * it keeps its metadata and part bytes, so saving writes the part back
+ * unchanged, but it never decodes. Like a part that failed to decode, it has
+ * an empty `dataUrl` and no `rawFontData`, and `load()` resolves to `null`.
+ */
+export function createWithheldEmbeddedFont(source: EmbeddedFontPartSource): PptxEmbeddedFont {
+	return createDeferredEmbeddedFont(source, { withheld: true });
+}
+
+/**
  * True when saving should write a deferred variant's original part bytes
  * under its original part and relationship: it was never decoded (reading
  * its data now would only decode it to re-encode the same bytes), or it
- * failed to decode. Never decodes. Fonts that are not deferred, and
- * decoded ones, keep the `rawFontData` save path.
+ * failed to decode or was withheld. Never decodes. A plain copy of a loaded
+ * variant (a spread or clone drops the non-enumerable `isLoaded`) that has
+ * its part but no clear data is written back verbatim too, so a withheld
+ * restricted face survives a host round trip. Decoded variants and fonts
+ * with clear data keep the `rawFontData` save path.
  */
 export function shouldSaveEmbeddedFontVerbatim(font: PptxEmbeddedFont): boolean {
-	if (font.isLoaded === undefined || !font.originalPartBytes?.length) {
-		return false;
-	}
-	if (!font.originalRId || !font.partPath) {
+	if (!font.originalPartBytes?.length || !font.originalRId || !font.partPath) {
 		return false;
 	}
 	return font.isLoaded === false || !font.rawFontData?.length;

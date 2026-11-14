@@ -26,6 +26,17 @@ describe('compatibilityWarningToasts', () => {
 		expect(toasts[0].severity).toBe('info');
 	});
 
+	it('maps the embedded font licence codes', () => {
+		const toasts = compatibilityWarningToasts([
+			{ code: 'EMBEDDED_FONT_RESTRICTED', severity: 'warning' },
+			{ code: 'EMBEDDED_FONT_NOT_EMBEDDABLE', severity: 'warning' },
+		]);
+		expect(toasts.map((toast) => toast.messageKey)).toStrictEqual([
+			'pptx.compatibility.embeddedFontRestricted',
+			'pptx.compatibility.embeddedFontNotEmbeddable',
+		]);
+	});
+
 	it('dedupes identical codes, keeping the first severity', () => {
 		const toasts = compatibilityWarningToasts([
 			{ code: 'SAVE_ELEMENT_SKIPPED', severity: 'warning', elementId: 'a' },

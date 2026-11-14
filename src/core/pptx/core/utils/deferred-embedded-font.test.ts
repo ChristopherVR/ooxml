@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
 	createDeferredEmbeddedFont,
+	createWithheldEmbeddedFont,
 	decodeEmbeddedFontPart,
 	isEmbeddedFontPartPlausible,
 	shouldSaveEmbeddedFontVerbatim,
@@ -108,10 +109,35 @@ describe('createDeferredEmbeddedFont', () => {
 		expect(font.dataUrl).toBe('data:font/ttf;base64,AAAA');
 	});
 
+	it('carries fsType last, in the same key order as the eager decoder', () => {
+		const source = { ...xorSource(), fsType: 0x0008 };
+		const eager = decodeEmbeddedFontPart(source)!;
+		const font = createDeferredEmbeddedFont(source);
+		expect(eager.fsType).toBe(0x0008);
+		expect(Object.keys(font)).toStrictEqual(Object.keys(eager));
+		expect(Object.keys(font).at(-1)).toBe('fsType');
+	});
+
 	it('keeps the part bytes it was given, without copying them again', () => {
 		const source = xorSource();
 		const font = createDeferredEmbeddedFont(source);
 		expect(font.originalPartBytes).toBe(source.originalPartBytes);
+	});
+});
+
+describe('createWithheldEmbeddedFont', () => {
+	it('never decodes, has no font data and is saved verbatim', async () => {
+		const btoa = vi.spyOn(globalThis, 'btoa');
+		const source = { ...xorSource(), fsType: 0x0002 };
+		const font = createWithheldEmbeddedFont(source);
+		expect(font.isLoaded).toBe(true);
+		expect(font.dataUrl).toBe('');
+		expect(font.rawFontData).toBeUndefined();
+		await expect(font.load!()).resolves.toBeNull();
+		expect(btoa).not.toHaveBeenCalled();
+		expect(font.originalPartBytes).toBe(source.originalPartBytes);
+		expect(font.fsType).toBe(0x0002);
+		expect(shouldSaveEmbeddedFontVerbatim(font)).toBe(true);
 	});
 });
 

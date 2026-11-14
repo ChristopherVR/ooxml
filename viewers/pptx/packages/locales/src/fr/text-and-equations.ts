@@ -59,6 +59,12 @@ export const translations = {
 	'pptx.fonts.missingWarning':
 		'Les polices {{count}} sont introuvables et ne seront pas intégrées.',
 	'pptx.fonts.notFound': 'Pas trouvé',
+	'pptx.fonts.previewOnly': 'Aperçu et impression uniquement',
+	'pptx.fonts.previewOnlyReason':
+		"La licence de cette police n'autorise que l'affichage et l'impression. Elle reste dans ce fichier, mais n'est jamais incorporée dans un autre fichier.",
+	'pptx.fonts.restricted': 'Restreinte',
+	'pptx.fonts.restrictedReason':
+		"La licence de cette police n'autorise pas son incorporation : elle n'est donc pas utilisée pour l'affichage et une police de substitution est montrée. Ses données restent inchangées dans ce fichier.",
 	'pptx.fonts.scanning': 'Numérisation des polices...',
 	'pptx.fonts.usedFonts': 'Polices utilisées',
 	'pptx.text.title': 'Texte',

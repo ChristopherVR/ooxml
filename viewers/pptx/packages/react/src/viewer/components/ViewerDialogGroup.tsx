@@ -1,4 +1,5 @@
 import {
+	describeEmbeddedFontRestrictions,
 	isDialogAvailable,
 	isPanelVisible,
 	printPropertiesFrameSlides,
@@ -61,7 +62,7 @@ export interface ViewerDialogGroupProps {
 	coreProperties: PptxCoreProperties | undefined;
 	customProperties: PptxCustomProperty[];
 	appProperties: PptxAppProperties | undefined;
-	embeddedFonts: Array<{ name: string }>;
+	embeddedFonts: Array<{ name: string; fsType?: number }>;
 	hasDigitalSignatures: boolean;
 	digitalSignatureCount: number;
 	presentationProperties: PptxPresentationProperties;
@@ -168,6 +169,7 @@ export function ViewerDialogGroup(props: ViewerDialogGroupProps) {
 				embedFontsEnabled={dialogs.embedFontsEnabled}
 				usedFontFamilies={propertyHandlers.usedFontFamilies}
 				embeddedFonts={embeddedFonts.map((f) => f.name)}
+				embeddedFontRestrictions={describeEmbeddedFontRestrictions(embeddedFonts)}
 				canEmbedFonts={dialogs.fontEmbedding.interactive}
 				embedUnavailableKey={dialogs.fontEmbedding.disabledReasonKey}
 				onClose={() => dialogs.setIsFontEmbeddingOpen(false)}

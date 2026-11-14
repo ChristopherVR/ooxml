@@ -115,6 +115,12 @@ describe('selectTrustedEmbeddedFonts', () => {
 		expect(selectTrustedEmbeddedFonts(fonts)).toEqual(fonts);
 	});
 
+	it('leaves out restricted-licence faces, which never cover their family', () => {
+		const brand = { name: 'Brand', dataUrl: '', fsType: 0x0002 };
+		const proof = { name: 'Proof', dataUrl: '', fsType: 0x0004 };
+		expect(selectTrustedEmbeddedFonts([brand, proof])).toEqual([proof]);
+	});
+
 	it('rejects the whole typeface when one slot holds another weight', () => {
 		// The regular slot is a SemiBold file: every regular run would paint SemiBold.
 		expect(selectTrustedEmbeddedFonts(family('DM Sans', 600))).toEqual([]);

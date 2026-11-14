@@ -26,6 +26,7 @@
  * @module render/embedded-font-trust
  */
 import type { PptxEmbeddedFont } from 'ooxml-core/pptx';
+import { embeddingPermission, mayDisplayEmbeddedFont } from 'ooxml-core/text';
 
 import { resolveEmbeddedFontClearBytes } from './embedded-font-bytes';
 import { resolveFontItalic, resolveFontWeight, resolveGoogleFontsFace } from './font-weight-names';
@@ -167,7 +168,13 @@ export function selectTrustedEmbeddedFonts(
 	if (memo) {
 		return memo;
 	}
-	const trusted = fonts.filter((font) => isEmbeddedTypefaceTrusted(fonts, trimmedName(font)));
+	// A restricted-licence face (OS/2 fsType) is never activated, so it covers
+	// nothing: leaving it out lets its family take a web or local substitute.
+	const trusted = fonts.filter(
+		(font) =>
+			(font.fsType === undefined || mayDisplayEmbeddedFont(embeddingPermission(font.fsType))) &&
+			isEmbeddedTypefaceTrusted(fonts, trimmedName(font)),
+	);
 	trustedByList.set(fonts, trusted);
 	return trusted;
 }

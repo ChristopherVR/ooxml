@@ -5,6 +5,8 @@
  * DOM-free.
  */
 import {
+	embeddingPermission,
+	mayEmbedFontSubset,
 	parseTrueType,
 	subsetTrueType,
 	type TrueTypeFont,
@@ -39,8 +41,9 @@ export class PdfEmbeddedFont {
 	/** `undefined` when the bytes are not TrueType or the font's licence forbids embedding. */
 	static create(file: PdfFontFile): PdfEmbeddedFont | undefined {
 		const font = parseTrueType(file.data);
-		// fsType bit 1 is restricted-licence embedding, bit 8 forbids subsetting.
-		if (!font || font.embeddingFlags & 0x0002 || font.embeddingFlags & 0x0100) return undefined;
+		// A PDF carries a subset of the outlines: restricted, no-subsetting and bitmap-only faces
+		// may not be embedded that way.
+		if (!font || !mayEmbedFontSubset(embeddingPermission(font.embeddingFlags))) return undefined;
 		return new PdfEmbeddedFont(file, font);
 	}
 	/** Whether the font has a glyph for every character of `text` (controls excepted). */

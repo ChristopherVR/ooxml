@@ -319,6 +319,10 @@ export const translations = {
 		"Un son de transition de diapositive n'a pas pu être enregistré et a été ignoré.",
 	'pptx.compatibility.diagramRelationshipIdsIncomplete':
 		"Il manque à ce diagramme SmartArt certaines références internes, il pourrait donc ne pas s'afficher exactement comme conçu.",
+	'pptx.compatibility.embeddedFontRestricted':
+		"La licence d'une police incorporée n'autorise pas son utilisation : une police de substitution est affichée. Ses données restent dans le fichier.",
+	'pptx.compatibility.embeddedFontNotEmbeddable':
+		"Une police n'a pas été incorporée, car sa licence n'autorise pas son incorporation dans une présentation modifiable.",
 	'pptx.compatibility.exportBackendUnavailable':
 		"L'exportation vers ce format n'est pas disponible dans l'environnement actuel.",
 } as const;

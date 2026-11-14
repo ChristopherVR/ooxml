@@ -200,6 +200,7 @@
 	<FontEmbeddingPanel
 		usedFontFamilies={usedFontFamilies}
 		embeddedFonts={props.embeddedFontNames}
+		embeddedFontRestrictions={props.embeddedFontRestrictions}
 		enabled={props.editor.embedFonts}
 		canEmbed={fontEmbedding.interactive}
 		unavailableKey={fontEmbedding.disabledReasonKey}

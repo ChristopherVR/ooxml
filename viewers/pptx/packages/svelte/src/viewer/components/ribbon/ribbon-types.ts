@@ -1,6 +1,7 @@
 import type {
 	AccountAuthConfig,
 	CanvasSize,
+	FontEmbeddingRestriction,
 	RibbonDisplayController,
 	ToolbarActionId,
 	ViewerPreferences,
@@ -58,6 +59,8 @@ export interface RibbonProps {
 	onversionhistory: () => void;
 	hasMacros: boolean;
 	embeddedFontNames: string[];
+	/** Licence restrictions of embedded typefaces (`describeEmbeddedFontRestrictions`). */
+	embeddedFontRestrictions?: Record<string, FontEmbeddingRestriction>;
 	hasDigitalSignatures: boolean;
 	digitalSignatureCount: number;
 	isPasswordProtected: boolean;

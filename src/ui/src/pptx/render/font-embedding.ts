@@ -26,8 +26,64 @@
  * @module render/font-embedding
  */
 
+import { embeddingPermission } from 'ooxml-core/text';
+
 /** i18n key explaining an inert toggle. */
 export const FONT_EMBEDDING_UNAVAILABLE_KEY = 'pptx.fonts.embedUnavailable';
+
+/**
+ * How an embedded typeface's licence (OS/2 `fsType`) limits it. A restricted
+ * face is not used for display; a preview & print face is displayed but never
+ * embedded into a new file. Both keep their font data in this file on save.
+ */
+export interface FontEmbeddingRestriction {
+	licence: 'restricted' | 'preview-print';
+	/** i18n key of the short badge text. */
+	labelKey: string;
+	/** i18n key of the explanation. */
+	reasonKey: string;
+}
+
+const RESTRICTIONS: Record<FontEmbeddingRestriction['licence'], FontEmbeddingRestriction> = {
+	restricted: {
+		licence: 'restricted',
+		labelKey: 'pptx.fonts.restricted',
+		reasonKey: 'pptx.fonts.restrictedReason',
+	},
+	'preview-print': {
+		licence: 'preview-print',
+		labelKey: 'pptx.fonts.previewOnly',
+		reasonKey: 'pptx.fonts.previewOnlyReason',
+	},
+};
+
+/**
+ * The licence restriction of each embedded typeface, keyed by the typeface
+ * name exactly as the embedded fonts carry it. A typeface takes its most
+ * restrictive face; unrestricted typefaces are absent.
+ *
+ * @example
+ * ```ts
+ * describeEmbeddedFontRestrictions([{ name: 'Brand', fsType: 0x0002 }]).Brand?.licence; // 'restricted'
+ * ```
+ */
+export function describeEmbeddedFontRestrictions(
+	fonts: readonly { name: string; fsType?: number | undefined }[] | undefined,
+): Record<string, FontEmbeddingRestriction> {
+	const result: Record<string, FontEmbeddingRestriction> = {};
+	for (const font of fonts ?? []) {
+		if (font.fsType === undefined || !font.name) {
+			continue;
+		}
+		const { licence } = embeddingPermission(font.fsType);
+		if (licence === 'restricted') {
+			result[font.name] = RESTRICTIONS.restricted;
+		} else if (licence === 'preview-print' && result[font.name]?.licence !== 'restricted') {
+			result[font.name] = RESTRICTIONS['preview-print'];
+		}
+	}
+	return result;
+}
 
 /** What the "Embed fonts in the file" toggle should look like and do. */
 export interface FontEmbeddingDescriptor {

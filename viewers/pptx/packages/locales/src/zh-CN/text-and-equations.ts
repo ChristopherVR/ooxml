@@ -62,6 +62,12 @@ export const translations = {
 	'pptx.fonts.enableEmbedding': '启用字体嵌入',
 	'pptx.fonts.missingWarning': '找不到 {{count}} 种字体，无法嵌入。',
 	'pptx.fonts.notFound': '未找到',
+	'pptx.fonts.previewOnly': '仅限预览和打印',
+	'pptx.fonts.previewOnlyReason':
+		'此字体的许可仅允许显示和打印。它保留在此文件中，但绝不会嵌入到其他文件中。',
+	'pptx.fonts.restricted': '受限',
+	'pptx.fonts.restrictedReason':
+		'此字体的许可不允许嵌入，因此不会用于显示，而是显示替代字体。其字体数据在此文件中保持不变。',
 	'pptx.fonts.scanning': '正在扫描字体...',
 	'pptx.fonts.usedFonts': '使用的字体',
 	'pptx.text.title': '文本',

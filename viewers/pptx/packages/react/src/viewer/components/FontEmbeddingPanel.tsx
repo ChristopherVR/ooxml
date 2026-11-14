@@ -1,4 +1,4 @@
-import { scanAvailableFontFamilies } from 'ooxml-ui/pptx';
+import { scanAvailableFontFamilies, type FontEmbeddingRestriction } from 'ooxml-ui/pptx';
 import React, { useState, useCallback, useEffect } from 'react';
 import { LuType, LuX, LuCheck, LuLoader } from 'react-icons/lu';
 
@@ -15,6 +15,8 @@ export interface FontEmbeddingPanelProps {
 	embedFontsEnabled: boolean;
 	usedFontFamilies: string[];
 	embeddedFonts: string[];
+	/** Licence restrictions of embedded typefaces (`describeEmbeddedFontRestrictions`). */
+	embeddedFontRestrictions?: Readonly<Record<string, FontEmbeddingRestriction>>;
 	/**
 	 * False when the deck embeds nothing, in which case the switch is inert and
 	 * says why. The viewer can keep or strip embedded font data on save, but it
@@ -37,6 +39,7 @@ export function FontEmbeddingPanel({
 	embedFontsEnabled,
 	usedFontFamilies,
 	embeddedFonts,
+	embeddedFontRestrictions,
 	canEmbedFonts = true,
 	embedUnavailableKey,
 	onClose,
@@ -150,16 +153,36 @@ export function FontEmbeddingPanel({
 									{usedFontFamilies.map((family) => {
 										const found = availableFamilies.has(family);
 										const embedded = embeddedSet.has(family);
+										const restriction = embeddedFontRestrictions?.[family];
 										return (
 											<div
 												key={family}
 												className='flex items-center justify-between px-3 py-2 rounded-lg bg-muted/60'
 											>
-												<span className='text-xs text-foreground'>{family}</span>
+												<span className='flex flex-col'>
+													<span className='text-xs text-foreground'>{family}</span>
+													{restriction && (
+														<span
+															className='text-[10px] text-muted-foreground'
+															data-font-restriction-reason={restriction.licence}
+														>
+															{t(restriction.reasonKey)}
+														</span>
+													)}
+												</span>
 												<div className='flex items-center gap-2'>
 													{embedded && (
 														<span className='text-[10px] px-1.5 py-0.5 rounded bg-green-900/40 text-green-400 border border-green-700/40'>
 															{t('pptx.fonts.embedded')}
+														</span>
+													)}
+													{restriction && (
+														<span
+															className='text-[10px] px-1.5 py-0.5 rounded bg-yellow-900/40 text-yellow-400 border border-yellow-700/40'
+															data-font-restriction={restriction.licence}
+															title={t(restriction.reasonKey)}
+														>
+															{t(restriction.labelKey)}
 														</span>
 													)}
 													{found ? (

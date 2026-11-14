@@ -2,10 +2,16 @@ import { XmlObject, PptxLayoutOption } from '../../types';
 import type { PptxEmbeddedFont, PptxEmbeddedFontList } from '../../types';
 import {
 	createDeferredEmbeddedFont,
+	createWithheldEmbeddedFont,
 	decodeEmbeddedFontPart,
 	isEmbeddedFontPartPlausible,
+	resolveEmbeddedFontGuid,
 	type EmbeddedFontPartSource,
 } from '../../utils/deferred-embedded-font';
+import {
+	mayDisplayFontWithFsType,
+	readEmbeddedFontPartFsType,
+} from '../../utils/embedded-font-permission';
 import { resolveLayoutDisplayName } from '../../utils/layout-display-name';
 import { stripParentDirSegments } from '../../utils/strip-parent-dir-segments';
 import { xmlAttr, xmlChild } from '../../utils/xml-access';
@@ -134,6 +140,21 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				originalPartBytes: new Uint8Array(fontBinary),
 				fontKey,
 			};
+			source.fsType = readEmbeddedFontPartFsType(
+				source.originalPartBytes,
+				resolveEmbeddedFontGuid(source),
+			);
+			if (!mayDisplayFontWithFsType(source.fsType)) {
+				// A restricted-licence face may not be installed or used, even
+				// for display. Keep the part so saving writes it back unchanged.
+				this.compatibilityService.reportWarning({
+					code: 'EMBEDDED_FONT_RESTRICTED',
+					message: `Embedded font "${typeface}" has a restricted licence (OS/2 fsType) and is not used for display; its font part is kept unchanged on save.`,
+					scope: 'presentation',
+					xmlPath: fontPath,
+				});
+				return createWithheldEmbeddedFont(source);
+			}
 			if (this.eagerDecodeEmbeddedFonts) {
 				return decodeEmbeddedFontPart(source);
 			}
