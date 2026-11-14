@@ -149,13 +149,25 @@ every face has loaded or failed, or the download is given up.
 
 Installed and embedded fonts need no wait, and with downloads off there is none.
 
+### Fonts in a vector PDF
+
+File > Export > Create PDF writes slide text as real PDF text. It embeds, as subsets, the
+TrueType fonts the page already holds locally (the `@font-face` rules with `data:` or `blob:`
+sources, which is how the deck's embedded fonts are registered) and any a host passes to
+`exportSlidesVectorPdf` (`fonts`), when the font's own licence flags allow embedding. It never downloads a font for the
+PDF. Text in any other font (an installed font, whose file a page cannot read, or a downloaded
+webfont) uses a standard PDF font scaled to the slide's measured widths, and the export reports
+that substitution; text no available font can write (complex scripts) is drawn as a picture with
+invisible, searchable text over it.
+
 ### Other uses of downloaded fonts
 
 - **WordArt warps** (inflate, can, waves and the like) bend real glyph outlines, so for those runs
   only the font files are also fetched with `fetch()` (`deck-webfont-outlines.ts`). Without them
   the viewer traces the browser's own rendering.
 - **Slide image export** inlines the faces into the exported SVG so the canvas is not tainted
-  (`foreign-object-font-embed.ts`).
+  (`foreign-object-font-embed.ts`). The effects a vector PDF export draws as pictures go through
+  the same capture.
 
 Both reuse the stylesheet URL above, so they follow the same setting. Both use `fetch()`, so a
 mirror must send `Access-Control-Allow-Origin`.

@@ -1,6 +1,7 @@
 import type {
 	CanvasSize,
 	FieldSubstitutionContext,
+	MountedPdfSlide,
 	RasterizeElementResult,
 	RasterizeElementTilesResult,
 } from 'ooxml-ui/pptx';
@@ -96,6 +97,8 @@ export interface RasterizeSlideController {
 		index: number,
 		scaleMultiplier?: number,
 	): Promise<RasterizeElementTilesResult>;
+	/** Mount slide `index` for the vector PDF export, with the html2canvas driver for it. */
+	mountSlide(index: number): Promise<MountedPdfSlide>;
 	/** Remove the off-screen capture stage from the DOM. */
 	destroy(): void;
 }

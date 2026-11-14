@@ -58,6 +58,7 @@ export * from './pdf-slides';
 // DOM entry every binding calls with its own capture stage (`exportSlidesVectorPdf`).
 export * from './pdf-vector-select';
 export * from './pdf-vector-export';
+export * from './pdf-export-run';
 export { resolvePdfTextFont } from './pdf-vector-paint';
 export * from './pdf-notes-builder';
 export * from './pdf-page-size';

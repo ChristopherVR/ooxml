@@ -1,4 +1,4 @@
-import type { CanvasSize, FieldSubstitutionContext } from 'ooxml-ui/pptx';
+import type { CanvasSize, FieldSubstitutionContext, PdfExportSettings } from 'ooxml-ui/pptx';
 import type { PptxData, PptxSlide } from 'pptx-viewer-core';
 
 import type { Translator } from '../../i18n/translator';
@@ -46,6 +46,8 @@ export interface ExportWiringDeps {
 	getIncludeHiddenSlides?(): boolean;
 	/** Options > Advanced > "High quality" raster scale for the print fallback path. */
 	getPrintHighQuality?(): boolean;
+	/** Options > Advanced > Save as PDF. Defaults to vector pages without hidden slides. */
+	getPdfExportSettings?(): PdfExportSettings | undefined;
 }
 
 export interface ExportWiring {
@@ -103,6 +105,9 @@ export function createExportWiring(deps: ExportWiringDeps): ExportWiring {
 		getFileName: () => deps.getFileName?.(),
 		getIncludeHiddenSlides: () => deps.getIncludeHiddenSlides?.() ?? false,
 		getPrintHighQuality: () => deps.getPrintHighQuality?.() ?? false,
+		getPdfExportSettings: () => deps.getPdfExportSettings?.(),
+		mountSlide: (index) => getRasterizer().mountSlide(index),
+		getImageResolutionScale: deps.getImageResolutionScale,
 		getTranslator: deps.getTranslator,
 	});
 

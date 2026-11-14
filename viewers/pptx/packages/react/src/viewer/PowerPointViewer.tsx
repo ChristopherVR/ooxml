@@ -61,6 +61,7 @@ import {
 	resolveAutosaveIntervalMs,
 	resolveHistoryDepth,
 	resolveImageResolutionScale,
+	resolvePdfExportSettings,
 	resolveOptionRootClasses,
 	resolveSlideSizeSelection,
 	resolveViewerRootOptions,
@@ -1126,6 +1127,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			// own baseline from this raw multiplier instead of reusing
 			// `imageExportScale` outright; see `useExportMediaHandlers.ts`.
 			imageResolutionScale: resolveImageResolutionScale(viewerOptions),
+			pdfExportSettings: resolvePdfExportSettings(viewerOptions),
 			mode,
 			slides,
 			activeSlide,

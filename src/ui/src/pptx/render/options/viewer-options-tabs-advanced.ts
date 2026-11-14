@@ -155,6 +155,20 @@ export const ADVANCED_TAB: ViewerOptionsTabDefinition = {
 				}),
 			],
 		},
+		{
+			id: 'pdf',
+			titleKey: 'pptx.options.advanced.pdf',
+			controls: [
+				toggle(
+					'advanced',
+					'pdfIncludeHiddenSlides',
+					'pptx.options.advanced.pdfIncludeHiddenSlides',
+				),
+				toggle('advanced', 'pdfSlidesAsPictures', 'pptx.options.advanced.pdfSlidesAsPictures', {
+					infoKey: 'pptx.options.advanced.pdfSlidesAsPicturesInfo',
+				}),
+			],
+		},
 	],
 };
 

@@ -154,6 +154,13 @@ export const translations = {
 	'pptx.options.advanced.printHiddenSlides': 'Ausgeblendete Folien drucken',
 	'pptx.options.advanced.printScaleToFit': 'An Papierformat anpassen',
 	'pptx.options.advanced.printFrameSlides': 'Folien einrahmen',
+	'pptx.options.advanced.pdf': 'Als PDF speichern',
+	'pptx.options.advanced.pdfIncludeHiddenSlides': 'Ausgeblendete Folien einschließen',
+	'pptx.options.advanced.pdfSlidesAsPictures': 'Folien als Bilder speichern',
+	'pptx.options.advanced.pdfSlidesAsPicturesInfo':
+		'Schreibt jede Folie als ein Bild, wie frühere Versionen dieses Viewers. Der Text in der PDF-Datei ist dann nicht auswählbar oder durchsuchbar. Lassen Sie diese Option deaktiviert, um Formen und Text als Vektorgrafik mit den eingebetteten Schriftarten zu speichern.',
+	'pptx.export.pdfApproximated':
+		'Die PDF-Datei wurde gespeichert. Einige Effekte konnten nicht als Vektorgrafik geschrieben werden und wurden als Bilder gezeichnet oder vereinfacht.',
 	'pptx.options.ribbon.label': 'Menüband anpassen',
 	'pptx.options.ribbon.description': 'Passen Sie das Menüband an.',
 	'pptx.options.ribbon.tabsTitle': 'Hauptregisterkarten',

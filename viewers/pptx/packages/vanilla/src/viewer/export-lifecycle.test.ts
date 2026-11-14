@@ -36,6 +36,7 @@ const {
 			rasterizeSlide: rasterizeSlideFn,
 			rasterizeSlideToRaster: rasterizeSlideToRasterFn,
 			rasterizeSlideToTiles: rasterizeSlideToTilesFn,
+			mountSlide: vi.fn(),
 			destroy: destroyFn,
 		})),
 		createExportController: vi.fn((_deps: ExportControllerDeps) => ({

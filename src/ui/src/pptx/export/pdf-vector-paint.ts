@@ -93,7 +93,7 @@ function paintText(
 	const family = primaryFamily(item.family) || 'the default font';
 	if (font.kind === 'standard' && !item.invisible)
 		notes.add(
-			`Text in "${family}" uses a standard PDF font (${font.baseFont}) because the font file is not available to embed; positions match the slide, letter shapes differ.`,
+			`Text in "${family}" uses a standard PDF font (${font.baseFont.split('-')[0]}) because the font file is not available to embed; positions match the slide, letter shapes differ.`,
 		);
 	else if (font.kind === 'embedded' && !font.named && !item.invisible)
 		notes.add(`Text in "${family}" uses the embedded font "${font.font.family}" instead.`);

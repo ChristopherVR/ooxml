@@ -48,6 +48,8 @@ export function paintBox(
 	clips: readonly PdfClip[],
 	alpha: number,
 	boxShadow: string,
+	/** A cell of a `border-collapse: collapse` table: its borders straddle the box edges. */
+	collapsed = false,
 ): BoxPaint {
 	if (boxShadow && boxShadow !== 'none') return { items: [], raster: SHADOW_REASON };
 	const radii = [
@@ -116,6 +118,8 @@ export function paintBox(
 		color: style.getPropertyValue(`border-${side.toLowerCase()}-color`),
 	}));
 	const drawn = sides.filter((s) => s.width > 0 && s.style !== 'none' && s.style !== 'hidden');
+	/** How far a collapsed border sits outside the box (half its width). */
+	const shift = (width: number) => (collapsed ? width / 2 : 0);
 	if (drawn.length) {
 		const first = drawn[0]!;
 		const uniform =
@@ -130,6 +134,7 @@ export function paintBox(
 			if (color === undefined) return { items: [], raster: BORDER_REASON };
 			if (color) {
 				const bw = first.width;
+				const inset = collapsed ? 0 : bw / 2;
 				const stroke: PathStroke = {
 					color,
 					width: bw,
@@ -146,11 +151,11 @@ export function paintBox(
 					kind: 'path',
 					...base,
 					d: roundedRectPath(
-						x + bw / 2,
-						y + bw / 2,
-						w - bw,
-						h - bw,
-						corner.map((r) => Math.max(0, r - bw / 2)) as [number, number, number, number],
+						x + inset,
+						y + inset,
+						w - 2 * inset,
+						h - 2 * inset,
+						corner.map((r) => Math.max(0, r - inset)) as [number, number, number, number],
 					),
 					stroke,
 				});
@@ -160,10 +165,10 @@ export function paintBox(
 				return { items: [], raster: BORDER_REASON };
 			const [top, right, bottom, left] = sides;
 			const rects: [typeof top, number, number, number, number][] = [
-				[top, x, y, w, top!.width],
-				[right, x + w - right!.width, y, right!.width, h],
-				[bottom, x, y + h - bottom!.width, w, bottom!.width],
-				[left, x, y, left!.width, h],
+				[top, x, y - shift(top!.width), w, top!.width],
+				[right, x + w - right!.width + shift(right!.width), y, right!.width, h],
+				[bottom, x, y + h - bottom!.width + shift(bottom!.width), w, bottom!.width],
+				[left, x - shift(left!.width), y, left!.width, h],
 			];
 			for (const [side, rx, ry, rw, rh] of rects) {
 				if (!side || !(side.width > 0) || side.style !== 'solid') continue;

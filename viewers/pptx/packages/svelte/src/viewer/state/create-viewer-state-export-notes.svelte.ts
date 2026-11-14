@@ -1,4 +1,4 @@
-import type { FieldSubstitutionContext, MobileSheetKey } from 'ooxml-ui/pptx';
+import type { FieldSubstitutionContext, MobileSheetKey, PdfExportSettings } from 'ooxml-ui/pptx';
 import type { TextSegment } from 'pptx-viewer-core';
 
 import type { Translator } from '../../i18n/translator';
@@ -31,6 +31,8 @@ export interface ExportNotesClusterDeps {
 	getIncludeHiddenSlides(): boolean;
 	/** Options > Advanced > "High quality" raster scale for the print fallback path. */
 	getPrintHighQuality(): boolean;
+	/** Options > Advanced > Save as PDF. Defaults to vector pages without hidden slides. */
+	getPdfExportSettings?(): PdfExportSettings;
 	getRootEl(): HTMLDivElement | undefined;
 	/** Whether in-place editing is on (gates whether notes edits are history-tracked). */
 	getEditable(): boolean;
@@ -79,6 +81,7 @@ export function buildExportNotesCluster(deps: ExportNotesClusterDeps): ExportNot
 		getImageResolutionScale: deps.getImageResolutionScale,
 		getIncludeHiddenSlides: deps.getIncludeHiddenSlides,
 		getPrintHighQuality: deps.getPrintHighQuality,
+		getPdfExportSettings: () => deps.getPdfExportSettings?.(),
 		getFieldContext: () => deps.getFieldContext?.(),
 		getDeckData: () => buildDeckExportData(editor, loader),
 		getFileName: () => deps.getFileName?.(),

@@ -33,7 +33,7 @@ export interface VectorPdfExportOptions extends PdfSlideSelection {
 	 * Mount slide `index` laid out at the canvas size and resolve to its stage element once it
 	 * has painted; `null` skips the slide. The stage stays mounted until the next call.
 	 */
-	mountSlide: (index: number) => Promise<HTMLElement | null | undefined>;
+	mountSlide: (index: number) => Promise<HTMLElement | MountedPdfSlide | null | undefined>;
 	/**
 	 * Extra TrueType fonts to embed (subset). The deck's own embedded fonts are found in the
 	 * page's `@font-face` rules; nothing is downloaded for the PDF.
@@ -43,10 +43,18 @@ export interface VectorPdfExportOptions extends PdfSlideSelection {
 	title?: string;
 	/** Device pixels per CSS px for effects drawn as pictures. Default 2. */
 	rasterScale?: number;
+	/** Editor chrome the binding marks its own way (beyond `data-export-ignore`). */
+	ignoreElement?: (element: Element) => boolean;
 	/** The binding's html2canvas driver, the last resort for a picture capture. */
 	html2canvasFallback?: RasterStrategyOptions['html2canvasFallback'];
 	signal?: AbortSignal;
 	onProgress?: (done: number, total: number) => void;
+}
+
+/** A mounted capture stage with the binding's html2canvas driver for it. */
+export interface MountedPdfSlide {
+	stage: HTMLElement;
+	html2canvasFallback?: RasterStrategyOptions['html2canvasFallback'];
 }
 
 export interface VectorPdfSlideReport {
@@ -88,14 +96,18 @@ export async function exportSlidesVectorPdf(
 	for (const [done, index] of indexes.entries()) {
 		if (options.signal?.aborted) throw abortError();
 		options.onProgress?.(done, indexes.length);
-		const stage = await options.mountSlide(index);
-		if (!stage) continue;
+		const mounted = await options.mountSlide(index);
+		if (!mounted) continue;
+		const stage = 'stage' in mounted ? mounted.stage : mounted;
+		const html2canvasFallback =
+			('stage' in mounted ? mounted.html2canvasFallback : undefined) ?? options.html2canvasFallback;
 		const collected = await collectSlide(stage, {
 			canvasWidth: W,
 			canvasHeight: H,
 			fonts,
 			...(options.rasterScale ? { rasterScale: options.rasterScale } : {}),
-			...(options.html2canvasFallback ? { html2canvasFallback: options.html2canvasFallback } : {}),
+			...(html2canvasFallback ? { html2canvasFallback } : {}),
+			...(options.ignoreElement ? { ignoreElement: options.ignoreElement } : {}),
 		});
 		let items: DisplayItem[] = collected.items;
 		let mode: VectorPdfSlideReport['mode'] = 'vector';
@@ -105,14 +117,12 @@ export async function exportSlidesVectorPdf(
 				stage,
 				stage,
 				'subtree',
-				{ x: 0, y: 0, width: W, height: H },
-				W,
-				H,
+				{ x: 0, y: 0, width: stage.offsetWidth || W, height: stage.offsetHeight || H },
+				stage.offsetWidth || W,
+				stage.offsetHeight || H,
 				{
-					scale: options.rasterScale ?? 2,
-					...(options.html2canvasFallback
-						? { html2canvasFallback: options.html2canvasFallback }
-						: {}),
+					scale: ((options.rasterScale ?? 2) * W) / (stage.offsetWidth || W),
+					...(html2canvasFallback ? { html2canvasFallback } : {}),
 				},
 			);
 			items = image

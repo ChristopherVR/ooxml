@@ -223,6 +223,14 @@ export function createRasterizeSlide(deps: RasterizeSlideDeps): RasterizeSlideCo
 		rasterizeSlide,
 		rasterizeSlideToRaster,
 		rasterizeSlideToTiles,
+		async mountSlide(index) {
+			const { stageEl } = await mountStage(index);
+			return {
+				stage: stageEl,
+				html2canvasFallback: (sourceRect, outputSize) =>
+					html2canvasFallback(stageEl, sourceRect, outputSize),
+			};
+		},
 		destroy() {
 			unmountCurrent();
 			host.remove();

@@ -35,6 +35,8 @@ export interface CollectSlideOptions {
 	/** Device pixels per CSS px for element pictures. Default 2. */
 	rasterScale?: number;
 	html2canvasFallback?: RasterStrategyOptions['html2canvasFallback'];
+	/** Editor chrome a binding marks its own way (beyond `data-export-ignore`). */
+	ignoreElement?: (element: Element) => boolean;
 	/** The most element pictures per slide before the whole slide is one picture. Default 32. */
 	maxRasters?: number;
 }
@@ -90,6 +92,11 @@ export async function collectSlide(
 	let picture: string | undefined;
 	const W = options.canvasWidth,
 		H = options.canvasHeight;
+	// The stage's own layout size: a zoomed canvas lays the slide out at another size.
+	const layoutW = stage.offsetWidth || W,
+		layoutH = stage.offsetHeight || H;
+	const sx = W / layoutW,
+		sy = H / layoutH;
 
 	const placeholder = (
 		matrix: Matrix,
@@ -154,7 +161,7 @@ export async function collectSlide(
 	};
 
 	const walk = (el: Element, ctx: Context) => {
-		if (picture || isExportIgnoredElement(el)) return;
+		if (picture || isExportIgnoredElement(el) || options.ignoreElement?.(el)) return;
 		const style = view.getComputedStyle(el);
 		if (style.display === 'none') return;
 		const box = boxOf(el);
@@ -206,7 +213,11 @@ export async function collectSlide(
 				{ matrix: multiply(matrix, [1, 0, 0, 1, box.x, box.y]), d: clip.d, evenOdd: clip.evenOdd },
 			];
 		if (visible && !ctx.invisible) {
-			const shadow = el.getAttribute('data-export-original-box-shadow') ?? style.boxShadow;
+			// The stage's own shadow is editor chrome (the page on the canvas), not slide content.
+			const shadow =
+				el === stage
+					? 'none'
+					: (el.getAttribute('data-export-original-box-shadow') ?? style.boxShadow);
 			const paint = paintBox(
 				style,
 				{ x: box.x, y: box.y, width: box.w, height: box.h },
@@ -214,6 +225,9 @@ export async function collectSlide(
 				clips,
 				alpha,
 				shadow,
+				style.display === 'table-cell' &&
+					!!el.closest('table') &&
+					view.getComputedStyle(el.closest('table')!).borderCollapse === 'collapse',
 			);
 			if (paint.raster) {
 				const own = hasOwnText(el);
@@ -414,7 +428,7 @@ export async function collectSlide(
 		neutraliseTransforms(stage, view, (found, stageMeasure) => {
 			transforms = found;
 			measure = stageMeasure;
-			walk(stage, { matrix: IDENTITY, clips: [], alpha: 1, invisible: false });
+			walk(stage, { matrix: [sx, 0, 0, sy, 0, 0], clips: [], alpha: 1, invisible: false });
 		}),
 	);
 	const limit = options.maxRasters ?? 32;
@@ -448,11 +462,11 @@ export async function collectSlide(
 			stage,
 			target,
 			mode,
-			{ x: item.x, y: item.y, width: item.width, height: item.height },
-			W,
-			H,
+			{ x: item.x / sx, y: item.y / sy, width: item.width / sx, height: item.height / sy },
+			layoutW,
+			layoutH,
 			{
-				scale: options.rasterScale ?? 2,
+				scale: (options.rasterScale ?? 2) * sx,
 				...(options.html2canvasFallback
 					? { html2canvasFallback: options.html2canvasFallback }
 					: {}),

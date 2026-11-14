@@ -1,5 +1,14 @@
-import type { ViewerOptions, ViewerOptionsStore, ViewportFitOptions } from 'ooxml-ui/pptx';
-import { resolveHistoryDepth, resolveImageResolutionScale } from 'ooxml-ui/pptx';
+import type {
+	PdfExportSettings,
+	ViewerOptions,
+	ViewerOptionsStore,
+	ViewportFitOptions,
+} from 'ooxml-ui/pptx';
+import {
+	resolveHistoryDepth,
+	resolveImageResolutionScale,
+	resolvePdfExportSettings,
+} from 'ooxml-ui/pptx';
 import type { PptxHandler, PptxSlide } from 'pptx-viewer-core';
 /**
  * useViewerBuildingBlocksCore: The "core state" third of
@@ -66,6 +75,8 @@ export interface ViewerBuildingBlocksCore {
 	 * `resolveExportCaptureDecision`.
 	 */
 	imageResolutionScale: number;
+	/** File > Options > Advanced > Save as PDF. */
+	pdfExportSettings: PdfExportSettings;
 	/** Full File > Options snapshot, for Trust Center gates in the canvas mapping. */
 	viewerOptions: ViewerOptions;
 	/** The File > Options store behind `viewerOptions`, for host locks. */
@@ -242,6 +253,7 @@ export function useViewerBuildingBlocksCore(
 		// comment in `PowerPointViewer.tsx`.
 		imageExportScale: 2 * resolveImageResolutionScale(viewerOptions),
 		imageResolutionScale: resolveImageResolutionScale(viewerOptions),
+		pdfExportSettings: resolvePdfExportSettings(viewerOptions),
 		viewerOptions,
 		optionsStore,
 	};

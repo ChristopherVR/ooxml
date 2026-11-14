@@ -1,4 +1,4 @@
-import type { DocumentStorage } from 'ooxml-ui/pptx';
+import type { DocumentStorage, PdfExportSettings } from 'ooxml-ui/pptx';
 import type { PptxCoreProperties, PptxSlide, PptxHandler } from 'pptx-viewer-core';
 /**
  * useIOHandlers: Composes export, print, theme, and property-handler hooks
@@ -60,6 +60,8 @@ export interface UseIOHandlersInput {
 	 * matching field on `UseExportHandlersInput`.
 	 */
 	imageResolutionScale?: number;
+	/** File > Options > Advanced > Save as PDF (vector pages or pictures, hidden slides). */
+	pdfExportSettings?: PdfExportSettings;
 }
 
 // ---------------------------------------------------------------------------
@@ -97,6 +99,7 @@ export function useIOHandlers(input: UseIOHandlersInput): IOHandlersResult {
 		allowExternalImages,
 		imageExportScale,
 		imageResolutionScale,
+		pdfExportSettings,
 	} = input;
 
 	const exportHandlers = useExportHandlers({
@@ -125,6 +128,7 @@ export function useIOHandlers(input: UseIOHandlersInput): IOHandlersResult {
 		slideSizeEmu: state.slideSizeEmu,
 		imageExportScale,
 		imageResolutionScale,
+		pdfExportSettings,
 	});
 
 	const printHandlers = usePrintHandlers({
