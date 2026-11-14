@@ -50,3 +50,135 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		expect(errors).toEqual([]);
 	});
 }
+
+test('find and replace walk the body, notes, text boxes and headers in story order', async ({
+	page,
+}) => {
+	const errors: string[] = [];
+	page.on('pageerror', (error) => errors.push(error.message));
+	await page.goto('/?framework=vanilla');
+	await newDocument(page);
+	const editor = page.locator('docx-editor');
+	await editor.evaluate((element) => {
+		const host = element as HTMLElement & { documentModel: Record<string, unknown> };
+		const model = host.documentModel;
+		const paragraph = (id: string, text: string) => ({ type: 'paragraph', id, runs: [{ text }] });
+		host.documentModel = {
+			...model,
+			blocks: [
+				{
+					type: 'paragraph',
+					id: 'body',
+					runs: [
+						{ text: 'zq body ' },
+						{ text: '', noteReference: { kind: 'footnote', id: '1' } },
+						{
+							text: '',
+							image: {
+								relId: '',
+								partName: '',
+								contentType: '',
+								widthPx: 160,
+								heightPx: 48,
+								unsupported: 'Text box',
+								textBoxText: ['zq box'],
+								textBoxEditable: true,
+								textBoxBorder: true,
+							},
+						},
+					],
+				},
+			],
+			footnotes: [
+				{
+					id: '1',
+					blocks: [
+						{
+							type: 'paragraph',
+							id: 'note',
+							runs: [{ text: '1', noteMark: 'footnote' }, { text: ' zq note' }],
+						},
+					],
+				},
+			],
+			sections: [
+				{
+					type: 'nextPage',
+					orientation: 'portrait',
+					pageWidthTwips: 12240,
+					pageHeightTwips: 15840,
+					marginTopTwips: 1440,
+					marginLeftTwips: 1440,
+					marginRightTwips: 1440,
+					marginBottomTwips: 1440,
+					columns: { count: 1, equalWidth: true },
+					endsAtBlockId: 'body',
+					headers: {
+						default: { partName: 'word/header1.xml', blocks: [paragraph('h', 'zq header')] },
+					},
+				},
+			],
+		};
+	});
+	const surface = editor.locator('.dve-paper > .ProseMirror');
+	await expect(surface).toContainText('zq body');
+	await surface
+		.locator('p')
+		.first()
+		.click({ position: { x: 2, y: 4 } });
+	await expect(surface).toBeFocused();
+	await page.keyboard.press('Control+Home');
+	await page.keyboard.press('Control+f');
+	const find = editor.getByLabel('Find text', { exact: true });
+	await find.fill('zq');
+	const status = editor.getByRole('status', { name: 'Search results' });
+	const where = editor.getByLabel('Search location', { exact: true });
+	await expect(status).toHaveText('4 matches');
+	await find.press('Enter');
+	await expect(status).toHaveText('1 of 4 matches');
+	await expect(where).toHaveText('Main Document');
+	// A note match opens the note's editor with the match selected; the focus stays in Find.
+	await find.press('Enter');
+	await expect(where).toHaveText('Footnotes');
+	const note = editor.locator('.dve-notes-container .ProseMirror');
+	await expect(note).toContainText('zq note');
+	await expect(find).toBeFocused();
+	await find.press('Enter');
+	await expect(where).toHaveText('Text Boxes');
+	await expect(note).toHaveCount(0);
+	await editor.getByRole('button', { name: 'Find next', exact: true }).click();
+	await expect(status).toHaveText('4 of 4 matches');
+	await expect(where).toHaveText('Header -Section 1-');
+	const header = editor.locator('.dve-header');
+	await expect(header.locator('.ProseMirror')).toContainText('zq header');
+	await editor.getByRole('button', { name: 'Find next', exact: true }).click();
+	await expect(where).toHaveText('Main Document');
+	await expect(header.locator('.ProseMirror')).toHaveCount(0);
+
+	await editor.getByLabel('Replace with', { exact: true }).fill('ok');
+	await editor.getByRole('button', { name: 'Replace all', exact: true }).click();
+	await expect(status).toHaveText('0 matches');
+	await expect(surface).toContainText('ok body');
+	await expect(header).toContainText('ok header');
+	await expect(editor.locator('.dve-notes-container')).toContainText('ok note');
+	await expect(surface.locator('.dve-textbox-line')).toHaveText('ok box');
+	// One undo step per story: the header goes back first and the body last.
+	await editor.getByRole('button', { name: 'Undo', exact: true }).click();
+	await expect(header).toContainText('zq header');
+	await expect(surface).toContainText('ok body');
+	await expect(status).toHaveText('1 match');
+	await editor.getByRole('button', { name: 'Redo', exact: true }).click();
+	await expect(header).toContainText('ok header');
+
+	const pending = page.waitForEvent('download');
+	await saveButton(page).click();
+	const zip = await JSZip.loadAsync(await readFile((await (await pending).path())!));
+	const names = Object.keys(zip.files).filter((name) =>
+		/^word\/(document|footnotes|header\d+)\.xml$/.test(name),
+	);
+	expect(names).toHaveLength(3);
+	const xml = (await Promise.all(names.map((name) => zip.file(name)!.async('string')))).join('');
+	expect(xml).not.toContain('zq');
+	for (const text of ['ok body', 'ok box', 'ok note', 'ok header']) expect(xml).toContain(text);
+	expect(errors).toEqual([]);
+});

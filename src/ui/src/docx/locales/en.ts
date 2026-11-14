@@ -10,6 +10,7 @@ import { enFontAdvanced } from './font-advanced';
 import { enLigatures } from './ligatures';
 import { enNavigation } from './navigation';
 import { enDropCap } from './drop-cap';
+import { enFindStories } from './find-stories';
 import { enLineNumbers } from './line-numbers';
 import { enApp } from './en-app';
 import { enTableProperties } from './table-properties';
@@ -26,6 +27,7 @@ export const en = {
 	...enTableProperties,
 	...enLineNumbers,
 	...enDropCap,
+	...enFindStories,
 	...enNavigation,
 	...enColumns,
 	...enSplitCells,

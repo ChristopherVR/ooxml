@@ -281,6 +281,7 @@ export class EditorCore {
 			refreshControls: () => this.refreshControls(),
 			keepOpenWithin: () => [
 				this.shell.toolbar,
+				this.shell.searchPanel?.element,
 				this.inserts.linkDialog.element,
 				this.inserts.pictureDialog.element,
 				this.inserts.smartArt.dialog.element,

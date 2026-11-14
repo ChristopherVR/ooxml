@@ -6,6 +6,7 @@ import { frFontAdvanced } from './font-advanced';
 import { frLigatures } from './ligatures';
 import { frNavigation } from './navigation';
 import { frDropCap } from './drop-cap';
+import { frFindStories } from './find-stories';
 import { frLineNumbers } from './line-numbers';
 import { frObjects } from './objects';
 import { frShapes } from './shapes';
@@ -23,6 +24,7 @@ export const fr: LocaleStrings = {
 	...frTableProperties,
 	...frLineNumbers,
 	...frDropCap,
+	...frFindStories,
 	...frNavigation,
 	...frColumns,
 	...frSplitCells,

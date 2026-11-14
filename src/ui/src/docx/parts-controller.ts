@@ -1,4 +1,5 @@
-import type { Block, HeaderFooterContent, Note, ReviewDisplayMode } from 'ooxml-core/docx';
+import type { Block, ReviewDisplayMode } from 'ooxml-core/docx';
+import type { FindStory } from 'ooxml-core/docx/ui';
 import { TextSelection, type Plugin } from 'prosemirror-state';
 import { closeHistory, undo, redo } from 'prosemirror-history';
 import { runStylesPlugin } from './run-styles';
@@ -19,13 +20,16 @@ import { imageNodeView, type ImageMediaCache } from './image-media';
 import { buildNotesElement } from './notes-view';
 import { attachNoteEditing, withMark, withoutMark } from './note-editor';
 import { insertNote, type NoteKind } from './note-commands';
-import { sectionPartsJson, HEADER_FOOTER_INPUT, SectionPartsStep } from 'ooxml-core/docx/ui';
-import { notePartsJson, NotePartsStep } from 'ooxml-core/docx/ui';
+import { sectionPartsJson, HEADER_FOOTER_INPUT } from 'ooxml-core/docx/ui';
 import { effectiveHeaderFooter, withHeaderFooterLink } from './header-footer-link';
 import type { HeaderFooterContext } from './header-footer-ribbon';
 import { storyPreview, selectSectionStart } from './header-footer-navigation';
-import { withBlankHeaderFooter, newHeaderFooterId } from './header-footer-commands';
-import { sectionLayoutJson } from 'ooxml-core/docx';
+import {
+	headerFooterStoryKey,
+	headerFooterTransaction,
+	notesTransaction,
+} from './parts-story-writes';
+import type { HeaderFooterStory } from './search-story-replace';
 
 export interface PartsControllerHost extends EditorHost {
 	images(): ImageMediaCache;
@@ -44,6 +48,7 @@ export class PartsController {
 	private footerEl?: HTMLElement | undefined;
 	private notesEl?: HTMLElement | undefined;
 	private active?: EditorView | undefined;
+	private activeNote?: { kind: NoteKind; id: string } | undefined;
 	private closeActive?: (() => void) | undefined;
 	private headerContext?: { kind: 'headers' | 'footers'; slot: HeaderFooterSlotName } | undefined;
 	private shownSection = 0;
@@ -142,6 +147,7 @@ export class PartsController {
 				...base,
 				activate: (view) => {
 					base.activate?.(view);
+					this.activeNote = { kind: story.kind, id: story.id };
 					story.opened?.(view);
 				},
 				deactivate: (view) => {
@@ -239,6 +245,7 @@ export class PartsController {
 			deactivate: (view) => {
 				if (this.active === view) {
 					this.active = undefined;
+					this.activeNote = undefined;
 					this.closeActive = undefined;
 				}
 				if (header) {
@@ -321,7 +328,16 @@ export class PartsController {
 				},
 				change: (kind, id, blocks) => this.updateNote(kind, id, blocks),
 				editable,
-				editor: this.editorOptions(),
+				editor: {
+					...this.editorOptions(),
+					activate: (view) => {
+						this.editorOptions().activate?.(view);
+						const item = view.dom.closest<HTMLElement>('li[data-docx-note-id]');
+						const kind = item?.dataset.docxNoteKind;
+						if (item && (kind === 'footnote' || kind === 'endnote'))
+							this.activeNote = { kind, id: item.dataset.docxNoteId ?? '' };
+					},
+				},
 			});
 		for (const element of [this.headerEl, this.footerEl, this.notesEl])
 			if (element) this.decorate(element);
@@ -365,17 +381,8 @@ export class PartsController {
 	private updateNote(kind: NoteKind, id: string, blocks: Block[]): void {
 		const view = this.host.view();
 		if (!view?.editable || !this.host.canEditOutsideBody()) return;
-		const replace = (notes: Note[]) =>
-			notes.map((note) => (note.id === id ? { ...note, blocks: structuredClone(blocks) } : note));
-		const model = this.host.model();
-		const key = kind === 'footnote' ? 'footnotes' : 'endnotes';
-		const next = {
-			...model,
-			...(model[key] && { [key]: replace(model[key]) }),
-		};
-		view.dispatch(
-			view.state.tr.step(new NotePartsStep(notePartsJson(next))).setMeta(HEADER_FOOTER_INPUT, true),
-		);
+		const tr = notesTransaction(view.state, this.host.model(), kind, new Map([[id, blocks]]));
+		view.dispatch(tr.setMeta(HEADER_FOOTER_INPUT, true));
 	}
 
 	/** Applies header/footer edits to every section slot that shares the edited part. */
@@ -384,29 +391,79 @@ export class PartsController {
 		slot: HeaderFooterSlotName,
 		blocks: Block[],
 	): void {
-		let model = this.host.model();
-		if (!effectiveHeaderFooter(model, this.shownSection, kind, slot))
-			model = withBlankHeaderFooter(model, kind, newHeaderFooterId, this.shownSection, slot);
-		const edited = effectiveHeaderFooter(model, this.shownSection, kind, slot)!;
-		const sections = (model.sections ?? []).map((section) => {
-			const slots = { ...section[kind] };
-			for (const [name, content] of Object.entries(slots) as [
-				HeaderFooterSlotName,
-				HeaderFooterContent,
-			][])
-				if (content === edited || (edited.partName && content?.partName === edited.partName))
-					slots[name] = { ...content, blocks: structuredClone(blocks) };
-			return { ...section, [kind]: slots };
-		});
 		const view = this.host.view();
 		if (!view?.editable || !this.host.canEditOutsideBody()) return;
-		const tr = view.state.tr;
-		const layout = sectionLayoutJson(sections);
-		if (layout !== view.state.doc.attrs.sections) tr.setDocAttribute('sections', layout);
-		if (Boolean(model.evenAndOddHeaders) !== view.state.doc.attrs.evenAndOddHeaders)
-			tr.setDocAttribute('evenAndOddHeaders', Boolean(model.evenAndOddHeaders));
-		view.dispatch(
-			tr.step(new SectionPartsStep(sectionPartsJson(sections))).setMeta(HEADER_FOOTER_INPUT, true),
+		const model = this.host.model();
+		const tr = headerFooterTransaction(view.state, model, kind, slot, this.shownSection, blocks);
+		view.dispatch(tr.setMeta(HEADER_FOOTER_INPUT, true));
+	}
+
+	/** The story key (`findStoryKey`) of the open header, footer or note editor. */
+	activeStoryKey(): string | undefined {
+		if (!this.active) return undefined;
+		const context = this.headerContext;
+		if (context)
+			return headerFooterStoryKey(this.host.model(), context.kind, context.slot, this.shownSection);
+		return this.activeNote && `${this.activeNote.kind}:${this.activeNote.id}`;
+	}
+
+	/**
+	 * Find's way into a story on the continuous surface: shows the header or footer's section (or
+	 * the note), opens its editor when editing is allowed and selects `from`..`to` in it.
+	 */
+	showStory(
+		story: FindStory,
+		from: number,
+		to: number,
+		canvas?: HTMLElement,
+		paper?: HTMLElement,
+	): void {
+		const view = this.host.view();
+		if (!view) return;
+		this.closeActive?.();
+		let target: HTMLElement | null | undefined;
+		if (story.kind === 'header' || story.kind === 'footer') {
+			if (this.shownSection !== story.sectionIndex || !this.headerEl)
+				selectSectionStart(view, this.host.model(), story.sectionIndex);
+			this.render(canvas, paper);
+			const root = story.kind === 'header' ? this.headerEl : this.footerEl;
+			target = root?.querySelector<HTMLElement>(`[data-slot="${story.slot}"]`);
+		} else if (story.kind === 'footnote' || story.kind === 'endnote')
+			target = [
+				...(this.notesEl?.querySelectorAll<HTMLElement>(
+					`li[data-docx-note-kind="${story.kind}"]`,
+				) ?? []),
+			].find((item) => item.dataset.docxNoteId === story.id);
+		target?.scrollIntoView?.({ block: 'center' });
+		target?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+		const active = this.active;
+		if (!active) return;
+		const size = active.state.doc.content.size;
+		const selection = TextSelection.create(
+			active.state.doc,
+			Math.min(from, size),
+			Math.min(to, size),
 		);
+		active.dispatch(active.state.tr.setSelection(selection).scrollIntoView());
+	}
+
+	/** Replace All's write of a header or footer part, as its own undo step. */
+	writeHeaderFooter(story: HeaderFooterStory, blocks: Block[]): void {
+		const view = this.host.view();
+		if (!view?.editable || !this.host.canEditOutsideBody()) return;
+		const kind = story.kind === 'header' ? 'headers' : 'footers';
+		const model = this.host.model();
+		view.dispatch(
+			closeHistory(
+				headerFooterTransaction(view.state, model, kind, story.slot, story.sectionIndex, blocks),
+			),
+		);
+	}
+
+	/** Replace All's write of the footnotes or endnotes story, as one undo step. */
+	writeNotes(kind: NoteKind, blocks: ReadonlyMap<string, Block[]>): void {
+		const view = this.host.view();
+		if (!view?.editable || !this.host.canEditOutsideBody() || !blocks.size) return;
+		view.dispatch(closeHistory(notesTransaction(view.state, this.host.model(), kind, blocks)));
 	}
 }

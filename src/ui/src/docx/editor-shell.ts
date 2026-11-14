@@ -11,6 +11,7 @@ import type { RibbonActionId } from 'ooxml-core/docx/ui';
 import { editorStyleText } from './styles';
 import { runRibbonCommand } from './editor-commands';
 import { createSearchPanel } from './search-panel';
+import { editorSearchStories } from './search-story-host';
 import { createPrintLayoutController } from './print-layout-view';
 import { createPrintEditingBridge } from './print-editing';
 import { attachPrintNoteEditing } from './print-note-editing';
@@ -198,6 +199,7 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 	});
 	shell.searchPanel = createSearchPanel({
 		getView: () => core.view,
+		stories: editorSearchStories(core),
 		onClose: () => core.view?.focus(),
 	});
 	shell.headings = new HeadingNavigator({

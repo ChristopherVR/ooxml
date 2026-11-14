@@ -1,5 +1,16 @@
 import type { EditorView } from 'prosemirror-view';
-import { SearchController, type SearchOptions, type SearchStatus } from './search-controller';
+import {
+	SearchController,
+	type SearchOptions,
+	type SearchStatus,
+	type SearchStoryHost,
+} from './search-controller';
+import {
+	OPTION_LABELS,
+	SPECIAL_CODES,
+	storyLabel,
+	WILDCARD_DISABLED,
+} from './search-panel-options';
 import {
 	localizeElement,
 	normalizeEditorLocale,
@@ -9,6 +20,8 @@ import {
 
 export interface SearchPanelOptions {
 	getView: () => EditorView | undefined;
+	/** Headers, footers, notes and text boxes; without it Find searches the body only. */
+	stories?: SearchStoryHost;
 	onClose?: () => void;
 }
 
@@ -36,48 +49,15 @@ const styleText = `
 	.dve-search-panel button:hover:not(:disabled){border-color:var(--blue,#1769aa)}
 	.dve-search-panel button:disabled{opacity:.55;cursor:default}
 	.dve-search-panel [role=status]{min-width:100px;color:var(--muted,#666)}
+	.dve-search-panel .dve-search-story{color:var(--muted,#666);font-style:italic}
 `;
-
-/** Find codes for the Special menu, in Word's order: the English label and the code it inserts. */
-const SPECIAL_CODES: ReadonlyArray<readonly [label: string, code: string]> = [
-	['Paragraph Mark', '^p'],
-	['Tab Character', '^t'],
-	['Any Character', '^?'],
-	['Any Digit', '^#'],
-	['Any Letter', '^$'],
-	['Caret Character', '^^'],
-	['Manual Line Break', '^l'],
-	['Page Break', '^m'],
-	['Optional Hyphen', '^-'],
-	['Nonbreaking Hyphen', '^~'],
-	['Nonbreaking Space', '^s'],
-	['White Space', '^w'],
-];
-
-/** The Find options of More >>, each with its English label. */
-const OPTION_LABELS = [
-	['wholeWords', 'Find whole words only'],
-	['wildcards', 'Use wildcards'],
-	['matchPrefix', 'Match prefix'],
-	['matchSuffix', 'Match suffix'],
-	['ignorePunctuation', 'Ignore punctuation characters'],
-	['ignoreWhitespace', 'Ignore white-space characters'],
-] as const;
-/** Word disables these options while Use wildcards is on. */
-const WILDCARD_DISABLED = new Set<string>([
-	'wholeWords',
-	'matchPrefix',
-	'matchSuffix',
-	'ignorePunctuation',
-	'ignoreWhitespace',
-]);
 
 export function createSearchPanel(
 	options: SearchPanelOptions,
 	initialLocale = 'en',
 ): SearchPanelHandle {
 	let locale: EditorLocale = normalizeEditorLocale(initialLocale);
-	const controller = new SearchController(options.getView);
+	const controller = new SearchController(options.getView, options.stories);
 	const panel = document.createElement('section');
 	panel.className = 'dve-search-panel';
 	panel.setAttribute('role', 'region');
@@ -121,6 +101,9 @@ export function createSearchPanel(
 	result.setAttribute('role', 'status');
 	result.setAttribute('aria-label', 'Search results');
 	result.setAttribute('aria-live', 'polite');
+	const where = document.createElement('span');
+	where.className = 'dve-search-story';
+	where.setAttribute('aria-label', 'Search location');
 
 	// More >> options: each checkbox by its option name, so the wildcard rule can disable them.
 	const optionsSection = document.createElement('div');
@@ -201,6 +184,7 @@ export function createSearchPanel(
 					: status.active
 						? `${status.active} ${translate(locale, 'of')} ${status.count} ${translate(locale, status.count === 1 ? 'matches one' : 'matches many')}`
 						: `${status.count} ${translate(locale, status.count === 1 ? 'matches one' : 'matches many')}`;
+		where.textContent = options.stories && status.active ? storyLabel(locale, status.story) : '';
 		replace.disabled = status.readOnly || !status.count;
 		replaceAll.disabled = status.readOnly || !status.count;
 		previous.disabled = next.disabled = !status.count;
@@ -220,22 +204,31 @@ export function createSearchPanel(
 		more.textContent = translate(locale, expanded ? '<< Less' : 'More >>');
 		more.setAttribute('aria-label', more.textContent);
 	});
-	previous.addEventListener('click', () => {
-		controller.findPrevious();
+	// Opening a header or note editor focuses it; Find keeps the focus in the panel, as Word's does.
+	const run = (action: () => unknown) => () => {
+		const root = panel.getRootNode() as Document | ShadowRoot;
+		const focused = root.activeElement;
+		action();
+		if (focused instanceof HTMLElement && panel.contains(focused) && root.activeElement !== focused)
+			focused.focus();
 		renderStatus(controller.status);
-	});
-	next.addEventListener('click', () => {
-		controller.findNext();
-		renderStatus(controller.status);
-	});
-	replace.addEventListener('click', () => {
-		controller.replaceOne(replaceInput.value);
-		renderStatus(controller.status);
-	});
-	replaceAll.addEventListener('click', () => {
-		controller.replaceAll(replaceInput.value);
-		renderStatus(controller.status);
-	});
+	};
+	previous.addEventListener(
+		'click',
+		run(() => controller.findPrevious()),
+	);
+	next.addEventListener(
+		'click',
+		run(() => controller.findNext()),
+	);
+	replace.addEventListener(
+		'click',
+		run(() => controller.replaceOne(replaceInput.value)),
+	);
+	replaceAll.addEventListener(
+		'click',
+		run(() => controller.replaceAll(replaceInput.value)),
+	);
 	findInput.addEventListener('keydown', (event) => {
 		if (event.key === 'Enter') {
 			event.preventDefault();
@@ -269,6 +262,7 @@ export function createSearchPanel(
 		replaceAll,
 		more,
 		result,
+		where,
 		close,
 		optionsSection,
 	);
