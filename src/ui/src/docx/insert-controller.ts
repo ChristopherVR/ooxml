@@ -31,6 +31,7 @@ import {
 } from './picture-commands';
 import { applyPictureBulletList } from './list-commands';
 import { selectedPicturePos, setPictureWrap } from './picture-format-commands';
+import { pictureClipboardPlugin } from './picture-drop';
 import { SmartArtController } from './smartart-controller';
 import { setSelectedChartLegend } from './chart-commands';
 import type { RibbonAction } from './ribbon';
@@ -202,6 +203,10 @@ export class InsertController {
 	plugins(): Plugin[] {
 		return [
 			shapeDrawPlugin(this.shapeTool),
+			pictureClipboardPlugin(
+				(view) => view === this.host.view(),
+				(file) => this.insertPictureFile(file),
+			),
 			keymap({
 				'Mod-k': (_state, _dispatch, view) => {
 					if (view?.editable) this.linkDialog.open();
