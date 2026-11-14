@@ -118,6 +118,13 @@ function mountInspector(editor: EditorState): { target: HTMLElement } {
 	return { target };
 }
 
+/** The Format pane sections shown, in order. */
+function formatSections(target: HTMLElement): string[] {
+	return Array.from(target.querySelectorAll<HTMLElement>('[data-pptx-format-section]')).map(
+		(node) => node.dataset.pptxFormatSection ?? '',
+	);
+}
+
 function sectionTitles(target: HTMLElement): string[] {
 	return Array.from(target.querySelectorAll('.pptx-svelte-inspector-section h4')).map(
 		(h) => h.textContent ?? '',
@@ -144,54 +151,76 @@ describe('inspectorPanel', () => {
 		expect(target.querySelector('.pptx-svelte-inspector-empty')).not.toBeNull();
 	});
 
-	it('shows Position + Fill & Stroke + Text for a shape element (shapes carry text properties too)', () => {
+	it('shows the shape Format sections, text ones included (shapes carry text properties too)', () => {
 		const el = shapeEl();
 		const editor = makeEditor([el]);
 		editor.select(el.id);
 		const { target } = mountInspector(editor);
 
 		expect(target.querySelector('[data-testid="geometry-x"]')).toBeTruthy();
-		expect(sectionTitles(target)).toStrictEqual([
-			'Fill & Stroke',
-			'Effects',
-			'Text',
-			'Accessibility',
-			'Action',
+		expect(formatSections(target)).toStrictEqual([
+			'fill',
+			'outline',
+			'effects',
+			'font',
+			'paragraph',
+			'arrange',
+			'sizePosition',
+			'altText',
+			'action',
 		]);
 		expect(target.querySelector('.pptx-svelte-inspector-empty')).toBeNull();
 	});
 
-	it('shows Position + Fill & Stroke + Text for a text element (text has shapeStyle too)', () => {
+	it('leads a text box with Font and Paragraph, then the shape sections (text has shapeStyle too)', () => {
 		const el = textEl();
 		const editor = makeEditor([el]);
 		editor.select(el.id);
 		const { target } = mountInspector(editor);
 
-		expect(sectionTitles(target)).toStrictEqual([
-			'Fill & Stroke',
-			'Effects',
-			'Text',
-			'Accessibility',
-			'Action',
+		expect(formatSections(target)).toStrictEqual([
+			'font',
+			'paragraph',
+			'fill',
+			'outline',
+			'effects',
+			'arrange',
+			'sizePosition',
+			'altText',
+			'action',
 		]);
 	});
 
-	it('shows Position + Fill & Stroke + Image for an image element (no Text section)', () => {
+	it('leads an image with its Picture section (no text sections)', () => {
 		const el = imageEl();
 		const editor = makeEditor([el]);
 		editor.select(el.id);
 		const { target } = mountInspector(editor);
 
-		expect(sectionTitles(target)).toStrictEqual(['Fill & Stroke', 'Effects', 'Image', 'Action']);
+		expect(formatSections(target)).toStrictEqual([
+			'picture',
+			'fill',
+			'outline',
+			'effects',
+			'arrange',
+			'sizePosition',
+			'action',
+		]);
 	});
 
-	it('shows Position + Accessibility + Table for a table element (no Fill & Stroke or Text)', () => {
+	it('leads a table with its Table section (no Fill or Outline)', () => {
 		const el = tableEl();
 		const editor = makeEditor([el]);
 		editor.select(el.id);
 		const { target } = mountInspector(editor);
 
-		expect(sectionTitles(target)).toStrictEqual(['Accessibility', 'Table', 'Action']);
+		expect(formatSections(target)).toStrictEqual([
+			'table',
+			'arrange',
+			'sizePosition',
+			'altText',
+			'action',
+		]);
 	});
 
 	it('offers Quick Styles for a shape but not for an image (React FillStrokeProperties gating)', () => {
@@ -242,7 +271,7 @@ describe('inspectorPanel', () => {
 			editor.select(el.id);
 			const { target } = mountInspector(editor);
 
-			expect(sectionTitles(target)).toContain('Accessibility');
+			expect(formatSections(target)).toContain('altText');
 			expect(target.querySelector('.pptx-svelte-alt-text textarea')).not.toBeNull();
 			expect(target.querySelector('.pptx-svelte-alt-text input[type="text"]')).not.toBeNull();
 		},

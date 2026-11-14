@@ -50,6 +50,7 @@ import {
 	createPresentationController,
 	mountPresentationContextMenu,
 } from './ui';
+import { formatPaneFor } from './ui/inspector/format-pane';
 import type { RegionSet, RegionSupport } from './ui/region-set';
 import { createRegionSet } from './ui/region-set';
 import type { BackstageCloudFiles } from './ui/ribbon/ribbon-types';
@@ -276,7 +277,11 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 			deleteSlides: (indexes) => deps.deleteSlides(indexes),
 			toggleHideSlides: (indexes) => deps.toggleHideSlides(indexes),
 		},
-		...buildChromeCallbacks({ ...deps, getRegionSet: () => regions }),
+		...buildChromeCallbacks({
+			...deps,
+			getRegionSet: () => regions,
+			formatPane: formatPaneFor(store),
+		}),
 	});
 	// Hosts parked by the previous chrome and not adopted by this one are done.
 	regions.sweep();

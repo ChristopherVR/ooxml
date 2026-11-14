@@ -17,6 +17,7 @@ import { test, expect, devices } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
 import { resetTabSession } from './support/deck';
+import { openFormatSection } from './support/format-pane';
 
 test.use({ ...devices['Pixel 7'] });
 
@@ -130,6 +131,8 @@ test.describe('mobile audit (Pixel 7 touch)', () => {
 		// `[data-pptx-inspector]`, so this cannot pass with the sheet closed.
 		const sheet = page.locator('[data-pptx-inspector]:visible').first();
 		await expect(sheet).toBeVisible();
+		// Size and position starts closed in the Format pane; open it to reach the fields.
+		await openFormatSection(page, 'sizePosition');
 		// It must carry real editing controls (position/size and friends).
 		expect(
 			await sheet.locator('input[type="number"]:visible').count(),

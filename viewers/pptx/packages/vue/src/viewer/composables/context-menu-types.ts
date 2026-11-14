@@ -1,4 +1,4 @@
-import type { ResolvedCustomization } from 'ooxml-ui/pptx';
+import type { FormatPaneController, ResolvedCustomization } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import type { ComputedRef, Ref } from 'vue';
 
@@ -39,6 +39,8 @@ export interface UseContextMenuInput {
 	inlineEditingElementId: Ref<string | null>;
 	/** Whether the properties inspector is open; the format-object trio opens it. */
 	inspectorOpen: Ref<boolean>;
+	/** Format pane launches (Edit Alt Text, Size and Position, Format Shape); default opens `inspectorOpen`. */
+	formatPane?: FormatPaneController;
 	/** "Edit Text": the same effect as double-clicking the element. */
 	enterInlineEdit: (id: string) => void;
 	ops: EditorOperations;

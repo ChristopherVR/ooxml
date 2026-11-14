@@ -26,6 +26,21 @@ describe('inspector customization (#61)', () => {
 		controller.api.setCustomization({});
 		expect(css()).toBe('');
 	});
+	it('hides and reorders Format pane sections', () => {
+		const css = ribbonCustomizationCss(
+			resolveCustomization({
+				inspector: {
+					hiddenSections: ['effects', 'bogus"]{}' as never],
+					sectionOrder: ['sizePosition', 'arrange'],
+				},
+			}),
+			'v1',
+		);
+		expect(css).toContain('[data-pptx-ribbon-scope="v1"] [data-pptx-format-section="effects"]');
+		expect(css).not.toContain('bogus');
+		expect(css).toContain('[data-pptx-format-section="sizePosition"] {\n\torder: -2;');
+		expect(css).toContain('[data-pptx-format-section="arrange"] {\n\torder: -1;');
+	});
 	it('ignores unrecognized card ids from untyped hosts', () => {
 		expect(
 			ribbonCustomizationCss(

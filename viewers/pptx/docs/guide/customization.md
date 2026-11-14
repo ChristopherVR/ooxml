@@ -25,6 +25,23 @@ it. `updateCustomization({ inspector: { hiddenCards: [] } })` restores the cards
 live. Card visibility is scoped to each viewer, independently of inspector
 opening and closing.
 
+The Properties tab is a Format pane of collapsible sections chosen for the
+selection (Font and Paragraph for a text box, Fill and Outline for a shape,
+Picture, Table, Chart, Arrange, Size and position, ...). Hide sections with
+`inspector.hiddenSections` and move sections to the front with
+`inspector.sectionOrder`:
+
+```ts
+const customization: ViewerCustomization = {
+	inspector: { hiddenSections: ['effects'], sectionOrder: ['sizePosition'] },
+};
+```
+
+Section ids are `slide`, `font`, `paragraph`, `picture`, `table`, `chart`,
+`smartArt`, `media`, `object`, `fill`, `outline`, `effects`, `arrange`,
+`sizePosition`, `altText` and `action`. Which sections are open is remembered
+per selection kind for the session only; nothing is stored.
+
 Every binding renders the same PowerPoint-style chrome: a ribbon, a File tab,
 a File > Options (Settings) dialog, right-click menus, a keyboard map, a slide
 rail, an inspector, a status bar and a handful of dialogs. Most embeddings do

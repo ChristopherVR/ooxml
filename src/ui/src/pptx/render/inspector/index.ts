@@ -46,3 +46,31 @@ export { TEXT_BOX_SECTION, TEXT_BOX_SECTIONS } from './text-box-fields';
 export type { TextBoxSection, TextBoxTarget } from './text-box-fields';
 export { TEXT_EFFECT_SECTIONS } from './text-effect-fields';
 export type { TextEffectSection, TextEffectTarget } from './text-effect-fields';
+export { FORMAT_PANEL_SECTIONS, formatPanelIn } from './format-panel-sections';
+export type { FormatPanelId } from './format-panel-sections';
+export {
+	FORMAT_SECTION_ATTRIBUTE,
+	FORMAT_SECTION_IDS,
+	formatElementCategory,
+	hasFormatShapeEffect,
+	isLineFormatElement,
+	resolveFormatCategory,
+	resolveFormatSections,
+} from './format-sections';
+export type {
+	FormatSectionId,
+	FormatSectionOptions,
+	FormatSectionView,
+	FormatSelectionCategory,
+} from './format-sections';
+export {
+	formatMixedValue,
+	formatSelectionElements,
+	isFormatSectionMixed,
+} from './format-section-mixed';
+export type { FormatFieldValue } from './format-section-mixed';
+export {
+	findFormatSection,
+	formatSectionForAnchor,
+	revealFormatSection,
+} from './format-section-reveal';

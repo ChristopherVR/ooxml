@@ -1,6 +1,7 @@
 /**
  * Shared types for the useElementManipulation hook and its sub-hooks.
  */
+import type { FormatPaneController } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide, MergeShapeOperation } from 'pptx-viewer-core';
 
 import type { ElementContextMenuAction } from '../types';
@@ -25,6 +26,8 @@ export interface UseElementManipulationInput {
 	setSelectedElementIds: React.Dispatch<React.SetStateAction<string[]>>;
 	setIsInspectorPaneOpen: React.Dispatch<React.SetStateAction<boolean>>;
 	setSidebarPanelMode: React.Dispatch<React.SetStateAction<string>>;
+	/** Format pane launches (Format Shape, Size and Position, Edit Alt Text). */
+	formatPane: FormatPaneController;
 	ops: ElementOperations;
 	history: EditorHistoryResult;
 	onOpenHyperlinkDialog: () => void;

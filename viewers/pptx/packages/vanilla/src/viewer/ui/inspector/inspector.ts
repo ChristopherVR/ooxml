@@ -1,4 +1,8 @@
-import { tableStyleAssignmentUpdate } from 'ooxml-ui/pptx';
+import {
+	createFormatPaneController,
+	formatSelectionElements,
+	tableStyleAssignmentUpdate,
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';
@@ -12,6 +16,7 @@ import { createCommentsTab } from './comments-tab';
 import { createDeckPanel } from './deck-panel';
 import { createElementsTab } from './elements-tab';
 import { createFillSection } from './fill-section';
+import { createFormatSections } from './format-sections';
 import { createGroupInfoSection } from './group-info-section';
 import { createImageSection } from './image-section';
 import { createMediaSection } from './media-section';
@@ -108,40 +113,49 @@ export function createInspector(
 	};
 
 	// -- Properties tab content ----------------------------------------------
-	// Deck-level (no selection) sections, React's default inspector view.
-	const deckPanel = createDeckPanel(doc, t, handlers);
-	body.appendChild(deckPanel.el);
+	// A Format pane: every panel below is built into the shared section
+	// `FORMAT_PANEL_SECTIONS` assigns it (see `format-sections.ts`).
+	const pane = handlers.formatPane ?? createFormatPaneController();
+	const format = createFormatSections(doc, t, pane, body, () => setActiveTab('properties'));
+	body.appendChild(format.el);
+	const into = format.into;
 
-	const section = (label: string): HTMLElement => {
-		const wrap = createEl(doc, 'div', 'pptxv-inspector-section');
-		const caption = createEl(doc, 'h4', 'pptxv-inspector-section-title');
-		caption.textContent = label;
-		wrap.appendChild(caption);
-		body.appendChild(wrap);
-		return wrap;
-	};
+	// Deck-level (no selection) cards, React's default inspector view: the Slide section.
+	const deckPanel = createDeckPanel(doc, t, handlers);
+	format.host('slide').appendChild(deckPanel.el);
 
 	const position = createPositionSection(
 		doc,
 		t,
-		section,
+		into('sizePosition'),
 		handlers.setGeometry,
 		handlers.toggleElementLock,
+		into('arrange')(t('pptx.inspector.element')),
 	);
-	const groupInfo = createGroupInfoSection(doc, t, section);
-	const oleProperties = createOlePropertiesSection(doc, t, section, handlers);
-	const fill = createFillSection(doc, t, section, handlers);
-	const quickStyles = createQuickStylesGallery(doc, t, section, handlers);
-	const text = createTextSection(doc, t, section, handlers);
-	const text3d = createText3DSection(doc, t, section, handlers);
-	const image = createImageSection(doc, t, section, handlers);
-	const accessibility = createAccessibilitySection(doc, t, section, handlers);
+	const groupInfo = createGroupInfoSection(doc, t, into('arrange'));
+	const oleProperties = createOlePropertiesSection(doc, t, into('object'), handlers);
+	const fill = createFillSection(doc, t, into('fill'), handlers, {
+		outline: into('outline')(t('pptx.inspector.line')),
+		effects: into('effects')(t('pptx.inspector.effects')),
+		shapeType: into('arrange')(t('pptx.shape.type')),
+	});
+	const quickStyles = createQuickStylesGallery(doc, t, into('fill'), handlers);
+	const text = createTextSection(
+		doc,
+		t,
+		into('font'),
+		handlers,
+		into('paragraph')(t('pptx.formatPane.paragraph')),
+	);
+	const text3d = createText3DSection(doc, t, into('font'), handlers);
+	const image = createImageSection(doc, t, into('picture'), handlers);
+	const accessibility = createAccessibilitySection(doc, t, into('altText'), handlers);
 	// The cell-text spreadsheet sits ABOVE the table's styling section, matching
 	// React's inspector order. It builds its own <section> (rather than using the
 	// `section()` factory) because it needs an aria-labelled landmark, so it is
-	// appended to the body by hand at exactly this point.
+	// appended to the Table section by hand at exactly this point.
 	const tableDataGrid = createTableDataGrid(doc, t, handlers);
-	body.appendChild(tableDataGrid.el);
+	format.host('table').appendChild(tableDataGrid.el);
 	// `handlers` already carries everything `TableStyleEditorDeps` needs
 	// (getTableStyleMap/getThemeColorMap/updateTableStyleMap/deleteTableStyle),
 	// so there is no need to thread a second deps object down from `ChromeOptions`.
@@ -152,11 +166,11 @@ export function createInspector(
 		onDeleteStyle: (id) => handlers.deleteTableStyle(id),
 		onAssignStyle: (styleId) => handlers.setTableOptions(tableStyleAssignmentUpdate(styleId)),
 	};
-	const table = createTableSection(doc, t, section, handlers, styleEditorDeps);
-	const smartArt = createSmartArtSection(doc, t, section, handlers);
-	const action = createActionSection(doc, t, section, handlers);
-	const chart = createChartSection(doc, t, section, handlers);
-	const media = createMediaSection(doc, t, section, handlers);
+	const table = createTableSection(doc, t, into('table'), handlers, styleEditorDeps);
+	const smartArt = createSmartArtSection(doc, t, into('smartArt'), handlers);
+	const action = createActionSection(doc, t, into('action'), handlers);
+	const chart = createChartSection(doc, t, into('chart'), handlers);
+	const media = createMediaSection(doc, t, into('media'), handlers);
 	const sections = [
 		position,
 		groupInfo,
@@ -191,6 +205,9 @@ export function createInspector(
 			elementsTab.update(state);
 			commentsTab.update(state);
 			deckPanel.update(state);
+			format.layout(
+				formatSelectionElements(state.selectedElement, state.selectedIds, state.elements),
+			);
 			animationPanel.update({
 				editable: state.editable,
 				selectedElementId: state.selectedElementId,

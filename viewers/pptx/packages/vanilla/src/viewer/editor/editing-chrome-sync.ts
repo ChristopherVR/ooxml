@@ -222,6 +222,7 @@ export function createEditingChromeSync(deps: EditingChromeSyncDeps): () => void
 			elements: activeSlide?.elements ?? [],
 			selectedIds: state.selectedElementIds,
 			selectedElementId: el?.id,
+			...(el ? { selectedElement: el } : {}),
 			comments: activeSlide?.comments ?? [],
 			commentMentionAuthors: combineCommentMentionAuthors(
 				state.modernCommentAuthors,

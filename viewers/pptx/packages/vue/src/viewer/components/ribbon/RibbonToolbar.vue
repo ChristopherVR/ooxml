@@ -15,6 +15,7 @@
 import {
 	RIBBON_CONTEXTUAL_TABS,
 	attachRibbonOverflow,
+	HOME_LAUNCHER_SECTIONS,
 	homeLaunchers,
 	resolveActiveRibbonTab,
 	ribbonDisplayLayout,
@@ -28,6 +29,7 @@ import type {
 import { computed, inject, onBeforeUnmount, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { injectFormatPane } from '../../composables/format-pane-context';
 import { useRibbonAddInTabs } from '../../composables/ribbon-add-ins';
 import { useToolbarVisibility } from '../../composables/useToolbarVisibility';
 import { useResolvedCustomization } from '../../composables/useViewerCustomization';
@@ -141,12 +143,15 @@ const { visibleTabs } = useToolbarVisibility(
 
 // Groups collapse into popup buttons when the window is too narrow, as in Office.
 // Font, Paragraph and Drawing launchers open the Properties pane (there are no modal dialogs).
+const formatPane = injectFormatPane();
 const launchers = homeLaunchers(
 	() => t('pptx.inspector.properties'),
-	() => {
+	(group) => {
 		if (!props.isInspectorPaneOpen) {
 			props.onToggleInspector?.();
 		}
+		// Reveal the group's section (Font, Paragraph, Fill) on the Properties tab.
+		formatPane.requestFormatPane(HOME_LAUNCHER_SECTIONS[group], { focus: true });
 	},
 );
 let detachOverflow: (() => void) | null = null;

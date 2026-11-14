@@ -48,6 +48,7 @@ import { defineStatusBar } from './chrome/status-bar';
 import { defineStatusItem } from './chrome/status-item';
 import { defineTabStrip } from './chrome/tab-strip';
 import { defineTaskPane } from './chrome/task-pane';
+import { defineFormatSection } from './chrome/format-section';
 import { defineTitleBar } from './chrome/title-bar';
 import { defineZoomSlider } from './form/zoom-slider';
 import { defineSymbolPicker } from './form/symbol-picker';
@@ -101,6 +102,7 @@ export {
 	defineSwitch,
 	defineTabStrip,
 	defineTaskPane,
+	defineFormatSection,
 	defineTitleBar,
 	defineToolbar,
 	defineZoomSlider,
@@ -127,6 +129,7 @@ export type {
 export type { OfficeCommandEvent } from './ribbon/button';
 export type { OfficeDialogCloseEvent, OfficeDialogCloseReason } from './dialog/dialog';
 export type { OfficeProgressDialogState } from './dialog/progress-dialog';
+export { OfficeUiFormatSection } from './chrome/format-section';
 export { OfficeUiMessageDialog } from './dialog/message-dialog';
 export type {
 	OfficeMessageDialogKind,
@@ -327,6 +330,7 @@ export const CONTROL_DEFINERS = [
 	defineZoomSlider,
 	defineTabStrip,
 	defineTaskPane,
+	defineFormatSection,
 	defineOptionsDialog,
 	defineAccount,
 	defineRibbon,

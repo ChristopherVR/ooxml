@@ -3,7 +3,8 @@
  *
  * Separated from core state to keep each hook focused and under 300 lines.
  */
-import { initialInspectorOpen } from 'ooxml-ui/pptx';
+import { createFormatPaneController, initialInspectorOpen } from 'ooxml-ui/pptx';
+import type { FormatPaneController } from 'ooxml-ui/pptx';
 import { useState } from 'react';
 
 import type {
@@ -40,6 +41,8 @@ export interface ViewerUIState {
 	setIsSidebarCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
 	sidebarPanelMode: string;
 	setSidebarPanelMode: React.Dispatch<React.SetStateAction<string>>;
+	/** The Format pane's open sections and launch requests (one per viewer). */
+	formatPane: FormatPaneController;
 	showSlideSorter: boolean;
 	setShowSlideSorter: React.Dispatch<React.SetStateAction<boolean>>;
 	showReadingView: boolean;
@@ -128,6 +131,15 @@ export function useViewerUIState(inspectorInitiallyOpen?: boolean): ViewerUIStat
 	const [isOverflowMenuOpen, setIsOverflowMenuOpen] = useState(false);
 	const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 	const [sidebarPanelMode, setSidebarPanelMode] = useState<string>('properties');
+	// A launcher (Format Shape..., a ribbon dialog launcher) opens the inspector on Properties.
+	const [formatPane] = useState(() =>
+		createFormatPaneController({
+			showPane: () => {
+				setIsInspectorPaneOpen(true);
+				setSidebarPanelMode('properties');
+			},
+		}),
+	);
 	const [showSlideSorter, setShowSlideSorter] = useState(false);
 	const [showReadingView, setShowReadingView] = useState(false);
 	const [showOutlineView, setShowOutlineView] = useState(false);
@@ -184,6 +196,7 @@ export function useViewerUIState(inspectorInitiallyOpen?: boolean): ViewerUIStat
 		setIsSidebarCollapsed,
 		sidebarPanelMode,
 		setSidebarPanelMode,
+		formatPane,
 		showSlideSorter,
 		setShowSlideSorter,
 		showReadingView,

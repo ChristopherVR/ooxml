@@ -1,4 +1,5 @@
 import { ELEMENT_GEOMETRY_SECTIONS, elementLockTogglePatch, isElementLocked } from 'ooxml-ui/pptx';
+import type { FormatSectionView } from 'ooxml-ui/pptx';
 import type {
 	PptxElement,
 	PptxSlide,
@@ -24,11 +25,12 @@ import {
 	TransformPanel,
 	LayerOrderButtons,
 } from './ElementMiscPanels';
+import { FormatSections } from './FormatSections';
 import { ImagePropertiesPanel } from './ImagePropertiesPanel';
-import { CARD, HEADING } from './inspector-pane-constants';
 import { InspectorFields } from './InspectorFields';
 import { MediaPropertiesPanel } from './MediaPropertiesPanel';
 import { ShapeTextPanels } from './ShapeTextPanels';
+import type { ShapeTextPart } from './ShapeTextPanels';
 import { SmartArtPropertiesPanel } from './SmartArtPropertiesPanel';
 import { TableDataGrid } from './TableDataGrid';
 import { TablePropertiesPanel } from './TablePropertiesPanel';
@@ -68,6 +70,11 @@ interface ElementInspectorBodyProps {
 	onUpdateTextStyle: (patch: Partial<TextStyle>) => void;
 	/** Callback to move the element forward or backward in z-order. */
 	onMoveLayer: (direction: 'forward' | 'backward') => void;
+	/**
+	 * Every selected element (the primary one first), for the Format pane's
+	 * shared sections and Mixed tags. Edits still go to `selectedElement`.
+	 */
+	selectedElements?: readonly PptxElement[];
 }
 
 // ---------------------------------------------------------------------------
@@ -105,6 +112,7 @@ export function ElementInspectorBody({
 	onUpdateElementStyle,
 	onUpdateTextStyle,
 	onMoveLayer,
+	selectedElements,
 }: ElementInspectorBodyProps): React.ReactElement {
 	const { t } = useTranslation();
 
@@ -119,128 +127,172 @@ export function ElementInspectorBody({
 		onUpdateElement({ locks: elementLockTogglePatch(!isLocked) } as Partial<PptxElement>);
 	};
 
-	return (
-		<>
-			{/* Position & Size */}
-			<div className={CARD} data-pptx-inspector-section='transform'>
-				<div className='flex items-center justify-between'>
-					<div className={HEADING}>{t('pptx.inspector.element')}</div>
-					<button
-						type='button'
-						onClick={handleToggleLock}
-						disabled={!canEdit}
-						title={isLocked ? t('pptx.inspector.unlock') : t('pptx.inspector.lock')}
-						className='p-1 rounded hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed transition-colors max-md:min-w-[44px]! max-md:min-h-[44px]! flex items-center justify-center'
-						aria-pressed={isLocked}
-					>
-						{isLocked ? (
-							<LuLock className='w-3.5 h-3.5 text-amber-400' />
-						) : (
-							<LuLockOpen className='w-3.5 h-3.5 text-muted-foreground' />
+	const shapeText = (part: ShapeTextPart): React.ReactElement => (
+		<ShapeTextPanels
+			selectedElement={selectedElement}
+			canEdit={canEdit}
+			onUpdateElement={onUpdateElement}
+			onUpdateElementStyle={onUpdateElementStyle}
+			onUpdateTextStyle={onUpdateTextStyle}
+			part={part}
+		/>
+	);
+
+	// Each section holds the existing panels `FORMAT_PANEL_SECTIONS` assigns to it.
+	const renderSection = (view: FormatSectionView): React.ReactNode => {
+		switch (view.id) {
+			case 'font':
+			case 'paragraph':
+			case 'fill':
+			case 'effects':
+				return shapeText(view.id);
+			case 'outline':
+				return (
+					<>
+						{shapeText('outline')}
+						{view.arrowheads && (
+							<ConnectorPanel
+								selectedElement={selectedElement}
+								canEdit={canEdit}
+								onUpdateElementStyle={onUpdateElementStyle}
+							/>
 						)}
-					</button>
-				</div>
-				{/* X / Y / W / H / rotation: the shared Size & Position descriptors. */}
-				<div className='grid grid-cols-2 gap-1.5 text-[11px]'>
-					<InspectorFields
-						sections={ELEMENT_GEOMETRY_SECTIONS}
-						target={selectedElement}
-						onPatch={(patch) => onUpdateElement(patch as Partial<PptxElement>)}
-						disabled={!canEdit}
-					/>
-				</div>
-			</div>
-
-			{selectedElement.type === 'table' && (
-				<>
-					<TableDataGrid
-						tableElement={selectedElement as TablePptxElement}
+					</>
+				);
+			case 'altText':
+				return shapeText('altText');
+			case 'picture':
+				return (
+					isImageLikeElement(selectedElement) && (
+						<ImagePropertiesPanel
+							selectedElement={selectedElement}
+							canEdit={canEdit}
+							onUpdateElement={onUpdateElement}
+						/>
+					)
+				);
+			case 'table':
+				return (
+					<>
+						<TableDataGrid
+							tableElement={selectedElement as TablePptxElement}
+							canEdit={canEdit}
+							onUpdateElement={onUpdateElement}
+						/>
+						<TablePropertiesPanel
+							tableElement={selectedElement as TablePptxElement}
+							canEdit={canEdit}
+							onUpdateElement={onUpdateElement}
+							tableEditorState={tableEditorState}
+							tableStyleMap={tableStyleMap}
+							onTableStyleMapChange={onTableStyleMapChange}
+							onDeleteTableStyle={onDeleteTableStyle}
+						/>
+					</>
+				);
+			case 'chart':
+				return (
+					<ChartDataPanel
+						selectedElement={selectedElement as ChartPptxElement}
 						canEdit={canEdit}
 						onUpdateElement={onUpdateElement}
 					/>
-					<TablePropertiesPanel
-						tableElement={selectedElement as TablePptxElement}
+				);
+			case 'smartArt':
+				return (
+					selectedElement.type === 'smartArt' &&
+					selectedElement.smartArtData && (
+						<SmartArtPropertiesPanel
+							smartArtData={selectedElement.smartArtData}
+							canEdit={canEdit}
+							onUpdateElement={onUpdateElement}
+							box={{ width: selectedElement.width, height: selectedElement.height }}
+						/>
+					)
+				);
+			case 'media':
+				return (
+					<MediaPropertiesPanel
+						element={selectedElement as MediaPptxElement}
+						mediaDataUrls={mediaDataUrls ?? new Map()}
 						canEdit={canEdit}
 						onUpdateElement={onUpdateElement}
-						tableEditorState={tableEditorState}
-						tableStyleMap={tableStyleMap}
-						onTableStyleMapChange={onTableStyleMapChange}
-						onDeleteTableStyle={onDeleteTableStyle}
 					/>
-				</>
-			)}
+				);
+			case 'object':
+				return (
+					<OlePropertiesPanel
+						selectedElement={selectedElement}
+						canEdit={canEdit}
+						onUpdateElement={onUpdateElement}
+					/>
+				);
+			case 'arrange':
+				return (
+					<>
+						<div className='flex items-center justify-between'>
+							<span className='text-muted-foreground'>{t('pptx.inspector.element')}</span>
+							<button
+								type='button'
+								onClick={handleToggleLock}
+								disabled={!canEdit}
+								title={isLocked ? t('pptx.inspector.unlock') : t('pptx.inspector.lock')}
+								className='p-1 rounded hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed transition-colors max-md:min-w-[44px]! max-md:min-h-[44px]! flex items-center justify-center'
+								aria-pressed={isLocked}
+							>
+								{isLocked ? (
+									<LuLock className='w-3.5 h-3.5 text-amber-400' />
+								) : (
+									<LuLockOpen className='w-3.5 h-3.5 text-muted-foreground' />
+								)}
+							</button>
+						</div>
+						{shapeText('shapeType')}
+						<GroupInfoPanel selectedElement={selectedElement} />
+						<LayerOrderButtons canEdit={canEdit} onMoveLayer={onMoveLayer} />
+					</>
+				);
+			case 'sizePosition':
+				return (
+					<>
+						{/* X / Y / W / H / rotation: the shared Size & Position descriptors. */}
+						<div
+							className='grid grid-cols-2 gap-1.5 text-[11px]'
+							data-pptx-inspector-section='transform'
+						>
+							<InspectorFields
+								sections={ELEMENT_GEOMETRY_SECTIONS}
+								target={selectedElement}
+								onPatch={(patch) => onUpdateElement(patch as Partial<PptxElement>)}
+								disabled={!canEdit}
+							/>
+						</div>
+						<TransformPanel
+							selectedElement={selectedElement}
+							canEdit={canEdit}
+							onUpdateElement={onUpdateElement}
+						/>
+					</>
+				);
+			case 'action':
+				return (
+					<ActionSettingsPanel
+						selectedElement={selectedElement}
+						slides={slides}
+						canEdit={canEdit}
+						customShows={customShows}
+						onUpdateElement={onUpdateElement}
+					/>
+				);
+			default:
+				return null;
+		}
+	};
 
-			{selectedElement.type === 'chart' && (
-				<ChartDataPanel
-					selectedElement={selectedElement as ChartPptxElement}
-					canEdit={canEdit}
-					onUpdateElement={onUpdateElement}
-				/>
-			)}
-
-			{selectedElement.type === 'smartArt' && selectedElement.smartArtData && (
-				<SmartArtPropertiesPanel
-					smartArtData={selectedElement.smartArtData}
-					canEdit={canEdit}
-					onUpdateElement={onUpdateElement}
-					box={{ width: selectedElement.width, height: selectedElement.height }}
-				/>
-			)}
-
-			{isImageLikeElement(selectedElement) && (
-				<ImagePropertiesPanel
-					selectedElement={selectedElement}
-					canEdit={canEdit}
-					onUpdateElement={onUpdateElement}
-				/>
-			)}
-
-			{selectedElement.type === 'media' && (
-				<MediaPropertiesPanel
-					element={selectedElement as MediaPptxElement}
-					mediaDataUrls={mediaDataUrls ?? new Map()}
-					canEdit={canEdit}
-					onUpdateElement={onUpdateElement}
-				/>
-			)}
-
-			<ConnectorPanel
-				selectedElement={selectedElement}
-				canEdit={canEdit}
-				onUpdateElementStyle={onUpdateElementStyle}
-			/>
-
-			<GroupInfoPanel selectedElement={selectedElement} />
-
-			<OlePropertiesPanel
-				selectedElement={selectedElement}
-				canEdit={canEdit}
-				onUpdateElement={onUpdateElement}
-			/>
-
-			<ShapeTextPanels
-				selectedElement={selectedElement}
-				canEdit={canEdit}
-				onUpdateElement={onUpdateElement}
-				onUpdateElementStyle={onUpdateElementStyle}
-				onUpdateTextStyle={onUpdateTextStyle}
-			/>
-
-			<ActionSettingsPanel
-				selectedElement={selectedElement}
-				slides={slides}
-				canEdit={canEdit}
-				customShows={customShows}
-				onUpdateElement={onUpdateElement}
-			/>
-
-			<TransformPanel
-				selectedElement={selectedElement}
-				canEdit={canEdit}
-				onUpdateElement={onUpdateElement}
-			/>
-
-			<LayerOrderButtons canEdit={canEdit} onMoveLayer={onMoveLayer} />
-		</>
+	return (
+		<FormatSections
+			elements={selectedElements ?? [selectedElement]}
+			renderSection={renderSection}
+		/>
 	);
 }

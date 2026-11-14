@@ -42,7 +42,18 @@
 	import RecentColorsRow from './RecentColorsRow.svelte';
 	import ThemeColorSwatchGrid from './ThemeColorSwatchGrid.svelte';
 
-	const { editor, el }: { editor: EditorState; el: PptxElement } = $props();
+	const {
+		editor,
+		el,
+		part,
+	}: {
+		editor: EditorState;
+		el: PptxElement;
+		/** The Format pane section drawn (`fill` or `outline`); omitted, both. */
+		part?: 'fill' | 'outline';
+	} = $props();
+	const showFill = $derived(part !== 'outline');
+	const showLine = $derived(part !== 'fill');
 	const t = useTranslator();
 
 	const fill = $derived(fillColorOf(el));
@@ -126,7 +137,11 @@
 	}
 </script>
 
-<div class="pptx-svelte-inspector-color-row" data-pptx-inspector-section="fill-stroke">
+<div
+	class="pptx-svelte-inspector-color-row"
+	data-pptx-inspector-section={showFill ? 'fill-stroke' : undefined}
+>
+	{#if showFill}
 	<label class="pptx-svelte-inspector-color">
 		<span>{t('pptx.inspector.fill')}</span>
 		<input
@@ -142,6 +157,8 @@
 		/>
 		<RecentColorsRow colors={editor.mruColors} onselect={commitFill} />
 	</label>
+	{/if}
+	{#if showLine}
 	<label class="pptx-svelte-inspector-color">
 		<span>{t('pptx.inspector.line')}</span>
 		<input
@@ -157,8 +174,10 @@
 		/>
 		<RecentColorsRow colors={editor.mruColors} onselect={commitStroke} />
 	</label>
+	{/if}
 </div>
 
+{#if showFill}
 <label class="pptx-svelte-field">
 	<span class="pptx-svelte-field-label"
 		>{t('pptx.strokeEffects.fillOpacity')} <b>{pct(fillOpacity)}</b></span
@@ -172,8 +191,12 @@
 		oninput={(e) => editor.patchSelected(setFillOpacityPatch(el, Number(e.currentTarget.value)))}
 	/>
 </label>
+{/if}
+{#if showLine}
 <InspectorFields sections={SHAPE_LINE_SECTIONS} target={shapeStyle} onpatch={patchLine} />
+{/if}
 
+{#if showFill}
 <label class="pptx-svelte-field-checkbox">
 	<pptx-ui-checkbox
 		checked={gradientOn}
@@ -196,6 +219,7 @@
 
 {#if patternOn}
 	<PatternFillPanel {editor} {el} />
+{/if}
 {/if}
 
 <style>

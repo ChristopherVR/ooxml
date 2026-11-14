@@ -74,6 +74,7 @@ import {
 } from 'ooxml-ui/pptx';
 import type { CloudFileProvider, CloudOpenedFile, ViewerAddinStatus } from 'ooxml-ui/pptx';
 import {
+	createFormatPaneController,
 	createRibbonDisplayController,
 	findTextHighlightsByElement,
 	installSvgIdScope,
@@ -137,6 +138,7 @@ import { useCustomizedRibbonProps } from './composables/customization-ribbon-gat
 import { readDeckData } from './composables/deck-data';
 import { provideElementRenderErrorReporter } from './composables/element-render-errors';
 import { FieldContextKey } from './composables/field-context';
+import { FormatPaneKey } from './composables/format-pane-context';
 import { InspectorPreviewKey } from './composables/inspector-preview-context';
 import { MergeCropKey } from './composables/merge-crop-context';
 import { RecentColorsKey } from './composables/recent-colors-context';
@@ -1084,6 +1086,16 @@ const {
 	themeEditorOpen,
 } = ribbonUi;
 
+// -- Format pane (open sections, launcher requests): one per viewer ------
+// A launcher (Format Shape..., a ribbon dialog launcher) opens the inspector;
+// the slide inspector switches itself to Properties on the request.
+const formatPane = createFormatPaneController({
+	showPane: () => {
+		inspectorOpen.value = true;
+	},
+});
+provide(FormatPaneKey, formatPane);
+
 // -- Empty-canvas context menu (right-click with no element under the
 // cursor) -- a sibling of the element menu below, kept in its own composable.
 const layoutGalleryAnchor = ref<{ x: number; y: number } | null>(null);
@@ -1104,7 +1116,7 @@ const canvasMenu = useCanvasContextMenu({
 	},
 	onOpenFormatBackground: () => {
 		selectedElementIds.value = [];
-		inspectorOpen.value = true;
+		formatPane.requestFormatPane('slide', { focus: true });
 	},
 	customization: () => customization.resolved.value,
 });
@@ -1149,6 +1161,7 @@ const { contextMenu, contextItems, onCanvasContextMenu, onContextSelect } = useC
 	selectedElementIds,
 	inlineEditingElementId: inlineEdit.inlineEditingElementId,
 	inspectorOpen,
+	formatPane,
 	enterInlineEdit: inlineEdit.enterInlineEdit,
 	ops,
 	cutElement: clipboard.cutElement,

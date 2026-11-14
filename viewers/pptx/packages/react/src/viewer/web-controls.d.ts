@@ -27,6 +27,7 @@ declare module 'react' {
 			'pptx-ui-insert-chart-dialog': WebControlProps;
 			'pptx-ui-insert-smartart-dialog': WebControlProps;
 			'pptx-ui-select': WebControlProps;
+			'pptx-ui-format-section': WebControlProps;
 			'pptx-ui-checkbox': WebControlProps;
 			'pptx-ui-radio': WebControlProps;
 			'pptx-ui-switch': WebControlProps;

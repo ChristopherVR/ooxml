@@ -32,6 +32,7 @@ import type { Locator, Page } from '@playwright/test';
 import { savePptxViaBackstage } from './save-pptx';
 import { fixture, inspector, loadDeck, selectElement } from './support/deck';
 import { downloadBytes } from './support/exports';
+import { openFormatSection } from './support/format-pane';
 import { extractElementBlock, readZipPartText } from './support/pptx-xml';
 
 const TABLE_FIXTURE = fixture('table-styling.pptx');
@@ -91,6 +92,7 @@ async function selectTable(page: Page): Promise<void> {
 	await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
 	await page.waitForTimeout(400);
 	await expect(inspector(page)).toBeVisible();
+	await openFormatSection(page, 'altText');
 }
 
 /** Select the chart's graphic frame on the canvas. */
@@ -107,6 +109,7 @@ async function selectChart(page: Page): Promise<void> {
 	// chart's graphic frame as an element).
 	await selectElement(page, chart);
 	await expect(inspector(page)).toBeVisible();
+	await openFormatSection(page, 'altText');
 }
 
 test.describe('element accessibility on a graphic frame (table)', () => {

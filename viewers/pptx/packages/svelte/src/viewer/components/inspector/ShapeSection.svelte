@@ -7,7 +7,21 @@
 	import type { EditorState } from '../../editor/editor-state.svelte';
 	import ConnectorArrowsSection from './ConnectorArrowsSection.svelte';
 
-	const { editor, el }: { editor: EditorState; el: PptxElement } = $props();
+	const {
+		editor,
+		el,
+		part,
+	}: {
+		editor: EditorState;
+		el: PptxElement;
+		/**
+		 * The Format pane section drawn: `shapeType` (Arrange), `fill` (the
+		 * eyedropper) or `arrowheads` (Line); omitted, all of them.
+		 */
+		part?: 'shapeType' | 'fill' | 'arrowheads';
+	} = $props();
+	const show = (which: 'shapeType' | 'fill' | 'arrowheads'): boolean =>
+		part === undefined || part === which;
 	const t = useTranslator();
 	const style = $derived('shapeStyle' in el ? el.shapeStyle : undefined);
 	const shapeType = $derived('shapeType' in el ? el.shapeType : undefined);
@@ -28,11 +42,11 @@
 	}
 </script>
 
-{#if el.type === 'shape'}
+{#if show('shapeType') && el.type === 'shape'}
 	<label>{t('pptx.shape.type')}<pptx-ui-select aria-label={t('pptx.shape.type')} value={shapeType ?? 'rect'} onchange={(event) => setShapeType(event.currentTarget.value)}>{#each SHAPE_PRESET_DEFS as preset}<option value={preset.type}>{preset.label}</option>{/each}</pptx-ui-select></label>
 {/if}
-<button type="button" onclick={() => void sampleFill()} disabled={typeof window === 'undefined' || !('EyeDropper' in window)} title={t('pptx.fillStroke.eyedropperTooltip')}>{t('pptx.ribbon.eyedropper')}</button>
-{#if el.type === 'connector'}
+{#if show('fill')}<button type="button" onclick={() => void sampleFill()} disabled={typeof window === 'undefined' || !('EyeDropper' in window)} title={t('pptx.fillStroke.eyedropperTooltip')}>{t('pptx.ribbon.eyedropper')}</button>{/if}
+{#if show('arrowheads') && el.type === 'connector'}
 	<ConnectorArrowsSection {editor} {style} {el} />
 {/if}
 
