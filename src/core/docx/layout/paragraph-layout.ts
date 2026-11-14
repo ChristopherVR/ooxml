@@ -9,6 +9,7 @@ import {
 	runTextWidth,
 	resolveIndents,
 	tokenizeParagraph,
+	hangsPastLineEnd,
 	sourceLengthOf,
 	type PlacedToken,
 } from './paragraph-tokens';
@@ -210,6 +211,8 @@ function measureParagraph(
 	}
 	const hangingStopPx = firstLineExtraPx < 0 ? leftPx : undefined;
 	const placedTokens = () => placed.map((entry) => entry.token);
+	// Width of the punctuation hanging past each line's end, which alignment does not count.
+	const hangingPx = new Map<number, number>();
 
 	function flushLine(forceEmpty: boolean, forcedByBreak: 'page' | 'column' | undefined) {
 		if (!placed.length && !forceEmpty) return;
@@ -353,9 +356,17 @@ function measureParagraph(
 			!fits && hole && !jump && token.kind === 'word'
 				? hole.endPx - lineStart(lineIndex) - lineWidthPx
 				: undefined;
+		// Line-end punctuation that may not start the next line hangs past the margin instead.
+		const hanging =
+			!wouldFit &&
+			!hole &&
+			!jump &&
+			placed.length > 0 &&
+			hangsPastLineEnd(paragraph, tokens, tokenIndex);
+		if (hanging) hangingPx.set(lineIndex, advance);
 		if (pastHole !== undefined && lineWidthPx + pastHole + advance <= availableWidth(lineIndex)) {
 			jump = { index: placed.length, shiftPx: pastHole };
-		} else if (!wouldFit && token.kind !== 'space') {
+		} else if (!wouldFit && token.kind !== 'space' && !hanging) {
 			// Kinsoku and words split across runs: the glued tokens before this one go down with it.
 			const carry = jump ? 0 : gluedCarry(tokens, tokenIndex, placedTokens());
 			if (carry) {
@@ -395,7 +406,7 @@ function measureParagraph(
 			...line,
 			fragments: alignFragments(
 				line.fragments,
-				availableWidth(index),
+				availableWidth(index) + (hangingPx.get(index) ?? 0),
 				index === lastIndex,
 				// A line that runs around a picture is not aligned across it.
 				boxes[index]?.hole ? 'left' : effectiveAlign,

@@ -12,7 +12,7 @@ const STYLES = `<w:styles xmlns:w="${W}"><w:docDefaults><w:rPrDefault><w:rPr><w:
 const BODY =
 	'<w:p><w:pPr><w:kinsoku/></w:pPr><w:r><w:t>一。</w:t></w:r></w:p>' +
 	'<w:p><w:pPr><w:autoSpaceDE w:val="0"/><w:autoSpaceDN w:val="false"/></w:pPr><w:r><w:t>二。</w:t></w:r></w:p>' +
-	'<w:p><w:pPr><w:pStyle w:val="Chinese"/><w:kinsoku w:val="1"/></w:pPr><w:r><w:t>三。</w:t></w:r></w:p>';
+	'<w:p><w:pPr><w:pStyle w:val="Chinese"/><w:kinsoku w:val="1"/><w:overflowPunct w:val="0"/></w:pPr><w:r><w:t>三。</w:t></w:r></w:p>';
 
 async function packageBytes(): Promise<Uint8Array> {
 	const zip = new JSZip();
@@ -44,6 +44,7 @@ describe('kinsoku settings', () => {
 		const { model } = await loadDocx(await packageBytes());
 		const blocks = at(adaptDocumentModel(model).sections, 0).blocks as LayoutParagraph[];
 		expect(blocks.map((block) => block.kinsoku)).toEqual([undefined, false, undefined]);
+		expect(blocks.map((block) => block.overflowPunct)).toEqual([undefined, undefined, false]);
 		expect(blocks.map((block) => [block.autoSpaceDE, block.autoSpaceDN])).toEqual([
 			[undefined, undefined],
 			[false, false],
@@ -68,7 +69,7 @@ describe('kinsoku settings', () => {
 		);
 		const xml = await saved.file('word/document.xml')!.async('string');
 		expect(xml).toContain('<w:kinsoku/>');
-		expect(xml).toContain('<w:kinsoku w:val="1"/>');
+		expect(xml).toContain('<w:kinsoku w:val="1"/><w:overflowPunct w:val="0"/>');
 		expect(xml).toContain('<w:autoSpaceDE w:val="0"/><w:autoSpaceDN w:val="false"/>');
 		expect(await saved.file('word/styles.xml')!.async('string')).toBe(
 			await original.file('word/styles.xml')!.async('string'),

@@ -73,6 +73,8 @@ export interface Paragraph {
 	autoSpaceDE?: boolean;
 	/** `w:autoSpaceDN`: space between East Asian letters and digits (on when absent); read-only. */
 	autoSpaceDN?: boolean;
+	/** `w:overflowPunct`: line-end punctuation may hang past the margin (on when absent); read-only. */
+	overflowPunct?: boolean;
 	/**
 	 * `w:outlineLvl` as a 1-9 level, or 0 for body text (`w:val="9"`, which cancels a style's
 	 * level). Read-only like `borders`: the source XML keeps it and it is not written for new paragraphs.
@@ -128,6 +130,7 @@ export type ParagraphFormatting = Pick<
 	| 'kinsoku'
 	| 'autoSpaceDE'
 	| 'autoSpaceDN'
+	| 'overflowPunct'
 	| 'outlineLevel'
 	| 'borders'
 	| 'shadingFill'

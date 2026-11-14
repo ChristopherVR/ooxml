@@ -1,7 +1,7 @@
 import { definedProps } from '../defined-props';
 import type { LayoutFontSpec, TextMeasurer } from './measure';
 import type { LayoutFragment } from './result';
-import { kinsokuSets, type KinsokuSets } from '../../text/kinsoku';
+import { hangsAtLineEnd, kinsokuSets, type KinsokuSets } from '../../text/kinsoku';
 import { AUTO_SPACE_EM, eastAsianAutoSpace } from '../../text/east-asian';
 import {
 	appendBreakMarker,
@@ -132,6 +132,26 @@ function applyAutoSpace(paragraph: LayoutParagraph, tokens: BreakToken[]): void 
 			continue;
 		previous.spaceAfterPx = fontOf(run).sizePx * AUTO_SPACE_EM;
 	}
+}
+
+/**
+ * Whether `tokens[index]`, which does not fit on its line, hangs past the line end instead
+ * (`w:overflowPunct`): a single kinsoku-glued mark of the hanging set in a justified paragraph,
+ * not followed by another character that may not start a line.
+ */
+export function hangsPastLineEnd(
+	paragraph: LayoutParagraph,
+	tokens: readonly BreakToken[],
+	index: number,
+): boolean {
+	const token = tokens[index];
+	if (token?.kind !== 'word' || token.glue !== 'kinsoku') return false;
+	if (paragraph.overflowPunct === false || paragraph.align !== 'justify') return false;
+	const language = paragraph.runs[token.runIndex]?.kinsokuLanguage;
+	const [mark, ...rest] = graphemesOf(token.text);
+	if (!language || !mark || rest.length || !hangsAtLineEnd(mark, language)) return false;
+	const next = tokens[index + 1];
+	return !(next?.kind === 'word' && next.glue);
 }
 
 export function tokenizeParagraph(paragraph: LayoutParagraph): {

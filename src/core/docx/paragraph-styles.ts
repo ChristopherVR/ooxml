@@ -29,7 +29,12 @@ export const PAGINATION_KEYS = [
 ] as const;
 
 /** East Asian typography toggles (`w:kinsoku`...); read-only, kept in the source XML on save. */
-export const EAST_ASIAN_TYPOGRAPHY_KEYS = ['kinsoku', 'autoSpaceDE', 'autoSpaceDN'] as const;
+export const EAST_ASIAN_TYPOGRAPHY_KEYS = [
+	'kinsoku',
+	'autoSpaceDE',
+	'autoSpaceDN',
+	'overflowPunct',
+] as const;
 
 /** `w:outlineLvl` as a 1-9 level (0 for body text, `w:val="9"`); undefined when absent or invalid. */
 export function parseOutlineLevel(element: XmlElement | undefined): number | undefined {

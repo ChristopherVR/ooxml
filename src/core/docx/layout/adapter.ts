@@ -370,6 +370,7 @@ export function adaptDocumentModel(
 			...(resolved.kinsoku === false ? { kinsoku: false as const } : {}),
 			...(resolved.autoSpaceDE === false ? { autoSpaceDE: false as const } : {}),
 			...(resolved.autoSpaceDN === false ? { autoSpaceDN: false as const } : {}),
+			...(resolved.overflowPunct === false ? { overflowPunct: false as const } : {}),
 			...(model.kinsoku ? { kinsokuSettings: model.kinsoku } : {}),
 		};
 	}

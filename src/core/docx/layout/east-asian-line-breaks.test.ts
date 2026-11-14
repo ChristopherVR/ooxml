@@ -167,3 +167,39 @@ describe('Thai, Lao, Khmer and Myanmar line breaking', () => {
 		expect(lines([{ text: 'aaaaaaaa​bbbbbbbb' }])).toEqual(['aaaaaaaa​', 'bbbbbbbb']);
 	});
 });
+
+describe('hanging punctuation (w:overflowPunct)', () => {
+	const justify = { align: 'justify' as const };
+	const nine = '一'.repeat(9);
+
+	it('hangs a line-end mark past the margin in a justified paragraph', () => {
+		const result = layoutParagraph(
+			{ kind: 'paragraph', id: 'p', runs: [ja(`${ten}。一一`)], ...justify },
+			100,
+			measurer,
+			noop,
+		);
+		const first = at(result.lines, 0).fragments;
+		expect(first.map((fragment) => fragment.text).join('')).toBe(`${ten}。`);
+		expect(first.at(-1)?.xPx).toBe(100);
+		expect(lines([ja(ten), ja('、一', { bold: true })], justify)).toEqual([`${ten}、`, '一']);
+	});
+
+	it('wraps instead when the paragraph is not justified or turns it off', () => {
+		expect(lines([ja(`${ten}。一`)])).toEqual([nine, '一。一']);
+		expect(lines([ja(`${ten}。一`)], { ...justify, overflowPunct: false })).toEqual([
+			nine,
+			'一。一',
+		]);
+	});
+
+	it('hangs only marks of the hanging set, and only under kinsoku', () => {
+		expect(lines([ja(`${ten}！一`)], justify)).toEqual([nine, '一！一']);
+		expect(lines([ja(`${ten}。一`)], { ...justify, kinsoku: false })).toEqual([ten, '。一']);
+	});
+
+	it('does not hang a mark followed by another mark that may not start a line', () => {
+		expect(lines([ja(`${ten}。」一`)], justify)).toEqual([nine, '一。」一']);
+		expect(lines([ja(`${nine}。」一`)], justify)).toEqual([`${nine}。」`, '一']);
+	});
+});

@@ -166,6 +166,8 @@ export interface LayoutParagraph {
 	/** `w:autoSpaceDE w:val="0"` / `w:autoSpaceDN w:val="0"`: no space between East Asian text and Western letters / digits. */
 	autoSpaceDE?: false;
 	autoSpaceDN?: false;
+	/** `w:overflowPunct w:val="0"`: no line-end punctuation hangs past the margin. */
+	overflowPunct?: false;
 	/** The document's kinsoku settings (settings.xml), copied onto each paragraph that uses them. */
 	kinsokuSettings?: import('../../text/kinsoku').KinsokuSettings;
 }
