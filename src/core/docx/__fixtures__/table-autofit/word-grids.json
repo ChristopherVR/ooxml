@@ -202,6 +202,22 @@
         1000
       ]
     },
+    "consistent-wide": {
+      "mode": 15,
+      "grid": [
+        3120,
+        3120,
+        3120
+      ]
+    },
+    "consistent-word": {
+      "mode": 15,
+      "grid": [
+        2724,
+        3913,
+        2723
+      ]
+    },
     "interpolate-mode14": {
       "mode": 14,
       "grid": [

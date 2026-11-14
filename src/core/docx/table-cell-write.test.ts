@@ -73,6 +73,36 @@ describe('new table cell properties', () => {
 		expect(xml).toContain('<w:tcW w:w="1000" w:type="pct"/>');
 	});
 
+	it('keeps the written cell widths through later edits and saves', async () => {
+		const model = modelWith({
+			grid: [twips(2000), twips(3000)],
+			rows: [[{ paragraphs: [para('a')] }, { paragraphs: [para('b')] }]],
+		});
+		const cellWidths = (xml: string) =>
+			[...xml.matchAll(/<w:tcW w:w="(\d+)" w:type="dxa"\/>/g)].map((m) => m[1]);
+		// Saving the same in-memory model again, after an edit.
+		const first = await saveDocx(model);
+		(model.blocks[1] as Table).rows[0]![0]!.paragraphs[0]!.runs[0]!.text = 'edited';
+		expect(cellWidths(await tableXml(model))).toEqual(['2000', '3000']);
+		// Reopening the saved package: text edits and row inserts keep the widths.
+		const loaded = await loadDocx(first);
+		const table = loaded.model.blocks[1] as Table;
+		table.rows[0]![1]!.paragraphs[0]!.runs[0]!.text = 'changed';
+		const saved = await JSZip.loadAsync(await loaded.save());
+		const xml = await saved.file('word/document.xml')!.async('string');
+		expect(cellWidths(xml)).toEqual(['2000', '3000']);
+		const { insertRow } = await import('./table-structure');
+		let serial = 0;
+		const reopened = await loadDocx(first);
+		const base = reopened.model.blocks[1] as Table;
+		reopened.model.blocks[1] = insertRow(base, 0, 'below', () => `new-${++serial}`)!;
+		const grown = await JSZip.loadAsync(await reopened.save());
+		const grownXml = await grown.file('word/document.xml')!.async('string');
+		// The inserted row's cells take their column's width from the first row's tcW.
+		expect(grownXml.match(/<w:tr>/g)).toHaveLength(2);
+		expect(cellWidths(grownXml)).toEqual(['2000', '3000']);
+	});
+
 	it('writes percentage table widths and reads them back', async () => {
 		const model = modelWith({ rows: [[{ paragraphs: [para('a')] }]], widthPercent: 0.5 });
 		expect(await tableXml(model)).toContain('<w:tblW w:w="2500" w:type="pct"/>');

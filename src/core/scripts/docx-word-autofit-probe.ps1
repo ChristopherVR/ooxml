@@ -5,6 +5,7 @@
 # Small hand-written documents (Courier New 11 pt, cell margins 108 twips, Letter page with 1 in
 # margins) whose tables carry a deliberately wrong grid (1000 twips per column). Word recomputes an
 # AutoFit table's columns when it opens a document, so the grid it saves back is its own layout.
+# Two `consistent-*` cases carry the grid Word would write itself (equal to the cells' widths).
 # For every case the source document is written to <dir>/<case>.docx and Word's saved
 # `w:tblGrid/w:gridCol` widths (twips) are recorded in <dir>/word-grids.json.
 param(
@@ -19,8 +20,8 @@ New-Item -ItemType Directory -Force $work | Out-Null
 
 function C([string]$text, [string]$tcPr = '') { "<w:tc><w:tcPr>$tcPr</w:tcPr><w:p><w:r><w:t xml:space=`"preserve`">$text</w:t></w:r></w:p></w:tc>" }
 function TRow([string[]]$cells) { '<w:tr>' + ($cells -join '') + '</w:tr>' }
-function T([string]$tblPr, [string]$rows, [int]$cols = 3) {
-	$grid = '<w:gridCol w:w="1000"/>' * $cols
+function T([string]$tblPr, [string]$rows, [int]$cols = 3, [int]$gridWidth = 1000) {
+	$grid = "<w:gridCol w:w=`"$gridWidth`"/>" * $cols
 	"<w:tbl><w:tblPr>$tblPr<w:tblCellMar><w:left w:w=`"108`" w:type=`"dxa`"/><w:right w:w=`"108`" w:type=`"dxa`"/></w:tblCellMar></w:tblPr><w:tblGrid>$grid</w:tblGrid>$rows</w:tbl>"
 }
 $auto = '<w:tblW w:w="0" w:type="auto"/>'
@@ -55,6 +56,9 @@ $cases = [ordered]@{
 	'split-runs'        = T $auto (TRow '<w:tc><w:p><w:r><w:t xml:space="preserve">Hello </w:t></w:r><w:r><w:t>wor</w:t></w:r><w:r><w:t>ld</w:t></w:r></w:p></w:tc>', (C 'B'), (C 'xyz'))
 	'table-indent'      = T ($auto + '<w:tblInd w:w="1440" w:type="dxa"/>') (TRow (C 'A'), (C 'Supercalifragilistic'), (C $long))
 	'fixed'             = T ($auto + '<w:tblLayout w:type="fixed"/>') (TRow (C 'A'), (C 'Supercalifragilistic'), (C $long))
+	# A grid that agrees with the preferred widths, as Word itself saves it.
+	'consistent-wide'   = T $auto (TRow (C 'A' (Pref 5000)), (C 'B' (Pref 5000)), (C 'C' (Pref 5000))) 3 5000
+	'consistent-word'   = T $auto (TRow (C 'A' (Pref 3000)), (C 'Antidisestablishmentarianism' (Pref 3000)), (C 'C' (Pref 3000))) 3 3000
 }
 # The same layouts saved in older compatibility modes (0 writes no compatibilityMode setting).
 $modes = [ordered]@{}
