@@ -5,6 +5,7 @@ import {
 	elementBulletKind,
 	remapTextToSegments,
 	stepFontSizePt,
+	tableCellsTextFormat,
 	textFontSizePtToPx,
 	textFontSizePxToPt,
 } from 'ooxml-ui/pptx';
@@ -14,6 +15,7 @@ import type {
 	PptxElementWithText,
 	PptxThemeColorRef,
 	ShapeStyle,
+	TablePptxElement,
 	TextStyle,
 } from 'pptx-viewer-core';
 import { hasShapeProperties, hasTextProperties } from 'pptx-viewer-core';
@@ -100,6 +102,9 @@ export function canFormatShape(el: PptxElement | undefined): el is PptxElementWi
 
 /** Read the effective character-format state for the format toolbar UI. */
 export function readTextFormatState(el: PptxElement | undefined): TextFormatState {
+	if (el?.type === 'table') {
+		return tableTextFormatState(el);
+	}
 	const ts: TextStyle | undefined = canFormatText(el) ? el.textStyle : undefined;
 	const firstRun = canFormatText(el) ? el.textSegments?.find((s) => s.text)?.style : undefined;
 	const fontSizePx = ts?.fontSize ?? firstRun?.fontSize;
@@ -121,6 +126,29 @@ export function readTextFormatState(el: PptxElement | undefined): TextFormatStat
 		align: ts?.align ?? firstRun?.align,
 		paragraphMarginLeft: ts?.paragraphMarginLeft ?? firstRun?.paragraphMarginLeft ?? 0,
 		lineSpacing: ts?.lineSpacing ?? firstRun?.lineSpacing,
+	};
+}
+
+/** The ribbon state for a table: its first cell's format (shared reader). */
+function tableTextFormatState(el: TablePptxElement): TextFormatState {
+	const cell = tableCellsTextFormat(el);
+	return {
+		bold: cell.bold,
+		italic: cell.italic,
+		underline: cell.underline,
+		strikethrough: cell.strikethrough,
+		hasTextShadow: false,
+		fontSize: cell.fontSize ?? DEFAULT_FONT_SIZE,
+		fontFamily: cell.fontFamily,
+		placeholderType: undefined,
+		color: cell.color,
+		colorRef: undefined,
+		highlightColor: undefined,
+		characterSpacing: 0,
+		listType: 'none',
+		align: undefined,
+		paragraphMarginLeft: 0,
+		lineSpacing: undefined,
 	};
 }
 

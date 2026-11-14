@@ -1,5 +1,6 @@
-import { getCellText, withCellText } from 'ooxml-ui/pptx';
-import type { PptxElement } from 'pptx-viewer-core';
+import { getCellText, resolveTableCellEditEnd, withCellText } from 'ooxml-ui/pptx';
+import type { TableCellEditEnd, TableCellEditOutcome } from 'ooxml-ui/pptx';
+import type { PptxElement, TablePptxElement } from 'pptx-viewer-core';
 import { hasTextProperties } from 'pptx-viewer-core';
 
 import type { Store, ViewerState } from '../state';
@@ -11,6 +12,14 @@ import {
 
 export interface StructuredEditorOperations {
 	commitTableCell(id: string, row: number, column: number, text: string): void;
+	endTableCellEdit(
+		id: string,
+		row: number,
+		column: number,
+		end: TableCellEditEnd,
+	): TableCellEditOutcome | undefined;
+	/** Replace a table element as one undoable step (a paste into selected cells). */
+	replaceTableElement(next: TablePptxElement): void;
 	updateEquation(id: string, omml: Record<string, unknown>): void;
 }
 
@@ -53,6 +62,42 @@ export function createStructuredEditorOperations(deps: {
 				),
 			);
 			deps.commitChange();
+		},
+		replaceTableElement(next) {
+			const state = deps.store.get();
+			if (findActiveElement(state, next.id)?.type !== 'table') {
+				return;
+			}
+			deps.pushHistory();
+			deps.store.set(
+				replaceActiveElements(
+					state,
+					mapActiveElement(state, next.id, () => next),
+				),
+			);
+			deps.commitChange();
+		},
+		endTableCellEdit(id, row, column, end) {
+			const state = deps.store.get();
+			const target = findActiveElement(state, id);
+			if (target?.type !== 'table') {
+				return undefined;
+			}
+			// Shared: commits the runs, appends a row for Tab in the last cell,
+			// fills cells from a pasted grid, and names the next cell.
+			const outcome = resolveTableCellEditEnd(target, row, column, end);
+			const next = outcome.element;
+			if (next) {
+				deps.pushHistory();
+				deps.store.set(
+					replaceActiveElements(
+						state,
+						mapActiveElement(state, id, () => next),
+					),
+				);
+				deps.commitChange();
+			}
+			return outcome;
 		},
 		updateEquation(id, omml) {
 			const state = deps.store.get();

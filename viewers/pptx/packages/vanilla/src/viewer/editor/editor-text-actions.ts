@@ -1,5 +1,5 @@
 import type { ChangeCaseMode, ListConversionScope } from 'ooxml-ui/pptx';
-import { transformInlineListCase } from 'ooxml-ui/pptx';
+import { stepFontSizePt, transformInlineListCase } from 'ooxml-ui/pptx';
 import type { PptxThemeColorRef, TextStyle } from 'pptx-viewer-core';
 
 import type { Store, ViewerState } from '../state';
@@ -27,6 +27,7 @@ import {
 	toggleListType,
 } from './editor-paragraph-mutations';
 import { recordRecentColor } from './editor-recent-colors';
+import { tableTextFormatPatch } from './editor-table-text-format';
 
 /**
  * Character + paragraph formatting actions for the ribbon's Home > Font and
@@ -73,19 +74,40 @@ export function createTextActions(
 	getListConversionScope?: () => ListConversionScope | undefined,
 ): TextActions {
 	const listOptions = () => ({ listConversionScope: getListConversionScope?.() });
+	// A selected table formats every run of its selected cells (shared op).
+	const table = tableTextFormatPatch.bind(null, store);
+	const toggle = (key: 'bold' | 'italic' | 'underline' | 'strikethrough') =>
+		applyToSelected(
+			(el) => table(el, (current) => ({ [key]: !current[key] })) ?? toggleTextProp(el, key),
+		);
+	const tableSize = (pt: number) => ({ fontSize: Math.min(400, Math.max(1, pt)) });
 	return {
-		toggleBold: () => applyToSelected((el) => toggleTextProp(el, 'bold')),
-		toggleItalic: () => applyToSelected((el) => toggleTextProp(el, 'italic')),
-		toggleUnderline: () => applyToSelected((el) => toggleTextProp(el, 'underline')),
-		toggleStrikethrough: () => applyToSelected((el) => toggleTextProp(el, 'strikethrough')),
+		toggleBold: () => toggle('bold'),
+		toggleItalic: () => toggle('italic'),
+		toggleUnderline: () => toggle('underline'),
+		toggleStrikethrough: () => toggle('strikethrough'),
 		toggleTextShadow: () => applyToSelected((el) => toggleTextShadow(el)),
-		changeFontSize: (delta) => applyToSelected((el) => adjustFontSize(el, delta)),
-		stepFontSize: (direction) => applyToSelected((el) => stepFontSize(el, direction)),
-		setFontSize: (size) => applyToSelected((el) => setFontSize(el, size)),
-		setFontFamily: (family) => applyToSelected((el) => setFontFamily(el, family)),
+		changeFontSize: (delta) =>
+			applyToSelected(
+				(el) =>
+					table(el, (current) => tableSize((current.fontSize ?? 18) + delta)) ??
+					adjustFontSize(el, delta),
+			),
+		stepFontSize: (direction) =>
+			applyToSelected(
+				(el) =>
+					table(el, (current) => tableSize(stepFontSizePt(current.fontSize ?? 18, direction))) ??
+					stepFontSize(el, direction),
+			),
+		setFontSize: (size) =>
+			applyToSelected((el) => table(el, () => tableSize(size)) ?? setFontSize(el, size)),
+		setFontFamily: (family) =>
+			applyToSelected(
+				(el) => table(el, () => ({ fontFamily: family })) ?? setFontFamily(el, family),
+			),
 		setTextColor: (color, ref) => {
 			recordRecentColor(store, color);
-			applyToSelected((el) => setTextColor(el, color, ref));
+			applyToSelected((el) => table(el, () => ({ color })) ?? setTextColor(el, color, ref));
 		},
 		setHighlightColor: (color) => {
 			recordRecentColor(store, color);

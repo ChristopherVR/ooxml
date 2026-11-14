@@ -56,6 +56,8 @@ function fakeOps(): EditorOps {
 		setHandoutSlidesPerPage: vi.fn(),
 		applyFormatPainter: vi.fn(() => false),
 		commitTableCell: vi.fn(),
+		endTableCellEdit: vi.fn(),
+		replaceTableElement: vi.fn(),
 		updateEquation: vi.fn(),
 		updateDocumentProperties: vi.fn(),
 		updatePresentationProperties: vi.fn(),

@@ -3,6 +3,7 @@ import type {
 	ChangeCaseMode,
 	InlineTextEditSnapshot,
 	ListConversionScope,
+	TableCellTextStyleUpdate,
 } from 'ooxml-ui/pptx';
 import {
 	applyTextStyleUpdate,
@@ -13,16 +14,10 @@ import {
 	setElementBullets,
 	transformTextCase,
 	transformInlineListCase,
-	withCellStyle,
+	applyTableCellsTextStyle,
 } from 'ooxml-ui/pptx';
 import { hasTextProperties } from 'pptx-viewer-core';
-import type {
-	PptxElement,
-	PptxSlide,
-	PptxTableCellStyle,
-	TablePptxElement,
-	TextStyle,
-} from 'pptx-viewer-core';
+import type { PptxElement, PptxSlide, TablePptxElement, TextStyle } from 'pptx-viewer-core';
 import { computed } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 
@@ -111,24 +106,30 @@ export function useRibbonActions(input: UseRibbonActionsInput) {
 		return { elementId: sel.elementId, rowIndex: sel.rowIndex, columnIndex: sel.columnIndex };
 	});
 
-	/** Apply a text-style delta to the selected table cell (ribbon Text section). */
+	/**
+	 * Apply a text-style delta to every run of the selected table cells (the
+	 * Shift+click range, else the active cell; the whole table when no cell of
+	 * it is selected), through the shared core op.
+	 */
 	function applyCellTextStyle(el: TablePptxElement, updates: Partial<TextStyle>): void {
 		const sel = tableSelection.value;
-		if (!canEdit() || !el.tableData || !sel || sel.elementId !== el.id) {
+		if (!canEdit() || !el.tableData) {
 			return;
 		}
-		const { rowIndex, columnIndex } = sel;
-		const rows = el.tableData.rows.map((row, ri) =>
-			ri !== rowIndex
-				? row
-				: {
-						...row,
-						cells: row.cells.map((c, ci) =>
-							ci !== columnIndex ? c : withCellStyle(c, updates as Partial<PptxTableCellStyle>),
-						),
-					},
-		);
-		ops.updateElement(el.id, { tableData: { ...el.tableData, rows } } as Partial<PptxElement>);
+		const cells =
+			sel && sel.elementId === el.id
+				? sel.selectedCells?.length
+					? sel.selectedCells
+					: [{ row: sel.rowIndex, col: sel.columnIndex }]
+				: undefined;
+		const next = applyTableCellsTextStyle(el, cells, updates as TableCellTextStyleUpdate);
+		if (next === el) {
+			return;
+		}
+		ops.updateElement(el.id, {
+			tableData: next.tableData,
+			...(next.rawXml ? { rawXml: next.rawXml } : {}),
+		} as Partial<PptxElement>);
 	}
 
 	function ribbonUpdateTextStyle(updates: Partial<TextStyle>): void {

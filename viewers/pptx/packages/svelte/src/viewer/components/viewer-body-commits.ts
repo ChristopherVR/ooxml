@@ -1,9 +1,11 @@
 import {
 	getCellText,
 	reflowSmartArtData,
+	resolveTableCellEditEnd,
 	setCellText,
 	shouldCommitSmartArtNodeText,
 } from 'ooxml-ui/pptx';
+import type { TableCellEditEnd } from 'ooxml-ui/pptx';
 import { setSmartArtNodeStyle, updateSmartArtNodeText } from 'pptx-viewer-core';
 import type { PptxChartData } from 'pptx-viewer-core';
 
@@ -26,7 +28,13 @@ import type { EditorState } from '../editor/editor-state.svelte';
  * place), so the precedence between the two render paths is unchanged.
  */
 export interface EditCommitHandlers {
-	commitTableCell(id: string, rowIndex: number, cellIndex: number, text: string): void;
+	commitTableCell(
+		id: string,
+		rowIndex: number,
+		cellIndex: number,
+		text: string,
+		end?: TableCellEditEnd,
+	): void;
 	commitSmartArtNode(id: string, nodeId: string, text: string): void;
 	commitSmartArtFill(id: string, nodeId: string, fill: string): void;
 	/**
@@ -42,9 +50,20 @@ export interface EditCommitHandlers {
 
 export function createEditCommits(editor: EditorState): EditCommitHandlers {
 	return {
-		commitTableCell(id, rowIndex, cellIndex, rawText) {
+		commitTableCell(id, rowIndex, cellIndex, rawText, end) {
 			const table = editor.activeElements.find((element) => element.id === id);
 			if (table?.type !== 'table') {
+				return;
+			}
+			if (end) {
+				// The rich cell editor: runs, an appended row or a grid paste, as one patch.
+				const next = resolveTableCellEditEnd(table, rowIndex, cellIndex, end).element;
+				if (next) {
+					editor.applyElementPatch(id, {
+						tableData: next.tableData,
+						...(next.rawXml ? { rawXml: next.rawXml } : {}),
+					});
+				}
 				return;
 			}
 			const text = editor.transformCommittedText(rawText, getCellText(table, rowIndex, cellIndex));

@@ -124,7 +124,13 @@ export interface SlideCanvasProps {
 		elementId: string,
 	) => void;
 	/** Called when an edited table cell should be committed. */
-	onCommitCellEdit?: (elementId: string, rowIndex: number, colIndex: number, text: string) => void;
+	onCommitCellEdit?: (
+		elementId: string,
+		rowIndex: number,
+		colIndex: number,
+		text: string,
+		end?: import('ooxml-ui/pptx').TableCellEditEnd,
+	) => void;
 	/**
 	 * Commit a partial update to a SmartArt element from inline (on-canvas) node
 	 * editing. Routed to the same element-update path the inspector uses (undo/redo

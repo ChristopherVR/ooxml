@@ -27,7 +27,13 @@ interface ParentCallbacks {
 		cell: Omit<TableCellEditorState, 'elementId'> | null,
 		elementId: string,
 	) => void;
-	onCommitCellEdit?: (elementId: string, rowIndex: number, colIndex: number, text: string) => void;
+	onCommitCellEdit?: (
+		elementId: string,
+		rowIndex: number,
+		colIndex: number,
+		text: string,
+		end?: import('ooxml-ui/pptx').TableCellEditEnd,
+	) => void;
 	onUpdateSmartArtElement?: (elementId: string, updates: Partial<PptxElement>) => void;
 	onFormatText?: (updates: Partial<TextStyle>) => void;
 	onResizeTableColumns?: (elementId: string, newWidths: number[]) => void;
@@ -51,12 +57,7 @@ export interface StableCallbacks {
 	stableInlineEditCommit: () => void;
 	stableInlineEditCancel: () => void;
 	stableTableCellSelect: (cell: TableCellEditorState | null, elementId: string) => void;
-	stableCommitCellEdit: (
-		elementId: string,
-		rowIndex: number,
-		colIndex: number,
-		text: string,
-	) => void;
+	stableCommitCellEdit: NonNullable<ParentCallbacks['onCommitCellEdit']>;
 	stableUpdateSmartArtElement: (elementId: string, updates: Partial<PptxElement>) => void;
 	stableFormatText: (updates: Partial<TextStyle>) => void;
 	stableResizeTableColumns: (elementId: string, newWidths: number[]) => void;
@@ -107,8 +108,8 @@ export function useStableCallbacks(callbacks: ParentCallbacks): StableCallbacks 
 	);
 
 	const stableCommitCellEdit = useCallback(
-		(elementId: string, rowIndex: number, colIndex: number, text: string) =>
-			cbRef.current.onCommitCellEdit?.(elementId, rowIndex, colIndex, text),
+		(...args: Parameters<NonNullable<ParentCallbacks['onCommitCellEdit']>>) =>
+			cbRef.current.onCommitCellEdit?.(...args),
 		[],
 	);
 

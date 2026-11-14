@@ -18,12 +18,13 @@
  * @module angular-viewer/table-data-helpers
  */
 
-import type { CellCoord } from 'ooxml-ui/pptx';
+import type { CellCoord, TableCellEditEnd } from 'ooxml-ui/pptx';
 import {
 	computeMergeCellDown,
 	computeMergeCellRight,
 	computeSplitCell,
 	mergeCells,
+	resolveTableCellEditEnd,
 	splitCell,
 } from 'ooxml-ui/pptx';
 import type { PptxTableData, TablePptxElement } from 'pptx-viewer-core';
@@ -136,4 +137,22 @@ export function patchTableData(
 		return element;
 	}
 	return { ...element, tableData: { ...element.tableData, ...patch } };
+}
+
+/**
+ * The element patch for a rich cell edit (runs, an appended row for Tab in
+ * the last cell, or a pasted grid), from the shared `resolveTableCellEditEnd`;
+ * `undefined` when the document is unchanged.
+ */
+export function tableCellEditPatch(
+	element: TablePptxElement,
+	rowIndex: number,
+	colIndex: number,
+	end: TableCellEditEnd,
+): Partial<TablePptxElement> | undefined {
+	const next = resolveTableCellEditEnd(element, rowIndex, colIndex, end).element;
+	if (!next) {
+		return undefined;
+	}
+	return { tableData: next.tableData, ...(next.rawXml ? { rawXml: next.rawXml } : {}) };
 }

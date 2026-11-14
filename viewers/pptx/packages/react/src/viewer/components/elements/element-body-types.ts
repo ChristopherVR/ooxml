@@ -44,7 +44,12 @@ export interface RenderBodyOptions {
 	onCommit: () => void;
 	onCancel: () => void;
 	onCellSel?: (c: TableCellEditorState | null) => void;
-	onCellCommit?: (rowIndex: number, colIndex: number, text: string) => void;
+	onCellCommit?: (
+		rowIndex: number,
+		colIndex: number,
+		text: string,
+		end?: import('ooxml-ui/pptx').TableCellEditEnd,
+	) => void;
 	onColResize?: (newWidths: number[]) => void;
 	onRowResize?: (rowIndex: number, newHeight: number) => void;
 	findHl?: ElementFindHighlights;

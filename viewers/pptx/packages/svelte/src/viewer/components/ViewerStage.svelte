@@ -11,7 +11,12 @@
 	 * is CSS-scaled, and a ruler inside it would scale its strokes and labels
 	 * with the zoom instead of tracking it.
 	 */
-	import { RULER_THICKNESS, scrollInspectorSectionIntoView, updateViewerPreference } from 'ooxml-ui/pptx';
+	import {
+		attachTableCellsPaste,
+		RULER_THICKNESS,
+		scrollInspectorSectionIntoView,
+		updateViewerPreference,
+	} from 'ooxml-ui/pptx';
 	// oxlint-disable-next-line import/no-duplicates -- type-only imports stay top-level (consistent-type-specifier-style).
 	import type { InspectorSectionAnchor, PasteSpecialFormat } from 'ooxml-ui/pptx';
 	import { tick } from 'svelte';
@@ -83,6 +88,26 @@
 	const customization = useViewerCustomization();
 
 	const commits = $derived(createEditCommits(editor));
+
+	// Paste into selected table cells (none being edited): tab-separated text
+	// fills cells from the top-left selected cell, through the shared listener.
+	$effect(() =>
+		attachTableCellsPaste(
+			document,
+			() => {
+				const element = editor.selectedElement;
+				const cells = element ? editor.tableCells.cellsFor(element.id) : [];
+				return editingActive && element?.type === 'table' && cells.length > 0
+					? { element, cells }
+					: undefined;
+			},
+			(next) =>
+				editor.applyElementPatch(next.id, {
+					tableData: next.tableData,
+					...(next.rawXml ? { rawXml: next.rawXml } : {}),
+				}),
+		),
+	);
 
 	// The context menu's "Edit Hyperlink" (and the shared keymap's Ctrl+K)
 	// open the same dialog the Insert tab does; hosted here, because the menu

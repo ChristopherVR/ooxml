@@ -55,6 +55,7 @@ export interface SlideStageProps {
 		rowIndex: number,
 		cellIndex: number,
 		text: string,
+		end?: import('ooxml-ui/pptx').TableCellEditEnd,
 	) => void;
 	onsmartartnodecommit?: (elementId: string, nodeId: string, text: string) => void;
 	onsmartartnodefill?: (elementId: string, nodeId: string, fill: string) => void;
@@ -104,6 +105,7 @@ export interface SlideCanvasProps {
 		rowIndex: number,
 		cellIndex: number,
 		text: string,
+		end?: import('ooxml-ui/pptx').TableCellEditEnd,
 	) => void;
 	onsmartartnodecommit?: (elementId: string, nodeId: string, text: string) => void;
 	onsmartartnodefill?: (elementId: string, nodeId: string, fill: string) => void;
