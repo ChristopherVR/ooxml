@@ -1293,6 +1293,12 @@ export const translationsEn: Record<string, string> = {
 	'pptx.fonts.enableEmbedding': 'Enable font embedding',
 	'pptx.fonts.missingWarning': '{{count}} font(s) could not be found and will not be embedded.',
 	'pptx.fonts.notFound': 'Not found',
+	'pptx.fonts.previewOnly': 'Preview and print only',
+	'pptx.fonts.previewOnlyReason':
+		"This font's licence allows it to be displayed and printed only. It stays in this file, but it is never embedded into another file.",
+	'pptx.fonts.restricted': 'Restricted',
+	'pptx.fonts.restrictedReason':
+		"This font's licence does not allow it to be embedded, so it is not used for display and a substitute is shown. Its font data stays in this file unchanged.",
 	'pptx.fonts.scanning': 'Scanning fonts...',
 	'pptx.fonts.usedFonts': 'Used Fonts',
 

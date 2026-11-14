@@ -42,6 +42,7 @@ function mountDialogs() {
 				embedFontsEnabled: closed(),
 				usedFontFamilies: ref([]),
 				embeddedFontNames: ref([]),
+				embeddedFontRestrictions: ref({}),
 				fontEmbedding: ref({ interactive: false }),
 			},
 			insertDialogs,

@@ -23,6 +23,7 @@ import {
 	signal,
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
+import type { FontEmbeddingRestriction } from 'ooxml-ui/pptx';
 
 import type { DialogFooterActionSpec } from './dialog-footer.component';
 import { DialogFooterComponent } from './dialog-footer.component';
@@ -69,6 +70,7 @@ import { ModalDialogComponent } from './modal-dialog.component';
 					[usedFontFamilies]="usedFontFamilies()"
 					[availableFamilies]="availableFamilies()"
 					[embeddedSet]="embeddedSet()"
+					[restrictions]="embeddedFontRestrictions()"
 					[scanning]="scanning()"
 					[missingCount]="missingCount()"
 				/>
@@ -136,6 +138,9 @@ export class FontEmbeddingPanelComponent {
 
 	/** Font families already embedded in the file. */
 	readonly embeddedFonts = input<string[]>([]);
+
+	/** Licence restrictions of embedded typefaces (`describeEmbeddedFontRestrictions`). */
+	readonly embeddedFontRestrictions = input<Record<string, FontEmbeddingRestriction>>({});
 
 	/**
 	 * False when the deck embeds nothing, in which case the switch is inert and

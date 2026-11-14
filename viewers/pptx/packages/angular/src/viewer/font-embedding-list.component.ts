@@ -12,6 +12,7 @@
 
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
+import type { FontEmbeddingRestriction } from 'ooxml-ui/pptx';
 
 @Component({
 	selector: 'pptx-font-embedding-list',
@@ -34,12 +35,29 @@ import { TranslatePipe } from '@ngx-translate/core';
 				<div class="pptx-ng-fonts-list">
 					@for (family of usedFontFamilies(); track family) {
 						<div class="pptx-ng-fonts-row">
-							<span class="pptx-ng-fonts-name">{{ family }}</span>
+							<span class="pptx-ng-fonts-name">
+								{{ family }}
+								@if (restrictions()[family]; as restriction) {
+									<small
+										class="pptx-ng-fonts-reason"
+										[attr.data-font-restriction-reason]="restriction.licence"
+										>{{ restriction.reasonKey | translate }}</small
+									>
+								}
+							</span>
 							<div class="pptx-ng-fonts-status">
 								@if (embeddedSet().has(family)) {
 									<span class="pptx-ng-fonts-badge">{{
 										'pptx.fontEmbedding.embedded' | translate
 									}}</span>
+								}
+								@if (restrictions()[family]; as restriction) {
+									<span
+										class="pptx-ng-fonts-restricted"
+										[attr.data-font-restriction]="restriction.licence"
+										[attr.title]="restriction.reasonKey | translate"
+										>{{ restriction.labelKey | translate }}</span
+									>
 								}
 								@if (availableFamilies().has(family)) {
 									<span
@@ -133,6 +151,19 @@ import { TranslatePipe } from '@ngx-translate/core';
 				border: 1px solid rgba(21, 128, 61, 0.4);
 				border-radius: 0.25rem;
 			}
+			.pptx-ng-fonts-reason {
+				display: block;
+				font-size: 0.625rem;
+				color: var(--pptx-muted-foreground, #9ca3af);
+			}
+			.pptx-ng-fonts-restricted {
+				padding: 0.0625rem 0.375rem;
+				font-size: 0.625rem;
+				color: #facc15;
+				background: rgba(113, 63, 18, 0.4);
+				border: 1px solid rgba(161, 98, 7, 0.4);
+				border-radius: 0.25rem;
+			}
 			.pptx-ng-fonts-check {
 				font-size: 0.875rem;
 				color: #4ade80;
@@ -158,6 +189,9 @@ export class FontEmbeddingListComponent {
 
 	/** Families already embedded in the file. */
 	readonly embeddedSet = input<Set<string>>(new Set<string>());
+
+	/** Licence restrictions of embedded typefaces (`describeEmbeddedFontRestrictions`). */
+	readonly restrictions = input<Record<string, FontEmbeddingRestriction>>({});
 
 	/** True while the font-availability scan is running. */
 	readonly scanning = input<boolean>(false);

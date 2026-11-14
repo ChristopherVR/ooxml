@@ -11,7 +11,9 @@
  */
 import { describe, expect, it } from 'vitest';
 
+import { resolveEmbeddedFontClearBytes } from './embedded-font-bytes';
 import {
+	describeEmbeddedFontRestrictions,
 	describeFontEmbedding,
 	embeddedFontSaveOptions,
 	FONT_EMBEDDING_UNAVAILABLE_KEY,
@@ -107,5 +109,50 @@ describe('font embedding has exactly one setting', () => {
 			embeddedFontList: null,
 			embedTrueTypeFonts: false,
 		});
+	});
+});
+
+describe('describeEmbeddedFontRestrictions', () => {
+	it('reports restricted and preview & print typefaces with a reason, others not at all', () => {
+		const restrictions = describeEmbeddedFontRestrictions([
+			{ name: 'Open', fsType: 0 },
+			{ name: 'Editable', fsType: 0x0008 },
+			{ name: 'Unknown' },
+			{ name: 'Brand', fsType: 0x0002 },
+			{ name: 'Proof', fsType: 0x0004 },
+		]);
+		expect(Object.keys(restrictions).sort()).toStrictEqual(['Brand', 'Proof']);
+		expect(restrictions.Brand).toStrictEqual({
+			licence: 'restricted',
+			labelKey: 'pptx.fonts.restricted',
+			reasonKey: 'pptx.fonts.restrictedReason',
+		});
+		expect(restrictions.Proof?.labelKey).toBe('pptx.fonts.previewOnly');
+		expect(restrictions.Proof?.reasonKey).toBe('pptx.fonts.previewOnlyReason');
+	});
+
+	it('takes the most restrictive face of a typeface', () => {
+		for (const order of [
+			[0x0004, 0x0002],
+			[0x0002, 0x0004],
+		]) {
+			const fonts = order.map((fsType) => ({ name: 'Mixed', fsType }));
+			expect(describeEmbeddedFontRestrictions(fonts).Mixed?.licence).toBe('restricted');
+		}
+	});
+
+	it('never resolves font bytes for a restricted face', () => {
+		const clear = new Uint8Array([0, 1, 0, 0, 9, 9, 9, 9]);
+		expect(resolveEmbeddedFontClearBytes({ name: 'Ok', dataUrl: '', rawFontData: clear })).toBe(
+			clear,
+		);
+		expect(
+			resolveEmbeddedFontClearBytes({
+				name: 'Brand',
+				dataUrl: '',
+				rawFontData: clear,
+				fsType: 0x0002,
+			}),
+		).toBeUndefined();
 	});
 });

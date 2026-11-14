@@ -1,4 +1,8 @@
-import { collectUsedFonts, scanAvailableFontFamilies } from 'ooxml-ui/pptx';
+import {
+	collectUsedFonts,
+	describeEmbeddedFontRestrictions,
+	scanAvailableFontFamilies,
+} from 'ooxml-ui/pptx';
 import type { PptxEmbeddedFont, PptxSlide } from 'pptx-viewer-core';
 
 import type { Translator } from '../i18n';
@@ -51,6 +55,7 @@ export function openFontEmbeddingDialog(
 
 	const families = collectUsedFonts(options.slides);
 	const embedded = new Set(options.embeddedFonts.map((font) => font.name));
+	const restrictions = describeEmbeddedFontRestrictions(options.embeddedFonts);
 	const heading = createEl(doc, 'h3');
 	heading.textContent = `${t('pptx.fonts.usedFonts')} (${families.length})`;
 	const list = createEl(doc, 'div', 'pptxv-info-list');
@@ -72,6 +77,19 @@ export function openFontEmbeddingDialog(
 				const badge = createEl(doc, 'b');
 				badge.textContent = t('pptx.fonts.embedded');
 				badges.appendChild(badge);
+			}
+			const restriction = restrictions[family];
+			if (restriction) {
+				const badge = createEl(doc, 'b');
+				badge.dataset.fontRestriction = restriction.licence;
+				badge.title = t(restriction.reasonKey);
+				badge.textContent = t(restriction.labelKey);
+				badges.appendChild(badge);
+				const reason = createEl(doc, 'small');
+				reason.dataset.fontRestrictionReason = restriction.licence;
+				reason.textContent = t(restriction.reasonKey);
+				reason.style.display = 'block';
+				name.appendChild(reason);
 			}
 			const availability = createEl(doc, 'em');
 			availability.classList.toggle('is-missing', !available.has(family));

@@ -59,6 +59,12 @@ export const translations = {
 	'pptx.fonts.missingWarning':
 		'{{count}}-Schriftart(en) konnten nicht gefunden werden und werden nicht eingebettet.',
 	'pptx.fonts.notFound': 'Nicht gefunden',
+	'pptx.fonts.previewOnly': 'Nur Vorschau und Druck',
+	'pptx.fonts.previewOnlyReason':
+		'Die Lizenz dieser Schriftart erlaubt nur Anzeige und Druck. Sie bleibt in dieser Datei, wird aber nie in eine andere Datei eingebettet.',
+	'pptx.fonts.restricted': 'Eingeschränkt',
+	'pptx.fonts.restrictedReason':
+		'Die Lizenz dieser Schriftart erlaubt kein Einbetten. Sie wird daher nicht zur Anzeige verwendet, und eine Ersatzschrift wird gezeigt. Ihre Schriftdaten bleiben unverändert in dieser Datei.',
 	'pptx.fonts.scanning': 'Schriftarten werden gescannt...',
 	'pptx.fonts.usedFonts': 'Verwendete Schriftarten',
 	'pptx.text.title': 'Text',

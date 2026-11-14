@@ -11,7 +11,7 @@
 	 * whole bag rather than ~40 individual props is deliberate; the bag is the
 	 * viewer's single composition root and the chrome reads most of it.
 	 */
-	import { createGuide, readBackstageRecentFile, toggleSheet } from 'ooxml-ui/pptx';
+	import { createGuide, describeEmbeddedFontRestrictions, readBackstageRecentFile, toggleSheet } from 'ooxml-ui/pptx';
 	import type { AccountAuthConfig, ToolbarActionId } from 'ooxml-ui/pptx';
 
 	import type { ViewerStateBag } from '../state/create-viewer-state-types';
@@ -161,6 +161,7 @@
 		onversionhistory={() => (vm.versionHistoryOpen = true)}
 		hasMacros={loader.hasMacros}
 		embeddedFontNames={loader.embeddedFonts.map((font) => font.name)}
+		embeddedFontRestrictions={describeEmbeddedFontRestrictions(loader.embeddedFonts)}
 		hasDigitalSignatures={loader.hasDigitalSignatures}
 		digitalSignatureCount={loader.digitalSignatureCount}
 		isPasswordProtected={loader.isPasswordProtected}
@@ -287,6 +288,7 @@
 			onversionhistory={() => (vm.versionHistoryOpen = true)}
 			hasMacros={loader.hasMacros}
 			embeddedFontNames={loader.embeddedFonts.map((font) => font.name)}
+			embeddedFontRestrictions={describeEmbeddedFontRestrictions(loader.embeddedFonts)}
 			hasDigitalSignatures={loader.hasDigitalSignatures}
 			digitalSignatureCount={loader.digitalSignatureCount}
 			isPasswordProtected={loader.isPasswordProtected}
