@@ -6,6 +6,8 @@ import type { Block, HeaderFooterSlots, Note, SectionProperties } from './model'
 import { first, getW, parseXml, type XmlElement } from './xml';
 import { readCompatibilitySettings } from './compatibility';
 import { onOffElement } from './simple-types';
+import { parseKinsokuSettings } from './kinsoku-settings';
+import type { KinsokuSettings } from '../text/kinsoku';
 import { isStNumberFormat, type StNumberFormat } from './generated/wml-simple-types';
 import { enumValue, withParseWarnings } from './parse-diagnostics';
 import { parseRelationships, resolvePartPath, type Relationship } from './relationships';
@@ -38,6 +40,7 @@ interface SettingsInfo {
 	autoHyphenation: boolean;
 	compatibilityMode?: number;
 	doNotUseHtmlParagraphAutoSpacing?: boolean;
+	kinsoku?: KinsokuSettings;
 	footnoteNumFmt?: StNumberFormat;
 	endnoteNumFmt?: StNumberFormat;
 }
@@ -54,8 +57,10 @@ function parseSettings(xml: string | undefined): SettingsInfo {
 		getW(first(first(root, 'endnotePr'), 'numFmt'), 'val'),
 		'w:endnotePr/w:numFmt',
 	);
+	const kinsoku = parseKinsokuSettings(root);
 	return {
 		...readCompatibilitySettings(first(root, 'compat')),
+		...(kinsoku ? { kinsoku } : {}),
 		evenAndOddHeaders: onOffElement(first(root, 'evenAndOddHeaders')) === true,
 		autoHyphenation: onOffElement(first(root, 'autoHyphenation')) === true,
 		...(footnoteNumFmt ? { footnoteNumFmt } : {}),
@@ -102,6 +107,7 @@ export interface DocumentPartsResult {
 	endnotes?: Note[];
 	compatibilityMode?: number;
 	doNotUseHtmlParagraphAutoSpacing?: boolean;
+	kinsoku?: KinsokuSettings;
 	footnoteNumFmt?: StNumberFormat;
 	endnoteNumFmt?: StNumberFormat;
 	evenAndOddHeaders?: boolean;
@@ -178,6 +184,7 @@ export async function parseDocumentParts(
 		...(settings.doNotUseHtmlParagraphAutoSpacing
 			? { doNotUseHtmlParagraphAutoSpacing: true }
 			: {}),
+		...(settings.kinsoku ? { kinsoku: settings.kinsoku } : {}),
 		...(footnotes ? { footnotes } : {}),
 		...(footnoteSeparators ? { footnoteSeparators } : {}),
 		...(endnotes ? { endnotes } : {}),

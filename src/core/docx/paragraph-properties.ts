@@ -9,7 +9,7 @@ import {
 	parseSignedTwips,
 	parseTwips,
 } from './simple-types';
-import { PAGINATION_KEYS, parseOutlineLevel } from './paragraph-styles';
+import { EAST_ASIAN_TYPOGRAPHY_KEYS, PAGINATION_KEYS, parseOutlineLevel } from './paragraph-styles';
 import { parseParagraphBorders, parseShadingFill } from './table-borders';
 
 export type DirectParagraphProperties = Omit<
@@ -40,7 +40,7 @@ export function parseDirectParagraphProperties(
 	if (style) paragraph.style = style;
 	const pageBreakBefore = onOffElement(first(props, 'pageBreakBefore'));
 	if (pageBreakBefore !== undefined) paragraph.pageBreakBefore = pageBreakBefore;
-	for (const key of PAGINATION_KEYS) {
+	for (const key of [...PAGINATION_KEYS, ...EAST_ASIAN_TYPOGRAPHY_KEYS]) {
 		const value = onOffElement(first(props, key));
 		if (value !== undefined) paragraph[key] = value;
 	}

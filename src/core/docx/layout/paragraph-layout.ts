@@ -1,5 +1,5 @@
 import type { TextMeasurer } from './measure';
-import type { BreakToken } from './text-breaks';
+import { gluedCarry, type BreakToken } from './text-breaks';
 import type { LayoutFragment, LayoutLine, LayoutParagraphFrame } from './result';
 import type { LayoutParagraph } from './input';
 import { NO_TWIPS, twipsToPx } from './units';
@@ -209,6 +209,7 @@ function measureParagraph(
 		return { followingPx, beforeDecimalPx: beforeDecimalPx ?? followingPx };
 	}
 	const hangingStopPx = firstLineExtraPx < 0 ? leftPx : undefined;
+	const placedTokens = () => placed.map((entry) => entry.token);
 
 	function flushLine(forceEmpty: boolean, forcedByBreak: 'page' | 'column' | undefined) {
 		if (!placed.length && !forceEmpty) return;
@@ -269,8 +270,8 @@ function measureParagraph(
 		marginReachPx = 0;
 	}
 
-	for (const [tokenIndex, token] of tokens.entries()) {
-		if (tokenIndex < startToken) continue;
+	for (let tokenIndex = startToken; tokenIndex < tokens.length; tokenIndex++) {
+		const token = expectDefined(tokens[tokenIndex], 'token index');
 		tokenCursor = tokenIndex + 1;
 		if (token.kind === 'lineBreak') {
 			if (!placed.length) firstToken = tokenIndex;
@@ -353,6 +354,15 @@ function measureParagraph(
 		if (pastHole !== undefined && lineWidthPx + pastHole + advance <= availableWidth(lineIndex)) {
 			jump = { index: placed.length, shiftPx: pastHole };
 		} else if (!wouldFit && token.kind !== 'space') {
+			// Kinsoku and words split across runs: the glued tokens before this one go down with it.
+			const carry = jump ? 0 : gluedCarry(tokens, tokenIndex, placedTokens());
+			if (carry) {
+				placed.splice(placed.length - carry);
+				tokenCursor = tokenIndex - carry;
+				flushLine(false, undefined);
+				tokenIndex -= carry + 1;
+				continue;
+			}
 			tokenCursor = tokenIndex;
 			flushLine(false, undefined);
 			tokenCursor = tokenIndex + 1;

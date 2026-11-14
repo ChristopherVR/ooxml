@@ -51,6 +51,11 @@ export interface LayoutRun {
 	positionalTab?: TextRun['positionalTab'];
 	underline?: boolean;
 	strike?: boolean;
+	/**
+	 * The East Asian language whose kinsoku set governs this run's characters (from the resolved
+	 * `w:lang/@w:eastAsia`); absent, the run's characters are never kept off a line start or end.
+	 */
+	kinsokuLanguage?: import('../../text/kinsoku').KinsokuLanguage;
 }
 
 /** A picture's package part and size in CSS pixels; the engine never loads its bytes. */
@@ -156,6 +161,10 @@ export interface LayoutParagraph {
 	borders?: LayoutParagraphBorders;
 	/** `#rrggbb` shading behind the paragraph. */
 	shading?: string;
+	/** `w:kinsoku w:val="0"`: no line-start or line-end prohibition (on when absent). */
+	kinsoku?: false;
+	/** The document's kinsoku settings (settings.xml), copied onto each paragraph that uses them. */
+	kinsokuSettings?: import('../../text/kinsoku').KinsokuSettings;
 }
 
 /** A resolved cell border, ready to draw. */

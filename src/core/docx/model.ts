@@ -145,6 +145,11 @@ export interface DocumentModel {
 	 * them and reads the twips. Measured the same in compatibility modes 12, 14 and 15 except pageBreakBefore.
 	 */
 	doNotUseHtmlParagraphAutoSpacing?: boolean;
+	/**
+	 * Document-wide kinsoku settings from settings.xml (`w:strictFirstAndLastChars`,
+	 * `w:noLineBreaksBefore`, `w:noLineBreaksAfter`); read only, settings.xml is saved as loaded.
+	 */
+	kinsoku?: import('../text/kinsoku').KinsokuSettings;
 	/** Custom separator stories, including explicitly empty separators. */
 	footnoteSeparators?: { separator?: Note; continuationSeparator?: Note };
 	endnotes?: Note[];

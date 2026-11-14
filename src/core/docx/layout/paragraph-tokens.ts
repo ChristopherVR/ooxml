@@ -1,7 +1,15 @@
 import { definedProps } from '../defined-props';
 import type { LayoutFontSpec, TextMeasurer } from './measure';
 import type { LayoutFragment } from './result';
-import { appendBreakMarker, tokenizeRun, type BreakToken } from './text-breaks';
+import { kinsokuSets, type KinsokuSets } from '../../text/kinsoku';
+import {
+	appendBreakMarker,
+	breakAllowedBetween,
+	graphemesOf,
+	kinsokuForbids,
+	tokenizeRun,
+	type BreakToken,
+} from './text-breaks';
 import type { LayoutParagraph, LayoutRun } from './input';
 import { NO_TWIPS, DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE_PT, ptToPx, twipsToPx } from './units';
 
@@ -76,6 +84,33 @@ export function sourceLengthOf(run: LayoutRun): number {
 	return run.sourceLength ?? (run.object ? 1 : run.text.length || (run.breakAfter ? 1 : 0));
 }
 
+/** The kinsoku sets for a run's characters, or undefined when kinsoku does not apply to it. */
+function runKinsoku(
+	paragraph: LayoutParagraph,
+	run: LayoutRun | undefined,
+): KinsokuSets | undefined {
+	if (paragraph.kinsoku === false || !run?.kinsokuLanguage || run.synthetic) return undefined;
+	return kinsokuSets(run.kinsokuLanguage, paragraph.kinsokuSettings);
+}
+
+/**
+ * Marks the first word of a run that continues the previous run's word: glued when the boundary
+ * between the two runs is no break opportunity, or kinsoku forbids it.
+ */
+function glueAcrossRuns(paragraph: LayoutParagraph, tokens: BreakToken[], start: number): void {
+	const token = tokens[start];
+	const previous = tokens[start - 1];
+	if (token?.kind !== 'word' || previous?.kind !== 'word') return;
+	const before = paragraph.runs[previous.runIndex];
+	const after = paragraph.runs[token.runIndex];
+	if (before?.synthetic || before?.marker) return;
+	const last = graphemesOf(previous.text).at(-1) ?? '';
+	const first = graphemesOf(token.text)[0] ?? '';
+	if (!breakAllowedBetween(last, first)) token.glue = 'word';
+	else if (kinsokuForbids(last, first, runKinsoku(paragraph, before), runKinsoku(paragraph, after)))
+		token.glue = 'kinsoku';
+}
+
 export function tokenizeParagraph(paragraph: LayoutParagraph): {
 	tokens: BreakToken[];
 	runOffsets: number[];
@@ -84,6 +119,7 @@ export function tokenizeParagraph(paragraph: LayoutParagraph): {
 	const runOffsets: number[] = [];
 	let cursor = 0;
 	paragraph.runs.forEach((run, runIndex) => {
+		const start = tokens.length;
 		runOffsets.push(cursor);
 		if (run.hidden) {
 			if (!run.synthetic) cursor += sourceLengthOf(run);
@@ -100,7 +136,10 @@ export function tokenizeParagraph(paragraph: LayoutParagraph): {
 				text: run.text.slice(0, run.marker.length),
 			});
 			tokens.push(...tokenizeRun(run.text.slice(run.marker.length), runIndex));
-		} else tokens.push(...tokenizeRun(run.text, runIndex));
+		} else {
+			tokens.push(...tokenizeRun(run.text, runIndex, runKinsoku(paragraph, run)));
+			glueAcrossRuns(paragraph, tokens, start);
+		}
 		if (run.breakAfter) appendBreakMarker(tokens, runIndex, run.text.length, run.breakAfter);
 		// A list label maps to the start of the paragraph's text for click-to-cursor.
 		if (run.synthetic) {

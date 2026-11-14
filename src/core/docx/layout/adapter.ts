@@ -21,6 +21,8 @@ import { DEFAULT_FONT_SIZE_PT, ptToPx } from './units';
 import { docxChartPaint } from '../chart-paint';
 import { pictureBulletSizePt } from '../numbering-picture';
 import { definedProps } from '../defined-props';
+import { kinsokuLanguage } from '../../text/kinsoku';
+import { resolveEastAsiaLanguage } from '../run-language';
 import { symbolOnly, symbolSegments } from '../special-characters';
 import { formFieldDisplayText } from '../form-fields';
 import { adaptTable } from './adapt-table';
@@ -246,6 +248,15 @@ export function adaptDocumentModel(
 			...(formatting.strike || formatting.doubleStrike ? { strike: true } : {}),
 			...(run.break ? { breakAfter: run.break } : {}),
 			...(script ? { script } : {}),
+			...definedProps({
+				kinsokuLanguage: kinsokuLanguage(
+					resolveEastAsiaLanguage(run, {
+						runCatalog: model.characterStyles,
+						paragraphCatalog: catalog,
+						paragraphStyleId,
+					}),
+				),
+			}),
 		};
 	}
 	const labels = computeListLabels(model);
@@ -356,6 +367,8 @@ export function adaptDocumentModel(
 			...(resolved.keepLines ? { keepLines: true } : {}),
 			...(resolved.widowControl === false ? { widowControl: false } : {}),
 			...(resolved.contextualSpacing ? { contextualSpacing: true } : {}),
+			...(resolved.kinsoku === false ? { kinsoku: false as const } : {}),
+			...(model.kinsoku ? { kinsokuSettings: model.kinsoku } : {}),
 		};
 	}
 	function adaptBlock(block: Block): LayoutBlock {
