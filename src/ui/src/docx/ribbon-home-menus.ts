@@ -24,8 +24,12 @@ export function pasteSplit(): HTMLElement {
 		[
 			['paste', 'Paste'],
 			['text', 'Keep text only'],
+			['special', 'Paste Special...'],
 		],
-		(value) => ({ type: 'clipboard', key: 'paste', plainText: value === 'text' }),
+		(value) =>
+			value === 'special'
+				? { type: 'formatDialog', kind: 'pasteSpecial' }
+				: { type: 'clipboard', key: 'paste', plainText: value === 'text' },
 		true,
 	);
 }

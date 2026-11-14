@@ -11,6 +11,7 @@ import { enLigatures } from './ligatures';
 import { enNavigation } from './navigation';
 import { enDropCap } from './drop-cap';
 import { enFindStories } from './find-stories';
+import { enPasteOptions } from './paste-options';
 import { enLineNumbers } from './line-numbers';
 import { enApp } from './en-app';
 import { enTableProperties } from './table-properties';
@@ -28,6 +29,7 @@ export const en = {
 	...enLineNumbers,
 	...enDropCap,
 	...enFindStories,
+	...enPasteOptions,
 	...enNavigation,
 	...enColumns,
 	...enSplitCells,

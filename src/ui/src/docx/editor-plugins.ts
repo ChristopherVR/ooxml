@@ -25,6 +25,22 @@ import { sectionBreaksPlugin } from './section-commands';
 import { trackChangesPlugin } from './track-changes-mode';
 import { reviewRunMarksPlugin } from './review-run-marks';
 import { wordPastePlugin } from './word-paste';
+import { PasteController, pasteOptionsPlugin } from './paste-options';
+import { pasteOptionsButtonPlugin, type PasteOptionsButtonHost } from './paste-options-button';
+
+/** Word's paste: its HTML read as Word means it, Paste Options after it, Paste Special. */
+function pastePlugins(host: BodyPluginHost): Plugin[] {
+	const controller = new PasteController();
+	return [
+		wordPastePlugin(
+			() => host.model(),
+			() => (controller.option === 'merge' ? 'merge' : 'source'),
+		),
+		pasteOptionsPlugin(controller),
+		...(host.pasteOptions ? [pasteOptionsButtonPlugin(host.pasteOptions)] : []),
+		keymap({ 'Mod-Alt-v': () => (host.pasteSpecial?.(), Boolean(host.pasteSpecial)) }),
+	];
+}
 
 /** What the body editor's plugins read from the editor element. */
 export interface BodyPluginHost {
@@ -36,6 +52,10 @@ export interface BodyPluginHost {
 	reviewDisplayMode(): ReviewDisplayMode;
 	insertNote(kind: 'footnote' | 'endnote'): void;
 	showSearch(): void;
+	/** Paste Special (Ctrl+Alt+V). */
+	pasteSpecial?(): void;
+	/** Where the Paste Options button is drawn; without it pastes are still tracked. */
+	pasteOptions?: PasteOptionsButtonHost;
 	/** Controller and collaboration plugins, in the order they apply. */
 	extraPlugins: Plugin[];
 	collaborationPlugins: Plugin[];
@@ -48,7 +68,7 @@ export function bodyPlugins(host: BodyPluginHost): Plugin[] {
 	return [
 		...(host.yjs ? [] : [history()]),
 		...host.extraPlugins,
-		wordPastePlugin(() => host.model()),
+		...pastePlugins(host),
 		noteNumberingPlugin(),
 		sectionBreaksPlugin(),
 		fieldGuardPlugin(),

@@ -7,6 +7,7 @@ import { esLigatures } from './ligatures';
 import { esNavigation } from './navigation';
 import { esDropCap } from './drop-cap';
 import { esFindStories } from './find-stories';
+import { esPasteOptions } from './paste-options';
 import { esLineNumbers } from './line-numbers';
 import { esObjects } from './objects';
 import { esShapes } from './shapes';
@@ -25,6 +26,7 @@ export const es: LocaleStrings = {
 	...esLineNumbers,
 	...esDropCap,
 	...esFindStories,
+	...esPasteOptions,
 	...esNavigation,
 	...esColumns,
 	...esSplitCells,

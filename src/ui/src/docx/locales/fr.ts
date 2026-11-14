@@ -7,6 +7,7 @@ import { frLigatures } from './ligatures';
 import { frNavigation } from './navigation';
 import { frDropCap } from './drop-cap';
 import { frFindStories } from './find-stories';
+import { frPasteOptions } from './paste-options';
 import { frLineNumbers } from './line-numbers';
 import { frObjects } from './objects';
 import { frShapes } from './shapes';
@@ -25,6 +26,7 @@ export const fr: LocaleStrings = {
 	...frLineNumbers,
 	...frDropCap,
 	...frFindStories,
+	...frPasteOptions,
 	...frNavigation,
 	...frColumns,
 	...frSplitCells,

@@ -8,6 +8,7 @@ import { zhNavigation } from './navigation';
 import { zhLineNumbers } from './line-numbers';
 import { zhDropCap } from './drop-cap';
 import { zhFindStories } from './find-stories';
+import { zhPasteOptions } from './paste-options';
 import { zhObjects } from './objects';
 import { zhShapes } from './shapes';
 import { zhSmartArt } from './smartart';
@@ -25,6 +26,7 @@ export const zhCN: LocaleStrings = {
 	...zhLineNumbers,
 	...zhDropCap,
 	...zhFindStories,
+	...zhPasteOptions,
 	...zhNavigation,
 	...zhColumns,
 	...zhSplitCells,

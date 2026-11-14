@@ -21,6 +21,7 @@ import keyboardMenu from './keyboard-menu.css?raw';
 import smartArt from './smartart.css?raw';
 import contentControls from './content-controls.css?raw';
 import shapesCss from './shapes.css?raw';
+import pasteOptions from './paste-options.css?raw';
 
 // Legacy custom properties remain inputs, never defaults that hide an inherited Office theme.
 // Resolve at the host before mapping onto inner shared controls to avoid CSS variable cycles.
@@ -53,4 +54,5 @@ export const editorStyleText = [
 	smartArt,
 	contentControls,
 	shapesCss,
+	pasteOptions,
 ].join('\n');

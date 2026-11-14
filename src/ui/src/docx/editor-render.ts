@@ -32,6 +32,11 @@ export function renderDocument(core: EditorCore): void {
 				showSearch: () => {
 					if (!core.viewOptions.customization.shortcuts.has('find')) core.shell.searchPanel?.open();
 				},
+				pasteSpecial: () => core.formatDialogs.open('pasteSpecial'),
+				pasteOptions: {
+					container: () => core.shell.canvas?.closest<HTMLElement>('.dve-frame') ?? undefined,
+					locale: () => core.locale,
+				},
 				extraPlugins: core.inserts.plugins(),
 				yjs: Boolean(yjs),
 				revisionIds: core.collab.ids,
