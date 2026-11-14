@@ -5,6 +5,7 @@ import { FormatDialogs } from './format-dialogs';
 import type { EditorState, Transaction } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import type { DocumentModel } from 'ooxml-core/docx';
+import { inspectorActions } from './document-inspector-apply';
 import { createDocument } from 'ooxml-core/docx';
 import type { loadDocument } from 'ooxml-core/docx/load';
 import { refreshEditorControls } from './editor-controls';
@@ -272,6 +273,13 @@ export class EditorCore {
 				canEdit: () => !this.readOnly && !this.collab.active,
 				apply: (columns, footnoteColumns) => this.pages.applyColumns(columns, footnoteColumns),
 			},
+			inspector: inspectorActions({
+				view: () => this.view,
+				model: () => this.model,
+				canEdit: () =>
+					!this.readOnly && !this.collab.active && !locksStories(this.model.protection),
+				reportError: (cause) => dispatchDocumentError(this.element, cause),
+			}),
 			restrictEditing: {
 				protection: () => this.model.protection,
 				apply: (protection) => this.applyProtection(protection),

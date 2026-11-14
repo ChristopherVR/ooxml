@@ -11,6 +11,7 @@ import { frPasteOptions } from './paste-options';
 import { frPicture } from './picture';
 import { frPictureWatermark } from './picture-watermark';
 import { frConvertNotes } from './convert-notes';
+import { frDocumentInspector } from './document-inspector';
 import { frLineNumbers } from './line-numbers';
 import { frObjects } from './objects';
 import { frShapes } from './shapes';
@@ -33,6 +34,7 @@ export const fr: LocaleStrings = {
 	...frPicture,
 	...frPictureWatermark,
 	...frConvertNotes,
+	...frDocumentInspector,
 	...frNavigation,
 	...frColumns,
 	...frSplitCells,

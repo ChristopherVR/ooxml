@@ -73,6 +73,10 @@ export interface ChromeHost {
 	customization(): ResolvedWordCustomization;
 	/** The context of a host region (a File tab page). */
 	regionContext(region: string): WordRegionContext;
+	/** File > Info > Check for Issues: opens the Document Inspector. */
+	inspectDocument?(): void;
+	/** A File > Info property edit changed `model().properties`. */
+	documentInformationChanged?(): void;
 }
 
 export const DEFAULT_FILE_NAME = 'Document1.docx';
@@ -123,6 +127,7 @@ export class EditorChrome {
 				else delete next[key];
 				if (Object.keys(next).length) model.properties = next;
 				else delete model.properties;
+				host.documentInformationChanged?.();
 				this.setSaveState('dirty');
 			},
 			ribbon: () => host.ribbon(),
@@ -133,6 +138,10 @@ export class EditorChrome {
 			fileProviders: () => host.fileProviders?.() ?? [],
 			openCloudFile: (file) => this.openCloudFile(file),
 			locale: () => host.locale(),
+			inspectDocument: () => {
+				this.closeBackstage();
+				host.inspectDocument?.();
+			},
 		});
 		this.statusBar = createStatusBar({
 			setViewMode: (mode) => host.setViewMode(mode),

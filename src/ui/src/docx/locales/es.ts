@@ -11,6 +11,7 @@ import { esPasteOptions } from './paste-options';
 import { esPicture } from './picture';
 import { esPictureWatermark } from './picture-watermark';
 import { esConvertNotes } from './convert-notes';
+import { esDocumentInspector } from './document-inspector';
 import { esLineNumbers } from './line-numbers';
 import { esObjects } from './objects';
 import { esShapes } from './shapes';
@@ -33,6 +34,7 @@ export const es: LocaleStrings = {
 	...esPicture,
 	...esPictureWatermark,
 	...esConvertNotes,
+	...esDocumentInspector,
 	...esNavigation,
 	...esColumns,
 	...esSplitCells,

@@ -28,6 +28,10 @@ import { createColumnsDialog, type ColumnsHost } from './columns-dialog';
 import { createMultilevelListDialog } from './multilevel-list-dialog';
 import { createReviewOptionsDialog } from './review-options-dialog';
 import { createRestrictEditingPane, type RestrictEditingHost } from './restrict-editing-pane';
+import {
+	createDocumentInspectorDialog,
+	type DocumentInspectorHost,
+} from './document-inspector-dialog';
 
 export type FormatDialogKind =
 	| 'font'
@@ -56,7 +60,8 @@ export type FormatDialogKind =
 	| 'insertChart'
 	| 'changeChartType'
 	| 'chartData'
-	| 'pasteSpecial';
+	| 'pasteSpecial'
+	| 'inspectDocument';
 
 export interface FormatDialogsHost {
 	view(): EditorView | undefined;
@@ -78,6 +83,8 @@ export interface FormatDialogsHost {
 	convertNotes?: Omit<ConvertNotesHost, 'restoreFocus'>;
 	/** Review > Restrict Editing: the document's protection and how to change it. */
 	restrictEditing?: Omit<RestrictEditingHost, 'view'>;
+	/** File > Info > Inspect Document: removing what the inspector finds. */
+	inspector?: Omit<DocumentInspectorHost, 'model' | 'restoreFocus'>;
 	/** The document theme, for chart previews. */
 	theme?(): ThemeCatalog | undefined;
 }
@@ -171,6 +178,11 @@ export class FormatDialogs {
 				user: () => host.restrictEditing?.user() ?? 'Author',
 				highlight: () => host.restrictEditing?.highlight() ?? true,
 				setHighlight: (on) => host.restrictEditing?.setHighlight(on),
+			}),
+			inspectDocument: createDocumentInspectorDialog({
+				model: () => host.model(),
+				...(host.inspector ?? { blocked: () => 'readOnly', remove: () => false }),
+				restoreFocus: () => focusView(host.view()),
 			}),
 			tracking: createReviewOptionsDialog(() =>
 				host.reviewView ? host.reviewView() : host.view(),

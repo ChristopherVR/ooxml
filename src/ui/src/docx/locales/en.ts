@@ -15,6 +15,7 @@ import { enPasteOptions } from './paste-options';
 import { enPicture } from './picture';
 import { enPictureWatermark } from './picture-watermark';
 import { enConvertNotes } from './convert-notes';
+import { enDocumentInspector } from './document-inspector';
 import { enLineNumbers } from './line-numbers';
 import { enApp } from './en-app';
 import { enTableProperties } from './table-properties';
@@ -36,6 +37,7 @@ export const en = {
 	...enPicture,
 	...enPictureWatermark,
 	...enConvertNotes,
+	...enDocumentInspector,
 	...enNavigation,
 	...enColumns,
 	...enSplitCells,

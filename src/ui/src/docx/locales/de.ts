@@ -11,6 +11,7 @@ import { dePasteOptions } from './paste-options';
 import { dePicture } from './picture';
 import { dePictureWatermark } from './picture-watermark';
 import { deConvertNotes } from './convert-notes';
+import { deDocumentInspector } from './document-inspector';
 import { deLineNumbers } from './line-numbers';
 import { deObjects } from './objects';
 import { deShapes } from './shapes';
@@ -33,6 +34,7 @@ export const de: LocaleStrings = {
 	...dePicture,
 	...dePictureWatermark,
 	...deConvertNotes,
+	...deDocumentInspector,
 	...deNavigation,
 	...deColumns,
 	...deSplitCells,

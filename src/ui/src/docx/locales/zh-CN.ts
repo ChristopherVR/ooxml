@@ -12,6 +12,7 @@ import { zhPasteOptions } from './paste-options';
 import { zhPicture } from './picture';
 import { zhPictureWatermark } from './picture-watermark';
 import { zhConvertNotes } from './convert-notes';
+import { zhDocumentInspector } from './document-inspector';
 import { zhObjects } from './objects';
 import { zhShapes } from './shapes';
 import { zhSmartArt } from './smartart';
@@ -33,6 +34,7 @@ export const zhCN: LocaleStrings = {
 	...zhPicture,
 	...zhPictureWatermark,
 	...zhConvertNotes,
+	...zhDocumentInspector,
 	...zhNavigation,
 	...zhColumns,
 	...zhSplitCells,

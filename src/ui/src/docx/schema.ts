@@ -120,6 +120,8 @@ export const schema = new Schema({
 				sections: { default: null },
 				sectionParts: { default: null },
 				noteParts: { default: null },
+				/** Document properties and package information as JSON (`document-information-attr.ts`). */
+				documentInformation: { default: null },
 				...commentHistoryAttributes,
 			},
 		},

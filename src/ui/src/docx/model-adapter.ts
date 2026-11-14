@@ -36,6 +36,7 @@ import { sectionsOf } from './section-commands';
 import { sectionPartsJson, restoreSectionParts } from 'ooxml-core/docx/ui';
 import { notePartsJson, restoreNoteParts } from 'ooxml-core/docx/ui';
 import { commentThreadsFromDoc } from 'ooxml-core/docx/ui';
+import { documentInformationJson, readDocumentInformation } from './document-information-attr';
 
 type ListLabels = ReturnType<typeof computeListLabels>;
 
@@ -89,6 +90,7 @@ export function modelToDoc(model: DocumentModel) {
 			sectionParts: sectionPartsJson(model.sections),
 			noteParts: notePartsJson(model),
 			commentThreads: JSON.stringify(model.comments ?? []),
+			documentInformation: documentInformationJson(model),
 			evenAndOddHeaders: Boolean(model.evenAndOddHeaders),
 			trackChanges: Boolean(model.trackChanges),
 			trackFormatting: model.trackFormatting !== false,
@@ -138,6 +140,14 @@ function keepHeaderFooterSections(
 			},
 		],
 	};
+}
+
+/** `model` with the properties and package information the document attribute holds, if any. */
+function withDocumentInformation<T extends Partial<DocumentModel>>(model: T, value: unknown): T {
+	const info = readDocumentInformation(value);
+	if (!info) return model;
+	const { properties: _properties, packageInformation: _info, ...rest } = model;
+	return { ...rest, ...info } as T;
 }
 
 export function docToModel(
@@ -285,8 +295,9 @@ export function docToModel(
 		trackMoves: _trackMoves,
 		pageColor: _pageColor,
 		autoHyphenation: _hyphenation,
-		...rest
+		...kept
 	} = prior;
+	const rest = withDocumentInformation(kept, doc.attrs.documentInformation);
 	const sectionLayout =
 		typeof doc.attrs.sections === 'string'
 			? sectionsFromLayout(doc.attrs.sections, priorSections, blocks)

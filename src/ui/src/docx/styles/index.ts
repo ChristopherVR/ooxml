@@ -15,6 +15,7 @@ import print from './print.css?raw';
 import titlebar from './chrome-titlebar.css?raw';
 import backstage from './backstage.css?raw';
 import statusDialogs from './status-dialogs.css?raw';
+import documentInspector from './document-inspector.css?raw';
 import chromeDocument from './chrome-document.css?raw';
 import pageNavigator from './page-navigator.css?raw';
 import keyboardMenu from './keyboard-menu.css?raw';
@@ -48,6 +49,7 @@ export const editorStyleText = [
 	titlebar,
 	backstage,
 	statusDialogs,
+	documentInspector,
 	chromeDocument,
 	pageNavigator,
 	keyboardMenu,
