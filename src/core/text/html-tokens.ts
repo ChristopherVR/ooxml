@@ -13,28 +13,28 @@ const ENTITIES: Record<string, string> = {
 	gt: '>',
 	quot: '"',
 	apos: "'",
-	nbsp: ' ',
-	ensp: ' ',
-	emsp: ' ',
-	thinsp: ' ',
-	ndash: '–',
-	mdash: '—',
-	lsquo: '‘',
-	rsquo: '’',
-	ldquo: '“',
-	rdquo: '”',
-	bull: '•',
-	hellip: '…',
-	copy: '©',
-	reg: '®',
-	trade: '™',
-	euro: '€',
+	nbsp: '\u00a0',
+	ensp: '\u2002',
+	emsp: '\u2003',
+	thinsp: '\u2009',
+	ndash: '\u2013',
+	mdash: '\u2014',
+	lsquo: '\u2018',
+	rsquo: '\u2019',
+	ldquo: '\u201c',
+	rdquo: '\u201d',
+	bull: '\u2022',
+	hellip: '\u2026',
+	copy: '\u00a9',
+	reg: '\u00ae',
+	trade: '\u2122',
+	euro: '\u20ac',
 };
 
 /** A numeric reference as text, or U+FFFD for NUL, surrogates and values past U+10FFFF. */
 function codePoint(value: number): string {
-	if (!Number.isFinite(value) || value <= 0 || value > 0x10ffff) return '�';
-	if (value >= 0xd800 && value <= 0xdfff) return '�';
+	if (!Number.isFinite(value) || value <= 0 || value > 0x10ffff) return '\ufffd';
+	if (value >= 0xd800 && value <= 0xdfff) return '\ufffd';
 	return String.fromCodePoint(value);
 }
 

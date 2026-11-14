@@ -169,7 +169,7 @@ export function htmlToDrawingParagraphs(
 			if (msoLevel > 0) props.level = msoLevel;
 			props.marginLeftEmu = BULLET_INDENT_EMU + msoLevel * LEVEL_STEP_EMU;
 			props.indentEmu = -BULLET_INDENT_EMU;
-			props.bullet = { kind: 'char', char: '•' };
+			props.bullet = { kind: 'char', char: '\u2022' };
 		}
 		return Object.keys(props).length ? props : undefined;
 	};
@@ -206,7 +206,7 @@ export function htmlToDrawingParagraphs(
 		if (!paragraph) return;
 		if (!frame.pre && text.startsWith(' ') && /^$|[ \n]/.test(lastChar(paragraph)))
 			text = text.slice(1);
-		text = text.replace(/ /g, ' ');
+		text = text.replace(/\u00a0/g, ' ');
 		if (textLength + text.length > bounds.maxTextLength) {
 			text = text.slice(0, Math.max(0, bounds.maxTextLength - textLength));
 			truncated = stopped = true;

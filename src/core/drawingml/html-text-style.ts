@@ -184,7 +184,17 @@ export function msoListLevel(attrs: Map<string, string>): number | undefined {
 }
 
 /** Marker characters kept as typed; anything else (symbol-font code points) becomes a bullet. */
-const MARKER_CHARS = new Set(['•', '▪', '●', '○', '■', '–', '-', '*', 'o']);
+const MARKER_CHARS = new Set([
+	'\u2022',
+	'\u25aa',
+	'\u25cf',
+	'\u25cb',
+	'\u25a0',
+	'\u2013',
+	'-',
+	'*',
+	'o',
+]);
 
 /** The DrawingML bullet a typed list marker (`1.`, `a)`, `ii.`, a symbol) stands for. */
 export function bulletFromMarker(marker: string): DrawingBullet {
@@ -207,7 +217,7 @@ export function bulletFromMarker(marker: string): DrawingBullet {
 	}
 	// Word's symbol fonts write private-use or Wingdings code points; PowerPoint's default is a bullet.
 	const char = [...text][0] ?? '';
-	return { kind: 'char', char: MARKER_CHARS.has(char) ? char : '•' };
+	return { kind: 'char', char: MARKER_CHARS.has(char) ? char : '\u2022' };
 }
 
 /** The bullet an `<ol type start>` or `<ul>` item uses. */
@@ -216,7 +226,8 @@ export function listBullet(
 	attrs: Map<string, string>,
 	level: number,
 ): DrawingBullet {
-	if (!ordered) return { kind: 'char', char: ['•', '–', '•'][level % 3] ?? '•' };
+	if (!ordered)
+		return { kind: 'char', char: ['\u2022', '\u2013', '\u2022'][level % 3] ?? '\u2022' };
 	const type = attrs.get('type') ?? '1';
 	const scheme =
 		{ a: 'alphaLcPeriod', A: 'alphaUcPeriod', i: 'romanLcPeriod', I: 'romanUcPeriod' }[type] ??

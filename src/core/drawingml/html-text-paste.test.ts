@@ -60,7 +60,7 @@ describe('htmlToDrawingParagraphs', () => {
 			'<ul><li>a<ul><li>b</li></ul></li><li>c</li></ul><ol type="A" start="3"><li>d</li></ol>',
 		);
 		expect(drawingParagraphsText(paragraphs)).toBe('a\nb\nc\nd');
-		expect(paragraphs[0]?.properties?.bullet).toEqual({ kind: 'char', char: '•' });
+		expect(paragraphs[0]?.properties?.bullet).toEqual({ kind: 'char', char: '\u2022' });
 		expect(paragraphs[1]?.properties?.level).toBe(1);
 		expect(paragraphs[2]?.properties?.level).toBeUndefined();
 		expect(paragraphs[3]?.properties?.bullet).toEqual({
@@ -74,14 +74,14 @@ describe('htmlToDrawingParagraphs', () => {
 		const html =
 			"<p class=MsoListParagraph style='mso-list:l0 level2 lfo1'><![if !supportLists]>" +
 			"<span>2.<span style='font:7.0pt'>&nbsp;&nbsp;</span></span><![endif]>Second</p>" +
-			"<p style='mso-list:l1 level1 lfo2'><span style='mso-list:Ignore'>·<span>&nbsp;</span></span>Dot</p>";
+			"<p style='mso-list:l1 level1 lfo2'><span style='mso-list:Ignore'>\u00b7<span>&nbsp;</span></span>Dot</p>";
 		const { paragraphs } = htmlToDrawingParagraphs(html);
 		expect(drawingParagraphsText(paragraphs)).toBe('Second\nDot');
 		expect(paragraphs[0]?.properties).toMatchObject({
 			level: 1,
 			bullet: { kind: 'autoNumber', scheme: 'arabicPeriod', startAt: 2 },
 		});
-		expect(paragraphs[1]?.properties?.bullet).toEqual({ kind: 'char', char: '•' });
+		expect(paragraphs[1]?.properties?.bullet).toEqual({ kind: 'char', char: '\u2022' });
 	});
 
 	it('keeps safe links as placeholder relationships and drops script links', () => {
@@ -115,7 +115,7 @@ describe('htmlToDrawingParagraphs', () => {
 		const { paragraphs } = htmlToDrawingParagraphs(
 			'<p>&amp;&lt;&#65;&#x1F600;&#x110000;&#0;&bogus;</p>',
 		);
-		expect(drawingParagraphsText(paragraphs)).toBe('&<A\u{1F600}��&bogus;');
+		expect(drawingParagraphsText(paragraphs)).toBe('&<A\u{1F600}\ufffd\ufffd&bogus;');
 	});
 });
 
