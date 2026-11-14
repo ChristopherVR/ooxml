@@ -27,6 +27,7 @@ import { useElementOperations } from './useElementOperations';
 import type { ElementOperations } from './useElementOperations';
 import { useFindReplace } from './useFindReplace';
 import { useFormatPainterEditing } from './useFormatPainterEditing';
+import { useInlineRichTextPaste } from './useInlineRichTextPaste';
 import { useInsertElements } from './useInsertElements';
 import type { InsertElementHandlers } from './useInsertElements';
 import { usePasteSpecial } from './usePasteSpecial';
@@ -265,13 +266,24 @@ export function useEditorOperations(input: UseEditorOperationsInput): EditorOper
 		ops,
 		history,
 	});
-	const imagePaste = useCanvasImagePaste({
+	const canvasImagePaste = useCanvasImagePaste({
 		state,
 		mode,
 		canEdit,
 		handlerRef,
 		insertElement: insertHandlers.addElement,
 	});
+	const richTextPaste = useInlineRichTextPaste({
+		elementLookup: state.elementLookup,
+		inlineEditingElementIdRef: state.inlineEditingElementIdRef,
+		setInlineEditingElementId: state.setInlineEditingElementId,
+		setInlineEditingText: state.setInlineEditingText,
+		updateElementById: ops.updateElementById,
+	});
+	const imagePaste = useMemo(
+		() => ({ ...canvasImagePaste, richText: richTextPaste }),
+		[canvasImagePaste, richTextPaste],
+	);
 
 	// "Edit Text" from the element context menu is the same effect as
 	// double-clicking the element: `handleElementDoubleClick` already ignores

@@ -277,8 +277,12 @@ export function InlineTextEditor({
 					trimTrailingSpaceBeforeCaret();
 				}
 			}}
-			// Prevent paste from inserting HTML: paste as plain text only
+			// The canvas's shared `attachInlineRichPaste` handles paste first (formatted runs
+			// from text/html). Where it is not attached, never insert raw HTML: plain text only.
 			onPaste={(e) => {
+				if (e.nativeEvent.defaultPrevented) {
+					return;
+				}
 				e.preventDefault();
 				const text = e.clipboardData.getData('text/plain');
 				document.execCommand('insertText', false, text);
