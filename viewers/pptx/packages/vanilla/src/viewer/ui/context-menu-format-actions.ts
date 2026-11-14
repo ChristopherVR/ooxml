@@ -101,14 +101,18 @@ export async function rasterizePastedElementAsPicture(
 	if (!node) {
 		return null;
 	}
+	return buildRasterPictureElement(sourceClone, await rasterizeElementNode(doc, node));
+}
+
+/** A mounted element node as a PNG data URL (the "Save as Picture" pipeline). */
+export function rasterizeElementNode(doc: Document, node: HTMLElement): Promise<string> {
 	const rect = node.getBoundingClientRect();
 	const width = rect.width || node.offsetWidth;
 	const height = rect.height || node.offsetHeight;
-	const dataUrl = await rasterizeElementToDataUrl(node, width, height, doc, {
+	return rasterizeElementToDataUrl(node, width, height, doc, {
 		scale: 2,
 		html2canvasFallback: html2canvasFallbackFor(node),
 	});
-	return buildRasterPictureElement(sourceClone, dataUrl);
 }
 
 /**
