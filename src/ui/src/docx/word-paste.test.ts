@@ -1,7 +1,15 @@
 // @vitest-environment jsdom
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { createDocument, resolveNumberingLevel, type DocumentModel } from 'ooxml-core/docx';
+import JSZip from 'jszip';
+import {
+	createDocument,
+	loadDocx,
+	resolveNumberingLevel,
+	saveDocx,
+	type DocumentModel,
+} from 'ooxml-core/docx';
+import { fieldGuardPlugin } from 'ooxml-core/docx/ui';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -28,7 +36,7 @@ function editor(model: DocumentModel = createDocument()) {
 	document.body.append(host);
 	const doc = modelToDoc(model);
 	const view = new EditorView(host, {
-		state: EditorState.create({ doc, plugins: [wordPastePlugin(() => model)] }),
+		state: EditorState.create({ doc, plugins: [wordPastePlugin(() => model), fieldGuardPlugin()] }),
 	});
 	view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 1)));
 	views.push(view);
@@ -102,15 +110,16 @@ describe('pasting from Word', () => {
 		expect(run('red')).toMatchObject({ color: '#ff0000' });
 	});
 
-	it('keeps a field as a field', () => {
+	it('pastes a field result as text, as the field guard pastes every field result', () => {
 		const { view, model } = editor();
 		view.pasteHTML(fixture('word-table-notes'));
 		const runs = docToModel(view.state.doc, model).blocks.flatMap((block) =>
 			block.type === 'paragraph' ? block.runs : [],
 		);
-		expect(runs.find((r) => r.text === '1' && r.field)?.field).toMatchObject({
-			instr: ' PAGE ',
-		});
+		expect(runs.map((r) => r.text).join('')).toContain('Page 1');
+		expect(runs.some((r) => r.field)).toBe(false);
+		// The field code never reaches the text.
+		expect(runs.map((r) => r.text).join('')).not.toContain('PAGE');
 	});
 
 	it('leaves HTML from elsewhere to the normal parser', () => {
@@ -118,5 +127,25 @@ describe('pasting from Word', () => {
 		view.pasteHTML('<p>Web <b>text</b></p><ul><li>not Word</li></ul>');
 		expect(model.numberingCatalog).toBeUndefined();
 		expect(paragraphs(view).map((p) => p.text)).toContain('Web text');
+	});
+});
+
+describe('saving pasted Word content', () => {
+	it('writes the pasted list and styles to the package', async () => {
+		// The editor saves through the loaded package, as a new document does after New.
+		const loaded = await loadDocx(await saveDocx(createDocument()));
+		const { view, model } = editor(loaded.model);
+		view.pasteHTML(fixture('word-numbered'));
+		view.pasteHTML(fixture('word-styles'));
+		const zip = await JSZip.loadAsync(await loaded.save(docToModel(view.state.doc, model)));
+		const numbering = await zip.file('word/numbering.xml')!.async('string');
+		expect(numbering).toContain('<w:numFmt w:val="lowerLetter"/>');
+		expect(numbering).toContain('<w:lvlText w:val="%2)"/>');
+		const xml = await zip.file('word/document.xml')!.async('string');
+		expect(xml).toMatch(/<w:numPr><w:ilvl w:val="2"\/><w:numId w:val="\d+"\/><\/w:numPr>/);
+		expect(xml).toContain('<w:pStyle w:val="Heading2"/>');
+		// Normal is the default: a pasted Normal paragraph needs no style of its own.
+		expect(xml).not.toContain('<w:pStyle w:val="Normal"/>');
+		expect(xml).toContain('<w:smallCaps/>');
 	});
 });

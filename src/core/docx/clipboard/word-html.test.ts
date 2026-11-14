@@ -108,6 +108,23 @@ describe('Word clipboard HTML', () => {
 		});
 	});
 
+	it('reads the form a sanitising clipboard read gives (markers as comments, no stylesheet)', () => {
+		const sanitised = clipboardFragment(fixture('word-numbered'))
+			.replace(/<!\[if ([^\]]*)\]>/g, '<!--[if $1]-->')
+			.replace(/<!\[endif\]>/g, '<!--[endif]-->');
+		const lists: WordClipboardList[] = [];
+		const html = normalizeWordClipboardHtml(`<html><body>${sanitised}</body></html>`, {
+			numId: (list) => (lists.push(list), 3),
+		})!;
+		expect(lists[0]!.levels.map((level) => level.numFmt)).toEqual([
+			'decimal',
+			'lowerLetter',
+			'lowerRoman',
+		]);
+		expect(html).toContain('<p data-num-id="3" data-ilvl="1">Sub step a</p>');
+		expect(html).not.toMatch(/1\)|supportLists/);
+	});
+
 	it('maps classes and headings to style names', () => {
 		const { html } = normalize('word-styles');
 		expect(html).toContain('<p data-docx-paragraph-style="Heading1">Clipboard Heading</p>');

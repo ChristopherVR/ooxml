@@ -32,7 +32,12 @@ export function wordHtmlForPaste(
 				return undefined;
 			}
 		},
-		paragraphStyleId: (name) => styleIdForName(model.paragraphStyles?.styles, name),
+		paragraphStyleId: (name) => {
+			const styles = model.paragraphStyles?.styles;
+			const id = styleIdForName(styles, name);
+			// The default style (Normal) is what an unstyled paragraph has already.
+			return id && !styles?.[id]?.isDefault ? id : undefined;
+		},
 		characterStyleId: (name) => styleIdForName(model.characterStyles?.styles, name),
 	});
 }
