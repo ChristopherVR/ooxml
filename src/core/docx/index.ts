@@ -103,6 +103,7 @@ export {
 	type ListKind,
 } from './numbering-editing';
 export { formatNoteNumber, numberNotesInOrder } from './notes';
+export { PICTURE_WATERMARK_SCALES, pictureWatermarkSizePt } from './picture-watermark';
 export {
 	convertNoteRun,
 	convertNotes,

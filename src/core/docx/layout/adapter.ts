@@ -202,7 +202,8 @@ export function adaptDocumentModel(
 						heightPx: 1,
 						noteSeparator: run.noteSeparator,
 					}
-				: image && !image.anchored
+				: // A picture watermark floats behind the page text and takes no room in the header.
+					image && !image.anchored && !image.pictureWatermark
 					? {
 							partName: image.partName,
 							...(image.pictureFill ? { pictureFill: image.pictureFill } : {}),

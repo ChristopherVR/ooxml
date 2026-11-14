@@ -25,6 +25,7 @@ import {
 	type LayoutPageBox,
 } from 'ooxml-core/docx/layout';
 import type { PictureUrl } from './print-layout';
+import { pictureWatermarkElement, type WatermarkPage } from './print-picture-watermark';
 
 /** Page facts a header or footer field can show. */
 export interface PageFieldValues extends PageFieldContext {
@@ -79,7 +80,8 @@ function paragraphElement(paragraph: Paragraph, values: PageFieldValues): HTMLEl
 			!isRunHiddenForReview(run, values.reviewDisplayMode ?? 'all') &&
 			!run.break &&
 			!run.image?.anchored &&
-			!run.image?.watermark
+			!run.image?.watermark &&
+			!run.image?.pictureWatermark
 		)
 			element.append(runElement(run, values));
 	return element;
@@ -158,16 +160,31 @@ function floatingPictures(
 	);
 }
 
-/** The header's text watermark as a centered, rotated layer behind the page text, or null. */
+/**
+ * The header's watermark as a layer behind the page text, or null: text centred and rotated as
+ * Word sets it, or a picture centred on the margins.
+ */
 export function watermarkElement(
 	content: HeaderFooterContent,
-	page: Pick<LayoutPageBox, 'widthPx' | 'heightPx'>,
+	page: WatermarkPage,
 	reviewDisplayMode: ReviewDisplayMode = 'all',
+	pictureUrl?: PictureUrl,
 ): HTMLElement | null {
-	const spec = content.blocks
+	const image = content.blocks
 		.flatMap((block) => (block.type === 'paragraph' ? block.runs : []))
-		.find((run) => !isRunHiddenForReview(run, reviewDisplayMode) && run.image?.watermark)
-		?.image?.watermark;
+		.find(
+			(run) =>
+				!isRunHiddenForReview(run, reviewDisplayMode) &&
+				(run.image?.watermark || run.image?.pictureWatermark),
+		)?.image;
+	const picture = image?.pictureWatermark;
+	if (picture)
+		return pictureWatermarkElement(
+			picture,
+			page,
+			pictureUrl?.(picture.partName, picture.contentType),
+		);
+	const spec = image?.watermark;
 	if (!spec?.text) return null;
 	const chars = Math.max(1, [...spec.text].length);
 	const span = Math.min(page.widthPx * (spec.layout === 'diagonal' ? 0.78 : 0.7), 560);
@@ -254,7 +271,7 @@ export function decoratePages(
 			const anchorTop = kind === 'header' ? distancePx : page.heightPx - distancePx - 20;
 			sheet.append(...floatingPictures(content, page, anchorTop, values));
 			if (kind === 'header') {
-				const mark = watermarkElement(content, page, reviewDisplayMode);
+				const mark = watermarkElement(content, page, reviewDisplayMode, values.pictureUrl);
 				// First in the sheet so the page text paints over it, as a Word watermark sits behind text.
 				if (mark) sheet.prepend(mark);
 			}

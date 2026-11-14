@@ -10,6 +10,7 @@ import { zhDropCap } from './drop-cap';
 import { zhFindStories } from './find-stories';
 import { zhPasteOptions } from './paste-options';
 import { zhPicture } from './picture';
+import { zhPictureWatermark } from './picture-watermark';
 import { zhConvertNotes } from './convert-notes';
 import { zhObjects } from './objects';
 import { zhShapes } from './shapes';
@@ -30,6 +31,7 @@ export const zhCN: LocaleStrings = {
 	...zhFindStories,
 	...zhPasteOptions,
 	...zhPicture,
+	...zhPictureWatermark,
 	...zhConvertNotes,
 	...zhNavigation,
 	...zhColumns,

@@ -9,6 +9,7 @@ import { frDropCap } from './drop-cap';
 import { frFindStories } from './find-stories';
 import { frPasteOptions } from './paste-options';
 import { frPicture } from './picture';
+import { frPictureWatermark } from './picture-watermark';
 import { frConvertNotes } from './convert-notes';
 import { frLineNumbers } from './line-numbers';
 import { frObjects } from './objects';
@@ -30,6 +31,7 @@ export const fr: LocaleStrings = {
 	...frFindStories,
 	...frPasteOptions,
 	...frPicture,
+	...frPictureWatermark,
 	...frConvertNotes,
 	...frNavigation,
 	...frColumns,

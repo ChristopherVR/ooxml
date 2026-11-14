@@ -9,6 +9,7 @@ import { esDropCap } from './drop-cap';
 import { esFindStories } from './find-stories';
 import { esPasteOptions } from './paste-options';
 import { esPicture } from './picture';
+import { esPictureWatermark } from './picture-watermark';
 import { esConvertNotes } from './convert-notes';
 import { esLineNumbers } from './line-numbers';
 import { esObjects } from './objects';
@@ -30,6 +31,7 @@ export const es: LocaleStrings = {
 	...esFindStories,
 	...esPasteOptions,
 	...esPicture,
+	...esPictureWatermark,
 	...esConvertNotes,
 	...esNavigation,
 	...esColumns,

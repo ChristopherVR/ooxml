@@ -13,6 +13,7 @@ import {
 } from './package-parts';
 import { definedProps } from './defined-props';
 import { parseWatermarkShape } from './watermark';
+import { parsePictureWatermarkShape } from './picture-watermark';
 import { isSimpleTextBox, textBoxHasBorder } from './write-text-box';
 import { parseShape } from './shape-parse';
 import { getR, isElement, type XmlElement } from './xml';
@@ -245,6 +246,10 @@ function parseVmlPicture(node: XmlElement, context: DrawingContext): InlineImage
 	const shape = descendantNS(node, VML_NS, 'shape');
 	const watermark = parseWatermarkShape(shape ?? undefined);
 	if (watermark) return watermark;
+	const pictureWatermark = parsePictureWatermarkShape(shape ?? undefined, (relId) =>
+		resolvePicture(relId, context),
+	);
+	if (pictureWatermark) return pictureWatermark;
 	const style = shape?.getAttribute('style') ?? '';
 	const width = /width:\s*([\d.]+)pt/i.exec(style);
 	const height = /height:\s*([\d.]+)pt/i.exec(style);

@@ -7,6 +7,7 @@ import { applyPictureLayout } from '../drawingml/picture-layout';
 import type { InlineImage } from './model';
 import { EMU_PER_PIXEL } from './drawing';
 import { buildWatermarkRun } from './watermark';
+import { buildPictureWatermarkRun } from './picture-watermark';
 import { buildTextBoxDrawing, patchTextBox } from './write-text-box';
 import { buildShapeDrawing, rebuildShapeDrawing } from './write-shape';
 import { chartRun } from './write-chart-drawing';
@@ -215,6 +216,21 @@ export function createImageRun(
 				{ id, ...(image.altText ? { descr: image.altText } : {}) },
 				251658240 + (Number(id) % 4096) * 1024,
 			),
+		);
+		return node;
+	}
+	if (image.pictureWatermark) {
+		if (!allocator)
+			throw new Error('Cannot insert a picture watermark without a relationship allocator.');
+		const spec = image.pictureWatermark;
+		clearNonProperties(node);
+		node.appendChild(
+			buildPictureWatermarkRun(
+				doc,
+				spec,
+				allocator.addImage(spec.partName),
+				allocator.docPrIds.next(),
+			).lastChild!,
 		);
 		return node;
 	}

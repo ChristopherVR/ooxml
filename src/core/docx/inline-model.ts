@@ -33,6 +33,8 @@ export interface InlineImage {
 	textBoxText?: string[];
 	/** The text box is the simple form this editor writes, so its text, size and outline can change. */
 	watermark?: WatermarkSpec;
+	/** A Word picture watermark (`WordPictureWatermark`); `partName` and `contentType` name its picture. */
+	pictureWatermark?: PictureWatermarkSpec;
 	textBoxEditable?: boolean;
 	/** For an editable text box: whether it draws an outline (default true). */
 	textBoxBorder?: boolean;
@@ -52,6 +54,25 @@ export interface WatermarkSpec {
 	/** Drawn at half opacity. */
 	semitransparent: boolean;
 	layout: 'diagonal' | 'horizontal';
+}
+/**
+ * A Word picture watermark: a VML picture centred on the margins behind the text of every page,
+ * carried by an inline object run in a header.
+ */
+export interface PictureWatermarkSpec {
+	kind: 'picture';
+	partName: string;
+	contentType: string;
+	/** Drawn size in points. */
+	widthPt: number;
+	heightPt: number;
+	/** The Scale chosen in the dialog: `auto` fits the text area, a number is a percentage of the
+	 *  picture's own size. Undefined when read from a file, which does not record it. */
+	scale?: 'auto' | number;
+	/** Word's Washout: the picture drawn light (`v:imagedata` gain and blacklevel). */
+	washout: boolean;
+	/** `v:imagedata/@o:title`, the picture's file name without extension. */
+	title?: string;
 }
 /** How a floating picture sits relative to text. */
 export interface PicturePlacement {

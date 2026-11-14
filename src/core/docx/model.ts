@@ -17,7 +17,13 @@ export type {
 import type { Paragraph } from './model-paragraph';
 export type * from './content-control-model';
 export type * from './form-field-model';
-export type { HyperlinkInfo, InlineImage, PicturePlacement, WatermarkSpec } from './inline-model';
+export type {
+	HyperlinkInfo,
+	InlineImage,
+	PicturePlacement,
+	PictureWatermarkSpec,
+	WatermarkSpec,
+} from './inline-model';
 import type { Note, SectionProperties } from './section-model';
 export type {
 	HeaderFooterContent,

@@ -2,29 +2,62 @@ import type {
 	Block,
 	DocumentModel,
 	HeaderFooterContent,
+	InlineImage,
 	Paragraph,
+	PictureWatermarkSpec,
 	WatermarkSpec,
 } from 'ooxml-core/docx';
 import { withBlankHeaderFooter } from './header-footer-commands';
 import { sectionsOf } from './section-commands';
 
 const SLOTS = ['default', 'first', 'even'] as const;
-const isWatermark = (run: Paragraph['runs'][number]) => Boolean(run.image?.watermark);
+/** A text or picture watermark, as the Printed Watermark dialog sets it. */
+export type AnyWatermark = WatermarkSpec | PictureWatermarkSpec;
+const isWatermark = (run: Paragraph['runs'][number]) =>
+	Boolean(run.image?.watermark || run.image?.pictureWatermark);
+export const isPictureWatermark = (spec: AnyWatermark | undefined): spec is PictureWatermarkSpec =>
+	(spec as PictureWatermarkSpec | undefined)?.kind === 'picture';
 
 /** The first watermark in any header, or undefined. */
-export function currentWatermark(model: DocumentModel): WatermarkSpec | undefined {
+export function currentWatermark(model: DocumentModel): AnyWatermark | undefined {
 	for (const section of model.sections ?? [])
 		for (const content of Object.values(section.headers ?? {}))
 			for (const block of content?.blocks ?? [])
 				if (block.type === 'paragraph')
-					for (const run of block.runs) if (run.image?.watermark) return run.image.watermark;
+					for (const run of block.runs) {
+						const spec = run.image?.watermark ?? run.image?.pictureWatermark;
+						if (spec) return spec;
+					}
 	return undefined;
+}
+
+/** The inline object run that carries `spec` in a header paragraph. */
+function watermarkImage(spec: AnyWatermark): InlineImage {
+	if (!isPictureWatermark(spec))
+		return {
+			relId: '',
+			partName: '',
+			contentType: 'application/octet-stream',
+			widthPx: 0,
+			heightPx: 0,
+			unsupported: 'Watermark',
+			watermark: spec,
+		};
+	return {
+		relId: '',
+		partName: spec.partName,
+		contentType: spec.contentType,
+		widthPx: 0,
+		heightPx: 0,
+		unsupported: 'Watermark',
+		pictureWatermark: spec,
+	};
 }
 
 /** `blocks` with every watermark run removed and, when `spec` is given, one added to the first paragraph. */
 function withWatermarkRun(
 	blocks: Block[],
-	spec: WatermarkSpec | undefined,
+	spec: AnyWatermark | undefined,
 	newId: () => string,
 ): Block[] {
 	const next = structuredClone(blocks).map((block) =>
@@ -33,18 +66,7 @@ function withWatermarkRun(
 			: block,
 	);
 	if (!spec) return next;
-	const run = {
-		text: '',
-		image: {
-			relId: '',
-			partName: '',
-			contentType: 'application/octet-stream',
-			widthPx: 0,
-			heightPx: 0,
-			unsupported: 'Watermark',
-			watermark: spec,
-		},
-	};
+	const run = { text: '', image: watermarkImage(spec) };
 	const index = next.findIndex((block) => block.type === 'paragraph');
 	if (index < 0) return [{ type: 'paragraph', id: newId(), runs: [run] }, ...next];
 	const paragraph = next[index] as Paragraph;
@@ -59,7 +81,7 @@ function withWatermarkRun(
  */
 export function withWatermark(
 	model: DocumentModel,
-	spec: WatermarkSpec | undefined,
+	spec: AnyWatermark | undefined,
 	newId: () => string,
 ): DocumentModel {
 	let base = model;

@@ -37,6 +37,7 @@ import type { HeadingNavigator } from './heading-navigator';
 import type { DocxChartFormatPane } from './chart-format-pane';
 import { HEADER_FOOTER_INPUT, locksStories } from 'ooxml-core/docx/ui';
 import { newPicturePartName } from './picture-commands';
+import { stageWatermarkPicture, watermarkPictureSize } from './watermark-picture';
 import { ViewOptions } from './view-options';
 import { ReadAloudSession } from './read-aloud-session';
 import { DocxWebfonts } from './docx-webfonts';
@@ -231,6 +232,27 @@ export class EditorCore {
 				current: () => this.pages.currentWatermark(),
 				canEdit: () => !this.readOnly && !this.collab.active,
 				apply: (spec) => this.pages.applyWatermark(spec),
+				stagePicture: (file) =>
+					stageWatermarkPicture(
+						file,
+						(contentType) =>
+							this.collab.yjs?.media.partName(contentType) ?? newPicturePartName(contentType),
+						(name, part) => {
+							this.inserts.pendingMedia.set(name, part);
+							this.collab.yjs?.media.publish(name, part);
+						},
+					),
+				pictureSize: (partName, contentType) =>
+					watermarkPictureSize(this.inserts.media(partName, this.loaded?.media), contentType),
+				textArea: () => {
+					const { width, height, marginLeft, marginRight, marginTop, marginBottom } =
+						this.model.page;
+					return {
+						widthPt: (width - marginLeft - marginRight) * 0.75,
+						heightPt: (height - marginTop - marginBottom) * 0.75,
+					};
+				},
+				reportError: (cause) => dispatchDocumentError(element, cause),
 			},
 			convertNotes: {
 				counts: () => ({

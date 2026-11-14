@@ -7,7 +7,7 @@ import {
 	type WatermarkSpec,
 } from 'ooxml-core/docx';
 import { createWatermarkDialog } from './watermark-dialog';
-import { currentWatermark, withWatermark } from './watermark-commands';
+import { currentWatermark, withWatermark, type AnyWatermark } from './watermark-commands';
 import { watermarkElement } from './print-header-footer';
 
 const spec: WatermarkSpec = {
@@ -61,7 +61,7 @@ describe('withWatermark', () => {
 		expect(headerRuns(blank, 0, 'first')[0]!.image!.watermark!.text).toBe('DRAFT');
 		const changed = withWatermark(blank, { ...spec, text: 'SAMPLE' }, newId);
 		expect(headerRuns(changed, 0, 'default').filter((run) => run.image)).toHaveLength(1);
-		expect(currentWatermark(changed)!.text).toBe('SAMPLE');
+		expect((currentWatermark(changed) as WatermarkSpec).text).toBe('SAMPLE');
 		const removed = withWatermark(changed, undefined, newId);
 		expect(currentWatermark(removed)).toBeUndefined();
 		expect(headerRuns(removed, 0, 'default').map((run) => run.text)).toEqual(['Head']);
@@ -113,7 +113,7 @@ describe('watermark layer', () => {
 
 describe('Watermark dialog', () => {
 	it('applies the text and options, and None removes it', () => {
-		const applied: Array<WatermarkSpec | undefined> = [];
+		const applied: Array<AnyWatermark | undefined> = [];
 		const dialog = createWatermarkDialog({
 			current: () => undefined,
 			canEdit: () => true,
