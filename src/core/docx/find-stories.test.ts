@@ -12,7 +12,7 @@ const section = (extra: Partial<SectionProperties>): SectionProperties =>
 	({ ...createDocument().sections?.[0], ...extra }) as SectionProperties;
 
 describe('findStories', () => {
-	it('lists the stories in the order Word enumerates them', () => {
+	it('lists the stories in the order Word Find runs through them', () => {
 		const shared = part('shared header', 'word/header1.xml');
 		const model: DocumentModel = {
 			...createDocument(),
@@ -31,14 +31,14 @@ describe('findStories', () => {
 		};
 		expect(findStories(model).map(findStoryKey)).toEqual([
 			'main',
-			'footnote:1',
-			'endnote:2',
-			'textBoxes',
 			'header:0:even',
 			'header:0:default',
 			'footer:0:default',
 			'header:0:first',
 			'footer:1:first',
+			'footnote:1',
+			'endnote:2',
+			'textBoxes',
 		]);
 	});
 
@@ -53,10 +53,10 @@ describe('findStories', () => {
 		});
 		expect(stories.map(findStoryGroup)).toEqual([
 			'main',
+			'header:0:default',
 			'footnote',
 			'footnote',
 			'textBoxes',
-			'header:0:default',
 		]);
 	});
 });
