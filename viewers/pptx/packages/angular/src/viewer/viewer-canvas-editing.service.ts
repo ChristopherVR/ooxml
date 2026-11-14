@@ -40,7 +40,7 @@ import { InlineListSession } from './inline-list-session';
 import { textStylePatch } from './inspector-helpers';
 import { ListConversionScopeService } from './list-conversion-scope.service';
 import { patchTextStyle } from './ribbon-text-helpers';
-import { setCellText } from './table-data-helpers';
+import { setCellText, tableCellEditPatch } from './table-data-helpers';
 import type { TableCellCommit } from './table-renderer.component';
 import { ViewerDialogsService } from './viewer-dialogs.service';
 import { ViewerFormatPainterService } from './viewer-format-painter.service';
@@ -460,6 +460,22 @@ export class ViewerCanvasEditingService {
 		}
 		const el = host.activeSlide()?.elements.find((e) => e.id === event.id);
 		if (!el || el.type !== 'table') {
+			return;
+		}
+		if (event.commit.end) {
+			// The rich cell editor: runs, an appended row or a grid paste, as one edit.
+			const patch = tableCellEditPatch(
+				el,
+				event.commit.rowIndex,
+				event.commit.colIndex,
+				event.commit.end,
+				this.viewerOpts
+					? (text, previous) => this.viewerOpts!.autoCorrect(text, previous)
+					: undefined,
+			);
+			if (patch) {
+				this.editor.updateElement(host.activeSlideIndex(), event.id, patch);
+			}
 			return;
 		}
 		const text = this.viewerOpts

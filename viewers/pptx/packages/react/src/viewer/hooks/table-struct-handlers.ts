@@ -13,12 +13,13 @@ import {
 	removeTableElementColumn,
 	getCellText,
 	setCellText,
-	withCellStyle,
+	resolveTableCellEditEnd,
+	applyTableCellsTextStyle,
 } from 'ooxml-ui/pptx';
-import type { PptxTableCellStyle } from 'pptx-viewer-core';
+import type { TableCellEditEnd, TableCellTextStyleUpdate } from 'ooxml-ui/pptx';
 
 import type { TableCellEditorState } from '../types';
-import { updateCellTextInRawXml, updateCellTextStyleInRawXml } from '../utils/table-parse';
+import { updateCellTextInRawXml } from '../utils/table-parse';
 import type { UseTableOperationsInput, TableStructHandlers } from './table-operation-types';
 
 // ---------------------------------------------------------------------------
@@ -48,9 +49,32 @@ export function createTableStructHandlers(input: UseTableOperationsInput): Table
 		rowIndex: number,
 		colIndex: number,
 		rawText: string,
+		end?: TableCellEditEnd,
 	) => {
 		const el = elementLookup.get(elementId);
 		if (!el || el.type !== 'table') {
+			return;
+		}
+		if (end) {
+			// The rich cell editor: shared `resolveTableCellEditEnd` decides the
+			// document update (runs, appended row, grid paste) and the next cell.
+			const outcome = resolveTableCellEditEnd(el, rowIndex, colIndex, end, {
+				...(transformCommittedText ? { transformText: transformCommittedText } : {}),
+			});
+			if (outcome.element) {
+				ops.updateElementById(elementId, {
+					tableData: outcome.element.tableData,
+					...(outcome.element.rawXml ? { rawXml: outcome.element.rawXml } : {}),
+				});
+				history.markDirty();
+			}
+			const target = outcome.edit ?? outcome.select ?? { row: rowIndex, col: colIndex };
+			setTableEditorState({
+				rowIndex: target.row,
+				columnIndex: target.col,
+				elementId,
+				...(outcome.edit ? { isEditing: true, caret: outcome.edit.caret } : {}),
+			} as TableCellEditorState);
 			return;
 		}
 
@@ -91,50 +115,30 @@ export function createTableStructHandlers(input: UseTableOperationsInput): Table
 
 	// ── Cell text style update ───────────────────────────────────────────
 
+	// Every run of every selected cell (the Shift+click range, else the active
+	// cell; the whole table when no cell is active), through the shared core
+	// op so `tableData`, the painted runs and `rawXml` change together.
 	const handleUpdateCellTextStyle = (styleUpdates: Record<string, unknown>) => {
-		if (!selectedElement || selectedElement.type !== 'table' || !ts) {
+		if (!selectedElement || selectedElement.type !== 'table') {
 			return;
 		}
-
-		const elementId = selectedElement.id;
-		const { rowIndex, columnIndex: colIndex } = ts;
-		const updates: Record<string, unknown> = {};
-
-		// Update rawXml (which the rendering reads from)
-		if (selectedElement.rawXml) {
-			const newRawXml = updateCellTextStyleInRawXml(
-				selectedElement,
-				rowIndex,
-				colIndex,
-				styleUpdates,
-			);
-			if (newRawXml) {
-				updates.rawXml = newRawXml;
-			}
-		}
-
-		// Also update tableData cell style if tableData exists
-		if (selectedElement.tableData) {
-			const newRows = selectedElement.tableData.rows.map((row, ri) => {
-				if (ri !== rowIndex) {
-					return row;
-				}
-				return {
-					...row,
-					cells: row.cells.map((cell, ci) =>
-						ci === colIndex
-							? withCellStyle(cell, styleUpdates as Partial<PptxTableCellStyle>)
-							: cell,
-					),
-				};
-			});
-			updates.tableData = { ...selectedElement.tableData, rows: newRows };
-		}
-
-		if (Object.keys(updates).length === 0) {
+		const cells = ts
+			? ts.selectedCells?.length
+				? ts.selectedCells
+				: [{ row: ts.rowIndex, col: ts.columnIndex }]
+			: undefined;
+		const next = applyTableCellsTextStyle(
+			selectedElement,
+			cells,
+			styleUpdates as TableCellTextStyleUpdate,
+		);
+		if (next === selectedElement) {
 			return;
 		}
-		ops.updateElementById(elementId, updates);
+		ops.updateElementById(selectedElement.id, {
+			tableData: next.tableData,
+			...(next.rawXml ? { rawXml: next.rawXml } : {}),
+		});
 		history.markDirty();
 	};
 

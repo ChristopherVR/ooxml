@@ -37,6 +37,7 @@ import { useSectionOperations } from './useSectionOperations';
 import type { SectionOperations } from './useSectionOperations';
 import { useSlideManagement } from './useSlideManagement';
 import type { SlideManagementHandlers } from './useSlideManagement';
+import { useTableCellsPaste } from './useTableCellsPaste';
 import { useTableOperations } from './useTableOperations';
 import type { TableOperationHandlers } from './useTableOperations';
 import type { ViewerDialogsResult } from './useViewerDialogs';
@@ -375,18 +376,25 @@ export function useEditorOperations(input: UseEditorOperationsInput): EditorOper
 		history,
 		transformCommittedText,
 	});
+	useTableCellsPaste({
+		selectedElement,
+		tableEditorState: state.tableEditorState,
+		updateElementById: ops.updateElementById,
+		markDirty: history.markDirty,
+	});
 
-	// Combined text style updater: if a table cell is active, apply formatting
-	// to that cell; otherwise delegate to the normal element text style updater.
+	// Combined text style updater: with a table selected, apply formatting to the
+	// selected cells (the whole table when no cell is active, as PowerPoint
+	// does); otherwise delegate to the normal element text style updater.
 	const combinedUpdateTextStyle = useCallback(
 		(updates: Partial<TextStyle>) => {
-			if (selectedElement?.type === 'table' && state.tableEditorState) {
+			if (selectedElement?.type === 'table') {
 				tableOps.handleUpdateCellTextStyle(updates as Record<string, unknown>);
 				return;
 			}
 			ops.updateSelectedTextStyle(updates);
 		},
-		[selectedElement, state.tableEditorState, tableOps, ops],
+		[selectedElement, tableOps, ops],
 	);
 
 	const combinedOps: ElementOperations = useMemo(

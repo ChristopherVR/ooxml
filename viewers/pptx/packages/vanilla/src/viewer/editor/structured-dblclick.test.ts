@@ -56,7 +56,7 @@ describe('handleStructuredDblClick table cell drilldown', () => {
 		});
 		expect(result.handled).toBeFalsy();
 		expect(result.tableSession).toBeNull();
-		expect(cell.querySelector('input')).toBeNull();
+		expect(cell.querySelector('[data-table-cell-editor]')).toBeNull();
 	});
 
 	it('opens the cell editor on an unlocked table', () => {
@@ -75,6 +75,6 @@ describe('handleStructuredDblClick table cell drilldown', () => {
 			cell,
 		});
 		expect(result.handled).toBeTruthy();
-		expect(cell.querySelector('input')).not.toBeNull();
+		expect(cell.querySelector('[data-table-cell-editor]')).not.toBeNull();
 	});
 });

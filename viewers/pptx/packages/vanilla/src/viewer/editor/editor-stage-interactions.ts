@@ -1,4 +1,5 @@
 import {
+	attachTableCellsPaste,
 	isAdditiveSelectionPress,
 	isGroupMember,
 	resolveGroupDoubleClickTarget,
@@ -53,6 +54,22 @@ export function createStageInteractions(deps: StageInteractionsDeps): StageInter
 		onOpen: (session) => (tableInline = session),
 		onEditEquation: deps.onEditEquation,
 	});
+	// Paste into selected table cells (none being edited): tab-separated text
+	// fills cells from the top-left selected cell, through the shared listener.
+	const disposeCellsPaste = attachTableCellsPaste(
+		doc,
+		() => {
+			const state = store.get();
+			const element = ops.selectedElement(state);
+			const anchor = state.selectedTableCell;
+			if (!state.editable || element?.type !== 'table' || !anchor) {
+				return undefined;
+			}
+			const range = state.selectedTableCells.length ? state.selectedTableCells : [anchor];
+			return { element, cells: range.map(({ row, column }) => ({ row, col: column })) };
+		},
+		(next) => ops.replaceTableElement(next),
+	);
 	const gestures = createTransformGestures({
 		store,
 		ops,
@@ -387,6 +404,7 @@ export function createStageInteractions(deps: StageInteractionsDeps): StageInter
 			pendingMemberEdit = null;
 			closeInline(false);
 			disposeTableTouch();
+			disposeCellsPaste();
 			gestures.dispose();
 			adjustGesture.dispose();
 			marquee.dispose();

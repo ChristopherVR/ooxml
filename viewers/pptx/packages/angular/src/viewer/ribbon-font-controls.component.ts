@@ -27,6 +27,7 @@ import { EditorStateService } from './editor-state.service';
 import { LoadContentService } from './load-content.service';
 import { RecentColorsService } from './recent-colors.service';
 import { fontHomeAction } from './ribbon-font-home';
+import { tableFontRequestPatch, tableFontStyle } from './ribbon-font-table';
 import { homeLanguage, homeTranslator } from './ribbon-home-lang';
 /**
  * ribbon-font-controls.component.ts: the ribbon's reusable Font control group,
@@ -42,6 +43,7 @@ import {
 	textStyleOf,
 	transformSelectedTextCase,
 } from './ribbon-text-helpers';
+import { TableSelectionService } from './table-selection.service';
 import { ViewerCanvasEditingService } from './viewer-canvas-editing.service';
 
 /**
@@ -82,6 +84,7 @@ export class RibbonFontControlsComponent {
 	private readonly loader = inject(LoadContentService, { optional: true });
 	private readonly customFonts = inject(CustomFontsService, { optional: true });
 	private readonly recentColors = inject(RecentColorsService, { optional: true });
+	private readonly tableSelection = inject(TableSelectionService, { optional: true });
 	private readonly language = homeLanguage(this.translation);
 
 	/**
@@ -99,7 +102,11 @@ export class RibbonFontControlsComponent {
 	}
 
 	/** Current text style of the selection (for active-state highlighting). */
-	protected readonly curStyle = computed(() => textStyleOf(this.selectedElement()));
+	protected readonly curStyle = computed(
+		() =>
+			tableFontStyle(this.selectedElement(), this.tableSelection?.selection()) ??
+			textStyleOf(this.selectedElement()),
+	);
 
 	protected curFontFamily(): string {
 		return (
@@ -177,11 +184,25 @@ export class RibbonFontControlsComponent {
 	}
 
 	private enabled(): boolean {
-		return this.canEdit() && this.isText();
+		return this.canEdit() && (this.isText() || this.selectedElement()?.type === 'table');
+	}
+
+	/** A selected table formats every run of its selected cells (shared op). */
+	private tableRequest(id: string, value: unknown): boolean {
+		const element = this.selectedElement();
+		const patch = tableFontRequestPatch(element, this.tableSelection?.selection(), id, value);
+		if (!element || !patch) {
+			return false;
+		}
+		this.editor.updateElement(this.slideIndex(), element.id, patch);
+		return true;
 	}
 
 	protected pickerRequest(event: Event): void {
 		const { id, value } = (event as RibbonHomeRequestEvent).detail;
+		if (this.tableRequest(id, value)) {
+			return;
+		}
 		if (id === 'home.font.fontFamily') {
 			this.patchFontFamily(String(value));
 		} else if (id === 'home.font.fontSize') {
@@ -191,6 +212,12 @@ export class RibbonFontControlsComponent {
 
 	protected fontRequest(event: Event): void {
 		const { id, value, ref } = (event as RibbonHomeRequestEvent).detail;
+		if (this.tableRequest(id, value)) {
+			if (id === 'home.font.fontColor') {
+				this.recentColors?.push(String(value));
+			}
+			return;
+		}
 		const action = fontHomeAction(id);
 		if (action?.kind === 'toggle') {
 			this.toggleStyle(action.flag);

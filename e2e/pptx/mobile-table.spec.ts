@@ -31,7 +31,7 @@ test.use({ ...devices['Pixel 7'] });
 // Every binding supports table-cell touch editing: a double-tap
 // mounts a text input in the slide's `<td>`. (The Angular inspector table
 // editor uses a non-<table> grid so it does not collide with this spec's
-// `td input[type="text"]` selector.) Vue previously masked this because its
+// `td [data-table-cell-editor]` selector.) Vue previously masked this because its
 // inline-edit entry opened a whole-element text editor for every element type
 // on the second tap; that entry is now gated to text-bearing elements (mirroring
 // React's hasTextProperties gate), so the `<td>` double-tap reaches the cell
@@ -99,13 +99,13 @@ test('double-tapping a table cell opens an editor and accepts input', async ({ p
 	// Double-tap to enter cell edit (select, then edit).
 	await doubleTap(page, pt!.x, pt!.y);
 
-	const input = page.locator('td input[type="text"]');
+	const input = page.locator('td [data-table-cell-editor]');
 	await expect(input).toBeVisible();
 	await page.screenshot({ path: resolve(shotDir, 'table-cell-edit.png') });
 
-	// The editor auto-selects its text; typing replaces it. Commit with Enter.
+	// The editor auto-selects its text; typing replaces it. Commit with Escape (Enter adds a paragraph).
 	await page.keyboard.type('Free');
-	await page.keyboard.press('Enter');
+	await page.keyboard.press('Escape');
 	await page.waitForTimeout(200);
 
 	await expect(input).toBeHidden();
@@ -136,7 +136,7 @@ test('committing a cell edit by tapping away keeps the typed value', async ({ pa
 	expect(starter).not.toBeNull();
 	await doubleTap(page, starter!.x, starter!.y);
 
-	const input = page.locator('td input[type="text"]');
+	const input = page.locator('td [data-table-cell-editor]');
 	await expect(input).toBeVisible();
 
 	await page.keyboard.type('Renamed');
@@ -147,7 +147,7 @@ test('committing a cell edit by tapping away keeps the typed value', async ({ pa
 	const other = await page.evaluate(() => {
 		const vw = window.innerWidth;
 		for (const td of document.querySelectorAll('td')) {
-			if (td.querySelector('input')) {
+			if (td.querySelector('[data-table-cell-editor]')) {
 				continue; // skip the cell currently being edited
 			}
 			if (!td.textContent?.trim()) {

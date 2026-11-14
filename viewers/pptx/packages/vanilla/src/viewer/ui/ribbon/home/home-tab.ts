@@ -233,7 +233,8 @@ export function createHomeTab(doc: Document, t: Translator, deps: HomeTabDeps): 
 			clipboard.update({ hasSelection, hasClipboard, editable, formatPainterActive });
 			slides.update({ editable, slideCount, layouts, layoutPreviews, currentLayoutPath });
 			font.update({
-				canFormat,
+				// A selected table formats its selected cells' runs (PowerPoint).
+				canFormat: canFormat || selectedElement?.type === 'table',
 				editable,
 				text,
 				themeFonts,

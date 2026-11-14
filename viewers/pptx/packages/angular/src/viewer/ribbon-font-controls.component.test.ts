@@ -19,7 +19,9 @@ describe('ribbonFontControlsComponent FONT_SIZES', () => {
 	it('gates the picker and the strip on an editable text selection', () => {
 		expect(ribbonSource).toContain('<pptx-ui-ribbon-home-font-picker');
 		expect(ribbonSource).toContain('<pptx-ui-ribbon-home-font ');
-		expect(ribbonSource).toContain('return this.canEdit() && this.isText();');
+		expect(ribbonSource).toContain(
+			"return this.canEdit() && (this.isText() || this.selectedElement()?.type === 'table');",
+		);
 		expect(ribbonSource).toContain('enabled: this.enabled()');
 	});
 

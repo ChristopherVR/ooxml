@@ -201,6 +201,66 @@ describe('createTableStructHandlers', () => {
 				paragraphs: [{ align: 'left' }, { align: 'left' }],
 			});
 		});
+
+		it('formats every run of every cell in the Shift+click range', () => {
+			const input = createMockInput({
+				tableEditorState: {
+					rowIndex: 0,
+					columnIndex: 0,
+					selectedCells: [
+						{ row: 0, col: 0 },
+						{ row: 0, col: 1 },
+					],
+				},
+			});
+			const table = input.selectedElement as TablePptxElement;
+			Object.assign(table.tableData!.rows[0].cells[1], {
+				text: 'ab',
+				textRuns: [{ text: 'a', color: '#FF0000' }, { text: 'b' }],
+			});
+			createTableStructHandlers(input).handleUpdateCellTextStyle({ bold: true });
+			const updates = vi.mocked(input.ops.updateElementById).mock.calls[0][1] as TablePptxElement;
+			const rows = updates.tableData!.rows;
+			expect(rows[0].cells[0].style?.bold).toBe(true);
+			expect(rows[0].cells[1].textRuns).toEqual([
+				{ text: 'a', color: '#FF0000', bold: true },
+				{ text: 'b', bold: true },
+			]);
+			expect(rows[0].cells[2].style?.bold).toBeUndefined();
+		});
+	});
+
+	describe('handleCommitCellEdit from the rich cell editor', () => {
+		it('commits the runs and moves Tab from the last cell into an appended row', () => {
+			const input = createMockInput();
+			createTableStructHandlers(input).handleCommitCellEdit('table-1', 2, 2, '', {
+				reason: 'navigate',
+				key: 'next',
+				segments: [{ text: 'Last', style: { italic: true } }],
+			});
+			const updates = vi.mocked(input.ops.updateElementById).mock.calls[0][1] as TablePptxElement;
+			expect(updates.tableData!.rows).toHaveLength(4);
+			expect(updates.tableData!.rows[2].cells[2].textRuns).toEqual([
+				{ text: 'Last', italic: true },
+			]);
+			expect(input.setTableEditorState).toHaveBeenCalledWith(
+				expect.objectContaining({ rowIndex: 3, columnIndex: 0, isEditing: true, caret: 'all' }),
+			);
+		});
+
+		it('leaves editing with the cell selected on Escape and writes nothing unchanged', () => {
+			const input = createMockInput();
+			createTableStructHandlers(input).handleCommitCellEdit('table-1', 1, 1, '', {
+				reason: 'exit',
+				segments: undefined,
+			});
+			expect(input.ops.updateElementById).not.toHaveBeenCalled();
+			expect(input.setTableEditorState).toHaveBeenCalledWith({
+				rowIndex: 1,
+				columnIndex: 1,
+				elementId: 'table-1',
+			});
+		});
 	});
 
 	describe('handleResizeTableColumns', () => {

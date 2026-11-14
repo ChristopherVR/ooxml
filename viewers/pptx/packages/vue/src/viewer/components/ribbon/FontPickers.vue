@@ -74,9 +74,8 @@ const canFormat = computed(
 		Boolean(props.onUpdateTextStyle) &&
 		Boolean(
 			props.selectedElement &&
-			(hasTextProperties(props.selectedElement) ||
-				(props.selectedElement.type === 'table' &&
-					props.tableEditorState?.elementId === props.selectedElement.id)),
+			// A table takes the font of its selected cells, or of every cell.
+			(hasTextProperties(props.selectedElement) || props.selectedElement.type === 'table'),
 		),
 );
 const fontFamily = computed(() => fontInfo.value.fontFamily);

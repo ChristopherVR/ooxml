@@ -3,6 +3,8 @@ import type {
 	CellParagraphBlock,
 	CellPatternFillCss,
 	CellTextRun,
+	TableCellCaret,
+	TableCellEditEnd,
 	TableCellCss,
 	TableStyleContext,
 } from 'ooxml-ui/pptx';
@@ -22,18 +24,20 @@ import {
 import type {
 	ParsedTableStyleMap,
 	PptxElement,
+	PptxTableCell,
 	PptxTableCellStyle,
 	PptxTableData,
 	PptxThemeColorScheme,
 } from 'pptx-viewer-core';
-import type { ComponentPublicInstance, CSSProperties } from 'vue';
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
+import type { CSSProperties } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 
 import { useElementHitTargetStyle } from '../composables/element-hit-target';
 import { getContainerStyle } from '../composables/element-style';
 import { injectTableCellEdit } from '../composables/table-edit';
 import { injectTableSelection, useTableCellSelection } from '../composables/table-selection';
 import { injectTableTheme, resolveTableTheme } from '../composables/table-theme';
+import TableCellRichEditor from './TableCellRichEditor.vue';
 import TableResizeOverlay from './TableResizeOverlay.vue';
 
 /**
@@ -367,21 +371,8 @@ function onResizeRow(rowIndex: number, height: number): void {
 	tableSelectionCtx?.resizeRow(props.element.id, rowIndex, height);
 }
 
-/** The cell currently being edited (original grid coords), or null. */
-const editingCell = ref<{ rowIndex: number; colIndex: number } | null>(null);
-/** Live text for the active edit, seeded from the cell on entry. */
-const editText = ref('');
-/** The mounted `<input>` for the active edit, focused + select-all on mount. */
-const cellInputRef = ref<HTMLInputElement | null>(null);
-
-/**
- * Function template ref: the input lives inside a `v-for`, so a string ref
- * would collect an array. Only one cell edits at a time (guarded by `v-if`),
- * so capture the single element here and clear it on unmount.
- */
-function setCellInput(el: Element | ComponentPublicInstance | null): void {
-	cellInputRef.value = el instanceof HTMLInputElement ? el : null;
-}
+/** The cell being edited (original grid coords) and where its caret starts, or null. */
+const editingCell = ref<{ rowIndex: number; colIndex: number; caret: TableCellCaret } | null>(null);
 
 // G8: `a:graphicFrameLocks/@noDrilldown` forbids selecting/editing this
 // table's individual cells, even on an otherwise-editable deck.
@@ -441,9 +432,8 @@ function onCellPointerDown(event: PointerEvent): void {
 }
 
 /** Enter inline cell editing for the given cell. */
-function enterCellEdit(cell: RenderableCell): void {
-	editText.value = cell.text === ' ' ? '' : cell.text;
-	editingCell.value = { rowIndex: cell.rowIndex, colIndex: cell.colIndex };
+function enterCellEdit(cell: RenderableCell, caret: TableCellCaret = 'all'): void {
+	editingCell.value = { rowIndex: cell.rowIndex, colIndex: cell.colIndex, caret };
 }
 
 /** Double-tap / double-click on a cell enters inline edit mode. */
@@ -455,64 +445,55 @@ function onCellDblClick(event: Event, cell: RenderableCell): void {
 	enterCellEdit(cell);
 }
 
-/** Commit the current edit (called on blur). No-ops if already cancelled. */
-function commitCellEdit(): void {
-	const cell = editingCell.value;
-	if (!cell) {
+/** The parsed cell behind a rendered cell, which the rich editor edits. */
+function modelCell(cell: RenderableCell): PptxTableCell | undefined {
+	return tableData.value?.rows[cell.rowIndex]?.cells[cell.colIndex];
+}
+
+/**
+ * The rich cell editor closed: the shared `resolveTableCellEditEnd` (inside the
+ * edit context) commits the runs, appends a row for Tab in the last cell or
+ * fills cells from a pasted grid; this only maps the next cell onto the view.
+ */
+function onCellEditEnd(cell: RenderableCell, end: TableCellEditEnd): void {
+	const current = editingCell.value;
+	if (!current || current.rowIndex !== cell.rowIndex || current.colIndex !== cell.colIndex) {
+		cellEdit?.end?.(props.element.id, cell.rowIndex, cell.colIndex, end);
 		return;
 	}
 	editingCell.value = null;
-	cellEdit?.commit(props.element.id, cell.rowIndex, cell.colIndex, editText.value);
-}
-
-/** Enter / Tab commit; Escape cancels. Stops propagation so the canvas ignores it. */
-function onCellInputKeydown(event: KeyboardEvent): void {
-	event.stopPropagation();
-	if (event.key === 'Enter' || event.key === 'Tab') {
-		event.preventDefault();
-		// Commit directly: commitCellEdit clears editingCell first, so the
-		// ensuing blur (when the input unmounts) finds null and no-ops.
-		commitCellEdit();
-	} else if (event.key === 'Escape') {
-		event.preventDefault();
-		// Clear first so the ensuing blur's commitCellEdit no-ops (discards edit).
-		editingCell.value = null;
+	const outcome = cellEdit?.end?.(props.element.id, cell.rowIndex, cell.colIndex, end);
+	const target = outcome?.edit ?? outcome?.select;
+	if (target) {
+		cellSelection.selectCell(target.row, target.col, false);
+	}
+	if (outcome?.edit) {
+		editingCell.value = {
+			rowIndex: outcome.edit.row,
+			colIndex: outcome.edit.col,
+			caret: outcome.edit.caret,
+		};
 	}
 }
 
-// Focus + select-all the input as soon as it mounts (mirrors React's
-// TableCellInput useEffect: focus(); select();).
-// Also install a document-level pointerdown listener to commit on tap-away:
-// on mobile, the browser does not reliably blur an <input> when tapping a
-// non-focusable element elsewhere. A global listener ensures the edit is
-// committed regardless of where the tap lands (matching React's behaviour
-// where setPointerCapture on the canvas stage forces blur).
+// Commit on a tap outside the editor: on mobile, the browser does not reliably
+// blur a contenteditable when tapping a non-focusable element elsewhere.
+// Ending the edit unmounts the editor, which reports a `detach` end (a commit).
 let docListener: ((e: PointerEvent) => void) | null = null;
 
 watch(editingCell, (cell) => {
-	if (cell) {
-		void nextTick(() => {
-			const el = cellInputRef.value;
-			if (el) {
-				el.focus();
-				el.select();
+	if (cell && !docListener) {
+		docListener = (e: PointerEvent) => {
+			if (e.pointerType === 'mouse') {
+				return;
 			}
-		});
-		// Install document listener to catch taps outside the input
-		if (!docListener) {
-			docListener = (e: PointerEvent) => {
-				if (e.pointerType === 'mouse') {
-					return;
-				}
-				const input = cellInputRef.value;
-				if (input && !input.contains(e.target as Node)) {
-					input.blur(); // triggers commitCellEdit via @blur
-				}
-			};
-			document.addEventListener('pointerdown', docListener, true);
-		}
-	} else if (docListener) {
-		// Clean up document listener when editing ends
+			const editor = document.querySelector('[data-table-cell-editor]');
+			if (editor && !editor.contains(e.target as Node)) {
+				(editor as HTMLElement).blur();
+			}
+		};
+		document.addEventListener('pointerdown', docListener, true);
+	} else if (!cell && docListener) {
 		document.removeEventListener('pointerdown', docListener, true);
 		docListener = null;
 	}
@@ -628,18 +609,14 @@ onBeforeUnmount(() => {
 							canvas stage's pointer handler does not steal focus and discard
 							the edit (mirrors React TableCellInput + Angular TableRenderer).
 						-->
-							<input
+							<TableCellRichEditor
 								v-if="isEditing(cell)"
-								:ref="setCellInput"
-								v-model="editText"
-								type="text"
-								class="pptx-vue-table__cell-input"
-								@pointerdown.stop
-								@mousedown.stop
-								@click.stop
-								@dblclick.stop
-								@blur="commitCellEdit"
-								@keydown="onCellInputKeydown"
+								:key="`edit-${cell.key}`"
+								:cell="modelCell(cell)"
+								:cell-css="cell.style"
+								:caret="editingCell?.caret"
+								:rtl="tableData?.rtl === true"
+								@end="onCellEditEnd(cell, $event)"
 							/>
 							<!--
 							Paragraph blocks: a cell whose paragraphs set their own

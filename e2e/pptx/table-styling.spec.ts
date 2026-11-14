@@ -687,11 +687,11 @@ test.describe('table styling', () => {
 		const input = page
 			.locator('[aria-roledescription="slide"]')
 			.first()
-			.locator('td input')
+			.locator('td [data-table-cell-editor]')
 			.first();
 		await expect(input).toBeVisible();
 		await input.fill('Edited cell');
-		await input.press('Enter');
+		await input.press('Escape');
 		await expect(canvasCell(page, 'Edited cell')).toBeVisible();
 
 		const edited = await measureTable(page);
@@ -718,11 +718,11 @@ test.describe('table styling', () => {
 		const input = page
 			.locator('[aria-roledescription="slide"]')
 			.first()
-			.locator('td input')
+			.locator('td [data-table-cell-editor]')
 			.first();
 		await expect(input).toBeVisible();
 		await input.fill('Fractional cell');
-		await input.press('Enter');
+		await input.press('Escape');
 		await expect(canvasCell(page, 'Fractional cell')).toBeVisible();
 
 		const edited = await measureTable(page);
@@ -755,9 +755,9 @@ test.describe('table styling', () => {
 		const input = page
 			.locator('[aria-roledescription="slide"]')
 			.first()
-			.locator('td input')
+			.locator('td [data-table-cell-editor]')
 			.first();
-		await expect(input).toHaveValue('Revenue grew 42%');
+		await expect(input).toHaveText('Revenue grew 42%');
 		await input.press('Escape');
 
 		const noOpDownload = await savePptxViaBackstage(page);
@@ -782,11 +782,11 @@ test.describe('table styling', () => {
 		const reloadedInput = page
 			.locator('[aria-roledescription="slide"]')
 			.first()
-			.locator('td input')
+			.locator('td [data-table-cell-editor]')
 			.first();
-		await expect(reloadedInput).toHaveValue('Revenue grew 42%');
+		await expect(reloadedInput).toHaveText('Revenue grew 42%');
 		await reloadedInput.fill('Edited attributed cell');
-		await reloadedInput.press('Enter');
+		await reloadedInput.press('Escape');
 		await expect(canvasCell(page, 'Edited attributed cell')).toBeVisible();
 		const undo = page.getByRole('button', { name: 'Undo' });
 		const redo = page.getByRole('button', { name: 'Redo' });

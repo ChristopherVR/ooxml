@@ -24,7 +24,12 @@ export function renderTableFromTableData(
 		editable?: boolean;
 		selectedCell?: TableCellEditorState | null;
 		onSelectCell?: (cell: TableCellEditorState) => void;
-		onCommitCellEdit?: (rowIndex: number, colIndex: number, text: string) => void;
+		onCommitCellEdit?: (
+			rowIndex: number,
+			colIndex: number,
+			text: string,
+			end?: import('ooxml-ui/pptx').TableCellEditEnd,
+		) => void;
 		onResizeColumns?: (newWidths: number[]) => void;
 		onResizeRow?: (rowIndex: number, newHeight: number) => void;
 		styleCtx?: TableStyleContext;
@@ -188,16 +193,13 @@ export function renderTableFromTableData(
 											{diag ? <TableCellDiagonalBorders diag={diag} /> : null}
 											{isCellEditing ? (
 												<TableCellInput
-													initialText={cell.text ?? ''}
-													style={cellCss(cell, rowIndex, cellIndex) as React.CSSProperties}
-													onCommit={(text) => {
-														options?.onCommitCellEdit?.(rowIndex, cellIndex, text);
-													}}
-													onCancel={() => {
-														options?.onSelectCell?.({
-															rowIndex,
-															columnIndex: cellIndex,
-														});
+													key={`edit-${rowIndex}-${cellIndex}`}
+													cell={cell}
+													cellCss={cellCss(cell, rowIndex, cellIndex)}
+													caret={selectedCell?.caret}
+													rtl={tableData.rtl === true}
+													onEnd={(end) => {
+														options?.onCommitCellEdit?.(rowIndex, cellIndex, cell.text ?? '', end);
 													}}
 												/>
 											) : (

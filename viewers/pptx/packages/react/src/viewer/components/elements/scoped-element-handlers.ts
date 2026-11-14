@@ -17,8 +17,12 @@ export function getScopedElementHandlers(elementId: string, options: HandlerOpti
 				options.onTableCellSelect?.(cell, elementId)
 		: undefined;
 	const cellCommitHandler = options.onCommitCellEdit
-		? (rowIndex: number, colIndex: number, text: string) =>
-				options.onCommitCellEdit?.(elementId, rowIndex, colIndex, text)
+		? (
+				rowIndex: number,
+				colIndex: number,
+				text: string,
+				end?: Parameters<NonNullable<HandlerOptions['onCommitCellEdit']>>[4],
+			) => options.onCommitCellEdit?.(elementId, rowIndex, colIndex, text, end)
 		: undefined;
 	const colResizeHandler = options.onResizeTableColumns
 		? (newWidths: number[]) => options.onResizeTableColumns?.(elementId, newWidths)

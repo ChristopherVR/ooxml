@@ -127,7 +127,7 @@ describe('homeSection - font size box (shared fontSizeOf)', () => {
 		expect(popup()).toBeTruthy();
 	});
 
-	it('does not format a table with stale cell state from another table', () => {
+	it('formats the whole table when the cell state belongs to another table', () => {
 		const wrapper = mountHome({
 			selectedElement: { type: 'table', id: 'table-2' },
 			tableEditorState: { elementId: 'table-1', rowIndex: 0, columnIndex: 0 },
@@ -135,7 +135,7 @@ describe('homeSection - font size box (shared fontSizeOf)', () => {
 		for (const label of ['Font family', 'Font size']) {
 			expect(
 				(wrapper.get(`[aria-label="${label}"]`).element as PptxUiSelectElement).disabled,
-			).toBeTruthy();
+			).toBeFalsy();
 		}
 	});
 
@@ -145,7 +145,7 @@ describe('homeSection - font size box (shared fontSizeOf)', () => {
 		['read-only text', textShape(), false, true],
 		['text selection', textShape(), true, false],
 		['empty shape', { ...textShape(), type: 'shape', text: '' }, true, false],
-		['table without a selected cell', { type: 'table', id: 'tb1' }, true, true],
+		['table without a selected cell (whole table)', { type: 'table', id: 'tb1' }, true, false],
 	] as const)('gates font pickers for %s', (_name, selectedElement, canEdit, disabled) => {
 		const wrapper = mountHome({ selectedElement, canEdit });
 		for (const label of ['Font family', 'Font size']) {

@@ -93,7 +93,13 @@ export interface ElementRendererProps {
 	onInlineEditCommit: () => void;
 	onInlineEditCancel: () => void;
 	onTableCellSelect?: (cell: TableCellEditorState | null, elementId: string) => void;
-	onCommitCellEdit?: (elementId: string, rowIndex: number, colIndex: number, text: string) => void;
+	onCommitCellEdit?: (
+		elementId: string,
+		rowIndex: number,
+		colIndex: number,
+		text: string,
+		end?: import('ooxml-ui/pptx').TableCellEditEnd,
+	) => void;
 	/**
 	 * Commit a partial update to a SmartArt element from inline (on-canvas) node
 	 * editing. Wired to the same element-update path the inspector uses. When

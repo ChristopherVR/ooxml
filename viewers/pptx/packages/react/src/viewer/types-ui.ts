@@ -142,6 +142,8 @@ export interface TableCellEditorState {
 	columnIndex: number;
 	/** When true the cell has an active text input. */
 	isEditing?: boolean;
+	/** Where the caret starts when editing begins (Tab selects the cell's text). */
+	caret?: import('ooxml-ui/pptx').TableCellCaret;
 	/** Optional multi-cell selection (Shift+Click range). Each entry is {row, col}. */
 	selectedCells?: Array<{ row: number; col: number }>;
 }

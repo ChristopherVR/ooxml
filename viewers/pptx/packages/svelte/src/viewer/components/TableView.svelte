@@ -10,16 +10,19 @@
 	 */
 	import {
 		canDrillDown,
+		resolveTableCellEditEnd,
 		screenStrokeWidth,
 		shouldRenderHitTarget,
 		tableFrameCss,
 	} from 'ooxml-ui/pptx';
+	import type { TableCellCaret, TableCellEditEnd } from 'ooxml-ui/pptx';
 
 	import { buildTableRows, columnWidthStyles, tableRootStyle } from '../render';
 	import { getContainerStyle, getElementHitTargetStyle, styleToString } from '../style';
 	import { useTableStyleContext } from '../state/render-context';
 	import { useTableCellSelection } from '../state/table-cell-selection-context';
 	import type { ElementRendererProps } from './props';
+	import { tableCellEditor } from './table-cell-editor-action';
 	import { TableResizeController } from './table-resize.svelte';
 
 	const {
@@ -80,10 +83,13 @@
 	// `editor/table-cell-selection`; this only paints it, because a block the
 	// user cannot see is a block they cannot knowingly merge.
 	const isCellSelected = useTableCellSelection();
-	let editingKey = $state<string | null>(null);
-	let draft = $state('');
+	/** The cell being edited and where its caret starts, or null. */
+	let editing = $state<{ row: number; col: number; caret: TableCellCaret } | null>(null);
+	type CellView = (typeof rows)[number]['cells'][number];
+	const isEditingCell = (cell: CellView): boolean =>
+		editing?.row === cell.rowIndex && editing?.col === cell.cellIndex;
 
-	function begin(cell: (typeof rows)[number]['cells'][number], event: MouseEvent): void {
+	function begin(cell: CellView, event: MouseEvent): void {
 		// G8: `a:graphicFrameLocks/@noDrilldown` forbids selecting/editing this
 		// table's individual cells, even on an otherwise-editable deck.
 		if (!interactive || !ontablecellcommit || !canDrillDown(element)) {
@@ -91,39 +97,34 @@
 		}
 		event.preventDefault();
 		event.stopPropagation();
-		editingKey = cell.key;
-		draft = cell.text.trim();
+		editing = { row: cell.rowIndex, col: cell.cellIndex, caret: 'all' };
 	}
 
-	function commit(cell: (typeof rows)[number]['cells'][number]): void {
-		if (editingKey !== cell.key) {
-			return;
+	/**
+	 * The shared rich cell editor closed. The commit handler applies the shared
+	 * `resolveTableCellEditEnd` outcome; the same pure outcome names the next
+	 * cell to edit (Tab, Shift+Tab, an arrow at the text's edge).
+	 */
+	function end(row: number, col: number, result: TableCellEditEnd): void {
+		const outcome =
+			element.type === 'table' ? resolveTableCellEditEnd(element, row, col, result) : {};
+		if (editing?.row === row && editing.col === col) {
+			editing = outcome.edit ?? null;
 		}
-		ontablecellcommit?.(element.id, cell.rowIndex, cell.cellIndex, draft);
-		editingKey = null;
-	}
-
-	function focusInput(node: HTMLInputElement): void {
-		queueMicrotask(() => {
-			node.focus();
-			node.select();
-		});
+		ontablecellcommit?.(element.id, row, col, '', result);
 	}
 
 	$effect(() => {
-		if (!editingKey) {
+		if (!editing) {
 			return;
 		}
+		// A tap outside the editor ends the edit: unmounting it commits (`detach`).
 		const onOutsidePointerDown = (event: PointerEvent): void => {
 			const clickedEditor = event
 				.composedPath()
 				.some((target) => target instanceof Element && target.hasAttribute('data-inline-editor'));
-			if (clickedEditor) {
-				return;
-			}
-			const cell = rows.flatMap((row) => row.cells).find((candidate) => candidate.key === editingKey);
-			if (cell) {
-				commit(cell);
+			if (!clickedEditor) {
+				document.querySelector<HTMLElement>('[data-table-cell-editor]')?.blur();
 			}
 		};
 		document.addEventListener('pointerdown', onOutsidePointerDown, true);
@@ -196,8 +197,9 @@
 											/>
 										{/if}
 									</svg>
-								{/if}{#if editingKey === cell.key}
-									<input use:focusInput data-inline-editor type="text" bind:value={draft} onpointerdown={(event) => event.stopPropagation()} onclick={(event) => event.stopPropagation()} onblur={() => commit(cell)} onkeydown={(event) => { if (event.key === 'Enter') commit(cell); else if (event.key === 'Escape') editingKey = null; }} />
+								{/if}{#if isEditingCell(cell) && editing}{#key `${editing.row}:${editing.col}`}
+									<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+									<div class="pptx-svelte-table-cell-editor" use:tableCellEditor={{ cell: tableData?.rows[cell.rowIndex]?.cells[cell.cellIndex], caret: editing.caret, rtl: tableData?.rtl === true, onend: (result) => end(cell.rowIndex, cell.cellIndex, result) }} onpointerdown={(event) => event.stopPropagation()} onclick={(event) => event.stopPropagation()} ondblclick={(event) => event.stopPropagation()}></div>{/key}
 								{:else if cell.paragraphBlocks}{#each cell.paragraphBlocks as paragraph (paragraph.key)}<div
 											class="pptx-svelte-table-para"
 											style={paragraph.style}
@@ -248,7 +250,6 @@
 		border-collapse: collapse;
 		table-layout: fixed;
 	}
-	.pptx-svelte-table-cell input { box-sizing:border-box; width:100%; min-width:0; border:1px solid var(--pptx-primary, var(--office-accent, #2563eb)); background:white; color:#111827; font:inherit; }
 	/* Column/row drag-resize boundary lines: pointer-events none so a touch tap
 	   always reaches the cell underneath (double-tap-to-edit); the container's
 	   `onpointerdown` proximity-hit-tests the drag itself. */

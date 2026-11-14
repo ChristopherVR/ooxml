@@ -123,10 +123,10 @@ async function editTableCell(page: Page, text: string): Promise<void> {
 	await page.waitForTimeout(300);
 
 	// Type into the cell input
-	const input = page.locator('[data-pptx-viewport] td input[type="text"]');
+	const input = page.locator('[data-pptx-viewport] td [data-table-cell-editor]');
 	await expect(input).toBeVisible({ timeout: 3000 });
 	await input.fill(text);
-	await page.keyboard.press('Enter');
+	await page.keyboard.press('Escape');
 	await page.waitForTimeout(300);
 }
 

@@ -1,95 +1,65 @@
-import React, { useRef, useEffect } from 'react';
+import type { TableCellCaret, TableCellCss, TableCellEditEnd } from 'ooxml-ui/pptx';
+import { openTableCellTextEditor, tableCellEditorSegments } from 'ooxml-ui/pptx';
+import type { PptxTableCell } from 'pptx-viewer-core';
+import React, { useEffect, useRef } from 'react';
 
 /**
- * Inline cell text editor used when a table cell enters editing mode.
+ * Rich inline editor for a table cell in editing mode: mounts the shared
+ * `openTableCellTextEditor` (the same editor every binding uses) so the
+ * cell's runs keep their formatting, Enter adds a paragraph and Tab, the
+ * arrows at the text's edge and Escape leave the cell. The binding only maps
+ * the reported `TableCellEditEnd` (see `resolveTableCellEditEnd`).
  */
 export function TableCellInput({
-	initialText,
-	style,
-	onCommit,
-	onCancel,
+	cell,
+	cellCss,
+	caret,
+	rtl,
+	onEnd,
 }: {
-	initialText: string;
-	style?: React.CSSProperties;
-	onCommit: (text: string) => void;
-	onCancel: () => void;
+	cell: PptxTableCell | undefined;
+	cellCss?: TableCellCss;
+	caret?: TableCellCaret;
+	rtl?: boolean;
+	onEnd: (end: TableCellEditEnd) => void;
 }) {
-	const inputRef = useRef<HTMLInputElement>(null);
-	const committedRef = useRef(false);
-	const onCommitRef = useRef(onCommit);
-	onCommitRef.current = onCommit;
+	const hostRef = useRef<HTMLDivElement>(null);
+	const onEndRef = useRef(onEnd);
+	onEndRef.current = onEnd;
 
+	// Mounted once per edited cell. Unmounting (tapping away on mobile
+	// deselects the element before the browser fires blur) still commits:
+	// `destroy` reports a `detach` end when the editor was open.
 	useEffect(() => {
-		// Auto-focus and select all text when entering edit mode
-		const el = inputRef.current;
-		if (el) {
-			el.focus();
-			el.select();
-		}
-	}, []);
-
-	// Commit on unmount: on mobile, tapping away deselects the element and
-	// unmounts this input before the browser fires blur (React does not
-	// synthesise blur on unmount). Guard with committedRef so we never
-	// double-commit when blur fires normally before unmount.
-	useEffect(() => {
-		const input = inputRef.current;
-		return () => {
-			if (!committedRef.current && input) {
-				onCommitRef.current(input.value);
-			}
-		};
-	}, []);
-
-	const doCommit = (text: string) => {
-		if (committedRef.current) {
+		const host = hostRef.current;
+		if (!host) {
 			return;
 		}
-		committedRef.current = true;
-		onCommit(text);
-	};
-
-	const doCancel = () => {
-		committedRef.current = true;
-		onCancel();
-	};
+		const session = openTableCellTextEditor({
+			host,
+			segments: tableCellEditorSegments(cell),
+			...(cellCss ? { cellCss } : {}),
+			...(caret ? { caret } : {}),
+			rtl: rtl === true,
+			onEnd: (end) => onEndRef.current(end),
+		});
+		return () => session.destroy();
+		// The seed is read once: the editor owns the text while it is open.
+		// oxlint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 	return (
-		<input
-			ref={inputRef}
-			type='text'
-			defaultValue={initialText}
-			className='w-full bg-transparent outline-none'
-			style={{
-				...style,
-				padding: 0,
-				margin: 0,
-				border: 'none',
-			}}
+		<div
+			ref={hostRef}
+			className='w-full'
 			// Touch surfaces drive canvas drag/marquee through onPointerDown (see
 			// useCanvasEventHandlers.handleStagePointerDown). Without stopping it
 			// here, tapping inside the cell editor to reposition the caret would
-			// bubble to the stage, steal pointer capture, and blur the input,
-			// committing/discarding the cell before the edit is kept. This mirrors
-			// the guard in InlineTextEditor.
+			// bubble to the stage, steal pointer capture and blur the editor.
 			onPointerDown={(e) => e.stopPropagation()}
 			onMouseDown={(e) => e.stopPropagation()}
 			onClick={(e) => e.stopPropagation()}
 			onDoubleClick={(e) => e.stopPropagation()}
-			onBlur={(e) => doCommit(e.currentTarget.value)}
-			onKeyDown={(e) => {
-				e.stopPropagation();
-				if (e.key === 'Escape') {
-					e.preventDefault();
-					doCancel();
-				} else if (e.key === 'Enter') {
-					e.preventDefault();
-					doCommit(e.currentTarget.value);
-				} else if (e.key === 'Tab') {
-					e.preventDefault();
-					doCommit(e.currentTarget.value);
-				}
-			}}
 		/>
 	);
 }

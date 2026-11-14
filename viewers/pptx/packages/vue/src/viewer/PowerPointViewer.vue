@@ -547,6 +547,7 @@ const { tableSelection } = useTableCellEditingContext({
 	updateElement: (id, patch) => ops.updateElement(id, patch),
 	commitTableCell: (elementId, rowIndex, colIndex, text) =>
 		inlineEdit.commitTableCell(elementId, rowIndex, colIndex, text),
+	transformText: (text, previous) => inlineEdit.autoCorrect(text, previous),
 });
 
 // Inline SmartArt node-text and per-node fill editing context. Mirrors the

@@ -12,6 +12,7 @@
  */
 import type { PptxElement, PptxTableData, XmlObject } from '../../types';
 import { ensureXmlChild, ensureXmlChildOrCreate, ensureXmlChildren } from '../../utils/xml-access';
+import { applyCellRunStyleUpdates } from './table-cell-run-style-xml';
 import { rebuildCellTextBody, tableCellTextBodyMatches } from './table-cell-text-xml';
 import { ensureArray, getTblFromRawXml } from './table-structural-helpers';
 
@@ -133,40 +134,7 @@ export function updateCellTextStyleInRawXml(
 			// handed back a string and the first attribute assignment threw
 			// `TypeError: Cannot create property '@_b' on string ''` - styling a
 			// table cell CRASHED rather than silently doing nothing.
-			const rPr = ensureXmlChildOrCreate(run, 'a:rPr', 'first');
-
-			if ('bold' in styleUpdates) {
-				if (styleUpdates.bold) {
-					rPr['@_b'] = '1';
-				} else {
-					delete rPr['@_b'];
-				}
-			}
-			if ('italic' in styleUpdates) {
-				if (styleUpdates.italic) {
-					rPr['@_i'] = '1';
-				} else {
-					delete rPr['@_i'];
-				}
-			}
-			if ('underline' in styleUpdates) {
-				if (styleUpdates.underline) {
-					rPr['@_u'] = 'sng';
-				} else {
-					delete rPr['@_u'];
-				}
-			}
-			if ('strikethrough' in styleUpdates) {
-				if (styleUpdates.strikethrough) {
-					rPr['@_strike'] = 'sngStrike';
-				} else {
-					delete rPr['@_strike'];
-				}
-			}
-			if ('color' in styleUpdates && typeof styleUpdates.color === 'string') {
-				const hex = styleUpdates.color.replace('#', '');
-				rPr['a:solidFill'] = { 'a:srgbClr': { '@_val': hex } };
-			}
+			applyCellRunStyleUpdates(ensureXmlChildOrCreate(run, 'a:rPr', 'first'), styleUpdates);
 		}
 
 		// If there are no runs but there's an endParaRPr, update that too. The
@@ -175,38 +143,7 @@ export function updateCellTextStyleInRawXml(
 		// to be styling, and a truthiness test reads that `''` as absent.
 		const endRPr = runs.length === 0 ? ensureXmlChild(paragraph, 'a:endParaRPr') : undefined;
 		if (endRPr) {
-			if ('bold' in styleUpdates) {
-				if (styleUpdates.bold) {
-					endRPr['@_b'] = '1';
-				} else {
-					delete endRPr['@_b'];
-				}
-			}
-			if ('italic' in styleUpdates) {
-				if (styleUpdates.italic) {
-					endRPr['@_i'] = '1';
-				} else {
-					delete endRPr['@_i'];
-				}
-			}
-			if ('underline' in styleUpdates) {
-				if (styleUpdates.underline) {
-					endRPr['@_u'] = 'sng';
-				} else {
-					delete endRPr['@_u'];
-				}
-			}
-			if ('strikethrough' in styleUpdates) {
-				if (styleUpdates.strikethrough) {
-					endRPr['@_strike'] = 'sngStrike';
-				} else {
-					delete endRPr['@_strike'];
-				}
-			}
-			if ('color' in styleUpdates && typeof styleUpdates.color === 'string') {
-				const hex = styleUpdates.color.replace('#', '');
-				endRPr['a:solidFill'] = { 'a:srgbClr': { '@_val': hex } };
-			}
+			applyCellRunStyleUpdates(endRPr, styleUpdates);
 		}
 	}
 
