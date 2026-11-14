@@ -33,6 +33,7 @@ import { withSegmentSlideJumpTargets } from './run-slide-jump-targets';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveTextWriter';
 import { shouldWritePictureGeometry } from './save-picture-geometry-gate';
 import { applyNewPictureLayout, type PictureFillSaveContext } from './save-picture-fill';
+import { buildRichCellParagraphs, hasTableCellSource } from './table-cell-rich-xml';
 import { buildCellTextBody, tableCellSegmentsForSave } from './table-cell-segments-xml';
 
 /** Context passed to per-element save processing. */
@@ -133,6 +134,16 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const segments = tableCellSegmentsForSave(cell);
 		if (!segments) {
 			return false;
+		}
+		// An edited cell read from the deck keeps each run's own markup.
+		if (hasTableCellSource(segments)) {
+			xmlCell['a:txBody'] = buildCellTextBody(
+				xmlCell['a:txBody'] as XmlObject | undefined,
+				buildRichCellParagraphs(segments, (style) =>
+					this.createRunPropertiesFromTextStyle(style, links?.resolveHyperlinkRelationshipId),
+				),
+			);
+			return true;
 		}
 		const paragraphs = this.createParagraphsFromTextContent(
 			cell.text,

@@ -16,6 +16,7 @@ import {
 	editSegmentsText,
 	segmentsPlainText,
 } from 'ooxml-core/pptx/editor/render/segments-text-edit';
+import { tableCellSourceXml } from 'ooxml-core/pptx/editor/render/table-cell-source';
 import { fillTableCells } from 'ooxml-core/pptx/editor/render/table-grid-fill';
 import {
 	setTableElementCellSegments,
@@ -109,9 +110,25 @@ export function resolveTableCellEditEnd(
 	return outcome;
 }
 
-/** A cell's content as the editor opens it (shared so every binding seeds it alike). */
-export function tableCellEditorSegments(cell: PptxTableCell | undefined): TextSegment[] {
-	return cell ? tableCellSegments(cell) : [{ text: '', style: {} }];
+/**
+ * A cell's content as the editor opens it (shared so every binding seeds it
+ * alike). Given the table element and the cell's position, each run keeps the
+ * markup it was read from, so saving the edit loses none of it.
+ */
+export function tableCellEditorSegments(
+	cell: PptxTableCell | undefined,
+	element?: TablePptxElement,
+	row?: number,
+	col?: number,
+): TextSegment[] {
+	if (!cell) {
+		return [{ text: '', style: {} }];
+	}
+	const source =
+		element && row !== undefined && col !== undefined
+			? tableCellSourceXml(element, row, col)
+			: undefined;
+	return tableCellSegments(cell, source);
 }
 
 /**

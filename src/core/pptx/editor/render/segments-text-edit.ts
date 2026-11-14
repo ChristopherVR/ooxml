@@ -51,8 +51,14 @@ function explode(segments: readonly TextSegment[]): Char[] {
 	return chars;
 }
 
-function paragraphLayouts(segments: readonly TextSegment[]): Array<TextStyle | undefined> {
-	const layouts: Array<TextStyle | undefined> = [];
+/** A paragraph's own layout and source markup, carried by its first segment. */
+interface Layout {
+	properties?: TextStyle;
+	paragraph?: TextSegment['tableParagraph'];
+}
+
+function paragraphLayouts(segments: readonly TextSegment[]): Array<Layout | undefined> {
+	const layouts: Array<Layout | undefined> = [];
 	let atStart = true;
 	for (const segment of segments) {
 		if (segment.isParagraphBreak) {
@@ -63,7 +69,10 @@ function paragraphLayouts(segments: readonly TextSegment[]): Array<TextStyle | u
 			continue;
 		}
 		if (atStart) {
-			layouts.push(segment.paragraphProperties);
+			layouts.push({
+				properties: segment.paragraphProperties,
+				paragraph: segment.tableParagraph,
+			});
 			atStart = false;
 		}
 	}
@@ -121,13 +130,11 @@ export function editSegmentsText(
 	// equation), whose own text must not grow; a typed break is never the host's.
 	const hostSegment = segments[host.seg];
 	const atomic = hostSegment?.fieldType !== undefined || hostSegment?.equationXml !== undefined;
-	const inserted: Char[] = next
-		.slice(prefix, next.length - suffix)
-		.map((ch) => ({
-			ch,
-			seg: atomic || ch === '\n' ? -1 - host.seg : host.seg,
-			para: insertedPara,
-		}));
+	const inserted: Char[] = next.slice(prefix, next.length - suffix).map((ch) => ({
+		ch,
+		seg: atomic || ch === '\n' ? -1 - host.seg : host.seg,
+		para: insertedPara,
+	}));
 	const chars = [...old.slice(0, prefix), ...inserted, ...old.slice(old.length - suffix)];
 	return build(segments, chars, paragraphLayouts(segments));
 }
@@ -136,6 +143,7 @@ export function editSegmentsText(
 function withoutLayout(segment: TextSegment): TextSegment {
 	const copy = { ...segment };
 	delete copy.paragraphProperties;
+	delete copy.tableParagraph;
 	return copy;
 }
 
@@ -147,7 +155,7 @@ function styleOf(segments: readonly TextSegment[], seg: number): TextStyle {
 function build(
 	segments: readonly TextSegment[],
 	chars: readonly Char[],
-	layouts: ReadonlyArray<TextStyle | undefined>,
+	layouts: ReadonlyArray<Layout | undefined>,
 ): TextSegment[] {
 	const out: TextSegment[] = [];
 	let paragraphStart = true;
@@ -156,8 +164,11 @@ function build(
 	const open = (segment: TextSegment, para: number): void => {
 		if (paragraphStart) {
 			const layout = layouts[para];
-			if (layout) {
-				segment.paragraphProperties = { ...layout };
+			if (layout?.properties) {
+				segment.paragraphProperties = { ...layout.properties };
+			}
+			if (layout?.paragraph) {
+				segment.tableParagraph = layout.paragraph;
 			}
 			paragraphStart = false;
 		}
@@ -197,8 +208,13 @@ function build(
 			? { ...withoutLayout(base), text: char.ch, style: { ...base.style } }
 			: { text: char.ch, style: styleOf(segments, char.seg) };
 		if (char.seg < 0) {
-			// Typed text is plain text in the host run's format: never a field.
+			// Typed text is plain text in the host run's format: never a field,
+			// but it keeps that run's own properties (written as an `a:r`).
 			delete segment.fieldType;
+			const host = segments[-1 - char.seg]?.tableRun;
+			if (host && host.tag !== 'a:br') {
+				segment.tableRun = host;
+			}
 		}
 		run = { segment, seg: char.seg };
 		open(segment, paragraphStart ? paragraphPara : char.para);

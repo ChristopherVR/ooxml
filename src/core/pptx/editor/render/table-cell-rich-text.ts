@@ -20,10 +20,12 @@ import type {
 	TablePptxElement,
 	TextSegment,
 	TextStyle,
+	XmlObject,
 } from 'ooxml-core/pptx';
 import { updateCellTextInRawXml } from 'ooxml-core/pptx';
 
 import { tableCellSegmentsText } from '../../core/core/runtime/table-cell-segments-xml';
+import { pairTableCellSource, tableCellSourceXml, withRunStyle } from './table-cell-source';
 
 /** Shape text sizes are px; table runs and cell styles are points. */
 const PX_PER_PT = 96 / 72;
@@ -104,12 +106,16 @@ function paragraphBreak(style: TextStyle): TextSegment {
 /**
  * A cell's text as segments: its own `textSegments` when they still spell its
  * text, else its loaded runs, else its flat text in the cell's run style.
- * Each paragraph's first segment carries that paragraph's layout.
+ * Each paragraph's first segment carries that paragraph's layout. Given the
+ * cell's source markup (`tableCellSourceXml`), each segment also carries the
+ * run it was read from (`TextSegment.tableRun`) and each paragraph its `a:p`,
+ * so saving the edit keeps the markup this model does not type.
  */
-export function tableCellSegments(cell: PptxTableCell): TextSegment[] {
+export function tableCellSegments(cell: PptxTableCell, cellXml?: XmlObject): TextSegment[] {
 	if (cell.textSegments?.length && tableCellSegmentsText(cell.textSegments) === cell.text) {
 		return cell.textSegments.map((segment) => ({ ...segment, style: { ...segment.style } }));
 	}
+	const source = cell.textRuns?.length ? pairTableCellSource(cell.textRuns, cellXml) : undefined;
 	const segments: TextSegment[] = [];
 	let paragraphIndex = 0;
 	let paragraphStart = true;
@@ -118,6 +124,10 @@ export function tableCellSegments(cell: PptxTableCell): TextSegment[] {
 			const layout = paragraphProperties(cell.paragraphs?.[paragraphIndex]);
 			if (layout) {
 				segment.paragraphProperties = layout;
+			}
+			const paragraph = source?.paragraphs[paragraphIndex];
+			if (paragraph) {
+				segment.tableParagraph = paragraph;
 			}
 			paragraphStart = false;
 		}
@@ -134,18 +144,35 @@ export function tableCellSegments(cell: PptxTableCell): TextSegment[] {
 	const runs = cell.textRuns;
 	if (runs?.length) {
 		let lastStyle: TextStyle = cellStyleRunStyle(cell.style);
-		for (const run of runs) {
+		runs.forEach((run, index) => {
 			if (run.isParagraphBreak) {
 				nextParagraph(lastStyle);
-				continue;
+				return;
 			}
+			const runSource = source?.runs[index];
 			if (run.isLineBreak) {
-				push({ text: '\n', isLineBreak: true, style: { ...lastStyle } });
-				continue;
+				const tableRun = withRunStyle(runSource, lastStyle);
+				push({
+					text: '\n',
+					isLineBreak: true,
+					style: { ...lastStyle },
+					...(tableRun ? { tableRun } : {}),
+				});
+				return;
 			}
 			lastStyle = cellRunSegmentStyle(run);
-			push({ text: run.text, style: lastStyle });
-		}
+			const segment: TextSegment = { text: run.text, style: lastStyle };
+			const tableRun = withRunStyle(runSource, lastStyle);
+			if (tableRun) {
+				segment.tableRun = tableRun;
+				if (tableRun.tag === 'a:fld') {
+					// A field stays atomic: typing beside it never grows it.
+					const type = tableRun.xml['@_type'];
+					segment.fieldType = typeof type === 'string' && type ? type : 'field';
+				}
+			}
+			push(segment);
+		});
 		if (paragraphStart) {
 			push({ text: '', style: { ...lastStyle } });
 		}
@@ -189,6 +216,14 @@ export function withCellSegments(cell: PptxTableCell, segments: TextSegment[]): 
 		textSegments: segments,
 		textRuns: cellRunsFromSegments(segments),
 	};
+	// Renderers read an unset run flag as "inherit the cell's", so a format
+	// turned off in the edit is turned off on the cell, where `false` wins over
+	// a table style's bold header (runs set on still paint on).
+	for (const key of ['bold', 'italic', 'underline'] as const) {
+		if (segments.some((segment) => segment.text && segment.style?.[key] === false)) {
+			next.style = { ...next.style, [key]: false };
+		}
+	}
 	if (cell.paragraphs) {
 		const paragraphs: PptxTableCellParagraph[] = [];
 		let atStart = true;
@@ -210,7 +245,12 @@ export function withCellSegments(cell: PptxTableCell, segments: TextSegment[]): 
 
 /** Whether two segment lists spell and style the same content. */
 export function sameCellSegments(a: readonly TextSegment[], b: readonly TextSegment[]): boolean {
-	return JSON.stringify(a) === JSON.stringify(b);
+	// The source markup a segment carries is not content: compare what it spells.
+	const content = (segments: readonly TextSegment[]) =>
+		JSON.stringify(segments, (key, value) =>
+			key === 'tableRun' || key === 'tableParagraph' ? undefined : value,
+		);
+	return content(a) === content(b);
 }
 
 /**
@@ -229,7 +269,12 @@ export function setCellSegments(
 	if (!tableData || !cell) {
 		return element;
 	}
-	if (sameCellSegments(tableCellSegments(cell), segments)) {
+	if (
+		sameCellSegments(
+			tableCellSegments(cell, tableCellSourceXml(element, rowIndex, colIndex)),
+			segments,
+		)
+	) {
 		return element;
 	}
 	const rows = tableData.rows.map((row, ri) =>

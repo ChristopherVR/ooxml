@@ -1,9 +1,13 @@
 import type { TableCellCaret, TableCellEditEnd } from 'ooxml-ui/pptx';
 import { openTableCellTextEditor, tableCellEditorSegments } from 'ooxml-ui/pptx';
-import type { PptxTableCell } from 'pptx-viewer-core';
+import type { PptxTableCell, TablePptxElement } from 'pptx-viewer-core';
 
 export interface TableCellEditorActionOptions {
 	cell: PptxTableCell | undefined;
+	/** The table and the cell's position, so the editor keeps each run's markup. */
+	element?: TablePptxElement;
+	row?: number;
+	col?: number;
 	caret?: TableCellCaret;
 	rtl?: boolean;
 	onend: (end: TableCellEditEnd) => void;
@@ -22,7 +26,7 @@ export function tableCellEditor(
 	let current = options;
 	const session = openTableCellTextEditor({
 		host: node,
-		segments: tableCellEditorSegments(options.cell),
+		segments: tableCellEditorSegments(options.cell, options.element, options.row, options.col),
 		...(options.caret ? { caret: options.caret } : {}),
 		rtl: options.rtl === true,
 		onEnd: (end) => current.onend(end),

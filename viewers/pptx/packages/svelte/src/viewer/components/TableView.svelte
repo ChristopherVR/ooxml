@@ -199,7 +199,7 @@
 									</svg>
 								{/if}{#if isEditingCell(cell) && editing}{#key `${editing.row}:${editing.col}`}
 									<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-									<div class="pptx-svelte-table-cell-editor" use:tableCellEditor={{ cell: tableData?.rows[cell.rowIndex]?.cells[cell.cellIndex], caret: editing.caret, rtl: tableData?.rtl === true, onend: (result) => end(cell.rowIndex, cell.cellIndex, result) }} onpointerdown={(event) => event.stopPropagation()} onclick={(event) => event.stopPropagation()} ondblclick={(event) => event.stopPropagation()}></div>{/key}
+									<div class="pptx-svelte-table-cell-editor" use:tableCellEditor={{ cell: tableData?.rows[cell.rowIndex]?.cells[cell.cellIndex], element: element.type === 'table' ? element : undefined, row: cell.rowIndex, col: cell.cellIndex, caret: editing.caret, rtl: tableData?.rtl === true, onend: (result) => end(cell.rowIndex, cell.cellIndex, result) }} onpointerdown={(event) => event.stopPropagation()} onclick={(event) => event.stopPropagation()} ondblclick={(event) => event.stopPropagation()}></div>{/key}
 								{:else if cell.paragraphBlocks}{#each cell.paragraphBlocks as paragraph (paragraph.key)}<div
 											class="pptx-svelte-table-para"
 											style={paragraph.style}
