@@ -62,7 +62,7 @@ export function applyWordLink(target: LinkTarget, displayText?: string): Command
 		if (view?.editable === false || !state.schema.marks.link || (!target.href && !target.anchor))
 			return false;
 		if (target.href && !isNavigableHref(target.href))
-			throw new Error('Links must start with http://, https:// or mailto:.');
+			throw new Error('Links must start with http://, https://, mailto:, tel: or ftp://.');
 		if (!dispatch) return true;
 		const { from, to, empty } = state.selection;
 		const tr = state.tr;

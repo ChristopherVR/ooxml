@@ -106,8 +106,59 @@ describe('editor insert and formatting commands', () => {
 		const dialog = shadow(editor).querySelector<HTMLElement>('.dve-link-dialog')!;
 		dialog.querySelector<HTMLInputElement>('[aria-label="Address"]')!.value = 'javascript:alert(1)';
 		dialogButton(dialog, 'Insert').click();
-		expect(errors[0]).toMatch(/http:\/\/, https:\/\/ or mailto:/);
+		expect(errors[0]).toMatch(/http:\/\/, https:\/\/, mailto:, tel: or ftp:\/\//);
 		expect(firstParagraph(editor).runs.some((run) => run.link)).toBe(false);
+	});
+
+	it('inserts a tel link through the dialog', () => {
+		const editor = mount(textModel('Call us'));
+		select(editor, 1, 8);
+		ribbon(editor, 'Insert link');
+		const dialog = shadow(editor).querySelector<HTMLElement>('.dve-link-dialog')!;
+		dialog.querySelector<HTMLInputElement>('[aria-label="Address"]')!.value = 'tel:+27215550100';
+		dialogButton(dialog, 'Insert').click();
+		expect(firstParagraph(editor).runs[0]).toMatchObject({
+			text: 'Call us',
+			link: { href: 'tel:+27215550100' },
+		});
+	});
+
+	it('follows tel and ftp links only on Ctrl+click, as Word does', () => {
+		const model = createDocument();
+		model.blocks = [
+			{
+				type: 'paragraph',
+				id: 'p1',
+				runs: [
+					{ text: 'Call', link: { href: 'tel:+27215550100' } },
+					{ text: ' ' },
+					{ text: 'Files', link: { href: 'ftp://files.example.com/' } },
+				],
+			},
+		];
+		const editor = mount(model);
+		const anchors = [...shadow(editor).querySelectorAll<HTMLAnchorElement>('a[data-docx-link]')];
+		expect(anchors.map((anchor) => anchor.getAttribute('href'))).toEqual([
+			'tel:+27215550100',
+			'ftp://files.example.com/',
+		]);
+		const opened: string[] = [];
+		const original = window.open;
+		window.open = ((url?: string | URL) => {
+			opened.push(String(url));
+			return null;
+		}) as typeof window.open;
+		try {
+			const click = (event: MouseEvent) =>
+				view(editor).someProp('handleClick', (handle) => handle(view(editor), 2, event)) ?? false;
+			expect(click(new MouseEvent('click'))).toBe(false);
+			expect(opened).toEqual([]);
+			expect(click(new MouseEvent('click', { ctrlKey: true }))).toBe(true);
+			expect(followLinkAt(view(editor), 8)).toBe(true);
+			expect(opened).toEqual(['tel:+27215550100', 'ftp://files.example.com/']);
+		} finally {
+			window.open = original;
+		}
 	});
 
 	it('follows an internal link to its bookmark', () => {

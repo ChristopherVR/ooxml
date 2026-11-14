@@ -1,6 +1,7 @@
 import type { DOMOutputSpec, NodeSpec, MarkSpec } from 'prosemirror-model';
 import { inlineRunFormattingAttrs, inlineRunPropertiesDomAttrs } from './inline-run-properties';
 import { chartNodeSpec } from './chart-spec';
+import { isWordNavigableHref } from '../hyperlink';
 
 const safeAttrValue = (value: unknown): string => String(value ?? '').replace(/[;{}"]/g, '');
 
@@ -143,7 +144,7 @@ export const imageNodeSpec: NodeSpec = {
 
 /** Only these schemes are ever placed in a rendered `href`; other targets stay in the model only. */
 export function isNavigableHref(href: unknown): href is string {
-	return typeof href === 'string' && /^(https?:|mailto:)/i.test(href.trim());
+	return isWordNavigableHref(href);
 }
 
 /** `w:hyperlink` (external `href` or internal `anchor`), with an optional tooltip. */

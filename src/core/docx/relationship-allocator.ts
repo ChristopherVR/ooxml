@@ -4,6 +4,7 @@
 import { RELATIONSHIP_TYPES, isSafeHyperlinkHref, nextRelationshipId } from '../opc/index';
 import type { ChartSpace } from '../chart/index';
 import { DocPrIdAllocator } from './docpr-ids';
+import { isWordNavigableHref } from './hyperlink';
 import { isElement, REL_NS, type XmlDocument, type XmlElement } from './xml';
 
 export const HYPERLINK_RELATIONSHIP_TYPE = RELATIONSHIP_TYPES.hyperlink;
@@ -69,8 +70,10 @@ export class RelationshipAllocator {
 
 	/** Registers a brand-new external hyperlink target and returns its relationship id. */
 	addExternalHyperlink(href: string): string {
-		if (!isSafeHyperlinkHref(href))
-			throw new Error(`Unsupported hyperlink target: only http(s) and mailto links are supported.`);
+		if (!isWordNavigableHref(href))
+			throw new Error(
+				`Unsupported hyperlink target: only http(s), mailto, tel and ftp links are supported.`,
+			);
 		const id = this.nextId();
 		this.created.push({ id, type: HYPERLINK_RELATIONSHIP_TYPE, target: href, mode: 'External' });
 		return id;
