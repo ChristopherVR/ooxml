@@ -6,6 +6,7 @@ import {
 	listRevisions,
 	rejectRevision,
 	acceptAllRevisions,
+	rejectAllRevisions,
 } from './revision-commands';
 import { at, expectParagraph } from './test-support/access';
 
@@ -151,5 +152,18 @@ describe('tracked-change revisions', () => {
 		);
 		const revision = at(listRevisions(loaded.model), 0);
 		expect(() => acceptRevision(loaded.model, revision.id)).toThrow(/merging/);
+	});
+
+	it('removes a wholly deleted paragraph before a table instead of merging across it', async () => {
+		const loaded = await loadDocx(
+			await docx(
+				'<w:p><w:r><w:t>Kept</w:t></w:r></w:p>' +
+					'<w:p><w:pPr><w:rPr><w:del w:id="5" w:author="A"/></w:rPr></w:pPr><w:del w:id="6" w:author="A"><w:r><w:delText>Gone</w:delText></w:r></w:del></w:p>' +
+					'<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="2000"/></w:tblGrid><w:tr><w:tc><w:p><w:r><w:t>Cell</w:t></w:r></w:p></w:tc></w:tr></w:tbl><w:p/>',
+			),
+		);
+		const accepted = acceptAllRevisions(loaded.model);
+		expect(accepted.blocks.map((block) => block.type)).toEqual(['paragraph', 'table', 'paragraph']);
+		expect(rejectAllRevisions(loaded.model).blocks).toHaveLength(4);
 	});
 });

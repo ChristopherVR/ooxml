@@ -72,9 +72,26 @@ export function findRevision(model: DocumentModel, id: string): RevisionEntry | 
 	return listRevisions(model).find((entry) => entry.id === id);
 }
 
+/** No text and nothing else a run can hold: what is left of a wholly deleted paragraph. */
+const isEmptyParagraph = (paragraph: Paragraph): boolean =>
+	paragraph.runs.every(
+		(run) =>
+			!run.text &&
+			!run.image &&
+			!run.equation &&
+			!run.fieldChar &&
+			run.fieldCode === undefined &&
+			!run.break &&
+			!run.noteReference &&
+			!run.noteMark,
+	);
+
 function mergeIntoNext(blocks: Block[], paragraphId: string): Block[] {
 	const index = blocks.findIndex((b) => b.type === 'paragraph' && b.id === paragraphId);
 	const next = blocks[index + 1];
+	// An emptied paragraph before a table merges with nothing: it goes, as Word removes it.
+	if (index >= 0 && next?.type === 'table' && isEmptyParagraph(blocks[index] as Paragraph))
+		return [...blocks.slice(0, index), ...blocks.slice(index + 1)];
 	if (index < 0 || !next || next.type !== 'paragraph')
 		throw new Error(
 			`Cannot resolve the paragraph mark revision on paragraph ${paragraphId}: there is no following paragraph to merge with (merging across a table boundary is not supported).`,
