@@ -1,0 +1,85 @@
+// Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
+// One typed view of the layout compatibility settings in `word/settings.xml` (`w:compat`), and
+// named predicates for every layout rule that depends on them, so the layout engine never compares
+// raw mode numbers. Word writes `compatibilityMode` ([MS-DOCX]) as 11 (Word 2003), 12 (2007),
+// 14 (2010) or 15 (2013 and later); a document without one is treated as legacy.
+import { children, first, getW, type XmlElement } from './xml';
+import { onOffElement } from './simple-types';
+
+const WORD_COMPAT_URI = 'http://schemas.microsoft.com/office/word';
+
+/** The `w:compat` values the document model keeps. */
+export interface CompatibilitySettings {
+	/** `w:compatSetting[@w:name="compatibilityMode"]`, a positive integer. */
+	compatibilityMode?: number;
+	/** `w:compat/w:doNotUseHTMLParagraphAutoSpacing`. */
+	doNotUseHtmlParagraphAutoSpacing?: boolean;
+}
+
+/** `modern` is compatibility mode 15 and later; `legacy` is 11 to 14 and an absent mode. */
+export type CompatibilityGeneration = 'modern' | 'legacy';
+
+export interface CompatibilityProfile {
+	generation: CompatibilityGeneration;
+	/** The saved mode number, when the document has one. */
+	mode?: number;
+	/** Legacy `w:compat` child options. */
+	doNotUseHtmlParagraphAutoSpacing: boolean;
+}
+
+/** Reads the compatibility mode and legacy options from `w:settings/w:compat`. */
+export function readCompatibilitySettings(compat: XmlElement | undefined): CompatibilitySettings {
+	if (!compat) return {};
+	const setting = children(compat, 'compatSetting').find(
+		(item) => getW(item, 'name') === 'compatibilityMode' && getW(item, 'uri') === WORD_COMPAT_URI,
+	);
+	const mode = setting ? Number(getW(setting, 'val')) : undefined;
+	return {
+		...(mode !== undefined && Number.isInteger(mode) && mode > 0
+			? { compatibilityMode: mode }
+			: {}),
+		...(onOffElement(first(compat, 'doNotUseHTMLParagraphAutoSpacing')) === true
+			? { doNotUseHtmlParagraphAutoSpacing: true }
+			: {}),
+	};
+}
+
+/** The layout profile of a document model (or of the settings read from its package). */
+export function compatibilityProfile(settings: CompatibilitySettings): CompatibilityProfile {
+	const mode = settings.compatibilityMode;
+	return {
+		generation: mode !== undefined && mode >= 15 ? 'modern' : 'legacy',
+		...(mode !== undefined ? { mode } : {}),
+		doNotUseHtmlParagraphAutoSpacing: settings.doNotUseHtmlParagraphAutoSpacing === true,
+	};
+}
+
+/**
+ * `doNotUseHTMLParagraphAutoSpacing`: adjacent paragraph spacing adds the space after and before
+ * instead of keeping the larger, and auto spacing reads the twips. Measured in modes 12, 14 and 15.
+ */
+export function addsParagraphSpacing(profile: CompatibilityProfile): boolean {
+	return profile.doNotUseHtmlParagraphAutoSpacing;
+}
+
+/**
+ * A `pageBreakBefore` paragraph at the top of a page keeps its space before. Measured: kept in
+ * modes 12 and 14, dropped in 15; other modes (including later numbers) keep the legacy rule
+ * until they are measured.
+ */
+export function keepsSpaceBeforePageBreak(profile: CompatibilityProfile): boolean {
+	return profile.mode !== 15;
+}
+
+/**
+ * Native mode 15 footnote layout: the separator repeats the normal story on continued pages and
+ * `w:footnotePr/w:numCols` gives the notes their own columns. Only mode 15 has been measured.
+ */
+export function usesModernFootnoteLayout(profile: CompatibilityProfile): boolean {
+	return profile.mode === 15;
+}
+
+/** Modes 12 and 14 (measured) ignore the footnote column count and attach notes to body columns. */
+export function attachesFootnotesToBodyColumns(profile: CompatibilityProfile): boolean {
+	return profile.mode === 12 || profile.mode === 14;
+}

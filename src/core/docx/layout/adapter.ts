@@ -24,6 +24,13 @@ import { definedProps } from '../defined-props';
 import { symbolOnly, symbolSegments } from '../special-characters';
 import { formFieldDisplayText } from '../form-fields';
 import { adaptTable } from './adapt-table';
+import {
+	addsParagraphSpacing,
+	attachesFootnotesToBodyColumns,
+	compatibilityProfile,
+	keepsSpaceBeforePageBreak,
+	usesModernFootnoteLayout,
+} from '../compatibility';
 import { foldDropCaps } from './adapt-drop-cap';
 import { groupParagraphBorders, paragraphBox } from './adapt-paragraph-box';
 import { endnoteParagraphs, noteLabels, paragraphFootnotes } from './adapt-notes';
@@ -100,8 +107,9 @@ export function adaptDocumentModel(
 	const reviewMode = options.reviewDisplayMode ?? 'all';
 	const visibleModel = visibleReviewModel(model, reviewMode);
 	const catalog = model.paragraphStyles;
-	const addParagraphSpacing = model.doNotUseHtmlParagraphAutoSpacing === true;
-	const keepSpaceBeforePageBreak = model.compatibilityMode !== 15;
+	const compatibility = compatibilityProfile(model);
+	const addParagraphSpacing = addsParagraphSpacing(compatibility);
+	const keepSpaceBeforePageBreak = keepsSpaceBeforePageBreak(compatibility);
 	/** HTML auto spacing is 14 pt when the compatibility option is off; otherwise the twips are used. */
 	const autoSpaced = (auto: boolean | undefined, twipsValue: Twips | undefined) =>
 		auto && !addParagraphSpacing ? HTML_AUTO_SPACING_TWIPS : twipsValue;
@@ -387,8 +395,8 @@ export function adaptDocumentModel(
 			)
 		: undefined;
 	const sections = model.sections;
-	const modernFootnoteSeparator = model.compatibilityMode === 15;
-	const legacyFootnoteColumns = model.compatibilityMode === 12 || model.compatibilityMode === 14;
+	const modernFootnoteSeparator = usesModernFootnoteLayout(compatibility);
+	const legacyFootnoteColumns = attachesFootnotesToBodyColumns(compatibility);
 	if (
 		!modernFootnoteSeparator &&
 		!legacyFootnoteColumns &&
