@@ -11,85 +11,26 @@ import { type StylePatch, patchStyle } from '../styles';
 import { parseCellInput } from './deps';
 import type { ClipboardCell, ClipboardCells } from './types';
 import { hyperlinkFromHtmlAttributes } from './clipboard-links';
-
-const NAMED_COLORS: Record<string, string> = {
-	black: '000000',
-	white: 'FFFFFF',
-	red: 'FF0000',
-	green: '008000',
-	lime: '00FF00',
-	blue: '0000FF',
-	yellow: 'FFFF00',
-	orange: 'FFA500',
-	purple: '800080',
-	gray: '808080',
-	grey: '808080',
-	silver: 'C0C0C0',
-	navy: '000080',
-	maroon: '800000',
-	teal: '008080',
-	olive: '808000',
-	aqua: '00FFFF',
-	fuchsia: 'FF00FF',
-};
+import {
+	decodeHtmlEntities,
+	parseCssColorHex,
+	parseCssDeclarations,
+	parseHtmlAttributes,
+} from '../../text/html-tokens';
 
 /** A CSS colour (`#rgb`, `#rrggbb`, `rgb()`, a basic name) as a model colour. */
 export function parseCssColor(text: string): Color | undefined {
-	const value = text.trim().toLowerCase();
-	const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/.exec(value)?.[1];
-	if (hex)
-		return {
-			rgb: (hex.length === 3 ? [...hex].map((ch) => ch + ch).join('') : hex).toUpperCase(),
-		};
-	const rgb = /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/.exec(value);
-	if (rgb)
-		return {
-			rgb: rgb
-				.slice(1, 4)
-				.map((n) => Math.min(255, Number(n)).toString(16).padStart(2, '0'))
-				.join('')
-				.toUpperCase(),
-		};
-	const named = NAMED_COLORS[value];
-	return named ? { rgb: named } : undefined;
+	const rgb = parseCssColorHex(text);
+	return rgb ? { rgb } : undefined;
 }
 
-const ENTITIES: Record<string, string> = {
-	amp: '&',
-	lt: '<',
-	gt: '>',
-	quot: '"',
-	apos: "'",
-	nbsp: ' ',
-};
-
+/** Cell text keeps `&nbsp;` as an ordinary space, as Excel's own paste does. */
 export function decodeEntities(text: string): string {
-	return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (whole, name: string) => {
-		if (name.startsWith('#x') || name.startsWith('#X'))
-			return String.fromCodePoint(parseInt(name.slice(2), 16));
-		if (name.startsWith('#')) return String.fromCodePoint(Number(name.slice(1)));
-		return ENTITIES[name.toLowerCase()] ?? whole;
-	});
+	return decodeHtmlEntities(text.replace(/&nbsp;/gi, ' '));
 }
 
-function parseAttributes(text: string): Map<string, string> {
-	const attrs = new Map<string, string>();
-	for (const m of text.matchAll(
-		/([\w:-]{1,64})\s{0,16}=\s{0,16}(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g,
-	))
-		attrs.set((m[1] ?? '').toLowerCase(), decodeEntities(m[2] ?? m[3] ?? m[4] ?? ''));
-	return attrs;
-}
-
-function parseCss(text: string): Map<string, string> {
-	const out = new Map<string, string>();
-	for (const decl of text.split(';')) {
-		const colon = decl.indexOf(':');
-		if (colon < 0) continue;
-		out.set(decl.slice(0, colon).trim().toLowerCase(), decl.slice(colon + 1).trim());
-	}
-	return out;
-}
+const parseAttributes = parseHtmlAttributes;
+const parseCss = parseCssDeclarations;
 
 /** Excel writes `mso-number-format:"0\.00"` with `\` escapes and `\0022` for quotes. */
 function decodeNumberFormat(text: string): string {
