@@ -2,7 +2,7 @@
 // paragraph properties (`a:rPr`, `a:pPr`). Only values that map onto the model are read; anything
 // else (classes, layout, unsupported units) is ignored rather than guessed.
 import { parseCssColorHex, parseCssDeclarations } from '../text/html-tokens';
-import type { DrawingParagraphProperties, DrawingRunProperties } from './text-model';
+import type { DrawingBullet, DrawingRunProperties } from './text-model';
 import type { DrawingColor } from './types';
 
 const srgb = (value: string): DrawingColor => ({ kind: 'srgb', value, transforms: [] });
@@ -104,7 +104,8 @@ export function tagRunProperties(
 			const hex = color ? parseCssColorHex(color) : undefined;
 			if (hex) props.fill = { kind: 'solid', color: srgb(hex) };
 			const size = Number(attrs.get('size'));
-			if (Number.isInteger(size) && size >= 1 && size <= 7) props.sizePt = FONT_SIZE_ATTR[size - 1];
+			const sizePt = Number.isInteger(size) ? FONT_SIZE_ATTR[size - 1] : undefined;
+			if (sizePt !== undefined) props.sizePt = sizePt;
 			return props;
 		}
 		default:
@@ -186,7 +187,7 @@ export function msoListLevel(attrs: Map<string, string>): number | undefined {
 const MARKER_CHARS = new Set(['•', '▪', '●', '○', '■', '–', '-', '*', 'o']);
 
 /** The DrawingML bullet a typed list marker (`1.`, `a)`, `ii.`, a symbol) stands for. */
-export function bulletFromMarker(marker: string): DrawingParagraphProperties['bullet'] {
+export function bulletFromMarker(marker: string): DrawingBullet {
 	const text = marker.replace(/\s+/g, '');
 	const numbered = /^(\(?)(\d{1,4}|[a-z]|[A-Z]|[ivxlc]{1,6}|[IVXLC]{1,6})([.)])$/.exec(text);
 	if (numbered) {
@@ -214,7 +215,7 @@ export function listBullet(
 	ordered: boolean,
 	attrs: Map<string, string>,
 	level: number,
-): DrawingParagraphProperties['bullet'] {
+): DrawingBullet {
 	if (!ordered) return { kind: 'char', char: ['•', '–', '•'][level % 3] ?? '•' };
 	const type = attrs.get('type') ?? '1';
 	const scheme =
