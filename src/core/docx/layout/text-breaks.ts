@@ -1,3 +1,4 @@
+import { complexBreakAllowed } from '../../text/complex-breaks';
 import { isEastAsianChar } from '../../text/east-asian';
 import { prohibitedAtLineEnd, prohibitedAtLineStart, type KinsokuSets } from '../../text/kinsoku';
 
@@ -40,13 +41,14 @@ const ZERO_WIDTH_SPACE = '​';
 
 /**
  * Whether the line breaker may break between two adjacent graphemes of text, before kinsoku: after
- * a plain hyphen or a zero width space, and before or after an East Asian character. U+2011
+ * a plain hyphen or a zero width space, before or after an East Asian character, and between two
+ * grapheme clusters of Thai, Lao, Khmer or Myanmar (`text/complex-breaks.ts`). U+2011
  * (non-breaking hyphen, `w:noBreakHyphen`) is never split on.
  */
 export function breakAllowedBetween(before: string, after: string): boolean {
 	if (!before || !after) return false;
 	if (before === '-' || before.endsWith(ZERO_WIDTH_SPACE)) return true;
-	return isEastAsianChar(before) || isEastAsianChar(after);
+	return isEastAsianChar(before) || isEastAsianChar(after) || complexBreakAllowed(before, after);
 }
 
 /** Whether kinsoku forbids a break between `before` (under `beforeSets`) and `after`. */

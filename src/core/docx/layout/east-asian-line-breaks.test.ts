@@ -125,3 +125,45 @@ describe('automatic East Asian and Western spacing (w:autoSpaceDE, w:autoSpaceDN
 		expect(lines([run(`${ten}a`)])).toEqual([ten, 'a']);
 	});
 });
+
+describe('Thai, Lao, Khmer and Myanmar line breaking', () => {
+	const samples = {
+		thai: 'ภาษาไทยเป็นภาษาที่มีระดับเสียงของคำแน่นอนหรือวรรณยุกต์เช่นเดียวกับภาษาจีน',
+		lao: 'ພາສາລາວເປັນພາສາທີ່ມີສຽງວັນນະຍຸດແລະເປັນພາສາລາຊະການຂອງປະເທດລາວ',
+		khmer: 'ភាសាខ្មែរគឺជាភាសាកំណើតរបស់ជនជាតិខ្មែរនិងជាភាសាផ្លូវការរបស់ប្រទេសកម្ពុជា',
+		myanmar: 'မြန်မာဘာသာစကားသည်မြန်မာနိုင်ငံ၏ရုံးသုံးဘာသာစကားဖြစ်သည်',
+	};
+	for (const [script, text] of Object.entries(samples))
+		it(`wraps a long unspaced ${script} run at grapheme cluster boundaries`, () => {
+			const notes: string[] = [];
+			const result = layoutParagraph(
+				{ kind: 'paragraph', id: 'p', runs: [{ text }] },
+				100,
+				measurer,
+				(note) => notes.push(note),
+			);
+			const texts = result.lines.map((line) => line.fragments.map((f) => f.text).join(''));
+			expect(texts.length).toBeGreaterThan(3);
+			expect(texts.join('')).toBe(text);
+			expect(notes).toEqual([]);
+			const boundaries = new Set(
+				[...new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(text)].map(
+					(part) => part.index,
+				),
+			);
+			let offset = 0;
+			for (const line of texts) {
+				expect(boundaries.has(offset), `${script} line at ${offset}`).toBe(true);
+				expect(measurer.widthOf(line, { family: '', sizePx: 10 })).toBeLessThanOrEqual(100);
+				offset += line.length;
+			}
+		});
+
+	it('does not break between Thai and an adjacent Latin word', () => {
+		expect(lines([{ text: 'กabcd' }], {}, 40)).toEqual(['กabcd']);
+	});
+
+	it('breaks after a zero width space', () => {
+		expect(lines([{ text: 'aaaaaaaa​bbbbbbbb' }])).toEqual(['aaaaaaaa​', 'bbbbbbbb']);
+	});
+});
