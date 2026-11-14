@@ -77,7 +77,9 @@ test.describe('export formats', () => {
 
 		const bytes = await downloadBytes(download);
 		expect(isPdf(bytes), 'payload must start with %PDF-').toBe(true);
-		expect(bytes.byteLength).toBeGreaterThan(20_000);
+		// Vector pages of a text deck are a few KB (a picture page was tens of KB); an empty file is
+		// far below this. `export-pdf-vector.spec.ts` checks the pages' content.
+		expect(bytes.byteLength).toBeGreaterThan(2_000);
 		expect(pdfPageCount(bytes), 'the PDF must have one page per slide').toBe(
 			EXPORT_DECK_SLIDE_COUNT,
 		);
