@@ -1,10 +1,22 @@
-import type { Table, TableCell, TableCellMargins } from 'ooxml-core/docx';
+import { signedTwips, type Table, type TableCell, type TableCellMargins } from 'ooxml-core/docx';
 import { closeHistory } from 'prosemirror-history';
 import type { EditorState } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 
 export type TableRowProperties = NonNullable<Table['rowProperties']>[number];
 export type RowPatch = { [K in keyof TableRowProperties]?: TableRowProperties[K] | undefined };
+
+const WORD_FALLBACK_MARGINS: TableCellMargins = {
+	left: signedTwips(108),
+	right: signedTwips(108),
+	top: signedTwips(0),
+	bottom: signedTwips(0),
+};
+
+/** The margins a table inherits from its style chain (layout's resolution), for the dialogs. */
+function inheritedCellMargins(json: unknown): TableCellMargins {
+	return typeof json === 'string' ? (JSON.parse(json) as TableCellMargins) : WORD_FALLBACK_MARGINS;
+}
 
 /** Only rectangular tables currently expose formatting controls. */
 export function tablePropertiesContext(state: EditorState) {
@@ -50,6 +62,7 @@ export function tablePropertiesContext(state: EditorState) {
 			margins: (table.attrs.cellMargins
 				? JSON.parse(table.attrs.cellMargins)
 				: {}) as TableCellMargins,
+			inheritedMargins: inheritedCellMargins(table.attrs.inheritedCellMargins),
 		};
 	}
 	return null;

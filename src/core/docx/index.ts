@@ -12,6 +12,7 @@ export {
 export * from './underline';
 export { parseRunStyleCatalog } from './character-styles';
 export { parseTableStyleCatalog } from './table-styles';
+export { resolveTableCellMargins } from './table-margins';
 export { resolveTableStyleFormatting } from './resolve-table';
 export { resolveRunFormatting, type RunFormattingContext } from './run-formatting';
 export { parseTheme, parseColorSchemeMapping } from './theme';

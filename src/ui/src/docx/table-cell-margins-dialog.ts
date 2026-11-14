@@ -49,9 +49,7 @@ export function createCellMarginFields(onChange: () => void) {
 			for (const side of sides) {
 				const values = context.cells.map(
 					(cell) =>
-						cell.margins[side] ??
-						context.margins[side] ??
-						(side === 'left' || side === 'right' ? 108 : 0),
+						cell.margins[side] ?? context.margins[side] ?? context.inheritedMargins[side] ?? 0,
 				);
 				controls[side].value = values.every((value) => value === values[0])
 					? String(values[0]! / 1440)

@@ -281,6 +281,11 @@ export const schema = new Schema({
 				borders: { default: null },
 				/** Default cell margins (`w:tblCellMar`) as JSON. */
 				cellMargins: { default: null },
+				/**
+				 * The margins a side takes when the table sets none (its style chain, then the default
+				 * table style) as JSON. Shown by the dialogs; never written back.
+				 */
+				inheritedCellMargins: { default: null },
 				/** The block-level content control around the table (`w:sdt` around `w:tbl`). */
 				contentControl: { default: null },
 			},

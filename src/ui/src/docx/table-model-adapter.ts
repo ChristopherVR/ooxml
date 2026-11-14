@@ -3,7 +3,7 @@
 // id, because vertical-merge continuation cells and nested-table previews have no 1:1 visible
 // ProseMirror node to rebuild from; simple tables keep the existing rebuild-from-doc path.
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
-import { cellSourceBlocks, removedByEdit } from 'ooxml-core/docx';
+import { cellSourceBlocks, removedByEdit, resolveTableCellMargins } from 'ooxml-core/docx';
 import type {
 	ContentControl,
 	Paragraph,
@@ -121,6 +121,9 @@ export function tableNode(
 			indentTwips: block.indentTwips ?? null,
 			borders: block.borders ? JSON.stringify(block.borders) : null,
 			cellMargins: block.cellMargins ? JSON.stringify(block.cellMargins) : null,
+			inheritedCellMargins: JSON.stringify(
+				resolveTableCellMargins(block.style ? { style: block.style } : {}, tableStyles),
+			),
 			contentControl: block.contentControl ?? null,
 		},
 		rows,
