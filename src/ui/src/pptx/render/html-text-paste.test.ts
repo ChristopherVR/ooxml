@@ -59,13 +59,29 @@ describe('htmlToPasteSegments', () => {
 			paragraphProperties: { align: 'center', paragraphMarginLeft: 30, paragraphIndent: -30 },
 		});
 		expect(first('l')).toMatchObject({
-			bulletInfo: { char: '–' },
+			bulletInfo: { char: '\u2013' },
 			paragraphLevel: 1,
 			style: { hyperlink: 'https://e.x/' },
 		});
 		expect(first('h')?.style.highlightColor).toBe('#FFFF00');
 		expect(first('2')?.style.baseline).toBe(30000);
 		expect(first('lead')?.bulletInfo).toBeUndefined();
+	});
+
+	it('numbers pasted list items 1, 2, 3 before any reload', () => {
+		const pasted = htmlToPasteSegments(
+			'<p>x</p><ol><li>a</li><li>b</li><li>c</li></ol><p>y</p><ol><li>d</li></ol>',
+			destination,
+		);
+		const indexes = pasted?.segments
+			.filter((s) => s.bulletInfo?.autoNumType)
+			.map((s) => [s.text, s.bulletInfo?.paragraphIndex]);
+		expect(indexes).toEqual([
+			['a', 0],
+			['b', 1],
+			['c', 2],
+			['d', 0],
+		]);
 	});
 
 	it('reports plain HTML as not rich so the caller pastes text natively', () => {

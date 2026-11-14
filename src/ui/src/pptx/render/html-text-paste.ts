@@ -95,6 +95,32 @@ function paragraphMetadata(props: DrawingParagraphProperties | undefined): Parti
 	return meta;
 }
 
+/**
+ * Sets `bulletInfo.paragraphIndex` (the runtime ordinal offset the renderer adds to the start
+ * value) on pasted numbered paragraphs, as the loader does: consecutive items at one level with
+ * one scheme count up; an unnumbered paragraph ends the lists at its level and deeper, and a
+ * numbered one ends the lists nested beneath it.
+ */
+function createNumberingCounter(): (meta: Partial<TextSegment>) => void {
+	const running = new Map<number, { scheme: string; index: number }>();
+	const forgetFrom = (level: number) => {
+		for (const key of [...running.keys()]) if (key >= level) running.delete(key);
+	};
+	return (meta) => {
+		const level = meta.paragraphLevel ?? 0;
+		const scheme = meta.bulletInfo?.autoNumType;
+		if (!scheme || !meta.bulletInfo) {
+			forgetFrom(level);
+			return;
+		}
+		forgetFrom(level + 1);
+		const previous = running.get(level);
+		const index = previous?.scheme === scheme ? previous.index + 1 : 0;
+		running.set(level, { scheme, index });
+		meta.bulletInfo = { ...meta.bulletInfo, paragraphIndex: index };
+	};
+}
+
 /** Hyperlink and colour-choice fields of a destination run that a pasted value replaces. */
 function mergeStyle(destination: TextStyle, source: TextStyle): TextStyle {
 	const merged: TextStyle = { ...destination };
@@ -137,8 +163,10 @@ export function htmlToPasteSegments(
 		return undefined;
 	}
 	const segments: TextSegment[] = [];
+	const numbering = createNumberingCounter();
 	for (const [index, paragraph] of paragraphs.entries()) {
 		const meta = format === 'keep-text-only' ? {} : paragraphMetadata(paragraph.properties);
+		numbering(meta);
 		if (index > 0) {
 			segments.push({ text: '\n', style: { ...destination }, isParagraphBreak: true });
 		}
