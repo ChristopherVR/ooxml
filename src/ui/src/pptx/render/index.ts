@@ -558,6 +558,16 @@ export * from './table-layout';
 // Immutable single-cell text edit (`setCellText`) for inline cell editing,
 // shared by every binding's table renderer.
 export * from './table-cell-edit';
+// Rich cell text editing: the cell's runs as segments, the editor every binding
+// mounts in an edited cell, Tab/arrow navigation, range formatting and
+// tab-separated paste.
+export * from './table-cell-rich-text';
+export * from './table-cell-navigation';
+export * from './table-cell-text-editor';
+export * from './table-cell-edit-outcome';
+export * from './table-cells-paste-listener';
+export * from './table-cells-format';
+export * from './table-tsv-paste';
 // Inspector table data grid: normalised render model (`buildTableDataGrid`) plus
 // element-level row/column operations, so all five bindings edit cell text from
 // the sidebar through one implementation.
