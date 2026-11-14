@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.76.2](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.76.2) - 2026-11-14
+
+### Bug Fixes
+
+- **pptx:** Stand in for more office fonts with measured look-alikes ([c85e448](https://github.com/ChristopherVR/ooxml/commit/c85e44819ea377585d68aee721e5006991f294b8))
+
 ## [4.76.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.76.1) - 2026-11-14
 
 ### Bug Fixes
