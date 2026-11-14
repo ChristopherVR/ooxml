@@ -22,7 +22,21 @@
 	import TextEffectsSection from './TextEffectsSection.svelte';
 	import ThemeColorSwatchGrid from './ThemeColorSwatchGrid.svelte';
 
-	const { editor, el }: { editor: EditorState; el: PptxElement } = $props();
+	const {
+		editor,
+		el,
+		part,
+	}: {
+		editor: EditorState;
+		el: PptxElement;
+		/**
+		 * The Format pane section drawn: `font` (colour, text effects) or
+		 * `paragraph` (text box options, spacing, direction); omitted, both.
+		 */
+		part?: 'font' | 'paragraph';
+	} = $props();
+	const showFont = $derived(part !== 'paragraph');
+	const showParagraph = $derived(part !== 'font');
 	const t = useTranslator();
 
 	const textColor = $derived(textColorOf(el));
@@ -50,8 +64,11 @@
 	}
 </script>
 
-<InspectorFields sections={TEXT_BOX_SECTIONS} target={textStyle} onpatch={patchText} />
+{#if showParagraph}
+	<InspectorFields sections={TEXT_BOX_SECTIONS} target={textStyle} onpatch={patchText} />
+{/if}
 
+{#if showFont}
 <label class="pptx-svelte-field pptx-svelte-text-color-field">
 	<span class="pptx-svelte-field-label">{t('pptx.textPanel.color')}</span>
 	<input
@@ -70,13 +87,16 @@
 <RecentColorsRow colors={editor.mruColors} onselect={commitTextColor} />
 
 <TextEffectsSection {editor} {el} />
+{/if}
 
+{#if showParagraph}
 <div class="pptx-svelte-grid">
 	<label class="pptx-svelte-field"><span>{t('pptx.textAdvanced.lineSpacing')}</span><input type="number" min="0.5" max="5" step="0.05" value={textStyle.lineSpacing ?? 1} onchange={(event) => patchText({ lineSpacing: Number(event.currentTarget.value), lineSpacingExactPt: undefined })} /></label>
 	<label class="pptx-svelte-field"><span>{t('pptx.textAdvanced.spaceBefore')}</span><input type="number" min="0" value={textStyle.paragraphSpacingBefore ?? 0} onchange={(event) => patchText({ paragraphSpacingBefore: Number(event.currentTarget.value) })} /></label>
 	<label class="pptx-svelte-field"><span>{t('pptx.textAdvanced.spaceAfter')}</span><input type="number" min="0" value={textStyle.paragraphSpacingAfter ?? 0} onchange={(event) => patchText({ paragraphSpacingAfter: Number(event.currentTarget.value) })} /></label>
 </div>
 <label class="pptx-svelte-field-checkbox"><pptx-ui-checkbox checked={textStyle.rtl ?? false} onchange={(event) => patchText({ rtl: event.currentTarget.checked })} ></pptx-ui-checkbox><span>{t('pptx.textAdvanced.rtl')}</span></label>
+{/if}
 
 <style>
 	.pptx-svelte-field {

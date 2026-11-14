@@ -6,7 +6,7 @@
 	 * off the shell's own props.
 	 */
 	import type { RibbonAddInTab as RibbonAddInTabView, RibbonContextualTabId } from 'ooxml-ui/pptx';
-	import { RIBBON_CONTEXTUAL_TABS, homeLaunchers } from 'ooxml-ui/pptx';
+	import { HOME_LAUNCHER_SECTIONS, RIBBON_CONTEXTUAL_TABS, homeLaunchers } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 
@@ -46,10 +46,14 @@
 	// Font, Paragraph and Drawing launchers open the Properties pane (there are no modal dialogs).
 	const launchers = homeLaunchers(
 		() => t('pptx.inspector.properties'),
-		() => {
+		(group) => {
 			if (ribbon.chromeUi && !ribbon.chromeUi.inspectorOpen) {
 				ribbon.chromeUi.toggleInspector();
 			}
+			// Switch to Properties and reveal the group's section (Font, Paragraph, Fill).
+			ribbon.chromeUi?.formatPane.requestFormatPane(HOME_LAUNCHER_SECTIONS[group], {
+				focus: true,
+			});
 		},
 	);
 
