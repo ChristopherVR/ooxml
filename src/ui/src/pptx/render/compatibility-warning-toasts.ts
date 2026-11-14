@@ -78,6 +78,8 @@ const CODE_MESSAGE_KEYS: Readonly<Record<string, string>> = {
 		'pptx.compatibility.saveTransitionSoundPayloadUnsupported',
 	DIAGRAM_RELATIONSHIP_IDS_INCOMPLETE: 'pptx.compatibility.diagramRelationshipIdsIncomplete',
 	EXPORT_BACKEND_UNAVAILABLE: 'pptx.compatibility.exportBackendUnavailable',
+	EMBEDDED_FONT_RESTRICTED: 'pptx.compatibility.embeddedFontRestricted',
+	EMBEDDED_FONT_NOT_EMBEDDABLE: 'pptx.compatibility.embeddedFontNotEmbeddable',
 };
 
 /** Fallback key for a warning code with no entry in {@link CODE_MESSAGE_KEYS}. */

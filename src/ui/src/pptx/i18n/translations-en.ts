@@ -4157,6 +4157,10 @@ export const translationsEn: Record<string, string> = {
 		'One slide transition sound could not be saved and was skipped.',
 	'pptx.compatibility.diagramRelationshipIdsIncomplete':
 		'This SmartArt diagram is missing some internal references, so it may not display exactly as authored.',
+	'pptx.compatibility.embeddedFontRestricted':
+		'An embedded font has a licence that does not allow it to be used, so a substitute font is shown. Its font data is kept in the file.',
+	'pptx.compatibility.embeddedFontNotEmbeddable':
+		'A font was not embedded because its licence does not allow embedding it in an editable presentation.',
 	'pptx.compatibility.exportBackendUnavailable':
 		'Export to this format is not available in the current environment.',
 

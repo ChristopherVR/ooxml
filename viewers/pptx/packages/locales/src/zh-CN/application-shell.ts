@@ -197,6 +197,10 @@ export const translations = {
 		'无法保存一张幻灯片切换声音并被跳过。',
 	'pptx.compatibility.diagramRelationshipIdsIncomplete':
 		'此 SmartArt 图表缺少一些内部引用，因此它可能无法完全按照创作的方式显示。',
+	'pptx.compatibility.embeddedFontRestricted':
+		'嵌入字体的许可不允许使用该字体，因此显示替代字体。其字体数据保留在文件中。',
+	'pptx.compatibility.embeddedFontNotEmbeddable':
+		'未嵌入某个字体，因为其许可不允许将其嵌入到可编辑的演示文稿中。',
 	'pptx.compatibility.exportBackendUnavailable': '当前环境中无法导出为此格式。',
 	'pptx.readOnly.bannerTitle': '只读',
 	'pptx.readOnly.editAnyway': '无论如何编辑',
