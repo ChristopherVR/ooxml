@@ -75,8 +75,6 @@ export interface ChromeHost {
 	regionContext(region: string): WordRegionContext;
 	/** File > Info > Check for Issues: opens the Document Inspector. */
 	inspectDocument?(): void;
-	/** A File > Info property edit changed `model().properties`. */
-	documentInformationChanged?(): void;
 }
 
 export const DEFAULT_FILE_NAME = 'Document1.docx';
@@ -127,7 +125,6 @@ export class EditorChrome {
 				else delete next[key];
 				if (Object.keys(next).length) model.properties = next;
 				else delete model.properties;
-				host.documentInformationChanged?.();
 				this.setSaveState('dirty');
 			},
 			ribbon: () => host.ribbon(),

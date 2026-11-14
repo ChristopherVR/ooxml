@@ -1,5 +1,4 @@
 import { syncRibbonAddIns } from '../ribbon/add-in-tabs';
-import { syncDocumentInformation } from './document-inspector-apply';
 import { refitRibbon } from './ribbon-overflow';
 import { applyShellLabels } from './shell-labels';
 import type { CollaborativeEditor } from 'ooxml-core/collab';
@@ -127,7 +126,6 @@ function createChrome(core: EditorCore, api: ShellApi): EditorChrome {
 		regionContext: (region) => wordRegionContext(core, region),
 		reportError: (error) => dispatchDocumentError(element, error),
 		inspectDocument: () => core.formatDialogs.open('inspectDocument'),
-		documentInformationChanged: () => syncDocumentInformation(core.view, core.model),
 	});
 }
 

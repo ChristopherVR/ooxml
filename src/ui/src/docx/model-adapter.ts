@@ -142,8 +142,17 @@ function keepHeaderFooterSections(
 	};
 }
 
-/** `model` with the properties and package information the document attribute holds, if any. */
-function withDocumentInformation<T extends Partial<DocumentModel>>(model: T, value: unknown): T {
+/**
+ * `model` with the properties and package information of the document attribute, when the
+ * transaction changed it (Inspect Document's Remove All, or its undo). Otherwise the model's own
+ * fields stand, so a File > Info property edit made on the model is kept.
+ */
+function withDocumentInformation<T extends Partial<DocumentModel>>(
+	model: T,
+	value: unknown,
+	previous: unknown,
+): T {
+	if (value === previous) return model;
 	const info = readDocumentInformation(value);
 	if (!info) return model;
 	const { properties: _properties, packageInformation: _info, ...rest } = model;
@@ -297,7 +306,13 @@ export function docToModel(
 		autoHyphenation: _hyphenation,
 		...kept
 	} = prior;
-	const rest = withDocumentInformation(kept, doc.attrs.documentInformation);
+	const rest = previousDoc
+		? withDocumentInformation(
+				kept,
+				doc.attrs.documentInformation,
+				previousDoc.attrs.documentInformation,
+			)
+		: kept;
 	const sectionLayout =
 		typeof doc.attrs.sections === 'string'
 			? sectionsFromLayout(doc.attrs.sections, priorSections, blocks)

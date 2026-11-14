@@ -8,7 +8,7 @@ import { trackChangesPlugin } from 'ooxml-core/docx/ui';
 import { inspectFixture } from '../../../core/docx/test-support/inspect-fixture';
 import { docToModel, modelToDoc } from './model-adapter';
 import { schema } from './schema';
-import { inspectorActions, syncDocumentInformation } from './document-inspector-apply';
+import { inspectorActions } from './document-inspector-apply';
 import { createDocumentInspectorDialog } from './document-inspector-dialog';
 
 const views: EditorView[] = [];
@@ -85,7 +85,6 @@ describe('Document Inspector removal', () => {
 	it('keeps a File > Info property edit through later edits', async () => {
 		const { view, state } = await editor();
 		state.model.properties = { ...state.model.properties, title: 'Renamed' };
-		syncDocumentInformation(view, state.model);
 		view.dispatch(view.state.tr.insertText('x', 2));
 		expect(state.model.properties?.title).toBe('Renamed');
 	});

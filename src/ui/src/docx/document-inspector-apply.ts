@@ -2,13 +2,13 @@ import type { EditorState, Transaction } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { closeHistory } from 'prosemirror-history';
 import {
+	inspectDocument,
 	removeDocumentInformation,
 	type DocumentModel,
 	type InspectionCategory,
 } from 'ooxml-core/docx';
 import { forcesTrackChanges, trackChangesPluginKey } from 'ooxml-core/docx/ui';
 import { modelToDoc } from './model-adapter';
-import { documentInformationJson } from './document-information-attr';
 import type { DocumentInspectorHost } from './document-inspector-dialog';
 
 /**
@@ -69,21 +69,12 @@ export function inspectorActions(editor: {
 			try {
 				const tr = documentInformationRemoval(view.state, editor.model(), [category]);
 				if (tr) view.dispatch(tr);
-				return true;
+				// A guard may have filtered the transaction: report only what was really removed.
+				return !inspectDocument(editor.model(), [category])[0]?.findings.length;
 			} catch (cause) {
 				editor.reportError(cause);
 				return false;
 			}
 		},
 	};
-}
-
-/** Records a File > Info property edit (made on the model) on the editor document, off the undo stack. */
-export function syncDocumentInformation(view: EditorView | undefined, model: DocumentModel): void {
-	if (!view) return;
-	const json = documentInformationJson(model);
-	if (view.state.doc.attrs.documentInformation === json) return;
-	view.dispatch(
-		view.state.tr.setDocAttribute('documentInformation', json).setMeta('addToHistory', false),
-	);
 }
