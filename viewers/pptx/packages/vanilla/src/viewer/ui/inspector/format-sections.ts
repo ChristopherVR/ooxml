@@ -114,6 +114,7 @@ export function createFormatSections(
 		layout(elements) {
 			category = resolveFormatCategory(elements);
 			views = resolveFormatSections(elements);
+			el.setAttribute('data-pptx-format-sections', category);
 			const ids = new Set(views.map((view) => view.id));
 			for (const [id, host] of hosts) {
 				if (!ids.has(id)) {
