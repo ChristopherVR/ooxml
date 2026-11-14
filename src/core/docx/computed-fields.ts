@@ -1,7 +1,13 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-// The fields whose results this package computes from the document itself: DOCPROPERTY. Layout
-// draws these results, Update Fields writes them into the editor and a save writes them back
-// as the fields' cached results, so all three read them from here.
+// The fields whose results this package computes from the document itself: DOCPROPERTY and the
+// AUTONUM fields. Layout draws these results, Update Fields writes them into the editor and a
+// save writes them back as the fields' cached results, so all three read them from here.
+import {
+	AUTO_NUMBER_FIELDS,
+	autoNumberResult,
+	autoNumberStates,
+	type AutoNumberState,
+} from './auto-number-fields';
 import { docPropertyResult, fieldProperties } from './doc-property-field';
 import { fieldName } from './field-runs';
 import { withFieldResults, type FieldResultSpan } from './field-result-spans';
@@ -33,16 +39,25 @@ export interface ComputedFields {
 const CHARFORMAT = /\*\s*charformat\b/i;
 
 /** The names of the fields `computedFields` evaluates. */
-export const COMPUTED_FIELD_NAMES: ReadonlySet<string> = new Set(['DOCPROPERTY']);
+export const COMPUTED_FIELD_NAMES: ReadonlySet<string> = new Set([
+	'DOCPROPERTY',
+	...AUTO_NUMBER_FIELDS,
+]);
 
 /** Reads `model`'s computed fields; what each needs is worked out once, when first asked for. */
 export function computedFields(model: DocumentModel): ComputedFields {
 	let properties: DocumentPropertySet | undefined;
+	let autoNumbers: Map<string, AutoNumberState> | undefined;
 	return {
-		result(field) {
+		result(field, paragraph) {
 			const name = fieldName(field.instr);
 			if (name === 'DOCPROPERTY') {
 				const text = docPropertyResult(field.instr, (properties ??= fieldProperties(model)));
+				return text === undefined ? undefined : { text };
+			}
+			if (AUTO_NUMBER_FIELDS.has(name)) {
+				const state = (autoNumbers ??= autoNumberStates(model)).get(paragraph.id);
+				const text = state && autoNumberResult(field.instr, state);
 				return text === undefined ? undefined : { text };
 			}
 			return undefined;

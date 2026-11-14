@@ -1,0 +1,560 @@
+{
+	"note": "What Word 16 shows for each paragraph, read from the PDFs generate-word-computed-fields.ps1 exports.",
+	"documents": {
+		"auto-number-1": [
+			"1. a",
+			"2. b",
+			"3: c",
+			"iv. d",
+			"5. e 5.",
+			"1. H1",
+			"1.1. H2",
+			"1.2 H2e",
+			"1-2-1- H3",
+			"2. H1b",
+			"2.1. N",
+			"III. O1",
+			"A. O2",
+			"1. O3",
+			"a) O4",
+			"(1) O5",
+			"(a) O6",
+			"(i) O7",
+			"(a) O8",
+			"(i) O9",
+			"B. O2b",
+			"1. ON",
+			"2. after"
+		],
+		"auto-number-2": [
+			"1. n1",
+			"2. n2",
+			"1. h1",
+			"1. n3",
+			"1.2. n4",
+			"II. h1b",
+			"1. h2",
+			"1. n5",
+			"plain",
+			"2.2. h2b",
+			"plain heading",
+			"2.3. h2c",
+			"1. h3",
+			"2:3:1:1: n6"
+		],
+		"auto-number-3": [
+			"0.1. first h2",
+			"1. h3",
+			"1. n",
+			"2) n",
+			"C. n",
+			"0:1:1:4 n",
+			"5. n",
+			"6. n",
+			"seven. n",
+			"8. n"
+		],
+		"auto-number-4": [
+			"1. n1",
+			"2. n2",
+			"3. n3",
+			"0.1. h2",
+			"0.1.1. n4",
+			"1. h1",
+			"II. h1",
+			"1. n5",
+			"a) h4",
+			"1. n6",
+			"2. n7",
+			"2-0-0-1-3- n8"
+		],
+		"auto-number-5": [
+			"1. h1",
+			"1.1. n",
+			"1.1. h2",
+			"1.1.1. n",
+			"2. h1",
+			"2.1. n",
+			"2.2. n",
+			"3. h1",
+			"3.1. n",
+			"plain",
+			"3.2. n",
+			"3.1. h2",
+			"3.1.1. h3",
+			"3.2. h2",
+			"3.2.1. n",
+			"3.2.1. h3",
+			"3.2.1.1. n"
+		],
+		"auto-number-6": [
+			"1. h1",
+			"1.1. outline 2",
+			"1.1.1. body",
+			"II. outline 1"
+		],
+		"list-number-1": [
+			"a 1) b 2) c 3)",
+			"4) next para",
+			"a) l2 b) i)",
+			"c) back",
+			"(1).(a).(i).1..a..i.",
+			"V. o1 A. 1. a) (1).(a).(i).(a).(i)",
+			"6. g1 6.1. 6.1.1. 6.2.",
+			"5. s5 5.1. 5.3. 5.4.",
+			"6.x",
+			"1. item 2. 3.",
+			"4. item2 5.",
+			"6. item3 7. 7)",
+			"8. after",
+			"9. head"
+		],
+		"list-number-2": [
+			"i) x",
+			"ii) y"
+		],
+		"list-number-3": [
+			"a) i)",
+			"ii) y"
+		],
+		"list-number-4": [
+			"5) a) i)",
+			"ii) y"
+		],
+		"list-number-5": [
+			"1) a) z",
+			"b) i) (1)",
+			"(2) y"
+		],
+		"list-number-6": [
+			"1. 1.1. 1.1.1.",
+			"1.1.2. y 1.1.2.1."
+		],
+		"list-number-7": [
+			"x a) b)",
+			"x 2) y",
+			"3) y"
+		],
+		"list-number-8": [
+			"1) a)",
+			"b) back"
+		],
+		"list-number-9": [
+			"i) x",
+			"ii) back"
+		],
+		"list-number-10": [
+			"i) x",
+			"v) back"
+		],
+		"list-number-11": [
+			"a) x",
+			"x b) y",
+			"c) back"
+		],
+		"list-number-12": [
+			"i) (1)",
+			"(2) back"
+		],
+		"list-number-13": [
+			"a) b)",
+			"c) back"
+		],
+		"list-number-14": [
+			"a) (1) ii)",
+			"iii) back"
+		],
+		"list-number-15": [
+			"1) i) ii)",
+			"iii) back"
+		],
+		"symbol-1": [
+			[
+				{
+					"text": "xAx ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "xAx ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "xAx ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "x",
+					"font": "Calibri",
+					"size": 12.0
+				},
+				{
+					"text": "•",
+					"font": "SymbolMT",
+					"size": 12.0
+				},
+				{
+					"text": "x ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "x",
+					"font": "Calibri",
+					"size": 12.0
+				},
+				{
+					"text": "•",
+					"font": "SymbolMT",
+					"size": 12.0
+				},
+				{
+					"text": "x ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "x",
+					"font": "Calibri",
+					"size": 12.0
+				},
+				{
+					"text": "•",
+					"font": "SymbolMT",
+					"size": 12.0
+				},
+				{
+					"text": "x ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "x€x ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "x€x ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "x€x ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "x€x ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "x",
+					"font": "Calibri",
+					"size": 12.0
+				},
+				{
+					"text": "###",
+					"font": "Calibri-Bold",
+					"size": 12.0
+				},
+				{
+					"text": "x ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "x",
+					"font": "Calibri",
+					"size": 12.0
+				},
+				{
+					"text": "A",
+					"font": "Calibri",
+					"size": 20.0
+				},
+				{
+					"text": "x ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "x",
+					"font": "Calibri",
+					"size": 12.0
+				},
+				{
+					"text": "☺",
+					"font": "Wingdings-Regular",
+					"size": 16.0
+				},
+				{
+					"text": "x ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "xax ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "x",
+					"font": "Calibri",
+					"size": 12.0
+				},
+				{
+					"text": "###",
+					"font": "Calibri-Bold",
+					"size": 12.0
+				},
+				{
+					"text": "x ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "x",
+					"font": "Calibri",
+					"size": 12.0
+				},
+				{
+					"text": "###",
+					"font": "Calibri-Bold",
+					"size": 12.0
+				},
+				{
+					"text": "x ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "xAx ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "x",
+					"font": "Calibri",
+					"size": 12.0
+				},
+				{
+					"text": "###",
+					"font": "Calibri-Bold",
+					"size": 12.0
+				},
+				{
+					"text": "x ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "x",
+					"font": "Calibri",
+					"size": 12.0
+				},
+				{
+					"text": "###",
+					"font": "Calibri-Bold",
+					"size": 12.0
+				},
+				{
+					"text": "x ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "x",
+					"font": "Calibri",
+					"size": 12.0
+				},
+				{
+					"text": "ᅰ",
+					"font": "MalgunGothic",
+					"size": 12.0
+				},
+				{
+					"text": "x ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "x",
+					"font": "Calibri",
+					"size": 12.0
+				},
+				{
+					"text": "###",
+					"font": "Calibri-Bold",
+					"size": 12.0
+				},
+				{
+					"text": "x ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "x",
+					"font": "Calibri",
+					"size": 12.0
+				},
+				{
+					"text": "é",
+					"font": "TimesNewRomanPSMT",
+					"size": 9.0
+				},
+				{
+					"text": "x ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "x",
+					"font": "Calibri",
+					"size": 12.0
+				},
+				{
+					"text": "A",
+					"font": "ArialMT",
+					"size": 12.0
+				},
+				{
+					"text": "x ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "x“x ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "x",
+					"font": "Calibri",
+					"size": 12.0
+				},
+				{
+					"text": "###",
+					"font": "Calibri-Bold",
+					"size": 12.0
+				},
+				{
+					"text": "x ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "x",
+					"font": "Calibri",
+					"size": 12.0
+				},
+				{
+					"text": "A",
+					"font": "Calibri",
+					"size": 11.0
+				},
+				{
+					"text": "AAx ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "x",
+					"font": "Calibri",
+					"size": 12.0
+				},
+				{
+					"text": "",
+					"font": "Wingdings-Regular",
+					"size": 12.0
+				},
+				{
+					"text": "a",
+					"font": "CourierNewPSMT",
+					"size": 12.0
+				},
+				{
+					"text": "x ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			],
+			[
+				{
+					"text": "xAA",
+					"font": "Calibri",
+					"size": 12.0
+				},
+				{
+					"text": "",
+					"font": "SymbolMT",
+					"size": 12.0
+				},
+				{
+					"text": "###",
+					"font": "Calibri-Bold",
+					"size": 12.0
+				},
+				{
+					"text": "x ",
+					"font": "Calibri",
+					"size": 12.0
+				}
+			]
+		]
+	}
+}
