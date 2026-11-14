@@ -32,6 +32,7 @@ import {
 	createLiveColorInput,
 	ELEMENT_GEOMETRY_SECTIONS,
 	elementLockTogglePatch,
+	formatSelectionElements,
 	handleLiveColorEvent,
 	isElementLocked,
 	rebuildDrawingShapesIfCleared,
@@ -64,6 +65,10 @@ import { EditorStateService } from './editor-state.service';
 import { EffectsPanelComponent } from './effects-panel.component';
 import { ElementFlipControlsComponent } from './element-flip-controls.component';
 import { ElementMiscPropertiesComponent } from './element-misc-properties.component';
+import {
+	FormatSectionsComponent,
+	FormatSectionTemplateDirective,
+} from './format-sections.component';
 import { GradientPickerComponent } from './gradient-picker.component';
 import { ImagePropertiesPanelComponent } from './image-properties-panel.component';
 import { InspectorFieldsComponent } from './inspector-fields.component';
@@ -121,6 +126,8 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 		MediaPropertiesPanelComponent,
 		ElementMiscPropertiesComponent,
 		ElementFlipControlsComponent,
+		FormatSectionsComponent,
+		FormatSectionTemplateDirective,
 		InspectorFieldsComponent,
 		ShapeAuthoringPanelComponent,
 		Text3DPanelComponent,
@@ -147,407 +154,383 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 			step and one recent colour when it settles (shared createLiveColorInput).
 		-->
 		<aside [class]="inspectorClass()" [attr.aria-label]="'pptx.inspector.properties' | translate">
-			<!-- ── Transform: Position & Size ─────────────────────────────────── -->
-			<section class="pptx-ng-inspector__section" data-pptx-inspector-section="transform">
-				<h3 class="pptx-ng-inspector__heading">{{ 'pptx.inspector.transform' | translate }}</h3>
+			<pptx-format-sections [elements]="formatElements()">
+				<ng-template pptxFormatSection="font">
+					<!-- ── Text style (text-bearing elements only) ─────────────────────── -->
+					@if (hasText()) {
+						<section class="pptx-ng-inspector__section">
+							<h3 class="pptx-ng-inspector__heading">{{ 'pptx.inspector.text' | translate }}</h3>
 
-				@if (elementKey(); as key) {
-					<!-- X / Y / W / H / rotation: the shared Size & Position descriptors. -->
-					<pptx-inspector-fields
-						[attr.data-el-key]="key"
-						[sections]="geometrySections"
-						[target]="el()"
-						(patch)="onGeometryPatch($event)"
-					/>
-					<div class="pptx-ng-inspector__row pptx-ng-inspector__row--pairs">
-						<label class="pptx-ng-inspector__label" for="insp-opacity">{{
-							'pptx.inspector.opacity' | translate
-						}}</label>
-						<input
-							id="insp-opacity"
-							class="pptx-ng-inspector__input pptx-ng-inspector__input--number"
-							type="number"
-							inputmode="decimal"
-							min="0"
-							max="1"
-							step="0.01"
-							[value]="seed().opacity"
-							(change)="onOpacityChange($event)"
-						/>
-					</div>
-				}
-			</section>
-			<pptx-element-flip-controls [element]="el()" (patch)="onPatch($event)" />
+							@if (elementKey(); as key) {
+								<div class="pptx-ng-inspector__row" [attr.data-el-key]="key">
+									<label class="pptx-ng-inspector__label" for="insp-text-color">{{
+										'pptx.inspector.color' | translate
+									}}</label>
+									<input
+										id="insp-text-color"
+										class="pptx-ng-inspector__color"
+										type="color"
+										[value]="seed().textColor"
+										(input)="onLiveColor(textColorInput, $event)"
+										(change)="onLiveColor(textColorInput, $event)"
+										(blur)="onLiveColor(textColorInput, $event)"
+									/>
+									<label class="pptx-ng-inspector__label" for="insp-font-size">{{
+										'pptx.inspector.size' | translate
+									}}</label>
+									<input
+										id="insp-font-size"
+										class="pptx-ng-inspector__input pptx-ng-inspector__input--number"
+										type="number"
+										inputmode="decimal"
+										min="1"
+										step="any"
+										[value]="seed().fontSize"
+										(change)="onFontSizeChange($event)"
+									/>
+								</div>
+								<pptx-theme-color-swatch-grid
+									[selectedRef]="textColorRef()"
+									[selectedHex]="liveTextColor()"
+									(pick)="onTextThemeColor($event)"
+								/>
+								<pptx-recent-colors-row
+									[colors]="recentColors.recent()"
+									(pick)="onTextColorPick($event)"
+								/>
+							}
 
-			<!-- ── Shape fill & stroke (shape-style elements only) ────────────── -->
-			@if (hasShape()) {
-				<section class="pptx-ng-inspector__section" data-pptx-inspector-section="fill-stroke">
-					<h3 class="pptx-ng-inspector__heading">{{ 'pptx.inspector.fillStroke' | translate }}</h3>
-
-					@if (elementKey(); as key) {
-						<div class="pptx-ng-inspector__row" [attr.data-el-key]="key">
-							<label class="pptx-ng-inspector__label" for="insp-fill">{{
-								'pptx.inspector.fill' | translate
-							}}</label>
-							<input
-								id="insp-fill"
-								class="pptx-ng-inspector__color"
-								type="color"
-								[value]="seed().fillColor"
-								(input)="onLiveColor(fillColorInput, $event)"
-								(change)="onLiveColor(fillColorInput, $event)"
-								(blur)="onLiveColor(fillColorInput, $event)"
-							/>
-							<label class="pptx-ng-inspector__label" for="insp-stroke">{{
-								'pptx.inspector.stroke' | translate
-							}}</label>
-							<input
-								id="insp-stroke"
-								class="pptx-ng-inspector__color"
-								type="color"
-								[value]="seed().strokeColor"
-								(input)="onLiveColor(strokeColorInput, $event)"
-								(change)="onLiveColor(strokeColorInput, $event)"
-								(blur)="onLiveColor(strokeColorInput, $event)"
-							/>
-						</div>
-						<div class="pptx-ng-inspector__row" [attr.data-el-key]="key">
-							<span class="pptx-ng-inspector__label">{{ 'pptx.inspector.fill' | translate }}</span>
-							<pptx-theme-color-swatch-grid
-								[selectedRef]="fillColorRef()"
-								[selectedHex]="liveFillColor()"
-								(pick)="onFillThemeColor($event)"
-							/>
-						</div>
-						<pptx-recent-colors-row
-							[colors]="recentColors.recent()"
-							(pick)="onFillColorPick($event)"
-						/>
-						<div class="pptx-ng-inspector__row" [attr.data-el-key]="key">
-							<span class="pptx-ng-inspector__label">{{
-								'pptx.inspector.stroke' | translate
-							}}</span>
-							<pptx-theme-color-swatch-grid
-								[selectedRef]="strokeColorRef()"
-								[selectedHex]="liveStrokeColor()"
-								(pick)="onStrokeThemeColor($event)"
-							/>
-						</div>
-						<pptx-recent-colors-row
-							[colors]="recentColors.recent()"
-							(pick)="onStrokeColorPick($event)"
-						/>
-					}
-				</section>
-			}
-
-			<pptx-shape-authoring-panel [element]="el()" (patch)="onPatch($event)" />
-			<pptx-element-misc-properties
-				[element]="el()"
-				[canEdit]="canEdit()"
-				(patch)="onPatch($event)"
-			/>
-
-			<!-- ── Text style (text-bearing elements only) ─────────────────────── -->
-			@if (hasText()) {
-				<section class="pptx-ng-inspector__section">
-					<h3 class="pptx-ng-inspector__heading">{{ 'pptx.inspector.text' | translate }}</h3>
-
-					@if (elementKey(); as key) {
-						<div class="pptx-ng-inspector__row" [attr.data-el-key]="key">
-							<label class="pptx-ng-inspector__label" for="insp-text-color">{{
-								'pptx.inspector.color' | translate
-							}}</label>
-							<input
-								id="insp-text-color"
-								class="pptx-ng-inspector__color"
-								type="color"
-								[value]="seed().textColor"
-								(input)="onLiveColor(textColorInput, $event)"
-								(change)="onLiveColor(textColorInput, $event)"
-								(blur)="onLiveColor(textColorInput, $event)"
-							/>
-							<label class="pptx-ng-inspector__label" for="insp-font-size">{{
-								'pptx.inspector.size' | translate
-							}}</label>
-							<input
-								id="insp-font-size"
-								class="pptx-ng-inspector__input pptx-ng-inspector__input--number"
-								type="number"
-								inputmode="decimal"
-								min="1"
-								step="any"
-								[value]="seed().fontSize"
-								(change)="onFontSizeChange($event)"
-							/>
-						</div>
-						<pptx-theme-color-swatch-grid
-							[selectedRef]="textColorRef()"
-							[selectedHex]="liveTextColor()"
-							(pick)="onTextThemeColor($event)"
-						/>
-						<pptx-recent-colors-row
-							[colors]="recentColors.recent()"
-							(pick)="onTextColorPick($event)"
-						/>
+							<div class="pptx-ng-inspector__row pptx-ng-inspector__row--toggles">
+								<button
+									type="button"
+									class="pptx-ng-inspector__toggle"
+									data-pptx-compact
+									[class.is-active]="currentBold()"
+									[attr.aria-label]="'pptx.inspector.bold' | translate"
+									(click)="onBoldToggle()"
+								>
+									<strong>B</strong>
+								</button>
+								<button
+									type="button"
+									class="pptx-ng-inspector__toggle"
+									data-pptx-compact
+									[class.is-active]="currentItalic()"
+									[attr.aria-label]="'pptx.inspector.italic' | translate"
+									(click)="onItalicToggle()"
+								>
+									<em>I</em>
+								</button>
+								<button
+									type="button"
+									class="pptx-ng-inspector__toggle"
+									data-pptx-compact
+									[class.is-active]="currentUnderline()"
+									[attr.aria-label]="'pptx.inspector.underline' | translate"
+									(click)="onUnderlineToggle()"
+								>
+									<span style="text-decoration:underline">U</span>
+								</button>
+							</div>
+						</section>
 					}
 
-					<div class="pptx-ng-inspector__row pptx-ng-inspector__row--toggles">
-						<button
-							type="button"
-							class="pptx-ng-inspector__toggle"
-							data-pptx-compact
-							[class.is-active]="currentBold()"
-							[attr.aria-label]="'pptx.inspector.bold' | translate"
-							(click)="onBoldToggle()"
-						>
-							<strong>B</strong>
-						</button>
-						<button
-							type="button"
-							class="pptx-ng-inspector__toggle"
-							data-pptx-compact
-							[class.is-active]="currentItalic()"
-							[attr.aria-label]="'pptx.inspector.italic' | translate"
-							(click)="onItalicToggle()"
-						>
-							<em>I</em>
-						</button>
-						<button
-							type="button"
-							class="pptx-ng-inspector__toggle"
-							data-pptx-compact
-							[class.is-active]="currentUnderline()"
-							[attr.aria-label]="'pptx.inspector.underline' | translate"
-							(click)="onUnderlineToggle()"
-						>
-							<span style="text-decoration:underline">U</span>
-						</button>
-					</div>
-				</section>
-			}
+					<pptx-text-warp-gallery [element]="el()" (patch)="onPatch($event)" />
+					<pptx-text-effects-panel [element]="el()" (patch)="onPatch($event)" />
+					<pptx-text-3d-panel [element]="el()" (patch)="onPatch($event)" />
+				</ng-template>
+				<ng-template pptxFormatSection="paragraph">
+					<pptx-text-advanced-panel [element]="el()" (patch)="onPatch($event)" />
+				</ng-template>
+				<ng-template pptxFormatSection="picture">
+					@if (imageEl(); as image) {
+						<pptx-image-properties-panel
+							[element]="image"
+							[canEdit]="canEdit()"
+							(patch)="onPatch($event)"
+						/>
+					}
+				</ng-template>
+				<ng-template pptxFormatSection="table">
+					<!-- ── Table data editor ──────────────────────────────────────────── -->
+					@if (tableEl(); as t) {
+						<!-- Open by default, as the other four bindings show these two sections. -->
+						<details class="pptx-ng-inspector__details" open>
+							<summary class="pptx-ng-inspector__summary">
+								{{ 'pptx.inspector.tableData' | translate }}
+							</summary>
+							<pptx-table-data-editor [element]="t" (elementChange)="onElementReplace($event)" />
+						</details>
 
-			<pptx-text-warp-gallery [element]="el()" (patch)="onPatch($event)" />
+						<!-- ── Table style (structure, presets, widths, heights) ─────────── -->
+						<details class="pptx-ng-inspector__details" open>
+							<summary class="pptx-ng-inspector__summary">
+								{{ 'pptx.inspector.tableStyle' | translate }}
+							</summary>
+							<pptx-table-properties
+								[element]="t"
+								[tableStyleMap]="loader?.tableStyleMap()"
+								(elementChange)="onElementReplace($event)"
+								(tableStyleMapChange)="onTableStyleMapChange($event)"
+								(deleteTableStyle)="onDeleteTableStyle($event)"
+							/>
+						</details>
 
-			@if (imageEl(); as image) {
-				<details class="pptx-ng-inspector__details" open>
-					<summary class="pptx-ng-inspector__summary">
-						{{ 'pptx.inspector.image' | translate }}
-					</summary>
-					<pptx-image-properties-panel
-						[element]="image"
+						<!-- ── Selected cell formatting ─────────────────────────────────── -->
+						<details class="pptx-ng-inspector__details" open>
+							<summary class="pptx-ng-inspector__summary">
+								{{ 'pptx.inspector.cellFormatting' | translate }}
+							</summary>
+							<pptx-table-cell-formatting
+								[element]="t"
+								(elementChange)="onElementReplace($event)"
+							/>
+						</details>
+					}
+				</ng-template>
+				<ng-template pptxFormatSection="chart">
+					<!-- ── Chart type / title / grouping ────────────────────────────── -->
+					@if (chartEl(); as c) {
+						<details class="pptx-ng-inspector__details" open>
+							<summary class="pptx-ng-inspector__summary">
+								{{ 'pptx.chart.heading' | translate }}
+							</summary>
+							<pptx-chart-type-selector
+								[element]="c"
+								[canEdit]="canEdit()"
+								(elementChange)="onElementReplace($event)"
+							/>
+						</details>
+					}
+
+					<!-- ── Chart data editor ──────────────────────────────────────────── -->
+					@if (chartEl(); as c) {
+						<details class="pptx-ng-inspector__details" open>
+							<summary class="pptx-ng-inspector__summary">
+								{{ 'pptx.inspector.chartData' | translate }}
+							</summary>
+							<pptx-chart-data-editor [element]="c" (elementChange)="onElementReplace($event)" />
+						</details>
+					}
+				</ng-template>
+				<ng-template pptxFormatSection="smartArt">
+					<!-- ── SmartArt editing ───────────────────────────────────────────── -->
+					@if (smartArtData(); as sa) {
+						<section class="pptx-ng-inspector__section">
+							<pptx-smart-art-properties
+								[smartArtData]="sa"
+								(smartArtDataChange)="onSmartArtDataChange($event)"
+							/>
+						</section>
+					}
+				</ng-template>
+				<ng-template pptxFormatSection="media">
+					@if (mediaEl(); as media) {
+						<pptx-media-properties-panel [element]="media" (patch)="onPatch($event)" />
+					}
+				</ng-template>
+				<ng-template pptxFormatSection="object">
+					<pptx-element-misc-properties
+						[element]="el()"
 						[canEdit]="canEdit()"
+						part="ole"
 						(patch)="onPatch($event)"
 					/>
-				</details>
-			}
-
-			@if (mediaEl(); as media) {
-				<details class="pptx-ng-inspector__details" open>
-					<summary class="pptx-ng-inspector__summary">
-						{{ 'pptx.inspector.media' | translate }}
-					</summary>
-					<pptx-media-properties-panel [element]="media" (patch)="onPatch($event)" />
-				</details>
-			}
-
-			@if (accessibilityTextEl(); as a11yEl) {
-				<details class="pptx-ng-inspector__details" open>
-					<summary class="pptx-ng-inspector__summary">
-						{{ 'pptx.accessibility.heading' | translate }}
-					</summary>
-					<pptx-accessibility-text-panel [element]="a11yEl" (patch)="onPatch($event)" />
-				</details>
-			}
-
-			<!-- ── Arrange ────────────────────────────────────────────────────── -->
-			<section class="pptx-ng-inspector__section">
-				<div
-					class="pptx-ng-inspector__row"
-					style="justify-content:space-between;margin-bottom:0.35rem"
-				>
-					<h3 class="pptx-ng-inspector__heading" style="margin:0">
-						{{ 'pptx.editorToolbar.arrange' | translate }}
-					</h3>
-					<button
-						type="button"
-						class="pptx-ng-inspector__btn"
-						style="flex:0 0 auto;padding:2px 6px"
-						[attr.aria-pressed]="isLocked()"
-						[title]="(isLocked() ? 'pptx.inspector.unlock' : 'pptx.inspector.lock') | translate"
-						(click)="onLockToggle()"
-					>
-						{{ (isLocked() ? 'pptx.inspector.locked' : 'pptx.inspector.lock') | translate }}
-					</button>
-				</div>
-
-				<div class="pptx-ng-inspector__row">
-					<button
-						type="button"
-						class="pptx-ng-inspector__btn"
-						[title]="'pptx.contextMenu.bringToFront' | translate"
-						(click)="editor.bringSelectedToFront(slideIndex())"
-					>
-						{{ 'pptx.arrange.front' | translate }}
-					</button>
-					<button
-						type="button"
-						class="pptx-ng-inspector__btn"
-						[title]="'pptx.contextMenu.sendToBack' | translate"
-						(click)="editor.sendSelectedToBack(slideIndex())"
-					>
-						{{ 'pptx.arrange.back' | translate }}
-					</button>
-					<button
-						type="button"
-						class="pptx-ng-inspector__btn"
-						[title]="'pptx.contextMenu.bringForward' | translate"
-						(click)="editor.bringSelectedForward(slideIndex())"
-					>
-						<svg lucideArrowUp class="h-3.5 w-3.5"></svg>
-					</button>
-					<button
-						type="button"
-						class="pptx-ng-inspector__btn"
-						[title]="'pptx.contextMenu.sendBackward' | translate"
-						(click)="editor.sendSelectedBackward(slideIndex())"
-					>
-						<svg lucideArrowDown class="h-3.5 w-3.5"></svg>
-					</button>
-				</div>
-			</section>
-
-			<!-- ── Advanced: gradient fill (shape-style elements) ─────────────── -->
-			@if (hasShape()) {
-				<details class="pptx-ng-inspector__details">
-					<summary class="pptx-ng-inspector__summary">
-						{{ 'pptx.inspector.gradientFill' | translate }}
-					</summary>
-					<pptx-gradient-picker [element]="el()" (patch)="onPatch($event)" />
-				</details>
-
-				<!-- ── Advanced: effects (shadow / glow / reflection / soft edge) ── -->
-				<details class="pptx-ng-inspector__details">
-					<summary class="pptx-ng-inspector__summary">
-						{{ 'pptx.inspector.effects' | translate }}
-					</summary>
+				</ng-template>
+				<ng-template pptxFormatSection="fill">
+					<section class="pptx-ng-inspector__section" data-pptx-inspector-section="fill-stroke">
+						@if (elementKey(); as key) {
+							<div class="pptx-ng-inspector__row" [attr.data-el-key]="key">
+								<label class="pptx-ng-inspector__label" for="insp-fill">{{
+									'pptx.inspector.fill' | translate
+								}}</label>
+								<input
+									id="insp-fill"
+									class="pptx-ng-inspector__color"
+									type="color"
+									[value]="seed().fillColor"
+									(input)="onLiveColor(fillColorInput, $event)"
+									(change)="onLiveColor(fillColorInput, $event)"
+									(blur)="onLiveColor(fillColorInput, $event)"
+								/>
+							</div>
+							<div class="pptx-ng-inspector__row" [attr.data-el-key]="key">
+								<span class="pptx-ng-inspector__label">{{
+									'pptx.inspector.fill' | translate
+								}}</span>
+								<pptx-theme-color-swatch-grid
+									[selectedRef]="fillColorRef()"
+									[selectedHex]="liveFillColor()"
+									(pick)="onFillThemeColor($event)"
+								/>
+							</div>
+							<pptx-recent-colors-row
+								[colors]="recentColors.recent()"
+								(pick)="onFillColorPick($event)"
+							/>
+						}
+						<pptx-gradient-picker [element]="el()" (patch)="onPatch($event)" />
+					</section>
+					<pptx-pattern-fill-panel [element]="el()" (patch)="onPatch($event)" />
+				</ng-template>
+				<ng-template pptxFormatSection="outline" let-view>
+					<section class="pptx-ng-inspector__section">
+						@if (elementKey(); as key) {
+							<div class="pptx-ng-inspector__row" [attr.data-el-key]="key">
+								<label class="pptx-ng-inspector__label" for="insp-stroke">{{
+									'pptx.inspector.stroke' | translate
+								}}</label>
+								<input
+									id="insp-stroke"
+									class="pptx-ng-inspector__color"
+									type="color"
+									[value]="seed().strokeColor"
+									(input)="onLiveColor(strokeColorInput, $event)"
+									(change)="onLiveColor(strokeColorInput, $event)"
+									(blur)="onLiveColor(strokeColorInput, $event)"
+								/>
+							</div>
+							<div class="pptx-ng-inspector__row" [attr.data-el-key]="key">
+								<span class="pptx-ng-inspector__label">{{
+									'pptx.inspector.stroke' | translate
+								}}</span>
+								<pptx-theme-color-swatch-grid
+									[selectedRef]="strokeColorRef()"
+									[selectedHex]="liveStrokeColor()"
+									(pick)="onStrokeThemeColor($event)"
+								/>
+							</div>
+							<pptx-recent-colors-row
+								[colors]="recentColors.recent()"
+								(pick)="onStrokeColorPick($event)"
+							/>
+						}
+						<pptx-line-format-panel [element]="el()" (patch)="onPatch($event)" />
+					</section>
+					@if (view.arrowheads) {
+						<pptx-element-misc-properties
+							[element]="el()"
+							part="connector"
+							(patch)="onPatch($event)"
+						/>
+					}
+				</ng-template>
+				<ng-template pptxFormatSection="effects">
 					<pptx-effects-panel
 						[element]="el()"
 						[lookup]="elementLookup"
 						(patch)="onPatch($event)"
 						(preview)="onEffectPreview($event)"
 					/>
-				</details>
-
-				<!-- ── Advanced: line format (dash / compound / join / cap) ────── -->
-				<details class="pptx-ng-inspector__details">
-					<summary class="pptx-ng-inspector__summary">
-						{{ 'pptx.inspector.line' | translate }}
-					</summary>
-					<pptx-line-format-panel [element]="el()" (patch)="onPatch($event)" />
-				</details>
-
-				<!-- ── Advanced: pattern fill (preset + fg/bg) ─────────────────── -->
-				<details class="pptx-ng-inspector__details">
-					<summary class="pptx-ng-inspector__summary">
-						{{ 'pptx.table.fillPattern' | translate }}
-					</summary>
-					<pptx-pattern-fill-panel [element]="el()" (patch)="onPatch($event)" />
-				</details>
-			}
-
-			<!-- ── Advanced: text (spacing / alignment / direction) ───────────── -->
-			@if (hasText()) {
-				<details class="pptx-ng-inspector__details">
-					<summary class="pptx-ng-inspector__summary">
-						{{ 'pptx.inspector.textAdvanced' | translate }}
-					</summary>
-					<pptx-text-advanced-panel [element]="el()" (patch)="onPatch($event)" />
-				</details>
-
-				<!-- ── Advanced: text effects (shadow / glow / reflection of the text) ── -->
-				<details class="pptx-ng-inspector__details">
-					<summary class="pptx-ng-inspector__summary">
-						{{ 'pptx.textEffects.title' | translate }}
-					</summary>
-					<pptx-text-effects-panel [element]="el()" (patch)="onPatch($event)" />
-				</details>
-
-				<!-- ── Advanced: 3D text (extrusion / bevels / material) ────────── -->
-				<details class="pptx-ng-inspector__details">
-					<summary class="pptx-ng-inspector__summary">
-						{{ 'pptx.text3d.title' | translate }}
-					</summary>
-					<pptx-text-3d-panel [element]="el()" (patch)="onPatch($event)" />
-				</details>
-			}
-
-			<!-- ── Table data editor ──────────────────────────────────────────── -->
-			@if (tableEl(); as t) {
-				<!-- Open by default, as the other four bindings show these two sections. -->
-				<details class="pptx-ng-inspector__details" open>
-					<summary class="pptx-ng-inspector__summary">
-						{{ 'pptx.inspector.tableData' | translate }}
-					</summary>
-					<pptx-table-data-editor [element]="t" (elementChange)="onElementReplace($event)" />
-				</details>
-
-				<!-- ── Table style (structure, presets, widths, heights) ─────────── -->
-				<details class="pptx-ng-inspector__details" open>
-					<summary class="pptx-ng-inspector__summary">
-						{{ 'pptx.inspector.tableStyle' | translate }}
-					</summary>
-					<pptx-table-properties
-						[element]="t"
-						[tableStyleMap]="loader?.tableStyleMap()"
-						(elementChange)="onElementReplace($event)"
-						(tableStyleMapChange)="onTableStyleMapChange($event)"
-						(deleteTableStyle)="onDeleteTableStyle($event)"
-					/>
-				</details>
-
-				<!-- ── Selected cell formatting ─────────────────────────────────── -->
-				<details class="pptx-ng-inspector__details" open>
-					<summary class="pptx-ng-inspector__summary">
-						{{ 'pptx.inspector.cellFormatting' | translate }}
-					</summary>
-					<pptx-table-cell-formatting [element]="t" (elementChange)="onElementReplace($event)" />
-				</details>
-			}
-
-			<!-- ── Chart type / title / grouping ────────────────────────────── -->
-			@if (chartEl(); as c) {
-				<details class="pptx-ng-inspector__details" open>
-					<summary class="pptx-ng-inspector__summary">
-						{{ 'pptx.chart.heading' | translate }}
-					</summary>
-					<pptx-chart-type-selector
-						[element]="c"
+				</ng-template>
+				<ng-template pptxFormatSection="arrange">
+					<pptx-element-flip-controls [element]="el()" (patch)="onPatch($event)" />
+					<pptx-shape-authoring-panel [element]="el()" (patch)="onPatch($event)" />
+					<pptx-element-misc-properties
+						[element]="el()"
 						[canEdit]="canEdit()"
-						(elementChange)="onElementReplace($event)"
+						part="group"
+						(patch)="onPatch($event)"
 					/>
-				</details>
-			}
+					<!-- ── Arrange ────────────────────────────────────────────────────── -->
+					<section class="pptx-ng-inspector__section">
+						<div
+							class="pptx-ng-inspector__row"
+							style="justify-content:space-between;margin-bottom:0.35rem"
+						>
+							<h3 class="pptx-ng-inspector__heading" style="margin:0">
+								{{ 'pptx.editorToolbar.arrange' | translate }}
+							</h3>
+							<button
+								type="button"
+								class="pptx-ng-inspector__btn"
+								style="flex:0 0 auto;padding:2px 6px"
+								[attr.aria-pressed]="isLocked()"
+								[title]="(isLocked() ? 'pptx.inspector.unlock' : 'pptx.inspector.lock') | translate"
+								(click)="onLockToggle()"
+							>
+								{{ (isLocked() ? 'pptx.inspector.locked' : 'pptx.inspector.lock') | translate }}
+							</button>
+						</div>
 
-			<!-- ── Chart data editor ──────────────────────────────────────────── -->
-			@if (chartEl(); as c) {
-				<details class="pptx-ng-inspector__details" open>
-					<summary class="pptx-ng-inspector__summary">
-						{{ 'pptx.inspector.chartData' | translate }}
-					</summary>
-					<pptx-chart-data-editor [element]="c" (elementChange)="onElementReplace($event)" />
-				</details>
-			}
-
-			<!-- ── SmartArt editing ───────────────────────────────────────────── -->
-			@if (smartArtData(); as sa) {
-				<section class="pptx-ng-inspector__section">
-					<pptx-smart-art-properties
-						[smartArtData]="sa"
-						(smartArtDataChange)="onSmartArtDataChange($event)"
+						<div class="pptx-ng-inspector__row">
+							<button
+								type="button"
+								class="pptx-ng-inspector__btn"
+								[title]="'pptx.contextMenu.bringToFront' | translate"
+								(click)="editor.bringSelectedToFront(slideIndex())"
+							>
+								{{ 'pptx.arrange.front' | translate }}
+							</button>
+							<button
+								type="button"
+								class="pptx-ng-inspector__btn"
+								[title]="'pptx.contextMenu.sendToBack' | translate"
+								(click)="editor.sendSelectedToBack(slideIndex())"
+							>
+								{{ 'pptx.arrange.back' | translate }}
+							</button>
+							<button
+								type="button"
+								class="pptx-ng-inspector__btn"
+								[title]="'pptx.contextMenu.bringForward' | translate"
+								(click)="editor.bringSelectedForward(slideIndex())"
+							>
+								<svg lucideArrowUp class="h-3.5 w-3.5"></svg>
+							</button>
+							<button
+								type="button"
+								class="pptx-ng-inspector__btn"
+								[title]="'pptx.contextMenu.sendBackward' | translate"
+								(click)="editor.sendSelectedBackward(slideIndex())"
+							>
+								<svg lucideArrowDown class="h-3.5 w-3.5"></svg>
+							</button>
+						</div>
+					</section>
+				</ng-template>
+				<ng-template pptxFormatSection="sizePosition">
+					<section class="pptx-ng-inspector__section" data-pptx-inspector-section="transform">
+						@if (elementKey(); as key) {
+							<!-- X / Y / W / H / rotation: the shared Size & Position descriptors. -->
+							<pptx-inspector-fields
+								[attr.data-el-key]="key"
+								[sections]="geometrySections"
+								[target]="el()"
+								(patch)="onGeometryPatch($event)"
+							/>
+							<div class="pptx-ng-inspector__row pptx-ng-inspector__row--pairs">
+								<label class="pptx-ng-inspector__label" for="insp-opacity">{{
+									'pptx.inspector.opacity' | translate
+								}}</label>
+								<input
+									id="insp-opacity"
+									class="pptx-ng-inspector__input pptx-ng-inspector__input--number"
+									type="number"
+									inputmode="decimal"
+									min="0"
+									max="1"
+									step="0.01"
+									[value]="seed().opacity"
+									(change)="onOpacityChange($event)"
+								/>
+							</div>
+						}
+					</section>
+				</ng-template>
+				<ng-template pptxFormatSection="altText">
+					@if (accessibilityTextEl(); as a11yEl) {
+						<pptx-accessibility-text-panel [element]="a11yEl" (patch)="onPatch($event)" />
+					}
+				</ng-template>
+				<ng-template pptxFormatSection="action">
+					<pptx-action-settings-panel
+						[element]="el()"
+						[slideCount]="editor.slides().length"
+						(patch)="onPatch($event)"
 					/>
-				</section>
-			}
+				</ng-template>
+			</pptx-format-sections>
 
 			<!-- ── Animation authoring ────────────────────────────────────────── -->
 			<details
@@ -566,17 +549,6 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 					[animationTimelineAnchors]="slideAnimationTimelineAnchors()"
 					[canEdit]="canEdit()"
 					(animationsChange)="onAnimationsChange($event)"
-				/>
-			</details>
-
-			<details class="pptx-ng-inspector__details">
-				<summary class="pptx-ng-inspector__summary">
-					{{ 'pptx.action.title' | translate }}
-				</summary>
-				<pptx-action-settings-panel
-					[element]="el()"
-					[slideCount]="editor.slides().length"
-					(patch)="onPatch($event)"
 				/>
 			</details>
 
@@ -956,6 +928,14 @@ export class InspectorPanelComponent {
 	 * the currently-selected element (caret-reset / keyboard-dismiss guard).
 	 */
 	protected readonly elementKey = computed(() => this.el().id);
+	/** The selection the Format pane formats (primary first); edits still go to `el()`. */
+	protected readonly formatElements = computed(() =>
+		formatSelectionElements(
+			this.el(),
+			this.editor.selectedIds(),
+			this.editor.slides()[this.slideIndex()]?.elements,
+		),
+	);
 
 	/**
 	 * One-shot seed of every editable field's initial display value, recomputed

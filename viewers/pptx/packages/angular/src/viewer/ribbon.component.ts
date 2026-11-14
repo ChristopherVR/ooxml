@@ -21,7 +21,7 @@ import {
 	output,
 } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { homeLaunchers, ribbonDisplayLayout } from 'ooxml-ui/pptx';
+import { HOME_LAUNCHER_SECTIONS, homeLaunchers, ribbonDisplayLayout } from 'ooxml-ui/pptx';
 import type {
 	AccountAuthConfig,
 	RibbonDisplayController,
@@ -41,6 +41,7 @@ import { RibbonRevealStripComponent } from './ribbon-reveal-strip.component';
 import { RibbonTabListComponent } from './ribbon-tab-list.component';
 import type { RibbonTab } from './ribbon-types';
 import { injectResolvedCustomization } from './viewer-customization.service';
+import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 
 @Component({
 	selector: 'pptx-ribbon',
@@ -379,9 +380,17 @@ export class RibbonComponent {
 	readonly toggleInspector = output<void>();
 	private readonly translation = inject(TranslateService, { optional: true });
 	/** Font, Paragraph and Drawing launchers open the Properties pane (there are no modal dialogs). */
+	private readonly inspectorPane = inject(ViewerInspectorPanelService, { optional: true });
 	protected readonly launchers = homeLaunchers(
 		() => this.translation?.instant('pptx.inspector.properties') ?? 'Properties',
-		() => {
+		(group) => {
+			// In a viewer, the Format pane request opens the pane and reveals the group's section.
+			if (this.inspectorPane) {
+				this.inspectorPane.formatPane.requestFormatPane(HOME_LAUNCHER_SECTIONS[group], {
+					focus: true,
+				});
+				return;
+			}
 			if (!this.inspectorOpen()) {
 				this.toggleInspector.emit();
 			}
