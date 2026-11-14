@@ -90,6 +90,8 @@ export type {
 	PdfExportDialogTranslate,
 	PptxUiPdfExportDialogElement,
 } from './pdf-export-dialog';
+export { choosePdfExportSelection } from './pdf-export-options';
+export type { PdfExportOptionsInput } from './pdf-export-options';
 export type {
 	InsertSmartArtDialogDetail,
 	InsertSmartArtDialogInsertEvent,

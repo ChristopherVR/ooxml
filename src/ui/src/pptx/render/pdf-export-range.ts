@@ -75,3 +75,12 @@ export function parsePdfSlideNumber(value: string): number {
 	const text = value.trim();
 	return /^\d+$/u.test(text) ? Number(text) : Number.NaN;
 }
+
+/**
+ * Whether File > Export > PDF asks for a range first. The picture export ("Save slides as
+ * pictures") always writes every slide, so it gets no options step rather than controls that
+ * would do nothing.
+ */
+export function pdfExportAsksForRange(settings: { mode: 'vector' | 'pictures' }): boolean {
+	return settings.mode === 'vector';
+}

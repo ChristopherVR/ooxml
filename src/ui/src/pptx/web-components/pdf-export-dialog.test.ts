@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { registerPptxWebControls } from './index';
+import { choosePdfExportSelection, registerPptxWebControls } from './index';
 import type { PptxUiPdfExportDialogElement } from './index';
 
 beforeAll(registerPptxWebControls);
@@ -104,5 +104,63 @@ describe('pptx-ui-pdf-export-dialog', () => {
 			expect(closed).toHaveBeenCalledOnce();
 			expect(host.open).toBe(false);
 		});
+	});
+});
+
+describe('pptx-ui-pdf-export-dialog inputs', () => {
+	it('takes slides and the hidden-slide setting set after open', () => {
+		const host = document.createElement(
+			'pptx-ui-pdf-export-dialog',
+		) as PptxUiPdfExportDialogElement;
+		document.body.append(host);
+		host.open = true;
+		host.slides = [{}, {}, {}];
+		host.includeHiddenSlides = true;
+		expect(byTestId<HTMLInputElement>(host, 'pptx-pdf-export-to').value).toBe('3');
+		expect(byTestId<Checkable>(host, 'pptx-pdf-export-include-hidden').checked).toBe(true);
+		// Once the user changed something, a later input no longer resets the choice.
+		pick(host, 'current');
+		host.slides = [{}, {}, {}, {}];
+		expect(byTestId<Checkable>(host, 'pptx-pdf-export-range-current').checked).toBe(true);
+	});
+});
+
+describe('choosePdfExportSelection', () => {
+	const settings = { mode: 'vector' as const, includeHiddenSlides: false };
+
+	it('mounts the dialog in the container and resolves to the confirmed selection', async () => {
+		const container = document.createElement('div');
+		document.body.append(container);
+		const chosen = choosePdfExportSelection(container, {
+			settings,
+			slides: [{}, {}],
+			currentSlide: 1,
+		});
+		const host = container.querySelector('pptx-ui-pdf-export-dialog') as HTMLElement;
+		expect(host).not.toBeNull();
+		pick(host, 'current');
+		footerButton(host, 'insert').click();
+		await expect(chosen).resolves.toEqual({ slideIndexes: [1], includeHiddenSlides: true });
+		expect(container.querySelector('pptx-ui-pdf-export-dialog')).toBeNull();
+	});
+
+	it('resolves to null on Cancel', async () => {
+		const container = document.createElement('div');
+		document.body.append(container);
+		const chosen = choosePdfExportSelection(container, { settings, slides: [{}], currentSlide: 0 });
+		footerButton(container.querySelector('pptx-ui-pdf-export-dialog')!, 'cancel').click();
+		await expect(chosen).resolves.toBeNull();
+	});
+
+	it('asks nothing for the picture export', async () => {
+		const container = document.createElement('div');
+		await expect(
+			choosePdfExportSelection(container, {
+				settings: { mode: 'pictures', includeHiddenSlides: false },
+				slides: [{}],
+				currentSlide: 0,
+			}),
+		).resolves.toEqual({});
+		expect(container.childElementCount).toBe(0);
 	});
 });

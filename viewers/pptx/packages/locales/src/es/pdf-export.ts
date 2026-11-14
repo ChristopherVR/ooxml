@@ -23,11 +23,10 @@ export const translations: Record<string, string> = {
 		'{{count}} diapositivas se guardaron como imágenes únicas',
 	'pptx.pdfExport.summary.fonts.one': '1 fuente se sustituyó',
 	'pptx.pdfExport.summary.fonts.other': '{{count}} fuentes se sustituyeron',
-	'pptx.pdfExport.summary.omitted.one': '1 elemento no se pudo guardar y se omitió',
-	'pptx.pdfExport.summary.omitted.other':
-		'{{count}} elementos no se pudieron guardar y se omitieron',
-	'pptx.pdfExport.summary.simplified.one': '1 efecto se simplificó',
-	'pptx.pdfExport.summary.simplified.other': '{{count}} efectos se simplificaron',
+	'pptx.pdfExport.summary.omitted.one': 'se omitió contenido en 1 diapositiva',
+	'pptx.pdfExport.summary.omitted.other': 'se omitió contenido en {{count}} diapositivas',
+	'pptx.pdfExport.summary.simplified.one': 'se simplificaron efectos en 1 diapositiva',
+	'pptx.pdfExport.summary.simplified.other': 'se simplificaron efectos en {{count}} diapositivas',
 	'pptx.pdfExport.diagnostic.filterAsPicture':
 		'Los bordes suaves, el desenfoque, el resplandor y otros efectos de filtro se dibujan como imágenes.',
 	'pptx.pdfExport.diagnostic.blendAsPicture':

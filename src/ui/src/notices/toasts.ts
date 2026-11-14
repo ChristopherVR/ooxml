@@ -83,19 +83,7 @@ export class OfficeUiToasts extends OfficeElement {
 							data-severity=${toast.severity}
 						>
 							${glyph(toast.severity === 'warning' ? 'warning' : 'info', 'icon')}
-							<div class="message">
-								<p>${toast.message}</p>
-								${
-									toast.details?.length
-										? html`<details data-testid="${p}-details">
-												<summary>${labels.details ?? 'Details'}</summary>
-												<ul>
-													${toast.details.map((line) => html`<li>${line}</li>`)}
-												</ul>
-											</details>`
-										: ''
-								}
-							</div>
+							<p class="message">${toast.message}</p>
 							<button
 								type="button"
 								data-testid="${p}-dismiss"
@@ -103,6 +91,16 @@ export class OfficeUiToasts extends OfficeElement {
 								@click=${() => this.fire(requestEvent, { id: 'dismiss', toastId: toast.id })}
 								>${glyph('close', 'icon')}</button
 							>
+							${
+								toast.details?.length
+									? html`<details data-testid="${p}-details">
+											<summary>${labels.details ?? 'Details'}</summary>
+											<ul>
+												${toast.details.map((line) => html`<li>${line}</li>`)}
+											</ul>
+										</details>`
+									: ''
+							}
 						</div>`,
 				)}
 				${hiddenCount > 0 ? html`<p class="overflow">+${hiddenCount}</p>` : ''}

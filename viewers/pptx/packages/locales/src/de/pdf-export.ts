@@ -23,12 +23,10 @@ export const translations: Record<string, string> = {
 		'{{count}} Folien wurden als einzelne Bilder gespeichert',
 	'pptx.pdfExport.summary.fonts.one': '1 Schriftart wurde ersetzt',
 	'pptx.pdfExport.summary.fonts.other': '{{count}} Schriftarten wurden ersetzt',
-	'pptx.pdfExport.summary.omitted.one':
-		'1 Element konnte nicht gespeichert werden und wurde weggelassen',
-	'pptx.pdfExport.summary.omitted.other':
-		'{{count}} Elemente konnten nicht gespeichert werden und wurden weggelassen',
-	'pptx.pdfExport.summary.simplified.one': '1 Effekt wurde vereinfacht',
-	'pptx.pdfExport.summary.simplified.other': '{{count}} Effekte wurden vereinfacht',
+	'pptx.pdfExport.summary.omitted.one': 'auf 1 Folie wurden Inhalte weggelassen',
+	'pptx.pdfExport.summary.omitted.other': 'auf {{count}} Folien wurden Inhalte weggelassen',
+	'pptx.pdfExport.summary.simplified.one': 'auf 1 Folie wurden Effekte vereinfacht',
+	'pptx.pdfExport.summary.simplified.other': 'auf {{count}} Folien wurden Effekte vereinfacht',
 	'pptx.pdfExport.diagnostic.filterAsPicture':
 		'Weiche Kanten, Weichzeichnen, Leuchten und andere Filtereffekte werden als Bilder gezeichnet.',
 	'pptx.pdfExport.diagnostic.blendAsPicture': 'Mischmodi und Masken werden als Bilder gezeichnet.',

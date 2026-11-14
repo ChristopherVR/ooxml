@@ -72,6 +72,9 @@ export function definePptxPdfExportDialog(registry: CustomElementRegistry): void
 		#slides: readonly { hidden?: boolean }[] = [];
 		#current = 0;
 		#includeHidden = false;
+		/** The user changed a control since the dialog opened; until then new inputs re-seed it. */
+		#touched = false;
+		#seeding = false;
 
 		get open(): boolean {
 			return this.hasAttribute('open');
@@ -84,18 +87,21 @@ export function definePptxPdfExportDialog(registry: CustomElementRegistry): void
 		}
 		set slides(value: readonly { hidden?: boolean }[]) {
 			this.#slides = value ?? [];
+			this.#reseed();
 		}
 		get currentSlide(): number {
 			return this.#current;
 		}
 		set currentSlide(value: number) {
 			this.#current = Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+			this.#reseed();
 		}
 		get includeHiddenSlides(): boolean {
 			return this.#includeHidden;
 		}
 		set includeHiddenSlides(value: boolean) {
 			this.#includeHidden = Boolean(value);
+			this.#reseed();
 		}
 		get translateLabel(): PdfExportDialogTranslate | undefined {
 			return this.#translate;
@@ -135,7 +141,10 @@ export function definePptxPdfExportDialog(registry: CustomElementRegistry): void
 			}
 			const body = createPdfExportDialogBody(
 				this.ownerDocument,
-				() => this.#validate(),
+				() => {
+					if (!this.#seeding) this.#touched = true;
+					this.#validate();
+				},
 				() => this.#export(),
 			);
 			this.#body = body;
@@ -197,13 +206,31 @@ export function definePptxPdfExportDialog(registry: CustomElementRegistry): void
 				return;
 			}
 			if (this.open) {
-				body.set(
+				this.#touched = false;
+				this.#seed();
+			}
+			frame.dialog.open = this.open;
+		}
+
+		/** Show the opening choice for the current inputs. */
+		#seed(): void {
+			if (!this.#body) return;
+			this.#seeding = true;
+			try {
+				this.#body.set(
 					initialPdfExportChoice(this.#slides.length, this.#includeHidden),
 					this.#slides.length,
 				);
-				this.#sync();
+			} finally {
+				this.#seeding = false;
 			}
-			frame.dialog.open = this.open;
+			this.#sync();
+		}
+
+		/** Inputs set after `open` (in any order) still decide the opening choice. */
+		#reseed(): void {
+			if (this.open && this.#frame?.dialog.open && !this.#touched) this.#seed();
+			else this.#validate();
 		}
 
 		#export(): void {

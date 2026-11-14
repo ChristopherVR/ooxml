@@ -33,9 +33,9 @@ export interface PdfExportReportSummary {
 	slidesAsPictures: number;
 	/** Distinct font families written with another font. */
 	fonts: number;
-	/** Things left out of the file, per slide. */
+	/** Slides with something left out of the file. */
 	omitted: number;
-	/** Effects drawn simpler than on the slide, per slide. */
+	/** Slides with effects drawn simpler than on the slide. */
 	simplified: number;
 }
 
@@ -57,12 +57,14 @@ export function summarizePdfExport(result: PdfExportReportSource): PdfExportRepo
 	for (const slide of result.slides) {
 		if (slide.mode === 'picture') summary.slidesAsPictures++;
 		else summary.pictures += slide.pictures ?? 0;
+		const categories = new Set<string>();
 		for (const diagnostic of slide.diagnostics) {
 			const category = pdfDiagnosticCategory(diagnostic.code);
+			categories.add(category);
 			if (category === 'font') families.add(diagnostic.params?.family ?? '');
-			else if (category === 'omitted') summary.omitted++;
-			else if (category === 'simplified') summary.simplified++;
 		}
+		if (categories.has('omitted')) summary.omitted++;
+		if (categories.has('simplified')) summary.simplified++;
 	}
 	summary.fonts = families.size;
 	return summary;

@@ -24,11 +24,11 @@ export const translations: Record<string, string> = {
 		'{{count}} diapositives ont été enregistrées chacune comme une seule image',
 	'pptx.pdfExport.summary.fonts.one': '1 police a été remplacée',
 	'pptx.pdfExport.summary.fonts.other': '{{count}} polices ont été remplacées',
-	'pptx.pdfExport.summary.omitted.one': '1 élément n’a pas pu être enregistré et a été omis',
-	'pptx.pdfExport.summary.omitted.other':
-		'{{count}} éléments n’ont pas pu être enregistrés et ont été omis',
-	'pptx.pdfExport.summary.simplified.one': '1 effet a été simplifié',
-	'pptx.pdfExport.summary.simplified.other': '{{count}} effets ont été simplifiés',
+	'pptx.pdfExport.summary.omitted.one': 'du contenu a été omis sur 1 diapositive',
+	'pptx.pdfExport.summary.omitted.other': 'du contenu a été omis sur {{count}} diapositives',
+	'pptx.pdfExport.summary.simplified.one': 'des effets ont été simplifiés sur 1 diapositive',
+	'pptx.pdfExport.summary.simplified.other':
+		'des effets ont été simplifiés sur {{count}} diapositives',
 	'pptx.pdfExport.diagnostic.filterAsPicture':
 		'Les bords adoucis, le flou, la lumière et les autres effets de filtre sont dessinés comme des images.',
 	'pptx.pdfExport.diagnostic.blendAsPicture':
