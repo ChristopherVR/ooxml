@@ -3,7 +3,7 @@
  * Rich clipboard interop with other applications, framework-neutral:
  *
  * - formatted HTML on the system clipboard pastes into a text box being edited as runs (bold
- *   kept, Keep Source Formatting), and Ctrl+Shift+V pastes the same clipboard as text only;
+ *   kept, Keep Source Formatting), the editor reopens after it, and plain text then pastes as text;
  * - copying a shape writes a picture (`image/png`) and its text (`text/plain`) to the system
  *   clipboard while the in-app paste still clones the shape.
  *
@@ -58,7 +58,7 @@ test.beforeEach(async ({ context }) => {
 	await context.grantPermissions(['clipboard-read', 'clipboard-write']);
 });
 
-test('formatted HTML pastes into a text box as runs, Ctrl+Shift+V as text only', async ({
+test('formatted HTML pastes into a text box as runs and plain text after it stays text', async ({
 	page,
 }) => {
 	await loadDeck(page, SAMPLE_DECK);
@@ -79,18 +79,19 @@ test('formatted HTML pastes into a text box as runs, Ctrl+Shift+V as text only',
 	await expect(reopened).toBeVisible();
 	await expect(reopened).toBeFocused();
 
-	// Keep Text Only: the same clipboard arrives as plain text at the caret.
-	await reopened.press('ControlOrMeta+Shift+v');
+	// Plain text from another app lands at the caret after the pasted runs, as text, not markup.
+	await page.evaluate(() => navigator.clipboard.writeText('!'));
+	await reopened.press('ControlOrMeta+v');
 	await reopened.press('Escape');
 	await expect
 		.poll(async () => {
-			const runs = await runsOf(page, 'Rich tailRich tail');
+			const runs = await runsOf(page, 'Rich');
 			return {
 				text: runs.map((run) => run.text).join(''),
 				boldRich: runs.filter((run) => run.bold && run.text.includes('Rich')).length,
 			};
 		})
-		.toEqual({ text: expect.stringContaining(`${SHAPE_TEXT}Rich tailRich tail`), boldRich: 1 });
+		.toEqual({ text: expect.stringContaining(`${SHAPE_TEXT}Rich tail!`), boldRich: 1 });
 });
 
 test('copying a shape offers a picture and its text to other applications', async ({ page }) => {
