@@ -1,4 +1,5 @@
 import { parseCoreProperties } from './core-properties';
+import { readPackageInformation } from './package-information';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import { declaredEntrySize, openZip } from '../opc/zip-limits';
 import { inspectPackageSignatures } from '../opc/signature/index';
@@ -174,6 +175,8 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 	}
 	const packageProperties = await readPackageProperties(zip);
 	if (packageProperties) model.packageProperties = packageProperties;
+	const packageInformation = await readPackageInformation(zip);
+	if (packageInformation) model.packageInformation = packageInformation;
 	await readPlaceholderTexts(zip, drawings.rels, model);
 	const pageColor = parsePageBackground(document.documentElement, model.theme);
 	if (pageColor) model.pageColor = pageColor;

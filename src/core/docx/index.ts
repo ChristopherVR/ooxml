@@ -170,6 +170,16 @@ export {
 	tocCaptionLabel,
 } from './table-of-figures';
 export * from './document-stats';
+export {
+	INSPECTION_CATEGORIES,
+	inspectDocument,
+	type CategoryInspection,
+	type InspectionCategory,
+	type InspectionFinding,
+	type InspectionFindingKind,
+} from './inspect-document';
+export { removeDocumentInformation } from './remove-document-information';
+export type { PackageInformation } from './package-information';
 export * from './column-settings';
 export {
 	createProtectionPassword,

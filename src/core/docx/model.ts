@@ -142,6 +142,11 @@ export interface DocumentModel {
 	 * DOCPROPERTY fields show (the editable core fields in `properties` take their place).
 	 */
 	packageProperties?: DocumentPropertySet;
+	/**
+	 * Package metadata Inspect Document reports and removes: extended and custom properties,
+	 * custom XML data, the attached template, the reviewer list and the privacy settings.
+	 */
+	packageInformation?: import('./package-information').PackageInformation;
 	/** Whether `settings.xml` requests separate even-page headers/footers (`w:evenAndOddHeaders`). */
 	evenAndOddHeaders?: boolean;
 	/** `w:autoHyphenation` in settings.xml: Word hyphenates words at line ends. */

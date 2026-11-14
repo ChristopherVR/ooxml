@@ -8,13 +8,18 @@ import type { SaveOptions } from './model';
 
 const CORE_PATH = 'docProps/core.xml';
 
-export async function stampModified(zip: JSZip, option: SaveOptions['modified']): Promise<void> {
+/** With `anonymous` (`w:removePersonalInformation` is set) the author is not recorded. */
+export async function stampModified(
+	zip: JSZip,
+	option: SaveOptions['modified'],
+	anonymous = false,
+): Promise<void> {
 	if (!option) return;
 	const file = zip.file(CORE_PATH);
 	if (!file) return;
 	const source = await file.async('string');
 	const props = parseCoreProperties(source);
 	props.modified = formatW3cdtf(option.at ?? new Date());
-	if (option.author) props.lastModifiedBy = option.author;
+	if (option.author && !anonymous) props.lastModifiedBy = option.author;
 	zip.file(CORE_PATH, writeCoreProperties(props, source));
 }

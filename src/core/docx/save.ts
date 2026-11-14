@@ -14,6 +14,8 @@ import { applyModel } from './write';
 import { DocPrIdAllocator } from './docpr-ids';
 import { assertValidDocumentModel } from './validate-model';
 import { applyCoreProperties } from './core-properties';
+import { applyPackageInformation } from './package-information-save';
+import { scrubPersonalParts } from './personal-information';
 import { applyNumberingCatalog } from './numbering-package';
 import { applyStyleNumbering, differsOnlyByStyleNumbering } from './style-numbering-package';
 import { applyHeaderFooterEdits, createHeaderFooterParts } from './write-header-footer';
@@ -239,7 +241,12 @@ export async function saveDocx(
 	if (JSON.stringify(model.comments ?? []) !== JSON.stringify(binding?.base.comments ?? []))
 		await applyComments(zip, model.comments ?? []);
 	if (binding) await applyDataBindings(zip, model, binding.base, binding.context.sourceXml);
-	if (binding) await stampModified(zip, options?.modified);
+	await applyPackageInformation(zip, model.packageInformation, binding?.base.packageInformation);
+	const privacy = model.packageInformation;
+	if (privacy?.removePersonalInformation)
+		await scrubPersonalParts(zip, privacy.removeDateAndTime === true);
+	if (binding)
+		await stampModified(zip, options?.modified, privacy?.removePersonalInformation === true);
 	if (binding) await stripPackageSignatures(zip);
 	dropAddedFolders(zip, sourceEntries);
 	return zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
