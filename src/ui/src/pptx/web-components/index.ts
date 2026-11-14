@@ -40,6 +40,7 @@ import { definePptxSmartArtTextPane } from './smartart-text-pane';
 import { OFFICE_TOKEN_BRIDGE } from './office-token-bridge';
 import { definePptxOptionsDialog } from './options-dialog';
 import { definePptxInsertChartDialog } from './insert-chart-dialog';
+import { definePptxPdfExportDialog } from './pdf-export-dialog';
 import { definePptxInsertSmartArtDialog } from './insert-smartart-dialog';
 import { definePptxPresentToolbar } from './present-toolbar';
 import { definePptxPresenterConsole } from './presenter-console';
@@ -83,6 +84,12 @@ export type {
 	InsertChartDialogInsertEvent,
 	PptxUiInsertChartDialogElement,
 } from './insert-chart-dialog';
+export type {
+	PdfExportDialogConfirmEvent,
+	PdfExportDialogDetail,
+	PdfExportDialogTranslate,
+	PptxUiPdfExportDialogElement,
+} from './pdf-export-dialog';
 export type {
 	InsertSmartArtDialogDetail,
 	InsertSmartArtDialogInsertEvent,
@@ -241,6 +248,7 @@ const controls = [
 	['pptx-ui-slide-clipboard', definePptxSlideClipboard],
 	['pptx-ui-options-dialog', definePptxOptionsDialog],
 	['pptx-ui-insert-chart-dialog', definePptxInsertChartDialog],
+	['pptx-ui-pdf-export-dialog', definePptxPdfExportDialog],
 	['pptx-ui-insert-smartart-dialog', definePptxInsertSmartArtDialog],
 ] as const;
 

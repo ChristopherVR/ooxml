@@ -5,6 +5,7 @@
  * element's matrix is applied when painting.
  */
 import type { PdfFontSet } from '../../export/pdf-embedded-font';
+import type { PdfExportDiagnosticCode } from './pdf-export-diagnostics';
 import { cssColor } from './pdf-vector-css';
 import type { Matrix, PdfClip, TextItem } from './pdf-vector-display-list';
 
@@ -54,7 +55,7 @@ export interface TextNodeResult {
 	items: TextItem[];
 	tokens: number;
 	/** Why the node needs a picture instead (unset when it can be text). */
-	raster?: string;
+	raster?: PdfExportDiagnosticCode;
 }
 
 export interface TextNodeContext {
@@ -92,11 +93,11 @@ export function measureTextNode(
 	const raw = node.data;
 	if (!raw.trim()) return { items: [], tokens: 0 };
 	if (!/^horizontal/.test(style.writingMode || 'horizontal-tb'))
-		return { items: [], tokens: 0, raster: 'Vertical text is drawn as a picture.' };
+		return { items: [], tokens: 0, raster: 'verticalTextAsPicture' };
 	const display = applyTextTransform(raw, style.textTransform);
 	const shaping = needsShaping(display);
 	const color = cssColor(style.getPropertyValue('-webkit-text-fill-color') || style.color);
-	if (color === undefined) return { items: [], tokens: 0, raster: 'Text colour.' };
+	if (color === undefined) return { items: [], tokens: 0, raster: 'textColourAsPicture' };
 	const doc = node.ownerDocument;
 	const range = doc.createRange();
 	const pre = /^(pre|pre-wrap|break-spaces)$/.test(style.whiteSpace);
@@ -197,8 +198,7 @@ export function measureTextNode(
 		tokens: words.length,
 		...(shaping && !context.invisible
 			? {
-					raster:
-						'Right-to-left text and scripts that join or combine characters are drawn as pictures, with searchable text over them.',
+					raster: 'complexScriptAsPicture' as const,
 				}
 			: {}),
 	};

@@ -33,6 +33,19 @@ export interface CompatibilityWarningToast {
 	readonly messageKey: string;
 	/** `{{code}}` for the generic fallback key; `undefined` for a mapped code. */
 	readonly params?: Readonly<Record<string, string>>;
+	/**
+	 * Messages translated and joined (`pptx.compatibility.partSeparator`) into the `{{parts}}`
+	 * param of `messageKey`, for a summary built from counts (the PDF export notice).
+	 */
+	readonly parts?: readonly ToastMessagePart[];
+	/** Translated lines listed under a Details expander. */
+	readonly details?: readonly ToastMessagePart[];
+}
+
+/** One translatable message of a toast. */
+export interface ToastMessagePart {
+	readonly key: string;
+	readonly params?: Readonly<Record<string, string>>;
 }
 
 /**

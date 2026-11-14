@@ -12,6 +12,7 @@ import { translations as charts_2 } from './charts-2';
 import { translations as cloudFiles } from './cloud-files';
 import { translations as collaboration_and_sharing } from './collaboration-and-sharing';
 import { translations as compare_and_waterfall } from './compare-and-waterfall';
+import { translations as pdf_export } from './pdf-export';
 import { translations as design_galleries } from './design-galleries';
 import { translations as drawing_and_layout } from './drawing-and-layout';
 import { translations as drawing_and_layout_2 } from './drawing-and-layout-2';
@@ -77,6 +78,7 @@ export const translationsZhCN: Record<string, string> = {
 	...ribbon_galleries_effects,
 	...ribbon_galleries_picture,
 	...compare_and_waterfall,
+	...pdf_export,
 	...ribbon_galleries_smartart_layouts,
 	...ribbon_galleries_adjust,
 	...ribbon_galleries_data,

@@ -4,7 +4,8 @@
  * export uses), read into a display list and painted as paths, pictures and real text with the
  * deck's own embedded fonts subset into the file. Effects the PDF cannot express are pictures
  * of just those elements; a slide that cannot be read at all becomes one picture with its text
- * kept searchable. The result lists what was approximated: the file is close to the slide, not
+ * kept searchable. The result lists what was approximated, as codes a binding translates
+ * (`pdf-export-diagnostics.ts`, `pdf-export-notice.ts`): the file is close to the slide, not
  * identical to it.
  */
 import { collectLocalFontFiles } from '../../export/pdf-font-faces';
@@ -12,6 +13,7 @@ import { PdfFontSet, type PdfFontFile } from '../../export/pdf-embedded-font';
 import { buildVectorPdf } from '../../export/pdf-vector';
 import type { SlideSizeEmu } from '../render/slide-size';
 import type { CanvasSize } from '../types';
+import { distinctPdfDiagnostics, type PdfExportDiagnostic } from './pdf-export-diagnostics';
 import { collectSlide } from './pdf-vector-collect';
 import type { DisplayItem } from './pdf-vector-display-list';
 import { IDENTITY } from './pdf-vector-display-list';
@@ -62,7 +64,9 @@ export interface VectorPdfSlideReport {
 	index: number;
 	/** `vector` is paths and text (with any effects as pictures); `picture` is one image. */
 	mode: 'vector' | 'picture';
-	diagnostics: string[];
+	/** Elements of a `vector` slide drawn as pictures of just themselves. */
+	pictures: number;
+	diagnostics: PdfExportDiagnostic[];
 }
 
 export interface VectorPdfExportResult {
@@ -70,7 +74,7 @@ export interface VectorPdfExportResult {
 	bytes: Uint8Array<ArrayBuffer>;
 	slides: VectorPdfSlideReport[];
 	/** Every distinct diagnostic of every slide, for one notice. */
-	diagnostics: string[];
+	diagnostics: PdfExportDiagnostic[];
 	/** Families embedded as subsets. */
 	embeddedFonts: string[];
 }
@@ -141,7 +145,7 @@ export async function exportSlidesVectorPdf(
 						...items,
 					]
 				: items;
-			if (!image) collected.diagnostics.push('A slide could not be captured and is left blank.');
+			if (!image) collected.diagnostics.push({ code: 'slideNotCaptured' });
 		}
 		const painted = paintSlide(items, {
 			canvasWidth: W,
@@ -154,7 +158,8 @@ export async function exportSlidesVectorPdf(
 		reports.push({
 			index,
 			mode,
-			diagnostics: [...new Set([...collected.diagnostics, ...painted.diagnostics])],
+			pictures: mode === 'vector' ? collected.pictures : 0,
+			diagnostics: distinctPdfDiagnostics([...collected.diagnostics, ...painted.diagnostics]),
 		});
 	}
 	if (!pages.length) throw new Error('There are no slides to export.');
@@ -167,7 +172,7 @@ export async function exportSlidesVectorPdf(
 		blob: new Blob([bytes], { type: 'application/pdf' }),
 		bytes,
 		slides: reports,
-		diagnostics: [...new Set(reports.flatMap((report) => report.diagnostics))],
+		diagnostics: distinctPdfDiagnostics(reports.flatMap((report) => report.diagnostics)),
 		embeddedFonts: [...embedded],
 	};
 }

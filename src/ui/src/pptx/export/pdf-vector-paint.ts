@@ -10,6 +10,7 @@ import { encodeWinAnsi, pdfBaseFont, pdfTextWidth } from '../../export/pdf-fonts
 import { pathOperators, parsePath } from '../../export/pdf-path';
 import { drawSvgSubtree } from '../../export/pdf-svg';
 import { PdfVectorPage } from '../../export/pdf-vector';
+import { PdfDiagnosticSet, type PdfExportDiagnostic } from './pdf-export-diagnostics';
 import type { DisplayItem, PdfClip, TextItem } from './pdf-vector-display-list';
 
 /** How one run of text is written. */
@@ -57,7 +58,7 @@ export interface PaintSlideOptions {
 
 export interface PaintedSlide {
 	page: PdfVectorPage;
-	diagnostics: string[];
+	diagnostics: PdfExportDiagnostic[];
 }
 
 /** Concatenate the clip's path in its own space and intersect the clip with it. */
@@ -83,20 +84,19 @@ function paintText(
 	page: PdfVectorPage,
 	item: TextItem,
 	fonts: PdfFontSet | undefined,
-	notes: Set<string>,
+	notes: PdfDiagnosticSet,
 ): void {
 	const font = resolvePdfTextFont(item.text, item.family, item.bold, item.italic, fonts);
 	if (!font) {
-		notes.add('Some text uses characters no available font has, so it is not searchable.');
+		notes.add('unsearchableText');
 		return;
 	}
-	const family = primaryFamily(item.family) || 'the default font';
+	// An empty family is the default font; the message says so in the viewer's language.
+	const family = primaryFamily(item.family) || '';
 	if (font.kind === 'standard' && !item.invisible)
-		notes.add(
-			`Text in "${family}" uses a standard PDF font (${font.baseFont.split('-')[0]}) because the font file is not available to embed; positions match the slide, letter shapes differ.`,
-		);
+		notes.add('fontStandard', { family, substitute: font.baseFont.split('-')[0] ?? '' });
 	else if (font.kind === 'embedded' && !font.named && !item.invisible)
-		notes.add(`Text in "${family}" uses the embedded font "${font.font.family}" instead.`);
+		notes.add('fontSubstituted', { family, substitute: font.font.family });
 	const natural =
 		(font.kind === 'embedded'
 			? font.font.width(item.text)
@@ -126,7 +126,7 @@ function paintItem(
 	page: PdfVectorPage,
 	item: DisplayItem,
 	fonts: PdfFontSet | undefined,
-	notes: Set<string>,
+	notes: PdfDiagnosticSet,
 ): void {
 	page.save();
 	for (const clip of item.clips) clipTo(page, clip);
@@ -176,7 +176,7 @@ function paintItem(
 				for (const note of drawSvgSubtree(page, item.svg, item.images, fonts, item.alpha))
 					notes.add(note);
 			} catch {
-				notes.add('Part of a drawing could not be written as vector graphics and is left out.');
+				notes.add('drawingPartMissing');
 			}
 			break;
 	}
@@ -189,7 +189,7 @@ export function paintSlide(
 	options: PaintSlideOptions,
 ): PaintedSlide {
 	const page = new PdfVectorPage(options.pageWidth, options.pageHeight);
-	const notes = new Set<string>();
+	const notes = new PdfDiagnosticSet();
 	// Stage px, y down, to PDF points, origin bottom left.
 	const sx = options.pageWidth / options.canvasWidth;
 	const sy = options.pageHeight / options.canvasHeight;
@@ -198,5 +198,5 @@ export function paintSlide(
 	page.rect(0, 0, options.canvasWidth, options.canvasHeight);
 	page.op('W n');
 	for (const item of items) paintItem(page, item, options.fonts, notes);
-	return { page, diagnostics: [...notes] };
+	return { page, diagnostics: notes.toArray() };
 }

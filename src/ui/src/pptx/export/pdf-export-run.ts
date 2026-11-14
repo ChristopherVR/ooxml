@@ -2,9 +2,11 @@
  * File > Save as PDF as every binding runs it: vector pages (`exportSlidesVectorPdf`) unless
  * Options > Advanced > "Save slides as pictures" asks for the earlier one-picture-per-slide
  * export, which the binding keeps as `pictures`. Framework-free: the binding supplies its own
- * capture stage, picture export and download.
+ * capture stage, picture export, download and toast stack.
  */
 import type { PdfExportSettings } from '../render/options/viewer-options-apply';
+import type { CompatibilityWarningToast } from '../render/compatibility-warning-toasts';
+import { pdfExportNoticeToast } from './pdf-export-notice';
 import type { VectorPdfExportOptions, VectorPdfExportResult } from './pdf-vector-export';
 import { exportSlidesVectorPdf } from './pdf-vector-export';
 
@@ -18,6 +20,11 @@ export interface RunPdfExportOptions {
 	save: (blob: Blob) => void | Promise<void>;
 	/** Told what the vector export approximated, when it approximated anything. */
 	onApproximated?: (result: VectorPdfExportResult) => void;
+	/**
+	 * Show the binding's one non-blocking notice (its compatibility toast stack) summarising what
+	 * the vector export approximated. Not called when nothing was.
+	 */
+	notify?: (toast: CompatibilityWarningToast) => void;
 }
 
 /** The prefix of the console note listing what a vector PDF approximated. */
@@ -41,5 +48,7 @@ export async function runPdfExport(
 		console.info(PDF_EXPORT_REPORT_PREFIX, result.diagnostics);
 		options.onApproximated?.(result);
 	}
+	const toast = pdfExportNoticeToast(result);
+	if (toast) options.notify?.(toast);
 	return result;
 }

@@ -1783,6 +1783,7 @@ export * from './modify-password-check';
 export * from './read-only-session';
 // getCompatibilityWarnings() -> toast descriptors, deduped by code.
 export * from './compatibility-warning-toasts';
+export * from './pdf-export-range';
 // `ppaction://program` ("Run program" action): turns the resolved command
 // string into a non-blocking notice descriptor (message + Copy button i18n
 // keys), since a browser cannot launch a local executable. Consumed by every

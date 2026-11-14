@@ -1,29 +1,27 @@
 /**
  * The pieces of the vector PDF collector (`pdf-vector-collect.ts`) that read one element:
  * why it needs a picture, its content box, the bounds a picture of it covers, and its inline
- * SVG as a display item. The diagnostics wording lives here too.
+ * SVG as a display item. The diagnostic codes of each reason live here too.
  */
 import { collectSvgImages, drawSvgSubtree } from '../../export/pdf-svg';
 import { PdfFallback } from '../../export/pdf-svg-style';
 import { PdfVectorPage, type PdfImageResource } from '../../export/pdf-vector';
+import type { PdfExportDiagnosticCode } from './pdf-export-diagnostics';
+import { SHADOW_REASON } from './pdf-vector-box';
 import { roundedRectPath } from './pdf-vector-css';
 import type { ImageItem, Matrix, PdfClip, SvgItem } from './pdf-vector-display-list';
 import { multiply } from './pdf-vector-display-list';
 import { normalizeInlineSvg, viewBoxMatrix } from './pdf-vector-svg';
 
-export const FILTER_REASON =
-	'Soft edges, blur, glow and other filter effects are drawn as pictures.';
-export const BLEND_REASON = 'Blend modes and masks are drawn as pictures.';
-export const THREE_D_REASON = '3-D rotation and perspective are drawn as pictures.';
-export const MEDIA_REASON =
-	'Video, 3-D models and canvas drawings are drawn as pictures of their current frame.';
-export const TEXT_SHADOW_REASON = 'Text shadows are drawn as pictures under the searchable text.';
-export const SEARCHABLE_NOTE = 'Text inside pictures stays searchable as invisible text.';
-export const OPACITY_NOTE =
-	'Transparency set on a group is applied to each of its objects separately.';
-export const SVG_REASON =
-	'Drawings this export cannot write as vector graphics are drawn as pictures.';
-const FILL_TEXT_REASON = 'Text filled with a gradient or picture is drawn as a picture.';
+export const FILTER_REASON = 'filterAsPicture' satisfies PdfExportDiagnosticCode;
+export const BLEND_REASON = 'blendAsPicture' satisfies PdfExportDiagnosticCode;
+export const THREE_D_REASON = 'threeDAsPicture' satisfies PdfExportDiagnosticCode;
+export const MEDIA_REASON = 'mediaAsPicture' satisfies PdfExportDiagnosticCode;
+export const TEXT_SHADOW_REASON = 'textShadowAsPicture' satisfies PdfExportDiagnosticCode;
+export const SEARCHABLE_NOTE = 'searchableText' satisfies PdfExportDiagnosticCode;
+export const OPACITY_NOTE = 'groupOpacity' satisfies PdfExportDiagnosticCode;
+export const SVG_REASON = 'svgAsPicture' satisfies PdfExportDiagnosticCode;
+const FILL_TEXT_REASON = 'fillTextAsPicture' satisfies PdfExportDiagnosticCode;
 
 export const MEDIA_TAGS = new Set(['canvas', 'video']);
 const OPAQUE_TAGS = new Set(['iframe', 'object', 'embed', 'math']);
@@ -82,8 +80,8 @@ export function paintedBounds(
 }
 
 /** How far past its box an effect's picture reaches (blur and shadow spread). */
-export const effectPad = (reason: string, box: Box): number =>
-	reason === FILTER_REASON || reason === THREE_D_REASON || reason.startsWith('Shadows')
+export const effectPad = (reason: PdfExportDiagnosticCode, box: Box): number =>
+	reason === FILTER_REASON || reason === THREE_D_REASON || reason === SHADOW_REASON
 		? Math.min(200, 24 + 0.25 * Math.max(box.w, box.h))
 		: 2;
 
@@ -92,7 +90,7 @@ export function subtreeRasterReason(
 	el: Element,
 	style: CSSStyleDeclaration,
 	clipReadable: boolean,
-): string | undefined {
+): PdfExportDiagnosticCode | undefined {
 	if (style.filter && style.filter !== 'none') return FILTER_REASON;
 	if ((style.mixBlendMode && style.mixBlendMode !== 'normal') || hasMask(style) || !clipReadable)
 		return BLEND_REASON;

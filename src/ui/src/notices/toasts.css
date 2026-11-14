@@ -66,6 +66,28 @@ svg {
 	margin: 0;
 	overflow-wrap: anywhere;
 }
+.message p {
+	margin: 0;
+}
+details {
+	margin-top: var(--office-space-1);
+	color: var(--office-muted-foreground);
+	font-size: var(--office-font-size-xs);
+}
+summary {
+	cursor: pointer;
+	color: var(--office-foreground);
+}
+summary:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: calc(var(--office-focus-offset) / 2);
+}
+details ul {
+	max-height: 12em;
+	overflow-y: auto;
+	margin: var(--office-space-1) 0 0;
+	padding-inline-start: var(--office-space-4);
+}
 .overflow {
 	margin: var(--office-space-2) 0 0;
 	text-align: center;

@@ -10,6 +10,7 @@ import { PdfVectorPage, type PdfImageResource } from './pdf-vector';
 import { pathEnds, pathOperators, parsePath, type PathSegment } from './pdf-path';
 import { drawSvgText, type SvgFontFamilyMapper } from './pdf-svg-text';
 import { gradientPaint, isGradient, pathBounds, type GradientPaint } from './pdf-svg-gradient';
+import { PDF_SVG_NOTES, type PdfSvgNoteCode } from './pdf-svg-notes';
 import { basicShapePath } from './pdf-svg-shapes';
 import {
 	hrefOf,
@@ -70,7 +71,7 @@ function imageHref(root: Element, node: Element): string | undefined {
 }
 
 class Converter {
-	readonly degraded = new Set<string>();
+	readonly degraded = new Set<PdfSvgNoteCode>();
 	#nodes = 0;
 	constructor(
 		readonly root: Element,
@@ -102,20 +103,14 @@ class Converter {
 			if (gradient) {
 				const paint = gradientPaint(target, bounds);
 				if (paint) {
-					if (paint.variableOpacity)
-						this.degraded.add('Gradient transparency is averaged: a PDF shading has one opacity.');
-					if (paint.spreadApproximated)
-						this.degraded.add('Repeating and reflecting gradients are drawn as one gradient.');
+					if (paint.variableOpacity) this.degraded.add('gradientOpacityAveraged');
+					if (paint.spreadApproximated) this.degraded.add('gradientSpreadApproximated');
 					return paint;
 				}
 			}
 			const stops = Array.from(target.children).filter((child) => child.localName === 'stop');
 			const stop = stops[Math.floor(stops.length / 2)];
-			this.degraded.add(
-				gradient
-					? 'A gradient with no usable area is drawn as one flat colour (the middle stop).'
-					: 'Gradient outlines are drawn as one flat colour (the middle stop).',
-			);
+			this.degraded.add(gradient ? 'gradientFlatFill' : 'gradientOutlineFlat');
 			if (!stop) return null;
 			const color = parseColor(stop.getAttribute('stop-color') ?? '#000000');
 			return color && { ...color, a: color.a * number(stop.getAttribute('stop-opacity'), 1) };
@@ -130,33 +125,25 @@ class Converter {
 		if (SKIPPED.has(name) || element.getAttribute('display') === 'none') return;
 		const shadow = element.hasAttribute('data-shadow');
 		const glow = element.hasAttribute('data-glow');
-		if (shadow && element.hasAttribute('filter'))
-			this.degraded.add('Shadow blur is not applied: shadows are drawn hard-edged.');
+		if (shadow && element.hasAttribute('filter')) this.degraded.add('shadowBlurDropped');
 		if (glow) {
-			this.degraded.add('Glow is approximated by a hard-edged halo at half strength (no blur).');
+			this.degraded.add('glowApproximated');
 			this.#glow = this.#glowWidth(element);
 		}
 		if (element.hasAttribute('data-reflection') || element.hasAttribute('mask')) {
-			this.degraded.add('Reflections and masked shapes are not drawn.');
+			this.degraded.add('reflectionDropped');
 			return;
 		}
 		if (element.hasAttribute('data-bevel')) {
-			this.degraded.add('Bevel profiles and lighting are not drawn.');
+			this.degraded.add('bevelDropped');
 			return;
 		}
 		if (element.hasAttribute('data-group3d-perspective'))
-			this.degraded.add(
-				'The children of a group turned with perspective use one affine fit of the projection.',
-			);
-		if (element.hasAttribute('data-solid3d'))
-			this.degraded.add(
-				'Perspective and extrusion are drawn from the projected outline with flat shading; text and pictures use one affine fit of the projection (no convergence).',
-			);
-		else if (element.hasAttribute('data-perspective'))
-			this.degraded.add('3-D rotation is drawn as a parallel projection without perspective.');
+			this.degraded.add('groupPerspectiveAffine');
+		if (element.hasAttribute('data-solid3d')) this.degraded.add('solid3dFlat');
+		else if (element.hasAttribute('data-perspective')) this.degraded.add('perspectiveParallel');
 		if (element.hasAttribute('data-embedded-chart')) throw new PdfFallback('embedded chart');
-		if (element.hasAttribute('filter') && !shadow && !glow)
-			this.degraded.add('Blur and soft-edge filters are not applied.');
+		if (element.hasAttribute('filter') && !shadow && !glow) this.degraded.add('filterDropped');
 		const opacity = alpha * number(element.getAttribute('opacity'), 1) * (glow ? 0.5 : 1);
 		const transforms = parseTransform(element.getAttribute('transform'));
 		const clip = this.#clip(element);
@@ -369,7 +356,11 @@ export function convertSvgPage(
 		// SVG user space is y-down inches: map it to PDF points, origin bottom left.
 		page.concat([72, 0, 0, -72, 0, page.height]);
 		for (const child of Array.from(svg.children)) converter.walk(child, 1);
-		return { page, fallback: [], degraded: [...converter.degraded] };
+		return {
+			page,
+			fallback: [],
+			degraded: [...converter.degraded].map((code) => PDF_SVG_NOTES[code]),
+		};
 	} catch (error) {
 		if (error instanceof PdfFallback)
 			return { fallback: [`Unsupported content: ${error.message}.`], degraded: [] };
@@ -380,7 +371,8 @@ export function convertSvgPage(
 /**
  * Draw the children of one `<svg>` root into `page` in the page's current space (SVG user
  * units). Throws `PdfFallback` for content the vector path cannot represent, so a caller can
- * draw that subtree as a picture instead; returns what was simplified.
+ * draw that subtree as a picture instead; returns what was simplified, as codes
+ * (`PDF_SVG_NOTES` has their English).
  */
 export function drawSvgSubtree(
 	page: PdfVectorPage,
@@ -388,7 +380,7 @@ export function drawSvgSubtree(
 	images: ReadonlyMap<string, PdfImageResource>,
 	fonts?: PdfFontSet,
 	alpha = 1,
-): string[] {
+): PdfSvgNoteCode[] {
 	const converter = new Converter(svg, page, images, fonts);
 	for (const child of Array.from(svg.children)) converter.walk(child, alpha);
 	return [...converter.degraded];
