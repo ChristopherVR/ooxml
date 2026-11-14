@@ -16,6 +16,7 @@ import { useCanvasImagePaste } from '../editor/canvas-image-paste.svelte';
 import { EditorController } from '../editor/editor-controller.svelte';
 import { FindReplaceState } from '../editor/editor-find-replace.svelte';
 import type { EditorState } from '../editor/editor-state.svelte';
+import { useInlineRichTextPaste } from '../editor/inline-rich-paste.svelte';
 import type { PresentationController } from '../presentation';
 import { ChromeUiState } from './chrome-ui.svelte';
 import { CompatToastsState } from './compat-toasts.svelte';
@@ -215,6 +216,13 @@ export function useEditorUiCluster(deps: EditorUiClusterDeps): EditorUiCluster {
 		insertElement: (element) => {
 			editor.insertElement(element);
 		},
+	});
+	// oxlint-disable-next-line react-hooks/rules-of-hooks
+	useInlineRichTextPaste(() => options.getRootEl() ?? null, {
+		editingElement: () => controller.editingElement,
+		closeInline: () => controller.closeInline(),
+		enterInlineEdit: (id) => controller.enterInlineEdit(id),
+		applyElementPatch: (id, patch) => editor.applyElementPatch(id, patch),
 	});
 
 	const findReplace = new FindReplaceState({

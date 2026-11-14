@@ -22,6 +22,12 @@ export async function rasterizePastedElementAsPicture(
 	elementId: string,
 	sourceClone: PptxElement,
 ): Promise<PptxElement | null> {
+	const dataUrl = await rasterizeCanvasElementDataUrl(elementId);
+	return dataUrl ? buildRasterPictureElement(sourceClone, dataUrl) : null;
+}
+
+/** The mounted canvas node for `elementId` as a PNG data URL, or `null` when not on screen. */
+export async function rasterizeCanvasElementDataUrl(elementId: string): Promise<string | null> {
 	const node = findCanvasElementNode(document, elementId);
 	if (!node) {
 		return null;
@@ -43,5 +49,5 @@ export async function rasterizePastedElementAsPicture(
 				logging: false,
 			}),
 	});
-	return buildRasterPictureElement(sourceClone, dataUrl);
+	return dataUrl;
 }
