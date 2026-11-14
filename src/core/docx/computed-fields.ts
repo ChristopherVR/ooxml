@@ -8,7 +8,12 @@ import {
 	autoNumberStates,
 	type AutoNumberState,
 } from './auto-number-fields';
-import { docPropertyResult, fieldProperties } from './doc-property-field';
+import {
+	NO_PROPERTY_NAME,
+	UNKNOWN_PROPERTY,
+	docPropertyResult,
+	fieldProperties,
+} from './doc-property-field';
 import type { ListNumberFields } from './list-number-fields';
 import { computeListNumbering } from './numbering-format';
 import { symbolFieldResult } from './symbol-field';
@@ -49,8 +54,15 @@ export const COMPUTED_FIELD_NAMES: ReadonlySet<string> = new Set([
 	'SYMBOL',
 ]);
 
-/** Reads `model`'s computed fields; what each needs is worked out once, when first asked for. */
-export function computedFields(model: DocumentModel): ComputedFields {
+/**
+ * Reads `model`'s computed fields; what each needs is worked out once, when first asked for. A
+ * DOCPROPERTY that names no property keeps its result unless `errors` asks for Word's error text,
+ * as an explicit Update Fields shows it: the layout and a save never turn a result into an error.
+ */
+export function computedFields(
+	model: DocumentModel,
+	options: { errors?: boolean } = {},
+): ComputedFields {
 	let properties: DocumentPropertySet | undefined;
 	let autoNumbers: Map<string, AutoNumberState> | undefined;
 	let listNumbers: ListNumberFields | undefined;
@@ -59,7 +71,8 @@ export function computedFields(model: DocumentModel): ComputedFields {
 			const name = fieldName(field.instr);
 			if (name === 'DOCPROPERTY') {
 				const text = docPropertyResult(field.instr, (properties ??= fieldProperties(model)));
-				return text === undefined ? undefined : { text };
+				const error = text === UNKNOWN_PROPERTY || text === NO_PROPERTY_NAME;
+				return text === undefined || (error && !options.errors) ? undefined : { text };
 			}
 			if (AUTO_NUMBER_FIELDS.has(name)) {
 				const state = (autoNumbers ??= autoNumberStates(model)).get(paragraph.id);

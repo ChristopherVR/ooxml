@@ -14,8 +14,8 @@ const bytes = await readFile(
 );
 
 /** Each field of the body: its instruction, Word's cached result and the computed one. */
-function fieldsOf(model: DocumentModel) {
-	const fields = computedFields(model);
+function fieldsOf(model: DocumentModel, errors = true) {
+	const fields = computedFields(model, { errors });
 	return model.blocks.flatMap((block) =>
 		block.type === 'paragraph'
 			? fieldResultSpans(block.runs).map((span) => ({
@@ -38,6 +38,13 @@ describe('DOCPROPERTY', () => {
 		for (const field of fields)
 			if (KEPT.has(field.instr)) expect(field.computed, field.instr).toBeUndefined();
 			else expect(field.computed, field.instr).toBe(field.word);
+	});
+
+	it('keeps the result of a field naming no property outside Update Fields', async () => {
+		const { model } = await loadDocx(bytes);
+		const missing = fieldsOf(model, false).filter((field) => field.word.startsWith('Error!'));
+		expect(missing.length).toBeGreaterThan(1);
+		for (const field of missing) expect(field.computed).toBeUndefined();
 	});
 
 	it('reports a missing or unknown property as Word does', () => {

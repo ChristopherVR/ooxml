@@ -369,7 +369,7 @@ function refreshPass(
 		model && !captionsOnly && tr.docChanged ? docToModel(tr.doc, model, tr.before) : model;
 	const source = current && !captionsOnly ? styleRefSource(current) : undefined;
 	// DOCPROPERTY and the other fields whose results the document itself gives.
-	const computed = current && !captionsOnly ? computedFields(current) : undefined;
+	const computed = current && !captionsOnly ? computedFields(current, { errors: true }) : undefined;
 	const changes: Array<{ run: FieldResult; text: string; formatted?: ProseMirrorNode[] }> = [];
 	for (const run of fieldResults(tr.doc)) {
 		if (isFieldLocked(inlineNodeRun(schema.text('x', run.marks)))) continue;
