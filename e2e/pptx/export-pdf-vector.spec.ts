@@ -139,6 +139,32 @@ test.describe('vector PDF export', () => {
 	});
 
 	test(
+		'every binding reads Options > Advanced > Save as PDF',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const facts = await deckFacts(EXPORT_DECK);
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await seedAdvancedOptions(page, { pdfSlidesAsPictures: true });
+					await loadDeckAt(page, origin, EXPORT_DECK);
+					return exportPdf(page);
+				},
+				{ viewport: VIEWPORT },
+			);
+			const problems = byBinding(results).flatMap(({ name, value }) =>
+				value.pages === facts.slides && value.images >= facts.slides
+					? []
+					: [
+							`${name}: "Save slides as pictures" gave ${value.pages} pages, ${value.images} images`,
+						],
+			);
+			expect(problems.join('\n')).toBe('');
+		},
+	);
+
+	test(
 		'every binding writes vector pages with text',
 		{ tag: '@cross-binding' },
 		async ({ browser }, testInfo) => {

@@ -9,7 +9,10 @@ import { cssColor } from './pdf-vector-css';
 import type { Matrix, PdfClip, TextItem } from './pdf-vector-display-list';
 
 /** Scripts whose glyphs need shaping or bidi reordering a PDF text run cannot express. */
-const COMPLEX_SCRIPT = /[֐-ࣿऀ-෿ༀ-࿿က-႟ក-៿᠀-᢯ꡀ-꡿יִ-﷿ﹰ-﻿‍‏‫‮]|\p{M}/u;
+const COMPLEX_SCRIPT = new RegExp(
+	'[\u0590-\u08ff\u0900-\u0dff\u0f00-\u0fff\u1000-\u109f\u1780-\u17ff\u1800-\u18af\ua840-\ua87f\ufb1d-\ufdff\ufe70-\ufeff\u200f\u202b\u202e]|\u200d|\\p{M}',
+	'u',
+);
 
 /** Whether `text` needs shaping (joining scripts, combining marks, right-to-left). */
 export const needsShaping = (text: string): boolean => COMPLEX_SCRIPT.test(text);

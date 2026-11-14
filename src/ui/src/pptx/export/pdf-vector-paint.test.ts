@@ -8,6 +8,17 @@ import type { DisplayItem, TextItem } from './pdf-vector-display-list';
 import { IDENTITY } from './pdf-vector-display-list';
 import { paintSlide, resolvePdfTextFont } from './pdf-vector-paint';
 import { selectPdfSlides, slidePdfPageSize } from './pdf-vector-select';
+import { needsShaping } from './pdf-vector-text';
+
+describe('text that needs shaping', () => {
+	it('flags right-to-left, joining and combining text, not plain Latin or CJK', () => {
+		expect(needsShaping('Hello, world')).toBe(false);
+		expect(needsShaping('中文')).toBe(false);
+		expect(needsShaping('שלום')).toBe(true);
+		expect(needsShaping('مرحبا')).toBe(true);
+		expect(needsShaping('é')).toBe(true);
+	});
+});
 
 const latin1 = (bytes: Uint8Array) => Buffer.from(bytes).toString('latin1');
 

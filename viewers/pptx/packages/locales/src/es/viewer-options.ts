@@ -171,8 +171,6 @@ export const translations = {
 	'pptx.options.advanced.pdfSlidesAsPictures': 'Guardar las diapositivas como imágenes',
 	'pptx.options.advanced.pdfSlidesAsPicturesInfo':
 		'Escribe cada diapositiva como una sola imagen, como hacían las versiones anteriores de este visor. El texto del PDF no se podrá seleccionar ni buscar. Déjelo desactivado para guardar las formas y el texto como gráficos vectoriales con las fuentes incrustadas.',
-	'pptx.export.pdfApproximated':
-		'Se guardó el PDF. Algunos efectos no se pudieron escribir como gráficos vectoriales y se dibujaron como imágenes o se simplificaron.',
 	'pptx.options.ribbon.label': 'Personalizar cinta de opciones',
 	'pptx.options.ribbon.description': 'Personalice la cinta de opciones.',
 	'pptx.options.ribbon.tabsTitle': 'Pestañas principales',

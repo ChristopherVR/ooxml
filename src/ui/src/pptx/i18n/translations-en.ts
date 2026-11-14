@@ -3527,8 +3527,6 @@ export const translationsEn: Record<string, string> = {
 	'pptx.options.advanced.pdfSlidesAsPictures': 'Save slides as pictures',
 	'pptx.options.advanced.pdfSlidesAsPicturesInfo':
 		'Writes each slide as one picture, as earlier versions of this viewer did. The text in the PDF is then not selectable or searchable. Leave this off to save shapes and text as vector graphics with the embedded fonts.',
-	'pptx.export.pdfApproximated':
-		'The PDF was saved. Some effects could not be written as vector graphics and were drawn as pictures or simplified.',
 	'pptx.options.ribbon.label': 'Customize Ribbon',
 	'pptx.options.ribbon.description': 'Customize the ribbon.',
 	'pptx.options.ribbon.tabsTitle': 'Main Tabs',

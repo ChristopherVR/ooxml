@@ -80,8 +80,12 @@ export async function rasterizeIsolated(
 		if (mode === 'shadow') {
 			setStyle(saved, target, 'color', 'transparent');
 			setStyle(saved, target, '-webkit-text-fill-color', 'transparent');
-			setStyle(saved, target, 'background', 'none');
-			setStyle(saved, target, 'border-color', 'transparent');
+			// Longhands only: a shorthand reads back empty when only a longhand was set inline, so
+			// restoring it would drop the live element's own value.
+			setStyle(saved, target, 'background-color', 'transparent');
+			setStyle(saved, target, 'background-image', 'none');
+			for (const side of ['top', 'right', 'bottom', 'left'])
+				setStyle(saved, target, `border-${side}-color`, 'transparent');
 			setStyle(saved, target, 'box-shadow', 'none');
 			setStyle(saved, target, 'text-decoration-color', 'transparent');
 		}

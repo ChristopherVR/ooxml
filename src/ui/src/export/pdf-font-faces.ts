@@ -26,6 +26,28 @@ const MAX_FONT_BYTES = 32 * 1024 * 1024;
 
 const unquote = (value: string) => value.trim().replace(/^(['"])(.*)\1$/s, '$2');
 
+/**
+ * One declaration's value, read up to the `;` that ends it: a `data:` URL holds `;` inside its
+ * quotes and parentheses (`data:font/ttf;base64,...`), so a plain split would cut it short.
+ */
+function readDeclaration(body: string, name: string): string {
+	const start = new RegExp(`(?:^|[;{\\s])${name}\\s*:`, 'i').exec(body);
+	if (!start) return '';
+	let depth = 0;
+	let quote = '';
+	let index = start.index + start[0].length;
+	for (; index < body.length; index++) {
+		const ch = body[index]!;
+		if (quote) {
+			if (ch === quote) quote = '';
+		} else if (ch === '"' || ch === "'") quote = ch;
+		else if (ch === '(') depth++;
+		else if (ch === ')') depth--;
+		else if (ch === ';' && depth <= 0) break;
+	}
+	return body.slice(start.index + start[0].length, index).trim();
+}
+
 /** Parse the `@font-face` rules of `css` that name a `data:` or `blob:` source. */
 export function parseLocalFontFaces(css: string): LocalFontFace[] {
 	const faces: LocalFontFace[] = [];
@@ -35,7 +57,7 @@ export function parseLocalFontFaces(css: string): LocalFontFace[] {
 		const read = (name: string) =>
 			new RegExp(`(?:^|[;{\\s])${name}\\s*:\\s*([^;]*)`, 'i').exec(body)?.[1]?.trim();
 		const family = unquote(read('font-family') ?? '');
-		const src = read('src') ?? '';
+		const src = readDeclaration(body, 'src');
 		const url = [...src.matchAll(/url\(\s*(['"]?)([^'")]+)\1\s*\)/g)]
 			.map((m) => m[2]!)
 			.find((candidate) => /^(data:|blob:)/i.test(candidate));
