@@ -26,7 +26,6 @@ export class StoryBuilder {
 	readonly blocks: Block[] = [];
 	private runs: TextRun[] = [];
 	private sources: TextRun[] = [];
-	private deferred: Block[] = [];
 	private span: { kind: ChangeKind; previous?: string; revision: Revision } | undefined;
 	/** Original runs as imported, so the deleted pieces of one run merge into one run again. */
 	private readonly imported = new Map<TextRun, TextRun | undefined>();
@@ -98,21 +97,15 @@ export class StoryBuilder {
 		}
 	}
 
-	private block(block: Block): void {
-		if (this.runs.length) this.deferred.push(block);
-		else this.blocks.push(block);
-	}
-
 	private close(paragraph: Paragraph, mark?: 'insert' | 'delete'): void {
 		const runs = this.runs;
 		const result: Paragraph = { ...paragraph, runs };
 		delete result.markRevision;
 		delete result.formatRevision;
 		if (mark) result.markRevision = this.context.revision(mark);
-		this.blocks.push(result, ...this.deferred);
+		this.blocks.push(result);
 		this.runs = [];
 		this.sources = [];
-		this.deferred = [];
 		this.span = undefined;
 	}
 
@@ -142,14 +135,18 @@ export class StoryBuilder {
 		}
 	}
 
+	/**
+	 * A table goes in at once. Text open at that point is deleted text of the original whose
+	 * paragraph ends after the table (or inserted text around a deleted table), so the paragraph
+	 * it closes into follows the table on both sides.
+	 */
 	addBlock(block: Block): void {
-		this.block(block);
+		this.blocks.push(block);
 	}
 
 	/** The finished blocks; a story always ends with a paragraph mark, so nothing stays open. */
 	finish(): Block[] {
-		if (this.runs.length || this.deferred.length)
-			throw new Error('A compared story ended inside a paragraph.');
+		if (this.runs.length) throw new Error('A compared story ended inside a paragraph.');
 		return this.blocks;
 	}
 }

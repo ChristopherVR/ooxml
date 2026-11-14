@@ -54,6 +54,8 @@ function comparable(a: Row, b: Row): boolean {
 
 type RowStep =
 	| { kind: 'pair'; a: number; b: number }
+	/** The same text in cells that cannot be compared (nested tables): the revised row as it is. */
+	| { kind: 'keep'; b: number }
 	| { kind: 'delete'; a: number }
 	| { kind: 'insert'; b: number };
 
@@ -109,7 +111,7 @@ function rowSteps(original: Table, revised: Table, context: CompareContext): Row
 			// Same text, but compared cell by cell for formatting when the cells line up.
 			if (comparable(original.rows[op.aIndex]!, revised.rows[op.bIndex]!))
 				steps.push({ kind: 'pair', a: op.aIndex, b: op.bIndex });
-			else steps.push({ kind: 'delete', a: op.aIndex }, { kind: 'insert', b: op.bIndex });
+			else steps.push({ kind: 'keep', b: op.bIndex });
 		}
 	}
 	flush();
@@ -146,8 +148,20 @@ function insertedRow(row: Row, context: CompareContext): Row {
 	}));
 }
 
-/** An original table shown deleted: every row is a tracked row deletion. */
-export function deletedTable(table: Table, context: CompareContext): Table {
+/**
+ * An original table shown deleted: every row is a tracked row deletion. The writer builds a new
+ * table only from rows of one width, so a merged original table shows as deleted paragraphs.
+ */
+export function deletedTable(table: Table, context: CompareContext): Block[] {
+	const width = table.rows[0]?.length ?? 0;
+	if (!width || table.rows.some((row) => row.length !== width)) {
+		context.warn('A deleted table with merged cells is shown as deleted paragraphs.');
+		return wholeStory(
+			table.rows.flatMap((row) => row.flatMap((cell) => cell.paragraphs)),
+			'delete',
+			context,
+		);
+	}
 	const result: Table = {
 		...table,
 		id: context.blockId(),
@@ -160,37 +174,70 @@ export function deletedTable(table: Table, context: CompareContext): Table {
 	const style = context.tableStyle(table.style);
 	if (style) result.style = style;
 	else delete result.style;
-	return result;
+	return [result];
 }
 
-/** A revised table shown inserted: every row is a tracked row insertion. */
-export function insertedTable(table: Table, context: CompareContext): Table {
-	return {
+/** Paragraph ids cell by cell: what the writer treats as the structure of a table. */
+export const tableLayout = (table: Table): string =>
+	JSON.stringify(table.rows.map((row) => row.map((cell) => cell.paragraphs.map((p) => p.id))));
+
+/** Whether the writer can save `result` over the revised table it came from. */
+function writable(result: Table, revised: Table, context: CompareContext): boolean {
+	if (tableLayout(result) === context.sourceLayout(revised.id)) return true;
+	const width = result.rows[0]?.length ?? 0;
+	return Boolean(revised.structureEditable) && result.rows.every((row) => row.length === width);
+}
+
+/**
+ * A revised table shown inserted: every row is a tracked row insertion. When accepting the
+ * revised document's own changes restructured a table the writer cannot restructure, the table
+ * is written anew (fresh ids), or as inserted paragraphs when its cells are merged.
+ */
+export function insertedTable(table: Table, context: CompareContext): Block[] {
+	const result: Table = {
 		...table,
 		rows: table.rows.map((row) => insertedRow(row, context)),
 		rowProperties: table.rows.map((_, index) =>
 			rowProperties(table.rowProperties?.[index], context.revision('insert')),
 		),
 	};
+	if (writable(result, table, context)) return [result];
+	const width = table.rows[0]?.length ?? 0;
+	if (!width || table.rows.some((row) => row.length !== width)) {
+		context.warn('An inserted table with merged cells is shown as inserted paragraphs.');
+		return paragraphsOf(
+			wholeStory(
+				table.rows.flatMap((row) => row.flatMap((cell) => cell.paragraphs)),
+				'insert',
+				context,
+			),
+		).map((paragraph) => ({ ...paragraph, id: context.blockId() }));
+	}
+	return [
+		{
+			...result,
+			id: context.blockId(),
+			rows: result.rows.map((row) =>
+				row.map((cell) => ({
+					...cell,
+					paragraphs: cell.paragraphs.map((paragraph) => ({ ...paragraph, id: context.blockId() })),
+				})),
+			),
+		},
+	];
 }
 
 /**
  * Compares two tables row by row: rows with the same text pair, rows of a changed stretch pair
  * by their words, paired rows compare cell by cell and the rest are tracked row insertions and
- * deletions. A revised table whose rows the writer cannot restructure is shown replaced.
+ * deletions. When the writer could not save that (a revised table it cannot restructure, or rows
+ * of different widths after a column was added or removed), the table is shown replaced.
  */
 export function compareTables(original: Table, revised: Table, context: CompareContext): Block[] {
-	const steps = rowSteps(original, revised, context);
-	const structural = steps.some((step) => step.kind !== 'pair');
-	if (structural && !revised.structureEditable) {
-		context.warn(
-			'A table whose rows cannot be restructured is shown deleted and inserted whole instead of row by row.',
-		);
-		return [deletedTable(original, context), insertedTable(revised, context)];
-	}
+	const summary = { ...context.summary };
 	const rows: Row[] = [];
 	const properties: TableRowProperties[] = [];
-	for (const step of steps) {
+	for (const step of rowSteps(original, revised, context)) {
 		if (step.kind === 'pair') {
 			const a = original.rows[step.a]!;
 			rows.push(
@@ -200,6 +247,9 @@ export function compareTables(original: Table, revised: Table, context: CompareC
 				})),
 			);
 			properties.push(rowProperties(revised.rowProperties?.[step.b]));
+		} else if (step.kind === 'keep') {
+			rows.push(revised.rows[step.b]!);
+			properties.push({ ...revised.rowProperties?.[step.b] });
 		} else if (step.kind === 'delete') {
 			rows.push(deletedRow(original.rows[step.a]!, context));
 			properties.push(
@@ -213,5 +263,12 @@ export function compareTables(original: Table, revised: Table, context: CompareC
 	const result: Table = { ...revised, rows };
 	if (revised.rowProperties || properties.some((entry) => Object.keys(entry).length))
 		result.rowProperties = properties;
+	if (!writable(result, revised, context)) {
+		Object.assign(context.summary, summary);
+		context.warn(
+			'A table whose rows or columns cannot be restructured is shown deleted and inserted whole.',
+		);
+		return [...deletedTable(original, context), ...insertedTable(revised, context)];
+	}
 	return [result];
 }

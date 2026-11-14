@@ -1,4 +1,4 @@
-import type { DocumentModel } from '../model';
+import type { Block, DocumentModel } from '../model';
 import { mapDocumentParagraphs } from '../document-paragraphs';
 import { loadDocx } from '../parse';
 import {
@@ -9,6 +9,7 @@ import {
 } from '../revision-commands';
 import { createContext, revisionDate } from './context';
 import { compareStory } from './story';
+import { tableLayout } from './table';
 import {
 	UNCOMPARED_DOCUMENT_PARTS,
 	type CompareDocumentsOptions,
@@ -49,6 +50,22 @@ export function acceptForComparison(model: DocumentModel, warnings: string[]): D
 	}
 }
 
+/** Ids of the body paragraphs (table cells included) that hold a picture or drawing. */
+function picturedParagraphs(model: DocumentModel): string[] {
+	const ids: string[] = [];
+	const visit = (blocks: Block[]) => {
+		for (const block of blocks)
+			if (block.type === 'table')
+				for (const row of block.rows) for (const cell of row) visit(cell.paragraphs);
+			else if (block.runs.some((run) => run.image)) ids.push(block.id);
+	};
+	visit(model.blocks);
+	return ids;
+}
+
+/** Paragraphs compared again as whole insertions before a save failure is final. */
+const MAX_WHOLE_PARAGRAPHS = 64;
+
 const toBytes = (input: Uint8Array | ArrayBuffer): Uint8Array =>
 	input instanceof Uint8Array ? input : new Uint8Array(input);
 
@@ -70,26 +87,54 @@ export async function compareDocuments(
 		loadDocx(toBytes(original)),
 		loadDocx(toBytes(revised)),
 	]);
-	const warnings: string[] = [];
-	const before = acceptForComparison(originalDocument.model, warnings);
-	const after = acceptForComparison(revisedDocument.model, warnings);
-	const context = createContext({
-		author: options.author,
-		date: revisionDate(options.date),
-		granularity: options.granularity ?? 'word',
-		compareFormatting: options.compareFormatting ?? true,
-		revised: after,
-		warnings,
-	});
-	const blocks = compareStory(before.blocks, after.blocks, context);
-	const result: DocumentModel = structuredClone({ ...after, blocks });
-	const bytes = await revisedDocument.save(result);
-	const reloaded = await loadDocx(bytes);
-	return {
-		bytes,
-		model: reloaded.model,
-		summary: context.summary,
-		warnings,
-		notCompared: UNCOMPARED_DOCUMENT_PARTS,
-	};
+	const accepted: string[] = [];
+	const before = acceptForComparison(originalDocument.model, accepted);
+	const after = acceptForComparison(revisedDocument.model, accepted);
+	// The writer refuses to re-split a paragraph whose runs carry properties it cannot rebuild;
+	// such a paragraph is compared again shown inserted whole, which keeps its runs as they are.
+	const sourceLayouts = new Map(
+		revisedDocument.model.blocks.flatMap((block) =>
+			block.type === 'table' ? [[block.id, tableLayout(block)] as const] : [],
+		),
+	);
+	const whole = new Set<string>();
+	for (;;) {
+		const warnings = [...accepted];
+		if (whole.size)
+			warnings.push(
+				'Paragraphs whose runs carry formatting the writer cannot split are shown inserted whole, with the original text deleted.',
+			);
+		const context = createContext({
+			author: options.author,
+			date: revisionDate(options.date),
+			granularity: options.granularity ?? 'word',
+			compareFormatting: options.compareFormatting ?? true,
+			revised: after,
+			sourceLayouts,
+			whole,
+			warnings,
+		});
+		const blocks = compareStory(before.blocks, after.blocks, context);
+		const result: DocumentModel = structuredClone({ ...after, blocks });
+		let bytes: Uint8Array;
+		try {
+			bytes = await revisedDocument.save(result);
+		} catch (error) {
+			const id = /^Cannot edit paragraph (\S+?):/.exec((error as Error).message)?.[1];
+			// Other refusals (a picture the writer cannot replace in place) name no paragraph:
+			// every paragraph with a picture is then shown whole, once.
+			const added = id ? [id] : picturedParagraphs(after).filter((item) => !whole.has(item));
+			if (!added.length || whole.has(added[0]!) || whole.size >= MAX_WHOLE_PARAGRAPHS) throw error;
+			for (const item of added) whole.add(item);
+			continue;
+		}
+		const reloaded = await loadDocx(bytes);
+		return {
+			bytes,
+			model: reloaded.model,
+			summary: context.summary,
+			warnings,
+			notCompared: UNCOMPARED_DOCUMENT_PARTS,
+		};
+	}
 }

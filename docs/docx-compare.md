@@ -46,13 +46,18 @@ The rules follow Word 16's observable output (`Application.CompareDocuments`, ne
   properties (direct run formatting is compared; `compareFormatting: false` turns this off).
 - **Tables** are compared row by row: rows with the same text pair, the rows of a changed stretch
   pair by their words, paired rows are compared cell by cell, and the rest are tracked row
-  insertions and deletions (`w:trPr/w:ins`, `w:trPr/w:del`) with their content marked. A table
-  whose rows the writer cannot restructure (merged or nested cells) is shown deleted and inserted
-  whole.
+  insertions and deletions (`w:trPr/w:ins`, `w:trPr/w:del`) with their content marked. Rows
+  with nested tables are kept as they are when their text is the same. A table the result cannot
+  be saved over is shown deleted and inserted whole: one whose rows the writer cannot restructure
+  (merged cells, nested tables, tracked changes inside its cells in the source), or one that
+  gained or lost a column. A deleted or inserted table with merged cells shows as deleted or
+  inserted paragraphs.
 - Pictures, field markers, breaks and other non-text runs are compared whole, never split.
   Pictures and note references deleted from the original are not carried into the result (a
   warning says so); deleted text keeps its direct formatting and any style or list the revised
-  document also defines.
+  document also defines. A revised paragraph whose runs carry formatting the writer cannot split
+  (and, when the writer refuses a picture, every paragraph with a picture) is shown inserted
+  whole with the original text deleted, so the result still saves; a warning says so.
 
 ## Not compared
 
@@ -76,5 +81,7 @@ original and revised pairs with Word and saves Word's own comparison of each (`*
 `compare.word.test.ts` checks that `compareDocuments` marks the same inserted, deleted and
 reformatted spans (`revisionSpans`) as Word for word edits with paragraphs added and removed,
 formatting changes, inputs with their own tracked changes, character granularity and table rows.
-The results also open in Word with the same revision count, and rejecting them all in Word gives
-the original text.
+The pairs were compared with Word's moves detection off (`CompareMoves` false), since moves are
+not compared here. The results also open in Word with the same revision count, and rejecting
+them all in Word gives the original text. Each fixture result's accept-all and reject-all in the
+model give the revised and original body text (`compare.test.ts`).

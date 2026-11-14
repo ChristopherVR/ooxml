@@ -4,14 +4,40 @@ import type { CompareContext } from './context';
 import { diffKeys, orderReplacements, type DiffOp } from './diff';
 import { slideRegions } from './slide';
 import { compareTables, deletedTable, insertedTable } from './table';
-import { blockKey, isSpaceToken, markToken, paragraphTokens, tableKey, type Token } from './tokens';
+import {
+	blockKey,
+	END_KEY,
+	isSpaceToken,
+	markToken,
+	paragraphTokens,
+	tableKey,
+	type Token,
+} from './tokens';
+
+/** Prefix of keys that match nothing, for paragraphs shown inserted whole. */
+const WHOLE = '\u0004';
 
 /** A block's tokens: a paragraph's content and mark, or a table as one token. */
-function blockTokens(block: Block, last: boolean, context: CompareContext): Token[] {
+function blockTokens(
+	block: Block,
+	last: boolean,
+	context: CompareContext,
+	revised = false,
+): Token[] {
 	if (block.type === 'table')
 		return [{ kind: 'table', key: tableKey(block, context.granularity), table: block }];
-	return [...paragraphTokens(block, context.granularity), markToken(block, last)];
+	const tokens = [...paragraphTokens(block, context.granularity), markToken(block, last)];
+	// A paragraph shown inserted whole matches nothing (its last mark still ends the story).
+	if (revised && context.whole.has(block.id))
+		tokens.forEach((token, index) => {
+			if (token.key !== END_KEY) token.key = `${WHOLE}${block.id}:${index}`;
+		});
+	return tokens;
 }
+const keyOf = (block: Block, context: CompareContext, revised: boolean) =>
+	revised && block.type === 'paragraph' && context.whole.has(block.id)
+		? `${WHOLE}${block.id}`
+		: blockKey(block, context.granularity);
 
 /**
  * At word granularity, an unchanged stretch of spaces between two changes joins them (Word shows
@@ -58,7 +84,9 @@ function gapOps(a: Token[], b: Token[], context: CompareContext): StreamOp[] {
 
 /**
  * Pairs the tables deleted and inserted in one run of changes, in order, so a table that changed
- * is compared row by row instead of being shown deleted and inserted whole.
+ * is compared row by row instead of being shown deleted and inserted whole. The run is split at
+ * each pair: the deletions before the original table, the insertions before the revised table,
+ * then the pair, so text on either side of the table stays on its side.
  */
 function pairTables(ops: StreamOp[]): StreamOp[] {
 	const result: StreamOp[] = [];
@@ -70,21 +98,23 @@ function pairTables(ops: StreamOp[]): StreamOp[] {
 		let end = start;
 		while (end < ops.length && ops[end]!.kind !== 'equal') end++;
 		const region = ops.slice(start, end);
-		const deleted = region.filter((op) => op.kind === 'delete' && op.a.kind === 'table');
-		const inserted = region.filter((op) => op.kind === 'insert' && op.b.kind === 'table');
-		const pairs = new Map<StreamOp, StreamOp>();
-		deleted.forEach((op, index) => {
-			const partner = inserted[index];
-			if (partner) pairs.set(op, partner);
-		});
-		const paired = new Set(pairs.values());
-		for (const op of region) {
-			if (paired.has(op)) continue;
-			const partner = pairs.get(op);
-			if (partner && op.kind === 'delete' && partner.kind === 'insert')
-				result.push({ kind: 'equal', a: op.a, b: partner.b });
-			else result.push(op);
+		const deletes = region.filter((op) => op.kind === 'delete');
+		const inserts = region.filter((op) => op.kind === 'insert');
+		let d = 0;
+		let i = 0;
+		for (;;) {
+			const nextA = deletes.findIndex((op, index) => index >= d && op.a.kind === 'table');
+			const nextB = inserts.findIndex((op, index) => index >= i && op.b.kind === 'table');
+			if (nextA < 0 || nextB < 0) break;
+			result.push(...deletes.slice(d, nextA), ...inserts.slice(i, nextB));
+			const a = deletes[nextA]!;
+			const b = inserts[nextB]!;
+			if (a.kind === 'delete' && b.kind === 'insert')
+				result.push({ kind: 'equal', a: a.a, b: b.b });
+			d = nextA + 1;
+			i = nextB + 1;
 		}
+		result.push(...deletes.slice(d), ...inserts.slice(i));
 		start = end;
 	}
 	return result;
@@ -92,7 +122,8 @@ function pairTables(ops: StreamOp[]): StreamOp[] {
 
 /** The aligned steps of a whole story: paragraphs with the same text anchor, gaps are diffed. */
 function storyOps(original: Block[], revised: Block[], context: CompareContext): StreamOp[] {
-	const keys = (blocks: Block[]) => blocks.map((block) => blockKey(block, context.granularity));
+	const keys = (blocks: Block[], revised = false) =>
+		blocks.map((block) => keyOf(block, context, revised));
 	const ops: StreamOp[] = [];
 	let gapA: Token[] = [];
 	let gapB: Token[] = [];
@@ -103,18 +134,24 @@ function storyOps(original: Block[], revised: Block[], context: CompareContext):
 	};
 	const lastA = original.length - 1;
 	const lastB = revised.length - 1;
-	for (const op of diffKeys(keys(original), keys(revised))) {
+	for (const op of diffKeys(keys(original), keys(revised, true))) {
 		if (op.kind === 'delete') {
 			gapA.push(...blockTokens(original[op.aIndex]!, op.aIndex === lastA, context));
 			continue;
 		}
 		if (op.kind === 'insert') {
-			gapB.push(...blockTokens(revised[op.bIndex]!, op.bIndex === lastB, context));
+			const block = revised[op.bIndex]!;
+			const tokens = blockTokens(block, op.bIndex === lastB, context, true);
+			// A paragraph shown inserted whole takes no text of the original into its runs.
+			if (context.whole.has(block.id) && op.bIndex !== lastB) {
+				flush();
+				for (const token of tokens) ops.push({ kind: 'insert', b: token });
+			} else gapB.push(...tokens);
 			continue;
 		}
 		flush();
 		const a = blockTokens(original[op.aIndex]!, op.aIndex === lastA, context);
-		const b = blockTokens(revised[op.bIndex]!, op.bIndex === lastB, context);
+		const b = blockTokens(revised[op.bIndex]!, op.bIndex === lastB, context, true);
 		// An anchor's mark separates it from what follows, so it joins the next gap: text inserted
 		// after the story's last paragraph then marks that paragraph's mark, as Word does.
 		const markA = a.at(-1)?.kind === 'mark' ? a.pop() : undefined;
@@ -138,9 +175,9 @@ export function compareStory(
 		if (op.kind === 'equal' && op.a.kind === 'table' && op.b.kind === 'table')
 			for (const block of compareTables(op.a.table, op.b.table, context)) builder.addBlock(block);
 		else if (op.kind === 'delete' && op.a.kind === 'table')
-			builder.addBlock(deletedTable(op.a.table, context));
+			for (const block of deletedTable(op.a.table, context)) builder.addBlock(block);
 		else if (op.kind === 'insert' && op.b.kind === 'table')
-			builder.addBlock(insertedTable(op.b.table, context));
+			for (const block of insertedTable(op.b.table, context)) builder.addBlock(block);
 		else builder.add(op);
 	}
 	return builder.finish();
@@ -155,9 +192,9 @@ export function wholeStory(
 	const builder = new StoryBuilder(context);
 	for (const block of blocks) {
 		if (block.type === 'table') {
-			builder.addBlock(
-				kind === 'insert' ? insertedTable(block, context) : deletedTable(block, context),
-			);
+			const blocks =
+				kind === 'insert' ? insertedTable(block, context) : deletedTable(block, context);
+			for (const item of blocks) builder.addBlock(item);
 			continue;
 		}
 		for (const token of blockTokens(block, false, context))

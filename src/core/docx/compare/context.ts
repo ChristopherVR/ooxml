@@ -6,6 +6,8 @@ export type ChangeKind = 'insert' | 'delete' | 'formatChange';
 /** Shared state of one comparison: options, the revision factory and what it reports. */
 export interface CompareContext {
 	granularity: CompareGranularity;
+	/** Revised paragraphs never aligned with the original: they show inserted with their runs kept. */
+	whole: ReadonlySet<string>;
 	compareFormatting: boolean;
 	/** A new revision with a provisional id; saving numbers it with the document's allocator. */
 	revision(kind: ChangeKind, previousRunPropertiesXml?: string): Revision;
@@ -17,6 +19,8 @@ export interface CompareContext {
 	importParagraph(paragraph: Paragraph): Paragraph;
 	/** The properties of an original table cell shown in a deleted row. */
 	importCell(cell: TableCell): TableCell;
+	/** The paragraph-id layout of a table in the revised package as saved, before acceptance. */
+	sourceLayout(tableId: string): string | undefined;
 	/** The style id when the revised package defines it, else undefined. */
 	tableStyle(style: string | undefined): string | undefined;
 	summary: CompareSummary;
@@ -30,6 +34,9 @@ export interface ContextOptions {
 	compareFormatting: boolean;
 	/** The revised document: its catalogs decide which original styles and lists can be kept. */
 	revised: DocumentModel;
+	/** Table layouts of the revised package as loaded (`tableLayout`), keyed by table id. */
+	sourceLayouts: ReadonlyMap<string, string>;
+	whole: ReadonlySet<string>;
 	warnings: string[];
 }
 
@@ -57,6 +64,7 @@ export function createContext(options: ContextOptions): CompareContext {
 	const summary: CompareSummary = { insertions: 0, deletions: 0, formatChanges: 0 };
 	return {
 		granularity: options.granularity,
+		whole: options.whole,
 		compareFormatting: options.compareFormatting,
 		revision(kind, previousRunPropertiesXml) {
 			if (kind === 'insert') summary.insertions++;
@@ -118,6 +126,7 @@ export function createContext(options: ContextOptions): CompareContext {
 			delete cell.contentControl;
 			return cell;
 		},
+		sourceLayout: (tableId) => options.sourceLayouts.get(tableId),
 		tableStyle: (style) => (style && tableStyles[style] ? style : undefined),
 		summary,
 		warn,

@@ -100,10 +100,12 @@ export function paragraphTokens(paragraph: Paragraph, granularity: CompareGranul
 		pending = [];
 	};
 	for (const run of paragraph.runs) {
-		if (isAtomicRun(run)) {
+		// An empty run (a tab-less marker the model keeps, say) is kept as a token of its own, so a
+		// paragraph written back keeps every run it had.
+		if (isAtomicRun(run) || !run.text) {
 			flush();
 			tokens.push({ kind: 'atomic', key: atomicKey(run), run });
-		} else if (run.text) pending.push(run);
+		} else pending.push(run);
 	}
 	flush();
 	return tokens;
