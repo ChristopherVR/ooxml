@@ -10,6 +10,9 @@ import { getContext, setContext } from 'svelte';
 
 const RENDER_CONTEXT = Symbol('pptx-svelte-render-context');
 
+/** The context key, for a stage mounted outside the viewer tree (the export capture stage). */
+export const RENDER_CONTEXT_KEY = RENDER_CONTEXT;
+
 export interface RenderContextSource {
 	getColorScheme: () => PptxThemeColorScheme | undefined;
 	getTableStyleMap: () => ParsedTableStyleMap | undefined;

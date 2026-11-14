@@ -8,6 +8,7 @@ import type {
 import type { PptxSlide } from 'pptx-viewer-core';
 
 import type { Translator } from '../../i18n/translator';
+import type { RenderContextSource } from '../state/render-context';
 
 /** Extracted from `rasterize-slide.ts` purely to keep that file under the file-size budget. */
 export interface RasterizeSlideDeps {
@@ -18,6 +19,11 @@ export interface RasterizeSlideDeps {
 	getCanvasSize(): CanvasSize;
 	getMediaDataUrls(): Map<string, string>;
 	getTranslator(): Translator;
+	/**
+	 * The deck's theme and table styles, provided to the capture stage as the viewer provides them
+	 * to its own, so exported tables and themed fills match the canvas.
+	 */
+	getRenderContext?(): RenderContextSource | undefined;
 	/** Opt-in WebGL SmartArt renderer flag; see `PowerPointViewerProps.smartArt3D`. */
 	smartArt3D: boolean;
 	/**

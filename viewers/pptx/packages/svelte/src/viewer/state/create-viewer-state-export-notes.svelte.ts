@@ -8,6 +8,7 @@ import { createExportWiring } from '../export/export-wiring.svelte';
 import type { ExportWiring } from '../export/export-wiring.svelte';
 import { buildDeckExportData } from './deck-export-data';
 import type { PresentationLoader } from './presentation-loader.svelte';
+import { renderContextSourceFor } from './render-context';
 import type { ViewerState } from './viewer-state.svelte';
 
 export interface ExportNotesClusterDeps {
@@ -70,6 +71,7 @@ export function buildExportNotesCluster(deps: ExportNotesClusterDeps): ExportNot
 		getSlides: () => editor.renderedSlides,
 		getCanvasSize: () => loader.canvasSize,
 		getMediaDataUrls: () => loader.mediaDataUrls,
+		getRenderContext: () => renderContextSourceFor(loader),
 		getCurrent: () => viewer.current,
 		getTranslator: () => deps.t,
 		getSmartArt3D: deps.getSmartArt3D,
