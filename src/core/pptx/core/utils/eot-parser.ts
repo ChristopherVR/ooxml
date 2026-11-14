@@ -105,6 +105,15 @@ export function isEotFormat(data: Uint8Array): boolean {
 }
 
 /**
+ * The embedded font's OS/2 `fsType` (embedding permissions) as the EOT header
+ * carries it at offset 32, or `undefined` when `data` is not an EOT container.
+ * Readable without decompressing the font data.
+ */
+export function readEotFsType(data: Uint8Array): number | undefined {
+	return isEotFormat(data) ? readUint16LE(data, 32) : undefined;
+}
+
+/**
  * Parse the EOT container header and return its metadata.
  * Returns `null` if the data is not a valid EOT container.
  *

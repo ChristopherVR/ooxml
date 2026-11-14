@@ -931,4 +931,12 @@ export interface PptxEmbeddedFont {
 	 * these bytes verbatim under the original path/rel.
 	 */
 	originalPartBytes?: Uint8Array;
+	/**
+	 * The face's OS/2 `fsType` embedding permissions, read from the stored
+	 * part when loaded (absent when unreadable, e.g. WOFF payloads). Decode it
+	 * with `embeddingPermission` from `ooxml-core/text`. A restricted-licence
+	 * face is never activated: it loads with an empty `dataUrl` and no
+	 * `rawFontData`, and its part is saved back unchanged.
+	 */
+	fsType?: number;
 }
