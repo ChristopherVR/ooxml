@@ -931,6 +931,13 @@ export interface BulletInfo {
  * // => 4 segments: 2 styled runs, 1 paragraph break, 1 normal run
  * ```
  */
+/** A table cell run as authored: its tag, its XML node and the style it was read as. */
+export interface TableCellRunSource {
+	tag: 'a:r' | 'a:fld' | 'a:br';
+	xml: XmlObject;
+	style: TextStyle;
+}
+
 export interface TextSegment {
 	text: string;
 	style: TextStyle;
@@ -1017,6 +1024,16 @@ export interface TextSegment {
 	 * styling. Absent when the source contains an authored run or field.
 	 */
 	paragraphInsertionStyle?: TextStyle;
+	/**
+	 * Table cells only: the source run this segment was read from (`a:r`,
+	 * `a:fld` or `a:br`), with the run style it was read as. Saving an edited
+	 * cell re-emits that run's own `a:rPr` (hyperlinks, theme colours with
+	 * their transforms, language, effects) and overrides only the fields whose
+	 * style has since changed; a field stays a field while its text does.
+	 */
+	tableRun?: TableCellRunSource;
+	/** Table cells only: the source `a:p` of the paragraph this segment starts (its `a:pPr`, `a:endParaRPr`). */
+	tableParagraph?: XmlObject;
 	/**
 	 * Per-paragraph properties (alignment, spacing, margins, indent, tab stops,
 	 * rtl) authored on this paragraph's own `a:pPr` (#69). Only meaningful on

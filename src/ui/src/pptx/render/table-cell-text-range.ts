@@ -38,7 +38,7 @@ export function styleSegmentsRange(
 		const before = segment.text.slice(0, cutStart);
 		const middle = segment.text.slice(cutStart, cutEnd);
 		const after = segment.text.slice(cutEnd);
-		const { paragraphProperties, ...rest } = segment;
+		const { paragraphProperties, tableParagraph, ...rest } = segment;
 		const pieces: TextSegment[] = [];
 		if (before) {
 			pieces.push({ ...rest, text: before, style: { ...segment.style } });
@@ -51,6 +51,9 @@ export function styleSegmentsRange(
 		}
 		if (paragraphProperties) {
 			pieces[0]!.paragraphProperties = paragraphProperties;
+		}
+		if (tableParagraph) {
+			pieces[0]!.tableParagraph = tableParagraph;
 		}
 		out.push(...pieces);
 	}
@@ -81,11 +84,17 @@ export function toLineBreakAt(segments: readonly TextSegment[], offset: number):
 	for (let index = 0; index < out.length; index++) {
 		const segment = out[index]!;
 		if (position === offset && segment.isParagraphBreak) {
-			const { isParagraphBreak: _p, paragraphProperties: _l, ...rest } = segment;
+			const {
+				isParagraphBreak: _p,
+				paragraphProperties: _l,
+				tableParagraph: _x,
+				...rest
+			} = segment;
 			out[index] = { ...rest, text: '\n', isLineBreak: true };
 			const next = out[index + 1];
 			if (next) {
 				delete next.paragraphProperties;
+				delete next.tableParagraph;
 			}
 			return out;
 		}

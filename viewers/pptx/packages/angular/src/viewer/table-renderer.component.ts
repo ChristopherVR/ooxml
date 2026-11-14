@@ -321,7 +321,12 @@ export class TableRendererComponent {
 		}
 		this.cellSession = openTableCellTextEditor({
 			host,
-			segments: tableCellEditorSegments(data?.rows[cell.rowIndex]?.cells[cell.colIndex]),
+			segments: tableCellEditorSegments(
+				data?.rows[cell.rowIndex]?.cells[cell.colIndex],
+				this.element() as TablePptxElement,
+				cell.rowIndex,
+				cell.colIndex,
+			),
 			caret: cell.caret,
 			rtl: data?.rtl === true,
 			onEnd: (end) => this.onCellEditEnd(cell, end),

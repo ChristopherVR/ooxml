@@ -1,6 +1,6 @@
 import type { TableCellCaret, TableCellCss, TableCellEditEnd } from 'ooxml-ui/pptx';
 import { openTableCellTextEditor, tableCellEditorSegments } from 'ooxml-ui/pptx';
-import type { PptxTableCell } from 'pptx-viewer-core';
+import type { PptxTableCell, TablePptxElement } from 'pptx-viewer-core';
 import React, { useEffect, useRef } from 'react';
 
 /**
@@ -12,12 +12,19 @@ import React, { useEffect, useRef } from 'react';
  */
 export function TableCellInput({
 	cell,
+	element,
+	row,
+	col,
 	cellCss,
 	caret,
 	rtl,
 	onEnd,
 }: {
 	cell: PptxTableCell | undefined;
+	/** The table and the cell's position, so the editor keeps each run's markup. */
+	element?: TablePptxElement;
+	row?: number;
+	col?: number;
 	cellCss?: TableCellCss;
 	caret?: TableCellCaret;
 	rtl?: boolean;
@@ -37,7 +44,7 @@ export function TableCellInput({
 		}
 		const session = openTableCellTextEditor({
 			host,
-			segments: tableCellEditorSegments(cell),
+			segments: tableCellEditorSegments(cell, element, row, col),
 			...(cellCss ? { cellCss } : {}),
 			...(caret ? { caret } : {}),
 			rtl: rtl === true,

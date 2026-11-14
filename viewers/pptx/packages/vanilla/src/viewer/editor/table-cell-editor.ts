@@ -80,7 +80,12 @@ export function openTableCellEditor(options: {
 		}
 		current = openTableCellTextEditor({
 			host: cell,
-			segments: tableCellEditorSegments(element.tableData?.rows[row]?.cells[column]),
+			segments: tableCellEditorSegments(
+				element.tableData?.rows[row]?.cells[column],
+				element,
+				row,
+				column,
+			),
 			caret,
 			rtl: element.tableData?.rtl === true,
 			onEnd: (end) => {

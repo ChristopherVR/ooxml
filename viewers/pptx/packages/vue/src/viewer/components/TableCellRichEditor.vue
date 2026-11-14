@@ -13,11 +13,15 @@ import type {
 	TableCellTextEditorSession,
 } from 'ooxml-ui/pptx';
 import { openTableCellTextEditor, tableCellEditorSegments } from 'ooxml-ui/pptx';
-import type { PptxTableCell } from 'pptx-viewer-core';
+import type { PptxTableCell, TablePptxElement } from 'pptx-viewer-core';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 
 const props = defineProps<{
 	cell: PptxTableCell | undefined;
+	/** The table and the cell's position, so the editor keeps each run's markup. */
+	element?: TablePptxElement;
+	row?: number;
+	col?: number;
 	cellCss?: TableCellCss;
 	caret?: TableCellCaret;
 	rtl?: boolean;
@@ -33,7 +37,7 @@ onMounted(() => {
 	}
 	session = openTableCellTextEditor({
 		host: host.value,
-		segments: tableCellEditorSegments(props.cell),
+		segments: tableCellEditorSegments(props.cell, props.element, props.row, props.col),
 		...(props.cellCss ? { cellCss: props.cellCss } : {}),
 		...(props.caret ? { caret: props.caret } : {}),
 		rtl: props.rtl === true,

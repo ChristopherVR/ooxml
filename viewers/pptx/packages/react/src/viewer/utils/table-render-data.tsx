@@ -195,6 +195,9 @@ export function renderTableFromTableData(
 												<TableCellInput
 													key={`edit-${rowIndex}-${cellIndex}`}
 													cell={cell}
+													element={element}
+													row={rowIndex}
+													col={cellIndex}
 													cellCss={cellCss(cell, rowIndex, cellIndex)}
 													caret={selectedCell?.caret}
 													rtl={tableData.rtl === true}
