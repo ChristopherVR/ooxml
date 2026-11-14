@@ -121,6 +121,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		xmlCell: XmlObject,
 		style: PptxTableCellStyle,
 		paragraphs?: PptxTableCellParagraph[],
+		runsCarryFormatting = false,
 	): void {
 		// Work on the existing `a:tcPr`, or on a detached one that is attached
 		// below only if a cell property was written into it. A style that only
@@ -205,7 +206,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// than one run, or any field / hyperlink) so its preserved per-run
 		// styling survives; an edited cell reduces to a single run and still
 		// gets the cell-level formatting applied here.
+		// Runs written from the cell's rich segments carry their own formatting.
 		if (
+			!runsCarryFormatting &&
 			!isRichCellTxBody(xmlCell['a:txBody'] as XmlObject | undefined, this.ensureArray.bind(this))
 		) {
 			writeCellTextFormatting(xmlCell, style, this.ensureArray.bind(this), paragraphs);

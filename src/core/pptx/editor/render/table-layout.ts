@@ -68,6 +68,7 @@ function updateIntersectingMerges(
 						...cell,
 						text: content.text,
 						textRuns: content.textRuns,
+						textSegments: content.textSegments,
 						paragraphs: content.paragraphs,
 						style: promote ? (cell.style ?? anchor.style) : cell.style,
 						rowSpan: firstRow && height > 1 ? height : undefined,

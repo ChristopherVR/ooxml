@@ -68,9 +68,13 @@ export default defineConfig({
 		'pptx/editor/render/slide-search': 'pptx/editor/render/slide-search.ts',
 		'pptx/editor/render/slide-size-rescale': 'pptx/editor/render/slide-size-rescale.ts',
 		'pptx/editor/render/slide-transition-edits': 'pptx/editor/render/slide-transition-edits.ts',
+		'pptx/editor/render/segments-text-edit': 'pptx/editor/render/segments-text-edit.ts',
 		'pptx/editor/render/table-cell-edit': 'pptx/editor/render/table-cell-edit.ts',
 		'pptx/editor/render/table-cell-merge': 'pptx/editor/render/table-cell-merge.ts',
+		'pptx/editor/render/table-cell-rich-text': 'pptx/editor/render/table-cell-rich-text.ts',
+		'pptx/editor/render/table-cells-text-style': 'pptx/editor/render/table-cells-text-style.ts',
 		'pptx/editor/render/table-data-grid-ops': 'pptx/editor/render/table-data-grid-ops.ts',
+		'pptx/editor/render/table-grid-fill': 'pptx/editor/render/table-grid-fill.ts',
 		'pptx/editor/render/table-layout': 'pptx/editor/render/table-layout.ts',
 		'pptx/editor/render/table-merge': 'pptx/editor/render/table-merge.ts',
 		'pptx/editor/render/table-style-editor-descriptor':

@@ -176,10 +176,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	): void {
 		// A cell made in code with rich segments is written from them (see
 		// `PptxTableCell.textSegments`); any other cell from its flat text.
-		const writeCellText = (xmlCell: XmlObject, cell: PptxTableCell): void => {
-			if (!writeRichCellText?.(xmlCell, cell)) {
-				this.writeTableCellText(xmlCell, cell.text);
+		// `true` when the runs came from segments: they carry their own
+		// formatting, which the cell-level style must not stamp over.
+		const writeCellText = (xmlCell: XmlObject, cell: PptxTableCell): boolean => {
+			if (writeRichCellText?.(xmlCell, cell)) {
+				return true;
 			}
+			this.writeTableCellText(xmlCell, cell.text);
+			return false;
 		};
 		try {
 			const graphicData = xmlPath(shape, 'a:graphic', 'a:graphicData');
@@ -236,14 +240,12 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 							continue;
 						}
 
-						if (cell.text !== undefined) {
-							writeCellText(xmlCell, cell);
-						}
+						const richText = cell.text !== undefined && writeCellText(xmlCell, cell);
 						if (styleChanged) {
 							clearCellFormattingForStyleChange(xmlCell, cell.style);
 						}
 						if (cell.style) {
-							this.writeTableCellStyle(xmlCell, cell.style, cell.paragraphs);
+							this.writeTableCellStyle(xmlCell, cell.style, cell.paragraphs, richText);
 						}
 						serializeCellExtraAttributes(xmlCell, cell.extraAttributes);
 					}
@@ -271,16 +273,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					serializeCellMergeAttributes(xmlCell, cell);
 
 					// Update text
-					if (cell.text !== undefined) {
-						writeCellText(xmlCell, cell);
-					}
+					const richText = cell.text !== undefined && writeCellText(xmlCell, cell);
 
 					// Update cell style
 					if (styleChanged) {
 						clearCellFormattingForStyleChange(xmlCell, cell.style);
 					}
 					if (cell.style) {
-						this.writeTableCellStyle(xmlCell, cell.style, cell.paragraphs);
+						this.writeTableCellStyle(xmlCell, cell.style, cell.paragraphs, richText);
 					}
 
 					// Round-trip opaque tcPr attributes (horzOverflow,
