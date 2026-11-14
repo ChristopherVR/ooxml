@@ -76,6 +76,21 @@ try {
   Save-CmpDoc $doc "table-$side.docx"
  }
  Compare-CmpPair 'table' 1
+
+ # 6. A paragraph split in two: the space goes and a paragraph mark comes in.
+ Save-CmpDoc (New-CmpDoc "First sentence here. Second sentence follows it.`rTail paragraph.") 'split-original.docx'
+ Save-CmpDoc (New-CmpDoc "First sentence here.`rSecond sentence follows it.`rTail paragraph.") 'split-revised.docx'
+ Compare-CmpPair 'split' 1
+
+ # 7. A sentence inserted that repeats words around it: Word marks it from the sentence start.
+ Save-CmpDoc (New-CmpDoc "The cat sat on the mat. The dog slept.") 'repeat-original.docx'
+ Save-CmpDoc (New-CmpDoc "The cat sat on the mat. The cat sat on the rug. The dog slept.") 'repeat-revised.docx'
+ Compare-CmpPair 'repeat' 1
+
+ # 8. The last paragraph deleted: the previous paragraph's mark is marked, not the last one.
+ Save-CmpDoc (New-CmpDoc "Opening paragraph.`rMiddle paragraph.`rClosing paragraph to remove.") 'lastdel-original.docx'
+ Save-CmpDoc (New-CmpDoc "Opening paragraph.`rMiddle paragraph.") 'lastdel-revised.docx'
+ Compare-CmpPair 'lastdel' 1
 } finally {
  $cmpWord.Quit()
  [Runtime.InteropServices.Marshal]::FinalReleaseComObject($cmpWord)|Out-Null

@@ -140,13 +140,7 @@ function storyOps(original: Block[], revised: Block[], context: CompareContext):
 			continue;
 		}
 		if (op.kind === 'insert') {
-			const block = revised[op.bIndex]!;
-			const tokens = blockTokens(block, op.bIndex === lastB, context, true);
-			// A paragraph shown inserted whole takes no text of the original into its runs.
-			if (context.whole.has(block.id) && op.bIndex !== lastB) {
-				flush();
-				for (const token of tokens) ops.push({ kind: 'insert', b: token });
-			} else gapB.push(...tokens);
+			gapB.push(...blockTokens(revised[op.bIndex]!, op.bIndex === lastB, context, true));
 			continue;
 		}
 		flush();
@@ -161,7 +155,44 @@ function storyOps(original: Block[], revised: Block[], context: CompareContext):
 		if (markB) gapB.push(markB);
 	}
 	flush();
-	return ops;
+	return context.whole.size ? isolateWhole(ops) : ops;
+}
+
+/**
+ * Moves each paragraph shown inserted whole (its tokens and mark, all insertions) back to just
+ * after the last point where no paragraph is open, so no deleted text of the original whose mark
+ * comes later is written into its runs.
+ */
+function isolateWhole(ops: StreamOp[]): StreamOp[] {
+	const whole = (op: StreamOp | undefined): op is Extract<StreamOp, { kind: 'insert' }> =>
+		op?.kind === 'insert' && op.b.key.startsWith(WHOLE);
+	const result: StreamOp[] = [];
+	let boundary = 0;
+	let open = false;
+	for (let index = 0; index < ops.length; index++) {
+		const op = ops[index]!;
+		if (whole(op)) {
+			let end = index;
+			while (whole(ops[end]) && ops[end++]!.kind === 'insert') {
+				const last = ops[end - 1];
+				if (whole(last) && last.b.kind === 'mark') break;
+			}
+			const moved = ops.slice(index, end);
+			const last = moved.at(-1);
+			if (whole(last) && last.b.kind === 'mark') {
+				result.splice(boundary, 0, ...moved);
+				boundary += moved.length;
+				index = end - 1;
+				continue;
+			}
+		}
+		result.push(op);
+		const token = op.kind === 'delete' ? op.a : op.b;
+		if (token.kind === 'mark') open = false;
+		else if (token.kind !== 'table') open = true;
+		if (!open) boundary = result.length;
+	}
+	return result;
 }
 
 /** Compares two stories (the body, or the paragraphs of a table cell) into result blocks. */

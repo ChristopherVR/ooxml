@@ -17,6 +17,9 @@ const CASES: [string, CompareGranularity][] = [
 	['tracked', 'word'],
 	['chars', 'character'],
 	['table', 'word'],
+	['split', 'word'],
+	['repeat', 'word'],
+	['lastdel', 'word'],
 ];
 
 describe('compareDocuments against Word 16 Compare Documents', () => {

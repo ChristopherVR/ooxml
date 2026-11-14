@@ -1,12 +1,28 @@
 import type { DiffOp } from './diff';
 import type { Token } from './tokens';
 
-/** How natural a span edge between two tokens is: paragraph marks best, then spaces, then words. */
-function boundary(before: Token | undefined, after: Token | undefined): number {
+const SPACE = /^\s+$/u;
+const SENTENCE_END = /^[.!?]$/u;
+
+/**
+ * How natural a span edge before `tokens[index]` is: paragraph marks best, then the start of a
+ * sentence, then spaces, then punctuation, then the middle of a word.
+ */
+function boundary(tokens: Token[], index: number): number {
+	const before = tokens[index - 1];
+	const after = tokens[index];
 	if (!before || !after) return 4;
 	if (before.kind === 'mark' || after.kind === 'mark') return 5;
 	if (before.kind !== 'text' || after.kind !== 'text') return 2;
-	if (/^\s+$/u.test(before.key) || /^\s+$/u.test(after.key)) return 3;
+	const sentence = (token: Token | undefined) =>
+		token?.kind === 'text' && SENTENCE_END.test(token.key);
+	if (
+		SPACE.test(before.key)
+			? sentence(tokens[index - 2])
+			: sentence(before) && !SPACE.test(after.key)
+	)
+		return 4;
+	if (SPACE.test(before.key) || SPACE.test(after.key)) return 3;
 	const word = (token: Token) => /[\p{L}\p{N}]/u.test(token.key);
 	return word(before) && word(after) ? 0 : 1;
 }
@@ -52,8 +68,7 @@ export function slideRegions(ops: DiffOp[], a: Token[], b: Token[]): DiffOp[] {
 		)
 			right++;
 		const score = (shift: number) =>
-			boundary(tokens[start + shift - 1], tokens[start + shift]) +
-			boundary(tokens[start + shift + length - 1], tokens[start + shift + length]);
+			boundary(tokens, start + shift) + boundary(tokens, start + shift + length);
 		let best = 0;
 		for (let shift = -left; shift <= right; shift++) if (score(shift) > score(best)) best = shift;
 		if (best !== 0) {

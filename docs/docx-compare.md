@@ -2,9 +2,11 @@
 
 `compareDocuments(original, revised, options)` is Word's Review > Compare: it returns a new DOCX
 package whose content is the revised document, with everything that changed since the original
-recorded as tracked changes by one author. Accepting every change gives the revised document;
-rejecting every change gives the original. The code is in `src/core/docx/compare/`; it is
-DOM-free and changes neither input.
+recorded as tracked changes by one author. Accepting every change gives the revised body text;
+rejecting every change gives the original body text. Only the body is compared (see
+[Not compared](#not-compared)): rejecting does not bring back the original's headers, footers,
+notes, paragraph formatting, or the pictures and note references the result could not carry. The
+code is in `src/core/docx/compare/`; it is DOM-free and changes neither input.
 
 ```ts
 import { compareDocuments, listRevisions } from 'ooxml-core/docx';
@@ -38,7 +40,7 @@ The rules follow Word 16's observable output (`Application.CompareDocuments`, ne
 - **Word granularity** splits text into words, single spaces and punctuation; spaces left between
   two changes join them (`Alpha [BETA gamma][beta GAMMA].`, not two replacements around a kept
   space), and an insertion or deletion that could sit in several places is placed with its edges
-  at paragraph marks or spaces. **Character granularity** marks single characters
+  at paragraph marks, then at the start of a sentence, then at spaces. **Character granularity** marks single characters
   (`colo[u]r`).
 - Deletions come before insertions in a replaced span. Each contiguous span is one revision; ids
   are numbered on save by the same allocator the editor uses.
@@ -52,7 +54,9 @@ The rules follow Word 16's observable output (`Application.CompareDocuments`, ne
   (merged cells, nested tables, tracked changes inside its cells in the source), or one that
   gained or lost a column. A deleted or inserted table with merged cells shows as deleted or
   inserted paragraphs.
-- Pictures, field markers, breaks and other non-text runs are compared whole, never split.
+- Pictures, field markers, breaks and other non-text runs are compared whole, never split. A
+  simple field (`w:fldSimple`) is marked through its result runs only: rejecting its insertion
+  in Word removes the result text but keeps the field, which Word then updates.
   Pictures and note references deleted from the original are not carried into the result (a
   warning says so); deleted text keeps its direct formatting and any style or list the revised
   document also defines. A revised paragraph whose runs carry formatting the writer cannot split
@@ -79,8 +83,10 @@ The rules follow Word 16's observable output (`Application.CompareDocuments`, ne
 `src/core/docx/__fixtures__/compare/generate-word-compare.ps1` (Windows, Word 16, manual) builds
 original and revised pairs with Word and saves Word's own comparison of each (`*-word.docx`).
 `compare.word.test.ts` checks that `compareDocuments` marks the same inserted, deleted and
-reformatted spans (`revisionSpans`) as Word for word edits with paragraphs added and removed,
-formatting changes, inputs with their own tracked changes, character granularity and table rows.
+reformatted spans (`revisionSpans`) as Word for eight pairs: word edits with paragraphs added
+and removed, formatting changes, inputs with their own tracked changes, character granularity,
+table rows, a paragraph split in two, an inserted sentence that repeats the words around it and
+a deleted last paragraph.
 The pairs were compared with Word's moves detection off (`CompareMoves` false), since moves are
 not compared here. The results also open in Word with the same revision count, and rejecting
 them all in Word gives the original text. Each fixture result's accept-all and reject-all in the
