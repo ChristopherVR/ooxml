@@ -75,13 +75,30 @@ test('Format Shape reveals and focuses the Fill section', async ({ page }) => {
 		.toBe('fill');
 });
 
-test('a host hides Format pane sections through customization', async ({ page }) => {
+test('a host hides and reorders Format pane sections through customization', async ({ page }) => {
 	await loadDeck(
 		page,
 		SAMPLE_DECK,
-		withCustomization({ inspector: { hiddenSections: ['effects'] } }),
+		withCustomization({
+			inspector: { hiddenSections: ['effects'], sectionOrder: ['sizePosition'] },
+		}),
 	);
 	await selectElement(page, canvasShape(page, 'Product Overview'));
 	await expect(formatSection(page, 'arrange')).toBeVisible();
 	await expect(formatSection(page, 'effects')).toBeHidden();
+	// Size and position is drawn first, above the sections the selection opens.
+	const top = async (id: string) => (await formatSection(page, id).boundingBox())!.y;
+	await expect.poll(async () => (await top('sizePosition')) < (await top('arrange'))).toBe(true);
+	const first = await inspector(page)
+		.locator('[data-pptx-format-sections] > [data-pptx-format-section]:visible')
+		.evaluateAll(
+			(nodes) =>
+				nodes
+					.map((node) => ({
+						id: node.getAttribute('data-pptx-format-section'),
+						y: node.getBoundingClientRect().top,
+					}))
+					.sort((a, b) => a.y - b.y)[0]?.id,
+		);
+	expect(first).toBe('sizePosition');
 });

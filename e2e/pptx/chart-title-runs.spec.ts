@@ -43,6 +43,7 @@ import {
 	slideStage,
 	thumbnail,
 } from './support/deck';
+import { openFormatSection } from './support/format-pane';
 
 const CHART_FIXTURE = fixture('chart-title-runs.pptx');
 const ENTERED_TITLE = 'Committed with Enter';
@@ -687,6 +688,7 @@ test.describe('chart title rich text (multi-run titles)', () => {
 		await expect.poll(() => renderedTextCount(chart, AXIS_TITLE)).toBe(1);
 		await expect(await visibleInputWithValue(page, AXIS_TITLE)).toBeVisible();
 
+		await openFormatSection(page, 'sizePosition');
 		const x = inspector(page).getByRole('spinbutton', { name: 'X', exact: true });
 		const previousX = Number(await x.inputValue());
 		await x.fill(String(previousX + 1));
