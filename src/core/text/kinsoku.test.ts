@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+	hangsAtLineEnd,
 	kinsokuLanguage,
 	kinsokuSets,
 	prohibitedAtLineEnd,
@@ -68,5 +69,16 @@ describe('kinsokuSets', () => {
 	it('tests the base character of a grapheme', () => {
 		expect(prohibitedAtLineStart('ゞ', kinsokuSets('ja'))).toBe(true);
 		expect(prohibitedAtLineStart('', kinsokuSets('ja'))).toBe(false);
+	});
+});
+
+describe('hangsAtLineEnd', () => {
+	it('hangs the commas, full stops and closing marks Word hangs', () => {
+		for (const ch of ['。', '、', '，', '．', '」', '）', '’'])
+			expect(hangsAtLineEnd(ch, 'ja'), ch).toBe(true);
+		for (const ch of ['！', '？', '・', '：', '〕', ')'])
+			expect(hangsAtLineEnd(ch, 'ja'), ch).toBe(false);
+		expect(hangsAtLineEnd('〕', 'zh-Hans')).toBe(true);
+		expect(hangsAtLineEnd('。', 'ko')).toBe(false);
 	});
 });

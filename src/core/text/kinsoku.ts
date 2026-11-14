@@ -107,3 +107,24 @@ export function prohibitedAtLineStart(grapheme: string, sets: KinsokuSets): bool
 export function prohibitedAtLineEnd(grapheme: string, sets: KinsokuSets): boolean {
 	return grapheme.length > 0 && sets.noEnd.includes(first(grapheme));
 }
+
+/**
+ * Line-end marks that `w:overflowPunct` (17.3.1.21) lets hang past the right margin instead of
+ * pulling the character before them down, measured in Word 16. Word hangs them only in justified
+ * (`both`, `distribute`) paragraphs with kinsoku on, one mark per line, and not when the next
+ * character may not start a line either (`。」` wraps together). The Japanese and simplified Chinese
+ * sets were measured separately and differ in their brackets; traditional Chinese uses the marks
+ * both share. Simplified Chinese showed further cases not modeled here (`々` hanging although it
+ * may start a line, `』` wrapping).
+ */
+const HANGING: Record<KinsokuLanguage, string> = {
+	ja: '、。，．｡､,.」』】）］｝’”',
+	'zh-Hans': '、。，．,.】〕〉》］｝’”]}｣',
+	'zh-Hant': '、。，．,.】］｝’”',
+	ko: '',
+};
+
+/** Whether `grapheme` may hang at a line end under `w:overflowPunct`, in `language` text. */
+export function hangsAtLineEnd(grapheme: string, language: KinsokuLanguage): boolean {
+	return grapheme.length > 0 && HANGING[language].includes(first(grapheme));
+}
