@@ -35,6 +35,11 @@ export interface SlidePackageClipboardPaste {
 }
 export interface SlidePackageClipboardHost {
 	getSnapshot(): SlidePackageClipboardSnapshot | null;
+	/**
+	 * A PNG of the first copied slide, offered to other applications beside the package (as
+	 * PowerPoint does). Optional; a failed or missing picture never fails the copy.
+	 */
+	renderSlidePng?(index: number): Promise<Blob | null>;
 	/** Adopt the handler/model through the binding's single history transaction. */
 	commit(result: SlidePackageClipboardPaste): void;
 }
@@ -88,14 +93,29 @@ export function createSlidePackageClipboard(initialHost: SlidePackageClipboardHo
 				const blob = text.then(
 					(value) => new Blob([value], { type: SLIDE_PACKAGE_CLIPBOARD_MIME.slice(4) }),
 				);
-				const write = clipboard.write([
-					new ClipboardItem({
-						[SLIDE_PACKAGE_CLIPBOARD_MIME]: blob,
-						'text/plain': new Blob([preview], { type: 'text/plain' }),
-					}),
-				]);
+				const formats: Record<string, Blob | Promise<Blob>> = {
+					[SLIDE_PACKAGE_CLIPBOARD_MIME]: blob,
+					'text/plain': new Blob([preview], { type: 'text/plain' }),
+				};
+				const picture =
+					host.renderSlidePng && (ClipboardItem.supports?.('image/png') ?? true)
+						? host
+								.renderSlidePng(indexes[0] as number)
+								.then((png) => (png ? png : Promise.reject(new Error('No slide picture'))))
+						: undefined;
+				if (picture) {
+					picture.catch(() => undefined);
+					formats['image/png'] = picture;
+				}
+				const write = clipboard.write([new ClipboardItem(formats)]);
 				const settled = await Promise.allSettled([write, text]);
-				for (const result of settled) if (result.status === 'rejected') throw result.reason;
+				if (settled[1]?.status === 'rejected') throw settled[1].reason;
+				if (settled[0]?.status === 'rejected') {
+					if (!picture) throw settled[0].reason;
+					// The picture failed: the package and its text still go to the clipboard.
+					delete formats['image/png'];
+					await clipboard.write([new ClipboardItem(formats)]);
+				}
 			} finally {
 				pending = false;
 			}

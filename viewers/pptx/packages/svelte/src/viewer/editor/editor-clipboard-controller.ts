@@ -1,5 +1,5 @@
 import type { PasteSpecialFormat } from 'ooxml-ui/pptx';
-import { applyPasteSpecialFormat } from 'ooxml-ui/pptx';
+import { applyPasteSpecialFormat, copyElementsToSystemClipboard } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 
 import {
@@ -36,6 +36,15 @@ export class EditorClipboardController {
 		);
 		if (payload) {
 			this.#editor.clipboard = payload;
+			// Other applications get a picture of the selection and its text (best effort).
+			const selected = this.#editor.selectedElements;
+			void copyElementsToSystemClipboard({
+				elements: selected.length ? selected : [payload.element],
+				rasterize: async (_node, elementId) =>
+					(await import('../export/rasterize-picture'))
+						.rasterizeCanvasElementDataUrl(elementId)
+						.catch(() => null),
+			});
 		}
 	}
 

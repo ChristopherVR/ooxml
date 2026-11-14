@@ -22,6 +22,7 @@ import {
 	applyReroutedConnectors,
 	buildSlideTemplateSlide,
 	cloneElementForPaste,
+	copyElementsToSystemClipboard,
 	createEditorHistoryController,
 	groupSlidesBySection,
 	insertedLayoutCompletion,
@@ -66,6 +67,7 @@ import {
 	setElementPosition,
 	updateElementById,
 } from './element-operations';
+import { renderElementPngDataUrl } from './export-raster-tiles';
 import { canGroupSelected, canUngroupGroup } from './group-lock-guard';
 import { groupElements, ungroupElements } from './group-ops';
 import { LoadContentService } from './load-content.service';
@@ -793,6 +795,11 @@ export class EditorStateService {
 		}
 		this.clipboard = picked.map(cloneElement);
 		this.hasClipboard.set(true);
+		// Other applications get a picture of the selection and its text (best effort).
+		void copyElementsToSystemClipboard({
+			elements: picked,
+			rasterize: (node) => renderElementPngDataUrl(node, 2).catch(() => null),
+		});
 	}
 
 	/** Copy then delete the selected elements. */

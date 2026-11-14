@@ -1,4 +1,8 @@
-import { buildElementClipboardPayload, cloneElementForPaste } from 'ooxml-ui/pptx';
+import {
+	buildElementClipboardPayload,
+	cloneElementForPaste,
+	copyElementsToSystemClipboard,
+} from 'ooxml-ui/pptx';
 /**
  * useClipboardHandlers: Copy, cut, paste, duplicate, and delete handlers
  * extracted from useElementManipulation.
@@ -9,6 +13,7 @@ import { buildElementClipboardPayload, cloneElementForPaste } from 'ooxml-ui/ppt
  */
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 
+import { renderElementToRasterDataUrl } from '../utils/export-helpers';
 import type { ClipboardHandlers } from './element-manipulation-types';
 import type { EditorHistoryResult } from './useEditorHistory';
 import type { ElementOperations } from './useElementOperations';
@@ -46,6 +51,13 @@ export function useClipboardHandlers(input: ClipboardInput): ClipboardHandlers {
 			return;
 		}
 		setClipboardPayload(buildElementClipboardPayload(selectedElement, editTemplateMode));
+		// Other applications get a picture of the selection and its text (best effort).
+		const ids = new Set(effectiveSelectedIds);
+		const selected = activeSlide?.elements.filter((element) => ids.has(element.id)) ?? [];
+		void copyElementsToSystemClipboard({
+			elements: selected.length ? selected : [selectedElement],
+			rasterize: (node) => renderElementToRasterDataUrl(node, 2).catch(() => null),
+		});
 	};
 
 	const handleDelete = () => {

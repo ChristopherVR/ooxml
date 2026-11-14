@@ -1,9 +1,16 @@
-import { cloneElementForPaste, isTemplateElementId } from 'ooxml-ui/pptx';
+import {
+	cloneElementForPaste,
+	copyElementsToSystemClipboard,
+	isTemplateElementId,
+} from 'ooxml-ui/pptx';
+import type { ElementNodeRasterizer } from 'ooxml-ui/pptx';
 /**
  * useElementClipboard: the in-memory single-element copy / cut / paste buffer.
  *
- * Deliberately NOT the system clipboard: PowerPoint pastes a shape with all its
- * OOXML fidelity intact, which a text/image clipboard round-trip would flatten.
+ * The paste source stays this in-memory buffer: PowerPoint pastes a shape with
+ * all its OOXML fidelity intact, which a text/image clipboard round-trip would
+ * flatten. Copy also offers other applications a picture and the text of the
+ * selection through the system clipboard (shared `copyElementsToSystemClipboard`).
  * Cloning, descendant re-id and the paste cascade offset go through the shared
  * clipboard codec so this matches paste/duplicate/ungroup everywhere else.
  */
@@ -18,6 +25,8 @@ export interface UseElementClipboardOptions {
 	addElement: (element: PptxElement) => void;
 	removeElement: (id: string) => void;
 	selectedElementIds: Ref<string[]>;
+	/** Renders a copied shape for the system clipboard's picture (optional). */
+	rasterize?: ElementNodeRasterizer;
 }
 
 export interface UseElementClipboardResult {
@@ -43,6 +52,17 @@ export function useElementClipboard(
 		const el = options.findSlideElement(id);
 		if (el) {
 			clipboard.value = cloneElement(el);
+			// Other applications get a picture of the selection and its text (best effort).
+			const ids = options.selectedElementIds.value.includes(id)
+				? options.selectedElementIds.value
+				: [id];
+			const elements = ids
+				.map((value) => options.findSlideElement(value))
+				.filter((value): value is PptxElement => Boolean(value));
+			void copyElementsToSystemClipboard({
+				elements,
+				...(options.rasterize ? { rasterize: options.rasterize } : {}),
+			});
 		}
 	}
 

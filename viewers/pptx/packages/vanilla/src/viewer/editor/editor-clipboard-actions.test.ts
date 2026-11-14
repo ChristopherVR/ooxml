@@ -33,6 +33,31 @@ function harness(elements: PptxElement[]) {
 	return { store, actions };
 }
 
+describe('createClipboardActions copy (system clipboard)', () => {
+	it('keeps the internal payload and offers the shape text to other apps', async () => {
+		const writeText = vi.fn(async () => undefined);
+		vi.stubGlobal('ClipboardItem', undefined);
+		vi.stubGlobal('navigator', { clipboard: { writeText } });
+		try {
+			const shape = el('a', { text: 'Copied' } as Partial<PptxElement>);
+			const store = createStore<ViewerState>({
+				...createInitialViewerState(),
+				editable: true,
+				slides: [slide([shape])],
+				currentSlide: 0,
+				selectedElementId: 'a',
+				selectedElementIds: ['a'],
+			});
+			const ops = { selectedElement: () => shape } as unknown as EditorOps;
+			createClipboardActions({ store, ops }).copy();
+			expect(store.get().clipboardPayload?.element.id).toBe('a');
+			await vi.waitFor(() => expect(writeText).toHaveBeenCalledWith('Copied'));
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+});
+
 describe('createClipboardActions paste (Keep Source Formatting)', () => {
 	it('records the pasted clone as its own pristine Paste Options source', () => {
 		const { store, actions } = harness([el('a')]);

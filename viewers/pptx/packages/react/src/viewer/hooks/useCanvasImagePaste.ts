@@ -1,4 +1,4 @@
-import type { EditorImagePasteOptions } from 'ooxml-ui/pptx';
+import type { EditorImagePasteOptions, InlineRichPasteOptions } from 'ooxml-ui/pptx';
 import type { ImagePptxElement } from 'pptx-viewer-core';
 import { useMemo, useRef } from 'react';
 
@@ -8,7 +8,13 @@ type Input = Pick<UseEditorOperationsInput, 'state' | 'mode' | 'canEdit' | 'hand
 	insertElement(element: ImagePptxElement): void;
 };
 
-export type CanvasImagePasteHandlers = Pick<EditorImagePasteOptions, 'getTarget' | 'insertElement'>;
+export type CanvasImagePasteHandlers = Pick<
+	EditorImagePasteOptions,
+	'getTarget' | 'insertElement'
+> & {
+	/** Rich text paste into the inline text editor (shared `attachInlineRichPaste`). */
+	richText?: InlineRichPasteOptions;
+};
 
 /** Prepare live editor commands; the mounted SlideCanvas owns the listener lifetime. */
 export function useCanvasImagePaste(input: Input): CanvasImagePasteHandlers {

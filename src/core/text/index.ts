@@ -26,3 +26,12 @@ export * from './truetype/embedding';
 export { parseTrueType, type TrueTypeFont } from './truetype/parse';
 export { subsetTrueType, type TrueTypeSubset } from './truetype/subset';
 export * from './webfonts';
+export {
+	decodeHtmlEntities,
+	htmlClipboardFragment,
+	parseCssColorHex,
+	parseCssDeclarations,
+	parseHtmlAttributes,
+	tokenizeHtml,
+	type HtmlToken,
+} from './html-tokens';

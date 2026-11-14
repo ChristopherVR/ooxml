@@ -39,6 +39,8 @@ import { bindTableTouchEditor } from './table-touch-editor';
 export function createStageInteractions(deps: StageInteractionsDeps): StageInteractions {
 	const { doc, store, ops } = deps;
 	let inline: InlineEditorSession | null = null;
+	/** The element the open inline text editor edits. */
+	let inlineId: string | null = null;
 	let inlineTarget: PendingInlineTextEdit['target'] | undefined;
 	let modelObserver: ReturnType<typeof observeInlineTextModel> | undefined;
 	let tableInline: TableCellEditorSession | null = null;
@@ -168,6 +170,7 @@ export function createStageInteractions(deps: StageInteractionsDeps): StageInter
 		overlay.setEditing(true);
 		setStaticTextSuppressed(id, true);
 		inlineTarget = inlineTextEditTarget(state);
+		inlineId = id;
 		inline = openInlineEditor({
 			doc,
 			overlayRoot: overlay.root,
@@ -187,6 +190,7 @@ export function createStageInteractions(deps: StageInteractionsDeps): StageInter
 			onLiveFormatKey: deps.onInlineLiveFormatKey,
 			onClose() {
 				inline = null;
+				inlineId = null;
 				inlineTarget = undefined;
 				modelObserver = undefined;
 				deps.getOverlay()?.setEditing(false);
@@ -376,6 +380,8 @@ export function createStageInteractions(deps: StageInteractionsDeps): StageInter
 		hasActivePointerInteraction: () =>
 			gestures.isActive() || adjustGesture.isActive() || marquee.isActive(),
 		inlineActive: () => inline !== null || tableInline !== null,
+		inlineElementId: () => (inline ? inlineId : null),
+		openInlineEdit: (id) => enterInlineEdit(id),
 		dispose() {
 			pointerWindow()?.removeEventListener('pointerup', onPendingMemberEditUp);
 			pendingMemberEdit = null;

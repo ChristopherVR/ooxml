@@ -179,6 +179,7 @@ import { useHeaderFooterDialog } from './composables/useHeaderFooterDialog';
 import { useHyperlinkDialog } from './composables/useHyperlinkDialog';
 import { useInkDrawing } from './composables/useInkDrawing';
 import { useInlineEditing } from './composables/useInlineEditing';
+import { useInlineRichTextPaste } from './composables/useInlineRichTextPaste';
 import { useInsertElementDialogs } from './composables/useInsertElementDialogs';
 import { useInspectorDeckActions } from './composables/useInspectorDeckActions';
 import { useInspectorWiring } from './composables/useInspectorWiring';
@@ -193,7 +194,7 @@ import { useMobileChrome } from './composables/useMobileChrome';
 import { useMultiSelectOps } from './composables/useMultiSelectOps';
 import { provideOutlineAuthoring } from './composables/useOutlineAuthoring';
 import { usePasswordProtection } from './composables/usePasswordProtection';
-import { usePasteSpecial } from './composables/usePasteSpecial';
+import { rasterizePastedNode, usePasteSpecial } from './composables/usePasteSpecial';
 import { usePictureCrop } from './composables/usePictureCrop';
 import { usePresentationControls } from './composables/usePresentationControls';
 import { usePrint } from './composables/usePrint';
@@ -857,6 +858,7 @@ const clipboard = useElementClipboard({
 	addElement: (element) => ops.addElement(element),
 	removeElement: (id) => ops.removeElement(id),
 	selectedElementIds,
+	rasterize: (_node, id) => rasterizePastedNode(id).catch(() => null),
 });
 
 // -- Paste Special (Ctrl+Alt+V) + the post-paste Paste Options toolbar ---
@@ -2052,6 +2054,12 @@ useCanvasImagePaste(viewerRootRef, {
 		};
 	},
 	insertElement: ops.addElement,
+});
+useInlineRichTextPaste(viewerRootRef, {
+	editingElement: () => inlineEdit.inlineEditingElement.value,
+	cancelInlineEdit: inlineEdit.cancelInlineEdit,
+	enterInlineEdit: inlineEdit.enterInlineEdit,
+	updateElement: (id, patch) => ops.updateElement(id, patch),
 });
 
 // Host-persisted Save: revision token + acknowledgement (shared controller).
