@@ -126,7 +126,8 @@ const CATEGORY_SECTIONS: Record<Exclude<FormatSelectionCategory, 'mixed'>, reado
 	line: [['outline', true], ['effects', false], ['font', false], ['paragraph', false], ...TAIL],
 	// A picture keeps its Fill (the area behind a transparent picture) reachable, closed.
 	picture: [['picture', true], ['fill', false], ['outline', false], ['effects', false], ...TAIL],
-	table: [['table', true], ['font', false], ['paragraph', false], ...TAIL],
+	// Cell text formatting lives in the Table section's cell formatting; no table-wide text panel yet.
+	table: [['table', true], ...TAIL],
 	chart: [['chart', true], ...TAIL],
 	smartArt: [['smartArt', true], ...TAIL],
 	media: [['media', true], ...TAIL],
@@ -205,7 +206,7 @@ function entriesFor(element: PptxElement): readonly Entry[] {
 	// Text sections only for elements that carry text; shape sections only with a shape style.
 	return entries.filter(([id]) => {
 		if (id === 'font' || id === 'paragraph') {
-			return category === 'table' || hasTextProperties(element);
+			return hasTextProperties(element);
 		}
 		if (id === 'fill' || id === 'outline' || id === 'effects') {
 			return hasShapeProperties(element);

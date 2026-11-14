@@ -107,13 +107,7 @@ describe('resolveFormatSections', () => {
 		]);
 		expect(open(picture)).toEqual(['picture']);
 		const table = [el({ type: 'table' })];
-		expect(ids(table).slice(0, 5)).toEqual([
-			'table',
-			'font',
-			'paragraph',
-			'arrange',
-			'sizePosition',
-		]);
+		expect(ids(table).slice(0, 3)).toEqual(['table', 'arrange', 'sizePosition']);
 		expect(open(table)).toEqual(['table']);
 		expect(ids([el({ type: 'chart' })]).slice(0, 3)).toEqual(['chart', 'arrange', 'sizePosition']);
 		expect(open([el({ type: 'group' })])).toEqual(['arrange', 'sizePosition']);
