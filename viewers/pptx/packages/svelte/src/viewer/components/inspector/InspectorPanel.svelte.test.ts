@@ -216,8 +216,6 @@ describe('inspectorPanel', () => {
 
 		expect(formatSections(target)).toStrictEqual([
 			'table',
-			'font',
-			'paragraph',
 			'arrange',
 			'sizePosition',
 			'altText',
