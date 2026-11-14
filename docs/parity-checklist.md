@@ -405,13 +405,44 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       renderer matches by default (`setLinkedTextBoxFlow` opts in). The link is parsed and
       round-trips (`linkedTxbxId` / `linkedTxbxSeq`).
 - [ ] **P1** `.ppt` export turns video and non-WAV audio into pictures.
-- [ ] **P1** Clipboard is a suite slide-package format with no desktop Office interop.
+- [ ] **P1** Clipboard interop with desktop Office is partial. Done: HTML (`text/html`, CF_HTML)
+      pastes into a text box being edited as formatted runs, bullets, numbering and links
+      (Keep Source Formatting; Ctrl+Shift+V keeps text only), and copying shapes writes a PNG and
+      their text to the system clipboard. Open: no Paste Options toolbar or Paste Special for
+      text (Use Destination Theme is not offered); copied slides add no picture yet (no binding
+      supplies `renderSlidePng`); pasting HTML onto the slide (not into a text box) does not create
+      a text box; no RTF or Office native formats (`Art::GVML`, PowerPoint 14.0 Slides) are read
+      or written; a rich paste can take two Undo steps.
+- [x] **P1** Embedded fonts honour OS/2 `fsType` embedding permissions: restricted faces are not
+      displayed but their parts are saved unchanged; restricted, preview and print, and
+      bitmap-only faces are never newly embedded; the Embed Fonts panel shows the restriction in
+      every binding (`core/text/truetype/embedding.ts`).
 - [ ] **P2** 3-D models: `am3d:preTrans` is parsed, not applied; `rot` handedness and
       orthographic scale are unverified.
 - [ ] **P2** `p:smartTags` has no model; `p:revisionInfo` survival is unverified.
 
 ### Editing and slide show
 
+- [x] **P1** Table cells are edited as rich text with each run's markup kept (hyperlinks, fields
+      until their own text is edited, theme colours and transforms, untyped run properties):
+      Enter adds a paragraph, Tab/Shift+Tab and edge arrows move between cells, Tab in the last
+      cell adds a row, Esc keeps the text, tab-separated paste or Ctrl+V into selected cells fills
+      and grows the table, and Home-tab formatting applies to every run of a cell range or the
+      whole table (all five bindings). Open: the ribbon formats whole cells, not the text selected
+      inside a cell.
+- [ ] **P2** Format pane: the Properties tab shows selection-aware collapsible sections in all five
+      bindings, and Format Shape, Size and Position and Alt Text open it on their section. Open: a
+      multi-selection shows only a section-level "Mixed" badge (no per-field mixed values) and
+      edits apply to the primary element only; Vue shows the slide inspector for
+      multi-selections; tables have no table-wide Font/Paragraph section; section reordering is
+      visual only (tab order unchanged).
+- [x] **P1** Save as PDF writes vector pages at the slide size: shapes, gradients, pictures, inline
+      SVG charts and selectable text with the deck's embedded fonts subset in; hidden slides are
+      left out unless Options > Advanced > Save as PDF includes them; effects PDF cannot express
+      (soft edges, blur, glow, shadows, 3-D, blend modes, patterns, complex scripts) are pictures
+      of just that element with searchable text kept, and the export lists what it approximated
+      (`src/ui/src/pptx/export/pdf-vector-*.ts`). Open: fonts the page cannot read fall back to
+      standard PDF fonts; embedding a deck's own fonts is unit-tested only.
 - [ ] **P1** Remove Background: an existing `a14:backgroundRemoval` is drawn but cannot be
       authored (`src/ui/src/pptx/render/image-background-removal.ts`).
 - [ ] **P1** Zoom: slide, section and summary zooms render and save but cannot be inserted.
@@ -800,7 +831,7 @@ installed Visio 16 build is used to check that saved files open without repair.
       and every embedded font, ToUnicode and page stream is Flate-compressed (`/FlateDecode`,
       `/Length1` the uncompressed size)
       (`visio-viewer.pdfFonts`; `core/text/truetype`, `export/pdf-embedded-font.ts`,
-      `export/pdf-vector.ts`, `visio/viewer-pdf-options.ts`, `visio/pdf-svg-gradient.ts`).
+      `export/pdf-vector.ts`, `visio/viewer-pdf-options.ts`, `export/pdf-svg-gradient.ts`).
 - [ ] **P1** PDF: no font is bundled or looked up, so text outside WinAnsi still becomes a
       picture page unless the host sets `pdfFonts` with a font that has the glyphs (CFF/OpenType
       fonts and fonts whose licence forbids embedding are refused and reported); shadow and glow
