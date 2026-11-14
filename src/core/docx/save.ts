@@ -31,6 +31,7 @@ import { numberCommentIds } from './comment-spans';
 import { DEFAULT_STYLES_XML, hasDefaultStyles } from './default-styles';
 import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts';
 import { refreshStyleRefFields } from './style-ref-fields';
+import { refreshComputedFields } from './computed-fields';
 import { applyDiagramEdits } from './diagram-save';
 import { applyGeneratedDiagramCaches } from './diagram-cache';
 import { applyChartPartEdits } from './chart-save';
@@ -58,14 +59,28 @@ function newDocument(): XmlDocument {
 }
 
 /**
- * `model` with its header and footer STYLEREF results brought up to date, or undefined when none
- * changes. Word updates those fields as it draws each page, so a saved header should not keep a
- * stale result; a part the writer cannot rebuild with the new results keeps the ones it has, and
- * a model the update cannot read is saved as it is: the update never makes a save fail.
+ * `model` with its header and footer STYLEREF and computed field results (DOCPROPERTY...)
+ * brought up to date, or undefined when none changes. Word updates those fields as it draws each
+ * page, so a saved header should not keep a stale result; a part the writer cannot rebuild with
+ * the new results keeps the ones it has, and a model the update cannot read is saved as it is:
+ * the update never makes a save fail.
  */
+/** `model` with its body's computed field results up to date, or undefined when none changes. */
+function bodyResults(model: DocumentModel): DocumentModel | undefined {
+	try {
+		const refreshed = refreshComputedFields(model, { body: true });
+		if (refreshed.blocks === model.blocks) return undefined;
+		const body = { ...model, blocks: refreshed.blocks };
+		assertValidDocumentModel(body);
+		return body;
+	} catch {
+		return undefined;
+	}
+}
+
 function headerFooterResults(model: DocumentModel): DocumentModel | undefined {
 	try {
-		const refreshed = refreshStyleRefFields(model);
+		const refreshed = refreshStyleRefFields(refreshComputedFields(model));
 		if (refreshed === model) return undefined;
 		assertValidDocumentModel(refreshed);
 		return refreshed;
@@ -124,7 +139,7 @@ export async function saveDocx(
 		);
 	const zip = binding ? await openZip(binding.context.original, DOCX_ZIP_LIMITS) : new JSZip();
 	const sourceEntries = entryNames(zip);
-	const document = binding ? parseXml(binding.context.sourceXml) : newDocument();
+	let document = binding ? parseXml(binding.context.sourceXml) : newDocument();
 	const docPrIds = new DocPrIdAllocator();
 	await docPrIds.reserveFromPackage(zip);
 	if (!binding) {
@@ -140,15 +155,27 @@ export async function saveDocx(
 	// Header/footer parts the model added exist (with their relationships) before the body is written.
 	const headerFooterIds = await createHeaderFooterParts(zip, model, binding?.base, docPrIds);
 	const existingRelationships = parseRelationships(await zip.file(RELS_PART)?.async('string'));
-	const { newRelationships } = applyModel(
-		document,
-		model,
-		binding?.base.blocks ?? [],
-		existingRelationships.keys(),
-		binding?.base.sections ?? [],
-		docPrIds,
-		headerFooterIds,
-	);
+	const write = (target: XmlDocument, source: DocumentModel) =>
+		applyModel(
+			target,
+			source,
+			binding?.base.blocks ?? [],
+			existingRelationships.keys(),
+			binding?.base.sections ?? [],
+			docPrIds,
+			headerFooterIds,
+		);
+	// The body's computed field results (DOCPROPERTY...) are saved up to date; a body the writer
+	// cannot rebuild with them is written as the model holds it.
+	const preferred = bodyResults(model);
+	let written: ReturnType<typeof write> | undefined;
+	if (preferred)
+		try {
+			written = write(document, preferred);
+		} catch {
+			document = binding ? parseXml(binding.context.sourceXml) : newDocument();
+		}
+	const { newRelationships } = written ?? write(document, model);
 	if (model.pageColor !== binding?.base.pageColor) applyPageBackground(document, model.pageColor);
 	zip.file('word/document.xml', buildXml(document));
 	await writeNewRelationships(zip, 'word/document.xml', newRelationships, pendingMedia);

@@ -276,6 +276,30 @@ describe('updateFields', () => {
 		expect(texts(view)).toEqual(['Scope', 'See Scope', 'DOC-5|x', 'DOC-5']);
 	});
 
+	it('gives DOCPROPERTY fields the document properties, as edited', () => {
+		const view = editor(
+			paragraph('p0', [
+				field('old', ' DOCPROPERTY Title \\* Upper '),
+				schema.text('|'),
+				field('old', ' DOCPROPERTY Client '),
+				schema.text('|'),
+				field('kept', ' DOCPROPERTY Pages '),
+			]),
+		);
+		const model: DocumentModel = {
+			...createDocument(),
+			properties: { title: 'Edited title' },
+			packageProperties: {
+				core: { title: 'Loaded title' },
+				app: { pages: 3 },
+				custom: [{ name: 'Client', type: 'lpwstr', value: 'Contoso' }],
+			},
+			blocks: [{ type: 'paragraph', id: 'p0', runs: [{ text: 'old|old|kept' }] }],
+		};
+		expect(updateFields(view, pages, model)).toBe(true);
+		expect(texts(view)).toEqual(['EDITED TITLE|Contoso|kept']);
+	});
+
 	it('reads a body STYLEREF from its own paragraph and from captions renumbered with it', () => {
 		const styled = (text: string) => runToInlineNodes({ text, style: 'EntryName' }, schema)[0]!;
 		const view = editor(

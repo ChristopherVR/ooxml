@@ -28,6 +28,7 @@ import { warningsFor, imageAndBookmarkWarnings, forEachParagraph } from './parse
 import { diagramWarnings, resolveDocumentDiagrams } from './diagram-document';
 import { documentDrawingBlocks, resolveDocumentCharts } from './chart';
 import { readPlaceholderTexts } from './glossary';
+import { readPackageProperties } from './package-properties';
 
 export interface PackageContext {
 	original: Uint8Array;
@@ -171,6 +172,8 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 		const properties = parseCoreProperties(await coreFile.async('string'));
 		if (properties) model.properties = properties;
 	}
+	const packageProperties = await readPackageProperties(zip);
+	if (packageProperties) model.packageProperties = packageProperties;
 	await readPlaceholderTexts(zip, drawings.rels, model);
 	const pageColor = parsePageBackground(document.documentElement, model.theme);
 	if (pageColor) model.pageColor = pageColor;

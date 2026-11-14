@@ -1,5 +1,6 @@
 import type { DocumentModel } from '../index';
 import { adaptDocumentModel } from './adapter';
+import { withComputedFieldRuns } from './computed-field-runs';
 import { layoutSections } from './page-flow';
 import { FLOAT_WRAP_NOTE, positionFloats } from './floats';
 import { sameExclusions, wrapExclusions } from './wrap';
@@ -40,10 +41,10 @@ export function layoutDocumentModel(
 ): LayoutResult {
 	const projected = reviewDocumentFormatting(model, options.reviewDisplayMode ?? 'all');
 	const approximations = reviewFormattingWarnings(projected.diagnostics);
-	const input = adaptDocumentModel(
+	// Computed fields (DOCPROPERTY, AUTONUM, LISTNUM, SYMBOL...) show what the document gives them.
+	const input = withComputedFieldRuns(
+		adaptDocumentModel(projected.model, (message) => approximations.push(message), options),
 		projected.model,
-		(message) => approximations.push(message),
-		options,
 	);
 	const result = layout(input, measurer);
 	return {

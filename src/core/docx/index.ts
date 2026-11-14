@@ -110,8 +110,16 @@ export {
 	type StyleRefSource,
 	type StyleReference,
 } from './style-ref';
-export { fieldResultRun, withFieldCodeFormatting } from './style-ref-fields';
+export { fieldResultRun, withFieldCodeFormatting } from './field-result-spans';
 export { bodyStyleRefResult, refreshStyleRefFields } from './style-ref-fields';
+export {
+	COMPUTED_FIELD_NAMES,
+	computedFields,
+	refreshComputedFields,
+	type ComputedFieldResult,
+	type ComputedFields,
+} from './computed-fields';
+export { docPropertyResult, fieldProperties } from './doc-property-field';
 export {
 	listFormFields,
 	type FormFieldChoice,

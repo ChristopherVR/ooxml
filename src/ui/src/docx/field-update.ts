@@ -1,7 +1,10 @@
 import { closeHistory } from 'prosemirror-history';
 import { Mark, type Node as ProseMirrorNode } from 'prosemirror-model';
 import {
+	COMPUTED_FIELD_NAMES,
 	bodyStyleRefResult,
+	computedFields,
+	fieldName,
 	fieldResultRun,
 	isFieldLocked,
 	parseStyleReference,
@@ -307,9 +310,10 @@ function runsAt(
  * Word's Update Field for the whole body: every `SEQ` caption is renumbered, then `REF` results
  * follow their bookmarked paragraph and `PAGEREF` results take the page from `pageOf`. A REF that
  * pointed at a caption's label and number keeps showing the label; a longer result is treated as
- * the entire caption. With the document's `model`, `STYLEREF` results take the nearest text in
- * their style before the field, else after it, which an empty paragraph in the style makes empty
- * (the field stays, with its instruction, and a later update fills it). Fields with other
+ * the entire caption. With the document's `model`, DOCPROPERTY results follow its properties and
+ * `STYLEREF` results take the nearest text in their style before the field, else after it, which
+ * an empty paragraph in the style makes empty (the field stays, with its instruction, and a later
+ * update fills it). Fields with other
  * switches or a missing bookmark or style are left as they are. One undoable step; returns
  * whether anything changed.
  */
@@ -364,6 +368,8 @@ function refreshPass(
 	const current =
 		model && !captionsOnly && tr.docChanged ? docToModel(tr.doc, model, tr.before) : model;
 	const source = current && !captionsOnly ? styleRefSource(current) : undefined;
+	// DOCPROPERTY and the other fields whose results the document itself gives.
+	const computed = current && !captionsOnly ? computedFields(current) : undefined;
 	const changes: Array<{ run: FieldResult; text: string; formatted?: ProseMirrorNode[] }> = [];
 	for (const run of fieldResults(tr.doc)) {
 		if (isFieldLocked(inlineNodeRun(schema.text('x', run.marks)))) continue;
@@ -386,7 +392,18 @@ function refreshPass(
 				changes.push({ run, text, ...(formatted ? { formatted } : {}) });
 			continue;
 		}
-		const match = REFERENCE.exec(String(run.mark.attrs.instr ?? ''));
+		const instr = String(run.mark.attrs.instr ?? '');
+		if (computed && COMPUTED_FIELD_NAMES.has(fieldName(instr))) {
+			const $from = tr.doc.resolve(run.from);
+			const at = source?.index.get(String($from.parent.attrs.id));
+			const paragraph = at === undefined ? undefined : source?.paragraphs[at];
+			const field =
+				paragraph && runsAt(paragraph, run.from - $from.start(), run.to - $from.start());
+			const result = paragraph && field && computed.result({ from: field.from, instr }, paragraph);
+			if (result && result.text !== run.text) changes.push({ run, text: result.text });
+			continue;
+		}
+		const match = REFERENCE.exec(instr);
 		if (!match || !plainSwitches(match[3] ?? '')) continue;
 		const target = targets.get((match[2] ?? '').replace(/^"|"$/g, ''));
 		if (!target || (captionsOnly && captionLabel(target) === undefined)) continue;

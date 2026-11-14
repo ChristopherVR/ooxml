@@ -2,6 +2,7 @@ import { pictureNeedsSvg, pictureSvg } from '../picture-view';
 import {
 	fieldName,
 	isRunHiddenForReview,
+	refreshComputedFields,
 	type Block,
 	type DocumentModel,
 	type HeaderFooterContent,
@@ -206,6 +207,8 @@ export function decoratePages(
 	pictureUrl?: PictureUrl,
 	reviewDisplayMode: ReviewDisplayMode = 'all',
 ) {
+	// Header and footer DOCPROPERTY results follow the document's properties.
+	model = refreshComputedFields(model);
 	const numbers = pageNumbers(model, pages);
 	const numericValues = pageNumberValues(model, pages);
 	const counts = sectionPageCounts(pages);

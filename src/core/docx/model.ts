@@ -1,4 +1,5 @@
 import type { DocumentProperties } from './core-properties';
+import type { DocumentPropertySet } from '../opc/properties/types';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import { defaultStyleCatalogs } from './default-styles';
 import type { StJcTable, StNumberFormat } from './generated/wml-simple-types';
@@ -130,6 +131,11 @@ export interface DocumentModel {
 	sections?: SectionProperties[];
 	/** Package properties from `docProps/core.xml` (title, author, tags...). */
 	properties?: DocumentProperties;
+	/**
+	 * Every core, extended and custom property the package was loaded with, read-only: what
+	 * DOCPROPERTY fields show (the editable core fields in `properties` take their place).
+	 */
+	packageProperties?: DocumentPropertySet;
 	/** Whether `settings.xml` requests separate even-page headers/footers (`w:evenAndOddHeaders`). */
 	evenAndOddHeaders?: boolean;
 	/** `w:autoHyphenation` in settings.xml: Word hyphenates words at line ends. */
