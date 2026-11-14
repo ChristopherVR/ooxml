@@ -1,6 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-// The fields whose results this package computes from the document itself: DOCPROPERTY and the
-// AUTONUM fields. Layout draws these results, Update Fields writes them into the editor and a
+// The fields whose results this package computes from the document itself: DOCPROPERTY, the
+// AUTONUM fields and LISTNUM. Layout draws these results, Update Fields writes them into the editor and a
 // save writes them back as the fields' cached results, so all three read them from here.
 import {
 	AUTO_NUMBER_FIELDS,
@@ -9,6 +9,8 @@ import {
 	type AutoNumberState,
 } from './auto-number-fields';
 import { docPropertyResult, fieldProperties } from './doc-property-field';
+import type { ListNumberFields } from './list-number-fields';
+import { computeListNumbering } from './numbering-format';
 import { fieldName } from './field-runs';
 import { withFieldResults, type FieldResultSpan } from './field-result-spans';
 import { withStoryBlocks } from './field-stories';
@@ -42,12 +44,14 @@ const CHARFORMAT = /\*\s*charformat\b/i;
 export const COMPUTED_FIELD_NAMES: ReadonlySet<string> = new Set([
 	'DOCPROPERTY',
 	...AUTO_NUMBER_FIELDS,
+	'LISTNUM',
 ]);
 
 /** Reads `model`'s computed fields; what each needs is worked out once, when first asked for. */
 export function computedFields(model: DocumentModel): ComputedFields {
 	let properties: DocumentPropertySet | undefined;
 	let autoNumbers: Map<string, AutoNumberState> | undefined;
+	let listNumbers: ListNumberFields | undefined;
 	return {
 		result(field, paragraph) {
 			const name = fieldName(field.instr);
@@ -58,6 +62,11 @@ export function computedFields(model: DocumentModel): ComputedFields {
 			if (AUTO_NUMBER_FIELDS.has(name)) {
 				const state = (autoNumbers ??= autoNumberStates(model)).get(paragraph.id);
 				const text = state && autoNumberResult(field.instr, state);
+				return text === undefined ? undefined : { text };
+			}
+			if (name === 'LISTNUM') {
+				listNumbers ??= computeListNumbering(model).listNumbers;
+				const text = listNumbers.result(paragraph.id, field.from);
 				return text === undefined ? undefined : { text };
 			}
 			return undefined;

@@ -12,6 +12,7 @@ import { applyFieldFormat, parseFieldInstruction } from './field-format';
 import type { DocumentModel, Paragraph } from './model';
 import { formatListNumber } from './numbering-format';
 import { resolveParagraphFormatting } from './paragraph-styles';
+import { OUTLINE_NUMBERING } from './outline-numbering';
 
 /** The field names counted together. */
 export const AUTO_NUMBER_FIELDS: ReadonlySet<string> = new Set([
@@ -65,19 +66,6 @@ export function autoNumberStates(model: DocumentModel): Map<string, AutoNumberSt
 	return states;
 }
 
-/** AUTONUMOUT's outline numbering for headings of levels 1 to 9: I. A. 1. a) (1) (a) (i) (a) (i). */
-const OUTLINE: readonly [string, string, string][] = [
-	['', 'upperRoman', '.'],
-	['', 'upperLetter', '.'],
-	['', 'decimal', '.'],
-	['', 'lowerLetter', ')'],
-	['(', 'decimal', ')'],
-	['(', 'lowerLetter', ')'],
-	['(', 'lowerRoman', ')'],
-	['(', 'lowerLetter', ')'],
-	['(', 'lowerRoman', ')'],
-];
-
 /**
  * What an automatic number field shows for a paragraph's state, or undefined for another field
  * or switches this does not evaluate. AUTONUM draws the paragraph's count in its `\*` format,
@@ -90,7 +78,9 @@ export function autoNumberResult(instr: string, state: AutoNumberState): string 
 	if (!field || !AUTO_NUMBER_FIELDS.has(field.name)) return undefined;
 	const own = state.counts.at(-1)!;
 	if (field.name === 'AUTONUMOUT') {
-		const [open, numFmt, close] = state.heading ? OUTLINE[state.level - 1]! : ['', 'decimal', '.'];
+		const [open, numFmt, close] = state.heading
+			? OUTLINE_NUMBERING[state.level - 1]!
+			: ['', 'decimal', '.'];
 		return `${open}${formatListNumber(numFmt, own)}${close}`;
 	}
 	const given = field.switches.get('s');
