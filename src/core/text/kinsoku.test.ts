@@ -79,6 +79,10 @@ describe('hangsAtLineEnd', () => {
 		for (const ch of ['！', '？', '・', '：', '〕', ')'])
 			expect(hangsAtLineEnd(ch, 'ja'), ch).toBe(false);
 		expect(hangsAtLineEnd('〕', 'zh-Hans')).toBe(true);
+		expect(hangsAtLineEnd('！', 'zh-Hans')).toBe(true);
+		expect(hangsAtLineEnd('．', 'zh-Hans')).toBe(false);
+		expect(hangsAtLineEnd('、', 'zh-Hant')).toBe(true);
+		expect(hangsAtLineEnd('､', 'zh-Hant')).toBe(false);
 		expect(hangsAtLineEnd('。', 'ko')).toBe(false);
 	});
 });

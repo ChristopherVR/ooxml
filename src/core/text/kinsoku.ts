@@ -7,12 +7,15 @@
  * short, each candidate placed where it would start or end the second line), one set per East
  * Asian language. They are the sets ECMA-376 refers to in `w:kinsoku` (17.3.1.16); a document
  * replaces one language's set with `w:noLineBreaksBefore` / `w:noLineBreaksAfter` (17.15.1.58-59),
- * and `w:strictFirstAndLastChars` selects the strict Japanese set. Measured behaviour:
+ * and `w:strictFirstAndLastChars` selects the strict Japanese set. Measured behaviour, on a Word 16
+ * install with no East Asian editing language enabled (`LanguageSettings.LanguagePreferredForEditing`
+ * false for Japanese, both Chinese and Korean; one with them enabled may differ):
  *
  *  - The set follows the East Asian language of the character's run (`w:lang/@w:eastAsia`).
  *    A run with no East Asian language gets no prohibition at all, whatever the theme's
  *    `w:themeFontLang/@w:eastAsia` says.
- *  - Korean has an empty default set: Word breaks Korean text between any two ideographs.
+ *  - Korean has an empty default set: Word breaks Korean text before `。` or `」`, after ideographs
+ *    and after Hangul alike.
  *  - A custom set replaces that language's default set; other languages keep theirs.
  *  - Combining marks and zero-width controls never start a line anyway (they belong to the
  *    preceding grapheme), so they are not listed.
@@ -112,15 +115,15 @@ export function prohibitedAtLineEnd(grapheme: string, sets: KinsokuSets): boolea
  * Line-end marks that `w:overflowPunct` (17.3.1.21) lets hang past the right margin instead of
  * pulling the character before them down, measured in Word 16. Word hangs them only in justified
  * (`both`, `distribute`) paragraphs with kinsoku on, one mark per line, and not when the next
- * character may not start a line either (`。」` wraps together). The Japanese and simplified Chinese
- * sets were measured separately and differ in their brackets; traditional Chinese uses the marks
- * both share. Simplified Chinese showed further cases not modeled here (`々` hanging although it
- * may start a line, `』` wrapping).
+ * character may not start a line either (`。」` wraps together). Each set was measured by placing
+ * every line-start-prohibited character of the language where it would start the second line of
+ * a justified paragraph: Japanese hangs only its commas, full stops and closing quotes and
+ * brackets, Chinese most of its set. Korean has no prohibited characters, so nothing hangs.
  */
 const HANGING: Record<KinsokuLanguage, string> = {
-	ja: '、。，．｡､,.」』】）］｝’”',
-	'zh-Hans': '、。，．,.】〕〉》］｝’”]}｣',
-	'zh-Hant': '、。，．,.】］｝’”',
+	ja: ',.’”、。」』】），．］｝｡､',
+	'zh-Hans': '!%),.:;>?]}¢°’”‰′″℃、。〃〉》」』】〕〗〞﹚﹜﹞！＂％＇），：；？］｝￠',
+	'zh-Hant': '!),.:;?]}’”′、。〉》」』】〕〞﹚﹜﹞！），．：；？］｝',
 	ko: '',
 };
 

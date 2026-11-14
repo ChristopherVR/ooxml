@@ -64,9 +64,7 @@ describe('kinsoku settings', () => {
 		at((loaded.model.blocks[1] as Paragraph).runs, 0).text = '二、';
 		const saved = await JSZip.loadAsync(await loaded.save());
 		const original = await JSZip.loadAsync(bytes);
-		expect(await saved.file('word/settings.xml')!.async('string')).toContain(
-			'<w:noLineBreaksBefore w:lang="ja-JP" w:val="!%)"/>',
-		);
+		expect(await saved.file('word/settings.xml')!.async('string')).toBe(SETTINGS);
 		const xml = await saved.file('word/document.xml')!.async('string');
 		expect(xml).toContain('<w:kinsoku/>');
 		expect(xml).toContain('<w:kinsoku w:val="1"/><w:overflowPunct w:val="0"/>');

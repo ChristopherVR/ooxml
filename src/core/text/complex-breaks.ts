@@ -5,7 +5,8 @@
  * Word 16 does not break these scripts at dictionary word boundaries: a long unspaced run fills
  * each line and breaks between two grapheme clusters (UAX #29), mid-word (measured with
  * `Range.Information(wdFirstCharacterLineNumber)` on Thai, Lao, Khmer and Myanmar paragraphs,
- * with and without a `w:lang`). A break therefore never falls inside a cluster, so a base letter
+ * with and without a `w:lang`, on an install with no Thai or other South-East Asian editing
+ * language enabled; Word with one installed may break at word boundaries). A break therefore never falls inside a cluster, so a base letter
  * keeps its vowel signs, tone marks and medials. Two kinds of boundary that UAX #29 allows are
  * kept together because breaking there would split a syllable that is drawn as one unit (Word's
  * output never broke at them):
