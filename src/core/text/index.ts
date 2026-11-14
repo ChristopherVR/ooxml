@@ -18,6 +18,8 @@ export * from './font-metrics/vertical-metrics';
 export { parseTsv, toTsv } from './tsv';
 export * from './locale-number';
 export * from './realign-runs';
+export * from './east-asian';
+export * from './kinsoku';
 
 export * from './font-substitution';
 export * from './metric-font-family';
