@@ -74,6 +74,20 @@ export * from './numbering-model';
 export { parseNumberingCatalog, resolveNumberingLevel } from './numbering-parse';
 export { pictureBulletSizePt } from './numbering-picture';
 export {
+	DRAWING_WRAPS,
+	drawingWrapOf,
+	placementForWrap,
+	setDrawingWrap,
+	type DrawingWrap,
+	type FloatOrigin,
+} from './drawing-wrap';
+export {
+	isValidPictureCrop,
+	pictureCropOf,
+	setPictureCrop,
+	uncroppedPictureSize,
+} from './picture-crop-edit';
+export {
 	computeListLabels,
 	displayListLabel,
 	formatListNumber,

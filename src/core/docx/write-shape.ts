@@ -6,10 +6,11 @@ import { drawingFillXml } from '../drawingml/index';
 import type { DrawingFill } from '../drawingml/index';
 import { drawingLineXml } from '../drawingml/write-line';
 import { parseXml } from '../xml/index';
-import type { InlineImage, PicturePlacement } from './model';
+import type { InlineImage } from './model';
 import type { ShapeSpec } from './shape-model';
 import { A_NS, W_NS, WPS_NS } from './shape-parse';
 import { EMU_PER_PIXEL } from './units';
+import { positionElement as position, wrapElement } from './write-drawing-wrap';
 import { makeNS, makeW, type XmlDocument, type XmlElement } from './xml';
 
 const WP_NS = 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing';
@@ -19,7 +20,6 @@ const add = (parent: XmlElement, ...items: XmlElement[]) => {
 	return parent;
 };
 const emu = (px: number) => String(Math.max(1, Math.round(px * EMU_PER_PIXEL)));
-const emuOffset = (px: number) => String(Math.round(px * EMU_PER_PIXEL));
 const attrs = (element: XmlElement, values: Record<string, string>) => {
 	for (const [name, value] of Object.entries(values)) element.setAttribute(name, value);
 	return element;
@@ -96,58 +96,6 @@ function shapeStyle(doc: XmlDocument): XmlElement {
 		ref('effectRef', '0', 'accent1'),
 		ref('fontRef', 'minor', 'lt1'),
 	);
-}
-
-function wrapElement(doc: XmlDocument, placement: PicturePlacement): XmlElement {
-	switch (placement.wrap) {
-		case 'square':
-			return attrs(el(doc, WP_NS, 'wp:wrapSquare'), { wrapText: 'bothSides' });
-		case 'tight':
-		case 'through': {
-			const wrap = attrs(
-				el(doc, WP_NS, `wp:wrap${placement.wrap === 'tight' ? 'Tight' : 'Through'}`),
-				{
-					wrapText: 'bothSides',
-				},
-			);
-			const polygon = attrs(el(doc, WP_NS, 'wp:wrapPolygon'), { edited: '0' });
-			const point = (name: string, x: string, y: string) =>
-				attrs(el(doc, WP_NS, `wp:${name}`), { x, y });
-			return add(
-				wrap,
-				add(
-					polygon,
-					point('start', '0', '0'),
-					point('lineTo', '0', '21600'),
-					point('lineTo', '21600', '21600'),
-					point('lineTo', '21600', '0'),
-					point('lineTo', '0', '0'),
-				),
-			);
-		}
-		case 'topAndBottom':
-			return el(doc, WP_NS, 'wp:wrapTopAndBottom');
-		default:
-			return el(doc, WP_NS, 'wp:wrapNone');
-	}
-}
-
-function position(
-	doc: XmlDocument,
-	axis: 'H' | 'V',
-	relativeFrom: string,
-	align: string | undefined,
-	offsetPx: number | undefined,
-): XmlElement {
-	const node = attrs(el(doc, WP_NS, `wp:position${axis}`), { relativeFrom });
-	if (align) {
-		const a = el(doc, WP_NS, 'wp:align');
-		a.textContent = align;
-		return add(node, a);
-	}
-	const offset = el(doc, WP_NS, 'wp:posOffset');
-	offset.textContent = emuOffset(offsetPx ?? 0);
-	return add(node, offset);
 }
 
 function geometry(doc: XmlDocument, spec: ShapeSpec): XmlElement[] {
