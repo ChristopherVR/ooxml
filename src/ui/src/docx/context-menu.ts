@@ -10,6 +10,7 @@ import type { EditorView } from 'prosemirror-view';
 import { clipboardReadAllowed, copyOrCut, pasteClipboard } from './context-menu-actions';
 import { computeMenuItems, menuStateFromView, type MenuItem } from './context-menu-items';
 import { removeLink } from './link-commands';
+import { selectPictureAt } from './picture-format-commands';
 import { translate, type EditorLocale } from './localization';
 import type { RibbonAction } from './ribbon-action';
 import { withHostMenuItems } from '../embedding/host-menu';
@@ -99,6 +100,8 @@ export function createContextMenu(host: ContextMenuHost): ContextMenu {
 			label: translate(locale, item.label),
 			disabled: item.disabled,
 			separatorBefore: item.separatorBefore,
+			...(item.heading ? { heading: translate(locale, item.heading) } : {}),
+			...(item.checked !== undefined ? { checked: item.checked } : {}),
 			...(item.disabled && item.reason ? { title: translate(locale, item.reason) } : {}),
 		}));
 
@@ -180,6 +183,8 @@ export function createContextMenu(host: ContextMenuHost): ContextMenu {
 		if (!(event.target as Element).closest?.('.ProseMirror')) return;
 		event.preventDefault();
 		if (performance.now() - keyOpenedAt < KEY_ECHO_MS) return;
+		const view = host.view();
+		if (view) selectPictureAt(view, event.target);
 		const { clientX, clientY } = event;
 		// Let the browser and ProseMirror move the caret to the click before reading the selection.
 		setTimeout(() => open(clientX, clientY), 0);

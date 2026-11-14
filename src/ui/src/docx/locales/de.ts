@@ -8,6 +8,7 @@ import { deNavigation } from './navigation';
 import { deDropCap } from './drop-cap';
 import { deFindStories } from './find-stories';
 import { dePasteOptions } from './paste-options';
+import { dePicture } from './picture';
 import { deLineNumbers } from './line-numbers';
 import { deObjects } from './objects';
 import { deShapes } from './shapes';
@@ -27,6 +28,7 @@ export const de: LocaleStrings = {
 	...deDropCap,
 	...deFindStories,
 	...dePasteOptions,
+	...dePicture,
 	...deNavigation,
 	...deColumns,
 	...deSplitCells,

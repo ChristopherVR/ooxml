@@ -4,7 +4,7 @@ import { syncRuler } from './ruler-sync';
 import { keymap } from 'prosemirror-keymap';
 import type { Plugin } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
-import type { DocumentModel, PendingMediaPart } from 'ooxml-core/docx';
+import type { DocumentModel, DrawingWrap, PendingMediaPart } from 'ooxml-core/docx';
 import { applyCharacterStyle } from './character-style-picker';
 import { createLinkDialog, type LinkDialog } from './link-dialog';
 import { createPictureDialog, type PictureDialog } from './picture-dialog';
@@ -30,6 +30,7 @@ import {
 	stagePicture,
 } from './picture-commands';
 import { applyPictureBulletList } from './list-commands';
+import { selectedPicturePos, setPictureWrap } from './picture-format-commands';
 import { SmartArtController } from './smartart-controller';
 import { setSelectedChartLegend } from './chart-commands';
 import type { RibbonAction } from './ribbon';
@@ -137,6 +138,14 @@ export class InsertController {
 			const selection = view?.state.selection;
 			if (editable && selection instanceof NodeSelection && selection.node.type.name === 'image')
 				this.pictureDialog.open(selection.from);
+		} else if (action.type === 'picture') {
+			const pos = view && selectedPicturePos(view.state);
+			if (!view || !editable || pos === undefined) return true;
+			if (action.key === 'crop') this.pictureDialog.open(pos, 'crop');
+			else {
+				setPictureWrap(view, action.value as DrawingWrap);
+				focusView(view);
+			}
 		} else if (action.type === 'characterStyle') {
 			if (view?.editable) applyCharacterStyle(view, action.value);
 			focusView(view);

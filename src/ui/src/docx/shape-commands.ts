@@ -4,7 +4,10 @@ import { NodeSelection, type EditorState } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import {
 	DEFAULT_DRAWN_SHAPE,
+	drawingWrapOf,
 	isDirectionalPreset,
+	placementForWrap,
+	type DrawingWrap,
 	newShape,
 	type PicturePlacement,
 	type ShapeSpec,
@@ -137,43 +140,20 @@ export function setShapeSize(view: EditorView, widthPx?: number, heightPx?: numb
 		: false;
 }
 
-export type ShapeWrap =
-	| 'inline'
-	| 'square'
-	| 'tight'
-	| 'through'
-	| 'topAndBottom'
-	| 'behind'
-	| 'front';
+export type ShapeWrap = DrawingWrap;
 
 /** Wrap Text: the wrapping of the shape, or In Line with Text. */
 export function setShapeWrap(view: EditorView, wrap: ShapeWrap): boolean {
 	const selected = selectedShape(view.state);
 	if (!selected) return false;
 	if (wrap === 'inline') return apply(view, selected, { anchored: false, placement: null });
-	const base: PicturePlacement = selected.placement ?? {
-		wrap: 'none',
-		relativeFrom: 'column',
-		offsetXPx: 0,
-		relativeFromV: 'paragraph',
-		offsetYPx: 0,
-	};
-	const { behindText: _behind, ...kept } = base;
-	const placement: PicturePlacement =
-		wrap === 'behind'
-			? { ...kept, wrap: 'none', behindText: true }
-			: wrap === 'front'
-				? { ...kept, wrap: 'none' }
-				: { ...kept, wrap };
+	const placement = placementForWrap(selected.anchored ? selected.placement : undefined, wrap);
 	return apply(view, selected, { anchored: true, placement });
 }
 
 /** The Wrap Text choice that describes the selected shape. */
 export function shapeWrapOf(shape: SelectedShape): ShapeWrap {
-	if (!shape.anchored) return 'inline';
-	const placement = shape.placement;
-	if (!placement || placement.wrap === 'none') return placement?.behindText ? 'behind' : 'front';
-	return placement.wrap;
+	return drawingWrapOf(shape.anchored, shape.placement);
 }
 
 export interface DrawnRect {

@@ -204,6 +204,7 @@ export const RIBBON_ACTION_IDS = [
 	'split-cells',
 	'delete-table',
 	'table-properties',
+	'crop',
 ] as const;
 
 export type RibbonActionId = (typeof RIBBON_ACTION_IDS)[number];
@@ -407,6 +408,7 @@ export const RIBBON_ACTION_LABELS: Readonly<Record<RibbonActionId, string>> = {
 	'split-cells': 'Split cells',
 	'delete-table': 'Delete table',
 	'table-properties': 'Table properties',
+	crop: 'Crop',
 };
 
 export type { LegacyRibbonLabel };
