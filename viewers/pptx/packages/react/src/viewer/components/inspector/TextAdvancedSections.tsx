@@ -39,6 +39,8 @@ interface TextAdvancedSectionsProps {
 	selectedElement: PptxElement;
 	canEdit: boolean;
 	onUpdateTextStyle: (updates: Partial<TextStyle>) => void;
+	/** `font`: character formatting and text effects; `paragraph`: margins and text box. */
+	part?: 'font' | 'paragraph';
 }
 
 // ---------------------------------------------------------------------------
@@ -49,6 +51,7 @@ export function TextAdvancedSections({
 	selectedElement,
 	canEdit,
 	onUpdateTextStyle,
+	part,
 }: TextAdvancedSectionsProps): React.ReactElement | null {
 	// Only text-capable elements (text boxes, shapes with a text body, ...)
 	// expose a `textStyle`; everything else renders nothing at all.
@@ -68,13 +71,18 @@ export function TextAdvancedSections({
 				canEdit={canEdit}
 				onUpdateTextStyle={onUpdateTextStyle}
 				numChange={numChange}
+				part={part}
 			/>
 
-			<TextWarpGallery ts={ts} onUpdateTextStyle={onUpdateTextStyle} />
+			{part !== 'paragraph' && (
+				<>
+					<TextWarpGallery ts={ts} onUpdateTextStyle={onUpdateTextStyle} />
 
-			<TextEffectsPanel ts={ts} onUpdateTextStyle={onUpdateTextStyle} numChange={numChange} />
+					<TextEffectsPanel ts={ts} onUpdateTextStyle={onUpdateTextStyle} numChange={numChange} />
 
-			<Text3DProperties ts={ts} onUpdateTextStyle={onUpdateTextStyle} />
+					<Text3DProperties ts={ts} onUpdateTextStyle={onUpdateTextStyle} />
+				</>
+			)}
 		</div>
 	);
 }

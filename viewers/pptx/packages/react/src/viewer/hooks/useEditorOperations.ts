@@ -327,6 +327,7 @@ export function useEditorOperations(input: UseEditorOperationsInput): EditorOper
 		setSelectedElementIds: state.setSelectedElementIds,
 		setIsInspectorPaneOpen: state.setIsInspectorPaneOpen,
 		setSidebarPanelMode: state.setSidebarPanelMode,
+		formatPane: state.formatPane,
 		ops,
 		history,
 		onOpenHyperlinkDialog: () => dialogs.setIsHyperlinkDialogOpen(true),

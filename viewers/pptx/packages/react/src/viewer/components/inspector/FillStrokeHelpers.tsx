@@ -18,7 +18,15 @@ export interface FillStrokePropertiesProps {
 	onUpdateShapeStyle: (updates: Partial<ShapeStyle>) => void;
 	onSetFillColor: (color: string, ref?: PptxThemeColorRef) => void;
 	onSetStrokeColor: (color: string, ref?: PptxThemeColorRef) => void;
+	/**
+	 * The Format pane section this instance draws (`fill`, `outline` or
+	 * `effects`); omitted, it draws all three, as the standalone card did.
+	 */
+	part?: FillStrokePart;
 }
+
+/** One Format pane section of the fill-and-stroke panel. */
+export type FillStrokePart = 'fill' | 'outline' | 'effects';
 
 // ---------------------------------------------------------------------------
 // Shared CSS classes & helpers

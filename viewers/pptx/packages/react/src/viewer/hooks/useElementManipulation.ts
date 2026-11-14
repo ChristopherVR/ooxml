@@ -5,7 +5,8 @@
  * Handler logic is split across sub-hooks; this module composes them and
  * provides the context-menu dispatch.
  */
-import { contextMenuInspectorAnchor, scrollInspectorSectionIntoView } from 'ooxml-ui/pptx';
+import { contextMenuInspectorAnchor, formatSectionForAnchor } from 'ooxml-ui/pptx';
+import type { FormatPaneController } from 'ooxml-ui/pptx';
 
 import type { ElementContextMenuAction } from '../types';
 import type {
@@ -15,22 +16,12 @@ import type {
 import { useClipboardHandlers } from './useClipboardHandlers';
 import { useGroupAlignLayerHandlers } from './useGroupAlignLayerHandlers';
 
-/** Switch to the properties tab and, once mounted, scroll `anchor` into view. */
+/** Open the Format pane on the section `anchor` names (the request opens the tab). */
 function focusInspectorSection(
-	setIsInspectorPaneOpen: (open: boolean) => void,
-	setSidebarPanelMode: (mode: string) => void,
+	formatPane: FormatPaneController,
 	anchor: ReturnType<typeof contextMenuInspectorAnchor>,
 ): void {
-	setIsInspectorPaneOpen(true);
-	setSidebarPanelMode('properties');
-	if (!anchor) {
-		return;
-	}
-	// Two frames: one for React to commit the tab switch, one for layout to
-	// settle, before `scrollIntoView` can find the tagged section.
-	requestAnimationFrame(() => {
-		requestAnimationFrame(() => scrollInspectorSectionIntoView(document, anchor));
-	});
+	formatPane.requestFormatPane(anchor ? formatSectionForAnchor(anchor) : null, { focus: true });
 }
 
 export type {
@@ -45,6 +36,7 @@ export function useElementManipulation(
 		selectedElement,
 		setIsInspectorPaneOpen,
 		setSidebarPanelMode,
+		formatPane,
 		onOpenHyperlinkDialog,
 		onEditText,
 		onEditPoints,
@@ -132,25 +124,13 @@ export function useElementManipulation(
 				}
 				break;
 			case 'edit-alt-text':
-				focusInspectorSection(
-					setIsInspectorPaneOpen,
-					setSidebarPanelMode,
-					contextMenuInspectorAnchor('edit-alt-text'),
-				);
+				focusInspectorSection(formatPane, contextMenuInspectorAnchor('edit-alt-text'));
 				break;
 			case 'size-and-position':
-				focusInspectorSection(
-					setIsInspectorPaneOpen,
-					setSidebarPanelMode,
-					contextMenuInspectorAnchor('size-and-position'),
-				);
+				focusInspectorSection(formatPane, contextMenuInspectorAnchor('size-and-position'));
 				break;
 			case 'format-shape':
-				focusInspectorSection(
-					setIsInspectorPaneOpen,
-					setSidebarPanelMode,
-					contextMenuInspectorAnchor('format-shape'),
-				);
+				focusInspectorSection(formatPane, contextMenuInspectorAnchor('format-shape'));
 				break;
 		}
 	};

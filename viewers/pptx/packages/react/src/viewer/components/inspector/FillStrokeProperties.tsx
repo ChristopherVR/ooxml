@@ -39,6 +39,7 @@ export function FillStrokeProperties({
 	onUpdateShapeStyle,
 	onSetFillColor,
 	onSetStrokeColor,
+	part,
 }: FillStrokePropertiesProps): React.ReactElement {
 	const { t } = useTranslation();
 	// Lines (and line-like shapes) have fill disabled since they have no area to fill
@@ -112,6 +113,19 @@ export function FillStrokeProperties({
 	};
 
 	const showQuickStyles = selectedElement.type === 'shape' || selectedElement.type === 'text';
+	const fill = part === undefined || part === 'fill';
+	const strokeParts = (
+		<StrokeEffectsSection
+			style={style}
+			isLine={line}
+			onUpdateShapeStyle={onUpdateShapeStyle}
+			onSetStrokeColor={onSetStrokeColor}
+			part={part}
+		/>
+	);
+	if (!fill) {
+		return <div className='grid grid-cols-2 gap-2'>{strokeParts}</div>;
+	}
 
 	return (
 		<>
@@ -150,13 +164,8 @@ export function FillStrokeProperties({
 					onSetFillColor={onSetFillColor}
 				/>
 
-				{/* Stroke, effects, line join/cap */}
-				<StrokeEffectsSection
-					style={style}
-					isLine={line}
-					onUpdateShapeStyle={onUpdateShapeStyle}
-					onSetStrokeColor={onSetStrokeColor}
-				/>
+				{/* Stroke, effects, line join/cap (only the fill opacity in the Fill section) */}
+				{strokeParts}
 			</div>
 		</>
 	);
