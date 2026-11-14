@@ -25,6 +25,8 @@ export function createShapeEffectsControls(
 	doc: Document,
 	t: Translator,
 	handlers: InspectorHandlers,
+	/** Format pane homes for the shape type (Arrange) and arrowheads (Line); default `el`. */
+	targets: { shapeType?: HTMLElement; arrows?: HTMLElement } = {},
 ): ShapeEffectsControls {
 	const el = createEl(doc, 'div', 'pptxv-inspector-shape-effects');
 
@@ -36,7 +38,7 @@ export function createShapeEffectsControls(
 		})),
 		onChange: (value) => handlers.setShapeType(value),
 	});
-	el.appendChild(shapeType.el);
+	(targets.shapeType ?? el).appendChild(shapeType.el);
 
 	const effects = createInspectorFields(doc, t, {
 		sections: SHAPE_EFFECT_SECTIONS,
@@ -50,7 +52,7 @@ export function createShapeEffectsControls(
 	// The six `a:headEnd`/`a:tailEnd` dropdowns are their own card; see
 	// `connector-arrow-controls`.
 	const arrows = createConnectorArrowControls(doc, t, handlers);
-	el.appendChild(arrows.el);
+	(targets.arrows ?? el).appendChild(arrows.el);
 
 	return {
 		el,

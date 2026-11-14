@@ -4,8 +4,8 @@ import {
 	elementPictureFilename,
 	findCanvasElementNode,
 	rasterizeElementToDataUrl,
+	formatSectionForAnchor,
 	saveElementAsPicture,
-	scrollInspectorSectionIntoView,
 } from 'ooxml-ui/pptx';
 /**
  * DOM-driving implementations of the three "format object" context-menu
@@ -22,6 +22,7 @@ import type { PptxElement } from 'pptx-viewer-core';
 import { findActiveElement } from '../editor/editor-active-elements';
 import { renderToCanvas } from '../export/render-to-canvas';
 import type { Store, ViewerState } from '../state';
+import { formatPaneFor } from './inspector/format-pane';
 
 /** The mounted DOM node for `elementId`, or null when it is not on screen. */
 function findElementNode(doc: Document, elementId: string): HTMLElement | null {
@@ -112,19 +113,15 @@ export async function rasterizePastedElementAsPicture(
 }
 
 /**
- * "Edit Alt Text" / "Size and Position" / "Format Shape": open the inspector
- * (it may be collapsed, e.g. on a narrow viewport) and, once it has had a
- * chance to render, scroll the matching section into view. Two frames: one
- * for the store update to reach the inspector's re-render, one for layout to
- * settle, before `scrollIntoView` can find the tagged section.
+ * "Edit Alt Text" / "Size and Position" / "Format Shape": ask the viewer's
+ * Format pane for the matching section. The request opens the inspector (it
+ * may be collapsed, e.g. on a narrow viewport); the inspector switches to
+ * Properties, expands the section and focuses its heading once rendered.
  */
 export function focusInspectorSection(
-	doc: Document,
+	_doc: Document,
 	store: Store<ViewerState>,
 	anchor: InspectorSectionAnchor,
 ): void {
-	store.set({ inspectorOpen: true });
-	requestAnimationFrame(() => {
-		requestAnimationFrame(() => scrollInspectorSectionIntoView(doc, anchor));
-	});
+	formatPaneFor(store).requestFormatPane(formatSectionForAnchor(anchor), { focus: true });
 }

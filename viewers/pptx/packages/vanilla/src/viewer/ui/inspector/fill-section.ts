@@ -25,6 +25,17 @@ export interface FillSection {
 	update(state: InspectorState): void;
 }
 
+/**
+ * Where the Format pane puts the parts of this section: the line controls
+ * (and connector arrowheads) under Outline, the effects under Effects, the
+ * shape type under Arrange. Omitted, everything stays in the one section.
+ */
+export interface FillSectionSplit {
+	outline: HTMLElement;
+	effects: HTMLElement;
+	shapeType?: HTMLElement;
+}
+
 /** Percent-formatted readout for the opacity sliders (0..1 -> "NN%"). */
 function pct(value: number): string {
 	return `${Math.round(value * 100)}%`;
@@ -40,8 +51,14 @@ export function createFillSection(
 	t: Translator,
 	section: (label: string) => HTMLElement,
 	handlers: InspectorHandlers,
+	split?: FillSectionSplit,
 ): FillSection {
 	const el = section(t('pptx.shape.fillStroke'));
+	const outlineEl = split?.outline ?? el;
+	const effectsEl = split?.effects ?? el;
+	const parts = [
+		...new Set([el, outlineEl, effectsEl, ...(split?.shapeType ? [split.shapeType] : [])]),
+	];
 	// Scroll target for the "Format Shape" element context-menu command; see
 	// `pptx-viewer-shared`'s `context-menu-inspector-anchor.ts`.
 	el.setAttribute('data-pptx-inspector-section', 'fill-stroke');
@@ -85,7 +102,12 @@ export function createFillSection(
 	// picker, then that target's theme grid and recent colours. The two grids
 	// used to be appended one after the other under a single Fill/Line row, so
 	// nothing said which grid set the fill and which the line.
-	const colorGroup = (label: string, control: HTMLElement, ...rest: HTMLElement[]): void => {
+	const colorGroup = (
+		target: HTMLElement,
+		label: string,
+		control: HTMLElement,
+		...rest: HTMLElement[]
+	): void => {
 		const group = createEl(doc, 'div', 'pptxv-inspector-color-group');
 		group.setAttribute('role', 'group');
 		group.setAttribute('aria-label', label);
@@ -94,10 +116,10 @@ export function createFillSection(
 		title.textContent = label;
 		head.append(title, control);
 		group.append(head, ...rest);
-		el.appendChild(group);
+		target.appendChild(group);
 	};
-	colorGroup(t('pptx.inspector.fill'), fill.el, fillTheme.el, fillRecent.el);
-	colorGroup(t('pptx.inspector.line'), stroke.el, strokeTheme.el, strokeRecent.el);
+	colorGroup(el, t('pptx.inspector.fill'), fill.el, fillTheme.el, fillRecent.el);
+	colorGroup(outlineEl, t('pptx.inspector.line'), stroke.el, strokeTheme.el, strokeRecent.el);
 
 	const fillOpacity = makeRangeField(doc, {
 		label: t('pptx.strokeEffects.fillOpacity'),
@@ -114,7 +136,7 @@ export function createFillSection(
 		sections: SHAPE_LINE_SECTIONS,
 		onPatch: (patch) => handlers.setShapeStyle(patch),
 	});
-	el.appendChild(lineFields.el);
+	outlineEl.appendChild(lineFields.el);
 
 	// -- Gradient sub-panel -----------------------------------------------------
 	const gradientToggle = makeCheckboxField(doc, {
@@ -280,13 +302,20 @@ export function createFillSection(
 	const gated = [fill, stroke, fillOpacity, gradientToggle, patternToggle];
 	const gradientGated = [linearBtn, radialBtn, angleField, addStopBtn];
 	const patternGated = [patternPreset, patternBackground];
-	const effects = createShapeEffectsControls(doc, t, handlers);
-	el.appendChild(effects.el);
+	const effects = createShapeEffectsControls(
+		doc,
+		t,
+		handlers,
+		split ? { arrows: outlineEl, ...(split.shapeType ? { shapeType: split.shapeType } : {}) } : {},
+	);
+	effectsEl.appendChild(effects.el);
 
 	return {
 		el,
 		update(state) {
-			el.hidden = !state.hasSelection || !state.canShape;
+			for (const part of parts) {
+				part.hidden = !state.hasSelection || !state.canShape;
+			}
 			fill.setValue(state.fillColor);
 			stroke.setValue(state.strokeColor);
 			fillOpacity.setValue(state.fillOpacity);

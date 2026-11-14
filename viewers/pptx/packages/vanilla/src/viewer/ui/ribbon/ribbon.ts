@@ -10,6 +10,7 @@ import {
 	attachRibbonOverflow,
 	createRibbonDisplayController,
 	EMPTY_RESOLVED_CUSTOMIZATION,
+	HOME_LAUNCHER_SECTIONS,
 	homeLaunchers,
 	filterVisibleTabs,
 	isActionHidden,
@@ -253,8 +254,12 @@ export function createRibbon(
 	// Font, Paragraph and Drawing launchers open the Properties pane (there are no modal dialogs).
 	const launchers = homeLaunchers(
 		() => t('pptx.inspector.properties'),
-		() => {
-			if (!inspectorOpen) {
+		(group) => {
+			// Switch to Properties and reveal the group's section (Font, Paragraph, Fill);
+			// the request opens the inspector when it is closed.
+			if (handlers.nav.requestFormatPane) {
+				handlers.nav.requestFormatPane(HOME_LAUNCHER_SECTIONS[group]);
+			} else if (!inspectorOpen) {
 				openInspector();
 			}
 		},
