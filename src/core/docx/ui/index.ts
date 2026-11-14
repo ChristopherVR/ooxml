@@ -70,4 +70,5 @@ export * from './form-field-guard';
 export * from '../find-syntax';
 export * from '../find-pattern';
 export * from '../find-replacement';
+export * from '../find-stories';
 export * from './edit-restriction';
