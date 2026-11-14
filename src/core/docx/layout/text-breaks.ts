@@ -18,7 +18,15 @@ export { isEastAsianChar };
 export type TokenGlue = 'kinsoku' | 'word';
 
 export type BreakToken =
-	| { kind: 'word'; text: string; runIndex: number; sourceStart: number; glue?: TokenGlue }
+	| {
+			kind: 'word';
+			text: string;
+			runIndex: number;
+			sourceStart: number;
+			glue?: TokenGlue;
+			/** Automatic East Asian/Western spacing after this word (`w:autoSpaceDE`/`DN`), in px. */
+			spaceAfterPx?: number;
+	  }
 	| { kind: 'space'; text: string; runIndex: number; sourceStart: number }
 	| { kind: 'tab'; runIndex: number; sourceStart: number }
 	/** An inline picture: an unbreakable box of the run's object size. */

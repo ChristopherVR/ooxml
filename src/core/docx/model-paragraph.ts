@@ -69,6 +69,10 @@ export interface Paragraph {
 	 * `borders`: the source XML keeps it and it is not written for new paragraphs.
 	 */
 	kinsoku?: boolean;
+	/** `w:autoSpaceDE`: space between East Asian and Western letters (on when absent); read-only. */
+	autoSpaceDE?: boolean;
+	/** `w:autoSpaceDN`: space between East Asian letters and digits (on when absent); read-only. */
+	autoSpaceDN?: boolean;
 	/**
 	 * `w:outlineLvl` as a 1-9 level, or 0 for body text (`w:val="9"`, which cancels a style's
 	 * level). Read-only like `borders`: the source XML keeps it and it is not written for new paragraphs.
@@ -122,6 +126,8 @@ export type ParagraphFormatting = Pick<
 	| 'contextualSpacing'
 	| 'suppressLineNumbers'
 	| 'kinsoku'
+	| 'autoSpaceDE'
+	| 'autoSpaceDN'
 	| 'outlineLevel'
 	| 'borders'
 	| 'shadingFill'

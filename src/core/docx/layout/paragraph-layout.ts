@@ -295,6 +295,8 @@ function measureParagraph(
 						: 0
 				: 0;
 		const advance = width * (1 - markerFactor);
+		// Automatic East Asian/Western spacing follows the word; it never decides whether it fits.
+		const spacePx = token.kind === 'word' ? (token.spaceAfterPx ?? 0) : 0;
 		const positional = token.kind === 'tab' && paragraph.runs[token.runIndex]?.positionalTab;
 		if (positional) {
 			const { followingPx } = segmentAfter(tokenIndex);
@@ -379,9 +381,10 @@ function measureParagraph(
 			token,
 			widthPx: width,
 			...(leader ? { leader } : {}),
-			...(markerFactor ? { xOffsetPx: -width * markerFactor, advancePx: advance } : {}),
+			...(markerFactor ? { xOffsetPx: -width * markerFactor } : {}),
+			...(markerFactor || spacePx ? { advancePx: advance + spacePx } : {}),
 		});
-		lineWidthPx += token.kind === 'tab' ? width : advance;
+		lineWidthPx += token.kind === 'tab' ? width : advance + spacePx;
 		if (token.kind === 'space') lineSpacePx += advance;
 	}
 	flushLine(lines.length === 0, undefined);

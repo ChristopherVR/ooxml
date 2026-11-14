@@ -163,6 +163,9 @@ export interface LayoutParagraph {
 	shading?: string;
 	/** `w:kinsoku w:val="0"`: no line-start or line-end prohibition (on when absent). */
 	kinsoku?: false;
+	/** `w:autoSpaceDE w:val="0"` / `w:autoSpaceDN w:val="0"`: no space between East Asian text and Western letters / digits. */
+	autoSpaceDE?: false;
+	autoSpaceDN?: false;
 	/** The document's kinsoku settings (settings.xml), copied onto each paragraph that uses them. */
 	kinsokuSettings?: import('../../text/kinsoku').KinsokuSettings;
 }

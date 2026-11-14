@@ -2,6 +2,7 @@ import { definedProps } from '../defined-props';
 import type { LayoutFontSpec, TextMeasurer } from './measure';
 import type { LayoutFragment } from './result';
 import { kinsokuSets, type KinsokuSets } from '../../text/kinsoku';
+import { AUTO_SPACE_EM, eastAsianAutoSpace } from '../../text/east-asian';
 import {
 	appendBreakMarker,
 	breakAllowedBetween,
@@ -111,6 +112,28 @@ function glueAcrossRuns(paragraph: LayoutParagraph, tokens: BreakToken[], start:
 		token.glue = 'kinsoku';
 }
 
+/**
+ * Word's automatic space between East Asian letters and Western letters or digits, a quarter em
+ * of the preceding character, recorded on the word before each such boundary.
+ */
+function applyAutoSpace(paragraph: LayoutParagraph, tokens: BreakToken[]): void {
+	if (paragraph.autoSpaceDE === false && paragraph.autoSpaceDN === false) return;
+	for (let index = 1; index < tokens.length; index++) {
+		const previous = tokens[index - 1];
+		const token = tokens[index];
+		if (previous?.kind !== 'word' || token?.kind !== 'word') continue;
+		const run = paragraph.runs[previous.runIndex];
+		if (!run || run.synthetic || paragraph.runs[token.runIndex]?.synthetic) continue;
+		const kind = eastAsianAutoSpace(
+			graphemesOf(previous.text).at(-1) ?? '',
+			graphemesOf(token.text)[0] ?? '',
+		);
+		if (!kind || (kind === 'alpha' ? paragraph.autoSpaceDE : paragraph.autoSpaceDN) === false)
+			continue;
+		previous.spaceAfterPx = fontOf(run).sizePx * AUTO_SPACE_EM;
+	}
+}
+
 export function tokenizeParagraph(paragraph: LayoutParagraph): {
 	tokens: BreakToken[];
 	runOffsets: number[];
@@ -146,6 +169,7 @@ export function tokenizeParagraph(paragraph: LayoutParagraph): {
 			for (const token of tokens) if (token.runIndex === runIndex) token.sourceStart = 0;
 		} else cursor += sourceLengthOf(run);
 	});
+	applyAutoSpace(paragraph, tokens);
 	return { tokens, runOffsets };
 }
 

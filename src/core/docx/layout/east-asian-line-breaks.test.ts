@@ -61,8 +61,67 @@ describe('kinsoku line breaking (Word 16 probes)', () => {
 
 describe('words split across runs', () => {
 	it('never breaks inside a word whose letters are formatted differently', () => {
-		const result = lines([{ text: 'aaa bbb' }, { text: 'bb', bold: true }], {}, 80);
-		expect(result).toEqual(['aaa ', 'bbbbb'].map((line) => line.trimEnd()));
-		expect(at(result, 1)).toBe('bbbbb');
+		expect(lines([{ text: 'aaa bbb' }, { text: 'bb', bold: true }], {}, 80)).toEqual([
+			'aaa',
+			'bbbbb',
+		]);
+	});
+});
+
+describe('automatic East Asian and Western spacing (w:autoSpaceDE, w:autoSpaceDN)', () => {
+	// 7.5 pt is 10px, so a quarter em is 2.5px.
+	const run = (text: string, fontSizePt = 7.5): LayoutRun => ({ text, fontSizePt });
+	const fragmentsOf = (runs: LayoutRun[], extra: Partial<LayoutParagraph> = {}) =>
+		at(
+			layoutParagraph({ kind: 'paragraph', id: 'p', runs, ...extra }, 400, measurer, noop).lines,
+			0,
+		).fragments;
+	const positions = (runs: LayoutRun[], extra: Partial<LayoutParagraph> = {}) =>
+		fragmentsOf(runs, extra).map((fragment) => [fragment.text, fragment.xPx]);
+
+	it('adds a quarter em after the character before each East Asian/Western boundary', () => {
+		expect(positions([run('日本Wa日本12日x')])).toEqual([
+			['日', 0],
+			['本', 10],
+			['Wa', 22.5],
+			['日', 45],
+			['本', 55],
+			['12', 67.5],
+			['日', 90],
+			['x', 102.5],
+		]);
+	});
+
+	it('spaces across runs by the preceding size and leaves the glyph widths alone', () => {
+		const fragments = fragmentsOf([run('日'), run('a', 15), run('日')]);
+		expect(fragments.map((fragment) => [fragment.xPx, fragment.widthPx])).toEqual([
+			[0, 10],
+			[12.5, 10],
+			[27.5, 10],
+		]);
+	});
+
+	it('turns letters and digits off separately', () => {
+		expect(positions([run('日本Wa日本12日x')], { autoSpaceDE: false })).toEqual([
+			['日', 0],
+			['本', 10],
+			['Wa', 20],
+			['日', 40],
+			['本', 50],
+			['12', 62.5],
+			['日', 85],
+			['x', 95],
+		]);
+		expect(positions([run('本12日')], { autoSpaceDN: false }).map(([, x]) => x)).toEqual([
+			0, 10, 30,
+		]);
+	});
+
+	it('does not space punctuation or text already separated by a space', () => {
+		expect(positions([run('日 a.日(a)')]).map(([, x]) => x)).toEqual([0, 10, 20, 40, 50]);
+	});
+
+	it('does not let the gap after a line-end character push it to the next line', () => {
+		expect(lines([run(`${ten}a`)])).toEqual([ten, 'a']);
 	});
 });
