@@ -32,7 +32,8 @@ export function createFieldTracker() {
 				} else if (type === 'end') stack.pop();
 			} else {
 				const top = stack.at(-1);
-				if (named(child, 'instrText') && top && !top.inResult) top.instr += textContent(child);
+				if ((named(child, 'instrText') || named(child, 'delInstrText')) && top && !top.inResult)
+					top.instr += textContent(child);
 				else if ((named(child, 't') || named(child, 'delText')) && top?.inResult) {
 					resultInstr = top.instr.trim();
 					resultLocked = top.locked;
