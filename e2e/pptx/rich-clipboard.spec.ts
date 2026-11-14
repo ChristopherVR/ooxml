@@ -94,6 +94,57 @@ test('formatted HTML pastes into a text box as runs and plain text after it stay
 		.toEqual({ text: expect.stringContaining(`${SHAPE_TEXT}Rich tail!`), boldRich: 1 });
 });
 
+test('a rich paste mid-way into a bulleted list keeps the bullet and puts the caret after it', async ({
+	page,
+}) => {
+	await loadDeck(page, SAMPLE_DECK);
+	await page.evaluate((needle) => {
+		const api = window.__pptxViewer;
+		const target = api
+			.getElements(api.getActiveSlideIndex())
+			.find((candidate) => (candidate as { text?: string }).text?.includes(needle))!;
+		const style = { fontSize: 24 };
+		api.updateElement(target.id, {
+			text: 'One\nTwo',
+			textSegments: [
+				{ text: 'One', style, bulletInfo: { char: '\u2022' } },
+				{ text: '\n', style, isParagraphBreak: true },
+				{ text: 'Two', style, bulletInfo: { char: '\u2022' } },
+			],
+		} as never);
+	}, SHAPE_TEXT);
+	await elementWithText(page, 'Two').dblclick();
+	const editor = page.locator('[data-inline-editor]').first();
+	await expect(editor).toBeVisible();
+	await editor.press('ControlOrMeta+End');
+	await editor.press('Home');
+	await writeHtmlClipboard(page, '<b>New</b>', 'New');
+	await editor.press('ControlOrMeta+v');
+	await expect
+		.poll(async () => (await runsOf(page, 'NewTwo')).some((run) => run.bold && run.text === 'New'))
+		.toBe(true);
+	const reopened = page.locator('[data-inline-editor]').first();
+	await expect(reopened).toBeFocused();
+	await page.keyboard.type('Z');
+	await reopened.press('Escape');
+	await expect
+		.poll(() =>
+			page.evaluate(() => {
+				const api = window.__pptxViewer;
+				const element = api
+					.getElements(api.getActiveSlideIndex())
+					.find((candidate) => (candidate as { text?: string }).text?.includes('Two')) as
+					| { text?: string; textSegments?: { text: string; bulletInfo?: unknown }[] }
+					| undefined;
+				return {
+					text: element?.text,
+					bullets: (element?.textSegments ?? []).filter((segment) => segment.bulletInfo).length,
+				};
+			}),
+		)
+		.toEqual({ text: 'One\nNewZTwo', bullets: 2 });
+});
+
 test('copying a shape offers a picture and its text to other applications', async ({ page }) => {
 	await loadDeck(page, SAMPLE_DECK);
 	await selectElement(page, elementWithText(page, SHAPE_TEXT));
