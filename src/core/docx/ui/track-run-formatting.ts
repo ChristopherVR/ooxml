@@ -3,8 +3,8 @@ import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import type { EditorState, Transaction } from 'prosemirror-state';
 import { AddMarkStep, RemoveMarkStep, AttrStep, type Step } from 'prosemirror-transform';
 import type { TextRun } from '../model';
-import { createRun } from '../write-run';
-import { buildXml, first, makeW, parseXml, WORD_NS, type XmlElement } from '../xml';
+import { runPropertiesElement } from '../run-properties-snapshot';
+import { buildXml, type XmlElement } from '../xml';
 import { parseRunPropertiesSnapshot } from '../restore-run-format';
 import { inlineNodeRun } from './run-adapter';
 import { formattingRevision } from './review-formatting';
@@ -17,15 +17,7 @@ import {
 
 /** Uses the ordinary writer so snapshots retain script fonts and opaque source properties. */
 function properties(node: ProseMirrorNode): XmlElement {
-	const run = inlineNodeRun(node) ?? { text: '' };
-	// Only serialize properties here. The drawing/OMML has its own source and needs no allocator.
-	run.text = '';
-	delete run.image;
-	delete run.equation;
-	delete run.revision;
-	delete run.formatRevision;
-	const doc = parseXml(`<w:r xmlns:w="${WORD_NS}"/>`);
-	return first(createRun(doc, run), 'rPr') ?? makeW(doc, 'rPr');
+	return runPropertiesElement(inlineNodeRun(node) ?? { text: '' });
 }
 
 /** Records pure, supported formatting transactions without changing text or inline identities. */

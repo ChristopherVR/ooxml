@@ -124,6 +124,17 @@ export {
 	rejectRevision,
 	type RevisionEntry,
 } from './revision-commands';
+export {
+	compareDocuments,
+	UNCOMPARED_DOCUMENT_PARTS,
+	revisionSpans,
+	type CompareDocumentsOptions,
+	type CompareDocumentsResult,
+	type CompareGranularity,
+	type CompareSummary,
+	type RevisionSpan,
+	type UncomparedDocumentPart,
+} from './compare/index';
 export { DEFAULT_TABLE_BORDERS } from './table-defaults';
 export { fieldName } from './field-runs';
 export { isFieldLocked } from './field-lock';

@@ -53,8 +53,8 @@ Word (`docx-core`):
   style and numbering resolvers.
 - Editing commands: the `*-edit` modules (sections, content controls, list start overrides,
   charts) and `fillFormFields`, `refreshStyleRefFields`.
-- Review, document statistics, tables of contents, fields (`fieldName`, date fields) and notes
-  numbering.
+- Review (including `compareDocuments`, `revisionSpans` and `UNCOMPARED_DOCUMENT_PARTS`),
+  document statistics, tables of contents, fields (`fieldName`, date fields) and notes numbering.
 
 Not supported (internal): the generated schema simple types (`generated/wml-simple-types`),
 diagram and chart painting helpers (`diagram*`, `docxChart*`, `shapeSvg` and related paint

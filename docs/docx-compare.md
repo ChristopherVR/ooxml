@@ -1,0 +1,80 @@
+# Comparing documents (`ooxml-core/docx`)
+
+`compareDocuments(original, revised, options)` is Word's Review > Compare: it returns a new DOCX
+package whose content is the revised document, with everything that changed since the original
+recorded as tracked changes by one author. Accepting every change gives the revised document;
+rejecting every change gives the original. The code is in `src/core/docx/compare/`; it is
+DOM-free and changes neither input.
+
+```ts
+import { compareDocuments, listRevisions } from 'ooxml-core/docx';
+
+const result = await compareDocuments(v1Bytes, v2Bytes, {
+	author: 'Reviewer',
+	granularity: 'word', // or 'character'
+});
+await writeFile('compared.docx', result.bytes);
+console.log(result.summary); // { insertions, deletions, formatChanges }
+listRevisions(result.model); // the same changes, as the editor lists them
+```
+
+`result.model` is the saved package loaded again, so the model and the bytes agree. `warnings`
+names content the comparison could not carry over, and `notCompared` lists every part it never
+looks at (see below).
+
+## How it compares
+
+The rules follow Word 16's observable output (`Application.CompareDocuments`, new document):
+
+- **Tracked changes in either input are accepted first**, as Word does by default ("Word will
+  consider these changes accepted for the purpose of the comparison").
+- **Paragraphs with the same text are aligned first** (Myers' O(ND) difference over the
+  paragraphs). The paragraphs between two aligned ones are compared as one stream of words (or
+  characters), paragraph marks included, so a changed paragraph shows only its changed words, a
+  removed paragraph is deleted with its mark, and text merged from two paragraphs shows the
+  deleted mark between them.
+- **The last paragraph mark of the body or a table cell is never marked**: a paragraph added at
+  the end marks the previous paragraph's mark as inserted, as Word does.
+- **Word granularity** splits text into words, single spaces and punctuation; spaces left between
+  two changes join them (`Alpha [BETA gamma][beta GAMMA].`, not two replacements around a kept
+  space), and an insertion or deletion that could sit in several places is placed with its edges
+  at paragraph marks or spaces. **Character granularity** marks single characters
+  (`colo[u]r`).
+- Deletions come before insertions in a replaced span. Each contiguous span is one revision; ids
+  are numbered on save by the same allocator the editor uses.
+- **Formatting changes** of unchanged text are recorded as `w:rPrChange` with the original run
+  properties (direct run formatting is compared; `compareFormatting: false` turns this off).
+- **Tables** are compared row by row: rows with the same text pair, the rows of a changed stretch
+  pair by their words, paired rows are compared cell by cell, and the rest are tracked row
+  insertions and deletions (`w:trPr/w:ins`, `w:trPr/w:del`) with their content marked. A table
+  whose rows the writer cannot restructure (merged or nested cells) is shown deleted and inserted
+  whole.
+- Pictures, field markers, breaks and other non-text runs are compared whole, never split.
+  Pictures and note references deleted from the original are not carried into the result (a
+  warning says so); deleted text keeps its direct formatting and any style or list the revised
+  document also defines.
+
+## Not compared
+
+`notCompared` (`UNCOMPARED_DOCUMENT_PARTS`) lists them in every result:
+
+| Part                  | What the result shows                                                          |
+| --------------------- | ------------------------------------------------------------------------------ |
+| `headersAndFooters`   | The revised document's headers and footers.                                    |
+| `notes`               | The revised document's footnotes and endnotes.                                 |
+| `comments`            | The revised document's comments; anchors in deleted text are dropped.          |
+| `textBoxes`           | Text boxes, shapes and drawings compared as whole objects only.                |
+| `moves`               | Moved text as a deletion and an insertion, never `w:moveFrom`/`w:moveTo`.      |
+| `paragraphFormatting` | The revised paragraph properties; no `w:pPrChange`.                            |
+| `tableFormatting`     | The revised table, row and cell properties; no `w:tblPrChange`/`w:tcPrChange`. |
+| `sections`            | The revised section and page setup.                                            |
+
+## Checking against Word
+
+`src/core/docx/__fixtures__/compare/generate-word-compare.ps1` (Windows, Word 16, manual) builds
+original and revised pairs with Word and saves Word's own comparison of each (`*-word.docx`).
+`compare.word.test.ts` checks that `compareDocuments` marks the same inserted, deleted and
+reformatted spans (`revisionSpans`) as Word for word edits with paragraphs added and removed,
+formatting changes, inputs with their own tracked changes, character granularity and table rows.
+The results also open in Word with the same revision count, and rejecting them all in Word gives
+the original text.
