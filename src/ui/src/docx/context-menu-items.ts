@@ -115,8 +115,8 @@ export function computeMenuItems(state: MenuState): MenuItem[] {
 			}),
 		]);
 	if (state.pictureWrap)
-		groups.push([
-			...WRAP_ITEMS.map(([wrap, label], index) => ({
+		groups.push(
+			WRAP_ITEMS.map(([wrap, label], index) => ({
 				id: `picture-wrap-${wrap}`,
 				label,
 				command: { kind: 'ribbon', action: { type: 'picture', key: 'wrap', value: wrap } } as const,
@@ -124,11 +124,13 @@ export function computeMenuItems(state: MenuState): MenuItem[] {
 				checked: state.pictureWrap === wrap,
 				...(index === 0 ? { heading: 'Wrap text' as const } : {}),
 			})),
-			link('picture-format', 'Format picture', {
-				kind: 'ribbon',
-				action: { type: 'formatPicture' },
-			}),
-		]);
+			[
+				link('picture-format', 'Format picture', {
+					kind: 'ribbon',
+					action: { type: 'formatPicture' },
+				}),
+			],
+		);
 	if (state.inTable)
 		groups.push(
 			TABLE_ITEMS.map(([key, label]) => ({
