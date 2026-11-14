@@ -277,14 +277,14 @@ export function createWithheldEmbeddedFont(source: EmbeddedFontPartSource): Pptx
  * True when saving should write a deferred variant's original part bytes
  * under its original part and relationship: it was never decoded (reading
  * its data now would only decode it to re-encode the same bytes), or it
- * failed to decode. Never decodes. Fonts that are not deferred, and
- * decoded ones, keep the `rawFontData` save path.
+ * failed to decode or was withheld. Never decodes. A plain copy of a loaded
+ * variant (a spread or clone drops the non-enumerable `isLoaded`) that has
+ * its part but no clear data is written back verbatim too, so a withheld
+ * restricted face survives a host round trip. Decoded variants and fonts
+ * with clear data keep the `rawFontData` save path.
  */
 export function shouldSaveEmbeddedFontVerbatim(font: PptxEmbeddedFont): boolean {
-	if (font.isLoaded === undefined || !font.originalPartBytes?.length) {
-		return false;
-	}
-	if (!font.originalRId || !font.partPath) {
+	if (!font.originalPartBytes?.length || !font.originalRId || !font.partPath) {
 		return false;
 	}
 	return font.isLoaded === false || !font.rawFontData?.length;

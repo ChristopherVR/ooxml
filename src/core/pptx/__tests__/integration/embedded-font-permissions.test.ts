@@ -113,17 +113,22 @@ describe('embedded font permissions', () => {
 
 	it('saves the parts of restricted and preview faces back byte for byte', async () => {
 		vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-		for (const explicit of [false, true]) {
+		for (const mode of ['default', 'explicit', 'copied'] as const) {
 			const handler = new PptxHandler();
 			const data = await handler.load(await deckWithFonts());
 			// Reading the preview face's data decodes it; it must still round-trip.
 			void byName(data.embeddedFonts, 'preview face').rawFontData;
-			const saved = await JSZip.loadAsync(
-				await handler.save(
-					data.slides,
-					explicit ? { embeddedFonts: data.embeddedFonts } : undefined,
-				),
-			);
+			const options =
+				mode === 'default'
+					? undefined
+					: {
+							embeddedFonts:
+								mode === 'explicit'
+									? data.embeddedFonts
+									: // A host copy drops the non-enumerable runtime fields.
+										data.embeddedFonts!.map((font) => ({ ...font })),
+						};
+			const saved = await JSZip.loadAsync(await handler.save(data.slides, options));
 			expect(await saved.file('ppt/fonts/font0.fntdata')!.async('uint8array')).toStrictEqual(
 				PARTS.restricted,
 			);
