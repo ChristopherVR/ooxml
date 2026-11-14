@@ -28,6 +28,12 @@ export function buildCellProperties(doc: XmlDocument, cell: TableCell): XmlEleme
 		setW(width, 'w', String(cell.widthTwips));
 		setW(width, 'type', 'dxa');
 		tcPr.appendChild(width);
+	} else if (cell.widthPercent !== undefined) {
+		// Transitional `ST_MeasurementOrPercent`: fiftieths of a percent.
+		const width = makeW(doc, 'tcW');
+		setW(width, 'w', String(Math.round(cell.widthPercent * 5000)));
+		setW(width, 'type', 'pct');
+		tcPr.appendChild(width);
 	}
 	if (cell.gridSpan !== undefined && cell.gridSpan > 1)
 		tcPr.appendChild(withVal(doc, 'gridSpan', String(cell.gridSpan)));

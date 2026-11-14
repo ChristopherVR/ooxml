@@ -80,6 +80,14 @@ export function tableColumnCount(table: Table): number {
 	);
 }
 
+/** Grid column widths for a table the editor created: its grid, else the content width shared. */
+export function newTableGridWidths(table: Table, contentWidthTwips: number): number[] {
+	const columns = tableColumnCount(table);
+	return table.grid?.length === columns
+		? table.grid
+		: Array.from({ length: columns }, () => Math.max(1, Math.floor(contentWidthTwips / columns)));
+}
+
 /**
  * Builds `w:tblPr` and `w:tblGrid` for a table the editor created. Column widths come from the
  * model's grid when present, otherwise the content width is shared equally.
@@ -96,8 +104,13 @@ export function buildNewTableProperties(
 		tblPr.appendChild(style);
 	}
 	const width = makeW(doc, 'tblW');
-	setW(width, 'w', String(table.widthTwips ?? 0));
-	setW(width, 'type', table.widthTwips ? 'dxa' : 'auto');
+	const percent = !table.widthTwips && table.widthPercent ? table.widthPercent : undefined;
+	setW(
+		width,
+		'w',
+		String(percent !== undefined ? Math.round(percent * 5000) : (table.widthTwips ?? 0)),
+	);
+	setW(width, 'type', table.widthTwips ? 'dxa' : percent !== undefined ? 'pct' : 'auto');
 	tblPr.appendChild(width);
 	const jcValue = tableJustification(table);
 	if (jcValue) {
@@ -127,12 +140,7 @@ export function buildNewTableProperties(
 	for (const [name, value] of lookAttributes) setW(look, name, value);
 	tblPr.appendChild(look);
 	const tblGrid = makeW(doc, 'tblGrid');
-	const columns = tableColumnCount(table);
-	const widths =
-		table.grid?.length === columns
-			? table.grid
-			: Array.from({ length: columns }, () => Math.max(1, Math.floor(contentWidthTwips / columns)));
-	for (const value of widths) {
+	for (const value of newTableGridWidths(table, contentWidthTwips)) {
 		const column = makeW(doc, 'gridCol');
 		setW(column, 'w', String(value));
 		tblGrid.appendChild(column);

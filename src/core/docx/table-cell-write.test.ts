@@ -54,6 +54,33 @@ describe('new table cell properties', () => {
 		expect(tcPr).toMatch(/<w:tcW w:w="3000" w:type="dxa"\/>/);
 	});
 
+	it('gives cells without a width their grid width, so Word does not shrink them to content', async () => {
+		const xml = await tableXml(
+			modelWith({
+				grid: [twips(1000), twips(2000), twips(3000)],
+				rows: [
+					[{ paragraphs: [para('a')], gridSpan: 2 }, { paragraphs: [para('b')] }],
+					[
+						{ paragraphs: [para('c')], widthTwips: twips(900) },
+						{ paragraphs: [para('d')] },
+						{ paragraphs: [para('e')], widthPercent: 0.2 },
+					],
+				],
+			}),
+		);
+		const widths = [...xml.matchAll(/<w:tcW w:w="(\d+)" w:type="dxa"\/>/g)].map((m) => m[1]);
+		expect(widths).toEqual(['3000', '3000', '900', '2000']);
+		expect(xml).toContain('<w:tcW w:w="1000" w:type="pct"/>');
+	});
+
+	it('writes percentage table widths and reads them back', async () => {
+		const model = modelWith({ rows: [[{ paragraphs: [para('a')] }]], widthPercent: 0.5 });
+		expect(await tableXml(model)).toContain('<w:tblW w:w="2500" w:type="pct"/>');
+		const table = (await loadDocx(await saveDocx(model))).model.blocks[1] as Table;
+		expect(table).toMatchObject({ widthPercent: 0.5, layout: 'autofit' });
+		expect(table.widthTwips).toBeUndefined();
+	});
+
 	it('sizes tblGrid from gridSpan and marks short rows with gridAfter', async () => {
 		const xml = await tableXml(
 			modelWith({

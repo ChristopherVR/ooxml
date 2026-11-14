@@ -83,3 +83,12 @@ export function usesModernFootnoteLayout(profile: CompatibilityProfile): boolean
 export function attachesFootnotesToBodyColumns(profile: CompatibilityProfile): boolean {
 	return profile.mode === 12 || profile.mode === 14;
 }
+
+/**
+ * AutoFit tables size against the text column plus the first cell's left margin, and a percentage
+ * width against the column plus both outer cell margins. Measured in modes 12, 14 and with no
+ * mode (table-autofit fixtures); mode 15 sizes against the column itself.
+ */
+export function autofitOverhangsCellMargins(profile: CompatibilityProfile): boolean {
+	return profile.generation === 'legacy';
+}

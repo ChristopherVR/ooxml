@@ -190,6 +190,9 @@ export interface LayoutTableCell {
 	widthPx?: number;
 	/** Left edge from the table's left, from the table grid (merged cells span grid columns). */
 	xPx?: number;
+	/** AutoFit input: the preferred width (`w:tcW`) in pixels, or as a fraction of the table width. */
+	preferredWidthPx?: number;
+	preferredFraction?: number;
 	/** Cell margins (`w:tcMar`, else the table default); content is inset by them. */
 	padding?: LayoutCellPadding;
 	borders?: LayoutCellBorders;
@@ -223,6 +226,21 @@ export interface LayoutTable {
 	indentPx?: number;
 	/** `w:jc` on the table. */
 	alignment?: 'left' | 'center' | 'right';
+	/**
+	 * Set for an AutoFit table (`w:tblLayout` not `fixed`): its columns are sized from their
+	 * content when it is placed (table-autofit.ts), replacing the grid widths above.
+	 */
+	autofit?: LayoutTableAutofit;
+}
+
+export interface LayoutTableAutofit {
+	/** Grid columns. */
+	columns: number;
+	/** Preferred table width (`w:tblW`): pixels, or a fraction of the text column. */
+	widthPx?: number;
+	widthFraction?: number;
+	/** Compatibility modes before 15 let the cells' outer margins overhang the text column. */
+	legacyMargins?: boolean;
 }
 
 export type LayoutBlock = LayoutParagraph | LayoutTable;

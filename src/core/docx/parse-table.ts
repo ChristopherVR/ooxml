@@ -26,6 +26,18 @@ import { parseShadingFill, parseShadingThemeFill, parseTableBorders } from './ta
 
 const dxa = parseTwips;
 
+/**
+ * A percentage width (`ST_MeasurementOrPercent`) as a fraction: fiftieths of a percent in the
+ * transitional schema (`2500` is 50%), or a `%` value (`50%`) in the strict one.
+ */
+function percentWidth(width: XmlElement | undefined): number | undefined {
+	if (getW(width, 'type') !== 'pct') return undefined;
+	const raw = getW(width, 'w')?.trim();
+	if (!raw) return undefined;
+	const value = raw.endsWith('%') ? Number(raw.slice(0, -1)) / 100 : Number(raw) / 5000;
+	return Number.isFinite(value) && value > 0 ? value : undefined;
+}
+
 function nestedPreview(node: XmlElement): NestedTablePreview {
 	return {
 		rows: children(node, 'tr').map((row) =>
@@ -62,6 +74,8 @@ function parseCell(
 		const width = dxa(getW(tcW, 'w'));
 		if (width !== undefined) result.widthTwips = width;
 	}
+	const percent = percentWidth(tcW);
+	if (percent !== undefined) result.widthPercent = percent;
 	const vAlign = enumValue(isStVerticalJc, getW(first(props, 'vAlign'), 'val'), 'w:tcPr/w:vAlign');
 	if (vAlign) result.verticalAlign = vAlign;
 	const shd = first(props, 'shd');
@@ -190,6 +204,9 @@ export function parseTable(
 	const width =
 		(getW(tableWidth, 'type') ?? 'dxa') === 'dxa' ? dxa(getW(tableWidth, 'w')) : undefined;
 	if (width !== undefined) table.widthTwips = width;
+	const percent = percentWidth(tableWidth);
+	if (percent !== undefined) table.widthPercent = percent;
+	table.layout = getW(first(tblPr, 'tblLayout'), 'type') === 'fixed' ? 'fixed' : 'autofit';
 	const justification = enumValue(isStJcTable, getW(first(tblPr, 'jc'), 'val'), 'w:tblPr/w:jc');
 	if (justification) {
 		table.justification = justification;

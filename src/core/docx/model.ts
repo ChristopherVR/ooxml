@@ -84,6 +84,13 @@ export interface Table {
 	/** `w:tblGrid/w:gridCol` widths in twips, one per grid column. */
 	grid?: Twips[];
 	widthTwips?: Twips;
+	/** A percentage `w:tblW` (`type="pct"`) as a fraction of the text column; read-only layout input. */
+	widthPercent?: number;
+	/**
+	 * `w:tblLayout`: `fixed` keeps the grid, `autofit` (the default when the element is absent)
+	 * sizes the columns from their content. Set by the parser; tables the editor creates have none.
+	 */
+	layout?: 'fixed' | 'autofit';
 	alignment?: 'left' | 'center' | 'right';
 	/** The exact `w:tblPr/w:jc` value (`ST_JcTable`, including `start`/`end`); `alignment` is derived from it. */
 	justification?: StJcTable;

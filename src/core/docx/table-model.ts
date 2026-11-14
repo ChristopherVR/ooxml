@@ -63,6 +63,8 @@ export interface TableCell {
 	/** `w:vMerge`; `restart` begins a vertical merge, `continue` extends the cell above. */
 	verticalMerge?: 'restart' | 'continue';
 	widthTwips?: Twips;
+	/** A percentage `w:tcW` (`type="pct"`) as a fraction of the table width; read-only layout input. */
+	widthPercent?: number;
 	verticalAlign?: StVerticalJc;
 	shadingFill?: string;
 	shadingThemeFill?: ThemeColorReference;

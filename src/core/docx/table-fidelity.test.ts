@@ -37,6 +37,18 @@ describe('table grid, merge, border, shading and style fidelity', () => {
 		}
 	});
 
+	it('reads percentage widths (fiftieths or a % value) and the table layout type', async () => {
+		const cellXml = (width: string) =>
+			`<w:tc><w:tcPr><w:tcW w:w="${width}" w:type="pct"/></w:tcPr><w:p/></w:tc>`;
+		const xml = (layout: string) =>
+			`<w:document xmlns:w="${ns}"><w:body><w:tbl><w:tblPr><w:tblW w:w="2500" w:type="pct"/>${layout}</w:tblPr><w:tr>${cellXml('1000')}${cellXml('30%')}</w:tr></w:tbl><w:sectPr/></w:body></w:document>`;
+		const { table } = await loadTable(xml(''));
+		expect(table).toMatchObject({ widthPercent: 0.5, layout: 'autofit' });
+		expect(table.rows[0]!.map((cell) => cell.widthPercent)).toEqual([0.2, 0.3]);
+		const fixed = await loadTable(xml('<w:tblLayout w:type="fixed"/>'));
+		expect(fixed.table.layout).toBe('fixed');
+	});
+
 	it('parses grid widths, table width/alignment/indent, borders and tblLook', async () => {
 		const { table } = await loadTable();
 		expect(table.grid).toEqual([1000, 2000]);

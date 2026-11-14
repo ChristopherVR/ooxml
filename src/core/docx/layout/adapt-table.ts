@@ -11,6 +11,7 @@ import {
 	type TableCellMargins,
 } from '../index';
 import { expectDefined } from '../expect-defined';
+import { autofitOverhangsCellMargins, compatibilityProfile } from '../compatibility';
 import { cellSourceBlocks } from '../cell-blocks';
 import type {
 	LayoutBorder,
@@ -113,6 +114,21 @@ export function adaptTable(
 		...(grid ? { widthPx: grid.reduce((sum, width) => sum + width, 0) } : {}),
 		...(table.indentTwips ? { indentPx: twipsToPx(table.indentTwips) } : {}),
 		...(table.alignment ? { alignment: table.alignment } : {}),
+		...(table.layout === 'autofit'
+			? {
+					autofit: {
+						columns: Math.max(
+							columnCount,
+							...table.rows.map((row) => row.reduce((sum, cell) => sum + (cell.gridSpan ?? 1), 0)),
+						),
+						...(table.widthTwips ? { widthPx: twipsToPx(table.widthTwips) } : {}),
+						...(table.widthPercent ? { widthFraction: table.widthPercent } : {}),
+						...(autofitOverhangsCellMargins(compatibilityProfile(model))
+							? { legacyMargins: true }
+							: {}),
+					},
+				}
+			: {}),
 		rows: table.rows.map((row, rowIndex) => ({
 			...rowLayout(table.rowProperties?.[rowIndex]),
 			cells: row.map((cell, cellIndex): LayoutTableCell => {
@@ -167,6 +183,8 @@ export function adaptTable(
 						: {}),
 					...(width !== undefined ? { widthPx: width } : {}),
 					...(grid && xPx !== undefined ? { xPx } : {}),
+					...(cell.widthTwips ? { preferredWidthPx: twipsToPx(cell.widthTwips) } : {}),
+					...(cell.widthPercent ? { preferredFraction: cell.widthPercent } : {}),
 					padding,
 					...(Object.keys(borders).length ? { borders } : {}),
 					...(fill ? { shading: fill } : {}),

@@ -3,6 +3,7 @@ import { parseXml } from './xml';
 import {
 	addsParagraphSpacing,
 	attachesFootnotesToBodyColumns,
+	autofitOverhangsCellMargins,
 	compatibilityProfile,
 	keepsSpaceBeforePageBreak,
 	readCompatibilitySettings,
@@ -70,5 +71,16 @@ describe('compatibilityProfile', () => {
 		expect(
 			addsParagraphSpacing(compatibilityProfile({ doNotUseHtmlParagraphAutoSpacing: true })),
 		).toBe(true);
+	});
+
+	it('lets legacy AutoFit tables overhang the text column by the cell margins', () => {
+		expect(autofitOverhangsCellMargins(compatibilityProfile({ compatibilityMode: 15 }))).toBe(
+			false,
+		);
+		for (const value of [12, 14])
+			expect(autofitOverhangsCellMargins(compatibilityProfile({ compatibilityMode: value }))).toBe(
+				true,
+			);
+		expect(autofitOverhangsCellMargins(compatibilityProfile({}))).toBe(true);
 	});
 });

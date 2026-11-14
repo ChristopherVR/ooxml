@@ -5,6 +5,7 @@ import type { LayoutBlock, LayoutParagraph, LayoutTableCell } from './input';
 import type { LayoutParagraphBox, LayoutTableBox } from './result';
 import type { TextMeasurer } from './measure';
 import { layoutRow, stackParagraphs } from './table-layout';
+import { resolveTableAutofit } from './table-autofit';
 /** All nested source paragraphs, in OOXML story order. */
 export function cellParagraphs(cell: LayoutTableCell): LayoutParagraph[] {
 	const walk = (blocks: LayoutBlock[]): LayoutParagraph[] =>
@@ -37,14 +38,16 @@ export function stackCellBlocks(
 	let y = top;
 	const boxes: LayoutParagraphBox[] = [];
 	const tables: LayoutTableBox[] = [];
-	for (const block of cell.blocks) {
-		if (block.kind === 'paragraph') {
-			if (starts && !starts.has(block.id)) continue;
-			const result = stackParagraphs([block], width, measurer, note, y, starts);
+	for (const source of cell.blocks) {
+		if (source.kind === 'paragraph') {
+			if (starts && !starts.has(source.id)) continue;
+			const result = stackParagraphs([source], width, measurer, note, y, starts);
 			boxes.push(...result.boxes);
 			y = result.heightPx;
 			continue;
 		}
+		// A nested AutoFit table sizes its columns for the cell's content width.
+		const block = resolveTableAutofit(source, width, measurer, note);
 		const edges = physicalFragments ? nestedFragmentEdges(block) : undefined;
 		const tableWidth = block.widthPx ?? width;
 		const profile = nestedFrameProfile(block, tableWidth);

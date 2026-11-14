@@ -7,7 +7,8 @@ import { commentContinuations } from './comment-spans';
 import { annotationIdAllocator, newMoveRangeIds, type CommentSpans } from './write-ranges';
 import { writeTable as writeTableContent } from './write-table';
 import { placeTableControl } from './write-table-controls';
-import { buildNewTableProperties, tableColumnCount } from './table-defaults';
+import { buildNewTableProperties, newTableGridWidths, tableColumnCount } from './table-defaults';
+import { twips as twipsOf } from './units';
 import { buildCellProperties, buildRowProperties } from './table-cell-write';
 import { orderSectionProperties } from './element-order';
 import { applySectionEdits } from './write-sections';
@@ -32,14 +33,26 @@ function createTable(
 	node.appendChild(tblPr);
 	node.appendChild(tblGrid);
 	const columns = tableColumnCount(table);
+	const grid = newTableGridWidths(table, contentWidthTwips);
 	table.rows.forEach((row, rowIndex) => {
 		const tr = makeW(doc, 'tr');
 		const spanned = row.reduce((sum, cell) => sum + (cell.gridSpan ?? 1), 0);
 		const trPr = buildRowProperties(doc, table.rowProperties?.[rowIndex], columns - spanned);
 		if (trPr) tr.appendChild(trPr);
+		let start = 0;
 		for (const cell of row) {
 			const tc = makeW(doc, 'tc');
-			const tcPr = buildCellProperties(doc, cell);
+			// Word sizes an AutoFit table without cell widths from its content, ignoring the grid:
+			// give each new cell its grid width as its preferred width, as Word's Insert Table does.
+			const span = cell.gridSpan ?? 1;
+			const gridWidth = grid.slice(start, start + span).reduce((sum, width) => sum + width, 0);
+			start += span;
+			const tcPr = buildCellProperties(
+				doc,
+				cell.widthTwips === undefined && cell.widthPercent === undefined && gridWidth > 0
+					? { ...cell, widthTwips: twipsOf(gridWidth) }
+					: cell,
+			);
 			if (tcPr) tc.appendChild(tcPr);
 			for (const paragraph of cell.paragraphs)
 				tc.appendChild(createParagraph(doc, paragraph, allocator, spans));
