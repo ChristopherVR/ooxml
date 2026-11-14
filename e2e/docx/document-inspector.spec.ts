@@ -67,7 +67,7 @@ test('File > Info > Check for Issues removes hidden text and personal informatio
 test('Remove All clears comments and revisions, headers and footers, and custom XML, undoably', async ({
 	page,
 }) => {
-	const { host, row, saved, close, undo } = await inspect(page);
+	const { row, saved, close, undo } = await inspect(page);
 	for (const category of ['comments', 'headersFooters', 'customXml']) {
 		await row(category).getByRole('button', { name: 'Remove All' }).click();
 		await expect(row(category)).toHaveAttribute('data-state', 'clear');
