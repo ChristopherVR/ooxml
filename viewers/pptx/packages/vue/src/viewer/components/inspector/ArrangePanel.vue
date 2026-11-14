@@ -19,7 +19,14 @@ import InspectorFields from './InspectorFields.vue';
 const props = defineProps<{
 	element: PptxElement;
 	canEdit?: boolean;
+	/**
+	 * The Format pane section drawn: `arrange` (lock, flips) or
+	 * `sizePosition` (X / Y / W / H / rotation); omitted, both.
+	 */
+	part?: 'arrange' | 'sizePosition';
 }>();
+const showArrange = computed(() => props.part !== 'sizePosition');
+const showGeometry = computed(() => props.part !== 'arrange');
 
 const emit = defineEmits<{
 	update: [patch: Partial<PptxElement>];
@@ -52,7 +59,7 @@ function onFlipVertical(checked: boolean): void {
 
 <template>
 	<div class="pptx-vue-arrange flex flex-col gap-2 text-xs">
-		<div class="flex items-center justify-between">
+		<div v-if="showArrange" class="flex items-center justify-between">
 			<span class="text-muted-foreground font-medium">{{ t('pptx.arrange.positionSize') }}</span>
 			<button
 				type="button"
@@ -68,13 +75,14 @@ function onFlipVertical(checked: boolean): void {
 			</button>
 		</div>
 		<InspectorFields
+			v-if="showGeometry"
 			:sections="ELEMENT_GEOMETRY_SECTIONS"
 			:target="element"
 			:disabled="!props.canEdit"
 			@patch="(patch) => emit('update', patch as Partial<PptxElement>)"
 		/>
 
-		<div class="pptx-vue-arrange-flips grid grid-cols-2 gap-2">
+		<div v-if="showArrange" class="pptx-vue-arrange-flips grid grid-cols-2 gap-2">
 			<label class="pptx-vue-arrange-check inline-flex items-center gap-2 text-foreground">
 				<pptx-ui-checkbox
 					:checked="flipHorizontal"

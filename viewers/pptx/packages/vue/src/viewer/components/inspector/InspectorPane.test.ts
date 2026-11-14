@@ -60,7 +60,11 @@ describe('inspectorPane connector arrowheads', () => {
 			props: { element: shape({ type: 'connector', shapeType: 'bentConnector3' }) },
 		});
 		expect(wrapper.findComponent(ConnectorArrowsPanel).exists()).toBeTruthy();
-		expect(wrapper.text()).toContain('Connector');
+		// The arrowheads sit in the Format pane's Outline section, headed "Line" for a line.
+		const outline = wrapper.element.querySelector<HTMLElement & { label: string }>(
+			'[data-pptx-format-section="outline"]',
+		);
+		expect(outline?.label).toBe('Line');
 	});
 
 	it.each(['shape', 'text', 'image', 'table', 'chart'])(

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { shouldShowAccessibilitySection } from 'ooxml-ui/pptx';
 import type {
 	ParsedTableStyleMap,
 	PptxAnimationTimelineAnchor,
@@ -7,7 +6,6 @@ import type {
 	PptxElement,
 	PptxElementAnimation,
 } from 'pptx-viewer-core';
-import { hasShapeProperties, hasTextProperties, isImageLikeElement } from 'pptx-viewer-core';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -19,6 +17,7 @@ import ChartPanel from './ChartPanel.vue';
 import ConnectorArrowsPanel from './ConnectorArrowsPanel.vue';
 import EffectsPanel from './EffectsPanel.vue';
 import FillPanel from './FillPanel.vue';
+import FormatSections from './FormatSections.vue';
 import GroupInfoPanel from './GroupInfoPanel.vue';
 import ImagePanel from './ImagePanel.vue';
 import InspectorSectionCard from './InspectorSectionCard.vue';
@@ -33,9 +32,9 @@ import TextPanel from './TextPanel.vue';
 /**
  * InspectorPane: the right-hand property inspector for the editor.
  *
- * Composes the per-concern property panels (arrange / fill / stroke / text /
- * effects) for the currently-selected element and relays each panel's `update`
- * patch upward. The host applies the patch via `useEditorOperations.updateElement`.
+ * Composes the per-concern property panels for the currently-selected element
+ * inside the shared Format pane sections ({@link FormatSections}) and relays
+ * each panel's `update` patch upward. The host applies the patch via `useEditorOperations.updateElement`.
  *
  * Each panel follows the same contract: `props { element }`, `emits update(patch)`
  * where `patch` is a shallow `Partial<PptxElement>` (nested style objects are
@@ -59,6 +58,8 @@ const props = defineProps<{
 	 * optional.
 	 */
 	tableStyleMap?: ParsedTableStyleMap;
+	/** Every selected element, `element` first (defaults to `[element]`). */
+	selection?: readonly PptxElement[];
 }>();
 const emit = defineEmits<{
 	update: [patch: Partial<PptxElement>];
@@ -69,24 +70,13 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const isShape = computed(() => hasShapeProperties(props.element));
-const isText = computed(() => hasTextProperties(props.element));
-const isImage = computed(() => isImageLikeElement(props.element));
-const isTable = computed(() => props.element.type === 'table');
-const isChart = computed(() => props.element.type === 'chart');
-const isSmartArt = computed(() => props.element.type === 'smartArt');
-const isMedia = computed(() => props.element.type === 'media');
 // Arrowheads are a connector-only concern: `a:headEnd`/`a:tailEnd` are written
 // on a `p:cxnSp`, so the card must not appear for any other element type.
 const isConnector = computed(() => props.element.type === 'connector');
 const isGroup = computed(() => props.element.type === 'group');
-const isOle = computed(() => props.element.type === 'ole');
-// Accessibility (alt text / title): a picture's own field lives in
-// `ImagePanel`; shared's `shouldShowAccessibilitySection` decides everything
-// else, a plain shape, text box, connector, and every graphic-frame kind
-// (table/chart/smartArt/media/ole), so this stays in sync with the other
-// four bindings without a hard-coded type list here.
-const showAccessibilitySection = computed(() => shouldShowAccessibilitySection(props.element));
+// The whole selection for the Format pane's shared sections and Mixed tags;
+// edits still go to `element`.
+const formatElements = computed(() => props.selection ?? [props.element]);
 
 function relay(patch: Partial<PptxElement>): void {
 	emit('update', patch);
@@ -100,63 +90,99 @@ function relay(patch: Partial<PptxElement>): void {
 		:class="mobile ? 'w-full pt-1' : 'w-72 flex-[0_0_18rem] border-l border-border pt-2'"
 		:aria-label="t('pptx.inspector.properties')"
 	>
-		<InspectorSectionCard
-			:title="t('pptx.inspector.arrange')"
-			data-pptx-inspector-section="transform"
-		>
-			<ArrangePanel :element="element" :can-edit="props.canEdit" @update="relay" />
-		</InspectorSectionCard>
-
-		<InspectorSectionCard v-if="isGroup" :title="t('pptx.elementType.group')">
-			<GroupInfoPanel :element="element" />
-		</InspectorSectionCard>
-
-		<InspectorSectionCard v-if="isOle" :title="t('pptx.ole.title')">
-			<OlePropertiesPanel :element="element" :can-edit="props.canEdit" @update="relay" />
-		</InspectorSectionCard>
-
-		<InspectorSectionCard>
+		<!-- Each section holds the existing panels FORMAT_PANEL_SECTIONS assigns to it. -->
+		<FormatSections v-slot="{ view }" :elements="formatElements">
+			<TextPanel
+				v-if="view.id === 'font' || view.id === 'paragraph'"
+				:element="element"
+				:can-edit="props.canEdit"
+				:part="view.id"
+				@update="relay"
+			/>
+			<div v-else-if="view.id === 'fill'" data-pptx-inspector-section="fill-stroke">
+				<FillPanel :element="element" @update="relay" />
+			</div>
+			<template v-else-if="view.id === 'outline'">
+				<StrokePanel :element="element" @update="relay" />
+				<ConnectorArrowsPanel
+					v-if="view.arrowheads && isConnector"
+					:element="element"
+					:can-edit="props.canEdit"
+					@update="relay"
+				/>
+			</template>
+			<EffectsPanel
+				v-else-if="view.id === 'effects'"
+				:element="element"
+				:can-edit="props.canEdit"
+				@update="relay"
+			/>
+			<ImagePanel
+				v-else-if="view.id === 'picture'"
+				:element="element"
+				:can-edit="props.canEdit"
+				@update="relay"
+			/>
+			<template v-else-if="view.id === 'table'">
+				<TableDataGrid :element="element" :can-edit="props.canEdit" @update="relay" />
+				<TablePanel
+					:element="element"
+					:table-style-map="props.tableStyleMap"
+					@update="relay"
+					@table-style-map-change="emit('tableStyleMapChange', $event)"
+					@delete-table-style="emit('deleteTableStyle', $event)"
+				/>
+			</template>
+			<ChartPanel
+				v-else-if="view.id === 'chart'"
+				:element="element"
+				:can-edit="props.canEdit"
+				@update="relay"
+			/>
+			<SmartArtPropertiesPanel
+				v-else-if="view.id === 'smartArt'"
+				:element="element"
+				@update="relay"
+			/>
+			<MediaPropertiesPanel
+				v-else-if="view.id === 'media'"
+				:element="element"
+				:can-edit="props.canEdit"
+				:media-data-urls="props.mediaDataUrls"
+				@update="relay"
+			/>
+			<OlePropertiesPanel
+				v-else-if="view.id === 'object'"
+				:element="element"
+				:can-edit="props.canEdit"
+				@update="relay"
+			/>
+			<template v-else-if="view.id === 'arrange'">
+				<ArrangePanel :element="element" :can-edit="props.canEdit" part="arrange" @update="relay" />
+				<GroupInfoPanel v-if="isGroup" :element="element" />
+			</template>
+			<div v-else-if="view.id === 'sizePosition'" data-pptx-inspector-section="transform">
+				<ArrangePanel
+					:element="element"
+					:can-edit="props.canEdit"
+					part="sizePosition"
+					@update="relay"
+				/>
+			</div>
+			<div v-else-if="view.id === 'altText'" data-pptx-inspector-section="alt-text">
+				<AccessibilityPanel :element="element" :can-edit="props.canEdit" @update="relay" />
+			</div>
 			<ActionSettingsPanel
+				v-else-if="view.id === 'action'"
 				:element="element"
 				:slide-count="props.slideCount"
 				:can-edit="props.canEdit"
 				:custom-shows="props.customShows"
 				@update="relay"
 			/>
-		</InspectorSectionCard>
+		</FormatSections>
 
-		<InspectorSectionCard v-if="isText" :title="t('pptx.inspector.text')">
-			<TextPanel :element="element" :can-edit="props.canEdit" @update="relay" />
-		</InspectorSectionCard>
-
-		<InspectorSectionCard v-if="isImage" :title="t('pptx.inspector.image')">
-			<ImagePanel :element="element" :can-edit="props.canEdit" @update="relay" />
-		</InspectorSectionCard>
-
-		<InspectorSectionCard v-if="isTable" :title="t('pptx.inspector.table')">
-			<TableDataGrid :element="element" :can-edit="props.canEdit" @update="relay" />
-			<TablePanel
-				:element="element"
-				:table-style-map="props.tableStyleMap"
-				@update="relay"
-				@table-style-map-change="emit('tableStyleMapChange', $event)"
-				@delete-table-style="emit('deleteTableStyle', $event)"
-			/>
-		</InspectorSectionCard>
-
-		<InspectorSectionCard v-if="isChart" :title="t('pptx.inspector.chart')">
-			<ChartPanel :element="element" :can-edit="props.canEdit" @update="relay" />
-		</InspectorSectionCard>
-
-		<InspectorSectionCard v-if="isMedia" :title="t('pptx.inspector.media')">
-			<MediaPropertiesPanel
-				:element="element"
-				:can-edit="props.canEdit"
-				:media-data-urls="props.mediaDataUrls"
-				@update="relay"
-			/>
-		</InspectorSectionCard>
-
+		<!-- Animations are not formatting: they stay after the Format pane sections. -->
 		<InspectorSectionCard :title="t('pptx.inspector.animations')">
 			<AnimationPanel
 				:element="element"
@@ -167,38 +193,6 @@ function relay(patch: Partial<PptxElement>): void {
 				@update="relay"
 				@update-slide-animations="emit('updateSlideAnimations', $event)"
 			/>
-		</InspectorSectionCard>
-
-		<InspectorSectionCard v-if="isSmartArt" :title="t('pptx.inspector.smartArt')">
-			<SmartArtPropertiesPanel :element="element" @update="relay" />
-		</InspectorSectionCard>
-
-		<InspectorSectionCard
-			v-if="isShape"
-			:title="t('pptx.inspector.fill')"
-			data-pptx-inspector-section="fill-stroke"
-		>
-			<FillPanel :element="element" @update="relay" />
-		</InspectorSectionCard>
-
-		<InspectorSectionCard v-if="isShape" :title="t('pptx.inspector.line')">
-			<StrokePanel :element="element" @update="relay" />
-		</InspectorSectionCard>
-
-		<InspectorSectionCard v-if="isConnector" :title="t('pptx.elementType.connector')">
-			<ConnectorArrowsPanel :element="element" :can-edit="props.canEdit" @update="relay" />
-		</InspectorSectionCard>
-
-		<InspectorSectionCard v-if="isShape" :title="t('pptx.inspector.effects')">
-			<EffectsPanel :element="element" :can-edit="props.canEdit" @update="relay" />
-		</InspectorSectionCard>
-
-		<InspectorSectionCard
-			v-if="showAccessibilitySection"
-			:title="t('pptx.accessibility.heading')"
-			data-pptx-inspector-section="alt-text"
-		>
-			<AccessibilityPanel :element="element" :can-edit="props.canEdit" @update="relay" />
 		</InspectorSectionCard>
 	</aside>
 </template>
