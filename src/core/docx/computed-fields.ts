@@ -99,22 +99,30 @@ export function computedFields(
 	};
 }
 
+/** The computed fields whose results do not depend on where they are in the main document. */
+const STORY_FIELD_NAMES: ReadonlySet<string> = new Set(['DOCPROPERTY', 'SYMBOL']);
+
 /**
  * `model` with the cached result of every unlocked computed field brought up to date, in the
  * headers and footers and, with `body`, the main document. A field saved without a result
  * (Word saves AUTONUM, LISTNUM and SYMBOL so, and draws what they show) is left without one.
- * Returns `model` itself when nothing changed.
+ * The counted fields (AUTONUM, LISTNUM) count the main document only, so a header or footer
+ * keeps theirs. Returns `model` itself when nothing changed.
  */
 export function refreshComputedFields(
 	model: DocumentModel,
 	options: { body?: boolean } = {},
 ): DocumentModel {
 	const fields = computedFields(model);
-	const story = (blocks: Parameters<typeof withFieldResults>[0]) =>
+	const story = (names: ReadonlySet<string>) => (blocks: Parameters<typeof withFieldResults>[0]) =>
 		withFieldResults(blocks, (field, paragraph) => {
-			if (!COMPUTED_FIELD_NAMES.has(fieldName(field.instr))) return undefined;
+			if (!names.has(fieldName(field.instr))) return undefined;
 			const result = fields.result(field, paragraph);
 			return result && { text: result.text, charFormat: CHARFORMAT.test(field.instr) };
 		});
-	return withStoryBlocks(model, story, options.body ? story : undefined);
+	return withStoryBlocks(
+		model,
+		story(STORY_FIELD_NAMES),
+		options.body ? story(COMPUTED_FIELD_NAMES) : undefined,
+	);
 }

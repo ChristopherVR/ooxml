@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 import { computedFields } from './computed-fields';
 import { docPropertyResult, NO_PROPERTY_NAME, UNKNOWN_PROPERTY } from './doc-property-field';
+import { datePicture, formatWordDate } from './field-date';
 import { fieldResultSpans } from './field-result-spans';
 import type { DocumentModel, Paragraph } from './model';
 import { loadDocx } from './parse';
@@ -37,6 +38,11 @@ describe('DOCPROPERTY', () => {
 		expect(fields.length).toBeGreaterThan(50);
 		for (const field of fields)
 			if (KEPT.has(field.instr)) expect(field.computed, field.instr).toBeUndefined();
+			else if (field.instr.startsWith('DOCPROPERTY Due \\@'))
+				// Word draws the date in the local time zone (the fixture was made at UTC+10).
+				expect(field.computed, field.instr).toBe(
+					formatWordDate(new Date('2026-03-03T14:00:00Z'), datePicture(field.instr)!),
+				);
 			else expect(field.computed, field.instr).toBe(field.word);
 	});
 

@@ -2,7 +2,7 @@
 // AUTONUM, AUTONUMLGL and AUTONUMOUT (ECMA-376 Part 1, 17.16.5.4 to 17.16.5.6): numbers counted
 // by the paragraphs that hold one of these fields. Word's output, read from the documents in
 // `__fixtures__/computed-fields`, shows how: a heading (a paragraph with an outline level)
-// counts at its level and a body paragraph one level below the heading before it, headings and
+// counts at its level and a body paragraph one level below the numbered heading before it, headings and
 // body paragraphs keep counters of their own, a numbered heading restarts every deeper counter,
 // and every such field of one paragraph shows that paragraph's number.
 import { documentParagraphs } from './cell-blocks';
@@ -23,7 +23,7 @@ export const AUTO_NUMBER_FIELDS: ReadonlySet<string> = new Set([
 
 /** What a paragraph's automatic number fields count from. */
 export interface AutoNumberState {
-	/** One-based level: a heading's outline level, else one below the heading before it. */
+	/** One-based level: a heading's outline level, else one below the numbered heading before it. */
 	level: number;
 	heading: boolean;
 	/** The heading counters of levels 1 to `level - 1`, then the paragraph's own count. */
@@ -49,8 +49,9 @@ export function autoNumberStates(model: DocumentModel): Map<string, AutoNumberSt
 			: paragraph.outlineLevel;
 		const heading = outline !== undefined && outline >= 1 && outline <= 9;
 		const level = heading ? outline : lastHeading + 1;
-		if (heading) lastHeading = outline;
+		// Only a heading that holds such a field sets the level of the body paragraphs after it.
 		if (!counts(paragraph)) continue;
+		if (heading) lastHeading = outline;
 		const own = heading ? headings : bodies;
 		own[level]!++;
 		for (let deeper = level + 1; deeper <= 10; deeper++) {

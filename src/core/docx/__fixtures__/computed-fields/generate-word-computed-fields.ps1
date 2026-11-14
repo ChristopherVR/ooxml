@@ -100,6 +100,10 @@ Heading 1|{AUTONUMLGL} h1
 Normal@2|{AUTONUMLGL} outline 2
 Normal|{AUTONUMLGL} body
 Normal@1|{AUTONUMOUT} outline 1
+===
+Heading 1|{AUTONUMLGL} h
+Heading 2|plain
+Normal|{AUTONUMLGL} n
 '@
 	'list-number' = @'
 Normal|a {LISTNUM} b {LISTNUM} c {LISTNUM}
@@ -161,6 +165,17 @@ Normal|{LISTNUM} back
 ===
 Normal|{LISTNUM \l 1} {LISTNUM \l 3} {LISTNUM \l 3}
 Normal|{LISTNUM} back
+===
+List Number|item
+Normal|{LISTNUM} x
+List Number|item2
+===
+List Bullet|b
+Normal|{LISTNUM} y
+===
+List Number|item
+Normal|{LISTNUM \l 2} x
+List Number|item2
 '@
 	'symbol' = @'
 Normal|x{SYMBOL 65}x

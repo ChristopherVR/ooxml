@@ -16,7 +16,7 @@ import { parseFieldInstruction } from './field-format';
 import type { Paragraph } from './model';
 import { NumberingCounters, substituteLvlText } from './numbering-counters';
 import type { NumberingCatalog, NumberingLevelDefinition } from './numbering-model';
-import { formatListNumber } from './numbering-format';
+import { displayListLabel, formatListNumber } from './numbering-format';
 import { resolveNumberingLevel } from './numbering-parse';
 
 /** The built-in lists a LISTNUM can name (any case), drawn from one set of counters. */
@@ -80,7 +80,7 @@ export class ListNumberFields {
 		private readonly catalog: NumberingCatalog | undefined,
 	) {}
 
-	/** What the LISTNUM starting at run `from` of a paragraph shows. */
+	/** What the LISTNUM starting at run `from` of a paragraph (or with its result there) shows. */
 	result(paragraphId: string, from: number): string | undefined {
 		return this.results.get(paragraphId)?.get(from);
 	}
@@ -140,24 +140,29 @@ export class ListNumberFields {
 				typeof start === 'string' && /^\d+$/.test(start) ? Number(start) : undefined,
 			);
 			if (text === undefined) continue;
-			shown.set(field.from, text);
+			// Found by the field's first run, or by a run of its saved result.
+			for (const at of [field.from, ...field.runs]) shown.set(at, text);
 			if (leading) this.leadLevels.set(keyOf(target), own);
 			previous = own;
 		}
 		if (shown.size) this.results.set(paragraph.id, shown);
 	}
 
-	/** Advances `target` at zero-based `index` (or sets it to `start`) and draws its number. */
-	private count(target: ListTarget, index: number, start: number | undefined): string | undefined {
+	/** Advances `target` at zero-based level `wanted` (or sets it to `start`) and draws its number. */
+	private count(target: ListTarget, wanted: number, start: number | undefined): string | undefined {
 		const numId = target.kind === 'default' ? DEFAULT_ID : target.numId;
 		const catalog = target.kind === 'default' ? DEFAULT_CATALOG : this.catalog;
-		const def = catalog && resolveNumberingLevel(catalog, numId, index);
-		if (!catalog || !def) return undefined;
+		if (!catalog) return undefined;
+		// A list without the level asked for (a single-level list) counts at its deepest one.
+		let index = wanted;
+		let def = resolveNumberingLevel(catalog, numId, index);
+		while (!def && index > 0) def = resolveNumberingLevel(catalog, numId, --index);
+		if (!def) return undefined;
 		if (start === undefined) this.counters.advance(numId, index, def, catalog);
 		else this.counters.set(numId, index, start);
 		if (target.kind === 'num')
 			return def.numFmt === 'bullet'
-				? def.lvlText
+				? displayListLabel(def.lvlText)
 				: substituteLvlText(def.lvlText, numId, index, catalog, this.counters, Boolean(def.isLgl));
 		const value = (at: number) => this.counters.current(DEFAULT_ID, at, 1);
 		if (target.name === 'LegalDefault')

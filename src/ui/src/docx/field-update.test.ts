@@ -300,6 +300,42 @@ describe('updateFields', () => {
 		expect(texts(view)).toEqual(['EDITED TITLE|Contoso|kept']);
 	});
 
+	it('brings saved AUTONUM, LISTNUM and SYMBOL results up to date', () => {
+		const view = editor(
+			paragraph('p0', [field('9.', ' AUTONUM '), schema.text(' a')]),
+			paragraph('p1', [
+				field('9.', ' AUTONUM '),
+				schema.text(' b '),
+				field('x', ' LISTNUM '),
+				schema.text(' '),
+				field('x', ' LISTNUM '),
+			]),
+			paragraph('p2', [field('?', ' SYMBOL 0x20AC \\u ')]),
+		);
+		const runs = (instrs: [string, string][]) =>
+			instrs.map(([text, instr]) => ({ text, field: { instr, simple: true } }));
+		const model: DocumentModel = {
+			...createDocument(),
+			blocks: [
+				{ type: 'paragraph', id: 'p0', runs: [...runs([['9.', ' AUTONUM ']]), { text: ' a' }] },
+				{
+					type: 'paragraph',
+					id: 'p1',
+					runs: [
+						...runs([['9.', ' AUTONUM ']]),
+						{ text: ' b ' },
+						...runs([['x', ' LISTNUM ']]),
+						{ text: ' ' },
+						...runs([['x', ' LISTNUM ']]),
+					],
+				},
+				{ type: 'paragraph', id: 'p2', runs: runs([['?', ' SYMBOL 0x20AC \\u ']]) },
+			],
+		};
+		expect(updateFields(view, pages, model)).toBe(true);
+		expect(texts(view)).toEqual(['1. a', '2. b 1) 2)', '€']);
+	});
+
 	it('reads a body STYLEREF from its own paragraph and from captions renumbered with it', () => {
 		const styled = (text: string) => runToInlineNodes({ text, style: 'EntryName' }, schema)[0]!;
 		const view = editor(
