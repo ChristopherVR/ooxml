@@ -42,7 +42,38 @@ function withoutProperties(model: DocumentModel): DocumentModel {
 	if (packageInformation?.template) info.template = DEFAULT_TEMPLATE;
 	info.removePersonalInformation = true;
 	info.removeDateAndTime = true;
-	return { ...rest, packageInformation: info };
+	const packageProperties = withoutPersonalProperties(rest.packageProperties);
+	const { packageProperties: _loaded, ...withoutLoaded } = rest;
+	return {
+		...withoutLoaded,
+		...(packageProperties ? { packageProperties } : {}),
+		packageInformation: info,
+	};
+}
+
+/**
+ * What DOCPROPERTY fields read after the properties are removed: Word keeps the creation and
+ * modified dates and the revision number, and clears the rest (company, manager, custom...).
+ */
+function withoutPersonalProperties(
+	loaded: DocumentModel['packageProperties'],
+): DocumentModel['packageProperties'] {
+	if (!loaded) return undefined;
+	const { created, modified, revision } = loaded.core;
+	const { application, appVersion, totalTime } = loaded.app;
+	return {
+		core: {
+			...(created !== undefined ? { created } : {}),
+			...(modified !== undefined ? { modified } : {}),
+			...(revision !== undefined ? { revision } : {}),
+		},
+		app: {
+			...(application !== undefined ? { application } : {}),
+			...(appVersion !== undefined ? { appVersion } : {}),
+			...(totalTime !== undefined ? { totalTime } : {}),
+		},
+		custom: [],
+	};
 }
 
 function withoutCustomXml(model: DocumentModel): DocumentModel {
