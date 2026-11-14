@@ -58,6 +58,10 @@ import type { RibbonControlId, RibbonGroupId } from './ribbon-control-ids';
 /** The normalised, set-based view of a customisation. Treat as immutable. */
 export interface ResolvedCustomization {
 	hiddenInspectorCards: ReadonlySet<import('./inspector-customization').InspectorCardId>;
+	/** Format pane sections the host hides (`inspector.hiddenSections`). */
+	hiddenFormatSections: ReadonlySet<import('../inspector/format-sections').FormatSectionId>;
+	/** Format pane sections moved to the front, in order (`inspector.sectionOrder`). */
+	formatSectionOrder: readonly import('../inspector/format-sections').FormatSectionId[];
 	hiddenActions: ReadonlySet<ToolbarActionId>;
 	/** Contextual tabs (`shapeFormat`, ...) the host never wants shown. */
 	hiddenContextualTabs: ReadonlySet<RibbonContextualTabId>;
@@ -177,6 +181,8 @@ export function resolveCustomization(
 	return {
 		hiddenActions,
 		hiddenInspectorCards: new Set(c.inspector?.hiddenCards ?? []),
+		hiddenFormatSections: new Set(c.inspector?.hiddenSections ?? []),
+		formatSectionOrder: [...new Set(c.inspector?.sectionOrder ?? [])],
 		hiddenContextualTabs: ribbon.contextualTabs,
 		hiddenRibbonGroups: ribbon.groups,
 		hiddenRibbonControls: ribbon.controls,

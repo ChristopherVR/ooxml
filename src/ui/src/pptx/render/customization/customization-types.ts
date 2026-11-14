@@ -232,8 +232,16 @@ export type ViewerExportFormatId = 'pdf' | 'png' | 'video' | 'gif' | 'json' | 'c
  * nothing and lock nothing.
  */
 export interface ViewerCustomization {
-	/** Hide individual cards in the no-selection property inspector. */
-	inspector?: { hiddenCards?: readonly import('./inspector-customization').InspectorCardId[] };
+	/**
+	 * Hide individual cards in the no-selection property inspector, and hide or
+	 * reorder the Format pane's collapsible sections (`hiddenSections`,
+	 * `sectionOrder`: listed ids move to the front in that order).
+	 */
+	inspector?: {
+		hiddenCards?: readonly import('./inspector-customization').InspectorCardId[];
+		hiddenSections?: readonly import('../inspector/format-sections').FormatSectionId[];
+		sectionOrder?: readonly import('../inspector/format-sections').FormatSectionId[];
+	};
 	ribbon?: RibbonCustomization;
 	options?: OptionsCustomization;
 	backstage?: BackstageCustomization;

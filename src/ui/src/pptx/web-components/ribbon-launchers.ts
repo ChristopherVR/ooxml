@@ -1,3 +1,5 @@
+import type { FormatSectionId } from '../render/inspector/format-sections';
+
 /**
  * Office's dialog launcher: the small corner glyph at the bottom right of a group. The viewer has no
  * modal Font or Paragraph dialogs, so a host maps a group to the nearest real destination (the
@@ -75,7 +77,22 @@ export function listenForLaunchers(content: HTMLElement, launchers: RibbonLaunch
 /** Home groups whose Office launcher opens a formatting surface the viewer has as a pane. */
 export const HOME_LAUNCHER_GROUPS = ['home.font', 'home.paragraph', 'home.drawing'] as const;
 
-/** One launcher per Home formatting group, all opening the same pane. */
-export function homeLaunchers(label: () => string, run: () => void): RibbonLaunchers {
-	return Object.fromEntries(HOME_LAUNCHER_GROUPS.map((id) => [id, { label, run }]));
+export type HomeLauncherGroup = (typeof HOME_LAUNCHER_GROUPS)[number];
+
+/** The Format pane section each Home launcher reveals (see `requestFormatPane`). */
+export const HOME_LAUNCHER_SECTIONS = {
+	'home.font': 'font',
+	'home.paragraph': 'paragraph',
+	'home.drawing': 'fill',
+} as const satisfies Record<HomeLauncherGroup, FormatSectionId>;
+
+/**
+ * One launcher per Home formatting group, all opening the same pane; `run`
+ * receives the group so the host can reveal its section.
+ */
+export function homeLaunchers(
+	label: () => string,
+	run: (group: HomeLauncherGroup) => void,
+): RibbonLaunchers {
+	return Object.fromEntries(HOME_LAUNCHER_GROUPS.map((id) => [id, { label, run: () => run(id) }]));
 }
