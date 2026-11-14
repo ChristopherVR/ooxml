@@ -251,6 +251,7 @@ import { ViewerFileIOService } from './viewer-file-io.service';
 import { ViewerFindReplaceService } from './viewer-find-replace.service';
 import { ViewerFormatPainterService } from './viewer-format-painter.service';
 import { setupViewerImagePaste } from './viewer-image-paste';
+import { setupViewerInlineRichPaste } from './viewer-inline-rich-paste';
 import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 import { ViewerKeyboardService } from './viewer-keyboard.service';
 import { ViewerMobileSheetService } from './viewer-mobile-sheet.service';
@@ -3389,6 +3390,15 @@ export class PowerPointViewerComponent
 			this.loader,
 			this.editor,
 		);
+		setupViewerInlineRichPaste({
+			rootElement: () => this.viewerRoot()?.nativeElement,
+			activeSlide: () => this.activeSlide(),
+			activeSlideIndex: () => this.activeSlideIndex(),
+			editingId: () => this.canvasEditing.editingId(),
+			closeEdit: () => this.canvasEditing.editingId.set(null),
+			enterEdit: (id) => this.canvasEditing.onTextEditStart(id),
+			updateElement: (slideIndex, id, patch) => this.editor.updateElement(slideIndex, id, patch),
+		});
 
 		// Hand the collab-cursor controller the accessors it alone needs from the
 		// component (the slide stage, canvas size, active-slide-index).
