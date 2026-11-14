@@ -7,6 +7,16 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.51.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.51.1) - 2026-11-14
+
+### Bug Fixes
+
+- **ui:** Recompute stand-in tracking when a webfont loads ([37646d6](https://github.com/ChristopherVR/ooxml/commit/37646d6a23ac4db4576aca88b02a04cb5e296873))
+- **pptx:** Stand in for aptos with its measured look-alike ([f276739](https://github.com/ChristopherVR/ooxml/commit/f2767394ceff3a6a1d291f34e43fced2a6a4c2a2))
+- **ui:** Settle stand-in tracking before the new face paints ([17e36b3](https://github.com/ChristopherVR/ooxml/commit/17e36b3042cd4958f4b5182785887c2ba0ad8098))
+- **pptx:** Request the aptos look-alike bold at weight 650 ([a93f4d8](https://github.com/ChristopherVR/ooxml/commit/a93f4d8fcf6c09d96deb4d69664e5a5527894091))
+- **ui:** Lay out ribbon column stacks with grid for safari and firefox ([931aea5](https://github.com/ChristopherVR/ooxml/commit/931aea52ebfdcca7ff3c70bccab5c05f6bffbdda))
+
 ## [1.51.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.51.0) - 2026-11-13
 
 ### Features

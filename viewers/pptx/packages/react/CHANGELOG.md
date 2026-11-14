@@ -7,6 +7,16 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.77.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.77.1) - 2026-11-14
+
+### Bug Fixes
+
+- **pptx:** Hydrate images from newly requested layouts ([f5ba096](https://github.com/ChristopherVR/ooxml/commit/f5ba096640c2a600b1d0fae45ba177f67063b015))
+- **pptx:** Preserve template edits after SVG hydration ([cf42b05](https://github.com/ChristopherVR/ooxml/commit/cf42b0524aeeae9965ca51c92c4019c29db09051))
+- **ui:** Recompute stand-in tracking when a webfont loads ([37646d6](https://github.com/ChristopherVR/ooxml/commit/37646d6a23ac4db4576aca88b02a04cb5e296873))
+- **pptx:** Stand in for aptos with its measured look-alike ([f276739](https://github.com/ChristopherVR/ooxml/commit/f2767394ceff3a6a1d291f34e43fced2a6a4c2a2))
+- **pptx:** Request the aptos look-alike bold at weight 650 ([a93f4d8](https://github.com/ChristopherVR/ooxml/commit/a93f4d8fcf6c09d96deb4d69664e5a5527894091))
+
 ## [4.77.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.77.0) - 2026-11-13
 
 ### Features
