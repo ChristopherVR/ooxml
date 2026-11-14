@@ -2,8 +2,10 @@ import type { VisioDocument } from 'ooxml-core/visio';
 import { PdfFontSet, type PdfFontFile } from '../export/pdf-embedded-font';
 import { buildVectorPdf, PdfVectorPage, type PdfImageResource } from '../export/pdf-vector';
 import { exportPageSvg } from './export-svg';
-import { collectSvgImages, convertSvgPage } from './pdf-svg';
+import { collectSvgImages, convertSvgPage } from '../export/pdf-svg';
 import { rasterizePage } from './viewer-export';
+import { drawingFontFamily } from './font-stack';
+import { decodePdfImage } from '../export/pdf-image';
 
 /** Which pages the PDF holds. Background pages are always drawn behind the pages that use them. */
 export interface PdfExportOptions {
@@ -40,74 +42,8 @@ export interface PdfExportResult {
 	refusedFonts: string[];
 }
 
-const MAX_IMAGE_SIDE = 2048;
 const MAX_PAGES = 2000;
 const MAX_IMAGES_PER_PAGE = 500;
-
-async function deflate(bytes: Uint8Array, view: Window): Promise<Uint8Array | undefined> {
-	const Compression = (view as unknown as { CompressionStream?: typeof CompressionStream })
-		.CompressionStream;
-	if (!Compression) return undefined;
-	const stream = new Blob([Uint8Array.from(bytes)])
-		.stream()
-		.pipeThrough(new Compression('deflate'));
-	return new Uint8Array(await new Response(stream).arrayBuffer());
-}
-
-/** Decode a data URL picture to RGB (and alpha) samples, downscaled to a bounded size. */
-async function decodeImage(doc: Document, href: string): Promise<PdfImageResource | undefined> {
-	const view = doc.defaultView;
-	if (!view || !href.startsWith('data:image/')) return undefined;
-	try {
-		const image = new view.Image();
-		await new Promise<void>((resolve, reject) => {
-			image.onload = () => resolve();
-			image.onerror = () => reject(new Error('picture'));
-			image.src = href;
-		});
-		const scale = Math.min(
-			1,
-			MAX_IMAGE_SIDE / Math.max(image.naturalWidth, image.naturalHeight, 1),
-		);
-		const width = Math.max(1, Math.round(image.naturalWidth * scale));
-		const height = Math.max(1, Math.round(image.naturalHeight * scale));
-		const canvas = doc.createElement('canvas');
-		canvas.width = width;
-		canvas.height = height;
-		const context = canvas.getContext('2d');
-		if (!context) return undefined;
-		context.drawImage(image, 0, 0, width, height);
-		const rgba = context.getImageData(0, 0, width, height).data;
-		const rgb = new Uint8Array(width * height * 3);
-		const alpha = new Uint8Array(width * height);
-		let translucent = false;
-		for (let pixel = 0; pixel < width * height; pixel++) {
-			rgb[pixel * 3] = rgba[pixel * 4]!;
-			rgb[pixel * 3 + 1] = rgba[pixel * 4 + 1]!;
-			rgb[pixel * 3 + 2] = rgba[pixel * 4 + 2]!;
-			alpha[pixel] = rgba[pixel * 4 + 3]!;
-			if (alpha[pixel] !== 255) translucent = true;
-		}
-		const packed = await deflate(rgb, view);
-		const packedAlpha = translucent ? await deflate(alpha, view) : undefined;
-		return {
-			width,
-			height,
-			data: packed ?? rgb,
-			...(packed ? { filter: 'FlateDecode' as const } : {}),
-			...(translucent
-				? {
-						alpha: {
-							data: packedAlpha ?? alpha,
-							...(packedAlpha ? { filter: 'FlateDecode' as const } : {}),
-						},
-					}
-				: {}),
-		};
-	} catch {
-		return undefined;
-	}
-}
 
 /** The foreground page indexes a PDF export covers. */
 export function pdfPageIndexes(model: VisioDocument, options: PdfExportOptions = {}): number[] {
@@ -146,10 +82,17 @@ export async function exportDocumentPdfDetailed(
 		const hrefs = collectSvgImages(parsed).slice(0, MAX_IMAGES_PER_PAGE);
 		const images = new Map<string, PdfImageResource>();
 		for (const href of hrefs) {
-			const decoded = await decodeImage(doc, href);
+			const decoded = await decodePdfImage(doc, href);
 			if (decoded) images.set(href, decoded);
 		}
-		const converted = convertSvgPage(parsed, exported.width, exported.height, images, fontSet);
+		const converted = convertSvgPage(
+			parsed,
+			exported.width,
+			exported.height,
+			images,
+			fontSet,
+			drawingFontFamily,
+		);
 		if (converted.page) {
 			pages.push(converted.page);
 			reports.push({

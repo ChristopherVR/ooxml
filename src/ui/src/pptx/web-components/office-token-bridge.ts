@@ -35,6 +35,7 @@ export const OFFICE_ALIAS_TAGS = [
 	'pptx-ui-ribbon-actions',
 	'pptx-ui-options-dialog',
 	'pptx-ui-smartart-text-pane',
+	'pptx-ui-format-section',
 ] as const;
 
 /** Every alias maps the shared tokens onto the pptx theme and control tokens. */

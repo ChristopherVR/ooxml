@@ -61,6 +61,7 @@ import {
 	resolveAutosaveIntervalMs,
 	resolveHistoryDepth,
 	resolveImageResolutionScale,
+	resolvePdfExportSettings,
 	resolveOptionRootClasses,
 	resolveSlideSizeSelection,
 	resolveViewerRootOptions,
@@ -110,6 +111,7 @@ import { EditorChromeStyle } from './components/EditorChromeStyle';
 import { ElementRenderErrorScope } from './components/ElementErrorBoundary';
 import { Rendering3DFlagsContext } from './components/elements/rendering-3d-flags-context';
 import { HeaderFooterPanel } from './components/HeaderFooterPanel';
+import { FormatPaneContext } from './components/inspector/format-pane-context';
 import { RecentColorsProvider } from './components/inspector/RecentColorsContext';
 import { ThemeColorMapProvider } from './components/inspector/ThemeColorMapContext';
 import { MobileChromeOverlay } from './components/mobile/MobileChromeOverlay';
@@ -1126,6 +1128,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			// own baseline from this raw multiplier instead of reusing
 			// `imageExportScale` outright; see `useExportMediaHandlers.ts`.
 			imageResolutionScale: resolveImageResolutionScale(viewerOptions),
+			pdfExportSettings: resolvePdfExportSettings(viewerOptions),
 			mode,
 			slides,
 			activeSlide,
@@ -1485,187 +1488,190 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 						<ErrorState error={error} />
 					) : (
 						<ThemeColorMapProvider value={themeColorMapValue}>
-							<RecentColorsProvider value={recentColorsValue}>
-								{mode !== 'present' && rootOptions.showToolbar && (
-									<ViewerToolbarSection
+							<FormatPaneContext.Provider value={state.formatPane}>
+								<RecentColorsProvider value={recentColorsValue}>
+									{mode !== 'present' && rootOptions.showToolbar && (
+										<ViewerToolbarSection
+											mode={mode}
+											canEdit={canEdit}
+											state={state}
+											selectedElement={selectedElement}
+											activeSlide={activeSlide}
+											activeSlideIndex={activeSlideIndex}
+											zoom={zoom}
+											history={history}
+											findReplace={editorOps.findReplace}
+											manipulation={editorOps.manipulation}
+											insertHandlers={editorOps.insertHandlers}
+											exportHandlers={exportHandlers}
+											printHandlers={printHandlers}
+											propertyHandlers={propertyHandlers}
+											dialogs={dialogs}
+											slideOps={editorOps.slideOps}
+											sectionOps={editorOps.sectionOps}
+											onApplyLayout={(path) => void layoutSwitching.applyLayout(path)}
+											loadLayoutPreviews={layoutSwitching.loadLayoutPreviews}
+											customFontFamilies={customFontFamilies}
+											ops={editorOps.ops}
+											onSetMode={handleSetMode}
+											onPresentFromBeginning={presentation.enterPresentModeFromBeginning}
+											onEnterPresenterView={handleEnterPresenterView}
+											onEnterRehearsalMode={handleEnterRehearsalMode}
+											onOpenSettings={optionsAvailable ? () => setIsSettingsOpen(true) : undefined}
+											onOpenHeaderFooter={() => setIsHeaderFooterOpen(true)}
+											onOpenShareDialog={() => setIsShareDialogOpen(true)}
+											onOpenFile={handleOpenFile}
+											onOpenRecentFile={handleOpenRecentFile}
+											fileName={fileName}
+											autosaveStatus={autosaveStatus}
+											autosaveEnabled={autosaveActivation.active}
+											autosaveToggleAvailable={autosaveActivation.toggleAvailable}
+											onToggleAutosave={() => {
+												// Inert when the host passed `autosave={false}`: a preference
+												// cannot exceed the policy, so the switch must not move.
+												if (autosaveActivation.toggleAvailable) {
+													setAutosaveEnabled(!autosaveEnabled);
+													onAutosaveToggle?.(!autosaveEnabled);
+												}
+											}}
+											hiddenActions={hiddenActions}
+											recentPresentationsCount={viewerOptions.advanced.recentPresentationsCount}
+											aiEnabled={aiEnabled}
+											isAiPanelOpen={aiPanel.isOpen}
+											onToggleAiPanel={aiPanel.toggle}
+											isProtectedView={isProtectedView}
+											onEnableEditing={
+												hostCanEdit && isEditingAllowed(customizationResolved)
+													? handleEnableEditing
+													: undefined
+											}
+											ribbonDisplay={ribbonDisplayController}
+											onSetSnapToGrid={viewPreferencesSync.handleSetSnapToGrid}
+											onSetSnapToShape={viewPreferencesSync.handleSetSnapToShape}
+											onSetShowGuides={viewPreferencesSync.handleSetShowGuides}
+										/>
+									)}
+
+									{mode !== 'present' && rootOptions.showToolbar && readOnlyRec.bannerVisible && (
+										<ReadOnlyBanner
+											recommendation={readOnlyRec.recommendation}
+											onEditAnyway={readOnlyRec.editAnyway}
+											onDismiss={readOnlyRec.dismiss}
+											passwordPromptOpen={readOnlyRec.passwordPromptOpen}
+											passwordError={readOnlyRec.passwordError}
+											checkingPassword={readOnlyRec.checkingPassword}
+											onSubmitPassword={readOnlyRec.submitPassword}
+											onCancelPassword={readOnlyRec.cancelPasswordPrompt}
+										/>
+									)}
+
+									<ViewerMainContent
 										mode={mode}
 										canEdit={canEdit}
-										state={state}
-										selectedElement={selectedElement}
+										slides={slides}
 										activeSlide={activeSlide}
-										activeSlideIndex={activeSlideIndex}
-										zoom={zoom}
-										history={history}
-										findReplace={editorOps.findReplace}
-										manipulation={editorOps.manipulation}
-										insertHandlers={editorOps.insertHandlers}
-										exportHandlers={exportHandlers}
-										printHandlers={printHandlers}
-										propertyHandlers={propertyHandlers}
-										dialogs={dialogs}
-										slideOps={editorOps.slideOps}
-										sectionOps={editorOps.sectionOps}
 										onApplyLayout={(path) => void layoutSwitching.applyLayout(path)}
 										loadLayoutPreviews={layoutSwitching.loadLayoutPreviews}
-										customFontFamilies={customFontFamilies}
-										ops={editorOps.ops}
-										onSetMode={handleSetMode}
-										onPresentFromBeginning={presentation.enterPresentModeFromBeginning}
-										onEnterPresenterView={handleEnterPresenterView}
-										onEnterRehearsalMode={handleEnterRehearsalMode}
-										onOpenSettings={optionsAvailable ? () => setIsSettingsOpen(true) : undefined}
-										onOpenHeaderFooter={() => setIsHeaderFooterOpen(true)}
-										onOpenShareDialog={() => setIsShareDialogOpen(true)}
-										onOpenFile={handleOpenFile}
-										onOpenRecentFile={handleOpenRecentFile}
-										fileName={fileName}
-										autosaveStatus={autosaveStatus}
-										autosaveEnabled={autosaveActivation.active}
-										autosaveToggleAvailable={autosaveActivation.toggleAvailable}
-										onToggleAutosave={() => {
-											// Inert when the host passed `autosave={false}`: a preference
-											// cannot exceed the policy, so the switch must not move.
-											if (autosaveActivation.toggleAvailable) {
-												setAutosaveEnabled(!autosaveEnabled);
-												onAutosaveToggle?.(!autosaveEnabled);
-											}
-										}}
-										hiddenActions={hiddenActions}
-										recentPresentationsCount={viewerOptions.advanced.recentPresentationsCount}
-										aiEnabled={aiEnabled}
-										isAiPanelOpen={aiPanel.isOpen}
-										onToggleAiPanel={aiPanel.toggle}
-										isProtectedView={isProtectedView}
-										onEnableEditing={
-											hostCanEdit && isEditingAllowed(customizationResolved)
-												? handleEnableEditing
-												: undefined
+										presentationOverlay={
+											// `ppaction://program` ("Run program") notices. Rendered INSIDE
+											// the show stage, not beside the viewer: the fullscreen element
+											// is the viewer's inner container (the top layer), so anything
+											// mounted outside it is neither painted nor hit-testable while
+											// a real fullscreen show runs, whatever its z-index. Caught by
+											// e2e/run-program-notice.spec.ts (the Copy button was visible
+											// yet every click reached the stage).
+											<RunProgramNotices
+												notices={runProgramNoticesState.notices}
+												onDismiss={runProgramNoticesState.dismiss}
+											/>
 										}
-										ribbonDisplay={ribbonDisplayController}
-										onSetSnapToGrid={viewPreferencesSync.handleSetSnapToGrid}
-										onSetSnapToShape={viewPreferencesSync.handleSetSnapToShape}
-										onSetShowGuides={viewPreferencesSync.handleSetShowGuides}
+										masterPseudoSlide={masterPseudoSlide}
+										activeSlideIndex={activeSlideIndex}
+										canvasSize={canvasSize}
+										gridSpacingPx={gridSpacingPx}
+										slideSectionGroups={slideSectionGroups}
+										showSlidesPane={showSlidesPane}
+										showMasterPane={showMasterPane}
+										selectedElement={selectedElement}
+										state={state}
+										editorOps={editorOps}
+										dialogs={dialogs}
+										presentation={presentation}
+										annotations={annotations}
+										propertyHandlers={propertyHandlers}
+										themeHandlers={themeHandlers}
+										history={history}
+										comments={editorOps.comments}
+										masterViewCrud={masterViewCrud}
+										zoom={zoom}
+										isMobile={isMobile}
+										isTouchDevice={isTouchDevice}
+										onEndPresentation={() => handleSetMode('edit')}
+										leftPanelWidth={isMobile ? undefined : resizablePanels.leftWidth}
+										onResizeLeft={isMobile ? undefined : resizablePanels.onResizeLeft}
+										rightPanelWidth={isMobile ? undefined : resizablePanels.rightWidth}
+										onResizeRight={isMobile ? undefined : resizablePanels.onResizeRight}
+										hiddenActions={hiddenActions}
+										aiConfig={aiEnabled ? ai : undefined}
+										aiBridge={aiEnabled ? aiBridge : undefined}
+										aiPanel={aiEnabled ? aiPanel : undefined}
 									/>
-								)}
 
-								{mode !== 'present' && rootOptions.showToolbar && readOnlyRec.bannerVisible && (
-									<ReadOnlyBanner
-										recommendation={readOnlyRec.recommendation}
-										onEditAnyway={readOnlyRec.editAnyway}
-										onDismiss={readOnlyRec.dismiss}
-										passwordPromptOpen={readOnlyRec.passwordPromptOpen}
-										passwordError={readOnlyRec.passwordError}
-										checkingPassword={readOnlyRec.checkingPassword}
-										onSubmitPassword={readOnlyRec.submitPassword}
-										onCancelPassword={readOnlyRec.cancelPasswordPrompt}
-									/>
-								)}
-
-								<ViewerMainContent
-									mode={mode}
-									canEdit={canEdit}
-									slides={slides}
-									activeSlide={activeSlide}
-									onApplyLayout={(path) => void layoutSwitching.applyLayout(path)}
-									loadLayoutPreviews={layoutSwitching.loadLayoutPreviews}
-									presentationOverlay={
-										// `ppaction://program` ("Run program") notices. Rendered INSIDE
-										// the show stage, not beside the viewer: the fullscreen element
-										// is the viewer's inner container (the top layer), so anything
-										// mounted outside it is neither painted nor hit-testable while
-										// a real fullscreen show runs, whatever its z-index. Caught by
-										// e2e/run-program-notice.spec.ts (the Copy button was visible
-										// yet every click reached the stage).
-										<RunProgramNotices
-											notices={runProgramNoticesState.notices}
-											onDismiss={runProgramNoticesState.dismiss}
-										/>
-									}
-									masterPseudoSlide={masterPseudoSlide}
-									activeSlideIndex={activeSlideIndex}
-									canvasSize={canvasSize}
-									gridSpacingPx={gridSpacingPx}
-									slideSectionGroups={slideSectionGroups}
-									showSlidesPane={showSlidesPane}
-									showMasterPane={showMasterPane}
-									selectedElement={selectedElement}
-									state={state}
-									editorOps={editorOps}
-									dialogs={dialogs}
-									presentation={presentation}
-									annotations={annotations}
-									propertyHandlers={propertyHandlers}
-									themeHandlers={themeHandlers}
-									history={history}
-									comments={editorOps.comments}
-									masterViewCrud={masterViewCrud}
-									zoom={zoom}
-									isMobile={isMobile}
-									isTouchDevice={isTouchDevice}
-									onEndPresentation={() => handleSetMode('edit')}
-									leftPanelWidth={isMobile ? undefined : resizablePanels.leftWidth}
-									onResizeLeft={isMobile ? undefined : resizablePanels.onResizeLeft}
-									rightPanelWidth={isMobile ? undefined : resizablePanels.rightWidth}
-									onResizeRight={isMobile ? undefined : resizablePanels.onResizeRight}
-									hiddenActions={hiddenActions}
-									aiConfig={aiEnabled ? ai : undefined}
-									aiBridge={aiEnabled ? aiBridge : undefined}
-									aiPanel={aiEnabled ? aiPanel : undefined}
-								/>
-
-								{/* Keep the bottom panels mounted while the notes panel is expanded:
+									{/* Keep the bottom panels mounted while the notes panel is expanded:
 				    focusing the notes textbox opens the virtual keyboard, and
 				    unmounting on `isVirtualKeyboardOpen` would yank the textbox the
 				    user just tapped out from under them. When notes is collapsed we
 				    still hide the strip on keyboard-open to free room for canvas
 				    inline editing. */}
-								{mode !== 'present' && (!isVirtualKeyboardOpen || !state.isSlideNotesCollapsed) && (
-									<ViewerBottomPanels
-										activeSlide={activeSlide}
-										allSlides={slides}
-										isSlideNotesCollapsed={state.isSlideNotesCollapsed}
-										canEdit={canEdit}
-										slideCount={slides.length}
-										activeSlideIndex={activeSlideIndex}
-										isDirty={state.isDirty}
-										autosaveStatus={autosaveStatus}
-										saveProgress={saveProgressState}
-										fontProgress={state.fontProgress}
-										onToggleNotes={() => state.setIsSlideNotesCollapsed((p) => !p)}
-										onUpdateNotes={propertyHandlers.handleUpdateNotes}
-										collaborationSlot={
-											collaboration && shareAvailable ? <CollaborationStatusStrip /> : undefined
-										}
-										notesPanelHeight={isMobile ? undefined : resizablePanels.bottomHeight}
-										onResizeBottom={isMobile ? undefined : resizablePanels.onResizeBottom}
-										scale={zoom.scale}
-										onZoomIn={zoom.handleZoomIn}
-										onZoomOut={zoom.handleZoomOut}
-										onZoomToFit={zoom.handleZoomToFit}
-										mode={mode}
-										onSetMode={handleSetMode}
-										onToggleSlideSorter={() => state.setShowSlideSorter((p) => !p)}
-										hideStatusBar={isMobile || !rootOptions.showToolbar}
-										hiddenActions={hiddenActions}
-										notesStyle={state.notesMaster?.notesStyle}
-										onNotesHeightChange={setNotesBarHeight}
-									/>
-								)}
+									{mode !== 'present' &&
+										(!isVirtualKeyboardOpen || !state.isSlideNotesCollapsed) && (
+											<ViewerBottomPanels
+												activeSlide={activeSlide}
+												allSlides={slides}
+												isSlideNotesCollapsed={state.isSlideNotesCollapsed}
+												canEdit={canEdit}
+												slideCount={slides.length}
+												activeSlideIndex={activeSlideIndex}
+												isDirty={state.isDirty}
+												autosaveStatus={autosaveStatus}
+												saveProgress={saveProgressState}
+												fontProgress={state.fontProgress}
+												onToggleNotes={() => state.setIsSlideNotesCollapsed((p) => !p)}
+												onUpdateNotes={propertyHandlers.handleUpdateNotes}
+												collaborationSlot={
+													collaboration && shareAvailable ? <CollaborationStatusStrip /> : undefined
+												}
+												notesPanelHeight={isMobile ? undefined : resizablePanels.bottomHeight}
+												onResizeBottom={isMobile ? undefined : resizablePanels.onResizeBottom}
+												scale={zoom.scale}
+												onZoomIn={zoom.handleZoomIn}
+												onZoomOut={zoom.handleZoomOut}
+												onZoomToFit={zoom.handleZoomToFit}
+												mode={mode}
+												onSetMode={handleSetMode}
+												onToggleSlideSorter={() => state.setShowSlideSorter((p) => !p)}
+												hideStatusBar={isMobile || !rootOptions.showToolbar}
+												hiddenActions={hiddenActions}
+												notesStyle={state.notesMaster?.notesStyle}
+												onNotesHeightChange={setNotesBarHeight}
+											/>
+										)}
 
-								{mode !== 'present' && isMobile && rootOptions.showToolbar && (
-									<MobileChromeOverlay
-										state={state}
-										editorOps={editorOps}
-										presentation={presentation}
-										slides={slides}
-										activeSlideIndex={activeSlideIndex}
-										canvasSize={canvasSize}
-										slideSectionGroups={slideSectionGroups}
-										canEdit={canEdit}
-										commentCount={activeSlide?.comments?.length ?? 0}
-									/>
-								)}
-							</RecentColorsProvider>
+									{mode !== 'present' && isMobile && rootOptions.showToolbar && (
+										<MobileChromeOverlay
+											state={state}
+											editorOps={editorOps}
+											presentation={presentation}
+											slides={slides}
+											activeSlideIndex={activeSlideIndex}
+											canvasSize={canvasSize}
+											slideSectionGroups={slideSectionGroups}
+											canEdit={canEdit}
+											commentCount={activeSlide?.comments?.length ?? 0}
+										/>
+									)}
+								</RecentColorsProvider>
+							</FormatPaneContext.Provider>
 						</ThemeColorMapProvider>
 					)}
 				</div>

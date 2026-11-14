@@ -27,6 +27,7 @@ import { useElementOperations } from './useElementOperations';
 import type { ElementOperations } from './useElementOperations';
 import { useFindReplace } from './useFindReplace';
 import { useFormatPainterEditing } from './useFormatPainterEditing';
+import { useInlineRichTextPaste } from './useInlineRichTextPaste';
 import { useInsertElements } from './useInsertElements';
 import type { InsertElementHandlers } from './useInsertElements';
 import { usePasteSpecial } from './usePasteSpecial';
@@ -36,6 +37,7 @@ import { useSectionOperations } from './useSectionOperations';
 import type { SectionOperations } from './useSectionOperations';
 import { useSlideManagement } from './useSlideManagement';
 import type { SlideManagementHandlers } from './useSlideManagement';
+import { useTableCellsPaste } from './useTableCellsPaste';
 import { useTableOperations } from './useTableOperations';
 import type { TableOperationHandlers } from './useTableOperations';
 import type { ViewerDialogsResult } from './useViewerDialogs';
@@ -265,13 +267,24 @@ export function useEditorOperations(input: UseEditorOperationsInput): EditorOper
 		ops,
 		history,
 	});
-	const imagePaste = useCanvasImagePaste({
+	const canvasImagePaste = useCanvasImagePaste({
 		state,
 		mode,
 		canEdit,
 		handlerRef,
 		insertElement: insertHandlers.addElement,
 	});
+	const richTextPaste = useInlineRichTextPaste({
+		elementLookup: state.elementLookup,
+		inlineEditingElementIdRef: state.inlineEditingElementIdRef,
+		setInlineEditingElementId: state.setInlineEditingElementId,
+		setInlineEditingText: state.setInlineEditingText,
+		updateElementById: ops.updateElementById,
+	});
+	const imagePaste = useMemo(
+		() => ({ ...canvasImagePaste, richText: richTextPaste }),
+		[canvasImagePaste, richTextPaste],
+	);
 
 	// "Edit Text" from the element context menu is the same effect as
 	// double-clicking the element: `handleElementDoubleClick` already ignores
@@ -327,6 +340,7 @@ export function useEditorOperations(input: UseEditorOperationsInput): EditorOper
 		setSelectedElementIds: state.setSelectedElementIds,
 		setIsInspectorPaneOpen: state.setIsInspectorPaneOpen,
 		setSidebarPanelMode: state.setSidebarPanelMode,
+		formatPane: state.formatPane,
 		ops,
 		history,
 		onOpenHyperlinkDialog: () => dialogs.setIsHyperlinkDialogOpen(true),
@@ -362,18 +376,25 @@ export function useEditorOperations(input: UseEditorOperationsInput): EditorOper
 		history,
 		transformCommittedText,
 	});
+	useTableCellsPaste({
+		selectedElement,
+		tableEditorState: state.tableEditorState,
+		updateElementById: ops.updateElementById,
+		markDirty: history.markDirty,
+	});
 
-	// Combined text style updater: if a table cell is active, apply formatting
-	// to that cell; otherwise delegate to the normal element text style updater.
+	// Combined text style updater: with a table selected, apply formatting to the
+	// selected cells (the whole table when no cell is active, as PowerPoint
+	// does); otherwise delegate to the normal element text style updater.
 	const combinedUpdateTextStyle = useCallback(
 		(updates: Partial<TextStyle>) => {
-			if (selectedElement?.type === 'table' && state.tableEditorState) {
+			if (selectedElement?.type === 'table') {
 				tableOps.handleUpdateCellTextStyle(updates as Record<string, unknown>);
 				return;
 			}
 			ops.updateSelectedTextStyle(updates);
 		},
-		[selectedElement, state.tableEditorState, tableOps, ops],
+		[selectedElement, tableOps, ops],
 	);
 
 	const combinedOps: ElementOperations = useMemo(

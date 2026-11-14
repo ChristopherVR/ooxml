@@ -3,11 +3,17 @@ import {
 	applyPasteSpecialFormat,
 	buildElementClipboardPayload,
 	cloneElementForPaste,
+	copyElementsToSystemClipboard,
 } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 
 import type { Store, ViewerState } from '../state';
-import { getActiveElements, replaceActiveElements } from './editor-active-elements';
+import { rasterizeElementNode } from '../ui/context-menu-format-actions';
+import {
+	findActiveElementsByIds,
+	getActiveElements,
+	replaceActiveElements,
+} from './editor-active-elements';
 import type { EditorOps } from './editor-operations';
 
 /**
@@ -41,6 +47,15 @@ export interface ClipboardActionsDeps {
 
 export function createClipboardActions(deps: ClipboardActionsDeps): ClipboardActions {
 	const { store, ops } = deps;
+	/** Other applications get a picture of the selection and its text (best effort). */
+	const copyToSystem = (fallback: PptxElement): void => {
+		const state = store.get();
+		const selected = findActiveElementsByIds(state, state.selectedElementIds);
+		void copyElementsToSystemClipboard({
+			elements: selected.length ? selected : [fallback],
+			rasterize: (node) => rasterizeElementNode(node.ownerDocument, node).catch(() => null),
+		});
+	};
 
 	return {
 		copy() {
@@ -49,6 +64,7 @@ export function createClipboardActions(deps: ClipboardActionsDeps): ClipboardAct
 				return;
 			}
 			store.set({ clipboardPayload: buildElementClipboardPayload(el, false) });
+			copyToSystem(el);
 		},
 
 		cut() {
@@ -58,6 +74,7 @@ export function createClipboardActions(deps: ClipboardActionsDeps): ClipboardAct
 				return;
 			}
 			store.set({ clipboardPayload: buildElementClipboardPayload(el, false) });
+			copyToSystem(el);
 			ops.deleteSelected();
 		},
 

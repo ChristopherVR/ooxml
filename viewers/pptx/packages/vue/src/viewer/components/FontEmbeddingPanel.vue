@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { scanAvailableFontFamilies } from 'ooxml-ui/pptx';
+import type { FontEmbeddingRestriction } from 'ooxml-ui/pptx';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -18,6 +19,8 @@ const props = withDefaults(
 		embedFontsEnabled: boolean;
 		usedFontFamilies: string[];
 		embeddedFonts: string[];
+		/** Licence restrictions of embedded typefaces (`describeEmbeddedFontRestrictions`). */
+		embeddedFontRestrictions?: Record<string, FontEmbeddingRestriction>;
 		/**
 		 * False when the deck embeds nothing, in which case the switch is inert
 		 * and says why. The viewer can keep or strip embedded font data on save,
@@ -28,7 +31,7 @@ const props = withDefaults(
 		/** i18n key for the explanation shown when `canEmbedFonts` is false. */
 		embedUnavailableKey?: string;
 	}>(),
-	{ canEmbedFonts: true, embedUnavailableKey: undefined },
+	{ canEmbedFonts: true, embedUnavailableKey: undefined, embeddedFontRestrictions: () => ({}) },
 );
 
 const emit = defineEmits<{
@@ -126,13 +129,30 @@ const missingCount = computed(
 						:key="family"
 						class="flex items-center justify-between rounded-lg bg-muted/60 px-3 py-2"
 					>
-						<span class="text-xs text-foreground">{{ family }}</span>
+						<span class="flex flex-col">
+							<span class="text-xs text-foreground">{{ family }}</span>
+							<span
+								v-if="props.embeddedFontRestrictions[family]"
+								class="text-[10px] text-muted-foreground"
+								:data-font-restriction-reason="props.embeddedFontRestrictions[family].licence"
+							>
+								{{ t(props.embeddedFontRestrictions[family].reasonKey) }}
+							</span>
+						</span>
 						<div class="flex items-center gap-2">
 							<span
 								v-if="embeddedSet.has(family)"
 								class="rounded border border-green-700/40 bg-green-900/40 px-1.5 py-0.5 text-[10px] text-green-400"
 							>
 								{{ t('pptx.fontEmbedding.embedded') }}
+							</span>
+							<span
+								v-if="props.embeddedFontRestrictions[family]"
+								class="rounded border border-yellow-700/40 bg-yellow-900/40 px-1.5 py-0.5 text-[10px] text-yellow-400"
+								:data-font-restriction="props.embeddedFontRestrictions[family].licence"
+								:title="t(props.embeddedFontRestrictions[family].reasonKey)"
+							>
+								{{ t(props.embeddedFontRestrictions[family].labelKey) }}
 							</span>
 							<span v-if="availableFamilies.has(family)" class="text-[10px] text-green-400">
 								{{ t('pptx.fontEmbedding.available') }}

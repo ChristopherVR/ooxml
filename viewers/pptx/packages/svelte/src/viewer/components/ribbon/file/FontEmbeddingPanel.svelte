@@ -3,13 +3,14 @@
 	import Check from '@lucide/svelte/icons/check';
 	import Type from '@lucide/svelte/icons/type';
 	import X from '@lucide/svelte/icons/x';
-	import { scanAvailableFontFamilies } from 'ooxml-ui/pptx';
+	import { scanAvailableFontFamilies, type FontEmbeddingRestriction } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../../i18n/context';
 
 	const {
 		usedFontFamilies,
 		embeddedFonts,
+		embeddedFontRestrictions = {},
 		enabled,
 		canEmbed = true,
 		unavailableKey,
@@ -18,6 +19,8 @@
 	}: {
 		usedFontFamilies: string[];
 		embeddedFonts: string[];
+		/** Licence restrictions of embedded typefaces (`describeEmbeddedFontRestrictions`). */
+		embeddedFontRestrictions?: Record<string, FontEmbeddingRestriction>;
 		enabled: boolean;
 		/**
 		 * False when the deck embeds nothing, in which case the switch is inert and
@@ -74,7 +77,8 @@
 			{:else}
 				<div class="fonts">
 					{#each usedFontFamilies as family}
-						<div class="font"><span>{family}</span><span class="badges">{#if embedded.has(family)}<b>{t('pptx.fonts.embedded')}</b>{/if}{#if available.has(family)}<i><Check size={14} aria-hidden="true" /></i>{:else}<em>{t('pptx.fonts.notFound')}</em>{/if}</span></div>
+						{@const restriction = embeddedFontRestrictions[family]}
+						<div class="font"><span class="name"><span>{family}</span>{#if restriction}<small data-font-restriction-reason={restriction.licence}>{t(restriction.reasonKey)}</small>{/if}</span><span class="badges">{#if embedded.has(family)}<b>{t('pptx.fonts.embedded')}</b>{/if}{#if restriction}<u data-font-restriction={restriction.licence} title={t(restriction.reasonKey)}>{t(restriction.labelKey)}</u>{/if}{#if available.has(family)}<i><Check size={14} aria-hidden="true" /></i>{:else}<em>{t('pptx.fonts.notFound')}</em>{/if}</span></div>
 					{/each}
 				</div>
 			{/if}
@@ -85,5 +89,5 @@
 </div>
 
 <style>
-	.backdrop{position:fixed;inset:0;z-index:90;display:grid;place-items:center;background:#0009}.scrim{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent}.panel{position:relative;width:min(460px,calc(100vw - 32px));max-height:80vh;overflow:auto;border:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-radius:12px;background:var(--pptx-card, var(--office-surface, #f3f4f6));color:var(--pptx-card-foreground, var(--office-foreground, #1f2937));box-shadow:0 24px 80px #0008}header,footer{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--pptx-border, var(--office-border, #d1d5db))}header div{display:flex;align-items:center;gap:9px}header span{display:grid;width:24px;height:24px;place-items:center;border-radius:6px;background:color-mix(in srgb,var(--pptx-primary, var(--office-accent, #2563eb)) 18%,transparent);color:var(--pptx-primary, var(--office-accent, #2563eb));font-weight:700}h2,h3,p{margin:0}h2{font-size:14px}h3{font-size:12px}.body{display:grid;gap:16px;padding:18px}.body>p,.status{font-size:12px;color:var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280))}button,input{accent-color:var(--pptx-primary, var(--office-accent, #2563eb))}button{border:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-radius:6px;padding:6px 10px;background:var(--pptx-muted, var(--office-surface, #f3f4f6));color:inherit}.toggle{display:flex;align-items:center;gap:10px;font-size:12px}.toggle.inert{opacity:.6;cursor:not-allowed}.fonts{display:grid;gap:6px;max-height:280px;overflow:auto}.font{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 10px;border-radius:8px;background:var(--pptx-muted, var(--office-surface, #f3f4f6));font-size:12px}.badges{display:flex;align-items:center;gap:7px}.badges b{padding:2px 5px;border-radius:4px;background:#16653455;color:#86efac;font-size:10px}.badges i{color:#4ade80;font-style:normal}.badges em,.warning{color:#fbbf24;font-size:10px;font-style:normal}.warning{font-size:11px}footer{justify-content:flex-end;border-top:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-bottom:0}@media(max-width:600px){.panel{position:fixed;inset:auto 0 0;width:100%;max-height:88dvh;border-radius:16px 16px 0 0}}
+	.backdrop{position:fixed;inset:0;z-index:90;display:grid;place-items:center;background:#0009}.scrim{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent}.panel{position:relative;width:min(460px,calc(100vw - 32px));max-height:80vh;overflow:auto;border:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-radius:12px;background:var(--pptx-card, var(--office-surface, #f3f4f6));color:var(--pptx-card-foreground, var(--office-foreground, #1f2937));box-shadow:0 24px 80px #0008}header,footer{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--pptx-border, var(--office-border, #d1d5db))}header div{display:flex;align-items:center;gap:9px}header span{display:grid;width:24px;height:24px;place-items:center;border-radius:6px;background:color-mix(in srgb,var(--pptx-primary, var(--office-accent, #2563eb)) 18%,transparent);color:var(--pptx-primary, var(--office-accent, #2563eb));font-weight:700}h2,h3,p{margin:0}h2{font-size:14px}h3{font-size:12px}.body{display:grid;gap:16px;padding:18px}.body>p,.status{font-size:12px;color:var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280))}button,input{accent-color:var(--pptx-primary, var(--office-accent, #2563eb))}button{border:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-radius:6px;padding:6px 10px;background:var(--pptx-muted, var(--office-surface, #f3f4f6));color:inherit}.toggle{display:flex;align-items:center;gap:10px;font-size:12px}.toggle.inert{opacity:.6;cursor:not-allowed}.fonts{display:grid;gap:6px;max-height:280px;overflow:auto}.font{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 10px;border-radius:8px;background:var(--pptx-muted, var(--office-surface, #f3f4f6));font-size:12px}.badges{display:flex;align-items:center;gap:7px}.badges b{padding:2px 5px;border-radius:4px;background:#16653455;color:#86efac;font-size:10px}.name{display:grid;gap:2px}.name small{font-size:10px;color:var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280))}.badges u{padding:2px 5px;border-radius:4px;background:#854d0e55;color:#fde047;font-size:10px;text-decoration:none}.badges i{color:#4ade80;font-style:normal}.badges em,.warning{color:#fbbf24;font-size:10px;font-style:normal}.warning{font-size:11px}footer{justify-content:flex-end;border-top:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-bottom:0}@media(max-width:600px){.panel{position:fixed;inset:auto 0 0;width:100%;max-height:88dvh;border-radius:16px 16px 0 0}}
 </style>

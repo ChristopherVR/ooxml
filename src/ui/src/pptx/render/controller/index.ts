@@ -91,3 +91,11 @@ export type {
 	SaveRevisionController,
 	SaveRevisionControllerDeps,
 } from './save-revision';
+export { createFormatPaneController, formatSectionOpen } from './format-pane-controller';
+export type {
+	FormatPaneController,
+	FormatPaneControllerDeps,
+	FormatPaneRequest,
+	FormatPaneReveal,
+	FormatPaneState,
+} from './format-pane-controller';

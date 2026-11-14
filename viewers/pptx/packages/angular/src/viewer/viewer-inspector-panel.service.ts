@@ -15,7 +15,7 @@
  */
 
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { initialInspectorOpen } from 'ooxml-ui/pptx';
+import { createFormatPaneController, initialInspectorOpen } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 
 import { IsMobileService } from './is-mobile';
@@ -63,6 +63,12 @@ export class ViewerInspectorPanelService {
 	 * dismiss. Clearing the past-threshold drag also closes any open tool panel.
 	 */
 	readonly inspectorDrag = createSwipeDismissDrag(() => this.dismissMobileInspector());
+
+	/**
+	 * The Format pane's open sections and launch requests (Format Shape...,
+	 * ribbon dialog launchers), one per viewer. A request reopens the format view.
+	 */
+	readonly formatPane = createFormatPaneController({ showPane: () => this.openFormatPanel() });
 
 	private host: InspectorPanelHost | null = null;
 

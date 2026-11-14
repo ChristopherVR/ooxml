@@ -70,3 +70,4 @@ export {
 	isDashedStroke,
 } from './dash-pattern';
 export type { DashSegmentInput } from './dash-pattern';
+export * from './html-text-paste';

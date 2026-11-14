@@ -59,6 +59,12 @@ export const translations = {
 	'pptx.fonts.missingWarning':
 		'No se pudieron encontrar las fuentes {{count}} y no se incrustarán.',
 	'pptx.fonts.notFound': 'Extraviado',
+	'pptx.fonts.previewOnly': 'Solo vista previa e impresión',
+	'pptx.fonts.previewOnlyReason':
+		'La licencia de esta fuente solo permite mostrarla e imprimirla. Se conserva en este archivo, pero nunca se incrusta en otro archivo.',
+	'pptx.fonts.restricted': 'Restringida',
+	'pptx.fonts.restrictedReason':
+		'La licencia de esta fuente no permite incrustarla, por lo que no se usa para mostrar el texto y se muestra una sustituta. Sus datos de fuente se conservan sin cambios en este archivo.',
 	'pptx.fonts.scanning': 'Escaneando fuentes...',
 	'pptx.fonts.usedFonts': 'Fuentes usadas',
 	'pptx.text.title': 'Texto',

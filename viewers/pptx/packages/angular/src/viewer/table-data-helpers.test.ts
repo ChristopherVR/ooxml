@@ -24,6 +24,7 @@ import {
 	setCellText,
 	splitCursorCell,
 	splitMergedCell,
+	tableCellEditPatch,
 } from './table-data-helpers';
 
 // ---------------------------------------------------------------------------
@@ -76,6 +77,30 @@ describe('setCellText', () => {
 		const el = makeTable([['A', 'B']]);
 		setCellText(el, 0, 0, 'CHANGED');
 		expect(cellAt(el, 0, 0)?.text).toBe('A');
+	});
+});
+
+describe('tableCellEditPatch (rich cell editor)', () => {
+	it('commits runs and appends a row for Tab in the last cell', () => {
+		const el = makeTable([['A', 'B']]);
+		const patch = tableCellEditPatch(el, 0, 1, {
+			reason: 'navigate',
+			key: 'next',
+			segments: [{ text: 'Bold', style: { bold: true } }],
+		});
+		expect(patch?.tableData?.rows).toHaveLength(2);
+		expect(patch?.tableData?.rows[0]?.cells[1]?.textRuns).toEqual([{ text: 'Bold', bold: true }]);
+	});
+
+	it('fills cells from a pasted grid and is undefined for an unchanged exit', () => {
+		const el = makeTable([['A', 'B']]);
+		const patch = tableCellEditPatch(el, 0, 0, {
+			reason: 'paste',
+			segments: undefined,
+			grid: [['x', 'y', 'z']],
+		});
+		expect(patch?.tableData?.rows[0]?.cells.map((cell) => cell.text)).toEqual(['x', 'y', 'z']);
+		expect(tableCellEditPatch(el, 0, 0, { reason: 'exit', segments: undefined })).toBeUndefined();
 	});
 });
 

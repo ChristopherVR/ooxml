@@ -317,6 +317,10 @@ export const translations = {
 		'Ein Folienübergangston konnte nicht gespeichert werden und wurde übersprungen.',
 	'pptx.compatibility.diagramRelationshipIdsIncomplete':
 		'Diesem SmartArt-Diagramm fehlen einige interne Verweise, sodass es möglicherweise nicht genau wie ursprünglich erstellt angezeigt wird.',
+	'pptx.compatibility.embeddedFontRestricted':
+		'Die Lizenz einer eingebetteten Schriftart erlaubt ihre Verwendung nicht, daher wird eine Ersatzschrift angezeigt. Ihre Schriftdaten bleiben in der Datei.',
+	'pptx.compatibility.embeddedFontNotEmbeddable':
+		'Eine Schriftart wurde nicht eingebettet, weil ihre Lizenz das Einbetten in eine bearbeitbare Präsentation nicht erlaubt.',
 	'pptx.compatibility.exportBackendUnavailable':
 		'Der Export in dieses Format ist in der aktuellen Umgebung nicht verfügbar.',
 } as const;

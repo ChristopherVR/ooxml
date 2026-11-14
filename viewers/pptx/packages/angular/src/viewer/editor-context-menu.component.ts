@@ -19,12 +19,12 @@ import {
 	buildContextMenuEntries,
 	canCropElement,
 	contextMenuInspectorAnchor,
+	formatSectionForAnchor,
 	contextMenuViewItems,
 	customizeContextMenuEntries,
 	MERGE_SHAPES_LABEL_KEY,
 	isEditPointsEnabled,
 	resolveEditPointsAvailability,
-	scrollInspectorSectionIntoView,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, TablePptxElement } from 'pptx-viewer-core';
 
@@ -240,15 +240,12 @@ export class EditorContextMenuComponent {
 	private focusInspectorSection(
 		commandId: 'edit-alt-text' | 'size-and-position' | 'format-shape',
 	): void {
-		this.inspectorPanel.formatPanelClosed.set(false);
-		this.inspectorPanel.activePanel.set(null);
 		const anchor = contextMenuInspectorAnchor(commandId);
-		if (!anchor) {
-			return;
-		}
-		requestAnimationFrame(() => {
-			requestAnimationFrame(() => scrollInspectorSectionIntoView(document, anchor));
-		});
+		// The request opens the format view and, once rendered, expands and focuses the section.
+		this.inspectorPanel.formatPane.requestFormatPane(
+			anchor ? formatSectionForAnchor(anchor) : null,
+			{ focus: true },
+		);
 	}
 
 	/**

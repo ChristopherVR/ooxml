@@ -1,4 +1,9 @@
-import type { DocumentSaveReason, DocumentStorage, SlideSizeEmu } from 'ooxml-ui/pptx';
+import type {
+	DocumentSaveReason,
+	DocumentStorage,
+	PdfExportSettings,
+	SlideSizeEmu,
+} from 'ooxml-ui/pptx';
 import type {
 	PptxAppProperties,
 	PptxCoreProperties,
@@ -76,6 +81,8 @@ export interface UseExportHandlersInput {
 	 * Defaults to 1 when omitted.
 	 */
 	imageResolutionScale?: number;
+	/** File > Options > Advanced > Save as PDF (vector pages or pictures, hidden slides). */
+	pdfExportSettings?: PdfExportSettings;
 }
 
 export interface ExportHandlersResult {

@@ -69,6 +69,8 @@ export interface RibbonNavHandlers {
 	toggleMasterView?(): void;
 	/** Show/hide the right-hand property inspector (React's panel toggle). */
 	toggleInspector?(): void;
+	/** Open the inspector's Properties tab on a Format pane section (dialog launchers). */
+	requestFormatPane?(section: import('ooxml-ui/pptx').FormatSectionId): void;
 	/** The viewer's Ribbon Display Options state (the shared headless controller). */
 	getRibbonDisplay?(): import('ooxml-ui/pptx').RibbonDisplayController;
 	/**

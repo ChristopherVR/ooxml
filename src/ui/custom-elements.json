@@ -2419,6 +2419,78 @@
 		},
 		{
 			"kind": "javascript-module",
+			"path": "chrome/format-section.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiFormatSection",
+					"tagName": "office-ui-format-section",
+					"customElement": true,
+					"description": "`<office-ui-format-section label open mixed>`: one collapsible section of a Format pane (Fill, Outline, Size and position, ...). A native disclosure (`<details>`/`<summary>`) in the shadow root, so Enter and Space toggle it and assistive technology announces it as expanded or collapsed; the slotted body stays mounted while closed. `open` is owned by the host: a click on the heading flips it and emits `office-section-toggle` with `{ open }` (cancelable; a cancelled event leaves the section as it was). `mixed` shows a small badge (`mixed-label`, default \"Mixed\") for a multi-selection whose values differ. `focus()` focuses the heading. Parts: `heading`, `label`, `badge` and `body`.",
+					"attributes": [
+						{
+							"name": "label"
+						},
+						{
+							"name": "mixed"
+						},
+						{
+							"name": "mixed-label"
+						},
+						{
+							"name": "open"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "label",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "mixed",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "mixedLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "mixed-label"
+						},
+						{
+							"kind": "field",
+							"name": "open",
+							"type": {
+								"text": "boolean"
+							}
+						}
+					],
+					"events": [
+						{
+							"name": "office-section-toggle"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-format-section",
+					"declaration": {
+						"name": "OfficeUiFormatSection"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
 			"path": "ribbon/gallery.ts",
 			"declarations": [
 				{

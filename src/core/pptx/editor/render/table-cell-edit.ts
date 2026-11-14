@@ -37,6 +37,7 @@ import type { PptxTableCell, PptxTableCellStyle, TablePptxElement } from 'ooxml-
 export function withCellText(cell: PptxTableCell, text: string): PptxTableCell {
 	const next: PptxTableCell = { ...cell, text };
 	delete next.textRuns;
+	delete next.textSegments;
 	if (cell.paragraphs) {
 		next.paragraphs = cell.paragraphs.slice(0, 1);
 	}

@@ -294,7 +294,7 @@ test.describe('desktop manipulation (mouse)', () => {
 		const cellBox = (await cell.boundingBox())!;
 		await page.mouse.dblclick(cellBox.x + cellBox.width / 2, cellBox.y + cellBox.height / 2);
 
-		const input = page.locator('td input[type="text"]');
+		const input = page.locator('td [data-table-cell-editor]');
 		await expect(input).toBeVisible();
 
 		// The cell editor auto-selects its text, so typing replaces it.

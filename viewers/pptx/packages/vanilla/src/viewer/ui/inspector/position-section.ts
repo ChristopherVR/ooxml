@@ -24,6 +24,8 @@ export function createPositionSection(
 	section: (label: string) => HTMLElement,
 	setGeometry: (patch: GeometryPatch) => void,
 	toggleElementLock: () => void,
+	/** The Format pane's Arrange home for the lock toggle (default: this section's header). */
+	lockHost?: HTMLElement,
 ): PositionSection {
 	const el = section(t('pptx.arrange.positionSize'));
 	// Scroll target for the "Size and Position" element context-menu command;
@@ -48,7 +50,7 @@ export function createPositionSection(
 		className: 'pptxv-inspector-lock-btn',
 		onClick: toggleElementLock,
 	});
-	headerRow.appendChild(lockBtn.btn);
+	(lockHost ?? headerRow).appendChild(lockBtn.btn);
 
 	const geometry = createInspectorFields(doc, t, {
 		sections: ELEMENT_GEOMETRY_SECTIONS,
@@ -61,6 +63,9 @@ export function createPositionSection(
 		el,
 		update(state) {
 			el.hidden = !state.hasSelection;
+			if (lockHost) {
+				lockHost.hidden = !state.hasSelection;
+			}
 			geometry.update(
 				{
 					x: state.x,

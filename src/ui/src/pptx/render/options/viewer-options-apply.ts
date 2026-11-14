@@ -102,6 +102,21 @@ export function resolveImageResolutionScale(options: ViewerOptions): number {
 	return ppi === undefined ? 1 : Math.max(0.25, Math.min(4, ppi / 96));
 }
 
+/** How File > Save as PDF writes the file (Options > Advanced > Save as PDF). */
+export interface PdfExportSettings {
+	/** `vector` is paths and real text with embedded fonts; `pictures` is one image per slide. */
+	mode: 'vector' | 'pictures';
+	includeHiddenSlides: boolean;
+}
+
+/** The PDF export settings every binding's PDF command reads. */
+export function resolvePdfExportSettings(options: ViewerOptions): PdfExportSettings {
+	return {
+		mode: options.advanced.pdfSlidesAsPictures ? 'pictures' : 'vector',
+		includeHiddenSlides: options.advanced.pdfIncludeHiddenSlides,
+	};
+}
+
 /** Whether the viewer should open documents read-only until editing is enabled. */
 export function shouldOpenInProtectedView(options: ViewerOptions): boolean {
 	return options.trust.openInProtectedView;

@@ -5,11 +5,12 @@
  * throws `PdfFallback` inside `convertSvgPage`, which then reports `fallback` so the caller can
  * use a picture of the page instead.
  */
-import type { PdfFontSet } from '../export/pdf-embedded-font';
-import { PdfVectorPage, type PdfImageResource } from '../export/pdf-vector';
+import type { PdfFontSet } from './pdf-embedded-font';
+import { PdfVectorPage, type PdfImageResource } from './pdf-vector';
 import { pathEnds, pathOperators, parsePath, type PathSegment } from './pdf-path';
-import { drawSvgText } from './pdf-svg-text';
+import { drawSvgText, type SvgFontFamilyMapper } from './pdf-svg-text';
 import { gradientPaint, isGradient, pathBounds, type GradientPaint } from './pdf-svg-gradient';
+import { basicShapePath } from './pdf-svg-shapes';
 import {
 	hrefOf,
 	number,
@@ -76,6 +77,7 @@ class Converter {
 		readonly page: PdfVectorPage,
 		readonly images: ReadonlyMap<string, PdfImageResource>,
 		readonly fonts?: PdfFontSet,
+		readonly familyOf?: SvgFontFamilyMapper,
 	) {}
 	/** Set while a glow group is drawn: the halo width in the group's units. */
 	#glow: number | undefined;
@@ -188,8 +190,17 @@ class Converter {
 				break;
 			}
 			case 'text':
-				drawSvgText(this.page, element, opacity, this.fonts);
+				drawSvgText(this.page, element, opacity, this.fonts, this.familyOf);
 				break;
+			case 'circle':
+			case 'ellipse':
+			case 'line':
+			case 'polyline':
+			case 'polygon': {
+				const d = basicShapePath(element);
+				if (d) this.#path(element, d, opacity);
+				break;
+			}
 			case 'use':
 			case 'image':
 				this.#image(element, opacity);
@@ -330,9 +341,11 @@ class Converter {
 		const w = number(element.getAttribute('width'), 0),
 			h = number(element.getAttribute('height'), 0);
 		if (!(w > 0 && h > 0)) return;
+		const x = number(element.getAttribute('x')),
+			y = number(element.getAttribute('y'));
 		this.page.save();
 		if (alpha < 1) this.page.alpha(alpha);
-		this.page.concat([w, 0, 0, -h, 0, h]);
+		this.page.concat([w, 0, 0, -h, x, y + h]);
 		this.page.drawImage(resource);
 		this.page.restore();
 	}
@@ -348,9 +361,10 @@ export function convertSvgPage(
 	heightIn: number,
 	images: ReadonlyMap<string, PdfImageResource>,
 	fonts?: PdfFontSet,
+	familyOf?: SvgFontFamilyMapper,
 ): SvgPageConversion {
 	const page = new PdfVectorPage(widthIn * 72, heightIn * 72);
-	const converter = new Converter(svg, page, images, fonts);
+	const converter = new Converter(svg, page, images, fonts, familyOf);
 	try {
 		// SVG user space is y-down inches: map it to PDF points, origin bottom left.
 		page.concat([72, 0, 0, -72, 0, page.height]);
@@ -361,4 +375,21 @@ export function convertSvgPage(
 			return { fallback: [`Unsupported content: ${error.message}.`], degraded: [] };
 		throw error;
 	}
+}
+
+/**
+ * Draw the children of one `<svg>` root into `page` in the page's current space (SVG user
+ * units). Throws `PdfFallback` for content the vector path cannot represent, so a caller can
+ * draw that subtree as a picture instead; returns what was simplified.
+ */
+export function drawSvgSubtree(
+	page: PdfVectorPage,
+	svg: Element,
+	images: ReadonlyMap<string, PdfImageResource>,
+	fonts?: PdfFontSet,
+	alpha = 1,
+): string[] {
+	const converter = new Converter(svg, page, images, fonts);
+	for (const child of Array.from(svg.children)) converter.walk(child, alpha);
+	return [...converter.degraded];
 }

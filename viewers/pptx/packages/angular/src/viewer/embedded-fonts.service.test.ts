@@ -86,6 +86,24 @@ describe('embeddedFontsService', () => {
 		destroy();
 	});
 
+	it('exposes licence restrictions and never registers a restricted face', () => {
+		const { svc, destroy } = makeService();
+		svc.setFonts([
+			makeFont({ name: 'Brand', dataUrl: '', fsType: 0x0002, rawFontData: undefined }),
+			makeFont({ name: 'Proof', fsType: 0x0004 }),
+		]);
+		expect(svc.restrictions().Brand).toMatchObject({
+			licence: 'restricted',
+			labelKey: 'pptx.fonts.restricted',
+			reasonKey: 'pptx.fonts.restrictedReason',
+		});
+		expect(svc.restrictions().Proof?.licence).toBe('preview-print');
+		expect(svc.fontFaceCss()).not.toContain('"Brand"');
+		expect(svc.fontFaceCss()).toContain('font-family: "Proof"');
+		destroy();
+		expect(svc.restrictions()).toStrictEqual({});
+	});
+
 	it('removes the injected <style> and clears signals on destroy', () => {
 		const { svc, destroy } = makeService();
 		svc.setFonts([makeFont({ name: 'Injected' })]);

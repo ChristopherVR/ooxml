@@ -7,6 +7,7 @@
  */
 import type { PptxEmbeddedFont } from 'ooxml-core/pptx';
 import { deobfuscateFont } from 'ooxml-core/pptx';
+import { embeddingPermission, mayDisplayEmbeddedFont } from 'ooxml-core/text';
 
 /** Whitelist of `data:`/`blob:` URLs safe to interpolate into `url("…")`. */
 const FONT_DATA_URL_PATTERN =
@@ -61,6 +62,11 @@ export function isInjectableUrl(url: string): boolean {
  * none of these yield usable bytes.
  */
 export function resolveEmbeddedFontClearBytes(font: PptxEmbeddedFont): Uint8Array | undefined {
+	// A restricted-licence face (OS/2 fsType) is never activated, even when a
+	// host hands back its part bytes and key.
+	if (font.fsType !== undefined && !mayDisplayEmbeddedFont(embeddingPermission(font.fsType))) {
+		return undefined;
+	}
 	if (isInjectableUrl(font.dataUrl) && !font.dataUrl.startsWith('blob:')) {
 		const decoded = decodeFontDataUrl(font.dataUrl);
 		if (decoded && decoded.length >= 4) {

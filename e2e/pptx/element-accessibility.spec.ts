@@ -30,6 +30,7 @@ import { BOLD_TARGET_TEXT } from './fixtures/generate-text-style-emphasis-fixtur
 import { savePptxViaBackstage } from './save-pptx';
 import { elementWithText, fixture, inspector, loadDeck, selectElement } from './support/deck';
 import { downloadBytes } from './support/exports';
+import { openFormatSection } from './support/format-pane';
 import { extractElementBlock, readZipPartText } from './support/pptx-xml';
 
 const DECK = fixture('text-style-emphasis.pptx');
@@ -55,6 +56,7 @@ async function selectTarget(page: Page): Promise<void> {
 	await target.waitFor();
 	await selectElement(page, target);
 	await expect(inspector(page)).toBeVisible();
+	await openFormatSection(page, 'altText');
 }
 
 async function fillAndCommit(input: Locator, value: string): Promise<void> {

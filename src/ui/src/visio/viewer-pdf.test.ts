@@ -2,11 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { demoDocument } from 'ooxml-core/visio/ui';
 import { exportPageSvg } from './export-svg';
 import { buildVectorPdf, PdfVectorPage } from '../export/pdf-vector';
-import { convertSvgPage } from './pdf-svg';
+import { convertSvgPage } from '../export/pdf-svg';
 import { PdfFontSet } from '../export/pdf-embedded-font';
 import { existsSync, readFileSync } from 'node:fs';
 import { inflateSync } from 'node:zlib';
 import { exportDocumentPdfDetailed, pdfPageIndexes } from './viewer-pdf';
+import { drawingFontFamily } from './font-stack';
 
 const latin1 = (bytes: Uint8Array) => String.fromCharCode(...bytes);
 /** Each stream of a PDF: its dictionary, and its bytes inflated when the filter is FlateDecode. */
@@ -154,9 +155,9 @@ describe('vector page conversion', () => {
 			'<svg xmlns="http://www.w3.org/2000/svg"><text><tspan x="0" y="1">Zoom − out</tspan></text></svg>',
 		);
 		expect(convertSvgPage(unicode, 1, 1, new Map()).fallback[0]).toMatch(/WinAnsi/);
-		expect(convertSvgPage(unicode, 1, 1, new Map(), new PdfFontSet([])).fallback[0]).toMatch(
-			/WinAnsi/,
-		);
+		expect(
+			convertSvgPage(unicode, 1, 1, new Map(), new PdfFontSet([]), drawingFontFamily).fallback[0],
+		).toMatch(/WinAnsi/);
 	});
 
 	it('embeds decoded pictures', () => {
@@ -248,11 +249,13 @@ describe('embedded fonts', () => {
 				{ family: 'Arial', data: new Uint8Array(readFileSync(arial)) },
 			]);
 			// Arial has the minus sign but no CJK ideograph: that run still needs a picture.
-			expect(convertSvgPage(unicode, 1, 1, new Map(), fonts).fallback[0]).toMatch(/WinAnsi/);
+			expect(
+				convertSvgPage(unicode, 1, 1, new Map(), fonts, drawingFontFamily).fallback[0],
+			).toMatch(/WinAnsi/);
 			const minus = parse(
 				'<svg xmlns="http://www.w3.org/2000/svg"><text><tspan x="0" y="1" font-family="Arial" font-size="0.2">Zoom − out</tspan></text></svg>',
 			);
-			const result = convertSvgPage(minus, 1, 1, new Map(), fonts);
+			const result = convertSvgPage(minus, 1, 1, new Map(), fonts, drawingFontFamily);
 			expect(result.fallback).toEqual([]);
 			expect(result.page!.content).toMatch(/\/E0 [\d.]+ Tf .* TJ ET/);
 			const bytes = buildVectorPdf([result.page!]);

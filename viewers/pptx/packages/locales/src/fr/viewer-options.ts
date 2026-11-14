@@ -171,6 +171,11 @@ export const translations = {
 	'pptx.options.advanced.printHiddenSlides': 'Imprimer les diapositives masquées',
 	'pptx.options.advanced.printScaleToFit': "Mettre à l'échelle de la feuille",
 	'pptx.options.advanced.printFrameSlides': 'Encadrer les diapositives',
+	'pptx.options.advanced.pdf': 'Enregistrer au format PDF',
+	'pptx.options.advanced.pdfIncludeHiddenSlides': 'Inclure les diapositives masquées',
+	'pptx.options.advanced.pdfSlidesAsPictures': 'Enregistrer les diapositives comme images',
+	'pptx.options.advanced.pdfSlidesAsPicturesInfo':
+		"Écrit chaque diapositive sous la forme d'une seule image, comme les versions précédentes de cette visionneuse. Le texte du PDF ne peut alors être ni sélectionné ni recherché. Laissez cette option désactivée pour enregistrer les formes et le texte en graphiques vectoriels avec les polices incorporées.",
 	'pptx.options.ribbon.label': 'Personnaliser le ruban',
 	'pptx.options.ribbon.description': 'Personnalisez le ruban.',
 	'pptx.options.ribbon.tabsTitle': 'Onglets principaux',

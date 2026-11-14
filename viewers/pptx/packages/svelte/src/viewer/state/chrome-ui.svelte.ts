@@ -9,7 +9,8 @@
 /** The inspector pane's tab strip, matching React's `InspectorTab`. */
 export type InspectorTabId = 'elements' | 'properties' | 'comments';
 
-import { initialInspectorOpen } from 'ooxml-ui/pptx';
+import { createFormatPaneController, initialInspectorOpen } from 'ooxml-ui/pptx';
+import type { FormatPaneController } from 'ooxml-ui/pptx';
 
 export class ChromeUiState {
 	constructor(inspectorInitiallyOpen?: boolean) {
@@ -21,6 +22,17 @@ export class ChromeUiState {
 	inspectorOpen = $state(true);
 	/** Active inspector tab (React defaults to Properties). */
 	inspectorTab = $state<InspectorTabId>('properties');
+	/**
+	 * The Format pane's open sections and launch requests, one per viewer. A
+	 * launcher (Format Shape..., a ribbon dialog launcher) opens the inspector
+	 * on Properties.
+	 */
+	readonly formatPane: FormatPaneController = createFormatPaneController({
+		showPane: () => {
+			this.inspectorOpen = true;
+			this.inspectorTab = 'properties';
+		},
+	});
 
 	toggleSidebar(): void {
 		this.sidebarCollapsed = !this.sidebarCollapsed;

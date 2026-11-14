@@ -33,6 +33,7 @@ import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
 import { inspector, resetTabSession } from './support/deck';
+import { openFormatSection } from './support/format-pane';
 import { chooseSelectValue, expectSelectValue } from './support/select-control';
 
 /**
@@ -109,12 +110,15 @@ async function selectConnector(page: Page): Promise<void> {
 		}
 		await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
 		if (await card.isVisible()) {
+			// Size and position starts closed; the geometry fields live there.
+			await openFormatSection(page, 'sizePosition');
 			return;
 		}
 	}
 	// Out of attempts: report through the normal assertion so the failure names
 	// the missing card rather than a bare timeout.
 	await expect(card).toBeVisible();
+	await openFormatSection(page, 'sizePosition');
 }
 
 /** Commit a value into a numeric inspector field the way a keyboard user does. */

@@ -42,5 +42,9 @@ export interface StageInteractions {
 	beginAdjustGesture(event: PointerEvent, descriptor: ShapeAdjustmentHandleDescriptor): void;
 	closeInline(commit: boolean): void;
 	inlineActive(): boolean;
+	/** The element whose inline text editor is open, or null. */
+	inlineElementId(): string | null;
+	/** Open the inline text editor on `id` (caret at the end unless a caret is pending). */
+	openInlineEdit(id: string): void;
 	dispose(): void;
 }

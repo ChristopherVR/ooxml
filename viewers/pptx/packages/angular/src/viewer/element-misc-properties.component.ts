@@ -229,7 +229,16 @@ export class ElementMiscPropertiesComponent {
 	 * not yet gated); defaults to `true` so existing callers keep working.
 	 */
 	readonly canEdit = input<boolean>(true);
+	/**
+	 * The Format pane section drawn: `connector` (arrowheads, Line section),
+	 * `group` (Arrange) or `ole` (Object); omitted, all three.
+	 */
+	readonly part = input<'connector' | 'group' | 'ole' | undefined>(undefined);
 	readonly patch = output<Partial<PptxElement>>();
+	private shows(which: 'connector' | 'group' | 'ole'): boolean {
+		const part = this.part();
+		return part === undefined || part === which;
+	}
 	/**
 	 * The six arrowhead dropdowns, described once in shared. Angular used to
 	 * declare its own value order and interpolate sentence-case captions
@@ -237,15 +246,21 @@ export class ElementMiscPropertiesComponent {
 	 */
 	protected readonly arrowControls = CONNECTOR_ARROW_CONTROLS;
 	protected readonly geometries = GEOMETRIES;
-	protected readonly connector = computed(() => this.element().type === 'connector');
+	protected readonly connector = computed(
+		() => this.shows('connector') && this.element().type === 'connector',
+	);
 	protected readonly connectorType = computed(
 		() => (this.element() as { shapeType?: string }).shapeType ?? 'straightConnector1',
 	);
 	protected readonly group = computed(() =>
-		this.element().type === 'group' ? (this.element() as GroupPptxElement) : undefined,
+		this.shows('group') && this.element().type === 'group'
+			? (this.element() as GroupPptxElement)
+			: undefined,
 	);
 	protected readonly ole = computed(() =>
-		this.element().type === 'ole' ? (this.element() as OlePptxElement) : undefined,
+		this.shows('ole') && this.element().type === 'ole'
+			? (this.element() as OlePptxElement)
+			: undefined,
 	);
 	protected readonly oleType = computed(() => getOleObjectTypeLabel(this.ole()?.oleObjectType));
 	/** Whether the "Edit content" dialog is currently open. */

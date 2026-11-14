@@ -297,7 +297,7 @@ describe('tableView', () => {
 			const td = target.querySelector('td')!;
 			td.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
 			flushSync();
-			expect(target.querySelector('input')).toBeNull();
+			expect(target.querySelector('[data-table-cell-editor]')).toBeNull();
 		});
 
 		it('enters cell-edit mode on double-click on an unlocked table', () => {
@@ -306,7 +306,33 @@ describe('tableView', () => {
 			const td = target.querySelector('td')!;
 			td.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
 			flushSync();
-			expect(target.querySelector('input')).not.toBeNull();
+			expect(target.querySelector('[data-table-cell-editor]')).not.toBeNull();
+		});
+	});
+
+	describe('rich cell editor', () => {
+		it('commits the edited runs on Tab and moves editing to the next cell', () => {
+			const ontablecellcommit = vi.fn();
+			const target = mountEl(buildTableElement(), { interactive: true, ontablecellcommit });
+			target.querySelector('td')!.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+			flushSync();
+			const editor = target.querySelector<HTMLElement>('[data-table-cell-editor]')!;
+			const span = editor.querySelector('span');
+			if (span) {
+				span.textContent = 'Edited';
+			} else {
+				editor.querySelector('[data-cell-paragraph]')!.replaceChildren('Edited');
+			}
+			editor.dispatchEvent(new Event('input', { bubbles: true }));
+			editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+			flushSync();
+			expect(ontablecellcommit).toHaveBeenCalledOnce();
+			const [id, row, col, , end] = ontablecellcommit.mock.calls[0]!;
+			expect([id, row, col, end.reason, end.key]).toEqual(['el-table', 0, 0, 'navigate', 'next']);
+			expect(end.segments.map((s: { text: string }) => s.text).join('')).toBe('Edited');
+			const cells = Array.from(target.querySelectorAll('td'));
+			expect(cells[1]!.querySelector('[data-table-cell-editor]')).not.toBeNull();
+			expect(cells[0]!.querySelector('[data-table-cell-editor]')).toBeNull();
 		});
 	});
 });

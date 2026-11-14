@@ -19,8 +19,12 @@
  */
 
 import { DestroyRef, Injectable, inject, signal } from '@angular/core';
-import { createEmbeddedFontsSheet, createEmbeddedOutlineFontsSlot } from 'ooxml-ui/pptx';
-import type { EmbeddedFontsSheet } from 'ooxml-ui/pptx';
+import {
+	createEmbeddedFontsSheet,
+	createEmbeddedOutlineFontsSlot,
+	describeEmbeddedFontRestrictions,
+} from 'ooxml-ui/pptx';
+import type { EmbeddedFontsSheet, FontEmbeddingRestriction } from 'ooxml-ui/pptx';
 import type { PptxEmbeddedFont } from 'pptx-viewer-core';
 
 import { EMBEDDED_FONTS_STYLE_ID, buildUserFontFaceStyles } from './embedded-fonts-helpers';
@@ -45,6 +49,8 @@ export class EmbeddedFontsService {
 	 * substitution fallbacks resolved (e.g. `'"Calibri", "Carlito", …'`).
 	 */
 	readonly fontFamilies = signal<string[]>([]);
+	/** Licence restrictions of the embedded typefaces, by typeface name. */
+	readonly restrictions = signal<Record<string, FontEmbeddingRestriction>>({});
 
 	/** The shared managed `<style>` element; owns the rule text and object URLs. */
 	private readonly sheet: EmbeddedFontsSheet | null = hasDomSupport()
@@ -68,6 +74,7 @@ export class EmbeddedFontsService {
 		// Register this deck's embedded fonts' real outlines (see
 		// glyph-outline-cache.ts) for WordArt envelope glyph-outline warping.
 		this.outlineFonts.set(fonts);
+		this.restrictions.set(describeEmbeddedFontRestrictions(fonts ?? []));
 		if (!this.sheet) {
 			return;
 		}
@@ -90,5 +97,6 @@ export class EmbeddedFontsService {
 		this.sheet?.dispose();
 		this.fontFaceCss.set('');
 		this.fontFamilies.set([]);
+		this.restrictions.set({});
 	}
 }

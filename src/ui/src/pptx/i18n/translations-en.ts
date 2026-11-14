@@ -1043,6 +1043,17 @@ export const translationsEn: Record<string, string> = {
 	'pptx.inspector.fill': 'Fill',
 	'pptx.inspector.line': 'Line',
 	'pptx.inspector.effects': 'Effects',
+	'pptx.formatPane.slide': 'Slide',
+	'pptx.formatPane.font': 'Font',
+	'pptx.formatPane.paragraph': 'Paragraph',
+	'pptx.formatPane.picture': 'Picture',
+	'pptx.formatPane.object': 'Object',
+	'pptx.formatPane.outline': 'Outline',
+	'pptx.formatPane.sizePosition': 'Size and position',
+	'pptx.formatPane.altText': 'Alt Text',
+	'pptx.formatPane.action': 'Action',
+	'pptx.formatPane.mixed': 'Mixed',
+	'pptx.formatPane.sections': 'Format sections',
 	'pptx.inspector.softEdge': 'Soft Edge',
 	'pptx.inspector.softEdgeRadius': 'Soft Edge Radius',
 	'pptx.arrange.positionSize': 'Position & Size',
@@ -1293,6 +1304,12 @@ export const translationsEn: Record<string, string> = {
 	'pptx.fonts.enableEmbedding': 'Enable font embedding',
 	'pptx.fonts.missingWarning': '{{count}} font(s) could not be found and will not be embedded.',
 	'pptx.fonts.notFound': 'Not found',
+	'pptx.fonts.previewOnly': 'Preview and print only',
+	'pptx.fonts.previewOnlyReason':
+		"This font's licence allows it to be displayed and printed only. It stays in this file, but it is never embedded into another file.",
+	'pptx.fonts.restricted': 'Restricted',
+	'pptx.fonts.restrictedReason':
+		"This font's licence does not allow it to be embedded, so it is not used for display and a substitute is shown. Its font data stays in this file unchanged.",
 	'pptx.fonts.scanning': 'Scanning fonts...',
 	'pptx.fonts.usedFonts': 'Used Fonts',
 
@@ -3522,6 +3539,11 @@ export const translationsEn: Record<string, string> = {
 	'pptx.options.advanced.printHiddenSlides': 'Print hidden slides',
 	'pptx.options.advanced.printScaleToFit': 'Scale to fit paper',
 	'pptx.options.advanced.printFrameSlides': 'Frame slides',
+	'pptx.options.advanced.pdf': 'Save as PDF',
+	'pptx.options.advanced.pdfIncludeHiddenSlides': 'Include hidden slides',
+	'pptx.options.advanced.pdfSlidesAsPictures': 'Save slides as pictures',
+	'pptx.options.advanced.pdfSlidesAsPicturesInfo':
+		'Writes each slide as one picture, as earlier versions of this viewer did. The text in the PDF is then not selectable or searchable. Leave this off to save shapes and text as vector graphics with the embedded fonts.',
 	'pptx.options.ribbon.label': 'Customize Ribbon',
 	'pptx.options.ribbon.description': 'Customize the ribbon.',
 	'pptx.options.ribbon.tabsTitle': 'Main Tabs',
@@ -4151,6 +4173,10 @@ export const translationsEn: Record<string, string> = {
 		'One slide transition sound could not be saved and was skipped.',
 	'pptx.compatibility.diagramRelationshipIdsIncomplete':
 		'This SmartArt diagram is missing some internal references, so it may not display exactly as authored.',
+	'pptx.compatibility.embeddedFontRestricted':
+		'An embedded font has a licence that does not allow it to be used, so a substitute font is shown. Its font data is kept in the file.',
+	'pptx.compatibility.embeddedFontNotEmbeddable':
+		'A font was not embedded because its licence does not allow embedding it in an editable presentation.',
 	'pptx.compatibility.exportBackendUnavailable':
 		'Export to this format is not available in the current environment.',
 

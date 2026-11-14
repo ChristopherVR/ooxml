@@ -126,6 +126,7 @@ import { ViewerOptionsService } from './viewer-options.service';
 			[embedFontsEnabled]="svc.embedFontsEnabled()"
 			[usedFontFamilies]="usedFontFamilies()"
 			[embeddedFonts]="embeddedFamilies()"
+			[embeddedFontRestrictions]="fontRestrictions()"
 			[canEmbedFonts]="svc.fontEmbedding().interactive"
 			[embedUnavailableKey]="svc.fontEmbedding().disabledReasonKey"
 			(toggleEmbedFonts)="svc.embedFontsEnabled.set($event)"
@@ -235,6 +236,8 @@ export class ViewerExtraDialogsComponent {
 	);
 	/** Families backed by an embedded @font-face rule. */
 	protected readonly embeddedFamilies = computed(() => this.fonts.fontFamilies());
+	/** Licence restrictions of the embedded typefaces (OS/2 fsType). */
+	protected readonly fontRestrictions = computed(() => this.fonts.restrictions());
 	/** Media data-URL map as a plain record for the compare thumbnails. */
 	protected readonly mediaRecord = computed<Record<string, string>>(() =>
 		Object.fromEntries(this.loader.mediaDataUrls()),

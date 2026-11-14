@@ -61,7 +61,7 @@ function findElementNode(elementId: string): HTMLElement | null {
 }
 
 /** Rasterise the mounted node for `elementId` to a PNG data URL, or null if unmounted. */
-async function rasterizePastedNode(elementId: string): Promise<string | null> {
+export async function rasterizePastedNode(elementId: string): Promise<string | null> {
 	const node = findElementNode(elementId);
 	if (!node) {
 		return null;

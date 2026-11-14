@@ -19,6 +19,7 @@ import { writeCustomerDataScopes } from '../../utils/customer-data-package';
 import type { CustomerDataScope } from '../../utils/customer-data-package';
 import { shouldSaveEmbeddedFontVerbatim } from '../../utils/deferred-embedded-font';
 import { serializeEmbeddedFontList, setEmbeddedFontList } from '../../utils/embedded-font-list';
+import { mayNewlyEmbedFontData } from '../../utils/embedded-font-permission';
 import { obfuscateFont, generateFontGuid } from '../../utils/font-deobfuscation';
 import { safeResolveZipPath } from '../../utils/safe-path';
 import { applySmartArtConnectorLabels } from '../../utils/smartart-connector-labels';
@@ -765,7 +766,19 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					// file didn't declare one and emitting a synthetic GUID
 					// would not match the opaque bytes on disk.
 				} else {
-					// New / externally-supplied font: mint a fresh GUID-named part.
+					// New / externally-supplied font. Its licence must allow
+					// embedding into an editable file: restricted, preview & print
+					// and bitmap-only faces are left out (OS/2 fsType).
+					if (!mayNewlyEmbedFontData(variant, fontData!)) {
+						this.compatibilityService.reportWarning({
+							code: 'EMBEDDED_FONT_NOT_EMBEDDABLE',
+							message: `Font "${typeface}" was not embedded: its licence (OS/2 fsType) does not allow embedding it in an editable presentation.`,
+							scope: 'save',
+							xmlPath: `/p:presentation/p:embeddedFontLst/p:embeddedFont[@typeface="${typeface}"]`,
+						});
+						continue;
+					}
+					// Mint a fresh GUID-named part.
 					guid = variant.fontGuid ?? generateFontGuid();
 					const fileName = `{${guid}}.fntdata`;
 					fontPartPath = `ppt/fonts/${fileName}`;
@@ -805,6 +818,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				entry[variantKey] = { '@_r:id': rId };
 			}
 
+			if (Object.keys(entry).length === 1) {
+				// Every variant was left out: no entry for this typeface.
+				continue;
+			}
 			embeddedFontEntries.push(entry);
 		}
 
@@ -824,7 +841,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				: explicitFonts === undefined && this.loadedEmbeddedFontList
 					? serializeEmbeddedFontList(this.loadedEmbeddedFontList)
 					: generatedList;
-			setEmbeddedFontList(this.presentationData, metadata);
+			setEmbeddedFontList(
+				this.presentationData,
+				metadata === generatedList && embeddedFontEntries.length === 0 ? null : metadata,
+			);
 		}
 
 		// ── 6. Ensure [Content_Types].xml has fntdata extension ──────

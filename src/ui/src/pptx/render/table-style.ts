@@ -181,6 +181,9 @@ export function cellRunStyle(run: CellTextRun, cellCss?: TableCellCss): TableCel
 	if (run.bold) {
 		const family = run.fontFamily ?? (cellCss?.fontFamily as string | undefined);
 		css.fontWeight = fontWeightAttribute(family, true) ?? 'bold';
+	} else if (run.bold === false) {
+		// Turned off in an edit: undo the cell's (or the table style's) bold.
+		css.fontWeight = 'normal';
 	} else if (run.fontFamily && cellCss) {
 		const cellWeight = cssFontWeightNumber(cellCss.fontWeight);
 		const weight = resolveFontWeight(run.fontFamily, isBoldCell(cellCss));
@@ -190,6 +193,8 @@ export function cellRunStyle(run: CellTextRun, cellCss?: TableCellCss): TableCel
 	}
 	if (resolveFontItalic(run.fontFamily, run.italic)) {
 		css.fontStyle = 'italic';
+	} else if (run.italic === false) {
+		css.fontStyle = 'normal';
 	}
 	const deco: string[] = [];
 	if (run.underline) {
@@ -200,6 +205,8 @@ export function cellRunStyle(run: CellTextRun, cellCss?: TableCellCss): TableCel
 	}
 	if (deco.length > 0) {
 		css.textDecoration = deco.join(' ');
+	} else if (run.underline === false) {
+		css.textDecoration = 'none';
 	}
 	// Only the authored spacing. Shape text adds a measured tracking
 	// correction, which cells do not use.

@@ -20,7 +20,16 @@
 	import type { EditorState } from '../../editor/editor-state.svelte';
 	import InspectorFields from './InspectorFields.svelte';
 
-	const { editor, el }: { editor: EditorState; el: PptxElement } = $props();
+	const {
+		editor,
+		el,
+		part,
+	}: {
+		editor: EditorState;
+		el: PptxElement;
+		/** `lock` (Arrange) or `geometry` (Size and position); omitted, both. */
+		part?: 'lock' | 'geometry';
+	} = $props();
 	const t = useTranslator();
 
 	function commit(patch: ElementGeometryPatch): void {
@@ -36,7 +45,11 @@
 	}
 </script>
 
-<div class="pptx-svelte-inspector-lock-row" data-pptx-inspector-section="transform">
+{#if part !== 'geometry'}
+<div
+	class="pptx-svelte-inspector-lock-row"
+	data-pptx-inspector-section={part === undefined ? 'transform' : undefined}
+>
 	<span>{t('pptx.inspector.element')}</span>
 	<button
 		type="button"
@@ -52,7 +65,12 @@
 		{/if}
 	</button>
 </div>
-<InspectorFields sections={ELEMENT_GEOMETRY_SECTIONS} target={el} onpatch={commit} />
+{/if}
+{#if part !== 'lock'}
+	<div data-pptx-inspector-section={part === 'geometry' ? 'transform' : undefined}>
+		<InspectorFields sections={ELEMENT_GEOMETRY_SECTIONS} target={el} onpatch={commit} />
+	</div>
+{/if}
 
 <style>
 	.pptx-svelte-inspector-lock-row {

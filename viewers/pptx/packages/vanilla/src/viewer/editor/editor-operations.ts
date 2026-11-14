@@ -1,4 +1,10 @@
-import type { EditorHistoryController, ElementBoxPatch, HistoryTheme } from 'ooxml-ui/pptx';
+import type {
+	EditorHistoryController,
+	ElementBoxPatch,
+	HistoryTheme,
+	TableCellEditEnd,
+	TableCellEditOutcome,
+} from 'ooxml-ui/pptx';
 import {
 	applyFormatToElement,
 	buildDeckSaveOptions,
@@ -28,6 +34,7 @@ import type {
 	PptxSection,
 	PptxSlide,
 	PptxSlideMaster,
+	TablePptxElement,
 	TextSegment,
 	TextStyle,
 } from 'pptx-viewer-core';
@@ -109,6 +116,15 @@ export interface EditorOps {
 	setHandoutSlidesPerPage(count: number): void;
 	applyFormatPainter(sourceId: string, targetId: string): boolean;
 	commitTableCell(id: string, row: number, column: number, text: string): void;
+	/** The rich cell editor closed: apply the shared outcome as one history entry. */
+	endTableCellEdit(
+		id: string,
+		row: number,
+		column: number,
+		end: TableCellEditEnd,
+	): TableCellEditOutcome | undefined;
+	/** Replace a table element as one undoable step (a paste into selected cells). */
+	replaceTableElement(next: TablePptxElement): void;
 	updateEquation(id: string, omml: Record<string, unknown>): void;
 	updateDocumentProperties(
 		core: PptxCoreProperties,

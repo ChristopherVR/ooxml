@@ -5,6 +5,7 @@
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';
 	import FontPickerGroup from './FontPickerGroup.svelte';
+	import { tableTextFormatOf, tableTextFormatPatch } from '../../../editor/editor-table-text-format';
 	import {
 		adjustFontSizePatch,
 		changeCasePatch,
@@ -29,15 +30,19 @@
 	const t = useTranslator();
 
 	const element = $derived(editor.selectedElement);
-	const active = $derived(editor.editable && element !== undefined && hasTextProperties(element));
+	// A selected table formats every run of its selected cells (PowerPoint).
+	const table = $derived(tableTextFormatOf(editor, element));
+	const active = $derived(
+		editor.editable && element !== undefined && (hasTextProperties(element) || table !== undefined),
+	);
 	const style = $derived(element && hasTextProperties(element) ? element.textStyle : undefined);
 	const state = $derived({
 		controls: fontHomeControls({
 			enabled: active,
-			bold: Boolean(style?.bold),
-			italic: Boolean(style?.italic),
-			underline: Boolean(style?.underline),
-			strikethrough: Boolean(style?.strikethrough),
+			bold: Boolean(table?.bold ?? style?.bold),
+			italic: Boolean(table?.italic ?? style?.italic),
+			underline: Boolean(table?.underline ?? style?.underline),
+			strikethrough: Boolean(table?.strikethrough ?? style?.strikethrough),
 			shadow: hasTextShadow(element),
 			characterSpacing: style?.characterSpacing,
 			fontColor: {
@@ -54,8 +59,41 @@
 		translate: homeSnapshotTranslator(['font'], t),
 	});
 
+	/** Table cells take the character formats through the shared range op. */
+	function requestTable(name: string, value: unknown): boolean {
+		const size = (pt: number) => ({ fontSize: Math.min(400, Math.max(1, pt)) });
+		const build = (current: NonNullable<typeof table>) => {
+			switch (name) {
+				case 'bold':
+				case 'italic':
+				case 'underline':
+				case 'strikethrough':
+					return { [name]: !current[name] };
+				case 'increaseFontSize':
+					return size((current.fontSize ?? 18) + 2);
+				case 'decreaseFontSize':
+					return size((current.fontSize ?? 18) - 2);
+				case 'fontColor':
+					return { color: String(value) };
+				default:
+					return undefined;
+			}
+		};
+		if (!table || build(table) === undefined) {
+			return false;
+		}
+		editor.patchSelected((current) => tableTextFormatPatch(editor, current, (now) => build(now) ?? {}) ?? {});
+		if (name === 'fontColor') {
+			editor.recordRecentColor(String(value));
+		}
+		return true;
+	}
+
 	function request(event: RibbonHomeRequestEvent): void {
 		const { id, value, ref } = event.detail;
+		if (requestTable(id.replace('home.font.', ''), value)) {
+			return;
+		}
 		switch (id.replace('home.font.', '')) {
 			case 'bold':
 			case 'italic':

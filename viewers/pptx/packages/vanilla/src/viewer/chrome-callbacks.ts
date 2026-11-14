@@ -91,6 +91,8 @@ export interface ChromeCallbackDeps {
 	toggleMasterNavigation(): void;
 	/** Show/hide the right-hand property inspector panel. */
 	toggleInspector(): void;
+	/** The viewer's Format pane controller (one per viewer). */
+	formatPane?: import('ooxml-ui/pptx').FormatPaneController;
 	/** The viewer's Ribbon Display Options state. */
 	getRibbonDisplay(): import('ooxml-ui/pptx').RibbonDisplayController;
 	/** Select a single element by id (inspector Elements tab). */
@@ -214,6 +216,12 @@ export function buildChromeCallbacks(
 			toggleTemplateEditing: () => deps.toggleTemplateEditing(),
 			toggleMasterView: () => deps.toggleMasterNavigation(),
 			toggleInspector: () => deps.toggleInspector(),
+			...(deps.formatPane
+				? {
+						requestFormatPane: (section: import('ooxml-ui/pptx').FormatSectionId) =>
+							deps.formatPane?.requestFormatPane(section, { focus: true }),
+					}
+				: {}),
 			getRibbonDisplay: () => deps.getRibbonDisplay(),
 			clearSelection: () => deps.clearSelection(),
 			toggleViewOption: (option) => deps.getEditActions().toggleViewOption(option),
@@ -315,6 +323,7 @@ export function buildChromeCallbacks(
 		},
 	};
 	const inspectorHandlers: ChromeOptions['inspectorHandlers'] = {
+		...(deps.formatPane ? { formatPane: deps.formatPane } : {}),
 		selectElement: (id) => deps.selectElement(id),
 		openDocumentProperties: () => deps.openDocumentProperties(),
 		getChartFollowDataPoint: () => deps.getChartFollowDataPoint(),

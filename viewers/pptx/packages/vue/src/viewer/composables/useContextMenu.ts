@@ -3,13 +3,14 @@ import {
 	canCropElement,
 	chartFormatTargetFromEvent,
 	contextMenuInspectorAnchor,
+	createFormatPaneController,
 	customizeContextMenuEntries,
+	formatSectionForAnchor,
 	hasMultipleSelectedTableCells,
 	mergeOperationForCommand,
 	resolveContextMenuElementId,
 	resolveEditPointsAvailability,
 	resolveTopLevelElementId,
-	scrollInspectorSectionIntoView,
 } from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -283,18 +284,18 @@ export function useContextMenu(input: UseContextMenuInput): UseContextMenuResult
 	}
 
 	/**
-	 * "Edit Alt Text" / "Size and Position" / "Format Shape": open the
-	 * properties inspector and, once it has re-rendered, scroll the matching
-	 * section into view. A no-op degrade when the section is not tagged.
+	 * "Edit Alt Text" / "Size and Position" / "Format Shape": open the Format
+	 * pane on the matching section, expanded and focused once rendered.
 	 */
-	function focusInspectorSection(anchor: ReturnType<typeof contextMenuInspectorAnchor>): void {
-		inspectorOpen.value = true;
-		if (!anchor) {
-			return;
-		}
-		requestAnimationFrame(() => {
-			requestAnimationFrame(() => scrollInspectorSectionIntoView(document, anchor));
+	const formatPane =
+		input.formatPane ??
+		createFormatPaneController({
+			showPane: () => {
+				inspectorOpen.value = true;
+			},
 		});
+	function focusInspectorSection(anchor: ReturnType<typeof contextMenuInspectorAnchor>): void {
+		formatPane.requestFormatPane(anchor ? formatSectionForAnchor(anchor) : null, { focus: true });
 	}
 
 	return { contextMenu, contextItems, onCanvasContextMenu, onContextSelect };

@@ -73,6 +73,27 @@ describe('slide package system clipboard controller', () => {
 		current.handler.dispose();
 		source.handler.dispose();
 	});
+	it('adds the slide picture when it renders and keeps the package when it does not', async () => {
+		const clipboard = transport(),
+			current = await deck('Source');
+		const png = new Blob([new Uint8Array([137, 80])], { type: 'image/png' });
+		const renderSlidePng = vi.fn(async () => png);
+		const controller = createSlidePackageClipboard({
+			getSnapshot: () => current,
+			commit: vi.fn(),
+			renderSlidePng,
+		});
+		await controller.copy([0]);
+		expect(renderSlidePng).toHaveBeenCalledWith(0);
+		expect((await clipboard.read())[0]!.types).toContain('image/png');
+		renderSlidePng.mockResolvedValueOnce(null as unknown as Blob);
+		await controller.copy([0]);
+		const types = (await clipboard.read())[0]!.types;
+		expect(types).toContain(SLIDE_PACKAGE_CLIPBOARD_MIME);
+		expect(types).not.toContain('image/png');
+		controller.dispose();
+		current.handler.dispose();
+	});
 	it('reports clipboard permission failures and refuses foreign text without local fallback', async () => {
 		const clipboard = transport(),
 			current = await deck('Source'),

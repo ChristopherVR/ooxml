@@ -1,3 +1,4 @@
+import type { TableCellEditEnd, TableCellEditOutcome } from 'ooxml-ui/pptx';
 import type { InjectionKey } from 'vue';
 import { inject } from 'vue';
 
@@ -15,6 +16,17 @@ export interface TableCellEditContext {
 	 * applies the immutable `setCellText` update, and records editor history.
 	 */
 	commit: (elementId: string, rowIndex: number, colIndex: number, text: string) => void;
+	/**
+	 * The rich cell editor closed: apply the shared `resolveTableCellEditEnd`
+	 * outcome (runs, appended row, grid paste) as one history entry and return
+	 * it so the renderer can move to the next cell.
+	 */
+	end?: (
+		elementId: string,
+		rowIndex: number,
+		colIndex: number,
+		end: TableCellEditEnd,
+	) => TableCellEditOutcome | undefined;
 }
 
 /** Typed injection key for the table-cell editing context. */

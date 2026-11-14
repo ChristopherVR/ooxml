@@ -1,3 +1,5 @@
+import { formatSelectionElements } from 'ooxml-ui/pptx';
+import type { PptxElement } from 'pptx-viewer-core';
 import React from 'react';
 
 import { useSheetDismissDrag } from '../hooks/useSheetDismissDrag';
@@ -5,6 +7,7 @@ import { useTranslation } from '../i18n/use-translation';
 import { cn } from '../utils';
 import { AnimationPanel } from './inspector/AnimationPanel';
 import { ElementInspectorBody } from './inspector/ElementInspectorBody';
+import { FormatSections } from './inspector/FormatSections';
 // Extracted inspector modules
 import type { InspectorPaneProps } from './inspector/inspector-pane-types';
 import { InspectorCommentsSection } from './inspector/InspectorCommentsSection';
@@ -14,6 +17,8 @@ import { PresentationPropertiesPanel } from './inspector/PresentationPropertiesP
 import { SlideBackgroundPanel } from './inspector/SlideBackgroundPanel';
 import { useInspectorPaneState } from './inspector/useInspectorPaneState';
 import { ResizeHandle } from './ResizeHandle';
+
+const NO_SELECTION: readonly PptxElement[] = [];
 
 // ---------------------------------------------------------------------------
 // Main Inspector Pane (thin shell, delegates to extracted sub-panels)
@@ -90,6 +95,11 @@ export function InspectorPane(props: InspectorPaneProps): React.ReactElement {
 		panelWidth,
 	} = props;
 	const hasSelection = selectedElement !== null;
+	// The whole selection, primary first, for the Format pane's shared sections.
+	const selectedElements = React.useMemo(
+		() => formatSelectionElements(selectedElement, selectedElementIds, activeSlide?.elements),
+		[selectedElement, selectedElementIds, activeSlide?.elements],
+	);
 	const { t } = useTranslation();
 
 	// Swipe-down-to-dismiss for the mobile bottom-sheet presentation. The grab
@@ -184,50 +194,56 @@ export function InspectorPane(props: InspectorPaneProps): React.ReactElement {
 									onUpdateElementStyle={onUpdateElementStyle}
 									onUpdateTextStyle={onUpdateTextStyle}
 									onMoveLayer={onMoveLayer}
+									selectedElements={selectedElements}
 								/>
 							) : (
-								<>
-									<PresentationPropertiesPanel
-										canEdit={canEdit}
-										canvasSize={canvasSize}
-										presentationProperties={presentationProperties}
-										onUpdatePresentationProperties={onUpdatePresentationProperties}
-										notesMaster={notesMaster}
-										handoutMaster={handoutMaster}
-										notesCanvasSize={notesCanvasSize}
-										coreProperties={coreProperties}
-										appProperties={appProperties}
-										customProperties={customProperties}
-										themeOptions={effectiveThemeOptions}
-										selectedThemePath={selectedThemePath}
-										setSelectedThemePath={setSelectedThemePath}
-										onApplyTheme={onApplyTheme}
-										onUpdateCoreProperties={onUpdateCoreProperties}
-										onUpdateAppProperties={onUpdateAppProperties}
-										onUpdateCustomProperties={onUpdateCustomProperties}
-										tagCollections={tagCollections}
-										onUpdateTagCollections={onUpdateTagCollections}
-										onUpdateCanvasSize={onUpdateCanvasSize}
-										slideSizeEmu={slideSizeEmu}
-										onUpdateSlideSize={onUpdateSlideSize}
-										hasContent={slides.some((slide) => slide.elements.length > 0)}
-										activeSlide={activeSlide}
-										theme={theme}
-										onUpdateSlide={onUpdateSlide}
-									/>
+								<FormatSections
+									elements={NO_SELECTION}
+									renderSection={() => (
+										<div className='space-y-3'>
+											<PresentationPropertiesPanel
+												canEdit={canEdit}
+												canvasSize={canvasSize}
+												presentationProperties={presentationProperties}
+												onUpdatePresentationProperties={onUpdatePresentationProperties}
+												notesMaster={notesMaster}
+												handoutMaster={handoutMaster}
+												notesCanvasSize={notesCanvasSize}
+												coreProperties={coreProperties}
+												appProperties={appProperties}
+												customProperties={customProperties}
+												themeOptions={effectiveThemeOptions}
+												selectedThemePath={selectedThemePath}
+												setSelectedThemePath={setSelectedThemePath}
+												onApplyTheme={onApplyTheme}
+												onUpdateCoreProperties={onUpdateCoreProperties}
+												onUpdateAppProperties={onUpdateAppProperties}
+												onUpdateCustomProperties={onUpdateCustomProperties}
+												tagCollections={tagCollections}
+												onUpdateTagCollections={onUpdateTagCollections}
+												onUpdateCanvasSize={onUpdateCanvasSize}
+												slideSizeEmu={slideSizeEmu}
+												onUpdateSlideSize={onUpdateSlideSize}
+												hasContent={slides.some((slide) => slide.elements.length > 0)}
+												activeSlide={activeSlide}
+												theme={theme}
+												onUpdateSlide={onUpdateSlide}
+											/>
 
-									{activeSlide && (
-										<SlideBackgroundPanel
-											activeSlide={activeSlide}
-											canEdit={canEdit}
-											onUpdateSlide={onUpdateSlide}
-											editTemplateMode={editTemplateMode}
-											slideMasters={slideMasters}
-											onSetTemplateBackground={onSetTemplateBackground}
-											onGetTemplateBackgroundColor={onGetTemplateBackgroundColor}
-										/>
+											{activeSlide && (
+												<SlideBackgroundPanel
+													activeSlide={activeSlide}
+													canEdit={canEdit}
+													onUpdateSlide={onUpdateSlide}
+													editTemplateMode={editTemplateMode}
+													slideMasters={slideMasters}
+													onSetTemplateBackground={onSetTemplateBackground}
+													onGetTemplateBackgroundColor={onGetTemplateBackgroundColor}
+												/>
+											)}
+										</div>
 									)}
-								</>
+								/>
 							)}
 						</div>
 					)}

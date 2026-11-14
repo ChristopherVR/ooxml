@@ -114,6 +114,12 @@ interface AdvancedTextFormattingProps {
 	numChange: (
 		fn: (v: number) => Partial<TextStyle>,
 	) => (e: React.ChangeEvent<HTMLInputElement>) => void;
+	/**
+	 * The Format pane section drawn: `font` (baseline, highlight, underline,
+	 * outline, spacing) or `paragraph` (margins, indent, text box options);
+	 * omitted, both.
+	 */
+	part?: 'font' | 'paragraph';
 }
 
 export function AdvancedTextFormatting({
@@ -121,171 +127,188 @@ export function AdvancedTextFormatting({
 	canEdit,
 	onUpdateTextStyle,
 	numChange,
+	part,
 }: AdvancedTextFormattingProps): React.ReactElement {
 	const { t } = useTranslation();
 	const commitRecentColor = useRecentColorCommit();
+	const font = part !== 'paragraph';
+	const paragraph = part !== 'font';
 	return (
 		<div className='mt-2 rounded border border-border bg-card p-2 space-y-2'>
-			<div className='text-[11px] uppercase tracking-wide text-muted-foreground'>
-				{t('pptx.textProperties.advancedTextHeading')}
-			</div>
+			{font && (
+				<>
+					<div className='text-[11px] uppercase tracking-wide text-muted-foreground'>
+						{t('pptx.textProperties.advancedTextHeading')}
+					</div>
 
-			{/* Superscript / Subscript */}
-			<div className='grid grid-cols-2 gap-2'>
-				{BASELINE_TOGGLES.map(([label, baseline]) => (
-					<label key={label} className='inline-flex items-center gap-2 text-foreground'>
-						<WebCheckbox
-							checked={ts?.baseline === baseline}
-							onChange={() =>
-								onUpdateTextStyle({
-									baseline: ts?.baseline === baseline ? 0 : baseline,
-								})
-							}
-						/>
-						{label}
-					</label>
-				))}
-			</div>
-
-			{/* Highlight */}
-			<label className='flex flex-col gap-1'>
-				<span className='text-muted-foreground'>{t('pptx.text.highlightColor')}</span>
-				<input
-					type='color'
-					value={normalizeHexColor(ts?.highlightColor, '#ffff00')}
-					ref={commitRecentColor}
-					onChange={(e) => onUpdateTextStyle({ highlightColor: e.target.value })}
-					disabled={!canEdit}
-					className={COLOR_CLS}
-				/>
-			</label>
-
-			{/* Underline Style + Colour */}
-			<div className='grid grid-cols-2 gap-2'>
-				<label className='flex flex-col gap-1'>
-					<span className='text-muted-foreground'>{t('pptx.textProperties.underlineStyle')}</span>
-					<WebSelect
-						aria-label={t('pptx.textProperties.underlineStyle')}
-						value={ts?.underlineStyle || 'sng'}
-						disabled={!canEdit}
-						onChange={(e) =>
-							onUpdateTextStyle({
-								underline: true,
-								underlineStyle: e.target.value as UnderlineStyle,
-							})
-						}
-						className={INPUT_CLS}
-					>
-						{UNDERLINE_STYLES.map(([v, l]) => (
-							<option key={v} value={v}>
-								{l}
-							</option>
+					{/* Superscript / Subscript */}
+					<div className='grid grid-cols-2 gap-2'>
+						{BASELINE_TOGGLES.map(([label, baseline]) => (
+							<label key={label} className='inline-flex items-center gap-2 text-foreground'>
+								<WebCheckbox
+									checked={ts?.baseline === baseline}
+									onChange={() =>
+										onUpdateTextStyle({
+											baseline: ts?.baseline === baseline ? 0 : baseline,
+										})
+									}
+								/>
+								{label}
+							</label>
 						))}
-					</WebSelect>
-				</label>
-				<label className='flex flex-col gap-1'>
-					<span className='text-muted-foreground'>{t('pptx.textProperties.underlineColour')}</span>
-					<input
-						type='color'
-						value={ts?.underlineColor || ts?.color || '#000000'}
-						ref={commitRecentColor}
-						onChange={(e) => onUpdateTextStyle({ underlineColor: e.target.value })}
-						className={COLOR_CLS}
-					/>
-				</label>
-			</div>
+					</div>
 
-			{/* Text Outline */}
-			<div className='grid grid-cols-2 gap-2'>
-				<label className='flex flex-col gap-1'>
-					<span className='text-muted-foreground'>{t('pptx.textProperties.outlineWidth')}</span>
-					<input
-						type='number'
-						min={0}
-						max={10}
-						step={0.5}
-						value={ts?.textOutlineWidth ?? 0}
-						onChange={(e) =>
-							onUpdateTextStyle({
-								textOutlineWidth: parseFloat(e.target.value) || 0,
-							})
-						}
-						className={INPUT_CLS}
-					/>
-				</label>
-				{(ts?.textOutlineWidth ?? 0) > 0 && (
+					{/* Highlight */}
 					<label className='flex flex-col gap-1'>
-						<span className='text-muted-foreground'>{t('pptx.textProperties.outlineColour')}</span>
+						<span className='text-muted-foreground'>{t('pptx.text.highlightColor')}</span>
 						<input
 							type='color'
-							value={ts?.textOutlineColor || '#000000'}
+							value={normalizeHexColor(ts?.highlightColor, '#ffff00')}
 							ref={commitRecentColor}
-							onChange={(e) => onUpdateTextStyle({ textOutlineColor: e.target.value })}
+							onChange={(e) => onUpdateTextStyle({ highlightColor: e.target.value })}
+							disabled={!canEdit}
 							className={COLOR_CLS}
 						/>
 					</label>
-				)}
-			</div>
 
-			{/* Character Spacing */}
-			<label className='flex flex-col gap-1'>
-				<span className='text-muted-foreground'>{t('pptx.text.characterSpacing')}</span>
-				<input
-					type='number'
-					min={-1000}
-					max={5000}
-					step={50}
-					value={Math.round(ts?.characterSpacing ?? 0)}
-					disabled={!canEdit}
-					onChange={numChange((v) => ({ characterSpacing: v }))}
-					className={INPUT_CLS}
-				/>
-			</label>
+					{/* Underline Style + Colour */}
+					<div className='grid grid-cols-2 gap-2'>
+						<label className='flex flex-col gap-1'>
+							<span className='text-muted-foreground'>
+								{t('pptx.textProperties.underlineStyle')}
+							</span>
+							<WebSelect
+								aria-label={t('pptx.textProperties.underlineStyle')}
+								value={ts?.underlineStyle || 'sng'}
+								disabled={!canEdit}
+								onChange={(e) =>
+									onUpdateTextStyle({
+										underline: true,
+										underlineStyle: e.target.value as UnderlineStyle,
+									})
+								}
+								className={INPUT_CLS}
+							>
+								{UNDERLINE_STYLES.map(([v, l]) => (
+									<option key={v} value={v}>
+										{l}
+									</option>
+								))}
+							</WebSelect>
+						</label>
+						<label className='flex flex-col gap-1'>
+							<span className='text-muted-foreground'>
+								{t('pptx.textProperties.underlineColour')}
+							</span>
+							<input
+								type='color'
+								value={ts?.underlineColor || ts?.color || '#000000'}
+								ref={commitRecentColor}
+								onChange={(e) => onUpdateTextStyle({ underlineColor: e.target.value })}
+								className={COLOR_CLS}
+							/>
+						</label>
+					</div>
 
-			{/* Paragraph Margins & Indent */}
-			<div className='grid grid-cols-2 gap-2'>
-				<label className='flex flex-col gap-1'>
-					<span className='text-muted-foreground'>{t('pptx.textProperties.leftMargin')}</span>
-					<input
-						type='number'
-						min={0}
-						max={500}
-						step={4}
-						value={Math.round(ts?.paragraphMarginLeft ?? 0)}
-						disabled={!canEdit}
-						onChange={numChange((v) => ({
-							paragraphMarginLeft: Math.max(0, Math.min(500, v)),
-						}))}
-						className={INPUT_CLS}
-					/>
-				</label>
-				<label className='flex flex-col gap-1'>
-					<span className='text-muted-foreground'>{t('pptx.textProperties.firstIndent')}</span>
-					<input
-						type='number'
-						min={-500}
-						max={500}
-						step={4}
-						value={Math.round(ts?.paragraphIndent ?? 0)}
-						disabled={!canEdit}
-						onChange={numChange((v) => ({
-							paragraphIndent: Math.max(-500, Math.min(500, v)),
-						}))}
-						className={INPUT_CLS}
-					/>
-				</label>
-			</div>
+					{/* Text Outline */}
+					<div className='grid grid-cols-2 gap-2'>
+						<label className='flex flex-col gap-1'>
+							<span className='text-muted-foreground'>{t('pptx.textProperties.outlineWidth')}</span>
+							<input
+								type='number'
+								min={0}
+								max={10}
+								step={0.5}
+								value={ts?.textOutlineWidth ?? 0}
+								onChange={(e) =>
+									onUpdateTextStyle({
+										textOutlineWidth: parseFloat(e.target.value) || 0,
+									})
+								}
+								className={INPUT_CLS}
+							/>
+						</label>
+						{(ts?.textOutlineWidth ?? 0) > 0 && (
+							<label className='flex flex-col gap-1'>
+								<span className='text-muted-foreground'>
+									{t('pptx.textProperties.outlineColour')}
+								</span>
+								<input
+									type='color'
+									value={ts?.textOutlineColor || '#000000'}
+									ref={commitRecentColor}
+									onChange={(e) => onUpdateTextStyle({ textOutlineColor: e.target.value })}
+									className={COLOR_CLS}
+								/>
+							</label>
+						)}
+					</div>
 
-			{/* Text box options (vertical alignment, direction, autofit, wrap,
+					{/* Character Spacing */}
+					<label className='flex flex-col gap-1'>
+						<span className='text-muted-foreground'>{t('pptx.text.characterSpacing')}</span>
+						<input
+							type='number'
+							min={-1000}
+							max={5000}
+							step={50}
+							value={Math.round(ts?.characterSpacing ?? 0)}
+							disabled={!canEdit}
+							onChange={numChange((v) => ({ characterSpacing: v }))}
+							className={INPUT_CLS}
+						/>
+					</label>
+				</>
+			)}
+
+			{paragraph && (
+				<>
+					{/* Paragraph Margins & Indent */}
+					<div className='grid grid-cols-2 gap-2'>
+						<label className='flex flex-col gap-1'>
+							<span className='text-muted-foreground'>{t('pptx.textProperties.leftMargin')}</span>
+							<input
+								type='number'
+								min={0}
+								max={500}
+								step={4}
+								value={Math.round(ts?.paragraphMarginLeft ?? 0)}
+								disabled={!canEdit}
+								onChange={numChange((v) => ({
+									paragraphMarginLeft: Math.max(0, Math.min(500, v)),
+								}))}
+								className={INPUT_CLS}
+							/>
+						</label>
+						<label className='flex flex-col gap-1'>
+							<span className='text-muted-foreground'>{t('pptx.textProperties.firstIndent')}</span>
+							<input
+								type='number'
+								min={-500}
+								max={500}
+								step={4}
+								value={Math.round(ts?.paragraphIndent ?? 0)}
+								disabled={!canEdit}
+								onChange={numChange((v) => ({
+									paragraphIndent: Math.max(-500, Math.min(500, v)),
+								}))}
+								className={INPUT_CLS}
+							/>
+						</label>
+					</div>
+
+					{/* Text box options (vertical alignment, direction, autofit, wrap,
 			    columns): the shared descriptors, drawn by the generic renderer. */}
-			<div className='grid grid-cols-2 gap-2'>
-				<InspectorFields
-					sections={TEXT_BOX_SECTIONS}
-					target={ts}
-					onPatch={onUpdateTextStyle}
-					disabled={!canEdit}
-				/>
-			</div>
+					<div className='grid grid-cols-2 gap-2'>
+						<InspectorFields
+							sections={TEXT_BOX_SECTIONS}
+							target={ts}
+							onPatch={onUpdateTextStyle}
+							disabled={!canEdit}
+						/>
+					</div>
+				</>
+			)}
 		</div>
 	);
 }

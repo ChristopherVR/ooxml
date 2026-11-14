@@ -50,6 +50,7 @@ import {
 	resolveFontDownloadBase,
 	resolveGoogleWebfontHref,
 	resolveImageResolutionScale,
+	resolvePdfExportSettings,
 	resolveSlideSizeSelection,
 	saveFailureMessage,
 	shouldClearAutosaveCacheOnClose,
@@ -562,6 +563,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 				resolveImageResolutionScale(this.optionsController.getOptions()),
 			getIncludeHiddenSlides: () => this.optionsController.getOptions().advanced.printHiddenSlides,
 			getPrintHighQuality: () => this.optionsController.getOptions().advanced.printHighQuality,
+			getPdfExportSettings: () => resolvePdfExportSettings(this.optionsController.getOptions()),
 			getFileName: () => this.documentView().fileName,
 		});
 		// File > Options controller: owns the persisted options store and turns

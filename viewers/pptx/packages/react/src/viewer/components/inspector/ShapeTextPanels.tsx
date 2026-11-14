@@ -31,7 +31,22 @@ interface ShapeTextPanelsProps {
 	onUpdateElement: (updates: Partial<PptxElement>) => void;
 	onUpdateElementStyle: (patch: Partial<ShapeStyle>) => void;
 	onUpdateTextStyle: (patch: Partial<TextStyle>) => void;
+	/**
+	 * The Format pane section drawn; omitted, every panel (the standalone
+	 * layout). See `FORMAT_PANEL_SECTIONS` for which panel goes where.
+	 */
+	part?: ShapeTextPart;
 }
+
+/** The Format pane sections these panels fill. */
+export type ShapeTextPart =
+	| 'shapeType'
+	| 'fill'
+	| 'outline'
+	| 'effects'
+	| 'font'
+	| 'paragraph'
+	| 'altText';
 
 /**
  * The patch a native text colour pick makes on an element: the same style update
@@ -54,13 +69,17 @@ export function ShapeTextPanels({
 	onUpdateElement,
 	onUpdateElementStyle,
 	onUpdateTextStyle,
+	part,
 }: ShapeTextPanelsProps): React.ReactElement {
 	const { t } = useTranslation();
+	const show = (which: ShapeTextPart) => part === undefined || part === which;
+	const strokePart = part === 'fill' || part === 'outline' || part === 'effects' ? part : undefined;
+	const showFillStroke = part === undefined || strokePart !== undefined;
 
 	return (
 		<>
 			{/* Shape Type */}
-			{hasShapeProperties(selectedElement) && (
+			{show('shapeType') && hasShapeProperties(selectedElement) && (
 				<div className={CARD}>
 					<div className={HEADING}>{t('pptx.shape.type', 'Shape Type')}</div>
 					<WebSelect
@@ -87,10 +106,19 @@ export function ShapeTextPanels({
 			    pair of colour swatches. Vue's FillPanel and Svelte's
 			    FillStrokeSection already ship this; React rendered a cut-down
 			    card while the complete one sat unreferenced. */}
-			{hasShapeProperties(selectedElement) && (
-				<div className={CARD} data-pptx-fill-stroke data-pptx-inspector-section='fill-stroke'>
-					<div className={HEADING}>{t('pptx.shape.fillStroke', 'Fill & Stroke')}</div>
+			{showFillStroke && hasShapeProperties(selectedElement) && (
+				<div
+					className={CARD}
+					data-pptx-fill-stroke={part === undefined || part === 'fill' ? '' : undefined}
+					data-pptx-inspector-section={
+						part === undefined || part === 'fill' ? 'fill-stroke' : undefined
+					}
+				>
+					{part === undefined && (
+						<div className={HEADING}>{t('pptx.shape.fillStroke', 'Fill & Stroke')}</div>
+					)}
 					<FillStrokeProperties
+						part={strokePart}
 						selectedElement={selectedElement}
 						selectedShapeStyle={selectedElement.shapeStyle}
 						selectedShapeType={selectedElement.shapeType}
@@ -110,7 +138,7 @@ export function ShapeTextPanels({
 			)}
 
 			{/* Text Color & Font Size */}
-			{hasTextProperties(selectedElement) && (
+			{show('font') && hasTextProperties(selectedElement) && (
 				<div className={CARD} data-pptx-text-card>
 					<div className={HEADING}>{t('pptx.text.title', 'Text')}</div>
 					<div className='grid grid-cols-2 gap-1.5 text-[11px]'>
@@ -194,11 +222,14 @@ export function ShapeTextPanels({
 
 			{/* Warp / effects / 3D text: gated on the same text-capable check as
 			    the card above, so they appear alongside the other text sections. */}
-			<TextAdvancedSections
-				selectedElement={selectedElement}
-				canEdit={canEdit}
-				onUpdateTextStyle={onUpdateTextStyle}
-			/>
+			{(show('font') || show('paragraph')) && (
+				<TextAdvancedSections
+					selectedElement={selectedElement}
+					canEdit={canEdit}
+					onUpdateTextStyle={onUpdateTextStyle}
+					part={part === 'font' || part === 'paragraph' ? part : undefined}
+				/>
+			)}
 
 			{/* Accessibility (alt text / title): a picture's own field lives in
 			    ImagePropertiesPanel; shared's `shouldShowAccessibilitySection`
@@ -206,7 +237,7 @@ export function ShapeTextPanels({
 			    every graphic-frame kind (table/chart/smartArt/media/ole), so this
 			    stays in sync with the other four bindings without a hard-coded
 			    type list here. */}
-			{shouldShowAccessibilitySection(selectedElement) && (
+			{show('altText') && shouldShowAccessibilitySection(selectedElement) && (
 				<AccessibilityTextSection
 					selectedElement={selectedElement}
 					canEdit={canEdit}

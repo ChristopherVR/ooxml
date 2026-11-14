@@ -51,6 +51,11 @@ import type { RegionSet } from '../region-set';
  * opacity, image adjustments/crop, table-level flags + padding).
  */
 export interface InspectorHandlers {
+	/**
+	 * The viewer's Format pane controller (open sections, launch requests); the
+	 * inspector keeps a private one when absent (tests, a standalone inspector).
+	 */
+	formatPane?: import('ooxml-ui/pptx').FormatPaneController;
 	/** Select an element from the Elements (layer-order) tab. */
 	selectElement(id: string): void;
 	/** Open the full Document Properties dialog from the Properties tab. */
@@ -424,6 +429,11 @@ export interface InspectorDeckState {
 	selectedIds: readonly string[];
 	/** Primary selected element id (docked Animation panel target), if any. */
 	selectedElementId?: string;
+	/**
+	 * The primary selected element itself (it may live on a layout while
+	 * template editing), for the Format pane's sections; edits still target it.
+	 */
+	selectedElement?: PptxElement;
 	comments: readonly PptxComment[];
 	/** Authors offered by the Comments tab's `@`-mention typeahead. */
 	commentMentionAuthors: readonly PptxModernCommentAuthor[];

@@ -163,6 +163,7 @@ export function useViewerBuildingBlocksState(
 		gridSpacingPx,
 		imageExportScale,
 		imageResolutionScale,
+		pdfExportSettings,
 		setExitModeHandler,
 		viewerOptions,
 	} = core;
@@ -275,6 +276,7 @@ export function useViewerBuildingBlocksState(
 		promptKeepInkAnnotations: viewerOptions.advanced.slideShowPromptKeepInkAnnotations,
 		imageExportScale,
 		imageResolutionScale,
+		pdfExportSettings,
 		mode,
 		slides,
 		activeSlide,

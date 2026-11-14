@@ -226,7 +226,7 @@
 </div>
 
 {#if fontsOpen}
-	<FontEmbeddingPanel usedFontFamilies={usedFontFamilies} embeddedFonts={props.embeddedFontNames} enabled={props.editor.embedFonts} canEmbed={fontEmbedding.interactive} unavailableKey={fontEmbedding.disabledReasonKey} ontoggle={(enabled) => (props.editor.embedFonts = enabled)} onclose={() => (fontsOpen = false)} />
+	<FontEmbeddingPanel usedFontFamilies={usedFontFamilies} embeddedFonts={props.embeddedFontNames} embeddedFontRestrictions={props.embeddedFontRestrictions} enabled={props.editor.embedFonts} canEmbed={fontEmbedding.interactive} unavailableKey={fontEmbedding.disabledReasonKey} ontoggle={(enabled) => (props.editor.embedFonts = enabled)} onclose={() => (fontsOpen = false)} />
 {/if}
 {#if signaturesOpen && custom.isDialogAvailable('signatures')}
 	<DigitalSignaturesDialog hasSignatures={props.hasDigitalSignatures} signatureCount={props.digitalSignatureCount} onclose={() => (signaturesOpen = false)} />

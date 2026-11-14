@@ -17,18 +17,22 @@
 
 	import { useTranslator } from '../../../../i18n/context';
 	import { setFontFamilyPatch, setFontSizePatch } from '../../../editor';
+	import { tableTextFormatOf, tableTextFormatPatch } from '../../../editor/editor-table-text-format';
 	import type { EditorState } from '../../../editor/editor-state.svelte';
 
 	const { editor }: { editor: EditorState } = $props();
 	const t = useTranslator();
 	const el = $derived(editor.selectedElement);
-	const active = $derived(el !== undefined && hasTextProperties(el));
+	// A selected table sets the font of every run of its selected cells.
+	const table = $derived(tableTextFormatOf(editor, el));
+	const active = $derived(el !== undefined && (hasTextProperties(el) || table !== undefined));
 	const themeFonts = $derived({
 		heading: editor.theme?.fontScheme?.majorFont?.latin,
 		body: editor.theme?.fontScheme?.minorFont?.latin,
 	});
 	// With nothing overriding it, the box shows the family the deck would render.
 	const fontFamily = $derived(
+		table?.fontFamily ??
 		(el && hasTextProperties(el) ? el.textStyle?.fontFamily : undefined) ??
 			resolveDefaultFontFamily(
 				(el as { placeholderType?: string } | undefined)?.placeholderType,
@@ -40,7 +44,7 @@
 			{
 				enabled: editor.editable && active,
 				fontFamily,
-				fontSize: el ? fontSizeOf(el) : 24,
+				fontSize: table?.fontSize ?? (el ? fontSizeOf(el) : 24),
 				themeFonts,
 				embeddedFonts: editor.embeddedFontFamilies,
 				customFonts: editor.customFontFamilies,
@@ -53,6 +57,19 @@
 	function request(event: RibbonHomeRequestEvent): void {
 		const { id, value } = event.detail;
 		if (!editor.editable || !active) {
+			return;
+		}
+		if (table) {
+			const size = Number(value);
+			const update =
+				id === 'home.font.fontFamily'
+					? { fontFamily: String(value) }
+					: id === 'home.font.fontSize' && Number.isFinite(size) && size > 0
+						? { fontSize: size }
+						: undefined;
+			if (update) {
+				editor.patchSelected((current) => tableTextFormatPatch(editor, current, () => update) ?? {});
+			}
 			return;
 		}
 		if (id === 'home.font.fontFamily') {

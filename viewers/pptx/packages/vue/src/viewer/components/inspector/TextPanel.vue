@@ -28,13 +28,10 @@ import ThemeColorSwatchGrid from './ThemeColorSwatchGrid.vue';
 /**
  * TextPanel: typography inspector for the Vue `pptx-vue-viewer` editor.
  *
- * Exposes character/paragraph formatting (`fontFamily`, `fontSize`, `bold`,
- * `italic`, `underline`, `strikethrough`, `color`, `align`) read from
- * `element.textStyle`, plus the shared Text Box options (`TEXT_BOX_SECTIONS`:
- * vertical alignment, direction, autofit, wrap, columns) drawn by the generic
- * {@link InspectorFields} renderer. Each control emits a SHALLOW `update` patch carrying the
- * FULL merged `textStyle` sub-object so the parent can forward it verbatim to
- * `ops.updateElement(id, patch)`.
+ * Character formatting (`part="font"`) and alignment plus the shared Text Box
+ * options (`TEXT_BOX_SECTIONS`, `part="paragraph"`) read from `element.textStyle`.
+ * Each control emits a SHALLOW `update` patch carrying the FULL merged
+ * `textStyle` so the parent forwards it to `ops.updateElement(id, patch)`.
  *
  * Only text-bearing elements (`hasTextProperties`) expose editable controls;
  * other element types show a muted note instead. After the formatting come the
@@ -48,6 +45,8 @@ const props = withDefaults(
 		element: PptxElement;
 		/** Read-only decks keep the Text Warp, Text Effects and 3-D controls visible but inert. */
 		canEdit?: boolean;
+		/** Format pane section: `font` (characters, effects) or `paragraph` (alignment, text box). */
+		part?: 'font' | 'paragraph';
 	}>(),
 	{ canEdit: true },
 );
@@ -164,6 +163,7 @@ function onTextEffectPatch(patch: Partial<TextStyle>): void {
 <template>
 	<div class="pptx-vue-text-panel flex flex-col gap-2 p-2">
 		<h3
+			v-if="!props.part"
 			class="pptx-vue-text-title text-xs font-semibold uppercase tracking-wide text-muted-foreground"
 		>
 			{{ t('pptx.textPanel.title') }}
@@ -174,128 +174,134 @@ function onTextEffectPatch(patch: Partial<TextStyle>): void {
 		</p>
 
 		<div v-else class="pptx-vue-text-fields flex flex-col gap-2">
-			<label class="pptx-vue-text-field flex flex-col gap-1">
-				<span class="pptx-vue-text-label text-muted-foreground">{{
-					t('pptx.textPanel.font')
-				}}</span>
-				<pptx-ui-select
-					:aria-label="t('pptx.textPanel.font')"
-					class="pptx-vue-text-input w-full bg-muted border border-border rounded px-2 py-1 max-md:min-h-[44px]"
-					:value="fontFamily"
-					@change="onFontFamily"
-				>
-					<option value="">{{ t('pptx.textPanel.default') }}</option>
-					<option v-for="font in FONT_OPTIONS" :key="font" :value="font">
-						{{ font }}
-					</option>
-					<option v-if="fontFamily && !FONT_OPTIONS.includes(fontFamily)" :value="fontFamily">
-						{{ fontFamily }}
-					</option>
-				</pptx-ui-select>
-			</label>
-
-			<div class="pptx-vue-text-row grid grid-cols-2 gap-2">
+			<template v-if="props.part !== 'paragraph'">
 				<label class="pptx-vue-text-field flex flex-col gap-1">
 					<span class="pptx-vue-text-label text-muted-foreground">{{
-						t('pptx.textPanel.size')
+						t('pptx.textPanel.font')
 					}}</span>
-					<input
-						type="number"
+					<pptx-ui-select
+						:aria-label="t('pptx.textPanel.font')"
 						class="pptx-vue-text-input w-full bg-muted border border-border rounded px-2 py-1 max-md:min-h-[44px]"
-						min="1"
-						step="any"
-						:value="fontSize"
-						@input="onFontSize"
-					/>
+						:value="fontFamily"
+						@change="onFontFamily"
+					>
+						<option value="">{{ t('pptx.textPanel.default') }}</option>
+						<option v-for="font in FONT_OPTIONS" :key="font" :value="font">
+							{{ font }}
+						</option>
+						<option v-if="fontFamily && !FONT_OPTIONS.includes(fontFamily)" :value="fontFamily">
+							{{ fontFamily }}
+						</option>
+					</pptx-ui-select>
 				</label>
-				<label class="pptx-vue-text-field flex flex-col gap-1">
+
+				<div class="pptx-vue-text-row grid grid-cols-2 gap-2">
+					<label class="pptx-vue-text-field flex flex-col gap-1">
+						<span class="pptx-vue-text-label text-muted-foreground">{{
+							t('pptx.textPanel.size')
+						}}</span>
+						<input
+							type="number"
+							class="pptx-vue-text-input w-full bg-muted border border-border rounded px-2 py-1 max-md:min-h-[44px]"
+							min="1"
+							step="any"
+							:value="fontSize"
+							@input="onFontSize"
+						/>
+					</label>
+					<label class="pptx-vue-text-field flex flex-col gap-1">
+						<span class="pptx-vue-text-label text-muted-foreground">{{
+							t('pptx.textPanel.color')
+						}}</span>
+						<input
+							type="color"
+							class="pptx-vue-text-color w-full h-8 bg-muted border border-border rounded p-0.5"
+							:value="color"
+							v-on="colorEvents"
+						/>
+					</label>
+				</div>
+				<ThemeColorSwatchGrid
+					:selected-ref="colorRef"
+					:selected-hex="color"
+					@pick="onColorThemePick"
+				/>
+				<RecentColorsRow
+					v-if="recentColors"
+					:colors="recentColors.recent.value"
+					@pick="onColorPick"
+				/>
+
+				<div class="pptx-vue-text-field flex flex-col gap-1">
 					<span class="pptx-vue-text-label text-muted-foreground">{{
-						t('pptx.textPanel.color')
+						t('pptx.textPanel.style')
 					}}</span>
-					<input
-						type="color"
-						class="pptx-vue-text-color w-full h-8 bg-muted border border-border rounded p-0.5"
-						:value="color"
-						v-on="colorEvents"
-					/>
-				</label>
-			</div>
-			<ThemeColorSwatchGrid
-				:selected-ref="colorRef"
-				:selected-hex="color"
-				@pick="onColorThemePick"
-			/>
-			<RecentColorsRow
-				v-if="recentColors"
-				:colors="recentColors.recent.value"
-				@pick="onColorPick"
-			/>
-
-			<div class="pptx-vue-text-field flex flex-col gap-1">
-				<span class="pptx-vue-text-label text-muted-foreground">{{
-					t('pptx.textPanel.style')
-				}}</span>
-				<div class="pptx-vue-text-toggles flex flex-wrap gap-1">
-					<button
-						v-for="tg in TOGGLES"
-						:key="tg.key"
-						type="button"
-						class="pptx-vue-text-toggle min-w-8 rounded border border-border px-2 py-1 transition-colors max-md:min-h-[44px] max-md:min-w-[44px]"
-						:class="
-							isActive(tg.key)
-								? 'pptx-vue-text-toggle-active bg-primary text-white font-semibold'
-								: 'bg-muted hover:bg-accent'
-						"
-						:aria-pressed="isActive(tg.key)"
-						:title="t(tg.titleKey)"
-						@click="toggle(tg.key)"
-					>
-						{{ tg.label }}
-					</button>
+					<div class="pptx-vue-text-toggles flex flex-wrap gap-1">
+						<button
+							v-for="tg in TOGGLES"
+							:key="tg.key"
+							type="button"
+							class="pptx-vue-text-toggle min-w-8 rounded border border-border px-2 py-1 transition-colors max-md:min-h-[44px] max-md:min-w-[44px]"
+							:class="
+								isActive(tg.key)
+									? 'pptx-vue-text-toggle-active bg-primary text-white font-semibold'
+									: 'bg-muted hover:bg-accent'
+							"
+							:aria-pressed="isActive(tg.key)"
+							:title="t(tg.titleKey)"
+							@click="toggle(tg.key)"
+						>
+							{{ tg.label }}
+						</button>
+					</div>
 				</div>
-			</div>
+			</template>
 
-			<div class="pptx-vue-text-field flex flex-col gap-1">
-				<span class="pptx-vue-text-label text-muted-foreground">
-					{{ t('pptx.textPanel.horizontalAlign') }}
-				</span>
-				<div class="pptx-vue-text-toggles flex flex-wrap gap-1">
-					<button
-						v-for="opt in ALIGN_OPTIONS"
-						:key="opt.value"
-						type="button"
-						class="pptx-vue-text-toggle min-w-8 rounded border border-border px-2 py-1 transition-colors max-md:min-h-[44px] max-md:min-w-[44px]"
-						:class="
-							align === opt.value
-								? 'pptx-vue-text-toggle-active bg-primary text-white font-semibold'
-								: 'bg-muted hover:bg-accent'
-						"
-						:aria-pressed="align === opt.value"
-						:title="t(opt.labelKey)"
-						@click="setAlign(opt.value)"
-					>
-						{{ t(opt.labelKey) }}
-					</button>
+			<template v-if="props.part !== 'font'">
+				<div class="pptx-vue-text-field flex flex-col gap-1">
+					<span class="pptx-vue-text-label text-muted-foreground">
+						{{ t('pptx.textPanel.horizontalAlign') }}
+					</span>
+					<div class="pptx-vue-text-toggles flex flex-wrap gap-1">
+						<button
+							v-for="opt in ALIGN_OPTIONS"
+							:key="opt.value"
+							type="button"
+							class="pptx-vue-text-toggle min-w-8 rounded border border-border px-2 py-1 transition-colors max-md:min-h-[44px] max-md:min-w-[44px]"
+							:class="
+								align === opt.value
+									? 'pptx-vue-text-toggle-active bg-primary text-white font-semibold'
+									: 'bg-muted hover:bg-accent'
+							"
+							:aria-pressed="align === opt.value"
+							:title="t(opt.labelKey)"
+							@click="setAlign(opt.value)"
+						>
+							{{ t(opt.labelKey) }}
+						</button>
+					</div>
 				</div>
-			</div>
 
-			<InspectorFields
-				:sections="TEXT_BOX_SECTIONS"
-				:target="textStyle"
-				:disabled="!props.canEdit"
-				@patch="patchTextStyle"
-			/>
+				<InspectorFields
+					:sections="TEXT_BOX_SECTIONS"
+					:target="textStyle"
+					:disabled="!props.canEdit"
+					@patch="patchTextStyle"
+				/>
+			</template>
 
-			<TextWarpGallery :ts="textStyle" :disabled="!props.canEdit" @select="onWarpSelect" />
+			<template v-if="props.part !== 'paragraph'">
+				<TextWarpGallery :ts="textStyle" :disabled="!props.canEdit" @select="onWarpSelect" />
 
-			<TextEffectsPanel :ts="textStyle" :disabled="!props.canEdit" @update="onTextEffectPatch" />
+				<TextEffectsPanel :ts="textStyle" :disabled="!props.canEdit" @update="onTextEffectPatch" />
 
-			<Text3DProperties
-				:ts="textStyle"
-				:inherits="text3dInheritsFromTemplate(props.element)"
-				:disabled="!props.canEdit"
-				@update="patchTextStyle"
-			/>
+				<Text3DProperties
+					:ts="textStyle"
+					:inherits="text3dInheritsFromTemplate(props.element)"
+					:disabled="!props.canEdit"
+					@update="patchTextStyle"
+				/>
+			</template>
 		</div>
 	</div>
 </template>

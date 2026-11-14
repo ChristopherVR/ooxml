@@ -23,7 +23,12 @@ export function renderTableElement(
 		editable?: boolean;
 		selectedCell?: TableCellEditorState | null;
 		onSelectCell?: (cell: TableCellEditorState) => void;
-		onCommitCellEdit?: (rowIndex: number, colIndex: number, text: string) => void;
+		onCommitCellEdit?: (
+			rowIndex: number,
+			colIndex: number,
+			text: string,
+			end?: import('ooxml-ui/pptx').TableCellEditEnd,
+		) => void;
 		onResizeColumns?: (newWidths: number[]) => void;
 		onResizeRow?: (rowIndex: number, newHeight: number) => void;
 		styleCtx?: TableStyleContext;

@@ -69,6 +69,7 @@ import {
 	writeStoredViewerPrefs,
 	installSvgIdScope,
 	createRibbonDisplayController,
+	attachTableCellsPaste,
 } from 'ooxml-ui/pptx';
 import type {
 	GoogleFontsOption,
@@ -213,6 +214,7 @@ import {
 	RibbonCustomizationStyleDirective,
 } from './ribbon-customization-style.directive';
 import { listenRibbonDisplayGestures } from './ribbon-display-listeners';
+import { tableFontCells } from './ribbon-font-table';
 import { performResetSlide } from './ribbon-home-section.component';
 import { RibbonLayoutGalleryComponent } from './ribbon-layout-gallery.component';
 import { layoutOptionsFrom } from './ribbon-layout-options';
@@ -251,6 +253,7 @@ import { ViewerFileIOService } from './viewer-file-io.service';
 import { ViewerFindReplaceService } from './viewer-find-replace.service';
 import { ViewerFormatPainterService } from './viewer-format-painter.service';
 import { setupViewerImagePaste } from './viewer-image-paste';
+import { setupViewerInlineRichPaste } from './viewer-inline-rich-paste';
 import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 import { ViewerKeyboardService } from './viewer-keyboard.service';
 import { ViewerMobileSheetService } from './viewer-mobile-sheet.service';
@@ -3088,6 +3091,7 @@ export class PowerPointViewerComponent
 			resolveStage: () => this.stageElement(),
 			imageExportScale: () => this.viewerOpts.imageExportScale(),
 			imageResolutionScale: () => this.viewerOpts.imageResolutionScale(),
+			pdfExportSettings: () => this.viewerOpts.pdfExportSettings(),
 		});
 
 		// Hand the find/replace controller a slide-navigation callback so a match
@@ -3389,6 +3393,38 @@ export class PowerPointViewerComponent
 			this.loader,
 			this.editor,
 		);
+		setupViewerInlineRichPaste({
+			rootElement: () => this.viewerRoot()?.nativeElement,
+			activeSlide: () => this.activeSlide(),
+			activeSlideIndex: () => this.activeSlideIndex(),
+			editingId: () => this.canvasEditing.editingId(),
+			closeEdit: () => this.canvasEditing.editingId.set(null),
+			enterEdit: (id) => this.canvasEditing.onTextEditStart(id),
+			updateElement: (slideIndex, id, patch) => this.editor.updateElement(slideIndex, id, patch),
+		});
+		// Paste into selected table cells (none being edited): tab-separated text
+		// fills cells from the top-left selected cell (shared listener).
+		if (typeof document !== 'undefined') {
+			const detachCellsPaste = attachTableCellsPaste(
+				document,
+				() => {
+					const selection = tableSelection.selection();
+					const element = this.activeSlide()?.elements.find(
+						(item) => item.id === selection?.elementId,
+					);
+					if (!selection || selection.isEditing || !this.canEdit() || element?.type !== 'table') {
+						return undefined;
+					}
+					return { element, cells: tableFontCells(element, selection) ?? [] };
+				},
+				(next) =>
+					this.editor.updateElement(this.activeSlideIndex(), next.id, {
+						tableData: next.tableData,
+						...(next.rawXml ? { rawXml: next.rawXml } : {}),
+					}),
+			);
+			this.destroyRef.onDestroy(detachCellsPaste);
+		}
 
 		// Hand the collab-cursor controller the accessors it alone needs from the
 		// component (the slide stage, canvas size, active-slide-index).

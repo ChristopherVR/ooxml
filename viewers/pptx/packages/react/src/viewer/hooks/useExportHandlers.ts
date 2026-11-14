@@ -14,7 +14,8 @@ import {
 } from 'ooxml-ui/pptx';
 import { useState, useRef, useCallback } from 'react';
 
-import { exportSlideAsPng, exportAllSlidesAsPdf, copySlideToClipboard } from '../utils/export';
+import { exportSlideAsPng, copySlideToClipboard } from '../utils/export';
+import { exportPresentationPdf } from '../utils/export-pdf-vector';
 import type { UseExportHandlersInput, ExportHandlersResult } from './export-handler-types';
 import { useExportMediaHandlers } from './useExportMediaHandlers';
 import { useExportNotesPdf } from './useExportNotesPdf';
@@ -51,9 +52,8 @@ export function useExportHandlers(input: UseExportHandlersInput): ExportHandlers
 		slideSizeEmu,
 		imageExportScale,
 		imageResolutionScale,
+		pdfExportSettings,
 	} = input;
-	// Stable callbacks must not capture a previous deck just to read a scalar.
-	const slideCount = slides.length;
 	const backgroundColor = activeSlide?.backgroundColor;
 
 	const [exportModalOpen, setExportModalOpen] = useState(false);
@@ -132,6 +132,20 @@ export function useExportHandlers(input: UseExportHandlersInput): ExportHandlers
 		}
 	}, [canvasStageRef, activeSlideIndex, backgroundColor, imageExportScale]);
 
+	// Read at invocation, so the callback stays stable and never holds a previous deck.
+	const pdfInputRef = useRef({
+		settings: pdfExportSettings ?? { mode: 'vector' as const, includeHiddenSlides: false },
+		slides,
+		canvasSize,
+		slideSize: slideSizeEmu,
+	});
+	pdfInputRef.current = {
+		settings: pdfExportSettings ?? { mode: 'vector', includeHiddenSlides: false },
+		slides,
+		canvasSize,
+		slideSize: slideSizeEmu,
+	};
+
 	const handleExportPdf = useCallback(async () => {
 		if (!canvasStageRef.current) {
 			return;
@@ -143,13 +157,13 @@ export function useExportHandlers(input: UseExportHandlersInput): ExportHandlers
 		setExportProgress(0);
 		setExportModalOpen(true);
 		try {
-			await exportAllSlidesAsPdf(
+			await exportPresentationPdf(
 				canvasStageRef,
-				slideCount,
 				setActiveSlideIndex,
 				activeSlideIndex,
 				'presentation.pdf',
 				{
+					...pdfInputRef.current,
 					scale: imageExportScale,
 					onProgress: (current, total) => {
 						setExportProgress(slideProgressPercent(current, total));
@@ -173,7 +187,7 @@ export function useExportHandlers(input: UseExportHandlersInput): ExportHandlers
 			exportAbortRef.current = null;
 			setExportModalOpen(false);
 		}
-	}, [canvasStageRef, slideCount, setActiveSlideIndex, activeSlideIndex, imageExportScale]);
+	}, [canvasStageRef, setActiveSlideIndex, activeSlideIndex, imageExportScale]);
 
 	const handleCopySlideAsImage = useCallback(async () => {
 		const stageEl = canvasStageRef.current;

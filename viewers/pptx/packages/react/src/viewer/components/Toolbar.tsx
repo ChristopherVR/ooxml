@@ -1,4 +1,9 @@
-import { attachRibbonOverflow, homeLaunchers, isPanelVisible } from 'ooxml-ui/pptx';
+import {
+	attachRibbonOverflow,
+	HOME_LAUNCHER_SECTIONS,
+	homeLaunchers,
+	isPanelVisible,
+} from 'ooxml-ui/pptx';
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { useController } from '../hooks/useController';
@@ -7,6 +12,7 @@ import { useToolbarVisibility } from '../hooks/useToolbarVisibility';
 import { useTranslation } from '../i18n/use-translation';
 import type { ToolbarSection } from '../types';
 import { cn } from '../utils';
+import { useFormatPane } from './inspector/format-pane-context';
 import { MobileToolbar } from './mobile/MobileToolbar';
 import { ArrangeSection } from './toolbar/ArrangeSection';
 import { ContextualTabSection } from './toolbar/ContextualTabSection';
@@ -65,19 +71,22 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 	// Groups collapse into popup buttons when the window is too narrow, as in Office.
 	const detachOverflow = useRef<(() => void) | null>(null);
 	// Font, Paragraph and Drawing launchers open the Properties pane (there are no modal dialogs).
+	const formatPane = useFormatPane();
 	const inspector = useRef({ open: p.isInspectorPaneOpen, toggle: p.onToggleInspector });
 	inspector.current = { open: p.isInspectorPaneOpen, toggle: p.onToggleInspector };
 	const launchers = useMemo(
 		() =>
 			homeLaunchers(
 				() => t('pptx.inspector.properties'),
-				() => {
+				(group) => {
 					if (!inspector.current.open) {
 						inspector.current.toggle();
 					}
+					// Switch to Properties and reveal the group's section (Font, Paragraph, Fill).
+					formatPane.requestFormatPane(HOME_LAUNCHER_SECTIONS[group], { focus: true });
 				},
 			),
-		[t],
+		[t, formatPane],
 	);
 	const attachOverflow = useCallback(
 		(node: HTMLDivElement | null) => {

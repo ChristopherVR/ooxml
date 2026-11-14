@@ -11,10 +11,14 @@
 	 * is CSS-scaled, and a ruler inside it would scale its strokes and labels
 	 * with the zoom instead of tracking it.
 	 */
-	import { RULER_THICKNESS, scrollInspectorSectionIntoView, updateViewerPreference } from 'ooxml-ui/pptx';
+	import {
+		attachTableCellsPaste,
+		formatSectionForAnchor,
+		RULER_THICKNESS,
+		updateViewerPreference,
+	} from 'ooxml-ui/pptx';
 	// oxlint-disable-next-line import/no-duplicates -- type-only imports stay top-level (consistent-type-specifier-style).
 	import type { InspectorSectionAnchor, PasteSpecialFormat } from 'ooxml-ui/pptx';
-	import { tick } from 'svelte';
 
 	import type { PptxLayoutOption, PptxLayoutPreview } from 'pptx-viewer-core';
 
@@ -84,6 +88,26 @@
 
 	const commits = $derived(createEditCommits(editor));
 
+	// Paste into selected table cells (none being edited): tab-separated text
+	// fills cells from the top-left selected cell, through the shared listener.
+	$effect(() =>
+		attachTableCellsPaste(
+			document,
+			() => {
+				const element = editor.selectedElement;
+				const cells = element ? editor.tableCells.cellsFor(element.id) : [];
+				return editingActive && element?.type === 'table' && cells.length > 0
+					? { element, cells }
+					: undefined;
+			},
+			(next) =>
+				editor.applyElementPatch(next.id, {
+					tableData: next.tableData,
+					...(next.rawXml ? { rawXml: next.rawXml } : {}),
+				}),
+		),
+	);
+
 	// The context menu's "Edit Hyperlink" (and the shared keymap's Ctrl+K)
 	// open the same dialog the Insert tab does; hosted here, because the menu
 	// unmounts the moment a command is run, off `controller.hyperlinkOpen` so
@@ -99,20 +123,11 @@
 	}
 
 	/**
-	 * "Edit Alt Text" / "Size and Position" / "Format Shape": switch to the
-	 * properties tab, then (once the panel has re-rendered) scroll the
-	 * matching section into view. A no-op degrade when the section is not
-	 * tagged, same as every other binding.
+	 * "Edit Alt Text" / "Size and Position" / "Format Shape": open the Format
+	 * pane on the matching section, expanded and focused once rendered.
 	 */
 	function focusInspectorSection(anchor: InspectorSectionAnchor): void {
-		if (!chromeUi) {
-			return;
-		}
-		chromeUi.inspectorOpen = true;
-		chromeUi.setInspectorTab('properties');
-		void tick().then(() =>
-			requestAnimationFrame(() => scrollInspectorSectionIntoView(document, anchor)),
-		);
+		chromeUi?.formatPane.requestFormatPane(formatSectionForAnchor(anchor), { focus: true });
 	}
 
 	// -- Empty-canvas context menu ------------------------------------------

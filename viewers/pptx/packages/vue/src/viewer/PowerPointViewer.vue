@@ -74,6 +74,7 @@ import {
 } from 'ooxml-ui/pptx';
 import type { CloudFileProvider, CloudOpenedFile, ViewerAddinStatus } from 'ooxml-ui/pptx';
 import {
+	createFormatPaneController,
 	createRibbonDisplayController,
 	findTextHighlightsByElement,
 	installSvgIdScope,
@@ -137,6 +138,7 @@ import { useCustomizedRibbonProps } from './composables/customization-ribbon-gat
 import { readDeckData } from './composables/deck-data';
 import { provideElementRenderErrorReporter } from './composables/element-render-errors';
 import { FieldContextKey } from './composables/field-context';
+import { FormatPaneKey } from './composables/format-pane-context';
 import { InspectorPreviewKey } from './composables/inspector-preview-context';
 import { MergeCropKey } from './composables/merge-crop-context';
 import { RecentColorsKey } from './composables/recent-colors-context';
@@ -179,6 +181,7 @@ import { useHeaderFooterDialog } from './composables/useHeaderFooterDialog';
 import { useHyperlinkDialog } from './composables/useHyperlinkDialog';
 import { useInkDrawing } from './composables/useInkDrawing';
 import { useInlineEditing } from './composables/useInlineEditing';
+import { useInlineRichTextPaste } from './composables/useInlineRichTextPaste';
 import { useInsertElementDialogs } from './composables/useInsertElementDialogs';
 import { useInspectorDeckActions } from './composables/useInspectorDeckActions';
 import { useInspectorWiring } from './composables/useInspectorWiring';
@@ -193,7 +196,7 @@ import { useMobileChrome } from './composables/useMobileChrome';
 import { useMultiSelectOps } from './composables/useMultiSelectOps';
 import { provideOutlineAuthoring } from './composables/useOutlineAuthoring';
 import { usePasswordProtection } from './composables/usePasswordProtection';
-import { usePasteSpecial } from './composables/usePasteSpecial';
+import { rasterizePastedNode, usePasteSpecial } from './composables/usePasteSpecial';
 import { usePictureCrop } from './composables/usePictureCrop';
 import { usePresentationControls } from './composables/usePresentationControls';
 import { usePrint } from './composables/usePrint';
@@ -544,6 +547,7 @@ const { tableSelection } = useTableCellEditingContext({
 	updateElement: (id, patch) => ops.updateElement(id, patch),
 	commitTableCell: (elementId, rowIndex, colIndex, text) =>
 		inlineEdit.commitTableCell(elementId, rowIndex, colIndex, text),
+	transformText: (text, previous) => inlineEdit.autoCorrect(text, previous),
 });
 
 // Inline SmartArt node-text and per-node fill editing context. Mirrors the
@@ -857,6 +861,7 @@ const clipboard = useElementClipboard({
 	addElement: (element) => ops.addElement(element),
 	removeElement: (id) => ops.removeElement(id),
 	selectedElementIds,
+	rasterize: (_node, id) => rasterizePastedNode(id).catch(() => null),
 });
 
 // -- Paste Special (Ctrl+Alt+V) + the post-paste Paste Options toolbar ---
@@ -1082,6 +1087,16 @@ const {
 	themeEditorOpen,
 } = ribbonUi;
 
+// -- Format pane (open sections, launcher requests): one per viewer ------
+// A launcher (Format Shape..., a ribbon dialog launcher) opens the inspector;
+// the slide inspector switches itself to Properties on the request.
+const formatPane = createFormatPaneController({
+	showPane: () => {
+		inspectorOpen.value = true;
+	},
+});
+provide(FormatPaneKey, formatPane);
+
 // -- Empty-canvas context menu (right-click with no element under the
 // cursor) -- a sibling of the element menu below, kept in its own composable.
 const layoutGalleryAnchor = ref<{ x: number; y: number } | null>(null);
@@ -1102,7 +1117,7 @@ const canvasMenu = useCanvasContextMenu({
 	},
 	onOpenFormatBackground: () => {
 		selectedElementIds.value = [];
-		inspectorOpen.value = true;
+		formatPane.requestFormatPane('slide', { focus: true });
 	},
 	customization: () => customization.resolved.value,
 });
@@ -1147,6 +1162,7 @@ const { contextMenu, contextItems, onCanvasContextMenu, onContextSelect } = useC
 	selectedElementIds,
 	inlineEditingElementId: inlineEdit.inlineEditingElementId,
 	inspectorOpen,
+	formatPane,
 	enterInlineEdit: inlineEdit.enterInlineEdit,
 	ops,
 	cutElement: clipboard.cutElement,
@@ -2052,6 +2068,12 @@ useCanvasImagePaste(viewerRootRef, {
 		};
 	},
 	insertElement: ops.addElement,
+});
+useInlineRichTextPaste(viewerRootRef, {
+	editingElement: () => inlineEdit.inlineEditingElement.value,
+	cancelInlineEdit: inlineEdit.cancelInlineEdit,
+	enterInlineEdit: inlineEdit.enterInlineEdit,
+	updateElement: (id, patch) => ops.updateElement(id, patch),
 });
 
 // Host-persisted Save: revision token + acknowledgement (shared controller).

@@ -28,8 +28,11 @@ export function createTextSection(
 	t: Translator,
 	section: (label: string) => HTMLElement,
 	handlers: InspectorHandlers,
+	/** The Format pane's Paragraph home for the text box and spacing fields (default: `el`). */
+	paragraph?: HTMLElement,
 ): TextSection {
 	const el = section(t('pptx.inspector.text'));
+	const paragraphEl = paragraph ?? el;
 
 	// B6 (A3): the inspector's own text-colour picker, distinct from the
 	// ribbon's Home > Font colour swatch picker (both write the same
@@ -73,7 +76,7 @@ export function createTextSection(
 		sections: TEXT_BOX_SECTIONS,
 		onPatch: (patch) => handlers.setTextStyle(patch),
 	});
-	el.appendChild(textBox.el);
+	paragraphEl.appendChild(textBox.el);
 	const number = (label: string, key: keyof TextAdvancedChanges, min?: number) =>
 		makeNumberField(doc, {
 			label,
@@ -91,16 +94,10 @@ export function createTextSection(
 		label: t('pptx.textAdvanced.rtl'),
 		onChange: (enabled) => handlers.setTextAdvanced({ rtl: enabled }),
 	});
-	const advanced = [
-		characterSpacing,
-		lineSpacing,
-		exactSpacing,
-		spacingBefore,
-		spacingAfter,
-		indent,
-		margin,
-	];
-	el.append(...advanced.map(({ el: node }) => node), rtl.el);
+	const paragraphFields = [lineSpacing, exactSpacing, spacingBefore, spacingAfter, indent, margin];
+	const advanced = [characterSpacing, ...paragraphFields];
+	el.append(characterSpacing.el);
+	paragraphEl.append(...paragraphFields.map(({ el: node }) => node), rtl.el);
 	const effects = createTextEffectsControls(doc, t, handlers);
 	el.appendChild(effects.el);
 
@@ -110,6 +107,7 @@ export function createTextSection(
 		el,
 		update(state) {
 			el.hidden = !state.hasSelection || !state.canText;
+			paragraphEl.hidden = el.hidden;
 			color.setValue(state.textStyle?.color);
 			colorTheme.setThemeColorMap(state.themeColorMap);
 			colorTheme.setSelected(state.textStyle?.colorRef, state.textStyle?.color);

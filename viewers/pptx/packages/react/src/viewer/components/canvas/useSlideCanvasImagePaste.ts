@@ -1,4 +1,4 @@
-import { attachEditorImagePaste } from 'ooxml-ui/pptx';
+import { attachEditorImagePaste, attachInlineRichPaste } from 'ooxml-ui/pptx';
 import { useLayoutEffect, useRef } from 'react';
 
 import type { SlideCanvasProps } from './canvas-types';
@@ -52,4 +52,13 @@ export function useSlideCanvasImagePaste(input: Input): void {
 			insertElement: (element) => latest.current.imagePaste?.insertElement(element),
 		});
 	}, [input.imagePaste, input.zoom.canvasViewportRef, eligible, slideId]);
+	// Paste inside the inline text editor: formatted runs from text/html, else plain text.
+	const richText = input.imagePaste?.richText;
+	useLayoutEffect(() => {
+		const root = input.zoom.canvasViewportRef.current;
+		if (!root || !richText) {
+			return;
+		}
+		return attachInlineRichPaste(root, richText);
+	}, [richText, input.zoom.canvasViewportRef]);
 }

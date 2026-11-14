@@ -318,6 +318,10 @@ export const translations = {
 		'No se pudo guardar un sonido de transición de diapositiva y se omitió.',
 	'pptx.compatibility.diagramRelationshipIdsIncomplete':
 		'A este diagrama de SmartArt le faltan algunas referencias internas, por lo que puede no mostrarse exactamente como se creó.',
+	'pptx.compatibility.embeddedFontRestricted':
+		'La licencia de una fuente incrustada no permite usarla, por lo que se muestra una fuente sustituta. Sus datos se conservan en el archivo.',
+	'pptx.compatibility.embeddedFontNotEmbeddable':
+		'Una fuente no se incrustó porque su licencia no permite incrustarla en una presentación editable.',
 	'pptx.compatibility.exportBackendUnavailable':
 		'La exportación a este formato no está disponible en el entorno actual.',
 } as const;

@@ -18,6 +18,7 @@
  *
  * @module render/customization/ribbon-control-visibility
  */
+import { FORMAT_SECTION_ATTRIBUTE, FORMAT_SECTION_IDS } from '../inspector/format-sections';
 import { INSPECTOR_CARD_IDS } from './inspector-customization';
 import type { ResolvedCustomization } from './customization-resolve';
 import { RIBBON_CONTROL_IDS, RIBBON_GROUP_IDS } from './ribbon-control-ids';
@@ -109,6 +110,11 @@ export function ribbonCustomizationCss(resolved: ResolvedCustomization, scope?: 
 			selectors.push(attrSelector(safeScope, 'data-pptx-inspector-card', id));
 		}
 	}
+	for (const id of resolved.hiddenFormatSections) {
+		if (FORMAT_SECTION_IDS.includes(id)) {
+			selectors.push(attrSelector(safeScope, FORMAT_SECTION_ATTRIBUTE, id));
+		}
+	}
 	for (const id of resolved.hiddenRibbonGroups) {
 		if (isRibbonGroupId(id)) {
 			selectors.push(attrSelector(safeScope, RIBBON_GROUP_ATTR, id));
@@ -122,8 +128,24 @@ export function ribbonCustomizationCss(resolved: ResolvedCustomization, scope?: 
 			}
 		}
 	}
+	const order = formatSectionOrderCss(resolved, safeScope);
 	if (selectors.length === 0) {
-		return '';
+		return order;
 	}
-	return `${selectors.join(',\n')} {\n\tdisplay: none !important;\n}\n`;
+	return `${selectors.join(',\n')} {\n\tdisplay: none !important;\n}\n${order}`;
+}
+
+/**
+ * Move the host's `inspector.sectionOrder` sections to the front of the
+ * Format pane: the section list is a flex column, so a negative `order`
+ * places a listed section ahead of the rest, which keep their own order.
+ */
+function formatSectionOrderCss(resolved: ResolvedCustomization, scope: string | undefined): string {
+	const ids = resolved.formatSectionOrder.filter((id) => FORMAT_SECTION_IDS.includes(id));
+	return ids
+		.map(
+			(id, index) =>
+				`${attrSelector(scope, FORMAT_SECTION_ATTRIBUTE, id)} {\n\torder: ${index - ids.length};\n}\n`,
+		)
+		.join('');
 }

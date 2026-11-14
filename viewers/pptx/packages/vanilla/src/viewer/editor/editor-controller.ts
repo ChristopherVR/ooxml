@@ -66,6 +66,7 @@ import { createEditActions } from './editor-edit-ops';
 import type { FindReplaceActions } from './editor-find-replace-actions';
 import { createFindReplaceActions } from './editor-find-replace-actions';
 import { attachCanvasImagePaste } from './editor-image-paste';
+import { attachCanvasInlineRichPaste } from './editor-inline-rich-paste';
 import { createEditorKeydownHandler } from './editor-keyboard';
 import { selectionInteractivity } from './editor-lock-gates';
 import { createEditorOps } from './editor-operations';
@@ -672,9 +673,12 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 	};
 
 	let detachImagePaste: (() => void) | undefined;
+	let detachRichPaste: (() => void) | undefined;
 	const detachChrome = (): void => {
 		detachImagePaste?.();
 		detachImagePaste = undefined;
+		detachRichPaste?.();
+		detachRichPaste = undefined;
 		interactions.closeInline(true);
 		interactions.closeInline(false);
 		attachedWrap?.removeEventListener('pointerdown', onStagePointerDown);
@@ -814,6 +818,15 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 				getHandler: deps.getHandler,
 				isEditing: interactions.inlineActive,
 				insertElement: editActions.insertElement,
+			});
+			detachRichPaste = attachCanvasInlineRichPaste(attachedRoot, {
+				store,
+				inlineElementId: () => interactions.inlineElementId(),
+				closeInline: (commit) => interactions.closeInline(commit),
+				openInlineEdit: (id) => interactions.openInlineEdit(id),
+				pushHistory: () => ops.pushHistory(),
+				previewElement: (id, patch) => ops.previewElement(id, patch),
+				commitChange: () => ops.commitChange(),
 			});
 			attachedWrap.addEventListener('pointerdown', onStagePointerDown);
 			attachedWrap.addEventListener('pointermove', interactions.onStagePointerMove);

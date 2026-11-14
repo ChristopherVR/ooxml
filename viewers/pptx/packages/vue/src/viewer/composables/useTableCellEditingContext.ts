@@ -1,5 +1,6 @@
+import { attachTableCellsPaste, resolveTableCellEditEnd } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
-import { provide, ref } from 'vue';
+import { onScopeDispose, provide, ref } from 'vue';
 import type { Ref } from 'vue';
 
 import { TableCellEditKey } from './table-edit';
@@ -16,6 +17,8 @@ export interface UseTableCellEditingContextInput {
 	updateElement: (id: string, patch: Partial<PptxElement>) => void;
 	/** Commit a single cell's new text (element-level inline table-cell edit). */
 	commitTableCell: (elementId: string, rowIndex: number, colIndex: number, text: string) => void;
+	/** AutoCorrect for committed cell text (given the cell's previous text). */
+	transformText?: (text: string, previous?: string) => string;
 }
 
 export interface UseTableCellEditingContextResult {
@@ -42,6 +45,19 @@ export function useTableCellEditingContext(
 		canEdit: canEditInline,
 		commit: (elementId: string, rowIndex: number, colIndex: number, text: string) =>
 			commitTableCell(elementId, rowIndex, colIndex, text),
+		end: (elementId, rowIndex, colIndex, end) => {
+			const el = findActiveElement(elementId);
+			if (!canEditInline() || !el || el.type !== 'table') {
+				return undefined;
+			}
+			const outcome = resolveTableCellEditEnd(el, rowIndex, colIndex, end, {
+				...(input.transformText ? { transformText: input.transformText } : {}),
+			});
+			if (outcome.element) {
+				updateElement(elementId, tablePatch(outcome.element));
+			}
+			return outcome;
+		},
 	});
 
 	// Table cell selection + drag-resize context for `TableRenderer` / `TablePanel`.
@@ -66,6 +82,27 @@ export function useTableCellEditingContext(
 		const rows = el.tableData.rows.map((r, i) => (i === rowIndex ? { ...r, height } : r));
 		updateElement(elementId, { tableData: { ...el.tableData, rows } } as Partial<PptxElement>);
 	}
+	// Paste into selected cells (no cell being edited): tab-separated text fills
+	// cells from the top-left selected one; the shared listener decides.
+	const detachPaste =
+		typeof document === 'undefined'
+			? undefined
+			: attachTableCellsPaste(
+					document,
+					() => {
+						const sel = tableSelection.value;
+						const el = sel ? findActiveElement(sel.elementId) : undefined;
+						if (!sel || !canEditInline() || el?.type !== 'table') {
+							return undefined;
+						}
+						const cells = sel.selectedCells?.length
+							? sel.selectedCells
+							: [{ row: sel.rowIndex, col: sel.columnIndex }];
+						return { element: el, cells };
+					},
+					(next) => updateElement(next.id, tablePatch(next)),
+				);
+	onScopeDispose(() => detachPaste?.());
 	provideTableSelection({
 		selection: tableSelection,
 		select: (next) => {
@@ -76,4 +113,12 @@ export function useTableCellEditingContext(
 	});
 
 	return { tableSelection };
+}
+
+/** The element patch for a table edit: its data, and its markup when it has one. */
+function tablePatch(next: PptxElement): Partial<PptxElement> {
+	return {
+		...(next.type === 'table' ? { tableData: next.tableData } : {}),
+		...(next.rawXml ? { rawXml: next.rawXml } : {}),
+	} as Partial<PptxElement>;
 }

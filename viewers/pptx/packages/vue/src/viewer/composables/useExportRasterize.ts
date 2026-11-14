@@ -1,5 +1,6 @@
 import type {
 	CanvasSize,
+	MountedPdfSlide,
 	RasterizeElementResult,
 	RasterizeElementTilesResult,
 } from 'ooxml-ui/pptx';
@@ -26,6 +27,8 @@ export interface UseExportRasterizeInput {
 }
 
 export interface UseExportRasterizeResult {
+	/** Mount slide `index` for the vector PDF export, with the html2canvas driver for it. */
+	mountSlide: (index: number) => Promise<MountedPdfSlide>;
 	rasterizeSlide: (index: number, scaleMultiplier?: number) => Promise<HTMLCanvasElement>;
 	rasterizeSlideToRaster: (
 		index: number,
@@ -158,5 +161,14 @@ export function useExportRasterize(input: UseExportRasterizeInput): UseExportRas
 		return result.canvas;
 	}
 
-	return { rasterizeSlide, rasterizeSlideToRaster, rasterizeSlideToTiles };
+	async function mountSlide(index: number): Promise<MountedPdfSlide> {
+		const stage = await mountStage(index);
+		return {
+			stage,
+			html2canvasFallback: (sourceRect, outputSize) =>
+				html2canvasFallback(stage, sourceRect, outputSize),
+		};
+	}
+
+	return { rasterizeSlide, rasterizeSlideToRaster, rasterizeSlideToTiles, mountSlide };
 }

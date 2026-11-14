@@ -1,5 +1,6 @@
 import { installOfficeUiTheme } from '../../theme';
 import { withOfficeThemeCss } from '../theme/office-css';
+import { definePptxFormatSection } from './format-section';
 import { definePptxSlideClipboard } from './slide-clipboard';
 export { slideClipboardLabels } from './slide-clipboard';
 export type { PptxUiSlideClipboardElement } from './slide-clipboard';
@@ -117,8 +118,8 @@ export type { PptxUiExportProgressElement } from './office-alias-types';
 
 export { attachRibbonOverflow, reflowRibbon } from './ribbon-overflow';
 export type { RibbonRowOptions } from './ribbon-overflow';
-export { HOME_LAUNCHER_GROUPS, homeLaunchers } from './ribbon-launchers';
-export type { RibbonLauncher, RibbonLaunchers } from './ribbon-launchers';
+export { HOME_LAUNCHER_GROUPS, HOME_LAUNCHER_SECTIONS, homeLaunchers } from './ribbon-launchers';
+export type { HomeLauncherGroup, RibbonLauncher, RibbonLaunchers } from './ribbon-launchers';
 
 export type { RibbonCommandRequestEvent } from './office-alias-types';
 export type {
@@ -235,6 +236,7 @@ const controls = [
 	['pptx-ui-subtitle-settings', definePptxSubtitleSettings],
 	['pptx-ui-theme-editor', definePptxThemeEditor],
 	['pptx-ui-chart-format-pane', definePptxChartFormatPane],
+	['pptx-ui-format-section', definePptxFormatSection],
 	['pptx-ui-title-bar', definePptxTitleBar],
 	['pptx-ui-slide-clipboard', definePptxSlideClipboard],
 	['pptx-ui-options-dialog', definePptxOptionsDialog],
