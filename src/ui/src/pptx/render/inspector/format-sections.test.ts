@@ -111,6 +111,8 @@ describe('resolveFormatSections', () => {
 		expect(open(table)).toEqual(['table']);
 		expect(ids([el({ type: 'chart' })]).slice(0, 3)).toEqual(['chart', 'arrange', 'sizePosition']);
 		expect(open([el({ type: 'group' })])).toEqual(['arrange', 'sizePosition']);
+		expect(ids([el({ type: 'ole' })])[0]).toBe('object');
+		expect(ids([el({ type: 'ink' })])).not.toContain('object');
 	});
 
 	it('keeps only shared sections for a multi-selection, without Size and position', () => {

@@ -211,6 +211,10 @@ function entriesFor(element: PptxElement): readonly Entry[] {
 		if (id === 'fill' || id === 'outline' || id === 'effects') {
 			return hasShapeProperties(element);
 		}
+		if (id === 'object') {
+			// Only embedded OLE objects have an Object panel (ink, zoom, 3D models have none yet).
+			return element.type === 'ole';
+		}
 		if (id === 'altText') {
 			// A picture's alt text lives in its Picture section.
 			return shouldShowAccessibilitySection(element);
