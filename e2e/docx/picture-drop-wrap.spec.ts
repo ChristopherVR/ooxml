@@ -90,6 +90,29 @@ test('a picture file dropped on the page is inserted there as an inline picture'
 	expect(errors).toEqual([]);
 });
 
+test('in Print Layout a dropped picture lands at the drop point and can be selected', async ({
+	page,
+}) => {
+	await page.goto('/');
+	await newDocument(page);
+	const editor = page.locator('docx-editor');
+	await editor.locator('.ProseMirror').click();
+	await page.keyboard.type('Before after');
+	await editor.getByRole('tab', { name: 'View', exact: true }).click();
+	await editor.getByRole('button', { name: 'Print Layout', exact: true }).click();
+	// The line spans the column; the text fragment is just the words.
+	const line = editor.locator('.dve-print-line', { hasText: 'Before after' }).first();
+	const box = (await line.locator('[data-source-start]').first().boundingBox())!;
+	await dropPicture(editor, await pngBase64(page), box.x + box.width * 0.5, box.y + box.height / 2);
+	await expect(editor.locator('.dve-print-page .dve-print-picture')).toHaveCount(1);
+	const xml = await savedXml(editor);
+	const body = xml.replace(/<w:rPr>.*?<\/w:rPr>/g, '');
+	expect(body).not.toMatch(/after<\/w:t><\/w:r><w:r><w:drawing>/);
+	expect(body).toMatch(/<w:t[^>]*>Bef[^<]*<\/w:t><\/w:r><w:r><w:drawing>/);
+	await editor.locator('.dve-print-page .dve-print-picture').click();
+	await expect(editor.getByRole('tab', { name: 'Picture Format', exact: true })).toBeVisible();
+});
+
 test('Picture Format wraps and crops the picture, and the menu offers Wrap Text', async ({
 	page,
 }) => {

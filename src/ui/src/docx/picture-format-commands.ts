@@ -37,7 +37,10 @@ export function isPictureNode(node: ProseMirrorNode | null | undefined): node is
 		!node.attrs.shape &&
 		!node.attrs.chart &&
 		!node.attrs.diagram &&
-		!node.attrs.textBoxEditable,
+		!node.attrs.textBoxEditable &&
+		// A legacy VML picture (`w:pict`) has no DrawingML fill or wrap to write; one inserted in
+		// this session has no relationship yet and is written as DrawingML.
+		(node.attrs.pictureFill || !node.attrs.relId),
 	);
 }
 

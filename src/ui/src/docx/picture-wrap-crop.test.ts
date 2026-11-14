@@ -9,6 +9,8 @@ import { at, paragraphAt } from './test-support';
 import { computeMenuItems } from './context-menu-items';
 import { buildPictureFormatPanel } from './picture-format-ribbon';
 import { strings } from './localization-strings';
+import { isPictureNode } from './picture-format-commands';
+import { schema } from './schema';
 
 registerDocxEditor();
 
@@ -161,6 +163,14 @@ describe('picture Wrap Text and Crop', () => {
 			action: { type: 'picture', key: 'wrap', value: 'tight' },
 		});
 		expect(items.find((item) => item.id === 'picture-format')).toBeDefined();
+	});
+
+	it('leaves legacy VML pictures out, since they have no DrawingML wrap or crop to write', () => {
+		const image = (attrs: Record<string, unknown>) =>
+			schema.nodes.image!.create({ partName: 'word/media/a.png', ...attrs });
+		expect(isPictureNode(image({ relId: 'rId1' }))).toBe(false);
+		expect(isPictureNode(image({ relId: 'rId1', pictureFill: '{"kind":"picture"}' }))).toBe(true);
+		expect(isPictureNode(image({ relId: '' }))).toBe(true);
 	});
 
 	it('translates every label of the Picture Format tab', () => {
