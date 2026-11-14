@@ -8,6 +8,7 @@ import type {
 import { children, first, getW, named, parseXml, type XmlDocument, type XmlElement } from './xml';
 import { parseRunProperties } from './run-properties';
 import { parseOnOff } from './simple-types';
+import { parseCellMargins } from './table-margins';
 import { parseShadingFill, parseShadingThemeFill, parseTableBorders } from './table-borders';
 
 const REGIONS: TableConditionalRegion[] = [
@@ -57,6 +58,7 @@ export function parseTableStyleCatalog(xml: string): TableStyleCatalog {
 		const tblPr = first(element, 'tblPr');
 		const borders = parseTableBorders(first(tblPr, 'tblBorders'));
 		const shadingFill = parseShadingFill(first(tblPr, 'shd'));
+		const cellMargins = parseCellMargins(first(tblPr, 'tblCellMar'));
 		const conditional: Partial<Record<TableConditionalRegion, TableStyleConditionalFormatting>> =
 			{};
 		for (const block of children(element, 'tblStylePr')) {
@@ -71,6 +73,7 @@ export function parseTableStyleCatalog(xml: string): TableStyleCatalog {
 			...(isDefault === undefined ? {} : { isDefault }),
 			...(borders ? { borders } : {}),
 			...(shadingFill ? { shadingFill } : {}),
+			...(cellMargins ? { cellMargins } : {}),
 			conditional,
 		};
 	}

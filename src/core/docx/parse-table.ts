@@ -1,11 +1,5 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type {
-	NestedTablePreview,
-	TableCell,
-	TableCellMargins,
-	TableLook,
-	TableRowProperties,
-} from './table-model';
+import type { NestedTablePreview, TableCell, TableLook, TableRowProperties } from './table-model';
 import type { Paragraph, Table } from './model';
 import { children, first, getW, type XmlElement, WORD_NS } from './xml';
 import { canEditTableStructure, canRestructureTable } from './table-structure-check';
@@ -24,6 +18,7 @@ import {
 import type { Twips } from './units';
 import { parseShadingFill, parseShadingThemeFill, parseTableBorders } from './table-borders';
 import { parseTableFloating } from './parse-table-floating';
+import { parseCellMargins } from './table-margins';
 
 const dxa = parseTwips;
 
@@ -88,7 +83,7 @@ function parseCell(
 	if (themeFill) result.shadingThemeFill = themeFill;
 	const borders = parseTableBorders(first(props, 'tcBorders'));
 	if (borders) result.borders = borders;
-	const margins = parseMargins(first(props, 'tcMar'));
+	const margins = parseCellMargins(first(props, 'tcMar'));
 	if (margins) result.margins = margins;
 	const nested = children(cell, 'tbl').map(nestedPreview);
 	if (nested.length) result.nestedTables = nested;
@@ -134,29 +129,6 @@ function parseLook(element: XmlElement | undefined): TableLook | undefined {
 		if (value !== undefined) look[name] = value;
 	}
 	return Object.keys(look).length ? look : undefined;
-}
-
-/** Cell margins from `w:tcMar` or `w:tblCellMar`, in twips (`start`/`end` read as left/right). */
-function parseMargins(element: XmlElement | undefined): TableCellMargins | undefined {
-	if (!element) return undefined;
-	const parsed: TableCellMargins = {};
-	for (const [side, logical] of [
-		['top', 'top'],
-		['bottom', 'bottom'],
-		['left', 'start'],
-		['right', 'end'],
-	] as const) {
-		const edge = first(element, logical) ?? first(element, side);
-		const type = getW(edge, 'type') ?? 'dxa';
-		const value =
-			type === 'nil'
-				? parseSignedTwips('0')
-				: type === 'dxa'
-					? parseSignedTwips(getW(edge, 'w'))
-					: undefined;
-		if (value !== undefined) parsed[side] = value;
-	}
-	return Object.keys(parsed).length ? parsed : undefined;
 }
 
 /** Row height (`w:trHeight`, `auto` rule meaning at least), keep-together and header flags. */
@@ -233,7 +205,7 @@ export function parseTable(
 	if (styleId) table.style = styleId;
 	const look = parseLook(first(tblPr, 'tblLook'));
 	if (look) table.look = look;
-	const cellMargins = parseMargins(first(tblPr, 'tblCellMar'));
+	const cellMargins = parseCellMargins(first(tblPr, 'tblCellMar'));
 	if (cellMargins) table.cellMargins = cellMargins;
 	const rowProperties = rowEntries.map(({ element, control }) => {
 		const properties = parseRowProperties(element);

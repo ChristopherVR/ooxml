@@ -24,6 +24,32 @@ function T([string]$tblPr, [string]$rows, [int]$cols = 3, [int]$gridWidth = 1000
 	$grid = "<w:gridCol w:w=`"$gridWidth`"/>" * $cols
 	"<w:tbl><w:tblPr>$tblPr<w:tblCellMar><w:left w:w=`"108`" w:type=`"dxa`"/><w:right w:w=`"108`" w:type=`"dxa`"/></w:tblCellMar></w:tblPr><w:tblGrid>$grid</w:tblGrid>$rows</w:tbl>"
 }
+# A table without its own cell margins, so they come from the styles part.
+function TBare([string]$tblPr, [string]$rows) {
+	"<w:tbl><w:tblPr>$tblPr</w:tblPr><w:tblGrid>" + ('<w:gridCol w:w="1000"/>' * 3) + "</w:tblGrid>$rows</w:tbl>"
+}
+function TableStyle([string]$id, [string]$inner, [string]$extra = '') {
+	"<w:style w:type=`"table`" $extra w:styleId=`"$id`"><w:name w:val=`"$id`"/>$inner</w:style>"
+}
+function Mar([int]$left, [int]$right) {
+	"<w:tblPr><w:tblCellMar><w:left w:w=`"$left`" w:type=`"dxa`"/><w:right w:w=`"$right`" w:type=`"dxa`"/></w:tblCellMar></w:tblPr>"
+}
+function Set-Entry([string]$path, [string]$name, [string]$text) {
+	$zip = [IO.Compression.ZipFile]::Open($path, 'Update')
+	try {
+		$zip.GetEntry($name).Delete()
+		$stream = $zip.CreateEntry($name).Open()
+		$bytes = [Text.UTF8Encoding]::new($false).GetBytes($text)
+		$stream.Write($bytes, 0, $bytes.Length); $stream.Close()
+	} finally { $zip.Dispose() }
+}
+function Get-Entry([string]$path, [string]$name) {
+	$zip = [IO.Compression.ZipFile]::OpenRead($path)
+	try {
+		$reader = New-Object IO.StreamReader(($zip.GetEntry($name)).Open())
+		$text = $reader.ReadToEnd(); $reader.Close(); $text
+	} finally { $zip.Dispose() }
+}
 $auto = '<w:tblW w:w="0" w:type="auto"/>'
 $long = 'the quick brown fox jumps over the lazy dog and keeps running past the river bank until night'
 $mid = 'alpha beta gamma delta epsilon zeta eta theta'
@@ -59,7 +85,16 @@ $cases = [ordered]@{
 	# A grid that agrees with the preferred widths, as Word itself saves it.
 	'consistent-wide'   = T $auto (TRow (C 'A' (Pref 5000)), (C 'B' (Pref 5000)), (C 'C' (Pref 5000))) 3 5000
 	'consistent-word'   = T $auto (TRow (C 'A' (Pref 3000)), (C 'Antidisestablishmentarianism' (Pref 3000)), (C 'C' (Pref 3000))) 3 3000
+	# Cell margins from the styles part: none, the default table style, a style chain, own margins.
+	'style-none'        = TBare $auto (TRow (C 'A'), (C 'Hello world'), (C 'xyz'))
+	'style-default'     = TBare $auto (TRow (C 'A'), (C 'Hello world'), (C 'xyz'))
+	'style-chain'       = TBare ($auto + '<w:tblStyle w:val="Child"/>') (TRow (C 'A'), (C 'Hello world'), (C 'xyz'))
+	'style-own'         = TBare ($auto + '<w:tblStyle w:val="Child"/><w:tblCellMar><w:left w:w="20" w:type="dxa"/></w:tblCellMar>') (TRow (C 'A'), (C 'Hello world'), (C 'xyz'))
 }
+# Table styles added to the styles part (style-* cases); their Word-saved copies are kept too.
+$defaultStyle = TableStyle 'Plain' (Mar 50 50) 'w:default="1"'
+$chain = (TableStyle 'Base' (Mar 200 300)) + (TableStyle 'Child' '<w:basedOn w:val="Base"/>')
+$tableStyles = @{ 'style-default' = $defaultStyle; 'style-chain' = $defaultStyle + $chain; 'style-own' = $defaultStyle + $chain }
 # The same layouts saved in older compatibility modes (0 writes no compatibilityMode setting).
 $modes = [ordered]@{}
 foreach ($name in $cases.Keys) { $modes[$name] = 15 }
@@ -90,9 +125,14 @@ try {
 				$stream.Write($bytes, 0, $bytes.Length); $stream.Close()
 			} finally { $zip.Dispose() }
 		}
+		if ($tableStyles[$name]) {
+			$styles = (Get-Entry $source 'word/styles.xml').Replace('</w:styles>', $tableStyles[$name] + '</w:styles>')
+			Set-Entry $source 'word/styles.xml' $styles
+		}
 		$doc = $word.Documents.Open($source, $false, $true)
 		$doc.SaveAs2($saved, 12)
 		$doc.Close($false)
+		if ($name -like 'style-*') { Copy-Item $saved (Join-Path $Out "$name.word.docx") -Force }
 		$zip = [IO.Compression.ZipFile]::OpenRead($saved)
 		try {
 			$reader = New-Object IO.StreamReader(($zip.GetEntry('word/document.xml')).Open())

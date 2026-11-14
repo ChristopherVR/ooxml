@@ -38,7 +38,6 @@ export interface TableCellMargins {
 	left?: SignedTwips;
 	right?: SignedTwips;
 }
-/** Row-level properties (`w:trPr`): height, keep-together and repeat-as-header. */
 /** `w:tblPr/w:tblpPr`: a floating table's position and the distance kept from wrapped text. */
 export interface TableFloatingPosition {
 	/** `w:horzAnchor`: `text` is the text column. */
@@ -56,6 +55,7 @@ export interface TableFloatingPosition {
 	topFromTextTwips?: Twips;
 	bottomFromTextTwips?: Twips;
 }
+/** Row-level properties (`w:trPr`): height, keep-together and repeat-as-header. */
 export interface TableRowProperties {
 	/** The `w:sdt` around this row: saving patches what changed, and wraps or unwraps the row. */
 	contentControl?: import('./content-control-model').ContentControl;
@@ -125,6 +125,8 @@ export interface TableStyleDefinition {
 	isDefault?: boolean;
 	borders?: TableBorders;
 	shadingFill?: string;
+	/** `w:tblPr/w:tblCellMar`: default cell margins of tables with this style. */
+	cellMargins?: TableCellMargins;
 	conditional: Partial<Record<TableConditionalRegion, TableStyleConditionalFormatting>>;
 }
 /** Parsed `styles.xml` table styles; conditional formatting resolves for rendering only. */

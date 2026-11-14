@@ -218,6 +218,38 @@
         2723
       ]
     },
+    "style-none": {
+      "mode": 15,
+      "grid": [
+        153,
+        1473,
+        417
+      ]
+    },
+    "style-default": {
+      "mode": 15,
+      "grid": [
+        233,
+        1553,
+        497
+      ]
+    },
+    "style-chain": {
+      "mode": 15,
+      "grid": [
+        633,
+        1953,
+        897
+      ]
+    },
+    "style-own": {
+      "mode": 15,
+      "grid": [
+        453,
+        1773,
+        717
+      ]
+    },
     "interpolate-mode14": {
       "mode": 14,
       "grid": [
