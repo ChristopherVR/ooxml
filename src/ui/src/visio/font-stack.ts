@@ -21,6 +21,16 @@ export function visioFontStack(family: string): string {
 	return stack;
 }
 
+/**
+ * The renderer paints a drawing family as its substitute list; the PDF keeps choosing its
+ * standard or supplied font by the drawing's own family, as before that list existed. Any other
+ * list (a converted metafile's) is read as written.
+ */
+export function drawingFontFamily(value: string): string {
+	const primary = primaryFontFamily(value);
+	return visioFontStack(primary) === value ? primary : value;
+}
+
 /** The first family of a CSS `font-family` list, unquoted (the drawing's own family). */
 export function primaryFontFamily(value: string): string {
 	const trimmed = value.trim();

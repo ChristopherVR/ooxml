@@ -1,0 +1,202 @@
+/**
+ * Paint a slide display list (`pdf-vector-display-list.ts`) onto one PDF page of the shared
+ * vector writer: paths, gradient shadings, pictures, inline SVG through the shared converter,
+ * and text as real PDF text. Text uses a supplied (embedded, subset) font of the run's family
+ * when there is one, else a standard PDF font; each fragment is scaled horizontally to its
+ * measured width, so positions follow the slide even where the glyph shapes differ. Pure.
+ */
+import type { PdfEmbeddedFont, PdfFontSet } from '../../export/pdf-embedded-font';
+import { encodeWinAnsi, pdfBaseFont, pdfTextWidth } from '../../export/pdf-fonts';
+import { pathOperators, parsePath } from '../../export/pdf-path';
+import { drawSvgSubtree } from '../../export/pdf-svg';
+import { PdfVectorPage } from '../../export/pdf-vector';
+import type { DisplayItem, PdfClip, TextItem } from './pdf-vector-display-list';
+
+/** How one run of text is written. */
+export type PdfTextFont =
+	| { kind: 'embedded'; font: PdfEmbeddedFont; named: boolean }
+	| { kind: 'standard'; baseFont: string; encoded: string };
+
+/** The first family of a CSS `font-family` list, unquoted. */
+export function primaryFamily(family: string): string {
+	const first = family.split(',')[0] ?? '';
+	return first.trim().replace(/^['"]|['"]$/g, '');
+}
+
+/**
+ * The font a run is written in: a supplied font of the run's family, else a standard font when
+ * the text is WinAnsi, else any supplied font that has every character; `undefined` when none.
+ */
+export function resolvePdfTextFont(
+	text: string,
+	family: string,
+	bold: boolean,
+	italic: boolean,
+	fonts?: PdfFontSet,
+): PdfTextFont | undefined {
+	if (fonts?.has(family)) {
+		const font = fonts.pick(family, bold, italic, text);
+		if (font) return { kind: 'embedded', font, named: true };
+	}
+	const encoded = encodeWinAnsi(text);
+	if (encoded !== undefined)
+		return { kind: 'standard', baseFont: pdfBaseFont(family, bold, italic), encoded };
+	const fallback = fonts?.pick(family, bold, italic, text);
+	return fallback ? { kind: 'embedded', font: fallback, named: false } : undefined;
+}
+
+export interface PaintSlideOptions {
+	/** The stage size in CSS px. */
+	canvasWidth: number;
+	canvasHeight: number;
+	/** The page size in points. */
+	pageWidth: number;
+	pageHeight: number;
+	fonts?: PdfFontSet;
+}
+
+export interface PaintedSlide {
+	page: PdfVectorPage;
+	diagnostics: string[];
+}
+
+/** Concatenate the clip's path in its own space and intersect the clip with it. */
+function clipTo(page: PdfVectorPage, clip: PdfClip): void {
+	const segments = parsePath(clip.d);
+	if (!segments) return;
+	const [a, b, c, d, e, f] = clip.matrix;
+	const det = a * d - b * c;
+	if (!segments.length || Math.abs(det) < 1e-12) {
+		// An empty or degenerate clip shows nothing.
+		page.rect(0, 0, 0, 0);
+		page.op('W n');
+		return;
+	}
+	page.concat(clip.matrix);
+	for (const operator of pathOperators(segments)) page.op(operator);
+	page.op(clip.evenOdd ? 'W* n' : 'W n');
+	// Undo the clip's matrix so the item's own matrix applies from stage space.
+	page.concat([d / det, -b / det, -c / det, a / det, (c * f - d * e) / det, (b * e - a * f) / det]);
+}
+
+function paintText(
+	page: PdfVectorPage,
+	item: TextItem,
+	fonts: PdfFontSet | undefined,
+	notes: Set<string>,
+): void {
+	const font = resolvePdfTextFont(item.text, item.family, item.bold, item.italic, fonts);
+	if (!font) {
+		notes.add('Some text uses characters no available font has, so it is not searchable.');
+		return;
+	}
+	const family = primaryFamily(item.family) || 'the default font';
+	if (font.kind === 'standard' && !item.invisible)
+		notes.add(
+			`Text in "${family}" uses a standard PDF font (${font.baseFont}) because the font file is not available to embed; positions match the slide, letter shapes differ.`,
+		);
+	else if (font.kind === 'embedded' && !font.named && !item.invisible)
+		notes.add(`Text in "${family}" uses the embedded font "${font.font.family}" instead.`);
+	const natural =
+		(font.kind === 'embedded'
+			? font.font.width(item.text)
+			: pdfTextWidth(font.encoded, font.baseFont)) * item.size;
+	const scale =
+		natural > 0 && item.width > 0 ? Math.min(400, Math.max(25, (item.width / natural) * 100)) : 100;
+	const spacing = { scale, ...(item.invisible ? { invisible: true } : {}) };
+	page.fillColor(item.color.r, item.color.g, item.color.b);
+	const alpha = item.alpha * item.color.a;
+	if (alpha < 1) page.alpha(alpha);
+	if (font.kind === 'embedded')
+		page.embeddedText(font.font, item.size, item.x, item.baseline, item.text, spacing);
+	else page.text(font.baseFont, item.size, item.x, item.baseline, font.encoded, spacing);
+	if (item.invisible) return;
+	const thickness = Math.max(0.5, item.size * 0.06);
+	if (item.underline) {
+		page.rect(item.x, item.baseline + item.size * 0.12, item.width, thickness);
+		page.op('f');
+	}
+	if (item.strike) {
+		page.rect(item.x, item.baseline - item.size * 0.3, item.width, thickness);
+		page.op('f');
+	}
+}
+
+function paintItem(
+	page: PdfVectorPage,
+	item: DisplayItem,
+	fonts: PdfFontSet | undefined,
+	notes: Set<string>,
+): void {
+	page.save();
+	for (const clip of item.clips) clipTo(page, clip);
+	page.concat(item.matrix);
+	switch (item.kind) {
+		case 'path': {
+			const segments = parsePath(item.d);
+			if (!segments?.length) break;
+			const evenOdd = item.evenOdd ? '*' : '';
+			if (item.shading) {
+				page.save();
+				const alpha = item.alpha * item.shading.opacity;
+				if (alpha < 1) page.alpha(alpha, 1);
+				for (const operator of pathOperators(segments)) page.op(operator);
+				page.op(`W${evenOdd} n`);
+				for (const matrix of item.shading.matrices) page.concat(matrix);
+				page.paintShading(item.shading.shading);
+				page.restore();
+			}
+			const fill = item.fill && item.fill.a > 0 ? item.fill : undefined;
+			const stroke = item.stroke && item.stroke.color.a > 0 && item.stroke.width > 0;
+			if (!fill && !stroke) break;
+			const fillAlpha = fill ? item.alpha * fill.a : 1;
+			const strokeAlpha = item.stroke ? item.alpha * item.stroke.color.a : 1;
+			if (fillAlpha < 1 || strokeAlpha < 1) page.alpha(fillAlpha, strokeAlpha);
+			if (fill) page.fillColor(fill.r, fill.g, fill.b);
+			if (stroke && item.stroke) {
+				const s = item.stroke;
+				page.strokeColor(s.color.r, s.color.g, s.color.b);
+				page.lineStyle(s.width, s.cap, s.join, s.dash);
+			}
+			for (const operator of pathOperators(segments)) page.op(operator);
+			page.op(fill && stroke ? `B${evenOdd}` : fill ? `f${evenOdd}` : 'S');
+			break;
+		}
+		case 'image':
+			if (!(item.width > 0 && item.height > 0)) break;
+			if (item.alpha < 1) page.alpha(item.alpha);
+			page.concat([item.width, 0, 0, -item.height, item.x, item.y + item.height]);
+			page.drawImage(item.image);
+			break;
+		case 'text':
+			paintText(page, item, fonts, notes);
+			break;
+		case 'svg':
+			try {
+				for (const note of drawSvgSubtree(page, item.svg, item.images, fonts, item.alpha))
+					notes.add(note);
+			} catch {
+				notes.add('Part of a drawing could not be written as vector graphics and is left out.');
+			}
+			break;
+	}
+	page.restore();
+}
+
+/** Paint `items` in order on a new page; the diagnostics say what was approximated. */
+export function paintSlide(
+	items: readonly DisplayItem[],
+	options: PaintSlideOptions,
+): PaintedSlide {
+	const page = new PdfVectorPage(options.pageWidth, options.pageHeight);
+	const notes = new Set<string>();
+	// Stage px, y down, to PDF points, origin bottom left.
+	const sx = options.pageWidth / options.canvasWidth;
+	const sy = options.pageHeight / options.canvasHeight;
+	page.concat([sx, 0, 0, -sy, 0, options.pageHeight]);
+	// The stage clips everything to the slide.
+	page.rect(0, 0, options.canvasWidth, options.canvasHeight);
+	page.op('W n');
+	for (const item of items) paintItem(page, item, options.fonts, notes);
+	return { page, diagnostics: [...notes] };
+}

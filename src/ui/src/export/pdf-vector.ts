@@ -34,6 +34,27 @@ const num = (value: number): string => {
 	return text.includes('.') ? text.replace(/\.?0+$/, '') || '0' : text;
 };
 
+/** Spacing and text state for one run of text. */
+export interface PdfTextSpacing {
+	/** Extra space after each space character, in text space units. */
+	word?: number;
+	/** Extra space after each character, in text space units. */
+	character?: number;
+	/** Horizontal scaling in percent (`Tz`), so a run can be fitted to a measured width. */
+	scale?: number;
+	/** Invisible text (render mode 3): selectable and searchable over a picture of it. */
+	invisible?: boolean;
+}
+
+/** The `Tz` and `Tr` operators a run needs, with a leading space; empty for the defaults. */
+const textState = (spacing: PdfTextSpacing): string =>
+	`${scaled(spacing) ? ` ${num(spacing.scale!)} Tz` : ''}${spacing.invisible ? ' 3 Tr' : ''}`;
+const scaled = (spacing: PdfTextSpacing): boolean =>
+	spacing.scale !== undefined && Math.abs(spacing.scale - 100) > 1e-6;
+/** Text state outlives `ET`, so a run that changed it puts the defaults back. */
+const textReset = (spacing: PdfTextSpacing): string =>
+	`${scaled(spacing) ? ' 100 Tz' : ''}${spacing.invisible ? ' 0 Tr' : ''}`;
+
 /** One page under construction: append operators, then hand it to `buildVectorPdf`. */
 export class PdfVectorPage {
 	readonly #ops: string[] = [];
@@ -103,12 +124,12 @@ export class PdfVectorPage {
 		x: number,
 		y: number,
 		text: string,
-		spacing: { word?: number; character?: number } = {},
+		spacing: PdfTextSpacing = {},
 	): void {
 		this.op(
 			`BT /${this.font(baseFont)} ${num(size)} Tf 1 0 0 -1 ${num(x)} ${num(y)} Tm ${num(
 				spacing.character ?? 0,
-			)} Tc ${num(spacing.word ?? 0)} Tw ${pdfLiteral(text)} Tj ET`,
+			)} Tc ${num(spacing.word ?? 0)} Tw${textState(spacing)} ${pdfLiteral(text)} Tj ET${textReset(spacing)}`,
 		);
 	}
 	/**
@@ -121,7 +142,7 @@ export class PdfVectorPage {
 		x: number,
 		y: number,
 		text: string,
-		spacing: { word?: number; character?: number } = {},
+		spacing: PdfTextSpacing = {},
 	): void {
 		let name = [...this.embeddedFonts].find(([, existing]) => existing === font)?.[0];
 		if (!name) {
@@ -138,7 +159,7 @@ export class PdfVectorPage {
 		this.op(
 			`BT /${name} ${num(size)} Tf 1 0 0 -1 ${num(x)} ${num(y)} Tm ${num(
 				spacing.character ?? 0,
-			)} Tc [${parts.join(' ')}] TJ ET`,
+			)} Tc${textState(spacing)} [${parts.join(' ')}] TJ ET${textReset(spacing)}`,
 		);
 	}
 	/** Paint a gradient over the current clip, in the current space. */
