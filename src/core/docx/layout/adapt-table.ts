@@ -12,6 +12,7 @@ import {
 } from '../index';
 import { expectDefined } from '../expect-defined';
 import { autofitOverhangsCellMargins, compatibilityProfile } from '../compatibility';
+import { floatingFrame } from './adapt-table-floating';
 import { cellSourceBlocks } from '../cell-blocks';
 import type {
 	LayoutBorder,
@@ -129,6 +130,7 @@ export function adaptTable(
 					},
 				}
 			: {}),
+		...(table.floating && !_nested ? { floating: floatingFrame(table.floating) } : {}),
 		rows: table.rows.map((row, rowIndex) => ({
 			...rowLayout(table.rowProperties?.[rowIndex]),
 			cells: row.map((cell, cellIndex): LayoutTableCell => {

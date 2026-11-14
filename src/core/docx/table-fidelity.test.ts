@@ -49,6 +49,27 @@ describe('table grid, merge, border, shading and style fidelity', () => {
 		expect(fixed.table.layout).toBe('fixed');
 	});
 
+	it('reads a floating table position (w:tblpPr) and keeps it on save', async () => {
+		const tblpPr =
+			'<w:tblpPr w:leftFromText="180" w:rightFromText="181" w:topFromText="10" w:bottomFromText="20" w:vertAnchor="page" w:horzAnchor="margin" w:tblpXSpec="right" w:tblpX="-50" w:tblpY="2880" w:tblpYSpec="bogus"/>';
+		const xml = `<w:document xmlns:w="${ns}"><w:body><w:tbl><w:tblPr>${tblpPr}<w:tblW w:w="0" w:type="auto"/></w:tblPr><w:tr><w:tc><w:p><w:r><w:t>A</w:t></w:r></w:p></w:tc></w:tr></w:tbl><w:sectPr/></w:body></w:document>`;
+		const { table, loaded } = await loadTable(xml);
+		expect(table.floating).toEqual({
+			horizontalAnchor: 'margin',
+			verticalAnchor: 'page',
+			xTwips: -50,
+			yTwips: 2880,
+			xAlign: 'right',
+			leftFromTextTwips: 180,
+			rightFromTextTwips: 181,
+			topFromTextTwips: 10,
+			bottomFromTextTwips: 20,
+		});
+		table.rows[0]![0]!.paragraphs[0]!.runs[0]!.text = 'Changed';
+		const output = await JSZip.loadAsync(await loaded.save());
+		expect(await output.file('word/document.xml')!.async('string')).toContain(tblpPr);
+	});
+
 	it('parses grid widths, table width/alignment/indent, borders and tblLook', async () => {
 		const { table } = await loadTable();
 		expect(table.grid).toEqual([1000, 2000]);

@@ -39,6 +39,23 @@ export interface TableCellMargins {
 	right?: SignedTwips;
 }
 /** Row-level properties (`w:trPr`): height, keep-together and repeat-as-header. */
+/** `w:tblPr/w:tblpPr`: a floating table's position and the distance kept from wrapped text. */
+export interface TableFloatingPosition {
+	/** `w:horzAnchor`: `text` is the text column. */
+	horizontalAnchor?: 'margin' | 'page' | 'text';
+	/** `w:vertAnchor`: `text` is the paragraph that follows the table. */
+	verticalAnchor?: 'margin' | 'page' | 'text';
+	/** `w:tblpX`/`w:tblpY`: offsets from the anchor; `w:tblpXSpec`/`w:tblpYSpec` win over them. */
+	xTwips?: SignedTwips;
+	yTwips?: SignedTwips;
+	xAlign?: 'left' | 'center' | 'right' | 'inside' | 'outside';
+	yAlign?: 'top' | 'center' | 'bottom' | 'inside' | 'outside' | 'inline';
+	/** `w:leftFromText`, `w:rightFromText`, `w:topFromText`, `w:bottomFromText`. */
+	leftFromTextTwips?: Twips;
+	rightFromTextTwips?: Twips;
+	topFromTextTwips?: Twips;
+	bottomFromTextTwips?: Twips;
+}
 export interface TableRowProperties {
 	/** The `w:sdt` around this row: saving patches what changed, and wraps or unwraps the row. */
 	contentControl?: import('./content-control-model').ContentControl;

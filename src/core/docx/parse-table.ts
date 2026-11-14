@@ -23,6 +23,7 @@ import {
 } from './simple-types';
 import type { Twips } from './units';
 import { parseShadingFill, parseShadingThemeFill, parseTableBorders } from './table-borders';
+import { parseTableFloating } from './parse-table-floating';
 
 const dxa = parseTwips;
 
@@ -207,6 +208,8 @@ export function parseTable(
 	const percent = percentWidth(tableWidth);
 	if (percent !== undefined) table.widthPercent = percent;
 	table.layout = getW(first(tblPr, 'tblLayout'), 'type') === 'fixed' ? 'fixed' : 'autofit';
+	const floating = parseTableFloating(first(tblPr, 'tblpPr'));
+	if (floating) table.floating = floating;
 	const justification = enumValue(isStJcTable, getW(first(tblPr, 'jc'), 'val'), 'w:tblPr/w:jc');
 	if (justification) {
 		table.justification = justification;

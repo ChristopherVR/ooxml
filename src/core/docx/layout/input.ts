@@ -231,6 +231,21 @@ export interface LayoutTable {
 	 * content when it is placed (table-autofit.ts), replacing the grid widths above.
 	 */
 	autofit?: LayoutTableAutofit;
+	/** `w:tblpPr`: the table is placed out of the text flow and text wraps around it. */
+	floating?: LayoutTableFloating;
+}
+
+/** A floating table's frame, in the terms floating pictures use (floats.ts). */
+export interface LayoutTableFloating {
+	relativeFromH: 'page' | 'margin' | 'column';
+	alignH?: 'left' | 'center' | 'right' | 'inside' | 'outside';
+	offsetXPx: number;
+	/** `paragraph` is the paragraph that follows the table, where the table sits in the flow. */
+	relativeFromV: 'page' | 'margin' | 'paragraph';
+	alignV?: 'top' | 'center' | 'bottom' | 'inside' | 'outside';
+	offsetYPx: number;
+	/** Distance kept between the table and the text wrapped around it. */
+	distance: { topPx: number; rightPx: number; bottomPx: number; leftPx: number };
 }
 
 export interface LayoutTableAutofit {

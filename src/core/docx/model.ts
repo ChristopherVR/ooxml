@@ -91,6 +91,8 @@ export interface Table {
 	 * sizes the columns from their content. Set by the parser; tables the editor creates have none.
 	 */
 	layout?: 'fixed' | 'autofit';
+	/** `w:tblpPr`: the table floats at this position and text wraps around it (read-only). */
+	floating?: import('./table-model').TableFloatingPosition;
 	alignment?: 'left' | 'center' | 'right';
 	/** The exact `w:tblPr/w:jc` value (`ST_JcTable`, including `start`/`end`); `alignment` is derived from it. */
 	justification?: StJcTable;

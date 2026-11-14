@@ -12,9 +12,13 @@ import { reviewDocumentFormatting, reviewFormattingWarnings } from '../review-do
 /** Paginates an engine-native `LayoutDocumentInput` (bypasses the DocumentModel adapter). */
 export function layoutDocument(input: LayoutDocumentInput, measurer: TextMeasurer): LayoutResult {
 	let result = layoutSections(input, measurer);
-	if (!positionFloats(input, result.pages)) return result;
-	// Wrapped pictures take room from the text, which can move the pictures' anchors: lay out
-	// again around them until their positions settle (usually one extra pass).
+	const pictures = positionFloats(input, result.pages);
+	const tables = input.sections.some((section) =>
+		section.blocks.some((block) => block.kind === 'table' && block.floating),
+	);
+	if (!pictures && !tables) return result;
+	// Wrapped pictures and floating tables take room from the text, which can move their anchors:
+	// lay out again around them until their positions settle (usually one extra pass).
 	let exclusions = wrapExclusions(result.pages);
 	for (let pass = 0; exclusions.size && pass < 3; pass++) {
 		result = layoutSections(input, measurer, exclusions);
@@ -23,7 +27,8 @@ export function layoutDocument(input: LayoutDocumentInput, measurer: TextMeasure
 		if (sameExclusions(next, exclusions)) break;
 		exclusions = next;
 	}
-	return { ...result, approximations: [...new Set([...result.approximations, FLOAT_WRAP_NOTE])] };
+	const notes = pictures ? [...result.approximations, FLOAT_WRAP_NOTE] : result.approximations;
+	return { ...result, approximations: [...new Set(notes)] };
 }
 
 /** Paginates a `docx-core` `DocumentModel` directly: `adaptDocumentModel` + `layoutDocument`. */

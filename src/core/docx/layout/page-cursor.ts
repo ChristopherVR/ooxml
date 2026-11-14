@@ -5,6 +5,7 @@ import { FootnoteFlow } from './footnote-flow';
 import { LegacyFootnoteFlow } from './legacy-footnote-flow';
 export { FOOTNOTE_SEPARATOR_PX } from './footnote-flow';
 import type { LayoutBlockBox, LayoutColumnBox, LayoutFootnoteBox, LayoutPageBox } from './result';
+import { inFlow } from './result';
 
 /**
  * Mutable fill-position bookkeeping for one section: which page/column is
@@ -119,9 +120,9 @@ export class PageCursor {
 	/** Reject trials that overflow an earlier column, including a kept table row. */
 	get columnContentFits(): boolean {
 		return this.activeColumns.every((column) =>
-			column.blocks.every(
-				(block) => block.yPx + block.heightPx <= this.columnTopPx + this.columnHeightPx,
-			),
+			column.blocks
+				.filter(inFlow)
+				.every((block) => block.yPx + block.heightPx <= this.columnTopPx + this.columnHeightPx),
 		);
 	}
 	endBalance(): void {
@@ -186,7 +187,7 @@ export class PageCursor {
 		const bottom = Math.max(
 			this.yPx,
 			...this.activeColumns.flatMap((column) =>
-				column.blocks.map((block) => block.yPx + block.heightPx),
+				column.blocks.filter(inFlow).map((block) => block.yPx + block.heightPx),
 			),
 		);
 		for (const column of this.activeColumns) {
@@ -243,7 +244,9 @@ export class PageCursor {
 						...this.activeColumns
 							.slice(0, this.columnIndex)
 							.flatMap((column) =>
-								column.blocks.map((block) => block.yPx + block.heightPx - this.columnTopPx),
+								column.blocks
+									.filter(inFlow)
+									.map((block) => block.yPx + block.heightPx - this.columnTopPx),
 							),
 					),
 				))
@@ -287,7 +290,7 @@ export class PageCursor {
 			: Math.max(
 					this.yPx,
 					...this.activeColumns.flatMap((column) =>
-						column.blocks.map((block) => block.yPx + block.heightPx),
+						column.blocks.filter(inFlow).map((block) => block.yPx + block.heightPx),
 					),
 				);
 		this.footnotes.commit(

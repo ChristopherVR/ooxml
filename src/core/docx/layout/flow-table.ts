@@ -10,6 +10,7 @@ import type { PageCursor } from './page-cursor';
 import { MergedRowPlan } from './table-merged-rows';
 import { splitRowAtHeight, type RowLayout } from './table-layout';
 import { resolveTableAutofit } from './table-autofit';
+import { placeFloatingTable } from './flow-floating-table';
 import type { TextMeasurer } from './measure';
 import type { LayoutTable, LayoutTableRow } from './input';
 import type { LayoutTableBox, LayoutTableRowBox } from './result';
@@ -30,6 +31,11 @@ export function placeTable(
 ): void {
 	// AutoFit columns are sized for the text column the table starts in.
 	const table = resolveTableAutofit(source, cursor.columnWidthPx, measurer, note);
+	if (
+		table.floating &&
+		placeFloatingTable(cursor, { ...table, floating: table.floating }, measurer, note)
+	)
+		return;
 	// Word only repeats the contiguous header group starting at the first row.
 	// A tblHeader flag after the first body row is ignored (ECMA-376 17.4.50).
 	const firstBodyRow = table.rows.findIndex((row) => !row.isHeader);

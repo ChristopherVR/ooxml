@@ -250,7 +250,8 @@ export class SectionFlow {
 	private requiredKeepHeight(index: number, depth = 0): number {
 		if (index >= this.blocks.length || depth > 64) return 0;
 		const block = expectDefined(this.blocks[index], 'keep-chain block index');
-		if (block.kind === 'table') return this.firstRowHeight(index);
+		// A floating table takes no room from the flow.
+		if (block.kind === 'table') return block.floating ? 0 : this.firstRowHeight(index);
 		const layout = this.paragraphLayout(index);
 		const before = this.spacingBeforeFor(index);
 		const own =
