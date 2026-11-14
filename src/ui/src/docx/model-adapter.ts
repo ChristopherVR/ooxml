@@ -18,6 +18,7 @@ import { schema } from './schema';
 import {
 	paragraphAttrs,
 	paragraphFromAttrs,
+	PARAGRAPH_EAST_ASIAN_KEYS,
 	PARAGRAPH_KEEP_KEYS as KEEP_KEYS,
 } from 'ooxml-core/docx/ui';
 import { sameJson, sameRuns } from 'ooxml-core/docx/ui';
@@ -220,7 +221,9 @@ export function docToModel(
 			(previous.numbering ? previous.numbering.level : null) === (node.attrs.ilvl ?? null) &&
 			(previous.pageBreakBefore ?? null) === node.attrs.pageBreakBefore &&
 			sameJson(previous.tabStops ?? null, node.attrs.tabStops ?? null) &&
-			KEEP_KEYS.every((key) => (previous[key] ?? null) === (node.attrs[key] ?? null)) &&
+			[...KEEP_KEYS, ...PARAGRAPH_EAST_ASIAN_KEYS].every(
+				(key) => (previous[key] ?? null) === (node.attrs[key] ?? null),
+			) &&
 			sameJson(previous.dropCap ?? null, node.attrs.dropCap ?? null) &&
 			sameJson(previous.borders ?? null, node.attrs.borders ?? null) &&
 			(previous.shadingFill ?? null) === (node.attrs.shadingFill ?? null) &&

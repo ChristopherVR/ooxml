@@ -1,6 +1,7 @@
 import type { Attrs } from 'prosemirror-model';
 import type { Paragraph, TextRun } from '../model';
 import { paragraphTwipsFromAttrs } from '../attr-units';
+import { EAST_ASIAN_TYPOGRAPHY_KEYS } from '../paragraph-styles';
 
 /** Paragraph pagination toggles carried through the editor as node attributes. */
 export const PARAGRAPH_KEEP_KEYS = [
@@ -10,6 +11,13 @@ export const PARAGRAPH_KEEP_KEYS = [
 	'contextualSpacing',
 	'suppressLineNumbers',
 ] as const;
+
+/**
+ * East Asian typography toggles (`w:kinsoku`, `w:autoSpaceDE`, `w:autoSpaceDN`,
+ * `w:overflowPunct`) carried through the editor so layout keeps them after an edit. They are read
+ * only: null means the paragraph has no such element, and saving never adds one.
+ */
+export const PARAGRAPH_EAST_ASIAN_KEYS = EAST_ASIAN_TYPOGRAPHY_KEYS;
 
 /** Shared conversion for caller-provided paragraph schemas and inline run adapters. */
 export function paragraphFromAttrs(attrs: Attrs, id: string, runs: TextRun[]): Paragraph {
@@ -36,7 +44,9 @@ export function paragraphFromAttrs(attrs: Attrs, id: string, runs: TextRun[]): P
 		...(attrs.pageBreakBefore != null ? { pageBreakBefore: Boolean(attrs.pageBreakBefore) } : {}),
 		...(attrs.tabStops?.length ? { tabStops: structuredClone(attrs.tabStops) } : {}),
 		...Object.fromEntries(
-			PARAGRAPH_KEEP_KEYS.filter((key) => attrs[key] != null).map((key) => [key, attrs[key]]),
+			[...PARAGRAPH_KEEP_KEYS, ...PARAGRAPH_EAST_ASIAN_KEYS]
+				.filter((key) => attrs[key] != null)
+				.map((key) => [key, Boolean(attrs[key])]),
 		),
 		...(attrs.dropCap ? { dropCap: { ...attrs.dropCap } } : {}),
 		...(attrs.borders ? { borders: structuredClone(attrs.borders) } : {}),
@@ -79,6 +89,10 @@ export function paragraphAttrs(paragraph: Paragraph): Attrs {
 		widowControl: paragraph.widowControl ?? null,
 		contextualSpacing: paragraph.contextualSpacing ?? null,
 		suppressLineNumbers: paragraph.suppressLineNumbers ?? null,
+		kinsoku: paragraph.kinsoku ?? null,
+		autoSpaceDE: paragraph.autoSpaceDE ?? null,
+		autoSpaceDN: paragraph.autoSpaceDN ?? null,
+		overflowPunct: paragraph.overflowPunct ?? null,
 		dropCap: paragraph.dropCap ?? null,
 		borders: paragraph.borders ?? null,
 		shadingFill: paragraph.shadingFill ?? null,

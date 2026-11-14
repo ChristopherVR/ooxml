@@ -161,6 +161,11 @@ export const schema = new Schema({
 				widowControl: { default: null },
 				contextualSpacing: { default: null },
 				suppressLineNumbers: { default: null },
+				/** East Asian typography toggles (`w:kinsoku`...): true, false or null = no element; read-only. */
+				kinsoku: { default: null },
+				autoSpaceDE: { default: null },
+				autoSpaceDN: { default: null },
+				overflowPunct: { default: null },
 				/** `w:framePr` drop cap: `{ style, lines }` on the frame paragraph holding the initial. */
 				dropCap: { default: null },
 				/** `w:pBdr` (object) and shading fill; read-only, drawn around the paragraph. */
