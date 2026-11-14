@@ -23,6 +23,11 @@ const FILL_IDS = ['shapeFill', 'shapeOutline', 'shapeEffects'].map(
 	(id) => `[data-ribbon-control="home.drawing.${id}"]`,
 );
 const FILL_OUTLINE = [...FILL_IDS, ...FILL_IDS.map((id) => `${id} > button`)].join(', ');
+/** The repeated hook outranks the collapsed-popup rule's `display: flex !important`. */
+const DRAWING_POPUP_ROW =
+	'[data-pptx-chrome="drawing-controls"][data-pptx-chrome][data-pptx-chrome][data-pptx-chrome]';
+/** The Drawing commands that span all three rows of the group. */
+const DRAWING_TALL = `:is(${['shapes', 'arrange', 'quickStyles'].map((id) => `[data-ribbon-control="home.drawing.${id}"]`).join(', ')})`;
 
 export const EDITOR_HOME_LAYOUT_CSS = `
 @media (min-width: 768px) {
@@ -103,9 +108,17 @@ export const EDITOR_HOME_LAYOUT_CSS = `
   ${R} [data-ribbon-group="home.clipboard"] [data-stack] { gap: 0; }
   ${R} [data-ribbon-group="home.clipboard"] [data-stack] > button { height: 22px; min-height: 22px; justify-content: flex-start; }
 
-  /* Drawing: Shapes, Arrange and Quick Styles stand tall; Fill, Outline and Effects stack beside them. */
+  /* Drawing: Shapes, Arrange and Quick Styles stand tall; Fill, Outline and Effects stack beside them.
+     A grid, not a wrapping flex column: Safari and Firefox size a column-wrap flex container as
+     one column wide, so the wrapped Fill column spilled over the Editing group there. */
   ${R} [data-ribbon-group="home.drawing"] [data-pptx-chrome="drawing-controls"] {
-    flex-direction: column; flex-wrap: wrap; align-content: flex-start; align-items: stretch; gap: 0 2px; height: 66px; max-height: 66px;
+    display: grid; grid-auto-flow: column; grid-template-rows: repeat(3, 22px); grid-auto-columns: max-content;
+    justify-content: start; align-content: start; align-items: stretch; gap: 0 2px; height: 66px; max-height: 66px;
+  }
+  ${R} [data-pptx-chrome="drawing-controls"] ${DRAWING_TALL} { grid-row: 1 / -1; }
+  /* A collapsed Drawing group's popup keeps the grid (the popup rule forces flex with !important). */
+  ${R} [data-ribbon-group="home.drawing"][data-collapsed][data-open]:not(pptx-ui-ribbon-group) > ${DRAWING_POPUP_ROW} {
+    display: grid !important; height: auto; max-height: none;
   }
   ${R} [data-pptx-chrome="drawing-controls"] [data-pptx-chrome="ribbon-inline-label"] { display: none; }
   ${R} [data-pptx-chrome="drawing-controls"] [data-ribbon-control="home.drawing.shapes"] { order: 1; }

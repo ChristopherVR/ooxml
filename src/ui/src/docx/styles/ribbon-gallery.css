@@ -66,14 +66,25 @@
 	width: 400px;
 }
 
-/* Language: labelled controls flow in short columns instead of one tall stack. */
+/* Language: labelled controls flow in short columns instead of one tall stack. A grid, not a
+   wrapping flex column: Safari and Firefox size a column-wrap flex container as one column wide,
+   which clipped every column after the first there. The direction pickers and the note share a
+   column; each labelled language field takes a column of its own. */
 .ribbon-group[data-label='Language'] {
 	flex: 0 0 auto;
-	flex-direction: column;
-	flex-wrap: wrap;
 	align-content: flex-start;
 	max-height: 86px;
 	max-width: none;
 	column-gap: 12px;
 	overflow: hidden;
+}
+.ribbon-group[data-label='Language']:not([data-collapsed]) {
+	display: grid;
+	grid-auto-flow: column;
+	grid-template-rows: auto auto;
+	grid-auto-columns: max-content;
+	justify-content: start;
+}
+.ribbon-group[data-label='Language']:not([data-collapsed]) > .multilingual-language-control {
+	grid-row: span 2;
 }

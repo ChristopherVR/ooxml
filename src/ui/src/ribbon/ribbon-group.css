@@ -35,12 +35,16 @@
 :host([data-compact-row]) .row {
 	align-items: center;
 }
-/* Several small drop-down galleries stack in columns of three. */
+/* Several small drop-down galleries stack in columns of three. A grid, not a wrapping flex column:
+   Safari and Firefox size a column-wrap flex container as one column wide, so the later columns
+   spilled over the next group there. */
 :host([data-stack]) .row {
-	flex-direction: column;
-	align-items: stretch;
-	align-content: flex-start;
-	flex-wrap: wrap;
+	display: grid;
+	grid-auto-flow: column;
+	grid-template-rows: repeat(3, max-content);
+	grid-auto-columns: max-content;
+	align-content: start;
+	justify-content: start;
 	max-height: var(--office-ribbon-stack-max-height);
 	gap: var(--office-space-0);
 }

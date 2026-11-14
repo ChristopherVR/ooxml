@@ -219,10 +219,17 @@ test('Home keeps Office rows and flat, dimmed disabled actions', async ({ page }
 						button.getBoundingClientRect().left
 					);
 				})(),
+				// The Shape Fill column must sit inside the Drawing group, not over Editing.
+				fillOverhang: (() => {
+					const group = document.querySelector('[data-ribbon-group="home.drawing"]')!;
+					const fill = document.querySelector('[data-ribbon-control="home.drawing.shapeFill"]')!;
+					return fill.getBoundingClientRect().right - group.getBoundingClientRect().right;
+				})(),
 				rows: ['font-controls', 'drawing-controls', 'arrange-controls'].map((role) => {
 					const row = document.querySelector(`[data-pptx-chrome="${role}"]`)!;
 					return {
 						height: row.getBoundingClientRect().height,
+						display: getComputedStyle(row).display,
 						wrap: getComputedStyle(row).flexWrap,
 					};
 				}),
@@ -236,11 +243,13 @@ test('Home keeps Office rows and flat, dimmed disabled actions', async ({ page }
 		// Large Shapes: the glyph is centred over the caption, so it sits well inside the button.
 		expect(paint.shapesIconLeft).toBeGreaterThan(6);
 		const [font, drawing, arrange] = paint.rows;
-		// Font is two rows, Drawing a 66px column flow, Arrange the viewer's single flat row.
+		// Font is two rows, Drawing a 66px three-row grid (a column-wrap flex row is one column wide
+		// in Safari and Firefox), Arrange the viewer's single flat row.
 		expect(font.wrap, fontFamily).toBe('wrap');
 		expect(font.height, fontFamily).toBeGreaterThanOrEqual(54);
 		expect(drawing.height, fontFamily).toBe(66);
-		expect(drawing.wrap).toBe('wrap');
+		expect(drawing.display).toBe('grid');
+		expect(paint.fillOverhang, fontFamily).toBeLessThanOrEqual(0);
 		expect(arrange.wrap).toBe('nowrap');
 	}
 });
