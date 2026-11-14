@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { openSample, newDocument, saveButton, setReadOnly } from './helpers';
+import {
+	clickInEditor,
+	editorSelectionText,
+	openSample,
+	newDocument,
+	saveButton,
+	setReadOnly,
+} from './helpers';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 
@@ -123,10 +130,7 @@ test('find and replace walk the body, headers, notes and text boxes in story ord
 	});
 	const surface = editor.locator('.dve-paper > .ProseMirror');
 	await expect(surface).toContainText('zq body');
-	await surface
-		.locator('p')
-		.first()
-		.click({ position: { x: 2, y: 4 } });
+	await clickInEditor(surface.locator('p').first(), { position: { x: 2, y: 4 } });
 	await expect(surface).toBeFocused();
 	await page.keyboard.press('Control+Home');
 	await page.keyboard.press('Control+f');
@@ -175,11 +179,11 @@ test('find and replace walk the body, headers, notes and text boxes in story ord
 	await expect(headerEditor).toContainText('X header');
 	await expect(surface).not.toContainText('X');
 
-	await surface
-		.locator('p')
-		.first()
-		.click({ position: { x: 2, y: 4 } });
+	// The click's caret reaches the body through an asynchronous selectionchange that the editor
+	// ignores once Ctrl+F has moved the focus, so wait for it, as a person's pause would.
+	await clickInEditor(surface.locator('p').first(), { position: { x: 2, y: 4 } });
 	await expect(headerEditor).toHaveCount(0);
+	await expect.poll(() => editorSelectionText(editor)).toBe('');
 	await page.keyboard.press('Control+f');
 	await expect(status).toHaveText('3 matches');
 	await editor.getByRole('button', { name: 'Replace all', exact: true }).click();
