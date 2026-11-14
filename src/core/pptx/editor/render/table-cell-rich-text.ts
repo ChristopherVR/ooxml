@@ -78,7 +78,7 @@ function segmentCellRun(segment: TextSegment): PptxTableCellTextRun {
 	const style = segment.style ?? {};
 	for (const key of RUN_STYLE_KEYS) {
 		const value = style[key];
-		if (value !== undefined && value !== false) {
+		if (value !== undefined) {
 			(run as unknown as Record<string, unknown>)[key] = value;
 		}
 	}

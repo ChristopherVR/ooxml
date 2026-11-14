@@ -65,6 +65,8 @@ export interface UseInlineEditingResult {
 	commitInlineEdit: () => void;
 	cancelInlineEdit: () => void;
 	commitTableCell: (elementId: string, rowIndex: number, colIndex: number, text: string) => void;
+	/** The enabled AutoCorrect rules, applied to what was typed since `previous`. */
+	autoCorrect: (text: string, previous?: string) => string;
 }
 
 /**
@@ -307,5 +309,6 @@ export function useInlineEditing(input: UseInlineEditingInput): UseInlineEditing
 		commitInlineEdit,
 		cancelInlineEdit,
 		commitTableCell,
+		autoCorrect,
 	};
 }

@@ -57,7 +57,9 @@ export function createEditCommits(editor: EditorState): EditCommitHandlers {
 			}
 			if (end) {
 				// The rich cell editor: runs, an appended row or a grid paste, as one patch.
-				const next = resolveTableCellEditEnd(table, rowIndex, cellIndex, end).element;
+				const next = resolveTableCellEditEnd(table, rowIndex, cellIndex, end, {
+					transformText: (text, previous) => editor.transformCommittedText(text, previous),
+				}).element;
 				if (next) {
 					editor.applyElementPatch(id, {
 						tableData: next.tableData,

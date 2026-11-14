@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { editSegmentsText, segmentsPlainText } from './segments-text-edit';
 import { cellRunsFromSegments, tableCellSegments, withCellSegments } from './table-cell-rich-text';
+import { withCellTextStyle } from './table-cells-text-style';
 
 const runs: TextSegment[] = [
 	{ text: 'Revenue ', style: { fontSize: 20 }, paragraphProperties: { align: 'center' } },
@@ -86,5 +87,20 @@ describe('table cell rich text', () => {
 		expect(cell.textRuns).toEqual(cellRunsFromSegments(runs));
 		expect(cell.textRuns![0]!.fontSize).toBe(15);
 		expect(cell.paragraphs).toEqual([{ align: 'center' }, {}]);
+	});
+
+	it('keeps a format turned off in an edit, so the cell style cannot paint it back', () => {
+		const cell = withCellSegments({ text: 'x', style: { bold: true } }, [
+			{ text: 'x', style: { bold: false } },
+		]);
+		expect(cell.textRuns).toEqual([{ text: 'x', bold: false }]);
+	});
+
+	it('drops a theme colour reference when a colour is picked for the cells', () => {
+		const cell = withCellTextStyle(
+			{ text: 'x', style: { color: '#000000', colorRef: { scheme: 'accent1' } as never } },
+			{ color: '#FF0000' },
+		);
+		expect(cell.style).toMatchObject({ color: '#FF0000', colorRef: undefined });
 	});
 });

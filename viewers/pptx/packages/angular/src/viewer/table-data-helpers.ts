@@ -149,8 +149,11 @@ export function tableCellEditPatch(
 	rowIndex: number,
 	colIndex: number,
 	end: TableCellEditEnd,
+	transformText?: (text: string, previous?: string) => string,
 ): Partial<TablePptxElement> | undefined {
-	const next = resolveTableCellEditEnd(element, rowIndex, colIndex, end).element;
+	const next = resolveTableCellEditEnd(element, rowIndex, colIndex, end, {
+		...(transformText ? { transformText } : {}),
+	}).element;
 	if (!next) {
 		return undefined;
 	}

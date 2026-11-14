@@ -12,6 +12,10 @@
  */
 import type { PptxTableCell, TablePptxElement, TextSegment } from 'ooxml-core/pptx';
 import { appendTableElementRow } from 'ooxml-core/pptx/editor/render/table-data-grid-ops';
+import {
+	editSegmentsText,
+	segmentsPlainText,
+} from 'ooxml-core/pptx/editor/render/segments-text-edit';
 import { fillTableCells } from 'ooxml-core/pptx/editor/render/table-grid-fill';
 import {
 	setTableElementCellSegments,
@@ -32,6 +36,31 @@ export interface TableCellEditOutcome {
 	select?: { row: number; col: number };
 }
 
+export interface TableCellEditOptions {
+	/**
+	 * The host's committed-text transform (Options > Proofing > AutoCorrect),
+	 * given the edited text and the cell's previous text. Its changes are
+	 * carried onto the runs like any other edit.
+	 */
+	transformText?: (text: string, previous?: string) => string;
+}
+
+/** The edited segments with the committed-text transform applied. */
+function transformedSegments(
+	element: TablePptxElement,
+	row: number,
+	col: number,
+	segments: TextSegment[] | undefined,
+	transform: TableCellEditOptions['transformText'],
+): TextSegment[] | undefined {
+	if (!segments || !transform) {
+		return segments;
+	}
+	const text = segmentsPlainText(segments);
+	const next = transform(text, element.tableData?.rows[row]?.cells[col]?.text);
+	return next === text ? segments : editSegmentsText(segments, next);
+}
+
 /**
  * Resolve the end of an edit of cell `(row, col)` of `element`.
  */
@@ -40,8 +69,10 @@ export function resolveTableCellEditEnd(
 	row: number,
 	col: number,
 	end: TableCellEditEnd,
+	options: TableCellEditOptions = {},
 ): TableCellEditOutcome {
-	let next = end.segments ? setTableElementCellSegments(element, row, col, end.segments) : element;
+	const segments = transformedSegments(element, row, col, end.segments, options.transformText);
+	let next = segments ? setTableElementCellSegments(element, row, col, segments) : element;
 	const outcome: TableCellEditOutcome = {};
 	switch (end.reason) {
 		case 'navigate': {

@@ -58,7 +58,9 @@ export function createTableStructHandlers(input: UseTableOperationsInput): Table
 		if (end) {
 			// The rich cell editor: shared `resolveTableCellEditEnd` decides the
 			// document update (runs, appended row, grid paste) and the next cell.
-			const outcome = resolveTableCellEditEnd(el, rowIndex, colIndex, end);
+			const outcome = resolveTableCellEditEnd(el, rowIndex, colIndex, end, {
+				...(transformCommittedText ? { transformText: transformCommittedText } : {}),
+			});
 			if (outcome.element) {
 				ops.updateElementById(elementId, {
 					tableData: outcome.element.tableData,

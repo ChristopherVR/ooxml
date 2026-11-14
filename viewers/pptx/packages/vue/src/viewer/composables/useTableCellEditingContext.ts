@@ -17,6 +17,8 @@ export interface UseTableCellEditingContextInput {
 	updateElement: (id: string, patch: Partial<PptxElement>) => void;
 	/** Commit a single cell's new text (element-level inline table-cell edit). */
 	commitTableCell: (elementId: string, rowIndex: number, colIndex: number, text: string) => void;
+	/** AutoCorrect for committed cell text (given the cell's previous text). */
+	transformText?: (text: string, previous?: string) => string;
 }
 
 export interface UseTableCellEditingContextResult {
@@ -48,7 +50,9 @@ export function useTableCellEditingContext(
 			if (!canEditInline() || !el || el.type !== 'table') {
 				return undefined;
 			}
-			const outcome = resolveTableCellEditEnd(el, rowIndex, colIndex, end);
+			const outcome = resolveTableCellEditEnd(el, rowIndex, colIndex, end, {
+				...(input.transformText ? { transformText: input.transformText } : {}),
+			});
 			if (outcome.element) {
 				updateElement(elementId, tablePatch(outcome.element));
 			}

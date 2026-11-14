@@ -14,6 +14,9 @@ import type { TablePptxElement } from 'ooxml-core/pptx';
 
 import { resolveTableCellsPaste } from './table-cell-edit-outcome';
 
+/** Where a paste belongs to the focused field, not the selected cells. */
+const EDITABLE = '[data-inline-editor], input, textarea, select, [contenteditable="true"]';
+
 /** The selected table and cells a paste would fill, or `undefined`. */
 export interface TableCellsPasteTarget {
 	element: TablePptxElement;
@@ -31,10 +34,7 @@ export function attachTableCellsPaste(
 ): () => void {
 	const onPaste = (event: ClipboardEvent): void => {
 		const focused = event.target instanceof Element ? event.target : null;
-		if (
-			focused?.closest('[data-inline-editor], input, textarea, [contenteditable="true"]') ||
-			event.defaultPrevented
-		) {
+		if (focused?.closest(EDITABLE) || event.defaultPrevented) {
 			return;
 		}
 		const selected = target();
@@ -50,6 +50,22 @@ export function attachTableCellsPaste(
 		event.stopImmediatePropagation();
 		apply(next);
 	};
+	// With cells selected, Ctrl/Cmd+V pastes into them (PowerPoint): keep the
+	// editor keymap from claiming the chord for its element clipboard, and let
+	// the browser fire the native `paste` this listener reads. Not prevented.
+	const onKeyDown = (event: KeyboardEvent): void => {
+		const command = (event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey;
+		const focused = event.target instanceof Element ? event.target : null;
+		if (!command || event.key.toLowerCase() !== 'v' || focused?.closest(EDITABLE) || !target()) {
+			return;
+		}
+		event.stopImmediatePropagation();
+	};
+	const win = doc.defaultView;
+	win?.addEventListener('keydown', onKeyDown, true);
 	doc.addEventListener('paste', onPaste, true);
-	return () => doc.removeEventListener('paste', onPaste, true);
+	return () => {
+		win?.removeEventListener('keydown', onKeyDown, true);
+		doc.removeEventListener('paste', onPaste, true);
+	};
 }

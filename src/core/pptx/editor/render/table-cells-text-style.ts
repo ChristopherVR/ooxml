@@ -89,7 +89,10 @@ function segmentPatch(update: TableCellTextStyleUpdate): Partial<TextStyle> {
 
 function cellStylePatch(update: TableCellTextStyleUpdate): Partial<PptxTableCellStyle> {
 	const { strikethrough: _strikethrough, ...patch } = update;
-	return patch;
+	// A picked colour replaces a theme colour reference, which would win on save.
+	return 'color' in update && !('colorRef' in update)
+		? { ...patch, colorRef: undefined, colorXml: undefined }
+		: patch;
 }
 
 /** One cell with the formatting applied to its style and every run. */

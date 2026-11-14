@@ -469,6 +469,9 @@ export class ViewerCanvasEditingService {
 				event.commit.rowIndex,
 				event.commit.colIndex,
 				event.commit.end,
+				this.viewerOpts
+					? (text, previous) => this.viewerOpts!.autoCorrect(text, previous)
+					: undefined,
 			);
 			if (patch) {
 				this.editor.updateElement(host.activeSlideIndex(), event.id, patch);

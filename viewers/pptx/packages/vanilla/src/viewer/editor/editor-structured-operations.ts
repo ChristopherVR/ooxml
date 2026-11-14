@@ -85,7 +85,9 @@ export function createStructuredEditorOperations(deps: {
 			}
 			// Shared: commits the runs, appends a row for Tab in the last cell,
 			// fills cells from a pasted grid, and names the next cell.
-			const outcome = resolveTableCellEditEnd(target, row, column, end);
+			const outcome = resolveTableCellEditEnd(target, row, column, end, {
+				...(deps.transformCommittedText ? { transformText: deps.transformCommittedText } : {}),
+			});
 			const next = outcome.element;
 			if (next) {
 				deps.pushHistory();

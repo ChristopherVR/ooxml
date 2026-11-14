@@ -18,8 +18,9 @@ import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
+import { centreOf, selectTableCell } from './support/context-menu';
 import { resetTabSession } from './support/deck';
-import { nextPaint, selectSlide } from './support/render-ready';
+import { nextPaint, selectRibbonTab, selectSlide } from './support/render-ready';
 
 const fixturePath = resolve(
 	fileURLToPath(new URL('./fixtures/table-styling.pptx', import.meta.url)),
@@ -100,5 +101,35 @@ test.describe('rich table cell editing', () => {
 		for (const text of ['P1', 'P2', 'P3', 'P4']) {
 			await expect(cellWithText(page, text)).toBeVisible();
 		}
+	});
+
+	test('Ctrl+V with a cell selected fills cells from it', async ({ page, context }) => {
+		await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+		await loadDeck(page);
+		await page.evaluate(() => navigator.clipboard.writeText('V1\tV2\r\nV3\tV4\r\n'));
+		await selectTableCell(page, slideTable(page).locator('td').first());
+		await page.keyboard.press('Control+V');
+		for (const text of ['V1', 'V2', 'V3', 'V4']) {
+			await expect(cellWithText(page, text)).toBeVisible();
+		}
+	});
+
+	test('Bold with a cell range selected bolds every selected cell', async ({ page }) => {
+		await loadDeck(page);
+		const cells = slideTable(page).locator('tr').first().locator('td');
+		await selectTableCell(page, cells.nth(0));
+		const second = await centreOf(cells.nth(1));
+		await page.keyboard.down('Shift');
+		await page.mouse.click(second.x, second.y);
+		await page.keyboard.up('Shift');
+		await selectRibbonTab(page, 'Home');
+		await page.getByRole('button', { name: 'Bold', exact: true }).first().click();
+		const weight = (cell: Locator) =>
+			cell.evaluate((td) => {
+				const text = [...td.querySelectorAll('span')].find((span) => span.textContent?.trim());
+				return Number.parseInt(getComputedStyle(text ?? td).fontWeight, 10);
+			});
+		await expect.poll(() => weight(cells.nth(0))).toBeGreaterThanOrEqual(600);
+		await expect.poll(() => weight(cells.nth(1))).toBeGreaterThanOrEqual(600);
 	});
 });

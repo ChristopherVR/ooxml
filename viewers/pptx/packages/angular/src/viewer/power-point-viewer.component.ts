@@ -69,6 +69,7 @@ import {
 	writeStoredViewerPrefs,
 	installSvgIdScope,
 	createRibbonDisplayController,
+	attachTableCellsPaste,
 } from 'ooxml-ui/pptx';
 import type {
 	GoogleFontsOption,
@@ -213,6 +214,7 @@ import {
 	RibbonCustomizationStyleDirective,
 } from './ribbon-customization-style.directive';
 import { listenRibbonDisplayGestures } from './ribbon-display-listeners';
+import { tableFontCells } from './ribbon-font-table';
 import { performResetSlide } from './ribbon-home-section.component';
 import { RibbonLayoutGalleryComponent } from './ribbon-layout-gallery.component';
 import { layoutOptionsFrom } from './ribbon-layout-options';
@@ -3389,6 +3391,29 @@ export class PowerPointViewerComponent
 			this.loader,
 			this.editor,
 		);
+		// Paste into selected table cells (none being edited): tab-separated text
+		// fills cells from the top-left selected cell (shared listener).
+		if (typeof document !== 'undefined') {
+			const detachCellsPaste = attachTableCellsPaste(
+				document,
+				() => {
+					const selection = tableSelection.selection();
+					const element = this.activeSlide()?.elements.find(
+						(item) => item.id === selection?.elementId,
+					);
+					if (!selection || selection.isEditing || !this.canEdit() || element?.type !== 'table') {
+						return undefined;
+					}
+					return { element, cells: tableFontCells(element, selection) ?? [] };
+				},
+				(next) =>
+					this.editor.updateElement(this.activeSlideIndex(), next.id, {
+						tableData: next.tableData,
+						...(next.rawXml ? { rawXml: next.rawXml } : {}),
+					}),
+			);
+			this.destroyRef.onDestroy(detachCellsPaste);
+		}
 
 		// Hand the collab-cursor controller the accessors it alone needs from the
 		// component (the slide stage, canvas size, active-slide-index).

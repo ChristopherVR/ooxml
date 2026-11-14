@@ -140,6 +140,19 @@ describe('resolveTableCellEditEnd', () => {
 		expect(outcome.edit).toEqual({ row: 1, col: 0, caret: 'all' });
 	});
 
+	it('applies the host AutoCorrect transform to the committed runs', () => {
+		const outcome = resolveTableCellEditEnd(
+			table(),
+			0,
+			1,
+			{ reason: 'blur', segments: [{ text: 'teh', style: { bold: true } }] },
+			{ transformText: (text) => text.replace('teh', 'the') },
+		);
+		expect(outcome.element!.tableData!.rows[0]!.cells[1]!.textRuns).toEqual([
+			{ text: 'the', bold: true },
+		]);
+	});
+
 	it('leaves the element untouched for an unchanged blur and selects on exit', () => {
 		expect(resolveTableCellEditEnd(table(), 0, 0, { reason: 'blur', segments: undefined })).toEqual(
 			{},
