@@ -7,6 +7,70 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.52.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.52.0) - 2026-11-15
+
+### Features
+
+- **text:** Decode font embedding permissions from os/2 fstype ([a32b9ed](https://github.com/ChristopherVR/ooxml/commit/a32b9eda03739888963d9a9903b660527aeeac5b))
+- **ui:** Show licence-restricted embedded fonts in embed fonts panel ([4856eef](https://github.com/ChristopherVR/ooxml/commit/4856eef2afa4d1779c766d873331dd884f42c846))
+- **ui:** Substitute and announce licence-restricted embedded fonts ([e60f146](https://github.com/ChristopherVR/ooxml/commit/e60f1469249299383f7b7c282123b50e739b42dd))
+- **ui:** Paste rich text into pptx text boxes and copy shapes outward ([c9142fc](https://github.com/ChristopherVR/ooxml/commit/c9142fc47b7f42b6a3b1199e1c40bf2c2d1a447c))
+- **ui:** Add selection-aware format pane model and section element ([f65b923](https://github.com/ChristopherVR/ooxml/commit/f65b923ec579719dfba4dcad87edc6e7a6f429e9))
+- **ui:** Share a rich table cell editor with tab moves and tsv paste ([f5b1246](https://github.com/ChristopherVR/ooxml/commit/f5b1246f1a72df43382a8b04d58248e24fba3d74))
+- **ui:** Add vector pdf export for powerpoint slides ([4855979](https://github.com/ChristopherVR/ooxml/commit/4855979dc783223b17ec4455be0038d207a1ad12))
+- **pptx:** Save presentations as vector pdf in all five bindings ([4980339](https://github.com/ChristopherVR/ooxml/commit/49803398cc04c5301315eb160a1f838e58c3dc37))
+- **ui:** Report pptx pdf approximations as codes with a range dialog ([193aa72](https://github.com/ChristopherVR/ooxml/commit/193aa72e1aecc86810f0cd075ffd413a4d643b1d))
+- **ui:** Share the pptx pdf options step and keep toast text exact ([4947742](https://github.com/ChristopherVR/ooxml/commit/4947742c1bc6487b07463ae97eed471435fc9525))
+- **docx:** Compute docproperty field results ([85cbc00](https://github.com/ChristopherVR/ooxml/commit/85cbc009104b91bb09031d014f30125d4f9702bf))
+- **ui:** Find and replace in headers, footers, notes and text boxes ([e5b5e1b](https://github.com/ChristopherVR/ooxml/commit/e5b5e1b41da07494f143afc815200b9cb911b0ca))
+- **ui:** Paste word lists, styles and run formatting as word does ([e618081](https://github.com/ChristopherVR/ooxml/commit/e6180814fb56aa41d0a305d53b9f37184dc7fded))
+- **ui:** Add word paste options and paste special ([c609ffb](https://github.com/ChristopherVR/ooxml/commit/c609ffb0b32a4c629dac31cfedadadaad42a3f16))
+- **ui:** Crop pictures and choose their text wrapping in word ([acb90d5](https://github.com/ChristopherVR/ooxml/commit/acb90d570de35e968dfaad5984235d5f3c035a8a))
+- **ui:** Drop or paste a picture file onto a word page ([880cfce](https://github.com/ChristopherVR/ooxml/commit/880cfced958e9bedd04b91e3bff6568efa856947))
+- **docx:** Follow tel and ftp hyperlinks on ctrl+click ([165b2f9](https://github.com/ChristopherVR/ooxml/commit/165b2f943306bf52f296573734d8abdeb19c4cb2))
+- **docx:** Convert footnotes and endnotes ([33e6d17](https://github.com/ChristopherVR/ooxml/commit/33e6d174072b096459d5ca398d2a77c0a9e45ed5))
+- **docx:** Add picture watermarks ([61acdd1](https://github.com/ChristopherVR/ooxml/commit/61acdd1a2980be32958a9ba1486f5a52f74e5f71))
+- **ui:** Add word's document inspector to file > info ([ff515cb](https://github.com/ChristopherVR/ooxml/commit/ff515cb00d68cae75650b9aba1a3d8e252a65ed4))
+- **ui:** Add an opt-in cards look for the office chrome ([3a994b8](https://github.com/ChristopherVR/ooxml/commit/3a994b8a24084a9e41e18fe3b96b4e614779fa47))
+- **ui:** Add japanese and korean chart format pane strings ([7975e96](https://github.com/ChristopherVR/ooxml/commit/7975e96e98406e587e77fedee43d1e63f351b014))
+- **i18n:** Add japanese and korean powerpoint ui locales ([4d37b48](https://github.com/ChristopherVR/ooxml/commit/4d37b48d3d6eb0fae9bb95b19cd302b6c357b501))
+
+### Bug Fixes
+
+- **pptx:** Stand in for more office fonts with measured look-alikes ([c85e448](https://github.com/ChristopherVR/ooxml/commit/c85e44819ea377585d68aee721e5006991f294b8))
+- **ui:** Number pasted list items before the deck is reloaded ([d549833](https://github.com/ChristopherVR/ooxml/commit/d5498337c62a1421fb4925dfbde14bd117a5304c))
+- **ui:** Leave font and paragraph out of the table format pane ([4b3bf42](https://github.com/ChristopherVR/ooxml/commit/4b3bf4200648c510f2effb653fb1f87e6675fd79))
+- **ui:** Show the object format section only for ole objects ([b280cc7](https://github.com/ChristopherVR/ooxml/commit/b280cc7d16738604f5e5c4275b6e8c8feaec14aa))
+- **pptx:** Autocorrect, format off and ctrl+v for rich table cells ([73c3358](https://github.com/ChristopherVR/ooxml/commit/73c3358018687d031d7664135bf23e0abbeaa454))
+- **ui:** Read embedded deck fonts and restore live styles in pdf export ([5d5c1e2](https://github.com/ChristopherVR/ooxml/commit/5d5c1e24858c0e971bedc504db84e947bf2b6ad5))
+- **pptx:** Keep run markup when an edited table cell is saved ([5d6faae](https://github.com/ChristopherVR/ooxml/commit/5d6faae0d06ce029adfb8af41616180612e66720))
+- **docx:** Keep east asian paragraph toggles through the editor ([5c89de1](https://github.com/ChristopherVR/ooxml/commit/5c89de178b7434903583ba1d93c9d6abfcdbcfcc))
+- **docx:** Keep docproperty results that name no property ([7d9d938](https://github.com/ChristopherVR/ooxml/commit/7d9d938869b2250648c38e8bb44686d3a0af4ea8))
+- **docx:** Follow more of word's autonum and listnum counting ([df01245](https://github.com/ChristopherVR/ooxml/commit/df0124589683ef783e04d58364f6391c18e11d49))
+- **ui:** Keep find's story editor in step with the focus ([86aaa04](https://github.com/ChristopherVR/ooxml/commit/86aaa04d143de0d5413825c5b47e44b25df2b913))
+- **ui:** Leave pasted normal paragraphs unstyled and test the save ([5c5914f](https://github.com/ChristopherVR/ooxml/commit/5c5914f93a106bd0ab69bf3034b1f0646b047105))
+- **ui:** Keep format picture out of the wrap text menu group ([e1dad3b](https://github.com/ChristopherVR/ooxml/commit/e1dad3b77499144077b8a29643c83ee0a14449f9))
+- **ui:** Select inline pictures in print layout and skip vml pictures ([979b21e](https://github.com/ChristopherVR/ooxml/commit/979b21eb37bf0a710049887a8f497e3d32371c03))
+- **ui:** Apply document information only when a step changes it ([310a3e0](https://github.com/ChristopherVR/ooxml/commit/310a3e008f031bd9a0e01be7932f434f013a8eeb))
+- **ui:** Show the cell margins a table inherits in the table dialogs ([d579c88](https://github.com/ChristopherVR/ooxml/commit/d579c88429fe7bd12f5526c65c057c9144557318))
+- **ui:** Dock floating format panes inside the cards look's gap ([903c4d9](https://github.com/ChristopherVR/ooxml/commit/903c4d94fe5980db75f638e4eaa87746fb64a902))
+- **ui:** Handle a failed clipboard picture the clipboard never reads ([f260422](https://github.com/ChristopherVR/ooxml/commit/f260422d6c143881473b39cb6220818671626a32))
+- **ui:** Bound the waits of the vector pdf export so it cannot hang ([ecbe295](https://github.com/ChristopherVR/ooxml/commit/ecbe2955630e80608badf5cd546f7cfaf640581a))
+- **ui:** Draw only the target in vector pdf element pictures ([7150877](https://github.com/ChristopherVR/ooxml/commit/7150877215ecbde41fffdb5895c00093005cecb1))
+
+### Performance
+
+- **ui:** Build one styled clone per slide for vector pdf pictures ([235f7d8](https://github.com/ChristopherVR/ooxml/commit/235f7d8ea2326504f75eb389f4e16bcd31a79104))
+
+### Refactor
+
+- **ui:** Split format panel table and add selection helper ([38e3dea](https://github.com/ChristopherVR/ooxml/commit/38e3deaf9ca80c767cad6131f8a94cadde16c57f))
+- **ui:** Split the vector pdf slide collector ([78cd6f5](https://github.com/ChristopherVR/ooxml/commit/78cd6f563bddc9865ccfd5a32ba88f438c510013))
+
+### Testing
+
+- **ui:** Keep the slide package when its clipboard picture fails ([ca6dd3f](https://github.com/ChristopherVR/ooxml/commit/ca6dd3f9778f38a326cefed9eb05290ded1bc1e5))
+
 ## [1.51.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.51.1) - 2026-11-14
 
 ### Bug Fixes

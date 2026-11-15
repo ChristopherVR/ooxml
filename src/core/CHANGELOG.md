@@ -7,6 +7,73 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.51.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.51.0) - 2026-11-15
+
+### Features
+
+- **text:** Decode font embedding permissions from os/2 fstype ([a32b9ed](https://github.com/ChristopherVR/ooxml/commit/a32b9eda03739888963d9a9903b660527aeeac5b))
+- **pptx:** Honour embedded font licence permissions ([697ccba](https://github.com/ChristopherVR/ooxml/commit/697ccba093e0da0030c305349d65e209fb0a8316))
+- **drawingml:** Convert clipboard html into bounded drawingml paragraphs ([4644756](https://github.com/ChristopherVR/ooxml/commit/4644756370cb5a742a597376d09644c4b79a7190))
+- **pptx:** Keep table cell runs when a cell is edited ([13daace](https://github.com/ChristopherVR/ooxml/commit/13daace71d593139932e395064436a7c71ce780e))
+- **docx:** Size autofit table columns from their content ([a997b30](https://github.com/ChristopherVR/ooxml/commit/a997b302139b741612c2f54bda56190ea1b393d7))
+- **docx:** Place floating tables and wrap text around them ([0a1a129](https://github.com/ChristopherVR/ooxml/commit/0a1a12948bb15c1392f0b4e07d4ee6ba929359c4))
+- **text:** Add word's kinsoku line-start and line-end sets ([8845736](https://github.com/ChristopherVR/ooxml/commit/8845736eeefd28dff9e6df329e6ab0296e8a8253))
+- **docx:** Apply kinsoku when laying out east asian paragraphs ([b3c1d6f](https://github.com/ChristopherVR/ooxml/commit/b3c1d6f68b2261b808bcda0df16af3750b7d0c70))
+- **text:** Add east asian and western automatic spacing rules ([d2a8e85](https://github.com/ChristopherVR/ooxml/commit/d2a8e856f4b2ed0548e00cea90d2aaae80c46988))
+- **docx:** Space east asian text from western letters and digits ([6a412f4](https://github.com/ChristopherVR/ooxml/commit/6a412f4d3d08760d077c856d361bfa0bea6c9c75))
+- **text:** Add line breaks inside thai, lao, khmer and myanmar text ([955e062](https://github.com/ChristopherVR/ooxml/commit/955e062bf57c3d783ff556e4d7c23695ffeef73b))
+- **text:** Add word's hanging line-end punctuation sets ([b7ca04b](https://github.com/ChristopherVR/ooxml/commit/b7ca04bb0285e75918b9a5ce615d6f9908488089))
+- **docx:** Hang line-end punctuation in justified east asian text ([41fee7e](https://github.com/ChristopherVR/ooxml/commit/41fee7ef91ab6a2c22a6b38b2ce3c1e446cb71e3))
+- **docx:** Compute docproperty field results ([85cbc00](https://github.com/ChristopherVR/ooxml/commit/85cbc009104b91bb09031d014f30125d4f9702bf))
+- **docx:** Compute autonum, autonumlgl and autonumout fields ([cb94ef8](https://github.com/ChristopherVR/ooxml/commit/cb94ef859e097231d0c584153bf82b31674ff369))
+- **docx:** Compute listnum fields with the list counters ([26f0e56](https://github.com/ChristopherVR/ooxml/commit/26f0e56c5b5cbaf57d773f539906a990c3577b63))
+- **docx:** Compute symbol field results ([523d249](https://github.com/ChristopherVR/ooxml/commit/523d249ded6aecbb4097f623ba25937c0ebef4ea))
+- **docx:** List the stories find searches in word's order ([8bd43d1](https://github.com/ChristopherVR/ooxml/commit/8bd43d1f26821e068ba120426f8ac7013022d191))
+- **docx:** Read the html word puts on the clipboard ([b120499](https://github.com/ChristopherVR/ooxml/commit/b120499fd40737874002dd1fbfbc000b8bb97c57))
+- **ui:** Paste word lists, styles and run formatting as word does ([e618081](https://github.com/ChristopherVR/ooxml/commit/e6180814fb56aa41d0a305d53b9f37184dc7fded))
+- **docx:** Crop pictures and change their text wrapping ([92468fb](https://github.com/ChristopherVR/ooxml/commit/92468fb81b0919c1076ae1354251284b4cba98ca))
+- **ui:** Crop pictures and choose their text wrapping in word ([acb90d5](https://github.com/ChristopherVR/ooxml/commit/acb90d570de35e968dfaad5984235d5f3c035a8a))
+- **docx:** Follow tel and ftp hyperlinks on ctrl+click ([165b2f9](https://github.com/ChristopherVR/ooxml/commit/165b2f943306bf52f296573734d8abdeb19c4cb2))
+- **docx:** Convert footnotes and endnotes ([33e6d17](https://github.com/ChristopherVR/ooxml/commit/33e6d174072b096459d5ca398d2a77c0a9e45ed5))
+- **docx:** Add picture watermarks ([61acdd1](https://github.com/ChristopherVR/ooxml/commit/61acdd1a2980be32958a9ba1486f5a52f74e5f71))
+- **docx:** Inspect and remove document information as word does ([16e3356](https://github.com/ChristopherVR/ooxml/commit/16e33566099daa258e6f3f213ba65414b38d29e7))
+- **docx:** Model tracked table row insertions and deletions ([9fe93f7](https://github.com/ChristopherVR/ooxml/commit/9fe93f77dc57cf9f238a0d5cd99b1fad26e85f12))
+- **docx:** Compare documents into tracked changes ([be31abf](https://github.com/ChristopherVR/ooxml/commit/be31abf245e0b0f0e0632c3c0a2631127d5b74d7))
+
+### Bug Fixes
+
+- **pptx:** Keep a copied withheld embedded font part on save ([533b3f4](https://github.com/ChristopherVR/ooxml/commit/533b3f41e20722dfa0ef6f3723eddd081dc7b9b6))
+- **drawingml:** Type pasted html bullets for exact optional properties ([1657f9b](https://github.com/ChristopherVR/ooxml/commit/1657f9bc334727aa2e00c2908729b981045ffec5))
+- **drawingml:** Spell pasted html entities and markers as code points ([936c2bc](https://github.com/ChristopherVR/ooxml/commit/936c2bc9a86037b00b9ffd5a840a8944efbbc0a7))
+- **pptx:** Autocorrect, format off and ctrl+v for rich table cells ([73c3358](https://github.com/ChristopherVR/ooxml/commit/73c3358018687d031d7664135bf23e0abbeaa454))
+- **pptx:** Keep run markup when an edited table cell is saved ([5d6faae](https://github.com/ChristopherVR/ooxml/commit/5d6faae0d06ce029adfb8af41616180612e66720))
+- **docx:** Resolve table cell margins through the table style chain ([e2c1974](https://github.com/ChristopherVR/ooxml/commit/e2c19740c4ddfb2d652dbcdf723e6b9747748489))
+- **docx:** Wrap long thai, lao, khmer and myanmar runs ([1e616c0](https://github.com/ChristopherVR/ooxml/commit/1e616c022ab15124de2f94edb46a1915c5796463))
+- **text:** Correct the chinese hanging punctuation sets ([94719b6](https://github.com/ChristopherVR/ooxml/commit/94719b6431c9957d8cc3043c6e309b613ec89159))
+- **docx:** Keep east asian paragraph toggles through the editor ([5c89de1](https://github.com/ChristopherVR/ooxml/commit/5c89de178b7434903583ba1d93c9d6abfcdbcfcc))
+- **docx:** Keep docproperty results that name no property ([7d9d938](https://github.com/ChristopherVR/ooxml/commit/7d9d938869b2250648c38e8bb44686d3a0af4ea8))
+- **docx:** Follow more of word's autonum and listnum counting ([df01245](https://github.com/ChristopherVR/ooxml/commit/df0124589683ef783e04d58364f6391c18e11d49))
+- **docx:** Search headers and footers right after the main document ([5964555](https://github.com/ChristopherVR/ooxml/commit/59645558ede4e0987d8b8bf16e728750cc5aafe4))
+- **ui:** Leave pasted normal paragraphs unstyled and test the save ([5c5914f](https://github.com/ChristopherVR/ooxml/commit/5c5914f93a106bd0ab69bf3034b1f0646b047105))
+- **docx:** Keep document information out of collaboration rooms ([ccbe8de](https://github.com/ChristopherVR/ooxml/commit/ccbe8de00dc8ebe1cbf07c0f1158dc557962e5f0))
+- **docx:** Read and write deleted field codes as w:delInstrText ([8badb55](https://github.com/ChristopherVR/ooxml/commit/8badb55a9a5f20b20840b1a0322626220cb64613))
+- **docx:** Remove an emptied paragraph before a table on accept ([4f7b5f0](https://github.com/ChristopherVR/ooxml/commit/4f7b5f0eaf6e7a764ae0c4835db2b526fcf03723))
+- **docx:** Keep compared tables and paragraphs writable ([12069dc](https://github.com/ChristopherVR/ooxml/commit/12069dc720a1edc99f385a17e7fb7226a70b3aa5))
+- **docx:** Start compared spans at sentences, isolate whole paragraphs ([8cb50e6](https://github.com/ChristopherVR/ooxml/commit/8cb50e64c8929d75f293b8adaab4a51ef5d928f1))
+- **ui:** Show the cell margins a table inherits in the table dialogs ([d579c88](https://github.com/ChristopherVR/ooxml/commit/d579c88429fe7bd12f5526c65c057c9144557318))
+- **docx:** Clear docproperty values when inspect removes properties ([a9a5454](https://github.com/ChristopherVR/ooxml/commit/a9a5454577b6396723578ae0a147ee3a98717c16))
+- **docx:** Scan word clipboard html without backtracking regexes ([811cf0b](https://github.com/ChristopherVR/ooxml/commit/811cf0b7d7f87109848fadd9d875136e0f08ac13))
+- **text:** Strip clipboard html tags and comment markers without regexes ([9ea6819](https://github.com/ChristopherVR/ooxml/commit/9ea6819dd301778bbe764f09b45beac589069d0d))
+
+### Refactor
+
+- **docx:** Read layout compatibility through one profile ([d447f11](https://github.com/ChristopherVR/ooxml/commit/d447f1198027509475f395cd5dde26007a1257ca))
+
+### Testing
+
+- **docx:** Record autofit tables whose grid matches their widths ([d4ae742](https://github.com/ChristopherVR/ooxml/commit/d4ae7420d03a100ab8db5590f2a14c5318e46d93))
+- **docx:** Refresh the docx public surface snapshot ([2a39f4c](https://github.com/ChristopherVR/ooxml/commit/2a39f4cac524b08dbe37dcad7b9e54cf6d91a8d1))
+
 ## [1.50.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.50.2) - 2026-11-14
 
 ### Bug Fixes

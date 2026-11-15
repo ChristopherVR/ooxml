@@ -7,6 +7,44 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.77.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.77.0) - 2026-11-15
+
+### Features
+
+- **text:** Decode font embedding permissions from os/2 fstype ([a32b9ed](https://github.com/ChristopherVR/ooxml/commit/a32b9eda03739888963d9a9903b660527aeeac5b))
+- **pptx:** Honour embedded font licence permissions ([697ccba](https://github.com/ChristopherVR/ooxml/commit/697ccba093e0da0030c305349d65e209fb0a8316))
+- **ui:** Show licence-restricted embedded fonts in embed fonts panel ([4856eef](https://github.com/ChristopherVR/ooxml/commit/4856eef2afa4d1779c766d873331dd884f42c846))
+- **ui:** Substitute and announce licence-restricted embedded fonts ([e60f146](https://github.com/ChristopherVR/ooxml/commit/e60f1469249299383f7b7c282123b50e739b42dd))
+- **drawingml:** Convert clipboard html into bounded drawingml paragraphs ([4644756](https://github.com/ChristopherVR/ooxml/commit/4644756370cb5a742a597376d09644c4b79a7190))
+- **angular:** Paste rich text in text boxes and copy shapes to other apps ([529205e](https://github.com/ChristopherVR/ooxml/commit/529205eabc7bc0c4d437ed7de0e37027314e275d))
+- **ui:** Add selection-aware format pane model and section element ([f65b923](https://github.com/ChristopherVR/ooxml/commit/f65b923ec579719dfba4dcad87edc6e7a6f429e9))
+- **angular:** Show the properties tab as a selection-aware format pane ([67b7f73](https://github.com/ChristopherVR/ooxml/commit/67b7f73216e79dec4c561bbde5801d8ceda7cab3))
+- **pptx:** Keep table cell runs when a cell is edited ([13daace](https://github.com/ChristopherVR/ooxml/commit/13daace71d593139932e395064436a7c71ce780e))
+- **pptx:** Edit table cells as rich text in all five bindings ([3bf179d](https://github.com/ChristopherVR/ooxml/commit/3bf179d6f2d9a996da50f23d73014bf6fe2c379b))
+- **pptx:** Save presentations as vector pdf in all five bindings ([4980339](https://github.com/ChristopherVR/ooxml/commit/49803398cc04c5301315eb160a1f838e58c3dc37))
+- **ui:** Report pptx pdf approximations as codes with a range dialog ([193aa72](https://github.com/ChristopherVR/ooxml/commit/193aa72e1aecc86810f0cd075ffd413a4d643b1d))
+- **ui:** Share the pptx pdf options step and keep toast text exact ([4947742](https://github.com/ChristopherVR/ooxml/commit/4947742c1bc6487b07463ae97eed471435fc9525))
+- **pptx:** Ask for the pdf range and show its notice in every binding ([6e2a069](https://github.com/ChristopherVR/ooxml/commit/6e2a06902554dfba9a9c6bb2bcb4ee263e8d73f4))
+- **text:** Add word's kinsoku line-start and line-end sets ([8845736](https://github.com/ChristopherVR/ooxml/commit/8845736eeefd28dff9e6df329e6ab0296e8a8253))
+- **text:** Add east asian and western automatic spacing rules ([d2a8e85](https://github.com/ChristopherVR/ooxml/commit/d2a8e856f4b2ed0548e00cea90d2aaae80c46988))
+- **text:** Add line breaks inside thai, lao, khmer and myanmar text ([955e062](https://github.com/ChristopherVR/ooxml/commit/955e062bf57c3d783ff556e4d7c23695ffeef73b))
+- **text:** Add word's hanging line-end punctuation sets ([b7ca04b](https://github.com/ChristopherVR/ooxml/commit/b7ca04bb0285e75918b9a5ce615d6f9908488089))
+- **docx:** Compute symbol field results ([523d249](https://github.com/ChristopherVR/ooxml/commit/523d249ded6aecbb4097f623ba25937c0ebef4ea))
+- **i18n:** Add japanese and korean powerpoint ui locales ([4d37b48](https://github.com/ChristopherVR/ooxml/commit/4d37b48d3d6eb0fae9bb95b19cd302b6c357b501))
+
+### Bug Fixes
+
+- **pptx:** Keep a copied withheld embedded font part on save ([533b3f4](https://github.com/ChristopherVR/ooxml/commit/533b3f41e20722dfa0ef6f3723eddd081dc7b9b6))
+- **drawingml:** Type pasted html bullets for exact optional properties ([1657f9b](https://github.com/ChristopherVR/ooxml/commit/1657f9bc334727aa2e00c2908729b981045ffec5))
+- **drawingml:** Spell pasted html entities and markers as code points ([936c2bc](https://github.com/ChristopherVR/ooxml/commit/936c2bc9a86037b00b9ffd5a840a8944efbbc0a7))
+- **pptx:** Autocorrect, format off and ctrl+v for rich table cells ([73c3358](https://github.com/ChristopherVR/ooxml/commit/73c3358018687d031d7664135bf23e0abbeaa454))
+- **ui:** Read embedded deck fonts and restore live styles in pdf export ([5d5c1e2](https://github.com/ChristopherVR/ooxml/commit/5d5c1e24858c0e971bedc504db84e947bf2b6ad5))
+- **pptx:** Keep run markup when an edited table cell is saved ([5d6faae](https://github.com/ChristopherVR/ooxml/commit/5d6faae0d06ce029adfb8af41616180612e66720))
+- **text:** Correct the chinese hanging punctuation sets ([94719b6](https://github.com/ChristopherVR/ooxml/commit/94719b6431c9957d8cc3043c6e309b613ec89159))
+- **ci:** Escape the em-dash in locale tests and scope a docx locator ([a1e01ee](https://github.com/ChristopherVR/ooxml/commit/a1e01eec85dca443fe5be4788ae4ba8a8bb37033))
+- **angular:** Keep gradient and pattern fill behind closed disclosures ([86704a6](https://github.com/ChristopherVR/ooxml/commit/86704a615a4615fedd12093818398b5428d53884))
+- **text:** Strip clipboard html tags and comment markers without regexes ([9ea6819](https://github.com/ChristopherVR/ooxml/commit/9ea6819dd301778bbe764f09b45beac589069d0d))
+
 ## [4.76.2](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.76.2) - 2026-11-14
 
 ### Bug Fixes
