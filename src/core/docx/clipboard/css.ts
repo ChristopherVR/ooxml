@@ -101,7 +101,7 @@ export function readStyleRules(html: string): CssRule[] {
 	const rules: CssRule[] = [];
 	for (const block of styleBlocks(html)) {
 		// Comment markers become spaces, so removing one can never form another.
-		const css = stripCssComments(block.replace(/<!--|-->/g, ' '));
+		const css = stripCssComments(block.split('<!--').join(' ').split('-->').join(' '));
 		for (const rule of css.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
 			const selector = rule[1]!.replace(/\s+/g, ' ').trim();
 			if (selector) rules.push({ selector, declarations: parseDeclarations(rule[2]) });

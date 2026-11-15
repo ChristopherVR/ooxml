@@ -196,7 +196,7 @@ export function tokenizeHtml(html: string, maxTokens = Number.POSITIVE_INFINITY)
 	let i = 0;
 	while (i < html.length) {
 		if (tokens.length >= maxTokens) {
-			text += html.slice(i).replace(/<[^<>]*>/g, '');
+			text += textWithoutTags(html.slice(i));
 			break;
 		}
 		const lt = html.indexOf('<', i);
@@ -265,4 +265,27 @@ export function tokenizeHtml(html: string, maxTokens = Number.POSITIVE_INFINITY)
 	}
 	flush();
 	return tokens;
+}
+
+/**
+ * `html` with every complete tag (`<` up to the next `>`) removed, in one linear pass; a `<`
+ * with no closing `>` stays as text.
+ */
+function textWithoutTags(html: string): string {
+	let out = '';
+	let at = 0;
+	for (let lt = html.indexOf('<'); lt >= 0; lt = html.indexOf('<', at)) {
+		const gt = html.indexOf('>', lt + 1);
+		if (gt < 0) break;
+		const inner = html.indexOf('<', lt + 1);
+		// `a < b <i>`: the first `<` opens no tag, so it stays text.
+		if (inner >= 0 && inner < gt) {
+			out += html.slice(at, inner);
+			at = inner;
+			continue;
+		}
+		out += html.slice(at, lt);
+		at = gt + 1;
+	}
+	return out + html.slice(at);
 }
