@@ -33,6 +33,17 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ## Shared layer and every product
 
+- [ ] **P2** The opt-in cards look (`data-office-look="cards"`, the suite Simple view default) is
+      uneven: Vanilla and Vue keep some bordered inner cards, not every field row becomes the
+      two-column grid, and selects, submenus, the font picker and the canvas context menu keep
+      their own radius and shadow. In Simple view Word, Excel and Visio also pick up the pill
+      status groups and 12px menus.
+- [ ] **P2** Japanese and Korean exist only for PowerPoint: the suite's shared language list
+      (`apps/office-suite/src/settings.js`) and `SUPPORTED_OFFICE_LOCALES` do not offer them, and
+      Word, Excel, Visio, Teams, the diagram strings, the shared options and ChartEx tables have
+      no ja/ko. The rarer PowerPoint preset names (animations, newer SmartArt layouts, bevel,
+      material and 3-D camera presets) in ja/ko are unreviewed by a native speaker. CJK chrome
+      fonts apply only when the host sets `lang`.
 - [x] **P1** OneDrive save recovery only offered choosing/copying versions: format-aware three-way
       mergers now combine supported independent DOCX/XLSX/PPTX/VSDX edits automatically and rebase
       against the latest revision. The suite reloads the acknowledged combined file. Evidence:
@@ -492,6 +503,29 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       of just that element with searchable text kept, and the export lists what it approximated
       (`src/ui/src/pptx/export/pdf-vector-*.ts`). Open: fonts the page cannot read fall back to
       standard PDF fonts; embedding a deck's own fonts is unit-tested only.
+- [x] **P1** Save as PDF says what it approximated: one translated notice counts elements and
+      slides saved as pictures, substituted fonts, and slides with content left out or effects
+      simplified, with a Details list; all five bindings emit `pdfExportReport`. Export > PDF first
+      offers Range (All, Current slide, Slides from-to) and Include hidden slides
+      (`export/pdf-export-notice.ts`, `web-components/pdf-export-dialog.ts`). Open: a later clean
+      export leaves the previous notice until it is dismissed.
+- [ ] **P2** Save as PDF options lack Selection and custom-show ranges, Publish what (handouts,
+      notes pages, outline), document properties, accessibility structure tags, PDF/A and
+      bitmap-text options; "Save slides as pictures" has no options step and writes every slide.
+- [ ] **P2** Table cells: turning one run's bold off in an otherwise bold cell can paint bold until
+      reload (the saved `b="0"` is right); some font buttons enabled for tables (highlight,
+      spacing, shadow, change case) do nothing on cells; Esc does not restore the cell selection in
+      vanilla and Svelte.
+- [ ] **P1** Opening a deck parses every slide before the first paints (no progressive open, no
+      time-to-first-slide or interaction-latency benchmarks in `e2e/pptx`).
+- [ ] **P1** Headless SVG export (`pptx/converter/SvgExporter.ts`, the CLI `export-svg` and the
+      `export_slide_svg` tool) uses a simplified renderer that trails the editor (plain `<text>`,
+      no warp, fewer effects); server output does not share the editor's paint.
+- [ ] **P2** Automation is element-level MCP tools only: no Office.js-shaped object model
+      (`RequestContext`/`load`/`sync`, text ranges, table borders and margins, adjustments, custom
+      XML) for add-in style scripts.
+- [ ] **P2** Customization hides or replaces regions and capabilities, not single toolbar controls,
+      and dialogs have no headless draft/validate/apply hooks.
 - [ ] **P1** Remove Background: an existing `a14:backgroundRemoval` is drawn but cannot be
       authored (`src/ui/src/pptx/render/image-background-removal.ts`).
 - [ ] **P1** Zoom: slide, section and summary zooms render and save but cannot be inserted.
