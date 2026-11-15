@@ -369,9 +369,22 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 								(pick)="onFillColorPick($event)"
 							/>
 						}
-						<pptx-gradient-picker [element]="el()" (patch)="onPatch($event)" />
 					</section>
-					<pptx-pattern-fill-panel [element]="el()" (patch)="onPatch($event)" />
+					<!-- Gradient and pattern editing stay behind their own closed disclosures, as
+					     the other bindings only show them for that fill mode: open, their stop and
+					     pattern colour inputs would sit beside the solid fill's picker. -->
+					<details class="pptx-ng-inspector__details" data-pptx-fill-advanced="gradient">
+						<summary class="pptx-ng-inspector__summary">
+							{{ 'pptx.inspector.gradientFill' | translate }}
+						</summary>
+						<pptx-gradient-picker [element]="el()" (patch)="onPatch($event)" />
+					</details>
+					<details class="pptx-ng-inspector__details" data-pptx-fill-advanced="pattern">
+						<summary class="pptx-ng-inspector__summary">
+							{{ 'pptx.table.fillPattern' | translate }}
+						</summary>
+						<pptx-pattern-fill-panel [element]="el()" (patch)="onPatch($event)" />
+					</details>
 				</ng-template>
 				<ng-template pptxFormatSection="outline" let-view>
 					<section class="pptx-ng-inspector__section">
