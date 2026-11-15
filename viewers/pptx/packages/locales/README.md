@@ -1,6 +1,6 @@
 # Locale reference dictionaries
 
-This private workspace package contains the complete French, Spanish, German, and Simplified Chinese
+This private workspace package contains the complete French, Spanish, German, Simplified Chinese, Japanese and Korean
 UI dictionaries used by the demos and bundled into all five viewer packages.
 This workspace is not published separately and is not a runtime dependency of
 any viewer binding.
@@ -11,6 +11,8 @@ Repository workspaces reference the dictionaries by package name:
 import { translationsDe } from 'pptx-viewer-locales/de';
 import { translationsEs } from 'pptx-viewer-locales/es';
 import { translationsFr } from 'pptx-viewer-locales/fr';
+import { translationsJa } from 'pptx-viewer-locales/ja';
+import { translationsKo } from 'pptx-viewer-locales/ko';
 import { translationsZhCN } from 'pptx-viewer-locales/zh-CN';
 ```
 
@@ -23,7 +25,7 @@ import { translationsZhCN } from 'pptx-react-viewer/i18n/zh-CN';
 import { translationsFr } from 'pptx-vue-viewer/i18n/fr';
 ```
 
-The same `i18n/fr`, `i18n/es`, `i18n/de`, and `i18n/zh-CN` subpaths are available
+The same `i18n/fr`, `i18n/es`, `i18n/de`, `i18n/zh-CN`, `i18n/ja` and `i18n/ko` subpaths are available
 in the Angular, Svelte, and Vanilla packages. See the
 [localization guide](../../docs/guide/localization.md) for registration and Vue's
 placeholder conversion.
@@ -35,7 +37,7 @@ coverage is tested; native-speaker terminology review is still welcome.
 ## How to help
 
 Native and fluent speakers can review one semantic file at a time under
-`src/fr`, `src/es`, `src/de`, or `src/zh-CN`. Files are organized by product area, such as
+`src/fr`, `src/es`, `src/de`, `src/zh-CN`, `src/ja` or `src/ko`. Files are organized by product area, such as
 `charts.ts`, `presenting-and-slide-show.ts`, and `text-and-equations.ts`.
 
 1. Find the same key in `src/ui/src/pptx/i18n/translations-en.ts` to confirm

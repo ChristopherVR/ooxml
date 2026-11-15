@@ -24,6 +24,8 @@ const locales = {
 	es: 'translationsEs',
 	de: 'translationsDe',
 	'zh-CN': 'translationsZhCN',
+	ja: 'translationsJa',
+	ko: 'translationsKo',
 };
 const temporary = mkdtempSync(join(tmpdir(), 'pptx-locale-consumer-'));
 const cases = [];

@@ -18,6 +18,8 @@ export const LANGUAGES: LanguageOption[] = [
 	{ code: 'es', label: 'Español' },
 	{ code: 'de', label: 'Deutsch' },
 	{ code: 'zh-CN', label: '简体中文' },
+	{ code: 'ja', label: '日本語' },
+	{ code: 'ko', label: '한국어' },
 ];
 
 export const LANGUAGE_KEYS = LANGUAGES.map((language) => language.code);

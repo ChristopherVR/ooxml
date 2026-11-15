@@ -135,7 +135,7 @@ does not open is almost never framework-specific.
 ### i18n
 
 Adding an English key to `src/ui/src/pptx/i18n/translations-en.ts` (and its `translations-en-*.ts` siblings) requires
-matching entries under `packages/locales/src/{de,es,fr,zh-CN}/`.
+matching entries under `packages/locales/src/{de,es,fr,zh-CN,ja,ko}/`.
 `packages/locales/src/locales.test.ts` fails the test suite if any locale is missing
 a canonical key. Never hardcode a user-visible string: route it through
 `t()` / `translate`.
@@ -148,7 +148,7 @@ a canonical key. Never hardcode a user-visible string: route it through
 packages/
   core/      pptx-viewer-core     Parse, edit, serialize PPTX (framework-agnostic)
   shared/    pptx-viewer-shared   Compatibility facade (PRIVATE); owns no logic, which lives in src/ui/src/pptx
-  locales/   pptx-viewer-locales  de/es/fr/zh-CN dictionaries (PRIVATE)
+  locales/   pptx-viewer-locales  de/es/fr/zh-CN/ja/ko dictionaries (PRIVATE)
   react/     pptx-react-viewer    React binding
   vue/       pptx-vue-viewer      Vue 3 binding
   angular/   pptx-angular-viewer  Angular binding
@@ -426,7 +426,7 @@ What gets a PR sent back, in rough order of frequency:
 1. A UI feature or fix in one binding with no statement about the other four.
 2. Pure logic duplicated into a binding instead of extracted to `shared`.
 3. A non-conforming commit message (it will mis-version a release).
-4. New English i18n keys with no `de`/`es`/`fr`/`zh-CN` entries.
+4. New English i18n keys with no `de`/`es`/`fr`/`zh-CN`/`ja`/`ko` entries.
 5. A source file pushed well past 300 LOC instead of split.
 6. Em-dashes.
 

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { createI18n } from 'vue-i18n';
 
+import { translationsJa } from '../../locales/src/ja';
+import { translationsKo } from '../../locales/src/ko';
 import { translationsZhCN } from '../../locales/src/zh-CN';
 import { toVueI18nSyntax, translationsEn } from './i18n';
 
@@ -19,6 +21,34 @@ describe('simplified Chinese messages', () => {
 		expect(t('pptx.statusBar.slideOf', { current: 2, total: 7 })).toBe('第 2 张，共 7 张');
 		expect(t('pptx.comments.mentionPlaceholder')).toBe('输入 @ 提及他人');
 	});
+});
+
+describe('Japanese and Korean messages', () => {
+	for (const { locale, dictionary, slideOf } of [
+		{ locale: 'ja', dictionary: translationsJa, slideOf: 'スライド 2/7' },
+		{ locale: 'ko', dictionary: translationsKo, slideOf: '슬라이드 2/7' },
+	]) {
+		it(`${locale} compiles the entire dictionary and interpolates slide counters`, () => {
+			const { t } = createI18n({
+				legacy: false,
+				locale,
+				messages: { [locale]: toVueI18nSyntax(dictionary) },
+				missingWarn: false,
+				fallbackWarn: false,
+			}).global;
+			const failures = Object.keys(dictionary).filter((key) => {
+				try {
+					t(key);
+					return false;
+				} catch {
+					return true;
+				}
+			});
+			expect(failures).toStrictEqual([]);
+			expect(t('pptx.statusBar.slideOf', { current: 2, total: 7 })).toBe(slideOf);
+			expect(t('pptx.comments.mentionPlaceholder')).toContain('@');
+		});
+	}
 });
 
 describe('translationsEn (vue-i18n syntax adapter)', () => {

@@ -3,6 +3,8 @@ import {
 	translationsEs,
 	translationsFr,
 	translationsZhCN,
+	translationsJa,
+	translationsKo,
 } from 'pptx-viewer-locales';
 import { keyToLabel, toVueI18nSyntax, translationsEn } from 'pptx-vue-viewer/i18n';
 /**
@@ -19,6 +21,8 @@ import { createI18n } from 'vue-i18n';
 
 import {
 	demoStringsZhCN,
+	demoStringsJa,
+	demoStringsKo,
 	demoStringsDe,
 	demoStringsEn,
 	demoStringsFr,
@@ -38,6 +42,8 @@ const i18n = createI18n({
 		es: { ...toVueI18nSyntax(translationsEs), ...demoStringsEs },
 		de: { ...toVueI18nSyntax(translationsDe), ...demoStringsDe },
 		'zh-CN': { ...toVueI18nSyntax(translationsZhCN), ...demoStringsZhCN },
+		ja: { ...toVueI18nSyntax(translationsJa), ...demoStringsJa },
+		ko: { ...toVueI18nSyntax(translationsKo), ...demoStringsKo },
 	},
 	missing: (_locale, key) => keyToLabel(key),
 	missingWarn: false,

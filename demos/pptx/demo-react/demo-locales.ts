@@ -73,3 +73,31 @@ export const demoStringsZhCN = {
 	'demo.dropzone.joiningSession': '正在加入协作会话：',
 	'demo.dropzone.uploadAriaLabel': '上传演示文稿',
 } satisfies Record<keyof typeof demoStringsEn, string>;
+
+export const demoStringsJa = {
+	'demo.dropzone.hint': '.pptx または .ppt ファイルをここにドロップするか、クリックして参照します',
+	'demo.dropzone.hintCollab':
+		'.pptx または .ppt ファイルをここにドロップするか、クリックして参照し、共同編集を開始します',
+	'demo.dropzone.processed': 'ファイルはすべてブラウザー内で処理されます',
+	'demo.dropzone.browse': 'ファイルを参照',
+	'demo.dropzone.newPresentation': 'または新しいプレゼンテーションを作成',
+	'demo.dropzone.creating': '作成しています...',
+	'demo.dropzone.joiningBroadcast': 'ブロードキャストに参加しています:',
+	'demo.dropzone.loadingBroadcast': 'ブロードキャスト元からプレゼンテーションを読み込んでいます...',
+	'demo.dropzone.joiningSession': '共同編集セッションに参加しています:',
+	'demo.dropzone.uploadAriaLabel': 'プレゼンテーションをアップロード',
+} satisfies Record<keyof typeof demoStringsEn, string>;
+
+export const demoStringsKo = {
+	'demo.dropzone.hint': '.pptx 또는 .ppt 파일을 여기에 끌어 놓거나 클릭하여 찾아보세요',
+	'demo.dropzone.hintCollab':
+		'.pptx 또는 .ppt 파일을 여기에 끌어 놓거나 클릭하여 찾아보고 공동 작업을 시작하세요',
+	'demo.dropzone.processed': '파일은 모두 브라우저에서 처리됩니다',
+	'demo.dropzone.browse': '파일 찾아보기',
+	'demo.dropzone.newPresentation': '또는 새 프레젠테이션 만들기',
+	'demo.dropzone.creating': '만드는 중...',
+	'demo.dropzone.joiningBroadcast': '브로드캐스트에 참가하는 중:',
+	'demo.dropzone.loadingBroadcast': '브로드캐스터에서 프레젠테이션을 불러오는 중...',
+	'demo.dropzone.joiningSession': '공동 작업 세션에 참가하는 중:',
+	'demo.dropzone.uploadAriaLabel': '프레젠테이션 업로드',
+} satisfies Record<keyof typeof demoStringsEn, string>;

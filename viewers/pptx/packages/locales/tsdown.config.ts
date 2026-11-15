@@ -7,6 +7,8 @@ export default defineConfig((options) => ({
 		'src/es/index.ts',
 		'src/de/index.ts',
 		'src/zh-CN/index.ts',
+		'src/ja/index.ts',
+		'src/ko/index.ts',
 	],
 	format: ['esm', 'cjs'],
 	outDir: '.types',

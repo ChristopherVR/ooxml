@@ -5,10 +5,14 @@ import {
 	translationsEs,
 	translationsFr,
 	translationsZhCN,
+	translationsJa,
+	translationsKo,
 } from 'pptx-viewer-locales';
 
 import {
 	demoStringsZhCN,
+	demoStringsJa,
+	demoStringsKo,
 	demoStringsDe,
 	demoStringsEn,
 	demoStringsEs,
@@ -38,6 +42,8 @@ registerTranslations('fr', { ...translationsFr, ...demoStringsFr });
 registerTranslations('es', { ...translationsEs, ...demoStringsEs });
 registerTranslations('de', { ...translationsDe, ...demoStringsDe });
 registerTranslations('zh-CN', { ...translationsZhCN, ...demoStringsZhCN });
+registerTranslations('ja', { ...translationsJa, ...demoStringsJa });
+registerTranslations('ko', { ...translationsKo, ...demoStringsKo });
 
 function readStoredLanguage(): LanguageCode {
 	let stored: LanguageCode = 'en';

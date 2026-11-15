@@ -40,7 +40,7 @@ export async function bundleSuite(outfile) {
 				},
 				{
 					// PowerPoint's display languages (Settings > Language), from the locale workspace.
-					find: /^pptx-viewer-locales\/(fr|es|de|zh-CN)$/,
+					find: /^pptx-viewer-locales\/(fr|es|de|zh-CN|ja|ko)$/,
 					replacement: join(ROOT, 'viewers/pptx/packages/locales/src/$1/index.ts'),
 				},
 				{

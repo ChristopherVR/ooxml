@@ -25,6 +25,8 @@ async function pptxMessages(locale) {
 		es: () => import('pptx-viewer-locales/es'),
 		de: () => import('pptx-viewer-locales/de'),
 		'zh-CN': () => import('pptx-viewer-locales/zh-CN'),
+		ja: () => import('pptx-viewer-locales/ja'),
+		ko: () => import('pptx-viewer-locales/ko'),
 	};
 	const module = await loaders[locale]?.();
 	return module && Object.values(module).find((value) => value && typeof value === 'object');
