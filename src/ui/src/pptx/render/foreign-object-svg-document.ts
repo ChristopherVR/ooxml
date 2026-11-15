@@ -49,6 +49,12 @@ export interface ForeignObjectSvgBodyOptions {
 	 * collected it for several bodies of one document; collected here otherwise.
 	 */
 	externalFonts?: ExternalFontFaceCssResult | Promise<ExternalFontFaceCssResult>;
+	/**
+	 * Draw `element` without its own CSS transform (`transform`, `translate`, `rotate`, `scale`),
+	 * at its untransformed layout: for a slide stage scaled to fit the screen, so the body's
+	 * coordinates are the stage's own CSS px. Its content keeps every transform it has.
+	 */
+	untransformedRoot?: boolean;
 }
 
 /** The reusable, size-independent SVG body, plus whether every image embedded cleanly. */
@@ -116,7 +122,10 @@ export interface PreparedForeignObjectClone {
 export async function prepareForeignObjectClone(
 	element: HTMLElement,
 	doc: Document & FontStyleDocumentLike & LinkStyleDocumentLike,
-	options: Pick<ForeignObjectSvgBodyOptions, 'readComputedStyle' | 'externalFonts'> = {},
+	options: Pick<
+		ForeignObjectSvgBodyOptions,
+		'readComputedStyle' | 'externalFonts' | 'untransformedRoot'
+	> = {},
 ): Promise<PreparedForeignObjectClone> {
 	const { readComputedStyle = (el) => window.getComputedStyle(el) } = options;
 
@@ -134,6 +143,11 @@ export async function prepareForeignObjectClone(
 	// Keep the trees aligned while copying styles, then omit editor-only nodes
 	// before embedding resources. The live editor tree is never changed.
 	prepareExportClone(clone);
+	// The element's own transform (a stage's zoom) only places it on screen; the body draws it at
+	// its layout size, in the coordinates its caller measured.
+	if (options.untransformedRoot)
+		for (const property of ['transform', 'translate', 'rotate', 'scale'])
+			clone.style.setProperty(property, 'none');
 
 	const [{ allEmbedded: imagesEmbedded }, externalFonts] = await Promise.all([
 		embedImagesOnClone(clone),

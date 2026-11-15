@@ -25,21 +25,22 @@ const tree: IsolatedVisibilityTree = {
 };
 
 describe('isolatedVisibilities', () => {
-	it('subtree: shows the target and what inherits from it, keeps stylesheet values', () => {
+	it('subtree: shows the target and what inherits from it, hides everything outside', () => {
 		expect(isolatedVisibilities(tree, 1, 'subtree')).toEqual([
 			'hidden',
 			'visible',
 			'visible',
 			'visible',
+			// A stylesheet value inside the target holds, as under the cascade.
 			'hidden',
 			'hidden',
 			'hidden',
-			// A value of its own differing from its parent's holds under the cascade.
-			'visible',
+			// Outside the target nothing shows, whatever it sets for itself.
+			'hidden',
 		]);
 	});
 
-	it('self and shadow: hide the target children, and what inherits from them', () => {
+	it('self and shadow: show the target alone', () => {
 		for (const mode of ['self', 'shadow'] as const)
 			expect(isolatedVisibilities(tree, 1, mode)).toEqual([
 				'hidden',
@@ -49,7 +50,7 @@ describe('isolatedVisibilities', () => {
 				'hidden',
 				'hidden',
 				'hidden',
-				'visible',
+				'hidden',
 			]);
 	});
 
@@ -58,10 +59,14 @@ describe('isolatedVisibilities', () => {
 	});
 
 	it('leaves the stage visible when the stage is the target', () => {
-		expect(isolatedVisibilities(tree, 0, 'subtree').slice(0, 4)).toEqual([
+		expect(isolatedVisibilities(tree, 0, 'subtree')).toEqual([
 			'visible',
 			'visible',
 			'visible',
+			'visible',
+			'hidden',
+			'hidden',
+			'hidden',
 			'visible',
 		]);
 		expect(isolatedVisibilities(tree, 0, 'self').slice(0, 2)).toEqual(['visible', 'hidden']);
@@ -80,37 +85,42 @@ describe('isolatedVisibilities', () => {
 	/**
 	 * 0 stage
 	 * ├─ 1 target
-	 * │  └─ 2 child
-	 * │     └─ 3 grandchild, `style="visibility: visible"`
-	 * └─ 4 sibling shape, `style="visibility: visible"`
-	 *    └─ 5 its text
+	 * │  ├─ 2 child
+	 * │  │  └─ 3 grandchild, `style="visibility: visible"`
+	 * │  └─ 4 child, `style="visibility: hidden"`
+	 * └─ 5 sibling shape, `style="visibility: visible"` (as renderers write every shape)
+	 *    └─ 6 its text
 	 */
 	const declaredTree: IsolatedVisibilityTree = {
-		parents: [-1, 0, 1, 2, 0, 4],
-		visibility: ['visible', 'visible', 'visible', 'visible', 'visible', 'visible'],
-		declared: ['', '', '', 'visible', 'visible', ''],
+		parents: [-1, 0, 1, 2, 1, 0, 5],
+		visibility: ['visible', 'visible', 'visible', 'visible', 'hidden', 'visible', 'visible'],
+		declared: ['', '', '', 'visible', 'hidden', 'visible', ''],
 	};
 
-	it('keeps a value the element declares inline, as the capture of the live stage does', () => {
+	it('hides a shape outside the target that declares itself visible', () => {
 		for (const mode of ['subtree', 'self', 'shadow'] as const) {
 			const shown = isolatedVisibilities(declaredTree, 1, mode);
-			expect(shown[4], mode).toBe('visible');
-			expect(shown[5], mode).toBe('visible');
+			expect(shown[5], mode).toBe('hidden');
+			expect(shown[6], mode).toBe('hidden');
 		}
 	});
 
-	it('keeps an inline-visible grandchild under a child the capture hides', () => {
-		expect(isolatedVisibilities(declaredTree, 1, 'self')).toEqual([
+	it('keeps what the target subtree declares in a subtree picture only', () => {
+		expect(isolatedVisibilities(declaredTree, 1, 'subtree').slice(1, 5)).toEqual([
+			'visible',
+			'visible',
+			'visible',
 			'hidden',
+		]);
+		expect(isolatedVisibilities(declaredTree, 1, 'self').slice(1, 5)).toEqual([
 			'visible',
 			'hidden',
-			'visible',
-			'visible',
-			'visible',
+			'hidden',
+			'hidden',
 		]);
 	});
 
-	it('lets the capture override what the stage, target and target children declare', () => {
+	it('shows the target whatever it and the stage declare', () => {
 		const declared: IsolatedVisibilityTree = {
 			parents: [-1, 0, 1],
 			visibility: ['visible', 'hidden', 'visible'],
@@ -167,12 +177,9 @@ describe('isolatedMarkup', () => {
 		);
 	});
 
-	it('keeps a subtree that declares itself visible, as the capture of the live stage shows it', () => {
-		const shown = template({ declared: ['', '', 'visible', ''] });
-		expect(isolatedMarkup(shown, 1, 'subtree')).toBe(
-			`<r style="${v('hidden')}"><a style="${v('visible')}">x</a>` +
-				`<b style="${v('visible')}"><c style="${v('visible')}"/></b></r>`,
-		);
+	it('leaves out a subtree outside the target even when it declares itself visible', () => {
+		const declared = template({ declared: ['', '', 'visible', ''] });
+		expect(isolatedMarkup(declared, 1, 'subtree')).toBe(pruned);
 	});
 
 	it('never leaves out a subtree that is not prunable', () => {

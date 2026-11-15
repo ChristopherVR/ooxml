@@ -87,6 +87,15 @@ function hideAllBut(
 	setStyle(saved, target, 'visibility', 'visible');
 	if (mode !== 'subtree')
 		for (const child of Array.from(target.children)) setStyle(saved, child, 'visibility', 'hidden');
+	// A `visibility` an element declares in its own style beats the hidden stage it inherits
+	// from (renderers declare `visible` on every shape), so each one outside what the picture
+	// draws is hidden too.
+	for (const el of Array.from(stage.querySelectorAll('*'))) {
+		if (el === target || el.parentElement === target) continue;
+		if (mode === 'subtree' && target.contains(el)) continue;
+		const declared = (el as HTMLElement).style?.getPropertyValue('visibility');
+		if (declared && declared !== 'hidden') setStyle(saved, el, 'visibility', 'hidden');
+	}
 	if (mode === 'shadow') {
 		setStyle(saved, target, 'color', 'transparent');
 		setStyle(saved, target, '-webkit-text-fill-color', 'transparent');
@@ -129,6 +138,7 @@ export async function rasterizeIsolated(
 				doc as Document & FontStyleDocumentLike & LinkStyleDocumentLike,
 				{
 					width: naturalWidth,
+					untransformedRoot: true,
 					height: naturalHeight,
 					...(options.externalFonts ? { externalFonts: options.externalFonts() } : {}),
 				},

@@ -1,8 +1,19 @@
 import { neutralizeDeviceStrokes } from './device-pixel-stroke';
+import { ACTION_INDICATOR_CLASS, LINK_TOOLTIP_CLASS } from './element-action-affordance';
+
+/**
+ * Editor affordances every binding paints inside an element's box without marking them
+ * `data-export-ignore`: the amber action badge and the hover link tooltip. They are editor
+ * chrome (PowerPoint's own exports have neither), so no export draws them.
+ */
+const EDITOR_AFFORDANCES = `.${ACTION_INDICATOR_CLASS}, .${LINK_TOOLTIP_CLASS}`;
 
 /** Explicit editor-only DOM is omitted by both raster export strategies. */
 export function isExportIgnoredElement(element: Element): boolean {
-	return element.getAttribute('data-export-ignore') === 'true';
+	return (
+		element.getAttribute('data-export-ignore') === 'true' ||
+		element.matches?.(EDITOR_AFFORDANCES) === true
+	);
 }
 
 /**
@@ -16,7 +27,9 @@ export function isExportIgnoredElement(element: Element): boolean {
  */
 export function prepareExportClone(root: HTMLElement): void {
 	neutralizeDeviceStrokes(root);
-	for (const overlay of root.querySelectorAll('[data-export-ignore="true"]')) {
+	for (const overlay of root.querySelectorAll(
+		`[data-export-ignore="true"], ${EDITOR_AFFORDANCES}`,
+	)) {
 		overlay.remove();
 	}
 	for (const element of [root, ...root.querySelectorAll<HTMLElement | SVGElement>('*')]) {

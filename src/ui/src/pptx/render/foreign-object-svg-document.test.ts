@@ -86,6 +86,19 @@ describe('buildForeignObjectSvgBody', () => {
 		expect(clone.textContent).toBe('Keep');
 	});
 
+	it('treats the action badge and link tooltip as editor chrome no export draws', () => {
+		const clone = document.createElement('div');
+		clone.innerHTML =
+			'<div class="pptx-link-host">Shape<div class="pptx-action-indicator"><svg></svg></div>' +
+			'<div class="pptx-link-tooltip"><div>Go to slide 2</div></div></div>';
+		expect(isExportIgnoredElement(clone.querySelector('.pptx-action-indicator')!)).toBe(true);
+		expect(isExportIgnoredElement(clone.querySelector('.pptx-link-tooltip')!)).toBe(true);
+		expect(isExportIgnoredElement(clone.firstElementChild!)).toBe(false);
+		prepareExportClone(clone);
+		expect(clone.querySelector('.pptx-action-indicator, .pptx-link-tooltip')).toBeNull();
+		expect(clone.textContent).toBe('Shape');
+	});
+
 	it('omits marked HTML and SVG editor nodes without changing content or the live tree', async () => {
 		const el = document.createElement('div');
 		el.innerHTML =

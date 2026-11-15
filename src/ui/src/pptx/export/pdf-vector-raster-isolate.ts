@@ -1,9 +1,8 @@
 /**
  * The DOM-free half of drawing one element of a styled stage clone on its own (see
- * `pdf-vector-raster-batch.ts`). `rasterizeIsolated` hides the live stage, shows the target (and
- * hides the target's children when it draws only the target's own box or text shadow), and lets
- * the cascade work out every other node. A clone with every computed style inlined has no
- * inheritance left to work that out, so the same answer is computed here for every element and
+ * `pdf-vector-raster-batch.ts`): only the target is visible (with its descendants for a `subtree`
+ * picture), over a transparent background. A clone with every computed style inlined has no
+ * inheritance left to work that out, so the answer is computed here for every element and
  * written into the serialised clone explicitly. A subtree the picture shows none of is left out
  * of its markup where that cannot move anything (see `pdf-vector-raster-template.ts`).
  */
@@ -17,7 +16,7 @@ export interface IsolatedVisibilityTree {
 	visibility: readonly string[];
 	/**
 	 * The `visibility` each live element declares in its own `style` attribute (`''` for none):
-	 * a declared value beats inheritance, so it holds while the stage around it is hidden.
+	 * inside a `subtree` target a declared value beats inheritance.
 	 */
 	declared: readonly string[];
 }
@@ -58,12 +57,10 @@ const VISIBILITY = new Set(['visible', 'hidden', 'collapse']);
 
 /**
  * The `visibility` of every element when only element `target` is drawn, `mode` as
- * `rasterizeIsolated` draws it.
- *
- * After the stage, the target and (for `self` and `shadow`) its children, which the capture sets
- * itself, an element keeps a value its own `style` declares; then an element whose inlined value
- * differs from its parent's was given its own value by a stylesheet and keeps it too; any other
- * element inherits its parent's new value.
+ * `rasterizeIsolated` draws it: everything outside the target is hidden, whatever it declares,
+ * and so (for `self` and `shadow`) is everything inside it. In a `subtree` picture the target's
+ * descendants keep what the cascade gives them: a value an element's own `style` declares, or a
+ * stylesheet value (an inlined value differing from its parent's), else its parent's new value.
  */
 export function isolatedVisibilities(
 	tree: IsolatedVisibilityTree,
@@ -72,14 +69,15 @@ export function isolatedVisibilities(
 ): string[] {
 	const { parents, visibility, declared } = tree;
 	const out: string[] = [];
+	const inside: boolean[] = [];
 	for (let i = 0; i < parents.length; i++) {
 		const parent = parents[i] ?? -1;
 		const own = visibility[i] ?? '';
 		const set = declared[i] ?? '';
+		inside.push(i === target || (parent >= 0 && inside[parent] === true));
 		let value: string;
 		if (i === target) value = 'visible';
-		else if (parent === target && mode !== 'subtree') value = 'hidden';
-		else if (parent < 0) value = 'hidden';
+		else if (!inside[i] || mode !== 'subtree') value = 'hidden';
 		else if (VISIBILITY.has(set)) value = set;
 		else if (own && own !== (visibility[parent] ?? '')) value = own;
 		else value = out[parent] ?? 'visible';

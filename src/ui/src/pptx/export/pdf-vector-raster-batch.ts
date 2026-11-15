@@ -75,6 +75,7 @@ export async function prepareIsolatedRasterBase(
 		for (const [target, tag] of targets) target.setAttribute(RASTER_TARGET_ATTRIBUTE, tag);
 		const prepared = await settleWithin(
 			prepareForeignObjectClone(stage, doc, {
+				untransformedRoot: true,
 				...(options.readComputedStyle ? { readComputedStyle: options.readComputedStyle } : {}),
 				...(options.externalFonts ? { externalFonts: options.externalFonts() } : {}),
 			}),

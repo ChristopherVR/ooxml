@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { prepareExportClone } from '../render/export-clone';
 import { inlineComputedStylesOnClone } from '../render/foreign-object-style-inline';
+import { isolateLive } from './pdf-vector-raster';
 import { prepareIsolatedRasterBase, RASTER_TARGET_ATTRIBUTE } from './pdf-vector-raster-batch';
 import { isolatedMarkup } from './pdf-vector-raster-isolate';
 import { RASTER_VISIBILITY_ATTRIBUTE, shadowTargetStyle } from './pdf-vector-raster-live';
@@ -78,6 +79,9 @@ describe('prepareIsolatedRasterBase', () => {
 		const plain = root.cloneNode(true) as HTMLElement;
 		inlineComputedStylesOnClone(root, plain, computed);
 		prepareExportClone(plain);
+		// The stage is drawn without its own transform (see the zoom test below).
+		for (const property of ['transform', 'translate', 'rotate', 'scale'])
+			plain.style.setProperty(property, 'none');
 		const expected = new XMLSerializer().serializeToString(plain);
 		expect(withoutSlots(isolatedMarkup(base.template, 1, 'subtree', { prune: false }))).toBe(
 			expected,
@@ -113,23 +117,86 @@ describe('prepareIsolatedRasterBase', () => {
 		expect(isolatedMarkup(base.template, last, 'subtree')).toContain('scrolled');
 	});
 
-	it('keeps what declares itself visible in its own style, and unmarks the live stage', async () => {
+	it('draws only the target: a shape declaring itself visible stays out', async () => {
 		const root = stage();
 		const target = shape(root);
+		const inside = add(target, 'position: absolute; visibility: hidden');
+		inside.style.visibility = 'visible';
+		inside.append('declared inside');
 		const declared = shape(root);
 		declared.style.visibility = 'visible';
-		declared.append('declared visible');
-		shape(root).append('inherits hidden');
+		declared.append('declared outside');
 		const base = (await prepareIsolatedRasterBase(root, new Map([[target, '0']]), {
 			readComputedStyle: computed,
 		}))!;
 		for (const mode of ['subtree', 'self', 'shadow'] as const) {
 			const markup = isolatedMarkup(base.template, 1, mode);
-			expect(markup, mode).toContain('declared visible');
-			expect(markup, mode).not.toContain('inherits hidden');
+			expect(markup, mode).not.toContain('declared outside');
+			// Inside a subtree picture what an element declares holds; self and shadow hide it.
+			if (mode === 'subtree')
+				expect(markup).toMatch(/visibility:visible!important">declared inside/u);
+			else expect(markup, mode).not.toMatch(/visibility:visible!important">declared inside/u);
 		}
 		expect(root.querySelector(`[${RASTER_VISIBILITY_ATTRIBUTE}]`)).toBeNull();
 		expect(declared.getAttribute('style')).toBe('visibility: visible;');
+	});
+
+	it('draws a zoomed stage at its own layout size, where the picture regions are measured', async () => {
+		const root = stage();
+		root.style.transform = 'scale(0.871875)';
+		root.style.transformOrigin = '0px 0px';
+		const target = shape(root);
+		// A plain declaration: jsdom's own does not keep every transform value.
+		const zoom = (el: Element) => {
+			const base = computed(el);
+			const map = new Map<string, string>();
+			for (let i = 0; i < base.length; i++)
+				map.set(base.item(i), base.getPropertyValue(base.item(i)));
+			if (el === root) map.set('transform', 'matrix(0.871875, 0, 0, 0.871875, 0, 0)');
+			if (el === target) map.set('transform', 'matrix(0.98, 0.17, -0.17, 0.98, 0, 0)');
+			const keys = [...map.keys()];
+			return {
+				length: keys.length,
+				item: (i: number) => keys[i] ?? '',
+				getPropertyValue: (property: string) => map.get(property) ?? '',
+			};
+		};
+		const base = (await prepareIsolatedRasterBase(root, new Map([[target, '0']]), {
+			readComputedStyle: zoom,
+		}))!;
+		const markup = isolatedMarkup(base.template, 1, 'self');
+		const [rootStyle = '', targetStyle = ''] = [...markup.matchAll(/ style="([^"]*)"/gu)].map(
+			(match) => match[1],
+		);
+		expect(rootStyle).toMatch(/transform: none/u);
+		expect(rootStyle).not.toContain('0.871875');
+		// The content keeps its own transforms.
+		expect(targetStyle).toContain('matrix(0.98, 0.17, -0.17, 0.98, 0, 0)');
+		expect(root.style.transform).toBe('scale(0.871875)');
+	});
+});
+
+describe('isolateLive', () => {
+	it('hides shapes that declare themselves visible, and puts every style back', () => {
+		const root = stage();
+		const target = shape(root);
+		const child = add(target, '');
+		child.style.visibility = 'visible';
+		const other = shape(root);
+		other.style.visibility = 'visible';
+		const restore = isolateLive(root, target, 'subtree');
+		expect(root.style.visibility).toBe('hidden');
+		expect(target.style.visibility).toBe('visible');
+		expect(child.style.visibility).toBe('visible');
+		expect(other.style.visibility).toBe('hidden');
+		restore();
+		expect(other.style.visibility).toBe('visible');
+		expect(other.style.getPropertyPriority('visibility')).toBe('');
+		expect(root.style.visibility).toBe('');
+		const restoreSelf = isolateLive(root, target, 'self');
+		expect(child.style.visibility).toBe('hidden');
+		restoreSelf();
+		expect(child.style.visibility).toBe('visible');
 	});
 });
 

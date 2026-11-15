@@ -1,9 +1,9 @@
 /**
  * What the shared-clone pictures (`pdf-vector-raster-batch.ts`) need from the LIVE stage beyond
- * its computed styles. A capture of the live stage hides the stage and lets the cascade decide
- * the rest, and under the cascade a `visibility` an element declares in its own `style` beats the
- * hidden stage it inherits from; computed styles alone cannot tell such a declaration from an
- * inherited value, so the declarations are carried into the clone on a temporary attribute.
+ * its computed styles. Inside a `subtree` picture's target, a `visibility` an element declares in
+ * its own `style` beats the value it inherits; computed styles alone cannot tell such a
+ * declaration from an inherited value, so the declarations are carried into the clone on a
+ * temporary attribute.
  */
 import { withAuthoredStrokeWidths } from '../render/device-pixel-stroke';
 import { prepareExportClone } from '../render/export-clone';
