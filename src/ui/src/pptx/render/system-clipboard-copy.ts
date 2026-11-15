@@ -80,6 +80,9 @@ export async function writeSystemClipboard(
 		}
 		return blob.type === 'image/png' ? blob : new Blob([blob], { type: 'image/png' });
 	});
+	// The clipboard may never read the picture (it refuses the item, or the text fallback runs), so
+	// a failed render must not surface as an unhandled rejection; the write still sees it reject.
+	image.catch(() => undefined);
 	const formats: Record<string, Blob | PromiseLike<Blob>> = { 'image/png': image };
 	if (input.text) {
 		formats['text/plain'] = new Blob([input.text], { type: 'text/plain' });

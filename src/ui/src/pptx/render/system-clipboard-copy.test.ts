@@ -47,6 +47,26 @@ describe('writeSystemClipboard', () => {
 		]);
 	});
 
+	it('leaves no unhandled rejection when the clipboard never reads a failed picture', async () => {
+		const unhandled = vi.fn();
+		process.on('unhandledRejection', unhandled);
+		try {
+			const write = vi.fn(async () => {
+				throw new Error('refused');
+			});
+			const writeText = vi.fn(async () => undefined);
+			await writeSystemClipboard(
+				{ text: 'Hi', image: Promise.resolve(null) },
+				{ write, writeText },
+				Item,
+			);
+			await new Promise((resolve) => setTimeout(resolve, 0));
+			expect(unhandled).not.toHaveBeenCalled();
+		} finally {
+			process.off('unhandledRejection', unhandled);
+		}
+	});
+
 	it('reports a denied permission without throwing', async () => {
 		const denied = Object.assign(new Error('denied'), { name: 'NotAllowedError' });
 		const write = vi.fn(async () => {
