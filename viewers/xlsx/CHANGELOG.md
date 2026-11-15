@@ -1,12 +1,233 @@
 # Changelog
 
-All notable changes to this project are documented here.
-This file is generated from [Conventional Commits](https://www.conventionalcommits.org)
-by [git-cliff](https://git-cliff.org); do not edit it by hand.
+All notable changes to this viewer's packages, newest first. Each dated section names the
+packages released that day and merges their entries; the full history of each package is in its
+own `CHANGELOG.md` (`packages/<name>/`, `mcp/`, `server/`). The release workflow writes these
+sections (`scripts/viewer-changelogs.mjs`); do not edit them by hand.
 
-Each dated section below names the per-package releases cut in that run; the per-package
-history lives in `packages/<name>/CHANGELOG.md`. Nothing has been published yet, so there are no
-sections: the first release run writes them.
+## 2026-11-13
+
+_Releases: @christophervr/xlsx-core@1.1.2, @christophervr/xlsx-react-viewer@1.5.0, xlsx-vue-viewer@1.5.0, xlsx-angular-viewer@1.5.0, xlsx-svelte-viewer@1.5.0, xlsx-solid-viewer@1.5.0, xlsx-vanilla-viewer@1.5.0_
+
+### Features
+
+- **xlsx:** Host-owned context menus and workflow operations ([18854c4](https://github.com/ChristopherVR/ooxml/commit/18854c444095dfaea70f087f3c868211316436a7))
+- **xlsx:** Filter and extend the native context menu ([554d354](https://github.com/ChristopherVR/ooxml/commit/554d354d5f2ec8ce9146ce43645301b379f71d11))
+- **xlsx:** Make replace validation configurable ([093f478](https://github.com/ChristopherVR/ooxml/commit/093f4782640506ab8274134f70ad4abb8a2e4e50))
+
+### Documentation
+
+- Correct outdated statements across the repository ([6ea98f5](https://github.com/ChristopherVR/ooxml/commit/6ea98f59c35894f7c2dc3e1037d82b17a482a80c))
+
+## 2026-11-06
+
+_Releases: @christophervr/xlsx-core@1.1.1, @christophervr/xlsx-react-viewer@1.4.1, xlsx-vue-viewer@1.4.1, xlsx-angular-viewer@1.4.1, xlsx-svelte-viewer@1.4.1, xlsx-solid-viewer@1.4.1, xlsx-vanilla-viewer@1.4.1_
+
+### Documentation
+
+- Disclose every outbound request in PRIVACY.md ([eb1810b](https://github.com/ChristopherVR/ooxml/commit/eb1810bd3dd1ede67a8c4872f3fe5daa64472fe1))
+
+## 2026-11-05
+
+_Releases: @christophervr/xlsx-react-viewer@1.4.0, xlsx-vue-viewer@1.4.0, xlsx-angular-viewer@1.4.0, xlsx-svelte-viewer@1.4.0, xlsx-solid-viewer@1.4.0, xlsx-vanilla-viewer@1.4.0_
+
+### Features
+
+- **xlsx:** Open workbooks from cloud places in File > Open ([f1b19e4](https://github.com/ChristopherVR/ooxml/commit/f1b19e495f8ac1fe43ed1a540f76ce5c6cbc2710))
+- **ui:** Expose openCloudFile on the word, excel and visio bindings ([b4837c7](https://github.com/ChristopherVR/ooxml/commit/b4837c76398c125755458861ce62679d7c179003))
+
+## 2026-11-04
+
+_Releases: xlsx-viewer-mcp@1.1.0, @christophervr/xlsx-core@1.1.0, @christophervr/xlsx-react-viewer@1.3.0, xlsx-vue-viewer@1.3.0, xlsx-angular-viewer@1.3.0, xlsx-svelte-viewer@1.3.0, xlsx-solid-viewer@1.3.0, xlsx-vanilla-viewer@1.3.0_
+
+### Features
+
+- **embedding:** Connect office products to shared onedrive storage ([b8620c1](https://github.com/ChristopherVR/ooxml/commit/b8620c13a4903aa27fed365d113153cad76ed29f))
+
+### Dependencies
+
+- **deps:** Bump the angular group with 8 updates ([b233fe0](https://github.com/ChristopherVR/ooxml/commit/b233fe0bd00783876e01b5f0c7488a8f9e139fe6))
+- **deps:** Merge angular dependency updates ([#234](https://github.com/ChristopherVR/ooxml/issues/234)) ([5c642cf](https://github.com/ChristopherVR/ooxml/commit/5c642cf7e6fc39265778fb062e4b13772af47a8e))
+
+## 2026-11-03
+
+_Releases: xlsx-viewer-mcp@1.0.1_
+
+### Dependencies
+
+- **deps:** Bump the production-minor-and-patch group with 22 updates ([8e60b14](https://github.com/ChristopherVR/ooxml/commit/8e60b14e1d8ee3a1cb507670caa15a611632ef26))
+- **deps:** Merge production dependency updates ([#236](https://github.com/ChristopherVR/ooxml/issues/236)) ([7eb137b](https://github.com/ChristopherVR/ooxml/commit/7eb137b03906ded043ce0e4adf83e01fcdaa44a9))
+
+## 2026-10-29
+
+_Releases: xlsx-viewer-mcp@1.0.0, @christophervr/xlsx-core@1.0.0, @christophervr/xlsx-react-viewer@1.2.2, xlsx-vue-viewer@1.2.2, xlsx-angular-viewer@1.2.2, xlsx-svelte-viewer@1.2.2, xlsx-solid-viewer@1.2.2, xlsx-vanilla-viewer@1.2.2_
+
+### Features
+
+- **xlsx:** Commit xlsx-core and xlsx-viewer-mcp to a stable 1.0 api ([e458ecf](https://github.com/ChristopherVR/ooxml/commit/e458ecf368421096ccffb366cc1e0ba17f438b77))
+
+## 2026-10-23
+
+_Releases: @christophervr/xlsx-core@0.3.1, @christophervr/xlsx-react-viewer@1.2.1, xlsx-vue-viewer@1.2.1, xlsx-angular-viewer@1.2.1, xlsx-svelte-viewer@1.2.1, xlsx-solid-viewer@1.2.1, xlsx-vanilla-viewer@1.2.1_
+
+### Refactor
+
+- **docx:** Build the Word bindings on ooxml-ui/bindings ([90e8131](https://github.com/ChristopherVR/ooxml/commit/90e81310800081ad484e93a3bab25806a07bc3e4))
+- **xlsx:** Build the Excel bindings on ooxml-ui/bindings ([31ca812](https://github.com/ChristopherVR/ooxml/commit/31ca812ba4513f0b0e0db643ab4b36643cbe62e5))
+
+### Documentation
+
+- Describe wave 6 chart and smartart editing in word and excel ([d212908](https://github.com/ChristopherVR/ooxml/commit/d212908f59be7f5da51ce5347b23a665e4cedb08))
+
+### Other
+
+- Word and Excel docs for wave 6 (docs6-4) ([da0f3e8](https://github.com/ChristopherVR/ooxml/commit/da0f3e83c59b8ff55104bd852cf46fa052c587b5))
+- Shared binding kit (wave6-1) ([98ab396](https://github.com/ChristopherVR/ooxml/commit/98ab396a11b31675c0266acd5242060412642bd3))
+
+## 2026-10-22
+
+_Releases: xlsx-viewer-mcp@0.2.2, xlsx-viewer-mcp@0.2.1, @christophervr/xlsx-react-viewer@1.2.0, @christophervr/xlsx-react-viewer@1.1.0, @christophervr/xlsx-react-viewer@1.0.0, xlsx-vue-viewer@1.2.0, xlsx-vue-viewer@1.1.0, xlsx-vue-viewer@1.0.0, xlsx-angular-viewer@1.2.0, xlsx-angular-viewer@1.1.0, xlsx-angular-viewer@1.0.0, xlsx-svelte-viewer@1.2.0, xlsx-svelte-viewer@1.1.0, xlsx-svelte-viewer@1.0.0, xlsx-solid-viewer@1.2.0, xlsx-solid-viewer@1.1.0, xlsx-solid-viewer@1.0.0, xlsx-vanilla-viewer@1.2.0, xlsx-vanilla-viewer@1.1.0, xlsx-vanilla-viewer@1.0.0_
+
+### Features
+
+- **xlsx:** Route save and open through host-owned storage ([ef768a6](https://github.com/ChristopherVR/ooxml/commit/ef768a684f558275071be347d68406503aef8c23))
+- **xlsx:** Forward file-command, workbook, ribbon and sheet events ([5aaf6db](https://github.com/ChristopherVR/ooxml/commit/5aaf6dbdc767a1ff8c30b1b8619c0dcb09cfdc38))
+- **xlsx:** Take the shared customization contract in <xlsx-editor> ([f96a544](https://github.com/ChristopherVR/ooxml/commit/f96a5449a6a36fba59997197b484ddefb4f2d8e8))
+- **embedding:** Land the host customization, read-only and storage contracts ([822a6a0](https://github.com/ChristopherVR/ooxml/commit/822a6a073840b9e9d1671476542322b28332dc42))
+- **xlsx:** Let hosts own the data-validation alert in building blocks ([fcbe367](https://github.com/ChristopherVR/ooxml/commit/fcbe367f5cfe366cc425796e3fdff9c31aa99e25))
+- **xlsx:** Complete the building-block toolbar and add vanilla ([af8114f](https://github.com/ChristopherVR/ooxml/commit/af8114ff92e023858cd5a6d2a9922d6dbb2ee111))
+- **xlsx:** Make the building blocks read-only unless canEdit is true ([efe6158](https://github.com/ChristopherVR/ooxml/commit/efe6158de251e1e34694335292755cfec96d640b))
+
+### Bug Fixes
+
+- **xlsx:** Report read-only with the lock and host switch ([782adb9](https://github.com/ChristopherVR/ooxml/commit/782adb95a4c8ad4dded13d73e8a5fa5aee2c8666))
+- **xlsx:** Name the share opener like the other building blocks ([1346849](https://github.com/ChristopherVR/ooxml/commit/1346849e085724ef8a4810cf540f8d802fd47cee))
+- **xlsx:** Expect the readonly-change detail in the vanilla mount test ([d8cf911](https://github.com/ChristopherVR/ooxml/commit/d8cf9116eb28ff440538491a9af459b1481f4afc))
+
+### Refactor
+
+- **mcp:** Register every format's tools through core automation ([9a28bfa](https://github.com/ChristopherVR/ooxml/commit/9a28bfa684167472fff27f04a371c37d494a5fd5))
+
+### Documentation
+
+- **xlsx:** Document building blocks and list them in the sidebar ([9d48799](https://github.com/ChristopherVR/ooxml/commit/9d4879997eaea18e71ff61203c5a52c2b33fa4c0))
+
+### Testing
+
+- **xlsx:** Run the reviewed-edit tools end to end over mcp ([9f66379](https://github.com/ChristopherVR/ooxml/commit/9f66379b96ec2708d032294d1ef2f8557e24f284))
+
+### Styling
+
+- **xlsx:** Format the react binding test ([a2e8b70](https://github.com/ChristopherVR/ooxml/commit/a2e8b70fe6f25b51b02cbd612675f492f247b2fc))
+
+### Other
+
+- Integrate the customization contract into host storage ([629554b](https://github.com/ChristopherVR/ooxml/commit/629554b3030728bfe16e11ac8ae5b2530bb28a17))
+
+## 2026-10-21
+
+_Releases: xlsx-viewer-mcp@0.2.0, @christophervr/xlsx-core@0.3.0, @christophervr/xlsx-react-viewer@0.7.0, xlsx-vue-viewer@0.7.0, xlsx-angular-viewer@0.7.0, xlsx-svelte-viewer@0.7.0, xlsx-solid-viewer@0.7.0, xlsx-vanilla-viewer@0.7.0_
+
+### Features
+
+- **xlsx:** Add native framework building blocks ([9689a65](https://github.com/ChristopherVR/ooxml/commit/9689a6520682e9db18f8cbee78d8434ad114b097))
+- **xlsx:** Expose composable spreadsheet building blocks ([9aef499](https://github.com/ChristopherVR/ooxml/commit/9aef499f76196be6dd008ae873ac8f0d4caeeb58))
+- **xlsx:** Share office themes across editor building blocks ([a791ec2](https://github.com/ChristopherVR/ooxml/commit/a791ec2e68956921006c719397803e603286a8c0))
+
+### Bug Fixes
+
+- **deps:** Align private bindings with their react test host ([f4152ef](https://github.com/ChristopherVR/ooxml/commit/f4152ef04ccdc3e5c9d21ecf59f485b56de2ec52))
+- **ui:** Harden composition lifecycle and consumer checks ([6aa52be](https://github.com/ChristopherVR/ooxml/commit/6aa52be88175ca4f46f6f3b1c223ef06a8f1f915))
+- **ui:** Preserve live formula drafts and runtime compatibility ([3a7d4f1](https://github.com/ChristopherVR/ooxml/commit/3a7d4f184658c4d69b04bbd36bab7afa3896dd9e))
+- **ui:** Guard framework demos and native input identity ([a094008](https://github.com/ChristopherVR/ooxml/commit/a094008b00578fff9ed861addbfe2aca2ce9ab09))
+
+### Styling
+
+- Fix the oxfmt and oxlint warnings in the viewers ([db0314f](https://github.com/ChristopherVR/ooxml/commit/db0314f319e3d0508960872260792215477d9ca5))
+
+### Dependencies
+
+- **deps:** Declare native adapter development dependencies ([b5f9957](https://github.com/ChristopherVR/ooxml/commit/b5f9957a65d934ebb4d40ed02bb872dcd24575fb))
+
+## 2026-10-20
+
+_Releases: xlsx-viewer-mcp@0.1.11_
+
+### Dependencies
+
+- **deps:** Bump the production-minor-and-patch group with 22 updates ([02d7713](https://github.com/ChristopherVR/ooxml/commit/02d7713ceb301921fd6c7706138d64f4c10a9d38))
+- **deps:** Merge dependency update ([#94](https://github.com/ChristopherVR/ooxml/issues/94)) ([e381aba](https://github.com/ChristopherVR/ooxml/commit/e381abaa11794233cdea85a9dc6d098d4cb338c4))
+
+## 2026-10-15
+
+_Releases: xlsx-viewer-mcp@0.1.10_
+
+### Bug Fixes
+
+- **automation:** Add --root and untrusted-content notes to MCP servers ([0da2c7d](https://github.com/ChristopherVR/ooxml/commit/0da2c7d1ec6655f649a608ded1f36dea41f34962))
+
+## 2026-10-10
+
+_Releases: xlsx-viewer-mcp@0.1.9, @christophervr/xlsx-react-viewer@0.6.0, xlsx-vue-viewer@0.6.0, xlsx-angular-viewer@0.6.0, xlsx-svelte-viewer@0.6.0, xlsx-solid-viewer@0.6.0, xlsx-vanilla-viewer@0.6.0_
+
+### Features
+
+- **xlsx:** Make ribbon add-in tabs a prop and event of every binding ([691f553](https://github.com/ChristopherVR/ooxml/commit/691f5531b9f5b4a5a5ac0645b43c8c0fc55be5d8))
+
+### Styling
+
+- Apply oxfmt to files drifted from the formatter ([daeabf2](https://github.com/ChristopherVR/ooxml/commit/daeabf26125af866f90359ac8a5716234d5b8b36))
+
+## 2026-10-09
+
+_Releases: xlsx-viewer-mcp@0.1.8_
+
+### Dependencies
+
+- **deps:** Bump the production-minor-and-patch group with 5 updates ([#42](https://github.com/ChristopherVR/ooxml/issues/42)) ([fda493e](https://github.com/ChristopherVR/ooxml/commit/fda493e2697908c477ce845019d9c2fe8b591ab2))
+
+## 2026-10-08
+
+_Releases: xlsx-viewer-mcp@0.1.7, xlsx-viewer-mcp@0.1.6, @christophervr/xlsx-core@0.2.10, @christophervr/xlsx-core@0.2.9, @christophervr/xlsx-react-viewer@0.5.1, @christophervr/xlsx-react-viewer@0.5.0, @christophervr/xlsx-react-viewer@0.4.6, xlsx-vue-viewer@0.5.1, xlsx-vue-viewer@0.5.0, xlsx-vue-viewer@0.4.6, xlsx-angular-viewer@0.5.1, xlsx-angular-viewer@0.5.0, xlsx-angular-viewer@0.4.6, xlsx-svelte-viewer@0.5.1, xlsx-svelte-viewer@0.5.0, xlsx-svelte-viewer@0.4.6, xlsx-solid-viewer@0.5.1, xlsx-solid-viewer@0.5.0, xlsx-solid-viewer@0.4.6, xlsx-vanilla-viewer@0.5.1, xlsx-vanilla-viewer@0.5.0, xlsx-vanilla-viewer@0.4.6_
+
+### Features
+
+- **xlsx:** Expose collaboration in every binding ([2983ccc](https://github.com/ChristopherVR/ooxml/commit/2983ccc1e5d72749a31d2540e8f57b637f282b3e))
+
+### Bug Fixes
+
+- **ci:** Recover unpublished releases and validate manifests ([ae190df](https://github.com/ChristopherVR/ooxml/commit/ae190df2352283303858719fe1db5e58b86903fb))
+
+### Documentation
+
+- Refresh the readmes with webp images and the office suite ([6a800d0](https://github.com/ChristopherVR/ooxml/commit/6a800d062bc911d6c4ea682bdbffa7fc437d1556))
+
+## 2026-10-07
+
+_Releases: xlsx-viewer-mcp@0.1.5, @christophervr/xlsx-core@0.2.8, @christophervr/xlsx-core@0.2.7, @christophervr/xlsx-core@0.2.6, @christophervr/xlsx-react-viewer@0.4.5, @christophervr/xlsx-react-viewer@0.4.4, @christophervr/xlsx-react-viewer@0.4.3, xlsx-vue-viewer@0.4.5, xlsx-vue-viewer@0.4.4, xlsx-vue-viewer@0.4.3, xlsx-angular-viewer@0.4.5, xlsx-angular-viewer@0.4.4, xlsx-angular-viewer@0.4.3, xlsx-svelte-viewer@0.4.5, xlsx-svelte-viewer@0.4.4, xlsx-svelte-viewer@0.4.3, xlsx-solid-viewer@0.4.5, xlsx-solid-viewer@0.4.4, xlsx-solid-viewer@0.4.3, xlsx-vanilla-viewer@0.4.5, xlsx-vanilla-viewer@0.4.4, xlsx-vanilla-viewer@0.4.3_
+
+### Refactor
+
+- Move the library into src/core, next to src/ui ([3933a88](https://github.com/ChristopherVR/ooxml/commit/3933a88e36784ce5f4bfab0af1ca12eb65d3cd0c))
+
+### Chores
+
+- Merge the release commit into the restructure ([efdb30a](https://github.com/ChristopherVR/ooxml/commit/efdb30a34873f71211e11a39f315b5dc3c3cd82c))
+
+## 2026-10-06
+
+_Releases: @christophervr/xlsx-core@0.2.5, @christophervr/xlsx-react-viewer@0.4.2, xlsx-vue-viewer@0.4.2, xlsx-angular-viewer@0.4.2, xlsx-svelte-viewer@0.4.2, xlsx-solid-viewer@0.4.2, xlsx-vanilla-viewer@0.4.2_
+
+### Refactor
+
+- Move the library into src/core, next to src/ui ([3933a88](https://github.com/ChristopherVR/ooxml/commit/3933a88e36784ce5f4bfab0af1ca12eb65d3cd0c))
+- **demos:** Move the viewer demos to demos/<product> ([4031a96](https://github.com/ChristopherVR/ooxml/commit/4031a96e6d4a20192ddd263858bdd2c20edccb54))
+- **e2e:** Move the viewer browser tests to e2e/<product> ([2e4106d](https://github.com/ChristopherVR/ooxml/commit/2e4106d2f240f3440782faf93e711e9eaef06f50))
+
+### Chores
+
+- Merge the release commit into the restructure ([efdb30a](https://github.com/ChristopherVR/ooxml/commit/efdb30a34873f71211e11a39f315b5dc3c3cd82c))
+
 ## 2026-10-05
 
 _Releases: @christophervr/xlsx-core@0.2.3, @christophervr/xlsx-react-viewer@0.4.0, xlsx-vue-viewer@0.4.0, xlsx-angular-viewer@0.4.0, xlsx-svelte-viewer@0.4.0, xlsx-solid-viewer@0.4.0, xlsx-vanilla-viewer@0.4.0_
@@ -105,4 +326,3 @@ _Releases: @christophervr/xlsx-core@0.1.1, @christophervr/xlsx-react-viewer@0.1.
 ### Testing
 
 - Assert the currency format, not font-dependent text (by @ChristopherVR) ([8fe9421](https://github.com/ChristopherVR/xlsx-viewer/commit/8fe94212c09b906ea786e370e55fd9bd8c6b78ef))
-

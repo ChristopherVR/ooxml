@@ -1,12 +1,1654 @@
 # Changelog
 
-All notable changes to this project are documented here.
+All notable changes to this viewer's packages, newest first. Each dated section names the
+packages released that day and merges their entries; the full history of each package is in its
+own `CHANGELOG.md` (`packages/<name>/`, `mcp/`, `server/`). The release workflow writes these
+sections (`scripts/viewer-changelogs.mjs`); do not edit them by hand.
 
-The `2.0.0` section below is hand-authored to showcase the V2 release; the
-dated sections beneath it are generated from
-[Conventional Commits](https://www.conventionalcommits.org) by
-[git-cliff](https://git-cliff.org). The exact version number and date for
-`2.0.0` are finalized when the release is tagged.
+## 2026-11-14
+
+_Releases: pptx-react-viewer@4.77.2, pptx-react-viewer@4.77.1, pptx-vue-viewer@4.76.2, pptx-vue-viewer@4.76.1, pptx-angular-viewer@4.76.2, pptx-angular-viewer@4.76.1, pptx-svelte-viewer@4.76.2, pptx-svelte-viewer@4.76.1, pptx-vanilla-viewer@3.76.2, pptx-vanilla-viewer@3.76.1_
+
+### Bug Fixes
+
+- **pptx:** Stand in for more office fonts with measured look-alikes ([c85e448](https://github.com/ChristopherVR/ooxml/commit/c85e44819ea377585d68aee721e5006991f294b8))
+- **pptx:** Hydrate images from newly requested layouts ([f5ba096](https://github.com/ChristopherVR/ooxml/commit/f5ba096640c2a600b1d0fae45ba177f67063b015))
+- **pptx:** Preserve template edits after SVG hydration ([cf42b05](https://github.com/ChristopherVR/ooxml/commit/cf42b0524aeeae9965ca51c92c4019c29db09051))
+- **ui:** Recompute stand-in tracking when a webfont loads ([37646d6](https://github.com/ChristopherVR/ooxml/commit/37646d6a23ac4db4576aca88b02a04cb5e296873))
+- **pptx:** Stand in for aptos with its measured look-alike ([f276739](https://github.com/ChristopherVR/ooxml/commit/f2767394ceff3a6a1d291f34e43fced2a6a4c2a2))
+- **pptx:** Request the aptos look-alike bold at weight 650 ([a93f4d8](https://github.com/ChristopherVR/ooxml/commit/a93f4d8fcf6c09d96deb4d69664e5a5527894091))
+
+## 2026-11-13
+
+_Releases: pptx-viewer-mcp@2.10.3, pptx-react-viewer@4.77.0, pptx-react-viewer@4.76.0, pptx-vue-viewer@4.76.0, pptx-vue-viewer@4.75.0, pptx-angular-viewer@4.76.0, pptx-angular-viewer@4.75.0, pptx-svelte-viewer@4.76.0, pptx-svelte-viewer@4.75.0, pptx-vanilla-viewer@3.76.0, pptx-vanilla-viewer@3.75.0_
+
+### Features
+
+- **react:** Report collaborationState from useViewerBuildingBlocks ([8fe9e9f](https://github.com/ChristopherVR/ooxml/commit/8fe9e9fd1f2b69485e023cd8f414342fc0f5eee1))
+- **react:** Take onElementRenderError on PowerPointViewer ([716a537](https://github.com/ChristopherVR/ooxml/commit/716a5373a6e00d03f66bb9ef06886b0580a92ea0))
+- **pptx:** Add ribbon display options to every binding ([b374382](https://github.com/ChristopherVR/ooxml/commit/b374382d21e8d1c1e23068c339883ec4cff2849a))
+- **pptx:** Zoom at the pointer and drag to pan the slide viewport ([73bc446](https://github.com/ChristopherVR/ooxml/commit/73bc4465d33c6c9ba2e2b77b3b36a77dde37a658))
+- **pptx:** Zoom out to 10% and show a new slide from its top-left ([20cbb04](https://github.com/ChristopherVR/ooxml/commit/20cbb044810058cf282af27efd387bd4983f3375))
+- **pptx:** Offer supported font weight variants ([#280](https://github.com/ChristopherVR/ooxml/issues/280)) ([c66bb54](https://github.com/ChristopherVR/ooxml/commit/c66bb54b85a8165969f6e4a6549ddd53b00fcc09))
+- **pptx:** Host-owned workflows in useViewerBuildingBlocks ([781b14f](https://github.com/ChristopherVR/ooxml/commit/781b14f0d2e1c07746b9d9da9afedf499e30fc02))
+- **pptx:** Acknowledge asynchronous saves by revision ([7a581e9](https://github.com/ChristopherVR/ooxml/commit/7a581e9436000ee16ac8612f7fa8b6d6b20086be))
+- **pptx:** Host-owned chart insertion in useViewerBuildingBlocks ([24b8ad6](https://github.com/ChristopherVR/ooxml/commit/24b8ad6b9144f01f26d79e0ad02178becedcbed7))
+- **pptx:** Host operations for protection, properties, fonts and signatures ([6bb4c28](https://github.com/ChristopherVR/ooxml/commit/6bb4c28a12b00e709aec5daf3a679910915bf98a))
+- **pptx:** Host-owned slide show dialogs in building blocks ([e758425](https://github.com/ChristopherVR/ooxml/commit/e7584257450d4042d8099cf386e2b23dd75fd0fe))
+- **vanilla:** Add building blocks on the shared session ([a96b599](https://github.com/ChristopherVR/ooxml/commit/a96b5992770d4c9a3aa4d082735a76a18de24789))
+- **ui:** Register the pptx dialog operations as building-block groups ([2226646](https://github.com/ChristopherVR/ooxml/commit/2226646334bc76e04d722d8d93207117501883df))
+- **vanilla:** Add dialog groups and live options to building blocks ([2e6355e](https://github.com/ChristopherVR/ooxml/commit/2e6355eaa4702910224319274a5d2184880563dd))
+- **vue:** Highlight the matched find text on the canvas ([a1e07ec](https://github.com/ChristopherVR/ooxml/commit/a1e07ec0ff297984224d9a279bc5c3abc0c95a65))
+- **vue:** Report shell state from the building blocks ([29a9aba](https://github.com/ChristopherVR/ooxml/commit/29a9aba5cb48c4884746fba3e73a65359f23cc51))
+- **vue:** Contain element render errors per element ([8b3f4e5](https://github.com/ChristopherVR/ooxml/commit/8b3f4e542aa348d9cb38cde2d135801cd3a904bd))
+- **vue:** Add the PowerPoint building blocks on the shared session ([214cad9](https://github.com/ChristopherVR/ooxml/commit/214cad972a9849770b9c85d988e7ca560bff465a))
+- **angular:** Highlight the matched find text on the canvas ([2bb6410](https://github.com/ChristopherVR/ooxml/commit/2bb641011fa93cd8f89af18651984597796bdebb))
+- **angular:** Report shell state and lock trust options in the blocks ([d83c5fd](https://github.com/ChristopherVR/ooxml/commit/d83c5fd5916b48aabef51d31bfc10ed2f7d963b8))
+- **angular:** Contain element render errors per element ([7f49a09](https://github.com/ChristopherVR/ooxml/commit/7f49a09663b8a91cfec26228c850826458fb6566))
+- **angular:** Add building blocks on the shared session ([5f0fdea](https://github.com/ChristopherVR/ooxml/commit/5f0fdea77caf4fccb6e4b4cfde0b52d74db5d7af))
+- **svelte:** Highlight the matched find text on the canvas ([0383ab4](https://github.com/ChristopherVR/ooxml/commit/0383ab407950450bd45bdace54b9d795d1fecb54))
+- **svelte:** Report shell state and lock trust options in the blocks ([bf9c50d](https://github.com/ChristopherVR/ooxml/commit/bf9c50de79b9d270beca71dc1030e4736e5ec91f))
+- **svelte:** Contain element render errors per element ([e0fbd3c](https://github.com/ChristopherVR/ooxml/commit/e0fbd3c8a95ecc6c2e9366827dff66ea5e256a80))
+- **svelte:** Add building blocks over the shared session ([a88c28b](https://github.com/ChristopherVR/ooxml/commit/a88c28b081680d17484a4cc489659aa66cd04f9d))
+- **vanilla:** Highlight the matched find text on the canvas ([2e7e163](https://github.com/ChristopherVR/ooxml/commit/2e7e1637d7ed92855b45d187abd9a67f47d6cef4))
+- **vanilla:** Report shell state and apply options live in the blocks ([34cc41d](https://github.com/ChristopherVR/ooxml/commit/34cc41d538a4746f23ef4f587f0da628a4fc5ecc))
+
+### Bug Fixes
+
+- **pptx:** Preserve slide zoom when saving tool edits ([#282](https://github.com/ChristopherVR/ooxml/issues/282)) ([7af7b5e](https://github.com/ChristopherVR/ooxml/commit/7af7b5ea3c9d4c5c30aefe7ccfb9c5955058fabb))
+- **pptx:** Guard stale media inserts and mirror hooks docs in zh ([89adf24](https://github.com/ChristopherVR/ooxml/commit/89adf24d14c24414e49b4a7fb478b4ca52b219c9))
+- **pptx:** Drop an unused import in the building-block actions ([5e2db99](https://github.com/ChristopherVR/ooxml/commit/5e2db99face2b5d837ff0fbc324ddec3df12b937))
+- **react:** Isolate element rendering failures ([#288](https://github.com/ChristopherVR/ooxml/issues/288)) ([1d62335](https://github.com/ChristopherVR/ooxml/commit/1d62335c3b565610f5d5dd912037a62b528bb43a))
+- **react:** Stop dialog flag requests from looping under React 18 ([f6bf9b9](https://github.com/ChristopherVR/ooxml/commit/f6bf9b9add8171e184c6c5bee862aed081ec1903))
+- **pptx:** Draw no slide on the hidden editing canvas during a show ([#279](https://github.com/ChristopherVR/ooxml/issues/279)) ([25f963b](https://github.com/ChristopherVR/ooxml/commit/25f963ba9a91666fcc1d1f0c9173e385cac84cf0))
+- **pptx:** Keep host save snapshots side-effect free in angular and vue ([5f262ce](https://github.com/ChristopherVR/ooxml/commit/5f262ceafb3ec30cabb7f214ec515f9e8add1879))
+- **pptx:** Wrap the shared signature parser instead of re-exporting it ([2f0e5a1](https://github.com/ChristopherVR/ooxml/commit/2f0e5a15c4ff72b620ba0beeb62c5433759fd709))
+- **pptx:** Route dialog flags on the flag alone in the block ports ([8ccadb4](https://github.com/ChristopherVR/ooxml/commit/8ccadb4f017d59ee12eed35d3328301e86994388))
+- **pptx:** Bring the viewer props manifest and two tests back in step ([8d88acc](https://github.com/ChristopherVR/ooxml/commit/8d88accd078305ed0b772bdec354966ddf226004))
+- **vanilla:** Keep the canvas and omit only a failing element ([d22c848](https://github.com/ChristopherVR/ooxml/commit/d22c848aad72eabc5c9710e0e8687359bafd5d2f))
+- **vanilla:** Deliver a store write made by a listener after it returns ([dd12600](https://github.com/ChristopherVR/ooxml/commit/dd126009279b881d90c724d3e68673080f813166))
+- **vanilla:** Fit the slide show to the screen at any editing zoom ([e4399ac](https://github.com/ChristopherVR/ooxml/commit/e4399ac09c5a3d6a7c72d470d9705c2557999aa8))
+- **vanilla:** Build the ribbon in a window short enough to collapse it ([10ea8fc](https://github.com/ChristopherVR/ooxml/commit/10ea8fcc13d1f32491d4084cbcaffc3cac9f835a))
+- **vanilla:** Return focus to the viewer when the find bar closes ([625763b](https://github.com/ChristopherVR/ooxml/commit/625763b98eebd3b51aa93a33cf423c4c04329977))
+
+### Refactor
+
+- **react:** Mark find matches through the shared highlight rule ([42010a2](https://github.com/ChristopherVR/ooxml/commit/42010a259e759e7dae003efeb415de611c54d716))
+- **pptx:** Share signature parsing and password rules across bindings ([234881c](https://github.com/ChristopherVR/ooxml/commit/234881cd9d4d147fb297c73f66b3fc3116aae4e2))
+- **react:** Run building blocks on the shared session and groups ([7501b95](https://github.com/ChristopherVR/ooxml/commit/7501b951fc6d97a20f21401b32d574104aef8d89))
+- **pptx:** Share the Set Up Slide Show rules across all bindings ([74d53c0](https://github.com/ChristopherVR/ooxml/commit/74d53c0d8f81808f2131123944e8425c77270786))
+- **pptx:** Share the find outline and media file helpers ([13b7962](https://github.com/ChristopherVR/ooxml/commit/13b796295cd1ddb543b5e658cf53ea912ea18394))
+
+### Documentation
+
+- Correct outdated statements across the repository ([6ea98f5](https://github.com/ChristopherVR/ooxml/commit/6ea98f59c35894f7c2dc3e1037d82b17a482a80c))
+
+### Testing
+
+- **shared:** Prove shell state, collaboration and live options in blocks ([b26b465](https://github.com/ChristopherVR/ooxml/commit/b26b4656dd1520992f33da6d67cf7c5dffcab39d))
+- **shared:** Add the element render error parity contract ([4781f2f](https://github.com/ChristopherVR/ooxml/commit/4781f2fe6d34356cb233d8d4211bcc751b9ab613))
+- **react:** Run building blocks against the shared parity contract ([daf3d35](https://github.com/ChristopherVR/ooxml/commit/daf3d3583e42fd01900c16ecf526b9cb2fcbd82a))
+- **vue:** Run the building-blocks parity contract on the Vue blocks ([6b51ea9](https://github.com/ChristopherVR/ooxml/commit/6b51ea942dd54d1830ecd57cf7b63d0a2adcf55a))
+- **angular:** Run the building-blocks contract on the Angular blocks ([8268ef1](https://github.com/ChristopherVR/ooxml/commit/8268ef16c3b45e1289d1a67d8f582497476ca0f8))
+- **svelte:** Run the building-blocks contract and the demo spec ([d2d6c49](https://github.com/ChristopherVR/ooxml/commit/d2d6c49284fdd5163f905a39b42a8f181aed4736))
+- **vanilla:** Type the render error harness options like the contract harness ([67f6475](https://github.com/ChristopherVR/ooxml/commit/67f6475016e6087de39ebcb273c1582970760057))
+
+### Styling
+
+- **pptx:** Format the building-block ports ([5887368](https://github.com/ChristopherVR/ooxml/commit/5887368f63662635dcf4f445aca2f55f80985e7e))
+- **pptx:** Format the find highlight changes ([f9ad9a3](https://github.com/ChristopherVR/ooxml/commit/f9ad9a3a10dc4693855a4a1321c1d92dab7d6f8b))
+- **pptx:** Format the host dialog changes ([e99bb23](https://github.com/ChristopherVR/ooxml/commit/e99bb2326cf880387e233a161e3caccb88893d74))
+- **pptx:** Format the parity and render containment changes ([9385503](https://github.com/ChristopherVR/ooxml/commit/93855030363b6c1f2471f1082416c2764216183c))
+
+## 2026-11-12
+
+_Releases: pptx-react-viewer@4.75.0, pptx-vue-viewer@4.74.0, pptx-angular-viewer@4.74.0, pptx-svelte-viewer@4.74.0, pptx-vanilla-viewer@3.74.0_
+
+### Features
+
+- **pptx:** Add rich table cells, custom geometry and new chart parts ([#278](https://github.com/ChristopherVR/ooxml/issues/278)) ([d6c6786](https://github.com/ChristopherVR/ooxml/commit/d6c6786b56b4642eaec1af6c78cd21a067eb0c17))
+- **react:** Add a no-i18next entry for hosts using PptxI18nProvider ([eee7d7c](https://github.com/ChristopherVR/ooxml/commit/eee7d7c169447c5378205455a0ec3f4e6025f674))
+
+### Bug Fixes
+
+- **chart:** Offer only the label positions a chart group accepts ([c6894c9](https://github.com/ChristopherVR/ooxml/commit/c6894c9b2bda96dc49b77a0a9e76b48e9903f2bd))
+- **react:** Show built-in English when react-i18next has no instance ([7d825a3](https://github.com/ChristopherVR/ooxml/commit/7d825a34a496f1684300827c9357a334c3525960))
+- **deps:** Match the three peer range of the angular and vue viewers ([3cb53c3](https://github.com/ChristopherVR/ooxml/commit/3cb53c328e7357839fa71bbb7c49cf6b86ed772e))
+- **pptx:** Start a vanilla custom show on its own first slide ([5317151](https://github.com/ChristopherVR/ooxml/commit/531715174fcb7f0cb2ba1f8b14a01f6fdd8c71c8))
+
+### Testing
+
+- **react:** Give the cold no-i18next imports a 60s hook budget ([3df9e20](https://github.com/ChristopherVR/ooxml/commit/3df9e209401d79d0d6b4ea5456cbd2ef5ac9de92))
+- **ui:** Pin flipped-shape text compensation in the dom renderer ([3d5b096](https://github.com/ChristopherVR/ooxml/commit/3d5b096f41e12744ce911dd83394d3bc57b2b3a1))
+
+## 2026-11-11
+
+_Releases: pptx-react-viewer@4.74.0, pptx-vue-viewer@4.73.0, pptx-angular-viewer@4.73.0, pptx-svelte-viewer@4.73.0, pptx-vanilla-viewer@3.73.0_
+
+### Features
+
+- **pptx:** Export a slide thumbnail building block in every binding ([#242](https://github.com/ChristopherVR/ooxml/issues/242)) ([f717202](https://github.com/ChristopherVR/ooxml/commit/f717202d7af2cbb01b65cf2d02f598bff1dbb492))
+
+## 2026-11-09
+
+_Releases: pptx-viewer-mcp@2.10.2, pptx-react-viewer@4.73.1, pptx-vue-viewer@4.72.1, pptx-angular-viewer@4.72.1, pptx-svelte-viewer@4.72.1, pptx-vanilla-viewer@3.72.1_
+
+### Dependencies
+
+- **deps:** Merge dependabot development group and jsdom 31 ([eb65de6](https://github.com/ChristopherVR/ooxml/commit/eb65de67a495cbd4d775c995d5ac25f08322fbf9))
+- **deps:** Bump the production-minor-and-patch group with 25 updates ([4046ca3](https://github.com/ChristopherVR/ooxml/commit/4046ca399665d485da35696889c0212cc6526f63))
+- **deps:** Hold jsdom at 30 and refresh viewer preflight for tailwind ([33351a8](https://github.com/ChristopherVR/ooxml/commit/33351a8a874315b0355ca699fed1a4548a23375e))
+
+### Chores
+
+- **deps-dev:** Bump the development-minor-and-patch group with 15 updates ([f9d1598](https://github.com/ChristopherVR/ooxml/commit/f9d15981d99b0dee22754c9711ed1755ae5d666a))
+- **deps-dev:** Bump jsdom from 30.1.3 to 31.0.0 ([a0dcba1](https://github.com/ChristopherVR/ooxml/commit/a0dcba1ff6d84e4a025f0cb183f831c9da5c3938))
+- **deps-dev:** Bump the angular group with 2 updates ([a196992](https://github.com/ChristopherVR/ooxml/commit/a1969923af19f6f95769c837359e552fbb5f4868))
+
+## 2026-11-08
+
+_Releases: pptx-react-viewer@4.73.0, pptx-react-viewer@4.72.0, pptx-vue-viewer@4.72.0, pptx-vue-viewer@4.71.0, pptx-angular-viewer@4.72.0, pptx-angular-viewer@4.71.0, pptx-svelte-viewer@4.72.0, pptx-svelte-viewer@4.71.0, pptx-vanilla-viewer@3.72.0, pptx-vanilla-viewer@3.71.0_
+
+### Features
+
+- **pptx:** Accept text body options and rich text on new shapes ([#264](https://github.com/ChristopherVR/ooxml/issues/264)) ([c7d0111](https://github.com/ChristopherVR/ooxml/commit/c7d011174aa101665eb48d8783bdb38cb0969fe6))
+- **pptx:** Add picture fills, links, shared media and SVG pictures to new elements ([05ceae1](https://github.com/ChristopherVR/ooxml/commit/05ceae1f210c431fab83f2a5abda90170da0a285))
+- **pptx:** Save effects of new pictures and keep a:extLst last ([#259](https://github.com/ChristopherVR/ooxml/issues/259)) ([9bf2a22](https://github.com/ChristopherVR/ooxml/commit/9bf2a2249d9276ad7ad6ae8d8bc201bd7f48c349))
+- **pptx:** Accept app properties when creating a presentation ([#263](https://github.com/ChristopherVR/ooxml/issues/263)) ([78b3c1b](https://github.com/ChristopherVR/ooxml/commit/78b3c1b9a4be4e18f2e8bef06e3764f214f62872))
+
+### Styling
+
+- **pptx:** Format the merged picture and link changes ([6952819](https://github.com/ChristopherVR/ooxml/commit/69528198578f5541380c168f2ee145808abf21f2))
+
+## 2026-11-07
+
+_Releases: pptx-react-viewer@4.71.0, pptx-react-viewer@4.70.1, pptx-react-viewer@4.70.0, pptx-react-viewer@4.69.0, pptx-react-viewer@4.68.0, pptx-vue-viewer@4.70.0, pptx-vue-viewer@4.69.1, pptx-vue-viewer@4.69.0, pptx-vue-viewer@4.68.0, pptx-vue-viewer@4.67.0, pptx-angular-viewer@4.70.0, pptx-angular-viewer@4.69.1, pptx-angular-viewer@4.69.0, pptx-angular-viewer@4.68.0, pptx-angular-viewer@4.67.0, pptx-svelte-viewer@4.70.0, pptx-svelte-viewer@4.69.1, pptx-svelte-viewer@4.69.0, pptx-svelte-viewer@4.68.0, pptx-svelte-viewer@4.67.0, pptx-vanilla-viewer@3.70.0, pptx-vanilla-viewer@3.69.1, pptx-vanilla-viewer@3.69.0, pptx-vanilla-viewer@3.68.0, pptx-vanilla-viewer@3.67.0_
+
+### Features
+
+- **pptx:** Write structured slide gradient backgrounds ([#262](https://github.com/ChristopherVR/ooxml/issues/262)) ([5b861d9](https://github.com/ChristopherVR/ooxml/commit/5b861d9265b8c4d8020f8550212185b0b9244a77))
+- **chart:** Add literal data and a minimal profile to new chart parts ([#261](https://github.com/ChristopherVR/ooxml/issues/261)) ([243281f](https://github.com/ChristopherVR/ooxml/commit/243281f7b1590644243a05cac93f403eafa8118a))
+- **pptx:** Add a fixedDate save option for reproducible output ([#260](https://github.com/ChristopherVR/ooxml/issues/260)) ([7d112d4](https://github.com/ChristopherVR/ooxml/commit/7d112d4bc7a2759f0850c246e9183261ef3c02a4))
+- **pptx:** Build SDK tables with widths, fills and dashed borders ([#258](https://github.com/ChristopherVR/ooxml/issues/258)) ([d19dce5](https://github.com/ChristopherVR/ooxml/commit/d19dce5bb3f457bc01511b6de79fc3d1a3122cc1))
+- **ui:** Start document webfonts while the file parses ([b26b5e4](https://github.com/ChristopherVR/ooxml/commit/b26b5e4a5aa141c4311dad9ccd4f074f0d768515))
+- **text:** Share the webfont fallback with word, excel and visio ([296264b](https://github.com/ChristopherVR/ooxml/commit/296264b25560c6cd274bf5df62e94300783ef6bb))
+
+### Bug Fixes
+
+- **pptx:** Keep the shared style of rich text segments on save ([#256](https://github.com/ChristopherVR/ooxml/issues/256)) ([41f12b1](https://github.com/ChristopherVR/ooxml/commit/41f12b180b43be6173999386b96463af5d4ed570))
+- **pptx:** Keep the model and part in step when a series is recoloured ([#257](https://github.com/ChristopherVR/ooxml/issues/257)) ([9a4ee24](https://github.com/ChristopherVR/ooxml/commit/9a4ee24bc23e6c7a029ddf3c7574e87ce88fbc26))
+- **angular:** Edit text in its own font instead of a plain textarea ([24ba701](https://github.com/ChristopherVR/ooxml/commit/24ba701aebd4588870dfb7e976880779de97f74c))
+
+## 2026-11-06
+
+_Releases: pptx-viewer-core@4.14.1, pptx-viewer-mcp@2.10.1, @christophervr/pptx-viewer@2.42.1, pptx-react-viewer@4.67.0, pptx-react-viewer@4.66.0, pptx-react-viewer@4.65.0, pptx-vue-viewer@4.66.0, pptx-vue-viewer@4.65.0, pptx-vue-viewer@4.64.0, pptx-angular-viewer@4.66.0, pptx-angular-viewer@4.65.0, pptx-angular-viewer@4.64.0, pptx-svelte-viewer@4.66.0, pptx-svelte-viewer@4.65.0, pptx-svelte-viewer@4.64.0, pptx-vanilla-viewer@3.66.0, pptx-vanilla-viewer@3.65.0, pptx-vanilla-viewer@3.64.0_
+
+### Features
+
+- **drawingml:** Share powerpoint's measured dash patterns ([9c36464](https://github.com/ChristopherVR/ooxml/commit/9c364649697f675ecea811c807188cb083c91078))
+- **ui:** Match dashed square-cap ends and dash phase on straight lines ([7ea4139](https://github.com/ChristopherVR/ooxml/commit/7ea4139a8a759e8dbdec1650b6d6c7f792084d43))
+- **drawingml:** Model PowerPoint's path="shape" gradient field ([afc2c2e](https://github.com/ChristopherVR/ooxml/commit/afc2c2e5243c859b71516e7aa921eac5f287ae0c))
+- **ui:** Fit arch and circle text to its arc and space lines one pitch apart ([816e254](https://github.com/ChristopherVR/ooxml/commit/816e2541fc6af4dce45b8b3c2fa7896f650d5cb4))
+- **ui:** Add a trust center option for downloading webfonts ([e260f16](https://github.com/ChristopherVR/ooxml/commit/e260f16f564e115657f8c60a4c8513ff9c4ddaf2))
+- **pptx:** Honour the font download option in every binding ([6a153eb](https://github.com/ChristopherVR/ooxml/commit/6a153eb83186830490f8a0968d8ba29876562ca6))
+- **ui:** Paint shadow and glow along gradient, pattern and picture shapes ([2e81d32](https://github.com/ChristopherVR/ooxml/commit/2e81d325e92948d82a0f5e584e672349fbdf7ca0))
+- **ui:** PowerPoint-style media control bar on the editor canvas ([7c71c7f](https://github.com/ChristopherVR/ooxml/commit/7c71c7fb6f8ea8346afc9281a86bba00eac64a74))
+- **ui:** Draw the table style effectRef shadow on the table frame ([30b9df8](https://github.com/ChristopherVR/ooxml/commit/30b9df883501814c38d715a3795876bc4b7c97e3))
+- **locales:** Translate the pptx save progress texts ([1b665f3](https://github.com/ChristopherVR/ooxml/commit/1b665f3003ecf065d5efdba9c7625adef2d3f5d8))
+- **react:** Show save progress in the status bar ([2c8db63](https://github.com/ChristopherVR/ooxml/commit/2c8db637320c82eb0182e46e072d1b3615d4f8c4))
+- **vue:** Show save progress in the status bar ([d9dcffb](https://github.com/ChristopherVR/ooxml/commit/d9dcffb8fd11aab03811e81f94d83280bd0f73fd))
+- **ui:** Dissolve a morphing silhouette shadow between both ends ([18a792a](https://github.com/ChristopherVR/ooxml/commit/18a792aaa4cd5f631d83fc8701e1e37461e0636f))
+- **angular:** Show save progress in the status bar ([e311948](https://github.com/ChristopherVR/ooxml/commit/e311948017c51014ba2430a69994ddfc71f17e14))
+- **svelte:** Show save progress in the status bar ([91136d4](https://github.com/ChristopherVR/ooxml/commit/91136d428a40f51e4016f5e4b7603a722dc00bec))
+- **vanilla:** Show save progress in the status bar ([034d1a6](https://github.com/ChristopherVR/ooxml/commit/034d1a6bf93177dcfbcd33bdee8b3bc84f91f384))
+
+### Bug Fixes
+
+- **deps:** Update emf-converter to 4.25.3 ([e51a619](https://github.com/ChristopherVR/ooxml/commit/e51a6192b3a531022b3677753e79b6a015233b9d))
+- **pptx:** Persist canvas size changes from automation ([#252](https://github.com/ChristopherVR/ooxml/issues/252)) ([e9b76d4](https://github.com/ChristopherVR/ooxml/commit/e9b76d47fcb2b3432cefda7f061fc302370320bf))
+- **geometry:** Reconstruct swooshArrow's guide chain from PowerPoint ([f427d84](https://github.com/ChristopherVR/ooxml/commit/f427d84088235985b4fbf1a681cc3bcaab84fdf0))
+- **geometry:** Draw actionButtonHelp's question mark with elliptical arcs ([01275f1](https://github.com/ChristopherVR/ooxml/commit/01275f191ab8a1e0a19c52e9322b477084718bd2))
+- **geometry:** Shade the scroll curl with the measured swirl, not discs ([1e3d8f9](https://github.com/ChristopherVR/ooxml/commit/1e3d8f93f777031900f8de7fdcd79c7e7a479dd4))
+- **ui:** Paint path="shape" gradients as PowerPoint does in every binding ([9fd7ea8](https://github.com/ChristopherVR/ooxml/commit/9fd7ea856540a27e4f0d33eb853b66fa5bdef842))
+- **pptx:** Read adj1 of the wave and pour text warps and write it back ([90f407a](https://github.com/ChristopherVR/ooxml/commit/90f407afc7726fde72f52fc93a9b6e0adf57df36))
+- **pptx:** Preserve merged cells during table structure edits ([#253](https://github.com/ChristopherVR/ooxml/issues/253)) ([0158dda](https://github.com/ChristopherVR/ooxml/commit/0158dda7f0ad7ba5148dda05f9d7ecc23e468555))
+- **pptx:** Wait for a deck's webfonts before showing it ([995b977](https://github.com/ChristopherVR/ooxml/commit/995b977e12041a798744eb9704d4d5735cd52a1a))
+- **ui:** Break lines where powerpoint does when the deck font is missing ([40765e7](https://github.com/ChristopherVR/ooxml/commit/40765e7ac295ca1c6ee4346cd95109fd7be7d951))
+- **ui:** Stop table borders adding a pixel to every row ([dc2fdd7](https://github.com/ChristopherVR/ooxml/commit/dc2fdd7b5754c735a14c1b1a686122abdeea92dc))
+- **ui:** Lay missing legacy East Asian fonts out on their named metrics ([adec110](https://github.com/ChristopherVR/ooxml/commit/adec11017ea2b59b0bb78248752c7ee2dac74e38))
+- **ui:** Paint outer shadow and glow along non-rectangular shapes ([6d4cc12](https://github.com/ChristopherVR/ooxml/commit/6d4cc12f49235b799444706b3c3a0fa0c699be16))
+- **ui:** Snap every rect edge to exact EMU and draw lines with flat caps ([3217686](https://github.com/ChristopherVR/ooxml/commit/32176861683f9e8dd566331bdae36a6e5135f7f1))
+- **geometry:** Follow ecma-376 for curvedConnector3, 4 and 5 ([fb6b33f](https://github.com/ChristopherVR/ooxml/commit/fb6b33f867882e8ffd8617694977a45fd120d375))
+- **ui:** Hit-test silhouette shapes on their geometry, not their box ([638f6bf](https://github.com/ChristopherVR/ooxml/commit/638f6bf73bffaa64d439caa23a45f7ae465cc5f8))
+- **pptx:** Resolve an absolute layout-to-master relationship target ([03ed692](https://github.com/ChristopherVR/ooxml/commit/03ed692a1367546d7a92bccbf03fce01bdf16f86))
+- **ui:** Match PowerPoint's dash lengths and cap handling ([6ff7e23](https://github.com/ChristopherVR/ooxml/commit/6ff7e23e91513260a7f2c52358d9261ce04667ad))
+- **ui:** Match PowerPoint table style fills, double lines and tblBg span ([a30f8ca](https://github.com/ChristopherVR/ooxml/commit/a30f8ca02ef08ed6e056afec123d89add435c444))
+- **react:** Lay out a pure equation box with the shared block style ([2495586](https://github.com/ChristopherVR/ooxml/commit/2495586bd203ce359e870ae08486e940ac83804b))
+- **ui:** Snap group child strokes by their absolute position ([061ae7e](https://github.com/ChristopherVR/ooxml/commit/061ae7e5a6d6edbc1c431761e54732c25191d554))
+- **geometry:** Match PowerPoint for about 55 preset shapes ([97f99e1](https://github.com/ChristopherVR/ooxml/commit/97f99e1ea2dc603684870a41905203bf341cf420))
+- **ui:** Draw nineteen text warps as measured top and bottom paths ([01eb409](https://github.com/ChristopherVR/ooxml/commit/01eb409b2c24f2697d2c094ee2729b9193deb046))
+- **ui:** Put the inner shadow on the edge the offset points to ([1983da4](https://github.com/ChristopherVR/ooxml/commit/1983da4650d9b80bd41eb0d7e222fb744b6136b7))
+- **ui:** Keep the shadow and glow of a morphing shape painted as a silhouette ([0f8f76d](https://github.com/ChristopherVR/ooxml/commit/0f8f76d5fe5842503983c6e7a24a89ca48e19472))
+- **ui:** Place table cell paragraphs on PowerPoint's baselines ([eb41b49](https://github.com/ChristopherVR/ooxml/commit/eb41b49d1ae40af08614dfcfcc2d01f65871a97e))
+- **text:** Lay missing Office fonts out on their own metrics ([83c4f02](https://github.com/ChristopherVR/ooxml/commit/83c4f029a0c2975e62ca1ae7a50f5f58f13ad732))
+- **ui:** Stroke split-layout presets along their stroked paths only ([68ad9aa](https://github.com/ChristopherVR/ooxml/commit/68ad9aa2f908a43fe9a0cfd0b24250b704bb1159))
+- **react:** Inset raw-xml table cell margins by half the border ([7586b55](https://github.com/ChristopherVR/ooxml/commit/7586b558531ba54188968e79cda431907d7269aa))
+- **ui:** Stop flowing a:linkedTxbx text, as PowerPoint ignores it ([2eeabbb](https://github.com/ChristopherVR/ooxml/commit/2eeabbbebfdd5e9f9a4d11848f3e655efe906ea8))
+- **react:** Render a soft line break as a bare br like the other bindings ([f9c7bf1](https://github.com/ChristopherVR/ooxml/commit/f9c7bf1e053d11efe99025e2c9b24dff21fb1d87))
+- **ui:** Start dashed closed outlines where powerpoint does ([7246a37](https://github.com/ChristopherVR/ooxml/commit/7246a37eef1465dfed5031387b948c62d0e71743))
+- **react:** Put the table style shadow on the element frame ([a45cb2f](https://github.com/ChristopherVR/ooxml/commit/a45cb2f5df60957b63e1c69b597accf4a0410f4e))
+- **geometry:** Rebuild the three circular arrows on the ECMA guide chain ([d3b7a1e](https://github.com/ChristopherVR/ooxml/commit/d3b7a1e9e196ef50b87dbe37289d35181a49e1f6))
+- **geometry:** Rebuild ribbon, ribbon2, ellipse ribbons, left-right ribbon ([5a75fe1](https://github.com/ChristopherVR/ooxml/commit/5a75fe1a5bfef83e63105ce0a52e808e5212cf0c))
+- **geometry:** Rebuild verticalScroll, horizontalScroll and funnel ([b14f7f2](https://github.com/ChristopherVR/ooxml/commit/b14f7f2b1ab9d030c09ba7e36d91172140635c34))
+- **geometry:** Correct irregularSeal2, magnetic disk and multidocument ([60783a8](https://github.com/ChristopherVR/ooxml/commit/60783a8fdd0c99a54c9538d654def571d368bf97))
+- **geometry:** Draw action button glyphs and fix cube and bevel shading ([6b7801f](https://github.com/ChristopherVR/ooxml/commit/6b7801fe2c4777dbf928300991d5dda5fd232562))
+- **ui:** Veil lighten and darken sub-paths over gradient and picture fills ([d9d80ab](https://github.com/ChristopherVR/ooxml/commit/d9d80ab90f9d11b64f63b6ec902a9647902b39b6))
+- **ui:** Paint gradients the way PowerPoint does and fix blank rect path ([0f1e8d8](https://github.com/ChristopherVR/ooxml/commit/0f1e8d877e87edeae94bbb59890a078ca581cbc6))
+- **ui:** Give every painted copy of a slide its own svg def ids ([a58124a](https://github.com/ChristopherVR/ooxml/commit/a58124a1b0bbb8a8d0c45d92fdebc0d7001e5188))
+- **pptx:** Render format-encoded datetime fields, share one date engine ([8734d72](https://github.com/ChristopherVR/ooxml/commit/8734d727d79b29cebba70866fc6837a73387a023))
+- **pptx:** Keep trailing line breaks after grouped runs ([369af79](https://github.com/ChristopherVR/ooxml/commit/369af7900b301fdefcff1a8e5f2962e4f198eb29))
+- **ui:** Anchor pure equation shapes with the text body in every binding ([4fd9d8f](https://github.com/ChristopherVR/ooxml/commit/4fd9d8f0ecce22ce5393ad68f3ec0024c7be2653))
+- **vue:** Hide the ole action bar until hover or focus ([501bdbb](https://github.com/ChristopherVR/ooxml/commit/501bdbbecd7d9e2b5ee74e73cde4715f1d5e1f0e))
+- **svelte:** Snap dashed square-cap connector paths to the device grid ([043a716](https://github.com/ChristopherVR/ooxml/commit/043a716d78655724ad7b6b7bc100822d9d85664f))
+- **ui:** Place arch warps on the box ellipse and draw the pours as paths ([00027ff](https://github.com/ChristopherVR/ooxml/commit/00027ffead543d98c51f71e6f09f366c5b8beb4b))
+- **angular:** Use the real slide rail for read-only decks ([7256515](https://github.com/ChristopherVR/ooxml/commit/7256515855ec393ab24bc591706a2a26c226214c))
+- **svelte:** Paint warped text with svg fill instead of css color ([9830dd6](https://github.com/ChristopherVR/ooxml/commit/9830dd6efe0c55c29ffaec4798cc66d06be31c6f))
+- **svelte:** Hide the ole action bar until hover or focus ([cd2e2a6](https://github.com/ChristopherVR/ooxml/commit/cd2e2a6eac894b7b17e34fc681a47d5b87b31da3))
+- **vanilla:** Register deck-embedded fonts as @font-face in vanilla and svelte ([3b2640c](https://github.com/ChristopherVR/ooxml/commit/3b2640c7ac165edaf31e2fea3a40003471f66016))
+
+### Refactor
+
+- **ui:** Route embedded font injection through the shared sheet ([63263a2](https://github.com/ChristopherVR/ooxml/commit/63263a2f3fe808b7c0353395c407d611a5bf0e35))
+- **ui:** Paint warped text runs with resolveWarpRunPaint everywhere ([c2b5281](https://github.com/ChristopherVR/ooxml/commit/c2b5281840d26bae691f7f9edfc38591c107aed3))
+- **react:** Render every table from the shared table descriptors ([492e26e](https://github.com/ChristopherVR/ooxml/commit/492e26e086f996e7d3916e9589d5764427947b18))
+
+### Documentation
+
+- Disclose every outbound request in PRIVACY.md ([eb1810b](https://github.com/ChristopherVR/ooxml/commit/eb1810bd3dd1ede67a8c4872f3fe5daa64472fe1))
+- **ui:** Record silhouette shadow, inner shadow and morph findings ([1f9c8ac](https://github.com/ChristopherVR/ooxml/commit/1f9c8acffd25aaa0a02a07ef2b388bafab482c48))
+
+### Testing
+
+- **react:** Pin the freeform circle path as an image paint server ([f7e0f32](https://github.com/ChristopherVR/ooxml/commit/f7e0f3267d35d8c33040795f79b8f36459b92cfd))
+- **pptx:** Pin transparent outlines and text-box effects from the SDK ([#254](https://github.com/ChristopherVR/ooxml/issues/254)) ([6de0da1](https://github.com/ChristopherVR/ooxml/commit/6de0da1799532dbe4c6f093d93c75a44471f4375))
+- **react:** Pin the measured powerpoint dash lengths in snapshots ([d5ea53f](https://github.com/ChristopherVR/ooxml/commit/d5ea53f9e1a9369e3d56e558f30790941640489d))
+- **react:** Pin powerpoint's inner shadow blur and edge in color-core ([6c75692](https://github.com/ChristopherVR/ooxml/commit/6c75692a60b3060db0eef298fca2915d04d5ab30))
+
+## 2026-11-05
+
+_Releases: pptx-react-viewer@4.64.1, pptx-react-viewer@4.64.0, pptx-react-viewer@4.63.1, pptx-vue-viewer@4.63.1, pptx-vue-viewer@4.63.0, pptx-vue-viewer@4.62.1, pptx-angular-viewer@4.63.1, pptx-angular-viewer@4.63.0, pptx-angular-viewer@4.62.1, pptx-svelte-viewer@4.63.1, pptx-svelte-viewer@4.63.0, pptx-svelte-viewer@4.62.1, pptx-vanilla-viewer@3.63.1, pptx-vanilla-viewer@3.63.0, pptx-vanilla-viewer@3.62.1_
+
+### Features
+
+- **ui:** Add file open places for cloud providers to the pptx viewer ([ea51fde](https://github.com/ChristopherVR/ooxml/commit/ea51fde2fd2f60a3ea55b1a4591be501095ce9b8))
+- **pptx:** Open cloud files from file open in the react viewer ([6239a4a](https://github.com/ChristopherVR/ooxml/commit/6239a4a13e9f303d2ca24750233ea5906d783b82))
+- **pptx:** Add shared in-app dialogs for hyperlinks, names and deletes ([2b6419f](https://github.com/ChristopherVR/ooxml/commit/2b6419fb6e83899ad59a71d05a75b2291ee9012b))
+- **site:** Explain onedrive save conflicts in a details section ([43431d4](https://github.com/ChristopherVR/ooxml/commit/43431d41399d849c8e8ac0c40619d44c23e00532))
+- **react:** Re-path a resizing shape's outline during morph ([5ba8386](https://github.com/ChristopherVR/ooxml/commit/5ba8386a2827399216a22d7ee93cca4ac06bd12a))
+- **locales:** Translate connected services labels ([e16ef29](https://github.com/ChristopherVR/ooxml/commit/e16ef29895c80feabc522639f29b253d2007b2f5))
+- **react:** List connected services on the account page ([95cbc25](https://github.com/ChristopherVR/ooxml/commit/95cbc256ee2e6574cc77f44d171aed54406c33ad))
+- **react:** Re-path morphing freeforms and size the flip camera ([37c8978](https://github.com/ChristopherVR/ooxml/commit/37c897889d0898221a8f7c6b1c1fda9a7719e69f))
+- **pptx:** Open cloud files from file open in the vue viewer ([30638f2](https://github.com/ChristopherVR/ooxml/commit/30638f2a8eb205237578a2fcfee531670e6c5d6b))
+- **vue:** Mark the outline overlay for the morph outline carry ([233d578](https://github.com/ChristopherVR/ooxml/commit/233d5788b607eafc1368917ea60793bfbcd6b975))
+- **vue:** List connected services on the account page ([9396991](https://github.com/ChristopherVR/ooxml/commit/9396991227ea5e80eda04150b95458c285cb345b))
+- **vue:** Hand the slide size to the morph plan ([bb06796](https://github.com/ChristopherVR/ooxml/commit/bb06796deda9af920ce322a479172c6a4a9da902))
+- **pptx:** Open cloud files from file open in the angular viewer ([0f9a18c](https://github.com/ChristopherVR/ooxml/commit/0f9a18c135d5594146b05de07b8bc7d0926c368b))
+- **angular:** Mark the outline overlay for the morph outline carry ([b271e7e](https://github.com/ChristopherVR/ooxml/commit/b271e7e4635dbad003bc34fcd67385e6e0fab4ee))
+- **angular:** List connected services on the account page ([51e50fd](https://github.com/ChristopherVR/ooxml/commit/51e50fd6ca350fa40360596a1fdb1717ef2454eb))
+- **angular:** Hand the slide size to the morph plan ([16014b5](https://github.com/ChristopherVR/ooxml/commit/16014b59620a415cb4f93d9ffa5adfa888a9f415))
+- **pptx:** Open cloud files from file open in the svelte viewer ([25f47f7](https://github.com/ChristopherVR/ooxml/commit/25f47f75a17f4eb2f70a7eddc090b8d623cc001d))
+- **svelte:** Mark the outline overlay for the morph outline carry ([2331e25](https://github.com/ChristopherVR/ooxml/commit/2331e251817ed3c8bde77d42d2a03ae212a8cad1))
+- **svelte:** List connected services on the account page ([509c6d2](https://github.com/ChristopherVR/ooxml/commit/509c6d2a665dbfa3114054265414f37ed870bd71))
+- **svelte:** Hand the slide size to the morph plan ([ded6b79](https://github.com/ChristopherVR/ooxml/commit/ded6b79da03b98313b3eeb5bcd092263bc37d6f8))
+- **pptx:** Open cloud files from file open in the vanilla viewer ([f2f42c1](https://github.com/ChristopherVR/ooxml/commit/f2f42c18c93316da9ade273a7e9eca6ad2d7e0ff))
+- **vanilla:** List connected services on the account page ([4604fcf](https://github.com/ChristopherVR/ooxml/commit/4604fcfc1938d022c984be744a0deea0e46cb7f1))
+- **vanilla:** Hand the slide size to the morph plan ([6378874](https://github.com/ChristopherVR/ooxml/commit/6378874af4a40cbb559c5e48071bb16abe5afc6d))
+
+### Bug Fixes
+
+- **react:** Drop unused imports and merge ooxml-ui/pptx imports ([e26dc69](https://github.com/ChristopherVR/ooxml/commit/e26dc69fbd8891dd13cbcadfd286c66ef46cb9b8))
+- **ui:** Keep a morphing line at its width and fix flipped connectors ([8b42576](https://github.com/ChristopherVR/ooxml/commit/8b42576c1282c1eb2be04c811f1c8ea0485444dd))
+- **pptx:** Read a text shadow without alpha as opaque ([2bd02f4](https://github.com/ChristopherVR/ooxml/commit/2bd02f4a0af3dd94728b0598885c05be6b59b73f))
+- **ui:** Paint blurred shadows and glows with powerpoint's profiles ([78e5a22](https://github.com/ChristopherVR/ooxml/commit/78e5a226675b0cd1437de66f70f2a404811888ba))
+- **ui:** Snap thin pptx strokes to whole device pixels like PowerPoint ([78436fb](https://github.com/ChristopherVR/ooxml/commit/78436fb1a8519aecb966ff221fd18d8f72928e6a))
+- **ui:** Keep css borders and compound strands unrounded ([c57a5e3](https://github.com/ChristopherVR/ooxml/commit/c57a5e37712c0286946c8f40364851a371d5ea76))
+- **pptx:** Mark a saved deck clean only once storage has stored it ([703ad1f](https://github.com/ChristopherVR/ooxml/commit/703ad1f080f57ee61b959cf131d002efc97116d5))
+- **pptx:** Keep the cloud files strings in a named locale section ([ba9e50f](https://github.com/ChristopherVR/ooxml/commit/ba9e50feb29c70cf8aefb12a7073fb020e553209))
+- **react:** Replace browser dialogs with the in-app dialogs ([1e8d491](https://github.com/ChristopherVR/ooxml/commit/1e8d4916fb0be61ae9f48e7c5cca108c0c9056dd))
+- **pptx:** Refuse handle edits on a read-only viewer in every binding ([6a4df10](https://github.com/ChristopherVR/ooxml/commit/6a4df10f07abdc8021009b20b6070f33561d4b92))
+- **react:** Stack morph crossfades in the plan's overlay order ([a3d592d](https://github.com/ChristopherVR/ooxml/commit/a3d592def5963f00a41578afc906521b89c0d58b))
+- **pptx:** Show the read-only badge in the Angular and vanilla ribbon ([58106ec](https://github.com/ChristopherVR/ooxml/commit/58106ec434b911888b481355ab10b8a42b38634d))
+- **pptx:** Stop warning about unchanged images on every save ([6a3efd9](https://github.com/ChristopherVR/ooxml/commit/6a3efd99b1752755f7ccce42e3c85c1105b0436b))
+- **color:** Add straight-alpha resampling for translucent gradient stops ([71dc9cb](https://github.com/ChristopherVR/ooxml/commit/71dc9cbaa163a37c283763ae2a4a78a931845e5b))
+- **deps:** Update emf-converter to 4.25.3 ([e51a619](https://github.com/ChristopherVR/ooxml/commit/e51a6192b3a531022b3677753e79b6a015233b9d))
+- **pptx:** Measure percentage paragraph spacing against its text size ([08a8f65](https://github.com/ChristopherVR/ooxml/commit/08a8f6509903e784d30753f1e1ac754b8863e3fb))
+- **react:** Grow abutting rectangles under their cover to close the seam ([ef32c70](https://github.com/ChristopherVR/ooxml/commit/ef32c700bd222231ed67bdafc4bed5e0620f726e))
+- **geometry:** Place the pentagon preset's side vertices per the spec ([8f127a5](https://github.com/ChristopherVR/ooxml/commit/8f127a5f9710b36e17b038fe83793aa14b940b58))
+- **pptx:** Turn vertically flipped text upside down, never mirror it ([f63671a](https://github.com/ChristopherVR/ooxml/commit/f63671a1217edb2a72f03403ccbc432a494d4a79))
+- **react:** Turn flipped text about its text rectangle ([f33228f](https://github.com/ChristopherVR/ooxml/commit/f33228f445802f75f7ae8fda2f76a603ed8bc59b))
+- **react:** Let text overflow its box on the static path ([fe02529](https://github.com/ChristopherVR/ooxml/commit/fe0252912357b7bf38f0e7c4a99ceea9515ecb08))
+- **pptx:** Preserve schema order in snapshot merges ([#245](https://github.com/ChristopherVR/ooxml/issues/245)) ([ad90b70](https://github.com/ChristopherVR/ooxml/commit/ad90b70b7a9024c3e54ec01a7b50ac2e3a2af677))
+- **pptx:** Keep custom show hyperlinks in sync ([#246](https://github.com/ChristopherVR/ooxml/issues/246)) ([ce77eb7](https://github.com/ChristopherVR/ooxml/commit/ce77eb7fe06d5d8df08d79cf2016da8f811aaba3))
+- **opc:** Merge concurrent core property additions in any order ([2789389](https://github.com/ChristopherVR/ooxml/commit/2789389fa2b26cf4dc84f02e7d231ee0a4d58224))
+- **vue:** Drop unused beforeEach imports in table style tests ([cb4c916](https://github.com/ChristopherVR/ooxml/commit/cb4c916a690563ee06b13d9887158dbc60a62845))
+- **vue:** Replace browser dialogs with the in-app dialogs ([d88bebd](https://github.com/ChristopherVR/ooxml/commit/d88bebd69824e370f4d05132490a8743dcb73cbf))
+- **vue:** Play a timed slide's next transition and stack crossfades ([27124d5](https://github.com/ChristopherVR/ooxml/commit/27124d57780165096ed6a7bff52091eec6f1682f))
+- **vue:** Grow abutting rectangles under their cover to close the seam ([f141fdf](https://github.com/ChristopherVR/ooxml/commit/f141fdf79666fc930fb84b715cf27177df3645e2))
+- **angular:** Drop unused resolvePresentationAction import ([9a25b52](https://github.com/ChristopherVR/ooxml/commit/9a25b5207a0c219a1949cfecd632b66428b54d02))
+- **angular:** Replace browser dialogs with the in-app dialogs ([f61edb7](https://github.com/ChristopherVR/ooxml/commit/f61edb7614f6871508a339698de7514300fff46c))
+- **angular:** Stack morph crossfades in the plan's overlay order ([d16391a](https://github.com/ChristopherVR/ooxml/commit/d16391ae2c2903dd604e83f0dd2c187668456991))
+- **angular:** Grow abutting rectangles under their cover ([cbf17f0](https://github.com/ChristopherVR/ooxml/commit/cbf17f0e08ce2d3e08169b8e9e853f75c862d067))
+- **svelte:** Replace browser dialogs with the in-app dialogs ([5473338](https://github.com/ChristopherVR/ooxml/commit/5473338c97713539a876d9ea4decd79be8f97fff))
+- **svelte:** Play a timed slide's next transition and stack crossfades ([afa6c87](https://github.com/ChristopherVR/ooxml/commit/afa6c871402d5c29b752d3fb522c54bee19c32a7))
+- **svelte:** Grow abutting rectangles under their cover ([8156c72](https://github.com/ChristopherVR/ooxml/commit/8156c72a69215bebba366fd96297ec020849fb3d))
+- **vanilla:** Drop the abutting-edge bleed from morph overlay copies ([e826d90](https://github.com/ChristopherVR/ooxml/commit/e826d90be4410129f048cd703b3fc9032a3fdf98))
+- **vanilla:** Replace browser dialogs with the in-app dialogs ([29678e8](https://github.com/ChristopherVR/ooxml/commit/29678e8eb4663eabebc24b0d882e741db638353c))
+- **vanilla:** Stack morph crossfades in the plan's overlay order ([6f17194](https://github.com/ChristopherVR/ooxml/commit/6f17194bf26dbf792c9a9e4c512dc42ffe96a0d7))
+- **vanilla:** Paint rewrapped morph text pieces from the stage clone ([b47e91a](https://github.com/ChristopherVR/ooxml/commit/b47e91a90a335fc5eaabf8a4672b703462966d44))
+- **vanilla:** Strip morph body and text copies to their part ([a91359e](https://github.com/ChristopherVR/ooxml/commit/a91359ee62e962eae5c757532386dcc2522810cc))
+- **vanilla:** Paint a carried morph text copy without the source flip ([4b131b5](https://github.com/ChristopherVR/ooxml/commit/4b131b559a30ec20857d9f06cc2c7d7e300e1278))
+
+### Refactor
+
+- **pptx:** Use the shared places element in file open ([ea85028](https://github.com/ChristopherVR/ooxml/commit/ea850283ae8a3720ee7bf3ee4ef71981af5f43c8))
+- **react:** Give the show's transition overlay its own component ([fb0c635](https://github.com/ChristopherVR/ooxml/commit/fb0c63547dc0f99b5e6ef90fb368f58442088f0b))
+- **angular:** Resolve the entry auto-advance delay in a helper ([7cafe51](https://github.com/ChristopherVR/ooxml/commit/7cafe517eb4fe26b7934d275934ab476521cdf21))
+- **angular:** Arm the entry auto-advance in a helper ([2ea86a5](https://github.com/ChristopherVR/ooxml/commit/2ea86a56b75b532e51a53d35cef9a35ab6fc70fc))
+
+### Testing
+
+- **pptx:** Pin sibling strand paths of a compound outline per binding ([328a94a](https://github.com/ChristopherVR/ooxml/commit/328a94a9dfa0cd20d22d993fc88faa8b76bfa55e))
+- **ui:** Keep the dialog test helpers lint clean ([de583e2](https://github.com/ChristopherVR/ooxml/commit/de583e289dcf98a42b04503ff11818bc0358e9ab))
+- **pptx:** Prove cloud files open read-only in every binding ([b4ee684](https://github.com/ChristopherVR/ooxml/commit/b4ee684d1ba677541ffd2739aa59859b99778807))
+- **react:** Cover morph shape text carried apart from its body ([386ed56](https://github.com/ChristopherVR/ooxml/commit/386ed563c675f71ab38a8c1046b96349d63ea90f))
+- **pptx:** Give in-app dialog waits room on busy runners ([adb47b8](https://github.com/ChristopherVR/ooxml/commit/adb47b8bcede111a3302a5a1b981f1d853a28113))
+- **react:** Cover issue 141 morph stacking, ghosts and overlay rearm ([7471c29](https://github.com/ChristopherVR/ooxml/commit/7471c2927f26c56b860b5d06e9aa4e4f8b66e74f))
+- **vue:** Cover issue 141 morph stacking, ghosts and picture alpha ([1c10267](https://github.com/ChristopherVR/ooxml/commit/1c102670593b151872eb5b28e6d0a5dbdca6ad72))
+- **vue:** Run the timed transition test on fake timers ([14256f4](https://github.com/ChristopherVR/ooxml/commit/14256f4a2e02acd88608858d062d1905416cd909))
+- **vue:** Pin flipped text as PowerPoint paints it ([7103736](https://github.com/ChristopherVR/ooxml/commit/710373607b45d46adfbb135bedcee2c0515993d4))
+- **angular:** Cover issue 141 morph stacking, rearm and timed advance ([2072c65](https://github.com/ChristopherVR/ooxml/commit/2072c65223a9128800707af266ab40ed2ec9f452))
+- **angular:** Test timed advance and picture img on real code ([2815ad5](https://github.com/ChristopherVR/ooxml/commit/2815ad58b05596e306e14221258960143b3ba612))
+- **angular:** Give the morph overlay mount tests room on busy runners ([f6f6b2c](https://github.com/ChristopherVR/ooxml/commit/f6f6b2ce725bbd195bcdd5bc119beb97bdb9a193))
+- **angular:** Pin flipped text as PowerPoint paints it ([87d9b4f](https://github.com/ChristopherVR/ooxml/commit/87d9b4f9b94e1d6c4c53e5ed3c2f0c66497d0bda))
+- **svelte:** Cover issue 141 morph stacking, rearm and timed advance ([12ccd83](https://github.com/ChristopherVR/ooxml/commit/12ccd832e06fdefb4ebbad67516a13675a811e69))
+- **svelte:** Read every overlay style sheet in morph tests ([11818f4](https://github.com/ChristopherVR/ooxml/commit/11818f431f93d01e0a071a186ea8afd45cd3f502))
+- **svelte:** Pin flipped text as PowerPoint paints it ([80595ad](https://github.com/ChristopherVR/ooxml/commit/80595ad9f57f0d9bf9ffe64b410373893d1742ce))
+- **vanilla:** Type the compound outline fixture before casting it ([6822cd0](https://github.com/ChristopherVR/ooxml/commit/6822cd08f5d3cc922785f529e62cd938c8987497))
+- **vanilla:** Cover issue 141 morph stacking, ghosts and picture alpha ([812386f](https://github.com/ChristopherVR/ooxml/commit/812386f962b2cd7c570feaa6f0c4729e01870c2e))
+- **vanilla:** Cancel morph overlays in afterEach ([ad8f6e3](https://github.com/ChristopherVR/ooxml/commit/ad8f6e39849ab2658ee1e22ed98ad07d6ebf9270))
+- **vanilla:** Cover the morph outline marker on the outline overlay ([d47a25f](https://github.com/ChristopherVR/ooxml/commit/d47a25f0f19bc2eff997afdf126354f3a3d36a0a))
+
+## 2026-11-04
+
+_Releases: pptx-viewer-core@4.14.0, pptx-viewer-mcp@2.10.0, @christophervr/pptx-viewer@2.42.0, @christophervr/pptx-viewer@2.41.7, pptx-react-viewer@4.63.0, pptx-vue-viewer@4.62.0, pptx-angular-viewer@4.62.0, pptx-angular-viewer@4.61.2, pptx-svelte-viewer@4.62.0, pptx-vanilla-viewer@3.62.0_
+
+### Features
+
+- **embedding:** Connect office products to shared onedrive storage ([b8620c1](https://github.com/ChristopherVR/ooxml/commit/b8620c13a4903aa27fed365d113153cad76ed29f))
+- **collab:** Merge concurrent onedrive document edits ([194529b](https://github.com/ChristopherVR/ooxml/commit/194529b06c63f994eed5d1d4b7e82759e17a704b))
+
+### Bug Fixes
+
+- **release:** Publish pptx-angular-viewer from its built dist ([#240](https://github.com/ChristopherVR/ooxml/issues/240)) ([8015762](https://github.com/ChristopherVR/ooxml/commit/8015762a9eb2852cbaa4bc57bd0e7d6912802bd3))
+
+### Dependencies
+
+- **deps:** Update production dependencies ([bbd7b53](https://github.com/ChristopherVR/ooxml/commit/bbd7b530c7a15ae48c0c0a2ff4ea7dcdfe2aa9d3))
+- **deps:** Merge dependency update ([#92](https://github.com/ChristopherVR/ooxml/issues/92)) ([ce1b012](https://github.com/ChristopherVR/ooxml/commit/ce1b01215261b162443f903e1a2086ed4110ae28))
+- **deps:** Bump the production-minor-and-patch group with 22 updates ([02d7713](https://github.com/ChristopherVR/ooxml/commit/02d7713ceb301921fd6c7706138d64f4c10a9d38))
+- **deps:** Merge dependency update ([#94](https://github.com/ChristopherVR/ooxml/issues/94)) ([e381aba](https://github.com/ChristopherVR/ooxml/commit/e381abaa11794233cdea85a9dc6d098d4cb338c4))
+- **deps:** Merge dependency update ([#96](https://github.com/ChristopherVR/ooxml/issues/96)) ([33b0ebb](https://github.com/ChristopherVR/ooxml/commit/33b0ebb6a16b4448d577c169c79187466d4148a3))
+- **deps:** Update emf-converter to 4.21.0 ([#106](https://github.com/ChristopherVR/ooxml/issues/106)) ([641ae31](https://github.com/ChristopherVR/ooxml/commit/641ae316b7de07ed6f3c5158e8b154c991e1b719))
+- **deps:** Bump production minor and patch dependencies ([#213](https://github.com/ChristopherVR/ooxml/issues/213)) ([3cfdd01](https://github.com/ChristopherVR/ooxml/commit/3cfdd016aa61cacb0540491c5ab13974e32f8e1e))
+- **deps:** Merge node type updates ([#235](https://github.com/ChristopherVR/ooxml/issues/235)) ([ab34b75](https://github.com/ChristopherVR/ooxml/commit/ab34b754d451f73e51b1aa7833de628776ac3726))
+- **deps:** Bump the production-minor-and-patch group with 22 updates ([8e60b14](https://github.com/ChristopherVR/ooxml/commit/8e60b14e1d8ee3a1cb507670caa15a611632ef26))
+- **deps:** Merge production dependency updates ([#236](https://github.com/ChristopherVR/ooxml/issues/236)) ([7eb137b](https://github.com/ChristopherVR/ooxml/commit/7eb137b03906ded043ce0e4adf83e01fcdaa44a9))
+- **deps:** Merge development dependency updates ([#237](https://github.com/ChristopherVR/ooxml/issues/237)) ([448c68d](https://github.com/ChristopherVR/ooxml/commit/448c68db3783efcd646de6258e59f28a971c2170))
+- **deps:** Merge dependency update ([#95](https://github.com/ChristopherVR/ooxml/issues/95)) ([0926eac](https://github.com/ChristopherVR/ooxml/commit/0926eac231cb49749433fb7a9eac870cc7996e52))
+
+### Chores
+
+- **deps-dev:** Bump @types/node ([df60cd7](https://github.com/ChristopherVR/ooxml/commit/df60cd7aff4efb7006ac0a6cfd1c69b08230a011))
+- **deps-dev:** Bump the development-minor-and-patch group with 14 updates ([1cdc60b](https://github.com/ChristopherVR/ooxml/commit/1cdc60b0f0a591304a2240ffcb550eccfd8d2487))
+- Integrate latest main before full verification ([3bec814](https://github.com/ChristopherVR/ooxml/commit/3bec814857ae675f31eba14fcec59a3db4e1cb77))
+- **deps-dev:** Bump development minor and patch dependencies ([#215](https://github.com/ChristopherVR/ooxml/issues/215)) ([a445b3e](https://github.com/ChristopherVR/ooxml/commit/a445b3e3cc2191341063c799768c5aad13981751))
+- **deps-dev:** Bump @types/node ([8dfb9a2](https://github.com/ChristopherVR/ooxml/commit/8dfb9a2a7b40aac3641f927de3ab7fcebc9a42ec))
+- **deps-dev:** Bump the development-minor-and-patch group with 7 updates ([e6e7a5e](https://github.com/ChristopherVR/ooxml/commit/e6e7a5e8075087159d1df4608212bea6a98b03ad))
+- **deps-dev:** Bump tsup from 8.5.1 to 9.0.0 ([9835e80](https://github.com/ChristopherVR/ooxml/commit/9835e8038a9a271e37e286e524496513910553a6))
+
+## 2026-11-03
+
+_Releases: pptx-viewer-mcp@2.9.1, pptx-react-viewer@4.62.2, pptx-react-viewer@4.62.1, pptx-vue-viewer@4.61.1, pptx-angular-viewer@4.61.1, pptx-svelte-viewer@4.61.1, pptx-vanilla-viewer@3.61.1_
+
+### Bug Fixes
+
+- **release:** Publish pptx-angular-viewer from its built dist ([#240](https://github.com/ChristopherVR/ooxml/issues/240)) ([8015762](https://github.com/ChristopherVR/ooxml/commit/8015762a9eb2852cbaa4bc57bd0e7d6912802bd3))
+
+### Styling
+
+- **pptx:** Apply updated formatter to overflow menu ([8661c17](https://github.com/ChristopherVR/ooxml/commit/8661c17751f4b6739512bff8b57398ee8aad4a03))
+
+### Dependencies
+
+- **deps:** Merge node type updates ([#235](https://github.com/ChristopherVR/ooxml/issues/235)) ([ab34b75](https://github.com/ChristopherVR/ooxml/commit/ab34b754d451f73e51b1aa7833de628776ac3726))
+- **deps:** Bump the production-minor-and-patch group with 22 updates ([8e60b14](https://github.com/ChristopherVR/ooxml/commit/8e60b14e1d8ee3a1cb507670caa15a611632ef26))
+- **deps:** Merge production dependency updates ([#236](https://github.com/ChristopherVR/ooxml/issues/236)) ([7eb137b](https://github.com/ChristopherVR/ooxml/commit/7eb137b03906ded043ce0e4adf83e01fcdaa44a9))
+- **deps:** Merge development dependency updates ([#237](https://github.com/ChristopherVR/ooxml/issues/237)) ([448c68d](https://github.com/ChristopherVR/ooxml/commit/448c68db3783efcd646de6258e59f28a971c2170))
+- **deps:** Bump the angular group with 8 updates ([b233fe0](https://github.com/ChristopherVR/ooxml/commit/b233fe0bd00783876e01b5f0c7488a8f9e139fe6))
+- **deps:** Merge angular dependency updates ([#234](https://github.com/ChristopherVR/ooxml/issues/234)) ([5c642cf](https://github.com/ChristopherVR/ooxml/commit/5c642cf7e6fc39265778fb062e4b13772af47a8e))
+
+### Chores
+
+- **deps-dev:** Bump @types/node ([8dfb9a2](https://github.com/ChristopherVR/ooxml/commit/8dfb9a2a7b40aac3641f927de3ab7fcebc9a42ec))
+- **deps-dev:** Bump the development-minor-and-patch group with 7 updates ([e6e7a5e](https://github.com/ChristopherVR/ooxml/commit/e6e7a5e8075087159d1df4608212bea6a98b03ad))
+- **xlsx:** Calculate filterxml with native regression coverage ([3b5f4c7](https://github.com/ChristopherVR/ooxml/commit/3b5f4c74faaa67c76024af81a2773af3bf84f979))
+- **docx:** Resolve theme page backgrounds and hsl tints ([56c4ab3](https://github.com/ChristopherVR/ooxml/commit/56c4ab36aaa91bf66558902ba17dd0d1ca51412c))
+
+## 2026-10-31
+
+_Releases: pptx-react-viewer@4.62.0, pptx-vue-viewer@4.61.0, pptx-angular-viewer@4.61.0, pptx-svelte-viewer@4.61.0, pptx-vanilla-viewer@3.61.0_
+
+### Bug Fixes
+
+- Preserve signatures and presentation automation edits ([fa89190](https://github.com/ChristopherVR/ooxml/commit/fa891906e4259f481c494aac85e80c0c3835f05a))
+
+## 2026-10-30
+
+_Releases: pptx-viewer-mcp@2.9.0, pptx-react-viewer@4.61.0, pptx-react-viewer@4.60.0, pptx-react-viewer@4.59.0, pptx-vue-viewer@4.60.0, pptx-vue-viewer@4.59.0, pptx-vue-viewer@4.58.0, pptx-angular-viewer@4.60.0, pptx-angular-viewer@4.59.0, pptx-angular-viewer@4.58.0, pptx-svelte-viewer@4.60.0, pptx-svelte-viewer@4.59.0, pptx-svelte-viewer@4.58.0, pptx-vanilla-viewer@3.60.0, pptx-vanilla-viewer@3.59.0, pptx-vanilla-viewer@3.58.0_
+
+### Features
+
+- **pptx:** Add custom show editing operations and manage_custom_shows tool ([2dce987](https://github.com/ChristopherVR/ooxml/commit/2dce987baa2feb12c3fd319953153a9d85d76f57))
+- **visio:** Flate-compress embedded PDF streams ([e6fa351](https://github.com/ChristopherVR/ooxml/commit/e6fa3512a86d86ecb88768b392996914d8591a17))
+- **visio:** Apply theme fonts, effects and connectors separately ([aae09b5](https://github.com/ChristopherVR/ooxml/commit/aae09b5a74a214ddb93ced67ddc8648ea92ac2e5))
+- **pptx:** Add the Custom Shows dialog and write valid custom show ids ([5e4aca6](https://github.com/ChristopherVR/ooxml/commit/5e4aca69a8ca52e249492cd908dba239104538f3))
+- **visio:** Add PDF page range, gradients, shadows and embedded fonts ([f4cec01](https://github.com/ChristopherVR/ooxml/commit/f4cec01b5923e37e6b0bbdc9fab66adaa0339da6))
+- **diagram:** Preserve node pictures through layout reflow ([95beac5](https://github.com/ChristopherVR/ooxml/commit/95beac591882524670aaa2fa0ace9e65dabcf670))
+- **pptx:** Retain smartart pictures across native reflow and save ([a91af54](https://github.com/ChristopherVR/ooxml/commit/a91af54e9bc20561df0e55f5b23f2f0f28836e6e))
+- **drawingml:** Share rich picture effects and tiled fills ([3df41df](https://github.com/ChristopherVR/ooxml/commit/3df41df34f80c851ce45044cd01edd9c1afdf238))
+- **chart:** Share cached region map geometry and rendering ([53531e8](https://github.com/ChristopherVR/ooxml/commit/53531e817fbef4ebe1e013ff95e048828949882d))
+- **chart:** Expose localized map approximation captions ([b003c75](https://github.com/ChristopherVR/ooxml/commit/b003c7549cbdfa6f9a456c9553a699824d6ae4ed))
+- **chart:** Draw 3-D charts in the core painter ([a31f208](https://github.com/ChristopherVR/ooxml/commit/a31f20802bff07e945ca76495de22b57609c7d39))
+
+### Bug Fixes
+
+- **chart:** Match native funnel bar spacing ([cdaacaa](https://github.com/ChristopherVR/ooxml/commit/cdaacaa9e810619163ece773f164b2d2d98eb1a2))
+- **chart:** Align map paint and sparse values with native source ([5a5aaf9](https://github.com/ChristopherVR/ooxml/commit/5a5aaf9252243bebe006d5ea968630511fab4013))
+- **diagram:** Preserve picture layout roles colors and frame extent ([f31dbb9](https://github.com/ChristopherVR/ooxml/commit/f31dbb9096793368d090f46f5fe00f222785b89d))
+- **chart:** Honor native map labels and formatting defaults ([b5e8607](https://github.com/ChristopherVR/ooxml/commit/b5e8607cd0fed412d15df0124611edf057751f11))
+- **chart:** Bound cached geography allocation across rings ([b393fb3](https://github.com/ChristopherVR/ooxml/commit/b393fb32da7f0f444edb13eb79bfd04d3b7a730a))
+- **diagram:** Bind native picture fills to presentation roles ([f1ebce2](https://github.com/ChristopherVR/ooxml/commit/f1ebce269c8f98258ff8b28c26e19c501ebb020e))
+- **drawingml:** Match native picture effect semantics ([335f911](https://github.com/ChristopherVR/ooxml/commit/335f9113a26ae7f2836314cfd41bf78430e331bd))
+- **diagram:** Keep authored node styling above role colors ([1ce1b6b](https://github.com/ChristopherVR/ooxml/commit/1ce1b6b2a98334de8d6e0a33b5a7375e9981a939))
+- **pptx:** Preserve compact map source index contracts ([4fbf5a0](https://github.com/ChristopherVR/ooxml/commit/4fbf5a0832418fb97dc9e130287eeb93958207b1))
+- **ui:** Refresh smartart pictures after asynchronous pixel paint ([fb87fa9](https://github.com/ChristopherVR/ooxml/commit/fb87fa9f1ef5c2724ed12c2b8e8d12861b0f0511))
+- **chart:** Parse schema-defined map color breakpoints ([c7e84f1](https://github.com/ChristopherVR/ooxml/commit/c7e84f124d234dc5bb42010371db20f205c5976a))
+- **chart:** Retain explicit legacy color positions with counts ([9260eeb](https://github.com/ChristopherVR/ooxml/commit/9260eeb1a692966b13aad37b9b79042d8c067da5))
+- **pptx:** Keep SmartArt shapes and exact region-map dimensions after rebase ([7626781](https://github.com/ChristopherVR/ooxml/commit/762678164540d5a35d34cd57261f508d0972a8aa))
+- **pptx:** Keep SmartArt shapes, pictures and captions through text pane edits ([9cc6fbf](https://github.com/ChristopherVR/ooxml/commit/9cc6fbfa07785555bf8e8e67ee5d895404c2c730))
+- **pptx:** Use the shared select in the Angular custom shows dialog ([932dcdf](https://github.com/ChristopherVR/ooxml/commit/932dcdf02b8fb7361f3b5f93f541aa6c0b70d4b4))
+
+### Refactor
+
+- **drawingml:** Share validated raster image dimensions ([4fb3c00](https://github.com/ChristopherVR/ooxml/commit/4fb3c0083faa121bf88615ebf39948f27d2848d7))
+
+### Testing
+
+- **drawingml:** Extend native picture effect controls ([6e3ef0d](https://github.com/ChristopherVR/ooxml/commit/6e3ef0d06099704166ba0803d3efced5af519771))
+- **ui:** Compare shared renderers with native office captures ([8bf9556](https://github.com/ChristopherVR/ooxml/commit/8bf955623369ed0de740d1a746a250489fb49bf6))
+- **chart:** Assert native extended title defaults and overrides ([7f878c8](https://github.com/ChristopherVR/ooxml/commit/7f878c8a45758380264d766302803344284bade7))
+
+### Styling
+
+- Format picture bullet numbering and the custom shows template ([2cdcec1](https://github.com/ChristopherVR/ooxml/commit/2cdcec1c9e79ced33688aa18573002ce77034b0d))
+
+### Other
+
+- Bring origin/main into the embedding work ([a3711a1](https://github.com/ChristopherVR/ooxml/commit/a3711a14049a2cd11b994e76eafec039db2dc2de))
+
+## 2026-10-29
+
+_Releases: pptx-react-viewer@4.58.0, pptx-react-viewer@4.57.1, pptx-vue-viewer@4.57.0, pptx-vue-viewer@4.56.1, pptx-angular-viewer@4.57.0, pptx-angular-viewer@4.56.1, pptx-svelte-viewer@4.57.0, pptx-svelte-viewer@4.56.1, pptx-vanilla-viewer@3.57.0, pptx-vanilla-viewer@3.56.1_
+
+### Features
+
+- **pptx:** Accept effects, line options and path gradients on shapes ([#230](https://github.com/ChristopherVR/ooxml/issues/230)) ([a22501f](https://github.com/ChristopherVR/ooxml/commit/a22501fb6044c526f1860b1fae12eb49d6e43ce7))
+
+### Bug Fixes
+
+- **pptx:** Edit tag and customer-data owners without regrouping slides ([adbe9ca](https://github.com/ChristopherVR/ooxml/commit/adbe9ca129f0c4fcb18dd850bfd486091c569813))
+- **geometry:** Draw arc, pie, chord and blockArc sweeps that wrap past 0 ([ee4a502](https://github.com/ChristopherVR/ooxml/commit/ee4a502022d615bfee5057bed4d87804265e90e2))
+- **docx:** Match Word equation heights and list indents, record caret x ([5e51378](https://github.com/ChristopherVR/ooxml/commit/5e51378d484b6f8538d29b7878f260ec8e97f233))
+
+### Testing
+
+- **automation:** Snapshot mcp tool names and schemas ([6469eac](https://github.com/ChristopherVR/ooxml/commit/6469eace8bbcdb604c5d9681fccd59e6bc6e68a3))
+- **chart:** Name the accepted native gradient raster gaps ([4b21b72](https://github.com/ChristopherVR/ooxml/commit/4b21b727d63cb6f29c7005cad1e270be388dc128))
+- **chart:** Record native two-stop alpha weighting evidence ([2b0cb3a](https://github.com/ChristopherVR/ooxml/commit/2b0cb3a659c534c50a51e843d7da889edbc34bdd))
+- **automation:** Keep the pptx schema snapshot out of the formatter ([21bac92](https://github.com/ChristopherVR/ooxml/commit/21bac92f9bb8d54b220d8240f53505a7000fed12))
+- **chart:** Record translucent gradients over opaque backdrops ([7afd300](https://github.com/ChristopherVR/ooxml/commit/7afd300d057fea24b019efca945e83bf9b06d6a5))
+
+### Styling
+
+- Format files from the stability work ([6ebb965](https://github.com/ChristopherVR/ooxml/commit/6ebb965ec54f2424db7297ff89a1fda5066ea280))
+
+## 2026-10-28
+
+_Releases: pptx-react-viewer@4.57.0, pptx-react-viewer@4.56.1, pptx-react-viewer@4.56.0, pptx-react-viewer@4.55.0, pptx-vue-viewer@4.56.0, pptx-vue-viewer@4.55.0, pptx-vue-viewer@4.54.0, pptx-angular-viewer@4.56.0, pptx-angular-viewer@4.55.0, pptx-angular-viewer@4.54.0, pptx-svelte-viewer@4.56.0, pptx-svelte-viewer@4.55.0, pptx-svelte-viewer@4.54.0, pptx-vanilla-viewer@3.56.0, pptx-vanilla-viewer@3.55.1, pptx-vanilla-viewer@3.55.0, pptx-vanilla-viewer@3.54.0_
+
+### Features
+
+- **pptx:** Add opt-in whole-list conversion with listConversionScope ([#229](https://github.com/ChristopherVR/ooxml/issues/229)) ([bf7be3e](https://github.com/ChristopherVR/ooxml/commit/bf7be3e5cedd7ff9ed9e6cc62b0bd5be7ec363c4))
+- **pptx:** Expose the slide thumbnail rail as a building block in every binding ([#228](https://github.com/ChristopherVR/ooxml/issues/228)) ([2b77f02](https://github.com/ChristopherVR/ooxml/commit/2b77f026e1e26e6a5fe3c52f275608f39bc0ea8e))
+- **text:** Share font selection with word script layout ([59ad0a2](https://github.com/ChristopherVR/ooxml/commit/59ad0a2e8249d3ffc9be34c2c9e6f9ffe8b3b07a))
+- **chart:** Share manual plot layout across chart painters ([18b79c0](https://github.com/ChristopherVR/ooxml/commit/18b79c04bb1d2aa914630453413d995d0bb54922))
+- **chart:** Share smooth series paths and authored strokes ([7329e5c](https://github.com/ChristopherVR/ooxml/commit/7329e5cbb546a041c0e67417fbe84e9d3dc415a2))
+- **chart:** Share point label offsets and pie leader lines ([861f78f](https://github.com/ChristopherVR/ooxml/commit/861f78f5d9ba0fa93ed6e85ddfc209fd2bf828ca))
+- **drawingml:** Render guide-driven custom shapes in word ([81558e6](https://github.com/ChristopherVR/ooxml/commit/81558e6fcfdb2a64ced22661410cbdfba954cea2))
+- **drawingml:** Share picture crop with excel ([f093c0f](https://github.com/ChristopherVR/ooxml/commit/f093c0f6d1c2ea96736613990e870143d770774e))
+- **chart:** Share calendar date axis rendering ([474de5c](https://github.com/ChristopherVR/ooxml/commit/474de5c4f2418ee7b67ec34a5e08c8eefa4bb992))
+- **chart:** Share chart data table layout and rendering ([09fbdf1](https://github.com/ChristopherVR/ooxml/commit/09fbdf1ec8016b376b67053d8a5575fc3d1ef145))
+- **drawingml:** Share ordered picture effects with excel ([b669575](https://github.com/ChristopherVR/ooxml/commit/b669575a041ab25169a7c83757075fe9dffe390a))
+- **chart:** Share funnel geometry and neutral rendering ([28f6ce3](https://github.com/ChristopherVR/ooxml/commit/28f6ce302fa5791a11819209d6501e97e971b80b))
+- **chart:** Share box distributions and neutral rendering ([6390e30](https://github.com/ChristopherVR/ooxml/commit/6390e30ac6994e6891f8324e4264949f66e0a0a0))
+- **diagram:** Paint cached pictures in word and excel ([f254d51](https://github.com/ChristopherVR/ooxml/commit/f254d51eeed81279dd9f971cb7ac496364738ec2))
+- **drawingml:** Share source-backed text body 3d codecs ([bcf2a0a](https://github.com/ChristopherVR/ooxml/commit/bcf2a0a491c6e4dc4e5fd4f5b615f3673285cadf))
+- **pptx:** Add an /ai entry and createAiAssistant to every binding ([#219](https://github.com/ChristopherVR/ooxml/issues/219)) ([ecd4d43](https://github.com/ChristopherVR/ooxml/commit/ecd4d43acfc0133c2f9c1e3320f366244ba3bba3))
+- **visio:** Improve selection dragging and resizing ([60cf8dd](https://github.com/ChristopherVR/ooxml/commit/60cf8dd9c547f16e114b98ae01fed0968aca5866))
+- **pptx:** Save chart labels and series colours through core ([4b25d98](https://github.com/ChristopherVR/ooxml/commit/4b25d98dc70d336d400e185d2af60b190889c4fe))
+- **chart:** Share rich title and axis save semantics ([d55e49d](https://github.com/ChristopherVR/ooxml/commit/d55e49da53b2beef0e8215d76376b42bb74e16cd))
+- **drawingml:** Share outlines effects and theme style matrices ([1bcb6c2](https://github.com/ChristopherVR/ooxml/commit/1bcb6c228370994984ecc277f2d456705fae1134))
+- **drawingml:** Preserve and author pattern and picture fills ([b30778e](https://github.com/ChristopherVR/ooxml/commit/b30778e085f626605c3c42edd1e966733dc77d78))
+- **diagram:** Share interpreted SmartArt previews across products ([f9dd019](https://github.com/ChristopherVR/ooxml/commit/f9dd0197da1871da3178a2d3ee880fe27266f0c0))
+- **chart:** Add safe hierarchical ChartEx editing primitives ([1759131](https://github.com/ChristopherVR/ooxml/commit/17591312e4b41bdf6a10873f54d43bea979cfcc6))
+- **chart:** Bind ChartEx edits to Word and Excel storage ([8443244](https://github.com/ChristopherVR/ooxml/commit/8443244f5520e967b5ddda797b27ddf5929b7eb7))
+- **chart:** Preserve hidden labels and edit cell label ranges ([b17afec](https://github.com/ChristopherVR/ooxml/commit/b17afecadcfc83aa94431d3cf89e8e7621c67ec2))
+- **chart:** Add shared advanced formatting intents ([c4d6fa1](https://github.com/ChristopherVR/ooxml/commit/c4d6fa115445ef6bc99b341c92a46941a326859a))
+- **chart:** Allocate fresh embedded workbook data sheets ([909bc58](https://github.com/ChristopherVR/ooxml/commit/909bc582f793e08b63671d82abe70440a49afdfd))
+- **diagram:** Share SmartArt style and color authoring ([86b43a4](https://github.com/ChristopherVR/ooxml/commit/86b43a497b5effa071b25e73dab91ab4bb18c296))
+- **chart:** Save structural edits with fresh workbook ranges ([99d0a3e](https://github.com/ChristopherVR/ooxml/commit/99d0a3e11ff95d002feb3a6060faa2eac3f6057b))
+- **chart:** Share resolved appearance conversions across hosts ([f26c9ff](https://github.com/ChristopherVR/ooxml/commit/f26c9ffa072db97ae8632c5e97de960821d3cf8f))
+- **chart:** Support structural ChartEx data edits across hosts ([8fd8d15](https://github.com/ChristopherVR/ooxml/commit/8fd8d15729d3c8347c8090451f2fefd420e03c4a))
+- **chart:** Share standalone rich text formatting edits ([829764b](https://github.com/ChristopherVR/ooxml/commit/829764b41480dd4f91f7609cfc1d1071e6117de6))
+- **chart:** Share appearance and chart family save operations ([e1b4f4a](https://github.com/ChristopherVR/ooxml/commit/e1b4f4ae337a2b0b99b9a127219dbbd4e7392109))
+- **ui:** Edit ChartEx charts in Word and Excel ([35ca2bd](https://github.com/ChristopherVR/ooxml/commit/35ca2bd824525a67220c533b6487b604118526b2))
+- **diagram:** Attach generated caches in Word and Excel ([0ba0947](https://github.com/ChristopherVR/ooxml/commit/0ba09477b7c5a6b251dd607d0775feec4655abf0))
+- **chart:** Share chart text layout and point label saves ([a638df2](https://github.com/ChristopherVR/ooxml/commit/a638df2ea8d702b1595b96bddf668a94dc9946dc))
+- **chart:** Split secondary series without changing targets ([cd1d2d5](https://github.com/ChristopherVR/ooxml/commit/cd1d2d5e3fb74bdb1ae7b05f1b2a0836e7ae34c2))
+- **chart:** Share chart chrome and protection edits ([9d59053](https://github.com/ChristopherVR/ooxml/commit/9d590537db83f652b66a8e7c9431ca6b0f640c86))
+- **chart:** Create extended charts through shared operations ([5a8ece7](https://github.com/ChristopherVR/ooxml/commit/5a8ece72b122382e57f8648c8c58a17dec8e5a09))
+- **pptx:** Save extended chart families through the core ([f5c1091](https://github.com/ChristopherVR/ooxml/commit/f5c10914458e9cd31e92d6efdfd156f77de40dd0))
+- **pptx:** Plan shared analysis and point chart saves ([3ab4c64](https://github.com/ChristopherVR/ooxml/commit/3ab4c6462e18ef7a24f35322f7b424337a668384))
+- **chart:** Preserve series targets across combo type edits ([d991ecb](https://github.com/ChristopherVR/ooxml/commit/d991ecb51d855cec58efd752f7c959a8d5346f32))
+- **chart:** Share axis labels and plot decorations ([0838fa8](https://github.com/ChristopherVR/ooxml/commit/0838fa8e6832d6442cec0f9a71e0a83051a5581d))
+- **chart:** Edit rich title runs and typed data vectors ([a3b688e](https://github.com/ChristopherVR/ooxml/commit/a3b688e38ccecdf64d99856df1bed8a33e2866e6))
+- **chart:** Share extended chart style and axis editing ([906594d](https://github.com/ChristopherVR/ooxml/commit/906594d527d0c472cd5435f60049fe0f3e1e4a2b))
+
+### Bug Fixes
+
+- **pptx:** Stretch textPlain WordArt to fill its shape ([#226](https://github.com/ChristopherVR/ooxml/issues/226)) ([120d3ce](https://github.com/ChristopherVR/ooxml/commit/120d3ce4e4e4dd8c5830902230fabb5e2c8dcfe7))
+- **pptx:** Keep the timed advance of a slide with no transition ([df75415](https://github.com/ChristopherVR/ooxml/commit/df75415df55557f9366732550540a149821ab939))
+- **pptx:** Resolve viewer lint errors and stale save refs ([4abc45b](https://github.com/ChristopherVR/ooxml/commit/4abc45b210fbf2ce2cd7c4673bdf9d8f14a254be))
+- **pptx:** Scope collaboration undo to the local participant ([55b8bad](https://github.com/ChristopherVR/ooxml/commit/55b8badcf0ec06a7294debff8deff844dcfafb62))
+- **pptx:** Autocorrect only the text typed in this edit ([0e5a85e](https://github.com/ChristopherVR/ooxml/commit/0e5a85e496e0d53e36c00e6fdfd5dd3749337d8a))
+- **pptx:** Keep browser-local blob URLs out of the collaboration room ([433891b](https://github.com/ChristopherVR/ooxml/commit/433891b1db9a173780e6ad59cad56d92a5a0e929))
+- **chart:** Resolve chartex axes by position to avoid prototype pollution ([16edc2f](https://github.com/ChristopherVR/ooxml/commit/16edc2fd96b261ecbfbe388491fe12494be15b89))
+- **drawingml:** Separate guide and path coordinate spaces ([4db9fe1](https://github.com/ChristopherVR/ooxml/commit/4db9fe140ec43aae8cac6cae8846ccf4dad9ba58))
+- **chart:** Export shared date format tokenizer ([b928657](https://github.com/ChristopherVR/ooxml/commit/b928657532d41bec6a83a5969c03be922ef0a90a))
+- **drawingml:** Bound picture luminance and report extensions ([a36e847](https://github.com/ChristopherVR/ooxml/commit/a36e84725c483815ae7508872dd4d89c5a8375b2))
+- **chart:** Paint date ticks over plot backgrounds ([e3fad37](https://github.com/ChristopherVR/ooxml/commit/e3fad379f6d990c1ad85658e751cb84176ca7852))
+- **docx:** Load media for cached smartart pictures ([149b350](https://github.com/ChristopherVR/ooxml/commit/149b35025750b5189813e34cfa33cd1ff5757a17))
+- **chart:** Retain table names and exclude hidden box series ([292dc25](https://github.com/ChristopherVR/ooxml/commit/292dc25c22544d9179d5c0fd31327a3d0aafb462))
+- **chart:** Match native funnel label and box mean defaults ([06bbf26](https://github.com/ChristopherVR/ooxml/commit/06bbf26e496f00270eca67472087454496217cc1))
+- **drawingml:** Preserve anchors and guard text 3d edits ([617a029](https://github.com/ChristopherVR/ooxml/commit/617a02979d5cdae5e3818afd8fb79af367de25eb))
+- **drawingml:** Preserve omitted picture source formatting ([5e2d57d](https://github.com/ChristopherVR/ooxml/commit/5e2d57dfe0b3076be7c6cb5b086c596643eb5203))
+- **chart:** Preserve source content across chart consumers ([1ce74e9](https://github.com/ChristopherVR/ooxml/commit/1ce74e92f8864a046f3ef756b35bf8568c685c5b))
+- **diagram:** Report partial interpreted preview capabilities ([ea9e474](https://github.com/ChristopherVR/ooxml/commit/ea9e4746aa826a00a8bc49ac58852687e62eaf12))
+- **chart:** Preserve resolved gradient focus geometry ([0db31bf](https://github.com/ChristopherVR/ooxml/commit/0db31bf6be311d50eceb9aae66b809c15a9ca48c))
+- **chart:** Retain histogram semantics when switching layouts ([95e9a75](https://github.com/ChristopherVR/ooxml/commit/95e9a75440adaf743bc3c76d399f2b39e40b662e))
+- **pptx:** Preserve chart label defaults and retry workbook writes ([78e8efb](https://github.com/ChristopherVR/ooxml/commit/78e8efbe56ff2000e4d189657d7cc972057fd50f))
+- **pptx:** Save ChartEx label content flags through the core ([88309ed](https://github.com/ChristopherVR/ooxml/commit/88309edce7d247d068fd9934cbf79990b40ea081))
+- **chart:** Preserve source attributes and reuse workbook writes ([4a5f40b](https://github.com/ChristopherVR/ooxml/commit/4a5f40b51644afcb8fdc8690e14a89c41fc5b5bd))
+- **pptx:** Refresh chart adapters after saving shared models ([fdebf79](https://github.com/ChristopherVR/ooxml/commit/fdebf796a8168693c678a9889d2b9b1135079f1e))
+- **chart:** Activate newly allocated workbook data sheets ([7767080](https://github.com/ChristopherVR/ooxml/commit/77670803f1e87ffdab709138f57f4850e2946e50))
+- **pptx:** Declare chart refresh across runtime mixins ([5f880e6](https://github.com/ChristopherVR/ooxml/commit/5f880e639b16111c9b591a6cb909a07d6d3f5607))
+- **chart:** Accept host-allocated picture preview sources ([08fe91b](https://github.com/ChristopherVR/ooxml/commit/08fe91b613a007141ec2291a458a6d02cb6f61ab))
+- **chart:** Preserve authored paint and typed category edits ([547e5c0](https://github.com/ChristopherVR/ooxml/commit/547e5c069fdbeb351e5a8fcddbcb67f790a2b677))
+- **chart:** Preserve rich axis title style projection ([b5d5b7a](https://github.com/ChristopherVR/ooxml/commit/b5d5b7a728785576550957ecd07c202ad36ede0e))
+- **pptx:** Default SmartArt reflow to its local origin ([ae8a59b](https://github.com/ChristopherVR/ooxml/commit/ae8a59b43dbf4dcfdec3d199cc0735b09f1d65ec))
+- **pptx:** Morph offstage text size changes and keep run alpha ([75749c0](https://github.com/ChristopherVR/ooxml/commit/75749c0618fe24714d9f086ca7248f9f3e41e729))
+- **pptx:** End inline edit on Escape and scope collab undo origin ([1338d38](https://github.com/ChristopherVR/ooxml/commit/1338d388f137f8542ce07dbd61f5b6186a842d41))
+- **pptx:** Converge when two clients seed an empty room ([#217](https://github.com/ChristopherVR/ooxml/issues/217)) ([ee06f53](https://github.com/ChristopherVR/ooxml/commit/ee06f5389a9f277704640e4efaa567b3d5718507))
+- **pptx:** Wait out the entry transition before a timed slide advances ([a4707a6](https://github.com/ChristopherVR/ooxml/commit/a4707a6e694d26e32af0375ee06d600541a1236a))
+- **pptx:** Preserve axis styles when editing vanilla controls ([3633959](https://github.com/ChristopherVR/ooxml/commit/36339594ee7a5599339cace99a84c1c4621fa948))
+
+### Refactor
+
+- **opc:** Share hyperlink policy with explicit host protocols ([5f8ac72](https://github.com/ChristopherVR/ooxml/commit/5f8ac72edbe4fff4d2fa303ed3ce8a471762bd12))
+- **pptx:** Read ChartEx facts through the neutral model ([f78b582](https://github.com/ChristopherVR/ooxml/commit/f78b58266a5819121f92b9f954fdd5162b4c0eff))
+- **pptx:** Project classic chart paint from neutral models ([76dbdc6](https://github.com/ChristopherVR/ooxml/commit/76dbdc6dc0ba1c3afc8fe98ba92f482abfdcccd2))
+
+### Documentation
+
+- Record further shared office capability delivery ([845ee99](https://github.com/ChristopherVR/ooxml/commit/845ee99bdc290e148c485c87e64d853a5884e7f8))
+
+### Testing
+
+- **diagram:** Guard optional word media in picture assertion ([c8f5d14](https://github.com/ChristopherVR/ooxml/commit/c8f5d14ddcdef1ee04de6d4f3e557d1719eae5e8))
+- **pptx:** Compare authored ChartEx visibility and scaling ([5748e23](https://github.com/ChristopherVR/ooxml/commit/5748e234bbe1919b522479f440440457267c4abf))
+- **svelte:** Keep the room history optional in the effects host ([15d7d2e](https://github.com/ChristopherVR/ooxml/commit/15d7d2ef52e19bac3fa1c0100d844ef7b4a85047))
+
+### Styling
+
+- **chart:** Apply workspace formatting to chart tests ([b3f3a08](https://github.com/ChristopherVR/ooxml/commit/b3f3a0887eaff025d3fd7bf88cd288977df4121f))
+- **pptx:** Format angular ai sources ([4e2588d](https://github.com/ChristopherVR/ooxml/commit/4e2588d281fc9d5ce49b3c8c24451fb04790cadb))
+
+### Chores
+
+- Integrate current main for reuse verification ([a22d5f5](https://github.com/ChristopherVR/ooxml/commit/a22d5f53406330909d3853ab64a4d850bc3c0ad1))
+- Integrate main before shared capability push ([9dc78da](https://github.com/ChristopherVR/ooxml/commit/9dc78da5262a854807b9fc8395f1fd97f71c2eb4))
+- Prepare shared capability implementation worktree ([b36e947](https://github.com/ChristopherVR/ooxml/commit/b36e9472aa94839f82fcfe7e9a9569da7f5c1c52))
+
+## 2026-10-26
+
+_Releases: pptx-react-viewer@4.54.0, pptx-react-viewer@4.53.2, pptx-react-viewer@4.53.1, pptx-vue-viewer@4.53.0, pptx-vue-viewer@4.52.2, pptx-vue-viewer@4.52.1, pptx-angular-viewer@4.53.1, pptx-angular-viewer@4.53.0, pptx-angular-viewer@4.52.2, pptx-angular-viewer@4.52.1, pptx-svelte-viewer@4.53.0, pptx-svelte-viewer@4.52.2, pptx-svelte-viewer@4.52.1, pptx-vanilla-viewer@3.53.0, pptx-vanilla-viewer@3.52.2, pptx-vanilla-viewer@3.52.1_
+
+### Features
+
+- **ui:** Add a lightweight pptx AI host entry ([#210](https://github.com/ChristopherVR/ooxml/issues/210)) ([d47a350](https://github.com/ChristopherVR/ooxml/commit/d47a350083895e3c07294eb2b6e8819102ee8599))
+- **pptx:** Let hosts bound deck loads with limits ([#216](https://github.com/ChristopherVR/ooxml/issues/216)) ([58a5540](https://github.com/ChristopherVR/ooxml/commit/58a5540075982935d91cbc9c97a5c5d66359a180))
+- **pptx:** Decode embedded fonts on first use ([#209](https://github.com/ChristopherVR/ooxml/issues/209)) ([a1c313a](https://github.com/ChristopherVR/ooxml/commit/a1c313ab23421786f632f95927735a7c2e89bbb1))
+
+### Bug Fixes
+
+- **pptx:** Keep comment @-mentions on their text through edits, trims and saves ([#206](https://github.com/ChristopherVR/ooxml/issues/206)) ([09a420f](https://github.com/ChristopherVR/ooxml/commit/09a420fb44364fff04df9aa5550684519bec02cd))
+- **angular:** Load the assistant runtime on demand ([ededbfe](https://github.com/ChristopherVR/ooxml/commit/ededbfe953532628ace701c2be19310212509d1d))
+
+### Performance
+
+- **pptx:** Load the outline font parser on demand ([#208](https://github.com/ChristopherVR/ooxml/issues/208)) ([7b930b3](https://github.com/ChristopherVR/ooxml/commit/7b930b3fc57bcb2ff1047bed1c6a25bb6484127c))
+- **pptx:** Share package part reads within one load ([#207](https://github.com/ChristopherVR/ooxml/issues/207)) ([a6d7f82](https://github.com/ChristopherVR/ooxml/commit/a6d7f82c8941cb41e1340f672b2e1c5939ed0609))
+
+### Dependencies
+
+- **deps:** Bump production minor and patch dependencies ([#213](https://github.com/ChristopherVR/ooxml/issues/213)) ([3cfdd01](https://github.com/ChristopherVR/ooxml/commit/3cfdd016aa61cacb0540491c5ab13974e32f8e1e))
+
+### Chores
+
+- **deps-dev:** Bump development minor and patch dependencies ([#215](https://github.com/ChristopherVR/ooxml/issues/215)) ([a445b3e](https://github.com/ChristopherVR/ooxml/commit/a445b3e3cc2191341063c799768c5aad13981751))
+
+## 2026-10-25
+
+_Releases: pptx-react-viewer@4.53.0, pptx-react-viewer@4.52.1, pptx-react-viewer@4.52.0, pptx-vue-viewer@4.52.0, pptx-vue-viewer@4.51.1, pptx-vue-viewer@4.51.0, pptx-angular-viewer@4.52.0, pptx-angular-viewer@4.51.1, pptx-angular-viewer@4.51.0, pptx-svelte-viewer@4.52.0, pptx-svelte-viewer@4.51.1, pptx-svelte-viewer@4.51.0, pptx-vanilla-viewer@3.52.0, pptx-vanilla-viewer@3.51.1, pptx-vanilla-viewer@3.51.0_
+
+### Features
+
+- **pptx:** Let hosts block external content with allowExternalContent ([#201](https://github.com/ChristopherVR/ooxml/issues/201)) ([903c8e2](https://github.com/ChristopherVR/ooxml/commit/903c8e201dbd36252a5e82a388dcb59e30f3afc4))
+- **pptx:** Let theme scheme edits name the parts they write ([51b741e](https://github.com/ChristopherVR/ooxml/commit/51b741e66bd0684edd5c44df9a5755a2885368ac))
+- **pptx:** Read a theme part's format scheme with its other schemes ([868cb75](https://github.com/ChristopherVR/ooxml/commit/868cb758e84577dac0641f46eff3dad00203baa8))
+- **pptx:** Put back a format scheme a theme part held ([6bcd4bb](https://github.com/ChristopherVR/ooxml/commit/6bcd4bba33314cbd9626c727df9a1b932d282230))
+- **pptx:** Let the editor history forget steps it cannot restore ([a2d0a9c](https://github.com/ChristopherVR/ooxml/commit/a2d0a9ccf257647bc03bcf14f1981c78a49a5381))
+- **pptx:** Let hosts disable or self-host the Google Fonts fallback ([#200](https://github.com/ChristopherVR/ooxml/issues/200)) ([e5de994](https://github.com/ChristopherVR/ooxml/commit/e5de994b1d976c64f727dbefd35ae640a4563ebf))
+- **ui:** Group the shared keyboard shortcut reference ([ab6c1fd](https://github.com/ChristopherVR/ooxml/commit/ab6c1fda0068e213b6753363fb26ed353d713c13))
+- **angular:** Add text shadow, glow and reflection to the inspector ([15921c9](https://github.com/ChristopherVR/ooxml/commit/15921c98e1e29e4f0580c91eed6c27df6e9abd05))
+
+### Bug Fixes
+
+- **pptx:** Preview colour drags as one undo step ([#203](https://github.com/ChristopherVR/ooxml/issues/203)) ([27cc512](https://github.com/ChristopherVR/ooxml/commit/27cc5126cee1c351069e8eb7c2dafe4a0d7806a1))
+- **pptx:** Save hyperlinks to their current targets ([#204](https://github.com/ChristopherVR/ooxml/issues/204)) ([371fe79](https://github.com/ChristopherVR/ooxml/commit/371fe799d88e4158fb7ed895a1e32b0c9b67682e))
+- **pptx:** Run the saves of one handler one at a time ([#184](https://github.com/ChristopherVR/ooxml/issues/184)) ([4e9353f](https://github.com/ChristopherVR/ooxml/commit/4e9353fc82d3d3ae8fd1865bc40e157465d850f5))
+- **pptx:** Resolve master and layout backgrounds through their master ([c6da218](https://github.com/ChristopherVR/ooxml/commit/c6da218afe8f162ffb361d14b7dea7502c95a19e))
+- **react:** Keep the slides state as it is while a layout applies ([dd4e993](https://github.com/ChristopherVR/ooxml/commit/dd4e993da3e61734302a9f4df025067c413254de))
+- **react:** Keep an edit made to a new slide while its layout loads ([8c73289](https://github.com/ChristopherVR/ooxml/commit/8c7328981b23f7bcd92b264a0473058b7211f87f))
+- **react:** Undo and redo a theme pick in the theme part too ([af45148](https://github.com/ChristopherVR/ooxml/commit/af45148b18087db083286e2afa6ad9204dfb885d))
+- **react:** Wait for an undone theme part before saving ([4105d37](https://github.com/ChristopherVR/ooxml/commit/4105d37189e3ecfda11e656e2125abebe295293b))
+- **react:** Commit a design theme pick from the slides it previewed ([4f324a9](https://github.com/ChristopherVR/ooxml/commit/4f324a9c6e25c1c6271e693ab2f3badad62662eb))
+- **ui:** Share theme undo records and queue every theme part write ([981d069](https://github.com/ChristopherVR/ooxml/commit/981d069b2421e8d984a051225f532f8d06d55d48))
+- **pptx:** Keep theme state on the part a switched master uses ([c806787](https://github.com/ChristopherVR/ooxml/commit/c8067874618784de1908cd81c3b5e8affda800cf))
+- **react:** Apply a theme part by path in place as one undo step ([96e75ac](https://github.com/ChristopherVR/ooxml/commit/96e75ac176eb9f0ff19cf1237aaad64751530a1e))
+- **react:** Put a switched deck's format scheme back on undo ([34a3807](https://github.com/ChristopherVR/ooxml/commit/34a3807f217a1ddc09c8a7e77674024e37142e9c))
+- **react:** Keep a slide paste with its own masters to one undo step ([f04fa2c](https://github.com/ChristopherVR/ooxml/commit/f04fa2c3cfd0d07fd90e348d8b3f54e1161f18a6))
+- **react:** Record no undo step for a master added or deleted ([6943036](https://github.com/ChristopherVR/ooxml/commit/69430366cb9e45dd62fd3639fc080da5b6478084))
+- **ui:** Undo an Effects pick in the viewer and the saved theme ([b43768c](https://github.com/ChristopherVR/ooxml/commit/b43768ccfb742e6daa1fe143d825cb404f73cd20))
+- **react:** Keep the slides and their pictures through a master command ([8a8b9f5](https://github.com/ChristopherVR/ooxml/commit/8a8b9f51eafea72ff673b2d807c4c71bf16996f7))
+- **react:** Forget the undo steps that reach a deleted layout ([3faabb5](https://github.com/ChristopherVR/ooxml/commit/3faabb57c37fed3354f1d75bbdbcf4236a3776ea))
+- **react:** Adopt the layout list a master view command returns ([12ac250](https://github.com/ChristopherVR/ooxml/commit/12ac250f230782d2a9714c1a6feb77b7ec6e1c86))
+- **react:** Stop the duotone pickers applying a colour on blur ([#193](https://github.com/ChristopherVR/ooxml/issues/193)) ([82b0468](https://github.com/ChristopherVR/ooxml/commit/82b0468f6331116ad65b15d2885145bd5f2a8a8d))
+- **react:** Print through the shared job plan and its vector path ([f52d2e5](https://github.com/ChristopherVR/ooxml/commit/f52d2e5f422a94965b1c21f8d7b37384d015bbc2))
+- **vue:** Take back one Home > Layout pick per Undo ([7514a1f](https://github.com/ChristopherVR/ooxml/commit/7514a1ff41f5641f09be7860adf176ebad3ef3c5))
+- **vue:** Keep an edit made to a new slide while its layout loads ([70c30df](https://github.com/ChristopherVR/ooxml/commit/70c30df8ef80670a466b6d16872721f4558f5ff3))
+- **vue:** Write and undo design theme picks in the theme part ([97c2e28](https://github.com/ChristopherVR/ooxml/commit/97c2e2854b0a2f557351c0581ea3fe6a61a8ea5f))
+- **vue:** Apply a theme part by path in place as one undo step ([3b5cd44](https://github.com/ChristopherVR/ooxml/commit/3b5cd4449ed7ad45359dfea2a725b2cb7e9f57bc))
+- **vue:** Forget the undo steps that reach a deleted layout ([36a9559](https://github.com/ChristopherVR/ooxml/commit/36a95596c9357725704593b1bb602ee950035fb3))
+- **vue:** Adopt the layout list a master view command returns ([1fc259d](https://github.com/ChristopherVR/ooxml/commit/1fc259dfa1ca78cf2ab29bc2daff8c27062b78a4))
+- **vue:** Show the inspector text effects and 3-D text ([414082e](https://github.com/ChristopherVR/ooxml/commit/414082e4b47aff307b3ac799ea06a321c0c34952))
+- **vue:** Print through the shared job plan with translated titles ([1ad52c5](https://github.com/ChristopherVR/ooxml/commit/1ad52c5192657ff6ec808d4340ea28f5250a880e))
+- **vue:** List the shared keyboard shortcuts in the help panel ([cd0bcdc](https://github.com/ChristopherVR/ooxml/commit/cd0bcdcea6b1d9d57390f9f3fd265bf347e7c1e1))
+- **angular:** Keep an edit made to a new slide while its layout loads ([a832d18](https://github.com/ChristopherVR/ooxml/commit/a832d184b4ca055517910387c4b1c7ddcd7bdf3c))
+- **angular:** Write and undo design theme picks in the theme part ([3b519c8](https://github.com/ChristopherVR/ooxml/commit/3b519c83e2ea9add6b19e2db5f74458e2890116e))
+- **angular:** Apply a theme part by path in place as one undo step ([ce00626](https://github.com/ChristopherVR/ooxml/commit/ce00626c0892448682a0e277ec5d33771f2471a5))
+- **angular:** Run slide master view commands on the deck as it is now ([63fd9f4](https://github.com/ChristopherVR/ooxml/commit/63fd9f45a6eb945d89b0f5775a0bd52d281229db))
+- **angular:** Forget the undo steps that reach a deleted layout ([50f862d](https://github.com/ChristopherVR/ooxml/commit/50f862d7222a4492dca34aa28e104e39166c3f84))
+- **angular:** Show the slide New Slide adds ([2a436ac](https://github.com/ChristopherVR/ooxml/commit/2a436ac35b89d20c6f78523c85e5abb303a01918))
+- **angular:** Fall back to captured slides when the svg print fails ([0467d90](https://github.com/ChristopherVR/ooxml/commit/0467d90827c93bbea26f1437adcdafd459acf5e4))
+- **svelte:** Leave the keys typed into a text field to the field ([#205](https://github.com/ChristopherVR/ooxml/issues/205)) ([00870cc](https://github.com/ChristopherVR/ooxml/commit/00870ccabfa5ff3d638a838c7657743b3322cfd5))
+- **svelte:** Take back one layout pick or new slide per Undo ([a9106c9](https://github.com/ChristopherVR/ooxml/commit/a9106c970ba05a9358034d934cf3ccd3617e7000))
+- **svelte:** Keep an edit made to a new slide while its layout loads ([dde9116](https://github.com/ChristopherVR/ooxml/commit/dde911671dae687ce76ed70158612ab20338dc1b))
+- **svelte:** Undo design theme picks in the theme part as well ([f4b1e9f](https://github.com/ChristopherVR/ooxml/commit/f4b1e9f56e10d12532403787502f9da9054d6c7a))
+- **svelte:** Apply a theme part by path in place as one undo step ([b65a0b8](https://github.com/ChristopherVR/ooxml/commit/b65a0b81f93df18ffac5812afb91a3e7dea48e05))
+- **ui:** Draw a switched master's style references with its new part ([915a3e1](https://github.com/ChristopherVR/ooxml/commit/915a3e1034cc4608f68d315a2e4c89056548b94f))
+- **svelte:** Keep slide pictures loading after a master view command ([cf3d650](https://github.com/ChristopherVR/ooxml/commit/cf3d65057c92aa47f4f5df8d2d4a479b61a319c8))
+- **svelte:** Forget the undo steps that reach a deleted layout ([f13a6b4](https://github.com/ChristopherVR/ooxml/commit/f13a6b4284e8db7ce29f347440cb66daf81a5e98))
+- **svelte:** Insert Ctrl+M's new slide after the one on screen ([c1f22e7](https://github.com/ChristopherVR/ooxml/commit/c1f22e76da20a62cac5a3e7111bf82e1f7b4c749))
+- **svelte:** Apply the inspector text effects to every run ([921f843](https://github.com/ChristopherVR/ooxml/commit/921f8435e5b2ced43a5a8adf9daf9402ba9399ac))
+- **svelte:** Keep the high quality print scale through the wiring ([defbe64](https://github.com/ChristopherVR/ooxml/commit/defbe646357614c813fd389faedcbd13c76ee35a))
+- **svelte:** Print through the shared job plan with translated titles ([8baaf7e](https://github.com/ChristopherVR/ooxml/commit/8baaf7ed9aaf7c235ba6e46a2e88a90e8efdbb8e))
+- **vanilla:** Take back a new slide from a layout in one Undo ([18f85a0](https://github.com/ChristopherVR/ooxml/commit/18f85a0b93cba47cd1306d3755a9dee03d496e12))
+- **vanilla:** Keep an edit made to a new slide while its layout loads ([fc769ae](https://github.com/ChristopherVR/ooxml/commit/fc769ae029325dd070dc3d91d4cc643d86884ba5))
+- **vanilla:** Undo design theme picks in the theme part as well ([60e8656](https://github.com/ChristopherVR/ooxml/commit/60e8656eac6ea33901d29838fc877650ed5b6917))
+- **vanilla:** Apply a theme part by path in place as one undo step ([1511e92](https://github.com/ChristopherVR/ooxml/commit/1511e92c8ae5d2bdb974d1ecb1908395df4a93b5))
+- **vanilla:** Carry the format scheme through a theme switch and undo ([ddd5d7b](https://github.com/ChristopherVR/ooxml/commit/ddd5d7b61630f88a0895e07012b5a7bdeb4af5d5))
+- **vanilla:** Keep slide pictures loading after a master view command ([09311c0](https://github.com/ChristopherVR/ooxml/commit/09311c0155f207c94c2ec7a51889df717d164b91))
+- **vanilla:** Forget the undo steps that reach a deleted layout ([0ec48c1](https://github.com/ChristopherVR/ooxml/commit/0ec48c1c0a2acf7f1534fd513bac92298cf8e5a8))
+- **vanilla:** Draw the inspector text effects from the shared fields ([bdbb929](https://github.com/ChristopherVR/ooxml/commit/bdbb9299fe22ca321255eb045c3663eb9eed3496))
+- **vanilla:** Apply a whole-text inspector edit to every run ([9ddfef4](https://github.com/ChristopherVR/ooxml/commit/9ddfef4dba93be3b727f1ce3e1485c31869419d9))
+- **vanilla:** Stack the accessibility title field like alt text ([83ef182](https://github.com/ChristopherVR/ooxml/commit/83ef1828f8cd6e472d961eb3bcdb15687460472e))
+- **vanilla:** Print through the shared job plan with translated titles ([0c0a6f8](https://github.com/ChristopherVR/ooxml/commit/0c0a6f8ccb2a46c067b6db39e92df81156defc87))
+
+### Performance
+
+- **xml:** Read a fragment's child elements one at a time ([9ce77d4](https://github.com/ChristopherVR/ooxml/commit/9ce77d47f951b9e2b1183df0dac82675b6dd843c))
+
+### Refactor
+
+- **ui:** Run pptx find and replace on one shared session ([#202](https://github.com/ChristopherVR/ooxml/issues/202)) ([61ff51e](https://github.com/ChristopherVR/ooxml/commit/61ff51e2710edad14212132b475652b27bb05d43))
+- **react:** Keep theme undo on the shared theme history ([b22d7d0](https://github.com/ChristopherVR/ooxml/commit/b22d7d0c479a548f06e6ac5db9aa95296091fad6))
+- **react:** Use the shared history theme type directly ([ab74da9](https://github.com/ChristopherVR/ooxml/commit/ab74da95a1c23aa33755530c219b35b2c75abe9e))
+- **opc:** Read a guarded zip entry as a stream of chunks ([472fa92](https://github.com/ChristopherVR/ooxml/commit/472fa927be4d4dafb2b625834b30109af8c28a4a))
+- **xlsx:** Share the number format view of the automation reads ([c3811da](https://github.com/ChristopherVR/ooxml/commit/c3811daeda4a9d280a47a9873fb9cd1a77fb32e2))
+- **pptx:** Forget a deleted part's undo steps in one shared call ([1b5ddc4](https://github.com/ChristopherVR/ooxml/commit/1b5ddc4517a7b54ecf97baa56cb55f2e574eb802))
+- **pptx:** Remove react and vue modules nothing imports ([#199](https://github.com/ChristopherVR/ooxml/issues/199)) ([54359ae](https://github.com/ChristopherVR/ooxml/commit/54359ae107d7782c0df857ec31993f089b3775a6))
+- **vue:** Restore theme undo through the shared restore call ([2f96520](https://github.com/ChristopherVR/ooxml/commit/2f96520090f351d139236ae58c8de0d6a6b0e55e))
+- **vue:** Tidy the shortcut panel after the shared reference ([64db3de](https://github.com/ChristopherVR/ooxml/commit/64db3dedc3b8cd7f54bd09a121ff30f797c22742))
+- **angular:** Restore theme undo through the shared restore call ([6c526a2](https://github.com/ChristopherVR/ooxml/commit/6c526a24e0ff73279632bda0202f741794e27015))
+- **angular:** Move the slide master view commands into a module ([f527472](https://github.com/ChristopherVR/ooxml/commit/f52747261d8bd2d676b96cad8d28efdf956f1439))
+- **svelte:** Restore theme undo through the shared restore call ([03cdcad](https://github.com/ChristopherVR/ooxml/commit/03cdcadd716cf0c51491f14e38ae0c99ed2e92fc))
+- **svelte:** Tick the text effects through the shared sections ([8ebe991](https://github.com/ChristopherVR/ooxml/commit/8ebe99128923c3dfcdcf61f1d75a4d102c58a171))
+- **vanilla:** Restore theme undo through the shared restore call ([0ec4a7d](https://github.com/ChristopherVR/ooxml/commit/0ec4a7d6ea87166a18a29a1e3c012241353bbe72))
+
+### Documentation
+
+- **react:** Correct the text advanced sections header ([91b1f1b](https://github.com/ChristopherVR/ooxml/commit/91b1f1b9c7ae4125583c2cd9179099ebbae97272))
+- **vue:** Say where the inspector text effects patch lands ([b18c500](https://github.com/ChristopherVR/ooxml/commit/b18c500c642bc9ff39899a6bfaf6397aef38a5a3))
+
+### Testing
+
+- **pptx:** Pin a design fonts pick to the font scheme part ([5555df9](https://github.com/ChristopherVR/ooxml/commit/5555df91ffae18c8025c183d9f98aeefcc4093a2))
+- **pptx:** Give the two-themes deck parts with their own script faces ([7fe8fc7](https://github.com/ChristopherVR/ooxml/commit/7fe8fc705d55efa439df9fe61334c9c31737c9ae))
+- **pptx:** Undo a theme switch on parts with their own script faces ([f8aa949](https://github.com/ChristopherVR/ooxml/commit/f8aa949a91562e6b0fc6c045d02f38877cfc8361))
+- **pptx:** Give the two-themes deck its own line and effect styles ([c42c3d5](https://github.com/ChristopherVR/ooxml/commit/c42c3d5d56cf4cb4fd3317ca369d0972f4298c63))
+- **pptx:** Undo a theme switch's style references in every binding ([e8c55b0](https://github.com/ChristopherVR/ooxml/commit/e8c55b0fee7a74a87fe3fd91ee9c29969b551095))
+- **pptx:** Undo an Effects pick in every binding ([a0c10ed](https://github.com/ChristopherVR/ooxml/commit/a0c10ed4ebdc5f1006e41e46c158b041bbc3c265))
+- **angular:** Pin one Undo per layout pick and new slide from a layout ([34c8b84](https://github.com/ChristopherVR/ooxml/commit/34c8b8484a90809eec58bff169e3208802ab3aac))
+- **angular:** Give the layout undo tests' loader its theme signals ([57549bb](https://github.com/ChristopherVR/ooxml/commit/57549bb0d6293eb59731262a016de6474a834b69))
+
+### Chores
+
+- **pptx:** Drop the text effect strings nothing reads anymore ([5d28074](https://github.com/ChristopherVR/ooxml/commit/5d2807489dc5b463f38c40dc25ea3b5a8cac0a42))
+- **pptx:** Drop two shortcut strings only Vue's old catalog read ([860622c](https://github.com/ChristopherVR/ooxml/commit/860622c74e0d2471a8c019c1c68d10b983e9278d))
+
+## 2026-10-24
+
+_Releases: pptx-react-viewer@4.51.1, pptx-vue-viewer@4.50.2, pptx-angular-viewer@4.50.2, pptx-svelte-viewer@4.50.2, pptx-vanilla-viewer@3.50.2_
+
+### Bug Fixes
+
+- **pptx:** Stop the fill showing along a widened outline's edge ([52251e3](https://github.com/ChristopherVR/ooxml/commit/52251e39b5e74b0674e19380eee93c963c983a54))
+- **pptx:** Stack the vanilla morph overlay runs in the plan's order ([91776a4](https://github.com/ChristopherVR/ooxml/commit/91776a4199f8e4a1ebf1fd8b13c5dd12b8a31ca1))
+
+## 2026-10-23
+
+_Releases: pptx-react-viewer@4.51.0, pptx-react-viewer@4.50.0, pptx-react-viewer@4.49.0, pptx-vue-viewer@4.50.1, pptx-vue-viewer@4.50.0, pptx-vue-viewer@4.49.0, pptx-angular-viewer@4.50.1, pptx-angular-viewer@4.50.0, pptx-angular-viewer@4.49.0, pptx-svelte-viewer@4.50.1, pptx-svelte-viewer@4.50.0, pptx-svelte-viewer@4.49.0, pptx-vanilla-viewer@3.50.1, pptx-vanilla-viewer@3.50.0, pptx-vanilla-viewer@3.49.0_
+
+### Features
+
+- **react:** Let hosts translate the viewer through PptxI18nProvider ([d171dc1](https://github.com/ChristopherVR/ooxml/commit/d171dc1ccabdea3c27cac11db9971fd5d23bdab7))
+- **chart:** Model pie-of-pie split options and date axis time units ([82e3a08](https://github.com/ChristopherVR/ooxml/commit/82e3a08de62696cdd1632a07783b78019ed8e91b))
+- **chart:** Add neutral chart edit operations over ChartSpace ([af3c35b](https://github.com/ChristopherVR/ooxml/commit/af3c35bc9fb61833dd94aec813d8d7a16829d733))
+- **drawingml:** Add the neutral rich text body model, reader and writer ([14539db](https://github.com/ChristopherVR/ooxml/commit/14539dba2f3f8018d73dd956fb25b61d385f36a5))
+- **diagram:** Share smartart node text projection and reconciliation ([a284df7](https://github.com/ChristopherVR/ooxml/commit/a284df74bc9a1dee5003be0c7b3e9df4b44b5a9c))
+- **diagram:** Expose smartart node paragraphs to word and excel ([c48a282](https://github.com/ChristopherVR/ooxml/commit/c48a2821587f86bfcfd58722f06f71e00834539f))
+- **chart:** Add the neutral chart data sheet model ([a681ccb](https://github.com/ChristopherVR/ooxml/commit/a681ccb4b39eef5af6a419cc340029f7bd13eb56))
+- **ui:** Add the shared chart data sheet element ([0a87377](https://github.com/ChristopherVR/ooxml/commit/0a873776e44afbd9f2c672bafdc42e941cfd3957))
+- **pptx:** Export the one default undo depth ([9320c81](https://github.com/ChristopherVR/ooxml/commit/9320c81872b1508d79293b5abddc5e9abf7136db))
+- **diagram:** Add the product-neutral SmartArt gallery catalogue ([219e709](https://github.com/ChristopherVR/ooxml/commit/219e709651e480cd7e6be0c26625d5933b3699be))
+- **ui:** Add shared SmartArt picker and pptx insert dialogs ([85085d9](https://github.com/ChristopherVR/ooxml/commit/85085d9f21e9dc9b54c08d36c8e63f63db0b3f88))
+- **react:** Use the shared insert smartart and chart dialogs ([17948b1](https://github.com/ChristopherVR/ooxml/commit/17948b126c406fd15b7b58998dafc227e5e09ee3))
+- **diagram:** Resolve cached smartart drawing shapes into a neutral view ([cba3609](https://github.com/ChristopherVR/ooxml/commit/cba360940c0ed00270917b2d56f5456055e10ea3))
+- **chart:** Add format-target edits and typed chart edit intents ([10e1ee3](https://github.com/ChristopherVR/ooxml/commit/10e1ee3536407edc388f1ed9a4fba97632ad17b6))
+- **pptx:** Save chart title and legend edits through writeChartSpace ([f29502f](https://github.com/ChristopherVR/ooxml/commit/f29502fcf5ace041780d0fbd413fb180fad38fbc))
+- **pptx:** Save chart axis edits through writeChartSpace ([457eeaf](https://github.com/ChristopherVR/ooxml/commit/457eeaf1c7517380ef901d985ce96a923a008da7))
+- **pptx:** Save chart series data edits through writeChartSpace ([e2c156b](https://github.com/ChristopherVR/ooxml/commit/e2c156b34224b743c2355c240e57c0973d931e17))
+- **ui:** Add the shared pptx autosave and recovery controllers ([318997a](https://github.com/ChristopherVR/ooxml/commit/318997a5984e5479dfc913d7cad7785458329fbb))
+- **ui:** Draw the pptx effects inspector from shared field descriptors ([3e5afa8](https://github.com/ChristopherVR/ooxml/commit/3e5afa829164142fd4a97866db24efe861c6db1e))
+- **ui:** Draw the pptx line options from shared field descriptors ([6194f50](https://github.com/ChristopherVR/ooxml/commit/6194f509e0715ce9d653a49742402693952cbfee))
+- **ui:** Draw the pptx size and position fields from descriptors ([edd890a](https://github.com/ChristopherVR/ooxml/commit/edd890a291dc01af63cfdb8c245b131d298868bc))
+- **ui:** Draw the pptx text box options from shared field descriptors ([bf34da5](https://github.com/ChristopherVR/ooxml/commit/bf34da5910f4623e189b0ff7b6ffe37f632dd949))
+- **chart:** Move the embedded workbook writer into chart/workbook ([b766e1b](https://github.com/ChristopherVR/ooxml/commit/b766e1bbc67fdde7959c5c5b06bde46e41e07ccd))
+- **chart:** Share the chart design galleries and add quick layouts ([c95c89a](https://github.com/ChristopherVR/ooxml/commit/c95c89aab3ac5cdd6cdb500e033d0b799533343e))
+- **chart:** Apply chart data sheet edits to a chart space ([d181cda](https://github.com/ChristopherVR/ooxml/commit/d181cda21ad1c87b7b20e3a7476754b455baea43))
+- **chart:** Model, parse and write chartex parts ([07f1d0f](https://github.com/ChristopherVR/ooxml/commit/07f1d0f99ef2a3c0132feedd9c2d626045938985))
+- **chart:** Add neutral chartex edit operations ([a48f991](https://github.com/ChristopherVR/ooxml/commit/a48f991b83c83ab411040f6fd7ca44bd8a24ad19))
+- **pptx:** Save chartex edits through writeChartExSpace ([b4b7ca6](https://github.com/ChristopherVR/ooxml/commit/b4b7ca6ec1eb9201777419197db363ad868eaeb3))
+- **diagram:** Write edits back into an existing smartart data part ([2393535](https://github.com/ChristopherVR/ooxml/commit/23935356efb880f8963bd3b03cc04a67f1bb0b27))
+- **docx:** Change smartart layouts and draw diagrams without a cache ([5758d49](https://github.com/ChristopherVR/ooxml/commit/5758d49d2bd307b5cbaa663392660365ea2567c6))
+- **chart:** Keep unmodelled chart-space children in edited parts ([3b4e506](https://github.com/ChristopherVR/ooxml/commit/3b4e5064d421af3f6ad1a3ee37132dd93e60b79c))
+- **chart:** Keep band formats and picture options verbatim ([502f3a4](https://github.com/ChristopherVR/ooxml/commit/502f3a4ac646fce0b79fcf4a0eaf796758eaa704))
+- **pptx:** Expose smartart add shape before and above ([9427df7](https://github.com/ChristopherVR/ooxml/commit/9427df74947c45b487f944c33f33c629f5264753))
+- **diagram:** Share the outline levels of a diagram's nodes ([d20e8cf](https://github.com/ChristopherVR/ooxml/commit/d20e8cf0bcfe2b9b8c5c6e06f5701adb0ef68673))
+- **ui:** Add the pptx-ui-smartart-text-pane alias ([89dc5f1](https://github.com/ChristopherVR/ooxml/commit/89dc5f16edb98cbab866132f7de9548562cd0d4b))
+- **ui:** Add shape before and above to the smartart design ribbon ([6a1c8d8](https://github.com/ChristopherVR/ooxml/commit/6a1c8d88414c4d2673ea289da043032558c10db3))
+- **ui:** Draw the pptx inspector Recent Colors on the shared colour grid ([#174](https://github.com/ChristopherVR/ooxml/issues/174)) ([8f99d4a](https://github.com/ChristopherVR/ooxml/commit/8f99d4a3b1bf0750b51279b374992ffe338fb33a))
+- **ui:** Add a shared progress dialog for the pptx export modal ([#175](https://github.com/ChristopherVR/ooxml/issues/175)) ([05ca9c0](https://github.com/ChristopherVR/ooxml/commit/05ca9c0a9c3fd4726fed6ae9cacd9736512d30a3))
+- **ui:** Share the pptx read-only banner session ([#176](https://github.com/ChristopherVR/ooxml/issues/176)) ([43effb0](https://github.com/ChristopherVR/ooxml/commit/43effb07fa8a71977557b345da1913de3646a59a))
+- **vue:** Use the shared insert smartart and chart dialogs ([169071b](https://github.com/ChristopherVR/ooxml/commit/169071b1f65ab02c1a8e3fe1efa716e9c7c26fb6))
+- **angular:** Use the shared insert smartart and chart dialogs ([7a51484](https://github.com/ChristopherVR/ooxml/commit/7a51484bf3517bd8732ea41a3e145b3216ae79c3))
+- **svelte:** Use the shared insert smartart and chart dialogs ([5be4d81](https://github.com/ChristopherVR/ooxml/commit/5be4d8172bcf3d8aa226117a68a09a9249095f60))
+- **vanilla:** Use the shared insert smartart and chart dialogs ([ea128fb](https://github.com/ChristopherVR/ooxml/commit/ea128fb4d0ad0b7c473f700f20ad3e6d848fc20f))
+
+### Bug Fixes
+
+- **xlsx:** Close the open code scanning alerts in core ([0f6b643](https://github.com/ChristopherVR/ooxml/commit/0f6b64306e57958a097caaf7085d63479766acb3))
+- **pptx:** Apply theme picks in place and keep theme tiles stable ([ecb6385](https://github.com/ChristopherVR/ooxml/commit/ecb6385a8e211b60461f842eb4a88945555796e5))
+- **chart:** Drop an unused import from the title edits ([ecb2f09](https://github.com/ChristopherVR/ooxml/commit/ecb2f0985cc5e487d51c1111859dff2a5e644bfb))
+- **ui:** Keep the smartart picker css on design tokens ([a58dddd](https://github.com/ChristopherVR/ooxml/commit/a58dddd33cfb6a81ebc0100796d972a88e8bf756))
+- **chart:** Keep the chart data table in line with written cells ([67387d4](https://github.com/ChristopherVR/ooxml/commit/67387d47ead5b31431143f1514b139a7728ae5be))
+- **pptx:** Read bare chartex elements and named axis units ([d0db2ca](https://github.com/ChristopherVR/ooxml/commit/d0db2caf07721b154a404bbd0158867c352be3e2))
+- **react:** Autosave uncommitted inline text ([84e4b15](https://github.com/ChristopherVR/ooxml/commit/84e4b1507bd1d4d8959dfc3af67d89a506131cc6))
+- **xlsx:** Never rewrite a chart part the model cannot carry ([ac136f7](https://github.com/ChristopherVR/ooxml/commit/ac136f7319080e129106b452504ca915310367f3))
+- **pptx:** Add a recent colour once a pick settles, not while dragging ([#172](https://github.com/ChristopherVR/ooxml/issues/172)) ([919a8ee](https://github.com/ChristopherVR/ooxml/commit/919a8ee72039a9f86011d74204f093074bef394a))
+- **core:** Copy Node Buffer views by value before parsing them ([#178](https://github.com/ChristopherVR/ooxml/issues/178)) ([16b3a66](https://github.com/ChristopherVR/ooxml/commit/16b3a66f5a83cf9ba198d151745c208214961021))
+- **vue:** Keep 44px touch targets on the generic inspector fields ([6aae97d](https://github.com/ChristopherVR/ooxml/commit/6aae97dfa73ee7b41b80aab558151b0014bd7a55))
+- **vue:** Autosave uncommitted inline text ([c7efba5](https://github.com/ChristopherVR/ooxml/commit/c7efba5ce7870eef21d63912dfeb3ece068db119))
+- **vue:** Put a plain inline draft into the recovery snapshot ([612aed7](https://github.com/ChristopherVR/ooxml/commit/612aed701c5e0f66c6f675d74a8eda9d9c20af23))
+- **pptx:** Lay the angular inspector fields out on a two-column grid ([0c69461](https://github.com/ChristopherVR/ooxml/commit/0c694610181202745491201b168ee474e0b1770f))
+- **angular:** Autosave uncommitted inline text ([784f5f7](https://github.com/ChristopherVR/ooxml/commit/784f5f7d262975aab3b56eb9ea37a69f9bc1effb))
+- **svelte:** Mount the insert dialogs only while open ([3d6bc4d](https://github.com/ChristopherVR/ooxml/commit/3d6bc4d3fcc2a4cfe4e2b5bd0f29075ec1d3c54a))
+- **svelte:** Autosave uncommitted inline text ([2f0abcb](https://github.com/ChristopherVR/ooxml/commit/2f0abcb900f254d4ab791a9476271b206379b754))
+- **vanilla:** Autosave uncommitted inline text ([d941b5e](https://github.com/ChristopherVR/ooxml/commit/d941b5eb0a4dc9a5dee7c4efd2646f1fe476c02f))
+
+### Performance
+
+- **ui:** Let html2canvas clone only the captured element's branch ([#171](https://github.com/ChristopherVR/ooxml/issues/171)) ([ee0cd6e](https://github.com/ChristopherVR/ooxml/commit/ee0cd6e8045c2f0271c511909981dbe7d10677be))
+- **vanilla:** Build ribbon gallery tiles only while they are shown ([#170](https://github.com/ChristopherVR/ooxml/issues/170)) ([a59dcb5](https://github.com/ChristopherVR/ooxml/commit/a59dcb5228b5293c1daa3d6d68f392730775ad46))
+
+### Refactor
+
+- **react:** Route translations through an internal useTranslation hook ([cbe1912](https://github.com/ChristopherVR/ooxml/commit/cbe1912f38747ca01a07fc7475c0103574b5fb62))
+- **drawingml:** Densify list style levels without self-assignment ([17276de](https://github.com/ChristopherVR/ooxml/commit/17276de4cc32eecc5a03de995e21aadd1d03a1af))
+- **pptx:** Use the shared chart data sheet in every binding ([d47fd8d](https://github.com/ChristopherVR/ooxml/commit/d47fd8df56053bb21ca0d1eaa053b678201f7132))
+- **react:** Adapt the shared history, key and ai controllers ([5b48aa7](https://github.com/ChristopherVR/ooxml/commit/5b48aa7f4de8365ccc10e533ece34f5c0d0c8069))
+- **diagram:** Move smartart node operations and reflow to diagram ([bd35fff](https://github.com/ChristopherVR/ooxml/commit/bd35fff8ddee181f47358bc5a96a3969b2f330fa))
+- **diagram:** Move the fabricated smartart data part writer ([d6fd6da](https://github.com/ChristopherVR/ooxml/commit/d6fd6daf55eeaefdfe3c32e772ea9b2423179998))
+- **react:** Adapt the shared autosave and recovery controllers ([a240063](https://github.com/ChristopherVR/ooxml/commit/a240063f91d3418064be0c6db8422d5975d9125f))
+- **react:** Adapt the shared collaboration provider and session ([eba178c](https://github.com/ChristopherVR/ooxml/commit/eba178cfa1bc3db638170c3cf9f74d998b54f064))
+- **chart:** Build the chartex summary from the neutral model ([78ee4b0](https://github.com/ChristopherVR/ooxml/commit/78ee4b0ab816d0338b8615834ba9bbf09c43b8cc))
+- **chart:** Split the chartex axis parser and share the test part ([a514e2f](https://github.com/ChristopherVR/ooxml/commit/a514e2f8a8c655b9e3e1f67c9da23234504c4cf6))
+- **diagram:** Move built-in smartart definitions to diagram/builtin ([d673145](https://github.com/ChristopherVR/ooxml/commit/d6731456c840ef85032e490f60c3492b36cd7445))
+- **ui:** Ship the chart Format pane's own translations ([d6c3d65](https://github.com/ChristopherVR/ooxml/commit/d6c3d6539cf8f28ba5032959a7e2bbd0076f15ae))
+- **ui:** Run every pptx canvas gesture on the shared controller ([f10083a](https://github.com/ChristopherVR/ooxml/commit/f10083abf1c3dfc34dd7d2b0e0107ad8dadd0343))
+- **ui:** Decide pptx slide show steps once for every binding ([582e31f](https://github.com/ChristopherVR/ooxml/commit/582e31ff532e343f589e3345360783e275704172))
+- **diagram:** Share smartart node edits, tree order and inserts ([42b3ba1](https://github.com/ChristopherVR/ooxml/commit/42b3ba18f9b3369d3c69ae4615d755daaeb966fa))
+- **diagram:** Share the smartart ui strings with every product ([b96c393](https://github.com/ChristopherVR/ooxml/commit/b96c393e820e88317bda0dea1ab25eb9e20b8b26))
+- **pptx:** Use the shared smartart text pane in every binding ([329aee5](https://github.com/ChristopherVR/ooxml/commit/329aee50261d17801f0a2f8f36752e0c57abd93e))
+- **pptx:** Remove the ribbon controls no binding renders anymore ([#173](https://github.com/ChristopherVR/ooxml/issues/173)) ([6c1d764](https://github.com/ChristopherVR/ooxml/commit/6c1d7640af70910f61d91a020e347d15099da534))
+- **vue:** Adapt the shared history, key and ai controllers ([fc416d3](https://github.com/ChristopherVR/ooxml/commit/fc416d37bbdd517f5ea315a9147bc9367a963a43))
+- **vue:** Adapt the shared autosave and recovery controllers ([82b5c93](https://github.com/ChristopherVR/ooxml/commit/82b5c93a24cd4a256fd401246d107de9477c7cd7))
+- **vue:** Adapt the shared collaboration provider and session ([3a831fb](https://github.com/ChristopherVR/ooxml/commit/3a831fbe03182befd0f1e4bd1c33f825b10bedd3))
+- **angular:** Adapt the shared history, key and ai controllers ([1f9c089](https://github.com/ChristopherVR/ooxml/commit/1f9c0894dadf0e7c67984ba3a92853a205f69989))
+- **angular:** Adapt the shared autosave and recovery controllers ([12341c5](https://github.com/ChristopherVR/ooxml/commit/12341c57e21b50c3aa927e947d9a7eb0f1c34bec))
+- **angular:** Adapt the shared collaboration provider and session ([2329389](https://github.com/ChristopherVR/ooxml/commit/23293896b0691d32b3cfba9a17ed8172db706dc2))
+- **svelte:** Adapt the shared history, key and ai controllers ([f3f7644](https://github.com/ChristopherVR/ooxml/commit/f3f764498cd78cda9455a332abfd8bdddd7d0d1e))
+- **svelte:** Adapt the shared autosave and recovery controllers ([f955e18](https://github.com/ChristopherVR/ooxml/commit/f955e1832dc92e1495bbdc3cac164573a2b28b1b))
+- **svelte:** Adapt the shared collaboration provider and session ([25033a3](https://github.com/ChristopherVR/ooxml/commit/25033a32ceed02c917d23d2fab29129ce440e196))
+- **vanilla:** Adapt the shared history, key and ai controllers ([e2643b4](https://github.com/ChristopherVR/ooxml/commit/e2643b44f7de67556546df617d079e482a7638d1))
+- **vanilla:** Adapt the shared autosave and recovery controllers ([59d1ee6](https://github.com/ChristopherVR/ooxml/commit/59d1ee6efcbc32e3a967d364e64905dfa964f115))
+- **vanilla:** Adapt the shared collaboration provider and session ([b951129](https://github.com/ChristopherVR/ooxml/commit/b951129813af24303fe43ebcf90b0c9337ea0fc8))
+
+### Documentation
+
+- **pptx:** Document wave 6 controllers and shared editing UI ([451b4c4](https://github.com/ChristopherVR/ooxml/commit/451b4c4f268cfead6297dc51016ec54052772124))
+
+### Testing
+
+- **pptx:** Copy fixture Buffers by value in the chart save harnesses ([#181](https://github.com/ChristopherVR/ooxml/issues/181)) ([90ce9e4](https://github.com/ChristopherVR/ooxml/commit/90ce9e4704be388ef1ee8723c0b745c3457f07e7))
+- **pptx:** Prove neutral chart edits load as pptx chart edits ([8ac6160](https://github.com/ChristopherVR/ooxml/commit/8ac616029886e87f6c76b829297b574f63742519))
+- **pptx:** Pin smartart text parity with the neutral text model ([a7ffb36](https://github.com/ChristopherVR/ooxml/commit/a7ffb36b635521e0aaa756747f6283df3611aa32))
+- **pptx:** Follow the lint style in the chart data sheet tests ([f8679da](https://github.com/ChristopherVR/ooxml/commit/f8679da6613dde9d737b8f0518023c99320a5d50))
+- **pptx:** Add the chart save harness for the neutral writer ([974c497](https://github.com/ChristopherVR/ooxml/commit/974c497dd6fc8945596bcb9b8ca04ad6dd7a1eb0))
+- **pptx:** Leave workbook-dependent label flags out of the save harness ([79297e5](https://github.com/ChristopherVR/ooxml/commit/79297e52145624fde9a1fb27c9c09ab7ae3323fa))
+- **pptx:** Pin the unified autosave engine in vue and svelte ([1f77d29](https://github.com/ChristopherVR/ooxml/commit/1f77d29c60a53b222d41f1ac2cb0d9fd5a748bb7))
+- **svelte:** Find the position fields by their shared test id ([8e6402f](https://github.com/ChristopherVR/ooxml/commit/8e6402f952e38ca519b9dd87b77a3afbeda86d4a))
+
+### Chores
+
+- Format files the wave 6 merges left unformatted ([77bb7eb](https://github.com/ChristopherVR/ooxml/commit/77bb7eba1e3ed7984525ea862a189ac7d467f7dd))
+
+### Other
+
+- Neutral chart edit operations (wave6-3) ([6c283c3](https://github.com/ChristopherVR/ooxml/commit/6c283c3b863b75ae00ef407db1903c42b9785212))
+- Neutral text model and shared smartart node text (wave6-4) ([10b6a35](https://github.com/ChristopherVR/ooxml/commit/10b6a359d10de68064ef8d0f525227d77631be93))
+- Shared chart data sheet (wave6-5) ([b546a73](https://github.com/ChristopherVR/ooxml/commit/b546a73c0eff334308473e8d970e72cd674534e0))
+- Pptx headless controllers (wave6-2) ([41dc33b](https://github.com/ChristopherVR/ooxml/commit/41dc33be23af816e33e08983f29e08621d5ae32f))
+- Shared smartart picker and insert dialogs (wave6-6) ([60c4372](https://github.com/ChristopherVR/ooxml/commit/60c437219dc3e495238bb0760e17a8036e511f41))
+- Smartart drawing view, edit operations and data writer (wave6-8) ([c2fe92b](https://github.com/ChristopherVR/ooxml/commit/c2fe92b05f243b5d5a9af2aed867a26957095bbd))
+- Shared chart format pane (wave6-7) ([0324c80](https://github.com/ChristopherVR/ooxml/commit/0324c80633332e602ce813bc64b0e231ab6b64af))
+- Pptx chart save through writeChartSpace (wave6-9) ([5ea372f](https://github.com/ChristopherVR/ooxml/commit/5ea372f859ced6b11455e8e09a0425793cf7cd67))
+- Pptx autosave, recovery and collaboration controllers (wave6-10) ([e48da7a](https://github.com/ChristopherVR/ooxml/commit/e48da7a6ffb025682d27314d537868355512916f))
+- Pptx inspector field descriptors (wave6-12) ([a360ffc](https://github.com/ChristopherVR/ooxml/commit/a360ffcbec5303ebe7d427c5e442f99d82e72d06))
+- Word chart editing (wave6-11) ([45ecd4b](https://github.com/ChristopherVR/ooxml/commit/45ecd4b144f4195cfa4cbe85763b87fbca162470))
+- Shared chart design galleries and Visio chart editing (wave6-14) ([692e476](https://github.com/ChristopherVR/ooxml/commit/692e4763f28083d3d280b78a2e1a73e13f77499b))
+- Neutral chartex model, parser, writer and edits (wave6-15) ([933b9c9](https://github.com/ChristopherVR/ooxml/commit/933b9c9bd78f3fb2825f2b5233b525791004f296))
+- Bring wave6-integration into wave6-13 ([0b881ed](https://github.com/ChristopherVR/ooxml/commit/0b881ed1a85fe81295e0e68f7f92bd137e65f91b))
+- Word SmartArt editing (wave6-13) ([751ba15](https://github.com/ChristopherVR/ooxml/commit/751ba157ca578e8ff6b57371a243180101ed562e))
+- Autosave uncommitted inline text (wave6-10b) ([d75cc4d](https://github.com/ChristopherVR/ooxml/commit/d75cc4dc43d86717653481c6237679117ad586a6))
+- Word chart Format pane, chart resizing and shared pane translations (wave6-17) ([d6ac348](https://github.com/ChristopherVR/ooxml/commit/d6ac3489fd3e8ed959f4978b4de8fd4674ee71b3))
+- Shared pptx canvas gestures, group selection and show steps (wave6-16) ([2f0df81](https://github.com/ChristopherVR/ooxml/commit/2f0df81355f1c3e4db3e12a8d39489b5d4c23825))
+- Excel SmartArt editing on the shared diagram core (wave6-20) ([c5fdb99](https://github.com/ChristopherVR/ooxml/commit/c5fdb9919cfce94ae9daac4d1079ca235c0c5183))
+- Excel chart editing over ChartSpace (wave6-18) ([ce75f7f](https://github.com/ChristopherVR/ooxml/commit/ce75f7faba40314ebc8c6de2a43c757328aa4c40))
+- Pptx SmartArt text pane on the shared element (wave6-19) ([e025597](https://github.com/ChristopherVR/ooxml/commit/e025597647c9b19da2c8a308e0cc44734c569c4d))
+- Bring origin/main into wave 6 ([2fedfaa](https://github.com/ChristopherVR/ooxml/commit/2fedfaae708c279044fdf86ea192315e366f80da))
+- PowerPoint viewer docs for wave 6 (docs6-2) ([1c284ba](https://github.com/ChristopherVR/ooxml/commit/1c284ba64fa55dfdc0799ea0625f388f268ebd5c))
+
+## 2026-10-22
+
+_Releases: pptx-viewer-mcp@2.8.9, pptx-viewer-mcp@2.8.8, pptx-react-viewer@4.48.0, pptx-react-viewer@4.47.1, pptx-react-viewer@4.47.0, pptx-react-viewer@4.46.0, pptx-react-viewer@4.45.0, pptx-vue-viewer@4.48.0, pptx-vue-viewer@4.47.1, pptx-vue-viewer@4.47.0, pptx-vue-viewer@4.46.0, pptx-vue-viewer@4.45.0, pptx-angular-viewer@4.48.0, pptx-angular-viewer@4.47.1, pptx-angular-viewer@4.47.0, pptx-angular-viewer@4.46.0, pptx-angular-viewer@4.45.0, pptx-svelte-viewer@4.48.0, pptx-svelte-viewer@4.47.1, pptx-svelte-viewer@4.47.0, pptx-svelte-viewer@4.46.0, pptx-svelte-viewer@4.45.0, pptx-vanilla-viewer@3.48.0, pptx-vanilla-viewer@3.47.1, pptx-vanilla-viewer@3.47.0, pptx-vanilla-viewer@3.46.0, pptx-vanilla-viewer@3.45.0_
+
+### Features
+
+- **ui:** Move the pptx inspector Quick Styles onto the shared gallery ([#168](https://github.com/ChristopherVR/ooxml/issues/168)) ([978fdbd](https://github.com/ChristopherVR/ooxml/commit/978fdbdb82335f24a0496ba1bf1152a7018cee63))
+- **ui:** Build the pptx status bar state in one place ([#169](https://github.com/ChristopherVR/ooxml/issues/169)) ([0af0608](https://github.com/ChristopherVR/ooxml/commit/0af06085a54134ef3679d66f3319c50d8527a960))
+- **react:** Ship a canvas-only stylesheet as canvas.css ([34ef433](https://github.com/ChristopherVR/ooxml/commit/34ef433e6136bce3ca15b5d7024d867123d8af91))
+- **pptx:** Route saves and recovery through host-owned storage ([4ad5655](https://github.com/ChristopherVR/ooxml/commit/4ad565525269ef0284114efad6d5e4a7bed756e4))
+- **pptx:** Add readOnly to the five viewer bindings ([4aadd67](https://github.com/ChristopherVR/ooxml/commit/4aadd678969d4b2d4811d86880b91c79ba7ca3b6))
+- **pptx:** Report the missing host events from the react viewer ([2ba8c58](https://github.com/ChristopherVR/ooxml/commit/2ba8c58d45446cf912eab5d3c4c026a55fd50a3e))
+- **pptx:** Report inspector and AI property edits, emit vue dirty-change ([83d879d](https://github.com/ChristopherVR/ooxml/commit/83d879d4e27dec236e32af86064afebac21c6af9))
+- **embedding:** Land the host customization, read-only and storage contracts ([822a6a0](https://github.com/ChristopherVR/ooxml/commit/822a6a073840b9e9d1671476542322b28332dc42))
+- **automation:** Run the document tools against open editors ([6a45ebc](https://github.com/ChristopherVR/ooxml/commit/6a45ebc3651a21739b5e18e7758395c866656198))
+- **pptx:** Confirm owner write-back and report its status ([2cb779f](https://github.com/ChristopherVR/ooxml/commit/2cb779f606c7d8d0778c11be830433fc93f728c3))
+- **automation:** Define word, excel and visio tools once in core ([bed1839](https://github.com/ChristopherVR/ooxml/commit/bed18392fec1f07fa9a0c1eabf8a7c1bb25b0387))
+- **pptx:** Report the shared collaboration state from every binding ([62752ef](https://github.com/ChristopherVR/ooxml/commit/62752efd7b2f9df8372db485cd23c2a6ed5f15ee))
+- **react:** Open useViewerBuildingBlocks on an initial slide ([#158](https://github.com/ChristopherVR/ooxml/issues/158)) ([b750d32](https://github.com/ChristopherVR/ooxml/commit/b750d321ecd556c5c0813eec29c45506227c0597))
+- **automation:** Propose xlsx edits as a reviewable diff ([0e13837](https://github.com/ChristopherVR/ooxml/commit/0e13837c6fdf0766e21aa8a31ef69737df8ab203))
+- **automation:** Add xlsx_propose_edits and xlsx_apply_proposal tools ([8c7500d](https://github.com/ChristopherVR/ooxml/commit/8c7500df317f1cffa3016705369e52b0a5ad0218))
+- **pptx:** Define the powerpoint tools as shared automation tools ([88acafd](https://github.com/ChristopherVR/ooxml/commit/88acafd82419de2cefbebd4b91b935c378f8c772))
+- **pptx:** Connect through a provider, webrtc or same-browser room ([4ae5288](https://github.com/ChristopherVR/ooxml/commit/4ae528882a33ec93730f30bf642589a00b6edf06))
+- **pptx:** Report the missing host events from the vue viewer ([37167d2](https://github.com/ChristopherVR/ooxml/commit/37167d234b435780fcfe63bd4733a413ff84f11a))
+- **pptx:** Report the missing host events from the angular viewer ([94b9de4](https://github.com/ChristopherVR/ooxml/commit/94b9de473167c68e3b678636f6453af237d7029c))
+- **pptx:** Report the missing host events from the svelte viewer ([08bdc7d](https://github.com/ChristopherVR/ooxml/commit/08bdc7dc04ef235c86670df8747022f3718f38cb))
+- **pptx:** Report the missing host events from the vanilla viewer ([d6590fd](https://github.com/ChristopherVR/ooxml/commit/d6590fd6f61ca77f92a6b49001445eb434c548b0))
+
+### Bug Fixes
+
+- **ui:** Paint the morph overlay in one stacking order ([9f5a11f](https://github.com/ChristopherVR/ooxml/commit/9f5a11fa15c3c31eb06551decda93b96b7841b94))
+- **react:** Paint the leaving slide over its own layout in transitions ([82ecd24](https://github.com/ChristopherVR/ooxml/commit/82ecd240b86497af6817681527edc2372b147155))
+- **ui:** Fit the pptx slide to sub-pixel viewport sizes ([#165](https://github.com/ChristopherVR/ooxml/issues/165)) ([d09a71d](https://github.com/ChristopherVR/ooxml/commit/d09a71d1e478eebc28edec2af309e7f4b0a69dbb))
+- **pptx:** Inject the .ppt svg rasteriser and move it to pptx/node ([be73b10](https://github.com/ChristopherVR/ooxml/commit/be73b10464c4629ebffa86d631b086e46a42fbe3))
+- **pptx:** Scope the viewer stylesheet reset to the viewer roots ([c390b2b](https://github.com/ChristopherVR/ooxml/commit/c390b2ba2f0ec7811c3554b9989346c6e8cd927d))
+- **pptx:** Fit the react slide before its first paint ([#164](https://github.com/ChristopherVR/ooxml/issues/164)) ([a8eed20](https://github.com/ChristopherVR/ooxml/commit/a8eed2004fbfe69d79f9ceaab785b09fe0fbb8f2))
+- **pptx:** Report host save failures and use host recovery everywhere ([8e982c8](https://github.com/ChristopherVR/ooxml/commit/8e982c8576f656d10200a45cc1708a5ac8e14ed6))
+- **pptx:** Align cache maintenance tests with the shared sweeps ([a13ff2d](https://github.com/ChristopherVR/ooxml/commit/a13ff2d5f487599fe43a37a503436bd069375479))
+- **pptx:** Render flowChart connector presets as shapes, not lines ([978593a](https://github.com/ChristopherVR/ooxml/commit/978593a0d0067d97105fd98b8d640dc929ec9f2b))
+- **pptx:** Paint picture fills inherited from layout placeholders ([71b8196](https://github.com/ChristopherVR/ooxml/commit/71b81964ca4b19ef9cc143fa970479614426bd9d))
+- **ui:** Measure the vanilla pptx viewport once per render ([c3c0341](https://github.com/ChristopherVR/ooxml/commit/c3c034105e19b6343f3b78e7059da417584cf54d))
+- **vanilla:** Hide the protected view bar without a host css reset ([5faa645](https://github.com/ChristopherVR/ooxml/commit/5faa645619be8df037aa99edf6ec444d2a03af31))
+
+### Performance
+
+- **pptx:** Share workers in the react 18 test leg ([34507aa](https://github.com/ChristopherVR/ooxml/commit/34507aa95cb689418d6c7e755d32b592a912ec27))
+- **react:** Let hosts tree-shake unused components from the bundle ([5959b25](https://github.com/ChristopherVR/ooxml/commit/5959b2586753af02bafb10e9520b373293551935))
+
+### Refactor
+
+- **mcp:** Register every format's tools through core automation ([9a28bfa](https://github.com/ChristopherVR/ooxml/commit/9a28bfa684167472fff27f04a371c37d494a5fd5))
+
+### Documentation
+
+- **pptx:** Sync english docs with the monorepo layout and apis ([4b89444](https://github.com/ChristopherVR/ooxml/commit/4b89444ac835ae6ed61ef1f6f7a3fc0d23aac7f5))
+- **pptx:** Fix demo paths and shared facade wording in package readmes ([4caf3d2](https://github.com/ChristopherVR/ooxml/commit/4caf3d2471527b484f1e1b6b2d3f5add11a92048))
+
+### Testing
+
+- **pptx:** Cover the stroked clip widening in every binding ([0c29435](https://github.com/ChristopherVR/ooxml/commit/0c2943500ac3026066aa699d26ed758bca2891bd))
+- **react:** Compare canvas.css sources as posix paths ([3fc535c](https://github.com/ChristopherVR/ooxml/commit/3fc535c1513d848ed548fcf6bd0d986325ae2be4))
+- Point script, e2e and plan references at real paths ([eec05e2](https://github.com/ChristopherVR/ooxml/commit/eec05e293e6149c0ecf2dd3c863694721949294a))
+
+### Other
+
+- Integrate the customization contract into host storage ([629554b](https://github.com/ChristopherVR/ooxml/commit/629554b3030728bfe16e11ac8ae5b2530bb28a17))
+- Integrate the pptx binding events into host storage ([08272a2](https://github.com/ChristopherVR/ooxml/commit/08272a298c8b249aa0bf143b689ff01f66663309))
+- Bring origin/main into the embedding work ([a3711a1](https://github.com/ChristopherVR/ooxml/commit/a3711a14049a2cd11b994e76eafec039db2dc2de))
+- Point script, e2e and plan references at real paths ([eec05e2](https://github.com/ChristopherVR/ooxml/commit/eec05e293e6149c0ecf2dd3c863694721949294a))
+
+## 2026-10-21
+
+_Releases: pptx-react-viewer@4.44.0, pptx-react-viewer@4.43.0, pptx-vue-viewer@4.44.0, pptx-vue-viewer@4.43.0, pptx-angular-viewer@4.44.0, pptx-angular-viewer@4.43.0, pptx-svelte-viewer@4.44.0, pptx-svelte-viewer@4.43.0, pptx-vanilla-viewer@3.44.0, pptx-vanilla-viewer@3.43.0_
+
+### Features
+
+- **opc:** Name the check a zip package failed ([5125361](https://github.com/ChristopherVR/ooxml/commit/5125361f7787c1edf9863ccf85d0666a56610d1b))
+- **xml:** Throw a typed error when a part breaks a parse limit ([40e73f6](https://github.com/ChristopherVR/ooxml/commit/40e73f6e0ddb045ef5a3b960e26cfc07a1fc6d45))
+- **automation:** List and fill Word form fields from document bytes ([548ca2d](https://github.com/ChristopherVR/ooxml/commit/548ca2d53b2828bc69681e154e8bd668cfacf90b))
+- **xlsx:** Expand workbook inspection and cell reads ([#117](https://github.com/ChristopherVR/ooxml/issues/117)) ([481bcc2](https://github.com/ChristopherVR/ooxml/commit/481bcc265611822a628c121f00897ec6b3e95cd6))
+- **pptx:** Add layout-inheriting text placeholders ([#113](https://github.com/ChristopherVR/ooxml/issues/113)) ([a9bb079](https://github.com/ChristopherVR/ooxml/commit/a9bb07957fcf9aa1a12406911726211b415c690a))
+
+### Bug Fixes
+
+- **react:** Render sorter and section menu rows without wrappers ([25e54e8](https://github.com/ChristopherVR/ooxml/commit/25e54e8a23b7c0740de3f8bd91b23f2ece94e747))
+- **chart:** Scale and draw series with very many points ([778a3e9](https://github.com/ChristopherVR/ooxml/commit/778a3e973b5d948e15ef2d0de6ac70a4243feb5a))
+- **docx:** Add no folder entries to a saved package ([9688c30](https://github.com/ChristopherVR/ooxml/commit/9688c30da93a3a73436a248b59b5a64d71fc7585))
+- **xml:** Keep the line break after the declaration of a part ([9af3e23](https://github.com/ChristopherVR/ooxml/commit/9af3e23b3c33368027123f1363c9d1236cc8230e))
+- **docx:** Keep markers and smart tags in place in a rebuilt paragraph ([8ddce70](https://github.com/ChristopherVR/ooxml/commit/8ddce70d17ba25ff6a1887f91c907ecba70a9b1f))
+- **text:** Keep unchanged words between far-apart edits in a diff ([3cf0b04](https://github.com/ChristopherVR/ooxml/commit/3cf0b0495a5c3c2d339b22c5db2b547c14921fbd))
+- **pptx:** Render weight-named font families at their weight ([7188288](https://github.com/ChristopherVR/ooxml/commit/718828829585145b461742c04e030fe3fbbd2d52))
+- **pptx:** Render style-named font families in their style ([5413be6](https://github.com/ChristopherVR/ooxml/commit/5413be6b74a6409c8a2f1454e1a1cf4c4f1b8ba8))
+- **color:** Require each palette variant to name its step ([70d7d9a](https://github.com/ChristopherVR/ooxml/commit/70d7d9a949e9dc5289bacf33bf63bd9af4c9f258))
+- **color:** Require each palette variant to name its step ([3135862](https://github.com/ChristopherVR/ooxml/commit/3135862978fd352498d977335777555ba519428a))
+- **pptx:** Render flowChart connector presets as shapes, not lines ([08399ae](https://github.com/ChristopherVR/ooxml/commit/08399aea49db3270d6ef9c9c163c0ea3b6f8e23f))
+- **pptx:** Paint picture fills inherited from layout placeholders ([70bf7f9](https://github.com/ChristopherVR/ooxml/commit/70bf7f91beda9ae8e4d70472134222afc873dc68))
+- **pptx:** Do not clip stroked shapes in the react static renderer ([dca0420](https://github.com/ChristopherVR/ooxml/commit/dca0420ebead89696ac83316de890e786188b101))
+- **pptx:** Inherit shared office themes across native viewers ([8ae64f7](https://github.com/ChristopherVR/ooxml/commit/8ae64f7f72ea70c323fef9b6c712697c6c54aeb6))
+- **pptx:** Apply named weights and styles to Vue WordArt and bullet fonts ([fe6e687](https://github.com/ChristopherVR/ooxml/commit/fe6e687b27c70831b42b4e5d152cbfe5292774c1))
+- **vue:** Show the inspector Text Warp, on the shared gallery ([1a358ad](https://github.com/ChristopherVR/ooxml/commit/1a358ade3f115e465a9df612da336d65f4390e27))
+- **svelte:** Offer every text warp and store the real preset ([4e97248](https://github.com/ChristopherVR/ooxml/commit/4e972480510b2e83a4418b72ee1280c1601a0472))
+- **vanilla:** Hide the protected view bar without a host css reset ([c321460](https://github.com/ChristopherVR/ooxml/commit/c32146099bdf254ddb26aa39f861bd061d6bef4c))
+- **pptx:** Theme standalone vanilla inspector controls ([cdf5347](https://github.com/ChristopherVR/ooxml/commit/cdf5347e13f67444d93e8d20aebeba7f8963164d))
+
+### Performance
+
+- **xlsx:** Keep comments and cdata on the XML fast path ([#119](https://github.com/ChristopherVR/ooxml/issues/119)) ([ee7212a](https://github.com/ChristopherVR/ooxml/commit/ee7212afc204e15b5977d215f5cc61c99aaf4bc3))
+
+### Refactor
+
+- **react:** Render Help and Record through the shared section ([db59aa2](https://github.com/ChristopherVR/ooxml/commit/db59aa2e38349eb27869b94cfb73368383cc2d36))
+- **react:** Draw the inspector theme colours on the shared grid ([5478038](https://github.com/ChristopherVR/ooxml/commit/5478038fb6737698c4f4535405733acf795d2308))
+- **react:** Draw the inspector Text Warp on the shared gallery ([fd2f582](https://github.com/ChristopherVR/ooxml/commit/fd2f5821475715f120a5ff802df714112fbda4aa))
+- **vue:** Render Help and Record through the shared section ([2817c70](https://github.com/ChristopherVR/ooxml/commit/2817c7092031dd06b53f7aa53366a3818c4bcc5c))
+- **vue:** Draw the inspector theme colours on the shared grid ([e402a0e](https://github.com/ChristopherVR/ooxml/commit/e402a0eadec61e91ca1c6f0b21ec417d2de12a37))
+- **angular:** Render Help and Record through the shared section ([a2041ed](https://github.com/ChristopherVR/ooxml/commit/a2041ed15f7debf8e19f242d03e7e01ad1d5998a))
+- **angular:** Draw the inspector theme colours on the shared grid ([04328e8](https://github.com/ChristopherVR/ooxml/commit/04328e8ed660758b1ed8873d642dcbc31cf8ebfa))
+- **angular:** Draw the inspector Text Warp on the shared gallery ([8b38906](https://github.com/ChristopherVR/ooxml/commit/8b389068bf06c42edf8fec3e5cdbacb4dbedfc05))
+- **svelte:** Render Help and Record through the shared section ([98fb9b1](https://github.com/ChristopherVR/ooxml/commit/98fb9b170750ab5eb8581b6085cf482bedbfc5af))
+- **svelte:** Draw the inspector theme colours on the shared grid ([d7917a1](https://github.com/ChristopherVR/ooxml/commit/d7917a14c91955a0a0c16a453ddbdbbad25b864b))
+- **vanilla:** Render Help and Record through the shared section ([d869a39](https://github.com/ChristopherVR/ooxml/commit/d869a3919d2d3b4ad3d4053cf8c3dcfabe21dc96))
+- **vanilla:** Draw the inspector theme colours on the shared grid ([c65dd48](https://github.com/ChristopherVR/ooxml/commit/c65dd48cf5a01e3627a897720f8610ee673ef5be))
+- **vanilla:** Draw the inspector Text Warp on the shared gallery ([816c6c0](https://github.com/ChristopherVR/ooxml/commit/816c6c01439044f15b82a664f35e7f84b8176e96))
+
+### Testing
+
+- **react:** Mount the Help tab to read its command names ([fdc1df3](https://github.com/ChristopherVR/ooxml/commit/fdc1df3ee2e806c6d1a46304ec077a9f3ecb7630))
+- **pptx:** Follow the cover direction fix in react and angular ([bb9f936](https://github.com/ChristopherVR/ooxml/commit/bb9f93638997cb8cef29f2eb4488e9b4e8f2a14f))
+
+### Dependencies
+
+- **deps:** Update emf-converter to 4.21.0 ([#106](https://github.com/ChristopherVR/ooxml/issues/106)) ([641ae31](https://github.com/ChristopherVR/ooxml/commit/641ae316b7de07ed6f3c5158e8b154c991e1b719))
+- **deps:** Update dev tools and fix svelte type checks ([#107](https://github.com/ChristopherVR/ooxml/issues/107)) ([550eac2](https://github.com/ChristopherVR/ooxml/commit/550eac24d469d14245a0ac71789e01c8d5fb50f9))
+
+### Chores
+
+- Integrate latest main before full verification ([3bec814](https://github.com/ChristopherVR/ooxml/commit/3bec814857ae675f31eba14fcec59a3db4e1cb77))
+
+## 2026-10-20
+
+_Releases: pptx-viewer-mcp@2.8.7, pptx-react-viewer@4.42.1, pptx-vue-viewer@4.42.1, pptx-angular-viewer@4.42.1, pptx-svelte-viewer@4.42.1, pptx-vanilla-viewer@3.42.1_
+
+### Bug Fixes
+
+- **deps:** Adapt error codes and iframe tests to updated dependencies ([550070e](https://github.com/ChristopherVR/ooxml/commit/550070e59951c339a67c7e3d6920b9b7ac0c1004))
+- **pptx:** Link authors when saving first-time comments ([6b6ea0d](https://github.com/ChristopherVR/ooxml/commit/6b6ea0d149f8073ddf10d44454795e54386e5ec3))
+- **ui:** Render freeform arrows with shared endpoint sizing ([dff5678](https://github.com/ChristopherVR/ooxml/commit/dff567825cde43c4fa46c0bb90afef8eb9e12782))
+- **pptx:** Preserve metrics during staged text builds ([388c1b2](https://github.com/ChristopherVR/ooxml/commit/388c1b25b621e5409dd55a483922d8f7928f023e))
+
+### Testing
+
+- **ui:** Align marker assertions with powerpoint dimensions ([e5c2f76](https://github.com/ChristopherVR/ooxml/commit/e5c2f76e99e012c29412171c23dd7ade80640b5b))
+
+### Dependencies
+
+- **deps:** Merge dependency update ([#92](https://github.com/ChristopherVR/ooxml/issues/92)) ([ce1b012](https://github.com/ChristopherVR/ooxml/commit/ce1b01215261b162443f903e1a2086ed4110ae28))
+- **deps:** Bump the production-minor-and-patch group with 22 updates ([02d7713](https://github.com/ChristopherVR/ooxml/commit/02d7713ceb301921fd6c7706138d64f4c10a9d38))
+- **deps:** Merge dependency update ([#94](https://github.com/ChristopherVR/ooxml/issues/94)) ([e381aba](https://github.com/ChristopherVR/ooxml/commit/e381abaa11794233cdea85a9dc6d098d4cb338c4))
+- **deps:** Merge dependency update ([#95](https://github.com/ChristopherVR/ooxml/issues/95)) ([0926eac](https://github.com/ChristopherVR/ooxml/commit/0926eac231cb49749433fb7a9eac870cc7996e52))
+- **deps:** Merge dependency update ([#96](https://github.com/ChristopherVR/ooxml/issues/96)) ([33b0ebb](https://github.com/ChristopherVR/ooxml/commit/33b0ebb6a16b4448d577c169c79187466d4148a3))
+- **deps:** Merge dependency update ([#97](https://github.com/ChristopherVR/ooxml/issues/97)) ([8ef37ee](https://github.com/ChristopherVR/ooxml/commit/8ef37ee45829ad74631367cfd2d9c2c986536a60))
+- **deps:** Bump the angular group with 7 updates ([c3aee14](https://github.com/ChristopherVR/ooxml/commit/c3aee1459d6f86422e51c20819d6203343993ef0))
+- **deps:** Merge angular updates ([#90](https://github.com/ChristopherVR/ooxml/issues/90)) ([119c279](https://github.com/ChristopherVR/ooxml/commit/119c279502424ffc0e14a0543c334fc828fccdd5))
+
+### Chores
+
+- **deps-dev:** Bump @types/node ([df60cd7](https://github.com/ChristopherVR/ooxml/commit/df60cd7aff4efb7006ac0a6cfd1c69b08230a011))
+- **deps-dev:** Bump tsup from 8.5.1 to 9.0.0 ([9835e80](https://github.com/ChristopherVR/ooxml/commit/9835e8038a9a271e37e286e524496513910553a6))
+- **deps-dev:** Bump the development-minor-and-patch group with 14 updates ([1cdc60b](https://github.com/ChristopherVR/ooxml/commit/1cdc60b0f0a591304a2240ffcb550eccfd8d2487))
+- **pptx:** Integrate current main with dependency updates ([713239b](https://github.com/ChristopherVR/ooxml/commit/713239b3b9166d0010dcd058ea758c11ff2425c0))
+- **deps-dev:** Bump happy-dom from 20.14.6 to 21.0.3 ([b9bab0e](https://github.com/ChristopherVR/ooxml/commit/b9bab0e0ab3661d833feb74653788c81bde06c45))
+
+## 2026-10-17
+
+_Releases: pptx-react-viewer@4.42.0, pptx-react-viewer@4.41.0, pptx-react-viewer@4.40.2, pptx-vue-viewer@4.42.0, pptx-vue-viewer@4.41.0, pptx-vue-viewer@4.40.2, pptx-angular-viewer@4.42.0, pptx-angular-viewer@4.41.0, pptx-angular-viewer@4.40.2, pptx-svelte-viewer@4.42.0, pptx-svelte-viewer@4.41.0, pptx-svelte-viewer@4.40.2, pptx-vanilla-viewer@3.42.0, pptx-vanilla-viewer@3.41.0, pptx-vanilla-viewer@3.40.2_
+
+### Features
+
+- **chart:** Honor native markers throughout shared rendering ([a7aeee1](https://github.com/ChristopherVR/ooxml/commit/a7aeee171248fc565b7bc9d611e054b659954243))
+- **chart:** Draw data labels in the shared chart renderer ([32142ef](https://github.com/ChristopherVR/ooxml/commit/32142ef32c392548fdf5f79aa9d7f659356fac70))
+
+### Bug Fixes
+
+- **chart:** Apply shared axis scaling to radar charts ([4acbf15](https://github.com/ChristopherVR/ooxml/commit/4acbf1556d8ac89371f736a8b7b5f7a5aedc3609))
+- **chart:** Preserve data label inheritance and source formats ([e92e5eb](https://github.com/ChristopherVR/ooxml/commit/e92e5eb80b098f6331fa21a5dc284018d56ec686))
+- **xml:** Close the remaining code scanning alerts ([6d85151](https://github.com/ChristopherVR/ooxml/commit/6d85151b85dc65fe03c26079c8e76e162dffd5c5))
+- **pptx:** Bound image caches and dispose chart subscriptions ([0f2c004](https://github.com/ChristopherVR/ooxml/commit/0f2c0041b94c32293f8502bc299a4c18f586b3f3))
+
+### Refactor
+
+- **chart:** Share axis ranges and native gridline rendering ([8c26687](https://github.com/ChristopherVR/ooxml/commit/8c26687a7b3196955df602198528adc83fce259b))
+- **chart:** Share pptx marker geometry with neutral rendering ([b246d63](https://github.com/ChristopherVR/ooxml/commit/b246d6315c32412298508d9b2a944b0c9bafc26b))
+
+### Documentation
+
+- **chart:** Gap report and harness for the shared chart renderer ([b166877](https://github.com/ChristopherVR/ooxml/commit/b1668770e66e241704dd5ec9a04d2813e522acc4))
+
+## 2026-10-16
+
+_Releases: pptx-react-viewer@4.40.1, pptx-react-viewer@4.40.0, pptx-react-viewer@4.39.0, pptx-vue-viewer@4.40.1, pptx-vue-viewer@4.40.0, pptx-vue-viewer@4.39.0, pptx-angular-viewer@4.40.1, pptx-angular-viewer@4.40.0, pptx-angular-viewer@4.39.0, pptx-svelte-viewer@4.40.1, pptx-svelte-viewer@4.40.0, pptx-svelte-viewer@4.39.0, pptx-vanilla-viewer@3.40.1, pptx-vanilla-viewer@3.40.0, pptx-vanilla-viewer@3.39.0_
+
+### Features
+
+- **pptx:** Apply theme effect schemes and background styles ([998bb4b](https://github.com/ChristopherVR/ooxml/commit/998bb4b52c0d3606d0d4c26a0f26c970b4684b69))
+- **pptx:** Resolve a style against another effect scheme ([6db6a07](https://github.com/ChristopherVR/ooxml/commit/6db6a0777b8a82a787f8a78015b34513df4c2f0a))
+- **locales:** Translate the Effects, Background Styles and Variants copy ([89b8b02](https://github.com/ChristopherVR/ooxml/commit/89b8b02486600fa46087023293b87867d3e3b0d6))
+- **pptx:** Expose a package's real theme variants on the handler ([f176c1b](https://github.com/ChristopherVR/ooxml/commit/f176c1bcd2974005606fcc3588a5d3620de414b8))
+- **react:** Preview and apply Design effects and background styles ([5cd3fac](https://github.com/ChristopherVR/ooxml/commit/5cd3facee7143a6f2331e2f08636307d348c4255))
+- **ui:** Add Link and Date & Time to the phone Insert sheet ([f9962a5](https://github.com/ChristopherVR/ooxml/commit/f9962a5ddc0aebbaba8568f2203627c6989bc4c6))
+- **pptx:** Save chart picture, pattern, gradient, 3-D and text formats ([979e444](https://github.com/ChristopherVR/ooxml/commit/979e444af1cab982a8e1ea2360325646efeec6d4))
+- **locales:** Translate the chart Format pane's fills, 3-D and text ([2714041](https://github.com/ChristopherVR/ooxml/commit/2714041813ab5899ff519bb8386269ff07ffc0c8))
+- **pptx:** Open the shared Insert sheet from the phone bottom bar ([53526bd](https://github.com/ChristopherVR/ooxml/commit/53526bdaecc293fdd1be168362010921df6c112e))
+- **geometry:** Add the PowerPoint shape gallery catalogue ([2fb79e2](https://github.com/ChristopherVR/ooxml/commit/2fb79e2717cf9094a2692d04503e95cc09453467))
+- **locales:** Translate the Shapes gallery and the Design galleries ([c4aaeb3](https://github.com/ChristopherVR/ooxml/commit/c4aaeb31f9119e0bc825b922b964dfc37d62f7d3))
+- **react:** Apply a whole theme from the Design > Themes gallery ([da35a17](https://github.com/ChristopherVR/ooxml/commit/da35a17da79296a0e5f6b09e576766ca37cf83be))
+- **pptx:** Keep Slide Templates reachable from every New Slide menu ([be03af6](https://github.com/ChristopherVR/ooxml/commit/be03af63a0ed6c23a79800b500d3d425ea22773f))
+- **pptx:** Add chart element format and options edit operations ([d99f83e](https://github.com/ChristopherVR/ooxml/commit/d99f83ec63e6251c4aaa39a31ad5d2f4d2659b54))
+- **locales:** Translate the chart Format pane and Chart Format tab ([3b0b7d2](https://github.com/ChristopherVR/ooxml/commit/3b0b7d2aebac14bcbc0df22f5ceef695b4443cc9))
+- **react:** Add the chart Format pane and Chart Format tab ([f311e9d](https://github.com/ChristopherVR/ooxml/commit/f311e9d8fd8b2c2e76912d3e225c9b3da94dedcc))
+- **pptx:** Read chart element formats from each element's spPr on load ([46620d0](https://github.com/ChristopherVR/ooxml/commit/46620d08e61513234ba61964e4f751d679fcb28b))
+- **vue:** Preview and apply Design effects and background styles ([2ee51ef](https://github.com/ChristopherVR/ooxml/commit/2ee51efba1783361baeb8b00691e9592102830df))
+- **vue:** Apply a whole theme from the Design > Themes gallery ([624cf94](https://github.com/ChristopherVR/ooxml/commit/624cf94e485ffc47e4a9ab335977f0fd4ac20290))
+- **vue:** Add the chart Format pane and Chart Format tab ([461f497](https://github.com/ChristopherVR/ooxml/commit/461f4974ddd1ecd0673cd43086b1171471f6a6e9))
+- **angular:** Preview and apply Design effects and background styles ([8aed90d](https://github.com/ChristopherVR/ooxml/commit/8aed90d168c35112c2d646302eeb6585d5f69157))
+- **angular:** Open the inspector from the Format Background footer ([0de6c22](https://github.com/ChristopherVR/ooxml/commit/0de6c223b0b1bec347dc739fdd7016c3ec8f48c8))
+- **angular:** Insert any gallery shape and apply a whole theme ([326dea3](https://github.com/ChristopherVR/ooxml/commit/326dea371f234e36dde2ca91cf386d56aa0b9437))
+- **angular:** Add the chart Format pane and Chart Format tab ([9ad9cbd](https://github.com/ChristopherVR/ooxml/commit/9ad9cbd6421e140f8c00c03fe2d424dcaea649a6))
+- **svelte:** Preview and apply Design effects and background styles ([4411175](https://github.com/ChristopherVR/ooxml/commit/441117505920079cc73ea4f4a3ff41bf2bff4b40))
+- **svelte:** Apply a whole theme from the Design > Themes gallery ([ba1710a](https://github.com/ChristopherVR/ooxml/commit/ba1710a0a31e250d9a3400f3e6e61bb93285264d))
+- **svelte:** Add the chart Format pane and Chart Format tab ([012d5a2](https://github.com/ChristopherVR/ooxml/commit/012d5a23ce1cae7476c892cff9ce79d799d2a7b0))
+- **vanilla:** Preview and apply Design effects and background styles ([482321e](https://github.com/ChristopherVR/ooxml/commit/482321e62cb09654ea44471cba189121b7aa24bc))
+- **vanilla:** Add the Themes gallery and Designer to the Design tab ([5a5860d](https://github.com/ChristopherVR/ooxml/commit/5a5860dbb1eb8798a22126f99f698ea5a6d7289e))
+- **vanilla:** Add the chart Format pane and Chart Format tab ([54e35d8](https://github.com/ChristopherVR/ooxml/commit/54e35d8acae0684902db81012e42f382f3758189))
+
+### Bug Fixes
+
+- **xml:** Close code scanning alerts and steady the docx presence spec ([442b249](https://github.com/ChristopherVR/ooxml/commit/442b249cce1de4fdd228d073b394d741733f4c08))
+- **locales:** Align new powerpoint strings with office terms ([5de0ce8](https://github.com/ChristopherVR/ooxml/commit/5de0ce84918554207043198369a2dd3021e3abda))
+- **ui:** Translate built-in SmartArt layout names in the Layouts gallery ([a48c035](https://github.com/ChristopherVR/ooxml/commit/a48c035a309cfadb46eb91e651839efaf559cf33))
+- **ui:** Translate Compare change sentences and the waterfall legend ([f6f8e77](https://github.com/ChristopherVR/ooxml/commit/f6f8e77a0db1e2b418c5a326abae9b8a6a51124f))
+- **pptx:** Write ChartEx bin size and count as val attributes ([457df13](https://github.com/ChristopherVR/ooxml/commit/457df13ae1c4bafbb61d53b41a3078e7a74556b4))
+- **pptx:** Write animation graphicEl children in the DrawingML namespace ([9b7604d](https://github.com/ChristopherVR/ooxml/commit/9b7604d417495e0c89342207ffb2ed4afc5906ab))
+- **pptx:** Mirror chart text colour edits and keep automatic label angles ([c8f12c3](https://github.com/ChristopherVR/ooxml/commit/c8f12c3b17c0fc778fc5905a4d8ba8c0f2fd0e2a))
+- **pptx:** Keep a chart title's size when its text format is edited ([67b433c](https://github.com/ChristopherVR/ooxml/commit/67b433c3dd77863e37201441c851dc9b1e9b60ec))
+- **pptx:** See data labels of a second chart group of the same type ([06e7685](https://github.com/ChristopherVR/ooxml/commit/06e7685fd29fc9c5239c8161aa0963e09378adbc))
+- **react:** Cast the chart area shadow and glow outside the chart frame ([bf08978](https://github.com/ChristopherVR/ooxml/commit/bf089783da051187287b7cb589195cf58fba177c))
+- **react:** Keep a gallery hover preview out of save and recovery ([67c714d](https://github.com/ChristopherVR/ooxml/commit/67c714d47272e218d167d7df71a44376bd80b213))
+- **pptx:** Sync a slide background style over collaboration ([32bc400](https://github.com/ChristopherVR/ooxml/commit/32bc400deccd8a4c53df15aec8e4c1245b392654))
+- **pptx:** Center resized slide content in pixel coordinates ([#86](https://github.com/ChristopherVR/ooxml/issues/86)) ([fbbdfee](https://github.com/ChristopherVR/ooxml/commit/fbbdfee9dfe9b718ed02f0847e2a1197661f2f33))
+- **pptx:** Preserve picture source crops in svg exports ([#88](https://github.com/ChristopherVR/ooxml/issues/88)) ([97c254c](https://github.com/ChristopherVR/ooxml/commit/97c254c159e7486e77b425be95bbe17aca0955ea))
+- **svelte:** Translate media and picture inspector labels ([d0bde63](https://github.com/ChristopherVR/ooxml/commit/d0bde63ea46502a316e94f4b795901db20644c17))
+- **svelte:** Translate table, text effects and SmartArt inspector labels ([ca38b70](https://github.com/ChristopherVR/ooxml/commit/ca38b708db0399fec7db9f72046296c82587116d))
+- **ui:** Translate shared preset catalogue labels ([46661a1](https://github.com/ChristopherVR/ooxml/commit/46661a125e90b91b00f3fa66f584f232bc21a871))
+- **vanilla:** Lay out the phone sheets and stack them above the canvas ([1479b46](https://github.com/ChristopherVR/ooxml/commit/1479b46f3d0d928e03d9c5b232960a88ee1d5cae))
+- **pptx:** Stack the phone sheets above the canvas and end them above the bar ([5d38927](https://github.com/ChristopherVR/ooxml/commit/5d3892723a31b10109cc14e2211c616d5fb376bc))
+- **vue:** Cast the chart area shadow and glow outside the chart frame ([216a7d3](https://github.com/ChristopherVR/ooxml/commit/216a7d3bfb5e37c9ec775e1cf08acea27f240de3))
+- **vue:** Keep a gallery hover preview out of recovery snapshots ([ec3d384](https://github.com/ChristopherVR/ooxml/commit/ec3d384b32b2d5ca3dafc06bb024741a665c3869))
+- **angular:** Keep each Position and Size label with its input on phones ([c2947ee](https://github.com/ChristopherVR/ooxml/commit/c2947eea5d43dccb5c393af31c39b9340f96787f))
+- **angular:** Cast the chart area shadow and glow outside the chart frame ([b46250b](https://github.com/ChristopherVR/ooxml/commit/b46250bee857417af1d06efe6da268311cb95394))
+- **angular:** Keep a gallery hover preview out of snapshots and collab ([0c536a3](https://github.com/ChristopherVR/ooxml/commit/0c536a38a9dc5e81508a7344e3b84641f7444e1b))
+- **svelte:** Cast the chart area shadow and glow outside the chart frame ([b4fda2b](https://github.com/ChristopherVR/ooxml/commit/b4fda2bd7ca830869faa92239f9344f814b78590))
+- **vanilla:** Skip recovery snapshots while a gallery preview shows ([64904c5](https://github.com/ChristopherVR/ooxml/commit/64904c55e3a8d35b1ea69a384e5b6247c45820c5))
+
+### Testing
+
+- **pptx:** Make the generated e2e decks open in PowerPoint ([036e0eb](https://github.com/ChristopherVR/ooxml/commit/036e0eb438d8664230afe7fe2de44a1e9365fb9b))
+- **angular:** Expect the phone slide margin below the mobile breakpoint ([b7df5e9](https://github.com/ChristopherVR/ooxml/commit/b7df5e92d2955ad38ba703b06e5532c9f9b34f4d))
+- **svelte:** Prove a gallery hover preview is not published or saved ([8626fcd](https://github.com/ChristopherVR/ooxml/commit/8626fcd08ecb43c78b5c2165d3bb3fb3e3dd4a44))
+- **vanilla:** Format the element context menu test ([906baa8](https://github.com/ChristopherVR/ooxml/commit/906baa809ca71d844625d79e4ccb61e85ddd14d8))
+
+### Styling
+
+- **vue:** Format the phone insert sheet ([6dd11ec](https://github.com/ChristopherVR/ooxml/commit/6dd11ecb6720ac07be7d9cb63ac3b4ec54290656))
+
+## 2026-10-15
+
+_Releases: pptx-viewer-mcp@2.8.6, pptx-react-viewer@4.38.0, pptx-react-viewer@4.37.0, pptx-vue-viewer@4.38.0, pptx-vue-viewer@4.37.0, pptx-angular-viewer@4.38.0, pptx-angular-viewer@4.37.0, pptx-svelte-viewer@4.38.0, pptx-svelte-viewer@4.37.0, pptx-vanilla-viewer@3.38.0, pptx-vanilla-viewer@3.37.0_
+
+### Features
+
+- **chart:** Draw combination, waterfall and histogram charts ([ae79ec2](https://github.com/ChristopherVR/ooxml/commit/ae79ec24da6576a4497fcc4fce0b444be436dcc1))
+- **chart:** Draw bubble, stock, treemap and sunburst charts ([94a4240](https://github.com/ChristopherVR/ooxml/commit/94a424016e799722b22205f87b17e68fd5d5f816))
+- **xlsx:** Draw bubble, stock, treemap and sunburst charts from live cells ([11a4b36](https://github.com/ChristopherVR/ooxml/commit/11a4b367b7e116590c60d8eaccbf051563ae5c97))
+- **chart:** Honour stock bar formatting, draw volume stock, pad bubble axes ([614fc42](https://github.com/ChristopherVR/ooxml/commit/614fc421668e707be211c37658ea76681174eed5))
+- **math:** Draw equations as SVG and write them to Office Math ([cf5d2c0](https://github.com/ChristopherVR/ooxml/commit/cf5d2c09691aea6434a35a23d8116d888a79f320))
+- **automation:** Build word, excel and powerpoint files from outlines ([eda7e9e](https://github.com/ChristopherVR/ooxml/commit/eda7e9e7e5739764d2de03f93a71dcb7a268a78a))
+- **automation:** Suggest word edits as tracked changes, read all cells ([0fdfd3a](https://github.com/ChristopherVR/ooxml/commit/0fdfd3ae752d605db5171d66b2355f8a25e85054))
+- **pptx:** Host regions and capabilities in every binding ([18547f6](https://github.com/ChristopherVR/ooxml/commit/18547f6768fff10d8d8999ef109ef5381add8795))
+- **pptx:** Close binding props drift and guard prop parity ([167802e](https://github.com/ChristopherVR/ooxml/commit/167802e036f62e4c0dd23144a45ae1618eefd007))
+- **pptx:** Host dialog.options in the shared options dialog ([770e85b](https://github.com/ChristopherVR/ooxml/commit/770e85bed0d3bb0b61da4a34fb31591bfc6070e1))
+- **chart:** Model series trendlines and error bars ([bd885ce](https://github.com/ChristopherVR/ooxml/commit/bd885ce5b90b318232363f1d801461ef0bce053e))
+- **chart:** Fit trendlines and size error bars in data space ([1023d6f](https://github.com/ChristopherVR/ooxml/commit/1023d6f892c4534af9e83b34c638c17d26079bef))
+- **chart:** Draw trendlines and error bars in the shared painter ([dcce901](https://github.com/ChristopherVR/ooxml/commit/dcce901233ca1c72580b094c243125c837961b17))
+- **ui:** Lay out the PowerPoint Insert tab as Office does ([55aef8a](https://github.com/ChristopherVR/ooxml/commit/55aef8a30fd3ad7eabf0f2c4f1bd2fa3d8b0f49c))
+- **ui:** Scale the Insert tab like Office and add the Table grid ([e6f5dcc](https://github.com/ChristopherVR/ooxml/commit/e6f5dcc7f050f184de46af1ed07bed16ff6dc446))
+- **ui:** Add pptx table layout tab and review comment navigation ([325ab16](https://github.com/ChristopherVR/ooxml/commit/325ab1613592c633a6d1291ecee7d05478e40485))
+
+### Bug Fixes
+
+- **tools:** Move the pptx MCP file io onto confined file operations ([21efcbe](https://github.com/ChristopherVR/ooxml/commit/21efcbe9c80a02c1ac6da0d1a4b2e6933fb146ed))
+- **opc:** Stop reporting digest checks as a valid signature ([9b3cac4](https://github.com/ChristopherVR/ooxml/commit/9b3cac4c24c3a2fd17693fa253ceea6970ca0fe7))
+- **pptx:** Guard OCSP responder requests against SSRF ([b223ee0](https://github.com/ChristopherVR/ooxml/commit/b223ee0f2ac593f3b3ac2ec1c452724be4a3fd07))
+- **opc:** Guard zip reads against forged sizes and unsafe part names ([39294e9](https://github.com/ChristopherVR/ooxml/commit/39294e97d434e7132a22e39930d262a0d0b281da))
+- **digest:** Add timingSafeEqual and a 1M default spin limit ([5efd9c9](https://github.com/ChristopherVR/ooxml/commit/5efd9c95dcb2fa1b5e8d830333b9dce5d253e816))
+- **crypto:** Harden agile and standard decryption against hostile input ([b1e7be5](https://github.com/ChristopherVR/ooxml/commit/b1e7be51db6aee35ed91dfcf143a3710d199308a))
+- **automation:** Confine file io by realpath with relative results ([3b0340f](https://github.com/ChristopherVR/ooxml/commit/3b0340fa753c4fa0c483c0715c19693bd5b40b4e))
+- **xml:** Bound nesting depth and element count in parseXml ([7441f60](https://github.com/ChristopherVR/ooxml/commit/7441f60925b128da24500833aecb5936d24ee024))
+- **opc:** Match attribute names exactly and accept single quotes ([9220247](https://github.com/ChristopherVR/ooxml/commit/922024743255a61b6f39b2ef231dffc533da8b14))
+- **math:** Cap LaTeX and OMML nesting and use null-prototype sibling maps ([553cd72](https://github.com/ChristopherVR/ooxml/commit/553cd7232a58d7b979f5065e35d1e9f31c2d48fc))
+- **diagram:** Null-prototype layout variables and a presentation node budget ([572bf71](https://github.com/ChristopherVR/ooxml/commit/572bf71479c24389793db22dc80f056e090d4264))
+- **chart:** Match Excel for extended chart text, labels and fills ([9514ba1](https://github.com/ChristopherVR/ooxml/commit/9514ba19f9624b205da5a64b2ea6f32ea3355d65))
+- **geometry:** Draw the wedge callout presets as ECMA-376 defines them ([2a4f2b0](https://github.com/ChristopherVR/ooxml/commit/2a4f2b0b100040a5ab1352f6d36f6a5e64d82a58))
+- **math:** Draw the minus sign and space only a binary one ([1620cb0](https://github.com/ChristopherVR/ooxml/commit/1620cb00486131c99437dc13259b5d82c5d7d63f))
+- **geometry:** Keep the oval callout on its ellipse ([a98b010](https://github.com/ChristopherVR/ooxml/commit/a98b010ba274ae857d2bd3bc618761a1dce4bb39))
+- **svelte:** Translate the chart section and lead with its title ([1a102b6](https://github.com/ChristopherVR/ooxml/commit/1a102b60aeb7def69f05fd2d5d0b18286467cd46))
+- **react:** Name chart data grid cells through the translator ([4d96bdd](https://github.com/ChristopherVR/ooxml/commit/4d96bdd20b7eb4ac65c42b6ddaff32501f6f8d09))
+- **vue:** Put the chart title before the chart type ([984a118](https://github.com/ChristopherVR/ooxml/commit/984a118c76fa959387ffbd2d890ef35a5d5cc2a8))
+- **angular:** Keep the inspector panel inside its host ([df1c964](https://github.com/ChristopherVR/ooxml/commit/df1c9645f69f90d28f6f8fb7f91ae8ae775fa7dc))
+- **pptx:** Keep the table selected on a shift-click in angular ([81299f0](https://github.com/ChristopherVR/ooxml/commit/81299f0a4e0f9cf88018c3b0bf70fc5a933e9834))
+- **svelte:** Render the morph stylesheet as text instead of html ([79761a1](https://github.com/ChristopherVR/ooxml/commit/79761a14e7ccecff15783f613a06eb5834c07ddb))
+- **svelte:** Pass the morph style element tag as an expression ([5a25a10](https://github.com/ChristopherVR/ooxml/commit/5a25a107fe89cf1a0206dbba409b6554d07c0669))
+- **svelte:** Fit the shape panel in its column and drop a duplicate ([9bfe5c1](https://github.com/ChristopherVR/ooxml/commit/9bfe5c1622026bd8cafe9542dacd6533d4331a6f))
+- **pptx:** Close vanilla dialogs when the viewer is destroyed ([eeb9ccc](https://github.com/ChristopherVR/ooxml/commit/eeb9ccc155d4e55053cc308ccfa4450421c00f4c))
+- **vanilla:** Style the inspector's bare form fields without a host reset ([6b6c4db](https://github.com/ChristopherVR/ooxml/commit/6b6c4db9e56ed5c3663d2e1dfdacebe365bc6c39))
+- **vanilla:** Lay out the remaining unstyled inspector panels ([dc0ed5d](https://github.com/ChristopherVR/ooxml/commit/dc0ed5d4893c3877c11a37ae2d4ab5f2da79535f))
+
+### Refactor
+
+- **pptx:** Drop the unused jszip import from the chart parser ([66f67dc](https://github.com/ChristopherVR/ooxml/commit/66f67dcb464a61015ea3b56fcc6578a29e7016a5))
+- **chart:** Move waterfall steps and range into the chart area ([b6fa22a](https://github.com/ChristopherVR/ooxml/commit/b6fa22a987d40b63f3369868083435eba35afa83))
+- **pptx:** Open file > options through the shared options dialog ([d6d4fba](https://github.com/ChristopherVR/ooxml/commit/d6d4fbad29c6d0f7ccf5ce676fa8ca3a2e8c0ae6))
+- **chart:** Move number formats, palettes, axis labels, auto title to core ([26bde03](https://github.com/ChristopherVR/ooxml/commit/26bde036faed3663e9a037b8e755e5c517202263))
+- **chart:** Move bubble, stock, treemap and sunburst geometry to core ([a465fa6](https://github.com/ChristopherVR/ooxml/commit/a465fa63dfd1f15c67a22a97fa5ed9c97d2965e8))
+- **pptx:** Read chart trendlines and error bars from core model ([fa53d97](https://github.com/ChristopherVR/ooxml/commit/fa53d97b442df87b60ac1be85f5e4480bb8fec7a))
+
+### Testing
+
+- **angular:** Expect scriptable embedded types to stay closed ([1e9e2f4](https://github.com/ChristopherVR/ooxml/commit/1e9e2f45b6401404df9b276fe443c898c4abdfe8))
+- **pptx:** Split vanilla region tests over three workers ([4c612b0](https://github.com/ChristopherVR/ooxml/commit/4c612b03fe39b30e89c325c04cb81279e0f5e61b))
+- **ui:** Give the vanilla comment action mocks applyChanges ([65a53ba](https://github.com/ChristopherVR/ooxml/commit/65a53ba439e9e7c4c173b3be23b14452bb03552d))
+
+### Chores
+
+- **ui:** Drop an unused chart import and clarify the note lookup ([76ed6f1](https://github.com/ChristopherVR/ooxml/commit/76ed6f1bbd263129a0d3950119a8f062ba020d9f))
+
+## 2026-10-14
+
+_Releases: pptx-react-viewer@4.36.3, pptx-react-viewer@4.36.2, pptx-react-viewer@4.36.1, pptx-vue-viewer@4.36.3, pptx-vue-viewer@4.36.2, pptx-vue-viewer@4.36.1, pptx-angular-viewer@4.36.3, pptx-angular-viewer@4.36.2, pptx-angular-viewer@4.36.1, pptx-svelte-viewer@4.36.3, pptx-svelte-viewer@4.36.2, pptx-svelte-viewer@4.36.1, pptx-vanilla-viewer@3.36.3, pptx-vanilla-viewer@3.36.2, pptx-vanilla-viewer@3.36.1_
+
+### Bug Fixes
+
+- **ui:** Translate swatch, style and scheme names in pptx menus ([#83](https://github.com/ChristopherVR/ooxml/issues/83)) ([bd2908c](https://github.com/ChristopherVR/ooxml/commit/bd2908c03147486699378b99eccbba6cbd5b8efd))
+- **ui:** Draw the table background and lines of Themed Styles ([#76](https://github.com/ChristopherVR/ooxml/issues/76)) ([8ea2382](https://github.com/ChristopherVR/ooxml/commit/8ea2382e8654a12e5f8f48d1658c8e872b7c9cc0))
+- **pptx:** Commit inline edits and suppress bookmark shortcuts ([fea149f](https://github.com/ChristopherVR/ooxml/commit/fea149fff0444996b68d9c869d5209acdc9581ea))
+- **pptx:** Close outline view and format background on escape ([8b837d7](https://github.com/ChristopherVR/ooxml/commit/8b837d71ee66588e7912a958c891c31e4e19868a))
+- **ui:** Restore native touch dragging across office editors ([6dc56a1](https://github.com/ChristopherVR/ooxml/commit/6dc56a1ba920b230d2a2d23572378305e74fe48c))
+- **pptx:** Restore a valid slide after undoing new slide ([cefc83b](https://github.com/ChristopherVR/ooxml/commit/cefc83b9fcb9b0fe09cec1a81c0c51ef1733bf8d))
+- **vanilla:** Group the inspector's fill and line colours by target ([#82](https://github.com/ChristopherVR/ooxml/issues/82)) ([dd86fe2](https://github.com/ChristopherVR/ooxml/commit/dd86fe2bf015d87e79779a3d94ea58e78afc9e3d))
+
+### Testing
+
+- **pptx:** Await saltless password unlock completion ([57c4311](https://github.com/ChristopherVR/ooxml/commit/57c4311a006c98d563c0dc3d8729ad81314cd36c))
+
+## 2026-10-13
+
+_Releases: pptx-react-viewer@4.36.0, pptx-react-viewer@4.35.0, pptx-react-viewer@4.34.0, pptx-react-viewer@4.33.2, pptx-vue-viewer@4.36.0, pptx-vue-viewer@4.35.0, pptx-vue-viewer@4.34.0, pptx-vue-viewer@4.33.2, pptx-angular-viewer@4.36.0, pptx-angular-viewer@4.35.0, pptx-angular-viewer@4.34.0, pptx-angular-viewer@4.33.2, pptx-svelte-viewer@4.36.0, pptx-svelte-viewer@4.35.0, pptx-svelte-viewer@4.34.0, pptx-svelte-viewer@4.33.2, pptx-vanilla-viewer@3.36.0, pptx-vanilla-viewer@3.35.0, pptx-vanilla-viewer@3.34.0, pptx-vanilla-viewer@3.33.2_
+
+### Features
+
+- **ui:** Customize inspector startup and deck card visibility ([ada4979](https://github.com/ChristopherVR/ooxml/commit/ada49799906e5ed99159b1f326ae0cb1c737017e))
+- **ui:** Add a Size group with Crop to the Picture Format tab ([58f5906](https://github.com/ChristopherVR/ooxml/commit/58f5906b157cf2503b9348f671da76c591117cc6))
+- **pptx:** Support native whole-shape fixed opacity ([7b0372e](https://github.com/ChristopherVR/ooxml/commit/7b0372ed918da963bf662a302334e68ccae972e2))
+- **pptx:** Expose supported imported after-effect clearing ([936e248](https://github.com/ChristopherVR/ooxml/commit/936e248374a57fa90882879ab0a2ea607b4a4796))
+- **pptx:** Add rich search and cross-deck slide clipboard ([736dbf9](https://github.com/ChristopherVR/ooxml/commit/736dbf94f7fac5226accea2e942db2e5f9e08063))
+- **pptx:** Edit rich chart titles across viewer bindings ([e27970e](https://github.com/ChristopherVR/ooxml/commit/e27970e7791e8b1d2287619aa338ac907e25758d))
+- **pptx:** Replace chart labels with coherent workbook updates ([df616f7](https://github.com/ChristopherVR/ooxml/commit/df616f7f14674af9e41fd579b6860280ef45b9ac))
+
+### Bug Fixes
+
+- **pptx:** Honor bounded native visibility timing ([a9a70ee](https://github.com/ChristopherVR/ooxml/commit/a9a70ee8c87abfb32ab3d6999c633073bf5e3ddd))
+- **pptx:** Separate inherited paragraph spacing from direct values ([0c23aac](https://github.com/ChristopherVR/ooxml/commit/0c23aac22831cff4dd4a7dcce79d48ffdaab27b4))
+- **pptx:** Apply explicit line spacing over inherited paragraphs ([aad8c3d](https://github.com/ChristopherVR/ooxml/commit/aad8c3deba0eb8d4034b208e732136a5fc24cc92))
+- **pptx:** Paint animated picture frames above their images ([55ac6e8](https://github.com/ChristopherVR/ooxml/commit/55ac6e8d9ae5b4c74d0f1bd18b783864c9d446c1))
+- **pptx:** Animate shape backgrounds independently of text ([1c2568b](https://github.com/ChristopherVR/ooxml/commit/1c2568b9fc5712ae34b9e0a11f530d4b298eb8a7))
+- **core:** Keep custom-geometry command order through undo and copies ([3ea38e4](https://github.com/ChristopherVR/ooxml/commit/3ea38e4e1bda2a59e7677b3c1783d53a89d1ab75))
+- **ui:** Keep spaces and line breaks in a wrap="none" text body ([12297d1](https://github.com/ChristopherVR/ooxml/commit/12297d13787c6230e406ab52d53c07365bcae185))
+- **pptx:** Bound legacy opacity image hint admission ([a37cf62](https://github.com/ChristopherVR/ooxml/commit/a37cf62761132b312825d3fe9d317a28317c7e85))
+- **pptx:** Refuse unresolved opacity parent timing ([8d71f85](https://github.com/ChristopherVR/ooxml/commit/8d71f852f4f0f4305cf18dbafcb151f6c7fac280))
+- **pptx:** Preserve native after-state and honor explicit clears ([aed6a6d](https://github.com/ChristopherVR/ooxml/commit/aed6a6d03410a3487589edfa6f57bde243885a45))
+- **pptx:** Number slide-number fields from the deck's firstSlideNum ([ec9b18d](https://github.com/ChristopherVR/ooxml/commit/ec9b18da409c971d08491b612db228fa32608c8b))
+- **pptx:** Keep a:br line breaks soft through an inline text edit ([02e40ae](https://github.com/ChristopherVR/ooxml/commit/02e40aed4dc8388676d5b852d73e5065d1b3846f))
+- **pptx:** Drop cleared cell fills and borders when the style changes ([99dbeba](https://github.com/ChristopherVR/ooxml/commit/99dbebabe7fd885998c52360610781e10ad3bca4))
+- **ui:** Apply a picked font family to the whole text box ([5c20e49](https://github.com/ChristopherVR/ooxml/commit/5c20e4945a8b35bf68169715f3f4bd926ecfac86))
+- **ui:** Round the table cell panel numbers for display ([#65](https://github.com/ChristopherVR/ooxml/issues/65)) ([964a96f](https://github.com/ChristopherVR/ooxml/commit/964a96f3c9c04e5bb186b1459d9089d8e6cf06ee))
+- **pptx:** Use shared controls for speaker-note search ([84064a9](https://github.com/ChristopherVR/ooxml/commit/84064a9f465ac05b73ff2231c61a16e04ef95e9a))
+- **pptx:** Translate notes and clipboard controls ([73e9449](https://github.com/ChristopherVR/ooxml/commit/73e9449cd2e40635fac1c2d13ff82dfc95d1cb5e))
+- **pptx:** Preserve chart workbooks across repeated saves ([b684d66](https://github.com/ChristopherVR/ooxml/commit/b684d66f7da744b8d322178e9db0b5df05fcf0fa))
+- **pptx:** Typecheck clipboard fixture without build output ([ee3769f](https://github.com/ChristopherVR/ooxml/commit/ee3769ffce40280cde48317020fb62b858e4a6ed))
+- **ui:** Paint picture frames and shadows across bindings ([#69](https://github.com/ChristopherVR/ooxml/issues/69)) ([c012f08](https://github.com/ChristopherVR/ooxml/commit/c012f08aa95ca069f2164f9f50e15208a793ba8e))
+- **ui:** Apply line spacing and indent over a paragraph's own a:pPr ([#62](https://github.com/ChristopherVR/ooxml/issues/62)) ([d8a24e6](https://github.com/ChristopherVR/ooxml/commit/d8a24e6740d773e4e4c49c8089f7ca4db20b3b3b))
+- **ui:** Give a shape with no line a default width on outline colour ([#67](https://github.com/ChristopherVR/ooxml/issues/67)) ([2db8c24](https://github.com/ChristopherVR/ooxml/commit/2db8c2451264edc18a0c79d8a62fbd268fee6111))
+- **pptx:** Preserve background paint colors and whole opacity ([afd6e3b](https://github.com/ChristopherVR/ooxml/commit/afd6e3b5e372a5d05c723e1cdb55c6c001f241dc))
+- **pptx:** Handle opaque share origins and clean up dialog tests ([2c73b55](https://github.com/ChristopherVR/ooxml/commit/2c73b55ed37381c6b7f51cefe72bd2439d5e03af))
+- **vanilla:** Forward nested action groups through the lazy ribbon actions ([ae2f5ef](https://github.com/ChristopherVR/ooxml/commit/ae2f5ef9f82c7fd6f49b0804bc3be0010ea5f095))
+- **vanilla:** Style the table cell panels and theme colour grid ([#64](https://github.com/ChristopherVR/ooxml/issues/64)) ([69d061d](https://github.com/ChristopherVR/ooxml/commit/69d061dd0c1b1f25787543d56dd0f6ae0aa88bc0))
+
+### Refactor
+
+- **pptx:** Move native effect timing decisions into core ([61e030a](https://github.com/ChristopherVR/ooxml/commit/61e030a0ae01032d36da6211577bf340187052c8))
+- **pptx:** Share font and whole-text edits in core ([94be138](https://github.com/ChristopherVR/ooxml/commit/94be138efc09b3eb881436eb07be54af0460fb45))
+- **pptx:** Move paragraph and run style scope into core ([3ba3c32](https://github.com/ChristopherVR/ooxml/commit/3ba3c321af80efed2da4c6d58a377070c59b7c07))
+- **pptx:** Move paragraph geometry cascade into core ([2dfc204](https://github.com/ChristopherVR/ooxml/commit/2dfc204f3ae6a84fed476073b3aefae261ab8d6b))
+
+### Testing
+
+- **pptx:** Restore React translation state between files ([8994960](https://github.com/ChristopherVR/ooxml/commit/899496055fad208de2f65b96ab628d38b064bdcf))
+- **ui:** Clear the text selection between test files ([abb829f](https://github.com/ChristopherVR/ooxml/commit/abb829f2e3a4e6ff0a99a9023012d1d3ad0d8b51))
+- **pptx:** Isolate the raw-key inspector test and widen a perf margin ([e66aaec](https://github.com/ChristopherVR/ooxml/commit/e66aaec24adc0b68472eae1fc42aa4598e09c352))
+- **pptx:** Verify snapshot paste in vue and svelte sorters ([bf6a4b8](https://github.com/ChristopherVR/ooxml/commit/bf6a4b887f5e6d94e695188fb055624c19888c22))
+- **vue:** Release shared automatic unmount registration ([ff89905](https://github.com/ChristopherVR/ooxml/commit/ff89905e77f19b0d91b6184ddbaeaf17c3a49136))
+- **pptx:** Update angular and vanilla sorter expectations ([036e64c](https://github.com/ChristopherVR/ooxml/commit/036e64c20671b0d2ecae675fed5232a32719848d))
+- **angular:** Verify shared search and snapshot paste behavior ([fc8e4c3](https://github.com/ChristopherVR/ooxml/commit/fc8e4c3ae4ed53931b71f08ef9e80c5993c84222))
+- **pptx:** Cover svelte paste and handler adoption contracts ([1617a9f](https://github.com/ChristopherVR/ooxml/commit/1617a9faf769dd355d13873ca1f0557cf0a3d4a0))
+
+### Dependencies
+
+- **deps:** Update production dependencies ([bbd7b53](https://github.com/ChristopherVR/ooxml/commit/bbd7b530c7a15ae48c0c0a2ff4ea7dcdfe2aa9d3))
+- **deps:** Bump the angular group with 7 updates ([#57](https://github.com/ChristopherVR/ooxml/issues/57)) ([7d7881b](https://github.com/ChristopherVR/ooxml/commit/7d7881bfd9615f32b32fbd5c856402926498a492))
+
+### Chores
+
+- **deps-dev:** Bump the development-minor-and-patch group across 1 directory with 3 updates ([#60](https://github.com/ChristopherVR/ooxml/issues/60)) ([630adbb](https://github.com/ChristopherVR/ooxml/commit/630adbb3aa8d0a22007233ae64b999edf559115c))
+
+## 2026-10-11
+
+_Releases: pptx-viewer-core@4.13.5, pptx-viewer-mcp@2.8.5, @christophervr/pptx-viewer@2.41.6, pptx-react-viewer@4.33.1, pptx-vue-viewer@4.33.1, pptx-angular-viewer@4.33.1, pptx-svelte-viewer@4.33.1, pptx-vanilla-viewer@3.33.1_
+
+### Bug Fixes
+
+- **angular:** Apply gallery picks by id, not through the memoized descriptor ([43c0c76](https://github.com/ChristopherVR/ooxml/commit/43c0c7602a824b4fb94b4ac5e162df149f3c16db))
+
+### Testing
+
+- **pptx:** Wait for the hyperlink deck to load as svelte does ([01d7206](https://github.com/ChristopherVR/ooxml/commit/01d72066f9ab3fce3433426a19e8c337624e087f))
+- **pptx:** Share workers across the binding package unit tests ([d51469c](https://github.com/ChristopherVR/ooxml/commit/d51469cc709e145007222ef0510a19bedbf08728))
+- **ui:** Keep each DOM environment and test state in its own worker ([6d52bec](https://github.com/ChristopherVR/ooxml/commit/6d52bec41343129aa621e11e173fe3c706e82b6e))
+- **pptx:** Find the angular img tag whatever the template formatting ([fca83d0](https://github.com/ChristopherVR/ooxml/commit/fca83d070c7627dbd2b075d07f8fd92e75808383))
+
+### Styling
+
+- **pptx:** Format the pptx viewer with its own oxfmt configuration ([7ca9f51](https://github.com/ChristopherVR/ooxml/commit/7ca9f51be7d0926e28cc5913792cfc1c966c0d35))
+- Fix the oxfmt and oxlint warnings in the viewers ([db0314f](https://github.com/ChristopherVR/ooxml/commit/db0314f319e3d0508960872260792215477d9ca5))
+
+### Dependencies
+
+- **deps:** Bump the production-minor-and-patch group with 5 updates ([#42](https://github.com/ChristopherVR/ooxml/issues/42)) ([fda493e](https://github.com/ChristopherVR/ooxml/commit/fda493e2697908c477ce845019d9c2fe8b591ab2))
+
+### Chores
+
+- **deps-dev:** Bump the development-minor-and-patch group across 1 directory with 6 updates ([#43](https://github.com/ChristopherVR/ooxml/issues/43)) ([e3a4861](https://github.com/ChristopherVR/ooxml/commit/e3a4861279b8d2bbf3b869617329eddb953b7838))
+
+## 2026-10-10
+
+_Releases: pptx-react-viewer@4.33.0, pptx-react-viewer@4.32.0, pptx-vue-viewer@4.33.0, pptx-vue-viewer@4.32.0, pptx-angular-viewer@4.33.0, pptx-angular-viewer@4.32.0, pptx-svelte-viewer@4.33.0, pptx-svelte-viewer@4.32.0, pptx-vanilla-viewer@3.33.0, pptx-vanilla-viewer@3.32.0_
+
+### Features
+
+- **color:** Add the Office theme colour palette to the color area ([646b6b5](https://github.com/ChristopherVR/ooxml/commit/646b6b532a304013f0c8783801ab3401de8a1950))
+- **pptx:** Add host ribbon tabs to all five PowerPoint bindings ([2089f62](https://github.com/ChristopherVR/ooxml/commit/2089f620d736c867dbd383f2fe4dd39eff7e6cc3))
+- **text:** Add the fonts' design advance widths, regular and bold ([15f7eeb](https://github.com/ChristopherVR/ooxml/commit/15f7eebb692c4cf43d8febdd49070e583daef22a))
+- **visio:** Pick theme colours that follow the page theme ([d29c9c7](https://github.com/ChristopherVR/ooxml/commit/d29c9c7b8ae343821db3461ca55af2283d6a19ef))
+- **geometry:** Share arrow-key nudges and Shift angle snapping ([a839871](https://github.com/ChristopherVR/ooxml/commit/a8398713b97bcc9a193e6bd85aba51c55066eba8))
+
+### Bug Fixes
+
+- **pptx:** Verify certificate chains with node:crypto, not node-forge ([51e6312](https://github.com/ChristopherVR/ooxml/commit/51e6312aa152a47ac11a6beced49b373adf0fb68))
+- **pptx:** Keep the browser's image drag out of picture moves ([817a36a](https://github.com/ChristopherVR/ooxml/commit/817a36a1eae21a48e149ee5459597577dd2cdf22))
+
+### Refactor
+
+- **geometry:** Move the orthogonal connector router out of pptx ([7628894](https://github.com/ChristopherVR/ooxml/commit/7628894c847d098846b7250e8cf7cfee0b8e1ecd))
+- **ui:** Move Excel and Word colour pickers onto the shared grid ([ab332b6](https://github.com/ChristopherVR/ooxml/commit/ab332b6ed7a4b80bc5016de05efb3fad694c85de))
+
+### Testing
+
+- **core:** Fuzz the xml, formula, number format and hyperlink parsers ([c6911a0](https://github.com/ChristopherVR/ooxml/commit/c6911a00f79fb07eab294d885b760452b4bdaf72))
+
+### Styling
+
+- Apply oxfmt to files drifted from the formatter ([daeabf2](https://github.com/ChristopherVR/ooxml/commit/daeabf26125af866f90359ac8a5716234d5b8b36))
+
+### Dependencies
+
+- **deps:** Bump the production-minor-and-patch group with 5 updates ([#42](https://github.com/ChristopherVR/ooxml/issues/42)) ([fda493e](https://github.com/ChristopherVR/ooxml/commit/fda493e2697908c477ce845019d9c2fe8b591ab2))
+
+### Chores
+
+- **deps-dev:** Bump the development-minor-and-patch group across 1 directory with 6 updates ([#43](https://github.com/ChristopherVR/ooxml/issues/43)) ([e3a4861](https://github.com/ChristopherVR/ooxml/commit/e3a4861279b8d2bbf3b869617329eddb953b7838))
+
+## 2026-10-09
+
+_Releases: pptx-viewer-mcp@2.8.4, pptx-react-viewer@4.31.1, pptx-react-viewer@4.31.0, pptx-vue-viewer@4.31.1, pptx-vue-viewer@4.31.0, pptx-angular-viewer@4.31.1, pptx-angular-viewer@4.31.0, pptx-svelte-viewer@4.31.1, pptx-svelte-viewer@4.31.0, pptx-vanilla-viewer@3.31.1, pptx-vanilla-viewer@3.31.0_
+
+### Features
+
+- **visio:** Add change case and format painter commands ([85440e1](https://github.com/ChristopherVR/ooxml/commit/85440e1b6a88608c297de91157648a057dda0102))
+- **visio:** Add page themes and glow, soft edge and reflection effects ([709bd22](https://github.com/ChristopherVR/ooxml/commit/709bd2287e86a689eff8cb3b674f95f6da755d00))
+- **visio:** Add re-layout, auto align, layer assignment and guide edits ([c4c9cb2](https://github.com/ChristopherVR/ooxml/commit/c4c9cb2dec0579c595fc0d6be0787fd1da4e8cd6))
+
+### Bug Fixes
+
+- **pptx:** Paint the outline gradient of chart line series ([#41](https://github.com/ChristopherVR/ooxml/issues/41)) ([158d44b](https://github.com/ChristopherVR/ooxml/commit/158d44bd79582591697e9d6ef8ccc5311dc6d1f4))
+- **pptx:** Save the size of empty table cell paragraphs ([5f73df1](https://github.com/ChristopherVR/ooxml/commit/5f73df19e7c77690d55cc1c33f1792d76d18851a))
+- **pptx:** Follow slide links outside slide shows ([#38](https://github.com/ChristopherVR/ooxml/issues/38)) ([f3e99cb](https://github.com/ChristopherVR/ooxml/commit/f3e99cb2d4faaefbfbb8e8c3a130744665f9be3c))
+
+### Testing
+
+- **react:** Expect line-height 0 on exactly spaced table cell runs ([094ff1a](https://github.com/ChristopherVR/ooxml/commit/094ff1a1b06a7887c6762b00b007f451a9ba848e))
+
+### Dependencies
+
+- **deps:** Bump the production-minor-and-patch group with 5 updates ([#42](https://github.com/ChristopherVR/ooxml/issues/42)) ([fda493e](https://github.com/ChristopherVR/ooxml/commit/fda493e2697908c477ce845019d9c2fe8b591ab2))
+
+## 2026-10-08
+
+_Releases: pptx-viewer-core@4.13.4, pptx-viewer-core@4.13.3, pptx-viewer-mcp@2.8.3, pptx-viewer-mcp@2.8.2, @christophervr/pptx-viewer@2.41.5, pptx-react-viewer@4.30.3, pptx-react-viewer@4.30.2, pptx-react-viewer@4.30.1, pptx-react-viewer@4.30.0, pptx-react-viewer@4.29.0, pptx-vue-viewer@4.30.3, pptx-vue-viewer@4.30.2, pptx-vue-viewer@4.30.1, pptx-vue-viewer@4.30.0, pptx-vue-viewer@4.29.0, pptx-angular-viewer@4.30.3, pptx-angular-viewer@4.30.2, pptx-angular-viewer@4.30.1, pptx-angular-viewer@4.30.0, pptx-angular-viewer@4.29.0, pptx-svelte-viewer@4.30.3, pptx-svelte-viewer@4.30.2, pptx-svelte-viewer@4.30.1, pptx-svelte-viewer@4.30.0, pptx-svelte-viewer@4.29.0, pptx-vanilla-viewer@3.30.3, pptx-vanilla-viewer@3.30.2, pptx-vanilla-viewer@3.30.1, pptx-vanilla-viewer@3.30.0, pptx-vanilla-viewer@3.29.0_
+
+### Features
+
+- **chart:** Add the neutral chartSpace model ([2544c31](https://github.com/ChristopherVR/ooxml/commit/2544c31319b5cc723b26a2c37b519719693f62b8))
+- **chart:** Parse chart parts from the shared DOM ([49c1b76](https://github.com/ChristopherVR/ooxml/commit/49c1b76e41b5fac972c52a5d8169e9ad14478cfd))
+- **opc:** Patch property parts in place and model app statistics ([66c4cf1](https://github.com/ChristopherVR/ooxml/commit/66c4cf1043d73a6df05131d813cbae7f5af6e35e))
+- **chart:** Write chartSpace parts from the neutral model ([bf6920f](https://github.com/ChristopherVR/ooxml/commit/bf6920fb553ff32c32c3edf9bff652cad3bd71ac))
+- **chart:** Accept text bodies given as XML and drop invalid characters ([816830f](https://github.com/ChristopherVR/ooxml/commit/816830fa29a42491d72b835a9b6eb7b5a617f234))
+- **chart:** Render chartSpace parts to svg ([eb2c12f](https://github.com/ChristopherVR/ooxml/commit/eb2c12f877c0f4c7521a9d71e323120fb9084ca6))
+- **chart:** Model display units, data tables and walls ([b95531a](https://github.com/ChristopherVR/ooxml/commit/b95531a3ff55f09c83676291c4b4857d1943189c))
+- **ui:** Add showCompatibilityToasts root option ([992adda](https://github.com/ChristopherVR/ooxml/commit/992adda597325f8d2c9ca5fcbf612ac4da1b65c0))
+- **opc:** Support shared suite files and embedded editing ([41614b1](https://github.com/ChristopherVR/ooxml/commit/41614b10ef62522fe2dceae695b478b53cca293a))
+- **xlsx:** Render imported manual legend layouts ([5173750](https://github.com/ChristopherVR/ooxml/commit/5173750a97a560e50d408d3f2f39df6d162d78d5))
+
+### Bug Fixes
+
+- **ci:** Recover unpublished releases and validate manifests ([ae190df](https://github.com/ChristopherVR/ooxml/commit/ae190df2352283303858719fe1db5e58b86903fb))
+- **ui:** Keep table resize handles off merged cells ([e8b99ee](https://github.com/ChristopherVR/ooxml/commit/e8b99ee588ecd856fd4f201a96262c4a62637aef))
+- **pptx:** Write cell properties into an empty a:tcPr ([22e8a3b](https://github.com/ChristopherVR/ooxml/commit/22e8a3b9661b4dada517df5d24d47e8eb3fa94e9))
+- **pptx:** Place share in the ribbon tab row ([8efe00e](https://github.com/ChristopherVR/ooxml/commit/8efe00e3b889e2565c7256bbac6c28ceb2787e2b))
+- **ui:** Keep thin pptx strokes at least one device pixel on screen ([bb1df44](https://github.com/ChristopherVR/ooxml/commit/bb1df4463b9321ce6b57214037ac938bb1d33296))
+- **pptx:** Keep unedited empty table cells free of a:tcPr ([01d4f3d](https://github.com/ChristopherVR/ooxml/commit/01d4f3d36d5acd4fb795b4f33018efa0e3482b06))
+- **pptx:** Default an absent c:gapWidth to 150 ([e16f565](https://github.com/ChristopherVR/ooxml/commit/e16f5651541cfbba9b7a1280e58463c041e507d9))
+- **chart:** Paint coincident linear stops as the native one-step ramp ([eabbc5e](https://github.com/ChristopherVR/ooxml/commit/eabbc5e3dc968f0d40246293238ef88ae7b004f4))
+- **pptx:** List line breaks in slide titles as spaces in app.xml ([45f496a](https://github.com/ChristopherVR/ooxml/commit/45f496ab747f90f7b8764a295c8d0df8414141c0))
+- **pptx:** Export the neutral SmartArt type names from the public entry ([0f081d2](https://github.com/ChristopherVR/ooxml/commit/0f081d260fbaf034129114fcba6137c900dbf846))
+- **chart:** Read the line chart group's own c:smooth ([a5cfd0d](https://github.com/ChristopherVR/ooxml/commit/a5cfd0d45af11e2b2214a9abdc86ce33ba5312be))
+- **ui:** Map chart style numbers to the palettes office uses ([c16145d](https://github.com/ChristopherVR/ooxml/commit/c16145de0c649e401259f25a0cacc06a3f5c409d))
+- **pptx:** Read chart style numbers from the mc:Fallback ([045faf7](https://github.com/ChristopherVR/ooxml/commit/045faf71cadf05f1c9bc4b3155003abe9520b764))
+- **pptx:** Treat a bare data-label switch as on ([637f938](https://github.com/ChristopherVR/ooxml/commit/637f938814baced0d2f72aeca7142e2281db0ca3))
+- **pptx:** Declare c15 and c16 prefixes in chart extension writers ([7b93a01](https://github.com/ChristopherVR/ooxml/commit/7b93a010a77c1ef8433f75fc8d2f3ad810659c75))
+- **pptx:** Repair chart parts this library once saved with undeclared prefixes ([a5f77af](https://github.com/ChristopherVR/ooxml/commit/a5f77af3bf0a2661af35091da920ca707e4fcb96))
+- **pptx:** Paint chart label fonts in every binding ([13493fc](https://github.com/ChristopherVR/ooxml/commit/13493fc180d39cb2622d5f22fd331a9e0abbb781))
+- **pptx:** Build chart style palettes over the deck theme ([7ab9527](https://github.com/ChristopherVR/ooxml/commit/7ab9527743dbb1dc1438d2d3e6e73553b13e54b7))
+- **pptx:** Read each table cell paragraph's own layout ([bcc61f3](https://github.com/ChristopherVR/ooxml/commit/bcc61f3b3e98564e50d018a4a37576f3b237fb57))
+- **pptx:** Lay out table cell paragraphs with their own spacing ([c3db7c5](https://github.com/ChristopherVR/ooxml/commit/c3db7c57596d8f31e24b2d556ed1eea8dddad90a))
+- **pptx:** Save each table cell paragraph's own alignment ([0d43f35](https://github.com/ChristopherVR/ooxml/commit/0d43f3530d5cefd52b98193be98329b4ec66547b))
+- **pptx:** Align every paragraph when a table cell is aligned ([1bb7e7d](https://github.com/ChristopherVR/ooxml/commit/1bb7e7de568a0d8a6808862fd6dc4367782e9686))
+- **pptx:** Skip chart axis lines and gridlines set to no line ([c6a9fcb](https://github.com/ChristopherVR/ooxml/commit/c6a9fcb0fb07498acf6db64d9ee9417339a6f2ac))
+- **pptx:** Apply a table cell run's character spacing ([6d1ee14](https://github.com/ChristopherVR/ooxml/commit/6d1ee148cbd0ea058ae032a7a3b8fe9cdace1ce1))
+- **pptx:** Size an empty table cell from its end paragraph properties ([30da656](https://github.com/ChristopherVR/ooxml/commit/30da656aa60039fff3c912c20cd286dc49055adf))
+- **ui:** Keep a folded ribbon group open for popup buttons ([88a9d78](https://github.com/ChristopherVR/ooxml/commit/88a9d78d5f3188c5b725d9c5baa0cd6568c954e2))
+- **pptx:** Emit valid declarations for pptx-vanilla-viewer exports ([1a4aef2](https://github.com/ChristopherVR/ooxml/commit/1a4aef2240c68b6da32e0739e5b0d3ccc16287ed))
+
+### Performance
+
+- **xml:** Add a lightweight reader for large plain fragments ([5e0318f](https://github.com/ChristopherVR/ooxml/commit/5e0318facba5e0766dd6d1f26172eb94177fe471))
+
+### Refactor
+
+- **pptx:** Share the chart XML presence check for a:noFill ([ad7bae0](https://github.com/ChristopherVR/ooxml/commit/ad7bae0ea91758a2e7dcb581c2f472da394e5eb4))
+- **pptx:** Compile the ui helpers under the strict project ([edbff0a](https://github.com/ChristopherVR/ooxml/commit/edbff0a3fd1863efa394da6c9fe826514fda5f7c))
+- **chart:** Use the Drawing type names ([76bf49c](https://github.com/ChristopherVR/ooxml/commit/76bf49c0a96519816c79375eed1aa9ead84f8b10))
+- **diagram:** Add the neutral SmartArt model types ([b8f4e74](https://github.com/ChristopherVR/ooxml/commit/b8f4e7406362570e085c701dd1e342d534fcc048))
+- **geometry:** Move the preset shape evaluator out of pptx ([c670910](https://github.com/ChristopherVR/ooxml/commit/c670910349b7f6d6d02c335a551518265efde6a9))
+- **diagram:** Move the layout engine out of pptx ([91767c0](https://github.com/ChristopherVR/ooxml/commit/91767c03d4ec9fb2225c47eddd0adc850f187022))
+- **pptx:** Update document properties through opc/properties ([a295f6a](https://github.com/ChristopherVR/ooxml/commit/a295f6a2182eb344e6c9e9a6fe70ba5366268b9c))
+- **diagram:** Port the dgm:choose walkers to ordered XML ([2dfc037](https://github.com/ChristopherVR/ooxml/commit/2dfc0371bb0d4b72e5a3ef4b4cb71bd1a5cb7f81))
+- **diagram:** Move the SmartArt constraint solver into diagram ([bd91ad8](https://github.com/ChristopherVR/ooxml/commit/bd91ad884cf00947957b9620309c885df21d6985))
+- **diagram:** Move the SmartArt interpreter model into diagram ([b24d320](https://github.com/ChristopherVR/ooxml/commit/b24d3200af42eda7c1d7fcc7dcf592202e2fc0f8))
+- **chart:** Move the svg painter into the chart area ([0f9169d](https://github.com/ChristopherVR/ooxml/commit/0f9169d11c5bf92342bc291fdb3f8ef8d84927c5))
+- **pptx:** Build chart models from the neutral parser ([1e38985](https://github.com/ChristopherVR/ooxml/commit/1e389856ae308843d0d86c83b41f6a62284ef1d2))
+- **pptx:** Delete the legacy object-tree chart parser ([b4f0f4f](https://github.com/ChristopherVR/ooxml/commit/b4f0f4f8af4b2eefe49749f5b3c1b1ee7492dba9))
+- **diagram:** Move the SmartArt hierarchy arranger into diagram ([989744c](https://github.com/ChristopherVR/ooxml/commit/989744c5a2ed121eda9b2b11a37815e295c14740))
+- **diagram:** Move the SmartArt layout interpreters into diagram ([3725b73](https://github.com/ChristopherVR/ooxml/commit/3725b7359b5d845012fa7b84b3cddc421446cfbd))
+
+### Documentation
+
+- Refresh the readmes with webp images and the office suite ([6a800d0](https://github.com/ChristopherVR/ooxml/commit/6a800d062bc911d6c4ea682bdbffa7fc437d1556))
+
+### Testing
+
+- **pptx:** Accept the released core 1.x automation range ([d9ef4e0](https://github.com/ChristopherVR/ooxml/commit/d9ef4e0755aea625bc203cce5a1f03cfae921c8f))
+- **pptx:** Compare chart parts with the neutral parser on every deck ([58b16be](https://github.com/ChristopherVR/ooxml/commit/58b16be72bdcf27e291ff5b9bebc139db9cd3607))
+
+### Styling
+
+- **pptx:** Format the declaration export-list guard ([85a73e4](https://github.com/ChristopherVR/ooxml/commit/85a73e48ab351d518e3adc9187ba222cc21ffb13))
+
+### Chores
+
+- **pptx:** Require ooxml-ui 1.3.0 for the ribbon actions ([4c6ace1](https://github.com/ChristopherVR/ooxml/commit/4c6ace1cef8e237c77e1ff2b825b2d86b3fee083))
+
+## 2026-10-07
+
+_Releases: pptx-viewer-core@4.13.2, pptx-viewer-core@4.13.1, pptx-viewer-core@4.13.0, pptx-viewer-mcp@2.8.1, pptx-viewer-mcp@2.8.0, pptx-react-viewer@4.28.0, pptx-react-viewer@4.27.0, pptx-react-viewer@4.26.0, pptx-vue-viewer@4.28.0, pptx-vue-viewer@4.27.0, pptx-vue-viewer@4.26.0, pptx-angular-viewer@4.28.0, pptx-angular-viewer@4.27.0, pptx-angular-viewer@4.26.0, pptx-svelte-viewer@4.28.0, pptx-svelte-viewer@4.27.0, pptx-svelte-viewer@4.26.0, pptx-vanilla-viewer@3.28.0, pptx-vanilla-viewer@3.27.0, pptx-vanilla-viewer@3.26.0_
+
+### Features
+
+- **shared:** Offer PowerPoint's built-in SmartArt layouts in every binding ([29100c4](https://github.com/ChristopherVR/ooxml/commit/29100c431c61983400e5af19ffd7d85ec2653463))
+- **pptx:** Migrate shared renderer and editing into core and ui ([ba4cd0d](https://github.com/ChristopherVR/ooxml/commit/ba4cd0dc64707ed32d4386c14b80b0ad8a50300a))
+- **xlsx:** Author chart series gradients with shared controls ([a932dbd](https://github.com/ChristopherVR/ooxml/commit/a932dbd724eb5bcf6f34473bd5e6f1fc80c07849))
+- **xlsx:** Edit gradient stop brightness with shared color logic ([a49baa4](https://github.com/ChristopherVR/ooxml/commit/a49baa4d275182dd89bb3bd61fd5b7c9e2e719db))
+- **xlsx:** Add native named gradient preset gallery ([47ec692](https://github.com/ChristopherVR/ooxml/commit/47ec69208803df71d035ba191653134ec475ff26))
+- **xlsx:** Add rectangular gradient geometry controls ([e10c21a](https://github.com/ChristopherVR/ooxml/commit/e10c21a08bf6fdc3238504d7434db3f0b2a8b68f))
+- **xlsx:** Author radial and path fills on chart series ([2d3652a](https://github.com/ChristopherVR/ooxml/commit/2d3652ad10b2422302dbe457bb6899f2e56cb7bb))
+- **xlsx:** Format chart and plot background fills ([9237f7f](https://github.com/ChristopherVR/ooxml/commit/9237f7f2ec5851088a28d2af5ca82d02806f5438))
+- **visio:** Rotate shapes with shared pointer geometry ([407fa61](https://github.com/ChristopherVR/ooxml/commit/407fa614c7f919052d44d9e31f7abfbcfe6df50d))
+- **xlsx:** Render and preserve mixed chart title text ([4f3f87e](https://github.com/ChristopherVR/ooxml/commit/4f3f87ea6eff2802393f24448a1b48931282d012))
+- **xlsx:** Render and preserve chart title paragraph spacing ([4f0d619](https://github.com/ChristopherVR/ooxml/commit/4f0d6198d90ab3befbfa6b9806965f01492bce45))
+- **xlsx:** Wrap chart titles with shared text flow ([14a33ed](https://github.com/ChristopherVR/ooxml/commit/14a33ed2ee58f8469e5d24a0a36923a3922f23c4))
+- **pptx:** Move snapshots and cached drawing bounds into core ([f13d837](https://github.com/ChristopherVR/ooxml/commit/f13d83743ce937b5b8c5c66d0abc130d78da8dbb))
+- **chart:** Share Office chart color palettes ([bd436dd](https://github.com/ChristopherVR/ooxml/commit/bd436dd9dc392805f84a2c483c67f09e424b2e5d))
+- **visio:** Preserve page hatch orientation and tile phase ([8b13665](https://github.com/ChristopherVR/ooxml/commit/8b13665ad715f703a983938b47c6b82ba87a6aee))
+- **xlsx:** Add shared Change Colors gallery and native palette edits ([c0e42f0](https://github.com/ChristopherVR/ooxml/commit/c0e42f0b611371ffef7334fa950db5ce9a98cbdd))
+- **chart:** Share native chart style definitions ([f8a6c9e](https://github.com/ChristopherVR/ooxml/commit/f8a6c9eecc12432d91de025b355f8ab1e1e1a673))
+- **xlsx:** Render imported native chart appearance ([c14f42d](https://github.com/ChristopherVR/ooxml/commit/c14f42d99db1aad93ff522a4436aab29606d52d6))
+- **xlsx:** Preserve and render native chart series gradients ([50a9288](https://github.com/ChristopherVR/ooxml/commit/50a928804960c1ab373498a78ef3aab66ff5fbca))
+- **xlsx:** Render imported native chart shadows ([ab83de0](https://github.com/ChristopherVR/ooxml/commit/ab83de0bc39002955cf915922d4b027f13da760e))
+- **xlsx:** Honor native chart gap width and overlap ([42b7d63](https://github.com/ChristopherVR/ooxml/commit/42b7d63d9bd025ca0113b6f84c9f22ea37a986ab))
+- **xlsx:** Add solid chart fill transparency controls ([60f5c51](https://github.com/ChristopherVR/ooxml/commit/60f5c51fcc46e8edd48d0a25c9189113d7e799b1))
+- **pptx:** Add PowerPoint's built-in SmartArt layout definitions ([9c6cd97](https://github.com/ChristopherVR/ooxml/commit/9c6cd97ba6276a441aadf0d527d3bdc81fabce5e))
+- **pptx:** Apply built-in SmartArt layouts synchronously and save them ([4ddf31c](https://github.com/ChristopherVR/ooxml/commit/4ddf31c5f2f2a1b17e8af411ecd42bee7deaa491))
+- **teams:** Render PowerPoint files with the shared DOM viewer ([eff1672](https://github.com/ChristopherVR/ooxml/commit/eff167219c4ef50759f07e02f0b920095785b693))
+
+### Bug Fixes
+
+- **chart:** Match native scaled linear gradient paint ([8bd1171](https://github.com/ChristopherVR/ooxml/commit/8bd1171809210e886f9a459a5d634b2109ad06e9))
+- **chart:** Paint native rectangular path gradients ([af81015](https://github.com/ChristopherVR/ooxml/commit/af81015bca6823dc505c26c006b2a99eb2e85c8f))
+- **xlsx:** Paint native circular chart backgrounds ([e2bddbf](https://github.com/ChristopherVR/ooxml/commit/e2bddbfdafdfe31792ec9f9e6e5002350e5d2f4f))
+- **xlsx:** Preserve chart axis visibility on export ([da056bb](https://github.com/ChristopherVR/ooxml/commit/da056bb9ebbc70561d63b1dc9e1f558997c0f946))
+- **xlsx:** Preserve direct chart fills on export ([c3b3491](https://github.com/ChristopherVR/ooxml/commit/c3b3491a109720a2e38599b3b5272e9d84964309))
+- **pptx:** Copy owned package parts when duplicating slides ([6940f93](https://github.com/ChristopherVR/ooxml/commit/6940f936cc1f804a498aea941480357ad4236edb))
+- **pptx:** Generate complete native 3d chart axes ([6de35d9](https://github.com/ChristopherVR/ooxml/commit/6de35d96c68b4c7a6118b7bcb2a9ac27fa7f3ecc))
+- **pptx:** Write text properties before paragraph content ([a5fe6e7](https://github.com/ChristopherVR/ooxml/commit/a5fe6e78fe4889804f4a553dcbf4ce4a1c6c92e4))
+- **xlsx:** Preserve native built-in chart text defaults ([f3b9335](https://github.com/ChristopherVR/ooxml/commit/f3b93358bc0fd123c1eb83cfba9237e183ae31e6))
+- **xlsx:** Inherit and preserve chart text formatting ([b292d16](https://github.com/ChristopherVR/ooxml/commit/b292d167b07c6cebaa9168f7a01ab113135d3857))
+- **xlsx:** Align chart title lines with measured font boxes ([8499a58](https://github.com/ChristopherVR/ooxml/commit/8499a584ea11a03cb25517f3d6dad3b16104b375))
+- **pptx:** Project rectangular chart gradients in every binding ([8bc5ee3](https://github.com/ChristopherVR/ooxml/commit/8bc5ee3be9584e37a251ae72701ed9d2d392448f))
+- **ci:** Clear lint errors in chart and drawing checks ([f331e67](https://github.com/ChristopherVR/ooxml/commit/f331e670ca9c52a76e048648e55d0660d925f7c4))
+- **pptx:** Preserve rectangular chart gradient paths ([27c6ddb](https://github.com/ChristopherVR/ooxml/commit/27c6ddbf0b123266a67c794b4bbaa0b7c0d062ef))
+- **pptx:** Retain grid policy until core exports are released ([82e0fd0](https://github.com/ChristopherVR/ooxml/commit/82e0fd07dddee8e06d8576b1ae017fafa939de57))
+- **pptx:** Wrap text in static svg exports ([ece906e](https://github.com/ChristopherVR/ooxml/commit/ece906e50e8e19d41b062453ed0f898ea18abf77))
+- **pptx:** Preserve rich data label formatting when saving ([0cc1c69](https://github.com/ChristopherVR/ooxml/commit/0cc1c694ff9df5c5b88ce165f1d5602e29dd0da0))
+- **pptx:** Finish migrated package dependency wiring ([ab8d12d](https://github.com/ChristopherVR/ooxml/commit/ab8d12dd241c131409a8ddf33548d2ffd92d3fdb))
+- **ci:** Align binding test harnesses with migrated packages ([e47b0e3](https://github.com/ChristopherVR/ooxml/commit/e47b0e3769340fd36ab7c29a88f26bafdb768b4d))
+- **docx:** Preserve tracked run formatting through text edits ([ecfde3c](https://github.com/ChristopherVR/ooxml/commit/ecfde3c526ce16a41246f1ec26b22fe0a1921463))
+- **pptx:** Preserve combo chart formatting and table subscripts ([7518420](https://github.com/ChristopherVR/ooxml/commit/75184207b96f061a557f675ef061c4c9a838393a))
+- **pptx:** Apply PowerPoint table cell spacing and margins ([c5feb77](https://github.com/ChristopherVR/ooxml/commit/c5feb77c3a8e7daec77c2575092e946a3614e5ef))
+- **pptx:** Resolve chart text fonts across runs and scripts ([6d00580](https://github.com/ChristopherVR/ooxml/commit/6d00580398c698e2cf4140ed2f709883b29f475d))
+- **pptx:** Include bullet text runs in paragraph strut sizing ([b10c8cd](https://github.com/ChristopherVR/ooxml/commit/b10c8cd89ae3ed4ee87cf1a38f7892928858bac1))
+- **pptx:** Wrap Korean text at word boundaries ([cfa6b1d](https://github.com/ChristopherVR/ooxml/commit/cfa6b1d9d27b43685b6b5e1a6ef7cf7a63a73229))
+- **shared:** Size SmartArt 3D labels to their text and sharpen them ([79318b6](https://github.com/ChristopherVR/ooxml/commit/79318b60fe12b81612c16de58e1c47584a2af008))
+- **shared:** Draw SmartArt connectors in the 3D view ([5795dcf](https://github.com/ChristopherVR/ooxml/commit/5795dcff0b489e9e79722781d000bba6d9b2f7a7))
+- **ci:** Allow migrated UI sources in viewer tests ([e1283a1](https://github.com/ChristopherVR/ooxml/commit/e1283a1ecb7b57db464f4356be2843b242300837))
+- **ci:** Run vanilla stylesheet generation with Node ([0ce6b61](https://github.com/ChristopherVR/ooxml/commit/0ce6b6146e882458c905fcbdc116bdd020f2ea32))
+- **ci:** Invoke the Node stylesheet build script ([ae040b5](https://github.com/ChristopherVR/ooxml/commit/ae040b587809eaabc2ae682c50c156334493e328))
+
+### Performance
+
+- **pptx:** Share the engine and load metafile conversion lazily ([e00b1d7](https://github.com/ChristopherVR/ooxml/commit/e00b1d748b9adb79dac8579f67db24e75f0a7fe2))
+
+### Refactor
+
+- Remove remaining relative typescript js suffixes ([e567a4a](https://github.com/ChristopherVR/ooxml/commit/e567a4a8a9abdea5b58d88a7dda7814e311787c9))
+- **pptx:** Move chart grid editing policy into core ([0d8e23f](https://github.com/ChristopherVR/ooxml/commit/0d8e23f8cf62ed11d01d9ab0417df12d23b9b213))
+- **crypto:** Share Office GUID generation ([7d4ceeb](https://github.com/ChristopherVR/ooxml/commit/7d4ceeb07fcad2f55eef2cba73514f01af7cc2f3))
+- Use extensionless relative typescript imports ([ef81f39](https://github.com/ChristopherVR/ooxml/commit/ef81f394cd2f275bcc9db87830db24b0adb2ec8b))
+- **pptx:** Share the DOM renderer for embedded viewers ([2e3219c](https://github.com/ChristopherVR/ooxml/commit/2e3219cff733e1f49094806119f3da78a50762ee))
+
+### Testing
+
+- **xlsx:** Measure native linear gradient paint profiles ([ccc4ceb](https://github.com/ChristopherVR/ooxml/commit/ccc4cebc6408a47f73e85ce95262ebe61973deda))
 
 ## 2026-10-06
 
@@ -8282,3 +9924,191 @@ _Releases: pptx-react-viewer@1.2.0, pptx-vue-viewer@1.2.0, pptx-angular-viewer@1
 - Updated action to latest version (by @ChristopherVR) ([6a19377](https://github.com/ChristopherVR/pptx-viewer/commit/6a19377fbaceed3bfdf908eb7a5f3e92a5a81ced))
 - Removed obsolete snapshots and split tests further in pipeline (by @ChristopherVR) ([cb5a1d6](https://github.com/ChristopherVR/pptx-viewer/commit/cb5a1d6a21a41778bb61da8575969cc28a91f5a3))
 - Fix format issue (by @ChristopherVR) ([20f767b](https://github.com/ChristopherVR/pptx-viewer/commit/20f767bed24db2b453d7857f635e3941695aaea2))
+## 2026-07-03
+
+_Releases: @christophervr/pptx-viewer@1.1.46, pptx-react-viewer@1.1.78, pptx-react-viewer@1.1.74, pptx-react-viewer@1.1.73, pptx-vue-viewer@1.1.89, pptx-vue-viewer@1.1.85, pptx-vue-viewer@1.1.83, pptx-vue-viewer@1.1.81, pptx-angular-viewer@1.1.63, pptx-angular-viewer@1.1.59, pptx-angular-viewer@1.1.57_
+
+### Features
+
+- **cli:** Arrow-key colour prompts and PowerPoint-ready scaffolds (by @ChristopherVR) ([8de03c9](https://github.com/ChristopherVR/pptx-viewer/commit/8de03c9da8c8d20e28cca253ff6d7083de65a0d8))
+- Document localization and add demo language pickers (by @ChristopherVR) ([a07ad82](https://github.com/ChristopherVR/pptx-viewer/commit/a07ad8279e906590e0392d19cd1637855012a80e))
+- **vue:** Interoperable presence schema, webrtc transport, granular sync (by @ChristopherVR) ([9b53df5](https://github.com/ChristopherVR/pptx-viewer/commit/9b53df5e9487c5fbb16e78f40f5e746752eb4574))
+
+### Documentation
+
+- Remove completed ROADMAP and PORTING trackers, scrub stale references (by @ChristopherVR) ([8a745a1](https://github.com/ChristopherVR/pptx-viewer/commit/8a745a1d2a1ee3932503d37dd022494ab9cfcc4b))
+
+### Testing
+
+- **vue:** Install a real vue-i18n instance globally for component tests (by @ChristopherVR) ([47edca1](https://github.com/ChristopherVR/pptx-viewer/commit/47edca1d9060ef30899970038510c278716fe23a))
+
+### Dependencies
+
+- **deps:** Declare yjs, y-websocket, and y-webrtc across bindings (by @ChristopherVR) ([27a2849](https://github.com/ChristopherVR/pptx-viewer/commit/27a2849da755a0902296dcd59557c1329a1cbadf))
+
+## 2026-07-02
+
+_Releases: pptx-viewer-core@1.1.43, @christophervr/pptx-viewer@1.1.45, pptx-react-viewer@1.1.71, pptx-react-viewer@1.1.67, pptx-vue-viewer@1.1.80, pptx-vue-viewer@1.1.76, pptx-angular-viewer@1.1.56, pptx-angular-viewer@1.1.52_
+
+### Features
+
+- **cli:** Add interactive @christophervr/pptx-viewer installer (by @ChristopherVR) ([4df680d](https://github.com/ChristopherVR/pptx-viewer/commit/4df680d9791d18e38c0f413420e8e1e5f9f2907e))
+- **shared:** Add canonical i18n translation dictionary (by @ChristopherVR) ([429e386](https://github.com/ChristopherVR/pptx-viewer/commit/429e386c7245fc5cf526ac72481fd5ab23b3e09d))
+- **angular:** Wire ngx-translate, convert hardcoded UI strings to translation keys (by @ChristopherVR) ([33bc42e](https://github.com/ChristopherVR/pptx-viewer/commit/33bc42e0f221a8c8644f1cc80cc314971abc9791))
+
+### Bug Fixes
+
+- **core:** Correct install docs and drop the retired @christophervr/pptx-viewer alias (by @ChristopherVR) ([6544b4e](https://github.com/ChristopherVR/pptx-viewer/commit/6544b4eaf086945ecd8a18b877de5a483032aa14))
+- **core,angular:** Revert xmldom to 0.8.x and fix shared import specifiers (by @ChristopherVR) ([29eda31](https://github.com/ChristopherVR/pptx-viewer/commit/29eda3119836559b63bc08733dd9dd6398a69c8d))
+- **react:** Expose i18n dictionary via pptx-react-viewer, not the private shared package (by @ChristopherVR) ([09f49fe](https://github.com/ChristopherVR/pptx-viewer/commit/09f49fe68aa27d3305294f5896d5f53d3b52a160))
+- **vue:** Expose i18n dictionary via pptx-vue-viewer, not the private shared package (by @ChristopherVR) ([8577907](https://github.com/ChristopherVR/pptx-viewer/commit/8577907cf63af3190853b31e7810f477f394fad2))
+- Format issues (by @ChristopherVR) ([bbf874d](https://github.com/ChristopherVR/pptx-viewer/commit/bbf874dda638932d6a435b28238cd822176d1cd6))
+
+## 2026-06-27
+
+_Releases: pptx-viewer-core@1.1.42, pptx-react-viewer@1.1.64, pptx-vue-viewer@1.1.73, pptx-angular-viewer@1.1.51_
+
+### Bug Fixes
+
+- Missing document links (by @ChristopherVR) ([f52bd6f](https://github.com/ChristopherVR/pptx-viewer/commit/f52bd6fd2fc4f564f018ecf5e84e64d24c8fd240))
+
+## 2026-06-26
+
+_Releases: pptx-react-viewer@1.1.60_
+
+### Features
+
+- **react:** Wire editTemplateMode partition, render layer, and save merge for master/layout editing (by @ChristopherVR) ([c683ab1](https://github.com/ChristopherVR/pptx-viewer/commit/c683ab1ceb0a6942b4bdda87dda7104f2436e1e8))
+
+## 2026-06-25
+
+_Releases: pptx-react-viewer@1.1.55, pptx-react-viewer@1.1.48, pptx-vue-viewer@1.1.60, pptx-vue-viewer@1.1.54, pptx-angular-viewer@1.1.45_
+
+### Refactor
+
+- **shared:** Extract text-rendering pure logic (line-height, warp, effects) (by @ChristopherVR) ([11c8d22](https://github.com/ChristopherVR/pptx-viewer/commit/11c8d22e9910dda9c8dfa18e0f6d7683577c7b9f))
+
+### Other
+
+- **smartart:** Snapshot in-progress SmartArt session work (by @ChristopherVR) ([0cac22f](https://github.com/ChristopherVR/pptx-viewer/commit/0cac22f5b1a0ecc33960f4712ff2ef691beb3f65))
+
+## 2026-06-22
+
+_Releases: pptx-react-viewer@1.1.43_
+
+### Features
+
+- **react:** 3D surface charts on vanilla three; drop @react-three peer deps (by @ChristopherVR) ([a8a1004](https://github.com/ChristopherVR/pptx-viewer/commit/a8a10048169678fa7bf559198d36c9f6023d2be0))
+
+### Documentation
+
+- 3D models/charts need only the single optional `three` peer dep (by @ChristopherVR) ([0b05f85](https://github.com/ChristopherVR/pptx-viewer/commit/0b05f857100cb71eb9db10fdc23dfbafc21dbb5d))
+
+## 2026-06-21
+
+_Releases: pptx-viewer-core@1.1.28, pptx-viewer-core@1.1.27, pptx-viewer-core@1.1.26, pptx-viewer-mcp@1.1.26, pptx-react-viewer@1.1.32, pptx-react-viewer@1.1.31, pptx-react-viewer@1.1.30, pptx-vue-viewer@1.1.33, pptx-vue-viewer@1.1.32, pptx-vue-viewer@1.1.31, pptx-vue-viewer@1.1.30, pptx-angular-viewer@1.1.32, pptx-angular-viewer@1.1.31, pptx-angular-viewer@1.1.30, pptx-angular-viewer@1.1.29_
+
+### Features
+
+- Extracted more shared logic into the shared package (by @ChristopherVR) ([977c608](https://github.com/ChristopherVR/pptx-viewer/commit/977c608ecdb142908b38aaa37104d983275b705b))
+- **shared:** Add Three.js SmartArt 3D model + scene runtime (by @ChristopherVR) ([f949213](https://github.com/ChristopherVR/pptx-viewer/commit/f949213b33ed0dca4c52d5d1ab414c3dba67efe7))
+- **vue:** Opt-in Three.js SmartArt renderer (by @ChristopherVR) ([2d59be3](https://github.com/ChristopherVR/pptx-viewer/commit/2d59be365bee62521b1cfa670f9d5d5468418488))
+- **angular:** Opt-in Three.js SmartArt renderer (by @ChristopherVR) ([be6d858](https://github.com/ChristopherVR/pptx-viewer/commit/be6d85818b4a2f70cf644ee91467fd44dc4506de))
+
+### Bug Fixes
+
+- **angular:** Bundle pptx-viewer-core and fix demo JIT + Vue demo alias (by @ChristopherVR) ([78838ec](https://github.com/ChristopherVR/pptx-viewer/commit/78838ec900fe2d8c90bc39333636d788c52c3161))
+- **angular:** Replace bare file input with styled dropzone in demo (by @ChristopherVR) ([d47a4a5](https://github.com/ChristopherVR/pptx-viewer/commit/d47a4a538c8e7f7cd057ac652b2dbede527d92e3))
+- **vue,ci:** Fix Rolldown build panic and isolate per-framework CI failures (by @ChristopherVR) ([7d282ee](https://github.com/ChristopherVR/pptx-viewer/commit/7d282eeadeb130814dca84996b0434568f2f5e0e))
+
+### Documentation
+
+- Sharpen npm descriptions and keywords for discoverability (by @ChristopherVR) ([8fea56d](https://github.com/ChristopherVR/pptx-viewer/commit/8fea56d7650f7dc2f3167dea97b94b612a03a4e7))
+- **core:** Reword README in plain language (by @ChristopherVR) ([793c26e](https://github.com/ChristopherVR/pptx-viewer/commit/793c26ec7e2415c66f34c637cb541483bf395a11))
+- **react:** Soften jargon in README internals (by @ChristopherVR) ([74c28ec](https://github.com/ChristopherVR/pptx-viewer/commit/74c28ec5519ffd8704fd3c0aa4588ce76861e68b))
+- **vue:** Reword README in plain language (by @ChristopherVR) ([3afac93](https://github.com/ChristopherVR/pptx-viewer/commit/3afac9321206ab492d8cd6d63babc6cedef7292f))
+- **angular:** Reword README in plain language (by @ChristopherVR) ([ba72266](https://github.com/ChristopherVR/pptx-viewer/commit/ba722668b0c4846e86837b2cf255198231ab2631))
+
+### Dependencies
+
+- **deps:** Update dependencies within semver ranges (by @ChristopherVR) ([d472b58](https://github.com/ChristopherVR/pptx-viewer/commit/d472b58dfd47628b5c682bd5f4dc2014ec29b421))
+
+## 2026-06-20
+
+_Releases: pptx-viewer-core@1.1.24, pptx-viewer-mcp@1.1.24, pptx-react-viewer@1.1.24, pptx-vue-viewer@1.1.24, pptx-angular-viewer@1.1.24_
+
+### Features
+
+- **core:** Add signature-node module and shared signature utilities (by @ChristopherVR) ([e7cb263](https://github.com/ChristopherVR/pptx-viewer/commit/e7cb26335f15e633cfc37371f16a6ad210be5e11))
+- **tools:** Scaffold @pptx-viewer/tools package (by @ChristopherVR) ([f34b949](https://github.com/ChristopherVR/pptx-viewer/commit/f34b949e0f6d6460710aa223146399dfbc38a436))
+- **react:** Implement functional Broadcast slide show with Yjs collaboration (by @ChristopherVR) ([67bdc71](https://github.com/ChristopherVR/pptx-viewer/commit/67bdc715f98cada5fa1f1048e6ef4b0582047d1d))
+- **vue:** Add pptx-vue-viewer package + bundled pptx-viewer-shared (by @ChristopherVR) ([1b7a958](https://github.com/ChristopherVR/pptx-viewer/commit/1b7a958ce91792a6d174f174932800bc8ff40ef9))
+- **vue:** Export to PNG/PDF + image & table inspector panels (by @ChristopherVR) ([6e8ca87](https://github.com/ChristopherVR/pptx-viewer/commit/6e8ca8779ee138dba2f17176b8ffffbf837f0110))
+- **vue:** Port React's full Office-style ribbon toolbar (by @ChristopherVR) ([2341157](https://github.com/ChristopherVR/pptx-viewer/commit/23411572fb88ee50c7a3f64d93fc7d365e7ac73f))
+- **angular:** Add pptx-angular-viewer package + demo (by @ChristopherVR) ([81255a9](https://github.com/ChristopherVR/pptx-viewer/commit/81255a9251e855bc51b97c8dc68b55e71e206882))
+- **angular:** PNG + PDF export (html2canvas-pro + jspdf) (by @ChristopherVR) ([e5aec3d](https://github.com/ChristopherVR/pptx-viewer/commit/e5aec3d58b84407629ca84292fe7c3407bd9d87e))
+- **angular:** Wire signatures panel (parts-reading) into the viewer (by @ChristopherVR) ([d11afb9](https://github.com/ChristopherVR/pptx-viewer/commit/d11afb96195c998f9a56a218fa641b8adbf62fb6))
+
+### Bug Fixes
+
+- Enable vitest globals in all packages to fix expectTypeOf errors (by @ChristopherVR) ([6d90d72](https://github.com/ChristopherVR/pptx-viewer/commit/6d90d72ff0107ad0194f9c73ceeb3df244f4cfc6))
+- **test:** Add i18n mocks to react tests and bump versions to 1.2.0 (by @ChristopherVR) ([2c1c962](https://github.com/ChristopherVR/pptx-viewer/commit/2c1c9628714b905b28592493abf02fb270107b65))
+- **deps:** Pin @xmldom/xmldom to 0.8.x in core to fix build (by @ChristopherVR) ([2ed7b2e](https://github.com/ChristopherVR/pptx-viewer/commit/2ed7b2e777d4e740a3e4c9ca7e2b3d6fc2bbd21f))
+- **core:** Declare jszip and fast-xml-parser as runtime dependencies (by @ChristopherVR) ([b6636be](https://github.com/ChristopherVR/pptx-viewer/commit/b6636be972206bb2c6acee0fed05c45b4759fbdc))
+- **tools:** Ship pptx-viewer-core as a dependency so npx installs it (by @ChristopherVR) ([da33db1](https://github.com/ChristopherVR/pptx-viewer/commit/da33db11281f3573dc49defaba7e7404e59bc43f))
+- **deps:** Unblock install after the 1.1.23 version alignment (by @ChristopherVR) ([542a92d](https://github.com/ChristopherVR/pptx-viewer/commit/542a92dcafe2041e8b1c3cb4b371ef0353a470c9))
+- Close security & performance findings from full-codebase review (by @ChristopherVR) ([7edda8a](https://github.com/ChristopherVR/pptx-viewer/commit/7edda8a1860002cc72bd78ca1830949b02dab2c9))
+- **build:** Make all packages build + publish cleanly; align Vue README (by @ChristopherVR) ([7db5de6](https://github.com/ChristopherVR/pptx-viewer/commit/7db5de6a343887fc1a32dd526ae1ab68e1e3e6e0))
+- Format issues (by @ChristopherVR) ([cc84180](https://github.com/ChristopherVR/pptx-viewer/commit/cc84180ed35b273283fb679b667be15d82ef2a55))
+
+### Refactor
+
+- **core:** Consume emf-converter and mtx-decompressor from npm (by @ChristopherVR) ([2f6013d](https://github.com/ChristopherVR/pptx-viewer/commit/2f6013d5b8fab0aef5b32901841d94c0fa886f24))
+- **react:** Consume theme + loader from pptx-viewer-shared (by @ChristopherVR) ([1b93d1f](https://github.com/ChristopherVR/pptx-viewer/commit/1b93d1fccff378b0ac402810a0cbddea46add29c))
+- **react:** Rename package from pptx-viewer to pptx-react-viewer (by @ChristopherVR) ([4cefa50](https://github.com/ChristopherVR/pptx-viewer/commit/4cefa501f38e0b26776607d68800d13738aba449))
+- **react:** Remove em-dashes from code comments and prose (1/2) (by @ChristopherVR) ([863e941](https://github.com/ChristopherVR/pptx-viewer/commit/863e94132c19751d5c7327baa520244c53e7c115))
+- **react:** Remove em-dashes from code comments and prose (2/2) (by @ChristopherVR) ([2544c13](https://github.com/ChristopherVR/pptx-viewer/commit/2544c1361643cb338be87a89d5123a8ac666aada))
+- **vue:** Remove em-dashes from code comments and prose (by @ChristopherVR) ([e306df9](https://github.com/ChristopherVR/pptx-viewer/commit/e306df9ed3d8ee65cc6de6f94ace8789682aa0bb))
+- **angular:** Keep core peer as workspace:\*, resolve at build time (by @ChristopherVR) ([b123ac9](https://github.com/ChristopherVR/pptx-viewer/commit/b123ac99e9611b7f585197d827ba2ac35217997e))
+- **angular:** Remove em-dashes from code comments and prose (by @ChristopherVR) ([0166321](https://github.com/ChristopherVR/pptx-viewer/commit/01663210fd84f60b29c7c6176def02951e3903f3))
+
+### Documentation
+
+- Restructure root README, elevate limitations, fix outdated claims (by @ChristopherVR) ([86dcda9](https://github.com/ChristopherVR/pptx-viewer/commit/86dcda9b5e3129f2223341337055778db574e985))
+- Rewrite limitations with technical explanations and remove inaccurate claims (by @ChristopherVR) ([ac4bc84](https://github.com/ChristopherVR/pptx-viewer/commit/ac4bc84ed9bd03f62e3ae29c35baf3f444a3c0bf))
+- **readme:** Npm-friendly READMEs — hero image, capabilities & install first (by @ChristopherVR) ([c843d19](https://github.com/ChristopherVR/pptx-viewer/commit/c843d1934b846f901bba92e63d2b01f9479594d0))
+- Streamline npm READMEs and add badges, screenshots, demo links (by @ChristopherVR) ([92e980d](https://github.com/ChristopherVR/pptx-viewer/commit/92e980d434900abd223c4d70c6cae19a623f9ca8))
+- **tools:** Make MCP first-class in README and drop em-dashes (by @ChristopherVR) ([89ebd64](https://github.com/ChristopherVR/pptx-viewer/commit/89ebd6453719cf46a4e655dfe689c9d5fae19549))
+- Remove em-dashes and clarify demo link in viewer packages (by @ChristopherVR) ([f52afff](https://github.com/ChristopherVR/pptx-viewer/commit/f52afffd935016b747116a9909c523021b492225))
+- **vue,angular:** Point Try-demo links at per-framework demos (by @ChristopherVR) ([b5e6915](https://github.com/ChristopherVR/pptx-viewer/commit/b5e6915c416075f4f50630d76dfedbc324cde03e))
+
+### Build & CI
+
+- Independent per-package versioning, tags, and changelogs (by @ChristopherVR) ([79595d9](https://github.com/ChristopherVR/pptx-viewer/commit/79595d972d7c4102e8b1e1e3926f439486f76ba1))
+- Add @pptx-viewer/tools to test, release, and publish pipeline (by @ChristopherVR) ([0e2ff95](https://github.com/ChristopherVR/pptx-viewer/commit/0e2ff9579a8ea039d4367d69f13998560ee9313d))
+- **react,vue:** Self-contained, minified, precompressed dist + vue CI (by @ChristopherVR) ([aa28df9](https://github.com/ChristopherVR/pptx-viewer/commit/aa28df916eee064ac502c01be3445e8c84ad37f6))
+- **vue:** Adopt Tailwind 4 pipeline for chrome visual parity with React (by @ChristopherVR) ([451dacc](https://github.com/ChristopherVR/pptx-viewer/commit/451dacc831d41e620749f8403a2183d4e8b853df))
+- **angular:** Adopt Tailwind 4 pipeline for ribbon chrome parity (by @ChristopherVR) ([65cf58f](https://github.com/ChristopherVR/pptx-viewer/commit/65cf58fbcce1fbf3ac0c3ce0f3b49b3c9604d1b1))
+
+### Dependencies
+
+- **deps:** Update all dependencies to latest (by @ChristopherVR) ([e3287c0](https://github.com/ChristopherVR/pptx-viewer/commit/e3287c03ff58b1a1ae103ed32a513468a454a084))
+- **deps:** Bump all workspace manifest floors to latest (by @ChristopherVR) ([890c33d](https://github.com/ChristopherVR/pptx-viewer/commit/890c33d667a39480a69e6a3da893964382993b29))
+- **deps:** Update dependencies and CI actions to latest (by @ChristopherVR) ([b1a84a2](https://github.com/ChristopherVR/pptx-viewer/commit/b1a84a26814bfdb9b5d5ef7dd87aeabc4fa82c04))
+
+### Chores
+
+- Add license files, NOTICE, and package metadata for npm publishing (by @ChristopherVR) ([9464bb8](https://github.com/ChristopherVR/pptx-viewer/commit/9464bb8b91734daf35131d3c7e52e60895fe0a1c))
+- Bump all packages to v1.1.0 and remove remaining MyClawAssist refs (by @ChristopherVR) ([c386511](https://github.com/ChristopherVR/pptx-viewer/commit/c38651150c08011cee5e17e15f7ee8adc0014b80))
+- Bump all packages to 1.x.1 patch versions (by @ChristopherVR) ([c75205a](https://github.com/ChristopherVR/pptx-viewer/commit/c75205a96cc7797d1647ac4705395b7707ac8910))
+- Bump all packages to minor versions for SDK table support (by @ChristopherVR) ([2d4b635](https://github.com/ChristopherVR/pptx-viewer/commit/2d4b6351b0bf328f8a556cf593733fd8ad36c7b5))
+- Bump dependencies to latest and minor-bump packages for parity work (by @ChristopherVR) ([da19fdf](https://github.com/ChristopherVR/pptx-viewer/commit/da19fdf9a4670d274d9973b67aa22d34217b8555))
+- Roll TypeScript back to 5.9.x; quiet new oxlint vitest rules (by @ChristopherVR) ([713c020](https://github.com/ChristopherVR/pptx-viewer/commit/713c020ac2428db0fb1eb6cb30e56b2cff19a80f))
+- Relicense from MIT to Apache-2.0 (by @ChristopherVR) ([e12f926](https://github.com/ChristopherVR/pptx-viewer/commit/e12f9266f02bebbfc218986b617c418fee43a56b))
+- **tools:** Bump @pptx-viewer/tools to v1.1.0 (by @ChristopherVR) ([c15aba6](https://github.com/ChristopherVR/pptx-viewer/commit/c15aba600c5f2a1137acb157b7dab896e659f37c))
+- Rename package to pptx-viewer-mcp and publish to npm (by @ChristopherVR) ([9cb8a25](https://github.com/ChristopherVR/pptx-viewer/commit/9cb8a2567082b9bfdc91efee0b91cf2cbe2aa1c4))
+- Apply linter auto-fixes, template literals, and update gitignore (by @ChristopherVR) ([ce1288e](https://github.com/ChristopherVR/pptx-viewer/commit/ce1288edb1c4572a3bc8b33624cd69086c56d134))
+
+### Other
+
+- **angular:** Tailwind 4 Office ribbon + pt→px font fix (by @ChristopherVR) ([ad5da60](https://github.com/ChristopherVR/pptx-viewer/commit/ad5da60e73c4a6ea780cda94773b4a74dcea9786))
