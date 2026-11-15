@@ -170,7 +170,11 @@ export async function exportSlidesVectorPdf(
 	options.onProgress?.(indexes.length, indexes.length);
 	const bytes = buildVectorPdf(pages, options.title ? { title: options.title } : {});
 	const embedded = new Set(
-		pages.flatMap((page) => [...page.embeddedFonts.values()].map((font) => font.family)),
+		pages.flatMap((page) =>
+			[...page.embeddedFonts.values()]
+				.filter((font) => font !== fonts.textLayer)
+				.map((font) => font.family),
+		),
 	);
 	return {
 		blob: new Blob([bytes], { type: 'application/pdf' }),

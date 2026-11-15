@@ -54,6 +54,8 @@ export const translations: Record<string, string> = {
 		'Le texte dans une couleur que cet export ne peut pas écrire est dessiné comme une image.',
 	'pptx.pdfExport.diagnostic.complexScriptAsPicture':
 		'Le texte de droite à gauche et les écritures qui lient ou combinent des caractères sont dessinés comme des images, avec le texte interrogeable par-dessus.',
+	'pptx.pdfExport.diagnostic.noFontTextAsPicture':
+		'Le texte dont aucune police du fichier ne peut afficher les caractères (par exemple du chinois, du japonais ou du coréen quand la présentation n’incorpore pas de police pour eux) est dessiné comme une image, avec le texte interrogeable par-dessus.',
 	'pptx.pdfExport.diagnostic.slideTooMuchText':
 		'Une diapositive contient plus de texte que cet export n’en lit ; elle est donc dessinée comme une seule image.',
 	'pptx.pdfExport.diagnostic.slideTooManyEffects':

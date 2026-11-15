@@ -21,6 +21,7 @@ export const PDF_PICTURE_CODES = [
 	'verticalTextAsPicture',
 	'textColourAsPicture',
 	'complexScriptAsPicture',
+	'noFontTextAsPicture',
 ] as const;
 
 /** A whole slide is one picture (its text kept searchable). */

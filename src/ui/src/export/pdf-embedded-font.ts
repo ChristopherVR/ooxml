@@ -12,6 +12,10 @@ import {
 	type TrueTypeFont,
 	type TrueTypeSubset,
 } from 'ooxml-core/text';
+import { toUnicodeCMap, type PdfCidFont, type PdfFontParts } from './pdf-cid-font';
+import { PdfTextLayerFont } from './pdf-text-layer-font';
+
+export type { PdfCidFont, PdfFontParts } from './pdf-cid-font';
 
 /** A font file the host supplies for embedding. */
 export interface PdfFontFile {
@@ -23,7 +27,7 @@ export interface PdfFontFile {
 	data: Uint8Array;
 }
 
-export class PdfEmbeddedFont {
+export class PdfEmbeddedFont implements PdfCidFont {
 	readonly #cids = new Map<number, number>();
 	readonly #used: number[] = [];
 	readonly #codes: number[] = [];
@@ -113,58 +117,13 @@ export class PdfEmbeddedFont {
 	}
 }
 
-export interface PdfFontParts {
-	fontFile: Uint8Array;
-	/** Advance per CID in 1/1000 em, starting at CID 0. */
-	widths: number[];
-	toUnicode: string;
-	descriptor: {
-		flags: number;
-		bbox: [number, number, number, number];
-		italicAngle: number;
-		ascent: number;
-		descent: number;
-		capHeight: number;
-		stemV: number;
-	};
-}
-
-const hex4 = (value: number) => value.toString(16).padStart(4, '0');
-const utf16 = (code: number) => {
-	if (code < 0x10000) return hex4(code);
-	const v = code - 0x10000;
-	return hex4(0xd800 + (v >> 10)) + hex4(0xdc00 + (v & 0x3ff));
-};
-
-/** A ToUnicode CMap sending CID `index + 1` to `codes[index]`. */
-function toUnicodeCMap(codes: readonly number[]): string {
-	const lines = [
-		'/CIDInit /ProcSet findresource begin',
-		'12 dict begin',
-		'begincmap',
-		'/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def',
-		'/CMapName /Adobe-Identity-UCS def',
-		'/CMapType 2 def',
-		'1 begincodespacerange',
-		'<0000> <FFFF>',
-		'endcodespacerange',
-	];
-	for (let start = 0; start < codes.length; start += 100) {
-		const chunk = codes.slice(start, start + 100);
-		lines.push(`${chunk.length} beginbfchar`);
-		chunk.forEach((code, index) => lines.push(`<${hex4(start + index + 1)}> <${utf16(code)}>`));
-		lines.push('endbfchar');
-	}
-	lines.push('endcmap', 'CMapName currentdict /CMap defineresource pop', 'end', 'end');
-	return lines.join('\n');
-}
-
 /**
  * The embedded fonts for a document: matched by family and style, with every other font as a
  * fallback for characters the match lacks.
  */
 export class PdfFontSet {
 	readonly fonts: PdfEmbeddedFont[];
+	#textLayer: PdfTextLayerFont | undefined;
 	constructor(files: readonly PdfFontFile[] = []) {
 		this.fonts = files.flatMap((file) => {
 			const font = PdfEmbeddedFont.create(file);
@@ -173,6 +132,14 @@ export class PdfFontSet {
 	}
 	get size(): number {
 		return this.fonts.length;
+	}
+	/**
+	 * The glyphless font of this document's invisible text layer, for text over a picture of it
+	 * that no supplied font can write (one font for every page, created on first use).
+	 */
+	get textLayer(): PdfTextLayerFont {
+		this.#textLayer ??= new PdfTextLayerFont();
+		return this.#textLayer;
 	}
 	/** The best font that has every character of `text`, or `undefined`. */
 	pick(family: string, bold: boolean, italic: boolean, text: string): PdfEmbeddedFont | undefined {

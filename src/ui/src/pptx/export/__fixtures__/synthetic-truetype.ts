@@ -5,7 +5,8 @@
 const be16 = (v: number) => [(v >> 8) & 255, v & 255];
 const be32 = (v: number) => [(v >>> 24) & 255, (v >> 16) & 255, (v >> 8) & 255, v & 255];
 
-export function syntheticTrueType(): Uint8Array {
+/** `extra` maps more characters (code point, glyph 1 to 3; sorted, in the BMP) to the glyphs. */
+export function syntheticTrueType(extra: readonly (readonly [number, number])[] = []): Uint8Array {
 	const simple = [...be16(1), ...be16(0), ...be16(0), ...be16(100), ...be16(100), 0, 0, 0, 0, 0, 0];
 	const pad = (b: number[]) => (b.length % 4 ? [...b, ...Array(4 - (b.length % 4)).fill(0)] : b);
 	const glyphs = [[], pad(simple), pad(simple), []] as number[][];
@@ -35,6 +36,7 @@ export function syntheticTrueType(): Uint8Array {
 	const segments = [
 		[0x20, 0x20, 3 - 0x20],
 		[0x41, 0x42, 1 - 0x41],
+		...extra.map(([code, glyph]) => [code, code, glyph - code] as const),
 		[0xffff, 0xffff, 1],
 	] as const;
 	const sub = [

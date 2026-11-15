@@ -7,6 +7,7 @@
 import type { PdfFontSet } from '../../export/pdf-embedded-font';
 import type { PdfExportDiagnosticCode } from './pdf-export-diagnostics';
 import { cssColor } from './pdf-vector-css';
+import { canWritePdfText } from './pdf-vector-paint';
 import type { Matrix, PdfClip, TextItem } from './pdf-vector-display-list';
 
 /** Scripts whose glyphs need shaping or bidi reordering a PDF text run cannot express. */
@@ -92,10 +93,21 @@ export function measureTextNode(
 ): TextNodeResult {
 	const raw = node.data;
 	if (!raw.trim()) return { items: [], tokens: 0 };
-	if (!/^horizontal/.test(style.writingMode || 'horizontal-tb'))
-		return { items: [], tokens: 0, raster: 'verticalTextAsPicture' };
+	// Vertical text is a picture; its characters are measured one by one for the text layer.
+	const vertical = !/^horizontal/.test(style.writingMode || 'horizontal-tb');
 	const display = applyTextTransform(raw, style.textTransform);
 	const shaping = needsShaping(display);
+	const weight = style.fontWeight;
+	const bold = weight === 'bold' || Number.parseInt(weight, 10) >= 600;
+	const italic = /italic|oblique/.test(style.fontStyle);
+	const family = style.fontFamily;
+	// Characters no supplied or standard font has (CJK in a deck that embeds no font for it) are
+	// drawn as a picture of the browser's rendering, with the text kept as an invisible layer.
+	const noFont =
+		!shaping &&
+		!context.invisible &&
+		!canWritePdfText(display.replace(/\s+/g, ' ').trim(), family, bold, italic, context.fonts);
+	const picture = vertical || shaping || noFont;
 	const color = cssColor(style.getPropertyValue('-webkit-text-fill-color') || style.color);
 	if (color === undefined) return { items: [], tokens: 0, raster: 'textColourAsPicture' };
 	const doc = node.ownerDocument;
@@ -119,7 +131,7 @@ export function measureTextNode(
 		range.setStart(node, start);
 		range.setEnd(node, end);
 		const rects = rectsOf(range);
-		if (rects.length === 1) {
+		if (rects.length === 1 && (!vertical || end - start === 1)) {
 			const r = rects[0]!;
 			tokens.push(token(start, end, r));
 			continue;
@@ -136,10 +148,6 @@ export function measureTextNode(
 	range.detach?.();
 	if (!tokens.length) return { items: [], tokens: words.length };
 	const size = Number.parseFloat(style.fontSize) || 16;
-	const weight = style.fontWeight;
-	const bold = weight === 'bold' || Number.parseInt(weight, 10) >= 600;
-	const italic = /italic|oblique/.test(style.fontStyle);
-	const family = style.fontFamily;
 	const ratio = ascentRatio(family, bold, italic, context.fonts);
 	const decoration = style.textDecorationLine || '';
 	const justify = /justify/.test(style.textAlign);
@@ -173,7 +181,7 @@ export function measureTextNode(
 			color: color ?? { r: 0, g: 0, b: 0, a: 0 },
 			...(decoration.includes('underline') ? { underline: true } : {}),
 			...(decoration.includes('line-through') ? { strike: true } : {}),
-			...(context.invisible || shaping || !color ? { invisible: true } : {}),
+			...(context.invisible || picture || !color ? { invisible: true } : {}),
 		});
 	};
 	let group: Token[] = [];
@@ -181,6 +189,7 @@ export function measureTextNode(
 		const previous = group[group.length - 1];
 		const sameLine =
 			previous &&
+			!vertical &&
 			Math.abs(token.top - previous.top) < Math.max(token.height, previous.height) * 0.5 &&
 			token.left >= previous.right - 1 &&
 			!justify &&
@@ -196,9 +205,13 @@ export function measureTextNode(
 	return {
 		items,
 		tokens: words.length,
-		...(shaping && !context.invisible
+		...(picture && !context.invisible
 			? {
-					raster: 'complexScriptAsPicture' as const,
+					raster: vertical
+						? ('verticalTextAsPicture' as const)
+						: shaping
+							? ('complexScriptAsPicture' as const)
+							: ('noFontTextAsPicture' as const),
 				}
 			: {}),
 	};

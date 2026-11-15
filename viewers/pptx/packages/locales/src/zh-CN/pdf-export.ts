@@ -42,6 +42,8 @@ export const translations: Record<string, string> = {
 	'pptx.pdfExport.diagnostic.textColourAsPicture': '使用此导出无法写入的颜色的文字绘制为图片。',
 	'pptx.pdfExport.diagnostic.complexScriptAsPicture':
 		'从右到左的文字以及连接或组合字符的文字绘制为图片，其上覆盖可搜索文字。',
+	'pptx.pdfExport.diagnostic.noFontTextAsPicture':
+		'文件中没有任何字体可以显示的字符（例如演示文稿未嵌入中文、日文或韩文字体时）绘制为图片，其上覆盖可搜索文字。',
 	'pptx.pdfExport.diagnostic.slideTooMuchText':
 		'某张幻灯片的文字超出此导出可读取的数量，因此绘制为一张图片。',
 	'pptx.pdfExport.diagnostic.slideTooManyEffects':

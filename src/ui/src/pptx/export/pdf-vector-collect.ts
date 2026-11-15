@@ -265,6 +265,8 @@ export async function collectSlide(
 		});
 		children.sort((a, b) => a.z - b.z || a.index - b.index);
 		let shadowDone = false;
+		// One picture of `el` covers all of its text nodes that need one.
+		let textPicture = false;
 		for (const { node } of children) {
 			if (picture) return;
 			if (node.nodeType === 1) {
@@ -297,7 +299,9 @@ export async function collectSlide(
 				return;
 			}
 			if (result.raster) {
-				raster(el, 'subtree', ctx.matrix, boxOf(el), 4, result.raster);
+				if (!textPicture) raster(el, 'subtree', ctx.matrix, boxOf(el), 4, result.raster);
+				else notes.add(result.raster);
+				textPicture = true;
 				items.push(...result.items.map((item) => ({ ...item, invisible: true })));
 			} else items.push(...result.items);
 		}

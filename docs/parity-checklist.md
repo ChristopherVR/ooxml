@@ -502,8 +502,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       (soft edges, blur, glow, shadows, 3-D, blend modes, patterns, complex scripts) are pictures
       of just that element with searchable text kept, a video that has not played prints as its
       poster frame, and the export lists what it approximated
-      (`src/ui/src/pptx/export/pdf-vector-*.ts`). Open: fonts the page cannot read fall back to
-      standard PDF fonts; embedding a deck's own fonts is unit-tested only.
+      (`src/ui/src/pptx/export/pdf-vector-*.ts`). Text no available font has (Chinese, Japanese
+      or Korean in a deck that embeds no font for it) is a picture of the run with an invisible
+      text layer in a glyphless font, counted in the notice, not left out; vertical text keeps
+      the same layer, one character at a time. Open: fonts the page cannot read fall back to
+      standard PDF fonts, so such CJK text is a picture rather than real glyphs (no system or web
+      font is read or downloaded for the PDF); embedding a deck's own fonts is unit-tested only.
 - [x] **P1** Save as PDF says what it approximated: one translated notice counts elements and
       slides saved as pictures, substituted fonts, and slides with content left out or effects
       simplified, with a Details list; all five bindings emit `pdfExportReport`. Export > PDF first

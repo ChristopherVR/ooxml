@@ -3,12 +3,15 @@
  * vector writer: paths, gradient shadings, pictures, inline SVG through the shared converter,
  * and text as real PDF text. Text uses a supplied (embedded, subset) font of the run's family
  * when there is one, else a standard PDF font; each fragment is scaled horizontally to its
- * measured width, so positions follow the slide even where the glyph shapes differ. Pure.
+ * measured width, so positions follow the slide even where the glyph shapes differ. Text no font
+ * can write (drawn as a picture by the collector) is kept as an invisible text layer in a glyphless
+ * font (`pdf-text-layer-font.ts`), so it stays searchable. Pure.
  */
 import type { PdfEmbeddedFont, PdfFontSet } from '../../export/pdf-embedded-font';
 import { encodeWinAnsi, pdfBaseFont, pdfTextWidth } from '../../export/pdf-fonts';
 import { pathOperators, parsePath } from '../../export/pdf-path';
 import { drawSvgSubtree } from '../../export/pdf-svg';
+import { PdfTextLayerFont } from '../../export/pdf-text-layer-font';
 import { PdfVectorPage } from '../../export/pdf-vector';
 import { PdfDiagnosticSet, type PdfExportDiagnostic } from './pdf-export-diagnostics';
 import type { DisplayItem, PdfClip, TextItem } from './pdf-vector-display-list';
@@ -80,15 +83,46 @@ function clipTo(page: PdfVectorPage, clip: PdfClip): void {
 	page.concat([d / det, -b / det, -c / det, a / det, (c * f - d * e) / det, (b * e - a * f) / det]);
 }
 
+/** The fonts one page paints with: the supplied set and the invisible text layer's font. */
+interface PaintFonts {
+	set: PdfFontSet | undefined;
+	textLayer: PdfTextLayerFont;
+}
+
+/** Whether some font (supplied or standard) can write `text` as visible PDF text. */
+export function canWritePdfText(
+	text: string,
+	family: string,
+	bold: boolean,
+	italic: boolean,
+	fonts?: PdfFontSet,
+): boolean {
+	return resolvePdfTextFont(text, family, bold, italic, fonts) !== undefined;
+}
+
+/** `item` as invisible text in the glyphless text-layer font, fitted to its measured width. */
+function paintTextLayer(page: PdfVectorPage, item: TextItem, font: PdfTextLayerFont): void {
+	const natural = font.width(item.text) * item.size;
+	const scale =
+		natural > 0 && item.width > 0 ? Math.min(400, Math.max(25, (item.width / natural) * 100)) : 100;
+	page.embeddedText(font, item.size, item.x, item.baseline, item.text, {
+		scale,
+		invisible: true,
+	});
+}
+
 function paintText(
 	page: PdfVectorPage,
 	item: TextItem,
-	fonts: PdfFontSet | undefined,
+	fonts: PaintFonts,
 	notes: PdfDiagnosticSet,
 ): void {
-	const font = resolvePdfTextFont(item.text, item.family, item.bold, item.italic, fonts);
+	const font = resolvePdfTextFont(item.text, item.family, item.bold, item.italic, fonts.set);
 	if (!font) {
-		notes.add('unsearchableText');
+		// No font has these characters. The collector draws such text as a picture with this
+		// invisible layer over it; visible text that still reaches here is not drawn.
+		if (!item.invisible) notes.add('unsearchableText');
+		paintTextLayer(page, item, fonts.textLayer);
 		return;
 	}
 	// An empty family is the default font; the message says so in the viewer's language.
@@ -125,7 +159,7 @@ function paintText(
 function paintItem(
 	page: PdfVectorPage,
 	item: DisplayItem,
-	fonts: PdfFontSet | undefined,
+	fonts: PaintFonts,
 	notes: PdfDiagnosticSet,
 ): void {
 	page.save();
@@ -173,7 +207,7 @@ function paintItem(
 			break;
 		case 'svg':
 			try {
-				for (const note of drawSvgSubtree(page, item.svg, item.images, fonts, item.alpha))
+				for (const note of drawSvgSubtree(page, item.svg, item.images, fonts.set, item.alpha))
 					notes.add(note);
 			} catch {
 				notes.add('drawingPartMissing');
@@ -197,6 +231,10 @@ export function paintSlide(
 	// The stage clips everything to the slide.
 	page.rect(0, 0, options.canvasWidth, options.canvasHeight);
 	page.op('W n');
-	for (const item of items) paintItem(page, item, options.fonts, notes);
+	const fonts = {
+		set: options.fonts,
+		textLayer: options.fonts?.textLayer ?? new PdfTextLayerFont(),
+	};
+	for (const item of items) paintItem(page, item, fonts, notes);
 	return { page, diagnostics: notes.toArray() };
 }

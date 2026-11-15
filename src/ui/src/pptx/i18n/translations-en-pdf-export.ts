@@ -53,6 +53,8 @@ export const pdfExportTranslationsEn: Record<string, string> = {
 		'Text in a colour this export cannot write is drawn as a picture.',
 	'pptx.pdfExport.diagnostic.complexScriptAsPicture':
 		'Right-to-left text and scripts that join or combine characters are drawn as pictures, with searchable text over them.',
+	'pptx.pdfExport.diagnostic.noFontTextAsPicture':
+		'Text in characters no font in the file can show (such as Chinese, Japanese or Korean when the presentation embeds no font for them) is drawn as a picture, with searchable text over it.',
 	'pptx.pdfExport.diagnostic.slideTooMuchText':
 		'A slide has more text than this export reads, so it is drawn as one picture.',
 	'pptx.pdfExport.diagnostic.slideTooManyEffects':

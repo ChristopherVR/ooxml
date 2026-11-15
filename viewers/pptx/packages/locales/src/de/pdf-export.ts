@@ -50,6 +50,8 @@ export const translations: Record<string, string> = {
 		'Text in einer Farbe, die dieser Export nicht schreiben kann, wird als Bild gezeichnet.',
 	'pptx.pdfExport.diagnostic.complexScriptAsPicture':
 		'Rechts-nach-links-Text und Schriften, die Zeichen verbinden oder kombinieren, werden als Bilder mit durchsuchbarem Text darüber gezeichnet.',
+	'pptx.pdfExport.diagnostic.noFontTextAsPicture':
+		'Text mit Zeichen, die keine Schriftart in der Datei darstellen kann (etwa Chinesisch, Japanisch oder Koreanisch, wenn die Präsentation keine Schriftart dafür einbettet), wird als Bild mit durchsuchbarem Text darüber gezeichnet.',
 	'pptx.pdfExport.diagnostic.slideTooMuchText':
 		'Eine Folie enthält mehr Text, als dieser Export liest, und wird daher als ein Bild gezeichnet.',
 	'pptx.pdfExport.diagnostic.slideTooManyEffects':

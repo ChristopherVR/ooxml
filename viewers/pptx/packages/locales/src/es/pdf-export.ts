@@ -51,6 +51,8 @@ export const translations: Record<string, string> = {
 		'El texto en un color que esta exportación no puede escribir se dibuja como imagen.',
 	'pptx.pdfExport.diagnostic.complexScriptAsPicture':
 		'El texto de derecha a izquierda y los alfabetos que unen o combinan caracteres se dibujan como imágenes, con el texto que se puede buscar encima.',
+	'pptx.pdfExport.diagnostic.noFontTextAsPicture':
+		'El texto con caracteres que ninguna fuente del archivo puede mostrar (como chino, japonés o coreano cuando la presentación no incrusta una fuente para ellos) se dibuja como una imagen, con el texto que se puede buscar encima.',
 	'pptx.pdfExport.diagnostic.slideTooMuchText':
 		'Una diapositiva tiene más texto del que lee esta exportación, así que se dibuja como una sola imagen.',
 	'pptx.pdfExport.diagnostic.slideTooManyEffects':

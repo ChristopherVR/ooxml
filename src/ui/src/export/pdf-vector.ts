@@ -6,7 +6,7 @@
  */
 import { zlibCompress } from 'ooxml-core/opc';
 import { pdfLiteral } from './pdf-fonts';
-import type { PdfEmbeddedFont } from './pdf-embedded-font';
+import type { PdfCidFont } from './pdf-cid-font';
 
 /** Pixel data for one image XObject. `data` is the (optionally compressed) sample stream. */
 export interface PdfImageResource {
@@ -61,7 +61,7 @@ export class PdfVectorPage {
 	readonly fonts = new Map<string, string>();
 	readonly alphas = new Map<string, { fill: number; stroke: number }>();
 	readonly images = new Map<string, PdfImageResource>();
-	readonly embeddedFonts = new Map<string, PdfEmbeddedFont>();
+	readonly embeddedFonts = new Map<string, PdfCidFont>();
 	readonly shadings = new Map<string, PdfShading>();
 	constructor(
 		/** Page size in points. */
@@ -137,7 +137,7 @@ export class PdfVectorPage {
 	 * kerning after each space, since `Tw` does not apply to multi-byte codes.
 	 */
 	embeddedText(
-		font: PdfEmbeddedFont,
+		font: PdfCidFont,
 		size: number,
 		x: number,
 		y: number,
@@ -217,7 +217,7 @@ type StreamWriter = (id: number, dictionary: string, data: Uint8Array, filtered?
 
 /** The five objects of an embedded subset font starting at `id`; returns the next free id. */
 function writeEmbeddedFont(
-	font: PdfEmbeddedFont,
+	font: PdfCidFont,
 	id: number,
 	object: ObjectWriter,
 	stream: StreamWriter,
@@ -275,7 +275,7 @@ export function buildVectorPdf(
 	// 1 catalog, 2 page tree, 3 info; the rest from 4.
 	let next = 4;
 	const fontIds = new Map<string, number>();
-	const embeddedIds = new Map<PdfEmbeddedFont, number>();
+	const embeddedIds = new Map<PdfCidFont, number>();
 	const kids: number[] = [];
 	for (const page of pages) {
 		const xobjects: string[] = [];

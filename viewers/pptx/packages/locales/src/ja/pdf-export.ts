@@ -48,6 +48,8 @@ export const translations = {
 		'このエクスポートで書き出せない色のテキストは画像として描画されます。',
 	'pptx.pdfExport.diagnostic.complexScriptAsPicture':
 		'右から左に書くテキストや、文字を連結または合成する文字体系は画像として描画され、その上に検索可能なテキストが重ねられます。',
+	'pptx.pdfExport.diagnostic.noFontTextAsPicture':
+		'ファイル内のどのフォントでも表示できない文字のテキスト (プレゼンテーションに中国語、日本語、韓国語のフォントが埋め込まれていない場合など) は画像として描画され、その上に検索可能なテキストが重ねられます。',
 	'pptx.pdfExport.diagnostic.slideTooMuchText':
 		'スライドのテキストがこのエクスポートで読み取れる量を超えているため、1 枚の画像として描画されます。',
 	'pptx.pdfExport.diagnostic.slideTooManyEffects':

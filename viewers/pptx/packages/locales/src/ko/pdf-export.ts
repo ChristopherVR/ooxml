@@ -47,6 +47,8 @@ export const translations = {
 		'이 내보내기에서 쓸 수 없는 색의 텍스트는 그림으로 그려집니다.',
 	'pptx.pdfExport.diagnostic.complexScriptAsPicture':
 		'오른쪽에서 왼쪽으로 쓰는 텍스트와 문자를 연결하거나 결합하는 문자 체계는 그림으로 그려지며, 그 위에 검색 가능한 텍스트가 놓입니다.',
+	'pptx.pdfExport.diagnostic.noFontTextAsPicture':
+		'파일의 어떤 글꼴로도 표시할 수 없는 문자의 텍스트(프레젠테이션에 중국어, 일본어, 한국어 글꼴이 포함되어 있지 않은 경우 등)는 그림으로 그려지며, 그 위에 검색 가능한 텍스트가 놓입니다.',
 	'pptx.pdfExport.diagnostic.slideTooMuchText':
 		'슬라이드의 텍스트가 이 내보내기에서 읽을 수 있는 양보다 많아 하나의 그림으로 그려집니다.',
 	'pptx.pdfExport.diagnostic.slideTooManyEffects':
