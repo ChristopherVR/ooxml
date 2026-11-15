@@ -19,6 +19,7 @@ import type { DisplayItem } from './pdf-vector-display-list';
 import { IDENTITY } from './pdf-vector-display-list';
 import { paintSlide } from './pdf-vector-paint';
 import { rasterizeIsolated } from './pdf-vector-raster';
+import { externalFontCache } from './pdf-vector-raster-batch';
 import type { PdfSlideSelection } from './pdf-vector-select';
 import { selectPdfSlides, slidePdfPageSize } from './pdf-vector-select';
 import type { RasterStrategyOptions } from './rasterize-element-strategy';
@@ -95,6 +96,7 @@ export async function exportSlidesVectorPdf(
 	const fonts = new PdfFontSet([...(options.fonts ?? []), ...localFonts]);
 	const W = options.canvasSize.width,
 		H = options.canvasSize.height;
+	const externalFonts = externalFontCache(options.document);
 	const pages = [];
 	const reports: VectorPdfSlideReport[] = [];
 	for (const [done, index] of indexes.entries()) {
@@ -109,6 +111,7 @@ export async function exportSlidesVectorPdf(
 			canvasWidth: W,
 			canvasHeight: H,
 			fonts,
+			externalFonts,
 			...(options.rasterScale ? { rasterScale: options.rasterScale } : {}),
 			...(html2canvasFallback ? { html2canvasFallback } : {}),
 			...(options.ignoreElement ? { ignoreElement: options.ignoreElement } : {}),
@@ -127,6 +130,7 @@ export async function exportSlidesVectorPdf(
 				{
 					scale: ((options.rasterScale ?? 2) * W) / (stage.offsetWidth || W),
 					...(html2canvasFallback ? { html2canvasFallback } : {}),
+					externalFonts,
 				},
 			);
 			items = image

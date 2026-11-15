@@ -509,11 +509,17 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       offers Range (All, Current slide, Slides from-to) and Include hidden slides
       (`export/pdf-export-notice.ts`, `web-components/pdf-export-dialog.ts`). Open: a later clean
       export leaves the previous notice until it is dismissed.
-- [ ] **P1** Save as PDF (vector, the default) is slow on effect-heavy decks: every element drawn
-      as a picture clones and style-inlines the whole slide and rasterises a slide-sized SVG, about
-      0.5 s per picture. A 14-slide deck with about 17 such elements per slide took about 8 s per
-      slide locally (over 3 minutes on CI runners). Build the styled clone once per slide and
-      rasterise only the element's region.
+- [ ] **P1** Save as PDF (vector, the default) is still slow on effect-heavy decks. The styled clone
+      of a slide is now built once and every element picture is cut from it
+      (`export/pdf-vector-raster-batch.ts`, pixel-identical to the one-at-a-time capture), which
+      took the 14-slide test deck (about 17 pictures per slide) from about 10.5 s to 7.5 s per
+      slide locally (109 s to 83 s). What is left is the browser drawing each picture's SVG: about
+      0.4 s each, because every picture still carries every shape on the slide. The capture hides
+      the stage, but shapes whose own `style` says `visibility: visible` stay visible, so each
+      element picture also holds misplaced copies of its neighbours (visible as ghost labels and
+      boxes in that deck's PDF); a capture holding only the element would draw in about 1.4 s per
+      slide. Open: make pictures hold only their element, then check that each picture crops the
+      element's own region (the ghosts sit at about 0.87 of their real position).
 - [ ] **P2** Save as PDF options lack Selection and custom-show ranges, Publish what (handouts,
       notes pages, outline), document properties, accessibility structure tags, PDF/A and
       bitmap-text options; "Save slides as pictures" has no options step and writes every slide.

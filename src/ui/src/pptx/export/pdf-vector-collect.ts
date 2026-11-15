@@ -44,7 +44,8 @@ import {
 import { clipPathData } from './pdf-vector-css';
 import type { DisplayItem, ImageItem, Matrix, PdfClip } from './pdf-vector-display-list';
 import { IDENTITY, multiply } from './pdf-vector-display-list';
-import { rasterizeIsolated, type IsolatedRasterMode } from './pdf-vector-raster';
+import type { IsolatedRasterMode } from './pdf-vector-raster';
+import { rasterizeIsolatedBatch, type IsolatedRasterBatchOptions } from './pdf-vector-raster-batch';
 import { MAX_TEXT_TOKENS, measureTextNode } from './pdf-vector-text';
 import {
 	neutraliseTransforms,
@@ -64,6 +65,8 @@ export interface CollectSlideOptions {
 	ignoreElement?: (element: Element) => boolean;
 	/** The most element pictures per slide before the whole slide is one picture. Default 32. */
 	maxRasters?: number;
+	/** The document's external font CSS, shared by every slide of one export. */
+	externalFonts?: IsolatedRasterBatchOptions['externalFonts'];
 }
 
 export interface CollectedSlide {
@@ -334,21 +337,23 @@ export async function collectSlide(
 			const image = await settleWithin(decodePdfImage(doc, href), IMAGE_TIMEOUT_MS, undefined);
 			if (image) map.set(href, image);
 		}
-	for (const { item, target, mode } of rasters) {
-		const image = await rasterizeIsolated(
-			stage,
+	const images = await rasterizeIsolatedBatch(
+		stage,
+		rasters.map(({ item, target, mode }) => ({
 			target,
 			mode,
-			{ x: item.x / sx, y: item.y / sy, width: item.width / sx, height: item.height / sy },
-			layoutW,
-			layoutH,
-			{
-				scale: (options.rasterScale ?? 2) * sx,
-				...(options.html2canvasFallback
-					? { html2canvasFallback: options.html2canvasFallback }
-					: {}),
-			},
-		);
+			rect: { x: item.x / sx, y: item.y / sy, width: item.width / sx, height: item.height / sy },
+		})),
+		layoutW,
+		layoutH,
+		{
+			scale: (options.rasterScale ?? 2) * sx,
+			...(options.html2canvasFallback ? { html2canvasFallback: options.html2canvasFallback } : {}),
+			...(options.externalFonts ? { externalFonts: options.externalFonts } : {}),
+		},
+	);
+	rasters.forEach(({ item }, i) => {
+		const image = images[i];
 		if (image) {
 			item.image = image;
 			pictures++;
@@ -356,7 +361,7 @@ export async function collectSlide(
 			failed.add(item);
 			notes.add('effectMissing');
 		}
-	}
+	});
 	return {
 		items: items.filter((item) => !failed.has(item)),
 		diagnostics: notes.toArray(),

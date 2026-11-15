@@ -2,7 +2,11 @@ import { settleThreeViews, snapshotThreeViewsIntoClone } from '../three-view/exp
 import { withAuthoredStrokeWidths } from './device-pixel-stroke';
 import { prepareExportClone } from './export-clone';
 import { collectExternalFontFaceCss, collectFontFaceCss } from './foreign-object-font-embed';
-import type { FontStyleDocumentLike, LinkStyleDocumentLike } from './foreign-object-font-embed';
+import type {
+	ExternalFontFaceCssResult,
+	FontStyleDocumentLike,
+	LinkStyleDocumentLike,
+} from './foreign-object-font-embed';
 /**
  * Assemble a self-contained SVG `foreignObject` document from a live slide
  * DOM subtree: the "does not depend on html2canvas's CSS subset" raster
@@ -40,6 +44,11 @@ export interface ForeignObjectSvgBodyOptions {
 	backgroundColor?: string;
 	/** Defaults to `window.getComputedStyle`; injectable for tests. */
 	readComputedStyle?: ComputedStyleReader;
+	/**
+	 * The external font CSS ({@link collectExternalFontFaceCss}), when the caller already
+	 * collected it for several bodies of one document; collected here otherwise.
+	 */
+	externalFonts?: ExternalFontFaceCssResult | Promise<ExternalFontFaceCssResult>;
 }
 
 /** The reusable, size-independent SVG body, plus whether every image embedded cleanly. */
@@ -76,12 +85,40 @@ export async function buildForeignObjectSvgBody(
 	doc: Document & FontStyleDocumentLike & LinkStyleDocumentLike,
 	options: ForeignObjectSvgBodyOptions,
 ): Promise<ForeignObjectSvgBody> {
-	const {
-		width,
-		height,
-		backgroundColor,
-		readComputedStyle = (el) => window.getComputedStyle(el),
-	} = options;
+	const prepared = await prepareForeignObjectClone(element, doc, options);
+	return {
+		bodyMarkup: foreignObjectBodyMarkup(
+			new XMLSerializer().serializeToString(prepared.clone),
+			prepared.fontFaceCss,
+			options,
+		),
+		allEmbedded: prepared.allEmbedded,
+		naturalWidth: options.width,
+		naturalHeight: options.height,
+	};
+}
+
+/** {@link prepareForeignObjectClone}'s result: the styled, self-contained clone, not yet serialised. */
+export interface PreparedForeignObjectClone {
+	/** The detached clone, every computed style inlined and every image embedded. */
+	clone: HTMLElement;
+	/** The `@font-face` CSS the body's `<defs>` carries. */
+	fontFaceCss: string;
+	/** `false` when at least one image or external font could not be inlined as `data:`. */
+	allEmbedded: boolean;
+}
+
+/**
+ * The expensive half of {@link buildForeignObjectSvgBody}: clone `element`, inline every computed
+ * style, embed its images and collect the font CSS. A caller drawing several pictures of one
+ * stage prepares it once and serialises variants of the clone with {@link foreignObjectBodyMarkup}.
+ */
+export async function prepareForeignObjectClone(
+	element: HTMLElement,
+	doc: Document & FontStyleDocumentLike & LinkStyleDocumentLike,
+	options: Pick<ForeignObjectSvgBodyOptions, 'readComputedStyle' | 'externalFonts'> = {},
+): Promise<PreparedForeignObjectClone> {
+	const { readComputedStyle = (el) => window.getComputedStyle(el) } = options;
 
 	// 3D views draw into a shadow-root canvas a clone cannot carry: let them
 	// finish loading, then swap each cloned view for an <img> of its pixels
@@ -100,30 +137,39 @@ export async function buildForeignObjectSvgBody(
 
 	const [{ allEmbedded: imagesEmbedded }, externalFonts] = await Promise.all([
 		embedImagesOnClone(clone),
-		collectExternalFontFaceCss(doc, fetchAsDataUrl),
+		options.externalFonts ?? collectExternalFontFaceCss(doc, fetchAsDataUrl),
 	]);
 	const allEmbedded = imagesEmbedded && externalFonts.allEmbedded;
-
 	const fontFaceCss = [collectFontFaceCss(doc), externalFonts.css].filter(Boolean).join('\n\n');
+	return { clone, fontFaceCss, allEmbedded };
+}
+
+/**
+ * The `<defs>` + background + `foreignObject` markup around `cloneMarkup` (a clone serialised
+ * as XML), as {@link buildForeignObjectSvgBody} returns it.
+ */
+export function foreignObjectBodyMarkup(
+	cloneMarkup: string,
+	fontFaceCss: string,
+	options: Pick<ForeignObjectSvgBodyOptions, 'width' | 'height' | 'backgroundColor'>,
+): string {
+	const { width, height, backgroundColor } = options;
 	const defs = fontFaceCss
 		? `<defs><style type="text/css">${cssCdata(fontFaceCss)}</style></defs>`
 		: '';
 	const bgRect = backgroundColor
 		? `<rect width="${width}" height="${height}" fill="${escapeSvgAttr(backgroundColor)}" />`
 		: '';
-
-	const bodyMarkup = [
+	return [
 		defs,
 		bgRect,
 		`<foreignObject x="0" y="0" width="${width}" height="${height}">`,
 		`<div xmlns="http://www.w3.org/1999/xhtml" style="width:${width}px;height:${height}px;overflow:hidden;">`,
 		// This becomes XML, not HTML: retain nested SVG namespaces and close void elements.
-		new XMLSerializer().serializeToString(clone),
+		cloneMarkup,
 		'</div>',
 		'</foreignObject>',
 	].join('');
-
-	return { bodyMarkup, allEmbedded, naturalWidth: width, naturalHeight: height };
 }
 
 /** A viewBox window into the body's natural coordinate space, for one output tile. */
