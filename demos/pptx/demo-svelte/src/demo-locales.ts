@@ -97,3 +97,39 @@ export const demoStringsZhCN = {
 	'demo.export.print': '打印',
 	'demo.editToggle.label': '编辑',
 } satisfies Record<keyof typeof demoStringsEn, string>;
+
+export const demoStringsJa = {
+	'demo.dropzone.hint': '.pptx または .ppt ファイルをここにドロップするか、クリックして参照します',
+	'demo.dropzone.processed': 'ファイルはすべてブラウザー内で処理されます',
+	'demo.dropzone.browse': 'ファイルを参照',
+	'demo.dropzone.newPresentation': 'または新しいプレゼンテーションを作成',
+	'demo.dropzone.creating': '作成しています...',
+	'demo.dropzone.uploadAriaLabel': 'プレゼンテーションをアップロード',
+	'demo.viewer.loadError': 'プレゼンテーションを読み込めませんでした',
+	'demo.pickers.switchTheme': 'テーマの切り替え',
+	'demo.pickers.switchLanguage': '言語の切り替え',
+	'demo.export.png': 'PNG としてエクスポート',
+	'demo.export.pdf': 'PDF としてエクスポート',
+	'demo.export.gif': 'GIF としてエクスポート',
+	'demo.export.video': 'ビデオのエクスポート',
+	'demo.export.print': '印刷',
+	'demo.editToggle.label': '編集',
+} satisfies Record<keyof typeof demoStringsEn, string>;
+
+export const demoStringsKo = {
+	'demo.dropzone.hint': '.pptx 또는 .ppt 파일을 여기에 끌어 놓거나 클릭하여 찾아보세요',
+	'demo.dropzone.processed': '파일은 모두 브라우저에서 처리됩니다',
+	'demo.dropzone.browse': '파일 찾아보기',
+	'demo.dropzone.newPresentation': '또는 새 프레젠테이션 만들기',
+	'demo.dropzone.creating': '만드는 중...',
+	'demo.dropzone.uploadAriaLabel': '프레젠테이션 업로드',
+	'demo.viewer.loadError': '프레젠테이션을 불러오지 못했습니다',
+	'demo.pickers.switchTheme': '테마 전환',
+	'demo.pickers.switchLanguage': '언어 전환',
+	'demo.export.png': 'PNG로 내보내기',
+	'demo.export.pdf': 'PDF로 내보내기',
+	'demo.export.gif': 'GIF로 내보내기',
+	'demo.export.video': '비디오 내보내기',
+	'demo.export.print': '인쇄',
+	'demo.editToggle.label': '편집',
+} satisfies Record<keyof typeof demoStringsEn, string>;

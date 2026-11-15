@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { translationsDe, translationsEs, translationsFr, translationsZhCN } from '.';
+import {
+	translationsDe,
+	translationsEs,
+	translationsFr,
+	translationsJa,
+	translationsKo,
+	translationsZhCN,
+} from '.';
 import { translationsEn } from '../../../../../src/ui/src/pptx/i18n';
 
 const PLACEHOLDER_RE = /\{\{[^}]+\}\}/gu;
@@ -9,6 +16,8 @@ const locales = {
 	es: translationsEs,
 	fr: translationsFr,
 	'zh-CN': translationsZhCN,
+	ja: translationsJa,
+	ko: translationsKo,
 };
 
 describe('complete locale dictionaries', () => {

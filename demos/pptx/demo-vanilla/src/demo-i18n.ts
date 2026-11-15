@@ -6,10 +6,14 @@ import {
 	translationsEs,
 	translationsFr,
 	translationsZhCN,
+	translationsJa,
+	translationsKo,
 } from 'pptx-viewer-locales';
 
 import {
 	demoStringsZhCN,
+	demoStringsJa,
+	demoStringsKo,
 	demoStringsDe,
 	demoStringsEn,
 	demoStringsEs,
@@ -40,6 +44,8 @@ export const viewerMessages: TranslationMessages = {
 	es: { ...translationsEs, ...demoStringsEs },
 	de: { ...translationsDe, ...demoStringsDe },
 	'zh-CN': { ...translationsZhCN, ...demoStringsZhCN },
+	ja: { ...translationsJa, ...demoStringsJa },
+	ko: { ...translationsKo, ...demoStringsKo },
 };
 
 export function readStoredLanguage(): LanguageCode {

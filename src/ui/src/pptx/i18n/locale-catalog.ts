@@ -20,4 +20,6 @@ export const LOCALE_CATALOG: readonly LocaleCatalogEntry[] = [
 	{ code: 'es', label: 'Spanish', nativeLabel: 'Español' },
 	{ code: 'de', label: 'German', nativeLabel: 'Deutsch' },
 	{ code: 'zh-CN', label: 'Chinese (Simplified)', nativeLabel: '简体中文' },
+	{ code: 'ja', label: 'Japanese', nativeLabel: '日本語' },
+	{ code: 'ko', label: 'Korean', nativeLabel: '한국어' },
 ];

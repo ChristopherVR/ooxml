@@ -6,6 +6,8 @@ import {
 	translationsEs,
 	translationsFr,
 	translationsZhCN,
+	translationsJa,
+	translationsKo,
 } from 'pptx-viewer-locales';
 
 import { createSameBrowserDemo } from '../../shared/same-browser-collaboration';
@@ -42,6 +44,8 @@ export class SameBrowserDemoComponent {
 			es: translationsEs,
 			fr: translationsFr,
 			'zh-CN': translationsZhCN,
+			ja: translationsJa,
+			ko: translationsKo,
 		})) {
 			translate.setTranslation(language, messages);
 		}

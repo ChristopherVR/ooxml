@@ -13,6 +13,8 @@ import {
 	translationsEs,
 	translationsFr,
 	translationsZhCN,
+	translationsJa,
+	translationsKo,
 } from '../../../../../../viewers/pptx/packages/locales/src';
 import { translationsEn } from '../../i18n';
 import { BUILTIN_SMARTART_LAYOUTS } from '../../../../../core/diagram/builtin/catalog';
@@ -69,6 +71,8 @@ const locales: Record<string, Record<string, string>> = {
 	es: translationsEs,
 	fr: translationsFr,
 	'zh-CN': translationsZhCN,
+	ja: translationsJa,
+	ko: translationsKo,
 };
 
 /** Fill `{{name}}` placeholders the way every binding's translator does. */

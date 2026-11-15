@@ -19,6 +19,11 @@ describe('resolveLocaleParam', () => {
 		expect(resolveLocaleParam('?locale=Zh-Cn')).toBe('zh-CN');
 	});
 
+	it('accepts the regional Japanese and Korean tags', () => {
+		expect(resolveLocaleParam('?locale=ja-JP')).toBe('ja');
+		expect(resolveLocaleParam('?locale=ko-KR')).toBe('ko');
+	});
+
 	it('accepts the bare "zh" alias for Simplified Chinese', () => {
 		expect(resolveLocaleParam('?locale=zh')).toBe('zh-CN');
 	});

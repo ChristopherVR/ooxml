@@ -191,7 +191,7 @@ and the demos read the core's `dist`), then rebuild the pptx packages you need
 packages/
   core/             pptx-viewer-core     - Thin entry point re-exporting ooxml-core/pptx
   shared/           pptx-viewer-shared   - Private compatibility exports from ooxml-ui/pptx
-  locales/          pptx-viewer-locales  - de/es/fr/zh-CN dictionaries (internal)
+  locales/          pptx-viewer-locales  - de/es/fr/zh-CN/ja/ko dictionaries (internal)
   react/            pptx-react-viewer    - React viewer/editor component
   react-compat/     (private, no build)  - React 18 peer set; `packages/react` aliases onto it to
                                            re-run its suite + declaration check (`bun run test:react18`)

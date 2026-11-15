@@ -7,7 +7,7 @@
  * accessible names, so before this spec a locale regression was structurally
  * invisible: a binding could stop translating entirely and the suite would go
  * greener, not redder. The expected strings are imported from
- * `pptx-viewer-locales` (de/es/fr/zh-CN) and the shared English dictionary rather
+ * `pptx-viewer-locales` (de/es/fr/zh-CN/ja/ko) and the shared English dictionary rather
  * than restated here, so the spec cannot drift from what the demos register.
  *
  * The asserted keys are deliberately few and deliberately chosen: the ribbon
@@ -15,7 +15,7 @@
  * renders, the status bar's "Slide 1 of 7" is the highest-traffic interpolated
  * string in the chrome, and live probing confirmed all five bindings translate
  * them immediately on switch. Each translated value also differs from its
- * English one in all four reference locales, so an accidental English fallback fails
+ * English one in every reference locale, so an accidental English fallback fails
  * instead of passing by coincidence. The much broader missing-translation
  * fallout (hundreds of keys in some bindings) is MEASURED and reported via a
  * test annotation, not asserted - see {@link measureEnglishFallout}.
@@ -35,6 +35,8 @@ import {
 	translationsDe,
 	translationsEs,
 	translationsFr,
+	translationsJa,
+	translationsKo,
 	translationsZhCN,
 } from '../../viewers/pptx/packages/locales/src';
 import { loadDeck, resetTabSession } from './support/deck';
@@ -58,6 +60,8 @@ const LOCALES: readonly LocaleUnderTest[] = [
 	{ code: 'fr', dictionary: translationsFr },
 	{ code: 'es', dictionary: translationsEs },
 	{ code: 'zh-CN', dictionary: translationsZhCN },
+	{ code: 'ja', dictionary: translationsJa },
+	{ code: 'ko', dictionary: translationsKo },
 ];
 
 /** Ribbon tabs asserted per locale (shared `TOOLBAR_TABS` label keys). */

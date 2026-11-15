@@ -15,11 +15,15 @@ import {
 	translationsEs,
 	translationsFr,
 	translationsZhCN,
+	translationsJa,
+	translationsKo,
 } from 'pptx-viewer-locales';
 import { initReactI18next } from 'react-i18next';
 
 import {
 	demoStringsZhCN,
+	demoStringsJa,
+	demoStringsKo,
 	demoStringsDe,
 	demoStringsEn,
 	demoStringsFr,
@@ -35,6 +39,8 @@ i18nInstance.use(initReactI18next).init({
 		es: { translation: { ...translationsEs, ...demoStringsEs } },
 		de: { translation: { ...translationsDe, ...demoStringsDe } },
 		'zh-CN': { translation: { ...translationsZhCN, ...demoStringsZhCN } },
+		ja: { translation: { ...translationsJa, ...demoStringsJa } },
+		ko: { translation: { ...translationsKo, ...demoStringsKo } },
 	},
 	lng: 'en',
 	fallbackLng: 'en',

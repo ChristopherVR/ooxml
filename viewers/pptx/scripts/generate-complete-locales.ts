@@ -105,6 +105,16 @@ const locales = [
 		exportName: 'translationsDe',
 		curated: { ...(await loadCurated('translationsDe')), ...(await loadGenerated('de')) },
 	},
+	{
+		code: 'ja',
+		exportName: 'translationsJa',
+		curated: await loadGenerated('ja'),
+	},
+	{
+		code: 'ko',
+		exportName: 'translationsKo',
+		curated: await loadGenerated('ko'),
+	},
 ] as const;
 
 function maskPlaceholders(value: string): { masked: string; placeholders: string[] } {

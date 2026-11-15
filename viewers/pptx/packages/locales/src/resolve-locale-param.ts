@@ -2,15 +2,17 @@
  * The viewer locale ids every binding's demo app can register a dictionary
  * for. `en` needs no dictionary from this package (it is built into
  * `pptx-viewer-shared`); the rest match this package's exports (`./fr`,
- * `./es`, `./de`, `./zh-CN`).
+ * `./es`, `./de`, `./zh-CN`, `./ja`, `./ko`).
  */
-export const VIEWER_LOCALE_CODES = ['en', 'fr', 'es', 'de', 'zh-CN'] as const;
+export const VIEWER_LOCALE_CODES = ['en', 'fr', 'es', 'de', 'zh-CN', 'ja', 'ko'] as const;
 
 export type ViewerLocaleCode = (typeof VIEWER_LOCALE_CODES)[number];
 
 /** Case-insensitive aliases accepted in addition to the canonical codes. */
 const LOCALE_ALIASES: Record<string, ViewerLocaleCode> = {
 	zh: 'zh-CN',
+	'ja-jp': 'ja',
+	'ko-kr': 'ko',
 };
 
 /**

@@ -32,6 +32,8 @@ import {
 	translationsEs,
 	translationsFr,
 	translationsZhCN,
+	translationsJa,
+	translationsKo,
 } from 'pptx-viewer-locales';
 import 'pptx-angular-viewer/styles';
 
@@ -50,6 +52,8 @@ import {
 } from './collab-utils';
 import {
 	demoStringsZhCN,
+	demoStringsJa,
+	demoStringsKo,
 	demoStringsDe,
 	demoStringsEn,
 	demoStringsFr,
@@ -230,6 +234,8 @@ export class AppComponent {
 		this.translate.setTranslation('es', { ...translationsEs, ...demoStringsEs });
 		this.translate.setTranslation('de', { ...translationsDe, ...demoStringsDe });
 		this.translate.setTranslation('zh-CN', { ...translationsZhCN, ...demoStringsZhCN });
+		this.translate.setTranslation('ja', { ...translationsJa, ...demoStringsJa });
+		this.translate.setTranslation('ko', { ...translationsKo, ...demoStringsKo });
 		this.translate.use(this.languageKey());
 
 		this.autoConnectFromUrl();

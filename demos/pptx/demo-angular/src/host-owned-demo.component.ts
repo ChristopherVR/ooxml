@@ -13,6 +13,8 @@ import {
 	translationsEs,
 	translationsFr,
 	translationsZhCN,
+	translationsJa,
+	translationsKo,
 } from 'pptx-viewer-locales';
 
 import { createHostOwnedDemo } from '../../shared/host-owned-collaboration';
@@ -59,6 +61,8 @@ export class HostOwnedDemoComponent {
 			es: translationsEs,
 			fr: translationsFr,
 			'zh-CN': translationsZhCN,
+			ja: translationsJa,
+			ko: translationsKo,
 		})) {
 			translate.setTranslation(language, messages);
 		}

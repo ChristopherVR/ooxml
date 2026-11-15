@@ -114,6 +114,26 @@
 				"types": "./dist/i18n/zh-CN.d.cts",
 				"default": "./dist/i18n/zh-CN.cjs"
 			}
+		},
+		"./i18n/ja": {
+			"import": {
+				"types": "./dist/i18n/ja.d.mts",
+				"default": "./dist/i18n/ja.mjs"
+			},
+			"require": {
+				"types": "./dist/i18n/ja.d.cts",
+				"default": "./dist/i18n/ja.cjs"
+			}
+		},
+		"./i18n/ko": {
+			"import": {
+				"types": "./dist/i18n/ko.d.mts",
+				"default": "./dist/i18n/ko.mjs"
+			},
+			"require": {
+				"types": "./dist/i18n/ko.d.cts",
+				"default": "./dist/i18n/ko.cjs"
+			}
 		}
 	},
 	"scripts": {
