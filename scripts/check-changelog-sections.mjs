@@ -33,7 +33,7 @@
  */
 
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -100,7 +100,7 @@ export function checkChangelog(text, { requireReleases = false } = {}) {
 
 /**
  * Root changelog plus every packages/<pkg>/CHANGELOG.md that exists, and the same for each
- * imported viewer (viewers/<name>/packages/<pkg>, mcp and server).
+ * imported viewer (its root changelog, viewers/<name>/packages/<pkg>, mcp and server).
  */
 export function changelogFiles(root = ROOT) {
 	const files = [];
@@ -129,6 +129,10 @@ export function changelogFiles(root = ROOT) {
 			if (!viewer.isDirectory()) {
 				continue;
 			}
+			const viewerChangelog = join(viewersDir, viewer.name, 'CHANGELOG.md');
+			if (existsSync(viewerChangelog)) {
+				files.push(viewerChangelog);
+			}
 			scan(join(viewersDir, viewer.name, 'packages'));
 			for (const single of ['mcp', 'server']) {
 				const candidate = join(viewersDir, viewer.name, single, 'CHANGELOG.md');
@@ -147,7 +151,9 @@ function main() {
 	let failures = 0;
 
 	for (const file of targets) {
-		const isRoot = relative(ROOT, file) === 'CHANGELOG.md';
+		// The repository and viewer root changelogs hold dated sections that must name releases.
+		const path = relative(ROOT, file).split(sep).join('/');
+		const isRoot = path === 'CHANGELOG.md' || /^viewers\/[^/]+\/CHANGELOG\.md$/u.test(path);
 		const findings = checkChangelog(readFileSync(file, 'utf8'), { requireReleases: isRoot });
 		for (const { line, heading, problem } of findings) {
 			failures++;

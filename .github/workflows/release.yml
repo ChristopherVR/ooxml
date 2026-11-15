@@ -214,6 +214,13 @@ jobs:
             fi
           done
 
+      # Each viewer's root changelog gets one dated section naming the viewer packages released
+      # today, built from the package sections git-cliff just wrote (a second run on the same day
+      # extends that day's section).
+      - name: Update the viewer changelogs
+        if: steps.plan.outputs.any_changed == 'true'
+        run: node scripts/viewer-changelogs.mjs --plan release-plan.json
+
       - name: Commit version bumps and changelogs
         if: steps.plan.outputs.any_changed == 'true'
         env:
@@ -229,7 +236,7 @@ jobs:
           # so package.json + bun.lock in the repo always match what is published and the tag
           # points at a commit whose manifests are truthful. The paths are split into words on purpose.
           # shellcheck disable=SC2046
-          git add $(node -p "const p=require('./release-plan.json');p.order.filter(k=>p.packages[k].release).flatMap(k=>[p.packages[k].manifest,p.packages[k].changelog]).join(' ')") bun.lock
+          git add $(node -p "const p=require('./release-plan.json');p.order.filter(k=>p.packages[k].release).flatMap(k=>[p.packages[k].manifest,p.packages[k].changelog]).join(' ')") bun.lock viewers/*/CHANGELOG.md
           if git diff --cached --quiet; then
             echo "No release changes to commit"
           else

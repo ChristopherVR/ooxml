@@ -1,0 +1,161 @@
+import assert from 'node:assert/strict';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { test } from 'node:test';
+
+import { checkChangelog } from './check-changelog-sections.mjs';
+import {
+	HEADER,
+	mergeGroups,
+	missingDates,
+	parsePackageChangelog,
+	planDates,
+	renderDaySection,
+	updateViewerChangelogs,
+	upsertDaySection,
+} from './viewer-changelogs.mjs';
+
+const pkg = (npm, sections) =>
+	[
+		'# Changelog',
+		'',
+		'Header text.',
+		'',
+		...sections.flatMap(([version, date, groups]) => [
+			`## [${version}](https://example.test/${npm}@${version}) - ${date}`,
+			'',
+			...Object.entries(groups).flatMap(([heading, entries]) => [
+				`### ${heading}`,
+				'',
+				...entries,
+				'',
+			]),
+		]),
+	].join('\n');
+
+test('parses package sections with their groups and wrapped entries', () => {
+	const sections = parsePackageChangelog(
+		pkg('a', [['1.1.0', '2026-11-13', { Features: ['- **x:** One', '- Two\n  continued'] }]]),
+	);
+	assert.equal(sections.length, 1);
+	assert.deepEqual(sections[0].groups, [
+		{ heading: 'Features', entries: ['- **x:** One', '- Two\n  continued'] },
+	]);
+	assert.equal(sections[0].date, '2026-11-13');
+});
+
+test('merges groups in cliff order and lists each entry once', () => {
+	const merged = mergeGroups([
+		{
+			groups: [
+				{ heading: 'Documentation', entries: ['- d'] },
+				{ heading: 'Features', entries: ['- f'] },
+			],
+		},
+		{
+			groups: [
+				{ heading: 'Features', entries: ['- f', '- g'] },
+				{ heading: 'Bug Fixes', entries: [] },
+			],
+		},
+	]);
+	assert.deepEqual(merged, [
+		{ heading: 'Features', entries: ['- f', '- g'] },
+		{ heading: 'Documentation', entries: ['- d'] },
+	]);
+});
+
+test('a day section names its releases and passes the stub check', () => {
+	const section = renderDaySection('2026-11-15', [
+		{ npm: 'a', version: '1.0.1', groups: [{ heading: 'Bug Fixes', entries: ['- fix'] }] },
+		{ npm: 'b', version: '2.0.0', groups: [] },
+	]);
+	assert.match(
+		section,
+		/^## 2026-11-15\n\n_Releases: a@1\.0\.1, b@2\.0\.0_\n\n### Bug Fixes\n\n- fix\n/u,
+	);
+	assert.deepEqual(checkChangelog(section, { requireReleases: true }), []);
+});
+
+test('upserts by date: replaces the same day, inserts a new day in order, keeps old ones', () => {
+	const old = 'Old header\n\n## 2026-10-05\n\n_Releases: a@0.1.0_\n\nold body\n';
+	const added = upsertDaySection(old, '2026-11-13', '## 2026-11-13\n\n_Releases: a@1.0.0_\n');
+	assert.ok(added.startsWith(HEADER));
+	assert.ok(added.indexOf('## 2026-11-13') < added.indexOf('## 2026-10-05'));
+	assert.ok(added.includes('old body'));
+	const replaced = upsertDaySection(added, '2026-11-13', '## 2026-11-13\n\n_Releases: a@1.0.1_\n');
+	assert.equal(replaced.match(/## 2026-11-13/gu).length, 1);
+	assert.ok(replaced.includes('a@1.0.1') && !replaced.includes('a@1.0.0'));
+	assert.equal(
+		upsertDaySection(replaced, '2026-11-13', '## 2026-11-13\n\n_Releases: a@1.0.1_\n'),
+		replaced,
+	);
+});
+
+function fixtureRepo() {
+	const root = mkdtempSync(join(tmpdir(), 'viewer-changelogs-'));
+	const write = (path, text) => {
+		mkdirSync(join(root, path, '..'), { recursive: true });
+		writeFileSync(join(root, path), text);
+	};
+	write(
+		'viewers/demo/packages/core/CHANGELOG.md',
+		pkg('demo-core', [
+			['1.1.0', '2026-11-13', { Features: ['- core feature'] }],
+			['1.0.0', '2026-10-20', { 'Bug Fixes': ['- core fix'] }],
+		]),
+	);
+	write(
+		'viewers/demo/packages/react/CHANGELOG.md',
+		pkg('demo-react', [['2.0.0', '2026-11-13', { Features: ['- react feature'] }]]),
+	);
+	write(
+		'viewers/demo/CHANGELOG.md',
+		'Old header\n\n## 2026-10-05\n\n_Releases: demo-core@0.9.0_\n',
+	);
+	const table = {
+		'demo-core': { dir: 'viewers/demo/packages/core', npm: 'demo-core' },
+		'demo-react': { dir: 'viewers/demo/packages/react', npm: 'demo-react' },
+	};
+	return { root, table, read: () => readFileSync(join(root, 'viewers/demo/CHANGELOG.md'), 'utf8') };
+}
+
+test('backfill adds every missing release day, newest first, once', () => {
+	const { root, table, read } = fixtureRepo();
+	assert.deepEqual(updateViewerChangelogs(root, missingDates, table), [
+		'viewers/demo/CHANGELOG.md',
+	]);
+	const text = read();
+	assert.ok(text.indexOf('## 2026-11-13') < text.indexOf('## 2026-10-20'));
+	assert.ok(text.indexOf('## 2026-10-20') < text.indexOf('## 2026-10-05'));
+	assert.match(text, /_Releases: demo-core@1\.1\.0, demo-react@2\.0\.0_/u);
+	assert.deepEqual(updateViewerChangelogs(root, missingDates, table), []);
+});
+
+test('release mode writes only the days of the packages the plan released', () => {
+	const { root, table, read } = fixtureRepo();
+	const plan = {
+		packages: {
+			'demo-react': {
+				npm: 'demo-react',
+				dir: 'viewers/demo/packages/react',
+				release: true,
+				version: '2.0.0',
+			},
+			'demo-core': {
+				npm: 'demo-core',
+				dir: 'viewers/demo/packages/core',
+				release: false,
+				version: '1.1.0',
+			},
+		},
+	};
+	updateViewerChangelogs(root, planDates(plan), table);
+	const text = read();
+	assert.ok(text.includes('## 2026-11-13'));
+	assert.ok(!text.includes('## 2026-10-20'));
+	assert.match(text, /demo-core@1\.1\.0, demo-react@2\.0\.0/u);
+	const none = { packages: { x: { npm: 'x', dir: 'src/core', release: true, version: '1.0.0' } } };
+	assert.deepEqual(updateViewerChangelogs(root, planDates(none), table), []);
+});
