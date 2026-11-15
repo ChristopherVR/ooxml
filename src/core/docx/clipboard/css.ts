@@ -99,12 +99,45 @@ export interface CssRule {
 /** The rules of every `<style>` block in `html`, comments removed. */
 export function readStyleRules(html: string): CssRule[] {
 	const rules: CssRule[] = [];
-	for (const block of html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)) {
-		const css = block[1]!.replace(/<!--|-->/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+	for (const block of styleBlocks(html)) {
+		// Comment markers become spaces, so removing one can never form another.
+		const css = stripCssComments(block.replace(/<!--|-->/g, ' '));
 		for (const rule of css.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
 			const selector = rule[1]!.replace(/\s+/g, ' ').trim();
 			if (selector) rules.push({ selector, declarations: parseDeclarations(rule[2]) });
 		}
 	}
 	return rules;
+}
+
+/**
+ * The text of every `<style>` element, found with a linear scan (a closing tag may carry
+ * whitespace or attributes, `</style >`, and an unclosed block runs to the end).
+ */
+function styleBlocks(html: string): string[] {
+	const lower = html.toLowerCase();
+	const blocks: string[] = [];
+	let at = lower.indexOf('<style');
+	while (at >= 0) {
+		const open = lower.indexOf('>', at);
+		if (open < 0) break;
+		const close = lower.indexOf('</style', open);
+		blocks.push(html.slice(open + 1, close < 0 ? html.length : close));
+		if (close < 0) break;
+		at = lower.indexOf('<style', close + 7);
+	}
+	return blocks;
+}
+
+/** `css` without its comments; an unclosed comment runs to the end. */
+function stripCssComments(css: string): string {
+	let out = '';
+	let at = 0;
+	for (let start = css.indexOf('/*'); start >= 0; start = css.indexOf('/*', at)) {
+		out += css.slice(at, start);
+		const end = css.indexOf('*/', start + 2);
+		if (end < 0) return out;
+		at = end + 2;
+	}
+	return out + css.slice(at);
 }
