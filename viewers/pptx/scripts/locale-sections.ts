@@ -141,6 +141,7 @@ const SECTION_DEFINITIONS = [
 		prefixes: [
 			'arrange',
 			'inspector',
+			'formatPane',
 			'shape',
 			'action',
 			'align',
