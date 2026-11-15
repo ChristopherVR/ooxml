@@ -200,6 +200,10 @@ test.describe('vector PDF export', () => {
 					});
 					await loadDeckAt(page, origin, NOTICE_DECK);
 					await exportPdf(page);
+					// The report is logged after the file is saved, so the download can arrive first.
+					for (let waited = 0; !approximated && waited < 10_000; waited += 100) {
+						await page.waitForTimeout(100);
+					}
 					const notice = page.locator(
 						'[data-testid="pptx-compat-toast"][data-code="PDF_EXPORT_APPROXIMATED"]',
 					);
