@@ -187,8 +187,10 @@ test.describe('Word-style ribbon', () => {
 		);
 		await expect(surface.locator('u')).toHaveCount(1);
 		await editor.getByRole('button', { name: 'Paragraph settings' }).click();
-		await editor.getByLabel('Left', { exact: true }).fill('1');
-		await editor.getByLabel('Left', { exact: true }).dispatchEvent('input');
+		// The closed picture dialog also has a hidden "Left" (crop) field; roles skip hidden ones.
+		const left = editor.getByRole('spinbutton', { name: 'Left', exact: true });
+		await left.fill('1');
+		await left.dispatchEvent('input');
 		await editor.getByLabel('Alignment', { exact: true }).selectOption('justify');
 		await editor.getByRole('button', { name: 'OK', exact: true }).click();
 		await expect(surface.locator('p').first()).toHaveCSS('margin-left', '96px');

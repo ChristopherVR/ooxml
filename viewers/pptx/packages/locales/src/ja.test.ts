@@ -37,7 +37,7 @@ describe('Japanese locale', () => {
 			if (/^(?:https?:\/\/|wss?:\/\/)/u.test(english) && !english.includes(' ')) {
 				expect(translationsJa[key]).toBe(english);
 			}
-			expect(translationsJa[key]).not.toMatch(/[​-‍﻿—]/u);
+			expect(translationsJa[key]).not.toMatch(/[\u200B-\u200D\uFEFF\u2014]/u);
 		}
 	});
 

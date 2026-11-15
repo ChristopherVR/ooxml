@@ -37,7 +37,7 @@ describe('Korean locale', () => {
 			if (/^(?:https?:\/\/|wss?:\/\/)/u.test(english) && !english.includes(' ')) {
 				expect(translationsKo[key]).toBe(english);
 			}
-			expect(translationsKo[key]).not.toMatch(/[​-‍﻿—]/u);
+			expect(translationsKo[key]).not.toMatch(/[\u200B-\u200D\uFEFF\u2014]/u);
 		}
 	});
 
