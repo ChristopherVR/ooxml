@@ -13,6 +13,7 @@ import type {
 } from '../render/foreign-object-font-embed';
 import { buildForeignObjectSvgBody } from '../render/foreign-object-svg-document';
 import type { RasterSourceRect, RasterStrategyOptions } from './rasterize-element-strategy';
+import { RASTER_TIMEOUT_MS, settleWithin } from './pdf-vector-timeout';
 import { rasterizeWindow } from './rasterize-element-strategy';
 
 /**
@@ -89,20 +90,25 @@ export async function rasterizeIsolated(
 			setStyle(saved, target, 'box-shadow', 'none');
 			setStyle(saved, target, 'text-decoration-color', 'transparent');
 		}
-		const body = await buildForeignObjectSvgBody(
-			stage,
-			doc as Document & FontStyleDocumentLike & LinkStyleDocumentLike,
-			{ width: naturalWidth, height: naturalHeight },
-		);
-		const output = {
-			width: Math.max(1, Math.round(rect.width * options.scale)),
-			height: Math.max(1, Math.round(rect.height * options.scale)),
-		};
-		const { canvas } = await rasterizeWindow(body, rect, output, undefined, {
-			html2canvasFallback: options.html2canvasFallback ?? noFallback,
-			onStrategyFailed: () => undefined,
-		});
-		return await drawableToPdfImage(doc, canvas, canvas.width, canvas.height, 8192);
+		// Bounded, so a stalled font or image fetch cannot hang the export; the finally below then
+		// restores the live stage either way.
+		const work = (async () => {
+			const body = await buildForeignObjectSvgBody(
+				stage,
+				doc as Document & FontStyleDocumentLike & LinkStyleDocumentLike,
+				{ width: naturalWidth, height: naturalHeight },
+			);
+			const output = {
+				width: Math.max(1, Math.round(rect.width * options.scale)),
+				height: Math.max(1, Math.round(rect.height * options.scale)),
+			};
+			const { canvas } = await rasterizeWindow(body, rect, output, undefined, {
+				html2canvasFallback: options.html2canvasFallback ?? noFallback,
+				onStrategyFailed: () => undefined,
+			});
+			return await drawableToPdfImage(doc, canvas, canvas.width, canvas.height, 8192);
+		})();
+		return await settleWithin(work, RASTER_TIMEOUT_MS, undefined);
 	} catch {
 		return undefined;
 	} finally {

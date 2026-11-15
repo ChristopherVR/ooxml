@@ -18,6 +18,7 @@ import {
 	type PdfExportDiagnosticCode,
 } from './pdf-export-diagnostics';
 import { paintBox } from './pdf-vector-box';
+import { FONTS_TIMEOUT_MS, IMAGE_TIMEOUT_MS, settleWithin } from './pdf-vector-timeout';
 import {
 	boxClip,
 	contentBox,
@@ -299,7 +300,7 @@ export async function collectSlide(
 		}
 	};
 
-	await doc.fonts?.ready;
+	if (doc.fonts) await settleWithin(doc.fonts.ready, FONTS_TIMEOUT_MS, undefined);
 	withAuthoredStrokeWidths(stage, () =>
 		neutraliseTransforms(stage, view, (found, stageMeasure) => {
 			transforms = found;
@@ -318,7 +319,7 @@ export async function collectSlide(
 	}
 	const failed = new Set<DisplayItem>();
 	for (const request of pending) {
-		const image = await request.load();
+		const image = await settleWithin(request.load(), IMAGE_TIMEOUT_MS, undefined);
 		if (!image) {
 			failed.add(request.item);
 			notes.add(request.failure);
@@ -330,7 +331,7 @@ export async function collectSlide(
 	}
 	for (const { hrefs, map } of svgImages)
 		for (const href of hrefs.slice(0, 500)) {
-			const image = await decodePdfImage(doc, href);
+			const image = await settleWithin(decodePdfImage(doc, href), IMAGE_TIMEOUT_MS, undefined);
 			if (image) map.set(href, image);
 		}
 	for (const { item, target, mode } of rasters) {
