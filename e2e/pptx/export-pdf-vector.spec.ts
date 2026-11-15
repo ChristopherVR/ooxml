@@ -9,7 +9,7 @@
  *
  * Run: bunx playwright test export-pdf-vector
  */
-import { readFile, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { inflateSync } from 'node:zlib';
@@ -53,7 +53,8 @@ function hiddenDeck(): Promise<string> {
 		const xml = await part?.async('string');
 		if (!xml?.includes('<p:sld ')) throw new Error('the export deck has no second slide');
 		zip.file('ppt/slides/slide2.xml', xml.replace('<p:sld ', '<p:sld show="0" '));
-		const path = join(tmpdir(), `pdf-hidden-slide-${process.pid}.pptx`);
+		// A private directory, not a guessable name in the shared temp folder.
+		const path = join(await mkdtemp(join(tmpdir(), 'pdf-hidden-slide-')), 'hidden-slide.pptx');
 		await writeFile(path, await zip.generateAsync({ type: 'uint8array' }));
 		return path;
 	})();
