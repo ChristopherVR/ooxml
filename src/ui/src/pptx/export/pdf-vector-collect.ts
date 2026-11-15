@@ -12,6 +12,11 @@ import { decodePdfImage, drawableToPdfImage } from '../../export/pdf-image';
 import type { PdfImageResource } from '../../export/pdf-vector';
 import { withAuthoredStrokeWidths } from '../render/device-pixel-stroke';
 import { isExportIgnoredElement } from '../render/export-clone';
+import {
+	PdfDiagnosticSet,
+	type PdfExportDiagnostic,
+	type PdfExportDiagnosticCode,
+} from './pdf-export-diagnostics';
 import { paintBox } from './pdf-vector-box';
 import {
 	boxClip,
@@ -62,16 +67,20 @@ export interface CollectSlideOptions {
 
 export interface CollectedSlide {
 	items: DisplayItem[];
-	diagnostics: string[];
+	diagnostics: PdfExportDiagnostic[];
+	/** Elements drawn as pictures of just themselves (effects, media frames). */
+	pictures: number;
 	/** Set when the whole slide must be drawn as one picture (with `items` as invisible text). */
-	picture?: string;
+	picture?: PdfExportDiagnosticCode;
 }
 
 interface Pending {
 	item: ImageItem;
 	load: () => Promise<PdfImageResource | undefined>;
 	fit?: 'fill' | 'cover' | 'contain';
-	failure: string;
+	failure: PdfExportDiagnosticCode;
+	/** A media frame (canvas, video): counts as an element drawn as a picture. */
+	frame?: boolean;
 }
 
 interface Context {
@@ -89,12 +98,13 @@ export async function collectSlide(
 	const doc = stage.ownerDocument;
 	const view = doc.defaultView!;
 	const items: DisplayItem[] = [];
-	const notes = new Set<string>();
+	const notes = new PdfDiagnosticSet();
 	const pending: Pending[] = [];
 	const rasters: { item: ImageItem; target: Element; mode: IsolatedRasterMode }[] = [];
 	const svgImages: { hrefs: string[]; map: Map<string, PdfImageResource> }[] = [];
 	let tokens = 0;
-	let picture: string | undefined;
+	let picture: PdfExportDiagnosticCode | undefined;
+	let pictures = 0;
 	const W = options.canvasWidth,
 		H = options.canvasHeight;
 	// The stage's own layout size: a zoomed canvas lays the slide out at another size.
@@ -123,7 +133,7 @@ export async function collectSlide(
 		matrix: Matrix,
 		box: Box,
 		pad: number,
-		reason: string,
+		reason: PdfExportDiagnosticCode,
 	) => {
 		notes.add(reason);
 		const bounds = paintedBounds(matrix, box, pad, W, H);
@@ -140,7 +150,7 @@ export async function collectSlide(
 		const box = boxOf(el);
 		let matrix = ctx.matrix;
 		const transform = transforms.get(el);
-		let reason: string | undefined;
+		let reason: PdfExportDiagnosticCode | undefined;
 		if (transform?.local) matrix = multiply(matrix, transform.local);
 		else if (transform && !ctx.invisible) reason = THREE_D_REASON;
 		const opacity = Number.parseFloat(style.opacity);
@@ -188,7 +198,7 @@ export async function collectSlide(
 				items.push(...paint.items);
 				if (paint.image) {
 					const { href, fit, item } = paint.image;
-					const failure = 'A background picture could not be read and is left out.';
+					const failure = 'backgroundPictureMissing';
 					pending.push({ item, fit, load: () => decodePdfImage(doc, href), failure });
 				}
 			}
@@ -210,7 +220,13 @@ export async function collectSlide(
 			const fit =
 				style.objectFit === 'cover' ? 'cover' : style.objectFit === 'contain' ? 'contain' : 'fill';
 			const load = () => drawableToPdfImage(doc, media, natural[0] ?? 0, natural[1] ?? 0);
-			pending.push({ item, fit, load, failure: 'A picture could not be read and is left out.' });
+			pending.push({
+				item,
+				fit,
+				load,
+				failure: 'pictureMissing',
+				...(tag !== 'img' ? { frame: true } : {}),
+			});
 			return;
 		}
 		if (tag === 'svg') {
@@ -273,7 +289,7 @@ export async function collectSlide(
 			);
 			tokens += result.tokens;
 			if (tokens > MAX_TEXT_TOKENS) {
-				picture = 'The slide has more text than this export reads, so it is drawn as one picture.';
+				picture = 'slideTooMuchText';
 				return;
 			}
 			if (result.raster) {
@@ -291,12 +307,12 @@ export async function collectSlide(
 			walk(stage, { matrix: [sx, 0, 0, sy, 0, 0], clips: [], alpha: 1, invisible: false });
 		}),
 	);
-	if (!picture && rasters.length > (options.maxRasters ?? 32))
-		picture = 'The slide has too many effects to draw separately, so it is drawn as one picture.';
+	if (!picture && rasters.length > (options.maxRasters ?? 32)) picture = 'slideTooManyEffects';
 	if (picture) {
 		return {
 			items: items.flatMap((item) => (item.kind === 'text' ? [{ ...item, invisible: true }] : [])),
-			diagnostics: [picture, SEARCHABLE_NOTE],
+			diagnostics: [{ code: picture }, { code: SEARCHABLE_NOTE }],
+			pictures: 0,
 			picture,
 		};
 	}
@@ -308,6 +324,7 @@ export async function collectSlide(
 			notes.add(request.failure);
 			continue;
 		}
+		if (request.frame) pictures++;
 		request.item.image = image;
 		if (request.fit && request.fit !== 'fill') fitImage(request.item, image, request.fit);
 	}
@@ -331,11 +348,17 @@ export async function collectSlide(
 					: {}),
 			},
 		);
-		if (image) item.image = image;
-		else {
+		if (image) {
+			item.image = image;
+			pictures++;
+		} else {
 			failed.add(item);
-			notes.add('An effect could not be captured as a picture and is left out.');
+			notes.add('effectMissing');
 		}
 	}
-	return { items: items.filter((item) => !failed.has(item)), diagnostics: [...notes] };
+	return {
+		items: items.filter((item) => !failed.has(item)),
+		diagnostics: notes.toArray(),
+		pictures,
+	};
 }

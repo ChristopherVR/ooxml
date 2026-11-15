@@ -5,6 +5,7 @@ import { galleryAdjustTranslationsEn } from './translations-en-galleries-adjust'
 import { galleryDataTranslationsEn } from './translations-en-galleries-data';
 import { galleryEffectsTranslationsEn } from './translations-en-galleries-effects';
 import { compareTranslationsEn } from './translations-en-compare';
+import { pdfExportTranslationsEn } from './translations-en-pdf-export';
 import { galleryPictureTranslationsEn } from './translations-en-galleries-picture';
 import { gallerySmartArtLayoutTranslationsEn } from './translations-en-galleries-smartart-layouts';
 import { shapeGalleryTranslationsEn } from './translations-en-shape-gallery';
@@ -29,6 +30,7 @@ export const translationsEn: Record<string, string> = {
 	...galleryDataTranslationsEn,
 	...galleryPictureTranslationsEn,
 	...compareTranslationsEn,
+	...pdfExportTranslationsEn,
 	...gallerySmartArtLayoutTranslationsEn,
 	...galleryAdjustTranslationsEn,
 	...tableLayoutTranslationsEn,

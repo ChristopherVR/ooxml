@@ -188,6 +188,9 @@ export const VIEWER_EVENTS: readonly ViewerSurfaceEntry[] = [
 	{ id: 'autosaveRecovery' },
 	// Raw connection status only; `collaborationChange` carries the full shared state everywhere.
 	{ id: 'collaborationStatus' },
+	// What a vector PDF export approximated (`VectorPdfExportResult`), for File > Export > PDF and
+	// the API alike; vanilla, vue and svelte also take `exportPdf({ onReport })` per call.
+	{ id: 'pdfExportReport' },
 ];
 
 const capitalised = (id: string): string => id.charAt(0).toUpperCase() + id.slice(1);

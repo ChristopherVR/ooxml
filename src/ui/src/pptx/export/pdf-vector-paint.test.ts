@@ -85,7 +85,9 @@ describe('vector PDF painting', () => {
 			/BT \/F0 40 Tf 1 0 0 -1 100 200 Tm .*Tz \(Hello world\) Tj ET 100 Tz/,
 		);
 		expect([...page.fonts.values()]).toEqual(['Helvetica']);
-		expect(diagnostics.join(' ')).toMatch(/"Calibri" uses a standard PDF font/);
+		expect(diagnostics).toEqual([
+			{ code: 'fontStandard', params: { family: 'Calibri', substitute: 'Helvetica' } },
+		]);
 		const pdf = latin1(buildVectorPdf([page]));
 		expect(pdf).toContain('/MediaBox [0 0 960 540]');
 		expect(streams(buildVectorPdf([page])).join('\n')).toContain('(Hello world) Tj');

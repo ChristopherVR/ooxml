@@ -61,6 +61,10 @@ export interface CompatToastViewItem {
 	readonly severity: 'info' | 'warning';
 	readonly messageKey: string;
 	readonly params?: Readonly<Record<string, string>>;
+	/** Joined into the `{{parts}}` param of `messageKey` (see `CompatibilityWarningToast`). */
+	readonly parts?: readonly { key: string; params?: Readonly<Record<string, string>> }[];
+	/** Lines under the toast's Details expander. */
+	readonly details?: readonly { key: string; params?: Readonly<Record<string, string>> }[];
 }
 
 export interface CompatToastsViewState {

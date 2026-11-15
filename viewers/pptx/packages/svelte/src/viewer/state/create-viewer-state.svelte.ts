@@ -333,6 +333,8 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 		getFieldContext: fieldContext,
 		getFileName: () => options.getFileName?.(),
 		onnotesupdate: options.onnotesupdate,
+		notify: (toast) => editorUi.compatToasts.notify(toast),
+		onpdfexportreport: (result) => options.onpdfexportreport?.(result),
 	});
 
 	// File > Open > Recent and the cache sweep list the HOST's store even while a cloud file
@@ -587,6 +589,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 			runQuickAccessCommand(id, {
 				deck,
 				exportingApi,
+				runPdf: () => exportNotes.exportUi.runPdf(),
 				parityUi: editorUi.parityUi,
 				customization: getCustomization(),
 			}),

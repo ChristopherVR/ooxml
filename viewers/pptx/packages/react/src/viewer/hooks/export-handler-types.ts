@@ -1,5 +1,7 @@
 import type {
+	CompatibilityWarningToast,
 	DocumentSaveReason,
+	VectorPdfExportResult,
 	DocumentStorage,
 	PdfExportSettings,
 	SlideSizeEmu,
@@ -83,6 +85,12 @@ export interface UseExportHandlersInput {
 	imageResolutionScale?: number;
 	/** File > Options > Advanced > Save as PDF (vector pages or pictures, hidden slides). */
 	pdfExportSettings?: PdfExportSettings;
+	/** Where File > Export > PDF mounts its options dialog (the viewer root, for the theme). */
+	pdfExportContainerRef?: RefObject<HTMLElement | null> | undefined;
+	/** Shows the PDF approximation notice in the viewer's toast stack. */
+	notifyPdfExport?: ((toast: CompatibilityWarningToast) => void) | undefined;
+	/** The host's `onPdfExportReport`: what a vector PDF export approximated. */
+	onPdfExportReport?: ((result: VectorPdfExportResult) => void) | undefined;
 }
 
 export interface ExportHandlersResult {

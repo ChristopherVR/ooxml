@@ -261,7 +261,20 @@ export function definePptxCompatToasts(registry: CustomElementRegistry): void {
 					id: toast.id,
 					code: toast.code,
 					severity: toast.severity,
-					message: t(toast.messageKey, toast.params),
+					message: t(
+						toast.messageKey,
+						toast.parts
+							? {
+									...toast.params,
+									parts: toast.parts
+										.map((part) => t(part.key, part.params))
+										.join(t('pptx.compatibility.partSeparator')),
+								}
+							: toast.params,
+					),
+					...(toast.details?.length
+						? { details: toast.details.map((line) => t(line.key, line.params)) }
+						: {}),
 				})),
 				overflowCount:
 					(value.overflowCount ?? 0) +
@@ -270,6 +283,7 @@ export function definePptxCompatToasts(registry: CustomElementRegistry): void {
 					title: t('pptx.compatibility.toastTitle'),
 					dismissAll: t('pptx.compatibility.dismissAll'),
 					dismiss: t('pptx.compatibility.dismiss'),
+					details: t('pptx.compatibility.details'),
 				},
 			};
 		}

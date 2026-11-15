@@ -257,6 +257,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			onStopCollaboration,
 			onCollaborationChange,
 			onCollaborationStatus,
+			onPdfExportReport,
 			onAutosave,
 			onAutosaveToggle,
 			onAutosaveStatus,
@@ -1129,6 +1130,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			// `imageExportScale` outright; see `useExportMediaHandlers.ts`.
 			imageResolutionScale: resolveImageResolutionScale(viewerOptions),
 			pdfExportSettings: resolvePdfExportSettings(viewerOptions),
+			onPdfExportReport,
 			mode,
 			slides,
 			activeSlide,

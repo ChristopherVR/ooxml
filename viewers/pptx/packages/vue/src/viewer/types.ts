@@ -6,6 +6,7 @@ import type {
 	ListConversionScope,
 	PptxLoadLimits,
 	RibbonDisplayMode,
+	VectorPdfExportResult,
 } from 'ooxml-ui/pptx';
 import type {
 	AccountAuthConfig,
@@ -469,6 +470,11 @@ export interface PowerPointViewerEmits {
 	(e: 'presentation-change', presenting: boolean): void;
 	/** Fired on every collaboration connection-status transition. */
 	(e: 'collaboration-status', status: ConnectionStatus): void;
+	/**
+	 * Fired after a vector PDF export (File > Export > PDF) that approximated something: effects
+	 * drawn as pictures, substituted fonts, content left out. The viewer also shows a notice.
+	 */
+	(e: 'pdf-export-report', result: VectorPdfExportResult): void;
 }
 
 /**

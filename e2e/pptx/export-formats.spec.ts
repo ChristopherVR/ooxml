@@ -21,6 +21,7 @@ import type { Page } from '@playwright/test';
 
 import { loadDeck, loadDeckAt } from './support/deck';
 import {
+	confirmPdfOptions,
 	downloadBytes,
 	downloadViaCard,
 	EXPORT_DECK,
@@ -115,6 +116,7 @@ test.describe('export formats', () => {
 					// afterwards can miss a modal that was up for a few frames.
 					const progressShown = await watchProgress(page, /export as pdf/iu);
 					await exportCard(page, PDF_CARD).click();
+					await confirmPdfOptions(page);
 					const progressSeen = await progressShown(60_000);
 					if (!progressSeen) {
 						// Let a modal-less export finish before the page closes under it.
@@ -185,6 +187,7 @@ test.describe('export formats', () => {
 						}).observe(document.body, { childList: true, subtree: true, attributes: true });
 					});
 					await exportCard(page, PDF_CARD).click();
+					await confirmPdfOptions(page);
 					await downloadDone;
 					return page.evaluate(
 						() =>

@@ -23,6 +23,7 @@ import type {
 	ViewerCustomizationApi,
 	ViewerFontSource,
 	ViewerTheme,
+	VectorPdfExportResult,
 	ViewportFitOptions,
 } from 'ooxml-ui/pptx';
 import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
@@ -430,6 +431,11 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	onpresentationchange?: (presenting: boolean) => void;
 	/** Fired on every collaboration connection-status transition. */
 	oncollaborationstatus?: (status: ConnectionStatus) => void;
+	/**
+	 * Told what a vector PDF export approximated (elements drawn as pictures, substituted fonts),
+	 * for File > Export > PDF and `exportPdf()` alike. Not called when nothing was approximated.
+	 */
+	onpdfexportreport?: (result: VectorPdfExportResult) => void;
 	/**
 	 * Real-time collaboration configuration. When provided, the viewer connects
 	 * to the room (y-websocket or serverless y-webrtc), publishes local edits

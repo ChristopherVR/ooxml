@@ -16,7 +16,9 @@
 
 import { inject, Injectable, signal } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
+import type { PdfSlideSelection } from 'ooxml-ui/pptx';
 import {
+	choosePdfExportSelection,
 	EXPORT_ASSEMBLING_PERCENT,
 	downloadBlob,
 	EXPORT_DONE_PERCENT,
@@ -112,11 +114,31 @@ export class ViewerExportService {
 	}
 
 	/**
-	 * Export every slide to a multi-page PDF. Each slide is made the live stage,
-	 * given a render tick to settle, captured to a canvas, then the original
-	 * slide is restored. Progress + Cancel drive the export-progress modal.
+	 * File > Export > PDF from the viewer's own UI: ask for the range (the shared options dialog,
+	 * vector export only), then export it. Cancel exports nothing.
 	 */
-	async exportPdf(): Promise<void> {
+	async exportPdfWithOptions(): Promise<void> {
+		const host = this.requireHost();
+		if (host.slideCount() === 0 || this.exporting()) {
+			return;
+		}
+		const selection = await choosePdfExportSelection(host.pdfOptionsContainer?.(), {
+			settings: host.pdfExportSettings?.() ?? { mode: 'vector', includeHiddenSlides: false },
+			slides: host.slides?.() ?? host.mergedSlides(),
+			currentSlide: host.activeSlideIndex(),
+			translate: (key, params) => this.translate.instant(key, params),
+		});
+		if (selection) {
+			await this.exportPdf(selection);
+		}
+	}
+
+	/**
+	 * Export the slides `selection` names (every slide by default) to a multi-page PDF. Each slide
+	 * is made the live stage, given a render tick to settle, captured, then the original slide is
+	 * restored. Progress + Cancel drive the export-progress modal.
+	 */
+	async exportPdf(selection: PdfSlideSelection = {}): Promise<void> {
 		const host = this.requireHost();
 		if (host.slideCount() === 0 || this.exporting()) {
 			return;
@@ -134,6 +156,7 @@ export class ViewerExportService {
 						document,
 						slides,
 						canvasSize: { width, height },
+						...selection,
 						mountSlide: async (index) => {
 							const stage = await flipToSlide(host, index);
 							return stage ? { stage, html2canvasFallback: html2canvasFallbackFor(stage) } : null;
@@ -150,6 +173,8 @@ export class ViewerExportService {
 					},
 					pictures: () => Promise.resolve(),
 					save: (blob) => downloadBlob(blob, 'presentation.pdf'),
+					...(host.onPdfExportReport ? { onApproximated: host.onPdfExportReport } : {}),
+					...(host.notify ? { notify: host.notify } : {}),
 				});
 				this.progress.set(EXPORT_DONE_PERCENT);
 			} catch (err) {

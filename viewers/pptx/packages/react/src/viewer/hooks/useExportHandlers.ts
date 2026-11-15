@@ -6,6 +6,7 @@
  * Save-as logic lives in ./useExportSaveAs.ts.
  */
 import {
+	choosePdfExportSelection,
 	EXPORT_ASSEMBLING_PERCENT,
 	EXPORT_DONE_PERCENT,
 	isExportAbortError,
@@ -14,6 +15,7 @@ import {
 } from 'ooxml-ui/pptx';
 import { useState, useRef, useCallback } from 'react';
 
+import { useTranslation } from '../i18n/use-translation';
 import { exportSlideAsPng, copySlideToClipboard } from '../utils/export';
 import { exportPresentationPdf } from '../utils/export-pdf-vector';
 import type { UseExportHandlersInput, ExportHandlersResult } from './export-handler-types';
@@ -54,6 +56,7 @@ export function useExportHandlers(input: UseExportHandlersInput): ExportHandlers
 		imageResolutionScale,
 		pdfExportSettings,
 	} = input;
+	const { t } = useTranslation();
 	const backgroundColor = activeSlide?.backgroundColor;
 
 	const [exportModalOpen, setExportModalOpen] = useState(false);
@@ -145,9 +148,23 @@ export function useExportHandlers(input: UseExportHandlersInput): ExportHandlers
 		canvasSize,
 		slideSize: slideSizeEmu,
 	};
+	// The host callbacks and translator, read at invocation like the deck above.
+	const pdfHostRef = useRef({ input, t });
+	pdfHostRef.current = { input, t };
 
 	const handleExportPdf = useCallback(async () => {
 		if (!canvasStageRef.current) {
+			return;
+		}
+		const host = pdfHostRef.current;
+		// File > Export > PDF asks for the range first (vector pages only); Cancel exports nothing.
+		const selection = await choosePdfExportSelection(host.input.pdfExportContainerRef?.current, {
+			settings: pdfInputRef.current.settings,
+			slides: pdfInputRef.current.slides,
+			currentSlide: activeSlideIndex,
+			translate: host.t,
+		});
+		if (!selection) {
 			return;
 		}
 		const abortCtrl = new AbortController();
@@ -164,6 +181,9 @@ export function useExportHandlers(input: UseExportHandlersInput): ExportHandlers
 				'presentation.pdf',
 				{
 					...pdfInputRef.current,
+					selection,
+					notify: host.input.notifyPdfExport,
+					onApproximated: host.input.onPdfExportReport,
 					scale: imageExportScale,
 					onProgress: (current, total) => {
 						setExportProgress(slideProgressPercent(current, total));

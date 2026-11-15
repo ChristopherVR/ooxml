@@ -6,6 +6,7 @@ import {
 	slideProgressPercent,
 	slideStatusLabel,
 } from 'ooxml-ui/pptx';
+import type { PdfSlideSelection } from 'ooxml-ui/pptx';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -42,8 +43,8 @@ export interface UseExportProgressResult {
 	exportProgress: Ref<number>;
 	/** Status line under the bar (e.g. "Rendering slide 3 of 10..."). */
 	exportStatusMessage: Ref<string>;
-	/** Run the PDF export with the progress modal wired. */
-	runPdf: () => Promise<void>;
+	/** Run the PDF export with the progress modal wired, for `selection` (default: the options). */
+	runPdf: (selection?: PdfSlideSelection) => Promise<void>;
 	/** Run the GIF export with the progress modal wired. */
 	runGif: () => Promise<void>;
 	/** Run the WebM video export with the progress modal wired. */
@@ -77,9 +78,10 @@ export function useExportProgress(options: UseExportProgressOptions): UseExportP
 		exportModalOpen.value = false;
 	}
 
-	async function runPdf(): Promise<void> {
+	async function runPdf(selection: PdfSlideSelection = {}): Promise<void> {
 		const controller = beginExport(t('pptx.ribbon.exportPdf'));
 		const pdfOptions: ExportPdfOptions = {
+			...selection,
 			signal: controller.signal,
 			onProgress: (current, total) => {
 				exportProgress.value = slideProgressPercent(current, total);

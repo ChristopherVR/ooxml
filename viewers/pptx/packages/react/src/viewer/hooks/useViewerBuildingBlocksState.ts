@@ -3,6 +3,7 @@ import type {
 	ListConversionScope,
 	PptxLoadLimits,
 	ReadOnlyRecommendation,
+	VectorPdfExportResult,
 } from 'ooxml-ui/pptx';
 /**
  * useViewerBuildingBlocksState: The dialogs / editor-operations /
@@ -75,6 +76,8 @@ export interface UseViewerBuildingBlocksStateInput {
 	onZoomChange?: (zoom: number) => void;
 	onSelectionChange?: (ids: string[]) => void;
 	onSlideCountChange?: (count: number) => void;
+	/** What a vector PDF export approximated (as the viewer's `onPdfExportReport`). */
+	onPdfExportReport?: (result: VectorPdfExportResult) => void;
 }
 
 export interface ViewerBuildingBlocksState {
@@ -145,6 +148,7 @@ export function useViewerBuildingBlocksState(
 		onZoomChange,
 		onSelectionChange,
 		onSlideCountChange,
+		onPdfExportReport,
 	} = input;
 	const {
 		state,
@@ -293,6 +297,7 @@ export function useViewerBuildingBlocksState(
 		onZoomChange,
 		onSelectionChange,
 		onSlideCountChange,
+		onPdfExportReport,
 	});
 
 	// Route keyboard/end-of-show exits through the same keep/discard-ink dialog

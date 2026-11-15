@@ -9,6 +9,7 @@ import {
 	roundedRectPath,
 	splitTopLevel,
 } from './pdf-vector-css';
+import type { PdfExportDiagnosticCode } from './pdf-export-diagnostics';
 import type { ImageItem, Matrix, PathItem, PathStroke, PdfClip } from './pdf-vector-display-list';
 
 export interface BoxGeometry {
@@ -29,14 +30,12 @@ export interface BoxPaint {
 	items: (PathItem | ImageItem)[];
 	image?: BoxImageRequest;
 	/** Set when the box cannot be vector; the caller draws it as a picture. */
-	raster?: string;
+	raster?: PdfExportDiagnosticCode;
 }
 
-const FILL_REASON =
-	'Fills this export cannot write as vector graphics (patterns, picture tiles, radial and semi-transparent gradients) are drawn as pictures.';
-const BORDER_REASON =
-	'Borders with styles other than solid, dashed or dotted, or with differing sides on a rounded box, are drawn as pictures.';
-export const SHADOW_REASON = 'Shadows are drawn as pictures.';
+const FILL_REASON = 'boxFillAsPicture' satisfies PdfExportDiagnosticCode;
+const BORDER_REASON = 'borderAsPicture' satisfies PdfExportDiagnosticCode;
+export const SHADOW_REASON = 'shadowAsPicture' satisfies PdfExportDiagnosticCode;
 
 const px = (value: string) => Number.parseFloat(value) || 0;
 

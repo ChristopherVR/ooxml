@@ -15,13 +15,15 @@ export interface OfficeToast {
 	readonly severity: 'info' | 'warning';
 	/** Translated message. */
 	readonly message: string;
+	/** Translated lines shown under a collapsed Details expander. */
+	readonly details?: readonly string[];
 }
 
 export interface OfficeToastsState {
 	toasts: readonly OfficeToast[];
 	/** Extra toasts a host already trimmed off the list it passes. */
 	overflowCount?: number;
-	labels?: { title?: string; dismissAll?: string; dismiss?: string };
+	labels?: { title?: string; dismissAll?: string; dismiss?: string; details?: string };
 }
 
 /**
@@ -89,6 +91,16 @@ export class OfficeUiToasts extends OfficeElement {
 								@click=${() => this.fire(requestEvent, { id: 'dismiss', toastId: toast.id })}
 								>${glyph('close', 'icon')}</button
 							>
+							${
+								toast.details?.length
+									? html`<details data-testid="${p}-details">
+											<summary>${labels.details ?? 'Details'}</summary>
+											<ul>
+												${toast.details.map((line) => html`<li>${line}</li>`)}
+											</ul>
+										</details>`
+									: ''
+							}
 						</div>`,
 				)}
 				${hiddenCount > 0 ? html`<p class="overflow">+${hiddenCount}</p>` : ''}

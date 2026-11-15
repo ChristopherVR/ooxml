@@ -874,7 +874,8 @@ export interface ChromeHost {
 	selectElements(ids: string[]): void;
 	exportSlidePng(): Promise<void>;
 	copySlideAsImage(): Promise<void>;
-	exportPdf(): Promise<void>;
+	/** File > Export > PDF from the UI: the PDF options step, then the export. */
+	exportPdfFromUi(): Promise<void>;
 	exportGif(): Promise<void>;
 	exportVideo(): Promise<void>;
 	exportJson(): void;
@@ -1046,7 +1047,7 @@ export function buildMountChromeDeps(host: ChromeHost): MountChromeDeps {
 		commitNotes: (notes, notesSegments) => host.editor.commitNotes(notes, notesSegments),
 		exportSlidePng: () => host.exportSlidePng(),
 		copySlideAsImage: () => host.copySlideAsImage(),
-		exportPdf: () => host.exportPdf(),
+		exportPdf: () => host.exportPdfFromUi(),
 		exportGif: () => host.exportGif(),
 		exportVideo: () => host.exportVideo(),
 		exportJson: () => host.exportJson(),

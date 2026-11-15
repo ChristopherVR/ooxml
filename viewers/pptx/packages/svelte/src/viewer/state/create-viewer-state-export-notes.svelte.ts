@@ -1,4 +1,11 @@
-import type { FieldSubstitutionContext, MobileSheetKey, PdfExportSettings } from 'ooxml-ui/pptx';
+import { choosePdfExportSelection } from 'ooxml-ui/pptx';
+import type {
+	CompatibilityWarningToast,
+	FieldSubstitutionContext,
+	MobileSheetKey,
+	PdfExportSettings,
+	VectorPdfExportResult,
+} from 'ooxml-ui/pptx';
 import type { TextSegment } from 'pptx-viewer-core';
 
 import type { Translator } from '../../i18n/translator';
@@ -45,6 +52,10 @@ export interface ExportNotesClusterDeps {
 	/** Host-supplied source file name, used to name the deck-JSON download. */
 	getFileName?(): string | undefined;
 	onnotesupdate?: (notes: string) => void;
+	/** Show the PDF approximation notice in the compatibility toast stack. */
+	notify?(toast: CompatibilityWarningToast): void;
+	/** The host's `onpdfexportreport`. */
+	onpdfexportreport?(result: VectorPdfExportResult): void;
 }
 
 export interface ExportNotesCluster {
@@ -87,10 +98,20 @@ export function buildExportNotesCluster(deps: ExportNotesClusterDeps): ExportNot
 		getFieldContext: () => deps.getFieldContext?.(),
 		getDeckData: () => buildDeckExportData(editor, loader),
 		getFileName: () => deps.getFileName?.(),
+		notify: (toast) => deps.notify?.(toast),
+		onPdfExportReport: (result) => deps.onpdfexportreport?.(result),
 	});
 	const exportUi = new ExportUiState({
 		controller: exportWiring.controller,
 		getTranslator: () => deps.t,
+		// Mounted in the viewer root so the dialog inherits the viewer theme.
+		choosePdfSelection: () =>
+			choosePdfExportSelection(deps.getRootEl(), {
+				settings: deps.getPdfExportSettings?.() ?? { mode: 'vector', includeHiddenSlides: false },
+				slides: editor.renderedSlides,
+				currentSlide: viewer.current,
+				translate: (key, params) => deps.t(key, params),
+			}),
 	});
 
 	let notesExpanded = $state(false);

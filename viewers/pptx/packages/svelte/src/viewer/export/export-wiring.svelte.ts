@@ -4,6 +4,7 @@ import type { PptxData, PptxSlide } from 'pptx-viewer-core';
 import type { Translator } from '../../i18n/translator';
 import type { RenderContextSource } from '../state/render-context';
 import { ExportController } from './export-controller.svelte';
+import type { ExportControllerDeps } from './export-controller.svelte';
 import type { RasterizeSlideController } from './rasterize-slide';
 import { createRasterizeSlide } from './rasterize-slide';
 
@@ -49,6 +50,10 @@ export interface ExportWiringDeps {
 	getPrintHighQuality?(): boolean;
 	/** Options > Advanced > Save as PDF. Defaults to vector pages without hidden slides. */
 	getPdfExportSettings?(): PdfExportSettings | undefined;
+	/** Show the PDF approximation notice in the viewer's toast stack. */
+	notify?: ExportControllerDeps['notify'];
+	/** The host's `onpdfexportreport`. */
+	onPdfExportReport?: ExportControllerDeps['onPdfExportReport'];
 	/** The deck's theme and table styles for the capture stage. */
 	getRenderContext?(): RenderContextSource | undefined;
 }
@@ -113,6 +118,8 @@ export function createExportWiring(deps: ExportWiringDeps): ExportWiring {
 		mountSlide: (index) => getRasterizer().mountSlide(index),
 		getImageResolutionScale: deps.getImageResolutionScale,
 		getTranslator: deps.getTranslator,
+		notify: (toast) => deps.notify?.(toast),
+		onPdfExportReport: (result) => deps.onPdfExportReport?.(result),
 	});
 
 	return {

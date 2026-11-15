@@ -989,6 +989,12 @@ const exporter = useExportWiring({
 	onSavedClean: () => {
 		autosave.isDirty.value = false;
 	},
+	// What a vector PDF approximated: the host's event, and one notice in the toast stack.
+	onPdfExportReport: (result) => emit('pdf-export-report', result),
+	notify: (toast) => compatToasts.notify(toast),
+	// File > Export > PDF's options dialog mounts in the viewer root (declared further down).
+	dialogContainer: () => viewerRootRef.value,
+	translate: (key, params) => (params ? t(key, params) : t(key)),
 });
 const { exportStageRef, exportSlide, rasterizeSlide, exportProgressCtl, onExportPdf } = exporter;
 

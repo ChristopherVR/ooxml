@@ -59,6 +59,8 @@ export * from './pdf-slides';
 export * from './pdf-vector-select';
 export * from './pdf-vector-export';
 export * from './pdf-export-run';
+export * from './pdf-export-diagnostics';
+export * from './pdf-export-notice';
 export { resolvePdfTextFont } from './pdf-vector-paint';
 export * from './pdf-notes-builder';
 export * from './pdf-page-size';
