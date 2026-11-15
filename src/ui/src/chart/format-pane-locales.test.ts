@@ -28,7 +28,9 @@ describe('chart Format pane dictionary', () => {
 	it('maps tags onto its locales and lets a product override a caption', () => {
 		expect(chartFormatLocale('fr-CA')).toBe('fr');
 		expect(chartFormatLocale('zh-Hans')).toBe('zh-CN');
-		expect(chartFormatLocale('ja')).toBe('en');
+		expect(chartFormatLocale('ja-JP')).toBe('ja');
+		expect(chartFormatLocale('ko-KR')).toBe('ko');
+		expect(chartFormatLocale('it')).toBe('en');
 		const translate = chartFormatTranslator('de', (key) =>
 			key === 'chartFormat.close' ? 'Zu' : key,
 		);
