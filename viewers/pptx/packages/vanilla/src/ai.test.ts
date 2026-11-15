@@ -49,7 +49,8 @@ async function openWith(ai: PptxAiConfig | PptxAiAssistant): Promise<HTMLElement
 	const toggle = container.querySelector<HTMLButtonElement>('.pptxv-ai-toggle');
 	expect(toggle).not.toBeNull();
 	toggle?.click();
-	await vi.waitFor(() => expect(panelModule.created).toHaveLength(1));
+	// The panel module loads lazily; a loaded CI worker can take longer than the 1 s default.
+	await vi.waitFor(() => expect(panelModule.created).toHaveLength(1), { timeout: 10_000 });
 	const host = container.querySelector<HTMLElement>('[data-pptx-ai-panel]');
 	expect(host?.hidden).toBeFalsy();
 	return container;
