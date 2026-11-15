@@ -86,6 +86,7 @@ function relay(patch: Partial<PptxElement>): void {
 <template>
 	<aside
 		:data-pptx-inspector="mobile ? undefined : ''"
+		data-pptx-chrome="inspector"
 		class="pptx-vue-inspector overflow-y-auto bg-background box-border px-3 pb-8 text-xs text-foreground"
 		:class="mobile ? 'w-full pt-1' : 'w-72 flex-[0_0_18rem] border-l border-border pt-2'"
 		:aria-label="t('pptx.inspector.properties')"
