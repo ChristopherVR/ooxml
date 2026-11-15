@@ -98,9 +98,12 @@ export async function downloadViaCard(
 ): Promise<Download> {
 	const downloadPromise = page.waitForEvent('download', { timeout: timeoutMs });
 	await exportCard(page, title).click({ timeout: timeoutMs });
-	if (title === PDF_CARD) await confirmPdfOptions(page, pdfOptions);
+	if (title === PDF_CARD) pdfOptionsAsked.set(page, await confirmPdfOptions(page, pdfOptions));
 	return downloadPromise;
 }
+
+/** Whether the last PDF export through {@link downloadViaCard} on a page showed the options step. */
+export const pdfOptionsAsked = new WeakMap<Page, boolean>();
 
 /** The PDF options step (Range, Include hidden slides) that File > Export > PDF opens first. */
 export function pdfOptionsDialog(page: Page): Locator {

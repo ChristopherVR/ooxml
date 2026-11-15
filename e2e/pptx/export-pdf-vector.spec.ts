@@ -25,6 +25,7 @@ import {
 	openBackstageExport,
 	PDF_CARD,
 	pdfImageXObjectCount,
+	pdfOptionsAsked,
 	pdfOptionsDialog,
 	pdfPageCount,
 	seedAdvancedOptions,
@@ -100,11 +101,14 @@ function readPdf(bytes: Uint8Array): PdfFacts {
 	};
 }
 
-async function exportPdf(page: Page, choice: PdfOptionsChoice = {}): Promise<PdfFacts> {
+async function exportPdf(
+	page: Page,
+	choice: PdfOptionsChoice = {},
+): Promise<PdfFacts & { asked: boolean }> {
 	await openBackstageExport(page);
 	const download = await downloadViaCard(page, PDF_CARD, 180_000, choice);
 	expect(download.suggestedFilename()).toMatch(/\.pdf$/u);
-	return readPdf(await downloadBytes(download));
+	return { ...readPdf(await downloadBytes(download)), asked: pdfOptionsAsked.get(page) === true };
 }
 
 test.describe('vector PDF export', () => {
@@ -197,8 +201,8 @@ test.describe('vector PDF export', () => {
 				{ viewport: VIEWPORT },
 			);
 			const problems = byBinding(results).flatMap(({ name, value }) => {
-				if (!value.approximated)
-					return value.notices ? [`${name}: a notice without approximations`] : [];
+				// The deck's picture effects must be approximated, or this test proves nothing.
+				if (!value.approximated) return [`${name}: the export reported no approximations`];
 				const issues: string[] = [];
 				if (value.notices !== 1) issues.push(`${name}: ${value.notices} PDF notices, expected 1`);
 				if (!/^PDF saved with approximations: .+\.$/u.test(value.message))
@@ -241,6 +245,29 @@ test.describe('vector PDF export', () => {
 							`${name}: "Save slides as pictures" gave ${value.pages} pages, ${value.images} images`,
 						],
 			);
+			expect(problems.join('\n')).toBe('');
+		},
+	);
+
+	test(
+		'every binding asks for the range and exports only those slides',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const facts = await deckFacts(EXPORT_DECK);
+			expect(facts.visible).toBe(facts.slides);
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await loadDeckAt(page, origin, EXPORT_DECK);
+					return exportPdf(page, { range: 'slides', from: 2, to: 3 });
+				},
+				{ viewport: VIEWPORT },
+			);
+			const problems = byBinding(results).flatMap(({ name, value }) => [
+				...(value.asked ? [] : [`${name}: Export > PDF showed no options step`]),
+				...(value.pages === 2 ? [] : [`${name}: slides 2-3 gave ${value.pages} pages`]),
+			]);
 			expect(problems.join('\n')).toBe('');
 		},
 	);
