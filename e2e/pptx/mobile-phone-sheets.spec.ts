@@ -11,6 +11,7 @@ import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 import { resetTabSession } from './support/deck';
+import { openFormatSection } from './support/format-pane';
 
 const deck = resolve(
 	fileURLToPath(new URL('../../viewers/pptx/.github/assets/sample-deck.pptx', import.meta.url)),
@@ -70,6 +71,8 @@ test('the Format sheet lays X/Y and W/H out as two columns, each field beside it
 	await load(page);
 	await page.locator('[data-pptx-element="true"]').last().tap();
 	await bar(page).getByRole('button', { name: 'Format' }).tap();
+	// The fields live in the Format pane's Size and Position section, closed for a shape.
+	await openFormatSection(page, 'sizePosition');
 	// Some bindings label them W and H, others Width and Height.
 	const names: Record<string, RegExp> = {
 		X: /^\s*X\s*$/,

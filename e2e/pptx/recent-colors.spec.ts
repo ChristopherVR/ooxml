@@ -35,6 +35,7 @@ import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
 import { fixture, inspector, loadDeck } from './support/deck';
+import { formatSection } from './support/format-pane';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -129,6 +130,9 @@ async function selectSourceShape(page: Page): Promise<void> {
 	const source = sourceShape(page);
 	await source.waitFor();
 	await source.click();
+	// The slide's own Format pane has colour inputs too: wait for the shape's Fill
+	// section, or a case could read the slide's inputs before the selection lands.
+	await expect(formatSection(page, 'fill')).toBeVisible();
 	await expect(colorInputs(page).first()).toBeVisible();
 }
 
