@@ -1,5 +1,8 @@
 import type {
 	CanvasSize,
+	CompatibilityWarningToast,
+	PdfExportDialogTranslate,
+	VectorPdfExportResult,
 	DocumentSaveReason,
 	DocumentStorage,
 	RasterizeElementResult,
@@ -7,6 +10,7 @@ import type {
 	ViewerOptions,
 } from 'ooxml-ui/pptx';
 import {
+	choosePdfExportSelection,
 	deleteAutosaveSnapshot,
 	deliverSavedPresentation,
 	exportDeckJson,
@@ -70,6 +74,14 @@ export interface UseExportWiringInput {
 	changeSources?: () => readonly unknown[];
 	/** A Save / Save As landed with no edit while it was in flight: the document is clean. */
 	onSavedClean?: () => void;
+	/** The viewer's `pdf-export-report` emit (what a vector PDF approximated). */
+	onPdfExportReport?: (result: VectorPdfExportResult) => void;
+	/** Show a notice (the PDF approximation summary) in the compatibility toast stack. */
+	notify?: (toast: CompatibilityWarningToast) => void;
+	/** Where File > Export > PDF mounts its options dialog (inside the viewer root, for the theme). */
+	dialogContainer?: () => HTMLElement | null | undefined;
+	/** Active-language translator for the options dialog. */
+	translate?: PdfExportDialogTranslate;
 }
 
 export interface UseExportWiringResult {
@@ -133,6 +145,12 @@ export function useExportWiring(input: UseExportWiringInput): UseExportWiringRes
 			imageExportScale,
 		});
 
+	const getPdfExportSettings = () => {
+		const options = input.getOptions?.();
+		return options
+			? resolvePdfExportSettings(options)
+			: { mode: 'vector' as const, includeHiddenSlides: false };
+	};
 	const exporter = useExport({
 		slides,
 		canvasSize,
@@ -140,12 +158,9 @@ export function useExportWiring(input: UseExportWiringInput): UseExportWiringRes
 		rasterizeSlideToRaster,
 		rasterizeSlideToTiles,
 		mountSlide,
-		getPdfExportSettings: () => {
-			const options = input.getOptions?.();
-			return options
-				? resolvePdfExportSettings(options)
-				: { mode: 'vector', includeHiddenSlides: false };
-		},
+		getPdfExportSettings,
+		...(input.onPdfExportReport ? { onReport: input.onPdfExportReport } : {}),
+		...(input.notify ? { notify: input.notify } : {}),
 		...(imageExportScale ? { imageExportScale } : {}),
 	});
 	const mediaExport = useMediaExport({ slideCount, rasterizeSlide });
@@ -154,8 +169,23 @@ export function useExportWiring(input: UseExportWiringInput): UseExportWiringRes
 	function onExportPng(): void {
 		void exporter.exportSlidePng(activeSlideIndex.value);
 	}
+	/** File > Export > PDF from the UI: the shared options step (Range), then the export. */
+	async function exportPdfWithOptions(): Promise<void> {
+		if (isExporting.value || slides.value.length === 0) {
+			return;
+		}
+		const selection = await choosePdfExportSelection(input.dialogContainer?.(), {
+			settings: getPdfExportSettings(),
+			slides: slides.value,
+			currentSlide: activeSlideIndex.value,
+			...(input.translate ? { translate: input.translate } : {}),
+		});
+		if (selection) {
+			await exportProgressCtl.runPdf(selection);
+		}
+	}
 	function onExportPdf(): void {
-		void exportProgressCtl.runPdf();
+		void exportPdfWithOptions();
 	}
 	function onExportGif(): void {
 		void exportProgressCtl.runGif();

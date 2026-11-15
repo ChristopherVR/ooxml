@@ -10,7 +10,7 @@ import type { CanvasSize } from '../types';
 import type { EditorHistoryResult } from './useEditorHistory';
 import type { ElementOperations } from './useElementOperations';
 import { useExportHandlers } from './useExportHandlers';
-import type { ExportHandlersResult } from './useExportHandlers';
+import type { ExportHandlersResult, UseExportHandlersInput } from './useExportHandlers';
 import { usePrintHandlers } from './usePrintHandlers';
 import type { PrintHandlersResult } from './usePrintHandlers';
 import { usePropertyHandlers } from './usePropertyHandlers';
@@ -62,6 +62,10 @@ export interface UseIOHandlersInput {
 	imageResolutionScale?: number;
 	/** File > Options > Advanced > Save as PDF (vector pages or pictures, hidden slides). */
 	pdfExportSettings?: PdfExportSettings;
+	/** See the matching fields on `UseExportHandlersInput`. */
+	pdfExportContainerRef?: UseExportHandlersInput['pdfExportContainerRef'];
+	notifyPdfExport?: UseExportHandlersInput['notifyPdfExport'];
+	onPdfExportReport?: UseExportHandlersInput['onPdfExportReport'];
 }
 
 // ---------------------------------------------------------------------------
@@ -100,6 +104,9 @@ export function useIOHandlers(input: UseIOHandlersInput): IOHandlersResult {
 		imageExportScale,
 		imageResolutionScale,
 		pdfExportSettings,
+		pdfExportContainerRef,
+		notifyPdfExport,
+		onPdfExportReport,
 	} = input;
 
 	const exportHandlers = useExportHandlers({
@@ -129,6 +136,9 @@ export function useIOHandlers(input: UseIOHandlersInput): IOHandlersResult {
 		imageExportScale,
 		imageResolutionScale,
 		pdfExportSettings,
+		pdfExportContainerRef,
+		notifyPdfExport,
+		onPdfExportReport,
 	});
 
 	const printHandlers = usePrintHandlers({

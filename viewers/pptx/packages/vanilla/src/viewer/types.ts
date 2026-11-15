@@ -80,6 +80,12 @@ export interface PptxViewerCallbacks {
 	onElementRenderError?: import('ooxml-ui/pptx').ElementRenderErrorHandler;
 	/** Fired when the active slide changes (zero-based index). */
 	onSlideChange?: (index: number) => void;
+	/**
+	 * Fired after a vector PDF export (File > Export > PDF or `exportPdf()`) that approximated
+	 * something: elements drawn as pictures, substituted fonts, simplified effects. The viewer also
+	 * shows one notice summarising it. Not fired when nothing was approximated.
+	 */
+	onPdfExportReport?: (result: import('ooxml-ui/pptx').VectorPdfExportResult) => void;
 	/** Fired when the editing zoom scale changes (1 = 100%); reports the editing zoom during a show too. */
 	onZoomChange?: (scale: number) => void;
 	/**

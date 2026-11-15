@@ -565,6 +565,11 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			getPrintHighQuality: () => this.optionsController.getOptions().advanced.printHighQuality,
 			getPdfExportSettings: () => resolvePdfExportSettings(this.optionsController.getOptions()),
 			getFileName: () => this.documentView().fileName,
+			onPdfExportReport: (result) => this.options.onPdfExportReport?.(result),
+			notify: (toast) =>
+				this.store.set({
+					compatToasts: [toast, ...this.store.get().compatToasts.filter((t) => t.id !== toast.id)],
+				}),
 		});
 		// File > Options controller: owns the persisted options store and turns
 		// option values into behavior. Created before the parity workflows (which

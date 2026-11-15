@@ -6,6 +6,7 @@ import {
 	slideProgressPercent,
 	slideStatusLabel,
 } from 'ooxml-ui/pptx';
+import type { PdfSlideSelection } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n/translator';
 import type { ExportController } from './export-controller.svelte';
@@ -31,6 +32,11 @@ export interface ExportUiDeps {
 	 * "feedback with sound" hook); not called on abort or failure.
 	 */
 	onComplete?(): void;
+	/**
+	 * File > Export > PDF's options step (Range, Include hidden slides): resolves to the
+	 * selection to export, or `null` when the user cancelled. Omitted: every slide, no dialog.
+	 */
+	choosePdfSelection?(): Promise<PdfSlideSelection | null>;
 }
 
 export class ExportUiState {
@@ -110,11 +116,19 @@ export class ExportUiState {
 			.catch((err: unknown) => this.#fail('Copy image', err));
 	}
 
-	/** Run the PDF export with the progress modal wired. */
+	/** Ask for the PDF options, then run the PDF export with the progress modal wired. */
 	async runPdf(): Promise<void> {
+		if (this.exporting) {
+			return;
+		}
+		const selection = this.#deps.choosePdfSelection ? await this.#deps.choosePdfSelection() : {};
+		if (!selection) {
+			return;
+		}
 		const abort = this.#begin(this.#t('pptx.ribbon.exportPdf'));
 		try {
 			await this.#deps.controller.exportPdf({
+				...selection,
 				signal: abort.signal,
 				onProgress: (current, total) => {
 					this.progress = slideProgressPercent(current, total);

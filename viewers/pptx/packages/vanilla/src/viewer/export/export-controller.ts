@@ -1,4 +1,8 @@
-import type { PdfExportSettings, VectorPdfExportResult } from 'ooxml-ui/pptx';
+import type {
+	CompatibilityWarningToast,
+	PdfExportSettings,
+	VectorPdfExportResult,
+} from 'ooxml-ui/pptx';
 import {
 	downloadBlob,
 	downloadDataUrl,
@@ -48,6 +52,8 @@ export interface ExportPdfOptions {
 	/** 1-based slide range (vector export). */
 	from?: number;
 	to?: number;
+	/** Explicit 0-based slides (the current slide); overrides `from`/`to` (vector export). */
+	slideIndexes?: readonly number[];
 	/** `pictures` writes one image per slide (the compatibility export); default from the options. */
 	mode?: PdfExportSettings['mode'];
 	/** Told what the vector PDF approximated (effects drawn as pictures, substituted fonts). */
@@ -82,6 +88,10 @@ export interface ExportControllerDeps {
 	getPdfExportSettings?: () => PdfExportSettings;
 	/** Options > Advanced image resolution multiplier, for effects drawn as pictures. */
 	getImageResolutionScale?: () => number;
+	/** The viewer-level `onPdfExportReport`, told what every vector PDF approximated. */
+	onPdfExportReport?: (result: VectorPdfExportResult) => void;
+	/** Show the PDF approximation notice in the compatibility toast stack. */
+	notify?: (toast: CompatibilityWarningToast) => void;
 }
 
 export interface ExportController {
@@ -263,6 +273,7 @@ export function createExportController(deps: ExportControllerDeps): ExportContro
 						...(state.slideSize ? { slideSize: state.slideSize } : {}),
 						...(options.from !== undefined ? { from: options.from } : {}),
 						...(options.to !== undefined ? { to: options.to } : {}),
+						...(options.slideIndexes ? { slideIndexes: options.slideIndexes } : {}),
 						mountSlide,
 						rasterScale: 2 * (deps.getImageResolutionScale?.() ?? 1),
 						title: capture.baseName,
@@ -271,7 +282,11 @@ export function createExportController(deps: ExportControllerDeps): ExportContro
 					},
 					pictures: () => Promise.resolve(),
 					save: (blob) => downloadBlob(blob, `${capture.baseName}.pdf`),
-					...(options.onReport ? { onApproximated: options.onReport } : {}),
+					onApproximated: (result) => {
+						options.onReport?.(result);
+						deps.onPdfExportReport?.(result);
+					},
+					...(deps.notify ? { notify: deps.notify } : {}),
 				});
 			});
 		}

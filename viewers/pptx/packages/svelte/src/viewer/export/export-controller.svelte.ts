@@ -1,5 +1,6 @@
 import type {
 	CanvasSize,
+	CompatibilityWarningToast,
 	MountedPdfSlide,
 	PdfExportSettings,
 	VectorPdfExportResult,
@@ -48,6 +49,8 @@ export interface ExportPdfOptions {
 	/** 1-based slide range (vector export). */
 	from?: number;
 	to?: number;
+	/** Explicit 0-based slides (the current slide); overrides `from`/`to` (vector export). */
+	slideIndexes?: readonly number[];
 	/** `pictures` writes one image per slide (the compatibility export); default from the options. */
 	mode?: PdfExportSettings['mode'];
 	/** Told what the vector PDF approximated (effects drawn as pictures, substituted fonts). */
@@ -105,6 +108,10 @@ export interface ExportControllerDeps {
 	getPdfExportSettings?(): PdfExportSettings | undefined;
 	/** Options > Advanced image resolution multiplier, for effects drawn as pictures. */
 	getImageResolutionScale?(): number;
+	/** Show the PDF approximation notice in the viewer's toast stack. */
+	notify?(toast: CompatibilityWarningToast): void;
+	/** The host's `onpdfexportreport`, told what every vector PDF approximated. */
+	onPdfExportReport?(result: VectorPdfExportResult): void;
 }
 
 /**
@@ -232,12 +239,17 @@ export class ExportController {
 						title: baseName,
 						...(options.from !== undefined ? { from: options.from } : {}),
 						...(options.to !== undefined ? { to: options.to } : {}),
+						...(options.slideIndexes ? { slideIndexes: options.slideIndexes } : {}),
 						...(signal ? { signal } : {}),
 						...(onProgress ? { onProgress } : {}),
 					},
 					pictures: () => Promise.resolve(),
 					save: (blob) => downloadBlob(blob, `${baseName}.pdf`),
-					...(options.onReport ? { onApproximated: options.onReport } : {}),
+					onApproximated: (result) => {
+						options.onReport?.(result);
+						this.#deps.onPdfExportReport?.(result);
+					},
+					...(this.#deps.notify ? { notify: (toast) => this.#deps.notify?.(toast) } : {}),
 				});
 			} finally {
 				this.exporting = false;

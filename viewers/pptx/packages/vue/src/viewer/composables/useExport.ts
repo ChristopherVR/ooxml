@@ -1,4 +1,5 @@
 import type {
+	CompatibilityWarningToast,
 	MountedPdfSlide,
 	PdfExportSettings,
 	RasterizeElementResult,
@@ -55,6 +56,10 @@ export interface UseExportOptions {
 	getPdfExportSettings?: () => PdfExportSettings;
 	/** Options > Advanced image resolution multiplier, for effects drawn as pictures. */
 	imageExportScale?: () => number;
+	/** The viewer's `pdf-export-report` emit: told what every vector PDF approximated. */
+	onReport?: (result: VectorPdfExportResult) => void;
+	/** Show the PDF notice in the viewer's compatibility toast stack. */
+	notify?: (toast: CompatibilityWarningToast) => void;
 }
 
 /** Per-slide progress callback: `(currentSlideIndex, totalSlides)`. */
@@ -71,6 +76,8 @@ export interface ExportPdfOptions {
 	/** 1-based slide range (vector export). */
 	from?: number;
 	to?: number;
+	/** Explicit 0-based slide indexes (the current slide); overrides `from`/`to` (vector export). */
+	slideIndexes?: readonly number[];
 	/** `pictures` writes one image per slide (the compatibility export); default from the options. */
 	mode?: PdfExportSettings['mode'];
 	/** Told what the vector PDF approximated (effects drawn as pictures, substituted fonts). */
@@ -129,6 +136,9 @@ export function useExport(options: UseExportOptions): UseExportResult {
 			includeHiddenSlides: false,
 		};
 		const mode = options.mountSlide ? (opts.mode ?? defaults.mode) : 'pictures';
+		const reporters = [opts.onReport, options.onReport].filter(
+			(report): report is (result: VectorPdfExportResult) => void => report !== undefined,
+		);
 		if (mode === 'vector' && options.mountSlide) {
 			exporting.value = true;
 			try {
@@ -147,12 +157,16 @@ export function useExport(options: UseExportOptions): UseExportResult {
 						title: baseName,
 						...(opts.from !== undefined ? { from: opts.from } : {}),
 						...(opts.to !== undefined ? { to: opts.to } : {}),
+						...(opts.slideIndexes ? { slideIndexes: opts.slideIndexes } : {}),
 						...(signal ? { signal } : {}),
 						...(onProgress ? { onProgress } : {}),
 					},
 					pictures: () => Promise.resolve(),
 					save: (blob) => downloadBlob(blob, `${baseName}.pdf`),
-					...(opts.onReport ? { onApproximated: opts.onReport } : {}),
+					...(reporters.length
+						? { onApproximated: (result) => reporters.forEach((report) => report(result)) }
+						: {}),
+					...(options.notify ? { notify: options.notify } : {}),
 				});
 			} finally {
 				exporting.value = false;

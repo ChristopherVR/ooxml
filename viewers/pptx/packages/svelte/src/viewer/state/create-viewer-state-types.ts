@@ -16,6 +16,7 @@ import type {
 	MobileSheetKey,
 	PptxLoadLimits,
 	ResolvedCustomization,
+	VectorPdfExportResult,
 	ViewerAutosaveStatus,
 	ViewerMode,
 	ViewportFitPadding,
@@ -146,6 +147,7 @@ export interface CreateViewerStateOptions {
 	onpropertieschange?: (updates: Partial<PptxCoreProperties>) => void;
 	onpresentationchange?: (presenting: boolean) => void;
 	oncollaborationstatus?: (status: ConnectionStatus) => void;
+	onpdfexportreport?: (result: VectorPdfExportResult) => void;
 	onstartcollaboration?: (config: CollaborationConfig) => void;
 	oncollaborationchange?: (state: CollaborationState) => void;
 	onstopcollaboration?: () => void;

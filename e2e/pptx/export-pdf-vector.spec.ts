@@ -25,8 +25,10 @@ import {
 	openBackstageExport,
 	PDF_CARD,
 	pdfImageXObjectCount,
+	pdfOptionsDialog,
 	pdfPageCount,
 	seedAdvancedOptions,
+	type PdfOptionsChoice,
 } from './support/exports';
 import { byBinding } from './support/menu-report';
 import { acrossFrameworks } from './support/parity';
@@ -37,6 +39,8 @@ test.describe.configure({ timeout: 240_000 });
 
 /** A deck with one hidden slide among fourteen. */
 const HIDDEN_DECK = fixture('solution-explorer.pptx');
+/** A deck with picture effects, so the export approximates something. */
+const NOTICE_DECK = fixture('image-alpha-effects.pptx');
 
 interface DeckFacts {
 	slides: number;
@@ -96,9 +100,9 @@ function readPdf(bytes: Uint8Array): PdfFacts {
 	};
 }
 
-async function exportPdf(page: Page): Promise<PdfFacts> {
+async function exportPdf(page: Page, choice: PdfOptionsChoice = {}): Promise<PdfFacts> {
 	await openBackstageExport(page);
-	const download = await downloadViaCard(page, PDF_CARD, 180_000);
+	const download = await downloadViaCard(page, PDF_CARD, 180_000, choice);
 	expect(download.suggestedFilename()).toMatch(/\.pdf$/u);
 	return readPdf(await downloadBytes(download));
 }
@@ -128,6 +132,83 @@ test.describe('vector PDF export', () => {
 		await loadDeck(page, HIDDEN_DECK);
 		expect((await exportPdf(page)).pages).toBe(facts.slides);
 	});
+
+	test('the options step exports the current slide or a range', async ({ page }) => {
+		const facts = await deckFacts(HIDDEN_DECK);
+		await loadDeck(page, HIDDEN_DECK);
+		expect((await exportPdf(page, { range: 'current' })).pages).toBe(1);
+		// Slides 1-3 counted with hidden slides in the numbering, all included.
+		expect(
+			(await exportPdf(page, { range: 'slides', from: 1, to: 3, includeHidden: true })).pages,
+		).toBe(Math.min(3, facts.slides));
+	});
+
+	test('the options step can be cancelled without a download', async ({ page }) => {
+		await loadDeck(page, EXPORT_DECK);
+		await openBackstageExport(page);
+		const downloads: string[] = [];
+		page.on('download', (download) => downloads.push(download.suggestedFilename()));
+		await page
+			.locator('[role="dialog"][aria-label="File"]')
+			.getByRole('button', { name: PDF_CARD })
+			.first()
+			.click();
+		await expect(pdfOptionsDialog(page)).toBeVisible();
+		await page.keyboard.press('Escape');
+		await expect(page.locator('pptx-ui-pdf-export-dialog')).toHaveCount(0);
+		await page.waitForTimeout(1_000);
+		expect(downloads).toEqual([]);
+	});
+
+	test(
+		'every binding shows one notice exactly when the PDF approximated something',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					let approximated = false;
+					page.on('console', (message) => {
+						if (message.text().startsWith('[pptx-viewer] PDF export:')) approximated = true;
+					});
+					await loadDeckAt(page, origin, NOTICE_DECK);
+					await exportPdf(page);
+					const notice = page.locator(
+						'[data-testid="pptx-compat-toast"][data-code="PDF_EXPORT_APPROXIMATED"]',
+					);
+					if (approximated)
+						await notice
+							.first()
+							.waitFor({ timeout: 10_000 })
+							.catch(() => {});
+					return {
+						approximated,
+						notices: await notice.count(),
+						details: await notice.locator('details li').count(),
+						message:
+							(await notice
+								.first()
+								.locator('.message')
+								.textContent()
+								.catch(() => '')) ?? '',
+					};
+				},
+				{ viewport: VIEWPORT },
+			);
+			const problems = byBinding(results).flatMap(({ name, value }) => {
+				if (!value.approximated)
+					return value.notices ? [`${name}: a notice without approximations`] : [];
+				const issues: string[] = [];
+				if (value.notices !== 1) issues.push(`${name}: ${value.notices} PDF notices, expected 1`);
+				if (!/^PDF saved with approximations: .+\.$/u.test(value.message))
+					issues.push(`${name}: notice text "${value.message}"`);
+				if (value.details < 1) issues.push(`${name}: the notice lists no details`);
+				return issues;
+			});
+			expect(problems.join('\n')).toBe('');
+		},
+	);
 
 	test('keeps the picture export as the compatibility option', async ({ page }) => {
 		const facts = await deckFacts(EXPORT_DECK);

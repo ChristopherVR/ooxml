@@ -3,6 +3,7 @@ import type {
 	GoogleFontsOption,
 	PdfExportSettings,
 	PptxLoadLimits,
+	VectorPdfExportResult,
 } from 'ooxml-ui/pptx';
 import type {
 	AutosaveRecord,
@@ -139,6 +140,8 @@ export interface UseViewerIntegrationInput {
 	imageResolutionScale?: number;
 	/** File > Options > Advanced > Save as PDF (vector pages or pictures, hidden slides). */
 	pdfExportSettings?: PdfExportSettings;
+	/** The host's `onPdfExportReport`: what a vector PDF export approximated. */
+	onPdfExportReport?: ((result: VectorPdfExportResult) => void) | undefined;
 	mode: ViewerState['mode'];
 	slides: PptxSlide[];
 	activeSlide: PptxSlide | undefined;
@@ -350,6 +353,12 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 		imageExportScale,
 		imageResolutionScale,
 		pdfExportSettings,
+		// File > Export > PDF: its options dialog mounts in the viewer root; the approximation
+		// notice joins the compatibility toast stack, replacing an earlier PDF notice.
+		pdfExportContainerRef: state.containerRef,
+		notifyPdfExport: (toast) =>
+			setCompatToasts((prev) => [toast, ...prev.filter((entry) => entry.id !== toast.id)]),
+		onPdfExportReport: input.onPdfExportReport,
 	});
 
 	// ── Mode switching with annotation awareness ──────────────────

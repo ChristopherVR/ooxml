@@ -178,6 +178,9 @@ export function toViewerStateOptions(
 		get oncollaborationstatus() {
 			return getProps().oncollaborationstatus;
 		},
+		get onpdfexportreport() {
+			return getProps().onpdfexportreport;
+		},
 		get onstartcollaboration() {
 			return getProps().onstartcollaboration;
 		},

@@ -6,7 +6,9 @@
 import { runPdfExport } from 'ooxml-ui/pptx';
 import type {
 	CanvasSize,
+	CompatibilityWarningToast,
 	PdfExportSettings,
+	PdfSlideSelection,
 	SlideSizeEmu,
 	VectorPdfExportResult,
 } from 'ooxml-ui/pptx';
@@ -24,7 +26,11 @@ export interface PresentationPdfOptions extends PdfExportOptions {
 	canvasSize: CanvasSize;
 	slideSize?: SlideSizeEmu | undefined;
 	/** Told what the vector PDF approximated. */
-	onApproximated?: (result: VectorPdfExportResult) => void;
+	onApproximated?: ((result: VectorPdfExportResult) => void) | undefined;
+	/** The range the PDF options step chose (`choosePdfExportSelection`); every slide when omitted. */
+	selection?: PdfSlideSelection | undefined;
+	/** Show the approximation notice in the viewer's toast stack. */
+	notify?: ((toast: CompatibilityWarningToast) => void) | undefined;
 }
 
 /** Export the presentation as a PDF download (see the module comment). */
@@ -44,6 +50,7 @@ export async function exportPresentationPdf(
 				slides: options.slides,
 				canvasSize: options.canvasSize,
 				...(options.slideSize ? { slideSize: options.slideSize } : {}),
+				...options.selection,
 				mountSlide: async (index) => {
 					setActiveSlide(index);
 					await waitForRender(150);
@@ -84,6 +91,7 @@ export async function exportPresentationPdf(
 				),
 			save: (blob) => downloadBlob(blob, filename),
 			...(options.onApproximated ? { onApproximated: options.onApproximated } : {}),
+			...(options.notify ? { notify: options.notify } : {}),
 		});
 	} finally {
 		setActiveSlide(currentSlideIndex);

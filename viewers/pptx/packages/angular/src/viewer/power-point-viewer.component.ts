@@ -76,6 +76,7 @@ import type {
 	ListConversionScope,
 	PptxLoadLimits,
 	RibbonDisplayMode,
+	VectorPdfExportResult,
 } from 'ooxml-ui/pptx';
 import type {
 	AutosaveRecord,
@@ -522,7 +523,7 @@ const noopClose = (): void => undefined;
 						(toggleNotes)="mobileSheetSvc.toggleNotes()"
 						(toggleFormatPainter)="formatPainter.toggle()"
 						(exportPng)="xport.exportPng()"
-						(exportPdf)="xport.exportPdf()"
+						(exportPdf)="xport.exportPdfWithOptions()"
 						(exportGif)="xport.exportGif()"
 						(exportVideo)="xport.exportVideo()"
 						(exportJson)="fileIO.exportJson(fileName())"
@@ -1423,7 +1424,7 @@ const noopClose = (): void => undefined;
 					(openFile)="fileIO.openFile()"
 					(savePptx)="fileIO.saveAsPptx()"
 					(exportPng)="xport.exportPng()"
-					(exportPdf)="xport.exportPdf()"
+					(exportPdf)="xport.exportPdfWithOptions()"
 					(exportGif)="xport.exportGif()"
 					(exportVideo)="xport.exportVideo()"
 					(print)="print.openDialog()"
@@ -1968,6 +1969,8 @@ export class PowerPointViewerComponent
 	readonly load = output<ViewerLoadDetail>();
 	/** Fired once per distinct load failure, with a human-readable message. */
 	readonly error = output<string>();
+	/** Fired after a vector PDF export with what it approximated (effects as pictures, fonts). */
+	readonly pdfExportReport = output<VectorPdfExportResult>();
 
 	protected readonly loader = inject(LoadContentService);
 	protected readonly loadNotices = inject(LoadNoticesService);
@@ -3092,6 +3095,9 @@ export class PowerPointViewerComponent
 			imageExportScale: () => this.viewerOpts.imageExportScale(),
 			imageResolutionScale: () => this.viewerOpts.imageResolutionScale(),
 			pdfExportSettings: () => this.viewerOpts.pdfExportSettings(),
+			pdfOptionsContainer: () => this.viewerRoot()?.nativeElement,
+			notify: (toast) => this.loadNotices.notify(toast),
+			onPdfExportReport: (result) => this.pdfExportReport.emit(result),
 		});
 
 		// Hand the find/replace controller a slide-navigation callback so a match
@@ -4497,7 +4503,7 @@ export class PowerPointViewerComponent
 				this.print.openDialog();
 				break;
 			case 'exportPdf':
-				void this.xport.exportPdf();
+				void this.xport.exportPdfWithOptions();
 				break;
 			case 'newSlide':
 				this.editor.addSlide(this.activeSlideIndex());

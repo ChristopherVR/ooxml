@@ -6,6 +6,7 @@ import type {
 	GoogleFontsOption,
 	ListConversionScope,
 	PptxLoadLimits,
+	VectorPdfExportResult,
 } from 'ooxml-ui/pptx';
 import type {
 	AccountAuthConfig,
@@ -407,6 +408,12 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	onPresentationChange?: (presenting: boolean) => void;
 	/** Fired on every collaboration connection-status transition. */
 	onCollaborationStatus?: (status: ConnectionStatus) => void;
+	/**
+	 * Fired after a vector PDF export (File > Export > PDF) that approximated something: the
+	 * elements drawn as pictures, substituted fonts and the rest, as codes with params. The user
+	 * also sees one notice in the toast stack.
+	 */
+	onPdfExportReport?: (result: VectorPdfExportResult) => void;
 	/** Optional class name */
 	className?: string;
 

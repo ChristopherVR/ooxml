@@ -94,10 +94,58 @@ export async function downloadViaCard(
 	page: Page,
 	title: RegExp,
 	timeoutMs: number = EXPORT_DOWNLOAD_TIMEOUT_MS,
+	pdfOptions: PdfOptionsChoice = {},
 ): Promise<Download> {
 	const downloadPromise = page.waitForEvent('download', { timeout: timeoutMs });
 	await exportCard(page, title).click({ timeout: timeoutMs });
+	if (title === PDF_CARD) await confirmPdfOptions(page, pdfOptions);
 	return downloadPromise;
+}
+
+/** The PDF options step (Range, Include hidden slides) that File > Export > PDF opens first. */
+export function pdfOptionsDialog(page: Page): Locator {
+	return page.locator('pptx-ui-pdf-export-dialog [data-testid="pptx-pdf-export-dialog"]');
+}
+
+export interface PdfOptionsChoice {
+	range?: 'all' | 'current' | 'slides';
+	from?: number;
+	to?: number;
+	/** Toggle "Include hidden slides" to this value. */
+	includeHidden?: boolean;
+	/** Cancel instead of exporting. */
+	cancel?: boolean;
+}
+
+/**
+ * Answer the PDF options dialog when it opens (the picture export, "Save slides as pictures",
+ * has none, so a dialog that does not appear within a moment is not an error).
+ */
+export async function confirmPdfOptions(
+	page: Page,
+	choice: PdfOptionsChoice = {},
+): Promise<boolean> {
+	const host = page.locator('pptx-ui-pdf-export-dialog');
+	const shown = await host
+		.waitFor({ state: 'attached', timeout: 5_000 })
+		.then(() => true)
+		.catch(() => false);
+	if (!shown) return false;
+	if (choice.range) await host.getByTestId(`pptx-pdf-export-range-${choice.range}`).click();
+	if (choice.from !== undefined)
+		await host.getByTestId('pptx-pdf-export-from').fill(String(choice.from));
+	if (choice.to !== undefined) await host.getByTestId('pptx-pdf-export-to').fill(String(choice.to));
+	if (choice.includeHidden !== undefined) {
+		const box = host.getByTestId('pptx-pdf-export-include-hidden');
+		if (
+			(await box.evaluate((el) => (el as { checked?: boolean }).checked === true)) !==
+			choice.includeHidden
+		)
+			await box.click();
+	}
+	const footer = host.locator('office-ui-dialog-footer');
+	await footer.locator(`button[data-action="${choice.cancel ? 'cancel' : 'insert'}"]`).click();
+	return true;
 }
 
 /** Read a completed download's bytes. */
