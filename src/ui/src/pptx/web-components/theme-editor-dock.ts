@@ -23,6 +23,18 @@ function phoneBarTop(host: HTMLElement): number | undefined {
 	return undefined;
 }
 
+/** The editor body's padding in pixels (zero in the default look). */
+function bodyPadding(body: HTMLElement | null | undefined) {
+	const style = body ? getComputedStyle(body) : undefined;
+	const px = (value: string | undefined) => Number.parseFloat(value ?? '') || 0;
+	return {
+		top: px(style?.paddingTop),
+		right: px(style?.paddingRight),
+		bottom: px(style?.paddingBottom),
+		left: px(style?.paddingLeft),
+	};
+}
+
 /** The same editor-body anchor works even when a native adapter lives in the ribbon. */
 export function attachThemeEditorDock(
 	host: HTMLElement,
@@ -36,10 +48,12 @@ export function attachThemeEditorDock(
 		?.querySelector<HTMLElement>('[data-pptx-chrome="body"]');
 	const position = (): void => {
 		const rect = body?.getBoundingClientRect();
-		const top = Math.max(0, rect?.top ?? 0);
-		let bottom = Math.min(window.innerHeight, rect?.bottom ?? window.innerHeight);
-		const left = Math.max(0, rect?.left ?? 0);
-		const right = Math.min(window.innerWidth, rect?.right ?? window.innerWidth);
+		// Dock inside the body's padding: the cards look pads the body by its gap.
+		const pad = bodyPadding(body);
+		const top = Math.max(0, (rect?.top ?? 0) + pad.top);
+		let bottom = Math.min(window.innerHeight, (rect?.bottom ?? window.innerHeight) - pad.bottom);
+		const left = Math.max(0, (rect?.left ?? 0) + pad.left);
+		const right = Math.min(window.innerWidth, (rect?.right ?? window.innerWidth) - pad.right);
 		const narrow = right - left < 768;
 		if (options.phoneSheet) {
 			const barTop = narrow ? phoneBarTop(host) : undefined;

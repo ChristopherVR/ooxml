@@ -93,6 +93,11 @@ export const EDITOR_CARDS_CSS = `
     border-radius: var(--office-radius-control, 7px);
   }
   ${C} [data-pptx-chrome="inspector"] :is(.grid, [data-pptx-chrome="presentation-fields"]) { gap: 8px 10px; }
+  ${C} :is(pptx-ui-theme-editor, pptx-ui-chart-format-pane):not([inline]) {
+    overflow: hidden; border-left-color: transparent;
+    border-radius: var(--office-radius-surface, 14px);
+    box-shadow: var(--office-shadow-card-strong, ${LIGHT_SHADOW});
+  }
   ${C} [data-pptx-chrome="theme-editor"] {
     border-left: 0; border-radius: var(--office-radius-surface, 14px);
     box-shadow: var(--office-shadow-card-strong, ${LIGHT_SHADOW});
