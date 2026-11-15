@@ -7,7 +7,7 @@ sections (`scripts/viewer-changelogs.mjs`); do not edit them by hand.
 
 ## 2026-11-15
 
-_Releases: pptx-react-viewer@4.78.0, pptx-vue-viewer@4.77.0, pptx-angular-viewer@4.77.0, pptx-svelte-viewer@4.77.0, pptx-vanilla-viewer@3.77.0_
+_Releases: pptx-react-viewer@4.78.1, pptx-react-viewer@4.78.0, pptx-vue-viewer@4.77.1, pptx-vue-viewer@4.77.0, pptx-angular-viewer@4.77.1, pptx-angular-viewer@4.77.0, pptx-svelte-viewer@4.77.1, pptx-svelte-viewer@4.77.0, pptx-vanilla-viewer@3.77.1, pptx-vanilla-viewer@3.77.0_
 
 ### Features
 
@@ -42,6 +42,7 @@ _Releases: pptx-react-viewer@4.78.0, pptx-vue-viewer@4.77.0, pptx-angular-viewer
 
 ### Bug Fixes
 
+- **ui:** Keep cjk text in vector pdf export as a picture with text ([a3a5072](https://github.com/ChristopherVR/ooxml/commit/a3a5072c420c715b6a647117d6d9cfe670b570db))
 - **pptx:** Keep a copied withheld embedded font part on save ([533b3f4](https://github.com/ChristopherVR/ooxml/commit/533b3f41e20722dfa0ef6f3723eddd081dc7b9b6))
 - **drawingml:** Type pasted html bullets for exact optional properties ([1657f9b](https://github.com/ChristopherVR/ooxml/commit/1657f9bc334727aa2e00c2908729b981045ffec5))
 - **drawingml:** Spell pasted html entities and markers as code points ([936c2bc](https://github.com/ChristopherVR/ooxml/commit/936c2bc9a86037b00b9ffd5a840a8944efbbc0a7))

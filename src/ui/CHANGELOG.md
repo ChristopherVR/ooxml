@@ -7,6 +7,13 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.52.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.52.1) - 2026-11-15
+
+### Bug Fixes
+
+- **ui:** Print a paused stage video's poster in the vector pdf ([1c83f8e](https://github.com/ChristopherVR/ooxml/commit/1c83f8e40b18042dc6a29dee11f8a1c664ef5d4e))
+- **ui:** Keep cjk text in vector pdf export as a picture with text ([a3a5072](https://github.com/ChristopherVR/ooxml/commit/a3a5072c420c715b6a647117d6d9cfe670b570db))
+
 ## [1.52.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.52.0) - 2026-11-15
 
 ### Features

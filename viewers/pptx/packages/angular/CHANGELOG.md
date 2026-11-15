@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.77.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.77.1) - 2026-11-15
+
+### Bug Fixes
+
+- **ui:** Keep cjk text in vector pdf export as a picture with text ([a3a5072](https://github.com/ChristopherVR/ooxml/commit/a3a5072c420c715b6a647117d6d9cfe670b570db))
+
 ## [4.77.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.77.0) - 2026-11-15
 
 ### Features
