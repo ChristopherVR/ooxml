@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { positionLabel, pressedState, splitFileName } from './document-bar.js';
+import {
+	applyWorkspaceLook,
+	positionLabel,
+	pressedState,
+	splitFileName,
+	workspaceLook,
+} from './document-bar.js';
 
 test('a file name splits at its last dot, so the bar can mute the extension', () => {
 	assert.deepEqual(splitFileName('Quarterly review.pptx'), ['Quarterly review', '.pptx']);
@@ -21,4 +27,18 @@ test('a formatting button is pressed, not pressed, or mixed for a selection that
 	assert.equal(pressedState(false), 'false');
 	assert.equal(pressedState(undefined), 'false');
 	assert.equal(pressedState(null), 'mixed');
+});
+
+test('Simple view takes the cards look and the ribbon layout drops it', () => {
+	assert.equal(workspaceLook('simple'), 'cards');
+	assert.equal(workspaceLook('office'), 'default');
+	const attributes = new Map();
+	const root = {
+		setAttribute: (name, value) => attributes.set(name, value),
+		removeAttribute: (name) => attributes.delete(name),
+	};
+	applyWorkspaceLook(root, 'simple');
+	assert.equal(attributes.get('data-office-look'), 'cards');
+	applyWorkspaceLook(root, 'office');
+	assert.equal(attributes.has('data-office-look'), false);
 });

@@ -136,6 +136,12 @@ export const editorRadius = (s = current) => `${(CORNERS[s.corners] ?? CORNERS.r
 /** PowerPoint's `allowExternalContent`: `false` when blocked, else `undefined` (its own choice). */
 export const externalContentOption = (s = current) => (s.blockExternalContent ? false : undefined);
 
+const CARDS_RADII = [
+	'--office-radius-surface',
+	'--office-radius-toolbar',
+	'--office-radius-control',
+];
+
 /** The workspace's corner style and motion, on the root element. */
 export function applyWorkspaceSettings(root = globalThis.document?.documentElement, s = current) {
 	if (!root) return;
@@ -143,6 +149,10 @@ export function applyWorkspaceSettings(root = globalThis.document?.documentEleme
 	root.style.setProperty('--radius', `${corners.control}px`);
 	root.style.setProperty('--radius-panel', `${corners.panel}px`);
 	root.style.setProperty('--office-radius', `${corners.control}px`);
+	// Square corners flatten Simple view's cards too; otherwise they keep the look's own radii.
+	for (const name of CARDS_RADII)
+		if (corners.control === 0) root.style.setProperty(name, '0px');
+		else root.style.removeProperty(name);
 	root.classList.toggle('reduce-motion', s.reduceMotion);
 	if (s.reduceMotion) root.classList.remove('theme-anim');
 }

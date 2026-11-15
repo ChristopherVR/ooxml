@@ -9,6 +9,17 @@ import { $, badge, escape, task } from './ui.js';
 import { icon } from './icons.js';
 import { onSettings, settings, updateSettings } from './settings.js';
 
+/**
+ * Simple view floats the editors' chrome as cards (`data-office-look`, next to the theme's
+ * `data-office-theme` on the root); the ribbon layout keeps each app's own look. Only the
+ * attribute changes, so open documents keep their state.
+ */
+export const workspaceLook = (layout) => (layout === 'simple' ? 'cards' : 'default');
+export function applyWorkspaceLook(root, layout) {
+	if (workspaceLook(layout) === 'cards') root.setAttribute('data-office-look', 'cards');
+	else root.removeAttribute('data-office-look');
+}
+
 /** `Quarterly review.pptx` as its stem and its extension, so the bar can mute the extension. */
 export function splitFileName(name) {
 	const dot = name.lastIndexOf('.');
@@ -70,6 +81,7 @@ export function mountDocumentBar({ sessions, active }) {
 	function render() {
 		const simple = settings().layout === 'simple';
 		document.body.dataset.layout = simple ? 'simple' : 'office';
+		applyWorkspaceLook(document.documentElement, settings().layout);
 		$('layout-toggle').innerHTML = simple
 			? `${icon('ribbon')}<span>Show ribbon</span>`
 			: `${icon('page')}<span>Simple view</span>`;
