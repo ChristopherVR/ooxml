@@ -500,7 +500,8 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       SVG charts and selectable text with the deck's embedded fonts subset in; hidden slides are
       left out unless Options > Advanced > Save as PDF includes them; effects PDF cannot express
       (soft edges, blur, glow, shadows, 3-D, blend modes, patterns, complex scripts) are pictures
-      of just that element with searchable text kept, and the export lists what it approximated
+      of just that element with searchable text kept, a video that has not played prints as its
+      poster frame, and the export lists what it approximated
       (`src/ui/src/pptx/export/pdf-vector-*.ts`). Open: fonts the page cannot read fall back to
       standard PDF fonts; embedding a deck's own fonts is unit-tested only.
 - [x] **P1** Save as PDF says what it approximated: one translated notice counts elements and

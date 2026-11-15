@@ -18,6 +18,7 @@ import {
 	type PdfExportDiagnosticCode,
 } from './pdf-export-diagnostics';
 import { paintBox } from './pdf-vector-box';
+import { videoPicture } from './pdf-vector-media';
 import { FONTS_TIMEOUT_MS, IMAGE_TIMEOUT_MS, settleWithin } from './pdf-vector-timeout';
 import {
 	boxClip,
@@ -213,17 +214,16 @@ export async function collectSlide(
 			if (!visible || ctx.invisible || !(content.w > 0 && content.h > 0)) return;
 			const media = el as HTMLImageElement & HTMLCanvasElement & HTMLVideoElement;
 			const natural =
-				tag === 'img'
-					? [media.naturalWidth, media.naturalHeight]
-					: tag === 'video'
-						? [media.videoWidth, media.videoHeight]
-						: [media.width, media.height];
+				tag === 'img' ? [media.naturalWidth, media.naturalHeight] : [media.width, media.height];
 			if (tag !== 'img') notes.add(MEDIA_REASON);
 			const item = placeholderImage(matrix, [...clips, boxClip(matrix, content)], alpha, content);
 			items.push(item);
 			const fit =
 				style.objectFit === 'cover' ? 'cover' : style.objectFit === 'contain' ? 'contain' : 'fill';
-			const load = () => drawableToPdfImage(doc, media, natural[0] ?? 0, natural[1] ?? 0);
+			const load = () =>
+				tag === 'video'
+					? videoPicture(doc, media)
+					: drawableToPdfImage(doc, media, natural[0] ?? 0, natural[1] ?? 0);
 			pending.push({
 				item,
 				fit,
