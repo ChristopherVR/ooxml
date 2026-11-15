@@ -18,6 +18,7 @@ import { schema } from './schema';
 import {
 	paragraphAttrs,
 	paragraphFromAttrs,
+	PARAGRAPH_EAST_ASIAN_KEYS,
 	PARAGRAPH_KEEP_KEYS as KEEP_KEYS,
 } from 'ooxml-core/docx/ui';
 import { sameJson, sameRuns } from 'ooxml-core/docx/ui';
@@ -35,6 +36,7 @@ import { sectionsOf } from './section-commands';
 import { sectionPartsJson, restoreSectionParts } from 'ooxml-core/docx/ui';
 import { notePartsJson, restoreNoteParts } from 'ooxml-core/docx/ui';
 import { commentThreadsFromDoc } from 'ooxml-core/docx/ui';
+import { documentInformationJson, readDocumentInformation } from './document-information-attr';
 
 type ListLabels = ReturnType<typeof computeListLabels>;
 
@@ -88,6 +90,7 @@ export function modelToDoc(model: DocumentModel) {
 			sectionParts: sectionPartsJson(model.sections),
 			noteParts: notePartsJson(model),
 			commentThreads: JSON.stringify(model.comments ?? []),
+			documentInformation: documentInformationJson(model),
 			evenAndOddHeaders: Boolean(model.evenAndOddHeaders),
 			trackChanges: Boolean(model.trackChanges),
 			trackFormatting: model.trackFormatting !== false,
@@ -137,6 +140,23 @@ function keepHeaderFooterSections(
 			},
 		],
 	};
+}
+
+/**
+ * `model` with the properties and package information of the document attribute, when the
+ * transaction changed it (Inspect Document's Remove All, or its undo). Otherwise the model's own
+ * fields stand, so a File > Info property edit made on the model is kept.
+ */
+function withDocumentInformation<T extends Partial<DocumentModel>>(
+	model: T,
+	value: unknown,
+	previous: unknown,
+): T {
+	if (value === previous) return model;
+	const info = readDocumentInformation(value);
+	if (!info) return model;
+	const { properties: _properties, packageInformation: _info, ...rest } = model;
+	return { ...rest, ...info } as T;
 }
 
 export function docToModel(
@@ -220,7 +240,9 @@ export function docToModel(
 			(previous.numbering ? previous.numbering.level : null) === (node.attrs.ilvl ?? null) &&
 			(previous.pageBreakBefore ?? null) === node.attrs.pageBreakBefore &&
 			sameJson(previous.tabStops ?? null, node.attrs.tabStops ?? null) &&
-			KEEP_KEYS.every((key) => (previous[key] ?? null) === (node.attrs[key] ?? null)) &&
+			[...KEEP_KEYS, ...PARAGRAPH_EAST_ASIAN_KEYS].every(
+				(key) => (previous[key] ?? null) === (node.attrs[key] ?? null),
+			) &&
 			sameJson(previous.dropCap ?? null, node.attrs.dropCap ?? null) &&
 			sameJson(previous.borders ?? null, node.attrs.borders ?? null) &&
 			(previous.shadingFill ?? null) === (node.attrs.shadingFill ?? null) &&
@@ -282,8 +304,15 @@ export function docToModel(
 		trackMoves: _trackMoves,
 		pageColor: _pageColor,
 		autoHyphenation: _hyphenation,
-		...rest
+		...kept
 	} = prior;
+	const rest = previousDoc
+		? withDocumentInformation(
+				kept,
+				doc.attrs.documentInformation,
+				previousDoc.attrs.documentInformation,
+			)
+		: kept;
 	const sectionLayout =
 		typeof doc.attrs.sections === 'string'
 			? sectionsFromLayout(doc.attrs.sections, priorSections, blocks)

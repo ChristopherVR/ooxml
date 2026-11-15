@@ -1,4 +1,4 @@
-import type { DocumentModel, SectionProperties, WatermarkSpec } from 'ooxml-core/docx';
+import type { DocumentModel, SectionProperties } from 'ooxml-core/docx';
 import { closeHistory } from 'prosemirror-history';
 import { applyPageSetup, type PageSetupValues } from 'ooxml-core/docx';
 import { emit } from './events';
@@ -12,7 +12,7 @@ import {
 	sectionsOf,
 	withSection,
 } from './section-commands';
-import { currentWatermark, withWatermark } from './watermark-commands';
+import { currentWatermark, withWatermark, type AnyWatermark } from './watermark-commands';
 import { newHeaderFooterId, withBlankHeaderFooter, withPageNumber } from './header-footer-commands';
 import { pageSetupChange } from './page-setup-change';
 import { pageSizeOf } from 'ooxml-core/docx';
@@ -132,13 +132,13 @@ export class PageController {
 		);
 	}
 
-	/** Layout > Watermark: a text watermark in every header (or none), one undoable step. */
-	applyWatermark(spec: WatermarkSpec | undefined): void {
+	/** Design > Watermark: a text or picture watermark in every header (or none), one undoable step. */
+	applyWatermark(spec: AnyWatermark | undefined): void {
 		this.changeHeaderFooter((model) => withWatermark(model, spec, newHeaderFooterId));
 	}
 
 	/** The document's current watermark, for the Watermark dialog. */
-	currentWatermark(): WatermarkSpec | undefined {
+	currentWatermark(): AnyWatermark | undefined {
 		return currentWatermark(this.host.model());
 	}
 

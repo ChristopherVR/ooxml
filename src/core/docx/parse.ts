@@ -1,4 +1,5 @@
 import { parseCoreProperties } from './core-properties';
+import { readPackageInformation } from './package-information';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import { declaredEntrySize, openZip } from '../opc/zip-limits';
 import { inspectPackageSignatures } from '../opc/signature/index';
@@ -28,6 +29,7 @@ import { warningsFor, imageAndBookmarkWarnings, forEachParagraph } from './parse
 import { diagramWarnings, resolveDocumentDiagrams } from './diagram-document';
 import { documentDrawingBlocks, resolveDocumentCharts } from './chart';
 import { readPlaceholderTexts } from './glossary';
+import { readPackageProperties } from './package-properties';
 
 export interface PackageContext {
 	original: Uint8Array;
@@ -158,6 +160,7 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 	model.sections = parts.sections;
 	if (parts.compatibilityMode !== undefined) model.compatibilityMode = parts.compatibilityMode;
 	if (parts.doNotUseHtmlParagraphAutoSpacing) model.doNotUseHtmlParagraphAutoSpacing = true;
+	if (parts.kinsoku) model.kinsoku = parts.kinsoku;
 	if (parts.footnotes) model.footnotes = parts.footnotes;
 	if (parts.footnoteSeparators) model.footnoteSeparators = parts.footnoteSeparators;
 	if (parts.endnotes) model.endnotes = parts.endnotes;
@@ -170,6 +173,10 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 		const properties = parseCoreProperties(await coreFile.async('string'));
 		if (properties) model.properties = properties;
 	}
+	const packageProperties = await readPackageProperties(zip);
+	if (packageProperties) model.packageProperties = packageProperties;
+	const packageInformation = await readPackageInformation(zip);
+	if (packageInformation) model.packageInformation = packageInformation;
 	await readPlaceholderTexts(zip, drawings.rels, model);
 	const pageColor = parsePageBackground(document.documentElement, model.theme);
 	if (pageColor) model.pageColor = pageColor;

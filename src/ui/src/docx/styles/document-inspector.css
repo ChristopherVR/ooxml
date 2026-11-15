@@ -1,0 +1,80 @@
+/* File > Info > Inspect Document: Word's Document Inspector list of categories and results. */
+.dve-inspector-dialog {
+	--dve-inspector-width: 34rem;
+}
+.dve-inspector-dialog .dve-inspector-intro {
+	margin: 0 0 8px;
+	color: var(--ink);
+}
+.dve-inspector-dialog .dve-inspector-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	max-width: var(--dve-inspector-width);
+	max-height: 60vh;
+	overflow-y: auto;
+	border: 1px solid var(--line);
+	border-radius: var(--dve-radius, var(--office-radius, 4px));
+	background: var(--surface);
+}
+.dve-inspector-dialog .dve-inspector-row {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	padding: 10px 12px;
+	border-bottom: 1px solid var(--line);
+	color: var(--ink);
+}
+.dve-inspector-dialog .dve-inspector-row:last-child {
+	border-bottom: 0;
+}
+.dve-inspector-dialog .dve-dialog-check.dve-inspector-row input {
+	margin-top: 2px;
+}
+.dve-inspector-dialog .dve-inspector-text {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+.dve-inspector-dialog .dve-inspector-description,
+.dve-inspector-dialog .dve-inspector-note {
+	color: var(--muted);
+}
+.dve-inspector-dialog .dve-inspector-findings {
+	margin: 2px 0 0;
+	padding-left: 18px;
+	color: var(--muted);
+}
+.dve-inspector-dialog .dve-inspector-mark {
+	display: inline-grid;
+	flex: none;
+	place-items: center;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	font-weight: 700;
+	font-size: 12px;
+	line-height: 1;
+}
+.dve-inspector-dialog .dve-inspector-result[data-state='found'] .dve-inspector-mark {
+	background: var(--word);
+	color: var(--dve-primary-foreground, var(--office-accent-foreground, #fff));
+}
+.dve-inspector-dialog .dve-inspector-result[data-state='clear'] .dve-inspector-mark {
+	border: 1px solid var(--line);
+	color: var(--word);
+}
+.dve-inspector-dialog .dve-inspector-result > button {
+	flex: none;
+	align-self: center;
+}
+@media (max-width: 480px) {
+	.dve-inspector-dialog .dve-inspector-result {
+		flex-wrap: wrap;
+	}
+	.dve-inspector-dialog .dve-inspector-result > button {
+		margin-left: 28px;
+	}
+}

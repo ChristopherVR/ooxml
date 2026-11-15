@@ -168,6 +168,7 @@ export const RIBBON_ACTION_IDS = [
 	'insert-table-of-figures',
 	'insert-footnote',
 	'insert-endnote',
+	'convert-notes',
 	'paragraph-direction',
 	'text-language',
 	'custom-text-language-tag',
@@ -204,6 +205,7 @@ export const RIBBON_ACTION_IDS = [
 	'split-cells',
 	'delete-table',
 	'table-properties',
+	'crop',
 ] as const;
 
 export type RibbonActionId = (typeof RIBBON_ACTION_IDS)[number];
@@ -370,6 +372,7 @@ export const RIBBON_ACTION_LABELS: Readonly<Record<RibbonActionId, string>> = {
 	'insert-table-of-figures': 'Insert table of figures',
 	'insert-footnote': 'Insert footnote',
 	'insert-endnote': 'Insert endnote',
+	'convert-notes': 'Convert notes',
 	'paragraph-direction': 'Paragraph direction',
 	'text-language': 'Text language',
 	'custom-text-language-tag': 'Custom text language tag',
@@ -407,6 +410,7 @@ export const RIBBON_ACTION_LABELS: Readonly<Record<RibbonActionId, string>> = {
 	'split-cells': 'Split cells',
 	'delete-table': 'Delete table',
 	'table-properties': 'Table properties',
+	crop: 'Crop',
 };
 
 export type { LegacyRibbonLabel };

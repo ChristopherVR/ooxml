@@ -18,7 +18,7 @@ export interface Exclusion {
 	bothSides?: boolean;
 }
 
-/** Areas that wrapped floating pictures take from the text, per page index. */
+/** Areas that wrapped floating pictures and floating tables take from the text, per page index. */
 export function wrapExclusions(pages: LayoutPageBox[]): Map<number, Exclusion[]> {
 	const exclusions = new Map<number, Exclusion[]>();
 	for (const page of pages) {
@@ -32,6 +32,20 @@ export function wrapExclusions(pages: LayoutPageBox[]): Map<number, Exclusion[]>
 				topAndBottom: float.wrap === 'topAndBottom',
 				...(float.wrapText === 'bothSides' ? { bothSides: true } : {}),
 			}));
+		// Floating tables (`w:tblpPr`): text may run on both sides, kept at their distances.
+		for (const column of page.columns)
+			for (const block of column.blocks) {
+				if (block.kind !== 'table' || !block.floating) continue;
+				const distance = block.floating;
+				list.push({
+					xPx: page.marginLeftPx + column.xPx + (block.xPx ?? 0) - distance.leftPx,
+					yPx: page.marginTopPx + block.yPx - distance.topPx,
+					widthPx: (block.widthPx ?? 0) + distance.leftPx + distance.rightPx,
+					heightPx: block.heightPx + distance.topPx + distance.bottomPx,
+					topAndBottom: false,
+					bothSides: true,
+				});
+			}
 		if (list.length) exclusions.set(page.index, list);
 	}
 	return exclusions;

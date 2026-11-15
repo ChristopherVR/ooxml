@@ -163,11 +163,16 @@ export type RibbonAction =
 			value: 'richText' | 'text' | 'checkbox' | 'dropDownList' | 'comboBox' | 'date';
 	  }
 	| { type: 'formatPicture' }
+	/** Picture Format: Wrap Text (a `DrawingWrap`) or Crop (the Format Picture crop fields). */
+	| { type: 'picture'; key: 'wrap'; value: string }
+	| { type: 'picture'; key: 'crop' }
 	| { type: 'link' }
 	| { type: 'characterStyle'; value: string }
 	| { type: 'showHidden' }
 	| { type: 'thumbnails' }
 	| { type: 'insertNote'; kind: 'footnote' | 'endnote' }
+	/** Convert Notes, or Convert to Endnote/Footnote on one note. */
+	| { type: 'convertNotes'; selection: import('ooxml-core/docx').NoteSelection }
 	| {
 			type: 'toc';
 			key: 'insert' | 'update' | 'remove' | 'fields' | 'figures' | 'updateFigures';

@@ -6,6 +6,12 @@ import { frFontAdvanced } from './font-advanced';
 import { frLigatures } from './ligatures';
 import { frNavigation } from './navigation';
 import { frDropCap } from './drop-cap';
+import { frFindStories } from './find-stories';
+import { frPasteOptions } from './paste-options';
+import { frPicture } from './picture';
+import { frPictureWatermark } from './picture-watermark';
+import { frConvertNotes } from './convert-notes';
+import { frDocumentInspector } from './document-inspector';
 import { frLineNumbers } from './line-numbers';
 import { frObjects } from './objects';
 import { frShapes } from './shapes';
@@ -23,6 +29,12 @@ export const fr: LocaleStrings = {
 	...frTableProperties,
 	...frLineNumbers,
 	...frDropCap,
+	...frFindStories,
+	...frPasteOptions,
+	...frPicture,
+	...frPictureWatermark,
+	...frConvertNotes,
+	...frDocumentInspector,
 	...frNavigation,
 	...frColumns,
 	...frSplitCells,

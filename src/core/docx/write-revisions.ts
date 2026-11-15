@@ -111,15 +111,25 @@ export function revisionWrapper(
 	wrapper.appendChild(content);
 	return wrapper;
 }
-/** Deleted text uses `w:delText`; moved-from content retains `w:t`. */
+/** Deleted text uses `w:delText` and a deleted field code `w:delInstrText`; moved-from content retains `w:t`. */
 export function convertToDeleteText(doc: XmlDocument, run: XmlElement): void {
-	for (const t of children(run, 't')) {
-		const delText = doc.createElementNS(WORD_NS, 'w:delText');
+	for (const t of [...children(run, 't'), ...children(run, 'instrText')]) {
+		const delText = doc.createElementNS(
+			WORD_NS,
+			t.localName === 'instrText' ? 'w:delInstrText' : 'w:delText',
+		);
 		const space = t.getAttributeNS('http://www.w3.org/XML/1998/namespace', 'space');
 		if (space) delText.setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:space', space);
 		while (t.firstChild) delText.appendChild(t.firstChild);
 		run.replaceChild(delText, t);
 	}
+}
+
+/** A row's tracked insertion or deletion marker (`w:trPr/w:ins|w:del`). */
+export function rowRevisionElement(doc: XmlDocument, revision: Revision): XmlElement {
+	const element = makeW(doc, revision.kind === 'delete' ? 'del' : 'ins');
+	writeRevisionMetadata(element, revision);
+	return element;
 }
 
 /** Writes/clears the paragraph mark's own tracked insertion/deletion (`w:pPr/w:rPr/w:ins|w:del`). */

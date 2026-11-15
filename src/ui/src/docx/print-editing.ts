@@ -1,6 +1,7 @@
 import { printKeyboardNavigation } from './print-keyboard-navigation';
 import { createPrintDragScroll } from './print-drag-scroll';
 import { PrintEditingIndex } from './print-editing-index';
+import { selectInlineObject } from './print-inline-object';
 import { glyphRect, caretRect } from './print-editing-geometry';
 import { affinityOnLine, lineForCaret, type CaretAffinity } from './print-caret-affinity';
 import type { EditorView } from 'prosemirror-view';
@@ -247,6 +248,12 @@ export function createPrintEditingBridge(
 			if (!active || event.button !== 0) return;
 			if (event.target instanceof Element && event.target.closest('[data-read-only="true"]')) {
 				getView()?.dom.blur();
+				return;
+			}
+			const view = getView();
+			if (view && selectInlineObject(view, event.target, position)) {
+				event.preventDefault();
+				refresh();
 				return;
 			}
 			const target = hit(event);

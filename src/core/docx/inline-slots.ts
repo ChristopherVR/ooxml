@@ -54,7 +54,11 @@ function runIsSafe(run: XmlElement): boolean {
 			type === 'begin' && data.length === 1 && isElement(ffData!) && isModeledFormFieldData(ffData)
 		);
 	}
-	if (content.length && content.every((element) => named(element, 'instrText'))) return true;
+	if (
+		content.length &&
+		content.every((element) => named(element, 'instrText') || named(element, 'delInstrText'))
+	)
+		return true;
 	// One kind of symbol and one kind of positional tab per run, as the model holds them.
 	if (runSymbol(content) === null || runPositionalTab(content) === null) return false;
 	const kinds = new Set<string>();

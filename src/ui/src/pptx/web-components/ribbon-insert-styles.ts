@@ -43,7 +43,7 @@ ${TABLE_PICKER_CSS}
 .list .heading { padding:4px 12px 2px; font-size:11px; opacity:.7; }
 .list.grid .heading { grid-column:1 / -1; padding:2px 2px 0; }
 .list button[aria-current] { font-weight:600; background:var(--pptx-accent,#33334d); }
-.list { position:fixed; z-index:1200; display:flex; flex-direction:column; min-width:170px; max-width:calc(100vw - 16px); max-height:65vh; overflow:auto; padding:4px 0; background:var(--pptx-popover,#111827); border:1px solid var(--pptx-border,#374151); border-radius:6px; box-shadow:0 8px 24px #0005; }
+.list { position:fixed; z-index:1200; display:flex; flex-direction:column; min-width:170px; max-width:calc(100vw - 16px); max-height:65vh; overflow:auto; padding:4px 0; background:var(--pptx-popover,#111827); border:1px solid var(--pptx-border,#374151); border-radius:var(--_office-look-menu-radius,6px); box-shadow:var(--_office-look-menu-shadow,0 8px 24px #0005); }
 .list[hidden] { display:none; }
 .list button { display:flex; align-items:center; gap:8px; width:100%; min-height:28px; padding:4px 12px; border:0; background:transparent; font-size:12px; text-align:left; cursor:pointer; }
 .list svg { width:16px; height:16px; }

@@ -96,7 +96,8 @@ function parseRun(node: XmlElement, revision?: Revision): TextRun {
 	let noteSeparator: TextRun['noteSeparator'];
 	let fieldChar: TextRun['fieldChar'];
 	const fieldCode =
-		content.length > 0 && content.every((child) => named(child, 'instrText'))
+		content.length > 0 &&
+		content.every((child) => named(child, 'instrText') || named(child, 'delInstrText'))
 			? content.map((child) => textContent(child)).join('')
 			: undefined;
 	const only = content.length === 1 ? content[0] : undefined;

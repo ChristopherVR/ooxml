@@ -94,8 +94,8 @@ svg:not([data-painted]) {
 	background: var(--office-background);
 	color: var(--office-foreground);
 	border: var(--office-border-width) solid var(--office-border);
-	border-radius: var(--office-radius);
-	box-shadow: var(--office-shadow);
+	border-radius: var(--_office-look-menu-radius, var(--office-radius));
+	box-shadow: var(--_office-look-menu-shadow, var(--office-shadow));
 }
 .panel[hidden] {
 	display: none;

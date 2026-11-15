@@ -42,6 +42,7 @@ describe('Word Home split commands', () => {
 		);
 		for (const [label, value, action] of [
 			['Paste options', 'text', { type: 'clipboard', key: 'paste', plainText: true }],
+			['Paste options', 'special', { type: 'formatDialog', kind: 'pasteSpecial' }],
 			['Bullets options', 'remove', { type: 'list', key: 'remove' }],
 		] as const) {
 			const menu = ribbon.querySelector<HTMLSelectElement>(`[aria-label="${label}"]`)!;

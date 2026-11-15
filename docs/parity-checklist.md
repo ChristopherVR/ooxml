@@ -84,8 +84,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       (`diagram/builtin/catalog.ts`), not yet checked against Office's gallery.
 - [ ] **P1** Proofing is the browser's `spellcheck` attribute everywhere: no grammar, thesaurus,
       custom dictionary, ignore list or proofing-language engine.
-- [ ] **P1** Picture Format and Shape Format contextual tabs: missing in Excel (both) and Word
-      (Picture Format); partial in Word and PowerPoint Shape Format (no Arrange, Size or Alt Text).
+- [ ] **P1** Picture Format and Shape Format contextual tabs: missing in Excel (both); partial in
+      Word Picture Format (Wrap Text, Crop and Format only), and in Word and PowerPoint Shape
+      Format (no Arrange, Size or Alt Text).
 - [ ] **P2** `c:userShapes` (shapes over a chart) is parsed but not drawn; surface charts have no
       dedicated painter.
 - [x] **P2** Equation ownership audited: all 11 non-test `latex-*` and `omml-*` modules in
@@ -243,11 +244,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       are not editable.
 - [ ] **P1** Table-structure revisions (`cellIns`, `cellDel`, `cellMerge`, `tblPrChange`,
       `trPrChange`, `tcPrChange`) are not modelled and block structure edits; `tblGridChange` and
-      `numberingChange` have no code.
+      `numberingChange` have no code. Tracked row insertions and deletions (`w:trPr/w:ins`,
+      `w:del`) are modelled, accepted and rejected (`docx/table-row-revisions.test.ts`) but not yet
+      exercised through the editor.
 - [ ] **P1** Fields computed today: PAGE, NUMPAGES, SECTIONPAGES, DATE, TIME, TOC, SEQ, REF,
-      PAGEREF, STYLEREF. IF, `=`, MERGEFIELD, INCLUDETEXT, INCLUDEPICTURE, DOCPROPERTY, AUTHOR,
-      INDEX/XE, TA/TOA, CITATION/BIBLIOGRAPHY, LISTNUM and SYMBOL keep their cached result
-      (`layout/page-fields.ts`); Update Fields skips the `\n \r \w \p` switches.
+      PAGEREF, STYLEREF, DOCPROPERTY, AUTONUM, AUTONUMLGL, AUTONUMOUT, LISTNUM and SYMBOL
+      (`docx/computed-fields.ts`). IF, `=`, MERGEFIELD, INCLUDETEXT, INCLUDEPICTURE, AUTHOR,
+      INDEX/XE, TA/TOA and CITATION/BIBLIOGRAPHY keep their cached result (`layout/page-fields.ts`);
+      Update Fields skips the `\n \r \w \p` switches.
 - [ ] **P1** Grouped drawings (`wpg`) and canvases (`wpc`), legacy VML text boxes (`v:textbox`),
       WordArt, ink and gradient or picture fills are kept but not drawn.
 - [ ] **P1** Ruby (`w:ruby`) has no model and probably blocks editing its paragraph; vertical
@@ -303,26 +307,53 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P1** Find & Replace: formatting search (Format > Font, Paragraph, Style) remains. Wildcards,
       whole words, prefix and suffix, the ignore options and the Special codes are done
       (`src/core/docx/find-pattern.ts`, `src/ui/src/docx/search-panel.ts`).
-- [ ] **P1** Find searches the main body only, as far as a code search shows: headers, footers,
-      footnotes, endnotes and text boxes are not matched (`src/ui/src/docx/search-document.ts`).
+- [ ] **P2** Find and Replace search the main document, headers and footers, footnotes, endnotes and
+      text boxes in turn (`docx/find-stories.ts`, `src/ui/src/docx/search-stories.test.ts`,
+      `e2e/docx/search.spec.ts`); a match in a header, footer or note opens its editor (Print Layout
+      switches to Draft). Open: comments, text boxes inside headers, footers and notes, the Find In
+      story picker, navigation pane results, the host Find dialog (body only), Replace All being one
+      undo step per story instead of one, and the story order is unconfirmed against Word's dialog.
 - [ ] **P1** Only Draft and Print Layout views: no Read Mode, Web Layout, Outline or Focus.
 - [ ] **P1** Index, citations and bibliography, Table of Authorities.
-- [ ] **P1** Compare and Combine; accessibility checker.
-- [ ] **P1** Paste options (Keep Source, Merge, Text Only) and Paste Special. HTML copied from
-      Word goes through the generic ProseMirror parser: `mso-` list levels, styles, notes and
-      fields are not read (`src/ui/src/docx/context-menu-actions.ts`).
-- [ ] **P1** Pictures: no crop editing (the picture dialog covers size and alt text), no Wrap Text
-      menu, and no handler found for dropping an image file on the page
-      (`src/ui/src/docx/picture-dialog.ts`).
-- [ ] **P2** Footnotes and endnotes cannot be converted into each other
-      (`src/ui/src/docx/note-commands.ts`); watermarks are text only (`docx/watermark.ts`).
-- [ ] **P2** Inspect Document only lists counts: no removal of comments, revisions, hidden text,
-      document properties or personal information (`src/ui/src/docx/backstage-pages.ts`).
+- [ ] **P1** Compare is core only (`docx/compare/`, `docs/docx-compare.md`): body text and tables
+      become tracked changes at word or character level, matching Word 16's CompareDocuments on 8
+      fixture pairs. Not compared: moves, headers and footers, notes, comments, text boxes,
+      paragraph, table and section formatting; tables with column changes, merged or nested cells
+      show as replaced. Combine Documents, the Compare/Combine UI and the accessibility checker
+      remain open.
+- [ ] **P1** Paste: Word's clipboard HTML pastes as real lists with Word's levels and formats, its
+      paragraph styles where the document defines them, and Word-only run formatting
+      (`docx/clipboard/`); a Paste Options button (or Ctrl) re-pastes as Keep Source Formatting,
+      Merge Formatting or Keep Text Only, and Paste Special (Ctrl+Alt+V) offers HTML or unformatted
+      text. Open: notes and fields paste as text, missing source styles are not created, the header,
+      footer and note editors do not read Word HTML, no K/M/T keys or other Paste Special formats,
+      Merge Formatting is approximate, and pasted Word pictures do not load.
+- [ ] **P1** Pictures: crop by percent in Format Picture and all seven Wrap Text choices (Picture
+      Format tab and right-click menu, inline and floating converted both ways), plus dropping or
+      pasting picture files at the pointer (`docx/picture-crop-edit.ts`, `docx/drawing-wrap.ts`,
+      `e2e/docx/picture-drop-wrap.spec.ts`). Open: crop handles and crop by length, wrap polygon
+      editing (Tight and Through use a rectangle), text distances, wrap and crop for header, footer,
+      note and VML pictures, and the right-click menu on Print Layout pages.
+- [x] **P2** Footnotes and endnotes convert like Word's Convert Notes (all to endnotes, all to
+      footnotes, swap) and Convert to Endnote/Footnote on a note reference, swapping the note styles
+      when defined (`docx/note-convert.ts`, `e2e/docx/convert-notes.spec.ts`); picture watermarks
+      with scale and washout (`docx/picture-watermark.ts`, `e2e/docx/picture-watermark.spec.ts`).
+- [ ] **P2** Note conversion and watermark leftovers: converting from inside the note text, notes
+      holding charts, shapes or floating pictures (left in place), and drawing picture watermarks in
+      Draft view.
+- [ ] **P2** Inspect Document (File > Info > Check for Issues) inspects and undoably removes
+      comments and revisions, document properties and personal information (setting and honouring
+      `w:removePersonalInformation` and `w:removeDateAndTime`), custom XML data, header and footer
+      content and hidden text, matching Word 16's saved output
+      (`docx/remove-document-information.test.ts`, `e2e/docx/document-inspector.spec.ts`). Open:
+      Collapsed Headings and Invisible Content, hidden paragraph marks and style-inherited hidden
+      text, emptied comment parts are kept where Word deletes them, the glossary is not scrubbed,
+      and the privacy flag cannot be turned off.
 - [ ] **P2** Content controls: picture, building-block gallery and repeating-section controls are
       kept but cannot be inserted, and repeating items cannot be added or removed
       (`docx/content-control-model.ts`).
-- [ ] **P2** Hyperlinks open only `http`, `https` and `mailto` targets; `tel` and `ftp` are refused
-      (`docx/ui/link-commands.ts`).
+- [x] **P2** Hyperlinks to http, https, mailto, tel and ftp targets open on Ctrl+click, as in Word;
+      script and disguised schemes are refused (`docx/hyperlink.test.ts`).
 - [ ] **P1** No AutoCorrect or AutoFormat as you type (smart quotes, automatic lists).
 - [ ] **P1** Collaboration covers the body and comments; headers, footers and notes are
       incomplete, table commands are off during collaboration, and there are no mentions.
@@ -331,31 +362,49 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 ### Layout and rendering
 
 - [ ] **P1** Hyphenation: `autoHyphenation` is read but never applied by `src/core/docx/layout`.
-- [ ] **P1** Compatibility mode: mode 15 versus 14 and earlier changes only page-break spacing and
-      footnote separators and columns (`docx/document-parts.ts`, `layout/adapter.ts`). The other
-      mode-dependent layout rules and most `w:compat` options are not applied.
-- [ ] **P1** Floating tables (`w:tblpPr`) are kept but laid out in the flow: no position and no
-      text wrap (`layout/table-layout.ts`).
+- [ ] **P1** Compatibility mode: `docx/compatibility.ts` reads `w:compat` into one profile; mode 15
+      versus 14 and earlier changes page-break spacing, footnote separators and columns, and the
+      width AutoFit tables size against (measured in modes 12, 14 and no mode). Legacy tables are
+      not outdented by the cell margin, and the other mode-dependent rules and most `w:compat`
+      options (including `growAutofit` and `autofitToFirstFixedWidthCell`) are not applied.
+- [ ] **P1** Floating tables (`w:tblpPr`) are positioned by their anchors, offsets and alignment and
+      text wraps on both sides (`layout/flow-floating-table.ts`, checked against Word 16 in
+      `__fixtures__/floating-table`). They stay on the page where they occur; tables that do not
+      fit, hold footnotes or merge cells vertically fall back to the flow; narrow gaps stay empty;
+      floating tables in cells, on multi-column pages and in modes before 15 are unmeasured.
 - [ ] **P1** Text frames (`w:framePr`) other than drop caps are laid out as ordinary paragraphs.
-- [ ] **P1** East Asian layout: line-start and line-end rules (`w:kinsoku`,
-      `w:noLineBreaksBefore`/`After`), `w:autoSpaceDE`/`DN`, punctuation compression
-      (`w:characterSpacingControl`) and hanging punctuation (`w:overflowPunct`) are read but not
-      applied (`layout/text-breaks.ts`).
-- [ ] **P1** Thai, Lao, Khmer and Myanmar text has no line-break opportunities except spaces
-      (`layout/paragraph-tokens.ts`).
-- [ ] **P1** Fields LISTNUM, AUTONUM, AUTONUMLGL, AUTONUMOUT, DOCPROPERTY and SYMBOL show their
-      saved result instead of a computed one (`layout/page-fields.ts`).
+- [ ] **P2** East Asian layout: kinsoku (per-language default sets measured from Word 16,
+      `w:strictFirstAndLastChars`, `w:noLineBreaksBefore`/`After`), `w:autoSpaceDE`/`DN` (a quarter
+      em) and hanging punctuation in justified paragraphs (`w:overflowPunct`) are applied
+      (`text/kinsoku.ts`, `text/east-asian.ts`, `layout/text-breaks.ts`). Open: punctuation
+      compression (`w:characterSpacingControl`), `w:wordWrap`, justified CJK lines spread between
+      characters, the font-dependent gap after Western text, and checks on a Word with East Asian
+      editing languages enabled.
+- [x] **P1** Thai, Lao, Khmer and Myanmar text breaks between grapheme clusters as Word 16 does
+      (never inside a cluster; U+200B always breaks) (`text/complex-breaks.ts`). Measured on an
+      install without a Thai editing language; dictionary word breaking is not modelled.
+- [x] **P1** Fields LISTNUM, AUTONUM, AUTONUMLGL, AUTONUMOUT, DOCPROPERTY and SYMBOL are computed in
+      layout, by Update Fields and on save, matching Word 16's output
+      (`docx/__fixtures__/computed-fields`).
+- [ ] **P2** Computed-field leftovers: DOCPROPERTY `\#` pictures, dates without `\@` and statistics
+      keep their saved result; AUTONUM and LISTNUM count the main document only; LISTNUM resolves
+      only NumberDefault, OutlineDefault and LegalDefault by name; SYMBOL `\h` is not applied;
+      DOCPROPERTY shows the current value where Word keeps the stale result until F9.
 - [ ] **P1** Right-to-left text: paragraph direction is applied but runs are not reordered by
       the bidirectional algorithm, and the Word UI has no right-to-left locale or mirrored chrome.
 - [ ] **P1** Tight and through wrapping use the object's rectangle, not its wrap polygon, and only
       the larger side gets text (`layout/floats.ts`).
-- [ ] **P1** Table autofit (`tblLayout`) is not applied; merged cells are read-only on Print Layout
-      pages.
+- [ ] **P1** Table AutoFit (`layout/table-autofit.ts`) sizes columns from content, preferred cell
+      and table widths and merged cells, matching Word 16's saved grids in
+      `__fixtures__/table-autofit`; default cell margins resolve through the table, its style chain
+      and the default table style. `gridBefore`/`gridAfter`, `noWrap`, cell spacing, negative
+      indents and preferred widths on merged cells are not measured.
+- [ ] **P1** Merged cells are read-only on Print Layout pages.
 - [ ] **P1** Floating objects inside table cells, floating charts and floating text boxes are not
       positioned on pages; linked text boxes have no code.
 - [ ] **P1** Pagination is approximate (no Word-rendered page corpus yet); caret placement at line
-      and page boundaries is heuristic; no kerning, East Asian line breaking or complex-script
-      shaping.
+      and page boundaries is heuristic; no kerning or complex-script shaping; over-long Latin
+      words overflow instead of breaking by character.
 
 ### Ribbon
 
@@ -365,7 +414,7 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P1** Table tab (Table Design and Layout merged) lacks table styles and style options, Cell
       Size and AutoFit, cell alignment and margins, Repeat Header Rows, Formula, Convert to Text,
       Select and Draw Borders.
-- [ ] **P1** Missing tabs: Draw, Picture Format, Equation.
+- [ ] **P1** Missing tabs: Draw and Equation; Picture Format has only Wrap Text, Crop and Format.
 - [ ] **P1** Layout: the Arrange group (Position, Wrap Text, order, Selection Pane, Align, Group,
       Rotate) and Text Direction.
 - [ ] **P1** Insert: WordArt, Quick Parts, Signature Line, Object, Icons, 3D Models, Screenshot,

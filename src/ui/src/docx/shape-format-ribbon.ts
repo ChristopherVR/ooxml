@@ -5,7 +5,7 @@ import { colorSplit, group, menuSelect, spinner, stack, tool } from './ribbon-pa
 import { panelOf, selectTab, setTabHidden, isTabHidden } from './ribbon-tab-api';
 import { selectedShape, shapeWrapOf } from './shape-commands';
 
-const WRAPS: Array<[string, string]> = [
+export const WRAPS: Array<[string, string]> = [
 	['inline', 'In Line with Text'],
 	['square', 'Square'],
 	['tight', 'Tight'],

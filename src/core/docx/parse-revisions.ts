@@ -80,6 +80,15 @@ export function paragraphMarkRevision(pPr: XmlElement | undefined): Revision | u
 	return undefined;
 }
 
+/** Whole-row insertion/deletion, recorded as `w:trPr/w:ins|w:del`. */
+export function rowRevision(trPr: XmlElement | undefined): Revision | undefined {
+	const ins = first(trPr, 'ins');
+	if (ins) return revisionFrom(ins, 'insert');
+	const del = first(trPr, 'del');
+	if (del) return revisionFrom(del, 'delete');
+	return undefined;
+}
+
 /** Preserve prior paragraph properties alongside their revision identity. */
 export function paragraphFormatRevision(pPr: XmlElement | undefined): Revision | undefined {
 	const change = first(pPr, 'pPrChange');

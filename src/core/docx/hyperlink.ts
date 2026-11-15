@@ -4,6 +4,21 @@
 import type { HyperlinkInfo } from './model';
 import type { Relationship } from './package-parts';
 import { getR, getW, type XmlElement } from './xml';
+import { hyperlinkPolicy } from '../opc/safe-href';
+
+/** Schemes Word follows on Ctrl+click beyond the shared http, https and mailto set. */
+export const WORD_EXTRA_LINK_SCHEMES: readonly string[] = ['tel', 'ftp'];
+
+/**
+ * True for an external link target the editor may write and follow on a user gesture (http,
+ * https, mailto, tel and ftp), after the shared policy rejects script and disguised schemes.
+ */
+export function isWordNavigableHref(href: unknown): href is string {
+	return (
+		typeof href === 'string' &&
+		hyperlinkPolicy(href, { additionalOpenSchemes: WORD_EXTRA_LINK_SCHEMES }).open
+	);
+}
 
 /** Resolves a `w:hyperlink` element's target using the document's relationship map. */
 export function resolveHyperlink(

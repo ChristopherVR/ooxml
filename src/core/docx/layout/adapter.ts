@@ -21,9 +21,18 @@ import { DEFAULT_FONT_SIZE_PT, ptToPx } from './units';
 import { docxChartPaint } from '../chart-paint';
 import { pictureBulletSizePt } from '../numbering-picture';
 import { definedProps } from '../defined-props';
+import { kinsokuLanguage } from '../../text/kinsoku';
+import { resolveEastAsiaLanguage } from '../run-language';
 import { symbolOnly, symbolSegments } from '../special-characters';
 import { formFieldDisplayText } from '../form-fields';
 import { adaptTable } from './adapt-table';
+import {
+	addsParagraphSpacing,
+	attachesFootnotesToBodyColumns,
+	compatibilityProfile,
+	keepsSpaceBeforePageBreak,
+	usesModernFootnoteLayout,
+} from '../compatibility';
 import { foldDropCaps } from './adapt-drop-cap';
 import { groupParagraphBorders, paragraphBox } from './adapt-paragraph-box';
 import { endnoteParagraphs, noteLabels, paragraphFootnotes } from './adapt-notes';
@@ -100,8 +109,9 @@ export function adaptDocumentModel(
 	const reviewMode = options.reviewDisplayMode ?? 'all';
 	const visibleModel = visibleReviewModel(model, reviewMode);
 	const catalog = model.paragraphStyles;
-	const addParagraphSpacing = model.doNotUseHtmlParagraphAutoSpacing === true;
-	const keepSpaceBeforePageBreak = model.compatibilityMode !== 15;
+	const compatibility = compatibilityProfile(model);
+	const addParagraphSpacing = addsParagraphSpacing(compatibility);
+	const keepSpaceBeforePageBreak = keepsSpaceBeforePageBreak(compatibility);
 	/** HTML auto spacing is 14 pt when the compatibility option is off; otherwise the twips are used. */
 	const autoSpaced = (auto: boolean | undefined, twipsValue: Twips | undefined) =>
 		auto && !addParagraphSpacing ? HTML_AUTO_SPACING_TWIPS : twipsValue;
@@ -192,7 +202,8 @@ export function adaptDocumentModel(
 						heightPx: 1,
 						noteSeparator: run.noteSeparator,
 					}
-				: image && !image.anchored
+				: // A picture watermark floats behind the page text and takes no room in the header.
+					image && !image.anchored && !image.pictureWatermark
 					? {
 							partName: image.partName,
 							...(image.pictureFill ? { pictureFill: image.pictureFill } : {}),
@@ -238,6 +249,15 @@ export function adaptDocumentModel(
 			...(formatting.strike || formatting.doubleStrike ? { strike: true } : {}),
 			...(run.break ? { breakAfter: run.break } : {}),
 			...(script ? { script } : {}),
+			...definedProps({
+				kinsokuLanguage: kinsokuLanguage(
+					resolveEastAsiaLanguage(run, {
+						runCatalog: model.characterStyles,
+						paragraphCatalog: catalog,
+						paragraphStyleId,
+					}),
+				),
+			}),
 		};
 	}
 	const labels = computeListLabels(model);
@@ -348,6 +368,11 @@ export function adaptDocumentModel(
 			...(resolved.keepLines ? { keepLines: true } : {}),
 			...(resolved.widowControl === false ? { widowControl: false } : {}),
 			...(resolved.contextualSpacing ? { contextualSpacing: true } : {}),
+			...(resolved.kinsoku === false ? { kinsoku: false as const } : {}),
+			...(resolved.autoSpaceDE === false ? { autoSpaceDE: false as const } : {}),
+			...(resolved.autoSpaceDN === false ? { autoSpaceDN: false as const } : {}),
+			...(resolved.overflowPunct === false ? { overflowPunct: false as const } : {}),
+			...(model.kinsoku ? { kinsokuSettings: model.kinsoku } : {}),
 		};
 	}
 	function adaptBlock(block: Block): LayoutBlock {
@@ -387,8 +412,8 @@ export function adaptDocumentModel(
 			)
 		: undefined;
 	const sections = model.sections;
-	const modernFootnoteSeparator = model.compatibilityMode === 15;
-	const legacyFootnoteColumns = model.compatibilityMode === 12 || model.compatibilityMode === 14;
+	const modernFootnoteSeparator = usesModernFootnoteLayout(compatibility);
+	const legacyFootnoteColumns = attachesFootnotesToBodyColumns(compatibility);
 	if (
 		!modernFootnoteSeparator &&
 		!legacyFootnoteColumns &&

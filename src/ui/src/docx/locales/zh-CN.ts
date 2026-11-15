@@ -7,6 +7,12 @@ import { zhLigatures } from './ligatures';
 import { zhNavigation } from './navigation';
 import { zhLineNumbers } from './line-numbers';
 import { zhDropCap } from './drop-cap';
+import { zhFindStories } from './find-stories';
+import { zhPasteOptions } from './paste-options';
+import { zhPicture } from './picture';
+import { zhPictureWatermark } from './picture-watermark';
+import { zhConvertNotes } from './convert-notes';
+import { zhDocumentInspector } from './document-inspector';
 import { zhObjects } from './objects';
 import { zhShapes } from './shapes';
 import { zhSmartArt } from './smartart';
@@ -23,6 +29,12 @@ export const zhCN: LocaleStrings = {
 	...zhTableProperties,
 	...zhLineNumbers,
 	...zhDropCap,
+	...zhFindStories,
+	...zhPasteOptions,
+	...zhPicture,
+	...zhPictureWatermark,
+	...zhConvertNotes,
+	...zhDocumentInspector,
 	...zhNavigation,
 	...zhColumns,
 	...zhSplitCells,

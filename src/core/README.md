@@ -178,6 +178,17 @@ console.log(comparisonText(result)); // values, formulas, formats, sheets, names
 
 Cells are matched by address; see [workbook comparison](../../docs/xlsx-compare.md) for the categories and limits.
 
+**Compare two versions of a Word document**
+
+```ts
+import { compareDocuments } from 'ooxml-core/docx';
+
+const { bytes, summary } = await compareDocuments(v1, v2, { author: 'Reviewer' });
+// bytes: the revised document with every difference as a tracked change
+```
+
+See [document comparison](../../docs/docx-compare.md) for the rules and what is not compared.
+
 **Work at the package level**
 
 ```ts

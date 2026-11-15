@@ -10,6 +10,12 @@ import { enFontAdvanced } from './font-advanced';
 import { enLigatures } from './ligatures';
 import { enNavigation } from './navigation';
 import { enDropCap } from './drop-cap';
+import { enFindStories } from './find-stories';
+import { enPasteOptions } from './paste-options';
+import { enPicture } from './picture';
+import { enPictureWatermark } from './picture-watermark';
+import { enConvertNotes } from './convert-notes';
+import { enDocumentInspector } from './document-inspector';
 import { enLineNumbers } from './line-numbers';
 import { enApp } from './en-app';
 import { enTableProperties } from './table-properties';
@@ -26,6 +32,12 @@ export const en = {
 	...enTableProperties,
 	...enLineNumbers,
 	...enDropCap,
+	...enFindStories,
+	...enPasteOptions,
+	...enPicture,
+	...enPictureWatermark,
+	...enConvertNotes,
+	...enDocumentInspector,
 	...enNavigation,
 	...enColumns,
 	...enSplitCells,

@@ -6,6 +6,12 @@ import { deFontAdvanced } from './font-advanced';
 import { deLigatures } from './ligatures';
 import { deNavigation } from './navigation';
 import { deDropCap } from './drop-cap';
+import { deFindStories } from './find-stories';
+import { dePasteOptions } from './paste-options';
+import { dePicture } from './picture';
+import { dePictureWatermark } from './picture-watermark';
+import { deConvertNotes } from './convert-notes';
+import { deDocumentInspector } from './document-inspector';
 import { deLineNumbers } from './line-numbers';
 import { deObjects } from './objects';
 import { deShapes } from './shapes';
@@ -23,6 +29,12 @@ export const de: LocaleStrings = {
 	...deTableProperties,
 	...deLineNumbers,
 	...deDropCap,
+	...deFindStories,
+	...dePasteOptions,
+	...dePicture,
+	...dePictureWatermark,
+	...deConvertNotes,
+	...deDocumentInspector,
 	...deNavigation,
 	...deColumns,
 	...deSplitCells,

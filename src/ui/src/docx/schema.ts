@@ -120,6 +120,8 @@ export const schema = new Schema({
 				sections: { default: null },
 				sectionParts: { default: null },
 				noteParts: { default: null },
+				/** Document properties and package information as JSON (`document-information-attr.ts`). */
+				documentInformation: { default: null },
 				...commentHistoryAttributes,
 			},
 		},
@@ -161,6 +163,11 @@ export const schema = new Schema({
 				widowControl: { default: null },
 				contextualSpacing: { default: null },
 				suppressLineNumbers: { default: null },
+				/** East Asian typography toggles (`w:kinsoku`...): true, false or null = no element; read-only. */
+				kinsoku: { default: null },
+				autoSpaceDE: { default: null },
+				autoSpaceDN: { default: null },
+				overflowPunct: { default: null },
 				/** `w:framePr` drop cap: `{ style, lines }` on the frame paragraph holding the initial. */
 				dropCap: { default: null },
 				/** `w:pBdr` (object) and shading fill; read-only, drawn around the paragraph. */
@@ -182,7 +189,8 @@ export const schema = new Schema({
 						align: (el as HTMLElement).style.textAlign || null,
 						direction: (el as HTMLElement).dir || (el as HTMLElement).style.direction || null,
 						id: (el as HTMLElement).dataset.id || '',
-						style: '',
+						// Set by the Word clipboard reader to a style the document defines.
+						style: (el as HTMLElement).dataset.docxParagraphStyle || '',
 						spacingBeforeTwips: null,
 						spacingAfterTwips: null,
 						lineSpacingTwips: null,
@@ -273,6 +281,11 @@ export const schema = new Schema({
 				borders: { default: null },
 				/** Default cell margins (`w:tblCellMar`) as JSON. */
 				cellMargins: { default: null },
+				/**
+				 * The margins a side takes when the table sets none (its style chain, then the default
+				 * table style) as JSON. Shown by the dialogs; never written back.
+				 */
+				inheritedCellMargins: { default: null },
 				/** The block-level content control around the table (`w:sdt` around `w:tbl`). */
 				contentControl: { default: null },
 			},

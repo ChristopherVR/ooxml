@@ -1,15 +1,8 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Brings the cached results of STYLEREF fields up to date in a story's paragraphs.
-import { isFieldLocked } from './field-lock';
-import type {
-	Block,
-	DocumentModel,
-	HeaderFooterContent,
-	HeaderFooterSlots,
-	Paragraph,
-	Table,
-	TextRun,
-} from './model';
+import { withFieldResults } from './field-result-spans';
+import { withStoryBlocks } from './field-stories';
+import type { Block, DocumentModel, Paragraph } from './model';
 import {
 	parseStyleReference,
 	styleRefSource,
@@ -17,197 +10,6 @@ import {
 	type StyleRefSource,
 	type StyleReference,
 } from './style-ref';
-
-/** A field's cached result in a paragraph's runs; `from` and `to` span the whole field. */
-interface FieldResult extends RunSpan {
-	instr: string;
-	locked: boolean;
-	/** The runs holding the result. */
-	runs: number[];
-	/** The run holding the instruction of a complex field. */
-	code?: number;
-	/** The instruction run holding the first letter of the field name. */
-	name?: number;
-	/** Where a result goes when there is none: just after the `separate` marker. */
-	insertAt: number;
-	/** Its result is text a revision removes: kept as it is until the revision is settled. */
-	removed?: true;
-}
-
-/** Whether a revision takes a run's text out of the document: deleted, or moved away. */
-const removed = (run: TextRun) =>
-	run.revision?.kind === 'delete' || run.revision?.kind === 'moveFrom';
-
-/**
- * Complex fields closed in this paragraph, and simple fields, with the runs of their results. A
- * result run a revision removes is not part of the result: its text is gone, and a new result
- * goes into the text the revisions keep (a result they remove whole stays as it is).
- */
-function fieldResults(runs: readonly TextRun[]): FieldResult[] {
-	const found: FieldResult[] = [];
-	const open: {
-		begin: number;
-		code: string;
-		codeRun?: number;
-		nameRun?: number;
-		separate?: number;
-		locked: boolean;
-	}[] = [];
-	runs.forEach((run, index) => {
-		const top = open.at(-1);
-		if (run.fieldChar === 'begin')
-			open.push({ begin: index, code: '', locked: isFieldLocked(run) });
-		else if (run.fieldCode !== undefined && top && top.separate === undefined) {
-			top.code += run.fieldCode;
-			top.codeRun ??= index;
-			if (top.nameRun === undefined && /\S/.test(run.fieldCode)) top.nameRun = index;
-		} else if (run.fieldChar === 'separate' && top) top.separate = index;
-		else if (run.fieldChar === 'end' && top) {
-			open.pop();
-			if (top.separate === undefined) return;
-			const instr = top.code.trim();
-			const results: number[] = [];
-			let gone = false;
-			for (let at = top.separate + 1; at < index; at++) {
-				const item = runs[at]!;
-				if (item.field?.instr !== instr || item.fieldChar || item.fieldCode !== undefined) continue;
-				if (removed(item)) gone = true;
-				else results.push(at);
-			}
-			found.push({
-				from: top.begin,
-				to: index,
-				instr,
-				locked: top.locked || results.some((at) => isFieldLocked(runs[at])),
-				runs: results,
-				...(top.codeRun !== undefined ? { code: top.codeRun } : {}),
-				...(top.nameRun !== undefined ? { name: top.nameRun } : {}),
-				insertAt: top.separate + 1,
-				...(gone && !results.length ? { removed: true as const } : {}),
-			});
-		}
-	});
-	let simple: FieldResult | undefined;
-	let identity: string | undefined;
-	runs.forEach((run, index) => {
-		if (!run.field?.simple) {
-			simple = undefined;
-			return;
-		}
-		if (simple && simple.instr === run.field.instr && identity === run.fieldInstanceId) {
-			if (!removed(run)) simple.runs.push(index);
-			simple.to = index;
-		} else {
-			simple = {
-				from: index,
-				to: index,
-				instr: run.field.instr,
-				locked: false,
-				runs: removed(run) ? [] : [index],
-				insertAt: index,
-			};
-			identity = run.fieldInstanceId;
-			found.push(simple);
-		}
-		simple.locked ||= isFieldLocked(run);
-	});
-	return found;
-}
-
-/** Run properties that make a run something other than formatted text. */
-const STRUCTURE = [
-	'fieldChar',
-	'fieldCode',
-	'fieldInstanceId',
-	'fieldFlags',
-	'break',
-	'noteReference',
-	'noteMark',
-	'noteSeparator',
-	'equation',
-	'image',
-] as const;
-
-/**
- * Run properties that are not character formatting: what a run holds, the revision it is part of,
- * its comments and its link. A result formatted like the field code keeps its own.
- */
-const NOT_FORMATTING = [
-	...STRUCTURE,
-	'text',
-	'field',
-	'revision',
-	'formatRevision',
-	'restoredRunPropertiesXml',
-	'commentIds',
-	'link',
-	'contentControl',
-] as const;
-
-/**
- * `result` with `text`, formatted like the field-code run `code` (Word's `\* CHARFORMAT` takes
- * the formatting of the first letter of the field name).
- */
-export function withFieldCodeFormatting(result: TextRun, code: TextRun, text: string): TextRun {
-	const formatted: Partial<TextRun> = { ...code };
-	const own: Partial<TextRun> = {};
-	for (const key of NOT_FORMATTING) {
-		delete formatted[key];
-		if (result[key] !== undefined) Object.assign(own, { [key]: result[key] });
-	}
-	return { ...formatted, ...own, text };
-}
-
-/**
- * The runs with `field`'s result replaced by `text`, or undefined when it already reads `text`.
- * The text goes into the first result run, which keeps its formatting (Word's `\* MERGEFORMAT`),
- * or with `charFormat` takes that of the first letter of the field name, and the other result
- * runs are emptied rather than removed: the writer keeps every run where it was, with any
- * formatting the model does not hold. An empty result gets a run formatted like the instruction.
- */
-function replaceResult(
-	runs: readonly TextRun[],
-	field: FieldResult,
-	text: string,
-	charFormat: boolean,
-) {
-	const current = field.runs.map((at) => runs[at]!.text).join('') === text;
-	const next = [...runs];
-	const [first, ...rest] = field.runs;
-	const name = field.name ?? field.code;
-	if (first !== undefined) {
-		const formatted =
-			charFormat && name !== undefined
-				? withFieldCodeFormatting(runs[first]!, runs[name]!, text)
-				: undefined;
-		// CHARFORMAT also brings the formatting up to date when the text already is.
-		if (
-			current &&
-			(!formatted || (sameRun(formatted, runs[first]!) && rest.every((at) => !runs[at]!.text)))
-		)
-			return undefined;
-		next[first] = formatted ?? { ...runs[first]!, text };
-		for (const at of rest) next[at] = { ...runs[at]!, text: '' };
-		return next;
-	}
-	const code = charFormat ? name : field.code;
-	if (current || code === undefined || field.removed) return undefined;
-	next.splice(field.insertAt, 0, fieldResultRun(runs[code]!, field.instr, text));
-	return next;
-}
-
-/** Whether two runs hold the same properties, in any order. */
-function sameRun(a: TextRun, b: TextRun): boolean {
-	const keys = new Set([...Object.keys(a), ...Object.keys(b)]) as Set<keyof TextRun>;
-	return [...keys].every((key) => JSON.stringify(a[key]) === JSON.stringify(b[key]));
-}
-
-/** The result run `text` of a complex field that has none, formatted like its instruction run. */
-export function fieldResultRun(code: TextRun, instr: string, text: string): TextRun {
-	const formatted: Partial<TextRun> = { ...code };
-	for (const key of STRUCTURE) delete formatted[key];
-	return { ...formatted, text, field: { instr } };
-}
 
 /** Gives a STYLEREF field its result, or undefined to keep the one it has. */
 export type StyleRefEvaluator = (
@@ -217,43 +19,6 @@ export type StyleRefEvaluator = (
 	field: RunSpan,
 ) => string | undefined;
 
-function paragraphWithResults(paragraph: Paragraph, evaluate: StyleRefEvaluator): Paragraph {
-	let runs: readonly TextRun[] = paragraph.runs;
-	// From the last field back, so an edit never moves the runs of a field still to be done.
-	const start = (field: FieldResult) => field.runs[0] ?? field.insertAt;
-	for (const field of fieldResults(runs).sort((a, b) => start(b) - start(a))) {
-		const reference = field.locked ? undefined : parseStyleReference(field.instr);
-		const text = reference && evaluate(reference, paragraph, field);
-		if (text !== undefined)
-			runs = replaceResult(runs, field, text, reference?.charFormat === true) ?? runs;
-	}
-	return runs === paragraph.runs ? paragraph : { ...paragraph, runs: [...runs] };
-}
-
-/**
- * A table with its cells' results set, in the tables nested in a cell too (they are the cell's
- * source blocks; its own paragraphs are `paragraphs`). The table itself when nothing changed.
- */
-function tableWithResults(table: Table, evaluate: StyleRefEvaluator): Table {
-	let changed = false;
-	const rows = table.rows.map((row) =>
-		row.map((cell) => {
-			const paragraphs = cell.paragraphs.map((item) => paragraphWithResults(item, evaluate));
-			const sourceBlocks = cell.sourceBlocks?.map((item) =>
-				item.type === 'table' ? tableWithResults(item, evaluate) : item,
-			);
-			if (
-				paragraphs.every((item, index) => item === cell.paragraphs[index]) &&
-				(sourceBlocks ?? []).every((item, index) => item === cell.sourceBlocks![index])
-			)
-				return cell;
-			changed = true;
-			return { ...cell, paragraphs, ...(sourceBlocks ? { sourceBlocks } : {}) };
-		}),
-	);
-	return changed ? { ...table, rows } : table;
-}
-
 /**
  * The blocks with every unlocked STYLEREF result that `evaluate` answers set to its answer.
  * Unchanged paragraphs and tables are returned as they are, so the writer keeps their XML.
@@ -262,16 +27,11 @@ export function withStyleRefResults(
 	blocks: readonly Block[],
 	evaluate: StyleRefEvaluator,
 ): Block[] {
-	let changed = false;
-	const next = blocks.map((block): Block => {
-		const updated =
-			block.type === 'paragraph'
-				? paragraphWithResults(block, evaluate)
-				: tableWithResults(block, evaluate);
-		changed ||= updated !== block;
-		return updated;
+	return withFieldResults(blocks, (field, paragraph) => {
+		const reference = parseStyleReference(field.instr);
+		const text = reference && evaluate(reference, paragraph, field);
+		return text === undefined ? undefined : { text, charFormat: reference?.charFormat === true };
 	});
-	return changed ? next : (blocks as Block[]);
 }
 
 /**
@@ -332,8 +92,6 @@ export function bodyStyleRefResult(
 	return undefined;
 }
 
-const SLOTS = ['default', 'first', 'even'] as const;
-
 /**
  * Brings STYLEREF results up to date. A field in a header or footer takes the text it shows on
  * every page, when that does not depend on the page (`pageIndependentResult`); Word updates such
@@ -354,40 +112,14 @@ export function refreshStyleRefFields(
 		if (!everywhere.has(key)) everywhere.set(key, pageIndependentResult(read(), reference));
 		return everywhere.get(key);
 	};
-	const content = (item: HeaderFooterContent | undefined) => {
-		if (!item) return item;
-		const blocks = withStyleRefResults(item.blocks, story);
-		return blocks === item.blocks ? item : { ...item, blocks };
-	};
-	const slots = (item: HeaderFooterSlots | undefined) => {
-		if (!item) return item;
-		let changed = false;
-		const next: HeaderFooterSlots = { ...item };
-		for (const slot of SLOTS) {
-			const refreshed = content(item[slot]);
-			if (refreshed === item[slot]) continue;
-			changed = true;
-			next[slot] = refreshed!;
-		}
-		return changed ? next : item;
-	};
-	let changed = false;
-	const sections = model.sections?.map((section) => {
-		const headers = slots(section.headers);
-		const footers = slots(section.footers);
-		if (headers === section.headers && footers === section.footers) return section;
-		changed = true;
-		return {
-			...section,
-			...(headers ? { headers } : {}),
-			...(footers ? { footers } : {}),
-		};
-	});
-	const blocks = options.body
-		? withStyleRefResults(model.blocks, (reference, paragraph, field) =>
-				bodyStyleRefResult(read(), reference, paragraph, field),
-			)
-		: model.blocks;
-	if (!changed && blocks === model.blocks) return model;
-	return { ...model, blocks, ...(sections ? { sections } : {}) };
+	return withStoryBlocks(
+		model,
+		(blocks) => withStyleRefResults(blocks, story),
+		options.body
+			? (blocks) =>
+					withStyleRefResults(blocks, (reference, paragraph, field) =>
+						bodyStyleRefResult(read(), reference, paragraph, field),
+					)
+			: undefined,
+	);
 }

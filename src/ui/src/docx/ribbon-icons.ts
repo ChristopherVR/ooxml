@@ -53,6 +53,7 @@ const paths = {
 	updateTable: 'M20 12a8 8 0 1 1-2.5-5.8 M20 4v5h-5',
 	footnote: 'M5 4h9v12H5z M8 8h3 M8 11h3 M4 20h16 M17 6v.01',
 	endnote: 'M5 3h9v11H5z M8 7h3 M8 10h3 M4 17h16 M4 21h16',
+	convertNotes: 'M4 4h7v9H4z M13 11h7v9h-7z M14 5h4l-2-2 M18 5v4 M10 19H6v-4 M6 19l2 2',
 	sectionNext: 'M5 3h9l3 3v8H5z M5 18h14 M5 21h14 M12 9v4 M10 11l2 2 2-2',
 	sectionContinuous: 'M5 4h14v6H5z M5 14h14v6H5z M3 12h2 M8 12h2 M14 12h2 M19 12h2',
 	sectionEven: 'M6 3h9l3 3v15H6z M9 13a1.5 1.5 0 0 1 3 0c0 1.2-3 2.5-3 3.5h3',

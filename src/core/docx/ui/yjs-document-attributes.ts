@@ -2,13 +2,22 @@ import { Plugin, type EditorState } from 'prosemirror-state';
 import type * as Y from 'yjs';
 import { ySyncPluginKey } from 'y-prosemirror';
 
+/**
+ * Document attributes kept out of the room: comment threads have their own shared maps, and the
+ * document properties and package information (`documentInformation`) stay on this device.
+ */
+export const LOCAL_DOCUMENT_ATTRIBUTES: ReadonlySet<string> = new Set([
+	'commentThreads',
+	'documentInformation',
+]);
+
 /** Word root attributes use a separate map because the body binding omits them. */
 export function wordYjsDocumentAttributes(attrs: Y.Map<unknown>, canWrite: () => boolean): Plugin {
 	const patch = (state: EditorState) => {
 		const tr = state.tr;
 		for (const [key, value] of attrs.entries()) {
 			if (
-				key !== 'commentThreads' &&
+				!LOCAL_DOCUMENT_ATTRIBUTES.has(key) &&
 				key in (state.doc.type.spec.attrs ?? {}) &&
 				JSON.stringify(state.doc.attrs[key]) !== JSON.stringify(value)
 			)
@@ -38,7 +47,7 @@ export function wordYjsDocumentAttributes(attrs: Y.Map<unknown>, canWrite: () =>
 						transaction.meta.set('addToHistory', thisPlugin.getState(next.state));
 						for (const [key, value] of Object.entries(next.state.doc.attrs))
 							if (
-								key !== 'commentThreads' &&
+								!LOCAL_DOCUMENT_ATTRIBUTES.has(key) &&
 								JSON.stringify(attrs.get(key)) !== JSON.stringify(value)
 							)
 								attrs.set(key, value);

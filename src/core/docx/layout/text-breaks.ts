@@ -1,31 +1,33 @@
+import { complexBreakAllowed } from '../../text/complex-breaks';
+import { isEastAsianChar } from '../../text/east-asian';
+import { prohibitedAtLineEnd, prohibitedAtLineStart, type KinsokuSets } from '../../text/kinsoku';
+
 /**
- * A UAX#14-lite tokenizer: enough of the Unicode line-breaking algorithm to
- * place break opportunities at spaces, hyphens, and between CJK characters,
- * without implementing the full class table.
- *
- * The `isEastAsianChar` codepoint ranges are ported, with this provenance
- * note, from the sibling PowerPoint viewer's East Asian line-breaking helper
- * at `../pptx-viewer-new/packages/angular/src/internal/shared-src/render/text-east-asian-breaks.ts`
- * (`isEastAsianChar`). That module's hanging-punctuation/kinsoku machinery is
- * PowerPoint-specific (`a:pPr/@hangingPunct`, `@eaLnBrk`) and is not ported;
- * only the character classification is reused here.
+ * A UAX#14-lite tokenizer: enough of the Unicode line-breaking algorithm to place break
+ * opportunities at spaces, after hyphens and around East Asian characters, without the full class
+ * table. Kinsoku (the East Asian line-start and line-end prohibition, see `text/kinsoku.ts`) does
+ * not remove a break opportunity from the token stream: the token after it is marked `glue` and
+ * the line breaker moves it down together with the token before it.
  */
-export function isEastAsianChar(ch: string): boolean {
-	const cp = ch.codePointAt(0) ?? 0;
-	return (
-		(cp >= 0x1100 && cp <= 0x11ff) ||
-		(cp >= 0x2e80 && cp <= 0x9fff) ||
-		(cp >= 0xa960 && cp <= 0xa97f) ||
-		(cp >= 0xac00 && cp <= 0xd7ff) ||
-		(cp >= 0xf900 && cp <= 0xfaff) ||
-		(cp >= 0xfe30 && cp <= 0xfe4f) ||
-		(cp >= 0xff00 && cp <= 0xffef) ||
-		(cp >= 0x20000 && cp <= 0x3ffff)
-	);
-}
+export { isEastAsianChar };
+
+/**
+ * Why a word token may not start a line on its own: `kinsoku` (a prohibited line-start or
+ * line-end character at the boundary) or `word` (the boundary is inside a word, split between
+ * two differently formatted runs).
+ */
+export type TokenGlue = 'kinsoku' | 'word';
 
 export type BreakToken =
-	| { kind: 'word'; text: string; runIndex: number; sourceStart: number }
+	| {
+			kind: 'word';
+			text: string;
+			runIndex: number;
+			sourceStart: number;
+			glue?: TokenGlue;
+			/** Automatic East Asian/Western spacing after this word (`w:autoSpaceDE`/`DN`), in px. */
+			spaceAfterPx?: number;
+	  }
 	| { kind: 'space'; text: string; runIndex: number; sourceStart: number }
 	| { kind: 'tab'; runIndex: number; sourceStart: number }
 	/** An inline picture: an unbreakable box of the run's object size. */
@@ -35,43 +37,82 @@ export type BreakToken =
 	/** An explicit page or column break carried on a run (see {@link LayoutRun.breakAfter}). */
 	| { kind: 'pageBreak' | 'columnBreak'; runIndex: number; sourceStart: number };
 
+const ZERO_WIDTH_SPACE = '​';
+
+/**
+ * Whether the line breaker may break between two adjacent graphemes of text, before kinsoku: after
+ * a plain hyphen or a zero width space, before or after an East Asian character, and between two
+ * grapheme clusters of Thai, Lao, Khmer or Myanmar (`text/complex-breaks.ts`). U+2011
+ * (non-breaking hyphen, `w:noBreakHyphen`) is never split on.
+ */
+export function breakAllowedBetween(before: string, after: string): boolean {
+	if (!before || !after) return false;
+	if (before === '-' || before.endsWith(ZERO_WIDTH_SPACE)) return true;
+	return isEastAsianChar(before) || isEastAsianChar(after) || complexBreakAllowed(before, after);
+}
+
+/** Whether kinsoku forbids a break between `before` (under `beforeSets`) and `after`. */
+export function kinsokuForbids(
+	before: string,
+	after: string,
+	beforeSets: KinsokuSets | undefined,
+	afterSets: KinsokuSets | undefined,
+): boolean {
+	return (
+		(afterSets !== undefined && prohibitedAtLineStart(after, afterSets)) ||
+		(beforeSets !== undefined && prohibitedAtLineEnd(before, beforeSets))
+	);
+}
+
+const graphemeSegmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+
+/** The grapheme clusters of `text`. */
+export function graphemesOf(text: string): string[] {
+	return [...graphemeSegmenter.segment(text)].map((part) => part.segment);
+}
+
 /**
  * Splits one run's text into break-opportunity tokens. `sourceStart` is the
  * character offset of each token within the run's own text, so callers can
  * map a line's fragments back to a paragraph/run character range (used for
- * click-to-place-cursor mapping in the Print Layout view).
+ * click-to-place-cursor mapping in the Print Layout view). `kinsoku` is the
+ * run's prohibition sets, when kinsoku applies to it.
  */
-export function tokenizeRun(text: string, runIndex: number): BreakToken[] {
+export function tokenizeRun(text: string, runIndex: number, kinsoku?: KinsokuSets): BreakToken[] {
 	const tokens: BreakToken[] = [];
 	let word = '';
 	let wordStart = 0;
+	let glue: TokenGlue | undefined;
+	let previous = '';
 	const flushWord = () => {
-		if (word) tokens.push({ kind: 'word', text: word, runIndex, sourceStart: wordStart });
+		if (word)
+			tokens.push({
+				kind: 'word',
+				text: word,
+				runIndex,
+				sourceStart: wordStart,
+				...(glue ? { glue } : {}),
+			});
 		word = '';
+		glue = undefined;
 	};
-	const chars = [...new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(text)].map(
-		(part) => part.segment,
-	);
 	let offset = 0;
-	for (const ch of chars) {
-		if (ch === '\n') {
+	for (const ch of graphemesOf(text)) {
+		if (ch === '\n' || ch === '\t' || ch === ' ') {
 			flushWord();
-			tokens.push({ kind: 'lineBreak', runIndex, sourceStart: offset });
-		} else if (ch === '\t') {
-			flushWord();
-			tokens.push({ kind: 'tab', runIndex, sourceStart: offset });
-		} else if (ch === ' ') {
-			flushWord();
-			tokens.push({ kind: 'space', text: ch, runIndex, sourceStart: offset });
-		} else if (isEastAsianChar(ch)) {
-			flushWord();
-			tokens.push({ kind: 'word', text: ch, runIndex, sourceStart: offset });
+			previous = '';
+			if (ch === '\n') tokens.push({ kind: 'lineBreak', runIndex, sourceStart: offset });
+			else if (ch === '\t') tokens.push({ kind: 'tab', runIndex, sourceStart: offset });
+			else tokens.push({ kind: 'space', text: ch, runIndex, sourceStart: offset });
 		} else {
+			if (word && breakAllowedBetween(previous, ch)) {
+				const kept = kinsokuForbids(previous, ch, kinsoku, kinsoku);
+				flushWord();
+				if (kept) glue = 'kinsoku';
+			}
 			if (!word) wordStart = offset;
 			word += ch;
-			// A plain hyphen is a break opportunity; U+2011 (non-breaking hyphen,
-			// `w:noBreakHyphen`) falls through here and is never split on.
-			if (ch === '-') flushWord();
+			previous = ch;
 		}
 		offset += ch.length;
 	}
@@ -87,4 +128,26 @@ export function appendBreakMarker(
 	kind: 'page' | 'column',
 ): void {
 	tokens.push({ kind: kind === 'page' ? 'pageBreak' : 'columnBreak', runIndex, sourceStart });
+}
+
+/**
+ * How many of a line's last placed tokens must move to the next line together with
+ * `tokens[index]`, which does not fit: the chain of glued tokens ending at it. 0 when the token
+ * is not glued, or when the chain reaches back to the line's first token (nothing could stay on
+ * the line, so the break falls before `tokens[index]` after all).
+ */
+export function gluedCarry(
+	tokens: readonly BreakToken[],
+	index: number,
+	placed: readonly BreakToken[],
+): number {
+	let carry = 0;
+	for (let current = index; ; current--) {
+		const token = tokens[current];
+		if (token?.kind !== 'word' || !token.glue) return carry;
+		const previous = placed[placed.length - 1 - carry];
+		if (!previous || previous !== tokens[current - 1]) return carry;
+		carry++;
+		if (carry >= placed.length) return 0;
+	}
 }

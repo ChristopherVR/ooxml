@@ -1,22 +1,30 @@
-import { closeHistory } from 'prosemirror-history';
-import { TextSelection } from 'prosemirror-state';
+import { NodeSelection, TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
+import { expectDefined, FindPatternError, type FindOptions } from 'ooxml-core/docx/ui';
+import { findDocumentMatches } from './search-document';
 import {
-	expectDefined,
-	FindPatternError,
-	replacementParts,
-	type FindOptions,
-} from 'ooxml-core/docx/ui';
-import {
-	findDocumentMatches,
-	replaceTargets,
-	type DocumentMatch,
-	type ReplacementTarget,
-} from './search-document';
+	findUnitMatches,
+	mainUnits,
+	searchUnits,
+	type SearchUnit,
+	type StoryMatch,
+} from './search-stories';
+import { applyReplacements, type SearchStoryHost } from './search-story-replace';
+
+export type { SearchStoryHost } from './search-story-replace';
 
 export interface SearchMatch {
 	from: number;
 	to: number;
+}
+
+/** The story a match is in: what the Find dialog names beside its count. */
+export interface SearchStoryInfo {
+	readonly kind: 'main' | 'footnote' | 'endnote' | 'textBoxes' | 'header' | 'footer';
+	/** Headers and footers: `default`, `first` or `even`. */
+	readonly slot?: 'default' | 'first' | 'even';
+	/** Headers and footers: the zero-based section that owns the part. */
+	readonly sectionIndex?: number;
 }
 
 export interface SearchStatus {
@@ -26,27 +34,54 @@ export interface SearchStatus {
 	readOnly: boolean;
 	/** The query is a wildcard pattern Word would reject; nothing matches it. */
 	invalid: boolean;
+	/** The story of the active match, when there is one. */
+	story?: SearchStoryInfo;
 }
 
 /** The Find options of the dialog: Match case, whole words, wildcards and the rest of More >>. */
 export type SearchOptions = FindOptions;
 
+/** A match Find selected outside an editor caret (a text box, a story it could not open). */
+interface Placed {
+	readonly key: string;
+	readonly from: number;
+	readonly to: number;
+	/** The body selection right after placing it; any other selection means the user moved on. */
+	readonly body: SearchMatch;
+}
+
+/**
+ * Find and Replace over the body and, given a story host, the other stories in Word's order (see
+ * `findStories`): Find Next runs off the end of one story into the next and wraps to the body.
+ */
 export class SearchController {
 	private query = '';
 	private options: SearchOptions = {};
-	private matches: DocumentMatch[] = [];
+	private units: SearchUnit[] = [];
+	private matches: StoryMatch[] = [];
 	private activeIndex = -1;
 	private invalid = false;
+	private placed: Placed | undefined;
 
-	constructor(private readonly getView: () => EditorView | undefined) {}
+	constructor(
+		private readonly getView: () => EditorView | undefined,
+		private readonly stories?: SearchStoryHost,
+	) {}
 
 	get status(): SearchStatus {
+		const story = this.matches[this.activeIndex]?.unit.story;
 		return {
 			query: this.query,
 			count: this.matches.length,
 			active: this.activeIndex < 0 ? 0 : this.activeIndex + 1,
 			readOnly: !this.getView()?.editable,
 			invalid: this.invalid,
+			...(story && {
+				story:
+					story.kind === 'header' || story.kind === 'footer'
+						? { kind: story.kind, slot: story.slot, sectionIndex: story.sectionIndex }
+						: { kind: story.kind },
+			}),
 		};
 	}
 
@@ -59,10 +94,19 @@ export class SearchController {
 	refresh(): SearchStatus {
 		const view = this.getView();
 		this.matches = [];
+		this.units = [];
 		this.invalid = false;
-		if (view) {
+		if (view && this.query) {
+			const open = this.stories?.openStory();
+			const units = (this.units = this.stories
+				? searchUnits(
+						view.state.doc,
+						this.stories.model(),
+						open && { key: open.key, doc: open.view.state.doc },
+					)
+				: mainUnits(view.state.doc));
 			try {
-				this.matches = findDocumentMatches(view.state.doc, this.query, this.options);
+				this.matches = findUnitMatches(units, this.query, this.options);
 			} catch (error) {
 				if (!(error instanceof FindPatternError)) throw error;
 				this.invalid = true;
@@ -73,29 +117,33 @@ export class SearchController {
 	}
 
 	findNext(): SearchMatch | null {
-		const view = this.getView();
 		this.refresh();
-		if (!view || !this.matches.length) return null;
+		if (!this.getView() || !this.matches.length) return null;
 		let next = this.activeIndex + 1;
 		if (this.activeIndex < 0) {
-			const cursor = view.state.selection.from;
-			next = this.matches.findIndex((match) => match.from >= cursor);
+			const cursor = this.cursor();
+			next = this.matches.findIndex(
+				(match) =>
+					match.order > cursor.order || (match.order === cursor.order && match.from >= cursor.pos),
+			);
 			if (next < 0) next = 0;
 		}
 		return this.select(next % this.matches.length);
 	}
 
 	findPrevious(): SearchMatch | null {
-		const view = this.getView();
 		this.refresh();
-		if (!view || !this.matches.length) return null;
+		if (!this.getView() || !this.matches.length) return null;
 		let previous = this.activeIndex - 1;
 		if (this.activeIndex < 0) {
-			const cursor = view.state.selection.from;
+			const cursor = this.cursor();
 			previous = -1;
 			for (let index = this.matches.length - 1; index >= 0; index--) {
-				const match = this.matches[index];
-				if (match && match.from < cursor) {
+				const match = this.matches[index]!;
+				if (
+					match.order < cursor.order ||
+					(match.order === cursor.order && match.from < cursor.pos)
+				) {
 					previous = index;
 					break;
 				}
@@ -112,7 +160,7 @@ export class SearchController {
 		if (this.activeIndex < 0 && !this.findNext()) return false;
 		const match = this.matches[this.activeIndex];
 		if (!match) return false;
-		return this.replace(view, [match], replacement);
+		return this.replace(view, [match], replacement) > 0;
 	}
 
 	replaceAll(replacement: string): number {
@@ -120,52 +168,87 @@ export class SearchController {
 		if (!view?.editable || !this.query) return 0;
 		this.refresh();
 		if (!this.matches.length) return 0;
-		const targets = [...this.matches];
-		return this.replace(view, targets, replacement) ? targets.length : 0;
+		if (this.matches.some((match) => match.unit.key !== 'main')) this.stories?.closeStory();
+		return this.replace(view, [...this.matches], replacement);
+	}
+
+	/** The open story's selection, a placed match, or the body caret, as a search-order position. */
+	private cursor(): { order: number; pos: number } {
+		const orderOf = (key: string) => this.units.findIndex((unit) => unit.key === key);
+		const open = this.stories?.openStory();
+		if (open && orderOf(open.key) >= 0)
+			return { order: orderOf(open.key), pos: open.view.state.selection.from };
+		const placed = this.currentPlaced();
+		if (placed && orderOf(placed.key) >= 0) return { order: orderOf(placed.key), pos: placed.from };
+		return { order: 0, pos: this.getView()?.state.selection.from ?? 0 };
+	}
+
+	private currentPlaced(): Placed | undefined {
+		const selection = this.getView()?.state.selection;
+		const placed = this.placed;
+		if (!selection || !placed || this.stories?.openStory()) return undefined;
+		return selection.from === placed.body.from && selection.to === placed.body.to
+			? placed
+			: undefined;
 	}
 
 	private indexAtSelection(): number {
+		const same = (key: string, range: SearchMatch) => (match: StoryMatch) =>
+			match.unit.key === key && match.from === range.from && match.to === range.to;
+		const open = this.stories?.openStory();
+		if (open) return this.matches.findIndex(same(open.key, open.view.state.selection));
+		const placed = this.currentPlaced();
+		if (placed) return this.matches.findIndex(same(placed.key, placed));
 		const selection = this.getView()?.state.selection;
-		if (!selection) return -1;
-		return this.matches.findIndex(
-			(match) => match.from === selection.from && match.to === selection.to,
-		);
+		return selection ? this.matches.findIndex(same('main', selection)) : -1;
 	}
 
 	private select(index: number): SearchMatch {
 		const view = this.getView()!;
 		const match = expectDefined(this.matches[index], 'search match');
-		this.activeIndex = index;
-		view.dispatch(
-			view.state.tr
-				.setSelection(TextSelection.create(view.state.doc, match.from, match.to))
-				.scrollIntoView(),
-		);
+		const { unit } = match;
+		const place = (body: SearchMatch) => {
+			this.placed = { key: unit.key, from: match.from, to: match.to, body };
+		};
+		this.placed = undefined;
+		// Selecting re-enters `refresh` through the editor's change handlers, so the placed match is
+		// recorded before the dispatch and the active index is settled again afterwards.
+		if (unit.key === 'main' || unit.textBoxPos !== undefined) {
+			this.stories?.closeStory();
+			const { doc } = view.state;
+			let selection: TextSelection | NodeSelection;
+			if (unit.textBoxPos === undefined)
+				selection = TextSelection.create(doc, match.from, match.to);
+			else {
+				selection = NodeSelection.create(doc, unit.textBoxPos);
+				place({ from: selection.from, to: selection.to });
+			}
+			view.dispatch(view.state.tr.setSelection(selection).scrollIntoView());
+		} else {
+			this.stories?.showStory(unit.story, match.from, match.to);
+			const { from, to } = view.state.selection;
+			if (this.stories?.openStory()?.key !== unit.key) place({ from, to });
+		}
+		const settled = this.indexAtSelection();
+		this.activeIndex = settled < 0 ? index : settled;
 		return match;
 	}
 
-	/** Replaces the matches (in document order) in one undoable step; false if the replacement is invalid. */
-	private replace(view: EditorView, matches: DocumentMatch[], replacement: string): boolean {
-		const wildcards = Boolean(this.options.wildcards);
-		let targets: ReplacementTarget[];
+	/** Replaces the matches, one undoable step per story; the count replaced, 0 if invalid. */
+	private replace(view: EditorView, matches: StoryMatch[], replacement: string): number {
 		try {
-			targets = matches.map((match) => ({
-				from: match.from,
-				to: match.to,
-				parts: replacementParts(replacement, match, wildcards),
-			}));
+			const count = applyReplacements(view, this.stories, matches, {
+				replacement,
+				wildcards: Boolean(this.options.wildcards),
+			});
+			this.placed = undefined;
+			this.refresh();
+			return count;
 		} catch (error) {
 			if (!(error instanceof FindPatternError)) throw error;
 			this.invalid = true;
-			return false;
+			return 0;
 		}
-		const transaction = replaceTargets(view.state, targets);
-		// The cursor goes after the first replacement, mapped through every step of the transaction.
-		const cursor = transaction.mapping.map(expectDefined(matches[0], 'first match').to, 1);
-		const selection = TextSelection.near(transaction.doc.resolve(cursor));
-		view.dispatch(closeHistory(transaction.setSelection(selection).scrollIntoView()));
-		this.refresh();
-		return true;
 	}
 }
 

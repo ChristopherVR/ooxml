@@ -38,6 +38,23 @@ export interface TableCellMargins {
 	left?: SignedTwips;
 	right?: SignedTwips;
 }
+/** `w:tblPr/w:tblpPr`: a floating table's position and the distance kept from wrapped text. */
+export interface TableFloatingPosition {
+	/** `w:horzAnchor`: `text` is the text column. */
+	horizontalAnchor?: 'margin' | 'page' | 'text';
+	/** `w:vertAnchor`: `text` is the paragraph that follows the table. */
+	verticalAnchor?: 'margin' | 'page' | 'text';
+	/** `w:tblpX`/`w:tblpY`: offsets from the anchor; `w:tblpXSpec`/`w:tblpYSpec` win over them. */
+	xTwips?: SignedTwips;
+	yTwips?: SignedTwips;
+	xAlign?: 'left' | 'center' | 'right' | 'inside' | 'outside';
+	yAlign?: 'top' | 'center' | 'bottom' | 'inside' | 'outside' | 'inline';
+	/** `w:leftFromText`, `w:rightFromText`, `w:topFromText`, `w:bottomFromText`. */
+	leftFromTextTwips?: Twips;
+	rightFromTextTwips?: Twips;
+	topFromTextTwips?: Twips;
+	bottomFromTextTwips?: Twips;
+}
 /** Row-level properties (`w:trPr`): height, keep-together and repeat-as-header. */
 export interface TableRowProperties {
 	/** The `w:sdt` around this row: saving patches what changed, and wraps or unwraps the row. */
@@ -49,6 +66,8 @@ export interface TableRowProperties {
 	cantSplit?: boolean;
 	/** `w:tblHeader`: the row repeats at the top of each page the table continues onto. */
 	header?: boolean;
+	/** `w:trPr/w:ins` or `w:trPr/w:del`: the whole row is a tracked insertion or deletion. */
+	revision?: import('./model-run').Revision;
 }
 /** A read-only preview of a nested table's text, rendered but not independently editable. */
 export interface NestedTablePreview {
@@ -63,6 +82,8 @@ export interface TableCell {
 	/** `w:vMerge`; `restart` begins a vertical merge, `continue` extends the cell above. */
 	verticalMerge?: 'restart' | 'continue';
 	widthTwips?: Twips;
+	/** A percentage `w:tcW` (`type="pct"`) as a fraction of the table width; read-only layout input. */
+	widthPercent?: number;
 	verticalAlign?: StVerticalJc;
 	shadingFill?: string;
 	shadingThemeFill?: ThemeColorReference;
@@ -106,6 +127,8 @@ export interface TableStyleDefinition {
 	isDefault?: boolean;
 	borders?: TableBorders;
 	shadingFill?: string;
+	/** `w:tblPr/w:tblCellMar`: default cell margins of tables with this style. */
+	cellMargins?: TableCellMargins;
 	conditional: Partial<Record<TableConditionalRegion, TableStyleConditionalFormatting>>;
 }
 /** Parsed `styles.xml` table styles; conditional formatting resolves for rendering only. */

@@ -38,6 +38,8 @@ export interface BackstageHandlers {
 	/** A file chosen in a cloud place: loads it and closes the File view. */
 	openCloudFile(file: CloudOpenedFile): Promise<void>;
 	locale(): EditorLocale;
+	/** Check for Issues > Inspect Document: closes the File view and opens the Document Inspector. */
+	inspectDocument?(): void;
 }
 
 export interface PageContext {
@@ -153,7 +155,11 @@ export function renderInfo({ handlers, t, content }: PageContext): void {
 	left.append(
 		title,
 		paragraph(t(status), 'dve-backstage-muted'),
-		heading(t('Inspect document'), 'h3'),
+		card(
+			t('Inspect document'),
+			t('Before publishing this file, check it for hidden properties and personal information.'),
+			primary(t('Check for Issues'), () => handlers.inspectDocument?.()),
+		),
 		paragraph(t('Compatibility notes'), 'dve-backstage-muted'),
 		notes,
 		heading(t('Manage document'), 'h3'),

@@ -36,6 +36,12 @@ const openDeck = async () => {
 	await ready();
 };
 const ribbon = () => page.locator('.document-host:not([hidden]) .pptxv-ribbon');
+const look = () => page.evaluate(() => document.documentElement.dataset.officeLook ?? 'default');
+const railRadius = () =>
+	page
+		.locator('.document-host:not([hidden]) [data-pptx-chrome="slides"]')
+		.first()
+		.evaluate((el) => getComputedStyle(el).borderTopLeftRadius);
 
 try {
 	await page.goto(`${base}/?suite`);
@@ -48,6 +54,11 @@ try {
 	assert.match(await page.locator('#doc-title').innerText(), /slide-jump-links\s*\.pptx/u);
 	assert.equal(await page.locator('#share').isVisible(), false, 'Share is not in the More menu');
 	console.log('A deck opens in Simple view by default');
+
+	// Simple view floats PowerPoint's chrome as cards; the ribbon layout keeps the flat look.
+	assert.equal(await look(), 'cards');
+	assert.equal(await railRadius(), '14px');
+	console.log('Simple view uses the cards look');
 
 	// The file commands live in the More menu.
 	await page.click('#actions-more');
@@ -81,6 +92,8 @@ try {
 	await ribbon().waitFor();
 	assert.equal(await page.evaluate(() => document.body.dataset.layout), 'office');
 	assert.match(await page.locator('#save-state').innerText(), /Unsaved/u);
+	assert.equal(await look(), 'default');
+	assert.notEqual(await railRadius(), '14px');
 	await page.click('#layout-toggle');
 	await ribbon().waitFor({ state: 'detached' });
 	assert.match(await position(), new RegExp(`/ ${total + 1}$`, 'u'));

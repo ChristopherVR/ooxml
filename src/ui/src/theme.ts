@@ -1,3 +1,5 @@
+import { CARDS_LOOK_CSS } from './look';
+import { LOOK_DARK_TOKENS } from './look-tokens';
 import { OFFICE_TOKENS, TOUCH } from './tokens';
 import { themeBridge } from './theme-bridge';
 import {
@@ -20,6 +22,16 @@ export {
 	type ShadcnBridgeOptions,
 	type ThemeBridgeMap,
 } from './theme-bridge';
+export {
+	applyOfficeLook,
+	CARDS_LOOK_CSS,
+	CARDS_LOOK_PROPERTIES,
+	normalizeOfficeLook,
+	OFFICE_LOOK_ATTRIBUTE,
+	OFFICE_LOOKS,
+	type OfficeLook,
+} from './look';
+export { LOOK_DARK_TOKENS, LOOK_TOKENS } from './look-tokens';
 export { COMPACT, FOCUS_RING, OFFICE_TOKENS, tok, TOUCH, type OfficeToken } from './tokens';
 
 /**
@@ -54,7 +66,10 @@ const DARK = `
 	--office-teams-divider: #3d3d3d;
 	--office-teams-text-subtle: #adadad;
 	--office-shadow: 0 6px 20px rgb(0 0 0 / 45%);
-	--office-shadow-lg: 0 10px 25px rgb(0 0 0 / 45%);`;
+	--office-shadow-lg: 0 10px 25px rgb(0 0 0 / 45%);
+${Object.entries(LOOK_DARK_TOKENS)
+	.map(([name, value]) => `\t${name}: ${value};`)
+	.join('\n')}`;
 
 /** Every token's default on `:root`, generated from the token table. */
 const LIGHT = Object.entries(OFFICE_TOKENS)
@@ -100,10 +115,11 @@ ${modeCss(':where([data-office-theme="dark"])', true)}
 		--office-accent-foreground: HighlightText;
 		--office-ring: Highlight;
 		--office-danger: CanvasText;
+		--office-card-border: CanvasText;
 	}
 }
 ${BUILDING_BLOCKS_CSS}
-`;
+${CARDS_LOOK_CSS}`;
 
 /** Idempotent per document or shadow root. Browser-only; false without a style container. */
 export function installOfficeUiTheme(

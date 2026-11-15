@@ -53,6 +53,7 @@ export type LegacyRibbonLabel =
 	| 'Insert table of figures'
 	| 'Insert footnote'
 	| 'Insert endnote'
+	| 'Convert notes'
 	| 'Paragraph direction'
 	| 'Text language'
 	| 'Custom text language tag'

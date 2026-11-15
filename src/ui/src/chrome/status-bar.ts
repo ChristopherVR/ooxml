@@ -178,7 +178,7 @@ export class OfficeUiStatusBar extends OfficeElement {
 					)}
 				</span>
 				<i class="sep tight" aria-hidden="true" ?hidden=${viewsHidden || togglesHidden}></i>
-				<div class="group views" ?hidden=${viewsHidden}>
+				<div class="group views" part="views" ?hidden=${viewsHidden}>
 					${repeat(
 						views,
 						(spec) => spec.id,
@@ -193,7 +193,7 @@ export class OfficeUiStatusBar extends OfficeElement {
 				></slot>
 				<slot name="end"></slot>
 				<i class="sep tight" aria-hidden="true" ?hidden=${zoomHidden}></i>
-				<div class="group zoom" ?hidden=${zoomHidden}>
+				<div class="group zoom" part="zoom" ?hidden=${zoomHidden}>
 					${this.zoomStep('zoomOut', zoom?.outLabel ?? '', zoom?.outIcon ?? 'minus')}
 					<button
 						type="button"

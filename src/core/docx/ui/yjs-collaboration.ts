@@ -8,7 +8,7 @@ import { WordYjsComments } from './yjs-comments';
 import { wordInlinePropertyCodec } from './inline-run-properties';
 import { independentCommentAnchors, seedEmptyParagraphText } from './yjs-bootstrap';
 import { guardDeletedNodeSelection } from './yjs-node-selection';
-import { wordYjsDocumentAttributes } from './yjs-document-attributes';
+import { LOCAL_DOCUMENT_ATTRIBUTES, wordYjsDocumentAttributes } from './yjs-document-attributes';
 import type { EditorView } from 'prosemirror-view';
 import {
 	initProseMirrorDoc,
@@ -115,7 +115,7 @@ export class WordYjsCollaboration {
 						this.comments.resolved.set(comment.id, comment.resolved);
 				}
 				for (const [key, value] of Object.entries(initial.attrs))
-					if (key !== 'commentThreads') this.attributes.set(key, value);
+					if (!LOCAL_DOCUMENT_ATTRIBUTES.has(key)) this.attributes.set(key, value);
 				prosemirrorToYXmlFragment(independentCommentAnchors(initial), this.fragment);
 				seedEmptyParagraphText(this.fragment);
 				if (format === 'word-yjs-v3') {

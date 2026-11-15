@@ -81,7 +81,7 @@ button.b:focus-visible { outline:2px solid var(--pptx-ring,#818cf8); outline-off
 input.num { box-sizing:border-box; width:52px; height:26px; padding:0 4px; border:1px solid var(--pptx-border,#475569); border-radius:4px; background:var(--pptx-muted,#2a2a3d); color:var(--pptx-foreground,#f8fafc); font:inherit; font-size:11px; text-align:center; }
 input.num:disabled { opacity:.4; }
 input.num:focus-visible { outline:2px solid var(--pptx-ring,#818cf8); outline-offset:-2px; }
-.popup { box-sizing:border-box; position:fixed; z-index:1200; max-width:calc(100vw - 16px); max-height:min(70vh,520px); overflow:auto; padding:4px 0; border:1px solid var(--pptx-border,#475569); border-radius:8px; background:var(--pptx-popover,#111827); color:var(--pptx-popover-foreground,#f8fafc); box-shadow:0 8px 24px #0006; font-size:12px; }
+.popup { box-sizing:border-box; position:fixed; z-index:1200; max-width:calc(100vw - 16px); max-height:min(70vh,520px); overflow:auto; padding:4px 0; border:1px solid var(--pptx-border,#475569); border-radius:var(--_office-look-menu-radius,8px); background:var(--pptx-popover,#111827); color:var(--pptx-popover-foreground,#f8fafc); box-shadow:var(--_office-look-menu-shadow,0 8px 24px #0006); font-size:12px; }
 .popup[hidden] { display:none; }
 .popup[role=dialog] { padding:8px; }
 .popup.grid:not([hidden]) { display:grid; grid-template-columns:repeat(8,30px); gap:2px; padding:6px; max-height:min(70vh,520px); }

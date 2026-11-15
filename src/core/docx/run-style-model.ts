@@ -44,10 +44,14 @@ export interface CharacterStyleDefinition {
 	linkedStyle?: string;
 	isDefault?: boolean;
 	formatting: RunFormatting;
+	/** `w:rPr/w:lang/@w:eastAsia`, which selects the kinsoku set of the style's text. */
+	eastAsiaLanguage?: string;
 }
 /** Parsed run-level style data (docDefaults `rPrDefault` plus character/paragraph style `rPr`). Read-only catalog. */
 export interface RunStyleCatalog {
 	docDefaults: RunFormatting;
+	/** `w:rPrDefault`'s `w:lang/@w:eastAsia`. */
+	docDefaultsEastAsiaLanguage?: string;
 	styles: Record<string, CharacterStyleDefinition>;
 	warnings: string[];
 }

@@ -1,13 +1,11 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { DocumentModel, Paragraph, ParagraphStyleCatalog } from './model';
 import { documentParagraphs } from './cell-blocks';
-import type {
-	NumberingCatalog,
-	NumberingLevelDefinition,
-	ParagraphListLabel,
-} from './numbering-model';
+import type { NumberingCatalog, ParagraphListLabel } from './numbering-model';
 import { definedProps } from './defined-props';
 import { resolveNumberingLevel } from './numbering-parse';
+import { NumberingCounters, substituteLvlText } from './numbering-counters';
+import { ListNumberFields } from './list-number-fields';
 import { resolveStyleNumbering } from './paragraph-styles';
 import {
 	cardinalWords,
@@ -76,133 +74,74 @@ export function resolveParagraphNumbering(
 	return inherited;
 }
 
-class NumberingCounters {
-	private counts = new Map<string, Map<number, number>>();
-	private started = new Map<string, Set<number>>();
-
-	private forNum(numId: string): Map<number, number> {
-		let counts = this.counts.get(numId);
-		if (!counts) {
-			counts = new Map();
-			this.counts.set(numId, counts);
-		}
-		return counts;
-	}
-
-	private startedLevels(numId: string): Set<number> {
-		let started = this.started.get(numId);
-		if (!started) {
-			started = new Set();
-			this.started.set(numId, started);
-		}
-		return started;
-	}
-
-	/** Advances one level and resets deeper counters according to their resolved restart rules. */
-	advance(
-		numId: string,
-		level: number,
-		def: NumberingLevelDefinition,
-		catalog: NumberingCatalog,
-	): number {
-		const counts = this.forNum(numId);
-		const started = this.startedLevels(numId);
-		const next = started.has(level) ? (counts.get(level) ?? def.start) + 1 : def.start;
-		counts.set(level, next);
-		started.add(level);
-		for (const deeper of [...started]) {
-			if (deeper <= level) continue;
-			const deeperDef = resolveNumberingLevel(catalog, numId, deeper);
-			const restart = deeperDef?.lvlRestart;
-			if (restart === 0) continue;
-			// OOXML uses a one-based trigger. Invalid deeper/self triggers are ignored,
-			// leaving the default (previous level). Word also restarts on a skipped
-			// higher level, independently of that intermediate level's own restart rule.
-			const trigger =
-				restart !== undefined && restart > 0 && restart <= deeper ? restart - 1 : deeper - 1;
-			if (level > trigger) continue;
-			counts.delete(deeper);
-			started.delete(deeper);
-		}
-		// Nested items consume the initial value of omitted ancestors, even when
-		// their marker has no ancestor placeholders. Later explicit items advance it.
-		for (let ancestor = 0; ancestor < level; ancestor++) {
-			if (started.has(ancestor)) continue;
-			const ancestorDef = resolveNumberingLevel(catalog, numId, ancestor);
-			if (!ancestorDef) continue;
-			counts.set(ancestor, ancestorDef.start);
-			started.add(ancestor);
-		}
-		return next;
-	}
-
-	/** Current value for an ancestor placeholder, defaulting to its own start when never instantiated. */
-	current(numId: string, level: number, start: number): number {
-		return this.forNum(numId).get(level) ?? start;
-	}
-}
-
-function substituteLvlText(
-	lvlText: string,
-	numId: string,
-	level: number,
-	catalog: NumberingCatalog,
-	counters: NumberingCounters,
-	forceDecimal: boolean,
-): string {
-	return lvlText.replace(/%([1-9])/g, (match, digit: string) => {
-		const ancestorLevel = Number(digit) - 1;
-		if (ancestorLevel > level) return match;
-		const ancestorDef = resolveNumberingLevel(catalog, numId, ancestorLevel);
-		const start = ancestorDef?.start ?? 1;
-		const value = counters.current(numId, ancestorLevel, start);
-		const fmt = forceDecimal ? 'decimal' : (ancestorDef?.numFmt ?? 'decimal');
-		return formatListNumber(fmt, value);
-	});
+/** List markers by paragraph id, and the LISTNUM fields counted with the same lists. */
+export interface ListNumbering {
+	labels: Map<string, ParagraphListLabel>;
+	listNumbers: ListNumberFields;
 }
 
 /**
  * Computes list markers for every numbered/bulleted paragraph in document order, tracking
- * counter state across the document per `numId`/level. Purely derived from the model; never
- * mutates it and is never itself part of the saved document.
+ * counter state across the document per `numId`/level, and the LISTNUM fields that count with
+ * those lists (a LISTNUM moves its list on, so later markers count it). Purely derived from the
+ * model; never mutates it and is never itself part of the saved document.
  */
-export function computeListLabels(model: DocumentModel): Map<string, ParagraphListLabel> {
+export function computeListNumbering(model: DocumentModel): ListNumbering {
 	const catalog = model.numberingCatalog;
 	const labels = new Map<string, ParagraphListLabel>();
-	if (!catalog) return labels;
 	const counters = new NumberingCounters();
+	const listNumbers = new ListNumberFields(counters, catalog);
 	for (const paragraph of documentParagraphs(model.blocks)) {
-		const numbering = resolveParagraphNumbering(paragraph, model.paragraphStyles, catalog);
-		if (!numbering) continue;
-		const numId = String(numbering.numId);
-		const level = Math.min(8, Math.max(0, numbering.level));
-		const def = resolveNumberingLevel(catalog, numId, level);
-		if (!def) continue;
-		if (def.numFmt === 'none') continue;
-		counters.advance(numId, level, def, catalog);
-		const text =
-			def.numFmt === 'bullet'
-				? def.lvlText
-				: substituteLvlText(def.lvlText, numId, level, catalog, counters, Boolean(def.isLgl));
-		const picture =
-			def.pictureBulletId !== undefined ? catalog.pictureBullets?.[def.pictureBulletId] : undefined;
-		labels.set(paragraph.id, {
-			numId,
-			level,
-			text,
-			suffix: def.suffix ?? 'tab',
-			...definedProps({
-				alignment: def.lvlJc,
-				indentLeftTwips: def.indentLeftTwips,
-				hangingTwips: def.hangingTwips,
-				firstLineTwips: def.firstLineTwips,
-				markerFormat: def.markerFormat,
-				tabStopTwips: def.tabStopTwips,
-				picture,
-			}),
-		});
+		const label = catalog && paragraphLabel(paragraph, model, catalog, counters);
+		if (label) labels.set(paragraph.id, label);
+		listNumbers.paragraph(
+			paragraph,
+			label ? { numId: label.numId, level: label.level } : undefined,
+		);
 	}
-	return labels;
+	return { labels, listNumbers };
+}
+
+/** List markers by paragraph id (see `computeListNumbering`). */
+export function computeListLabels(model: DocumentModel): Map<string, ParagraphListLabel> {
+	return computeListNumbering(model).labels;
+}
+
+/** A paragraph's list marker, its list's counter moved on; undefined when it has none. */
+function paragraphLabel(
+	paragraph: Paragraph,
+	model: DocumentModel,
+	catalog: NumberingCatalog,
+	counters: NumberingCounters,
+): ParagraphListLabel | undefined {
+	const numbering = resolveParagraphNumbering(paragraph, model.paragraphStyles, catalog);
+	if (!numbering) return undefined;
+	const numId = String(numbering.numId);
+	const level = Math.min(8, Math.max(0, numbering.level));
+	const def = resolveNumberingLevel(catalog, numId, level);
+	if (!def || def.numFmt === 'none') return undefined;
+	counters.advance(numId, level, def, catalog);
+	const text =
+		def.numFmt === 'bullet'
+			? def.lvlText
+			: substituteLvlText(def.lvlText, numId, level, catalog, counters, Boolean(def.isLgl));
+	const picture =
+		def.pictureBulletId !== undefined ? catalog.pictureBullets?.[def.pictureBulletId] : undefined;
+	return {
+		numId,
+		level,
+		text,
+		suffix: def.suffix ?? 'tab',
+		...definedProps({
+			alignment: def.lvlJc,
+			indentLeftTwips: def.indentLeftTwips,
+			hangingTwips: def.hangingTwips,
+			firstLineTwips: def.firstLineTwips,
+			markerFormat: def.markerFormat,
+			tabStopTwips: def.tabStopTwips,
+			picture,
+		}),
+	};
 }
 
 /**

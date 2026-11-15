@@ -7,6 +7,7 @@ import { applyPictureLayout } from '../drawingml/picture-layout';
 import type { InlineImage } from './model';
 import { EMU_PER_PIXEL } from './drawing';
 import { buildWatermarkRun } from './watermark';
+import { buildPictureWatermarkRun } from './picture-watermark';
 import { buildTextBoxDrawing, patchTextBox } from './write-text-box';
 import { buildShapeDrawing, rebuildShapeDrawing } from './write-shape';
 import { chartRun } from './write-chart-drawing';
@@ -18,6 +19,7 @@ import {
 } from './write-drawing-patch';
 import type { RelationshipAllocator } from './relationship-allocator';
 import { patchFallbackSize } from './write-fallback';
+import { patchDrawingWrap, placementPositionChanged } from './write-drawing-wrap';
 import { diagramRun } from './write-diagram-drawing';
 import { isElement, makeNS, makeW, named, REL_NS, type XmlDocument, type XmlElement } from './xml';
 
@@ -217,6 +219,21 @@ export function createImageRun(
 		);
 		return node;
 	}
+	if (image.pictureWatermark) {
+		if (!allocator)
+			throw new Error('Cannot insert a picture watermark without a relationship allocator.');
+		const spec = image.pictureWatermark;
+		clearNonProperties(node);
+		node.appendChild(
+			buildPictureWatermarkRun(
+				doc,
+				spec,
+				allocator.addImage(spec.partName),
+				allocator.docPrIds.next(),
+			).lastChild!,
+		);
+		return node;
+	}
 	if (image.watermark) {
 		clearNonProperties(node);
 		node.appendChild(
@@ -237,7 +254,7 @@ export function createImageRun(
 		) {
 			const fill = oldDrawing.getElementsByTagNameNS(PIC_NS, 'blipFill')[0];
 			const blip = fill?.getElementsByTagNameNS(A_NS, 'blip')[0];
-			if (fill && image.pictureFill.crop !== undefined)
+			if (fill && (image.pictureFill.crop !== undefined || base.pictureFill?.crop))
 				applyPictureCrop(fill, image.pictureFill.crop);
 			if (blip && image.pictureFill.effects !== undefined)
 				applyPictureEffects(blip, image.pictureFill.effects);
@@ -248,10 +265,11 @@ export function createImageRun(
 			updateExtent(oldDrawing, image.widthPx, image.heightPx);
 		if (image.altText !== base.altText || image.title !== base.title)
 			updateDocPr(oldDrawing, image.altText, image.title);
+		patchDrawingWrap(oldDrawing, doc, image, base);
 		if (
 			image.anchored &&
 			image.placement &&
-			JSON.stringify(image.placement) !== JSON.stringify(base.placement)
+			placementPositionChanged(image.placement, base.placement)
 		)
 			updatePlacement(oldDrawing, doc, image.placement);
 		clearNonProperties(node, oldContainer);
@@ -265,6 +283,7 @@ export function createImageRun(
 	const relId = allocator.addImage(image.partName);
 	const svgRelId = image.svgPartName ? allocator.addImage(image.svgPartName) : undefined;
 	const drawing = buildInlineDrawing(doc, image, relId, allocator.docPrIds.next(), svgRelId);
+	patchDrawingWrap(drawing, doc, image);
 	clearNonProperties(node);
 	node.appendChild(drawing);
 	return node;

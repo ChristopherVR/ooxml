@@ -89,6 +89,9 @@ export async function writeNewRelationships(
 			continue;
 		}
 		const pending = pendingMedia?.get(relationship.partName);
+		// A picture already in the package (a note moved to the other notes part) only needs
+		// the relationship; its bytes and content type are there already.
+		if (!pending && zip.file(relationship.partName)) continue;
 		if (!pending)
 			throw new Error(`Missing bytes for newly inserted media part: ${relationship.partName}`);
 		zip.file(relationship.partName, pending.bytes);

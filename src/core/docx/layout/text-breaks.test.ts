@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { isEastAsianChar, tokenizeRun } from './text-breaks';
+import { kinsokuSets } from '../../text/kinsoku';
+import { gluedCarry, isEastAsianChar, tokenizeRun } from './text-breaks';
 
 describe('isEastAsianChar', () => {
 	it('classifies CJK ideographs, kana, and hangul as East Asian', () => {
@@ -44,5 +45,41 @@ describe('tokenizeRun', () => {
 	it('emits tab and line-break tokens', () => {
 		const tokens = tokenizeRun('a\tb\nc', 0);
 		expect(tokens.map((t) => t.kind)).toEqual(['word', 'tab', 'word', 'lineBreak', 'word']);
+	});
+});
+
+describe('kinsoku glue', () => {
+	const japanese = kinsokuSets('ja');
+	const words = (text: string, sets: typeof japanese | undefined = japanese) =>
+		tokenizeRun(text, 0, sets).map((t) =>
+			t.kind === 'word' ? `${t.glue ? '+' : ''}${t.text}` : t.kind,
+		);
+
+	it('glues a prohibited line-start character to the character before it', () => {
+		expect(words('本。次')).toEqual(['本', '+。', '次']);
+		expect(words('「本」')).toEqual(['「', '+本', '+」']);
+	});
+
+	it('keeps every break opportunity without kinsoku', () => {
+		expect(tokenizeRun('本。次', 0).every((t) => t.kind !== 'word' || !t.glue)).toBe(true);
+	});
+
+	it('glues Western punctuation after East Asian text by the same sets', () => {
+		expect(words('本!')).toEqual(['本', '+!']);
+		expect(words('(本')).toEqual(['(', '+本']);
+	});
+
+	it('carries the glued chain to the next line, unless it is the whole line', () => {
+		const tokens = tokenizeRun('一一。」', 0, japanese);
+		expect(gluedCarry(tokens, 3, tokens.slice(0, 3))).toBe(2);
+		expect(gluedCarry(tokens, 1, tokens.slice(0, 1))).toBe(0);
+		expect(gluedCarry(tokens, 2, tokens.slice(1, 2))).toBe(0);
+	});
+});
+
+describe('zero width space', () => {
+	it('is always a break opportunity', () => {
+		const tokens = tokenizeRun('abc​def', 0);
+		expect(tokens.map((t) => (t.kind === 'word' ? t.text : t.kind))).toEqual(['abc​', 'def']);
 	});
 });

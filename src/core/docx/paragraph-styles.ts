@@ -28,6 +28,14 @@ export const PAGINATION_KEYS = [
 	'suppressLineNumbers',
 ] as const;
 
+/** East Asian typography toggles (`w:kinsoku`...); read-only, kept in the source XML on save. */
+export const EAST_ASIAN_TYPOGRAPHY_KEYS = [
+	'kinsoku',
+	'autoSpaceDE',
+	'autoSpaceDN',
+	'overflowPunct',
+] as const;
+
 /** `w:outlineLvl` as a 1-9 level (0 for body text, `w:val="9"`); undefined when absent or invalid. */
 export function parseOutlineLevel(element: XmlElement | undefined): number | undefined {
 	const raw = getW(element, 'val');
@@ -47,7 +55,7 @@ export function parseFormatting(pPr: XmlElement | undefined): ParagraphFormattin
 	if (bidi !== undefined) result.direction = bidi ? 'rtl' : 'ltr';
 	const pageBreakBefore = enabled(first(pPr, 'pageBreakBefore'));
 	if (pageBreakBefore !== undefined) result.pageBreakBefore = pageBreakBefore;
-	for (const key of PAGINATION_KEYS) {
+	for (const key of [...PAGINATION_KEYS, ...EAST_ASIAN_TYPOGRAPHY_KEYS]) {
 		const value = enabled(first(pPr, key));
 		if (value !== undefined) result[key] = value;
 	}
@@ -193,6 +201,7 @@ export function resolveParagraphFormatting(
 		'hangingTwips',
 		'pageBreakBefore',
 		...PAGINATION_KEYS,
+		...EAST_ASIAN_TYPOGRAPHY_KEYS,
 		'outlineLevel',
 		'borders',
 		'shadingFill',

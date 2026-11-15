@@ -4,6 +4,7 @@ import { balanceColumns, canBalanceBlock } from './balance-columns';
 import type { TextMeasurer } from './measure';
 import type { LayoutDocumentInput, LayoutSection } from './input';
 import type { LayoutPageBox, LayoutResult } from './result';
+import { inFlow } from './result';
 import type { Exclusion } from './wrap';
 
 /**
@@ -60,7 +61,9 @@ function alignVertically(
 		const available = page.heightPx - page.marginTopPx - page.marginBottomPx - footnoteHeight;
 		const used = Math.max(
 			0,
-			...page.columns.flatMap((column) => column.blocks.map((block) => block.yPx + block.heightPx)),
+			...page.columns.flatMap((column) =>
+				column.blocks.filter(inFlow).map((block) => block.yPx + block.heightPx),
+			),
 		);
 		const shift = (available - used) / (align === 'center' ? 2 : 1);
 		if (shift <= 0) continue;

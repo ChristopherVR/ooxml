@@ -1,5 +1,5 @@
 import type { TextMeasurer } from './measure';
-import type { BreakToken } from './text-breaks';
+import { gluedCarry, type BreakToken } from './text-breaks';
 import type { LayoutFragment, LayoutLine, LayoutParagraphFrame } from './result';
 import type { LayoutParagraph } from './input';
 import { NO_TWIPS, twipsToPx } from './units';
@@ -9,6 +9,7 @@ import {
 	runTextWidth,
 	resolveIndents,
 	tokenizeParagraph,
+	hangsPastLineEnd,
 	sourceLengthOf,
 	type PlacedToken,
 } from './paragraph-tokens';
@@ -209,6 +210,9 @@ function measureParagraph(
 		return { followingPx, beforeDecimalPx: beforeDecimalPx ?? followingPx };
 	}
 	const hangingStopPx = firstLineExtraPx < 0 ? leftPx : undefined;
+	const placedTokens = () => placed.map((entry) => entry.token);
+	// Width of the punctuation hanging past each line's end, which alignment does not count.
+	const hangingPx = new Map<number, number>();
 
 	function flushLine(forceEmpty: boolean, forcedByBreak: 'page' | 'column' | undefined) {
 		if (!placed.length && !forceEmpty) return;
@@ -269,8 +273,8 @@ function measureParagraph(
 		marginReachPx = 0;
 	}
 
-	for (const [tokenIndex, token] of tokens.entries()) {
-		if (tokenIndex < startToken) continue;
+	for (let tokenIndex = startToken; tokenIndex < tokens.length; tokenIndex++) {
+		const token = expectDefined(tokens[tokenIndex], 'token index');
 		tokenCursor = tokenIndex + 1;
 		if (token.kind === 'lineBreak') {
 			if (!placed.length) firstToken = tokenIndex;
@@ -294,6 +298,8 @@ function measureParagraph(
 						: 0
 				: 0;
 		const advance = width * (1 - markerFactor);
+		// Automatic East Asian/Western spacing follows the word; it never decides whether it fits.
+		const spacePx = token.kind === 'word' ? (token.spaceAfterPx ?? 0) : 0;
 		const positional = token.kind === 'tab' && paragraph.runs[token.runIndex]?.positionalTab;
 		if (positional) {
 			const { followingPx } = segmentAfter(tokenIndex);
@@ -350,9 +356,26 @@ function measureParagraph(
 			!fits && hole && !jump && token.kind === 'word'
 				? hole.endPx - lineStart(lineIndex) - lineWidthPx
 				: undefined;
+		// Line-end punctuation that may not start the next line hangs past the margin instead.
+		const hanging =
+			!wouldFit &&
+			!hole &&
+			!jump &&
+			placed.length > 0 &&
+			hangsPastLineEnd(paragraph, tokens, tokenIndex);
+		if (hanging) hangingPx.set(lineIndex, advance);
 		if (pastHole !== undefined && lineWidthPx + pastHole + advance <= availableWidth(lineIndex)) {
 			jump = { index: placed.length, shiftPx: pastHole };
-		} else if (!wouldFit && token.kind !== 'space') {
+		} else if (!wouldFit && token.kind !== 'space' && !hanging) {
+			// Kinsoku and words split across runs: the glued tokens before this one go down with it.
+			const carry = jump ? 0 : gluedCarry(tokens, tokenIndex, placedTokens());
+			if (carry) {
+				placed.splice(placed.length - carry);
+				tokenCursor = tokenIndex - carry;
+				flushLine(false, undefined);
+				tokenIndex -= carry + 1;
+				continue;
+			}
 			tokenCursor = tokenIndex;
 			flushLine(false, undefined);
 			tokenCursor = tokenIndex + 1;
@@ -369,9 +392,10 @@ function measureParagraph(
 			token,
 			widthPx: width,
 			...(leader ? { leader } : {}),
-			...(markerFactor ? { xOffsetPx: -width * markerFactor, advancePx: advance } : {}),
+			...(markerFactor ? { xOffsetPx: -width * markerFactor } : {}),
+			...(markerFactor || spacePx ? { advancePx: advance + spacePx } : {}),
 		});
-		lineWidthPx += token.kind === 'tab' ? width : advance;
+		lineWidthPx += token.kind === 'tab' ? width : advance + spacePx;
 		if (token.kind === 'space') lineSpacePx += advance;
 	}
 	flushLine(lines.length === 0, undefined);
@@ -382,7 +406,7 @@ function measureParagraph(
 			...line,
 			fragments: alignFragments(
 				line.fragments,
-				availableWidth(index),
+				availableWidth(index) + (hangingPx.get(index) ?? 0),
 				index === lastIndex,
 				// A line that runs around a picture is not aligned across it.
 				boxes[index]?.hole ? 'left' : effectiveAlign,

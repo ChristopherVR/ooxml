@@ -1,4 +1,5 @@
 import type { DocumentProperties } from './core-properties';
+import type { DocumentPropertySet } from '../opc/properties/types';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import { defaultStyleCatalogs } from './default-styles';
 import type { StJcTable, StNumberFormat } from './generated/wml-simple-types';
@@ -16,7 +17,13 @@ export type {
 import type { Paragraph } from './model-paragraph';
 export type * from './content-control-model';
 export type * from './form-field-model';
-export type { HyperlinkInfo, InlineImage, PicturePlacement, WatermarkSpec } from './inline-model';
+export type {
+	HyperlinkInfo,
+	InlineImage,
+	PicturePlacement,
+	PictureWatermarkSpec,
+	WatermarkSpec,
+} from './inline-model';
 import type { Note, SectionProperties } from './section-model';
 export type {
 	HeaderFooterContent,
@@ -84,6 +91,15 @@ export interface Table {
 	/** `w:tblGrid/w:gridCol` widths in twips, one per grid column. */
 	grid?: Twips[];
 	widthTwips?: Twips;
+	/** A percentage `w:tblW` (`type="pct"`) as a fraction of the text column; read-only layout input. */
+	widthPercent?: number;
+	/**
+	 * `w:tblLayout`: `fixed` keeps the grid, `autofit` (the default when the element is absent)
+	 * sizes the columns from their content. Set by the parser; tables the editor creates have none.
+	 */
+	layout?: 'fixed' | 'autofit';
+	/** `w:tblpPr`: the table floats at this position and text wraps around it (read-only). */
+	floating?: import('./table-model').TableFloatingPosition;
 	alignment?: 'left' | 'center' | 'right';
 	/** The exact `w:tblPr/w:jc` value (`ST_JcTable`, including `start`/`end`); `alignment` is derived from it. */
 	justification?: StJcTable;
@@ -121,6 +137,16 @@ export interface DocumentModel {
 	sections?: SectionProperties[];
 	/** Package properties from `docProps/core.xml` (title, author, tags...). */
 	properties?: DocumentProperties;
+	/**
+	 * Every core, extended and custom property the package was loaded with, read-only: what
+	 * DOCPROPERTY fields show (the editable core fields in `properties` take their place).
+	 */
+	packageProperties?: DocumentPropertySet;
+	/**
+	 * Package metadata Inspect Document reports and removes: extended and custom properties,
+	 * custom XML data, the attached template, the reviewer list and the privacy settings.
+	 */
+	packageInformation?: import('./package-information').PackageInformation;
 	/** Whether `settings.xml` requests separate even-page headers/footers (`w:evenAndOddHeaders`). */
 	evenAndOddHeaders?: boolean;
 	/** `w:autoHyphenation` in settings.xml: Word hyphenates words at line ends. */
@@ -136,6 +162,11 @@ export interface DocumentModel {
 	 * them and reads the twips. Measured the same in compatibility modes 12, 14 and 15 except pageBreakBefore.
 	 */
 	doNotUseHtmlParagraphAutoSpacing?: boolean;
+	/**
+	 * Document-wide kinsoku settings from settings.xml (`w:strictFirstAndLastChars`,
+	 * `w:noLineBreaksBefore`, `w:noLineBreaksAfter`); read only, settings.xml is saved as loaded.
+	 */
+	kinsoku?: import('../text/kinsoku').KinsokuSettings;
 	/** Custom separator stories, including explicitly empty separators. */
 	footnoteSeparators?: { separator?: Note; continuationSeparator?: Note };
 	endnotes?: Note[];

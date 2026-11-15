@@ -197,7 +197,7 @@ export function createTablePropertiesDialog(viewOf: () => EditorView | undefined
 			);
 			for (const side of sides)
 				margins[side].value = String(
-					(context.margins[side] ?? (side === 'left' || side === 'right' ? 108 : 0)) / 1440,
+					(context.margins[side] ?? context.inheritedMargins[side] ?? 0) / 1440,
 				);
 			cellMargins.load(context);
 			cellAlignment.load(context);

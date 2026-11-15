@@ -1,0 +1,350 @@
+{
+  "wordBuild": "16.0.20527",
+  "unit": "twips",
+  "cases": {
+    "max-fits": {
+      "mode": 15,
+      "grid": [
+        349,
+        1669,
+        613
+      ]
+    },
+    "interpolate": {
+      "mode": 15,
+      "grid": [
+        349,
+        2857,
+        6154
+      ]
+    },
+    "interpolate-two": {
+      "mode": 15,
+      "grid": [
+        877,
+        3041,
+        5442
+      ]
+    },
+    "interpolate-rows": {
+      "mode": 15,
+      "grid": [
+        2181,
+        1581,
+        5598
+      ]
+    },
+    "table-pct-100": {
+      "mode": 15,
+      "grid": [
+        1241,
+        5938,
+        2181
+      ]
+    },
+    "table-pct-50": {
+      "mode": 15,
+      "grid": [
+        349,
+        1192,
+        3139
+      ]
+    },
+    "table-dxa-narrow": {
+      "mode": 15,
+      "grid": [
+        349,
+        1114,
+        4537
+      ]
+    },
+    "table-dxa-wide": {
+      "mode": 15,
+      "grid": [
+        1061,
+        5075,
+        1864
+      ]
+    },
+    "table-dxa-tiny": {
+      "mode": 15,
+      "grid": [
+        877,
+        2857,
+        613
+      ]
+    },
+    "cell-dxa": {
+      "mode": 15,
+      "grid": [
+        3000,
+        1160,
+        5200
+      ]
+    },
+    "cell-dxa-small": {
+      "mode": 15,
+      "grid": [
+        2857,
+        1169,
+        5334
+      ]
+    },
+    "cell-dxa-rows": {
+      "mode": 15,
+      "grid": [
+        3000,
+        349,
+        349
+      ]
+    },
+    "cell-dxa-all": {
+      "mode": 15,
+      "grid": [
+        2000,
+        2000,
+        2000
+      ]
+    },
+    "cell-dxa-over": {
+      "mode": 15,
+      "grid": [
+        3120,
+        3120,
+        3120
+      ]
+    },
+    "cell-dxa-unequal": {
+      "mode": 15,
+      "grid": [
+        3411,
+        4705,
+        1244
+      ]
+    },
+    "cell-pct": {
+      "mode": 15,
+      "grid": [
+        1521,
+        1669,
+        613
+      ]
+    },
+    "span-equal": {
+      "mode": 15,
+      "grid": [
+        1759,
+        1759,
+        349
+      ]
+    },
+    "span-weighted": {
+      "mode": 15,
+      "grid": [
+        842,
+        3071,
+        349
+      ]
+    },
+    "span-text": {
+      "mode": 15,
+      "grid": [
+        1065,
+        5092,
+        613
+      ]
+    },
+    "empty-cell": {
+      "mode": 15,
+      "grid": [
+        222,
+        1669,
+        613
+      ]
+    },
+    "paragraph-indent": {
+      "mode": 15,
+      "grid": [
+        2749,
+        349,
+        613
+      ]
+    },
+    "two-paragraphs": {
+      "mode": 15,
+      "grid": [
+        2461,
+        349,
+        613
+      ]
+    },
+    "split-runs": {
+      "mode": 15,
+      "grid": [
+        1669,
+        349,
+        613
+      ]
+    },
+    "table-indent": {
+      "mode": 15,
+      "grid": [
+        349,
+        2857,
+        4714
+      ]
+    },
+    "fixed": {
+      "mode": 15,
+      "grid": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    "consistent-wide": {
+      "mode": 15,
+      "grid": [
+        3120,
+        3120,
+        3120
+      ]
+    },
+    "consistent-word": {
+      "mode": 15,
+      "grid": [
+        2724,
+        3913,
+        2723
+      ]
+    },
+    "style-none": {
+      "mode": 15,
+      "grid": [
+        153,
+        1473,
+        417
+      ]
+    },
+    "style-default": {
+      "mode": 15,
+      "grid": [
+        233,
+        1553,
+        497
+      ]
+    },
+    "style-chain": {
+      "mode": 15,
+      "grid": [
+        633,
+        1953,
+        897
+      ]
+    },
+    "style-own": {
+      "mode": 15,
+      "grid": [
+        453,
+        1773,
+        717
+      ]
+    },
+    "interpolate-mode14": {
+      "mode": 14,
+      "grid": [
+        349,
+        2857,
+        6262
+      ]
+    },
+    "interpolate-mode12": {
+      "mode": 12,
+      "grid": [
+        349,
+        2857,
+        6262
+      ]
+    },
+    "interpolate-mode0": {
+      "mode": 0,
+      "grid": [
+        349,
+        2857,
+        6262
+      ]
+    },
+    "table-pct-100-mode14": {
+      "mode": 14,
+      "grid": [
+        1270,
+        6075,
+        2231
+      ]
+    },
+    "table-pct-100-mode12": {
+      "mode": 12,
+      "grid": [
+        1270,
+        6075,
+        2231
+      ]
+    },
+    "table-pct-100-mode0": {
+      "mode": 0,
+      "grid": [
+        1270,
+        6075,
+        2231
+      ]
+    },
+    "span-weighted-mode14": {
+      "mode": 14,
+      "grid": [
+        842,
+        3071,
+        349
+      ]
+    },
+    "span-weighted-mode12": {
+      "mode": 12,
+      "grid": [
+        842,
+        3071,
+        349
+      ]
+    },
+    "span-weighted-mode0": {
+      "mode": 0,
+      "grid": [
+        842,
+        3071,
+        349
+      ]
+    },
+    "cell-dxa-unequal-mode14": {
+      "mode": 14,
+      "grid": [
+        3495,
+        4705,
+        1268
+      ]
+    },
+    "cell-dxa-unequal-mode12": {
+      "mode": 12,
+      "grid": [
+        3495,
+        4705,
+        1268
+      ]
+    },
+    "cell-dxa-unequal-mode0": {
+      "mode": 0,
+      "grid": [
+        3495,
+        4705,
+        1268
+      ]
+    }
+  }
+}

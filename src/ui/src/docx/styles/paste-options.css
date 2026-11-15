@@ -1,0 +1,29 @@
+/* The Paste Options button Word shows after a paste; its menu is office-ui-context-menu. */
+.dve-paste-options {
+	position: fixed;
+	z-index: 40;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 22px;
+	padding: 0;
+	border: 1px solid var(--line);
+	border-radius: var(--dve-radius, var(--office-radius, 4px));
+	background: var(--surface);
+	color: inherit;
+	box-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
+	cursor: pointer;
+}
+.dve-paste-options:hover,
+.dve-paste-options:focus-visible {
+	border-color: var(--word);
+}
+.dve-paste-special select {
+	width: 100%;
+	min-width: 240px;
+}
+.dve-paste-special-note {
+	max-width: 360px;
+	margin: 0;
+}

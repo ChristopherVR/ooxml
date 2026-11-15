@@ -1,6 +1,7 @@
 /** Clipboard operations for the context menu. Nothing here pretends a denied permission succeeded. */
 import { deleteFieldSelection } from 'ooxml-core/docx/ui';
 import type { EditorView } from 'prosemirror-view';
+import { pastePayload } from './paste-options';
 
 /**
  * Cut or copy through the browser's own command so ProseMirror's clipboard serializer keeps rich
@@ -57,32 +58,56 @@ export async function clipboardReadAllowed(): Promise<boolean> {
 	}
 }
 
-/** Uses ProseMirror's HTML parser for formatted content, with a plain-text API fallback. */
+/** Reads the async clipboard, asking for Word's HTML as written (stylesheet and markers kept). */
+async function readClipboardItems(clipboard: Clipboard): Promise<ClipboardItems> {
+	const read = clipboard.read.bind(clipboard) as (options?: object) => Promise<ClipboardItems>;
+	try {
+		return await read({ unsanitized: ['text/html'] });
+	} catch (error) {
+		// A browser that rejects the option (rather than the permission) reads sanitised HTML.
+		if (error instanceof TypeError) return read();
+		throw error;
+	}
+}
+
+/** The clipboard's HTML and text (`null` for a type it does not hold). */
+export interface ClipboardContents {
+	html: string | null;
+	text: string | null;
+}
+
+/**
+ * What the clipboard holds as HTML and as text, or `null` when the browser has no clipboard
+ * API. Throws when it refuses to read (a denied permission).
+ */
+export async function readClipboardContents(): Promise<ClipboardContents | null> {
+	const clipboard = typeof navigator === 'undefined' ? undefined : navigator.clipboard;
+	if (!clipboard) return null;
+	if (!clipboard.read) return { html: null, text: await clipboard.readText() };
+	const contents: ClipboardContents = { html: null, text: null };
+	for (const item of await readClipboardItems(clipboard)) {
+		if (contents.html === null && item.types.includes('text/html'))
+			contents.html = await (await item.getType('text/html')).text();
+		if (contents.text === null && item.types.includes('text/plain'))
+			contents.text = await (await item.getType('text/plain')).text();
+	}
+	return contents;
+}
+
+/**
+ * Uses ProseMirror's HTML parser for formatted content, with a plain-text API fallback. What was
+ * read is recorded, so Paste Options can paste it again another way.
+ */
 export async function pasteClipboard(view: EditorView, plainText = false): Promise<boolean> {
 	if (!view.editable) return false;
 	try {
-		if (navigator.clipboard.read) {
-			const items = await navigator.clipboard.read();
-			for (const item of plainText ? [] : items) {
-				if (!item.types.includes('text/html')) continue;
-				const html = await (await item.getType('text/html')).text();
-				if (!view.editable || view.isDestroyed) return false;
-				view.focus();
-				return html ? view.pasteHTML(html) : true;
-			}
-			for (const item of items) {
-				if (!item.types.includes('text/plain')) continue;
-				const text = await (await item.getType('text/plain')).text();
-				if (!view.editable || view.isDestroyed) return false;
-				view.focus();
-				return text ? view.pasteText(text) : true;
-			}
-			return false;
-		}
-		const text = await navigator.clipboard.readText();
-		if (!view.editable || view.isDestroyed) return false;
-		view.focus();
-		return text ? view.pasteText(text) : true;
+		const contents = await readClipboardContents();
+		if (!contents || !view.editable || view.isDestroyed) return false;
+		const payload = { html: contents.html, text: contents.text ?? '' };
+		if (!plainText && contents.html !== null)
+			return contents.html ? pastePayload(view, payload, 'source') : true;
+		if (contents.text === null) return false;
+		return contents.text ? pastePayload(view, payload, 'text') : true;
 	} catch {
 		return false;
 	}

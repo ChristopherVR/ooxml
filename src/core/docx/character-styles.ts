@@ -12,6 +12,8 @@ function styleElements(document: XmlDocument): XmlElement[] {
 	);
 }
 
+const eastAsiaLanguageOf = (rPr: XmlElement | undefined) => getW(first(rPr, 'lang'), 'eastAsia');
+
 /** Parses `styles.xml`'s `rPrDefault` plus every character/paragraph style's `w:rPr`. */
 export function parseRunStyleCatalog(xml: string): RunStyleCatalog {
 	const document = parseXml(xml);
@@ -25,6 +27,7 @@ export function parseRunStyleCatalog(xml: string): RunStyleCatalog {
 		const linkedStyle = getW(first(element, 'link'), 'val');
 		const isDefault = parseOnOff(getW(element, 'default'));
 		const name = getW(first(element, 'name'), 'val');
+		const eastAsiaLanguage = eastAsiaLanguageOf(first(element, 'rPr'));
 		styles[id] = {
 			id,
 			type,
@@ -33,6 +36,7 @@ export function parseRunStyleCatalog(xml: string): RunStyleCatalog {
 			...(linkedStyle ? { linkedStyle } : {}),
 			...(isDefault === undefined ? {} : { isDefault }),
 			formatting: parseRunProperties(first(element, 'rPr')),
+			...(eastAsiaLanguage ? { eastAsiaLanguage } : {}),
 		};
 	}
 	const warnings: string[] = [];
@@ -50,8 +54,10 @@ export function parseRunStyleCatalog(xml: string): RunStyleCatalog {
 			parent = styles[parent]?.basedOn;
 		}
 	}
+	const docDefaultsEastAsiaLanguage = eastAsiaLanguageOf(first(defaults, 'rPr'));
 	return {
 		docDefaults: parseRunProperties(first(defaults, 'rPr')),
+		...(docDefaultsEastAsiaLanguage ? { docDefaultsEastAsiaLanguage } : {}),
 		styles,
 		warnings: [...new Set(warnings)],
 	};

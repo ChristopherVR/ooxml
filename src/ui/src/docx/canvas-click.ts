@@ -1,5 +1,6 @@
 import { TextSelection } from 'prosemirror-state';
 import type { EditorCore } from './editor-core';
+import { attachPictureDrop } from './picture-drop';
 
 const clamp = (value: number, low: number, high: number) =>
 	Math.min(Math.max(value, low), Math.max(low, high));
@@ -67,5 +68,12 @@ export function attachCanvasClick(core: EditorCore): void {
 	);
 	canvas.addEventListener('focus', (event) => {
 		if (event.target === canvas && Date.now() < armed) editable()?.focus();
+	});
+	// A picture file dropped on the page lands at the nearest text, the way a click does.
+	attachPictureDrop(canvas, {
+		editableView: editable,
+		placeCaret: (x, y) =>
+			core.pages.viewMode === 'print' && Boolean(core.shell.printEditing?.selectNearest(x, y)),
+		insert: (file) => core.inserts.insertPictureFile(file),
 	});
 }

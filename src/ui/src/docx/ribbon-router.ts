@@ -171,6 +171,7 @@ export function routeRibbonAction(core: EditorCore, action: RibbonAction): void 
 	} else if (action.type === 'view') pages.setViewMode(action.value);
 	else if (action.type === 'print') pages.print();
 	else if (action.type === 'insertNote') parts.insertNote(action.kind, shell.canvas, shell.paper);
+	else if (action.type === 'convertNotes') parts.convertNotes(action.selection);
 	else if (action.type === 'page') pages.changePageSetup(action.key, action.value);
 	else if (action.type === 'sectionBreak') pages.insertSectionBreak(action.kind);
 	else if (action.type === 'evenOddHeaders') pages.toggleEvenOddHeaders();

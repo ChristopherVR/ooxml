@@ -1,6 +1,7 @@
 import type { DOMOutputSpec, NodeSpec, MarkSpec } from 'prosemirror-model';
 import { inlineRunFormattingAttrs, inlineRunPropertiesDomAttrs } from './inline-run-properties';
 import { chartNodeSpec } from './chart-spec';
+import { isWordNavigableHref } from '../hyperlink';
 
 const safeAttrValue = (value: unknown): string => String(value ?? '').replace(/[;{}"]/g, '');
 
@@ -81,6 +82,9 @@ export const imageNodeSpec: NodeSpec = {
 		chart: { default: null },
 		/** A drawing shape (`ShapeSpec`) as JSON; drawn as SVG by the shape node view. */
 		shape: { default: null },
+		/** A header watermark (`WatermarkSpec` or `PictureWatermarkSpec`) as JSON, kept through edits. */
+		watermark: { default: null },
+		pictureWatermark: { default: null },
 	},
 	parseDOM: [
 		{
@@ -143,7 +147,7 @@ export const imageNodeSpec: NodeSpec = {
 
 /** Only these schemes are ever placed in a rendered `href`; other targets stay in the model only. */
 export function isNavigableHref(href: unknown): href is string {
-	return typeof href === 'string' && /^(https?:|mailto:)/i.test(href.trim());
+	return isWordNavigableHref(href);
 }
 
 /** `w:hyperlink` (external `href` or internal `anchor`), with an optional tooltip. */

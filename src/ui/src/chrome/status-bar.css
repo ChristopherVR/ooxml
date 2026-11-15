@@ -96,6 +96,14 @@
 	align-items: center;
 	gap: var(--office-space-0);
 }
+/* The cards look (look.ts) turns the view switcher and the zoom into pills. */
+.group {
+	border-radius: var(--_office-look-pill, 0);
+	background: var(--_office-look-pill-track, transparent);
+}
+.group button {
+	border-radius: var(--_office-look-pill, var(--office-radius-sm));
+}
 .sep {
 	flex: none;
 	width: var(--office-border-width);
