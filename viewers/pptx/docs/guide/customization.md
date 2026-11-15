@@ -1301,6 +1301,7 @@ unit test fails if an id is missing here.
 | `advanced.display`               | Display                                 |
 | `advanced.slideShow`             | Slide Show                              |
 | `advanced.print`                 | Print                                   |
+| `advanced.pdf`                   | Save as PDF                             |
 | `ribbon.shortcutReference`       | Keyboard Shortcuts                      |
 | `quickAccess.quickAccessOptions` | Quick Access Toolbar options            |
 | `trust.trustSettings`            | Security settings                       |
@@ -1372,6 +1373,8 @@ unit test fails if an id is missing here.
 | `advanced.printHiddenSlides`                 | boolean | `false`          | Print hidden slides                                              |
 | `advanced.printScaleToFit`                   | boolean | `false`          | Scale to fit paper                                               |
 | `advanced.printFrameSlides`                  | boolean | `false`          | Frame slides                                                     |
+| `advanced.pdfIncludeHiddenSlides`            | boolean | `false`          | Include hidden slides                                            |
+| `advanced.pdfSlidesAsPictures`               | boolean | `false`          | Save slides as pictures                                          |
 | `quickAccess.visible`                        | boolean | `true`           | Show Quick Access Toolbar                                        |
 | `quickAccess.position`                       | string  | `'above'`        | Toolbar Position                                                 |
 | `quickAccess.showCommandLabels`              | boolean | `false`          | Always show command labels                                       |
