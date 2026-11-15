@@ -240,6 +240,22 @@ and application background), `--office-surface` (toolbar and panel surfaces), `-
 `--office-muted-foreground`, `--office-border`, `--office-selected`, and the accent and focus tokens
 above. Document paper, cell fills and slide artwork remain document content.
 
+### Looks
+
+`data-office-look` on the same scope as `data-office-theme` picks the chrome's shape, elevation
+and density; it never changes a colour. Without it the chrome keeps its flat default look.
+`data-office-look="cards"` (opt-in; the PowerPoint editor today) floats the ribbon, thumbnail rail,
+canvas, notes and side pane as rounded, shadowed cards 12px apart on a workspace background, turns
+the status bar's view switcher and zoom into pills, rounds menus, and gives the Format pane 36px
+section headings, 32px fields and a segmented tab strip. `applyOfficeLook(element, 'cards')` from
+`ooxml-ui/theme` sets it; switching keeps mounted editors as they are. The look's tokens
+(`--office-shadow-card`, `--office-shadow-card-strong`, `--office-card-border`,
+`--office-radius-surface`, `--office-radius-toolbar`, `--office-radius-control`,
+`--office-workspace-gap`, `--office-side-pane-width`, `--office-pane-heading-height`,
+`--office-pane-field-height`) have light and dark values; a host may also set
+`--office-workspace` for the background behind the cards. Put the attribute on the document root
+when a product attaches floating menus to `body`.
+
 Library-supplied native building blocks opt into `BUILDING_BLOCKS_CSS` through
 `prepareOfficeUiBlock(element, kind, product)`, exported by `ooxml-ui/theme`. It installs the shared
 theme in the element's owner document and marks only that control root with `data-office-block`

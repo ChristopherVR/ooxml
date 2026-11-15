@@ -1,3 +1,5 @@
+import { LOOK_TOKENS } from './look-tokens';
+
 /**
  * The ooxml-ui design tokens: the single source of every colour, size, space, radius, type,
  * shadow, motion and layering value the controls use. Controls never write a literal; they read
@@ -294,6 +296,8 @@ export const OFFICE_TOKENS = {
 	'--office-call-live': '#6bb700',
 	'--office-call-scrim': 'rgb(0 0 0 / 60%)',
 	'--office-shadow-teams': '0 2px 4px rgb(0 0 0 / 14%), 0 0 2px rgb(0 0 0 / 12%)',
+	// The cards look (look-tokens.ts)
+	...LOOK_TOKENS,
 } as const;
 
 export type OfficeToken = keyof typeof OFFICE_TOKENS;

@@ -4,7 +4,7 @@
 	color: var(--office-foreground);
 	font-family: var(--office-font);
 	font-size: var(--office-font-size-sm);
-	border-bottom: 1px solid var(--office-border);
+	border-bottom: var(--office-border-width) solid var(--office-border);
 }
 :host([hidden]) {
 	display: none;
@@ -13,9 +13,11 @@ summary {
 	display: flex;
 	align-items: center;
 	gap: var(--office-space-2);
-	min-height: var(--office-target-size);
+	/* The cards look (look.ts) sets the private properties; the fallbacks are the default look. */
+	min-height: var(--_office-look-heading-height, var(--office-target-size));
 	padding: var(--office-space-1);
-	border-radius: var(--office-radius-sm);
+	border-radius: var(--_office-look-control-radius, var(--office-radius-sm));
+	font-size: var(--_office-look-heading-size, inherit);
 	cursor: pointer;
 	list-style: none;
 	user-select: none;
@@ -29,7 +31,7 @@ summary:hover {
 }
 summary:focus-visible {
 	outline: var(--office-focus-width) solid var(--office-ring);
-	outline-offset: -1px;
+	outline-offset: calc(-1 * var(--office-border-width));
 }
 .chevron {
 	flex: none;
@@ -55,7 +57,7 @@ details[open] > summary .chevron {
 .badge {
 	flex: none;
 	padding: 0 var(--office-space-1);
-	border: 1px solid var(--office-border);
+	border: var(--office-border-width) solid var(--office-border);
 	border-radius: var(--office-radius-sm);
 	color: var(--office-muted-foreground);
 	font-size: var(--office-font-size-xs);
