@@ -509,6 +509,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       offers Range (All, Current slide, Slides from-to) and Include hidden slides
       (`export/pdf-export-notice.ts`, `web-components/pdf-export-dialog.ts`). Open: a later clean
       export leaves the previous notice until it is dismissed.
+- [ ] **P1** Save as PDF (vector, the default) is slow on effect-heavy decks: every element drawn
+      as a picture clones and style-inlines the whole slide and rasterises a slide-sized SVG, about
+      0.5 s per picture. A 14-slide deck with about 17 such elements per slide took about 8 s per
+      slide locally (over 3 minutes on CI runners). Build the styled clone once per slide and
+      rasterise only the element's region.
 - [ ] **P2** Save as PDF options lack Selection and custom-show ranges, Publish what (handouts,
       notes pages, outline), document properties, accessibility structure tags, PDF/A and
       bitmap-text options; "Save slides as pictures" has no options step and writes every slide.

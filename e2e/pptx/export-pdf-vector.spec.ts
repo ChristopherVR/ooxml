@@ -9,11 +9,14 @@
  *
  * Run: bunx playwright test export-pdf-vector
  */
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { inflateSync } from 'node:zlib';
 
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import JSZip from 'jszip';
 import { PptxHandler } from 'pptx-viewer-core';
 
 import { fixture, loadDeck, loadDeckAt } from './support/deck';
@@ -38,8 +41,24 @@ const VIEWPORT = { width: 1600, height: 950 };
 test.use({ viewport: VIEWPORT });
 test.describe.configure({ timeout: 240_000 });
 
-/** A deck with one hidden slide among fourteen. */
-const HIDDEN_DECK = fixture('solution-explorer.pptx');
+/**
+ * The small export deck with its second slide hidden (`show="0"`), written once per worker. A
+ * small deck keeps these tests about the selection, not about export speed on a heavy deck.
+ */
+let hiddenDeckPath: Promise<string> | undefined;
+function hiddenDeck(): Promise<string> {
+	hiddenDeckPath ??= (async () => {
+		const zip = await JSZip.loadAsync(await readFile(EXPORT_DECK));
+		const part = zip.file('ppt/slides/slide2.xml');
+		const xml = await part?.async('string');
+		if (!xml?.includes('<p:sld ')) throw new Error('the export deck has no second slide');
+		zip.file('ppt/slides/slide2.xml', xml.replace('<p:sld ', '<p:sld show="0" '));
+		const path = join(tmpdir(), `pdf-hidden-slide-${process.pid}.pptx`);
+		await writeFile(path, await zip.generateAsync({ type: 'uint8array' }));
+		return path;
+	})();
+	return hiddenDeckPath;
+}
 /** A deck with picture effects, so the export approximates something. */
 const NOTICE_DECK = fixture('image-alpha-effects.pptx');
 
@@ -124,22 +143,25 @@ test.describe('vector PDF export', () => {
 	});
 
 	test('leaves hidden slides out unless the option includes them', async ({ page }) => {
-		const facts = await deckFacts(HIDDEN_DECK);
+		const deck = await hiddenDeck();
+		const facts = await deckFacts(deck);
 		expect(facts.visible).toBeLessThan(facts.slides);
-		await loadDeck(page, HIDDEN_DECK);
+		await loadDeck(page, deck);
 		expect((await exportPdf(page)).pages).toBe(facts.visible);
 	});
 
 	test('includes hidden slides when Options > Advanced asks for them', async ({ page }) => {
-		const facts = await deckFacts(HIDDEN_DECK);
+		const deck = await hiddenDeck();
+		const facts = await deckFacts(deck);
 		await seedAdvancedOptions(page, { pdfIncludeHiddenSlides: true });
-		await loadDeck(page, HIDDEN_DECK);
+		await loadDeck(page, deck);
 		expect((await exportPdf(page)).pages).toBe(facts.slides);
 	});
 
 	test('the options step exports the current slide or a range', async ({ page }) => {
-		const facts = await deckFacts(HIDDEN_DECK);
-		await loadDeck(page, HIDDEN_DECK);
+		const deck = await hiddenDeck();
+		const facts = await deckFacts(deck);
+		await loadDeck(page, deck);
 		expect((await exportPdf(page, { range: 'current' })).pages).toBe(1);
 		// Slides 1-3 counted with hidden slides in the numbering, all included.
 		expect(
