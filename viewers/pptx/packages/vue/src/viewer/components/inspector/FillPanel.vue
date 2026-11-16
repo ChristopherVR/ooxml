@@ -1,6 +1,14 @@
 <script setup lang="ts">
-import { fillColorOf, shapeStylePatch } from 'ooxml-ui/pptx';
-import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
+import {
+	fillColorOf,
+	resolveShapeFillView,
+	SHAPE_FILL_MODE_SECTIONS,
+	SHAPE_FILL_OPTIONS_SECTIONS,
+	shapeFillChange,
+	shapeFillPatch,
+	shapeStylePatch,
+} from 'ooxml-ui/pptx';
+import type { ShapeFillAction, ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import { hasShapeProperties } from 'pptx-viewer-core';
 import { computed } from 'vue';
@@ -10,23 +18,18 @@ import { injectRecentColors } from '../../composables/recent-colors-context';
 import { useLiveElementColor } from '../../composables/useLiveElementColor';
 import RecentColorsRow from '../RecentColorsRow.vue';
 import FillGradientControls from './FillGradientControls.vue';
-import FillPatternControls from './FillPatternControls.vue';
+import InspectorFields from './InspectorFields.vue';
 import ThemeColorSwatchGrid from './ThemeColorSwatchGrid.vue';
 
 /**
- * FillPanel: shape fill controls (mode, solid colour, opacity, gradient,
- * pattern).
- *
- * Only meaningful for shape-like elements (`hasShapeProperties`). When the
- * element has no shape properties a muted "No fill options" note is shown.
- *
- * Solid-mode fields emit the FULL merged `shapeStyle` sub-object as a shallow
- * patch directly (`{ shapeStyle: { ...current, fillMode, fillColor,
- * fillOpacity } }`); gradient and pattern mode delegate their own field
- * editing to {@link FillGradientControls} / {@link FillPatternControls} (split
- * out to keep this file under the repo's 300-LOC budget), which build the same
- * shallow `shapeStyle` patch shape from shared's `gradient-picker.ts` /
- * `PATTERN_PRESET_OPTIONS` and re-emit it here untouched.
+ * FillPanel: the Format pane's Fill section. The fill kind, transparency,
+ * gradient type and angle and picture tiling are the shared fill descriptors
+ * drawn by {@link InspectorFields}; the solid colour, the gradient stops
+ * ({@link FillGradientControls}), the pattern swatches and colours and the
+ * picture source are what `resolveShapeFillView` asks for, and their events
+ * are the shared `shapeFillPatch` actions. Every patch is emitted as the full
+ * merged `shapeStyle` (`shapeStylePatch`). A muted note stands in for
+ * elements without shape properties.
  */
 const props = defineProps<{
 	element: PptxElement;
@@ -39,61 +42,54 @@ const emit = defineEmits<{
 const { t } = useI18n();
 const recentColors = injectRecentColors();
 
-type FillMode = 'none' | 'solid' | 'gradient' | 'pattern';
-
 const applicable = computed(() => hasShapeProperties(props.element));
 
-const currentStyle = computed<ShapeStyle>(() =>
-	hasShapeProperties(props.element) ? (props.element.shapeStyle ?? {}) : {},
+const style = computed<ShapeStyle | undefined>(() =>
+	hasShapeProperties(props.element) ? props.element.shapeStyle : undefined,
 );
 
-const fillMode = computed<FillMode>(() => {
-	const mode = currentStyle.value.fillMode;
-	return mode === 'gradient' || mode === 'pattern' || mode === 'none' ? mode : 'solid';
-});
-
-const fillColor = computed(() => currentStyle.value.fillColor ?? '#ffffff');
-
-const fillOpacityPercent = computed(() => {
-	const raw = currentStyle.value.fillOpacity ?? 1;
-	return Math.round(raw * 100);
-});
+const view = computed(() => resolveShapeFillView(style.value));
 
 function patchStyle(patch: Partial<ShapeStyle>): void {
-	emit('update', {
-		shapeStyle: { ...currentStyle.value, ...patch },
-	} as Partial<PptxElement>);
+	emit('update', shapeStylePatch(props.element, patch));
 }
 
-function onMode(value: string): void {
-	patchStyle({ fillMode: value as FillMode });
-}
-
-function onColor(value: string): void {
-	patchStyle({ fillColor: value, fillColorRef: undefined });
+function act(action: ShapeFillAction): void {
+	const patch = shapeFillPatch(style.value, action);
+	if (patch) {
+		patchStyle(patch);
+	}
 }
 
 /** The native picker: live while dragging, one `update` and one recent colour per pick. */
 const fillColorEvents = useLiveElementColor({
 	element: () => props.element,
 	colorOf: fillColorOf,
-	patch: (el, hex) => shapeStylePatch(el, { fillColor: hex, fillColorRef: undefined }),
+	patch: (el, hex) => shapeStylePatch(el, shapeFillChange(hex)),
 	commit: (patch) => emit('update', patch),
 });
 
 function onThemeColor(commit: ThemeColorPickerCommit): void {
-	patchStyle({ fillColor: commit.hex, fillColorRef: commit.ref });
+	act({ type: 'color', hex: commit.hex, ref: commit.ref });
 	recentColors?.push(commit.hex);
 }
 
-function onOpacity(value: string): void {
-	const n = Number(value);
-	if (!Number.isFinite(n)) {
+function onRecentColor(hex: string): void {
+	act({ type: 'color', hex });
+	recentColors?.push(hex);
+}
+
+function onImageFile(event: Event): void {
+	const file = (event.target as HTMLInputElement).files?.[0];
+	if (!file) {
 		return;
 	}
-	const clamped = Math.min(100, Math.max(0, n));
-	patchStyle({ fillOpacity: clamped / 100 });
+	const reader = new FileReader();
+	reader.onload = () => act({ type: 'imageUrl', url: String(reader.result) });
+	reader.readAsDataURL(file);
 }
+
+const valueOf = (event: Event): string => (event.target as HTMLInputElement).value;
 </script>
 
 <template>
@@ -103,75 +99,123 @@ function onOpacity(value: string): void {
 		</p>
 
 		<template v-else>
-			<label class="pptx-vue-fill-field flex flex-col gap-1">
-				<span class="pptx-vue-fill-label text-muted-foreground">{{ t('pptx.fill.fill') }}</span>
-				<pptx-ui-select
-					:aria-label="t('pptx.fill.fill')"
-					class="pptx-vue-fill-select bg-muted border border-border rounded px-2 py-1 max-md:min-h-[44px]"
-					:value="fillMode"
-					@change="onMode(($event.target as HTMLSelectElement).value)"
-				>
-					<option value="none">{{ t('pptx.fill.none') }}</option>
-					<option value="solid">{{ t('pptx.fill.solid') }}</option>
-					<option value="gradient">{{ t('pptx.fill.gradient') }}</option>
-					<!-- No dedicated `pptx.fill.pattern` key exists yet (see final report);
-					     reuses `pptx.table.fillPattern` ("Pattern"), the closest existing key. -->
-					<option value="pattern">{{ t('pptx.table.fillPattern') }}</option>
-				</pptx-ui-select>
-			</label>
+			<InspectorFields :sections="SHAPE_FILL_MODE_SECTIONS" :target="style" @patch="patchStyle" />
 
-			<template v-if="fillMode === 'solid'">
+			<template v-if="view.color">
 				<label class="pptx-vue-fill-field flex flex-col gap-1">
 					<span class="pptx-vue-fill-label text-muted-foreground">{{ t('pptx.fill.color') }}</span>
 					<input
 						type="color"
 						class="pptx-vue-fill-color w-full h-8 p-0 bg-muted border border-border rounded"
-						:value="fillColor"
+						:value="view.color.value"
 						v-on="fillColorEvents"
 					/>
 				</label>
 				<ThemeColorSwatchGrid
-					:selected-ref="currentStyle.fillColorRef"
-					:selected-hex="fillColor"
+					:selected-ref="view.color.colorRef"
+					:selected-hex="view.color.value"
 					@pick="onThemeColor"
 				/>
 				<RecentColorsRow
 					v-if="recentColors"
 					:colors="recentColors.recent.value"
-					@pick="
-						(hex) => {
-							onColor(hex);
-							recentColors?.push(hex);
-						}
-					"
+					@pick="onRecentColor"
 				/>
+			</template>
 
-				<label class="pptx-vue-fill-field flex flex-col gap-1">
-					<span class="pptx-vue-fill-label text-muted-foreground">{{
-						t('pptx.fill.opacityPercent', { value: fillOpacityPercent })
+			<InspectorFields
+				:sections="SHAPE_FILL_OPTIONS_SECTIONS"
+				:target="style"
+				@patch="patchStyle"
+			/>
+
+			<FillGradientControls v-if="view.stops" :stops="view.stops" @action="act" />
+
+			<template v-if="view.pattern">
+				<span class="pptx-vue-pattern-label text-muted-foreground">{{
+					t('pptx.table.patternPreset')
+				}}</span>
+				<div
+					class="pptx-vue-pattern-grid grid max-h-48 grid-cols-8 gap-1 overflow-y-auto rounded border border-border p-2"
+				>
+					<button
+						v-for="swatch in view.pattern.swatches"
+						:key="swatch.value"
+						type="button"
+						data-testid="fill-pattern-swatch"
+						:title="t(swatch.labelKey)"
+						:aria-label="t(swatch.labelKey)"
+						:aria-pressed="swatch.selected"
+						class="pptx-vue-pattern-swatch h-8 w-8 rounded border transition-colors"
+						:class="
+							swatch.selected ? 'border-2 border-primary' : 'border-border hover:border-primary/50'
+						"
+						@click="act({ type: 'patternPreset', preset: swatch.value })"
+					>
+						<div
+							v-if="swatch.backgroundImage"
+							class="h-full w-full rounded-sm"
+							:style="{
+								backgroundImage: swatch.backgroundImage,
+								backgroundRepeat: 'repeat',
+								backgroundSize: '8px 8px',
+							}"
+						/>
+					</button>
+				</div>
+				<label class="pptx-vue-pattern-field flex flex-col gap-1">
+					<span class="pptx-vue-pattern-label text-muted-foreground">{{
+						t('pptx.fillAdvanced.foregroundColor')
 					}}</span>
 					<input
-						type="range"
-						class="pptx-vue-fill-range w-full accent-primary"
-						min="0"
-						max="100"
-						:value="fillOpacityPercent"
-						@input="onOpacity(($event.target as HTMLInputElement).value)"
+						type="color"
+						class="pptx-vue-pattern-color h-8 w-full rounded border border-border bg-muted p-0"
+						:value="view.pattern.foreground"
+						@input="act({ type: 'patternForeground', hex: valueOf($event) })"
+						@change="recentColors?.push(valueOf($event))"
+					/>
+				</label>
+				<label class="pptx-vue-pattern-field flex flex-col gap-1">
+					<span class="pptx-vue-pattern-label text-muted-foreground">{{
+						t('pptx.fillAdvanced.backgroundColor')
+					}}</span>
+					<input
+						type="color"
+						class="pptx-vue-pattern-color h-8 w-full rounded border border-border bg-muted p-0"
+						:value="view.pattern.background"
+						@input="act({ type: 'patternBackground', hex: valueOf($event) })"
+						@change="recentColors?.push(valueOf($event))"
 					/>
 				</label>
 			</template>
 
-			<FillGradientControls
-				v-else-if="fillMode === 'gradient'"
-				:element="element"
-				@update="(patch) => emit('update', patch)"
-			/>
-
-			<FillPatternControls
-				v-else-if="fillMode === 'pattern'"
-				:element="element"
-				@update="(patch) => emit('update', patch)"
-			/>
+			<template v-if="view.image">
+				<label class="pptx-vue-fill-field flex flex-col gap-1">
+					<span class="pptx-vue-fill-label text-muted-foreground">{{
+						t('pptx.fillAdvanced.imageUrl')
+					}}</span>
+					<input
+						type="text"
+						data-testid="fill-image-url"
+						class="rounded border border-border bg-muted px-2 py-1"
+						placeholder="https://example.com/image.png"
+						:value="view.image.url"
+						@change="act({ type: 'imageUrl', url: valueOf($event) })"
+					/>
+				</label>
+				<label class="pptx-vue-fill-field flex flex-col gap-1">
+					<span class="pptx-vue-fill-label text-muted-foreground">{{
+						t('pptx.fillAdvanced.orChooseFile')
+					}}</span>
+					<input type="file" accept="image/*" class="text-xs" @change="onImageFile" />
+				</label>
+				<img
+					v-if="view.image.url"
+					:src="view.image.url"
+					:alt="t('pptx.fillAdvanced.fillPreviewAlt')"
+					class="h-16 w-full rounded border border-border object-cover"
+				/>
+			</template>
 		</template>
 	</div>
 </template>

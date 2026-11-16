@@ -1,156 +1,43 @@
-// oxlint-disable react-hooks/rules-of-hooks
 import { mount } from '@vue/test-utils';
-import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
+import type { ShapeFillStopView } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
-import { ref } from 'vue';
 
-import { ThemeColorMapKey } from '../../composables/theme-color-map-context';
 import FillGradientControls from './FillGradientControls.vue';
 import { setControlValue } from './test-control-value';
-import { themeSwatch } from './test-theme-swatch';
 
-const OFFICE_THEME = {
-	dk1: '#000000',
-	lt1: '#FFFFFF',
-	dk2: '#44546A',
-	lt2: '#E7E6E6',
-	accent1: '#4472C4',
-	accent2: '#ED7D31',
-	accent3: '#A5A5A5',
-	accent4: '#FFC000',
-	accent5: '#5B9BD5',
-	accent6: '#70AD47',
-	bg1: '#FFFFFF',
-	tx1: '#000000',
-	bg2: '#E7E6E6',
-	tx2: '#44546A',
-};
+const stops: ShapeFillStopView[] = [
+	{ index: 0, color: '#000000', position: 0, opacity: 100, removable: true },
+	{ index: 1, color: '#888888', position: 50, opacity: 40, removable: true },
+	{ index: 2, color: '#ffffff', position: 100, opacity: 100, removable: true },
+];
 
-function shape(shapeStyle: ShapeStyle = {}): PptxElement {
-	return {
-		type: 'shape',
-		id: 'sp 1',
-		x: 0,
-		y: 0,
-		width: 100,
-		height: 100,
-		shapeStyle,
-	} as PptxElement;
-}
-
-function lastPatch(wrapper: ReturnType<typeof mount>): { shapeStyle: ShapeStyle } {
-	const events = wrapper.emitted('update');
-	expect(events).toBeTruthy();
-	const ev = events as unknown[][];
-	return ev[ev.length - 1][0] as { shapeStyle: ShapeStyle };
-}
+const actions = (wrapper: ReturnType<typeof mount>) =>
+	(wrapper.emitted('action') ?? []).map((args) => args[0]);
 
 describe('fillGradientControls', () => {
-	it('starts from the shared default two-stop gradient when none is configured', () => {
-		const wrapper = mount(FillGradientControls, { props: { element: shape() } });
-		expect(wrapper.findAll('[data-testid="fx-gradient-stop-row"]')).toHaveLength(2);
+	it('draws one row per shared stop view', () => {
+		const wrapper = mount(FillGradientControls, { props: { stops } });
+		expect(wrapper.findAll('[data-testid="fill-gradient-stop"]')).toHaveLength(3);
+		const numbers = wrapper.findAll('input[type="number"]');
+		expect((numbers[3]!.element as HTMLInputElement).value).toBe('40');
 	});
 
-	it('switches gradient type and activates fillMode: gradient', async () => {
-		const wrapper = mount(FillGradientControls, {
-			props: { element: shape({ fillMode: 'gradient', fillGradientType: 'linear' }) },
-		});
-		const select = wrapper.find('pptx-ui-select');
-		await setControlValue(select, 'radial');
-		const style = lastPatch(wrapper).shapeStyle;
-		expect(style.fillMode).toBe('gradient');
-		expect(style.fillGradientType).toBe('radial');
-	});
-
-	it('hides the angle control for a radial gradient', () => {
-		const wrapper = mount(FillGradientControls, {
-			props: { element: shape({ fillGradientType: 'radial' }) },
-		});
-		expect(wrapper.find('input[type="range"]').exists()).toBeFalsy();
-	});
-
-	it('updates a stop color, preserving its position', async () => {
-		const wrapper = mount(FillGradientControls, {
-			props: {
-				element: shape({
-					fillGradientStops: [
-						{ color: '#ff0000', position: 0 },
-						{ color: '#0000ff', position: 100 },
-					],
-				}),
-			},
-		});
-		const firstColor = wrapper.find('input[type="color"]');
-		await setControlValue(firstColor, '#00ff00');
-		const style = lastPatch(wrapper).shapeStyle;
-		expect(style.fillGradientStops?.[0]).toMatchObject({ color: '#00ff00', position: 0 });
-		expect(style.fillGradientStops?.[1]).toMatchObject({ color: '#0000ff', position: 100 });
-	});
-
-	it('adds a stop via addGradientStopPatch', async () => {
-		const wrapper = mount(FillGradientControls, { props: { element: shape() } });
+	it('emits the shared stop actions', async () => {
+		const wrapper = mount(FillGradientControls, { props: { stops } });
+		await setControlValue(wrapper.findAll('input[type="number"]')[2]!, '30');
+		await wrapper.findAll('.pptx-vue-gradient-remove')[1]!.trigger('click');
 		await wrapper.find('.pptx-vue-gradient-add').trigger('click');
-		const style = lastPatch(wrapper).shapeStyle;
-		expect(style.fillGradientStops).toHaveLength(3);
+		expect(actions(wrapper)).toStrictEqual([
+			{ type: 'stopPosition', index: 1, position: 30 },
+			{ type: 'removeStop', index: 1 },
+			{ type: 'addStop' },
+		]);
 	});
 
-	it('removes a stop, but never below two remaining', async () => {
+	it('disables remove on the last two stops', () => {
 		const wrapper = mount(FillGradientControls, {
-			props: {
-				element: shape({
-					fillGradientStops: [
-						{ color: '#ff0000', position: 0 },
-						{ color: '#00ff00', position: 50 },
-						{ color: '#0000ff', position: 100 },
-					],
-				}),
-			},
+			props: { stops: stops.slice(0, 2).map((s) => ({ ...s, removable: false })) },
 		});
-		const removeButtons = wrapper.findAll('.pptx-vue-gradient-remove');
-		expect(removeButtons).toHaveLength(3);
-		await removeButtons[1].trigger('click');
-		const style = lastPatch(wrapper).shapeStyle;
-		expect(style.fillGradientStops).toHaveLength(2);
-	});
-});
-
-describe('fillGradientControls theme colour picker', () => {
-	it('commits both the resolved hex and the ref on a theme swatch click', async () => {
-		const wrapper = mount(FillGradientControls, {
-			props: {
-				element: shape({
-					fillGradientStops: [
-						{ color: '#ff0000', position: 0 },
-						{ color: '#0000ff', position: 100 },
-					],
-				}),
-			},
-			global: { provide: { [ThemeColorMapKey as symbol]: ref(OFFICE_THEME) } },
-		});
-		const accent1 = themeSwatch(wrapper, 'Accent 1');
-		await accent1.trigger('click');
-		const style = lastPatch(wrapper).shapeStyle;
-		expect(style.fillGradientStops?.[0]).toMatchObject({
-			color: '#4472c4',
-			colorRef: { scheme: 'accent1' },
-		});
-	});
-
-	it('clears a previously-stored ref when the native colour input changes', async () => {
-		const wrapper = mount(FillGradientControls, {
-			props: {
-				element: shape({
-					fillGradientStops: [
-						{ color: '#4472c4', position: 0, colorRef: { scheme: 'accent1' } },
-						{ color: '#0000ff', position: 100 },
-					],
-				}),
-			},
-			global: { provide: { [ThemeColorMapKey as symbol]: ref(OFFICE_THEME) } },
-		});
-		const firstColor = wrapper.find('input[type="color"]');
-		await setControlValue(firstColor, '#00ff00');
-		const style = lastPatch(wrapper).shapeStyle;
-		expect(style.fillGradientStops?.[0]?.colorRef).toBeFalsy();
+		expect(wrapper.find('.pptx-vue-gradient-remove').attributes('disabled')).toBeDefined();
 	});
 });

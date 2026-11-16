@@ -68,10 +68,10 @@ describe('fillPanel', () => {
 
 	it('emits the full merged shapeStyle when fill mode changes', async () => {
 		const wrapper = mount(FillPanel, { props: { element: shape() } });
-		const select = wrapper.find('pptx-ui-select');
+		const select = wrapper.find('[data-testid="fill-mode"]');
 		await setControlValue(select, 'none');
 		expect(lastPatch(wrapper)).toStrictEqual({
-			shapeStyle: { fillMode: 'none', fillColor: '#00aa55', fillOpacity: 1 },
+			shapeStyle: { fillMode: 'none', fillColor: 'transparent', fillOpacity: 1 },
 		});
 	});
 
@@ -98,28 +98,38 @@ describe('fillPanel', () => {
 		});
 	});
 
-	it('the select offers a pattern option alongside none/solid/gradient', () => {
+	it('the select offers the six shared fill kinds', () => {
 		const wrapper = mount(FillPanel, { props: { element: shape() } });
 		const values = wrapper.findAll('option').map((o) => o.attributes('value'));
-		expect(values).toStrictEqual(['none', 'solid', 'gradient', 'pattern']);
+		expect(values).toStrictEqual(['none', 'solid', 'gradient', 'image', 'pattern', 'background']);
 	});
 
-	it('an element already in gradient mode renders FillGradientControls (stop rows), not the solid swatch', () => {
+	it('an element with a picture fill shows its tiling and source', () => {
+		const wrapper = mount(FillPanel, {
+			props: { element: shape({ shapeStyle: { fillMode: 'image', fillImageUrl: 'data:x' } }) },
+		});
+		expect(wrapper.find('[data-testid="fill-image-mode"]').exists()).toBeTruthy();
+		expect((wrapper.find('[data-testid="fill-image-url"]').element as HTMLInputElement).value).toBe(
+			'data:x',
+		);
+	});
+
+	it('an element already in gradient mode renders the stop rows, not the solid swatch', () => {
 		const wrapper = mount(FillPanel, {
 			props: { element: shape({ shapeStyle: { fillMode: 'gradient' } }) },
 		});
 		expect(wrapper.find('.pptx-vue-fill-color').exists()).toBeFalsy();
-		expect(wrapper.findAll('[data-testid="fx-gradient-stop-row"]').length).toBeGreaterThan(0);
+		expect(wrapper.findAll('[data-testid="fill-gradient-stop"]').length).toBeGreaterThan(0);
 	});
 
-	it('an element already in pattern mode renders FillPatternControls (preset swatch grid)', () => {
+	it('an element already in pattern mode renders the preset swatch grid', () => {
 		const wrapper = mount(FillPanel, {
 			props: { element: shape({ shapeStyle: { fillMode: 'pattern' } }) },
 		});
-		expect(wrapper.findAll('[data-testid="fx-pattern-swatch"]').length).toBeGreaterThan(0);
+		expect(wrapper.findAll('[data-testid="fill-pattern-swatch"]').length).toBeGreaterThan(0);
 	});
 
-	it('forwards a gradient-section patch through to the update event untouched', async () => {
+	it('emits the shared add-stop patch as the merged shapeStyle', async () => {
 		const wrapper = mount(FillPanel, {
 			props: { element: shape({ shapeStyle: { fillMode: 'gradient' } }) },
 		});
@@ -128,11 +138,11 @@ describe('fillPanel', () => {
 		expect(patch.shapeStyle.fillGradientStops).toHaveLength(3);
 	});
 
-	it('forwards a pattern-section patch through to the update event untouched', async () => {
+	it('emits the shared pattern preset patch as the merged shapeStyle', async () => {
 		const wrapper = mount(FillPanel, {
 			props: { element: shape({ shapeStyle: { fillMode: 'pattern' } }) },
 		});
-		await wrapper.find('[data-testid="fx-pattern-swatch"]').trigger('click');
+		await wrapper.find('[data-testid="fill-pattern-swatch"]').trigger('click');
 		const patch = lastPatch(wrapper) as { shapeStyle: { fillPatternPreset?: string } };
 		expect(patch.shapeStyle.fillPatternPreset).toBeDefined();
 	});
