@@ -1,3 +1,5 @@
+import { readDrawingLineFields } from '../../../../drawingml/line-read';
+import { OBJECT_DRAWING_VIEW } from '../../color/object-drawing-view';
 import { themeColorRefFromColorChoice } from '../../color/theme-color-ref';
 import { TextStyle, XmlObject } from '../../types';
 import { extractColorChoiceXml } from '../../utils/color-xml-preservation';
@@ -57,25 +59,28 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// #85: Underline line styling (a:uLn width/dash/cap/ends) and the
 		// follow-text markers (a:uLnTx / a:uFillTx). Previously only the uLn
 		// solidFill colour above was read; the line properties were dropped.
-		if (uLn) {
+		// The line fields (width, compound, cap, alignment, dash) come from the
+		// shared DrawingML line reader over the object-tree view.
+		const underlineFields =
+			uLn && typeof uLn === 'object' ? readDrawingLineFields(OBJECT_DRAWING_VIEW, uLn) : undefined;
+		if (uLn && underlineFields) {
 			const line: NonNullable<TextStyle['underlineLine']> = {};
-			const widthEmu = Number.parseInt(String(uLn['@_w'] ?? ''), 10);
-			if (Number.isFinite(widthEmu)) {
-				line.widthEmu = widthEmu;
+			if (underlineFields.widthEmu !== undefined) {
+				line.widthEmu = underlineFields.widthEmu;
 			}
-			const compound = String(uLn['@_cmpd'] ?? '').trim();
+			const compound = underlineFields.compound?.trim();
 			if (compound) {
 				line.compound = compound;
 			}
-			const cap = String(uLn['@_cap'] ?? '').trim();
+			const cap = underlineFields.cap?.trim();
 			if (cap) {
 				line.cap = cap;
 			}
-			const algn = String(uLn['@_algn'] ?? '').trim();
+			const algn = underlineFields.alignment?.trim();
 			if (algn) {
 				line.algn = algn;
 			}
-			const prstDash = String((uLn['a:prstDash'] as XmlObject | undefined)?.['@_val'] ?? '').trim();
+			const prstDash = underlineFields.dash?.trim();
 			if (prstDash) {
 				line.prstDash = prstDash;
 			}
@@ -98,15 +103,16 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			style.underlineFillFollowsText = true;
 		}
 		// Text outline (a:rPr > a:ln)
-		const textLn = runProperties['a:ln'] as XmlObject | undefined;
+		// (width and dash through the shared line reader, the colour through the
+		// runtime colour codec)
+		const textLn = OBJECT_DRAWING_VIEW.child(runProperties, 'ln');
 		if (textLn) {
-			const textOutlineW = Number.parseInt(String(textLn['@_w'] || ''), 10);
-			if (Number.isFinite(textOutlineW) && textOutlineW > 0) {
-				style.textOutlineWidth = textOutlineW / PptxHandlerRuntime.EMU_PER_PX;
+			const outline = readDrawingLineFields(OBJECT_DRAWING_VIEW, textLn);
+			if (outline.widthEmu !== undefined && outline.widthEmu > 0) {
+				style.textOutlineWidth = outline.widthEmu / PptxHandlerRuntime.EMU_PER_PX;
 			}
-			const textOutlineDash = (textLn['a:prstDash'] as XmlObject | undefined)?.['@_val'];
-			if (typeof textOutlineDash === 'string' && textOutlineDash !== 'solid') {
-				style.textOutlineDash = textOutlineDash;
+			if (outline.dash && outline.dash !== 'solid') {
+				style.textOutlineDash = outline.dash;
 			}
 			const textOutlineFill = textLn['a:solidFill'] as XmlObject | undefined;
 			if (textOutlineFill) {

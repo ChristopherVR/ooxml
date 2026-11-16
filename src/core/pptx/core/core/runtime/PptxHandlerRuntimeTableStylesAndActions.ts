@@ -1,3 +1,5 @@
+import { readDrawingGradient } from '../../../../drawingml/gradient-read';
+import { OBJECT_DRAWING_VIEW } from '../../color/object-drawing-view';
 import { XmlObject, TextStyle } from '../../types';
 import type { PptxAction } from '../../types';
 import { ooxmlGradientAngleToCssDegrees } from '../../utils/gradient-angle';
@@ -159,42 +161,33 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 
 		// Text gradient fill
-		const gradFill = rPr['a:gradFill'] as XmlObject | undefined;
-		if (gradFill) {
-			const gsLst = gradFill['a:gsLst'];
-			if (gsLst) {
-				const stops = this.ensureArray((gsLst as XmlObject)['a:gs']);
-				if (stops.length >= 2) {
-					const cssStops = stops.map((gs: XmlObject) => {
-						const pos = parseInt(String(gs['@_pos'] || '0')) / 1000;
-						const color = this.parseColor(gs) || '#000000';
-						return `${color} ${pos}%`;
-					});
-					const angle = gradFill['a:lin']
-						? parseInt(String((gradFill['a:lin'] as XmlObject)['@_ang'] || '0')) / 60000
-						: 0;
-					const gradType = gradFill['a:path'] ? 'radial' : 'linear';
-					// `a:lin/@ang` is clockwise from +x; CSS is clockwise from "to top".
-					result.textFillGradient = `linear-gradient(${ooxmlGradientAngleToCssDegrees(angle)}deg, ${cssStops.join(', ')})`;
+		// Stops, angle and the path choice through the shared DrawingML gradient
+		// reader (`readDrawingGradient` over the object-tree view); the stop
+		// colours resolve through the runtime colour codec on each `a:gs`.
+		const gradFill = OBJECT_DRAWING_VIEW.child(rPr, 'gradFill');
+		if (gradFill && OBJECT_DRAWING_VIEW.child(gradFill, 'gsLst')) {
+			const gradient = readDrawingGradient(OBJECT_DRAWING_VIEW, gradFill);
+			if (gradient.stops.length >= 2) {
+				const cssStops = gradient.stops.map((stop) => {
+					const color = this.parseColor(stop.node) || '#000000';
+					return `${color} ${(stop.position ?? 0) / 1000}%`;
+				});
+				const angle = gradient.fill.angle ?? 0;
+				const gradType = gradient.hasPath ? 'radial' : 'linear';
+				// `a:lin/@ang` is clockwise from +x; CSS is clockwise from "to top".
+				result.textFillGradient = `linear-gradient(${ooxmlGradientAngleToCssDegrees(angle)}deg, ${cssStops.join(', ')})`;
 
-					// Store structured data for round-trip serialization
-					const structuredStops: NonNullable<TextStyle['textFillGradientStops']> = [];
-					for (const gs of stops) {
-						const gsObj = gs as XmlObject;
-						const color = this.parseColor(gsObj) || '#000000';
-						const posRaw = parseInt(String(gsObj['@_pos'] || '0'), 10);
-						const position = Number.isFinite(posRaw) ? (posRaw / 100000) * 100 : 0;
-						const opacity = this.extractColorOpacity(gsObj);
-						structuredStops.push({
-							color,
-							position,
-							...(opacity !== undefined ? { opacity } : {}),
-						});
-					}
-					result.textFillGradientStops = structuredStops;
-					result.textFillGradientAngle = angle;
-					result.textFillGradientType = gradType;
-				}
+				// Store structured data for round-trip serialization
+				result.textFillGradientStops = gradient.stops.map((stop) => {
+					const opacity = this.extractColorOpacity(stop.node);
+					return {
+						color: this.parseColor(stop.node) || '#000000',
+						position: ((stop.position ?? 0) / 100000) * 100,
+						...(opacity !== undefined ? { opacity } : {}),
+					};
+				});
+				result.textFillGradientAngle = angle;
+				result.textFillGradientType = gradType;
 			}
 		}
 

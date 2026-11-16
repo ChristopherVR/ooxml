@@ -3,6 +3,7 @@ import { TextStyle, XmlObject } from '../../types';
 import { extractColorChoiceXml } from '../../utils/color-xml-preservation';
 import { buildEffectDagTreeFromXml } from '../builders/effect-dag-containers';
 import { extractReflectionAttributes } from '../builders/effect-style-extractor-reflection';
+import { findObjectEffect, shadowOffset } from '../builders/effect-style-from-model';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeTextStyleUtils';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
@@ -124,114 +125,103 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	/**
-	 * Parse text-run-level effects (a:effectLst on a:rPr) — outer shadow, glow,
+	 * Parse text-run-level effects (a:effectLst on a:rPr): outer shadow, glow,
 	 * and reflection — and apply them to the given TextStyle.
 	 */
 	protected applyTextRunEffects(style: TextStyle, runEffectList: XmlObject): void {
+		// The CT_EffectList members are read by the shared DrawingML effect reader
+		// (`findObjectEffect`, over the object-tree view); colours and opacity
+		// resolve through the runtime colour codec on the effect's node, so
+		// scheme colours follow the slide's theme and colour map.
+		const emuPerPx = PptxHandlerRuntimeBase.EMU_PER_PX;
+		const px = (emu: number | undefined) =>
+			emu !== undefined && Math.trunc(emu) >= 0 ? Math.trunc(emu) / emuPerPx : undefined;
+		const degrees = (angle: number | undefined) =>
+			angle === undefined ? undefined : Math.trunc(angle) / 60000;
+
 		// Outer shadow
-		const outerShdw = runEffectList['a:outerShdw'] as XmlObject | undefined;
-		if (outerShdw) {
-			const shdwColor = this.parseColor(outerShdw);
+		const outer = findObjectEffect(runEffectList, 'outerShadow');
+		if (outer) {
+			const shdwColor = this.parseColor(outer.node);
 			if (shdwColor) {
 				style.textShadowColor = shdwColor;
 			}
 			// No `a:alpha` is an opaque shadow (ECMA-376), not the renderer's 0.5.
-			style.textShadowOpacity = this.extractColorOpacity(outerShdw) ?? 1;
-			const blurRaw = Number.parseInt(String(outerShdw['@_blurRad'] || ''), 10);
-			if (Number.isFinite(blurRaw) && blurRaw >= 0) {
-				style.textShadowBlur = blurRaw / PptxHandlerRuntimeBase.EMU_PER_PX;
+			style.textShadowOpacity = this.extractColorOpacity(outer.node) ?? 1;
+			const blur = px(outer.effect.blurRadiusEmu);
+			if (blur !== undefined) {
+				style.textShadowBlur = blur;
 			}
-			const distRaw = Number.parseInt(String(outerShdw['@_dist'] || ''), 10);
-			const dirRaw = Number.parseInt(String(outerShdw['@_dir'] || ''), 10);
-			if (Number.isFinite(distRaw) && distRaw >= 0) {
-				const dist = distRaw / PptxHandlerRuntimeBase.EMU_PER_PX;
-				const dirRad = ((Number.isFinite(dirRaw) ? dirRaw / 60000 : 0) * Math.PI) / 180;
-				style.textShadowOffsetX = Math.round(Math.cos(dirRad) * dist * 100) / 100;
-				style.textShadowOffsetY = Math.round(Math.sin(dirRad) * dist * 100) / 100;
+			const offset = shadowOffset(
+				px(outer.effect.distanceEmu),
+				degrees(outer.effect.directionAngle) ?? 0,
+			);
+			if (offset.x !== undefined && offset.y !== undefined) {
+				style.textShadowOffsetX = offset.x;
+				style.textShadowOffsetY = offset.y;
 			}
 		}
 		// Glow
-		const glowNode = runEffectList['a:glow'] as XmlObject | undefined;
-		if (glowNode) {
-			const glowColor = this.parseColor(glowNode);
+		const glow = findObjectEffect(runEffectList, 'glow');
+		if (glow) {
+			const glowColor = this.parseColor(glow.node);
 			if (glowColor) {
 				style.textGlowColor = glowColor;
 			}
 			// Preserve the original colour choice (e.g. `a:schemeClr`) so the
 			// writer can re-emit it instead of always resolving to a flat
 			// `a:srgbClr`, which would sever the glow from theme/Recolor changes.
-			const glowColorXml = extractColorChoiceXml(glowNode);
+			const glowColorXml = extractColorChoiceXml(glow.node);
 			if (glowColorXml) {
 				style.textGlowColorXml = glowColorXml;
 			}
-			const glowColorRef = themeColorRefFromColorChoice(glowNode);
+			const glowColorRef = themeColorRefFromColorChoice(glow.node);
 			if (glowColorRef) {
 				style.textGlowColorRef = glowColorRef;
 			}
-			const glowOpacity = this.extractColorOpacity(glowNode);
+			const glowOpacity = this.extractColorOpacity(glow.node);
 			if (glowOpacity !== undefined) {
 				style.textGlowOpacity = glowOpacity;
 			}
-			const radRaw = Number.parseInt(String(glowNode['@_rad'] || ''), 10);
-			if (Number.isFinite(radRaw) && radRaw >= 0) {
-				style.textGlowRadius = radRaw / PptxHandlerRuntimeBase.EMU_PER_PX;
+			const radius = px(glow.effect.radiusEmu);
+			if (radius !== undefined) {
+				style.textGlowRadius = radius;
 			}
 		}
 		// Reflection. Reuses the same `extractReflectionAttributes` helper the
-		// shape-level parser (`PptxShapeEffectStyleExtractor`) already relies on,
-		// so a text run's `a:rPr/a:effectLst/a:reflection` honours the full
-		// attribute set (`@dist`/`@stA`/`@endA`/`@blurRad` plus `@sx`/`@sy`,
-		// `@kx`/`@ky`, `@rot`, `@fadeDir` and `@algn`) instead of a hand-rolled
-		// subset that silently dropped the latter five.
-		const reflNode = runEffectList['a:reflection'] as XmlObject | undefined;
-		if (reflNode) {
+		// shape-level parser (`PptxShapeEffectStyleExtractor`) relies on, over
+		// the shared effect reader, so a text run's `a:reflection` honours the
+		// full attribute set.
+		const reflection = findObjectEffect(runEffectList, 'reflection');
+		if (reflection) {
 			style.textReflection = true;
-			const attrs = extractReflectionAttributes(reflNode, PptxHandlerRuntimeBase.EMU_PER_PX);
-			if (attrs.reflectionBlurRadius !== undefined) {
-				style.textReflectionBlur = attrs.reflectionBlurRadius;
-			}
-			if (attrs.reflectionStartOpacity !== undefined) {
-				style.textReflectionStartOpacity = attrs.reflectionStartOpacity;
-			}
-			if (attrs.reflectionEndOpacity !== undefined) {
-				style.textReflectionEndOpacity = attrs.reflectionEndOpacity;
-			}
-			if (attrs.reflectionDistance !== undefined) {
-				style.textReflectionOffset = attrs.reflectionDistance;
-			}
-			if (attrs.reflectionEndPosition !== undefined) {
-				style.textReflectionEndPosition = attrs.reflectionEndPosition;
-			}
-			if (attrs.reflectionDirection !== undefined) {
-				style.textReflectionDirection = attrs.reflectionDirection;
-			}
-			if (attrs.reflectionFadeDirection !== undefined) {
-				style.textReflectionFadeDirection = attrs.reflectionFadeDirection;
-			}
-			if (attrs.reflectionScaleX !== undefined) {
-				style.textReflectionScaleX = attrs.reflectionScaleX;
-			}
-			if (attrs.reflectionScaleY !== undefined) {
-				style.textReflectionScaleY = attrs.reflectionScaleY;
-			}
-			if (attrs.reflectionSkewX !== undefined) {
-				style.textReflectionSkewX = attrs.reflectionSkewX;
-			}
-			if (attrs.reflectionSkewY !== undefined) {
-				style.textReflectionSkewY = attrs.reflectionSkewY;
-			}
-			if (attrs.reflectionRotation !== undefined) {
-				style.textReflectionRotation = attrs.reflectionRotation;
-			}
-			if (attrs.reflectionAlignment !== undefined) {
-				style.textReflectionAlignment = attrs.reflectionAlignment;
+			const attrs = extractReflectionAttributes(reflection.node, emuPerPx);
+			const fields = [
+				['reflectionBlurRadius', 'textReflectionBlur'],
+				['reflectionStartOpacity', 'textReflectionStartOpacity'],
+				['reflectionEndOpacity', 'textReflectionEndOpacity'],
+				['reflectionDistance', 'textReflectionOffset'],
+				['reflectionEndPosition', 'textReflectionEndPosition'],
+				['reflectionDirection', 'textReflectionDirection'],
+				['reflectionFadeDirection', 'textReflectionFadeDirection'],
+				['reflectionScaleX', 'textReflectionScaleX'],
+				['reflectionScaleY', 'textReflectionScaleY'],
+				['reflectionSkewX', 'textReflectionSkewX'],
+				['reflectionSkewY', 'textReflectionSkewY'],
+				['reflectionRotation', 'textReflectionRotation'],
+				['reflectionAlignment', 'textReflectionAlignment'],
+			] as const;
+			for (const [from, to] of fields) {
+				if (attrs[from] !== undefined) {
+					(style as Record<string, unknown>)[to] = attrs[from];
+				}
 			}
 		}
 
 		// Inner shadow
-		const innerShdw = runEffectList['a:innerShdw'] as XmlObject | undefined;
-		if (innerShdw) {
-			const color = this.parseColor(innerShdw);
+		const inner = findObjectEffect(runEffectList, 'innerShadow');
+		if (inner) {
+			const color = this.parseColor(inner.node);
 			if (color) {
 				style.textInnerShadowColor = color;
 			}
@@ -239,76 +229,73 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			// writer can re-emit it instead of always resolving to a flat
 			// `a:srgbClr`, which would silently swap an authored preset colour
 			// for its resolved hex on every round trip.
-			const innerShadowColorXml = extractColorChoiceXml(innerShdw);
+			const innerShadowColorXml = extractColorChoiceXml(inner.node);
 			if (innerShadowColorXml) {
 				style.textInnerShadowColorXml = innerShadowColorXml;
 			}
-			const innerShadowColorRef = themeColorRefFromColorChoice(innerShdw);
+			const innerShadowColorRef = themeColorRefFromColorChoice(inner.node);
 			if (innerShadowColorRef) {
 				style.textInnerShadowColorRef = innerShadowColorRef;
 			}
-			const opacity = this.extractColorOpacity(innerShdw);
+			const opacity = this.extractColorOpacity(inner.node);
 			if (opacity !== undefined) {
 				style.textInnerShadowOpacity = opacity;
 			}
-			const isBlurRaw = Number.parseInt(String(innerShdw['@_blurRad'] || ''), 10);
-			if (Number.isFinite(isBlurRaw) && isBlurRaw >= 0) {
-				style.textInnerShadowBlur = isBlurRaw / PptxHandlerRuntimeBase.EMU_PER_PX;
+			const blur = px(inner.effect.blurRadiusEmu);
+			if (blur !== undefined) {
+				style.textInnerShadowBlur = blur;
 			}
-			const isDistRaw = Number.parseInt(String(innerShdw['@_dist'] || ''), 10);
-			const isDirRaw = Number.parseInt(String(innerShdw['@_dir'] || ''), 10);
-			if (Number.isFinite(isDistRaw) && isDistRaw >= 0) {
-				const isDist = isDistRaw / PptxHandlerRuntimeBase.EMU_PER_PX;
-				const isDirRad = ((Number.isFinite(isDirRaw) ? isDirRaw / 60000 : 0) * Math.PI) / 180;
-				style.textInnerShadowOffsetX = Math.round(Math.cos(isDirRad) * isDist * 100) / 100;
-				style.textInnerShadowOffsetY = Math.round(Math.sin(isDirRad) * isDist * 100) / 100;
+			const offset = shadowOffset(
+				px(inner.effect.distanceEmu),
+				degrees(inner.effect.directionAngle) ?? 0,
+			);
+			if (offset.x !== undefined && offset.y !== undefined) {
+				style.textInnerShadowOffsetX = offset.x;
+				style.textInnerShadowOffsetY = offset.y;
 			}
 		}
 
 		// Preset shadow
-		const prstShdw = runEffectList['a:prstShdw'] as XmlObject | undefined;
-		if (prstShdw) {
-			const prst = String(prstShdw['@_prst'] || '').trim();
+		const preset = findObjectEffect(runEffectList, 'presetShadow');
+		if (preset) {
+			const prst = preset.effect.preset?.trim();
 			if (prst) {
 				style.textPresetShadowName = prst;
 			}
-			const color = this.parseColor(prstShdw);
+			const color = this.parseColor(preset.node);
 			if (color) {
 				style.textPresetShadowColor = color;
 			}
-			const opacity = this.extractColorOpacity(prstShdw);
+			const opacity = this.extractColorOpacity(preset.node);
 			if (opacity !== undefined) {
 				style.textPresetShadowOpacity = opacity;
 			}
-			const psDist = Number.parseInt(String(prstShdw['@_dist'] || ''), 10);
-			if (Number.isFinite(psDist) && psDist >= 0) {
-				style.textPresetShadowDistance = psDist / PptxHandlerRuntimeBase.EMU_PER_PX;
+			const distance = px(preset.effect.distanceEmu);
+			if (distance !== undefined) {
+				style.textPresetShadowDistance = distance;
 			}
-			const psDir = Number.parseInt(String(prstShdw['@_dir'] || ''), 10);
-			if (Number.isFinite(psDir)) {
-				style.textPresetShadowDirection = psDir / 60000;
+			const direction = degrees(preset.effect.directionAngle);
+			if (direction !== undefined) {
+				style.textPresetShadowDirection = direction;
 			}
 		}
 
 		// Blur
-		const blurNode = runEffectList['a:blur'] as XmlObject | undefined;
-		if (blurNode) {
-			const radRaw = Number.parseInt(String(blurNode['@_rad'] || ''), 10);
-			if (Number.isFinite(radRaw) && radRaw >= 0) {
-				style.textBlurRadius = radRaw / PptxHandlerRuntimeBase.EMU_PER_PX;
-			}
+		const blur = px(findObjectEffect(runEffectList, 'blur')?.effect.radiusEmu);
+		if (blur !== undefined) {
+			style.textBlurRadius = blur;
 		}
 
 		// Soft edge (feathers the glyph's own alpha silhouette; see the
 		// `textSoftEdgeRadius` doc comment for why this never rendered before).
-		const softEdgeNode = runEffectList['a:softEdge'] as XmlObject | undefined;
-		if (softEdgeNode) {
-			const radRaw = Number.parseInt(String(softEdgeNode['@_rad'] || ''), 10);
-			if (Number.isFinite(radRaw) && radRaw >= 0) {
-				style.textSoftEdgeRadius = radRaw / PptxHandlerRuntimeBase.EMU_PER_PX;
-			}
+		const softEdge = px(findObjectEffect(runEffectList, 'softEdge')?.effect.radiusEmu);
+		if (softEdge !== undefined) {
+			style.textSoftEdgeRadius = softEdge;
 		}
 
+		// The members below are not CT_EffectList children (they belong to
+		// blip effects), but some producers put them on a run's `a:effectLst`
+		// and PowerPoint's reader has always kept them.
 		// Alpha modification fixed
 		const alphaModFix = runEffectList['a:alphaModFix'] as XmlObject | undefined;
 		if (alphaModFix) {
