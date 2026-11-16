@@ -133,29 +133,23 @@ export function chartFilteredSeriesIndexes(space: ChartSpace): number[] {
 /** Hides the series whose `c:idx` is `index`: it moves into its group's filtered series. */
 export function filterChartSeries(space: ChartSpace, index: number): ChartSpace {
 	return editChartSpace(space, (draft) => {
-		const entry = chartSeriesEntries(draft).find(({ series }) => series.index === index);
+		const plotted = chartSeriesEntries(draft);
+		const entry = plotted.find(({ series }) => series.index === index);
 		if (!entry) throw new RangeError(`No chart series with idx ${index}`);
 		const { group, position } = entry;
-		// PowerPoint's Chart Filters keep one plotted series in each group.
-		if (group.series.length < 2)
-			throw new RangeError('Hiding the last series of a chart group is not supported');
+		if (plotted.length < 2) throw new RangeError('The chart must keep its last series visible');
+		// The stock chart schema requires plotted series in the group.
+		if (group.kind === 'stock' && group.series.length < 2)
+			throw new RangeError('The stock group must keep its last series visible');
 		const extLst = extensionList(group);
 		const doc = extLst.ownerDocument;
-		let ext = elements(extLst).find(
-			(item) => item.localName === 'ext' && item.getAttribute('uri') === FILTERED_URI,
-		);
-		if (!ext) {
-			ext = doc.createElementNS(NS.c, 'c:ext');
-			ext.setAttribute('uri', FILTERED_URI);
-			ext.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:c15', C15);
-			extLst.appendChild(ext);
-		}
-		const local = WRAPPER[group.kind];
-		let wrapper = elements(ext).find((item) => item.localName === local);
-		if (!wrapper) {
-			wrapper = doc.createElementNS(C15, `c15:${local}`);
-			ext.appendChild(wrapper);
-		}
+		// Each filtered series extension contains one wrapper with one c15:ser.
+		const ext = doc.createElementNS(NS.c, 'c:ext');
+		ext.setAttribute('uri', FILTERED_URI);
+		ext.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:c15', C15);
+		const wrapper = doc.createElementNS(C15, `c15:${WRAPPER[group.kind]}`);
+		ext.appendChild(wrapper);
+		extLst.appendChild(ext);
 		const declarations = [...CHART_ROOT_BINDINGS]
 			.map(([prefix, uri]) => ` xmlns:${prefix}="${uri}"`)
 			.join('');

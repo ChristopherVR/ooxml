@@ -187,18 +187,19 @@ function parseOneFilteredSeries(
 	return result;
 }
 
-/** Find the chart15 filter `c:ext` (by uri) directly under `container/c:extLst`. */
+function filterExtensions(container: XmlObject | undefined, xmlLookup: XmlLookupLike): XmlObject[] {
+	const extLst = xmlLookup.getChildByLocalName(container, 'extLst');
+	return xmlLookup
+		.getChildrenArrayByLocalName(extLst, 'ext')
+		.filter((ext) => ext['@_uri'] === CHART_FILTERED_SERIES_EXT_URI);
+}
+
+/** Find the first chart15 filter extension directly under `container/c:extLst`. */
 export function findFilterExt(
 	container: XmlObject | undefined,
 	xmlLookup: XmlLookupLike,
 ): XmlObject | undefined {
-	const extLst = xmlLookup.getChildByLocalName(container, 'extLst');
-	if (!extLst) {
-		return undefined;
-	}
-	return xmlLookup
-		.getChildrenArrayByLocalName(extLst, 'ext')
-		.find((ext) => ext['@_uri'] === CHART_FILTERED_SERIES_EXT_URI);
+	return filterExtensions(container, xmlLookup)[0];
 }
 
 /**
@@ -213,25 +214,17 @@ export function parseFilteredSeries(
 	container: XmlObject | undefined,
 	xmlLookup: XmlLookupLike,
 ): PptxChartFilteredSeries[] | undefined {
-	const ext = findFilterExt(container, xmlLookup);
-	if (!ext) {
-		return undefined;
-	}
-	const wrapperKey = Object.keys(ext).find((key) => /^filtered.*series$/iu.test(localNameOf(key)));
-	if (!wrapperKey) {
-		return undefined;
-	}
-	const wrapperValue = ext[wrapperKey];
-	const wrapperNodes = Array.isArray(wrapperValue)
-		? (wrapperValue as XmlObject[])
-		: [wrapperValue as XmlObject];
-
 	const results: PptxChartFilteredSeries[] = [];
-	for (const wrapperNode of wrapperNodes) {
-		for (const serNode of xmlLookup.getChildrenArrayByLocalName(wrapperNode, 'ser')) {
-			const parsed = parseOneFilteredSeries(serNode, xmlLookup);
-			if (parsed) {
-				results.push(parsed);
+	for (const ext of filterExtensions(container, xmlLookup)) {
+		const wrapperKey = Object.keys(ext).find((key) =>
+			/^filtered.*series$/iu.test(localNameOf(key)),
+		);
+		if (!wrapperKey) continue;
+		const wrapperNodes = xmlLookup.getChildrenArrayByLocalName(ext, localNameOf(wrapperKey));
+		for (const wrapperNode of wrapperNodes) {
+			for (const serNode of xmlLookup.getChildrenArrayByLocalName(wrapperNode, 'ser')) {
+				const parsed = parseOneFilteredSeries(serNode, xmlLookup);
+				if (parsed) results.push(parsed);
 			}
 		}
 	}

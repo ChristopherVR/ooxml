@@ -68,8 +68,9 @@ export function planNeutralFilteredSeries(
 	if (JSON.stringify(keptOrder) !== JSON.stringify(beforeOrder)) return before;
 	edits.push((space) => {
 		let next = space;
-		for (const idx of hidden) next = filterChartSeries(next, idx);
+		// Restore first when the edit swaps the only plotted series with a filtered one.
 		for (const idx of restored) next = restoreChartFilteredSeries(next, idx);
+		for (const idx of hidden) next = filterChartSeries(next, idx);
 		for (const idx of removed) next = removeChartFilteredSeries(next, idx);
 		return next;
 	});

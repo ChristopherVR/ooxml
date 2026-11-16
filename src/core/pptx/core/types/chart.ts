@@ -882,6 +882,10 @@ export interface PptxChartFilteredSeries {
 	values?: number[];
 	/** This hidden series' own identity GUID (`c16:uniqueId`), when present. */
 	uniqueId?: string;
+	/** The source chart group's type in a combination chart. */
+	seriesChartType?: PptxChartType;
+	/** The source group's value axis. */
+	axisId?: number;
 	/**
 	 * A full snapshot of the series as it looked the moment it was hidden
 	 * (`render/chart-ext-editor-actions.ts`'s `hideChartSeries`), so
