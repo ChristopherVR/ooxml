@@ -18,7 +18,7 @@
  *
  * @module services/animation-behavior-captured
  */
-import captures from './animation-behavior-captures.json';
+import captures from './animation-behavior-captures.json' with { type: 'json' };
 
 /** A typed OOXML value (`p:strVal` / `p:fltVal` / ... / `p:clrVal`). */
 export interface CapturedValue {
