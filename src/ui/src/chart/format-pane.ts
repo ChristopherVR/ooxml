@@ -82,6 +82,7 @@ export class OfficeUiChartFormatPane extends OfficeElement {
 	/** Properties a host may set before the element is defined; replayed through their setters. */
 	static replayed: readonly string[] = [
 		'source',
+		'pictures',
 		'chartSpace',
 		'theme',
 		'target',
@@ -94,6 +95,7 @@ export class OfficeUiChartFormatPane extends OfficeElement {
 	private sourceValue: ChartFormatSource | undefined;
 	private spaceValue: ChartSpace | undefined;
 	private themeValue: DrawingColorTheme | undefined;
+	private picturesValue = false;
 	private targetValue = 'chartArea';
 	private translator: ChartFormatTranslate = echo;
 	private localeValue = 'en';
@@ -143,6 +145,17 @@ export class OfficeUiChartFormatPane extends OfficeElement {
 		this.sourceValue = value && chartSpaceFormatSource(value, this.themeOptions());
 		this.requestUpdate('chartSpace');
 	}
+	/**
+	 * Offer Picture or texture fill for a `chartSpace`: set by a host that keeps the chart's
+	 * `pictureSources` and stores pending pictures when it saves (`embedChartSpacePictures`).
+	 */
+	get pictures(): boolean {
+		return this.picturesValue;
+	}
+	set pictures(value: boolean) {
+		this.picturesValue = Boolean(value);
+		if (this.spaceValue) this.chartSpace = this.spaceValue;
+	}
 	/** Resolves scheme colours of a `chartSpace`. */
 	get theme(): DrawingColorTheme | undefined {
 		return this.themeValue;
@@ -182,7 +195,10 @@ export class OfficeUiChartFormatPane extends OfficeElement {
 	}
 
 	private themeOptions() {
-		return this.themeValue ? { theme: this.themeValue } : {};
+		return {
+			...(this.themeValue ? { theme: this.themeValue } : {}),
+			...(this.picturesValue ? { pictures: true } : {}),
+		};
 	}
 
 	private statics(): Statics {

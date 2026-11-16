@@ -3,8 +3,8 @@
  * intent (`ChartEditIntent` of `ooxml-core/chart`), the request every product
  * understands: `applyChartEditIntent` runs it over a `ChartSpace`, other
  * products map it onto their own edit path. Returns `null` for a value that is
- * not usable (an empty or out-of-range number), a target does not support it,
- * or the field requires host-owned media allocation. Advanced properties use
+ * not usable (an empty or out-of-range number) or a target does not support it.
+ * A picture fill names its picture as a `data:` URL; the host stores it on save. Advanced properties use
  * the same strict core operations as the product save adapters.
  *
  * @module chart/format-pane-intent
@@ -20,6 +20,7 @@ import type { DrawingColor, DrawingFill } from 'ooxml-core/drawingml';
 import type { ChartFormatFieldValue } from './format-pane-types';
 import type { ChartFormatElementView } from './format-pane-view';
 import { chartAdvancedFieldIntent } from './format-pane-advanced-intent';
+import { DEFAULT_CHART_TEXTURE } from './format-pane-fill-kinds';
 import { chartDrawingColorFromHex, chartDrawingGradientFrom } from 'ooxml-core/chart';
 
 const number = (value: ChartFormatFieldValue): number | null => {
@@ -111,8 +112,29 @@ function paintIntent(
 				);
 				return fill && { op: 'fill', target, fill };
 			}
+			// Office applies its default texture, tiled, until a picture is inserted.
+			if (text === 'picture')
+				return !view.support.picture || view.fill.kind === 'picture'
+					? null
+					: { op: 'picture', target, edit: { src: DEFAULT_CHART_TEXTURE, tile: true } };
 			return null;
 		}
+		case 'fill.picture':
+			return view.support.picture && text.startsWith('data:image/')
+				? {
+						op: 'picture',
+						target,
+						edit: { src: text, tile: Boolean(view.fill.picture?.tile) },
+					}
+				: null;
+		case 'fill.pictureTile':
+			return view.support.picture && view.fill.kind === 'picture'
+				? { op: 'picture', target, edit: { tile: Boolean(value) } }
+				: null;
+		case 'fill.pictureTransparency':
+			return !view.support.picture || view.fill.kind !== 'picture' || n === null || n < 0 || n > 100
+				? null
+				: { op: 'picture', target, edit: { transparency: n } };
 		case 'fill.color': {
 			const color = drawingColorFromHex(text, view.fill.transparency);
 			return color && { op: 'fill', target, fill: { kind: 'solid', color } };

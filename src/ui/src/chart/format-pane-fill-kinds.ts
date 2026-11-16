@@ -80,6 +80,13 @@ export function patternFields(
 	];
 }
 
+/**
+ * Office applies a texture when Picture or texture fill is chosen with no picture yet; this small
+ * tiled parchment stands in for its default in every product.
+ */
+export const DEFAULT_CHART_TEXTURE =
+	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAABoUlEQVR42j3S504CQRQF4Hn/19BojCUxMYiiomIBFKmCIh1sgL389sMxJpPZnXPvKXd2QyW70qlt37UOn0f5m/Jmq5L8HJcm/dN2dev25mA6yObSc+PeSa++E6vhvp2xvPUbu3atjmpozdIGGpyWhQwPHhYHBzU7zvB6l+3wOo3sJRpqgwQHYi+3Z93LFJSqAj0ZRIJoeL07Z/7n8DTMqT12j9vVzZjn/eFi1Nx/6BzpsKMRZt5vpIgG7F59Ow4QTY2I/z2toL3dF3DKp8t0NTAMylRRo7DEuuPccub35+GcaX08FqkEA+izWHGnhKAsAO14y/bB1R5cTyDjTI+7s0itSgIBrhUHAneN5IGBarOUiMMVMoscBCVGwmXIgyAnOXPW8msB9WtSbhTW+ZgEEyK0DCS18jGSLxPB0Kklncmz06Gbkr7I91I8XlICCsJ5NrTEatjcoZpI0KvmViVUjbdnEllm1wr1ackIKrpUo+aemgHscBeKz9wK8REHRTNWHFckO3L8ZZjQnf0av//P7B7PDxf+/2o1IA4HNEeiGij+AIB5gfnxhkAIAAAAAElFTkSuQmCC';
+
 /** Picture source, transparency and tiling of a picture fill. */
 export function pictureFields(picture: ChartFormatFillView['picture']): ChartFormatField[] {
 	const fields: ChartFormatField[] = [

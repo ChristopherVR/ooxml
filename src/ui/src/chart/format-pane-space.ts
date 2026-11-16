@@ -3,10 +3,11 @@
  * neutral view every product can give the pane once its chart model is a
  * `ChartSpace`. It offers shared fill, outline, effects, text, 3-D, series
  * analysis, axis, legend and label edits. Each series' capabilities decide
- * which analysis and secondary-axis controls appear. Picture fills stay off:
- * the shared painter does not draw them, so a host cannot preview what it would
- * save (`chart/picture-parts` allocates their relationships for a host that
- * does). Colours resolve through `theme` when given.
+ * which analysis and secondary-axis controls appear. Picture fills are offered
+ * when the host says it saves them (`pictures`): the shared painter draws the
+ * pictures in `ChartSpace.pictureSources`, and the host stores a pending
+ * picture on save (`chart/picture-parts`: `embedChartSpacePictures`). Colours
+ * resolve through `theme` when given.
  *
  * @module chart/format-pane-space
  */
@@ -60,13 +61,22 @@ export interface ChartSpaceFormatSourceOptions {
 	 * a range is taken only where the chart already caches its cells.
 	 */
 	resolveRange?: ChartRangeNumbers;
+	/**
+	 * Offer Picture or texture fill: the host keeps `ChartSpace.pictureSources` for the pictures it
+	 * loaded and stores pending pictures when it saves (`embedChartSpacePictures`).
+	 */
+	pictures?: boolean;
 }
 
 type Resolve = (color: DrawingColor) => { hex: string; alpha: number } | undefined;
 
 const transparency = (alpha: number) => Math.round((1 - alpha) * 100);
 
-function fillView(fill: DrawingFill | undefined, resolve: Resolve): ChartFormatFillView {
+function fillView(
+	fill: DrawingFill | undefined,
+	resolve: Resolve,
+	sources?: Readonly<Record<string, string>>,
+): ChartFormatFillView {
 	switch (fill?.kind) {
 		case 'none':
 			return { kind: 'none' };
@@ -87,8 +97,19 @@ function fillView(fill: DrawingFill | undefined, resolve: Resolve): ChartFormatF
 					background: fill.background ? (resolve(fill.background)?.hex ?? '#FFFFFF') : '#FFFFFF',
 				},
 			};
-		case 'picture':
-			return { kind: 'picture' };
+		case 'picture': {
+			const alpha = fill.effects?.find((effect) => effect.kind === 'alphaModFix');
+			const src = fill.relId ? sources?.[fill.relId] : undefined;
+			return {
+				kind: 'picture',
+				picture: {
+					...(fill.relId ? { relId: fill.relId } : {}),
+					...(src ? { src } : {}),
+					tile: Boolean(fill.layout?.tile),
+					transparency: alpha?.kind === 'alphaModFix' ? Math.round((1 - alpha.amount) * 100) : 0,
+				},
+			};
+		}
 		default:
 			return { kind: 'automatic' };
 	}
@@ -234,7 +255,7 @@ export function chartSpaceFormatSource(
 						space,
 						target,
 						resolve,
-						(fill) => fillView(fill, resolve),
+						(fill) => fillView(fill, resolve, space.pictureSources),
 						(line) => lineView(line, resolve),
 						!lineTarget,
 					)
@@ -243,7 +264,7 @@ export function chartSpaceFormatSource(
 				fill: !lineTarget,
 				gradient: true,
 				pattern: advanced && !lineTarget,
-				picture: false,
+				picture: advanced && !lineTarget && options.pictures === true,
 				threeD: advanced && !lineTarget,
 				text: advanced && chartTargetHasText(target),
 				lineDetails: advanced,
@@ -253,7 +274,7 @@ export function chartSpaceFormatSource(
 					advanced &&
 					chartSeriesSecondaryAxisSupported(space, target.seriesIndex),
 			},
-			fill: fillView(shape?.fill, resolve),
+			fill: fillView(shape?.fill, resolve, space.pictureSources),
 			line: lineView(shape?.line, resolve),
 		};
 	};

@@ -152,4 +152,34 @@ describe('chartFormatFieldIntent', () => {
 		expect(chartFormatFieldIntent(view, series, 'shadow.blur', -1)).toBeNull();
 		expect(chartFormatFieldIntent(view, series, 'series.axis', 'secondary')).toBeNull();
 	});
+
+	it('offers picture fills to a host that saves them and edits them through picture intents', () => {
+		const PNG =
+			'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAADCAIAAAA2iEnWAAAAEElEQVR4nGP4z8AARAwoFABE0AX7pM/egAAAAABJRU5ErkJggg==';
+		const target = { kind: 'plotArea' } as const;
+		expect(chartSpaceFormatSource(columnSpace()).element(target).support.picture).toBe(false);
+		let space = columnSpace();
+		const view = () => chartSpaceFormatSource(space, { pictures: true }).element(target);
+		const run = (field: string, value: ChartFormatFieldValue) => {
+			const intent = chartFormatFieldIntent(view(), target, field, value);
+			expect(intent?.op).toBe('picture');
+			space = applyChartEditIntent(space, intent!);
+		};
+		expect(view().support.picture).toBe(true);
+		// Choosing the fill applies the default texture, tiled, as Office does.
+		run('fill.kind', 'picture');
+		expect(view().fill).toMatchObject({ kind: 'picture', picture: { tile: true } });
+		expect(chartFormatFieldIntent(view(), target, 'fill.kind', 'picture')).toBeNull();
+		run('fill.picture', PNG);
+		run('fill.pictureTile', false);
+		run('fill.pictureTransparency', 35);
+		expect(view().fill).toMatchObject({
+			kind: 'picture',
+			picture: { src: PNG, tile: false, transparency: 35 },
+		});
+		expect(chartFormatFieldIntent(view(), target, 'fill.pictureTransparency', 140)).toBeNull();
+		expect(
+			chartFormatFieldIntent(view(), target, 'fill.picture', 'https://example.test/a.png'),
+		).toBeNull();
+	});
 });
