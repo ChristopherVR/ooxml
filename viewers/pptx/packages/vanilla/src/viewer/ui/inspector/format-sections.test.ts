@@ -9,6 +9,7 @@ import type { PptxElement } from 'pptx-viewer-core';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { buildInspectorState } from '../../editor/inspector-state-builder';
+import { createTestCommentsPanel } from '../comments-panel.test-support';
 import { createInspector } from './inspector';
 import type { InspectorDeckState, InspectorHandlers } from './types';
 
@@ -31,10 +32,14 @@ beforeAll(() => registerPptxWebControls());
 afterEach(() => document.body.replaceChildren());
 
 function mount(pane: FormatPaneController) {
-	const handlers = new Proxy({ formatPane: pane } as unknown as InspectorHandlers, {
-		get: (target, key, receiver) =>
-			Reflect.get(target, key, receiver) ?? (key === 'then' ? undefined : vi.fn()),
-	});
+	const comments = createTestCommentsPanel([], true);
+	const handlers = new Proxy(
+		{ formatPane: pane, commentsPanel: () => comments.panel } as unknown as InspectorHandlers,
+		{
+			get: (target, key, receiver) =>
+				Reflect.get(target, key, receiver) ?? (key === 'then' ? undefined : vi.fn()),
+		},
+	);
 	const inspector = createInspector(document, (key) => key, handlers);
 	document.body.appendChild(inspector.el);
 	const select = (primary: PptxElement, selection: PptxElement[] = [primary]): void => {

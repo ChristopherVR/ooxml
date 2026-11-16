@@ -74,7 +74,11 @@ describe('svelte thumbnail context menu', () => {
 	it('shows the rail markers, counts and routes a command to the rail menu', () => {
 		const slides = [0, 1, 2].map((i) => ({ id: `s${i}`, elements: [] })) as unknown as PptxSlide[];
 		const menu = new ThumbnailRailMenu();
-		menu.contextMenu = { x: 10, y: 20, index: 1, selectedIndexes: [0, 1] };
+		// Select the first two slides, then right-click the second (inside the selection).
+		const ids = slides.map((slide) => slide.id);
+		menu.onClick({ ctrlKey: false, metaKey: false, shiftKey: false }, 's0', ids);
+		menu.onClick({ ctrlKey: false, metaKey: false, shiftKey: true }, 's1', ids);
+		menu.openContextMenu(10, 20, 1, ids);
 		const onduplicate = vi.fn();
 		const target = render(ThumbnailContextMenu, {
 			menu,

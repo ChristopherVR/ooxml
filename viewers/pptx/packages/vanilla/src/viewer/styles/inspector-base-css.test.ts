@@ -105,6 +105,12 @@ describe('inspector baseline for bare form markup', () => {
 			{} as InspectorHandlers,
 		);
 		inspector(host, accessibility.el);
+		// The shared Alt Text fields draw once a selected element is known.
+		accessibility.update({
+			hasSelection: true,
+			showAccessibilitySection: true,
+			selectedElement: { id: 'shape-1', type: 'shape', x: 0, y: 0, width: 10, height: 10 },
+		} as unknown as Parameters<typeof accessibility.update>[0]);
 		const textarea = accessibility.el.querySelector('textarea')!;
 
 		expect(getComputedStyle(fieldset).paddingTop).toBe('0px');

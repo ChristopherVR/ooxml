@@ -243,9 +243,11 @@ describe('inspectorPanel', () => {
 		const imageEditor = makeEditor([image]);
 		imageEditor.select(image.id);
 		const { target } = mountInspector(imageEditor);
-		expect(target.querySelector('.pptx-svelte-alt-text')).not.toBeNull();
+		expect(target.querySelector('[data-pptx-inspector-section="alt-text"]')).not.toBeNull();
 		// A picture has no title field: only the alt-text textarea, no title input.
-		expect(target.querySelector('.pptx-svelte-alt-text input[type="text"]')).toBeNull();
+		expect(
+			target.querySelector('[data-pptx-inspector-section="alt-text"] input[type="text"]'),
+		).toBeNull();
 		cleanup?.();
 
 		// A plain shape now models both altText and title (PptxNonVisualDescription),
@@ -254,8 +256,12 @@ describe('inspectorPanel', () => {
 		const shapeEditor = makeEditor([shape]);
 		shapeEditor.select(shape.id);
 		const { target: shapeTarget } = mountInspector(shapeEditor);
-		expect(shapeTarget.querySelector('.pptx-svelte-alt-text textarea')).not.toBeNull();
-		expect(shapeTarget.querySelector('.pptx-svelte-alt-text input[type="text"]')).not.toBeNull();
+		expect(
+			shapeTarget.querySelector('[data-pptx-inspector-section="alt-text"] textarea'),
+		).not.toBeNull();
+		expect(
+			shapeTarget.querySelector('[data-pptx-inspector-section="alt-text"] input[type="text"]'),
+		).not.toBeNull();
 	});
 
 	it.each([
@@ -272,8 +278,12 @@ describe('inspectorPanel', () => {
 			const { target } = mountInspector(editor);
 
 			expect(formatSections(target)).toContain('altText');
-			expect(target.querySelector('.pptx-svelte-alt-text textarea')).not.toBeNull();
-			expect(target.querySelector('.pptx-svelte-alt-text input[type="text"]')).not.toBeNull();
+			expect(
+				target.querySelector('[data-pptx-inspector-section="alt-text"] textarea'),
+			).not.toBeNull();
+			expect(
+				target.querySelector('[data-pptx-inspector-section="alt-text"] input[type="text"]'),
+			).not.toBeNull();
 		},
 	);
 
