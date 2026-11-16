@@ -271,10 +271,10 @@ describe('setElementBullets / toggleElementBullets', () => {
 	});
 
 	it('preserves an authored glyph and formatting across explicit set and live off/on', () => {
-		const info = { char: '»', fontFamily: 'Wingdings', sizePercent: 80, color: '#AABBCC' };
-		const el = textElement([seg('» ', { bulletInfo: info }), seg('Item')]);
+		const info = { char: '§', fontFamily: 'Wingdings', sizePercent: 80, color: '#AABBCC' };
+		const el = textElement([seg('§ ', { bulletInfo: info }), seg('Item')]);
 		const on = { ...el, ...setElementBullets(el, 'bullet') } as PptxElement;
-		expect(buildParagraphs(on)[0].bulletMarker).toBe('»');
+		expect(buildParagraphs(on)[0].bulletMarker).toBe('▪'); // Wingdings is missing here; the model keeps '§'
 		const off = { ...on, ...setElementBullets(on, 'none') } as PptxElement;
 		const back = { ...off, ...setElementBullets(off, 'bullet') } as PptxElement;
 		expect((back as { textSegments: TextSegment[] }).textSegments[0].bulletInfo).toStrictEqual(

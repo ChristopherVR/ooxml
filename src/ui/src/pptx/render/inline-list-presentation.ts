@@ -2,6 +2,7 @@ import type { TextSegment } from 'ooxml-core/pptx';
 
 import { resolveParagraphBullet } from './bullet-list';
 import { buildBulletMarkerStyle } from './paragraph-bullet-marker-style';
+import { displayableSymbolBullet } from './symbol-font-fallback';
 import type { RenderParagraph } from './paragraph-types';
 import type { RunStyle } from './text-run-style';
 import { isParagraphSeparatorSegment } from './text-segment-paragraph-break';
@@ -63,7 +64,9 @@ export function inlineListPresentationCss(
 		};
 		rules.push(`${block} { ${declarations(document, style)} }`);
 		// The static renderer suppresses blank markers; the editor shows a new empty item.
-		const emptyBullet = paragraph.isEmpty ? resolveParagraphBullet(carriers[index]) : undefined;
+		const emptyBullet = paragraph.isEmpty
+			? displayableSymbolBullet(resolveParagraphBullet(carriers[index]))
+			: undefined;
 		const picture = paragraph.bulletPicture ?? emptyBullet?.picture;
 		const marker = paragraph.bulletMarker ?? emptyBullet?.marker;
 		const markerStyle: RunStyle = {
