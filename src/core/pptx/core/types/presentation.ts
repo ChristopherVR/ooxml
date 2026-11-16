@@ -97,20 +97,20 @@ export interface PptxActiveXControl {
 	/** `p:control/@imgH` in EMU (ST_PositiveCoordinate32). @see imgWidthEmu */
 	imgHeightEmu?: number;
 	/** X position (px) of the control's fallback picture, if present. */
-	x?: number;
+	x?: number | undefined;
 	/** Y position (px) of the control's fallback picture, if present. */
-	y?: number;
+	y?: number | undefined;
 	/** Width (px) of the control's fallback picture, if present. */
-	width?: number;
+	width?: number | undefined;
 	/** Height (px) of the control's fallback picture, if present. */
-	height?: number;
+	height?: number | undefined;
 	/**
 	 * Relationship ID of the control's static fallback picture
 	 * (`mc:AlternateContent > mc:Fallback > p:pic > p:blipFill > a:blip@r:embed`).
 	 * Renderers resolve this to an image so a control shows its last static
 	 * frame instead of a blank area (the live ActiveX cannot run in a viewer).
 	 */
-	fallbackImageRelId?: string;
+	fallbackImageRelId?: string | undefined;
 	/** Raw XML for round-trip preservation. */
 	rawXml?: XmlObject;
 }
@@ -424,7 +424,7 @@ export interface PptxPresentationProperties {
 	/** Show slides: 'all', a custom show id, or a from-to range. */
 	showSlidesMode?: 'all' | 'customShow' | 'range';
 	/** Custom show id to use when showSlidesMode is 'customShow'. */
-	showSlidesCustomShowId?: string;
+	showSlidesCustomShowId?: string | undefined;
 	/** Slide range start (1-based) when showSlidesMode is 'range'. */
 	showSlidesFrom?: number;
 	/** Slide range end (1-based) when showSlidesMode is 'range'. */
@@ -898,7 +898,7 @@ export interface PptxEmbeddedFont {
 	bold?: boolean;
 	italic?: boolean;
 	/** CSS font format hint (e.g. "truetype", "opentype"). */
-	format?: 'truetype' | 'opentype' | 'woff' | 'woff2';
+	format?: 'truetype' | 'opentype' | 'woff' | 'woff2' | undefined;
 	/**
 	 * Deobfuscated (clear-text) font binary data preserved from load
 	 * for round-trip re-embedding on save. When present, the save
@@ -906,7 +906,7 @@ export interface PptxEmbeddedFont {
 	 * Decoded on first read for deferred fonts, like {@link dataUrl}; saving
 	 * a deferred font that was never decoded writes its original part bytes.
 	 */
-	rawFontData?: Uint8Array;
+	rawFontData?: Uint8Array | undefined;
 	/**
 	 * Original ZIP path of the font part (e.g. `ppt/fonts/{GUID}.fntdata`).
 	 * Preserved from load for round-trip.

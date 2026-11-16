@@ -76,7 +76,7 @@ const sidePosition = (position: string | undefined) =>
  */
 export function setChartExLegend(
 	space: ChartExSpace,
-	options: { visible: boolean; position?: string },
+	options: { visible: boolean; position?: string | undefined },
 ): ChartExSpace {
 	return editChartExSpace(space, (draft) => {
 		if (!options.visible) {

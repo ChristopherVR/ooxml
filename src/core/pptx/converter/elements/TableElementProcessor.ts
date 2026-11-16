@@ -106,7 +106,7 @@ export class TableElementProcessor implements ElementProcessor {
 		const htmlRows: string[] = [];
 
 		for (let ri = 0; ri < tableData.rows.length; ri++) {
-			const row = tableData.rows[ri];
+			const row = at(tableData.rows, ri);
 			const isHeader = ri === 0 && tableData.firstRowHeader !== false;
 			const tag = isHeader ? 'th' : 'td';
 			const cells: string[] = [];

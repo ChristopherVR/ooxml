@@ -49,7 +49,7 @@ export function replaceTokensAcrossSegments(segments: TextSegment[], data: Templ
 	const segmentMap: Array<{ segmentIndex: number; localOffset: number }> = [];
 
 	for (let i = 0; i < segments.length; i++) {
-		const seg = segments[i];
+		const seg = at(segments, i);
 		if (seg.isParagraphBreak) {
 			// Paragraph breaks don't contribute text but we need to track them
 			continue;
@@ -57,7 +57,7 @@ export function replaceTokensAcrossSegments(segments: TextSegment[], data: Templ
 		const text = seg.text ?? '';
 		for (let c = 0; c < text.length; c++) {
 			segmentMap.push({ segmentIndex: i, localOffset: c });
-			textParts.push(text[c]);
+			textParts.push(at(text, c));
 		}
 	}
 

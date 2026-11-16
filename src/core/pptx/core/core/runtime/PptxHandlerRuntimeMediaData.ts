@@ -8,6 +8,7 @@ import type { MediaTimingData } from './PptxHandlerRuntimeImageEffects';
 import { requiresBase64DataUrl } from './PptxHandlerRuntimeMediaParsingUtils';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeMediaTimingParsing';
 import { decodeTiffToPngBlob } from './tiff-to-png';
+import { at } from '../../../../geometry/indexed';
 
 // Re-exported for backward compatibility: existing callers/tests import this
 // from here rather than from `tiff-to-png.ts` directly.
@@ -45,7 +46,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const uint8 = new Uint8Array(bytes);
 		let binary = '';
 		for (let i = 0; i < uint8.length; i++) {
-			binary += String.fromCharCode(uint8[i]);
+			binary += String.fromCharCode(at(uint8, i));
 		}
 		return `data:${mimeType};base64,${btoa(binary)}`;
 	}

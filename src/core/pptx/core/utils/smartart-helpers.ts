@@ -87,7 +87,7 @@ export function makeShapeElement(
 	fillColor: string,
 	text: string,
 	opts?: PptxCustomPathProperties & {
-		rotation?: number;
+		rotation?: number | undefined;
 		skewX?: number;
 		skewY?: number;
 		strokeColor?: string;
@@ -101,7 +101,7 @@ export function makeShapeElement(
 		shapeAdjustments?: Record<string, number>;
 		/** Solid fill opacity (0..1), e.g. a Venn circle's 50% alpha. */
 		fillOpacity?: number;
-		textSegments?: TextSegment[];
+		textSegments?: TextSegment[] | undefined;
 	},
 ): ShapePptxElement {
 	const shapeStyle: ShapeStyle = {

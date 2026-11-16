@@ -38,7 +38,7 @@ export interface DiagramNodeTextRun<S = unknown> {
 	/** Raw run XML used to retain unmodelled extension children on save. */
 	rawXml?: Record<string, unknown>;
 	/** Original direct-child order, including unmodelled extension children. */
-	childOrder?: string[];
+	childOrder?: string[] | undefined;
 }
 
 /** An ordered item within a SmartArt text paragraph. */
@@ -50,7 +50,7 @@ export type DiagramNodeTextParagraphItem<S = unknown> =
 			style?: S;
 			properties?: DrawingRunProperties;
 			rawXml?: Record<string, unknown>;
-			childOrder?: string[];
+			childOrder?: string[] | undefined;
 	  }
 	| {
 			kind: 'field';
@@ -63,9 +63,9 @@ export type DiagramNodeTextParagraphItem<S = unknown> =
 			properties?: DrawingRunProperties;
 			paragraphProperties?: DrawingParagraphProperties;
 			rawXml?: Record<string, unknown>;
-			childOrder?: string[];
+			childOrder?: string[] | undefined;
 	  }
-	| { kind: 'tab'; rawXml?: Record<string, unknown>; childOrder?: string[] }
+	| { kind: 'tab'; rawXml?: Record<string, unknown>; childOrder?: string[] | undefined }
 	| { kind: 'raw'; name: string; value: unknown };
 
 /** A complete `a:p` paragraph in a SmartArt data-model text body. */
@@ -156,14 +156,14 @@ export interface DiagramNode<S = unknown> {
 	 * colour list from a colour transform's per-role palettes instead of the
 	 * generic cycled palette (see `applySmartArtRoleColors`).
 	 */
-	styleRole?: string;
+	styleRole?: string | undefined;
 	/**
 	 * `dgm:prSet/@coherent3DOff` (`CT_ElemPropSet`) resolved from the node's
 	 * paired presentation point: when true, this node opts out of the
 	 * diagram's overall coherent-3D scene rotation (a `dgm:scene3d`/`dgm:sp3d`
 	 * quick-style variation) applied to every other node.
 	 */
-	coherent3DOff?: boolean;
+	coherent3DOff?: boolean | undefined;
 	/**
 	 * The layout variables PowerPoint recorded for each presentation node
 	 * this point drives (`dgm:prSet/@presName` -> `dgm:presLayoutVars`
@@ -171,7 +171,7 @@ export interface DiagramNode<S = unknown> {
 	 * org-chart manager set to "Left Hanging". Read-only: the presentation
 	 * points themselves round-trip verbatim.
 	 */
-	presLayoutVarsByName?: Record<string, Record<string, string>>;
+	presLayoutVarsByName?: Record<string, Record<string, string>> | undefined;
 	/**
 	 * Per-run text + run-properties for the node's first paragraph, captured at
 	 * parse time. When the joined run text still equals {@link text} (the node

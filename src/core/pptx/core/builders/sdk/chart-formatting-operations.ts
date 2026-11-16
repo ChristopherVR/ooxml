@@ -15,7 +15,7 @@ import {
 	ensureChartData,
 	ensureDataPoint,
 	removeEmptyDataPoint,
-	validateSeriesIndex,
+	validatedSeries,
 } from './chart-operations';
 
 /**
@@ -43,8 +43,7 @@ export function setChartDataPointStyle(
 	pointIndex: number,
 	style: PptxChartShapeProps | null,
 ): void {
-	validateSeriesIndex(element, seriesIndex);
-	const series = element.chartData!.series[seriesIndex];
+	const series = validatedSeries(element, seriesIndex);
 	if (style === null) {
 		const dp = series.dataPoints?.find((p) => p.idx === pointIndex);
 		if (dp) {

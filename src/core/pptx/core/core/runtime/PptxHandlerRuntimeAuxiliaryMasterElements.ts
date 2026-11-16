@@ -45,7 +45,7 @@ export interface MasterPartElementHost {
 	 * {@link PptxHandlerRuntime.enrichSlideMasterElements}). Read here only so
 	 * the save side can tell a chosen colour from a flattened `p:bgRef`.
 	 */
-	backgroundColor?: string;
+	backgroundColor?: string | undefined;
 }
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {

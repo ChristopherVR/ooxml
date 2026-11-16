@@ -164,7 +164,7 @@ export interface GroupOwnBoxAnchor extends GroupChildSpaceOwner {
 	readonly height: number;
 	readonly xEmu?: number;
 	readonly yEmu?: number;
-	readonly rotation?: number;
+	readonly rotation?: number | undefined;
 }
 
 /**

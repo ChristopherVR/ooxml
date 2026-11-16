@@ -783,7 +783,7 @@ export interface PptxChartSeries {
 	errBars?: PptxChartErrBars[] | undefined;
 	dataPoints?: PptxChartDataPoint[] | undefined;
 	marker?: PptxChartMarker | undefined;
-	dataLabels?: PptxChartDataLabel[];
+	dataLabels?: PptxChartDataLabel[] | undefined;
 	explosion?: number;
 	/**
 	 * Series-level `c:invertIfNegative`: when true, bar/column data points with a
@@ -813,7 +813,7 @@ export interface PptxChartSeries {
 	 * where the chart-level {@link PptxChartData.chartType} applies to every
 	 * series.
 	 */
-	seriesChartType?: PptxChartType;
+	seriesChartType?: PptxChartType | undefined;
 	/**
 	 * Per-series 3-D bar/column shape override (`c:ser/c:shape`), legal only
 	 * inside a bar3D chart-type container. Overrides {@link PptxChartData.barShape}

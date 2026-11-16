@@ -4,7 +4,7 @@ export interface PptxEmbeddedFontDataId {
 	/** Required relationship identifier from `r:id`. */
 	relationshipId?: string | null | undefined;
 	/** Original leaf retained for unknown attribute preservation. */
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }
 
 export interface PptxEmbeddedFontDescriptor {

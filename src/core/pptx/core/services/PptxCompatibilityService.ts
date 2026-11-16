@@ -22,7 +22,7 @@ export interface CompatibilityWarningInput {
 	scope: PptxCompatibilityWarning['scope'];
 	slideId?: string | undefined;
 	elementId?: string | undefined;
-	xmlPath?: string;
+	xmlPath?: string | undefined;
 }
 
 export interface IPptxCompatibilityService {

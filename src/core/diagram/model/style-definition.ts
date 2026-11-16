@@ -19,8 +19,8 @@ export type DiagramHueDirection = 'cw' | 'ccw';
 
 /** CT_Colors application metadata. Color-choice children remain preserved XML. */
 export interface DiagramColorListMetadata {
-	method?: DiagramColorApplicationMethod;
-	hueDirection?: DiagramHueDirection;
+	method?: DiagramColorApplicationMethod | undefined;
+	hueDirection?: DiagramHueDirection | undefined;
 }
 
 /**
@@ -33,7 +33,7 @@ export interface DiagramColorListMetadata {
  */
 export interface DiagramResolvedStyleRef {
 	fillColor?: string;
-	fillMode?: 'solid' | 'gradient' | 'pattern' | 'none' | 'theme';
+	fillMode?: 'solid' | 'gradient' | 'pattern' | 'none' | 'theme' | undefined;
 	strokeColor?: string;
 	strokeWidth?: number;
 	/** `a:effectRef`'s theme-resolved outer shadow colour, when the style has one. */
@@ -81,7 +81,7 @@ export interface DiagramDefinitionMetadata {
 /** Typed CT_ColorTransform metadata and the resolved legacy color palette. */
 export interface DiagramColorTransform extends DiagramDefinitionMetadata {
 	/** Legacy resolved display name. */
-	name?: string;
+	name?: string | undefined;
 	/** Ordered resolved fill colors for rendering. */
 	fillColors: string[];
 	/** Ordered resolved line colors for rendering. */
@@ -99,7 +99,7 @@ export interface DiagramColorTransform extends DiagramDefinitionMetadata {
 	/** Line-list span/cycle + hue-direction interpolation of the primary styleLbl. */
 	lineInterpolation?: DiagramColorListMetadata;
 	/** Ordered CT_CTStyleLabel metadata. */
-	labels?: DiagramColorTransformLabel[];
+	labels?: DiagramColorTransformLabel[] | undefined;
 	/**
 	 * Every `styleLbl`'s own resolved fill/line colour list, keyed by name
 	 * (e.g. `node1`, `asst0`, `bgShp`, `revTx`). Unlike {@link fillColors} /
@@ -129,11 +129,11 @@ export interface DiagramQuickStyle<
 	Text = unknown,
 > extends DiagramDefinitionMetadata {
 	/** Legacy resolved display name. */
-	name?: string;
+	name?: string | undefined;
 	/** Legacy effect-intensity rendering hint. */
-	effectIntensity?: string;
+	effectIntensity?: string | undefined;
 	/** Ordered CT_StyleLabel metadata. Complex style payload remains preserved XML. */
-	labels?: DiagramQuickStyleLabel<Scene, Shape, Text>[];
+	labels?: DiagramQuickStyleLabel<Scene, Shape, Text>[] | undefined;
 	/**
 	 * Whole-diagram 3D scene (camera preset/rotation/zoom/fov, light rig,
 	 * backdrop) from the quick style's own `dgm:styleDef/dgm:scene3d`, present

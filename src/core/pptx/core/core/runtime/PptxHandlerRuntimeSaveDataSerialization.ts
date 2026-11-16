@@ -142,6 +142,7 @@ import { recordTableParagraphOrder } from './table-paragraph-save-order';
 import { rebuildTableXmlFromData } from './table-structural-ops';
 import { deterministicColumnId } from './table-xml-rebuild';
 import { writeTablePropertiesOwnFillAndEffects } from './table-tblpr-save';
+import { at } from '../../../../geometry/indexed';
 
 /**
  * `c:ext/@uri` for the Office 2017 (`c16r3:`) "show #N/A as an empty cell"
@@ -226,7 +227,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// After rebuilding, apply text and style to all cells
 				const rebuiltRows = this.ensureArray((tbl as XmlObject)['a:tr']);
 				for (let rIdx = 0; rIdx < tableData.rows.length; rIdx++) {
-					const dataRow = tableData.rows[rIdx];
+					const dataRow = at(tableData.rows, rIdx);
 					const xmlRow = rebuiltRows[rIdx] as XmlObject | undefined;
 					if (!xmlRow) {
 						continue;
@@ -234,7 +235,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 					const xmlCells = this.ensureArray(xmlRow['a:tc']);
 					for (let cIdx = 0; cIdx < dataRow.cells.length; cIdx++) {
-						const cell = dataRow.cells[cIdx];
+						const cell = at(dataRow.cells, cIdx);
 						const xmlCell = xmlCells[cIdx] as XmlObject | undefined;
 						if (!xmlCell) {
 							continue;
@@ -256,7 +257,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			// â”€â”€ No structural change: update cells in place â”€â”€
 			writeTableColumnWidths(tbl as XmlObject, tableData.columnWidths);
 			for (let rIdx = 0; rIdx < Math.min(tableData.rows.length, xmlRows.length); rIdx++) {
-				const dataRow = tableData.rows[rIdx];
+				const dataRow = at(tableData.rows, rIdx);
 				const xmlRow = xmlRows[rIdx] as XmlObject;
 
 				// Update row height
@@ -266,7 +267,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 				const xmlCells = this.ensureArray(xmlRow['a:tc']);
 				for (let cIdx = 0; cIdx < Math.min(dataRow.cells.length, xmlCells.length); cIdx++) {
-					const cell = dataRow.cells[cIdx];
+					const cell = at(dataRow.cells, cIdx);
 					const xmlCell = xmlCells[cIdx] as XmlObject;
 
 					// Serialize cell merge attributes
@@ -622,9 +623,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// Update existing series that are present in both XML and data
 				const commonCount = Math.min(seriesNodes.length, chartData.series.length);
 				for (let si = 0; si < commonCount; si++) {
-					const seriesNode = seriesNodes[si];
-					const seriesData = chartData.series[si];
-					const assignedIndex = seriesIndexAssignment[si];
+					const seriesNode = at(seriesNodes, si);
+					const seriesData = at(chartData.series, si);
+					const assignedIndex = at(seriesIndexAssignment, si);
 
 					// Update series index
 					const idxNode = this.xmlLookupService.getChildByLocalName(seriesNode, 'idx');
@@ -818,9 +819,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 					const newSeriesXmlNodes: XmlObject[] = [];
 					for (let si = seriesNodes.length; si < chartData.series.length; si++) {
-						const seriesData = chartData.series[si];
+						const seriesData = at(chartData.series, si);
 						const newNode = this.buildNewSeriesXml(
-							seriesIndexAssignment[si],
+							at(seriesIndexAssignment, si),
 							seriesData,
 							chartData.categories,
 							templateSeries,

@@ -104,7 +104,7 @@ function withoutFallbackLanguages(paragraphs: XmlObject[]): XmlObject[] {
 
 /** A real slide placeholder with no authored frame or text-format defaults. */
 export function placeholderShape(
-	identity: { type: string; idx?: string },
+	identity: { type: string; idx?: string | undefined },
 	paragraphs: XmlObject[],
 ): XmlObject {
 	paragraphs = withoutFallbackLanguages(paragraphs);

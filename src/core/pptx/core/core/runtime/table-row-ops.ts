@@ -184,7 +184,7 @@ export function removeTableRow(
 
 	// Handle merge spans
 	for (let c = 0; c < removedRow.cells.length; c++) {
-		const cell = removedRow.cells[c];
+		const cell = at(removedRow.cells, c);
 
 		if (cell.vMerge) {
 			// This cell is a continuation of a vertical merge from above.
@@ -256,7 +256,7 @@ export function removeTableRow(
 
 				// Handle merge spans in XML
 				for (let c = 0; c < xmlRemovedCells.length; c++) {
-					const xmlCell = xmlRemovedCells[c];
+					const xmlCell = at(xmlRemovedCells, c);
 
 					if (xmlCell['@_vMerge'] === '1') {
 						// Find anchor above and decrement rowSpan

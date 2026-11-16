@@ -139,14 +139,14 @@ export function resolveSaveTimeCustomGeometryPaths(
 
 /** The custom-geometry slots `applyGeometryUpdate` reads off a shape/image/picture element. */
 export interface SaveTimeCustomGeometryElement {
-	customGeometryPaths?: CustomGeometryPath[];
-	customGeometryRawData?: CustomGeometryRawData;
-	pathWidth?: number;
-	pathHeight?: number;
-	customGeometryAdjustHandlesXY?: AdjustHandleXY[];
-	customGeometryAdjustHandlesPolar?: AdjustHandlePolar[];
-	customGeometryConnectionSites?: ConnectionSite[];
-	customGeometryTextRect?: CustomGeometryTextRect;
+	customGeometryPaths?: CustomGeometryPath[] | undefined;
+	customGeometryRawData?: CustomGeometryRawData | undefined;
+	pathWidth?: number | undefined;
+	pathHeight?: number | undefined;
+	customGeometryAdjustHandlesXY?: AdjustHandleXY[] | undefined;
+	customGeometryAdjustHandlesPolar?: AdjustHandlePolar[] | undefined;
+	customGeometryConnectionSites?: ConnectionSite[] | undefined;
+	customGeometryTextRect?: CustomGeometryTextRect | undefined;
 }
 
 /**

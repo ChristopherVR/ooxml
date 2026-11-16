@@ -22,6 +22,7 @@ import {
 	renderSmartArtSvg,
 	renderZoomPreviewSvg,
 } from './svg-rich-elements';
+import { at } from '../../geometry/indexed';
 
 // ────────────────────────────────────────────────────────────────────
 // Public options
@@ -405,7 +406,7 @@ function renderTable(el: PptxElement, defaults: ReturnType<typeof resolveDefault
 		let xOffset = 0;
 
 		for (let ci = 0; ci < row.cells.length; ci++) {
-			const cell = row.cells[ci];
+			const cell = at(row.cells, ci);
 			if (cell.vMerge || cell.hMerge) {
 				xOffset += (cols[ci] ?? 0) * el.width;
 				continue;
@@ -703,7 +704,7 @@ export class SvgExporter {
 				continue;
 			}
 
-			const slide = data.slides[i];
+			const slide = at(data.slides, i);
 
 			// Skip hidden unless asked
 			if (slide.hidden && !includeHidden) {

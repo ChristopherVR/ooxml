@@ -153,7 +153,7 @@ export function extractAnimationTarget(cTn: XmlObject): PptxAnimationTarget | un
 export interface PptxGraphicBuildEntry {
 	shapeId: string;
 	groupId: string;
-	uiExpand?: boolean;
+	uiExpand?: boolean | undefined;
 	build: PptxGraphicBuild;
 	rawXml?: XmlObject;
 }

@@ -124,7 +124,7 @@ export interface PptxHandlerSaveOptions {
 	 */
 	fixedDate?: Date;
 	headerFooter?: PptxHeaderFooter;
-	presentationProperties?: PptxPresentationProperties;
+	presentationProperties?: PptxPresentationProperties | undefined;
 	customShows?: PptxCustomShow[];
 	sections?: PptxSection[];
 	coreProperties?: PptxCoreProperties;

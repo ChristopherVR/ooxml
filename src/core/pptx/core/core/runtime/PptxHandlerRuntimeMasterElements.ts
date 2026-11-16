@@ -12,6 +12,7 @@ import { stripParentDirSegments } from '../../utils/strip-parent-dir-segments';
 import { xmlPath } from '../../utils/xml-access';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimePlaceholderDefaults';
 import type { PlaceholderInfo } from './PptxHandlerRuntimeTypes';
+import { at } from '../../../../geometry/indexed';
 
 export function parseHeaderFooterFlags(
 	hf: XmlObject | undefined,
@@ -244,7 +245,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			const shapes = this.ensureArray(spTree['p:sp']);
 			const placeholderShapeIndices = new Set<number>();
 			for (let idx = 0; idx < shapes.length; idx++) {
-				const shape = shapes[idx];
+				const shape = at(shapes, idx);
 				const nvSpPr = shape['p:nvSpPr'] as XmlObject | undefined;
 				const ph = (nvSpPr?.['p:nvPr'] as XmlObject | undefined)?.['p:ph'];
 				if (ph) {

@@ -214,7 +214,7 @@ export function mirrorTextColor(
 		return data;
 	}
 	const color = fill.kind === 'solid' ? fill.color : undefined;
-	const withColor = <T extends { color?: string }>(style: T | undefined): T => {
+	const withColor = <T extends { color?: string | undefined }>(style: T | undefined): T => {
 		const next = { ...style } as T;
 		if (color) next.color = color;
 		else delete next.color;

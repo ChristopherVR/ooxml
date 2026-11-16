@@ -14,6 +14,7 @@
 import type { PptxElement } from '../types/elements';
 import type { PptxData, PptxSlide } from '../types/presentation';
 import type { PptxTableData } from '../types/table';
+import { at } from '../../../geometry/indexed';
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -305,7 +306,7 @@ export function checkDuplicateTitles(slides: PptxSlide[]): AccessibilityIssue[] 
 	const titleMap = new Map<string, number[]>();
 
 	for (let i = 0; i < slides.length; i++) {
-		const slide = slides[i];
+		const slide = at(slides, i);
 		const titleEl = slide.elements.find((el) => isTitleElement(el) && isVisibleElement(el));
 		if (!titleEl) {
 			continue;
@@ -383,7 +384,7 @@ export function checkPresentation(
 	const issues: AccessibilityIssue[] = [];
 
 	for (let i = 0; i < data.slides.length; i++) {
-		const slide = data.slides[i];
+		const slide = at(data.slides, i);
 		issues.push(...checkMissingAltText(slide, i));
 		issues.push(...checkMissingSlideTitle(slide, i));
 		if (!skipContrast) {

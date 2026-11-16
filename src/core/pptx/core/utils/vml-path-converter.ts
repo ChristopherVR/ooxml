@@ -59,6 +59,9 @@ export function convertVmlPathToSvg(
 		return undefined;
 	}
 
+	// Every read below is bounds-checked first; parseInt and the digit test treat a missing
+	// token (undefined) and the empty string alike.
+	const tok = (k: number): string => tokens[k] ?? '';
 	const parts: string[] = [];
 	let i = 0;
 
@@ -68,8 +71,8 @@ export function convertVmlPathToSvg(
 			case 'm': {
 				// moveTo
 				if (i + 2 < tokens.length) {
-					const x = parseInt(tokens[i + 1], 10) * scaleX;
-					const y = parseInt(tokens[i + 2], 10) * scaleY;
+					const x = parseInt(tok(i + 1), 10) * scaleX;
+					const y = parseInt(tok(i + 2), 10) * scaleY;
 					parts.push(`M ${x} ${y}`);
 					i += 3;
 				} else {
@@ -82,11 +85,11 @@ export function convertVmlPathToSvg(
 				i++;
 				while (
 					i + 1 < tokens.length &&
-					/^[-+]?\d+$/.test(tokens[i]) &&
-					/^[-+]?\d+$/.test(tokens[i + 1])
+					/^[-+]?\d+$/.test(tok(i)) &&
+					/^[-+]?\d+$/.test(tok(i + 1))
 				) {
-					const x = parseInt(tokens[i], 10) * scaleX;
-					const y = parseInt(tokens[i + 1], 10) * scaleY;
+					const x = parseInt(tok(i), 10) * scaleX;
+					const y = parseInt(tok(i + 1), 10) * scaleY;
 					parts.push(`L ${x} ${y}`);
 					i += 2;
 				}
@@ -95,13 +98,13 @@ export function convertVmlPathToSvg(
 			case 'c': {
 				// curveTo — 3 coordinate pairs per curve
 				i++;
-				while (i + 5 < tokens.length && /^[-+]?\d+$/.test(tokens[i])) {
-					const x1 = parseInt(tokens[i], 10) * scaleX;
-					const y1 = parseInt(tokens[i + 1], 10) * scaleY;
-					const x2 = parseInt(tokens[i + 2], 10) * scaleX;
-					const y2 = parseInt(tokens[i + 3], 10) * scaleY;
-					const x = parseInt(tokens[i + 4], 10) * scaleX;
-					const y = parseInt(tokens[i + 5], 10) * scaleY;
+				while (i + 5 < tokens.length && /^[-+]?\d+$/.test(tok(i))) {
+					const x1 = parseInt(tok(i), 10) * scaleX;
+					const y1 = parseInt(tok(i + 1), 10) * scaleY;
+					const x2 = parseInt(tok(i + 2), 10) * scaleX;
+					const y2 = parseInt(tok(i + 3), 10) * scaleY;
+					const x = parseInt(tok(i + 4), 10) * scaleX;
+					const y = parseInt(tok(i + 5), 10) * scaleY;
 					parts.push(`C ${x1} ${y1} ${x2} ${y2} ${x} ${y}`);
 					i += 6;
 				}
@@ -121,11 +124,11 @@ export function convertVmlPathToSvg(
 				i++;
 				while (
 					i + 1 < tokens.length &&
-					/^[-+]?\d+$/.test(tokens[i]) &&
-					/^[-+]?\d+$/.test(tokens[i + 1])
+					/^[-+]?\d+$/.test(tok(i)) &&
+					/^[-+]?\d+$/.test(tok(i + 1))
 				) {
-					const dx = parseInt(tokens[i], 10) * scaleX;
-					const dy = parseInt(tokens[i + 1], 10) * scaleY;
+					const dx = parseInt(tok(i), 10) * scaleX;
+					const dy = parseInt(tok(i + 1), 10) * scaleY;
 					parts.push(`l ${dx} ${dy}`);
 					i += 2;
 				}
@@ -134,13 +137,13 @@ export function convertVmlPathToSvg(
 			case 'r': {
 				// relative curveTo
 				i++;
-				while (i + 5 < tokens.length && /^[-+]?\d+$/.test(tokens[i])) {
-					const dx1 = parseInt(tokens[i], 10) * scaleX;
-					const dy1 = parseInt(tokens[i + 1], 10) * scaleY;
-					const dx2 = parseInt(tokens[i + 2], 10) * scaleX;
-					const dy2 = parseInt(tokens[i + 3], 10) * scaleY;
-					const dx = parseInt(tokens[i + 4], 10) * scaleX;
-					const dy = parseInt(tokens[i + 5], 10) * scaleY;
+				while (i + 5 < tokens.length && /^[-+]?\d+$/.test(tok(i))) {
+					const dx1 = parseInt(tok(i), 10) * scaleX;
+					const dy1 = parseInt(tok(i + 1), 10) * scaleY;
+					const dx2 = parseInt(tok(i + 2), 10) * scaleX;
+					const dy2 = parseInt(tok(i + 3), 10) * scaleY;
+					const dx = parseInt(tok(i + 4), 10) * scaleX;
+					const dy = parseInt(tok(i + 5), 10) * scaleY;
 					parts.push(`c ${dx1} ${dy1} ${dx2} ${dy2} ${dx} ${dy}`);
 					i += 6;
 				}
@@ -151,11 +154,11 @@ export function convertVmlPathToSvg(
 				i++;
 				while (
 					i + 1 < tokens.length &&
-					/^[-+]?\d+$/.test(tokens[i]) &&
-					/^[-+]?\d+$/.test(tokens[i + 1])
+					/^[-+]?\d+$/.test(tok(i)) &&
+					/^[-+]?\d+$/.test(tok(i + 1))
 				) {
-					const x = parseInt(tokens[i], 10) * scaleX;
-					const y = parseInt(tokens[i + 1], 10) * scaleY;
+					const x = parseInt(tok(i), 10) * scaleX;
+					const y = parseInt(tok(i + 1), 10) * scaleY;
 					parts.push(`Q ${x} ${y}`);
 					i += 2;
 				}
@@ -194,8 +197,8 @@ export function parseVmlLine(node: XmlObject): {
 	const from = String(node['@_from'] || '0,0');
 	const to = String(node['@_to'] || '0,0');
 
-	const [fromX, fromY] = from.split(',').map((s) => parseCssDimension(s.trim()));
-	const [toX, toY] = to.split(',').map((s) => parseCssDimension(s.trim()));
+	const [fromX = NaN, fromY = NaN] = from.split(',').map((s) => parseCssDimension(s.trim()));
+	const [toX = NaN, toY = NaN] = to.split(',').map((s) => parseCssDimension(s.trim()));
 
 	const x = Math.min(fromX, toX);
 	const y = Math.min(fromY, toY);

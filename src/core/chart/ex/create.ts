@@ -10,7 +10,7 @@ import { setChartExLayout, type ChartExLayout } from '../edit/chartex-structure'
 export function createChartExSpace(
 	data: ChartDataSheet | ChartExDataSheet,
 	layout: Exclude<ChartExLayout, 'regionMap'>,
-	options: { title?: string; legend?: { visible: boolean; position?: string } } = {},
+	options: { title?: string; legend?: { visible: boolean; position?: string | undefined } } = {},
 ): ChartExSpace {
 	if (!data.series.length) throw new RangeError('A chart needs at least one series.');
 	if (data.series.length > 1 && !['boxWhisker', 'clusteredColumn'].includes(layout))

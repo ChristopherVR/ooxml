@@ -156,7 +156,7 @@ export function addTableColumn(
 			// Update each a:tr
 			const xmlRows = ensureArray(tbl['a:tr'] as XmlObject | XmlObject[]);
 			for (let ri = 0; ri < xmlRows.length; ri++) {
-				const xmlRow = xmlRows[ri];
+				const xmlRow = at(xmlRows, ri);
 				const xmlCells = ensureArray(xmlRow['a:tc'] as XmlObject | XmlObject[]);
 
 				const newXmlCell = createDefaultXmlCell();

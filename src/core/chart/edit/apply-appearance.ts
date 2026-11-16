@@ -23,7 +23,7 @@ import { editChartSpace } from './draft';
 export interface ChartAppearance {
 	reset?: boolean;
 	fill?: ChartFillAppearance;
-	line?: ChartLineAppearance;
+	line?: ChartLineAppearance | undefined;
 	effects?: ChartEffectsAppearance;
 	threeD?: ChartThreeDAppearance;
 	text?: ChartTextAppearance;

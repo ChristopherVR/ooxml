@@ -27,7 +27,7 @@ export interface ChartDataLabelStyle {
 		showLegendKey?: boolean;
 		showBubbleSize?: boolean;
 		separator?: string;
-		showLeaderLines?: boolean;
+		showLeaderLines?: boolean | undefined;
 		position?: string;
 		/** Label-specific number format (`c:dLbls/c:numFmt/@formatCode`), distinct from the series' own cell format (C2-G16). */
 		numberFormat?: string;

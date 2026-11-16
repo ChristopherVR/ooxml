@@ -106,7 +106,7 @@ export class SlideMetadataRenderer {
 
 		const lines: string[] = ['### Animations'];
 		for (let gi = 0; gi < clickGroups.length; gi += 1) {
-			const group = clickGroups[gi];
+			const group = at(clickGroups, gi);
 			lines.push(`- **Click ${gi + 1}:**`);
 			for (const anim of group) {
 				lines.push(`  - ${this.summariseAnimation(anim)}`);

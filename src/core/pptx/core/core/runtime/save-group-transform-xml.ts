@@ -26,19 +26,19 @@ export interface GroupTransformInput {
 	readonly y: number;
 	readonly width: number;
 	readonly height: number;
-	readonly rotation?: number;
-	readonly flipHorizontal?: boolean;
-	readonly flipVertical?: boolean;
+	readonly rotation?: number | undefined;
+	readonly flipHorizontal?: boolean | undefined;
+	readonly flipVertical?: boolean | undefined;
 	/** Exact EMU this group's own `a:off`/`a:ext` were parsed from, when known. See `xfrm-emu-resolution.ts`. */
 	readonly xEmu?: number;
 	readonly yEmu?: number;
-	readonly widthEmu?: number;
-	readonly heightEmu?: number;
+	readonly widthEmu?: number | undefined;
+	readonly heightEmu?: number | undefined;
 	/** Exact EMU this group's own `a:chOff`/`a:chExt` were parsed from. See `group-xfrm-preservation.ts`. */
 	readonly chOffXEmu?: number;
 	readonly chOffYEmu?: number;
-	readonly chExtWidthEmu?: number;
-	readonly chExtHeightEmu?: number;
+	readonly chExtWidthEmu?: number | undefined;
+	readonly chExtHeightEmu?: number | undefined;
 }
 
 /**
@@ -167,10 +167,10 @@ export interface GroupChildTransformInput {
 	readonly height: number;
 	readonly xEmu?: number;
 	readonly yEmu?: number;
-	readonly widthEmu?: number;
-	readonly heightEmu?: number;
+	readonly widthEmu?: number | undefined;
+	readonly heightEmu?: number | undefined;
 	/** See `group-child-rotated-resize.ts`: a resized ROTATED child needs its own rotation to preserve its on-screen anchor. */
-	readonly rotation?: number;
+	readonly rotation?: number | undefined;
 }
 
 /**

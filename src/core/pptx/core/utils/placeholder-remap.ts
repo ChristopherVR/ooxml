@@ -85,8 +85,8 @@ export function preferredPlaceholderTypes(element: PptxElement): readonly string
 
 /** A placeholder identity as read from `p:ph`. */
 export interface PlaceholderIdentity {
-	type?: string;
-	idx?: string;
+	type?: string | undefined;
+	idx?: string | undefined;
 }
 
 /**

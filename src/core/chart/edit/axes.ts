@@ -42,7 +42,7 @@ export interface ChartAxisEdit {
 	minorTickMark?: 'cross' | 'in' | 'out' | 'none';
 	tickLabelPosition?: 'high' | 'low' | 'nextTo' | 'none';
 	/** Where the other axis crosses: `autoZero`, `min`, `max`, or a value. */
-	crosses?: 'autoZero' | 'min' | 'max' | number;
+	crosses?: 'autoZero' | 'min' | 'max' | number | undefined;
 	majorGridlines?: boolean;
 	minorGridlines?: boolean;
 	auto?: boolean;
@@ -52,7 +52,7 @@ export interface ChartAxisEdit {
 	tickMarkSkip?: number | null;
 	noMultiLevelLabels?: boolean;
 	/** Value axis: a built-in unit (`thousands`, `millions`...) or a custom divisor; `null` clears. */
-	displayUnits?: string | number | null;
+	displayUnits?: string | number | null | undefined;
 }
 
 /** The axis an edit targets; throws when the part has no such axis. */

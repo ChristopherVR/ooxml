@@ -7,6 +7,7 @@ import { normalizeNamespaceUri } from '../../utils/strict-namespace-map';
 import type { PptxSaveState } from './PptxSaveSessionBuilder';
 import { buildSlideReferenceRemap } from './slide-reference-remap';
 import { duplicateSlideParts } from './duplicate-slide-parts';
+import { at } from '../../../../geometry/indexed';
 
 export interface PptxPresentationSlidesReconcilerInput {
 	slides: PptxSlide[];
@@ -143,7 +144,7 @@ export class PptxPresentationSlidesReconciler implements IPptxPresentationSlides
 
 		const attachedPaths = new Map<string, string>();
 		for (let index = 0; index < input.slides.length; index++) {
-			const slide = input.slides[index];
+			const slide = at(input.slides, index);
 			slide.slideNumber = index + 1;
 
 			const existingSlideXml = input.slideMap.get(slide.id);

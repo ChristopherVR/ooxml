@@ -24,6 +24,7 @@
 
 import type { PptxChartUserShape, PptxChartUserShapeGroupChild } from '../../types/chart';
 import type { ChartPptxElement } from '../../types/elements';
+import { at } from '../../../../geometry/indexed';
 
 /**
  * A path to one overlay shape, top-level or nested inside `grpSp` groups:
@@ -73,7 +74,7 @@ function withNodeAtPath<T extends ChartUserShapeNode>(
 	}
 	const result: T[] = [];
 	for (let i = 0; i < nodes.length; i++) {
-		const node = nodes[i];
+		const node = at(nodes, i);
 		if (i !== head) {
 			result.push(node);
 			continue;

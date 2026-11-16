@@ -95,7 +95,7 @@ function invertOffsetAxisEmu(
 
 /** This helper's inputs: a group child carrying its own rotation, plus its as-parsed child-space EMU box. */
 export interface RotatedGroupChildResizeInput extends GroupChildGeometry {
-	readonly rotation?: number;
+	readonly rotation?: number | undefined;
 }
 
 /**

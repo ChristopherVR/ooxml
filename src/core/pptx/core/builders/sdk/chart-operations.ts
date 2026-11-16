@@ -17,6 +17,7 @@ import type {
 	PptxChartDataPoint,
 	PptxChartErrBars,
 	PptxChartMarker,
+	PptxChartSeries,
 	PptxChartMarkerSymbol,
 	PptxChartShapeProps,
 	PptxChartTrendline,
@@ -59,6 +60,16 @@ export function validateSeriesIndex(element: ChartPptxElement, seriesIndex: numb
 			`Series index ${seriesIndex} is out of range. Chart has ${element.chartData.series.length} series (indices 0–${element.chartData.series.length - 1}).`,
 		);
 	}
+}
+
+/** {@link validateSeriesIndex}, then the series it names. */
+export function validatedSeries(element: ChartPptxElement, seriesIndex: number): PptxChartSeries {
+	validateSeriesIndex(element, seriesIndex);
+	const series = element.chartData?.series[seriesIndex];
+	if (!series) {
+		throw new RangeError(`Series index ${seriesIndex} is out of range.`);
+	}
+	return series;
 }
 
 // ---------------------------------------------------------------------------
@@ -550,8 +561,7 @@ export function updateChartDataPoint(
 	pointIndex: number,
 	value: number,
 ): void {
-	validateSeriesIndex(element, seriesIndex);
-	const series = element.chartData!.series[seriesIndex];
+	const series = validatedSeries(element, seriesIndex);
 	if (pointIndex < 0 || pointIndex >= series.values.length) {
 		throw new RangeError(
 			`Point index ${pointIndex} is out of range. Series "${series.name}" has ${series.values.length} data points (indices 0\u2013${series.values.length - 1}).`,
@@ -636,8 +646,7 @@ export function setChartSeriesColor(
 	seriesIndex: number,
 	color: string | null | undefined,
 ): void {
-	validateSeriesIndex(element, seriesIndex);
-	const series = element.chartData!.series[seriesIndex];
+	const series = validatedSeries(element, seriesIndex);
 	// A solid colour and a gradient are one fill choice: the last call wins.
 	Reflect.deleteProperty(series, 'gradientFill');
 	clearChartSeriesPointPaint(element.chartData!, series);
@@ -812,8 +821,7 @@ export function setChartSeriesMarker(
 		| { symbol?: PptxChartMarkerSymbol; size?: number; fillColor?: string }
 		| null,
 ): void {
-	validateSeriesIndex(element, seriesIndex);
-	const series = element.chartData!.series[seriesIndex];
+	const series = validatedSeries(element, seriesIndex);
 	if (marker === null) {
 		series.marker = undefined;
 		return;
@@ -880,7 +888,7 @@ export function setChartSeriesChartType(
 
 /** Find (or create) the `c:dPt` override for `pointIndex` in a series. */
 export function ensureDataPoint(
-	series: { dataPoints?: PptxChartDataPoint[] },
+	series: { dataPoints?: PptxChartDataPoint[] | undefined },
 	pointIndex: number,
 ): PptxChartDataPoint {
 	const points = (series.dataPoints ??= []);
@@ -915,8 +923,7 @@ export function setChartDataPointFill(
 	pointIndex: number,
 	color: string | null,
 ): void {
-	validateSeriesIndex(element, seriesIndex);
-	const series = element.chartData!.series[seriesIndex];
+	const series = validatedSeries(element, seriesIndex);
 	if (color === null) {
 		const dp = series.dataPoints?.find((p) => p.idx === pointIndex);
 		if (!dp) {
@@ -961,8 +968,7 @@ export function setChartDataPointExplosion(
 	pointIndex: number,
 	explosion: number | null,
 ): void {
-	validateSeriesIndex(element, seriesIndex);
-	const series = element.chartData!.series[seriesIndex];
+	const series = validatedSeries(element, seriesIndex);
 	if (explosion === null) {
 		const dp = series.dataPoints?.find((p) => p.idx === pointIndex);
 		if (dp) {
@@ -995,8 +1001,7 @@ export function setChartDataPointMarker(
 	pointIndex: number,
 	marker: { symbol?: PptxChartMarkerSymbol; size?: number; fillColor?: string } | null,
 ): void {
-	validateSeriesIndex(element, seriesIndex);
-	const series = element.chartData!.series[seriesIndex];
+	const series = validatedSeries(element, seriesIndex);
 	if (marker === null) {
 		const dp = series.dataPoints?.find((p) => p.idx === pointIndex);
 		if (dp) {
@@ -1114,7 +1119,7 @@ export function setChartDataPointLabel(
 ): void {
 	validateSeriesIndex(element, seriesIndex);
 	assertChartModelLabelPosition(element.chartData!, edit?.position, seriesIndex);
-	const series = element.chartData!.series[seriesIndex];
+	const series = validatedSeries(element, seriesIndex);
 	if (edit === null) {
 		if (!series.dataLabels) {
 			return;
@@ -1137,7 +1142,7 @@ export function setChartDataPointLabel(
 
 /** Drop a `c:dPt` override that no longer carries any formatting. */
 export function removeEmptyDataPoint(
-	series: { dataPoints?: PptxChartDataPoint[] },
+	series: { dataPoints?: PptxChartDataPoint[] | undefined },
 	pointIndex: number,
 ): void {
 	if (!series.dataPoints) {

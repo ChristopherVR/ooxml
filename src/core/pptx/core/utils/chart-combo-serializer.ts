@@ -27,6 +27,7 @@ import {
 	normalizeChartContainerChildren,
 	orderChartContainerChildren,
 } from './chart-container-schema';
+import { at as atIndex } from '../../../geometry/indexed';
 
 type GetLocalName = (key: string) => string;
 
@@ -234,7 +235,7 @@ export function applyComboSeriesTypesToXml(
 			groups.set(local, []);
 			groupOrder.push(local);
 		}
-		groups.get(local)!.push(serNodes[i]);
+		groups.get(local)!.push(atIndex(serNodes, i));
 	}
 
 	// Remove the original container, then re-insert one container per group in

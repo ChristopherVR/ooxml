@@ -30,6 +30,7 @@ import {
 } from './master-layout-crud-xml';
 import type { MasterLayoutCrudFailure, MasterLayoutCrudResult } from './master-layout-crud-xml';
 import { STANDARD_LAYOUTS } from './PresentationBuilder';
+import { at } from '../../../../geometry/indexed';
 
 /** {@link duplicateSlideMaster} / {@link insertSlideMaster} success: the new master's id. */
 export interface DuplicateMasterSuccess {
@@ -69,7 +70,7 @@ export async function duplicateSlideMaster(
 	let newRels = sourceRels;
 	const sourceLayoutPaths = (source.layouts ?? []).map((l) => l.path);
 	for (let i = 0; i < sourceLayoutPaths.length; i++) {
-		const oldPath = sourceLayoutPaths[i];
+		const oldPath = at(sourceLayoutPaths, i);
 		const newPath = `ppt/slideLayouts/slideLayout${layoutBase + i + 1}.xml`;
 
 		const layoutXml = await zip.file(oldPath)?.async('string');
@@ -203,7 +204,7 @@ export async function insertSlideMaster(
 	for (let i = 0; i < STANDARD_LAYOUTS.length; i++) {
 		const newIndex = layoutBase + i + 1;
 		const layoutPath = `ppt/slideLayouts/slideLayout${newIndex}.xml`;
-		zip.file(layoutPath, generateLayoutXml(STANDARD_LAYOUTS[i]));
+		zip.file(layoutPath, generateLayoutXml(at(STANDARD_LAYOUTS, i)));
 		zip.file(relsPathFor(layoutPath), layoutRelsXml(masterIndex));
 		await addLayoutToSlideMaster(zip, newIndex, masterIndex);
 		await addLayoutContentType(zip, newIndex);

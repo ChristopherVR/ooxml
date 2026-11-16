@@ -760,9 +760,9 @@ export interface SummaryZoomTarget extends PptxImageProperties {
 	scaleFactorX?: number | undefined;
 	scaleFactorY?: number | undefined;
 	/** This tile's own `zmPr/@returnToParent`; see {@link ZoomPptxElement.returnToParent}. */
-	returnToParent?: boolean;
+	returnToParent?: boolean | undefined;
 	/** This tile's own `zmPr/@transitionDur` in milliseconds; see {@link ZoomPptxElement.transitionDurationMs}. */
-	transitionDurationMs?: number;
+	transitionDurationMs?: number | undefined;
 	rawXml?: XmlObject;
 }
 

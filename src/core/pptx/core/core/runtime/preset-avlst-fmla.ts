@@ -19,6 +19,7 @@
  */
 
 import { evaluateGuides } from '../../geometry/guide-formula';
+import { at } from '../../../../geometry/indexed';
 
 /**
  * Built-in variable names whose value does NOT depend on the shape's width or
@@ -66,7 +67,7 @@ export function evaluatePresetAdjustmentFormula(
 	// tokens[0] is the operator mnemonic; operands follow. Only operands can
 	// carry a variable reference that would require geometry.
 	for (let i = 1; i < tokens.length; i++) {
-		const token = tokens[i];
+		const token = at(tokens, i);
 		if (token === '') {
 			continue;
 		}

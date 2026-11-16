@@ -15,7 +15,12 @@
 import type { ChartPptxElement } from '../../types/elements';
 import type { ChartGradientInput } from './chart-gradient-input';
 import { assertChartGradientSupported, toChartGradientFill } from './chart-gradient-input';
-import { ensureDataPoint, removeEmptyDataPoint, validateSeriesIndex } from './chart-operations';
+import {
+	ensureDataPoint,
+	removeEmptyDataPoint,
+	validateSeriesIndex,
+	validatedSeries,
+} from './chart-operations';
 import { at } from '../../../../geometry/indexed';
 
 function seriesChartType(element: ChartPptxElement, seriesIndex: number) {
@@ -53,8 +58,7 @@ export function setChartSeriesGradient(
 	seriesIndex: number,
 	gradient: ChartGradientInput | null,
 ): void {
-	validateSeriesIndex(element, seriesIndex);
-	const series = element.chartData!.series[seriesIndex];
+	const series = validatedSeries(element, seriesIndex);
 	if (gradient === null) {
 		Reflect.deleteProperty(series, 'gradientFill');
 		return;
@@ -98,7 +102,7 @@ export function setChartDataPointGradient(
 	if (!Number.isInteger(pointIndex) || pointIndex < 0) {
 		throw new RangeError(`Data point index must be a non-negative integer, got ${pointIndex}.`);
 	}
-	const series = element.chartData!.series[seriesIndex];
+	const series = validatedSeries(element, seriesIndex);
 	if (gradient === null) {
 		const dp = series.dataPoints?.find((p) => p.idx === pointIndex);
 		if (dp) {

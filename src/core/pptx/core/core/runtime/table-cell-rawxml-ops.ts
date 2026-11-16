@@ -179,12 +179,12 @@ export function updateMergeAttrsInRawXml(
 	const xmlRows = ensureArray(table['a:tr'] as XmlObject | XmlObject[] | undefined);
 
 	for (let rIdx = 0; rIdx < Math.min(tableData.rows.length, xmlRows.length); rIdx++) {
-		const dataRow = tableData.rows[rIdx];
+		const dataRow = at(tableData.rows, rIdx);
 		const xmlCells = ensureArray(at(xmlRows, rIdx)['a:tc'] as XmlObject | XmlObject[] | undefined);
 
 		for (let cIdx = 0; cIdx < Math.min(dataRow.cells.length, xmlCells.length); cIdx++) {
-			const cell = dataRow.cells[cIdx];
-			const xmlCell = xmlCells[cIdx];
+			const cell = at(dataRow.cells, cIdx);
+			const xmlCell = at(xmlCells, cIdx);
 
 			// gridSpan
 			if (cell.gridSpan !== undefined && cell.gridSpan > 1) {

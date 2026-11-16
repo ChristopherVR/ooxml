@@ -13,6 +13,7 @@
 import type { PptxEmbeddedFont } from '../types';
 import { extractFontFromEot, isEotFormat, parseEotHeader } from './eot-parser';
 import { deobfuscateFont, detectFontFormat, extractGuidFromPartName } from './font-deobfuscation';
+import { at } from '../../../geometry/indexed';
 
 /** Where an embedded variant's part sits and how it is declared. */
 export interface EmbeddedFontPartSource {
@@ -122,7 +123,7 @@ function uint8ArrayToBase64(bytes: Uint8Array): string {
 	for (let i = 0; i < bytes.length; i += chunkSize) {
 		const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
 		for (let j = 0; j < chunk.length; j++) {
-			binary += String.fromCharCode(chunk[j]);
+			binary += String.fromCharCode(at(chunk, j));
 		}
 	}
 	return btoa(binary);

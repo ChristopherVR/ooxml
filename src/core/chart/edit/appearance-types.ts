@@ -49,8 +49,8 @@ export interface ChartLineAppearance {
 	gradient?: ChartGradientFill;
 	width?: number;
 	dash?: string;
-	compound?: string;
-	cap?: string;
+	compound?: string | undefined;
+	cap?: string | undefined;
 	join?: string;
 	beginArrow?: string;
 	endArrow?: string;

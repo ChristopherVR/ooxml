@@ -357,9 +357,9 @@ export interface ShapeStyle {
 	/** Original `a:custDash` payload retained for lossless edits. */
 	customDashXml?: XmlObject;
 	/** 3D scene/camera settings from `a:scene3d`. */
-	scene3d?: Pptx3DScene;
+	scene3d?: Pptx3DScene | undefined;
 	/** 3D shape extrusion/bevel from `a:sp3d`. */
-	shape3d?: Pptx3DShape;
+	shape3d?: Pptx3DShape | undefined;
 	/** Line-level shadow colour from `a:ln/a:effectLst/a:outerShdw`. */
 	lineShadowColor?: string | undefined;
 	/** Line-level shadow opacity (0-1). */

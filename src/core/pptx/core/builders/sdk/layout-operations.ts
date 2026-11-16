@@ -15,6 +15,7 @@ import { openPptxZip } from '../../utils/zip-open';
 import { escAttr } from '../../ppt/pptx/xml-utils';
 import { PptxHandler } from '../../PptxHandler';
 import type { PptxData, PptxLayoutOption } from '../../types/presentation';
+import { at } from '../../../../geometry/indexed';
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -396,7 +397,7 @@ export async function createLayouts(
 	const layoutPaths: string[] = [];
 
 	for (let i = 0; i < definitions.length; i++) {
-		const def = definitions[i];
+		const def = at(definitions, i);
 		const newIndex = existingCount + i + 1;
 		const layoutPath = `ppt/slideLayouts/slideLayout${newIndex}.xml`;
 

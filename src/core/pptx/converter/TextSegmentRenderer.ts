@@ -27,7 +27,7 @@ interface ParagraphRenderResult {
  * Options controlling how text segments are rendered.
  */
 export interface TextSegmentRenderOptions {
-	paragraphIndents?: Array<{ marginLeft?: number; indent?: number }>;
+	paragraphIndents?: Array<{ marginLeft?: number; indent?: number }> | undefined;
 	slideNumber?: number;
 	dateTimeText?: string;
 	inlineMode?: boolean;
@@ -66,7 +66,7 @@ export class TextSegmentRenderer {
 		for (let index = 0; index < renderedParagraphs.length; index += 1) {
 			if (index > 0) {
 				const previous = renderedParagraphs[index - 1];
-				const current = renderedParagraphs[index];
+				const current = at(renderedParagraphs, index);
 				output.push(previous.isListItem && current.isListItem ? '\n' : '\n\n');
 			}
 			output.push(at(renderedParagraphs, index).text);

@@ -90,7 +90,7 @@ export interface PptxCommonSlideViewProperties {
 	/** View origin (scroll position). */
 	origin?: PptxViewOrigin;
 	/** View scale. */
-	scale?: PptxViewScale;
+	scale?: PptxViewScale | undefined;
 }
 
 /**

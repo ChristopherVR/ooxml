@@ -25,6 +25,7 @@ import { mergeNativeAfterAnimationIntoEditorAnimations } from './editor-animatio
 import type { IPptxSlideLoaderService, PptxSlideLoaderParams } from './slide-loader-types';
 import { readCommonSlideDataName } from './slide-name';
 import { resolveSlideTimingNode } from './slide-transition-envelope';
+import { at } from '../../../geometry/indexed';
 
 export type {
 	PptxMediaTimingEntry,
@@ -79,7 +80,7 @@ export class PptxSlideLoaderService implements IPptxSlideLoaderService {
 		// Load each slide sequentially (order matters for theme override state)
 		const slides: PptxSlide[] = [];
 		for (let index = 0; index < sldIds.length; index++) {
-			const slide = await this.loadSingleSlide(params, sldIds[index], index, relsMap);
+			const slide = await this.loadSingleSlide(params, at(sldIds, index), index, relsMap);
 			if (slide) {
 				slides.push(slide);
 			}

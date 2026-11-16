@@ -102,8 +102,8 @@ export function applyChartAxisGridlinesToXml(
 	opts: {
 		majorGridlines?: boolean;
 		minorGridlines?: boolean;
-		majorGridlinesSpPr?: PptxChartShapeProps;
-		minorGridlinesSpPr?: PptxChartShapeProps;
+		majorGridlinesSpPr?: PptxChartShapeProps | undefined;
+		minorGridlinesSpPr?: PptxChartShapeProps | undefined;
 	},
 	getLocalName: GetLocalName,
 	resolveColor?: ResolveColor,

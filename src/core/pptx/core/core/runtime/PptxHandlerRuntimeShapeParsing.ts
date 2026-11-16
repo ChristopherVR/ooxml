@@ -169,7 +169,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			let text = '';
 			const textStyle: TextStyle = {};
 			const textSegments: TextSegment[] = [];
-			const paragraphIndents: Array<{ marginLeft?: number; indent?: number }> = [];
+			const paragraphIndents: Array<{
+				marginLeft?: number | undefined;
+				indent?: number | undefined;
+			}> = [];
 			const inheritedBodyDefaultRunStyle = this.extractTextRunStyle(
 				xmlPath(inheritedTxBody, 'a:lstStyle', 'a:defPPr', 'a:defRPr'),
 				'left',

@@ -23,11 +23,11 @@ import { collectAllText } from './chart-title-xml-ops';
 
 /** The subset of font fields a `cx:txPr`/`cx:unitsLabel` run reads onto. */
 interface CxFontTarget {
-	fontFamily?: string;
+	fontFamily?: string | undefined;
 	eastAsiaFontFamily?: string;
-	fontSize?: number;
+	fontSize?: number | undefined;
 	fontBold?: boolean;
-	fontColor?: string;
+	fontColor?: string | undefined;
 }
 
 const NO_COLOR: ColorParserLike = { parseColor: () => undefined };

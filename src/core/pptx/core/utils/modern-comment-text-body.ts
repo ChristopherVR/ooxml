@@ -1,4 +1,5 @@
 import type { XmlObject } from '../types';
+import { at } from '../../../geometry/indexed';
 
 /**
  * Run-preserving text edits for a modern (`p188`) comment body.
@@ -140,7 +141,7 @@ function spliceParagraph(paragraph: XmlObject, line: string): XmlObject | undefi
 		if (next.length === 0) {
 			continue;
 		}
-		const textKey = keyOf(runs[index], 't') ?? 'a:t';
+		const textKey = keyOf(at(runs, index), 't') ?? 'a:t';
 		const nextRun: XmlObject = { ...runs[index] };
 		nextRun[textKey] = next;
 		rebuilt.push(nextRun);
@@ -190,16 +191,16 @@ export function applyModernCommentText(original: XmlObject | undefined, text: st
 	for (let index = 0; index < lines.length; index += 1) {
 		const source = paragraphs[index];
 		if (!source) {
-			rebuilt.push(plainParagraph(paragraphs[paragraphs.length - 1], lines[index]));
+			rebuilt.push(plainParagraph(paragraphs[paragraphs.length - 1], at(lines, index)));
 			continue;
 		}
 		// A paragraph whose runs do not account for all of its text (fields,
 		// breaks) cannot be spliced safely; rebuild just that line.
 		const spliced =
 			originalLines[index] === flattenRuns(source)
-				? spliceParagraph(source, lines[index])
+				? spliceParagraph(source, at(lines, index))
 				: undefined;
-		rebuilt.push(spliced ?? plainParagraph(source, lines[index]));
+		rebuilt.push(spliced ?? plainParagraph(source, at(lines, index)));
 	}
 
 	const result: XmlObject = { ...original };
