@@ -8,6 +8,7 @@ import {
 	chartExSummaryFromModel,
 	renderChartSummarySvg,
 	chartSpaceDataSheet,
+	chartSpaceFormatting,
 	renderChartSpaceSvg,
 	type ChartSpace,
 	type ChartExSpace,
@@ -95,6 +96,8 @@ export class ChartObjectEditor {
 		this.dialog.className = 'chart-dialog chart-edit-dialog';
 		this.sheet = doc.createElement('office-ui-chart-data-sheet') as OfficeUiChartDataSheet;
 		this.pane = doc.createElement('office-ui-chart-format-pane') as OfficeUiChartFormatPane;
+		// Visio saves picture fills: the embedded workbook stores them as media parts.
+		this.pane.pictures = true;
 		this.preview = doc.createElement('div');
 		this.preview.className = 'chart-edit-preview';
 		this.preview.setAttribute('role', 'img');
@@ -202,7 +205,12 @@ export class ChartObjectEditor {
 		if (!space) return;
 		this.sheet.data = chartSpaceDataSheet(space);
 		this.pane.chartSpace = space;
-		const svg = parseSvgPreview(this.dialog.ownerDocument, renderChartSpaceSvg(space, LIVE));
+		// The preview paints the formatting the part will save (chart and plot area fills).
+		const formatting = chartSpaceFormatting(space);
+		const svg = parseSvgPreview(
+			this.dialog.ownerDocument,
+			renderChartSpaceSvg(space, { ...LIVE, ...(formatting ? { formatting } : {}) }),
+		);
 		if (svg) this.preview.replaceChildren(svg);
 		else this.preview.replaceChildren();
 	}

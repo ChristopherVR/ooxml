@@ -226,6 +226,42 @@ describe('chart object Edit Data and Format Chart', () => {
 		expect(chartSpaceDataSheet(back.space).series[0]?.values).toEqual([4, 3]);
 	});
 
+	it('offers picture fills, previews them and re-embeds them as workbook media', async () => {
+		const PNG =
+			'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAADCAIAAAA2iEnWAAAAEElEQVR4nGP4z8AARAwoFABE0AX7pM/egAAAAABJRU5ErkJggg==';
+		const submit = vi.fn<Submit>(async () => {});
+		const { editor, press } = setup(submit);
+		await editor.open('format', TARGET, (await gridChartWorkbook(ROWS, 'column'))!);
+		const series = { kind: 'series', seriesIndex: 0 } as const;
+		expect(editor.pane.source?.element(series).support.picture).toBe(true);
+		for (const [target, intentTarget] of [
+			['series:0', series],
+			['plotArea', { kind: 'plotArea' }],
+		] as const)
+			editor.pane.dispatchEvent(
+				new CustomEvent('office-chart-format-edit', {
+					detail: {
+						target,
+						field: 'fill.picture',
+						value: PNG,
+						intent: { op: 'picture', target: intentTarget, edit: { src: PNG } },
+					},
+				}),
+			);
+		expect(editor.preview.querySelectorAll('image')).not.toHaveLength(0);
+		expect(
+			editor.preview.querySelector('[data-chart-part="plotArea"]')?.getAttribute('fill'),
+		).toMatch(/^url\(#/u);
+		press('OK');
+		await vi.waitFor(() => expect(submit).toHaveBeenCalled());
+		const out = submit.mock.calls[0]![0].workbook;
+		const zip = await JSZip.loadAsync(out);
+		expect(Object.keys(zip.files).filter((name) => name.startsWith('xl/media/'))).toHaveLength(1);
+		const back = (await readEmbeddedChartSpace(out))!;
+		expect(Object.values(back.space.pictureSources ?? {})).toEqual([PNG]);
+		expect((await readEmbeddedChart(out))!.view.series[0]?.picture?.href).toBe(PNG);
+	});
+
 	it('refuses a workbook with no chart and shows a failed save', async () => {
 		const submit = vi.fn<Submit>(async () => {
 			throw new Error('The drawing changed.');
