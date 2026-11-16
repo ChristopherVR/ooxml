@@ -71,7 +71,15 @@ function render(node: ReactNode): void {
 	act(() => root.render(<I18nextProvider i18n={i18n}>{node}</I18nextProvider>));
 }
 
-const text = () => document.body.textContent ?? '';
+// The ribbon tabs draw inside the shared tab row's shadow root, so read open shadow roots too.
+const deepText = (node: Node): string => {
+	let out = node.nodeType === Node.TEXT_NODE ? (node.textContent ?? '') : '';
+	const shadow = node instanceof Element ? node.shadowRoot : null;
+	if (shadow) out += deepText(shadow);
+	for (const child of Array.from(node.childNodes)) out += deepText(child);
+	return out;
+};
+const text = () => deepText(document.body);
 
 /** Enough of the toolbar's props to render its tab strip; no handler runs while rendering. */
 function toolbarProps(): ToolbarProps {
