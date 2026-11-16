@@ -61,9 +61,20 @@ export function planChartExPointLabels(
 			pending.push((space) => editChartExPointLabel(space, seriesIndex, label.idx, edit));
 		}
 		if (!supported) {
-			// A custom-text or manual-layout edit has no ChartEx node; do not silently ignore it.
+			// CT_DataLabel of the chartex schema ([MS-ODRAWXML]) holds a number format, shape, text
+			// properties, visibility flags and a separator, but no label text and no manual layout,
+			// and Excel 16's object model refuses both on an extended chart's label
+			// (`DataLabel.Text`, `DataLabel.Left`), so such an edit is refused, never dropped.
+			const custom = (series.dataLabels ?? []).some((label) => {
+				const previous = old.dataLabels?.find((item) => item.idx === label.idx);
+				return label.text !== previous?.text || !same(label.layout, previous?.layout);
+			});
 			edits.push(() => {
-				throw new RangeError('The ChartEx point-label edit is not supported.');
+				throw new RangeError(
+					custom
+						? 'Extended chart data labels cannot hold custom text or a manual position.'
+						: 'The ChartEx point-label edit is not supported.',
+				);
 			});
 		} else {
 			for (const label of old.dataLabels ?? [])

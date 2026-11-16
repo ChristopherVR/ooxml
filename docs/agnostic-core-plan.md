@@ -514,7 +514,9 @@ is the acceptance bar), and the area has its own tests and real parts from `src/
   opening with both the old and new generators, a known template limitation.
   Typed axis/style/point-label operations now serve PowerPoint as well as Word and Excel. The
   style bridge reuses shared DrawingML edits while keeping ChartEx data and layout semantics native
-  to its model. **Remains:** raw geography/Pareto creation, wider axis/custom-label authoring and
+  to its model. ChartEx labels have no custom text or manual layout node in the schema and Excel 16's
+  object model refuses both, so those edits stay refused (see the delivery ledger, 2026-11-16).
+  **Remains:** raw geography/Pareto creation, wider axis authoring and
   removal of the remaining compatibility paths only
   after regression and native checks. The complete Office ChartEx authoring surface is not claimed.
 

@@ -292,6 +292,15 @@ filled radar (82). An earlier run without `c:smooth` reported the scatter series
 evidence, not a pixel comparison. Surface wireframe, pie-of-pie and bubble option edits were not
 opened natively.
 
+ChartEx custom data labels: CT_DataLabel of the chartex schema ([MS-ODRAWXML]) holds a number
+format, shape and text properties, visibility flags, a separator and `@pos`, but no label text and
+no manual layout. Excel 16, driven through its object model on a waterfall chart, raised "not
+implemented" for `DataLabel.Text` and `DataLabel.Left`, and the part it saved kept only the series'
+visibility flags. Per-point visibility, position, separator, number format, font, shape and hiding
+already go through the shared `pointLabel` action in PowerPoint, Word and Excel; a PowerPoint edit
+of a ChartEx label's text or manual position stays refused, now with a message naming the cause.
+No custom-label node is invented.
+
 ### Documentation reconciliation, 2026-10-27
 
 Active roadmap, architecture plans, product capability pages and ribbon reviews now distinguish

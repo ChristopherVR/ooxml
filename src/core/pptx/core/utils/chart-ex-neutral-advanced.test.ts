@@ -118,9 +118,12 @@ it.each(['logScale', 'crossesAt'] as const)(
 		).rejects.toThrow('does not support');
 	},
 );
-it('refuses custom point text which ChartEx has no node to store', async () => {
+it.each([
+	['custom point text', { idx: 0, text: 'Cannot store this' }],
+	['a manual label position', { idx: 0, layout: { x: 0.1, y: 0.2 } }],
+])('refuses %s, which ChartEx has no node to store', async (_name, label) => {
 	const after = structuredClone(before);
-	after.series[0]!.dataLabels = [{ idx: 0, text: 'Cannot store this' }];
+	after.series[0]!.dataLabels = [label];
 	await expect(
 		saveChartExPackageThroughNeutral(
 			new JSZip(),
@@ -129,7 +132,7 @@ it('refuses custom point text which ChartEx has no node to store', async () => {
 			before,
 			after,
 		),
-	).rejects.toThrow('point-label');
+	).rejects.toThrow('cannot hold custom text or a manual position');
 });
 it('embeds a picture chosen for a ChartEx format target using the existing host relationship allocator', async () => {
 	const bytes = readFileSync(
