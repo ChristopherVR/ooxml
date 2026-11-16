@@ -1,92 +1,107 @@
+import { createPresentationRehearsalController } from 'ooxml-ui/pptx';
+import type { PresentationRehearsalState } from 'ooxml-ui/pptx';
+
 import type { Translator } from '../i18n';
 import { createEl } from '../render';
+import type { Store, ViewerState } from '../state';
 
 export interface RehearseTimingsOptions {
-	slideCount: number;
-	currentSlide(): number;
-	navigate(index: number): void;
+	store: Store<ViewerState>;
+	/** Open the slide show the rehearsal records. */
+	enterPresentation(): Promise<void>;
 	onSave(timings: Record<number, number>): void;
 }
 
+const format = (ms: number): string => new Date(Math.max(0, ms)).toISOString().slice(14, 19);
+
+/**
+ * Rehearse Timings for the vanilla binding: runs the slide show with the
+ * shared `createPresentationRehearsalController` timing it (the controller owns
+ * the clocks, pause and the display tick), and paints its HUD and the
+ * keep-the-timings summary. Returns the function that tears it down.
+ */
 export function openRehearseTimings(
 	doc: Document,
 	host: HTMLElement,
 	t: Translator,
 	options: RehearseTimingsOptions,
-): void {
+): () => void {
 	host.querySelector('.pptxv-rehearse')?.remove();
-	const hud = createEl(doc, 'aside', 'pptxv-rehearse');
-	hud.setAttribute('aria-label', t('pptx.rehearse.summaryTitle'));
-	const slide = createEl(doc, 'span');
-	const time = createEl(doc, 'strong');
-	const total = createEl(doc, 'span');
-	const timings: Record<number, number> = {};
-	let slideStarted = performance.now();
-	let totalStarted = slideStarted;
-	let pausedAt = 0;
-	let pausedDuration = 0;
-	let paused = false;
-	const format = (ms: number): string => new Date(Math.max(0, ms)).toISOString().slice(14, 19);
+	const rehearsal = createPresentationRehearsalController();
+	const panel = createEl(doc, 'aside', 'pptxv-rehearse');
+	panel.setAttribute('aria-label', t('pptx.rehearse.summaryTitle'));
+	host.appendChild(panel);
+
 	const button = (label: string, action: () => void): HTMLButtonElement => {
 		const el = createEl(doc, 'button');
 		el.type = 'button';
 		el.textContent = label;
 		el.addEventListener('click', action);
-		hud.appendChild(el);
 		return el;
 	};
-	const pause = button(t('pptx.rehearse.pause'), () => {
-		paused = !paused;
-		if (paused) {
-			pausedAt = performance.now();
-		} else {
-			const delay = performance.now() - pausedAt;
-			pausedDuration += delay;
-			slideStarted += delay;
-			totalStarted += delay;
-		}
-		pause.textContent = t(paused ? 'pptx.rehearse.resume' : 'pptx.rehearse.pause');
-	});
-	const commitCurrent = (): void => {
-		timings[options.currentSlide()] = Math.max(
-			250,
-			performance.now() - slideStarted - pausedDuration,
-		);
-		pausedDuration = 0;
+	const text = (tag: 'span' | 'strong', value: string): HTMLElement => {
+		const el = createEl(doc, tag);
+		el.textContent = value;
+		return el;
 	};
-	button(t('pptx.presenter.next'), () => {
-		if (paused) {
+	let teardown = (): void => undefined;
+	const close = (): void => teardown();
+
+	const paint = (state: PresentationRehearsalState): void => {
+		if (state.active) {
+			panel.setAttribute('role', 'status');
+			panel.replaceChildren(
+				text('span', `${t('pptx.rehearse.slide')} ${state.slideIndex + 1}`),
+				text('strong', `${t('pptx.rehearse.slideTime')}: ${format(state.slideElapsedMs)}`),
+				text('span', `${t('pptx.rehearse.totalTime')}: ${format(state.totalElapsedMs)}`),
+				button(t(state.paused ? 'pptx.rehearse.resume' : 'pptx.rehearse.pause'), () =>
+					rehearsal.togglePause(),
+				),
+			);
 			return;
 		}
-		commitCurrent();
-		const next = options.currentSlide() + 1;
-		if (next < options.slideCount) {
-			options.navigate(next);
-			slideStarted = performance.now();
+		if (state.summaryOpen) {
+			panel.setAttribute('role', 'dialog');
+			const rows = Object.entries(state.timings).map(([index, ms]) =>
+				text('span', `${t('pptx.rehearse.slide')} ${Number(index) + 1}: ${format(ms)}`),
+			);
+			panel.replaceChildren(
+				...rows,
+				text(
+					'strong',
+					`${t('pptx.rehearse.totalPresentationTime')}: ${format(state.recordedTotalMs)}`,
+				),
+				button(t('pptx.rehearse.saveTimings'), () => {
+					options.onSave({ ...rehearsal.save() });
+					close();
+				}),
+				button(t('pptx.rehearse.discard'), () => {
+					rehearsal.discard();
+					close();
+				}),
+			);
+		}
+	};
+
+	const unsubscribeRehearsal = rehearsal.subscribe(() => paint(rehearsal.getSnapshot()));
+	const unsubscribeStore = options.store.subscribe((state, previous) => {
+		if (state.currentSlide !== previous.currentSlide) {
+			rehearsal.moveTo(state.currentSlide);
+		}
+		if (previous.presenting && !state.presenting) {
+			rehearsal.finish();
 		}
 	});
-	button(t('pptx.rehearse.saveTimings'), () => {
-		commitCurrent();
-		options.onSave(timings);
-		hud.remove();
+	teardown = () => {
+		unsubscribeRehearsal();
+		unsubscribeStore();
+		rehearsal.dispose();
+		panel.remove();
+	};
+	// Start the clock once the show is up, on the slide it actually opened on.
+	void options.enterPresentation().then(() => {
+		rehearsal.start(options.store.get().currentSlide);
+		return undefined;
 	});
-	button(t('pptx.rehearse.discard'), () => hud.remove());
-	hud.prepend(slide, time, total);
-	const timer = window.setInterval(() => {
-		if (paused) {
-			return;
-		}
-		const now = performance.now();
-		slide.textContent = `${t('pptx.rehearse.slide')} ${options.currentSlide() + 1}/${options.slideCount}`;
-		time.textContent = `${t('pptx.rehearse.slideTime')}: ${format(now - slideStarted)}`;
-		total.textContent = `${t('pptx.rehearse.totalTime')}: ${format(now - totalStarted)}`;
-	}, 250);
-	const observer = new MutationObserver(() => {
-		if (!hud.isConnected) {
-			clearInterval(timer);
-			observer.disconnect();
-		}
-	});
-	observer.observe(host, { childList: true });
-	host.appendChild(hud);
+	return close;
 }

@@ -221,9 +221,8 @@ export function createParityWorkflows(host: ParityWorkflowHost): ParityWorkflows
 		},
 		startRehearsal() {
 			openRehearseTimings(host.doc, host.root(), host.t, {
-				slideCount: state().slides.length,
-				currentSlide: () => state().currentSlide,
-				navigate: host.goToSlide,
+				store: host.store,
+				enterPresentation: () => host.enterPresentation(),
 				onSave: (timings) =>
 					host.editor.commitSlides(applyRehearsalTimings(state().slides, timings)),
 			});

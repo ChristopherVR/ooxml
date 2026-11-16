@@ -1,9 +1,7 @@
 import {
 	applySlidePasteTemplates,
 	buildDeckSaveOptions,
-	buildPresentationAudienceUrl,
 	buildUserFontFaceStyles,
-	clearPresentationDeck,
 	collectAccessibilityIssues,
 	commitElementUpdateBatch,
 	createBackstagePresentation,
@@ -12,8 +10,6 @@ import {
 	createEmbeddedFontsSheet,
 	createSaveProgressController,
 	createEmbeddedOutlineFontsSlot,
-	createInitialPresentationSnapshot,
-	createPresentationSessionId,
 	createPresenterShowGuard,
 	clearAutosaveSnapshots,
 	createSlidePackageClipboard,
@@ -24,25 +20,19 @@ import {
 	insertSlidePaste,
 	isEditingAllowed,
 	isPanelVisible,
-	isPresentationSessionMessage,
 	loadDeckWebfontOutlines,
 	loadPresentationDeck,
 	makeSlideId,
 	mayLeaveSlideShow,
-	mergePresentationSnapshot,
 	openPptxFile,
 	parsePresentationSessionId,
-	placeAudienceWindow,
 	prepareElementForInsertion,
-	PRESENTATION_CHANNEL_NAME,
-	PRESENTATION_MESSAGE_ORIGIN,
 	pruneExpiredAutosaveSnapshots,
 	readBackstageRecentFile,
 	readOnlySessionActions,
 	readStoredViewerPrefs,
 	reflowSmartArtData,
 	resolve3DRenderingFlags,
-	resolveAudienceScreenPlacement,
 	resolveAllowExternalContent,
 	resolveAuthoredSlideRange,
 	resolveAutosaveFileKey,
@@ -59,13 +49,12 @@ import {
 	shouldDiscardAutosaveOnSuccessfulSave,
 	slideSpaceElement,
 	stepPresenterZoom,
-	storePresentationDeck,
 	subtitleSettingsFromOptions,
-	swapPresentationWindows,
 	THEME_CATALOG,
 	withSaveFailureToast,
 	writeStoredViewerPrefs,
 	confirmExternalHyperlinkDialog,
+	createPresenterSessionController,
 	installSvgIdScope,
 	createRibbonDisplayController,
 } from 'ooxml-ui/pptx';
@@ -229,11 +218,38 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	private readonly controls: ViewerControls;
 	private destroyed = false;
 	private releaseSvgIdScope: (() => void) | undefined;
-	private presenterChannel: BroadcastChannel | null = null;
-	private audienceWindow: Window | null = null;
-	private presenterSessionId = '';
-	private presenterSequence = 0;
-	private presenterSnapshot = createInitialPresentationSnapshot();
+	/**
+	 * The presenter and audience windows: the shared presenter session
+	 * controller (window, deck hand-over, channel protocol, Swap Displays) that
+	 * every binding uses. It owns the snapshot both windows share.
+	 */
+	private readonly presenterSession = createPresenterSessionController({
+		// The audience gets the deck as edited, not as loaded.
+		getSource: () => {
+			const handler = this.loading.getHandler();
+			return handler ? handler.save(this.store.get().slides) : null;
+		},
+		onAudienceSnapshot: (snapshot) => {
+			// Same target as updatePresenterSnapshot: the chrome root, so the
+			// effects stay visible when this audience tab goes fullscreen.
+			renderAudienceEffects(this.lifecycle.chrome.root, snapshot);
+		},
+		onAudienceSlide: (index) => this.goToSlide(index),
+		onAudienceExit: () => {
+			// Close this tab; when the browser refuses, raise the black
+			// end-of-slide-show screen. Leaving presentation mode would drop the
+			// room into the editor.
+			if (endAudienceDisplay(window)) {
+				this.store.set({ endOfShow: true });
+			}
+		},
+		// The console's `audience` control flips back to "Open Audience Window".
+		onAudienceClosed: () => this.presenterView?.syncSnapshot(),
+	});
+
+	private get presenterSnapshot(): PresentationSnapshot {
+		return this.presenterSession.getSnapshot().snapshot;
+	}
 	private presenterView: PresenterViewHandle | null = null;
 	private presenterCaptions: PresenterCaptions | null = null;
 	/**
@@ -730,8 +746,8 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			}),
 		);
 		this.store.subscribe((state, previous) => {
-			if (this.presenterSessionId) {
-				this.syncAudience(state.currentSlide);
+			if (this.presenterSession.getSnapshot().role === 'presenter') {
+				this.presenterSession.updateSnapshot({ slideIndex: state.currentSlide });
 			}
 			this.annotations.sync(this.presenterSnapshot);
 			if (previous.presenting && !state.presenting) {
@@ -1630,63 +1646,17 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		if (this.store.get().presenting) {
 			this.presenterShowGuard.expectAudienceBounce();
 		}
-		const popup = window.open(
-			'about:blank',
-			'pptx-viewer-audience',
-			'popup=yes,width=1280,height=720',
-		);
-		if (!popup) {
+		if (!this.presenterSession.openAudience()) {
 			// A blocked popup causes no bounce, so a latch left armed here would
 			// eat the presenter's next Escape.
 			this.presenterShowGuard.disarm();
 			return;
 		}
-		this.audienceWindow = popup;
-		this.presenterSessionId = createPresentationSessionId();
 		this.presenterView?.syncSnapshot();
-		const sessionId = this.presenterSessionId;
-		const url = buildPresentationAudienceUrl(window.location.href, sessionId);
-		void resolveAudienceScreenPlacement(window).then((placement) => {
-			if (placement && this.audienceWindow === popup && !popup.closed) {
-				placeAudienceWindow(popup, placement);
-			}
-			return undefined;
-		});
-		const handler = this.loading.getHandler();
-		if (!handler) {
-			this.closeAudienceWindow();
-			return;
-		}
-		void handler
-			.save(this.store.get().slides)
-			.then((bytes) => storePresentationDeck(sessionId, bytes))
-			.then(() => popup.location.replace(url))
-			.catch(() => this.closeAudienceWindow());
-	}
-
-	private getPresenterChannel(): BroadcastChannel | null {
-		try {
-			this.presenterChannel ??= new BroadcastChannel(PRESENTATION_CHANNEL_NAME);
-			return this.presenterChannel;
-		} catch {
-			return null;
-		}
 	}
 
 	private isAudienceWindowOpen(): boolean {
-		return Boolean(this.audienceWindow && !this.audienceWindow.closed);
-	}
-
-	private syncAudience(slideIndex = this.getCurrentSlide()): void {
-		if (!this.presenterSessionId) {
-			return;
-		}
-		this.getPresenterChannel()?.postMessage({
-			origin: PRESENTATION_MESSAGE_ORIGIN,
-			type: 'presenter-state',
-			sessionId: this.presenterSessionId,
-			snapshot: { ...this.presenterSnapshot, slideIndex, sequence: ++this.presenterSequence },
-		});
+		return this.presenterSession.getSnapshot().audienceOpen;
 	}
 
 	/** Current presenter snapshot (pointer tool, blackout, ink, captions). */
@@ -1695,13 +1665,12 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	}
 
 	updatePresenterSnapshot(patch: Partial<PresentationSnapshot>): void {
-		this.presenterSnapshot = mergePresentationSnapshot(this.presenterSnapshot, patch);
+		this.presenterSession.updateSnapshot(patch);
 		// Painted into the CHROME ROOT (the element the Fullscreen API holds and
 		// the `.pptxv` positioning context), not the host container: a blackout
 		// sheet mounted beside the fullscreen element is never drawn during a
 		// real fullscreen show.
 		renderAudienceEffects(this.lifecycle.chrome.root, this.presenterSnapshot);
-		this.syncAudience(this.presenterSnapshot.slideIndex);
 		this.annotations.sync(this.presenterSnapshot);
 		this.syncPresentationToolbar();
 		// The console reads the snapshot for its pressed states and its zoom, and
@@ -1872,11 +1841,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	 * control is disabled in that state.
 	 */
 	private swapPresenterDisplays(): void {
-		const audience = this.audienceWindow;
-		if (!audience || audience.closed) {
-			return;
-		}
-		void swapPresentationWindows(window, audience);
+		void this.presenterSession.swapDisplays();
 	}
 
 	/**
@@ -1889,50 +1854,11 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	}
 
 	private connectAudienceRole(): void {
+		this.presenterSession.connect();
 		const audienceSession = parsePresentationSessionId(window.location.hash);
-		const channel = this.getPresenterChannel();
-		if (!channel) {
-			return;
-		}
-		channel.addEventListener('message', (event: MessageEvent) => {
-			const message = event.data;
-			if (!isPresentationSessionMessage(message)) {
-				return;
-			}
-			if (audienceSession && message.sessionId === audienceSession) {
-				if (message.type === 'presenter-state') {
-					this.presenterSnapshot = message.snapshot;
-					// Same target as updatePresenterSnapshot: the chrome root, so the
-					// effects stay visible when this audience tab goes fullscreen.
-					renderAudienceEffects(this.lifecycle.chrome.root, message.snapshot);
-					this.goToSlide(message.snapshot.slideIndex);
-				}
-				if (message.type === 'presenter-slide-change') {
-					this.goToSlide(message.slideIndex);
-				}
-				if (message.type === 'presenter-exit') {
-					// Close this tab; when the browser refuses, raise the black
-					// end-of-slide-show screen. Leaving presentation mode would drop
-					// the room into the editor.
-					if (endAudienceDisplay(window)) {
-						this.store.set({ endOfShow: true });
-					}
-				}
-			} else if (
-				message.type === 'audience-ready' &&
-				message.sessionId === this.presenterSessionId
-			) {
-				this.syncAudience();
-			}
-		});
 		if (!audienceSession) {
 			return;
 		}
-		channel.postMessage({
-			origin: PRESENTATION_MESSAGE_ORIGIN,
-			type: 'audience-ready',
-			sessionId: audienceSession,
-		});
 		if (this.options.source === undefined) {
 			void loadPresentationDeck(audienceSession).then(async (bytes) => {
 				if (!bytes) {
@@ -1948,22 +1874,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	}
 
 	private closeAudienceWindow(): void {
-		const sessionId = this.presenterSessionId;
-		if (sessionId) {
-			this.getPresenterChannel()?.postMessage({
-				origin: PRESENTATION_MESSAGE_ORIGIN,
-				type: 'presenter-exit',
-				sessionId,
-			});
-			void clearPresentationDeck(sessionId);
-		}
-		try {
-			this.audienceWindow?.close();
-		} catch {
-			/* ignore */
-		}
-		this.audienceWindow = null;
-		this.presenterSessionId = '';
+		this.presenterSession.closeAudience();
 		// The console outlives the audience display: they are independent
 		// surfaces, and repainting is only needed so the `audience` control
 		// flips back to "Open Audience Window".
@@ -2446,8 +2357,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.rulers = null;
 		this.parityWorkflows.closeReadingView();
 		this.parityWorkflows.closeOutlineView();
-		this.closeAudienceWindow();
-		this.presenterChannel?.close();
+		this.presenterSession.dispose();
 		this.sessions.destroy();
 		this.optionsController.dispose();
 		this.detachSignatureWarning?.();

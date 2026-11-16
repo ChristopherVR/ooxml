@@ -1,4 +1,9 @@
-import { annotationOverlayZIndex, strokeToInkElement } from 'ooxml-ui/pptx';
+import {
+	annotationOverlayZIndex,
+	applyPresentationInk,
+	createPresentationInkController,
+	presentationInkSlideCount,
+} from 'ooxml-ui/pptx';
 import type {
 	CanvasSize,
 	PresentationBlackout,
@@ -49,11 +54,17 @@ export interface PresentationAnnotationsController {
 	dispose(): void;
 }
 
-/** Own temporary slide-show ink and optionally persist it into slide elements. */
+/**
+ * Own temporary slide-show ink and optionally persist it into slide elements.
+ * The strokes live in the shared `createPresentationInkController`; this
+ * binding's overlay draws them in unit-square coordinates and reports whole
+ * stroke lists, and "Keep" converts them through the shared `applyPresentationInk`.
+ */
 export function createPresentationAnnotationsController(
 	options: PresentationAnnotationsControllerOptions,
 ): PresentationAnnotationsController {
-	let strokes: PresentationInkStroke[] = [];
+	const ink = createPresentationInkController();
+	const strokes = (): readonly PresentationInkStroke[] => ink.getSnapshot().strokes;
 	let unmount = (): void => undefined;
 	let lastStage: PresentationAnnotationStage | null = null;
 	let lastOverlayKey: string | null = null;
@@ -74,7 +85,7 @@ export function createPresentationAnnotationsController(
 			stage.pointer?.color ?? '',
 		].join('|');
 
-	const notify = (): void => options.onStrokesChange?.([...strokes]);
+	const notify = (): void => options.onStrokesChange?.([...strokes()]);
 	const mount = (): void => {
 		unmount();
 		const stage = lastStage;
@@ -88,47 +99,29 @@ export function createPresentationAnnotationsController(
 			tool,
 			color: stage.pointer?.color ?? '#ef4444',
 			blackout: stage.blackout,
-			strokes,
+			strokes: [...strokes()],
 			onChange(next) {
-				strokes = next;
+				ink.setStrokes(next);
 				notify();
 			},
 			onPointerMove: options.onPointerMove,
 		});
 	};
 	const clear = (): void => {
-		strokes = [];
+		ink.clearAll();
 		notify();
 		mount();
 	};
 	const persist = (): boolean => {
 		const slides = options.getSlides();
-		let changed = false;
-		const next = slides.map((slide, slideIndex) => {
-			const additions = strokes
-				.filter((stroke) => stroke.slideIndex === slideIndex && stroke.points.length > 1)
-				.map((stroke) =>
-					strokeToInkElement({
-						points: stroke.points.map((point) => ({
-							x: point.x * (lastStage?.canvasSize.width ?? 960),
-							y: point.y * (lastStage?.canvasSize.height ?? 540),
-						})),
-						color: stroke.color,
-						width: stroke.width,
-						tool: stroke.tool,
-					}),
-				)
-				.filter((ink) => ink !== null);
-			if (additions.length === 0) {
-				return slide;
-			}
-			changed = true;
-			return { ...slide, elements: [...slide.elements, ...additions] };
+		const next = applyPresentationInk(slides, strokes(), {
+			width: lastStage?.canvasSize.width ?? 960,
+			height: lastStage?.canvasSize.height ?? 540,
 		});
-		if (changed) {
-			options.commitSlides(next);
+		if (next !== slides) {
+			options.commitSlides([...next]);
 		}
-		return changed;
+		return next !== slides;
 	};
 	return {
 		syncStage(stage) {
@@ -152,24 +145,29 @@ export function createPresentationAnnotationsController(
 				overlay.style.zIndex = String(annotationOverlayZIndex(stage.blackout));
 			}
 		},
-		getStrokes: () => strokes,
+		getStrokes: strokes,
 		setStrokes(next) {
-			strokes = [...next];
+			ink.setStrokes(next);
 			notify();
 			mount();
 		},
-		hasAnnotations: () => strokes.length > 0,
+		hasAnnotations: () => strokes().length > 0,
 		clear,
 		async finishPresentation() {
-			if (strokes.length === 0) {
+			if (strokes().length === 0) {
 				return 'none';
 			}
 			if (options.shouldPromptKeepAnnotations?.() === false) {
 				clear();
 				return 'discarded';
 			}
-			const slides = new Set(strokes.map((stroke) => stroke.slideIndex)).size;
-			const choice = await promptKeepAnnotations(options.doc, options.t, strokes.length, slides);
+			const state = ink.getSnapshot();
+			const choice = await promptKeepAnnotations(
+				options.doc,
+				options.t,
+				state.strokes.length,
+				presentationInkSlideCount(state),
+			);
 			if (choice === 'keep') {
 				persist();
 			}
