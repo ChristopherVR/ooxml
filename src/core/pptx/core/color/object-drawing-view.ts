@@ -14,6 +14,10 @@ import type { DrawingColor } from '../../../drawingml/types';
 import type { XmlObject } from '../types';
 import { CODEC_COLOR_CHOICE_ORDER, objectDrawingColor } from './color-transforms';
 
+const COLOR_KINDS = new Map(
+	CODEC_COLOR_CHOICE_ORDER.filter(([element]) => element !== 'a:styleClr'),
+);
+
 const isNode = (value: unknown): value is XmlObject =>
 	Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 
@@ -67,4 +71,16 @@ export const OBJECT_DRAWING_VIEW: DrawingNodeView<XmlObject> = {
 		return found;
 	},
 	color: objectNodeColor,
+	colors(node) {
+		const found: DrawingColor[] = [];
+		for (const [key, value] of Object.entries(node)) {
+			const kind = COLOR_KINDS.get(key);
+			if (!kind) continue;
+			for (const entry of Array.isArray(value) ? value : [value]) {
+				const colorNode = asNode(entry);
+				if (colorNode) found.push(objectDrawingColor(kind, colorNode));
+			}
+		}
+		return found;
+	},
 };

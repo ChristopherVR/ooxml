@@ -1,60 +1,31 @@
 // CT_EffectList codec. Source-backed edits change only the requested properties, preserving
 // extension XML, invalid unmodelled attributes and authored scheme colours in every other field.
 import { NS, buildXml, elements, parseXml, type XmlElement } from '../xml/index';
-import { booleanAttribute } from './dom';
-import { parseDrawingColorIn } from './drawing-color';
 import { fillElementOf, parseDrawingFill } from './drawing-fill';
 import { drawingFillXml } from './write-fill';
 import type { DrawingEffect, DrawingEffectList } from './effect-model';
+import {
+	DRAWING_EFFECT_BOOLEANS,
+	DRAWING_EFFECT_COLORED,
+	DRAWING_EFFECT_KINDS,
+	DRAWING_EFFECT_NUMBERS,
+	DRAWING_EFFECT_STRINGS,
+	readDrawingEffect,
+	type DrawingEffectKind,
+} from './effect-read';
+import { DOM_DRAWING_VIEW } from './node-view';
 import { patchDrawingColorIn } from './patch-color';
 
-const KINDS = {
-	outerShdw: 'outerShadow',
-	innerShdw: 'innerShadow',
-	prstShdw: 'presetShadow',
-	glow: 'glow',
-	softEdge: 'softEdge',
-	blur: 'blur',
-	reflection: 'reflection',
-	fillOverlay: 'fillOverlay',
-} as const;
-type KnownKind = Exclude<DrawingEffect['kind'], 'unsupported'>;
+const KINDS = DRAWING_EFFECT_KINDS;
+type KnownKind = DrawingEffectKind;
 const TAGS = Object.fromEntries(Object.entries(KINDS).map(([tag, kind]) => [kind, tag])) as Record<
 	KnownKind,
 	string
 >;
-const GEOMETRY = { blurRadiusEmu: 'blurRad', distanceEmu: 'dist', directionAngle: 'dir' };
-const TRANSFORM = { scaleX: 'sx', scaleY: 'sy', skewXAngle: 'kx', skewYAngle: 'ky' };
-const NUMBERS: Record<KnownKind, Readonly<Record<string, string>>> = {
-	outerShadow: { ...GEOMETRY, ...TRANSFORM },
-	innerShadow: GEOMETRY,
-	presetShadow: { distanceEmu: 'dist', directionAngle: 'dir' },
-	glow: { radiusEmu: 'rad' },
-	softEdge: { radiusEmu: 'rad' },
-	blur: { radiusEmu: 'rad' },
-	fillOverlay: {},
-	reflection: {
-		...GEOMETRY,
-		...TRANSFORM,
-		fadeDirectionAngle: 'fadeDir',
-		startAlpha: 'stA',
-		startPosition: 'stPos',
-		endAlpha: 'endA',
-		endPosition: 'endPos',
-	},
-};
-const STRINGS: Partial<Record<KnownKind, Readonly<Record<string, string>>>> = {
-	outerShadow: { alignment: 'algn' },
-	reflection: { alignment: 'algn' },
-	presetShadow: { preset: 'prst' },
-	fillOverlay: { blend: 'blend' },
-};
-const BOOLEANS: Partial<Record<KnownKind, Readonly<Record<string, string>>>> = {
-	outerShadow: { rotateWithShape: 'rotWithShape' },
-	reflection: { rotateWithShape: 'rotWithShape' },
-	blur: { grow: 'grow' },
-};
-const COLORED = new Set<KnownKind>(['outerShadow', 'innerShadow', 'presetShadow', 'glow']);
+const NUMBERS = DRAWING_EFFECT_NUMBERS;
+const STRINGS = DRAWING_EFFECT_STRINGS;
+const BOOLEANS = DRAWING_EFFECT_BOOLEANS;
+const COLORED = DRAWING_EFFECT_COLORED;
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
 function fragment(xml: string): XmlElement {
@@ -64,32 +35,13 @@ function fragment(xml: string): XmlElement {
 /** Reads one effect. No defaults are synthesized and unsupported nodes remain editable opaque data. */
 export function parseDrawingEffect(node: XmlElement): DrawingEffect {
 	const sourceXml = buildXml(node);
-	const kind = node.namespaceURI === NS.a ? KINDS[node.localName as keyof typeof KINDS] : undefined;
-	if (!kind) return { kind: 'unsupported', sourceXml };
-	const result: Record<string, unknown> = { kind, sourceXml };
-	for (const [key, attribute] of Object.entries(NUMBERS[kind])) {
-		const raw = node.getAttribute(attribute);
-		if (raw === null || raw.trim() === '') continue;
-		const value = Number(raw);
-		if (Number.isFinite(value)) result[key] = value;
-	}
-	for (const [key, attribute] of Object.entries(STRINGS[kind] ?? {})) {
-		const value = node.getAttribute(attribute);
-		if (value !== null) result[key] = value;
-	}
-	for (const [key, attribute] of Object.entries(BOOLEANS[kind] ?? {})) {
-		const value = booleanAttribute(node, attribute);
-		if (value !== undefined) result[key] = value;
-	}
-	if (COLORED.has(kind)) {
-		const color = parseDrawingColorIn(node);
-		if (color) result.color = color;
-	}
-	if (kind === 'fillOverlay') {
-		const fill = parseDrawingFill(node);
-		if (fill) result.fill = fill;
-	}
-	return result as unknown as DrawingEffect;
+	const fields =
+		node.namespaceURI === NS.a
+			? readDrawingEffect(DOM_DRAWING_VIEW, node.localName, node, parseDrawingFill)
+			: undefined;
+	if (!fields) return { kind: 'unsupported', sourceXml };
+	const { kind, ...rest } = fields;
+	return { kind, sourceXml, ...rest } as DrawingEffect;
 }
 
 /** Reads an a:effectLst. Absence is inheritance; an empty list is explicit no effects. */

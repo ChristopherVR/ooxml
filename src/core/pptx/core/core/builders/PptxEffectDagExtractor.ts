@@ -1,15 +1,21 @@
+import {
+	interpretDrawingEffectDag,
+	readDrawingEffectContainer,
+	type DrawingDagColorOp,
+} from '../../../../drawingml/effect-dag';
+import type { DrawingEffectFields } from '../../../../drawingml/effect-read';
+import { OBJECT_DRAWING_VIEW } from '../../color/object-drawing-view';
 import type { ShapeStyle, XmlObject } from '../../types';
 import { buildEffectDagTreeFromXml } from './effect-dag-containers';
+import { extractDagDuotone } from './effect-dag-specific-helpers';
 import {
-	extractDagGrayscale,
-	extractDagBiLevel,
-	extractDagLuminance,
-	extractDagHsl,
-	extractDagAlphaModFix,
-	extractDagTint,
-	extractDagDuotone,
-	extractDagFillOverlay,
-} from './effect-dag-specific-helpers';
+	blurStyle,
+	glowStyle,
+	innerShadowStyle,
+	outerShadowStyle,
+	reflectionStyle,
+	softEdgeStyle,
+} from './effect-style-from-model';
 
 /**
  * Context required by the DAG extractor — a subset of the effect codec context.
@@ -25,18 +31,17 @@ export interface IPptxEffectDagExtractor {
 	extractEffectDagStyle(shapeProps: XmlObject): Partial<ShapeStyle>;
 }
 
+const VALID_FILL_OVERLAY_BLENDS = new Set(['over', 'mult', 'screen', 'darken', 'lighten']);
+
 /**
- * Parses `a:effectDag` elements — the DAG-based alternative to `a:effectLst`.
- *
- * The DAG can contain the same effects as effectLst (shadow, glow, blur, etc.)
- * plus additional effects: grayscale, biLevel, lum, hsl, alphaModFix, tint,
- * duotone, fillOverlay, and various alpha manipulation effects.
- *
- * This extractor:
- * 1. Delegates standard effectLst-compatible effects (shadow, glow, etc.)
- *    back to the caller via the returned partial ShapeStyle.
- * 2. Extracts DAG-specific effects into `dag*` ShapeStyle properties.
- * 3. Preserves the raw XML node for round-trip serialisation.
+ * Parses `a:effectDag`, the DAG alternative to `a:effectLst`, through the shared reader and
+ * interpretation (`drawingml/effect-dag.ts`): the graph is walked from the shape along its paint
+ * path, so effects inside `a:cont` and painted `a:blend` containers are found too. The first
+ * effect of each list kind maps onto the same ShapeStyle fields as `a:effectLst`
+ * (`effect-style-from-model.ts`); the colour operations (grayscale, biLevel, lum, hsl, tint,
+ * duotone) and the combined alpha map onto the `dag*` fields. What the interpretation
+ * approximates is listed in `effectDagApproximations`. The raw XML and the typed structural
+ * tree are kept for round-trip saving.
  */
 export class PptxEffectDagExtractor implements IPptxEffectDagExtractor {
 	private readonly context: PptxEffectDagExtractorContext;
@@ -51,200 +56,123 @@ export class PptxEffectDagExtractor implements IPptxEffectDagExtractor {
 	 */
 	public extractEffectDagStyle(shapeProps: XmlObject): Partial<ShapeStyle> {
 		const effectDag = childByLocalName(shapeProps, 'effectDag');
-		if (!effectDag) {
+		if (!effectDag || typeof effectDag !== 'object') {
 			return {};
 		}
 
-		const style: Partial<ShapeStyle> = {};
-
-		// Preserve raw XML for round-trip save
-		style.effectDagXml = effectDag;
-
-		// Typed structural tree — captures the four CT_EffectContainer nodes
-		// (`a:cont`, `a:blend`, `a:xfrmEffect`, `a:relOff`) and preserves any
-		// other inner effect verbatim as a raw leaf. Round-trip serialisation
-		// continues to use the raw XML above; the typed tree is exposed for
-		// downstream consumers and tests.
+		const style: Partial<ShapeStyle> = { effectDagXml: effectDag };
 		const tree = buildEffectDagTreeFromXml(effectDag);
 		if (tree) {
 			style.effectDagTree = tree;
 		}
 
-		// ── Standard effectLst-compatible effects inside the DAG ──
-		this.extractDagShadow(effectDag, style);
-		this.extractDagInnerShadow(effectDag, style);
-		this.extractDagGlow(effectDag, style);
-		this.extractDagSoftEdge(effectDag, style);
-		this.extractDagReflection(effectDag, style);
-		this.extractDagBlur(effectDag, style);
-
-		// ── DAG-specific effects ──
-		extractDagGrayscale(effectDag, style);
-		extractDagBiLevel(effectDag, style);
-		extractDagLuminance(effectDag, style);
-		extractDagHsl(effectDag, style);
-		extractDagAlphaModFix(effectDag, style);
-		extractDagTint(effectDag, style);
-		extractDagDuotone(effectDag, style, this.context);
-		extractDagFillOverlay(effectDag, style);
-		this.extractDagFillOverlayColor(effectDag, style);
-
+		const paint = interpretDrawingEffectDag(
+			readDrawingEffectContainer(OBJECT_DRAWING_VIEW, effectDag)!,
+		);
+		const seen = new Set<string>();
+		for (const { effect, source } of paint.effects) {
+			if (seen.has(effect.kind) || !source) {
+				continue;
+			}
+			seen.add(effect.kind);
+			Object.assign(style, this.effectStyle(effect, source));
+		}
+		for (const op of paint.colorOps) {
+			this.applyColorOp(op, style);
+		}
+		if (paint.opacity < 1) {
+			style.dagAlphaModFix = paint.opacity * 100;
+		}
+		if (paint.approximations.length > 0) {
+			style.effectDagApproximations = paint.approximations;
+		}
 		return style;
 	}
 
+	private effectStyle(effect: DrawingEffectFields, node: XmlObject): Partial<ShapeStyle> {
+		const { emuPerPx } = this.context;
+		switch (effect.kind) {
+			case 'outerShadow':
+				return outerShadowStyle(effect, node, this.context);
+			case 'innerShadow':
+				return innerShadowStyle(effect, node, this.context);
+			case 'glow':
+				return glowStyle(effect, node, this.context);
+			case 'softEdge':
+				return softEdgeStyle(effect, this.context);
+			case 'reflection':
+				return reflectionStyle(effect, node, emuPerPx);
+			case 'blur':
+				return blurStyle(effect, this.context);
+			case 'fillOverlay':
+				return this.fillOverlayStyle(effect.blend, node);
+			default:
+				// A preset shadow in a DAG keeps its source XML only, as before.
+				return {};
+		}
+	}
+
 	/**
-	 * Parse the `a:fillOverlay` overlay tint colour/opacity (the shared
-	 * {@link extractDagFillOverlay} helper only captures the `@blend` mode). The
-	 * overlay carries a full fill child (`a:solidFill` or `a:gradFill`); we read
-	 * the solid colour, or the first gradient stop's colour, so the renderer can
-	 * paint the tint instead of only mapping a blend mode.
+	 * The `a:fillOverlay` blend mode and its overlay tint: the solid colour, or the first
+	 * gradient stop's colour, so the renderer can paint the tint instead of only a blend mode.
 	 */
-	private extractDagFillOverlayColor(dag: XmlObject, style: Partial<ShapeStyle>): void {
-		const fillOverlay = dag['a:fillOverlay'] as XmlObject | undefined;
-		if (!fillOverlay) {
-			return;
+	private fillOverlayStyle(blend: string | undefined, fillOverlay: XmlObject): Partial<ShapeStyle> {
+		const style: Partial<ShapeStyle> = {};
+		const mode = String(blend ?? '')
+			.trim()
+			.toLowerCase();
+		if (VALID_FILL_OVERLAY_BLENDS.has(mode)) {
+			style.dagFillOverlayBlend = mode as ShapeStyle['dagFillOverlayBlend'];
 		}
-
 		const colorHost = fillOverlayColorHost(fillOverlay, this.context);
-		if (!colorHost) {
-			return;
+		const color = colorHost ? this.context.parseColor(colorHost) : undefined;
+		if (color) {
+			style.dagFillOverlayColor = color;
+			const opacity = this.context.extractColorOpacity(colorHost);
+			if (typeof opacity === 'number' && Number.isFinite(opacity)) {
+				style.dagFillOverlayOpacity = opacity;
+			}
 		}
-
-		const color = this.context.parseColor(colorHost);
-		if (!color) {
-			return;
-		}
-		style.dagFillOverlayColor = color;
-
-		const opacity = this.context.extractColorOpacity(colorHost);
-		if (typeof opacity === 'number' && Number.isFinite(opacity)) {
-			style.dagFillOverlayOpacity = opacity;
-		}
+		return style;
 	}
 
-	// ── Standard effects (same as effectLst children) ──
-
-	private extractDagShadow(dag: XmlObject, style: Partial<ShapeStyle>): void {
-		const outerShdw = dag['a:outerShdw'] as XmlObject | undefined;
-		if (!outerShdw) {
-			return;
-		}
-
-		style.shadowColor = this.context.parseColor(outerShdw);
-		style.shadowOpacity = this.context.extractColorOpacity(outerShdw);
-
-		const blurRaw = parseInt(String(outerShdw['@_blurRad'] || ''), 10);
-		if (Number.isFinite(blurRaw) && blurRaw >= 0) {
-			style.shadowBlur = blurRaw / this.context.emuPerPx;
-		}
-		const distRaw = parseInt(String(outerShdw['@_dist'] || ''), 10);
-		const dirRaw = parseInt(String(outerShdw['@_dir'] || ''), 10);
-		const distance =
-			Number.isFinite(distRaw) && distRaw >= 0 ? distRaw / this.context.emuPerPx : undefined;
-		const dirDeg = Number.isFinite(dirRaw) ? dirRaw / 60000 : 0;
-		const dirRad = (dirDeg * Math.PI) / 180;
-
-		if (distance !== undefined) {
-			style.shadowOffsetX = Math.round(Math.cos(dirRad) * distance * 100) / 100;
-			style.shadowOffsetY = Math.round(Math.sin(dirRad) * distance * 100) / 100;
-		}
-		style.shadowAngle = dirDeg;
-		style.shadowDistance = distance;
-	}
-
-	private extractDagInnerShadow(dag: XmlObject, style: Partial<ShapeStyle>): void {
-		const innerShdw = dag['a:innerShdw'] as XmlObject | undefined;
-		if (!innerShdw) {
-			return;
-		}
-
-		style.innerShadowColor = this.context.parseColor(innerShdw);
-		style.innerShadowOpacity = this.context.extractColorOpacity(innerShdw);
-
-		const blurRaw = parseInt(String(innerShdw['@_blurRad'] || ''), 10);
-		if (Number.isFinite(blurRaw) && blurRaw >= 0) {
-			style.innerShadowBlur = blurRaw / this.context.emuPerPx;
-		}
-		const distRaw = parseInt(String(innerShdw['@_dist'] || ''), 10);
-		const dirRaw = parseInt(String(innerShdw['@_dir'] || ''), 10);
-		const distance =
-			Number.isFinite(distRaw) && distRaw >= 0 ? distRaw / this.context.emuPerPx : undefined;
-		const dirDeg = Number.isFinite(dirRaw) ? dirRaw / 60000 : 0;
-		const dirRad = (dirDeg * Math.PI) / 180;
-
-		if (distance !== undefined) {
-			style.innerShadowOffsetX = Math.round(Math.cos(dirRad) * distance * 100) / 100;
-			style.innerShadowOffsetY = Math.round(Math.sin(dirRad) * distance * 100) / 100;
-		}
-	}
-
-	private extractDagGlow(dag: XmlObject, style: Partial<ShapeStyle>): void {
-		const glow = dag['a:glow'] as XmlObject | undefined;
-		if (!glow) {
-			return;
-		}
-
-		style.glowColor = this.context.parseColor(glow);
-		style.glowOpacity = this.context.extractColorOpacity(glow);
-		const radRaw = parseInt(String(glow['@_rad'] || ''), 10);
-		if (Number.isFinite(radRaw) && radRaw >= 0) {
-			style.glowRadius = radRaw / this.context.emuPerPx;
-		}
-	}
-
-	private extractDagSoftEdge(dag: XmlObject, style: Partial<ShapeStyle>): void {
-		const softEdge = dag['a:softEdge'] as XmlObject | undefined;
-		if (!softEdge) {
-			return;
-		}
-
-		const radRaw = parseInt(String(softEdge['@_rad'] || ''), 10);
-		if (Number.isFinite(radRaw) && radRaw >= 0) {
-			style.softEdgeRadius = radRaw / this.context.emuPerPx;
-		}
-	}
-
-	private extractDagReflection(dag: XmlObject, style: Partial<ShapeStyle>): void {
-		const refl = dag['a:reflection'] as XmlObject | undefined;
-		if (!refl) {
-			return;
-		}
-
-		const blurRaw = parseInt(String(refl['@_blurRad'] || ''), 10);
-		if (Number.isFinite(blurRaw) && blurRaw >= 0) {
-			style.reflectionBlurRadius = blurRaw / this.context.emuPerPx;
-		}
-		const stA = parseInt(String(refl['@_stA'] || ''), 10);
-		if (Number.isFinite(stA)) {
-			style.reflectionStartOpacity = stA / 100000;
-		}
-		const endA = parseInt(String(refl['@_endA'] || ''), 10);
-		if (Number.isFinite(endA)) {
-			style.reflectionEndOpacity = endA / 100000;
-		}
-		const endPos = parseInt(String(refl['@_endPos'] || ''), 10);
-		if (Number.isFinite(endPos)) {
-			style.reflectionEndPosition = endPos / 100000;
-		}
-		const dist = parseInt(String(refl['@_dist'] || ''), 10);
-		if (Number.isFinite(dist) && dist >= 0) {
-			style.reflectionDistance = dist / this.context.emuPerPx;
-		}
-	}
-
-	private extractDagBlur(dag: XmlObject, style: Partial<ShapeStyle>): void {
-		const blur = dag['a:blur'] as XmlObject | undefined;
-		if (!blur) {
-			return;
-		}
-
-		const radRaw = parseInt(String(blur['@_rad'] || ''), 10);
-		if (Number.isFinite(radRaw) && radRaw >= 0) {
-			style.blurRadius = radRaw / this.context.emuPerPx;
-		}
-		const growVal = String(blur['@_grow'] || '').trim();
-		if (growVal === '1' || growVal === 'true') {
-			style.blurGrow = true;
+	/** The first operation of each kind sets its `dag*` field (percentages as 0..100). */
+	private applyColorOp(op: DrawingDagColorOp<XmlObject>, style: Partial<ShapeStyle>): void {
+		switch (op.kind) {
+			case 'grayscale':
+				style.dagGrayscale ??= true;
+				break;
+			case 'biLevel':
+				style.dagBiLevel ??= Math.max(0, Math.min(100, op.threshold * 100));
+				break;
+			case 'luminance':
+				if (style.dagLumBrightness === undefined && style.dagLumContrast === undefined) {
+					style.dagLumBrightness = op.brightness * 100;
+					style.dagLumContrast = op.contrast * 100;
+				}
+				break;
+			case 'hsl':
+				if (style.dagHslHue === undefined) {
+					style.dagHslHue = op.hue;
+					// `@sat` adjusts saturation (0 = unchanged); the field is the resulting
+					// percentage of the original that the painter's `saturate()` takes.
+					style.dagHslSaturation = 100 + op.saturation * 100;
+					style.dagHslLuminance = op.luminance * 100;
+				}
+				break;
+			case 'tint':
+				if (style.dagTintHue === undefined) {
+					style.dagTintHue = op.hue;
+					style.dagTintAmount = op.amount * 100;
+				}
+				break;
+			case 'duotone':
+				if (!style.dagDuotone && op.source) {
+					extractDagDuotone({ 'a:duotone': op.source }, style, this.context);
+				}
+				break;
+			default:
+				break;
 		}
 	}
 }
@@ -283,16 +211,7 @@ function childByLocalName(xml: XmlObject, name: string): XmlObject | undefined {
 }
 
 export type { DagSpecificContext } from './effect-dag-specific-helpers';
-export {
-	extractDagGrayscale,
-	extractDagBiLevel,
-	extractDagLuminance,
-	extractDagHsl,
-	extractDagAlphaModFix,
-	extractDagTint,
-	extractDagDuotone,
-	extractDagFillOverlay,
-} from './effect-dag-specific-helpers';
+export { extractDagDuotone } from './effect-dag-specific-helpers';
 export {
 	parseEffectDagContainer,
 	buildEffectDagTreeFromXml,

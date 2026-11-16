@@ -212,12 +212,33 @@ would keep two XML models alive.
    the new ones on all 1,542 `a:gradFill` elements of the corpus. The permanent harness is
    `pptx/__tests__/integration/drawingml-fill-effect-neutral-parity.test.ts` (both views over every
    gradient, paired by path).
+   **Effect codecs and the effect DAG (2026-11-16).** The CT_EffectList reader is one function,
+   `readDrawingEffect` (`drawingml/effect-read.ts`, over the node view); `parseDrawingEffect` adds
+   the source XML. The pptx `a:effectLst` extractors (`PptxShapeEffectStyleExtractor`, the
+   reflection helper also used by text runs, the fill-overlay helper) read the typed effects and
+   map them onto ShapeStyle in `effect-style-from-model.ts`; colours still resolve through the
+   runtime codec on the effect's node. Before the switch the old and new extractors agreed on all
+   5,140 `a:effectLst` holders (8 readers each) and the old and new DOM readers on all 479 list
+   effects; the fill and effect harness now compares every list effect through both views. The
+   effect DAG has a neutral model (`drawingml/effect-dag-model.ts`: containers, list effects,
+   `alphaMod`, `blend`, `alphaModFix`, `alphaRepl`, colour and alpha operations, offsets,
+   transforms, references), a reader (`readDrawingEffectContainer`) and a renderer-facing
+   interpretation (`interpretDrawingEffectDag`: the effects and colour operations on the paint
+   path, the combined alpha, the first offset, transform and blend mode, and the approximations it
+   made). `PptxEffectDagExtractor` runs on it, so effects inside `a:cont` and `a:blend` now reach the
+   painters; the per-element top-level DAG helpers were removed (only the duotone colour pair
+   stays, resolved against the slide theme), and `a:hsl/@sat` is now read as an adjustment
+   (0 unchanged), as the schema default says. The corpus has no effect DAG, so the DAG is pinned by
+   unit tests only; what is approximated is listed in docs/parity-checklist.md. Text-run effects
+   other than reflection (`PptxHandlerRuntimeTextRunEffects`) and the theme effect styles still
+   read their own attributes.
 
-   **Remains:** effect DAG interpretation and broader effect rendering; the format scheme reader
+   **Remains:** painting DAG sibling composition, masks, blends, transforms and references (see
+   docs/parity-checklist.md); the text-run effect readers; the format scheme reader
    (`PptxHandlerRuntimeThemeFormatScheme`, its own `PptxThemeFormatScheme` shape next to the neutral
    `ThemeFormatScheme`), theme ref and `phClr` resolution (`PptxHandlerRuntimeThemeRefResolution`),
-   theme switching and saving, the master `p:clrMap` reader, `types/theme.ts` and the effect codecs
-   still read the object tree. The pptx text parsers still read through
+   theme switching and saving, the master `p:clrMap` reader and `types/theme.ts` still read the
+   object tree. The pptx text parsers still read through
    their own object tree (the neutral model is pinned, not yet used by pptx); the xlsx theme writer
    still patches the part itself (a neutral writer exists as `drawingml/write-theme.ts`; whether xlsx
    should adopt it is open).

@@ -388,6 +388,12 @@ export interface ShapeStyle {
 	 * recurse into the full effect taxonomy.
 	 */
 	effectDagTree?: EffectDagContainer;
+	/**
+	 * What the shared DAG interpretation (`interpretDrawingEffectDag` in `drawingml/effect-dag.ts`)
+	 * simplified or did not apply for this shape's `a:effectDag`, one entry each; absent when the
+	 * graph was painted as written.
+	 */
+	effectDagApproximations?: string[];
 	/** Grayscale flag from effectDag `a:grayscl`. */
 	dagGrayscale?: boolean;
 	/** Bi-level threshold (0-100) from effectDag `a:biLevel`. */
@@ -398,7 +404,10 @@ export interface ShapeStyle {
 	dagLumContrast?: number;
 	/** Hue rotation in degrees (0-360) from effectDag `a:hsl/@hue`. */
 	dagHslHue?: number;
-	/** Saturation adjustment from effectDag `a:hsl/@sat`. */
+	/**
+	 * Saturation as a percentage of the original (100 = unchanged) from effectDag `a:hsl/@sat`,
+	 * which adjusts it by that many percentage points (default 0).
+	 */
 	dagHslSaturation?: number;
 	/** Luminance adjustment from effectDag `a:hsl/@lum`. */
 	dagHslLuminance?: number;

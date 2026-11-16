@@ -24,6 +24,8 @@ export * from './drawing-geometry';
 export * from './drawing-shadow';
 export * from './effect-model';
 export * from './drawing-effects';
+export * from './effect-read';
+export * from './effect-dag';
 export * from './write-line';
 export * from './write-color';
 export * from './patch-color';

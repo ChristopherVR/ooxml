@@ -1,5 +1,6 @@
 import type { ShapeStyle, XmlObject } from '../../types';
 import { effectChild } from './effect-list-roundtrip';
+import { findObjectEffect } from './effect-style-from-model';
 import { fillOverlayColorHost } from './PptxEffectDagExtractor';
 
 const VALID_FILL_OVERLAY_BLENDS = new Set(['over', 'mult', 'screen', 'darken', 'lighten']);
@@ -30,14 +31,15 @@ export function extractFillOverlayAttributes(
 	context: FillOverlayExtractorContext,
 ): Partial<ShapeStyle> {
 	const effectList = effectChild(shapeProps, 'effectLst');
-	const fillOverlay = effectChild(effectList, 'fillOverlay');
-	if (!fillOverlay) {
+	const overlay = findObjectEffect(effectList, 'fillOverlay');
+	if (!overlay) {
 		return {};
 	}
+	const fillOverlay = overlay.node;
 
 	const style: Partial<ShapeStyle> = {};
 
-	const blend = String(fillOverlay['@_blend'] || '')
+	const blend = String(overlay.effect.blend ?? '')
 		.trim()
 		.toLowerCase();
 	if (VALID_FILL_OVERLAY_BLENDS.has(blend)) {

@@ -4,6 +4,7 @@ import path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { resolveDrawingColor } from '../../../drawingml/drawing-color';
+import { readDrawingEffect } from '../../../drawingml/effect-read';
 import { readDrawingGradient, type DrawingGradientRead } from '../../../drawingml/gradient-read';
 import { DOM_DRAWING_VIEW } from '../../../drawingml/node-view';
 import type { DrawingColor } from '../../../drawingml/types';
@@ -13,7 +14,7 @@ import { PptxRuntimeDependencyFactory } from '../../core/core/factories/PptxRunt
 import type { XmlObject } from '../../core/types';
 
 /**
- * DrawingML fill parity (docs/agnostic-core-plan.md step 3): the pptx gradient codec
+ * DrawingML fill and effect parity (docs/agnostic-core-plan.md step 3): the pptx gradient codec
  * (`PptxGradientStyleCodec`) reads `a:gradFill` through the shared reader
  * (`drawingml/gradient-read.ts`) over the object-tree view, and the DOM fill reader runs the same
  * reader over the DOM view. This harness reads every `a:gradFill` of every committed deck through
@@ -23,6 +24,14 @@ import type { XmlObject } from '../../core/types';
  * One view difference is by design: the object view does not return an empty element as a child
  * (fast-xml-parser gives `<a:tileRect/>` as `''`; the codec always read it as absent and writes it
  * back verbatim), so an attribute-less `a:tileRect` or `a:path` is compared as absent.
+ *
+ * Effects: every child of every `a:effectLst` is read by the shared effect reader
+ * (`drawingml/effect-read.ts`) through both views and must give the same typed effect (colours
+ * compared resolved). The pptx effect codecs (`PptxShapeEffectStyleExtractor`, the reflection and
+ * fill-overlay helpers and the DAG extractor) map those typed effects onto ShapeStyle
+ * (`effect-style-from-model.ts`). Before that switch, the previous extractors (8 readers over
+ * 5,140 `a:effectLst` holders, and 6 reflections) and the previous DOM effect reader (479 effects)
+ * were compared with the new ones: identical.
  *
  * Before the switch, the previous codec (its 13 readers and the standalone tile reader) and the
  * previous DOM gradient reader were compared with the new ones over the 1,542 `a:gradFill`
@@ -83,6 +92,7 @@ interface Difference {
 
 const differences: Difference[] = [];
 let gradientsCompared = 0;
+let effectsCompared = 0;
 let partsCompared = 0;
 
 function compare(label: string, xml: string): void {
@@ -114,6 +124,8 @@ function compare(label: string, xml: string): void {
 			if (objectTree !== dom) differences.push({ label: `${label} ${trail}`, objectTree, dom });
 			return;
 		}
+		if (element.namespaceURI === NS.a && element.localName === 'effectLst')
+			compareEffects(element, node, `${label} ${trail}`);
 		const seen = new Map<string, number>();
 		for (const child of elements(element)) {
 			const index = seen.get(child.tagName) ?? 0;
@@ -122,6 +134,34 @@ function compare(label: string, xml: string): void {
 		}
 	};
 	visit(root, tree[root.tagName], root.tagName);
+}
+
+/** Every child of an `a:effectLst`, read by the shared effect reader through both views. */
+function compareEffects(list: XmlElement, node: unknown, label: string): void {
+	const seen = new Map<string, number>();
+	for (const child of elements(list)) {
+		const index = seen.get(child.tagName) ?? 0;
+		seen.set(child.tagName, index + 1);
+		const objectNode = objectChild(node, child.tagName, index);
+		// An attribute-less effect (`<a:blur/>`) is `''` in the object tree: read as empty.
+		const objectEffect = readDrawingEffect(
+			OBJECT_DRAWING_VIEW,
+			child.localName,
+			objectNode && typeof objectNode === 'object' ? (objectNode as XmlObject) : {},
+		);
+		const domEffect = readDrawingEffect(DOM_DRAWING_VIEW, child.localName, child);
+		const summary = (effect: typeof domEffect) =>
+			JSON.stringify(
+				effect && 'color' in effect ? { ...effect, color: hex(effect.color) } : effect,
+			);
+		effectsCompared++;
+		if (summary(objectEffect) !== summary(domEffect))
+			differences.push({
+				label: `${label}/${child.tagName}#${index}`,
+				objectTree: summary(objectEffect),
+				dom: summary(domEffect),
+			});
+	}
 }
 
 beforeAll(async () => {
@@ -135,19 +175,20 @@ beforeAll(async () => {
 		for (const name of Object.keys(zip.files).sort()) {
 			if (zip.files[name]!.dir || !name.endsWith('.xml')) continue;
 			const xml = await zip.file(name)!.async('string');
-			if (!xml.includes('gradFill')) continue;
+			if (!xml.includes('gradFill') && !xml.includes('effectLst')) continue;
 			compare(`${path.relative(CORE, deck)}!${name}`, xml);
 		}
 	}
 }, 600_000);
 
-describe('DrawingML fills: pptx object tree vs shared DOM reader', () => {
+describe('DrawingML fills and effects: pptx object tree vs shared DOM reader', () => {
 	it('compares a real corpus', () => {
 		expect(partsCompared).toBeGreaterThan(300);
 		expect(gradientsCompared).toBeGreaterThan(1_400);
+		expect(effectsCompared).toBeGreaterThan(400);
 	});
 
-	it('reads every gradient the same way', () => {
+	it('reads every gradient and list effect the same way', () => {
 		expect(differences.slice(0, 20)).toEqual([]);
 	});
 });

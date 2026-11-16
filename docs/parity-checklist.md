@@ -634,6 +634,16 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Black and White view.
 - [ ] **P2** Designer, Rehearse with Coach, Screen Recording, Keep Slides Updated and Media
       Controls are disabled.
+- [ ] **P2** Effect DAGs (`a:effectDag`) are painted as one effect list plus colour operations
+      (`interpretDrawingEffectDag`, `src/core/drawingml/effect-dag.ts`): effects and colour
+      operations inside `a:cont` and `a:blend` containers are found, `alphaModFix` and `alphaRepl`
+      alpha multiplies, and the first of each list effect and colour operation is painted. Still
+      approximated, and listed per shape in `effectDagApproximations`: sibling outputs are not
+      composited separately, `a:alphaMod` masks are reduced to their alpha, non-`over` blends paint
+      as `over`, `a:xfrm`/`a:relOff` are reported but not applied, and `a:effect` references,
+      `a:fill`, `clrChange`, `clrRepl` and the alpha threshold operations are not painted. The
+      committed decks hold no effect DAG, so this is unit-tested against the schema, not checked
+      against PowerPoint output.
 - [ ] **P2** A non-rectangular shape with a line effect or a 3-D bevel still loses its outer shadow
       and glow (a clip-path cuts them off); solid, unfilled, gradient, pattern and picture shapes
       (and their inner shadow) paint them as a shape-following filter

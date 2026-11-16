@@ -52,6 +52,13 @@ extraction commit is named below. Product adapters and public compatibility path
   repository, at `494897493`) into one reader over a node view; the pptx object-tree view is
   `pptx/core/color/object-drawing-view.ts`. The codec keeps its presentation rules and the
   writer; both readers were compared over the committed decks before the old code was removed.
+- `core/drawingml/effect-read.ts` moves the CT_EffectList field tables and reader out of
+  `drawingml/drawing-effects.ts` onto the node view (this repository, at `1b3fc3922`);
+  `pptx/core/core/builders/effect-style-from-model.ts` replaces the attribute parsing of
+  `PptxShapeEffectStyleExtractor`, `effect-style-extractor-reflection.ts` and the list effects of
+  `PptxEffectDagExtractor`. `core/drawingml/{effect-dag-model,effect-dag}.ts` are new strict code
+  from ECMA-376 Part 1, 20.1.8 (CT_EffectContainer and EG_Effect); they replace the top-level-only
+  readers of `pptx/core/core/builders/effect-dag-specific-helpers.ts` (duotone stays).
 - `core/drawingml/picture-effects.ts` is a new ordered DOM codec for grayscale,
   luminance and alpha, retaining opaque source operations. Its percentage and transfer
   helpers replace equivalent PowerPoint runtime and `render/image-effects.ts` formulas.

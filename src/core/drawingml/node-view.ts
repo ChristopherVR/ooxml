@@ -1,7 +1,7 @@
 // A read-only view over one DrawingML element, so a reader is written once and serves both the
 // shared DOM (`xml` area) and an object tree (the pptx area's fast-xml-parser nodes). Each format
-// supplies a view; the readers (`gradient-read.ts`, `effect-read.ts`) never see the node type.
-import { parseDrawingColorIn } from './drawing-color';
+// supplies a view; the readers (`gradient-read.ts`, `effect-read.ts`, `effect-dag.ts`) never see the node type.
+import { parseDrawingColorIn, parseDrawingColorList } from './drawing-color';
 import { NS, attributeReader, children, elements, first, type XmlElement } from './dom';
 import type { DrawingColor } from './types';
 
@@ -16,6 +16,8 @@ export interface DrawingNodeView<N> {
 	elements(node: N): { name: string; node: N }[];
 	/** The colour element `node` holds directly (`a:gs`, `a:outerShdw`, `a:solidFill`...). */
 	color(node: N): DrawingColor | undefined;
+	/** Every colour element `node` holds directly, in document order (`a:duotone`). */
+	colors(node: N): DrawingColor[];
 }
 
 /** The view over the shared DOM. */
@@ -25,4 +27,5 @@ export const DOM_DRAWING_VIEW: DrawingNodeView<XmlElement> = {
 	children: (node, name) => children(node, name, NS.a),
 	elements: (node) => elements(node).map((element) => ({ name: element.localName, node: element })),
 	color: (node) => parseDrawingColorIn(node),
+	colors: (node) => parseDrawingColorList(node),
 };

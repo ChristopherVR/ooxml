@@ -32,7 +32,7 @@ with passing corpus, browser and native edit/reopen checks. ChartEx has shared f
 style/axis/label operations and compatibility projections. The remaining architecture work is
 adaptation of unsupported source details and removal of covered
 legacy paths, rather than reimplementing these shared codecs or controls. Picture media allocation,
-unsafe combo splits, effect DAG interpretation, broader native typography/3D fidelity and the complete
+unsafe combo splits, painting the approximated effect DAG members, broader native typography/3D fidelity and the complete
 Office style catalogue remain explicit limits. Sections and wave notes below are dated snapshots.
 
 ## 1. State

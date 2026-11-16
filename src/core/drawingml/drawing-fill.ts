@@ -39,8 +39,8 @@ export function parseDrawingFill(properties: XmlElement | undefined): DrawingFil
 			return color ? { kind: 'solid', color } : { kind: 'unsupported', element: 'solidFill' };
 		}
 		case 'gradFill': {
-			const gradient = readDrawingGradient(DOM_DRAWING_VIEW, fill).fill;
-			return { kind: 'gradient', sourceXml: buildXml(fill), ...gradient };
+			const { kind, ...gradient } = readDrawingGradient(DOM_DRAWING_VIEW, fill).fill;
+			return { kind, sourceXml: buildXml(fill), ...gradient };
 		}
 		case 'pattFill': {
 			const foreground = parseDrawingColorIn(first(fill, 'fgClr', NS.a));
