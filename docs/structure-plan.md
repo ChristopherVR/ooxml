@@ -538,6 +538,16 @@ generic renderers and checked per binding:
 | Slide Background card  | `SLIDE_BACKGROUND_SECTIONS`                                | Hide background graphics missing in three cards; a colour on a picture background was saved but never shown                         |
 | Media playback         | `MEDIA_PLAYBACK_SECTIONS`                                  | no fades in vanilla; Angular's Play Across Slides did not start the clip; switched-off flags written as `false`                     |
 | OLE card               | `OLE_OBJECT_NAME_SECTIONS`, `resolveOleSummaryRows`        | the name was trimmed per keystroke (a typed space vanished); Angular's group card was untranslated English                          |
+| Action Settings        | `ACTION_SETTINGS_SECTION`, `actionSettingsTargetOf`        | five slide pickers (number box or select, titled or not); the custom show and Return after showing missing in some bindings         |
+| Media trim             | `MEDIA_TRIM_SECTION`                                       | mm:ss text boxes in React, seconds or milliseconds elsewhere; the end bound ignored the live clip duration                          |
+| Table cell formatting  | `TABLE_CELL_SECTIONS`                                      | untranslated B I U and L C R letter buttons; one border width and margin for all sides in vanilla; diagonals only in Vue; px units  |
+| Artistic effects       | `PICTURE_ARTISTIC_SECTIONS` (a `gallery` field)            | thumbnails in React and Vue, a select elsewhere; Vue's gallery never disabled; Grayscale left the grayscale toggle on in three      |
+
+The field model resolves what depends on the deck or the clip at render time: a field's
+`optionsOf(target)` replaces its static choices (the deck's slides and custom shows, with a verbatim
+`label` beside the translation key), `maxOf(target)` its upper bound (the trim end against the live
+duration), and `previewImageOf(target)` a gallery's picture. Each generic renderer rebuilds a
+section when its resolved choices change.
 
 A slide background fill now draws at once: `getSlideBackgroundStyle` publishes the resolved
 background as `--pptx-slide-bg-*` custom properties on every stage, and `resolveComputedFill`
@@ -545,12 +555,11 @@ paints a `useBackgroundFill` shape that carries no resolved copy with them, offs
 position (`render/slide-background-fill.ts`; React's stage adapter passes the properties through).
 A framework-neutral spec (`slide-background-fill-live.spec.ts`) checks the five demos.
 
-Still per binding, by choice or for lack of time: Action Settings (its slide and custom-show
-pickers need options computed from the deck, which the field model does not yet carry), the
-artistic effect gallery (React and Vue draw it with picture thumbnails, the others as a select),
-the media trim fields (already on the shared `media-trim-range.ts` helpers, but they need the live
-clip duration), the table cell formatting and style editor, and the docked Animation and Transition
-panes. Chart and SmartArt formatting already go through the shared elements
+Still per binding, by choice or for lack of time: the table cell text and fill colour pickers with
+their theme grids and the gradient and pattern cell fill, the table style editor (its fields
+already come from the shared table-style-editor descriptor, but it edits style definitions per
+table part rather than one value through a patch), Merge and Split, and the docked Animation and
+Transition panes. Chart and SmartArt formatting already go through the shared elements
 (`office-ui-chart-format-pane`, the SmartArt picker and text pane).
 
 ### PowerPoint tab row on `office-ui-ribbon` (landed 2026-11-16)
