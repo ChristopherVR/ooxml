@@ -49,6 +49,30 @@ describe('chart filtered series', () => {
 		expect(writeChartSpace(restored)).toBe(writeChartSpace(load()));
 	});
 
+	it('retains a combo group with several filtered series and restores each to that group', () => {
+		const space = load();
+		const bar = space.plotArea.groups[0]!;
+		const line = {
+			kind: 'line' as const,
+			element: 'lineChart',
+			is3D: false,
+			grouping: 'standard',
+			axisIds: [...bar.axisIds],
+			series: bar.series.splice(1),
+		};
+		space.plotArea.groups.push(line);
+
+		const hidden = filterChartSeries(filterChartSeries(space, 2), 1);
+		const xml = writeChartSpace(hidden);
+		expect(xml.match(/<c15:filteredLineSeries><c15:ser>/gu)).toHaveLength(2);
+		const reopened = parseChartSpace(xml).chartSpace;
+		expect(reopened.plotArea.groups[1]).toMatchObject({ kind: 'line', series: [] });
+		expect(chartFilteredSeriesIndexes(reopened)).toEqual([2, 1]);
+
+		const restored = restoreChartFilteredSeries(restoreChartFilteredSeries(reopened, 2), 1);
+		expect(writeChartSpace(restored)).toBe(writeChartSpace(space));
+	});
+
 	it('drops a hidden series and refuses what it cannot do', () => {
 		const space = filterChartSeries(load(), 2);
 		expect(chartFilteredSeriesIndexes(removeChartFilteredSeries(space, 2))).toEqual([]);

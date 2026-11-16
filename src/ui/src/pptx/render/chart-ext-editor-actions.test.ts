@@ -82,6 +82,20 @@ describe('restoreFilteredSeries', () => {
 		});
 	}
 
+	it('restores the source chart type and value axis from a saved filter', () => {
+		const data = chartWithOneFiltered({
+			chartType: 'combo',
+			filteredSeries: [
+				{ idx: 1, order: 1, name: 'Margin', values: [3, 5], seriesChartType: 'line', axisId: 20 },
+			],
+		});
+		expect(restoreFilteredSeries(data, 0)?.series[1]).toMatchObject({
+			name: 'Margin',
+			seriesChartType: 'line',
+			axisId: 20,
+		});
+	});
+
 	it('moves a filtered series back into series, using its own cached name/values', () => {
 		const result = restoreFilteredSeries(chartWithOneFiltered(), 0);
 		expect(result?.series.map((s) => s.name)).toStrictEqual(['Series A', 'Series B']);

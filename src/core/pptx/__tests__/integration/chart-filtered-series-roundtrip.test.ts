@@ -4,6 +4,10 @@ import { fileURLToPath } from 'node:url';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 
+import { parseChartSpace } from '../../../chart/index';
+import { setChartSeriesChartType } from '../../core/builders/sdk/chart-operations';
+import { withChartSeriesOnSecondaryAxis } from '../../core/builders/sdk/chart-series-axis-operations';
+import { PresentationBuilder } from '../../core/builders/sdk/PresentationBuilder';
 import { PptxHandler } from '../../index';
 import type { ChartPptxElement, PptxData } from '../../index';
 import { requireFixture } from '../require-fixture';
@@ -178,4 +182,87 @@ describe('chart filtered-series round-trip (c15:filteredBarSeries)', () => {
 			expect(restoredA?.values).toStrictEqual(hiddenSeries.values);
 		});
 	});
+});
+
+it('keeps a fully filtered line group and its workbook references in a combo chart', async () => {
+	const { handler, data, createSlide } = await PresentationBuilder.create();
+	const slide = createSlide('Blank')
+		.addChart('bar', {
+			categories: ['Q1', 'Q2'],
+			series: [
+				{ name: 'Revenue', values: [10, 20] },
+				{ name: 'Margin', values: [3, 5] },
+			],
+			embedWorkbook: true,
+		})
+		.build();
+	data.slides.push(slide);
+	const authored = chartOnSlide(data, 0);
+	setChartSeriesChartType(authored, 1, 'line');
+	authored.chartData = withChartSeriesOnSecondaryAxis(authored.chartData!, 1, true);
+	const initial = await handler.save(data.slides);
+
+	const editor = new PptxHandler();
+	const opened = await editor.load(initial);
+	const chart = chartOnSlide(opened, 0).chartData!;
+	const [bar, line] = chart.series;
+	expect(line?.seriesChartType).toBe('line');
+	const part = chart.chartPartPath!;
+	const before = parseChartSpace(await readZipEntry(initial, part)).chartSpace;
+	const lineGroup = before.plotArea.groups[1]!;
+	const range = lineGroup.series[0]!.values?.formula;
+	expect(range).toBe('Sheet1!$C$2:$C$3');
+
+	// Mirrors the shared editor hiding its only line series.
+	chart.series = [bar!];
+	chart.filteredSeries = [
+		{
+			idx: line!.idx!,
+			order: line!.idx!,
+			name: line!.name,
+			categories: chart.categories,
+			values: line!.values,
+			originalSeries: line!,
+		},
+	];
+	const hidden = await editor.save(opened.slides);
+	const hiddenXml = await readZipEntry(hidden, part);
+	const hiddenGroup = parseChartSpace(hiddenXml).chartSpace.plotArea.groups[1];
+	expect(hiddenGroup).toMatchObject({ kind: 'line', axisIds: lineGroup.axisIds, series: [] });
+	expect(hiddenGroup?.extLst).toContain('<c15:filteredLineSeries>');
+	expect(hiddenGroup?.extLst).toContain(`<c15:sqref>${range}</c15:sqref>`);
+
+	const reopen = new PptxHandler();
+	const reopened = await reopen.load(hidden);
+	const roundTripped = chartOnSlide(reopened, 0).chartData!;
+	expect(roundTripped.series.map((series) => series.name)).toEqual(['Revenue']);
+	const [entry] = roundTripped.filteredSeries ?? [];
+	expect(entry).toMatchObject({ name: 'Margin', seriesChartType: 'line', axisId: line!.axisId });
+
+	roundTripped.series.push({
+		idx: entry!.idx,
+		name: entry!.name!,
+		values: entry!.values!,
+		seriesChartType: entry!.seriesChartType,
+		axisId: entry!.axisId,
+	});
+	roundTripped.filteredSeries = undefined;
+	const restored = await reopen.save(reopened.slides);
+	const restoredGroup = parseChartSpace(await readZipEntry(restored, part)).chartSpace.plotArea
+		.groups[1];
+	expect(restoredGroup).toMatchObject({
+		kind: 'line',
+		axisIds: lineGroup.axisIds,
+		series: [{ index: line!.idx, values: { formula: range } }],
+	});
+	expect(restoredGroup?.extLst).toBeUndefined();
+
+	const workbookPart = Object.keys((await JSZip.loadAsync(initial)).files).find((path) =>
+		path.endsWith('.xlsx'),
+	)!;
+	const workbook = async (bytes: Uint8Array) =>
+		(await JSZip.loadAsync(bytes)).file(workbookPart)!.async('uint8array');
+	const initialWorkbook = await workbook(initial);
+	expect(await workbook(hidden)).toEqual(initialWorkbook);
+	expect(await workbook(restored)).toEqual(initialWorkbook);
 });

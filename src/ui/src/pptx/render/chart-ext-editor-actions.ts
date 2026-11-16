@@ -120,6 +120,8 @@ export function restoreFilteredSeries(
 				values,
 				idx: filtered.idx,
 				...(filtered.uniqueId ? { uniqueId: filtered.uniqueId } : {}),
+				...(filtered.seriesChartType ? { seriesChartType: filtered.seriesChartType } : {}),
+				...(filtered.axisId !== undefined ? { axisId: filtered.axisId } : {}),
 			};
 	// The first currently-visible series whose own idx sorts after the
 	// restored one; splicing in there reproduces its original relative

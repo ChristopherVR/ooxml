@@ -221,17 +221,24 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			'filteredSeries' | 'filteredSeriesTitle' | 'filteredCategoryTitle'
 		> = {};
 		for (const { group, node } of groups) {
-			const hidden = parseFilteredSeries(node, reader.xml);
-			if (hidden) filtered.filteredSeries = [...(filtered.filteredSeries ?? []), ...hidden];
-			const titles = parseFilteredTitles(node, reader.xml);
-			if (titles?.seriesTitle) filtered.filteredSeriesTitle ??= titles.seriesTitle;
-			if (titles?.categoryTitle) filtered.filteredCategoryTitle ??= titles.categoryTitle;
 			const containerChartType = groupChartType(group);
+			const seriesChartType = chartType === 'combo' ? containerChartType : undefined;
 			// The value axis: searched from the end of the group's axis ids (scatter-like groups
 			// list it last; category charts reference one value axis).
 			const axisId = [...group.axisIds]
 				.reverse()
 				.find((id) => axes.some((axis) => axis.axisType === 'valAx' && axis.axisId === id));
+			const hidden = parseFilteredSeries(node, reader.xml);
+			if (hidden) {
+				for (const entry of hidden) {
+					if (seriesChartType) entry.seriesChartType = seriesChartType;
+					if (axisId !== undefined) entry.axisId = axisId;
+				}
+				filtered.filteredSeries = [...(filtered.filteredSeries ?? []), ...hidden];
+			}
+			const titles = parseFilteredTitles(node, reader.xml);
+			if (titles?.seriesTitle) filtered.filteredSeriesTitle ??= titles.seriesTitle;
+			if (titles?.categoryTitle) filtered.filteredCategoryTitle ??= titles.categoryTitle;
 			const nodes = rawChildren(node, 'ser', reader.localName);
 			group.series.forEach((entry, index) => {
 				const serNode = nodes[index] ?? {};
@@ -243,9 +250,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 							node: serNode,
 							index,
 							categories,
-							...(chartType === 'combo' && containerChartType
-								? { seriesChartType: containerChartType }
-								: {}),
+							...(seriesChartType ? { seriesChartType } : {}),
 							...(containerChartType ? { containerChartType } : {}),
 							...(axisId !== undefined ? { axisId } : {}),
 						},
