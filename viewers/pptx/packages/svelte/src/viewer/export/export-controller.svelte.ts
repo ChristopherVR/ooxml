@@ -8,6 +8,8 @@ import type {
 	RasterizeElementTilesResult,
 } from 'ooxml-ui/pptx';
 import {
+	canCopyImageToClipboard,
+	copyPngToClipboard,
 	downloadBlob,
 	downloadDataUrl,
 	exportAbortError,
@@ -179,16 +181,16 @@ export class ExportController {
 			this.exporting ||
 			targetIndex < 0 ||
 			targetIndex >= this.#deps.getSlideCount() ||
-			typeof ClipboardItem === 'undefined' ||
-			!navigator.clipboard?.write
+			!canCopyImageToClipboard()
 		) {
 			return;
 		}
 		this.exporting = true;
 		try {
-			const result = await this.#captureRaster(targetIndex),
-				blob = await rasterResultToPngBlob(result);
-			await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+			// The clipboard write starts inside the click; Safari rejects it after an await.
+			await copyPngToClipboard(
+				this.#captureRaster(targetIndex).then((result) => rasterResultToPngBlob(result)),
+			);
 		} finally {
 			this.exporting = false;
 		}

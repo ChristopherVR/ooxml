@@ -4,6 +4,8 @@ import type {
 	VectorPdfExportResult,
 } from 'ooxml-ui/pptx';
 import {
+	canCopyImageToClipboard,
+	copyPngToClipboard,
 	downloadBlob,
 	downloadDataUrl,
 	runPdfExport,
@@ -231,18 +233,14 @@ export function createExportController(deps: ExportControllerDeps): ExportContro
 	async function copySlideAsImage(index?: number): Promise<void> {
 		const state = deps.store.get(),
 			targetIndex = index ?? state.currentSlide;
-		if (
-			targetIndex < 0 ||
-			targetIndex >= state.slides.length ||
-			typeof ClipboardItem === 'undefined' ||
-			!navigator.clipboard?.write
-		) {
+		if (targetIndex < 0 || targetIndex >= state.slides.length || !canCopyImageToClipboard()) {
 			return;
 		}
 		return guarded(undefined, async () => {
-			const result = await captureRaster(targetIndex),
-				blob = await rasterResultToPngBlob(result);
-			await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+			// The clipboard write starts inside the click; Safari rejects it after an await.
+			await copyPngToClipboard(
+				captureRaster(targetIndex).then((result) => rasterResultToPngBlob(result)),
+			);
 		});
 	}
 

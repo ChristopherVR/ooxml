@@ -15,7 +15,7 @@
  */
 
 import { Injectable } from '@angular/core';
-import { downloadBlob } from 'ooxml-ui/pptx';
+import { canCopyImageToClipboard, copyPngToClipboard, downloadBlob } from 'ooxml-ui/pptx';
 import type { RasterizeElementTilesResult } from 'ooxml-ui/pptx';
 import type { PptxData, PptxSaveFormat, PptxSlide, SvgExportOptions } from 'pptx-viewer-core';
 
@@ -105,12 +105,11 @@ export class ExportService {
 
 	/** Rasterize an element and copy it to the system clipboard as a PNG image. */
 	async copyElementAsPng(el: HTMLElement, scale: number = 2): Promise<void> {
-		if (typeof ClipboardItem === 'undefined' || !navigator.clipboard?.write) {
+		if (!canCopyImageToClipboard()) {
 			throw new Error('[ExportService] Image clipboard is unavailable');
 		}
-
-		const blob = await this.rasterizeElementToPngBlob(el, scale);
-		await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+		// The clipboard write starts inside the click; Safari rejects it after an await.
+		await copyPngToClipboard(this.rasterizeElementToPngBlob(el, scale));
 	}
 
 	/**

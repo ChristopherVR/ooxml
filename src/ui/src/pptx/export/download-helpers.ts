@@ -20,8 +20,15 @@ const FALLBACK_DOWNLOAD_NAME = 'presentation.pptx',
 	 * named after. Bare, lower-case, no leading dot.
 	 */
 	DEFAULT_EXPORT_STRIP_EXTENSIONS = ['pptx', 'pdf', 'png', 'gif', 'webm'],
-	/** Revoke delay (ms) after triggering a download click. */
-	REVOKE_DELAY_MS = 200,
+	/**
+	 * Revoke delay (ms) after triggering a download click. Safari on iPadOS and
+	 * iOS shows a download sheet first and reads the object URL only once the
+	 * user confirms it, so a short delay revoked the URL before the file was
+	 * fetched and the download (Save included) failed. A minute covers that.
+	 */
+	REVOKE_DELAY_MS = 60_000,
+	/** Delay (ms) before the temporary download anchor is removed. */
+	ANCHOR_REMOVE_DELAY_MS = 200,
 	/**
 	 * Revoke delay (ms) after opening a payload in a new tab. Longer than the
 	 * download delay: the new document may still be fetching the object URL (a PDF
@@ -116,10 +123,8 @@ export function downloadBlob(blob: Blob, filename: string): void {
 	document.body.appendChild(anchor);
 	anchor.click();
 	// Defer cleanup so the browser has time to start the download.
-	setTimeout(() => {
-		anchor.remove();
-		URL.revokeObjectURL(url);
-	}, REVOKE_DELAY_MS);
+	setTimeout(() => anchor.remove(), ANCHOR_REMOVE_DELAY_MS);
+	setTimeout(() => URL.revokeObjectURL(url), REVOKE_DELAY_MS);
 }
 
 /**
@@ -137,7 +142,7 @@ export function downloadDataUrl(dataUrl: string, filename: string): void {
 	anchor.click();
 	setTimeout(() => {
 		anchor.remove();
-	}, REVOKE_DELAY_MS);
+	}, ANCHOR_REMOVE_DELAY_MS);
 }
 
 /**

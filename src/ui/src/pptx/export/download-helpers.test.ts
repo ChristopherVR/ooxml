@@ -123,6 +123,10 @@ describe('downloadBlob / downloadDataUrl', () => {
 		expect(revokeObjectURL).not.toHaveBeenCalled();
 		vi.advanceTimersByTime(200);
 		expect(anchor.remove).toHaveBeenCalledOnce();
+		// iPadOS reads the URL only after the user confirms the download sheet (#290).
+		vi.advanceTimersByTime(30_000);
+		expect(revokeObjectURL).not.toHaveBeenCalled();
+		vi.advanceTimersByTime(30_000);
 		expect(revokeObjectURL).toHaveBeenCalledWith('blob:fake-url');
 	});
 
