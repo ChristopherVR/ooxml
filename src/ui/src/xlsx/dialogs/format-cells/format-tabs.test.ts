@@ -74,7 +74,8 @@ describe('Format Cells: Border tab', () => {
 		const first = ctx.dialogs.open('format-cells', { tab: 'border' });
 		let dialog = dialogEl(ctx, 'format-cells');
 		clickButton(dialog, 'Outline');
-		expect(dialog.querySelector('[data-preview]')?.getAttribute('style')).toContain('border-top');
+		// The preview draws the top edge (engines may fold the four edges into one shorthand).
+		expect(dialog.querySelector<HTMLElement>('[data-preview]')?.style.borderTopStyle).toBe('solid');
 		clickButton(dialog, 'OK');
 		await first;
 		expect(styleOf(ctx, 0, 0).border).toEqual({ top: { style: 'thin' }, left: { style: 'thin' } });

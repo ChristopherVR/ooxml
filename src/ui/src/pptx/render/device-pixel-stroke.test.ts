@@ -156,6 +156,8 @@ describe('export keeps authored widths', () => {
 		// attribute back would shift a framework-set transform on the live stage.
 		const { host, stage } = stageWithStroke();
 		stage.style.setProperty('transform', 'scale(0.9958333333)');
+		// What the engine stores for it (some round the number); the restore must leave it as is.
+		const transform = stage.style.getPropertyValue('transform');
 		const writes: string[] = [];
 		const setAttribute = stage.setAttribute.bind(stage);
 		stage.setAttribute = (name: string, value: string) => {
@@ -164,7 +166,7 @@ describe('export keeps authored widths', () => {
 		};
 		withAuthoredStrokeWidths(host, () => undefined);
 		expect(writes).toEqual([]);
-		expect(stage.style.getPropertyValue('transform')).toBe('scale(0.9958333333)');
+		expect(stage.style.getPropertyValue('transform')).toBe(transform);
 		expect(stage.style.getPropertyValue(DEVICE_PX_VAR)).toBe(
 			'calc(1px / (0.5 * var(--pptx-dpr, 1)))',
 		);

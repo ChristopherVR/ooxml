@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { RunFontSpec } from './text-metric-tracking';
 import { resetMetricTrackingCache } from './text-metric-tracking';
@@ -7,6 +7,17 @@ import { splitStyledRun, stripUnderlineDecoration } from './text-run-spacing';
 import type { RunStyle } from './text-run-style';
 
 const FONT: RunFontSpec = { fontFamily: 'Arial', fontSizePx: 16 };
+
+// The split tests describe the no-canvas path. jsdom can now draw through the workspace's canvas
+// package, so the 2D context is held absent here.
+beforeEach(() => {
+	vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+	resetMetricTrackingCache();
+});
+afterEach(() => {
+	vi.restoreAllMocks();
+	resetMetricTrackingCache();
+});
 
 describe('stripUnderlineDecoration', () => {
 	it('removes the underline decoration line but keeps line-through', () => {

@@ -7,6 +7,17 @@ import { buildTabContext } from './text-tab-layout';
 import type { TabRenderContext, TabStopSpec } from './text-tab-layout';
 import { buildRunTabLines } from './text-tab-run-build';
 
+// These tests measure with their own callback. jsdom can now draw through the workspace's canvas
+// package, so the real-canvas advance-grid probe is held at "no context" to keep it out of the sums.
+beforeEach(() => {
+	vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+	resetMetricTrackingCache();
+});
+afterEach(() => {
+	vi.restoreAllMocks();
+	resetMetricTrackingCache();
+});
+
 /** Deterministic monospace measurement: 10px per character, 5px per glyph. */
 const measure = (text: string): number => (text.length === 1 ? 5 : text.length * 10);
 

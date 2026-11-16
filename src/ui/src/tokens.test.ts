@@ -6,15 +6,25 @@ import { OFFICE_TOKENS, tok } from './tokens';
 
 beforeAll(() => registerOfficeUi());
 
-/** The CSS a control renders into its shadow root (jsdom uses the `<style>` fallback). */
+/** The CSS a control renders into its shadow root, as authored. */
 function shadowCss(tag: string): string {
 	const el = document.createElement(tag);
 	document.body.append(el);
 	const root = el.shadowRoot!;
+	// The authored CSS: Lit keeps each style's source on the class. jsdom re-serialises adopted
+	// rules (a bare `0` becomes `0px`), which would read as a raw length outside the tokens.
+	const authored = (
+		(el.constructor as { elementStyles?: ReadonlyArray<{ cssText?: string } | CSSStyleSheet> })
+			.elementStyles ?? []
+	).flatMap((style) =>
+		'cssText' in style && typeof style.cssText === 'string' ? [style.cssText] : [],
+	);
 	const sheets = (root as ShadowRoot & { adoptedStyleSheets?: CSSStyleSheet[] }).adoptedStyleSheets;
-	const text = sheets?.length
-		? sheets.map((s) => [...s.cssRules].map((r) => r.cssText).join('\n')).join('\n')
-		: [...root.querySelectorAll('style')].map((s) => s.textContent).join('\n');
+	const text = authored.length
+		? authored.join('\n')
+		: sheets?.length
+			? sheets.map((s) => [...s.cssRules].map((r) => r.cssText).join('\n')).join('\n')
+			: [...root.querySelectorAll('style')].map((s) => s.textContent).join('\n');
 	el.remove();
 	return text;
 }

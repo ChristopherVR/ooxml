@@ -29,16 +29,16 @@ describe('legacy Word note column rendering', () => {
 			expect(pages).toHaveLength(2);
 			const first = pages[0]!.querySelector<HTMLElement>('.dve-print-custom-footnote-separator')!;
 			expect(first.textContent).toContain('Sources');
-			expect(first.style.left).toBe('226.66666666666669px');
+			// Lengths are compared as numbers: engines round a stored px value differently.
+			const px = (value: string): number => Number.parseFloat(value);
+			expect(px(first.style.left)).toBeCloseTo(680 / 3, 2);
 			const next = [
 				...pages[1]!.querySelectorAll<HTMLElement>('.dve-print-custom-footnote-separator'),
 			];
-			expect(
-				next.map((separator) => [separator.textContent, separator.style.left, separator.style.top]),
-			).toEqual([
-				['Continued ', '0px', '-16px'],
-				['Continued ', '226.66666666666669px', '320px'],
-			]);
+			expect(next.map((separator) => separator.textContent)).toEqual(['Continued ', 'Continued ']);
+			expect(next.map((separator) => px(separator.style.top))).toEqual([-16, 320]);
+			expect(px(next[0]!.style.left)).toBe(0);
+			expect(px(next[1]!.style.left)).toBeCloseTo(680 / 3, 2);
 			const notes = [...pages[1]!.querySelectorAll<HTMLElement>('.dve-print-footnote')];
 			expect(notes.map((note) => note.style.top)).toEqual(['0px', '336px']);
 			expect(element.querySelectorAll('.dve-print-footnote-separator')).toHaveLength(0);

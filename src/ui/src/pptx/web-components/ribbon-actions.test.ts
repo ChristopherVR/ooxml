@@ -8,6 +8,27 @@ import { registerPptxWebControls } from './index';
 beforeAll(registerPptxWebControls);
 afterEach(() => document.body.replaceChildren());
 
+/**
+ * The CSS a shadow root carries, as authored: Lit keeps each style's source on the class, and an
+ * adopted or inline sheet is read as written. jsdom re-serialises adopted rules (`cssRules`), so
+ * a check on a token's text reads the source instead.
+ */
+function shadowCss(host: Element): string {
+	const styles =
+		(host.constructor as { elementStyles?: ReadonlyArray<{ cssText?: string } | CSSStyleSheet> })
+			.elementStyles ?? [];
+	const authored = styles.map((style) =>
+		'cssText' in style && typeof style.cssText === 'string'
+			? style.cssText
+			: [...(style as CSSStyleSheet).cssRules].map((rule) => rule.cssText).join('\n'),
+	);
+	const inline = [...host.shadowRoot!.querySelectorAll('style')].map((node) => node.textContent);
+	const adopted = (host.shadowRoot!.adoptedStyleSheets ?? []).flatMap((sheet) =>
+		[...sheet.cssRules].map((rule) => rule.cssText),
+	);
+	return [...authored, ...inline, ...adopted].join('\n');
+}
+
 const input: TabRowActionsInput = {
 	translate: (key, params) => (params ? `${key}:${params.count}` : key),
 	showComments: true,
@@ -62,7 +83,7 @@ describe('pptx-ui-ribbon-actions', () => {
 		expect(part(host, 'comments').getAttribute('aria-label')).toBe('pptx.toolbar.comments');
 		expect(part(host, 'comments').getAttribute('aria-pressed')).toBe('true');
 		expect(part(host, 'share').textContent).toBe('pptx.toolbar.share');
-		const css = host.shadowRoot!.textContent!;
+		const css = shadowCss(host);
 		expect(css).toContain('--_pptx-primary: var(--pptx-primary, var(--office-accent,');
 		expect(css).toContain('--office-accent: var(--_pptx-primary);');
 	});

@@ -25,11 +25,24 @@ function shadowCss(tag: string): string {
 	const el = document.createElement(tag);
 	document.body.append(el);
 	const root = el.shadowRoot!;
+	// Lit keeps each style's source on the class; jsdom re-serialises adopted rules (`0` becomes
+	// `0px`, `border: 0` a longhand list), so the authored text is what these checks read.
+	const authored = (
+		(el.constructor as { elementStyles?: ReadonlyArray<{ cssText?: string } | CSSStyleSheet> })
+			.elementStyles ?? []
+	).flatMap((style) =>
+		'cssText' in style && typeof style.cssText === 'string'
+			? [style.cssText]
+			: [...(style as CSSStyleSheet).cssRules].map((rule) => rule.cssText),
+	);
 	const text = [
+		...authored,
 		...[...root.querySelectorAll('style')].map((style) => style.textContent),
-		...(root.adoptedStyleSheets ?? []).flatMap((sheet) =>
-			[...sheet.cssRules].map((rule) => rule.cssText),
-		),
+		...(authored.length
+			? []
+			: (root.adoptedStyleSheets ?? []).flatMap((sheet) =>
+					[...sheet.cssRules].map((rule) => rule.cssText),
+				)),
 	].join(' ');
 	el.remove();
 	return text;

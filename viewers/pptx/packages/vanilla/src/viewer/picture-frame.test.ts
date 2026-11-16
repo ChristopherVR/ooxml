@@ -115,9 +115,11 @@ describe('vanilla: a shape paints the shadow and glow profiles of PowerPoint', (
 				glowOpacity: 0.6,
 			},
 		} as PptxElement).querySelector<HTMLElement>('[data-element-id="fx"]');
-		expect(box?.style.boxShadow).toBe(
-			'0px 0px 20px rgba(0, 0, 0, 1), 0 0 10px 12.5px rgba(255, 0, 0, 0.6)',
-		);
+		// Compared through the engine's own serialisation (it may reorder colour and lengths).
+		const expected = document.createElement('div');
+		expected.style.boxShadow =
+			'0px 0px 20px rgba(0, 0, 0, 1), 0 0 10px 12.5px rgba(255, 0, 0, 0.6)';
+		expect(box?.style.boxShadow).toBe(expected.style.boxShadow);
 		expect(box?.style.filter ?? '').not.toContain('drop-shadow');
 	});
 });

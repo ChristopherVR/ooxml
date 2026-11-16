@@ -54,15 +54,20 @@ describe('buildForeignObjectSvgBody', () => {
 			const parsed = document.createElement('div');
 			parsed.innerHTML = body.bodyMarkup;
 			const exported = parsed.querySelector<HTMLElement>('#shape')!;
-			expect(exported.style.outline).toBe('none');
+			// The shorthand's serialisation differs between engines; the style is what carries `none`.
+			expect(exported.style.outlineStyle).toBe('none');
 			expect(exported.style.outlineOffset).toBe('0px');
-			expect(exported.style.boxShadow).toBe(shape.dataset.exportOriginalBoxShadow);
+			// Compared through the engine's own serialisation of the authored shadow list.
+			const authoredShadow = document.createElement('div');
+			authoredShadow.style.boxShadow = shape.dataset.exportOriginalBoxShadow!;
+			expect(exported.style.boxShadow).toBe(authoredShadow.style.boxShadow);
 			expect(exported.style.border).toBe(getComputedStyle(shape).border);
 			expect(exported.style.borderRadius).toBe('8px');
 			expect(exported.style.clipPath).toBe(shape.style.clipPath);
-			expect(exported.style.filter).toBe(shape.style.filter);
+			// Copied as computed, so compared with the computed value (colours resolve to rgb()).
+			expect(exported.style.filter).toBe(getComputedStyle(shape).filter);
 			expect(parsed.querySelector<HTMLElement>('#unmarked')!.style.boxShadow).toBe(
-				'4px 5px 6px black',
+				getComputedStyle(el.lastElementChild as HTMLElement).boxShadow,
 			);
 			expect(el.outerHTML).toBe(original);
 		} finally {
