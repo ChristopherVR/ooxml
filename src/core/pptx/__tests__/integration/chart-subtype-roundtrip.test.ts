@@ -66,8 +66,8 @@ describe('bar3D shape integration', () => {
 		const saved = await handler.save(data.slides);
 		const zip = await JSZip.loadAsync(saved);
 		const savedXml = await zip.file('ppt/charts/chart1.xml')!.async('string');
-		expect(savedXml).toContain('<c:shape val="pyramidToMax">');
-		expect(savedXml).toContain('<c:shape val="box">');
+		expect(savedXml).toMatch(/<c:shape val="pyramidToMax"\s*\/?>/u);
+		expect(savedXml).toMatch(/<c:shape val="box"\s*\/?>/u);
 		// Chart-level c:shape must stay between c:gapWidth/c:gapDepth and c:axId.
 		expect(savedXml.indexOf('<c:shape val="pyramidToMax">')).toBeLessThan(
 			savedXml.indexOf('<c:axId'),
@@ -136,7 +136,7 @@ describe('radar style integration', () => {
 		const saved = await handler.save(data.slides);
 		const zip = await JSZip.loadAsync(saved);
 		const savedXml = await zip.file('ppt/charts/chart1.xml')!.async('string');
-		expect(savedXml).toContain('<c:radarStyle val="standard">');
+		expect(savedXml).toMatch(/<c:radarStyle val="standard"\s*\/?>/u);
 
 		const reloaded = await new PptxHandler().load(saved.buffer as ArrayBuffer);
 		expect(chartElement(reloaded).chartData!.radarStyle).toBe('standard');
@@ -162,7 +162,7 @@ describe('surface wireframe integration', () => {
 		const saved = await handler.save(data.slides);
 		const zip = await JSZip.loadAsync(saved);
 		const savedXml = await zip.file('ppt/charts/chart1.xml')!.async('string');
-		expect(savedXml).toContain('<c:wireframe val="1">');
+		expect(savedXml).toMatch(/<c:wireframe val="1"\s*\/?>/u);
 		// c:wireframe must stay the first child of the surface container.
 		expect(savedXml.indexOf('<c:wireframe')).toBeLessThan(savedXml.indexOf('<c:ser>'));
 
