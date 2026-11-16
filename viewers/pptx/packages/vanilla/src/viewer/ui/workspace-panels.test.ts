@@ -53,6 +53,30 @@ describe('workspace parity panels', () => {
 		expect(document.querySelector('[data-pptx-selection-name]')?.textContent).toBe('Hero Title');
 	});
 
+	it('refuses renaming and dragging in the selection pane on a read-only deck', () => {
+		const onRename = vi.fn();
+		const onReorder = vi.fn();
+		openSelectionPane(document, document.body, createTranslator(), {
+			elements: [element, { ...element, id: 'other', name: 'Other' }],
+			selectedIds: [],
+			canEdit: () => false,
+			onSelect: vi.fn(),
+			onToggleHidden: vi.fn(),
+			onReorder,
+			onRename,
+		});
+		const rows = document.querySelectorAll<HTMLElement>('.pptxv-selection-row');
+		expect(rows[0]!.draggable).toBeFalsy();
+		rows[0]!.dispatchEvent(new Event('dragstart', { bubbles: true }));
+		rows[1]!.dispatchEvent(new Event('drop', { bubbles: true, cancelable: true }));
+		rows[0]!
+			.querySelector('[data-pptx-selection-name]')!
+			.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+		expect(document.querySelector('.pptxv-selection-rename')).toBeNull();
+		expect(onReorder).not.toHaveBeenCalled();
+		expect(onRename).not.toHaveBeenCalled();
+	});
+
 	it('renames from the selection pane: dblclick edits, Enter commits', () => {
 		const onRename = vi.fn();
 		openSelectionPane(document, document.body, createTranslator(), {

@@ -1,15 +1,20 @@
-import { resolveSelectionPaneRename } from 'ooxml-ui/pptx';
+import {
+	createSelectionPaneController,
+	formatSelectionPaneLabel,
+	selectionPaneRows,
+} from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 /**
  * Selection Pane: lists all elements on the active slide with
- * visibility toggles, rename-on-double-click, and drag-to-reorder.
+ * visibility toggles, rename-on-double-click, and drag-to-reorder. The row
+ * labels, the rename box and the drag are the shared selection pane controller.
  */
 import React, { useState, useCallback, useRef } from 'react';
 import { LuEye, LuEyeOff, LuGripVertical } from 'react-icons/lu';
 
+import { useController } from '../hooks/useController';
 import { useTranslation } from '../i18n/use-translation';
 import { cn } from '../utils';
-import { getElementDisplayName } from './selection-pane-utils';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -48,17 +53,50 @@ export function SelectionPane({
 	const activeSlide = slides[activeSlideIndex] as PptxSlide | undefined;
 	const elements = activeSlide?.elements ?? [];
 
-	const [editingId, setEditingId] = useState<string | null>(null);
-	const [editingName, setEditingName] = useState('');
 	const inputRef = useRef<HTMLInputElement>(null);
-	// The display name the rename input was seeded with: an unedited commit
-	// (blur or Enter without typing) must not write that fallback label into
-	// the element as its name.
-	const editSeedRef = useRef('');
-
-	// Drag reorder state
-	const [dragIndex, setDragIndex] = useState<number | null>(null);
-	const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+	const latest = useRef({ activeSlideIndex, canEdit, setSlides, markDirty });
+	latest.current = { activeSlideIndex, canEdit, setSlides, markDirty };
+	/** Rewrite the active slide's element list (rename or reorder), marking the deck dirty. */
+	const updateElements = useCallback(
+		(update: (elements: PptxElement[]) => PptxElement[] | null) => {
+			const { activeSlideIndex: index } = latest.current;
+			latest.current.setSlides((prevSlides) => {
+				const slide = prevSlides[index];
+				const next = slide ? update([...(slide.elements ?? [])]) : null;
+				if (!slide || !next) {
+					return prevSlides;
+				}
+				const nextSlides = [...prevSlides];
+				nextSlides[index] = { ...slide, elements: next };
+				return nextSlides;
+			});
+			latest.current.markDirty();
+		},
+		[],
+	);
+	const [pane] = useState(() =>
+		createSelectionPaneController({
+			canEdit: () => latest.current.canEdit,
+			// A rename round-trips through save as cNvPr/@name, and so does a clear: `''` is
+			// written as `name=""` (`@name` is required), while `undefined` means "no opinion".
+			onRename: (id, name) =>
+				updateElements((list) => {
+					const idx = list.findIndex((e) => e.id === id);
+					if (idx === -1) {
+						return null;
+					}
+					list[idx] = { ...list[idx], name } as PptxElement;
+					return list;
+				}),
+			onReorder: (from, to) =>
+				updateElements((list) => {
+					const [moved] = list.splice(from, 1);
+					list.splice(to, 0, moved);
+					return list;
+				}),
+		}),
+	);
+	const paneState = useController(pane);
 
 	const handleSelect = useCallback(
 		(elementId: string) => {
@@ -95,100 +133,15 @@ export function SelectionPane({
 
 	const handleDoubleClick = useCallback(
 		(element: PptxElement, displayName: string) => {
-			if (!canEdit) {
-				return;
-			}
-			setEditingId(element.id);
-			setEditingName(displayName);
-			editSeedRef.current = displayName;
-			setTimeout(() => inputRef.current?.select(), 0);
-		},
-		[canEdit],
-	);
-
-	const commitRename = useCallback(() => {
-		const elementId = editingId;
-		setEditingId(null);
-		if (elementId === null) {
-			return;
-		}
-		// Shared decision: `null` for an unedited commit (so a "Shape 3"-style
-		// fallback label is never persisted as a real name), otherwise the name to
-		// write - including `''` for a cleared box.
-		const commit = resolveSelectionPaneRename(editSeedRef.current, editingName);
-		if (!commit) {
-			return;
-		}
-		setSlides((prevSlides) => {
-			const nextSlides = [...prevSlides];
-			const slide = nextSlides[activeSlideIndex];
-			if (!slide) {
-				return prevSlides;
-			}
-			const nextElements = [...(slide.elements ?? [])];
-			const idx = nextElements.findIndex((e) => e.id === elementId);
-			if (idx === -1) {
-				return prevSlides;
-			}
-			// A rename round-trips through save as cNvPr/@name, and so does a
-			// clear: the writer (`applyNameToCnvPr`) treats `undefined` as "the
-			// model has no opinion" and leaves the markup alone, so an emptied
-			// box has to commit `''` to mean anything at all. `@name` is
-			// REQUIRED on CT_NonVisualDrawingProps, so `''` is written as
-			// `name=""` rather than deleting the attribute.
-			nextElements[idx] = {
-				...nextElements[idx],
-				name: commit.name,
-			} as PptxElement;
-			nextSlides[activeSlideIndex] = { ...slide, elements: nextElements };
-			return nextSlides;
-		});
-		markDirty();
-	}, [editingId, editingName, activeSlideIndex, setSlides, markDirty]);
-
-	const handleDragStart = useCallback((index: number) => {
-		setDragIndex(index);
-	}, []);
-
-	const handleDragOver = useCallback(
-		(e: React.DragEvent, index: number) => {
-			e.preventDefault();
-			if (dragIndex !== null && dragIndex !== index) {
-				setDragOverIndex(index);
+			if (pane.startRename(element.id, displayName)) {
+				setTimeout(() => inputRef.current?.select(), 0);
 			}
 		},
-		[dragIndex],
+		[pane],
 	);
 
-	const handleDrop = useCallback(
-		(targetIndex: number) => {
-			if (dragIndex === null || dragIndex === targetIndex) {
-				setDragIndex(null);
-				setDragOverIndex(null);
-				return;
-			}
-
-			setSlides((prevSlides) => {
-				const nextSlides = [...prevSlides];
-				const slide = nextSlides[activeSlideIndex];
-				if (!slide) {
-					return prevSlides;
-				}
-				const nextElements = [...(slide.elements ?? [])];
-				const [moved] = nextElements.splice(dragIndex, 1);
-				nextElements.splice(targetIndex, 0, moved);
-				nextSlides[activeSlideIndex] = { ...slide, elements: nextElements };
-				return nextSlides;
-			});
-			markDirty();
-			setDragIndex(null);
-			setDragOverIndex(null);
-		},
-		[dragIndex, activeSlideIndex, setSlides, markDirty],
-	);
-
-	// Display in reverse order (top-most element first)
-	const reversed = [...elements].reverse();
+	// Top-most element first.
+	const rows = selectionPaneRows(elements);
 
 	return (
 		<div
@@ -207,33 +160,32 @@ export function SelectionPane({
 				</button>
 			</div>
 			<div className='flex-1 overflow-y-auto py-1'>
-				{reversed.length === 0 ? (
+				{rows.length === 0 ? (
 					<div className='px-3 py-4 text-xs text-muted-foreground italic'>
 						{t('pptx.selectionPane.empty')}
 					</div>
 				) : (
-					reversed.map((element, reversedIdx) => {
-						const realIndex = elements.length - 1 - reversedIdx;
+					rows.map(({ element, index: realIndex, label }) => {
 						const isSelected =
 							selectedElementId === element.id || selectedElementIds.includes(element.id);
-						const displayName = getElementDisplayName(element, realIndex);
-						const isEditing = editingId === element.id;
+						const displayName = formatSelectionPaneLabel(label, t);
+						const isEditing = paneState.renamingId === element.id;
 
 						return (
 							<div
 								key={element.id}
 								draggable={canEdit}
-								onDragStart={() => handleDragStart(realIndex)}
-								onDragOver={(e) => handleDragOver(e, realIndex)}
-								onDrop={() => handleDrop(realIndex)}
-								onDragEnd={() => {
-									setDragIndex(null);
-									setDragOverIndex(null);
+								onDragStart={() => pane.dragStart(realIndex)}
+								onDragOver={(e) => {
+									e.preventDefault();
+									pane.dragOver(realIndex);
 								}}
+								onDrop={() => pane.drop(realIndex)}
+								onDragEnd={pane.dragEnd}
 								className={cn(
 									'flex items-center gap-1.5 px-2 py-1 text-xs cursor-pointer transition-colors',
 									isSelected ? 'bg-primary/30 text-primary' : 'hover:bg-muted text-foreground',
-									dragOverIndex === realIndex ? 'border-t-2 border-primary' : '',
+									paneState.dragOverIndex === realIndex ? 'border-t-2 border-primary' : '',
 								)}
 								onClick={() => handleSelect(element.id)}
 								onDoubleClick={() => handleDoubleClick(element, displayName)}
@@ -247,15 +199,15 @@ export function SelectionPane({
 											ref={inputRef}
 											type='text'
 											aria-label={t('pptx.selectionPane.renameElement')}
-											value={editingName}
-											onChange={(e) => setEditingName(e.target.value)}
-											onBlur={commitRename}
+											value={paneState.renameDraft}
+											onChange={(e) => pane.setRenameDraft(e.target.value)}
+											onBlur={() => pane.commitRename()}
 											onKeyDown={(e) => {
 												if (e.key === 'Enter') {
-													commitRename();
+													pane.commitRename();
 												}
 												if (e.key === 'Escape') {
-													setEditingId(null);
+													pane.cancelRename();
 												}
 											}}
 											className='w-full bg-muted text-xs px-1 py-0.5 rounded border border-border outline-none'

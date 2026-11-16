@@ -1,5 +1,11 @@
-import { resolveSelectionPaneRename, restoreEditorKeyboardFocus } from 'ooxml-ui/pptx';
-import { hasTextProperties } from 'pptx-viewer-core';
+import {
+	createSelectionPaneController,
+	formatSelectionPaneLabel,
+	restoreEditorKeyboardFocus,
+	selectionPaneLabel,
+	selectionPaneRows,
+} from 'ooxml-ui/pptx';
+import type { SelectionPaneController, SelectionPaneRow } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 
 import type { Translator } from '../i18n';
@@ -15,6 +21,8 @@ export interface SelectionPaneOptions extends SelectionPaneModel {
 	onSelect(id: string): void;
 	onToggleHidden(id: string): void;
 	onReorder(from: number, to: number): void;
+	/** Whether the host allows edits: renaming and dragging are refused otherwise. */
+	canEdit?(): boolean;
 	/** Rename commit: the trimmed name, or `''` to clear it. */
 	onRename(id: string, name: string): void;
 	/**
@@ -52,6 +60,12 @@ export function openSelectionPane(
 	pane.appendChild(header);
 
 	const list = createEl(doc, 'div', 'pptxv-workspace-list');
+	// The shared rename box and drag state; the deck changes go out through the options.
+	const controller = createSelectionPaneController({
+		canEdit: () => options.canEdit?.() ?? true,
+		onRename: options.onRename,
+		onReorder: options.onReorder,
+	});
 	let model: SelectionPaneModel = { elements: options.elements, selectedIds: options.selectedIds };
 	let renderedElements: readonly PptxElement[] | null = null;
 	const rowsById = new Map<string, HTMLElement>();
@@ -80,18 +94,11 @@ export function openSelectionPane(
 			list.appendChild(empty);
 			return;
 		}
-		[...model.elements].reverse().forEach((element, reversedIndex) => {
-			const row = buildRow(
-				doc,
-				t,
-				element,
-				model.elements.length - reversedIndex - 1,
-				options,
-				model.selectedIds,
-			);
-			rowsById.set(element.id, row);
+		for (const paneRow of selectionPaneRows(model.elements)) {
+			const row = buildRow(doc, t, paneRow, options, controller, model.selectedIds);
+			rowsById.set(paneRow.element.id, row);
 			list.appendChild(row);
-		});
+		}
 	};
 	renderRows();
 	pane.appendChild(list);
@@ -124,13 +131,13 @@ export function openSelectionPane(
 function buildRow(
 	doc: Document,
 	t: Translator,
-	element: PptxElement,
-	index: number,
+	{ element, index, label }: SelectionPaneRow,
 	options: SelectionPaneOptions,
+	controller: SelectionPaneController,
 	selectedIds: readonly string[],
 ): HTMLElement {
 	const row = createEl(doc, 'div', 'pptxv-selection-row');
-	row.draggable = true;
+	row.draggable = options.canEdit?.() ?? true;
 	row.dataset.index = String(index);
 	row.classList.toggle('is-selected', selectedIds.includes(element.id));
 	const grip = createEl(doc, 'span');
@@ -139,10 +146,10 @@ function buildRow(
 	name.type = 'button';
 	// E2E contract: the row's name label, double-clicked to rename.
 	name.dataset.pptxSelectionName = 'true';
-	name.textContent = displayName(element, index);
+	name.textContent = formatSelectionPaneLabel(label, t);
 	name.addEventListener('click', () => options.onSelect(element.id));
 	name.addEventListener('dblclick', () =>
-		startRename(doc, t, row, name, element, index, options.onRename),
+		startRename(doc, t, row, name, element, index, controller),
 	);
 	const visible = createEl(doc, 'button');
 	visible.type = 'button';
@@ -152,27 +159,27 @@ function buildRow(
 		t(element.hidden ? 'pptx.selectionPane.show' : 'pptx.selectionPane.hide'),
 	);
 	visible.addEventListener('click', () => options.onToggleHidden(element.id));
-	row.addEventListener('dragstart', (event) =>
-		event.dataTransfer?.setData('text/plain', String(index)),
-	);
-	row.addEventListener('dragover', (event) => event.preventDefault());
+	row.addEventListener('dragstart', (event) => {
+		event.dataTransfer?.setData('text/plain', String(index));
+		controller.dragStart(index);
+	});
+	row.addEventListener('dragover', (event) => {
+		event.preventDefault();
+		controller.dragOver(index);
+	});
+	row.addEventListener('dragend', () => controller.dragEnd());
 	row.addEventListener('drop', (event) => {
 		event.preventDefault();
-		const from = Number(event.dataTransfer?.getData('text/plain'));
-		if (Number.isInteger(from)) {
-			options.onReorder(from, index);
-		}
+		controller.drop(index);
 	});
 	row.append(grip, name, visible);
 	return row;
 }
 
 /**
- * Swap the name button for a text input, matching React's SelectionPane:
- * Enter and blur commit, Escape cancels. The input is seeded with the display
- * name, and an unedited commit changes nothing (in particular, a "Shape 3"
- * fallback label is never written into the element as a real name). A commit
- * with an emptied value clears the stored name.
+ * Swap the name button for a text input, matching every binding: Enter and blur commit, Escape
+ * cancels. The input is seeded with the row's label, and an unedited commit changes nothing (a
+ * "Shape 3" fallback label is never written as a real name); an emptied box clears the name.
  */
 function startRename(
 	doc: Document,
@@ -181,9 +188,12 @@ function startRename(
 	name: HTMLButtonElement,
 	element: PptxElement,
 	index: number,
-	onRename: SelectionPaneOptions['onRename'],
+	controller: SelectionPaneController,
 ): void {
-	const seed = displayName(element, index);
+	const seed = name.textContent ?? '';
+	if (!controller.startRename(element.id, seed)) {
+		return;
+	}
 	const input = doc.createElement('input');
 	input.type = 'text';
 	input.className = 'pptxv-selection-rename';
@@ -193,32 +203,33 @@ function startRename(
 	row.insertBefore(input, name);
 	input.focus();
 	input.select();
+	input.addEventListener('input', () => controller.setRenameDraft(input.value));
 
-	// Enter commits and removes the input, which also fires blur: `done`
-	// keeps that second path from committing (or restoring) twice.
-	let done = false;
+	// Enter commits and removes the input, which also fires blur: the controller's own guard
+	// keeps that second path from committing twice.
 	const finish = (commit: boolean): void => {
-		if (done) {
+		if (controller.getSnapshot().renamingId !== element.id) {
 			return;
 		}
-		done = true;
-		// Hand the keyboard back to the viewer root BEFORE the input leaves the
-		// document. Otherwise focus falls to `document.body`, outside the root
-		// this binding listens on, and the Ctrl+Z that undoes the rename is
-		// silently dropped.
+		// The box closes first (the blur that focusing the root causes must find it closed), then
+		// the keyboard goes back to the viewer root BEFORE the input leaves the document, or
+		// focus falls outside the root this binding listens on and Ctrl+Z is dropped.
+		let written: string | null = null;
+		if (commit) {
+			// The field's value as it stands (an IME or a programmatic fill may not fire `input`).
+			controller.setRenameDraft(input.value);
+			written = controller.commitRename() ? input.value.trim() : null;
+		} else {
+			controller.cancelRename();
+		}
 		restoreEditorKeyboardFocus(input);
 		input.remove();
 		name.hidden = false;
-		// Shared decision: `null` for an unedited commit (the seed may be a
-		// fallback label, not a stored name), otherwise the name to write -
-		// including `''` for a cleared box, which is the only value the save
-		// writer reads as a clear.
-		const patch = commit ? resolveSelectionPaneRename(seed, input.value) : null;
-		if (!patch) {
-			return;
+		if (written !== null) {
+			// The live feed repaints the row; until then it shows the new name (or the label).
+			name.textContent =
+				written || formatSelectionPaneLabel(selectionPaneLabel({ ...element, name: '' }, index), t);
 		}
-		name.textContent = patch.name.length > 0 ? patch.name : fallbackName(element, index);
-		onRename(element.id, patch.name);
 	};
 	input.addEventListener('keydown', (event) => {
 		if (event.key === 'Enter') {
@@ -228,19 +239,4 @@ function startRename(
 		}
 	});
 	input.addEventListener('blur', () => finish(true));
-}
-
-function displayName(element: PptxElement, index: number): string {
-	if (element.name && element.name.trim().length > 0) {
-		return element.name.trim();
-	}
-	return fallbackName(element, index);
-}
-
-/** The label used when the element has no explicit name (text or `Type n`). */
-function fallbackName(element: PptxElement, index: number): string {
-	if (hasTextProperties(element) && element.text?.trim()) {
-		return element.text.trim().slice(0, 32);
-	}
-	return `${element.type.charAt(0).toUpperCase()}${element.type.slice(1)} ${index + 1}`;
 }

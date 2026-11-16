@@ -833,7 +833,9 @@ const noopClose = (): void => undefined;
 										<pptx-selection-pane
 											[elements]="activeSlide()?.elements ?? []"
 											[selectedIds]="editor.selectedIds()"
+											[canEdit]="canEdit()"
 											(selectElement)="editor.select([$event])"
+											(reorderElement)="canvasEditing.onSelectionPaneReorder($event)"
 											(bringForward)="canvasEditing.onSelectionPaneBringForward($event)"
 											(sendBackward)="canvasEditing.onSelectionPaneSendBackward($event)"
 											(toggleHidden)="canvasEditing.onToggleElementHidden($event)"

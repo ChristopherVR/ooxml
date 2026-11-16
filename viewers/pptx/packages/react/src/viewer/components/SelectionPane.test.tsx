@@ -20,7 +20,12 @@ import type { Mock } from 'vitest';
 import { SelectionPane } from './SelectionPane';
 
 vi.mock<typeof import('../i18n/use-translation')>(import('../i18n/use-translation'), () => ({
-	useTranslation: () => ({ t: (key: string) => translationsEn[key] ?? key }),
+	useTranslation: () => ({
+		t: (key: string, params?: Record<string, string | number>) =>
+			(translationsEn[key] ?? key).replace(/\{\{(\w+)\}\}/gu, (_, name: string) =>
+				String(params?.[name] ?? ''),
+			),
+	}),
 }));
 
 let container: HTMLDivElement;
@@ -194,5 +199,27 @@ describe('selection Pane rename', () => {
 		expect(harness.setSlides).not.toHaveBeenCalled();
 		expect(harness.markDirty).not.toHaveBeenCalled();
 		expect(harness.slides()[0].elements[0].name).toBeUndefined();
+	});
+});
+
+describe('selection Pane drag reorder', () => {
+	it('moves the dragged row onto the drop target, top-most first', () => {
+		const harness = mountPane([
+			makeSlide([shape({ id: 'back', name: 'Back' }), shape({ id: 'front', name: 'Front' })]),
+		]);
+		const rows = Array.from(
+			container.querySelectorAll<HTMLElement>('[data-pptx-selection-pane] [draggable]'),
+		);
+		expect(rows.map((row) => row.textContent)).toStrictEqual(['Front', 'Back']);
+		act(() => {
+			rows[0]!.dispatchEvent(new Event('dragstart', { bubbles: true }));
+			rows[1]!.dispatchEvent(new Event('dragover', { bubbles: true, cancelable: true }));
+			rows[1]!.dispatchEvent(new Event('drop', { bubbles: true }));
+		});
+		expect(harness.slides()[0].elements.map((element) => element.id)).toStrictEqual([
+			'front',
+			'back',
+		]);
+		expect(harness.markDirty).toHaveBeenCalledOnce();
 	});
 });

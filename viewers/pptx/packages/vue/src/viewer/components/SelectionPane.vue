@@ -1,19 +1,18 @@
 <script setup lang="ts">
+/** The Selection Pane: rows, rename box and drag reorder from the shared selection pane controller. */
 import { Eye, EyeOff, GripVertical } from 'lucide-vue-next';
-import { resolveSelectionPaneRename, restoreEditorKeyboardFocus } from 'ooxml-ui/pptx';
-import { hasTextProperties } from 'pptx-viewer-core';
+import {
+	createSelectionPaneController,
+	formatSelectionPaneLabel,
+	restoreEditorKeyboardFocus,
+	selectionPaneRows,
+} from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import { computed, nextTick, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-/**
- * SelectionPane: lists every element on the active slide with visibility
- * toggles, drag-to-reorder (z-order), and double-click-to-rename. Vue port of
- * the React `SelectionPane.tsx`. The pane is presentational: it emits
- * `select`, `toggle-visibility`, `reorder`, and `rename`; the host routes
- * those through the history-tracked editor operations so they undo/redo like
- * any other edit.
- */
+import { useController } from '../composables/useController';
+
 const props = defineProps<{
 	elements: PptxElement[];
 	selectedIds: string[];
@@ -30,126 +29,60 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const TYPE_LABEL_KEYS: Record<string, string> = {
-	text: 'pptx.elementType.textBox',
-	shape: 'pptx.elementType.shape',
-	connector: 'pptx.elementType.connector',
-	image: 'pptx.elementType.image',
-	picture: 'pptx.elementType.picture',
-	chart: 'pptx.elementType.chart',
-	table: 'pptx.elementType.table',
-	smartArt: 'pptx.elementType.smartArt',
-	media: 'pptx.elementType.media',
-	group: 'pptx.elementType.group',
-	ink: 'pptx.elementType.ink',
-	ole: 'pptx.elementType.object',
-	unknown: 'pptx.elementType.object',
-};
+const pane = createSelectionPaneController({
+	canEdit: () => props.canEdit,
+	onRename: (id, name) => emit('rename', { id, name }),
+	onReorder: (from, to) => emit('reorder', { from, to }),
+});
+const state = useController(pane);
+const editingId = computed(() => state.value.renamingId);
+const dragOverIndex = computed(() => state.value.dragOverIndex);
 
-function displayName(element: PptxElement, index: number): string {
-	if (element.name && element.name.trim().length > 0) {
-		return element.name.trim();
-	}
-	if (hasTextProperties(element) && element.text && element.text.trim().length > 0) {
-		return element.text.trim().slice(0, 32);
-	}
-	const typeKey = TYPE_LABEL_KEYS[element.type] ?? 'pptx.elementType.object';
-	return t('pptx.selectionPane.elementLabel', { type: t(typeKey), number: index + 1 });
-}
+const rows = computed(() =>
+	selectionPaneRows(props.elements).map((row) => ({
+		...row,
+		name: formatSelectionPaneLabel(row.label, (key, params) => t(key, params ?? {})),
+	})),
+);
 
-// -- Inline rename (double-click the row label, like React) ------------------
-const editingId = ref<string | null>(null);
-const editDraft = ref('');
 const renameInputRef = ref<HTMLInputElement | null>(null);
-/** Function ref: a string ref inside `v-for` would collect into an array. */
 function setRenameInput(el: unknown): void {
 	renameInputRef.value = el instanceof HTMLInputElement ? el : null;
 }
-// The display name the rename input was seeded with: an unedited commit (blur
-// or Enter without typing) must not write that fallback label into the element
-// as its name. Mirrors React's `editSeedRef`.
-let editSeed = '';
 
-function startRename(element: PptxElement, index: number): void {
-	if (!props.canEdit) {
+function startRename(element: PptxElement, name: string): void {
+	if (!pane.startRename(element.id, name)) {
 		return;
 	}
-	editingId.value = element.id;
-	editDraft.value = displayName(element, index);
-	editSeed = editDraft.value;
 	void nextTick(() => {
 		renameInputRef.value?.focus();
 		renameInputRef.value?.select();
 	});
 }
 
-/**
- * Give the keyboard back to the viewer root before the input unmounts.
- *
- * Without this, focus lands on `document.body` when the input goes away and
- * the viewer (which listens for `keydown` on its own root) never sees the
- * Ctrl+Z that undoes the rename. Shared, because three bindings had it.
- */
+/** Give the keyboard back to the viewer root before the input goes away. */
 function releaseRenameFocus(): void {
 	restoreEditorKeyboardFocus(renameInputRef.value);
 }
 
-/** Commit the trimmed draft: non-empty renames, empty clears the name. */
-function commitRename(element: PptxElement): void {
-	if (editingId.value !== element.id) {
+// The box closes first, then the keyboard goes back to the root: focusing the root blurs the
+// input, and the blur's own commit must find the box already closed.
+function commitRename(): void {
+	if (state.value.renamingId === null) {
 		return;
 	}
-	// Clear first: focusing the root blurs the input, and the `blur` handler
-	// re-enters here. With `editingId` already null that re-entry is a no-op.
-	editingId.value = null;
+	pane.commitRename();
 	releaseRenameFocus();
-	// Shared decision: `null` for an unedited commit (so a fallback display
-	// label is never persisted as a real name), otherwise the name to write -
-	// including `''` for a cleared box, which is the only value the save writer
-	// reads as a clear.
-	const commit = resolveSelectionPaneRename(editSeed, editDraft.value);
-	if (!commit) {
-		return;
-	}
-	emit('rename', { id: element.id, name: commit.name });
 }
 
-/** Escape: drop the draft without emitting (clearing first disarms blur). */
 function cancelRename(): void {
-	editingId.value = null;
+	pane.cancelRename();
 	releaseRenameFocus();
-}
-
-// Top-most element first (reverse of paint order), matching PowerPoint.
-const rows = computed(() =>
-	props.elements
-		.map((element, index) => ({ element, index }))
-		.slice()
-		.reverse(),
-);
-
-const dragIndex = ref<number | null>(null);
-const dragOverIndex = ref<number | null>(null);
-
-function onDragStart(index: number): void {
-	dragIndex.value = index;
 }
 
 function onDragOver(event: DragEvent, index: number): void {
 	event.preventDefault();
-	if (dragIndex.value !== null && dragIndex.value !== index) {
-		dragOverIndex.value = index;
-	}
-}
-
-function onDrop(targetIndex: number): void {
-	const from = dragIndex.value;
-	dragIndex.value = null;
-	dragOverIndex.value = null;
-	if (from === null || from === targetIndex) {
-		return;
-	}
-	emit('reorder', { from, to: targetIndex });
+	pane.dragOver(index);
 }
 </script>
 
@@ -171,7 +104,7 @@ function onDrop(targetIndex: number): void {
 				{{ t('pptx.selectionPane.noObjects') }}
 			</div>
 			<div
-				v-for="{ element, index } in rows"
+				v-for="{ element, index, name } in rows"
 				v-else
 				:key="element.id"
 				:draggable="props.canEdit && editingId !== element.id"
@@ -183,13 +116,10 @@ function onDrop(targetIndex: number): void {
 					dragOverIndex === index ? 'border-t-2 border-primary' : '',
 				]"
 				@click="emit('select', element.id)"
-				@dragstart="onDragStart(index)"
+				@dragstart="pane.dragStart(index)"
 				@dragover="onDragOver($event, index)"
-				@drop="onDrop(index)"
-				@dragend="
-					dragIndex = null;
-					dragOverIndex = null;
-				"
+				@drop="pane.drop(index)"
+				@dragend="pane.dragEnd()"
 			>
 				<GripVertical
 					v-if="props.canEdit"
@@ -198,22 +128,22 @@ function onDrop(targetIndex: number): void {
 				<span
 					class="flex-1 truncate"
 					data-pptx-selection-name
-					@dblclick.stop="startRename(element, index)"
+					@dblclick.stop="startRename(element, name)"
 				>
 					<input
 						v-if="editingId === element.id"
 						:ref="setRenameInput"
 						type="text"
 						:aria-label="t('pptx.selectionPane.renameElement')"
-						:value="editDraft"
+						:value="state.renameDraft"
 						class="w-full rounded border border-border bg-muted px-1 py-0.5 text-xs outline-none"
-						@input="editDraft = ($event.target as HTMLInputElement).value"
-						@blur="commitRename(element)"
-						@keydown.enter="commitRename(element)"
+						@input="pane.setRenameDraft(($event.target as HTMLInputElement).value)"
+						@blur="commitRename()"
+						@keydown.enter="commitRename()"
 						@keydown.escape="cancelRename"
 						@click.stop
 					/>
-					<template v-else>{{ displayName(element, index) }}</template>
+					<template v-else>{{ name }}</template>
 				</span>
 				<button
 					type="button"

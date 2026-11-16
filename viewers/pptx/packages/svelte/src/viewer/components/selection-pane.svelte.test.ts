@@ -38,6 +38,10 @@ function createEditor(
 ): EditorState & { applyElementPatch: ReturnType<typeof vi.fn>; select: ReturnType<typeof vi.fn> } {
 	return {
 		activeElements: elements,
+		editable: true,
+		currentSlideIndex: 0,
+		slides: [{ id: 's1', elements }],
+		commitSlides: vi.fn(),
 		selection: { ids: [] },
 		selectedElementId: null,
 		select: vi.fn(),
@@ -240,5 +244,31 @@ describe('svelte selection pane rename focus', () => {
 
 		expect(document.activeElement).toBe(root);
 		expect(editor.applyElementPatch).not.toHaveBeenCalled();
+	});
+});
+
+describe('svelte selection pane labels and drag reorder', () => {
+	it('labels an unnamed row with the translated type and its stacking position', () => {
+		const target = mountPane(createEditor([shape({ id: 'a' }), shape({ id: 'b' })]));
+		const names = Array.from(target.querySelectorAll('[data-pptx-selection-name]')).map(
+			(node) => node.textContent,
+		);
+		expect(names).toStrictEqual(['Shape 2', 'Shape 1']);
+	});
+
+	it('reorders by dragging through one deck commit, never on a read-only deck', () => {
+		const editor = createEditor([shape({ id: 'a' }), shape({ id: 'b' })]);
+		const target = mountPane(editor);
+		const rows = target.querySelectorAll('.row');
+		rows[0]!.dispatchEvent(new Event('dragstart', { bubbles: true }));
+		rows[1]!.dispatchEvent(new Event('dragover', { bubbles: true, cancelable: true }));
+		rows[1]!.dispatchEvent(new Event('drop', { bubbles: true }));
+		flushSync();
+		const commit = (editor as unknown as { commitSlides: ReturnType<typeof vi.fn> }).commitSlides;
+		expect(commit).toHaveBeenCalledOnce();
+		expect(commit.mock.calls[0]![0][0].elements.map((el: PptxElement) => el.id)).toStrictEqual([
+			'b',
+			'a',
+		]);
 	});
 });

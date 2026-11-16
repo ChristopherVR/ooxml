@@ -422,6 +422,18 @@ export class ViewerCanvasEditingService {
 		this.editor.sendSelectedBackward(this.requireHost().activeSlideIndex());
 	}
 
+	/** A Selection Pane drag: move the element at stacking position `from` to `to`. */
+	onSelectionPaneReorder(event: { from: number; to: number }): void {
+		const host = this.requireHost();
+		const elements = [...(host.activeSlide()?.elements ?? [])];
+		const [moved] = elements.splice(event.from, 1);
+		if (!moved) {
+			return;
+		}
+		elements.splice(event.to, 0, moved);
+		this.editor.updateSlide(host.activeSlideIndex(), { elements });
+	}
+
 	onToggleElementHidden(id: string): void {
 		const host = this.requireHost();
 		const el = host.activeSlide()?.elements.find((e) => e.id === id);

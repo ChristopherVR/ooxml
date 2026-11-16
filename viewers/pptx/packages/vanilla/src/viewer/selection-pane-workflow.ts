@@ -59,6 +59,7 @@ export function createSelectionPaneWorkflow(
 			pane = openSelectionPane(host.doc, host.root(), host.t, {
 				elements: activeSlide()?.elements ?? [],
 				selectedIds: host.store.get().selectedElementIds,
+				canEdit: () => host.store.get().editable,
 				subscribe: (listener) => {
 					// Re-selecting the same row hands out a fresh array every time, so
 					// forward only real changes; the pane would otherwise repaint on
