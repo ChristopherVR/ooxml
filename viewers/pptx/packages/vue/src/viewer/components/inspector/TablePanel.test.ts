@@ -192,9 +192,8 @@ describe('tablePanel', () => {
 
 	it('toggles the header row and emits firstRowHeader', async () => {
 		const wrapper = mountPanel(makeTableElement(2, 2));
-		// Style toggle order: banded rows, header row, ... -> index 1 is header row.
-		const checkboxes = wrapper.findAll('pptx-ui-checkbox');
-		await setControlValue(checkboxes[1], true);
+		// The shared Table Style Options field for the header row.
+		await setControlValue(wrapper.find('[data-testid="table-firstRowHeader"]'), true);
 		const td = lastEmittedTableData(wrapper);
 		expect(td.firstRowHeader).toBeTruthy();
 	});

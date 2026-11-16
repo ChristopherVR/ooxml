@@ -19,6 +19,10 @@ describe('getReactSlideBackgroundStyle', () => {
 			backgroundImage: undefined,
 			backgroundSize: '100% 100%',
 			backgroundRepeat: 'no-repeat',
+			// The resolved background, published for shapes that use the slide background fill.
+			'--pptx-slide-bg-color': '#123456',
+			'--pptx-slide-bg-image': 'url(data:image/png;base64,abc)',
+			'--pptx-slide-bg-repeat': 'no-repeat',
 		});
 	});
 

@@ -648,7 +648,8 @@ describe('parseDrawingColorChoice', () => {
 					'@_b': '50000',
 				},
 			};
-			expect(parseDrawingColorChoice(node)).toBe('#808080');
+			// scRGB channels are linear (ECMA-376 20.1.2.3.30); 50% linear is 0xBC in sRGB.
+			expect(parseDrawingColorChoice(node)).toBe('#BCBCBC');
 		});
 
 		it('parses a specific color (25% R, 75% G, 50% B)', () => {
@@ -661,8 +662,8 @@ describe('parseDrawingColorChoice', () => {
 				},
 				result = parseDrawingColorChoice(node);
 			expect(result).toBeDefined();
-			// 0.25*255=64=0x40, 0.75*255=191=0xBF, 0.5*255=128=0x80
-			expect(result).toBe('#40BF80');
+			// Linear 25%, 75% and 50% gamma-encode to sRGB 0x89, 0xE1 and 0xBC.
+			expect(result).toBe('#89E1BC');
 		});
 
 		it('returns undefined when red channel is missing', () => {
@@ -1281,16 +1282,14 @@ describe('parseDrawingColorOpacity', () => {
 			expect(parseDrawingColorOpacity(node)).toBeCloseTo(1, 2);
 		});
 
-		it('negative alphaOff values are clamped to 0 by parseDrawingPercent', () => {
-			// parseDrawingPercent uses clampUnitInterval, so -20000/100000 = -0.2 -> 0
-			// This means negative offsets cannot reduce opacity through this code path
+		it('applies a negative alphaOff, which ST_FixedPercentage allows', () => {
 			const node: XmlObject = {
 				'a:srgbClr': {
 					'a:alphaOff': { '@_val': '-20000' },
 				},
 			};
-			// alphaOff clamped to 0, default opacity=1, 1+0 = 1
-			expect(parseDrawingColorOpacity(node)).toBeCloseTo(1, 2);
+			// Default opacity 1, offset by -0.2.
+			expect(parseDrawingColorOpacity(node)).toBeCloseTo(0.8, 2);
 		});
 
 		it('applies positive alphaOff to alpha', () => {
@@ -1315,17 +1314,15 @@ describe('parseDrawingColorOpacity', () => {
 			expect(parseDrawingColorOpacity(node)).toBe(1);
 		});
 
-		it('alphaOff with negative value is clamped to 0, so opacity is unchanged', () => {
-			// parseDrawingPercent clamps -50000/100000 = -0.5 to 0
-			// So alphaOff becomes 0 and has no effect
+		it('clamps an alpha a negative alphaOff takes below 0 to 0', () => {
 			const node: XmlObject = {
 				'a:srgbClr': {
 					'a:alpha': { '@_val': '10000' },
 					'a:alphaOff': { '@_val': '-50000' },
 				},
 			};
-			// alpha=0.1, alphaOff clamped to 0, so result = 0.1
-			expect(parseDrawingColorOpacity(node)).toBeCloseTo(0.1, 2);
+			// 0.1 - 0.5 = -0.4, clamped to 0.
+			expect(parseDrawingColorOpacity(node)).toBeCloseTo(0, 2);
 		});
 	});
 
