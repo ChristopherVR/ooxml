@@ -20,6 +20,7 @@
  * Reference: ECMA-376 Part 1, §20.1.8.35 (`a:grpFill`).
  */
 import type { GroupPptxElement, ShapeStyle } from '../../types';
+import { at } from '../../../../geometry/indexed';
 
 /** The gradient-stop list shape carried by {@link ShapeStyle}. */
 type GradientStops = NonNullable<ShapeStyle['fillGradientStops']>;
@@ -62,7 +63,8 @@ function sameStops(a: GradientStops | undefined, b: GradientStops | undefined): 
 	return (
 		a.length === b.length &&
 		a.every((stop, index) => {
-			const other = b[index];
+			// Same length as `a` (checked above).
+			const other = at(b, index);
 			return (
 				sameColor(stop.color, other.color) &&
 				stop.position === other.position &&

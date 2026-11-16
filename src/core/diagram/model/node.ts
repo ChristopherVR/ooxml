@@ -144,7 +144,7 @@ export interface DiagramNode<S = unknown> {
 	/** CT_Pt connection identifier, when the point references a connection. */
 	connectionId?: string | null | undefined;
 	parentId?: string | undefined;
-	children?: DiagramNode<S>[];
+	children?: DiagramNode<S>[] | undefined;
 	/** Node type from `@_type` attribute (e.g. "doc", "node", "asst", "pres"). */
 	nodeType?: string | undefined;
 	/**
@@ -179,19 +179,19 @@ export interface DiagramNode<S = unknown> {
 	 * the save path rebuilds the paragraph from these runs so per-run rich text
 	 * is not flattened. When {@link text} diverges, the runs are ignored.
 	 */
-	runs?: DiagramNodeTextRun<S>[];
+	runs?: DiagramNodeTextRun<S>[] | undefined;
 	/**
 	 * Complete typed paragraph model. Unlike {@link runs}, this retains every
 	 * paragraph and the ordered run, field, break, and tab children within it.
 	 */
-	paragraphs?: DiagramNodeTextParagraph<S>[];
+	paragraphs?: DiagramNodeTextParagraph<S>[] | undefined;
 	/**
 	 * Optional per-node visual override (fill / line / font colour, bold /
 	 * italic). Read at parse time from the point's `spPr` / first-run `rPr`, set
 	 * by the editing op, honoured by the render path, and written back on save so
 	 * it round-trips.
 	 */
-	style?: DiagramNodeStyle;
+	style?: DiagramNodeStyle | undefined;
 	/**
 	 * Manual layout override read from the node's `dgm:prSet` `cust*`
 	 * attributes (drag/resize/rotate/flip performed in PowerPoint's own diagram
@@ -199,5 +199,5 @@ export interface DiagramNode<S = unknown> {
 	 * {@link module:smartart-layout-interpreter-custom} so it survives even
 	 * when there is no cached `dsp:` drawing to fall back on.
 	 */
-	customLayout?: DiagramNodeCustomLayout;
+	customLayout?: DiagramNodeCustomLayout | undefined;
 }

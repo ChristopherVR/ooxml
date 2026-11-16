@@ -86,7 +86,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 * Parse `p:clrMapOvr` from a slide layout's XML.  Layouts can override
 	 * the master's colour map just like slides can.
 	 */
-	protected parseLayoutClrMapOverride(layoutXml: XmlObject): Record<string, string> | null {
+	protected override parseLayoutClrMapOverride(
+		layoutXml: XmlObject,
+	): Record<string, string> | null {
 		const clrMapOvr = (layoutXml['p:sldLayout'] as XmlObject | undefined)?.['p:clrMapOvr'] as
 			| XmlObject
 			| undefined;
@@ -126,10 +128,16 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				}
 			}
 			// Re-apply aliases
-			this.themeColorMap['tx1'] = this.themeColorMap['dk1'] || prevColorMap['dk1'];
-			this.themeColorMap['bg1'] = this.themeColorMap['lt1'] || prevColorMap['lt1'];
-			this.themeColorMap['tx2'] = this.themeColorMap['dk2'] || prevColorMap['dk2'];
-			this.themeColorMap['bg2'] = this.themeColorMap['lt2'] || prevColorMap['lt2'];
+			// A slot missing from both maps stays missing, as assigning `undefined` left it.
+			const alias = (target: string, source: string): void => {
+				const value = this.themeColorMap[source] || prevColorMap[source];
+				if (value === undefined) delete this.themeColorMap[target];
+				else this.themeColorMap[target] = value;
+			};
+			alias('tx1', 'dk1');
+			alias('bg1', 'lt1');
+			alias('tx2', 'dk2');
+			alias('bg2', 'lt2');
 		}
 
 		// Apply format scheme override

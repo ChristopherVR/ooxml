@@ -150,21 +150,23 @@ export interface PptxThemeFillStyle {
 	 */
 	kind: 'solid' | 'gradient' | 'pattern' | 'none' | 'group' | 'picture';
 	/** Pre-resolved colour (may be `undefined` when `phClr`-dependent). */
-	color?: string;
-	opacity?: number;
+	color?: string | undefined;
+	opacity?: number | undefined;
 	/** Gradient-specific fields (only present when `kind === "gradient"`). */
-	gradientStops?: Array<{ color: string; position: number; opacity?: number }>;
-	gradientAngle?: number;
-	gradientType?: 'linear' | 'radial';
-	gradientCss?: string;
+	gradientStops?:
+		| Array<{ color: string; position: number; opacity?: number | undefined }>
+		| undefined;
+	gradientAngle?: number | undefined;
+	gradientType?: 'linear' | 'radial' | undefined;
+	gradientCss?: string | undefined;
 	/** Pattern-specific fields (only present when `kind === "pattern"`). */
-	patternPreset?: string;
-	patternBackgroundColor?: string;
+	patternPreset?: string | undefined;
+	patternBackgroundColor?: string | undefined;
 	/**
 	 * The entry as the shared DrawingML reader holds it (`ThemeFillStyle.fill`): style references
 	 * resolve and substitute `phClr` against it.
 	 */
-	fill?: DrawingFill;
+	fill?: DrawingFill | undefined;
 	/** Raw XML node (object tree) the gradient codec and table styles still read. */
 	rawNode?: unknown;
 }
@@ -188,12 +190,12 @@ export interface PptxThemeFillStyle {
 export interface PptxThemeLineStyle {
 	/** Line width in pixels (converted from EMU). */
 	width?: number;
-	color?: string;
-	opacity?: number;
+	color?: string | undefined;
+	opacity?: number | undefined;
 	dash?: string;
 	lineJoin?: 'round' | 'bevel' | 'miter';
-	lineCap?: 'flat' | 'rnd' | 'sq';
-	compoundLine?: 'sng' | 'dbl' | 'thickThin' | 'thinThick' | 'tri';
+	lineCap?: 'flat' | 'rnd' | 'sq' | undefined;
+	compoundLine?: 'sng' | 'dbl' | 'thickThin' | 'thinThick' | 'tri' | undefined;
 	/** The `a:ln` as the shared DrawingML reader holds it; references resolve against it. */
 	line?: DrawingLine;
 	/** Raw XML node (object tree) the gradient codec and table styles still read. */
@@ -218,17 +220,17 @@ export interface PptxThemeLineStyle {
  * ```
  */
 export interface PptxThemeEffectStyle {
-	shadowColor?: string;
+	shadowColor?: string | undefined;
 	shadowBlur?: number;
 	shadowOffsetX?: number;
 	shadowOffsetY?: number;
-	shadowOpacity?: number;
-	glowColor?: string;
+	shadowOpacity?: number | undefined;
+	glowColor?: string | undefined;
 	glowRadius?: number;
-	glowOpacity?: number;
+	glowOpacity?: number | undefined;
 	softEdgeRadius?: number;
-	innerShadowColor?: string;
-	innerShadowOpacity?: number;
+	innerShadowColor?: string | undefined;
+	innerShadowOpacity?: number | undefined;
 	innerShadowBlur?: number;
 	innerShadowOffsetX?: number;
 	innerShadowOffsetY?: number;
@@ -277,7 +279,7 @@ export interface PptxThemeEffectStyle {
  */
 export interface PptxThemeFormatScheme {
 	/** The `@name` attribute of the format scheme. */
-	name?: string;
+	name?: string | undefined;
 	/** Fill styles at indices 1-3 (subtle, moderate, intense). */
 	fillStyles: PptxThemeFillStyle[];
 	/** Line styles at indices 1-3. */
@@ -308,11 +310,11 @@ export interface PptxTheme {
 	/** Theme name from `a:theme @name`. */
 	name?: string;
 	/** Resolved colour scheme. */
-	colorScheme?: PptxThemeColorScheme;
+	colorScheme?: PptxThemeColorScheme | undefined;
 	/** Resolved font scheme. */
-	fontScheme?: PptxThemeFontScheme;
+	fontScheme?: PptxThemeFontScheme | undefined;
 	/** Format scheme — fill, line, effect and background fill style matrices. */
-	formatScheme?: PptxThemeFormatScheme;
+	formatScheme?: PptxThemeFormatScheme | undefined;
 }
 
 /**

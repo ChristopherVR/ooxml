@@ -3,6 +3,7 @@ import { xmlText } from '../../utils';
 import { assignOrderedXmlChildren, setOwnXmlProperty } from './ordered-xml-children';
 import { paragraphContentEntries } from './paragraph-sibling-order';
 import { ensureItems, isGroupedByTag, isXmlObject } from './xml-child-scan';
+import { at } from '../../../../geometry/indexed';
 
 const CONTENT_TAGS = new Set(['a:r', 'a:br', 'a:fld']);
 const paragraphOrders = new WeakMap<XmlObject, readonly string[]>();
@@ -83,7 +84,8 @@ export function recordTableParagraphOrder(
 		return;
 	}
 	paragraphs.forEach((paragraph, index) => {
-		const runs = runsByParagraph[index];
+		// One run list per paragraph (lengths checked above).
+		const runs = at(runsByParagraph, index);
 		const tags = runs.map(runTag);
 		if (isXmlObject(paragraph) && !isGroupedByTag(tags) && matchesParagraph(paragraph, runs)) {
 			paragraphOrders.set(paragraph, tags);

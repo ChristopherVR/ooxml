@@ -269,7 +269,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		return normalized.length > 0 ? normalized : undefined;
 	}
 
-	protected resolveThemeTypeface(typeface: string | undefined): string | undefined {
+	protected override resolveThemeTypeface(typeface: string | undefined): string | undefined {
 		const normalized = this.normalizeTypefaceToken(typeface || '');
 		if (!normalized) {
 			return undefined;

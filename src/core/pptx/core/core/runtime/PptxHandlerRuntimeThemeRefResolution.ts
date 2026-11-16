@@ -212,7 +212,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 * with the given override colour.  When the gradient node contains
 	 * `a:schemeClr @val="phClr"`, the override colour is injected.
 	 */
-	protected reResolveGradientWithPhClr(
+	protected override reResolveGradientWithPhClr(
 		gradNode: XmlObject,
 		phClrValue: string,
 	): {

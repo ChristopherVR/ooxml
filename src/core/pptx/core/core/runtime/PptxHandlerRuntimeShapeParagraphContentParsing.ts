@@ -9,6 +9,7 @@ import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRunti
 import type { ShapeTextParsingContext, ParagraphContentResult } from './PptxHandlerRuntimeTypes';
 import { parseRubyElement } from './ruby-element-parsing';
 import { at } from '../../../../geometry/indexed';
+import { isFiniteNumber } from '../../../../units/finite';
 
 /** `a:p` children that contribute renderable content, in no particular order. */
 const PARAGRAPH_CONTENT_TAGS: ReadonlySet<string> = new Set([
@@ -464,7 +465,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			if (segments.length === 0) {
 				const endParaSz = (p['a:endParaRPr'] as XmlObject | undefined)?.['@_sz'];
 				const endParaPoints = endParaSz !== undefined ? parseInt(String(endParaSz)) / 100 : NaN;
-				if (Number.isFinite(endParaPoints) && endParaPoints > 0) {
+				if (isFiniteNumber(endParaPoints) && endParaPoints > 0) {
 					separatorStyle.fontSize = endParaPoints * (96 / 72);
 				}
 			}
@@ -492,7 +493,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			const emptyParagraphStyle = withAuthoredSplit({}) as TextStyle;
 			const endParaSz = (p['a:endParaRPr'] as XmlObject | undefined)?.['@_sz'];
 			const endParaPoints = endParaSz !== undefined ? parseInt(String(endParaSz)) / 100 : NaN;
-			if (Number.isFinite(endParaPoints) && endParaPoints > 0) {
+			if (isFiniteNumber(endParaPoints) && endParaPoints > 0) {
 				emptyParagraphStyle.fontSize = endParaPoints * (96 / 72);
 			}
 			segments.push({ text: '', style: emptyParagraphStyle });
@@ -535,7 +536,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				const lvlParsed = Number.parseInt(String(lvlRaw), 10);
 				// An authored `lvl="0"` is kept as level 0 (not dropped as the
 				// schema default) so a rewritten slide re-emits the attribute.
-				if (Number.isFinite(lvlParsed) && lvlParsed >= 0) {
+				if (isFiniteNumber(lvlParsed) && lvlParsed >= 0) {
 					at(segments, firstSegmentIndex).paragraphLevel = Math.min(Math.max(lvlParsed, 0), 8);
 				}
 			}
@@ -592,7 +593,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			if (paragraphOwnProps) {
 				at(segments, firstSegmentIndex).paragraphProperties = paragraphOwnProps;
 			}
-			stampParagraphMarkupFlags(segments[firstSegmentIndex], p, entries.length > 0);
+			stampParagraphMarkupFlags(at(segments, firstSegmentIndex), p, entries.length > 0);
 		}
 
 		return { parts, segments, seedStyle };

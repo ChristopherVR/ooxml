@@ -90,12 +90,15 @@ export function chartExFromNeutral(space: ChartExSpace, styled: Styled) {
 		dimension(space.plotArea.series.length ? dataOf(0) : undefined, 'strDim', 'cat'),
 	);
 	const series = space.plotArea.series.map((source, index): PptxChartSeries => {
-		const result = { ...styled.series[index] };
 		const values = levelText(dimension(dataOf(index), 'numDim', 'val'))?.[0]
 			?.map((value) => Number.parseFloat(value))
 			.filter(Number.isFinite);
-		result.name = source.tx?.value?.trim() || `Series ${index + 1}`;
-		result.values = values?.length ? values : [0];
+		// A styled model without this series (callers may pass none) still yields a series.
+		const result: PptxChartSeries = {
+			...styled.series[index],
+			name: source.tx?.value?.trim() || `Series ${index + 1}`,
+			values: values?.length ? values : [0],
+		};
 		if (source.layoutId === 'regionMap') {
 			const dim = exactDimension(dataOf(index), 'numDim', 'colorVal')?.levels[0];
 			if (dim) {

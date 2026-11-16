@@ -5,6 +5,7 @@ import { buildEffectDagTreeFromXml } from '../builders/effect-dag-containers';
 import { extractReflectionAttributes } from '../builders/effect-style-extractor-reflection';
 import { findObjectEffect, shadowOffset } from '../builders/effect-style-from-model';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeTextStyleUtils';
+import { isFiniteNumber } from '../../../../units/finite';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	/**
@@ -94,7 +95,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					// through the presentation's slide order (as shape-level actions
 					// do) and fall back to the file number only when the part is not
 					// in the list (e.g. while parsing a layout before slides load).
-					const slideNumber = parseInt(slideMatch[1], 10);
+					const slideNumber = parseInt(slideMatch[1] ?? '', 10);
 					const orderIndex = this.orderedSlidePaths.findIndex(
 						(slidePath) => slidePath.match(/slide(\d+)\.xml$/i)?.[1] === String(slideNumber),
 					);
@@ -300,7 +301,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const alphaModFix = runEffectList['a:alphaModFix'] as XmlObject | undefined;
 		if (alphaModFix) {
 			const amt = Number.parseInt(String(alphaModFix['@_amt'] || ''), 10);
-			if (Number.isFinite(amt)) {
+			if (isFiniteNumber(amt)) {
 				style.textAlphaModFix = amt / 1000;
 			}
 		}
@@ -309,7 +310,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const alphaMod = runEffectList['a:alphaMod'] as XmlObject | undefined;
 		if (alphaMod) {
 			const amt = Number.parseInt(String(alphaMod['@_amt'] || ''), 10);
-			if (Number.isFinite(amt)) {
+			if (isFiniteNumber(amt)) {
 				style.textAlphaMod = amt / 1000;
 			}
 		}
@@ -318,15 +319,15 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const hslNode = runEffectList['a:hsl'] as XmlObject | undefined;
 		if (hslNode) {
 			const hue = Number.parseInt(String(hslNode['@_hue'] || ''), 10);
-			if (Number.isFinite(hue)) {
+			if (isFiniteNumber(hue)) {
 				style.textHslHue = hue / 60000;
 			}
 			const sat = Number.parseInt(String(hslNode['@_sat'] || ''), 10);
-			if (Number.isFinite(sat)) {
+			if (isFiniteNumber(sat)) {
 				style.textHslSaturation = sat / 1000;
 			}
 			const lum = Number.parseInt(String(hslNode['@_lum'] || ''), 10);
-			if (Number.isFinite(lum)) {
+			if (isFiniteNumber(lum)) {
 				style.textHslLuminance = lum / 1000;
 			}
 		}

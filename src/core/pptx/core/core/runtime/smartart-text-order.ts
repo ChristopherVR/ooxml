@@ -1,4 +1,5 @@
 import type { XmlObject } from '../../types';
+import { at } from '../../../../geometry/indexed';
 
 const childOrder = new WeakMap<XmlObject, string[]>();
 
@@ -59,7 +60,8 @@ function directChildOrder(xml: string): string[] {
 			continue;
 		}
 		if (depth === 0) {
-			order.push(match[3]);
+			// The local-name group is required, so it is a string once the pattern matched.
+			order.push(match[3] ?? '');
 		}
 		if (!selfClosing) {
 			depth++;
@@ -76,7 +78,7 @@ function extractElementOrders(xml: string, elementName: string): string[][] {
 		'gu',
 	);
 	for (const match of xml.matchAll(pattern)) {
-		orders.push(directChildOrder(match[2]));
+		orders.push(directChildOrder(match[2] ?? ''));
 	}
 	return orders;
 }
@@ -98,13 +100,13 @@ export function annotateSmartArtTextOrder(xml: string, parsed: unknown): void {
 	const paragraphs = collectParsedParagraphs(parsed);
 	const orders = extractElementOrders(xml, 'p');
 	for (let index = 0; index < Math.min(orders.length, paragraphs.length); index++) {
-		childOrder.set(paragraphs[index], orders[index]);
+		childOrder.set(at(paragraphs, index), at(orders, index));
 	}
 	for (const name of ['r', 'fld', 'br']) {
 		const nodes = directChildrenByLocalName(paragraphs, name);
 		const nodeOrders = extractElementOrders(xml, name);
 		for (let index = 0; index < Math.min(nodeOrders.length, nodes.length); index++) {
-			childOrder.set(nodes[index], nodeOrders[index]);
+			childOrder.set(at(nodes, index), at(nodeOrders, index));
 		}
 	}
 }

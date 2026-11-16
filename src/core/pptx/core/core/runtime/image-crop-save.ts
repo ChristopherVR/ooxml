@@ -25,10 +25,10 @@ export function clampCropForSave(value: unknown): number {
 
 /** The four `a:srcRect` inset fractions a picture element carries. */
 export interface CropInsets {
-	cropLeft?: number;
-	cropTop?: number;
-	cropRight?: number;
-	cropBottom?: number;
+	cropLeft?: number | undefined;
+	cropTop?: number | undefined;
+	cropRight?: number | undefined;
+	cropBottom?: number | undefined;
 }
 
 /**

@@ -238,7 +238,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	): NonNullable<PptxImageEffects['fillOverlay']>['resolvedGradient'] {
 		const gsLst = gradFill['a:gsLst'] as XmlObject | undefined;
 		const gsNodes = this.ensureArray(gsLst?.['a:gs']);
-		const stops: Array<{ color: string; position: number; opacity?: number }> = [];
+		const stops: Array<{ color: string; position: number; opacity?: number | undefined }> = [];
 		for (const gsNode of gsNodes) {
 			const gs = gsNode as XmlObject;
 			const color = this.parseColor(gs);

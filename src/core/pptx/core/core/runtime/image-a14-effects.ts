@@ -13,6 +13,7 @@ import {
 	numberAttrByLocalName,
 	percent100k,
 } from './image-a14-xml';
+import { isFiniteNumber } from '../../../../units/finite';
 
 export { A14_IMAGE_PROPS_EXT_URI } from './image-a14-xml';
 
@@ -137,7 +138,7 @@ function collectParams(node: XmlObject): Record<string, number> {
 			continue;
 		}
 		const parsed = Number(node[key]);
-		if (Number.isFinite(parsed)) {
+		if (isFiniteNumber(parsed)) {
 			params[localName(key.slice(2))] = parsed;
 		}
 	}
@@ -154,7 +155,11 @@ function artisticRadiusOf(name: string, params: Record<string, number>): number 
 	if (key === undefined) {
 		return undefined;
 	}
+	// `key` is one of `params`' own keys (checked above).
 	const value = params[key];
+	if (value === undefined) {
+		return undefined;
+	}
 	// `radius` is an absolute value; every other parameter is a 1/1000th percent.
 	return key === 'radius' ? value : value / 1000;
 }

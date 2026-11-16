@@ -13,6 +13,7 @@ import { parseTextBodyScene3d } from '../../utils/text-body-scene3d';
 import { parseTextBodySp3d } from '../../utils/text-body-sp3d';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeBulletParsing';
 import type { BodyPropertiesResult } from './PptxHandlerRuntimeTypes';
+import { isFiniteNumber } from '../../../../units/finite';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	/**
@@ -178,8 +179,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				if (!valMatch) {
 					continue;
 				}
-				const val = parseInt(valMatch[1], 10);
-				if (!Number.isFinite(val)) {
+				const val = parseInt(valMatch[1] ?? '', 10);
+				if (!isFiniteNumber(val)) {
 					continue;
 				}
 				// The wave and pour presets name their first guide `adj1`, the others `adj`.

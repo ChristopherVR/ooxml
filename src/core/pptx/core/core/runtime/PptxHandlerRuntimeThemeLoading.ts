@@ -4,6 +4,7 @@ import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRunti
 import { colorSchemeFromMap, fontSchemeFromMap } from './theme-part-model';
 import { parseThemeColorMap } from '../../../../drawingml/theme';
 import { NS, first, parseXml, type XmlElement } from '../../../../xml/index';
+import { at } from '../../../../geometry/indexed';
 
 export function isPresentationThemePartPath(path: string): boolean {
 	return /^ppt\/theme\/(?!themeOverride)[^/]+\.xml$/iu.test(path);
@@ -33,7 +34,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		if (!masterFiles || masterFiles.length === 0) {
 			return undefined;
 		}
-		const masterPath = masterFiles[0].name;
+		const masterPath = at(masterFiles, 0).name;
 		const relsPath = masterPath.replace(
 			/ppt\/slideMasters\/(slideMaster\d+)\.xml/,
 			'ppt/slideMasters/_rels/$1.xml.rels',
@@ -280,8 +281,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 		const preferredThemePath = await this.resolvePrimaryThemePath();
 		const themeFile = preferredThemePath
-			? (themeFiles.find((file) => file.name === preferredThemePath) ?? themeFiles[0])
-			: themeFiles[0];
+			? (themeFiles.find((file) => file.name === preferredThemePath) ?? at(themeFiles, 0))
+			: at(themeFiles, 0);
 
 		const parsed = await this.parseThemePart(themeFile.name);
 		if (parsed) {

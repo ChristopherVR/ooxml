@@ -157,13 +157,13 @@ function fillView(
 	}
 }
 
-const FILL_TAG: Record<string, string> = {
+const FILL_TAG = {
 	solid: 'a:solidFill',
 	gradient: 'a:gradFill',
 	pattern: 'a:pattFill',
 	none: 'a:noFill',
 	picture: 'a:blipFill',
-};
+} satisfies Record<Exclude<DrawingFill['kind'], 'unsupported'>, string>;
 
 function fillTagOf(fill: DrawingFill): string {
 	return fill.kind === 'unsupported' ? `a:${fill.element}` : FILL_TAG[fill.kind];

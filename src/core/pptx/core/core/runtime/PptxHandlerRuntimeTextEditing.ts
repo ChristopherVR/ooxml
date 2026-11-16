@@ -1,6 +1,7 @@
 import { TextSegment, TextStyle, XmlObject } from '../../types';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeTextRunStyleExtraction';
 import { paragraphContentEntries } from './paragraph-sibling-order';
+import { at } from '../../../../geometry/indexed';
 
 const REWRITE_CONTENT_TAGS: ReadonlySet<string> = new Set(['a:r', 'a:fld', 'a:br']);
 
@@ -206,7 +207,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const remappedChars: Array<{ char: string; style: TextStyle }> = [];
 		for (let index = 0; index < prefixLength; index++) {
 			remappedChars.push({
-				char: nextChars[index],
+				char: at(nextChars, index),
 				style: this.cloneTextStyleValue(existingChars[index]?.style),
 			});
 		}
@@ -221,7 +222,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		);
 		for (let index = prefixLength; index <= nextSuffixIndex && index < nextChars.length; index++) {
 			remappedChars.push({
-				char: nextChars[index],
+				char: at(nextChars, index),
 				style: this.cloneTextStyleValue(insertedStyle),
 			});
 		}
@@ -230,7 +231,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const nextSuffixStart = nextSuffixIndex + 1;
 		for (let index = 0; index < nextChars.length - nextSuffixStart; index++) {
 			remappedChars.push({
-				char: nextChars[nextSuffixStart + index],
+				char: at(nextChars, nextSuffixStart + index),
 				style: this.cloneTextStyleValue(
 					existingChars[existingSuffixStart + index]?.style || insertedStyle,
 				),

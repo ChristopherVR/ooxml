@@ -58,7 +58,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		};
 	}
 
-	protected resolveThemeColor(schemeKey: string): string | undefined {
+	protected override resolveThemeColor(schemeKey: string): string | undefined {
 		const normalized = schemeKey.trim().toLowerCase();
 		if (!normalized) {
 			return undefined;

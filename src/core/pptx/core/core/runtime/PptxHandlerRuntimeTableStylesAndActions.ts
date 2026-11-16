@@ -65,10 +65,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// Detect internal slide jumps
 				const slideFileMatch = target.match(/slide(\d+)\.xml$/i);
 				if (slideFileMatch) {
-					const slideNum = parseInt(slideFileMatch[1], 10);
+					const slideNum = parseInt(slideFileMatch[1] ?? '', 10);
 					const matchIdx = slidePaths.findIndex((p) => {
 						const m = p.match(/slide(\d+)\.xml$/i);
-						return m ? parseInt(m[1], 10) === slideNum : false;
+						return m ? parseInt(m[1] ?? '', 10) === slideNum : false;
 					});
 					if (matchIdx >= 0) {
 						action.targetSlideIndex = matchIdx;
