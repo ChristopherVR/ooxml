@@ -2888,6 +2888,15 @@ corrected crop-independent tile periods and source-backed map paint. Provider ge
 used for local comparison are not committed; decoder regression fixtures use synthetic polygons.
 Apache-2.0 source licensing is retained.
 
+The approximate country outlines the shared painter draws for a region map without a provider
+cache (`src/core/chart/region-map/world-regions.ts`, `WORLD_REGIONS`, 22 regions, about 4.9 KB) are
+hand-drawn coarse polygons of 6 to 16 integer points each on a 1000 x 500 grid, with a label anchor
+per region. They were written in this project's PowerPoint viewer (`chart-map.tsx` of its React
+binding, then `chart-map-projection.ts`, first committed in `da3d65636b`, moved here in
+`ba4cd0dc64` and `53531e817f`). They are not derived or simplified from a geographic dataset, no
+third-party geodata is bundled, and they carry the repository's Apache-2.0 licence. They are
+labelled approximate wherever they are drawn.
+
 SmartArt picture association, role metadata, generated image relationships and host cache writers
 are new implementations built on the existing shared diagram engine. Visio ChartEx admission and
 editing reuse the existing embedded workbook and ChartEx transaction APIs; they do not copy a
