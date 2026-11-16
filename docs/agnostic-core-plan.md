@@ -844,7 +844,14 @@ workbooks passed.
 ### 3.9 pptx strictness and the XML object model (inventory, 2026-11-16)
 
 Strict since 2026-11-16: `pptx/ui`, `pptx/node`, `pptx/signature-node`, `pptx/core/openxml` and
-`pptx/core/types` (plus the two `pptx/merge-*.ts` files). `pptx/node` and `signature-node` only
+`pptx/core/types` (plus the two `pptx/merge-*.ts` files); later the same day `pptx/core/geometry`,
+`pptx/core/color`, `pptx/core/ppt`, `pptx/smartart-layouts`, `pptx/test-support` and the
+`pptx/core/core` contract leaves (`types.ts`, `handler-result-types.ts`, `load-limits.ts`,
+`zip-bomb.ts`, `svg-rasterizer.ts`). Ten tests in those directories drive `PptxHandler`, the
+runtime factory or the transform updater and stay excluded by name until those are strict.
+`types.ts` stopped being a hub once the result types of two runtime classes moved to the
+import-free `handler-result-types.ts`; geometry only needed `ensureArrayValue` from its leaf
+module instead of the `utils` barrel. `pptx/node` and `signature-node` only
 became reachable once the zip limits and the rasterizer type left `pptx/core/core/types.ts` for
 import-free modules (`zip-bomb.ts`, `svg-rasterizer.ts`): that file and `pptx/index.ts` are hubs,
 and anything importing them pulls about 1,610 strict errors of `pptx/core` into the compilation.
@@ -852,35 +859,38 @@ So a directory can only move once everything it imports is strict, which means w
 leaves inward (`types` and `openxml` first, then the utilities they feed).
 
 Measured by compiling every `src/core/pptx/**/*.ts` file under the strict base project (TypeScript
-7.0.2): 7,883 errors, counted where they are reported. TS2532 and TS18048 (possibly `undefined`,
-mostly `noUncheckedIndexedAccess` on object-tree and array access) are 5,390 of them; TS2375,
-TS2379 and TS2412 (`exactOptionalPropertyTypes`) about 1,000.
+7.0.2). The first count was 7,883 errors; after the moves above and the pass that let optional
+fields the code clears admit `undefined` (about 970 declarations) it is 6,907, counted where they
+are reported. TS2532 and TS18048 (possibly `undefined`, mostly `noUncheckedIndexedAccess` on
+object-tree and array access) are 5,148 of them, almost all in tests; `exactOptionalPropertyTypes`
+errors fell from about 1,000 to about 250. Everything `pptx/index.ts` reaches (the whole model)
+holds 780 source errors, down from 1,392; every directory below waits on that number reaching 0.
 
-| Directory                   | Source errors | Test errors | Blocked by                                    |
-| --------------------------- | ------------: | ----------: | --------------------------------------------- |
-| `pptx/core/core`            |           643 |       1,528 | itself (the runtime and the `types.ts` hub)   |
-| `pptx/core/utils`           |           486 |       1,117 | `core/core`                                   |
-| `pptx/core/builders`        |           230 |         671 | `core/core`, `core/utils`                     |
-| `pptx/editor/render`        |           169 |         587 | `ooxml-core/pptx` (the whole model)           |
-| `pptx/automation/tools`     |           136 |           1 | the whole model                               |
-| `pptx/core/ppt`             |            80 |          12 | `core/core`, `core/utils`                     |
-| `pptx/core/services`        |            69 |         372 | `core/core`, `core/utils`                     |
-| `pptx/core/geometry`        |            65 |          82 | `core/utils`                                  |
-| `pptx/automation/catalogue` |            43 |           0 | the whole model                               |
-| `pptx/converter`            |            40 |          23 | the whole model                               |
-| `pptx/__tests__`            |            32 |       1,219 | the whole model                               |
-| `pptx/cli`                  |             8 |           4 | the whole model                               |
-| `pptx/core/PptxHandler.ts`  |             2 |           0 | the whole model                               |
-| `pptx/automation/execution` |             2 |           0 | the whole model                               |
-| `pptx/editor/ai`            |             1 |           0 | the whole model (via `ooxml-core/pptx`)       |
-| `pptx/editor/loader`        |             0 |           5 | the whole model                               |
-| `pptx/core/color`           |             0 |           1 | `core/core` (colour adapters, being migrated) |
-| `pptx/automation/__tests__` |             0 |         255 | the whole model                               |
-| `pptx/smartart-layouts`     |             0 |           0 | the whole model                               |
+| Directory                   | Source errors | Test errors | Blocked by                               |
+| --------------------------- | ------------: | ----------: | ---------------------------------------- |
+| `pptx/core/core`            |           370 |       1,522 | itself (the runtime class chain)         |
+| `pptx/core/utils`           |           239 |       1,109 | `core/core` (through the `utils` barrel) |
+| `pptx/editor/render`        |           164 |         586 | `ooxml-core/pptx` (the whole model)      |
+| `pptx/core/builders`        |           132 |         665 | `core/core`, `core/utils`                |
+| `pptx/automation/tools`     |           126 |           1 | the whole model                          |
+| `pptx/automation/catalogue` |            43 |           0 | the whole model                          |
+| `pptx/converter`            |            29 |          17 | the whole model                          |
+| `pptx/core/services`        |            13 |         367 | `core/core`, `core/utils`                |
+| `pptx/cli`                  |             8 |           4 | the whole model                          |
+| `pptx/core/PptxHandler.ts`  |             2 |           0 | the whole model                          |
+| `pptx/automation/execution` |             2 |           0 | the whole model                          |
+| `pptx/editor/ai`            |             1 |           0 | the whole model (via `ooxml-core/pptx`)  |
+| `pptx/editor/loader`        |             0 |           4 | the whole model (via `ooxml-core/pptx`)  |
+| `pptx/__tests__`            |             0 |       1,241 | the whole model                          |
+| `pptx/automation/__tests__` |             0 |         255 | the whole model                          |
 
 The test columns count because the strict project, unlike `tsconfig.pptx.json`, type-checks test
 files. `editor/ai` and `editor/loader` are nearly clean but import the model through
-`ooxml-core/pptx`; they move once `core` does, or sooner if they import only leaf modules.
+`ooxml-core/pptx`, which the editor bundle keeps external so module state is shared; switching
+them to relative leaf imports would duplicate that state, so they move once the model does. Of the
+780 model errors about 80 are in the runtime theme, colour, text, fill and effect modules that the
+drawingml migrations are rewriting; the rest are possibly-`undefined` reads and arguments
+(TS18048, TS2345) that need real narrowing one call site at a time.
 
 What blocks moving the object trees onto the shared `xml` area:
 
