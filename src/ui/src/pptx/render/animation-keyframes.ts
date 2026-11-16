@@ -22,6 +22,7 @@ import { MOTION_FAMILY_KEYFRAME_DEFINITIONS } from './animation-keyframes-motion
 import type { MotionFamilyEffectNameKeys } from './animation-keyframes-motion-family';
 import { ROTATION_FAMILY_KEYFRAME_DEFINITIONS } from './animation-keyframes-rotation-family';
 import type { RotationFamilyEffectNameKeys } from './animation-keyframes-rotation-family';
+import { ensurePixelateFilterDefs } from './animation-pixelate-filter';
 import { SLIDE_FILTER_KEYFRAME_DEFINITIONS } from './animation-slide-filter';
 import type { SlideFilterEffectName } from './animation-slide-filter';
 import { STRIPS_KEYFRAME_DEFINITIONS } from './animation-strips-reveal';
@@ -66,5 +67,7 @@ const KEYFRAME_DEFINITIONS: Record<EffectName, string> = {
 // ==========================================================================
 
 export function getEffectKeyframes(effect: EffectName): string {
+	// The mosaic keyframes reference same-document filters; add them on first use.
+	if (effect === 'pixelateIn' || effect === 'pixelateOut') ensurePixelateFilterDefs();
 	return KEYFRAME_DEFINITIONS[effect] ?? '';
 }

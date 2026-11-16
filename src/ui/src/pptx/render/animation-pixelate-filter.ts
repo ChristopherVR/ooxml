@@ -1,11 +1,12 @@
 /**
  * `animation-pixelate-filter` - the `p:animEffect/@filter="pixelate"` mosaic
  * reveal/conceal: a genuinely blocky, content-preserving grid dissolve built
- * from a small, FIXED set of self-contained SVG `<filter>` data-URIs. Every
- * value is inlined directly inside the generated `@keyframes` CSS text
- * (`filter: url("data:image/svg+xml,...")`), exactly like the diamond/wedge
- * mask reveals' data-URI `mask-image`s in `animation-mask-reveal.ts`: no DOM
- * `<defs>` injection, no per-element id, nothing for a binding to wire up.
+ * from a small, FIXED set of SVG `<filter>`s. The generated `@keyframes` CSS
+ * references them as `filter: url(#pptx-pixelate-<n>)`, and
+ * {@link ensurePixelateFilterDefs} adds the one hidden `<svg>` that holds them
+ * (`getEffectKeyframes` calls it), so a binding has nothing to wire up. They
+ * used to be self-contained `data:image/svg+xml` references, which Chromium
+ * resolves but WebKit does not.
  *
  * How the mosaic works (SVG filter primitives only, no canvas/WebGL):
  *  1. `feFlood` paints a small opaque square (the "dot") sized `x=0 y=0
@@ -99,41 +100,55 @@ function round(value: number, precision: number): number {
 	return Math.round(value * factor) / factor;
 }
 
-/**
- * Percent-encode an SVG document for a `data:image/svg+xml,...` URI.
- * `encodeURIComponent` already escapes everything unsafe inside a CSS
- * `url("...")` string (quotes, angle brackets, `#`, `%`); the trailing
- * `#<filterId>` fragment is appended UN-encoded afterwards, since a percent
- * encoded `#` (`%23`) is treated as literal data rather than a URL fragment
- * and the filter reference silently fails to resolve.
- */
-function svgDataUri(svg: string, filterId: string): string {
-	return `url("data:image/svg+xml,${encodeURIComponent(svg)}#${filterId}")`;
-}
-
-/** Build the single-filter SVG document for one mosaic coarseness level. */
+/** Build the `<filter>` element for one mosaic coarseness level. */
 function pixelateFilterMarkup(level: number, filterId: string): string {
 	const tile = round(level, 4);
 	const dot = round(level * DOT_RATIO, 4);
 	return (
-		'<svg xmlns="http://www.w3.org/2000/svg">' +
 		`<filter id="${filterId}" primitiveUnits="objectBoundingBox" x="-0.5" y="-0.5" width="2" height="2" color-interpolation-filters="sRGB">` +
 		`<feFlood x="0" y="0" width="${dot}" height="${dot}" result="dot"/>` +
 		`<feComposite in="dot" width="${tile}" height="${tile}" result="tile"/>` +
 		'<feTile in="tile" result="grid"/>' +
 		'<feComposite in="SourceGraphic" in2="grid" operator="in"/>' +
-		'</filter></svg>'
+		'</filter>'
 	);
 }
 
+const filterId = (index: number): string => `pptx-pixelate-${index}`;
+
+/** The id of the hidden `<svg>` that holds every level's `<filter>`. */
+export const PIXELATE_FILTER_DEFS_ID = 'pptx-pixelate-defs';
+
+/** Every level's `<filter>`, as the markup of one hidden `<svg>`. */
+export const PIXELATE_FILTER_DEFS_MARKUP: string =
+	`<svg xmlns="http://www.w3.org/2000/svg" id="${PIXELATE_FILTER_DEFS_ID}" aria-hidden="true" focusable="false" width="0" height="0" style="position:absolute;width:0;height:0;overflow:hidden">` +
+	PIXELATE_LEVELS.map((level, index) => pixelateFilterMarkup(level, filterId(index))).join('') +
+	'</svg>';
+
 /**
- * Ready-to-use `filter: url("data:...")` CSS values, one per
- * {@link PIXELATE_LEVELS} entry (coarsest first, same order/index).
+ * `filter: url(#id)` values, one per {@link PIXELATE_LEVELS} entry (coarsest
+ * first, same order/index). They reference filters in the same document, which
+ * {@link ensurePixelateFilterDefs} adds: WebKit resolves a CSS `filter: url()`
+ * only within the document, so self-contained `data:image/svg+xml` references
+ * painted no mosaic in Safari (#290).
  */
-export const PIXELATE_FILTER_VALUES: readonly string[] = PIXELATE_LEVELS.map((level, index) => {
-	const filterId = `pptx-pixelate-${index}`;
-	return svgDataUri(pixelateFilterMarkup(level, filterId), filterId);
-});
+export const PIXELATE_FILTER_VALUES: readonly string[] = PIXELATE_LEVELS.map(
+	(_level, index) => `url(#${filterId(index)})`,
+);
+
+/**
+ * Add the hidden `<svg>` holding the pixelate filters to `doc` once. Safe to
+ * call repeatedly and where there is no document (server rendering).
+ */
+export function ensurePixelateFilterDefs(
+	doc: Document | undefined = typeof document === 'undefined' ? undefined : document,
+): void {
+	if (!doc?.body || doc.getElementById(PIXELATE_FILTER_DEFS_ID)) return;
+	const host = doc.createElement('div');
+	host.innerHTML = PIXELATE_FILTER_DEFS_MARKUP;
+	const svg = host.firstElementChild;
+	if (svg) doc.body.appendChild(svg);
+}
 
 /**
  * Build one `@keyframes` block stepping through `order` (a sequence of CSS
