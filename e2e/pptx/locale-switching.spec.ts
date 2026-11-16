@@ -136,7 +136,14 @@ async function measureEnglishFallout(
 	}
 	const visibleStrings = await page.evaluate(() => {
 		const strings = new Set<string>();
-		for (const tab of document.querySelectorAll('[role="tab"]')) {
+		// The ribbon's tabs live in the shared tab row's shadow root.
+		const tabs = [
+			...document.querySelectorAll('[role="tab"]'),
+			...[...document.querySelectorAll('pptx-ui-ribbon-tabs')].flatMap((row) => [
+				...(row.shadowRoot?.querySelectorAll('[role="tab"]') ?? []),
+			]),
+		];
+		for (const tab of tabs) {
 			const text = tab.textContent?.trim();
 			if (text) {
 				strings.add(text);

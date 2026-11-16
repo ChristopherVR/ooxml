@@ -40,14 +40,17 @@ test('the new-slide halves stack and large labelled commands keep Office spacing
 		const icon = caret.querySelector('svg')!;
 		const iconBox = icon.getBoundingClientRect();
 		const caretBox = caret.getBoundingClientRect();
-		const tab = document.querySelector(
-			'[data-pptx-chrome="ribbon-tabs"] [role="tab"][aria-selected="true"]',
-		)!;
+		// The tab row is the shared element: its tabs live in its shadow root.
+		const tab = document
+			.querySelector('[data-pptx-chrome="ribbon-tabs"]')!
+			.shadowRoot!.querySelector('[role="tab"][aria-selected="true"]')!;
 		const underline = getComputedStyle(tab, '::after');
 		const tabBox = tab.getBoundingClientRect();
 		const underlineBottom = tabBox.bottom - Number.parseFloat(underline.bottom);
 		let clippedUnderline = false;
-		for (let parent = tab.parentElement; parent; parent = parent.parentElement) {
+		const up = (node: Element): Element | null =>
+			node.parentElement ?? ((node.parentNode as ShadowRoot | null)?.host || null);
+		for (let parent = up(tab); parent; parent = up(parent)) {
 			if (getComputedStyle(parent).overflowY !== 'visible') {
 				const bottom = parent.getBoundingClientRect().top + parent.clientTop + parent.clientHeight;
 				clippedUnderline ||= underlineBottom > bottom + 0.1;
