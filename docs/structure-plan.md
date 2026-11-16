@@ -510,6 +510,36 @@ opacity 0-100 and a pattern swatch grid, and adds a stop halfway along the last 
 background fill saves as `useBgFill`; the canvas still draws it only after a reopen.
 See the active delivery ledger and agnostic plan for implemented coverage and residual limits.
 
+The Alt Text and picture fields followed (2026-11-16): `ELEMENT_ALT_TEXT_SECTIONS`
+(`render/inspector/element-alt-text-fields.ts`, description and title, gated per kind by
+`element-non-visual-description.ts`), `PICTURE_ADJUSTMENT_SECTIONS` and `PICTURE_CROP_SECTIONS`
+(`picture-fields.ts`: brightness, contrast, saturation, transparency, black and white threshold,
+grayscale and the four crop insets) are drawn by the generic renderers, which gained a `text` field
+kind (a text box, or a text area when `multiline`, with a placeholder). React and Vue lost
+`ImageAdjustmentsPanel`, React `RangeSlider`, and vanilla's per-field image, crop, alt text and
+title handlers became one `patchSelectedElement` (its unused gradient and fill opacity handlers
+and gradient state went with them). Drift found: Angular showed the stored `alphaModFix` (opacity)
+as Transparency, so an opaque picture read 100%; crop insets stopped at 80% in React, Vue and
+Angular and 90% in Svelte and vanilla; Angular's crop captions were untranslated English; Svelte and
+vanilla had no Grayscale; a zero threshold wrote a bi-level effect (a white picture) everywhere but
+Svelte; vanilla committed alt text on change, the others per keystroke; Angular's Alt Text panel
+and the Vue and Angular adjustments ignored `canEdit`. Every binding now shows transparency
+inverted, as PowerPoint does, crops to the shared 90% clamp on a slider, clears an effect set back
+to zero, applies alt text as typed and disables the fields with the pane.
+
+Still hand-written per binding (the next candidates, roughly in order of size): the text and
+paragraph options outside the Text Box section (character and line spacing, indents, bullets,
+columns spacing), the table section (style options, cell padding, borders, cell fill), the media
+playback and trim options, Action Settings, the picture's compound controls (artistic effect,
+duotone, colour wash and recolour), the slide background card, the OLE and group cards, and the
+docked Animation and Transition panes. Chart and SmartArt formatting already go through the shared
+elements (`office-ui-chart-format-pane`, the SmartArt picker and text pane). The slide background
+fill still draws only after a reopen: no shared path reaches the slide's resolved background when
+the Fill section writes `useBackgroundFill`, since the canvas fill resolver sees only the element.
+Either the slide stage publishes its resolved background (custom properties the fill resolver can
+read) or each binding passes the active slide's background into the fill-kind change; both touch
+every binding's canvas or inspector wiring and need a check in all five demos.
+
 ### PowerPoint tab row on `office-ui-ribbon` (landed 2026-11-16)
 
 The five PowerPoint bindings draw their ribbon tab row with `pptx-ui-ribbon-tabs`, the shared
