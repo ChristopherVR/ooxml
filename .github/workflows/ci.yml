@@ -813,60 +813,6 @@ jobs:
           path: .browser-timings/history.json
           key: browser-timings-${{ runner.os }}-${{ github.run_id }}
 
-  # The viewers that are still their own repository (none today; see CONSUMERS in ci-plan.mjs),
-  # linked to this change: the contract the shared elements and the format logic have to keep. It
-  # reports failures on the run but is not part of `ci-success`: a viewer that is red for its own
-  # reasons must not block this repository.
-  consumers:
-    name: external viewer (${{ matrix.name }})
-    needs: [plan, build]
-    if: |
-      !cancelled() && needs.build.result != 'failure' &&
-      toJSON(fromJSON(needs.plan.outputs.plan).consumers) != '[]'
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJSON(needs.plan.outputs.plan).consumers }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          ref: ${{ needs.plan.outputs.ref }}
-          path: ooxml
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          ref: ${{ needs.plan.outputs.ref }}
-          repository: ${{ matrix.repo }}
-          path: viewer
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-      - run: bun install --frozen-lockfile
-        working-directory: ooxml
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          name: core-dist
-          path: ooxml/src/core/dist
-        continue-on-error: true
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          name: ui-dist
-          path: ooxml/src/ui/dist
-        continue-on-error: true
-      - name: Build what this change did not
-        run: |
-          [ -d ooxml/src/core/dist ] || (cd ooxml && bun run build)
-          [ -d ooxml/src/ui/dist ] || (cd ooxml/src/ui && bun run build)
-      - name: Link the viewer to this checkout
-        run: node ooxml/scripts/link-local.mjs viewer --no-build
-      - run: ${{ matrix.install }}
-        working-directory: viewer
-      - run: ${{ matrix.verify }}
-        working-directory: viewer
-
   # The single check the `main` ruleset requires. Funnelling through one job keeps branch
   # protection stable when jobs are added or renamed (a required check that no longer exists blocks
   # every PR silently). `always()` plus the explicit result test is deliberate: without it a

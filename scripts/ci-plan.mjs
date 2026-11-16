@@ -158,14 +158,6 @@ const GROUP_ORDER = ['format', 'types', 'unit', 'scripts', 'docs', 'mcp', 'brows
 const ALL_GROUPS = new Set(GROUP_ORDER);
 const ALL_VIEWERS = Object.keys(VIEWERS);
 
-/**
- * The viewer repositories that still consume this one, and how each is verified against a local
- * link (`{ name, repo, install, verify }`). None today: pptx-viewer, the last one, moved into
- * `viewers/pptx`. The `consumers` job stays for the next external consumer.
- */
-export const CONSUMERS = {};
-const ALL_CONSUMERS = Object.keys(CONSUMERS);
-
 /** Files whose change can affect everything: dependencies, compiler and test configuration, CI. */
 const EVERYTHING =
 	/^(package\.json|bun\.lockb?|\.oxfmtrc\.json|\.github\/workflows\/ci\.yml|scripts\/ci-(plan|base|manifests)\.(mjs|test\.mjs)|src\/core\/(package\.json|tsconfig[^/]*\.json|vitest\.[^/]+|tsup[^/]*\.ts|tsdown[^/]*\.ts))$/;
@@ -181,7 +173,6 @@ const viewerOfFile = (file) => /^(?:viewers|demos|e2e)\/([^/]+)\//.exec(file)?.[
 
 /** The area a format owns: only its own viewer can break. */
 // `SHIPPING_AREA` is a change to the core's shipped manifest fields: it breaks no viewer's checks.
-const AREA_CONSUMERS = { docx: [], xlsx: [], visio: [], teams: [], pptx: [], [SHIPPING_AREA]: [] };
 const AREA_VIEWERS = {
 	docx: ['docx'],
 	xlsx: ['xlsx'],
@@ -190,11 +181,6 @@ const AREA_VIEWERS = {
 	pptx: ['pptx'],
 	[SHIPPING_AREA]: [],
 };
-
-/** Which external viewers a change under `src/core/<area>/` can break. Shared areas can break all of them. */
-export function consumersOfArea(area) {
-	return AREA_CONSUMERS[area] ?? ALL_CONSUMERS;
-}
 
 /** Which in-repo viewers a change under `src/core/<area>/` can break. Shared areas can break all of them. */
 export function viewersOfArea(area) {
@@ -541,7 +527,6 @@ export function plan(changed, { full = false, testFiles, reference = false } = {
 		live.push('viewers/pptx/playwright.config.ts');
 	// src/core is the library, one folder per area; src/ui is ooxml-ui, a package of its own.
 	const src = live.filter((file) => file.startsWith('src/core/'));
-	const areas = new Set(src.map((file) => file.split('/')[2]));
 	const ui = live.some((file) => file.startsWith('src/ui/'));
 	const scripts = live.some((file) => /^(scripts|\.github|site)\//.test(file));
 	const mcp = live.some(
@@ -551,10 +536,6 @@ export function plan(changed, { full = false, testFiles, reference = false } = {
 	// Shipped code, not tests: what the builds, the package checks and the UI typecheck depend on.
 	const coreCode = src.some((file) => !isTestFile(file));
 	const uiCode = live.some((file) => file.startsWith('src/ui/') && !isTestFile(file));
-
-	const consumers = new Set();
-	if (everything || ui) for (const key of ALL_CONSUMERS) consumers.add(key);
-	for (const area of areas) for (const key of consumersOfArea(area)) consumers.add(key);
 
 	// A viewer runs the check groups the change reaches (viewerGroups): its own files, the shared
 	// UI, a core area it reads (not the core's tests), its product editor in ooxml-ui, or everything.
@@ -609,7 +590,6 @@ export function plan(changed, { full = false, testFiles, reference = false } = {
 		viewerBrowser,
 		// What the pptx jobs in ci.yml run (see VIEWERS.pptx and pptxPlan).
 		pptx,
-		consumers: ALL_CONSUMERS.filter((key) => consumers.has(key)).map((key) => CONSUMERS[key]),
 	};
 }
 

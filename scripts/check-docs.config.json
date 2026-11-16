@@ -33,7 +33,6 @@
 			"allow": [
 				"AGENTS.md",
 				"PROVENANCE.md",
-				"docs/linked-changes.md",
 				"viewers/pptx/AGENTS.md",
 				"viewers/*/docs/research/**",
 				"viewers/*/docs/suite-provenance.md",

@@ -12,8 +12,7 @@ Delete any section that genuinely does not apply.
 ## Depends on
 
 <!-- If this needs an unreleased ooxml change, open this PR as a draft and link it:
-Depends on: ChristopherVR/ooxml#123. Land and release the ooxml side first; see
-https://github.com/ChristopherVR/ooxml/blob/main/docs/linked-changes.md. Delete if none. -->
+Depends on: ChristopherVR/ooxml#123. Land and release the ooxml side first. Delete if none. -->
 
 ## Type of change
 

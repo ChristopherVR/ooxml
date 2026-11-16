@@ -11,9 +11,8 @@ Delete any section that genuinely does not apply.
 
 ## Needed by
 
-<!-- If a repository outside this one is waiting for this, link its PR or issue; see
-docs/linked-changes.md. The viewers in viewers/ are part of this repository: change them in the
-same PR. Delete if none. -->
+<!-- If a repository outside this one is waiting for this, link its PR or issue. The viewers in
+viewers/ are part of this repository: change them in the same PR. Delete if none. -->
 
 ## Type of change
 

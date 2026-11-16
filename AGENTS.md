@@ -122,10 +122,9 @@ from `@christophervr/ooxml-core` and `@christophervr/office-ui` to the unscoped
 `office-ui.web-control-contract` symbol are public API and keep their names.
 
 The viewers in `viewers/` are released by this repository's own flow, so nothing syncs them; the former
-`pptx-viewer` repository holds only a pointer here. The reusable `.github/workflows/sync-ooxml.yml` and
-`bun run fleet` remain for any repository that consumes this one from the outside (none today). A
-breaking change here breaks the in-repo viewers' CI at once; make it deliberately and note it in the
-commit.
+`pptx-viewer` repository holds only a pointer here. No repository outside this one consumes it, so
+there is no sync workflow, local-linking script or fleet report. A breaking change here breaks the
+in-repo viewers' CI at once; make it deliberately and note it in the commit.
 
 The viewers resolve this package to the workspace: their `ooxml-core` and `ooxml-ui` ranges are
 `*` or `workspace:*` (a few pptx packages still pin a caret range, which Bun links while the local
@@ -134,9 +133,7 @@ the packages in dependency order and rewrites each workspace range to a caret ra
 released with it, so **a change that needs both the core and a viewer lands in one push** and is
 released together; nothing waits for a core release. CI's standalone MCP check installs the local
 core as a tarball (`scripts/copy-mcp-sources.mjs`) and everything else from npm, as a user would.
-`node scripts/link-local.mjs` and `docs/linked-changes.md` describe the order for a repository
-outside this one, which does depend on the published core. Commits to another repository follow
-that repository's own `AGENTS.md`.
+Commits to another repository follow that repository's own `AGENTS.md`.
 
 ### Where does my change go?
 

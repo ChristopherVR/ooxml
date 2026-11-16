@@ -3,7 +3,7 @@ name: Preview packages
 # Publishes every pull request's ooxml-core and ooxml-ui to pkg.pr.new (https://pkg.pr.new), a free
 # preview registry for open source, and comments the install commands on the PR. A viewer, the
 # suite or an outside consumer can then try an unreleased change with `npm i <url>` instead of
-# linking a checkout (scripts/link-local.mjs) or waiting for a release.
+# waiting for a release.
 #
 # Needs the pkg.pr.new GitHub App installed on the repository (https://github.com/apps/pkg-pr-new);
 # it authenticates the upload from this workflow run, so no token or secret is involved. Previews
