@@ -8,6 +8,7 @@
 import {
 	chartColorStyleId,
 	chartExSummary,
+	chartSpacePictureSources,
 	parseChartExSpace,
 	type ChartExSpace,
 	parseChartSpace,
@@ -120,10 +121,15 @@ export function parseChartGraphic(
 	};
 }
 
-/** Reads the chart part (and its relationships) into the model. Never throws; problems go to `issues`. */
+/**
+ * Reads the chart part (and its relationships) into the model. Never throws; problems go to
+ * `issues`. With `readBytes`, the pictures of its picture fills are read into
+ * `chartSpace.pictureSources` so the painter draws them.
+ */
 export async function resolveChartPart(
 	chart: DocxChart,
 	readText: (partName: string) => Promise<string | undefined>,
+	readBytes?: (partName: string) => Promise<Uint8Array | undefined>,
 ): Promise<void> {
 	if (!chart.partName) return;
 	try {
@@ -178,6 +184,10 @@ export async function resolveChartPart(
 			colorsRel && (await readText(resolvePartPath(chart.partName, colorsRel.target)));
 		const palette = colorsXml ? chartColorStyleId(colorsXml) : undefined;
 		if (palette !== undefined) chart.colorPalette = palette;
+		if (readBytes) {
+			const pictures = await chartSpacePictureSources(chartSpace, chart.partName, rels, readBytes);
+			if (Object.keys(pictures).length) chartSpace.pictureSources = pictures;
+		}
 	} catch (error) {
 		chart.issues.push({
 			code: 'CHART_PART_UNREADABLE',
@@ -213,6 +223,7 @@ export function chartsIn(blocks: Block[]): DocxChart[] {
 export async function resolveDocumentCharts(
 	blocks: Block[],
 	readText: (partName: string) => Promise<string | undefined>,
+	readBytes?: (partName: string) => Promise<Uint8Array | undefined>,
 ): Promise<void> {
-	for (const chart of chartsIn(blocks)) await resolveChartPart(chart, readText);
+	for (const chart of chartsIn(blocks)) await resolveChartPart(chart, readText, readBytes);
 }

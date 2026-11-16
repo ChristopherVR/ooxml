@@ -1,9 +1,9 @@
 // Word's chart Format pane: the shared `office-ui-chart-format-pane` docked beside the page for the
 // selected chart (Format Selection on the Chart Design tab, Format Chart Area... on the chart's
 // context menu, like Word 365). The pane reads the chart's `ChartSpace` through
-// `chartSpaceFormatSource`; each committed field's neutral intent runs through
-// `applyChartEditIntent` and the docx chart edit command, one undo step per edit, and is saved by
-// the existing chart save path. Fields no neutral intent writes stay hidden (the source does not
+// `chartSpaceFormatSource` (with picture fills, which the save stores as media parts); each
+// committed field's neutral intent runs through `applyChartEditIntent` and the docx chart edit
+// command, one undo step per edit, and is saved by the existing chart save path. Fields no neutral intent writes stay hidden (the source does not
 // offer them) or are ignored.
 import type { EditorView } from 'prosemirror-view';
 import { applyChartExEditIntent, applyChartEditIntent } from 'ooxml-core/chart';
@@ -47,6 +47,8 @@ export function createChartFormatPane(host: ChartFormatPaneHost): DocxChartForma
 	defineChartFormatPane();
 	const element = document.createElement('office-ui-chart-format-pane');
 	element.className = 'dve-chart-format-pane';
+	// Word saves picture fills: `chart-save.ts` stores the pictures as media parts.
+	element.pictures = true;
 	element.hidden = true;
 	let locale: EditorLocale | undefined;
 	let theme: ThemeCatalog | undefined;

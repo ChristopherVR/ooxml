@@ -5,9 +5,12 @@ import { history, undo, redo } from 'prosemirror-history';
 import { EditorState, NodeSelection, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import type { ChartEditIntent } from 'ooxml-core/chart';
+import { applyChartEditIntent } from 'ooxml-core/chart';
 import {
 	chartsIn,
 	createDocument,
+	docxChartPaint,
+	editDocxChart,
 	loadDocx,
 	newChartImage,
 	newDocxChart,
@@ -208,5 +211,42 @@ describe('Word chart Format pane', () => {
 		expect(chartsIn(reloaded.model.blocks)).toHaveLength(1);
 		undo(view.state, view.dispatch);
 		expect(view.state.doc.nodeAt(pos)?.attrs.widthPx).toBe(576);
+	});
+
+	it('offers picture fills, paints them and saves them as media parts that reopen', async () => {
+		const PNG =
+			'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAADCAIAAAA2iEnWAAAAEElEQVR4nGP4z8AARAwoFABE0AX7pM/egAAAAABJRU5ErkJggg==';
+		const { view, model } = editorWithChart();
+		const pane = paneFor(view);
+		pane.open('series:0');
+		const series = { kind: 'series', seriesIndex: 0 } as const;
+		expect(pane.element.source?.element(series).support.picture).toBe(true);
+		edit(pane, { op: 'picture', target: series, edit: { src: PNG } }, 'fill.picture');
+		edit(pane, { op: 'picture', target: { kind: 'plotArea' }, edit: { src: PNG, tile: true } });
+		const chart = selectedChart(view.state)!.chart;
+		expect(docxChartPaint(chart, 400, 300).svg).toContain(`href="${PNG}"`);
+		const bytes = await saveDocx(docToModel(view.state.doc, model));
+		const zip = await JSZip.loadAsync(bytes);
+		const media = Object.keys(zip.files).filter((name) => name.startsWith('word/media/'));
+		expect(media).toHaveLength(1);
+		const part = Object.keys(zip.files).find((name) =>
+			/^word\/charts\/chart\d+\.xml$/u.test(name),
+		)!;
+		const xml = await zip.file(part)!.async('string');
+		expect(xml).not.toContain('chartPicturePending');
+		expect(xml.match(/<a:blip [^>]*r:embed="rId\d+"/gu)).toHaveLength(2);
+		// Reopened, the pictures resolve from the package and a further edit keeps them.
+		const reloaded = await loadDocx(bytes);
+		const [again] = chartsIn(reloaded.model.blocks);
+		// Both fills share the one media part and relationship.
+		expect(Object.values(again!.chartSpace!.pictureSources ?? {})).toEqual([PNG]);
+		expect(docxChartPaint(again, 400, 300).svg).toContain(`href="${PNG}"`);
+		const faded = editDocxChart(again!, (space) =>
+			applyChartEditIntent(space, { op: 'picture', target: series, edit: { transparency: 30 } }),
+		);
+		expect(faded.chartSpace?.plotArea.groups[0]?.series[0]?.spPr?.fill).toMatchObject({
+			kind: 'picture',
+			effects: [{ kind: 'alphaModFix', amount: 0.7 }],
+		});
 	});
 });

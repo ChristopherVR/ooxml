@@ -223,8 +223,10 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 	await resolveDocumentDiagrams(pictureBlocks, async (partName) =>
 		zip.file(partName)?.async('string'),
 	);
-	await resolveDocumentCharts(pictureBlocks, async (partName) =>
-		zip.file(partName)?.async('string'),
+	await resolveDocumentCharts(
+		pictureBlocks,
+		async (partName) => zip.file(partName)?.async('string'),
+		async (partName) => zip.file(partName)?.async('uint8array'),
 	);
 	model.warnings.push(...imageAndBookmarkWarnings(blocks), ...diagramWarnings(pictureBlocks));
 	for (const warning of schemaWarnings)

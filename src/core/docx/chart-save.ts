@@ -10,6 +10,9 @@
 import type JSZip from 'jszip';
 import { applyChartExPartEdits } from './chart-ex-save';
 import {
+	CHART_MEDIA_FOLDERS,
+	embedChartPartPictures,
+	embedChartSpacePictures,
 	writeChartSpaceOverSource,
 	chartSpaceWorkbookWrites,
 	saveChartWorkbookUpdates,
@@ -30,6 +33,7 @@ export async function writeNewChartPart(zip: JSZip, space: ChartSpace): Promise<
 		chartFolder: 'word/charts/',
 		embeddingsFolder: 'word/embeddings/',
 	});
+	await embedChartPartPictures(zip, partName, CHART_MEDIA_FOLDERS.docx, space.pictureSources);
 	return partName;
 }
 
@@ -41,7 +45,14 @@ async function saveEditedChart(
 ): Promise<void> {
 	const source = await zip.file(chart.partName)?.async('string');
 	if (!source) throw new Error('The source chart part is missing.');
-	zip.file(chart.partName, writeChartSpaceOverSource(source, chart.chartSpace));
+	// Pictures chosen in the Format pane become media parts of the chart part.
+	const space = await embedChartSpacePictures(
+		zip,
+		chart.partName,
+		CHART_MEDIA_FOLDERS.docx,
+		chart.chartSpace,
+	);
+	zip.file(chart.partName, writeChartSpaceOverSource(source, space));
 	await saveChartWorkbookUpdates(
 		{
 			read: async (partName) => zip.file(partName)?.async('uint8array'),
