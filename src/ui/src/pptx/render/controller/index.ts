@@ -157,6 +157,15 @@ export type {
 	SelectionPaneRow,
 	SelectionPaneState,
 } from './selection-pane-controller';
+export { createSlideRailController, slideRailMenuEntries } from './slide-rail-controller';
+export type {
+	SlideRailClick,
+	SlideRailCommands,
+	SlideRailController,
+	SlideRailControllerDeps,
+	SlideRailMenuState,
+	SlideRailState,
+} from './slide-rail-controller';
 export { createSlideSorterController, slideSorterView } from './slide-sorter-controller';
 export type {
 	SlideSorterClickModifiers,
