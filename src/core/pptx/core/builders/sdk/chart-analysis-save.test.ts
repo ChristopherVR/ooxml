@@ -24,7 +24,7 @@ const columnOf = (slides: Awaited<ReturnType<PptxHandler['load']>>['slides']) =>
 describe('PowerPoint chart analysis saves', () => {
 	it('reopens several trendlines and custom error values', async () => {
 		const handler = new PptxHandler();
-		const deck = await handler.load(new Uint8Array(readFileSync(FIXTURE)));
+		const deck = await handler.load(new Uint8Array(readFileSync(FIXTURE)).buffer);
 		const element = columnOf(deck.slides);
 		const points = element.chartData!.series[0]!.values.length;
 		let data = withChartSeriesTrendline(element.chartData!, 0, 0, { type: 'linear' });
@@ -36,7 +36,8 @@ describe('PowerPoint chart analysis saves', () => {
 		});
 		element.chartData = data;
 		const reopened = columnOf(
-			(await new PptxHandler().load(await handler.save(deck.slides))).slides,
+			(await new PptxHandler().load((await handler.save(deck.slides)).buffer as ArrayBuffer))
+				.slides,
 		);
 		const back = reopened.chartData!;
 		expect(chartSeriesTrendlinesView(back, 0)).toEqual([

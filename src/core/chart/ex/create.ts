@@ -8,8 +8,8 @@ import { setChartExLayout } from '../edit/chartex-structure';
 import { newChartExGeography, toChartExPareto, type ChartExFamily } from '../edit/chartex-family';
 
 export interface CreateChartExOptions {
-	title?: string;
-	legend?: { visible: boolean; position?: string };
+	title?: string | undefined;
+	legend?: { visible: boolean; position?: string | undefined } | undefined;
 	/**
 	 * Region map: the culture and, optionally, projection and area. The part gets no provider
 	 * cache (`cx:geoCache`); see {@link newChartExGeography}.

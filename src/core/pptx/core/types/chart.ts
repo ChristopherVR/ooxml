@@ -1317,7 +1317,7 @@ export interface PptxChartData {
 	 * chart-type container (combo charts can carry more than one). Absent
 	 * when the chart has no such extension. See {@link PptxChartFilteredSeries}.
 	 */
-	filteredSeries?: PptxChartFilteredSeries[];
+	filteredSeries?: PptxChartFilteredSeries[] | undefined;
 	/**
 	 * `c15:filteredSeriesTitle`: the auto-generated series title text (e.g.
 	 * "Series 3") PowerPoint preserved when the chart filter hid the series
