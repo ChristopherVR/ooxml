@@ -2,6 +2,8 @@ import { parseDrawingPictureFill } from './picture-fill';
 // DrawingML fill and line readers over the DOM.
 import { parseDrawingColorIn } from './drawing-color';
 import { NS, children, elements, first, type XmlElement } from './dom';
+import { readDrawingGradient } from './gradient-read';
+import { DOM_DRAWING_VIEW } from './node-view';
 import type { DrawingFill, DrawingLine } from './types';
 import { buildXml } from '../xml/index';
 
@@ -37,43 +39,8 @@ export function parseDrawingFill(properties: XmlElement | undefined): DrawingFil
 			return color ? { kind: 'solid', color } : { kind: 'unsupported', element: 'solidFill' };
 		}
 		case 'gradFill': {
-			const stops = children(first(fill, 'gsLst', NS.a) ?? fill, 'gs', NS.a).flatMap((stop) => {
-				const color = parseDrawingColorIn(stop);
-				const position = Number.parseInt(stop.getAttribute('pos') ?? '', 10);
-				return color && Number.isFinite(position) ? [{ position: position / 1000, color }] : [];
-			});
-			const angle = Number.parseInt(first(fill, 'lin', NS.a)?.getAttribute('ang') ?? '', 10);
-			const scaled = first(fill, 'lin', NS.a)?.getAttribute('scaled');
-			const path = first(fill, 'path', NS.a)?.getAttribute('path');
-			const focus = first(first(fill, 'path', NS.a), 'fillToRect', NS.a);
-			const tile = first(fill, 'tileRect', NS.a);
-			const tileRect = tile
-				? {
-						l: Number(tile.getAttribute('l') ?? 0) / 100000,
-						t: Number(tile.getAttribute('t') ?? 0) / 100000,
-						r: Number(tile.getAttribute('r') ?? 0) / 100000,
-						b: Number(tile.getAttribute('b') ?? 0) / 100000,
-					}
-				: undefined;
-			const fillToRect = focus
-				? {
-						l: Number(focus.getAttribute('l') ?? 0) / 100000,
-						t: Number(focus.getAttribute('t') ?? 0) / 100000,
-						r: Number(focus.getAttribute('r') ?? 0) / 100000,
-						b: Number(focus.getAttribute('b') ?? 0) / 100000,
-					}
-				: undefined;
-			return {
-				kind: 'gradient',
-				sourceXml: buildXml(fill),
-				stops,
-				...(Number.isFinite(angle) ? { angle: angle / 60000 } : {}),
-				...(scaled === '1' || scaled === 'true' ? { scaled: true } : {}),
-				...(scaled === '0' || scaled === 'false' ? { scaled: false } : {}),
-				...(path ? { path } : {}),
-				...(fillToRect && Object.values(fillToRect).every(Number.isFinite) ? { fillToRect } : {}),
-				...(tileRect && Object.values(tileRect).every(Number.isFinite) ? { tileRect } : {}),
-			};
+			const gradient = readDrawingGradient(DOM_DRAWING_VIEW, fill).fill;
+			return { kind: 'gradient', sourceXml: buildXml(fill), ...gradient };
 		}
 		case 'pattFill': {
 			const foreground = parseDrawingColorIn(first(fill, 'fgClr', NS.a));

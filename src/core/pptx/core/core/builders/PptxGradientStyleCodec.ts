@@ -1,32 +1,39 @@
+import {
+	gradientFocusCenter,
+	readDrawingGradient,
+	sortGradientStopEntries,
+	type DrawingGradientRead,
+} from '../../../../drawingml/gradient-read';
+import { OBJECT_DRAWING_VIEW } from '../../color/object-drawing-view';
 import { themeColorRefFromColorChoice, themeColorRefToXml } from '../../color/theme-color-ref';
 import type { ShapeStyle, XmlObject } from '../../types';
 import { ooxmlGradientAngleToCssDegrees } from '../../utils/gradient-angle';
-import { drawingChild, drawingChildren, mergeDrawingFillXml } from './drawing-fill-xml';
+import { drawingChild, mergeDrawingFillXml } from './drawing-fill-xml';
 
 /**
- * Parse `a:gradFill/a:tileRect` LTRB insets into 0..1 fractions.
- *
- * Values are stored in 1/100000 units and may be negative. Standalone (no
- * codec context) so the shape-style extractor can populate the typed field
- * without threading a new context dependency.
+ * Parse `a:gradFill/a:tileRect` LTRB insets into fractions (1/100000 units, may be negative,
+ * an unreadable side reads 0). Standalone so the shape-style extractor can use it directly.
  */
 export function extractGradientTileRect(
 	gradFill: XmlObject,
 ): NonNullable<ShapeStyle['fillGradientTileRect']> | undefined {
-	const tileRect = drawingChild(gradFill, 'tileRect');
-	if (!tileRect) {
+	return finiteSides(readObjectGradient(gradFill).tileRectSides);
+}
+
+/** `a:gradFill` read by the shared `drawingml` reader over the object tree. */
+export function readObjectGradient(gradFill: XmlObject): DrawingGradientRead<XmlObject> {
+	return readDrawingGradient(OBJECT_DRAWING_VIEW, gradFill);
+}
+
+/** LTRB sides with each unreadable side as 0, as the codec always read them. */
+function finiteSides(
+	sides: { l: number; t: number; r: number; b: number } | undefined,
+): { l: number; t: number; r: number; b: number } | undefined {
+	if (!sides) {
 		return undefined;
 	}
-	const toFraction = (raw: unknown): number => {
-		const parsed = Number.parseInt(String(raw ?? '0'), 10);
-		return Number.isFinite(parsed) ? parsed / 100000 : 0;
-	};
-	return {
-		l: toFraction(tileRect['@_l']),
-		t: toFraction(tileRect['@_t']),
-		r: toFraction(tileRect['@_r']),
-		b: toFraction(tileRect['@_b']),
-	};
+	const side = (value: number) => (Number.isFinite(value) ? value : 0);
+	return { l: side(sides.l), t: side(sides.t), r: side(sides.r), b: side(sides.b) };
 }
 
 /**
@@ -108,13 +115,8 @@ export class PptxGradientStyleCodec implements IPptxGradientStyleCodec {
 	}
 
 	public extractGradientOpacity(gradFill: XmlObject): number | undefined {
-		const gradientStops = drawingChildren(drawingChild(gradFill, 'gsLst'), 'gs');
-		if (gradientStops.length === 0) {
-			return undefined;
-		}
-
-		const opacities = gradientStops
-			.map((stop) => this.context.extractColorOpacity(stop))
+		const opacities = readObjectGradient(gradFill)
+			.stops.map((stop) => this.context.extractColorOpacity(stop.node))
 			.filter((opacity): opacity is number => opacity !== undefined);
 		if (opacities.length === 0) {
 			return undefined;
@@ -125,37 +127,16 @@ export class PptxGradientStyleCodec implements IPptxGradientStyleCodec {
 	}
 
 	public extractGradientStops(gradFill: XmlObject): NonNullable<ShapeStyle['fillGradientStops']> {
-		const gradientStops = drawingChildren(drawingChild(gradFill, 'gsLst'), 'gs');
-		if (gradientStops.length === 0) {
-			return [];
-		}
-
-		const sortedStops = [...gradientStops].sort((left, right) => {
-			const leftPos = Number.parseInt(String(left['@_pos'] || '0'), 10);
-			const rightPos = Number.parseInt(String(right['@_pos'] || '0'), 10);
-			if (!Number.isFinite(leftPos) && !Number.isFinite(rightPos)) {
-				return 0;
-			}
-			if (!Number.isFinite(leftPos)) {
-				return 1;
-			}
-			if (!Number.isFinite(rightPos)) {
-				return -1;
-			}
-			return leftPos - rightPos;
-		});
-
+		// A stop without a readable `pos` (required by the schema) sits at 0, as it always did.
+		const sortedStops = sortGradientStopEntries(readObjectGradient(gradFill).stops, 0);
 		const stops: NonNullable<ShapeStyle['fillGradientStops']> = [];
-		sortedStops.forEach((stop) => {
+		for (const { node: stop, position: rawPosition } of sortedStops) {
 			const color = this.context.parseColor(stop);
 			if (!color) {
-				return;
+				continue;
 			}
 
-			const positionRaw = Number.parseInt(String(stop['@_pos'] || '0'), 10);
-			const position = Number.isFinite(positionRaw)
-				? this.context.clampUnitInterval(positionRaw / 100000) * 100
-				: 0;
+			const position = this.context.clampUnitInterval((rawPosition ?? 0) / 100000) * 100;
 			const opacity = this.context.extractColorOpacity(stop);
 
 			// Preserve original color XML for round-trip (scheme colors + transforms)
@@ -172,20 +153,20 @@ export class PptxGradientStyleCodec implements IPptxGradientStyleCodec {
 				...(originalColorXml ? { originalColorXml } : {}),
 				...(colorRef ? { colorRef } : {}),
 			});
-		});
+		}
 		return stops;
 	}
 
 	public extractGradientType(gradFill: XmlObject): NonNullable<ShapeStyle['fillGradientType']> {
-		return drawingChild(gradFill, 'path') ? 'radial' : 'linear';
+		return readObjectGradient(gradFill).hasPath ? 'radial' : 'linear';
 	}
 
 	public extractGradientPathType(gradFill: XmlObject): ShapeStyle['fillGradientPathType'] {
-		const pathNode = drawingChild(gradFill, 'path');
-		if (!pathNode) {
+		const gradient = readObjectGradient(gradFill);
+		if (!gradient.hasPath) {
 			return undefined;
 		}
-		const pathValue = String(pathNode['@_path'] || '')
+		const pathValue = String(gradient.fill.path ?? '')
 			.trim()
 			.toLowerCase();
 		if (pathValue === 'circle' || pathValue === 'rect' || pathValue === 'shape') {
@@ -196,55 +177,18 @@ export class PptxGradientStyleCodec implements IPptxGradientStyleCodec {
 	}
 
 	public extractGradientFocalPoint(gradFill: XmlObject): ShapeStyle['fillGradientFocalPoint'] {
-		const pathNode = drawingChild(gradFill, 'path');
-		if (!pathNode) {
-			return undefined;
-		}
-		const fillToRect = drawingChild(pathNode, 'fillToRect');
-		if (!fillToRect) {
-			return undefined;
-		}
-
-		// a:fillToRect has @l, @t, @r, @b as percentages in 1/100000 units.
-		// The focal point is the center of the fillToRect.
-		const l = Number.parseInt(String(fillToRect['@_l'] || '0'), 10);
-		const t = Number.parseInt(String(fillToRect['@_t'] || '0'), 10);
-		const r = Number.parseInt(String(fillToRect['@_r'] || '0'), 10);
-		const b = Number.parseInt(String(fillToRect['@_b'] || '0'), 10);
-
-		const safeL = Number.isFinite(l) ? l / 100000 : 0;
-		const safeT = Number.isFinite(t) ? t / 100000 : 0;
-		const safeR = Number.isFinite(r) ? r / 100000 : 0;
-		const safeB = Number.isFinite(b) ? b / 100000 : 0;
-
-		// Focal point is the center of the rectangle formed by (l, t) to (1-r, 1-b)
-		const x = this.context.clampUnitInterval((safeL + (1 - safeR)) / 2);
-		const y = this.context.clampUnitInterval((safeT + (1 - safeB)) / 2);
-
-		return { x, y };
+		// The focal point is the centre of the rectangle from (l, t) to (1 - r, 1 - b).
+		const sides = finiteSides(readObjectGradient(gradFill).fillToRectSides);
+		return sides ? gradientFocusCenter(sides) : undefined;
 	}
 
 	public extractGradientFillToRect(gradFill: XmlObject): ShapeStyle['fillGradientFillToRect'] {
-		const pathNode = drawingChild(gradFill, 'path');
-		if (!pathNode) {
+		const sides = finiteSides(readObjectGradient(gradFill).fillToRectSides);
+		if (!sides) {
 			return undefined;
 		}
-		const fillToRect = drawingChild(pathNode, 'fillToRect');
-		if (!fillToRect) {
-			return undefined;
-		}
-
-		const l = Number.parseInt(String(fillToRect['@_l'] || '0'), 10);
-		const t = Number.parseInt(String(fillToRect['@_t'] || '0'), 10);
-		const r = Number.parseInt(String(fillToRect['@_r'] || '0'), 10);
-		const b = Number.parseInt(String(fillToRect['@_b'] || '0'), 10);
-
-		return {
-			l: Number.isFinite(l) ? this.context.clampUnitInterval(l / 100000) : 0,
-			t: Number.isFinite(t) ? this.context.clampUnitInterval(t / 100000) : 0,
-			r: Number.isFinite(r) ? this.context.clampUnitInterval(r / 100000) : 0,
-			b: Number.isFinite(b) ? this.context.clampUnitInterval(b / 100000) : 0,
-		};
+		const clamp = (value: number) => this.context.clampUnitInterval(value);
+		return { l: clamp(sides.l), t: clamp(sides.t), r: clamp(sides.r), b: clamp(sides.b) };
 	}
 
 	public extractGradientTileRect(gradFill: XmlObject): ShapeStyle['fillGradientTileRect'] {
@@ -252,52 +196,24 @@ export class PptxGradientStyleCodec implements IPptxGradientStyleCodec {
 	}
 
 	public extractGradientFlip(gradFill: XmlObject): ShapeStyle['fillGradientFlip'] {
-		const flipRaw = String(gradFill['@_flip'] || '')
-			.trim()
-			.toLowerCase();
-		if (flipRaw === 'x' || flipRaw === 'y' || flipRaw === 'xy' || flipRaw === 'none') {
-			return flipRaw;
+		const flip = readObjectGradient(gradFill).flip;
+		if (flip === 'x' || flip === 'y' || flip === 'xy' || flip === 'none') {
+			return flip;
 		}
 		return undefined;
 	}
 
 	public extractGradientRotWithShape(gradFill: XmlObject): boolean | undefined {
-		const rot = gradFill['@_rotWithShape'];
-		if (rot === undefined || rot === null) {
-			return undefined;
-		}
-		const token = String(rot).trim().toLowerCase();
-		if (token === '1' || token === 'true') {
-			return true;
-		}
-		if (token === '0' || token === 'false') {
-			return false;
-		}
-		return undefined;
+		return readObjectGradient(gradFill).rotateWithShape;
 	}
 
 	public extractGradientScaled(gradFill: XmlObject): boolean | undefined {
-		const lin = drawingChild(gradFill, 'lin');
-		if (!lin) {
-			return undefined;
-		}
-		const scaled = lin['@_scaled'];
-		if (scaled === undefined || scaled === null) {
-			return undefined;
-		}
-		const token = String(scaled).trim().toLowerCase();
-		if (token === '1' || token === 'true') {
-			return true;
-		}
-		if (token === '0' || token === 'false') {
-			return false;
-		}
-		return undefined;
+		return readObjectGradient(gradFill).fill.scaled;
 	}
 
 	public extractGradientAngle(gradFill: XmlObject): number {
-		const angleRaw = Number.parseInt(String(drawingChild(gradFill, 'lin')?.['@_ang'] || ''), 10);
-		return Number.isFinite(angleRaw) ? (((angleRaw / 60000) % 360) + 360) % 360 : 90;
+		const angle = readObjectGradient(gradFill).fill.angle;
+		return angle === undefined ? 90 : ((angle % 360) + 360) % 360;
 	}
 
 	public buildGradientCssFromStops(
@@ -545,25 +461,7 @@ export class PptxGradientStyleCodec implements IPptxGradientStyleCodec {
 	}
 
 	private extractStopsSorted(gradFill: XmlObject): XmlObject[] {
-		const gradientStops = drawingChildren(drawingChild(gradFill, 'gsLst'), 'gs');
-		if (gradientStops.length === 0) {
-			return [];
-		}
-
-		return [...gradientStops].sort((left, right) => {
-			const leftPos = Number.parseInt(String(left['@_pos'] || '0'), 10);
-			const rightPos = Number.parseInt(String(right['@_pos'] || '0'), 10);
-			if (!Number.isFinite(leftPos) && !Number.isFinite(rightPos)) {
-				return 0;
-			}
-			if (!Number.isFinite(leftPos)) {
-				return 1;
-			}
-			if (!Number.isFinite(rightPos)) {
-				return -1;
-			}
-			return leftPos - rightPos;
-		});
+		return sortGradientStopEntries(readObjectGradient(gradFill).stops, 0).map((stop) => stop.node);
 	}
 
 	/**

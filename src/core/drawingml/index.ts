@@ -17,6 +17,8 @@ export * from './drawing-color-css';
 export * from './drawing-color-brightness';
 export * from './ordered-color-transforms';
 export * from './drawing-fill';
+export * from './node-view';
+export * from './gradient-read';
 export * from './drawing-text';
 export * from './drawing-geometry';
 export * from './drawing-shadow';

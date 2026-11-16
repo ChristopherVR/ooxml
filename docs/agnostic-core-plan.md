@@ -201,12 +201,23 @@ would keep two XML models alive.
    cases the corpus lacks (`a:alphaMod` above 100%, repeated alpha transforms, and in the UI reader a
    negative `a:alphaOff` and a `sysClr` without `lastClr`), where the shared resolver is the one
    followed. The colour harness also compares the declared alpha of every colour element.
+   **Gradient codec (2026-11-16).** `a:gradFill` is read once, by `readDrawingGradient`
+   (`drawingml/gradient-read.ts`) over a `DrawingNodeView` (`drawingml/node-view.ts`: the DOM view,
+   and the pptx object-tree view `OBJECT_DRAWING_VIEW` in `pptx/core/color/object-drawing-view.ts`).
+   `parseDrawingFill` and every `PptxGradientStyleCodec` reader (stops, opacity, type, angle, path,
+   focus and tile rectangles, flip, rotation, scaling, CSS, mean colour) derive from that read; the
+   codec keeps only its presentation rules (stops sorted with a missing `pos` at 0, positions and
+   focus clamped, the angle normalised with 90 as default) and resolves stop colours through the
+   runtime colour codec. Before the switch the old codec readers and the old DOM reader agreed with
+   the new ones on all 1,542 `a:gradFill` elements of the corpus. The permanent harness is
+   `pptx/__tests__/integration/drawingml-fill-effect-neutral-parity.test.ts` (both views over every
+   gradient, paired by path).
 
    **Remains:** effect DAG interpretation and broader effect rendering; the format scheme reader
    (`PptxHandlerRuntimeThemeFormatScheme`, its own `PptxThemeFormatScheme` shape next to the neutral
    `ThemeFormatScheme`), theme ref and `phClr` resolution (`PptxHandlerRuntimeThemeRefResolution`),
-   theme switching and saving, the master `p:clrMap` reader, `types/theme.ts`, the gradient codec
-   (`PptxGradientStyleCodec`) and the effect codecs still read the object tree. The pptx text parsers still read through
+   theme switching and saving, the master `p:clrMap` reader, `types/theme.ts` and the effect codecs
+   still read the object tree. The pptx text parsers still read through
    their own object tree (the neutral model is pinned, not yet used by pptx); the xlsx theme writer
    still patches the part itself (a neutral writer exists as `drawingml/write-theme.ts`; whether xlsx
    should adopt it is open).

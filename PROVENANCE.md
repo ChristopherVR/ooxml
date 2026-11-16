@@ -47,6 +47,11 @@ extraction commit is named below. Product adapters and public compatibility path
   `ui/src/pptx/render/picture-crop/crop-geometry.ts`. DrawingML crop read/write and Excel
   model, edit, paint and source-preserving save adapters are new strict code. Product
   pointer behavior and minimum frame sizes remain UI policy.
+- `core/drawingml/{node-view,gradient-read}.ts` merge the `a:gradFill` readers of
+  `drawingml/drawing-fill.ts` and `pptx/core/core/builders/PptxGradientStyleCodec.ts` (this
+  repository, at `494897493`) into one reader over a node view; the pptx object-tree view is
+  `pptx/core/color/object-drawing-view.ts`. The codec keeps its presentation rules and the
+  writer; both readers were compared over the committed decks before the old code was removed.
 - `core/drawingml/picture-effects.ts` is a new ordered DOM codec for grayscale,
   luminance and alpha, retaining opaque source operations. Its percentage and transfer
   helpers replace equivalent PowerPoint runtime and `render/image-effects.ts` formulas.
