@@ -58,6 +58,7 @@ export const chartFormatEs: Readonly<Record<string, string>> = {
 		'Escriba valores como 1, 2, 3 o un rango como Sheet1!$C$2:$C$4.',
 	'chartFormat.errorBars.customCachedHint':
 		'Escriba valores como 1, 2, 3 o un rango de celdas que este gráfico ya representa.',
+	'chartFormat.errorBars.customValuesHint': 'Escriba valores como 1, 2, 3.',
 	'chartFormat.analysis.multipleErrorBars':
 		'Las barras de error ambiguas se conservan y no se pueden editar aquí.',
 	'chartFormat.axis.title': 'Título del eje',

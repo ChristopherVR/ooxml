@@ -58,6 +58,7 @@ export const chartFormatEn: Readonly<Record<string, string>> = {
 		'Enter values such as 1, 2, 3 or a range such as Sheet1!$C$2:$C$4.',
 	'chartFormat.errorBars.customCachedHint':
 		'Enter values such as 1, 2, 3, or a range of cells this chart already plots.',
+	'chartFormat.errorBars.customValuesHint': 'Enter values such as 1, 2, 3.',
 	'chartFormat.analysis.multipleErrorBars':
 		'Ambiguous error bars are preserved and cannot be edited here.',
 	'chartFormat.axis.title': 'Axis title',

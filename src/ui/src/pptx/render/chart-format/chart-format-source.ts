@@ -4,12 +4,16 @@
  * element view is the core's `readChartElementFormat`, so the pane keeps every
  * PowerPoint section (pattern and picture fills, effects, 3-D Format, Text
  * Options, the secondary axis) as extension sections the neutral source lacks.
+ * Series of the 2-D, unstacked families also get the shared Error Bars
+ * section (amount, direction, end caps and custom values).
  *
  * @module render/chart-format/chart-format-source
  */
 import type { PptxChartData } from 'ooxml-core/pptx';
 import {
 	chartModelLabelPositions,
+	chartSeriesErrorBarsView,
+	chartSupportsErrorBars,
 	chartSupportsSecondaryAxis,
 	isChartSeriesOnSecondaryAxis,
 	readChartElementFormat,
@@ -18,6 +22,7 @@ import {
 import type {
 	ChartFormatAxisView,
 	ChartFormatLabelsView,
+	ChartFormatSeriesOptionsView,
 	ChartFormatSource,
 } from '../../../chart/format-pane-view';
 import { PATTERN_PRESET_OPTIONS } from '../fill-pattern-label-keys';
@@ -46,6 +51,7 @@ export function pptxChartFormatSource(data: PptxChartData): ChartFormatSource {
 			gapWidth: data.barGapWidth,
 			firstSliceAngle: data.firstSliceAngle,
 			holeSize: data.doughnutHoleSize,
+			...errorBarsOf(data, seriesIndex),
 		}),
 		axisOptions: (axisIndex): ChartFormatAxisView | undefined => {
 			const axis = data.axes?.[axisIndex];
@@ -96,6 +102,28 @@ export function pptxChartFormatSource(data: PptxChartData): ChartFormatSource {
 				position: labels.position,
 				...positionsOf(chartModelLabelPositions(data, seriesIndex)),
 			};
+		},
+	};
+}
+
+/**
+ * The Error Bars section of a series (no Trendlines section: PowerPoint's
+ * trendlines are not edited through this pane yet). Custom amounts are typed
+ * values; PowerPoint stores them as literals.
+ */
+function errorBarsOf(
+	data: PptxChartData,
+	seriesIndex: number,
+): Pick<ChartFormatSeriesOptionsView, 'analysis'> {
+	const series = data.series[seriesIndex];
+	if (!series || !chartSupportsErrorBars(data)) return {};
+	const { errorBars, multiple } = chartSeriesErrorBarsView(data, seriesIndex);
+	return {
+		analysis: {
+			multipleTrendlines: false,
+			multipleErrorBars: multiple,
+			pointCount: Math.max(1, series.values.length),
+			...(errorBars ? { errorBars } : {}),
 		},
 	};
 }

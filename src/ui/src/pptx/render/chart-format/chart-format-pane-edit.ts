@@ -26,6 +26,7 @@ import {
 	withChartDataLabelOptions,
 	withChartElementFormat,
 	withChartLegendOptions,
+	withChartSeriesErrorBars,
 	withChartSeriesOnSecondaryAxis,
 	withChartSeriesOptions,
 } from 'ooxml-core/pptx';
@@ -41,6 +42,8 @@ import {
 import type { ChartFormatEditDetail } from '../../../chart/format-pane';
 import type { ChartFormatFieldValue } from './chart-format-pane-types';
 import { resolveChartFormatTarget } from './chart-format-targets';
+import { pptxChartFormatSource } from './chart-format-source';
+import { chartAnalysisFieldIntent } from '../../../chart/format-pane-analysis';
 
 function number(value: ChartFormatFieldValue): number | null {
 	if (value === '' || typeof value === 'boolean') {
@@ -244,6 +247,17 @@ export function applyChartFormatField(
 			}
 			const key = field.slice(7) as 'gapWidth' | 'overlap' | 'firstSliceAngle' | 'holeSize';
 			return withChartSeriesOptions(data, { [key]: Math.round(n) });
+		}
+		if (field.startsWith('errorBars.')) {
+			// The shared pane's neutral intent, applied to PowerPoint's model.
+			const series =
+				target.kind === 'series'
+					? pptxChartFormatSource(data).seriesOptions?.(target.seriesIndex)
+					: undefined;
+			const intent = chartAnalysisFieldIntent(series, target, field, value);
+			return intent?.op === 'errorBars'
+				? withChartSeriesErrorBars(data, intent.seriesIndex, intent.edit)
+				: null;
 		}
 		if (field.startsWith('axis.')) {
 			const edit = target.kind === 'axis' ? axisEdit(field, value) : null;

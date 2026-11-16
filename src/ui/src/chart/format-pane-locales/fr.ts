@@ -58,6 +58,7 @@ export const chartFormatFr: Readonly<Record<string, string>> = {
 		'Saisissez des valeurs comme 1, 2, 3 ou une plage comme Sheet1!$C$2:$C$4.',
 	'chartFormat.errorBars.customCachedHint':
 		'Saisissez des valeurs comme 1, 2, 3 ou une plage de cellules que ce graphique représente déjà.',
+	'chartFormat.errorBars.customValuesHint': 'Saisissez des valeurs comme 1, 2, 3.',
 	'chartFormat.analysis.multipleErrorBars':
 		'Les barres d’erreur ambiguës sont conservées et ne peuvent pas être modifiées ici.',
 	'chartFormat.axis.title': 'Titre de l’axe',

@@ -58,6 +58,7 @@ export const chartFormatJa: Readonly<Record<string, string>> = {
 		'1, 2, 3 のような値、または Sheet1!$C$2:$C$4 のような範囲を入力します。',
 	'chartFormat.errorBars.customCachedHint':
 		'1, 2, 3 のような値、またはこのグラフに既に表示されているセル範囲を入力します。',
+	'chartFormat.errorBars.customValuesHint': '1, 2, 3 のような値を入力します。',
 	'chartFormat.analysis.multipleErrorBars':
 		'判別できない誤差範囲は保持されますが、ここでは編集できません。',
 	'chartFormat.axis.title': '軸ラベル',

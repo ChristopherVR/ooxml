@@ -92,15 +92,17 @@ function errorBarSection(analysis: Analysis): ChartFormatSection {
 				'Ambiguous error bars are preserved and cannot be edited here.',
 			)
 		: error?.valueType === 'cust'
-			? analysis.workbookRanges
-				? t(
-						'errorBars.customHint',
-						'Enter values such as 1, 2, 3 or a range such as Sheet1!$C$2:$C$4.',
-					)
-				: t(
-						'errorBars.customCachedHint',
-						'Enter values such as 1, 2, 3, or a range of cells this chart already plots.',
-					)
+			? !analysis.resolveRange
+				? t('errorBars.customValuesHint', 'Enter values such as 1, 2, 3.')
+				: analysis.workbookRanges
+					? t(
+							'errorBars.customHint',
+							'Enter values such as 1, 2, 3 or a range such as Sheet1!$C$2:$C$4.',
+						)
+					: t(
+							'errorBars.customCachedHint',
+							'Enter values such as 1, 2, 3, or a range of cells this chart already plots.',
+						)
 			: undefined;
 	return {
 		id: 'errorBars',
@@ -129,7 +131,9 @@ export function chartAnalysisSections(series: ChartFormatSeriesOptionsView): Cha
 		});
 	const analysis = series.analysis;
 	if (!analysis) return sections;
-	sections.push(...chartTrendlineSections(analysis.trendlines ?? []), errorBarSection(analysis));
+	// A product that does not edit trendlines here leaves `trendlines` out.
+	if (analysis.trendlines) sections.push(...chartTrendlineSections(analysis.trendlines));
+	sections.push(errorBarSection(analysis));
 	return sections;
 }
 

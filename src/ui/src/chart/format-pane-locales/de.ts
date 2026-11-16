@@ -58,6 +58,7 @@ export const chartFormatDe: Readonly<Record<string, string>> = {
 		'Geben Sie Werte wie 1, 2, 3 oder einen Bereich wie Sheet1!$C$2:$C$4 ein.',
 	'chartFormat.errorBars.customCachedHint':
 		'Geben Sie Werte wie 1, 2, 3 ein oder einen Zellbereich, den dieses Diagramm bereits darstellt.',
+	'chartFormat.errorBars.customValuesHint': 'Geben Sie Werte wie 1, 2, 3 ein.',
 	'chartFormat.analysis.multipleErrorBars':
 		'Mehrdeutige Fehlerindikatoren bleiben erhalten und können hier nicht bearbeitet werden.',
 	'chartFormat.axis.title': 'Achsentitel',

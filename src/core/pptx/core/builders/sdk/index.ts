@@ -121,6 +121,11 @@ export {
 	isChartSeriesOnSecondaryAxis,
 	withChartSeriesOnSecondaryAxis,
 } from './chart-series-axis-operations';
+export {
+	chartSeriesErrorBarsView,
+	chartSupportsErrorBars,
+	withChartSeriesErrorBars,
+} from './chart-error-bar-operations';
 
 // Chart drawing-overlay (c:userShapes) operations
 export {

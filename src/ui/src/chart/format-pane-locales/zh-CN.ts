@@ -56,6 +56,7 @@ export const chartFormatZhCN: Readonly<Record<string, string>> = {
 	'chartFormat.errorBars.minusValues': '负错误值',
 	'chartFormat.errorBars.customHint': '输入 1, 2, 3 等值或 Sheet1!$C$2:$C$4 等区域。',
 	'chartFormat.errorBars.customCachedHint': '输入 1, 2, 3 等值，或此图表已绘制的单元格区域。',
+	'chartFormat.errorBars.customValuesHint': '输入 1, 2, 3 等值。',
 	'chartFormat.analysis.multipleErrorBars': '有歧义的误差线将保留，无法在此编辑。',
 	'chartFormat.axis.title': '坐标轴标题',
 	'chartFormat.axis.baseTimeUnit': '基本单位',

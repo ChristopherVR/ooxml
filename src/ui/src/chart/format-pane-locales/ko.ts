@@ -58,6 +58,7 @@ export const chartFormatKo: Readonly<Record<string, string>> = {
 		'1, 2, 3 같은 값 또는 Sheet1!$C$2:$C$4 같은 범위를 입력하십시오.',
 	'chartFormat.errorBars.customCachedHint':
 		'1, 2, 3 같은 값 또는 이 차트에 이미 표시된 셀 범위를 입력하십시오.',
+	'chartFormat.errorBars.customValuesHint': '1, 2, 3 같은 값을 입력하십시오.',
 	'chartFormat.analysis.multipleErrorBars':
 		'구분할 수 없는 오차 막대는 유지되지만 여기에서 편집할 수 없습니다.',
 	'chartFormat.axis.title': '축 제목',
