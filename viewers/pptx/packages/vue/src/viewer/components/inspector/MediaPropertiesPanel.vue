@@ -1,15 +1,11 @@
 <script setup lang="ts">
-import {
-	mediaTrimEndAbsoluteMs,
-	mediaTrimEndMsFromAbsoluteMs,
-	mediaTrimResetPatch,
-	mediaTrimResetState,
-} from 'ooxml-ui/pptx';
+import { MEDIA_TRIM_SECTIONS, mediaTrimResetPatch, mediaTrimResetState } from 'ooxml-ui/pptx';
 /**
  * MediaPropertiesPanel: inspector panel for `media` (audio/video) elements,
  * ported from React's `MediaPropertiesPanel`. Composes an optional live preview
  * (only when the element carries an embedded `mediaData` data-URL), the trim
- * timeline scrubber, mm:ss trim inputs, playback options, and bookmarks.
+ * timeline scrubber, the shared trim fields (`MEDIA_TRIM_SECTIONS`, bounded by
+ * the live duration), playback options, and bookmarks.
  *
  * Uniform inspector contract:
  *  - Props: `{ element, canEdit }`.
@@ -24,13 +20,11 @@ import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import {
-	clamp,
 	formatTime,
-	mmSsToMs,
-	msToMmSs,
 	trimmedDurationLabel,
 	validateTrimRange,
 } from '../../composables/useMediaEditing';
+import InspectorFields from './InspectorFields.vue';
 import MediaBookmarks from './MediaBookmarks.vue';
 import MediaPlaybackOptions from './MediaPlaybackOptions.vue';
 import MediaTrimTimeline from './MediaTrimTimeline.vue';
@@ -76,8 +70,6 @@ const durationMs = computed(() => duration.value * 1000);
 const trimStartMs = computed(() => media.value?.trimStartMs ?? 0);
 const trimEndMs = computed(() => media.value?.trimEndMs ?? 0);
 // The End input shows an absolute clock position; the element stores
-// p14:trim/@end's distance from the clip's tail.
-const trimEndAbsoluteMs = computed(() => mediaTrimEndAbsoluteMs(durationMs.value, trimEndMs.value));
 const resetTrimState = computed(() =>
 	mediaTrimResetState(
 		{ trimStartMs: trimStartMs.value, trimEndMs: trimEndMs.value },
@@ -129,25 +121,6 @@ function emitTrim(trimStart: number, trimEnd: number): void {
 
 function onTimelineTrim(payload: { trimStartMs: number; trimEndMs: number }): void {
 	emitTrim(payload.trimStartMs, payload.trimEndMs);
-}
-
-function commitTrimStart(event: Event): void {
-	const parsed = mmSsToMs((event.target as HTMLInputElement).value);
-	if (parsed === undefined) {
-		return;
-	}
-	const max = durationMs.value > 0 ? durationMs.value : parsed;
-	emit('update', { trimStartMs: clamp(parsed, 0, max) } as Partial<PptxElement>);
-}
-
-function commitTrimEnd(event: Event): void {
-	const parsed = mmSsToMs((event.target as HTMLInputElement).value);
-	if (parsed === undefined) {
-		return;
-	}
-	const trimEnd =
-		durationMs.value > 0 ? mediaTrimEndMsFromAbsoluteMs(durationMs.value, parsed) : parsed;
-	emit('update', { trimEndMs: trimEnd } as Partial<PptxElement>);
 }
 
 function resetTrim(): void {
@@ -232,30 +205,13 @@ const BTN = 'rounded bg-muted hover:bg-accent px-2 py-1 text-[11px] transition-c
 
 		<div :class="CARD">
 			<div :class="HEADING">{{ t('pptx.media.trim') }}</div>
-			<div class="grid grid-cols-2 gap-1.5">
-				<label class="flex flex-col gap-0.5">
-					<span :class="LABEL">{{ t('pptx.media.trimStartTime') }}</span>
-					<input
-						type="text"
-						:class="INPUT"
-						placeholder="00:00"
-						:disabled="!canEdit"
-						:value="msToMmSs(trimStartMs)"
-						@change="commitTrimStart"
-					/>
-				</label>
-				<label class="flex flex-col gap-0.5">
-					<span :class="LABEL">{{ t('pptx.media.trimEndTime') }}</span>
-					<input
-						type="text"
-						:class="INPUT"
-						placeholder="00:00"
-						:disabled="!canEdit"
-						:value="msToMmSs(trimEndAbsoluteMs)"
-						@change="commitTrimEnd"
-					/>
-				</label>
-			</div>
+			<InspectorFields
+				v-if="media"
+				:sections="MEDIA_TRIM_SECTIONS"
+				:target="{ media, durationMs }"
+				:disabled="!canEdit"
+				@patch="emit('update', $event)"
+			/>
 			<div :class="ROW">
 				<span :class="LABEL">{{ t('pptx.media.trimmedDuration') }}</span>
 				<span class="text-[11px] tabular-nums font-medium">{{ trimmedLabel }}</span>

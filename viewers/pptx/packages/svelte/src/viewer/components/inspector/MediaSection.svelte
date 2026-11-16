@@ -1,8 +1,7 @@
 <script lang="ts">
 	import type { MediaCaptionTrack, MediaPptxElement, PptxElement } from 'pptx-viewer-core';
 	import {
-		mediaTrimEndAbsoluteMs,
-		mediaTrimEndMsFromAbsoluteMs,
+		MEDIA_TRIM_SECTIONS,
 		mediaTrimResetPatch,
 		mediaTrimResetState,
 		MEDIA_PLAYBACK_SECTIONS,
@@ -29,14 +28,8 @@
 	let bookmarkLabel = $state('');
 	// eslint-disable-next-line prefer-const
 	let bookmarkTime = $state(0);
-	// G17/trim-end: `trimEndMs` is `p14:trim/@end`'s distance from the clip's
-	// TAIL (COM-verified, see shared `media-trim-range.ts`), not an absolute
-	// stop time. The raw "Trim end ms" field used to bind that distance
-	// directly, so typing "the last 5s" of a 20s clip meant computing
-	// 20000-5000 by hand; it now shows/accepts the absolute end position like
-	// React's `MediaInspector` and Vue's `MediaPropertiesPanel.vue`.
+	// The trim fields (`MEDIA_TRIM_SECTIONS`) are bounded by the live duration.
 	const durationMs = $derived(duration * 1000);
-	const trimEndAbsoluteMs = $derived(media ? mediaTrimEndAbsoluteMs(durationMs, media.trimEndMs ?? 0) : 0);
 
 	function patch(next: Partial<MediaPptxElement>): void {
 		if (media) {
@@ -84,7 +77,7 @@
 {#if media}<div class="section">
 	{#if previewUrl}<div class="preview">{#if media.mediaType === 'video'}<video bind:this={preview} src={previewUrl} preload="metadata" onloadedmetadata={() => (duration = preview && Number.isFinite(preview.duration) ? preview.duration : 0)} ontimeupdate={() => { if (preview) currentTime = preview.currentTime; }} onplay={() => (playing = true)} onpause={() => (playing = false)}><track kind="captions" label={t('pptx.media.captions')} src="data:text/vtt;charset=utf-8,WEBVTT" />{#each media.captionTracks ?? [] as track}<track kind={track.kind === 'subtitles' ? 'subtitles' : 'captions'} label={track.label} srclang={track.language} src={track.src ?? `data:text/vtt;charset=utf-8,${encodeURIComponent(track.content ?? 'WEBVTT')}`} default={track.isDefault} />{/each}</video>{:else}<audio bind:this={preview} src={previewUrl} preload="metadata" onloadedmetadata={() => (duration = preview && Number.isFinite(preview.duration) ? preview.duration : 0)} ontimeupdate={() => { if (preview) currentTime = preview.currentTime; }} onplay={() => (playing = true)} onpause={() => (playing = false)}></audio>{/if}<button type="button" onclick={togglePreview}>{playing ? t('pptx.media.pause') : t('pptx.media.play')}</button><span>{currentTime.toFixed(1)} / {duration.toFixed(1)}s</span>{#if duration > 0}<MediaTrimTimeline {duration} startMs={media.trimStartMs ?? 0} endMs={media.trimEndMs} {currentTime} bookmarks={media.bookmarks ?? []} onchange={(trimStartMs, trimEndMs) => patch({ trimStartMs, trimEndMs })} onseek={seek} />{/if}</div>{/if}
 	<InspectorFields sections={MEDIA_PLAYBACK_SECTIONS} target={media as PptxElement} disabled={!editor.editable} onpatch={(next) => patch(next as Partial<MediaPptxElement>)} />
-	<div class="grid"><label>{t('pptx.media.trimStart')}<input type="number" min="0" value={media.trimStartMs ?? 0} onchange={(event) => patch({ trimStartMs: Number(event.currentTarget.value) })} /></label><label>{t('pptx.media.trimEnd')}<input type="number" min="0" value={trimEndAbsoluteMs} onchange={(event) => patch({ trimEndMs: event.currentTarget.value === '' ? undefined : mediaTrimEndMsFromAbsoluteMs(durationMs, Number(event.currentTarget.value)) })} /></label></div>
+	<InspectorFields sections={MEDIA_TRIM_SECTIONS} target={{ media, durationMs }} disabled={!editor.editable} onpatch={(next) => patch(next as Partial<MediaPptxElement>)} />
 	{#if resetTrimState.visible}<button type="button" class="reset-trim" onclick={() => patch(mediaTrimResetPatch() as Partial<MediaPptxElement>)}>{t('pptx.media.resetTrim')}</button>{/if}
 	<details open><summary>{t('pptx.media.bookmarks')}</summary>{#each [...(media.bookmarks ?? [])].sort((a,b)=>a.time-b.time) as bookmark}<div class="row"><input value={bookmark.label} onchange={(event) => patch({bookmarks:(media.bookmarks??[]).map((item)=>item.id===bookmark.id?{...item,label:event.currentTarget.value}:item)})} /><input type="number" min="0" step="0.1" value={bookmark.time} onchange={(event) => patch({bookmarks:(media.bookmarks??[]).map((item)=>item.id===bookmark.id?{...item,time:Number(event.currentTarget.value)}:item)})} /><button aria-label={t('pptx.media.removeBookmark')} onclick={() => patch({bookmarks:(media.bookmarks??[]).filter((item)=>item.id!==bookmark.id)})}>×</button></div>{/each}<div class="row"><input placeholder={t('pptx.media.bookmarkLabel')} bind:value={bookmarkLabel} /><input type="number" min="0" step="0.1" bind:value={bookmarkTime} /><button aria-label={t('pptx.media.addBookmark')} onclick={addBookmark}>+</button></div></details>
 	<details open><summary>{t('pptx.media.captionTracks')}</summary>{#each media.captionTracks ?? [] as track, index}<fieldset><div class="grid"><label>{t('pptx.media.trackLabel')}<input value={track.label} onchange={(event)=>trackPatch(index,{label:event.currentTarget.value})} /></label><label>{t('pptx.media.trackLanguage')}<input value={track.language} onchange={(event)=>trackPatch(index,{language:event.currentTarget.value})} /></label><label>{t('pptx.media.trackKind')}<pptx-ui-select aria-label={t('pptx.media.trackKind')} value={track.kind} onchange={(event)=>trackPatch(index,{kind:event.currentTarget.value as MediaCaptionTrack['kind']})}><option value="subtitles">{t('pptx.media.trackKind.subtitles')}</option><option value="captions">{t('pptx.media.captions')}</option><option value="descriptions">{t('pptx.media.trackKind.descriptions')}</option></pptx-ui-select></label><label class="inline"><pptx-ui-checkbox checked={track.isDefault ?? false} onchange={(event)=>patch({captionTracks:(media.captionTracks??[]).map((item,i)=>({...item,isDefault:event.currentTarget.checked?i===index:(i===index?false:item.isDefault)}))})} ></pptx-ui-checkbox>{t('pptx.media.trackDefault')}</label></div><label>{t('pptx.media.trackSource')}<input value={track.src ?? ''} placeholder={t('pptx.media.trackSourcePlaceholder')} onchange={(event)=>trackPatch(index,{src:event.currentTarget.value||undefined})} /></label><label>{t('pptx.media.trackInlineWebVtt')}<textarea rows="4" value={track.content ?? ''} onchange={(event)=>trackPatch(index,{content:event.currentTarget.value||undefined})}></textarea></label><button onclick={() => patch({captionTracks:(media.captionTracks??[]).filter((_item,i)=>i!==index)})}>{t('pptx.media.removeTrack')}</button></fieldset>{/each}<button onclick={addTrack}>{t('pptx.media.addCaptionTrack')}</button></details>

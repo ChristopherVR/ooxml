@@ -108,6 +108,8 @@ export { SLIDE_BACKGROUND_SECTION, SLIDE_BACKGROUND_SECTIONS } from './slide-bac
 export type { SlideBackgroundSection, SlideBackgroundTarget } from './slide-background-fields';
 export { MEDIA_PLAYBACK_SECTION, MEDIA_PLAYBACK_SECTIONS } from './media-playback-fields';
 export type { MediaPlaybackSection } from './media-playback-fields';
+export { MEDIA_TRIM_SECTION, MEDIA_TRIM_SECTIONS } from './media-trim-fields';
+export type { MediaTrimSection, MediaTrimTarget } from './media-trim-fields';
 export {
 	OLE_OBJECT_NAME_SECTION,
 	OLE_OBJECT_NAME_SECTIONS,

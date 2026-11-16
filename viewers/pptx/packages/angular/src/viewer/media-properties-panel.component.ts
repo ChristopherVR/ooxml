@@ -9,8 +9,7 @@ import {
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import {
-	mediaTrimEndAbsoluteMs,
-	mediaTrimEndMsFromAbsoluteMs,
+	MEDIA_TRIM_SECTIONS,
 	mediaTrimResetPatch,
 	mediaTrimResetState,
 	MEDIA_PLAYBACK_SECTIONS,
@@ -36,26 +35,12 @@ import { appendMediaBookmark } from './media-properties-helpers';
 				[canEdit]="canEdit()"
 				(patch)="patch.emit($event)"
 			/>
-			<div class="grid two">
-				<label>
-					<span>{{ 'pptx.media.trimStartTime' | translate }}</span>
-					<input
-						type="number"
-						min="0"
-						[value]="media().trimStartMs ?? 0"
-						(change)="numberPatch('trimStartMs', $event)"
-					/>
-				</label>
-				<label>
-					<span>{{ 'pptx.media.trimEndTime' | translate }}</span>
-					<input
-						type="number"
-						min="0"
-						[value]="trimEndAbsoluteMs()"
-						(change)="trimEndPatch($event)"
-					/>
-				</label>
-			</div>
+			<pptx-inspector-fields
+				[sections]="trimSections"
+				[target]="trimTarget()"
+				[disabled]="!canEdit()"
+				(patch)="patch.emit($event)"
+			/>
 			@if (resetTrimState().visible) {
 				<button type="button" class="reset-trim" (click)="patch.emit(trimResetPatch())">
 					{{ 'pptx.media.resetTrim' | translate }}
@@ -177,33 +162,13 @@ export class MediaPropertiesPanelComponent {
 	protected readonly media = computed(() => this.element());
 	protected readonly mediaDataUrls = computed(() => this.loader?.mediaDataUrls() ?? new Map());
 	protected readonly playbackSections = MEDIA_PLAYBACK_SECTIONS;
-	/**
-	 * `trimEndMs` is `p14:trim/@end`, the distance from the clip's TAIL
-	 * (COM-verified), not an absolute stop time. The "Trim end" field shows the
-	 * user an absolute position and converts back on commit, mirroring React's
-	 * `MediaInspector` / Vue's `MediaPropertiesPanel.vue` via the shared
-	 * `media-trim-range.ts` (this raw ms field used to bind the tail distance
-	 * directly, so typing "the last 5s" required computing duration-minus-5000
-	 * by hand).
-	 */
+	/** The clip with its duration: what the shared trim fields are bounded by. */
 	private readonly durationMs = computed(() => (this.media().metadata?.duration ?? 0) * 1000);
-	protected readonly trimEndAbsoluteMs = computed(() =>
-		mediaTrimEndAbsoluteMs(this.durationMs(), this.media().trimEndMs ?? 0),
-	);
-	protected numberPatch(key: keyof MediaPptxElement, event: Event): void {
-		this.patch.emit({
-			[key]: Number((event.target as HTMLInputElement).value),
-		} as Partial<PptxElement>);
-	}
-
-	/** Convert the typed absolute end position back to `trimEndMs`'s tail distance. */
-	protected trimEndPatch(event: Event): void {
-		const absoluteMs = Number((event.target as HTMLInputElement).value);
-		this.patch.emit({
-			trimEndMs: mediaTrimEndMsFromAbsoluteMs(this.durationMs(), absoluteMs),
-		} as Partial<PptxElement>);
-	}
-
+	protected readonly trimTarget = computed(() => ({
+		media: this.media(),
+		durationMs: this.durationMs(),
+	}));
+	protected readonly trimSections = MEDIA_TRIM_SECTIONS;
 	protected addBookmark(): void {
 		const current = this.media().bookmarks ?? [];
 		const bookmarks = appendMediaBookmark(

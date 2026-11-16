@@ -1,6 +1,5 @@
 import {
-	mediaTrimEndAbsoluteMs,
-	mediaTrimEndMsFromAbsoluteMs,
+	MEDIA_TRIM_SECTIONS,
 	mediaTrimResetPatch,
 	mediaTrimResetState,
 	trimmedMediaDurationMs,
@@ -12,6 +11,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { LuClock, LuScissors } from 'react-icons/lu';
 
 import { useTranslation } from '../../i18n/use-translation';
+import { InspectorFields } from './InspectorFields';
 
 // ---------------------------------------------------------------------------
 // Style constants (matching InspectorPane)
@@ -19,7 +19,6 @@ import { useTranslation } from '../../i18n/use-translation';
 
 const HEADING = 'text-[11px] uppercase tracking-wide text-muted-foreground';
 const CARD = 'rounded border border-border bg-card p-2 space-y-2';
-const INPUT = 'flex-1 bg-muted border border-border rounded px-1.5 py-0.5 w-full';
 const BTN = 'rounded bg-muted hover:bg-accent px-2 py-1 text-[11px] transition-colors';
 const LABEL_CLS = 'flex items-center justify-between gap-2';
 const LABEL_TEXT = 'text-muted-foreground';
@@ -42,46 +41,6 @@ export function msToMmSs(ms: number): string {
 	return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
-/**
- * Parse a mm:ss (or m:ss, or raw seconds) string into milliseconds.
- * Returns `undefined` if the input is not parseable.
- *
- * Accepts:
- * - "1:30"  → 90000
- * - "01:30" → 90000
- * - "90"    → 90000  (treated as seconds)
- * - "1:30.5" → not supported, truncated to 1:30
- */
-export function mmSsToMs(value: string): number | undefined {
-	const trimmed = value.trim();
-	if (trimmed.length === 0) {
-		return undefined;
-	}
-
-	// mm:ss format
-	const colonIdx = trimmed.indexOf(':');
-	if (colonIdx >= 0) {
-		const minPart = trimmed.slice(0, colonIdx);
-		const secPart = trimmed.slice(colonIdx + 1);
-		const minutes = parseInt(minPart, 10);
-		const seconds = parseInt(secPart, 10);
-		if (!Number.isFinite(minutes) || !Number.isFinite(seconds)) {
-			return undefined;
-		}
-		if (minutes < 0 || seconds < 0 || seconds >= 60) {
-			return undefined;
-		}
-		return (minutes * 60 + seconds) * 1000;
-	}
-
-	// Raw seconds
-	const seconds = parseInt(trimmed, 10);
-	if (!Number.isFinite(seconds) || seconds < 0) {
-		return undefined;
-	}
-	return seconds * 1000;
-}
-
 const TRIM_ERROR_KEYS: Record<MediaTrimRangeError, string> = {
 	negative: 'pptx.media.trimErrorNegative',
 	startAfterEnd: 'pptx.media.trimErrorStartAfterEnd',
@@ -99,82 +58,6 @@ export function validateTrimRange(
 ): string | null {
 	const error = validateMediaTrimRange(trimStartMs, trimEndMs, durationMs);
 	return error ? TRIM_ERROR_KEYS[error] : null;
-}
-
-// ---------------------------------------------------------------------------
-// TrimTimeInput: a mm:ss text input with validation
-// ---------------------------------------------------------------------------
-
-interface TrimTimeInputProps {
-	label: string;
-	valueMs: number;
-	maxMs: number;
-	disabled: boolean;
-	onChange: (ms: number) => void;
-}
-
-function TrimTimeInput({
-	label,
-	valueMs,
-	maxMs,
-	disabled,
-	onChange,
-}: TrimTimeInputProps): React.ReactElement {
-	const [editValue, setEditValue] = useState<string | null>(null);
-	const [hasError, setHasError] = useState(false);
-
-	const displayValue = editValue ?? msToMmSs(valueMs);
-
-	const handleFocus = useCallback((): void => {
-		setEditValue(msToMmSs(valueMs));
-		setHasError(false);
-	}, [valueMs]);
-
-	const handleBlur = useCallback((): void => {
-		if (editValue !== null) {
-			const parsed = mmSsToMs(editValue);
-			if (parsed !== undefined && parsed >= 0 && (maxMs <= 0 || parsed <= maxMs)) {
-				onChange(parsed);
-				setHasError(false);
-			} else {
-				setHasError(false);
-			}
-		}
-		setEditValue(null);
-	}, [editValue, maxMs, onChange]);
-
-	const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>): void => {
-		const val = e.target.value;
-		setEditValue(val);
-		const parsed = mmSsToMs(val);
-		setHasError(parsed === undefined);
-	}, []);
-
-	const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>): void => {
-		if (e.key === 'Enter') {
-			e.currentTarget.blur();
-		} else if (e.key === 'Escape') {
-			setEditValue(null);
-			setHasError(false);
-		}
-	}, []);
-
-	return (
-		<label className='flex flex-col gap-0.5'>
-			<span className={`text-[11px] ${LABEL_TEXT}`}>{label}</span>
-			<input
-				type='text'
-				disabled={disabled}
-				className={`${INPUT} text-[11px] tabular-nums ${hasError ? 'border-red-400' : ''}`}
-				value={displayValue}
-				placeholder='00:00'
-				onFocus={handleFocus}
-				onBlur={handleBlur}
-				onChange={handleChange}
-				onKeyDown={handleKeyDown}
-			/>
-		</label>
-	);
 }
 
 // ---------------------------------------------------------------------------
@@ -205,34 +88,12 @@ export function MediaInspector({
 		(): string => msToMmSs(trimmedMediaDurationMs(trimStartMs, trimEndMs, durationMs)),
 		[trimStartMs, trimEndMs, durationMs],
 	);
-	// The End input shows an absolute clock position; the element stores the
-	// distance from the clip's tail.
-	const trimEndAbsoluteMs = mediaTrimEndAbsoluteMs(durationMs, trimEndMs);
-
 	const validationError = useMemo(
 		() => validateTrimRange(trimStartMs, trimEndMs, durationMs),
 		[trimStartMs, trimEndMs, durationMs],
 	);
 
 	const resetTrimState = mediaTrimResetState({ trimStartMs, trimEndMs }, canEdit);
-
-	const handleTrimStartChange = useCallback(
-		(ms: number): void => {
-			onUpdateElement({
-				trimStartMs: ms,
-			} as Partial<PptxElement>);
-		},
-		[onUpdateElement],
-	);
-
-	const handleTrimEndChange = useCallback(
-		(ms: number): void => {
-			onUpdateElement({
-				trimEndMs: durationMs > 0 ? mediaTrimEndMsFromAbsoluteMs(durationMs, ms) : ms,
-			} as Partial<PptxElement>);
-		},
-		[durationMs, onUpdateElement],
-	);
 
 	const handleResetTrim = useCallback((): void => {
 		onUpdateElement(mediaTrimResetPatch());
@@ -245,21 +106,13 @@ export function MediaInspector({
 				{t('pptx.media.trim')}
 			</div>
 
-			{/* Trim time inputs in mm:ss format */}
-			<div className='grid grid-cols-2 gap-1.5'>
-				<TrimTimeInput
-					label={t('pptx.media.trimStartTime')}
-					valueMs={trimStartMs}
-					maxMs={durationMs}
+			{/* Start and end times, bounded by the live duration: shared descriptors. */}
+			<div className='grid grid-cols-2 gap-1.5 text-[11px]'>
+				<InspectorFields
+					sections={MEDIA_TRIM_SECTIONS}
+					target={{ media: element, durationMs }}
 					disabled={!canEdit}
-					onChange={handleTrimStartChange}
-				/>
-				<TrimTimeInput
-					label={t('pptx.media.trimEndTime')}
-					valueMs={trimEndAbsoluteMs}
-					maxMs={durationMs}
-					disabled={!canEdit}
-					onChange={handleTrimEndChange}
+					onPatch={onUpdateElement}
 				/>
 			</div>
 

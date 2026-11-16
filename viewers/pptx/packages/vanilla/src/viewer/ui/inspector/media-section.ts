@@ -1,13 +1,11 @@
 import {
-	mediaTrimEndAbsoluteMs,
-	mediaTrimEndMsFromAbsoluteMs,
+	MEDIA_TRIM_SECTIONS,
 	mediaTrimResetPatch,
 	mediaTrimResetState,
 	MEDIA_PLAYBACK_SECTIONS,
 } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
-import { makeNumberField } from '../controls';
 import { createInspectorFields } from './inspector-fields';
 import { createMediaTrimTimeline } from './media-trim-timeline';
 import type { InspectorHandlers, InspectorState } from './types';
@@ -19,12 +17,8 @@ export function createMediaSection(
 	handlers: InspectorHandlers,
 ) {
 	const el = section(t('pptx.media.title'));
-	// G17/trim-end: `trimEndMs` is `p14:trim/@end`'s distance from the clip's
-	// TAIL (COM-verified, see shared `media-trim-range.ts`), not an absolute
-	// stop time. The "Trim end" number field below used to bind that distance
-	// directly, so typing "the last 5s" of a 20s clip meant computing
-	// 20000-5000 by hand; it now shows/accepts the absolute end position, like
-	// React's `MediaInspector` and Vue's `MediaPropertiesPanel.vue`.
+	// The trim fields (`MEDIA_TRIM_SECTIONS`) show the absolute end and are
+	// bounded by the clip's live duration, read off the preview when it loads.
 	let currentMedia: InspectorState['media'];
 	const resolveDurationMs = (): number => {
 		const liveSeconds = Number.isFinite(preview.duration) ? preview.duration : 0;
@@ -44,6 +38,7 @@ export function createMediaSection(
 			},
 		});
 		paintTimeline();
+		paintTrim();
 	});
 	const poster = doc.createElement('img');
 	poster.className = 'pptxv-media-poster';
@@ -55,19 +50,21 @@ export function createMediaSection(
 		onPatch: (patch) =>
 			handlers.setMediaProperties(patch as Parameters<InspectorHandlers['setMediaProperties']>[0]),
 	});
-	const trimStart = makeNumberField(doc, {
-		label: t('pptx.media.trimStart'),
-		min: 0,
-		onCommit: (trimStartMs) => handlers.setMediaProperties({ trimStartMs }),
+	// Start and end times, bounded by the clip's live duration: the shared descriptors.
+	const trim = createInspectorFields(doc, t, {
+		sections: MEDIA_TRIM_SECTIONS,
+		onPatch: (patch) =>
+			handlers.setMediaProperties(patch as Parameters<InspectorHandlers['setMediaProperties']>[0]),
 	});
-	const trimEnd = makeNumberField(doc, {
-		label: t('pptx.media.trimEnd'),
-		min: 0,
-		onCommit: (absoluteEndMs) =>
-			handlers.setMediaProperties({
-				trimEndMs: mediaTrimEndMsFromAbsoluteMs(resolveDurationMs(), absoluteEndMs),
-			}),
-	});
+	const paintTrim = (): void => {
+		if (currentMedia) {
+			trim.update(
+				{ media: currentMedia, durationMs: resolveDurationMs() },
+				!canEditMedia,
+				currentMedia.id,
+			);
+		}
+	};
 	const resetTrim = doc.createElement('button');
 	resetTrim.type = 'button';
 	resetTrim.className = 'pptxv-media-reset-trim';
@@ -118,8 +115,6 @@ export function createMediaSection(
 	const timeline = createMediaTrimTimeline(doc, {
 		onTrimChange: (trimStartMs, trimEndMs) => {
 			handlers.setMediaProperties({ trimStartMs, trimEndMs });
-			trimStart.setValue(trimStartMs);
-			trimEnd.setValue(mediaTrimEndAbsoluteMs(resolveDurationMs(), trimEndMs));
 		},
 		onSeek: (seconds) => {
 			if (Number.isFinite(preview.duration)) {
@@ -144,8 +139,7 @@ export function createMediaSection(
 		poster,
 		timeline.el,
 		playback.el,
-		trimStart.el,
-		trimEnd.el,
+		trim.el,
 		resetTrim,
 		bookmarks.label,
 		captions.label,
@@ -170,8 +164,7 @@ export function createMediaSection(
 			if (media) {
 				playback.update(media, !state.isMedia, media.id);
 			}
-			trimStart.setValue(media?.trimStartMs ?? 0);
-			trimEnd.setValue(mediaTrimEndAbsoluteMs(resolveDurationMs(), media?.trimEndMs ?? 0));
+			paintTrim();
 			bookmarks.control.value = (media?.bookmarks ?? [])
 				.map(({ time, label }) => `${time} | ${label}`)
 				.join('\n');
@@ -181,9 +174,6 @@ export function createMediaSection(
 			metadata.textContent = media?.metadata
 				? `${media.metadata.duration ?? 0}s, ${media.metadata.videoWidth ?? 0} x ${media.metadata.videoHeight ?? 0}, ${media.metadata.codecInfo ?? media.mediaMimeType ?? ''}`
 				: (media?.mediaMimeType ?? '');
-			for (const control of [trimStart, trimEnd]) {
-				control.setDisabled(!state.isMedia);
-			}
 			resetTrim.hidden = !state.isMedia || !mediaTrimResetState(media, true).visible;
 			bookmarks.control.disabled = !state.isMedia;
 			captions.control.disabled = !state.isMedia;

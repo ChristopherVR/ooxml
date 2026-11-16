@@ -252,7 +252,7 @@ describe('media section trim timeline wiring', () => {
 	 * 20000-5000 by hand; it now shows/accepts the absolute end position, like
 	 * React's `MediaInspector` and Vue's `MediaPropertiesPanel.vue`.
 	 */
-	it('shows 15000 (15s) for a 20s clip with trimEndMs=5000, and stores 5000 for a typed 15000', async () => {
+	it('shows the end as 15 s for a 20 s clip with trimEndMs=5000, and stores 8000 for a typed 12 s', async () => {
 		const { createMediaSection } = await import('./media-section');
 		const setMediaProperties = vi.fn();
 		const section = createMediaSection(document, createTranslator(), sectionFactory(), {
@@ -274,11 +274,11 @@ describe('media section trim timeline wiring', () => {
 		const trimEndInput = section.el.querySelector<HTMLInputElement>(
 			'input[aria-label="Trim End"]',
 		)!;
-		expect(trimEndInput.value).toBe('15000');
+		expect(trimEndInput.value).toBe('15');
 
-		// A different absolute end than the one just displayed (15000), so the
+		// A different absolute end than the one just displayed (15 s), so the
 		// field's own "unchanged commit" guard does not swallow it.
-		trimEndInput.value = '12000';
+		trimEndInput.value = '12';
 		trimEndInput.dispatchEvent(new Event('change'));
 		expect(setMediaProperties).toHaveBeenCalledWith({ trimEndMs: 8000 });
 	});

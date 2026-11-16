@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { msToMmSs, mmSsToMs, validateTrimRange } from './MediaInspector';
+import { msToMmSs, validateTrimRange } from './MediaInspector';
 
 // ---------------------------------------------------------------------------
 // msToMmSs
@@ -60,75 +60,6 @@ describe('msToMmSs', () => {
 
 // ---------------------------------------------------------------------------
 // mmSsToMs
-// ---------------------------------------------------------------------------
-
-describe('mmSsToMs', () => {
-	it("parses mm:ss format '1:30' to 90000", () => {
-		expect(mmSsToMs('1:30')).toBe(90000);
-	});
-
-	it("parses mm:ss format '01:30' to 90000", () => {
-		expect(mmSsToMs('01:30')).toBe(90000);
-	});
-
-	it("parses mm:ss format '0:00' to 0", () => {
-		expect(mmSsToMs('0:00')).toBe(0);
-	});
-
-	it("parses mm:ss format '10:05' to 605000", () => {
-		expect(mmSsToMs('10:05')).toBe(605000);
-	});
-
-	it("parses raw seconds '90' to 90000", () => {
-		expect(mmSsToMs('90')).toBe(90000);
-	});
-
-	it("parses raw seconds '0' to 0", () => {
-		expect(mmSsToMs('0')).toBe(0);
-	});
-
-	it('trims whitespace', () => {
-		expect(mmSsToMs('  1:30  ')).toBe(90000);
-		expect(mmSsToMs('  90  ')).toBe(90000);
-	});
-
-	it('returns undefined for empty string', () => {
-		expect(mmSsToMs('')).toBeUndefined();
-	});
-
-	it('returns undefined for whitespace-only string', () => {
-		expect(mmSsToMs('   ')).toBeUndefined();
-	});
-
-	it('returns undefined when seconds >= 60 in mm:ss format', () => {
-		expect(mmSsToMs('1:60')).toBeUndefined();
-		expect(mmSsToMs('0:99')).toBeUndefined();
-	});
-
-	it('returns undefined for negative minutes in mm:ss format', () => {
-		expect(mmSsToMs('-1:30')).toBeUndefined();
-	});
-
-	it('returns undefined for negative seconds in mm:ss format', () => {
-		expect(mmSsToMs('1:-5')).toBeUndefined();
-	});
-
-	it('returns undefined for negative raw seconds', () => {
-		expect(mmSsToMs('-10')).toBeUndefined();
-	});
-
-	it('returns undefined for non-numeric input', () => {
-		expect(mmSsToMs('abc')).toBeUndefined();
-		expect(mmSsToMs('abc:def')).toBeUndefined();
-	});
-
-	it('handles large minute values', () => {
-		expect(mmSsToMs('120:00')).toBe(7200000);
-	});
-});
-
-// ---------------------------------------------------------------------------
-// validateTrimRange
 // ---------------------------------------------------------------------------
 
 describe('validateTrimRange', () => {

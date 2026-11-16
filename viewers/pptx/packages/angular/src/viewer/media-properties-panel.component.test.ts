@@ -25,8 +25,10 @@ describe('mediaPropertiesPanelComponent trim-end field', () => {
 			path.join(__dirname, 'media-properties-panel.component.ts'),
 			'utf8',
 		);
-		expect(source).toMatch(/trimEndAbsoluteMs = computed\(\(\) =>\s*mediaTrimEndAbsoluteMs\(/);
-		expect(source).toMatch(/trimEndMs: mediaTrimEndMsFromAbsoluteMs\(/);
+		// The shared trim fields show the absolute end and convert it back
+		// (`media-trim-fields.ts`), bounded by the clip's duration.
+		expect(source).toContain('[sections]="trimSections"');
+		expect(source).toContain('[target]="trimTarget()"');
 		expect(source).not.toContain('[value]="media().trimEndMs ?? 0"');
 	});
 
