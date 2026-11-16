@@ -26,6 +26,7 @@ import { findOleObjNode } from '../../utils/ole-alternate-content';
 import { ensureXmlChild } from '../../utils/xml-access';
 import { BLIP_FILL_ORDER, SP_PR_ORDER, reorderObjectKeys } from '../../utils/xml-reorder';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveContentPartInk';
+import { writeBackgroundFillFlag } from './save-background-fill-flag';
 import { writeNewShapePictureFill } from './save-picture-fill';
 import type { SaveSlideContext } from './PptxHandlerRuntimeSaveElementEmbedding';
 import { CHART_CONTENT_TYPE, CHART_RELATIONSHIP_TYPE } from './PptxHandlerRuntimeSaveShapeXml';
@@ -791,6 +792,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			const spPr = ensureXmlChild(shape, 'p:spPr');
 			if (spPr) {
 				this.applyFillAndStroke(spPr, el.shapeStyle, ctx.inheritedGroupFill);
+				writeBackgroundFillFlag(shape, spPr, el.shapeStyle);
 				this.applyEffectsAndThreeD(spPr, el.shapeStyle);
 				this.finalizeSpPrSchemaOrder(shape);
 				// Re-emit `<p:style>` (lnRef/fillRef/effectRef/fontRef) — Phase 2 Stream B / C-H2.
