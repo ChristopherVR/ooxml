@@ -11,5 +11,7 @@ export {
 	listBuiltinSmartArtLayouts,
 	loadBuiltinSmartArtLayoutXml,
 	parseBuiltinLayoutDefinition,
+	findBuiltinSmartArtStyleDefinition,
+	loadBuiltinSmartArtStyleDefinitionXml,
 } from '../core/utils/smartart-builtin-layouts';
 export type { BuiltinSmartArtLayoutEntry } from '../core/utils/smartart-builtin-layouts';

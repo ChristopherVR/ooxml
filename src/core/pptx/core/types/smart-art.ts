@@ -184,6 +184,14 @@ export interface PptxSmartArtData extends DiagramData {
 	 * (`ooxml-core/pptx/smartart-layouts`). Save writes that definition as the layout part.
 	 */
 	builtinLayoutId?: string;
+	/**
+	 * A built-in colour definition (`dgm:colorsDef` XML, from `ooxml-core/diagram/builtin`) picked
+	 * in Change Colors. Save writes it as the colours part, replacing the old one as PowerPoint
+	 * does, and records its `uniqueId` on the document point.
+	 */
+	builtinColorsXml?: string;
+	/** A built-in quick-style definition (`dgm:styleDef` XML) picked in SmartArt Styles; as above. */
+	builtinQuickStyleXml?: string;
 	/** Internal save hint: the layout definition changed in the editor. */
 	layoutDirty?: boolean;
 	/** Internal save hint: typed layout-definition metadata changed. */

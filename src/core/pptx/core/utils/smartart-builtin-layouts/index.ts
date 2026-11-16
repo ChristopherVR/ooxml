@@ -28,6 +28,11 @@ export {
 	loadBuiltinSmartArtLayoutXml,
 	type BuiltinSmartArtLayoutEntry,
 } from '../../../../diagram/builtin/layouts';
+// The full built-in colour and quick-style catalogue, loaded with the layouts.
+export {
+	findBuiltinSmartArtStyleDefinition,
+	loadBuiltinSmartArtStyleDefinitionXml,
+} from '../../../../diagram/builtin/style-definitions';
 
 const localName = (key: string): string => key.slice(key.indexOf(':') + 1);
 

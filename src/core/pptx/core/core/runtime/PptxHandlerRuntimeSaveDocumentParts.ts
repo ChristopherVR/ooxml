@@ -37,6 +37,10 @@ import { synthesizeNewSmartArtStructuralPoints } from './smartart-node-synthesis
 import { applySmartArtQuickStyle } from './smartart-quick-style-builder';
 import { applySmartArtChrome } from './smartart-save-chrome';
 import {
+	applySmartArtDefinitionIdentity,
+	smartArtDefinitionPartXml,
+} from './smartart-save-definitions';
+import {
 	applySmartArtLayoutIdentity,
 	presentationIdsFromPoints,
 	resolveSmartArtSaveLayout,
@@ -196,6 +200,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						this.compatibilityService.getXmlLocalName(key),
 					);
 				}
+				applySmartArtDefinitionIdentity(dataModel, smartArtData, (key) =>
+					this.compatibilityService.getXmlLocalName(key),
+				);
 
 				// Persist chrome (background / outline) onto dgm:bg and
 				// dgm:whole/a:ln when present on the in-memory data.
@@ -316,6 +323,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		slidePath: string,
 		smartArtData: SmartArtPptxElement['smartArtData'],
 	): Promise<void> {
+		if (smartArtData?.colorsRelId && smartArtData.builtinColorsXml) {
+			this.writeSmartArtDefinitionPart(
+				slidePath,
+				smartArtData.colorsRelId,
+				smartArtData.builtinColorsXml,
+			);
+			return;
+		}
 		const transform = smartArtData?.colorTransform;
 		if (!smartArtData?.colorsRelId || !transform) {
 			return;
@@ -340,6 +355,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		slidePath: string,
 		smartArtData: SmartArtPptxElement['smartArtData'],
 	): Promise<void> {
+		if (smartArtData?.styleRelId && smartArtData.builtinQuickStyleXml) {
+			this.writeSmartArtDefinitionPart(
+				slidePath,
+				smartArtData.styleRelId,
+				smartArtData.builtinQuickStyleXml,
+			);
+			return;
+		}
 		const quickStyle = smartArtData?.quickStyle;
 		if (!smartArtData?.quickStyleDirty || !smartArtData.styleRelId || !quickStyle) {
 			return;
@@ -357,6 +380,15 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					smartArtData.style,
 				),
 		);
+	}
+
+	/** Replace a colours or quick-style part with a built-in definition picked in a gallery. */
+	private writeSmartArtDefinitionPart(slidePath: string, relId: string, xml: string): void {
+		const target = this.slideRelsMap.get(slidePath)?.get(relId);
+		if (!target) {
+			return;
+		}
+		this.zip.file(this.resolveImagePath(slidePath, target), smartArtDefinitionPartXml(xml));
 	}
 
 	/**
