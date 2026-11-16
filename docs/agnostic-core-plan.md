@@ -611,6 +611,10 @@ is the acceptance bar), and the area has its own tests and real parts from `src/
   (`chart/edit/group-subtype.ts`, intent `groupSubtype`) under the chart types and removal rules the
   object-tree writers use (`chart-neutral-save-subtype.ts`); `chart-subtype-migration.test.ts`
   saves each edit both ways over the corpus and classifies every part difference.
+  Group `varyColors`, bar direction, scatter style and the `standard` grouping flag edited on
+  their own go through `setChartVaryColors`, `setChartBarDirection`, `setChartScatterStyle` and
+  `setChartGrouping` (`chart-neutral-save-group-flags.ts`, `chart-group-flags-migration.test.ts`);
+  the object-tree writers had dropped the first three.
   One series of a vertical 2-D column, line or area chart can become XY (Scatter): the scatter
   group shares the category and value axes it leaves, with x values from the categories, markers
   in the series colour and smoothing off, as Excel 16 saves that edit (`setChartSeriesType`); the

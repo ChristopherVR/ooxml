@@ -52,6 +52,9 @@ export function planNeutralChartType(
 		};
 		edits.push((space) => setChartType(space, to));
 		probe.chartType = before.chartType;
+		// The switch wrote the direction the edited model asks for.
+		if (before.barDirection === undefined) delete probe.barDirection;
+		else probe.barDirection = before.barDirection;
 	}
 	if (probe.series.length === before.series.length)
 		probe.series.forEach((series, index) => {

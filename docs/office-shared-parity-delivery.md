@@ -312,6 +312,15 @@ pinning, JavaScript number caches, manual-layout number form, resolved outline c
 `c:shape` position). No fixture holds a pie-of-pie chart, so that case is unit evidence only. Cleared
 settings the object-tree writers keep remain on that path.
 
+Group settings on their own: `chart-neutral-save-group-flags.ts` claims `varyColors`, the bar
+direction, the scatter style and the `standard` grouping flag of a kept chart type through
+`setChartVaryColors`, `setChartBarDirection` (every group a bar group; the axes swap sides),
+`setChartScatterStyle` and `setChartGrouping`. A probe that saved each edit through the object-tree
+writers found that they wrote no `c:varyColors`, `c:barDir` or `c:scatterStyle` on an existing part,
+so those edits were lost on save. `chart-group-flags-migration.test.ts` saves each edit both ways:
+70, 31 and 2 parts reload with the edit through the neutral writer and none through the object-tree
+writers; the grouping flag reloads on all 8 3-D bar parts both ways (one to the same canonical XML).
+
 XY combinations: Excel 16, driven through its object model (`Series.ChartType = xlXYScatter` on a
 column or line series), saves a `c:scatterChart` that references the same category and value axes
 as the column or line group, with the categories as `c:xVal`, a 5 pt circle marker in the series
