@@ -15,6 +15,7 @@
  * @module ppt/ole-embed-parser
  */
 
+import { at } from '../../../geometry/indexed';
 import { isOle2CompoundFile } from '../utils/ole-embedded-extract';
 import { ENTRY_TYPE_ROOT, parseOle2 } from '../utils/ole2-parser';
 import { inflateZlib } from './deflate-utils';
@@ -31,7 +32,7 @@ export interface OleEmbedRef {
 	/** Persist id of this embed's `ExOleObjStg` (from `ExOleObjAtom`). */
 	persistIdRef: number;
 	/** `ProgIDAtom` string (recInstance 2 `CString`), when present. */
-	progId?: string;
+	progId?: string | undefined;
 }
 
 function readCString(view: DataView, rec: PptRecord): string {
@@ -94,7 +95,7 @@ function clsidToString(clsid: Uint8Array): string | undefined {
 	const d3 = view.getUint16(6, true).toString(16).padStart(4, '0');
 	let d4 = '';
 	for (let i = 8; i < 16; i++) {
-		d4 += clsid[i].toString(16).padStart(2, '0');
+		d4 += at(clsid, i).toString(16).padStart(2, '0');
 	}
 	return `${d1}-${d2}-${d3}-${d4.slice(0, 4)}-${d4.slice(4)}`.toUpperCase();
 }

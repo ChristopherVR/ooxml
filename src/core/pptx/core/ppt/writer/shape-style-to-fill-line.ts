@@ -98,6 +98,6 @@ export function resolveLine(style: ShapeStyle | undefined): WLine | undefined {
 		kind: 'line',
 		rgb: strip(style.strokeColor)!,
 		widthEmu: Math.max(1, Math.round((style.strokeWidth ?? 1) * EMU_PER_PX)),
-		dash,
+		...(dash !== undefined && { dash }),
 	};
 }

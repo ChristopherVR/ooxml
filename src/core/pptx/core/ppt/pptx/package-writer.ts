@@ -9,6 +9,8 @@
 
 import JSZip from 'jszip';
 
+import { at } from '../../../../geometry/indexed';
+
 import { SCHEME } from '../color-scheme';
 import type { PptDeck, PptSlideModel } from '../ppt-model';
 import type { HyperlinkRelAllocator } from './hyperlink-xml';
@@ -129,7 +131,7 @@ export async function buildPptxPackage(deck: PptDeck): Promise<ArrayBuffer> {
 	}
 
 	for (const [pictureIndex, fileNumber] of usage.fileNumbers) {
-		const picture = deck.pictures[pictureIndex];
+		const picture = at(deck.pictures, pictureIndex);
 		zip.file(`ppt/media/image${fileNumber}.${picture.extension}`, picture.bytes);
 	}
 
@@ -193,7 +195,7 @@ ${masterRels.join('\n')}
 			}
 			const relId = `rId${++relCounter}`;
 			relIdByPicture.set(pictureIndex, relId);
-			const picture = deck.pictures[pictureIndex];
+			const picture = at(deck.pictures, pictureIndex);
 			mediaRels.push(
 				`  <Relationship Id="${relId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image${fileNumber}.${picture.extension}"/>`,
 			);

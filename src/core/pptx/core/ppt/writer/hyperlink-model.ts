@@ -16,7 +16,7 @@ import type { WHyperlink, WHyperlinkKind } from './write-model';
 /** Context needed to resolve a `customShow` action to a concrete target. */
 export interface HyperlinkResolveContext {
 	slides: PptxSlide[];
-	customShows?: PptxCustomShow[];
+	customShows?: PptxCustomShow[] | undefined;
 }
 
 /**
@@ -74,7 +74,7 @@ export function resolveHyperlinkKind(
 				kind: 'customShow',
 				name: show.name,
 				firstSlideIndex: resolveCustomShowFirstSlideNumber(show, ctx.slides) - 1,
-				returnAfter: ea.returnAfter,
+				...(ea.returnAfter !== undefined && { returnAfter: ea.returnAfter }),
 			};
 		}
 		case 'openFile':
@@ -98,5 +98,16 @@ export function resolveHyperlink(
 		return undefined;
 	}
 	const target = resolveHyperlinkKind(pptxAction, ctx);
-	return target ? { target, tooltip: pptxAction.tooltip } : undefined;
+	return target
+		? { target, ...(pptxAction.tooltip !== undefined && { tooltip: pptxAction.tooltip }) }
+		: undefined;
+}
+
+/** {@link resolveHyperlink} as an object to spread: empty when there is no hyperlink. */
+export function hyperlinkField(
+	pptxAction: PptxAction | undefined,
+	ctx: HyperlinkResolveContext,
+): { hyperlink?: WHyperlink } {
+	const hyperlink = resolveHyperlink(pptxAction, ctx);
+	return hyperlink ? { hyperlink } : {};
 }

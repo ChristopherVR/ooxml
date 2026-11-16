@@ -49,10 +49,11 @@ export function extractText(
 		}
 	}
 	const bodies = collectTextBodies(ctx.view, start, end, ctx.scheme);
-	if (bodies.length === 0) {
+	const [first] = bodies;
+	if (!first) {
 		return undefined;
 	}
-	return buildTextBody(bodies[0], ctx.fonts, hyperlinkRanges);
+	return buildTextBody(first, ctx.fonts, hyperlinkRanges);
 }
 
 /** Read the placeholder type from the client data, when present. */

@@ -22,27 +22,27 @@ export interface EmuRect {
 /** A resolved text run. */
 export interface PptRun {
 	text: string;
-	bold?: boolean;
-	italic?: boolean;
-	underline?: boolean;
-	sizePt?: number;
-	colorRgb?: string;
-	fontName?: string;
+	bold?: boolean | undefined;
+	italic?: boolean | undefined;
+	underline?: boolean | undefined;
+	sizePt?: number | undefined;
+	colorRgb?: string | undefined;
+	fontName?: string | undefined;
 	/** Run-level (`MouseClickTextInteractiveInfoAtom`-anchored) hyperlink. */
-	hyperlink?: PptHyperlinkTarget;
+	hyperlink?: PptHyperlinkTarget | undefined;
 }
 
 /** A resolved paragraph. */
 export interface PptParagraph {
 	indentLevel: number;
-	align?: 'l' | 'ctr' | 'r' | 'just';
+	align?: 'l' | 'ctr' | 'r' | 'just' | undefined;
 	/** Explicitly toggled bullet; undefined leaves it to inherited styles. */
-	hasBullet?: boolean;
-	bulletChar?: string;
-	bulletFontName?: string;
-	bulletColorRgb?: string;
-	marginLeftEmu?: number;
-	indentEmu?: number;
+	hasBullet?: boolean | undefined;
+	bulletChar?: string | undefined;
+	bulletFontName?: string | undefined;
+	bulletColorRgb?: string | undefined;
+	marginLeftEmu?: number | undefined;
+	indentEmu?: number | undefined;
 	runs: PptRun[];
 }
 
@@ -77,20 +77,20 @@ export interface PptLine {
 	kind: 'line';
 	rgb: string;
 	widthEmu: number;
-	dash?: string;
-	headArrow?: string;
-	tailArrow?: string;
+	dash?: string | undefined;
+	headArrow?: string | undefined;
+	tailArrow?: string | undefined;
 }
 
 /** Common shape fields. */
 export interface PptShapeBase {
-	name?: string;
-	anchor?: EmuRect;
-	rotationDeg?: number;
-	flipH?: boolean;
-	flipV?: boolean;
+	name?: string | undefined;
+	anchor?: EmuRect | undefined;
+	rotationDeg?: number | undefined;
+	flipH?: boolean | undefined;
+	flipV?: boolean | undefined;
 	/** Shape-level (`MouseClickInteractiveInfoContainer` in `OfficeArtClientData`) hyperlink. */
-	actionClick?: PptHyperlinkTarget;
+	actionClick?: PptHyperlinkTarget | undefined;
 }
 
 /** A geometric shape or text box. */
@@ -98,11 +98,11 @@ export interface PptShape extends PptShapeBase {
 	kind: 'shape';
 	preset: string;
 	isConnector: boolean;
-	fill?: PptFill;
-	line?: PptLine | { kind: 'noLine' };
-	text?: PptTextBody;
+	fill?: PptFill | undefined;
+	line?: PptLine | { kind: 'noLine' } | undefined;
+	text?: PptTextBody | undefined;
 	/** ST_PlaceholderType when the shape is a placeholder. */
-	placeholderType?: string;
+	placeholderType?: string | undefined;
 }
 
 /** A picture referencing an entry in the deck picture list. */
@@ -159,15 +159,15 @@ export interface PptOleEmbedData {
 	 */
 	data: Uint8Array;
 	/** `ExOleEmbedContainer`'s `ProgIDAtom` string, when present. */
-	progId?: string;
+	progId?: string | undefined;
 	/** The nested storage's root CLSID, formatted `XXXXXXXX-XXXX-...`, when recoverable. */
-	clsId?: string;
+	clsId?: string | undefined;
 }
 
 /** A parsed slide. */
 export interface PptSlideModel {
 	/** Slide background solid fill, when specified on the slide itself. */
-	backgroundRgb?: string;
+	backgroundRgb?: string | undefined;
 	/** Whether the background should come from the master. */
 	followMasterBackground: boolean;
 	/** Whether master decorative shapes should show on this slide. */
@@ -184,16 +184,16 @@ export interface PptPictureData {
 
 /** Default text styles harvested from the main master. */
 export interface PptMasterTextLevel {
-	sizePt?: number;
-	bold?: boolean;
-	colorRgb?: string;
-	fontName?: string;
-	align?: 'l' | 'ctr' | 'r' | 'just';
-	bulletChar?: string;
-	bulletFontName?: string;
-	hasBullet?: boolean;
-	marginLeftEmu?: number;
-	indentEmu?: number;
+	sizePt?: number | undefined;
+	bold?: boolean | undefined;
+	colorRgb?: string | undefined;
+	fontName?: string | undefined;
+	align?: 'l' | 'ctr' | 'r' | 'just' | undefined;
+	bulletChar?: string | undefined;
+	bulletFontName?: string | undefined;
+	hasBullet?: boolean | undefined;
+	marginLeftEmu?: number | undefined;
+	indentEmu?: number | undefined;
 }
 
 /** The parsed deck. */
@@ -204,7 +204,7 @@ export interface PptDeck {
 	/** Shapes drawn on the main master (excluding placeholders). */
 	masterShapes: PptAnyShape[];
 	/** Master background color. */
-	masterBackgroundRgb?: string;
+	masterBackgroundRgb?: string | undefined;
 	/** Master (or document) color scheme. */
 	scheme: PptColorScheme;
 	/** Document font collection (index = FontIndexRef). */
@@ -222,5 +222,5 @@ export interface PptDeck {
 export interface PptRawTextWithStyles {
 	textType: number;
 	text: string;
-	styles?: PptStyleRuns;
+	styles?: PptStyleRuns | undefined;
 }

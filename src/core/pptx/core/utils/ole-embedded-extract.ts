@@ -95,8 +95,8 @@ function readAsciiZ(bytes: Uint8Array, offset: number): { value: string; next: n
 		end++;
 	}
 	let value = '';
-	for (let i = offset; i < end; i++) {
-		value += String.fromCharCode(bytes[i]);
+	for (const byte of bytes.subarray(offset, end)) {
+		value += String.fromCharCode(byte);
 	}
 	// Skip the terminating NUL when present.
 	return { value, next: end < bytes.length ? end + 1 : end };
@@ -153,7 +153,7 @@ export function decodeOle10Native(stream: Uint8Array): OleUnwrapResult | undefin
 
 	const data = stream.subarray(cursor, dataEnd);
 	const fileName = baseNameFromPath(sourcePath.value) ?? baseNameFromPath(label.value) ?? undefined;
-	return { fileName, data };
+	return { ...(fileName !== undefined && { fileName }), data };
 }
 
 /**

@@ -46,10 +46,10 @@ export function romanNumeral(n: number): string {
 	];
 	let remaining = Math.max(1, Math.min(n, 3999));
 	let result = '';
-	for (let i = 0; i < values.length; i++) {
-		while (remaining >= values[i]) {
+	for (const [i, value] of values.entries()) {
+		while (remaining >= value) {
 			result += numerals[i];
-			remaining -= values[i];
+			remaining -= value;
 		}
 	}
 	return result;

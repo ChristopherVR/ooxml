@@ -2,12 +2,12 @@ export function parseDataUrlToBytes(
 	dataUrl: string,
 ): { bytes: Uint8Array; extension: string } | null {
 	const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
-	if (!match) {
+	const [, mimeType, base64Payload] = match ?? [];
+	if (mimeType === undefined || base64Payload === undefined) {
 		return null;
 	}
 
-	const mime = match[1].toLowerCase();
-	const base64Payload = match[2];
+	const mime = mimeType.toLowerCase();
 
 	const extensionByMime: Record<string, string> = {
 		'image/jpeg': 'jpg',
@@ -138,8 +138,9 @@ export async function fetchUrlToBytes(
 		}
 
 		const arrayBuffer = await response.arrayBuffer();
-		const contentType = (response.headers.get('Content-Type') ?? 'application/octet-stream')
-			.split(';')[0]
+		const contentType = (
+			(response.headers.get('Content-Type') ?? 'application/octet-stream').split(';')[0] ?? ''
+		)
 			.trim()
 			.toLowerCase();
 

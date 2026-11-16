@@ -34,7 +34,7 @@ import type { PptRawText } from './text/text-atoms';
 /** Everything needed from the compound file. */
 export interface PptStreams {
 	powerPointDocument: Uint8Array;
-	pictures?: Uint8Array;
+	pictures?: Uint8Array | undefined;
 	offsetToCurrentEdit: number;
 	/**
 	 * True when the caller has already RC4-decrypted `powerPointDocument`
@@ -44,7 +44,7 @@ export interface PptStreams {
 	 * reference is left in place by design; decryption does not rewrite the
 	 * administrative records it deliberately leaves untouched).
 	 */
-	decrypted?: boolean;
+	decrypted?: boolean | undefined;
 }
 
 /** Parse the font collection into font family names. */

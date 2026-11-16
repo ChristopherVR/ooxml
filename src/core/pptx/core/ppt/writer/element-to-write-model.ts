@@ -15,9 +15,9 @@
 import type { GroupPptxElement, PptxCustomShow, PptxElement, PptxSlide } from '../../types';
 import type { PptxCompatibilityWarning } from '../../types/metadata';
 import { degradeElement, placeholderShape } from './degrade-element';
-import { elementRectEmu, withoutEmuGeometry } from './element-rect';
+import { elementPlacement, elementRectEmu, withoutEmuGeometry } from './element-rect';
 import type { HyperlinkResolveContext } from './hyperlink-model';
-import { resolveHyperlink } from './hyperlink-model';
+import { hyperlinkField } from './hyperlink-model';
 import { convertMedia } from './media-element-convert';
 import { convertOle } from './ole-element-convert';
 import type { ResolvedPictures } from './picture-resolve';
@@ -53,15 +53,15 @@ export interface ConvertContext {
 	 * before conversion so `media-element-convert.ts` can embed real audio
 	 * without mutating the live element tree.
 	 */
-	resolvedMedia?: Map<string, Uint8Array>;
+	resolvedMedia?: Map<string, Uint8Array> | undefined;
 	/**
 	 * Per-element `metroBlob` packages (element id -> ZIP bytes) built from
 	 * the deck's own `.pptx` serialisation by `metro-blob-collect.ts`, so ink,
 	 * SmartArt, charts and 3D models reopen natively in PowerPoint 2007+.
 	 */
-	metroBlobs?: Map<string, Uint8Array>;
+	metroBlobs?: Map<string, Uint8Array> | undefined;
 	/** Pictures the async pre-pass resolved (`picture-resolve.ts`), keyed by the live element. */
-	resolvedPictures?: ResolvedPictures;
+	resolvedPictures?: ResolvedPictures | undefined;
 }
 
 const PLACEHOLDER_TYPES = new Set(['title', 'body', 'ctrTitle', 'subTitle']);
@@ -80,10 +80,12 @@ function buildTextBody(
 		return undefined;
 	}
 	const el = element as PptxElement & {
-		textSegments?: import('../../types/text').TextSegment[];
-		text?: string;
-		textStyle?: import('../../types/text').TextStyle;
-		paragraphIndents?: Array<{ marginLeft?: number; indent?: number }>;
+		textSegments?: import('../../types/text').TextSegment[] | undefined;
+		text?: string | undefined;
+		textStyle?: import('../../types/text').TextStyle | undefined;
+		paragraphIndents?:
+			| Array<{ marginLeft?: number | undefined; indent?: number | undefined }>
+			| undefined;
 	};
 	const paragraphs = textSegmentsToParagraphs(el.textSegments ?? [], el.paragraphIndents, {
 		text: el.text,
@@ -119,43 +121,42 @@ function textTypeFor(placeholderType: WShape['placeholderType']): number {
 function convertShapeLike(element: PptxElement, ctx: ConvertContext): WShape {
 	const isText = element.type === 'text';
 	const el = element as PptxElement & {
-		shapeType?: string;
-		shapeStyle?: import('../../types/shape-style').ShapeStyle;
+		shapeType?: string | undefined;
+		shapeStyle?: import('../../types/shape-style').ShapeStyle | undefined;
 	};
 	const spt = sptForPreset(el.shapeType, isText);
 	const placeholderType = toPlaceholderType(element.placeholderType);
+	const placement = elementPlacement(element);
+	const fill = resolveFill(el.shapeStyle);
+	const line = resolveLine(el.shapeStyle);
+	const text = buildTextBody(element, textTypeFor(placeholderType), ctx.hyperlinkCtx);
 	return {
 		kind: 'shape',
 		spt,
 		isConnector: element.type === 'connector',
-		name: element.name,
-		anchor: elementRectEmu(element),
-		rotationDeg: element.rotation,
-		flipH: element.flipHorizontal,
-		flipV: element.flipVertical,
-		fill: resolveFill(el.shapeStyle),
-		line: resolveLine(el.shapeStyle),
-		text: buildTextBody(element, textTypeFor(placeholderType), ctx.hyperlinkCtx),
-		placeholderType,
-		hyperlink: resolveHyperlink(element.actionClick, ctx.hyperlinkCtx),
+		...placement,
+		...(fill !== undefined && { fill }),
+		...(line !== undefined && { line }),
+		...(text !== undefined && { text }),
+		...(placeholderType !== undefined && { placeholderType }),
+		...hyperlinkField(element.actionClick, ctx.hyperlinkCtx),
 	};
 }
 
 /** Convert an image/picture element, embedding PNG/JPEG or degrading with a warning. */
 function convertPicture(element: PptxElement, ctx: ConvertContext): WAnyShape {
-	const el = element as PptxElement & { imageData?: string; altText?: string };
+	const el = element as PptxElement & {
+		imageData?: string | undefined;
+		altText?: string | undefined;
+	};
 	const picture = ctx.resolvedPictures?.get(element) ?? dataUrlToPicture(el.imageData);
 	if (picture) {
 		ctx.pictures.push(picture);
 		return {
 			kind: 'picture',
 			pictureIndex: ctx.pictures.length - 1,
-			name: element.name,
-			anchor: elementRectEmu(element),
-			rotationDeg: element.rotation,
-			flipH: element.flipHorizontal,
-			flipV: element.flipVertical,
-			hyperlink: resolveHyperlink(element.actionClick, ctx.hyperlinkCtx),
+			...elementPlacement(element),
+			...hyperlinkField(element.actionClick, ctx.hyperlinkCtx),
 		};
 	}
 	ctx.report({
@@ -176,14 +177,10 @@ function convertGroup(element: GroupPptxElement, ctx: ConvertContext): WGroup {
 	const local = elementRectEmu(withoutEmuGeometry(element));
 	return {
 		kind: 'group',
-		name: element.name,
-		anchor: elementRectEmu(element),
+		...elementPlacement(element),
 		childRect: { x: 0, y: 0, w: local.w, h: local.h },
-		rotationDeg: element.rotation,
-		flipH: element.flipHorizontal,
-		flipV: element.flipVertical,
 		children: element.children.map((child) => convertElement(withoutEmuGeometry(child), ctx)),
-		hyperlink: resolveHyperlink(element.actionClick, ctx.hyperlinkCtx),
+		...hyperlinkField(element.actionClick, ctx.hyperlinkCtx),
 	};
 }
 
@@ -239,10 +236,11 @@ function convertSlide(slide: PptxSlide, ctx: ConvertContext): WSlide {
 						hyperlinkCtx: ctx.hyperlinkCtx,
 					})
 				: undefined;
+	const backgroundRgb = slide.backgroundColor?.replace(/^#/u, '');
 	return {
-		backgroundRgb: slide.backgroundColor?.replace(/^#/u, ''),
+		...(backgroundRgb !== undefined && { backgroundRgb }),
 		shapes: slide.elements.map((el) => convertElement(el, ctx)),
-		notesParagraphs,
+		...(notesParagraphs !== undefined && { notesParagraphs }),
 	};
 }
 

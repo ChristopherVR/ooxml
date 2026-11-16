@@ -20,7 +20,7 @@ export interface PptRawText {
 	/** Text with \r paragraph marks and \x0B line breaks. */
 	text: string;
 	/** Style runs, when a StyleTextPropAtom followed the text. */
-	styles?: PptStyleRuns;
+	styles?: PptStyleRuns | undefined;
 }
 
 /** Windows-1252 high range (0x80-0x9F) to Unicode. */

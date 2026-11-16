@@ -28,9 +28,9 @@ export function placeholderShape(element: PptxElement, label: string): WShape {
 		kind: 'shape',
 		spt: 1,
 		isConnector: false,
-		name: element.name,
+		...(element.name !== undefined && { name: element.name }),
 		anchor: elementRectEmu(element),
-		rotationDeg: element.rotation,
+		...(element.rotation !== undefined && { rotationDeg: element.rotation }),
 		fill: { kind: 'solid', rgb: 'F2F2F2' },
 		line: { kind: 'line', rgb: 'BFBFBF', widthEmu: 9525 },
 		text: {
@@ -51,7 +51,8 @@ export function degradeElement(
 	label: string,
 ): WAnyShape {
 	const preview =
-		(element as { previewImageData?: string }).previewImageData ?? pictureSourceOf(element)?.inline;
+		(element as { previewImageData?: string | undefined }).previewImageData ??
+		pictureSourceOf(element)?.inline;
 	const picture = ctx.resolvedPictures?.get(element) ?? dataUrlToPicture(preview);
 	const metroBlob = ctx.metroBlobs?.get(element.id);
 	ctx.report(
@@ -82,11 +83,11 @@ export function degradeElement(
 		return {
 			kind: 'picture',
 			pictureIndex: ctx.pictures.length - 1,
-			name: element.name,
+			...(element.name !== undefined && { name: element.name }),
 			anchor: elementRectEmu(element),
-			rotationDeg: element.rotation,
-			metroBlob,
+			...(element.rotation !== undefined && { rotationDeg: element.rotation }),
+			...(metroBlob !== undefined && { metroBlob }),
 		};
 	}
-	return { ...placeholderShape(element, label), metroBlob };
+	return { ...placeholderShape(element, label), ...(metroBlob !== undefined && { metroBlob }) };
 }

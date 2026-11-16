@@ -9,6 +9,7 @@
  * @module ppt/escher/properties
  */
 
+import { at } from '../../../../geometry/indexed';
 import type { PptRecord } from '../record-stream';
 
 /** Well-known OfficeArt property ids used by the importer. */
@@ -121,7 +122,7 @@ export function rotationToDegrees(raw: number): number {
 export function decodeComplexString(payload: Uint8Array): string {
 	let out = '';
 	for (let i = 0; i + 1 < payload.length; i += 2) {
-		const code = payload[i] | (payload[i + 1] << 8);
+		const code = at(payload, i) | (at(payload, i + 1) << 8);
 		if (code === 0) {
 			break;
 		}

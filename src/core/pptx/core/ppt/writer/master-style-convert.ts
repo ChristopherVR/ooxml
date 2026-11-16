@@ -10,6 +10,7 @@
  * @module ppt/writer/master-style-convert
  */
 
+import { definedProps } from '../../../../docx/defined-props';
 import { EMU_PER_PX } from '../../constants';
 import type { PlaceholderTextLevelStyle } from '../../types/element-base';
 import type { PptxMasterTextStyles, PptxTextStyleLevels } from '../../types/masters';
@@ -37,8 +38,8 @@ const ALIGN_MAP: Record<string, WParagraph['align']> = {
 
 /** The deck theme's major (heading) and minor (body) Latin faces. */
 export interface ThemeFonts {
-	major?: string;
-	minor?: string;
+	major?: string | undefined;
+	minor?: string | undefined;
 }
 
 function fontNameOf(style: PlaceholderTextLevelStyle, themeFonts: ThemeFonts): string | undefined {
@@ -62,14 +63,14 @@ function hexOf(color: string | undefined): string | undefined {
 function toLevel(style: PlaceholderTextLevelStyle = {}, themeFonts: ThemeFonts = {}): WMasterLevel {
 	const bulletChar = style.bulletNone ? undefined : style.bulletChar;
 	return {
-		paragraph: {
+		paragraph: definedProps({
 			align: style.alignment ? ALIGN_MAP[style.alignment] : undefined,
 			hasBullet: style.bulletNone ? false : bulletChar ? true : undefined,
 			bulletChar,
 			bulletColorRgb: hexOf(style.bulletColor),
 			marginLeftEmu: style.marginLeft !== undefined ? style.marginLeft * EMU_PER_PX : undefined,
 			indentEmu: style.indent !== undefined ? style.indent * EMU_PER_PX : undefined,
-		},
+		}),
 		// Explicit, as PowerPoint's own master levels are (full CF masks): a
 		// binary master level otherwise inherits bold/italic from the level
 		// above it, unlike an OOXML `a:lvlNpPr`.
@@ -77,9 +78,11 @@ function toLevel(style: PlaceholderTextLevelStyle = {}, themeFonts: ThemeFonts =
 			bold: style.bold ?? false,
 			italic: style.italic ?? false,
 			underline: false,
-			sizePt: style.fontSize !== undefined ? (style.fontSize * 72) / 96 : undefined,
-			colorRgb: hexOf(style.color),
-			fontName: fontNameOf(style, themeFonts),
+			...definedProps({
+				sizePt: style.fontSize !== undefined ? (style.fontSize * 72) / 96 : undefined,
+				colorRgb: hexOf(style.color),
+				fontName: fontNameOf(style, themeFonts),
+			}),
 		},
 	};
 }
@@ -114,11 +117,11 @@ export function convertMasterTextStyles(
 	if (!styles) {
 		return undefined;
 	}
-	const out: WMasterTextStyles = {
+	const out: WMasterTextStyles = definedProps({
 		title: toLevels(styles.titleStyle, TITLE_LEVELS, themeFonts),
 		body: toLevels(styles.bodyStyle, PPT_MASTER_LEVELS, themeFonts),
 		other: toLevels(styles.otherStyle, PPT_MASTER_LEVELS, themeFonts),
-	};
+	});
 	return out.title || out.body || out.other ? out : undefined;
 }
 

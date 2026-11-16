@@ -23,8 +23,8 @@ const CRC_TABLE = (() => {
 
 function crc32(bytes: Uint8Array): number {
 	let crc = 0xffffffff;
-	for (let i = 0; i < bytes.length; i++) {
-		crc = CRC_TABLE[(crc ^ bytes[i]) & 0xff] ^ (crc >>> 8);
+	for (const byte of bytes) {
+		crc = (CRC_TABLE[(crc ^ byte) & 0xff] ?? 0) ^ (crc >>> 8);
 	}
 	return (crc ^ 0xffffffff) >>> 0;
 }
@@ -52,14 +52,15 @@ function filterRow(
 	outOffset: number,
 ): void {
 	const row = y * stride;
-	const left = (i: number): number => (i >= 4 ? rgba[row + i - 4] : 0);
-	const up = (i: number): number => (y > 0 ? rgba[row - stride + i] : 0);
+	// Every index below lies inside the row (or the row above), so `?? 0` never applies.
+	const left = (i: number): number => (i >= 4 ? (rgba[row + i - 4] ?? 0) : 0);
+	const up = (i: number): number => (y > 0 ? (rgba[row - stride + i] ?? 0) : 0);
 	const cost = (d: number): number => (d < 128 ? d : 256 - d);
 	let none = 0;
 	let sub = 0;
 	let upCost = 0;
 	for (let i = 0; i < stride; i++) {
-		const v = rgba[row + i];
+		const v = rgba[row + i] ?? 0;
 		none += cost(v);
 		sub += cost((v - left(i)) & 0xff);
 		upCost += cost((v - up(i)) & 0xff);
@@ -67,7 +68,7 @@ function filterRow(
 	const type = sub < none && sub <= upCost ? 1 : upCost < none ? 2 : 0;
 	out[outOffset] = type;
 	for (let i = 0; i < stride; i++) {
-		const v = rgba[row + i];
+		const v = rgba[row + i] ?? 0;
 		out[outOffset + 1 + i] =
 			type === 0 ? v : type === 1 ? (v - left(i)) & 0xff : (v - up(i)) & 0xff;
 	}

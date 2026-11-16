@@ -46,7 +46,7 @@ export type ResolvedPictures = Map<PptxElement, WPictureData>;
 /** How {@link resolvePictureSources} turns pictures it cannot embed as they are into rasters. */
 export interface ResolvePictureOptions {
 	/** Rasterises an SVG with no raster fallback; without it the DOM's own renderer is used. */
-	rasterizeSvg?: PptxSvgRasterizer;
+	rasterizeSvg?: PptxSvgRasterizer | undefined;
 }
 
 /** Decode a TIFF's first page to PNG through `utif` (DOM-free), or `undefined`. */

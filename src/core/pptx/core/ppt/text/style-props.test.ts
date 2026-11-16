@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import { DEFAULT_SCHEME } from '../color-scheme';
 import { parseStyleTextPropAtom } from './style-props';
+import { at } from '../../../test-support/access';
 
 function parse(hex: string, textLength: number) {
 	const bytes = new Uint8Array(hex.split(/\s+/).map((h) => parseInt(h, 16)));
@@ -25,7 +26,7 @@ describe('parseStyleTextPropAtom', () => {
 			13,
 		);
 		expect(runs.paragraphRuns).toHaveLength(1);
-		expect(runs.paragraphRuns[0].count).toBe(14);
+		expect(at(runs.paragraphRuns, 0).count).toBe(14);
 		expect(runs.charRuns).toHaveLength(4);
 		expect(runs.charRuns[0]).toMatchObject({
 			count: 7,
@@ -50,7 +51,7 @@ describe('parseStyleTextPropAtom', () => {
 			12,
 		);
 		expect(runs.paragraphRuns).toHaveLength(1);
-		expect(runs.paragraphRuns[0].count).toBe(13);
+		expect(at(runs.paragraphRuns, 0).count).toBe(13);
 		expect(runs.charRuns).toHaveLength(1);
 		expect(runs.charRuns[0]).toMatchObject({ count: 13, colorRgb: '000000' });
 	});
@@ -59,7 +60,7 @@ describe('parseStyleTextPropAtom', () => {
 		// One char run, color index 2 (shadows slot).
 		// PF run first, then the CF run.
 		const runs = parse('06 00 00 00 00 00 00 00 00 00 06 00 00 00 00 00 04 00 00 00 00 02', 5);
-		expect(runs.charRuns[0].colorRgb).toBe(DEFAULT_SCHEME[2]);
+		expect(at(runs.charRuns, 0).colorRgb).toBe(DEFAULT_SCHEME[2]);
 	});
 
 	it('survives truncated atoms without throwing', () => {

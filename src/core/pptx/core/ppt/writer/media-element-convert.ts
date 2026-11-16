@@ -8,9 +8,9 @@
 
 import type { PptxElement } from '../../types';
 import { degradeElement } from './degrade-element';
-import { elementRectEmu } from './element-rect';
+import { elementPlacement } from './element-rect';
 import type { ConvertContext } from './element-to-write-model';
-import { resolveHyperlink } from './hyperlink-model';
+import { hyperlinkField } from './hyperlink-model';
 import { dataUrlToWav } from './raster-utils';
 import type { WAnyShape } from './write-model';
 
@@ -23,9 +23,9 @@ import type { WAnyShape } from './write-model';
  */
 export function convertMedia(element: PptxElement, ctx: ConvertContext): WAnyShape {
 	const el = element as PptxElement & {
-		mediaType?: string;
-		mediaData?: string;
-		mediaPath?: string;
+		mediaType?: string | undefined;
+		mediaData?: string | undefined;
+		mediaPath?: string | undefined;
 	};
 	if (el.mediaType === 'audio') {
 		const wavBytes =
@@ -36,12 +36,8 @@ export function convertMedia(element: PptxElement, ctx: ConvertContext): WAnySha
 				kind: 'media',
 				wavBytes,
 				soundName: element.name ?? 'Sound',
-				name: element.name,
-				anchor: elementRectEmu(element),
-				rotationDeg: element.rotation,
-				flipH: element.flipHorizontal,
-				flipV: element.flipVertical,
-				hyperlink: resolveHyperlink(element.actionClick, ctx.hyperlinkCtx),
+				...elementPlacement(element),
+				...hyperlinkField(element.actionClick, ctx.hyperlinkCtx),
 			};
 		}
 	}

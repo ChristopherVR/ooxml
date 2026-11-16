@@ -38,8 +38,8 @@ const JUMP_VERB_MAP: Record<string, ElementActionType> = {
 
 /** Read a `key=value` pair out of a lowercased `ppaction://verb?query` string. */
 function actionQueryParam(actionStr: string, key: string): string | undefined {
-	const match = actionStr.match(new RegExp(`[?&]${key}=([^&]*)`));
-	return match ? decodeURIComponent(match[1]) : undefined;
+	const value = actionStr.match(new RegExp(`[?&]${key}=([^&]*)`))?.[1];
+	return value !== undefined ? decodeURIComponent(value) : undefined;
 }
 
 /**

@@ -23,11 +23,11 @@ export interface TextHyperlinkRange {
 
 /** Raw strings parsed from one `ExHyperlinkContainer`, keyed by `ExHyperlinkId`. */
 export interface RawHyperlinkStrings {
-	friendlyName?: string;
+	friendlyName?: string | undefined;
 	/** `TargetAtom` (recInstance 1): external destination (URL, file path). */
-	target?: string;
+	target?: string | undefined;
 	/** `LocationAtom` (recInstance 3): same-file destination (slide/custom show). */
-	location?: string;
+	location?: string | undefined;
 }
 
 /** [MS-PPT] LinkToEnum values this reader understands (mirrors the writer's `LT`). */
@@ -121,8 +121,8 @@ function parseSlideLocation(location: string | undefined): number | undefined {
 	if (!location) {
 		return undefined;
 	}
-	const match = /^\d+,(\d+),$/u.exec(location);
-	return match ? Number.parseInt(match[1], 10) - 1 : undefined;
+	const slideNumber = /^\d+,(\d+),$/u.exec(location)?.[1];
+	return slideNumber !== undefined ? Number.parseInt(slideNumber, 10) - 1 : undefined;
 }
 
 /**

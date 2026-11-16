@@ -4,6 +4,7 @@
  * @module ppt/pptx/master-writer
  */
 
+import { at } from '../../../../geometry/indexed';
 import { SCHEME } from '../color-scheme';
 import type { PptDeck, PptMasterTextLevel } from '../ppt-model';
 import { shapeXml } from './shape-writer';
@@ -60,7 +61,7 @@ function styleLevels(levels: PptMasterTextLevel[], fallbackSizePt: number): stri
 
 /** Generate ppt/slideMasters/slideMaster1.xml. */
 export function slideMasterXml(deck: PptDeck, ctx: ShapeWriterContext): string {
-	const backgroundRgb = deck.masterBackgroundRgb ?? deck.scheme[SCHEME.background];
+	const backgroundRgb = deck.masterBackgroundRgb ?? at(deck.scheme, SCHEME.background);
 	const shapes = deck.masterShapes.map((shape) => shapeXml(shape, ctx)).join('');
 	return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <p:sldMaster ${XMLNS}>
@@ -105,7 +106,8 @@ export function slideLayoutXml(): string {
  * title text -> dk2, fills -> accent1, accents -> accent2/3.
  */
 export function themeXml(deck: PptDeck): string {
-	const s = deck.scheme;
+	// A .ppt colour scheme always holds its eight slots.
+	const s = (slot: number): string => at(deck.scheme, slot);
 	const majorFont = deck.fonts[0] ?? 'Arial';
 	const minorFont = deck.fonts[0] ?? 'Arial';
 	const clr = (name: string, value: string): string =>
@@ -114,18 +116,18 @@ export function themeXml(deck: PptDeck): string {
 <a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="Imported PPT Theme">
   <a:themeElements>
     <a:clrScheme name="Imported PPT">
-      ${clr('dk1', s[SCHEME.textAndLines])}
-      ${clr('lt1', s[SCHEME.background])}
-      ${clr('dk2', s[SCHEME.titleText])}
-      ${clr('lt2', s[SCHEME.shadows])}
-      ${clr('accent1', s[SCHEME.fills])}
-      ${clr('accent2', s[SCHEME.accent1])}
-      ${clr('accent3', s[SCHEME.accent2])}
-      ${clr('accent4', s[SCHEME.accent3])}
-      ${clr('accent5', s[SCHEME.accent1])}
-      ${clr('accent6', s[SCHEME.accent2])}
-      ${clr('hlink', s[SCHEME.accent2])}
-      ${clr('folHlink', s[SCHEME.accent3])}
+      ${clr('dk1', s(SCHEME.textAndLines))}
+      ${clr('lt1', s(SCHEME.background))}
+      ${clr('dk2', s(SCHEME.titleText))}
+      ${clr('lt2', s(SCHEME.shadows))}
+      ${clr('accent1', s(SCHEME.fills))}
+      ${clr('accent2', s(SCHEME.accent1))}
+      ${clr('accent3', s(SCHEME.accent2))}
+      ${clr('accent4', s(SCHEME.accent3))}
+      ${clr('accent5', s(SCHEME.accent1))}
+      ${clr('accent6', s(SCHEME.accent2))}
+      ${clr('hlink', s(SCHEME.accent2))}
+      ${clr('folHlink', s(SCHEME.accent3))}
     </a:clrScheme>
     <a:fontScheme name="Imported PPT">
       <a:majorFont><a:latin typeface="${esc(majorFont)}"/><a:ea typeface=""/><a:cs typeface=""/></a:majorFont>

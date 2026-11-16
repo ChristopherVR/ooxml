@@ -100,7 +100,7 @@ export interface MetroBlobInput {
 	/** The complete package-root element (see `metro-blob-xml.ts`). */
 	rootXml: string;
 	/** The element's `cNvPr` id, echoed into `downrev.xml`. */
-	shapeId?: string;
+	shapeId?: string | undefined;
 	parts: MetroParts;
 }
 

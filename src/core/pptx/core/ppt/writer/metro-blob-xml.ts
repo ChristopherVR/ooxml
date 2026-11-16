@@ -24,15 +24,15 @@ export interface MetroFragment {
 	/** Relationship ids (slide-relative) the fragment references via `r:*` attributes. */
 	relIds: string[];
 	/** The element's `cNvPr` id, echoed into the package's `downrev` part. */
-	shapeId?: string;
+	shapeId?: string | undefined;
 }
 
 /** How a model element is matched to its saved XML. */
 export interface MetroFragmentMatch {
 	/** `cNvPr/@id`; preferred when known. */
-	shapeId?: string;
+	shapeId?: string | undefined;
 	/** `cNvPr/@name`; used only when no `shapeId` is known and the name is unique. */
-	name?: string;
+	name?: string | undefined;
 }
 
 const TAGS: ReadonlyArray<{ tag: string; kind: MetroBlobKind }> = [
@@ -43,8 +43,8 @@ const TAGS: ReadonlyArray<{ tag: string; kind: MetroBlobKind }> = [
 interface Candidate {
 	kind: MetroBlobKind;
 	xml: string;
-	id?: string;
-	name?: string;
+	id?: string | undefined;
+	name?: string | undefined;
 }
 
 function readAttr(tag: string, attr: string): string | undefined {

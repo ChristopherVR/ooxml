@@ -89,7 +89,7 @@ function litLen(sink: BitSink, sym: number): void {
 
 function tableIndex(base: number[], value: number): number {
 	let i = base.length - 1;
-	while (base[i] > value) {
+	while ((base[i] ?? 0) > value) {
 		i--;
 	}
 	return i;
@@ -98,8 +98,8 @@ function tableIndex(base: number[], value: number): number {
 function adler32(bytes: Uint8Array): number {
 	let a = 1;
 	let b = 0;
-	for (let i = 0; i < bytes.length; i++) {
-		a = (a + bytes[i]) % 65521;
+	for (const byte of bytes) {
+		a = (a + byte) % 65521;
 		b = (b + a) % 65521;
 	}
 	return ((b << 16) | a) >>> 0;
@@ -113,12 +113,17 @@ export function zlibDeflate(data: Uint8Array): Uint8Array {
 
 	const head = new Int32Array(1 << HASH_BITS).fill(-1);
 	const prev = new Int32Array(data.length);
+	// Callers keep `i + MIN_MATCH <= data.length`, so the `?? 0` reads below never apply.
 	const hashAt = (i: number): number =>
-		Math.imul((data[i] << 10) ^ (data[i + 1] << 5) ^ data[i + 2], 2654435761) >>> (32 - HASH_BITS);
+		Math.imul(
+			((data[i] ?? 0) << 10) ^ ((data[i + 1] ?? 0) << 5) ^ (data[i + 2] ?? 0),
+			2654435761,
+		) >>>
+		(32 - HASH_BITS);
 	const insert = (i: number): void => {
 		if (i + MIN_MATCH <= data.length) {
 			const h = hashAt(i);
-			prev[i] = head[h];
+			prev[i] = head[h] ?? -1;
 			head[h] = i;
 		}
 	};
@@ -129,7 +134,7 @@ export function zlibDeflate(data: Uint8Array): Uint8Array {
 		let bestDist = 0;
 		if (i + MIN_MATCH <= data.length) {
 			const limit = Math.min(MAX_MATCH, data.length - i);
-			let cand = head[hashAt(i)];
+			let cand = head[hashAt(i)] ?? -1;
 			let chain = MAX_CHAIN;
 			while (cand >= 0 && i - cand <= WINDOW && chain-- > 0) {
 				let l = 0;
@@ -143,22 +148,22 @@ export function zlibDeflate(data: Uint8Array): Uint8Array {
 						break;
 					}
 				}
-				cand = prev[cand];
+				cand = prev[cand] ?? -1;
 			}
 		}
 		if (bestLen >= MIN_MATCH) {
 			const li = tableIndex(LEN_BASE, bestLen);
 			litLen(sink, 257 + li);
-			sink.bits(bestLen - LEN_BASE[li], LEN_EXTRA[li]);
+			sink.bits(bestLen - (LEN_BASE[li] ?? 0), LEN_EXTRA[li] ?? 0);
 			const di = tableIndex(DIST_BASE, bestDist);
 			sink.code(di, 5);
-			sink.bits(bestDist - DIST_BASE[di], DIST_EXTRA[di]);
+			sink.bits(bestDist - (DIST_BASE[di] ?? 0), DIST_EXTRA[di] ?? 0);
 			for (let k = 0; k < bestLen; k++) {
 				insert(i + k);
 			}
 			i += bestLen;
 		} else {
-			litLen(sink, data[i]);
+			litLen(sink, data[i] ?? 0);
 			insert(i);
 			i++;
 		}

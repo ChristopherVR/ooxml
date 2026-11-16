@@ -17,6 +17,7 @@
  * @module ppt/writer/master-roundtrip-writer
  */
 
+import { definedProps } from '../../../../docx/defined-props';
 import JSZip from 'jszip';
 import { openPptxZip } from '../../utils/zip-open';
 
@@ -98,13 +99,17 @@ export async function buildMasterRoundTrip(
 ): Promise<WMasterRoundTrip> {
 	return {
 		placeholders: source.placeholders,
-		schemeColors: source.schemeColors,
-		themeFonts: source.themeFonts,
-		oartTextStyles: source.txStylesXml
-			? await buildOArtTextStylesPackage(source.txStylesXml)
-			: undefined,
-		theme: source.themeXml ? await buildThemePackage(source.themeXml) : undefined,
-		colorMapping: source.clrMapAttributes ? buildColorMapping(source.clrMapAttributes) : undefined,
+		themeFonts: definedProps(source.themeFonts),
+		...definedProps({
+			schemeColors: source.schemeColors,
+			oartTextStyles: source.txStylesXml
+				? await buildOArtTextStylesPackage(source.txStylesXml)
+				: undefined,
+			theme: source.themeXml ? await buildThemePackage(source.themeXml) : undefined,
+			colorMapping: source.clrMapAttributes
+				? buildColorMapping(source.clrMapAttributes)
+				: undefined,
+		}),
 	};
 }
 

@@ -73,7 +73,7 @@ export function sniffImageFormat(bytes: Uint8Array): SniffedImageFormat | undefi
 	}
 	if (
 		(b[0] === 0xd7 && b[1] === 0xcd && b[2] === 0xc6 && b[3] === 0x9a) ||
-		(b[0] <= 2 && b[1] === 0 && b[2] === 9 && b[3] === 0)
+		(b[0] !== undefined && b[0] <= 2 && b[1] === 0 && b[2] === 9 && b[3] === 0)
 	) {
 		return 'wmf'; // placeable header, or a bare META_HEADER (type 1/2, headerSize 9)
 	}

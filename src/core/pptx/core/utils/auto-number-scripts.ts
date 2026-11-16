@@ -93,7 +93,9 @@ export function toHebrewNumeral(n: number): string {
 	const tens = ['', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ'];
 	const ones = ['', 'א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט'];
 	const result =
-		hundreds[Math.floor(value / 100)] + tens[Math.floor((value % 100) / 10)] + ones[value % 10];
+		(hundreds[Math.floor(value / 100)] ?? '') +
+		(tens[Math.floor((value % 100) / 10)] ?? '') +
+		(ones[value % 10] ?? '');
 	return result.replace('יה', 'טו').replace('יו', 'טז');
 }
 
@@ -107,7 +109,9 @@ export function toArabicAbjadNumeral(n: number): string {
 	const tens = ['', 'ي', 'ك', 'ل', 'م', 'ن', 'س', 'ع', 'ف', 'ص'];
 	const ones = ['', 'ا', 'ب', 'ج', 'د', 'ه', 'و', 'ز', 'ح', 'ط'];
 	return (
-		hundreds[Math.floor(value / 100)] + tens[Math.floor((value % 100) / 10)] + ones[value % 10]
+		(hundreds[Math.floor(value / 100)] ?? '') +
+		(tens[Math.floor((value % 100) / 10)] ?? '') +
+		(ones[value % 10] ?? '')
 	);
 }
 
@@ -130,7 +134,7 @@ function cjkUnder10000(x: number, digits: ReadonlyArray<string>): string {
 			result += digits[0];
 			zeroPending = false;
 		}
-		result += digits[digit] + smallUnits[unitPos];
+		result += (digits[digit] ?? '') + (smallUnits[unitPos] ?? '');
 		started = true;
 	}
 	return result;

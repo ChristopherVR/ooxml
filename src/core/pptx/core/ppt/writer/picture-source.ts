@@ -12,11 +12,11 @@ import type { PptxElement } from '../../types';
 /** A picture's inline URL (data: or blob:) and/or its package part path. */
 export interface PictureSource {
 	/** Inline `data:`/`blob:` URL, when the element carries one. */
-	inline?: string;
+	inline?: string | undefined;
 	/** Package part path of the picture itself. */
-	partPath?: string;
+	partPath?: string | undefined;
 	/** An SVG picture's `asvg:svgBlip` part, used when there is no raster at all. */
-	svgPath?: string;
+	svgPath?: string | undefined;
 }
 
 function isInlineUrl(value: string | undefined): value is string {

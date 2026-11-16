@@ -51,8 +51,8 @@ function sliceCharRuns(
 	if (segments.length === 0) {
 		segments.push({ start, end, props: charRuns[charRuns.length - 1] });
 	} else {
-		const last = segments[segments.length - 1];
-		if (last.end < end) {
+		const last = segments.at(-1);
+		if (last && last.end < end) {
 			segments.push({ start: last.end, end, props: last.props });
 		}
 	}
@@ -72,7 +72,7 @@ function splitByHyperlinks(
 	start: number;
 	end: number;
 	props: PptCharProps | undefined;
-	hyperlink?: TextHyperlinkRange['target'];
+	hyperlink?: TextHyperlinkRange['target'] | undefined;
 }> {
 	if (hyperlinkRanges.length === 0) {
 		return segments;
@@ -81,7 +81,7 @@ function splitByHyperlinks(
 		start: number;
 		end: number;
 		props: PptCharProps | undefined;
-		hyperlink?: TextHyperlinkRange['target'];
+		hyperlink?: TextHyperlinkRange['target'] | undefined;
 	}> = [];
 	const rangeCovering = (pos: number): TextHyperlinkRange | undefined =>
 		hyperlinkRanges.find((r) => r.begin <= pos && pos < r.end);
@@ -214,7 +214,7 @@ export function buildTextBody(
 	}
 
 	// Drop a single empty trailing paragraph caused by a terminal \r.
-	if (paragraphs.length > 1 && paragraphs[paragraphs.length - 1].runs.length === 0) {
+	if (paragraphs.length > 1 && paragraphs.at(-1)?.runs.length === 0) {
 		paragraphs.pop();
 	}
 

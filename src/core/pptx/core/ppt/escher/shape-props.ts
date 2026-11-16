@@ -8,7 +8,8 @@
  * @module ppt/escher/shape-props
  */
 
-import { resolveEscherColor } from '../color-scheme';
+import { at } from '../../../../geometry/indexed';
+import { SCHEME, resolveEscherColor } from '../color-scheme';
 import type { PptColorScheme } from '../color-scheme';
 import type { EmuRect, PptFill, PptLine } from '../ppt-model';
 import type { PptRecord } from '../record-stream';
@@ -121,7 +122,7 @@ export function extractFill(
 		return { kind: 'solid', rgb: resolveEscherColor(fillColor, scheme) };
 	}
 	if (filled === true) {
-		return { kind: 'solid', rgb: scheme[4] };
+		return { kind: 'solid', rgb: at(scheme, SCHEME.fills) };
 	}
 	// No explicit fill info: text boxes default to no fill.
 	return isTextBoxType(spt) ? { kind: 'none' } : undefined;
@@ -143,7 +144,10 @@ export function extractLine(
 	}
 	const line: PptLine = {
 		kind: 'line',
-		rgb: lineColor !== undefined ? resolveEscherColor(lineColor, scheme) : scheme[1],
+		rgb:
+			lineColor !== undefined
+				? resolveEscherColor(lineColor, scheme)
+				: at(scheme, SCHEME.textAndLines),
 		widthEmu: lineWidth ?? 9525,
 	};
 	const dash = dashStyle(props.values.get(OPT.lineDashing));

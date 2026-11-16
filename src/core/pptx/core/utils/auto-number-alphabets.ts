@@ -147,7 +147,7 @@ export const HEBREW_LETTERS: ReadonlyArray<string> = Array.from('אבגדהוז�
  */
 export function repeatedLabel(n: number, alphabet: ReadonlyArray<string>): string {
 	const index = Math.max(0, Math.floor(n) - 1);
-	const letter = alphabet[index % alphabet.length];
+	const letter = alphabet[index % alphabet.length] ?? '';
 	return letter.repeat(Math.floor(index / alphabet.length) + 1);
 }
 
@@ -164,7 +164,7 @@ const CJK_DIGITS = ['〇', '一', '二', '三', '四', '五', '六', '七', '八
 
 /** Digit-by-digit CJK numeral with `〇` for zero (10 -> `一〇`, 12345 -> `一二三四五`). */
 export function toCjkDigitString(n: number): string {
-	return String(Math.max(0, Math.floor(n))).replace(/[0-9]/gu, (d) => CJK_DIGITS[Number(d)]);
+	return String(Math.max(0, Math.floor(n))).replace(/[0-9]/gu, (d) => CJK_DIGITS[Number(d)] ?? d);
 }
 
 /**

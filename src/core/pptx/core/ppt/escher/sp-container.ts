@@ -45,7 +45,7 @@ export interface DrawingContext {
 export interface ParsedDrawing {
 	shapes: PptAnyShape[];
 	/** Solid background fill from the background shape, when present. */
-	backgroundRgb?: string;
+	backgroundRgb?: string | undefined;
 }
 
 const FSP_FLAG_GROUP = 0x0001;

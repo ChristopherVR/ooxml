@@ -20,35 +20,35 @@ export interface PptParagraphProps {
 	/** Outline indent level 0-4. */
 	indentLevel: number;
 	/** Bullet suppressed / forced. */
-	hasBullet?: boolean;
+	hasBullet?: boolean | undefined;
 	/** Bullet character. */
-	bulletChar?: string;
+	bulletChar?: string | undefined;
 	/** Bullet font index into the document font collection. */
-	bulletFontRef?: number;
+	bulletFontRef?: number | undefined;
 	/** Bullet color as hex RGB. */
-	bulletColorRgb?: string;
+	bulletColorRgb?: string | undefined;
 	/** Paragraph alignment. */
-	align?: 'l' | 'ctr' | 'r' | 'just';
+	align?: 'l' | 'ctr' | 'r' | 'just' | undefined;
 	/** Left margin in master units. */
-	leftMarginMu?: number;
+	leftMarginMu?: number | undefined;
 	/** Indent in master units. */
-	indentMu?: number;
+	indentMu?: number | undefined;
 }
 
 /** Parsed character-level formatting exception. */
 export interface PptCharProps {
 	/** Number of characters covered. */
 	count: number;
-	bold?: boolean;
-	italic?: boolean;
-	underline?: boolean;
-	shadow?: boolean;
+	bold?: boolean | undefined;
+	italic?: boolean | undefined;
+	underline?: boolean | undefined;
+	shadow?: boolean | undefined;
 	/** Font index into the document font collection. */
-	fontRef?: number;
+	fontRef?: number | undefined;
 	/** Font size in points. */
-	sizePt?: number;
+	sizePt?: number | undefined;
 	/** Text color as hex RGB. */
-	colorRgb?: string;
+	colorRgb?: string | undefined;
 }
 
 /** Result of parsing a StyleTextPropAtom. */

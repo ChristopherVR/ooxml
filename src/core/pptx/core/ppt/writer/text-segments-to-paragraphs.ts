@@ -5,6 +5,7 @@
  * @module ppt/writer/text-segments-to-paragraphs
  */
 
+import { definedProps } from '../../../../docx/defined-props';
 import { EMU_PER_PX } from '../../constants';
 import type { PptxAction } from '../../types/actions';
 import type { TextSegment, TextStyle } from '../../types/text';
@@ -33,10 +34,12 @@ function segmentHyperlinkAction(segment: TextSegment): PptxAction | undefined {
 		return undefined;
 	}
 	return {
-		url: style.hyperlink,
-		action: style.hyperlinkAction,
-		targetSlideIndex: style.hyperlinkTargetSlideIndex,
-		tooltip: style.hyperlinkTooltip,
+		...(style.hyperlink !== undefined && { url: style.hyperlink }),
+		...(style.hyperlinkAction !== undefined && { action: style.hyperlinkAction }),
+		...(style.hyperlinkTargetSlideIndex !== undefined && {
+			targetSlideIndex: style.hyperlinkTargetSlideIndex,
+		}),
+		...(style.hyperlinkTooltip !== undefined && { tooltip: style.hyperlinkTooltip }),
 	};
 }
 
@@ -48,33 +51,37 @@ function styleToRun(
 ): WRun {
 	return {
 		text,
-		bold: style?.bold,
-		italic: style?.italic,
-		underline: style?.underline,
-		// `TextStyle.fontSize` is CSS px (the `.pptx` save writes `sz` as px * 72 / 96);
-		// a TextCFException's size is in points.
-		sizePt: style?.fontSize !== undefined ? (style.fontSize * 72) / 96 : undefined,
-		colorRgb: style?.color?.replace(/^#/u, ''),
-		fontName: style?.fontFamily,
-		hyperlink: segment
-			? resolveHyperlink(segmentHyperlinkAction(segment), hyperlinkCtx)
-			: undefined,
+		...definedProps({
+			bold: style?.bold,
+			italic: style?.italic,
+			underline: style?.underline,
+			// `TextStyle.fontSize` is CSS px (the `.pptx` save writes `sz` as px * 72 / 96);
+			// a TextCFException's size is in points.
+			sizePt: style?.fontSize !== undefined ? (style.fontSize * 72) / 96 : undefined,
+			colorRgb: style?.color?.replace(/^#/u, ''),
+			fontName: style?.fontFamily,
+			hyperlink: segment
+				? resolveHyperlink(segmentHyperlinkAction(segment), hyperlinkCtx)
+				: undefined,
+		}),
 	};
 }
 
 interface ParagraphMeta {
 	level: number;
 	align: WParagraph['align'];
-	marginLeftEmu?: number;
-	indentEmu?: number;
-	hasBullet?: boolean;
-	bulletChar?: string;
-	bulletColorRgb?: string;
+	marginLeftEmu?: number | undefined;
+	indentEmu?: number | undefined;
+	hasBullet?: boolean | undefined;
+	bulletChar?: string | undefined;
+	bulletColorRgb?: string | undefined;
 }
 
 function metaFromSegment(
 	segment: TextSegment,
-	paragraphIndents: Array<{ marginLeft?: number; indent?: number }> | undefined,
+	paragraphIndents:
+		| Array<{ marginLeft?: number | undefined; indent?: number | undefined }>
+		| undefined,
 	paraIndex: number,
 	fallbackAlign: WParagraph['align'],
 ): ParagraphMeta {
@@ -100,8 +107,14 @@ function metaFromSegment(
  */
 export function textSegmentsToParagraphs(
 	segments: TextSegment[],
-	paragraphIndents: Array<{ marginLeft?: number; indent?: number }> | undefined,
-	fallback: { text?: string; style?: TextStyle; hyperlinkCtx: HyperlinkResolveContext },
+	paragraphIndents:
+		| Array<{ marginLeft?: number | undefined; indent?: number | undefined }>
+		| undefined,
+	fallback: {
+		text?: string | undefined;
+		style?: TextStyle | undefined;
+		hyperlinkCtx: HyperlinkResolveContext;
+	},
 ): WParagraph[] {
 	const hyperlinkCtx = fallback.hyperlinkCtx;
 	if (segments.length === 0) {
@@ -127,12 +140,12 @@ export function textSegmentsToParagraphs(
 		const m = meta ?? { level: 0, align: fallbackAlign };
 		paragraphs.push({
 			indentLevel: m.level,
-			align: m.align,
-			hasBullet: m.hasBullet,
-			bulletChar: m.bulletChar,
-			bulletColorRgb: m.bulletColorRgb,
-			marginLeftEmu: m.marginLeftEmu,
-			indentEmu: m.indentEmu,
+			...(m.align !== undefined && { align: m.align }),
+			...(m.hasBullet !== undefined && { hasBullet: m.hasBullet }),
+			...(m.bulletChar !== undefined && { bulletChar: m.bulletChar }),
+			...(m.bulletColorRgb !== undefined && { bulletColorRgb: m.bulletColorRgb }),
+			...(m.marginLeftEmu !== undefined && { marginLeftEmu: m.marginLeftEmu }),
+			...(m.indentEmu !== undefined && { indentEmu: m.indentEmu }),
 			runs,
 		});
 		runs = [];

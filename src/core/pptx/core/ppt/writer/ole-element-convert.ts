@@ -8,7 +8,7 @@
 import type { OlePptxElement } from '../../types';
 import { parseDataUrlToBytes } from '../../utils/data-url-utils';
 import { degradeElement } from './degrade-element';
-import { elementRectEmu } from './element-rect';
+import { elementPlacement } from './element-rect';
 import type { ConvertContext } from './element-to-write-model';
 import { dataUrlToPicture } from './raster-utils';
 import type { WAnyShape } from './write-model';
@@ -43,21 +43,13 @@ export function convertOle(element: OlePptxElement, ctx: ConvertContext): WAnySh
 		return {
 			kind: 'picture',
 			pictureIndex: ctx.pictures.length - 1,
-			name: element.name,
-			anchor: elementRectEmu(element),
-			rotationDeg: element.rotation,
-			flipH: element.flipHorizontal,
-			flipV: element.flipVertical,
+			...elementPlacement(element),
 		};
 	}
 	return {
 		kind: 'picture',
 		pictureIndex: ctx.pictures.length - 1,
-		name: element.name,
-		anchor: elementRectEmu(element),
-		rotationDeg: element.rotation,
-		flipH: element.flipHorizontal,
-		flipV: element.flipVertical,
+		...elementPlacement(element),
 		ole: { data: parsed.bytes, label },
 	};
 }

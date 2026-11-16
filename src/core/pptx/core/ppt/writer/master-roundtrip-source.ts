@@ -20,14 +20,14 @@ import type { WMasterPlaceholder, WMasterPlaceholderKind } from './write-model';
 export interface MasterRoundTripSource {
 	placeholders: WMasterPlaceholder[];
 	/** `p:txStyles`, with the master root's namespace declarations added. */
-	txStylesXml?: string;
+	txStylesXml?: string | undefined;
 	/** `p:clrMap` attributes (`bg1="lt1"` ...), verbatim. */
-	clrMapAttributes?: string;
-	themeXml?: string;
+	clrMapAttributes?: string | undefined;
+	themeXml?: string | undefined;
 	/** ColorSchemeAtom colours: bg1, tx1, bg2, tx2, accent1, accent2, hlink, folHlink. */
-	schemeColors?: string[];
+	schemeColors?: string[] | undefined;
 	/** The theme's major / minor Latin faces, for `+mj-lt` / `+mn-lt` style fonts. */
-	themeFonts: { major?: string; minor?: string };
+	themeFonts: { major?: string | undefined; minor?: string | undefined };
 }
 
 const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
@@ -133,8 +133,9 @@ function themeColor(themeXml: string, slot: string): string | undefined {
 	if (!body) {
 		return undefined;
 	}
-	return (/\bval="([0-9A-Fa-f]{6})"/u.exec(body) ??
-		/\blastClr="([0-9A-Fa-f]{6})"/u.exec(body))?.[1];
+	return (
+		/\bval="([0-9A-Fa-f]{6})"/u.exec(body) ?? /\blastClr="([0-9A-Fa-f]{6})"/u.exec(body)
+	)?.[1];
 }
 
 /**

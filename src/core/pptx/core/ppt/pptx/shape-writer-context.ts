@@ -24,9 +24,9 @@ export interface OleRef {
 	/** Relationship id inside the containing part. */
 	relId: string;
 	/** `ExOleEmbedContainer`'s `ProgIDAtom` string, when present. */
-	progId?: string;
+	progId?: string | undefined;
 	/** The nested storage's root CLSID, when recoverable. */
-	clsId?: string;
+	clsId?: string | undefined;
 }
 
 /** Callbacks the package writer supplies while serializing shapes. */
@@ -57,7 +57,12 @@ export function cNvPrXml(
 }
 
 export function xfrmXml(
-	shape: { anchor?: EmuRect; rotationDeg?: number; flipH?: boolean; flipV?: boolean },
+	shape: {
+		anchor?: EmuRect | undefined;
+		rotationDeg?: number | undefined;
+		flipH?: boolean | undefined;
+		flipV?: boolean | undefined;
+	},
 	inner = '',
 ): string {
 	const anchor = shape.anchor ?? { x: 0, y: 0, w: 0, h: 0 };

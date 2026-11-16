@@ -7,7 +7,7 @@
 
 import { EMU_PER_PX } from '../../constants';
 import type { PptxElementBase } from '../../types/element-base';
-import type { WRect } from './write-model';
+import type { WRect, WShapeBase } from './write-model';
 
 /** Resolve an element's bounding rectangle in EMU. */
 export function elementRectEmu(el: PptxElementBase): WRect {
@@ -16,6 +16,22 @@ export function elementRectEmu(el: PptxElementBase): WRect {
 		y: el.yEmu ?? Math.round(el.y * EMU_PER_PX),
 		w: el.widthEmu ?? Math.round(el.width * EMU_PER_PX),
 		h: el.heightEmu ?? Math.round(el.height * EMU_PER_PX),
+	};
+}
+
+/**
+ * The placement fields every drawable node copies from its element: name,
+ * EMU anchor, rotation and flips, each only when the element sets it.
+ */
+export function elementPlacement(
+	el: PptxElementBase,
+): Pick<WShapeBase, 'name' | 'anchor' | 'rotationDeg' | 'flipH' | 'flipV'> {
+	return {
+		...(el.name !== undefined && { name: el.name }),
+		anchor: elementRectEmu(el),
+		...(el.rotation !== undefined && { rotationDeg: el.rotation }),
+		...(el.flipHorizontal !== undefined && { flipH: el.flipHorizontal }),
+		...(el.flipVertical !== undefined && { flipV: el.flipVertical }),
 	};
 }
 
