@@ -3,14 +3,13 @@ import {
 	imageResetPatch,
 	imageResetState,
 	PICTURE_ADJUSTMENT_SECTIONS,
+	PICTURE_EFFECT_SECTIONS,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxImageLikeElement } from 'pptx-viewer-core';
 import React from 'react';
 
 import { useTranslation } from '../../i18n/use-translation';
 import { ArtisticEffectsGallery } from './ArtisticEffectsGallery';
-import { ColorChangeSection } from './ColorChangeSection';
-import { ColorWashSection } from './ColorWashSection';
 import { DuotonePanel } from './DuotonePanel';
 import { ImageCropSection } from './ImageCropSection';
 import { CARD, HEADING } from './inspector-pane-constants';
@@ -70,17 +69,20 @@ export function ImagePropertiesPanel({
 					onUpdateElement={onUpdateElement}
 				/>
 
+				{/* Colour wash, recolour and duotone: shared descriptors, one renderer. */}
+				<div className='grid grid-cols-2 gap-1.5 text-[11px]'>
+					<InspectorFields
+						sections={PICTURE_EFFECT_SECTIONS}
+						target={selectedElement as PptxElement}
+						disabled={!canEdit}
+						onPatch={onUpdateElement}
+					/>
+				</div>
 				<DuotonePanel
 					selectedElement={selectedElement}
 					canEdit={canEdit}
 					onUpdateElement={onUpdateElement}
 				/>
-
-				{/* Colour Wash */}
-				<ColorWashSection fx={fx} canEdit={canEdit} updateEffects={updateEffects} />
-
-				{/* Colour Change */}
-				<ColorChangeSection fx={fx} canEdit={canEdit} updateEffects={updateEffects} />
 
 				{/* Artistic Effects Gallery */}
 				<ArtisticEffectsGallery

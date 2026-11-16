@@ -8,8 +8,7 @@ import { setControlValue } from './test-control-value';
 
 /**
  * DebouncedColorInput: wraps every category-B `type="color"` input used by
- * `ColorChangeSection`, `ColorWashSection`, `DuotonePanel`, and
- * `TableCellFormattingPanel`. The "Recent colours" push (wave-4 B6) is wired
+ * `TableCellFormattingPanel` and `TableCellColorField`. The "Recent colours" push (wave-4 B6) is wired
  * once here, on the native `change` event, so every caller gets it for free.
  */
 describe('debouncedColorInput', () => {

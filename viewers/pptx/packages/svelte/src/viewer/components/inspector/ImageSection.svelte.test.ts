@@ -174,6 +174,21 @@ describe('imageSection', () => {
 		expect((currentEl(editor) as ImageShape).cropLeft).toBeUndefined();
 	});
 
+	it('draws the shared colour effects and switches a colour wash on', () => {
+		const editor = makeEditor(imageEl());
+		const { target } = mountSection(editor, currentEl(editor));
+		const wash = target.querySelector<HTMLInputElement>(
+			'[data-testid="picture-colorWash-toggle"]',
+		)!;
+		wash.checked = true;
+		wash.dispatchEvent(new Event('change', { bubbles: true }));
+		flushSync();
+		expect(
+			(currentEl(editor) as { imageEffects?: { colorWash?: unknown } }).imageEffects?.colorWash,
+		).toStrictEqual({ color: '#0066cc', opacity: 40 });
+		expect(target.querySelector('[data-testid="picture-colorChange-toggle"]')).not.toBeNull();
+	});
+
 	it('draws the shared picture adjustments: inverted transparency and grayscale', () => {
 		const editor = makeEditor(imageEl({ imageEffects: { alphaModFix: 70 } }));
 		const { target } = mountSection(editor, currentEl(editor));

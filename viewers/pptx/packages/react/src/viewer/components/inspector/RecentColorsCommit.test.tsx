@@ -30,7 +30,6 @@ import { ChartDataPointMarkerOptions } from './ChartDataPointMarkerOptions';
 import { ChartDataPointOptions } from './ChartDataPointOptions';
 import { ChartMarkerOptions } from './ChartMarkerOptions';
 import { DebouncedColorInput } from './DebouncedColorInput';
-import { DuotonePanel } from './DuotonePanel';
 import { ColorPickerRow, GradientStopRow } from './FillStrokeSubComponents';
 import { InspectorFields } from './InspectorFields';
 import { Text3DProperties } from './properties/Text3DProperties';
@@ -185,18 +184,6 @@ const CASES: Case[] = [
 		name: 'DebouncedColorInput',
 		inputs: 1,
 		render: (apply) => <DebouncedColorInput value='#000000' onCommit={apply} />,
-	},
-	{
-		name: 'DuotonePanel',
-		inputs: 2,
-		live: false,
-		render: (apply) => (
-			<DuotonePanel
-				selectedElement={{ type: 'image', id: 'i', imageEffects: {} } as unknown as PptxElement}
-				canEdit
-				onUpdateElement={apply}
-			/>
-		),
 	},
 	{
 		// The generic renderer behind the effects, line, size and text box sections.

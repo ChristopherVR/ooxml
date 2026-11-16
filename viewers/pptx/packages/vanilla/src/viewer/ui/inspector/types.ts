@@ -313,9 +313,6 @@ export interface InspectorState {
 	textStyle: TextStyle | undefined;
 	selectedTextRange: InlineTextSelection | null;
 	imageArtisticEffect: string;
-	imageDuotone1: string;
-	imageDuotone2: string;
-	imageColorWash?: { color: string; opacity: number };
 	actionClick?: ElementAction;
 	actionHover?: ElementAction;
 	/**

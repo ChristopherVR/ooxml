@@ -1,13 +1,17 @@
 import {
 	ARTISTIC_EFFECTS,
+	DUOTONE_PRESETS,
 	ELEMENT_ALT_TEXT_SECTIONS,
 	PICTURE_ADJUSTMENT_SECTIONS,
 	PICTURE_CROP_SECTIONS,
+	PICTURE_EFFECT_SECTIONS,
+	pictureDuotonePresetPatch,
 } from 'ooxml-ui/pptx';
+import type { PptxElement } from 'pptx-viewer-core';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';
-import { makeRangeField, createInspectorSelect, createInspectorCheckbox } from './controls-extra';
+import { createInspectorSelect } from './controls-extra';
 import { createInspectorFields } from './inspector-fields';
 import type { InspectorHandlers, InspectorState } from './types';
 
@@ -44,10 +48,7 @@ export function createImageSection(
 	resetCrop.textContent = t('pptx.image.resetCrop');
 	resetCrop.addEventListener('click', handlers.resetCrop);
 
-	const pct = (value: number): string => `${Math.round(value)}%`;
-
-	const onPatch = (patch: Parameters<InspectorHandlers['patchSelectedElement']>[0]): void =>
-		handlers.patchSelectedElement(patch);
+	const onPatch = (patch: Partial<PptxElement>): void => handlers.patchSelectedElement(patch);
 	const adjustments = createInspectorFields(doc, t, {
 		sections: PICTURE_ADJUSTMENT_SECTIONS,
 		onPatch,
@@ -78,61 +79,32 @@ export function createImageSection(
 		}),
 	);
 	artisticLabel.appendChild(artistic);
-	const duotone = createEl(doc, 'div', 'pptxv-inspector-grid');
-	const colorInputs: Partial<Record<'color1' | 'color2', HTMLInputElement>> = {};
-	const duoField = (labelText: string, key: 'color1' | 'color2'): HTMLInputElement => {
-		const label = doc.createElement('label');
-		label.textContent = labelText;
-		const input = doc.createElement('input');
-		input.type = 'color';
-		input.addEventListener('input', () =>
-			handlers.setImageEffects({
-				duotone: {
-					color1: key === 'color1' ? input.value : (colorInputs.color1?.value ?? '#000000'),
-					color2: key === 'color2' ? input.value : (colorInputs.color2?.value ?? '#ffffff'),
-				},
-			}),
-		);
-		label.appendChild(input);
-		duotone.appendChild(label);
-		return input;
-	};
-	const color1 = duoField(t('pptx.image.duotoneDark'), 'color1');
-	const color2 = duoField(t('pptx.image.duotoneLight'), 'color2');
-	colorInputs.color1 = color1;
-	colorInputs.color2 = color2;
-	// B6: push into the "Recent colours" MRU list once each picker commits.
-	for (const input of [color1, color2]) {
-		input.addEventListener('change', () => handlers.pushRecentColor(input.value));
-	}
-	el.append(artisticLabel, duotone);
-	const wash = createInspectorCheckbox(doc);
-	const washColor = doc.createElement('input');
-	washColor.type = 'color';
-	let washOpacityValue = 40;
-	const washOpacity = makeRangeField(doc, {
-		label: t('pptx.image.washOpacity'),
-		min: 0,
-		max: 100,
-		formatValue: pct,
-		onCommit: (opacity) => {
-			washOpacityValue = opacity;
-			handlers.setImageEffects({ colorWash: { color: washColor.value, opacity } });
-		},
+	// Colour wash, recolour and duotone: the shared descriptors; the duotone
+	// preset swatches below apply the shared `pictureDuotonePresetPatch`.
+	const colorEffects = createInspectorFields(doc, t, {
+		sections: PICTURE_EFFECT_SECTIONS,
+		onPatch,
+		onColorCommit: (hex) => handlers.pushRecentColor(hex),
 	});
-	wash.addEventListener('change', () =>
-		handlers.setImageEffects({
-			colorWash: wash.checked ? { color: washColor.value, opacity: washOpacityValue } : undefined,
-		}),
-	);
-	washColor.addEventListener('input', () =>
-		handlers.setImageEffects({
-			colorWash: { color: washColor.value, opacity: washOpacityValue },
-		}),
-	);
-	// B6: push into the "Recent colours" MRU list once the wash picker commits.
-	washColor.addEventListener('change', () => handlers.pushRecentColor(washColor.value));
-	el.append(wash, washColor, washOpacity.el);
+	let latestElement: PptxElement | undefined;
+	const presets = createEl(doc, 'div', 'pptxv-duotone-presets');
+	const presetButtons = DUOTONE_PRESETS.map((preset) => {
+		const swatch = doc.createElement('button');
+		swatch.type = 'button';
+		swatch.className = 'pptxv-duotone-preset';
+		swatch.dataset['testid'] = 'picture-duotone-preset';
+		swatch.title = t(preset.labelKey);
+		swatch.setAttribute('aria-label', t(preset.labelKey));
+		swatch.style.background = `linear-gradient(135deg, ${preset.shadow} 50%, ${preset.highlight} 50%)`;
+		swatch.addEventListener('click', () => {
+			if (latestElement) {
+				onPatch(pictureDuotonePresetPatch(latestElement, preset));
+			}
+		});
+		return swatch;
+	});
+	presets.append(...presetButtons);
+	el.append(artisticLabel, colorEffects.el, presets);
 
 	el.append(crop.el, resetCrop, altText.el);
 
@@ -141,29 +113,23 @@ export function createImageSection(
 		update(state) {
 			el.hidden = !state.hasSelection || !state.isImage;
 			const element = state.selectedElement;
+			latestElement = element;
+			for (const swatch of presetButtons) {
+				swatch.disabled = !state.isImage;
+			}
 			if (element) {
 				adjustments.update(element, !state.isImage, element.id);
 				// G7: `a:picLocks/@noCrop` forbids cropping this specific picture,
 				// even on an otherwise-editable image.
 				crop.update(element, !state.isImage || !state.croppable, element.id);
 				altText.update(element, !state.isImage, element.id);
+				colorEffects.update(element, !state.isImage, element.id);
 			}
 			artistic.value = state.imageArtisticEffect;
-			color1.value = state.imageDuotone1;
-			color2.value = state.imageDuotone2;
-			wash.checked = Boolean(state.imageColorWash);
-			washColor.value = state.imageColorWash?.color ?? '#0066cc';
-			washOpacity.setValue(state.imageColorWash?.opacity ?? 40);
-			washOpacityValue = state.imageColorWash?.opacity ?? 40;
 			artistic.disabled = !state.isImage;
-			color1.disabled = !state.isImage;
-			color2.disabled = !state.isImage;
 			replace.disabled = !state.isImage;
 			reset.disabled = !state.isImage || !state.imageResettable;
 			resetCrop.disabled = !state.isImage || !state.croppable;
-			wash.disabled = !state.isImage;
-			washColor.disabled = !state.isImage;
-			washOpacity.setDisabled(!state.isImage);
 		},
 	};
 }

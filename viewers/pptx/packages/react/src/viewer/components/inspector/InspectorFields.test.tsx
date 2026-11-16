@@ -13,12 +13,13 @@ import {
 	SHAPE_LINE_SECTIONS,
 	TEXT_BOX_SECTIONS,
 } from 'ooxml-ui/pptx';
-import type { PptxElement, ShapeStyle, TextStyle } from 'pptx-viewer-core';
+import type { PptxElement, PptxImageLikeElement, ShapeStyle, TextStyle } from 'pptx-viewer-core';
 import React, { act } from 'react';
 import type { Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createMarkedRoot, marked } from '../../i18n/marking-translator.test-support';
+import { ImagePropertiesPanel } from './ImagePropertiesPanel';
 import { InspectorFields } from './InspectorFields';
 import { TextAdvancedSections } from './TextAdvancedSections';
 
@@ -275,5 +276,41 @@ describe('textAdvancedSections spacing fields', () => {
 			margin.dispatchEvent(new Event('input', { bubbles: true }));
 		});
 		expect(onUpdateTextStyle).toHaveBeenCalledWith({ paragraphMarginLeft: 24 });
+	});
+});
+
+describe('imagePropertiesPanel colour effects', () => {
+	it('draws the shared colour effects and switches a colour wash on', () => {
+		const onUpdateElement = vi.fn();
+		const picture = {
+			type: 'image',
+			id: 'p1',
+			x: 0,
+			y: 0,
+			width: 10,
+			height: 10,
+			imageEffects: { brightness: 5 },
+		} as unknown as PptxImageLikeElement;
+		act(() => {
+			root.render(
+				<ImagePropertiesPanel
+					selectedElement={picture}
+					canEdit
+					onUpdateElement={onUpdateElement}
+				/>,
+			);
+		});
+		expect(byTestId('picture-washColor')).toBeNull();
+		const wash = byTestId('picture-colorWash-toggle')!;
+		act(() => {
+			wash.checked = true;
+			wash.dispatchEvent(new Event('change', { bubbles: true }));
+		});
+		expect(onUpdateElement).toHaveBeenCalledWith({
+			imageEffects: { brightness: 5, colorWash: { color: '#0066cc', opacity: 40 } },
+		});
+		expect(
+			container.querySelectorAll('[data-testid="picture-duotone-preset"]').length,
+		).toBeGreaterThan(0);
 	});
 });

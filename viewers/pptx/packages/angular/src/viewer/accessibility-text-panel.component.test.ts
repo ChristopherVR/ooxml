@@ -78,6 +78,12 @@ describe('picture panels draw the shared picture descriptors', () => {
 		expect(image).not.toContain("key: 'alphaModFix'");
 	});
 
+	it('draws the colour effects from the shared sections and the duotone presets natively', () => {
+		expect(image).toContain('PICTURE_EFFECT_SECTIONS');
+		expect(image).toContain('pictureDuotonePresetPatch(this.element(), preset)');
+		expect(crop).not.toContain('toggleWash');
+	});
+
 	it('draws the crop insets from the shared section, gated on croppable', () => {
 		expect(crop).toContain('PICTURE_CROP_SECTIONS');
 		expect(crop).toContain('[disabled]="!croppable()"');

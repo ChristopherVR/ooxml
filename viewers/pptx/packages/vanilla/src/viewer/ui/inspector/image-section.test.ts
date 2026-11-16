@@ -75,6 +75,26 @@ describe('image section shared picture fields', () => {
 		expect(h.patchSelectedElement).toHaveBeenCalledWith({ cropLeft: 0.25 });
 	});
 
+	it('draws the shared colour effects and applies a duotone preset', () => {
+		const h = handlers();
+		const section = createImageSection(document, createTranslator(), sectionFactory(), h);
+		section.update(state({ selectedElement: picture({ imageEffects: { contrast: 5 } }) }));
+		const recolor = section.el.querySelector<HTMLInputElement>(
+			'[data-testid="picture-colorChange-toggle"]',
+		)!;
+		recolor.checked = true;
+		recolor.dispatchEvent(new Event('change'));
+		expect(h.patchSelectedElement).toHaveBeenLastCalledWith({
+			imageEffects: {
+				contrast: 5,
+				clrChange: { clrFrom: '#ffffff', clrTo: '#000000', clrToTransparent: false },
+			},
+		});
+		section.el.querySelector<HTMLButtonElement>('[data-testid="picture-duotone-preset"]')!.click();
+		const [patch] = vi.mocked(h.patchSelectedElement).mock.calls.at(-1)!;
+		expect((patch as { imageEffects?: { duotone?: unknown } }).imageEffects?.duotone).toBeTruthy();
+	});
+
 	it('commits the alt text as it is typed', () => {
 		const h = handlers();
 		const section = createImageSection(document, createTranslator(), sectionFactory(), h);

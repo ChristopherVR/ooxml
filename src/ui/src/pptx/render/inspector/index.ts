@@ -82,6 +82,17 @@ export {
 	PICTURE_CROP_SECTIONS,
 } from './picture-fields';
 export type { PictureSection } from './picture-fields';
+export {
+	PICTURE_DEFAULT_COLOR_CHANGE,
+	PICTURE_DEFAULT_COLOR_WASH,
+	PICTURE_DEFAULT_DUOTONE,
+	PICTURE_COLOR_WASH_SECTION,
+	PICTURE_DUOTONE_SECTION,
+	PICTURE_EFFECT_SECTIONS,
+	PICTURE_RECOLOR_SECTION,
+	pictureDuotonePresetPatch,
+} from './picture-effect-fields';
+export type { PictureEffectSection } from './picture-effect-fields';
 export type { TextBoxSection, TextBoxTarget } from './text-box-fields';
 export {
 	CHARACTER_SPACING_SECTION,

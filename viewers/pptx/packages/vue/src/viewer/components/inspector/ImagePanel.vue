@@ -4,6 +4,7 @@ import {
 	imageResetPatch,
 	imageResetState,
 	PICTURE_ADJUSTMENT_SECTIONS,
+	PICTURE_EFFECT_SECTIONS,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxImageEffects } from 'pptx-viewer-core';
 import { isImageLikeElement } from 'pptx-viewer-core';
@@ -12,8 +13,6 @@ import { useI18n } from 'vue-i18n';
 
 import { getImageEffects } from '../../composables/useImageEditing';
 import ArtisticEffectsGallery from './ArtisticEffectsGallery.vue';
-import ColorChangeSection from './ColorChangeSection.vue';
-import ColorWashSection from './ColorWashSection.vue';
 import DuotonePanel from './DuotonePanel.vue';
 import ImageCropSection from './ImageCropSection.vue';
 import InspectorFields from './InspectorFields.vue';
@@ -90,11 +89,14 @@ function onResetPicture(): void {
 
 			<ArtisticEffectsGallery :img-src="imgSrc" :fx="effects" @update="relay" />
 
-			<ColorChangeSection :fx="effects" @update="relay" />
+			<InspectorFields
+				:sections="PICTURE_EFFECT_SECTIONS"
+				:target="element"
+				:disabled="!canEdit"
+				@patch="relay"
+			/>
 
-			<ColorWashSection :fx="effects" @update="relay" />
-
-			<DuotonePanel :fx="effects" @update="relay" />
+			<DuotonePanel :element="element" :can-edit="canEdit" @update="relay" />
 
 			<button
 				type="button"

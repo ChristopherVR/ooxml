@@ -7,22 +7,6 @@
  */
 import type { PptxElement, PptxImageEffects, PptxCropShape } from 'pptx-viewer-core';
 
-/** Default colour-wash effect applied when the wash toggle is switched on. */
-export const DEFAULT_COLOR_WASH: NonNullable<PptxImageEffects['colorWash']> = {
-	color: '#0066cc',
-	opacity: 40,
-};
-
-/** Default colour-change effect applied when the recolour toggle is switched on. */
-export const DEFAULT_CLR_CHANGE: NonNullable<PptxImageEffects['clrChange']> = {
-	clrFrom: '#ffffff',
-	clrTo: '#000000',
-	clrToTransparent: false,
-};
-
-/** Default duotone shadow/highlight pair used before a preset is chosen. */
-export const DEFAULT_DUOTONE = { color1: '#000000', color2: '#ffffff' } as const;
-
 /**
  * The image-effects object emitted by "Reset Picture": clears every adjustment
  * back to its neutral default. Mirrors React's ImagePropertiesPanel reset.

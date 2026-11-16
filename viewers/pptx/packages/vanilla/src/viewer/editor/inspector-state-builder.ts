@@ -126,11 +126,6 @@ export function buildInspectorState(
 		selectedTextRange,
 		imageArtisticEffect:
 			el && isImageLikeElement(el) ? (el.imageEffects?.artisticEffect ?? 'none') : 'none',
-		imageDuotone1:
-			el && isImageLikeElement(el) ? (el.imageEffects?.duotone?.color1 ?? '#000000') : '#000000',
-		imageDuotone2:
-			el && isImageLikeElement(el) ? (el.imageEffects?.duotone?.color2 ?? '#ffffff') : '#ffffff',
-		imageColorWash: el && isImageLikeElement(el) ? el.imageEffects?.colorWash : undefined,
 		showAccessibilitySection: el !== undefined && shouldShowAccessibilitySection(el),
 		chartHighlightCell:
 			el?.type === 'chart' && chartPartSelection?.elementId === el.id

@@ -75,6 +75,24 @@ describe('imagePanel', () => {
 		expect(events?.at(-1)?.[0]).toStrictEqual({ imageEffects: { contrast: 10, grayscale: true } });
 	});
 
+	it('draws the shared colour effects and applies a duotone preset', async () => {
+		const wrapper = mount(ImagePanel, {
+			props: { element: imageEl({ imageEffects: { contrast: 10 } } as Partial<PptxElement>) },
+		});
+		await setControlValue(wrapper.get('[data-testid="picture-colorChange-toggle"]'), true);
+		expect(wrapper.emitted('update')?.at(-1)?.[0]).toStrictEqual({
+			imageEffects: {
+				contrast: 10,
+				clrChange: { clrFrom: '#ffffff', clrTo: '#000000', clrToTransparent: false },
+			},
+		});
+		await wrapper.get('[data-testid="picture-duotone-preset"]').trigger('click');
+		const last = wrapper.emitted('update')?.at(-1)?.[0] as {
+			imageEffects?: { duotone?: unknown };
+		};
+		expect(last.imageEffects?.duotone).toBeTruthy();
+	});
+
 	it('disables Reset Picture until an effect override exists and clears effects when clicked', async () => {
 		const clean = mount(ImagePanel, { props: { element: imageEl() } });
 		expect(

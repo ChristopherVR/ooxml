@@ -380,6 +380,9 @@ export const EDITOR_CSS = `
 }
 .pptxv-field-select-input:disabled { opacity: 0.5; }
 .pptxv-field-range { flex-direction: column; align-items: stretch; }
+.pptxv-duotone-presets { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.pptxv-duotone-preset { width: 24px; height: 24px; padding: 0; border: 1px solid var(--pptx-border); border-radius: 50%; cursor: pointer; }
+.pptxv-duotone-preset:disabled { opacity: 0.5; cursor: default; }
 .pptxv-field-text { flex-direction: column; align-items: stretch; margin-bottom: 8px; }
 .pptxv-field-text .pptxv-field-input { width: 100%; height: auto; min-height: 26px; box-sizing: border-box; resize: vertical; }
 .pptxv-field-range-row { display: flex; align-items: center; gap: 8px; }
