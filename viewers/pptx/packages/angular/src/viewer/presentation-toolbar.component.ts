@@ -194,7 +194,7 @@ export class PresentationToolbarComponent {
 					this.annotations.setHighlighterColor(intent.color);
 				}
 				if (this.annotations.tool() !== intent.tool) {
-					this.annotations.setTool(intent.tool);
+					this.annotations.selectTool(intent.tool);
 				}
 				return;
 			case 'blackboard':
@@ -202,7 +202,7 @@ export class PresentationToolbarComponent {
 					blackout: this.presenterWindow.snapshot().blackout,
 					tool: this.annotations.tool(),
 					setBlackout: (blackout) => this.presenterWindow.updateSnapshot({ blackout }),
-					setTool: (tool) => this.annotations.setTool(tool),
+					setTool: (tool) => this.annotations.selectTool(tool),
 				});
 				return;
 			case 'clear':

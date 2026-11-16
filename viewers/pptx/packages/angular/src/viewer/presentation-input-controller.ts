@@ -151,7 +151,7 @@ export class PresentationInputController {
 				break;
 			case 'pointerTool':
 				// PowerPoint's Ctrl+A "arrow" is the plain pointer: no active tool.
-				annotations.setTool(mapped.tool === 'arrow' ? 'none' : mapped.tool);
+				annotations.selectTool(mapped.tool === 'arrow' ? 'none' : mapped.tool);
 				break;
 			case 'eraseAnnotations':
 				annotations.clearAnnotations();

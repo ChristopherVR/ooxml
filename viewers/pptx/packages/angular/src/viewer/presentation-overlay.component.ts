@@ -724,16 +724,16 @@ export class PresentationOverlayComponent implements OnInit {
 				this.presenterViewToggle.emit();
 				break;
 			case 'pointerArrow':
-				this.annotations.setTool('none');
+				this.annotations.selectTool('none');
 				break;
 			case 'pointerPen':
-				this.annotations.setTool('pen');
+				this.annotations.selectTool('pen');
 				break;
 			case 'pointerHighlighter':
-				this.annotations.setTool('highlighter');
+				this.annotations.selectTool('highlighter');
 				break;
 			case 'pointerLaser':
-				this.annotations.setTool('laser');
+				this.annotations.selectTool('laser');
 				break;
 			case 'eraseInk':
 				this.annotations.clearAnnotations();

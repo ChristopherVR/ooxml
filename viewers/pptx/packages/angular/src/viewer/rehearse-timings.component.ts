@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 
 import type { DialogFooterActionSpec } from './dialog-footer.component';
@@ -105,20 +105,16 @@ export class RehearseTimingsComponent {
 
 	readonly summary = input(false);
 	readonly paused = input(false);
-	readonly slideStartedAt = input<number | null>(null);
-	readonly presentationStartedAt = input<number | null>(null);
-	readonly timings = input<Record<number, number>>({});
+	/** Time on the current slide, from the shared rehearsal controller (it owns the tick). */
+	readonly slideElapsedMs = input(0);
+	/** Time since the rehearsal started, paused time excluded. */
+	readonly totalElapsedMs = input(0);
+	readonly timings = input<Readonly<Record<number, number>>>({});
 	readonly togglePause = output<void>();
 	readonly save = output<void>();
 	readonly discard = output<void>();
-	private readonly now = signal(Date.now());
-	private timer = window.setInterval(() => this.now.set(Date.now()), 250);
-	readonly slideTime = computed(() =>
-		formatMs(this.slideStartedAt() ? this.now() - this.slideStartedAt()! : 0),
-	);
-	readonly totalElapsed = computed(() =>
-		formatMs(this.presentationStartedAt() ? this.now() - this.presentationStartedAt()! : 0),
-	);
+	readonly slideTime = computed(() => formatMs(this.slideElapsedMs()));
+	readonly totalElapsed = computed(() => formatMs(this.totalElapsedMs()));
 	readonly entries = computed(() =>
 		Object.entries(this.timings())
 			.map(([index, ms]) => ({ index: Number(index), time: formatMs(ms) }))
@@ -127,7 +123,4 @@ export class RehearseTimingsComponent {
 	readonly totalTime = computed(() =>
 		formatMs(Object.values(this.timings()).reduce((sum, ms) => sum + ms, 0)),
 	);
-	ngOnDestroy(): void {
-		window.clearInterval(this.timer);
-	}
 }

@@ -15,12 +15,8 @@ import {
 	PEN_WIDTH,
 	buildPathD,
 	cursorForTool,
-	eraseAtPoint,
 	laserDotOpacity,
-	nextStrokeId,
-	resetStrokeIdCounter,
 	smoothPoints,
-	strokeHitsEraser,
 } from './presentation-annotations-helpers';
 import type { AnnotationPoint, AnnotationStroke } from './presentation-annotations-helpers';
 
@@ -67,27 +63,6 @@ describe('constants', () => {
 
 	it('eraser radius is positive', () => {
 		expect(ERASER_RADIUS).toBeGreaterThan(0);
-	});
-});
-
-// ---------------------------------------------------------------------------
-// nextStrokeId
-// ---------------------------------------------------------------------------
-
-describe('nextStrokeId', () => {
-	it('returns a string prefixed with stroke-', () => {
-		resetStrokeIdCounter();
-		const id = nextStrokeId();
-		expect(id.startsWith('stroke-')).toBeTruthy();
-	});
-
-	it('increments on each call', () => {
-		resetStrokeIdCounter();
-		const a = nextStrokeId();
-		const b = nextStrokeId();
-		const numA = parseInt(a.split('-')[1], 10);
-		const numB = parseInt(b.split('-')[1], 10);
-		expect(numB - numA).toBe(1);
 	});
 });
 
@@ -148,72 +123,6 @@ describe('smoothPoints', () => {
 	it('is a no-op when window is 0', () => {
 		const pts = [pt(0, 0), pt(50, 100), pt(10, 5)];
 		expect(smoothPoints(pts, 0)).toStrictEqual(pts);
-	});
-});
-
-// ---------------------------------------------------------------------------
-// strokeHitsEraser
-// ---------------------------------------------------------------------------
-
-describe('strokeHitsEraser', () => {
-	const s = stroke('s1', [pt(10, 10), pt(20, 20), pt(30, 30)]);
-
-	it('returns true when eraser centre is within radius of a point', () => {
-		expect(strokeHitsEraser(s, 10, 10, 5)).toBeTruthy();
-	});
-
-	it('returns true when eraser overlaps any intermediate point', () => {
-		expect(strokeHitsEraser(s, 21, 21, 5)).toBeTruthy();
-	});
-
-	it('returns false when eraser is far from all points', () => {
-		expect(strokeHitsEraser(s, 100, 100, 5)).toBeFalsy();
-	});
-
-	it('returns false for stroke with no points', () => {
-		expect(strokeHitsEraser(stroke('s2', []), 0, 0, 100)).toBeFalsy();
-	});
-
-	it('boundary: excludes a point exactly at radius (strict <)', () => {
-		// distance = 5, radius = 5 → not hit (strict <)
-		expect(strokeHitsEraser(stroke('s3', [pt(5, 0)]), 0, 0, 5)).toBeFalsy();
-	});
-});
-
-// ---------------------------------------------------------------------------
-// eraseAtPoint
-// ---------------------------------------------------------------------------
-
-describe('eraseAtPoint', () => {
-	const strokes = [
-		stroke('a', [pt(0, 0), pt(5, 5)]),
-		stroke('b', [pt(100, 100), pt(110, 110)]),
-		stroke('c', [pt(3, 3)]),
-	];
-
-	it('removes strokes that hit the eraser', () => {
-		const result = eraseAtPoint(strokes, 0, 0, 10);
-		const ids = result.map((s) => s.id);
-		// 'a' and 'c' are within 10px of (0,0)
-		expect(ids).not.toContain('a');
-		expect(ids).not.toContain('c');
-		expect(ids).toContain('b');
-	});
-
-	it('returns all strokes when eraser misses everything', () => {
-		const result = eraseAtPoint(strokes, 500, 500, 5);
-		expect(result).toHaveLength(3);
-	});
-
-	it('returns empty array when all strokes are erased', () => {
-		const result = eraseAtPoint(strokes, 2, 2, 200);
-		expect(result).toHaveLength(0);
-	});
-
-	it('does not mutate the input array', () => {
-		const original = [...strokes];
-		eraseAtPoint(strokes, 0, 0, 10);
-		expect(strokes).toHaveLength(original.length);
 	});
 });
 

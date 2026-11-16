@@ -28,7 +28,12 @@ function controllerWith(overrides: Partial<PresentationInputDeps> = {}): {
 		root: () => null,
 		navigator: { navigate: vi.fn(), goToSlide: vi.fn() } as never,
 		playback: {} as never,
-		annotations: { setTool: vi.fn(), clearAnnotations: vi.fn(), tool: () => 'none' } as never,
+		annotations: {
+			setTool: vi.fn(),
+			selectTool: vi.fn(),
+			clearAnnotations: vi.fn(),
+			tool: () => 'none',
+		} as never,
 		presenterWindow: { snapshot: () => ({ blackout: 'none' }), updateSnapshot: vi.fn() } as never,
 		toggleInkMarkup: vi.fn(),
 		toggleSubtitles: vi.fn(),

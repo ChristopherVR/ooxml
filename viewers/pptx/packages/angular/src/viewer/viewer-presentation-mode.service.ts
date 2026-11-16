@@ -17,9 +17,11 @@
  * Provide it once on the viewer component (`providers: [ViewerPresentationModeService]`).
  */
 
-import { inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { createPresentationRehearsalController } from 'ooxml-ui/pptx';
 import type { AuthoredSlideRange } from 'ooxml-ui/pptx';
 
+import { controllerSignal } from './controller-signal';
 import type { SlideAnnotationMap } from './presentation-annotations-helpers';
 import { endShowMediaCleanup } from './presentation-overlay-helpers';
 import { PresenterWindowService } from './presenter-window.service';
@@ -65,16 +67,17 @@ export class ViewerPresentationModeService {
 	readonly presentingPresenter = signal(false);
 	/** Epoch ms when presenter view started (drives the elapsed timer). */
 	readonly presenterStartTime = signal<number | null>(null);
-	readonly rehearsing = signal(false);
-	readonly rehearsalPaused = signal(false);
-	readonly showRehearsalSummary = signal(false);
-	readonly rehearsalStartedAt = signal<number | null>(null);
-	readonly slideStartedAt = signal<number | null>(null);
-	readonly recordedTimings = signal<Record<number, number>>({});
+	/** Rehearse Timings: the shared controller, read as a signal. */
+	readonly rehearsal = createPresentationRehearsalController();
+	private readonly rehearsalState = controllerSignal(this.rehearsal);
+	readonly rehearsing = computed(() => this.rehearsalState().active);
+	readonly rehearsalPaused = computed(() => this.rehearsalState().paused);
+	readonly showRehearsalSummary = computed(() => this.rehearsalState().summaryOpen);
+	readonly rehearsalSlideElapsedMs = computed(() => this.rehearsalState().slideElapsedMs);
+	readonly rehearsalTotalElapsedMs = computed(() => this.rehearsalState().totalElapsedMs);
+	readonly recordedTimings = computed(() => this.rehearsalState().timings);
 	/** Live subtitle preference shared by the ribbon and presentation overlay. */
 	readonly subtitlesVisible = signal(false);
-	private pauseStartedAt: number | null = null;
-	private pausedOnSlideMs = 0;
 
 	private host: PresentationModeHost | null = null;
 
@@ -155,16 +158,8 @@ export class ViewerPresentationModeService {
 		host.setActiveSlideIndex(
 			resolveRehearsalStartIndex(start, host.activeSlideIndex(), host.slideCount()),
 		);
-		this.recordedTimings.set({});
-		this.showRehearsalSummary.set(false);
-		this.rehearsalPaused.set(false);
-		this.rehearsing.set(true);
-		this.pauseStartedAt = null;
-		this.pausedOnSlideMs = 0;
-		const now = Date.now();
-		this.rehearsalStartedAt.set(now);
-		this.slideStartedAt.set(now);
 		this.present();
+		this.rehearsal.start(host.activeSlideIndex());
 	}
 
 	/**
@@ -182,24 +177,12 @@ export class ViewerPresentationModeService {
 		if (index < 0 || index >= this.customShowsCtl.presentationSlides().length) {
 			return;
 		}
-		if (this.rehearsing() && index !== host.activeSlideIndex()) {
-			this.recordCurrentSlide();
-			this.slideStartedAt.set(Date.now());
-			this.pausedOnSlideMs = 0;
-		}
+		this.rehearsal.moveTo(index);
 		host.setActiveSlideIndex(index);
 	}
 
 	toggleRehearsalPause(): void {
-		const now = Date.now();
-		if (this.rehearsalPaused()) {
-			this.pausedOnSlideMs += this.pauseStartedAt ? now - this.pauseStartedAt : 0;
-			this.pauseStartedAt = null;
-			this.rehearsalPaused.set(false);
-		} else {
-			this.pauseStartedAt = now;
-			this.rehearsalPaused.set(true);
-		}
+		this.rehearsal.togglePause();
 	}
 
 	closePresentation(): void {
@@ -208,32 +191,15 @@ export class ViewerPresentationModeService {
 		// cross-slide "play across slides" audio ends with it. The presenter-view
 		// swap goes through togglePresenterView instead, which keeps it playing.
 		endShowMediaCleanup();
-		if (this.rehearsing()) {
-			this.recordCurrentSlide();
-			this.rehearsing.set(false);
-			this.showRehearsalSummary.set(true);
-		}
+		this.rehearsal.finish();
 	}
 
 	saveRehearsalTimings(): void {
-		this.requireHost().applyRehearsalTimings(this.recordedTimings());
-		this.dismissRehearsalSummary();
+		this.requireHost().applyRehearsalTimings({ ...this.rehearsal.save() });
 	}
 
 	dismissRehearsalSummary(): void {
-		this.showRehearsalSummary.set(false);
-		this.rehearsing.set(false);
-	}
-
-	private recordCurrentSlide(): void {
-		const host = this.requireHost();
-		const started = this.slideStartedAt();
-		if (started === null) {
-			return;
-		}
-		const pausedNow = this.pauseStartedAt ? Date.now() - this.pauseStartedAt : 0;
-		const elapsed = Math.max(0, Date.now() - started - this.pausedOnSlideMs - pausedNow);
-		this.recordedTimings.update((current) => ({ ...current, [host.activeSlideIndex()]: elapsed }));
+		this.rehearsal.discard();
 	}
 
 	/**

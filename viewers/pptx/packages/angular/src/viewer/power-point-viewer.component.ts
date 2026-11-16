@@ -70,6 +70,7 @@ import {
 	installSvgIdScope,
 	createRibbonDisplayController,
 	attachTableCellsPaste,
+	applyRehearsalTimings,
 } from 'ooxml-ui/pptx';
 import type {
 	GoogleFontsOption,
@@ -1090,8 +1091,8 @@ const noopClose = (): void => undefined;
 			}
 			@if (presentationMode.rehearsing()) {
 				<pptx-rehearse-timings
-					[slideStartedAt]="presentationMode.slideStartedAt()"
-					[presentationStartedAt]="presentationMode.rehearsalStartedAt()"
+					[slideElapsedMs]="presentationMode.rehearsalSlideElapsedMs()"
+					[totalElapsedMs]="presentationMode.rehearsalTotalElapsedMs()"
 					[paused]="presentationMode.rehearsalPaused()"
 					[timings]="presentationMode.recordedTimings()"
 					(togglePause)="presentationMode.toggleRehearsalPause()"
@@ -3201,19 +3202,7 @@ export class PowerPointViewerComponent
 			authoredRange: () => this.presentationAuthoredRange(),
 			promptKeepAnnotations: (map) => this.extraDialogs()?.promptKeepAnnotations(map),
 			applyRehearsalTimings: (timings) => {
-				const slides = this.editor.snapshot().map((slide, index) => {
-					const advanceAfterMs = timings[index];
-					return typeof advanceAfterMs !== 'number'
-						? slide
-						: {
-								...slide,
-								transition: {
-									...slide.transition,
-									type: slide.transition?.type ?? 'none',
-									advanceAfterMs,
-								},
-							};
-				});
+				const slides = applyRehearsalTimings(this.editor.snapshot(), timings);
 				this.editor.applyReplacement(slides, 'Rehearse timings');
 			},
 		});

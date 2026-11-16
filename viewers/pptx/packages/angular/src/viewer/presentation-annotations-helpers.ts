@@ -14,6 +14,14 @@
  */
 import { buildStrokePathD, cursorForTool as sharedCursorForTool } from 'ooxml-ui/pptx';
 
+// Stroke widths, opacity and the eraser radius are the shared ink controller's.
+export {
+	PRESENTATION_ERASER_RADIUS as ERASER_RADIUS,
+	PRESENTATION_HIGHLIGHTER_OPACITY as HIGHLIGHTER_OPACITY,
+	PRESENTATION_HIGHLIGHTER_WIDTH as HIGHLIGHTER_WIDTH,
+	PRESENTATION_PEN_WIDTH as PEN_WIDTH,
+} from 'ooxml-ui/pptx';
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -44,38 +52,6 @@ export type SlideAnnotationMap = Map<number, AnnotationStroke[]>;
 export interface LaserPosition {
 	x: number;
 	y: number;
-}
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-export const PEN_WIDTH = 2.5;
-export const HIGHLIGHTER_WIDTH = 14;
-export const HIGHLIGHTER_OPACITY = 0.4;
-export const ERASER_RADIUS = 16;
-
-// ---------------------------------------------------------------------------
-// Stroke id generation
-// ---------------------------------------------------------------------------
-
-let strokeIdCounter = 0;
-
-/**
- * Generate a monotonically-increasing stroke id.
- * Module-level counter is fine: ids only need to be unique within a session.
- */
-export function nextStrokeId(): string {
-	strokeIdCounter += 1;
-	return `stroke-${strokeIdCounter}`;
-}
-
-/**
- * Reset the stroke-id counter. Exposed for tests only; never call from
- * production code.
- */
-export function resetStrokeIdCounter(): void {
-	strokeIdCounter = 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -132,46 +108,6 @@ export function smoothPoints(points: AnnotationPoint[], window = 2): AnnotationP
 		out.push({ x: sx / count, y: sy / count });
 	}
 	return out;
-}
-
-// ---------------------------------------------------------------------------
-// Eraser hit-testing
-// ---------------------------------------------------------------------------
-
-/**
- * Return `true` when any point on `stroke` lies within `radius` pixels of the
- * eraser centre `(ex, ey)` in slide space.
- *
- * Uses squared-distance comparison to avoid Math.sqrt.
- */
-export function strokeHitsEraser(
-	stroke: AnnotationStroke,
-	ex: number,
-	ey: number,
-	radius: number,
-): boolean {
-	const r2 = radius * radius;
-	for (const pt of stroke.points) {
-		const dx = pt.x - ex;
-		const dy = pt.y - ey;
-		if (dx * dx + dy * dy < r2) {
-			return true;
-		}
-	}
-	return false;
-}
-
-/**
- * Filter `strokes`, removing any that hit the eraser at `(ex, ey)`.
- * Returns a new array; does not mutate the input.
- */
-export function eraseAtPoint(
-	strokes: AnnotationStroke[],
-	ex: number,
-	ey: number,
-	radius = ERASER_RADIUS,
-): AnnotationStroke[] {
-	return strokes.filter((s) => !strokeHitsEraser(s, ex, ey, radius));
 }
 
 // ---------------------------------------------------------------------------
