@@ -1,9 +1,4 @@
-import {
-	DIAGRAM_COLOR_ENTRIES,
-	DIAGRAM_STYLE_ENTRIES,
-	type DiagramColorScheme,
-	type DiagramStyleIntensity,
-} from 'ooxml-core/diagram';
+import { findDiagramNativeColor, findDiagramNativeStyle } from 'ooxml-core/diagram';
 import { smartArtColorsGalleryState, smartArtStylesGalleryState } from '../smartart';
 import {
 	defineGallery,
@@ -13,22 +8,30 @@ import {
 import { emit } from './events';
 import { normalizeEditorLocale, translate, type LocalizationKey } from './localization';
 
+// The built-in definitions are in the separate `diagram/builtin` entry, loaded when a gallery is
+// created, so a pick normally applies at once (a pick during the load waits for it).
+type Builtin = typeof import('ooxml-core/diagram/builtin');
+let loaded: Builtin | undefined;
+let loading: Promise<Builtin> | undefined;
+const builtin = (): Promise<Builtin> =>
+	(loading ??= import('ooxml-core/diagram/builtin').then((module) => (loaded = module)));
+
 export function smartArtFormatGallery(kind: 'colors' | 'style'): HTMLElement {
 	defineGallery();
 	const gallery = document.createElement('office-ui-gallery') as OfficeUiGallery;
 	gallery.dataset.smartartFormat = kind;
+	void builtin().catch(() => undefined);
 	gallery.addEventListener('office-gallery-pick', (event) => {
 		const value = (event as OfficeGalleryPickEvent).detail.itemId;
-		if (kind === 'colors' && DIAGRAM_COLOR_ENTRIES.some((entry) => entry.id === value))
+		const entry = kind === 'colors' ? findDiagramNativeColor(value) : findDiagramNativeStyle(value);
+		if (!entry) return;
+		const apply = ({ builtinSmartArtFormatChange }: Builtin) =>
 			emit(gallery, 'ribbon-action', {
 				type: 'smartArtFormat',
-				change: { kind, value: value as DiagramColorScheme },
+				change: builtinSmartArtFormatChange(kind, entry.uniqueId),
 			});
-		if (kind === 'style' && DIAGRAM_STYLE_ENTRIES.some((entry) => entry.id === value))
-			emit(gallery, 'ribbon-action', {
-				type: 'smartArtFormat',
-				change: { kind, value: value as DiagramStyleIntensity },
-			});
+		if (loaded) apply(loaded);
+		else void builtin().then(apply);
 	});
 	return gallery;
 }
@@ -44,16 +47,8 @@ export function syncSmartArtFormatGalleries(
 	for (const gallery of root.querySelectorAll<OfficeUiGallery>('[data-smartart-format]')) {
 		const state =
 			gallery.dataset.smartartFormat === 'colors'
-				? smartArtColorsGalleryState(
-						{},
-						colorsId?.split('/').at(-1) as DiagramColorScheme | undefined,
-						t,
-					)
-				: smartArtStylesGalleryState(
-						undefined,
-						styleId?.split('/').at(-1) as DiagramStyleIntensity | undefined,
-						t,
-					);
+				? smartArtColorsGalleryState({}, colorsId, t)
+				: smartArtStylesGalleryState(undefined, styleId, t);
 		gallery.state = {
 			...state,
 			moreLabel: state.label,

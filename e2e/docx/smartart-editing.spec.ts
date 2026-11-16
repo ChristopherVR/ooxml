@@ -112,9 +112,11 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const data = Object.keys(zip.files).find((name) => /word\/diagrams\/data.*\.xml$/.test(name));
 		expect(data).toBeTruthy();
 		expect(await zip.file(data!)!.async('string')).toContain(
-			'urn:ooxml-core/colors/monochromatic2',
+			'urn:microsoft.com/office/officeart/2005/8/colors/accent2_2',
 		);
-		expect(await zip.file(data!)!.async('string')).toContain('urn:ooxml-core/style/moderate');
+		expect(await zip.file(data!)!.async('string')).toContain(
+			'urn:microsoft.com/office/officeart/2005/8/quickstyle/simple4',
+		);
 		const layout = Object.keys(zip.files).find((name) =>
 			/word\/diagrams\/layout.*\.xml$/.test(name),
 		);

@@ -15,7 +15,6 @@ import {
 } from 'ooxml-core/diagram';
 import { smartArtCommandId } from '../../smartart-controller';
 import { smartArtColorsGalleryState, smartArtStylesGalleryState } from '../../../smartart';
-import type { DiagramColorScheme, DiagramStyleIntensity } from 'ooxml-core/diagram';
 import { smartArtSchemeColors } from '../../grid/smartart';
 import { gallerySections } from '../shared-gallery';
 import { SLICER_SIZE_OPTIONS, slicerStyleGalleryItems } from '../../commands/slicers';
@@ -253,9 +252,7 @@ export function smartArtDesignTab(): RibbonTab {
 							gallerySections(
 								smartArtStylesGalleryState(
 									smartArtSchemeColors(ctx.workbook()?.theme).accent1,
-									activeSmartArt(ctx)?.smartArt.quickStyleId?.split('/').at(-1) as
-										| DiagramStyleIntensity
-										| undefined,
+									activeSmartArt(ctx)?.smartArt.quickStyleId,
 									(key) => ctx.t(key),
 								).sections,
 							),
@@ -268,9 +265,7 @@ export function smartArtDesignTab(): RibbonTab {
 							gallerySections(
 								smartArtColorsGalleryState(
 									smartArtSchemeColors(ctx.workbook()?.theme),
-									activeSmartArt(ctx)?.smartArt.colorsId?.split('/').at(-1) as
-										| DiagramColorScheme
-										| undefined,
+									activeSmartArt(ctx)?.smartArt.colorsId,
 									(key) => ctx.t(key),
 								).sections,
 							),

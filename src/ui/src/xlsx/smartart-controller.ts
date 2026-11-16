@@ -6,8 +6,9 @@
 // SmartArt Design list of `ooxml-core/diagram`, which Word's tab is built from too.
 import {
 	DIAGRAM_DESIGN_COMMANDS,
-	DIAGRAM_COLOR_ENTRIES,
-	DIAGRAM_STYLE_ENTRIES,
+	appliedDiagramNativeId,
+	findDiagramNativeColor,
+	findDiagramNativeStyle,
 	type DiagramDesignCommandKey,
 	type DiagramInsertPreset,
 } from 'ooxml-core/diagram';
@@ -25,6 +26,16 @@ import { chooseSmartArt } from './dialogs/insert-smartart';
 
 /** Excel's default SmartArt size in CSS pixels (about 5 by 3 inches). */
 const DEFAULT_SIZE = { width: 480, height: 280 };
+
+// The built-in colour and style definitions (`ooxml-core/diagram/builtin`), loaded once the
+// SmartArt Design galleries are offered, so a pick normally applies at once.
+type StyleLibrary = typeof import('ooxml-core/diagram/builtin');
+let styleLibrary: StyleLibrary | undefined;
+let styleLibraryLoad: Promise<StyleLibrary> | undefined;
+const loadStyleLibrary = (): Promise<StyleLibrary> =>
+	(styleLibraryLoad ??= import('ooxml-core/diagram/builtin').then(
+		(module) => (styleLibrary = module),
+	));
 
 const ICONS: Record<DiagramDesignCommandKey, Parameters<typeof icon>[0]> = {
 	addAfter: 'smartArtAddShape',
@@ -175,18 +186,26 @@ export function smartArtCommands(): Command[] {
 				label: kind === 'colors' ? 'Change Colors' : 'SmartArt Styles',
 				icon: icon('smartArt'),
 				lock: 'objects',
-				enabled: (ctx) => !!activeSmartArt(ctx),
-				run: (ctx, arg) => {
+				enabled: (ctx) => {
+					const active = !!activeSmartArt(ctx);
+					if (active && !styleLibrary) void loadStyleLibrary().catch(() => undefined);
+					return active;
+				},
+				run: async (ctx, arg) => {
 					const found = activeSmartArt(ctx);
 					const t = target(ctx);
-					if (!found || !t) return;
-					if (kind === 'colors') {
-						const choice = DIAGRAM_COLOR_ENTRIES.find((entry) => entry.id === arg);
-						if (choice) t.session.formatSmartArt(t.sheet, found.index, { kind, value: choice.id });
-					} else {
-						const choice = DIAGRAM_STYLE_ENTRIES.find((entry) => entry.id === arg);
-						if (choice) t.session.formatSmartArt(t.sheet, found.index, { kind, value: choice.id });
-					}
+					// A built-in id, or a model scheme or intensity (`monochromatic2`, `moderate`).
+					const id =
+						typeof arg === 'string' ? appliedDiagramNativeId(kind, `${kind}/${arg}`) : undefined;
+					const choice =
+						kind === 'colors' ? findDiagramNativeColor(id) : findDiagramNativeStyle(id);
+					if (!found || !t || !choice) return;
+					const { builtinSmartArtFormatChange } = styleLibrary ?? (await loadStyleLibrary());
+					t.session.formatSmartArt(
+						t.sheet,
+						found.index,
+						builtinSmartArtFormatChange(kind, choice.uniqueId),
+					);
 				},
 			}),
 		),

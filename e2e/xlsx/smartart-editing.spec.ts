@@ -114,8 +114,8 @@ for (const framework of FRAMEWORKS)
 		await expect(drawn.locator('office-ui-smartart')).toContainText('Gamma');
 		const back = await editorProperty<Book>(page, 'workbook');
 		expect(back.sheets[0]!.drawings.find((shape) => shape.kind === 'smartArt')).toMatchObject({
-			colorsId: 'urn:ooxml-core/colors/monochromatic2',
-			quickStyleId: 'urn:ooxml-core/style/moderate',
+			colorsId: 'urn:microsoft.com/office/officeart/2005/8/colors/accent2_2',
+			quickStyleId: 'urn:microsoft.com/office/officeart/2005/8/quickstyle/simple4',
 		});
 		expect(errors).toEqual([]);
 	});

@@ -64,10 +64,14 @@ it('runs SmartArt Design commands and the text pane on the selected diagram, wit
 	ctx.session()!.undo();
 	expect(smartArt(ctx).nodes.map((n) => n.text)).toEqual(['Plan', 'Build', 'Ship']);
 	expect(smartArt(ctx).diagram).toBeDefined();
+	// A model scheme name applies the built-in definition it stands for; a 3-D style applies too.
 	await ctx.commands.run('smartart.colors', 'monochromatic2');
-	expect(smartArt(ctx).colorsId).toBe('urn:ooxml-core/colors/monochromatic2');
-	await ctx.commands.run('smartart.style', 'moderate');
-	expect(smartArt(ctx).quickStyleId).toBe('urn:ooxml-core/style/moderate');
+	expect(smartArt(ctx).colorsId).toBe('urn:microsoft.com/office/officeart/2005/8/colors/accent2_2');
+	await ctx.commands.run('smartart.style', '3d1');
+	expect(smartArt(ctx).quickStyleId).toBe(
+		'urn:microsoft.com/office/officeart/2005/8/quickstyle/3d1',
+	);
+	expect(smartArt(ctx).definitions?.quickStyle).toContain('prstMaterial="plastic"');
 	ctx.session()!.undo();
-	expect(smartArt(ctx).quickStyleId).not.toBe('urn:ooxml-core/style/moderate');
+	expect(smartArt(ctx).quickStyleId).not.toContain('quickstyle/3d1');
 });

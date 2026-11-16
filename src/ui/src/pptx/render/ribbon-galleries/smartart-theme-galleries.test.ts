@@ -22,8 +22,8 @@ describe('smartArt galleries', () => {
 	it('marks the saved quick style and makes a subsequent style pick persistable', () => {
 		const element = smartArt({ quickStyle: { effectIntensity: 'intense' } });
 		const items = buildRibbonGallery('smartArtStyles', { element }).sections[0].items;
-		expect(items.filter((item) => item.applied).map((item) => item.id)).toStrictEqual(['intense']);
-		expect(applyRibbonGalleryItem('smartArtStyles', 'flat', { element })).toMatchObject({
+		expect(items.filter((item) => item.applied).map((item) => item.id)).toStrictEqual(['simple5']);
+		expect(applyRibbonGalleryItem('smartArtStyles', 'simple1', { element })).toMatchObject({
 			patch: {
 				smartArtData: {
 					style: 'flat',
@@ -34,19 +34,38 @@ describe('smartArt galleries', () => {
 		});
 	});
 
-	it('offers the model colour schemes under PowerPoint names', () => {
+	it("offers Office's full colour catalogue under PowerPoint names", () => {
 		const descriptor = buildRibbonGallery('smartArtColors', {
 			element: smartArt({ colorScheme: 'colorful2' }),
 		});
-		expect(descriptor.sections.map((s) => s.items.map((i) => i.id))).toStrictEqual([
-			['colorful1', 'colorful2', 'colorful3'],
-			['monochromatic1'],
-			['monochromatic2'],
+		expect(descriptor.sections.map((s) => s.id)).toStrictEqual([
+			'mainScheme',
+			'colorful',
+			'accent1',
+			'accent2',
+			'accent3',
+			'accent4',
+			'accent5',
+			'accent6',
 		]);
-		const item = descriptor.sections[0].items[1];
+		expect(descriptor.sections.flatMap((s) => s.items)).toHaveLength(38);
+		expect(descriptor.sections[1].items.map((i) => i.id)).toStrictEqual([
+			'colorful1',
+			'colorful2',
+			'colorful3',
+			'colorful4',
+			'colorful5',
+		]);
+		const item = descriptor.sections[1].items[1];
 		expect(item.applied).toBeTruthy();
 		expect(item.labelParams).toStrictEqual({ from: 2, to: 3 });
 		expect(galleryItemLabel(item, (key) => key)).toBe('Colorful Range - Accent Colors 2 to 3');
+		const outline = descriptor.sections[3].items[0];
+		expect([outline.id, outline.labelKey, outline.labelParams]).toStrictEqual([
+			'accent2_1',
+			'pptx.gallery.smartArtColors.coloredOutline',
+			{ accent: 2 },
+		]);
 	});
 
 	it('applies a colour scheme and a style through the shared patch', () => {
@@ -61,13 +80,21 @@ describe('smartArt galleries', () => {
 		const styles = buildRibbonGallery('smartArtStyles', {
 			element: smartArt({ style: 'intense' }),
 		});
+		expect(styles.sections.map((s) => s.id)).toStrictEqual(['bestMatch', 'threeD']);
 		expect(styles.sections[0].items.map((i) => [i.id, i.label, i.applied])).toStrictEqual([
-			['flat', 'Simple Fill', false],
-			['moderate', 'Moderate Effect', false],
-			['intense', 'Intense Effect', true],
+			['simple1', 'Simple Fill', false],
+			['simple2', 'White Outline', false],
+			['simple3', 'Subtle Effect', false],
+			['simple4', 'Moderate Effect', false],
+			['simple5', 'Intense Effect', true],
 		]);
+		expect(styles.sections[1].items).toHaveLength(9);
 		const style = applyRibbonGalleryItem('smartArtStyles', 'moderate', { element: smartArt() });
 		expect(style).toMatchObject({ patch: { smartArtData: { style: 'moderate' } } });
+		// A 3-D style renders at the nearest intensity in the editor.
+		expect(applyRibbonGalleryItem('smartArtStyles', '3d1', { element: smartArt() })).toMatchObject({
+			patch: { smartArtData: { style: 'moderate' } },
+		});
 		expect(applyRibbonGalleryItem('smartArtStyles', 'flat', { element: null })).toBeNull();
 		expect(buildRibbonGallery('smartArtStyles', { element: null }).disabled).toBeTruthy();
 	});

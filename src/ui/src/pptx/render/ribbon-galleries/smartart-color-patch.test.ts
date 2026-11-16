@@ -64,6 +64,6 @@ describe('smartArt gallery color edits', () => {
 				.flatMap((section) => section.items)
 				.filter((item) => item.applied)
 				.map((item) => item.id),
-		).toStrictEqual(['monochromatic2']);
+		).toStrictEqual(['accent2_2']);
 	});
 });

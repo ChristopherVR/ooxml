@@ -35,6 +35,14 @@ export function applySmartArtDataPatch(
 	elementId = 'inspector',
 ): PptxSmartArtData {
 	const next = { ...data, ...patch };
+	// A model colour or style change without a built-in definition replaces an earlier pick.
+	if (
+		(patch.colorScheme !== undefined || patch.colorTransform !== undefined) &&
+		!('builtinColorsXml' in patch)
+	)
+		delete next.builtinColorsXml;
+	if (patch.style !== undefined && !('builtinQuickStyleXml' in patch))
+		delete next.builtinQuickStyleXml;
 	if (patch.style !== undefined) {
 		next.quickStyleDirty = true;
 		next.quickStyle = {

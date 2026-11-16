@@ -170,6 +170,16 @@ describe('SmartArt editing in the Word editor', () => {
 		);
 		controller.handle({ type: 'smartArtFormat', change: { kind: 'style', value: 'moderate' } });
 		expect(selectedDiagram(view.state)!.diagram.quickStyleId).toBe('urn:ooxml-core/style/moderate');
+		const { builtinSmartArtFormatChange } = await import('ooxml-core/diagram/builtin');
+		controller.handle({
+			type: 'smartArtFormat',
+			change: builtinSmartArtFormatChange('style', '3d4'),
+		});
+		expect(selectedDiagram(view.state)!.diagram.quickStyleId).toBe(
+			'urn:microsoft.com/office/officeart/2005/8/quickstyle/3d4',
+		);
+		undo(view.state, view.dispatch);
+		expect(selectedDiagram(view.state)!.diagram.quickStyleId).toBe('urn:ooxml-core/style/moderate');
 		undo(view.state, view.dispatch);
 		expect(selectedDiagram(view.state)!.diagram.quickStyleId).not.toBe(
 			'urn:ooxml-core/style/moderate',
