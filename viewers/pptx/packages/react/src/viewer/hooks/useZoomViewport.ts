@@ -3,12 +3,19 @@ import {
 	clampZoomScale,
 	createViewerZoomStore,
 	resetViewportScroll,
+	selectionScrollTarget,
+	selectionZoomBounds,
+	zoomToSelectionScale,
 } from 'ooxml-ui/pptx';
-import type { ViewerZoomState, ViewerZoomStore, ViewportFitOptions } from 'ooxml-ui/pptx';
+import type {
+	SelectionZoomBounds,
+	ViewerZoomState,
+	ViewerZoomStore,
+	ViewportFitOptions,
+} from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import { useRef, useCallback, useEffect } from 'react';
 
-import { MIN_ELEMENT_SIZE, ZOOM_TO_SELECTION_PADDING } from '../constants';
 import type { CanvasSize } from '../types';
 import { useViewerStore } from './useViewerStore';
 import { useViewportFit } from './useViewportFit';
@@ -18,12 +25,7 @@ import { useViewportNode } from './useViewportNode';
 const selectZoom = (state: ViewerZoomState): number => state.zoom;
 
 /** Axis-aligned bounding box used by zoom / viewport helpers. */
-interface SelectionBounds {
-	minX: number;
-	minY: number;
-	maxX: number;
-	maxY: number;
-}
+type SelectionBounds = SelectionZoomBounds;
 
 interface UseZoomViewportInput extends ViewportFitOptions {
 	canvasSize: CanvasSize;
@@ -114,20 +116,13 @@ export function useZoomViewport({
 				return;
 			}
 
-			const boundedScale = clampZoomScale(nextScale);
-			const nextEditorScale = fitScale * boundedScale;
-			const centerX = (bounds.minX + bounds.maxX) / 2;
-			const centerY = (bounds.minY + bounds.maxY) / 2;
-			const targetScrollLeft =
-				canvasViewport.offsetLeft + centerX * nextEditorScale - wrapper.clientWidth / 2;
-			const targetScrollTop =
-				canvasViewport.offsetTop + centerY * nextEditorScale - wrapper.clientHeight / 2;
-
-			wrapper.scrollTo({
-				left: Math.max(targetScrollLeft, 0),
-				top: Math.max(targetScrollTop, 0),
-				behavior: 'smooth',
-			});
+			const target = selectionScrollTarget(
+				bounds,
+				fitScale * clampZoomScale(nextScale),
+				{ left: canvasViewport.offsetLeft, top: canvasViewport.offsetTop },
+				{ width: wrapper.clientWidth, height: wrapper.clientHeight },
+			);
+			wrapper.scrollTo({ ...target, behavior: 'smooth' });
 		},
 		[canvasViewportRef, fitScale],
 	);
@@ -150,49 +145,11 @@ export function useZoomViewport({
 	}, [store]);
 
 	const handleZoomToSelection = useCallback(() => {
-		if (selectedElements.length === 0) {
+		const selectionBounds = selectionZoomBounds(selectedElements);
+		if (!selectionBounds) {
 			return;
 		}
-
-		let minX = Number.POSITIVE_INFINITY;
-		let minY = Number.POSITIVE_INFINITY;
-		let maxX = Number.NEGATIVE_INFINITY;
-		let maxY = Number.NEGATIVE_INFINITY;
-
-		selectedElements.forEach((element) => {
-			minX = Math.min(minX, element.x);
-			minY = Math.min(minY, element.y);
-			maxX = Math.max(maxX, element.x + Math.max(element.width, MIN_ELEMENT_SIZE));
-			maxY = Math.max(maxY, element.y + Math.max(element.height, MIN_ELEMENT_SIZE));
-		});
-
-		if (
-			!Number.isFinite(minX) ||
-			!Number.isFinite(minY) ||
-			!Number.isFinite(maxX) ||
-			!Number.isFinite(maxY)
-		) {
-			return;
-		}
-
-		const selectionBounds: SelectionBounds = { minX, minY, maxX, maxY };
-
-		const boundsWidth = Math.max(selectionBounds.maxX - selectionBounds.minX, MIN_ELEMENT_SIZE);
-		const boundsHeight = Math.max(selectionBounds.maxY - selectionBounds.minY, MIN_ELEMENT_SIZE);
-		const availableWidth = Math.max(
-			effectiveEditorDimensions.width - ZOOM_TO_SELECTION_PADDING,
-			MIN_ELEMENT_SIZE,
-		);
-		const availableHeight = Math.max(
-			effectiveEditorDimensions.height - ZOOM_TO_SELECTION_PADDING,
-			MIN_ELEMENT_SIZE,
-		);
-		const targetEditorScale = Math.min(
-			availableWidth / boundsWidth,
-			availableHeight / boundsHeight,
-		);
-		const safeFitScale = fitScale > Number.EPSILON ? fitScale : Number.EPSILON;
-		const nextScale = clampZoomScale(targetEditorScale / safeFitScale);
+		const nextScale = zoomToSelectionScale(selectionBounds, effectiveEditorDimensions, fitScale);
 
 		setScale(nextScale);
 
@@ -203,8 +160,7 @@ export function useZoomViewport({
 		});
 	}, [
 		centerBoundsInViewport,
-		effectiveEditorDimensions.height,
-		effectiveEditorDimensions.width,
+		effectiveEditorDimensions,
 		fitScale,
 		selectedElements,
 		setScale,

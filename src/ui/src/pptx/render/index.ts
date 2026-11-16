@@ -1635,6 +1635,8 @@ export * from './chrome-metrics';
 // every binding's presentation-mode navigation.
 export * from './zoom-return-navigation';
 export * from './zoom-step';
+// Zoom to Selection: the zoom that fits the selection and the scroll that centres it.
+export * from './zoom-to-selection';
 export * from './command-search';
 export * from './autosave-store';
 // Recovery-snapshot housekeeping (clear, retention) against IndexedDB or the host's store.

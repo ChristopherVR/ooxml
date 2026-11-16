@@ -1,4 +1,4 @@
-import { calculateViewportFit } from 'ooxml-ui/pptx';
+import { calculateViewportFit, selectionZoomBounds, zoomToSelectionScale } from 'ooxml-ui/pptx';
 // @vitest-environment happy-dom
 /**
  * Tests for pure computation logic extracted from useZoomViewport.
@@ -429,48 +429,19 @@ interface Element {
 	height: number;
 }
 
-/** Compute selection bounds from an array of elements. */
+/** Selection bounds: the shared `selectionZoomBounds` the hook calls. */
 function computeSelectionBounds(elements: Element[]): SelectionBounds | null {
-	if (elements.length === 0) {
-		return null;
-	}
-	let minX = Number.POSITIVE_INFINITY;
-	let minY = Number.POSITIVE_INFINITY;
-	let maxX = Number.NEGATIVE_INFINITY;
-	let maxY = Number.NEGATIVE_INFINITY;
-
-	elements.forEach((element) => {
-		minX = Math.min(minX, element.x);
-		minY = Math.min(minY, element.y);
-		maxX = Math.max(maxX, element.x + Math.max(element.width, MIN_ELEMENT_SIZE));
-		maxY = Math.max(maxY, element.y + Math.max(element.height, MIN_ELEMENT_SIZE));
-	});
-
-	if (
-		!Number.isFinite(minX) ||
-		!Number.isFinite(minY) ||
-		!Number.isFinite(maxX) ||
-		!Number.isFinite(maxY)
-	) {
-		return null;
-	}
-	return { minX, minY, maxX, maxY };
+	return selectionZoomBounds(elements);
 }
 
-/** Compute the target zoom scale for zoom-to-selection. */
+/** The target zoom for zoom-to-selection: the shared `zoomToSelectionScale` the hook calls. */
 function computeZoomToSelectionScale(
 	bounds: SelectionBounds,
 	editorWidth: number,
 	editorHeight: number,
 	fitScale: number,
 ): number {
-	const boundsWidth = Math.max(bounds.maxX - bounds.minX, MIN_ELEMENT_SIZE);
-	const boundsHeight = Math.max(bounds.maxY - bounds.minY, MIN_ELEMENT_SIZE);
-	const availableWidth = Math.max(editorWidth - ZOOM_TO_SELECTION_PADDING, MIN_ELEMENT_SIZE);
-	const availableHeight = Math.max(editorHeight - ZOOM_TO_SELECTION_PADDING, MIN_ELEMENT_SIZE);
-	const targetEditorScale = Math.min(availableWidth / boundsWidth, availableHeight / boundsHeight);
-	const safeFitScale = fitScale > Number.EPSILON ? fitScale : Number.EPSILON;
-	return Math.min(Math.max(targetEditorScale / safeFitScale, MIN_ZOOM_SCALE), MAX_ZOOM_SCALE);
+	return zoomToSelectionScale(bounds, { width: editorWidth, height: editorHeight }, fitScale);
 }
 
 // ---------------------------------------------------------------------------
