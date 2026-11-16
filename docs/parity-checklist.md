@@ -91,8 +91,17 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P1** Equations in Excel text boxes and in Visio (`ooxml-core/math` and
       `src/ui/src/docx/equation-*` are the template).
 - [ ] **P1** SmartArt layouts the preview marks approximate (`src/core/diagram/layout-preview.ts`),
-      3-D styles and bent hierarchy connectors; the built-in catalogue has 176 layouts
-      (`diagram/builtin/catalog.ts`), not yet checked against Office's gallery.
+      3-D rendering (a spatial camera is not drawn; 3-D shapes paint flattened) and bent hierarchy
+      connectors; the built-in catalogue has 176 layouts (`diagram/builtin/catalog.ts`), not yet
+      checked against Office's gallery.
+- [x] **P1** SmartArt Change Colors and SmartArt Styles offer Office's full built-in catalogue in
+      Word, Excel and PowerPoint: 38 colour and 14 quick-style definitions (nine 3-D), captured
+      from PowerPoint 16 through COM (`diagram/builtin/style-*.ts`). A pick writes Office's own
+      definition and `uniqueId`; Word and Excel generated caches carry each label's bevel,
+      extrusion, material, light rig and text 3-D as Office's cache does. 82 Word 16 and Excel 16
+      files reopened natively with the expected ids (2026-11-16). Remaining: the gallery tiles
+      are hints, not renderings; PowerPoint previews a pick at the nearest model intensity and
+      colour patch until reopen; Word and Excel do not translate the gallery names.
 - [ ] **P1** Proofing is the browser's `spellcheck` attribute everywhere: no grammar, thesaurus,
       custom dictionary, ignore list or proofing-language engine.
 - [ ] **P1** Picture Format and Shape Format contextual tabs: missing in Excel (both); partial in

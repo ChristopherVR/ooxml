@@ -568,8 +568,11 @@ The labels U3 to U5 are assigned here; the remaining chart UI work was previousl
   full source-cache round-trip writer and layout fabrication stay in pptx (step 4). Colour and quick-style fabrication
   now live in `diagram/write/fabricated-styles.ts`, with the PowerPoint path as a compatibility facade. The neutral
   source-backed formatter patches definition fields while preserving unknown XML. `writeGeneratedDiagramDrawing`
-  serializes generated 2D drawings and returns presentation GUIDs a host can associate with its data model; PowerPoint's
-  ordinary 2D preset shape properties use the same serializer. It refuses 3D input rather than flattening it silently.
+  serializes generated drawings and returns presentation GUIDs a host can associate with its data model; PowerPoint's
+  ordinary 2D preset shape properties use the same serializer. Quick-style 3D is written per shape as Office's own
+  cache has it (the label's `scene3d` when it is not the default front view, its `sp3d`, and text 3D in `a:bodyPr`),
+  observed on PowerPoint 16's caches for all 14 built-in styles; a diagram's spatial camera stays in the quick-style
+  part, which Office's cache does not carry either. Any other 3D input is still refused rather than flattened.
   Word and Excel drop stale cached drawing parts on edit and now attach a generated replacement when the ordered
   interpreter and 2D painter admit the diagram. The shared writer adds presentation GUID associations; each host adds
   the drawing relationship and content type. A private extension records the generated approximation and a SHA-256 of
@@ -586,7 +589,20 @@ The labels U3 to U5 are assigned here; the remaining chart UI work was previousl
   three style intensities and five theme-accent colour schemes. `formatDocxDiagram` and `EditSession.formatSmartArt` update
   source definitions, keep node overrides and unchanged rich text, invalidate stale drawings, and save the selected
   definition ids. History retains the matching definitions, including after formatting an inserted diagram.
-  **Remains:** rich text authoring in Excel's text pane, the wider native Office style catalogue, and 3D formatting controls.
+  The galleries of every product (Word, Excel and PowerPoint) now list Office's full built-in catalogue: 38 colour and
+  14 quick-style definitions (`diagram/builtin/style-definitions.ts`, gallery metadata in `diagram/catalogue-native.ts`,
+  captured by `scripts/diagram/make-smartart-definitions.ps1` from PowerPoint 16 through COM). A pick
+  (`builtinSmartArtFormatChange`) replaces the definition part with Office's own XML and `uniqueId`, as Office does;
+  the model's five schemes and three intensities map onto the definitions they are named after. PowerPoint writes the
+  picked part on save and names it on the document point (`csTypeId`, `qsTypeId`); in the editor it recolours through
+  its existing colour patch and the nearest intensity, so a 3-D pick shows its true look only after reopening.
+  **Remains:** rich text authoring in Excel's text pane, 3D formatting controls beyond the gallery, drawing spatial
+  scenes, and translated gallery names in Word and Excel.
+
+  Acceptance on 2026-11-16: the extended `smartart-format-acceptance-build.ts` produced 41 Word and 41 Excel files
+  (the three model combinations, then each of the 38 colour definitions with the 14 quick styles in turn) and
+  `smartart-format-acceptance.ps1` reopened all 82 in Word 16 and Excel 16: node texts, colour and quick-style ids
+  matched, every node had native shapes, and Excel wrote no repair log.
 
   Acceptance on 2026-10-26: the shared formatting builder and
   `src/core/scripts/docx/smartart-format-acceptance.ps1` produced and reopened six documents, three combinations each in desktop

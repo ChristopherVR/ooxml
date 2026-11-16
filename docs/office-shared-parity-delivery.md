@@ -87,6 +87,12 @@ manual layout, and full removal of the PowerPoint source-tree model remain outsi
 - [x] Cover per-node overrides, rich text, host theme changes and save/reopen.
 - [x] Keep Visio diagram conversion a separate host feature with explicit native-shape or embedded
       semantics; sharing diagram primitives is not native Visio SmartArt support.
+- [x] Offer Office's full built-in catalogue (38 colour, 14 quick-style definitions, nine 3-D) in
+      every product's galleries; a pick writes Office's own definition and `uniqueId`.
+- [x] Write quick-style 3D (label `scene3d`, `sp3d`, text 3D) into Word and Excel generated caches
+      as Office's own caches carry it; keep the spatial camera in the quick-style part.
+- [ ] Regenerate a source cache Office laid out (round-trip writer), draw spatial scenes, and show
+      a 3-D pick in PowerPoint's editor before reopening.
 
 ## 6. Shared chart controls and ChartEx consumers
 
@@ -180,6 +186,24 @@ seven cases across six bindings. Native Word 16 and Excel 16 reopened six style/
 with the expected semantic text and style/colour ids and nonempty node shapes; Excel reported no
 repair. These are semantic/package checks, not native pixel comparisons or the complete Office
 style catalogue.
+
+### Built-in SmartArt catalogue and 3D caches, 2026-11-16
+
+`make-smartart-definitions.ps1` captured every entry of PowerPoint 16's `SmartArtColors` (38) and
+`SmartArtQuickStyles` (14) through COM; the generator stores them gzip-packed in
+`diagram/builtin` and the gallery metadata (names, categories, tile traits) in the main entry.
+Word, Excel and PowerPoint galleries list all 52; Word and Excel apply a pick by replacing the
+definition part, PowerPoint on save (in its editor a pick is previewed through the colour patch
+and nearest intensity, an approximation). Quick-style 3D is written into generated caches per
+shape, matching the structure of Office's caches observed for all 14 styles; the spatial camera
+of the five Scene styles stays in the quick-style part, as in Office's cache. Tests: every
+definition parses, matches its metadata, and saves/reopens on the Word fixture with a generated
+cache (`diagram/builtin/style-definitions.test.ts`); PowerPoint saves both parts and the
+document-point ids. Native: 41 Word 16 and 41 Excel 16 files (all 38 colours, all 14 styles)
+reopened with matching texts and ids, native node shapes and no Excel repair. Browser: the Word
+SmartArt specs (8, six bindings) and Excel SmartArt specs (13) pass with the new galleries; the
+PowerPoint browser suite was not run for this change. Not established:
+pixel parity of the generated caches or our flattened 3-D painting.
 
 ### Advanced chart controls and ChartEx hosts, 2026-10-26
 
