@@ -55,6 +55,8 @@ export class PackageWriter {
 	private readonly types = new Map<string, string>();
 	/** Output parts still holding the source bytes of a carried part (output name to source name). */
 	private readonly verbatim = new Map<string, string>();
+	/** Steps that finish the zipped package (chart pictures stored through the shared allocator). */
+	private readonly finishers: ((zip: JSZip) => Promise<unknown>)[] = [];
 
 	constructor(readonly source: SourceIndex | undefined) {}
 
@@ -124,6 +126,11 @@ export class PackageWriter {
 		this.parts.set(partName, data);
 	}
 
+	/** Runs `step` on the zipped package before it is generated, after every part is in it. */
+	finish(step: (zip: JSZip) => Promise<unknown>): void {
+		this.finishers.push(step);
+	}
+
 	private contentTypesXml(): string {
 		const defaults = new Map<string, string>([
 			['rels', CONTENT_TYPES.rels],
@@ -159,6 +166,7 @@ export class PackageWriter {
 		zip.file('[Content_Types].xml', this.contentTypesXml(), options);
 		const names = [...this.parts.keys()].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
 		for (const name of names) zip.file(name, this.parts.get(name) ?? '', options);
+		for (const step of this.finishers) await step(zip);
 		return zip.generateAsync({
 			type: 'uint8array',
 			compression: 'DEFLATE',

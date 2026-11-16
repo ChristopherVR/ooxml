@@ -195,6 +195,31 @@ describe('Excel chart Format pane', () => {
 		expect(pane.element.hidden).toBe(true);
 	});
 
+	it('applies a picture fill from Excel fill controls and hands its details to the shared pane', async () => {
+		const { ctx, pane } = columnChart();
+		await ctx.commands.run('chart.format-area');
+		const fill = pane.element.querySelector<HTMLSelectElement>('[aria-label="Fill"]')!;
+		expect([...fill.options].map((option) => option.value)).toContain('picture');
+		fill.value = 'picture';
+		fill.dispatchEvent(new Event('change'));
+		const chart = ctx.workbook()!.sheets[0]!.drawings[0]!;
+		if (chart.kind !== 'chart') throw new Error('Missing chart');
+		expect(chartElementFill(chart, 'chartArea')).toMatchObject({
+			kind: 'picture',
+			layout: { tile: {} },
+		});
+		// The shared pane now owns the Fill section: picture source, transparency and tiling.
+		expect(pane.element.querySelector('[aria-label="Fill"]')).toBeNull();
+		expect(shadow(pane, '[data-chart-format-field="fill.picture"]')).not.toBeNull();
+		const saved = (await loadXlsx(await saveXlsx(ctx.workbook()!))).sheets[0]!.drawings[0]!;
+		if (saved.kind !== 'chart') throw new Error('Missing exported chart');
+		expect(chartElementFill(saved, 'chartArea')).toMatchObject({ kind: 'picture' });
+		ctx.session()!.undo();
+		const undone = ctx.workbook()!.sheets[0]!.drawings[0]!;
+		if (undone.kind !== 'chart') throw new Error('Missing chart');
+		expect(chartElementFill(undone, 'chartArea')?.kind).not.toBe('picture');
+	});
+
 	it('edits live chart spacing, follows undo/redo, and saves the values', async () => {
 		const { ctx, pane, input, change } = columnChart();
 		await ctx.commands.run('chart.format-series');

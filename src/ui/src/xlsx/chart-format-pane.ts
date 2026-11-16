@@ -19,6 +19,7 @@ import {
 	workbookChartTheme,
 	xlsxChartFormatSource,
 	xlsxFillsTarget,
+	xlsxSlotsFill,
 	XLSX_CHART_FILL_SLOT,
 } from './chart-format-source';
 import { createSeriesFill } from './chart-series-fill';
@@ -119,7 +120,7 @@ export function createChartFormatPane(ctx: EditorContext) {
 		const slotted =
 			selected !== undefined &&
 			xlsxFillsTarget(selected) &&
-			listed.element(selected).fill.kind !== 'pattern';
+			xlsxSlotsFill(listed.element(selected).fill.kind);
 		const [active, idle] = isSeries() ? [seriesFill, backgroundFill] : [backgroundFill, seriesFill];
 		idle.refresh(undefined, undefined);
 		idle.element.remove();

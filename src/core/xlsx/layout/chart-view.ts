@@ -7,6 +7,7 @@ import {
 } from '../../chart/render/chart-view';
 import type { ChartObject, Workbook } from '../model';
 import { resolveColor } from './colors';
+import { xlsxChartPictureSource } from './chart-pictures';
 
 export {
 	categoryTotals,
@@ -53,6 +54,7 @@ export function chartView(
 		{
 			evaluateRef,
 			seriesColor: (series) => resolveColor(series.color, theme),
+			pictureSource: xlsxChartPictureSource(workbook, chart),
 		},
 	);
 }

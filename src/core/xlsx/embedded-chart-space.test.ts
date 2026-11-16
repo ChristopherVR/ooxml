@@ -120,4 +120,33 @@ describe('embedded chart source preservation', () => {
 			writeEmbeddedChartSpace(bytes, setChartTitle(found.space, 'Unsafe')),
 		).rejects.toThrow('cannot be preserved');
 	});
+
+	it('stores picture fills in the embedded workbook and paints them again on reopen', async () => {
+		// What Visio's Format Chart does with Insert > Chart's workbook.
+		const PNG =
+			'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAADCAIAAAA2iEnWAAAAEElEQVR4nGP4z8AARAwoFABE0AX7pM/egAAAAABJRU5ErkJggg==';
+		const bytes = (await gridChartWorkbook(ROWS, 'column'))!;
+		const found = (await readEmbeddedChartSpace(bytes))!;
+		let edited = applyChartEditIntent(found.space, {
+			op: 'picture',
+			target: { kind: 'series', seriesIndex: 1 },
+			edit: { src: PNG, tile: true },
+		});
+		edited = applyChartEditIntent(edited, {
+			op: 'picture',
+			target: { kind: 'chartArea' },
+			edit: { src: PNG, transparency: 20 },
+		});
+		const out = await writeEmbeddedChartSpace(bytes, edited);
+		const zip = await JSZip.loadAsync(out);
+		const xml = await zip.file(found.partName)!.async('string');
+		expect(xml).not.toContain('chartPicturePending');
+		const media = Object.keys(zip.files).filter((name) => name.startsWith('xl/media/'));
+		expect(media).toEqual(['xl/media/image1.png']);
+		const again = (await readEmbeddedChartSpace(out))!;
+		expect(Object.values(again.space.pictureSources ?? {})).toEqual([PNG]);
+		const view = (await readEmbeddedChart(out))!.view;
+		expect(view.series[1]?.picture).toMatchObject({ href: PNG, mode: 'tile' });
+		expect(view.appearance?.chartArea?.picture).toMatchObject({ href: PNG, opacity: 0.8 });
+	});
 });

@@ -33,6 +33,9 @@ const FILL_PARTS: readonly string[] = ['chartArea', 'plotArea', 'title', 'legend
 export const xlsxFillsTarget = (target: ChartFormatTarget): boolean =>
 	FILL_PARTS.includes(target.kind);
 
+/** Pattern and picture fills keep the shared pane's own Fill section, with their detail fields. */
+export const xlsxSlotsFill = (kind: string): boolean => kind !== 'pattern' && kind !== 'picture';
+
 /**
  * The Format pane source of `chart` (whose model is `space`) with `target` selected: Excel's fill
  * controls take the Fill section of the elements they edit, and `resolveRange` reads the cells a
@@ -45,8 +48,10 @@ export function xlsxChartFormatSource(
 	target: ChartFormatTarget | undefined,
 	resolveRange?: ChartRangeNumbers,
 ): ChartFormatSource {
+	// Excel saves picture fills: the workbook writer stores the pictures as media parts.
 	const source = chartSpaceFormatSource(space, {
 		theme,
+		pictures: true,
 		...(resolveRange ? { resolveRange } : {}),
 	});
 	const spacing = chartBarSpacing(chart);
@@ -65,7 +70,7 @@ export function xlsxChartFormatSource(
 				sliders: true,
 			};
 		},
-		...(target && xlsxFillsTarget(target) && source.element(target).fill.kind !== 'pattern'
+		...(target && xlsxFillsTarget(target) && xlsxSlotsFill(source.element(target).fill.kind)
 			? { slots: { fill: XLSX_CHART_FILL_SLOT } }
 			: {}),
 		flat: true,

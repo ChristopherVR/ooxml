@@ -19,6 +19,8 @@ import { chartXml } from './chart';
 import { writeChartColorStyle } from './chart-colors';
 import { parseChartSpace } from '../../chart/parse-space';
 import { writeChartSpace } from '../../chart/write-space';
+import { CHART_MEDIA_FOLDERS, embedChartPartPictures } from '../../chart/picture-parts';
+import { isPendingChartPicture } from '../../chart/edit/picture';
 import {
 	chartIssuesLostOnWrite,
 	patchChartFormulas,
@@ -150,7 +152,9 @@ export function editedChartPart(source: string, chart: ChartObject): string | un
 		return undefined;
 	}
 	const loaded = parsed.chartSpace;
-	if (sameModel(loaded, chart.chartSpace)) return undefined;
+	// The pictures the painter reads are not part of the XML.
+	const { pictureSources: _pictures, ...model } = chart.chartSpace;
+	if (sameModel(loaded, model)) return undefined;
 	// A part with unmodelled content below the top level keeps its bytes (reference moves only).
 	if (chartIssuesLostOnWrite(parsed.issues).length)
 		return patchChartFormulas(source, loaded, chart.chartSpace);
@@ -170,6 +174,7 @@ function writeChart(writer: PackageWriter, chart: ChartObject): string {
 		writer.carry(chart.partName);
 		if (edited) writer.add(chart.partName, edited, CONTENT_TYPES.chart);
 		writeChartColorStyle(writer, chart.partName, chart);
+		storeChartPictures(writer, chart.partName, chart);
 		return chart.partName;
 	}
 	const part = writer.uniqueName(
@@ -181,7 +186,18 @@ function writeChart(writer: PackageWriter, chart: ChartObject): string {
 		: chartXml(chart);
 	writer.add(part, xml, CONTENT_TYPES.chart);
 	writeChartColorStyle(writer, part, chart);
+	storeChartPictures(writer, part, chart);
 	return part;
+}
+
+/**
+ * Pictures chosen in the Format pane this session are written under pending ids; once the package
+ * is zipped they become media parts of the chart part (`chart/picture-parts`), ids rewritten.
+ */
+function storeChartPictures(writer: PackageWriter, part: string, chart: ChartObject): void {
+	const sources = chart.chartSpace?.pictureSources;
+	if (!sources || !Object.keys(sources).some(isPendingChartPicture)) return;
+	writer.finish((zip) => embedChartPartPictures(zip, part, CHART_MEDIA_FOLDERS.xlsx, sources));
 }
 
 /**

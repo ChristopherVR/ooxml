@@ -17,6 +17,12 @@ import { chartColorScheme } from '../chart/render/chart-colors';
 import type { ChartSpace } from '../chart/model';
 import { parseChartSpace } from '../chart/parse-space';
 import { chartIssuesLostOnWrite, writeChartSpaceOverSource } from '../chart/keep-source';
+import {
+	CHART_MEDIA_FOLDERS,
+	chartSpacePictureSources,
+	embedChartPartPictures,
+} from '../chart/picture-parts';
+import { parseRelationships, relationshipsPartFor } from '../opc/relationships';
 import type { ChartParseIssue } from '../chart/model-series';
 import { columnLabel, quoteSheetName } from './address';
 import { createEditSession } from './edit/session';
@@ -67,7 +73,19 @@ export async function readEmbeddedChartSpace(
 	bytes: Uint8Array,
 ): Promise<EmbeddedChartSpace | undefined> {
 	try {
-		return locate(await loadXlsx(bytes));
+		const workbook = await loadXlsx(bytes);
+		const found = locate(workbook);
+		const parts = workbook.source?.parts;
+		if (!found || !parts) return found;
+		// The pictures of its picture fills, so the painter draws them.
+		const rels = parseRelationships(
+			decoder.decode(parts.get(relationshipsPartFor(found.partName)) ?? new Uint8Array()),
+		);
+		const pictures = await chartSpacePictureSources(found.space, found.partName, rels, (part) =>
+			parts.get(part),
+		);
+		if (Object.keys(pictures).length) found.space.pictureSources = pictures;
+		return found;
 	} catch {
 		return undefined;
 	}
@@ -148,5 +166,7 @@ export async function writeEmbeddedChartSpace(
 			createFolders: false,
 		},
 	);
+	// Pictures chosen in the Format pane become media parts of the workbook's chart part.
+	await embedChartPartPictures(zip, found.partName, CHART_MEDIA_FOLDERS.xlsx, space.pictureSources);
 	return zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
 }
