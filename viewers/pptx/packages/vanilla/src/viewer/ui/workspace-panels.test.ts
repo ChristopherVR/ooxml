@@ -415,3 +415,39 @@ test('copies a sorter range and keeps its zoom control synchronized', () => {
 	document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
 	document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
 });
+
+test('reorders sorter tiles by dragging only on an editable deck, and undoes once', () => {
+	const open = (canEdit: boolean) => {
+		document.body.replaceChildren();
+		const onReorder = vi.fn();
+		const onUndo = vi.fn();
+		const editorUndo = vi.fn();
+		document.addEventListener('keydown', editorUndo);
+		openSlideSorterOverlay(document, document.body, createTranslator(), {
+			slides: ['a', 'b', 'c'].map((id, i) => ({ id, rId: id, slideNumber: i + 1, elements: [] })),
+			current: 0,
+			canEdit,
+			onSelect: vi.fn(),
+			onReorder,
+			onDelete: vi.fn(),
+			onDuplicate: vi.fn(),
+			onToggleHidden: vi.fn(),
+			onUndo,
+		});
+		const tiles = document.querySelectorAll('[data-pptx-chrome="sorter-tile"]');
+		tiles[0]!.dispatchEvent(new Event('dragstart', { bubbles: true }));
+		tiles[2]!.dispatchEvent(new Event('dragover', { bubbles: true, cancelable: true }));
+		tiles[2]!.dispatchEvent(new Event('drop', { bubbles: true, cancelable: true }));
+		document.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true }));
+		document.removeEventListener('keydown', editorUndo);
+		return { onReorder, onUndo, editorUndo, tiles };
+	};
+	const readOnly = open(false);
+	expect((readOnly.tiles[0] as HTMLElement).draggable).toBe(false);
+	expect(readOnly.onReorder).not.toHaveBeenCalled();
+	const editable = open(true);
+	expect(editable.onReorder).toHaveBeenCalledExactlyOnceWith(0, 2);
+	expect(editable.onUndo).toHaveBeenCalledOnce();
+	expect(editable.editorUndo).not.toHaveBeenCalled();
+	document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+});

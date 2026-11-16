@@ -19,13 +19,14 @@ function makeSlides(count: number): PptxSlide[] {
 	);
 }
 
-function mountSorter(slides: PptxSlide[], activeIndex = 0) {
+function mountSorter(slides: PptxSlide[], activeIndex = 0, canEdit = false) {
 	return mount(SlideSorter, {
 		props: {
 			slides,
 			canvasSize,
 			mediaDataUrls: new Map<string, string>(),
 			activeIndex,
+			canEdit,
 		},
 	});
 }
@@ -59,7 +60,7 @@ describe('slideSorter', () => {
 	});
 
 	it('emits reorder with from and to on a simulated drop', async () => {
-		const wrapper = mountSorter(makeSlides(4));
+		const wrapper = mountSorter(makeSlides(4), 0, true);
 		const tiles = wrapper.findAll('.pptx-vue-sorter-tile');
 		const dataTransfer = {
 			effectAllowed: '',
@@ -88,6 +89,21 @@ describe('slideSorter', () => {
 		await tiles[1]!.trigger('dragstart', { dataTransfer });
 		await tiles[1]!.trigger('drop', { dataTransfer });
 
+		expect(wrapper.emitted('reorder')).toBeUndefined();
+	});
+
+	it('does not reorder a read-only deck by dragging', async () => {
+		const wrapper = mountSorter(makeSlides(3));
+		const tiles = wrapper.findAll('.pptx-vue-sorter-tile');
+		const dataTransfer = {
+			effectAllowed: '',
+			dropEffect: '',
+			setData: (): void => undefined,
+			getData: (): string => '0',
+		};
+		expect(tiles[0]!.attributes('draggable')).toBe('false');
+		await tiles[0]!.trigger('dragstart', { dataTransfer });
+		await tiles[2]!.trigger('drop', { dataTransfer });
 		expect(wrapper.emitted('reorder')).toBeUndefined();
 	});
 

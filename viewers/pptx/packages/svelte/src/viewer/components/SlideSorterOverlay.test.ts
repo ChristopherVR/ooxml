@@ -77,6 +77,31 @@ function menuButton(target: HTMLElement, label: string): HTMLButtonElement {
 	return button;
 }
 
+describe('slideSorterOverlay drag reorder', () => {
+	function drag(target: HTMLElement, from: number, to: number): void {
+		const articles = target.querySelectorAll('article');
+		articles[from].dispatchEvent(new Event('dragstart', { bubbles: true }));
+		articles[to].dispatchEvent(new Event('dragover', { bubbles: true, cancelable: true }));
+		flushSync();
+		articles[to].dispatchEvent(new Event('drop', { bubbles: true, cancelable: true }));
+		flushSync();
+	}
+
+	it('moves the dragged slide onto the drop target', () => {
+		const { target, onmove } = render();
+		drag(target, 0, 2);
+		expect(onmove).toHaveBeenCalledExactlyOnceWith(0, 2);
+		expect(target.querySelector('article.drop-target')).toBeNull();
+	});
+
+	it('does not reorder a read-only deck', () => {
+		const { target, onmove } = render({ canEdit: false });
+		expect(target.querySelector('article')!.getAttribute('draggable')).toBe('false');
+		drag(target, 0, 2);
+		expect(onmove).not.toHaveBeenCalled();
+	});
+});
+
 describe('slideSorterOverlay context menu', () => {
 	it('opens on right-click and targets the right-clicked slide, not the active one', () => {
 		const { target } = render({ current: 0 });

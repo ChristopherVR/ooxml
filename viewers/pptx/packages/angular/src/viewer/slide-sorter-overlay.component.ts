@@ -2,43 +2,36 @@ import { NgStyle } from '@angular/common';
 import {
 	ChangeDetectionStrategy,
 	CUSTOM_ELEMENTS_SCHEMA,
+	DestroyRef,
 	inject,
 	Component,
 	HostListener,
 	computed,
 	input,
 	output,
-	signal,
 } from '@angular/core';
+import type { OnInit } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
-	buildSlideSorterContextMenuEntries,
+	createSlideSorterController,
+	createSlideSorterState,
 	HIDDEN_SLIDE_LABEL_KEY,
 	HIDDEN_SLIDE_SLASH_GRADIENT,
 	hiddenSlideCue,
-	isEditorTextInputTarget,
-	mapSlideSorterKey,
-	slideSorterContextMenuLabel,
-	applySorterAction,
-	createSlideSorterState,
-	selectSorterSlide,
-	sorterSelectionIndexes,
-	sorterMenuContext,
-	sorterGridColumns,
 	slideClipboardLabels,
-	sorterPasteInsertAt,
+	slideSorterContextMenuLabel,
+	slideSorterView,
 } from 'ooxml-ui/pptx';
 import type {
 	CanvasSize,
 	HiddenSlideCue,
-	SlideSorterKeyActionName,
-	SlideSorterState,
 	SlideSorterContextMenuCommandId,
 	SlideSorterContextMenuEntry,
 	SlidePasteRequest,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 
+import { controllerSignal } from './controller-signal';
 import { SlideCanvasComponent } from './slide-canvas.component';
 import { thumbnailHeight, thumbnailZoom } from './slide-sorter-overlay-helpers';
 
@@ -49,14 +42,10 @@ const THUMB_W = 200;
  * SlideSorterOverlayComponent: Angular port of the React `SlideSorterOverlay`.
  *
  * Renders a fixed full-screen modal overlay containing a responsive grid of
- * scaled slide previews. Double-clicking a thumbnail emits `select(index)`; pressing
- * Escape or clicking the ✕ button emits `closed`. Right-clicking a thumbnail
- * (when `canEdit`) opens a small context menu (Copy / Paste / Duplicate /
- * Hide-Show / Delete) whose command list comes from the shared
- * `buildSlideSorterContextMenuEntries`, the same list React, Vue, Svelte and
- * Vanilla render.
- *
- * Viewer-first scope: no drag-reorder, no section grouping.
+ * scaled slide previews. Every decision (selection, clipboard, zoom, keys, the
+ * right-click menu and drag reorder) is the shared `createSlideSorterController`;
+ * this component only draws it. Double-clicking a thumbnail emits `select(index)`;
+ * dropping one on another emits `moveSlide`.
  *
  * Usage:
  * ```html
@@ -79,22 +68,16 @@ const THUMB_W = 200;
 	templateUrl: './slide-sorter-overlay.component.html',
 	styleUrl: './slide-sorter-overlay.component.css',
 })
-export class SlideSorterOverlayComponent {
+export class SlideSorterOverlayComponent implements OnInit {
 	private readonly translation = inject(TranslateService);
 	readonly copySystemSlides = input<((indexes: number[]) => Promise<void>) | undefined>();
 	readonly pasteSystemSlides = input<((insertAt: number) => Promise<void>) | undefined>();
 	clipboardLabels = () => slideClipboardLabels((key) => this.translation.instant(key));
 	copyPackage = async (): Promise<void> => {
-		await this.copySystemSlides()?.(sorterSelectionIndexes(this.state(), this.slides()));
+		await this.copySystemSlides()?.(this.controller.selectedIndexes());
 	};
 	pastePackage = async (): Promise<void> => {
-		await this.pasteSystemSlides()?.(
-			sorterPasteInsertAt(
-				sorterSelectionIndexes(this.state(), this.slides()),
-				this.activeIndex(),
-				this.slides().length,
-			),
-		);
+		await this.pasteSystemSlides()?.(this.controller.pasteInsertAt());
 	};
 	/** Full list of slides to display. */
 	readonly slides = input.required<PptxSlide[]>();
@@ -129,15 +112,49 @@ export class SlideSorterOverlayComponent {
 	/** Toggle the hidden flag on a slide (context-menu only, no keyboard chord). */
 	readonly toggleHiddenSlide = output<number>();
 
+	/** Move one slide (drag a thumbnail onto another). */
+	readonly moveSlide = output<{ from: number; to: number }>();
+
 	// -------------------------------------------------------------------------
 	// Derived display values
 	// -------------------------------------------------------------------------
 
-	/** Zoom level that fits the full canvas width into THUMB_W pixels. */
-	readonly sorter = signal<SlideSorterState | null>(null);
-	readonly state = computed(
-		() => this.sorter() ?? createSlideSorterState(this.slides(), this.activeIndex()),
+	/**
+	 * The shared sorter state machine; the deck stays this component's inputs. Required inputs
+	 * cannot be read at construction, so it starts empty and `ngOnInit` anchors it on the active
+	 * slide.
+	 */
+	protected readonly controller = createSlideSorterController(
+		{
+			slides: () => this.slides(),
+			activeIndex: () => this.activeIndex(),
+			canEdit: () => this.canEdit(),
+			clipboardSourceSlides: () => this.clipboardSourceSlides(),
+			clipboardTemplates: () => this.clipboardTemplates(),
+			onOperation: (operation, indexes) => {
+				for (const index of indexes) {
+					if (operation === 'delete') {
+						this.deleteSlide.emit(index);
+					} else if (operation === 'duplicate') {
+						this.duplicateSlide.emit(index);
+					} else {
+						this.toggleHiddenSlide.emit(index);
+					}
+				}
+			},
+			onPaste: (request) => this.pasteSlides.emit(request),
+			onMove: (from, to) => this.moveSlide.emit({ from, to }),
+			onClose: () => this.closed.emit(),
+		},
+		{ initial: createSlideSorterState([], 0) },
 	);
+	private readonly snapshot = controllerSignal(this.controller, inject(DestroyRef));
+	readonly view = computed(() => slideSorterView(this.snapshot(), this.slides()));
+	/** Selection, clipboard and zoom (the shared `SlideSorterState`). */
+	readonly state = computed(() => this.snapshot().sorter);
+	readonly dragOverIndex = computed(() => this.snapshot().dragOverIndex);
+
+	/** Zoom level that fits the full canvas width into THUMB_W pixels. */
 	readonly thumbZoom = computed(() =>
 		thumbnailZoom(this.canvasSize().width, (THUMB_W * this.state().zoom) / 100),
 	);
@@ -159,58 +176,23 @@ export class SlideSorterOverlayComponent {
 
 	/** ngStyle object for the grid: responsive auto-fill columns. */
 	readonly gridStyle = computed<Record<string, string>>(() => ({
-		'grid-template-columns': `repeat(${sorterGridColumns(this.state().zoom)}, minmax(0, 1fr))`,
+		'grid-template-columns': `repeat(${this.view().gridColumns}, minmax(0, 1fr))`,
 	}));
 
 	// -------------------------------------------------------------------------
 	// Event handlers
 	// -------------------------------------------------------------------------
 
+	ngOnInit(): void {
+		this.controller.reset();
+	}
+
 	@HostListener('document:keydown', ['$event'])
 	onKeydown(event: KeyboardEvent): void {
-		this.closeContextMenu();
-		const { action } = mapSlideSorterKey(event, {
-			canEdit: this.canEdit(),
-			hasMultiSelection: sorterSelectionIndexes(this.state(), this.slides()).length > 1,
-			isTextInputTarget: isEditorTextInputTarget(event.target),
-		});
-		if (!action) {
-			return;
-		}
-		event.preventDefault();
-		event.stopPropagation();
-		this.runAction(action);
+		this.controller.handleKeydown(event);
 	}
 	setZoom(event: Event): void {
-		this.sorter.set({ ...this.state(), zoom: Number((event.target as HTMLInputElement).value) });
-	}
-	private runAction(action: SlideSorterKeyActionName | 'toggle-hidden'): void {
-		const result = applySorterAction(
-			this.state(),
-			this.slides(),
-			action,
-			this.activeIndex(),
-			this.clipboardSourceSlides() ?? this.slides(),
-			this.clipboardTemplates(),
-		);
-		this.sorter.set(result.state);
-		if (result.paste) {
-			this.pasteSlides.emit(result.paste);
-		}
-		if (result.close) {
-			this.closed.emit();
-		}
-		for (const index of result.indexes) {
-			if (result.operation === 'duplicate') {
-				this.duplicateSlide.emit(index);
-			}
-			if (result.operation === 'delete') {
-				this.deleteSlide.emit(index);
-			}
-			if (result.operation === 'toggle-hidden') {
-				this.toggleHiddenSlide.emit(index);
-			}
-		}
+		this.controller.setZoom(Number((event.target as HTMLInputElement).value));
 	}
 
 	/** Clicking the backdrop (outside the panel) closes the overlay. */
@@ -223,7 +205,32 @@ export class SlideSorterOverlayComponent {
 
 	/** Clicking selects within the sorter; double-clicking opens the canvas. */
 	onThumbClick(index: number, event: MouseEvent): void {
-		this.sorter.set(selectSorterSlide(this.state(), this.slides(), index, event));
+		this.controller.select(index, event);
+	}
+
+	onDragStart(index: number, event: DragEvent): void {
+		event.dataTransfer?.setData('text/plain', String(index));
+		if (event.dataTransfer) {
+			event.dataTransfer.effectAllowed = 'move';
+		}
+		this.controller.dragStart(index);
+	}
+
+	onDragOver(index: number, event: DragEvent): void {
+		event.preventDefault();
+		this.controller.dragOver(index);
+	}
+
+	onDrop(index: number, event: DragEvent): void {
+		event.preventDefault();
+		this.controller.drop(
+			index,
+			Number.parseInt(event.dataTransfer?.getData('text/plain') ?? '', 10),
+		);
+	}
+
+	onDragEnd(): void {
+		this.controller.dragEnd();
 	}
 
 	// -------------------------------------------------------------------------
@@ -231,7 +238,7 @@ export class SlideSorterOverlayComponent {
 	// -------------------------------------------------------------------------
 
 	/** Open state + screen position of the context menu, or null when closed. */
-	readonly contextMenu = signal<{ x: number; y: number; index: number } | null>(null);
+	readonly contextMenu = computed(() => this.snapshot().menu);
 
 	/**
 	 * Right-clicking a thumbnail opens the menu for THAT slide.
@@ -242,31 +249,21 @@ export class SlideSorterOverlayComponent {
 	 * mouse action against it was reachable.
 	 */
 	onThumbContextMenu(event: MouseEvent, index: number): void {
-		if (!this.canEdit()) {
-			return;
+		if (this.controller.openMenu(index, event.clientX, event.clientY)) {
+			event.preventDefault();
 		}
-		event.preventDefault();
-		this.sorter.set(selectSorterSlide(this.state(), this.slides(), index, {}, true));
-		this.contextMenu.set({ x: event.clientX, y: event.clientY, index });
 	}
 
 	closeContextMenu(): void {
-		this.contextMenu.set(null);
+		this.controller.closeMenu();
 	}
 
-	readonly menuEntries = computed<SlideSorterContextMenuEntry[]>(() =>
-		buildSlideSorterContextMenuEntries(sorterMenuContext(this.state(), this.slides())),
-	);
+	readonly menuEntries = computed<SlideSorterContextMenuEntry[]>(() => this.view().menuEntries);
 	menuLabelSuffix(translated: string, entry: SlideSorterContextMenuEntry): string {
-		return slideSorterContextMenuLabel(
-			translated,
-			entry,
-			sorterSelectionIndexes(this.state(), this.slides()).length,
-		);
+		return slideSorterContextMenuLabel(translated, entry, this.view().selectedIndexes.length);
 	}
 	runMenuCommand(id: SlideSorterContextMenuCommandId): void {
-		this.closeContextMenu();
-		this.runAction(id);
+		this.controller.run(id);
 	}
 
 	// -------------------------------------------------------------------------

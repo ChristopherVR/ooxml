@@ -44,4 +44,32 @@ describe('sorter selection adapter', () => {
 		component.onKeydown(escape);
 		expect(component.state().selectedIds).toStrictEqual(['a']);
 	});
+
+	it('reorders by dragging only on an editable deck', () => {
+		const injector = Injector.create({
+			providers: [
+				{ provide: DestroyRef, useValue: { onDestroy: () => () => undefined } },
+				{ provide: TranslateService, useValue: { instant: (key: string) => key } },
+			],
+		});
+		const component = runInInjectionContext(injector, () => new SlideSorterOverlayComponent());
+		const canEdit = signal(false);
+		Object.defineProperty(component, 'slides', {
+			value: signal(['a', 'b', 'c'].map((id) => ({ id, rId: id, elements: [] }))),
+		});
+		Object.defineProperty(component, 'canEdit', { value: canEdit });
+		component.ngOnInit();
+		const moves: { from: number; to: number }[] = [];
+		component.moveSlide.subscribe((move) => moves.push(move));
+		const drag = (from: number, to: number): void => {
+			component.onDragStart(from, new Event('dragstart') as DragEvent);
+			component.onDrop(to, new Event('drop') as DragEvent);
+		};
+		drag(0, 2);
+		expect(moves).toStrictEqual([]);
+		canEdit.set(true);
+		drag(0, 2);
+		expect(moves).toStrictEqual([{ from: 0, to: 2 }]);
+		expect(component.dragOverIndex()).toBeNull();
+	});
 });

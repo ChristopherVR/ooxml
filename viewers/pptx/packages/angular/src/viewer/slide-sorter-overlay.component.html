@@ -58,8 +58,10 @@
 						type="button"
 						class="pptx-ng-sorter-cell"
 						data-pptx-chrome="sorter-tile"
-						[class.is-active]="state().selectedIds.includes(slide.id)"
-						[attr.data-pptx-selected]="state().selectedIds.includes(slide.id)"
+						[class.is-active]="view().selectedIds.has(slide.id)"
+						[class.is-drop-target]="dragOverIndex() === i"
+						[attr.data-pptx-selected]="view().selectedIds.has(slide.id)"
+						[attr.draggable]="canEdit() ? 'true' : 'false'"
 						[class.is-hidden]="hidden.hidden"
 						[attr.data-pptx-slide-hidden]="hidden.marker ?? null"
 						[attr.aria-label]="'pptx.notes.slideN' | translate: { n: i + 1 }"
@@ -68,6 +70,11 @@
 						(click)="onThumbClick(i, $event)"
 						(dblclick)="select.emit(i)"
 						(contextmenu)="onThumbContextMenu($event, i)"
+						(dragstart)="onDragStart(i, $event)"
+						(dragover)="onDragOver(i, $event)"
+						(dragleave)="controller.dragLeave()"
+						(drop)="onDrop(i, $event)"
+						(dragend)="onDragEnd()"
 					>
 						<!-- Thumbnail clipping wrapper -->
 						<div class="pptx-ng-sorter-thumb-clip" [ngStyle]="clipStyle()">

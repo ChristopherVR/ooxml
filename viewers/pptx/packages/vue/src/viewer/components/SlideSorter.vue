@@ -1,32 +1,21 @@
 <script setup lang="ts">
-/** Slide previews and reactive adapters over the shared sorter decisions. */
+/** Slide previews over the shared `createSlideSorterController`; this file only draws it. */
 import { X } from 'lucide-vue-next';
 import {
-	buildSlideSorterContextMenuEntries,
+	createSlideSorterController,
 	HIDDEN_SLIDE_SLASH_GRADIENT,
 	hiddenSlideCue,
-	isEditorTextInputTarget,
-	mapSlideSorterKey,
-	slideSorterContextMenuLabel,
-	applySorterAction,
-	createSlideSorterState,
-	selectSorterSlide,
-	sorterSelectionIndexes,
-	sorterMenuContext,
-	sorterGridColumns,
 	slideClipboardLabels,
-	sorterPasteInsertAt,
+	slideSorterContextMenuLabel,
+	slideSorterView,
 } from 'ooxml-ui/pptx';
-import type {
-	SlideSorterKeyActionName,
-	SlideSorterContextMenuCommandId,
-	SlidePasteRequest,
-} from 'ooxml-ui/pptx';
+import type { SlideSorterContextMenuCommandId, SlidePasteRequest } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import type { CSSProperties } from 'vue';
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { useController } from '../composables/useController';
 import type { CanvasSize } from '../types';
 import ContextMenu from './ContextMenu.vue';
 import type { ContextMenuItem } from './ContextMenu.vue';
@@ -56,42 +45,55 @@ const emit = defineEmits<{
 	close: [];
 }>();
 
+const controller = createSlideSorterController({
+	slides: () => props.slides,
+	activeIndex: () => props.activeIndex,
+	canEdit: () => Boolean(props.canEdit),
+	clipboardSourceSlides: () => props.clipboardSourceSlides,
+	clipboardTemplates: () => props.clipboardTemplates,
+	onOperation: (operation, indexes) => {
+		for (const index of indexes) {
+			if (operation === 'delete') {
+				emit('delete', index);
+			} else if (operation === 'duplicate') {
+				emit('duplicate', index);
+			} else {
+				emit('toggle-hidden', index);
+			}
+		}
+	},
+	onPaste: (request) => emit('paste', request),
+	onMove: (from, to) => emit('reorder', from, to),
+	onClose: () => emit('close'),
+});
+const state = useController(controller);
+const view = computed(() => slideSorterView(state.value, props.slides));
+
 /** Fixed thumbnail width (px); height derives from the canvas aspect ratio. */
-const sorter = ref(createSlideSorterState(props.slides, props.activeIndex));
-const TILE_WIDTH = computed(() => (192 * sorter.value.zoom) / 100);
-
-const tileScale = computed(() => TILE_WIDTH.value / Math.max(1, props.canvasSize.width));
+const tileWidth = computed(() => 192 * view.value.zoomScale);
+const tileScale = computed(() => tileWidth.value / Math.max(1, props.canvasSize.width));
 const tileHeight = computed(() => Math.round(props.canvasSize.height * tileScale.value));
-
 const stageWrapStyle = computed<CSSProperties>(() => ({
-	width: `${TILE_WIDTH.value}px`,
+	width: `${tileWidth.value}px`,
 	height: `${tileHeight.value}px`,
 }));
 
-/**
- * The shared rail/sorter cue. The tile already dimmed and already showed the
- * word, but dimming is a colour-only signal and nothing announced the state, so
- * the tile now also carries the slash across its number and a description.
- */
+/** The shared rail/sorter cue: the slash across the number and a description. */
 const hiddenCue = hiddenSlideCue;
 const slashGradient = HIDDEN_SLIDE_SLASH_GRADIENT;
 
-/** Index of the tile currently being dragged, or `null` when idle. */
-const dragIndex = ref<number | null>(null);
-/** Index the dragged tile is currently hovering over (drop target preview). */
-const dragOverIndex = ref<number | null>(null);
-
-function onSelect(index: number, event: MouseEvent): void {
-	sorter.value = selectSorterSlide(sorter.value, props.slides, index, event);
-}
+const zoom = computed({
+	get: () => state.value.sorter.zoom,
+	set: (value: number) => controller.setZoom(value),
+});
 
 function onDragStart(index: number, event: DragEvent): void {
-	dragIndex.value = index;
 	if (event.dataTransfer) {
 		event.dataTransfer.effectAllowed = 'move';
 		// Some browsers require data to be set for a drag to start.
 		event.dataTransfer.setData('text/plain', String(index));
 	}
+	controller.dragStart(index);
 }
 
 function onDragOver(index: number, event: DragEvent): void {
@@ -100,115 +102,48 @@ function onDragOver(index: number, event: DragEvent): void {
 	if (event.dataTransfer) {
 		event.dataTransfer.dropEffect = 'move';
 	}
-	dragOverIndex.value = index;
+	controller.dragOver(index);
 }
 
 function onDrop(index: number, event: DragEvent): void {
 	event.preventDefault();
-	const from = dragIndex.value;
-	dragIndex.value = null;
-	dragOverIndex.value = null;
-	if (from === null || from === index) {
-		return;
-	}
-	emit('reorder', from, index);
+	controller.drop(index, Number.parseInt(event.dataTransfer?.getData('text/plain') ?? '', 10));
 }
-
-function onDragEnd(): void {
-	dragIndex.value = null;
-	dragOverIndex.value = null;
-}
-
-// ── Context menu (right-click a tile) ─────────────────────────────────
-const contextMenu = ref<{ open: boolean; x: number; y: number; index: number }>({
-	open: false,
-	x: 0,
-	y: 0,
-	index: 0,
-});
 
 /**
- * Deliberately does not also `emit('select', index)`: the host's `select`
- * handler navigates the canvas AND closes this whole overlay
- * (`deckViews.onSorterSelect`), which would tear the menu down again on the
- * very right-click that opened it, before a single mouse action against it
- * was reachable.
+ * Deliberately does not also `emit('select', index)`: the host's `select` handler navigates
+ * the canvas AND closes this whole overlay, which would tear the menu down again on the very
+ * right-click that opened it.
  */
 function openContextMenu(index: number, event: MouseEvent): void {
-	if (!props.canEdit) {
-		return;
-	}
-	event.preventDefault();
-	sorter.value = selectSorterSlide(sorter.value, props.slides, index, {}, true);
-	contextMenu.value = { open: true, x: event.clientX, y: event.clientY, index };
-}
-
-function runAction(action: SlideSorterKeyActionName | 'toggle-hidden'): void {
-	const result = applySorterAction(
-		sorter.value,
-		props.slides,
-		action,
-		props.activeIndex,
-		props.clipboardSourceSlides ?? props.slides,
-		props.clipboardTemplates,
-	);
-	sorter.value = result.state;
-	if (result.paste) {
-		emit('paste', result.paste);
-	}
-	if (result.close) {
-		emit('close');
-	}
-	for (const index of result.indexes) {
-		if (result.operation === 'duplicate') {
-			emit('duplicate', index);
-		}
-		if (result.operation === 'delete') {
-			emit('delete', index);
-		}
-		if (result.operation === 'toggle-hidden') {
-			emit('toggle-hidden', index);
-		}
+	if (controller.openMenu(index, event.clientX, event.clientY)) {
+		event.preventDefault();
 	}
 }
 
-const contextItems = computed<ContextMenuItem[]>(() => {
-	return buildSlideSorterContextMenuEntries(sorterMenuContext(sorter.value, props.slides)).flatMap(
-		(entry, position) => {
-			const item: ContextMenuItem = {
-				id: entry.id,
-				label: slideSorterContextMenuLabel(
-					t(entry.labelKey),
-					entry,
-					sorterSelectionIndexes(sorter.value, props.slides).length,
-				),
-				disabled: entry.disabled,
-			};
-			return entry.separatorBefore
-				? [{ id: `sep-${position}`, label: '', separator: true }, item]
-				: [item];
-		},
-	);
-});
+const contextItems = computed<ContextMenuItem[]>(() =>
+	view.value.menuEntries.flatMap((entry, position) => {
+		const item: ContextMenuItem = {
+			id: entry.id,
+			label: slideSorterContextMenuLabel(
+				t(entry.labelKey),
+				entry,
+				view.value.selectedIndexes.length,
+			),
+			disabled: entry.disabled,
+		};
+		return entry.separatorBefore
+			? [{ id: `sep-${position}`, label: '', separator: true }, item]
+			: [item];
+	}),
+);
 
 function onContextSelect(id: string): void {
-	contextMenu.value.open = false;
-	runAction(id as SlideSorterContextMenuCommandId);
+	controller.run(id as SlideSorterContextMenuCommandId);
 }
-function onKeyDown(event: KeyboardEvent): void {
-	contextMenu.value.open = false;
-	const { action } = mapSlideSorterKey(event, {
-		canEdit: Boolean(props.canEdit),
-		hasMultiSelection: sorterSelectionIndexes(sorter.value, props.slides).length > 1,
-		isTextInputTarget: isEditorTextInputTarget(event.target),
-	});
-	if (!action) {
-		return;
-	}
-	event.preventDefault();
-	event.stopPropagation();
-	runAction(action);
-}
+const onKeyDown = (event: KeyboardEvent): void => {
+	controller.handleKeydown(event);
+};
 
 onMounted(() => {
 	window.addEventListener('keydown', onKeyDown);
@@ -224,20 +159,11 @@ onBeforeUnmount(() => {
 			<pptx-ui-slide-clipboard
 				:labels.prop="slideClipboardLabels(t)"
 				:copyAction.prop="
-					copySystemSlides
-						? () => copySystemSlides!(sorterSelectionIndexes(sorter, slides))
-						: undefined
+					copySystemSlides ? () => copySystemSlides!(controller.selectedIndexes()) : undefined
 				"
 				:pasteAction.prop="
 					canEdit && pasteSystemSlides
-						? () =>
-								pasteSystemSlides!(
-									sorterPasteInsertAt(
-										sorterSelectionIndexes(sorter, slides),
-										activeIndex,
-										slides.length,
-									),
-								)
+						? () => pasteSystemSlides!(controller.pasteInsertAt())
 						: undefined
 				"
 			/>
@@ -254,33 +180,33 @@ onBeforeUnmount(() => {
 
 		<div
 			class="pptx-vue-sorter-grid"
-			:style="{ gridTemplateColumns: `repeat(${sorterGridColumns(sorter.zoom)}, minmax(0, 1fr))` }"
+			:style="{ gridTemplateColumns: `repeat(${view.gridColumns}, minmax(0, 1fr))` }"
 		>
 			<div
 				v-for="(slide, index) in slides"
 				:key="slide.id ?? index"
 				class="pptx-vue-sorter-tile"
 				:class="{
-					'is-active': sorter.selectedIds.includes(slide.id),
-					'is-dragging': index === dragIndex,
-					'is-drop-target': index === dragOverIndex && index !== dragIndex,
+					'is-active': view.selectedIds.has(slide.id),
+					'is-dragging': index === state.dragIndex,
+					'is-drop-target': index === state.dragOverIndex && index !== state.dragIndex,
 					'is-hidden': Boolean(slide.hidden),
 				}"
-				draggable="true"
+				:draggable="canEdit ? 'true' : 'false'"
 				data-pptx-chrome="sorter-tile"
 				:data-index="index"
-				:data-pptx-selected="sorter.selectedIds.includes(slide.id)"
+				:data-pptx-selected="view.selectedIds.has(slide.id)"
 				:data-pptx-slide-hidden="hiddenCue(slide.hidden, 'sorter', index).marker"
 				:aria-label="t('pptx.notes.slideN', { n: index + 1 })"
 				:aria-current="index === activeIndex ? 'true' : undefined"
 				:aria-describedby="hiddenCue(slide.hidden, 'sorter', index).labelId"
-				@click="onSelect(index, $event)"
+				@click="controller.select(index, $event)"
 				@dblclick="emit('select', index)"
 				@contextmenu="openContextMenu(index, $event)"
 				@dragstart="onDragStart(index, $event)"
 				@dragover="onDragOver(index, $event)"
 				@drop="onDrop(index, $event)"
-				@dragend="onDragEnd"
+				@dragend="controller.dragEnd()"
 			>
 				<div class="pptx-vue-sorter-stage" :style="stageWrapStyle" aria-hidden="true">
 					<SlideStage
@@ -311,17 +237,17 @@ onBeforeUnmount(() => {
 				min="50"
 				max="200"
 				step="10"
-				v-model.number="sorter.zoom"
+				v-model.number="zoom"
 				:aria-label="t('pptx.slideSorter.zoom')"
-			/>{{ sorter.zoom }}%</label
+			/>{{ zoom }}%</label
 		>
 		<ContextMenu
-			:open="contextMenu.open"
-			:x="contextMenu.x"
-			:y="contextMenu.y"
+			:open="state.menu !== null"
+			:x="state.menu?.x ?? 0"
+			:y="state.menu?.y ?? 0"
 			:items="contextItems"
 			@select="onContextSelect"
-			@close="contextMenu.open = false"
+			@close="controller.closeMenu()"
 		/>
 	</div>
 </template>

@@ -68,3 +68,72 @@ test('copies a selected range and resolves its clipboard through the shared stat
 		target.remove();
 	}
 });
+
+function harnessParams(overrides: Partial<Parameters<typeof useSlideSorterState>[0]> = {}) {
+	return {
+		slides: ['a', 'b'].map((id) => ({ id, rId: id, slideNumber: 1, elements: [] })),
+		activeSlideIndex: 0,
+		canEdit: true,
+		sectionGroups: [],
+		onSelectSlide: vi.fn(),
+		onMoveSlide: vi.fn(),
+		onDeleteSlides: vi.fn(),
+		onDuplicateSlides: vi.fn(),
+		onPasteSlides: vi.fn(),
+		onToggleHideSlides: vi.fn(),
+		onClose: vi.fn(),
+		...overrides,
+	};
+}
+
+test('keeps one keydown listener across re-renders and reaches the current onClose', () => {
+	const target = document.createElement('div');
+	document.body.appendChild(target);
+	const root = createRoot(target);
+	const add = vi.spyOn(window, 'addEventListener');
+	const remove = vi.spyOn(window, 'removeEventListener');
+	function Harness({ onClose }: { onClose: () => void }): React.ReactElement {
+		useSlideSorterState(harnessParams({ onClose }));
+		return <div />;
+	}
+	const onClose = vi.fn();
+	try {
+		act(() => root.render(<Harness onClose={vi.fn()} />));
+		act(() => root.render(<Harness onClose={onClose} />));
+		expect(add.mock.calls.filter(([kind]) => kind === 'keydown')).toHaveLength(1);
+		expect(remove.mock.calls.filter(([kind]) => kind === 'keydown')).toHaveLength(0);
+		act(() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })));
+		expect(onClose).toHaveBeenCalledOnce();
+	} finally {
+		act(() => root.unmount());
+		target.remove();
+		add.mockRestore();
+		remove.mockRestore();
+	}
+});
+
+test('opens no menu on a read-only deck and leaves the native menu alone', () => {
+	const target = document.createElement('div');
+	document.body.appendChild(target);
+	const root = createRoot(target);
+	let state: ReturnType<typeof useSlideSorterState>;
+	function Harness(): React.ReactElement {
+		state = useSlideSorterState(harnessParams({ canEdit: false }));
+		return <div />;
+	}
+	try {
+		act(() => root.render(<Harness />));
+		const preventDefault = vi.fn();
+		act(() =>
+			state.handleContextMenu(
+				{ clientX: 1, clientY: 2, preventDefault, stopPropagation: vi.fn() } as never,
+				1,
+			),
+		);
+		expect(state!.contextMenu).toBeNull();
+		expect(preventDefault).not.toHaveBeenCalled();
+	} finally {
+		act(() => root.unmount());
+		target.remove();
+	}
+});

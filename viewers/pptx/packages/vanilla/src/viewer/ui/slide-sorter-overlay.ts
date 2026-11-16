@@ -1,19 +1,12 @@
 import {
+	createSlideSorterController,
 	HIDDEN_SLIDE_ATTRIBUTE,
 	HIDDEN_SLIDE_LABEL_KEY,
 	hiddenSlideCue,
-	isEditorTextInputTarget,
-	mapSlideSorterKey,
-	applySorterAction,
-	createSlideSorterState,
-	selectSorterSlide,
-	sorterSelectionIndexes,
-	sorterMenuContext,
-	sorterGridColumns,
 	slideClipboardLabels,
-	sorterPasteInsertAt,
+	slideSorterView,
 } from 'ooxml-ui/pptx';
-import type { SlideSorterState, SlideSorterKeyActionName, SlidePasteRequest } from 'ooxml-ui/pptx';
+import type { SlideSorterState, SlidePasteRequest } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 
 import type { Translator } from '../i18n';
@@ -69,18 +62,11 @@ export function openSlideSorterOverlay(
 	) as import('ooxml-ui/pptx').PptxUiSlideClipboardElement;
 	clipboardControl.labels = slideClipboardLabels(t);
 	clipboardControl.copyAction = options.onCopySystem
-		? () => options.onCopySystem!(sorterSelectionIndexes(sorter, options.slides))
+		? () => options.onCopySystem!(controller.selectedIndexes())
 		: undefined;
 	clipboardControl.pasteAction =
 		options.canEdit !== false && options.onPasteSystem
-			? () =>
-					options.onPasteSystem!(
-						sorterPasteInsertAt(
-							sorterSelectionIndexes(sorter, options.slides),
-							options.current,
-							options.slides.length,
-						),
-					)
+			? () => options.onPasteSystem!(controller.pasteInsertAt())
 			: undefined;
 	header.append(title, count, clipboardControl, close);
 	overlay.appendChild(header);
@@ -89,78 +75,79 @@ export function openSlideSorterOverlay(
 	// Slide ids copied in this sorter session (the shared Copy / Paste pair).
 	const clipboard = options.clipboard ?? { ids: [] };
 	let closeMenu: (() => void) | null = null;
-	let sorter = clipboard.state ?? createSlideSorterState(options.slides, options.current);
+	const controller = createSlideSorterController(
+		{
+			slides: () => options.slides,
+			activeIndex: () => options.current,
+			canEdit: () => options.canEdit !== false,
+			clipboardTemplates: () => options.clipboardTemplates,
+			onOperation: (operation, indexes) => {
+				for (const index of indexes) {
+					if (operation === 'delete') {
+						options.onDelete(index);
+					} else if (operation === 'duplicate') {
+						options.onDuplicate(index);
+					} else {
+						options.onToggleHidden(index);
+					}
+				}
+			},
+			onPaste: (request) => options.onPaste?.(request),
+			onMove: (from, to) => options.onReorder(from, to),
+			onClose: () => dismiss(),
+			onUndo: options.onUndo,
+			onRedo: options.onRedo,
+		},
+		{ initial: clipboard.state },
+	);
 	const refreshSelection = (): void => {
+		const { sorter } = controller.getSnapshot();
 		clipboard.state = sorter;
+		clipboard.ids = sorter.clipboardIds;
+		const view = slideSorterView(controller.getSnapshot(), options.slides);
+		if (!controller.getSnapshot().menu) {
+			closeMenu?.();
+			closeMenu = null;
+		}
 		overlay
 			.querySelectorAll<HTMLElement>('[data-pptx-chrome="sorter-tile"]')
 			.forEach((card, index) => {
-				const selected = sorter.selectedIds.includes(options.slides[index].id);
+				const selected = view.selectedIds.has(options.slides[index].id);
 				card.dataset.pptxSelected = String(selected);
 				card.classList.toggle('is-current', selected);
+				card.classList.toggle('is-drop-target', controller.getSnapshot().dragOverIndex === index);
 			});
 		const slider = overlay.querySelector<HTMLInputElement>('input[type=range]');
 		if (slider) {
 			slider.value = String(sorter.zoom);
 		}
-		grid.style.gridTemplateColumns = `repeat(${sorterGridColumns(sorter.zoom)}, minmax(0, 1fr))`;
+		grid.style.gridTemplateColumns = `repeat(${view.gridColumns}, minmax(0, 1fr))`;
 		grid.querySelectorAll<HTMLElement>('article > button').forEach((button) => {
-			button.style.height = `${(100 * sorter.zoom) / 100}px`;
+			button.style.height = `${100 * view.zoomScale}px`;
 		});
 	};
-	const runAction = (action: SlideSorterKeyActionName | 'toggle-hidden'): void => {
-		const result = applySorterAction(
-			sorter,
-			options.slides,
-			action,
-			options.current,
-			options.slides,
-			options.clipboardTemplates,
-		);
-		sorter = result.state;
-		clipboard.ids = sorter.clipboardIds;
-		clipboard.state = sorter;
-		if (result.paste) {
-			options.onPaste?.(result.paste);
-		}
-		if (result.close) {
-			dismiss();
-		}
-		for (const index of result.indexes) {
-			if (result.operation === 'duplicate') {
-				options.onDuplicate(index);
-			}
-			if (result.operation === 'delete') {
-				options.onDelete(index);
-			}
-			if (result.operation === 'toggle-hidden') {
-				options.onToggleHidden(index);
-			}
-		}
-		refreshSelection();
-	};
+	const unsubscribe = controller.subscribe(refreshSelection);
 	options.slides.forEach((slide, index) => {
 		const card = createEl(doc, 'article', 'pptxv-sorter-card');
 		card.dataset.pptxChrome = 'sorter-tile';
 		card.addEventListener('contextmenu', (event) => {
-			if (options.canEdit === false) {
+			closeMenu?.();
+			closeMenu = null;
+			if (!controller.openMenu(index, event.clientX, event.clientY)) {
 				return;
 			}
 			event.preventDefault();
-			closeMenu?.();
-			sorter = selectSorterSlide(sorter, options.slides, index, {}, true);
-			refreshSelection();
 			closeMenu = openSlideSorterContextMenu({
 				doc,
 				t,
 				host: overlay,
 				x: event.clientX,
 				y: event.clientY,
-				context: sorterMenuContext(sorter, options.slides),
-				onCommand: runAction,
+				context: slideSorterView(controller.getSnapshot(), options.slides).menuContext,
+				onCommand: (command) => controller.run(command),
 			});
 		});
-		card.draggable = true;
+		card.draggable = options.canEdit !== false;
 		card.classList.toggle('is-current', index === options.current);
 		card.classList.toggle('is-hidden', Boolean(slide.hidden));
 		const preview = createEl(doc, 'button');
@@ -183,24 +170,25 @@ export function openSlideSorterOverlay(
 			badge.textContent = t(HIDDEN_SLIDE_LABEL_KEY);
 			preview.appendChild(badge);
 		}
-		preview.addEventListener('click', (event) => {
-			sorter = selectSorterSlide(sorter, options.slides, index, event);
-			refreshSelection();
-		});
+		preview.addEventListener('click', (event) => controller.select(index, event));
 		preview.addEventListener('dblclick', () => {
 			options.onSelect(index);
 			overlay.remove();
 		});
-		card.addEventListener('dragstart', (event) =>
-			event.dataTransfer?.setData('text/plain', String(index)),
-		);
-		card.addEventListener('dragover', (event) => event.preventDefault());
+		card.addEventListener('dragstart', (event) => {
+			event.dataTransfer?.setData('text/plain', String(index));
+			controller.dragStart(index);
+		});
+		card.addEventListener('dragover', (event) => {
+			event.preventDefault();
+			controller.dragOver(index);
+		});
+		card.addEventListener('dragleave', () => controller.dragLeave());
+		card.addEventListener('dragend', () => controller.dragEnd());
 		card.addEventListener('drop', (event) => {
 			event.preventDefault();
-			const from = Number(event.dataTransfer?.getData('text/plain'));
-			if (Number.isInteger(from)) {
-				options.onReorder(from, index);
-			}
+			const data = event.dataTransfer?.getData('text/plain');
+			controller.drop(index, data ? Number(data) : undefined);
 		});
 		card.append(preview);
 		grid.appendChild(card);
@@ -209,47 +197,17 @@ export function openSlideSorterOverlay(
 
 	const dismiss = (): void => {
 		closeMenu?.();
+		unsubscribe();
 		doc.removeEventListener('keydown', onKeyDown, true);
 		overlay.remove();
 	};
 	const onKeyDown = (event: KeyboardEvent): void => {
 		if (!overlay.isConnected) {
+			unsubscribe();
 			doc.removeEventListener('keydown', onKeyDown, true);
 			return;
 		}
-		if (
-			!isEditorTextInputTarget(event.target) &&
-			(event.ctrlKey || event.metaKey) &&
-			!event.altKey
-		) {
-			const key = event.key.toLowerCase();
-			const historyAction =
-				key === 'z'
-					? event.shiftKey
-						? options.onRedo
-						: options.onUndo
-					: key === 'y'
-						? options.onRedo
-						: undefined;
-			if (historyAction) {
-				event.preventDefault();
-				event.stopImmediatePropagation();
-				historyAction();
-				return;
-			}
-		}
-		const { action } = mapSlideSorterKey(event, {
-			canEdit: options.canEdit !== false,
-			hasMultiSelection: sorterSelectionIndexes(sorter, options.slides).length > 1,
-			isTextInputTarget: isEditorTextInputTarget(event.target),
-		});
-		if (!action) {
-			return;
-		}
-		closeMenu?.();
-		event.preventDefault();
-		event.stopPropagation();
-		runAction(action);
+		controller.handleKeydown(event);
 	};
 	doc.addEventListener('keydown', onKeyDown, true);
 
@@ -258,12 +216,9 @@ export function openSlideSorterOverlay(
 	zoom.min = '50';
 	zoom.max = '200';
 	zoom.step = '10';
-	zoom.value = String(sorter.zoom);
+	zoom.value = String(controller.getSnapshot().sorter.zoom);
 	zoom.setAttribute('aria-label', t('pptx.slideSorter.zoom'));
-	zoom.addEventListener('input', () => {
-		sorter = { ...sorter, zoom: Number(zoom.value) };
-		refreshSelection();
-	});
+	zoom.addEventListener('input', () => controller.setZoom(Number(zoom.value)));
 	overlay.appendChild(zoom);
 	refreshSelection();
 	close.addEventListener('click', dismiss);

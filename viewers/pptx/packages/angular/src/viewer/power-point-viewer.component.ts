@@ -1028,6 +1028,7 @@ const noopClose = (): void => undefined;
 					(duplicateSlide)="editor.duplicateSlide($event)"
 					(pasteSlides)="editor.pasteSlides($event); goTo($event.insertAt)"
 					(toggleHiddenSlide)="toggleHideSlides([$event])"
+					(moveSlide)="moveSlide($event.from, $event.to)"
 				/>
 			}
 
