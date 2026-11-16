@@ -9,12 +9,27 @@ import css from './ribbon-tabs.css?raw';
 /** Emitted when the user picks a tab; cancelable (`preventDefault()` keeps the current tab). */
 export type OfficeRibbonSelectEvent = CustomEvent<{ tab: string }>;
 
+/**
+ * One tab a host gives `items` directly: the tab row then draws these instead of reading tabs off
+ * the panels (a product that renders its panels elsewhere, as PowerPoint's bindings do).
+ */
+export interface OfficeRibbonTabItem {
+	readonly id: string;
+	readonly label: string;
+	/** Tints the tab as a contextual tab (`--office-ribbon-contextual`). */
+	readonly contextual?: boolean;
+	readonly keytip?: string;
+	/** The tab's tooltip (a ScreenTip); none when absent. */
+	readonly title?: string;
+}
+
 interface RibbonTab {
 	id: string;
 	label: string;
 	contextual: boolean;
 	keytip?: string;
 	keytipPanel?: string;
+	title?: string;
 }
 
 /**
@@ -34,6 +49,11 @@ interface RibbonTab {
  * shows its panel over the content (`peek`) until Escape, a command or a click elsewhere. Ctrl+F1 and
  * a double click on a tab toggle it. `collapse-label` names the button. Event:
  * `office-ribbon-collapse` `{ collapsed }`.
+ *
+ * `items` (a property) switches the element to a tab row only: the tabs come from the list, in its
+ * order, and the element leaves its children alone (it neither hides panels nor reads tabs off them).
+ * `selected` is then the selected item's id, or empty when it names none, and a click on the
+ * selected tab fires `office-ribbon-select` too.
  */
 export class OfficeUiRibbon extends OfficeElement {
 	static override styles = controlStyles(css);
@@ -49,6 +69,7 @@ export class OfficeUiRibbon extends OfficeElement {
 		collapsed: flag,
 		peek: flag,
 		collapseLabel: { attribute: 'collapse-label', type: String },
+		items: { attribute: false },
 		tabs: { state: true },
 	};
 	declare label: string | null;
@@ -60,6 +81,7 @@ export class OfficeUiRibbon extends OfficeElement {
 	declare collapsed: boolean;
 	declare peek: boolean;
 	declare collapseLabel: string | null;
+	declare items: readonly OfficeRibbonTabItem[] | null;
 	declare tabs: RibbonTab[];
 	private chosen: string | null = null;
 
@@ -74,10 +96,14 @@ export class OfficeUiRibbon extends OfficeElement {
 		this.collapsed = false;
 		this.peek = false;
 		this.collapseLabel = null;
+		this.items = null;
 		this.tabs = [];
 	}
 
 	get selected(): string {
+		if (this.items) {
+			return this.items.some((item) => item.id === this.chosen) ? (this.chosen ?? '') : '';
+		}
 		const shown = this.shown();
 		const chosen = shown.find((panel) => panel.dataset.ribbonTab === this.chosen);
 		return chosen?.dataset.ribbonTab ?? shown[0]?.dataset.ribbonTab ?? '';
@@ -136,6 +162,16 @@ export class OfficeUiRibbon extends OfficeElement {
 
 	/** Read the tabs off the panels (on connection and whenever the slotted panels change). */
 	private build(): void {
+		if (this.items) {
+			this.tabs = this.items.map((item) => ({
+				id: item.id,
+				label: item.label,
+				contextual: item.contextual === true,
+				...(item.keytip ? { keytip: item.keytip } : {}),
+				...(item.title ? { title: item.title } : {}),
+			}));
+			return;
+		}
 		this.tabs = this.shown().map((panel) => {
 			const id = panel.dataset.ribbonTab!;
 			panel.setAttribute('role', 'tabpanel');
@@ -193,6 +229,7 @@ export class OfficeUiRibbon extends OfficeElement {
 	}
 
 	protected override willUpdate(changed: Map<PropertyKey, unknown>): void {
+		if (changed.has('items')) this.build();
 		if (changed.has('collapsible')) this.applyAuto();
 		if (changed.has('peek')) {
 			const doc = this.ownerDocument;
@@ -203,7 +240,8 @@ export class OfficeUiRibbon extends OfficeElement {
 
 	private choose(tab: string): void {
 		if (this.collapsible && this.collapsed) this.peek = true;
-		if (tab === this.selected) return;
+		// A host that owns the selection (`items`) hears every choice, the selected tab's too.
+		if (tab === this.selected && !this.items) return;
 		if (this.fire('office-ribbon-select', { tab }, true)) this.selected = tab;
 	}
 
@@ -239,7 +277,9 @@ export class OfficeUiRibbon extends OfficeElement {
 		if (!next) return;
 		event.preventDefault();
 		this.choose(next.dataset.tab!);
-		this.focusTab();
+		// A host that owns the selection (`items`) may apply it later: focus follows the key.
+		if (this.items) next.focus();
+		else this.focusTab();
 	}
 
 	/** Rebuild the tab row when a panel's label or visibility flag changes. */
@@ -274,8 +314,9 @@ export class OfficeUiRibbon extends OfficeElement {
 	protected override updated(): void {
 		const selected = this.selected;
 		const hideAll = this.collapsed && !this.peek;
-		for (const panel of this.panels())
-			panel.hidden = hideAll || panel.dataset.ribbonTab !== selected;
+		if (!this.items)
+			for (const panel of this.panels())
+				panel.hidden = hideAll || panel.dataset.ribbonTab !== selected;
 		// Keep the active tab inside the scrolling tab strip.
 		const active = this.tabButton(selected);
 		const list = active?.parentElement;
@@ -321,6 +362,7 @@ export class OfficeUiRibbon extends OfficeElement {
 								data-contextual=${ifDefined(tab.contextual ? '' : undefined)}
 								data-keytip=${ifDefined(tab.keytip)}
 								data-keytip-panel=${ifDefined(tab.keytipPanel)}
+								title=${ifDefined(tab.title)}
 								aria-selected=${String(tab.id === selected)}
 								tabindex=${tab.id === selected ? 0 : -1}
 								>${tab.label}</button

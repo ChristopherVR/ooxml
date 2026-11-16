@@ -1907,6 +1907,7 @@ export * from './status-bar-state';
 export * from './notes-toolbar-state';
 export * from './title-bar-state';
 export * from './tab-row-actions';
+export * from './ribbon-tab-row';
 
 export * from './slide-sorter-state';
 // What a binding does with a new slide's layout once the core has re-mapped it.

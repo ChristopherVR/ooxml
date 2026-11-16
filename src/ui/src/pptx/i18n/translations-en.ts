@@ -2150,6 +2150,7 @@ export const translationsEn: Record<string, string> = {
 	'pptx.ribbon.tab.review': 'Review',
 	'pptx.ribbon.tab.view': 'View',
 	'pptx.ribbon.tab.help': 'Help',
+	'pptx.ribbon.tabsAria': 'Ribbon tabs',
 	'pptx.ribbon.tool.select': 'Select',
 	'pptx.ribbon.tool.pen': 'Pen',
 	'pptx.ribbon.tool.highlighter': 'Highlighter',

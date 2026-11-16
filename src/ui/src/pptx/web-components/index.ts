@@ -3,6 +3,8 @@ import { withOfficeThemeCss } from '../theme/office-css';
 import { definePptxFormatSection } from './format-section';
 import { definePptxSlideClipboard } from './slide-clipboard';
 export { slideClipboardLabels } from './slide-clipboard';
+export { ribbonTab, ribbonTabButtons } from './ribbon-tabs';
+export type { PptxUiRibbonTabsElement } from './ribbon-tabs';
 export type { PptxUiSlideClipboardElement } from './slide-clipboard';
 import { HOST_STYLES } from './host-styles';
 import { definePptxMobileBar } from './mobile-bar';
@@ -73,6 +75,7 @@ import { definePptxRibbonView } from './ribbon-view';
 import { definePptxSlideShowOptions } from './slide-show-options';
 import { definePptxStatusBar } from './status-bar';
 import { definePptxRibbonActions } from './ribbon-actions';
+import { definePptxRibbonTabs } from './ribbon-tabs';
 import { definePptxSubtitleSettings } from './subtitle-settings';
 import { definePptxThemeEditor } from './theme-editor';
 import { definePptxChartFormatPane } from './chart-format-pane';
@@ -240,6 +243,7 @@ const controls = [
 	['pptx-ui-ribbon-toggle', definePptxRibbonToggle],
 	['pptx-ui-status-bar', definePptxStatusBar],
 	['pptx-ui-ribbon-actions', definePptxRibbonActions],
+	['pptx-ui-ribbon-tabs', definePptxRibbonTabs],
 	['pptx-ui-notes-toolbar', definePptxNotesToolbar],
 	['pptx-ui-context-menu', definePptxContextMenu],
 	['pptx-ui-subtitle-settings', definePptxSubtitleSettings],

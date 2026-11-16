@@ -33,6 +33,7 @@ export const OFFICE_ALIAS_TAGS = [
 	'pptx-ui-status-bar',
 	'pptx-ui-ribbon-gallery',
 	'pptx-ui-ribbon-actions',
+	'pptx-ui-ribbon-tabs',
 	'pptx-ui-options-dialog',
 	'pptx-ui-smartart-text-pane',
 	'pptx-ui-format-section',
@@ -158,6 +159,9 @@ const EXTRAS: Partial<Record<(typeof OFFICE_ALIAS_TAGS)[number], string>> = {
 	// The tab row's Comments and Share at the pptx tab-row scale (11px labels, 24px controls).
 	'pptx-ui-ribbon-actions': `:host { --office-font-size: 11px; --office-control-height-md: 24px;
 	--office-icon-size-md: 14px; --office-font-size-2xs: 8px; padding-inline-start: 0; }`,
+	// The tab row at the pptx scale (12px labels, 34px tabs); contextual tabs keep the accent.
+	'pptx-ui-ribbon-tabs': `:host { --office-font-size: 12px; --office-ribbon-tab-height: 34px;
+	--office-ribbon-contextual: var(--pptx-contextual-tab, var(--pptx-primary, #6366f1)); }`,
 	// File > Options keeps its wide footprint (56rem, a 176px rail) rather than Office's 728px.
 	'pptx-ui-options-dialog': `:host { --office-options-width: min(56rem, calc(100vw - 32px));
 	--office-options-nav-width: 176px; --office-options-height: 540px; --office-z-dialog: 1200; }`,
