@@ -1,8 +1,9 @@
 /**
  * SmartArt Design > SmartArt Styles: Office's full built-in quick-style catalogue (the five Best
  * Match for Document styles and the nine 3-D styles; `DIAGRAM_NATIVE_STYLE_ENTRIES`). A pick sets
- * the nearest model intensity (`smartArtData.style`) for the editor's rendering and records the
- * built-in definition, which save writes as the quick-style part with its 3D properties (see
+ * the nearest model intensity (`smartArtData.style`) for the editor's rendering, applies the
+ * definition's 3D to the diagram at once (`smartart-style-3d-preview.ts`), and records the built-in
+ * definition, which save writes as the quick-style part with its 3D properties (see
  * `smartart-native-entries.ts`). A model intensity (`flat`) still applies its definition.
  *
  * @module render/ribbon-galleries/smartart-styles-gallery
@@ -13,6 +14,7 @@ import { smartArtStyleDefinitionTileSvg } from '../../../smartart/definition-til
 import type { RibbonGalleryModule } from './gallery-module';
 import { galleryColorScheme } from './gallery-theme';
 import { smartArtElementPatch } from './smartart-gallery-patch';
+import { smartArtQuickStyle3dPreview } from './smartart-style-3d-preview';
 import {
 	appliedSmartArtStyle,
 	builtinDefinitionXml,
@@ -61,9 +63,13 @@ export const SMARTART_STYLES_GALLERY: RibbonGalleryModule = {
 	apply(itemId, ctx) {
 		const entry = nativeStyleOf(itemId);
 		if (!entry) return null;
+		const xml = builtinDefinitionXml('style', entry.uniqueId);
+		const data = ctx.element?.type === 'smartArt' ? ctx.element.smartArtData : undefined;
 		const patch = smartArtElementPatch(ctx.element, {
 			style: modelStyleIntensity(entry),
-			builtinQuickStyleXml: builtinDefinitionXml('style', entry.uniqueId),
+			builtinQuickStyleXml: xml,
+			// The pick's own 3D, so a 3-D style shows in the editor before the deck is reopened.
+			...(xml && data ? smartArtQuickStyle3dPreview(data, xml) : {}),
 		});
 		return patch ? { kind: 'element', ...patch } : null;
 	},

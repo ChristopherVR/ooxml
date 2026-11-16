@@ -2,8 +2,9 @@
  * The full built-in SmartArt colour and quick-style catalogue (`ooxml-core/diagram`) as the
  * PowerPoint galleries show it: dictionary keys per entry and section, the applied entry of a
  * diagram, and the patch a pick makes. A pick recolours the shapes in the editor through the
- * existing colour patch and nearest style intensity (an approximation), and records the built-in
- * definition, which save writes as the part so the reopened deck carries Office's own definition.
+ * existing colour patch and nearest style intensity (an approximation), gives them the picked
+ * quick style's 3D at once (`smartart-style-3d-preview.ts`), and records the built-in definition,
+ * which save writes as the part so the reopened deck carries Office's own definition.
  *
  * @module render/ribbon-galleries/smartart-native-entries
  */

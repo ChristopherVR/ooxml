@@ -751,7 +751,10 @@ The labels U3 to U5 are assigned here; the remaining chart UI work was previousl
   (`builtinSmartArtFormatChange`) replaces the definition part with Office's own XML and `uniqueId`, as Office does;
   the model's five schemes and three intensities map onto the definitions they are named after. PowerPoint writes the
   picked part on save and names it on the document point (`csTypeId`, `qsTypeId`); in the editor it recolours through
-  its existing colour patch and the nearest intensity, so a 3-D pick shows its true look only after reopening.
+  its existing colour patch and the nearest intensity, and applies the picked definition's 3D at once
+  (`render/ribbon-galleries/smartart-style-3d-preview.ts`: per-label bevel, extrusion, material and text 3D onto
+  the drawing shapes, the Scene styles' camera onto the diagram), so the lit scene shows a 3-D pick before reopening;
+  colours and effects stay at the nearest intensity until then, and extrusion and contour colours use the renderer's defaults.
   Word and Excel name the gallery titles, sections and all 52 entries in every product locale
   (`diagram/strings/gallery.ts`), expanded from PowerPoint's own `pptx.gallery.smartArt*` translations so the
   three products agree; those translations are agent-authored and not verified against Office's localized names.

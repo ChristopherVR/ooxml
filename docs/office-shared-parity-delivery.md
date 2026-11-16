@@ -98,8 +98,9 @@ remain outside this delivery.
       (agent-authored; not verified against Office's localized gallery names).
 - [x] Draw 3D in the shared painter, approximately: lit bevels, extrusion along the camera's depth
       and the Scene styles' spatial camera (`smartart-3d.ts`, `diagram/scene-camera.ts`).
-- [ ] Regenerate a source cache Office laid out (round-trip writer), and show a 3-D pick in
-      PowerPoint's editor before reopening.
+- [x] Show a 3-D pick in PowerPoint's editor before reopening (its 3D; colours and effects stay
+      at the nearest intensity until reopen).
+- [ ] Regenerate a source cache Office laid out (round-trip writer).
 
 ## 6. Shared chart controls and ChartEx consumers
 
