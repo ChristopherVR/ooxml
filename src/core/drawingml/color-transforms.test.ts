@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import { parseXml } from '../xml/index';
-import { applyDrawingColorTransformList } from './color-transforms';
+import {
+	applyDrawingColorTransformList,
+	declaredDrawingColorAlpha,
+	drawingColorAlpha,
+} from './color-transforms';
 import { parseDrawingColorIn, resolveDrawingColor } from './drawing-color';
 import { DRAWING_PRESET_COLORS, DRAWING_SYSTEM_COLORS } from './preset-colors';
 
@@ -60,5 +64,33 @@ describe('preset and system colours', () => {
 		expect(hex('<a:sysClr val="windowText" lastClr="123456"/>')).toBe('#123456');
 		expect(hex('<a:sysClr val="highlight"/>')).toBe(DRAWING_SYSTEM_COLORS.highlight);
 		expect(hex('<a:sysClr val="window" lastClr="zz"/>')).toBe('#FFFFFF');
+	});
+});
+
+describe('colour alpha', () => {
+	const t = (...pairs: [string, string][]) => pairs.map(([name, value]) => ({ name, value }));
+
+	it('combines alpha, alphaMod and alphaOff, clamping after each step', () => {
+		expect(drawingColorAlpha(t(['alpha', '40000'], ['alphaMod', '200000']))).toBeCloseTo(0.8);
+		expect(drawingColorAlpha(t(['alpha', '90000'], ['alphaMod', '200000']))).toBe(1);
+		expect(drawingColorAlpha(t(['alpha', '50000'], ['alphaOff', '-25000']))).toBeCloseTo(0.25);
+		expect(drawingColorAlpha([])).toBe(1);
+	});
+
+	it('reads the first of a repeated transform, as the resolver does', () => {
+		expect(drawingColorAlpha(t(['alpha', '30000'], ['alpha', '90000']))).toBeCloseTo(0.3);
+	});
+
+	it('reports no declared alpha when no readable alpha transform is present', () => {
+		expect(declaredDrawingColorAlpha(t(['lumMod', '50000']))).toBeUndefined();
+		expect(declaredDrawingColorAlpha(t(['alpha', 'x']))).toBeUndefined();
+		expect(declaredDrawingColorAlpha(t(['alphaOff', '-10000']))).toBeCloseTo(0.9);
+	});
+
+	it('is the alpha the resolver returns', () => {
+		const color = colorOf('<a:schemeClr val="accent1"><a:alpha val="35000"/></a:schemeClr>');
+		expect(resolveDrawingColor(color, { scheme: () => '#112233' })?.alpha).toBe(
+			declaredDrawingColorAlpha(color.transforms),
+		);
 	});
 });

@@ -155,10 +155,35 @@ export function applyDrawingColorTransformList(
 	g = channelTransforms(g, find, 'green');
 	b = channelTransforms(b, find, 'blue');
 
+	return { r, g, b, alpha: drawingColorAlpha(transforms) };
+}
+
+const ALPHA_TRANSFORMS = ['alpha', 'alphaMod', 'alphaOff'];
+
+/**
+ * The opacity (0..1) a transform list gives: `alpha` (default 1), then `alphaMod`, then
+ * `alphaOff`, each clamped, the first of each name. This is the alpha the resolver returns.
+ */
+export function drawingColorAlpha(transforms: DrawingColor['transforms']): number {
+	const find = (name: string) => transforms.find((entry) => entry.name === name)?.value;
 	let alpha = parseDrawingPercent(find('alpha')) ?? 1;
 	const alphaMod = parseDrawingFraction(find('alphaMod'));
 	if (alphaMod !== undefined) alpha = clampUnitInterval(alpha * alphaMod);
 	const alphaOff = parseDrawingFraction(find('alphaOff'));
 	if (alphaOff !== undefined) alpha = clampUnitInterval(alpha + alphaOff);
-	return { r, g, b, alpha };
+	return alpha;
+}
+
+/**
+ * {@link drawingColorAlpha} when the list declares an alpha transform with a readable value;
+ * `undefined` when it declares none (the colour inherits whatever opacity its consumer applies).
+ */
+export function declaredDrawingColorAlpha(
+	transforms: DrawingColor['transforms'],
+): number | undefined {
+	const declared = ALPHA_TRANSFORMS.some((name) => {
+		const value = transforms.find((entry) => entry.name === name)?.value;
+		return value !== undefined && parseDrawingFraction(value) !== undefined;
+	});
+	return declared ? drawingColorAlpha(transforms) : undefined;
 }

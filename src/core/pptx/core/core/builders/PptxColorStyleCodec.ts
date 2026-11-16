@@ -1,3 +1,4 @@
+import { resolveObjectColorOpacity } from '../../color/color-transforms';
 import type { ShapeStyle, XmlObject } from '../../types';
 import { PptxColorTransformCodec } from './PptxColorTransformCodec';
 import type { IPptxColorTransformCodec } from './PptxColorTransformCodec';
@@ -148,51 +149,9 @@ export class PptxColorStyleCodec implements IPptxColorStyleCodec {
 		return undefined;
 	}
 
+	/** The declared opacity of the colour this holder resolves to: the shared resolver's alpha. */
 	public extractColorOpacity(colorNode: XmlObject | undefined): number | undefined {
-		const choiceNode = this.extractColorChoiceNode(colorNode);
-		if (!choiceNode) {
-			return undefined;
-		}
-
-		const alpha = this.percentAttrToUnit(
-			(choiceNode['a:alpha'] as XmlObject | undefined)?.['@_val'],
-		);
-		const alphaMod = this.percentAttrToUnit(
-			(choiceNode['a:alphaMod'] as XmlObject | undefined)?.['@_val'],
-		);
-		// `alphaOff` is an additive offset that may be negative, so parse it
-		// unclamped; clamping to [0, 1] first would discard negative offsets.
-		// The combined opacity is clamped once at the end.
-		const alphaOff = this.signedPercentToUnit(
-			(choiceNode['a:alphaOff'] as XmlObject | undefined)?.['@_val'],
-		);
-
-		if (alpha === undefined && alphaMod === undefined && alphaOff === undefined) {
-			return undefined;
-		}
-
-		let opacity = alpha ?? 1;
-		if (alphaMod !== undefined) {
-			opacity *= alphaMod;
-		}
-		if (alphaOff !== undefined) {
-			opacity += alphaOff;
-		}
-
-		return this.clampUnitInterval(opacity);
-	}
-
-	/**
-	 * Parse an OOXML percentage (thousandths, `100000` = 100%) into a fraction
-	 * WITHOUT clamping to [0, 1]. Used for additive offsets like `a:alphaOff`
-	 * that legitimately carry negative values.
-	 */
-	private signedPercentToUnit(value: unknown): number | undefined {
-		const parsed = Number.parseFloat(String(value ?? '').trim());
-		if (!Number.isFinite(parsed)) {
-			return undefined;
-		}
-		return parsed / 100000;
+		return resolveObjectColorOpacity(colorNode);
 	}
 
 	public colorWithOpacity(color: string, opacity: number | undefined): string {

@@ -192,15 +192,21 @@ would keep two XML models alive.
    the shared resolver applies (first occurrence), as the DOM reader does. The permanent harness is
    `pptx/__tests__/integration/drawingml-color-neutral-parity.test.ts` (object tree against DOM for
    every colour element, 180,651 compared, and every theme part).
+   **Colour opacity (2026-11-16).** `extractColorOpacity` (the codec) and `parseDrawingColorOpacity`
+   (core and `src/ui/src/pptx/render/drawing-color.ts`) read the resolver's alpha
+   (`declaredDrawingColorAlpha` in `drawingml/color-transforms.ts`, through the object-tree adapter
+   `resolveObjectColorOpacity`); the UI's own colour-choice reader now delegates to the core one
+   (`parseDrawingColorChoice` with scheme overrides). Before the switch the old and new readers
+   agreed on all 180,499 colour holders of the corpus (15,102 declaring alpha); they differ only in
+   cases the corpus lacks (`a:alphaMod` above 100%, repeated alpha transforms, and in the UI reader a
+   negative `a:alphaOff` and a `sysClr` without `lastClr`), where the shared resolver is the one
+   followed. The colour harness also compares the declared alpha of every colour element.
 
    **Remains:** effect DAG interpretation and broader effect rendering; the format scheme reader
    (`PptxHandlerRuntimeThemeFormatScheme`, its own `PptxThemeFormatScheme` shape next to the neutral
    `ThemeFormatScheme`), theme ref and `phClr` resolution (`PptxHandlerRuntimeThemeRefResolution`),
    theme switching and saving, the master `p:clrMap` reader, `types/theme.ts`, the gradient codec
-   (`PptxGradientStyleCodec`) and the effect codecs still read the object tree; colour opacity
-   (`extractColorOpacity`, `parseDrawingColorOpacity`) is still read separately from the resolver's
-   alpha; `src/ui/src/pptx/render/drawing-color.ts` keeps its own colour-choice reader (it already
-   delegates transforms to `applyDrawingColorTransforms`). The pptx text parsers still read through
+   (`PptxGradientStyleCodec`) and the effect codecs still read the object tree. The pptx text parsers still read through
    their own object tree (the neutral model is pinned, not yet used by pptx); the xlsx theme writer
    still patches the part itself (a neutral writer exists as `drawingml/write-theme.ts`; whether xlsx
    should adopt it is open).

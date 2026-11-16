@@ -13,7 +13,10 @@
  * @module color-transforms
  */
 import { hexToRgbChannels, toHex } from '../../../color/color-primitives';
-import { applyDrawingColorTransformList } from '../../../drawingml/color-transforms';
+import {
+	applyDrawingColorTransformList,
+	declaredDrawingColorAlpha,
+} from '../../../drawingml/color-transforms';
 import { resolveDrawingColor, type DrawingColorTheme } from '../../../drawingml/drawing-color';
 import type { DrawingColor } from '../../../drawingml/types';
 import type { XmlObject } from '../types';
@@ -106,6 +109,26 @@ export function resolveObjectColorChoice(
 		if (resolved) return resolved.hex;
 		// An unresolvable scheme reference ends the search, as the pptx readers always did.
 		if (kind === 'scheme') return undefined;
+	}
+	return undefined;
+}
+
+/**
+ * The opacity a colour-choice holder declares: the alpha the shared resolver gives the first
+ * colour element it holds in `order` (`a:alpha`, then `a:alphaMod`, then `a:alphaOff`, each
+ * clamped), or `undefined` when that element has no alpha transform.
+ */
+export function resolveObjectColorOpacity(
+	colorChoice: XmlObject | undefined,
+	order: ColorChoiceOrder = CODEC_COLOR_CHOICE_ORDER,
+): number | undefined {
+	if (!colorChoice) return undefined;
+	for (const [element] of order) {
+		const node = colorChoice[element];
+		if (!node) continue;
+		return typeof node === 'object' && !Array.isArray(node)
+			? declaredDrawingColorAlpha(objectColorTransforms(node as XmlObject))
+			: undefined;
 	}
 	return undefined;
 }

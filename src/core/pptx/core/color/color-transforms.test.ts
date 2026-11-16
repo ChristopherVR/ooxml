@@ -1,7 +1,11 @@
 import { describe, it, expect } from 'vitest';
 
 import type { XmlObject } from '../types';
-import { applyDrawingColorTransforms } from './color-transforms';
+import {
+	applyDrawingColorTransforms,
+	DEFAULT_SCHEME_COLOR_CHOICE_ORDER,
+	resolveObjectColorOpacity,
+} from './color-transforms';
 
 // Helper to build a color node with a single transform child.
 function _makeColorNode(transforms: Record<string, unknown>): XmlObject {
@@ -223,5 +227,50 @@ describe('applyDrawingColorTransforms', () => {
 			// Should land within 1 channel-unit of the input due to rounding.
 			expect(['#7F7F7F', '#808080', '#818181']).toContain(result);
 		});
+	});
+});
+
+describe('resolveObjectColorOpacity', () => {
+	it('reads the alpha of the colour element the codec resolves', () => {
+		expect(
+			resolveObjectColorOpacity({
+				'a:srgbClr': { '@_val': 'FF0000', 'a:alpha': { '@_val': '40000' } },
+			}),
+		).toBeCloseTo(0.4);
+		expect(resolveObjectColorOpacity({ 'a:srgbClr': { '@_val': 'FF0000' } })).toBeUndefined();
+		expect(resolveObjectColorOpacity(undefined)).toBeUndefined();
+	});
+
+	it('lets alphaMod raise opacity (the modulator is not clamped first)', () => {
+		const node = {
+			'a:schemeClr': {
+				'@_val': 'accent1',
+				'a:alpha': { '@_val': '40000' },
+				'a:alphaMod': { '@_val': '200000' },
+			},
+		};
+		expect(resolveObjectColorOpacity(node)).toBeCloseTo(0.8);
+	});
+
+	it('keeps negative alphaOff and reads the first repeated alpha', () => {
+		expect(
+			resolveObjectColorOpacity({
+				'a:prstClr': { '@_val': 'red', 'a:alphaOff': { '@_val': '-25000' } },
+			}),
+		).toBeCloseTo(0.75);
+		expect(
+			resolveObjectColorOpacity({
+				'a:srgbClr': { '@_val': '000000', 'a:alpha': [{ '@_val': '20000' }, { '@_val': '90000' }] },
+			}),
+		).toBeCloseTo(0.2);
+	});
+
+	it('follows the requested colour-choice order', () => {
+		const node = {
+			'a:srgbClr': { '@_val': '000000', 'a:alpha': { '@_val': '10000' } },
+			'a:scrgbClr': { '@_r': '0', '@_g': '0', '@_b': '0', 'a:alpha': { '@_val': '60000' } },
+		};
+		expect(resolveObjectColorOpacity(node, DEFAULT_SCHEME_COLOR_CHOICE_ORDER)).toBeCloseTo(0.6);
+		expect(resolveObjectColorOpacity(node)).toBeCloseTo(0.6);
 	});
 });

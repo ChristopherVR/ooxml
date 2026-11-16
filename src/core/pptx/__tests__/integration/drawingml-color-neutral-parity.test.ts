@@ -3,10 +3,14 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 
+import { declaredDrawingColorAlpha } from '../../../drawingml/color-transforms';
 import { parseDrawingColor, resolveDrawingColor } from '../../../drawingml/drawing-color';
 import { parseTheme } from '../../../drawingml/theme';
 import { NS, elements, parseXml, type XmlElement } from '../../../xml/index';
-import { resolveObjectColorChoice } from '../../core/color/color-transforms';
+import {
+	resolveObjectColorChoice,
+	resolveObjectColorOpacity,
+} from '../../core/color/color-transforms';
 import { PptxRuntimeDependencyFactory } from '../../core/core/factories/PptxRuntimeDependencyFactory';
 import { themeSchemesFromDrawingTheme } from '../../core/core/runtime/theme-part-model';
 import { THEME_COLOR_SCHEME_KEYS } from '../../core/core/runtime/theme-scheme-edit';
@@ -27,6 +31,17 @@ import type { XmlObject } from '../../core/types';
  *   (`themeSchemesFromDrawingTheme` over `parseTheme`), must equal an independent object-tree
  *   reading of the same part (slot colours through the codec, typefaces trimmed, east Asian and
  *   complex script faces falling back to latin).
+ *
+ * - Opacity: the same pairs must declare the same alpha (`resolveObjectColorOpacity`, what the
+ *   codec's `extractColorOpacity` and `parseDrawingColorOpacity` run, against the resolver's alpha
+ *   for the DOM colour, `undefined` when no alpha transform is written).
+ *
+ * Before the opacity switch, the previous readers (the codec's `extractColorOpacity`, the core and
+ * UI `parseDrawingColorOpacity` and the UI's own colour-choice reader) were compared with the new
+ * ones over 180,499 colour holders (15,102 declaring alpha): identical. They differed only where the
+ * corpus has no case: an `a:alphaMod` above 100% (the old readers clamped the modulator first), a
+ * repeated alpha transform (ignored, now the first applies) and, in the UI reader, a negative
+ * `a:alphaOff` (clamped to 0) and a `sysClr` without `lastClr` (now the system table).
  *
  * Before the switch, the previous object-tree codec and theme reader were compared with the new
  * ones over the same corpus (180,499 colour holders in 15,928 parts, 383 theme parts): equal
@@ -87,6 +102,7 @@ interface Difference {
 
 const differences: Difference[] = [];
 let colorsCompared = 0;
+let alphasDeclared = 0;
 let partsCompared = 0;
 let partsRejected = 0;
 let themesCompared = 0;
@@ -118,6 +134,15 @@ function compareColors(label: string, xml: string): void {
 			const dom = color ? resolveDrawingColor(color, domTheme)?.hex : undefined;
 			colorsCompared++;
 			if (objectTree !== dom) differences.push({ label: `${label} ${trail}`, objectTree, dom });
+			const objectAlpha = resolveObjectColorOpacity(holder);
+			const domAlpha = color ? declaredDrawingColorAlpha(color.transforms) : undefined;
+			if (objectAlpha !== undefined) alphasDeclared++;
+			if (objectAlpha !== domAlpha)
+				differences.push({
+					label: `${label} ${trail} alpha`,
+					objectTree: String(objectAlpha),
+					dom: String(domAlpha),
+				});
 			return;
 		}
 		const seen = new Map<string, number>();
@@ -197,6 +222,7 @@ describe('DrawingML colours and themes: pptx object tree vs shared DOM reader', 
 	it('compares a real corpus', () => {
 		expect(partsCompared).toBeGreaterThan(3000);
 		expect(colorsCompared).toBeGreaterThan(150_000);
+		expect(alphasDeclared).toBeGreaterThan(10_000);
 		expect(themesCompared).toBeGreaterThan(300);
 		expect(partsRejected).toBeLessThan(10);
 		expect(colorsUnpaired).toBeLessThan(500);

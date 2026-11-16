@@ -1,17 +1,16 @@
 /**
- * OOXML drawing-colour resolution: colour-choice parsing (srgb/scrgb/sys/scheme/
- * hsl/preset), the 26 colour transforms, scheme inheritance, and alpha
- * resolution. Pure TypeScript shared by the React, Vue, and Angular bindings.
+ * OOXML drawing-colour resolution for the bindings: colour-choice parsing (srgb/scrgb/sys/scheme/
+ * hsl/preset), the 26 colour transforms, scheme overrides and alpha. Every reader here delegates
+ * to the core object-tree adapter of the shared DrawingML resolver, so the bindings resolve a
+ * colour exactly as the runtime does (docs/agnostic-core-plan.md, step 3).
  */
 import {
 	XmlObject,
-	hslToRgb,
 	applyDrawingColorTransforms as applyFullColorTransforms,
-	PRESET_COLOR_MAP,
+	parseDrawingColor as parseCoreDrawingColor,
+	parseDrawingColorChoice as parseCoreDrawingColorChoice,
+	parseDrawingColorOpacity as parseCoreDrawingColorOpacity,
 } from 'ooxml-core/pptx';
-
-import { parseDrawingPercent } from './element-style-transform';
-import { clampUnitInterval } from './fill-style';
 
 export const DEFAULT_SCHEME_COLOR_MAP: Record<string, string> = {
 	dk1: '#000000',
@@ -41,144 +40,26 @@ export function applyDrawingColorTransforms(baseColor: string, colorNode: XmlObj
 	return applyFullColorTransforms(baseColor, colorNode);
 }
 
+/**
+ * Resolve a colour-choice holder to `#RRGGBB`. `schemeColorOverrides` (lower-cased scheme keys)
+ * replace the default scheme slots.
+ */
 export function parseDrawingColorChoice(
 	colorNode: XmlObject | undefined,
 	schemeColorOverrides?: Record<string, string | undefined>,
 ): string | undefined {
-	if (!colorNode) {
-		return undefined;
-	}
-
-	if (colorNode['a:scrgbClr']) {
-		const scrgb = colorNode['a:scrgbClr'] as XmlObject;
-		const red = parseDrawingPercent(scrgb['@_r']);
-		const green = parseDrawingPercent(scrgb['@_g']);
-		const blue = parseDrawingPercent(scrgb['@_b']);
-		if (red !== undefined && green !== undefined && blue !== undefined) {
-			const toHex = (value: number) =>
-				Math.min(255, Math.max(0, Math.round(value)))
-					.toString(16)
-					.padStart(2, '0')
-					.toUpperCase();
-			const base = `#${toHex(red * 255)}${toHex(green * 255)}${toHex(blue * 255)}`;
-			return applyDrawingColorTransforms(base, scrgb);
-		}
-	}
-
-	if (colorNode['a:srgbClr']) {
-		const srgb = colorNode['a:srgbClr'] as XmlObject;
-		const value = String(srgb['@_val'] || '').trim();
-		if (/^[0-9a-fA-F]{6}$/u.test(value)) {
-			return applyDrawingColorTransforms(`#${value.toUpperCase()}`, srgb);
-		}
-	}
-
-	if (colorNode['a:sysClr']) {
-		const systemColor = colorNode['a:sysClr'] as XmlObject;
-		const lastColor = String(systemColor['@_lastClr'] || '').trim();
-		if (/^[0-9a-fA-F]{6}$/u.test(lastColor)) {
-			return applyDrawingColorTransforms(`#${lastColor.toUpperCase()}`, systemColor);
-		}
-	}
-
-	if (colorNode['a:schemeClr']) {
-		const schemeColor = colorNode['a:schemeClr'] as XmlObject;
-		const schemeValue = String(schemeColor['@_val'] || '')
-			.trim()
-			.toLowerCase();
-		if (!schemeValue) {
-			return undefined;
-		}
-		const base = schemeColorOverrides?.[schemeValue] ?? DEFAULT_SCHEME_COLOR_MAP[schemeValue];
-		if (!base) {
-			return undefined;
-		}
-		return applyDrawingColorTransforms(base, schemeColor);
-	}
-
-	if (colorNode['a:hslClr']) {
-		const hslNode = colorNode['a:hslClr'] as XmlObject;
-		const hueRaw = Number.parseFloat(String(hslNode['@_hue'] ?? ''));
-		const satRaw = Number.parseFloat(String(hslNode['@_sat'] ?? ''));
-		const lumRaw = Number.parseFloat(String(hslNode['@_lum'] ?? ''));
-		if (Number.isFinite(hueRaw) && Number.isFinite(satRaw) && Number.isFinite(lumRaw)) {
-			const h = hueRaw / 60000;
-			const s = clampUnitInterval(satRaw / 100000);
-			const l = clampUnitInterval(lumRaw / 100000);
-			const rgb = hslToRgb(h, s, l);
-			const toHex = (value: number) =>
-				Math.min(255, Math.max(0, Math.round(value)))
-					.toString(16)
-					.padStart(2, '0')
-					.toUpperCase();
-			const base = `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
-			return applyDrawingColorTransforms(base, hslNode);
-		}
-	}
-
-	if (colorNode['a:prstClr']) {
-		const preset = String(
-			(colorNode['a:prstClr'] as XmlObject | undefined)?.['@_val'] || '',
-		).toLowerCase();
-		const mapped = PRESET_COLOR_MAP[preset];
-		if (!mapped) {
-			return undefined;
-		}
-		return applyDrawingColorTransforms(mapped, colorNode['a:prstClr'] as XmlObject);
-	}
-
-	return undefined;
+	return parseCoreDrawingColorChoice(colorNode, schemeColorOverrides);
 }
 
+/** {@link parseDrawingColorChoice} on the node itself, then on its `a:solidFill`. */
 export function parseDrawingColor(
 	colorNode: XmlObject | undefined,
 	schemeColorOverrides?: Record<string, string | undefined>,
 ): string | undefined {
-	if (!colorNode) {
-		return undefined;
-	}
-	const direct = parseDrawingColorChoice(colorNode, schemeColorOverrides);
-	if (direct) {
-		return direct;
-	}
-	if (colorNode['a:solidFill']) {
-		return parseDrawingColorChoice(colorNode['a:solidFill'] as XmlObject, schemeColorOverrides);
-	}
-	return undefined;
+	return parseCoreDrawingColor(colorNode, schemeColorOverrides);
 }
 
+/** The opacity the holder's colour declares (the shared resolver's alpha), or `undefined`. */
 export function parseDrawingColorOpacity(colorNode: XmlObject | undefined): number | undefined {
-	if (!colorNode) {
-		return undefined;
-	}
-	const colorChoice =
-		(colorNode['a:scrgbClr'] as XmlObject | undefined) ||
-		(colorNode['a:srgbClr'] as XmlObject | undefined) ||
-		(colorNode['a:schemeClr'] as XmlObject | undefined) ||
-		(colorNode['a:hslClr'] as XmlObject | undefined) ||
-		(colorNode['a:prstClr'] as XmlObject | undefined) ||
-		(colorNode['a:sysClr'] as XmlObject | undefined);
-	if (!colorChoice) {
-		return undefined;
-	}
-
-	const alpha = parseDrawingPercent((colorChoice['a:alpha'] as XmlObject | undefined)?.['@_val']);
-	const alphaMod = parseDrawingPercent(
-		(colorChoice['a:alphaMod'] as XmlObject | undefined)?.['@_val'],
-	);
-	const alphaOff = parseDrawingPercent(
-		(colorChoice['a:alphaOff'] as XmlObject | undefined)?.['@_val'],
-	);
-	if (alpha === undefined && alphaMod === undefined && alphaOff === undefined) {
-		return undefined;
-	}
-
-	let opacity = alpha ?? 1;
-	if (alphaMod !== undefined) {
-		opacity *= alphaMod;
-	}
-	if (alphaOff !== undefined) {
-		opacity += alphaOff;
-	}
-	return clampUnitInterval(opacity);
+	return parseCoreDrawingColorOpacity(colorNode);
 }
