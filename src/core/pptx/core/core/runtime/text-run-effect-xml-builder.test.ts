@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { TextStyle } from '../../types';
 import { buildTextRunEffectListXml } from './text-run-effect-xml-builder';
+import { at } from '../../../test-support/access';
 
 describe('buildTextRunEffectListXml', () => {
 	it('should return undefined when no effects are set', () => {
@@ -129,8 +130,8 @@ describe('buildTextRunEffectListXml', () => {
 		const duotone = result?.['a:duotone'] as Record<string, unknown>;
 		const colors = duotone['a:srgbClr'] as Array<Record<string, unknown>>;
 		expect(colors).toHaveLength(2);
-		expect(colors[0]['@_val']).toBe('000000');
-		expect(colors[1]['@_val']).toBe('FFFFFF');
+		expect(at(colors, 0)['@_val']).toBe('000000');
+		expect(at(colors, 1)['@_val']).toBe('FFFFFF');
 	});
 
 	/**

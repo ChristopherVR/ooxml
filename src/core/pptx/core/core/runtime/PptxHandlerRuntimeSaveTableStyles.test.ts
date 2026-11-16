@@ -11,6 +11,7 @@ import {
 	writeDiagonalBorders,
 	writeCellTextFormatting,
 } from './table-cell-save-helpers';
+import { at } from '../../../test-support/access';
 
 const EMU_PER_PX = 9525;
 
@@ -209,8 +210,8 @@ describe('writeTableCellText', () => {
 		const txBody = cell['a:txBody'] as XmlObject;
 		const paragraphs = txBody['a:p'] as XmlObject[];
 		expect(paragraphs).toHaveLength(3);
-		expect((paragraphs[0]['a:r'] as XmlObject)['a:t']).toBe('Line1');
-		expect((paragraphs[2]['a:r'] as XmlObject)['a:t']).toBe('Line3');
+		expect((at(paragraphs, 0)['a:r'] as XmlObject)['a:t']).toBe('Line1');
+		expect((at(paragraphs, 2)['a:r'] as XmlObject)['a:t']).toBe('Line3');
 	});
 
 	it('should preserve existing run properties', () => {

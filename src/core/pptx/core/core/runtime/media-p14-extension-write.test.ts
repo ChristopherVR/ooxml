@@ -6,6 +6,7 @@ import {
 	buildMediaP14Extensions,
 	hasMediaP14ExtensionData,
 } from './media-p14-extension-write';
+import { at } from '../../../test-support/access';
 
 function media(overrides: Partial<MediaPptxElement> = {}): MediaPptxElement {
 	return {
@@ -49,20 +50,20 @@ describe('buildMediaP14Extensions', () => {
 	it('writes p14:trim with p14:trim/@end as the distance from the tail, verbatim', () => {
 		const exts = buildMediaP14Extensions(media({ trimStartMs: 1000, trimEndMs: 5000 }));
 		expect(exts).toHaveLength(1);
-		expect(exts[0]['@_uri']).toBe('{DAA4B4D4-6D71-4841-9C94-3DE7FCFB9230}');
-		const p14Media = exts[0]['p14:media'] as Record<string, unknown>;
+		expect(at(exts, 0)['@_uri']).toBe('{DAA4B4D4-6D71-4841-9C94-3DE7FCFB9230}');
+		const p14Media = at(exts, 0)['p14:media'] as Record<string, unknown>;
 		expect(p14Media['p14:trim']).toStrictEqual({ '@_st': '1000', '@_end': '5000' });
 	});
 
 	it('writes the embed relationship id onto p14:media/@r:embed when supplied', () => {
 		const exts = buildMediaP14Extensions(media({ trimEndMs: 5000 }), 'rId7');
-		const p14Media = exts[0]['p14:media'] as Record<string, unknown>;
+		const p14Media = at(exts, 0)['p14:media'] as Record<string, unknown>;
 		expect(p14Media['@_r:embed']).toBe('rId7');
 	});
 
 	it('leaves @r:embed unset when no relationship id is supplied', () => {
 		const exts = buildMediaP14Extensions(media({ trimEndMs: 5000 }));
-		const p14Media = exts[0]['p14:media'] as Record<string, unknown>;
+		const p14Media = at(exts, 0)['p14:media'] as Record<string, unknown>;
 		expect(p14Media['@_r:embed']).toBeUndefined();
 	});
 
@@ -70,7 +71,7 @@ describe('buildMediaP14Extensions', () => {
 		const exts = buildMediaP14Extensions(
 			media({ fadeInDuration: 2, fadeOutDuration: 3, playbackSpeed: 1.5 }),
 		);
-		const p14Media = exts[0]['p14:media'] as Record<string, unknown>;
+		const p14Media = at(exts, 0)['p14:media'] as Record<string, unknown>;
 		expect(p14Media['p14:fade']).toStrictEqual({ '@_in': '2000', '@_out': '3000' });
 		expect(p14Media['@_spd']).toBe('150000');
 	});
@@ -80,8 +81,8 @@ describe('buildMediaP14Extensions', () => {
 			media({ bookmarks: [{ id: 'b1', time: 5, label: 'Intro' }] }),
 		);
 		expect(exts).toHaveLength(1);
-		expect(exts[0]['@_uri']).toBe('{C809E50D-3E49-4677-B9B1-B2B30C8E0B5F}');
-		const bmkLst = exts[0]['p14:bmkLst'] as { 'p14:bmk': Record<string, unknown>[] };
+		expect(at(exts, 0)['@_uri']).toBe('{C809E50D-3E49-4677-B9B1-B2B30C8E0B5F}');
+		const bmkLst = at(exts, 0)['p14:bmkLst'] as { 'p14:bmk': Record<string, unknown>[] };
 		expect(bmkLst['p14:bmk']).toStrictEqual([{ '@_name': 'Intro', '@_time': '5000' }]);
 	});
 

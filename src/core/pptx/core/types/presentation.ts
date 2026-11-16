@@ -562,13 +562,13 @@ export interface PptxSection {
  */
 export interface PptxModifyVerifier {
 	/** Hash algorithm name (e.g. "SHA-512", "SHA-1"). */
-	algorithmName?: string;
+	algorithmName?: string | undefined;
 	/** Base64-encoded hash value. */
-	hashData?: string;
+	hashData?: string | undefined;
 	/** Base64-encoded salt value. */
-	saltData?: string;
+	saltData?: string | undefined;
 	/** Number of hash iterations (spin count). */
-	spinValue?: number;
+	spinValue?: number | undefined;
 	/** Legacy algorithm ID extension. */
 	algIdExt?: string;
 	/** Legacy algorithm ID. */

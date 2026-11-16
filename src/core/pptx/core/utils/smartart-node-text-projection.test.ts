@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { PptxSmartArtNode } from '../types';
 import { projectSmartArtNodeText } from './smartart-node-text-projection';
+import { at } from '../../test-support/access';
 
 describe('smartArt node text projection', () => {
 	it('projects paragraphs, formatted items, bullets, alignment, tabs, and fields', () => {
@@ -62,7 +63,7 @@ describe('smartArt node text projection', () => {
 			isLineBreak: true,
 			breakRunProperties: { '@_lang': 'fr-FR' },
 		});
-		expect(segments[5].isParagraphBreak).toBeTruthy();
+		expect(at(segments, 5).isParagraphBreak).toBeTruthy();
 		expect(segments[6]).toMatchObject({ style: { underline: true, align: 'right' } });
 	});
 

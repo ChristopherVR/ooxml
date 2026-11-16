@@ -9,6 +9,7 @@ import {
 	ConnectorBuilder,
 } from './ElementBuilders';
 import { resetIdCounter } from './ElementFactory';
+import { at, must } from '../../../test-support/access';
 
 beforeEach(() => {
 	resetIdCounter();
@@ -155,9 +156,9 @@ describe('textBuilder', () => {
 		expect(el.type).toBe('text');
 		expect(el.text).toBe('Bold Normal');
 		expect(el.textSegments).toHaveLength(2);
-		expect(el.textSegments![0].text).toBe('Bold');
-		expect(el.textSegments![0].style?.bold).toBeTruthy();
-		expect(el.textSegments![1].text).toBe(' Normal');
+		expect(at(el.textSegments!, 0).text).toBe('Bold');
+		expect(at(el.textSegments!, 0).style?.bold).toBeTruthy();
+		expect(at(el.textSegments!, 1).text).toBe(' Normal');
 	});
 
 	it('chains all methods fluently', () => {
@@ -273,7 +274,7 @@ describe('shapeBuilder', () => {
 		expect(el.text).toBe('Click me');
 		expect(el.textSegments).toBeDefined();
 		expect(el.textSegments!.length).toBeGreaterThan(0);
-		expect(el.textSegments![0].text).toBe('Click me');
+		expect(at(el.textSegments!, 0).text).toBe('Click me');
 	});
 
 	it("sets textStyle for the shape's text", () => {
@@ -414,12 +415,12 @@ describe('imageBuilder', () => {
 
 describe('tableBuilder', () => {
 	it('creates a table with rows from addRow', () => {
-		const el = TableBuilder.create().addRow(['Alice', '95']).addRow(['Bob', '87']).build();
+		const el = must(TableBuilder.create().addRow(['Alice', '95']).addRow(['Bob', '87']).build());
 		expect(el.type).toBe('table');
 		expect(el.tableData.rows).toHaveLength(2);
-		expect(el.tableData.rows[0].cells[0].text).toBe('Alice');
-		expect(el.tableData.rows[0].cells[1].text).toBe('95');
-		expect(el.tableData.rows[1].cells[0].text).toBe('Bob');
+		expect(at(at(el.tableData.rows, 0).cells, 0).text).toBe('Alice');
+		expect(at(at(el.tableData.rows, 0).cells, 1).text).toBe('95');
+		expect(at(at(el.tableData.rows, 1).cells, 0).text).toBe('Bob');
 	});
 
 	it('generates a unique id with tbl prefix', () => {
@@ -435,74 +436,79 @@ describe('tableBuilder', () => {
 	});
 
 	it('headerRow sets firstRow flag and adds the row', () => {
-		const el = TableBuilder.create().headerRow(['Name', 'Score']).addRow(['Alice', '95']).build();
+		const el = must(
+			TableBuilder.create().headerRow(['Name', 'Score']).addRow(['Alice', '95']).build(),
+		);
 		expect(el.tableData.firstRowHeader).toBeTruthy();
 		expect(el.tableData.rows).toHaveLength(2);
-		expect(el.tableData.rows[0].cells[0].text).toBe('Name');
-		expect(el.tableData.rows[0].cells[1].text).toBe('Score');
+		expect(at(at(el.tableData.rows, 0).cells, 0).text).toBe('Name');
+		expect(at(at(el.tableData.rows, 0).cells, 1).text).toBe('Score');
 	});
 
 	it('addRow auto-converts string cells to TableCellInput objects', () => {
-		const el = TableBuilder.create().addRow(['A', 'B']).build();
-		expect(el.tableData.rows[0].cells[0].text).toBe('A');
-		expect(el.tableData.rows[0].cells[1].text).toBe('B');
+		const el = must(TableBuilder.create().addRow(['A', 'B']).build());
+		expect(at(at(el.tableData.rows, 0).cells, 0).text).toBe('A');
+		expect(at(at(el.tableData.rows, 0).cells, 1).text).toBe('B');
 	});
 
 	it('addRow accepts TableCellInput objects with styling', () => {
-		const el = TableBuilder.create()
-			.addRow([{ text: 'Styled', style: { bold: true, fontSize: 14 } }, { text: 'Normal' }])
-			.build();
-		expect(el.tableData.rows[0].cells[0].text).toBe('Styled');
-		expect(el.tableData.rows[0].cells[0].style?.bold).toBeTruthy();
-		expect(el.tableData.rows[0].cells[0].style?.fontSize).toBe(14);
-		expect(el.tableData.rows[0].cells[1].text).toBe('Normal');
+		const el = must(
+			TableBuilder.create()
+				.addRow([{ text: 'Styled', style: { bold: true, fontSize: 14 } }, { text: 'Normal' }])
+				.build(),
+		);
+		expect(at(at(el.tableData.rows, 0).cells, 0).text).toBe('Styled');
+		expect(at(at(el.tableData.rows, 0).cells, 0).style?.bold).toBeTruthy();
+		expect(at(at(el.tableData.rows, 0).cells, 0).style?.fontSize).toBe(14);
+		expect(at(at(el.tableData.rows, 0).cells, 1).text).toBe('Normal');
 	});
 
 	it('addRow accepts TableCellInput objects with gridSpan and rowSpan', () => {
-		const el = TableBuilder.create()
-			.addRow([{ text: 'Merged', gridSpan: 2, rowSpan: 3 }])
-			.build();
-		expect(el.tableData.rows[0].cells[0].gridSpan).toBe(2);
-		expect(el.tableData.rows[0].cells[0].rowSpan).toBe(3);
+		const el = must(
+			TableBuilder.create()
+				.addRow([{ text: 'Merged', gridSpan: 2, rowSpan: 3 }])
+				.build(),
+		);
+		expect(at(at(el.tableData.rows, 0).cells, 0).gridSpan).toBe(2);
+		expect(at(at(el.tableData.rows, 0).cells, 0).rowSpan).toBe(3);
 	});
 
 	it('sets columnWidths (normalized to proportions)', () => {
-		const el = TableBuilder.create().addRow(['A', 'B', 'C']).columnWidths([1, 2, 1]).build();
+		const el = must(TableBuilder.create().addRow(['A', 'B', 'C']).columnWidths([1, 2, 1]).build());
 		expect(el.tableData.columnWidths).toStrictEqual([0.25, 0.5, 0.25]);
 	});
 
 	it('uses equal column widths when columnWidths not set', () => {
-		const el = TableBuilder.create().addRow(['A', 'B']).build();
+		const el = must(TableBuilder.create().addRow(['A', 'B']).build());
 		expect(el.tableData.columnWidths).toHaveLength(2);
 		expect(el.tableData.columnWidths[0]).toBeCloseTo(0.5);
 		expect(el.tableData.columnWidths[1]).toBeCloseTo(0.5);
 	});
 
 	it('sets bandRows', () => {
-		const el = TableBuilder.create().addRow(['A']).bandRows().build();
+		const el = must(TableBuilder.create().addRow(['A']).bandRows().build());
 		expect(el.tableData.bandedRows).toBeTruthy();
 	});
 
 	it('bandRows(false) disables banding', () => {
-		const el = TableBuilder.create().addRow(['A']).bandRows(false).build();
+		const el = must(TableBuilder.create().addRow(['A']).bandRows(false).build());
 		expect(el.tableData.bandedRows).toBeFalsy();
 	});
 
 	it('sets bandColumns', () => {
-		const el = TableBuilder.create().addRow(['A']).bandColumns().build();
+		const el = must(TableBuilder.create().addRow(['A']).bandColumns().build());
 		expect(el.tableData.bandedColumns).toBeTruthy();
 	});
 
 	it('bandColumns(false) disables banding', () => {
-		const el = TableBuilder.create().addRow(['A']).bandColumns(false).build();
+		const el = must(TableBuilder.create().addRow(['A']).bandColumns(false).build());
 		expect(el.tableData.bandedColumns).toBeFalsy();
 	});
 
 	it('sets style', () => {
-		const el = TableBuilder.create()
-			.addRow(['A'])
-			.style('{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}')
-			.build();
+		const el = must(
+			TableBuilder.create().addRow(['A']).style('{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}').build(),
+		);
 		expect(el.tableData.tableStyleId).toBe('{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}');
 	});
 
@@ -510,7 +516,7 @@ describe('tableBuilder', () => {
 		// The default is applied at CREATION time so the save pipeline never
 		// has to inject a style (which would also mutate loaded tables that
 		// legitimately have none).
-		const el = TableBuilder.create().addRow(['A']).build();
+		const el = must(TableBuilder.create().addRow(['A']).build());
 		expect(el.tableData.tableStyleId).toBe('{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}');
 	});
 
@@ -541,16 +547,18 @@ describe('tableBuilder', () => {
 
 describe('chartBuilder', () => {
 	it('creates a bar chart with categories and series', () => {
-		const el = ChartBuilder.create('bar')
-			.categories(['Q1', 'Q2', 'Q3'])
-			.addSeries('Revenue', [100, 150, 130])
-			.build();
+		const el = must(
+			ChartBuilder.create('bar')
+				.categories(['Q1', 'Q2', 'Q3'])
+				.addSeries('Revenue', [100, 150, 130])
+				.build(),
+		);
 		expect(el.type).toBe('chart');
 		expect(el.chartData.chartType).toBe('bar');
 		expect(el.chartData.categories).toStrictEqual(['Q1', 'Q2', 'Q3']);
 		expect(el.chartData.series).toHaveLength(1);
-		expect(el.chartData.series[0].name).toBe('Revenue');
-		expect(el.chartData.series[0].values).toStrictEqual([100, 150, 130]);
+		expect(at(el.chartData.series, 0).name).toBe('Revenue');
+		expect(at(el.chartData.series, 0).values).toStrictEqual([100, 150, 130]);
 	});
 
 	it('uses default position and size for charts', () => {
@@ -567,66 +575,64 @@ describe('chartBuilder', () => {
 	});
 
 	it('sets series color', () => {
-		const el = ChartBuilder.create('bar').categories(['A']).addSeries('S', [1], '#4472C4').build();
-		expect(el.chartData.series[0].color).toBe('#4472C4');
+		const el = must(
+			ChartBuilder.create('bar').categories(['A']).addSeries('S', [1], '#4472C4').build(),
+		);
+		expect(at(el.chartData.series, 0).color).toBe('#4472C4');
 	});
 
 	it('supports multiple series', () => {
-		const el = ChartBuilder.create('bar')
-			.categories(['Q1', 'Q2'])
-			.addSeries('Revenue', [100, 150], '#4472C4')
-			.addSeries('Cost', [80, 90], '#ED7D31')
-			.build();
+		const el = must(
+			ChartBuilder.create('bar')
+				.categories(['Q1', 'Q2'])
+				.addSeries('Revenue', [100, 150], '#4472C4')
+				.addSeries('Cost', [80, 90], '#ED7D31')
+				.build(),
+		);
 		expect(el.chartData.series).toHaveLength(2);
-		expect(el.chartData.series[0].name).toBe('Revenue');
-		expect(el.chartData.series[1].name).toBe('Cost');
-		expect(el.chartData.series[1].color).toBe('#ED7D31');
+		expect(at(el.chartData.series, 0).name).toBe('Revenue');
+		expect(at(el.chartData.series, 1).name).toBe('Cost');
+		expect(at(el.chartData.series, 1).color).toBe('#ED7D31');
 	});
 
 	it('sets title', () => {
-		const el = ChartBuilder.create('bar')
-			.categories(['A'])
-			.addSeries('S', [1])
-			.title('Quarterly Revenue')
-			.build();
+		const el = must(
+			ChartBuilder.create('bar')
+				.categories(['A'])
+				.addSeries('S', [1])
+				.title('Quarterly Revenue')
+				.build(),
+		);
 		expect(el.chartData.title).toBe('Quarterly Revenue');
 	});
 
 	it('sets legend visibility and position', () => {
-		const el = ChartBuilder.create('bar')
-			.categories(['A'])
-			.addSeries('S', [1])
-			.legend(true, 'b')
-			.build();
+		const el = must(
+			ChartBuilder.create('bar').categories(['A']).addSeries('S', [1]).legend(true, 'b').build(),
+		);
 		expect(el.chartData.style?.hasLegend).toBeTruthy();
 		expect(el.chartData.style?.legendPosition).toBe('b');
 	});
 
 	it('legend(false) hides the legend', () => {
-		const el = ChartBuilder.create('bar')
-			.categories(['A'])
-			.addSeries('S', [1])
-			.legend(false)
-			.build();
+		const el = must(
+			ChartBuilder.create('bar').categories(['A']).addSeries('S', [1]).legend(false).build(),
+		);
 		expect(el.chartData.style?.hasLegend).toBeFalsy();
 	});
 
 	it('legend without position only sets visibility', () => {
-		const el = ChartBuilder.create('bar')
-			.categories(['A'])
-			.addSeries('S', [1])
-			.legend(true)
-			.build();
+		const el = must(
+			ChartBuilder.create('bar').categories(['A']).addSeries('S', [1]).legend(true).build(),
+		);
 		expect(el.chartData.style?.hasLegend).toBeTruthy();
 		expect(el.chartData.style?.legendPosition).toBeUndefined();
 	});
 
 	it('sets grouping', () => {
-		const el = ChartBuilder.create('bar')
-			.categories(['A'])
-			.addSeries('S', [1])
-			.grouping('stacked')
-			.build();
+		const el = must(
+			ChartBuilder.create('bar').categories(['A']).addSeries('S', [1]).grouping('stacked').build(),
+		);
 		expect(el.chartData.grouping).toBe('stacked');
 	});
 
@@ -665,7 +671,7 @@ describe('chartBuilder', () => {
 	it('supports different chart types', () => {
 		const types = ['line', 'pie', 'doughnut', 'area', 'scatter'] as const;
 		for (const chartType of types) {
-			const el = ChartBuilder.create(chartType).categories(['A']).addSeries('S', [1]).build();
+			const el = must(ChartBuilder.create(chartType).categories(['A']).addSeries('S', [1]).build());
 			expect(el.chartData.chartType).toBe(chartType);
 		}
 	});

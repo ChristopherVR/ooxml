@@ -9,6 +9,7 @@ import {
 	parseSvgPath,
 	serializeSvgPath,
 } from './shape-operations';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -285,17 +286,17 @@ describe('interpolateShapeGeometry', () => {
 		const result = interpolateShapeGeometry(from, to, 0.5);
 		const commands = parseSvgPath(result);
 		// M 0 0 stays the same
-		expect(commands[0].type).toBe('M');
-		expect(commands[0].args[0]).toBeCloseTo(0);
-		expect(commands[0].args[1]).toBeCloseTo(0);
+		expect(at(commands, 0).type).toBe('M');
+		expect(at(commands, 0).args[0]).toBeCloseTo(0);
+		expect(at(commands, 0).args[1]).toBeCloseTo(0);
 		// L 150 0
-		expect(commands[1].type).toBe('L');
-		expect(commands[1].args[0]).toBeCloseTo(150);
-		expect(commands[1].args[1]).toBeCloseTo(0);
+		expect(at(commands, 1).type).toBe('L');
+		expect(at(commands, 1).args[0]).toBeCloseTo(150);
+		expect(at(commands, 1).args[1]).toBeCloseTo(0);
 		// L 150 150
-		expect(commands[2].type).toBe('L');
-		expect(commands[2].args[0]).toBeCloseTo(150);
-		expect(commands[2].args[1]).toBeCloseTo(150);
+		expect(at(commands, 2).type).toBe('L');
+		expect(at(commands, 2).args[0]).toBeCloseTo(150);
+		expect(at(commands, 2).args[1]).toBeCloseTo(150);
 	});
 
 	it('should interpolate at t = 0.25', () => {
@@ -303,8 +304,8 @@ describe('interpolateShapeGeometry', () => {
 		const to = 'M 0 0 L 200 200';
 		const result = interpolateShapeGeometry(from, to, 0.25);
 		const commands = parseSvgPath(result);
-		expect(commands[1].args[0]).toBeCloseTo(125);
-		expect(commands[1].args[1]).toBeCloseTo(125);
+		expect(at(commands, 1).args[0]).toBeCloseTo(125);
+		expect(at(commands, 1).args[1]).toBeCloseTo(125);
 	});
 
 	it('should handle cubic bezier commands', () => {
@@ -312,13 +313,13 @@ describe('interpolateShapeGeometry', () => {
 		const to = 'M 0 0 C 20 40 60 80 100 120';
 		const result = interpolateShapeGeometry(from, to, 0.5);
 		const commands = parseSvgPath(result);
-		expect(commands[1].type).toBe('C');
-		expect(commands[1].args[0]).toBeCloseTo(15);
-		expect(commands[1].args[1]).toBeCloseTo(30);
-		expect(commands[1].args[2]).toBeCloseTo(45);
-		expect(commands[1].args[3]).toBeCloseTo(60);
-		expect(commands[1].args[4]).toBeCloseTo(75);
-		expect(commands[1].args[5]).toBeCloseTo(90);
+		expect(at(commands, 1).type).toBe('C');
+		expect(at(commands, 1).args[0]).toBeCloseTo(15);
+		expect(at(commands, 1).args[1]).toBeCloseTo(30);
+		expect(at(commands, 1).args[2]).toBeCloseTo(45);
+		expect(at(commands, 1).args[3]).toBeCloseTo(60);
+		expect(at(commands, 1).args[4]).toBeCloseTo(75);
+		expect(at(commands, 1).args[5]).toBeCloseTo(90);
 	});
 
 	it('should handle empty from path', () => {
@@ -364,11 +365,11 @@ describe('interpolateShapeGeometry', () => {
 		const to = 'M 0 0 Q 100 200 200 0';
 		const result = interpolateShapeGeometry(from, to, 0.5);
 		const commands = parseSvgPath(result);
-		expect(commands[1].type).toBe('Q');
-		expect(commands[1].args[0]).toBeCloseTo(75);
-		expect(commands[1].args[1]).toBeCloseTo(150);
-		expect(commands[1].args[2]).toBeCloseTo(150);
-		expect(commands[1].args[3]).toBeCloseTo(0);
+		expect(at(commands, 1).type).toBe('Q');
+		expect(at(commands, 1).args[0]).toBeCloseTo(75);
+		expect(at(commands, 1).args[1]).toBeCloseTo(150);
+		expect(at(commands, 1).args[2]).toBeCloseTo(150);
+		expect(at(commands, 1).args[3]).toBeCloseTo(0);
 	});
 
 	it('should preserve Z commands when both paths have them', () => {
@@ -422,8 +423,8 @@ describe('parseSvgPath', () => {
 
 	it('should handle negative numbers', () => {
 		const commands = parseSvgPath('M -10 -20 L 50 -30');
-		expect(commands[0].args).toStrictEqual([-10, -20]);
-		expect(commands[1].args).toStrictEqual([50, -30]);
+		expect(at(commands, 0).args).toStrictEqual([-10, -20]);
+		expect(at(commands, 1).args).toStrictEqual([50, -30]);
 	});
 });
 
@@ -481,11 +482,11 @@ describe('shape-operations integration', () => {
 		const path = 'M 0 0 L 100 0 L 100 100 Z';
 		const result = interpolateShapeGeometry(path, path, 0.5);
 		const commands = parseSvgPath(result);
-		expect(commands[0].args).toStrictEqual([0, 0]);
-		expect(commands[1].args[0]).toBeCloseTo(100);
-		expect(commands[1].args[1]).toBeCloseTo(0);
-		expect(commands[2].args[0]).toBeCloseTo(100);
-		expect(commands[2].args[1]).toBeCloseTo(100);
+		expect(at(commands, 0).args).toStrictEqual([0, 0]);
+		expect(at(commands, 1).args[0]).toBeCloseTo(100);
+		expect(at(commands, 1).args[1]).toBeCloseTo(0);
+		expect(at(commands, 2).args[0]).toBeCloseTo(100);
+		expect(at(commands, 2).args[1]).toBeCloseTo(100);
 	});
 
 	it('should produce continuous interpolation across multiple t values', () => {
@@ -494,16 +495,16 @@ describe('shape-operations integration', () => {
 		const steps = [0, 0.25, 0.5, 0.75, 1];
 		const results = steps.map((t) => {
 			const cmds = parseSvgPath(interpolateShapeGeometry(from, to, t));
-			return cmds[1].args;
+			return at(cmds, 1).args;
 		});
 
 		// x should monotonically increase from 0 to 100
 		for (let i = 1; i < results.length; i++) {
-			expect(results[i][0]).toBeGreaterThanOrEqual(results[i - 1][0]);
+			expect(at(results, i)[0]).toBeGreaterThanOrEqual(at(at(results, i - 1), 0));
 		}
 		// y should monotonically decrease from 100 to 0
 		for (let i = 1; i < results.length; i++) {
-			expect(results[i][1]).toBeLessThanOrEqual(results[i - 1][1]);
+			expect(at(results, i)[1]).toBeLessThanOrEqual(at(at(results, i - 1), 1));
 		}
 	});
 });

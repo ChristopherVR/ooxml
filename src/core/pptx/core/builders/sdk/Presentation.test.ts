@@ -18,6 +18,7 @@ import { describe, it, expect } from 'vitest';
 
 import { PptxHandler } from '../../PptxHandler';
 import { Presentation } from './Presentation';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -196,8 +197,8 @@ describe('presentation.addSlide()', () => {
 
 		const slide = pptx.getSlide(0);
 		expect(slide.elements).toHaveLength(2);
-		expect(slide.elements[0].type).toBe('text');
-		expect(slide.elements[1].type).toBe('shape');
+		expect(at(slide.elements, 0).type).toBe('text');
+		expect(at(slide.elements, 1).type).toBe('shape');
 	});
 
 	it('multiple slides can be added', async () => {
@@ -219,7 +220,7 @@ describe('presentation.addSlide()', () => {
 		// No manual push needed -- slides array is updated internally
 		expect(pptx.data.slides).toHaveLength(1);
 		expect(pptx.slides).toHaveLength(1);
-		expect(pptx.slides[0].elements).toHaveLength(1);
+		expect(at(pptx.slides, 0).elements).toHaveLength(1);
 	});
 });
 
@@ -333,7 +334,7 @@ describe('presentation.duplicateSlide()', () => {
 
 		// Element IDs should also differ
 		if (original.elements.length > 0 && clone.elements.length > 0) {
-			expect(clone.elements[0].id).not.toBe(original.elements[0].id);
+			expect(at(clone.elements, 0).id).not.toBe(at(original.elements, 0).id);
 		}
 	});
 });
@@ -518,8 +519,8 @@ describe('presentation.findText()', () => {
 
 		const results = pptx.findText('Hello');
 		expect(results.length).toBeGreaterThanOrEqual(1);
-		expect(results[0].text).toBe('Hello');
-		expect(results[0].slideIndex).toBe(0);
+		expect(at(results, 0).text).toBe('Hello');
+		expect(at(results, 0).slideIndex).toBe(0);
 	});
 
 	it('finds text across multiple slides', async () => {

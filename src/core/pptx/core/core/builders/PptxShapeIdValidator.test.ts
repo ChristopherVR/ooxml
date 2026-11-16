@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { XmlObject } from '../../types';
 import { PptxShapeIdValidator } from './PptxShapeIdValidator';
+import { at } from '../../../test-support/access';
 
 const ensureArray = (value: unknown): unknown[] => {
 	if (Array.isArray(value)) {
@@ -38,8 +39,8 @@ describe('pptxShapeIdValidator', () => {
 		expect(result).toBe(1);
 
 		const shapes = spTree['p:sp'] as XmlObject[];
-		const id1 = (shapes[0]['p:nvSpPr'] as XmlObject)['p:cNvPr']['@_id'];
-		const id2 = (shapes[1]['p:nvSpPr'] as XmlObject)['p:cNvPr']['@_id'];
+		const id1 = (at(shapes, 0)['p:nvSpPr'] as XmlObject)['p:cNvPr']['@_id'];
+		const id2 = (at(shapes, 1)['p:nvSpPr'] as XmlObject)['p:cNvPr']['@_id'];
 		expect(id1).not.toBe(id2);
 	});
 
@@ -54,7 +55,7 @@ describe('pptxShapeIdValidator', () => {
 		expect(result).toBe(1);
 
 		const shapes = spTree['p:sp'] as XmlObject[];
-		const id1 = (shapes[0]['p:nvSpPr'] as XmlObject)['p:cNvPr']['@_id'];
+		const id1 = (at(shapes, 0)['p:nvSpPr'] as XmlObject)['p:cNvPr']['@_id'];
 		expect(id1).toBe('6');
 	});
 
@@ -207,7 +208,7 @@ describe('pptxShapeIdValidator', () => {
 		expect(result).toBe(1);
 
 		const shapes = spTree['p:sp'] as XmlObject[];
-		const reassignedId = (shapes[1]['p:nvSpPr'] as XmlObject)['p:cNvPr']['@_id'];
+		const reassignedId = (at(shapes, 1)['p:nvSpPr'] as XmlObject)['p:cNvPr']['@_id'];
 		expect(reassignedId).not.toBe('2');
 
 		const cxnSp = spTree['p:cxnSp'] as XmlObject;

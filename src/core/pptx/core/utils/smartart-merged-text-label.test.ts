@@ -24,6 +24,7 @@ import {
 	resolveSmartArtMergedTextColors,
 	resolveSmartArtMergedTextLabels,
 } from './smartart-merged-text-label';
+import { at } from '../../test-support/access';
 
 const fixture = fileURLToPath(
 	new URL('../../__tests__/fixtures/e2e/three-d-parity/three-d-smartart.pptx', import.meta.url),
@@ -43,7 +44,7 @@ function loadDeck(): Promise<PptxData> {
 
 async function smartArtOn(slideNumber: number): Promise<PptxSmartArtData> {
 	const data = await loadDeck();
-	const element = data.slides[slideNumber - 1].elements.find(
+	const element = at(data.slides, slideNumber - 1).elements.find(
 		(el): el is SmartArtPptxElement => el.type === 'smartArt',
 	);
 	if (!element?.smartArtData) {

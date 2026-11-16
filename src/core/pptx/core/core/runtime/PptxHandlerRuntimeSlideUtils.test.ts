@@ -6,6 +6,7 @@ import { describe, it, expect } from 'vitest';
 
 import { requireFixture } from '../../../__tests__/require-fixture';
 import { PptxHandler } from '../../PptxHandler';
+import { at } from '../../../test-support/access';
 
 /**
  * `extractSlideNotes` used to merge the text of EVERY shape on a notes page
@@ -54,7 +55,7 @@ async function notesTextByPlaceholder(
 	const byType: Record<string, string> = {};
 	for (const shape of xml.split('<p:sp>').slice(1)) {
 		const placeholder = /<p:ph([^>]*)\/?>/u.exec(shape);
-		const type = placeholder ? (/type="([^"]+)"/u.exec(placeholder[1])?.[1] ?? 'body') : 'none';
+		const type = placeholder ? (/type="([^"]+)"/u.exec(at(placeholder, 1))?.[1] ?? 'body') : 'none';
 		byType[type] = [...shape.matchAll(/<a:t>([\s\S]*?)<\/a:t>/gu)].map((m) => m[1]).join('');
 	}
 	return byType;
@@ -67,7 +68,7 @@ describe('extractSlideNotes: only the notes BODY placeholder is speaker notes', 
 
 		// Slides 12, 13 and 14 are the three with a notes part; all are empty.
 		for (const slideNumber of [12, 13, 14] as const) {
-			const slide = data.slides[slideNumber - 1];
+			const slide = at(data.slides, slideNumber - 1);
 			expect(slide.id).toBe(`ppt/slides/slide${slideNumber}.xml`);
 			expect(slide.notes).toBeUndefined();
 			expect(slide.notesSegments ?? []).toStrictEqual([]);
@@ -93,7 +94,7 @@ describe('extractSlideNotes: only the notes BODY placeholder is speaker notes', 
 		);
 		const handler = new PptxHandler();
 		const data = await handler.load(buffer);
-		expect(data.slides[11].notes).toBe('12');
+		expect(at(data.slides, 11).notes).toBe('12');
 
 		const saved = await handler.save(data.slides);
 		const byType = await notesTextByPlaceholder(saved, NOTES_PART);
@@ -115,7 +116,7 @@ describe('extractSlideNotes: only the notes BODY placeholder is speaker notes', 
 		);
 		const handler = new PptxHandler();
 		const data = await handler.load(buffer);
-		expect(data.slides[11].notes).toBeUndefined();
+		expect(at(data.slides, 11).notes).toBeUndefined();
 	});
 
 	it('still reads notes from a page whose body text box has no placeholder', async () => {
@@ -131,6 +132,6 @@ describe('extractSlideNotes: only the notes BODY placeholder is speaker notes', 
 		);
 		const handler = new PptxHandler();
 		const data = await handler.load(buffer);
-		expect(data.slides[11].notes).toBe('Say this');
+		expect(at(data.slides, 11).notes).toBe('Say this');
 	});
 });

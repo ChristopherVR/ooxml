@@ -13,6 +13,7 @@ import {
 	nextAutoNumber,
 } from './auto-number-sequence';
 import { PptxHandlerRuntime } from './PptxHandlerRuntimeImplementation';
+import { at } from '../../../test-support/access';
 // Since collectShapeParagraphContent is a protected method on a deeply
 // chained mixin with many dependencies, we test the self-contained
 // content extraction logic used within it.
@@ -582,11 +583,11 @@ describe('collectShapeParagraphContent - bullet markers (real runtime)', () => {
 		const { segments } = new ParagraphContentRuntime().collect(paragraph, 0, 1, undefined, {
 			fontSize: 24,
 		});
-		expect(segments[0].style.fontSize).toBe(expectedSize);
-		expect(segments[0].bulletInfo?.sizePercent).toBe(75);
-		expect(segments[1].text).toBe('First');
-		expect(segments[1].style.fontSize).toBe(expectedSize);
-		expect(segments[2].style.fontSize).toBe(40);
+		expect(at(segments, 0).style.fontSize).toBe(expectedSize);
+		expect(at(segments, 0).bulletInfo?.sizePercent).toBe(75);
+		expect(at(segments, 1).text).toBe('First');
+		expect(at(segments, 1).style.fontSize).toBe(expectedSize);
+		expect(at(segments, 2).style.fontSize).toBe(40);
 	});
 
 	it.each(['a:r', 'a:fld'])('bases percentage bullets on the first %s font size', (tag) => {
@@ -600,9 +601,9 @@ describe('collectShapeParagraphContent - bullet markers (real runtime)', () => {
 			undefined,
 			{ fontSize: 24 },
 		);
-		expect(segments[0].style.fontSize).toBe(22);
-		expect(segments[0].bulletInfo?.sizePercent).toBe(75);
-		expect(segments[1].style.fontSize).toBe(22);
+		expect(at(segments, 0).style.fontSize).toBe(22);
+		expect(at(segments, 0).bulletInfo?.sizePercent).toBe(75);
+		expect(at(segments, 1).style.fontSize).toBe(22);
 	});
 
 	it('uses the first run for percentage numbering without changing later run sizes', () => {
@@ -622,10 +623,10 @@ describe('collectShapeParagraphContent - bullet markers (real runtime)', () => {
 			undefined,
 			{ fontSize: 24 },
 		);
-		expect(segments[0].style.fontSize).toBe(16);
-		expect(segments[0].bulletInfo?.sizePercent).toBe(125);
-		expect(segments[1].style.fontSize).toBe(16);
-		expect(segments[2].style.fontSize).toBe(40);
+		expect(at(segments, 0).style.fontSize).toBe(16);
+		expect(at(segments, 0).bulletInfo?.sizePercent).toBe(125);
+		expect(at(segments, 1).style.fontSize).toBe(16);
+		expect(at(segments, 2).style.fontSize).toBe(40);
 	});
 
 	it.each([{ 'a:r': { 'a:t': 'Inherited size' } }, {}])(
@@ -641,8 +642,8 @@ describe('collectShapeParagraphContent - bullet markers (real runtime)', () => {
 				undefined,
 				{ fontSize: 24 },
 			);
-			expect(segments[0].style.fontSize).toBe(24);
-			expect(segments[0].bulletInfo?.sizePercent).toBe(75);
+			expect(at(segments, 0).style.fontSize).toBe(24);
+			expect(at(segments, 0).bulletInfo?.sizePercent).toBe(75);
 		},
 	);
 
@@ -657,9 +658,9 @@ describe('collectShapeParagraphContent - bullet markers (real runtime)', () => {
 			undefined,
 			{ fontSize: 24 },
 		);
-		expect(segments[0].style.fontSize).toBe(24);
-		expect(segments[0].bulletInfo?.sizePts).toBe(9);
-		expect(segments[1].style.fontSize).toBe(22);
+		expect(at(segments, 0).style.fontSize).toBe(24);
+		expect(at(segments, 0).bulletInfo?.sizePts).toBe(9);
+		expect(at(segments, 1).style.fontSize).toBe(22);
 	});
 
 	it('stamps no display glyph for a picture bullet, only the bullet metadata', () => {
@@ -667,9 +668,9 @@ describe('collectShapeParagraphContent - bullet markers (real runtime)', () => {
 
 		// The marker segment survives (it carries `bulletInfo` for the renderers
 		// and the writer) but contributes no text of its own.
-		expect(segments[0].text).toBe('');
-		expect(segments[0].bulletInfo?.imageRelId).toBe('rId7');
-		expect(segments[1].text).toBe('Item text');
+		expect(at(segments, 0).text).toBe('');
+		expect(at(segments, 0).bulletInfo?.imageRelId).toBe('rId7');
+		expect(at(segments, 1).text).toBe('Item text');
 		// The paperclip must not reach the element's plain text either.
 		expect(parts.join('')).toBe('Item text');
 		expect(parts.join('')).not.toContain('\u{1F4CE}');
@@ -686,7 +687,7 @@ describe('collectShapeParagraphContent - bullet markers (real runtime)', () => {
 			0,
 			1,
 		);
-		expect(segments[0].text).toBe('• ');
+		expect(at(segments, 0).text).toBe('• ');
 	});
 
 	it('stamps an East-Asian auto-number marker in its own script', () => {
@@ -698,7 +699,7 @@ describe('collectShapeParagraphContent - bullet markers (real runtime)', () => {
 			0,
 			1,
 		);
-		expect(segments[0].text).toBe('一. ');
+		expect(at(segments, 0).text).toBe('一. ');
 	});
 
 	it('publishes the list ordinal, not the paragraph position, on the bullet info', () => {
@@ -721,8 +722,8 @@ describe('collectShapeParagraphContent - bullet markers (real runtime)', () => {
 			sequence,
 		);
 
-		expect(segments[0].text).toBe('1. ');
-		const info = segments[0].bulletInfo;
+		expect(at(segments, 0).text).toBe('1. ');
+		const info = at(segments, 0).bulletInfo;
 		expect(info?.paragraphIndex).toBe(0);
 		expect((info?.autoNumStartAt ?? 1) + (info?.paragraphIndex ?? 0)).toBe(1);
 	});
@@ -736,8 +737,8 @@ describe('collectShapeParagraphContent - bullet markers (real runtime)', () => {
 			0,
 			1,
 		);
-		expect(segments[0].text).toBe('5. ');
-		const info = segments[0].bulletInfo;
+		expect(at(segments, 0).text).toBe('5. ');
+		const info = at(segments, 0).bulletInfo;
 		expect((info?.autoNumStartAt ?? 1) + (info?.paragraphIndex ?? 0)).toBe(5);
 	});
 
@@ -751,10 +752,10 @@ describe('collectShapeParagraphContent - bullet markers (real runtime)', () => {
 		const autoNumPPr = { 'a:buAutoNum': { '@_type': 'arabicPeriod' } };
 
 		const one = runtime.collect({ 'a:pPr': autoNumPPr, 'a:r': { 'a:t': 'one' } }, 0, 4, sequence);
-		expect(one.segments[0].text).toBe('1. ');
+		expect(at(one.segments, 0).text).toBe('1. ');
 
 		const two = runtime.collect({ 'a:pPr': autoNumPPr, 'a:r': { 'a:t': 'two' } }, 1, 4, sequence);
-		expect(two.segments[0].text).toBe('2. ');
+		expect(at(two.segments, 0).text).toBe('2. ');
 
 		// A blank line: `a:pPr` still declares the auto-number, but the
 		// paragraph has no run/field/equation content, only `a:endParaRPr`.
@@ -772,7 +773,7 @@ describe('collectShapeParagraphContent - bullet markers (real runtime)', () => {
 			4,
 			sequence,
 		);
-		expect(after.segments[0].text).toBe('3. ');
+		expect(at(after.segments, 0).text).toBe('3. ');
 	});
 
 	it('still paints a char bullet on an otherwise-empty paragraph', () => {
@@ -830,9 +831,9 @@ describe('collectShapeParagraphContent - bullet marker alignment (real runtime)'
 		// level style (commonly 'l'), which differs from this paragraph's own
 		// authored `algn="r"` (resolved to 'right' as `paraAlign`).
 		const { segments } = runtime.collect(paragraph, 'right', { align: 'left', fontSize: 24 });
-		expect(segments[0].bulletInfo).toBeDefined();
-		expect(segments[0].style.align).toBe('right');
-		expect(segments[1].style.align).toBe('right');
+		expect(at(segments, 0).bulletInfo).toBeDefined();
+		expect(at(segments, 0).style.align).toBe('right');
+		expect(at(segments, 1).style.align).toBe('right');
 	});
 });
 
@@ -913,27 +914,30 @@ describe('collectShapeParagraphContent - empty paragraph metadata (real runtime)
 			const before = runtime.collect({ ...paragraph, 'a:endParaRPr': { '@_lang': 'en-US' } }, 0, 2);
 			for (const count of [1, 2]) {
 				const result = runtime.collect(paragraph, 0, count);
-				expect(result.segments[0].paragraphInsertionStyle).toMatchObject({
+				expect(at(result.segments, 0).paragraphInsertionStyle).toMatchObject({
 					fontSize: 40,
 					fontFamily: 'Courier New',
 					color: '#007000',
 					bold: true,
 				});
-				expect(result.segments[0].paragraphInsertionStyle?.authoredRunStyle).toMatchObject({
+				expect(at(result.segments, 0).paragraphInsertionStyle?.authoredRunStyle).toMatchObject({
 					fontSize: 40,
 					bold: true,
 				});
-				if (result.segments[0].bulletInfo) {
-					expect(result.segments[0].style).toStrictEqual(before.segments[0].style);
+				if (at(result.segments, 0).bulletInfo) {
+					expect(at(result.segments, 0).style).toStrictEqual(at(before.segments, 0).style);
 					expect(result.segments).toHaveLength(count === 1 ? 1 : 2);
 				}
 			}
 			expect(
-				runtime.collect({ ...paragraph, 'a:r': { 'a:t': '', 'a:rPr': { '@_sz': '1650' } } }, 0, 2)
-					.segments[0].paragraphInsertionStyle,
+				at(
+					runtime.collect({ ...paragraph, 'a:r': { 'a:t': '', 'a:rPr': { '@_sz': '1650' } } }, 0, 2)
+						.segments,
+					0,
+				).paragraphInsertionStyle,
 			).toBeUndefined();
 			expect(
-				runtime.collect({ 'a:pPr': bullet }, 0, 2).segments[0].paragraphInsertionStyle
+				at(runtime.collect({ 'a:pPr': bullet }, 0, 2).segments, 0).paragraphInsertionStyle
 					?.authoredRunStyle,
 			).toStrictEqual({});
 		},
@@ -954,17 +958,17 @@ describe('collectShapeParagraphContent - empty paragraph metadata (real runtime)
 			createAutoNumberSequence(),
 			{ fontFamily: 'Calibri', fontSize: 24, color: '#000000' },
 		);
-		expect(result.segments[0].bulletInfo).toMatchObject({
+		expect(at(result.segments, 0).bulletInfo).toMatchObject({
 			fontFamily: 'Wingdings',
 			color: '#FF0000',
 		});
-		expect(result.segments[0].paragraphInsertionStyle).toMatchObject({
+		expect(at(result.segments, 0).paragraphInsertionStyle).toMatchObject({
 			fontFamily: 'Calibri',
 			fontSize: 24,
 			color: '#000000',
 			authoredRunStyle: {},
 		});
-		expect(result.segments[0].bulletInfo?.sizePercent).toBe(75);
+		expect(at(result.segments, 0).bulletInfo?.sizePercent).toBe(75);
 	});
 
 	it.each(['a:r', 'a:fld', 'a:br', 'a14:m'])(
@@ -987,9 +991,9 @@ describe('collectShapeParagraphContent - empty paragraph metadata (real runtime)
 		);
 
 		expect(segments).toHaveLength(1);
-		expect(segments[0].text).toBe('');
+		expect(at(segments, 0).text).toBe('');
 		expect(parts.join('')).toBe('');
-		const captured = segments[0].endParaRunProperties;
+		const captured = at(segments, 0).endParaRunProperties;
 		expect(captured?.['@_sz']).toBe('1800');
 		expect(captured?.['@_kern']).toBe('1200');
 		expect(captured?.['@_cap']).toBe('none');
@@ -1002,7 +1006,7 @@ describe('collectShapeParagraphContent - empty paragraph metadata (real runtime)
 		});
 		// The blank line is sized from `a:endParaRPr sz`, as for the separator
 		// segment of a non-last empty paragraph (18pt at 96dpi).
-		expect(segments[0].style.fontSize).toBeCloseTo(24, 5);
+		expect(at(segments, 0).style.fontSize).toBeCloseTo(24, 5);
 	});
 
 	it('captures endParaRPr on a trailing empty paragraph without adding one', () => {
@@ -1013,7 +1017,7 @@ describe('collectShapeParagraphContent - empty paragraph metadata (real runtime)
 		// Paragraph 0 keeps its own terminator; paragraph 1 gains the carrier.
 		expect(first.segments.map((s) => s.text)).toStrictEqual(['Body', '\n']);
 		expect(last.segments).toHaveLength(1);
-		expect(last.segments[0].endParaRunProperties?.['@_kern']).toBe('1200');
+		expect(at(last.segments, 0).endParaRunProperties?.['@_kern']).toBe('1200');
 	});
 
 	it('gives a genuinely bare empty paragraph a zero-length carrier flagged bare', () => {
@@ -1040,8 +1044,8 @@ describe('endParaRPr survives a real-deck load (anatidae-animation.pptx)', () =>
 			bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer,
 		);
 
-		const captured = data.slides[0].elements
-			.flatMap((el) => (el as { textSegments?: TextSegment[] }).textSegments ?? [])
+		const captured = at(data.slides, 0)
+			.elements.flatMap((el) => (el as { textSegments?: TextSegment[] }).textSegments ?? [])
 			.map((segment) => segment.endParaRunProperties)
 			.filter((props): props is Record<string, unknown> => props !== undefined);
 
@@ -1066,8 +1070,8 @@ describe('endParaRPr survives a real-deck load (anatidae-animation.pptx)', () =>
 		const reloaded = await new PptxHandler().load(
 			saved.buffer.slice(saved.byteOffset, saved.byteOffset + saved.byteLength) as ArrayBuffer,
 		);
-		const captured = reloaded.slides[0].elements
-			.flatMap((el) => (el as { textSegments?: TextSegment[] }).textSegments ?? [])
+		const captured = at(reloaded.slides, 0)
+			.elements.flatMap((el) => (el as { textSegments?: TextSegment[] }).textSegments ?? [])
 			.map((segment) => segment.endParaRunProperties)
 			.filter((props): props is Record<string, unknown> => props !== undefined);
 
@@ -1108,7 +1112,7 @@ describe('collectShapeParagraphContent - percentage paragraph spacing (real runt
 			undefined,
 			{ fontSize: 24 },
 		);
-		expect(segments[0].paragraphProperties?.paragraphSpacingBefore).toBeCloseTo(
+		expect(at(segments, 0).paragraphProperties?.paragraphSpacingBefore).toBeCloseTo(
 			(expectedPt * 96) / 72,
 			5,
 		);
@@ -1125,6 +1129,6 @@ describe('collectShapeParagraphContent - percentage paragraph spacing (real runt
 			undefined,
 			{ fontSize: 24 },
 		);
-		expect(segments[0].paragraphProperties?.paragraphSpacingBefore).toBeCloseTo(24 * 1.2, 5);
+		expect(at(segments, 0).paragraphProperties?.paragraphSpacingBefore).toBeCloseTo(24 * 1.2, 5);
 	});
 });

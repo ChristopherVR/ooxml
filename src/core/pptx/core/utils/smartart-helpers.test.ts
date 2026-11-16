@@ -14,6 +14,7 @@ import {
 	treeDepth,
 	getContentNodes,
 } from './smartart-helpers';
+import { at, must } from '../../test-support/access';
 
 // Reset the shape counter before each test to ensure deterministic IDs.
 beforeEach(() => {
@@ -107,7 +108,7 @@ describe('nextId', () => {
 
 describe('makeShapeElement', () => {
 	it('creates a shape element with required fields', () => {
-		const el = makeShapeElement('id1', 10, 20, 100, 50, 'rect', '#FF0000', 'Hello');
+		const el = must(makeShapeElement('id1', 10, 20, 100, 50, 'rect', '#FF0000', 'Hello'));
 		expect(el.id).toBe('id1');
 		expect(el.type).toBe('shape');
 		expect(el.x).toBe(10);
@@ -134,16 +135,18 @@ describe('makeShapeElement', () => {
 	});
 
 	it('applies optional overrides', () => {
-		const el = makeShapeElement('id', 0, 0, 100, 50, 'rect', '#000', 'txt', {
-			rotation: 45,
-			strokeColor: '#CCC',
-			strokeWidth: 2,
-			fontSize: 14,
-			fontColor: '#333',
-			textAlign: 'left',
-			textVAlign: 'top',
-			cornerRadius: 10000,
-		});
+		const el = must(
+			makeShapeElement('id', 0, 0, 100, 50, 'rect', '#000', 'txt', {
+				rotation: 45,
+				strokeColor: '#CCC',
+				strokeWidth: 2,
+				fontSize: 14,
+				fontColor: '#333',
+				textAlign: 'left',
+				textVAlign: 'top',
+				cornerRadius: 10000,
+			}),
+		);
 		expect(el.rotation).toBe(45);
 		expect(el.shapeStyle.strokeColor).toBe('#CCC');
 		expect(el.shapeStyle.strokeWidth).toBe(2);
@@ -155,7 +158,7 @@ describe('makeShapeElement', () => {
 	});
 
 	it('defaults strokeColor to lightened fill', () => {
-		const el = makeShapeElement('id', 0, 0, 100, 50, 'rect', '#000000', '');
+		const el = must(makeShapeElement('id', 0, 0, 100, 50, 'rect', '#000000', ''));
 		// lighten("#000000", 0.2) => #333333
 		expect(el.shapeStyle.strokeColor).toBe(lighten('#000000', 0.2));
 	});
@@ -167,7 +170,7 @@ describe('makeShapeElement', () => {
 
 describe('makeConnectorElement', () => {
 	it('creates a connector element', () => {
-		const el = makeConnectorElement('c1', 0, 0, 100, 50, '#444');
+		const el = must(makeConnectorElement('c1', 0, 0, 100, 50, '#444'));
 		expect(el.type).toBe('connector');
 		expect(el.shapeType).toBe('straightConnector1');
 		expect(el.shapeStyle.strokeColor).toBe('#444');
@@ -202,8 +205,8 @@ describe('buildForest', () => {
 		];
 		const roots = buildForest(nodes);
 		expect(roots).toHaveLength(2);
-		expect(roots[0].node.id).toBe('1');
-		expect(roots[1].node.id).toBe('2');
+		expect(at(roots, 0).node.id).toBe('1');
+		expect(at(roots, 1).node.id).toBe('2');
 	});
 
 	it('nests children under their parent', () => {
@@ -213,8 +216,8 @@ describe('buildForest', () => {
 		];
 		const roots = buildForest(nodes);
 		expect(roots).toHaveLength(1);
-		expect(roots[0].children).toHaveLength(1);
-		expect(roots[0].children[0].node.text).toBe('Child');
+		expect(at(roots, 0).children).toHaveLength(1);
+		expect(at(at(roots, 0).children, 0).node.text).toBe('Child');
 	});
 
 	it('handles multi-level nesting', () => {
@@ -225,7 +228,7 @@ describe('buildForest', () => {
 		];
 		const roots = buildForest(nodes);
 		expect(roots).toHaveLength(1);
-		expect(roots[0].children[0].children[0].node.text).toBe('Grandchild');
+		expect(at(at(at(roots, 0).children, 0).children, 0).node.text).toBe('Grandchild');
 	});
 
 	it('returns empty array for empty input', () => {
@@ -295,8 +298,8 @@ describe('getContentNodes', () => {
 		];
 		const result = getContentNodes(nodes);
 		expect(result).toHaveLength(2);
-		expect(result[0].text).toBe('Hello');
-		expect(result[1].text).toBe('World');
+		expect(at(result, 0).text).toBe('Hello');
+		expect(at(result, 1).text).toBe('World');
 	});
 
 	it('returns empty array when all nodes have empty text', () => {

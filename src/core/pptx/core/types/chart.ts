@@ -1020,7 +1020,7 @@ export interface PptxChartStyle {
 	/** Chart style index from `c:style/@val`. */
 	styleId?: number;
 	/** Whether the chart has a visible legend. */
-	hasLegend?: boolean;
+	hasLegend?: boolean | undefined;
 	/**
 	 * Legend position (t, b, l, r, tr), exactly as written. Absent when the
 	 * legend declares none, which PowerPoint draws on the right; the default is
@@ -1442,7 +1442,7 @@ export interface PptxChartData {
 	hiLowLines?: PptxChartLineStyle | null | undefined;
 	/** `null` explicitly removes an existing up/down-bars container. */
 	upDownBars?: PptxChartUpDownBars | null | undefined;
-	axes?: PptxChartAxisFormatting[];
+	axes?: PptxChartAxisFormatting[] | undefined;
 	floor?: PptxChart3DSurface | undefined;
 	sideWall?: PptxChart3DSurface | undefined;
 	backWall?: PptxChart3DSurface | undefined;

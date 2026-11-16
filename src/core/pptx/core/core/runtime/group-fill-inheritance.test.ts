@@ -27,6 +27,7 @@ import { describe, expect, it } from 'vitest';
 
 import { PptxHandler } from '../../PptxHandler';
 import type { PptxElement } from '../../types';
+import { at } from '../../../test-support/access';
 
 /** One `<p:sp>` whose fill is whatever markup the caller passes. */
 function sp(id: number, name: string, x: number, y: number, fill: string): string {
@@ -77,7 +78,7 @@ async function loadLeavesByName(): Promise<Map<string, PptxElement>> {
 			}
 		}
 	};
-	walk(data.slides[0].elements);
+	walk(at(data.slides, 0).elements);
 	return leaves;
 }
 

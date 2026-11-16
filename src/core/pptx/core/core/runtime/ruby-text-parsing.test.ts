@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 import type { TextStyle, TextSegment } from '../../types';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Extracted ruby parsing logic (mirrors parseRubyElement in the runtime mixin)
@@ -383,8 +384,8 @@ describe('collectParagraphWithRuby', () => {
 		const { parts, segments } = collectParagraphWithRuby(p);
 		expect(parts).toStrictEqual(['東京']);
 		expect(segments).toHaveLength(1);
-		expect(segments[0].rubyText).toBe('とうきょう');
-		expect(segments[0].text).toBe('東京');
+		expect(at(segments, 0).rubyText).toBe('とうきょう');
+		expect(at(segments, 0).text).toBe('東京');
 	});
 
 	it('should mix ruby and non-ruby runs', () => {
@@ -406,9 +407,9 @@ describe('collectParagraphWithRuby', () => {
 		expect(parts).toStrictEqual(['Location: ', '東京', ' is the capital.']);
 		expect(segments).toHaveLength(3);
 		// Only the second segment should be a ruby segment
-		expect(segments[0].rubyText).toBeUndefined();
-		expect(segments[1].rubyText).toBe('とうきょう');
-		expect(segments[2].rubyText).toBeUndefined();
+		expect(at(segments, 0).rubyText).toBeUndefined();
+		expect(at(segments, 1).rubyText).toBe('とうきょう');
+		expect(at(segments, 2).rubyText).toBeUndefined();
 	});
 
 	it('should handle a run without ruby as a normal run', () => {
@@ -419,7 +420,7 @@ describe('collectParagraphWithRuby', () => {
 		const { parts, segments } = collectParagraphWithRuby(p);
 		expect(parts).toStrictEqual(['Normal text']);
 		expect(segments).toHaveLength(1);
-		expect(segments[0].rubyText).toBeUndefined();
+		expect(at(segments, 0).rubyText).toBeUndefined();
 	});
 });
 

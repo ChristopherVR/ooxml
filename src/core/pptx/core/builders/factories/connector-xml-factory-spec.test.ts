@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import type { ConnectorPptxElement, XmlObject } from '../../types';
 import { ConnectorXmlFactory } from './ConnectorXmlFactory';
 import type { PptxBuilderFactoryContext } from './types';
+import { at } from '../../../test-support/access';
 
 const EMU_PER_PX = 9525;
 
@@ -181,8 +182,8 @@ describe('connectorXmlFactory', () => {
 		const custDash = ln['a:custDash'] as XmlObject;
 		const ds = custDash['a:ds'] as XmlObject[];
 		expect(ds).toHaveLength(2);
-		expect(ds[0]['@_d']).toBe('200000');
-		expect(ds[0]['@_sp']).toBe('100000');
+		expect(at(ds, 0)['@_d']).toBe('200000');
+		expect(at(ds, 0)['@_sp']).toBe('100000');
 	});
 
 	it('should set connection points for stCxn and endCxn', () => {

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { XmlObject } from '../types';
 import { parseActiveXControlsFromSlide } from './activex-parser';
 import { applyActiveXControlsToSlide, buildActiveXControlNode } from './activex-serializer';
+import { at } from '../../test-support/access';
 
 /** Minimal slide XML carrying two `p:control` references plus a placeholder pic. */
 function synthSlide(): XmlObject {
@@ -52,15 +53,15 @@ describe('activex control serialization', () => {
 		const controls = ((slide['p:sld'] as XmlObject)['p:cSld'] as XmlObject)[
 			'p:controls'
 		] as XmlObject;
-		const first = (controls['p:control'] as XmlObject[])[0];
+		const first = at(controls['p:control'] as XmlObject[], 0);
 		expect(first['p:pic']).toBeDefined();
 	});
 
 	it('serializes edited control attributes back into the slide', () => {
 		const slide = synthSlide();
 		const parsed = parseActiveXControlsFromSlide(slide);
-		parsed[0].name = 'RenamedButton';
-		parsed[0].relId = 'rId9';
+		at(parsed, 0).name = 'RenamedButton';
+		at(parsed, 0).relId = 'rId9';
 		applyActiveXControlsToSlide(slide, parsed);
 
 		const reparsed = parseActiveXControlsFromSlide(slide);
@@ -90,9 +91,9 @@ describe('activex control serialization', () => {
 	it('round-trips showAsIcon/imgW/imgH through parse, edit, and serialize', () => {
 		const slide = synthSlide();
 		const parsed = parseActiveXControlsFromSlide(slide);
-		parsed[0].showAsIcon = true;
-		parsed[0].imgWidthEmu = 1828800;
-		parsed[0].imgHeightEmu = 914400;
+		at(parsed, 0).showAsIcon = true;
+		at(parsed, 0).imgWidthEmu = 1828800;
+		at(parsed, 0).imgHeightEmu = 914400;
 		applyActiveXControlsToSlide(slide, parsed);
 
 		const reparsed = parseActiveXControlsFromSlide(slide);

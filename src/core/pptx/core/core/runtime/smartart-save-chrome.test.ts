@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { XmlObject } from '../../types';
 import { applySmartArtChrome } from './smartart-save-chrome';
+import { xmlFixture } from '../../../test-support/access';
 
 /** Strip namespace prefix from an XML key (e.g. `dgm:bg` -> `bg`). */
 function localName(key: string): string {
@@ -43,9 +44,9 @@ describe('applySmartArtChrome', () => {
 	});
 
 	it('preserves existing children on an existing dgm:bg node', () => {
-		const dm: XmlObject = {
+		const dm = xmlFixture({
 			'dgm:bg': { 'a:effectLst': { marker: true } },
-		};
+		});
 		applySmartArtChrome(dm, { backgroundColor: '#FFFFFF' }, localName);
 		const bg = dm['dgm:bg'] as XmlObject;
 		expect(bg['a:effectLst']).toStrictEqual({ marker: true });
@@ -107,8 +108,8 @@ describe('applySmartArtChrome', () => {
 		});
 
 		it('reuses an existing prefixed gradFill key rather than duplicating', () => {
-			const dm: XmlObject = { 'dgm:bg': { 'x:gradFill': { marker: true } } };
-			const newGrad: XmlObject = { updated: true };
+			const dm = xmlFixture({ 'dgm:bg': { 'x:gradFill': { marker: true } } });
+			const newGrad = xmlFixture({ updated: true });
 			applySmartArtChrome(
 				dm,
 				{ backgroundColor: '#000000', backgroundFillXml: { localName: 'gradFill', xml: newGrad } },

@@ -10,6 +10,7 @@ import { describe, it, expect } from 'vitest';
 import type { OlePptxElement, TablePptxElement, XmlObject } from '../../types';
 import { PptxGraphicFrameParser } from './PptxGraphicFrameParser';
 import type { PptxGraphicFrameParserContext } from './PptxGraphicFrameParser';
+import { xmlFixture } from '../../../test-support/access';
 
 function makeParser(overrides: Partial<PptxGraphicFrameParserContext> = {}) {
 	return new PptxGraphicFrameParser({
@@ -421,7 +422,7 @@ describe('pptxGraphicFrameParser name/shapeId', () => {
 			'a:graphic': { 'a:graphicData': { 'c:chart': {} } },
 		};
 
-		const result = parser.parseGraphicFrame(frame, 'chart-1') as XmlObject;
+		const result = xmlFixture(parser.parseGraphicFrame(frame, 'chart-1'));
 		expect(result.name).toBe('Quarterly Chart');
 		expect(result.shapeId).toBe('9');
 	});

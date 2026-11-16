@@ -9,6 +9,7 @@ import {
 	remapShapeIdReferences,
 	visitXmlObjects,
 } from './shape-ids';
+import { at } from '../../test-support/access';
 
 function shape(id: string, overrides: Partial<ShapePptxElement> = {}): ShapePptxElement {
 	return {
@@ -111,9 +112,9 @@ describe('remapShapeIdReferences', () => {
 		};
 		remapShapeIdReferences(root, ids);
 		const anims = (root['pptx:animations'] as XmlObject)['pptx:animation'] as XmlObject[];
-		expect(anims[0]['@_elementId']).toBe('9');
-		expect(anims[0]['@_triggerShapeId']).toBe('9');
-		expect(anims[1]['@_elementId']).toBe('2');
+		expect(at(anims, 0)['@_elementId']).toBe('9');
+		expect(at(anims, 0)['@_triggerShapeId']).toBe('9');
+		expect(at(anims, 1)['@_elementId']).toBe('2');
 	});
 
 	it('never touches relationship ids, slide ids, timing-node ids, sub-shapes or declarations', () => {

@@ -7,6 +7,7 @@ import type {
 	SmartArtLayoutType,
 } from '../types';
 import { relayoutSmartArt } from './smartart-relayout';
+import { at } from '../../test-support/access';
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -79,7 +80,7 @@ describe('relayoutSmartArt', () => {
 		expect(shapes).toHaveLength(3);
 		// Each successive shape should have a greater x value
 		for (let i = 1; i < shapes.length; i++) {
-			expect(shapes[i].x).toBeGreaterThan(shapes[i - 1].x);
+			expect(at(shapes, i).x).toBeGreaterThan(at(shapes, i - 1).x);
 		}
 	});
 
@@ -140,7 +141,7 @@ describe('relayoutSmartArt', () => {
 		const shapes = relayoutSmartArt(data, W, H);
 
 		expect(shapes).toHaveLength(1);
-		expect(shapes[0].text).toBe('Only Node');
+		expect(at(shapes, 0).text).toBe('Only Node');
 	});
 
 	// 9. Relayout preserves text content
@@ -163,7 +164,7 @@ describe('relayoutSmartArt', () => {
 		const shapesWide = relayoutSmartArt(data, 1200, 300);
 
 		// Shapes in the wider container should be wider
-		expect(shapesWide[0].width).toBeGreaterThan(shapesNarrow[0].width);
+		expect(at(shapesWide, 0).width).toBeGreaterThan(at(shapesNarrow, 0).width);
 	});
 
 	// 11. Cycle layout produces shapes

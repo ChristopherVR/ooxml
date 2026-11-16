@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { PptxChartDataLabel, XmlObject } from '../types';
 import { applySeriesDataLabelsToXml } from './chart-series-datalabel-serializer';
+import { at } from '../../test-support/access';
 
 const getLocalName = (key: string): string => {
 	const colon = key.indexOf(':');
@@ -53,8 +54,8 @@ describe('applySeriesDataLabelsToXml', () => {
 		const dLbls = ser['c:dLbls'] as XmlObject;
 		const arr = dLbls['c:dLbl'] as XmlObject[];
 		expect(Array.isArray(arr)).toBeTruthy();
-		expect((arr[0]['c:idx'] as XmlObject)['@_val']).toBe('0');
-		expect((arr[1]['c:idx'] as XmlObject)['@_val']).toBe('2');
+		expect((at(arr, 0)['c:idx'] as XmlObject)['@_val']).toBe('0');
+		expect((at(arr, 1)['c:idx'] as XmlObject)['@_val']).toBe('2');
 	});
 
 	it('emits a delete override for a content-less label (suppress one point)', () => {

@@ -6,6 +6,7 @@ import {
 	isChartSeriesOnSecondaryAxis,
 	withChartSeriesOnSecondaryAxis,
 } from './chart-series-axis-operations';
+import { at } from '../../../test-support/access';
 
 const chart = (overrides: Partial<PptxChartData> = {}): PptxChartData => ({
 	chartType: 'bar',
@@ -38,7 +39,7 @@ describe('withChartSeriesOnSecondaryAxis', () => {
 			crossAxisId: 21,
 			deleted: true,
 		});
-		expect(next.series[1].axisId).toBe(21);
+		expect(at(next.series, 1).axisId).toBe(21);
 		expect(isChartSeriesOnSecondaryAxis(next, 1)).toBe(true);
 		expect(isChartSeriesOnSecondaryAxis(next, 0)).toBe(false);
 	});

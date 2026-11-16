@@ -143,7 +143,7 @@ export interface TextStyle {
 	 * @see element-body-properties.ts
 	 */
 	resolvedBodyProperties?: TextStyle;
-	fontFamily?: string;
+	fontFamily?: string | undefined;
 	fontSize?: number | undefined; // in points
 	/** When true, some form of autofit is in effect; see {@link autoFitMode} for which. */
 	autoFit?: boolean;
@@ -158,7 +158,7 @@ export interface TextStyle {
 	autoFitFontScale?: number;
 	/** Line spacing reduction for normAutofit (e.g. 0.2 = reduce by 20%). Only meaningful when autoFit is true. */
 	autoFitLineSpacingReduction?: number;
-	bold?: boolean;
+	bold?: boolean | undefined;
 	italic?: boolean;
 	underline?: boolean;
 	/** Specific underline style (e.g. "sng", "dbl", "wavy"). Falls back to "sng" when `underline` is true. */
@@ -268,7 +268,7 @@ export interface TextStyle {
 	textFillBlipUrl?: string;
 	/** Tiling mode for {@link textFillBlipUrl} (`a:blipFill/a:tile` present -> 'tile', else 'stretch'). */
 	textFillBlipMode?: 'stretch' | 'tile';
-	hyperlink?: string;
+	hyperlink?: string | undefined;
 	/** Relationship ID for the hyperlink (`a:hlinkClick/@r:id`) — preserved for round-trip serialization. */
 	hyperlinkRId?: string;
 	/** Hyperlink tooltip text (`a:hlinkClick/@tooltip`). */
@@ -381,7 +381,7 @@ export interface TextStyle {
 	/** Body text wrapping mode from `a:bodyPr/@wrap`. */
 	textWrap?: 'square' | 'none' | undefined;
 	/** Preset text warp type from `a:bodyPr/a:prstTxWarp`. */
-	textWarpPreset?: PptxTextWarpPreset;
+	textWarpPreset?: PptxTextWarpPreset | undefined;
 	/** Primary adjustment value for text warp (from `a:prstTxWarp/a:avLst/a:gd` with name "adj").
 	 *  Stored as raw OOXML 1/60000th units (e.g. 50000 = default for many presets). */
 	textWarpAdj?: number;

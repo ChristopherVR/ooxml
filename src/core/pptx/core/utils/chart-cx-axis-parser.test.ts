@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { XmlObject } from '../types';
 import { parseCxAxes, resolveCxTitleText } from './chart-cx-axis-parser';
+import { at } from '../../test-support/access';
 
 /** Minimal XmlLookupLike stub using plain object traversal (mirrors chart-cx-parser.test.ts). */
 const xmlLookup = {
@@ -112,10 +113,10 @@ describe('parseCxAxes (C2-G7)', () => {
 		};
 		const axes = parseCxAxes(plotArea, xmlLookup)!;
 		expect(axes).toHaveLength(2);
-		expect(axes[0].axisType).toBe('catAx');
-		expect(axes[1].axisType).toBe('valAx');
+		expect(at(axes, 0).axisType).toBe('catAx');
+		expect(at(axes, 1).axisType).toBe('valAx');
 		// cx:tickLabels present -> labels are shown, no forced 'none'.
-		expect(axes[1].tickLblPos).toBeUndefined();
+		expect(at(axes, 1).tickLblPos).toBeUndefined();
 	});
 
 	it('marks an axis hidden via @hidden and resolves fontFamily/fontColor from cx:txPr', () => {

@@ -353,7 +353,7 @@ export interface ShapeOptions extends Partial<ElementPosition>, ElementFlipInput
 	 * entry. The shape type argument is then not used. An empty list is no
 	 * custom geometry.
 	 */
-	paths?: CustomPathInput[];
+	paths?: CustomPathInput[] | undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -523,7 +523,7 @@ export interface ChartInput extends ChartContentInput {
 	title?: string;
 	hasLegend?: boolean;
 	legendPosition?: 't' | 'b' | 'l' | 'r' | 'tr';
-	grouping?: 'clustered' | 'stacked' | 'percentStacked';
+	grouping?: 'clustered' | 'stacked' | 'percentStacked' | undefined;
 	/** Bar series direction (`c:barDir`): vertical columns (default) or horizontal bars. */
 	barDirection?: 'col' | 'bar';
 	/** Bar cluster gap, % of bar width (`c:gapWidth`, 0..500; default 150). Bar, bar3D, ofPie. */
@@ -646,16 +646,16 @@ export interface PresentationOptions {
 	/** Slide height in EMU. Default: 6858000 (16:9 widescreen). */
 	height?: number | undefined;
 	/** Theme configuration. */
-	theme?: PresentationThemeInput;
+	theme?: PresentationThemeInput | undefined;
 	/** Presentation title (stored in docProps/core.xml). */
-	title?: string;
+	title?: string | undefined;
 	/** Presentation author. */
-	creator?: string;
+	creator?: string | undefined;
 	/**
 	 * Number of blank slides to include in the initial presentation.
 	 * Default: 0 (no slides). Slides use the "Blank" layout.
 	 */
-	initialSlideCount?: number;
+	initialSlideCount?: number | undefined;
 	/**
 	 * `p:presentation/@firstSlideNum` (ECMA-376 §19.2.1.26): the number a
 	 * slide-number field shows on the first slide. Omitted when undefined, so
@@ -668,7 +668,7 @@ export interface PresentationOptions {
 	 * has always given it. Pass `{ fill: { type: 'none' } }` so that an omitted
 	 * `fill` means no fill (`a:noFill`).
 	 */
-	shapeDefaults?: ShapeDefaultsInput;
+	shapeDefaults?: ShapeDefaultsInput | undefined;
 	/**
 	 * Application properties written to `docProps/app.xml` when the package
 	 * is created. Without them the part names `pptx-viewer-sdk`, version
@@ -679,7 +679,7 @@ export interface PresentationOptions {
 	 * field by field. A field the save option sets wins; a field it omits
 	 * keeps the value given here.
 	 */
-	appProperties?: PresentationAppPropertiesInput;
+	appProperties?: PresentationAppPropertiesInput | undefined;
 }
 
 /** What an omitted shape option falls back to; see {@link PresentationOptions.shapeDefaults}. */
@@ -689,23 +689,27 @@ export interface ShapeDefaultsInput {
 }
 
 export interface PresentationThemeInput {
-	name?: string;
-	colors?: {
-		dk1?: string;
-		lt1?: string;
-		dk2?: string;
-		lt2?: string;
-		accent1?: string;
-		accent2?: string;
-		accent3?: string;
-		accent4?: string;
-		accent5?: string;
-		accent6?: string;
-		hlink?: string;
-		folHlink?: string;
-	};
-	fonts?: {
-		majorFont?: string;
-		minorFont?: string;
-	};
+	name?: string | undefined;
+	colors?:
+		| {
+				dk1?: string;
+				lt1?: string;
+				dk2?: string;
+				lt2?: string;
+				accent1?: string;
+				accent2?: string;
+				accent3?: string;
+				accent4?: string;
+				accent5?: string;
+				accent6?: string;
+				hlink?: string;
+				folHlink?: string;
+		  }
+		| undefined;
+	fonts?:
+		| {
+				majorFont?: string;
+				minorFont?: string;
+		  }
+		| undefined;
 }

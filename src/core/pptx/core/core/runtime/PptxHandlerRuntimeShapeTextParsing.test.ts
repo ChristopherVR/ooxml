@@ -26,6 +26,7 @@ import {
 import { createAutoNumberSequence } from './auto-number-sequence';
 import { PptxHandlerRuntime } from './PptxHandlerRuntimeImplementation';
 import type { ParagraphStyleResult, ShapeTextParsingContext } from './PptxHandlerRuntimeTypes';
+import { at } from '../../../test-support/access';
 
 const EMU_PER_PX = 9525;
 
@@ -183,7 +184,7 @@ describe('extractParagraphOwnProperties', () => {
 		expect(result!.paragraphSpacingBefore).toBeGreaterThan(0);
 		expect(result!.paragraphSpacingAfter).toBeGreaterThan(0);
 		expect(result!.tabStops).toHaveLength(1);
-		expect(result!.tabStops![0].align).toBe('ctr');
+		expect(at(result!.tabStops!, 0).align).toBe('ctr');
 	});
 
 	it('re-emits a:defRPr and a:extLst verbatim', () => {
@@ -315,8 +316,8 @@ describe('parseTabStops', () => {
 	it('parses a single tab stop', () => {
 		const result = parseTabStops({ 'a:tabLst': { 'a:tab': { '@_pos': '914400', '@_algn': 'l' } } });
 		expect(result).toHaveLength(1);
-		expect(result![0].position).toBeCloseTo(914400 / EMU_PER_PX, 5);
-		expect(result![0].align).toBe('l');
+		expect(at(result!, 0).position).toBeCloseTo(914400 / EMU_PER_PX, 5);
+		expect(at(result!, 0).align).toBe('l');
 	});
 
 	it('parses several tab stops with their alignments', () => {
@@ -335,14 +336,14 @@ describe('parseTabStops', () => {
 
 	it("defaults an unknown or missing alignment to 'l'", () => {
 		expect(
-			parseTabStops({ 'a:tabLst': { 'a:tab': { '@_pos': '1', '@_algn': 'x' } } })![0].align,
+			at(parseTabStops({ 'a:tabLst': { 'a:tab': { '@_pos': '1', '@_algn': 'x' } } })!, 0).align,
 		).toBe('l');
-		expect(parseTabStops({ 'a:tabLst': { 'a:tab': { '@_pos': '1' } } })![0].align).toBe('l');
+		expect(at(parseTabStops({ 'a:tabLst': { 'a:tab': { '@_pos': '1' } } })!, 0).align).toBe('l');
 	});
 
 	it.each(['dot', 'hyphen', 'underscore'])('keeps the %s leader', (leader) => {
 		const result = parseTabStops({ 'a:tabLst': { 'a:tab': { '@_pos': '1', '@_leader': leader } } });
-		expect(result![0].leader).toBe(leader);
+		expect(at(result!, 0).leader).toBe(leader);
 	});
 
 	it('drops an unknown leader and a tab stop with no position', () => {

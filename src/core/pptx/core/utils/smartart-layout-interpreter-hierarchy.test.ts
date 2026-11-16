@@ -13,6 +13,7 @@ import type {
 	RenderedRectNode,
 	SmartArtLayoutResult,
 } from '../../../diagram/layout/smartart-layout-types';
+import { at } from '../../test-support/access';
 
 const box: BoundingBox = { width: 600, height: 400 };
 const palette = ['#4472C4', '#ED7D31', '#A5A5A5', '#FFC000'];
@@ -225,10 +226,10 @@ describe('smartArt hierarchy arranger: hierBranch', () => {
 			return { c1: byId(result, 'c1'), c2: byId(result, 'c2') };
 		});
 		for (const { c1, c2 } of positions) {
-			expect(c1.x).toBeCloseTo(positions[0].c1.x, 0);
-			expect(c1.y).toBeCloseTo(positions[0].c1.y, 0);
-			expect(c2.x).toBeCloseTo(positions[0].c2.x, 0);
-			expect(c2.y).toBeCloseTo(positions[0].c2.y, 0);
+			expect(c1.x).toBeCloseTo(at(positions, 0).c1.x, 0);
+			expect(c1.y).toBeCloseTo(at(positions, 0).c1.y, 0);
+			expect(c2.x).toBeCloseTo(at(positions, 0).c2.x, 0);
+			expect(c2.y).toBeCloseTo(at(positions, 0).c2.y, 0);
 		}
 	});
 
@@ -874,7 +875,7 @@ describe('smartArt hierarchy arranger: solo chain link continues fanning', () =>
 		// All 5 share the SAME row (y) and have 5 DISTINCT x positions - a fan,
 		// not a hanging column (which would share x, not y).
 		for (const node of fanned) {
-			expect(node.y).toBeCloseTo(fanned[0].y, 0);
+			expect(node.y).toBeCloseTo(at(fanned, 0).y, 0);
 		}
 		expect(new Set(fanned.map((n) => Math.round(n.x))).size).toBe(5);
 		// The deeper solo chain ("Branch C Root", g) still hangs: it does NOT
@@ -1070,7 +1071,7 @@ describe('smartArt hierarchy arranger: mode===hanging honours foldDeeperGenerati
 				{
 					...realAlgorithmNode.children![0],
 					children: [
-						realAlgorithmNode.children![0].children![0],
+						at(at(realAlgorithmNode.children!, 0).children!, 0),
 						{
 							name: 'childShape',
 							algorithm: { type: 'hierChild', parameters: [{ type: 'linDir', value: 'fromT' }] },

@@ -8,6 +8,7 @@ import {
 	removeTableColumn,
 	rebuildTableXmlFromData,
 } from './table-structural-ops';
+import { at, must } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -108,27 +109,27 @@ describe('addTableRow', () => {
 		const td = make2x3TableData();
 		const result = addTableRow(td, 0);
 		expect(result.tableData.rows).toHaveLength(3);
-		expect(result.tableData.rows[0].cells).toHaveLength(3);
-		expect(result.tableData.rows[0].cells[0].text).toBe('');
-		expect(result.tableData.rows[1].cells[0].text).toBe('A1');
-		expect(result.tableData.rows[2].cells[0].text).toBe('A2');
+		expect(at(result.tableData.rows, 0).cells).toHaveLength(3);
+		expect(at(at(result.tableData.rows, 0).cells, 0).text).toBe('');
+		expect(at(at(result.tableData.rows, 1).cells, 0).text).toBe('A1');
+		expect(at(at(result.tableData.rows, 2).cells, 0).text).toBe('A2');
 	});
 
 	it('should add a row at the end', () => {
 		const td = make2x3TableData();
 		const result = addTableRow(td, 2);
 		expect(result.tableData.rows).toHaveLength(3);
-		expect(result.tableData.rows[2].cells[0].text).toBe('');
-		expect(result.tableData.rows[2].cells).toHaveLength(3);
+		expect(at(at(result.tableData.rows, 2).cells, 0).text).toBe('');
+		expect(at(result.tableData.rows, 2).cells).toHaveLength(3);
 	});
 
 	it('should add a row in the middle', () => {
 		const td = make2x3TableData();
 		const result = addTableRow(td, 1);
 		expect(result.tableData.rows).toHaveLength(3);
-		expect(result.tableData.rows[0].cells[0].text).toBe('A1');
-		expect(result.tableData.rows[1].cells[0].text).toBe('');
-		expect(result.tableData.rows[2].cells[0].text).toBe('A2');
+		expect(at(at(result.tableData.rows, 0).cells, 0).text).toBe('A1');
+		expect(at(at(result.tableData.rows, 1).cells, 0).text).toBe('');
+		expect(at(at(result.tableData.rows, 2).cells, 0).text).toBe('A2');
 	});
 
 	it('should update rawXml when provided', () => {
@@ -167,19 +168,19 @@ describe('addTableRow', () => {
 		const result = addTableRow(td, 1);
 		expect(result.tableData.rows).toHaveLength(4);
 		// Anchor cell should now have rowSpan 4
-		expect(result.tableData.rows[0].cells[0].rowSpan).toBe(4);
+		expect(at(at(result.tableData.rows, 0).cells, 0).rowSpan).toBe(4);
 		// New row's first cell should be vMerge
-		expect(result.tableData.rows[1].cells[0].vMerge).toBeTruthy();
+		expect(at(at(result.tableData.rows, 1).cells, 0).vMerge).toBeTruthy();
 		// New row's second cell should be normal
-		expect(result.tableData.rows[1].cells[1].text).toBe('');
-		expect(result.tableData.rows[1].cells[1].vMerge).toBeUndefined();
+		expect(at(at(result.tableData.rows, 1).cells, 1).text).toBe('');
+		expect(at(at(result.tableData.rows, 1).cells, 1).vMerge).toBeUndefined();
 	});
 
 	it('should clamp index to valid range', () => {
 		const td = make2x3TableData();
 		const result = addTableRow(td, 100);
 		expect(result.tableData.rows).toHaveLength(3);
-		expect(result.tableData.rows[2].cells[0].text).toBe('');
+		expect(at(at(result.tableData.rows, 2).cells, 0).text).toBe('');
 	});
 });
 
@@ -192,14 +193,14 @@ describe('removeTableRow', () => {
 		const td = make2x3TableData();
 		const result = removeTableRow(td, 0);
 		expect(result.tableData.rows).toHaveLength(1);
-		expect(result.tableData.rows[0].cells[0].text).toBe('A2');
+		expect(at(at(result.tableData.rows, 0).cells, 0).text).toBe('A2');
 	});
 
 	it('should remove the last row', () => {
 		const td = make2x3TableData();
 		const result = removeTableRow(td, 1);
 		expect(result.tableData.rows).toHaveLength(1);
-		expect(result.tableData.rows[0].cells[0].text).toBe('A1');
+		expect(at(at(result.tableData.rows, 0).cells, 0).text).toBe('A1');
 	});
 
 	it('should not remove if only one row remains', () => {
@@ -250,11 +251,11 @@ describe('removeTableRow', () => {
 		const result = removeTableRow(td, 0);
 		expect(result.tableData.rows).toHaveLength(2);
 		// The text should have moved to the new anchor (previously row 1)
-		expect(result.tableData.rows[0].cells[0].text).toBe('Anchor');
+		expect(at(at(result.tableData.rows, 0).cells, 0).text).toBe('Anchor');
 		// The vMerge should be cleared
-		expect(result.tableData.rows[0].cells[0].vMerge).toBeUndefined();
+		expect(at(at(result.tableData.rows, 0).cells, 0).vMerge).toBeUndefined();
 		// rowSpan should be removed since it was 2-1=1
-		expect(result.tableData.rows[0].cells[0].rowSpan).toBeUndefined();
+		expect(at(at(result.tableData.rows, 0).cells, 0).rowSpan).toBeUndefined();
 	});
 
 	it('should handle removing a row with vMerge continuation', () => {
@@ -280,8 +281,8 @@ describe('removeTableRow', () => {
 		const result = removeTableRow(td, 1);
 		expect(result.tableData.rows).toHaveLength(2);
 		// Anchor rowSpan should decrease from 3 to 2
-		expect(result.tableData.rows[0].cells[0].rowSpan).toBe(2);
-		expect(result.tableData.rows[0].cells[0].text).toBe('Anchor');
+		expect(at(at(result.tableData.rows, 0).cells, 0).rowSpan).toBe(2);
+		expect(at(at(result.tableData.rows, 0).cells, 0).text).toBe('Anchor');
 	});
 });
 
@@ -294,26 +295,26 @@ describe('addTableColumn', () => {
 		const td = make2x3TableData();
 		const result = addTableColumn(td, 0);
 		expect(result.tableData.columnWidths).toHaveLength(4);
-		expect(result.tableData.rows[0].cells).toHaveLength(4);
-		expect(result.tableData.rows[0].cells[0].text).toBe('');
-		expect(result.tableData.rows[0].cells[1].text).toBe('A1');
+		expect(at(result.tableData.rows, 0).cells).toHaveLength(4);
+		expect(at(at(result.tableData.rows, 0).cells, 0).text).toBe('');
+		expect(at(at(result.tableData.rows, 0).cells, 1).text).toBe('A1');
 	});
 
 	it('should add a column at the end', () => {
 		const td = make2x3TableData();
 		const result = addTableColumn(td, 3);
 		expect(result.tableData.columnWidths).toHaveLength(4);
-		expect(result.tableData.rows[0].cells).toHaveLength(4);
-		expect(result.tableData.rows[0].cells[3].text).toBe('');
+		expect(at(result.tableData.rows, 0).cells).toHaveLength(4);
+		expect(at(at(result.tableData.rows, 0).cells, 3).text).toBe('');
 	});
 
 	it('should add a column in the middle', () => {
 		const td = make2x3TableData();
 		const result = addTableColumn(td, 1);
 		expect(result.tableData.columnWidths).toHaveLength(4);
-		expect(result.tableData.rows[0].cells[0].text).toBe('A1');
-		expect(result.tableData.rows[0].cells[1].text).toBe('');
-		expect(result.tableData.rows[0].cells[2].text).toBe('B1');
+		expect(at(at(result.tableData.rows, 0).cells, 0).text).toBe('A1');
+		expect(at(at(result.tableData.rows, 0).cells, 1).text).toBe('');
+		expect(at(at(result.tableData.rows, 0).cells, 2).text).toBe('B1');
 	});
 
 	it('should normalize column widths to sum to ~1', () => {
@@ -360,14 +361,14 @@ describe('addTableColumn', () => {
 
 		// Insert column at index 1 (inside the merge of row 0)
 		const result = addTableColumn(td, 1);
-		expect(result.tableData.rows[0].cells).toHaveLength(4);
+		expect(at(result.tableData.rows, 0).cells).toHaveLength(4);
 		// Anchor's gridSpan should increase to 4
-		expect(result.tableData.rows[0].cells[0].gridSpan).toBe(4);
+		expect(at(at(result.tableData.rows, 0).cells, 0).gridSpan).toBe(4);
 		// New cell should be hMerge continuation
-		expect(result.tableData.rows[0].cells[1].hMerge).toBeTruthy();
+		expect(at(at(result.tableData.rows, 0).cells, 1).hMerge).toBeTruthy();
 		// Row 1 cells should be normal
-		expect(result.tableData.rows[1].cells[1].text).toBe('');
-		expect(result.tableData.rows[1].cells[1].hMerge).toBeUndefined();
+		expect(at(at(result.tableData.rows, 1).cells, 1).text).toBe('');
+		expect(at(at(result.tableData.rows, 1).cells, 1).hMerge).toBeUndefined();
 	});
 
 	it('should preserve gridCol widths summing to the original total in XML', () => {
@@ -391,24 +392,24 @@ describe('removeTableColumn', () => {
 		const td = make2x3TableData();
 		const result = removeTableColumn(td, 0);
 		expect(result.tableData.columnWidths).toHaveLength(2);
-		expect(result.tableData.rows[0].cells).toHaveLength(2);
-		expect(result.tableData.rows[0].cells[0].text).toBe('B1');
+		expect(at(result.tableData.rows, 0).cells).toHaveLength(2);
+		expect(at(at(result.tableData.rows, 0).cells, 0).text).toBe('B1');
 	});
 
 	it('should remove the last column', () => {
 		const td = make2x3TableData();
 		const result = removeTableColumn(td, 2);
 		expect(result.tableData.columnWidths).toHaveLength(2);
-		expect(result.tableData.rows[0].cells[0].text).toBe('A1');
-		expect(result.tableData.rows[0].cells[1].text).toBe('B1');
+		expect(at(at(result.tableData.rows, 0).cells, 0).text).toBe('A1');
+		expect(at(at(result.tableData.rows, 0).cells, 1).text).toBe('B1');
 	});
 
 	it('should remove a middle column', () => {
 		const td = make2x3TableData();
 		const result = removeTableColumn(td, 1);
 		expect(result.tableData.columnWidths).toHaveLength(2);
-		expect(result.tableData.rows[0].cells[0].text).toBe('A1');
-		expect(result.tableData.rows[0].cells[1].text).toBe('C1');
+		expect(at(at(result.tableData.rows, 0).cells, 0).text).toBe('A1');
+		expect(at(at(result.tableData.rows, 0).cells, 1).text).toBe('C1');
 	});
 
 	it('should not remove if only one column remains', () => {
@@ -459,13 +460,13 @@ describe('removeTableColumn', () => {
 
 		// Remove column 0 (the anchor)
 		const result = removeTableColumn(td, 0);
-		expect(result.tableData.rows[0].cells).toHaveLength(2);
+		expect(at(result.tableData.rows, 0).cells).toHaveLength(2);
 		// The former hMerge continuation should become a normal cell
-		expect(result.tableData.rows[0].cells[0].hMerge).toBeUndefined();
+		expect(at(at(result.tableData.rows, 0).cells, 0).hMerge).toBeUndefined();
 		// The text should have moved from the anchor
-		expect(result.tableData.rows[0].cells[0].text).toBe('Anchor');
+		expect(at(at(result.tableData.rows, 0).cells, 0).text).toBe('Anchor');
 		// gridSpan should be cleared (was 2-1=1)
-		expect(result.tableData.rows[0].cells[0].gridSpan).toBeUndefined();
+		expect(at(at(result.tableData.rows, 0).cells, 0).gridSpan).toBeUndefined();
 	});
 
 	it('should handle removing a hMerge continuation cell', () => {
@@ -485,9 +486,9 @@ describe('removeTableColumn', () => {
 
 		// Remove column 1 (a continuation)
 		const result = removeTableColumn(td, 1);
-		expect(result.tableData.rows[0].cells).toHaveLength(2);
+		expect(at(result.tableData.rows, 0).cells).toHaveLength(2);
 		// Anchor gridSpan should decrease from 3 to 2
-		expect(result.tableData.rows[0].cells[0].gridSpan).toBe(2);
+		expect(at(at(result.tableData.rows, 0).cells, 0).gridSpan).toBe(2);
 	});
 
 	it('should handle removing anchor in rawXml with gridSpan', () => {
@@ -533,9 +534,9 @@ describe('removeTableColumn', () => {
 		const cells = getXmlCells(tbl, 0);
 		expect(cells).toHaveLength(2);
 		// Former hMerge cell should no longer be hMerge
-		expect(cells[0]['@_hMerge']).toBeUndefined();
+		expect(at(cells, 0)['@_hMerge']).toBeUndefined();
 		// gridSpan should be removed (was 2-1=1)
-		expect(cells[0]['@_gridSpan']).toBeUndefined();
+		expect(at(cells, 0)['@_gridSpan']).toBeUndefined();
 	});
 });
 
@@ -622,13 +623,13 @@ describe('rebuildTableXmlFromData', () => {
 		rebuildTableXmlFromData(tbl, tableData, 9525, ensureArray);
 
 		const rows = ensureArray(tbl['a:tr']) as XmlObject[];
-		const cells = ensureArray(rows[0]['a:tc']) as XmlObject[];
+		const cells = ensureArray(at(rows, 0)['a:tc']) as XmlObject[];
 
 		// First cell should preserve styling from original
-		expect((cells[0]['a:tcPr'] as XmlObject)?.['@_anchor']).toBe('ctr');
+		expect((at(cells, 0)['a:tcPr'] as XmlObject)?.['@_anchor']).toBe('ctr');
 
 		// Third cell should be a new default cell
-		expect(cells[2]['a:txBody']).toBeDefined();
+		expect(at(cells, 2)['a:txBody']).toBeDefined();
 	});
 
 	it('should set merge attributes correctly', () => {
@@ -669,10 +670,10 @@ describe('rebuildTableXmlFromData', () => {
 		rebuildTableXmlFromData(tbl, tableData, 9525, ensureArray);
 
 		const rows = ensureArray(tbl['a:tr']) as XmlObject[];
-		const firstRowCells = ensureArray(rows[0]['a:tc']) as XmlObject[];
+		const firstRowCells = ensureArray(at(rows, 0)['a:tc']) as XmlObject[];
 
-		expect(firstRowCells[0]['@_gridSpan']).toBe('2');
-		expect(firstRowCells[1]['@_hMerge']).toBe('1');
+		expect(at(firstRowCells, 0)['@_gridSpan']).toBe('2');
+		expect(at(firstRowCells, 1)['@_hMerge']).toBe('1');
 	});
 
 	it('should compute correct column widths from total EMU', () => {
@@ -701,8 +702,8 @@ describe('rebuildTableXmlFromData', () => {
 
 		const gridCols = getGridCols(tbl);
 		expect(gridCols).toHaveLength(2);
-		const w1 = parseInt(String(gridCols[0]['@_w']), 10);
-		const w2 = parseInt(String(gridCols[1]['@_w']), 10);
+		const w1 = parseInt(String(at(gridCols, 0)['@_w']), 10);
+		const w2 = parseInt(String(at(gridCols, 1)['@_w']), 10);
 		expect(w1 + w2).toBe(9144000);
 		expect(w1).toBe(4572000);
 		expect(w2).toBe(4572000);
@@ -718,8 +719,8 @@ describe('combined operations', () => {
 		'preserves rich runs when deleting a merged %s anchor',
 		(axis) => {
 			const td = make2x3TableData();
-			const source = td.rows[0].cells[0];
-			const target = axis === 'row' ? td.rows[1].cells[0] : td.rows[0].cells[1];
+			const source = at(at(td.rows, 0).cells, 0);
+			const target = must(axis === 'row' ? at(td.rows, 1).cells[0] : at(td.rows, 0).cells[1]);
 			source.textRuns = [
 				{ text: 'A', bold: true },
 				{ text: '1', italic: true },
@@ -736,30 +737,32 @@ describe('combined operations', () => {
 				target.hMerge = true;
 			}
 			const result = axis === 'row' ? removeTableRow(td, 0) : removeTableColumn(td, 0);
-			expect(result.tableData.rows[0].cells[0].text).toBe(source.text);
-			expect(result.tableData.rows[0].cells[0].textRuns).toStrictEqual(source.textRuns);
-			expect(result.tableData.rows[0].cells[0].paragraphs).toStrictEqual(source.paragraphs);
+			expect(at(at(result.tableData.rows, 0).cells, 0).text).toBe(source.text);
+			expect(at(at(result.tableData.rows, 0).cells, 0).textRuns).toStrictEqual(source.textRuns);
+			expect(at(at(result.tableData.rows, 0).cells, 0).paragraphs).toStrictEqual(source.paragraphs);
 		},
 	);
 
 	it('keeps the existing empty row-anchor text policy and its matching runs', () => {
 		const td = make2x3TableData();
-		td.rows[0].cells[0] = { text: '', rowSpan: 2, textRuns: [{ text: '', bold: true }] };
-		td.rows[1].cells[0] = {
+		at(td.rows, 0).cells[0] = { text: '', rowSpan: 2, textRuns: [{ text: '', bold: true }] };
+		at(td.rows, 1).cells[0] = {
 			text: 'Fallback',
 			vMerge: true,
 			textRuns: [{ text: 'Fallback', italic: true }],
 		};
 		const result = removeTableRow(td, 0);
-		expect(result.tableData.rows[0].cells[0].text).toBe('');
-		expect(result.tableData.rows[0].cells[0].textRuns).toStrictEqual(td.rows[0].cells[0].textRuns);
+		expect(at(at(result.tableData.rows, 0).cells, 0).text).toBe('');
+		expect(at(at(result.tableData.rows, 0).cells, 0).textRuns).toStrictEqual(
+			at(at(td.rows, 0).cells, 0).textRuns,
+		);
 	});
 
 	it('retains the continuation text body when deleting an empty column anchor', () => {
 		const td = make2x3TableData();
 		const raw = make2x3RawXml();
-		td.rows[0].cells[0] = { text: '', gridSpan: 2, textRuns: [{ text: '', bold: true }] };
-		td.rows[0].cells[1] = {
+		at(td.rows, 0).cells[0] = { text: '', gridSpan: 2, textRuns: [{ text: '', bold: true }] };
+		at(td.rows, 0).cells[1] = {
 			text: 'B1',
 			hMerge: true,
 			textRuns: [{ text: 'B', italic: true }, { text: '1' }],
@@ -767,16 +770,21 @@ describe('combined operations', () => {
 		};
 		const cells = getXmlCells(getTbl(raw), 0);
 		cells[0] = makeTc('', { '@_gridSpan': '2' });
-		cells[1]['@_hMerge'] = '1';
-		cells[1]['a:txBody']['a:p']['a:r'] = [{ 'a:rPr': { '@_i': '1' }, 'a:t': 'B' }, { 'a:t': '1' }];
-		const expectedBody = structuredClone(cells[1]['a:txBody']);
+		at(cells, 1)['@_hMerge'] = '1';
+		at(cells, 1)['a:txBody']['a:p']['a:r'] = [
+			{ 'a:rPr': { '@_i': '1' }, 'a:t': 'B' },
+			{ 'a:t': '1' },
+		];
+		const expectedBody = structuredClone(at(cells, 1)['a:txBody']);
 		const result = removeTableColumn(td, 0, raw);
-		expect(result.tableData.rows[0].cells[0].text).toBe('B1');
-		expect(result.tableData.rows[0].cells[0].textRuns).toStrictEqual(td.rows[0].cells[1].textRuns);
-		expect(result.tableData.rows[0].cells[0].paragraphs).toStrictEqual(
-			td.rows[0].cells[1].paragraphs,
+		expect(at(at(result.tableData.rows, 0).cells, 0).text).toBe('B1');
+		expect(at(at(result.tableData.rows, 0).cells, 0).textRuns).toStrictEqual(
+			at(at(td.rows, 0).cells, 1).textRuns,
 		);
-		expect(getXmlCells(getTbl(result.rawXml!), 0)[0]['a:txBody']).toStrictEqual(expectedBody);
+		expect(at(at(result.tableData.rows, 0).cells, 0).paragraphs).toStrictEqual(
+			at(at(td.rows, 0).cells, 1).paragraphs,
+		);
+		expect(at(getXmlCells(getTbl(result.rawXml!), 0), 0)['a:txBody']).toStrictEqual(expectedBody);
 	});
 
 	it('should support add row then remove row to return to original size', () => {
@@ -785,8 +793,8 @@ describe('combined operations', () => {
 		expect(afterAdd.rows).toHaveLength(3);
 		const { tableData: afterRemove } = removeTableRow(afterAdd, 1);
 		expect(afterRemove.rows).toHaveLength(2);
-		expect(afterRemove.rows[0].cells[0].text).toBe('A1');
-		expect(afterRemove.rows[1].cells[0].text).toBe('A2');
+		expect(at(at(afterRemove.rows, 0).cells, 0).text).toBe('A1');
+		expect(at(at(afterRemove.rows, 1).cells, 0).text).toBe('A2');
 	});
 
 	it('should support add column then remove column', () => {

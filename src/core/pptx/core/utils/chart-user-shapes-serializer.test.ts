@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import type { PptxChartUserShape, XmlObject } from '../types';
 import { parseChartUserShapesDrawing } from './chart-user-shapes-parser';
 import { buildChartUserShapesDrawingXml } from './chart-user-shapes-serializer';
+import { at } from '../../test-support/access';
 
 const PREFIXES = ['cdr:', 'c:', 'a:', 'xdr:', ''];
 
@@ -156,7 +157,7 @@ describe('buildChartUserShapesDrawingXml', () => {
 		// its OWN verbatim rawXml attached on reparse, same as the sibling
 		// "rebuilds a grpSp from its typed transform/children" test below.
 		expect(reparsed).toHaveLength(1);
-		const group = reparsed![0];
+		const group = at(reparsed!, 0);
 		expect(group.transform).toStrictEqual(shapes[0]!.transform);
 		expect(group.children).toStrictEqual(shapes[0]!.children);
 	});
@@ -274,9 +275,9 @@ describe('buildChartUserShapesDrawingXml', () => {
 		const built = buildChartUserShapesDrawingXml(shapes);
 		const reparsed = parseChartUserShapesDrawing(built, xml, colors);
 		expect(reparsed).toHaveLength(1);
-		expect(reparsed![0].kind).toBe('pic');
-		expect(reparsed![0].altText).toBe('A photo of the podium');
-		expect(reparsed![0].rawXml).toStrictEqual({
+		expect(at(reparsed!, 0).kind).toBe('pic');
+		expect(at(reparsed!, 0).altText).toBe('A photo of the podium');
+		expect(at(reparsed!, 0).rawXml).toStrictEqual({
 			...picRawXml,
 			'cdr:nvPicPr': { 'cdr:cNvPr': { '@_descr': 'A photo of the podium' } },
 		});
@@ -322,7 +323,7 @@ describe('buildChartUserShapesDrawingXml', () => {
 		];
 		const built = buildChartUserShapesDrawingXml(shapes);
 		const reparsed = parseChartUserShapesDrawing(built, xml, colors);
-		const child = reparsed![0].children![0];
+		const child = at(at(reparsed!, 0).children!, 0);
 		expect(child.kind).toBe('pic');
 		expect(child.off).toStrictEqual({ x: 200000, y: 300000 });
 		expect(child.ext).toStrictEqual({ cx: 400000, cy: 500000 });
@@ -454,9 +455,9 @@ describe('buildChartUserShapesDrawingXml', () => {
 			const built = buildChartUserShapesDrawingXml(shapes);
 			const reparsed = parseChartUserShapesDrawing(built, xml, colors);
 			expect(reparsed).toHaveLength(1);
-			const group = reparsed![0];
+			const group = at(reparsed!, 0);
 			expect(group.kind).toBe('grpSp');
-			expect(group.transform).toStrictEqual(shapes[0].transform);
+			expect(group.transform).toStrictEqual(at(shapes, 0).transform);
 			expect(group.children).toHaveLength(2);
 			expect(group.children![0]).toMatchObject({
 				kind: 'sp',
@@ -517,11 +518,11 @@ describe('buildChartUserShapesDrawingXml', () => {
 			];
 			const built = buildChartUserShapesDrawingXml(shapes);
 			const reparsed = parseChartUserShapesDrawing(built, xml, colors);
-			const outer = reparsed![0];
+			const outer = at(reparsed!, 0);
 			expect(outer.children).toHaveLength(1);
-			const nested = outer.children![0];
+			const nested = at(outer.children!, 0);
 			expect(nested.kind).toBe('grpSp');
-			expect(nested.transform).toStrictEqual(shapes[0].children![0].transform);
+			expect(nested.transform).toStrictEqual(at(at(shapes, 0).children!, 0).transform);
 			expect(nested.children).toHaveLength(1);
 			expect(nested.children![0]).toMatchObject({ kind: 'sp', prst: 'triangle' });
 		});

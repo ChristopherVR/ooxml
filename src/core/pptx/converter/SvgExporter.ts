@@ -33,9 +33,9 @@ import { at } from '../../geometry/indexed';
  */
 export interface SvgExportOptions {
 	/** Include hidden slides when exporting all. Default `false`. */
-	includeHidden?: boolean;
+	includeHidden?: boolean | undefined;
 	/** Slide indices to export (0-based). If omitted, all slides are exported. */
-	slideIndices?: number[];
+	slideIndices?: number[] | undefined;
 	/** Default font family when the element does not specify one. */
 	defaultFontFamily?: string;
 	/** Default font size in points when the element does not specify one. */

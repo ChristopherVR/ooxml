@@ -7,6 +7,7 @@ import { chartFormatFromNeutral } from './chart-from-neutral-format';
 import { neutralChartShapeMap } from './chart-from-neutral-format-map';
 import { readChartElementFormatsFromXml } from './chart-element-format-read-xml';
 import type { ChartTreeReader } from './chart-series-tree-fields';
+import { at } from '../../test-support/access';
 
 const reader: ChartTreeReader = {
 	xml: new PptxXmlLookupService(),
@@ -62,8 +63,8 @@ it('maps chart, axis and series primitives to neutral fields while keeping the s
 	const xml =
 		'<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><c:chart><c:plotArea><c:barChart><c:ser><c:idx val="0"/><c:order val="0"/><c:spPr><a:ln w="12700"/></c:spPr></c:ser></c:barChart><c:valAx><c:axId val="2"/><c:scaling/><c:spPr><a:ln w="12700"/></c:spPr></c:valAx></c:plotArea></c:chart></c:chartSpace>';
 	const space = parseChartSpace(xml).chartSpace;
-	space.plotArea.groups[0].series[0].spPr!.line!.widthEmu = 38100;
-	space.plotArea.axes[0].spPr!.line!.widthEmu = 50800;
+	at(at(space.plotArea.groups, 0).series, 0).spPr!.line!.widthEmu = 38100;
+	at(space.plotArea.axes, 0).spPr!.line!.widthEmu = 50800;
 	const tree = new PptxRuntimeDependencyFactory().createParser().parse(xml) as XmlObject;
 	const root = reader.xml.getChildByLocalName(tree, 'chartSpace')!;
 	const plot = reader.xml.getChildByLocalName(

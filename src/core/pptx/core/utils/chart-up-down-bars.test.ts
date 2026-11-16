@@ -4,6 +4,7 @@ import { PptxXmlLookupService } from '../services/PptxXmlLookupService';
 import type { XmlObject } from '../types';
 import { applyChartUpDownBars, parseChartUpDownBars } from './chart-up-down-bars';
 import { buildChartSpaceXml } from './chart-xml-generator';
+import { xmlFixture } from '../../test-support/access';
 
 const lookup = new PptxXmlLookupService();
 const localName = (key: string) => key.replace(/^.*:/u, '');
@@ -41,7 +42,7 @@ describe('chart up/down bars', () => {
 	});
 
 	it('updates formatting while preserving unsupported children', () => {
-		const container: XmlObject = {
+		const container = xmlFixture({
 			'c:ser': [],
 			'c:hiLowLines': {},
 			'c:upDownBars': {
@@ -50,7 +51,7 @@ describe('chart up/down bars', () => {
 			},
 			'c:marker': {},
 			'c:axId': [],
-		};
+		});
 		applyChartUpDownBars(
 			container,
 			{ gapWidth: 90, upBars: { fillColor: '#ABCDEF', strokeWidth: 1.5 } },

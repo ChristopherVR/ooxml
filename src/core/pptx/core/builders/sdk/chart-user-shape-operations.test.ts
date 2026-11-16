@@ -12,6 +12,7 @@ import {
 	updateChartUserShape,
 	updateChartUserShapeAtPath,
 } from './chart-user-shape-operations';
+import { at } from '../../../test-support/access';
 
 function makeChartElement(userShapes?: PptxChartUserShape[]): ChartPptxElement {
 	return {
@@ -133,7 +134,7 @@ describe('chart-user-shape-operations', () => {
 		it('updateChartUserShapeAtPath moves a child inside a group and clears the group rawXml', () => {
 			const el = makeGroupElement();
 			updateChartUserShapeAtPath(el, [0, 1], { off: { x: 700000, y: 200000 } });
-			const group = el.chartData!.userShapes![0];
+			const group = at(el.chartData!.userShapes!, 0);
 			expect(group.rawXml).toBeUndefined();
 			expect(group.children![0]).toMatchObject({ prst: 'rect', off: { x: 0, y: 0 } });
 			expect(group.children![1]).toMatchObject({ prst: 'ellipse', off: { x: 700000, y: 200000 } });
@@ -144,7 +145,7 @@ describe('chart-user-shape-operations', () => {
 		it('removeChartUserShapeAtPath drops a nested child and clears the group rawXml', () => {
 			const el = makeGroupElement();
 			removeChartUserShapeAtPath(el, [0, 0]);
-			const group = el.chartData!.userShapes![0];
+			const group = at(el.chartData!.userShapes!, 0);
 			expect(group.rawXml).toBeUndefined();
 			expect(group.children).toHaveLength(1);
 			expect(group.children![0]).toMatchObject({ prst: 'ellipse' });
@@ -154,7 +155,7 @@ describe('chart-user-shape-operations', () => {
 			const el = makeGroupElement();
 			removeChartUserShapeAtPath(el, [0]);
 			expect(el.chartData!.userShapes).toHaveLength(1);
-			expect(el.chartData!.userShapes![0].kind).toBe('sp');
+			expect(at(el.chartData!.userShapes!, 0).kind).toBe('sp');
 		});
 
 		it('addChartUserShapeGroupChild appends a child and clears the group rawXml', () => {
@@ -164,7 +165,7 @@ describe('chart-user-shape-operations', () => {
 				[0],
 				makeGroupChild({ prst: 'triangle', off: { x: 0, y: 500000 } }),
 			);
-			const group = el.chartData!.userShapes![0];
+			const group = at(el.chartData!.userShapes!, 0);
 			expect(group.rawXml).toBeUndefined();
 			expect(group.children).toHaveLength(3);
 			expect(group.children![2]).toMatchObject({ prst: 'triangle' });
@@ -207,8 +208,8 @@ describe('chart-user-shape-operations', () => {
 			const outerGroup = el.chartData!.userShapes![0];
 			el.chartData!.userShapes = [{ ...outerGroup, children: [nestedGroup], rawXml: undefined }];
 			updateChartUserShapeAtPath(el, [0, 0, 0], { fill: '#123456' });
-			const outer = el.chartData!.userShapes![0];
-			const nested = outer.children![0];
+			const outer = at(el.chartData!.userShapes!, 0);
+			const nested = at(outer.children!, 0);
 			expect(nested.rawXml).toBeUndefined();
 			expect(nested.children![0]).toMatchObject({ prst: 'triangle', fill: '#123456' });
 		});

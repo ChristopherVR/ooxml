@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { XmlObject } from '../types';
 import { applyChartTitleStyleToXml } from './chart-title-style-serializer';
+import { at } from '../../test-support/access';
 
 const getLocalName = (key: string) => key.replace(/^[^:]+:/u, '');
 
@@ -49,10 +50,10 @@ describe('applyChartTitleStyleToXml', () => {
 					}
 				}
 			}
-			expect(list[0]['a:endParaRPr']).toStrictEqual({ '@_sz': '1400' });
+			expect(at(list, 0)['a:endParaRPr']).toStrictEqual({ '@_sz': '1400' });
 			if (kind === 'rich') {
-				expect((list[1]['a:pPr'] as XmlObject)['@_algn']).toBe('ctr');
-				expect((list[1]['a:pPr'] as XmlObject)['a:spcAft']).toStrictEqual({
+				expect((at(list, 1)['a:pPr'] as XmlObject)['@_algn']).toBe('ctr');
+				expect((at(list, 1)['a:pPr'] as XmlObject)['a:spcAft']).toStrictEqual({
 					'a:spcPts': { '@_val': '600' },
 				});
 			}
@@ -61,7 +62,7 @@ describe('applyChartTitleStyleToXml', () => {
 			expect(saved).toHaveLength(list.length);
 			for (const paragraph of saved) {
 				expect(paragraph[1]).toMatch(/^<a:pPr\b/);
-				expect(paragraph[1].match(/<a:pPr\b/g)).toHaveLength(1);
+				expect(at(paragraph, 1).match(/<a:pPr\b/g)).toHaveLength(1);
 				expect(paragraph[1]).toMatch(/<a:endParaRPr\b[^>]*(?:\/>|><\/a:endParaRPr>)$/);
 			}
 		},

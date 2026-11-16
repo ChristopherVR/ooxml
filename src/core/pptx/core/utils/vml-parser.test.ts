@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { XmlObject } from '../types';
 import { VML_SHAPE_TAGS, parseVmlElement, parseVmlElements } from './vml-parser';
+import { at } from '../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // VML_SHAPE_TAGS
@@ -244,8 +245,8 @@ describe('parseVmlElements', () => {
 		};
 		const elements = parseVmlElements(container, 'bulk-');
 		expect(elements).toHaveLength(2);
-		expect(elements[0].id).toBe('bulk-vml-0');
-		expect(elements[1].id).toBe('bulk-vml-1');
+		expect(at(elements, 0).id).toBe('bulk-vml-0');
+		expect(at(elements, 1).id).toBe('bulk-vml-1');
 	});
 
 	it('parses single element (not in array)', () => {
@@ -290,6 +291,6 @@ describe('parseVmlElements', () => {
 			},
 		};
 		const elements = parseVmlElements(container);
-		expect(elements[0].id).toBe('vml-0');
+		expect(at(elements, 0).id).toBe('vml-0');
 	});
 });

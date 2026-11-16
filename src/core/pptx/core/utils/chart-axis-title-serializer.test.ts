@@ -7,6 +7,7 @@ import {
 	applyChartAxisTitleStyleToXml,
 } from './chart-axis-title-serializer';
 import { collectAllText } from './chart-title-xml-ops';
+import { xmlFixture } from '../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -262,7 +263,7 @@ describe('applyChartAxisTitleToXml', () => {
 
 describe('applyChartAxisTitleStyleToXml', () => {
 	it.each(['a', 'x'])('inserts %s:pPr before runs and paragraph-end properties', (prefix) => {
-		const node: XmlObject = {
+		const node = xmlFixture({
 			'c:title': {
 				'c:txPr': {
 					'a:bodyPr': {},
@@ -273,7 +274,7 @@ describe('applyChartAxisTitleStyleToXml', () => {
 					},
 				},
 			},
-		};
+		});
 		applyChartAxisTitleStyleToXml(node, { fontSize: 18 }, getLocalName);
 		const body = (node['c:title'] as XmlObject)['c:txPr'] as XmlObject;
 		const paragraph = body[`${prefix}:p`] as XmlObject;

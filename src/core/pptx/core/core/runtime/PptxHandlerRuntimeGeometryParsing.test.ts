@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 import { evaluatePresetAdjustmentFormula } from './preset-avlst-fmla';
+import { at } from '../../../test-support/access';
 
 // Since these are protected methods on a deeply chained mixin, we extract
 // their logic and test it directly. Implementations below are copied
@@ -47,7 +48,7 @@ function parseGeometryAdjustments(
 			const formula = String(gd['@_fmla']).trim();
 			const match = formula.match(/^val\s+(-?\d+)$/i);
 			if (match) {
-				const parsed = Number.parseInt(match[1], 10);
+				const parsed = Number.parseInt(at(match, 1), 10);
 				if (Number.isFinite(parsed)) {
 					value = parsed;
 				}

@@ -2,6 +2,7 @@ import JSZip from 'jszip';
 import { describe, it, expect } from 'vitest';
 
 import { parseEmbeddedXlsx } from './chart-xlsx-parser';
+import { at } from '../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Helpers — build minimal xlsx ZIP archives with XML parts
@@ -118,10 +119,10 @@ describe('parseEmbeddedXlsx', () => {
 		expect(result).toBeDefined();
 		expect(result!.categories).toStrictEqual(['Q1', 'Q2', 'Q3']);
 		expect(result!.series).toHaveLength(2);
-		expect(result!.series[0].name).toBe('Revenue');
-		expect(result!.series[0].values).toStrictEqual([100, 120, 140]);
-		expect(result!.series[1].name).toBe('Costs');
-		expect(result!.series[1].values).toStrictEqual([80, 90, 95]);
+		expect(at(result!.series, 0).name).toBe('Revenue');
+		expect(at(result!.series, 0).values).toStrictEqual([100, 120, 140]);
+		expect(at(result!.series, 1).name).toBe('Costs');
+		expect(at(result!.series, 1).values).toStrictEqual([80, 90, 95]);
 	});
 
 	it('should handle inline string cells (type=str)', async () => {
@@ -146,8 +147,8 @@ describe('parseEmbeddedXlsx', () => {
 		expect(result).toBeDefined();
 		expect(result!.categories).toStrictEqual(['East', 'West']);
 		expect(result!.series).toHaveLength(1);
-		expect(result!.series[0].name).toBe('Sales');
-		expect(result!.series[0].values).toStrictEqual([50, 75]);
+		expect(at(result!.series, 0).name).toBe('Sales');
+		expect(at(result!.series, 0).values).toStrictEqual([50, 75]);
 	});
 
 	it('should handle numeric-only cells (no shared strings)', async () => {
@@ -176,10 +177,10 @@ describe('parseEmbeddedXlsx', () => {
 		// Row 0 are headers (numeric), Rows 1+ first column are categories
 		expect(result!.categories).toStrictEqual(['2020', '2021']);
 		expect(result!.series).toHaveLength(2);
-		expect(result!.series[0].name).toBe('1');
-		expect(result!.series[0].values).toStrictEqual([100, 150]);
-		expect(result!.series[1].name).toBe('2');
-		expect(result!.series[1].values).toStrictEqual([200, 250]);
+		expect(at(result!.series, 0).name).toBe('1');
+		expect(at(result!.series, 0).values).toStrictEqual([100, 150]);
+		expect(at(result!.series, 1).name).toBe('2');
+		expect(at(result!.series, 1).values).toStrictEqual([200, 250]);
 	});
 
 	it('should handle rich text shared strings', async () => {
@@ -207,7 +208,7 @@ describe('parseEmbeddedXlsx', () => {
 		expect(result).toBeDefined();
 		// Header row: A1 resolves to rich text "Q1", B1 resolves to "Sales"
 		// But A1 is the corner cell, B1 is the series name
-		expect(result!.series[0].name).toBe('Sales');
+		expect(at(result!.series, 0).name).toBe('Sales');
 		expect(result!.categories).toStrictEqual(['Jan']);
 	});
 
@@ -233,7 +234,7 @@ describe('parseEmbeddedXlsx', () => {
 		expect(result).toBeDefined();
 		expect(result!.categories).toStrictEqual(['Item1', 'Item2']);
 		// Booleans resolve as "TRUE"/"FALSE" strings, numeric parse gives 0
-		expect(result!.series[0].values).toStrictEqual([0, 0]);
+		expect(at(result!.series, 0).values).toStrictEqual([0, 0]);
 	});
 
 	it('should return undefined for empty worksheet', async () => {
@@ -304,7 +305,7 @@ describe('parseEmbeddedXlsx', () => {
 		expect(result).toBeDefined();
 		expect(result!.categories).toStrictEqual(['X', 'Y', 'Z']);
 		// Row 3 B3 has no value, so grid cell is undefined => 0
-		expect(result!.series[0].values).toStrictEqual([10, 0, 30]);
+		expect(at(result!.series, 0).values).toStrictEqual([10, 0, 30]);
 	});
 
 	it('should handle multi-letter column references (e.g. AA1)', async () => {
@@ -329,8 +330,8 @@ describe('parseEmbeddedXlsx', () => {
 
 		expect(result).toBeDefined();
 		expect(result!.categories).toStrictEqual(['Row1']);
-		expect(result!.series[0].name).toBe('Col1');
-		expect(result!.series[0].values).toStrictEqual([99]);
+		expect(at(result!.series, 0).name).toBe('Col1');
+		expect(at(result!.series, 0).values).toStrictEqual([99]);
 	});
 
 	it('should handle xlsx with no sharedStrings.xml', async () => {
@@ -350,8 +351,8 @@ describe('parseEmbeddedXlsx', () => {
 
 		expect(result).toBeDefined();
 		expect(result!.categories).toStrictEqual(['A']);
-		expect(result!.series[0].name).toBe('Metric');
-		expect(result!.series[0].values).toStrictEqual([10.5]);
+		expect(at(result!.series, 0).name).toBe('Metric');
+		expect(at(result!.series, 0).values).toStrictEqual([10.5]);
 	});
 
 	it('should handle a single column with header and data rows', async () => {
@@ -396,10 +397,10 @@ describe('parseEmbeddedXlsx', () => {
 		expect(result).toBeDefined();
 		expect(result!.categories).toStrictEqual(['X', 'Y']);
 		// B1 and C1 are undefined, so default names are used
-		expect(result!.series[0].name).toBe('Series 1');
-		expect(result!.series[0].values).toStrictEqual([1, 3]);
-		expect(result!.series[1].name).toBe('Series 2');
-		expect(result!.series[1].values).toStrictEqual([2, 4]);
+		expect(at(result!.series, 0).name).toBe('Series 1');
+		expect(at(result!.series, 0).values).toStrictEqual([1, 3]);
+		expect(at(result!.series, 1).name).toBe('Series 2');
+		expect(at(result!.series, 1).values).toStrictEqual([2, 4]);
 	});
 
 	it('should handle floating point numeric values', async () => {
@@ -422,8 +423,8 @@ describe('parseEmbeddedXlsx', () => {
 		const result = await parseEmbeddedXlsx(xlsxData);
 
 		expect(result).toBeDefined();
-		expect(result!.series[0].values[0]).toBeCloseTo(3.14159);
-		expect(result!.series[0].values[1]).toBeCloseTo(-2.718);
+		expect(at(result!.series, 0).values[0]).toBeCloseTo(3.14159);
+		expect(at(result!.series, 0).values[1]).toBeCloseTo(-2.718);
 	});
 
 	it('should handle shared string index out of bounds gracefully', async () => {
@@ -444,6 +445,6 @@ describe('parseEmbeddedXlsx', () => {
 
 		expect(result).toBeDefined();
 		// Out of bounds shared string index falls back to the raw value string
-		expect(result!.series[0].name).toBe('99');
+		expect(at(result!.series, 0).name).toBe('99');
 	});
 });

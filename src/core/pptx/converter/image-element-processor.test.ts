@@ -4,6 +4,7 @@ import type { PptxElement, ImagePptxElement, PicturePptxElement } from '../core'
 import type { ElementProcessorContext } from './elements/ElementProcessor';
 import { ImageElementProcessor } from './elements/ImageElementProcessor';
 import { MediaContext } from './media-context';
+import { at } from '../test-support/access';
 
 // Minimal valid PNG data URL (1x1 pixel transparent PNG)
 const TINY_PNG_DATA_URL =
@@ -129,7 +130,7 @@ describe('imageElementProcessor', () => {
 		// The final result includes the truncation ellipsis
 		const match = result!.match(/!\[([^\]]*)\]/);
 		expect(match).not.toBeNull();
-		expect(match![1].length).toBeLessThanOrEqual(101); // 100 chars + potential ellipsis character
+		expect(at(match!, 1).length).toBeLessThanOrEqual(101); // 100 chars + potential ellipsis character
 	});
 
 	it('should handle empty alt text', async () => {

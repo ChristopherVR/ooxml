@@ -10,6 +10,7 @@ import {
 	containsConvertibleStrictNamespaceAttribute,
 	convertXmlToStrict,
 } from './strict-namespace-map';
+import { at } from '../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // normalizeNamespaceUri
@@ -248,10 +249,10 @@ describe('normalizeStrictXml', () => {
 		};
 		normalizeStrictXml(xml);
 		const items = xml['items'] as Record<string, unknown>[];
-		expect(items[0]['@_xmlns:p']).toBe(
+		expect(at(items, 0)['@_xmlns:p']).toBe(
 			'http://schemas.openxmlformats.org/presentationml/2006/main',
 		);
-		expect(items[1]['@_xmlns:a']).toBe('http://schemas.openxmlformats.org/drawingml/2006/main');
+		expect(at(items, 1)['@_xmlns:a']).toBe('http://schemas.openxmlformats.org/drawingml/2006/main');
 	});
 
 	it('returns the input node', () => {
@@ -567,8 +568,8 @@ describe('convertXmlToStrict', () => {
 		};
 		convertXmlToStrict(xml);
 		const items = xml['items'] as Record<string, unknown>[];
-		expect(items[0]['@_xmlns:p']).toBe('http://purl.oclc.org/ooxml/presentationml/main');
-		expect(items[1]['@_xmlns:a']).toBe('http://purl.oclc.org/ooxml/drawingml/main');
+		expect(at(items, 0)['@_xmlns:p']).toBe('http://purl.oclc.org/ooxml/presentationml/main');
+		expect(at(items, 1)['@_xmlns:a']).toBe('http://purl.oclc.org/ooxml/drawingml/main');
 	});
 
 	it('returns the input node', () => {
@@ -662,14 +663,18 @@ describe('convertXmlToStrict', () => {
 		// The OPC relationships namespace is conformance-independent: it stays.
 		expect(root['@_xmlns']).toBe('http://schemas.openxmlformats.org/package/2006/relationships');
 		const rels = root['Relationship'] as Record<string, unknown>[];
-		expect(rels[0]['@_Type']).toBe('http://purl.oclc.org/ooxml/officeDocument/relationships/slide');
-		expect(rels[1]['@_Type']).toBe('http://purl.oclc.org/ooxml/officeDocument/relationships/theme');
-		expect(rels[2]['@_Type']).toBe(
+		expect(at(rels, 0)['@_Type']).toBe(
+			'http://purl.oclc.org/ooxml/officeDocument/relationships/slide',
+		);
+		expect(at(rels, 1)['@_Type']).toBe(
+			'http://purl.oclc.org/ooxml/officeDocument/relationships/theme',
+		);
+		expect(at(rels, 2)['@_Type']).toBe(
 			'http://purl.oclc.org/ooxml/officeDocument/relationships/slideLayout',
 		);
 		// Non-namespace attributes should be untouched
-		expect(rels[0]['@_Target']).toBe('slides/slide1.xml');
-		expect(rels[0]['@_Id']).toBe('rId1');
+		expect(at(rels, 0)['@_Target']).toBe('slides/slide1.xml');
+		expect(at(rels, 0)['@_Id']).toBe('rId1');
 	});
 });
 
@@ -890,10 +895,10 @@ describe('round-trip: Strict -> Transitional -> Strict', () => {
 		const root = original['Relationships'] as Record<string, unknown>;
 		expect(root['@_xmlns']).toBe('http://schemas.openxmlformats.org/package/2006/relationships');
 		const rels = root['Relationship'] as Record<string, unknown>[];
-		expect(rels[0]['@_Type']).toBe(
+		expect(at(rels, 0)['@_Type']).toBe(
 			'http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument',
 		);
-		expect(rels[1]['@_Type']).toBe(
+		expect(at(rels, 1)['@_Type']).toBe(
 			'http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties',
 		);
 

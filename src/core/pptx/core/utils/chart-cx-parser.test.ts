@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { XmlObject } from '../types';
 import { parseCxChartSeries } from './chart-cx-parser';
+import { at, xmlFixture } from '../../test-support/access';
 
 /** Minimal XmlLookupLike stub using plain object traversal. */
 const xmlLookup = {
@@ -101,8 +102,8 @@ describe('parseCxChartSeries', () => {
 		expect(result).toBeDefined();
 		expect(result!.categories).toStrictEqual(['Q1', 'Q2', 'Q3']);
 		expect(result!.series).toHaveLength(1);
-		expect(result!.series[0].name).toBe('Revenue');
-		expect(result!.series[0].values).toStrictEqual([100, 150, 200]);
+		expect(at(result!.series, 0).name).toBe('Revenue');
+		expect(at(result!.series, 0).values).toStrictEqual([100, 150, 200]);
 	});
 
 	it('parses waterfall subtotals and connector visibility', () => {
@@ -123,7 +124,7 @@ describe('parseCxChartSeries', () => {
 				},
 			},
 		};
-		expect(parseCxChartSeries(plotArea, xmlLookup)?.series[0].waterfallOptions).toStrictEqual({
+		expect(at(parseCxChartSeries(plotArea, xmlLookup)?.series, 0).waterfallOptions).toStrictEqual({
 			connectorLines: false,
 			subtotalIndices: [0, 2],
 		});
@@ -166,10 +167,10 @@ describe('parseCxChartSeries', () => {
 		expect(result).toBeDefined();
 		expect(result!.categories).toStrictEqual(['Cat1', 'Cat2']);
 		expect(result!.series).toHaveLength(2);
-		expect(result!.series[0].name).toBe('Series A');
-		expect(result!.series[0].values).toStrictEqual([10, 20]);
-		expect(result!.series[1].name).toBe('Series B');
-		expect(result!.series[1].values).toStrictEqual([30, 40]);
+		expect(at(result!.series, 0).name).toBe('Series A');
+		expect(at(result!.series, 0).values).toStrictEqual([10, 20]);
+		expect(at(result!.series, 1).name).toBe('Series B');
+		expect(at(result!.series, 1).values).toStrictEqual([30, 40]);
 	});
 
 	it('should use fallback name when tx is missing', () => {
@@ -189,8 +190,8 @@ describe('parseCxChartSeries', () => {
 
 		const result = parseCxChartSeries(plotArea, xmlLookup);
 		expect(result).toBeDefined();
-		expect(result!.series[0].name).toBe('Series 1');
-		expect(result!.series[0].values).toStrictEqual([5]);
+		expect(at(result!.series, 0).name).toBe('Series 1');
+		expect(at(result!.series, 0).values).toStrictEqual([5]);
 	});
 
 	it('should use [0] fallback when no numDim data', () => {
@@ -205,7 +206,7 @@ describe('parseCxChartSeries', () => {
 
 		const result = parseCxChartSeries(plotArea, xmlLookup);
 		expect(result).toBeDefined();
-		expect(result!.series[0].values).toStrictEqual([0]);
+		expect(at(result!.series, 0).values).toStrictEqual([0]);
 	});
 
 	it('should extract series color from spPr > solidFill > srgbClr', () => {
@@ -232,7 +233,7 @@ describe('parseCxChartSeries', () => {
 
 		const result = parseCxChartSeries(plotArea, xmlLookup);
 		expect(result).toBeDefined();
-		expect(result!.series[0].color).toBe('#FF5733');
+		expect(at(result!.series, 0).color).toBe('#FF5733');
 	});
 
 	it('should set hasDataLabels when dataLabels with visibility is present', () => {
@@ -302,7 +303,7 @@ describe('parseCxChartSeries', () => {
 
 		const result = parseCxChartSeries(plotArea, xmlLookup);
 		expect(result).toBeDefined();
-		expect(result!.series[0].values).toStrictEqual([100, 200]);
+		expect(at(result!.series, 0).values).toStrictEqual([100, 200]);
 	});
 
 	it('resolves schema-standard chartData references and direct point text', () => {
@@ -393,7 +394,7 @@ describe('parseCxChartSeries', () => {
 		};
 
 		const result = parseCxChartSeries(plotArea, xmlLookup);
-		expect(result?.series[0].boxWhiskerOptions).toStrictEqual({
+		expect(at(result?.series, 0).boxWhiskerOptions).toStrictEqual({
 			quartileMethod: 'exclusive',
 			showMeanLine: true,
 			showMeanMarker: false,
@@ -413,19 +414,22 @@ describe('parseCxChartSeries', () => {
 			},
 		});
 		expect(
-			parseCxChartSeries(
-				series({ '@_intervalClosed': 'r', 'cx:binCount': { '@_val': '4' } }),
-				xmlLookup,
-			)?.series[0].histogramOptions,
+			at(
+				parseCxChartSeries(
+					series({ '@_intervalClosed': 'r', 'cx:binCount': { '@_val': '4' } }),
+					xmlLookup,
+				)?.series,
+				0,
+			).histogramOptions,
 		).toStrictEqual({ layout: 'histogram', binCount: 4, intervalClosed: 'r' });
 		expect(
-			parseCxChartSeries(series({ 'cx:binSize': { '@_val': '2.5' } }), xmlLookup)?.series[0]
+			at(parseCxChartSeries(series({ 'cx:binSize': { '@_val': '2.5' } }), xmlLookup)?.series, 0)
 				.histogramOptions,
 		).toStrictEqual({ layout: 'histogram', binSize: 2.5 });
 	});
 
 	it('parses histogram binning and Pareto series layouts', () => {
-		const plotArea: XmlObject = {
+		const plotArea = xmlFixture({
 			'cx:plotAreaRegion': {
 				'cx:series': [
 					{
@@ -450,17 +454,17 @@ describe('parseCxChartSeries', () => {
 					},
 				],
 			},
-		};
+		});
 
 		const result = parseCxChartSeries(plotArea, xmlLookup);
-		expect(result?.series[0].histogramOptions).toStrictEqual({
+		expect(at(result?.series, 0).histogramOptions).toStrictEqual({
 			layout: 'histogram',
 			binSize: 2.5,
 			intervalClosed: 'l',
 			underflow: -5,
 			overflow: 'auto',
 		});
-		expect(result?.series[1].histogramOptions).toStrictEqual({ layout: 'pareto' });
+		expect(at(result?.series, 1).histogramOptions).toStrictEqual({ layout: 'pareto' });
 	});
 
 	it('flags cx:aggregation (COM: charts-com.pptx slide 31 / chartEx6.xml) over numeric binning', () => {
@@ -481,7 +485,7 @@ describe('parseCxChartSeries', () => {
 		};
 
 		const result = parseCxChartSeries(plotArea, xmlLookup);
-		expect(result?.series[0].histogramOptions).toStrictEqual({
+		expect(at(result?.series, 0).histogramOptions).toStrictEqual({
 			layout: 'histogram',
 			aggregateByCategory: true,
 		});
@@ -601,7 +605,7 @@ describe('parseCxChartSeries color/data-label extensions (C2-G4)', () => {
 	it('resolves a:schemeClr via the colorParser when solid fill is a theme colour', () => {
 		const plotArea = seriesWithFill({ 'a:solidFill': { 'a:schemeClr': { '@_val': 'accent2' } } });
 		const result = parseCxChartSeries(plotArea, xmlLookup, undefined, undefined, colorParser);
-		expect(result!.series[0].color).toBe('#4472C4');
+		expect(at(result!.series, 0).color).toBe('#4472C4');
 	});
 
 	it('falls back to a gradient fill first stop when there is no solid fill', () => {
@@ -616,7 +620,7 @@ describe('parseCxChartSeries color/data-label extensions (C2-G4)', () => {
 			},
 		});
 		const result = parseCxChartSeries(plotArea, xmlLookup, undefined, undefined, colorParser);
-		expect(result!.series[0].color).toBe('#AABBCC');
+		expect(at(result!.series, 0).color).toBe('#AABBCC');
 	});
 
 	it('falls back to a pattern fill foreground when there is no solid or gradient fill', () => {
@@ -624,7 +628,7 @@ describe('parseCxChartSeries color/data-label extensions (C2-G4)', () => {
 			'a:pattFill': { 'a:fgClr': { 'a:srgbClr': { '@_val': '654321' } } },
 		});
 		const result = parseCxChartSeries(plotArea, xmlLookup, undefined, undefined, colorParser);
-		expect(result!.series[0].color).toBe('#654321');
+		expect(at(result!.series, 0).color).toBe('#654321');
 	});
 
 	it('parses cx:dataLabels @pos and cx:numFmt into dataLabelOptions', () => {
@@ -642,7 +646,7 @@ describe('parseCxChartSeries color/data-label extensions (C2-G4)', () => {
 			},
 		};
 		const result = parseCxChartSeries(plotArea, xmlLookup);
-		expect(result!.series[0].dataLabelOptions).toStrictEqual({
+		expect(at(result!.series, 0).dataLabelOptions).toStrictEqual({
 			position: 'outEnd',
 			numberFormat: '$#,##0',
 		});

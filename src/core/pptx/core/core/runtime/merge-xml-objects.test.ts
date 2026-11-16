@@ -4,6 +4,7 @@ import { parseStructuredCustomGeometry } from '../../geometry/custom-geometry-pa
 import type { XmlObject } from '../../types';
 import { PptxRuntimeDependencyFactory } from '../factories/PptxRuntimeDependencyFactory';
 import { mergeXmlObjects } from './merge-xml-objects';
+import { at } from '../../../test-support/access';
 
 const ensureArray = (value: unknown): unknown[] =>
 	value === undefined ? [] : Array.isArray(value) ? value : [value];
@@ -36,7 +37,7 @@ describe('mergeXmlObjects', () => {
 		}) as XmlObject;
 
 		const paths = parseStructuredCustomGeometry(mergedGeometry, 100, 100, ensureArray);
-		expect(paths[0].segments.map((segment) => segment.type)).toStrictEqual([
+		expect(at(paths, 0).segments.map((segment) => segment.type)).toStrictEqual([
 			'moveTo',
 			'lineTo',
 			'cubicBezTo',

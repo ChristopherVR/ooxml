@@ -5,6 +5,7 @@ import { withCellStyle } from '../../../editor/render/table-cell-edit';
 import type { PptxTableCellParagraph, PptxTableCellStyle, XmlObject } from '../../types';
 import { PptxHandlerRuntime } from './PptxHandlerRuntimeImplementation';
 import { flattenCellTxBodyText, rebuildCellTextBody } from './table-cell-text-xml';
+import { at } from '../../../test-support/access';
 
 class TableStyleRuntime extends PptxHandlerRuntime {
 	public writeStyle(
@@ -45,7 +46,7 @@ describe('table cell paragraph alignment on save', () => {
 		]);
 		expect(alignments(cell)).toStrictEqual(['l', 'l', 'l']);
 		const paragraphs = (cell['a:txBody'] as XmlObject)['a:p'] as XmlObject[];
-		expect(paragraphs[1]['a:pPr']).toStrictEqual({ '@_marL': '0', '@_algn': 'l' });
+		expect(at(paragraphs, 1)['a:pPr']).toStrictEqual({ '@_marL': '0', '@_algn': 'l' });
 		expect(Object.keys(paragraphs[2])).toStrictEqual(['a:pPr', 'a:r']);
 	});
 

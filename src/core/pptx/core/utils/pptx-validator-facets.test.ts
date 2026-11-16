@@ -2,6 +2,7 @@ import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 
 import { validatePptx } from './pptx-validator';
+import { at } from '../../test-support/access';
 
 const P = 'http://schemas.openxmlformats.org/presentationml/2006/main';
 const A = 'http://schemas.openxmlformats.org/drawingml/2006/main';
@@ -82,11 +83,11 @@ describe('selected ECMA-376 simple-type facets', () => {
 
 		const alpha = await facetIssues('<a:alpha val="120000"/>');
 		expect(alpha).toHaveLength(1);
-		expect(alpha[0].message).toContain('from 0 through 100000');
+		expect(at(alpha, 0).message).toContain('from 0 through 100000');
 
 		const alphaMod = await facetIssues('<a:alphaMod val="-1"/>');
 		expect(alphaMod).toHaveLength(1);
-		expect(alphaMod[0].message).toContain('0 or more');
+		expect(at(alphaMod, 0).message).toContain('0 or more');
 	});
 
 	it('validates angle and coordinate facets including universal measures', async () => {
@@ -130,7 +131,7 @@ describe('selected ECMA-376 simple-type facets', () => {
 			'<p:sldIdLst><p:sldId id="256" r:id=""/></p:sldIdLst>',
 		);
 		expect(rejected).toHaveLength(1);
-		expect(rejected[0].message).toContain('XML ID token');
+		expect(at(rejected, 0).message).toContain('XML ID token');
 	});
 
 	it('validates common PresentationML and DrawingML enum domains', async () => {

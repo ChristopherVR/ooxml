@@ -8,6 +8,7 @@ import {
 	buildGuideListExtension,
 	P14_GUIDE_URI,
 } from './guide-utils';
+import { at } from '../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // guideEmuToPx / guidePxToEmu (unit conversions)
@@ -109,10 +110,10 @@ describe('parseSlideDrawingGuides', () => {
 		};
 		const guides = parseSlideDrawingGuides(xml);
 		expect(guides).toHaveLength(1);
-		expect(guides[0].id).toBe('1');
-		expect(guides[0].orientation).toBe('horz');
+		expect(at(guides, 0).id).toBe('1');
+		expect(at(guides, 0).orientation).toBe('horz');
 		// pos=2880, 1 pos unit = 12700/8 = 1587.5 EMU, so 2880 * 1587.5 = 4572000
-		expect(guides[0].positionEmu).toBe(Math.round(2880 * (12700 / 8)));
+		expect(at(guides, 0).positionEmu).toBe(Math.round(2880 * (12700 / 8)));
 	});
 
 	it('parses a vertical guide (default orientation)', () => {
@@ -133,7 +134,7 @@ describe('parseSlideDrawingGuides', () => {
 		};
 		const guides = parseSlideDrawingGuides(xml);
 		expect(guides).toHaveLength(1);
-		expect(guides[0].orientation).toBe('vert');
+		expect(at(guides, 0).orientation).toBe('vert');
 	});
 
 	it('parses guide colour from a:srgbClr', () => {
@@ -155,7 +156,7 @@ describe('parseSlideDrawingGuides', () => {
 		};
 		const guides = parseSlideDrawingGuides(xml);
 		expect(guides).toHaveLength(1);
-		expect(guides[0].color).toBe('#FF0000');
+		expect(at(guides, 0).color).toBe('#FF0000');
 	});
 
 	it('parses multiple guides from an array', () => {
@@ -176,8 +177,8 @@ describe('parseSlideDrawingGuides', () => {
 		};
 		const guides = parseSlideDrawingGuides(xml);
 		expect(guides).toHaveLength(2);
-		expect(guides[0].orientation).toBe('horz');
-		expect(guides[1].orientation).toBe('vert');
+		expect(at(guides, 0).orientation).toBe('horz');
+		expect(at(guides, 1).orientation).toBe('vert');
 	});
 });
 
@@ -260,8 +261,8 @@ describe('buildGuideListExtension', () => {
 		};
 		const reparsed = parseSlideDrawingGuides(reparsedXml);
 		expect(reparsed).toHaveLength(1);
-		expect(reparsed[0].id).toBe('1');
-		expect(reparsed[0].orientation).toBe('horz');
-		expect(reparsed[0].positionEmu).toBe(parsed[0].positionEmu);
+		expect(at(reparsed, 0).id).toBe('1');
+		expect(at(reparsed, 0).orientation).toBe('horz');
+		expect(at(reparsed, 0).positionEmu).toBe(at(parsed, 0).positionEmu);
 	});
 });

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { PptxColorTransformCodec } from '../core/builders/PptxColorTransformCodec';
 import type { XmlObject } from '../types';
 import { applyChartPivotFormats, parseChartPivotFormats } from './chart-pivot-formats';
+import { at, must } from '../../test-support/access';
 
 const localName = (key: string): string => key.replace(/^.*:/u, '');
 
@@ -34,9 +35,9 @@ describe('classic ChartML pivot formats', () => {
 		};
 		const parsed = parseChartPivotFormats(chart, localName)!;
 		expect(parsed.formats[0]).toMatchObject({ index: 4 });
-		parsed.formats[0].index = 7;
-		parsed.formats[0].markerXml = { 'x:symbol': { '@_val': 'diamond' } };
-		parsed.formats[0].dataLabelXml = null;
+		at(parsed.formats, 0).index = 7;
+		at(parsed.formats, 0).markerXml = { 'x:symbol': { '@_val': 'diamond' } };
+		at(parsed.formats, 0).dataLabelXml = null;
 		applyChartPivotFormats(chart, parsed, localName);
 
 		const root = chart['x:pivotFmts'] as XmlObject;
@@ -48,11 +49,11 @@ describe('classic ChartML pivot formats', () => {
 			'extLst',
 			'future',
 		]);
-		expect(item[0]['x:idx']).toStrictEqual({ '@_val': '7', '@_vendor': 'idx' });
-		expect(item[0]['x:extLst']).toStrictEqual({
+		expect(at(item, 0)['x:idx']).toStrictEqual({ '@_val': '7', '@_vendor': 'idx' });
+		expect(at(item, 0)['x:extLst']).toStrictEqual({
 			'x:ext': { '@_uri': 'urn:test', 'v:data': {} },
 		});
-		expect(item[0]['v:future']).toStrictEqual({ '@_keep': 'yes' });
+		expect(at(item, 0)['v:future']).toStrictEqual({ '@_keep': 'yes' });
 		expect(parseChartPivotFormats(chart, localName)!.formats[0]).toMatchObject({ index: 7 });
 	});
 
@@ -113,19 +114,19 @@ describe('classic ChartML pivot formats', () => {
 				},
 			};
 			const parsed = parseChartPivotFormats(chart, localName)!;
-			expect(parsed.formats[0].shapeProperties).toStrictEqual({
+			expect(at(parsed.formats, 0).shapeProperties).toStrictEqual({
 				fillColor: '#FF0000',
 				strokeColor: '#00FF00',
 				strokeWidth: 1,
 				strokeDashStyle: 'dash',
 			});
-			expect(parsed.formats[0].textStyle).toStrictEqual({ fontSize: 14, bold: true });
-			expect(parsed.formats[0].marker).toStrictEqual({ symbol: 'diamond', size: 9 });
+			expect(at(parsed.formats, 0).textStyle).toStrictEqual({ fontSize: 14, bold: true });
+			expect(at(parsed.formats, 0).marker).toStrictEqual({ symbol: 'diamond', size: 9 });
 			// The raw fallback is still populated (lossless: an untouched entry
 			// re-serializes byte-equivalent).
-			expect(parsed.formats[0].shapePropertiesXml).toBeDefined();
-			expect(parsed.formats[0].txPrXml).toBeDefined();
-			expect(parsed.formats[0].markerXml).toBeDefined();
+			expect(at(parsed.formats, 0).shapePropertiesXml).toBeDefined();
+			expect(at(parsed.formats, 0).txPrXml).toBeDefined();
+			expect(at(parsed.formats, 0).markerXml).toBeDefined();
 		});
 
 		it('leaves an unedited entry byte-equivalent (typed fields unchanged is not an edit signal)', () => {
@@ -162,14 +163,14 @@ describe('classic ChartML pivot formats', () => {
 				},
 			};
 			const parsed = parseChartPivotFormats(chart, localName)!;
-			parsed.formats[0].shapeProperties = { fillColor: '#0000FF' };
+			at(parsed.formats, 0).shapeProperties = { fillColor: '#0000FF' };
 			applyChartPivotFormats(chart, parsed, localName);
 
 			const reparsed = parseChartPivotFormats(chart, localName)!;
-			expect(reparsed.formats[0].shapeProperties).toStrictEqual({ fillColor: '#0000FF' });
+			expect(at(reparsed.formats, 0).shapeProperties).toStrictEqual({ fillColor: '#0000FF' });
 			// The unmodeled effect list survives the edit untouched.
 			const root = chart['c:pivotFmts'] as XmlObject;
-			const item = (root['c:pivotFmt'] as XmlObject[])[0] ?? root['c:pivotFmt'];
+			const item = must((root['c:pivotFmt'] as XmlObject[])[0] ?? root['c:pivotFmt']);
 			const spPr = item['c:spPr'] as XmlObject;
 			expect(spPr['a:effectLst']).toStrictEqual({ 'a:outerShdw': { '@_blurRad': '40000' } });
 		});
@@ -179,12 +180,12 @@ describe('classic ChartML pivot formats', () => {
 				'c:pivotFmts': { 'c:pivotFmt': { 'c:idx': { '@_val': '2' } } },
 			};
 			const parsed = parseChartPivotFormats(chart, localName)!;
-			expect(parsed.formats[0].textStyle).toBeUndefined();
-			parsed.formats[0].textStyle = { fontSize: 18, italic: true, color: '#112233' };
+			expect(at(parsed.formats, 0).textStyle).toBeUndefined();
+			at(parsed.formats, 0).textStyle = { fontSize: 18, italic: true, color: '#112233' };
 			applyChartPivotFormats(chart, parsed, localName);
 
 			const reparsed = parseChartPivotFormats(chart, localName)!;
-			expect(reparsed.formats[0].textStyle).toStrictEqual({
+			expect(at(reparsed.formats, 0).textStyle).toStrictEqual({
 				fontSize: 18,
 				italic: true,
 				color: '#112233',
@@ -203,11 +204,11 @@ describe('classic ChartML pivot formats', () => {
 			const parsed = parseChartPivotFormats(chart, localName)!;
 			// Simulate an SDK caller that only touches the typed field, leaving
 			// the stale `markerXml` from parse in place.
-			parsed.formats[0].marker = { symbol: 'square', size: 6 };
+			at(parsed.formats, 0).marker = { symbol: 'square', size: 6 };
 			applyChartPivotFormats(chart, parsed, localName);
 
 			const reparsed = parseChartPivotFormats(chart, localName)!;
-			expect(reparsed.formats[0].marker).toStrictEqual({ symbol: 'square', size: 6 });
+			expect(at(reparsed.formats, 0).marker).toStrictEqual({ symbol: 'square', size: 6 });
 		});
 
 		it('lets an explicit raw override win when the typed field is untouched', () => {
@@ -222,13 +223,13 @@ describe('classic ChartML pivot formats', () => {
 			const parsed = parseChartPivotFormats(chart, localName)!;
 			// shapeProperties is left exactly as parsed (not a typed edit); the
 			// raw override is the explicit edit signal here.
-			parsed.formats[0].shapePropertiesXml = {
+			at(parsed.formats, 0).shapePropertiesXml = {
 				'a:solidFill': { 'a:schemeClr': { '@_val': 'accent2' } },
 			};
 			applyChartPivotFormats(chart, parsed, localName);
 
 			const root = chart['c:pivotFmts'] as XmlObject;
-			const item = (root['c:pivotFmt'] as XmlObject[])[0];
+			const item = at(root['c:pivotFmt'] as XmlObject[], 0);
 			expect(item['c:spPr']).toStrictEqual({
 				'a:solidFill': { 'a:schemeClr': { '@_val': 'accent2' } },
 			});
@@ -259,14 +260,14 @@ describe('classic ChartML pivot formats', () => {
 				expect(expected).toBeDefined();
 
 				const parsed = parseChartPivotFormats(chart, localName, colorParser)!;
-				expect(parsed.formats[0].shapeProperties).toStrictEqual({ fillColor: expected });
+				expect(at(parsed.formats, 0).shapeProperties).toStrictEqual({ fillColor: expected });
 			});
 
 			it('leaves the typed colour unresolved without a colour resolver (raw XML fallback only)', () => {
 				const chart = schemeClrChart();
 				const parsed = parseChartPivotFormats(chart, localName)!;
-				expect(parsed.formats[0].shapeProperties).toBeUndefined();
-				expect(parsed.formats[0].shapePropertiesXml).toStrictEqual({
+				expect(at(parsed.formats, 0).shapeProperties).toBeUndefined();
+				expect(at(parsed.formats, 0).shapePropertiesXml).toStrictEqual({
 					'a:solidFill': {
 						'a:schemeClr': { '@_val': 'accent2', 'a:lumMod': { '@_val': '75000' } },
 					},
@@ -302,14 +303,14 @@ describe('classic ChartML pivot formats', () => {
 				// A genuine edit (stroke colour) forces `resolveSpPrOverride` to
 				// re-derive `spPr`, but the fill itself is untouched and must keep
 				// following the theme instead of collapsing to a literal srgbClr.
-				parsed.formats[0].shapeProperties = {
-					...parsed.formats[0].shapeProperties,
+				at(parsed.formats, 0).shapeProperties = {
+					...at(parsed.formats, 0).shapeProperties,
 					strokeColor: '#0000FF',
 				};
 				applyChartPivotFormats(chart, parsed, localName, colorParser);
 
 				const root = chart['c:pivotFmts'] as XmlObject;
-				const item = (root['c:pivotFmt'] as XmlObject[])[0] ?? root['c:pivotFmt'];
+				const item = must((root['c:pivotFmt'] as XmlObject[])[0] ?? root['c:pivotFmt']);
 				const spPr = item['c:spPr'] as XmlObject;
 				expect(spPr['a:solidFill']).toStrictEqual({ 'a:schemeClr': { '@_val': 'accent2' } });
 			});

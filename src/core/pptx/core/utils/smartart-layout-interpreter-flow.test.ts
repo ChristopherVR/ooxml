@@ -7,6 +7,7 @@ import type {
 	PptxSmartArtWhen,
 } from '../types';
 import { chooseAlgType, selectArrangedNodes } from './smartart-layout-interpreter-flow';
+import { at } from '../../test-support/access';
 
 function whenNode(
 	fn: string,
@@ -44,7 +45,7 @@ describe('chooseAlgType', () => {
 			rawXml: {},
 		};
 		// Need the `when` branch's own rawXml too, not just otherwise's.
-		node.choose![0].when[0].rawXml = { 'dgm:alg': { '@_type': 'cycle' } };
+		at(at(node.choose!, 0).when, 0).rawXml = { 'dgm:alg': { '@_type': 'cycle' } };
 
 		const decided = chooseAlgType(node, 3, { presLayoutVars: { direction: 'rev' } });
 		expect(decided).toBe('cycle');

@@ -22,6 +22,7 @@ import {
 	applyClrMapOverrideToLayoutRoot,
 	applyHeaderFooterFlagsToNode,
 } from './master-save-helpers';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -156,7 +157,7 @@ describe('slide master save writer — end-to-end round-trip', () => {
 	it('applies typed clrMap mutations during save', async () => {
 		const { handler, data } = await PresentationBuilder.create();
 		expect(data.slideMasters?.length).toBeGreaterThanOrEqual(1);
-		const master = data.slideMasters![0];
+		const master = at(data.slideMasters!, 0);
 
 		// Override two aliases — the rest must fall back to the OOXML default
 		// mapping so the emitted node is schema-complete.
@@ -178,7 +179,7 @@ describe('slide master save writer — end-to-end round-trip', () => {
 
 	it('applies typed `headerFooter` mutations to the master', async () => {
 		const { handler, data } = await PresentationBuilder.create();
-		const master = data.slideMasters![0];
+		const master = at(data.slideMasters!, 0);
 		master.headerFooter = { hasHeader: false, hasSlideNumber: false };
 
 		const saved = await handler.save(data.slides, { slideMasters: data.slideMasters });
@@ -204,9 +205,9 @@ describe('slide layout save writer — end-to-end round-trip', () => {
 
 	it('persists `@matchingName`, `@preserve`, and `clrMapOverride` mutations', async () => {
 		const { handler, data } = await PresentationBuilder.create();
-		const master = data.slideMasters![0];
+		const master = at(data.slideMasters!, 0);
 		expect(master.layouts?.length).toBeGreaterThanOrEqual(1);
-		const layout = master.layouts![0];
+		const layout = at(master.layouts!, 0);
 
 		layout.matchingName = 'CustomTitleSlide';
 		layout.preserve = true;
@@ -232,8 +233,8 @@ describe('slide layout save writer — end-to-end round-trip', () => {
 
 	it('switches `clrMapOverride` back to `<a:masterClrMapping/>` when set to empty', async () => {
 		const { handler, data } = await PresentationBuilder.create();
-		const master = data.slideMasters![0];
-		const layout = master.layouts![0];
+		const master = at(data.slideMasters!, 0);
+		const layout = at(master.layouts!, 0);
 		layout.clrMapOverride = {};
 
 		const saved = await handler.save(data.slides, { slideLayouts: master.layouts });

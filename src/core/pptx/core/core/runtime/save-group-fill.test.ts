@@ -26,6 +26,7 @@ import { describe, expect, it } from 'vitest';
 import { PptxHandler } from '../../PptxHandler';
 import type { GroupPptxElement, PptxElement, PptxSlide, ShapeStyle } from '../../types';
 import { fillMatchesInheritedGroupFill, groupChildInheritedFill } from './save-group-fill';
+import { at } from '../../../test-support/access';
 
 /** One `<p:sp>` whose fill is whatever markup the caller passes. */
 function sp(id: number, name: string, x: number, y: number, fill: string): string {
@@ -135,8 +136,8 @@ describe('save re-emits authored a:grpFill instead of the resolved fill', () => 
 	it('writes the concrete fill when the child has been recoloured', async () => {
 		const { handler, slides } = await loadDeck();
 
-		const recoloured = findByName(slides[0].elements, 'DeepChild');
-		const cleared = findByName(slides[0].elements, 'DirectChild');
+		const recoloured = findByName(at(slides, 0).elements, 'DeepChild');
+		const cleared = findByName(at(slides, 0).elements, 'DirectChild');
 		expect(recoloured && 'shapeStyle' in recoloured).toBeTruthy();
 		Object.assign(recoloured as { shapeStyle?: ShapeStyle }, {
 			shapeStyle: { fillMode: 'solid', fillColor: '#00FF00' } satisfies ShapeStyle,

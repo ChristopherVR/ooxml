@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Extracted logic from PptxHandlerRuntimeThemeFormatScheme.parseEffectStyleList
@@ -206,8 +207,8 @@ describe('parseEffectStyleList', () => {
 		};
 		const result = parseEffectStyleList(listNode);
 		expect(result).toHaveLength(1);
-		expect(result[0].shadowColor).toBeUndefined();
-		expect(result[0].rawNode).toBeDefined();
+		expect(at(result, 0).shadowColor).toBeUndefined();
+		expect(at(result, 0).rawNode).toBeDefined();
 	});
 
 	it('should parse outer shadow from effectLst', () => {
@@ -229,7 +230,7 @@ describe('parseEffectStyleList', () => {
 
 		const result = parseEffectStyleList(listNode);
 		expect(result).toHaveLength(1);
-		const style = result[0];
+		const style = at(result, 0);
 		expect(style.shadowColor).toBe('#000000');
 		expect(style.shadowOpacity).toBeCloseTo(0.63, 5);
 		expect(style.shadowBlur).toBeCloseTo(6, 1);
@@ -257,7 +258,7 @@ describe('parseEffectStyleList', () => {
 
 		const result = parseEffectStyleList(listNode);
 		expect(result).toHaveLength(1);
-		const style = result[0];
+		const style = at(result, 0);
 		expect(style.innerShadowColor).toBe('#FF0000');
 		expect(style.innerShadowOpacity).toBeCloseTo(0.5, 5);
 		expect(style.innerShadowBlur).toBeCloseTo(2, 1);
@@ -282,7 +283,7 @@ describe('parseEffectStyleList', () => {
 
 		const result = parseEffectStyleList(listNode);
 		expect(result).toHaveLength(1);
-		const style = result[0];
+		const style = at(result, 0);
 		expect(style.glowColor).toBe('#FFFF00');
 		expect(style.glowOpacity).toBeCloseTo(0.8, 5);
 		expect(style.glowRadius).toBeCloseTo(5, 1);
@@ -301,7 +302,7 @@ describe('parseEffectStyleList', () => {
 
 		const result = parseEffectStyleList(listNode);
 		expect(result).toHaveLength(1);
-		expect(result[0].softEdgeRadius).toBeCloseTo(3, 1);
+		expect(at(result, 0).softEdgeRadius).toBeCloseTo(3, 1);
 	});
 
 	it('should parse reflection from effectLst', () => {
@@ -323,7 +324,7 @@ describe('parseEffectStyleList', () => {
 
 		const result = parseEffectStyleList(listNode);
 		expect(result).toHaveLength(1);
-		const style = result[0];
+		const style = at(result, 0);
 		expect(style.reflectionBlurRadius).toBeCloseTo(0.667, 2);
 		expect(style.reflectionStartOpacity).toBeCloseTo(0.52, 5);
 		expect(style.reflectionEndOpacity).toBeCloseTo(0.003, 5);
@@ -347,7 +348,7 @@ describe('parseEffectStyleList', () => {
 
 		const result = parseEffectStyleList(listNode);
 		expect(result).toHaveLength(1);
-		const style = result[0];
+		const style = at(result, 0);
 		expect(style.reflectionBlurRadius).toBe(0);
 		expect(style.reflectionStartOpacity).toBe(1);
 		expect(style.reflectionEndOpacity).toBeUndefined();
@@ -385,17 +386,17 @@ describe('parseEffectStyleList', () => {
 		expect(result).toHaveLength(3);
 
 		// First: empty
-		expect(result[0].shadowColor).toBeUndefined();
-		expect(result[0].reflectionBlurRadius).toBeUndefined();
+		expect(at(result, 0).shadowColor).toBeUndefined();
+		expect(at(result, 0).reflectionBlurRadius).toBeUndefined();
 
 		// Second: shadow only
-		expect(result[1].shadowColor).toBe('#111111');
-		expect(result[1].shadowBlur).toBeCloseTo(1, 1);
+		expect(at(result, 1).shadowColor).toBe('#111111');
+		expect(at(result, 1).shadowBlur).toBeCloseTo(1, 1);
 
 		// Third: reflection only
-		expect(result[2].reflectionBlurRadius).toBeCloseTo(2, 1);
-		expect(result[2].reflectionStartOpacity).toBe(0.5);
-		expect(result[2].reflectionEndOpacity).toBe(0);
+		expect(at(result, 2).reflectionBlurRadius).toBeCloseTo(2, 1);
+		expect(at(result, 2).reflectionStartOpacity).toBe(0.5);
+		expect(at(result, 2).reflectionEndOpacity).toBe(0);
 	});
 
 	it('should parse combined shadow + reflection in same effect style', () => {
@@ -424,7 +425,7 @@ describe('parseEffectStyleList', () => {
 
 		const result = parseEffectStyleList(listNode);
 		expect(result).toHaveLength(1);
-		const style = result[0];
+		const style = at(result, 0);
 
 		// Shadow should be parsed
 		expect(style.shadowColor).toBe('#000000');
@@ -452,7 +453,7 @@ describe('parseEffectStyleList', () => {
 
 		const result = parseEffectStyleList(listNode);
 		expect(result).toHaveLength(1);
-		expect(result[0].glowColor).toBe('#00FF00');
-		expect(result[0].glowRadius).toBeCloseTo(2, 1);
+		expect(at(result, 0).glowColor).toBe('#00FF00');
+		expect(at(result, 0).glowRadius).toBeCloseTo(2, 1);
 	});
 });

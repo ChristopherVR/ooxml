@@ -29,15 +29,15 @@ export interface InfoResult {
 	slideCount: number;
 	width: number;
 	height: number;
-	widthEmu?: number;
-	heightEmu?: number;
-	slideSizeType?: string;
-	title?: string;
-	creator?: string;
-	subject?: string;
-	themeName?: string;
-	majorFont?: string;
-	minorFont?: string;
+	widthEmu?: number | undefined;
+	heightEmu?: number | undefined;
+	slideSizeType?: string | undefined;
+	title?: string | undefined;
+	creator?: string | undefined;
+	subject?: string | undefined;
+	themeName?: string | undefined;
+	majorFont?: string | undefined;
+	minorFont?: string | undefined;
 	layoutCount: number;
 	layouts: string[];
 	sectionCount: number;
@@ -95,7 +95,7 @@ export interface SlideDiffEntry {
 	status: 'added' | 'removed' | 'modified' | 'unchanged';
 	elementCountA?: number;
 	elementCountB?: number;
-	textDifferences?: string[];
+	textDifferences?: string[] | undefined;
 }
 
 /** Result from the `diff` command. */

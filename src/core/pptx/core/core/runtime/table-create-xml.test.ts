@@ -7,6 +7,7 @@ import {
 	applyTableCellTextAndStyle,
 } from './table-create-xml';
 import { DEFAULT_POWERPOINT_TABLE_STYLE_ID } from './table-style-defaults';
+import { at } from '../../../test-support/access';
 
 describe('createTableCellXml', () => {
 	it('should create cell XML with the given text', () => {
@@ -128,8 +129,8 @@ describe('createTableGraphicFrameRawXml', () => {
 			'a:tbl'
 		] as XmlObject;
 		const rows = tbl['a:tr'] as XmlObject[];
-		const firstRowCells = rows[0]['a:tc'] as XmlObject[];
-		const txBody = firstRowCells[0]['a:txBody'] as XmlObject;
+		const firstRowCells = at(rows, 0)['a:tc'] as XmlObject[];
+		const txBody = at(firstRowCells, 0)['a:txBody'] as XmlObject;
 		const para = txBody['a:p'] as XmlObject;
 		const run = para['a:r'] as XmlObject;
 		expect(run['a:t']).toBe('Header 1');
@@ -141,8 +142,8 @@ describe('createTableGraphicFrameRawXml', () => {
 			'a:tbl'
 		] as XmlObject;
 		const rows = tbl['a:tr'] as XmlObject[];
-		const secondRowCells = rows[1]['a:tc'] as XmlObject[];
-		const txBody = secondRowCells[0]['a:txBody'] as XmlObject;
+		const secondRowCells = at(rows, 1)['a:tc'] as XmlObject[];
+		const txBody = at(secondRowCells, 0)['a:txBody'] as XmlObject;
 		const para = txBody['a:p'] as XmlObject;
 		const run = para['a:r'] as XmlObject;
 		expect(run['a:t']).toBe('');

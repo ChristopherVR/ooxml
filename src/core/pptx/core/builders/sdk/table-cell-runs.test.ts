@@ -10,6 +10,7 @@ import { PptxHandler } from '../../PptxHandler';
 import type { TablePptxElement } from '../../types';
 import { createTableElement } from './ElementFactory';
 import type { TableInput } from './types';
+import { at, must } from '../../../test-support/access';
 
 async function save(input: TableInput) {
 	const { handler, createSlide } = await PptxHandler.create();
@@ -44,7 +45,7 @@ describe('table cell runs', () => {
 				},
 			],
 		});
-		const cell = cells[0];
+		const cell = at(cells, 0);
 		expect(cell.match(/<a:p>/g)).toHaveLength(1);
 		const [a, b] = runs(cell);
 		expect(a).toContain('b="1"');
@@ -72,7 +73,7 @@ describe('table cell runs', () => {
 				},
 			],
 		});
-		const cell = cells[0];
+		const cell = at(cells, 0);
 		expect(cell.match(/<a:p>/g)).toHaveLength(2);
 		expect(cell.match(/algn="ctr"/g)).toHaveLength(2);
 		// cell style.fontSize is points: 12 pt
@@ -87,8 +88,8 @@ describe('table cell runs', () => {
 
 	it('leaves plain cells as before', async () => {
 		const { cells } = await save({ rows: [{ cells: [{ text: 'x', style: { bold: true } }] }] });
-		expect(runs(cells[0])).toHaveLength(1);
-		expect(runs(cells[0])[0]).toContain('b="1"');
+		expect(runs(at(cells, 0))).toHaveLength(1);
+		expect(runs(at(cells, 0))[0]).toContain('b="1"');
 	});
 
 	it('reads the runs back', async () => {
@@ -107,10 +108,10 @@ describe('table cell runs', () => {
 			],
 		});
 		const data = await new PptxHandler().load(bytes.buffer as ArrayBuffer);
-		const table = data.slides[0].elements[0] as {
+		const table = at(data.slides, 0).elements[0] as {
 			tableData?: { rows: Array<{ cells: Array<{ text: string; textRuns?: unknown[] }> }> };
 		};
-		const cell = table.tableData!.rows[0].cells[0];
+		const cell = at(at(table.tableData!.rows, 0).cells, 0);
 		expect(cell.text).toBe('AB');
 		expect(cell.textRuns).toEqual([
 			expect.objectContaining({ text: 'A', bold: true }),
@@ -131,7 +132,7 @@ describe('table cell runs', () => {
 				},
 			],
 		});
-		const [a, b] = runs(cells[0]);
+		const [a, b] = runs(at(cells, 0));
 		expect(a).not.toContain('b="1"');
 		expect(b).toContain('b="1"');
 		expect(a).toContain('sz="1050"');
@@ -169,7 +170,7 @@ describe('table cell runs', () => {
 
 	it('writes plain text for an empty run list', async () => {
 		const { cells } = await save({ rows: [{ cells: [{ text: 'plain', runs: [] }] }] });
-		expect(runs(cells[0])).toHaveLength(1);
+		expect(runs(at(cells, 0))).toHaveLength(1);
 		expect(cells[0]).toContain('<a:t>plain</a:t>');
 	});
 
@@ -178,16 +179,24 @@ describe('table cell runs', () => {
 			createTableElement({ rows: [{ cells: [{ text: 'x', runs: [{ text: 'y' }] }] }] }),
 		).toThrow(RangeError);
 		expect(
-			createTableElement({
-				rows: [{ cells: [{ text: 'AB', runs: [{ text: 'A' }, { text: 'B' }] }] }],
-			}).tableData.rows[0]?.cells[0]?.text,
+			at(
+				at(
+					createTableElement({
+						rows: [{ cells: [{ text: 'AB', runs: [{ text: 'A' }, { text: 'B' }] }] }],
+					}).tableData.rows,
+					0,
+				)?.cells,
+				0,
+			)?.text,
 		).toBe('AB');
 	});
 
 	it('writes the flat text once the cell text is changed', async () => {
-		const el = createTableElement({
-			rows: [{ cells: [{ runs: [{ text: 'A', style: { bold: true } }, { text: 'B' }] }] }],
-		});
+		const el = must(
+			createTableElement({
+				rows: [{ cells: [{ runs: [{ text: 'A', style: { bold: true } }, { text: 'B' }] }] }],
+			}),
+		);
 		const cell = el.tableData.rows[0]?.cells[0];
 		if (cell) {
 			cell.text = 'edited';

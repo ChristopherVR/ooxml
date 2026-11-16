@@ -15,6 +15,7 @@ import {
 	formatCommentTimestamp,
 	getCommentMarkerPosition,
 } from './element-utils';
+import { at } from '../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // isTemplateElement
@@ -278,20 +279,20 @@ describe('createUniformTextSegments', () => {
 	it('creates a single-segment array with the given text', () => {
 		const segments = createUniformTextSegments('Test text', { bold: true });
 		expect(segments).toHaveLength(1);
-		expect(segments[0].text).toBe('Test text');
+		expect(at(segments, 0).text).toBe('Test text');
 	});
 
 	it('clones the style so mutations do not propagate', () => {
 		const style = { bold: true, fontSize: 18 };
 		const segments = createUniformTextSegments('X', style);
-		segments[0].style.bold = false;
+		at(segments, 0).style.bold = false;
 		expect(style.bold).toBeTruthy();
 	});
 
 	it('provides an empty style object when style is undefined', () => {
 		const segments = createUniformTextSegments('X', undefined);
-		expect(segments[0].style).toBeDefined();
-		expectTypeOf(segments[0].style).toBeObject();
+		expect(at(segments, 0).style).toBeDefined();
+		expectTypeOf(at(segments, 0).style).toBeObject();
 	});
 });
 

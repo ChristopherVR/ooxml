@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 import type { TextStyle, XmlObject } from '../../types';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Extracted from PptxHandlerRuntimeTextRunEffects
@@ -82,7 +83,7 @@ function applyHyperlinkStyle(
 		if (slideTarget) {
 			const slideMatch = slideTarget.match(/slide(\d+)\.xml$/i);
 			if (slideMatch) {
-				style.hyperlinkTargetSlideIndex = parseInt(slideMatch[1], 10) - 1;
+				style.hyperlinkTargetSlideIndex = parseInt(at(slideMatch, 1), 10) - 1;
 			}
 		}
 	}

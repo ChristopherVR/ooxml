@@ -23,6 +23,7 @@ import { describe, expect, it } from 'vitest';
 import { PresentationBuilder } from '../../builders/sdk/PresentationBuilder';
 import { PptxHandler } from '../../PptxHandler';
 import type { ChartPptxElement } from '../../types/elements';
+import { at } from '../../../test-support/access';
 
 const CHART_XML = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart"
@@ -151,14 +152,14 @@ describe('c2-G11: chart-local c:clrMapOvr is applied to a:schemeClr resolution',
 		// `a:schemeClr val="tx1"` must resolve to lt1's colour, not dk1's.
 		const handler = new PptxHandler();
 		const data = await handler.load(await buildDeckWithClrMapOvr());
-		const element = data.slides[0].elements.find(
+		const element = at(data.slides, 0).elements.find(
 			(candidate) => candidate.type === 'chart',
 		) as ChartPptxElement;
 		const chartData = element.chartData!;
 
 		expect(chartData.clrMapOvr?.tx1).toBe('lt1');
-		expect(chartData.series[0].color).not.toBe('#000000');
-		expect(chartData.series[0].color?.toLowerCase()).toBe('#ffffff');
+		expect(at(chartData.series, 0).color).not.toBe('#000000');
+		expect(at(chartData.series, 0).color?.toLowerCase()).toBe('#ffffff');
 	});
 });
 
@@ -166,7 +167,7 @@ describe('classic chart chartSpace-level and chart-style-part parsing', () => {
 	it('resolves title/date1904/roundedCorners/gapDepth/chartStyleDefinition on load', async () => {
 		const handler = new PptxHandler();
 		const data = await handler.load(await buildDeck());
-		const element = data.slides[0].elements.find(
+		const element = at(data.slides, 0).elements.find(
 			(candidate) => candidate.type === 'chart',
 		) as ChartPptxElement;
 		expect(element).toBeDefined();
@@ -251,10 +252,10 @@ describe('c2-G9: c:dPt/c:pictureOptions picture fill resolves to an image URL', 
 	it('parses the flags and resolves the sibling blipFill to a data: URL', async () => {
 		const handler = new PptxHandler();
 		const data = await handler.load(await buildDeckWithDataPointPicture());
-		const element = data.slides[0].elements.find(
+		const element = at(data.slides, 0).elements.find(
 			(candidate) => candidate.type === 'chart',
 		) as ChartPptxElement;
-		const dataPoint = element.chartData!.series[0].dataPoints?.find((dp) => dp.idx === 0);
+		const dataPoint = at(element.chartData!.series, 0).dataPoints?.find((dp) => dp.idx === 0);
 
 		expect(dataPoint?.picture).toBeDefined();
 		expect(dataPoint?.picture?.pictureFormat).toBe('stack');
@@ -270,10 +271,10 @@ describe('c2-G9: c:dPt/c:pictureOptions picture fill resolves to an image URL', 
 		// pictureOptions anywhere) must still load without touching chart rels.
 		const handler = new PptxHandler();
 		const data = await handler.load(await buildDeck());
-		const element = data.slides[0].elements.find(
+		const element = at(data.slides, 0).elements.find(
 			(candidate) => candidate.type === 'chart',
 		) as ChartPptxElement;
-		expect(element.chartData!.series[0].dataPoints ?? []).toHaveLength(0);
+		expect(at(element.chartData!.series, 0).dataPoints ?? []).toHaveLength(0);
 	});
 });
 
@@ -344,10 +345,10 @@ describe('scatter c:xVal falls back to the embedded workbook when cache-less', (
 	it("backfills a series' xValues from the embedded workbook's first column", async () => {
 		const handler = new PptxHandler();
 		const data = await handler.load(await buildDeckWithScatterNoCache());
-		const element = data.slides[0].elements.find(
+		const element = at(data.slides, 0).elements.find(
 			(candidate) => candidate.type === 'chart',
 		) as ChartPptxElement;
-		const series = element.chartData!.series[0];
+		const series = at(element.chartData!.series, 0);
 
 		// c:yVal's own numCache-less fallback already worked before this fix.
 		expect(series.values).toStrictEqual([10, 20, 15]);
@@ -387,7 +388,7 @@ describe('series line width and dash (c:ser/c:spPr/a:ln)', () => {
 	it('converts @w to points, reads the preset dash, and leaves an unstyled series unset', async () => {
 		const handler = new PptxHandler();
 		const data = await handler.load(await buildDeck(LINE_CHART_XML));
-		const element = data.slides[0].elements.find(
+		const element = at(data.slides, 0).elements.find(
 			(candidate) => candidate.type === 'chart',
 		) as ChartPptxElement;
 		const [styled, plain] = element.chartData!.series;
@@ -404,7 +405,7 @@ it('refreshes saved classic topology and indices without losing host relationshi
 	const handler = new PptxHandler();
 	const data = await handler.load(await buildDeck());
 	const previous = (
-		data.slides[0].elements.find((entry) => entry.type === 'chart') as ChartPptxElement
+		at(data.slides, 0).elements.find((entry) => entry.type === 'chart') as ChartPptxElement
 	).chartData!;
 	const runtime = (
 		handler as unknown as {
@@ -418,7 +419,7 @@ it('refreshes saved classic topology and indices without losing host relationshi
 		}
 	).runtime;
 	const neutral = parseChartSpace(CHART_XML).chartSpace;
-	neutral.plotArea.groups[0].series[0].index = 17;
+	at(at(neutral.plotArea.groups, 0).series, 0).index = 17;
 	const pie = await runtime.refreshClassicChartFromPart(
 		writeChartSpace(setChartType(neutral, { kind: 'pie' })),
 		previous,

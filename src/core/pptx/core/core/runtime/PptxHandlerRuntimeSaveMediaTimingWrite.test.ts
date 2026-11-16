@@ -16,6 +16,7 @@ import { describe, it, expect } from 'vitest';
 import { PresentationBuilder } from '../../builders/sdk/PresentationBuilder';
 import { PptxHandler } from '../../PptxHandler';
 import type { XmlObject, MediaPptxElement, PptxElement } from '../../types';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Reimplemented: collectMediaElements
@@ -125,7 +126,7 @@ describe('collectMediaElements', () => {
 		const output: MediaPptxElement[] = [];
 		collectMediaElements(elements, output);
 		expect(output).toHaveLength(1);
-		expect(output[0].id).toBe('m1');
+		expect(at(output, 0).id).toBe('m1');
 	});
 
 	it('should recursively collect media from groups', () => {
@@ -152,7 +153,7 @@ describe('collectMediaElements', () => {
 		const output: MediaPptxElement[] = [];
 		collectMediaElements(elements, output);
 		expect(output).toHaveLength(1);
-		expect(output[0].id).toBe('m2');
+		expect(at(output, 0).id).toBe('m2');
 	});
 
 	it('should return empty array when no media elements', () => {

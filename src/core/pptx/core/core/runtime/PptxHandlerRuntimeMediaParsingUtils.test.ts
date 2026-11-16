@@ -9,6 +9,7 @@ import {
 	parseCtnMediaTiming,
 	parseMediaExtensionData,
 } from './PptxHandlerRuntimeMediaParsingUtils';
+import { xmlFixture } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // getXmlShapeIdFromXml
@@ -59,11 +60,11 @@ describe('getXmlShapeIdFromXml', () => {
 	});
 
 	it('should convert numeric id to string', () => {
-		const xml: XmlObject = {
+		const xml = xmlFixture({
 			'p:nvSpPr': {
 				'p:cNvPr': { '@_id': 123 },
 			},
-		};
+		});
 		expect(getXmlShapeIdFromXml(xml)).toBe('123');
 	});
 

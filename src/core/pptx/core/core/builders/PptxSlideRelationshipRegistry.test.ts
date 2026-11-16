@@ -12,6 +12,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { XmlObject } from '../../types';
 import { PptxSlideRelationshipRegistry, isExternalTarget } from './PptxSlideRelationshipRegistry';
+import { at } from '../../../test-support/access';
 
 describe('isExternalTarget', () => {
 	it('treats common URL schemes as external', () => {
@@ -57,14 +58,14 @@ describe('pptxSlideRelationshipRegistry', () => {
 		registry.resolveHyperlinkRelationshipId('ms-teams://l/chat/abc');
 
 		expect(relationships).toHaveLength(2);
-		expect(relationships[0]['@_TargetMode']).toBe('External');
-		expect(relationships[1]['@_TargetMode']).toBe('External');
+		expect(at(relationships, 0)['@_TargetMode']).toBe('External');
+		expect(at(relationships, 1)['@_TargetMode']).toBe('External');
 	});
 
 	it('does not mark relative targets as External', () => {
 		const relationships: XmlObject[] = [];
 		const registry = new PptxSlideRelationshipRegistry({ relationships });
 		registry.resolveHyperlinkRelationshipId('../slides/slide2.xml');
-		expect(relationships[0]['@_TargetMode']).toBeUndefined();
+		expect(at(relationships, 0)['@_TargetMode']).toBeUndefined();
 	});
 });

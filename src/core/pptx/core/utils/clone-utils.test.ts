@@ -15,6 +15,7 @@ import {
 	cloneSlide,
 	cloneXmlObject,
 } from './clone-utils';
+import { at } from '../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // cloneTextStyle
@@ -72,8 +73,8 @@ describe('cloneShapeStyle', () => {
 		expect(cloned.fillGradientStops).toStrictEqual(style.fillGradientStops);
 		expect(cloned.fillGradientStops).not.toBe(style.fillGradientStops);
 		// Mutate cloned gradient stop
-		cloned.fillGradientStops![0].color = '#00FF00';
-		expect(style.fillGradientStops![0].color).toBe('#FF0000');
+		at(cloned.fillGradientStops!, 0).color = '#00FF00';
+		expect(at(style.fillGradientStops!, 0).color).toBe('#FF0000');
 	});
 
 	it('handles styles without gradient stops', () => {
@@ -105,8 +106,10 @@ describe('cloneElement', () => {
 		expect(cloned).not.toBe(el);
 		// Verify deep independence of textSegments
 		if (cloned.type === 'text' && cloned.textSegments) {
-			cloned.textSegments[0].text = 'Changed';
-			expect((el as { textSegments: Array<{ text: string }> }).textSegments[0].text).toBe('Hello');
+			at(cloned.textSegments, 0).text = 'Changed';
+			expect(at((el as { textSegments: Array<{ text: string }> }).textSegments, 0).text).toBe(
+				'Hello',
+			);
 		}
 	});
 
@@ -213,7 +216,7 @@ describe('cloneElement', () => {
 		if (cloned.type !== 'group') {
 			throw new Error('expected a group clone');
 		}
-		const clonedInner = cloned.children[0];
+		const clonedInner = at(cloned.children, 0);
 		expect(cloned.children).not.toBe(outer.children);
 		expect(clonedInner).not.toBe(inner);
 		if (clonedInner.type !== 'group') {
@@ -221,7 +224,7 @@ describe('cloneElement', () => {
 		}
 		expect(clonedInner.children[0]).not.toBe(leaf);
 
-		clonedInner.children[0].x = 999;
+		at(clonedInner.children, 0).x = 999;
 		expect(leaf.x).toBe(1);
 	});
 
@@ -287,7 +290,7 @@ const aliasCases: AliasCase[] = [
 		'text: paragraph indents',
 		{ type: 'text', id: 'text', ...box, paragraphIndents: [{ marginLeft: 12, indent: 4 }] },
 		(clone) => {
-			clone.paragraphIndents![0].marginLeft = 999;
+			at(clone.paragraphIndents!, 0).marginLeft = 999;
 		},
 		(source) => source.paragraphIndents,
 	),
@@ -317,7 +320,7 @@ const aliasCases: AliasCase[] = [
 			textSegments: [{ text: 'a', style: { bold: true } }],
 		},
 		(clone) => {
-			clone.textSegments![0].style.bold = false;
+			at(clone.textSegments!, 0).style.bold = false;
 		},
 		(source) => source.textSegments,
 	),
@@ -349,8 +352,8 @@ const aliasCases: AliasCase[] = [
 			},
 		},
 		(clone) => {
-			clone.tableData!.rows[0].cells[0].text = 'edited';
-			clone.tableData!.rows[0].cells[0].style!.bold = false;
+			at(at(clone.tableData!.rows, 0).cells, 0).text = 'edited';
+			at(at(clone.tableData!.rows, 0).cells, 0).style!.bold = false;
 			clone.tableData!.columnWidths[0] = 999;
 		},
 		(source) => source.tableData,
@@ -378,7 +381,7 @@ const aliasCases: AliasCase[] = [
 			smartArtData: { layoutType: 'list', nodes: [{ id: 'n1', text: 'a', level: 0 }] },
 		},
 		(clone) => {
-			clone.smartArtData!.nodes[0].text = 'edited';
+			at(clone.smartArtData!.nodes, 0).text = 'edited';
 		},
 		(source) => source.smartArtData,
 	),
@@ -391,7 +394,7 @@ const aliasCases: AliasCase[] = [
 			extensionXml: [{ uri: '{A}', xml: { 'a:ext': { '@_val': '1' } } }],
 		},
 		(clone) => {
-			clone.extensionXml![0].uri = 'edited';
+			at(clone.extensionXml!, 0).uri = 'edited';
 		},
 		(source) => source.extensionXml,
 	),
@@ -420,7 +423,7 @@ const aliasCases: AliasCase[] = [
 			groupFill: { fillColor: '#FF0000' },
 		},
 		(clone) => {
-			clone.children[0].x = 999;
+			at(clone.children, 0).x = 999;
 			clone.groupFill!.fillColor = '#000000';
 		},
 		(source) => [source.children, source.groupFill],
@@ -438,7 +441,7 @@ const aliasCases: AliasCase[] = [
 		(clone) => {
 			clone.inkPaths[0] = 'edited';
 			clone.inkColors![0] = '#FFF';
-			clone.inkPointPressures![0][0] = 1;
+			at(clone.inkPointPressures!, 0)[0] = 1;
 		},
 		(source) => [source.inkPaths, source.inkColors, source.inkPointPressures],
 	),
@@ -451,7 +454,7 @@ const aliasCases: AliasCase[] = [
 			inkStrokes: [{ path: 'M0 0', color: '#000', width: 1, opacity: 1, pressures: [0.5] }],
 		},
 		(clone) => {
-			clone.inkStrokes![0].pressures![0] = 1;
+			at(clone.inkStrokes!, 0).pressures![0] = 1;
 		},
 		(source) => source.inkStrokes,
 	),
@@ -468,7 +471,7 @@ const aliasCases: AliasCase[] = [
 			],
 		},
 		(clone) => {
-			clone.summaryTargets![0].title = 'edited';
+			at(clone.summaryTargets!, 0).title = 'edited';
 		},
 		(source) => source.summaryTargets,
 	),
@@ -476,7 +479,7 @@ const aliasCases: AliasCase[] = [
 		'model3d: preserved graphicFrame extensions',
 		{ type: 'model3d', id: 'model3d', ...box, extensionXml: [{ uri: '{B}', xml: {} }] },
 		(clone) => {
-			clone.extensionXml![0].uri = 'edited';
+			at(clone.extensionXml!, 0).uri = 'edited';
 		},
 		(source) => source.extensionXml,
 	),
@@ -491,7 +494,7 @@ const aliasCases: AliasCase[] = [
 		},
 		(clone) => {
 			clone.locks!.noMove = false;
-			clone.extLstXml![0]['@_uri'] = 'edited';
+			at(clone.extLstXml!, 0)['@_uri'] = 'edited';
 		},
 		(source) => [source.locks, source.extLstXml],
 	),

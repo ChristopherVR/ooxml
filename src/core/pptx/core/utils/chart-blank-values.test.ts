@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { XmlObject } from '../types';
 import { extractSeriesNumbersWithBlanks } from './chart-blank-values';
+import { xmlFixture } from '../../test-support/access';
 
 const PREFIXES = ['c:', ''];
 
@@ -51,9 +52,9 @@ function createXmlLookup() {
 }
 
 function valNode(pts: Array<{ idx: number; v: number | string }>, ptCount?: number): XmlObject {
-	const cache: XmlObject = {
+	const cache = xmlFixture({
 		'c:pt': pts.map((p) => ({ '@_idx': String(p.idx), 'c:v': p.v })),
-	};
+	});
 	if (ptCount !== undefined) {
 		cache['c:ptCount'] = { '@_val': String(ptCount) };
 	}

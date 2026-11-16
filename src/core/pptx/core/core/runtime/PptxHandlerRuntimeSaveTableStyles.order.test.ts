@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { PptxHandler } from '../../PptxHandler';
 import type { PptxTableCellStyle, XmlObject } from '../../types';
 import { PptxHandlerRuntime } from './PptxHandlerRuntimeImplementation';
+import { at } from '../../../test-support/access';
 
 class TableStyleRuntime extends PptxHandlerRuntime {
 	public writeText(cell: XmlObject, text: string): void {
@@ -33,7 +34,7 @@ function expectParagraphOrder(xml: string, count: number): void {
 	expect(paragraphs.length).toBe(count);
 	for (let index = 0; index < paragraphs.length; index++) {
 		const names: string[] = [];
-		for (let child = paragraphs[index].firstChild; child; child = child.nextSibling) {
+		for (let child = at(paragraphs, index).firstChild; child; child = child.nextSibling) {
 			if (child.nodeType === 1) {
 				names.push(child.nodeName);
 			}
@@ -86,7 +87,7 @@ describe('table save paragraph child order', () => {
 		const cells = [...xml.matchAll(/<a:tc\b[^>]*>([\s\S]*?)<\/a:tc>/g)];
 		expect(cells).toHaveLength(2);
 		for (const [index, cell] of cells.entries()) {
-			expectParagraphOrder(cell[1], index === 0 ? 2 : 1);
+			expectParagraphOrder(at(cell, 1), index === 0 ? 2 : 1);
 			expect(cell[1]).toContain(`algn="${tokens[align]}"`);
 		}
 	});
@@ -114,7 +115,7 @@ describe('table save paragraph child order', () => {
 				'a:buChar': { '@_char': '*' },
 			});
 			const paragraphs = (cell['a:txBody'] as XmlObject)['a:p'] as XmlObject[];
-			expect(paragraphs[1]['a:pPr']).toStrictEqual({ '@_algn': 'r' });
+			expect(at(paragraphs, 1)['a:pPr']).toStrictEqual({ '@_algn': 'r' });
 			expectParagraphOrder(builder.build({ 'a:tc': cell }), 2);
 		},
 	);

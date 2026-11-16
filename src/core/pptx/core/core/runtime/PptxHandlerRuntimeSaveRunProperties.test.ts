@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { XmlObject, TextStyle } from '../../types';
 import { PptxHandlerRuntime } from './PptxHandlerRuntimeImplementation';
+import { at } from '../../../test-support/access';
 
 /**
  * The `createRunPropertiesFromTextStyle` method is protected on the runtime
@@ -395,7 +396,7 @@ describe('createRunPropertiesFromTextStyle', () => {
 		const gradFill = result['a:gradFill'] as XmlObject;
 		const gsLst = gradFill['a:gsLst'] as XmlObject;
 		const gs = gsLst['a:gs'] as XmlObject[];
-		const srgbClr = gs[0]['a:srgbClr'] as XmlObject;
+		const srgbClr = at(gs, 0)['a:srgbClr'] as XmlObject;
 		expect(srgbClr['a:alpha']).toStrictEqual({
 			'@_val': String(Math.round(0.5 * 100000)),
 		});

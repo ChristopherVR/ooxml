@@ -6,6 +6,7 @@ import type {
 	RenderedRectNode,
 	SmartArtLayoutResult,
 } from '../../../diagram/layout/smartart-layout-types';
+import { at } from '../../test-support/access';
 
 function rect(nodeId: string, x: number): RenderedRectNode {
 	return {
@@ -89,7 +90,7 @@ describe('interpretedLayoutToElements: descendant text folding', () => {
 		const elements = interpretedLayoutToElements(result([rect('mgr', 0)]), nodes, { x: 0, y: 0 });
 
 		expect(elements).toHaveLength(1);
-		const boxManager = elements[0];
+		const boxManager = at(elements, 0);
 		expect('text' in boxManager ? boxManager.text : undefined).toBe('Manager\nExtra Bullet');
 	});
 

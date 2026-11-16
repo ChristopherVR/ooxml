@@ -16,6 +16,7 @@ import {
 	reflowSmartArtLayout,
 } from './smartart-editing';
 import type { ContainerBounds } from './smartart-helpers';
+import { at } from '../../test-support/access';
 
 // Reset counter before each test for deterministic IDs.
 beforeEach(() => {
@@ -67,8 +68,8 @@ describe('addSmartArtNodeBefore', () => {
 			'VP Engineering',
 			'Dev Lead',
 		]);
-		expect(result.nodes[2].parentId).toBe('root');
-		expect(result.nodes[2].id).toMatch(/^\{[0-9A-F-]+\}$/iu);
+		expect(at(result.nodes, 2).parentId).toBe('root');
+		expect(at(result.nodes, 2).id).toMatch(/^\{[0-9A-F-]+\}$/iu);
 	});
 });
 
@@ -92,14 +93,14 @@ describe('addSmartArtNode', () => {
 		const data = makeData(['A', 'B']);
 		const result = addSmartArtNode(data, 'C');
 		expect(result.nodes).toHaveLength(3);
-		expect(result.nodes[2].text).toBe('C');
+		expect(at(result.nodes, 2).text).toBe('C');
 	});
 
 	it('inserts after the specified sibling', () => {
 		const data = makeData(['A', 'B', 'C']);
 		const result = addSmartArtNode(data, 'New', '1');
 		expect(result.nodes).toHaveLength(4);
-		expect(result.nodes[1].text).toBe('New');
+		expect(at(result.nodes, 1).text).toBe('New');
 	});
 
 	it('inherits parentId from sibling', () => {
@@ -142,7 +143,7 @@ describe('addSmartArtNode', () => {
 		const data = makeData(['A']);
 		const result = addSmartArtNode(data, 'B', 'nonexistent');
 		expect(result.nodes).toHaveLength(2);
-		expect(result.nodes[1].text).toBe('B');
+		expect(at(result.nodes, 1).text).toBe('B');
 	});
 });
 
@@ -155,14 +156,14 @@ describe('addSmartArtNodeAsChild', () => {
 		const data = makeData(['A']);
 		const result = addSmartArtNodeAsChild(data);
 		expect(result.nodes).toHaveLength(2);
-		expect(result.nodes[1].parentId).toBeUndefined();
+		expect(at(result.nodes, 1).parentId).toBeUndefined();
 	});
 
 	it('adds a child node under the specified parent', () => {
 		const data = makeData(['Parent']);
 		const result = addSmartArtNodeAsChild(data, '1', 'Child');
 		expect(result.nodes).toHaveLength(2);
-		const child = result.nodes[1];
+		const child = at(result.nodes, 1);
 		expect(child.text).toBe('Child');
 		expect(child.parentId).toBe('1');
 	});
@@ -170,7 +171,7 @@ describe('addSmartArtNodeAsChild', () => {
 	it('generates default text when none provided', () => {
 		const data = makeData(['A', 'B']);
 		const result = addSmartArtNodeAsChild(data);
-		expect(result.nodes[2].text).toBe('Item 3');
+		expect(at(result.nodes, 2).text).toBe('Item 3');
 	});
 
 	it('marks drawingShapes as stale to trigger reflow', () => {
@@ -188,8 +189,8 @@ describe('addSmartArtNodeAsChild', () => {
 		};
 		const result = addSmartArtNodeAsChild(data, 'p', 'Child');
 		expect(result.connections).toBeDefined();
-		expect(result.connections![0].sourceId).toBe('p');
-		expect(result.connections![0].type).toBe('parOf');
+		expect(at(result.connections!, 0).sourceId).toBe('p');
+		expect(at(result.connections!, 0).type).toBe('parOf');
 	});
 });
 
@@ -223,7 +224,7 @@ describe('removeSmartArtNode', () => {
 		};
 		const result = removeSmartArtNode(data, 'root');
 		expect(result.nodes).toHaveLength(1);
-		expect(result.nodes[0].parentId).toBeUndefined();
+		expect(at(result.nodes, 0).parentId).toBeUndefined();
 	});
 
 	it('marks drawingShapes as stale to trigger reflow', () => {
@@ -273,15 +274,15 @@ describe('updateSmartArtNodeText', () => {
 	it('updates the text of the specified node', () => {
 		const data = makeData(['Old Text']);
 		const result = updateSmartArtNodeText(data, '1', 'New Text');
-		expect(result.nodes[0].text).toBe('New Text');
+		expect(at(result.nodes, 0).text).toBe('New Text');
 	});
 
 	it('does not modify other nodes', () => {
 		const data = makeData(['A', 'B', 'C']);
 		const result = updateSmartArtNodeText(data, '2', 'Updated');
-		expect(result.nodes[0].text).toBe('A');
-		expect(result.nodes[1].text).toBe('Updated');
-		expect(result.nodes[2].text).toBe('C');
+		expect(at(result.nodes, 0).text).toBe('A');
+		expect(at(result.nodes, 1).text).toBe('Updated');
+		expect(at(result.nodes, 2).text).toBe('C');
 	});
 
 	it('patches text in-place when drawing shapes match positionally', () => {
@@ -291,7 +292,7 @@ describe('updateSmartArtNodeText', () => {
 		};
 		const result = updateSmartArtNodeText(data, '1', 'B');
 		expect(result.drawingShapes).toHaveLength(1);
-		expect(result.drawingShapes![0].text).toBe('B');
+		expect(at(result.drawingShapes!, 0).text).toBe('B');
 	});
 
 	it('patches text in-place when drawing shape matches positionally', () => {
@@ -301,7 +302,7 @@ describe('updateSmartArtNodeText', () => {
 		};
 		const result = updateSmartArtNodeText(data, '1', 'B');
 		expect(result.drawingShapes).toHaveLength(1);
-		expect(result.drawingShapes![0].text).toBe('B');
+		expect(at(result.drawingShapes!, 0).text).toBe('B');
 	});
 
 	it('preserves undefined drawingShapes for freshly inserted SmartArt', () => {
@@ -341,7 +342,7 @@ describe('updateSmartArtNodeText', () => {
 		const data = makeData(['A']);
 		const result = updateSmartArtNodeText(data, 'nonexistent', 'B');
 		// Should return updated data with unchanged nodes
-		expect(result.nodes[0].text).toBe('A');
+		expect(at(result.nodes, 0).text).toBe('A');
 	});
 });
 
@@ -353,15 +354,15 @@ describe('reorderSmartArtNode', () => {
 	it('moves a node down (direction=1)', () => {
 		const data = makeData(['A', 'B', 'C']);
 		const result = reorderSmartArtNode(data, '1', 1);
-		expect(result.nodes[0].text).toBe('B');
-		expect(result.nodes[1].text).toBe('A');
+		expect(at(result.nodes, 0).text).toBe('B');
+		expect(at(result.nodes, 1).text).toBe('A');
 	});
 
 	it('moves a node up (direction=-1)', () => {
 		const data = makeData(['A', 'B', 'C']);
 		const result = reorderSmartArtNode(data, '2', -1);
-		expect(result.nodes[0].text).toBe('B');
-		expect(result.nodes[1].text).toBe('A');
+		expect(at(result.nodes, 0).text).toBe('B');
+		expect(at(result.nodes, 1).text).toBe('A');
 	});
 
 	it('returns data unchanged if moving beyond bounds', () => {
@@ -387,10 +388,10 @@ describe('reorderSmartArtNode', () => {
 		const result = reorderSmartArtNode(data, 'c1', 1);
 		// Children should be swapped
 		const children = result.nodes.filter((n) => n.parentId === 'p');
-		expect(children[0].id).toBe('c2');
-		expect(children[1].id).toBe('c1');
+		expect(at(children, 0).id).toBe('c2');
+		expect(at(children, 1).id).toBe('c1');
 		// Parent should stay
-		expect(result.nodes[0].id).toBe('p');
+		expect(at(result.nodes, 0).id).toBe('p');
 	});
 
 	it('marks drawingShapes as stale to trigger reflow', () => {
@@ -414,38 +415,38 @@ describe('reorderSmartArtNodeToIndex', () => {
 	it('moves a node to a specific index', () => {
 		const data = makeData(['A', 'B', 'C', 'D']);
 		const result = reorderSmartArtNodeToIndex(data, '1', 2);
-		expect(result.nodes[0].text).toBe('B');
-		expect(result.nodes[1].text).toBe('C');
-		expect(result.nodes[2].text).toBe('A');
-		expect(result.nodes[3].text).toBe('D');
+		expect(at(result.nodes, 0).text).toBe('B');
+		expect(at(result.nodes, 1).text).toBe('C');
+		expect(at(result.nodes, 2).text).toBe('A');
+		expect(at(result.nodes, 3).text).toBe('D');
 	});
 
 	it('moves a node to the beginning', () => {
 		const data = makeData(['A', 'B', 'C']);
 		const result = reorderSmartArtNodeToIndex(data, '3', 0);
-		expect(result.nodes[0].text).toBe('C');
-		expect(result.nodes[1].text).toBe('A');
-		expect(result.nodes[2].text).toBe('B');
+		expect(at(result.nodes, 0).text).toBe('C');
+		expect(at(result.nodes, 1).text).toBe('A');
+		expect(at(result.nodes, 2).text).toBe('B');
 	});
 
 	it('moves a node to the end', () => {
 		const data = makeData(['A', 'B', 'C']);
 		const result = reorderSmartArtNodeToIndex(data, '1', 2);
-		expect(result.nodes[0].text).toBe('B');
-		expect(result.nodes[1].text).toBe('C');
-		expect(result.nodes[2].text).toBe('A');
+		expect(at(result.nodes, 0).text).toBe('B');
+		expect(at(result.nodes, 1).text).toBe('C');
+		expect(at(result.nodes, 2).text).toBe('A');
 	});
 
 	it('clamps index to valid range (too high)', () => {
 		const data = makeData(['A', 'B', 'C']);
 		const result = reorderSmartArtNodeToIndex(data, '1', 99);
-		expect(result.nodes[2].text).toBe('A');
+		expect(at(result.nodes, 2).text).toBe('A');
 	});
 
 	it('clamps index to valid range (negative)', () => {
 		const data = makeData(['A', 'B', 'C']);
 		const result = reorderSmartArtNodeToIndex(data, '3', -5);
-		expect(result.nodes[0].text).toBe('C');
+		expect(at(result.nodes, 0).text).toBe('C');
 	});
 
 	it('returns data unchanged if moving to same position', () => {
@@ -471,11 +472,11 @@ describe('reorderSmartArtNodeToIndex', () => {
 		};
 		const result = reorderSmartArtNodeToIndex(data, 'c1', 2);
 		const children = result.nodes.filter((n) => n.parentId === 'p');
-		expect(children[0].id).toBe('c2');
-		expect(children[1].id).toBe('c3');
-		expect(children[2].id).toBe('c1');
+		expect(at(children, 0).id).toBe('c2');
+		expect(at(children, 1).id).toBe('c3');
+		expect(at(children, 2).id).toBe('c1');
 		// Parent unaffected
-		expect(result.nodes[0].id).toBe('p');
+		expect(at(result.nodes, 0).id).toBe('p');
 	});
 
 	it('marks drawingShapes as stale to trigger reflow', () => {
@@ -579,22 +580,22 @@ describe('reflowSmartArtLayout — list', () => {
 		const shapes = reflowSmartArtLayout(data, bounds)!;
 		// Each shape should be below the previous one
 		for (let i = 1; i < shapes.length; i++) {
-			expect(shapes[i].y).toBeGreaterThan(shapes[i - 1].y);
+			expect(at(shapes, i).y).toBeGreaterThan(at(shapes, i - 1).y);
 		}
 	});
 
 	it('assigns correct text to each shape', () => {
 		const data = makeData(['Alpha', 'Beta'], 'list');
 		const shapes = reflowSmartArtLayout(data, bounds)!;
-		expect(shapes[0].text).toBe('Alpha');
-		expect(shapes[1].text).toBe('Beta');
+		expect(at(shapes, 0).text).toBe('Alpha');
+		expect(at(shapes, 1).text).toBe('Beta');
 	});
 
 	it('uses the full width of the container', () => {
 		const data = makeData(['A'], 'list');
 		const shapes = reflowSmartArtLayout(data, bounds)!;
 		// Width should be close to bounds width minus padding
-		expect(shapes[0].width).toBeGreaterThan(bounds.width * 0.8);
+		expect(at(shapes, 0).width).toBeGreaterThan(bounds.width * 0.8);
 	});
 
 	it('returns undefined for empty SmartArt', () => {
@@ -619,7 +620,7 @@ describe('reflowSmartArtLayout — list', () => {
 		const data = makeData(['Solo'], 'list');
 		const shapes = reflowSmartArtLayout(data, bounds)!;
 		expect(shapes).toHaveLength(1);
-		expect(shapes[0].text).toBe('Solo');
+		expect(at(shapes, 0).text).toBe('Solo');
 	});
 });
 
@@ -634,7 +635,7 @@ describe('reflowSmartArtLayout — process', () => {
 		const nodeShapes = shapes.filter((s) => s.shapeType === 'roundRect');
 		expect(nodeShapes).toHaveLength(3);
 		for (let i = 1; i < nodeShapes.length; i++) {
-			expect(nodeShapes[i].x).toBeGreaterThan(nodeShapes[i - 1].x);
+			expect(at(nodeShapes, i).x).toBeGreaterThan(at(nodeShapes, i - 1).x);
 		}
 	});
 
@@ -729,7 +730,7 @@ describe('reflowSmartArtLayout — cycle', () => {
 	it('uses ellipse shape type', () => {
 		const data = makeData(['A', 'B'], 'cycle');
 		const shapes = reflowSmartArtLayout(data, bounds)!;
-		expect(shapes[0].shapeType).toBe('ellipse');
+		expect(at(shapes, 0).shapeType).toBe('ellipse');
 	});
 
 	it('handles single node', () => {
@@ -749,9 +750,9 @@ describe('reflowSmartArtLayout — matrix', () => {
 		const shapes = reflowSmartArtLayout(data, bounds)!;
 		expect(shapes).toHaveLength(4);
 		// Items 0 and 1 should be on the same row (same y)
-		expect(shapes[0].y).toBe(shapes[1].y);
+		expect(at(shapes, 0).y).toBe(at(shapes, 1).y);
 		// Items 0 and 2 should be in the same column (same x)
-		expect(shapes[0].x).toBe(shapes[2].x);
+		expect(at(shapes, 0).x).toBe(at(shapes, 2).x);
 	});
 
 	it('handles single item', () => {
@@ -763,7 +764,7 @@ describe('reflowSmartArtLayout — matrix', () => {
 	it('uses roundRect shape type', () => {
 		const data = makeData(['A'], 'matrix');
 		const shapes = reflowSmartArtLayout(data, bounds)!;
-		expect(shapes[0].shapeType).toBe('roundRect');
+		expect(at(shapes, 0).shapeType).toBe('roundRect');
 	});
 });
 
@@ -775,14 +776,14 @@ describe('reflowSmartArtLayout — pyramid', () => {
 	it('makes bottom band wider than top band', () => {
 		const data = makeData(['Top', 'Bottom'], 'pyramid');
 		const shapes = reflowSmartArtLayout(data, bounds)!;
-		expect(shapes[1].width).toBeGreaterThan(shapes[0].width);
+		expect(at(shapes, 1).width).toBeGreaterThan(at(shapes, 0).width);
 	});
 
 	it('stacks bands vertically', () => {
 		const data = makeData(['A', 'B', 'C'], 'pyramid');
 		const shapes = reflowSmartArtLayout(data, bounds)!;
 		for (let i = 1; i < shapes.length; i++) {
-			expect(shapes[i].y).toBeGreaterThan(shapes[i - 1].y);
+			expect(at(shapes, i).y).toBeGreaterThan(at(shapes, i - 1).y);
 		}
 	});
 
@@ -790,7 +791,7 @@ describe('reflowSmartArtLayout — pyramid', () => {
 		const data = makeData(['Top', 'Bottom'], 'pyramid');
 		const shapes = reflowSmartArtLayout(data, bounds)!;
 		// Top band (narrower) should have a larger x offset (more centered)
-		expect(shapes[0].x).toBeGreaterThan(shapes[1].x);
+		expect(at(shapes, 0).x).toBeGreaterThan(at(shapes, 1).x);
 	});
 
 	it('handles single node', () => {
@@ -814,14 +815,14 @@ describe('reflowSmartArtLayout — funnel', () => {
 	it('top band is wider than bottom band', () => {
 		const data = makeData(['Top', 'Bottom'], 'funnel');
 		const shapes = reflowSmartArtLayout(data, bounds)!;
-		expect(shapes[0].width).toBeGreaterThan(shapes[1].width);
+		expect(at(shapes, 0).width).toBeGreaterThan(at(shapes, 1).width);
 	});
 
 	it('stacks bands vertically', () => {
 		const data = makeData(['A', 'B', 'C'], 'funnel');
 		const shapes = reflowSmartArtLayout(data, bounds)!;
 		for (let i = 1; i < shapes.length; i++) {
-			expect(shapes[i].y).toBeGreaterThan(shapes[i - 1].y);
+			expect(at(shapes, i).y).toBeGreaterThan(at(shapes, i - 1).y);
 		}
 	});
 
@@ -829,20 +830,20 @@ describe('reflowSmartArtLayout — funnel', () => {
 		const data = makeData(['A', 'B', 'C'], 'funnel');
 		const shapes = reflowSmartArtLayout(data, bounds)!;
 		// Last (narrowest) should have greater x than first (widest)
-		expect(shapes[2].x).toBeGreaterThan(shapes[0].x);
+		expect(at(shapes, 2).x).toBeGreaterThan(at(shapes, 0).x);
 	});
 
 	it('uses rect shape type', () => {
 		const data = makeData(['A'], 'funnel');
 		const shapes = reflowSmartArtLayout(data, bounds)!;
-		expect(shapes[0].shapeType).toBe('rect');
+		expect(at(shapes, 0).shapeType).toBe('rect');
 	});
 
 	it('handles single node', () => {
 		const data = makeData(['Only'], 'funnel');
 		const shapes = reflowSmartArtLayout(data, bounds)!;
 		expect(shapes).toHaveLength(1);
-		expect(shapes[0].text).toBe('Only');
+		expect(at(shapes, 0).text).toBe('Only');
 	});
 });
 
@@ -860,8 +861,8 @@ describe('reflowSmartArtLayout — target', () => {
 	it('outermost ring (first node) is larger than inner ring (last node)', () => {
 		const data = makeData(['Outer', 'Inner'], 'target');
 		const shapes = reflowSmartArtLayout(data, bounds)!;
-		expect(shapes[0].width).toBeGreaterThan(shapes[1].width);
-		expect(shapes[0].height).toBeGreaterThan(shapes[1].height);
+		expect(at(shapes, 0).width).toBeGreaterThan(at(shapes, 1).width);
+		expect(at(shapes, 0).height).toBeGreaterThan(at(shapes, 1).height);
 	});
 
 	it('all rings are centered on the same point', () => {
@@ -875,7 +876,7 @@ describe('reflowSmartArtLayout — target', () => {
 	it('uses ellipse shape type', () => {
 		const data = makeData(['A'], 'target');
 		const shapes = reflowSmartArtLayout(data, bounds)!;
-		expect(shapes[0].shapeType).toBe('ellipse');
+		expect(at(shapes, 0).shapeType).toBe('ellipse');
 	});
 
 	it('handles single node', () => {
@@ -902,20 +903,20 @@ describe('reflowSmartArtLayout — gear', () => {
 		const shapes = reflowSmartArtLayout(data, bounds)!;
 		expect(shapes).toHaveLength(5);
 		// First 3 are gear ellipses
-		expect(shapes[0].shapeType).toBe('ellipse');
-		expect(shapes[1].shapeType).toBe('ellipse');
-		expect(shapes[2].shapeType).toBe('ellipse');
+		expect(at(shapes, 0).shapeType).toBe('ellipse');
+		expect(at(shapes, 1).shapeType).toBe('ellipse');
+		expect(at(shapes, 2).shapeType).toBe('ellipse');
 		// Extra are roundRect labels
-		expect(shapes[3].shapeType).toBe('roundRect');
-		expect(shapes[4].shapeType).toBe('roundRect');
+		expect(at(shapes, 3).shapeType).toBe('roundRect');
+		expect(at(shapes, 4).shapeType).toBe('roundRect');
 	});
 
 	it('alternates gear vertical positions (even/odd offset)', () => {
 		const data = makeData(['A', 'B', 'C'], 'gear');
 		const shapes = reflowSmartArtLayout(data, bounds)!;
 		// Odd-indexed gear (B) should be offset vertically from even-indexed (A, C)
-		const yA = shapes[0].y + shapes[0].height / 2;
-		const yB = shapes[1].y + shapes[1].height / 2;
+		const yA = at(shapes, 0).y + at(shapes, 0).height / 2;
+		const yB = at(shapes, 1).y + at(shapes, 1).height / 2;
 		expect(yB).not.toBe(yA);
 	});
 
@@ -993,9 +994,9 @@ describe('reflowSmartArtLayout — timeline', () => {
 		const nodeShapes = shapes.filter((s) => s.id !== 'reflow-timeline-bar');
 		const midY = bounds.y + bounds.height / 2;
 		// Even-indexed nodes (A, C) should be above the midline
-		expect(nodeShapes[0].y + nodeShapes[0].height / 2).toBeLessThan(midY);
+		expect(at(nodeShapes, 0).y + at(nodeShapes, 0).height / 2).toBeLessThan(midY);
 		// Odd-indexed nodes (B, D) should be below the midline
-		expect(nodeShapes[1].y + nodeShapes[1].height / 2).toBeGreaterThan(midY);
+		expect(at(nodeShapes, 1).y + at(nodeShapes, 1).height / 2).toBeGreaterThan(midY);
 	});
 
 	it('distributes nodes along horizontal axis', () => {
@@ -1003,7 +1004,7 @@ describe('reflowSmartArtLayout — timeline', () => {
 		const shapes = reflowSmartArtLayout(data, bounds)!;
 		const nodeShapes = shapes.filter((s) => s.id !== 'reflow-timeline-bar');
 		for (let i = 1; i < nodeShapes.length; i++) {
-			expect(nodeShapes[i].x).toBeGreaterThan(nodeShapes[i - 1].x);
+			expect(at(nodeShapes, i).x).toBeGreaterThan(at(nodeShapes, i - 1).x);
 		}
 	});
 
@@ -1067,7 +1068,7 @@ describe('reflowSmartArtLayout — chevron', () => {
 		const data = makeData(['A', 'B', 'C'], 'chevron');
 		const shapes = reflowSmartArtLayout(data, bounds)!;
 		for (let i = 1; i < shapes.length; i++) {
-			expect(shapes[i].x).toBeGreaterThan(shapes[i - 1].x);
+			expect(at(shapes, i).x).toBeGreaterThan(at(shapes, i - 1).x);
 		}
 	});
 
@@ -1081,9 +1082,9 @@ describe('reflowSmartArtLayout — chevron', () => {
 	it('assigns correct text to each chevron', () => {
 		const data = makeData(['Step 1', 'Step 2', 'Step 3'], 'chevron');
 		const shapes = reflowSmartArtLayout(data, bounds)!;
-		expect(shapes[0].text).toBe('Step 1');
-		expect(shapes[1].text).toBe('Step 2');
-		expect(shapes[2].text).toBe('Step 3');
+		expect(at(shapes, 0).text).toBe('Step 1');
+		expect(at(shapes, 1).text).toBe('Step 2');
+		expect(at(shapes, 2).text).toBe('Step 3');
 	});
 
 	it('handles single node', () => {
@@ -1124,9 +1125,9 @@ describe('reflowSmartArtLayout — bending', () => {
 		const nodeShapes = shapes.filter((s) => s.shapeType === 'roundRect');
 
 		// Row 0 (first 4): should go left to right
-		expect(nodeShapes[0].x).toBeLessThan(nodeShapes[3].x);
+		expect(at(nodeShapes, 0).x).toBeLessThan(at(nodeShapes, 3).x);
 		// Row 1 (next 4): should go right to left
-		expect(nodeShapes[4].x).toBeGreaterThan(nodeShapes[7].x);
+		expect(at(nodeShapes, 4).x).toBeGreaterThan(at(nodeShapes, 7).x);
 	});
 
 	it('wraps to a new row after COLS items', () => {
@@ -1136,7 +1137,7 @@ describe('reflowSmartArtLayout — bending', () => {
 		const nodeShapes = shapes.filter((s) => s.shapeType === 'roundRect');
 
 		// Node 4 should be on the second row (higher y)
-		expect(nodeShapes[4].y).toBeGreaterThan(nodeShapes[0].y);
+		expect(at(nodeShapes, 4).y).toBeGreaterThan(at(nodeShapes, 0).y);
 	});
 
 	it('handles single node without arrows', () => {
@@ -1175,7 +1176,7 @@ describe('resolveLayoutCategory via reflowSmartArtLayout', () => {
 		};
 		const shapes = reflowSmartArtLayout(data, bounds)!;
 		// Funnel: top wider than bottom
-		expect(shapes[0].width).toBeGreaterThan(shapes[1].width);
+		expect(at(shapes, 0).width).toBeGreaterThan(at(shapes, 1).width);
 	});
 
 	it("resolves 'basicTarget' string to target layout", () => {
@@ -1187,8 +1188,8 @@ describe('resolveLayoutCategory via reflowSmartArtLayout', () => {
 			],
 		};
 		const shapes = reflowSmartArtLayout(data, bounds)!;
-		expect(shapes[0].shapeType).toBe('ellipse');
-		expect(shapes[0].width).toBeGreaterThan(shapes[1].width);
+		expect(at(shapes, 0).shapeType).toBe('ellipse');
+		expect(at(shapes, 0).width).toBeGreaterThan(at(shapes, 1).width);
 	});
 
 	it("resolves 'interlockingGears' string to gear layout", () => {
@@ -1200,7 +1201,7 @@ describe('resolveLayoutCategory via reflowSmartArtLayout', () => {
 			],
 		};
 		const shapes = reflowSmartArtLayout(data, bounds)!;
-		expect(shapes[0].shapeType).toBe('ellipse');
+		expect(at(shapes, 0).shapeType).toBe('ellipse');
 	});
 
 	it("resolves 'basicVenn' string to venn layout", () => {
@@ -1317,7 +1318,7 @@ describe('editing + reflow integration', () => {
 		const updated = updateSmartArtNodeText(data, '1', 'New');
 		const shapes = reflowSmartArtLayout(updated, bounds);
 		expect(shapes).toBeDefined();
-		expect(shapes![0].text).toBe('New');
+		expect(at(shapes!, 0).text).toBe('New');
 	});
 
 	it('reorder then reflow reflects new order', () => {
@@ -1325,9 +1326,9 @@ describe('editing + reflow integration', () => {
 		const updated = reorderSmartArtNodeToIndex(data, '1', 2);
 		const shapes = reflowSmartArtLayout(updated, bounds);
 		expect(shapes).toBeDefined();
-		expect(shapes![0].text).toBe('B');
-		expect(shapes![1].text).toBe('C');
-		expect(shapes![2].text).toBe('A');
+		expect(at(shapes!, 0).text).toBe('B');
+		expect(at(shapes!, 1).text).toBe('C');
+		expect(at(shapes!, 2).text).toBe('A');
 	});
 
 	it('add child to hierarchy then reflow shows new node', () => {
@@ -1359,8 +1360,8 @@ describe('editing + reflow integration', () => {
 		};
 		const cycleShapes = reflowSmartArtLayout(cycleData, bounds)!;
 
-		expect(listShapes[0].shapeType).toBe('roundRect');
-		expect(cycleShapes[0].shapeType).toBe('ellipse');
+		expect(at(listShapes, 0).shapeType).toBe('roundRect');
+		expect(at(cycleShapes, 0).shapeType).toBe('ellipse');
 	});
 });
 
@@ -1438,6 +1439,6 @@ describe('edge cases', () => {
 		const shapes = reflowSmartArtLayout(data, bounds);
 		expect(shapes).toBeDefined();
 		expect(shapes).toHaveLength(1);
-		expect(shapes![0].text).toBe('Visible');
+		expect(at(shapes!, 0).text).toBe('Visible');
 	});
 });

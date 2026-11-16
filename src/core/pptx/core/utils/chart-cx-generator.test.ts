@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { PptxChartData, PptxChartType } from '../types';
 import { buildChartExSpaceXml, canGenerateChartEx } from './chart-cx-generator';
+import { must } from '../../test-support/access';
 
 describe('canGenerateChartEx', () => {
 	it('covers every supported generated ChartEx chart type', () => {
@@ -39,7 +40,7 @@ describe('buildChartExSpaceXml: c:userShapes overlay reference (full-regenerate 
 			userShapesXml: { '@_r:id': 'rId3' },
 		};
 		const xml = buildChartExSpaceXml(chartData) as Record<string, Record<string, unknown>>;
-		const chartSpace = xml['cx:chartSpace'];
+		const chartSpace = must(xml['cx:chartSpace']);
 		expect(chartSpace['c:userShapes']).toStrictEqual({ '@_r:id': 'rId3' });
 		expect(chartSpace['@_xmlns:c']).toBe('http://schemas.openxmlformats.org/drawingml/2006/chart');
 	});
@@ -51,7 +52,7 @@ describe('buildChartExSpaceXml: c:userShapes overlay reference (full-regenerate 
 			series: [{ name: 'S', values: [1] }],
 		};
 		const xml = buildChartExSpaceXml(chartData) as Record<string, Record<string, unknown>>;
-		const chartSpace = xml['cx:chartSpace'];
+		const chartSpace = must(xml['cx:chartSpace']);
 		expect(chartSpace['c:userShapes']).toBeUndefined();
 		expect(chartSpace['@_xmlns:c']).toBeUndefined();
 	});

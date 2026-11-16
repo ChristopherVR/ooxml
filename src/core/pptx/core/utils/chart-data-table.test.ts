@@ -2,14 +2,15 @@ import { describe, expect, it } from 'vitest';
 
 import type { XmlObject } from '../types';
 import { applyChartDataTable } from './chart-data-table';
+import { xmlFixture } from '../../test-support/access';
 
 const localName = (key: string) => key.replace(/^.*:/u, '');
 
 describe('applyChartDataTable', () => {
 	it('does not change source XML for an undefined model value', () => {
-		const plotArea: XmlObject = {
+		const plotArea = xmlFixture({
 			'c:dTable': { 'c:showKeys': { '@_val': '1' }, 'c:extLst': { marker: true } },
-		};
+		});
 		const before = structuredClone(plotArea);
 		applyChartDataTable(plotArea, undefined, localName);
 		expect(plotArea).toStrictEqual(before);

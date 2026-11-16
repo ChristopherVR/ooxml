@@ -11,6 +11,7 @@ import {
 	isDefaultSmartArtLabelScene,
 	smartArtQuickStyleHas3d,
 } from './smartart-quick-style-3d';
+import { at } from '../../test-support/access';
 
 const DEFAULT_SCENE: Pptx3DScene = {
 	cameraPreset: 'orthographicFront',
@@ -63,15 +64,15 @@ describe('applySmartArtQuickStyle3d', () => {
 			[shape('sa-interp-a'), shape('sa-interp-b'), shape('sa-interp-c'), shape('sa-interp-d')],
 			{ nodes, quickStyle: bevelStyle },
 		);
-		expect(out[0].scene3d).toStrictEqual(FLAT_RIG_SCENE);
-		expect(out[0].shape3d?.bevelTopWidth).toBe(120900);
-		expect(out[1].shape3d).toStrictEqual(out[0].shape3d);
+		expect(at(out, 0).scene3d).toStrictEqual(FLAT_RIG_SCENE);
+		expect(at(out, 0).shape3d?.bevelTopWidth).toBe(120900);
+		expect(at(out, 1).shape3d).toStrictEqual(at(out, 0).shape3d);
 		// revTx: default scene and no sp3d, so the text-only shape stays flat.
-		expect(out[2].scene3d).toBeUndefined();
-		expect(out[2].shape3d).toBeUndefined();
+		expect(at(out, 2).scene3d).toBeUndefined();
+		expect(at(out, 2).shape3d).toBeUndefined();
 		// A default label scene is never written onto the shape.
-		expect(out[3].scene3d).toBeUndefined();
-		expect(out[3].shape3d).toStrictEqual({ extrusionHeight: 5 });
+		expect(at(out, 3).scene3d).toBeUndefined();
+		expect(at(out, 3).shape3d).toStrictEqual({ extrusionHeight: 5 });
 	});
 
 	it('falls back to node1 for an unmatched shape and keeps existing 3D', () => {
@@ -80,9 +81,9 @@ describe('applySmartArtQuickStyle3d', () => {
 			nodes: [],
 			quickStyle: bevelStyle,
 		});
-		expect(out[0].shape3d?.presetMaterial).toBe('plastic');
-		expect(out[1].shape3d).toBe(own);
-		expect(out[1].scene3d).toStrictEqual(FLAT_RIG_SCENE);
+		expect(at(out, 0).shape3d?.presetMaterial).toBe('plastic');
+		expect(at(out, 1).shape3d).toBe(own);
+		expect(at(out, 1).scene3d).toStrictEqual(FLAT_RIG_SCENE);
 	});
 
 	it("prefers the layout engine's own label over the node role and the node1 fallback", () => {
@@ -98,9 +99,9 @@ describe('applySmartArtQuickStyle3d', () => {
 			],
 			{ nodes, quickStyle: bevelStyle },
 		);
-		expect(out[0].shape3d).toBeUndefined();
-		expect(out[0].scene3d).toBeUndefined();
-		expect(out[1].shape3d).toStrictEqual({ extrusionHeight: 5 });
-		expect(out[2].shape3d).toBeUndefined();
+		expect(at(out, 0).shape3d).toBeUndefined();
+		expect(at(out, 0).scene3d).toBeUndefined();
+		expect(at(out, 1).shape3d).toStrictEqual({ extrusionHeight: 5 });
+		expect(at(out, 2).shape3d).toBeUndefined();
 	});
 });

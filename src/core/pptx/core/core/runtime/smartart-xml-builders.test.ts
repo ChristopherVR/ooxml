@@ -14,6 +14,7 @@ import {
 	mergeSmartArtPointXml,
 	mergeSmartArtConnectionXml,
 } from './smartart-xml-builders';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // buildSmartArtPointXml
@@ -27,13 +28,13 @@ describe('buildSmartArtPointXml', () => {
 	it('should build a single point with @_modelId and dgm:t', () => {
 		const result = buildSmartArtPointXml([{ id: '1', text: 'Hello' }]);
 		expect(result).toHaveLength(1);
-		expect(result[0]['@_modelId']).toBe('1');
-		expect(result[0]['dgm:t']).toBeDefined();
+		expect(at(result, 0)['@_modelId']).toBe('1');
+		expect(at(result, 0)['dgm:t']).toBeDefined();
 	});
 
 	it('should include @_type when nodeType is set', () => {
 		const result = buildSmartArtPointXml([{ id: '1', text: 'Root', nodeType: 'doc' }]);
-		expect(result[0]['@_type']).toBe('doc');
+		expect(at(result, 0)['@_type']).toBe('doc');
 	});
 
 	it('should not include @_type when nodeType is undefined', () => {
@@ -43,7 +44,7 @@ describe('buildSmartArtPointXml', () => {
 
 	it('should produce correct nested dgm:t → a:bodyPr, a:lstStyle, a:p', () => {
 		const result = buildSmartArtPointXml([{ id: '1', text: 'Test' }]);
-		const dgmT = result[0]['dgm:t'] as Record<string, unknown>;
+		const dgmT = at(result, 0)['dgm:t'] as Record<string, unknown>;
 		expect(dgmT).toHaveProperty('a:bodyPr');
 		expect(dgmT).toHaveProperty('a:lstStyle');
 		expect(dgmT).toHaveProperty('a:p');
@@ -51,7 +52,7 @@ describe('buildSmartArtPointXml', () => {
 
 	it('should produce correct a:p → a:r → a:rPr, a:t structure', () => {
 		const result = buildSmartArtPointXml([{ id: '1', text: 'Content' }]);
-		const dgmT = result[0]['dgm:t'] as Record<string, unknown>;
+		const dgmT = at(result, 0)['dgm:t'] as Record<string, unknown>;
 		const aP = dgmT['a:p'] as Record<string, unknown>;
 		const aR = aP['a:r'] as Record<string, unknown>;
 		expect(aR['a:rPr']).toStrictEqual({ '@_lang': 'en-US', '@_dirty': '0' });
@@ -66,9 +67,9 @@ describe('buildSmartArtPointXml', () => {
 		];
 		const result = buildSmartArtPointXml(nodes);
 		expect(result).toHaveLength(3);
-		expect(result[0]['@_modelId']).toBe('1');
-		expect(result[1]['@_modelId']).toBe('2');
-		expect(result[2]['@_modelId']).toBe('3');
+		expect(at(result, 0)['@_modelId']).toBe('1');
+		expect(at(result, 1)['@_modelId']).toBe('2');
+		expect(at(result, 2)['@_modelId']).toBe('3');
 	});
 
 	it('should preserve the text of each node accurately', () => {
@@ -83,13 +84,13 @@ describe('buildSmartArtPointXml', () => {
 			const aR = aP['a:r'] as Record<string, unknown>;
 			return aR['a:t'];
 		};
-		expect(getText(result[0])).toBe('Alpha');
-		expect(getText(result[1])).toBe('Beta');
+		expect(getText(at(result, 0))).toBe('Alpha');
+		expect(getText(at(result, 1))).toBe('Beta');
 	});
 
 	it('should handle empty text', () => {
 		const result = buildSmartArtPointXml([{ id: '1', text: '' }]);
-		const dgmT = result[0]['dgm:t'] as Record<string, unknown>;
+		const dgmT = at(result, 0)['dgm:t'] as Record<string, unknown>;
 		const aP = dgmT['a:p'] as Record<string, unknown>;
 		const aR = aP['a:r'] as Record<string, unknown>;
 		expect(aR['a:t']).toBe('');
@@ -97,13 +98,13 @@ describe('buildSmartArtPointXml', () => {
 
 	it('should handle node with nodeType "pres"', () => {
 		const result = buildSmartArtPointXml([{ id: '42', text: 'Presentation', nodeType: 'pres' }]);
-		expect(result[0]['@_type']).toBe('pres');
-		expect(result[0]['@_modelId']).toBe('42');
+		expect(at(result, 0)['@_type']).toBe('pres');
+		expect(at(result, 0)['@_modelId']).toBe('42');
 	});
 
 	it('should handle node with nodeType "asst"', () => {
 		const result = buildSmartArtPointXml([{ id: '5', text: 'Assistant', nodeType: 'asst' }]);
-		expect(result[0]['@_type']).toBe('asst');
+		expect(at(result, 0)['@_type']).toBe('asst');
 	});
 
 	it('should place @_type before dgm:t in the object', () => {
@@ -116,13 +117,13 @@ describe('buildSmartArtPointXml', () => {
 
 	it('should include a:bodyPr as an empty object', () => {
 		const result = buildSmartArtPointXml([{ id: '1', text: 'X' }]);
-		const dgmT = result[0]['dgm:t'] as Record<string, unknown>;
+		const dgmT = at(result, 0)['dgm:t'] as Record<string, unknown>;
 		expect(dgmT['a:bodyPr']).toStrictEqual({});
 	});
 
 	it('should include a:lstStyle as an empty object', () => {
 		const result = buildSmartArtPointXml([{ id: '1', text: 'X' }]);
-		const dgmT = result[0]['dgm:t'] as Record<string, unknown>;
+		const dgmT = at(result, 0)['dgm:t'] as Record<string, unknown>;
 		expect(dgmT['a:lstStyle']).toStrictEqual({});
 	});
 });
@@ -139,8 +140,8 @@ describe('buildSmartArtConnectionXml', () => {
 	it('should build a connection with @_srcId and @_destId', () => {
 		const result = buildSmartArtConnectionXml([{ sourceId: 'src1', destId: 'dst1' }]);
 		expect(result).toHaveLength(1);
-		expect(result[0]['@_srcId']).toBe('src1');
-		expect(result[0]['@_destId']).toBe('dst1');
+		expect(at(result, 0)['@_srcId']).toBe('src1');
+		expect(at(result, 0)['@_destId']).toBe('dst1');
 	});
 
 	it('should always include a unique @_modelId (required by CT_Connection)', () => {
@@ -148,14 +149,14 @@ describe('buildSmartArtConnectionXml', () => {
 			{ sourceId: 'a', destId: 'b' },
 			{ sourceId: 'b', destId: 'c' },
 		]);
-		expect(result[0]['@_modelId']).toMatch(/^\{[0-9A-F-]{36}\}$/u);
-		expect(result[1]['@_modelId']).toMatch(/^\{[0-9A-F-]{36}\}$/u);
-		expect(result[0]['@_modelId']).not.toBe(result[1]['@_modelId']);
+		expect(at(result, 0)['@_modelId']).toMatch(/^\{[0-9A-F-]{36}\}$/u);
+		expect(at(result, 1)['@_modelId']).toMatch(/^\{[0-9A-F-]{36}\}$/u);
+		expect(at(result, 0)['@_modelId']).not.toBe(at(result, 1)['@_modelId']);
 	});
 
 	it('should include @_type when type is set', () => {
 		const result = buildSmartArtConnectionXml([{ sourceId: 'a', destId: 'b', type: 'parOf' }]);
-		expect(result[0]['@_type']).toBe('parOf');
+		expect(at(result, 0)['@_type']).toBe('parOf');
 	});
 
 	it('should not include @_type when type is undefined', () => {
@@ -165,12 +166,12 @@ describe('buildSmartArtConnectionXml', () => {
 
 	it('should stringify srcOrd as @_srcOrd', () => {
 		const result = buildSmartArtConnectionXml([{ sourceId: 'a', destId: 'b', srcOrd: 0 }]);
-		expect(result[0]['@_srcOrd']).toBe('0');
+		expect(at(result, 0)['@_srcOrd']).toBe('0');
 	});
 
 	it('should stringify destOrd as @_destOrd', () => {
 		const result = buildSmartArtConnectionXml([{ sourceId: 'a', destId: 'b', destOrd: 3 }]);
-		expect(result[0]['@_destOrd']).toBe('3');
+		expect(at(result, 0)['@_destOrd']).toBe('3');
 	});
 
 	it('should not include @_srcOrd when srcOrd is undefined', () => {
@@ -191,9 +192,9 @@ describe('buildSmartArtConnectionXml', () => {
 		];
 		const result = buildSmartArtConnectionXml(conns);
 		expect(result).toHaveLength(3);
-		expect(result[0]['@_srcId']).toBe('1');
-		expect(result[1]['@_srcId']).toBe('2');
-		expect(result[2]['@_srcId']).toBe('3');
+		expect(at(result, 0)['@_srcId']).toBe('1');
+		expect(at(result, 1)['@_srcId']).toBe('2');
+		expect(at(result, 2)['@_srcId']).toBe('3');
 	});
 
 	it('should include all attributes when fully specified', () => {
@@ -213,20 +214,20 @@ describe('buildSmartArtConnectionXml', () => {
 			'@_srcOrd': '1',
 			'@_destOrd': '2',
 		});
-		expect(result[0]['@_modelId']).toMatch(/^\{[0-9A-F-]{36}\}$/u);
+		expect(at(result, 0)['@_modelId']).toMatch(/^\{[0-9A-F-]{36}\}$/u);
 	});
 
 	it('should handle connection type "presOf"', () => {
 		const result = buildSmartArtConnectionXml([{ sourceId: 'a', destId: 'b', type: 'presOf' }]);
-		expect(result[0]['@_type']).toBe('presOf');
+		expect(at(result, 0)['@_type']).toBe('presOf');
 	});
 
 	it('should handle srcOrd of 0 as string "0"', () => {
 		const result = buildSmartArtConnectionXml([
 			{ sourceId: 'a', destId: 'b', srcOrd: 0, destOrd: 0 },
 		]);
-		expect(result[0]['@_srcOrd']).toBe('0');
-		expect(result[0]['@_destOrd']).toBe('0');
+		expect(at(result, 0)['@_srcOrd']).toBe('0');
+		expect(at(result, 0)['@_destOrd']).toBe('0');
 	});
 });
 
@@ -362,12 +363,12 @@ describe('mergeSmartArtPointXml', () => {
 	it('does not append a non-content type onto a new node', () => {
 		const merged = mergeSmartArtPointXml([], [{ id: 'x', text: 'Y', nodeType: 'pres' }]);
 		// "pres" is non-content and must not be written as a content point type.
-		expect(merged[0]['@_type']).toBeUndefined();
+		expect(at(merged, 0)['@_type']).toBeUndefined();
 	});
 
 	it('preserves a content node nodeType such as "asst"', () => {
 		const merged = mergeSmartArtPointXml([], [{ id: 'x', text: 'Y', nodeType: 'asst' }]);
-		expect(merged[0]['@_type']).toBe('asst');
+		expect(at(merged, 0)['@_type']).toBe('asst');
 	});
 
 	it('rebuilds multiple runs when joined run text still equals node text', () => {
@@ -389,9 +390,9 @@ describe('mergeSmartArtPointXml', () => {
 		const p = t['a:p'] as XmlObject;
 		const runs = p['a:r'] as XmlObject[];
 		expect(runs).toHaveLength(2);
-		expect((runs[0]['a:rPr'] as XmlObject)['@_b']).toBe('1');
-		expect(runs[0]['a:t']).toBe('Bold ');
-		expect(runs[1]['a:t']).toBe('Normal');
+		expect((at(runs, 0)['a:rPr'] as XmlObject)['@_b']).toBe('1');
+		expect(at(runs, 0)['a:t']).toBe('Bold ');
+		expect(at(runs, 1)['a:t']).toBe('Normal');
 		// prSet preserved through the run rebuild.
 		expect(pt100['dgm:prSet']).toBeDefined();
 	});
@@ -478,10 +479,10 @@ describe('mergeSmartArtConnectionXml', () => {
 			{ sourceId: 'doc', destId: 'pres-1', type: 'presOf', srcOrd: 0, destOrd: 0 },
 		]);
 		expect(merged[0]).toBe(EXISTING_CXNS[0]);
-		expect(merged[0]['@_modelId']).toBe('{cxn-A}');
-		expect(merged[0]['@_parTransId']).toBe('{par-A}');
-		expect(merged[1]['@_modelId']).toBe('{cxn-B}');
-		expect(merged[1]['@_presId']).toBe('urn:layout/default');
+		expect(at(merged, 0)['@_modelId']).toBe('{cxn-A}');
+		expect(at(merged, 0)['@_parTransId']).toBe('{par-A}');
+		expect(at(merged, 1)['@_modelId']).toBe('{cxn-B}');
+		expect(at(merged, 1)['@_presId']).toBe('urn:layout/default');
 	});
 
 	it('drops a connection whose identity is no longer in the desired list', () => {
@@ -489,7 +490,7 @@ describe('mergeSmartArtConnectionXml', () => {
 			{ sourceId: 'doc', destId: '100', srcOrd: 0, destOrd: 0 },
 		]);
 		expect(merged).toHaveLength(1);
-		expect(merged[0]['@_modelId']).toBe('{cxn-A}');
+		expect(at(merged, 0)['@_modelId']).toBe('{cxn-A}');
 	});
 
 	it('synthesises a fresh @_modelId for a genuinely new connection', () => {
@@ -499,9 +500,9 @@ describe('mergeSmartArtConnectionXml', () => {
 			{ sourceId: '100', destId: '200', type: 'parOf', srcOrd: 0, destOrd: 0 },
 		]);
 		expect(merged).toHaveLength(3);
-		expect(merged[2]['@_modelId']).toMatch(/^\{[0-9A-F-]{36}\}$/u);
-		expect(merged[2]['@_srcId']).toBe('100');
-		expect(merged[2]['@_destId']).toBe('200');
+		expect(at(merged, 2)['@_modelId']).toMatch(/^\{[0-9A-F-]{36}\}$/u);
+		expect(at(merged, 2)['@_srcId']).toBe('100');
+		expect(at(merged, 2)['@_destId']).toBe('200');
 	});
 
 	it('round-trips through build -> parse without losing required attributes', () => {
@@ -514,7 +515,7 @@ describe('mergeSmartArtConnectionXml', () => {
 		const cxnLst = reparsed['dgm:cxnLst'] as XmlObject;
 		const cxns = cxnLst['dgm:cxn'] as XmlObject[];
 		expect(cxns.every((c) => Boolean(c['@_modelId']))).toBeTruthy();
-		expect(cxns[0]['@_parTransId']).toBe('{par-A}');
+		expect(at(cxns, 0)['@_parTransId']).toBe('{par-A}');
 	});
 });
 

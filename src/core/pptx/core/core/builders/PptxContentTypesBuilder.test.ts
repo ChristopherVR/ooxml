@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { XmlObject } from '../../types';
 import { PptxContentTypesBuilder } from './PptxContentTypesBuilder';
+import { at, must } from '../../../test-support/access';
 
 describe('pptxContentTypesBuilder', () => {
 	const builder = new PptxContentTypesBuilder();
@@ -29,9 +30,9 @@ describe('pptxContentTypesBuilder', () => {
 			});
 			const overrides = (result['Types'] as XmlObject)['Override'] as XmlObject[];
 			expect(overrides).toHaveLength(2);
-			expect(overrides[0]['@_PartName']).toBe('/ppt/slides/slide1.xml');
-			expect(overrides[0]['@_ContentType']).toBe(SLIDE_CT);
-			expect(overrides[1]['@_PartName']).toBe('/ppt/slides/slide2.xml');
+			expect(at(overrides, 0)['@_PartName']).toBe('/ppt/slides/slide1.xml');
+			expect(at(overrides, 0)['@_ContentType']).toBe(SLIDE_CT);
+			expect(at(overrides, 1)['@_PartName']).toBe('/ppt/slides/slide2.xml');
 		});
 
 		it('preserves existing non-slide overrides', () => {
@@ -56,7 +57,7 @@ describe('pptxContentTypesBuilder', () => {
 			const overrides = (result['Types'] as XmlObject)['Override'] as XmlObject[];
 			expect(overrides).toHaveLength(2);
 			// Non-slide override is preserved
-			expect(overrides[0]['@_PartName']).toBe('/ppt/presentation.xml');
+			expect(at(overrides, 0)['@_PartName']).toBe('/ppt/presentation.xml');
 		});
 
 		it('does not duplicate existing slide overrides', () => {
@@ -109,7 +110,7 @@ describe('pptxContentTypesBuilder', () => {
 			const overrides = (result['Types'] as XmlObject)['Override'] as XmlObject[];
 			const slideOverrides = overrides.filter((o: XmlObject) => o['@_ContentType'] === SLIDE_CT);
 			expect(slideOverrides).toHaveLength(1);
-			expect(slideOverrides[0]['@_PartName']).toBe('/ppt/slides/slide1.xml');
+			expect(at(slideOverrides, 0)['@_PartName']).toBe('/ppt/slides/slide1.xml');
 		});
 
 		it('adds default content type for new media extensions (png)', () => {
@@ -126,7 +127,7 @@ describe('pptxContentTypesBuilder', () => {
 				slideContentType: SLIDE_CT,
 			});
 			const defaults = (contentTypes['Types'] as XmlObject)['Default'] as XmlObject[];
-			const pngDefault = defaults.find((d: XmlObject) => d['@_Extension'] === 'png');
+			const pngDefault = must(defaults.find((d: XmlObject) => d['@_Extension'] === 'png'));
 			expect(pngDefault).toBeDefined();
 			expect(pngDefault['@_ContentType']).toBe('image/png');
 		});
@@ -216,7 +217,7 @@ describe('pptxContentTypesBuilder', () => {
 				(o: XmlObject) => o['@_ContentType'] === COMMENT_CT,
 			);
 			expect(commentOverrides).toHaveLength(1);
-			expect(commentOverrides[0]['@_PartName']).toBe('/ppt/comments/comment1.xml');
+			expect(at(commentOverrides, 0)['@_PartName']).toBe('/ppt/comments/comment1.xml');
 		});
 
 		it('adds commentAuthors override when hasCommentAuthors is true', () => {
@@ -287,7 +288,7 @@ describe('pptxContentTypesBuilder', () => {
 				(o: XmlObject) => o['@_ContentType'] === COMMENT_CT,
 			);
 			expect(commentOverrides).toHaveLength(1);
-			expect(commentOverrides[0]['@_PartName']).toBe('/ppt/comments/comment1.xml');
+			expect(at(commentOverrides, 0)['@_PartName']).toBe('/ppt/comments/comment1.xml');
 		});
 	});
 
@@ -309,7 +310,7 @@ describe('pptxContentTypesBuilder', () => {
 			};
 			builder.applyOutputFormatOverride(contentTypes, 'pptx', false);
 			const overrides = (contentTypes['Types'] as XmlObject)['Override'] as XmlObject[];
-			expect(overrides[0]['@_ContentType']).toBe(
+			expect(at(overrides, 0)['@_ContentType']).toBe(
 				'application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml',
 			);
 		});
@@ -329,7 +330,7 @@ describe('pptxContentTypesBuilder', () => {
 			};
 			builder.applyOutputFormatOverride(contentTypes, 'ppsx', false);
 			const overrides = (contentTypes['Types'] as XmlObject)['Override'] as XmlObject[];
-			expect(overrides[0]['@_ContentType']).toBe(
+			expect(at(overrides, 0)['@_ContentType']).toBe(
 				'application/vnd.openxmlformats-officedocument.presentationml.slideshow.main+xml',
 			);
 		});
@@ -349,7 +350,7 @@ describe('pptxContentTypesBuilder', () => {
 			};
 			builder.applyOutputFormatOverride(contentTypes, 'pptm', true);
 			const overrides = (contentTypes['Types'] as XmlObject)['Override'] as XmlObject[];
-			expect(overrides[0]['@_ContentType']).toBe(
+			expect(at(overrides, 0)['@_ContentType']).toBe(
 				'application/vnd.ms-powerpoint.presentation.macroEnabled.main+xml',
 			);
 		});
@@ -369,8 +370,8 @@ describe('pptxContentTypesBuilder', () => {
 			};
 			builder.applyOutputFormatOverride(contentTypes, 'pptm', true);
 			const overrides = (contentTypes['Types'] as XmlObject)['Override'] as XmlObject[];
-			const vbaOverride = overrides.find(
-				(o: XmlObject) => o['@_PartName'] === '/ppt/vbaProject.bin',
+			const vbaOverride = must(
+				overrides.find((o: XmlObject) => o['@_PartName'] === '/ppt/vbaProject.bin'),
 			);
 			expect(vbaOverride).toBeDefined();
 			expect(vbaOverride['@_ContentType']).toBe('application/vnd.ms-office.vbaProject');
@@ -445,8 +446,8 @@ describe('pptxContentTypesBuilder', () => {
 				(o: XmlObject) => o['@_ContentType'] === CUSTOM_XML_PROPS_CT,
 			);
 			expect(customXmlOverrides).toHaveLength(2);
-			expect(customXmlOverrides[0]['@_PartName']).toBe('/customXml/itemProps1.xml');
-			expect(customXmlOverrides[1]['@_PartName']).toBe('/customXml/itemProps2.xml');
+			expect(at(customXmlOverrides, 0)['@_PartName']).toBe('/customXml/itemProps1.xml');
+			expect(at(customXmlOverrides, 1)['@_PartName']).toBe('/customXml/itemProps2.xml');
 		});
 
 		it('does not add overrides for parts without properties', () => {
@@ -524,8 +525,8 @@ describe('pptxContentTypesBuilder', () => {
 			});
 			const overrides = (contentTypes['Types'] as XmlObject)['Override'] as XmlObject[];
 			expect(overrides).toHaveLength(2);
-			expect(overrides[0]['@_PartName']).toBe('/ppt/presentation.xml');
-			expect(overrides[1]['@_PartName']).toBe('/customXml/itemProps1.xml');
+			expect(at(overrides, 0)['@_PartName']).toBe('/ppt/presentation.xml');
+			expect(at(overrides, 1)['@_PartName']).toBe('/customXml/itemProps1.xml');
 		});
 	});
 
@@ -544,7 +545,7 @@ describe('pptxContentTypesBuilder', () => {
 			});
 			const overrides = (contentTypes['Types'] as XmlObject)['Override'] as XmlObject[];
 			// Should normalize to /ppt/slides/slide1.xml
-			expect(overrides[0]['@_PartName']).toBe('/ppt/slides/slide1.xml');
+			expect(at(overrides, 0)['@_PartName']).toBe('/ppt/slides/slide1.xml');
 		});
 
 		it('handles slide paths with leading slash', () => {
@@ -558,7 +559,7 @@ describe('pptxContentTypesBuilder', () => {
 				slideContentType: SLIDE_CT,
 			});
 			const overrides = (contentTypes['Types'] as XmlObject)['Override'] as XmlObject[];
-			expect(overrides[0]['@_PartName']).toBe('/ppt/slides/slide1.xml');
+			expect(at(overrides, 0)['@_PartName']).toBe('/ppt/slides/slide1.xml');
 		});
 	});
 });

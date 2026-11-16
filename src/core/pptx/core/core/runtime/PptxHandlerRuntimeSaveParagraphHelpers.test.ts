@@ -11,6 +11,7 @@ import {
 	computeUniformSegmentOverrides,
 } from './PptxHandlerRuntimeSaveParagraphHelpers';
 import type { ParagraphSpacingConfig } from './PptxHandlerRuntimeSaveParagraphHelpers';
+import { at, xmlFixture } from '../../../test-support/access';
 
 // Thin wrapper exposing the protected real parser so the round-trip test
 // below exercises the actual load path, not a re-implementation of it.
@@ -132,10 +133,10 @@ describe('buildParagraphPropertiesXml', () => {
 		const result = buildParagraphPropertiesXml(textStyle, undefined, undefined, emptySpacing);
 		const tabs = (result['a:tabLst'] as XmlObject)['a:tab'] as XmlObject[];
 		expect(tabs).toHaveLength(2);
-		expect(tabs[0]['@_pos']).toBe(String(Math.round(100 * EMU_PER_PX)));
-		expect(tabs[0]['@_algn']).toBe('ctr');
-		expect(tabs[0]['@_leader']).toBeUndefined();
-		expect(tabs[1]['@_leader']).toBe('dot');
+		expect(at(tabs, 0)['@_pos']).toBe(String(Math.round(100 * EMU_PER_PX)));
+		expect(at(tabs, 0)['@_algn']).toBe('ctr');
+		expect(at(tabs, 0)['@_leader']).toBeUndefined();
+		expect(at(tabs, 1)['@_leader']).toBe('dot');
 	});
 
 	it("should omit left-aligned tab's algn attribute", () => {
@@ -441,7 +442,7 @@ describe('applyBulletProperties', () => {
 			0,
 			1,
 		);
-		const bulletInfo = segments[0].bulletInfo;
+		const bulletInfo = at(segments, 0).bulletInfo;
 		expect(bulletInfo?.imageRelId).toBe('rId9');
 		expect(bulletInfo?.imageBlipFillXml).toStrictEqual(sourceBuBlip);
 
@@ -498,11 +499,11 @@ describe('assembleParagraphXml', () => {
 
 	it('should separate field runs from regular runs', () => {
 		const regular: XmlObject = { 'a:t': 'text' };
-		const field: XmlObject = {
+		const field = xmlFixture({
 			__isField: true,
 			'@_type': 'slidenum',
 			'a:t': '1',
-		};
+		});
 		const result = assembleParagraphXml([regular, field], {});
 		expect(result['a:r']).toStrictEqual(regular);
 		// Field run should have __isField stripped
@@ -512,8 +513,8 @@ describe('assembleParagraphXml', () => {
 	});
 
 	it('should handle multiple field runs as array', () => {
-		const f1: XmlObject = { __isField: true, '@_type': 'a' };
-		const f2: XmlObject = { __isField: true, '@_type': 'b' };
+		const f1 = xmlFixture({ __isField: true, '@_type': 'a' });
+		const f2 = xmlFixture({ __isField: true, '@_type': 'b' });
 		const result = assembleParagraphXml([f1, f2], {});
 		expect(Array.isArray(result['a:fld'])).toBeTruthy();
 		expect(result['a:fld'] as XmlObject[]).toHaveLength(2);
@@ -526,10 +527,10 @@ describe('assembleParagraphXml', () => {
 
 	it('should emit a:br for line-break runs and strip the marker', () => {
 		const text: XmlObject = { 'a:t': 'Hello' };
-		const br: XmlObject = {
+		const br = xmlFixture({
 			__isLineBreak: true,
 			'a:rPr': { '@_lang': 'en-US' },
-		};
+		});
 		const result = assembleParagraphXml([text, br], {});
 		expect(result['a:r']).toStrictEqual(text);
 		const brOut = result['a:br'] as XmlObject;
@@ -538,8 +539,8 @@ describe('assembleParagraphXml', () => {
 	});
 
 	it('should keep multiple a:br as array', () => {
-		const br1: XmlObject = { __isLineBreak: true };
-		const br2: XmlObject = { __isLineBreak: true };
+		const br1 = xmlFixture({ __isLineBreak: true });
+		const br2 = xmlFixture({ __isLineBreak: true });
 		const result = assembleParagraphXml([br1, br2], {});
 		expect(Array.isArray(result['a:br'])).toBeTruthy();
 		expect(result['a:br'] as XmlObject[]).toHaveLength(2);
@@ -549,10 +550,10 @@ describe('assembleParagraphXml', () => {
 		const equationXml = {
 			'm:oMath': { 'm:r': { 'm:t': 'x^2' } },
 		};
-		const equationRun: XmlObject = {
+		const equationRun = xmlFixture({
 			__isEquation: true,
 			__equationXml: equationXml,
-		};
+		});
 		const result = assembleParagraphXml([equationRun], {});
 		expect(result['m:oMath']).toStrictEqual({ 'm:r': { 'm:t': 'x^2' } });
 		// Marker keys should not leak into the paragraph output.
@@ -563,10 +564,10 @@ describe('assembleParagraphXml', () => {
 	it('should re-emit m:oMathPara equation runs verbatim', () => {
 		const oMathParaNode = { 'm:oMath': { 'm:r': { 'm:t': 'a+b' } } };
 		const equationXml = { 'm:oMathPara': oMathParaNode };
-		const equationRun: XmlObject = {
+		const equationRun = xmlFixture({
 			__isEquation: true,
 			__equationXml: equationXml,
-		};
+		});
 		const result = assembleParagraphXml([equationRun], {});
 		expect(result['m:oMathPara']).toStrictEqual(oMathParaNode);
 	});
@@ -599,11 +600,11 @@ describe('assembleParagraphXml', () => {
 		const equationSegment = segments.find((s) => s.equationXml);
 		expect(equationSegment?.equationSourceXml).toStrictEqual({ 'mc:AlternateContent': acNode });
 
-		const equationRun: XmlObject = {
+		const equationRun = xmlFixture({
 			__isEquation: true,
 			__equationXml: (equationSegment!.equationSourceXml ??
 				equationSegment!.equationXml) as XmlObject,
-		};
+		});
 		const result = assembleParagraphXml([equationRun], {});
 		expect(result['mc:AlternateContent']).toStrictEqual(acNode);
 		expect((result['mc:AlternateContent'] as XmlObject)['mc:Fallback']).toStrictEqual({

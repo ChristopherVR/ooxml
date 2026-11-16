@@ -24,6 +24,7 @@ import { describe, it, expect, expectTypeOf } from 'vitest';
 
 import { PptxXmlBuilder } from '../fluent/PptxXmlBuilder';
 import { Presentation } from './Presentation';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -414,9 +415,9 @@ describe('presentation.reorderSections()', () => {
 
 		pptx.reorderSections([sC.id, sA.id, sB.id]);
 
-		expect(pptx.sections[0].name).toBe('End');
-		expect(pptx.sections[1].name).toBe('Intro');
-		expect(pptx.sections[2].name).toBe('Body');
+		expect(at(pptx.sections, 0).name).toBe('End');
+		expect(at(pptx.sections, 1).name).toBe('Intro');
+		expect(at(pptx.sections, 2).name).toBe('Body');
 	});
 
 	it('returns this for chaining', async () => {
@@ -435,8 +436,8 @@ describe('presentation.reorderSections()', () => {
 		pptx.reorderSections([sC.id, sA.id]);
 
 		expect(pptx.sections).toHaveLength(2);
-		expect(pptx.sections[0].name).toBe('C');
-		expect(pptx.sections[1].name).toBe('A');
+		expect(at(pptx.sections, 0).name).toBe('C');
+		expect(at(pptx.sections, 1).name).toBe('A');
 	});
 
 	it('ignores nonexistent section IDs', async () => {
@@ -446,7 +447,7 @@ describe('presentation.reorderSections()', () => {
 		pptx.reorderSections(['fake_id_1', s.id, 'fake_id_2']);
 
 		expect(pptx.sections).toHaveLength(1);
-		expect(pptx.sections[0].name).toBe('Only');
+		expect(at(pptx.sections, 0).name).toBe('Only');
 	});
 
 	it('empty array clears all sections', async () => {
@@ -600,8 +601,8 @@ describe('presentation.sections getter', () => {
 		pptx.addSection('B', [1, 2]);
 
 		expect(pptx.sections).toHaveLength(2);
-		expect(pptx.sections[0].name).toBe('A');
-		expect(pptx.sections[1].name).toBe('B');
+		expect(at(pptx.sections, 0).name).toBe('A');
+		expect(at(pptx.sections, 1).name).toBe('B');
 	});
 
 	it('reflects removals', async () => {
@@ -611,7 +612,7 @@ describe('presentation.sections getter', () => {
 
 		pptx.removeSection(sA.id);
 		expect(pptx.sections).toHaveLength(1);
-		expect(pptx.sections[0].name).toBe('B');
+		expect(at(pptx.sections, 0).name).toBe('B');
 	});
 
 	it('returns empty array after removing all sections', async () => {
@@ -680,7 +681,7 @@ describe('presentation.mailMerge()', () => {
 		});
 
 		const outputs = await pptx.mailMerge([{ name: 'Test' }]);
-		const loaded = await Presentation.load(outputs[0].buffer as ArrayBuffer);
+		const loaded = await Presentation.load(at(outputs, 0).buffer as ArrayBuffer);
 		expect(loaded.slideCount).toBe(1);
 	});
 
@@ -990,8 +991,8 @@ describe('extended API integration', () => {
 
 		// Reorder sections
 		pptx.reorderSections([body.id, intro.id]);
-		expect(pptx.sections[0].name).toBe('Body');
-		expect(pptx.sections[1].name).toBe('Intro');
+		expect(at(pptx.sections, 0).name).toBe('Body');
+		expect(at(pptx.sections, 1).name).toBe('Intro');
 	});
 
 	it('forEachSlide + findSlides combined', async () => {

@@ -8,6 +8,7 @@ import {
 	parseMarker,
 	parseShapeProps,
 } from './chart-series-detail-parser';
+import { at } from '../../test-support/access';
 
 const xmlLookup = {
 	getChildByLocalName(parent: XmlObject | undefined, name: string): XmlObject | undefined {
@@ -236,7 +237,7 @@ describe('parseSeriesDataPoints', () => {
 		};
 		const result = parseSeriesDataPoints(series, xmlLookup, colorParser);
 		expect(result).toHaveLength(1);
-		expect(result[0].marker).toStrictEqual({
+		expect(at(result, 0).marker).toStrictEqual({
 			symbol: 'diamond',
 			size: 10,
 		});

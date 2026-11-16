@@ -8,6 +8,7 @@ import {
 	guidToKey,
 	extractGuidFromPartName,
 } from '../../utils/font-deobfuscation';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Helper: simulate the save-pipeline font re-embedding logic extracted from
@@ -150,11 +151,11 @@ describe('font re-embedding (save pipeline)', () => {
 		// Should create one relationship
 		const fontRels = result.relationships.filter((r) => r.type.includes('/font'));
 		expect(fontRels).toHaveLength(1);
-		expect(fontRels[0].target).toBe(`fonts/{${guid}}.fntdata`);
+		expect(at(fontRels, 0).target).toBe(`fonts/{${guid}}.fntdata`);
 
 		// Should produce one embeddedFont entry with p:regular
 		expect(result.embeddedFontEntries).toHaveLength(1);
-		const entry = result.embeddedFontEntries[0];
+		const entry = at(result.embeddedFontEntries, 0);
 		expect((entry['p:font'] as XmlObject)['@_typeface']).toBe('TestFont');
 		expect(entry['p:regular']).toBeDefined();
 		expect((entry['p:regular'] as XmlObject)['@_fontKey']).toBe(`{${guid}}`);
@@ -195,7 +196,7 @@ describe('font re-embedding (save pipeline)', () => {
 
 		// One embeddedFont entry (both variants under same typeface)
 		expect(result.embeddedFontEntries).toHaveLength(1);
-		const entry = result.embeddedFontEntries[0];
+		const entry = at(result.embeddedFontEntries, 0);
 		expect(entry['p:regular']).toBeDefined();
 		expect(entry['p:bold']).toBeDefined();
 		expect(entry['p:italic']).toBeUndefined();
@@ -247,7 +248,7 @@ describe('font re-embedding (save pipeline)', () => {
 		expect(result.writtenFiles.size).toBe(4);
 		expect(result.embeddedFontEntries).toHaveLength(1);
 
-		const entry = result.embeddedFontEntries[0];
+		const entry = at(result.embeddedFontEntries, 0);
 		expect(entry['p:regular']).toBeDefined();
 		expect(entry['p:bold']).toBeDefined();
 		expect(entry['p:italic']).toBeDefined();
@@ -307,7 +308,7 @@ describe('font re-embedding (save pipeline)', () => {
 
 		expect(result.writtenFiles.size).toBe(1);
 		expect(result.embeddedFontEntries).toHaveLength(1);
-		expect((result.embeddedFontEntries[0]['p:font'] as XmlObject)['@_typeface']).toBe(
+		expect((at(result.embeddedFontEntries, 0)['p:font'] as XmlObject)['@_typeface']).toBe(
 			'HasDataFont',
 		);
 	});
@@ -383,10 +384,10 @@ describe('font re-embedding (save pipeline)', () => {
 		// Should reuse the existing rId99 instead of creating a new one
 		const fontRels = result.relationships.filter((r) => r.type.includes('/font'));
 		expect(fontRels).toHaveLength(1); // No duplicate
-		expect(fontRels[0].id).toBe('rId99');
+		expect(at(fontRels, 0).id).toBe('rId99');
 
 		// The entry should reference rId99
-		const entry = result.embeddedFontEntries[0];
+		const entry = at(result.embeddedFontEntries, 0);
 		expect((entry['p:regular'] as XmlObject)['@_r:id']).toBe('rId99');
 	});
 
@@ -419,8 +420,8 @@ describe('font re-embedding (save pipeline)', () => {
 
 		const fontRels = result.relationships.filter((r) => r.type.includes('/font'));
 		expect(fontRels).toHaveLength(2);
-		expect(fontRels[0].id).toBe('rId6'); // Next after rId5
-		expect(fontRels[1].id).toBe('rId7');
+		expect(at(fontRels, 0).id).toBe('rId6'); // Next after rId5
+		expect(at(fontRels, 1).id).toBe('rId7');
 	});
 });
 

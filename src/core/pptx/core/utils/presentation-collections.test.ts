@@ -4,6 +4,7 @@ import { buildSlideReferenceRemap } from '../core/builders/slide-reference-remap
 import { PptxXmlLookupService } from '../services';
 import type { PptxSlide, XmlObject } from '../types';
 import { applyCustomShows, applySections, parseCustomShows } from './presentation-collections';
+import { at } from '../../test-support/access';
 
 const lookup = new PptxXmlLookupService();
 
@@ -48,12 +49,12 @@ describe('presentation collections', () => {
 		};
 		applyCustomShows(presentation, [{ name: 'New', id: '1', slideRIds: ['rId2', 'rId3'] }], lookup);
 		const list = presentation['x:custShowLst'] as XmlObject;
-		const show = (list['x:custShow'] as XmlObject[])[0];
+		const show = at(list['x:custShow'] as XmlObject[], 0);
 		expect(list['@_vendor:list']).toBe('keep');
 		expect(show).toMatchObject({ '@_name': 'New', '@_vendor:show': 'keep' });
 		const slideList = show['x:sldLst'] as XmlObject;
 		expect(slideList['@_vendor:slides']).toBe('keep');
-		expect((slideList['x:sld'] as XmlObject[])[0]['@_vendor:slide']).toBe('keep');
+		expect(at(slideList['x:sld'] as XmlObject[], 0)['@_vendor:slide']).toBe('keep');
 	});
 
 	it('clears custom shows only when an empty edit is explicitly supplied', () => {
@@ -81,10 +82,10 @@ describe('presentation collections', () => {
 			lookup,
 		);
 		const extList = presentation['p:extLst'] as XmlObject;
-		const ext = (extList['p:ext'] as XmlObject[])[0];
+		const ext = at(extList['p:ext'] as XmlObject[], 0);
 		expect(ext['@_uri']).toBe('{521415D9-36F7-43E2-AB2F-B90AF26B5E84}');
 		const list = ext['p14:sectionLst'] as XmlObject;
-		const section = (list['p14:section'] as XmlObject[])[0];
+		const section = at(list['p14:section'] as XmlObject[], 0);
 		expect(section['@_vendor:data']).toBe('keep');
 		expect(section['v:extLst']).toBeDefined();
 		expect(section['p15:sectionPr']).toMatchObject({ '@_collapsed': '0', '@_clr': 'AABBCC' });
@@ -140,7 +141,7 @@ describe('presentation collections', () => {
 			lookup,
 			remap,
 		);
-		const show = ((presentation['p:custShowLst'] as XmlObject)['p:custShow'] as XmlObject[])[0];
+		const show = at((presentation['p:custShowLst'] as XmlObject)['p:custShow'] as XmlObject[], 0);
 		const showSlides = (show['p:sldLst'] as XmlObject)['p:sld'] as XmlObject[];
 		expect(showSlides.map((entry) => entry['@_r:id'])).toStrictEqual(['rId2', 'rId9']);
 
@@ -151,8 +152,8 @@ describe('presentation collections', () => {
 			lookup,
 			remap,
 		);
-		const ext = ((sectionHost['p:extLst'] as XmlObject)['p:ext'] as XmlObject[])[0];
-		const section = ((ext['p14:sectionLst'] as XmlObject)['p14:section'] as XmlObject[])[0];
+		const ext = at((sectionHost['p:extLst'] as XmlObject)['p:ext'] as XmlObject[], 0);
+		const section = at((ext['p14:sectionLst'] as XmlObject)['p14:section'] as XmlObject[], 0);
 		const sectionSlides = (section['p14:sldIdLst'] as XmlObject)['p14:sldId'] as XmlObject[];
 		expect(sectionSlides.map((entry) => entry['@_id'])).toStrictEqual(['256', '259']);
 	});
@@ -185,7 +186,7 @@ describe('presentation collections', () => {
 			lookup,
 			remap,
 		);
-		const show = ((presentation['p:custShowLst'] as XmlObject)['p:custShow'] as XmlObject[])[0];
+		const show = at((presentation['p:custShowLst'] as XmlObject)['p:custShow'] as XmlObject[], 0);
 		const showSlides = (show['p:sldLst'] as XmlObject)['p:sld'] as XmlObject[];
 		expect(showSlides.map((entry) => entry['@_r:id'])).toStrictEqual(['rId2', 'rId3']);
 	});

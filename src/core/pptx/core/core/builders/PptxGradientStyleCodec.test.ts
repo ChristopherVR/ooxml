@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { XmlObject, ShapeStyle } from '../../types';
 import { PptxGradientStyleCodec } from './PptxGradientStyleCodec';
+import { at } from '../../../test-support/access';
 
 const mockContext = {
 	ensureArray: (value: unknown): unknown[] => {
@@ -58,10 +59,10 @@ describe('pptxGradientStyleCodec', () => {
 			};
 			const stops = codec.extractGradientStops(gradFill);
 			expect(stops).toHaveLength(2);
-			expect(stops[0].color).toBe('#FF0000');
-			expect(stops[0].position).toBe(0);
-			expect(stops[1].color).toBe('#0000FF');
-			expect(stops[1].position).toBe(100);
+			expect(at(stops, 0).color).toBe('#FF0000');
+			expect(at(stops, 0).position).toBe(0);
+			expect(at(stops, 1).color).toBe('#0000FF');
+			expect(at(stops, 1).position).toBe(100);
 		});
 
 		it('should preserve originalColorXml for scheme colors with transforms', () => {
@@ -81,8 +82,8 @@ describe('pptxGradientStyleCodec', () => {
 			};
 			const stops = codec.extractGradientStops(gradFill);
 			expect(stops).toHaveLength(1);
-			expect(stops[0].originalColorXml).toBeDefined();
-			const colorXml = stops[0].originalColorXml as XmlObject;
+			expect(at(stops, 0).originalColorXml).toBeDefined();
+			const colorXml = at(stops, 0).originalColorXml as XmlObject;
 			expect(colorXml['a:schemeClr']).toBeDefined();
 			const schemeClr = colorXml['a:schemeClr'] as XmlObject;
 			expect(schemeClr['@_val']).toBe('accent1');
@@ -97,7 +98,7 @@ describe('pptxGradientStyleCodec', () => {
 				},
 			};
 			const stops = codec.extractGradientStops(gradFill);
-			expect(stops[0].colorRef).toStrictEqual({ scheme: 'accent3' });
+			expect(at(stops, 0).colorRef).toStrictEqual({ scheme: 'accent3' });
 		});
 
 		it('does not set colorRef for an sRGB stop', () => {
@@ -107,7 +108,7 @@ describe('pptxGradientStyleCodec', () => {
 				},
 			};
 			const stops = codec.extractGradientStops(gradFill);
-			expect(stops[0].colorRef).toBeUndefined();
+			expect(at(stops, 0).colorRef).toBeUndefined();
 		});
 
 		it('should preserve originalColorXml for sRGB colors', () => {
@@ -117,7 +118,7 @@ describe('pptxGradientStyleCodec', () => {
 				},
 			};
 			const stops = codec.extractGradientStops(gradFill);
-			expect(stops[0].originalColorXml).toStrictEqual({
+			expect(at(stops, 0).originalColorXml).toStrictEqual({
 				'a:srgbClr': { '@_val': 'AABBCC' },
 			});
 		});
@@ -152,15 +153,15 @@ describe('pptxGradientStyleCodec', () => {
 			expect(gsArray).toHaveLength(2);
 
 			// First stop should use preserved scheme color
-			expect(gsArray[0]['a:schemeClr']).toBeDefined();
-			expect((gsArray[0]['a:schemeClr'] as XmlObject)['@_val']).toBe('accent1');
-			expect((gsArray[0]['a:schemeClr'] as XmlObject)['a:tint']).toStrictEqual({
+			expect(at(gsArray, 0)['a:schemeClr']).toBeDefined();
+			expect((at(gsArray, 0)['a:schemeClr'] as XmlObject)['@_val']).toBe('accent1');
+			expect((at(gsArray, 0)['a:schemeClr'] as XmlObject)['a:tint']).toStrictEqual({
 				'@_val': '60000',
 			});
 
 			// Second stop should use sRGB fallback
-			expect(gsArray[1]['a:srgbClr']).toBeDefined();
-			expect((gsArray[1]['a:srgbClr'] as XmlObject)['@_val']).toBe('0000FF');
+			expect(at(gsArray, 1)['a:srgbClr']).toBeDefined();
+			expect((at(gsArray, 1)['a:srgbClr'] as XmlObject)['@_val']).toBe('0000FF');
 		});
 
 		it('a typed colorRef wins over originalColorXml and the resolved hex', () => {
@@ -179,12 +180,12 @@ describe('pptxGradientStyleCodec', () => {
 			};
 			const xml = codec.buildGradientFillXml(shapeStyle);
 			const gsArray = ((xml as XmlObject)['a:gsLst'] as XmlObject)['a:gs'] as XmlObject[];
-			expect(gsArray[0]['a:schemeClr']).toStrictEqual({
+			expect(at(gsArray, 0)['a:schemeClr']).toStrictEqual({
 				'@_val': 'accent1',
 				'a:lumMod': { '@_val': '60000' },
 				'a:lumOff': { '@_val': '40000' },
 			});
-			expect(gsArray[0]['a:srgbClr']).toBeUndefined();
+			expect(at(gsArray, 0)['a:srgbClr']).toBeUndefined();
 		});
 
 		it('should round-trip gradient stops preserving scheme colors', () => {
@@ -228,18 +229,18 @@ describe('pptxGradientStyleCodec', () => {
 			const rebuiltStops = ((rebuilt as XmlObject)['a:gsLst'] as XmlObject)['a:gs'] as XmlObject[];
 
 			// Verify scheme colors are preserved, not flattened to sRGB
-			expect(rebuiltStops[0]['a:schemeClr']).toBeDefined();
-			expect((rebuiltStops[0]['a:schemeClr'] as XmlObject)['@_val']).toBe('dk1');
-			expect((rebuiltStops[0]['a:schemeClr'] as XmlObject)['a:satMod']).toStrictEqual({
+			expect(at(rebuiltStops, 0)['a:schemeClr']).toBeDefined();
+			expect((at(rebuiltStops, 0)['a:schemeClr'] as XmlObject)['@_val']).toBe('dk1');
+			expect((at(rebuiltStops, 0)['a:schemeClr'] as XmlObject)['a:satMod']).toStrictEqual({
 				'@_val': '110000',
 			});
 
-			expect(rebuiltStops[1]['a:schemeClr']).toBeDefined();
-			expect((rebuiltStops[1]['a:schemeClr'] as XmlObject)['@_val']).toBe('lt1');
-			expect((rebuiltStops[1]['a:schemeClr'] as XmlObject)['a:lumMod']).toStrictEqual({
+			expect(at(rebuiltStops, 1)['a:schemeClr']).toBeDefined();
+			expect((at(rebuiltStops, 1)['a:schemeClr'] as XmlObject)['@_val']).toBe('lt1');
+			expect((at(rebuiltStops, 1)['a:schemeClr'] as XmlObject)['a:lumMod']).toStrictEqual({
 				'@_val': '90000',
 			});
-			expect((rebuiltStops[1]['a:schemeClr'] as XmlObject)['a:lumOff']).toStrictEqual({
+			expect((at(rebuiltStops, 1)['a:schemeClr'] as XmlObject)['a:lumOff']).toStrictEqual({
 				'@_val': '10000',
 			});
 		});

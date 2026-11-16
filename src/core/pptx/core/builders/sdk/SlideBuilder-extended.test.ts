@@ -4,6 +4,7 @@ import { resetIdCounter, createTextElement } from './ElementFactory';
 import { ShapeBuilder } from './ShapeBuilder';
 import { SlideBuilder } from './SlideBuilder';
 import { TextBuilder } from './TextBuilder';
+import { at } from '../../../test-support/access';
 
 beforeEach(() => {
 	resetIdCounter();
@@ -17,7 +18,7 @@ describe('slideBuilder.addFreeform', () => {
 	it('adds a freeform shape element to the slide', () => {
 		const slide = new SlideBuilder(1).addFreeform('M 0 0 L 100 50 L 50 100 Z').build();
 		expect(slide.elements).toHaveLength(1);
-		expect(slide.elements[0].type).toBe('shape');
+		expect(at(slide.elements, 0).type).toBe('shape');
 		expect((slide.elements[0] as Record<string, unknown>).shapeType).toBe('custom');
 		expect((slide.elements[0] as Record<string, unknown>).pathData).toBe(
 			'M 0 0 L 100 50 L 50 100 Z',
@@ -26,7 +27,7 @@ describe('slideBuilder.addFreeform', () => {
 
 	it('generates an id with frm prefix', () => {
 		const slide = new SlideBuilder(1).addFreeform('M 0 0 L 100 100').build();
-		expect(slide.elements[0].id).toMatch(/^frm_/);
+		expect(at(slide.elements, 0).id).toMatch(/^frm_/);
 	});
 
 	it('accepts shape options for position and styling', () => {
@@ -39,7 +40,7 @@ describe('slideBuilder.addFreeform', () => {
 				stroke: { color: '#FF0000', width: 3 },
 			})
 			.build();
-		const el = slide.elements[0];
+		const el = at(slide.elements, 0);
 		expect(el.x).toBe(50);
 		expect(el.y).toBe(75);
 		expect(el.width).toBe(200);
@@ -65,10 +66,10 @@ describe('slideBuilder.addFreeform', () => {
 			.addShape('rect')
 			.build();
 		expect(slide.elements).toHaveLength(3);
-		expect(slide.elements[0].type).toBe('text');
-		expect(slide.elements[1].type).toBe('shape');
+		expect(at(slide.elements, 0).type).toBe('text');
+		expect(at(slide.elements, 1).type).toBe('shape');
 		expect((slide.elements[1] as Record<string, unknown>).shapeType).toBe('custom');
-		expect(slide.elements[2].type).toBe('shape');
+		expect(at(slide.elements, 2).type).toBe('shape');
 		expect((slide.elements[2] as Record<string, unknown>).shapeType).toBe('rect');
 	});
 });
@@ -82,7 +83,7 @@ describe('slideBuilder.addBuilderElement', () => {
 		const textBuilder = TextBuilder.create('Hello').fontSize(24).bold();
 		const slide = new SlideBuilder(1).addBuilderElement(textBuilder).build();
 		expect(slide.elements).toHaveLength(1);
-		expect(slide.elements[0].type).toBe('text');
+		expect(at(slide.elements, 0).type).toBe('text');
 		expect((slide.elements[0] as Record<string, unknown>).text).toBe('Hello');
 		expect((slide.elements[0] as Record<string, unknown>).textStyle?.fontSize).toBe(24);
 		expect((slide.elements[0] as Record<string, unknown>).textStyle?.bold).toBeTruthy();
@@ -92,9 +93,9 @@ describe('slideBuilder.addBuilderElement', () => {
 		const shapeBuilder = ShapeBuilder.create('ellipse').solidFill('#FF0000').position(10, 20);
 		const slide = new SlideBuilder(1).addBuilderElement(shapeBuilder).build();
 		expect(slide.elements).toHaveLength(1);
-		expect(slide.elements[0].type).toBe('shape');
+		expect(at(slide.elements, 0).type).toBe('shape');
 		expect((slide.elements[0] as Record<string, unknown>).shapeType).toBe('ellipse');
-		expect(slide.elements[0].x).toBe(10);
+		expect(at(slide.elements, 0).x).toBe(10);
 	});
 
 	it('works with any object that has a .build() method', () => {
@@ -103,7 +104,7 @@ describe('slideBuilder.addBuilderElement', () => {
 		};
 		const slide = new SlideBuilder(1).addBuilderElement(fakeBuilder).build();
 		expect(slide.elements).toHaveLength(1);
-		expect(slide.elements[0].type).toBe('text');
+		expect(at(slide.elements, 0).type).toBe('text');
 		expect((slide.elements[0] as Record<string, unknown>).text).toBe('Fake');
 	});
 
@@ -120,9 +121,9 @@ describe('slideBuilder.addBuilderElement', () => {
 			.addText('After')
 			.build();
 		expect(slide.elements).toHaveLength(3);
-		expect(slide.elements[0].type).toBe('text');
-		expect(slide.elements[1].type).toBe('shape');
-		expect(slide.elements[2].type).toBe('text');
+		expect(at(slide.elements, 0).type).toBe('text');
+		expect(at(slide.elements, 1).type).toBe('shape');
+		expect(at(slide.elements, 2).type).toBe('text');
 	});
 });
 
@@ -134,11 +135,11 @@ describe('slideBuilder.removeElement', () => {
 	it('removes an element by its ID', () => {
 		const builder = new SlideBuilder(1).addText('A').addText('B');
 		const elements = builder.getElements();
-		const idToRemove = elements[0].id;
+		const idToRemove = at(elements, 0).id;
 
 		const slide = builder.removeElement(idToRemove).build();
 		expect(slide.elements).toHaveLength(1);
-		expect(slide.elements[0].id).not.toBe(idToRemove);
+		expect(at(slide.elements, 0).id).not.toBe(idToRemove);
 	});
 
 	it('leaves the slide unchanged when ID does not match', () => {
@@ -160,9 +161,9 @@ describe('slideBuilder.removeElement', () => {
 		const builder = new SlideBuilder(1).addText('A').addText('B').addText('C');
 		const ids = builder.getElements().map((e) => e.id);
 
-		const slide = builder.removeElement(ids[0]).removeElement(ids[2]).build();
+		const slide = builder.removeElement(at(ids, 0)).removeElement(at(ids, 2)).build();
 		expect(slide.elements).toHaveLength(1);
-		expect(slide.elements[0].id).toBe(ids[1]);
+		expect(at(slide.elements, 0).id).toBe(ids[1]);
 	});
 
 	it('handles removing from an empty slide gracefully', () => {
@@ -185,13 +186,13 @@ describe('slideBuilder.getElements', () => {
 		const builder = new SlideBuilder(1).addText('A').addShape('rect');
 		const elements = builder.getElements();
 		expect(elements).toHaveLength(2);
-		expect(elements[0].type).toBe('text');
-		expect(elements[1].type).toBe('shape');
+		expect(at(elements, 0).type).toBe('text');
+		expect(at(elements, 1).type).toBe('shape');
 	});
 
 	it('reflects removals', () => {
 		const builder = new SlideBuilder(1).addText('A').addText('B');
-		const id = builder.getElements()[0].id;
+		const id = at(builder.getElements(), 0).id;
 		builder.removeElement(id);
 		expect(builder.getElements()).toHaveLength(1);
 	});
@@ -227,7 +228,7 @@ describe('slideBuilder.elementCount', () => {
 
 	it('decrements after removal', () => {
 		const builder = new SlideBuilder(1).addText('A').addText('B');
-		const id = builder.getElements()[0].id;
+		const id = at(builder.getElements(), 0).id;
 		builder.removeElement(id);
 		expect(builder.elementCount).toBe(1);
 	});
@@ -270,7 +271,7 @@ describe('slideBuilder.getLastElement', () => {
 
 		const slide = builder.addAnimation(el!.id, { preset: 'fadeIn', duration: 500 }).build();
 		expect(slide.animations).toHaveLength(1);
-		expect(slide.animations![0].elementId).toBe(el!.id);
+		expect(at(slide.animations!, 0).elementId).toBe(el!.id);
 	});
 
 	it('returns undefined after removing all elements', () => {

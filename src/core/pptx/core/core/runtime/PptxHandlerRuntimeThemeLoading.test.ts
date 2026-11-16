@@ -1,6 +1,7 @@
 import { describe, it, expect, expectTypeOf } from 'vitest';
 
 import { isPresentationThemePartPath } from './PptxHandlerRuntimeThemeLoading';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Extracted logic from PptxHandlerRuntimeThemeLoading
@@ -22,8 +23,8 @@ interface PptxThemeColorScheme {
 }
 
 interface PptxThemeFontScheme {
-	majorFont: { latin?: string; eastAsia?: string; complexScript?: string };
-	minorFont: { latin?: string; eastAsia?: string; complexScript?: string };
+	majorFont: { latin?: string | undefined; eastAsia?: string | undefined; complexScript?: string };
+	minorFont: { latin?: string | undefined; eastAsia?: string | undefined; complexScript?: string };
 }
 
 interface PptxTheme {
@@ -294,7 +295,7 @@ describe('getDefaultSchemeColorMap', () => {
 		for (const key of requiredKeys) {
 			expect(map).toHaveProperty(key);
 			expectTypeOf(map[key]).toBeString();
-			expect(map[key].length).toBeGreaterThan(0);
+			expect(at(map, key).length).toBeGreaterThan(0);
 		}
 	});
 

@@ -368,12 +368,12 @@ describe('oOXML_TO_PRESET reverse lookups', () => {
 	// lookup below - the forward and reverse directions no longer disagree
 	// for this pair.
 	it('forward- and reverse-resolves the real entr.16 (Split) and entr.17 (Stretch) consistently', () => {
-		const split = must(must(PRESET_TO_OOXML['splitIn']));
+		const split = must(PRESET_TO_OOXML['splitIn']);
 		expect(split.presetClass).toBe('entr');
 		expect(split.presetId).toBe(16);
 		expect(ooxmlToPresetName({ presetClass: 'entr', presetId: 16 })).toBe('splitIn');
 
-		const stretch = must(must(PRESET_TO_OOXML['stretchIn']));
+		const stretch = must(PRESET_TO_OOXML['stretchIn']);
 		expect(stretch.presetClass).toBe('entr');
 		expect(stretch.presetId).toBe(17);
 		expect(ooxmlToPresetName({ presetClass: 'entr', presetId: 17 })).toBe('stretchIn');

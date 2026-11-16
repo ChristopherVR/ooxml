@@ -25,7 +25,7 @@ type GetLocalName = (key: string) => string;
 /** The legend-relevant subset of `PptxChartStyle`. */
 export interface ChartLegendStyle {
 	/** Whether the chart has a visible legend. */
-	hasLegend?: boolean;
+	hasLegend?: boolean | undefined;
 	/** Legend position (`b`, `tr`, `l`, `r`, `t`). */
 	legendPosition?: string | undefined;
 	legendEntries?: PptxChartLegendEntry[] | undefined;

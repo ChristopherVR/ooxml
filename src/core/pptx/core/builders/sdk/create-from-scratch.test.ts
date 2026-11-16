@@ -17,6 +17,7 @@ import { describe, it, expect, expectTypeOf } from 'vitest';
 import { PptxHandler } from '../../PptxHandler';
 import type { PptxSlide } from '../../types/presentation';
 import { PresentationBuilder } from './PresentationBuilder';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -123,7 +124,7 @@ describe('initialSlideCount', () => {
 			initialSlideCount: 3,
 		});
 		for (let i = 0; i < data.slides.length; i++) {
-			expect(data.slides[i].slideNumber).toBe(i + 1);
+			expect(at(data.slides, i).slideNumber).toBe(i + 1);
 		}
 	});
 
@@ -400,10 +401,12 @@ describe('round-trip (create -> save -> reload)', () => {
 
 		const { data: data2 } = await saveAndReload(handler, data.slides);
 		expect(data2.slides).toHaveLength(1);
-		expect(data2.slides[0].elements.length).toBeGreaterThanOrEqual(1);
+		expect(at(data2.slides, 0).elements.length).toBeGreaterThanOrEqual(1);
 
 		// Find a text element
-		const textEl = data2.slides[0].elements.find((e) => e.type === 'text' || e.type === 'shape');
+		const textEl = at(data2.slides, 0).elements.find(
+			(e) => e.type === 'text' || e.type === 'shape',
+		);
 		expect(textEl).toBeDefined();
 	});
 
@@ -424,7 +427,7 @@ describe('round-trip (create -> save -> reload)', () => {
 
 		const { data: data2 } = await saveAndReload(handler, data.slides);
 		expect(data2.slides).toHaveLength(1);
-		expect(data2.slides[0].elements.length).toBeGreaterThanOrEqual(1);
+		expect(at(data2.slides, 0).elements.length).toBeGreaterThanOrEqual(1);
 	});
 
 	it('round-trips a complex multi-slide presentation', async () => {
@@ -434,7 +437,7 @@ describe('round-trip (create -> save -> reload)', () => {
 		});
 
 		// Add text to initial slide
-		data.slides[0].elements.push(
+		at(data.slides, 0).elements.push(
 			...createSlide('Blank')
 				.addText('Title', { fontSize: 36, x: 50, y: 50, width: 800, height: 60 })
 				.build().elements,
@@ -515,15 +518,15 @@ describe('adding content to presentations created from scratch', () => {
 		}
 
 		expect(data.slides).toHaveLength(11);
-		expect(data.slides[0].layoutName).toBe('Title Slide');
-		expect(data.slides[6].layoutName).toBe('Blank');
+		expect(at(data.slides, 0).layoutName).toBe('Title Slide');
+		expect(at(data.slides, 6).layoutName).toBe('Blank');
 	});
 
 	it('defaults to Blank layout when no layout specified', async () => {
 		const { createSlide, data } = await PresentationBuilder.create();
 
 		data.slides.push(createSlide().build());
-		expect(data.slides[0].layoutName).toBe('Blank');
+		expect(at(data.slides, 0).layoutName).toBe('Blank');
 	});
 
 	it('can build a slide with slide-level properties', async () => {
@@ -567,7 +570,7 @@ describe('adding content to presentations created from scratch', () => {
 
 		data.slides.push(slide);
 		expect(slide.elements).toHaveLength(1);
-		expect(slide.elements[0].type).toBe('connector');
+		expect(at(slide.elements, 0).type).toBe('connector');
 	});
 
 	it('can add multiple element types to a single slide', async () => {
@@ -611,10 +614,10 @@ describe('adding content to presentations created from scratch', () => {
 		data.slides.push(slide);
 
 		expect(slide.elements).toHaveLength(4);
-		expect(slide.elements[0].type).toBe('text');
-		expect(slide.elements[1].type).toBe('shape');
-		expect(slide.elements[2].type).toBe('connector');
-		expect(slide.elements[3].type).toBe('table');
+		expect(at(slide.elements, 0).type).toBe('text');
+		expect(at(slide.elements, 1).type).toBe('shape');
+		expect(at(slide.elements, 2).type).toBe('connector');
+		expect(at(slide.elements, 3).type).toBe('table');
 
 		// Save and verify it's a valid PPTX
 		const bytes = await handler.save(data.slides);

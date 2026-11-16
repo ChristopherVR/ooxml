@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 import type { XmlObject } from '../../types';
+import { at, xmlFixture } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Extracted from PptxHandlerRuntimeSlideMasters — pure helper functions
@@ -54,7 +55,7 @@ function extractPlaceholderList(
 		return [];
 	}
 	const shapes = ensureArray(spTree['p:sp']);
-	const result: Array<{ type: string; idx?: string }> = [];
+	const result: Array<{ type: string; idx?: string | undefined }> = [];
 	for (const sp of shapes) {
 		const nvPr = sp?.['p:nvSpPr']?.['p:nvPr'] as XmlObject | undefined;
 		const ph = nvPr?.['p:ph'] as XmlObject | undefined;
@@ -236,17 +237,17 @@ describe('extractPlaceholderList', () => {
 		};
 		const result = extractPlaceholderList(spTree);
 		expect(result).toHaveLength(1);
-		expect(result[0].type).toBe('title');
+		expect(at(result, 0).type).toBe('title');
 	});
 
 	it('should handle numeric idx values', () => {
-		const spTree: XmlObject = {
+		const spTree = xmlFixture({
 			'p:sp': {
 				'p:nvSpPr': {
 					'p:nvPr': { 'p:ph': { '@_type': 'ftr', '@_idx': 10 } },
 				},
 			},
-		};
+		});
 		const result = extractPlaceholderList(spTree);
 		expect(result).toStrictEqual([{ type: 'ftr', idx: '10' }]);
 	});

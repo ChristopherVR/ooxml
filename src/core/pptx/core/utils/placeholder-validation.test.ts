@@ -7,6 +7,7 @@ import {
 	normalizePlaceholderType,
 	getValidPlaceholderTypes,
 } from './placeholder-validation';
+import { at } from '../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // isValidPlaceholderType
@@ -153,9 +154,9 @@ describe('canonicalizePlaceholderTypes', () => {
 		};
 		expect(canonicalizePlaceholderTypes(root)).toBe(2);
 		const shapes = root['p:cSld']['p:spTree']['p:sp'];
-		expect(shapes[0]['p:nvSpPr']['p:nvPr']['p:ph']['@_type']).toBe('ctrTitle');
-		expect(shapes[1]['p:nvSpPr']['p:nvPr']['p:ph']['@_type']).toBe('subTitle');
-		expect(shapes[2]['p:nvSpPr']['p:nvPr']['p:ph']).toStrictEqual({ '@_idx': '2' });
+		expect(at(shapes, 0)['p:nvSpPr']['p:nvPr']['p:ph']['@_type']).toBe('ctrTitle');
+		expect(at(shapes, 1)['p:nvSpPr']['p:nvPr']['p:ph']['@_type']).toBe('subTitle');
+		expect(at(shapes, 2)['p:nvSpPr']['p:nvPr']['p:ph']).toStrictEqual({ '@_idx': '2' });
 		expect(
 			root['p:cSld']['p:spTree']['p:grpSp']['p:sp']['p:nvSpPr']['p:nvPr']['p:ph']['@_type'],
 		).toBe('sldNum');

@@ -8,6 +8,7 @@ import {
 	parseSmartArtTextParagraphs,
 	smartArtParagraphsText,
 } from './smartart-text-paragraphs';
+import { at } from '../../../test-support/access';
 
 const XML =
 	'<dgm:dataModel xmlns:dgm="urn:dgm" xmlns:a="urn:a"><dgm:ptLst>' +
@@ -32,7 +33,7 @@ describe('smartArt typed text paragraphs', () => {
 		const paragraphs = parseSmartArtTextParagraphs(point(parsed))!;
 
 		expect(paragraphs).toHaveLength(2);
-		expect(paragraphs[0].items.map((item) => item.kind)).toStrictEqual([
+		expect(at(paragraphs, 0).items.map((item) => item.kind)).toStrictEqual([
 			'run',
 			'tab',
 			'raw',
@@ -40,9 +41,9 @@ describe('smartArt typed text paragraphs', () => {
 			'break',
 			'run',
 		]);
-		expect(paragraphs[0].pPr).toStrictEqual({ '@_lvl': '1' });
-		expect(paragraphs[0].endParaRPr).toStrictEqual({ '@_sz': '1800' });
-		expect(paragraphs[0].items[3]).toMatchObject({
+		expect(at(paragraphs, 0).pPr).toStrictEqual({ '@_lvl': '1' });
+		expect(at(paragraphs, 0).endParaRPr).toStrictEqual({ '@_sz': '1800' });
+		expect(at(paragraphs, 0).items[3]).toMatchObject({
 			kind: 'field',
 			id: 'f1',
 			fieldType: 'slidenum',
@@ -50,11 +51,11 @@ describe('smartArt typed text paragraphs', () => {
 			rPr: { '@_i': '1' },
 			pPr: {},
 		});
-		expect(paragraphs[0].items[0]).toMatchObject({
+		expect(at(paragraphs, 0).items[0]).toMatchObject({
 			kind: 'run',
 			run: { childOrder: ['rPr', 'extLst', 't'] },
 		});
-		expect(paragraphs[0].items[3]).toMatchObject({
+		expect(at(paragraphs, 0).items[3]).toMatchObject({
 			kind: 'field',
 			childOrder: ['rPr', 'extLst', 'pPr', 't'],
 		});
@@ -66,7 +67,7 @@ describe('smartArt typed text paragraphs', () => {
 		const factory = new PptxRuntimeDependencyFactory();
 		const parsed = factory.createParser().parse(XML) as XmlObject;
 		const paragraphs = parseSmartArtTextParagraphs(point(parsed))!;
-		const field = paragraphs[0].items[3];
+		const field = at(at(paragraphs, 0).items, 3);
 		if (field.kind === 'field') {
 			field.text = 'Edited';
 		}

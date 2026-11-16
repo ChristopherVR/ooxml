@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Extracted logic from PptxHandlerRuntimeLoadPipeline
@@ -10,7 +11,7 @@ interface XmlObject {
 
 interface MockSlide {
 	id: string;
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 	elements: unknown[];
 	warnings?: MockWarning[];
 }
@@ -252,11 +253,11 @@ describe('attachSlideWarnings', () => {
 		];
 
 		const result = attachSlideWarnings(slides, warnings);
-		expect(result[0].warnings).toHaveLength(2);
-		expect(result[0].warnings![0].message).toBe('Warning A');
-		expect(result[0].warnings![1].message).toBe('Warning C');
-		expect(result[1].warnings).toHaveLength(1);
-		expect(result[1].warnings![0].message).toBe('Warning B');
+		expect(at(result, 0).warnings).toHaveLength(2);
+		expect(at(at(result, 0).warnings!, 0).message).toBe('Warning A');
+		expect(at(at(result, 0).warnings!, 1).message).toBe('Warning C');
+		expect(at(result, 1).warnings).toHaveLength(1);
+		expect(at(at(result, 1).warnings!, 0).message).toBe('Warning B');
 	});
 
 	it('should return empty warnings array for unmatched slides', () => {
@@ -264,7 +265,7 @@ describe('attachSlideWarnings', () => {
 		const warnings: MockWarning[] = [{ slideId: 'slide2', message: 'Orphan warning' }];
 
 		const result = attachSlideWarnings(slides, warnings);
-		expect(result[0].warnings).toHaveLength(0);
+		expect(at(result, 0).warnings).toHaveLength(0);
 	});
 
 	it('should handle empty slides array', () => {
@@ -275,14 +276,14 @@ describe('attachSlideWarnings', () => {
 	it('should handle empty warnings array', () => {
 		const slides: MockSlide[] = [{ id: 'slide1', elements: [] }];
 		const result = attachSlideWarnings(slides, []);
-		expect(result[0].warnings).toHaveLength(0);
+		expect(at(result, 0).warnings).toHaveLength(0);
 	});
 
 	it('should preserve existing slide properties', () => {
 		const slides: MockSlide[] = [{ id: 'slide1', elements: [{ type: 'text' }] }];
 		const result = attachSlideWarnings(slides, []);
-		expect(result[0].id).toBe('slide1');
-		expect(result[0].elements).toHaveLength(1);
+		expect(at(result, 0).id).toBe('slide1');
+		expect(at(result, 0).elements).toHaveLength(1);
 	});
 
 	it('should not mutate the original slides array', () => {
@@ -290,6 +291,6 @@ describe('attachSlideWarnings', () => {
 		const warnings: MockWarning[] = [{ slideId: 'slide1', message: 'Test' }];
 		const result = attachSlideWarnings(slides, warnings);
 		expect(result).not.toBe(slides);
-		expect(slides[0].warnings).toBeUndefined();
+		expect(at(slides, 0).warnings).toBeUndefined();
 	});
 });

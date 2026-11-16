@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { XmlObject } from '../../types';
 import { parseTableStyleSectionFill, parseTableStyleSectionText } from './table-style-fill-parse';
+import { at } from '../../../test-support/access';
 
 function section(fill: XmlObject): XmlObject {
 	return { 'a:tcStyle': { 'a:fill': fill } } as XmlObject;
@@ -96,10 +97,10 @@ describe('parseTableStyleSectionFill', () => {
 		expect(fill?.gradient?.type).toBe('linear');
 		expect(fill?.gradient?.angle).toBe(90);
 		expect(fill?.gradient?.stops.length).toBe(2);
-		expect(fill?.gradient?.stops[0].fill.schemeColor).toBe('accent1');
-		expect(fill?.gradient?.stops[0].position).toBe(0);
-		expect(fill?.gradient?.stops[1].fill.color).toBe('#000000');
-		expect(fill?.gradient?.stops[1].position).toBe(100);
+		expect(at(fill?.gradient?.stops, 0).fill.schemeColor).toBe('accent1');
+		expect(at(fill?.gradient?.stops, 0).position).toBe(0);
+		expect(at(fill?.gradient?.stops, 1).fill.color).toBe('#000000');
+		expect(at(fill?.gradient?.stops, 1).position).toBe(100);
 	});
 
 	it('parses a radial (path) gradient fill', () => {

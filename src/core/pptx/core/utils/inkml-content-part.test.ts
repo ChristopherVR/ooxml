@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { ContentPartInkStroke, XmlObject } from '../types';
 import { buildInkMlContent, parseInkMlContent } from './inkml-content-part';
+import { at } from '../../test-support/access';
 
 // Mirror the loader's parser options (see PptxRuntimeDependencyFactory): keep
 // attribute prefixes and preserve element text verbatim so trace strings such
@@ -58,7 +59,7 @@ describe('parseInkMlContent - real PowerPoint InkML', () => {
 </inkml:ink>`;
 		const { strokes } = parseInkMlContent(parse(xml));
 		// With Y first, the first column is Y and the second is X.
-		expect(strokes[0].path).toBe('M 20 10 L 21 11');
+		expect(at(strokes, 0).path).toBe('M 20 10 L 21 11');
 	});
 
 	it('defaults to X Y order when no traceFormat is present', () => {
@@ -66,7 +67,7 @@ describe('parseInkMlContent - real PowerPoint InkML', () => {
   <inkml:trace>5 6, 7 8</inkml:trace>
 </inkml:ink>`;
 		const { strokes } = parseInkMlContent(parse(xml));
-		expect(strokes[0].path).toBe('M 5 6 L 7 8');
+		expect(at(strokes, 0).path).toBe('M 5 6 L 7 8');
 	});
 
 	it('decodes single-difference (velocity) encoded values', () => {
@@ -80,7 +81,7 @@ describe('parseInkMlContent - real PowerPoint InkML', () => {
   <inkml:trace>100 100, '5 '10, '5 '10</inkml:trace>
 </inkml:ink>`;
 		const { strokes } = parseInkMlContent(parse(xml));
-		expect(strokes[0].path).toBe('M 100 100 L 105 110 L 110 120');
+		expect(at(strokes, 0).path).toBe('M 100 100 L 105 110 L 110 120');
 	});
 });
 
@@ -96,7 +97,7 @@ describe('parseInkMlContent - T (time) channel', () => {
 </inkml:ink>`;
 		const { strokes } = parseInkMlContent(parse(xml));
 		expect(strokes).toHaveLength(1);
-		expect(strokes[0].pointTimestamps).toStrictEqual([1000, 1120, 1300]);
+		expect(at(strokes, 0).pointTimestamps).toStrictEqual([1000, 1120, 1300]);
 	});
 
 	it('leaves pointTimestamps unset when no T channel is declared', () => {
@@ -110,7 +111,7 @@ describe('parseInkMlContent - T (time) channel', () => {
   <inkml:trace>0 0, 10 10</inkml:trace>
 </inkml:ink>`;
 		const { strokes } = parseInkMlContent(parse(xml));
-		expect(strokes[0].pointTimestamps).toBeUndefined();
+		expect(at(strokes, 0).pointTimestamps).toBeUndefined();
 	});
 
 	it("leaves pointTimestamps unset for this project's own authored (pva:path) traces", () => {
@@ -118,7 +119,7 @@ describe('parseInkMlContent - T (time) channel', () => {
   <ink:trace pva:path="M 1 2 L 3 4">1 2 0.5, 3 4 0.5</ink:trace>
 </ink:ink>`;
 		const { strokes } = parseInkMlContent(parse(xml));
-		expect(strokes[0].pointTimestamps).toBeUndefined();
+		expect(at(strokes, 0).pointTimestamps).toBeUndefined();
 	});
 });
 
@@ -182,8 +183,8 @@ describe('parseInkMlContent - pen tilt channels', () => {
   <inkml:trace>5 6, 7 8</inkml:trace>
 </inkml:ink>`;
 		const { strokes } = parseInkMlContent(parse(xml));
-		expect(strokes[0].tiltAngles).toBeUndefined();
-		expect(strokes[0].tiltMagnitudes).toBeUndefined();
+		expect(at(strokes, 0).tiltAngles).toBeUndefined();
+		expect(at(strokes, 0).tiltMagnitudes).toBeUndefined();
 	});
 });
 
@@ -204,14 +205,14 @@ describe('parseInkMlContent - authored (own) format', () => {
 </ink:ink>`;
 		const { strokes } = parseInkMlContent(parse(xml));
 		expect(strokes).toHaveLength(1);
-		expect(strokes[0].path).toBe('M 1 2 L 3 4');
-		expect(strokes[0].color).toBe('#ff0000');
-		expect(strokes[0].width).toBe(3);
-		expect(strokes[0].opacity).toBeCloseTo(0.8, 5);
+		expect(at(strokes, 0).path).toBe('M 1 2 L 3 4');
+		expect(at(strokes, 0).color).toBe('#ff0000');
+		expect(at(strokes, 0).width).toBe(3);
+		expect(at(strokes, 0).opacity).toBeCloseTo(0.8, 5);
 		// This trace's authored text has only the `x y pressure` triple (no
 		// trailing `ox oy` pair), so it decodes with no tilt data, same as
 		// before the OTx/OTy writer existed.
-		expect(strokes[0].tiltAngles).toBeUndefined();
+		expect(at(strokes, 0).tiltAngles).toBeUndefined();
 	});
 
 	it('decodes a trailing ox/oy pair as authored tilt data', () => {
@@ -219,11 +220,11 @@ describe('parseInkMlContent - authored (own) format', () => {
   <ink:trace pva:path="M 1 2 L 3 4">1 2 0.5 1 0, 3 4 0.5 0 1</ink:trace>
 </ink:ink>`;
 		const { strokes } = parseInkMlContent(parse(xml));
-		expect(strokes[0].tiltAngles).toHaveLength(2);
-		expect(strokes[0].tiltAngles?.[0]).toBeCloseTo(0, 5);
-		expect(strokes[0].tiltAngles?.[1]).toBeCloseTo(Math.PI / 2, 5);
-		expect(strokes[0].tiltMagnitudes?.[0]).toBeCloseTo(1, 5);
-		expect(strokes[0].tiltMagnitudes?.[1]).toBeCloseTo(1, 5);
+		expect(at(strokes, 0).tiltAngles).toHaveLength(2);
+		expect(at(strokes, 0).tiltAngles?.[0]).toBeCloseTo(0, 5);
+		expect(at(strokes, 0).tiltAngles?.[1]).toBeCloseTo(Math.PI / 2, 5);
+		expect(at(strokes, 0).tiltMagnitudes?.[0]).toBeCloseTo(1, 5);
+		expect(at(strokes, 0).tiltMagnitudes?.[1]).toBeCloseTo(1, 5);
 	});
 });
 
@@ -243,7 +244,7 @@ describe('buildInkMlContent - OTx/OTy tilt authoring', () => {
 		)['ink:channel'] as XmlObject[];
 		expect(channels).toHaveLength(3);
 		expect(channels.map((c) => c['@_name'])).toStrictEqual(['X', 'Y', 'F']);
-		const trace = (root['ink:trace'] as XmlObject[])[0];
+		const trace = at(root['ink:trace'] as XmlObject[], 0);
 		expect(trace['#text']).toBe('1 2 0.2, 3 4 0.9');
 	});
 
@@ -273,11 +274,11 @@ describe('buildInkMlContent - OTx/OTy tilt authoring', () => {
 		// authored dialect uses (`traceTilt`) must recover the same angle and
 		// magnitude the writer was given.
 		const { strokes: reread } = parseInkMlContent(built);
-		expect(reread[0].tiltAngles?.[0]).toBeCloseTo(0, 5);
-		expect(reread[0].tiltAngles?.[1]).toBeCloseTo(Math.PI / 2, 5);
-		expect(reread[0].tiltMagnitudes?.[0]).toBeCloseTo(0.5, 5);
-		expect(reread[0].tiltMagnitudes?.[1]).toBeCloseTo(1, 5);
-		expect(reread[0].tiltMagnitudes?.[2]).toBeCloseTo(0, 5);
+		expect(at(reread, 0).tiltAngles?.[0]).toBeCloseTo(0, 5);
+		expect(at(reread, 0).tiltAngles?.[1]).toBeCloseTo(Math.PI / 2, 5);
+		expect(at(reread, 0).tiltMagnitudes?.[0]).toBeCloseTo(0.5, 5);
+		expect(at(reread, 0).tiltMagnitudes?.[1]).toBeCloseTo(1, 5);
+		expect(at(reread, 0).tiltMagnitudes?.[2]).toBeCloseTo(0, 5);
 	});
 
 	it('a stroke with no tilt in a tilt-bearing document authors "0 0" (no visible lean)', () => {
@@ -294,7 +295,7 @@ describe('buildInkMlContent - OTx/OTy tilt authoring', () => {
 		];
 		const built = buildInkMlContent(strokes);
 		const root = built['ink:ink'] as XmlObject;
-		const plainTrace = (root['ink:trace'] as XmlObject[])[1];
+		const plainTrace = at(root['ink:trace'] as XmlObject[], 1);
 		expect(plainTrace['#text']).toBe('5 5 0.5 0 0, 6 6 0.5 0 0');
 	});
 });
@@ -335,7 +336,7 @@ describe('buildInkMlContent - AZIMUTH/ALTITUDE channel preservation', () => {
   <inkml:trace>0 0 90 45, 10 0 45 10, 20 0 0 0</inkml:trace>
 </inkml:ink>`;
 		const loaded = parseInkMlContent(parse(xml));
-		expect(loaded.strokes[0].tiltEncoding).toBe('azimuthAltitude');
+		expect(at(loaded.strokes, 0).tiltEncoding).toBe('azimuthAltitude');
 
 		// A save that edits something else in the part rebuilds it from the
 		// decoded strokes; the rebuilt part must keep declaring AZIMUTH/ALTITUDE,
@@ -365,16 +366,16 @@ describe('buildInkMlContent - AZIMUTH/ALTITUDE channel preservation', () => {
 		// asserting magnitude, not angle, for such a point.
 		const reread = parseInkMlContent(rebuilt).strokes;
 		for (const index of [0, 1, 2]) {
-			expect(reread[0].tiltAngles?.[index]).toBeCloseTo(
-				loaded.strokes[0].tiltAngles?.[index] ?? NaN,
+			expect(at(reread, 0).tiltAngles?.[index]).toBeCloseTo(
+				at(loaded.strokes, 0).tiltAngles?.[index] ?? NaN,
 				5,
 			);
-			expect(reread[0].tiltMagnitudes?.[index]).toBeCloseTo(
-				loaded.strokes[0].tiltMagnitudes?.[index] ?? NaN,
+			expect(at(reread, 0).tiltMagnitudes?.[index]).toBeCloseTo(
+				at(loaded.strokes, 0).tiltMagnitudes?.[index] ?? NaN,
 				5,
 			);
 		}
-		expect(reread[0].tiltEncoding).toBe('azimuthAltitude');
+		expect(at(reread, 0).tiltEncoding).toBe('azimuthAltitude');
 	});
 
 	it('falls back to OTx/OTy when strokes mix AZIMUTH/ALTITUDE with vector (or captured) tilt', () => {

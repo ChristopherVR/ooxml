@@ -4,6 +4,7 @@ import type { XmlObject, ShapeStyle } from '../../types';
 import { FILL_CHOICE_ELEMENTS, fillChoiceChildren } from './fill-choice-group';
 import type { ShapeFillStrokeContext } from './save-shape-fill-stroke';
 import { writeShapeFillAndStroke } from './save-shape-fill-stroke';
+import { at } from '../../../test-support/access';
 
 /**
  * These drive the REAL `writeShapeFillAndStroke` that
@@ -278,8 +279,8 @@ describe('applyFillAndStroke - dash patterns', () => {
 		const custDash = ln['a:custDash'] as XmlObject;
 		const ds = custDash['a:ds'] as XmlObject[];
 		expect(ds).toHaveLength(2);
-		expect(ds[0]['@_d']).toBe('300000');
-		expect(ds[0]['@_sp']).toBe('100000');
+		expect(at(ds, 0)['@_d']).toBe('300000');
+		expect(at(ds, 0)['@_sp']).toBe('100000');
 	});
 
 	it('should set default custom dash when segments are empty', () => {

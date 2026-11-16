@@ -8,6 +8,7 @@ import {
 	serializeSmartArtDefinitionHeaderList,
 	validateSmartArtDefinitionHeaderList,
 } from './smartart-definition-header';
+import { at } from '../../test-support/access';
 
 const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' });
 const builder = new XMLBuilder({ ignoreAttributes: false, attributeNamePrefix: '@_' });
@@ -32,8 +33,8 @@ describe('diagramML definition header lists', () => {
 				descriptions: [{ value: 'Description' }],
 				categories: [{ type: 'urn:category', priority: 42 }],
 			});
-			list.headers[0].titles[0].value = 'Edited';
-			list.headers[0].categories![0].priority = 99;
+			at(at(list.headers, 0).titles, 0).value = 'Edited';
+			at(at(list.headers, 0).categories!, 0).priority = 99;
 			const serialized = builder.build(serializeSmartArtDefinitionHeaderList(list));
 
 			expect(serialized).toContain(`<x:${root}`);
@@ -47,8 +48,8 @@ describe('diagramML definition header lists', () => {
 			expect(serialized.indexOf('<x:desc')).toBeLessThan(serialized.indexOf('<x:catLst'));
 			expect(serialized.indexOf('<x:catLst')).toBeLessThan(serialized.indexOf('<x:extLst'));
 			const reparsed = parseSmartArtDefinitionHeaderList(parser.parse(serialized) as XmlObject);
-			expect(reparsed.headers[0].titles[0].value).toBe('Edited');
-			expect(reparsed.headers[0].categories![0].priority).toBe(99);
+			expect(at(at(reparsed.headers, 0).titles, 0).value).toBe('Edited');
+			expect(at(at(reparsed.headers, 0).categories!, 0).priority).toBe(99);
 		},
 	);
 

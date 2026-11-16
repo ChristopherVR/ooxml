@@ -17,6 +17,7 @@ import {
 	updateMergeAttrsInRawXml,
 } from './table-cell-rawxml-ops';
 import { ensureArray } from './table-structural-helpers';
+import { at, must } from '../../../test-support/access';
 
 const parser = new XMLParser({
 	ignoreAttributes: false,
@@ -49,7 +50,7 @@ function cellOf(rawXml: XmlObject): XmlObject {
 }
 
 function cellsOf(rawXml: XmlObject, rowIndex = 0): XmlObject[] {
-	return rawCellsOf(rawRowsOf(rawXml)[rowIndex]);
+	return rawCellsOf(at(rawRowsOf(rawXml), rowIndex));
 }
 
 function paragraphsOf(rawXml: XmlObject): XmlObject[] {
@@ -265,8 +266,8 @@ function mergedTableElement(
 
 function dataAfterDeletingMergeAnchor(element: TablePptxElement, axis: MergeAxis): PptxTableData {
 	const source = element.tableData!;
-	const anchor = source.rows[0].cells[0];
-	const target = axis === 'row' ? source.rows[1].cells[0] : source.rows[0].cells[1];
+	const anchor = at(at(source.rows, 0).cells, 0);
+	const target = must(axis === 'row' ? at(source.rows, 1).cells[0] : at(source.rows, 0).cells[1]);
 	const promoted = {
 		...target,
 		text: anchor.text || target.text,
@@ -286,7 +287,7 @@ function dataAfterDeletingMergeContinuation(
 	axis: MergeAxis,
 ): PptxTableData {
 	const source = element.tableData!;
-	const anchor = source.rows[0].cells[0];
+	const anchor = at(source.rows, 0).cells[0];
 	const unmergedAnchor = {
 		...anchor,
 		...(axis === 'row' ? { rowSpan: undefined } : { gridSpan: undefined }),
@@ -306,7 +307,7 @@ describe('updateCellTextStyleInRawXml with bare properties elements', () => {
 		expect(() => {
 			result = updateCellTextStyleInRawXml(element, 0, 0, { align: 'center' });
 		}).not.toThrow();
-		const pPr = paragraphsOf(result as XmlObject)[0]['a:pPr'] as XmlObject;
+		const pPr = at(paragraphsOf(result as XmlObject), 0)['a:pPr'] as XmlObject;
 		expect(pPr['@_algn']).toBe('ctr');
 	});
 
@@ -316,7 +317,7 @@ describe('updateCellTextStyleInRawXml with bare properties elements', () => {
 		expect(() => {
 			result = updateCellTextStyleInRawXml(element, 0, 0, { bold: true });
 		}).not.toThrow();
-		const run = paragraphsOf(result as XmlObject)[0]['a:r'] as XmlObject;
+		const run = at(paragraphsOf(result as XmlObject), 0)['a:r'] as XmlObject;
 		expect((run['a:rPr'] as XmlObject)['@_b']).toBe('1');
 	});
 
@@ -324,7 +325,7 @@ describe('updateCellTextStyleInRawXml with bare properties elements', () => {
 		const result = updateCellTextStyleInRawXml(tableElement(bareProps), 0, 0, {
 			bold: true,
 		}) as XmlObject;
-		const run = paragraphsOf(result)[0]['a:r'] as XmlObject;
+		const run = at(paragraphsOf(result), 0)['a:r'] as XmlObject;
 		expect(run['a:t']).toBe('hi');
 	});
 
@@ -333,7 +334,7 @@ describe('updateCellTextStyleInRawXml with bare properties elements', () => {
 			'<a:tc><a:txBody><a:bodyPr/><a:p><a:r><a:t>hi</a:t></a:r></a:p></a:txBody></a:tc>',
 		);
 		const result = updateCellTextStyleInRawXml(element, 0, 0, { italic: true }) as XmlObject;
-		const run = paragraphsOf(result)[0]['a:r'] as XmlObject;
+		const run = at(paragraphsOf(result), 0)['a:r'] as XmlObject;
 		expect(Object.keys(run)).toStrictEqual(['a:rPr', 'a:t']);
 	});
 
@@ -350,7 +351,7 @@ describe('updateCellTextStyleInRawXml with bare properties elements', () => {
 			'<a:tc><a:txBody><a:bodyPr/><a:p><a:endParaRPr/></a:p></a:txBody></a:tc>',
 		);
 		const result = updateCellTextStyleInRawXml(element, 0, 0, { bold: true }) as XmlObject;
-		const endParaRPr = paragraphsOf(result)[0]['a:endParaRPr'] as XmlObject;
+		const endParaRPr = at(paragraphsOf(result), 0)['a:endParaRPr'] as XmlObject;
 		expect(endParaRPr['@_b']).toBe('1');
 	});
 
@@ -362,7 +363,7 @@ describe('updateCellTextStyleInRawXml with bare properties elements', () => {
 		}).not.toThrow();
 		const paragraphs = paragraphsOf(result as XmlObject);
 		expect(paragraphs).toHaveLength(1);
-		expect((paragraphs[0]['a:pPr'] as XmlObject)['@_algn']).toBe('just');
+		expect((at(paragraphs, 0)['a:pPr'] as XmlObject)['@_algn']).toBe('just');
 	});
 });
 
@@ -384,7 +385,7 @@ describe('updateCellTextInRawXml emits CT_TextBody in schema order', () => {
 			'<a:tc><a:txBody><a:bodyPr/><a:p><a:pPr/><a:r><a:t>old</a:t></a:r></a:p></a:txBody></a:tc>',
 		);
 		const result = updateCellTextInRawXml(element, 0, 0, 'new') as XmlObject;
-		const paragraph = paragraphsOf(result)[0];
+		const paragraph = at(paragraphsOf(result), 0);
 		expect(Object.keys(paragraph)).toStrictEqual(['a:pPr', 'a:r']);
 		expect((paragraph['a:r'] as XmlObject)['a:t']).toBe('new');
 	});
@@ -394,7 +395,7 @@ describe('updateCellTextInRawXml emits CT_TextBody in schema order', () => {
 			'<a:tc><a:txBody><a:bodyPr/><a:p><a:r><a:rPr lang="en"/><a:t>old</a:t></a:r></a:p></a:txBody></a:tc>',
 		);
 		const result = updateCellTextInRawXml(element, 0, 0, 'new') as XmlObject;
-		const run = paragraphsOf(result)[0]['a:r'] as XmlObject;
+		const run = at(paragraphsOf(result), 0)['a:r'] as XmlObject;
 		expect(Object.keys(run)).toStrictEqual(['a:rPr', 'a:t']);
 	});
 });
@@ -409,15 +410,15 @@ describe('rebuildTableStructureInRawXml structural edit descriptors', () => {
 
 		expect(rows.map((row) => row['@_id'])).toStrictEqual(['r0', undefined, 'r1', 'r2']);
 		expect(rows.map((row) => row['@_h'])).toStrictEqual(['95250', '381000', '190500', '285750']);
-		expect(rows[0]['x:opaque']).toStrictEqual({ '@_id': 'row-0' });
-		expect(rows[2]['x:opaque']).toStrictEqual({ '@_id': 'row-1' });
-		expect(rows[3]['x:opaque']).toStrictEqual({ '@_id': 'row-2' });
-		expect(rawCellsOf(rows[1]).map((cell) => cell['@_id'])).toStrictEqual([
+		expect(at(rows, 0)['x:opaque']).toStrictEqual({ '@_id': 'row-0' });
+		expect(at(rows, 2)['x:opaque']).toStrictEqual({ '@_id': 'row-1' });
+		expect(at(rows, 3)['x:opaque']).toStrictEqual({ '@_id': 'row-2' });
+		expect(rawCellsOf(at(rows, 1)).map((cell) => cell['@_id'])).toStrictEqual([
 			undefined,
 			undefined,
 			undefined,
 		]);
-		rawCellsOf(rows[1]).forEach((cell) => {
+		rawCellsOf(at(rows, 1)).forEach((cell) => {
 			expect(cell['a:tcPr']).toStrictEqual({});
 			expect(cell['a:txBody']).toStrictEqual({
 				'a:bodyPr': {},
@@ -425,7 +426,9 @@ describe('rebuildTableStructureInRawXml structural edit descriptors', () => {
 				'a:p': { 'a:endParaRPr': { '@_lang': 'en-US', '@_dirty': '0' } },
 			});
 		});
-		expect(rawCellsOf(rows[2])[0]).toStrictEqual(rawCellsOf(rawRowsOf(originalRawXml!)[1])[0]);
+		expect(rawCellsOf(at(rows, 2))[0]).toStrictEqual(
+			rawCellsOf(at(rawRowsOf(originalRawXml!), 1))[0],
+		);
 		expect(rawGridColumnsOf(result)).toStrictEqual(rawGridColumnsOf(originalRawXml!));
 		expect(source.rawXml).toStrictEqual(originalRawXml);
 	});
@@ -441,9 +444,9 @@ describe('rebuildTableStructureInRawXml structural edit descriptors', () => {
 		expect(columns.map((column) => column['@_id'])).toStrictEqual(['g0', undefined, 'g1', 'g2']);
 		expect(columns.map((column) => column['@_w'])).toStrictEqual(['200', '150', '150', '500']);
 		expect(columns.reduce((sum, column) => sum + Number(column['@_w']), 0)).toBe(1000);
-		expect(columns[0]['x:opaque']).toStrictEqual({ '@_id': 'grid-0' });
-		expect(columns[2]['x:opaque']).toStrictEqual({ '@_id': 'grid-1' });
-		expect(columns[3]['x:opaque']).toStrictEqual({ '@_id': 'grid-2' });
+		expect(at(columns, 0)['x:opaque']).toStrictEqual({ '@_id': 'grid-0' });
+		expect(at(columns, 2)['x:opaque']).toStrictEqual({ '@_id': 'grid-1' });
+		expect(at(columns, 3)['x:opaque']).toStrictEqual({ '@_id': 'grid-2' });
 		expect(rows.map((row) => row['@_id'])).toStrictEqual(['r0', 'r1', 'r2']);
 		expect(rows.map((row) => row['@_h'])).toStrictEqual(['95250', '190500', '285750']);
 		rows.forEach((row, rowIndex) => {
@@ -454,8 +457,10 @@ describe('rebuildTableStructureInRawXml structural edit descriptors', () => {
 				`r${rowIndex}c1`,
 				`r${rowIndex}c2`,
 			]);
-			expect(cells[1]['a:tcPr']).toStrictEqual({});
-			expect(cells[2]['a:tcPr']).toStrictEqual(rawCellsOf(originalRows[rowIndex])[1]['a:tcPr']);
+			expect(at(cells, 1)['a:tcPr']).toStrictEqual({});
+			expect(at(cells, 2)['a:tcPr']).toStrictEqual(
+				at(rawCellsOf(at(originalRows, rowIndex)), 1)['a:tcPr'],
+			);
 		});
 	});
 
@@ -467,8 +472,12 @@ describe('rebuildTableStructureInRawXml structural edit descriptors', () => {
 
 		expect(rows.map((row) => row['@_id'])).toStrictEqual(['r0', 'r2']);
 		expect(rows.map((row) => row['@_h'])).toStrictEqual(['95250', '285750']);
-		expect(rows[1]['x:opaque']).toStrictEqual({ '@_id': 'row-2' });
-		expect(rawCellsOf(rows[1]).map((cell) => cell['@_id'])).toStrictEqual(['r2c0', 'r2c1', 'r2c2']);
+		expect(at(rows, 1)['x:opaque']).toStrictEqual({ '@_id': 'row-2' });
+		expect(rawCellsOf(at(rows, 1)).map((cell) => cell['@_id'])).toStrictEqual([
+			'r2c0',
+			'r2c1',
+			'r2c2',
+		]);
 		expect(rawGridColumnsOf(result).map((column) => column['@_id'])).toStrictEqual([
 			'g0',
 			'g1',
@@ -486,14 +495,14 @@ describe('rebuildTableStructureInRawXml structural edit descriptors', () => {
 		expect(columns.map((column) => column['@_id'])).toStrictEqual(['g0', 'g2']);
 		expect(columns.map((column) => column['@_w'])).toStrictEqual(['286', '714']);
 		expect(columns.reduce((sum, column) => sum + Number(column['@_w']), 0)).toBe(1000);
-		expect(columns[1]['x:opaque']).toStrictEqual({ '@_id': 'grid-2' });
+		expect(at(columns, 1)['x:opaque']).toStrictEqual({ '@_id': 'grid-2' });
 		rows.forEach((row, rowIndex) => {
 			expect(row['x:opaque']).toStrictEqual({ '@_id': `row-${rowIndex}` });
 			expect(rawCellsOf(row).map((cell) => cell['@_id'])).toStrictEqual([
 				`r${rowIndex}c0`,
 				`r${rowIndex}c2`,
 			]);
-			expect(rawCellsOf(row)[1]['a:tcPr']).toStrictEqual({
+			expect(at(rawCellsOf(row), 1)['a:tcPr']).toStrictEqual({
 				'@_marL': '91440',
 				'a:extLst': {
 					'a:ext': {
@@ -537,7 +546,7 @@ describe('rebuildTableStructureInRawXml structural edit descriptors', () => {
 			'g2',
 		]);
 		expect(columns.reduce((sum, column) => sum + Number(column['@_w']), 0)).toBe(1000);
-		expect(rawCellsOf(rawRowsOf(rawXml)[0]).map((cell) => cell['@_id'])).toStrictEqual([
+		expect(rawCellsOf(at(rawRowsOf(rawXml), 0)).map((cell) => cell['@_id'])).toStrictEqual([
 			'r0c0',
 			undefined,
 			'r0c1',
@@ -574,8 +583,12 @@ describe('rebuildTableStructureInRawXml structural edit descriptors', () => {
 			undefined,
 			undefined,
 		]);
-		expect(rawCellsOf(rows[0]).map((cell) => cell['@_id'])).toStrictEqual(['r0c0', 'r0c1', 'r0c2']);
-		expect(rawCellsOf(rows[3]).map((cell) => cell['@_id'])).toStrictEqual([
+		expect(rawCellsOf(at(rows, 0)).map((cell) => cell['@_id'])).toStrictEqual([
+			'r0c0',
+			'r0c1',
+			'r0c2',
+		]);
+		expect(rawCellsOf(at(rows, 3)).map((cell) => cell['@_id'])).toStrictEqual([
 			undefined,
 			undefined,
 			undefined,
@@ -589,12 +602,13 @@ describe('rebuildTableStructureInRawXml merged-anchor promotion', () => {
 		(axis) => {
 			const source = mergedTableElement(axis);
 			const sourceRows = rawRowsOf(source.rawXml!);
-			const anchorXml = rawCellsOf(sourceRows[0])[0];
-			const targetXml =
-				axis === 'row' ? rawCellsOf(sourceRows[1])[0] : rawCellsOf(sourceRows[0])[1];
+			const anchorXml = at(rawCellsOf(at(sourceRows, 0)), 0);
+			const targetXml = must(
+				axis === 'row' ? rawCellsOf(at(sourceRows, 1))[0] : rawCellsOf(at(sourceRows, 0))[1],
+			);
 			const next = dataAfterDeletingMergeAnchor(source, axis);
 			const result = rebuild(source, next, { axis, action: 'delete', index: 0 });
-			const survivor = rawCellsOf(rawRowsOf(result)[0])[0];
+			const survivor = at(rawCellsOf(at(rawRowsOf(result), 0)), 0);
 
 			expect(survivor['@_id']).toBe('target');
 			expect(survivor['a:txBody']).toStrictEqual(anchorXml['a:txBody']);
@@ -608,10 +622,10 @@ describe('rebuildTableStructureInRawXml merged-anchor promotion', () => {
 		'does not replace the %s anchor body when deleting a continuation',
 		(axis) => {
 			const source = mergedTableElement(axis);
-			const anchorXml = rawCellsOf(rawRowsOf(source.rawXml!)[0])[0];
+			const anchorXml = at(rawCellsOf(at(rawRowsOf(source.rawXml!), 0)), 0);
 			const next = dataAfterDeletingMergeContinuation(source, axis);
 			const result = rebuild(source, next, { axis, action: 'delete', index: 1 });
-			const survivor = rawCellsOf(rawRowsOf(result)[0])[0];
+			const survivor = at(rawCellsOf(at(rawRowsOf(result), 0)), 0);
 
 			expect(survivor['@_id']).toBe('anchor');
 			expect(survivor['a:txBody']).toStrictEqual(anchorXml['a:txBody']);
@@ -625,11 +639,12 @@ describe('rebuildTableStructureInRawXml merged-anchor promotion', () => {
 		(axis) => {
 			const source = mergedTableElement(axis, '', 'Target');
 			const sourceRows = rawRowsOf(source.rawXml!);
-			const targetXml =
-				axis === 'row' ? rawCellsOf(sourceRows[1])[0] : rawCellsOf(sourceRows[0])[1];
+			const targetXml = must(
+				axis === 'row' ? rawCellsOf(at(sourceRows, 1))[0] : rawCellsOf(at(sourceRows, 0))[1],
+			);
 			const next = dataAfterDeletingMergeAnchor(source, axis);
 			const result = rebuild(source, next, { axis, action: 'delete', index: 0 });
-			const survivor = rawCellsOf(rawRowsOf(result)[0])[0];
+			const survivor = at(rawCellsOf(at(rawRowsOf(result), 0)), 0);
 
 			expect(survivor['@_id']).toBe('target');
 			expect(survivor['a:txBody']).toStrictEqual(targetXml['a:txBody']);
@@ -640,7 +655,7 @@ describe('rebuildTableStructureInRawXml merged-anchor promotion', () => {
 
 describe('ensureArray', () => {
 	it('reports one paragraph for a lone <a:p/>, not zero', () => {
-		const body = (parser.parse('<t><a:bodyPr/><a:p/></t>') as Record<string, XmlObject>)['t'];
+		const body = must((parser.parse('<t><a:bodyPr/><a:p/></t>') as Record<string, XmlObject>)['t']);
 		expect(ensureArray(body['a:p'] as XmlObject | XmlObject[] | undefined)).toHaveLength(1);
 	});
 
@@ -672,15 +687,15 @@ describe('updateMergeAttrsInRawXml preserves unchanged text bodies', () => {
 		const element = tableElement(plainCell('A') + plainCell('B') + richCell, 3);
 		const original = structuredClone(element.rawXml);
 		const next = data(['A B', '', richText]);
-		next.rows[0].cells[0].gridSpan = 2;
-		next.rows[0].cells[1].hMerge = true;
+		at(at(next.rows, 0).cells, 0).gridSpan = 2;
+		at(at(next.rows, 0).cells, 1).hMerge = true;
 		const result = updateMergeAttrsInRawXml(element, next)!;
 		const cells = cellsOf(result);
 		expect(cells[2]).toStrictEqual(cellsOf(original!)[2]);
-		expect(cells[0]['@_gridSpan']).toBe('2');
-		expect(cells[1]['@_hMerge']).toBe('1');
-		expect(cells[0]['a:txBody']['a:p']['a:r']['a:t']).toBe('A B');
-		expect(cells[1]['a:txBody']['a:p']['a:r']['a:t']).toBe('');
+		expect(at(cells, 0)['@_gridSpan']).toBe('2');
+		expect(at(cells, 1)['@_hMerge']).toBe('1');
+		expect(at(cells, 0)['a:txBody']['a:p']['a:r']['a:t']).toBe('A B');
+		expect(at(cells, 1)['a:txBody']['a:p']['a:r']['a:t']).toBe('');
 		expect(element.rawXml).toStrictEqual(original);
 	});
 
@@ -692,8 +707,8 @@ describe('updateMergeAttrsInRawXml preserves unchanged text bodies', () => {
 		const original = structuredClone(element.rawXml);
 		const result = updateMergeAttrsInRawXml(element, data(['Combined', '', richText]))!;
 		const cells = cellsOf(result);
-		expect(cells[0]['@_gridSpan']).toBeUndefined();
-		expect(cells[1]['@_hMerge']).toBeUndefined();
+		expect(at(cells, 0)['@_gridSpan']).toBeUndefined();
+		expect(at(cells, 1)['@_hMerge']).toBeUndefined();
 		expect(cells.map((cell) => cell['a:txBody'])).toStrictEqual(
 			cellsOf(original!).map((cell) => cell['a:txBody']),
 		);
@@ -704,19 +719,21 @@ describe('updateMergeAttrsInRawXml preserves unchanged text bodies', () => {
 		const element = tableElement(richCell);
 		const result = updateMergeAttrsInRawXml(element, data(['Edited']))!;
 		expect(paragraphsOf(result)).toHaveLength(1);
-		expect(paragraphsOf(result)[0]['a:r']['a:t']).toBe('Edited');
-		expect(paragraphsOf(result)[0]['a:r']['a:rPr']['@_b']).toBe('1');
+		expect(at(paragraphsOf(result), 0)['a:r']['a:t']).toBe('Edited');
+		expect(at(paragraphsOf(result), 0)['a:r']['a:rPr']['@_b']).toBe('1');
 	});
 
 	it('preserves a rich anchor when merging it with an empty neighbor', () => {
 		const element = tableElement(richCell + plainCell(''), 2);
 		const next = data([richText, '']);
-		next.rows[0].cells[0].gridSpan = 2;
-		next.rows[0].cells[1].hMerge = true;
+		at(at(next.rows, 0).cells, 0).gridSpan = 2;
+		at(at(next.rows, 0).cells, 1).hMerge = true;
 		const result = updateMergeAttrsInRawXml(element, next)!;
-		expect(cellsOf(result)[0]['a:txBody']).toStrictEqual(cellsOf(element.rawXml!)[0]['a:txBody']);
-		expect(cellsOf(result)[0]['@_gridSpan']).toBe('2');
-		expect(cellsOf(result)[1]['@_hMerge']).toBe('1');
+		expect(at(cellsOf(result), 0)['a:txBody']).toStrictEqual(
+			at(cellsOf(element.rawXml!), 0)['a:txBody'],
+		);
+		expect(at(cellsOf(result), 0)['@_gridSpan']).toBe('2');
+		expect(at(cellsOf(result), 1)['@_hMerge']).toBe('1');
 	});
 
 	it('clears absorbed rich text while retaining unchanged vertical merge anchors', () => {
@@ -727,13 +744,15 @@ describe('updateMergeAttrsInRawXml preserves unchanged text bodies', () => {
 			columnWidths: [1],
 			rows: [{ cells: [{ text: richText }] }, { cells: [{ text: '' }] }],
 		};
-		next.rows[0].cells[0].rowSpan = 2;
-		next.rows[1].cells[0].vMerge = true;
+		at(at(next.rows, 0).cells, 0).rowSpan = 2;
+		at(at(next.rows, 1).cells, 0).vMerge = true;
 		const result = updateMergeAttrsInRawXml(element, next)!;
-		expect(cellsOf(result)[0]['a:txBody']).toStrictEqual(cellsOf(element.rawXml!)[0]['a:txBody']);
-		expect(cellsOf(result)[0]['@_rowSpan']).toBe('2');
-		expect(cellsOf(result, 1)[0]['@_vMerge']).toBe('1');
-		const clearedBody = cellsOf(result, 1)[0]['a:txBody'] as XmlObject;
+		expect(at(cellsOf(result), 0)['a:txBody']).toStrictEqual(
+			at(cellsOf(element.rawXml!), 0)['a:txBody'],
+		);
+		expect(at(cellsOf(result), 0)['@_rowSpan']).toBe('2');
+		expect(at(cellsOf(result, 1), 0)['@_vMerge']).toBe('1');
+		const clearedBody = at(cellsOf(result, 1), 0)['a:txBody'] as XmlObject;
 		expect(clearedBody['a:p']['a:r']['a:t']).toBe('');
 		expect(clearedBody['a:p']['a:fld']).toBeUndefined();
 		expect(clearedBody['a:p']['a:br']).toBeUndefined();
@@ -750,7 +769,7 @@ describe('updateMergeAttrsInRawXml preserves unchanged text bodies', () => {
 		(cell) => {
 			const result = updateMergeAttrsInRawXml(tableElement(cell), data(['']))!;
 			expect(paragraphsOf(result)).toHaveLength(1);
-			expect(paragraphsOf(result)[0]['a:r']['a:t']).toBe('');
+			expect(at(paragraphsOf(result), 0)['a:r']['a:t']).toBe('');
 		},
 	);
 });

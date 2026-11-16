@@ -7,6 +7,7 @@ import {
 	isStrictNamespaceUri,
 } from '../../utils/strict-namespace-map';
 import { createPptxSaveConstants } from '../factories';
+import { at } from '../../../test-support/access';
 
 /**
  * Tests for the strict conformance round-trip save pipeline.
@@ -152,15 +153,15 @@ describe('simulated strict OOXML round-trip', () => {
 		// OPC namespace is untouched (it was already canonical).
 		expect(root['@_xmlns']).toBe('http://schemas.openxmlformats.org/package/2006/relationships');
 		const rels = root['Relationship'] as Record<string, unknown>[];
-		expect(rels[0]['@_Type']).toBe(
+		expect(at(rels, 0)['@_Type']).toBe(
 			'http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument',
 		);
 		// The OPC-defined core-properties type stays canonical in both directions.
-		expect(rels[1]['@_Type']).toBe(
+		expect(at(rels, 1)['@_Type']).toBe(
 			'http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties',
 		);
 		// The Strict camelCase form normalizes to the Transitional hyphenated one.
-		expect(rels[2]['@_Type']).toBe(
+		expect(at(rels, 2)['@_Type']).toBe(
 			'http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties',
 		);
 
@@ -325,8 +326,8 @@ describe('forced conformance conversion: transitional to strict', () => {
 
 		// Tag data should be unaffected
 		const tags = tagLst['p:tag'] as Record<string, unknown>[];
-		expect(tags[0]['@_name']).toBe('key1');
-		expect(tags[0]['@_val']).toBe('value1');
+		expect(at(tags, 0)['@_name']).toBe('key1');
+		expect(at(tags, 0)['@_val']).toBe('value1');
 	});
 
 	it('converts newly created presentationPr XML to strict', () => {
@@ -420,9 +421,11 @@ describe('mixed content preservation', () => {
 		expect(root['@_xmlns']).toBe('http://schemas.openxmlformats.org/package/2006/relationships');
 		const rels = root['Relationship'] as Record<string, unknown>[];
 		// OOXML relationship gets converted
-		expect(rels[0]['@_Type']).toBe('http://purl.oclc.org/ooxml/officeDocument/relationships/slide');
+		expect(at(rels, 0)['@_Type']).toBe(
+			'http://purl.oclc.org/ooxml/officeDocument/relationships/slide',
+		);
 		// VBA relationship is Microsoft-specific and not in the mapping — preserved as-is
-		expect(rels[1]['@_Type']).toBe(
+		expect(at(rels, 1)['@_Type']).toBe(
 			'http://schemas.microsoft.com/office/2006/relationships/vbaProject',
 		);
 	});

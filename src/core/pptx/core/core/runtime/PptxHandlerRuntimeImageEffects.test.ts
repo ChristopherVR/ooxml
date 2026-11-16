@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 import type { XmlObject, PptxImageEffects } from '../../types';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Extracted from PptxHandlerRuntimeImageEffects
@@ -154,7 +155,7 @@ function extractImageEffects(blip: XmlObject | undefined): PptxImageEffects | nu
 				if (imgEffect) {
 					const keys = Object.keys(imgEffect).filter((k) => k.startsWith('a14:artistic'));
 					if (keys.length > 0) {
-						const effectName = keys[0].replace('a14:', '');
+						const effectName = at(keys, 0).replace('a14:', '');
 						effects.artisticEffect = effectName;
 						hasAny = true;
 						const effectNode = imgEffect[keys[0]] as XmlObject | undefined;

@@ -23,6 +23,7 @@ import {
 	parseParagraphExtraAttributes,
 	parseBulletInfo,
 } from './paragraph-properties-parser';
+import { at } from '../../test-support/access';
 
 const EMU_PER_PX = 9525;
 
@@ -347,8 +348,8 @@ describe('parseTabStops', () => {
 		};
 		const tabs = parseTabStops(pPr);
 		expect(tabs).toHaveLength(1);
-		expect(tabs![0].position).toBeCloseTo(914400 / EMU_PER_PX, 2);
-		expect(tabs![0].align).toBe('l');
+		expect(at(tabs!, 0).position).toBeCloseTo(914400 / EMU_PER_PX, 2);
+		expect(at(tabs!, 0).align).toBe('l');
 	});
 
 	it('parses multiple tab stops with different alignments', () => {
@@ -364,10 +365,10 @@ describe('parseTabStops', () => {
 		};
 		const tabs = parseTabStops(pPr);
 		expect(tabs).toHaveLength(4);
-		expect(tabs![0].align).toBe('l');
-		expect(tabs![1].align).toBe('ctr');
-		expect(tabs![2].align).toBe('r');
-		expect(tabs![3].align).toBe('dec');
+		expect(at(tabs!, 0).align).toBe('l');
+		expect(at(tabs!, 1).align).toBe('ctr');
+		expect(at(tabs!, 2).align).toBe('r');
+		expect(at(tabs!, 3).align).toBe('dec');
 	});
 
 	it('parses tab with leader', () => {
@@ -378,7 +379,7 @@ describe('parseTabStops', () => {
 		};
 		const tabs = parseTabStops(pPr);
 		expect(tabs).toHaveLength(1);
-		expect(tabs![0].leader).toBe('dot');
+		expect(at(tabs!, 0).leader).toBe('dot');
 	});
 
 	it('parses tab leader types: dot, hyphen, underscore', () => {
@@ -393,9 +394,9 @@ describe('parseTabStops', () => {
 		};
 		const tabs = parseTabStops(pPr);
 		expect(tabs).toHaveLength(3);
-		expect(tabs![0].leader).toBe('dot');
-		expect(tabs![1].leader).toBe('hyphen');
-		expect(tabs![2].leader).toBe('underscore');
+		expect(at(tabs!, 0).leader).toBe('dot');
+		expect(at(tabs!, 1).leader).toBe('hyphen');
+		expect(at(tabs!, 2).leader).toBe('underscore');
 	});
 
 	it("defaults alignment to 'l' when absent", () => {
@@ -405,7 +406,7 @@ describe('parseTabStops', () => {
 			},
 		};
 		const tabs = parseTabStops(pPr);
-		expect(tabs![0].align).toBe('l');
+		expect(at(tabs!, 0).align).toBe('l');
 	});
 });
 

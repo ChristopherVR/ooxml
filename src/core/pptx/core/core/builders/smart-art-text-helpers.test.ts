@@ -7,6 +7,7 @@ import {
 	extractParagraphText,
 	getLocalName,
 } from './smart-art-text-helpers';
+import { xmlFixture } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // getLocalName
@@ -139,7 +140,7 @@ describe('collectLocalTextValues', () => {
 	});
 
 	it('collects attributed, prefixed, empty, and numeric text leaves in order', () => {
-		const obj: XmlObject = {
+		const obj = xmlFixture({
 			'c:title': {
 				'a:p': {
 					'a:r': [
@@ -151,7 +152,7 @@ describe('collectLocalTextValues', () => {
 					],
 				},
 			},
-		};
+		});
 		const out: string[] = [];
 
 		collectLocalTextValues(obj, 't', out);

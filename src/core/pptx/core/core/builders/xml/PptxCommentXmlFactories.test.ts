@@ -5,6 +5,7 @@ import type { PptxCommentAuthor, XmlObject } from '../../../types';
 import { PptxSaveState } from '../PptxSaveSessionBuilder';
 import { PptxCommentAuthorsXmlFactory } from './PptxCommentAuthorsXmlFactory';
 import { PptxSlideCommentsXmlFactory } from './PptxSlideCommentsXmlFactory';
+import { at } from '../../../../test-support/access';
 
 const STRICT = {
 	p: 'http://purl.oclc.org/ooxml/presentationml/main',
@@ -50,13 +51,13 @@ describe('pptx slide comments XML factory', () => {
 		});
 		const comment = (xml['p:cmLst'] as XmlObject)['p:cm'] as XmlObject[];
 
-		expect(comment[0]['@_authorId']).toBe('2');
-		expect(comment[0]['@_custom']).toBe('keep');
-		expect(comment[0]['x:pos']).toBeUndefined();
-		expect(comment[0]['x:text']).toBeUndefined();
-		expect(comment[0]['p:pos']).toStrictEqual({ '@_x': '95250', '@_y': '190500' });
-		expect(comment[0]['p:text']).toBe('Edited');
-		expect(comment[0]['p:extLst']).toStrictEqual({
+		expect(at(comment, 0)['@_authorId']).toBe('2');
+		expect(at(comment, 0)['@_custom']).toBe('keep');
+		expect(at(comment, 0)['x:pos']).toBeUndefined();
+		expect(at(comment, 0)['x:text']).toBeUndefined();
+		expect(at(comment, 0)['p:pos']).toStrictEqual({ '@_x': '95250', '@_y': '190500' });
+		expect(at(comment, 0)['p:text']).toBe('Edited');
+		expect(at(comment, 0)['p:extLst']).toStrictEqual({
 			'p:ext': { '@_uri': 'urn:test', 'x:data': 'opaque' },
 		});
 	});
@@ -68,7 +69,7 @@ describe('pptx slide comments XML factory', () => {
 			slideComments: [{ id: '0', text: 'Done', resolved: true }],
 		});
 		const comment = (xml['p:cmLst'] as XmlObject)['p:cm'] as XmlObject[];
-		expect(comment[0]['@_done']).toBe('1');
+		expect(at(comment, 0)['@_done']).toBe('1');
 	});
 
 	it('emits an explicit unresolved marker when an edit clears a resolved comment', () => {
@@ -85,7 +86,7 @@ describe('pptx slide comments XML factory', () => {
 			],
 		});
 		const comment = (xml['p:cmLst'] as XmlObject)['p:cm'] as XmlObject[];
-		expect(comment[0]['@_done']).toBe('0');
+		expect(at(comment, 0)['@_done']).toBe('0');
 	});
 
 	it('preserves the original @_resolved attribute name on write-back', () => {
@@ -95,8 +96,8 @@ describe('pptx slide comments XML factory', () => {
 			slideComments: [{ id: '0', text: 'Done', resolved: true, rawXml: { '@_resolved': '1' } }],
 		});
 		const comment = (xml['p:cmLst'] as XmlObject)['p:cm'] as XmlObject[];
-		expect(comment[0]['@_resolved']).toBe('1');
-		expect(comment[0]['@_done']).toBeUndefined();
+		expect(at(comment, 0)['@_resolved']).toBe('1');
+		expect(at(comment, 0)['@_done']).toBeUndefined();
 	});
 
 	it('omits any resolved marker for an unresolved comment with no prior state', () => {
@@ -106,8 +107,8 @@ describe('pptx slide comments XML factory', () => {
 			slideComments: [{ id: '0', text: 'Plain' }],
 		});
 		const comment = (xml['p:cmLst'] as XmlObject)['p:cm'] as XmlObject[];
-		expect(comment[0]['@_done']).toBeUndefined();
-		expect(comment[0]['@_resolved']).toBeUndefined();
+		expect(at(comment, 0)['@_done']).toBeUndefined();
+		expect(at(comment, 0)['@_resolved']).toBeUndefined();
 	});
 
 	it('uses Strict namespaces for a Strict save', () => {
@@ -152,9 +153,9 @@ describe('pptx comment authors XML factory', () => {
 		expect(root['x:cmAuthor']).toBeUndefined();
 		expect(root['p:extLst']).toStrictEqual({ 'p:ext': { '@_uri': 'urn:list' } });
 		expect(root['@_xmlns:p']).toBe(STRICT.p);
-		expect(authors[0]['@_vendor']).toBe('keep');
-		expect(authors[0]['@_id']).toBe('4');
-		expect(authors[0]['p:extLst']).toStrictEqual({
+		expect(at(authors, 0)['@_vendor']).toBe('keep');
+		expect(at(authors, 0)['@_id']).toBe('4');
+		expect(at(authors, 0)['p:extLst']).toStrictEqual({
 			'p:ext': { '@_uri': 'urn:author' },
 		});
 	});

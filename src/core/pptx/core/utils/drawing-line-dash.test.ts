@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { ShapeStyle, StrokeDashType, XmlObject } from '../types';
 import { applyDrawingLineDash, parseDrawingLineDash } from './drawing-line-dash';
+import { at } from '../../test-support/access';
 
 const normalize = (value: unknown): StrokeDashType | undefined =>
 	value === 'dash' || value === 'solid' ? value : undefined;
@@ -41,7 +42,7 @@ describe('drawingML custom line dash', () => {
 		applyDrawingLineDash(unchanged, style);
 		expect(unchanged).toStrictEqual(line);
 
-		style.customDashSegments![0].dash = 200000;
+		at(style.customDashSegments!, 0).dash = 200000;
 		applyDrawingLineDash(line, style);
 		expect(line['d:custDash']).toStrictEqual({
 			'@_vendor': 'wrapper',

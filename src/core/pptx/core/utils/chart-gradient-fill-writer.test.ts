@@ -7,6 +7,7 @@ import {
 	chartGradientsEqual,
 	supportsChartGradientFill,
 } from './chart-gradient-fill-writer';
+import { at } from '../../test-support/access';
 
 const localName = (key: string) => key.replace(/^.*:/u, '');
 
@@ -189,7 +190,7 @@ describe('applyChartGradientToSpPr', () => {
 		const spPr: XmlObject = { 'a:gradFill': authored };
 		applyChartGradientToSpPr(
 			spPr,
-			{ ...parsed, angle: 0, stops: [parsed.stops[0], { color: '#000000', position: 100 }] },
+			{ ...parsed, angle: 0, stops: [at(parsed.stops, 0), { color: '#000000', position: 100 }] },
 			localName,
 			{
 				parseGradient: () => parsed,

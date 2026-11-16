@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { XmlObject } from '../../types';
 import { preserveNotesParagraphXml } from './notes-paragraph-scoped-xml';
+import { at } from '../../../test-support/access';
 
 function authoredParagraph(): XmlObject {
 	return {
@@ -36,9 +37,9 @@ describe('preserveNotesParagraphXml', () => {
 
 		preserveNotesParagraphXml(original, rebuilt);
 
-		expect(rebuilt[0]['a:pPr']).toBe(original[0]['a:pPr']);
-		expect((rebuilt[0]['a:pPr'] as XmlObject)['@_eaLnBrk']).toBe('1');
-		expect((rebuilt[0]['a:pPr'] as XmlObject)['a:buNone']).toStrictEqual({});
+		expect(at(rebuilt, 0)['a:pPr']).toBe(at(original, 0)['a:pPr']);
+		expect((at(rebuilt, 0)['a:pPr'] as XmlObject)['@_eaLnBrk']).toBe('1');
+		expect((at(rebuilt, 0)['a:pPr'] as XmlObject)['a:buNone']).toStrictEqual({});
 	});
 
 	it('keeps a:pPr as the paragraph first key so child order stays legal', () => {
@@ -54,7 +55,7 @@ describe('preserveNotesParagraphXml', () => {
 
 		preserveNotesParagraphXml([authoredParagraph()], rebuilt);
 
-		expect(rebuilt[0]['a:endParaRPr']).toStrictEqual({ '@_lang': 'en-GB', '@_dirty': '0' });
+		expect(at(rebuilt, 0)['a:endParaRPr']).toStrictEqual({ '@_lang': 'en-GB', '@_dirty': '0' });
 	});
 
 	it('preserves paragraph properties across an edit that changes the text', () => {
@@ -62,26 +63,26 @@ describe('preserveNotesParagraphXml', () => {
 
 		preserveNotesParagraphXml([authoredParagraph()], rebuilt);
 
-		expect((rebuilt[0]['a:pPr'] as XmlObject)['@_algn']).toBe('l');
-		expect((rebuilt[0]['a:r'] as XmlObject)['a:t']).toBe('completely different note');
+		expect((at(rebuilt, 0)['a:pPr'] as XmlObject)['@_algn']).toBe('l');
+		expect((at(rebuilt, 0)['a:r'] as XmlObject)['a:t']).toBe('completely different note');
 	});
 
 	it('never overwrites paragraph properties the builder produced itself', () => {
 		const rebuilt = [rebuiltParagraph('note')];
-		rebuilt[0]['a:pPr'] = { '@_algn': 'ctr' };
+		at(rebuilt, 0)['a:pPr'] = { '@_algn': 'ctr' };
 
 		preserveNotesParagraphXml([authoredParagraph()], rebuilt);
 
-		expect(rebuilt[0]['a:pPr']).toStrictEqual({ '@_algn': 'ctr' });
+		expect(at(rebuilt, 0)['a:pPr']).toStrictEqual({ '@_algn': 'ctr' });
 	});
 
 	it('never overwrites end-paragraph properties the builder produced itself', () => {
 		const rebuilt = [rebuiltParagraph('note')];
-		rebuilt[0]['a:endParaRPr'] = { '@_lang': 'ja-JP', '@_sz': '1200' };
+		at(rebuilt, 0)['a:endParaRPr'] = { '@_lang': 'ja-JP', '@_sz': '1200' };
 
 		preserveNotesParagraphXml([authoredParagraph()], rebuilt);
 
-		expect(rebuilt[0]['a:endParaRPr']).toStrictEqual({ '@_lang': 'ja-JP', '@_sz': '1200' });
+		expect(at(rebuilt, 0)['a:endParaRPr']).toStrictEqual({ '@_lang': 'ja-JP', '@_sz': '1200' });
 	});
 
 	it('leaves an empty authored a:pPr alone rather than replacing an empty one', () => {
@@ -90,7 +91,7 @@ describe('preserveNotesParagraphXml', () => {
 
 		preserveNotesParagraphXml(original, rebuilt);
 
-		expect(rebuilt[0]['a:pPr']).toStrictEqual({});
+		expect(at(rebuilt, 0)['a:pPr']).toStrictEqual({});
 	});
 
 	it('matches paragraphs by index and leaves added paragraphs untouched', () => {
@@ -100,10 +101,10 @@ describe('preserveNotesParagraphXml', () => {
 
 		preserveNotesParagraphXml([authoredParagraph(), second], rebuilt);
 
-		expect((rebuilt[0]['a:pPr'] as XmlObject)['@_algn']).toBe('l');
-		expect((rebuilt[1]['a:pPr'] as XmlObject)['@_algn']).toBe('ctr');
-		expect(rebuilt[2]['a:pPr']).toStrictEqual({});
-		expect(rebuilt[2]['a:endParaRPr']).toStrictEqual({ '@_lang': 'en-US' });
+		expect((at(rebuilt, 0)['a:pPr'] as XmlObject)['@_algn']).toBe('l');
+		expect((at(rebuilt, 1)['a:pPr'] as XmlObject)['@_algn']).toBe('ctr');
+		expect(at(rebuilt, 2)['a:pPr']).toStrictEqual({});
+		expect(at(rebuilt, 2)['a:endParaRPr']).toStrictEqual({ '@_lang': 'en-US' });
 	});
 
 	it('drops trailing originals when the edit removed paragraphs', () => {
@@ -123,7 +124,7 @@ describe('preserveNotesParagraphXml', () => {
 		expect(() =>
 			preserveNotesParagraphXml([undefined as unknown as XmlObject], rebuilt),
 		).not.toThrow();
-		expect(rebuilt[0]['a:pPr']).toStrictEqual({});
+		expect(at(rebuilt, 0)['a:pPr']).toStrictEqual({});
 	});
 
 	it('writes an adopted a:pPr before the runs', () => {

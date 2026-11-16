@@ -4,6 +4,7 @@ import type { PptxSmartArtData, PptxSmartArtNode } from '../types';
 import { decomposeSmartArt } from './smartart-decompose';
 import { resetDecomposeCounter } from './smartart-helpers';
 import { applyNodeStylesToElements } from './smartart-node-style-apply';
+import { at, must } from '../../test-support/access';
 
 beforeEach(() => {
 	resetDecomposeCounter();
@@ -21,7 +22,7 @@ describe('decomposeSmartArt honours per-node style', () => {
 		const result = decomposeSmartArt(data, bounds);
 		expect(result).toBeDefined();
 		const shapes = result!.filter((e) => e.type === 'shape');
-		const first = shapes[0];
+		const first = must(at(shapes, 0));
 		if (first.type !== 'shape') {
 			throw new Error('expected a shape element');
 		}
@@ -30,7 +31,7 @@ describe('decomposeSmartArt honours per-node style', () => {
 		expect(first.textStyle?.color).toBe('#FFFFFF');
 		expect(first.textStyle?.bold).toBeTruthy();
 		// Second node has no override: its palette fill is left as-is.
-		const second = shapes[1];
+		const second = must(at(shapes, 1));
 		if (second.type !== 'shape') {
 			throw new Error('expected a shape element');
 		}
@@ -55,7 +56,7 @@ describe('applyNodeStylesToElements', () => {
 			nodes: [{ id: '1', text: 'A', style: { lineColor: '#0000FF' } }],
 		};
 		const elements = decomposeSmartArt(data, bounds)!;
-		const first = elements.find((e) => e.type === 'shape');
+		const first = must(elements.find((e) => e.type === 'shape'));
 		if (!first || first.type !== 'shape') {
 			throw new Error('expected a shape element');
 		}

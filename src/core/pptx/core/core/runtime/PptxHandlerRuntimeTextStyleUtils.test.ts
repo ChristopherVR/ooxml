@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 import type { TextStyle, TextSegment } from '../../types';
+import { at } from '../../../test-support/access';
 
 // Since these are protected methods on a deeply chained mixin, we extract
 // their logic and test them directly.
@@ -331,7 +332,7 @@ describe('compactTextSegments', () => {
 			undefined,
 		);
 		expect(result).toHaveLength(1);
-		expect(result[0].text).toBe('Hello World');
+		expect(at(result, 0).text).toBe('Hello World');
 	});
 
 	it('should keep segments with different styles separate', () => {
@@ -343,8 +344,8 @@ describe('compactTextSegments', () => {
 			undefined,
 		);
 		expect(result).toHaveLength(2);
-		expect(result[0].text).toBe('Hello ');
-		expect(result[1].text).toBe('World');
+		expect(at(result, 0).text).toBe('Hello ');
+		expect(at(result, 1).text).toBe('World');
 	});
 
 	it('should skip empty text segments', () => {
@@ -358,6 +359,6 @@ describe('compactTextSegments', () => {
 			undefined,
 		);
 		expect(result).toHaveLength(1);
-		expect(result[0].text).toBe('Hello World');
+		expect(at(result, 0).text).toBe('Hello World');
 	});
 });

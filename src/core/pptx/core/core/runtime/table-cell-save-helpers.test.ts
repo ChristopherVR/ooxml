@@ -6,6 +6,7 @@ import {
 	writeDiagonalBorders,
 	writeCellTextFormatting,
 } from './table-cell-save-helpers';
+import { at } from '../../../test-support/access';
 
 const EMU_PER_PX = 9525;
 
@@ -115,7 +116,7 @@ describe('writeCellTextFormatting', () => {
 		expect(paragraphs).toHaveLength(2);
 
 		// First paragraph, first run
-		const firstRuns = ensureArray(paragraphs[0]['a:r']);
+		const firstRuns = ensureArray(at(paragraphs, 0)['a:r']);
 		expect(firstRuns).toHaveLength(2);
 		for (const run of firstRuns) {
 			const rPr = run['a:rPr'] as XmlObject;
@@ -129,7 +130,7 @@ describe('writeCellTextFormatting', () => {
 		}
 
 		// Second paragraph
-		const secondRun = ensureArray(paragraphs[1]['a:r'])[0];
+		const secondRun = at(ensureArray(at(paragraphs, 1)['a:r']), 0);
 		const rPr = secondRun['a:rPr'] as XmlObject;
 		expect(rPr['@_b']).toBe('1');
 	});
@@ -143,8 +144,8 @@ describe('writeCellTextFormatting', () => {
 
 		writeCellTextFormatting(xmlCell, { fontSize: 10.555 }, ensureArray);
 
-		const paragraph = ensureArray(xmlCell['a:txBody']?.['a:p'])[0];
-		const run = ensureArray(paragraph['a:r'])[0];
+		const paragraph = at(ensureArray(xmlCell['a:txBody']?.['a:p']), 0);
+		const run = at(ensureArray(paragraph['a:r']), 0);
 		expect((run['a:rPr'] as XmlObject)['@_sz']).toBe('1056');
 	});
 
@@ -158,7 +159,7 @@ describe('writeCellTextFormatting', () => {
 		};
 		writeCellTextFormatting(xmlCell, { bold: true }, ensureArray);
 
-		const run = ensureArray(ensureArray(xmlCell['a:txBody']?.['a:p'])[0]?.['a:r'])[0];
+		const run = at(ensureArray(ensureArray(xmlCell['a:txBody']?.['a:p'])[0]?.['a:r']), 0);
 		expect((run['a:rPr'] as XmlObject)['@_b']).toBe('1');
 	});
 
@@ -170,7 +171,7 @@ describe('writeCellTextFormatting', () => {
 		};
 		writeCellTextFormatting(xmlCell, {}, ensureArray);
 
-		const run = ensureArray(ensureArray(xmlCell['a:txBody']?.['a:p'])[0]?.['a:r'])[0];
+		const run = at(ensureArray(ensureArray(xmlCell['a:txBody']?.['a:p'])[0]?.['a:r']), 0);
 		expect((run['a:rPr'] as XmlObject)['@_b']).toBe('0');
 	});
 
@@ -182,7 +183,7 @@ describe('writeCellTextFormatting', () => {
 		};
 		writeCellTextFormatting(xmlCell, { bold: false }, ensureArray);
 
-		const run = ensureArray(ensureArray(xmlCell['a:txBody']?.['a:p'])[0]?.['a:r'])[0];
+		const run = at(ensureArray(ensureArray(xmlCell['a:txBody']?.['a:p'])[0]?.['a:r']), 0);
 		expect((run['a:rPr'] as XmlObject)['@_b']).toBe('0');
 	});
 });

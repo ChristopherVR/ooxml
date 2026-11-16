@@ -9,6 +9,7 @@ import { PresentationBuilder } from '../../builders/sdk/PresentationBuilder';
 import { PptxHandler } from '../../PptxHandler';
 import type { PptxChartData } from '../../types';
 import type { ChartPptxElement } from '../../types/elements';
+import { at } from '../../../test-support/access';
 
 export const BAR_CHART_XML = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart"
@@ -84,7 +85,7 @@ export async function buildDeck(chartXml = BAR_CHART_XML): Promise<ArrayBuffer> 
 export async function loadChart(buffer: ArrayBuffer) {
 	const handler = new PptxHandler();
 	const data = await handler.load(buffer);
-	const chart = data.slides[0].elements.find((e) => e.type === 'chart') as ChartPptxElement;
+	const chart = at(data.slides, 0).elements.find((e) => e.type === 'chart') as ChartPptxElement;
 	expect(chart.chartData).toBeDefined();
 	return { handler, data, chart };
 }
@@ -95,7 +96,7 @@ export async function saveWith(
 ) {
 	const { handler, data, chart } = await loadChart(await buildDeck(chartXml));
 	chart.chartData = edit(chart.chartData!);
-	data.slides[0].isDirty = true;
+	at(data.slides, 0).isDirty = true;
 	const bytes = await handler.save(data.slides);
 	const zip = await JSZip.loadAsync(bytes);
 	// The builder writes empty elements as `<x></x>`; compare in self-closing form.

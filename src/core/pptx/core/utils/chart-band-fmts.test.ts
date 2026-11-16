@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { PptxXmlLookupService } from '../services/PptxXmlLookupService';
 import type { XmlObject } from '../types';
 import { applyChartBandFmts, parseChartBandFmts } from './chart-band-fmts';
+import { at } from '../../test-support/access';
 
 const lookup = new PptxXmlLookupService();
 const localName = (key: string) => key.replace(/^.*:/u, '');
@@ -79,9 +80,9 @@ describe('applyChartBandFmts', () => {
 		const bandFmts = container['c:bandFmts'] as XmlObject;
 		const bands = bandFmts['c:bandFmt'] as XmlObject[];
 		expect(bands).toHaveLength(2);
-		expect((bands[0]['c:idx'] as XmlObject)['@_val']).toBe('0');
+		expect((at(bands, 0)['c:idx'] as XmlObject)['@_val']).toBe('0');
 		expect(
-			((bands[0]['c:spPr'] as XmlObject)['a:solidFill'] as XmlObject)['a:srgbClr'],
+			((at(bands, 0)['c:spPr'] as XmlObject)['a:solidFill'] as XmlObject)['a:srgbClr'],
 		).toStrictEqual({ '@_val': '112233' });
 	});
 
@@ -104,10 +105,10 @@ describe('applyChartBandFmts', () => {
 		const bands = (container['c:bandFmts'] as XmlObject)['c:bandFmt'] as XmlObject[];
 		expect(bands).toHaveLength(2);
 		expect(
-			((bands[0]['c:spPr'] as XmlObject)['a:solidFill'] as XmlObject)['a:srgbClr'],
+			((at(bands, 0)['c:spPr'] as XmlObject)['a:solidFill'] as XmlObject)['a:srgbClr'],
 		).toStrictEqual({ '@_val': 'AAAAAA' });
 		expect(
-			((bands[1]['c:spPr'] as XmlObject)['a:solidFill'] as XmlObject)['a:srgbClr'],
+			((at(bands, 1)['c:spPr'] as XmlObject)['a:solidFill'] as XmlObject)['a:srgbClr'],
 		).toStrictEqual({ '@_val': '00FF00' });
 	});
 

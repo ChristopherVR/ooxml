@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { PresentationBuilder } from '../../builders/sdk/PresentationBuilder';
 import { PptxHandler } from '../../PptxHandler';
 import type { ChartPptxElement } from '../../types/elements';
+import { at } from '../../../test-support/access';
 
 /**
  * Load -> edit -> save -> re-parse regressions for the chart formatting
@@ -95,12 +96,12 @@ describe('chart formatting edit -> save -> re-parse (W3-D1)', () => {
 		const handler = new PptxHandler();
 		const buffer = await buildLineDeck();
 		const data = await handler.load(buffer);
-		const chart = data.slides[0].elements.find((e) => e.type === 'chart') as
+		const chart = at(data.slides, 0).elements.find((e) => e.type === 'chart') as
 			| ChartPptxElement
 			| undefined;
 		expect(chart?.chartData).toBeDefined();
 		const chartData = chart!.chartData!;
-		const series = chartData.series[0];
+		const series = at(chartData.series, 0);
 
 		// --- Edit every construct under test ---
 		series.dataPoints = [
@@ -135,7 +136,7 @@ describe('chart formatting edit -> save -> re-parse (W3-D1)', () => {
 		chartData.dropLines = { color: '#AAAAAA', width: 0.75, dashStyle: 'dot' };
 		chartData.hiLowLines = { color: '#BBBBBB', width: 1, dashStyle: 'solid' };
 		chartData.clrMapOvr = { bg1: 'lt1', accent1: 'accent2' };
-		data.slides[0].isDirty = true;
+		at(data.slides, 0).isDirty = true;
 
 		// --- Save and re-parse via the full PptxHandler pipeline ---
 		const savedBytes = await handler.save(data.slides);
@@ -156,10 +157,10 @@ describe('chart formatting edit -> save -> re-parse (W3-D1)', () => {
 
 		// Re-parse through PptxHandler and assert the typed model round-trips.
 		const reloaded = await new PptxHandler().load(savedBytes.buffer as ArrayBuffer);
-		const reloadedChart = reloaded.slides[0].elements.find((e) => e.type === 'chart') as
+		const reloadedChart = at(reloaded.slides, 0).elements.find((e) => e.type === 'chart') as
 			| ChartPptxElement
 			| undefined;
-		const reloadedSeries = reloadedChart!.chartData!.series[0];
+		const reloadedSeries = at(reloadedChart!.chartData!.series, 0);
 		expect(reloadedSeries.dataPoints?.[0].spPr).toMatchObject({
 			strokeColor: '#123456',
 			strokeWidth: 2,

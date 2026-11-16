@@ -8,6 +8,7 @@ import {
 	parseChartDataPointPicture,
 	parseChartDataPointPictureBlipRel,
 } from './chart-datapoint-serializer';
+import { at } from '../../test-support/access';
 
 const lookup = new PptxXmlLookupService();
 
@@ -42,10 +43,10 @@ describe('applySeriesDataPointsToXml', () => {
 		const dpts = node['c:dPt'] as XmlObject[];
 		expect(Array.isArray(dpts)).toBeTruthy();
 		expect(dpts).toHaveLength(2);
-		const fill = (dpts[0]['c:spPr'] as XmlObject)['a:solidFill'] as XmlObject;
+		const fill = (at(dpts, 0)['c:spPr'] as XmlObject)['a:solidFill'] as XmlObject;
 		expect((fill['a:srgbClr'] as XmlObject)['@_val']).toBe('112233');
-		expect((dpts[1]['c:explosion'] as XmlObject)['@_val']).toBe('25');
-		expect((dpts[1]['c:idx'] as XmlObject)['@_val']).toBe('2');
+		expect((at(dpts, 1)['c:explosion'] as XmlObject)['@_val']).toBe('25');
+		expect((at(dpts, 1)['c:idx'] as XmlObject)['@_val']).toBe('2');
 	});
 
 	it('reuses an existing dPt by idx to preserve unmodeled children', () => {

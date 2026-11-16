@@ -9,6 +9,7 @@ import {
 	chartDataAddCategory,
 	chartDataRemoveCategory,
 } from './chart-data-utils';
+import { at } from '../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -41,8 +42,8 @@ describe('chartDataAddSeries', () => {
 			values: [20, 40, 60],
 		});
 		expect(result.series).toHaveLength(3);
-		expect(result.series[2].name).toBe('Profit');
-		expect(result.series[2].values).toStrictEqual([20, 40, 60]);
+		expect(at(result.series, 2).name).toBe('Profit');
+		expect(at(result.series, 2).values).toStrictEqual([20, 40, 60]);
 	});
 
 	it('preserves the original data (immutable)', () => {
@@ -62,7 +63,7 @@ describe('chartDataAddSeries', () => {
 			name: 'Short',
 			values: [10],
 		});
-		expect(result.series[2].values).toStrictEqual([10, 0, 0]);
+		expect(at(result.series, 2).values).toStrictEqual([10, 0, 0]);
 	});
 
 	it('truncates values when longer than categories', () => {
@@ -71,7 +72,7 @@ describe('chartDataAddSeries', () => {
 			name: 'Long',
 			values: [10, 20, 30, 40, 50],
 		});
-		expect(result.series[2].values).toStrictEqual([10, 20, 30]);
+		expect(at(result.series, 2).values).toStrictEqual([10, 20, 30]);
 	});
 
 	it('preserves color when provided', () => {
@@ -81,7 +82,7 @@ describe('chartDataAddSeries', () => {
 			values: [1, 2, 3],
 			color: '#00FF00',
 		});
-		expect(result.series[2].color).toBe('#00FF00');
+		expect(at(result.series, 2).color).toBe('#00FF00');
 	});
 
 	it('does not set color when omitted', () => {
@@ -90,7 +91,7 @@ describe('chartDataAddSeries', () => {
 			name: 'NoColor',
 			values: [1, 2, 3],
 		});
-		expect(result.series[2].color).toBeUndefined();
+		expect(at(result.series, 2).color).toBeUndefined();
 	});
 
 	it('accepts empty values when no categories', () => {
@@ -99,7 +100,7 @@ describe('chartDataAddSeries', () => {
 			name: 'Empty',
 			values: [],
 		});
-		expect(result.series[2].values).toStrictEqual([]);
+		expect(at(result.series, 2).values).toStrictEqual([]);
 	});
 
 	it('does not pad values when no categories exist', () => {
@@ -108,7 +109,7 @@ describe('chartDataAddSeries', () => {
 			name: 'Free',
 			values: [10, 20],
 		});
-		expect(result.series[2].values).toStrictEqual([10, 20]);
+		expect(at(result.series, 2).values).toStrictEqual([10, 20]);
 	});
 
 	it('preserves all other chart data fields', () => {
@@ -137,14 +138,14 @@ describe('chartDataRemoveSeries', () => {
 		const data = makeChartData();
 		const result = chartDataRemoveSeries(data, 0);
 		expect(result.series).toHaveLength(1);
-		expect(result.series[0].name).toBe('Cost');
+		expect(at(result.series, 0).name).toBe('Cost');
 	});
 
 	it('removes the last series', () => {
 		const data = makeChartData();
 		const result = chartDataRemoveSeries(data, 1);
 		expect(result.series).toHaveLength(1);
-		expect(result.series[0].name).toBe('Revenue');
+		expect(at(result.series, 0).name).toBe('Revenue');
 	});
 
 	it('preserves original data (immutable)', () => {
@@ -176,8 +177,8 @@ describe('chartDataRemoveSeries', () => {
 		});
 		const result = chartDataRemoveSeries(data, 1);
 		expect(result.series).toHaveLength(2);
-		expect(result.series[0].name).toBe('Revenue');
-		expect(result.series[1].name).toBe('Third');
+		expect(at(result.series, 0).name).toBe('Revenue');
+		expect(at(result.series, 1).name).toBe('Third');
 	});
 
 	it('preserves other chart fields', () => {
@@ -196,28 +197,28 @@ describe('chartDataUpdatePoint', () => {
 	it('updates a single data point', () => {
 		const data = makeChartData();
 		const result = chartDataUpdatePoint(data, 0, 1, 999);
-		expect(result.series[0].values).toStrictEqual([100, 999, 300]);
+		expect(at(result.series, 0).values).toStrictEqual([100, 999, 300]);
 	});
 
 	it('preserves original data (immutable)', () => {
 		const data = makeChartData();
 		const result = chartDataUpdatePoint(data, 0, 0, 42);
-		expect(data.series[0].values[0]).toBe(100);
-		expect(result.series[0].values[0]).toBe(42);
+		expect(at(data.series, 0).values[0]).toBe(100);
+		expect(at(result.series, 0).values[0]).toBe(42);
 	});
 
 	it('does not affect other series', () => {
 		const data = makeChartData();
 		const result = chartDataUpdatePoint(data, 0, 0, 42);
-		expect(result.series[1].values).toStrictEqual([80, 160, 240]);
+		expect(at(result.series, 1).values).toStrictEqual([80, 160, 240]);
 	});
 
 	it('does not affect other data points in the same series', () => {
 		const data = makeChartData();
 		const result = chartDataUpdatePoint(data, 1, 2, 500);
-		expect(result.series[1].values).toStrictEqual([80, 160, 500]);
-		expect(result.series[1].values[0]).toBe(80);
-		expect(result.series[1].values[1]).toBe(160);
+		expect(at(result.series, 1).values).toStrictEqual([80, 160, 500]);
+		expect(at(result.series, 1).values[0]).toBe(80);
+		expect(at(result.series, 1).values[1]).toBe(160);
 	});
 
 	it('throws RangeError for invalid series index', () => {
@@ -235,19 +236,19 @@ describe('chartDataUpdatePoint', () => {
 	it('can set a value to zero', () => {
 		const data = makeChartData();
 		const result = chartDataUpdatePoint(data, 0, 0, 0);
-		expect(result.series[0].values[0]).toBe(0);
+		expect(at(result.series, 0).values[0]).toBe(0);
 	});
 
 	it('can set a negative value', () => {
 		const data = makeChartData();
 		const result = chartDataUpdatePoint(data, 0, 0, -50);
-		expect(result.series[0].values[0]).toBe(-50);
+		expect(at(result.series, 0).values[0]).toBe(-50);
 	});
 
 	it('can set a fractional value', () => {
 		const data = makeChartData();
 		const result = chartDataUpdatePoint(data, 0, 0, 3.14);
-		expect(result.series[0].values[0]).toBeCloseTo(3.14);
+		expect(at(result.series, 0).values[0]).toBeCloseTo(3.14);
 	});
 });
 
@@ -362,8 +363,8 @@ describe('chartDataAddCategory', () => {
 	it('adds a zero value to every series', () => {
 		const data = makeChartData();
 		const result = chartDataAddCategory(data, 'Q4');
-		expect(result.series[0].values).toStrictEqual([100, 200, 300, 0]);
-		expect(result.series[1].values).toStrictEqual([80, 160, 240, 0]);
+		expect(at(result.series, 0).values).toStrictEqual([100, 200, 300, 0]);
+		expect(at(result.series, 1).values).toStrictEqual([80, 160, 240, 0]);
 	});
 
 	it('preserves original data (immutable)', () => {
@@ -380,15 +381,15 @@ describe('chartDataAddCategory', () => {
 		});
 		const result = chartDataAddCategory(data, 'First');
 		expect(result.categories).toStrictEqual(['First']);
-		expect(result.series[0].values).toStrictEqual([0]);
+		expect(at(result.series, 0).values).toStrictEqual([0]);
 	});
 
 	it('preserves series names and colors', () => {
 		const data = makeChartData();
 		const result = chartDataAddCategory(data, 'Q4');
-		expect(result.series[0].name).toBe('Revenue');
-		expect(result.series[0].color).toBe('#4472C4');
-		expect(result.series[1].name).toBe('Cost');
+		expect(at(result.series, 0).name).toBe('Revenue');
+		expect(at(result.series, 0).color).toBe('#4472C4');
+		expect(at(result.series, 1).name).toBe('Cost');
 	});
 
 	it('preserves other chart fields', () => {
@@ -408,23 +409,23 @@ describe('chartDataRemoveCategory', () => {
 		const data = makeChartData();
 		const result = chartDataRemoveCategory(data, 0);
 		expect(result.categories).toStrictEqual(['Q2', 'Q3']);
-		expect(result.series[0].values).toStrictEqual([200, 300]);
-		expect(result.series[1].values).toStrictEqual([160, 240]);
+		expect(at(result.series, 0).values).toStrictEqual([200, 300]);
+		expect(at(result.series, 1).values).toStrictEqual([160, 240]);
 	});
 
 	it('removes the last category', () => {
 		const data = makeChartData();
 		const result = chartDataRemoveCategory(data, 2);
 		expect(result.categories).toStrictEqual(['Q1', 'Q2']);
-		expect(result.series[0].values).toStrictEqual([100, 200]);
+		expect(at(result.series, 0).values).toStrictEqual([100, 200]);
 	});
 
 	it('removes a middle category', () => {
 		const data = makeChartData();
 		const result = chartDataRemoveCategory(data, 1);
 		expect(result.categories).toStrictEqual(['Q1', 'Q3']);
-		expect(result.series[0].values).toStrictEqual([100, 300]);
-		expect(result.series[1].values).toStrictEqual([80, 240]);
+		expect(at(result.series, 0).values).toStrictEqual([100, 300]);
+		expect(at(result.series, 1).values).toStrictEqual([80, 240]);
 	});
 
 	it('preserves original data (immutable)', () => {
@@ -470,15 +471,15 @@ describe('combined chart data operations', () => {
 		expect(withNew.series).toHaveLength(3);
 		const back = chartDataRemoveSeries(withNew, 2);
 		expect(back.series).toHaveLength(2);
-		expect(back.series[0].name).toBe('Revenue');
-		expect(back.series[1].name).toBe('Cost');
+		expect(at(back.series, 0).name).toBe('Revenue');
+		expect(at(back.series, 1).name).toBe('Cost');
 	});
 
 	it('add category then update the new data points', () => {
 		const data = makeChartData();
 		const withCat = chartDataAddCategory(data, 'Q4');
 		const updated = chartDataUpdatePoint(withCat, 0, 3, 400);
-		expect(updated.series[0].values).toStrictEqual([100, 200, 300, 400]);
+		expect(at(updated.series, 0).values).toStrictEqual([100, 200, 300, 400]);
 	});
 
 	it('change type and add series', () => {
@@ -497,7 +498,7 @@ describe('combined chart data operations', () => {
 		const removed = chartDataRemoveCategory(data, 1); // remove Q2
 		const added = chartDataAddCategory(removed, 'Q4');
 		expect(added.categories).toStrictEqual(['Q1', 'Q3', 'Q4']);
-		expect(added.series[0].values).toStrictEqual([100, 300, 0]);
+		expect(at(added.series, 0).values).toStrictEqual([100, 300, 0]);
 	});
 
 	it('full rebuild: change type, remove all series, add new', () => {
@@ -512,7 +513,7 @@ describe('combined chart data operations', () => {
 		});
 		expect(data.chartType).toBe('pie');
 		expect(data.series).toHaveLength(1);
-		expect(data.series[0].name).toBe('Segments');
+		expect(at(data.series, 0).name).toBe('Segments');
 		expect(data.grouping).toBeUndefined();
 	});
 
@@ -542,7 +543,7 @@ describe('combined chart data operations', () => {
 		// Add a category
 		data = chartDataAddCategory(data, 'C');
 		expect(data.categories).toStrictEqual(['A', 'B', 'C']);
-		expect(data.series[0].values).toStrictEqual([10, 20, 0]);
+		expect(at(data.series, 0).values).toStrictEqual([10, 20, 0]);
 
 		// Add a series
 		data = chartDataAddSeries(data, {
@@ -553,7 +554,7 @@ describe('combined chart data operations', () => {
 
 		// Update a point
 		data = chartDataUpdatePoint(data, 0, 2, 25);
-		expect(data.series[0].values[2]).toBe(25);
+		expect(at(data.series, 0).values[2]).toBe(25);
 
 		// Change type
 		data = chartDataChangeType(data, 'pie');
@@ -563,12 +564,12 @@ describe('combined chart data operations', () => {
 		// Remove a category
 		data = chartDataRemoveCategory(data, 0);
 		expect(data.categories).toStrictEqual(['B', 'C']);
-		expect(data.series[0].values).toStrictEqual([20, 25]);
-		expect(data.series[1].values).toStrictEqual([40, 50]);
+		expect(at(data.series, 0).values).toStrictEqual([20, 25]);
+		expect(at(data.series, 1).values).toStrictEqual([40, 50]);
 
 		// Remove a series
 		data = chartDataRemoveSeries(data, 0);
 		expect(data.series).toHaveLength(1);
-		expect(data.series[0].name).toBe('S2');
+		expect(at(data.series, 0).name).toBe('S2');
 	});
 });

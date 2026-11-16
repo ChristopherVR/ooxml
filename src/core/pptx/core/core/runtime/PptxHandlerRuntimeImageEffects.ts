@@ -10,26 +10,26 @@ import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRunti
 
 /** Timing data extracted from the OOXML timing tree for a single media element. */
 export interface MediaTimingData {
-	trimStartMs?: number;
-	trimEndMs?: number;
-	fullScreen?: boolean;
-	loop?: boolean;
-	posterFramePath?: string;
-	volume?: number;
-	fadeInDuration?: number;
-	fadeOutDuration?: number;
-	autoPlay?: boolean;
-	playAcrossSlides?: boolean;
-	hideWhenNotPlaying?: boolean;
-	bookmarks?: MediaBookmark[];
+	trimStartMs?: number | undefined;
+	trimEndMs?: number | undefined;
+	fullScreen?: boolean | undefined;
+	loop?: boolean | undefined;
+	posterFramePath?: string | undefined;
+	volume?: number | undefined;
+	fadeInDuration?: number | undefined;
+	fadeOutDuration?: number | undefined;
+	autoPlay?: boolean | undefined;
+	playAcrossSlides?: boolean | undefined;
+	hideWhenNotPlaying?: boolean | undefined;
+	bookmarks?: MediaBookmark[] | undefined;
 	/** Playback speed multiplier (1 = normal). From p14:media/@spd (percentage * 1000). */
-	playbackSpeed?: number;
+	playbackSpeed?: number | undefined;
 	/**
 	 * Resolved media path from `p14:media/@r:embed`. Used as a fallback source
 	 * when a media element is referenced only through the p14 extension and the
 	 * primary `mediaPath` could not be resolved.
 	 */
-	mediaEmbedPath?: string;
+	mediaEmbedPath?: string | undefined;
 }
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {

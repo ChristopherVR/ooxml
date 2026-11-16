@@ -11,6 +11,7 @@ import { PptxHandler } from '../../PptxHandler';
 import type { PptxTableCell, TablePptxElement } from '../../types';
 import { createTableElement } from './ElementFactory';
 import type { FillInput, TableInput } from './types';
+import { must } from '../../../test-support/access';
 
 async function roundTrip(input: TableInput): Promise<{ cells: string[]; loaded: PptxTableCell[] }> {
 	const { handler, createSlide } = await PptxHandler.create();
@@ -150,7 +151,7 @@ describe('TableCellInput.fill', () => {
 				},
 			],
 		};
-		const el = createTableElement(input);
+		const el = must(createTableElement(input));
 		expect(el.tableData.rows[0]?.cells[0]?.style).toMatchObject({
 			bold: true,
 			color: '#FFFFFF',

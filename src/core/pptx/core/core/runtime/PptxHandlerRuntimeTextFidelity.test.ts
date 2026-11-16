@@ -18,6 +18,7 @@ import { hasOwnFontDeclaration } from './paragraph-sibling-order';
 import { PptxHandlerRuntime } from './PptxHandlerRuntimeImplementation';
 import { flattenCellTxBodyText, isRichCellTxBody } from './PptxHandlerRuntimeSaveTableStyles';
 import type { ShapeTextParsingContext } from './PptxHandlerRuntimeTypes';
+import { at } from '../../../test-support/access';
 
 function ensureArray(value: unknown): XmlObject[] {
 	if (value === undefined || value === null) {
@@ -168,8 +169,8 @@ describe('#68 table cell rich text', () => {
 		runtime.runWriteTableCellText(cell, 'Hello link');
 		const runs = ensureArray(((cell['a:txBody'] as XmlObject)['a:p'] as XmlObject)['a:r']);
 		expect(runs).toHaveLength(2);
-		expect((runs[0]['a:rPr'] as XmlObject)['@_b']).toBe('1');
-		expect((runs[1]['a:rPr'] as XmlObject)['a:hlinkClick']).toBeDefined();
+		expect((at(runs, 0)['a:rPr'] as XmlObject)['@_b']).toBe('1');
+		expect((at(runs, 1)['a:rPr'] as XmlObject)['a:hlinkClick']).toBeDefined();
 	});
 
 	it('rebuilds a single run when the cell text was edited', () => {
@@ -189,8 +190,8 @@ describe('#68 table cell rich text', () => {
 		// re-applied to the hyperlinked second run.
 		runtime.runWriteTableCellStyle(cell, { bold: true });
 		const runs = ensureArray(((cell['a:txBody'] as XmlObject)['a:p'] as XmlObject)['a:r']);
-		expect((runs[1]['a:rPr'] as XmlObject)['@_b']).toBeUndefined();
-		expect((runs[1]['a:rPr'] as XmlObject)['a:hlinkClick']).toBeDefined();
+		expect((at(runs, 1)['a:rPr'] as XmlObject)['@_b']).toBeUndefined();
+		expect((at(runs, 1)['a:rPr'] as XmlObject)['a:hlinkClick']).toBeDefined();
 	});
 });
 
@@ -223,8 +224,8 @@ describe('#69 per-paragraph pPr', () => {
 		];
 		const paragraphs = runtime.runCreateParagraphs(undefined, {}, segments);
 		expect(paragraphs.length).toBeGreaterThanOrEqual(2);
-		const first = paragraphs[0]['a:pPr'] as XmlObject;
-		const last = paragraphs[paragraphs.length - 1]['a:pPr'] as XmlObject;
+		const first = at(paragraphs, 0)['a:pPr'] as XmlObject;
+		const last = at(paragraphs, paragraphs.length - 1)['a:pPr'] as XmlObject;
 		expect(first['@_algn']).toBe('l');
 		expect(last['@_algn']).toBe('r');
 	});

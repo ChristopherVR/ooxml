@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import type { PptxElement } from '../core/types/elements';
 import type { PptxSlide, PptxData } from '../core/types/presentation';
 import { SvgExporter } from './SvgExporter';
+import { at } from '../test-support/access';
 
 // ────────────────────────────────────────────────────────────────────
 // Helpers
@@ -499,15 +500,15 @@ describe('svgExporter', () => {
 		expect(svg).not.toContain('data-chart-mark="bar"');
 		const stageWidths = [...svg.matchAll(/data-chart-mark="funnel"[^>]+points="([^"]+)"/gu)].map(
 			(match) => {
-				const [left, right] = match[1]
+				const [left, right] = at(match, 1)
 					.split(' ')
 					.slice(0, 2)
 					.map((point) => Number(point.split(',')[0]));
 				return right - left;
 			},
 		);
-		expect(stageWidths[0]).toBeGreaterThan(stageWidths[1]);
-		expect(stageWidths[1]).toBeGreaterThan(stageWidths[2]);
+		expect(stageWidths[0]).toBeGreaterThan(at(stageWidths, 1));
+		expect(stageWidths[1]).toBeGreaterThan(at(stageWidths, 2));
 	});
 
 	it('renders SmartArt drawing geometry and text', () => {

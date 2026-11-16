@@ -6,6 +6,7 @@ import {
 	recordTableParagraphOrder,
 	withOrderedTableParagraphs,
 } from './table-paragraph-save-order';
+import { at } from '../../../test-support/access';
 
 const runs: PptxTableCellTextRun[] = [
 	{ text: 'Page ' },
@@ -87,7 +88,7 @@ describe('table paragraph save order', () => {
 		expect(part).toStrictEqual(before);
 		expect(ordered).not.toBe(part);
 		expect(ordered.untouched).toBe(untouched);
-		const result = (ordered.tables[0]['a:txBody'] as XmlObject)['a:p'] as XmlObject;
+		const result = (at(ordered.tables, 0)['a:txBody'] as XmlObject)['a:p'] as XmlObject;
 		expect(Object.keys(result)).toStrictEqual([
 			'a:pPr',
 			'a:r',
@@ -179,7 +180,7 @@ describe('table paragraph save order', () => {
 
 	it('keeps grouped content and unsupported or absent run metadata untouched', () => {
 		const { cell } = fixture();
-		recordTableParagraphOrder(cell, [runs[0], runs[3], runs[1], runs[2]]);
+		recordTableParagraphOrder(cell, [at(runs, 0), at(runs, 3), at(runs, 1), at(runs, 2)]);
 		expect(withOrderedTableParagraphs(cell)).toBe(cell);
 		recordTableParagraphOrder(
 			cell,

@@ -6,6 +6,7 @@ import { TextElementProcessor } from './elements/TextElementProcessor';
 import { MediaContext } from './media-context';
 import { SlideProcessor } from './SlideProcessor';
 import { TextSegmentRenderer } from './TextSegmentRenderer';
+import { at } from '../test-support/access';
 
 function makeRegistry(): ElementProcessorRegistry {
 	const registry = new ElementProcessorRegistry();
@@ -332,7 +333,7 @@ describe('slideProcessor', () => {
 			semanticMode: true,
 		});
 		// The heading line should contain the truncated title
-		const headingLine = result.split('\n')[0];
+		const headingLine = at(result.split('\n'), 0);
 		expect(headingLine).toContain('## Slide 1:');
 		// The title portion (after "## Slide 1: ") should be at most 120 chars
 		const titlePart = headingLine.replace(/^## Slide 1: /, '');

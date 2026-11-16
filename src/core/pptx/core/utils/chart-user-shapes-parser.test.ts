@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { XmlObject } from '../types';
 import { flattenChartUserShapes, parseChartUserShapesDrawing } from './chart-user-shapes-parser';
+import { at, xmlFixture } from '../../test-support/access';
 
 const PREFIXES = ['cdr:', 'c:', 'a:', 'xdr:', ''];
 
@@ -69,7 +70,7 @@ describe('parseChartUserShapesDrawing', () => {
 
 	it('parses a relSizeAnchor sp with fill, geometry and text', () => {
 		const xml = createXmlLookup();
-		const drawing: XmlObject = {
+		const drawing = xmlFixture({
 			'c:userShapes': {
 				'cdr:relSizeAnchor': {
 					'cdr:from': { 'cdr:x': 0.1, 'cdr:y': 0.2 },
@@ -89,10 +90,10 @@ describe('parseChartUserShapesDrawing', () => {
 					},
 				},
 			},
-		};
+		});
 		const shapes = parseChartUserShapesDrawing(drawing, xml, colors);
 		expect(shapes).toHaveLength(1);
-		const shape = shapes![0];
+		const shape = at(shapes!, 0);
 		expect(shape.kind).toBe('sp');
 		expect(shape.anchor).toBe('rel');
 		expect(shape.from).toStrictEqual({ x: 0.1, y: 0.2 });
@@ -108,7 +109,7 @@ describe('parseChartUserShapesDrawing', () => {
 
 	it('parses an absSizeAnchor with an EMU extent and a connector', () => {
 		const xml = createXmlLookup();
-		const drawing: XmlObject = {
+		const drawing = xmlFixture({
 			'c:userShapes': {
 				'cdr:absSizeAnchor': {
 					'cdr:from': { 'cdr:x': 0.25, 'cdr:y': 0.25 },
@@ -120,10 +121,10 @@ describe('parseChartUserShapesDrawing', () => {
 					},
 				},
 			},
-		};
+		});
 		const shapes = parseChartUserShapesDrawing(drawing, xml, colors);
 		expect(shapes).toHaveLength(1);
-		const shape = shapes![0];
+		const shape = at(shapes!, 0);
 		expect(shape.kind).toBe('cxnSp');
 		expect(shape.anchor).toBe('abs');
 		expect(shape.from).toStrictEqual({ x: 0.25, y: 0.25 });
@@ -145,7 +146,7 @@ describe('parseChartUserShapesDrawing', () => {
 	// leaves for renderers that only want a flat list.
 	it('parses a grpSp anchor into a single entry with its own transform and children', () => {
 		const xml = createXmlLookup();
-		const drawing: XmlObject = {
+		const drawing = xmlFixture({
 			'c:userShapes': {
 				'cdr:relSizeAnchor': {
 					'cdr:from': { 'cdr:x': 0.1, 'cdr:y': 0.1 },
@@ -191,10 +192,10 @@ describe('parseChartUserShapesDrawing', () => {
 					},
 				},
 			},
-		};
+		});
 		const shapes = parseChartUserShapesDrawing(drawing, xml, colors);
 		expect(shapes).toHaveLength(1);
-		const shape = shapes![0];
+		const shape = at(shapes!, 0);
 		expect(shape.kind).toBe('grpSp');
 		expect(shape.anchor).toBe('rel');
 		expect(shape.from).toStrictEqual({ x: 0.1, y: 0.1 });
@@ -208,9 +209,9 @@ describe('parseChartUserShapesDrawing', () => {
 		expect(shape.children).toHaveLength(3);
 		expect(shape.children!.map((c) => c.kind)).toStrictEqual(['sp', 'sp', 'cxnSp']);
 		expect(shape.children!.map((c) => c.prst)).toStrictEqual(['rect', 'ellipse', undefined]);
-		expect(shape.children![0].off).toStrictEqual({ x: 0, y: 0 });
-		expect(shape.children![0].ext).toStrictEqual({ cx: 500000, cy: 1000000 });
-		expect(shape.children![1].off).toStrictEqual({ x: 500000, y: 0 });
+		expect(at(shape.children!, 0).off).toStrictEqual({ x: 0, y: 0 });
+		expect(at(shape.children!, 0).ext).toStrictEqual({ cx: 500000, cy: 1000000 });
+		expect(at(shape.children!, 1).off).toStrictEqual({ x: 500000, y: 0 });
 		expect(shape.rawXml).toBeDefined();
 	});
 
@@ -235,7 +236,7 @@ describe('parseChartUserShapesDrawing', () => {
 				},
 			},
 		};
-		const drawing: XmlObject = {
+		const drawing = xmlFixture({
 			'c:userShapes': {
 				'cdr:relSizeAnchor': {
 					'cdr:from': { 'cdr:x': 0, 'cdr:y': 0 },
@@ -253,11 +254,11 @@ describe('parseChartUserShapesDrawing', () => {
 					},
 				},
 			},
-		};
+		});
 		const shapes = parseChartUserShapesDrawing(drawing, xml, colors);
-		const outer = shapes![0];
+		const outer = at(shapes!, 0);
 		expect(outer.children).toHaveLength(1);
-		const nested = outer.children![0];
+		const nested = at(outer.children!, 0);
 		expect(nested.kind).toBe('grpSp');
 		expect(nested.transform).toStrictEqual({
 			off: { x: 0, y: 0 },
@@ -266,14 +267,14 @@ describe('parseChartUserShapesDrawing', () => {
 			chExt: { cx: 500000, cy: 1000000 },
 		});
 		expect(nested.children).toHaveLength(1);
-		expect(nested.children![0].kind).toBe('sp');
-		expect(nested.children![0].prst).toBe('triangle');
+		expect(at(nested.children!, 0).kind).toBe('sp');
+		expect(at(nested.children!, 0).prst).toBe('triangle');
 		expect(nested.rawXml).toBeDefined();
 	});
 
 	it('flattenChartUserShapes applies the group transform to leaf positions', () => {
 		const xml = createXmlLookup();
-		const drawing: XmlObject = {
+		const drawing = xmlFixture({
 			'c:userShapes': {
 				'cdr:relSizeAnchor': {
 					'cdr:from': { 'cdr:x': 0.1, 'cdr:y': 0.1 },
@@ -310,7 +311,7 @@ describe('parseChartUserShapesDrawing', () => {
 					},
 				},
 			},
-		};
+		});
 		const shapes = parseChartUserShapesDrawing(drawing, xml, colors);
 		const flattened = flattenChartUserShapes(shapes);
 		expect(flattened).toHaveLength(2);
@@ -337,7 +338,7 @@ describe('parseChartUserShapesDrawing', () => {
 	// the group must convert to an exact EMU position delta, not vanish.
 	it('flattenChartUserShapes resolves an exact position for an absSizeAnchor group child with non-identity chOff/chExt', () => {
 		const xml = createXmlLookup();
-		const drawing: XmlObject = {
+		const drawing = xmlFixture({
 			'c:userShapes': {
 				'cdr:absSizeAnchor': {
 					'cdr:from': { 'cdr:x': 0.2, 'cdr:y': 0.3 },
@@ -363,7 +364,7 @@ describe('parseChartUserShapesDrawing', () => {
 					},
 				},
 			},
-		};
+		});
 		const shapes = parseChartUserShapesDrawing(drawing, xml, colors);
 		const flattened = flattenChartUserShapes(shapes);
 		expect(flattened).toHaveLength(1);
@@ -386,7 +387,7 @@ describe('parseChartUserShapesDrawing', () => {
 	// overlay.ts`'s old `shapeBox` computed from `absGroupOffsetEmu`).
 	it('flattenChartUserShapes folds an absSizeAnchor group child offset into `from` when given the chart box, instead of a separate absGroupOffsetEmu', () => {
 		const xml = createXmlLookup();
-		const drawing: XmlObject = {
+		const drawing = xmlFixture({
 			'c:userShapes': {
 				'cdr:absSizeAnchor': {
 					'cdr:from': { 'cdr:x': 0.2, 'cdr:y': 0.3 },
@@ -412,7 +413,7 @@ describe('parseChartUserShapesDrawing', () => {
 					},
 				},
 			},
-		};
+		});
 		const shapes = parseChartUserShapesDrawing(drawing, xml, colors);
 		// Chart box in EMU, e.g. an 840x420px chart (EMU_PER_PIXEL = 9525).
 		const chartBox = { width: 840 * 9525, height: 420 * 9525 };
@@ -426,14 +427,14 @@ describe('parseChartUserShapesDrawing', () => {
 			anchor: 'abs',
 			ext: { cx: 250000, cy: 500000 },
 		});
-		expect(flattened[0].from.x).toBeCloseTo(0.2 + 250000 / chartBox.width, 9);
-		expect(flattened[0].from.y).toBeCloseTo(0.3 + 500000 / chartBox.height, 9);
-		expect(flattened[0].absGroupOffsetEmu).toBeUndefined();
+		expect(at(flattened, 0).from.x).toBeCloseTo(0.2 + 250000 / chartBox.width, 9);
+		expect(at(flattened, 0).from.y).toBeCloseTo(0.3 + 500000 / chartBox.height, 9);
+		expect(at(flattened, 0).absGroupOffsetEmu).toBeUndefined();
 	});
 
 	it('parses a leaf shape and a group own rotation/flip from a:xfrm attributes', () => {
 		const xml = createXmlLookup();
-		const drawing: XmlObject = {
+		const drawing = xmlFixture({
 			'c:userShapes': {
 				'cdr:relSizeAnchor': [
 					{
@@ -471,18 +472,18 @@ describe('parseChartUserShapesDrawing', () => {
 					},
 				],
 			},
-		};
+		});
 		const shapes = parseChartUserShapesDrawing(drawing, xml, colors)!;
-		expect(shapes[0].rotation).toBe(30);
-		expect(shapes[0].flipV).toBeTruthy();
-		expect(shapes[0].flipH).toBeUndefined();
-		expect(shapes[1].transform!.rotation).toBe(15);
-		expect(shapes[1].transform!.flipH).toBeTruthy();
+		expect(at(shapes, 0).rotation).toBe(30);
+		expect(at(shapes, 0).flipV).toBeTruthy();
+		expect(at(shapes, 0).flipH).toBeUndefined();
+		expect(at(shapes, 1).transform!.rotation).toBe(15);
+		expect(at(shapes, 1).transform!.flipH).toBeTruthy();
 	});
 
 	it("flattenChartUserShapes composes a group's own rotation onto a leaf that fully occupies its box", () => {
 		const xml = createXmlLookup();
-		const drawing: XmlObject = {
+		const drawing = xmlFixture({
 			'c:userShapes': {
 				'cdr:relSizeAnchor': {
 					'cdr:from': { 'cdr:x': 0.1, 'cdr:y': 0.1 },
@@ -510,7 +511,7 @@ describe('parseChartUserShapesDrawing', () => {
 					},
 				},
 			},
-		};
+		});
 		const shapes = parseChartUserShapesDrawing(drawing, xml, colors);
 		const [leaf] = flattenChartUserShapes(shapes);
 		// The child fully occupies the group's own box, so its centre coincides
@@ -523,7 +524,7 @@ describe('parseChartUserShapesDrawing', () => {
 
 	it("flattenChartUserShapes rotates an off-centre leaf's position about the group's own centre", () => {
 		const xml = createXmlLookup();
-		const drawing: XmlObject = {
+		const drawing = xmlFixture({
 			'c:userShapes': {
 				'cdr:relSizeAnchor': {
 					'cdr:from': { 'cdr:x': 0, 'cdr:y': 0 },
@@ -551,7 +552,7 @@ describe('parseChartUserShapesDrawing', () => {
 					},
 				},
 			},
-		};
+		});
 		const shapes = parseChartUserShapesDrawing(drawing, xml, colors);
 		const [leaf] = flattenChartUserShapes(shapes);
 		// The child has no rotation of its own, so the leaf's composed rotation
@@ -589,7 +590,7 @@ describe('parseChartUserShapesDrawing', () => {
 				},
 			},
 		};
-		const drawing: XmlObject = {
+		const drawing = xmlFixture({
 			'c:userShapes': {
 				'cdr:relSizeAnchor': {
 					'cdr:from': { 'cdr:x': 0, 'cdr:y': 0 },
@@ -608,7 +609,7 @@ describe('parseChartUserShapesDrawing', () => {
 					},
 				},
 			},
-		};
+		});
 		const shapes = parseChartUserShapesDrawing(drawing, xml, colors);
 		const [leaf] = flattenChartUserShapes(shapes);
 		// Three flips (leaf, inner group, outer group) compose to one: odd count = flipped.
@@ -626,7 +627,7 @@ describe('parseChartUserShapesDrawing', () => {
 	// Left/Top so the rotated run's delta can be checked independently).
 	it("flattenChartUserShapes uses an absSizeAnchor's OWN ext as a top-level group's real aspect for rotation, not grpSpPr's differently-shaped ext", () => {
 		const xml = createXmlLookup();
-		const drawing: XmlObject = {
+		const drawing = xmlFixture({
 			'c:userShapes': {
 				'cdr:absSizeAnchor': {
 					'cdr:from': { 'cdr:x': 0.1, 'cdr:y': 0.1 },
@@ -658,7 +659,7 @@ describe('parseChartUserShapesDrawing', () => {
 					},
 				},
 			},
-		};
+		});
 		const shapes = parseChartUserShapesDrawing(drawing, xml, colors);
 		const [leaf] = flattenChartUserShapes(shapes);
 		expect(leaf!.ext!.cx).toBeCloseTo(1500000, -1);
@@ -693,7 +694,7 @@ describe('parseChartUserShapesDrawing', () => {
 				},
 			},
 		};
-		const drawing: XmlObject = {
+		const drawing = xmlFixture({
 			'c:userShapes': {
 				'cdr:absSizeAnchor': {
 					'cdr:from': { 'cdr:x': 0.1, 'cdr:y': 0.1 },
@@ -713,7 +714,7 @@ describe('parseChartUserShapesDrawing', () => {
 					},
 				},
 			},
-		};
+		});
 		const shapes = parseChartUserShapesDrawing(drawing, xml, colors);
 		const [leaf] = flattenChartUserShapes(shapes);
 		// COM: Left=102.9682pt, Top=103.4036pt (both relative to an anchor
@@ -739,7 +740,7 @@ describe('parseChartUserShapesDrawing', () => {
 	// see this test's assertions for the derivation.
 	it("flattenChartUserShapes uses the chart's own box as a top-level relSizeAnchor group's real aspect for rotation, when given one", () => {
 		const xml = createXmlLookup();
-		const drawing: XmlObject = {
+		const drawing = xmlFixture({
 			'c:userShapes': {
 				'cdr:relSizeAnchor': {
 					'cdr:from': { 'cdr:x': 0.1, 'cdr:y': 0.1 },
@@ -767,7 +768,7 @@ describe('parseChartUserShapesDrawing', () => {
 					},
 				},
 			},
-		};
+		});
 		const shapes = parseChartUserShapesDrawing(drawing, xml, colors);
 
 		// Without a chartBox: unchanged isotropic (1:1) fallback.
@@ -811,7 +812,7 @@ describe('parseChartUserShapesDrawing', () => {
 
 	it('registers a placeholder carrying rawXml for a graphicFrame anchor instead of dropping it', () => {
 		const xml = createXmlLookup();
-		const drawing: XmlObject = {
+		const drawing = xmlFixture({
 			'c:userShapes': {
 				'cdr:absSizeAnchor': {
 					'cdr:from': { 'cdr:x': 0.2, 'cdr:y': 0.2 },
@@ -819,7 +820,7 @@ describe('parseChartUserShapesDrawing', () => {
 					'cdr:graphicFrame': { '@_name': 'Nested Chart' },
 				},
 			},
-		};
+		});
 		const shapes = parseChartUserShapesDrawing(drawing, xml, colors);
 		expect(shapes).toStrictEqual([
 			{
@@ -844,7 +845,7 @@ describe('parseChartUserShapesDrawing', () => {
 				'a:ln': { '@_w': '9525', 'a:solidFill': { 'a:srgbClr': { '@_val': '000000' } } },
 			},
 		};
-		const drawing: XmlObject = {
+		const drawing = xmlFixture({
 			'c:userShapes': {
 				'cdr:relSizeAnchor': {
 					'cdr:from': { 'cdr:x': 0.05, 'cdr:y': 0.05 },
@@ -852,10 +853,10 @@ describe('parseChartUserShapesDrawing', () => {
 					'cdr:pic': picNode,
 				},
 			},
-		};
+		});
 		const shapes = parseChartUserShapesDrawing(drawing, xml, colors);
 		expect(shapes).toHaveLength(1);
-		const shape = shapes![0];
+		const shape = at(shapes!, 0);
 		expect(shape.kind).toBe('pic');
 		expect(shape.stroke).toBe('#000000');
 		expect(shape.rawXml).toStrictEqual(picNode);
@@ -864,7 +865,7 @@ describe('parseChartUserShapesDrawing', () => {
 
 	it('resolves a gradient fill from its first stop when there is no solid fill', () => {
 		const xml = createXmlLookup();
-		const drawing: XmlObject = {
+		const drawing = xmlFixture({
 			'c:userShapes': {
 				'cdr:relSizeAnchor': {
 					'cdr:from': { 'cdr:x': 0, 'cdr:y': 0 },
@@ -883,14 +884,14 @@ describe('parseChartUserShapesDrawing', () => {
 					},
 				},
 			},
-		};
+		});
 		const [shape] = parseChartUserShapesDrawing(drawing, xml, colors)!;
 		expect(shape.fill).toBe('#AABBCC');
 	});
 
 	it('resolves a pattern fill from its foreground colour', () => {
 		const xml = createXmlLookup();
-		const drawing: XmlObject = {
+		const drawing = xmlFixture({
 			'c:userShapes': {
 				'cdr:relSizeAnchor': {
 					'cdr:from': { 'cdr:x': 0, 'cdr:y': 0 },
@@ -906,7 +907,7 @@ describe('parseChartUserShapesDrawing', () => {
 					},
 				},
 			},
-		};
+		});
 		const [shape] = parseChartUserShapesDrawing(drawing, xml, colors)!;
 		expect(shape.fill).toBe('#654321');
 	});

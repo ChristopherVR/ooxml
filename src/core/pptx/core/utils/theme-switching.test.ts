@@ -8,6 +8,7 @@ import {
 	applyThemeToData,
 	buildThemeColorMap,
 } from './theme-switching';
+import { at } from '../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Test helpers
@@ -102,7 +103,7 @@ describe('reResolveSlideColors', () => {
 		const slides = [makeSlide([makeTextElement()])];
 		const result = reResolveSlideColors(slides, makeOldColorMap(), ION_COLORS);
 
-		const el = result[0].elements![0] as { textStyle?: { color?: string } };
+		const el = at(result, 0).elements![0] as { textStyle?: { color?: string } };
 		expect(el.textStyle?.color).toBe('#B01513');
 	});
 
@@ -110,7 +111,7 @@ describe('reResolveSlideColors', () => {
 		const slides = [makeSlide([makeShapeElement()])];
 		const result = reResolveSlideColors(slides, makeOldColorMap(), ION_COLORS);
 
-		const el = result[0].elements![0] as {
+		const el = at(result, 0).elements![0] as {
 			shapeStyle?: { fillColor?: string; strokeColor?: string };
 		};
 		expect(el.shapeStyle?.fillColor).toBe('#B01513'); // accent1
@@ -124,7 +125,7 @@ describe('reResolveSlideColors', () => {
 		const slides = [makeSlide([el])];
 		const result = reResolveSlideColors(slides, makeOldColorMap(), ION_COLORS);
 
-		const resultEl = result[0].elements![0] as {
+		const resultEl = at(result, 0).elements![0] as {
 			textStyle?: { color?: string };
 		};
 		expect(resultEl.textStyle?.color).toBe('#FF0000');
@@ -145,7 +146,7 @@ describe('reResolveSlideColors', () => {
 		const slides = [makeSlide([el])];
 		const result = reResolveSlideColors(slides, makeOldColorMap(), ION_COLORS);
 
-		const resultEl = result[0].elements![0] as {
+		const resultEl = at(result, 0).elements![0] as {
 			textSegments?: TextSegment[];
 		};
 		expect(resultEl.textSegments?.[0]?.style?.color).toBe('#B01513');
@@ -156,7 +157,7 @@ describe('reResolveSlideColors', () => {
 		const slide = makeSlide([]);
 		slide.backgroundColor = '#E7E6E6'; // lt2
 		const result = reResolveSlideColors([slide], makeOldColorMap(), ION_COLORS);
-		expect(result[0].backgroundColor).toBe('#D4D4D8'); // ION lt2
+		expect(at(result, 0).backgroundColor).toBe('#D4D4D8'); // ION lt2
 	});
 
 	it('remaps group child element colours recursively', () => {
@@ -173,7 +174,7 @@ describe('reResolveSlideColors', () => {
 		const slides = [makeSlide([group])];
 		const result = reResolveSlideColors(slides, makeOldColorMap(), ION_COLORS);
 
-		const grp = result[0].elements![0] as { children?: PptxElement[] };
+		const grp = at(result, 0).elements![0] as { children?: PptxElement[] };
 		const resultChild = grp.children?.[0] as {
 			shapeStyle?: { fillColor?: string };
 		};
@@ -196,7 +197,7 @@ describe('reResolveSlideColors', () => {
 		const slides = [makeSlide([el])];
 		const result = reResolveSlideColors(slides, makeOldColorMap(), ION_COLORS);
 
-		const resultEl = result[0].elements![0] as {
+		const resultEl = at(result, 0).elements![0] as {
 			shapeStyle?: {
 				fillGradientStops?: Array<{ color: string; position: number }>;
 			};
@@ -216,7 +217,7 @@ describe('reResolveSlideColors', () => {
 		const slides = [makeSlide([el])];
 		const result = reResolveSlideColors(slides, makeOldColorMap(), ION_COLORS);
 
-		const resultEl = result[0].elements![0] as {
+		const resultEl = at(result, 0).elements![0] as {
 			shapeStyle?: { shadowColor?: string; glowColor?: string };
 		};
 		expect(resultEl.shapeStyle?.shadowColor).toBe('#1B1D2C'); // ION dk2
@@ -301,7 +302,7 @@ describe('applyThemeToData', () => {
 		const result = applyThemeToData(data, ION_COLORS, undefined, 'Ion');
 
 		// Slides are re-resolved
-		const el = result.slides[0].elements![0] as {
+		const el = at(result.slides, 0).elements![0] as {
 			textStyle?: { color?: string };
 		};
 		expect(el.textStyle?.color).toBe('#B01513');
@@ -355,7 +356,7 @@ describe('applyThemeToData', () => {
 			'Ion',
 		);
 
-		const el = result.slides[0].elements[0] as {
+		const el = at(result.slides, 0).elements[0] as {
 			textStyle?: { fontFamily?: string };
 			textSegments?: TextSegment[];
 		};

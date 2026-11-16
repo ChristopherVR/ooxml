@@ -25,6 +25,7 @@ import { describe, expect, it } from 'vitest';
 
 import { PptxHandler } from '../../PptxHandler';
 import type { GroupPptxElement, PptxElement } from '../../types';
+import { at } from '../../../test-support/access';
 
 const REFLECTION =
 	'<a:effectLst><a:reflection blurRad="0" stA="60000" endA="0" endPos="100000" dist="24000" ' +
@@ -55,7 +56,7 @@ async function loadSlideElements(): Promise<PptxElement[]> {
 	const data = await handler.load(
 		bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer,
 	);
-	return [...data.slides[0].elements];
+	return [...at(data.slides, 0).elements];
 }
 
 /** Depth-first find by `name`, descending into groups. */

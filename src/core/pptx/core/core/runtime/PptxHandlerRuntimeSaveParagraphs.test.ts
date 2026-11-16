@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { TextSegment, TextStyle, XmlObject } from '../../types';
 import { PptxHandlerRuntime } from './PptxHandlerRuntimeImplementation';
+import { at } from '../../../test-support/access';
 
 /**
  * Regression coverage against the REAL `createParagraphsFromTextContent`.
@@ -66,8 +67,8 @@ describe('createParagraphsFromTextContent: paragraph direction is not flattened 
 			},
 		]);
 		expect(paragraphs).toHaveLength(2);
-		expect(paragraphs[1]['a:r']).toBeUndefined();
-		expect(paragraphs[1]['a:endParaRPr']).toStrictEqual({ '@_sz': '3000' });
+		expect(at(paragraphs, 1)['a:r']).toBeUndefined();
+		expect(at(paragraphs, 1)['a:endParaRPr']).toStrictEqual({ '@_sz': '3000' });
 	});
 
 	it('keeps a flagged empty-text paragraph break after collaboration decoding', () => {
@@ -84,8 +85,8 @@ describe('createParagraphsFromTextContent: paragraph direction is not flattened 
 			segment('After'),
 		]);
 		expect(paragraphs).toHaveLength(3);
-		expect(paragraphs[1]['a:r']).toBeUndefined();
-		expect(paragraphs[1]['a:endParaRPr']).toStrictEqual({ '@_sz': '3000' });
+		expect(at(paragraphs, 1)['a:r']).toBeUndefined();
+		expect(at(paragraphs, 1)['a:endParaRPr']).toStrictEqual({ '@_sz': '3000' });
 	});
 
 	it('never discards nonempty body text with an accidentally retained insertion hint', () => {
@@ -118,7 +119,7 @@ describe('createParagraphsFromTextContent: paragraph direction is not flattened 
 			endParaRunProperties: raw,
 			paragraphInsertionStyle: hint,
 		};
-		expect(runtime.build('', undefined, [carrier])[0]['a:endParaRPr']).toStrictEqual(raw);
+		expect(at(runtime.build('', undefined, [carrier]), 0)['a:endParaRPr']).toStrictEqual(raw);
 		const [paragraph] = runtime.build('', undefined, [
 			{
 				...carrier,
@@ -150,7 +151,7 @@ describe('createParagraphsFromTextContent: paragraph direction is not flattened 
 			{ text: '', style: { fontSize: 22 } },
 		]);
 		expect(runProperties(paragraph)).toHaveLength(1);
-		expect(runProperties(paragraph)[0]['@_sz']).toBe('1650');
+		expect(at(runProperties(paragraph), 0)['@_sz']).toBe('1650');
 	});
 
 	it('writes an element-level rtl as a:pPr/@rtl only', () => {
@@ -249,10 +250,10 @@ describe('createParagraphsFromTextContent: a runless paragraph stays runless', (
 		expect(paragraphs).toHaveLength(3);
 		expect('a:r' in paragraphs[1]).toBeFalsy();
 		// The blank line keeps its size: `a:endParaRPr` is still emitted.
-		expect(paragraphs[1]['a:endParaRPr']).toBeDefined();
+		expect(at(paragraphs, 1)['a:endParaRPr']).toBeDefined();
 		// The paragraphs that do have text keep their runs.
-		expect(paragraphs[0]['a:r']).toBeDefined();
-		expect(paragraphs[2]['a:r']).toBeDefined();
+		expect(at(paragraphs, 0)['a:r']).toBeDefined();
+		expect(at(paragraphs, 2)['a:r']).toBeDefined();
 	});
 
 	it('keeps the parsed endParaRPr on the blank paragraph it belongs to', () => {
@@ -268,7 +269,7 @@ describe('createParagraphsFromTextContent: a runless paragraph stays runless', (
 			segment('b'),
 		]);
 		expect('a:r' in paragraphs[1]).toBeFalsy();
-		expect((paragraphs[1]['a:endParaRPr'] as XmlObject)['@_sz']).toBe('1000');
+		expect((at(paragraphs, 1)['a:endParaRPr'] as XmlObject)['@_sz']).toBe('1000');
 	});
 
 	it('still writes the run of a paragraph whose only content is an empty run', () => {

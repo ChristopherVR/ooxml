@@ -18,6 +18,7 @@ import {
 	saveWith,
 	section,
 } from './chart-element-format-deck.test-util';
+import { at } from '../../../test-support/access';
 
 /**
  * Load -> chart Format pane edits -> save -> reload. Every edit the panes make
@@ -96,7 +97,7 @@ describe('chart Format pane edits save and reload', () => {
 
 		const chartData = reloaded.chart.chartData!;
 		expect(chartData.style?.chartAreaFill?.toUpperCase()).toContain('DDEBF7');
-		expect(chartData.series[0].color?.toUpperCase()).toContain('C00000');
+		expect(at(chartData.series, 0).color?.toUpperCase()).toContain('C00000');
 		expect(chartData.axes?.[0].spPr?.strokeColor?.toUpperCase()).toContain('7F7F7F');
 		expect(chartData.axes?.[1].majorGridlinesSpPr?.strokeColor?.toUpperCase()).toContain('D9D9D9');
 	});
@@ -139,7 +140,7 @@ describe('chart Format pane edits save and reload', () => {
 
 	it('leaves an untouched chart part byte-for-byte', async () => {
 		const { handler, data } = await loadChart(await buildDeck());
-		data.slides[0].isDirty = true;
+		at(data.slides, 0).isDirty = true;
 		const zip = await JSZip.loadAsync(await handler.save(data.slides));
 		expect(await zip.file('ppt/charts/chart1.xml')!.async('string')).toBe(BAR_CHART_XML);
 	});

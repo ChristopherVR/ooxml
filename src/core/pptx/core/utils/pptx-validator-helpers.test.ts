@@ -18,6 +18,7 @@ import { describe, expect, it } from 'vitest';
 
 import { PptxRuntimeDependencyFactory } from '../core/factories/PptxRuntimeDependencyFactory';
 import { createParser, extractRelationships, tryParseXml } from './pptx-validator-helpers';
+import { at } from '../../test-support/access';
 
 const loaderParser = () => new PptxRuntimeDependencyFactory().createParser();
 
@@ -35,9 +36,10 @@ describe('validator parser agrees with the loader parser', () => {
 
 		const parsed = tryParseXml(rels, createParser());
 		expect(parsed).not.toHaveProperty('error');
-		const validatorTarget = extractRelationships(
-			(parsed as { data: Record<string, unknown> }).data,
-		)[0].target;
+		const validatorTarget = at(
+			extractRelationships((parsed as { data: Record<string, unknown> }).data),
+			0,
+		).target;
 
 		const loaded = loaderParser().parse(rels) as {
 			Relationships: { Relationship: Record<string, string> };

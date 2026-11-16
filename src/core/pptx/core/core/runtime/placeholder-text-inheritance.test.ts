@@ -33,6 +33,7 @@ import { describe, it, expect } from 'vitest';
 import { requireFixture } from '../../../__tests__/require-fixture';
 import { PptxHandler } from '../../PptxHandler';
 import type { PptxElement, PptxSlide } from '../../types';
+import { at } from '../../../test-support/access';
 
 const fixturePath = requireFixture(
 	fileURLToPath(
@@ -71,7 +72,7 @@ describe('header/footer placeholder inheritance', () => {
 	it('keeps the empty ftr placeholder and resolves the master footer onto it', async () => {
 		const { slides } = await loadFixture();
 		// Before the fix slide 1 parsed to three elements and no footer at all.
-		const footer = placeholder(slides[0], 'ftr');
+		const footer = placeholder(at(slides, 0), 'ftr');
 		expect(footer).toBeDefined();
 		expect(footer).toHaveProperty('text', 'Fixture Footer');
 		expect(footer!.width).toBeGreaterThan(0);
@@ -80,7 +81,7 @@ describe('header/footer placeholder inheritance', () => {
 
 	it('tags the inherited footer runs as footer FIELDS so the dialog stays live', async () => {
 		const { slides } = await loadFixture();
-		const footer = placeholder(slides[0], 'ftr');
+		const footer = placeholder(at(slides, 0), 'ftr');
 		const segments = (footer as { textSegments?: Array<{ text: string; fieldType?: string }> })
 			.textSegments;
 		expect(segments?.some((segment) => segment.fieldType === 'footer')).toBeTruthy();
@@ -92,7 +93,7 @@ describe('header/footer placeholder inheritance', () => {
 		// under a different `idx`. Both parsed at 0x0 (invisible) before the fix.
 		// `placeholderType` is normalised to lower case, as `p:ph/@type` is.
 		for (const type of ['dt', 'sldnum']) {
-			const element = placeholder(slides[0], type);
+			const element = placeholder(at(slides, 0), type);
 			expect(element, `no ${type} placeholder`).toBeDefined();
 			expect(element!.width, `${type} width`).toBeGreaterThan(0);
 			expect(element!.height, `${type} height`).toBeGreaterThan(0);
@@ -111,7 +112,7 @@ describe('header/footer placeholder inheritance', () => {
 
 	it('writes a per-slide override once the footer text is actually edited', async () => {
 		const { handler, slides } = await loadFixture();
-		const footer = placeholder(slides[0], 'ftr') as {
+		const footer = placeholder(at(slides, 0), 'ftr') as {
 			text?: string;
 			textSegments?: unknown;
 		};

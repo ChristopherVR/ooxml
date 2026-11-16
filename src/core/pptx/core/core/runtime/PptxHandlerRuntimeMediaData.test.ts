@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Extracted logic from PptxHandlerRuntimeMediaData
@@ -433,7 +434,7 @@ describe('resolveAnimationSoundPaths', () => {
 
 		resolveAnimationSoundPaths(animations, resolveRelationshipTarget, 'ppt/slides/slide1.xml');
 
-		expect(animations[0].soundPath).toBe('ppt/media/click.wav-from-ppt/slides/slide1.xml');
+		expect(at(animations, 0).soundPath).toBe('ppt/media/click.wav-from-ppt/slides/slide1.xml');
 	});
 
 	it('leaves soundPath unset when the rId has no matching relationship', () => {
@@ -441,7 +442,7 @@ describe('resolveAnimationSoundPaths', () => {
 
 		resolveAnimationSoundPaths(animations, () => undefined, 'ppt/slides/slide1.xml');
 
-		expect(animations[0].soundPath).toBeUndefined();
+		expect(at(animations, 0).soundPath).toBeUndefined();
 	});
 
 	it('leaves an animation with no soundRId untouched', () => {
@@ -449,6 +450,6 @@ describe('resolveAnimationSoundPaths', () => {
 
 		resolveAnimationSoundPaths(animations, () => 'ppt/media/click.wav', 'ppt/slides/slide1.xml');
 
-		expect(animations[0].soundPath).toBeUndefined();
+		expect(at(animations, 0).soundPath).toBeUndefined();
 	});
 });

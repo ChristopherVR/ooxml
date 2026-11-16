@@ -10,8 +10,8 @@ export interface GetSlideResult {
 	slideIndex: number;
 	slideNumber: number;
 	hidden: boolean;
-	layoutName?: string;
-	backgroundColor?: string;
+	layoutName?: string | undefined;
+	backgroundColor?: string | undefined;
 	notes: string;
 	commentCount: number;
 	elements: Record<string, unknown>[];

@@ -14,6 +14,7 @@ import {
 	parseHexColor,
 	relativeLuminance,
 } from './accessibility-checker';
+import { at } from '../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Helpers to build minimal test fixtures
@@ -104,15 +105,15 @@ describe('checkMissingAltText', () => {
 		const slide = makeSlide([makeElement({ type: 'image', id: 'img1' })]);
 		const issues = checkMissingAltText(slide, 0);
 		expect(issues).toHaveLength(1);
-		expect(issues[0].type).toBe('missingAltText');
-		expect(issues[0].elementId).toBe('img1');
+		expect(at(issues, 0).type).toBe('missingAltText');
+		expect(at(issues, 0).elementId).toBe('img1');
 	});
 
 	it('flags charts without alt text', () => {
 		const slide = makeSlide([makeElement({ type: 'chart', id: 'chart1' })]);
 		const issues = checkMissingAltText(slide, 0);
 		expect(issues).toHaveLength(1);
-		expect(issues[0].message).toContain('Chart');
+		expect(at(issues, 0).message).toContain('Chart');
 	});
 
 	it('does not flag images with alt text', () => {
@@ -138,14 +139,14 @@ describe('checkMissingAltText', () => {
 		const slide = makeSlide([makeElement({ type: 'media', id: 'vid1' })]);
 		const issues = checkMissingAltText(slide, 0);
 		expect(issues).toHaveLength(1);
-		expect(issues[0].message).toContain('Media');
+		expect(at(issues, 0).message).toContain('Media');
 	});
 
 	it('flags SmartArt without alt text', () => {
 		const slide = makeSlide([makeElement({ type: 'smartArt', id: 'sa1' })]);
 		const issues = checkMissingAltText(slide, 0);
 		expect(issues).toHaveLength(1);
-		expect(issues[0].message).toContain('SmartArt');
+		expect(at(issues, 0).message).toContain('SmartArt');
 	});
 });
 
@@ -158,14 +159,14 @@ describe('checkMissingSlideTitle', () => {
 		const slide = makeSlide([makeElement({ type: 'text', id: 'body-text' })]);
 		const issues = checkMissingSlideTitle(slide, 0);
 		expect(issues).toHaveLength(1);
-		expect(issues[0].type).toBe('missingSlideTitle');
+		expect(at(issues, 0).type).toBe('missingSlideTitle');
 	});
 
 	it('flags slide with empty title', () => {
 		const slide = makeSlide([makeElement({ type: 'text', id: 'title-1', text: '' })]);
 		const issues = checkMissingSlideTitle(slide, 0);
 		expect(issues).toHaveLength(1);
-		expect(issues[0].message).toContain('empty');
+		expect(at(issues, 0).message).toContain('empty');
 	});
 
 	it('passes slide with populated title', () => {
@@ -197,7 +198,7 @@ describe('checkLowContrast', () => {
 		const slide = makeSlide([el]);
 		const issues = checkLowContrast(slide, 0, 4.5);
 		expect(issues).toHaveLength(1);
-		expect(issues[0].type).toBe('lowContrast');
+		expect(at(issues, 0).type).toBe('lowContrast');
 	});
 
 	it('passes black text on white background', () => {
@@ -269,7 +270,7 @@ describe('checkComplexTables', () => {
 		const slide = makeSlide([el]);
 		const issues = checkComplexTables(slide, 0);
 		expect(issues).toHaveLength(1);
-		expect(issues[0].type).toBe('complexTable');
+		expect(at(issues, 0).type).toBe('complexTable');
 	});
 
 	it('passes simple tables without merges', () => {
@@ -317,7 +318,7 @@ describe('checkDuplicateTitles', () => {
 		];
 		const issues = checkDuplicateTitles(slides);
 		expect(issues).toHaveLength(2);
-		expect(issues[0].type).toBe('duplicateTitle');
+		expect(at(issues, 0).type).toBe('duplicateTitle');
 	});
 
 	it('is case-insensitive', () => {
@@ -346,7 +347,7 @@ describe('checkBlankSlide', () => {
 		const slide = makeSlide([]);
 		const issues = checkBlankSlide(slide, 0);
 		expect(issues).toHaveLength(1);
-		expect(issues[0].type).toBe('blankSlide');
+		expect(at(issues, 0).type).toBe('blankSlide');
 	});
 
 	it('flags slide with only empty text elements', () => {
@@ -401,7 +402,7 @@ describe('checkPresentation', () => {
 		const data = { slides, width: 1280, height: 720 } as unknown as PptxData;
 		const issues = checkPresentation(data);
 		for (let i = 1; i < issues.length; i++) {
-			expect(issues[i].slideIndex).toBeGreaterThanOrEqual(issues[i - 1].slideIndex);
+			expect(at(issues, i).slideIndex).toBeGreaterThanOrEqual(at(issues, i - 1).slideIndex);
 		}
 	});
 

@@ -6,6 +6,7 @@ import type {
 	PptxSmartArtNodeStyle,
 	PptxSmartArtTextRun,
 } from '../../types';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Extracted from PptxHandlerRuntimeSmartArtXmlUtils
@@ -538,8 +539,8 @@ describe('extractSmartArtNodeRuns', () => {
 		};
 		const runs = extractSmartArtNodeRuns(point);
 		expect(runs).toHaveLength(1);
-		expect(runs![0].text).toBe('Bold');
-		expect(runs![0].rPr).toStrictEqual({ '@_b': '1' });
+		expect(at(runs!, 0).text).toBe('Bold');
+		expect(at(runs!, 0).rPr).toStrictEqual({ '@_b': '1' });
 	});
 
 	it('captures multiple runs with per-run properties', () => {
@@ -555,9 +556,9 @@ describe('extractSmartArtNodeRuns', () => {
 		};
 		const runs = extractSmartArtNodeRuns(point);
 		expect(runs).toHaveLength(2);
-		expect(runs![0].text).toBe('Bold');
-		expect(runs![1].text).toBe('Italic');
-		expect(runs![1].rPr).toStrictEqual({ '@_i': '1' });
+		expect(at(runs!, 0).text).toBe('Bold');
+		expect(at(runs!, 1).text).toBe('Italic');
+		expect(at(runs!, 1).rPr).toStrictEqual({ '@_i': '1' });
 	});
 
 	it('captures a run without rPr (no rPr field set)', () => {
@@ -566,8 +567,8 @@ describe('extractSmartArtNodeRuns', () => {
 		};
 		const runs = extractSmartArtNodeRuns(point);
 		expect(runs).toHaveLength(1);
-		expect(runs![0].text).toBe('Plain');
-		expect(runs![0].rPr).toBeUndefined();
+		expect(at(runs!, 0).text).toBe('Plain');
+		expect(at(runs!, 0).rPr).toBeUndefined();
 	});
 
 	it('only reads the first paragraph', () => {
@@ -578,14 +579,14 @@ describe('extractSmartArtNodeRuns', () => {
 		};
 		const runs = extractSmartArtNodeRuns(point);
 		expect(runs).toHaveLength(1);
-		expect(runs![0].text).toBe('One');
+		expect(at(runs!, 0).text).toBe('One');
 	});
 
 	it('deep-clones rPr so later edits do not mutate the source tree', () => {
 		const rPr = { '@_sz': '1800' };
 		const point: XmlObject = { 'dgm:t': { 'a:p': { 'a:r': { 'a:rPr': rPr, 'a:t': 'X' } } } };
 		const runs = extractSmartArtNodeRuns(point)!;
-		(runs[0].rPr as Record<string, unknown>)['@_sz'] = '9999';
+		(at(runs, 0).rPr as Record<string, unknown>)['@_sz'] = '9999';
 		expect(rPr['@_sz']).toBe('1800');
 	});
 });

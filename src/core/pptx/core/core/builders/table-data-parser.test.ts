@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import type { XmlObject } from '../../types';
 import { PptxTableDataParser } from './PptxTableDataParser';
 import type { PptxTableDataParserContext } from './PptxTableDataParser';
+import { at } from '../../../test-support/access';
 
 const EMU_PER_PX = 9525;
 
@@ -136,8 +137,8 @@ describe('pptxTableDataParser - row heights', () => {
 		const parser = new PptxTableDataParser(makeContext());
 		const result = parser.parseTableData(graphicData);
 
-		expect(result!.rows[0].height).toBe(370840 / EMU_PER_PX);
-		expect(result!.rows[1].height).toBe(914400 / EMU_PER_PX);
+		expect(at(result!.rows, 0).height).toBe(370840 / EMU_PER_PX);
+		expect(at(result!.rows, 1).height).toBe(914400 / EMU_PER_PX);
 	});
 
 	it.each([0, 1, 4762, 4763, 825500, 9144001])('round-trips a row height of %i EMU', (height) => {
@@ -148,7 +149,7 @@ describe('pptxTableDataParser - row heights', () => {
 				rows: [{ height: String(height), cells: [makeCell('A')] }],
 			}),
 		);
-		expect(Math.round(result!.rows[0].height! * EMU_PER_PX)).toBe(height);
+		expect(Math.round(at(result!.rows, 0).height! * EMU_PER_PX)).toBe(height);
 	});
 
 	it('defaults row height to 0 when @_h is missing', () => {
@@ -164,7 +165,7 @@ describe('pptxTableDataParser - row heights', () => {
 		const parser = new PptxTableDataParser(makeContext());
 		const result = parser.parseTableData(graphicData);
 
-		expect(result!.rows[0].height).toBe(0);
+		expect(at(result!.rows, 0).height).toBe(0);
 	});
 });
 
@@ -181,7 +182,7 @@ describe('pptxTableDataParser - cell text extraction', () => {
 		const parser = new PptxTableDataParser(makeContext());
 		const result = parser.parseTableData(graphicData);
 
-		expect(result!.rows[0].cells[0].text).toBe('Hello');
+		expect(at(at(result!.rows, 0).cells, 0).text).toBe('Hello');
 	});
 
 	it('concatenates multiple runs within a paragraph', () => {
@@ -204,7 +205,7 @@ describe('pptxTableDataParser - cell text extraction', () => {
 		const parser = new PptxTableDataParser(makeContext());
 		const result = parser.parseTableData(graphicData);
 
-		expect(result!.rows[0].cells[0].text).toBe('Bold Normal');
+		expect(at(at(result!.rows, 0).cells, 0).text).toBe('Bold Normal');
 	});
 
 	it('joins multiple paragraphs with newline', () => {
@@ -222,7 +223,7 @@ describe('pptxTableDataParser - cell text extraction', () => {
 		const parser = new PptxTableDataParser(makeContext());
 		const result = parser.parseTableData(graphicData);
 
-		expect(result!.rows[0].cells[0].text).toBe('Line 1\nLine 2');
+		expect(at(at(result!.rows, 0).cells, 0).text).toBe('Line 1\nLine 2');
 	});
 
 	it('includes field text from a:fld elements', () => {
@@ -242,7 +243,7 @@ describe('pptxTableDataParser - cell text extraction', () => {
 		const parser = new PptxTableDataParser(makeContext());
 		const result = parser.parseTableData(graphicData);
 
-		expect(result!.rows[0].cells[0].text).toBe('42');
+		expect(at(at(result!.rows, 0).cells, 0).text).toBe('42');
 	});
 });
 
@@ -268,10 +269,10 @@ describe('pptxTableDataParser - cell merge detection', () => {
 		const parser = new PptxTableDataParser(makeContext());
 		const result = parser.parseTableData(graphicData);
 
-		expect(result!.rows[0].cells[0].gridSpan).toBe(2);
-		expect(result!.rows[0].cells[1].hMerge).toBeTruthy();
-		expect(result!.rows[0].cells[2].gridSpan).toBeUndefined();
-		expect(result!.rows[0].cells[2].hMerge).toBeFalsy();
+		expect(at(at(result!.rows, 0).cells, 0).gridSpan).toBe(2);
+		expect(at(at(result!.rows, 0).cells, 1).hMerge).toBeTruthy();
+		expect(at(at(result!.rows, 0).cells, 2).gridSpan).toBeUndefined();
+		expect(at(at(result!.rows, 0).cells, 2).hMerge).toBeFalsy();
 	});
 
 	it('parses rowSpan and vMerge for vertical merge', () => {
@@ -285,9 +286,9 @@ describe('pptxTableDataParser - cell merge detection', () => {
 		const parser = new PptxTableDataParser(makeContext());
 		const result = parser.parseTableData(graphicData);
 
-		expect(result!.rows[0].cells[0].rowSpan).toBe(2);
-		expect(result!.rows[0].cells[0].vMerge).toBeFalsy();
-		expect(result!.rows[1].cells[0].vMerge).toBeTruthy();
+		expect(at(at(result!.rows, 0).cells, 0).rowSpan).toBe(2);
+		expect(at(at(result!.rows, 0).cells, 0).vMerge).toBeFalsy();
+		expect(at(at(result!.rows, 1).cells, 0).vMerge).toBeTruthy();
 	});
 });
 
@@ -452,7 +453,7 @@ describe('pptxTableDataParser - edge cases', () => {
 		const parser = new PptxTableDataParser(makeContext());
 		const result = parser.parseTableData(graphicData);
 
-		expect(result!.rows[0].cells[0].text).toBe('');
+		expect(at(at(result!.rows, 0).cells, 0).text).toBe('');
 	});
 
 	it('parses table with single column (non-array from XML parser)', () => {
@@ -474,7 +475,7 @@ describe('pptxTableDataParser - edge cases', () => {
 		expect(result).toBeDefined();
 		expect(result!.columnWidths).toHaveLength(1);
 		expect(result!.columnWidths[0]).toBeCloseTo(1.0, 5);
-		expect(result!.rows[0].cells[0].text).toBe('Only cell');
+		expect(at(at(result!.rows, 0).cells, 0).text).toBe('Only cell');
 	});
 });
 
@@ -595,8 +596,10 @@ describe('pptxTableDataParser - cell image fill', () => {
 		const parser = new PptxTableDataParser(makeContext({ resolveCellImagePath }));
 		const result = parser.parseTableData(graphicData, 'ppt/slides/slide3.xml');
 
-		expect(result!.rows[0].cells[0].style?.fillMode).toBe('image');
-		expect(result!.rows[0].cells[0].style?.backgroundImageFillPath).toBe('ppt/media/photo.png');
+		expect(at(at(result!.rows, 0).cells, 0).style?.fillMode).toBe('image');
+		expect(at(at(result!.rows, 0).cells, 0).style?.backgroundImageFillPath).toBe(
+			'ppt/media/photo.png',
+		);
 	});
 });
 
@@ -655,6 +658,6 @@ describe('pptxTableDataParser - default cell font size (otherStyle)', () => {
 		const parser = new PptxTableDataParser(makeContext({ resolveDefaultCellFontSize: () => 18 }));
 		const result = parser.parseTableData(graphicData, 'ppt/slides/slide1.xml');
 
-		expect(result!.rows[0].cells[0].style?.fontSize).toBeUndefined();
+		expect(at(at(result!.rows, 0).cells, 0).style?.fontSize).toBeUndefined();
 	});
 });

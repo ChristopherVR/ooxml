@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
 
 import { PptxHandler } from '../../PptxHandler';
 import type { PptxSmartArtData, SmartArtPptxElement } from '../../types';
+import { at } from '../../../test-support/access';
 
 const fixture = fileURLToPath(
 	new URL('../../../__tests__/fixtures/e2e/three-d-parity/three-d-smartart.pptx', import.meta.url),
@@ -21,7 +22,7 @@ async function loadSmartArt(slideNumbers: number[]): Promise<PptxSmartArtData[]>
 		bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer,
 	);
 	return slideNumbers.map((n) => {
-		const element = data.slides[n - 1].elements.find(
+		const element = at(data.slides, n - 1).elements.find(
 			(el): el is SmartArtPptxElement => el.type === 'smartArt',
 		);
 		if (!element) {

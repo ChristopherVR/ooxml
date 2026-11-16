@@ -5,6 +5,7 @@ import type { PptxSlide, PptxData } from '../../types/presentation';
 import type { TextSegment } from '../../types/text';
 import { applyTemplate, findPlaceholders, mailMerge } from './template-engine';
 import type { TemplateData } from './template-engine';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Test helpers
@@ -189,18 +190,18 @@ describe('applyTemplate — simple substitution', () => {
 	it('should replace a simple placeholder', () => {
 		const data = makeData([makeSlide('s1', [makeTextElement('t1', 'Hello {{name}}')])]);
 		applyTemplate(data, { name: 'Alice' });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 			textSegments?: TextSegment[];
 		};
-		expect(el.textSegments![0].text).toBe('Hello Alice');
+		expect(at(el.textSegments!, 0).text).toBe('Hello Alice');
 		expect(el.text).toBe('Hello Alice');
 	});
 
 	it('should replace multiple placeholders', () => {
 		const data = makeData([makeSlide('s1', [makeTextElement('t1', '{{first}} {{last}}')])]);
 		applyTemplate(data, { first: 'John', last: 'Doe' });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('John Doe');
@@ -209,7 +210,7 @@ describe('applyTemplate — simple substitution', () => {
 	it('should handle number values', () => {
 		const data = makeData([makeSlide('s1', [makeTextElement('t1', 'Total: {{count}}')])]);
 		applyTemplate(data, { count: 42 });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('Total: 42');
@@ -218,7 +219,7 @@ describe('applyTemplate — simple substitution', () => {
 	it('should handle boolean values', () => {
 		const data = makeData([makeSlide('s1', [makeTextElement('t1', 'Active: {{active}}')])]);
 		applyTemplate(data, { active: true });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('Active: true');
@@ -227,7 +228,7 @@ describe('applyTemplate — simple substitution', () => {
 	it('should leave unresolved placeholders intact', () => {
 		const data = makeData([makeSlide('s1', [makeTextElement('t1', 'Hello {{unknown}}')])]);
 		applyTemplate(data, { name: 'Alice' });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('Hello {{unknown}}');
@@ -236,7 +237,7 @@ describe('applyTemplate — simple substitution', () => {
 	it('should replace placeholders in shape elements', () => {
 		const data = makeData([makeSlide('s1', [makeShapeElement('s1', '{{label}}')])]);
 		applyTemplate(data, { label: 'Box 1' });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('Box 1');
@@ -247,7 +248,7 @@ describe('applyTemplate — simple substitution', () => {
 			makeSlide('s1', [makeGroupElement('g1', [makeTextElement('t1', '{{nested}}')])]),
 		]);
 		applyTemplate(data, { nested: 'found it' });
-		const group = data.slides[0].elements[0] as PptxElement & {
+		const group = at(data.slides, 0).elements[0] as PptxElement & {
 			children: PptxElement[];
 		};
 		const child = group.children[0] as PptxElement & { text?: string };
@@ -264,11 +265,11 @@ describe('applyTemplate — simple substitution', () => {
 			]),
 		]);
 		applyTemplate(data, { name: 'Alice', city: 'NYC' });
-		const table = data.slides[0].elements[0] as PptxElement & {
+		const table = at(data.slides, 0).elements[0] as PptxElement & {
 			tableData: { rows: Array<{ cells: Array<{ text: string }> }> };
 		};
-		expect(table.tableData.rows[0].cells[1].text).toBe('Alice');
-		expect(table.tableData.rows[1].cells[1].text).toBe('NYC');
+		expect(at(at(table.tableData.rows, 0).cells, 1).text).toBe('Alice');
+		expect(at(at(table.tableData.rows, 1).cells, 1).text).toBe('NYC');
 	});
 
 	it('should replace across multiple slides', () => {
@@ -277,14 +278,14 @@ describe('applyTemplate — simple substitution', () => {
 			makeSlide('s2', [makeTextElement('t2', '{{farewell}}')], 2),
 		]);
 		applyTemplate(data, { greeting: 'Hi', farewell: 'Bye' });
-		expect((data.slides[0].elements[0] as PptxElement & { text?: string }).text).toBe('Hi');
-		expect((data.slides[1].elements[0] as PptxElement & { text?: string }).text).toBe('Bye');
+		expect((at(data.slides, 0).elements[0] as PptxElement & { text?: string }).text).toBe('Hi');
+		expect((at(data.slides, 1).elements[0] as PptxElement & { text?: string }).text).toBe('Bye');
 	});
 
 	it('should handle empty string values', () => {
 		const data = makeData([makeSlide('s1', [makeTextElement('t1', 'Value: {{val}}')])]);
 		applyTemplate(data, { val: '' });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('Value: ');
@@ -299,7 +300,7 @@ describe('applyTemplate — nested/dot-notation', () => {
 	it('should resolve dot-notation paths', () => {
 		const data = makeData([makeSlide('s1', [makeTextElement('t1', '{{company.name}}')])]);
 		applyTemplate(data, { company: { name: 'Acme Corp' } });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('Acme Corp');
@@ -310,7 +311,7 @@ describe('applyTemplate — nested/dot-notation', () => {
 		applyTemplate(data, {
 			a: { b: { c: { d: 'deep' } } },
 		});
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('deep');
@@ -319,7 +320,7 @@ describe('applyTemplate — nested/dot-notation', () => {
 	it('should leave unresolved nested paths intact', () => {
 		const data = makeData([makeSlide('s1', [makeTextElement('t1', '{{company.ceo}}')])]);
 		applyTemplate(data, { company: { name: 'Acme' } });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('{{company.ceo}}');
@@ -328,7 +329,7 @@ describe('applyTemplate — nested/dot-notation', () => {
 	it('should leave path intact if intermediate is not an object', () => {
 		const data = makeData([makeSlide('s1', [makeTextElement('t1', '{{company.name.first}}')])]);
 		applyTemplate(data, { company: { name: 'Acme' } });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('{{company.name.first}}');
@@ -345,7 +346,7 @@ describe('applyTemplate — conditionals', () => {
 			makeSlide('s1', [makeTextElement('t1', '{{#if showName}}Name: Alice{{/if}}')]),
 		]);
 		applyTemplate(data, { showName: true });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('Name: Alice');
@@ -356,7 +357,7 @@ describe('applyTemplate — conditionals', () => {
 			makeSlide('s1', [makeTextElement('t1', 'Before{{#if showName}}Name: Alice{{/if}}After')]),
 		]);
 		applyTemplate(data, { showName: false });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('BeforeAfter');
@@ -367,7 +368,7 @@ describe('applyTemplate — conditionals', () => {
 			makeSlide('s1', [makeTextElement('t1', '{{#if name}}Hi {{name}}{{/if}}')]),
 		]);
 		applyTemplate(data, { name: 'Bob' });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('Hi Bob');
@@ -376,7 +377,7 @@ describe('applyTemplate — conditionals', () => {
 	it('should treat empty string as false', () => {
 		const data = makeData([makeSlide('s1', [makeTextElement('t1', 'X{{#if name}}Hi{{/if}}Y')])]);
 		applyTemplate(data, { name: '' });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('XY');
@@ -385,7 +386,7 @@ describe('applyTemplate — conditionals', () => {
 	it('should treat undefined key as false', () => {
 		const data = makeData([makeSlide('s1', [makeTextElement('t1', 'X{{#if missing}}Hi{{/if}}Y')])]);
 		applyTemplate(data, {});
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('XY');
@@ -396,7 +397,7 @@ describe('applyTemplate — conditionals', () => {
 			makeSlide('s1', [makeTextElement('t1', '{{#if !hideFooter}}Footer visible{{/if}}')]),
 		]);
 		applyTemplate(data, { hideFooter: false });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('Footer visible');
@@ -407,7 +408,7 @@ describe('applyTemplate — conditionals', () => {
 			makeSlide('s1', [makeTextElement('t1', '{{#if config.showChart}}Chart here{{/if}}')]),
 		]);
 		applyTemplate(data, { config: { showChart: true } });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('Chart here');
@@ -418,7 +419,7 @@ describe('applyTemplate — conditionals', () => {
 			makeSlide('s1', [makeTextElement('t1', '{{#if count}}Has items{{/if}}')]),
 		]);
 		applyTemplate(data, { count: 5 });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('Has items');
@@ -429,7 +430,7 @@ describe('applyTemplate — conditionals', () => {
 			makeSlide('s1', [makeTextElement('t1', 'X{{#if count}}Has items{{/if}}Y')]),
 		]);
 		applyTemplate(data, { count: 0 });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('XY');
@@ -440,7 +441,7 @@ describe('applyTemplate — conditionals', () => {
 			makeSlide('s1', [makeTextElement('t1', '{{#if items}}Has items{{/if}}')]),
 		]);
 		applyTemplate(data, { items: [{ x: 1 }] });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('Has items');
@@ -451,7 +452,7 @@ describe('applyTemplate — conditionals', () => {
 			makeSlide('s1', [makeTextElement('t1', 'X{{#if items}}Has items{{/if}}Y')]),
 		]);
 		applyTemplate(data, { items: [] as TemplateData[] });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('XY');
@@ -470,12 +471,12 @@ describe('applyTemplate — cross-run tokens', () => {
 		];
 		const data = makeData([makeSlide('s1', [makeTextElement('t1', 'Hello {{name}}', segments)])]);
 		applyTemplate(data, { name: 'World' });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 			textSegments?: TextSegment[];
 		};
 		// The first segment should contain the replacement
-		expect(el.textSegments![0].text).toContain('Hello World');
+		expect(at(el.textSegments!, 0).text).toContain('Hello World');
 		expect(el.text).toContain('Hello World');
 	});
 
@@ -487,7 +488,7 @@ describe('applyTemplate — cross-run tokens', () => {
 		];
 		const data = makeData([makeSlide('s1', [makeTextElement('t1', 'X{{val}}Y', segments)])]);
 		applyTemplate(data, { val: 'Z' });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('XZY');
@@ -503,7 +504,7 @@ describe('applyTemplate — cross-run tokens', () => {
 			makeSlide('s1', [makeTextElement('t1', '{{first}} {{last}}', segments)]),
 		]);
 		applyTemplate(data, { first: 'A', last: 'B' });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('A B');
@@ -533,7 +534,7 @@ describe('applyTemplate — loops', () => {
 			items: [{ title: 'Slide A' }, { title: 'Slide B' }],
 		});
 		const getText = (i: number) =>
-			(data.slides[i].elements[0] as PptxElement & { text?: string }).text;
+			(at(data.slides, i).elements[0] as PptxElement & { text?: string }).text;
 		expect(getText(0)).toBe('Title: Slide A');
 		expect(getText(1)).toBe('Title: Slide B');
 	});
@@ -547,7 +548,7 @@ describe('applyTemplate — loops', () => {
 			items: [{ title: 'Overview' }, { title: 'Details' }],
 		});
 		const getText = (i: number) =>
-			(data.slides[i].elements[0] as PptxElement & { text?: string }).text;
+			(at(data.slides, i).elements[0] as PptxElement & { text?: string }).text;
 		expect(getText(0)).toBe('Acme - Overview');
 		expect(getText(1)).toBe('Acme - Details');
 	});
@@ -567,7 +568,7 @@ describe('applyTemplate — loops', () => {
 		applyTemplate(data, {
 			items: [{ name: 'Alice' }],
 		});
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).not.toContain('{{#each');
@@ -586,12 +587,14 @@ describe('applyTemplate — loops', () => {
 			items: [{ title: 'A' }, { title: 'B' }],
 		});
 		expect(data.slides).toHaveLength(4); // intro + 2 loop + end
-		expect((data.slides[0].elements[0] as PptxElement & { text?: string }).text).toBe(
+		expect((at(data.slides, 0).elements[0] as PptxElement & { text?: string }).text).toBe(
 			'Intro: Acme',
 		);
-		expect((data.slides[1].elements[0] as PptxElement & { text?: string }).text).toBe('A');
-		expect((data.slides[2].elements[0] as PptxElement & { text?: string }).text).toBe('B');
-		expect((data.slides[3].elements[0] as PptxElement & { text?: string }).text).toBe('End: Acme');
+		expect((at(data.slides, 1).elements[0] as PptxElement & { text?: string }).text).toBe('A');
+		expect((at(data.slides, 2).elements[0] as PptxElement & { text?: string }).text).toBe('B');
+		expect((at(data.slides, 3).elements[0] as PptxElement & { text?: string }).text).toBe(
+			'End: Acme',
+		);
 	});
 
 	it('should handle undefined array key by producing zero loop slides', () => {
@@ -613,7 +616,7 @@ describe('applyTemplate — notes', () => {
 		slide.notes = 'Speaker: {{speaker}}';
 		const data = makeData([slide]);
 		applyTemplate(data, { speaker: 'Dr. Smith' });
-		expect(data.slides[0].notes).toBe('Speaker: Dr. Smith');
+		expect(at(data.slides, 0).notes).toBe('Speaker: Dr. Smith');
 	});
 });
 
@@ -651,7 +654,7 @@ describe('applyTemplate — edge cases', () => {
 	it('should handle placeholder with whitespace in key', () => {
 		const data = makeData([makeSlide('s1', [makeTextElement('t1', '{{ name }}')])]);
 		applyTemplate(data, { name: 'Alice' });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('Alice');
@@ -669,7 +672,7 @@ describe('applyTemplate — edge cases', () => {
 		} as PptxElement;
 		const data = makeData([makeSlide('s1', [el])]);
 		applyTemplate(data, { name: 'Alice' });
-		const updated = data.slides[0].elements[0] as PptxElement & {
+		const updated = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(updated.text).toBe('Hello Alice');
@@ -678,7 +681,7 @@ describe('applyTemplate — edge cases', () => {
 	it('should not substitute objects/arrays into text placeholders', () => {
 		const data = makeData([makeSlide('s1', [makeTextElement('t1', 'Val: {{obj}}')])]);
 		applyTemplate(data, { obj: { nested: 'value' } });
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			text?: string;
 		};
 		expect(el.text).toBe('Val: {{obj}}');
@@ -694,8 +697,8 @@ describe('applyTemplate — edge cases', () => {
 			makeSlide('s1', [makeTextElement('t1', 'Line 1 {{a}}Line 2 {{b}}', segments)]),
 		]);
 		applyTemplate(data, { a: 'X', b: 'Y' });
-		expect(segments[0].text).toBe('Line 1 X');
-		expect(segments[2].text).toBe('Line 2 Y');
+		expect(at(segments, 0).text).toBe('Line 1 X');
+		expect(at(segments, 2).text).toBe('Line 2 Y');
 	});
 });
 
@@ -731,10 +734,10 @@ describe('mailMerge', () => {
 		await mailMerge(mockHandler, data, [{ name: 'Alice' }]);
 
 		// Original should be unchanged
-		const el = data.slides[0].elements[0] as PptxElement & {
+		const el = at(data.slides, 0).elements[0] as PptxElement & {
 			textSegments?: TextSegment[];
 		};
-		expect(el.textSegments![0].text).toBe('Hello {{name}}');
+		expect(at(el.textSegments!, 0).text).toBe('Hello {{name}}');
 	});
 
 	it('should return empty array for empty records', async () => {
@@ -763,9 +766,9 @@ describe('mailMerge', () => {
 		await mailMerge(mockHandler, data, [{ name: 'Alice' }]);
 
 		expect(capturedSlides).not.toBeNull();
-		const el = capturedSlides![0].elements[0] as PptxElement & {
+		const el = at(capturedSlides!, 0).elements[0] as PptxElement & {
 			textSegments?: TextSegment[];
 		};
-		expect(el.textSegments![0].text).toBe('Hello Alice');
+		expect(at(el.textSegments!, 0).text).toBe('Hello Alice');
 	});
 });

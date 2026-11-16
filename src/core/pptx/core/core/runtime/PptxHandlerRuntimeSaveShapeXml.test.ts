@@ -36,6 +36,7 @@ import {
 	buildGroupTransformXml,
 	classifyGroupChildTag,
 } from './save-group-shape-xml';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // OLE save helpers — re-implemented from PptxHandlerRuntimeSaveShapeXml so
@@ -165,8 +166,8 @@ function parseInkPathTokens(svgPath: string): {
 		for (const token of tokens) {
 			const parts = token.trim().split(/\s+/);
 			const cmd = parts[0];
-			const x = parseFloat(parts[1]);
-			const y = parseFloat(parts[2]);
+			const x = parseFloat(at(parts, 1));
+			const y = parseFloat(at(parts, 2));
 			if (cmd === 'M') {
 				moveToList.push({ x, y });
 			} else if (cmd === 'L') {
@@ -201,8 +202,8 @@ function buildInkShapeXml(el: {
 			for (const token of tokens) {
 				const parts = token.trim().split(/\s+/);
 				const cmd = parts[0];
-				const x = parseFloat(parts[1]);
-				const y = parseFloat(parts[2]);
+				const x = parseFloat(at(parts, 1));
+				const y = parseFloat(at(parts, 2));
 				const pt = {
 					'@_x': String(Math.round(x * EMU_PER_PX)),
 					'@_y': String(Math.round(y * EMU_PER_PX)),
@@ -928,7 +929,7 @@ describe.runIf(existsSync(fixturePath(CHART_GALLERY)))(
 	() => {
 		it('writes a grouped chart as <p:graphicFrame>, not <p:sp>', async () => {
 			const { handler, data } = await loadFixture(CHART_GALLERY);
-			const slide = data.slides[0];
+			const slide = at(data.slides, 0);
 			const chart = slide.elements.find((el) => el.type === 'chart');
 			expect(chart).toBeDefined();
 
@@ -955,7 +956,7 @@ describe.runIf(existsSync(fixturePath(CHART_GALLERY)))(
 
 		it('re-parses the grouped chart as a chart element', async () => {
 			const { handler, data } = await loadFixture(CHART_GALLERY);
-			const slide = data.slides[0];
+			const slide = at(data.slides, 0);
 			const chart = slide.elements.find((el) => el.type === 'chart')!;
 			slide.elements = [
 				{
@@ -972,7 +973,7 @@ describe.runIf(existsSync(fixturePath(CHART_GALLERY)))(
 
 			const saved = await handler.save(data.slides);
 			const reloaded = await new PptxHandler().load(saved.buffer as ArrayBuffer);
-			const group = reloaded.slides[0].elements.find((el) => el.type === 'group');
+			const group = at(reloaded.slides, 0).elements.find((el) => el.type === 'group');
 			expect(group).toBeDefined();
 			expect((group as GroupPptxElement).children.map((child) => child.type)).toStrictEqual([
 				'chart',
@@ -1115,7 +1116,7 @@ describe.runIf(existsSync(fixturePath(LINKED_TEXTBOX)))(
 			const { handler, data } = await loadFixture(LINKED_TEXTBOX);
 			const slide = data.slides.find((s) => s.elements.some((el) => el.type === 'group'))!;
 			const group = slide.elements.find((el) => el.type === 'group') as GroupPptxElement;
-			editChild(group.children[0]);
+			editChild(at(group.children, 0));
 			slide.isDirty = true;
 
 			const saved = await handler.save(data.slides);
@@ -1134,7 +1135,7 @@ describe.runIf(existsSync(fixturePath(LINKED_TEXTBOX)))(
 			const rGroup = reloaded.slides
 				.find((s) => s.id === slide.id)!
 				.elements.find((el) => el.type === 'group') as GroupPptxElement;
-			const rChild = rGroup.children[0];
+			const rChild = at(rGroup.children, 0);
 			expect(rChild.text).toBe(EDITED);
 			// The moved child (ChainB-head) is now the LEFTMOST child, so
 			// PowerPoint's own bounding-box auto-fit (`group-tight-rewrap.ts`)
@@ -1191,7 +1192,7 @@ describe.runIf(existsSync(fixturePath(CHART_GALLERY)))(
 	() => {
 		async function savedGroupTagOrder(chartFirst: boolean): Promise<string[]> {
 			const { handler, data } = await loadFixture(CHART_GALLERY);
-			const slide = data.slides[0];
+			const slide = at(data.slides, 0);
 			const chart = slide.elements.find((el) => el.type === 'chart')!;
 			const text = slide.elements.find((el) => el.type === 'text')!;
 			const children = chartFirst ? [chart, text] : [text, chart];
@@ -1227,7 +1228,7 @@ describe.runIf(existsSync(fixturePath(CHART_GALLERY)))(
 
 		it('never leaks an ordering marker into the serialized XML', async () => {
 			const { handler, data } = await loadFixture(CHART_GALLERY);
-			const slide = data.slides[0];
+			const slide = at(data.slides, 0);
 			const chart = slide.elements.find((el) => el.type === 'chart')!;
 			const text = slide.elements.find((el) => el.type === 'text')!;
 			slide.elements = [

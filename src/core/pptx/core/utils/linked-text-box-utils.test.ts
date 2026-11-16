@@ -8,6 +8,7 @@ import {
 	getLinkedTextBoxSegments,
 } from './linked-text-box-utils';
 import type { LinkedTextBoxChain } from './linked-text-box-utils';
+import { at } from '../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Helpers to build test elements
@@ -72,7 +73,7 @@ describe('buildLinkedTextBoxChains', () => {
 	it('defaults linkedTxbxSeq to 0 when missing', () => {
 		const elements: PptxElement[] = [makeTextElement({ id: 'a', linkedTxbxId: 5 })];
 		const chains = buildLinkedTextBoxChains(elements);
-		expect(chains.get(5)!.members[0].seq).toBe(0);
+		expect(at(chains.get(5)!.members, 0).seq).toBe(0);
 	});
 
 	it('ignores non-text elements', () => {
@@ -197,8 +198,8 @@ describe('distributeSegmentsAcrossChain', () => {
 		};
 		const result = distributeSegmentsAcrossChain(chain);
 		expect(result.get('t1')).toHaveLength(2);
-		expect(result.get('t1')![0].text).toBe('Hello ');
-		expect(result.get('t1')![1].text).toBe('World');
+		expect(at(result.get('t1')!, 0).text).toBe('Hello ');
+		expect(at(result.get('t1')!, 1).text).toBe('World');
 	});
 
 	it('distributes segments across two boxes based on capacity', () => {

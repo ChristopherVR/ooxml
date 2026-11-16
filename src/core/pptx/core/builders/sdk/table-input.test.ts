@@ -11,6 +11,7 @@ import { PptxHandler } from '../../PptxHandler';
 import type { TablePptxElement } from '../../types';
 import { createTableElement } from './ElementFactory';
 import type { TableInput, TableOptions } from './types';
+import { must } from '../../../test-support/access';
 
 async function roundTrip(
 	input: TableInput,
@@ -76,7 +77,7 @@ describe('fillMergedCells', () => {
 			['v', 'hv', 'C'],
 			['D', 'E', 'h'],
 		];
-		const el = createTableElement(input);
+		const el = must(createTableElement(input));
 		expect(el.tableData.columnWidths).toHaveLength(3);
 		expect(layout(el)).toEqual(expected);
 		const { xml, table } = await roundTrip(input);
@@ -101,9 +102,11 @@ describe('fillMergedCells', () => {
 	});
 
 	it('takes the cells as given without fillMergedCells', () => {
-		const el = createTableElement({
-			rows: [{ cells: [{ text: 'A', gridSpan: 2 }, { text: '' }] }],
-		});
+		const el = must(
+			createTableElement({
+				rows: [{ cells: [{ text: 'A', gridSpan: 2 }, { text: '' }] }],
+			}),
+		);
 		expect(el.tableData.rows[0]?.cells.map((c) => c.hMerge ?? false)).toEqual([false, false]);
 	});
 
@@ -130,10 +133,12 @@ describe('column widths', () => {
 	});
 
 	it('accepts a zero-width column beside a wider one', () => {
-		const el = createTableElement({
-			rows: [{ cells: [{ text: 'a' }, { text: 'b' }] }],
-			columnWidths: [0, 3],
-		});
+		const el = must(
+			createTableElement({
+				rows: [{ cells: [{ text: 'a' }, { text: 'b' }] }],
+				columnWidths: [0, 3],
+			}),
+		);
 		expect(el.tableData.columnWidths).toEqual([0, 1]);
 	});
 });

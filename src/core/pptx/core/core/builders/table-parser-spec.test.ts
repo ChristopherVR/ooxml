@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import type { XmlObject } from '../../types';
 import { PptxTableDataParser } from './PptxTableDataParser';
 import type { PptxTableDataParserContext } from './PptxTableDataParser';
+import { at } from '../../../test-support/access';
 
 const EMU_PER_PX = 9525;
 
@@ -109,7 +110,7 @@ describe('pptxTableDataParser — table structure', () => {
 		expect(result).toBeDefined();
 		expect(result!.rows).toHaveLength(1);
 		// Preserve fractional pixels so save can recover the original EMU.
-		expect(result!.rows[0].height).toBe(370840 / EMU_PER_PX);
+		expect(at(result!.rows, 0).height).toBe(370840 / EMU_PER_PX);
 	});
 
 	it('extracts cell text from a:txBody > a:p > a:r > a:t', () => {
@@ -138,7 +139,7 @@ describe('pptxTableDataParser — table structure', () => {
 		const result = parser.parseTableData(graphicData);
 
 		expect(result).toBeDefined();
-		expect(result!.rows[0].cells[0].text).toBe('Cell 1');
+		expect(at(at(result!.rows, 0).cells, 0).text).toBe('Cell 1');
 	});
 
 	it('concatenates multiple runs into cell text', () => {
@@ -166,7 +167,7 @@ describe('pptxTableDataParser — table structure', () => {
 		const parser = new PptxTableDataParser(makeContext());
 		const result = parser.parseTableData(graphicData);
 
-		expect(result!.rows[0].cells[0].text).toBe('Hello World');
+		expect(at(at(result!.rows, 0).cells, 0).text).toBe('Hello World');
 	});
 
 	it('joins multiple paragraphs with newline', () => {
@@ -189,7 +190,7 @@ describe('pptxTableDataParser — table structure', () => {
 		const parser = new PptxTableDataParser(makeContext());
 		const result = parser.parseTableData(graphicData);
 
-		expect(result!.rows[0].cells[0].text).toBe('Line 1\nLine 2');
+		expect(at(at(result!.rows, 0).cells, 0).text).toBe('Line 1\nLine 2');
 	});
 
 	it('parses gridSpan for horizontal merge', () => {
@@ -235,13 +236,13 @@ describe('pptxTableDataParser — table structure', () => {
 		const result = parser.parseTableData(graphicData);
 
 		expect(result).toBeDefined();
-		const cells = result!.rows[0].cells;
+		const cells = at(result!.rows, 0).cells;
 		expect(cells).toHaveLength(3);
-		expect(cells[0].gridSpan).toBe(2);
-		expect(cells[0].text).toBe('Merged Cell');
-		expect(cells[1].hMerge).toBeTruthy();
-		expect(cells[2].text).toBe('Single');
-		expect(cells[2].gridSpan).toBeUndefined();
+		expect(at(cells, 0).gridSpan).toBe(2);
+		expect(at(cells, 0).text).toBe('Merged Cell');
+		expect(at(cells, 1).hMerge).toBeTruthy();
+		expect(at(cells, 2).text).toBe('Single');
+		expect(at(cells, 2).gridSpan).toBeUndefined();
 	});
 
 	it('parses rowSpan and vMerge for vertical merge', () => {
@@ -293,10 +294,10 @@ describe('pptxTableDataParser — table structure', () => {
 
 		expect(result).toBeDefined();
 		expect(result!.rows).toHaveLength(3);
-		expect(result!.rows[0].cells[0].rowSpan).toBe(3);
-		expect(result!.rows[0].cells[0].vMerge).toBeFalsy();
-		expect(result!.rows[1].cells[0].vMerge).toBeTruthy();
-		expect(result!.rows[2].cells[0].vMerge).toBeTruthy();
+		expect(at(at(result!.rows, 0).cells, 0).rowSpan).toBe(3);
+		expect(at(at(result!.rows, 0).cells, 0).vMerge).toBeFalsy();
+		expect(at(at(result!.rows, 1).cells, 0).vMerge).toBeTruthy();
+		expect(at(at(result!.rows, 2).cells, 0).vMerge).toBeTruthy();
 	});
 });
 
@@ -432,8 +433,8 @@ describe('pptxTableDataParser — table properties & style', () => {
 		expect(result!.columnWidths).toHaveLength(1);
 		expect(result!.columnWidths[0]).toBeCloseTo(1.0, 5);
 		expect(result!.rows).toHaveLength(1);
-		expect(result!.rows[0].cells).toHaveLength(1);
-		expect(result!.rows[0].cells[0].text).toBe('Only cell');
+		expect(at(result!.rows, 0).cells).toHaveLength(1);
+		expect(at(at(result!.rows, 0).cells, 0).text).toBe('Only cell');
 	});
 
 	it('parses a full spec-accurate table with multiple rows and cells', () => {
@@ -518,13 +519,13 @@ describe('pptxTableDataParser — table properties & style', () => {
 
 		expect(result).toBeDefined();
 		expect(result!.rows).toHaveLength(2);
-		expect(result!.rows[0].cells).toHaveLength(3);
-		expect(result!.rows[0].cells[0].text).toBe('Header A');
-		expect(result!.rows[0].cells[1].text).toBe('Header B');
-		expect(result!.rows[0].cells[2].text).toBe('Header C');
-		expect(result!.rows[1].cells[0].text).toBe('A1');
-		expect(result!.rows[1].cells[1].text).toBe('B1');
-		expect(result!.rows[1].cells[2].text).toBe('C1');
+		expect(at(result!.rows, 0).cells).toHaveLength(3);
+		expect(at(at(result!.rows, 0).cells, 0).text).toBe('Header A');
+		expect(at(at(result!.rows, 0).cells, 1).text).toBe('Header B');
+		expect(at(at(result!.rows, 0).cells, 2).text).toBe('Header C');
+		expect(at(at(result!.rows, 1).cells, 0).text).toBe('A1');
+		expect(at(at(result!.rows, 1).cells, 1).text).toBe('B1');
+		expect(at(at(result!.rows, 1).cells, 2).text).toBe('C1');
 		expect(result!.firstRowHeader).toBeTruthy();
 		expect(result!.bandedRows).toBeTruthy();
 		expect(result!.tableStyleId).toBe('{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}');

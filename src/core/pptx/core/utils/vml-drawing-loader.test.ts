@@ -3,6 +3,7 @@ import type JSZip from 'jszip';
 import { describe, it, expect } from 'vitest';
 
 import { loadLegacyVmlDrawings } from './vml-drawing-loader';
+import { at } from '../../test-support/access';
 
 const parser = new XMLParser({ ignoreAttributes: false });
 
@@ -44,7 +45,7 @@ describe('loadLegacyVmlDrawings', () => {
 		);
 
 		expect(elements).toHaveLength(1);
-		expect(elements[0].type).toBe('shape');
+		expect(at(elements, 0).type).toBe('shape');
 	});
 
 	it('returns an empty array when there is no vmlDrawing relationship', async () => {

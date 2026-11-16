@@ -16,6 +16,7 @@ import {
 	layoutPyramid,
 } from './smartart-layouts';
 import { layoutHierarchy, layoutRelationship } from './smartart-layouts-tree';
+import { at } from '../../test-support/access';
 
 // Reset shape counter to keep test IDs deterministic.
 beforeEach(() => {
@@ -54,7 +55,7 @@ describe('layoutList', () => {
 	it('assigns each shape the correct text', () => {
 		const nodes = makeNodes(['Alpha', 'Beta']);
 		const elements = layoutList(nodes, bounds);
-		expect(elements[0].type).toBe('shape');
+		expect(at(elements, 0).type).toBe('shape');
 		expect((elements[0] as Record<string, unknown>).text).toBe('Alpha');
 		expect((elements[1] as Record<string, unknown>).text).toBe('Beta');
 	});
@@ -69,7 +70,7 @@ describe('layoutList', () => {
 		const nodes = makeNodes(['A', 'B']);
 		const elements = layoutList(nodes, bounds);
 		// Second element should be below the first
-		expect(elements[1].y).toBeGreaterThan(elements[0].y);
+		expect(at(elements, 1).y).toBeGreaterThan(at(elements, 0).y);
 	});
 
 	it('applies theme colours when provided', () => {
@@ -115,14 +116,14 @@ describe('layoutProcess', () => {
 		const nodes = makeNodes(['Solo']);
 		const elements = layoutProcess(nodes, bounds);
 		expect(elements).toHaveLength(1);
-		expect(elements[0].type).toBe('shape');
+		expect(at(elements, 0).type).toBe('shape');
 	});
 
 	it('arranges shapes horizontally (left to right)', () => {
 		const nodes = makeNodes(['A', 'B']);
 		const elements = layoutProcess(nodes, bounds);
 		const shapes = elements.filter((e) => e.type === 'shape');
-		expect(shapes[1].x).toBeGreaterThan(shapes[0].x);
+		expect(at(shapes, 1).x).toBeGreaterThan(at(shapes, 0).x);
 	});
 
 	it('keeps all shapes within bounds', () => {
@@ -158,7 +159,7 @@ describe('layoutCycle', () => {
 		const nodes = makeNodes(['Solo']);
 		const elements = layoutCycle(nodes, bounds);
 		expect(elements).toHaveLength(1);
-		expect(elements[0].type).toBe('shape');
+		expect(at(elements, 0).type).toBe('shape');
 	});
 
 	it('places nodes radially around a center', () => {
@@ -195,9 +196,9 @@ describe('layoutMatrix', () => {
 		const nodes = makeNodes(['A', 'B', 'C', 'D']);
 		const elements = layoutMatrix(nodes, bounds);
 		// Items 0 and 1 should be on the first row (same y)
-		expect(elements[0].y).toBe(elements[1].y);
+		expect(at(elements, 0).y).toBe(at(elements, 1).y);
 		// Items 0 and 2 should be in the first column (same x)
-		expect(elements[0].x).toBe(elements[2].x);
+		expect(at(elements, 0).x).toBe(at(elements, 2).x);
 	});
 
 	it('uses roundRect shapes', () => {
@@ -226,14 +227,14 @@ describe('layoutPyramid', () => {
 		const nodes = makeNodes(['Top', 'Bottom']);
 		const elements = layoutPyramid(nodes, bounds);
 		// Bottom item (index 1) should be wider
-		expect(elements[1].width).toBeGreaterThan(elements[0].width);
+		expect(at(elements, 1).width).toBeGreaterThan(at(elements, 0).width);
 	});
 
 	it('stacks bands vertically', () => {
 		const nodes = makeNodes(['A', 'B', 'C']);
 		const elements = layoutPyramid(nodes, bounds);
 		for (let i = 1; i < elements.length; i++) {
-			expect(elements[i].y).toBeGreaterThan(elements[i - 1].y);
+			expect(at(elements, i).y).toBeGreaterThan(at(elements, i - 1).y);
 		}
 	});
 
@@ -241,7 +242,7 @@ describe('layoutPyramid', () => {
 		const nodes = makeNodes(['A', 'B']);
 		const elements = layoutPyramid(nodes, bounds);
 		// Top band (narrower) should have a larger x offset
-		expect(elements[0].x).toBeGreaterThan(elements[1].x);
+		expect(at(elements, 0).x).toBeGreaterThan(at(elements, 1).x);
 	});
 });
 
@@ -283,7 +284,7 @@ describe('layoutHierarchy', () => {
 		const elements = layoutHierarchy(nodes, bounds);
 		const shapes = elements.filter((e) => e.type === 'shape');
 		// Root should have a lower y than child (higher on screen)
-		expect(shapes[0].y).toBeLessThan(shapes[1].y);
+		expect(at(shapes, 0).y).toBeLessThan(at(shapes, 1).y);
 	});
 });
 
@@ -320,7 +321,7 @@ describe('layoutRelationship', () => {
 		// Should be arranged horizontally (increasing x)
 		const xs = elements.map((e) => e.x);
 		for (let i = 1; i < xs.length; i++) {
-			expect(xs[i]).toBeGreaterThan(xs[i - 1]);
+			expect(xs[i]).toBeGreaterThan(at(xs, i - 1));
 		}
 	});
 });

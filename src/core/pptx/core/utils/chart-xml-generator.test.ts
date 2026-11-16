@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { PptxChartData, XmlObject } from '../types';
 import { buildChartSpaceXml } from './chart-xml-generator';
+import { at } from '../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -45,7 +46,7 @@ describe('buildChartSpaceXml', () => {
 			}),
 		);
 		const container = plotArea(tree)['c:barChart'] as XmlObject;
-		const series = (container['c:ser'] as XmlObject[])[0];
+		const series = at(container['c:ser'] as XmlObject[], 0);
 		const seriesLabels = series['c:dLbls'] as XmlObject;
 		const point = seriesLabels['c:dLbl'] as XmlObject;
 		expect((point['c:idx'] as XmlObject)['@_val']).toBe('1');
@@ -181,17 +182,17 @@ describe('buildChartSpaceXml', () => {
 	it('writes series values as numLit and categories as strLit', () => {
 		const pa = plotArea(buildChartSpaceXml(makeData()));
 		const ser = (pa['c:barChart'] as XmlObject)['c:ser'] as XmlObject[];
-		const val = (ser[0]['c:val'] as XmlObject)['c:numLit'] as XmlObject;
+		const val = (at(ser, 0)['c:val'] as XmlObject)['c:numLit'] as XmlObject;
 		expect(val['c:ptCount']).toStrictEqual({ '@_val': '3' });
 		expect((val['c:pt'] as XmlObject[])[0]).toStrictEqual({ '@_idx': '0', 'c:v': '100' });
-		const cat = (ser[0]['c:cat'] as XmlObject)['c:strLit'] as XmlObject;
+		const cat = (at(ser, 0)['c:cat'] as XmlObject)['c:strLit'] as XmlObject;
 		expect((cat['c:pt'] as XmlObject[])[0]).toStrictEqual({ '@_idx': '0', 'c:v': 'Q1' });
 	});
 
 	it('puts the series name in c:tx > c:v', () => {
 		const pa = plotArea(buildChartSpaceXml(makeData()));
 		const ser = (pa['c:barChart'] as XmlObject)['c:ser'] as XmlObject[];
-		expect((ser[0]['c:tx'] as XmlObject)['c:v']).toBe('Revenue');
+		expect((at(ser, 0)['c:tx'] as XmlObject)['c:v']).toBe('Revenue');
 	});
 
 	it('builds a pie chart with no axes', () => {
@@ -211,8 +212,8 @@ describe('buildChartSpaceXml', () => {
 		expect(Array.isArray(pa['c:valAx'])).toBeTruthy();
 		expect(pa['c:valAx'] as XmlObject[]).toHaveLength(2);
 		const ser = (pa['c:scatterChart'] as XmlObject)['c:ser'] as XmlObject[];
-		expect(ser[0]['c:xVal']).toBeDefined();
-		expect(ser[0]['c:yVal']).toBeDefined();
+		expect(at(ser, 0)['c:xVal']).toBeDefined();
+		expect(at(ser, 0)['c:yVal']).toBeDefined();
 	});
 
 	it('falls back to a bar chart for unknown/unsupported types', () => {
@@ -304,7 +305,7 @@ describe('buildChartSpaceXml', () => {
 			),
 		);
 		const ser = (pa['c:barChart'] as XmlObject)['c:ser'] as XmlObject[];
-		const spPr = ser[0]['c:spPr'] as XmlObject;
+		const spPr = at(ser, 0)['c:spPr'] as XmlObject;
 		const fill = spPr['a:solidFill'] as XmlObject;
 		expect((fill['a:srgbClr'] as XmlObject)['@_val']).toBe('4472C4');
 	});
@@ -316,7 +317,7 @@ describe('buildChartSpaceXml', () => {
 			),
 		);
 		const ser = (pa['c:lineChart'] as XmlObject)['c:ser'] as XmlObject[];
-		const spPr = ser[0]['c:spPr'] as XmlObject;
+		const spPr = at(ser, 0)['c:spPr'] as XmlObject;
 		const ln = spPr['a:ln'] as XmlObject;
 		expect(((ln['a:solidFill'] as XmlObject)['a:srgbClr'] as XmlObject)['@_val']).toBe('FF0000');
 	});
@@ -324,7 +325,7 @@ describe('buildChartSpaceXml', () => {
 	it('omits c:spPr when a series has no colour', () => {
 		const pa = plotArea(buildChartSpaceXml(makeData()));
 		const ser = (pa['c:barChart'] as XmlObject)['c:ser'] as XmlObject[];
-		expect(ser[0]['c:spPr']).toBeUndefined();
+		expect(at(ser, 0)['c:spPr']).toBeUndefined();
 	});
 
 	it('emits typed trendlines and error bars for SDK-created charts', () => {
@@ -355,7 +356,7 @@ describe('buildChartSpaceXml', () => {
 				}),
 			),
 		);
-		const series = ((pa['c:barChart'] as XmlObject)['c:ser'] as XmlObject[])[0];
+		const series = at((pa['c:barChart'] as XmlObject)['c:ser'] as XmlObject[], 0);
 		const trendline = series['c:trendline'] as XmlObject;
 		expect(trendline['c:order']).toStrictEqual({ '@_val': '3' });
 		expect((trendline['c:trendlineLbl'] as XmlObject)['c:numFmt']).toStrictEqual({

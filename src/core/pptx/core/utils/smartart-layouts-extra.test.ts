@@ -16,6 +16,7 @@ import {
 	layoutAccentProcess,
 	layoutVerticalChevronList,
 } from './smartart-layouts-extra';
+import { at } from '../../test-support/access';
 
 // Reset shape counter to keep test IDs deterministic.
 beforeEach(() => {
@@ -58,7 +59,7 @@ describe('layoutStepDownProcess', () => {
 		const nodes = makeNodes(['Solo']);
 		const elements = layoutStepDownProcess(nodes, bounds);
 		expect(elements).toHaveLength(1);
-		expect(elements[0].type).toBe('shape');
+		expect(at(elements, 0).type).toBe('shape');
 	});
 
 	it('positions nodes diagonally (increasing x and y)', () => {
@@ -66,8 +67,8 @@ describe('layoutStepDownProcess', () => {
 		const elements = layoutStepDownProcess(nodes, bounds);
 		const shapes = elements.filter((e) => e.type === 'shape');
 		for (let i = 1; i < shapes.length; i++) {
-			expect(shapes[i].x).toBeGreaterThan(shapes[i - 1].x);
-			expect(shapes[i].y).toBeGreaterThan(shapes[i - 1].y);
+			expect(at(shapes, i).x).toBeGreaterThan(at(shapes, i - 1).x);
+			expect(at(shapes, i).y).toBeGreaterThan(at(shapes, i - 1).y);
 		}
 	});
 
@@ -128,16 +129,16 @@ describe('layoutAlternatingFlow', () => {
 		const shapes = elements.filter((e) => e.type === 'shape');
 		const centerX = bounds.x + bounds.width / 2;
 		// First node (i=0) should be left of center
-		expect(shapes[0].x + shapes[0].width).toBeLessThanOrEqual(centerX + 1);
+		expect(at(shapes, 0).x + at(shapes, 0).width).toBeLessThanOrEqual(centerX + 1);
 		// Second node (i=1) should be right of center
-		expect(shapes[1].x).toBeGreaterThanOrEqual(centerX - 1);
+		expect(at(shapes, 1).x).toBeGreaterThanOrEqual(centerX - 1);
 	});
 
 	it('stacks nodes vertically', () => {
 		const nodes = makeNodes(['A', 'B']);
 		const elements = layoutAlternatingFlow(nodes, bounds);
 		const shapes = elements.filter((e) => e.type === 'shape');
-		expect(shapes[1].y).toBeGreaterThan(shapes[0].y);
+		expect(at(shapes, 1).y).toBeGreaterThan(at(shapes, 0).y);
 	});
 });
 
@@ -164,7 +165,7 @@ describe('layoutDescendingProcess', () => {
 		const elements = layoutDescendingProcess(nodes, bounds);
 		const shapes = elements.filter((e) => e.type === 'shape');
 		for (let i = 1; i < shapes.length; i++) {
-			expect(shapes[i].y).toBeGreaterThan(shapes[i - 1].y);
+			expect(at(shapes, i).y).toBeGreaterThan(at(shapes, i - 1).y);
 		}
 	});
 
@@ -172,7 +173,7 @@ describe('layoutDescendingProcess', () => {
 		const nodes = makeNodes(['A', 'B', 'C']);
 		const elements = layoutDescendingProcess(nodes, bounds);
 		const shapes = elements.filter((e) => e.type === 'shape');
-		expect(shapes[0].width).toBeGreaterThan(shapes[2].width);
+		expect(at(shapes, 0).width).toBeGreaterThan(at(shapes, 2).width);
 	});
 
 	it('centers shapes horizontally', () => {
@@ -180,7 +181,7 @@ describe('layoutDescendingProcess', () => {
 		const elements = layoutDescendingProcess(nodes, bounds);
 		const shapes = elements.filter((e) => e.type === 'shape');
 		// First (wider) shape should have smaller x offset
-		expect(shapes[0].x).toBeLessThanOrEqual(shapes[1].x);
+		expect(at(shapes, 0).x).toBeLessThanOrEqual(at(shapes, 1).x);
 	});
 });
 
@@ -249,14 +250,14 @@ describe('layoutVerticalBlockList', () => {
 		const elements = layoutVerticalBlockList(nodes, bounds);
 		// Elements come in pairs: [header0, body0, header1, body1]
 		// header1 should be below header0
-		expect(elements[2].y).toBeGreaterThan(elements[0].y);
+		expect(at(elements, 2).y).toBeGreaterThan(at(elements, 0).y);
 	});
 
 	it('places header bar to the left of body block', () => {
 		const nodes = makeNodes(['A']);
 		const elements = layoutVerticalBlockList(nodes, bounds);
 		// First element is header, second is body
-		expect(elements[0].x).toBeLessThan(elements[1].x);
+		expect(at(elements, 0).x).toBeLessThan(at(elements, 1).x);
 	});
 });
 
@@ -301,7 +302,7 @@ describe('layoutGroupedList', () => {
 				(e as Record<string, unknown>).text.startsWith('Group'),
 		);
 		if (headers.length >= 2) {
-			expect(headers[1].x).toBeGreaterThan(headers[0].x);
+			expect(at(headers, 1).x).toBeGreaterThan(at(headers, 0).x);
 		}
 	});
 });
@@ -326,14 +327,14 @@ describe('layoutPyramidList', () => {
 		const nodes = makeNodes(['A']);
 		const elements = layoutPyramidList(nodes, bounds);
 		// First element is pyramid segment, should be on left half
-		expect(elements[0].x).toBeLessThan(bounds.width / 2);
+		expect(at(elements, 0).x).toBeLessThan(bounds.width / 2);
 	});
 
 	it('places labels on the right side', () => {
 		const nodes = makeNodes(['A']);
 		const elements = layoutPyramidList(nodes, bounds);
 		// Third element is label, should be on right half
-		const label = elements[2]; // segment, connector, label
+		const label = at(elements, 2); // segment, connector, label
 		expect(label.x).toBeGreaterThan(bounds.width * 0.3);
 	});
 
@@ -377,7 +378,7 @@ describe('layoutHorizontalPictureList', () => {
 			(e) => e.type === 'shape' && (e as Record<string, unknown>).shapeType === 'ellipse',
 		);
 		for (let i = 1; i < ellipses.length; i++) {
-			expect(ellipses[i].x).toBeGreaterThan(ellipses[i - 1].x);
+			expect(at(ellipses, i).x).toBeGreaterThan(at(ellipses, i - 1).x);
 		}
 	});
 
@@ -422,7 +423,7 @@ describe('layoutAccentProcess', () => {
 			(e) => e.type === 'shape' && (e as Record<string, unknown>).shapeType === 'roundRect',
 		);
 		if (mainBoxes.length >= 2) {
-			expect(mainBoxes[1].x).toBeGreaterThan(mainBoxes[0].x);
+			expect(at(mainBoxes, 1).x).toBeGreaterThan(at(mainBoxes, 0).x);
 		}
 	});
 
@@ -457,7 +458,7 @@ describe('layoutVerticalChevronList', () => {
 		const elements = layoutVerticalChevronList(nodes, bounds);
 		const shapes = elements.filter((e) => e.type === 'shape');
 		for (let i = 1; i < shapes.length; i++) {
-			expect(shapes[i].y).toBeGreaterThan(shapes[i - 1].y);
+			expect(at(shapes, i).y).toBeGreaterThan(at(shapes, i - 1).y);
 		}
 	});
 
@@ -465,7 +466,7 @@ describe('layoutVerticalChevronList', () => {
 		const nodes = makeNodes(['Solo']);
 		const elements = layoutVerticalChevronList(nodes, bounds);
 		expect(elements).toHaveLength(1);
-		expect(elements[0].type).toBe('shape');
+		expect(at(elements, 0).type).toBe('shape');
 	});
 
 	it('assigns correct text to each shape', () => {

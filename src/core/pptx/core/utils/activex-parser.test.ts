@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { XmlObject } from '../types';
 import { parseActiveXControlsFromSlide } from './activex-parser';
+import { at } from '../../test-support/access';
 
 function slideWithControls(controls: XmlObject): XmlObject {
 	return { 'p:sld': { 'p:cSld': { 'p:controls': controls } } };
@@ -93,9 +94,9 @@ describe('parseActiveXControlsFromSlide', () => {
 				'p:control': { '@_r:id': 'rId5' },
 			}),
 		);
-		expect(controls[0].showAsIcon).toBeUndefined();
-		expect(controls[0].imgWidthEmu).toBeUndefined();
-		expect(controls[0].imgHeightEmu).toBeUndefined();
+		expect(at(controls, 0).showAsIcon).toBeUndefined();
+		expect(at(controls, 0).imgWidthEmu).toBeUndefined();
+		expect(at(controls, 0).imgHeightEmu).toBeUndefined();
 	});
 
 	it('dedupes a control present in both choice and fallback, keeping the preview', () => {
@@ -117,6 +118,6 @@ describe('parseActiveXControlsFromSlide', () => {
 			}),
 		);
 		expect(controls).toHaveLength(1);
-		expect(controls[0].fallbackImageRelId).toBe('rId10');
+		expect(at(controls, 0).fallbackImageRelId).toBe('rId10');
 	});
 });

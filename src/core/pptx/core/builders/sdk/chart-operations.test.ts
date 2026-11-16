@@ -29,6 +29,7 @@ import {
 	setChartDataPointLabel,
 } from './chart-operations';
 import { createChartElement, resetIdCounter } from './ElementFactory';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -166,28 +167,28 @@ describe('addChartSeries', () => {
 		const before = el.chartData!.series.length;
 		addChartSeries(el, { name: 'Profit', values: [20, 40, 60] });
 		expect(el.chartData!.series).toHaveLength(before + 1);
-		expect(el.chartData!.series[before].name).toBe('Profit');
-		expect(el.chartData!.series[before].values).toStrictEqual([20, 40, 60]);
+		expect(at(el.chartData!.series, before).name).toBe('Profit');
+		expect(at(el.chartData!.series, before).values).toStrictEqual([20, 40, 60]);
 	});
 
 	it('adds a series with color', () => {
 		const el = makeTestChart();
 		addChartSeries(el, { name: 'Extra', values: [1, 2], color: '#00FF00' });
-		const added = el.chartData!.series[el.chartData!.series.length - 1];
+		const added = at(el.chartData!.series, el.chartData!.series.length - 1);
 		expect(added.color).toBe('#00FF00');
 	});
 
 	it('adds a series without color', () => {
 		const el = makeTestChart();
 		addChartSeries(el, { name: 'NoColor', values: [5] });
-		const added = el.chartData!.series[el.chartData!.series.length - 1];
+		const added = at(el.chartData!.series, el.chartData!.series.length - 1);
 		expect(added.color).toBeUndefined();
 	});
 
 	it('adds a series with empty values array', () => {
 		const el = makeTestChart();
 		addChartSeries(el, { name: 'Empty', values: [] });
-		const added = el.chartData!.series[el.chartData!.series.length - 1];
+		const added = at(el.chartData!.series, el.chartData!.series.length - 1);
 		expect(added.values).toStrictEqual([]);
 	});
 
@@ -203,7 +204,7 @@ describe('addChartSeries', () => {
 	it('appends to the end of existing series', () => {
 		const el = makeTestChart();
 		addChartSeries(el, { name: 'Last', values: [999] });
-		const last = el.chartData!.series[el.chartData!.series.length - 1];
+		const last = at(el.chartData!.series, el.chartData!.series.length - 1);
 		expect(last.name).toBe('Last');
 	});
 
@@ -220,18 +221,18 @@ describe('addChartSeries', () => {
 describe('removeChartSeries', () => {
 	it('removes the first series', () => {
 		const el = makeTestChart();
-		const secondName = el.chartData!.series[1].name;
+		const secondName = at(el.chartData!.series, 1).name;
 		removeChartSeries(el, 0);
 		expect(el.chartData!.series).toHaveLength(1);
-		expect(el.chartData!.series[0].name).toBe(secondName);
+		expect(at(el.chartData!.series, 0).name).toBe(secondName);
 	});
 
 	it('removes the last series', () => {
 		const el = makeTestChart();
-		const firstName = el.chartData!.series[0].name;
+		const firstName = at(el.chartData!.series, 0).name;
 		removeChartSeries(el, 1);
 		expect(el.chartData!.series).toHaveLength(1);
-		expect(el.chartData!.series[0].name).toBe(firstName);
+		expect(at(el.chartData!.series, 0).name).toBe(firstName);
 	});
 
 	it('removes a middle series from a 3-series chart', () => {
@@ -240,8 +241,8 @@ describe('removeChartSeries', () => {
 		expect(el.chartData!.series).toHaveLength(3);
 		removeChartSeries(el, 1);
 		expect(el.chartData!.series).toHaveLength(2);
-		expect(el.chartData!.series[0].name).toBe('Revenue');
-		expect(el.chartData!.series[1].name).toBe('Third');
+		expect(at(el.chartData!.series, 0).name).toBe('Revenue');
+		expect(at(el.chartData!.series, 1).name).toBe('Third');
 	});
 
 	it('throws RangeError for negative index', () => {
@@ -323,35 +324,35 @@ describe('updateChartSeriesValues', () => {
 	it('updates values for the first series', () => {
 		const el = makeTestChart();
 		updateChartSeriesValues(el, 0, [999, 888, 777]);
-		expect(el.chartData!.series[0].values).toStrictEqual([999, 888, 777]);
+		expect(at(el.chartData!.series, 0).values).toStrictEqual([999, 888, 777]);
 	});
 
 	it('updates values for the second series', () => {
 		const el = makeTestChart();
 		updateChartSeriesValues(el, 1, [10, 20]);
-		expect(el.chartData!.series[1].values).toStrictEqual([10, 20]);
+		expect(at(el.chartData!.series, 1).values).toStrictEqual([10, 20]);
 	});
 
 	it('can set values to an empty array', () => {
 		const el = makeTestChart();
 		updateChartSeriesValues(el, 0, []);
-		expect(el.chartData!.series[0].values).toStrictEqual([]);
+		expect(at(el.chartData!.series, 0).values).toStrictEqual([]);
 	});
 
 	it('preserves other series when updating one', () => {
 		const el = makeTestChart();
-		const secondBefore = [...el.chartData!.series[1].values];
+		const secondBefore = [...at(el.chartData!.series, 1).values];
 		updateChartSeriesValues(el, 0, [1, 2, 3]);
-		expect(el.chartData!.series[1].values).toStrictEqual(secondBefore);
+		expect(at(el.chartData!.series, 1).values).toStrictEqual(secondBefore);
 	});
 
 	it('preserves series name and color', () => {
 		const el = makeTestChart();
-		const nameBefore = el.chartData!.series[0].name;
-		const colorBefore = el.chartData!.series[0].color;
+		const nameBefore = at(el.chartData!.series, 0).name;
+		const colorBefore = at(el.chartData!.series, 0).color;
 		updateChartSeriesValues(el, 0, [42]);
-		expect(el.chartData!.series[0].name).toBe(nameBefore);
-		expect(el.chartData!.series[0].color).toBe(colorBefore);
+		expect(at(el.chartData!.series, 0).name).toBe(nameBefore);
+		expect(at(el.chartData!.series, 0).color).toBe(colorBefore);
 	});
 
 	it('throws RangeError for negative index', () => {
@@ -479,8 +480,8 @@ describe('combined chart operations', () => {
 
 		expect(el.chartData?.chartType).toBe('pie');
 		expect(el.chartData?.series.length).toBe(1);
-		expect(el.chartData?.series[0].name).toBe('Segments');
-		expect(el.chartData?.series[0].values).toStrictEqual([40, 30, 20, 10]);
+		expect(at(el.chartData?.series, 0).name).toBe('Segments');
+		expect(at(el.chartData?.series, 0).values).toStrictEqual([40, 30, 20, 10]);
 		expect(el.chartData?.categories).toStrictEqual(['A', 'B', 'C', 'D']);
 		expect(el.chartData?.title).toBe('Distribution');
 	});
@@ -490,7 +491,7 @@ describe('combined chart operations', () => {
 		addChartSeries(el, { name: 'Added', values: [0, 0, 0] });
 		const newIndex = el.chartData!.series.length - 1;
 		updateChartSeriesValues(el, newIndex, [10, 20, 30]);
-		expect(el.chartData!.series[newIndex].values).toStrictEqual([10, 20, 30]);
+		expect(at(el.chartData!.series, newIndex).values).toStrictEqual([10, 20, 30]);
 	});
 
 	it('preserves internal chartData properties (chartPartPath, chartRelationshipId) through operations', () => {
@@ -517,39 +518,39 @@ describe('updateChartDataPoint', () => {
 	it('updates a single data point in the first series', () => {
 		const el = makeTestChart();
 		updateChartDataPoint(el, 0, 1, 999);
-		expect(el.chartData!.series[0].values).toStrictEqual([100, 999, 300]);
+		expect(at(el.chartData!.series, 0).values).toStrictEqual([100, 999, 300]);
 	});
 
 	it('updates a data point in the second series', () => {
 		const el = makeTestChart();
 		updateChartDataPoint(el, 1, 0, 42);
-		expect(el.chartData!.series[1].values[0]).toBe(42);
+		expect(at(el.chartData!.series, 1).values[0]).toBe(42);
 	});
 
 	it('does not affect other series', () => {
 		const el = makeTestChart();
-		const secondBefore = [...el.chartData!.series[1].values];
+		const secondBefore = [...at(el.chartData!.series, 1).values];
 		updateChartDataPoint(el, 0, 0, 42);
-		expect(el.chartData!.series[1].values).toStrictEqual(secondBefore);
+		expect(at(el.chartData!.series, 1).values).toStrictEqual(secondBefore);
 	});
 
 	it('does not affect other data points in the same series', () => {
 		const el = makeTestChart();
 		updateChartDataPoint(el, 0, 1, 777);
-		expect(el.chartData!.series[0].values[0]).toBe(100);
-		expect(el.chartData!.series[0].values[2]).toBe(300);
+		expect(at(el.chartData!.series, 0).values[0]).toBe(100);
+		expect(at(el.chartData!.series, 0).values[2]).toBe(300);
 	});
 
 	it('can set a value to zero', () => {
 		const el = makeTestChart();
 		updateChartDataPoint(el, 0, 0, 0);
-		expect(el.chartData!.series[0].values[0]).toBe(0);
+		expect(at(el.chartData!.series, 0).values[0]).toBe(0);
 	});
 
 	it('can set a negative value', () => {
 		const el = makeTestChart();
 		updateChartDataPoint(el, 0, 0, -50);
-		expect(el.chartData!.series[0].values[0]).toBe(-50);
+		expect(at(el.chartData!.series, 0).values[0]).toBe(-50);
 	});
 
 	it('throws RangeError for invalid series index', () => {
@@ -584,18 +585,18 @@ describe('addChartCategory', () => {
 	it('adds a zero value to every series', () => {
 		const el = makeTestChart();
 		addChartCategory(el, 'Q4');
-		expect(el.chartData!.series[0].values).toStrictEqual([100, 200, 300, 0]);
-		expect(el.chartData!.series[1].values).toStrictEqual([80, 160, 240, 0]);
+		expect(at(el.chartData!.series, 0).values).toStrictEqual([100, 200, 300, 0]);
+		expect(at(el.chartData!.series, 1).values).toStrictEqual([80, 160, 240, 0]);
 	});
 
 	it('works with no existing categories', () => {
 		const el = makeTestChart({ categories: [] });
-		el.chartData!.series[0].values = [];
-		el.chartData!.series[1].values = [];
+		at(el.chartData!.series, 0).values = [];
+		at(el.chartData!.series, 1).values = [];
 		addChartCategory(el, 'First');
 		expect(el.chartData!.categories).toStrictEqual(['First']);
-		expect(el.chartData!.series[0].values).toStrictEqual([0]);
-		expect(el.chartData!.series[1].values).toStrictEqual([0]);
+		expect(at(el.chartData!.series, 0).values).toStrictEqual([0]);
+		expect(at(el.chartData!.series, 1).values).toStrictEqual([0]);
 	});
 
 	it('can add multiple categories sequentially', () => {
@@ -603,7 +604,7 @@ describe('addChartCategory', () => {
 		addChartCategory(el, 'Q4');
 		addChartCategory(el, 'Q5');
 		expect(el.chartData!.categories).toHaveLength(5);
-		expect(el.chartData!.series[0].values).toHaveLength(5);
+		expect(at(el.chartData!.series, 0).values).toHaveLength(5);
 	});
 
 	it('throws when chartData is missing', () => {
@@ -621,22 +622,22 @@ describe('removeChartCategory', () => {
 		const el = makeTestChart();
 		removeChartCategory(el, 0);
 		expect(el.chartData!.categories).toStrictEqual(['Q2', 'Q3']);
-		expect(el.chartData!.series[0].values).toStrictEqual([200, 300]);
-		expect(el.chartData!.series[1].values).toStrictEqual([160, 240]);
+		expect(at(el.chartData!.series, 0).values).toStrictEqual([200, 300]);
+		expect(at(el.chartData!.series, 1).values).toStrictEqual([160, 240]);
 	});
 
 	it('removes the last category', () => {
 		const el = makeTestChart();
 		removeChartCategory(el, 2);
 		expect(el.chartData!.categories).toStrictEqual(['Q1', 'Q2']);
-		expect(el.chartData!.series[0].values).toStrictEqual([100, 200]);
+		expect(at(el.chartData!.series, 0).values).toStrictEqual([100, 200]);
 	});
 
 	it('removes a middle category', () => {
 		const el = makeTestChart();
 		removeChartCategory(el, 1);
 		expect(el.chartData!.categories).toStrictEqual(['Q1', 'Q3']);
-		expect(el.chartData!.series[0].values).toStrictEqual([100, 300]);
+		expect(at(el.chartData!.series, 0).values).toStrictEqual([100, 300]);
 	});
 
 	it('throws RangeError for negative index', () => {
@@ -665,7 +666,7 @@ describe('removeChartCategory', () => {
 		removeChartCategory(el, 1);
 		removeChartCategory(el, 0);
 		expect(el.chartData!.categories).toHaveLength(0);
-		expect(el.chartData!.series[0].values).toHaveLength(0);
+		expect(at(el.chartData!.series, 0).values).toHaveLength(0);
 	});
 });
 
@@ -678,7 +679,7 @@ describe('combined with new operations', () => {
 		const el = makeTestChart();
 		addChartCategory(el, 'Q4');
 		updateChartDataPoint(el, 0, 3, 400);
-		expect(el.chartData!.series[0].values).toStrictEqual([100, 200, 300, 400]);
+		expect(at(el.chartData!.series, 0).values).toStrictEqual([100, 200, 300, 400]);
 	});
 
 	it('remove category then verify remaining data integrity', () => {
@@ -686,7 +687,7 @@ describe('combined with new operations', () => {
 		removeChartCategory(el, 0); // remove Q1
 		expect(el.chartData!.categories).toStrictEqual(['Q2', 'Q3']);
 		updateChartDataPoint(el, 0, 0, 999); // Q2 position is now [0]
-		expect(el.chartData!.series[0].values[0]).toBe(999);
+		expect(at(el.chartData!.series, 0).values[0]).toBe(999);
 	});
 
 	it('full workflow: add series, add category, update point, remove', () => {
@@ -694,11 +695,11 @@ describe('combined with new operations', () => {
 		addChartSeries(el, { name: 'Extra', values: [10, 20, 30] });
 		addChartCategory(el, 'Q4');
 		updateChartDataPoint(el, 2, 3, 40); // Extra series, Q4
-		expect(el.chartData!.series[2].values).toStrictEqual([10, 20, 30, 40]);
+		expect(at(el.chartData!.series, 2).values).toStrictEqual([10, 20, 30, 40]);
 
 		removeChartCategory(el, 0); // remove Q1
 		expect(el.chartData!.categories).toStrictEqual(['Q2', 'Q3', 'Q4']);
-		expect(el.chartData!.series[2].values).toStrictEqual([20, 30, 40]);
+		expect(at(el.chartData!.series, 2).values).toStrictEqual([20, 30, 40]);
 
 		removeChartSeries(el, 2);
 		expect(el.chartData!.series).toHaveLength(2);
@@ -713,38 +714,38 @@ describe('setChartSeriesColor', () => {
 	it('sets a series colour from a #-prefixed hex', () => {
 		const el = makeTestChart();
 		setChartSeriesColor(el, 0, '#FF0000');
-		expect(el.chartData?.series[0].color).toBe('#FF0000');
+		expect(at(el.chartData?.series, 0).color).toBe('#FF0000');
 	});
 
 	it('normalises a bare hex by prefixing #', () => {
 		const el = makeTestChart();
 		setChartSeriesColor(el, 1, '00FF00');
-		expect(el.chartData?.series[1].color).toBe('#00FF00');
+		expect(at(el.chartData?.series, 1).color).toBe('#00FF00');
 	});
 
 	it('trims surrounding whitespace before normalising', () => {
 		const el = makeTestChart();
 		setChartSeriesColor(el, 0, '  #123456  ');
-		expect(el.chartData?.series[0].color).toBe('#123456');
+		expect(at(el.chartData?.series, 0).color).toBe('#123456');
 	});
 
 	it('clears the colour when passed null', () => {
 		const el = makeTestChart();
 		setChartSeriesColor(el, 0, null);
-		expect(el.chartData?.series[0].color).toBeUndefined();
+		expect(at(el.chartData?.series, 0).color).toBeUndefined();
 	});
 
 	it('clears the colour when passed undefined', () => {
 		const el = makeTestChart();
 		setChartSeriesColor(el, 0, undefined);
-		expect(el.chartData?.series[0].color).toBeUndefined();
+		expect(at(el.chartData?.series, 0).color).toBeUndefined();
 	});
 
 	it('only affects the targeted series', () => {
 		const el = makeTestChart();
-		const otherBefore = el.chartData!.series[1].color;
+		const otherBefore = at(el.chartData!.series, 1).color;
 		setChartSeriesColor(el, 0, '#ABCDEF');
-		expect(el.chartData?.series[1].color).toBe(otherBefore);
+		expect(at(el.chartData?.series, 1).color).toBe(otherBefore);
 	});
 
 	it('throws RangeError for an out-of-range series index', () => {
@@ -1046,14 +1047,14 @@ describe('setChartSeriesTrendline', () => {
 	it('adds a trendline to a series', () => {
 		const el = makeTestChart();
 		setChartSeriesTrendline(el, 0, { trendlineType: 'linear' });
-		expect(el.chartData?.series[0].trendlines).toStrictEqual([{ trendlineType: 'linear' }]);
+		expect(at(el.chartData?.series, 0).trendlines).toStrictEqual([{ trendlineType: 'linear' }]);
 	});
 
 	it('replaces an existing trendline', () => {
 		const el = makeTestChart();
 		setChartSeriesTrendline(el, 0, { trendlineType: 'linear' });
 		setChartSeriesTrendline(el, 0, { trendlineType: 'movingAvg', period: 3 });
-		expect(el.chartData?.series[0].trendlines).toStrictEqual([
+		expect(at(el.chartData?.series, 0).trendlines).toStrictEqual([
 			{ trendlineType: 'movingAvg', period: 3 },
 		]);
 	});
@@ -1062,14 +1063,14 @@ describe('setChartSeriesTrendline', () => {
 		const el = makeTestChart();
 		setChartSeriesTrendline(el, 0, { trendlineType: 'linear' });
 		setChartSeriesTrendline(el, 0, null);
-		expect(el.chartData?.series[0].trendlines).toStrictEqual([]);
+		expect(at(el.chartData?.series, 0).trendlines).toStrictEqual([]);
 	});
 
 	it('only affects the targeted series', () => {
 		const el = makeTestChart();
 		setChartSeriesTrendline(el, 1, { trendlineType: 'power' });
-		expect(el.chartData?.series[0].trendlines).toBeUndefined();
-		expect(el.chartData?.series[1].trendlines).toStrictEqual([{ trendlineType: 'power' }]);
+		expect(at(el.chartData?.series, 0).trendlines).toBeUndefined();
+		expect(at(el.chartData?.series, 1).trendlines).toStrictEqual([{ trendlineType: 'power' }]);
 	});
 
 	it('throws RangeError for an out-of-range series index', () => {
@@ -1098,7 +1099,7 @@ describe('setChartSeriesErrorBars', () => {
 			valType: 'percentage',
 			val: 5,
 		});
-		expect(el.chartData?.series[0].errBars).toStrictEqual([
+		expect(at(el.chartData?.series, 0).errBars).toStrictEqual([
 			{ direction: 'y', barType: 'both', valType: 'percentage', val: 5 },
 		]);
 	});
@@ -1112,7 +1113,7 @@ describe('setChartSeriesErrorBars', () => {
 			val: 1,
 		});
 		setChartSeriesErrorBars(el, 0, { direction: 'y', barType: 'plus', valType: 'stdErr' });
-		expect(el.chartData?.series[0].errBars).toStrictEqual([
+		expect(at(el.chartData?.series, 0).errBars).toStrictEqual([
 			{ direction: 'y', barType: 'plus', valType: 'stdErr' },
 		]);
 	});
@@ -1126,14 +1127,14 @@ describe('setChartSeriesErrorBars', () => {
 			val: 1,
 		});
 		setChartSeriesErrorBars(el, 0, null);
-		expect(el.chartData?.series[0].errBars).toStrictEqual([]);
+		expect(at(el.chartData?.series, 0).errBars).toStrictEqual([]);
 	});
 
 	it('only affects the targeted series', () => {
 		const el = makeTestChart();
 		setChartSeriesErrorBars(el, 1, { direction: 'y', barType: 'both', valType: 'stdDev', val: 2 });
-		expect(el.chartData?.series[0].errBars).toBeUndefined();
-		expect(el.chartData?.series[1].errBars).toHaveLength(1);
+		expect(at(el.chartData?.series, 0).errBars).toBeUndefined();
+		expect(at(el.chartData?.series, 1).errBars).toHaveLength(1);
 	});
 
 	it('throws RangeError for an out-of-range series index', () => {
@@ -1272,7 +1273,7 @@ describe('setChartSeriesMarker', () => {
 	it('sets a marker from a partial patch', () => {
 		const el = makeTestChart({ chartType: 'line' });
 		setChartSeriesMarker(el, 0, { symbol: 'circle', size: 7, fillColor: '#FF0000' });
-		const m = el.chartData?.series[0].marker;
+		const m = at(el.chartData?.series, 0).marker;
 		expect(m?.symbol).toBe('circle');
 		expect(m?.size).toBe(7);
 		expect(m?.spPr?.fillColor).toBe('#FF0000');
@@ -1282,7 +1283,7 @@ describe('setChartSeriesMarker', () => {
 		const el = makeTestChart({ chartType: 'line' });
 		setChartSeriesMarker(el, 0, { symbol: 'square', size: 5 });
 		setChartSeriesMarker(el, 0, { fillColor: '#00FF00' });
-		const m = el.chartData?.series[0].marker;
+		const m = at(el.chartData?.series, 0).marker;
 		expect(m?.symbol).toBe('square');
 		expect(m?.size).toBe(5);
 		expect(m?.spPr?.fillColor).toBe('#00FF00');
@@ -1292,7 +1293,7 @@ describe('setChartSeriesMarker', () => {
 		const el = makeTestChart({ chartType: 'line' });
 		setChartSeriesMarker(el, 0, { symbol: 'diamond' });
 		setChartSeriesMarker(el, 0, null);
-		expect(el.chartData?.series[0].marker).toBeUndefined();
+		expect(at(el.chartData?.series, 0).marker).toBeUndefined();
 	});
 
 	it('throws on out-of-range series index', () => {
@@ -1309,7 +1310,7 @@ describe('setChartSeriesChartType', () => {
 	it('sets a per-series type and promotes chart to combo', () => {
 		const el = makeTestChart({ chartType: 'bar' });
 		setChartSeriesChartType(el, 1, 'line');
-		expect(el.chartData?.series[1].seriesChartType).toBe('line');
+		expect(at(el.chartData?.series, 1).seriesChartType).toBe('line');
 		expect(el.chartData?.chartType).toBe('combo');
 	});
 
@@ -1323,7 +1324,7 @@ describe('setChartSeriesChartType', () => {
 		const el = makeTestChart({ chartType: 'bar' });
 		setChartSeriesChartType(el, 1, 'line');
 		setChartSeriesChartType(el, 1, null);
-		expect(el.chartData?.series[1].seriesChartType).toBeUndefined();
+		expect(at(el.chartData?.series, 1).seriesChartType).toBeUndefined();
 	});
 });
 
@@ -1335,7 +1336,7 @@ describe('setChartDataPointFill', () => {
 	it('sets a per-point fill colour', () => {
 		const el = makeTestChart({ chartType: 'pie' });
 		setChartDataPointFill(el, 0, 2, '#123456');
-		const dp = el.chartData?.series[0].dataPoints?.find((p) => p.idx === 2);
+		const dp = at(el.chartData?.series, 0).dataPoints?.find((p) => p.idx === 2);
 		expect(dp?.spPr?.fillColor).toBe('#123456');
 	});
 
@@ -1343,7 +1344,7 @@ describe('setChartDataPointFill', () => {
 		const el = makeTestChart({ chartType: 'pie' });
 		setChartDataPointFill(el, 0, 2, '#123456');
 		setChartDataPointFill(el, 0, 2, null);
-		expect(el.chartData?.series[0].dataPoints).toStrictEqual([]);
+		expect(at(el.chartData?.series, 0).dataPoints).toStrictEqual([]);
 	});
 
 	it('keeps the override when explosion is also set', () => {
@@ -1351,7 +1352,7 @@ describe('setChartDataPointFill', () => {
 		setChartDataPointFill(el, 0, 1, '#123456');
 		setChartDataPointExplosion(el, 0, 1, 25);
 		setChartDataPointFill(el, 0, 1, null);
-		const dp = el.chartData?.series[0].dataPoints?.find((p) => p.idx === 1);
+		const dp = at(el.chartData?.series, 0).dataPoints?.find((p) => p.idx === 1);
 		expect(dp?.explosion).toBe(25);
 		expect(dp?.spPr).toBeUndefined();
 	});
@@ -1361,16 +1362,16 @@ describe('setChartDataPointExplosion', () => {
 	it('sets and clears pie slice explosion', () => {
 		const el = makeTestChart({ chartType: 'pie' });
 		setChartDataPointExplosion(el, 0, 0, 30);
-		expect(el.chartData?.series[0].dataPoints?.[0].explosion).toBe(30);
+		expect(at(el.chartData?.series, 0).dataPoints?.[0].explosion).toBe(30);
 		setChartDataPointExplosion(el, 0, 0, null);
-		expect(el.chartData?.series[0].dataPoints).toStrictEqual([]);
+		expect(at(el.chartData?.series, 0).dataPoints).toStrictEqual([]);
 	});
 
 	it('keeps points sorted by idx', () => {
 		const el = makeTestChart({ chartType: 'pie' });
 		setChartDataPointExplosion(el, 0, 2, 10);
 		setChartDataPointExplosion(el, 0, 0, 20);
-		const idxs = el.chartData?.series[0].dataPoints?.map((p) => p.idx);
+		const idxs = at(el.chartData?.series, 0).dataPoints?.map((p) => p.idx);
 		expect(idxs).toStrictEqual([0, 2]);
 	});
 });
@@ -1379,7 +1380,7 @@ describe('setChartDataPointLabel', () => {
 	it('adds a per-point label override for a series', () => {
 		const chart = makeTestChart();
 		setChartDataPointLabel(chart, 0, 2, { showValue: true, position: 'outEnd' });
-		const labels = chart.chartData!.series[0].dataLabels;
+		const labels = at(chart.chartData!.series, 0).dataLabels;
 		expect(labels).toHaveLength(1);
 		expect(labels![0]).toMatchObject({ idx: 2, showVal: true, position: 'outEnd' });
 	});
@@ -1388,7 +1389,7 @@ describe('setChartDataPointLabel', () => {
 		const chart = makeTestChart();
 		setChartDataPointLabel(chart, 0, 1, { showValue: true });
 		setChartDataPointLabel(chart, 0, 1, { showCategory: true, text: 'Hi' });
-		const labels = chart.chartData!.series[0].dataLabels!;
+		const labels = at(chart.chartData!.series, 0).dataLabels!;
 		expect(labels).toHaveLength(1);
 		expect(labels[0]).toMatchObject({ idx: 1, showVal: true, showCatName: true, text: 'Hi' });
 	});
@@ -1397,21 +1398,21 @@ describe('setChartDataPointLabel', () => {
 		const chart = makeTestChart();
 		setChartDataPointLabel(chart, 0, 2, { showValue: true });
 		setChartDataPointLabel(chart, 0, 0, { showValue: true });
-		expect(chart.chartData!.series[0].dataLabels!.map((l) => l.idx)).toStrictEqual([0, 2]);
+		expect(at(chart.chartData!.series, 0).dataLabels!.map((l) => l.idx)).toStrictEqual([0, 2]);
 	});
 
 	it('clears empty text back to undefined', () => {
 		const chart = makeTestChart();
 		setChartDataPointLabel(chart, 0, 0, { text: 'X' });
 		setChartDataPointLabel(chart, 0, 0, { text: '' });
-		expect(chart.chartData!.series[0].dataLabels![0].text).toBeUndefined();
+		expect(at(at(chart.chartData!.series, 0).dataLabels!, 0).text).toBeUndefined();
 	});
 
 	it('saves typed text over a "Value From Cells" label as literal text', () => {
 		const chart = makeTestChart();
-		chart.chartData!.series[0].dataLabels = [{ idx: 0, text: 'Alpha', textFromCells: true }];
+		at(chart.chartData!.series, 0).dataLabels = [{ idx: 0, text: 'Alpha', textFromCells: true }];
 		setChartDataPointLabel(chart, 0, 0, { text: 'Typed' });
-		const label = chart.chartData!.series[0].dataLabels![0];
+		const label = at(at(chart.chartData!.series, 0).dataLabels!, 0);
 		expect(label.text).toBe('Typed');
 		expect(label.textFromCells).toBeUndefined();
 	});
@@ -1420,7 +1421,7 @@ describe('setChartDataPointLabel', () => {
 		const chart = makeTestChart();
 		setChartDataPointLabel(chart, 0, 1, { showValue: true });
 		setChartDataPointLabel(chart, 0, 1, null);
-		expect(chart.chartData!.series[0].dataLabels).toBeUndefined();
+		expect(at(chart.chartData!.series, 0).dataLabels).toBeUndefined();
 	});
 
 	it('removing one of several overrides keeps the rest', () => {
@@ -1428,7 +1429,7 @@ describe('setChartDataPointLabel', () => {
 		setChartDataPointLabel(chart, 0, 0, { showValue: true });
 		setChartDataPointLabel(chart, 0, 1, { showValue: true });
 		setChartDataPointLabel(chart, 0, 0, null);
-		expect(chart.chartData!.series[0].dataLabels!.map((l) => l.idx)).toStrictEqual([1]);
+		expect(at(chart.chartData!.series, 0).dataLabels!.map((l) => l.idx)).toStrictEqual([1]);
 	});
 
 	it('throws RangeError for an out-of-range series index', () => {

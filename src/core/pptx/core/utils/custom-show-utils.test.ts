@@ -8,6 +8,7 @@ import {
 	navigateCustomShow,
 	getCustomShowPositionLabel,
 } from './custom-show-utils';
+import { at } from '../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -58,13 +59,13 @@ describe('findCustomShow', () => {
 
 describe('resolveCustomShowSlideIndices', () => {
 	it('resolves rIds to 0-based slide indices in custom show order', () => {
-		const indices = resolveCustomShowSlideIndices(shows[0], slides);
+		const indices = resolveCustomShowSlideIndices(at(shows, 0), slides);
 		// rId2 → 0, rId5 → 3, rId6 → 4
 		expect(indices).toStrictEqual([0, 3, 4]);
 	});
 
 	it('resolves second show correctly', () => {
-		const indices = resolveCustomShowSlideIndices(shows[1], slides);
+		const indices = resolveCustomShowSlideIndices(at(shows, 1), slides);
 		// rId3 → 1, rId4 → 2
 		expect(indices).toStrictEqual([1, 2]);
 	});

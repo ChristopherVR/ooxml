@@ -11,6 +11,7 @@ import type {
 import type { PptxData, PptxSlide } from '../../types/presentation';
 import type { ShapeStyle } from '../../types/shape-style';
 import { mergePresentation } from './merge-operations';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Test helpers
@@ -153,9 +154,9 @@ describe('mergePresentation', () => {
 	it('appends to end by default', () => {
 		mergePresentation(target, source);
 		// Original target slides should still be at the beginning
-		expect(target.slides[0].elements[0]).toBeDefined();
-		expect((target.slides[0].elements[0] as TextPptxElement).text).toBe('Target Slide 1');
-		expect((target.slides[1].elements[0] as TextPptxElement).text).toBe('Target Slide 2');
+		expect(at(target.slides, 0).elements[0]).toBeDefined();
+		expect((at(target.slides, 0).elements[0] as TextPptxElement).text).toBe('Target Slide 1');
+		expect((at(target.slides, 1).elements[0] as TextPptxElement).text).toBe('Target Slide 2');
 		// Source slides appended after
 		expect(target.slides).toHaveLength(5);
 	});
@@ -222,9 +223,9 @@ describe('mergePresentation', () => {
 		});
 		expect(target.slides).toHaveLength(3);
 		// First slide should now be the merged one
-		expect(target.slides[0].elements[0]).toBeDefined();
+		expect(at(target.slides, 0).elements[0]).toBeDefined();
 		// Original slide1 is now second
-		expect((target.slides[1].elements[0] as TextPptxElement).text).toBe('Target Slide 1');
+		expect((at(target.slides, 1).elements[0] as TextPptxElement).text).toBe('Target Slide 1');
 	});
 
 	it('inserts at a middle position', () => {
@@ -234,10 +235,10 @@ describe('mergePresentation', () => {
 		});
 		expect(target.slides).toHaveLength(3);
 		// Original first slide is at index 0
-		expect((target.slides[0].elements[0] as TextPptxElement).text).toBe('Target Slide 1');
+		expect((at(target.slides, 0).elements[0] as TextPptxElement).text).toBe('Target Slide 1');
 		// Merged slide at index 1
 		// Original second slide pushed to index 2
-		expect((target.slides[2].elements[0] as TextPptxElement).text).toBe('Target Slide 2');
+		expect((at(target.slides, 2).elements[0] as TextPptxElement).text).toBe('Target Slide 2');
 	});
 
 	it('clamps insertAt to end if beyond length', () => {
@@ -247,8 +248,8 @@ describe('mergePresentation', () => {
 		});
 		expect(target.slides).toHaveLength(3);
 		// Merged slide should be at the end
-		expect((target.slides[0].elements[0] as TextPptxElement).text).toBe('Target Slide 1');
-		expect((target.slides[1].elements[0] as TextPptxElement).text).toBe('Target Slide 2');
+		expect((at(target.slides, 0).elements[0] as TextPptxElement).text).toBe('Target Slide 1');
+		expect((at(target.slides, 1).elements[0] as TextPptxElement).text).toBe('Target Slide 2');
 	});
 
 	it('clamps negative insertAt to 0', () => {
@@ -258,7 +259,7 @@ describe('mergePresentation', () => {
 		});
 		expect(target.slides).toHaveLength(3);
 		// Merged slide should be at the start
-		expect((target.slides[1].elements[0] as TextPptxElement).text).toBe('Target Slide 1');
+		expect((at(target.slides, 1).elements[0] as TextPptxElement).text).toBe('Target Slide 1');
 	});
 
 	// -----------------------------------------------------------------------
@@ -283,7 +284,7 @@ describe('mergePresentation', () => {
 	it('re-numbers slideNumber sequentially after merge', () => {
 		mergePresentation(target, source, { insertAt: 1 });
 		for (let i = 0; i < target.slides.length; i++) {
-			expect(target.slides[i].slideNumber).toBe(i + 1);
+			expect(at(target.slides, i).slideNumber).toBe(i + 1);
 		}
 	});
 
@@ -314,11 +315,11 @@ describe('mergePresentation', () => {
 		// Target also has "t1"
 		mergePresentation(target, src);
 		// Find the merged group
-		const mergedSlide = target.slides[target.slides.length - 1];
+		const mergedSlide = at(target.slides, target.slides.length - 1);
 		const group = mergedSlide.elements[0] as GroupPptxElement;
 		expect(group.type).toBe('group');
 		// The child's ID should be different from target's "t1"
-		expect(group.children[0].id).not.toBe('t1');
+		expect(at(group.children, 0).id).not.toBe('t1');
 	});
 
 	// -----------------------------------------------------------------------
@@ -326,20 +327,20 @@ describe('mergePresentation', () => {
 	// -----------------------------------------------------------------------
 
 	it('does not mutate source slides', () => {
-		const originalSourceText = (source.slides[0].elements[0] as TextPptxElement).text;
-		const originalSourceId = source.slides[0].id;
+		const originalSourceText = (at(source.slides, 0).elements[0] as TextPptxElement).text;
+		const originalSourceId = at(source.slides, 0).id;
 		mergePresentation(target, source);
-		expect(source.slides[0].id).toBe(originalSourceId);
-		expect((source.slides[0].elements[0] as TextPptxElement).text).toBe(originalSourceText);
+		expect(at(source.slides, 0).id).toBe(originalSourceId);
+		expect((at(source.slides, 0).elements[0] as TextPptxElement).text).toBe(originalSourceText);
 	});
 
 	it('cloned slides are independent copies', () => {
 		mergePresentation(target, source);
 		// Modify a merged slide and verify source is unaffected
-		const mergedSlide = target.slides[target.slides.length - 1];
+		const mergedSlide = at(target.slides, target.slides.length - 1);
 		const el = mergedSlide.elements[0] as TextPptxElement;
 		el.text = 'MODIFIED';
-		expect((source.slides[2].elements[0] as TextPptxElement).text).toBe('Source Slide 3');
+		expect((at(source.slides, 2).elements[0] as TextPptxElement).text).toBe('Source Slide 3');
 	});
 
 	// -----------------------------------------------------------------------
@@ -350,7 +351,7 @@ describe('mergePresentation', () => {
 		const imgData = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUg';
 		const src = makePptxData([makeSlide('imgSlide', 1, [makeImageElement('img1', imgData)])]);
 		mergePresentation(target, src);
-		const mergedSlide = target.slides[target.slides.length - 1];
+		const mergedSlide = at(target.slides, target.slides.length - 1);
 		const img = mergedSlide.elements[0] as ImagePptxElement;
 		expect(img.imageData).toBe(imgData);
 	});
@@ -364,7 +365,7 @@ describe('mergePresentation', () => {
 			},
 		]);
 		mergePresentation(target, src);
-		const mergedSlide = target.slides[target.slides.length - 1];
+		const mergedSlide = at(target.slides, target.slides.length - 1);
 		expect(mergedSlide.backgroundImage).toBe(bgImg);
 	});
 
@@ -376,7 +377,7 @@ describe('mergePresentation', () => {
 			},
 		]);
 		mergePresentation(target, src);
-		const mergedSlide = target.slides[target.slides.length - 1];
+		const mergedSlide = at(target.slides, target.slides.length - 1);
 		expect(mergedSlide.backgroundColor).toBe('#FF0000');
 	});
 
@@ -397,7 +398,7 @@ describe('mergePresentation', () => {
 
 		mergePresentation(targetWithShapes, src);
 
-		const mergedSlide = targetWithShapes.slides[targetWithShapes.slides.length - 1];
+		const mergedSlide = at(targetWithShapes.slides, targetWithShapes.slides.length - 1);
 		const mergedConnector = mergedSlide.elements[2] as ConnectorPptxElement;
 		const mergedShape1 = mergedSlide.elements[0] as ShapePptxElement;
 		const mergedShape2 = mergedSlide.elements[1] as ShapePptxElement;
@@ -429,8 +430,8 @@ describe('mergePresentation', () => {
 
 		// Target has "t1" so it will be remapped
 		mergePresentation(target, src);
-		const mergedSlide = target.slides[target.slides.length - 1];
-		const mergedElementId = mergedSlide.elements[0].id;
+		const mergedSlide = at(target.slides, target.slides.length - 1);
+		const mergedElementId = at(mergedSlide.elements, 0).id;
 		expect(mergedSlide.animations?.[0].elementId).toBe(mergedElementId);
 		expect(mergedElementId).not.toBe('t1'); // It was remapped
 	});
@@ -492,7 +493,7 @@ describe('mergePresentation', () => {
 		mergePresentation(target, source);
 		// The merged slides (last 3) should be marked dirty
 		for (let i = 2; i < target.slides.length; i++) {
-			expect(target.slides[i].isDirty).toBeTruthy();
+			expect(at(target.slides, i).isDirty).toBeTruthy();
 		}
 	});
 
@@ -508,7 +509,7 @@ describe('mergePresentation', () => {
 			},
 		]);
 		mergePresentation(target, src);
-		const mergedSlide = target.slides[target.slides.length - 1];
+		const mergedSlide = at(target.slides, target.slides.length - 1);
 		expect(mergedSlide.notes).toBe('These are speaker notes');
 	});
 
@@ -520,7 +521,7 @@ describe('mergePresentation', () => {
 			},
 		]);
 		mergePresentation(target, src);
-		const mergedSlide = target.slides[target.slides.length - 1];
+		const mergedSlide = at(target.slides, target.slides.length - 1);
 		expect(mergedSlide.transition?.type).toBe('fade');
 		expect(mergedSlide.transition?.durationMs).toBe(1000);
 	});
@@ -533,7 +534,7 @@ describe('mergePresentation', () => {
 			},
 		]);
 		mergePresentation(target, src);
-		const mergedSlide = target.slides[target.slides.length - 1];
+		const mergedSlide = at(target.slides, target.slides.length - 1);
 		expect(mergedSlide.hidden).toBeTruthy();
 	});
 
@@ -546,7 +547,7 @@ describe('mergePresentation', () => {
 			},
 		]);
 		mergePresentation(target, src);
-		const mergedSlide = target.slides[target.slides.length - 1];
+		const mergedSlide = at(target.slides, target.slides.length - 1);
 		expect(mergedSlide.layoutPath).toBe('ppt/slideLayouts/slideLayout7.xml');
 		expect(mergedSlide.layoutName).toBe('Blank');
 	});
@@ -583,7 +584,7 @@ describe('mergePresentation', () => {
 		const src = makePptxData([makeSlide('emptySlide', 1, [])]);
 		const count = mergePresentation(target, src);
 		expect(count).toBe(1);
-		const mergedSlide = target.slides[target.slides.length - 1];
+		const mergedSlide = at(target.slides, target.slides.length - 1);
 		expect(mergedSlide.elements).toStrictEqual([]);
 	});
 

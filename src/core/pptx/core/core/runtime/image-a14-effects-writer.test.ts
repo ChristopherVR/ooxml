@@ -8,6 +8,7 @@ import {
 	buildA14ImageExtension,
 } from './image-a14-effects-writer';
 import { A14_NAMESPACE } from './image-a14-xml';
+import { at } from '../../../test-support/access';
 
 /**
  * The `a14` blip extension WRITER. Until it existed, an artistic effect picked
@@ -136,7 +137,7 @@ describe('applyA14ImageExtension', () => {
 		});
 		const written = imgEffects(blip);
 		expect(written).toHaveLength(2);
-		expect(written[0]['a14:backgroundRemoval']).toBe(rawXml);
+		expect(at(written, 0)['a14:backgroundRemoval']).toBe(rawXml);
 		expect(Object.keys(written[1])).toStrictEqual(['a14:artisticCutout']);
 	});
 

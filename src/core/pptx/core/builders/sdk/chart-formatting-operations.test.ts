@@ -8,6 +8,7 @@ import {
 	setChartColorMapOverride,
 } from './chart-formatting-operations';
 import { createChartElement } from './ElementFactory';
+import { at } from '../../../test-support/access';
 
 function makeChart(chartType: PptxChartType = 'line'): ChartPptxElement {
 	return createChartElement(chartType, {
@@ -25,7 +26,7 @@ describe('setChartDataPointStyle', () => {
 			strokeWidth: 2,
 			strokeDashStyle: 'dash',
 		});
-		const dp = chart.chartData!.series[0].dataPoints?.find((p) => p.idx === 1);
+		const dp = at(chart.chartData!.series, 0).dataPoints?.find((p) => p.idx === 1);
 		expect(dp?.spPr).toStrictEqual({
 			fillColor: '#112233',
 			strokeColor: '#445566',
@@ -38,7 +39,7 @@ describe('setChartDataPointStyle', () => {
 		const chart = makeChart();
 		setChartDataPointStyle(chart, 0, 0, { fillColor: '#111111' });
 		setChartDataPointStyle(chart, 0, 0, { strokeColor: '#222222' });
-		const dp = chart.chartData!.series[0].dataPoints?.find((p) => p.idx === 0);
+		const dp = at(chart.chartData!.series, 0).dataPoints?.find((p) => p.idx === 0);
 		expect(dp?.spPr).toStrictEqual({ fillColor: '#111111', strokeColor: '#222222' });
 	});
 
@@ -46,7 +47,7 @@ describe('setChartDataPointStyle', () => {
 		const chart = makeChart();
 		setChartDataPointStyle(chart, 0, 0, { fillColor: '#111111' });
 		setChartDataPointStyle(chart, 0, 0, null);
-		expect(chart.chartData!.series[0].dataPoints).toStrictEqual([]);
+		expect(at(chart.chartData!.series, 0).dataPoints).toStrictEqual([]);
 	});
 
 	it('throws for an out-of-range series index', () => {

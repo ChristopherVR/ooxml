@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import type { XmlObject } from '../../types';
 import { PptxSmartArtParser } from './PptxSmartArtParser';
 import { extractTextFromPoint, getLocalName } from './smart-art-text-helpers';
+import { at } from '../../../test-support/access';
 
 /**
  * Minimal xmlLookupService that works with fast-xml-parser-style objects.
@@ -124,10 +125,10 @@ describe('pptxSmartArtParser — node text extraction', () => {
 
 		const nodes = parser.parseNodes(dataModel, xmlLookupService);
 		expect(nodes).toHaveLength(2);
-		expect(nodes[0].text).toBe('CEO');
-		expect(nodes[0].id).toBe('1');
-		expect(nodes[1].text).toBe('VP Marketing');
-		expect(nodes[1].id).toBe('2');
+		expect(at(nodes, 0).text).toBe('CEO');
+		expect(at(nodes, 0).id).toBe('1');
+		expect(at(nodes, 1).text).toBe('VP Marketing');
+		expect(at(nodes, 1).id).toBe('2');
 	});
 
 	it('preserves run order and boundary whitespace in node text', () => {
@@ -149,7 +150,7 @@ describe('pptxSmartArtParser — node text extraction', () => {
 
 		const nodes = parser.parseNodes(dataModel, xmlLookupService);
 
-		expect(nodes[0].text).toBe('North America');
+		expect(at(nodes, 0).text).toBe('North America');
 		expect(extractTextFromPoint((dataModel['dgm:ptLst'] as XmlObject)['dgm:pt'] as XmlObject)).toBe(
 			'North America',
 		);
@@ -176,7 +177,7 @@ describe('pptxSmartArtParser — node text extraction', () => {
 
 		const nodes = parser.parseNodes(dataModel, xmlLookupService);
 		expect(nodes).toHaveLength(1);
-		expect(nodes[0].text).toBe('Has text');
+		expect(at(nodes, 0).text).toBe('Has text');
 	});
 
 	it('skips points without model ID', () => {
@@ -210,7 +211,7 @@ describe('pptxSmartArtParser — node text extraction', () => {
 
 		const nodes = parser.parseNodes(dataModel, xmlLookupService);
 		expect(nodes).toHaveLength(1);
-		expect(nodes[0].nodeType).toBe('asst');
+		expect(at(nodes, 0).nodeType).toBe('asst');
 	});
 
 	it('returns empty array when dataModel is undefined', () => {
@@ -258,8 +259,8 @@ describe('pptxSmartArtParser — connections and parent-child relationships', ()
 			srcOrd: 0,
 			destOrd: 0,
 		});
-		expect(connections[1].sourceId).toBe('0');
-		expect(connections[1].destId).toBe('2');
+		expect(at(connections, 1).sourceId).toBe('0');
+		expect(at(connections, 1).destId).toBe('2');
 
 		expect(parentMap.get('1')).toBe('0');
 		expect(parentMap.get('2')).toBe('0');
@@ -278,7 +279,7 @@ describe('pptxSmartArtParser — connections and parent-child relationships', ()
 
 		const { connections } = parser.parseConnections(dataModel, xmlLookupService);
 		expect(connections).toHaveLength(1);
-		expect(connections[0].destId).toBe('3');
+		expect(at(connections, 0).destId).toBe('3');
 	});
 
 	it('returns empty results when dataModel is undefined', () => {
@@ -308,12 +309,12 @@ describe('pptxSmartArtParser — node tree building', () => {
 
 		const result = parser.buildNodeTree(nodes, parentMap);
 
-		expect(result[0].children).toHaveLength(2);
-		expect(result[0].children![0].text).toBe('Child A');
-		expect(result[0].children![1].text).toBe('Child B');
-		expect(result[1].parentId).toBe('0');
-		expect(result[2].parentId).toBe('0');
-		expect(result[0].parentId).toBeUndefined();
+		expect(at(result, 0).children).toHaveLength(2);
+		expect(at(at(result, 0).children!, 0).text).toBe('Child A');
+		expect(at(at(result, 0).children!, 1).text).toBe('Child B');
+		expect(at(result, 1).parentId).toBe('0');
+		expect(at(result, 2).parentId).toBe('0');
+		expect(at(result, 0).parentId).toBeUndefined();
 	});
 
 	it('handles nodes with no parent gracefully', () => {
@@ -321,8 +322,8 @@ describe('pptxSmartArtParser — node tree building', () => {
 		const parentMap = new Map<string, string>();
 
 		const result = parser.buildNodeTree(nodes, parentMap);
-		expect(result[0].parentId).toBeUndefined();
-		expect(result[0].children).toStrictEqual([]);
+		expect(at(result, 0).parentId).toBeUndefined();
+		expect(at(result, 0).children).toStrictEqual([]);
 	});
 });
 

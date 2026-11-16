@@ -8,6 +8,7 @@ import {
 	parseModernAuthors,
 	parseModernCommentPart,
 } from './modern-comment-xml';
+import { at } from '../../test-support/access';
 
 describe('modern PowerPoint comments XML', () => {
 	it('parses arbitrary prefixes, replies, task metadata, and positions', () => {
@@ -45,7 +46,7 @@ describe('modern PowerPoint comments XML', () => {
 			y: 2,
 			assignedTo: ['a2', 'a3'],
 		});
-		expect(parsed.comments[0].replies?.[0]).toMatchObject({ id: 'r1', text: 'Reply' });
+		expect(at(parsed.comments, 0).replies?.[0]).toMatchObject({ id: 'r1', text: 'Reply' });
 	});
 
 	it('serializes edits while preserving unknown root, comment, and extension XML', () => {
@@ -71,7 +72,7 @@ describe('modern PowerPoint comments XML', () => {
 			9525,
 		);
 		const root = built['p188:cmLst'] as XmlObject;
-		const node = (root['p188:cm'] as XmlObject[])[0];
+		const node = at(root['p188:cm'] as XmlObject[], 0);
 		expect(root['@_xmlns:p188']).toBe(MODERN_COMMENT_NAMESPACE);
 		expect(root['@_vendorRoot']).toBe('keep');
 		expect(node['@_vendor']).toBe('keep');
@@ -104,12 +105,12 @@ describe('modern PowerPoint comments XML', () => {
 			rawXml: raw,
 		};
 		const built = buildModernCommentPart([comment], undefined, () => 'a1', 9525);
-		const node = ((built['p188:cmLst'] as XmlObject)['p188:cm'] as XmlObject[])[0];
+		const node = at((built['p188:cmLst'] as XmlObject)['p188:cm'] as XmlObject[], 0);
 		const runs = ((node['p188:txBody'] as XmlObject)['a:p'] as XmlObject)['a:r'] as XmlObject[];
 
 		expect(runs).toHaveLength(2);
 		expect(runs[0]).toStrictEqual({ 'a:rPr': { '@_b': '1' }, 'a:t': '@Jane Doe' });
-		expect(runs[1]['a:t']).toBe(' please review today');
+		expect(at(runs, 1)['a:t']).toBe(' please review today');
 		expect(node['p188:mentionLst']).toStrictEqual(raw['p188:mentionLst']);
 	});
 
@@ -127,7 +128,7 @@ describe('modern PowerPoint comments XML', () => {
 			rawXml: { '@_created': '0001-01-01T00:00:00' },
 		};
 		const built = buildModernCommentPart([comment], undefined, () => 'a1', 9525);
-		const node = ((built['p188:cmLst'] as XmlObject)['p188:cm'] as XmlObject[])[0];
+		const node = at((built['p188:cmLst'] as XmlObject)['p188:cm'] as XmlObject[], 0);
 
 		expect(node['@_status']).toBe('active');
 		expect(node['@_created']).toBe('0001-01-01T00:00:00');
@@ -159,7 +160,7 @@ describe('modern PowerPoint comments XML', () => {
 			9525,
 		);
 		const built = buildModernCommentPart(parsed.comments, undefined, () => 'a1', 9525);
-		const node = ((built['p188:cmLst'] as XmlObject)['p188:cm'] as XmlObject[])[0];
+		const node = at((built['p188:cmLst'] as XmlObject)['p188:cm'] as XmlObject[], 0);
 		// Must be the ORIGINAL string, not a UTC-shifted `Date.parse` ->
 		// `toISOString()` reformat: `Date.parse('2024-01-15T10:30:00')` reads
 		// the string as LOCAL time, so reformatting through `toISOString()`
@@ -184,11 +185,11 @@ describe('modern PowerPoint comments XML', () => {
 			() => undefined,
 			9525,
 		);
-		expect(parsed.comments[0].status).toBeUndefined();
-		expect(parsed.comments[0].resolved).toBeUndefined();
+		expect(at(parsed.comments, 0).status).toBeUndefined();
+		expect(at(parsed.comments, 0).resolved).toBeUndefined();
 
 		const built = buildModernCommentPart(parsed.comments, undefined, () => 'a1', 9525);
-		const node = ((built['p188:cmLst'] as XmlObject)['p188:cm'] as XmlObject[])[0];
+		const node = at((built['p188:cmLst'] as XmlObject)['p188:cm'] as XmlObject[], 0);
 		expect(node['@_status']).toBeUndefined();
 	});
 
@@ -207,10 +208,10 @@ describe('modern PowerPoint comments XML', () => {
 			},
 		};
 		const parsed = parseModernAuthors(source);
-		parsed.authors[0].name = 'Ada Lovelace';
+		at(parsed.authors, 0).name = 'Ada Lovelace';
 		const built = buildModernAuthorPart(parsed.authors, parsed.root);
 		const root = built['p188:authorLst'] as XmlObject;
-		const author = (root['p188:author'] as XmlObject[])[0];
+		const author = at(root['p188:author'] as XmlObject[], 0);
 		expect(root['@_vendor']).toBe('keep');
 		expect(author['@_name']).toBe('Ada Lovelace');
 		expect(author['x:extLst']).toStrictEqual({ 'x:ext': {} });

@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 import type { XmlObject } from '../../types';
 import { PptxTableDataParser } from './PptxTableDataParser';
 import { extractTableCellParagraphs } from './table-cell-paragraphs';
+import { at } from '../../../test-support/access';
 
 const parser = new XMLParser({
 	ignoreAttributes: false,
@@ -114,7 +115,7 @@ describe('PptxTableDataParser paragraphs', () => {
 					'</a:tr></a:tbl>',
 			) as XmlObject,
 		);
-		const [formatted, empty, plain] = table?.rows[0].cells ?? [];
+		const [formatted, empty, plain] = at(table?.rows, 0).cells ?? [];
 		expect(formatted.paragraphs).toStrictEqual([{ align: 'center' }]);
 		// The renderer draws paragraphs only alongside runs, so a cell without
 		// runs does not carry them.

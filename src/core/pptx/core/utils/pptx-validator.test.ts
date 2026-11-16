@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 
 import { validatePptx, repairPptx } from './pptx-validator';
 import type { ValidationResult } from './pptx-validator';
+import { at } from '../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Helpers — create minimal PPTX ZIPs in-memory
@@ -352,7 +353,7 @@ describe('validatePptx', () => {
 		const result = await validatePptx(buf);
 		const issues = issuesByCode(result, 'MALFORMED_SLIDE_XML');
 		expect(issues).toHaveLength(1);
-		expect(issues[0].path).toBe('ppt/slides/slide1.xml');
+		expect(at(issues, 0).path).toBe('ppt/slides/slide1.xml');
 	});
 
 	it('does not report well-formed slide XML as malformed', async () => {
@@ -393,7 +394,7 @@ describe('validatePptx', () => {
 		const result = await validatePptx(buf);
 		const issues = issuesByCode(result, 'MISSING_MEDIA');
 		expect(issues).toHaveLength(1);
-		expect(issues[0].message).toContain('image1.png');
+		expect(at(issues, 0).message).toContain('image1.png');
 	});
 
 	it('does not flag existing media as missing', async () => {

@@ -9,6 +9,7 @@ import {
 	chartGridSetCategoryLabel as setChartCategoryLabel,
 	chartGridSetCellValue as setChartCellValue,
 } from './chart-grid-operations';
+import { at } from '../../test-support/access';
 
 function makeData(): PptxChartData {
 	return {
@@ -25,8 +26,8 @@ describe('addChartSeries', () => {
 	it('appends a zero-filled series named after its position', () => {
 		const next = addChartSeries(makeData());
 		expect(next.series).toHaveLength(3);
-		expect(next.series[2].name).toBe('Series 3');
-		expect(next.series[2].values).toStrictEqual([0, 0]);
+		expect(at(next.series, 2).name).toBe('Series 3');
+		expect(at(next.series, 2).values).toStrictEqual([0, 0]);
 	});
 });
 
@@ -50,8 +51,8 @@ describe('addChartCategory', () => {
 	it('appends a category and pads every series', () => {
 		const next = addChartCategory(makeData());
 		expect(next.categories).toStrictEqual(['Q1', 'Q2', 'Cat 3']);
-		expect(next.series[0].values).toHaveLength(3);
-		expect(next.series[1].values).toHaveLength(3);
+		expect(at(next.series, 0).values).toHaveLength(3);
+		expect(at(next.series, 1).values).toHaveLength(3);
 	});
 });
 
@@ -59,7 +60,7 @@ describe('removeChartCategory', () => {
 	it('removes the category from the labels and every series', () => {
 		const next = removeChartCategory(makeData(), 0);
 		expect(next?.categories).toStrictEqual(['Q2']);
-		expect(next?.series[0].values).toStrictEqual([20]);
+		expect(at(next?.series, 0).values).toStrictEqual([20]);
 	});
 
 	it('refuses to remove the last category', () => {
@@ -87,7 +88,7 @@ describe('setChartCategoryLabel', () => {
 
 describe('setChartCellValue', () => {
 	it('writes a parsed numeric cell', () => {
-		expect(setChartCellValue(makeData(), 0, 1, '42')?.series[0].values).toStrictEqual([10, 42]);
+		expect(at(setChartCellValue(makeData(), 0, 1, '42')?.series, 0).values).toStrictEqual([10, 42]);
 	});
 
 	it('rejects a cleared cell rather than coercing it to zero', () => {
@@ -103,10 +104,10 @@ describe('setChartCellValue', () => {
 describe('grid editing guards and preservation', () => {
 	it.each([true, false])('retains point-formatting policy: followDataPoint=%s', (follow) => {
 		const data = makeData();
-		data.series[0].dataPoints = [{ idx: 1 }];
+		at(data.series, 0).dataPoints = [{ idx: 1 }];
 		const next = removeChartCategory(data, 0, follow);
-		expect(next?.series[0].dataPoints).toEqual([{ idx: follow ? 0 : 1 }]);
-		expect(data.series[0].dataPoints).toEqual([{ idx: 1 }]);
+		expect(at(next?.series, 0).dataPoints).toEqual([{ idx: follow ? 0 : 1 }]);
+		expect(at(data.series, 0).dataPoints).toEqual([{ idx: 1 }]);
 	});
 
 	it.each([-1, 2, 0.5, Number.NaN, Number.POSITIVE_INFINITY])(
@@ -125,7 +126,7 @@ describe('grid editing guards and preservation', () => {
 		const before = structuredClone(data);
 		const next = setChartCellValue(data, 0, 1, '42');
 		expect(data).toEqual(before);
-		expect(next?.series[0].values).toEqual([10, 42]);
+		expect(at(next?.series, 0).values).toEqual([10, 42]);
 		expect(next?.series[1]).toEqual(data.series[1]);
 		expect(next?.chartType).toBe('bar');
 	});

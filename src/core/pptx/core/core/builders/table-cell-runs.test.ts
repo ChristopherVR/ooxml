@@ -6,6 +6,7 @@ import { annotateParagraphSiblingOrder } from '../runtime/paragraph-sibling-orde
 import { PptxTableDataParser } from './PptxTableDataParser';
 import { extractTableCellTextRuns } from './table-cell-runs';
 import type { TableCellRunsContext } from './table-cell-runs';
+import { at } from '../../../test-support/access';
 
 const parser = new XMLParser({
 	ignoreAttributes: false,
@@ -216,7 +217,7 @@ describe('extractTableCellTextRuns', () => {
 					'<a:r><a:t>grew</a:t></a:r></a:p></a:txBody></a:tc></a:tr></a:tbl>',
 			) as XmlObject,
 		);
-		const cell = table?.rows[0].cells[0];
+		const cell = at(table?.rows, 0).cells[0];
 		expect(cell?.text).toBe('Revenue grew');
 		expect(cell?.textRuns).toHaveLength(2);
 		expect(cell?.textRuns?.[0].bold).toBeTruthy();

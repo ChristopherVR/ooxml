@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import { createTextElement, createShapeElement } from './ElementFactory';
 import { SlideBuilder } from './SlideBuilder';
+import { at } from '../../../test-support/access';
 
 describe('slideBuilder', () => {
 	it('builds a slide with slide number and layout', () => {
@@ -19,8 +20,8 @@ describe('slideBuilder', () => {
 			.addText('Subtitle', { fontSize: 18, x: 100, y: 120, width: 800, height: 40 })
 			.build();
 		expect(slide.elements).toHaveLength(2);
-		expect(slide.elements[0].type).toBe('text');
-		expect(slide.elements[1].type).toBe('text');
+		expect(at(slide.elements, 0).type).toBe('text');
+		expect(at(slide.elements, 1).type).toBe('text');
 	});
 
 	it('chains addShape', () => {
@@ -31,7 +32,7 @@ describe('slideBuilder', () => {
 			})
 			.build();
 		expect(slide.elements).toHaveLength(1);
-		expect(slide.elements[0].type).toBe('shape');
+		expect(at(slide.elements, 0).type).toBe('shape');
 	});
 
 	it('chains addImage', () => {
@@ -39,7 +40,7 @@ describe('slideBuilder', () => {
 			.addImage('data:image/png;base64,abc', { altText: 'Photo' })
 			.build();
 		expect(slide.elements).toHaveLength(1);
-		expect(slide.elements[0].type).toBe('image');
+		expect(at(slide.elements, 0).type).toBe('image');
 	});
 
 	it('chains addTable', () => {
@@ -49,7 +50,7 @@ describe('slideBuilder', () => {
 			})
 			.build();
 		expect(slide.elements).toHaveLength(1);
-		expect(slide.elements[0].type).toBe('table');
+		expect(at(slide.elements, 0).type).toBe('table');
 	});
 
 	it('chains addChart', () => {
@@ -60,26 +61,26 @@ describe('slideBuilder', () => {
 			})
 			.build();
 		expect(slide.elements).toHaveLength(1);
-		expect(slide.elements[0].type).toBe('chart');
+		expect(at(slide.elements, 0).type).toBe('chart');
 	});
 
 	it('chains addConnector', () => {
 		const slide = new SlideBuilder(1).addConnector({ endArrow: 'triangle' }).build();
 		expect(slide.elements).toHaveLength(1);
-		expect(slide.elements[0].type).toBe('connector');
+		expect(at(slide.elements, 0).type).toBe('connector');
 	});
 
 	it('chains addMedia', () => {
 		const slide = new SlideBuilder(1).addMedia('video', 'data:video/mp4;base64,abc').build();
 		expect(slide.elements).toHaveLength(1);
-		expect(slide.elements[0].type).toBe('media');
+		expect(at(slide.elements, 0).type).toBe('media');
 	});
 
 	it('chains addGroup', () => {
 		const child = createTextElement('Child');
 		const slide = new SlideBuilder(1).addGroup([child]).build();
 		expect(slide.elements).toHaveLength(1);
-		expect(slide.elements[0].type).toBe('group');
+		expect(at(slide.elements, 0).type).toBe('group');
 	});
 
 	it('addElement accepts pre-built elements', () => {
@@ -141,9 +142,9 @@ describe('slideBuilder', () => {
 			.addText('Animated', { x: 100, y: 100, width: 200, height: 50 })
 			.build();
 
-		const elementId = slide.elements[0].id;
+		const elementId = at(slide.elements, 0).id;
 		const slide2 = new SlideBuilder(1)
-			.addElement(slide.elements[0])
+			.addElement(at(slide.elements, 0))
 			.addAnimation(elementId, { preset: 'fadeIn', duration: 500 })
 			.build();
 

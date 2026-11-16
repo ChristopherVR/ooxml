@@ -4,6 +4,7 @@ import { EMU_PER_PX } from '../constants';
 import { createTableGraphicFrameRawXml } from '../core/runtime/table-create-xml';
 import type { PptxElement, PptxElementWithText, ConnectorPptxElement, XmlObject } from '../types';
 import { createTemplateShapeRawXml, createTemplateConnectorRawXml } from './element-xml-builders';
+import { at } from '../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // createTemplateShapeRawXml
@@ -68,7 +69,7 @@ describe('createTemplateShapeRawXml', () => {
 		const xml = createTemplateShapeRawXml(baseElement);
 		const txBody = xml['p:txBody'] as XmlObject;
 		const paragraphs = txBody['a:p'] as XmlObject[];
-		const run = paragraphs[0]['a:r'] as XmlObject;
+		const run = at(paragraphs, 0)['a:r'] as XmlObject;
 		expect(run['a:t'] as string).toBe('Hello');
 	});
 
@@ -82,8 +83,8 @@ describe('createTemplateShapeRawXml', () => {
 		const avLst = prstGeom['a:avLst'] as XmlObject;
 		const gds = avLst['a:gd'] as XmlObject[];
 		expect(gds).toHaveLength(2);
-		expect(gds[0]['@_name']).toBe('adj1');
-		expect(gds[0]['@_fmla']).toBe('val 25000');
+		expect(at(gds, 0)['@_name']).toBe('adj1');
+		expect(at(gds, 0)['@_fmla']).toBe('val 25000');
 	});
 
 	it('sets flipH when flipHorizontal is true', () => {

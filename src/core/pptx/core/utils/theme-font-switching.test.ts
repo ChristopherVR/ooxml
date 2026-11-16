@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { PptxElement, PptxSlide, PptxThemeFontScheme, TextSegment } from '../types';
 import { reResolveElementFonts, reResolveSlideFonts } from './theme-font-switching';
+import { at } from '../../test-support/access';
 
 const OFFICE_FONTS: PptxThemeFontScheme = {
 	majorFont: { latin: 'Calibri Light', eastAsia: 'MS Gothic' },
@@ -90,8 +91,8 @@ describe('reResolveSlideFonts', () => {
 
 		const result = reResolveSlideFonts(slides, OFFICE_FONTS, APTOS_FONTS);
 
-		expect((result[0].elements[0] as TextLike).textStyle?.fontFamily).toBe('Georgia');
-		expect((result[0].elements[1] as TextLike).textStyle?.fontFamily).toBe('Calibri');
+		expect((at(result, 0).elements[0] as TextLike).textStyle?.fontFamily).toBe('Georgia');
+		expect((at(result, 0).elements[1] as TextLike).textStyle?.fontFamily).toBe('Calibri');
 		// Nothing changed, so the input array and slide objects are returned.
 		expect(result).toBe(slides);
 	});
@@ -170,13 +171,16 @@ describe('reResolveSlideFonts', () => {
 		} as unknown as PptxElement;
 
 		const [element] = reResolveElementFonts([table], OFFICE_FONTS, APTOS_FONTS);
-		const cells = (
-			element as {
-				tableData: { rows: Array<{ cells: Array<{ style?: { fontFamily?: string } }> }> };
-			}
-		).tableData.rows[0].cells;
+		const cells = at(
+			(
+				element as {
+					tableData: { rows: Array<{ cells: Array<{ style?: { fontFamily?: string } }> }> };
+				}
+			).tableData.rows,
+			0,
+		).cells;
 
-		expect(cells[0].style?.fontFamily).toBe('Aptos');
-		expect(cells[1].style?.fontFamily).toBe('Georgia');
+		expect(at(cells, 0).style?.fontFamily).toBe('Aptos');
+		expect(at(cells, 1).style?.fontFamily).toBe('Georgia');
 	});
 });

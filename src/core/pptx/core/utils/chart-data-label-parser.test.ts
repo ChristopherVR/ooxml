@@ -7,6 +7,7 @@ import {
 	dataLabelsGroupDeleted,
 	dataLabelsGroupShowsContent,
 } from './chart-data-labels-visibility';
+import { at } from '../../test-support/access';
 
 const lookup = new PptxXmlLookupService();
 
@@ -148,7 +149,7 @@ describe('chartML data label parsing', () => {
 				},
 			},
 		};
-		expect(parseSeriesDataLabels(series, lookup)[0].text).toBe(' 1,444 ');
+		expect(at(parseSeriesDataLabels(series, lookup), 0).text).toBe(' 1,444 ');
 	});
 
 	describe('"Value From Cells" data labels (C2-G13)', () => {

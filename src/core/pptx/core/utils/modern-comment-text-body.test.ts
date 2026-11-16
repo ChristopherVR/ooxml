@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { XmlObject } from '../types';
 import { applyModernCommentText, flattenBodyText } from './modern-comment-text-body';
+import { at } from '../../test-support/access';
 
 /** A mention run (bold) followed by ordinary prose, as PowerPoint writes it. */
 const mentionBody = (): XmlObject => ({
@@ -32,16 +33,16 @@ describe('modern comment txBody text splice', () => {
 			'a:rPr': { '@_lang': 'en-US', '@_b': '1' },
 			'a:t': '@Jane Doe',
 		});
-		expect(runs[1]['a:t']).toBe(' please review the numbers today');
-		expect(runs[1]['a:rPr']).toStrictEqual({ '@_lang': 'en-US' });
+		expect(at(runs, 1)['a:t']).toBe(' please review the numbers today');
+		expect(at(runs, 1)['a:rPr']).toStrictEqual({ '@_lang': 'en-US' });
 	});
 
 	it('keeps the trailing run when text is inserted at the head', () => {
 		const result = applyModernCommentText(mentionBody(), 'Hi @Jane Doe please review the numbers');
 		const runs = ((result['a:p'] as XmlObject)['a:r'] as XmlObject[]) ?? [];
-		expect(runs[0]['a:t']).toBe('Hi @Jane Doe');
-		expect(runs[0]['a:rPr']).toStrictEqual({ '@_lang': 'en-US', '@_b': '1' });
-		expect(runs[1]['a:t']).toBe(' please review the numbers');
+		expect(at(runs, 0)['a:t']).toBe('Hi @Jane Doe');
+		expect(at(runs, 0)['a:rPr']).toStrictEqual({ '@_lang': 'en-US', '@_b': '1' });
+		expect(at(runs, 1)['a:t']).toBe(' please review the numbers');
 	});
 
 	it('rewrites only the edited paragraph of a multi-line body', () => {
@@ -55,8 +56,8 @@ describe('modern comment txBody text splice', () => {
 		const result = applyModernCommentText(body, 'first\nsecond line');
 		const paragraphs = result['a:p'] as XmlObject[];
 		expect(paragraphs[0]).toStrictEqual({ 'a:r': { 'a:rPr': { '@_b': '1' }, 'a:t': 'first' } });
-		expect((paragraphs[1]['a:r'] as XmlObject)['a:t']).toBe('second line');
-		expect((paragraphs[1]['a:r'] as XmlObject)['a:rPr']).toStrictEqual({ '@_i': '1' });
+		expect((at(paragraphs, 1)['a:r'] as XmlObject)['a:t']).toBe('second line');
+		expect((at(paragraphs, 1)['a:r'] as XmlObject)['a:rPr']).toStrictEqual({ '@_i': '1' });
 	});
 
 	it('adds and drops paragraphs as lines are added and removed', () => {

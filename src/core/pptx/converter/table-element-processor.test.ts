@@ -4,6 +4,7 @@ import type { PptxElement, PptxTableData, TablePptxElement } from '../core';
 import type { ElementProcessorContext } from './elements/ElementProcessor';
 import { TableElementProcessor } from './elements/TableElementProcessor';
 import { MediaContext } from './media-context';
+import { at } from '../test-support/access';
 
 function makeContext(overrides: Partial<ElementProcessorContext> = {}): ElementProcessorContext {
 	return {
@@ -231,7 +232,7 @@ describe('tableElementProcessor', () => {
 			firstRowHeader: false,
 		});
 		// Add textSegments to the cell manually
-		const cell = element.tableData!.rows[0].cells[0] as unknown as Record<string, unknown>;
+		const cell = at(element.tableData!.rows, 0).cells[0] as unknown as Record<string, unknown>;
 		cell.textSegments = [{ text: 'bold text', style: { bold: true, fontSize: 14 } }];
 		const result = await processor.process(element, ctx);
 		expect(result).not.toBeNull();

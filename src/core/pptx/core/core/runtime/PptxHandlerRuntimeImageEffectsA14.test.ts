@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { PptxHandler } from '../../../index';
 import type { PptxData, PptxImageEffects, XmlObject } from '../../../index';
 import { PptxHandlerRuntime } from '../PptxHandlerRuntime';
+import { at } from '../../../test-support/access';
 
 /**
  * The `a14` blip extension, exercised through the REAL
@@ -143,7 +144,7 @@ describe('a14 image extension on a real PowerPoint deck', () => {
 			const buf = readFileSync(FIXTURE);
 			const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
 			const data: PptxData = await new PptxHandler().load(ab);
-			const picture = data.slides[0].elements.find(
+			const picture = at(data.slides, 0).elements.find(
 				(el) => 'imageEffects' in el && el.imageEffects?.duotone,
 			);
 			expect(picture).toBeDefined();

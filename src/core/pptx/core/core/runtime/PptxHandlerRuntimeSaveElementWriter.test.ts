@@ -16,6 +16,7 @@ import { describe, expect, it } from 'vitest';
 
 import { PptxHandler } from '../../PptxHandler';
 import type { GroupPptxElement, PptxData, PptxElement, PptxSlide } from '../../types';
+import { at } from '../../../test-support/access';
 
 const LINKED_TEXTBOX = 'linked-textbox.pptx';
 const CHART_GALLERY = 'chart-gallery.pptx';
@@ -50,7 +51,7 @@ function firstSlideWithGroup(data: PptxData): PptxSlide {
 describe.runIf(existsSync(fixturePath(LINKED_TEXTBOX)))('applyNameToCnvPr', () => {
 	it('persists a rename of a loaded shape', async () => {
 		const { handler, data } = await loadFixture(LINKED_TEXTBOX);
-		const slide = data.slides[0];
+		const slide = at(data.slides, 0);
 		const target = slide.elements.find((el) => el.type !== 'group')!;
 		expect(target.name).toBeDefined();
 		expect(target.name).not.toBe('RENAMED-SHAPE');
@@ -62,7 +63,7 @@ describe.runIf(existsSync(fixturePath(LINKED_TEXTBOX)))('applyNameToCnvPr', () =
 		expect(cNvPrNames(await slideXml(saved, slide.id))).toContain('RENAMED-SHAPE');
 
 		const reloaded = await new PptxHandler().load(saved.buffer as ArrayBuffer);
-		const roundTripped = reloaded.slides[0].elements.find((el) => el.id === target.id);
+		const roundTripped = at(reloaded.slides, 0).elements.find((el) => el.id === target.id);
 		expect(roundTripped?.name).toBe('RENAMED-SHAPE');
 	});
 
@@ -89,7 +90,7 @@ describe.runIf(existsSync(fixturePath(LINKED_TEXTBOX)))('applyNameToCnvPr', () =
 		// `@name` is REQUIRED on CT_NonVisualDrawingProps (ECMA-376
 		// S20.1.2.2.8), so an explicit clear must not delete it.
 		const { handler, data } = await loadFixture(LINKED_TEXTBOX);
-		const slide = data.slides[0];
+		const slide = at(data.slides, 0);
 		const target = slide.elements.find((el) => el.type !== 'group')!;
 		target.name = '';
 		slide.isDirty = true;
@@ -107,7 +108,7 @@ describe.runIf(existsSync(fixturePath(CHART_GALLERY)))('applyNameToCnvPr (no col
 		// carries none (an SDK-built element, or one whose name a caller
 		// dropped) must still mean "no opinion", never "blank it".
 		const { handler, data } = await loadFixture(CHART_GALLERY);
-		const chart = data.slides[0].elements.find((el) => el.type === 'chart');
+		const chart = at(data.slides, 0).elements.find((el) => el.type === 'chart');
 		expect(chart).toBeDefined();
 		expect(chart!.name).toBe('Chart 1');
 		delete chart!.name;
@@ -146,7 +147,7 @@ describe.runIf(existsSync(fixturePath(CHART_GALLERY)))('applyNameToCnvPr (no col
 describe.runIf(existsSync(fixturePath(LINKED_TEXTBOX)))('applyHiddenToCnvPr', () => {
 	it('round-trips the Selection Pane hide toggle', async () => {
 		const { handler, data } = await loadFixture(LINKED_TEXTBOX);
-		const slide = data.slides[0];
+		const slide = at(data.slides, 0);
 		const target = slide.elements.find((el) => el.type !== 'group') as PptxElement;
 		target.hidden = true;
 		slide.isDirty = true;
@@ -155,6 +156,6 @@ describe.runIf(existsSync(fixturePath(LINKED_TEXTBOX)))('applyHiddenToCnvPr', ()
 		await expect(slideXml(saved, slide.id)).resolves.toContain('hidden="1"');
 
 		const reloaded = await new PptxHandler().load(saved.buffer as ArrayBuffer);
-		expect(reloaded.slides[0].elements.find((el) => el.id === target.id)?.hidden).toBeTruthy();
+		expect(at(reloaded.slides, 0).elements.find((el) => el.id === target.id)?.hidden).toBeTruthy();
 	});
 });

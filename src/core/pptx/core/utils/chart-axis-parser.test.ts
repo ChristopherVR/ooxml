@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { XmlObject } from '../types';
 import { parseChartAxes, parseChart3DSurfaces, upsertChartAxisChild } from './chart-axis-parser';
+import { at } from '../../test-support/access';
 
 const xmlLookup = {
 	getChildByLocalName(parent: XmlObject | undefined, name: string): XmlObject | undefined {
@@ -46,7 +47,7 @@ const colorParser = {
 
 const getLocalName = (key: string): string => {
 	const parts = key.split(':');
-	return parts.length > 1 ? parts[parts.length - 1] : key;
+	return parts.length > 1 ? at(parts, parts.length - 1) : key;
 };
 
 describe('parseChartAxes', () => {
@@ -85,7 +86,7 @@ describe('parseChartAxes', () => {
 		const plotArea = {
 			'c:valAx': { 'c:title': { 'c:tx': { 'c:rich': { 'a:p': { 'a:r': { 'a:t': value } } } } } },
 		};
-		expect(parseChartAxes(plotArea, xmlLookup, colorParser, getLocalName)[0].titleText).toBe(
+		expect(at(parseChartAxes(plotArea, xmlLookup, colorParser, getLocalName), 0).titleText).toBe(
 			expected,
 		);
 	});
@@ -255,7 +256,7 @@ describe('parseChartAxes', () => {
 		const result = parseChartAxes(plotArea, xmlLookup, colorParser, getLocalName);
 		expect(result).toHaveLength(1);
 
-		const valAx = result[0];
+		const valAx = at(result, 0);
 		expect(valAx.axisType).toBe('valAx');
 		expect(valAx.logScale).toBeTruthy();
 		expect(valAx.logBase).toBe(10);
@@ -273,7 +274,7 @@ describe('parseChartAxes', () => {
 		};
 
 		const result = parseChartAxes(plotArea, xmlLookup, colorParser, getLocalName);
-		const valAx = result[0];
+		const valAx = at(result, 0);
 		expect(valAx.logScale).toBeTruthy();
 		expect(valAx.logBase).toBe(2);
 	});
@@ -289,7 +290,7 @@ describe('parseChartAxes', () => {
 		};
 
 		const result = parseChartAxes(plotArea, xmlLookup, colorParser, getLocalName);
-		const valAx = result[0];
+		const valAx = at(result, 0);
 		expect(valAx.logScale).toBeUndefined();
 		expect(valAx.logBase).toBeUndefined();
 		expect(valAx.min).toBe(0);
@@ -305,7 +306,7 @@ describe('parseChartAxes', () => {
 		};
 
 		const result = parseChartAxes(plotArea, xmlLookup, colorParser, getLocalName);
-		const valAx = result[0];
+		const valAx = at(result, 0);
 		expect(valAx.axisId).toBe(123456);
 		expect(valAx.crossAxisId).toBe(789012);
 	});
@@ -318,7 +319,7 @@ describe('parseChartAxes', () => {
 		};
 
 		const result = parseChartAxes(plotArea, xmlLookup, colorParser, getLocalName);
-		const valAx = result[0];
+		const valAx = at(result, 0);
 		expect(valAx.deleted).toBeTruthy();
 	});
 
@@ -332,7 +333,7 @@ describe('parseChartAxes', () => {
 		};
 
 		const result = parseChartAxes(plotArea, xmlLookup, colorParser, getLocalName);
-		const valAx = result[0];
+		const valAx = at(result, 0);
 		expect(valAx.logScale).toBeUndefined();
 		expect(valAx.logBase).toBeUndefined();
 	});
@@ -350,7 +351,7 @@ describe('parseChartAxes', () => {
 				},
 			},
 		};
-		const axis = parseChartAxes(plotArea, xmlLookup, colorParser, getLocalName)[0];
+		const axis = at(parseChartAxes(plotArea, xmlLookup, colorParser, getLocalName), 0);
 		expect(axis.displayUnits).toBe('custom');
 		expect(axis.displayUnitsValue).toBe(2500);
 		expect(axis.displayUnitsLabel).toStrictEqual({
@@ -370,7 +371,7 @@ describe('parseChartAxes', () => {
 			},
 		};
 		expect(
-			parseChartAxes(plotArea, xmlLookup, colorParser, getLocalName)[0].displayUnits,
+			at(parseChartAxes(plotArea, xmlLookup, colorParser, getLocalName), 0).displayUnits,
 		).toBeUndefined();
 	});
 });
@@ -431,13 +432,13 @@ describe('parseChartAxes — majorUnit / minorUnit / tickLblPos', () => {
 		};
 		const axes = parseChartAxes(plotArea, xmlLookup, colorParser, getLocalName);
 		expect(axes).toHaveLength(1);
-		expect(axes[0].axisId).toBe(111);
-		expect(axes[0].min).toBe(0);
-		expect(axes[0].max).toBe(500);
-		expect(axes[0].orientation).toBe('maxMin');
-		expect(axes[0].majorUnit).toBe(100);
-		expect(axes[0].minorUnit).toBe(20);
-		expect(axes[0].tickLblPos).toBe('low');
+		expect(at(axes, 0).axisId).toBe(111);
+		expect(at(axes, 0).min).toBe(0);
+		expect(at(axes, 0).max).toBe(500);
+		expect(at(axes, 0).orientation).toBe('maxMin');
+		expect(at(axes, 0).majorUnit).toBe(100);
+		expect(at(axes, 0).minorUnit).toBe(20);
+		expect(at(axes, 0).tickLblPos).toBe('low');
 	});
 
 	it('rejects invalid tickLblPos values', () => {
@@ -448,7 +449,7 @@ describe('parseChartAxes — majorUnit / minorUnit / tickLblPos', () => {
 			},
 		};
 		const axes = parseChartAxes(plotArea, xmlLookup, colorParser, getLocalName);
-		expect(axes[0].tickLblPos).toBeUndefined();
+		expect(at(axes, 0).tickLblPos).toBeUndefined();
 	});
 });
 

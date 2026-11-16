@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { ShapeStyle, XmlObject } from '../../types';
 import { drawingChild, drawingChildren, mergeDrawingFillXml } from './drawing-fill-xml';
 import { PptxGradientStyleCodec } from './PptxGradientStyleCodec';
+import { at } from '../../../test-support/access';
 
 const codec = new PptxGradientStyleCodec({
 	ensureArray: (value) => (Array.isArray(value) ? value : value === undefined ? [] : [value]),
@@ -37,7 +38,7 @@ describe('drawingML fill round-trip preservation', () => {
 			{ color: '#FF0000', position: 0 },
 			{ color: '#0000FF', position: 100 },
 		]);
-		expect(stops[0].originalColorXml).toStrictEqual({
+		expect(at(stops, 0).originalColorXml).toStrictEqual({
 			'd:srgbClr': { '@_val': 'FF0000' },
 		});
 		expect(codec.extractGradientType(gradient)).toBe('radial');

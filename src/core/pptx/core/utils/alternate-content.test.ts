@@ -10,6 +10,7 @@ import {
 	isNamespaceSupported,
 	getSupportedNamespaces,
 } from './alternate-content';
+import { at } from '../../test-support/access';
 
 /** Build the WeakMap `unwrapAlternateContent`'s runtime caller populates from its return value. */
 function blockMapFor(blocks: AlternateContentBlock[]): WeakMap<XmlObject, AlternateContentBlock> {
@@ -275,8 +276,8 @@ describe('unwrapAlternateContent', () => {
 		unwrapAlternateContent(container);
 		const shapes = container['p:sp'] as Array<{ id: string }>;
 		expect(shapes).toHaveLength(2);
-		expect(shapes[0].id).toBe('existing');
-		expect(shapes[1].id).toBe('fromChoice');
+		expect(at(shapes, 0).id).toBe('existing');
+		expect(at(shapes, 1).id).toBe('fromChoice');
 	});
 
 	it('merges Fallback elements into container when not supported', () => {
@@ -295,7 +296,7 @@ describe('unwrapAlternateContent', () => {
 		unwrapAlternateContent(container);
 		const pics = container['p:pic'] as Array<{ id: string }>;
 		expect(pics).toHaveLength(1);
-		expect(pics[0].id).toBe('fromFallback');
+		expect(at(pics, 0).id).toBe('fromFallback');
 		// Choice shape should NOT be present
 		expect(container['p:sp']).toBeUndefined();
 	});
@@ -327,11 +328,11 @@ describe('unwrapAlternateContent', () => {
 		unwrapAlternateContent(container);
 		const shapes = container['p:sp'] as Array<{ id: string }>;
 		expect(shapes).toHaveLength(1);
-		expect(shapes[0].id).toBe('ac1Choice');
+		expect(at(shapes, 0).id).toBe('ac1Choice');
 
 		const pics = container['p:pic'] as Array<{ id: string }>;
 		expect(pics).toHaveLength(1);
-		expect(pics[0].id).toBe('ac2Fallback');
+		expect(at(pics, 0).id).toBe('ac2Fallback');
 	});
 
 	it('handles graphicFrame, grpSp, cxnSp, contentPart tags', () => {
@@ -347,8 +348,8 @@ describe('unwrapAlternateContent', () => {
 		};
 
 		unwrapAlternateContent(container);
-		expect((container['p:graphicFrame'] as Array<{ id: string }>)[0].id).toBe('frame1');
-		expect((container['p:cxnSp'] as Array<{ id: string }>)[0].id).toBe('conn1');
+		expect(at(container['p:graphicFrame'] as Array<{ id: string }>, 0).id).toBe('frame1');
+		expect(at(container['p:cxnSp'] as Array<{ id: string }>, 0).id).toBe('conn1');
 	});
 });
 
@@ -415,7 +416,7 @@ describe('reapplyAlternateContentToTree', () => {
 		};
 		const blocks = unwrapAlternateContent(container);
 		expect(blocks).toHaveLength(1);
-		expect(blocks[0].selectedBranch).toBe('fallback');
+		expect(at(blocks, 0).selectedBranch).toBe('fallback');
 
 		const restored = reapplyAlternateContentToTree(
 			container as XmlObject,
@@ -463,8 +464,8 @@ describe('reapplyAlternateContentToTree', () => {
 		expect(groups[1]).toBe(otherGroup);
 		// The nested envelope is back inside the first group, not leaked to spTree.
 		expect(restored['mc:AlternateContent']).toBeUndefined();
-		expect(groups[0]['p:sp']).toBeUndefined();
-		const nestedAc = groups[0]['mc:AlternateContent'] as XmlObject;
+		expect(at(groups, 0)['p:sp']).toBeUndefined();
+		const nestedAc = at(groups, 0)['mc:AlternateContent'] as XmlObject;
 		expect(((nestedAc['mc:Choice'] as XmlObject)['p:sp'] as XmlObject)['@_id']).toBe(
 			'nestedChoice',
 		);

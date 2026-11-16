@@ -14,6 +14,7 @@ import {
 } from './chart-operations';
 import { ChartBuilder } from './ChartBuilder';
 import { createChartElement } from './ElementFactory';
+import { at } from '../../../test-support/access';
 
 const gradient: ChartGradientInput = {
 	stops: [
@@ -104,7 +105,7 @@ describe('createChartElement / ChartBuilder with a series gradient', () => {
 			series: [{ name: 'S', values: [1, 2], gradientFill: gradient }],
 			categories: ['A', 'B'],
 		});
-		expect(chart.chartData!.series[0].gradientFill).toStrictEqual(expected);
+		expect(at(chart.chartData!.series, 0).gradientFill).toStrictEqual(expected);
 	});
 
 	it('applies .gradient() to the most recently added series', () => {
@@ -114,8 +115,8 @@ describe('createChartElement / ChartBuilder with a series gradient', () => {
 			.addSeries('Second', [3, 4])
 			.gradient(gradient)
 			.build();
-		expect(chart.chartData!.series[0].gradientFill).toBeUndefined();
-		expect(chart.chartData!.series[1].gradientFill).toStrictEqual(expected);
+		expect(at(chart.chartData!.series, 0).gradientFill).toBeUndefined();
+		expect(at(chart.chartData!.series, 1).gradientFill).toStrictEqual(expected);
 	});
 
 	it('throws for .gradient() before any series and for line-drawn chart types', () => {
@@ -135,22 +136,22 @@ describe('setChartSeriesGradient', () => {
 	it('sets and clears a series gradient, keeping the solid colour as the fallback', () => {
 		const chart = makeChart();
 		setChartSeriesGradient(chart, 0, gradient);
-		expect(chart.chartData!.series[0].gradientFill).toStrictEqual(expected);
+		expect(at(chart.chartData!.series, 0).gradientFill).toStrictEqual(expected);
 		setChartSeriesGradient(chart, 0, null);
-		expect(chart.chartData!.series[0].gradientFill).toBeUndefined();
-		expect(chart.chartData!.series[0].color).toBe('#4472C4');
+		expect(at(chart.chartData!.series, 0).gradientFill).toBeUndefined();
+		expect(at(chart.chartData!.series, 0).color).toBe('#4472C4');
 	});
 
 	it('is cleared by setChartSeriesColor: the last call wins', () => {
 		const chart = makeChart();
 		setChartSeriesGradient(chart, 0, gradient);
 		setChartSeriesColor(chart, 0, '#00B050');
-		expect(chart.chartData!.series[0].gradientFill).toBeUndefined();
-		expect(chart.chartData!.series[0].color).toBe('#00B050');
+		expect(at(chart.chartData!.series, 0).gradientFill).toBeUndefined();
+		expect(at(chart.chartData!.series, 0).color).toBe('#00B050');
 
 		setChartSeriesGradient(chart, 0, gradient);
 		setChartSeriesColor(chart, 0, null);
-		expect(chart.chartData!.series[0].gradientFill).toBeUndefined();
+		expect(at(chart.chartData!.series, 0).gradientFill).toBeUndefined();
 	});
 
 	it('throws for an out-of-range series and for a line-drawn combo series', () => {
@@ -170,7 +171,7 @@ describe('setChartDataPointGradient', () => {
 		const chart = makeChart();
 		setChartDataPointStyle(chart, 0, 2, { fillColor: '#FF0000', strokeWidth: 2 });
 		setChartDataPointGradient(chart, 0, 2, gradient);
-		expect(chart.chartData!.series[0].dataPoints).toStrictEqual([
+		expect(at(chart.chartData!.series, 0).dataPoints).toStrictEqual([
 			{ idx: 2, spPr: { strokeWidth: 2 }, gradientFill: expected },
 		]);
 	});
@@ -179,12 +180,12 @@ describe('setChartDataPointGradient', () => {
 		const chart = makeChart();
 		setChartDataPointGradient(chart, 0, 1, gradient);
 		setChartDataPointFill(chart, 0, 1, '#00B050');
-		expect(chart.chartData!.series[0].dataPoints).toStrictEqual([
+		expect(at(chart.chartData!.series, 0).dataPoints).toStrictEqual([
 			{ idx: 1, spPr: { fillColor: '#00B050' } },
 		]);
 		setChartDataPointGradient(chart, 0, 1, gradient);
 		setChartDataPointStyle(chart, 0, 1, null);
-		expect(chart.chartData!.series[0].dataPoints).toStrictEqual([]);
+		expect(at(chart.chartData!.series, 0).dataPoints).toStrictEqual([]);
 	});
 
 	it('drops the empty override when cleared, keeping one with other formatting', () => {
@@ -194,7 +195,7 @@ describe('setChartDataPointGradient', () => {
 		setChartDataPointExplosion(chart, 0, 1, 20);
 		setChartDataPointGradient(chart, 0, 0, null);
 		setChartDataPointGradient(chart, 0, 1, null);
-		expect(chart.chartData!.series[0].dataPoints).toStrictEqual([{ idx: 1, explosion: 20 }]);
+		expect(at(chart.chartData!.series, 0).dataPoints).toStrictEqual([{ idx: 1, explosion: 20 }]);
 	});
 
 	it('validates the point index and chart type', () => {

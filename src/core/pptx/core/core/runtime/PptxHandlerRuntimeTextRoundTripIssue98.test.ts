@@ -15,6 +15,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { TextSegment, TextStyle, XmlObject } from '../../types';
 import { PptxHandlerRuntime } from './PptxHandlerRuntimeImplementation';
+import { at } from '../../../test-support/access';
 
 type HyperlinkResolver = (target: string) => string | undefined;
 
@@ -105,7 +106,7 @@ describe('#98 a:fld @uuid + per-field a:pPr', () => {
 				fieldParagraphPropertiesXml: { '@_algn': 'ctr' },
 			},
 		];
-		const fld = new TestRuntime().saveParagraphs({}, segments)[0]['a:fld'] as XmlObject;
+		const fld = at(new TestRuntime().saveParagraphs({}, segments), 0)['a:fld'] as XmlObject;
 		expect(fld['@_uuid']).toBe('{ABC}');
 		expect(fld['@_id']).toBeUndefined();
 		expect(fld['a:pPr']).toStrictEqual({ '@_algn': 'ctr' });
@@ -119,7 +120,7 @@ describe('#98 a:fld @uuid + per-field a:pPr', () => {
 		const segments: TextSegment[] = [
 			{ text: '5', style: {}, fieldType: 'slidenum', fieldGuid: '{DEF}', fieldGuidAttr: 'id' },
 		];
-		const fld = new TestRuntime().saveParagraphs({}, segments)[0]['a:fld'] as XmlObject;
+		const fld = at(new TestRuntime().saveParagraphs({}, segments), 0)['a:fld'] as XmlObject;
 		expect(fld['@_id']).toBe('{DEF}');
 		expect(fld['@_uuid']).toBeUndefined();
 	});
@@ -206,7 +207,7 @@ describe('#98 defRPr + extLst preservation', () => {
 				},
 			},
 		];
-		const pPr = new TestRuntime().saveParagraphs({}, segments)[0]['a:pPr'] as XmlObject;
+		const pPr = at(new TestRuntime().saveParagraphs({}, segments), 0)['a:pPr'] as XmlObject;
 		expect(pPr['a:defRPr']).toStrictEqual({ '@_sz': '1400' });
 		expect(pPr['a:extLst']).toStrictEqual({ 'a:ext': { '@_uri': '{X}' } });
 	});

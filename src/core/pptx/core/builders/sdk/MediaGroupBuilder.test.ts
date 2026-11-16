@@ -6,6 +6,7 @@ import { MediaBuilder } from './MediaBuilder';
 import { ShapeBuilder } from './ShapeBuilder';
 import { TableBuilder } from './TableBuilder';
 import { TextBuilder } from './TextBuilder';
+import { at, must } from '../../../test-support/access';
 
 beforeEach(() => {
 	resetIdCounter();
@@ -198,7 +199,7 @@ describe('groupBuilder', () => {
 		const el = GroupBuilder.create().addChild(text).build();
 		expect(el.children).toHaveLength(1);
 		expect(el.children[0]).toBe(text);
-		expect(el.children[0].type).toBe('text');
+		expect(at(el.children, 0).type).toBe('text');
 	});
 
 	it('.addChildBuilder(builder) calls .build() on the builder', () => {
@@ -206,7 +207,7 @@ describe('groupBuilder', () => {
 			.addChildBuilder(TextBuilder.create('Built').fontSize(18))
 			.build();
 		expect(el.children).toHaveLength(1);
-		expect(el.children[0].type).toBe('text');
+		expect(at(el.children, 0).type).toBe('text');
 		expect((el.children[0] as Record<string, unknown>).text).toBe('Built');
 		expect((el.children[0] as Record<string, unknown>).textStyle?.fontSize).toBe(18);
 	});
@@ -216,8 +217,8 @@ describe('groupBuilder', () => {
 		const shape = createShapeElement('rect');
 		const el = GroupBuilder.create().addChildren([text, shape]).build();
 		expect(el.children).toHaveLength(2);
-		expect(el.children[0].type).toBe('text');
-		expect(el.children[1].type).toBe('shape');
+		expect(at(el.children, 0).type).toBe('text');
+		expect(at(el.children, 1).type).toBe('shape');
 	});
 
 	// -- Position & size --------------------------------------------------
@@ -261,13 +262,13 @@ describe('groupBuilder', () => {
 		const innerGroup = GroupBuilder.create().addChildBuilder(TextBuilder.create('Nested')).build();
 		const outerGroup = GroupBuilder.create().addChild(innerGroup).build();
 		expect(outerGroup.children).toHaveLength(1);
-		expect(outerGroup.children[0].type).toBe('group');
+		expect(at(outerGroup.children, 0).type).toBe('group');
 		expect((outerGroup.children[0] as { children: Array<{ type: string }> }).children).toHaveLength(
 			1,
 		);
-		expect((outerGroup.children[0] as { children: Array<{ type: string }> }).children[0].type).toBe(
-			'text',
-		);
+		expect(
+			at((outerGroup.children[0] as { children: Array<{ type: string }> }).children, 0).type,
+		).toBe('text');
 	});
 
 	// -- Full chaining test -----------------------------------------------
@@ -285,9 +286,9 @@ describe('groupBuilder', () => {
 
 		expect(el.type).toBe('group');
 		expect(el.children).toHaveLength(3);
-		expect(el.children[0].type).toBe('shape');
-		expect(el.children[1].type).toBe('text');
-		expect(el.children[2].type).toBe('text');
+		expect(at(el.children, 0).type).toBe('shape');
+		expect(at(el.children, 1).type).toBe('text');
+		expect(at(el.children, 2).type).toBe('text');
 		expect(el.x).toBe(50);
 		expect(el.y).toBe(75);
 		expect(el.width).toBe(400);
@@ -354,8 +355,8 @@ describe('shapeBuilder convenience fills', () => {
 		const el = ShapeBuilder.create('rect').gradientFill(stops).build();
 		expect(el.shapeStyle?.fillMode).toBe('gradient');
 		expect(el.shapeStyle?.fillGradientStops).toHaveLength(2);
-		expect(el.shapeStyle?.fillGradientStops![0].color).toBe('#FF0000');
-		expect(el.shapeStyle?.fillGradientStops![1].color).toBe('#0000FF');
+		expect(at(el.shapeStyle?.fillGradientStops, 0).color).toBe('#FF0000');
+		expect(at(el.shapeStyle?.fillGradientStops, 1).color).toBe('#0000FF');
 	});
 
 	it('.gradientFill(stops, angle) sets gradient fill with angle', () => {
@@ -376,34 +377,36 @@ describe('shapeBuilder convenience fills', () => {
 
 describe('tableBuilder row/col highlighting', () => {
 	it('.lastRow() defaults to true', () => {
-		const el = TableBuilder.create().addRow(['Total', '100']).lastRow().build();
+		const el = must(TableBuilder.create().addRow(['Total', '100']).lastRow().build());
 		expect(el.tableData.lastRow).toBeTruthy();
 	});
 
 	it('.firstCol() defaults to true', () => {
-		const el = TableBuilder.create().addRow(['Category', 'Value']).firstCol().build();
+		const el = must(TableBuilder.create().addRow(['Category', 'Value']).firstCol().build());
 		expect(el.tableData.firstCol).toBeTruthy();
 	});
 
 	it('.lastCol() defaults to true', () => {
-		const el = TableBuilder.create().addRow(['Name', 'Total']).lastCol().build();
+		const el = must(TableBuilder.create().addRow(['Name', 'Total']).lastCol().build());
 		expect(el.tableData.lastCol).toBeTruthy();
 	});
 
 	it('.lastRow(false) sets false', () => {
-		const el = TableBuilder.create().addRow(['A', 'B']).lastRow(false).build();
+		const el = must(TableBuilder.create().addRow(['A', 'B']).lastRow(false).build());
 		expect(el.tableData.lastRow).toBeFalsy();
 	});
 
 	it('all highlighting flags can be combined', () => {
-		const el = TableBuilder.create()
-			.headerRow(['Name', 'Q1', 'Total'])
-			.addRow(['Alice', '95', '95'])
-			.addRow(['Total', '95', '95'])
-			.lastRow()
-			.firstCol()
-			.lastCol()
-			.build();
+		const el = must(
+			TableBuilder.create()
+				.headerRow(['Name', 'Q1', 'Total'])
+				.addRow(['Alice', '95', '95'])
+				.addRow(['Total', '95', '95'])
+				.lastRow()
+				.firstCol()
+				.lastCol()
+				.build(),
+		);
 		expect(el.tableData.firstRowHeader).toBeTruthy();
 		expect(el.tableData.lastRow).toBeTruthy();
 		expect(el.tableData.firstCol).toBeTruthy();

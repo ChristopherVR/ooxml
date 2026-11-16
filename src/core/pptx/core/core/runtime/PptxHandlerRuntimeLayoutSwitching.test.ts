@@ -5,6 +5,7 @@ import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 
 import type { PptxSlide, PptxLayoutOption, XmlObject, PptxElement } from '../../types';
 import { stripParentDirSegments } from '../../utils/strip-parent-dir-segments';
+import { at, must } from '../../../test-support/access';
 
 // ── Extracted logic matching PptxHandlerRuntimeLoadPipeline ──────────
 
@@ -112,7 +113,7 @@ function getAvailableLayoutsForSlide(
 	for (const lp of masterLayoutPaths) {
 		const xmlObj = layoutXmlMap.get(lp);
 		if (xmlObj) {
-			const sldLayout = (xmlObj as XmlObject)['p:sldLayout'] as XmlObject | undefined;
+			const sldLayout = must((xmlObj as XmlObject)['p:sldLayout'] as XmlObject | undefined);
 			const name = String(sldLayout?.['p:cSld']?.['@_name'] || '').trim() || lp;
 			const type = sldLayout?.['@_type'] !== null ? String(sldLayout['@_type']).trim() : undefined;
 			options.push({ path: lp, name, ...(type ? { type } : {}) });
@@ -311,8 +312,8 @@ describe('layout switching logic (GAP-E4)', () => {
 				layoutXmlMap,
 				allLayouts,
 			);
-			expect(layouts[0].type).toBe('title');
-			expect(layouts[1].type).toBe('obj');
+			expect(at(layouts, 0).type).toBe('title');
+			expect(at(layouts, 1).type).toBe('obj');
 		});
 
 		it('falls back to path when layout has no name', () => {
@@ -326,7 +327,7 @@ describe('layout switching logic (GAP-E4)', () => {
 				layoutXmlMap,
 				allLayouts,
 			);
-			expect(layouts[0].name).toBe('ppt/slideLayouts/slideLayout1.xml');
+			expect(at(layouts, 0).name).toBe('ppt/slideLayouts/slideLayout1.xml');
 		});
 	});
 
@@ -927,9 +928,9 @@ describe('placeholder re-mapping (GAP-E4 layout switching)', () => {
 
 		// Should still match by type fallback
 		expect(result).toHaveLength(1);
-		expect(result[0].id).toBe('b1');
-		expect(result[0].text).toBe('Content');
-		expect(result[0].x).toBe(Math.round(100000 / EMU_PER_PX));
+		expect(at(result, 0).id).toBe('b1');
+		expect(at(result, 0).text).toBe('Content');
+		expect(at(result, 0).x).toBe(Math.round(100000 / EMU_PER_PX));
 	});
 
 	it('skips footer/date-time/slide-number when adding empty placeholders', () => {
@@ -944,7 +945,7 @@ describe('placeholder re-mapping (GAP-E4 layout switching)', () => {
 
 		// Only title should be added; ftr/dt/sldNum are skipped
 		expect(result).toHaveLength(1);
-		expect(result[0].id).toContain('title');
+		expect(at(result, 0).id).toContain('title');
 	});
 
 	it('handles empty elements array', () => {
@@ -954,7 +955,7 @@ describe('placeholder re-mapping (GAP-E4 layout switching)', () => {
 
 		const result = remapElementsToNewLayout([], newLayout);
 		expect(result).toHaveLength(1);
-		expect(result[0].text).toBe('');
+		expect(at(result, 0).text).toBe('');
 	});
 
 	it('handles layout with no placeholders', () => {
@@ -1020,8 +1021,8 @@ describe('placeholder re-mapping (GAP-E4 layout switching)', () => {
 		const result = remapElementsToNewLayout([picture], layout);
 
 		expect(result).toHaveLength(1);
-		expect(result[0].x).toBe(Math.round(500000 / EMU_PER_PX));
-		expect(result[0].y).toBe(Math.round(600000 / EMU_PER_PX));
+		expect(at(result, 0).x).toBe(Math.round(500000 / EMU_PER_PX));
+		expect(at(result, 0).y).toBe(Math.round(600000 / EMU_PER_PX));
 	});
 
 	it('rewrites the moved element p:ph to name its new slot', () => {
@@ -1035,7 +1036,7 @@ describe('placeholder re-mapping (GAP-E4 layout switching)', () => {
 
 		const result = remapElementsToNewLayout([body], layout);
 
-		const ph = result[0].rawXml?.['p:nvSpPr']?.['p:nvPr']?.['p:ph'] as XmlObject;
+		const ph = at(result, 0).rawXml?.['p:nvSpPr']?.['p:nvPr']?.['p:ph'] as XmlObject;
 		expect(ph['@_idx']).toBe('1');
 		expect(ph['@_type']).toBe('body');
 	});
@@ -1052,8 +1053,8 @@ describe('placeholder re-mapping (GAP-E4 layout switching)', () => {
 		// caller's own slide model; writing the new transform into its shared
 		// rawXml corrupted both.
 		expect(body.rawXml?.['p:spPr']).toStrictEqual({});
-		expect(result[0].rawXml).not.toBe(body.rawXml);
-		expect((result[0].rawXml?.['p:spPr'] as XmlObject)?.['a:xfrm']).toBeDefined();
+		expect(at(result, 0).rawXml).not.toBe(body.rawXml);
+		expect((at(result, 0).rawXml?.['p:spPr'] as XmlObject)?.['a:xfrm']).toBeDefined();
 	});
 
 	it('handles element without rawXml as non-placeholder', () => {

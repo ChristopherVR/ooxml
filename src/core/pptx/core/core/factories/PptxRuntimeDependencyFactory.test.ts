@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { PptxRuntimeDependencyFactory } from './PptxRuntimeDependencyFactory';
+import { must } from '../../../test-support/access';
 
 const factory = new PptxRuntimeDependencyFactory();
 
@@ -58,7 +59,7 @@ describe('runtime dependency factory XML attribute entities', () => {
 
 	it('decodes entities in attribute values into the model', () => {
 		const parsed = factory.createParser().parse(source) as Sld;
-		const shape = parsed['p:sld']['p:cNvPr'];
+		const shape = must(parsed['p:sld']['p:cNvPr']);
 		expect(shape['@_name']).toBe('R&D "Team"');
 		expect(shape['@_descr']).toBe('line one\nline two');
 		expect(parsed['p:sld']['a:hlinkClick']['@_tgt']).toBe('https://example.com/s?a=1&b=2&c=3');

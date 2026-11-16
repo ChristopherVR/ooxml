@@ -14,6 +14,7 @@ import { PptxHandler } from '../../PptxHandler';
 import type { PptxData, SmartArtPptxElement } from '../../types';
 import type { RenderedRectNode } from '../../../../diagram/layout/smartart-layout-types';
 import { runEngineLayout } from '../../../../diagram/engine/engine-to-result';
+import { at } from '../../../test-support/access';
 
 const fixture = fileURLToPath(
 	new URL('../../../__tests__/fixtures/e2e/three-d-parity/three-d-smartart.pptx', import.meta.url),
@@ -33,7 +34,7 @@ function loadDeck(): Promise<PptxData> {
 
 async function engineShapes(slideNumber: number): Promise<RenderedRectNode[]> {
 	const data = await loadDeck();
-	const element = data.slides[slideNumber - 1].elements.find(
+	const element = at(data.slides, slideNumber - 1).elements.find(
 		(el): el is SmartArtPptxElement => el.type === 'smartArt',
 	);
 	const smartArt = element?.smartArtData;
@@ -88,14 +89,14 @@ describe('engine 2-D connector arrows', () => {
 			expect(arrow.width).toBeCloseTo(px(454329), 0);
 			expect(arrow.height).toBeCloseTo(px(575964), 0);
 		}
-		const first = arrows[0];
+		const first = at(arrows, 0);
 		expect(first.x).toBeCloseTo(px(5750178), 0);
 		expect(first.y).toBeCloseTo(px(1463489), 0);
 	}, 30000);
 
 	it('fills an arrow from its own label colour list, not the node palette', async () => {
 		const data = await loadDeck();
-		const element = data.slides[28].elements.find(
+		const element = at(data.slides, 28).elements.find(
 			(el): el is SmartArtPptxElement => el.type === 'smartArt',
 		);
 		const expected = element?.smartArtData?.colorTransform?.roleColors?.sibTrans2D1?.fill[0];

@@ -5,6 +5,7 @@ import {
 	applyComboSeriesTypesToXml,
 	consolidateComboContainersInXml,
 } from './chart-combo-serializer';
+import { at } from '../../test-support/access';
 
 const getLocalName = (key: string): string => {
 	const colon = key.indexOf(':');
@@ -204,8 +205,8 @@ describe('consolidateComboContainersInXml', () => {
 		const list = sers['c:ser'] as XmlObject[];
 		expect(Array.isArray(list)).toBeTruthy();
 		expect(list).toHaveLength(2);
-		expect((list[0]['c:tx'] as XmlObject)['c:v']).toBe('A');
-		expect((list[1]['c:tx'] as XmlObject)['c:v']).toBe('B');
+		expect((at(list, 0)['c:tx'] as XmlObject)['c:v']).toBe('A');
+		expect((at(list, 1)['c:tx'] as XmlObject)['c:v']).toBe('B');
 		// Axes preserved.
 		expect(pa['c:catAx']).toBeDefined();
 		expect(pa['c:valAx']).toBeDefined();

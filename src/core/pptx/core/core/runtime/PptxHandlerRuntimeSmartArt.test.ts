@@ -8,6 +8,7 @@ import {
 	picBlipEmbedId,
 } from './smartart-drawing-blip';
 import type { DrawingBlipDeps } from './smartart-drawing-blip';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Local-name XML accessors (mirror xmlLookupService for the tests, matching on
@@ -193,8 +194,8 @@ describe('parseDrawingShapesFromPart', () => {
 			makeDeps({ [drawingPath]: drawingXml, [relsPath]: relsXml }),
 		);
 		expect(shapes).toHaveLength(1);
-		expect(shapes[0].fillBlipEmbedId).toBe('rId1');
-		expect(shapes[0].fillImageUrl).toBe('data:image/png;base64,AAAA');
+		expect(at(shapes, 0).fillBlipEmbedId).toBe('rId1');
+		expect(at(shapes, 0).fillImageUrl).toBe('data:image/png;base64,AAAA');
 	});
 
 	it('resolves a bare dsp:pic blip and enumerates a grpSp-nested shape', async () => {
@@ -235,8 +236,8 @@ describe('parseDrawingShapesFromPart', () => {
 			makeDeps({ [drawingPath]: drawingXml }),
 		);
 		expect(shapes).toHaveLength(1);
-		expect(shapes[0].fillBlipEmbedId).toBe('rId1');
-		expect(shapes[0].fillImageUrl).toBeUndefined();
+		expect(at(shapes, 0).fillBlipEmbedId).toBe('rId1');
+		expect(at(shapes, 0).fillImageUrl).toBeUndefined();
 	});
 
 	it('returns an empty list when the drawing part is absent', async () => {

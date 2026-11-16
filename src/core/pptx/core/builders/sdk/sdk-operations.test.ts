@@ -13,6 +13,7 @@ import {
 } from './section-operations';
 import { duplicateSlide, duplicateElement, resetCloneIdCounter } from './slide-operations';
 import { findText, replaceText, replaceTextInSlide } from './text-operations';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Test helpers
@@ -113,19 +114,19 @@ describe('duplicateSlide', () => {
 		const original = makeSlide(1, [makeTextElement('txt_1', 'Hello'), makeShapeElement('shp_1')]);
 		const cloned = duplicateSlide(original, 2);
 
-		expect(cloned.elements[0].id).not.toBe('txt_1');
-		expect(cloned.elements[1].id).not.toBe('shp_1');
+		expect(at(cloned.elements, 0).id).not.toBe('txt_1');
+		expect(at(cloned.elements, 1).id).not.toBe('shp_1');
 		// New IDs should contain "clone"
-		expect(cloned.elements[0].id).toContain('clone');
-		expect(cloned.elements[1].id).toContain('clone');
+		expect(at(cloned.elements, 0).id).toContain('clone');
+		expect(at(cloned.elements, 1).id).toContain('clone');
 	});
 
 	it('preserves element types', () => {
 		const original = makeSlide(1, [makeTextElement('txt_1', 'Hello'), makeShapeElement('shp_1')]);
 		const cloned = duplicateSlide(original, 2);
 
-		expect(cloned.elements[0].type).toBe('text');
-		expect(cloned.elements[1].type).toBe('shape');
+		expect(at(cloned.elements, 0).type).toBe('text');
+		expect(at(cloned.elements, 1).type).toBe('shape');
 	});
 
 	it('preserves text content in cloned elements', () => {
@@ -134,7 +135,7 @@ describe('duplicateSlide', () => {
 
 		const el = cloned.elements[0] as PptxElement & { text: string; textSegments: TextSegment[] };
 		expect(el.text).toBe('Hello World');
-		expect(el.textSegments[0].text).toBe('Hello World');
+		expect(at(el.textSegments, 0).text).toBe('Hello World');
 	});
 
 	it('deep-clones text segments so mutations do not leak', () => {
@@ -148,11 +149,11 @@ describe('duplicateSlide', () => {
 
 		// Mutate cloned segment
 		const clonedEl = cloned.elements[0] as PptxElement & { textSegments: TextSegment[] };
-		clonedEl.textSegments[0].text = 'CHANGED';
+		at(clonedEl.textSegments, 0).text = 'CHANGED';
 
 		// Original should be unaffected
 		const originalEl = original.elements[0] as PptxElement & { textSegments: TextSegment[] };
-		expect(originalEl.textSegments[0].text).toBe('Hel');
+		expect(at(originalEl.textSegments, 0).text).toBe('Hel');
 	});
 
 	it('handles group elements - assigns new IDs to children', () => {
@@ -165,8 +166,8 @@ describe('duplicateSlide', () => {
 		const clonedGroup = cloned.elements[0] as PptxElement & { children: PptxElement[] };
 		expect(clonedGroup.type).toBe('group');
 		expect(clonedGroup.id).not.toBe('grp_1');
-		expect(clonedGroup.children[0].id).not.toBe('txt_child');
-		expect(clonedGroup.children[1].id).not.toBe('shp_child');
+		expect(at(clonedGroup.children, 0).id).not.toBe('txt_child');
+		expect(at(clonedGroup.children, 1).id).not.toBe('shp_child');
 	});
 
 	it('preserves slide background properties', () => {
@@ -213,8 +214,8 @@ describe('duplicateSlide', () => {
 		const cloned = duplicateSlide(original, 2);
 
 		expect(cloned.animations).toBeDefined();
-		expect(cloned.animations![0].elementId).toBe(cloned.elements[0].id);
-		expect(cloned.animations![0].elementId).not.toBe('txt_1');
+		expect(at(cloned.animations!, 0).elementId).toBe(at(cloned.elements, 0).id);
+		expect(at(cloned.animations!, 0).elementId).not.toBe('txt_1');
 	});
 
 	it('preserves hidden flag', () => {
@@ -272,8 +273,8 @@ describe('duplicateElement', () => {
 		const cloned = duplicateElement(group) as PptxElement & { children: PptxElement[] };
 
 		expect(cloned.id).not.toBe('grp_1');
-		expect(cloned.children[0].id).not.toBe('txt_child');
-		expect(cloned.children[0].type).toBe('text');
+		expect(at(cloned.children, 0).id).not.toBe('txt_child');
+		expect(at(cloned.children, 0).type).toBe('text');
 	});
 });
 
@@ -292,11 +293,11 @@ describe('findText', () => {
 		const results = findText(slides, 'Hello');
 
 		expect(results).toHaveLength(1);
-		expect(results[0].slideIndex).toBe(0);
-		expect(results[0].elementId).toBe('txt_1');
-		expect(results[0].segmentIndex).toBe(0);
-		expect(results[0].text).toBe('Hello');
-		expect(results[0].matchIndex).toBe(0);
+		expect(at(results, 0).slideIndex).toBe(0);
+		expect(at(results, 0).elementId).toBe('txt_1');
+		expect(at(results, 0).segmentIndex).toBe(0);
+		expect(at(results, 0).text).toBe('Hello');
+		expect(at(results, 0).matchIndex).toBe(0);
 	});
 
 	it('finds text across multiple slides', () => {
@@ -307,8 +308,8 @@ describe('findText', () => {
 		const results = findText(slides, 'Hello');
 
 		expect(results).toHaveLength(2);
-		expect(results[0].slideIndex).toBe(0);
-		expect(results[1].slideIndex).toBe(1);
+		expect(at(results, 0).slideIndex).toBe(0);
+		expect(at(results, 1).slideIndex).toBe(1);
 	});
 
 	it('finds multiple matches in one segment', () => {
@@ -316,9 +317,9 @@ describe('findText', () => {
 		const results = findText(slides, 'ha');
 
 		expect(results).toHaveLength(3);
-		expect(results[0].matchIndex).toBe(0);
-		expect(results[1].matchIndex).toBe(3);
-		expect(results[2].matchIndex).toBe(6);
+		expect(at(results, 0).matchIndex).toBe(0);
+		expect(at(results, 1).matchIndex).toBe(3);
+		expect(at(results, 2).matchIndex).toBe(6);
 	});
 
 	it('finds text in shapes with text', () => {
@@ -326,7 +327,7 @@ describe('findText', () => {
 		const results = findText(slides, 'Shape');
 
 		expect(results).toHaveLength(1);
-		expect(results[0].elementId).toBe('shp_1');
+		expect(at(results, 0).elementId).toBe('shp_1');
 	});
 
 	it('finds text in group children', () => {
@@ -336,7 +337,7 @@ describe('findText', () => {
 		const results = findText(slides, 'Hidden');
 
 		expect(results).toHaveLength(1);
-		expect(results[0].elementId).toBe('txt_child');
+		expect(at(results, 0).elementId).toBe('txt_child');
 	});
 
 	it('finds text across multiple segments in one element', () => {
@@ -349,11 +350,11 @@ describe('findText', () => {
 
 		const results = findText(slides, 'Hello');
 		expect(results).toHaveLength(1);
-		expect(results[0].segmentIndex).toBe(0);
+		expect(at(results, 0).segmentIndex).toBe(0);
 
 		const results2 = findText(slides, 'World');
 		expect(results2).toHaveLength(1);
-		expect(results2[0].segmentIndex).toBe(1);
+		expect(at(results2, 0).segmentIndex).toBe(1);
 	});
 
 	it('supports regex search', () => {
@@ -361,8 +362,8 @@ describe('findText', () => {
 		const results = findText(slides, /Q\d/);
 
 		expect(results).toHaveLength(2);
-		expect(results[0].text).toBe('Q1');
-		expect(results[1].text).toBe('Q2');
+		expect(at(results, 0).text).toBe('Q1');
+		expect(at(results, 1).text).toBe('Q2');
 	});
 
 	it('supports case-insensitive regex', () => {
@@ -377,7 +378,7 @@ describe('findText', () => {
 		const results = findText(slides, 'Hello');
 
 		expect(results).toHaveLength(1);
-		expect(results[0].matchIndex).toBe(0);
+		expect(at(results, 0).matchIndex).toBe(0);
 	});
 
 	it('returns empty for no matches', () => {
@@ -413,7 +414,7 @@ describe('findText', () => {
 		const results = findText(slides, '$100.00');
 
 		expect(results).toHaveLength(1);
-		expect(results[0].text).toBe('$100.00');
+		expect(at(results, 0).text).toBe('$100.00');
 	});
 
 	it('finds deeply nested group children', () => {
@@ -424,7 +425,7 @@ describe('findText', () => {
 
 		const results = findText(slides, 'Deep');
 		expect(results).toHaveLength(1);
-		expect(results[0].elementId).toBe('txt_deep');
+		expect(at(results, 0).elementId).toBe('txt_deep');
 	});
 });
 
@@ -439,7 +440,7 @@ describe('replaceTextInSlide', () => {
 
 		expect(count).toBe(1);
 		const el = slide.elements[0] as PptxElement & { text: string; textSegments: TextSegment[] };
-		expect(el.textSegments[0].text).toBe('Goodbye World');
+		expect(at(el.textSegments, 0).text).toBe('Goodbye World');
 		expect(el.text).toBe('Goodbye World');
 	});
 
@@ -449,7 +450,7 @@ describe('replaceTextInSlide', () => {
 
 		expect(count).toBe(3);
 		const el = slide.elements[0] as PptxElement & { text: string; textSegments: TextSegment[] };
-		expect(el.textSegments[0].text).toBe('ho ho ho');
+		expect(at(el.textSegments, 0).text).toBe('ho ho ho');
 	});
 
 	it('replaces across multiple elements', () => {
@@ -524,7 +525,7 @@ describe('replaceTextInSlide', () => {
 		replaceTextInSlide(slide, 'World', 'Earth');
 
 		const el = slide.elements[0] as PptxElement & { text: string; textSegments: TextSegment[] };
-		expect(el.textSegments[1].text).toBe('Earth');
+		expect(at(el.textSegments, 1).text).toBe('Earth');
 		expect(el.text).toBe('Hello Earth');
 	});
 });
@@ -539,9 +540,11 @@ describe('replaceText (multi-slide)', () => {
 		const count = replaceText(slides, '2025', '2026');
 
 		expect(count).toBe(2);
-		expect((slides[0].elements[0] as PptxElement & { text: string }).text).toBe('2026 report');
-		expect((slides[1].elements[0] as PptxElement & { text: string }).text).toBe('FY 2026');
-		expect((slides[2].elements[0] as PptxElement & { text: string }).text).toBe('No match here');
+		expect((at(slides, 0).elements[0] as PptxElement & { text: string }).text).toBe('2026 report');
+		expect((at(slides, 1).elements[0] as PptxElement & { text: string }).text).toBe('FY 2026');
+		expect((at(slides, 2).elements[0] as PptxElement & { text: string }).text).toBe(
+			'No match here',
+		);
 	});
 
 	it('handles regex across slides', () => {
@@ -564,7 +567,7 @@ describe('replaceText (multi-slide)', () => {
 		const count = replaceText(slides, /hello/gi, 'hi');
 
 		expect(count).toBe(3);
-		const el = slides[0].elements[0] as PptxElement & { text: string };
+		const el = at(slides, 0).elements[0] as PptxElement & { text: string };
 		expect(el.text).toBe('hi hi hi');
 	});
 });
@@ -591,9 +594,9 @@ describe('addSection', () => {
 		const data = makePptxData([makeSlide(1, []), makeSlide(2, [])]);
 		const section = addSection(data, 'Intro', [0]);
 
-		expect(data.slides[0].sectionName).toBe('Intro');
-		expect(data.slides[0].sectionId).toBe(section.id);
-		expect(data.slides[1].sectionName).toBeUndefined();
+		expect(at(data.slides, 0).sectionName).toBe('Intro');
+		expect(at(data.slides, 0).sectionId).toBe(section.id);
+		expect(at(data.slides, 1).sectionName).toBeUndefined();
 	});
 
 	it('initializes sections array if not present', () => {
@@ -619,8 +622,8 @@ describe('addSection', () => {
 		addSection(data, 'Part 2', [1, 2]);
 
 		expect(data.sections!).toHaveLength(2);
-		expect(data.sections![0].name).toBe('Part 1');
-		expect(data.sections![1].name).toBe('Part 2');
+		expect(at(data.sections!, 0).name).toBe('Part 1');
+		expect(at(data.sections!, 1).name).toBe('Part 2');
 	});
 
 	it('generates unique section IDs', () => {
@@ -652,9 +655,9 @@ describe('removeSection', () => {
 		const section = addSection(data, 'ToRemove', [0, 1]);
 
 		removeSection(data, section.id);
-		expect(data.slides[0].sectionName).toBeUndefined();
-		expect(data.slides[0].sectionId).toBeUndefined();
-		expect(data.slides[1].sectionName).toBeUndefined();
+		expect(at(data.slides, 0).sectionName).toBeUndefined();
+		expect(at(data.slides, 0).sectionId).toBeUndefined();
+		expect(at(data.slides, 1).sectionName).toBeUndefined();
 	});
 
 	it('returns false for non-existent section ID', () => {
@@ -680,8 +683,8 @@ describe('removeSection', () => {
 
 		removeSection(data, sec2.id);
 		expect(data.sections!).toHaveLength(2);
-		expect(data.sections![0].name).toBe('Keep');
-		expect(data.sections![1].name).toBe('AlsoKeep');
+		expect(at(data.sections!, 0).name).toBe('Keep');
+		expect(at(data.sections!, 1).name).toBe('AlsoKeep');
 	});
 });
 
@@ -720,7 +723,7 @@ describe('reorderSections', () => {
 		reorderSections(data, ['non_existent', sec1.id]);
 
 		expect(data.sections!).toHaveLength(1);
-		expect(data.sections![0].name).toBe('A');
+		expect(at(data.sections!, 0).name).toBe('A');
 	});
 
 	it('does nothing when sections is undefined', () => {
@@ -736,8 +739,8 @@ describe('reorderSections', () => {
 
 		reorderSections(data, [sec2.id, sec1.id]);
 
-		expect(data.sections![0].name).toBe('Second');
-		expect(data.sections![1].name).toBe('First');
+		expect(at(data.sections!, 0).name).toBe('Second');
+		expect(at(data.sections!, 1).name).toBe('First');
 	});
 });
 
@@ -790,8 +793,8 @@ describe('moveSlidesToSection', () => {
 		expect(moved).toBeTruthy();
 
 		// Slide 0 should now be in sec2
-		expect(data.slides[0].sectionId).toBe(sec2.id);
-		expect(data.slides[0].sectionName).toBe('Target');
+		expect(at(data.slides, 0).sectionId).toBe(sec2.id);
+		expect(at(data.slides, 0).sectionName).toBe('Target');
 
 		// sec1 should no longer contain slide1
 		expect(sec1.slideIds).not.toContain('slide1');

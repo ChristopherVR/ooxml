@@ -11,6 +11,7 @@ import {
 	createGroupElement,
 	resetIdCounter,
 } from './ElementFactory';
+import { at } from '../../../test-support/access';
 
 beforeEach(() => {
 	resetIdCounter();
@@ -210,7 +211,7 @@ describe('createTableElement', () => {
 		});
 		expect(el.type).toBe('table');
 		expect(el.tableData?.rows.length).toBe(2);
-		expect(el.tableData?.rows[0].cells[0].text).toBe('A');
+		expect(at(at(el.tableData?.rows, 0).cells, 0).text).toBe('A');
 		expect(el.tableData?.columnWidths).toStrictEqual([0.5, 0.5]);
 	});
 
@@ -236,7 +237,7 @@ describe('createTableElement', () => {
 		const el = createTableElement({
 			rows: [{ cells: [{ text: 'Merged', gridSpan: 2 }, { text: '' }] }],
 		});
-		expect(el.tableData?.rows[0].cells[0].gridSpan).toBe(2);
+		expect(at(at(el.tableData?.rows, 0).cells, 0).gridSpan).toBe(2);
 	});
 });
 
@@ -290,7 +291,7 @@ describe('createGroupElement', () => {
 		const el = createGroupElement([child1, child2]);
 		expect(el.type).toBe('group');
 		expect(el.children).toHaveLength(2);
-		expect(el.children[0].type).toBe('text');
-		expect(el.children[1].type).toBe('shape');
+		expect(at(el.children, 0).type).toBe('text');
+		expect(at(el.children, 1).type).toBe('shape');
 	});
 });

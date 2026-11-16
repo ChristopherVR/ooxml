@@ -84,7 +84,7 @@ export interface ShapeStyle {
 	 * resolved {@link fillColor} still matches this node, otherwise we fall
 	 * back to canonical `<a:srgbClr>`.
 	 */
-	fillColorXml?: XmlObject;
+	fillColorXml?: XmlObject | undefined;
 	/**
 	 * Typed theme colour reference for the fill, set when {@link fillColorXml}
 	 * is a plain `a:schemeClr` (see `themeColorRefFromColorChoice`). When

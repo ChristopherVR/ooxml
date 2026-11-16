@@ -6,6 +6,7 @@ import {
 	recordSlideFingerprints,
 	slideMatchesFingerprint,
 } from './slide-fingerprint';
+import { at } from '../../../test-support/access';
 
 /**
  * The fingerprint is the only thing standing between "we stopped rewriting
@@ -77,8 +78,10 @@ describe('fingerprintSlide', () => {
 	it('reacts to a change deep inside a run style', () => {
 		const slide = baseSlide();
 		const edited = structuredClone(slide);
-		(edited.elements[0] as unknown as { textSegments: { bold: boolean }[] }).textSegments[0].bold =
-			true;
+		at(
+			(edited.elements[0] as unknown as { textSegments: { bold: boolean }[] }).textSegments,
+			0,
+		).bold = true;
 		expect(fingerprintSlide(edited)).not.toBe(fingerprintSlide(slide));
 	});
 

@@ -32,15 +32,15 @@ import type { IPptxCompatibilityService } from './PptxCompatibilityService';
  */
 export interface PptxMediaTimingEntry {
 	/** Start trim offset in milliseconds. */
-	trimStartMs?: number;
+	trimStartMs?: number | undefined;
 	/** End trim offset in milliseconds. */
-	trimEndMs?: number;
+	trimEndMs?: number | undefined;
 	/** Whether the media should play in full-screen mode. */
-	fullScreen?: boolean;
+	fullScreen?: boolean | undefined;
 	/** Whether the media should loop continuously. */
-	loop?: boolean;
+	loop?: boolean | undefined;
 	/** Path to the poster frame image within the .pptx archive. */
-	posterFramePath?: string;
+	posterFramePath?: string | undefined;
 }
 
 /**

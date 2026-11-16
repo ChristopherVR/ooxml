@@ -11,6 +11,7 @@ import type {
 import type { PptxData, PptxSlide } from '../../types/presentation';
 import type { PptxTheme } from '../../types/theme';
 import { diffPresentations, diffSlides } from './diff-operations';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Test helpers
@@ -272,7 +273,7 @@ describe('diffPresentations', () => {
 		const diff = diffPresentations(a, b);
 
 		expect(diff.summary.modified).toBe(1);
-		const modified = diff.slideChanges[0];
+		const modified = at(diff.slideChanges, 0);
 		const added = modified.changes!.find((c) => c.elementId === 'sh1' && c.type === 'added');
 		expect(added).toBeDefined();
 		expect(added!.elementType).toBe('shape');
@@ -284,7 +285,7 @@ describe('diffPresentations', () => {
 		const diff = diffPresentations(a, b);
 
 		expect(diff.summary.modified).toBe(1);
-		const modified = diff.slideChanges[0];
+		const modified = at(diff.slideChanges, 0);
 		const removed = modified.changes!.find((c) => c.elementId === 'sh1' && c.type === 'removed');
 		expect(removed).toBeDefined();
 		expect(removed!.elementType).toBe('shape');
@@ -295,7 +296,7 @@ describe('diffPresentations', () => {
 		const b = makePptxData([makeSlide('s1', 1, [makeTextElement('t1', 'Hi', { x: 50, y: 80 })])]);
 		const diff = diffPresentations(a, b);
 
-		const modified = diff.slideChanges[0];
+		const modified = at(diff.slideChanges, 0);
 		const elDiff = modified.changes!.find((c) => c.elementId === 't1')!;
 		const xChange = elDiff.changes!.find((c) => c.property === 'x');
 		const yChange = elDiff.changes!.find((c) => c.property === 'y');
@@ -314,7 +315,7 @@ describe('diffPresentations', () => {
 		]);
 		const diff = diffPresentations(a, b);
 
-		const elDiff = diff.slideChanges[0].changes!.find((c) => c.elementId === 't1')!;
+		const elDiff = at(diff.slideChanges, 0).changes!.find((c) => c.elementId === 't1')!;
 		expect(elDiff.changes!.find((c) => c.property === 'width')).toBeDefined();
 		expect(elDiff.changes!.find((c) => c.property === 'height')).toBeDefined();
 	});
@@ -324,7 +325,7 @@ describe('diffPresentations', () => {
 		const b = makePptxData([makeSlide('s1', 1, [makeTextElement('t1', 'Hi', { rotation: 45 })])]);
 		const diff = diffPresentations(a, b);
 
-		const elDiff = diff.slideChanges[0].changes!.find((c) => c.elementId === 't1')!;
+		const elDiff = at(diff.slideChanges, 0).changes!.find((c) => c.elementId === 't1')!;
 		const rotChange = elDiff.changes!.find((c) => c.property === 'rotation');
 		expect(rotChange).toBeDefined();
 		expect(rotChange!.oldValue).toBe(0);
@@ -338,7 +339,7 @@ describe('diffPresentations', () => {
 		]);
 		const diff = diffPresentations(a, b);
 
-		const elDiff = diff.slideChanges[0].changes!.find((c) => c.elementId === 'sh1')!;
+		const elDiff = at(diff.slideChanges, 0).changes!.find((c) => c.elementId === 'sh1')!;
 		expect(elDiff.changes!.find((c) => c.property === 'shapeType')).toBeDefined();
 	});
 
@@ -359,7 +360,7 @@ describe('diffPresentations', () => {
 		]);
 		const diff = diffPresentations(a, b);
 
-		const elDiff = diff.slideChanges[0].changes!.find((c) => c.elementId === 't1')!;
+		const elDiff = at(diff.slideChanges, 0).changes!.find((c) => c.elementId === 't1')!;
 		expect(elDiff.changes!.find((c) => c.property === 'textStyle')).toBeDefined();
 	});
 
@@ -373,7 +374,9 @@ describe('diffPresentations', () => {
 		const diff = diffPresentations(a, b);
 
 		expect(diff.summary.modified).toBe(1);
-		const slideLevelChange = diff.slideChanges[0].changes!.find((c) => c.elementId === '__slide__');
+		const slideLevelChange = at(diff.slideChanges, 0).changes!.find(
+			(c) => c.elementId === '__slide__',
+		);
 		expect(slideLevelChange).toBeDefined();
 		const bgChange = slideLevelChange!.changes!.find((c) => c.property === 'slide.backgroundColor');
 		expect(bgChange).toBeDefined();
@@ -386,7 +389,9 @@ describe('diffPresentations', () => {
 		const b = makePptxData([makeSlide('s1', 1, [], { notes: 'New notes' })]);
 		const diff = diffPresentations(a, b);
 
-		const slideLevelChange = diff.slideChanges[0].changes!.find((c) => c.elementId === '__slide__');
+		const slideLevelChange = at(diff.slideChanges, 0).changes!.find(
+			(c) => c.elementId === '__slide__',
+		);
 		expect(slideLevelChange).toBeDefined();
 		expect(slideLevelChange!.changes!.find((c) => c.property === 'slide.notes')).toBeDefined();
 	});
@@ -396,7 +401,9 @@ describe('diffPresentations', () => {
 		const b = makePptxData([makeSlide('s1', 1, [], { hidden: true })]);
 		const diff = diffPresentations(a, b);
 
-		const slideLevelChange = diff.slideChanges[0].changes!.find((c) => c.elementId === '__slide__');
+		const slideLevelChange = at(diff.slideChanges, 0).changes!.find(
+			(c) => c.elementId === '__slide__',
+		);
 		expect(slideLevelChange).toBeDefined();
 	});
 
@@ -414,7 +421,7 @@ describe('diffPresentations', () => {
 		const diff = diffPresentations(a, b);
 
 		expect(diff.summary.modified).toBe(1);
-		const elDiff = diff.slideChanges[0].changes!.find(
+		const elDiff = at(diff.slideChanges, 0).changes!.find(
 			(c) => c.elementId === 't1' && c.type === 'modified',
 		);
 		expect(elDiff).toBeDefined();
@@ -430,7 +437,7 @@ describe('diffPresentations', () => {
 		]);
 		const diff = diffPresentations(a, b);
 
-		const added = diff.slideChanges[0].changes!.find(
+		const added = at(diff.slideChanges, 0).changes!.find(
 			(c) => c.elementId === 'sh_new' && c.type === 'added',
 		);
 		expect(added).toBeDefined();
@@ -445,7 +452,7 @@ describe('diffPresentations', () => {
 		const b = makePptxData([makeSlide('s1', 1, [makeGroupElement('g1', [makeTextElement('t1')])])]);
 		const diff = diffPresentations(a, b);
 
-		const removed = diff.slideChanges[0].changes!.find(
+		const removed = at(diff.slideChanges, 0).changes!.find(
 			(c) => c.elementId === 'sh1' && c.type === 'removed',
 		);
 		expect(removed).toBeDefined();
@@ -664,7 +671,7 @@ describe('diffPresentations', () => {
 		]);
 		const diff = diffPresentations(a, b);
 
-		const elDiff = diff.slideChanges[0].changes!.find((c) => c.elementId === 'img1')!;
+		const elDiff = at(diff.slideChanges, 0).changes!.find((c) => c.elementId === 'img1')!;
 		expect(elDiff.changes!.find((c) => c.property === 'imageData')).toBeDefined();
 	});
 
@@ -689,7 +696,7 @@ describe('diffPresentations', () => {
 		]);
 		const diff = diffPresentations(a, b);
 
-		const elDiff = diff.slideChanges[0].changes!.find((c) => c.elementId === 'cxn1')!;
+		const elDiff = at(diff.slideChanges, 0).changes!.find((c) => c.elementId === 'cxn1')!;
 		expect(elDiff.changes!.find((c) => c.property === 'shapeStyle')).toBeDefined();
 	});
 
@@ -708,7 +715,7 @@ describe('diffPresentations', () => {
 		]);
 		const diff = diffPresentations(a, b);
 
-		const changes = diff.slideChanges[0].changes!;
+		const changes = at(diff.slideChanges, 0).changes!;
 		expect(changes.find((c) => c.elementId === 't1')!.elementType).toBe('text');
 		expect(changes.find((c) => c.elementId === 'sh1')!.elementType).toBe('shape');
 		expect(changes.find((c) => c.elementId === 'img1')!.elementType).toBe('image');

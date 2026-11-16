@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest';
 import { PptxHandler } from '../../PptxHandler';
 import { createShapeElement, createTextElement } from './ElementFactory';
 import type { SlideBuilder } from './SlideBuilder';
+import { at } from '../../../test-support/access';
 
 const PNG =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
@@ -86,7 +87,7 @@ describe('link input', () => {
 				.addText([{ text: 'x', style: { link: { slideIndex: 1 } } }]),
 		);
 		const data = await new PptxHandler().load(bytes.buffer as ArrayBuffer);
-		const [shape, text] = data.slides[0].elements;
+		const [shape, text] = at(data.slides, 0).elements;
 		expect(shape.actionClick?.targetSlideIndex).toBe(1);
 		expect(
 			(text as { textSegments?: Array<{ style?: { hyperlinkTargetSlideIndex?: number } }> })

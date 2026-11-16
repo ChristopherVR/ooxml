@@ -7,6 +7,7 @@ import { Presentation } from './Presentation';
 import { PresentationBuilder } from './PresentationBuilder';
 import { SlideBuilder } from './SlideBuilder';
 import { duplicateSlide } from './slide-operations';
+import { at } from '../../../test-support/access';
 
 function textElement(element: ReturnType<SlideBuilder['build']>['elements'][number]) {
 	if (element.type !== 'text' && element.type !== 'shape') throw new Error('Expected text');
@@ -45,7 +46,7 @@ describe('SlideBuilder.addPlaceholder', () => {
 		expect(shapeXml).not.toMatch(/\b(sz|lIns|rIns|tIns|bIns)=/);
 		expect(shapeXml).not.toContain('<a:solidFill');
 		const reloaded = await new PptxHandler().load(bytes.buffer as ArrayBuffer);
-		const actual = textElement(reloaded.slides[0].elements[0]);
+		const actual = textElement(at(at(reloaded.slides, 0).elements, 0));
 		expect(actual.placeholderType).toBe(element.placeholderType);
 		for (const key of ['x', 'y', 'width', 'height'] as const)
 			expect(actual[key]).toBe(element[key]);
@@ -88,7 +89,7 @@ describe('SlideBuilder.addPlaceholder', () => {
 		expect(xml).not.toContain('lang="en-US"');
 		expect(xml).toContain('b="1"');
 		const reloaded = await new PptxHandler().load(bytes.buffer as ArrayBuffer);
-		expect(reloaded.slides[0].elements.map((element) => element.placeholderType)).toEqual([
+		expect(at(reloaded.slides, 0).elements.map((element) => element.placeholderType)).toEqual([
 			'ctrtitle',
 			'subtitle',
 		]);
@@ -151,16 +152,16 @@ describe('SlideBuilder.addPlaceholder', () => {
 		const loadedHandler = new PptxHandler();
 		const loaded = await loadedHandler.load(bytes.buffer as ArrayBuffer);
 		expect(
-			loaded.slides[0].elements.map(
+			at(loaded.slides, 0).elements.map(
 				(element) => xmlPath(element.rawXml, 'p:nvSpPr', 'p:cNvPr')?.['@_id'],
 			),
 		).toEqual(first.slice(1));
-		loaded.slides[0].isDirty = true;
+		at(loaded.slides, 0).isDirty = true;
 		const again = await loadedHandler.save(loaded.slides);
 		expect(ids(await slideXml(again))).toEqual(first);
 		const reloaded = await new PptxHandler().load(again.buffer as ArrayBuffer);
 		expect(
-			reloaded.slides[0].elements.map(
+			at(reloaded.slides, 0).elements.map(
 				(element) => xmlPath(element.rawXml, 'p:nvSpPr', 'p:cNvPr')?.['@_id'],
 			),
 		).toEqual(first.slice(1));
@@ -192,7 +193,7 @@ describe('SlideBuilder.addPlaceholder', () => {
 	it('duplicates inherited placeholders without pinning their transform', async () => {
 		const { handler, data, createSlide } = await PresentationBuilder.create();
 		data.slides.push(createSlide('Title Slide').addPlaceholder('ctrTitle', 'Original').build());
-		data.slides.push(duplicateSlide(data.slides[0], 2));
+		data.slides.push(duplicateSlide(at(data.slides, 0), 2));
 		const xml = await slideXml(await handler.save(data.slides), 2);
 		expect(xml.match(/<p:sp>[\s\S]*?<\/p:sp>/)![0]).not.toContain('<a:xfrm');
 		expect(xml).toContain('Original');
@@ -231,7 +232,7 @@ describe('SlideBuilder.addPlaceholder', () => {
 		loaded.addSlide('Two Content').addPlaceholder('body', 'Loaded', { idx: 2 });
 		const again = await new PptxHandler().load((await loaded.save()).buffer as ArrayBuffer);
 		expect(again.slides).toHaveLength(2);
-		expect(textElement(again.slides[1].elements[0]).text).toContain('Loaded');
+		expect(textElement(at(at(again.slides, 1).elements, 0)).text).toContain('Loaded');
 	});
 
 	it('resolves geometry through the master when the layout has no transform', async () => {
@@ -273,7 +274,7 @@ describe('SlideBuilder.addPlaceholder', () => {
 		const reloaded = await new PptxHandler().load(
 			(await handler.save(data.slides)).buffer as ArrayBuffer,
 		);
-		const actual = reloaded.slides[0].elements.find(
+		const actual = at(reloaded.slides, 0).elements.find(
 			(element) => 'text' in element && element.text?.includes('Heading'),
 		)!;
 		expect(actual.x).toBe(heading.x);
@@ -296,9 +297,9 @@ describe('SlideBuilder.addPlaceholder', () => {
 		const slide = new SlideBuilder(1, source.path, source.name, handler)
 			.addPlaceholder('subTitle', 'Original')
 			.build();
-		const element = textElement(slide.elements[0]);
+		const element = textElement(at(slide.elements, 0));
 		element.text = 'Unsaved content';
-		element.textSegments![0].text = 'Unsaved content';
+		at(element.textSegments!, 0).text = 'Unsaved content';
 		element.textStyle!.bold = true;
 		element.textStyle!.hyperlink = 'https://example.com';
 		const slides = [slide];
@@ -310,7 +311,7 @@ describe('SlideBuilder.addPlaceholder', () => {
 			(await handler.save(slides)).buffer as ArrayBuffer,
 		);
 		const after = textElement(
-			reloaded.slides[0].elements.find(
+			at(reloaded.slides, 0).elements.find(
 				(candidate) => 'text' in candidate && candidate.text?.includes('Unsaved content'),
 			)!,
 		);
@@ -352,7 +353,7 @@ describe('SlideBuilder.addPlaceholder', () => {
 			const reloaded = await new PptxHandler().load(
 				(await handler.save(data.slides)).buffer as ArrayBuffer,
 			);
-			const after = textElement(reloaded.slides.at(-1)!.elements[0]);
+			const after = textElement(at(reloaded.slides.at(-1)!.elements, 0));
 			expect(after.inheritedTransform).toEqual(before.inheritedTransform);
 			expect(after.x).toBe(before.x);
 			expect(after.textStyle?.fontSize).toBe(before.textStyle?.fontSize);

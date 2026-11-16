@@ -9,6 +9,7 @@ import {
 	buildChartPoints,
 } from './save-table-merge-helpers';
 import { writeTableColumnWidths } from './table-column-width-save';
+import { at } from '../../../test-support/access';
 
 describe('writeTableColumnWidths', () => {
 	it('updates only widths while retaining column identities, extensions and cells', () => {
@@ -21,8 +22,8 @@ describe('writeTableColumnWidths', () => {
 			'a:tr': { 'a:tc': 'untouched' },
 		};
 		const expected = structuredClone(tbl);
-		expected['a:tblGrid']['a:gridCol'][0]['@_w'] = '50';
-		expected['a:tblGrid']['a:gridCol'][1]['@_w'] = '150';
+		at(expected['a:tblGrid']['a:gridCol'], 0)['@_w'] = '50';
+		at(expected['a:tblGrid']['a:gridCol'], 1)['@_w'] = '150';
 		const proportions = [0.25, 0.75];
 		writeTableColumnWidths(tbl, proportions);
 		expect(tbl).toStrictEqual(expected);

@@ -30,17 +30,19 @@ export interface PptxConverterOptions extends ConversionOptions {
 	 * Optional 1-based slide range to limit conversion to a subset of the deck.
 	 * Omit or leave fields undefined to convert all slides.
 	 */
-	slideRange?: {
-		/** First slide to include (1-based, default 1). */
-		start?: number;
-		/** Last slide to include (1-based, default = last slide). */
-		end?: number;
-	};
+	slideRange?:
+		| {
+				/** First slide to include (1-based, default 1). */
+				start?: number;
+				/** Last slide to include (1-based, default = last slide). */
+				end?: number;
+		  }
+		| undefined;
 	/**
 	 * When true, emit clean semantic markdown instead of CSS-positioned HTML.
 	 * Default is false (positioned HTML layout for slide fidelity).
 	 */
-	semanticMode?: boolean;
+	semanticMode?: boolean | undefined;
 }
 
 /**

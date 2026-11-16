@@ -18,6 +18,7 @@ import { describe, expect, it } from 'vitest';
 
 import { PptxRuntimeDependencyFactory } from '../core/factories/PptxRuntimeDependencyFactory';
 import { ensureXmlChild, xmlChild } from './xml-access';
+import { must } from '../../test-support/access';
 
 describe('ensureXmlChild', () => {
 	it('returns an existing object child without touching it', () => {
@@ -68,7 +69,7 @@ describe('ensureXmlChild', () => {
 			string,
 			Record<string, unknown>
 		>;
-		const shape = parsed['p:sp'];
+		const shape = must(parsed['p:sp']);
 		expect(shape['p:spPr']).toBe('');
 
 		for (const [parent, key] of [

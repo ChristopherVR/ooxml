@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { ParsedTableStyleEntry, XmlObject } from '../../types';
 import { parseTableStyleEntry } from './table-style-entry-parse';
 import { applyTableStyleEntryToNode } from './table-style-save';
+import { at } from '../../../test-support/access';
 
 describe('applyTableStyleEntryToNode - fill (pure)', () => {
 	it('inserts new sections when missing on the style node', () => {
@@ -107,9 +108,9 @@ describe('applyTableStyleEntryToNode - fill (pure)', () => {
 		expect(gradFill['a:lin']?.['@_ang']).toBe('5400000');
 		const stops = gradFill['a:gsLst']?.['a:gs'] as XmlObject[];
 		expect(stops).toHaveLength(2);
-		expect(stops[0]['@_pos']).toBe('0');
-		expect(stops[0]['a:schemeClr']?.['@_val']).toBe('accent1');
-		expect(stops[1]['a:schemeClr']?.['a:tint']?.['@_val']).toBe('50000');
+		expect(at(stops, 0)['@_pos']).toBe('0');
+		expect(at(stops, 0)['a:schemeClr']?.['@_val']).toBe('accent1');
+		expect(at(stops, 1)['a:schemeClr']?.['a:tint']?.['@_val']).toBe('50000');
 
 		const pattFill = (node['a:band1V'] as XmlObject)['a:tcStyle']?.['a:fill']?.[
 			'a:pattFill'

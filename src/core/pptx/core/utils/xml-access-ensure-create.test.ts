@@ -12,6 +12,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { XmlObject } from '../types/common';
 import { ensureXmlChildOrCreate, ensureXmlChildren } from './xml-access';
+import { at } from '../../test-support/access';
 
 const parser = new XMLParser({
 	ignoreAttributes: false,
@@ -84,7 +85,7 @@ describe('ensureXmlChildren', () => {
 		const body = parse('<root><a:p/></root>');
 		const paragraphs = ensureXmlChildren(body, 'a:p');
 		expect(paragraphs).toHaveLength(1);
-		paragraphs[0]['a:pPr'] = { '@_algn': 'ctr' };
+		at(paragraphs, 0)['a:pPr'] = { '@_algn': 'ctr' };
 		expect(body['a:p']).toStrictEqual({ 'a:pPr': { '@_algn': 'ctr' } });
 	});
 
@@ -92,7 +93,7 @@ describe('ensureXmlChildren', () => {
 		const body = parse('<root><a:p/><a:p><a:r><a:t>x</a:t></a:r></a:p></root>');
 		const paragraphs = ensureXmlChildren(body, 'a:p');
 		expect(paragraphs).toHaveLength(2);
-		paragraphs[0]['a:pPr'] = {};
+		at(paragraphs, 0)['a:pPr'] = {};
 		expect((body['a:p'] as XmlObject[])[0]).toBe(paragraphs[0]);
 		expect((body['a:p'] as XmlObject[])[1]).toBe(paragraphs[1]);
 	});

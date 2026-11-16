@@ -9,6 +9,7 @@ import {
 	nestLegacyCommentReplies,
 	parseLegacyThreadingParent,
 } from './legacy-comment-threading';
+import { at, xmlFixture } from '../../test-support/access';
 
 const threadingExtLst = (authorId: string, idx: string, timeZoneBias?: string): XmlObject => ({
 	'p:ext': {
@@ -60,11 +61,11 @@ describe('parseLegacyThreadingParent', () => {
 	});
 
 	it('finds the threading extension among several p:ext entries', () => {
-		const commentNode: XmlObject = {
+		const commentNode = xmlFixture({
 			'p:extLst': {
 				'p:ext': [{ '@_uri': '{other}', 'x:data': {} }, threadingExtLst('2', '3')['p:ext']],
 			},
-		};
+		});
 		expect(parseLegacyThreadingParent(commentNode)).toStrictEqual({ authorId: '2', idx: '3' });
 	});
 });
@@ -101,12 +102,12 @@ describe('nestLegacyCommentReplies', () => {
 		});
 		const nested = nestLegacyCommentReplies([root, reply]);
 		expect(nested).toHaveLength(1);
-		expect(nested[0].id).toBe('c0');
-		expect(nested[0].replies).toHaveLength(1);
-		expect(nested[0].replies?.[0].id).toBe('c1');
-		expect(nested[0].replies?.[0].parentId).toBe('c0');
-		expect(nested[0].replies?.[0].threadId).toBe('c0');
-		expect(nested[0].threadId).toBe('c0');
+		expect(at(nested, 0).id).toBe('c0');
+		expect(at(nested, 0).replies).toHaveLength(1);
+		expect(at(nested, 0).replies?.[0].id).toBe('c1');
+		expect(at(nested, 0).replies?.[0].parentId).toBe('c0');
+		expect(at(nested, 0).replies?.[0].threadId).toBe('c0');
+		expect(at(nested, 0).threadId).toBe('c0');
 	});
 
 	it('nests a multi-level thread (reply to a reply)', () => {
@@ -121,10 +122,10 @@ describe('nestLegacyCommentReplies', () => {
 		});
 		const nested = nestLegacyCommentReplies([root, reply1, reply2]);
 		expect(nested).toHaveLength(1);
-		expect(nested[0].replies?.[0].id).toBe('c1');
-		expect(nested[0].replies?.[0].replies?.[0].id).toBe('c2');
-		expect(nested[0].replies?.[0].replies?.[0].parentId).toBe('c1');
-		expect(nested[0].replies?.[0].replies?.[0].threadId).toBe('c0');
+		expect(at(nested, 0).replies?.[0].id).toBe('c1');
+		expect(at(nested, 0).replies?.[0].replies?.[0].id).toBe('c2');
+		expect(at(nested, 0).replies?.[0].replies?.[0].parentId).toBe('c1');
+		expect(at(nested, 0).replies?.[0].replies?.[0].threadId).toBe('c0');
 	});
 
 	it('leaves comments flat when no threading extension is present', () => {

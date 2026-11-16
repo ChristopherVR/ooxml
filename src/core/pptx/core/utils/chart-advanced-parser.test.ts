@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { XmlObject } from '../types';
 import { parseSeriesTrendlines, parseSeriesErrBars, parseLineStyle } from './chart-advanced-parser';
+import { at } from '../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Helpers — mock XmlLookupLike and ColorParserLike
@@ -79,7 +80,7 @@ describe('parseSeriesTrendlines', () => {
 		};
 		const result = parseSeriesTrendlines(seriesNode, xmlLookup, colorParser);
 		expect(result).toHaveLength(1);
-		expect(result[0].trendlineType).toBe('linear');
+		expect(at(result, 0).trendlineType).toBe('linear');
 	});
 
 	it('parses an exponential trendline', () => {
@@ -90,7 +91,7 @@ describe('parseSeriesTrendlines', () => {
 		};
 		const result = parseSeriesTrendlines(seriesNode, xmlLookup, colorParser);
 		expect(result).toHaveLength(1);
-		expect(result[0].trendlineType).toBe('exponential');
+		expect(at(result, 0).trendlineType).toBe('exponential');
 	});
 
 	it('parses polynomial trendline with order', () => {
@@ -102,8 +103,8 @@ describe('parseSeriesTrendlines', () => {
 		};
 		const result = parseSeriesTrendlines(seriesNode, xmlLookup, colorParser);
 		expect(result).toHaveLength(1);
-		expect(result[0].trendlineType).toBe('polynomial');
-		expect(result[0].order).toBe(3);
+		expect(at(result, 0).trendlineType).toBe('polynomial');
+		expect(at(result, 0).order).toBe(3);
 	});
 
 	it('parses forward and backward projection', () => {
@@ -115,8 +116,8 @@ describe('parseSeriesTrendlines', () => {
 			},
 		};
 		const result = parseSeriesTrendlines(seriesNode, xmlLookup, colorParser);
-		expect(result[0].forward).toBe(2.5);
-		expect(result[0].backward).toBe(1.0);
+		expect(at(result, 0).forward).toBe(2.5);
+		expect(at(result, 0).backward).toBe(1.0);
 	});
 
 	it('parses displayRSq and displayEq flags', () => {
@@ -128,8 +129,8 @@ describe('parseSeriesTrendlines', () => {
 			},
 		};
 		const result = parseSeriesTrendlines(seriesNode, xmlLookup, colorParser);
-		expect(result[0].displayRSq).toBeTruthy();
-		expect(result[0].displayEq).toBeTruthy();
+		expect(at(result, 0).displayRSq).toBeTruthy();
+		expect(at(result, 0).displayEq).toBeTruthy();
 	});
 
 	it('skips trendlines with unknown type', () => {
@@ -141,7 +142,7 @@ describe('parseSeriesTrendlines', () => {
 		};
 		const result = parseSeriesTrendlines(seriesNode, xmlLookup, colorParser);
 		expect(result).toHaveLength(1);
-		expect(result[0].trendlineType).toBe('linear');
+		expect(at(result, 0).trendlineType).toBe('linear');
 	});
 
 	it('parses trendline color, width, and dash style from spPr/a:ln (COM-verified shape)', () => {
@@ -165,9 +166,9 @@ describe('parseSeriesTrendlines', () => {
 			},
 		};
 		const result = parseSeriesTrendlines(seriesNode, xmlLookup, colorParser);
-		expect(result[0].color).toBe('#FF0000');
-		expect(result[0].lineWidth).toBe(3);
-		expect(result[0].lineDashStyle).toBe('dash');
+		expect(at(result, 0).color).toBe('#FF0000');
+		expect(at(result, 0).lineWidth).toBe(3);
+		expect(at(result, 0).lineDashStyle).toBe('dash');
 	});
 
 	it('parses name, explicit false booleans, and typed label properties', () => {
@@ -223,10 +224,10 @@ describe('parseSeriesErrBars', () => {
 		};
 		const result = parseSeriesErrBars(seriesNode, xmlLookup, extractPointValues);
 		expect(result).toHaveLength(1);
-		expect(result[0].direction).toBe('y');
-		expect(result[0].barType).toBe('both');
-		expect(result[0].valType).toBe('fixedVal');
-		expect(result[0].val).toBe(5.0);
+		expect(at(result, 0).direction).toBe('y');
+		expect(at(result, 0).barType).toBe('both');
+		expect(at(result, 0).valType).toBe('fixedVal');
+		expect(at(result, 0).val).toBe(5.0);
 	});
 
 	it('parses x-direction error bars', () => {
@@ -239,9 +240,9 @@ describe('parseSeriesErrBars', () => {
 			},
 		};
 		const result = parseSeriesErrBars(seriesNode, xmlLookup, extractPointValues);
-		expect(result[0].direction).toBe('x');
-		expect(result[0].barType).toBe('plus');
-		expect(result[0].valType).toBe('percentage');
+		expect(at(result, 0).direction).toBe('x');
+		expect(at(result, 0).barType).toBe('plus');
+		expect(at(result, 0).valType).toBe('percentage');
 	});
 
 	it('parses explicit end-cap false and line color', () => {
@@ -313,8 +314,8 @@ describe('parseSeriesErrBars', () => {
 		};
 		const result = parseSeriesErrBars(seriesNode, xmlLookup, customExtractor);
 		expect(result).toHaveLength(1);
-		expect(result[0].customPlus).toStrictEqual([1.0, 2.0]);
-		expect(result[0].customMinus).toStrictEqual([0.5]);
+		expect(at(result, 0).customPlus).toStrictEqual([1.0, 2.0]);
+		expect(at(result, 0).customMinus).toStrictEqual([0.5]);
 	});
 
 	it('defaults errBarType to both when not specified', () => {
@@ -324,7 +325,7 @@ describe('parseSeriesErrBars', () => {
 			},
 		};
 		const result = parseSeriesErrBars(seriesNode, xmlLookup, extractPointValues);
-		expect(result[0].barType).toBe('both');
+		expect(at(result, 0).barType).toBe('both');
 	});
 });
 

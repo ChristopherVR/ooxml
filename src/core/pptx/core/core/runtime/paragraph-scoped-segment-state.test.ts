@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import type { PptxElementWithText, TextSegment, TextStyle, XmlObject } from '../../types';
 import { preserveParagraphScopedState } from './paragraph-scoped-segment-state';
 import { PptxHandlerRuntime } from './PptxHandlerRuntimeImplementation';
+import { at } from '../../../test-support/access';
 
 /**
  * Regression coverage for the uniform-run collapse in the REAL
@@ -76,10 +77,10 @@ describe('applyTextBodyContent: the uniform-run collapse keeps paragraph scope',
 			]),
 		);
 		expect(paragraphs).toHaveLength(2);
-		expect(pPr(paragraphs[0])['@_algn']).toBe('l');
+		expect(pPr(at(paragraphs, 0))['@_algn']).toBe('l');
 		// Was 'l': the second paragraph's own alignment went out with the
 		// discarded segment list and the shape-level style took its place.
-		expect(pPr(paragraphs[1])['@_algn']).toBe('r');
+		expect(pPr(at(paragraphs, 1))['@_algn']).toBe('r');
 	});
 
 	it('keeps per-paragraph margins, indent and spacing', () => {
@@ -94,9 +95,9 @@ describe('applyTextBodyContent: the uniform-run collapse keeps paragraph scope',
 				},
 			]),
 		);
-		expect(pPr(paragraphs[0])['@_marL']).toBe('0');
-		expect(pPr(paragraphs[1])['@_marL']).toBe(String(48 * 9525));
-		expect(pPr(paragraphs[1])['@_indent']).toBe(String(-18 * 9525));
+		expect(pPr(at(paragraphs, 0))['@_marL']).toBe('0');
+		expect(pPr(at(paragraphs, 1))['@_marL']).toBe(String(48 * 9525));
+		expect(pPr(at(paragraphs, 1))['@_indent']).toBe(String(-18 * 9525));
 	});
 
 	it('re-emits the authored a:endParaRPr instead of the lang stub', () => {
@@ -129,7 +130,7 @@ describe('applyTextBodyContent: the uniform-run collapse keeps paragraph scope',
 			]),
 		);
 		expect(paragraphs).toHaveLength(1);
-		expect(paragraphs[0]['a:br']).toBeDefined();
+		expect(at(paragraphs, 0)['a:br']).toBeDefined();
 	});
 
 	it('still lets an edited element.text win over stale segments', () => {
@@ -140,9 +141,9 @@ describe('applyTextBodyContent: the uniform-run collapse keeps paragraph scope',
 				{ text: 'Right', style: SHARED, paragraphProperties: { align: 'right' } },
 			]),
 		);
-		const firstRun = paragraphs[0]['a:r'] as XmlObject;
+		const firstRun = at(paragraphs, 0)['a:r'] as XmlObject;
 		expect(firstRun['a:t']).toBe('EDITED');
-		expect(pPr(paragraphs[1])['@_algn']).toBe('r');
+		expect(pPr(at(paragraphs, 1))['@_algn']).toBe('r');
 	});
 
 	it('leaves a body that never had paragraph state byte-identical', () => {

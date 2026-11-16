@@ -123,9 +123,9 @@ export interface PptxHandlerSaveOptions {
 	 * date. Two saves of the same input then produce the same bytes.
 	 */
 	fixedDate?: Date;
-	headerFooter?: PptxHeaderFooter;
+	headerFooter?: PptxHeaderFooter | undefined;
 	presentationProperties?: PptxPresentationProperties | undefined;
-	customShows?: PptxCustomShow[];
+	customShows?: PptxCustomShow[] | undefined;
 	sections?: PptxSection[];
 	coreProperties?: PptxCoreProperties;
 	appProperties?: PptxAppProperties;
@@ -140,14 +140,14 @@ export interface PptxHandlerSaveOptions {
 	 * background) to the master at its `path`. Masters not listed here pass
 	 * through verbatim from the original load.
 	 */
-	slideMasters?: PptxSlideMaster[];
+	slideMasters?: PptxSlideMaster[] | undefined;
 	/**
 	 * Updated slide layouts to save back to ppt/slideLayouts/slideLayout*.xml.
 	 * Each entry applies typed mutations (clrMapOverride, attrs, hf flags,
 	 * background) to the layout at its `path`. Layouts not listed here pass
 	 * through verbatim from the original load.
 	 */
-	slideLayouts?: PptxSlideLayout[];
+	slideLayouts?: PptxSlideLayout[] | undefined;
 	/** Updated tag collections to save back to ppt/tags/tag*.xml. */
 	tags?: PptxTagCollection[];
 	/** Presentation-level customer data references to author or update. */

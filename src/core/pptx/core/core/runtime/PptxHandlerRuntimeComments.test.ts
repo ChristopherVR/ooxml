@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Extracted logic from PptxHandlerRuntimeComments (protected methods)
@@ -378,7 +379,7 @@ function parseAuthorNodeFull(author: XmlObject, index: number): PptxCommentAutho
 		}
 		return tokens
 			.slice(0, 2)
-			.map((t) => t[0].toUpperCase())
+			.map((t) => at(t, 0).toUpperCase())
 			.join('');
 	};
 

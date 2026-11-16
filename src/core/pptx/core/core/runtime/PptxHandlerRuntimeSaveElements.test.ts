@@ -11,6 +11,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TextSegment, XmlObject } from '../../types';
 import { PptxHandlerRuntime } from './PptxHandlerRuntimeImplementation';
+import { at } from '../../../test-support/access';
 
 class NotesRuntime extends PptxHandlerRuntime {
 	public updateNotes(
@@ -68,7 +69,7 @@ function bodyTxBody(notesXml: XmlObject): XmlObject {
 		((notesXml['p:notes'] as XmlObject)['p:cSld'] as XmlObject)['p:spTree'] as XmlObject
 	)['p:sp'];
 	const shapes = Array.isArray(spTree) ? (spTree as XmlObject[]) : [spTree as XmlObject];
-	return shapes[0]['p:txBody'] as XmlObject;
+	return at(shapes, 0)['p:txBody'] as XmlObject;
 }
 
 function bodyXml(notesXml: XmlObject): string {
@@ -89,7 +90,7 @@ describe('updateNotesXmlText paragraph-scope preservation', () => {
 
 		expect(runtime.updateNotes(notesXml, 'Speaker note', undefined)).toBeTruthy();
 
-		const pPr = paragraphsOf(notesXml)[0]['a:pPr'] as XmlObject;
+		const pPr = at(paragraphsOf(notesXml), 0)['a:pPr'] as XmlObject;
 		expect(pPr['@_marL']).toBe('0');
 		expect(pPr['@_algn']).toBe('l');
 		expect(pPr['@_defTabSz']).toBe('914400');
@@ -108,7 +109,7 @@ describe('updateNotesXmlText paragraph-scope preservation', () => {
 
 		runtime.updateNotes(notesXml, 'A rewritten speaker note', undefined);
 
-		const paragraph = paragraphsOf(notesXml)[0];
+		const paragraph = at(paragraphsOf(notesXml), 0);
 		expect((paragraph['a:pPr'] as XmlObject)['@_hangingPunct']).toBe('1');
 		expect(bodyXml(notesXml)).toContain('A rewritten speaker note');
 	});
@@ -121,7 +122,7 @@ describe('updateNotesXmlText paragraph-scope preservation', () => {
 
 		runtime.updateNotes(notesXml, 'Note', undefined);
 
-		expect(paragraphsOf(notesXml)[0]['a:endParaRPr']).toStrictEqual({
+		expect(at(paragraphsOf(notesXml), 0)['a:endParaRPr']).toStrictEqual({
 			'@_lang': 'en-GB',
 			'@_dirty': '0',
 		});
@@ -137,9 +138,9 @@ describe('updateNotesXmlText paragraph-scope preservation', () => {
 
 		const paragraphs = paragraphsOf(notesXml);
 		expect(paragraphs).toHaveLength(2);
-		expect((paragraphs[0]['a:pPr'] as XmlObject)['@_algn']).toBe('l');
-		expect((paragraphs[1]['a:pPr'] as XmlObject)['@_algn']).toBe('ctr');
-		expect((paragraphs[1]['a:pPr'] as XmlObject)['@_marL']).toBe('457200');
+		expect((at(paragraphs, 0)['a:pPr'] as XmlObject)['@_algn']).toBe('l');
+		expect((at(paragraphs, 1)['a:pPr'] as XmlObject)['@_algn']).toBe('ctr');
+		expect((at(paragraphs, 1)['a:pPr'] as XmlObject)['@_marL']).toBe('457200');
 	});
 
 	it('leaves an added paragraph with no borrowed properties', () => {
@@ -149,10 +150,10 @@ describe('updateNotesXmlText paragraph-scope preservation', () => {
 
 		const paragraphs = paragraphsOf(notesXml);
 		expect(paragraphs).toHaveLength(2);
-		expect((paragraphs[0]['a:pPr'] as XmlObject)['@_algn']).toBe('ctr');
+		expect((at(paragraphs, 0)['a:pPr'] as XmlObject)['@_algn']).toBe('ctr');
 		// No properties borrowed AND no empty `<a:pPr/>` materialized: the new
 		// paragraph authored nothing, so it round-trips with no pPr at all.
-		expect(paragraphs[1]['a:pPr']).toBeUndefined();
+		expect(at(paragraphs, 1)['a:pPr']).toBeUndefined();
 	});
 });
 

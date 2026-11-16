@@ -4,6 +4,7 @@ import type { PptxChartData, PptxChartType, XmlObject } from '../types';
 import { AXIS_LOCAL_NAMES } from './chart-container-content-model';
 import { buildChartExSpaceXml, canGenerateChartEx } from './chart-cx-generator';
 import { buildChartSpaceXml } from './chart-xml-generator';
+import { at } from '../../test-support/access';
 
 // ECMA-376 dml-chart.xsd: line3D/surface3D require 3; bar3D/area3D/surface
 // allow 2..3. Other cartesian containers require 2; pie containers forbid axes.
@@ -79,9 +80,9 @@ describe('generated chart axis cardinality and references', () => {
 		assertAxisSet(plot, tag, count);
 		expect(count).toBeGreaterThanOrEqual(min);
 		expect(count).toBeLessThanOrEqual(max);
-		const series = nodes((plot[`c:${tag}`] as XmlObject)['c:ser'])[0];
+		const series = at(nodes((plot[`c:${tag}`] as XmlObject)['c:ser']), 0);
 		const values = (series['c:val'] ?? series['c:yVal']) as XmlObject;
-		expect(nodes((values['c:numLit'] as XmlObject)['c:pt'])[0]['c:v']).toBe('0');
+		expect(at(nodes((values['c:numLit'] as XmlObject)['c:pt']), 0)['c:v']).toBe('0');
 	});
 
 	it('generates the 3-D surface projection with three complete axes', () => {

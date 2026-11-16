@@ -22,6 +22,7 @@ import type {
 } from '../../types';
 import { PptxHandlerRuntime as ParsingHelpersRuntime } from './PptxHandlerRuntimeChartParsingHelpers';
 import { PptxHandlerRuntime as SaveDataRuntime } from './PptxHandlerRuntimeSaveDataSerialization';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Bind protected parse/save helpers as standalone functions for testing.
@@ -447,8 +448,8 @@ describe('applyChartChrome', () => {
 		const exts = (chartRoot['c:extLst'] as XmlObject)['c:ext'] as XmlObject[];
 		expect(Array.isArray(exts)).toBeTruthy();
 		expect(exts).toHaveLength(2);
-		expect(exts[0]['@_uri']).toBe('{SOME-OTHER-EXTENSION}');
-		expect(exts[1]['@_uri']).toBe('{56B9EC1D-385E-4148-901F-78D8002777C0}');
+		expect(at(exts, 0)['@_uri']).toBe('{SOME-OTHER-EXTENSION}');
+		expect(at(exts, 1)['@_uri']).toBe('{56B9EC1D-385E-4148-901F-78D8002777C0}');
 	});
 });
 

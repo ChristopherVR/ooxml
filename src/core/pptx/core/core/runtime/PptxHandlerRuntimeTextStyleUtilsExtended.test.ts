@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 import type { TextStyle, TextSegment } from '../../types';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Extracted from PptxHandlerRuntimeTextStyleUtils
@@ -357,8 +358,8 @@ describe('compactTextSegments', () => {
 	it('should return fallback segment for empty input', () => {
 		const result = compactTextSegments([], { bold: true });
 		expect(result).toHaveLength(1);
-		expect(result[0].text).toBe('');
-		expect(result[0].style).toStrictEqual({ bold: true });
+		expect(at(result, 0).text).toBe('');
+		expect(at(result, 0).style).toStrictEqual({ bold: true });
 	});
 
 	it('should skip segments with empty text', () => {
@@ -370,7 +371,7 @@ describe('compactTextSegments', () => {
 			undefined,
 		);
 		expect(result).toHaveLength(1);
-		expect(result[0].text).toBe('hello');
+		expect(at(result, 0).text).toBe('hello');
 	});
 
 	it('should merge adjacent segments with the same style', () => {
@@ -382,7 +383,7 @@ describe('compactTextSegments', () => {
 			undefined,
 		);
 		expect(result).toHaveLength(1);
-		expect(result[0].text).toBe('Hello World');
+		expect(at(result, 0).text).toBe('Hello World');
 	});
 
 	it('should not merge segments with different styles', () => {
@@ -407,7 +408,7 @@ describe('compactTextSegments', () => {
 			undefined,
 		);
 		expect(result).toHaveLength(1);
-		expect(result[0].text).toBe('abc');
+		expect(at(result, 0).text).toBe('abc');
 	});
 
 	it('should handle mixed merge/split correctly', () => {
@@ -421,7 +422,7 @@ describe('compactTextSegments', () => {
 			undefined,
 		);
 		expect(result).toHaveLength(2);
-		expect(result[0].text).toBe('ab');
-		expect(result[1].text).toBe('cd');
+		expect(at(result, 0).text).toBe('ab');
+		expect(at(result, 1).text).toBe('cd');
 	});
 });

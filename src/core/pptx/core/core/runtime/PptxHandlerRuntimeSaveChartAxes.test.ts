@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import { PptxHandler } from '../../PptxHandler';
 import type { ChartPptxElement, PptxChartType, XmlObject } from '../../types';
+import { at } from '../../../test-support/access';
 
 const parser = new XMLParser({ ignoreAttributes: false });
 const chartData = {
@@ -95,7 +96,7 @@ describe('native chart axes through load/save and editing', () => {
 				);
 				expect(ids).toHaveLength(3);
 				expected.push({ part, tag, ids });
-				chart.series[0].values[0] = 0;
+				at(chart.series, 0).values[0] = 0;
 				slide.isDirty = true;
 			}
 		}
@@ -114,7 +115,7 @@ describe('native chart axes through load/save and editing', () => {
 			);
 		expect(charts).toHaveLength(3);
 		for (const chart of charts) {
-			expect(chart.chartData!.series[0].values[0]).toBe(0);
+			expect(at(chart.chartData!.series, 0).values[0]).toBe(0);
 			if (chart.chartData!.chartType === 'surface') {
 				expect(chart.chartData!.surfaceTopView).toBe(false);
 			}
@@ -128,9 +129,11 @@ describe('native chart axes through load/save and editing', () => {
 			for (let pass = 0; pass < 2; pass++) {
 				const handler = new PptxHandler();
 				const loaded = await handler.load(bytes.buffer as ArrayBuffer);
-				const chart = loaded.slides[0].elements.find((e) => e.type === 'chart') as ChartPptxElement;
+				const chart = at(loaded.slides, 0).elements.find(
+					(e) => e.type === 'chart',
+				) as ChartPptxElement;
 				expect(chart.chartData!.chartType).toBe(type);
-				expect(chart.chartData!.series[0].values).toEqual([0, 2, 3]);
+				expect(at(chart.chartData!.series, 0).values).toEqual([0, 2, 3]);
 				expect(chart.chartData!.axes).toHaveLength(3);
 				bytes = await handler.save(loaded.slides);
 				assertAxes(
@@ -156,21 +159,23 @@ describe('native chart axes through load/save and editing', () => {
 			const bytes = await zip.generateAsync({ type: 'uint8array' });
 			const handler = new PptxHandler();
 			const loaded = await handler.load(bytes.buffer as ArrayBuffer);
-			const chart = loaded.slides[0].elements.find((e) => e.type === 'chart') as ChartPptxElement;
+			const chart = at(loaded.slides, 0).elements.find(
+				(e) => e.type === 'chart',
+			) as ChartPptxElement;
 			const ids = hasSeriesAxis ? [41, 82, 123] : [41, 82];
 			expect(chart.chartData!.axes!.map((axis) => axis.axisId)).toEqual(ids);
-			expect(chart.chartData!.series[0].values).toEqual([0, 2, 3]);
+			expect(at(chart.chartData!.series, 0).values).toEqual([0, 2, 3]);
 			if (tag.startsWith('surface')) {
 				expect(chart.chartData!.surfaceTopView).toBe(tag === 'surfaceChart');
 			}
 			const firstSaved = await handler.save(loaded.slides);
 			assertAxes(await chartPlot(firstSaved), tag, ids);
 			// An edit must not discard the series axis or its crossing relationship.
-			chart.chartData!.series[0].values[1] = 7;
+			at(chart.chartData!.series, 0).values[1] = 7;
 			if (hasSeriesAxis) {
 				chart.chartData!.axes!.find((axis) => axis.axisType === 'serAx')!.tickLabelSkip = 2;
 			}
-			loaded.slides[0].isDirty = true;
+			at(loaded.slides, 0).isDirty = true;
 			const edited = await handler.save(loaded.slides);
 			const plot = await chartPlot(edited);
 			assertAxes(plot, tag, ids);
@@ -179,10 +184,10 @@ describe('native chart axes through load/save and editing', () => {
 				expect((plot['c:serAx'] as XmlObject)['c:crossAx']).toEqual({ '@_val': '82' });
 			}
 			const reloaded = await new PptxHandler().load(edited.buffer as ArrayBuffer);
-			const result = reloaded.slides[0].elements.find(
+			const result = at(reloaded.slides, 0).elements.find(
 				(e) => e.type === 'chart',
 			) as ChartPptxElement;
-			expect(result.chartData!.series[0].values).toEqual([0, 7, 3]);
+			expect(at(result.chartData!.series, 0).values).toEqual([0, 7, 3]);
 		},
 	);
 });

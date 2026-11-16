@@ -10,6 +10,7 @@ import {
 	withChartSeriesOnSecondaryAxis,
 } from '../../builders/sdk/chart-series-axis-operations';
 import { BAR_CHART_XML, saveWith, section } from './chart-element-format-deck.test-util';
+import { at } from '../../../test-support/access';
 
 /**
  * Round 6 of the chart Format pane: picture, pattern and gradient fills,
@@ -220,7 +221,7 @@ describe('per-series data label options', () => {
 			'<c:dLbls><c:showLegendKey val="0"/><c:showVal val="1"/><c:showCatName val="0"/>',
 		);
 		const data = reloaded.chart.chartData!;
-		expect(data.series[1].dataLabelOptions).toMatchObject({
+		expect(at(data.series, 1).dataLabelOptions).toMatchObject({
 			showValue: true,
 			showSeriesName: true,
 		});

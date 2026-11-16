@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import type { PptxElementWithText, XmlObject } from '../../types';
 import { TextShapeXmlFactory } from './TextShapeXmlFactory';
 import type { PptxBuilderFactoryContext } from './types';
+import { at } from '../../../test-support/access';
 
 /**
  * Minimal factory context for testing.
@@ -105,7 +106,7 @@ describe('textShapeXmlFactory', () => {
 		const result = factory.createXmlElement({ element: createTextElement({ text: 'Test text' }) });
 		const txBody = result['p:txBody'] as XmlObject;
 		const paragraphs = txBody['a:p'] as XmlObject[];
-		const run = paragraphs[0]['a:r'] as XmlObject;
+		const run = at(paragraphs, 0)['a:r'] as XmlObject;
 		expect(run['a:t']).toBe('Test text');
 	});
 
@@ -137,7 +138,7 @@ describe('textShapeXmlFactory', () => {
 		const spPr = result['p:spPr'] as XmlObject;
 		const avLst = (spPr['a:prstGeom'] as XmlObject)['a:avLst'] as XmlObject;
 		expect(avLst['a:gd']).toBeDefined();
-		const gd = (avLst['a:gd'] as XmlObject[])[0];
+		const gd = at(avLst['a:gd'] as XmlObject[], 0);
 		expect(gd['@_name']).toBe('adj');
 		expect(gd['@_fmla']).toBe('val 50000');
 	});

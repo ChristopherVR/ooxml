@@ -6,6 +6,7 @@
 import { describe, it, expect } from 'vitest';
 
 import type { TextStyle, TextSegment } from '../../types';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Reimplemented helpers
@@ -36,7 +37,7 @@ function compactTextSegments(
 	let current = { ...segments[0] };
 
 	for (let i = 1; i < segments.length; i++) {
-		const seg = segments[i];
+		const seg = at(segments, i);
 		const sameStyle = JSON.stringify(current.style) === JSON.stringify(seg.style);
 		if (sameStyle && !current.fieldType && !seg.fieldType) {
 			current = { ...current, text: current.text + seg.text };
@@ -166,10 +167,10 @@ describe('remapEditedTextToExistingStyles', () => {
 		];
 		const result = remapEditedTextToExistingStyles(existing, 'Hello World', undefined);
 		expect(result).toHaveLength(2);
-		expect(result[0].text).toBe('Hello');
-		expect(result[0].style?.bold).toBeTruthy();
-		expect(result[1].text).toBe(' World');
-		expect(result[1].style?.italic).toBeTruthy();
+		expect(at(result, 0).text).toBe('Hello');
+		expect(at(result, 0).style?.bold).toBeTruthy();
+		expect(at(result, 1).text).toBe(' World');
+		expect(at(result, 1).style?.italic).toBeTruthy();
 	});
 
 	it('should use prefix style for inserted text in the middle', () => {
@@ -191,15 +192,15 @@ describe('remapEditedTextToExistingStyles', () => {
 		const existing: TextSegment[] = [{ text: 'Hello', style: { bold: true } }];
 		const result = remapEditedTextToExistingStyles(existing, '', undefined);
 		expect(result).toHaveLength(1);
-		expect(result[0].text).toBe('');
-		expect(result[0].style?.bold).toBeTruthy();
+		expect(at(result, 0).text).toBe('');
+		expect(at(result, 0).style?.bold).toBeTruthy();
 	});
 
 	it('should use fallback style when existing segments are empty', () => {
 		const result = remapEditedTextToExistingStyles([], 'New text', { fontSize: 24 });
 		expect(result).toHaveLength(1);
-		expect(result[0].text).toBe('New text');
-		expect(result[0].style?.fontSize).toBe(24);
+		expect(at(result, 0).text).toBe('New text');
+		expect(at(result, 0).style?.fontSize).toBe(24);
 	});
 
 	it('should handle text appended at the end', () => {
@@ -244,8 +245,8 @@ describe('compactTextSegments', () => {
 		];
 		const result = compactTextSegments(segments, undefined);
 		expect(result).toHaveLength(2);
-		expect(result[0].text).toBe('AB');
-		expect(result[1].text).toBe('C');
+		expect(at(result, 0).text).toBe('AB');
+		expect(at(result, 1).text).toBe('C');
 	});
 
 	it('should return empty array for empty input', () => {
@@ -274,6 +275,6 @@ describe('compactTextSegments', () => {
 		const segments: TextSegment[] = [{ text: 'Hello', style: {} }];
 		const result = compactTextSegments(segments, undefined);
 		expect(result).toHaveLength(1);
-		expect(result[0].text).toBe('Hello');
+		expect(at(result, 0).text).toBe('Hello');
 	});
 });

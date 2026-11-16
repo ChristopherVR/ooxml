@@ -10,6 +10,7 @@ import {
 	applySmartArtLayoutDefinition,
 	parseSmartArtLayoutDefinition,
 } from './smartart-layout-definition';
+import { at } from '../../test-support/access';
 
 const localName = (key: string): string => key.split(':').at(-1)!;
 
@@ -60,9 +61,9 @@ describe('diagramML constraint and rule codec', () => {
 			'x:ruleLst': { 'x:rule': { '@_type': 'primFontSz', '@_fact': 'NaN' } },
 		};
 		const value = parseSmartArtConstraintRules(node, localName);
-		value.constraints![0].value = 42;
-		value.constraints![0].referenceFor = 'des';
-		value.rules![0].max = Number.POSITIVE_INFINITY;
+		at(value.constraints!, 0).value = 42;
+		at(value.constraints!, 0).referenceFor = 'des';
+		at(value.rules!, 0).max = Number.POSITIVE_INFINITY;
 		expect(applySmartArtConstraintRules(node, value, localName)).toBeTruthy();
 		const constraint = (node['x:constrLst'] as XmlObject)['x:constr'] as XmlObject[];
 		expect(constraint[0]).toMatchObject({
@@ -72,7 +73,7 @@ describe('diagramML constraint and rule codec', () => {
 			'x:extLst': { 'x:ext': { '@_uri': 'keep' } },
 		});
 		const rule = (node['x:ruleLst'] as XmlObject)['x:rule'] as XmlObject[];
-		expect(rule[0]['@_max']).toBe('INF');
+		expect(at(rule, 0)['@_max']).toBe('INF');
 		expect((node['x:constrLst'] as XmlObject)['@_foreign']).toBe('list');
 	});
 
@@ -106,8 +107,8 @@ describe('diagramML constraint and rule codec', () => {
 			},
 		};
 		const layout = parseSmartArtLayoutDefinition(xml['x:layoutDef'] as XmlObject, localName)!;
-		layout.rootNode.constraints![0].value = 25;
-		layout.rootNode.rules![0].factor = 0.5;
+		at(layout.rootNode.constraints!, 0).value = 25;
+		at(layout.rootNode.rules!, 0).factor = 0.5;
 		expect(
 			applySmartArtLayoutDefinition(xml['x:layoutDef'] as XmlObject, layout, localName),
 		).toBeTruthy();

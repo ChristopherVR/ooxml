@@ -16,6 +16,7 @@ import {
 	withChartLegendOptions,
 	withChartSeriesOptions,
 } from './chart-format-options-operations';
+import { at } from '../../../test-support/access';
 
 function bar(): PptxChartData {
 	return {
@@ -100,7 +101,7 @@ describe('withChartElementFormat', () => {
 			{ kind: 'majorGridlines', axisIndex: 1 },
 			{ line: { kind: 'solid', color: '#D9D9D9', width: 0.5, dash: 'dash' } },
 		);
-		expect(next.series[0].color).toBe('#C00000');
+		expect(at(next.series, 0).color).toBe('#C00000');
 		expect(next.axes?.[1].majorGridlinesSpPr).toEqual({
 			strokeColor: '#D9D9D9',
 			strokeWidth: 0.5,
@@ -141,8 +142,8 @@ describe('resetChartElementFormat', () => {
 			{ line: { width: 4 } },
 		);
 		const next = resetChartElementFormat(formatted, { kind: 'series', seriesIndex: 0 });
-		expect(next.series[0].color).toBeUndefined();
-		expect(next.series[0].lineWidth).toBeUndefined();
+		expect(at(next.series, 0).color).toBeUndefined();
+		expect(at(next.series, 0).lineWidth).toBeUndefined();
 		expect(next.elementFormats?.['series:0']).toEqual({ reset: true });
 		expect(readChartElementFormat(next, { kind: 'series', seriesIndex: 0 }).reset).toBe(true);
 	});

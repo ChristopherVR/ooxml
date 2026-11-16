@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { at } from '../../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Extracted logic from PptxHandlerRuntimeEmbeddedFonts
@@ -54,7 +55,7 @@ function parseEmbeddedFontEntries(presentationData: XmlObject | undefined): Arra
 		const variants: Array<{
 			key: string;
 			rId: string;
-			fontKey?: string;
+			fontKey?: string | undefined;
 			bold: boolean;
 			italic: boolean;
 		}> = [];
@@ -143,9 +144,9 @@ describe('parseEmbeddedFontEntries', () => {
 		};
 		const result = parseEmbeddedFontEntries(data);
 		expect(result).toHaveLength(1);
-		expect(result[0].typeface).toBe('Calibri');
-		expect(result[0].variants).toHaveLength(1);
-		expect(result[0].variants[0]).toStrictEqual({
+		expect(at(result, 0).typeface).toBe('Calibri');
+		expect(at(result, 0).variants).toHaveLength(1);
+		expect(at(result, 0).variants[0]).toStrictEqual({
 			key: 'p:regular',
 			rId: 'rId1',
 			fontKey: undefined,
@@ -169,15 +170,15 @@ describe('parseEmbeddedFontEntries', () => {
 			},
 		};
 		const result = parseEmbeddedFontEntries(data);
-		expect(result[0].variants).toHaveLength(4);
-		expect(result[0].variants[0].bold).toBeFalsy();
-		expect(result[0].variants[0].italic).toBeFalsy();
-		expect(result[0].variants[1].bold).toBeTruthy();
-		expect(result[0].variants[1].italic).toBeFalsy();
-		expect(result[0].variants[2].bold).toBeFalsy();
-		expect(result[0].variants[2].italic).toBeTruthy();
-		expect(result[0].variants[3].bold).toBeTruthy();
-		expect(result[0].variants[3].italic).toBeTruthy();
+		expect(at(result, 0).variants).toHaveLength(4);
+		expect(at(at(result, 0).variants, 0).bold).toBeFalsy();
+		expect(at(at(result, 0).variants, 0).italic).toBeFalsy();
+		expect(at(at(result, 0).variants, 1).bold).toBeTruthy();
+		expect(at(at(result, 0).variants, 1).italic).toBeFalsy();
+		expect(at(at(result, 0).variants, 2).bold).toBeFalsy();
+		expect(at(at(result, 0).variants, 2).italic).toBeTruthy();
+		expect(at(at(result, 0).variants, 3).bold).toBeTruthy();
+		expect(at(at(result, 0).variants, 3).italic).toBeTruthy();
 	});
 
 	it('should skip fonts without typeface', () => {
@@ -223,7 +224,7 @@ describe('parseEmbeddedFontEntries', () => {
 			},
 		};
 		const result = parseEmbeddedFontEntries(data);
-		expect(result[0].variants[0].fontKey).toBe('{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}');
+		expect(at(at(result, 0).variants, 0).fontKey).toBe('{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}');
 	});
 
 	it('should parse multiple fonts in array', () => {
@@ -245,8 +246,8 @@ describe('parseEmbeddedFontEntries', () => {
 		};
 		const result = parseEmbeddedFontEntries(data);
 		expect(result).toHaveLength(2);
-		expect(result[0].typeface).toBe('Font1');
-		expect(result[1].typeface).toBe('Font2');
+		expect(at(result, 0).typeface).toBe('Font1');
+		expect(at(result, 1).typeface).toBe('Font2');
 	});
 });
 

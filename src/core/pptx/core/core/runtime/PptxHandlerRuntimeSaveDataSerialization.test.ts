@@ -5,6 +5,7 @@ import { PresentationBuilder } from '../../builders/sdk/PresentationBuilder';
 import { PptxHandler } from '../../PptxHandler';
 import type { PptxChartType } from '../../types';
 import type { ChartPptxElement } from '../../types/elements';
+import { at } from '../../../test-support/access';
 
 /**
  * Save-path regressions for the chart-type-change branch of
@@ -89,12 +90,12 @@ async function buildBarDeck(): Promise<ArrayBuffer> {
 async function saveWithChartType(chartType: PptxChartType): Promise<string> {
 	const handler = new PptxHandler();
 	const data = await handler.load(await buildBarDeck());
-	const chart = data.slides[0].elements.find((e) => e.type === 'chart') as
+	const chart = at(data.slides, 0).elements.find((e) => e.type === 'chart') as
 		| ChartPptxElement
 		| undefined;
 	expect(chart, 'chart graphic frame was not parsed').toBeDefined();
 	chart!.chartData!.chartType = chartType;
-	data.slides[0].isDirty = true;
+	at(data.slides, 0).isDirty = true;
 	const savedBytes = await handler.save(data.slides);
 	const savedZip = await JSZip.loadAsync(savedBytes);
 	return savedZip.file('ppt/charts/chart1.xml')!.async('string');
@@ -110,7 +111,7 @@ function containerChildren(xml: string, container: string): string[] {
 	const tagRe = /<(\/?)c:([A-Za-z0-9]+)([^>]*?)(\/?)>/gu;
 	let depth = 0;
 	let tag: RegExpExecArray | null;
-	while ((tag = tagRe.exec(m[1]))) {
+	while ((tag = tagRe.exec(at(m, 1)))) {
 		const [, close, name, , selfClose] = tag;
 		if (close) {
 			depth -= 1;

@@ -6,6 +6,7 @@ import {
 	parseSmartArtLayoutDefinition,
 	validateSmartArtLayoutDefinition,
 } from './smartart-layout-definition';
+import { at } from '../../test-support/access';
 
 const localName = (key: string): string => key.split(':').pop() ?? key;
 
@@ -235,7 +236,7 @@ describe('diagramML layout-definition metadata', () => {
 		]);
 		expect(second.chooseGroups).toStrictEqual([
 			{
-				id: first.chooseGroups![0].id,
+				id: at(first.chooseGroups!, 0).id,
 				ordinal: 1,
 				guard: expect.objectContaining({ value: '2' }),
 				origin: undefined,
@@ -244,7 +245,7 @@ describe('diagramML layout-definition metadata', () => {
 		// dgm:else has no condition of its own (matches chooseGuard's own
 		// convention) - its own chooseGroups entry carries no `guard`.
 		expect(third.chooseGroups).toStrictEqual([
-			{ id: first.chooseGroups![0].id, ordinal: 2, origin: undefined },
+			{ id: at(first.chooseGroups!, 0).id, ordinal: 2, origin: undefined },
 		]);
 	});
 
@@ -272,9 +273,9 @@ describe('diagramML layout-definition metadata', () => {
 		const parsed = parseSmartArtLayoutDefinition(nested, localName)!;
 		const [deep] = parsed.rootNode.children!;
 		expect(deep.chooseGroups).toHaveLength(2);
-		expect(deep.chooseGroups![0].id).not.toBe(deep.chooseGroups![1].id);
-		expect(deep.chooseGroups![0].ordinal).toBe(0);
-		expect(deep.chooseGroups![1].ordinal).toBe(0);
+		expect(at(deep.chooseGroups!, 0).id).not.toBe(at(deep.chooseGroups!, 1).id);
+		expect(at(deep.chooseGroups!, 0).ordinal).toBe(0);
+		expect(at(deep.chooseGroups!, 1).ordinal).toBe(0);
 	});
 
 	it('a direct (non-choose) child has no chooseGroups at all', () => {
@@ -298,10 +299,10 @@ describe('diagramML layout-definition metadata', () => {
 			revision: 3,
 			parameters: [{ type: 'grDir', value: 'tR' }],
 		};
-		value.rootNode.forEach![0].count = [4];
-		value.rootNode.choose![0].when[0].value = '3';
-		value.rootNode.choose![0].otherwise = null;
-		value.rootNode.children![1].moveWith = 'root';
+		at(value.rootNode.forEach!, 0).count = [4];
+		at(at(value.rootNode.choose!, 0).when, 0).value = '3';
+		at(value.rootNode.choose!, 0).otherwise = null;
+		at(value.rootNode.children!, 1).moveWith = 'root';
 
 		expect(applySmartArtLayoutDefinition(xml, value, localName)).toBeTruthy();
 		expect(xml).toMatchObject({
@@ -601,14 +602,22 @@ describe('forEachOrigin: the enclosing dgm:forEach a layoutNode was reached thro
 		const parsed = parseSmartArtLayoutDefinition(nested, localName)!;
 		const candidates = parsed.rootNode.constraintCandidates!;
 		expect(candidates).toHaveLength(2);
-		expect(candidates[0].guard).toStrictEqual([
+		expect(at(candidates, 0).guard).toStrictEqual([
 			expect.objectContaining({ function: 'cnt', operator: 'equ', value: '2' }),
 		]);
-		expect(candidates[0].constraint).toMatchObject({ type: 'ctrX', forName: 'circ1', factor: 0.3 });
+		expect(at(candidates, 0).constraint).toMatchObject({
+			type: 'ctrX',
+			forName: 'circ1',
+			factor: 0.3,
+		});
 		// The else branch keeps no condition of its own (matches `chooseGuard`'s
 		// own convention).
-		expect(candidates[1].guard).toStrictEqual([]);
-		expect(candidates[1].constraint).toMatchObject({ type: 'ctrX', forName: 'circ1', factor: 0.5 });
+		expect(at(candidates, 1).guard).toStrictEqual([]);
+		expect(at(candidates, 1).constraint).toMatchObject({
+			type: 'ctrX',
+			forName: 'circ1',
+			factor: 0.5,
+		});
 		// `allConstraints` still carries BOTH branches blindly unioned - the
 		// pre-existing consumer is unaffected by this new field's presence.
 		expect(parsed.rootNode.allConstraints).toHaveLength(2);

@@ -8,6 +8,7 @@ import { PptxHandler } from '../../PptxHandler';
 import type { PptxElement, PptxTableData, XmlObject } from '../../types';
 import { PptxHandlerRuntime } from './PptxHandlerRuntimeImplementation';
 import { tableStyleIdChanged } from './table-style-change-cell-clear';
+import { at } from '../../../test-support/access';
 
 const OLD_STYLE = '{F5AB1C69-6EDB-4FF4-983F-18BD219EF322}';
 const NEW_STYLE = '{3C2FFA5D-87B4-456A-9821-1D502468CF0F}';
@@ -82,7 +83,7 @@ describe('saving a table whose style changed', () => {
 	it('still writes a fill or border set after the pick', () => {
 		const shape = tableShape(OLD_STYLE);
 		const data = pickedData(NEW_STYLE);
-		data.rows[0].cells[0].style = { backgroundColor: '#123456', borderTopWidth: 2 };
+		at(at(data.rows, 0).cells, 0).style = { backgroundColor: '#123456', borderTopWidth: 2 };
 		new TableSaveRuntime().save(shape, data);
 		const [first] = tcPrs(shape);
 		expect(first['a:solidFill']).toStrictEqual({ 'a:srgbClr': { '@_val': '123456' } });
@@ -115,7 +116,7 @@ describe('saving a table whose style changed', () => {
 	it('clears an explicit style removal (empty id) too', () => {
 		const shape = tableShape(OLD_STYLE);
 		new TableSaveRuntime().save(shape, pickedData(''));
-		expect(tcPrs(shape)[0]['a:lnL']).toBeUndefined();
+		expect(at(tcPrs(shape), 0)['a:lnL']).toBeUndefined();
 	});
 
 	it('clears the cells reused by a structural rebuild', () => {
@@ -128,7 +129,7 @@ describe('saving a table whose style changed', () => {
 		] as XmlObject;
 		const rows = tbl['a:tr'] as XmlObject[];
 		expect(rows).toHaveLength(2);
-		const first = (rows[0]['a:tc'] as XmlObject[])[0]['a:tcPr'] as XmlObject;
+		const first = at(at(rows, 0)['a:tc'] as XmlObject[], 0)['a:tcPr'] as XmlObject;
 		expect(first['a:lnL']).toBeUndefined();
 		expect(first['a:solidFill']).toBeUndefined();
 	});
@@ -154,7 +155,7 @@ const FIXTURE = fileURLToPath(
 async function open(bytes: Uint8Array) {
 	const handler = new PptxHandler();
 	const deck = await handler.load(bytes.slice().buffer as ArrayBuffer);
-	const table = deck.slides[0].elements.find((e) => e.type === 'table');
+	const table = at(deck.slides, 0).elements.find((e) => e.type === 'table');
 	if (!table || table.type !== 'table' || !table.tableData) {
 		throw new Error('expected a table');
 	}
@@ -175,30 +176,30 @@ describe('table style change round trip', () => {
 		const deck = await open(new Uint8Array(readFileSync(FIXTURE)));
 		// Give the first cell a direct fill and a border, and save.
 		const formatted: PptxTableData = structuredClone(deck.tableData);
-		formatted.rows[0].cells[0].style = {
-			...formatted.rows[0].cells[0].style,
+		at(at(formatted.rows, 0).cells, 0).style = {
+			...at(at(formatted.rows, 0).cells, 0).style,
 			backgroundColor: '#00FF00',
 			borderTopWidth: 3,
 			borderTopColor: '#FF0000',
 		};
 		const reopened = await open(await saveWith(deck, formatted));
-		expect(reopened.tableData.rows[0].cells[0].style?.borderTopColor).toBe('#FF0000');
+		expect(at(at(reopened.tableData.rows, 0).cells, 0).style?.borderTopColor).toBe('#FF0000');
 
 		// A style pick: a new id, with the fill and border gone from the model.
 		const picked: PptxTableData = structuredClone(reopened.tableData);
 		picked.tableStyleId = NEW_STYLE;
-		const style = { ...picked.rows[0].cells[0].style };
+		const style = { ...at(at(picked.rows, 0).cells, 0).style };
 		for (const key of Object.keys(style).filter((k) => /^(background|fill|border)/u.test(k))) {
 			delete (style as Record<string, unknown>)[key];
 		}
-		picked.rows[0].cells[0].style = style;
+		at(at(picked.rows, 0).cells, 0).style = style;
 		const bytes = await saveWith(reopened, picked);
 
 		const xml = await (await JSZip.loadAsync(bytes)).file('ppt/slides/slide1.xml')!.async('string');
 		expect(xml).toContain(`<a:tableStyleId>${NEW_STYLE}</a:tableStyleId>`);
 		expect(xml).not.toContain('FF0000');
 		expect(xml).not.toContain('00FF00');
-		const after = (await open(bytes)).tableData.rows[0].cells[0].style;
+		const after = at(at((await open(bytes)).tableData.rows, 0).cells, 0).style;
 		expect(after?.backgroundColor).toBeUndefined();
 		expect(after?.borderTopWidth).toBeUndefined();
 	});

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { XmlObject, PptxImageEffects } from '../../types';
 import { buildSrcRectXml, clampCropForSave } from './image-crop-save';
+import { at } from '../../../test-support/access';
 
 /**
  * The image-effects save module defines most of its helpers as **protected**
@@ -319,8 +320,8 @@ describe('applyImageEffectsToBlip', () => {
 		const duo = blip['a:duotone'] as XmlObject;
 		const colors = duo['a:srgbClr'] as XmlObject[];
 		expect(colors).toHaveLength(2);
-		expect(colors[0]['@_val']).toBe('000000');
-		expect(colors[1]['@_val']).toBe('FFFFFF');
+		expect(at(colors, 0)['@_val']).toBe('000000');
+		expect(at(colors, 1)['@_val']).toBe('FFFFFF');
 	});
 
 	it('should set clrChange with transparency', () => {

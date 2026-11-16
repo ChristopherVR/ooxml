@@ -4,13 +4,14 @@ import { describe, it, expect } from 'vitest';
 
 import { PptxHandler } from '../../PptxHandler';
 import { buildBlankPresentationArchive, PresentationBuilder } from './PresentationBuilder';
+import { at } from '../../../test-support/access';
 
 /** Read every part of a generated package as text, keyed by archive path. */
 async function readParts(archive: ArrayBuffer | Uint8Array): Promise<Record<string, string>> {
 	const zip = await JSZip.loadAsync(archive);
 	const parts: Record<string, string> = {};
 	for (const name of Object.keys(zip.files).sort()) {
-		const entry = zip.files[name];
+		const entry = at(zip.files, name);
 		if (!entry.dir) {
 			parts[name] = await entry.async('string');
 		}
@@ -225,9 +226,9 @@ describe('presentationBuilder', () => {
 
 		data.slides.push(slide);
 		expect(data.slides).toHaveLength(1);
-		expect(data.slides[0].elements).toHaveLength(1);
-		expect(data.slides[0].elements[0].type).toBe('text');
-		expect(data.slides[0].notes).toBe('Speaker notes here');
+		expect(at(data.slides, 0).elements).toHaveLength(1);
+		expect(at(at(data.slides, 0).elements, 0).type).toBe('text');
+		expect(at(data.slides, 0).notes).toBe('Speaker notes here');
 
 		// Should be saveable
 		const bytes = await handler.save(data.slides);
@@ -256,8 +257,8 @@ describe('presentationBuilder', () => {
 		);
 
 		expect(data.slides).toHaveLength(2);
-		expect(data.slides[0].layoutName).toBe('Title Slide');
-		expect(data.slides[1].layoutName).toBe('Blank');
+		expect(at(data.slides, 0).layoutName).toBe('Title Slide');
+		expect(at(data.slides, 1).layoutName).toBe('Blank');
 	});
 
 	it('can create slides with tables and charts', async () => {
@@ -286,8 +287,8 @@ describe('presentationBuilder', () => {
 
 		data.slides.push(slide);
 		expect(slide.elements).toHaveLength(2);
-		expect(slide.elements[0].type).toBe('table');
-		expect(slide.elements[1].type).toBe('chart');
+		expect(at(slide.elements, 0).type).toBe('table');
+		expect(at(slide.elements, 1).type).toBe('chart');
 	});
 
 	it('round-trips a presentation with elements', async () => {
@@ -312,6 +313,6 @@ describe('presentationBuilder', () => {
 		const handler2 = new PptxHandler();
 		const data2 = await handler2.load(bytes.buffer as ArrayBuffer);
 		expect(data2.slides).toHaveLength(1);
-		expect(data2.slides[0].elements.length).toBeGreaterThanOrEqual(1);
+		expect(at(data2.slides, 0).elements.length).toBeGreaterThanOrEqual(1);
 	});
 });

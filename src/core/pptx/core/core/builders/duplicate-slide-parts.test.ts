@@ -17,6 +17,7 @@ import { SlideBuilder } from '../../builders/sdk/SlideBuilder';
 import { PptxHandler } from '../../PptxHandler';
 import type { ChartPptxElement, PptxSlide } from '../../types';
 import { cloneSlide } from '../../utils/clone-utils';
+import { at } from '../../../test-support/access';
 
 const relationshipBase = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/';
 const chart = (slide: PptxSlide) =>
@@ -43,11 +44,11 @@ async function sourceDeck(withDependencies = false): Promise<Uint8Array> {
 	slide.addMedia('audio', 'data:audio/wav;base64,UklGRgQAAABXQVZF');
 	data.slides.push(slide.build());
 	const zip = await JSZip.loadAsync(await handler.save(data.slides));
-	const slideXml = await zip.file(data.slides[0].id)!.async('string');
+	const slideXml = await zip.file(at(data.slides, 0).id)!.async('string');
 	const withLink = slideXml.replace('</a:rPr>', '<a:hlinkClick r:id="sourceLink42"/></a:rPr>');
 	expect(withLink).not.toBe(slideXml);
-	zip.file(data.slides[0].id, withLink);
-	const relsPath = relationshipsPartFor(data.slides[0].id);
+	zip.file(at(data.slides, 0).id, withLink);
+	const relsPath = relationshipsPartFor(at(data.slides, 0).id);
 	const rels = parseRelationships(await zip.file(relsPath)!.async('string'));
 	rels.set('sourceLink42', {
 		id: 'sourceLink42',
@@ -160,7 +161,7 @@ describe('duplicated slide package ownership', () => {
 			const bytes = await sourceDeck();
 			const presentation = await Presentation.load(buffer(bytes));
 			const { handler, data } = presentation;
-			const original = data.slides[0];
+			const original = at(data.slides, 0);
 			if (entry === 'presentation') presentation.duplicateSlide(0);
 			else if (entry === 'automation') duplicateToolSlide({ pptxData: data }, { slideIndex: 0 });
 			else if (entry === 'sdk') data.slides.push(duplicateSlide(original, 2));
@@ -169,7 +170,7 @@ describe('duplicated slide package ownership', () => {
 					...(entry === 'editor-deep' ? cloneSlide(original) : original),
 					id: 'editor-copy',
 				});
-			const clone = data.slides[1];
+			const clone = at(data.slides, 1);
 			const saved = await handler.save(data.slides);
 			const zip = await JSZip.loadAsync(saved);
 			await assertResolvedReferences(zip, original.id);
@@ -191,14 +192,14 @@ describe('duplicated slide package ownership', () => {
 			expect(chart(clone).chartData!.chartPartPath).not.toBe(
 				chart(original).chartData!.chartPartPath,
 			);
-			chart(clone).chartData!.series[0].values[0] = 42;
+			at(chart(clone).chartData!.series, 0).values[0] = 42;
 			clone.notes = 'Clone notes';
 			clone.isDirty = true;
-			expect(chart(original).chartData!.series[0].values[0]).toBe(0);
+			expect(at(chart(original).chartData!.series, 0).values[0]).toBe(0);
 			const edited = await handler.save(data.slides);
 			const reloaded = await new PptxHandler().load(buffer(edited));
-			expect(chart(reloaded.slides[0]).chartData!.series[0].values).toEqual([0, 2, 3]);
-			expect(chart(reloaded.slides[1]).chartData!.series[0].values).toEqual([42, 2, 3]);
+			expect(at(chart(at(reloaded.slides, 0)).chartData!.series, 0).values).toEqual([0, 2, 3]);
+			expect(at(chart(at(reloaded.slides, 1)).chartData!.series, 0).values).toEqual([42, 2, 3]);
 			expect(reloaded.slides.map((slide) => slide.notes)).toEqual([
 				'Original notes',
 				'Clone notes',
@@ -215,11 +216,11 @@ describe('duplicated slide package ownership', () => {
 	it('copies workbook, colors and style dependencies with content types and unchanged bytes', async () => {
 		const handler = new PptxHandler();
 		const data = await handler.load(buffer(await sourceDeck(true)));
-		data.slides.push(duplicateSlide(data.slides[0], 2));
+		data.slides.push(duplicateSlide(at(data.slides, 0), 2));
 		const zip = await JSZip.loadAsync(await handler.save(data.slides));
-		const sourceChart = await relatedPart(zip, data.slides[0].id, 'chart');
-		const clonedChart = await relatedPart(zip, data.slides[1].id, 'chart');
-		await assertResolvedReferences(zip, data.slides[1].id);
+		const sourceChart = await relatedPart(zip, at(data.slides, 0).id, 'chart');
+		const clonedChart = await relatedPart(zip, at(data.slides, 1).id, 'chart');
+		await assertResolvedReferences(zip, at(data.slides, 1).id);
 		await assertResolvedReferences(zip, clonedChart);
 		expect(await zip.file(clonedChart)!.async('string')).toBe(
 			await zip.file(sourceChart)!.async('string'),
@@ -237,21 +238,21 @@ describe('duplicated slide package ownership', () => {
 	it('uses a saved clone as the source of a later copy, not its ancestor', async () => {
 		const handler = new PptxHandler();
 		const data = await handler.load(buffer(await sourceDeck()));
-		data.slides.push(duplicateSlide(data.slides[0], 2));
+		data.slides.push(duplicateSlide(at(data.slides, 0), 2));
 		await handler.save(data.slides);
-		chart(data.slides[1]).chartData!.series[0].values[0] = 12;
-		data.slides[1].isDirty = true;
+		at(chart(at(data.slides, 1)).chartData!.series, 0).values[0] = 12;
+		at(data.slides, 1).isDirty = true;
 		await handler.save(data.slides);
-		data.slides.push(duplicateSlide(data.slides[1], 3));
-		chart(data.slides[2]).chartData!.series[0].values[0] = 24;
-		data.slides[2].isDirty = true;
+		data.slides.push(duplicateSlide(at(data.slides, 1), 3));
+		at(chart(at(data.slides, 2)).chartData!.series, 0).values[0] = 24;
+		at(data.slides, 2).isDirty = true;
 		const bytes = await handler.save(data.slides);
 		const loaded = await new PptxHandler().load(buffer(bytes));
-		expect(loaded.slides.map((slide) => chart(slide).chartData!.series[0].values[0])).toEqual([
+		expect(loaded.slides.map((slide) => at(chart(slide).chartData!.series, 0).values[0])).toEqual([
 			0, 12, 24,
 		]);
 		const zip = await JSZip.loadAsync(bytes);
-		await assertResolvedReferences(zip, loaded.slides[2].id);
+		await assertResolvedReferences(zip, at(loaded.slides, 2).id);
 	});
 
 	it('preserves an untouched PowerPoint-authored chart byte for byte', async () => {
@@ -260,9 +261,9 @@ describe('duplicated slide package ownership', () => {
 		);
 		const handler = new PptxHandler();
 		const data = await handler.load(buffer(bytes));
-		data.slides.push(duplicateSlide(data.slides[0], data.slides.length + 1));
+		data.slides.push(duplicateSlide(at(data.slides, 0), data.slides.length + 1));
 		const zip = await JSZip.loadAsync(await handler.save(data.slides));
-		const sourcePart = await relatedPart(zip, data.slides[0].id, 'chart');
+		const sourcePart = await relatedPart(zip, at(data.slides, 0).id, 'chart');
 		const copiedPart = await relatedPart(zip, data.slides.at(-1)!.id, 'chart');
 		expect(await zip.file(copiedPart)!.async('uint8array')).toEqual(
 			await zip.file(sourcePart)!.async('uint8array'),
@@ -274,27 +275,27 @@ describe('duplicated slide package ownership', () => {
 	it('reserves copied media names before embedding new media in the same save', async () => {
 		const handler = new PptxHandler();
 		const data = await handler.load(buffer(await sourceDeck()));
-		data.slides.push(duplicateSlide(data.slides[0], 2));
+		data.slides.push(duplicateSlide(at(data.slides, 0), 2));
 		data.slides.push(new SlideBuilder(3).addImage('data:image/png;base64,AQID').build());
 		const zip = await JSZip.loadAsync(await handler.save(data.slides));
-		const sourceImage = await relatedPart(zip, data.slides[0].id, 'image');
-		const clonedImage = await relatedPart(zip, data.slides[1].id, 'image');
-		const newImage = await relatedPart(zip, data.slides[2].id, 'image');
+		const sourceImage = await relatedPart(zip, at(data.slides, 0).id, 'image');
+		const clonedImage = await relatedPart(zip, at(data.slides, 1).id, 'image');
+		const newImage = await relatedPart(zip, at(data.slides, 2).id, 'image');
 		expect(newImage).not.toBe(clonedImage);
 		expect(await zip.file(clonedImage)!.async('uint8array')).toEqual(
 			await zip.file(sourceImage)!.async('uint8array'),
 		);
 		expect(await zip.file(newImage)!.async('uint8array')).toEqual(new Uint8Array([1, 2, 3]));
-		await assertResolvedReferences(zip, data.slides[2].id);
+		await assertResolvedReferences(zip, at(data.slides, 2).id);
 	});
 
 	it('does not copy unrelated parts when a foreign blank slide has a colliding rId', async () => {
 		const handler = new PptxHandler();
 		const data = await handler.load(buffer(await sourceDeck()));
 		const blank = await PptxHandler.createBlank({ initialSlideCount: 1 });
-		const unrelated = blank.data.slides[0];
+		const unrelated = at(blank.data.slides, 0);
 		unrelated.id = 'unrelated-blank';
-		unrelated.rId = data.slides[0].rId;
+		unrelated.rId = at(data.slides, 0).rId;
 		data.slides.push(unrelated);
 		const zip = await JSZip.loadAsync(await handler.save(data.slides));
 		const relationships = parseRelationships(
@@ -319,15 +320,15 @@ describe('duplicated slide package ownership', () => {
 				.addChart('line', { categories: ['A'], series: [{ name: 'One', values: [1] }] })
 				.build(),
 		);
-		data.slides.push(duplicateSlide(data.slides[0], 2));
-		chart(data.slides[1]).chartData!.series[0].values[0] = 2;
+		data.slides.push(duplicateSlide(at(data.slides, 0), 2));
+		at(chart(at(data.slides, 1)).chartData!.series, 0).values[0] = 2;
 		const bytes = await handler.save(data.slides);
 		const loaded = await new PptxHandler().load(buffer(bytes));
-		expect(loaded.slides.map((slide) => chart(slide).chartData!.series[0].values[0])).toEqual([
+		expect(loaded.slides.map((slide) => at(chart(slide).chartData!.series, 0).values[0])).toEqual([
 			1, 2,
 		]);
-		expect(chart(loaded.slides[0]).chartData!.chartPartPath).not.toBe(
-			chart(loaded.slides[1]).chartData!.chartPartPath,
+		expect(chart(at(loaded.slides, 0)).chartData!.chartPartPath).not.toBe(
+			chart(at(loaded.slides, 1)).chartData!.chartPartPath,
 		);
 	});
 });

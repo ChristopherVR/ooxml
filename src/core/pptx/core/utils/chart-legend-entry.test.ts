@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { XmlObject } from '../types';
 import { applyChartLegendToXml, parseChartLegendEntries } from './chart-legend-serializer';
+import { at, xmlFixture } from '../../test-support/access';
 
 const localName = (key: string) => key.replace(/^.*:/u, '');
 const parseColor = (node: XmlObject | undefined) => {
@@ -72,7 +73,7 @@ describe('chart legend entries', () => {
 	});
 
 	it('edits an entry while preserving its extension list', () => {
-		const root: XmlObject = {
+		const root = xmlFixture({
 			'c:plotArea': {},
 			'c:legend': {
 				'c:legendEntry': {
@@ -81,14 +82,14 @@ describe('chart legend entries', () => {
 					'c:extLst': { marker: true },
 				},
 			},
-		};
+		});
 		applyChartLegendToXml(
 			root,
 			{ legendEntries: [{ index: 3, textStyle: { fontSize: 10, bold: false } }] },
 			localName,
 		);
 		const legend = root['c:legend'] as XmlObject;
-		const entry = (legend['c:legendEntry'] as XmlObject[])[0];
+		const entry = at(legend['c:legendEntry'] as XmlObject[], 0);
 		expect(Object.keys(entry)).toStrictEqual(['c:idx', 'c:txPr', 'c:extLst']);
 		expect(entry['c:extLst']).toStrictEqual({ marker: true });
 		expect(parseChartLegendEntries(legend, localName, parseColor)).toStrictEqual([

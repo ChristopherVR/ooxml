@@ -23,6 +23,7 @@ import JSZip from 'jszip';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { PptxHandler } from '../../PptxHandler';
+import { at } from '../../../test-support/access';
 
 /** Same deck as `issue-132-hr-deck.pptx`, slimmed of its media payloads. */
 const FIXTURE = 'issue-132-gradient-fill.pptx';
@@ -50,10 +51,10 @@ async function saveFixture(): Promise<JSZip> {
 async function slideParts(zip: JSZip): Promise<Map<string, string>> {
 	const parts = new Map<string, string>();
 	for (const name of Object.keys(zip.files)) {
-		if (zip.files[name].dir || !/^ppt\/slides\/slide\d+\.xml$/u.test(name)) {
+		if (at(zip.files, name).dir || !/^ppt\/slides\/slide\d+\.xml$/u.test(name)) {
 			continue;
 		}
-		parts.set(name, await zip.files[name].async('string'));
+		parts.set(name, await at(zip.files, name).async('string'));
 	}
 	return parts;
 }

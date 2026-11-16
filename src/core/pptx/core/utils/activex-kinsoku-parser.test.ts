@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import type { XmlObject } from '../types';
 import { parseActiveXControlsFromSlide } from './activex-parser';
 import { parseKinsoku, applyKinsokuToXml } from './kinsoku-parser';
+import { at } from '../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // GAP-9: ActiveX Controls
@@ -67,10 +68,10 @@ describe('parseActiveXControlsFromSlide', () => {
 		};
 		const result = parseActiveXControlsFromSlide(xml);
 		expect(result).toHaveLength(2);
-		expect(result[0].relId).toBe('rId1');
-		expect(result[0].name).toBe('Button1');
-		expect(result[1].relId).toBe('rId2');
-		expect(result[1].name).toBe('CheckBox1');
+		expect(at(result, 0).relId).toBe('rId1');
+		expect(at(result, 0).name).toBe('Button1');
+		expect(at(result, 1).relId).toBe('rId2');
+		expect(at(result, 1).name).toBe('CheckBox1');
 	});
 
 	it('skips controls without r:id', () => {
@@ -85,7 +86,7 @@ describe('parseActiveXControlsFromSlide', () => {
 		};
 		const result = parseActiveXControlsFromSlide(xml);
 		expect(result).toHaveLength(1);
-		expect(result[0].relId).toBe('rId5');
+		expect(at(result, 0).relId).toBe('rId5');
 	});
 
 	it('handles controls where name/spid are optional (undefined)', () => {
@@ -99,8 +100,8 @@ describe('parseActiveXControlsFromSlide', () => {
 		};
 		const result = parseActiveXControlsFromSlide(xml);
 		expect(result).toHaveLength(1);
-		expect(result[0].name).toBeUndefined();
-		expect(result[0].shapeId).toBeUndefined();
+		expect(at(result, 0).name).toBeUndefined();
+		expect(at(result, 0).shapeId).toBeUndefined();
 	});
 
 	it('preserves rawXml reference', () => {
@@ -117,7 +118,7 @@ describe('parseActiveXControlsFromSlide', () => {
 			},
 		};
 		const result = parseActiveXControlsFromSlide(xml);
-		expect(result[0].rawXml).toBe(control);
+		expect(at(result, 0).rawXml).toBe(control);
 	});
 });
 

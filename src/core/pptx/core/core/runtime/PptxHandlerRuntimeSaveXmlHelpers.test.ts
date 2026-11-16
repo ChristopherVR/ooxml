@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { XmlObject } from '../../types';
 import { stripParentDirSegments } from '../../utils/strip-parent-dir-segments';
+import { xmlFixture } from '../../../test-support/access';
 
 /**
  * The `PptxHandlerRuntimeSaveXmlHelpers` module has protected methods on a
@@ -222,26 +223,26 @@ describe('deduplicateExtLst', () => {
 	});
 
 	it('should handle three duplicates of same URI', () => {
-		const extLst: XmlObject = {
+		const extLst = xmlFixture({
 			'p:ext': [
 				{ '@_uri': 'urn:a', v: 1 },
 				{ '@_uri': 'urn:a', v: 2 },
 				{ '@_uri': 'urn:a', v: 3 },
 			],
-		};
+		});
 		deduplicateExtLst(extLst, 'p:ext');
 		expect(extLst['p:ext']).toStrictEqual({ '@_uri': 'urn:a', v: 3 });
 	});
 
 	it('should handle mixed duplicate and unique URIs', () => {
-		const extLst: XmlObject = {
+		const extLst = xmlFixture({
 			'a:ext': [
 				{ '@_uri': 'urn:a', v: 1 },
 				{ '@_uri': 'urn:b', v: 2 },
 				{ '@_uri': 'urn:a', v: 3 },
 				{ '@_uri': 'urn:c', v: 4 },
 			],
-		};
+		});
 		deduplicateExtLst(extLst, 'a:ext');
 		const result = extLst['a:ext'] as XmlObject[];
 		expect(result).toHaveLength(3);
