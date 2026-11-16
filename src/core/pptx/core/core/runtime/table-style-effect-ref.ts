@@ -7,7 +7,8 @@
  *
  * @module table-style-effect-ref
  */
-import { applyDrawingColorTransforms } from '../../color';
+import { applyColorTransformListTo } from '../../color/color-transforms';
+import { OBJECT_DRAWING_VIEW } from '../../color/object-drawing-view';
 import type {
 	ParsedTableBackgroundShadow,
 	ParsedTableFillRef,
@@ -40,13 +41,20 @@ export function resolveTableBackgroundEffectRef(
 	if (!color) {
 		const overrideKey = effectRef.color?.schemeColor;
 		const base = overrideKey && colorMap ? colorMap[overrideKey] : effectRef.color?.color;
-		const lst = (effect.rawNode as XmlObject | undefined)?.['a:effectLst'] as XmlObject | undefined;
-		const shadow = lst?.['a:outerShdw'] as XmlObject | undefined;
-		const colorNode = shadow?.['a:schemeClr'] as XmlObject | undefined;
+		// The shared node view over the entry's object tree.
+		const node = effect.rawNode as XmlObject | undefined;
+		const lst = node && OBJECT_DRAWING_VIEW.child(node, 'effectLst');
+		const shadow = lst && OBJECT_DRAWING_VIEW.child(lst, 'outerShdw');
+		const shadowColor = shadow && OBJECT_DRAWING_VIEW.color(shadow);
 		if (!shadow || !base) {
 			return undefined;
 		}
-		color = hexOf(colorNode ? applyDrawingColorTransforms(base, colorNode) : base) ?? hexOf(base);
+		color =
+			hexOf(
+				shadowColor?.kind === 'scheme'
+					? applyColorTransformListTo(base, shadowColor.transforms)
+					: base,
+			) ?? hexOf(base);
 	}
 	if (!color) {
 		return undefined;

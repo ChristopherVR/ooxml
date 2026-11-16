@@ -12,7 +12,12 @@
  *
  * @module table-style-line-ref
  */
-import { applyDrawingColorTransforms } from '../../color';
+import type { DrawingColor } from '../../../../drawingml/types';
+import {
+	applyColorTransformListTo,
+	applyDrawingColorTransforms,
+} from '../../color/color-transforms';
+import { OBJECT_DRAWING_VIEW } from '../../color/object-drawing-view';
 import { parseSolidFillStyle } from './table-style-border-parse';
 import type {
 	ParsedTableFillRef,
@@ -22,24 +27,26 @@ import type {
 	XmlObject,
 } from '../../types';
 
-/** Whether a raw XML node has the child `key` at all (`<a:noFill/>` parses as ''). */
-function hasChild(rawNode: unknown, key: string): boolean {
-	return (
-		!!rawNode &&
-		typeof rawNode === 'object' &&
-		Object.prototype.hasOwnProperty.call(rawNode, key) &&
-		(rawNode as XmlObject)[key] !== undefined
-	);
+const asNode = (rawNode: unknown): XmlObject | undefined =>
+	rawNode && typeof rawNode === 'object' ? (rawNode as XmlObject) : undefined;
+
+/** Whether a theme line says "no line" (`<a:noFill/>`, read by the shared node view). */
+function isNoLine(rawNode: unknown): boolean {
+	const node = asNode(rawNode);
+	return !!node && OBJECT_DRAWING_VIEW.elements(node).some((child) => child.name === 'noFill');
 }
 
-/** The `a:schemeClr val="phClr"` (with its transforms) of a format-scheme line's solid fill. */
-function linePlaceholderColor(rawNode: unknown): XmlObject | undefined {
-	if (!rawNode || typeof rawNode !== 'object') {
-		return undefined;
-	}
-	const solidFill = (rawNode as XmlObject)['a:solidFill'] as XmlObject | undefined;
-	const schemeClr = solidFill?.['a:schemeClr'] as XmlObject | undefined;
-	return schemeClr?.['@_val'] === 'phClr' ? schemeClr : undefined;
+/** The colour of a format-scheme line's solid fill, read by the shared node view. */
+function lineSolidColor(rawNode: unknown): DrawingColor | undefined {
+	const node = asNode(rawNode);
+	const solidFill = node && OBJECT_DRAWING_VIEW.child(node, 'solidFill');
+	return solidFill ? OBJECT_DRAWING_VIEW.color(solidFill) : undefined;
+}
+
+/** The `phClr` colour (with its transforms) of a format-scheme line's solid fill. */
+function linePlaceholderColor(rawNode: unknown): DrawingColor | undefined {
+	const color = lineSolidColor(rawNode);
+	return color?.kind === 'scheme' && color.value === 'phClr' ? color : undefined;
 }
 
 /**
@@ -63,7 +70,7 @@ export function resolveTableStyleLineRef(
 	// came back with only a width, and the border renderer defaults a colourless
 	// border to black. Key presence, not truthiness: the parser reads
 	// `<a:noFill/>` as ''.
-	if (hasChild(line.rawNode, 'a:noFill')) {
+	if (isNoLine(line.rawNode)) {
 		return { noFill: true };
 	}
 	const border: ParsedTableStyleBorder = {};
@@ -78,7 +85,7 @@ export function resolveTableStyleLineRef(
 	const placeholder = linePlaceholderColor(line.rawNode);
 	const base = placeholder ? refColor(lnRef, colorMap) : undefined;
 	if (base && placeholder) {
-		border.color = applyDrawingColorTransforms(base, placeholder);
+		border.color = applyColorTransformListTo(base, placeholder.transforms);
 	} else if (line.color) {
 		border.color = line.color;
 	}
@@ -121,12 +128,12 @@ export function resolveTableStyleLineRefColor(
 ): Pick<ParsedTableStyleBorder, 'fill' | 'color'> | undefined {
 	const ref = lnRef.color;
 	const line = lnRef.idx > 0 ? formatScheme?.lineStyles[lnRef.idx - 1] : undefined;
-	const solidFill = (line?.rawNode as XmlObject | undefined)?.['a:solidFill'] as
-		| XmlObject
-		| undefined;
+	const node = asNode(line?.rawNode);
+	const solidFill = node && OBJECT_DRAWING_VIEW.child(node, 'solidFill');
 	const own = parseSolidFillStyle(solidFill);
 	if (!own) {
-		const hex = String((solidFill?.['a:srgbClr'] as XmlObject | undefined)?.['@_val'] ?? '');
+		const color = solidFill ? OBJECT_DRAWING_VIEW.color(solidFill) : undefined;
+		const hex = color?.kind === 'srgb' ? color.value : '';
 		return hex ? { color: hex.startsWith('#') ? hex : `#${hex}` } : refBorderColor(ref);
 	}
 	if (own.schemeColor !== 'phClr') {

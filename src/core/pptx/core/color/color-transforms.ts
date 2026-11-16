@@ -141,8 +141,19 @@ export function resolveObjectColorOpacity(
  * shade and tint in linear light, one HSL round trip, then the RGB channel transforms.
  */
 export function applyDrawingColorTransforms(baseColor: string, colorNode: XmlObject): string {
+	return applyColorTransformListTo(baseColor, objectColorTransforms(colorNode));
+}
+
+/**
+ * Apply a neutral colour's transform list to {@link baseColor} (`#RRGGBB`): how a `phClr`
+ * colour takes the colour that stands in for it. A base that is not `#RRGGBB` comes back unchanged.
+ */
+export function applyColorTransformListTo(
+	baseColor: string,
+	transforms: DrawingColor['transforms'],
+): string {
 	const rgb = hexToRgbChannels(baseColor);
 	if (!rgb) return baseColor;
-	const { r, g, b } = applyDrawingColorTransformList(rgb, objectColorTransforms(colorNode));
+	const { r, g, b } = applyDrawingColorTransformList(rgb, transforms);
 	return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }

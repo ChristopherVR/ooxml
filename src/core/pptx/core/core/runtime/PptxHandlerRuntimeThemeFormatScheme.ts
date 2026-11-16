@@ -41,8 +41,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const withPlaceholder = <T>(read: () => T): T =>
 			placeholder ? withThemePlaceholderColor(this.themeColorMap, placeholder, read) : read();
 		return {
-			color: (color) => this.resolveThemeDrawingColor(color),
-			opacity: (holder) => this.extractColorOpacity(holder),
+			color: (color) => this.resolveThemeDrawingColor(color, placeholder),
 			gradient: (node) =>
 				withPlaceholder(() => ({
 					color: this.extractGradientFillColor(node),
@@ -53,7 +52,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					gradientCss: this.extractGradientFillCss(node),
 				})),
 			gradientColor: (node) => withPlaceholder(() => this.extractGradientFillColor(node)),
-			objectColor: (holder) => this.parseColor(holder, placeholder),
 			normalizeDash: (value) => this.normalizeStrokeDashType(value),
 			emuPerPx: PptxHandlerRuntime.EMU_PER_PX,
 		};
@@ -63,13 +61,17 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 * `#RRGGBB` of a neutral colour through the active theme: a scheme name resolves through the
 	 * runtime (colour map and overrides), as the object-tree codec resolves it.
 	 */
-	protected resolveThemeDrawingColor(color: DrawingColor | undefined): string | undefined {
+	protected resolveThemeDrawingColor(
+		color: DrawingColor | undefined,
+		placeholder?: string,
+	): string | undefined {
 		if (!color) {
 			return undefined;
 		}
 		return resolveDrawingColor(color, {
 			scheme: (name) => {
 				const key = name.toLowerCase();
+				if (key === 'phclr' && placeholder) return placeholder;
 				return key ? this.resolveThemeColor(key) : undefined;
 			},
 		})?.hex;

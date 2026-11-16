@@ -19,7 +19,14 @@ import type {
 	ThemeFillStyle,
 	ThemeFormatScheme,
 } from '../../../../drawingml/format-scheme';
+import { declaredDrawingColorAlpha } from '../../../../drawingml/color-transforms';
+import {
+	readScene3DValues,
+	readText3DValues,
+	type ThreeDReader,
+} from '../../../../drawingml/read-3d-values';
 import type { DrawingColor, DrawingFill, DrawingLine } from '../../../../drawingml/types';
+import { OBJECT_DRAWING_VIEW } from '../../color/object-drawing-view';
 import { NS, elements, parseXml, type XmlElement } from '../../../../xml/index';
 import type {
 	PptxThemeEffectStyle,
@@ -31,10 +38,11 @@ import type {
 
 /** What the projection needs of the runtime. */
 export interface ThemeStyleViewContext {
-	/** `#RRGGBB` of a neutral colour through the active theme (`phClr` already substituted). */
+	/**
+	 * `#RRGGBB` of a neutral colour through the active theme; `phClr` stands for the reference
+	 * colour the context was made for (fills, lines and effects arrive already substituted).
+	 */
 	color(color: DrawingColor | undefined): string | undefined;
-	/** The opacity the object-tree colour holder declares (`a:alpha`...), if any. */
-	opacity(holder: XmlObject | undefined): number | undefined;
 	/** The gradient view of an object-tree `a:gradFill`. */
 	gradient(
 		node: XmlObject,
@@ -44,11 +52,19 @@ export interface ThemeStyleViewContext {
 	>;
 	/** The representative colour of an object-tree `a:gradFill`. */
 	gradientColor(node: XmlObject): string | undefined;
-	/** `#RRGGBB` of an object-tree colour holder (the 3D colours). */
-	objectColor(holder: XmlObject | undefined): string | undefined;
 	normalizeDash(value: string | undefined): string | undefined;
 	emuPerPx: number;
 }
+
+/** The opacity a neutral colour declares (`a:alpha`, `a:alphaMod`, `a:alphaOff`), if any. */
+const opacityOf = (color: DrawingColor | undefined): number | undefined =>
+	color ? declaredDrawingColorAlpha(color.transforms) : undefined;
+
+/** The shared 3D readers over the object tree (`a:scene3d`, `a:sp3d`). */
+const OBJECT_3D_READER: ThreeDReader<XmlObject> = {
+	attribute: (node, name) => (node ? OBJECT_DRAWING_VIEW.attribute(node, name) : undefined),
+	child: (node, name) => (node ? OBJECT_DRAWING_VIEW.child(node, name) : undefined),
+};
 
 const asObject = (value: unknown): XmlObject | undefined =>
 	value && typeof value === 'object' ? (value as XmlObject) : undefined;
@@ -108,7 +124,7 @@ function fillView(
 			return {
 				kind: 'solid',
 				color: context.color(fill.color),
-				opacity: context.opacity(node),
+				opacity: opacityOf(fill.color),
 				fill,
 				rawNode,
 			};
@@ -134,7 +150,7 @@ function fillView(
 				: {
 						kind: 'solid',
 						color: undefined,
-						opacity: context.opacity(node),
+						opacity: undefined,
 						fill,
 						rawNode,
 					};
@@ -173,11 +189,11 @@ export function themeLineStyleView(
 ): PptxThemeLineStyle {
 	const ln = node ?? {};
 	const style: PptxThemeLineStyle = { line, rawNode: ln };
-	if (line.widthEmu !== undefined && ln['@_w']) style.width = line.widthEmu / context.emuPerPx;
+	if (line.widthEmu !== undefined) style.width = line.widthEmu / context.emuPerPx;
 	const fill = line.fill;
 	if (fill?.kind === 'solid') {
 		style.color = context.color(fill.color);
-		style.opacity = context.opacity(asObject(ln['a:solidFill']));
+		style.opacity = opacityOf(fill.color);
 	} else if (fill?.kind === 'gradient') {
 		style.color = context.gradientColor(toNode(ln['a:gradFill']));
 	} else if (fill?.kind === 'pattern') {
@@ -224,45 +240,43 @@ const positive = (value: number | undefined): number | undefined => {
 const integer = (value: number | undefined): number | undefined =>
 	value === undefined ? undefined : Math.trunc(value);
 
-function attributeInteger(node: XmlObject | undefined, name: string): number | undefined {
-	const value = node?.[`@_${name}`];
-	return value !== undefined ? parseInt(String(value), 10) : undefined;
-}
-
-/** The 3D settings an `a:effectStyle` carries next to its effect list (object tree). */
+/**
+ * The 3D settings an `a:effectStyle` carries next to its effect list, read by the shared 3D
+ * readers (`readScene3DValues`, `readText3DValues`) over the entry's object node.
+ */
 function effectStyle3d(
 	node: XmlObject | undefined,
 	context: ThemeStyleViewContext,
 ): Pick<PptxThemeEffectStyle, 'scene3d' | 'shape3d'> {
 	const result: Pick<PptxThemeEffectStyle, 'scene3d' | 'shape3d'> = {};
-	const scene3d = asObject(node?.['a:scene3d']);
+	const scene3d = OBJECT_3D_READER.child(node, 'scene3d');
 	if (scene3d) {
-		const camera = asObject(scene3d['a:camera']);
-		const lightRig = asObject(scene3d['a:lightRig']);
+		const scene = readScene3DValues(scene3d, OBJECT_3D_READER);
 		result.scene3d = {
-			cameraPreset: String(camera?.['@_prst'] || '').trim() || undefined,
-			lightRigType: String(lightRig?.['@_rig'] || '').trim() || undefined,
-			lightRigDirection: String(lightRig?.['@_dir'] || '').trim() || undefined,
+			cameraPreset: scene.cameraPreset,
+			lightRigType: scene.lightRigType,
+			lightRigDirection: scene.lightRigDirection,
 		};
 	}
-	const sp3d = asObject(node?.['a:sp3d']);
+	const sp3d = OBJECT_3D_READER.child(node, 'sp3d');
 	if (sp3d) {
-		const bevelTop = sp3d['a:bevelT'] as XmlObject | undefined;
-		const bevelBottom = sp3d['a:bevelB'] as XmlObject | undefined;
-		const bevelType = (bevel: XmlObject | undefined) =>
-			bevel !== undefined ? String(asObject(bevel)?.['@_prst'] || 'circle').trim() : undefined;
+		const values = readText3DValues(sp3d, OBJECT_3D_READER);
+		const color = (name: string) => {
+			const holder = OBJECT_3D_READER.child(sp3d, name);
+			return holder ? context.color(OBJECT_DRAWING_VIEW.color(holder)) : undefined;
+		};
 		result.shape3d = {
-			extrusionHeight: attributeInteger(sp3d, 'extrusionH'),
-			extrusionColor: context.objectColor(asObject(sp3d['a:extrusionClr'])),
-			contourWidth: attributeInteger(sp3d, 'contourW'),
-			contourColor: context.objectColor(asObject(sp3d['a:contourClr'])),
-			presetMaterial: String(sp3d['@_prstMaterial'] || '').trim() || undefined,
-			bevelTopType: bevelTop ? bevelType(bevelTop) : undefined,
-			bevelTopWidth: attributeInteger(asObject(bevelTop), 'w'),
-			bevelTopHeight: attributeInteger(asObject(bevelTop), 'h'),
-			bevelBottomType: bevelBottom ? bevelType(bevelBottom) : undefined,
-			bevelBottomWidth: attributeInteger(asObject(bevelBottom), 'w'),
-			bevelBottomHeight: attributeInteger(asObject(bevelBottom), 'h'),
+			extrusionHeight: values.extrusionHeight,
+			extrusionColor: color('extrusionClr'),
+			contourWidth: values.contourWidth,
+			contourColor: color('contourClr'),
+			presetMaterial: values.presetMaterial,
+			bevelTopType: values.bevelTopType,
+			bevelTopWidth: values.bevelTopWidth,
+			bevelTopHeight: values.bevelTopHeight,
+			bevelBottomType: values.bevelBottomType,
+			bevelBottomWidth: values.bevelBottomWidth,
+			bevelBottomHeight: values.bevelBottomHeight,
 		};
 	}
 	return result;
@@ -280,14 +294,13 @@ export function themeEffectStyleView(
 		rawNode: es,
 	};
 	const list = style.effects;
-	const lst = asObject(es['a:effectLst']);
 	if (!list) return { ...result, ...effectStyle3d(es, context) };
 	const emuPerPx = context.emuPerPx;
 
 	const outer = firstEffect(list, 'outerShadow');
-	if (outer && lst?.['a:outerShdw']) {
+	if (outer) {
 		result.shadowColor = context.color(outer.color);
-		result.shadowOpacity = context.opacity(asObject(lst['a:outerShdw']));
+		result.shadowOpacity = opacityOf(outer.color);
 		const blur = positive(outer.blurRadiusEmu);
 		if (blur) result.shadowBlur = blur / emuPerPx;
 		const offset = shadowOffset(outer.distanceEmu, outer.directionAngle, emuPerPx);
@@ -297,9 +310,9 @@ export function themeEffectStyleView(
 		}
 	}
 	const inner = firstEffect(list, 'innerShadow');
-	if (inner && lst?.['a:innerShdw']) {
+	if (inner) {
 		result.innerShadowColor = context.color(inner.color);
-		result.innerShadowOpacity = context.opacity(asObject(lst['a:innerShdw']));
+		result.innerShadowOpacity = opacityOf(inner.color);
 		const blur = positive(inner.blurRadiusEmu);
 		if (blur) result.innerShadowBlur = blur / emuPerPx;
 		const offset = shadowOffset(inner.distanceEmu, inner.directionAngle, emuPerPx);
@@ -309,19 +322,19 @@ export function themeEffectStyleView(
 		}
 	}
 	const glow = firstEffect(list, 'glow');
-	if (glow && lst?.['a:glow']) {
+	if (glow) {
 		result.glowColor = context.color(glow.color);
-		result.glowOpacity = context.opacity(asObject(lst['a:glow']));
+		result.glowOpacity = opacityOf(glow.color);
 		const radius = positive(glow.radiusEmu);
 		if (radius) result.glowRadius = radius / emuPerPx;
 	}
 	const softEdge = firstEffect(list, 'softEdge');
-	if (softEdge && lst?.['a:softEdge']) {
+	if (softEdge) {
 		const radius = positive(softEdge.radiusEmu);
 		if (radius) result.softEdgeRadius = radius / emuPerPx;
 	}
 	const reflection = firstEffect(list, 'reflection');
-	if (reflection && lst?.['a:reflection']) {
+	if (reflection) {
 		// An absent radius or distance is zero; a negative one is not read.
 		const blur = integer(reflection.blurRadiusEmu) ?? 0;
 		if (blur >= 0) result.reflectionBlurRadius = blur / emuPerPx;

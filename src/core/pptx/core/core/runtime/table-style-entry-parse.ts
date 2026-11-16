@@ -17,7 +17,9 @@
  *
  * @module table-style-entry-parse
  */
-import { applyDrawingColorTransforms } from '../../color';
+import { applyColorTransformListTo } from '../../color/color-transforms';
+import { OBJECT_DRAWING_VIEW } from '../../color/object-drawing-view';
+import { readObjectGradient } from '../builders/PptxGradientStyleCodec';
 import type {
 	ParsedTableBackground,
 	ParsedTableStyleBorders,
@@ -176,10 +178,11 @@ export function resolveTableBackgroundFillRef(
 	}
 
 	if (overrideBase && fillDef.rawNode) {
-		const schemeClr = (fillDef.rawNode as XmlObject)['a:schemeClr'] as XmlObject | undefined;
-		const resolved = schemeClr
-			? applyDrawingColorTransforms(overrideBase, schemeClr)
-			: overrideBase;
+		const color = OBJECT_DRAWING_VIEW.color(fillDef.rawNode as XmlObject);
+		const resolved =
+			color?.kind === 'scheme'
+				? applyColorTransformListTo(overrideBase, color.transforms)
+				: overrideBase;
 		return { schemeColor: '', color: resolved };
 	}
 
@@ -202,29 +205,25 @@ function resolveFormatSchemeGradient(
 	if (!overrideBase) {
 		return undefined;
 	}
-	const gsLst = gradNode['a:gsLst'] as XmlObject | undefined;
-	const rawStops = gsLst?.['a:gs'];
-	const gsNodes = (Array.isArray(rawStops) ? rawStops : rawStops ? [rawStops] : []) as XmlObject[];
+	// The shared gradient reader over the object tree; only scheme-coloured (`phClr`) stops take
+	// the reference colour.
+	const read = readObjectGradient(gradNode);
 	const stops: ParsedTableStyleGradientStop[] = [];
-	for (const gs of gsNodes) {
-		const schemeClr = gs['a:schemeClr'] as XmlObject | undefined;
-		const color = schemeClr ? applyDrawingColorTransforms(overrideBase, schemeClr) : undefined;
-		if (!color) {
+	for (const stop of read.stops) {
+		if (stop.color?.kind !== 'scheme') {
 			continue;
 		}
-		const position = (parseInt(String(gs['@_pos'] || '0'), 10) || 0) / 1000;
-		stops.push({ position, fill: { schemeColor: '', color } });
+		const color = applyColorTransformListTo(overrideBase, stop.color.transforms);
+		stops.push({ position: (stop.position ?? 0) / 1000, fill: { schemeColor: '', color } });
 	}
 	if (stops.length === 0) {
 		return undefined;
 	}
-	const lin = gradNode['a:lin'] as XmlObject | undefined;
-	if (lin) {
-		const angRaw = parseInt(String(lin['@_ang'] || '0'), 10) || 0;
-		const angle = (((angRaw / 60000) % 360) + 360) % 360;
+	if (OBJECT_DRAWING_VIEW.child(gradNode, 'lin')) {
+		const angle = (((read.fill.angle ?? 0) % 360) + 360) % 360;
 		return { stops, angle, type: 'linear' };
 	}
-	if (gradNode['a:path'] !== undefined) {
+	if (read.hasPath) {
 		return { stops, type: 'radial' };
 	}
 	return { stops, type: 'linear' };
