@@ -75,7 +75,11 @@ export interface SeriesContext<S extends ChartSummarySeries> {
 	seriesColor: ChartViewOptions<S>['seriesColor'];
 	drawingColor: (color: ChartSummarySeries['drawingColor']) => string | undefined;
 	gradient: (fill: ChartSummarySeries['fill']) => ChartGradientFill | undefined;
-	picture: (fill: ChartSummarySeries['fill'], stack?: boolean) => ChartPicturePaint | undefined;
+	picture: (
+		fill: ChartSummarySeries['fill'],
+		stack?: boolean,
+		stackUnit?: number,
+	) => ChartPicturePaint | undefined;
 }
 
 export function seriesContext<S extends ChartSummarySeries>(
@@ -101,7 +105,7 @@ export function seriesContext<S extends ChartSummarySeries>(
 						resolveDrawingColor(color, resolver, { transformOrder: 'document' }),
 					)
 				: undefined,
-		picture: (fill, stack) => chartPicturePaint(fill, options.pictureSource, stack),
+		picture: (fill, stack, unit) => chartPicturePaint(fill, options.pictureSource, stack, unit),
 	};
 }
 
@@ -159,11 +163,11 @@ export function seriesView<S extends ChartSummarySeries>(
 		}),
 	);
 	if (Object.keys(points).length) view.pointGradients = points;
-	const picture = ctx.picture(s.fill, s.pictureStack);
+	const picture = ctx.picture(s.fill, s.pictureStack, s.pictureStackUnit);
 	if (picture) view.picture = picture;
 	const pictures = Object.fromEntries(
 		Object.entries(s.pointFills ?? {}).flatMap(([key, fill]) => {
-			const value = ctx.picture(fill, s.pictureStack);
+			const value = ctx.picture(fill, s.pictureStack, s.pictureStackUnit);
 			return value ? [[key, value]] : [];
 		}),
 	);

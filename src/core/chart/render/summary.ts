@@ -93,6 +93,8 @@ export interface ChartSummarySeries extends ChartMarkerSummary {
 	pointFills?: Record<number, DrawingFill>;
 	/** A bar or column picture fill stacks along the bar (`c:pictureOptions/c:pictureFormat`). */
 	pictureStack?: boolean;
+	/** `stackScale`: the value-axis units one stacked picture stands for (`c:pictureStackUnit`). */
+	pictureStackUnit?: number;
 	/** Opaque imported DrawingML effect list, retained during chart regeneration. */
 	effectsXml?: string;
 	/** Data labels the painter draws at each point (`c:dLbls`). */

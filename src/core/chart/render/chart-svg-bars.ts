@@ -78,7 +78,13 @@ export function bars(
 				const id = `${baseId}-mark${i}`;
 				// `a` is the bar's base on the value axis, `b` its end.
 				const from = model.horizontal ? (b < a ? 'right' : 'left') : b > a ? 'top' : 'bottom';
-				out.push(`<defs>${chartPicturePattern(id, picture, { ...box, from })}</defs>`);
+				// `stackScale`: one picture per `stackUnit` value-axis units.
+				const unitLength = picture.stackUnit
+					? Math.abs(frame.value(picture.stackUnit) - frame.value(0))
+					: undefined;
+				out.push(
+					`<defs>${chartPicturePattern(id, picture, { ...box, from, ...(unitLength ? { unitLength } : {}) })}</defs>`,
+				);
 				color = `url(#${id})`;
 			}
 			out.push(rect(box.x, box.y, box.w, box.h, color, s.shadowFilter));
