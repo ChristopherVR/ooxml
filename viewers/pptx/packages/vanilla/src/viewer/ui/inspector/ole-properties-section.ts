@@ -1,8 +1,9 @@
-import type { OlePptxElement } from 'pptx-viewer-core';
-import { getOleObjectTypeLabel } from 'pptx-viewer-core';
+import { OLE_OBJECT_NAME_SECTIONS, resolveOleSummaryRows } from 'ooxml-ui/pptx';
+import type { OlePptxElement, PptxElement } from 'pptx-viewer-core';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';
+import { createInspectorFields } from './inspector-fields';
 import { openOleEditorDialog } from './ole-editor-dialog';
 import type { InspectorHandlers, InspectorState } from './types';
 
@@ -49,32 +50,15 @@ export function createOlePropertiesSection(
 	});
 	el.appendChild(editButton);
 
-	const nameLabel = createEl(doc, 'label', 'pptxv-field pptxv-ole-name');
-	const nameCaption = createEl(doc, 'span', 'pptxv-field-label');
-	nameCaption.textContent = t('pptx.ole.objectName');
-	const nameInput = doc.createElement('input');
-	nameInput.type = 'text';
-	nameInput.placeholder = t('pptx.ole.objectNamePlaceholder');
-	nameInput.setAttribute('aria-label', t('pptx.ole.objectName'));
-	nameInput.addEventListener('keydown', (event) => event.stopPropagation());
-	nameInput.addEventListener('change', () => handlers.setOleName(nameInput.value));
-	nameLabel.append(nameCaption, nameInput);
-	el.appendChild(nameLabel);
-
-	const buildRow = (label: string): { row: HTMLElement; value: HTMLElement } => {
-		const row = createEl(doc, 'div', 'pptxv-ole-row');
-		const labelEl = createEl(doc, 'span');
-		labelEl.textContent = label;
-		const value = createEl(doc, 'span', 'pptxv-ole-value');
-		row.append(labelEl, value);
-		el.appendChild(row);
-		return { row, value };
-	};
-
-	const typeRow = buildRow(t('pptx.ole.type'));
-	const fileRow = buildRow(t('pptx.ole.fileName'));
-	const linkRow = buildRow(t('pptx.ole.linkStatus'));
-	linkRow.value.classList.add('pptxv-ole-badge');
+	// The Object Name: the shared descriptor, drawn by the generic renderer.
+	const name = createInspectorFields(doc, t, {
+		sections: OLE_OBJECT_NAME_SECTIONS,
+		onPatch: (patch) => handlers.patchSelectedElement(patch),
+	});
+	el.appendChild(name.el);
+	// The read-only rows (type, file name, linked or embedded): `resolveOleSummaryRows`.
+	const rows = createEl(doc, 'div', 'pptxv-ole-rows');
+	el.appendChild(rows);
 
 	return {
 		el,
@@ -85,15 +69,27 @@ export function createOlePropertiesSection(
 			}
 			currentOle = state.oleElement;
 			editButton.hidden = state.isLocked || state.oleIsLinked;
-			if (doc.activeElement !== nameInput) {
-				nameInput.value = state.oleName ?? '';
+			if (state.oleElement) {
+				name.update(state.oleElement, false, state.oleElement.id);
 			}
-			typeRow.value.textContent = getOleObjectTypeLabel(state.oleObjectType);
-			fileRow.row.hidden = !state.oleFileName;
-			fileRow.value.textContent = state.oleFileName ?? '';
-			fileRow.value.title = state.oleFileName ?? '';
-			linkRow.value.textContent = t(state.oleIsLinked ? 'pptx.ole.linked' : 'pptx.ole.embedded');
-			linkRow.value.classList.toggle('is-linked', state.oleIsLinked);
+			rows.replaceChildren(
+				...resolveOleSummaryRows(state.oleElement ?? ({ type: 'shape' } as PptxElement)).map(
+					(summary) => {
+						const row = createEl(doc, 'div', 'pptxv-ole-row');
+						const label = createEl(doc, 'span');
+						label.textContent = t(summary.labelKey);
+						const value = createEl(doc, 'span', 'pptxv-ole-value');
+						value.textContent = summary.valueKey ? t(summary.valueKey) : (summary.value ?? '');
+						value.title = summary.value ?? '';
+						if (summary.id === 'linkStatus') {
+							value.classList.add('pptxv-ole-badge');
+							value.classList.toggle('is-linked', state.oleIsLinked);
+						}
+						row.append(label, value);
+						return row;
+					},
+				),
+			);
 		},
 	};
 }

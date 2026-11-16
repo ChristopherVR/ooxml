@@ -194,14 +194,6 @@ export interface InspectorHandlers {
 	resetCrop(): void;
 	setElementAction(trigger: 'click' | 'hover', action: ElementAction): void;
 	/**
-	 * Set the selected OLE element's Object Name (`p:oleObj/@name`, ECMA-376
-	 * SS13.3.4). A browser cannot run the native application an embedded OLE
-	 * object belongs to, so the object stays read-only; this name already
-	 * parses, saves, and syncs via collaboration and only lacked an editing
-	 * surface.
-	 */
-	setOleName(name: string): void;
-	/**
 	 * Patch an in-place OLE content edit (spreadsheet cell / document
 	 * paragraph / nested-deck slide title / Replace File) onto the selected
 	 * element. Callers pass `buildOleContentUpdatePatch`'s output, which

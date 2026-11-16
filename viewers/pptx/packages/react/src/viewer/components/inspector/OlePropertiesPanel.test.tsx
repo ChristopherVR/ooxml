@@ -95,7 +95,7 @@ describe('olePropertiesPanel object name editing', () => {
 		expect(getNameInput().value).toBe('');
 	});
 
-	it('commits a trimmed oleName patch on input', () => {
+	it('commits the oleName as typed, so a space between words survives', () => {
 		const onUpdateElement = vi.fn();
 		act(() => {
 			root.render(
@@ -107,9 +107,9 @@ describe('olePropertiesPanel object name editing', () => {
 			);
 		});
 		act(() => {
-			setInputValue(getNameInput(), '  Q3 Budget  ');
+			setInputValue(getNameInput(), 'Q3 ');
 		});
-		expect(onUpdateElement).toHaveBeenCalledWith({ oleName: 'Q3 Budget' });
+		expect(onUpdateElement).toHaveBeenCalledWith({ oleName: 'Q3 ' });
 	});
 
 	it('clears oleName when the field is emptied', () => {

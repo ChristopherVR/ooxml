@@ -74,14 +74,14 @@ describe('olePropertiesSection', () => {
 		expect(input.value).toBe('Q3 Budget');
 	});
 
-	it('commits a trimmed oleName patch on input', () => {
+	it('commits the oleName as typed, so a space between words survives', () => {
 		const editor = createEditor();
 		const target = mountSection(ole(), editor);
-		const input = target.querySelector('input[type="text"]') as HTMLInputElement;
-		input.value = '  Q3 Budget  ';
+		const input = target.querySelector('[data-testid="ole-object-name"]') as HTMLInputElement;
+		input.value = 'Q3 ';
 		input.dispatchEvent(new Event('input', { bubbles: true }));
 		expect(editor.applyElementPatch).toHaveBeenCalledExactlyOnceWith('o1', {
-			oleName: 'Q3 Budget',
+			oleName: 'Q3 ',
 		});
 	});
 

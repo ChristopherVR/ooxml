@@ -50,11 +50,11 @@ describe('olePropertiesPanel', () => {
 		expect((input.element as HTMLInputElement).value).toBe('Q3 Budget');
 	});
 
-	it('emits a trimmed oleName patch on input', async () => {
+	it('emits the oleName as typed, so a space between words survives', async () => {
 		const wrapper = mount(OlePropertiesPanel, { props: { element: ole(), canEdit: true } });
-		const input = wrapper.find('input[type="text"]');
-		await setControlValue(input, '  Q3 Budget  ');
-		expect(wrapper.emitted('update')).toStrictEqual([[{ oleName: 'Q3 Budget' }]]);
+		const input = wrapper.find('[data-testid="ole-object-name"]');
+		await setControlValue(input, 'Q3 ');
+		expect(wrapper.emitted('update')).toStrictEqual([[{ oleName: 'Q3 ' }]]);
 	});
 
 	it('emits a clearing patch when the field is emptied', async () => {

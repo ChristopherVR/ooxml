@@ -12,11 +12,11 @@
 	 * round-tripping edit.
 	 */
 	import type { OlePptxElement, PptxElement } from 'pptx-viewer-core';
-	import { getOleObjectTypeLabel } from 'pptx-viewer-core';
-	import { buildOleObjectNamePatch } from 'ooxml-ui/pptx';
+	import { OLE_OBJECT_NAME_SECTIONS, resolveOleSummaryRows } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';
+	import InspectorFields from './InspectorFields.svelte';
 	import OleEditorDialog from './OleEditorDialog.svelte';
 
 	const { editor, el }: { editor: EditorState; el: PptxElement } = $props();
@@ -34,36 +34,22 @@
 			{t('pptx.ole.editContent')}
 		</button>
 	{/if}
-	<label class="pptx-svelte-ole-name">
-		<span>{t('pptx.ole.objectName')}</span>
-		<input
-			type="text"
-			disabled={!canEdit}
-			placeholder={t('pptx.ole.objectNamePlaceholder')}
-			value={ole.oleName ?? ''}
-			oninput={(event) =>
-				editor.applyElementPatch(
-					el.id,
-					buildOleObjectNamePatch(event.currentTarget.value) as Partial<PptxElement>,
-				)}
-		/>
-	</label>
-	<div class="pptx-svelte-ole-row">
-		<span>{t('pptx.ole.type')}</span>
-		<span class="pptx-svelte-ole-value">{getOleObjectTypeLabel(ole.oleObjectType)}</span>
-	</div>
-	{#if ole.fileName}
+	<InspectorFields
+		sections={OLE_OBJECT_NAME_SECTIONS}
+		target={el}
+		disabled={!canEdit}
+		onpatch={(patch) => editor.applyElementPatch(el.id, patch)}
+	/>
+	{#each resolveOleSummaryRows(el) as row (row.id)}
 		<div class="pptx-svelte-ole-row">
-			<span>{t('pptx.ole.fileName')}</span>
-			<span class="pptx-svelte-ole-value" title={ole.fileName}>{ole.fileName}</span>
+			<span>{t(row.labelKey)}</span>
+			{#if row.id === 'linkStatus'}
+				<span class="pptx-svelte-ole-badge" class:is-linked={ole.isLinked}>{t(row.valueKey ?? '')}</span>
+			{:else}
+				<span class="pptx-svelte-ole-value" title={row.value}>{row.value}</span>
+			{/if}
 		</div>
-	{/if}
-	<div class="pptx-svelte-ole-row">
-		<span>{t('pptx.ole.linkStatus')}</span>
-		<span class="pptx-svelte-ole-badge" class:is-linked={ole.isLinked}>
-			{ole.isLinked ? t('pptx.ole.linked') : t('pptx.ole.embedded')}
-		</span>
-	</div>
+	{/each}
 </div>
 
 <OleEditorDialog {editor} el={ole} open={isEditorOpen} onclose={() => (isEditorOpen = false)} />
@@ -88,24 +74,6 @@
 		flex-direction: column;
 		gap: 6px;
 		font-size: 11px;
-	}
-	.pptx-svelte-ole-name {
-		display: flex;
-		flex-direction: column;
-		gap: 3px;
-	}
-	.pptx-svelte-ole-name span {
-		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
-	}
-	.pptx-svelte-ole-name input {
-		width: 100%;
-		box-sizing: border-box;
-		padding: 4px 6px;
-		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
-		border-radius: var(--pptx-radius, var(--office-radius, 4px));
-		background: var(--pptx-background, var(--office-background, #ffffff));
-		color: inherit;
-		font: inherit;
 	}
 	.pptx-svelte-ole-row {
 		display: flex;

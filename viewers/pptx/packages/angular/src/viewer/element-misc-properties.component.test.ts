@@ -22,10 +22,11 @@ import path from 'node:path';
 import { Injector, runInInjectionContext, signal } from '@angular/core';
 import type { InputSignal, OutputEmitterRef } from '@angular/core';
 import {
-	buildOleObjectNamePatch,
 	CONNECTOR_ARROW_CONTROLS,
 	connectorArrowPatch,
 	connectorArrowValue,
+	inspectorFieldPatch,
+	OLE_OBJECT_NAME_SECTIONS,
 } from 'ooxml-ui/pptx';
 import { keyToLabel, translationsEn } from 'ooxml-ui/pptx/i18n';
 import type { OlePptxElement, PptxElement, ShapeStyle } from 'pptx-viewer-core';
@@ -166,14 +167,6 @@ function createMiscPropertiesComponent(
 }
 
 /** Fire the component's OLE Object Name input handler with a real `<input>`. */
-function fireOleNameInput(component: ElementMiscPropertiesComponent, value: string): void {
-	const input = document.createElement('input');
-	input.value = value;
-	(component as unknown as { onOleNameInput: (event: Event) => void }).onOleNameInput({
-		target: input,
-	} as unknown as Event);
-}
-
 // G9 (OpenXML parity audit, D3): a:cxnSpLocks/@noChangeArrowheads already
 // computed `arrowheadsChangeable` in element-locks.ts but nothing here
 // consulted it.
@@ -219,26 +212,23 @@ describe('elementMiscPropertiesComponent connector arrowhead locks', () => {
 });
 
 describe('elementMiscPropertiesComponent OLE object name', () => {
-	it('emits a trimmed oleName patch on input, via the shared patch builder', () => {
-		const { component, emitted } = createMiscPropertiesComponent(makeOle());
-		fireOleNameInput(component, '  Q3 Budget  ');
-		expect(emitted).toStrictEqual([buildOleObjectNamePatch('  Q3 Budget  ')]);
-		expect(emitted).toStrictEqual([{ oleName: 'Q3 Budget' }]);
+	it('draws the Object Name from the shared descriptor, written as typed', () => {
+		expect(COMPONENT_SOURCE).toContain('[sections]="oleNameSections"');
+		expect(
+			inspectorFieldPatch(OLE_OBJECT_NAME_SECTIONS, 'oleObject', 'oleName', makeOle(), 'Q3 '),
+		).toStrictEqual({ oleName: 'Q3 ' });
 	});
 
-	it('emits a clearing patch when the field is emptied', () => {
-		const { component, emitted } = createMiscPropertiesComponent(
-			makeOle({ oleName: 'Q3 Budget' } as Partial<PptxElement>),
-		);
-		fireOleNameInput(component, '');
-		expect(emitted).toStrictEqual([{ oleName: undefined }]);
+	it('lists the read-only rows from the shared resolver and translates the group card', () => {
+		expect(COMPONENT_SOURCE).toContain('resolveOleSummaryRows(ole)');
+		expect(COMPONENT_SOURCE).toContain("'pptx.group.childCount' | translate");
+		expect(COMPONENT_SOURCE).not.toContain('children</p>');
 	});
 
 	it('binds the Object Name input to the fail-safe `!canEdit()` disabled state', () => {
 		// Matches the convention pinned across every other binding's OLE panel
 		// (React/Vue): absent-or-false canEdit disables the field.
 		expect(COMPONENT_SOURCE).toContain('[disabled]="!canEdit()"');
-		expect(COMPONENT_SOURCE).toContain("'pptx.ole.objectName' | translate");
 	});
 });
 

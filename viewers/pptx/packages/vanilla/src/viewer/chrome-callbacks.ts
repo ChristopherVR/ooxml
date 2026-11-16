@@ -387,7 +387,6 @@ export function buildChromeCallbacks(
 		resetImage: () => deps.getEditActions().resetSelectedImage(),
 		resetCrop: () => deps.getEditActions().resetSelectedCrop(),
 		setElementAction: (trigger, action) => deps.getEditActions().setElementAction(trigger, action),
-		setOleName: (name) => deps.getEditActions().setOleName(name),
 		setOleContent: (patch) => deps.getEditActions().setOleContent(patch),
 		getDialogRegions: () => deps.getRegionSet?.(),
 		setChartData: (data) => deps.getEditActions().setChartData(data),

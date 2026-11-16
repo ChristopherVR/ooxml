@@ -9,7 +9,7 @@ function sectionFactory() {
 }
 
 function state(overrides: Partial<InspectorState> = {}): InspectorState {
-	return {
+	const base = {
 		hasSelection: true,
 		isOle: false,
 		isLocked: false,
@@ -17,17 +17,37 @@ function state(overrides: Partial<InspectorState> = {}): InspectorState {
 		oleFileName: undefined,
 		oleIsLinked: false,
 		oleName: undefined,
-		oleElement: undefined,
 		...overrides,
 	} as InspectorState;
+	// The builder hands the section the OLE element itself, as `buildInspectorState` does.
+	const oleElement =
+		overrides.oleElement ??
+		(base.isOle
+			? ({
+					id: 'ole1',
+					type: 'ole',
+					x: 0,
+					y: 0,
+					width: 100,
+					height: 100,
+					oleObjectType: base.oleObjectType,
+					fileName: base.oleFileName,
+					isLinked: base.oleIsLinked,
+					oleName: base.oleName,
+				} as NonNullable<InspectorState['oleElement']>)
+			: undefined);
+	return { ...base, oleElement } as InspectorState;
 }
 
 function handlers(): InspectorHandlers & {
-	setOleName: ReturnType<typeof vi.fn>;
+	patchSelectedElement: ReturnType<typeof vi.fn>;
 	setOleContent: ReturnType<typeof vi.fn>;
 } {
-	return { setOleName: vi.fn(), setOleContent: vi.fn() } as unknown as InspectorHandlers & {
-		setOleName: ReturnType<typeof vi.fn>;
+	return {
+		patchSelectedElement: vi.fn(),
+		setOleContent: vi.fn(),
+	} as unknown as InspectorHandlers & {
+		patchSelectedElement: ReturnType<typeof vi.fn>;
 		setOleContent: ReturnType<typeof vi.fn>;
 	};
 }
@@ -100,14 +120,14 @@ describe('ole properties section', () => {
 		expect((input as HTMLInputElement).value).toBe('Q3 Budget');
 	});
 
-	it('calls handlers.setOleName on change', () => {
+	it('writes the Object Name as it is typed', () => {
 		const h = handlers();
 		const section = createOlePropertiesSection(document, createTranslator(), sectionFactory(), h);
 		section.update(state({ isOle: true }));
 		const input = section.el.querySelector('input[type="text"]') as HTMLInputElement;
 		input.value = 'Q3 Budget';
-		input.dispatchEvent(new Event('change', { bubbles: true }));
-		expect(h.setOleName).toHaveBeenCalledWith('Q3 Budget');
+		input.dispatchEvent(new Event('input', { bubbles: true }));
+		expect(h.patchSelectedElement).toHaveBeenCalledWith({ oleName: 'Q3 Budget' });
 	});
 
 	it('shows the "Edit content" button for an editable, embedded object', () => {

@@ -1,6 +1,9 @@
-import { buildOleObjectNamePatch, canInteractWithElement } from 'ooxml-ui/pptx';
+import {
+	canInteractWithElement,
+	OLE_OBJECT_NAME_SECTIONS,
+	resolveOleSummaryRows,
+} from 'ooxml-ui/pptx';
 import type { PptxElement, ShapeStyle, OlePptxElement, GroupPptxElement } from 'pptx-viewer-core';
-import { getOleObjectTypeLabel } from 'pptx-viewer-core';
 import React, { useState } from 'react';
 
 import { useTranslation } from '../../i18n/use-translation';
@@ -8,6 +11,7 @@ import { cn } from '../../utils';
 import { OleEditorDialog } from '../OleEditorDialog';
 import { ConnectorArrowsSection } from './ConnectorArrowsSection';
 import { CARD, HEADING, INPUT, BTN } from './inspector-pane-constants';
+import { InspectorFields } from './InspectorFields';
 
 // ---------------------------------------------------------------------------
 // Connector Panel
@@ -116,44 +120,33 @@ export function OlePropertiesPanel({
 						{t('pptx.ole.editContent')}
 					</button>
 				)}
-				<label className='flex flex-col gap-1'>
-					<span className='text-muted-foreground'>{t('pptx.ole.objectName')}</span>
-					<input
-						type='text'
+				<div className='grid grid-cols-2 gap-1.5'>
+					<InspectorFields
+						sections={OLE_OBJECT_NAME_SECTIONS}
+						target={selectedElement}
 						disabled={!canEdit}
-						className={INPUT}
-						value={ole.oleName ?? ''}
-						placeholder={t('pptx.ole.objectNamePlaceholder')}
-						onChange={(e) =>
-							onUpdateElement(buildOleObjectNamePatch(e.target.value) as Partial<PptxElement>)
-						}
+						onPatch={onUpdateElement}
 					/>
-				</label>
-				<div className='flex items-center justify-between gap-2'>
-					<span className='text-muted-foreground'>{t('pptx.ole.type')}</span>
-					<span className='text-foreground truncate'>
-						{getOleObjectTypeLabel(ole.oleObjectType)}
-					</span>
 				</div>
-				{ole.fileName && (
-					<div className='flex items-center justify-between gap-2'>
-						<span className='text-muted-foreground'>{t('pptx.ole.fileName')}</span>
-						<span className='text-foreground truncate' title={ole.fileName}>
-							{ole.fileName}
-						</span>
-					</div>
-				)}
-				<div className='flex items-center justify-between gap-2'>
-					<span className='text-muted-foreground'>{t('pptx.ole.linkStatus')}</span>
-					<span
-						className={cn(
-							'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium',
-							ole.isLinked ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400',
+				{resolveOleSummaryRows(ole).map((row) => (
+					<div key={row.id} className='flex items-center justify-between gap-2'>
+						<span className='text-muted-foreground'>{t(row.labelKey)}</span>
+						{row.id === 'linkStatus' ? (
+							<span
+								className={cn(
+									'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium',
+									ole.isLinked ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400',
+								)}
+							>
+								{t(row.valueKey ?? '')}
+							</span>
+						) : (
+							<span className='text-foreground truncate' title={row.value}>
+								{row.value}
+							</span>
 						)}
-					>
-						{ole.isLinked ? t('pptx.ole.linked') : t('pptx.ole.embedded')}
-					</span>
-				</div>
+					</div>
+				))}
 			</div>
 			<OleEditorDialog
 				isOpen={isEditorOpen}

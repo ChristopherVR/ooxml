@@ -10,16 +10,17 @@ import {
 import { TranslatePipe } from '@ngx-translate/core';
 import type { ConnectorArrowControl } from 'ooxml-ui/pptx';
 import {
-	buildOleObjectNamePatch,
 	canInteractWithElement,
 	CONNECTOR_ARROW_CONTROLS,
 	CONNECTOR_ARROW_SIZE_VALUES,
 	connectorArrowPatch,
 	connectorArrowValue,
+	OLE_OBJECT_NAME_SECTIONS,
+	resolveOleSummaryRows,
 } from 'ooxml-ui/pptx';
 import type { GroupPptxElement, OlePptxElement, PptxElement, ShapeStyle } from 'pptx-viewer-core';
-import { getOleObjectTypeLabel } from 'pptx-viewer-core';
 
+import { InspectorFieldsComponent } from './inspector-fields.component';
 import { OleEditorDialogComponent } from './ole-editor-dialog.component';
 import { schemaLabelKey } from './schema-token-labels';
 
@@ -55,7 +56,7 @@ export function connectorStylePatch(
 	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	selector: 'pptx-element-misc-properties',
 	standalone: true,
-	imports: [TranslatePipe, OleEditorDialogComponent],
+	imports: [TranslatePipe, InspectorFieldsComponent, OleEditorDialogComponent],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		@if (connector()) {
@@ -97,9 +98,9 @@ export function connectorStylePatch(
 			</section>
 		}
 		@if (group(); as value) {
-			<section class="card" aria-label="Group">
-				<h3>Group</h3>
-				<p>{{ value.children.length }} children</p>
+			<section class="card" [attr.aria-label]="'pptx.elementType.group' | translate">
+				<h3>{{ 'pptx.elementType.group' | translate }}</h3>
+				<p>{{ 'pptx.group.childCount' | translate: { count: value.children.length } }}</p>
 			</section>
 		}
 		@if (ole(); as value) {
@@ -110,32 +111,21 @@ export function connectorStylePatch(
 						{{ 'pptx.ole.editContent' | translate }}
 					</button>
 				}
-				<label class="ole-name">
-					<span>{{ 'pptx.ole.objectName' | translate }}</span>
-					<input
-						type="text"
-						[attr.aria-label]="'pptx.ole.objectName' | translate"
-						[placeholder]="'pptx.ole.objectNamePlaceholder' | translate"
-						[disabled]="!canEdit()"
-						[value]="value.oleName ?? ''"
-						(input)="onOleNameInput($event)"
-					/>
-				</label>
+				<pptx-inspector-fields
+					[sections]="oleNameSections"
+					[target]="value"
+					[disabled]="!canEdit()"
+					(patch)="patch.emit($event)"
+				/>
 				<dl>
-					<div>
-						<dt>{{ 'pptx.ole.type' | translate }}</dt>
-						<dd>{{ oleType() }}</dd>
-					</div>
-					@if (value.fileName) {
+					@for (row of oleRows(); track row.id) {
 						<div>
-							<dt>{{ 'pptx.ole.fileName' | translate }}</dt>
-							<dd [title]="value.fileName">{{ value.fileName }}</dd>
+							<dt>{{ row.labelKey | translate }}</dt>
+							<dd [title]="row.value ?? ''">
+								{{ row.valueKey ? (row.valueKey | translate) : row.value }}
+							</dd>
 						</div>
 					}
-					<div>
-						<dt>{{ 'pptx.ole.linkStatus' | translate }}</dt>
-						<dd>{{ (value.isLinked ? 'pptx.ole.linked' : 'pptx.ole.embedded') | translate }}</dd>
-					</div>
 				</dl>
 				<pptx-ole-editor-dialog
 					[open]="isEditorOpen()"
@@ -262,7 +252,11 @@ export class ElementMiscPropertiesComponent {
 			? (this.element() as OlePptxElement)
 			: undefined,
 	);
-	protected readonly oleType = computed(() => getOleObjectTypeLabel(this.ole()?.oleObjectType));
+	protected readonly oleNameSections = OLE_OBJECT_NAME_SECTIONS;
+	protected readonly oleRows = computed(() => {
+		const ole = this.ole();
+		return ole ? resolveOleSummaryRows(ole) : [];
+	});
 	/** Whether the "Edit content" dialog is currently open. */
 	protected readonly isEditorOpen = signal(false);
 	/**
@@ -272,20 +266,6 @@ export class ElementMiscPropertiesComponent {
 	protected readonly arrowsChangeable = computed(() =>
 		canInteractWithElement(this.element(), 'changeArrowheads'),
 	);
-
-	/**
-	 * A browser cannot run the native application that owns an embedded OLE
-	 * object, so the object itself stays read-only. Its Object Name IS
-	 * editable: `p:oleObj/@name` (ECMA-376 SS13.3.4) already parses, saves,
-	 * and syncs via collaboration, and shared's `getOleDisplayName` /
-	 * `getOleAriaLabel` already read it, so this was the only piece missing
-	 * to make it a real, round-tripping edit.
-	 */
-	protected onOleNameInput(event: Event): void {
-		this.patch.emit(
-			buildOleObjectNamePatch((event.target as HTMLInputElement).value) as Partial<PptxElement>,
-		);
-	}
 
 	/** Open the "Edit content" dialog (button gated on `canEdit() && !ole.isLinked`). */
 	protected openEditor(): void {
