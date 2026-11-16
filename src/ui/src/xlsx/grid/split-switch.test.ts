@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { createWorkbook, putCell } from 'ooxml-core/xlsx';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mountGrid } from './index';
 import { createTestContext } from './test-context';
 
@@ -34,12 +34,13 @@ describe('switching between a frozen and a split window', () => {
 		delete ws.view.freeze;
 		ws.view.split = { x: 1500, y: 600 };
 		await fire();
-		expect(scroller.scrollTop).toBe(220);
+		// The grid repositions on its next frame; a loaded runner can take longer than one wait.
+		await vi.waitFor(() => expect(scroller.scrollTop).toBe(220), { timeout: 2000 });
 		// And back: the scroll becomes relative to the frozen edge again.
 		delete ws.view.split;
 		ws.view.freeze = { rows: 1, cols: 1 };
 		await fire();
-		expect(scroller.scrollTop).toBe(200);
+		await vi.waitFor(() => expect(scroller.scrollTop).toBe(200), { timeout: 2000 });
 	});
 
 	it('writes the scrolled first cells into the sheet view', async () => {
