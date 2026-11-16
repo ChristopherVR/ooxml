@@ -24,11 +24,50 @@ type Entry = {
 const captureOf = (options?: boolean | EventListenerOptions): boolean =>
 	typeof options === 'boolean' ? options : Boolean(options?.capture);
 
+const FRAME_SHIM = Symbol.for('ooxml.test.frame-shim');
+
+/**
+ * Replaces jsdom's `requestAnimationFrame` with one timer per callback. jsdom drives every frame
+ * (and its focus fixup) from one shared `setInterval` handle it looks up on the global at call
+ * time. When a real frame is pending as a test fakes the timers, the real tick clears the handle
+ * through the fake `clearInterval` (a no-op) and forgets it; the next frame or focus fixup asked
+ * for while time is fake stores a fake handle, and once the real timers are back that handle
+ * never fires and is never cleared, so no frame callback runs again in any later file on the
+ * worker. Per-callback timers keep no state across a fake-timer install, so a lost callback is
+ * only one a test faked and never advanced. Fake timers still replace this shim while installed
+ * (`window` is the global in Vitest's jsdom environment).
+ */
+function installFrameShim(): void {
+	const win = window as Window & { [FRAME_SHIM]?: true };
+	if (win[FRAME_SHIM] || !navigator.userAgent.includes('jsdom')) {
+		return;
+	}
+	const timers = new Map<number, ReturnType<typeof setTimeout>>();
+	let lastId = 0;
+	win.requestAnimationFrame = (callback: FrameRequestCallback): number => {
+		const id = ++lastId;
+		timers.set(
+			id,
+			setTimeout(() => {
+				timers.delete(id);
+				callback(performance.now());
+			}, 1000 / 60),
+		);
+		return id;
+	};
+	win.cancelAnimationFrame = (id: number): void => {
+		clearTimeout(timers.get(id));
+		timers.delete(id);
+	};
+	win[FRAME_SHIM] = true;
+}
+
 /** Install the tracking for the current test file; call it from a setup file. */
 export function installDomHygiene(): void {
 	if (typeof document === 'undefined' || typeof window === 'undefined') {
 		return;
 	}
+	installFrameShim();
 	// Keyed by listener so a lookup stays cheap however many listeners a file registers.
 	const live = new Map<EventListenerOrEventListenerObject, Entry[]>();
 	const matches = (entry: Entry, target: EventTarget, type: string, capture: boolean) =>
