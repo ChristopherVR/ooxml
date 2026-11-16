@@ -1,3 +1,4 @@
+import { ribbonTab, ribbonTabButtons } from 'ooxml-ui/pptx';
 import type { RibbonAddInTab as RibbonAddInTabView } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -28,8 +29,8 @@ describe('host ribbon tabs', () => {
 		});
 		const instance = mount(RibbonTabBar, { target, props });
 		cleanup = () => unmount(instance);
-		const tab = () => target.querySelector<HTMLButtonElement>('[data-ribbon-add-in-tab="reports"]');
-		expect([...target.querySelectorAll('[role="tab"]')].at(-1)).toBe(tab());
+		const tab = () => ribbonTab(target, '[data-ribbon-add-in-tab="reports"]');
+		expect([...ribbonTabButtons(target)].at(-1)).toBe(tab());
 		expect(tab()!.textContent!.trim()).toBe('Reports');
 		expect(tab()!.getAttribute('aria-selected')).toBe('false');
 		tab()!.click();
@@ -37,7 +38,9 @@ describe('host ribbon tabs', () => {
 		props.active = 'reports';
 		flushSync();
 		expect(tab()!.getAttribute('aria-selected')).toBe('true');
-		expect(target.querySelectorAll('[role="tab"][aria-selected="true"]')).toHaveLength(1);
+		expect(
+			ribbonTabButtons(target).filter((tab) => tab.matches('[role="tab"][aria-selected="true"]')),
+		).toHaveLength(1);
 		props.addInTabs = [];
 		flushSync();
 		expect(tab()).toBeNull();

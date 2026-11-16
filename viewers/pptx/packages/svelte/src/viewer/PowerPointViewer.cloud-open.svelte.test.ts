@@ -1,11 +1,12 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 /**
  * File > Open > a cloud place, end to end through the real `PowerPointViewer`: the opened file
  * loads like any open, File > Save goes to the file's own storage instead of the host's, and a file
  * the service leaves read-only stays read-only.
  */
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-
+import { ribbonTabButtons } from 'ooxml-ui/pptx';
 import type {
 	CloudFileProvider,
 	CloudOpenedFile,
@@ -113,11 +114,7 @@ async function openFromCloud(
 	file: CloudOpenedFile,
 	slides: number,
 ): Promise<void> {
-	click(
-		[...target.querySelectorAll('.pptx-svelte-ribbon-tabs [role="tab"]')].find(
-			(tab) => tab.textContent?.trim() === 'File',
-		),
-	);
+	click([...ribbonTabButtons(target)].find((tab) => tab.textContent?.trim() === 'File'));
 	click(
 		[...target.querySelectorAll('[data-pptx-backstage-nav-item]')].find(
 			(item) => item.textContent?.trim() === 'Open',

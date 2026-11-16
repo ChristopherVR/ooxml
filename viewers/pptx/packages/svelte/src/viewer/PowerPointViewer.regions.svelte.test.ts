@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { registerPptxWebControls } from 'ooxml-ui/pptx';
+import { registerPptxWebControls, ribbonTabButtons } from 'ooxml-ui/pptx';
 import type {
 	PowerPointViewerAPI,
 	ViewerCustomization,
@@ -65,9 +65,7 @@ async function mountViewer(
 }
 
 function openFileTab(target: HTMLElement): void {
-	const file = [
-		...target.querySelectorAll<HTMLElement>('.pptx-svelte-ribbon-tabs [role="tab"]'),
-	].find((tab) => tab.textContent?.trim() === 'File');
+	const file = [...ribbonTabButtons(target)].find((tab) => tab.textContent?.trim() === 'File');
 	file!.click();
 	flushSync();
 }

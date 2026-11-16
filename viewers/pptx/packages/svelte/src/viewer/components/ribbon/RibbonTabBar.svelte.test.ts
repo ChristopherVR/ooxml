@@ -1,3 +1,4 @@
+import { ribbonTabButtons } from 'ooxml-ui/pptx';
 import { mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -12,7 +13,7 @@ afterEach(() => {
 });
 
 function tabLabels(target: HTMLElement): string[] {
-	return [...target.querySelectorAll('[role="tab"]')].map((el) => el.textContent?.trim() ?? '');
+	return [...ribbonTabButtons(target)].map((el) => el.textContent?.trim() ?? '');
 }
 
 describe('ribbonTabBar hiddenActions', () => {
@@ -21,7 +22,7 @@ describe('ribbonTabBar hiddenActions', () => {
 		const instance = mount(RibbonTabBar, { target, props: { active: 'home', onselect: vi.fn() } });
 		cleanup = () => unmount(instance);
 
-		expect(target.querySelectorAll('[role="tab"]')).toHaveLength(RIBBON_TABS.length);
+		expect(ribbonTabButtons(target)).toHaveLength(RIBBON_TABS.length);
 	});
 
 	it('omits a hidden tab from the tab strip', () => {
@@ -32,7 +33,7 @@ describe('ribbonTabBar hiddenActions', () => {
 		});
 		cleanup = () => unmount(instance);
 
-		expect(target.querySelectorAll('[role="tab"]')).toHaveLength(RIBBON_TABS.length - 2);
+		expect(ribbonTabButtons(target)).toHaveLength(RIBBON_TABS.length - 2);
 		expect(tabLabels(target)).not.toContain('Design');
 		expect(tabLabels(target)).not.toContain('Record');
 	});

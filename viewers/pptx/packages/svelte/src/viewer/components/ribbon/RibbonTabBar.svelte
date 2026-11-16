@@ -1,14 +1,13 @@
 <script lang="ts">
 	/**
-	 * RibbonTabBar: the File/Home/Insert/View tab strip, driven by the registry,
-	 * plus the right-side quick actions React keeps on the tab row
-	 * (`TabRowActions`): Record, then Comments and Share drawn by the shared
-	 * `pptx-ui-ribbon-actions` (the element Word and Excel put there too).
+	 * RibbonTabBar: the ribbon tab row, the shared `pptx-ui-ribbon-tabs` (the tab row Word, Excel
+	 * and Visio draw) fed from `buildRibbonTabRow`, with the right-side quick actions React keeps
+	 * on the tab row (`TabRowActions`) in its actions slot: Record, then Comments and Share drawn
+	 * by the shared `pptx-ui-ribbon-actions`, then Ribbon Display Options.
 	 */
 	import {
+		buildRibbonTabRow,
 		buildTabRowActionsState,
-		contextualTabLabelKey,
-		filterVisibleTabs,
 		isActionHidden,
 	} from 'ooxml-ui/pptx';
 	import {
@@ -18,13 +17,13 @@
 		RibbonAddInTab,
 		RibbonContextualTabId,
 		RibbonDisplayController,
+		RibbonTabSelectDetail,
 		ToolbarActionId,
 	} from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../i18n/context';
 	import type { ChromeUiState } from '../../state/chrome-ui.svelte';
 	import { controllerState } from '../../state/controller-state';
 	import { useViewerOptions } from '../../state/viewer-options-context';
-	import { RIBBON_TABS } from './ribbon-tabs';
 	import type { RibbonTabId } from './ribbon-tabs';
 
 	const {
@@ -64,13 +63,19 @@
 	const displayState = ribbonDisplay ? controllerState(ribbonDisplay) : undefined;
 	const displayLabel = $derived(t(RIBBON_DISPLAY_OPTIONS_LABEL_KEY));
 
-	/** A double click on a tab other than File switches between the docked ribbon and the tab row. */
-	function onTabDoubleClick(id: string): void {
-		if (id !== 'file') {
-			ribbonDisplay?.toggleCollapsed();
-		}
+	const tabRow = $derived(
+		buildRibbonTabRow({
+			translate: t,
+			active,
+			hiddenActions,
+			addInTabs,
+			contextualTabs,
+			screenTip: (label) => optionsState.screenTip(label),
+		}),
+	);
+	function onTabSelect(event: Event): void {
+		onselect((event as CustomEvent<RibbonTabSelectDetail>).detail.tab);
 	}
-	const visibleTabs = $derived(filterVisibleTabs(RIBBON_TABS, hiddenActions));
 	const actionsState = $derived(
 		buildTabRowActionsState({
 			translate: t,
@@ -83,54 +88,13 @@
 	);
 </script>
 
-<div class="pptx-svelte-ribbon-tabrow" data-pptx-chrome="ribbon-tabs">
-	<div class="pptx-svelte-ribbon-tabs" role="tablist" data-pptx-chrome="ribbon-tab-scroll">
-		{#each visibleTabs as tab (tab.id)}
-			<button
-				type="button"
-				class="pptx-svelte-ribbon-tab"
-				class:pptx-svelte-ribbon-tab-active={active === tab.id}
-				role="tab"
-				aria-selected={active === tab.id}
-				title={optionsState.screenTip(t(tab.labelKey))}
-				onclick={() => onselect(tab.id)}
-				ondblclick={() => onTabDoubleClick(tab.id)}
-			>
-				{t(tab.labelKey)}
-			</button>
-		{/each}
-		{#each addInTabs as tab (tab.id)}
-			<button
-				type="button"
-				class="pptx-svelte-ribbon-tab"
-				class:pptx-svelte-ribbon-tab-active={active === tab.id}
-				role="tab"
-				aria-selected={active === tab.id}
-				data-ribbon-add-in-tab={tab.id}
-				title={optionsState.screenTip(tab.label)}
-				onclick={() => onselect(tab.id)}
-				ondblclick={() => onTabDoubleClick(tab.id)}
-			>
-				{tab.label}
-			</button>
-		{/each}
-		{#each contextualTabs as tab (tab)}
-			<button
-				type="button"
-				class="pptx-svelte-ribbon-tab pptx-svelte-ribbon-tab-contextual"
-				class:pptx-svelte-ribbon-tab-active={active === tab}
-				role="tab"
-				aria-selected={active === tab}
-				data-ribbon-contextual-tab={tab}
-				title={optionsState.screenTip(t(contextualTabLabelKey(tab)))}
-				onclick={() => onselect(tab)}
-				ondblclick={() => onTabDoubleClick(tab)}
-			>
-				{t(contextualTabLabelKey(tab))}
-			</button>
-		{/each}
-	</div>
-	<div class="pptx-svelte-ribbon-tabrow-actions">
+<pptx-ui-ribbon-tabs
+	data-pptx-chrome="ribbon-tabs"
+	state={tabRow}
+	ontab-select={onTabSelect}
+	oncollapse-toggle={() => ribbonDisplay?.toggleCollapsed()}
+>
+	<div class="pptx-svelte-ribbon-tabrow-actions" slot="actions">
 		{#if onrecord && !isActionHidden('record', hiddenActions)}
 			<button
 				type="button"
@@ -168,33 +132,9 @@
 			</button>
 		{/if}
 	</div>
-</div>
+</pptx-ui-ribbon-tabs>
 
 <style>
-	.pptx-svelte-ribbon-tabrow {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		border-top: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
-		border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
-	}
-
-	.pptx-svelte-ribbon-tabs {
-		display: flex;
-		flex: 1;
-		align-items: center;
-		gap: 2px;
-		min-width: 0;
-		padding: 0 8px;
-		overflow-x: auto;
-		overflow-y: hidden;
-		scrollbar-width: none;
-	}
-
-	.pptx-svelte-ribbon-tabs::-webkit-scrollbar {
-		display: none;
-	}
-
 	.pptx-svelte-ribbon-tabrow-actions {
 		display: flex;
 		align-items: center;
@@ -256,42 +196,5 @@
 
 	.pptx-svelte-ribbon-display-btn-collapsed svg {
 		transform: rotate(180deg);
-	}
-
-	.pptx-svelte-ribbon-tab {
-		padding: 6px 12px;
-		border: none;
-		background: transparent;
-		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
-		font: inherit;
-		font-size: 12.5px;
-		font-weight: 500;
-		white-space: nowrap;
-		cursor: pointer;
-		position: relative;
-	}
-
-	.pptx-svelte-ribbon-tab:hover {
-		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
-		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
-	}
-
-	/* PowerPoint tints its contextual tabs with an accent colour. */
-	.pptx-svelte-ribbon-tab-contextual {
-		color: var(--pptx-contextual-tab, #c084fc);
-	}
-
-	.pptx-svelte-ribbon-tab-active {
-		color: var(--pptx-primary, var(--office-accent, #2563eb));
-	}
-
-	.pptx-svelte-ribbon-tab-active::after {
-		content: '';
-		position: absolute;
-		left: 8px;
-		right: 8px;
-		bottom: -1px;
-		height: 2px;
-		background: var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 </style>

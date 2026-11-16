@@ -6,6 +6,8 @@ import {
 	RIBBON_CONTROL_IDS,
 	RIBBON_GROUP_IDS,
 	RIBBON_TAB_IDS,
+	ribbonTab,
+	ribbonTabButtons,
 	TOOLBAR_BUTTON_IDS,
 } from 'ooxml-ui/pptx';
 import type { ViewerCustomization, ViewerCustomizationApi } from 'ooxml-ui/pptx';
@@ -62,9 +64,7 @@ async function mountViewer(
 }
 
 function tabLabels(target: HTMLElement): string[] {
-	return Array.from(target.querySelectorAll('.pptx-svelte-ribbon-tabs [role="tab"]')).map((tab) =>
-		(tab.textContent ?? '').trim(),
-	);
+	return Array.from(ribbonTabButtons(target)).map((tab) => (tab.textContent ?? '').trim());
 }
 
 describe('powerPointViewer customization', () => {
@@ -189,16 +189,14 @@ describe('ribbon group / control customisation', () => {
 
 	it('shows the Shape Format tab for a shape selection and falls back to Home', async () => {
 		const { target, instance } = await mountViewer();
-		expect(target.querySelector('[data-ribbon-contextual-tab]')).toBeNull();
+		expect(ribbonTab(target, '[data-ribbon-contextual-tab]')).toBeNull();
 		const shape = instance
 			.getElements(0)
 			.find((element) => contextualTabsForElement(element).includes('shapeFormat'));
 		expect(shape).toBeDefined();
 		instance.selectElements([shape?.id ?? '']);
 		flushSync();
-		const tab = target.querySelector<HTMLButtonElement>(
-			'[data-ribbon-contextual-tab="shapeFormat"]',
-		);
+		const tab = ribbonTab(target, '[data-ribbon-contextual-tab="shapeFormat"]');
 		expect(tab?.textContent?.trim()).toBe('Shape Format');
 		// Selecting never switches tabs by itself.
 		expect(target.querySelector('[data-ribbon-group="home.clipboard"]')).not.toBeNull();
@@ -214,7 +212,7 @@ describe('ribbon group / control customisation', () => {
 
 		instance.clearSelection();
 		flushSync();
-		expect(target.querySelector('[data-ribbon-contextual-tab]')).toBeNull();
+		expect(ribbonTab(target, '[data-ribbon-contextual-tab]')).toBeNull();
 		expect(target.querySelector('[data-ribbon-group="home.clipboard"]')).not.toBeNull();
 	});
 });
@@ -266,11 +264,13 @@ describe('powerPointViewer host ribbon tabs', () => {
 		target.addEventListener('office-ribbon-add-in', (event) =>
 			heard((event as CustomEvent).detail),
 		);
-		const tab = () => target.querySelector<HTMLButtonElement>('[data-ribbon-add-in-tab]');
+		const tab = () => ribbonTab(target, '[data-ribbon-add-in-tab]');
 		const selected = () =>
 			// The ribbon's own tab row: the viewer has other tab lists (inspector).
 			[
-				...target.querySelectorAll('.pptx-svelte-ribbon-tabs [role="tab"][aria-selected="true"]'),
+				...ribbonTabButtons(target).filter((tab) =>
+					tab.matches('[role="tab"][aria-selected="true"]'),
+				),
 			].map((item) => item.textContent?.trim());
 		expect(tabLabels(target).at(-1)).toBe('Reports');
 		expect(target.querySelector('pptx-ui-ribbon-add-in')).toBeNull();

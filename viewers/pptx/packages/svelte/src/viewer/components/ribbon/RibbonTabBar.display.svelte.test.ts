@@ -1,4 +1,4 @@
-import { createRibbonDisplayController } from 'ooxml-ui/pptx';
+import { createRibbonDisplayController, ribbonTabButtons } from 'ooxml-ui/pptx';
 import { mount, unmount, flushSync } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -53,9 +53,7 @@ describe('ribbonTabBar Ribbon Display Options', () => {
 		const target = render({ active: 'home', onselect: vi.fn(), ribbonDisplay: controller });
 		flushSync();
 
-		const home = [...target.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find(
-			(tab) => tab.textContent?.trim() === 'Home',
-		);
+		const home = [...ribbonTabButtons(target)].find((tab) => tab.textContent?.trim() === 'Home');
 		home?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
 
 		expect(controller.getSnapshot().effectiveMode).toBe('tabs');
