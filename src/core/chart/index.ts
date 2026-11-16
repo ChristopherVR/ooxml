@@ -16,6 +16,7 @@ export * from './style-palette';
 export * from './style-presets';
 export * from './quick-layouts';
 export * from './histogram-binning';
+export * from './pareto';
 export * from './waterfall';
 export * from './treemap-squarify';
 export * from './trendline-equation';

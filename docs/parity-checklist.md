@@ -81,8 +81,15 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P1** 3-D chart detail in the core painter: data labels, floor and wall formatting, bar
       `c:shape` (cylinder, cone, pyramid), pie explosion, surface wireframe and contour modes, and
       measurement against Office renders.
-- [ ] **P1** Region map ChartEx (`cx:geography`) is modelled and saved but not drawn by
-      `src/core/chart/render`; the Pareto cumulative line is unconfirmed there.
+- [x] **P1** Pareto charts draw in the shared painter (bars in descending order, the cumulative
+      line on a 0 to 100% secondary axis; `chart/pareto.ts`, `chart/ex/create-family.test.ts`), and
+      Word, Excel and PowerPoint insert pareto charts as Office writes them (an owned `paretoLine`
+      series and a percentage axis, observed from Excel 16's `AddChart2(-1, xlPareto)`).
+- [ ] **P1** Region maps: Word, Excel and PowerPoint insert them (`cx:geography` with culture,
+      projection and area, no provider cache) and the shared painter draws them over bundled,
+      approximate country outlines with a translated notice. A new map has no `cx:geoCache`, and
+      Office 16 draws it empty until Office itself adds map data through its online service; this
+      code never fetches geodata. Exact shapes need a cache Office wrote.
 - [ ] **P1** Visio has no ChartEx path (`src/ui/src/visio/render-embedded-chart.ts`).
 - [ ] **P1** Pivot charts: `pivotSource` and `pivotFmts` are only carried through; no field
       buttons and no link to PivotTable edits.
@@ -515,6 +522,22 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Splits inside a stack, groups with unknown extensions and a turn on a chart that already has
       secondary axes keep the object-tree path; 3-D or bubble series types switch the whole chart,
       as Office does. Groups of one type that are not neighbours after a conversion stay separate.
+
+- [ ] **P1** Chart save is not native-certified for every fresh template. New ChartEx parts now
+      carry the chart style and colour style parts Office requires (without them Word and PowerPoint
+      refuse the file): a fresh PowerPoint deck, Word document and Excel workbook with one chart of
+      each of the eight families open in Office 16 and keep every family and value on Office's own
+      re-save (`scripts/chartex-acceptance.ps1`, 2026-11-16).
+- [ ] **P2** PowerPoint chart edits still saved only by the object-tree writers (no neutral
+      adapter, `chart-neutral-save-plan.ts`): group `varyColors`, bar direction and scatter style on
+      their own, the `standard` grouping flag, a series' own number format, the chart-wide gridline
+      flag, the colour style part, colour map override, print settings, user shapes, pivot formats,
+      filtered series and the external data auto-update flag. Group subtype settings moved
+      (`chart-neutral-save-subtype.ts`).
+- [ ] **P2** Per-series chart combinations: a series of a vertical 2-D category chart can become
+      column, line, area or scatter (`chart/edit/series-type.ts`, native PowerPoint reopen checked);
+      combinations on horizontal bars or on two value axes and splits inside a stack keep the
+      object-tree path, and 3-D or bubble series types switch the whole chart, as Office does.
 - [x] `a:linkedTxbx` (Word-style linked text boxes) is not flowed: PowerPoint ignores it (measured
       with COM `Slide.Export`: the head keeps all text unclipped, successors stay empty), so the
       renderer matches by default (`setLinkedTextBoxFlow` opts in). The link is parsed and

@@ -2,7 +2,7 @@ import { chartExFormatting } from './summary-ex-formatting';
 import { chartExSeriesPaint } from './summary-ex-series';
 // Builds neutral SVG summaries for supported Office 2016 extended chart parts: waterfall,
 // histogram, treemap, sunburst, funnel, box-and-whisker and region maps. Word uses cached points;
-// Excel can resolve retained formulas from live cells. Pareto remains unsummarised.
+// Excel can resolve retained formulas from live cells. A pareto line marks its histogram.
 import type { DrawingColor } from '../../drawingml/types';
 import { parseXml, type XmlElement } from '../../xml/index';
 import type { ChartExData, ChartExDimension, ChartExSeries, ChartExSpace } from '../ex/model';
@@ -248,6 +248,14 @@ export function chartExSummaryFromModel(space: ChartExSpace): ChartExSummary {
 				? { parentLabelLayout: parentLayout }
 				: {}),
 		};
-	} else if (chartType === 'histogram') summary.histogram = histogramOptions(primary);
+	} else if (chartType === 'histogram') {
+		summary.histogram = histogramOptions(primary);
+		const owner = all.indexOf(primary);
+		const line = all.find((s) => s.layoutId === 'paretoLine' && s.ownerIndex === owner);
+		if (line) {
+			const stroke = line.spPr?.line?.fill;
+			summary.histogram.pareto = stroke?.kind === 'solid' ? { lineColor: stroke.color } : {};
+		}
+	}
 	return { layoutId, summary };
 }

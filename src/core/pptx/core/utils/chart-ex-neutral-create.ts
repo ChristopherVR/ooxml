@@ -5,35 +5,66 @@ import {
 	createChartExSpace,
 	setChartExDataLabelsVisible,
 	writeChartExSpace,
-	type ChartExLayout,
+	type ChartExFamily,
 } from '../../../chart';
 import type { PptxChartData, XmlObject } from '../types';
 import { planChartExFamilyEdits } from './chart-ex-neutral-save-families';
 import type { ChartExEdit } from './chart-ex-neutral-save';
+/**
+ * A pareto chart is written as Office writes it: the frequency series plus an owned `paretoLine`
+ * series and a percentage axis, never the cumulative values the view model computes. A region map
+ * without a provider cache or source point indexes is written through the neutral model too; one
+ * that carries them keeps the raw generator, which preserves them.
+ */
 export function createChartExThroughNeutral(chart: PptxChartData): XmlObject | undefined {
-	const layouts: Partial<Record<PptxChartData['chartType'], Exclude<ChartExLayout, 'regionMap'>>> =
-		{
-			funnel: 'funnel',
-			waterfall: 'waterfall',
-			histogram: 'clusteredColumn',
-			boxWhisker: 'boxWhisker',
-			treemap: 'treemap',
-			sunburst: 'sunburst',
-		};
-	const layout = layouts[chart.chartType];
-	if (!layout || chart.series.some((series) => series.histogramOptions?.layout === 'pareto'))
+	const layouts: Partial<Record<PptxChartData['chartType'], ChartExFamily>> = {
+		funnel: 'funnel',
+		waterfall: 'waterfall',
+		histogram: 'clusteredColumn',
+		boxWhisker: 'boxWhisker',
+		treemap: 'treemap',
+		sunburst: 'sunburst',
+		regionMap: 'regionMap',
+	};
+	const pareto = chart.series.some((series) => series.histogramOptions?.layout === 'pareto');
+	const layout = pareto && chart.chartType === 'histogram' ? 'pareto' : layouts[chart.chartType];
+	const map = chart.series[0]?.regionMapOptions;
+	if (
+		!layout ||
+		(layout === 'regionMap' &&
+			(chart.series.length !== 1 ||
+				map?.geographyCache !== undefined ||
+				map?.geographyCacheXml !== undefined ||
+				map?.entityIds?.length ||
+				map?.categorySourceIndices ||
+				map?.valueSourceIndices ||
+				map?.valueColors?.length ||
+				map?.fixedColor))
+	)
 		return undefined;
+	const dataSeries = chart.series.filter((series) => series.histogramOptions?.layout !== 'pareto');
 	let space = createChartExSpace(
 		{
 			categories: chart.categories,
 			categoryLevels: chart.categoryLevels ?? [chart.categories],
-			series: chart.series.map((series) => ({
+			series: dataSeries.map((series) => ({
 				name: series.name,
 				values: series.values.map((value, index) => (series.blanks?.[index] ? null : value)),
 			})),
 		},
 		layout,
 		{
+			...(layout === 'regionMap'
+				? {
+						geography: {
+							...(map?.projectionType ? { projectionType: map.projectionType } : {}),
+							...(map?.viewedRegionType ? { viewedRegionType: map.viewedRegionType } : {}),
+							...(map?.cultureLanguage ? { cultureLanguage: map.cultureLanguage } : {}),
+							...(map?.cultureRegion ? { cultureRegion: map.cultureRegion } : {}),
+							...(map?.attribution !== undefined ? { attribution: map.attribution } : {}),
+						},
+					}
+				: {}),
 			...(chart.title ? { title: chart.title } : {}),
 			...(chart.style?.hasLegend
 				? { legend: { visible: true, position: chart.style.legendPosition } }

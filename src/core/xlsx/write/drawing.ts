@@ -2,6 +2,7 @@ import { applyPictureLayout } from '../../drawingml/picture-layout';
 import { applyPictureEffects, parsePictureEffects } from '../../drawingml/picture-effects';
 import { applyPictureCrop, parsePictureCrop } from '../../drawingml/picture-crop';
 import { writeChartExSpaceOverSource } from '../../chart/ex/keep-source';
+import { writeInsertedChartEx } from './chart-ex';
 import { RELATIONSHIP_TYPES } from '../../opc/index';
 import { NS, buildXml, elements, first, parseXml } from '../../xml/index';
 import type {
@@ -293,6 +294,22 @@ export function writeDrawing(
 		if (object.kind === 'formControl') {
 			// The control shape sits inside `mc:AlternateContent`; its anchor is not re-written.
 			body += object.sourceXml;
+			continue;
+		}
+		if (
+			object.kind === 'unsupported' &&
+			object.chartExSpace &&
+			!object.chartExPartName &&
+			!object.sourceXml
+		) {
+			const frame = writeInsertedChartEx(
+				writer,
+				object.chartExSpace,
+				rels,
+				(part) => relativeTarget(partName, part),
+				nextId++,
+			);
+			body += anchorXml(object.anchor, frame);
 			continue;
 		}
 		if (object.kind === 'unsupported' && object.chartExSpace && object.chartExPartName) {

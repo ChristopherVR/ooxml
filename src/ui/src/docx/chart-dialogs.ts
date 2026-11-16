@@ -17,6 +17,7 @@ import {
 	editDocxChartEx,
 	newChartImage,
 	newDocxChart,
+	newDocxChartEx,
 	type DocxChart,
 	type ThemeCatalog,
 } from 'ooxml-core/docx';
@@ -34,8 +35,10 @@ import {
 	type OfficeChartValue,
 } from '../dialog/chart-picker';
 import {
+	DOCX_CHART_EX_TYPES,
 	DOCX_CHART_GROUPINGS,
 	DOCX_CHART_TYPES,
+	chartExPickerFamily,
 	DOCX_GROUPED_CHART_TYPES,
 	chartPickerChoice,
 	chartTypeTarget,
@@ -84,8 +87,18 @@ function previewChart(
 	tile: boolean,
 	chart: DocxChart | undefined,
 ): DocxChart {
-	const target = chartTypeTarget(value.type, value.grouping);
 	const title = value.title.trim();
+	const family = chartExPickerFamily(value.type);
+	if (family) {
+		const preview = newDocxChartEx(family, title && !tile ? { title } : {});
+		return tile
+			? editDocxChartEx(preview, (space) => {
+					const { title: _title, legend: _legend, ...rest } = space;
+					return rest;
+				})
+			: preview;
+	}
+	const target = chartTypeTarget(value.type, value.grouping);
 	let next = chart ?? newDocxChart(target, title && !tile ? { title } : {});
 	if (chart)
 		try {
@@ -124,6 +137,17 @@ export function createChartTypeDialog(host: ChartDialogsHost, change: boolean): 
 	picker.changeOnly = change;
 	const message = document.createElement('p');
 	message.setAttribute('role', 'status');
+	// A new region map has no geography cache: say what the preview's outlines are.
+	const note = document.createElement('p');
+	note.setAttribute('role', 'note');
+	note.className = 'dve-chart-note';
+	const updateNote = () => {
+		note.textContent =
+			chartExPickerFamily(picker.value.type) === 'regionMap'
+				? translate(locale, 'chart.mapNotice')
+				: '';
+	};
+	picker.addEventListener('office-chart-change', updateNote);
 	const cancel = dialogButton('Cancel');
 	const ok = dialogButton('OK', true);
 	let locale: EditorLocale = 'en';
@@ -158,10 +182,11 @@ export function createChartTypeDialog(host: ChartDialogsHost, change: boolean): 
 		if (view?.editable) {
 			if (change) setSelectedChartType(view, type, grouping);
 			else {
-				const chart = newDocxChart(
-					chartTypeTarget(type, grouping),
-					text.trim() ? { title: text.trim() } : {},
-				);
+				const family = chartExPickerFamily(type);
+				const options = text.trim() ? { title: text.trim() } : {};
+				const chart = family
+					? newDocxChartEx(family, options)
+					: newDocxChart(chartTypeTarget(type, grouping), options);
 				const tr = insertChartImage(view.state, newChartImage(chart));
 				if (tr) view.dispatch(tr);
 			}
@@ -204,10 +229,10 @@ export function createChartTypeDialog(host: ChartDialogsHost, change: boolean): 
 				element.replaceChildren(message, dialogActions(cancel));
 			} else {
 				current = selected?.chart;
-				picker.types = DOCX_CHART_TYPES.map(([id, label]) => ({
-					id,
-					label: translate(locale, label),
-				}));
+				// Change Chart Type keeps a classic chart classic; Insert Chart offers every family.
+				picker.types = [...DOCX_CHART_TYPES, ...(change ? [] : DOCX_CHART_EX_TYPES)].map(
+					([id, label]) => ({ id, label: translate(locale, label) }),
+				);
 				picker.groupings = DOCX_CHART_GROUPINGS.map(([id, label]) => ({
 					id,
 					label: translate(locale, label),
@@ -217,7 +242,8 @@ export function createChartTypeDialog(host: ChartDialogsHost, change: boolean): 
 				picker.value = current
 					? { ...chartPickerChoice(current), title: current.title ?? '' }
 					: { type: 'column', grouping: 'clustered', title: translate(locale, 'Chart title') };
-				element.replaceChildren(picker, dialogActions(cancel, ok));
+				updateNote();
+				element.replaceChildren(picker, note, dialogActions(cancel, ok));
 			}
 			localizeDialog(element, locale);
 			setDialogOpen(element, true);

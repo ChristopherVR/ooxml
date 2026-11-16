@@ -52,7 +52,8 @@ describe('generated chartEx histogram and Pareto package', () => {
 		const partPath = 'ppt/extendedCharts/chart1.xml';
 		const chartXml = await zip.file(partPath)!.async('string');
 		expect(chartXml).toContain('<cx:series layoutId="clusteredColumn"');
-		expect(chartXml).toContain('<cx:series layoutId="paretoLine"');
+		expect(chartXml).toContain('<cx:series layoutId="paretoLine" ownerIdx="0"><cx:axisId val="2">');
+		expect(chartXml).toContain('<cx:units unit="percentage">');
 		expect(chartXml).toContain(
 			'<cx:binning intervalClosed="r" underflow="auto" overflow="100"><cx:binCount val="5"></cx:binCount></cx:binning>',
 		);
@@ -78,8 +79,9 @@ describe('generated chartEx histogram and Pareto package', () => {
 					},
 				},
 				{
-					name: 'Cumulative',
-					values: [50, 78, 92, 100],
+					// Office's pareto line caches nothing: the view derives it from the bars.
+					name: 'Cumulative %',
+					values: [50, 78.57, 92.86, 100],
 					histogramOptions: { layout: 'pareto' },
 				},
 			],

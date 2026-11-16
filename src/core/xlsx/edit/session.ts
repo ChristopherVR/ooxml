@@ -318,6 +318,7 @@ export function createEditSession(
 		updateChart: (s, index, patch) => charts.updateChart(ctx, s, index, patch),
 		editChart: (s, index, intent) => charts.editChart(ctx, s, index, intent),
 		editChartEx: (s, index, operation) => chartEx.editChartEx(ctx, s, index, operation),
+		addChartEx: (s, chart) => chartEx.addChartEx(ctx, s, chart),
 		addImage: (s, bytes, type, anchor, name) => charts.addImage(ctx, s, bytes, type, anchor, name),
 		replaceConditionalFormat: (s, index, cf) => cfEdits.replaceConditionalFormat(ctx, s, index, cf),
 		removeConditionalFormat: (s, index) => cfEdits.removeConditionalFormat(ctx, s, index),

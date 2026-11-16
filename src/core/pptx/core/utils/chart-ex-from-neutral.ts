@@ -1,3 +1,4 @@
+import { paretoCumulative, paretoOrder } from '../../../chart/pareto';
 import { parseRegionValueColorPositions } from '../../../chart/region-map';
 // ChartEx facts come from the namespace-aware shared parser. Host-resolved paint and fonts are
 // supplied separately so PowerPoint retains its theme and raw geography-cache compatibility.
@@ -183,6 +184,17 @@ export function chartExFromNeutral(space: ChartExSpace, styled: Styled) {
 			else delete result.dataLabels;
 		}
 		return result;
+	});
+	// An owned pareto line (`@ownerIdx`, as Office writes it) caches no data: its view values are
+	// the cumulative share of its owner's values in descending order, in percent.
+	space.plotArea.series.forEach((source, index) => {
+		const owner = source.ownerIndex === undefined ? undefined : series[source.ownerIndex];
+		const line = series[index];
+		if (source.layoutId !== 'paretoLine' || !owner || !line || dataOf(index)) return;
+		const values = owner.values.map((value) => (Number.isFinite(value) ? value : 0));
+		const ordered = paretoOrder(values).map((i) => values[i]!);
+		line.values = paretoCumulative(ordered).map((share) => Math.round(share * 10000) / 100);
+		if (!source.tx) line.name = 'Cumulative %';
 	});
 	const axes = space.plotArea.axes.map((source, index): PptxChartAxisFormatting => {
 		const out = {

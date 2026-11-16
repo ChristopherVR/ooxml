@@ -20,6 +20,12 @@ import type { RelationshipInput } from '../../../../opc/relationships';
 import { buildChartColorStyleXml } from '../../utils/chart-color-style-writer';
 import { requireEmbeddedWorkbookChart } from '../../utils/chart-new-part-workbook';
 import { buildChartExSpaceXml, canGenerateChartEx } from '../../utils/chart-cx-generator';
+import {
+	CHART_STYLE_CONTENT_TYPE,
+	CHART_STYLE_REL,
+	chartExColorStyleXml,
+	chartExStyleXml,
+} from '../../../../chart/ex/style-part';
 import { writeNewChartPart } from '../../utils/chart-new-part';
 import { buildChartSpaceXml } from '../../utils/chart-xml-generator';
 import { findOleObjNode } from '../../utils/ole-alternate-content';
@@ -87,6 +93,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	protected pendingChartPartPaths?: string[] | undefined;
 	protected pendingExtendedChartPartPaths?: string[] | undefined;
 	protected pendingChartColorPartPaths?: string[] | undefined;
+	protected pendingChartStylePartPaths?: string[] | undefined;
 	/** Embedded workbooks of SDK-created charts written this save (`embedWorkbook`). */
 	protected pendingChartWorkbookPartPaths?: string[] | undefined;
 
@@ -176,7 +183,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 		const colorTarget = chartData.colorPalette?.length
 			? this.writeChartColorPart(partPath, chartData.colorPalette, chartData.colorMethod)
-			: undefined;
+			: extended
+				? this.writeChartExStyleParts(partPath, 'colors')
+				: undefined;
+		// PowerPoint refuses an extended chart part without a chart style part (`style-part.ts`).
+		const styleTarget = extended ? this.writeChartExStyleParts(partPath, 'style') : undefined;
 		if (embedded) {
 			// The workbook takes rId1 (`c:externalData`); the colour-style part follows it.
 			const colorRels = new Map<string, RelationshipInput>(
@@ -204,16 +215,22 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		} else if (colorTarget) {
 			const fileName = partPath.slice(partPath.lastIndexOf('/') + 1);
 			const directory = partPath.slice(0, partPath.lastIndexOf('/'));
+			const relationships = [
+				{
+					'@_Id': 'rId1',
+					'@_Type': PptxHandlerRuntime.CHART_COLOR_REL_TYPE,
+					'@_Target': colorTarget,
+				},
+				...(styleTarget
+					? [{ '@_Id': 'rId2', '@_Type': CHART_STYLE_REL, '@_Target': styleTarget }]
+					: []),
+			];
 			this.zip.file(
 				`${directory}/_rels/${fileName}.rels`,
 				this.builder.build({
 					Relationships: {
 						'@_xmlns': 'http://schemas.openxmlformats.org/package/2006/relationships',
-						Relationship: {
-							'@_Id': 'rId1',
-							'@_Type': PptxHandlerRuntime.CHART_COLOR_REL_TYPE,
-							'@_Target': colorTarget,
-						},
+						Relationship: relationships.length === 1 ? relationships[0] : relationships,
 					},
 				}),
 			);
@@ -226,6 +243,21 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			'@_Target': `../${partPath.slice('ppt/'.length)}`,
 		});
 		return this.createChartGraphicFrameXml(el, relId, extended);
+	}
+
+	/**
+	 * Writes the default chart style (`styleN.xml`) or colour style (`colorsN.xml`) part of a new
+	 * extended chart next to it; returns its target relative to the chart part.
+	 */
+	private writeChartExStyleParts(partPath: string, kind: 'style' | 'colors'): string {
+		const fileName = partPath.slice(partPath.lastIndexOf('/') + 1);
+		const index = /\d+/u.exec(fileName)?.[0] ?? '1';
+		const directory = partPath.slice(0, partPath.lastIndexOf('/'));
+		const path = `${directory}/${kind}${index}.xml`;
+		this.zip.file(path, kind === 'style' ? chartExStyleXml() : chartExColorStyleXml());
+		if (kind === 'style') (this.pendingChartStylePartPaths ??= []).push(path);
+		else (this.pendingChartColorPartPaths ??= []).push(path);
+		return `${kind}${index}.xml`;
 	}
 
 	/** Writes `colorsN.xml` next to the chart part; returns its target relative to the chart. */
@@ -256,6 +288,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const extendedPaths = this.pendingExtendedChartPartPaths;
 		const colorPaths = this.pendingChartColorPartPaths;
 		const workbookPaths = this.pendingChartWorkbookPartPaths;
+		const stylePaths = this.pendingChartStylePartPaths;
+		this.pendingChartStylePartPaths = undefined;
 		this.pendingChartPartPaths = undefined;
 		this.pendingExtendedChartPartPaths = undefined;
 		this.pendingChartColorPartPaths = undefined;
@@ -264,6 +298,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			(!paths || paths.length === 0) &&
 			(!extendedPaths || extendedPaths.length === 0) &&
 			(!colorPaths || colorPaths.length === 0) &&
+			(!stylePaths || stylePaths.length === 0) &&
 			(!workbookPaths || workbookPaths.length === 0)
 		) {
 			return;
@@ -289,6 +324,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				(path) => [path, PptxHandlerRuntime.CHART_COLOR_CONTENT_TYPE] as const,
 			),
 			...(workbookPaths ?? []).map((path) => [path, CHART_WORKBOOK_CONTENT_TYPE] as const),
+			...(stylePaths ?? []).map((path) => [path, CHART_STYLE_CONTENT_TYPE] as const),
 		]) {
 			const partName = `/${p}`;
 			if (!have.has(partName)) {

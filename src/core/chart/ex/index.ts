@@ -14,3 +14,5 @@ export * from './hydrate';
 export * from './data-layout';
 export * from './workbook';
 export * from './create';
+export * from './new-part';
+export * from './style-part';

@@ -17,6 +17,8 @@ import {
 	chartSpaceWorkbookWrites,
 	saveChartWorkbookUpdates,
 	writeChartPartWithWorkbook,
+	writeChartExPartWithWorkbook,
+	type ChartExSpace,
 	type ChartSpace,
 	type ChartWorkbookIssue,
 } from '../chart/index';
@@ -34,6 +36,15 @@ export async function writeNewChartPart(zip: JSZip, space: ChartSpace): Promise<
 		embeddingsFolder: 'word/embeddings/',
 	});
 	await embedChartPartPictures(zip, partName, CHART_MEDIA_FOLDERS.docx, space.pictureSources);
+	return partName;
+}
+
+/** {@link writeNewChartPart} for an extended chart: `chartExN.xml`, relationships and workbook. */
+export async function writeNewChartExPart(zip: JSZip, space: ChartExSpace): Promise<string> {
+	const { partName } = await writeChartExPartWithWorkbook(zip, space, {
+		chartFolder: 'word/charts/',
+		embeddingsFolder: 'word/embeddings/',
+	});
 	return partName;
 }
 

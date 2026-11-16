@@ -46,6 +46,8 @@ export function chartExDataLayout(
 		}
 	}
 	for (const series of draft.plotArea.series) {
+		// A pareto line is drawn from its owner and has neither data nor a name of its own.
+		if (series.ownerIndex !== undefined && !series.tx) continue;
 		const col = columns.length;
 		columns.push([series.tx?.value ?? series.tx?.rich?.text ?? '']);
 		series.tx = {

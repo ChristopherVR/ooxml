@@ -10,6 +10,7 @@ import type {
 	FilterCriteria,
 	BorderEdge,
 	CellStyle,
+	UnsupportedDrawingObject,
 	CellValue,
 	ChartObject,
 	Color,
@@ -309,6 +310,11 @@ export interface EditSession {
 	editChart(sheet: number, index: number, intent: ChartEditIntent): void;
 	/** Extended chart operation with atomic source-cell synchronization and history. */
 	editChartEx(sheet: number, index: number, operation: (space: ChartExSpace) => ChartExSpace): void;
+	/** Inserts an extended chart (`buildChartEx`); returns its drawing index. */
+	addChartEx(
+		sheet: number,
+		chart: UnsupportedDrawingObject & { chartExSpace: ChartExSpace },
+	): number;
 	/** Inserts a picture (bytes stored as a new media part) and returns it. */
 	addImage(
 		sheet: number,

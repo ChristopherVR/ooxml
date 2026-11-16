@@ -663,15 +663,17 @@ is the acceptance bar), and the area has its own tests and real parts from `src/
   hierarchy mappings are refused. ChartEx common formatting uses its own capability source;
   unsupported classic advanced controls are hidden or refused.
   PowerPoint now projects neutral ChartEx facts through a host colour/font bridge, and shared
-  creation/save increments cover six authored families and admitted family switches. Neutral
-  chart-part grafts reopen with the expected native PowerPoint types in valid gallery decks;
-  this does not certify fresh SDK presentation templates. A new six-slide SDK deck failed native
-  opening with both the old and new generators, a known template limitation.
+  creation/save increments cover all eight families and admitted family switches, Pareto
+  (`toChartExPareto`: an owned `paretoLine` and a percentage axis) and region maps
+  (`newChartExGeography`, no provider cache) included. Word and Excel insert every family from
+  the shared picker (`newDocxChartEx`, `buildChartEx`/`addChartEx`); new parts carry the chart
+  style and colour style parts Office requires (`chart/ex/style-part.ts`), and fresh Word, Excel
+  and PowerPoint files with all eight families pass the native check in the delivery ledger.
   Typed axis/style/point-label operations now serve PowerPoint as well as Word and Excel. The
   style bridge reuses shared DrawingML edits while keeping ChartEx data and layout semantics native
   to its model. ChartEx labels have no custom text or manual layout node in the schema and Excel 16's
   object model refuses both, so those edits stay refused (see the delivery ledger, 2026-11-16).
-  **Remains:** raw geography/Pareto creation, wider axis authoring and
+  **Remains:** exact region map shapes without an Office-written geography cache, and
   removal of the remaining compatibility paths only
   after regression and native checks. The complete Office ChartEx authoring surface is not claimed.
 

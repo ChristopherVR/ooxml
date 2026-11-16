@@ -20,6 +20,7 @@ import { parseCxRegionMapOptions } from './chart-cx-region-map';
 import { extractCxSeriesColor } from './chart-cx-series-color';
 import { parseCxTreemapOptions } from './chart-cx-treemap';
 import { parseCxWaterfallOptions } from './chart-cx-waterfall';
+import { paretoCumulative, paretoOrder } from '../../../chart/pareto';
 
 /** Minimal xml-lookup interface needed by the cx: parser. */
 export interface XmlLookupLike {
@@ -174,6 +175,21 @@ export function parseCxChartSeries(
 		}
 
 		return result;
+	});
+
+	// An owned pareto line (`@ownerIdx`, as Office writes it) caches no data: its view values are the
+	// cumulative share of its owner's values in descending order, in percent (as chart-ex-from-neutral).
+	cxSeriesList.forEach((ser, index) => {
+		const owner = Number.parseInt(String(ser['@_ownerIdx'] ?? ''), 10);
+		const line = series[index];
+		const source = Number.isSafeInteger(owner) ? series[owner] : undefined;
+		if (!line || !source || String(ser['@_layoutId']) !== 'paretoLine') return;
+		if (xmlLookup.getChildByLocalName(ser, 'dataId') || xmlLookup.getChildByLocalName(ser, 'data'))
+			return;
+		const values = source.values.map((value) => (Number.isFinite(value) ? value : 0));
+		const ordered = paretoOrder(values).map((i) => values[i]!);
+		line.values = paretoCumulative(ordered).map((share) => Math.round(share * 10000) / 100);
+		if (!xmlLookup.getChildByLocalName(ser, 'tx')) line.name = 'Cumulative %';
 	});
 
 	const chartData = buildCxChartData(plotArea, chartRoot, xmlLookup, colorParser, resolveTypeface);

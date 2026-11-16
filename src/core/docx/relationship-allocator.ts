@@ -2,7 +2,7 @@
 // Assigns fresh relationship ids when write.ts introduces a new external hyperlink or a
 // newly inserted picture, and records what save.ts must add to word/_rels/document.xml.rels.
 import { RELATIONSHIP_TYPES, isSafeHyperlinkHref, nextRelationshipId } from '../opc/index';
-import type { ChartSpace } from '../chart/index';
+import type { ChartExSpace, ChartSpace } from '../chart/index';
 import { DocPrIdAllocator } from './docpr-ids';
 import { isWordNavigableHref } from './hyperlink';
 import { isElement, REL_NS, type XmlDocument, type XmlElement } from './xml';
@@ -11,6 +11,8 @@ export const HYPERLINK_RELATIONSHIP_TYPE = RELATIONSHIP_TYPES.hyperlink;
 export const IMAGE_RELATIONSHIP_TYPE = RELATIONSHIP_TYPES.image;
 export const CHART_RELATIONSHIP_TYPE =
 	'http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart';
+export const CHART_EX_RELATIONSHIP_TYPE =
+	'http://schemas.microsoft.com/office/2014/relationships/chartEx';
 export { isSafeHyperlinkHref };
 
 export interface NewRelationship {
@@ -26,6 +28,8 @@ export interface NewRelationship {
 	content?: string;
 	/** A chart inserted in this session: its part, relationships and workbook are created on save, which sets the target. */
 	chart?: ChartSpace;
+	/** An extended chart inserted in this session, written the same way as {@link chart}. */
+	chartEx?: ChartExSpace;
 }
 
 /** A part a new diagram adds: its relationship type and, for the data part, its text. */
@@ -119,6 +123,19 @@ export class RelationshipAllocator {
 			target: '',
 			mode: 'Internal',
 			chart: space,
+		});
+		return id;
+	}
+
+	/** Registers an extended chart inserted in this session; its part is named on write. */
+	addChartEx(space: ChartExSpace): string {
+		const id = this.nextId();
+		this.created.push({
+			id,
+			type: CHART_EX_RELATIONSHIP_TYPE,
+			target: '',
+			mode: 'Internal',
+			chartEx: space,
 		});
 		return id;
 	}

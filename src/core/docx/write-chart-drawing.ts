@@ -1,8 +1,10 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // The inline drawing of a chart inserted in this session: `wp:inline` around an `a:graphicData`
 // whose `c:chart` names the chart part's relationship, the markup Word writes for Insert > Chart.
+// An extended chart's `cx:chart` sits in `mc:AlternateContent/mc:Choice Requires="cx1"`, as Word
+// writes it, so a consumer without extended charts skips it; no fallback picture is written.
 import { EMU_PER_PIXEL } from './drawing';
-import { CHART_GRAPHIC_URI } from './chart';
+import { CHART_GRAPHIC_URI, CHARTEX_GRAPHIC_URI } from './chart';
 import type { InlineImage } from './model';
 import type { RelationshipAllocator } from './relationship-allocator';
 import { clearNonProperties, updateExtent } from './write-drawing-patch';
@@ -11,6 +13,10 @@ import { makeNS, makeW, REL_NS, type XmlDocument, type XmlElement } from './xml'
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
 const WP_NS = 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing';
 const C_NS = 'http://schemas.openxmlformats.org/drawingml/2006/chart';
+const CX_NS = CHARTEX_GRAPHIC_URI;
+const CX1_NS = 'http://schemas.microsoft.com/office/drawing/2015/9/8/chartex';
+const MC_NS = 'http://schemas.openxmlformats.org/markup-compatibility/2006';
+const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';
 
 function child(parent: XmlElement, ns: string, name: string, attrs: Record<string, string> = {}) {
 	const node = makeNS(parent.ownerDocument!, ns, name);
@@ -25,6 +31,7 @@ export function buildChartDrawing(
 	image: InlineImage,
 	relId: string,
 	docPrId: string,
+	extended = false,
 ): XmlElement {
 	const drawing = makeW(doc, 'drawing');
 	const inline = child(drawing, WP_NS, 'wp:inline', {
@@ -43,10 +50,26 @@ export function buildChartDrawing(
 	if (image.title) docPr.setAttribute('title', image.title);
 	child(inline, WP_NS, 'wp:cNvGraphicFramePr');
 	const graphic = child(inline, A_NS, 'a:graphic');
-	const data = child(graphic, A_NS, 'a:graphicData', { uri: CHART_GRAPHIC_URI });
-	const chart = child(data, C_NS, 'c:chart');
+	const data = child(graphic, A_NS, 'a:graphicData', {
+		uri: extended ? CHARTEX_GRAPHIC_URI : CHART_GRAPHIC_URI,
+	});
+	const chart = extended ? child(data, CX_NS, 'cx:chart') : child(data, C_NS, 'c:chart');
 	chart.setAttributeNS(REL_NS, 'r:id', relId);
 	return drawing;
+}
+
+/** `mc:AlternateContent` choosing an extended chart's drawing when `cx1` is understood. */
+export function buildChartExDrawing(
+	doc: XmlDocument,
+	image: InlineImage,
+	relId: string,
+	docPrId: string,
+): XmlElement {
+	const alternate = makeNS(doc, MC_NS, 'mc:AlternateContent');
+	alternate.setAttributeNS(XMLNS_NS, 'xmlns:cx1', CX1_NS);
+	const choice = child(alternate, MC_NS, 'mc:Choice', { Requires: 'cx1' });
+	choice.appendChild(buildChartDrawing(doc, image, relId, docPrId, true));
+	return alternate;
 }
 
 /**
@@ -80,6 +103,13 @@ export function chartRun(
 		const relId = allocator.addChart(image.chart.chartSpace);
 		clearNonProperties(node);
 		node.appendChild(buildChartDrawing(doc, image, relId, allocator.docPrIds.next()));
+		return node;
+	}
+	if (!base && image.chart?.chartExSpace && !image.chart.relId && !image.chart.partName) {
+		if (!allocator) throw new Error('Cannot insert a chart without a relationship allocator.');
+		const relId = allocator.addChartEx(image.chart.chartExSpace);
+		clearNonProperties(node);
+		node.appendChild(buildChartExDrawing(doc, image, relId, allocator.docPrIds.next()));
 		return node;
 	}
 	return undefined;

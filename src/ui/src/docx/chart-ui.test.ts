@@ -7,6 +7,8 @@ import { createDocument, saveDocx, loadDocx, chartsIn, type Paragraph } from 'oo
 import { selectedChart } from 'ooxml-core/docx/ui';
 import { docToModel, modelToDoc } from './model-adapter';
 import { createChartDataDialog, createChartTypeDialog } from './chart-dialogs';
+import { chartExFamilyOf } from 'ooxml-core/chart';
+import { translate } from './localization';
 import { chartPickerChoice, chartTypeTarget, setSelectedChartLegend } from './chart-commands';
 import { syncChartDesign } from './chart-design-ribbon';
 import { createRibbon } from './ribbon';
@@ -68,6 +70,31 @@ describe('Word charts in the editor', () => {
 		expect(selectedChart(view.state)).toBeUndefined();
 		syncChartDesign(ribbon, view.state, true);
 		expect(isTabHidden(panelOf(ribbon, 'chart-design')!)).toBe(true);
+	});
+
+	it('inserts pareto and map charts from the extended families and saves them', async () => {
+		for (const family of ['pareto', 'regionMap'] as const) {
+			const { view, model } = editor();
+			const dialog = createChartTypeDialog({ view: () => view, theme: () => undefined }, false);
+			document.body.append(dialog.element);
+			dialog.open();
+			const picker = dialog.element.querySelector('office-ui-chart-picker') as Picker & {
+				types: { id: string }[];
+			};
+			expect(picker.types.map((t) => t.id)).toContain(`cx:${family}`);
+			picker.value = { type: `cx:${family}`, grouping: 'clustered', title: family };
+			picker.dispatchEvent(new CustomEvent('office-chart-change'));
+			const note = dialog.element.querySelector('[role="note"]')!.textContent;
+			expect(note).toBe(family === 'regionMap' ? translate('en', 'chart.mapNotice') : '');
+			[...dialog.element.querySelectorAll('button')].find((b) => b.textContent === 'OK')!.click();
+			const selected = selectedChart(view.state)!;
+			expect(selected.chart.chartExSpace).toBeDefined();
+			const saved = await saveDocx(docToModel(view.state.doc, model));
+			const chart = chartsIn((await loadDocx(saved)).model.blocks)[0]!;
+			expect(chartExFamilyOf(chart.chartExSpace!)).toBe(family);
+			expect(chart.title).toBe(family);
+			dialog.element.remove();
+		}
 	});
 
 	it('changes the type, the legend and the data of the selected chart, one undo step each', async () => {

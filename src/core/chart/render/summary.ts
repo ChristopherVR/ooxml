@@ -150,6 +150,8 @@ export interface ChartSummaryGroup {
 /** The binning of a histogram summary: `cx:binning` plus whether bars aggregate by category. */
 export interface HistogramSummaryOptions extends HistogramOptions {
 	aggregateByCategory?: boolean | undefined;
+	/** A pareto chart: bars in descending order and a cumulative percentage line (`paretoLine`). */
+	pareto?: { lineColor?: DrawingColor | undefined } | undefined;
 }
 
 /** Bubble display options of `c:bubbleChart`: scale (percent), what the size represents, negatives. */

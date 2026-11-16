@@ -1,6 +1,7 @@
 // Insert Chart: a chart type gallery, grouping, title and a live preview drawn by the core's
 // chartView + renderChartSvg. OK adds a ChartObject over the selection (or, from Chart Design,
-// changes the active chart's type).
+// changes the active chart's type). The extended families (ids `cx:<family>`) are offered by Insert
+// Chart only; OK adds an extended chart over the selection through the session's `addChartEx`.
 import { type ChartObject, type ChartType, chartView, renderChartSvg } from 'ooxml-core/xlsx';
 import { activeChart, editChart } from 'ooxml-core/xlsx/ui';
 import { CHART_TYPES } from '../commands/insert';
@@ -8,7 +9,12 @@ import { regionOf, target } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { showDialog } from './frame';
 import { text } from './fields';
-import { buildChart, evaluateRef } from 'ooxml-core/xlsx/ui';
+import { buildChart, buildChartEx, evaluateRef, INSERT_CHART_EX_TYPES } from 'ooxml-core/xlsx/ui';
+import {
+	chartExSummaryFromModel,
+	renderChartSummarySvg,
+	type ChartExFamily,
+} from 'ooxml-core/chart';
 import { defineChartPicker } from '../../dialog/chart-picker';
 import type { OfficeChartValue } from '../../dialog/chart-picker';
 
@@ -32,6 +38,8 @@ export interface InsertChartProps {
 }
 
 type Grouping = NonNullable<ChartObject['grouping']>;
+const MAP_NOTICE =
+	'Map outlines here are approximate. Office draws a new map only after it adds map data through its online service.';
 const GROUPINGS: ReadonlyArray<readonly [Grouping, string]> = [
 	['clustered', 'Clustered'],
 	['stacked', 'Stacked'],
@@ -49,7 +57,22 @@ export function openInsertChart(
 	const doc = ctx.host.ownerDocument;
 	defineChartPicker(doc.defaultView?.customElements);
 	const picker = doc.createElement('office-ui-chart-picker') as Picker;
-	picker.types = CHART_TYPES.map(([id, label]) => ({ id, label: ctx.t(label) }));
+	picker.types = [
+		...CHART_TYPES.map(([id, label]) => ({ id: id as string, label: ctx.t(label) })),
+		...(change
+			? []
+			: INSERT_CHART_EX_TYPES.map(([family, label]) => ({
+					id: `cx:${family}`,
+					label: ctx.t(label),
+				}))),
+	];
+	const familyOf = (type: string): ChartExFamily | undefined =>
+		INSERT_CHART_EX_TYPES.find(([family]) => `cx:${family}` === type)?.[0];
+	const mapNotice = ctx.t(MAP_NOTICE);
+	const extended = (value: OfficeChartValue, family: ChartExFamily) =>
+		buildChartEx(t.workbook, t.sheet, range, family, {
+			...(value.title.trim() ? { title: value.title.trim() } : {}),
+		});
 	picker.groupings = GROUPINGS.map(([id, label]) => ({ id, label: ctx.t(label) }));
 	picker.groupedTypes = ['column', 'bar'];
 	picker.labels = {
@@ -74,6 +97,21 @@ export function openInsertChart(
 		});
 	};
 	picker.drawPreview = (value, size, tile) => {
+		const family = familyOf(value.type);
+		if (family) {
+			try {
+				const summary = chartExSummaryFromModel(extended(value, family).chartExSpace).summary;
+				if (!summary) return '';
+				const { title: _title, ...bare } = summary;
+				return renderChartSummarySvg(tile ? { ...bare, showLegend: false } : summary, {
+					width: size.width,
+					height: size.height,
+					mapApproximationLabel: mapNotice,
+				});
+			} catch {
+				return '';
+			}
+		}
 		// A type tile is drawn bare (no title or legend); the large preview shows the chart as it will be.
 		const chart = { ...current(value), ...(tile ? { title: '', showLegend: false } : {}) };
 		return renderChartSvg(
@@ -82,7 +120,15 @@ export function openInsertChart(
 			size.height,
 		);
 	};
-	const body: HTMLElement[] = [picker];
+	// A new region map has no geography cache: say what the preview's outlines are.
+	const note = doc.createElement('p');
+	note.setAttribute('role', 'note');
+	const updateNote = () => {
+		note.textContent = familyOf(picker.value.type) === 'regionMap' ? mapNotice : '';
+	};
+	picker.addEventListener('office-chart-change', updateNote);
+	updateNote();
+	const body: HTMLElement[] = [picker, note];
 	if (!change && t.ws.rows.size === 0)
 		body.push(text(ctx, 'Select the data for the chart first, then insert it.'));
 	return showDialog<ChartObject>(ctx, {
@@ -96,6 +142,12 @@ export function openInsertChart(
 				?.focus(),
 		submit: () => {
 			const value = picker.value;
+			const family = familyOf(value.type);
+			if (family) {
+				const built = extended(value, family);
+				ctx.selection.set({ drawing: t.session.addChartEx(t.sheet, built) });
+				return built.chartEx!;
+			}
 			const chart = current(value);
 			if (change)
 				editChart(ctx, () => ({

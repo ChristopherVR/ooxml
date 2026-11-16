@@ -1,3 +1,4 @@
+import { paretoCumulative, paretoOrder } from '../../../chart/pareto';
 // ChartEx parity harness (chart-ex-neutral-parity.test.ts): one comparison shape for the fields the
 // pptx ChartEx reader (`PptxChartData`) and the neutral chartex model (`ChartExSpace`) share, and a
 // projection from each. The pptx normalisations (trimmed text, the `Series N` default name, `[0]`
@@ -306,10 +307,26 @@ export function projectNeutralChartEx(space: ChartExSpace): ChartExShape {
 			const values = levelText(dimensionOf(seriesData(space, series), 'numDim', 'val', 'val'))[0]
 				?.map((value) => Number.parseFloat(value))
 				.filter((value) => Number.isFinite(value));
+			// An owned pareto line without data: the cumulative share of its owner, in percent.
+			const owner = series.ownerIndex === undefined ? undefined : all[series.ownerIndex];
+			const derived =
+				series.layoutId === 'paretoLine' && owner && !seriesData(space, series)
+					? (() => {
+							const base =
+								levelText(dimensionOf(seriesData(space, owner), 'numDim', 'val', 'val'))[0]
+									?.map((value) => Number.parseFloat(value))
+									.filter((value) => Number.isFinite(value)) ?? [];
+							const source = base.length ? base : [0];
+							const ordered = paretoOrder(source).map((i) => source[i]!);
+							return paretoCumulative(ordered).map((v) => Math.round(v * 10000) / 100);
+						})()
+					: undefined;
 			const fill = series.spPr?.fill;
 			return {
-				name: series.tx?.value?.trim() || `Series ${index + 1}`,
-				values: values?.length ? values : [0],
+				name:
+					series.tx?.value?.trim() ||
+					(derived && !series.tx ? 'Cumulative %' : `Series ${index + 1}`),
+				values: derived ?? (values?.length ? values : [0]),
 				color:
 					fill?.kind === 'solid' && fill.color.kind === 'srgb'
 						? `#${fill.color.value.toUpperCase()}`

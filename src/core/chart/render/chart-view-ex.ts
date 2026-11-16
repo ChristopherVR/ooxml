@@ -9,6 +9,7 @@ import { niceScale, formatAxisValue } from './chart-scale';
 import type { ChartGroupView, ChartViewModel, ValueAxisView } from './chart-view';
 import { valueExtent } from './chart-value-axis';
 import { extentOf } from '../extent';
+import { paretoCumulative, paretoOrder } from '../pareto';
 import { stockView } from './chart-view-stock';
 import { seriesView, type ChartRefValue, type SeriesContext } from './chart-view-series';
 import type { ChartSummary, ChartSummarySeries } from './summary';
@@ -108,10 +109,15 @@ export function waterfallView<S extends ChartSummarySeries>(
 	model.categories = steps.map((_, i) => labels[i] ?? String(i + 1));
 }
 
-/** Histogram: the raw observations (or categories to count) become bins of one count series. */
+/**
+ * Histogram: the raw observations (or categories to count) become bins of one count series. A
+ * pareto chart orders the bins by descending count and adds its cumulative line on a 0 to 100%
+ * secondary axis.
+ */
 export function histogramView<S extends ChartSummarySeries>(
 	chart: ChartSummary<S>,
 	model: ChartViewModel,
+	ctx?: SeriesContext<S>,
 ): void {
 	const first = model.series[0];
 	if (!first) return;
@@ -123,8 +129,38 @@ export function histogramView<S extends ChartSummarySeries>(
 				model.categories,
 			)
 		: computeHistogramBins(raw, options, formatAxisValue);
-	model.categories = bins.map((bin) => bin.label);
-	first.values = bins.map((bin) => bin.value);
+	const pareto = options.pareto;
+	const order = pareto ? paretoOrder(bins.map((bin) => bin.value)) : bins.map((_, i) => i);
+	model.categories = order.map((i) => bins[i]!.label);
+	first.values = order.map((i) => bins[i]!.value);
 	model.barGapWidth = 0;
 	model.barOverlap = 0;
+	if (!pareto) return;
+	const color =
+		ctx?.drawingColor(pareto.lineColor) ??
+		(ctx?.palette && chartPaletteSeriesColor(ctx.palette, 1, 2, ctx.scheme)) ??
+		(ctx ? autoSeriesColor(ctx.theme, 1) : '#ed7d31');
+	model.extraGroups = [
+		{
+			type: 'line',
+			grouping: 'standard',
+			secondary: true,
+			series: [
+				{
+					name: '',
+					values: paretoCumulative(first.values.map((v) => v ?? 0)),
+					color,
+					stroke: { color, width: 2.25 },
+					marker: { symbol: 'none' },
+					sourceIndex: 1,
+				},
+			],
+		},
+	];
+}
+
+/** The 0 to 100% axis of a pareto line, fixed as Office writes it (`min="0" max="1"`). */
+export function paretoAxis(model: ChartViewModel): void {
+	if (!model.extraGroups?.some((group) => group.secondary)) return;
+	model.secondaryAxis = { ...niceScale(0, 1), min: 0, max: 1, percent: true };
 }

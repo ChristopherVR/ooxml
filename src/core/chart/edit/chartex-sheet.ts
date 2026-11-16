@@ -46,12 +46,22 @@ export function chartExLevelValues(level: ChartExLevel | undefined): string[] {
 			values[point.index] = point.value;
 	return values;
 }
+/**
+ * The plot positions of the series that own data, in sheet order. A series drawn from another one
+ * (a pareto line, `@ownerIdx`) has no data of its own and no row in the data sheet.
+ */
+export function chartExDataSeriesIndices(space: ChartExSpace): number[] {
+	return space.plotArea.series.flatMap((series, index) =>
+		series.ownerIndex === undefined ? [index] : [],
+	);
+}
 /** First-level values for each authored series; parent category levels are exposed separately. */
 export function chartExSpaceDataSheet(space: ChartExSpace): ChartExDataSheet {
-	const levels = space.plotArea.series.length
-		? (chartExSeriesDimension(space, 0, false)?.levels.map(chartExLevelValues) ?? [])
+	const plot = chartExDataSeriesIndices(space);
+	const levels = plot.length
+		? (chartExSeriesDimension(space, plot[0]!, false)?.levels.map(chartExLevelValues) ?? [])
 		: [];
-	const values = space.plotArea.series.map((_, i) =>
+	const values = plot.map((i) =>
 		chartExLevelValues(chartExSeriesDimension(space, i, true)?.levels[0]),
 	);
 	const count = Math.max(levels[0]?.length ?? 0, ...values.map((v) => v.length), 0);
@@ -59,13 +69,16 @@ export function chartExSpaceDataSheet(space: ChartExSpace): ChartExDataSheet {
 	return {
 		categories,
 		categoryLevels: levels.length ? levels : [categories],
-		series: space.plotArea.series.map((series, i) => ({
-			name: series.tx?.value ?? series.tx?.rich?.text ?? '',
-			values: Array.from({ length: count }, (_, p) => {
-				const v = values[i]?.[p];
-				return v !== undefined && v !== '' && Number.isFinite(Number(v)) ? Number(v) : null;
-			}),
-		})),
+		series: plot.map((position, i) => {
+			const series = space.plotArea.series[position]!;
+			return {
+				name: series.tx?.value ?? series.tx?.rich?.text ?? '',
+				values: Array.from({ length: count }, (_, p) => {
+					const v = values[i]?.[p];
+					return v !== undefined && v !== '' && Number.isFinite(Number(v)) ? Number(v) : null;
+				}),
+			};
+		}),
 	};
 }
 function rewrite(level: ChartExLevel, values: readonly (string | number | null)[]): void {
@@ -84,26 +97,32 @@ export function applyChartExSpaceDataSheetEdits(
 		const sheet = chartExSpaceDataSheet(result);
 		const next = applyChartDataSheetEdit(sheet, edit);
 		if (!next) continue;
+		const plot = chartExDataSeriesIndices(result);
+		const position = (sheetIndex: number) => {
+			const index = plot[sheetIndex];
+			if (index === undefined) throw new RangeError(`No chart series at index ${sheetIndex}`);
+			return index;
+		};
 		if (edit.kind === 'series-name') {
-			result = renameChartExSeries(result, edit.series, edit.name);
+			result = renameChartExSeries(result, position(edit.series), edit.name);
 			continue;
 		}
 		if (edit.kind === 'add-series') {
-			result = addChartExSeries(result, next.series.at(-1)!.name);
+			result = addChartExSeries(result, next.series.at(-1)!.name, plot[0]);
 			continue;
 		}
 		if (edit.kind === 'remove-series') {
-			result = removeChartExSeries(result, edit.series);
+			result = removeChartExSeries(result, position(edit.series));
 			continue;
 		}
 		result = editChartExSpace(result, (draft) => {
 			const seen = new Set<ChartExDimension>();
-			for (let i = 0; i < draft.plotArea.series.length; i++) {
+			for (const [row, i] of plot.entries()) {
 				if (edit.kind === 'value') {
-					if (i !== edit.series) continue;
+					if (row !== edit.series) continue;
 					const dimension = chartExSeriesDimension(draft, i, true);
 					if (!dimension?.levels[0]) throw new Error('Numeric chart dimension is missing.');
-					rewrite(dimension.levels[0], next.series[i]!.values);
+					rewrite(dimension.levels[0], next.series[row]!.values);
 					continue;
 				}
 				for (const numeric of [false, true]) {

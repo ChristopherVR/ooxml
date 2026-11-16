@@ -4,6 +4,10 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { clickButton, createTestContext, dialogEl, pressKey } from '../commands/test-support';
 import { buildChart } from 'ooxml-core/xlsx/ui';
 import { registerToolDialogs } from './register-tools';
+import { chartExFamilyOf } from 'ooxml-core/chart';
+
+const MAP_NOTICE =
+	'Map outlines here are approximate. Office draws a new map only after it adds map data through its online service.';
 
 afterEach(() => (document.body.innerHTML = ''));
 
@@ -57,7 +61,7 @@ describe('Insert Chart dialog', () => {
 		expect(
 			pickerRoot(dialog).querySelector('[data-gallery-item="line"]')!.getAttribute('aria-pressed'),
 		).toBe('true');
-		expect(pickerRoot(dialog).querySelectorAll('office-ui-gallery .tile svg')).toHaveLength(8);
+		expect(pickerRoot(dialog).querySelectorAll('office-ui-gallery .tile > svg')).toHaveLength(16);
 		const title = pickerRoot(dialog).querySelector<HTMLInputElement>('[data-key="title"]')!;
 		title.value = 'Q1';
 		title.dispatchEvent(new Event('input'));
@@ -68,6 +72,28 @@ describe('Insert Chart dialog', () => {
 		expect(drawings[0]).toMatchObject({ kind: 'chart', chartType: 'line', title: 'Q1' });
 		ctx.session()!.undo();
 		expect(ctx.workbook()!.sheets[0]!.drawings).toHaveLength(0);
+	});
+
+	it('adds pareto and map charts from the extended families, saved as chartEx parts', async () => {
+		for (const family of ['pareto', 'regionMap']) {
+			const ctx = setup();
+			const result = ctx.dialogs.open('insert-chart');
+			const dialog = dialogEl(ctx, 'insert-chart');
+			pickerRoot(dialog)
+				.querySelector<HTMLButtonElement>(`[data-gallery-item="cx:${family}"]`)!
+				.click();
+			expect(pickerRoot(dialog).querySelector('.preview svg')).not.toBeNull();
+			expect(dialog.querySelector('[role="note"]')!.textContent).toBe(
+				family === 'regionMap' ? ctx.t(MAP_NOTICE) : '',
+			);
+			clickButton(dialog, 'OK');
+			await result;
+			const drawing = ctx.workbook()!.sheets[0]!.drawings[0]!;
+			expect(drawing.kind).toBe('unsupported');
+			const back = await loadXlsx(await saveXlsx(ctx.workbook()!));
+			const saved = back.sheets[0]!.drawings[0]!;
+			expect(saved.kind === 'unsupported' && chartExFamilyOf(saved.chartExSpace!)).toBe(family);
+		}
 	});
 
 	it('Cancel and Escape add nothing', async () => {

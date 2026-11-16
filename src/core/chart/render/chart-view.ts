@@ -31,6 +31,7 @@ import {
 	chartExtraAxes,
 	chartExtraView,
 	histogramView,
+	paretoAxis,
 	waterfallView,
 	type WaterfallView,
 } from './chart-view-ex';
@@ -294,13 +295,14 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 	if (type === 'stock') model.stock = stockView(chart.stock, ctx);
 	if (type === 'bubble') bubbleView(chart, model, ctx.evaluateRef);
 	if (type === 'treemap' || type === 'sunburst') hierarchyView(chart, model, ctx.evaluateRef);
-	if (type === 'histogram') histogramView(chart, model);
+	if (type === 'histogram') histogramView(chart, model, ctx);
 	if (extra.length && (type === 'column' || type === 'line' || type === 'area'))
 		chartExtraView(chart, model, ctx, total, collect);
 	if (type === 'waterfall') waterfallView(chart, model, ctx);
 	else if (!byPoint) model.valueAxis = valueAxis(model);
 	applyDataLabels(model, chart.series, extra, ctx.drawingColor);
 	chartExtraAxes(model);
+	if (type === 'histogram' && chart.histogram?.pareto) paretoAxis(model);
 	applyChartAxes(model, chart, ctx.drawingColor);
 	return model;
 }

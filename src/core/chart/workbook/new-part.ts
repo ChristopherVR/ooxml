@@ -105,7 +105,7 @@ export function stageChartPartWithWorkbook(
 		partName,
 		writeChartSpace({ ...space, externalDataRelId: relId, externalDataAutoUpdate: false }),
 	);
-	const target = `${relativeFolder(chartFolder, embeddingsFolder)}${workbook.slice(embeddingsFolder.length)}`;
+	const target = `${packageRelativeFolder(chartFolder, embeddingsFolder)}${workbook.slice(embeddingsFolder.length)}`;
 	zip.file(
 		relationshipsPartFor(partName),
 		buildRelationshipsXml(
@@ -145,7 +145,7 @@ export async function writeChartPartWithWorkbook(
 }
 
 /** The relative path from `from/` to `to/` (`word/charts/` to `word/embeddings/` is `../embeddings/`). */
-function relativeFolder(from: string, to: string): string {
+export function packageRelativeFolder(from: string, to: string): string {
 	const a = from.split('/').filter(Boolean);
 	const b = to.split('/').filter(Boolean);
 	let common = 0;

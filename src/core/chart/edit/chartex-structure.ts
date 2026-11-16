@@ -21,7 +21,10 @@ export function addChartExSeries(
 	templateIndex = 0,
 ): ChartExSpace {
 	const template = chartExSeriesAt(space, templateIndex);
-	if (!['boxWhisker', 'clusteredColumn'].includes(template.layoutId))
+	if (
+		!['boxWhisker', 'clusteredColumn'].includes(template.layoutId) ||
+		space.plotArea.series.some((series) => series.layoutId === 'paretoLine')
+	)
 		throw new RangeError('This chart family supports one data series.');
 	return editChartExSpace(space, (draft) => {
 		const source = chartExSeriesAt(draft, templateIndex);

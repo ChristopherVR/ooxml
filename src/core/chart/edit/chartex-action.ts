@@ -4,10 +4,12 @@ import {
 	addChartExSeries,
 	removeChartExSeries,
 	setChartExAxis,
-	setChartExLayout,
 	setChartExPointLabel,
-	type ChartExLayout,
 } from './chartex-structure';
+import { setChartExFamily, type ChartExFamily } from './chartex-family';
+import { editChartExAxis, type ChartExAxisEdit } from './chartex-axis';
+import { setChartExRegionMap, type ChartExRegionMapOptions } from './chartex-region-map';
+import { chartExDataSeriesIndices } from './chartex-sheet';
 import {
 	chartExAxisAt,
 	editChartExSpace,
@@ -16,11 +18,14 @@ import {
 	setChartExBinning,
 	setChartExParentLabelLayout,
 	setChartExBoxWhisker,
+	renameChartExSeries,
 } from './chartex';
 
 export type ChartExEditAction =
 	| { op: 'title'; text: string | undefined }
-	| { op: 'layout'; layout: ChartExLayout }
+	| { op: 'layout'; layout: ChartExFamily }
+	/** Renames the data series at `seriesIndex` (a plot position); a linked name keeps its cell. */
+	| { op: 'seriesName'; seriesIndex: number; name: string }
 	| { op: 'addSeries'; name: string; templateIndex?: number }
 	| { op: 'removeSeries'; seriesIndex: number }
 	| { op: 'waterfall'; seriesIndex: number; options: Parameters<typeof setChartExWaterfall>[2] }
@@ -33,6 +38,9 @@ export type ChartExEditAction =
 	| { op: 'boxWhisker'; seriesIndex: number; options: Parameters<typeof setChartExBoxWhisker>[2] }
 	| { op: 'axis'; axisIndex: number; edit: Partial<ChartExAxis> }
 	| { op: 'tickLabels'; axisIndex: number; visible: boolean }
+	/** Axis title, visibility, scaling, units, number format, gridlines and tick marks. */
+	| { op: 'axisOptions'; axisIndex: number; edit: ChartExAxisEdit }
+	| { op: 'regionMap'; seriesIndex: number; options: ChartExRegionMapOptions }
 	| {
 			op: 'pointLabel';
 			seriesIndex: number;
@@ -48,7 +56,11 @@ export function applyChartExEditAction(
 		case 'title':
 			return setChartExTitle(space, action.text);
 		case 'layout':
-			return setChartExLayout(space, action.layout);
+			return setChartExFamily(space, action.layout);
+		case 'seriesName':
+			if (!chartExDataSeriesIndices(space).includes(action.seriesIndex))
+				throw new RangeError('Only a data series has a name to edit.');
+			return renameChartExSeries(space, action.seriesIndex, action.name);
 		case 'addSeries':
 			return addChartExSeries(space, action.name, action.templateIndex);
 		case 'removeSeries':
@@ -69,6 +81,10 @@ export function applyChartExEditAction(
 				if (action.visible) axis.tickLabels ??= {};
 				else delete axis.tickLabels;
 			});
+		case 'axisOptions':
+			return editChartExAxis(space, action.axisIndex, action.edit);
+		case 'regionMap':
+			return setChartExRegionMap(space, action.seriesIndex, action.options);
 		case 'pointLabel':
 			return setChartExPointLabel(space, action.seriesIndex, action.pointIndex, action.label);
 	}

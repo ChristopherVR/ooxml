@@ -4,9 +4,11 @@
 // dispatches the result as one undo step (`replaceSelectedChart`).
 import type { EditorView } from 'prosemirror-view';
 import {
+	CHART_EX_FAMILIES,
 	setChartExLegend,
 	setChartLegend,
 	setChartType,
+	type ChartExFamily,
 	type ChartTypeTarget,
 } from 'ooxml-core/chart';
 import { editDocxChartEx, editDocxChart, type DocxChart } from 'ooxml-core/docx';
@@ -24,6 +26,24 @@ export const DOCX_CHART_TYPES: ReadonlyArray<readonly [id: string, label: Locali
 	['scatter', 'chart.type.scatter'],
 	['radar', 'chart.type.radar'],
 ];
+
+/** The extended chart families, after the classic types as in Word's gallery; ids are `cx:<family>`. */
+export const DOCX_CHART_EX_TYPES: ReadonlyArray<readonly [id: string, label: LocalizationKey]> =
+	CHART_EX_FAMILIES.map(
+		(family) =>
+			[
+				`cx:${family}`,
+				`chart.type.${family === 'clusteredColumn' ? 'histogram' : family}` as LocalizationKey,
+			] as const,
+	);
+
+/** The extended chart family a picker id names, or undefined for a classic type. */
+export function chartExPickerFamily(type: string): ChartExFamily | undefined {
+	const family = type.startsWith('cx:') ? type.slice(3) : '';
+	return (CHART_EX_FAMILIES as readonly string[]).includes(family)
+		? (family as ChartExFamily)
+		: undefined;
+}
 
 export const DOCX_CHART_GROUPINGS: ReadonlyArray<readonly [id: string, label: LocalizationKey]> = [
 	['clustered', 'Clustered'],

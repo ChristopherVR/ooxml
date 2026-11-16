@@ -180,6 +180,21 @@ export const TOOLS_STRINGS: Translations = {
 	Scatter: ['Nuage de points', 'Punkt (X Y)', 'Dispersión', '散点图'],
 	Doughnut: ['Anneau', 'Ring', 'Anillo', '圆环图'],
 	Radar: ['Radar', 'Netz', 'Radial', '雷达图'],
+	Waterfall: ['Cascade', 'Wasserfall', 'Cascada', '瀑布图'],
+	Histogram: ['Histogramme', 'Histogramm', 'Histograma', '直方图'],
+	Pareto: ['Pareto', 'Pareto', 'Pareto', '排列图'],
+	'Box and Whisker': ['Zone et valeur', 'Kastengrafik', 'Cajas y bigotes', '箱形图'],
+	Treemap: ['Compartimentage', 'Treemap', 'Rectángulos', '树状图'],
+	Sunburst: ['Rayons de soleil', 'Sunburst', 'Proyección solar', '旭日图'],
+	Funnel: ['Entonnoir', 'Trichter', 'Embudo', '漏斗图'],
+	Map: ['Carte', 'Karte', 'Mapa', '地图'],
+	'Map outlines here are approximate. Office draws a new map only after it adds map data through its online service.':
+		[
+			'Les contours de la carte sont approximatifs ici. Office ne dessine une nouvelle carte qu’après y avoir ajouté des données cartographiques via son service en ligne.',
+			'Die Kartenumrisse sind hier angenähert. Office zeichnet eine neue Karte erst, nachdem es über seinen Onlinedienst Kartendaten hinzugefügt hat.',
+			'Aquí los contornos del mapa son aproximados. Office dibuja un mapa nuevo solo después de añadirle datos de mapa mediante su servicio en línea.',
+			'此处的地图轮廓为近似值。Office 仅在通过其联机服务添加地图数据后才会绘制新地图。',
+		],
 	// Paste Special
 	'Paste Special': ['Collage spécial', 'Inhalte einfügen', 'Pegado especial', '选择性粘贴'],
 	Paste: ['Coller', 'Einfügen', 'Pegar', '粘贴'],

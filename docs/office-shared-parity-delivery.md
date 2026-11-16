@@ -78,7 +78,7 @@ complete Office-parity claim.
 These checks cover supported source semantics and operations, not native pixel fidelity. XY
 (Scatter) series in vertical 2-D category-axis combinations are admitted (see the 2026-11-16
 evidence below); 3-D and bubble series types remain whole-chart switches, as in Office. Combinations
-on horizontal bars or on two value axes, raw geographic/Pareto creation, ChartEx custom label text
+on horizontal bars or on two value axes, ChartEx custom label text
 or manual layout (no schema node, see below), and full removal of the PowerPoint source-tree model
 remain outside this delivery.
 
@@ -496,6 +496,37 @@ The final Word/Excel ChartEx controls use the same style projection for pattern 
 text, shape 3D and outlines; native ChartEx axis/family controls remain separate. Twelve browser
 cases passed across all six bindings for both products, including pattern edits, data growth and
 save/reopen. Secondary-axis authoring remains disabled for ChartEx.
+
+### ChartEx creation in Word, Excel and PowerPoint, 2026-11-16
+
+Insert Chart in Word and Excel now offers the eight extended families after the classic types
+(waterfall, histogram, pareto, box and whisker, treemap, sunburst, funnel, map); PowerPoint's
+existing Pareto and Filled Map entries now write Office's markup. One core path creates them:
+`createChartExSpace` (with `toChartExPareto` and `newChartExGeography`),
+`applyChartExOfficeDefaults` (labels, gaps, gridlines and family options read from the parts Excel
+16 writes for `Shapes.AddChart2`, observed output only), `stageChartExPartWithWorkbook` (Word's
+part, workbook and relationships) and `writeInsertedChartEx` (Excel's part over sheet ranges, no
+embedded workbook; leading text columns become treemap and sunburst levels). A pareto chart is the
+histogram series plus an owned `paretoLine` series and a 0 to 1 percentage axis, never cached
+cumulative values; PowerPoint derives its view values from the bars on load.
+
+Office 16 refused every new ChartEx part without its chart style and colour style relationships
+(Word: "Word experienced an error trying to open the file"; each part was tested alone). New parts
+now carry both: Office's colourful palette 10 and a schema-complete chart style with id 0
+(`chart/ex/style-part.ts`). This also explains the earlier fresh-deck failure recorded above.
+
+`src/core/scripts/chartex-acceptance-build.ts` writes `word-chartex.docx`, `excel-chartex.xlsx` and
+`powerpoint-chartex.pptx`, one chart of each family; `chartex-acceptance.ps1` opened them one
+application at a time in Word, Excel and PowerPoint 16 and saved Office's own copy, and
+`--verify` read the copies back: 24 of 24 charts kept their family and first-series values. Excel
+and PowerPoint reported the expected `XlChartType` (117 to 123, 140) for all 16 of their charts;
+Word's object model lists no extended chart, so Word is checked through its re-save and a PDF
+export, which drew every family but the map. Region maps are written without a geography cache:
+Office draws them empty until it adds map data from its online service, and this code never
+contacts a geodata provider. The shared painter draws them over bundled approximate outlines with
+a translated notice in Insert Chart. Tests: `chart/ex/create-family.test.ts`,
+`docx/chart-ex-insert.test.ts`, `xlsx/edit/chart-ex-insert.test.ts`, the Word and Excel dialog
+tests and the pptx ChartEx integration suite.
 
 ### Final repository verification, 2026-10-27
 

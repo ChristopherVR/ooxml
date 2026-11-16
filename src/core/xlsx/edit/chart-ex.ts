@@ -22,7 +22,12 @@ function at(
 	index: number,
 ): UnsupportedDrawingObject & { chartExSpace: ChartExSpace } {
 	const drawing = sheetDrawingAt(book, s, index);
-	if (drawing?.kind !== 'unsupported' || !drawing.chartExSpace || !drawing.chartExPartName)
+	// A chart inserted in this session has no part yet (`chartExPartName`); saving writes one.
+	if (
+		drawing?.kind !== 'unsupported' ||
+		!drawing.chartExSpace ||
+		(!drawing.chartExPartName && drawing.sourceXml)
+	)
 		throw new Error('No extended chart at this drawing index.');
 	if (drawing.chartExIssues?.length)
 		throw new Error('This extended chart contains unsupported content.');
@@ -101,7 +106,8 @@ export function editChartEx(
 			if (
 				next.plotArea.series.some(
 					(series) =>
-						!series.tx?.formula ||
+						// A pareto line has neither name nor data of its own.
+						(series.ownerIndex === undefined && !series.tx?.formula) ||
 						(
 							series.data ?? next.chartData.data.find((data) => data.id === series.dataId)
 						)?.dimensions.some((d) => !d.formula),
@@ -169,9 +175,36 @@ export function editChartEx(
 					...summary.summary,
 					kind: 'chart',
 					anchor: chart.anchor,
-					partName: chart.chartExPartName!,
+					...(chart.chartExPartName ? { partName: chart.chartExPartName } : {}),
 				};
 			else delete chart.chartEx;
+		},
+		{ sheet: s },
+	);
+}
+
+/**
+ * Adds an extended chart built by `buildChartEx` as one undo step; returns its drawing index.
+ * Saving writes its `chartEx` part, chart style and colour style parts and the drawing frame.
+ */
+export function addChartEx(
+	ctx: EditContext,
+	s: number,
+	chart: UnsupportedDrawingObject & { chartExSpace: ChartExSpace },
+): number {
+	const sheet = ctx.workbook.sheets[s];
+	if (!sheet) throw new RangeError(`No sheet at index ${s}`);
+	const added: UnsupportedDrawingObject = structuredClone(chart);
+	delete added.chartExPartName;
+	delete added.sourceXml;
+	delete added.chartExIssues;
+	return ctx.run(
+		'Insert chart',
+		'annotations',
+		[{ kind: 'sheet', sheet: s }],
+		() => {
+			sheet.drawings.push(structuredClone(added));
+			return sheet.drawings.length - 1;
 		},
 		{ sheet: s },
 	);
