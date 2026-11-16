@@ -19,20 +19,32 @@ function axisPair(space: ChartSpace, group: ChartPlotGroup): [ChartAxis, ChartAx
 		: undefined;
 }
 
-/** The first series anchors the renderer's primary scale; later series can be split in place. */
+/**
+ * The first series anchors the renderer's primary scale; later series of vertical 2D bar, line and
+ * area groups can be split in place. A stacked or percent-stacked group gives up its first or last
+ * series (each axis then keeps one stack); a series inside the stack is refused.
+ */
 export function chartSeriesSecondaryAxisSupported(space: ChartSpace, seriesIndex: number): boolean {
 	const { group } = chartSeriesEntryAt(space, seriesIndex);
 	const first = space.plotArea.groups[0];
 	if (!first || seriesIndex === 0 || group.is3D || first.is3D) return false;
 	if (![group.kind, first.kind].every((kind) => ['bar', 'line', 'area'].includes(kind)))
 		return false;
-	// Horizontal combinations are not painted yet. Splitting stacked groups would change totals.
+	// Horizontal combinations are not painted yet.
 	if (group.barDirection === 'bar' || first.barDirection === 'bar') return false;
-	if (
-		group.series.length > 1 &&
-		(group.grouping === 'stacked' || group.grouping === 'percentStacked' || !!group.extLst)
-	)
-		return false;
+	if (group.series.length > 1) {
+		// An unknown group extension cannot be split without guessing what it applies to.
+		if (group.extLst) return false;
+		// A stacked group keeps one stack per axis: the moved series may leave from either end,
+		// but leaving from the middle would part the series around it into two stacks.
+		const { position } = chartSeriesEntryAt(space, seriesIndex);
+		if (
+			(group.grouping === 'stacked' || group.grouping === 'percentStacked') &&
+			position > 0 &&
+			position < group.series.length - 1
+		)
+			return false;
+	}
 	return !!axisPair(space, group) && !!axisPair(space, first);
 }
 
@@ -54,6 +66,29 @@ function isolateSeries(space: ChartSpace, index: number): ChartPlotGroup {
 		.map((series) => ({ ...structuredClone(group), series }));
 	space.plotArea.groups.splice(groupIndex, 1, ...segments);
 	return chartSeriesEntryAt(space, index).group;
+}
+
+/** A group's options without its series, to tell whether two neighbours are one group split. */
+const groupKey = (group: ChartPlotGroup): string => JSON.stringify({ ...group, series: [] });
+
+/**
+ * Joins the group holding series `index` with neighbours of the same type, options and axes, so a
+ * series moved back to its axis stacks and clusters with its old group again.
+ */
+function mergeNeighbours(space: ChartSpace, index: number): void {
+	const { groupIndex } = chartSeriesEntryAt(space, index);
+	const groups = space.plotArea.groups;
+	let at = groupIndex;
+	const key = groupKey(groups[at]!);
+	if (at > 0 && groupKey(groups[at - 1]!) === key) {
+		groups[at - 1]!.series.push(...groups[at]!.series);
+		groups.splice(at, 1);
+		at--;
+	}
+	if (at + 1 < groups.length && groupKey(groups[at + 1]!) === key) {
+		groups[at]!.series.push(...groups[at + 1]!.series);
+		groups.splice(at + 1, 1);
+	}
 }
 
 export interface ChartSecondaryAxisOptions {
@@ -80,7 +115,12 @@ export function setChartSeriesSecondaryAxis(
 		const group = isolateSeries(draft, seriesIndex);
 		const primary = draft.plotArea.groups[0]!;
 		if (!secondary) {
+			const left = group.axisIds;
 			group.axisIds = [...primary.axisIds];
+			mergeNeighbours(draft, seriesIndex);
+			// A secondary pair no series plots on any more goes, as Office drops it.
+			if (!draft.plotArea.groups.some((other) => other.axisIds.some((id) => left.includes(id))))
+				draft.plotArea.axes = draft.plotArea.axes.filter((axis) => !left.includes(axis.id!));
 			return;
 		}
 		if (group.axisIds[1] !== primary.axisIds[1]) return;
@@ -90,6 +130,7 @@ export function setChartSeriesSecondaryAxis(
 			.find((pair) => pair && pair[1].id !== primary.axisIds[1]);
 		if (existing) {
 			group.axisIds = existing.map((axis) => axis.id!);
+			mergeNeighbours(draft, seriesIndex);
 			return;
 		}
 		const used = new Set(draft.plotArea.axes.map((axis) => axis.id));

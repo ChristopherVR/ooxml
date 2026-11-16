@@ -64,15 +64,66 @@ describe('secondary axes with stable document-order selections', () => {
 	});
 	it('refuses the primary anchor and chart families the combination painter cannot represent', () => {
 		expect(chartSeriesSecondaryAxisSupported(columnChart(), 0)).toBe(false);
-		for (const edit of [
-			{ barDirection: 'bar' },
-			{ grouping: 'stacked' },
-			{ extLst: '<c:extLst/>' },
-		] as const) {
+		for (const edit of [{ barDirection: 'bar' }, { extLst: '<c:extLst/>' }] as const) {
 			const source = columnChart();
 			Object.assign(source.plotArea.groups[0]!, edit);
 			expect(chartSeriesSecondaryAxisSupported(source, 1)).toBe(false);
 			expect(() => setChartSeriesSecondaryAxis(source, 1, true)).toThrow();
 		}
 	});
+
+	it('moves the last or first series of a stacked group, keeping one stack per axis', () => {
+		for (const grouping of ['stacked', 'percentStacked'] as const) {
+			const source = stacked(grouping);
+			expect(chartSeriesSecondaryAxisSupported(source, 1)).toBe(false);
+			expect(() => setChartSeriesSecondaryAxis(source, 1, true)).toThrow(RangeError);
+			expect(chartSeriesSecondaryAxisSupported(source, 2)).toBe(true);
+			const moved = reopen(setChartSeriesSecondaryAxis(source, 2, true));
+			expect(moved.plotArea.groups.map((g) => [g.grouping, g.series.length])).toEqual([
+				[grouping, 2],
+				[grouping, 1],
+			]);
+			expect(entries(moved)).toEqual(entries(reopen(source)));
+			expect(svg(moved)).toContain('data-chart-series="2" data-chart-point');
+			// Back on the primary axis it stacks with its old group again and the pair goes.
+			const back = reopen(setChartSeriesSecondaryAxis(moved, 2, false));
+			expect(back).toEqual(reopen(source));
+		}
+	});
+	it('lets the first series of a later stacked group leave, the rest stacking on the primary axis', () => {
+		const source = columnChart();
+		const line = structuredClone(source.plotArea.groups[0]!);
+		Object.assign(line, { kind: 'line', element: 'lineChart', grouping: 'stacked' });
+		for (const key of ['barDirection', 'gapWidth', 'overlap'] as const) delete line[key];
+		line.series = line.series.map((series, i) => ({ ...series, index: 5 + i, order: 5 + i }));
+		source.plotArea.groups.push(line);
+		expect(chartSeriesSecondaryAxisSupported(source, 2)).toBe(true);
+		const moved = reopen(setChartSeriesSecondaryAxis(source, 2, true));
+		expect(moved.plotArea.groups.map((g) => [g.kind, g.series.length])).toEqual([
+			['bar', 2],
+			['line', 1],
+			['line', 1],
+		]);
+		expect(entries(moved)).toEqual(entries(reopen(source)));
+	});
+	it('joins a second moved series to the existing secondary group of the same type', () => {
+		const source = stacked('clustered');
+		const one = setChartSeriesSecondaryAxis(source, 2, true);
+		const two = reopen(setChartSeriesSecondaryAxis(one, 1, true));
+		expect(two.plotArea.groups.map((g) => g.series.length)).toEqual([1, 2]);
+		expect(two.plotArea.axes).toHaveLength(4);
+		expect(entries(two)).toEqual(entries(reopen(source)));
+	});
 });
+
+function stacked(grouping: 'stacked' | 'percentStacked' | 'clustered') {
+	const source = columnChart();
+	const group = source.plotArea.groups[0]!;
+	group.grouping = grouping;
+	if (grouping !== 'clustered') group.overlap = 100;
+	const third = structuredClone(group.series[1]!);
+	third.index = 2;
+	third.order = 2;
+	group.series.push(third);
+	return source;
+}
