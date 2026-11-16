@@ -1,5 +1,6 @@
-// A generated cache, independent of Office's native layout regeneration. This is not a
-// round-trip writer for a source cached part: unsupported 3D must remain in its original part.
+// A generated cache, independent of Office's native layout regeneration. For a diagram Office laid
+// out, the host passes the presentation ids of its points (`presentationIds`) so the regenerated
+// shapes bind to them; unsupported 3D must remain in its original part.
 // Quick-style 3D (a label's bevel, extrusion, material and light rig) is written into each shape
 // as Office writes it; the diagram's spatial camera stays in the quick-style part.
 import { createOfficeGuid } from '../../crypto/uuid';

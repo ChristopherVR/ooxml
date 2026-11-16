@@ -16,6 +16,7 @@ import {
 	DEFAULT_GENERATED_DIAGRAM_SCHEME,
 } from '../cache-metadata';
 import { writeGeneratedDiagramDrawing } from './drawing';
+import { sourcePresentationIds } from './cache-presentation';
 import { withDiagramPictureSources } from '../picture-layout';
 
 const DSP = 'http://schemas.microsoft.com/office/drawing/2008/diagram';
@@ -46,7 +47,14 @@ export function withDiagramDrawingRelationship(xml: string, relationshipId: stri
 	return buildXml(doc);
 }
 
-/** Generate only an admitted 2D interpretation. A declined cache leaves the host's fallback intact. */
+/**
+ * Generate only an admitted 2D interpretation. A declined cache leaves the host's fallback intact.
+ * This is also the round-trip writer for a cache Office laid out: after an edit, the drawing is
+ * regenerated from the layout engine and each shape for a node and layout role Office presented
+ * takes Office's presentation point (`sourcePresentationIds`), so only new nodes get new points.
+ * The placement is the engine's, measured against Office's caches by
+ * `scripts/diagram/measure-source-cache-regeneration.ts`; it is not Office's own layout.
+ */
 export function buildGeneratedDiagramCache(
 	dataXml: string,
 	input: Omit<DiagramPreviewInput, 'nodes'>,
@@ -203,12 +211,6 @@ export function buildGeneratedDiagramCache(
 			shape.body = body;
 		}
 	}
-	let serialized: ReturnType<typeof writeGeneratedDiagramDrawing>;
-	try {
-		serialized = writeGeneratedDiagramDrawing(drawing);
-	} catch {
-		return undefined;
-	}
 	const oldMarkers = descendants(root, 'generatedCache').filter(
 		(node) => node.namespaceURI === GENERATED_DIAGRAM_CACHE_NS,
 	);
@@ -217,6 +219,13 @@ export function buildGeneratedDiagramCache(
 			descendants(marker, 'shape').map((node) => node.getAttribute('id')),
 		),
 	);
+	const presentationIds = sourcePresentationIds(points, oldIds, drawing.shapes);
+	let serialized: ReturnType<typeof writeGeneratedDiagramDrawing>;
+	try {
+		serialized = writeGeneratedDiagramDrawing(drawing, { presentationIds });
+	} catch {
+		return undefined;
+	}
 	for (const point of children(points, 'pt', NS.dgm))
 		if (oldIds.has(point.getAttribute('modelId'))) points.removeChild(point);
 	for (const edge of children(connections, 'cxn', NS.dgm))
@@ -240,10 +249,13 @@ export function buildGeneratedDiagramCache(
 			engine: 'ordered-2d',
 			approximate: '1',
 			drawingSha256: generatedDrawingDigest(serialized.xml),
+			...(presentationIds.size ? { reusedPresentation: String(presentationIds.size) } : {}),
 		},
 	);
 	drawing.shapes.forEach((shape, index) => {
 		const id = serialized.modelIds.get(shape.modelId)!;
+		// A presentation point Office laid out keeps its markup; the regenerated shape binds to it.
+		if (presentationIds.has(shape.modelId)) return;
 		const point = add(points, NS.dgm, 'dgm:pt', { modelId: id, type: 'pres' });
 		add(point, NS.dgm, 'dgm:prSet', {
 			...(shape.sourceNodeId ? { presAssocID: shape.sourceNodeId } : {}),

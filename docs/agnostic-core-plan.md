@@ -720,8 +720,8 @@ The labels U3 to U5 are assigned here; the remaining chart UI work was previousl
   `diagram/edit` (node commands, tree order, outline levels, reflow, inserts). The insert picker and the SmartArt Design command
   list are shared (`design-commands.ts`).
 - **S4, part writers (done for data parts).** `diagram/write`: `data.ts` (a SmartArt created in memory), `data-edit.ts`
-  (`writeEditedDiagramData`, an existing data part) and `inserted.ts` (an inserted diagram's data part). **Remains:** the
-  full source-cache round-trip writer and layout fabrication stay in pptx (step 4). Colour and quick-style fabrication
+  (`writeEditedDiagramData`, an existing data part) and `inserted.ts` (an inserted diagram's data part). **Remains:**
+  PowerPoint's own source-cache regeneration and layout fabrication stay in pptx (step 4). Colour and quick-style fabrication
   now live in `diagram/write/fabricated-styles.ts`, with the PowerPoint path as a compatibility facade. The neutral
   source-backed formatter patches definition fields while preserving unknown XML. `writeGeneratedDiagramDrawing`
   serializes generated drawings and returns presentation GUIDs a host can associate with its data model; PowerPoint's
@@ -734,6 +734,14 @@ The labels U3 to U5 are assigned here; the remaining chart UI work was previousl
   the drawing relationship and content type. A private extension records the generated approximation and a SHA-256 of
   its drawing bytes. Loaders label matching caches `generated-drawing`; a native rewrite invalidates that status.
   Unsupported, partial and spatial/3D interpretations stay uncached and retain the explicit fallback.
+  The same writer is the round-trip writer for a cache Office laid out: after an edit, each regenerated shape for a
+  node and layout role Office presented binds to Office's own presentation point (`write/cache-presentation.ts`), as
+  Office's cache binds `dsp:sp/@modelId`, so the data part keeps Office's points and connections and only new nodes
+  get generated points. The placement is the layout engine's, not Office's: on the unedited diagrams of the 229
+  PowerPoint gallery fixtures and the Word fixture (`scripts/diagram/measure-source-cache-regeneration.ts`,
+  2026-11-16) the writer admits 52 of 230; 311 of their 414 regenerated shapes bind to an Office point, and the bound
+  shapes' worst frame deviation is within 1% of the diagram's larger side in 27 diagrams, 5% in 34 and 10% in 36
+  (the Word fixture, Basic Block List, exactly). The other 178 stay uncached as before.
 - **S5, Word and Excel SmartArt editing (done, with the shared UI).** Word edits and inserts SmartArt (`docx/diagram-edit.ts`,
   `docx/diagram-save.ts`); Excel does the same through `xlsx/edit/smart-art.ts` and `xlsx/write/smart-art.ts`. Both use the
   shared `office-ui-smartart-picker` (`src/ui/src/smartart/smartart-picker.ts`) and `office-ui-smartart-text-pane`
@@ -769,7 +777,10 @@ The labels U3 to U5 are assigned here; the remaining chart UI work was previousl
   Acceptance on 2026-11-16: the extended `smartart-format-acceptance-build.ts` produced 41 Word and 41 Excel files
   (the three model combinations, then each of the 38 colour definitions with the 14 quick styles in turn) and
   `smartart-format-acceptance.ps1` reopened all 82 in Word 16 and Excel 16: node texts, colour and quick-style ids
-  matched, every node had native shapes, and Excel wrote no repair log.
+  matched, every node had native shapes, and Excel wrote no repair log. Rerun after the round-trip writer bound
+  regenerated shapes to Office's presentation points, with two `edit-*` cases per product added (a text edit and an
+  added node, then Polished or Bird's Eye Scene): all 86 files reopened in Word 16 and Excel 16 with the edited texts,
+  the expected ids, one native shape per node and no Excel repair log.
 
   Acceptance on 2026-10-26: the shared formatting builder and
   `src/core/scripts/docx/smartart-format-acceptance.ps1` produced and reopened six documents, three combinations each in desktop

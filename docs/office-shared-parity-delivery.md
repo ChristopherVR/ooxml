@@ -100,7 +100,8 @@ remain outside this delivery.
       and the Scene styles' spatial camera (`smartart-3d.ts`, `diagram/scene-camera.ts`).
 - [x] Show a 3-D pick in PowerPoint's editor before reopening (its 3D; colours and effects stay
       at the nearest intensity until reopen).
-- [ ] Regenerate a source cache Office laid out (round-trip writer).
+- [x] Regenerate a source cache Office laid out after an edit (round-trip writer), bound to
+      Office's presentation points; placement is the layout engine's, measured below.
 
 ## 6. Shared chart controls and ChartEx consumers
 
@@ -226,6 +227,37 @@ reopened with matching texts and ids, native node shapes and no Excel repair. Br
 SmartArt specs (8, six bindings) and Excel SmartArt specs (13) pass with the new galleries; the
 PowerPoint browser suite was not run for this change. Not established:
 pixel parity of the generated caches or our flattened 3-D painting.
+
+### SmartArt round-trip cache, 3D painting and gallery names, 2026-11-16
+
+Round-trip writer: `buildGeneratedDiagramCache` binds each regenerated shape for a node and layout
+role Office presented to Office's own presentation point (`write/cache-presentation.ts`), so an
+edited diagram keeps Office's points and connections and only new nodes get generated points.
+Placement comes from the layout engine, not Office: on the unedited diagrams of the 229
+PowerPoint gallery fixtures and the Word fixture (`scripts/diagram/measure-source-cache-regeneration.ts`)
+the writer admits 52 of 230; 311 of their 414 regenerated shapes bind to an Office point; the
+worst bound-shape frame deviation is within 1% of the diagram's larger side in 27 diagrams, 5% in
+34 and 10% in 36, with large gaps in Captioned Pictures, Square Accent List, Step Down Process and
+the bracket and block lists (21% to 40%). The other 178 stay uncached as before. Native: the
+acceptance build gained `edit-3d1` and `edit-3d9` (text edit, added node, then Polished or Bird's
+Eye Scene) for Word and Excel; all 86 files reopened in Word 16 and Excel 16 with the edited
+texts, the expected ids, one native shape per node and no Excel repair log.
+
+3D painting: Word and Excel draw a bevel lit by an SVG specular filter from the label's light rig,
+an extrusion as stacked darkened copies along the camera's depth, and the Scene styles' camera as
+a per-shape affine projection through the scene camera PowerPoint fits (`diagram/scene-camera.ts`,
+moved from the pptx renderer; loaders carry the quick style's camera on the drawing). Tests:
+`diagram/scene-3d.test.ts`, `src/ui/src/smartart/smartart-3d.test.ts`. Not established: any
+pixel comparison with Office; there is no hidden-surface removal, material model or contour.
+
+PowerPoint preview: a SmartArt Styles pick applies the definition's per-label 3D to the drawing
+shapes and a Scene style's camera to the diagram (`smartart-style-3d-preview.ts`), so the lit
+scene shows it before reopening; colours and effects stay at the nearest intensity until then.
+Tested in `smartart-style-3d-preview.test.ts`; the PowerPoint browser suite was not run.
+
+Gallery names: Word and Excel name the titles, sections and all 52 entries in every product
+locale from PowerPoint's `pptx.gallery.smartArt*` translations (`diagram/strings/gallery.ts`).
+Those translations are agent-authored and not verified against Office's localized names.
 
 ### Advanced chart controls and ChartEx hosts, 2026-10-26
 

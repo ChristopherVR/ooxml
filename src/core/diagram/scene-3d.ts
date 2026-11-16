@@ -117,5 +117,5 @@ export function diagramQuickStyle3d(quickStyleXml: string): DiagramQuickStyle3d 
 				...(text ? { text } : {}),
 			};
 		});
-	return { ...(isSpatialDiagramScene(scene) ? { scene } : {}), labels };
+	return { ...(scene && isSpatialDiagramScene(scene) ? { scene } : {}), labels };
 }

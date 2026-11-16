@@ -90,7 +90,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       plus Switch Row/Column in Word and Excel and Change Chart Type in PowerPoint.
 - [ ] **P1** Equations in Excel text boxes and in Visio (`ooxml-core/math` and
       `src/ui/src/docx/equation-*` are the template).
-- [ ] **P1** SmartArt layouts the preview marks approximate (`src/core/diagram/layout-preview.ts`),
+- [ ] **P1** SmartArt layouts the preview marks approximate (`src/core/diagram/layout-preview.ts`;
+      an edited diagram's regenerated cache binds to Office's presentation points but its
+      placement is the engine's, within 1% of Office in 27 of 52 admitted gallery diagrams),
       3-D rendering in Word and Excel (approximate: a lit SVG bevel, stacked extrusion copies and
       the Scene styles' camera as a per-shape affine projection; no hidden surfaces, material
       model or contour, and not compared against Office's pixels) and bent hierarchy
