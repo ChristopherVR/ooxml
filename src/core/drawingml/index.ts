@@ -11,6 +11,8 @@ export {
 	stringAttribute,
 } from './dom';
 export * from './drawing-color';
+export * from './color-transforms';
+export * from './preset-colors';
 export * from './drawing-color-css';
 export * from './drawing-color-brightness';
 export * from './ordered-color-transforms';

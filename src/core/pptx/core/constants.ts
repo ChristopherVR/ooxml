@@ -5,8 +5,11 @@
 import { EMU_PER_PIXEL } from '../../units/index';
 import type { ConnectorArrowType, StrokeDashType } from './types';
 
-// Re-export colour maps from dedicated module
-export { PRESET_COLOR_MAP, SYSTEM_COLOR_MAP } from './constants-colors';
+// The preset and system colour tables live in the shared DrawingML area.
+export {
+	DRAWING_PRESET_COLORS as PRESET_COLOR_MAP,
+	DRAWING_SYSTEM_COLORS as SYSTEM_COLOR_MAP,
+} from '../../drawingml/preset-colors';
 
 // ---------------------------------------------------------------------------
 // Unit conversions

@@ -1,17 +1,15 @@
 // DrawingML colour: a DOM reader and a theme-aware resolver (moved from the provisional copy in
 // `diagram`, see docs/agnostic-core-plan.md).
 import {
-	clampUnitInterval,
 	hexToRgbChannels,
 	hslToRgb,
 	parseDrawingFraction,
 	parseDrawingHueDegrees,
-	parseDrawingPercent,
-	rgbToHsl,
 	scrgbLinearToSrgb8,
 	toHex,
 } from '../color/index';
-import { linearToSrgb255, srgb255ToLinear } from '../color/color-linear';
+import { APPLIED_COLOR_TRANSFORMS, applyDrawingColorTransformList } from './color-transforms';
+import { DRAWING_PRESET_COLORS, DRAWING_SYSTEM_COLORS } from './preset-colors';
 import { NS, elements, type XmlElement } from './dom';
 import type { DrawingColor } from './types';
 import { orderedColorTransforms } from './ordered-color-transforms';
@@ -83,17 +81,6 @@ export interface ResolvedDrawingColor {
 	unapplied: string[];
 }
 
-const PRESET_COLORS: Record<string, string> = {
-	black: '#000000',
-	white: '#FFFFFF',
-	red: '#FF0000',
-	green: '#008000',
-	blue: '#0000FF',
-	yellow: '#FFFF00',
-	gray: '#808080',
-	grey: '#808080',
-};
-
 function baseHex(color: DrawingColor, theme: DrawingColorTheme | undefined): string | undefined {
 	switch (color.kind) {
 		case 'srgb':
@@ -103,9 +90,9 @@ function baseHex(color: DrawingColor, theme: DrawingColorTheme | undefined): str
 		case 'system':
 			return color.fallback && /^[0-9a-f]{6}$/i.test(color.fallback)
 				? `#${color.fallback.toUpperCase()}`
-				: undefined;
+				: DRAWING_SYSTEM_COLORS[color.value];
 		case 'preset':
-			return PRESET_COLORS[color.value];
+			return DRAWING_PRESET_COLORS[color.value.toLowerCase()];
 		case 'scrgb': {
 			const [r, g, b] = color.value.split(',').map((part) => parseDrawingFraction(part));
 			if (r === undefined || g === undefined || b === undefined) return undefined;
@@ -123,30 +110,20 @@ function baseHex(color: DrawingColor, theme: DrawingColorTheme | undefined): str
 	}
 }
 
-const APPLIED = new Set([
-	'alpha',
-	'alphaMod',
-	'alphaOff',
-	'comp',
-	'inv',
-	'gray',
-	'shade',
-	'tint',
-	'hue',
-	'hueMod',
-	'hueOff',
-	'sat',
-	'satMod',
-	'satOff',
-	'lum',
-	'lumMod',
-	'lumOff',
-]);
+/** The document-order variant does not apply gamma or the RGB channel transforms. */
+const NOT_IN_DOCUMENT_ORDER = /^(?:gamma|invGamma|red|green|blue)/u;
+
+function unappliedTransforms(color: DrawingColor, documentOrder = false): string[] {
+	return [...new Set(color.transforms.map((entry) => entry.name))].filter(
+		(name) =>
+			!APPLIED_COLOR_TRANSFORMS.has(name) || (documentOrder && NOT_IN_DOCUMENT_ORDER.test(name)),
+	);
+}
 
 /**
  * Resolves a colour to `#RRGGBB` plus alpha. Applies the transforms in the order PowerPoint does
- * (structural, shade/tint in linear light, one HSL round trip, alpha) and lists those it does not
- * apply (`red*`, `green*`, `blue*`, `gamma`) in `unapplied`. Returns `undefined` when the base
+ * (`applyDrawingColorTransformList`: gamma, structural, shade/tint in linear light, one HSL round
+ * trip, the RGB channels, alpha) and lists any it does not know in `unapplied`. Returns `undefined` when the base
  * colour cannot be determined (an unknown theme slot, `phClr` with no host value, ...).
  * `transformOrder: 'document'` applies repeated transforms in XML order with fractional
  * intermediate channels, matching measured native Excel gradient stops.
@@ -168,73 +145,13 @@ export function resolveDrawingColor(
 		return {
 			hex: `#${toHex(round(value.r))}${toHex(round(value.g))}${toHex(round(value.b))}`,
 			alpha: value.alpha,
-			unapplied: [...new Set(color.transforms.map((transform) => transform.name))].filter(
-				(name) => !APPLIED.has(name),
-			),
+			unapplied: unappliedTransforms(color, true),
 		};
 	}
-	let { r, g, b } = rgb;
-	const find = (name: string) => color.transforms.find((entry) => entry.name === name)?.value;
-	const has = (name: string) => color.transforms.some((entry) => entry.name === name);
-
-	if (has('comp')) {
-		const hsl = rgbToHsl(r, g, b);
-		({ r, g, b } = hslToRgb((hsl.h + 180) % 360, hsl.s, hsl.l));
-	}
-	if (has('inv')) [r, g, b] = [255 - r, 255 - g, 255 - b];
-	if (has('gray')) r = g = b = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
-
-	const shade = parseDrawingPercent(find('shade'));
-	if (shade !== undefined) {
-		r = linearToSrgb255(srgb255ToLinear(r) * shade);
-		g = linearToSrgb255(srgb255ToLinear(g) * shade);
-		b = linearToSrgb255(srgb255ToLinear(b) * shade);
-	}
-	const tint = parseDrawingPercent(find('tint'));
-	if (tint !== undefined) {
-		r = linearToSrgb255(1 - (1 - srgb255ToLinear(r)) * tint);
-		g = linearToSrgb255(1 - (1 - srgb255ToLinear(g)) * tint);
-		b = linearToSrgb255(1 - (1 - srgb255ToLinear(b)) * tint);
-	}
-
-	if (['hue', 'hueMod', 'hueOff', 'sat', 'satMod', 'satOff', 'lum', 'lumMod', 'lumOff'].some(has)) {
-		const hsl = rgbToHsl(r, g, b);
-		const wrap = (degrees: number) => ((degrees % 360) + 360) % 360;
-		const hueAbs = parseDrawingHueDegrees(find('hue'));
-		if (hueAbs !== undefined) hsl.h = wrap(hueAbs);
-		const hueMod = parseDrawingFraction(find('hueMod'));
-		if (hueMod !== undefined) hsl.h = wrap(hsl.h * hueMod);
-		const hueOff = parseDrawingHueDegrees(find('hueOff'));
-		if (hueOff !== undefined) hsl.h = wrap(hsl.h + hueOff);
-		const satAbs = parseDrawingFraction(find('sat'));
-		if (satAbs !== undefined) hsl.s = clampUnitInterval(satAbs);
-		const satMod = parseDrawingFraction(find('satMod'));
-		if (satMod !== undefined) hsl.s = clampUnitInterval(hsl.s * satMod);
-		const satOff = parseDrawingFraction(find('satOff'));
-		if (satOff !== undefined) hsl.s = clampUnitInterval(hsl.s + satOff);
-		const lumAbs = parseDrawingFraction(find('lum'));
-		if (lumAbs !== undefined) hsl.l = clampUnitInterval(lumAbs);
-		const lumMod = parseDrawingFraction(find('lumMod'));
-		if (lumMod !== undefined) hsl.l = clampUnitInterval(hsl.l * lumMod);
-		const lumOff = parseDrawingFraction(find('lumOff'));
-		if (lumOff !== undefined) hsl.l = clampUnitInterval(hsl.l + lumOff);
-		// Excel chart text rounds half-channel HSL ties downward (native 50% gray is #7F7F7F).
-		const round =
-			options?.hslRounding === 'halfDown' ? (value: number) => Math.ceil(value - 0.5) : Math.round;
-		({ r, g, b } = hslToRgb(hsl.h, hsl.s, hsl.l, round));
-	}
-
-	let alpha = parseDrawingPercent(find('alpha')) ?? 1;
-	const alphaMod = parseDrawingFraction(find('alphaMod'));
-	if (alphaMod !== undefined) alpha = clampUnitInterval(alpha * alphaMod);
-	const alphaOff = parseDrawingFraction(find('alphaOff'));
-	if (alphaOff !== undefined) alpha = clampUnitInterval(alpha + alphaOff);
-
+	const value = applyDrawingColorTransformList(rgb, color.transforms, options);
 	return {
-		hex: `#${toHex(r)}${toHex(g)}${toHex(b)}`,
-		alpha,
-		unapplied: [...new Set(color.transforms.map((entry) => entry.name))].filter(
-			(name) => !APPLIED.has(name),
-		),
+		hex: `#${toHex(value.r)}${toHex(value.g)}${toHex(value.b)}`,
+		alpha: value.alpha,
+		unapplied: unappliedTransforms(color),
 	};
 }

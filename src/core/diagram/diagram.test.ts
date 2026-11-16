@@ -150,10 +150,11 @@ describe('drawing colour', () => {
 
 	it('is undefined for an unknown theme slot and lists transforms it does not apply', () => {
 		expect(resolveDrawingColor(colorOf('<a:schemeClr val="accent9"/>'), theme)).toBeUndefined();
-		expect(
-			resolveDrawingColor(colorOf('<a:srgbClr val="000000"><a:redMod val="50000"/></a:srgbClr>'))
-				?.unapplied,
-		).toEqual(['redMod']);
+		const red = resolveDrawingColor(
+			colorOf('<a:srgbClr val="800000"><a:redMod val="50000"/><a:fooMod val="1"/></a:srgbClr>'),
+		);
+		expect(red?.hex).toBe('#400000');
+		expect(red?.unapplied).toEqual(['fooMod']);
 	});
 });
 

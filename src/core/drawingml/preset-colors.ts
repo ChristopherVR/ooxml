@@ -1,16 +1,12 @@
-/**
- * OOXML preset colour map — ISO/IEC 29500 §20.1.10.48
- * and Windows system colour map — ISO/IEC 29500 §20.1.10.58.
- *
- * Extracted from constants.ts for file-size compliance.
- */
+// DrawingML preset colours (ECMA-376 Part 1, 20.1.10.48, `ST_PresetColorVal`) and the system
+// colours a `a:sysClr` names (20.1.10.58, `ST_SystemColorVal`), moved from the pptx area so every
+// format resolves `a:prstClr` and a `a:sysClr` without `lastClr` the same way.
 
 /**
- * Complete OOXML preset colour map.
- * Includes both long-form (`darkBlue`) and abbreviated (`dkBlue`) names,
- * as well as `Gray` / `Grey` variants.
+ * Every preset colour by its lower-case name: the long (`darkBlue`) and abbreviated (`dkBlue`)
+ * forms and the `Gray`/`Grey` variants. Look a name up lower-cased.
  */
-export const PRESET_COLOR_MAP: Record<string, string> = {
+export const DRAWING_PRESET_COLORS: Record<string, string> = {
 	aliceblue: '#F0F8FF',
 	antiquewhite: '#FAEBD7',
 	aqua: '#00FFFF',
@@ -203,11 +199,8 @@ export const PRESET_COLOR_MAP: Record<string, string> = {
 	yellowgreen: '#9ACD32',
 };
 
-// ---------------------------------------------------------------------------
-// Windows system colour map — ISO/IEC 29500 §20.1.10.58
-// ---------------------------------------------------------------------------
-
-export const SYSTEM_COLOR_MAP: Record<string, string> = {
+/** Default values of the system colours, by their schema name (case as written). */
+export const DRAWING_SYSTEM_COLORS: Record<string, string> = {
 	scrollBar: '#C8C8C8',
 	background: '#FFFFFF',
 	activeCaption: '#0054E3',
