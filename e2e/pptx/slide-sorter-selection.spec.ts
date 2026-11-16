@@ -13,6 +13,8 @@ test('sorter pastes retained slides after a different destination and undoes the
 		.last()
 		.click();
 	const tiles = page.locator('[data-pptx-chrome="sorter-tile"]');
+	// The sorter draws its tiles after it opens: count them once they are there.
+	await expect(tiles.first()).toBeVisible();
 	const count = await tiles.count();
 	const content = (index: number) =>
 		tiles
@@ -51,6 +53,8 @@ test('sorter range selection, multi-slide clipboard and zoom stay in sync', asyn
 		.last()
 		.click();
 	const tiles = page.locator('[data-pptx-chrome="sorter-tile"]');
+	// The sorter draws its tiles after it opens: count them once they are there.
+	await expect(tiles.first()).toBeVisible();
 	const count = await tiles.count();
 	expect(count).toBeGreaterThan(2);
 	await tiles.nth(0).click();
@@ -79,4 +83,18 @@ test('sorter range selection, multi-slide clipboard and zoom stay in sync', asyn
 	).toHaveCount(1);
 	await page.keyboard.press('Escape');
 	await expect(tiles).toHaveCount(0);
+});
+
+test('sorter reorders a slide by dragging its tile onto another', async ({ page, baseURL }) => {
+	await loadDeckAt(page, baseURL!, SAMPLE_DECK);
+	await page
+		.getByRole('button', { name: /slide sorter/iu })
+		.last()
+		.click();
+	const tiles = page.locator('[data-pptx-chrome="sorter-tile"]');
+	await expect(tiles.first()).toBeVisible();
+	const ids = () => page.evaluate(() => window.__pptxViewer.getSlides().map((slide) => slide.id));
+	const [a, b, c] = await ids();
+	await tiles.nth(0).dragTo(tiles.nth(2));
+	await expect.poll(async () => (await ids()).slice(0, 3)).toEqual([b, c, a]);
 });
