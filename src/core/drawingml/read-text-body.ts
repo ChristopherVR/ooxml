@@ -6,10 +6,12 @@ import {
 // DrawingML rich text body reader: `a:bodyPr` (CT_TextBodyProperties), `a:lstStyle` and the
 // paragraphs with their ordered runs, line breaks and fields, over the shared DOM. Works for any
 // element holding a text body (`a:txBody`, `p:txBody`, `dsp:txBody`, `dgm:t`, `c:rich`, `c:txPr`).
-import { NS, attributeReader, booleanAttribute, children, elements, first } from './dom';
-import { integerAttribute, stringAttribute, type XmlElement } from './dom';
+// The `a:bodyPr` attribute and autofit rules are the shared body codec's (`text-body-codec.ts`).
+import { NS, children, elements, first, type XmlElement } from './dom';
 import { parseDrawingParagraphProperties } from './read-paragraph-properties';
 import { isDrawingElement, outerXml, parseDrawingRunProperties } from './read-run-properties';
+import { readDrawingAutofit, readDrawingBodyAttributes } from './text-body-codec';
+import { domTextElementView } from './text-element-view';
 import type {
 	DrawingBodyProperties,
 	DrawingListStyle,
@@ -17,34 +19,6 @@ import type {
 	DrawingParagraphItem,
 	DrawingRichTextBody,
 } from './text-model';
-import { parseOoxmlPercent } from '../color/color-primitives';
-
-const BODY_STRINGS = [
-	['verticalOverflow', 'vertOverflow'],
-	['horizontalOverflow', 'horzOverflow'],
-	['vertical', 'vert'],
-	['wrap', 'wrap'],
-	['anchor', 'anchor'],
-] as const;
-
-const BODY_INTEGERS = [
-	['insetLeftEmu', 'lIns'],
-	['insetTopEmu', 'tIns'],
-	['insetRightEmu', 'rIns'],
-	['insetBottomEmu', 'bIns'],
-	['columnCount', 'numCol'],
-	['columnSpacingEmu', 'spcCol'],
-] as const;
-
-const BODY_BOOLEANS = [
-	['spaceFirstLastParagraph', 'spcFirstLastPara'],
-	['rightToLeftColumns', 'rtlCol'],
-	['fromWordArt', 'fromWordArt'],
-	['anchorCenter', 'anchorCtr'],
-	['forceAntiAlias', 'forceAA'],
-	['upright', 'upright'],
-	['compatibleLineSpacing', 'compatLnSpc'],
-] as const;
 
 /** Reads `a:bodyPr`; `undefined` for a missing element. */
 export function parseDrawingBodyProperties(
@@ -52,37 +26,13 @@ export function parseDrawingBodyProperties(
 ): DrawingBodyProperties | undefined {
 	if (!element) return undefined;
 	const out: DrawingBodyProperties = {};
-	const rotation = integerAttribute(element, 'rot');
-	if (rotation !== undefined) out.rotation = rotation / 60000;
-	for (const [key, name] of BODY_STRINGS) {
-		const value = stringAttribute(element, name);
-		if (value) out[key] = value;
-	}
-	for (const [key, name] of BODY_INTEGERS) {
-		const value = integerAttribute(element, name);
-		if (value !== undefined) out[key] = value;
-	}
-	for (const [key, name] of BODY_BOOLEANS) {
-		const value = booleanAttribute(element, name);
-		if (value !== undefined) out[key] = value;
-	}
+	readDrawingBodyAttributes(domTextElementView(element), out);
 	const extra: string[] = [];
 	for (const child of elements(element)) {
 		const name = isDrawingElement(child) ? child.localName : '';
-		if (name === 'noAutofit') out.autofit = { kind: 'none' };
-		else if (name === 'spAutoFit') out.autofit = { kind: 'shape' };
-		else if (name === 'normAutofit') {
-			const read = attributeReader(child);
-			const fontScale = parseOoxmlPercent(read('fontScale') ?? '');
-			const reduction = parseOoxmlPercent(read('lnSpcReduction') ?? '');
-			out.autofit = {
-				kind: 'normal',
-				...(read('fontScale') !== undefined && fontScale !== undefined ? { fontScale } : {}),
-				...(read('lnSpcReduction') !== undefined && reduction !== undefined
-					? { lineSpacingReduction: reduction }
-					: {}),
-			};
-		} else if (name === 'scene3d' && children(element, 'scene3d', NS.a).length === 1)
+		const autofit = readDrawingAutofit(name, domTextElementView(child));
+		if (autofit) out.autofit = autofit;
+		else if (name === 'scene3d' && children(element, 'scene3d', NS.a).length === 1)
 			out.scene3d = parseDrawingTextScene3D(child);
 		else if (
 			name === 'sp3d' &&

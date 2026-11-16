@@ -8,6 +8,7 @@ import {
 import { NS, buildXml, parseXml, type XmlDocument, type XmlElement } from '../xml/index';
 import { writeDrawingParagraphProperties } from './write-paragraph-properties';
 import { writeDrawingRunProperties } from './write-run-properties';
+import { drawingAutofitChild, drawingBodyAttributeEntries } from './text-body-codec';
 import type {
 	DrawingBodyProperties,
 	DrawingListStyle,
@@ -20,8 +21,6 @@ import {
 	drawingElement,
 	importDrawingXml,
 	keptChildren,
-	setBoolean,
-	setScaled,
 	setValue,
 	type OrderedChild,
 } from './write-text-xml';
@@ -44,40 +43,13 @@ export function writeDrawingBodyProperties(
 	value: DrawingBodyProperties,
 ): XmlElement {
 	const element = drawingElement(doc, 'bodyPr');
-	setScaled(element, 'rot', value.rotation, 60000);
-	setBoolean(element, 'spcFirstLastPara', value.spaceFirstLastParagraph);
-	setValue(element, 'vertOverflow', value.verticalOverflow);
-	setValue(element, 'horzOverflow', value.horizontalOverflow);
-	setValue(element, 'vert', value.vertical);
-	setValue(element, 'wrap', value.wrap);
-	setValue(element, 'lIns', value.insetLeftEmu);
-	setValue(element, 'tIns', value.insetTopEmu);
-	setValue(element, 'rIns', value.insetRightEmu);
-	setValue(element, 'bIns', value.insetBottomEmu);
-	setValue(element, 'numCol', value.columnCount);
-	setValue(element, 'spcCol', value.columnSpacingEmu);
-	setBoolean(element, 'rtlCol', value.rightToLeftColumns);
-	setBoolean(element, 'fromWordArt', value.fromWordArt);
-	setValue(element, 'anchor', value.anchor);
-	setBoolean(element, 'anchorCtr', value.anchorCenter);
-	setBoolean(element, 'forceAA', value.forceAntiAlias);
-	setBoolean(element, 'upright', value.upright);
-	setBoolean(element, 'compatLnSpc', value.compatibleLineSpacing);
+	for (const [name, text] of drawingBodyAttributeEntries(value)) element.setAttribute(name, text);
 	const children: OrderedChild[] = [];
-	const autofit = value.autofit;
-	if (autofit) {
-		const local =
-			autofit.kind === 'none'
-				? 'noAutofit'
-				: autofit.kind === 'shape'
-					? 'spAutoFit'
-					: 'normAutofit';
-		const node = drawingElement(doc, local);
-		if (autofit.kind === 'normal') {
-			setScaled(node, 'fontScale', autofit.fontScale, 100000);
-			setScaled(node, 'lnSpcReduction', autofit.lineSpacingReduction, 100000);
-		}
-		children.push({ name: local, node });
+	if (value.autofit) {
+		const autofit = drawingAutofitChild(value.autofit);
+		const node = drawingElement(doc, autofit.local);
+		for (const [name, text] of autofit.attributes) node.setAttribute(name, text);
+		children.push({ name: autofit.local, node });
 	}
 	if (value.shape3d && value.flatText3d)
 		throw new Error('Text extrusion and flat override are mutually exclusive');

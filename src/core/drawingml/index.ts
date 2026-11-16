@@ -43,6 +43,7 @@ export * from './text-model';
 export * from './text-element-view';
 export * from './text-paragraph-codec';
 export * from './text-run-codec';
+export * from './text-body-codec';
 export {
 	parseDrawingFont,
 	parseDrawingHyperlink,
