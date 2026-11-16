@@ -65,8 +65,29 @@ describe.each(['addChart', 'builder'] as NewChartPath[])(
 	},
 );
 
+describe('a column and scatter combination', () => {
+	it('writes the scatter series on the column axes with x and y values', async () => {
+		const { element, save } = await newChartDeck('bar');
+		setChartSeriesChartType(element, 1, 'scatter');
+		const { xml, chart, warnings } = await save();
+		expect(warnings).toStrictEqual([]);
+		// Excel writes the scatter group after the column group it shares the axes with.
+		expect(groups(xml)).toStrictEqual(['barChart', 'scatterChart']);
+		const scatter = firstElement(xml, 'c:scatterChart');
+		expect(scatter).toContain('<c:xVal>');
+		expect(scatter).toContain('<c:yVal>');
+		expect(scatter).not.toContain('<c:cat>');
+		expect(chart.chartType).toBe('combo');
+		expect(chart.series.map((series) => [series.name, series.seriesChartType])).toStrictEqual([
+			['Revenue', 'bar'],
+			['Cost', 'bar'],
+			['Margin', 'scatter'],
+		]);
+	});
+});
+
 describe('combinations the shared core cannot write', () => {
-	it.each(['scatter', 'pie'] as const)(
+	it.each(['pie'] as const)(
 		'keeps the legacy generator for a column and %s mix, and reports it',
 		async (type) => {
 			const { element, save } = await newChartDeck('bar');

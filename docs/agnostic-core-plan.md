@@ -473,8 +473,15 @@ is the acceptance bar), and the area has its own tests and real parts from `src/
   (`chart/edit/group-subtype.ts`, intent `groupSubtype`) under the chart types and removal rules the
   object-tree writers use (`chart-neutral-save-subtype.ts`); `chart-subtype-migration.test.ts`
   saves each edit both ways over the corpus and classifies every part difference.
+  One series of a vertical 2-D column, line or area chart can become XY (Scatter): the scatter
+  group shares the category and value axes it leaves, with x values from the categories, markers
+  in the series colour and smoothing off, as Excel 16 saves that edit (`setChartSeriesType`); the
+  SDK's promotion of a chart to `combo` is claimed the same way. 3-D and bubble series types stay
+  whole-chart switches, since Excel's object model turns the whole chart when one series takes
+  one. `chart-xy-combo-migration.test.ts` compares both save paths over the corpus.
   Unclaimed or rejected edits retain an explicit compatibility path. Unsafe group splits,
-  unsupported picture relationship changes and wider 3D/XY combinations are not silently admitted.
+  unsupported picture relationship changes, horizontal-bar and value-axis (pure XY) combinations
+  are not silently admitted.
   The saved-part corpus compares canonical XML and reloaded models; it is implementation parity,
   not a native rendering oracle. The 300-test classic corpus and five sequential native PowerPoint
   edit/reopen/workbook checks pass. See [the delivery ledger](office-shared-parity-delivery.md) for evidence;

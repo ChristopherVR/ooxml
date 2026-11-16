@@ -116,7 +116,10 @@ const painted = (fill: DrawingFill | undefined): fill is DrawingFill =>
 export function repaintSeriesForFamily(series: ChartSpaceSeries, toLine: boolean): void {
 	const shape = series.spPr;
 	if (!shape) return;
-	if (toLine && painted(shape.fill) && !painted(shape.line?.fill))
+	// A DrawingML outline holds no picture fill (CT_LineProperties has no `a:blipFill`), so a picture-
+	// filled series keeps its fill and draws its line in the automatic colour.
+	const outlineFill = shape.fill?.kind !== 'picture' && shape.fill?.kind !== 'unsupported';
+	if (toLine && outlineFill && painted(shape.fill) && !painted(shape.line?.fill))
 		shape.line = {
 			...shape.line,
 			widthEmu: shape.line?.widthEmu ?? 28575,

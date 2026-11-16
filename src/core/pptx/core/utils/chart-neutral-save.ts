@@ -43,18 +43,21 @@ export function saveChartPartThroughNeutral(
 	const plan = planNeutralChartSave(before, after);
 	if (!plan) return undefined;
 	let space: ChartSpace;
+	let written: string;
 	try {
 		const parsed = parseChartSpace(xml);
 		if (chartIssuesLostOnWrite(parsed.issues).length > 0) return undefined;
 		space = parsed.chartSpace;
 		for (const edit of plan.edits) space = edit(space);
+		written = writeChartSpaceOverSource(xml, space);
 	} catch {
-		// An edit the shared operation rejects (an axis bound past the other, a missing axis) is
-		// left to the object-tree writers, which report or ignore it as they always have.
+		// An edit the shared operation rejects (an axis bound past the other, a missing axis), or a
+		// model the shared writer refuses to write, is left to the object-tree writers, which report
+		// or ignore it as they always have, instead of losing the whole part's save.
 		return undefined;
 	}
 	return {
-		xml: writeChartSpaceOverSource(xml, space),
+		xml: written,
 		workbookWrites: plan.seriesData || options.retryWorkbook ? chartSpaceWorkbookWrites(space) : [],
 		...(plan.rebuildWorkbook ? { workbookModel: space } : {}),
 	};

@@ -482,6 +482,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       flag, the colour style part, colour map override, print settings, user shapes, pivot formats,
       filtered series and the external data auto-update flag. Group subtype settings moved
       (`chart-neutral-save-subtype.ts`).
+- [ ] **P2** Per-series chart combinations: a series of a vertical 2-D category chart can become
+      column, line, area or scatter (`chart/edit/series-type.ts`, native PowerPoint reopen checked);
+      combinations on horizontal bars or on two value axes and splits inside a stack keep the
+      object-tree path, and 3-D or bubble series types switch the whole chart, as Office does.
 - [x] `a:linkedTxbx` (Word-style linked text boxes) is not flowed: PowerPoint ignores it (measured
       with COM `Slide.Export`: the head keeps all text unclipped, successors stay empty), so the
       renderer matches by default (`setLinkedTextBoxFlow` opts in). The link is parsed and

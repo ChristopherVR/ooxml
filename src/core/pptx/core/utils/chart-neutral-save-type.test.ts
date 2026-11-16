@@ -31,6 +31,25 @@ describe('classic per-series type save plan', () => {
 		for (const edit of reset) space = edit(space);
 		expect(space.plotArea.groups.map((group) => group.kind)).toEqual(['bar', 'bar']);
 	});
+	it('claims the SDK promotion to combo, converting only the series whose type changed', () => {
+		const before = chart(),
+			after = structuredClone(before),
+			edits: NeutralChartEdit[] = [];
+		// What `setChartSeriesChartType(element, 1, 'scatter')` leaves in the model.
+		after.chartType = 'combo';
+		after.series[0]!.seriesChartType = 'bar';
+		after.series[1]!.seriesChartType = 'scatter';
+		const probe = structuredClone(after);
+		planNeutralChartType(before, probe, edits);
+		expect(same(before, probe)).toBe(true);
+		let space = columnChart();
+		for (const edit of edits) space = edit(space);
+		expect(space.plotArea.groups.map((group) => group.element)).toEqual([
+			'barChart',
+			'scatterChart',
+		]);
+		expect(space.plotArea.groups[1]!.axisIds).toEqual(space.plotArea.groups[0]!.axisIds);
+	});
 	it('reapplies explicit combo overrides after a whole-chart type change', () => {
 		const before = chart(),
 			after = structuredClone(before),

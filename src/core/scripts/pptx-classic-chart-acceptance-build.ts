@@ -9,6 +9,7 @@ import {
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { PptxHandler } from '../pptx/core/PptxHandler';
+import { setChartSeriesChartType } from '../pptx/core/builders/sdk/chart-operations';
 import type { ChartPptxElement, PptxChartData } from '../pptx/core/types';
 
 const output = process.argv[2];
@@ -31,6 +32,8 @@ const manifest: Record<
 	{
 		type: string;
 		nativeType: number;
+		/** Per-series native types of a combination chart (`Series.ChartType`), when checked. */
+		nativeTypes?: number[];
 		slideIndex: number;
 		slideCount: number;
 		series: { name: string; values: number[] }[];
@@ -38,7 +41,7 @@ const manifest: Record<
 		cells: { sheet: string; address: string; value: string | number }[];
 	}
 > = {};
-async function save(name: string, nativeType: number) {
+async function save(name: string, nativeType: number, nativeTypes?: number[]) {
 	const expected = structuredClone(element.chartData!);
 	const bytes = await handler.save(deck.slides);
 	const reopened = await new PptxHandler().load(bytes);
@@ -68,6 +71,7 @@ async function save(name: string, nativeType: number) {
 	manifest[name] = {
 		type: expected.chartType,
 		nativeType,
+		...(nativeTypes ? { nativeTypes } : {}),
 		slideIndex: slideIndex + 1,
 		slideCount: deck.slides.length,
 		series: expected.series.map(({ name, values }) => ({ name, values })),
@@ -100,5 +104,29 @@ chart().categories = ['Start', 'Finish'];
 chart().series = [{ name: 'Shrunk', values: [7, 14] }];
 chart().title = 'Shrunk chart';
 await save('classic-shrunk.pptx', 51);
+// A column chart whose last series becomes XY (Scatter): the scatter group shares the column axes.
+chart().categories = ['Plan', 'Design', 'Build', 'Review', 'Ship'];
+chart().series = [
+	{ name: 'Columns A', values: [2, 4, 6, 8, 10] },
+	{ name: 'Columns B', values: [3, 6, 9, 12, 15] },
+	{ name: 'Scatter C', values: [1, 5, 7, 11, 13] },
+];
+chart().title = 'Column and scatter';
+await save('classic-xy-combo.pptx', 51);
+setChartSeriesChartType(element, 2, 'scatter');
+await save('classic-xy-combo-scatter.pptx', 51, [51, 51, -4169]);
+// Group subtype settings on kept groups: a 3-D column's bar shape and a radar's fill.
+for (const series of chart().series) delete series.seriesChartType;
+chart().chartType = 'bar3D';
+await save('classic-bar3d.pptx', 54);
+chart().barShape = 'cylinder';
+chart().gapDepth = 220;
+await save('classic-bar3d-cylinder.pptx', 92);
+chart().chartType = 'radar';
+delete chart().barShape;
+delete chart().gapDepth;
+await save('classic-radar.pptx', 81);
+chart().radarStyle = 'filled';
+await save('classic-radar-filled.pptx', 82);
 writeFileSync(join(output, 'manifest.json'), JSON.stringify(manifest, null, 2));
 console.log(`Wrote ${Object.keys(manifest).length} classic chart cases to ${output}`);

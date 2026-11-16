@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { columnChart } from './test-support/column-chart';
 import { joinChartGroups, setChartSeriesType } from './series-type';
 import { setChartSeriesSecondaryAxis } from './secondary-axis';
+import { setChartType } from './type';
 import { chartSeriesEntries } from './draft';
 import { parseChartSpace } from '../parse-space';
 import { writeChartSpace } from '../write-space';
@@ -37,12 +38,58 @@ describe('one series combo type changes', () => {
 		const changed = setChartSeriesType(source, 0, { kind: 'area' });
 		expect(changed.plotArea.groups.map((group) => group.kind)).toEqual(['area', 'bar']);
 		expect(chartSeriesEntries(changed).map((entry) => entry.series.index)).toEqual([0, 1]);
-		expect(() => setChartSeriesType(source, 1, { kind: 'scatter' })).toThrow('vertical 2D');
+		expect(() => setChartSeriesType(source, 1, { kind: 'bubble' })).toThrow('vertical 2D');
+		expect(() => setChartSeriesType(source, 1, { kind: 'pie' })).toThrow('vertical 2D');
 		expect(() => setChartSeriesType(source, 1, { kind: 'line', is3D: true })).toThrow(
 			'vertical 2D',
 		);
 		source.plotArea.groups[0]!.extLst = '<c:extLst/>';
 		expect(() => setChartSeriesType(source, 1, { kind: 'line' })).toThrow('unknown group');
+	});
+	it('writes a scatter series on the category and value axes it leaves, as Excel saves it', () => {
+		const source = columnChart();
+		const changed = setChartSeriesType(source, 1, { kind: 'scatter' });
+		const saved = parseChartSpace(writeChartSpace(changed));
+		expect(saved.issues).toEqual([]);
+		const [bar, scatter] = saved.chartSpace.plotArea.groups;
+		expect([bar?.element, scatter?.element]).toEqual(['barChart', 'scatterChart']);
+		expect(scatter).toMatchObject({ scatterStyle: 'lineMarker', axisIds: bar!.axisIds });
+		expect(saved.chartSpace.plotArea.axes).toEqual(source.plotArea.axes);
+		const point = scatter!.series[0]!;
+		const original = chartSeriesEntries(source)[1]!.series;
+		expect(point.xValues).toEqual(original.categories);
+		expect(point.yValues).toEqual(original.values);
+		expect(point.categories).toBeUndefined();
+		// Markers only, in the series colour, unsmoothed: Excel's XY (Scatter) series.
+		expect(point.smooth).toBe(false);
+		expect(point.spPr?.line?.fill).toEqual({ kind: 'none' });
+		expect(point.marker).toMatchObject({
+			symbol: 'circle',
+			size: 5,
+			spPr: { fill: original.spPr?.fill, line: { widthEmu: 9525, fill: original.spPr?.fill } },
+		});
+		const xml = writeChartSpace(changed);
+		expect(xml).toMatch(/<c:scatterChart>.*<c:xVal>.*<c:yVal>.*<\/c:scatterChart>/su);
+		expect(xml).not.toMatch(/<c:scatterChart>.*<c:cat>.*<\/c:scatterChart>/su);
+		// Back to a column: the series takes its categories and values again.
+		const back = setChartSeriesType(changed, 1, { kind: 'bar' });
+		expect(back.plotArea.groups.map((group) => group.kind)).toEqual(['bar', 'bar']);
+		expect(chartSeriesEntries(back)[1]!.series.categories).toEqual(original.categories);
+		expect(chartSeriesEntries(back)[1]!.series.values).toEqual(original.values);
+	});
+	it('gives a combination scatter series its categories back on a whole-chart switch', () => {
+		const source = columnChart();
+		const original = chartSeriesEntries(source)[1]!.series;
+		const combo = setChartSeriesType(source, 1, { kind: 'scatter' });
+		const columns = setChartType(combo, { kind: 'bar', is3D: true });
+		const series = chartSeriesEntries(columns)[1]!.series;
+		expect(series.categories).toEqual(original.categories);
+		expect(series.values).toEqual(original.values);
+		expect(series.xValues).toBeUndefined();
+	});
+	it('keeps a scatter chart on two value axes a whole-chart type', () => {
+		const scatter = setChartType(columnChart(), { kind: 'scatter' });
+		expect(() => setChartSeriesType(scatter, 1, { kind: 'line' })).toThrow('axis pair');
 	});
 	it('joins equal groups anywhere in the plot area before writing, keeping other groups apart', () => {
 		const source = columnChart();

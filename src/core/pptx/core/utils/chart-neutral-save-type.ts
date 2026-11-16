@@ -31,6 +31,14 @@ export function planNeutralChartType(
 	probe: PptxChartData,
 	edits: NeutralChartEdit[],
 ): void {
+	// A single-type chart becoming `combo` (the SDK's `setChartSeriesChartType` promotes it once two
+	// series types differ) keeps its groups: only the series whose type changed are converted.
+	const toCombo =
+		probe.chartType === 'combo' &&
+		before.chartType !== 'combo' &&
+		NEUTRAL_CHART_TYPE_TARGETS[before.chartType] !== undefined &&
+		new Set(probe.series.map((series) => series.seriesChartType ?? before.chartType)).size > 1;
+	if (toCombo) probe.chartType = before.chartType;
 	const defaultType = probe.chartType;
 	const wholeChanged = probe.chartType !== before.chartType;
 	if (probe.chartType !== before.chartType) {

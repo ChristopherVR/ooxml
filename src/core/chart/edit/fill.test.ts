@@ -119,3 +119,13 @@ describe('style edits', () => {
 		expect(series[1]!.spPr?.fill).toEqual(chartSpaceSeries(space)[1]!.spPr?.fill);
 	});
 });
+
+describe('a picture-filled series switched to a line family', () => {
+	it('keeps its picture fill off the outline, which cannot hold one', () => {
+		const space = columnChart();
+		space.plotArea.groups[0]!.series[0]!.spPr = { fill: { kind: 'picture', relId: 'rId9' } };
+		const line = setChartType(space, { kind: 'line' });
+		expect(chartSpaceSeries(line)[0]!.spPr?.line?.fill).toBeUndefined();
+		expect(() => writeChartSpace(line)).not.toThrow();
+	});
+});

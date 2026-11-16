@@ -8,7 +8,13 @@
 import { CHART_GROUP_ELEMENTS } from '../parse-plot';
 import type { ChartAxis, ChartGroupKind, ChartPlotGroup, ChartSpace } from '../model';
 import type { ChartSpaceSeries } from '../model-series';
-import { assignOrDelete, chartSpaceSeries, editChartSpace, firstChartGroup } from './draft';
+import {
+	assignOrDelete,
+	chartSeriesEntries,
+	chartSpaceSeries,
+	editChartSpace,
+	firstChartGroup,
+} from './draft';
 import { GROUP_FIELDS, groupHasAxes, stripSeriesForKind } from './type-schema';
 import {
 	DEFAULT_CHART_AXIS_IDS,
@@ -158,8 +164,10 @@ export function setChartType(space: ChartSpace, target: ChartTypeTarget): ChartS
 		const base = firstChartGroup(draft);
 		if (target.kind === 'stock' && ![3, 4].includes(chartSpaceSeries(draft).length))
 			throw new RangeError('A stock chart requires three or four price series');
-		const series = chartSpaceSeries(draft).map((item) =>
-			stripSeriesForKind(item, base.kind, target.kind),
+		// Each series leaves its own group's family: a combination's scatter series takes its x and
+		// y values back as categories and values.
+		const series = chartSeriesEntries(draft).map(({ series: item, group: from }) =>
+			stripSeriesForKind(item, from.kind, target.kind),
 		);
 		const group = newGroup(base, target, series);
 		const toLine = chartGroupPaintsLine(group);

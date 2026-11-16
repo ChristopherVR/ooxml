@@ -75,9 +75,12 @@ complete Office-parity claim.
 - [x] Run the XML/model corpus harness with every difference classified, then native reopen and
       embedded-workbook refresh checks. Do not normalize away authored semantics to match a baseline.
 
-These checks cover supported source semantics and operations, not native pixel fidelity. Wider
-3D/XY combination switches, raw geographic/Pareto creation, arbitrary ChartEx custom label text or
-manual layout, and full removal of the PowerPoint source-tree model remain outside this delivery.
+These checks cover supported source semantics and operations, not native pixel fidelity. XY
+(Scatter) series in vertical 2-D category-axis combinations are admitted (see the 2026-11-16
+evidence below); 3-D and bubble series types remain whole-chart switches, as in Office. Combinations
+on horizontal bars or on two value axes, raw geographic/Pareto creation, ChartEx custom label text
+or manual layout (no schema node, see below), and full removal of the PowerPoint source-tree model
+remain outside this delivery.
 
 ## 5. Shared SmartArt style and colour authoring
 
@@ -264,8 +267,30 @@ through both paths over every deck: 33 parts reload with the same edited value b
 the same canonical XML and the rest differ only in the recorded object-tree side effects (theme font
 pinning, JavaScript number caches, manual-layout number form, resolved outline colours, one series
 `c:shape` position). No fixture holds a pie-of-pie chart, so that case is unit evidence only. Cleared
-settings the object-tree writers keep remain on that path. Native PowerPoint reopen of these edits
-is pending.
+settings the object-tree writers keep remain on that path.
+
+XY combinations: Excel 16, driven through its object model (`Series.ChartType = xlXYScatter` on a
+column or line series), saves a `c:scatterChart` that references the same category and value axes
+as the column or line group, with the categories as `c:xVal`, a 5 pt circle marker in the series
+colour, no line and `c:smooth val="0"`; asked to make one series 3-D column or bubble, it changes the
+whole chart. The shared `setChartSeriesType` now writes that structure. The object-tree writers
+wrote the scatter series with `c:cat` and `c:val`, which CT_ScatterSer does not allow;
+`chart-xy-combo-migration.test.ts` saves the edit both ways over the corpus: 16 parts reload with the
+same series types, names and values, 12 save through the neutral plan and 4 (two splits inside a
+stack, two groups with an unknown extension) keep the
+object-tree path. A whole-chart switch from such a combination now restores each series' data from
+its own group, and a picture-filled series switched to a line family keeps the picture off its
+outline (CT_LineProperties has no picture fill), which previously made the shared writer throw and
+the part's save fail; a writer failure now falls back to the object-tree path.
+
+Native acceptance (`pptx-classic-chart-acceptance.ps1 -RequireActiveDataSheet`, PowerPoint 16.0,
+2026-11-16): all 11 sequential cases passed chart type, series, category, value and Edit Data cell
+checks, including the column chart whose third series became scatter (series types 51, 51 and
+-4169), the 3-D column with a cylinder shape and gap depth 220 (92, `xlCylinderColClustered`) and the
+filled radar (82). An earlier run without `c:smooth` reported the scatter series as 72
+(`xlXYScatterSmooth`), which is why the conversion writes it explicitly. This is open and data
+evidence, not a pixel comparison. Surface wireframe, pie-of-pie and bubble option edits were not
+opened natively.
 
 ### Documentation reconciliation, 2026-10-27
 
