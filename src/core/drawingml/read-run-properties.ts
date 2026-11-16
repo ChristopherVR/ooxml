@@ -16,6 +16,8 @@ import {
 } from './dom';
 import type { DrawingFont, DrawingHyperlink, DrawingRunProperties } from './text-model';
 import { buildXml } from '../xml/index';
+import { domTextElementView } from './text-element-view';
+import { readDrawingFont } from './text-paragraph-codec';
 
 /** The outer XML of an element, for children kept verbatim. */
 export function outerXml(element: XmlElement): string {
@@ -29,16 +31,7 @@ export function isDrawingElement(element: XmlElement): boolean {
 
 /** Reads a `CT_TextFont` slot; `undefined` without a typeface. */
 export function parseDrawingFont(element: XmlElement | undefined): DrawingFont | undefined {
-	const typeface = stringAttribute(element, 'typeface');
-	if (!element || typeface === undefined) return undefined;
-	const font: DrawingFont = { typeface };
-	const panose = stringAttribute(element, 'panose');
-	if (panose) font.panose = panose;
-	const pitchFamily = integerAttribute(element, 'pitchFamily');
-	if (pitchFamily !== undefined) font.pitchFamily = pitchFamily;
-	const charset = integerAttribute(element, 'charset');
-	if (charset !== undefined) font.charset = charset;
-	return font;
+	return readDrawingFont(element ? domTextElementView(element) : undefined);
 }
 
 /** Reads `a:hlinkClick` / `a:hlinkMouseOver`. */

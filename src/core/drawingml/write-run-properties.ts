@@ -5,6 +5,7 @@ import { drawingColorXml } from './write-color';
 import { drawingFillXml } from './write-fill';
 import { patchDrawingLine } from './write-line';
 import type { DrawingFont, DrawingHyperlink, DrawingRunProperties } from './text-model';
+import { drawingFontEntries } from './text-paragraph-codec';
 import {
 	appendInSchemaOrder,
 	drawingElement,
@@ -47,10 +48,7 @@ const FILL_NAMES = new Set(['noFill', 'solidFill', 'gradFill', 'blipFill', 'patt
 /** Writes a `CT_TextFont` slot. */
 export function writeDrawingFont(doc: XmlDocument, local: string, font: DrawingFont): XmlElement {
 	const element = drawingElement(doc, local);
-	element.setAttribute('typeface', font.typeface);
-	setValue(element, 'panose', font.panose);
-	setValue(element, 'pitchFamily', font.pitchFamily);
-	setValue(element, 'charset', font.charset);
+	for (const [name, text] of drawingFontEntries(font)) element.setAttribute(name, text);
 	return element;
 }
 

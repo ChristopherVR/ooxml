@@ -6,13 +6,18 @@ import { writeDrawingFont, writeDrawingRunProperties } from './write-run-propert
 import type { DrawingParagraphProperties } from './text-model';
 import type { DrawingTextSpacing } from './types';
 import {
+	drawingBulletChild,
+	drawingBulletSizeChild,
+	drawingParagraphAttributeEntries,
+	drawingTabStopEntries,
+	drawingTextSpacingChild,
+	type DrawingAttributeEntry,
+} from './text-paragraph-codec';
+import {
 	appendInSchemaOrder,
 	drawingElement,
 	importDrawingXml,
 	keptChildren,
-	setBoolean,
-	setScaled,
-	setValue,
 	type OrderedChild,
 } from './write-text-xml';
 
@@ -37,6 +42,17 @@ export const PARAGRAPH_PROPERTIES_ORDER = [
 	'extLst',
 ] as const;
 
+/** An `a:<local>` element with the codec's attributes. */
+function codecElement(
+	doc: XmlDocument,
+	local: string,
+	attributes: readonly DrawingAttributeEntry[],
+): XmlElement {
+	const element = drawingElement(doc, local);
+	for (const [name, text] of attributes) element.setAttribute(name, text);
+	return element;
+}
+
 /** Writes `a:lnSpc` / `a:spcBef` / `a:spcAft`. */
 export function writeDrawingTextSpacing(
 	doc: XmlDocument,
@@ -44,24 +60,9 @@ export function writeDrawingTextSpacing(
 	spacing: DrawingTextSpacing,
 ): XmlElement {
 	const element = drawingElement(doc, local);
-	const inner = drawingElement(doc, spacing.unit === 'points' ? 'spcPts' : 'spcPct');
-	setScaled(inner, 'val', spacing.value, spacing.unit === 'points' ? 100 : 100000);
-	element.appendChild(inner);
+	const inner = drawingTextSpacingChild(spacing);
+	element.appendChild(codecElement(doc, inner.local, inner.attributes));
 	return element;
-}
-
-function setAttributes(element: XmlElement, value: DrawingParagraphProperties): void {
-	setValue(element, 'marL', value.marginLeftEmu);
-	setValue(element, 'marR', value.marginRightEmu);
-	setValue(element, 'lvl', value.level);
-	setValue(element, 'indent', value.indentEmu);
-	setValue(element, 'algn', value.align);
-	setValue(element, 'defTabSz', value.defaultTabSizeEmu);
-	setBoolean(element, 'rtl', value.rightToLeft);
-	setBoolean(element, 'eaLnBrk', value.eastAsianLineBreak);
-	setValue(element, 'fontAlgn', value.fontAlign);
-	setBoolean(element, 'latinLnBrk', value.latinLineBreak);
-	setBoolean(element, 'hangingPunct', value.hangingPunctuation);
 }
 
 function bulletChildren(doc: XmlDocument, value: DrawingParagraphProperties): OrderedChild[] {
@@ -73,28 +74,18 @@ function bulletChildren(doc: XmlDocument, value: DrawingParagraphProperties): Or
 		color.appendChild(importDrawingXml(doc, drawingColorXml(value.bulletColor)));
 		add('buClr', color);
 	}
-	const size = value.bulletSize;
-	if (size === 'text') add('buSzTx', drawingElement(doc, 'buSzTx'));
-	else if (size) {
-		const local = size.unit === 'percent' ? 'buSzPct' : 'buSzPts';
-		const element = drawingElement(doc, local);
-		setScaled(element, 'val', size.value, size.unit === 'percent' ? 100000 : 100);
-		add(local, element);
+	if (value.bulletSize) {
+		const size = drawingBulletSizeChild(value.bulletSize);
+		add(size.local, codecElement(doc, size.local, size.attributes));
 	}
 	if (value.bulletFont === 'text') add('buFontTx', drawingElement(doc, 'buFontTx'));
 	else if (value.bulletFont) add('buFont', writeDrawingFont(doc, 'buFont', value.bulletFont));
 	const bullet = value.bullet;
-	if (bullet?.kind === 'none') add('buNone', drawingElement(doc, 'buNone'));
-	else if (bullet?.kind === 'char') {
-		const element = drawingElement(doc, 'buChar');
-		element.setAttribute('char', bullet.char);
-		add('buChar', element);
-	} else if (bullet?.kind === 'autoNumber') {
-		const element = drawingElement(doc, 'buAutoNum');
-		element.setAttribute('type', bullet.scheme);
-		setValue(element, 'startAt', bullet.startAt);
-		add('buAutoNum', element);
-	} else if (bullet?.kind === 'picture') add('buBlip', importDrawingXml(doc, bullet.xml));
+	if (bullet?.kind === 'picture') add('buBlip', importDrawingXml(doc, bullet.xml));
+	else if (bullet) {
+		const child = drawingBulletChild(bullet);
+		if (child) add(child.local, codecElement(doc, child.local, child.attributes));
+	}
 	return out;
 }
 
@@ -104,8 +95,7 @@ export function writeDrawingParagraphProperties(
 	value: DrawingParagraphProperties,
 	local = 'pPr',
 ): XmlElement {
-	const element = drawingElement(doc, local);
-	setAttributes(element, value);
+	const element = codecElement(doc, local, drawingParagraphAttributeEntries(value));
 	const children: OrderedChild[] = [];
 	for (const [key, name] of [
 		['lineSpacing', 'lnSpc'],
@@ -118,12 +108,8 @@ export function writeDrawingParagraphProperties(
 	children.push(...bulletChildren(doc, value));
 	if (value.tabStops) {
 		const list = drawingElement(doc, 'tabLst');
-		for (const stop of value.tabStops) {
-			const tab = drawingElement(doc, 'tab');
-			setValue(tab, 'pos', stop.positionEmu);
-			setValue(tab, 'algn', stop.align);
-			list.appendChild(tab);
-		}
+		for (const stop of value.tabStops)
+			list.appendChild(codecElement(doc, 'tab', drawingTabStopEntries(stop)));
 		children.push({ name: 'tabLst', node: list });
 	}
 	if (value.defaultRunProperties)

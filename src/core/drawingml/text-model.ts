@@ -86,8 +86,13 @@ export interface DrawingRunProperties {
 export interface DrawingTabStop {
 	/** Position in EMU. */
 	positionEmu?: number;
-	/** `l`, `ctr`, `r`, `dec`. */
+	/** `l`, `ctr`, `r`, `dec`, as written (an authored default `l` is kept). */
 	align?: string;
+	/**
+	 * `leader` (`none`, `dot`, `hyphen`, `underscore`): not an attribute of CT_TextTabStop, but some
+	 * producers write it and PowerPoint's reader has always kept it, so it is read and written back.
+	 */
+	leader?: string;
 }
 
 /** The bullet of a paragraph (`a:buNone`, `a:buChar`, `a:buAutoNum`, `a:buBlip`). */

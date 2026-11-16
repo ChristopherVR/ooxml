@@ -40,6 +40,8 @@ export * from './theme';
 export * from './format-scheme';
 export * from './theme-color';
 export * from './text-model';
+export * from './text-element-view';
+export * from './text-paragraph-codec';
 export {
 	parseDrawingFont,
 	parseDrawingHyperlink,
