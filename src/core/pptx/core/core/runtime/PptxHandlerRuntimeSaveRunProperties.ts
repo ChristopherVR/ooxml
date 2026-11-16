@@ -1,31 +1,28 @@
+import type { DrawingRunProperties } from '../../../../drawingml/text-model';
+import { drawingFontEntries } from '../../../../drawingml/text-paragraph-codec';
+import { drawingRunAttributeEntries } from '../../../../drawingml/text-run-codec';
 import { XmlObject, TextStyle } from '../../types';
 import { serializeColorChoiceWithRef } from '../../utils/color-xml-preservation';
-import { createRunStyleGate } from './authored-run-style';
+import { objectAttributes } from '../../utils/paragraph-properties-neutral';
+import { textFontToDrawing } from '../../utils/run-properties-neutral';
+import { createRunStyleGate, type RunStyleGate } from './authored-run-style';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveSlideUtils';
 import { buildTextRunEffectListXml } from './text-run-effect-xml-builder';
 
 /**
- * Augment a CT_TextFont node (`a:latin` / `a:ea` / `a:cs` / `a:sym`) with
- * optional `@panose`, `@pitchFamily`, `@charset` attributes when the parsed
- * model captured them. Mutates and returns the same node so the caller can
- * use it inline at the OOXML-prescribed insertion point.
+ * A CT_TextFont node (`a:latin` / `a:ea` / `a:cs` / `a:sym`): the typeface
+ * plus the optional `@panose`, `@pitchFamily`, `@charset` the parsed model
+ * captured, written by the shared DrawingML codec.
  */
-function applyFontMetadata(
-	fontNode: XmlObject,
+function textFontNode(
+	typeface: string,
 	panose: string | undefined,
 	pitchFamily: number | undefined,
 	charset: number | undefined,
 ): XmlObject {
-	if (panose && panose.length > 0) {
-		fontNode['@_panose'] = panose;
-	}
-	if (typeof pitchFamily === 'number' && Number.isFinite(pitchFamily)) {
-		fontNode['@_pitchFamily'] = String(pitchFamily);
-	}
-	if (typeof charset === 'number' && Number.isFinite(charset)) {
-		fontNode['@_charset'] = String(charset);
-	}
-	return fontNode;
+	return objectAttributes(
+		drawingFontEntries(textFontToDrawing(typeface, panose, pitchFamily, charset)),
+	);
 }
 
 /**
@@ -108,6 +105,98 @@ function buildUnderlineLineXml(line: NonNullable<TextStyle['underlineLine']>): X
 	return uln;
 }
 
+/**
+ * The gated run attributes of a {@link TextStyle} on the neutral model (px ->
+ * points, the file's thousandths of a percent -> a fraction).
+ */
+function runAttributesToDrawing(style: TextStyle, owns: RunStyleGate): DrawingRunProperties {
+	const out: DrawingRunProperties = {};
+	// `@_lang` used to be stamped unconditionally, which fabricated a whole
+	// `<a:rPr lang="en-US"/>` for every run whose source authored none at
+	// all (measured: ~65 such elements across the fixture corpus, runs and
+	// `a:br` alike). `owns('language')` keeps it sparse exactly like every
+	// other property here: a run that never authored `@lang` and whose
+	// resolved language matches the paragraph/shape baseline inherits it
+	// silently, and the `a:rPr` can end up with no keys at all, in which case
+	// the caller omits it entirely rather than writing an empty shell.
+	if (owns('language')) out.language = style.language || 'en-US';
+	if (typeof style.fontSize === 'number' && Number.isFinite(style.fontSize) && owns('fontSize')) {
+		out.sizePt = style.fontSize * (72 / 96);
+	}
+	if (style.bold !== undefined && owns('bold')) out.bold = style.bold;
+	if (style.italic !== undefined && owns('italic')) out.italic = style.italic;
+	const ownsUnderline = owns('underline', 'underlineStyle', 'underlineExplicitNone');
+	if (style.underline && ownsUnderline) {
+		out.underline = style.underlineStyle || 'sng';
+	} else if (style.underlineExplicitNone && ownsUnderline) {
+		// Re-emit an explicitly authored `u="none"` suppression rather than
+		// collapsing it to inherit (which would let an inherited underline
+		// bleed through).
+		out.underline = 'none';
+	}
+	if (style.strikethrough !== undefined && owns('strikethrough', 'strikeType')) {
+		out.strike = style.strikethrough ? style.strikeType || 'sngStrike' : 'noStrike';
+	}
+	if (typeof style.baseline === 'number' && owns('baseline')) {
+		// A zero shift is only worth writing when the run authored it or it
+		// cancels an inherited shift; otherwise it is the default.
+		const zeroIsMeaningful =
+			style.authoredRunStyle?.baseline !== undefined ||
+			(style.inheritedRunStyle?.baseline ?? 0) !== 0;
+		if (style.baseline !== 0 || zeroIsMeaningful) out.baseline = style.baseline / 100000;
+	}
+	if (
+		typeof style.characterSpacing === 'number' &&
+		style.characterSpacing !== 0 &&
+		owns('characterSpacing')
+	) {
+		out.spacingPt = style.characterSpacing / 100;
+	}
+	if (typeof style.kerning === 'number' && style.kerning !== 0 && owns('kerning')) {
+		out.kernPt = style.kerning / 100;
+	}
+	const ownsCaps = owns('textCaps', 'textCapsExplicitNone');
+	if (style.textCaps && style.textCaps !== 'none' && ownsCaps) {
+		out.caps = style.textCaps;
+	} else if (style.textCapsExplicitNone && ownsCaps) {
+		// Re-emit an explicitly authored `cap="none"` rather than dropping it
+		// to inherit (which would let an inherited caps style bleed through).
+		out.caps = 'none';
+	}
+	// Run-level `rtl` is a child ELEMENT of CT_TextCharacterProperties
+	// (`<a:rtl val="1"/>`, written with the children below); the `@rtl`
+	// ATTRIBUTE belongs to CT_TextParagraphProperties only.
+	if (style.kumimoji !== undefined && owns('kumimoji')) out.kumimoji = style.kumimoji;
+	if (style.normalizeHeight !== undefined && owns('normalizeHeight')) {
+		out.normalizeHeight = style.normalizeHeight;
+	}
+	if (style.noProof !== undefined && owns('noProof')) out.noProof = style.noProof;
+	if (owns('dirty')) {
+		// `style.dirty === undefined` here is either "no baseline to compare
+		// against" (SDK-built text, a fabricated shape, a synthetic test style:
+		// `owns` passes everything) or an edit that flipped it back toward the
+		// baseline without clearing the flat field. Either way, stamp the same
+		// `dirty="0"` PowerPoint itself writes for freshly authored text.
+		out.dirty = Boolean(style.dirty);
+	}
+	if (style.spellingError !== undefined && owns('spellingError')) {
+		out.spellingError = style.spellingError;
+	}
+	if (style.smartTagClean !== undefined && owns('smartTagClean')) {
+		out.smartTagClean = style.smartTagClean;
+	}
+	if (style.bookmark && owns('bookmark')) out.bookmark = style.bookmark;
+	if (style.altLanguage && owns('altLanguage')) out.altLanguage = style.altLanguage;
+	if (
+		typeof style.smartTagId === 'number' &&
+		Number.isFinite(style.smartTagId) &&
+		owns('smartTagId')
+	) {
+		out.smartTagId = style.smartTagId;
+	}
+	return out;
+}
+
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	protected createRunPropertiesFromTextStyle(
 		style: TextStyle | undefined,
@@ -129,125 +218,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// `authored-run-style.ts`.
 		const owns = createRunStyleGate(style);
 
-		const runProps: XmlObject = {};
-		// `@_lang` used to be stamped unconditionally, which fabricated a whole
-		// `<a:rPr lang="en-US"/>` for every run whose source authored none at
-		// all (measured: ~65 such elements across the fixture corpus, runs and
-		// `a:br` alike). `owns('language')` keeps it sparse exactly like every
-		// other property here: a run that never authored `@lang` and whose
-		// resolved language matches the paragraph/shape baseline inherits it
-		// silently, and `runProps` below can end up with no keys at all, in
-		// which case the caller omits `a:rPr` entirely rather than writing an
-		// empty shell (see the `?? undefined` return at the end of this
-		// function).
-		if (owns('language')) {
-			runProps['@_lang'] = style.language || 'en-US';
-		}
-
-		if (typeof style.fontSize === 'number' && Number.isFinite(style.fontSize) && owns('fontSize')) {
-			runProps['@_sz'] = String(Math.round(style.fontSize * (72 / 96) * 100));
-		}
-		if (style.bold !== undefined && owns('bold')) {
-			runProps['@_b'] = style.bold ? '1' : '0';
-		}
-		if (style.italic !== undefined && owns('italic')) {
-			runProps['@_i'] = style.italic ? '1' : '0';
-		}
-		const ownsUnderline = owns('underline', 'underlineStyle', 'underlineExplicitNone');
-		if (style.underline && ownsUnderline) {
-			runProps['@_u'] = style.underlineStyle || 'sng';
-		} else if (style.underlineExplicitNone && ownsUnderline) {
-			// Re-emit an explicitly authored `u="none"` suppression rather than
-			// collapsing it to inherit (which would let an inherited underline
-			// bleed through).
-			runProps['@_u'] = 'none';
-		}
-		if (style.strikethrough !== undefined && owns('strikethrough', 'strikeType')) {
-			runProps['@_strike'] = style.strikethrough ? style.strikeType || 'sngStrike' : 'noStrike';
-		}
-		// Superscript / subscript baseline
-		if (typeof style.baseline === 'number' && owns('baseline')) {
-			// A zero shift is only worth writing when the run authored it or it
-			// cancels an inherited shift; otherwise it is the default.
-			const zeroIsMeaningful =
-				style.authoredRunStyle?.baseline !== undefined ||
-				(style.inheritedRunStyle?.baseline ?? 0) !== 0;
-			if (style.baseline !== 0 || zeroIsMeaningful) {
-				runProps['@_baseline'] = String(style.baseline);
-			}
-		}
-		// Character spacing
-		if (
-			typeof style.characterSpacing === 'number' &&
-			style.characterSpacing !== 0 &&
-			owns('characterSpacing')
-		) {
-			runProps['@_spc'] = String(style.characterSpacing);
-		}
-		// Kerning
-		if (typeof style.kerning === 'number' && style.kerning !== 0 && owns('kerning')) {
-			runProps['@_kern'] = String(style.kerning);
-		}
-		// Text caps
-		const ownsCaps = owns('textCaps', 'textCapsExplicitNone');
-		if (style.textCaps && style.textCaps !== 'none' && ownsCaps) {
-			runProps['@_cap'] = style.textCaps;
-		} else if (style.textCapsExplicitNone && ownsCaps) {
-			// Re-emit an explicitly authored `cap="none"` rather than dropping it
-			// to inherit (which would let an inherited caps style bleed through).
-			runProps['@_cap'] = 'none';
-		}
-		// NOTE (corrected): run-level `rtl` IS valid on
-		// CT_TextCharacterProperties, but as a child ELEMENT of type CT_Boolean
-		// (`<a:rtl val="1"/>`) sequenced between `hlinkMouseOver` and `extLst`,
-		// so it is emitted down in the child-element section below rather than
-		// here among the attributes. What is NOT valid on `a:rPr` is the
-		// ATTRIBUTE spelling `@rtl`: that one belongs to
-		// CT_TextParagraphProperties, where `buildParagraphPropertiesXml`
-		// writes it. The note that used to sit here claimed the whole property
-		// was paragraph-only, which is why run-level RTL was never written at
-		// all; a comment asserting a false schema fact is a much better way of
-		// keeping a bug alive than the bug itself, so it is corrected rather
-		// than deleted.
-		// Run metadata
-		if (style.kumimoji !== undefined && owns('kumimoji')) {
-			runProps['@_kumimoji'] = style.kumimoji ? '1' : '0';
-		}
-		if (style.normalizeHeight !== undefined && owns('normalizeHeight')) {
-			runProps['@_normalizeH'] = style.normalizeHeight ? '1' : '0';
-		}
-		if (style.noProof !== undefined && owns('noProof')) {
-			runProps['@_noProof'] = style.noProof ? '1' : '0';
-		}
-		if (owns('dirty')) {
-			// `style.dirty === undefined` here is either "no baseline to
-			// compare against" (SDK-built text, a fabricated shape, a
-			// synthetic test style: `owns` passes everything) or an edit that
-			// flipped it back toward the baseline without clearing the flat
-			// field. Either way, stamp the same `dirty="0"` PowerPoint itself
-			// writes for freshly authored text.
-			runProps['@_dirty'] = style.dirty ? '1' : '0';
-		}
-		if (style.spellingError !== undefined && owns('spellingError')) {
-			runProps['@_err'] = style.spellingError ? '1' : '0';
-		}
-		if (style.smartTagClean !== undefined && owns('smartTagClean')) {
-			runProps['@_smtClean'] = style.smartTagClean ? '1' : '0';
-		}
-		if (style.bookmark && owns('bookmark')) {
-			runProps['@_bmk'] = style.bookmark;
-		}
-		// Alternative language and SmartTag id (CT_TextCharacterProperties).
-		if (style.altLanguage && owns('altLanguage')) {
-			runProps['@_altLang'] = style.altLanguage;
-		}
-		if (
-			typeof style.smartTagId === 'number' &&
-			Number.isFinite(style.smartTagId) &&
-			owns('smartTagId')
-		) {
-			runProps['@_smtId'] = String(style.smartTagId);
-		}
+		// The attributes are written by the shared DrawingML run codec, in
+		// CT_TextCharacterProperties order (`kumimoji lang altLang sz b i u
+		// strike kern cap spc normalizeH baseline noProof dirty err smtClean
+		// smtId bmk`, as PowerPoint writes them). `runAttributesToDrawing` keeps
+		// the pptx rules for what is written.
+		const runProps = objectAttributes(
+			drawingRunAttributeEntries(runAttributesToDrawing(style, owns)),
+		);
 		// OOXML CT_TextCharacterProperties child element order (fast-xml-parser
 		// serialises keys in insertion order, so every child must be assigned
 		// in this exact sequence — any reversal triggers
@@ -470,8 +448,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			faceKey: keyof TextStyle,
 			themeTokenKey: keyof TextStyle,
 		): XmlObject =>
-			applyFontMetadata(
-				{ '@_typeface': typeface },
+			textFontNode(
+				typeface,
 				resolveFontMetadata(style, `${metadataPrefix}Panose`, faceKey, themeTokenKey, typeface),
 				resolveFontMetadata(
 					style,

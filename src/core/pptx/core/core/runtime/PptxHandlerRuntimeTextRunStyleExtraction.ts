@@ -2,7 +2,12 @@ import { themeColorRefFromColorChoice } from '../../color/theme-color-ref';
 import { TextStyle, XmlObject } from '../../types';
 import { extractColorChoiceXml } from '../../utils/color-xml-preservation';
 import { resolveTextFillBlip } from '../../utils/text-fill-blip';
-import { xmlAttr, xmlChild } from '../../utils/xml-access';
+import {
+	objectRunProperties,
+	runAttributesFromDrawing,
+	runFontMetadataFromDrawing,
+} from '../../utils/run-properties-neutral';
+import { xmlChild } from '../../utils/xml-access';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeTextRunEffects';
 
 /**
@@ -31,46 +36,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			return style;
 		}
 
-		if (runProperties['@_sz']) {
-			const points = parseInt(runProperties['@_sz']) / 100;
-			style.fontSize = points * (96 / 72);
-		}
-
-		// `@b` / `@i` are `xsd:boolean`, so "1", "0", "true" and "false" are all
-		// legal (the parser runs with `parseAttributeValue: false`, so the value
-		// is the raw string). A literal `=== '1'` test read the spec-legal
-		// `b="true"` written by several non-Microsoft producers as an EXPLICIT
-		// false, which then also beat the inherited bold. Every other boolean in
-		// this file already goes through the tolerant helper.
-		const bold = this.parseOptionalBooleanAttr(runProperties['@_b']);
-		if (bold !== undefined) {
-			style.bold = bold;
-		}
-		const italic = this.parseOptionalBooleanAttr(runProperties['@_i']);
-		if (italic !== undefined) {
-			style.italic = italic;
-		}
-		if (runProperties['@_u'] !== undefined) {
-			const underlineToken = String(runProperties['@_u'] || '')
-				.trim()
-				.toLowerCase();
-			style.underline =
-				underlineToken.length > 0 &&
-				underlineToken !== 'none' &&
-				underlineToken !== '0' &&
-				underlineToken !== 'false';
-			// Preserve the specific underline style variant
-			if (style.underline) {
-				const rawU = String(runProperties['@_u'] || '').trim();
-				if (rawU.length > 0 && rawU !== 'none') {
-					style.underlineStyle = rawU as TextStyle['underlineStyle'];
-				}
-			} else if (underlineToken === 'none') {
-				// Explicit `<a:rPr u="none"/>` suppression. Record it so the writer
-				// re-emits the explicit token instead of collapsing to inherit.
-				style.underlineExplicitNone = true;
-			}
-		}
+		// The attributes (size, the `xsd:boolean` flags in every lexical form,
+		// underline, strike, caps, baseline, spacing, kerning, language and the
+		// metadata), the font slots, the run `a:rtl` and the underline
+		// follow-text markers are read by the shared DrawingML run codec
+		// (`run-properties-neutral`). Colours, fills, the outline, effects and
+		// hyperlinks are read below by their own codecs.
+		const neutral = objectRunProperties(runProperties);
+		Object.assign(style, runAttributesFromDrawing(neutral));
 		// Underline colour (a:uFill > a:solidFill or a:uLn > a:solidFill)
 		const uFill = runProperties['a:uFill'] as XmlObject | undefined;
 		const uLn = runProperties['a:uLn'] as XmlObject | undefined;
@@ -118,25 +91,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				style.underlineLine = line;
 			}
 		}
-		if (runProperties['a:uLnTx'] !== undefined) {
+		if (neutral.underlineLineFollowsText) {
 			style.underlineLineFollowsText = true;
 		}
-		if (runProperties['a:uFillTx'] !== undefined) {
+		if (neutral.underlineFillFollowsText) {
 			style.underlineFillFollowsText = true;
-		}
-		if (runProperties['@_strike'] !== undefined) {
-			const strikeToken = String(runProperties['@_strike'] || '')
-				.trim()
-				.toLowerCase();
-			style.strikethrough =
-				strikeToken.length > 0 &&
-				strikeToken !== 'nostrike' &&
-				strikeToken !== 'none' &&
-				strikeToken !== '0' &&
-				strikeToken !== 'false';
-			if (style.strikethrough) {
-				style.strikeType = strikeToken === 'dblstrike' ? 'dblStrike' : 'sngStrike';
-			}
 		}
 		// Text outline (a:rPr > a:ln)
 		const textLn = runProperties['a:ln'] as XmlObject | undefined;
@@ -173,30 +132,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			style.textFillNone = true;
 		} else if (TEXT_FILL_ELEMENTS.some((name) => runProperties[name] !== undefined)) {
 			style.textFillNone = false;
-		}
-		// Superscript / subscript baseline shift (percentage)
-		if (runProperties['@_baseline'] !== undefined) {
-			const baselineVal = Number.parseInt(String(runProperties['@_baseline']), 10);
-			// An authored `baseline="0"` is kept as 0 (not collapsed to unset):
-			// two runs differing only by it must not compare equal, or the save
-			// path merges them into one run.
-			if (Number.isFinite(baselineVal)) {
-				style.baseline = baselineVal;
-			}
-		}
-		// Character spacing (hundredths of a point)
-		if (runProperties['@_spc'] !== undefined) {
-			const spcVal = Number.parseInt(String(runProperties['@_spc']), 10);
-			if (Number.isFinite(spcVal)) {
-				style.characterSpacing = spcVal;
-			}
-		}
-		// Kerning threshold
-		if (runProperties['@_kern'] !== undefined) {
-			const kernVal = Number.parseInt(String(runProperties['@_kern']), 10);
-			if (Number.isFinite(kernVal)) {
-				style.kerning = kernVal;
-			}
 		}
 		// Text highlight colour
 		if (runProperties['a:highlight']) {
@@ -248,21 +183,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// CT_TextParagraphProperties. Reading only `@_rtl` here meant an
 		// authored `<a:rtl/>` never loaded at all. The attribute is still read
 		// as a fallback for SDK-built content that put it there.
-		const rtlElement = runProperties['a:rtl'];
-		const runRtl =
-			rtlElement !== undefined
-				? (this.parseOptionalBooleanAttr(xmlAttr(xmlChild(runProperties, 'a:rtl'), 'val')) ?? true)
-				: this.parseOptionalBooleanAttr(runProperties['@_rtl']);
+		const runRtl = neutral.rightToLeft ?? this.parseOptionalBooleanAttr(runProperties['@_rtl']);
 		if (runRtl !== undefined) {
 			style.rtl = runRtl;
 		}
 
-		const latin = xmlChild(runProperties, 'a:latin');
-		const eastAsian = xmlChild(runProperties, 'a:ea');
-		const complexScript = xmlChild(runProperties, 'a:cs');
-		const latinTypefaceToken = xmlAttr(latin, 'typeface');
-		const eaTypefaceToken = xmlAttr(eastAsian, 'typeface');
-		const csTypefaceToken = xmlAttr(complexScript, 'typeface');
+		const latinTypefaceToken = neutral.latin?.typeface;
+		const eaTypefaceToken = neutral.eastAsian?.typeface;
+		const csTypefaceToken = neutral.complexScript?.typeface;
 		// The run's primary CSS family is its Latin face. East Asian and complex
 		// script faces are preserved below and applied only to matching glyphs.
 		const chosenTypeface = latinTypefaceToken;
@@ -313,81 +241,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// Hyperlinks (a:hlinkClick, a:hlinkMouseOver)
 		this.applyHyperlinkStyle(style, runProperties, relationshipMap);
 
-		// Text caps (@cap)
-		const capAttr = String(runProperties['@_cap'] || '')
-			.trim()
-			.toLowerCase();
-		if (capAttr === 'all' || capAttr === 'small') {
-			style.textCaps = capAttr;
-		} else if (capAttr === 'none') {
-			// Explicit `<a:rPr cap="none"/>` suppression. Record it so the writer
-			// re-emits the explicit token instead of dropping it to inherit.
-			style.textCaps = 'none';
-			style.textCapsExplicitNone = true;
-		}
-
 		// Symbol font (a:sym)
-		const symNode = xmlChild(runProperties, 'a:sym');
-		if (symNode) {
-			const symTypeface = this.normalizeTypefaceToken(xmlAttr(symNode, 'typeface') || '');
-			if (symTypeface) {
-				style.symbolFont = symTypeface;
-			}
-		}
-
-		// Language (@lang)
-		const langAttr = String(runProperties['@_lang'] || '').trim();
-		if (langAttr) {
-			style.language = langAttr;
-		}
-
-		// Run metadata attributes
-		const kumimoji = this.parseOptionalBooleanAttr(runProperties['@_kumimoji']);
-		if (kumimoji !== undefined) {
-			style.kumimoji = kumimoji;
-		}
-		const normalizeH = this.parseOptionalBooleanAttr(runProperties['@_normalizeH']);
-		if (normalizeH !== undefined) {
-			style.normalizeHeight = normalizeH;
-		}
-		const noProof = this.parseOptionalBooleanAttr(runProperties['@_noProof']);
-		if (noProof !== undefined) {
-			style.noProof = noProof;
-		}
-		const dirty = this.parseOptionalBooleanAttr(runProperties['@_dirty']);
-		if (dirty !== undefined) {
-			style.dirty = dirty;
-		}
-		const err = this.parseOptionalBooleanAttr(runProperties['@_err']);
-		if (err !== undefined) {
-			style.spellingError = err;
-		}
-		const smtClean = this.parseOptionalBooleanAttr(runProperties['@_smtClean']);
-		if (smtClean !== undefined) {
-			style.smartTagClean = smtClean;
-		}
-		const bmk = String(runProperties['@_bmk'] || '').trim();
-		if (bmk) {
-			style.bookmark = bmk;
-		}
-
-		// Alternative language and SmartTag id (CT_TextCharacterProperties).
-		const altLang = String(runProperties['@_altLang'] || '').trim();
-		if (altLang) {
-			style.altLanguage = altLang;
-		}
-		if (runProperties['@_smtId'] !== undefined) {
-			const smtIdRaw = Number.parseInt(String(runProperties['@_smtId']), 10);
-			if (Number.isFinite(smtIdRaw)) {
-				style.smartTagId = smtIdRaw;
-			}
+		if (neutral.symbol) {
+			style.symbolFont = neutral.symbol.typeface;
 		}
 
 		// Per-script font metadata (CT_TextFont @panose, @pitchFamily, @charset).
-		this.applyTextFontMetadata(style, latin, 'latin');
-		this.applyTextFontMetadata(style, eastAsian, 'eastAsia');
-		this.applyTextFontMetadata(style, complexScript, 'complexScript');
-		this.applyTextFontMetadata(style, symNode, 'symbol');
+		Object.assign(style, runFontMetadataFromDrawing(neutral));
 
 		// Text run effects (a:effectLst on a:rPr)
 		const runEffectList = runProperties['a:effectLst'] as XmlObject | undefined;
@@ -419,79 +279,5 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 
 		return style;
-	}
-
-	/**
-	 * Copy `@panose` / `@pitchFamily` / `@charset` from a font child node
-	 * (`a:latin`, `a:ea`, `a:cs`, `a:sym`) onto the matching `*Font*`
-	 * fields of `style`.
-	 */
-	private applyTextFontMetadata(
-		style: TextStyle,
-		fontNode: XmlObject | undefined,
-		kind: 'latin' | 'eastAsia' | 'complexScript' | 'symbol',
-	): void {
-		if (!fontNode) {
-			return;
-		}
-		const panose = String(fontNode['@_panose'] || '').trim();
-		const pitchRaw = fontNode['@_pitchFamily'];
-		const charsetRaw = fontNode['@_charset'];
-
-		const pitch =
-			pitchRaw !== undefined && pitchRaw !== null
-				? Number.parseInt(String(pitchRaw), 10)
-				: undefined;
-		const charset =
-			charsetRaw !== undefined && charsetRaw !== null
-				? Number.parseInt(String(charsetRaw), 10)
-				: undefined;
-
-		if (kind === 'latin') {
-			if (panose) {
-				style.latinFontPanose = panose;
-			}
-			if (typeof pitch === 'number' && Number.isFinite(pitch)) {
-				style.latinFontPitchFamily = pitch;
-			}
-			if (typeof charset === 'number' && Number.isFinite(charset)) {
-				style.latinFontCharset = charset;
-			}
-			return;
-		}
-		if (kind === 'eastAsia') {
-			if (panose) {
-				style.eastAsiaFontPanose = panose;
-			}
-			if (typeof pitch === 'number' && Number.isFinite(pitch)) {
-				style.eastAsiaFontPitchFamily = pitch;
-			}
-			if (typeof charset === 'number' && Number.isFinite(charset)) {
-				style.eastAsiaFontCharset = charset;
-			}
-			return;
-		}
-		if (kind === 'complexScript') {
-			if (panose) {
-				style.complexScriptFontPanose = panose;
-			}
-			if (typeof pitch === 'number' && Number.isFinite(pitch)) {
-				style.complexScriptFontPitchFamily = pitch;
-			}
-			if (typeof charset === 'number' && Number.isFinite(charset)) {
-				style.complexScriptFontCharset = charset;
-			}
-			return;
-		}
-		// symbol
-		if (panose) {
-			style.symbolFontPanose = panose;
-		}
-		if (typeof pitch === 'number' && Number.isFinite(pitch)) {
-			style.symbolFontPitchFamily = pitch;
-		}
-		if (typeof charset === 'number' && Number.isFinite(charset)) {
-			style.symbolFontCharset = charset;
-		}
 	}
 }

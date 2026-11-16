@@ -10,6 +10,7 @@ import {
 	parseTabStops,
 } from '../../utils/paragraph-properties-parser';
 import { objectParagraphProperties } from '../../utils/paragraph-properties-neutral';
+import { objectRunProperties, runAttributesFromDrawing } from '../../utils/run-properties-neutral';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSlideUtils';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
@@ -82,10 +83,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// the level's own default run size (`a:defRPr/@sz`, in hundredths of a
 		// point), which is the closest size basis available at parse time.
 		const defRPr = levelProps['a:defRPr'] as XmlObject | undefined;
-		const defRPrSzRaw = Number.parseInt(String(defRPr?.['@_sz'] ?? ''), 10);
-		const basisFontSizePx = Number.isFinite(defRPrSzRaw)
-			? this.pointsToPixels(defRPrSzRaw / 100)
-			: undefined;
+		const basisFontSizePx = runAttributesFromDrawing(objectRunProperties(defRPr)).fontSize;
 		// The shared codec reads `a:spcPts` before `a:spcPct`, so the spacing
 		// keeps its percentage only when that was the source.
 		const spacing = objectParagraphProperties(levelProps);
@@ -170,17 +168,17 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		defRPr: XmlObject,
 		style: PlaceholderTextLevelStyle,
 	): void {
-		if (defRPr['@_sz'] !== undefined) {
-			const hundredths = Number.parseInt(String(defRPr['@_sz']), 10);
-			if (Number.isFinite(hundredths)) {
-				style.fontSize = (hundredths / 100) * (96 / 72);
-			}
+		// Size, bold and italic through the shared DrawingML run codec.
+		const run = objectRunProperties(defRPr);
+		const { fontSize, bold, italic } = runAttributesFromDrawing(run);
+		if (fontSize !== undefined) {
+			style.fontSize = fontSize;
 		}
-		if (defRPr['@_b'] !== undefined) {
-			style.bold = defRPr['@_b'] === '1';
+		if (bold !== undefined) {
+			style.bold = bold;
 		}
-		if (defRPr['@_i'] !== undefined) {
-			style.italic = defRPr['@_i'] === '1';
+		if (italic !== undefined) {
+			style.italic = italic;
 		}
 
 		const solidFill = defRPr['a:solidFill'] as XmlObject | undefined;
@@ -195,9 +193,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			style.colorChoiceXml = solidFill;
 		}
 
-		const latin = defRPr['a:latin'] as XmlObject | undefined;
-		if (latin?.['@_typeface']) {
-			const typeface = String(latin['@_typeface']);
+		if (run.latin) {
+			const typeface = run.latin.typeface;
 			const resolved = this.resolveThemeTypeface(typeface);
 			const resolvedFamily = resolved ?? typeface;
 			style.fontFamily = resolvedFamily;

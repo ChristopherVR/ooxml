@@ -1,11 +1,8 @@
-import JSZip from 'jszip';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
-import path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { parseDrawingParagraphProperties } from '../../../drawingml/read-paragraph-properties';
 import type { DrawingParagraphProperties } from '../../../drawingml/text-model';
-import { NS, elements, parseXml, type XmlElement } from '../../../xml/index';
+import { NS, parseXml } from '../../../xml/index';
 import { PptxRuntimeDependencyFactory } from '../../core/core/factories/PptxRuntimeDependencyFactory';
 import {
 	applyBulletProperties,
@@ -28,6 +25,7 @@ import {
 	objectParagraphProperties,
 	objectTextSpacing,
 } from '../../core/utils/paragraph-properties-neutral';
+import { canonicalJson, walkParityCorpus, type ParityVisit } from './drawingml-text-parity-corpus';
 
 /**
  * DrawingML paragraph property parity (docs/agnostic-core-plan.md step 3): the pptx readers and
@@ -58,34 +56,13 @@ import {
  * 10,917 of those now match the source file's own order, which the old order never did.
  */
 
-const CORE = path.resolve(__dirname, '../../..');
 const PARAGRAPH_ELEMENTS = new Set([
 	'pPr',
 	'defPPr',
 	...Array.from({ length: 9 }, (_, index) => `lvl${index + 1}pPr`),
 ]);
-const parser = new PptxRuntimeDependencyFactory().createParser();
 const builder = new PptxRuntimeDependencyFactory().createBuilder();
-
-function decks(): string[] {
-	const found: string[] = [];
-	const walk = (dir: string) => {
-		for (const name of readdirSync(dir).sort()) {
-			const full = path.join(dir, name);
-			if (statSync(full).isDirectory()) walk(full);
-			else if (/\.(pptx|pptm|potx|ppsx)$/i.test(name)) found.push(full);
-		}
-	};
-	walk(path.join(CORE, 'pptx/__tests__/fixtures'));
-	return found;
-}
-
-/** The object-tree child for a DOM child: same-name siblings are an array, a bare element `''`. */
-function objectChild(node: unknown, name: string, index: number): unknown {
-	if (!node || typeof node !== 'object') return undefined;
-	const value = (node as XmlObject)[name];
-	return Array.isArray(value) ? value[index] : index === 0 ? value : undefined;
-}
+const canonical = canonicalJson;
 
 /** The codec families of a DOM reading (no colour, picture, default run or kept children). */
 function codecFamilies(value: DrawingParagraphProperties | undefined): DrawingParagraphProperties {
@@ -102,15 +79,6 @@ function codecFamilies(value: DrawingParagraphProperties | undefined): DrawingPa
 		...(bullet && bullet.kind !== 'picture' ? { bullet } : {}),
 	};
 }
-
-const canonical = (value: unknown): string =>
-	JSON.stringify(value, (_key, entry: unknown) =>
-		entry && typeof entry === 'object' && !Array.isArray(entry)
-			? Object.fromEntries(
-					Object.entries(entry as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b)),
-				)
-			: entry,
-	);
 
 /** What the pptx paragraph writer saves of a paragraph properties node, read back on the DOM. */
 function savedThroughPptx(node: XmlObject): DrawingParagraphProperties {
@@ -178,69 +146,29 @@ let fieldsCompared = 0;
 let savesCompared = 0;
 let partsCompared = 0;
 
-function compareParagraphs(label: string, xml: string): void {
-	let root: XmlElement;
-	try {
-		root = parseXml(xml, { label }).documentElement;
-	} catch {
-		return;
-	}
-	const tree = parser.parse(xml) as XmlObject;
-	partsCompared++;
-	const visit = (element: XmlElement, node: unknown, trail: string) => {
-		if (node === undefined) return;
-		if (element.namespaceURI === NS.a && PARAGRAPH_ELEMENTS.has(element.localName)) {
-			const objectNode = (typeof node === 'object' ? node : {}) as XmlObject;
-			const dom = codecFamilies(parseDrawingParagraphProperties(element));
-			const objectTree = objectParagraphProperties(objectNode);
-			elementsCompared++;
-			fieldsCompared += Object.keys(dom).length;
-			if (canonical(objectTree) !== canonical(dom))
-				readDifferences.push({
-					label: `${label} ${trail}`,
-					objectTree: canonical(objectTree),
-					dom: canonical(dom),
-				});
-			const lineSpacing = dom.lineSpacing;
-			const clamped =
-				lineSpacing?.unit === 'percent' && (lineSpacing.value < 0.1 || lineSpacing.value > 5);
-			if (!clamped) {
-				savesCompared++;
-				const saved = savedThroughPptx(objectNode);
-				if (canonical(saved) !== canonical(savedFamilies(dom)))
-					saveDifferences.push({
-						label: `${label} ${trail}`,
-						objectTree: canonical(saved),
-						dom: canonical(savedFamilies(dom)),
-					});
-			}
-			return;
-		}
-		const seen = new Map<string, number>();
-		for (const child of elements(element)) {
-			const index = seen.get(child.tagName) ?? 0;
-			seen.set(child.tagName, index + 1);
-			visit(child, objectChild(node, child.tagName, index), `${trail}/${child.tagName}#${index}`);
-		}
-	};
-	visit(root, tree[root.tagName], root.tagName);
+function compareParagraph({ label, element, node }: ParityVisit): void {
+	const dom = codecFamilies(parseDrawingParagraphProperties(element));
+	const objectTree = objectParagraphProperties(node);
+	elementsCompared++;
+	fieldsCompared += Object.keys(dom).length;
+	if (canonical(objectTree) !== canonical(dom))
+		readDifferences.push({ label, objectTree: canonical(objectTree), dom: canonical(dom) });
+	const lineSpacing = dom.lineSpacing;
+	const clamped =
+		lineSpacing?.unit === 'percent' && (lineSpacing.value < 0.1 || lineSpacing.value > 5);
+	if (clamped) return;
+	savesCompared++;
+	const saved = savedThroughPptx(node);
+	if (canonical(saved) !== canonical(savedFamilies(dom)))
+		saveDifferences.push({
+			label,
+			objectTree: canonical(saved),
+			dom: canonical(savedFamilies(dom)),
+		});
 }
 
 beforeAll(async () => {
-	for (const deck of decks()) {
-		let zip: JSZip;
-		try {
-			zip = await JSZip.loadAsync(readFileSync(deck));
-		} catch {
-			continue; // The password-protected fixture is a CFB container, not a zip.
-		}
-		for (const name of Object.keys(zip.files).sort()) {
-			if (zip.files[name]!.dir || !name.endsWith('.xml')) continue;
-			const xml = await zip.file(name)!.async('string');
-			if (!/pPr\b/u.test(xml)) continue;
-			compareParagraphs(`${path.relative(CORE, deck)}!${name}`, xml);
-		}
-	}
+	partsCompared = await walkParityCorpus(/pPr\b/u, PARAGRAPH_ELEMENTS, compareParagraph);
 }, 600_000);
 
 describe('DrawingML paragraph properties: pptx object tree vs shared DOM reader', () => {

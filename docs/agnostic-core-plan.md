@@ -279,14 +279,26 @@ would keep two XML models alive.
    (object tree against DOM for every element, 191,150 fields, and every element saved through the
    pptx writers and read back).
 
+   **pptx run properties (2026-11-16).** `drawingml/text-run-codec.ts` holds the rules for the
+   `a:rPr`, `a:defRPr` and `a:endParaRPr` attributes, the font slots (`a:latin`, `a:ea`, `a:cs`,
+   `a:sym`), the run `a:rtl` and the underline follow-text markers, over the same element view; the
+   DOM reader and writer use it, and so does pptx through `pptx/core/utils/run-properties-neutral.ts`:
+   `extractTextRunStyle` (`PptxHandlerRuntimeTextRunStyleExtraction`), the SmartArt projection's
+   `text-run-properties-parser`, the level-style run defaults (`PlaceholderStyles`) and the writer
+   `createRunPropertiesFromTextStyle` (`PptxHandlerRuntimeSaveRunProperties`). Colours, fills, the
+   outline, effects, highlight and hyperlinks still go through their own codecs. Old and new were
+   compared over 80,319 run property elements and 35,226 level elements of the committed decks:
+   equal, except that a rebuilt `a:rPr` writes its attributes in schema order (2,311 elements; 1,566
+   of them now in the source file's own order). The permanent harness is
+   `pptx/__tests__/integration/drawingml-run-neutral-parity.test.ts` (80,232 elements, 150,587
+   fields, read and saved).
+
    **Remains:** painting DAG sibling composition, masks, blends, transforms and references (see
    docs/parity-checklist.md); the text-run effect readers; theme gradient stops still come from the
    gradient codec over the paired object node (`rawNode`), because their `originalColorXml`
    round-trip data is object-tree XML, as does the background `bgRef` gradient; a picture theme
    fill is not drawn; an edited theme slot is written as `srgbClr`. Of the pptx text parsers, the paragraph
-   property families run on the shared codec (above); run properties (`a:rPr`, `a:defRPr`,
-   `a:endParaRPr`: `text-run-properties-parser`, `PptxHandlerRuntimeTextRunStyleExtraction`,
-   `PptxHandlerRuntimeSaveRunProperties`), body properties (`a:bodyPr`:
+   and run property families run on the shared codecs (above); body properties (`a:bodyPr`:
    `PptxHandlerRuntimeShapeBodyParsing`, `text-body-properties-parser`, the save text writer), the
    bullet colour and picture bullets, and the SmartArt text fabrication writer
    (`smartart-fabrication-text`) still read and write their own object tree; the xlsx theme writer
