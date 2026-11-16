@@ -26,8 +26,9 @@ import {
  * (`parseDrawingRichTextBody`), and the fields they share must agree once converted to one unit.
  *
  * Fields only one side reads (the neutral model's non-sRGB fills, outlines, list styles; the pptx
- * resolved theme colours) are not compared. Tab-stop leaders are a pptx extension outside
- * CT_TextTabStop, which the neutral model does not read.
+ * resolved theme colours) are not compared. Tab stops are not compared here: the paragraph
+ * codec both sides share (tab stops with their non-schema `leader` included) is pinned by
+ * `drawingml-paragraph-neutral-parity.test.ts`.
  */
 
 const parser = new PptxRuntimeDependencyFactory().createParser();

@@ -13,9 +13,16 @@
  *
  * @module placeholder-level-style-serializer
  */
+import type { DrawingBullet, DrawingParagraphProperties } from '../../../drawingml/text-model';
+import {
+	drawingBulletChild,
+	drawingBulletSizeChild,
+	drawingParagraphAttributeEntries,
+} from '../../../drawingml/text-paragraph-codec';
 import type { PlaceholderTextLevelStyle, XmlObject } from '../types';
 import { colorsEqual } from './color-xml-preservation';
 import { mergeOrderedXml } from './ordered-xml-merge';
+import { objectAttributes, objectTextSpacing } from './paragraph-properties-neutral';
 import { serializeTabStop } from './tab-stops';
 
 const EMU_PER_PX = 9525;
@@ -78,51 +85,44 @@ export const DEF_RPR_CHILD_ORDER = [
 
 const FILL_VARIANTS = ['a:noFill', 'a:gradFill', 'a:blipFill', 'a:pattFill', 'a:grpFill'] as const;
 
+/** The paragraph attributes of a level style on the neutral model. */
+function levelAttributesToDrawing(style: PlaceholderTextLevelStyle): DrawingParagraphProperties {
+	const out: DrawingParagraphProperties = {};
+	if (style.alignment !== undefined) {
+		out.align = ALIGN_TO_XML[style.alignment] ?? style.alignment;
+	}
+	if (style.marginLeft !== undefined) out.marginLeftEmu = style.marginLeft * EMU_PER_PX;
+	if (style.marginRight !== undefined) out.marginRightEmu = style.marginRight * EMU_PER_PX;
+	if (style.indent !== undefined) out.indentEmu = style.indent * EMU_PER_PX;
+	if (style.rtl !== undefined) out.rightToLeft = style.rtl;
+	if (style.defaultTabSize !== undefined) {
+		out.defaultTabSizeEmu = style.defaultTabSize * EMU_PER_PX;
+	}
+	if (style.eaLineBreak !== undefined) out.eastAsianLineBreak = style.eaLineBreak;
+	if (style.latinLineBreak !== undefined) out.latinLineBreak = style.latinLineBreak;
+	if (style.fontAlignment !== undefined) out.fontAlign = style.fontAlignment;
+	if (style.hangingPunctuation !== undefined) out.hangingPunctuation = style.hangingPunctuation;
+	return out;
+}
+
 export function serializePlaceholderLevelStyle(
 	style: PlaceholderTextLevelStyle,
 	existing?: XmlObject,
 ): XmlObject {
+	// Attribute values through the shared DrawingML codec (px -> EMU).
 	const attrEdits: Record<string, string | null> = {};
-	if (style.alignment !== undefined) {
-		attrEdits.algn = ALIGN_TO_XML[style.alignment] ?? style.alignment;
-	}
-	if (style.marginLeft !== undefined) {
-		attrEdits.marL = String(Math.round(style.marginLeft * EMU_PER_PX));
-	}
-	if (style.marginRight !== undefined) {
-		attrEdits.marR = String(Math.round(style.marginRight * EMU_PER_PX));
-	}
-	if (style.indent !== undefined) {
-		attrEdits.indent = String(Math.round(style.indent * EMU_PER_PX));
-	}
-	if (style.rtl !== undefined) {
-		attrEdits.rtl = style.rtl ? '1' : '0';
-	}
-	if (style.defaultTabSize !== undefined) {
-		attrEdits.defTabSz = String(Math.round(style.defaultTabSize * EMU_PER_PX));
-	}
-	if (style.eaLineBreak !== undefined) {
-		attrEdits.eaLnBrk = style.eaLineBreak ? '1' : '0';
-	}
-	if (style.latinLineBreak !== undefined) {
-		attrEdits.latinLnBrk = style.latinLineBreak ? '1' : '0';
-	}
-	if (style.fontAlignment !== undefined) {
-		attrEdits.fontAlgn = style.fontAlignment;
-	}
-	if (style.hangingPunctuation !== undefined) {
-		attrEdits.hangingPunct = style.hangingPunctuation ? '1' : '0';
+	for (const [name, value] of drawingParagraphAttributeEntries(levelAttributesToDrawing(style))) {
+		attrEdits[name] = value;
 	}
 
 	const childEdits = new Map<string, XmlObject | null>();
 	if (style.lineSpacing !== undefined) {
-		childEdits.set('a:lnSpc', {
-			'a:spcPct': { '@_val': String(Math.round(style.lineSpacing * 100000)) },
-		});
+		childEdits.set('a:lnSpc', objectTextSpacing({ unit: 'percent', value: style.lineSpacing }));
 	} else if (style.lineSpacingExactPt !== undefined) {
-		childEdits.set('a:lnSpc', {
-			'a:spcPts': { '@_val': String(Math.round(style.lineSpacingExactPt * 100)) },
-		});
+		childEdits.set(
+			'a:lnSpc',
+			objectTextSpacing({ unit: 'points', value: style.lineSpacingExactPt }),
+		);
 	}
 	if (style.spaceBefore !== undefined) {
 		childEdits.set(
@@ -175,9 +175,9 @@ function serializeParagraphSpacing(
 	percent: number | undefined,
 ): XmlObject {
 	if (percent !== undefined && value === resolvedValue) {
-		return { 'a:spcPct': { '@_val': String(Math.round(percent * 100000)) } };
+		return objectTextSpacing({ unit: 'percent', value: percent });
 	}
-	return { 'a:spcPts': { '@_val': String(Math.round(value * PT_HUNDREDTHS_PER_PX)) } };
+	return objectTextSpacing({ unit: 'points', value: (value * PT_HUNDREDTHS_PER_PX) / 100 });
 }
 
 function hasRunPropertyEdits(style: PlaceholderTextLevelStyle): boolean {
@@ -245,12 +245,16 @@ function applyBulletGroup(
 	} else if (style.bulletColorXml !== undefined) {
 		childEdits.set('a:buClr', style.bulletColorXml);
 	}
-	if (style.bulletSizePercent !== undefined) {
-		childEdits.set('a:buSzPct', { '@_val': String(Math.round(style.bulletSizePercent * 1000)) });
-		childEdits.set('a:buSzPts', null);
-	} else if (style.bulletSizePts !== undefined) {
-		childEdits.set('a:buSzPts', { '@_val': String(Math.round(style.bulletSizePts * 100)) });
-		childEdits.set('a:buSzPct', null);
+	const size =
+		style.bulletSizePercent !== undefined
+			? ({ unit: 'percent', value: style.bulletSizePercent / 100 } as const)
+			: style.bulletSizePts !== undefined
+				? ({ unit: 'points', value: style.bulletSizePts } as const)
+				: undefined;
+	if (size) {
+		const child = drawingBulletSizeChild(size);
+		childEdits.set(`a:${child.local}`, objectAttributes(child.attributes));
+		childEdits.set(size.unit === 'percent' ? 'a:buSzPts' : 'a:buSzPct', null);
 	}
 	if (style.bulletFontFamily !== undefined) {
 		// Merge onto the EXISTING `a:buFont` node instead of replacing it, so
@@ -266,14 +270,22 @@ function applyBulletGroup(
 	if (!touchesType) {
 		return;
 	}
-	childEdits.set('a:buNone', style.bulletNone ? {} : null);
+	const typeNode = (bullet: DrawingBullet | undefined): XmlObject | null => {
+		const child = bullet ? drawingBulletChild(bullet) : undefined;
+		return child ? objectAttributes(child.attributes) : null;
+	};
+	childEdits.set('a:buNone', typeNode(style.bulletNone ? { kind: 'none' } : undefined));
 	childEdits.set(
 		'a:buAutoNum',
-		style.bulletAutoNumType !== undefined ? { '@_type': style.bulletAutoNumType } : null,
+		typeNode(
+			style.bulletAutoNumType !== undefined
+				? { kind: 'autoNumber', scheme: style.bulletAutoNumType }
+				: undefined,
+		),
 	);
 	childEdits.set(
 		'a:buChar',
-		style.bulletChar !== undefined ? { '@_char': style.bulletChar } : null,
+		typeNode(style.bulletChar !== undefined ? { kind: 'char', char: style.bulletChar } : undefined),
 	);
 }
 

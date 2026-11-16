@@ -3,6 +3,18 @@ import { themeColorRefToSolidFillWithOpacity } from '../../color/theme-color-ref
 import { XmlObject, TextStyle } from '../../types';
 import type { BulletInfo } from '../../types';
 import { applyParagraphBulletOverrides } from '../../utils/paragraph-bullet-overrides';
+import type { DrawingParagraphProperties } from '../../../../drawingml/text-model';
+import {
+	drawingBulletChild,
+	drawingBulletSizeChild,
+	drawingFontEntries,
+	drawingParagraphAttributeEntries,
+} from '../../../../drawingml/text-paragraph-codec';
+import {
+	assignObjectChild,
+	objectAttributes,
+	objectTextSpacing,
+} from '../../utils/paragraph-properties-neutral';
 import { serializeTabStop } from '../../utils/tab-stops';
 import type { ParagraphChild } from './paragraph-child-assembly';
 import { classifyParagraphChild, writeParagraphChildren } from './paragraph-child-assembly';
@@ -56,6 +68,51 @@ function authoredPropertyGate(
 	return () => !isNested;
 }
 
+const finitePx = (value: number | undefined): number | undefined =>
+	typeof value === 'number' && Number.isFinite(value) ? value * EMU_PER_PX : undefined;
+
+/**
+ * The gated paragraph attributes of a {@link TextStyle} on the neutral model
+ * (px -> EMU). `lvl` reaches here only when the paragraph carries one (its own
+ * parsed `lvl`, including an authored `lvl="0"` PowerPoint itself often
+ * writes, or one set by an edit), so it is written whenever present; a
+ * paragraph that never had one gets none.
+ */
+function paragraphAttributesToDrawing(
+	textStyle: TextStyle | undefined,
+	paragraphAlign: string | undefined,
+	level: number | undefined,
+	owns: (key: keyof TextStyle) => boolean,
+): DrawingParagraphProperties {
+	const out: DrawingParagraphProperties = {};
+	if (typeof level === 'number' && Number.isFinite(level) && level >= 0) {
+		out.level = Math.min(Math.max(Math.round(level), 0), 8);
+	}
+	if (paragraphAlign && owns('align')) out.align = paragraphAlign;
+	if (textStyle?.rtl !== undefined && owns('rtl')) out.rightToLeft = textStyle.rtl;
+	const emu = (key: keyof TextStyle, value: number | undefined) =>
+		owns(key) ? finitePx(value) : undefined;
+	const marginLeftEmu = emu('paragraphMarginLeft', textStyle?.paragraphMarginLeft);
+	if (marginLeftEmu !== undefined) out.marginLeftEmu = marginLeftEmu;
+	const marginRightEmu = emu('paragraphMarginRight', textStyle?.paragraphMarginRight);
+	if (marginRightEmu !== undefined) out.marginRightEmu = marginRightEmu;
+	const indentEmu = emu('paragraphIndent', textStyle?.paragraphIndent);
+	if (indentEmu !== undefined) out.indentEmu = indentEmu;
+	const defaultTabSizeEmu = emu('defaultTabSize', textStyle?.defaultTabSize);
+	if (defaultTabSizeEmu !== undefined) out.defaultTabSizeEmu = defaultTabSizeEmu;
+	if (textStyle?.eaLineBreak !== undefined && owns('eaLineBreak')) {
+		out.eastAsianLineBreak = textStyle.eaLineBreak;
+	}
+	if (textStyle?.latinLineBreak !== undefined && owns('latinLineBreak')) {
+		out.latinLineBreak = textStyle.latinLineBreak;
+	}
+	if (textStyle?.fontAlignment && owns('fontAlignment')) out.fontAlign = textStyle.fontAlignment;
+	if (textStyle?.hangingPunctuation !== undefined && owns('hangingPunctuation')) {
+		out.hangingPunctuation = textStyle.hangingPunctuation;
+	}
+	return out;
+}
+
 /** Build the `a:pPr` (paragraph properties) XML object. */
 export function buildParagraphPropertiesXml(
 	textStyle: TextStyle | undefined,
@@ -65,68 +122,15 @@ export function buildParagraphPropertiesXml(
 	level?: number,
 	authoredProperties?: TextStyle,
 ): XmlObject {
-	const paragraphProps: XmlObject = {};
 	const owns = authoredPropertyGate(authoredProperties, level);
-
-	// CT_TextParagraphProperties: `lvl` is an attribute on `a:pPr`. A level
-	// reaches here only when the paragraph carries one (its own parsed `lvl`,
-	// including an authored `lvl="0"` PowerPoint itself often writes, or one
-	// set by an edit), so it is written whenever present; a paragraph that
-	// never had one gets none.
-	if (typeof level === 'number' && Number.isFinite(level) && level >= 0) {
-		paragraphProps['@_lvl'] = String(Math.min(Math.max(Math.round(level), 0), 8));
-	}
-
-	if (paragraphAlign && owns('align')) {
-		paragraphProps['@_algn'] = paragraphAlign;
-	}
-	if (textStyle?.rtl !== undefined && owns('rtl')) {
-		paragraphProps['@_rtl'] = textStyle.rtl ? '1' : '0';
-	}
-
-	// Paragraph indentation (marL, marR, indent: stored in px, written as EMU)
-	if (
-		typeof textStyle?.paragraphMarginLeft === 'number' &&
-		Number.isFinite(textStyle.paragraphMarginLeft) &&
-		owns('paragraphMarginLeft')
-	) {
-		paragraphProps['@_marL'] = String(Math.round(textStyle.paragraphMarginLeft * EMU_PER_PX));
-	}
-	if (
-		typeof textStyle?.paragraphMarginRight === 'number' &&
-		Number.isFinite(textStyle.paragraphMarginRight) &&
-		owns('paragraphMarginRight')
-	) {
-		paragraphProps['@_marR'] = String(Math.round(textStyle.paragraphMarginRight * EMU_PER_PX));
-	}
-	if (
-		typeof textStyle?.paragraphIndent === 'number' &&
-		Number.isFinite(textStyle.paragraphIndent) &&
-		owns('paragraphIndent')
-	) {
-		paragraphProps['@_indent'] = String(Math.round(textStyle.paragraphIndent * EMU_PER_PX));
-	}
-
-	// Additional paragraph properties
-	if (
-		typeof textStyle?.defaultTabSize === 'number' &&
-		Number.isFinite(textStyle.defaultTabSize) &&
-		owns('defaultTabSize')
-	) {
-		paragraphProps['@_defTabSz'] = String(Math.round(textStyle.defaultTabSize * EMU_PER_PX));
-	}
-	if (textStyle?.eaLineBreak !== undefined && owns('eaLineBreak')) {
-		paragraphProps['@_eaLnBrk'] = textStyle.eaLineBreak ? '1' : '0';
-	}
-	if (textStyle?.latinLineBreak !== undefined && owns('latinLineBreak')) {
-		paragraphProps['@_latinLnBrk'] = textStyle.latinLineBreak ? '1' : '0';
-	}
-	if (textStyle?.fontAlignment && owns('fontAlignment')) {
-		paragraphProps['@_fontAlgn'] = textStyle.fontAlignment;
-	}
-	if (textStyle?.hangingPunctuation !== undefined && owns('hangingPunctuation')) {
-		paragraphProps['@_hangingPunct'] = textStyle.hangingPunctuation ? '1' : '0';
-	}
+	// The attributes are written by the shared DrawingML codec, in
+	// CT_TextParagraphProperties order (`marL marR lvl indent algn defTabSz
+	// rtl eaLnBrk fontAlgn latinLnBrk hangingPunct`, as PowerPoint writes them).
+	const paragraphProps = objectAttributes(
+		drawingParagraphAttributeEntries(
+			paragraphAttributesToDrawing(textStyle, paragraphAlign, level, owns),
+		),
+	);
 
 	// CT_TextParagraphProperties child order (ECMA-376 21.1.2.2.7):
 	//   lnSpc, spcBef, spcAft, <bullet group>, tabLst, defRPr, extLst.
@@ -140,11 +144,10 @@ export function buildParagraphPropertiesXml(
 		Number.isFinite(spacing.lineSpacingExactPt) &&
 		owns('lineSpacingExactPt')
 	) {
-		paragraphProps['a:lnSpc'] = {
-			'a:spcPts': {
-				'@_val': String(Math.round(spacing.lineSpacingExactPt * 100)),
-			},
-		};
+		paragraphProps['a:lnSpc'] = objectTextSpacing({
+			unit: 'points',
+			value: spacing.lineSpacingExactPt,
+		});
 	}
 	if (spacing.spacingBefore && owns('paragraphSpacingBefore')) {
 		paragraphProps['a:spcBef'] = spacing.spacingBefore;
@@ -205,6 +208,18 @@ export function buildParagraphPropertiesXml(
 	return paragraphProps;
 }
 
+/** The bullet size of a {@link BulletInfo} on the neutral model (`text` wins, then percent). */
+function bulletSizeToDrawing(
+	bulletInfo: BulletInfo,
+): DrawingParagraphProperties['bulletSize'] | undefined {
+	if (bulletInfo.sizeInherit) return 'text';
+	if (bulletInfo.sizePercent !== undefined) {
+		return { unit: 'percent', value: bulletInfo.sizePercent / 100 };
+	}
+	if (bulletInfo.sizePts !== undefined) return { unit: 'points', value: bulletInfo.sizePts };
+	return undefined;
+}
+
 /** Apply bullet-related XML attributes from {@link BulletInfo} into `paragraphProps`. */
 export function applyBulletProperties(paragraphProps: XmlObject, bulletInfo: BulletInfo): void {
 	// CT_TextParagraphProperties bullet-group schema order:
@@ -243,55 +258,47 @@ export function applyBulletProperties(paragraphProps: XmlObject, bulletInfo: Bul
 			'a:srgbClr': { '@_val': colorHex },
 		};
 	}
-	if (bulletInfo.sizeInherit) {
-		paragraphProps['a:buSzTx'] = {};
-	} else if (bulletInfo.sizePercent !== undefined) {
-		paragraphProps['a:buSzPct'] = {
-			'@_val': String(Math.round(bulletInfo.sizePercent * 1000)),
-		};
-	} else if (bulletInfo.sizePts !== undefined) {
-		paragraphProps['a:buSzPts'] = {
-			'@_val': String(Math.round(bulletInfo.sizePts * 100)),
-		};
+	// Size, font and type children through the shared DrawingML codec.
+	const size = bulletSizeToDrawing(bulletInfo);
+	if (size) {
+		assignObjectChild(paragraphProps, drawingBulletSizeChild(size));
 	}
 	if (bulletInfo.fontInherit) {
 		paragraphProps['a:buFontTx'] = {};
 	} else if (bulletInfo.fontFamily) {
-		const buFont: XmlObject = {
-			'@_typeface': bulletInfo.fontFamily,
-		};
 		// `a:buFont` is a CT_TextFont, same as `a:latin`/`a:ea`/`a:cs`/`a:sym`:
 		// re-emit the font-matching hints those already carry, or a bullet's
 		// own PANOSE/pitch-family/charset silently vanish on every save.
-		if (bulletInfo.fontPanose) {
-			buFont['@_panose'] = bulletInfo.fontPanose;
-		}
-		if (bulletInfo.fontPitchFamily !== undefined) {
-			buFont['@_pitchFamily'] = String(bulletInfo.fontPitchFamily);
-		}
-		if (bulletInfo.fontCharset !== undefined) {
-			buFont['@_charset'] = String(bulletInfo.fontCharset);
-		}
-		paragraphProps['a:buFont'] = buFont;
+		paragraphProps['a:buFont'] = objectAttributes(
+			drawingFontEntries({
+				typeface: bulletInfo.fontFamily,
+				...(bulletInfo.fontPanose ? { panose: bulletInfo.fontPanose } : {}),
+				...(bulletInfo.fontPitchFamily !== undefined
+					? { pitchFamily: bulletInfo.fontPitchFamily }
+					: {}),
+				...(bulletInfo.fontCharset !== undefined ? { charset: bulletInfo.fontCharset } : {}),
+			}),
+		);
 	}
 	// Bullet TYPE choice (EG_TextBulletType): exactly one of none/char/
 	// autoNum/blip. `none` is checked first and returns, since `bulletInfo`
 	// never carries more than one of these at once.
 	if (bulletInfo.none) {
-		paragraphProps['a:buNone'] = {};
+		assignObjectChild(paragraphProps, drawingBulletChild({ kind: 'none' })!);
 		return;
 	}
 	if (bulletInfo.char) {
-		paragraphProps['a:buChar'] = { '@_char': bulletInfo.char };
+		assignObjectChild(paragraphProps, drawingBulletChild({ kind: 'char', char: bulletInfo.char })!);
 	}
 	if (bulletInfo.autoNumType) {
-		const buAutoNum: XmlObject = {
-			'@_type': bulletInfo.autoNumType,
-		};
-		if (bulletInfo.autoNumStartAt !== undefined && bulletInfo.autoNumStartAt !== 1) {
-			buAutoNum['@_startAt'] = String(bulletInfo.autoNumStartAt);
-		}
-		paragraphProps['a:buAutoNum'] = buAutoNum;
+		const startAt =
+			bulletInfo.autoNumStartAt !== undefined && bulletInfo.autoNumStartAt !== 1
+				? { startAt: bulletInfo.autoNumStartAt }
+				: {};
+		assignObjectChild(
+			paragraphProps,
+			drawingBulletChild({ kind: 'autoNumber', scheme: bulletInfo.autoNumType, ...startAt })!,
+		);
 	}
 	if (bulletInfo.imageBlipFillXml) {
 		// Re-emit the captured `a:buBlip` subtree verbatim (a:blip + a:extLst,

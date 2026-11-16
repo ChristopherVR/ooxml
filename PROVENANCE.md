@@ -2991,6 +2991,19 @@ codec and theme part reader now resolve through `drawingml`.
 | `PptxColorTransformCodec.parseColorChoice`, `color-utils.ts` readers  | `src/core/pptx/core/color/color-transforms.ts` | Replaced by an object-tree adapter (`resolveObjectColorChoice`) over `resolveDrawingColor`; the pptx code that resolved base colours and transforms was deleted |
 | `PptxHandlerRuntimeThemePartModel.parseThemePartXml` (scheme reading) | `drawingml/theme.ts` + `theme-part-model.ts`   | Names, colour scheme and font scheme read by `parseTheme`, mapped by `themeSchemesFromDrawingTheme`; the format scheme and raw subtrees stay on the object tree |
 
+## PowerPoint paragraph properties on the shared DrawingML codec (2026-11-16)
+
+Source: this repository, no external code. Step 3 of `docs/agnostic-core-plan.md`: the pptx
+readers and writers of the paragraph attributes, spacing, bullet group (size, font, type and the
+follow-text markers) and tab stops run on one codec shared with the DOM text reader and writer.
+
+| From                                                                                                                                                       | To                                                            | What changed                                                                                                                                                            |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `drawingml/read-paragraph-properties.ts` attribute, spacing, bullet and tab readers; `parseDrawingFont`                                                    | `src/core/drawingml/text-paragraph-codec.ts`                  | Rewritten over a `DrawingTextElementView` (`text-element-view.ts`) so the DOM and the pptx object tree share them; tab stops gained the non-schema `leader`             |
+| `drawingml/write-paragraph-properties.ts` attribute, spacing, bullet and tab writers; `writeDrawingFont` attributes                                        | `src/core/drawingml/text-paragraph-codec.ts`                  | Attribute and child entries in schema order, applied by the DOM writer and the pptx object-tree writers                                                                 |
+| `pptx/core/utils/paragraph-properties-parser.ts`, `tab-stops.ts`, the bullet readers of `PptxHandlerRuntimeBulletParsing` and `PlaceholderStyles`          | `pptx/core/utils/paragraph-properties-neutral.ts` (adapter)   | The object-tree readers were deleted; the pptx functions now convert the codec's neutral values to px and the pptx `TextStyle`/`BulletInfo` fields                      |
+| `PptxHandlerRuntimeSaveParagraphHelpers` (`a:pPr` attributes, bullets, exact line spacing), `SaveSlideUtils` spacing, `placeholder-level-style-serializer` | the codec's entries through `paragraph-properties-neutral.ts` | Values encoded by the codec; a rebuilt `a:pPr` now writes its attributes in schema order (the order PowerPoint writes) instead of the old fixed `lvl algn rtl marL ...` |
+
 ## Built-in SmartArt colour and quick-style catalogue (2026-11-16)
 
 Source: desktop PowerPoint 16.0 (build 20527) through its documented COM object model, no binary inspection.

@@ -1,5 +1,8 @@
-import { parseOoxmlPercent } from '../../color';
-import { parseParagraphSpacingPx } from '../../utils/paragraph-properties-parser';
+import {
+	parseLineSpacingExactPt,
+	parseLineSpacingMultiplier,
+	parseParagraphSpacingPx,
+} from '../../utils/paragraph-properties-parser';
 import { XmlObject, TextStyle, PlaceholderDefaults, PlaceholderTextLevelStyle } from '../../types';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeShapeImageFill';
 
@@ -51,16 +54,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	protected parseLineSpacingMultiplier(lineSpacingNode: XmlObject | undefined): number | undefined {
-		if (!lineSpacingNode) {
-			return undefined;
-		}
-		const spacingFraction = parseOoxmlPercent(
-			(lineSpacingNode['a:spcPct'] as XmlObject | undefined)?.['@_val'],
-		);
-		if (spacingFraction !== undefined) {
-			return Math.max(0.1, Math.min(5, spacingFraction));
-		}
-		return undefined;
+		return parseLineSpacingMultiplier(lineSpacingNode);
 	}
 
 	/**
@@ -68,17 +62,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 * Returns the value in points (hundredths-of-pt divided by 100).
 	 */
 	protected parseLineSpacingExactPt(lineSpacingNode: XmlObject | undefined): number | undefined {
-		if (!lineSpacingNode) {
-			return undefined;
-		}
-		const spcPtsRaw = Number.parseInt(
-			String((lineSpacingNode['a:spcPts'] as XmlObject | undefined)?.['@_val'] || ''),
-			10,
-		);
-		if (Number.isFinite(spcPtsRaw) && spcPtsRaw > 0) {
-			return spcPtsRaw / 100;
-		}
-		return undefined;
+		return parseLineSpacingExactPt(lineSpacingNode);
 	}
 
 	/**

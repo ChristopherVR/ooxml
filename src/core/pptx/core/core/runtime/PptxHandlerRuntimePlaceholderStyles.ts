@@ -1,15 +1,15 @@
-import { parseOoxmlPercent } from '../../color';
 import { XmlObject, PlaceholderTextLevelStyle } from '../../types';
 import { extractColorChoiceXml } from '../../utils/color-xml-preservation';
 import {
+	bulletFieldsFromDrawing,
+	paragraphSpacingPxFromDrawing,
 	parseAlignmentAttr,
-	parseBulletSizePercent,
 	parseParagraphExtraAttributes,
 	parseParagraphMargins,
 	parseParagraphRtl,
 	parseTabStops,
 } from '../../utils/paragraph-properties-parser';
-import { xmlHasChild } from '../../utils/xml-access';
+import { objectParagraphProperties } from '../../utils/paragraph-properties-neutral';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSlideUtils';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
@@ -86,35 +86,24 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const basisFontSizePx = Number.isFinite(defRPrSzRaw)
 			? this.pointsToPixels(defRPrSzRaw / 100)
 			: undefined;
-		const spcBefNode = levelProps['a:spcBef'] as XmlObject | undefined;
-		const spcBef = this.parseParagraphSpacingPx(spcBefNode, basisFontSizePx);
+		// The shared codec reads `a:spcPts` before `a:spcPct`, so the spacing
+		// keeps its percentage only when that was the source.
+		const spacing = objectParagraphProperties(levelProps);
+		const spcBef = paragraphSpacingPxFromDrawing(spacing.spaceBefore, basisFontSizePx);
 		if (spcBef !== undefined) {
 			style.spaceBefore = spcBef;
 			style.resolvedSpaceBefore = spcBef;
-			// `a:spcPts` wins over `a:spcPct` inside `parseParagraphSpacingPx`,
-			// so a percentage was the source only when there is no `a:spcPts`.
-			if ((spcBefNode as XmlObject | undefined)?.['a:spcPts'] === undefined) {
-				const pct = parseOoxmlPercent(
-					(spcBefNode?.['a:spcPct'] as XmlObject | undefined)?.['@_val'],
-				);
-				if (pct !== undefined) {
-					style.spaceBeforePercent = pct;
-				}
+			if (spacing.spaceBefore?.unit === 'percent') {
+				style.spaceBeforePercent = spacing.spaceBefore.value;
 			}
 		}
 
-		const spcAftNode = levelProps['a:spcAft'] as XmlObject | undefined;
-		const spcAft = this.parseParagraphSpacingPx(spcAftNode, basisFontSizePx);
+		const spcAft = paragraphSpacingPxFromDrawing(spacing.spaceAfter, basisFontSizePx);
 		if (spcAft !== undefined) {
 			style.spaceAfter = spcAft;
 			style.resolvedSpaceAfter = spcAft;
-			if ((spcAftNode as XmlObject | undefined)?.['a:spcPts'] === undefined) {
-				const pct = parseOoxmlPercent(
-					(spcAftNode?.['a:spcPct'] as XmlObject | undefined)?.['@_val'],
-				);
-				if (pct !== undefined) {
-					style.spaceAfterPercent = pct;
-				}
+			if (spacing.spaceAfter?.unit === 'percent') {
+				style.spaceAfterPercent = spacing.spaceAfter.value;
 			}
 		}
 
@@ -134,26 +123,23 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		levelProps: XmlObject,
 		style: PlaceholderTextLevelStyle,
 	): void {
-		const buChar = levelProps['a:buChar'] as XmlObject | undefined;
-		if (buChar?.['@_char']) {
-			style.bulletChar = String(buChar['@_char']);
+		// Type, font and size through the shared DrawingML codec.
+		const neutral = objectParagraphProperties(levelProps);
+		const bullet = neutral.bullet;
+		if (bullet?.kind === 'char') {
+			style.bulletChar = bullet.char;
+		} else if (bullet?.kind === 'autoNumber') {
+			style.bulletAutoNumType = bullet.scheme;
 		}
-
-		const buAutoNum = levelProps['a:buAutoNum'] as XmlObject | undefined;
-		if (buAutoNum?.['@_type']) {
-			style.bulletAutoNumType = String(buAutoNum['@_type']);
+		const { fontFamily, sizePercent, sizePts } = bulletFieldsFromDrawing(neutral);
+		if (fontFamily) {
+			style.bulletFontFamily = fontFamily;
 		}
-
-		const buFont = levelProps['a:buFont'] as XmlObject | undefined;
-		if (buFont?.['@_typeface']) {
-			style.bulletFontFamily = String(buFont['@_typeface']);
+		if (sizePercent !== undefined) {
+			style.bulletSizePercent = sizePercent;
 		}
-
-		const bulletSizePercent = parseBulletSizePercent(
-			levelProps['a:buSzPct'] as XmlObject | undefined,
-		);
-		if (bulletSizePercent !== undefined) {
-			style.bulletSizePercent = bulletSizePercent;
+		if (sizePts !== undefined) {
+			style.bulletSizePts = sizePts;
 		}
 
 		// Bullet colour. Route through `parseColor` so themed choices
@@ -173,17 +159,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			}
 		}
 
-		// Bullet size in points
-		const buSzPts = levelProps['a:buSzPts'] as XmlObject | undefined;
-		if (buSzPts?.['@_val'] !== undefined) {
-			const ptsRaw = Number.parseInt(String(buSzPts['@_val']), 10);
-			if (Number.isFinite(ptsRaw)) {
-				style.bulletSizePts = ptsRaw / 100;
-			}
-		}
-
 		// Bullet suppression
-		if (xmlHasChild(levelProps, 'a:buNone')) {
+		if (bullet?.kind === 'none') {
 			style.bulletNone = true;
 		}
 	}

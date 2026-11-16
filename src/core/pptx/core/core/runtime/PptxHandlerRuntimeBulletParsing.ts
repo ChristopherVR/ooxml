@@ -3,7 +3,8 @@ import { BulletInfo, XmlObject } from '../../types';
 import type { PlaceholderTextLevelStyle } from '../../types';
 import { formatAutoNumberMarker } from '../../utils/auto-number-format';
 import { extractColorChoiceXml } from '../../utils/color-xml-preservation';
-import { parseBulletSizePercent } from '../../utils/paragraph-properties-parser';
+import { bulletFieldsFromDrawing } from '../../utils/paragraph-properties-parser';
+import { objectParagraphProperties } from '../../utils/paragraph-properties-neutral';
 import { xmlChild, xmlHasChild, xmlPath } from '../../utils/xml-access';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeTextDefaults';
 
@@ -111,34 +112,23 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// from the run text rather than from a `buFont` / `buClr` /
 		// `buSzPct|Pts` declaration. Capture those so save can re-emit the
 		// same Tx form (otherwise the bullet visually shifts on round-trip).
-		const buFont = resolvedBulletProps['a:buFont'] as XmlObject | undefined;
-		const fontFamily = buFont?.['@_typeface'] ? String(buFont['@_typeface']) : undefined;
-		// `a:buFont` is a CT_TextFont, the same complex type as `a:latin`/`a:ea`/
-		// `a:cs`/`a:sym`, so it carries the same font-matching hints. These were
-		// modeled for every run-level font but never for the bullet's, so a
-		// bullet's own PANOSE/pitch-family/charset (which decide the FALLBACK
-		// glyph PowerPoint substitutes when the named typeface is missing) were
-		// silently dropped on every save.
-		const fontPanose = buFont?.['@_panose'] ? String(buFont['@_panose']) : undefined;
-		const pitchFamilyRaw = Number.parseInt(String(buFont?.['@_pitchFamily'] ?? ''), 10);
-		const fontPitchFamily = Number.isFinite(pitchFamilyRaw) ? pitchFamilyRaw : undefined;
-		const charsetRaw = Number.parseInt(String(buFont?.['@_charset'] ?? ''), 10);
-		const fontCharset = Number.isFinite(charsetRaw) ? charsetRaw : undefined;
-		const fontInherit = resolvedBulletProps['a:buFontTx'] !== undefined;
-
-		const sizePercent = parseBulletSizePercent(
-			resolvedBulletProps['a:buSzPct'] as XmlObject | undefined,
-		);
-
-		const buSzPts = resolvedBulletProps['a:buSzPts'] as XmlObject | undefined;
-		let sizePts: number | undefined;
-		if (buSzPts?.['@_val'] !== undefined) {
-			const ptsRaw = Number.parseInt(String(buSzPts['@_val']), 10);
-			if (Number.isFinite(ptsRaw)) {
-				sizePts = ptsRaw / 100;
-			}
-		}
-		const sizeInherit = resolvedBulletProps['a:buSzTx'] !== undefined;
+		//
+		// The font (a CT_TextFont, so with its PANOSE/pitch-family/charset
+		// font-matching hints, which decide the FALLBACK glyph PowerPoint
+		// substitutes when the named typeface is missing), size and bullet type
+		// are read by the shared DrawingML codec.
+		const neutral = objectParagraphProperties(resolvedBulletProps);
+		const {
+			fontFamily,
+			fontPanose,
+			fontPitchFamily,
+			fontCharset,
+			fontInherit,
+			sizePercent,
+			sizePts,
+			sizeInherit,
+			colorInherit,
+		} = bulletFieldsFromDrawing(neutral);
 
 		const buClr = resolvedBulletProps['a:buClr'] as XmlObject | undefined;
 		let color: string | undefined;
@@ -151,7 +141,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			colorXml = extractColorChoiceXml(buClr);
 			colorRef = themeColorRefFromColorChoice(buClr);
 		}
-		const colorInherit = resolvedBulletProps['a:buClrTx'] !== undefined;
 
 		// Whether this bullet resolution came from the paragraph's OWN `a:pPr`
 		// (candidate index 0) rather than the shape's `a:lstStyle`, the
@@ -163,12 +152,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const ownedByParagraph = resolvedBulletProps === paragraphProps;
 
 		// Character bullet
-		const bulletChar = String(
-			(resolvedBulletProps['a:buChar'] as XmlObject | undefined)?.['@_char'] || '',
-		);
-		if (bulletChar.length > 0) {
+		const bullet = neutral.bullet;
+		if (bullet?.kind === 'char') {
 			return {
-				char: bulletChar,
+				char: bullet.char,
 				fontFamily,
 				fontPanose,
 				fontPitchFamily,
@@ -185,12 +172,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			};
 		}
 
-		// Auto-numbered bullet
-		const autoNum = resolvedBulletProps['a:buAutoNum'] as XmlObject | undefined;
-		if (autoNum) {
-			const autoNumType = autoNum['@_type'] ? String(autoNum['@_type']) : undefined;
-			const startAtRaw = Number.parseInt(String(autoNum['@_startAt'] || '1'), 10);
-			const autoNumStartAt = Number.isFinite(startAtRaw) ? startAtRaw : 1;
+		// Auto-numbered bullet; an `a:buAutoNum` without its required `type`
+		// still numbers (PowerPoint's default scheme).
+		if (bullet?.kind === 'autoNumber' || resolvedBulletProps['a:buAutoNum']) {
+			const autoNumType = bullet?.kind === 'autoNumber' ? bullet.scheme : undefined;
+			const autoNumStartAt = (bullet?.kind === 'autoNumber' ? bullet.startAt : undefined) ?? 1;
 			return {
 				autoNumType,
 				autoNumStartAt,

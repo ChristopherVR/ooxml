@@ -1,6 +1,8 @@
 import { PptxSlide, XmlObject, TextStyle } from '../../types';
 import type { PptxElementAnimation, PptxSlideTransition } from '../../types';
 import { parseDataUrlToBytes, fetchUrlToBytes } from '../../utils/data-url-utils';
+import { clampLineSpacingMultiplier } from '../../utils/paragraph-properties-parser';
+import { objectTextSpacing } from '../../utils/paragraph-properties-neutral';
 import type { PptxSlideReferenceRemap } from '../../utils/presentation-collections';
 import type { PptxSaveState, IPptxSlideRelationshipRegistry } from '../builders';
 import { remapPartPaths } from '../builders/duplicate-slide-parts';
@@ -263,11 +265,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			return undefined;
 		}
 		const spacingPoints = Math.max(0, this.pixelsToPoints(spacing));
-		return {
-			'a:spcPts': {
-				'@_val': String(Math.round(spacingPoints * 100)),
-			},
-		};
+		return objectTextSpacing({ unit: 'points', value: spacingPoints });
 	}
 
 	protected createLineSpacingXmlFromMultiplier(
@@ -276,11 +274,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		if (typeof lineSpacing !== 'number' || !Number.isFinite(lineSpacing)) {
 			return undefined;
 		}
-		const normalized = Math.max(0.1, Math.min(5, lineSpacing));
-		return {
-			'a:spcPct': {
-				'@_val': String(Math.round(normalized * 100000)),
-			},
-		};
+		return objectTextSpacing({
+			unit: 'percent',
+			value: clampLineSpacingMultiplier(lineSpacing),
+		});
 	}
 }

@@ -261,13 +261,35 @@ would keep two XML models alive.
    writer keeps every slot still at its authored value as written (the harness writes back 4,596
    resolvable slots of the corpus, 571 of them `sysClr`, all as authored).
 
+   **pptx paragraph properties (2026-11-16).** `drawingml/text-paragraph-codec.ts` holds the rules
+   for the paragraph attributes, `a:lnSpc`/`a:spcBef`/`a:spcAft`, the bullet group except its colour
+   and picture (`a:buSz*`, `a:buFont*`, `a:buClrTx`, `a:buNone`, `a:buChar`, `a:buAutoNum`), tab
+   stops (now with the non-schema `leader` PowerPoint kept) and `CT_TextFont` slots, read through a
+   `DrawingTextElementView` (`text-element-view.ts`) and written as schema-ordered attribute
+   entries. The DOM reader and writer use it, and so does pptx through an object-tree adapter
+   (`pptx/core/utils/paragraph-properties-neutral.ts`): `paragraph-properties-parser`, `tab-stops`,
+   the bullet readers of `PptxHandlerRuntimeBulletParsing` and `PlaceholderStyles` (so `a:lstStyle`
+   and `p:txStyles` levels too), the `a:pPr` builder and bullet writer
+   (`PptxHandlerRuntimeSaveParagraphHelpers`), the spacing writers and the placeholder level-style
+   serializer convert the neutral values instead of reading attributes themselves. Before the
+   switch the old and new pptx readers and writers were compared over every `a:pPr`, `a:defPPr` and
+   `a:lvlNpPr` of the committed decks (54,742 elements): equal, except that a rebuilt `a:pPr` writes
+   its attributes in schema order (11,975 elements; 10,917 of them now in the source file's own
+   order). The permanent harness is `pptx/__tests__/integration/drawingml-paragraph-neutral-parity.test.ts`
+   (object tree against DOM for every element, 191,150 fields, and every element saved through the
+   pptx writers and read back).
+
    **Remains:** painting DAG sibling composition, masks, blends, transforms and references (see
    docs/parity-checklist.md); the text-run effect readers; theme gradient stops still come from the
    gradient codec over the paired object node (`rawNode`), because their `originalColorXml`
    round-trip data is object-tree XML, as does the background `bgRef` gradient; a picture theme
-   fill is not drawn; an edited theme slot is written as `srgbClr`. The pptx text parsers still
-   read through
-   their own object tree (the neutral model is pinned, not yet used by pptx); the xlsx theme writer
+   fill is not drawn; an edited theme slot is written as `srgbClr`. Of the pptx text parsers, the paragraph
+   property families run on the shared codec (above); run properties (`a:rPr`, `a:defRPr`,
+   `a:endParaRPr`: `text-run-properties-parser`, `PptxHandlerRuntimeTextRunStyleExtraction`,
+   `PptxHandlerRuntimeSaveRunProperties`), body properties (`a:bodyPr`:
+   `PptxHandlerRuntimeShapeBodyParsing`, `text-body-properties-parser`, the save text writer), the
+   bullet colour and picture bullets, and the SmartArt text fabrication writer
+   (`smartart-fabrication-text`) still read and write their own object tree; the xlsx theme writer
    still patches the part itself (a neutral writer exists as `drawingml/write-theme.ts`; whether xlsx
    should adopt it is open).
 

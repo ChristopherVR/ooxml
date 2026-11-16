@@ -1,34 +1,30 @@
 /**
  * Standalone parser utilities for `a:pPr` (paragraph properties) XML nodes.
  *
- * Extracts pure parsing logic from the PptxHandlerRuntime mixin chain into
- * exported, testable functions.  Mirrors the runtime's
- * `resolveShapeParagraphStyle`, `parseParagraphSpacingPx`,
- * `parseLineSpacingMultiplier`, `parseLineSpacingExactPt`, and bullet parsing.
+ * The attributes, spacing, bullet group and tab stops are read by the shared
+ * DrawingML codec (`drawingml/text-paragraph-codec.ts`, through
+ * `paragraph-properties-neutral`), the same rules the DOM reader runs; these
+ * functions convert the neutral values into the pptx {@link TextStyle} and
+ * {@link BulletInfo} fields (EMU and points to px, alignment tokens, the
+ * PowerPoint line-spacing clamp and the spacing basis).
  *
  * @module paragraph-properties-parser
  */
 
-import { parseOoxmlPercent } from '../color';
+import type { DrawingParagraphProperties } from '../../../drawingml/text-model';
+import type { DrawingTextSpacing } from '../../../drawingml/types';
+import {
+	readDrawingBulletChild,
+	readDrawingTextSpacing,
+} from '../../../drawingml/text-paragraph-codec';
 import type { BulletInfo, TextStyle, XmlObject } from '../types';
-import { xmlHasChild } from './xml-access';
+import {
+	objectParagraphAttributes,
+	objectParagraphProperties,
+	objectTextElementView,
+} from './paragraph-properties-neutral';
 
 const EMU_PER_PX = 9525;
-
-// ---------------------------------------------------------------------------
-// Boolean helper
-// ---------------------------------------------------------------------------
-
-function parseBoolAttr(value: unknown): boolean | undefined {
-	if (value === undefined || value === null) {
-		return undefined;
-	}
-	const normalized = String(value).trim().toLowerCase();
-	if (normalized.length === 0) {
-		return undefined;
-	}
-	return normalized === '1' || normalized === 'true';
-}
 
 function pointsToPixels(points: number): number {
 	return points * (96 / 72);
@@ -110,17 +106,22 @@ export function parseParagraphSpacingPx(
 	spacingNode: XmlObject | undefined,
 	basisFontSizePx?: number,
 ): number | undefined {
-	if (!spacingNode) {
-		return undefined;
+	return paragraphSpacingPxFromDrawing(
+		readDrawingTextSpacing(objectTextElementView(spacingNode)),
+		basisFontSizePx,
+	);
+}
+
+/** A neutral `a:spcBef` / `a:spcAft` value in px (see {@link parseParagraphSpacingPx}). */
+export function paragraphSpacingPxFromDrawing(
+	spacing: DrawingTextSpacing | undefined,
+	basisFontSizePx?: number,
+): number | undefined {
+	if (spacing?.unit === 'points') {
+		return pointsToPixels(spacing.value);
 	}
-	const spcPts = spacingNode['a:spcPts'] as XmlObject | undefined;
-	const raw = Number.parseInt(String(spcPts?.['@_val'] || ''), 10);
-	if (Number.isFinite(raw)) {
-		return pointsToPixels(raw / 100);
-	}
-	const fraction = parseOoxmlPercent((spacingNode['a:spcPct'] as XmlObject | undefined)?.['@_val']);
-	if (fraction !== undefined && basisFontSizePx !== undefined && basisFontSizePx > 0) {
-		return fraction * basisFontSizePx * SINGLE_LINE_HEIGHT_FACTOR;
+	if (spacing && basisFontSizePx !== undefined && basisFontSizePx > 0) {
+		return spacing.value * basisFontSizePx * SINGLE_LINE_HEIGHT_FACTOR;
 	}
 	return undefined;
 }
@@ -133,8 +134,16 @@ export function parseParagraphSpacingPx(
  * @returns Percentage of the run size, or `undefined` when absent/unparseable.
  */
 export function parseBulletSizePercent(buSzPct: XmlObject | undefined): number | undefined {
-	const fraction = parseOoxmlPercent(buSzPct?.['@_val']);
-	return fraction === undefined ? undefined : fraction * 100;
+	const view = objectTextElementView(buSzPct);
+	const out: DrawingParagraphProperties = {};
+	if (!view || !readDrawingBulletChild('buSzPct', view, out)) return undefined;
+	const size = out.bulletSize;
+	return typeof size === 'object' ? size.value * 100 : undefined;
+}
+
+/** The PowerPoint clamp of a proportional line spacing multiplier. */
+export function clampLineSpacingMultiplier(multiplier: number): number {
+	return Math.max(0.1, Math.min(5, multiplier));
 }
 
 /**
@@ -146,15 +155,8 @@ export function parseBulletSizePercent(buSzPct: XmlObject | undefined): number |
 export function parseLineSpacingMultiplier(
 	lineSpacingNode: XmlObject | undefined,
 ): number | undefined {
-	if (!lineSpacingNode) {
-		return undefined;
-	}
-	const spcPct = lineSpacingNode['a:spcPct'] as XmlObject | undefined;
-	const multiplier = parseOoxmlPercent(spcPct?.['@_val']);
-	if (multiplier === undefined) {
-		return undefined;
-	}
-	return Math.max(0.1, Math.min(5, multiplier));
+	const spacing = readDrawingTextSpacing(objectTextElementView(lineSpacingNode));
+	return spacing?.unit === 'percent' ? clampLineSpacingMultiplier(spacing.value) : undefined;
 }
 
 /**
@@ -165,15 +167,8 @@ export function parseLineSpacingMultiplier(
 export function parseLineSpacingExactPt(
 	lineSpacingNode: XmlObject | undefined,
 ): number | undefined {
-	if (!lineSpacingNode) {
-		return undefined;
-	}
-	const spcPts = lineSpacingNode['a:spcPts'] as XmlObject | undefined;
-	const raw = Number.parseInt(String(spcPts?.['@_val'] || ''), 10);
-	if (Number.isFinite(raw) && raw > 0) {
-		return raw / 100;
-	}
-	return undefined;
+	const spacing = readDrawingTextSpacing(objectTextElementView(lineSpacingNode));
+	return spacing?.unit === 'points' && spacing.value > 0 ? spacing.value : undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -189,35 +184,26 @@ export function parseLineSpacingExactPt(
 export function parseParagraphMargins(
 	pPr: XmlObject | undefined,
 ): Pick<TextStyle, 'paragraphMarginLeft' | 'paragraphMarginRight' | 'paragraphIndent'> {
+	return paragraphMarginsFromDrawing(objectParagraphAttributes(pPr));
+}
+
+/** The margin fields of neutral paragraph properties, in px. */
+export function paragraphMarginsFromDrawing(
+	properties: DrawingParagraphProperties,
+): Pick<TextStyle, 'paragraphMarginLeft' | 'paragraphMarginRight' | 'paragraphIndent'> {
 	const result: Pick<
 		TextStyle,
 		'paragraphMarginLeft' | 'paragraphMarginRight' | 'paragraphIndent'
 	> = {};
-	if (!pPr) {
-		return result;
+	if (properties.marginLeftEmu !== undefined) {
+		result.paragraphMarginLeft = properties.marginLeftEmu / EMU_PER_PX;
 	}
-
-	if (pPr['@_marL'] !== undefined) {
-		const marL = Number.parseInt(String(pPr['@_marL']), 10);
-		if (Number.isFinite(marL)) {
-			result.paragraphMarginLeft = marL / EMU_PER_PX;
-		}
+	if (properties.marginRightEmu !== undefined) {
+		result.paragraphMarginRight = properties.marginRightEmu / EMU_PER_PX;
 	}
-
-	if (pPr['@_marR'] !== undefined) {
-		const marR = Number.parseInt(String(pPr['@_marR']), 10);
-		if (Number.isFinite(marR)) {
-			result.paragraphMarginRight = marR / EMU_PER_PX;
-		}
+	if (properties.indentEmu !== undefined) {
+		result.paragraphIndent = properties.indentEmu / EMU_PER_PX;
 	}
-
-	if (pPr['@_indent'] !== undefined) {
-		const indent = Number.parseInt(String(pPr['@_indent']), 10);
-		if (Number.isFinite(indent)) {
-			result.paragraphIndent = indent / EMU_PER_PX;
-		}
-	}
-
 	return result;
 }
 
@@ -229,10 +215,7 @@ export function parseParagraphMargins(
  * Parse RTL direction from `a:pPr/@_rtl`.
  */
 export function parseParagraphRtl(pPr: XmlObject | undefined): boolean | undefined {
-	if (!pPr) {
-		return undefined;
-	}
-	return parseBoolAttr(pPr['@_rtl']);
+	return objectParagraphAttributes(pPr).rightToLeft;
 }
 
 /**
@@ -240,11 +223,7 @@ export function parseParagraphRtl(pPr: XmlObject | undefined): boolean | undefin
  * Returns 0-8 (clamped).
  */
 export function parseParagraphLevel(pPr: XmlObject | undefined): number {
-	if (!pPr) {
-		return 0;
-	}
-	const level = Number.parseInt(String(pPr['@_lvl'] || '0'), 10);
-	return Number.isFinite(level) ? Math.min(Math.max(level, 0), 8) : 0;
+	return objectParagraphAttributes(pPr).level ?? 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -257,61 +236,83 @@ export { parseTabStops, serializeTabStop } from './tab-stops';
 // Additional paragraph attributes
 // ---------------------------------------------------------------------------
 
+type ExtraAttributes = Pick<
+	TextStyle,
+	'defaultTabSize' | 'eaLineBreak' | 'latinLineBreak' | 'fontAlignment' | 'hangingPunctuation'
+>;
+
 /**
  * Parse additional paragraph-level attributes from `a:pPr`.
  *
  * Handles: `@_defTabSz`, `@_eaLnBrk`, `@_latinLnBrk`, `@_fontAlgn`,
  * `@_hangingPunct`.
  */
-export function parseParagraphExtraAttributes(
-	pPr: XmlObject | undefined,
-): Pick<
-	TextStyle,
-	'defaultTabSize' | 'eaLineBreak' | 'latinLineBreak' | 'fontAlignment' | 'hangingPunctuation'
-> {
-	const result: Pick<
-		TextStyle,
-		'defaultTabSize' | 'eaLineBreak' | 'latinLineBreak' | 'fontAlignment' | 'hangingPunctuation'
-	> = {};
-	if (!pPr) {
-		return result;
-	}
+export function parseParagraphExtraAttributes(pPr: XmlObject | undefined): ExtraAttributes {
+	return paragraphExtraAttributesFromDrawing(objectParagraphAttributes(pPr));
+}
 
-	if (pPr['@_defTabSz'] !== undefined) {
-		const defTabSz = Number.parseInt(String(pPr['@_defTabSz']), 10);
-		if (Number.isFinite(defTabSz)) {
-			result.defaultTabSize = defTabSz / EMU_PER_PX;
-		}
+/** The additional attribute fields of neutral paragraph properties. */
+export function paragraphExtraAttributesFromDrawing(
+	properties: DrawingParagraphProperties,
+): ExtraAttributes {
+	const result: ExtraAttributes = {};
+	if (properties.defaultTabSizeEmu !== undefined) {
+		result.defaultTabSize = properties.defaultTabSizeEmu / EMU_PER_PX;
 	}
-
-	const eaVal = parseBoolAttr(pPr['@_eaLnBrk']);
-	if (eaVal !== undefined) {
-		result.eaLineBreak = eaVal;
+	if (properties.eastAsianLineBreak !== undefined) {
+		result.eaLineBreak = properties.eastAsianLineBreak;
 	}
-
-	const latVal = parseBoolAttr(pPr['@_latinLnBrk']);
-	if (latVal !== undefined) {
-		result.latinLineBreak = latVal;
+	if (properties.latinLineBreak !== undefined) {
+		result.latinLineBreak = properties.latinLineBreak;
 	}
-
-	if (pPr['@_fontAlgn'] !== undefined) {
-		const fontAlgn = String(pPr['@_fontAlgn']).trim();
-		if (fontAlgn) {
-			result.fontAlignment = fontAlgn;
-		}
+	if (properties.fontAlign !== undefined) {
+		result.fontAlignment = properties.fontAlign;
 	}
-
-	const hpVal = parseBoolAttr(pPr['@_hangingPunct']);
-	if (hpVal !== undefined) {
-		result.hangingPunctuation = hpVal;
+	if (properties.hangingPunctuation !== undefined) {
+		result.hangingPunctuation = properties.hangingPunctuation;
 	}
-
 	return result;
 }
 
 // ---------------------------------------------------------------------------
 // Bullet parsing
 // ---------------------------------------------------------------------------
+
+/** The bullet font, size and type fields of neutral paragraph properties. */
+export function bulletFieldsFromDrawing(
+	properties: DrawingParagraphProperties,
+): Pick<
+	BulletInfo,
+	| 'fontFamily'
+	| 'fontPanose'
+	| 'fontPitchFamily'
+	| 'fontCharset'
+	| 'fontInherit'
+	| 'sizePercent'
+	| 'sizePts'
+	| 'sizeInherit'
+	| 'colorInherit'
+> {
+	const font = properties.bulletFont;
+	const size = properties.bulletSize;
+	return {
+		...(typeof font === 'object'
+			? {
+					fontFamily: font.typeface,
+					...(font.panose ? { fontPanose: font.panose } : {}),
+					...(font.pitchFamily !== undefined ? { fontPitchFamily: font.pitchFamily } : {}),
+					...(font.charset !== undefined ? { fontCharset: font.charset } : {}),
+				}
+			: {}),
+		...(font === 'text' ? { fontInherit: true } : {}),
+		...(typeof size === 'object' && size.unit === 'percent'
+			? { sizePercent: size.value * 100 }
+			: {}),
+		...(typeof size === 'object' && size.unit === 'points' ? { sizePts: size.value } : {}),
+		...(size === 'text' ? { sizeInherit: true } : {}),
+		...(properties.bulletColor === 'text' ? { colorInherit: true } : {}),
+	};
+}
 
 /**
  * Parse bullet info from paragraph-level properties.
@@ -326,31 +327,17 @@ export function parseBulletInfo(
 	if (!pPr) {
 		return null;
 	}
+	const properties = objectParagraphProperties(pPr);
+	const bullet = properties.bullet;
 
-	// Explicit none. `a:buNone` is a marker element: it has no attributes and no
-	// children, so it is ALWAYS bare in the file and fast-xml-parser always
-	// materialises it as the empty string. A truthiness test therefore never
-	// fired - this branch was dead code, and SmartArt's "no bullet" was read as
-	// "no opinion" and lost on save. `xmlHasChild` is the same presence test the
-	// slide-text path was corrected to use, so both sides now share one answer.
-	if (xmlHasChild(pPr, 'a:buNone')) {
+	// Explicit none. `a:buNone` is a marker element, so it is ALWAYS bare in the
+	// file; the codec reads its presence, and SmartArt's "no bullet" is an
+	// explicit opinion rather than "no opinion" (lost on save before).
+	if (bullet?.kind === 'none') {
 		return { none: true };
 	}
 
-	// Shared styling
-	const buFont = pPr['a:buFont'] as XmlObject | undefined;
-	const fontFamily = buFont?.['@_typeface'] ? String(buFont['@_typeface']) : undefined;
-
-	const sizePercent = parseBulletSizePercent(pPr['a:buSzPct'] as XmlObject | undefined);
-
-	const buSzPts = pPr['a:buSzPts'] as XmlObject | undefined;
-	let sizePts: number | undefined;
-	if (buSzPts?.['@_val'] !== undefined) {
-		const ptsRaw = Number.parseInt(String(buSzPts['@_val']), 10);
-		if (Number.isFinite(ptsRaw)) {
-			sizePts = ptsRaw / 100;
-		}
-	}
+	const { fontFamily, sizePercent, sizePts } = bulletFieldsFromDrawing(properties);
 
 	const buClr = pPr['a:buClr'] as XmlObject | undefined;
 	let color: string | undefined;
@@ -361,24 +348,16 @@ export function parseBulletInfo(
 		}
 	}
 
-	// Character bullet
-	const buChar = pPr['a:buChar'] as XmlObject | undefined;
-	if (buChar?.['@_char']) {
-		const char = String(buChar['@_char']);
-		if (char.length > 0) {
-			return { char, fontFamily, sizePercent, sizePts, color };
-		}
+	if (bullet?.kind === 'char') {
+		return { char: bullet.char, fontFamily, sizePercent, sizePts, color };
 	}
 
-	// Auto-numbered bullet
-	const autoNum = pPr['a:buAutoNum'] as XmlObject | undefined;
-	if (autoNum) {
-		const autoNumType = autoNum['@_type'] ? String(autoNum['@_type']) : undefined;
-		const startAtRaw = Number.parseInt(String(autoNum['@_startAt'] || '1'), 10);
-		const autoNumStartAt = Number.isFinite(startAtRaw) ? startAtRaw : 1;
+	// Auto-numbered bullet; an `a:buAutoNum` without its required `type` still
+	// numbers (PowerPoint's default scheme).
+	if (bullet?.kind === 'autoNumber' || pPr['a:buAutoNum']) {
 		return {
-			autoNumType,
-			autoNumStartAt,
+			autoNumType: bullet?.kind === 'autoNumber' ? bullet.scheme : undefined,
+			autoNumStartAt: (bullet?.kind === 'autoNumber' ? bullet.startAt : undefined) ?? 1,
 			paragraphIndex,
 			fontFamily,
 			sizePercent,
