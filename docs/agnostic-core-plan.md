@@ -843,64 +843,48 @@ workbooks passed.
 
 ### 3.9 pptx strictness and the XML object model (inventory, 2026-11-16)
 
-Strict since 2026-11-16: `pptx/ui`, `pptx/node`, `pptx/signature-node`, `pptx/core/openxml` and
-`pptx/core/types` (plus the two `pptx/merge-*.ts` files); later the same day `pptx/core/geometry`,
-`pptx/core/color`, `pptx/core/ppt`, `pptx/core/services`, `pptx/smartart-layouts`,
-`pptx/test-support` and the `pptx/core/core` contract leaves (`types.ts`,
-`handler-result-types.ts`, `load-limits.ts`, `zip-bomb.ts`, `svg-rasterizer.ts`). Thirteen tests in
-those directories drive `PptxHandler`, the runtime factory or the transform updater and stay
-excluded by name until those are strict. `types.ts` stopped being a hub once the result types of
-two runtime classes moved to the import-free `handler-result-types.ts`; geometry only needed
-`ensureArrayValue` from its leaf module instead of the `utils` barrel. `pptx/node` and
-`signature-node` only became reachable once the zip limits and the rasterizer type left
-`pptx/core/core/types.ts` for import-free modules (`zip-bomb.ts`, `svg-rasterizer.ts`). A directory
-can only move once everything it imports is strict, which means working from the leaves inward.
+Strict since 2026-11-16: the whole pptx model and almost everything around it. The strict project
+includes `pptx/core` (core/core, builders, utils, services, ppt, geometry, color, types, openxml and
+the handler modules), `pptx/converter`, `pptx/cli`, `pptx/editor/ai`, `pptx/editor/loader`,
+`pptx/ui`, `pptx/node`, `pptx/signature-node`, `pptx/smartart-layouts`, `pptx/test-support`,
+`pptx/index.ts` and the two `pptx/merge-*.ts` files. `tsconfig.json` maps `ooxml-core/pptx` to
+`pptx/index.ts`, as `tsconfig.pptx.json` does, so the editor modules resolve the model by its
+package name. Still relaxed: `pptx/editor/render`, `pptx/automation` and the `pptx/__tests__`
+integration suite, plus 197 test files elsewhere that `tsconfig.json` lists by name until their
+remaining strict errors are fixed (they were never type-checked by the relaxed project either).
+
+The way there was from the leaves inward. `pptx/core/core/types.ts` stopped being a hub once two
+runtime classes' result types moved to the import-free `handler-result-types.ts`; geometry needed
+`ensureArrayValue` from its leaf module instead of the `utils` barrel; and the runtime class chain
+had to be clean before anything importing `pptx/index.ts` could move.
 
 Measured by compiling every `src/core/pptx/**/*.ts` file under the strict base project (TypeScript
-7.0.2). The first count was 7,883 errors; it is now 5,813, counted where they are reported, and
-almost all of them are in tests (TS2532 and TS18048 on `a[0].x` reads, which the `at()`/`must()`
-test helpers fix mechanically once a directory is ready to move). Everything `pptx/index.ts`
-reaches (the whole model) held 1,392 source errors and now holds 100: 98 in the runtime theme,
-text, paragraph, run, fill and effect modules that the drawingml migrations are rewriting, and two
-in objects built from them (`PptxHandlerRuntimeSmartArt.ts` passes text runs from those modules,
-`chart-ex-from-neutral.ts` spreads a possibly missing series). Every directory below waits on those
-100 reaching 0, because each one's imports reach the runtime class chain.
+7.0.2): 7,883 errors at the start, 3,149 now, counted where they are reported. Everything
+`pptx/index.ts` reaches compiles clean (it held 1,392 source errors).
 
-| Directory                   | Source errors | Test errors | Blocked by                                |
-| --------------------------- | ------------: | ----------: | ----------------------------------------- |
-| `pptx/editor/render`        |           153 |         585 | `ooxml-core/pptx` (the whole model)       |
-| `pptx/automation/tools`     |           126 |           1 | the whole model                           |
-| `pptx/core/core`            |           101 |       1,495 | the runtime theme and text modules (98)   |
-| `pptx/automation/catalogue` |            43 |           0 | the whole model                           |
-| `pptx/cli`                  |             8 |           4 | the whole model                           |
-| `pptx/automation`           |             2 |           0 | the whole model                           |
-| `pptx/core/utils`           |             1 |       1,107 | `core/core` (through the runtime imports) |
-| `pptx/editor/ai`            |             1 |           0 | the whole model (via `ooxml-core/pptx`)   |
-| `pptx/converter`            |             0 |          17 | the whole model                           |
-| `pptx/core/builders`        |             0 |         664 | `core/core`                               |
-| `pptx/editor/loader`        |             0 |           4 | the whole model (via `ooxml-core/pptx`)   |
-| `pptx/__tests__`            |             0 |       1,237 | the whole model                           |
-| `pptx/automation/__tests__` |             0 |         255 | the whole model                           |
+| Directory            | Source errors | Test errors | Status                                   |
+| -------------------- | ------------: | ----------: | ---------------------------------------- |
+| `pptx/editor/render` |            70 |         581 | relaxed                                  |
+| `pptx/automation`    |            15 |         254 | relaxed                                  |
+| `pptx/__tests__`     |             0 |       1,287 | relaxed (integration suite and helpers)  |
+| `pptx/core/core`     |             0 |         471 | strict; failing tests excluded by name   |
+| `pptx/core/utils`    |             0 |         300 | strict; failing tests excluded by name   |
+| `pptx/core/builders` |             0 |         152 | strict; failing tests excluded by name   |
+| `pptx/converter`     |             0 |          10 | strict; failing tests excluded by name   |
+| `pptx/core/ppt`      |             0 |           9 | strict; writer round-trip tests excluded |
 
-The test columns count because the strict project, unlike `tsconfig.pptx.json`, type-checks test
-files. `editor/ai` and `editor/loader` are nearly clean but import the model through
-`ooxml-core/pptx`, which the editor bundle keeps external so module state is shared; switching
-them to relative leaf imports would duplicate that state, so they move once the model does.
+The remaining source errors are the same kinds the model had: possibly-`undefined` reads in the
+editor's collaboration and remap code, and automation tool parameters that zod parses with
+`| undefined` on optional fields. Most remaining test errors are object-tree chains such as
+`xml['p:sld']['p:cSld']` (TS7053) and fixtures typed narrower than the code they feed.
 
-The remaining runtime errors by file: `PptxHandlerRuntimeThemeRefResolution.ts` 62,
-`smartart-fabrication-text.ts` 9, `PptxHandlerRuntimeThemeOverrides.ts` 5, `smartart-text-order.ts`
-4, `PptxHandlerRuntimeTextEditing.ts` 3, `save-group-fill.ts` 3, `PptxHandlerRuntimeThemeFormatScheme.ts`
-2, `PptxHandlerRuntimeThemeLoading.ts` 2, `table-paragraph-save-order.ts` 2, and one each in
-`PptxHandlerRuntimeColorAndEffects.ts`, `PptxHandlerRuntimeSaveImageEffects.ts`,
-`PptxHandlerRuntimeShapeParagraphContentParsing.ts`, `PptxHandlerRuntimeTextRunEffects.ts`,
-`PptxHandlerRuntimeTextStyleUtils.ts` and `image-a14-effects.ts`.
-
-How the model was narrowed, so later work follows the same rules: optional fields the code clears
+How the code was narrowed, so later work follows the same rules: optional fields the code clears
 on purpose admit `undefined` (type-only); objects built for ole2's writer model or the text model
 set only the fields that are present; reads the surrounding code keeps in range use geometry's
 `at()`, which throws where the old code would have dereferenced `undefined`; required regex
-captures fall back to `''` and bitwise byte reads to `0`, the values `undefined` produced; and
-`Number.isFinite` guards use the `isFiniteNumber` type guard (`units/finite.ts`).
+captures fall back to `''` and bitwise byte reads to `0`, the values `undefined` produced;
+`Number.isFinite` guards use the `isFiniteNumber` type guard (`units/finite.ts`); and tests use
+`pptx/test-support/access.ts` (`at`, `must`, and `xmlFixture` for deliberately malformed trees).
 
 What blocks moving the object trees onto the shared `xml` area:
 
