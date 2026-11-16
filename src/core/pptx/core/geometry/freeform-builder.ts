@@ -73,13 +73,15 @@ export function douglasPeucker(
 	tolerance: number,
 ): CustomGeometryPoint[] {
 	const n = points.length;
-	if (n <= 2) {
+	const head = points[0];
+	const tail = points[n - 1];
+	if (n <= 2 || !head || !tail) {
 		return [...points];
 	}
 
 	// Bound input — very large arrays would be expensive even iteratively
 	if (n > MAX_DOUGLAS_PEUCKER_POINTS) {
-		return [points[0], points[n - 1]];
+		return [head, tail];
 	}
 
 	// `keep[i]` indicates whether index `i` is retained in the output.
@@ -102,11 +104,18 @@ export function douglasPeucker(
 
 		const first = points[lo];
 		const last = points[hi];
+		if (!first || !last) {
+			continue;
+		}
 
 		let maxDist = 0;
 		let maxIdx = -1;
 		for (let i = lo + 1; i < hi; i++) {
-			const dist = perpendicularDistance(points[i], first, last);
+			const point = points[i];
+			if (!point) {
+				continue;
+			}
+			const dist = perpendicularDistance(point, first, last);
 			if (dist > maxDist) {
 				maxDist = dist;
 				maxIdx = i;
@@ -120,13 +129,7 @@ export function douglasPeucker(
 		}
 	}
 
-	const result: CustomGeometryPoint[] = [];
-	for (let i = 0; i < n; i++) {
-		if (keep[i]) {
-			result.push(points[i]);
-		}
-	}
-	return result;
+	return points.filter((_, i) => keep[i]);
 }
 
 // ---------------------------------------------------------------------------
@@ -163,6 +166,9 @@ export function catmullRomToBezier(
 		const p1 = points[i];
 		const p2 = points[i + 1];
 		const p3 = points[Math.min(points.length - 1, i + 2)];
+		if (!p0 || !p1 || !p2 || !p3) {
+			continue;
+		}
 
 		const cp1: CustomGeometryPoint = {
 			x: p1.x + (p2.x - p0.x) / factor,
@@ -308,8 +314,11 @@ export class FreeformPathBuilder {
 			return '';
 		}
 
+		const [first, ...rest] = this.points;
+		if (!first) {
+			return '';
+		}
 		const parts: string[] = [];
-		const first = this.points[0];
 		parts.push(`M ${first.x} ${first.y}`);
 
 		if (this.smoothed && this.bezierCurves.length > 0) {
@@ -317,8 +326,8 @@ export class FreeformPathBuilder {
 				parts.push(`C ${cp1.x} ${cp1.y} ${cp2.x} ${cp2.y} ${end.x} ${end.y}`);
 			}
 		} else {
-			for (let i = 1; i < this.points.length; i++) {
-				parts.push(`L ${this.points[i].x} ${this.points[i].y}`);
+			for (const point of rest) {
+				parts.push(`L ${point.x} ${point.y}`);
 			}
 		}
 
@@ -370,8 +379,10 @@ export class FreeformPathBuilder {
 		const height = Math.max(maxY, 1);
 
 		const segments: CustomGeometryPath['segments'] = [];
-		const first = this.points[0];
-		segments.push({ type: 'moveTo', pt: { x: first.x, y: first.y } });
+		const [first, ...rest] = this.points;
+		if (first) {
+			segments.push({ type: 'moveTo', pt: { x: first.x, y: first.y } });
+		}
 
 		if (this.smoothed && this.bezierCurves.length > 0) {
 			for (const [cp1, cp2, end] of this.bezierCurves) {
@@ -385,10 +396,10 @@ export class FreeformPathBuilder {
 				});
 			}
 		} else {
-			for (let i = 1; i < this.points.length; i++) {
+			for (const point of rest) {
 				segments.push({
 					type: 'lineTo',
-					pt: { x: this.points[i].x, y: this.points[i].y },
+					pt: { x: point.x, y: point.y },
 				});
 			}
 		}

@@ -9,6 +9,8 @@ import {
 	getAllPointsFromPaths,
 	recalculatePathBounds,
 } from './custom-geometry';
+import { at, must } from '../../test-support/access';
+import { xmlChild, xmlChildren, xmlPath } from '../utils/xml-access';
 
 // ---------------------------------------------------------------------------
 // customGeometryPathsToSvgSubpaths
@@ -65,7 +67,7 @@ describe('customGeometryPathsToSvgSubpaths', () => {
 			},
 		];
 		// Target space is 100x100, so x halves and y quarters.
-		const [sub] = customGeometryPathsToSvgSubpaths(paths, 100, 100);
+		const sub = at(customGeometryPathsToSvgSubpaths(paths, 100, 100), 0);
 		expect(sub.d).toBe('M 50 50 L 100 100');
 	});
 
@@ -78,7 +80,7 @@ describe('customGeometryPathsToSvgSubpaths', () => {
 				segments: [{ type: 'moveTo', pt: { x: 0, y: 0 } }],
 			},
 		];
-		const [sub] = customGeometryPathsToSvgSubpaths(paths, 10, 10);
+		const sub = at(customGeometryPathsToSvgSubpaths(paths, 10, 10), 0);
 		expect(sub.stroke).toBeFalsy();
 	});
 });
@@ -200,14 +202,14 @@ describe('svgToCustomGeometryPaths', () => {
 	it('parses M and L commands', () => {
 		const paths = svgToCustomGeometryPaths('M 0 0 L 100 100', 100, 100);
 		expect(paths).toHaveLength(1);
-		expect(paths[0].width).toBe(100);
-		expect(paths[0].height).toBe(100);
-		expect(paths[0].segments).toHaveLength(2);
-		expect(paths[0].segments[0]).toStrictEqual({
+		expect(at(paths, 0).width).toBe(100);
+		expect(at(paths, 0).height).toBe(100);
+		expect(at(paths, 0).segments).toHaveLength(2);
+		expect(at(paths, 0).segments[0]).toStrictEqual({
 			type: 'moveTo',
 			pt: { x: 0, y: 0 },
 		});
-		expect(paths[0].segments[1]).toStrictEqual({
+		expect(at(paths, 0).segments[1]).toStrictEqual({
 			type: 'lineTo',
 			pt: { x: 100, y: 100 },
 		});
@@ -215,13 +217,13 @@ describe('svgToCustomGeometryPaths', () => {
 
 	it('parses Z (close) commands', () => {
 		const paths = svgToCustomGeometryPaths('M 0 0 L 100 0 L 100 100 Z', 100, 100);
-		expect(paths[0].segments).toHaveLength(4);
-		expect(paths[0].segments[3]).toStrictEqual({ type: 'close' });
+		expect(at(paths, 0).segments).toHaveLength(4);
+		expect(at(paths, 0).segments[3]).toStrictEqual({ type: 'close' });
 	});
 
 	it('parses C (cubic Bezier) commands', () => {
 		const paths = svgToCustomGeometryPaths('M 0 0 C 10 20 30 40 50 60', 100, 100);
-		expect(paths[0].segments[1]).toStrictEqual({
+		expect(at(paths, 0).segments[1]).toStrictEqual({
 			type: 'cubicBezTo',
 			pts: [
 				{ x: 10, y: 20 },
@@ -233,7 +235,7 @@ describe('svgToCustomGeometryPaths', () => {
 
 	it('parses Q (quadratic Bezier) commands', () => {
 		const paths = svgToCustomGeometryPaths('M 0 0 Q 50 100 100 0', 100, 100);
-		expect(paths[0].segments[1]).toStrictEqual({
+		expect(at(paths, 0).segments[1]).toStrictEqual({
 			type: 'quadBezTo',
 			pts: [
 				{ x: 50, y: 100 },
@@ -245,13 +247,13 @@ describe('svgToCustomGeometryPaths', () => {
 	it('returns a single path with empty segments for empty input', () => {
 		const paths = svgToCustomGeometryPaths('', 100, 100);
 		expect(paths).toHaveLength(1);
-		expect(paths[0].segments).toHaveLength(0);
+		expect(at(paths, 0).segments).toHaveLength(0);
 	});
 
 	it('ignores commands with insufficient coordinates', () => {
 		// L needs 2 coords, only 1 given
 		const paths = svgToCustomGeometryPaths('M 0 0 L 50', 100, 100);
-		expect(paths[0].segments).toHaveLength(1); // Only M parsed
+		expect(at(paths, 0).segments).toHaveLength(1); // Only M parsed
 	});
 });
 
@@ -296,7 +298,7 @@ describe('customGeometryPathsToXml', () => {
 			'@_r': 'r',
 			'@_b': 'b',
 		});
-		const pathXml = xml['a:pathLst']['a:path'];
+		const pathXml = must(xmlPath(xml, 'a:pathLst', 'a:path'));
 		expect(pathXml['@_w']).toBe('100');
 		expect(pathXml['@_h']).toBe('200');
 		expect(pathXml['a:moveTo']).toBeDefined();
@@ -317,7 +319,7 @@ describe('customGeometryPathsToXml', () => {
 			},
 		];
 		const xml = customGeometryPathsToXml(paths);
-		const pathXml = xml['a:pathLst']['a:path'];
+		const pathXml = must(xmlPath(xml, 'a:pathLst', 'a:path'));
 		// Multiple lineTo segments should be an array
 		expect(Array.isArray(pathXml['a:lnTo'])).toBeTruthy();
 		expect(pathXml['a:lnTo']).toHaveLength(2);
@@ -342,9 +344,9 @@ describe('customGeometryPathsToXml', () => {
 			},
 		];
 		const xml = customGeometryPathsToXml(paths);
-		const pathXml = xml['a:pathLst']['a:path'];
+		const pathXml = must(xmlPath(xml, 'a:pathLst', 'a:path'));
 		expect(pathXml['a:cubicBezTo']).toBeDefined();
-		const pts = pathXml['a:cubicBezTo']['a:pt'];
+		const pts = xmlChildren(xmlChild(pathXml, 'a:cubicBezTo'), 'a:pt');
 		expect(pts).toHaveLength(3);
 		expect(pts[0]).toStrictEqual({ '@_x': '10', '@_y': '20' });
 	});
@@ -361,12 +363,13 @@ describe('customGeometryPathsToXml', () => {
 			},
 		];
 		const xml = customGeometryPathsToXml(paths);
-		const pathXml = xml['a:pathLst']['a:path'];
+		const pathXml = must(xmlPath(xml, 'a:pathLst', 'a:path'));
 		expect(pathXml['a:arcTo']).toBeDefined();
-		expect(pathXml['a:arcTo']['@_wR']).toBe('50');
-		expect(pathXml['a:arcTo']['@_hR']).toBe('50');
-		expect(pathXml['a:arcTo']['@_stAng']).toBe('0');
-		expect(pathXml['a:arcTo']['@_swAng']).toBe('5400000');
+		const arcTo = xmlChild(pathXml, 'a:arcTo');
+		expect(arcTo?.['@_wR']).toBe('50');
+		expect(arcTo?.['@_hR']).toBe('50');
+		expect(arcTo?.['@_stAng']).toBe('0');
+		expect(arcTo?.['@_swAng']).toBe('5400000');
 	});
 });
 
@@ -549,7 +552,7 @@ describe('customGeometryPathsToXml — round-trip extension', () => {
 			},
 		];
 		const xml = customGeometryPathsToXml(paths);
-		const pathXml = xml['a:pathLst']['a:path'];
+		const pathXml = must(xmlPath(xml, 'a:pathLst', 'a:path'));
 		expect(pathXml['@_fill']).toBe('darken');
 		expect(pathXml['@_stroke']).toBe('0');
 		expect(pathXml['@_extrusionOk']).toBe('1');
@@ -564,7 +567,7 @@ describe('customGeometryPathsToXml — round-trip extension', () => {
 			},
 		];
 		const xml = customGeometryPathsToXml(paths);
-		const pathXml = xml['a:pathLst']['a:path'];
+		const pathXml = must(xmlPath(xml, 'a:pathLst', 'a:path'));
 		expect(pathXml['@_fill']).toBeUndefined();
 		expect(pathXml['@_stroke']).toBeUndefined();
 		expect(pathXml['@_extrusionOk']).toBeUndefined();

@@ -18,6 +18,7 @@ import { describe, it, expect } from 'vitest';
 
 import { PRESET_SHAPE_GEOMETRY_TABLE } from '../../../geometry/preset-shape-definitions-table';
 import { evaluatePresetShape } from '../../../geometry/preset-shape-evaluator';
+import { at } from '../../test-support/access';
 
 /** Extremes of the on-curve points of an evaluated path. */
 function bounds(svgPath: string): { minX: number; maxX: number; minY: number; maxY: number } {
@@ -32,12 +33,12 @@ function bounds(svgPath: string): { minX: number; maxX: number; minY: number; ma
 			continue;
 		}
 		// Only the trailing (x, y) of an arc is an on-curve point.
-		const pairs: number[][] =
+		const pairs: Array<Array<number | undefined>> =
 			command === 'A'
 				? nums.flatMap((_, i) => (i % 7 === 0 ? [[nums[i + 5], nums[i + 6]]] : []))
 				: nums.flatMap((_, i) => (i % 2 === 0 ? [[nums[i], nums[i + 1]]] : []));
 		for (const [x, y] of pairs) {
-			if (!Number.isFinite(x) || !Number.isFinite(y)) {
+			if (x === undefined || y === undefined || !Number.isFinite(x) || !Number.isFinite(y)) {
 				continue;
 			}
 			minX = Math.min(minX, x);
@@ -99,7 +100,7 @@ describe('hexagon', () => {
 			[200, 100],
 			[100, 100],
 			[100, 200],
-		]) {
+		] as const) {
 			const box = bounds(String(evaluatePresetShape('hexagon', w, h)?.svgPath));
 			expect(box.minY, `${w}x${h}`).toBeCloseTo(0, 2);
 			expect(box.maxY, `${w}x${h}`).toBeCloseTo(h, 2);
@@ -173,11 +174,11 @@ describe('sun', () => {
 			[12500, 0.75],
 			[25000, 0.5],
 			[40000, 0.2],
-		]) {
+		] as const) {
 			// The ellipse is the first sub-path; its arc endpoints span the disc.
 			// `expected` is the radius in HALF-box units, so the diameter is the
 			// same fraction of the full box.
-			const box = bounds(subpaths(200, 100, adj)[0].d);
+			const box = bounds(at(subpaths(200, 100, adj), 0).d);
 			expect((box.maxX - box.minX) / 200, `adj=${adj}`).toBeCloseTo(expected, 2);
 			expect((box.maxY - box.minY) / 100, `adj=${adj}`).toBeCloseTo(expected, 2);
 		}
@@ -187,7 +188,7 @@ describe('sun', () => {
 		for (const [w, h] of [
 			[200, 100],
 			[150, 150],
-		]) {
+		] as const) {
 			const box = bounds(String(evaluatePresetShape('sun', w, h)?.svgPath));
 			expect(box.minX, `${w}x${h}`).toBeCloseTo(0, 1);
 			expect(box.maxX, `${w}x${h}`).toBeCloseTo(w, 1);
@@ -198,8 +199,8 @@ describe('sun', () => {
 
 	it('clamps the adjustment to its legal range', () => {
 		// `pin 12500 adj 46875`: out-of-range values collapse onto the extremes.
-		expect(subpaths(200, 100, 0)[0].d).toBe(subpaths(200, 100, 12500)[0].d);
-		expect(subpaths(200, 100, 90000)[0].d).toBe(subpaths(200, 100, 46875)[0].d);
+		expect(at(subpaths(200, 100, 0), 0).d).toBe(at(subpaths(200, 100, 12500), 0).d);
+		expect(at(subpaths(200, 100, 90000), 0).d).toBe(at(subpaths(200, 100, 46875), 0).d);
 	});
 
 	it("keeps the text rect inscribed in the disc, not the disc's full bounds", () => {

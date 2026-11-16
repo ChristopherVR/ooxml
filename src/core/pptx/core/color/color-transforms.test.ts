@@ -8,7 +8,7 @@ import {
 } from './color-transforms';
 
 // Helper to build a color node with a single transform child.
-function _makeColorNode(transforms: Record<string, unknown>): XmlObject {
+function _makeColorNode(transforms: XmlObject): XmlObject {
 	return transforms;
 }
 

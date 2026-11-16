@@ -265,9 +265,9 @@ export interface PptxSlide {
 	nativeAnimations?: PptxNativeAnimation[];
 	/** Preserved raw `p:timing` XML for lossless round-trip of native animations. */
 	rawTiming?: XmlObject;
-	notes?: string;
+	notes?: string | undefined;
 	/** Rich text segments for the slide notes (preserves formatting). */
-	notesSegments?: TextSegment[];
+	notesSegments?: TextSegment[] | undefined;
 	/**
 	 * Parsed shapes from the notes slide's `<p:cSld>/<p:spTree>` so the full
 	 * notes-page shape tree can be inspected and mutated, not just the body

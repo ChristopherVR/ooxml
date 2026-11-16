@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, expectTypeOf } from 'vitest';
 
 import type { CustomGeometryPoint } from '../types';
 import { FreeformPathBuilder, douglasPeucker, catmullRomToBezier } from './freeform-builder';
+import { at } from '../../test-support/access';
 
 // ===========================================================================
 // douglasPeucker
@@ -120,7 +121,7 @@ describe('catmullRomToBezier', () => {
 		const curves = catmullRomToBezier(pts);
 		expect(curves).toHaveLength(1);
 		// End point of the curve should be the second input point
-		expect(curves[0][2]).toStrictEqual({ x: 100, y: 100 });
+		expect(at(curves, 0)[2]).toStrictEqual({ x: 100, y: 100 });
 	});
 
 	it('produces N-1 curve segments for N points', () => {
@@ -160,7 +161,7 @@ describe('catmullRomToBezier', () => {
 		];
 		const curves = catmullRomToBezier(pts);
 		for (let i = 0; i < curves.length; i++) {
-			expect(curves[i][2]).toStrictEqual(pts[i + 1]);
+			expect(at(curves, i)[2]).toStrictEqual(pts[i + 1]);
 		}
 	});
 
@@ -174,8 +175,12 @@ describe('catmullRomToBezier', () => {
 		const gentle = catmullRomToBezier(pts, 12);
 		// A smaller factor produces larger tangents => control points
 		// deviate more from the chord
-		const tightDev = Math.abs(tight[0][0].x - pts[0].x) + Math.abs(tight[0][0].y - pts[0].y);
-		const gentleDev = Math.abs(gentle[0][0].x - pts[0].x) + Math.abs(gentle[0][0].y - pts[0].y);
+		const tightDev =
+			Math.abs(at(at(tight, 0), 0).x - at(pts, 0).x) +
+			Math.abs(at(at(tight, 0), 0).y - at(pts, 0).y);
+		const gentleDev =
+			Math.abs(at(at(gentle, 0), 0).x - at(pts, 0).x) +
+			Math.abs(at(at(gentle, 0), 0).y - at(pts, 0).y);
 		expect(tightDev).toBeGreaterThan(gentleDev);
 	});
 });
@@ -332,16 +337,16 @@ describe('freeformPathBuilder', () => {
 	it('returns single empty path when no points', () => {
 		const paths = builder.toCustomGeometryPaths();
 		expect(paths).toHaveLength(1);
-		expect(paths[0].segments).toStrictEqual([]);
-		expect(paths[0].width).toBe(1);
-		expect(paths[0].height).toBe(1);
+		expect(at(paths, 0).segments).toStrictEqual([]);
+		expect(at(paths, 0).width).toBe(1);
+		expect(at(paths, 0).height).toBe(1);
 	});
 
 	it('emits moveTo + lineTo segments for polyline', () => {
 		builder.addPoint(0, 0).addPoint(100, 50).addPoint(200, 100);
 		const paths = builder.toCustomGeometryPaths();
 		expect(paths).toHaveLength(1);
-		expect(paths[0].segments).toStrictEqual([
+		expect(at(paths, 0).segments).toStrictEqual([
 			{ type: 'moveTo', pt: { x: 0, y: 0 } },
 			{ type: 'lineTo', pt: { x: 100, y: 50 } },
 			{ type: 'lineTo', pt: { x: 200, y: 100 } },
@@ -351,22 +356,22 @@ describe('freeformPathBuilder', () => {
 	it('appends close segment when closed', () => {
 		builder.addPoint(0, 0).addPoint(100, 0).addPoint(100, 100).close();
 		const paths = builder.toCustomGeometryPaths();
-		const segs = paths[0].segments;
+		const segs = at(paths, 0).segments;
 		expect(segs[segs.length - 1]).toStrictEqual({ type: 'close' });
 	});
 
 	it('computes correct bounding dimensions', () => {
 		builder.addPoint(10, 20).addPoint(300, 150);
 		const paths = builder.toCustomGeometryPaths();
-		expect(paths[0].width).toBe(300);
-		expect(paths[0].height).toBe(150);
+		expect(at(paths, 0).width).toBe(300);
+		expect(at(paths, 0).height).toBe(150);
 	});
 
 	it('enforces minimum dimensions of 1', () => {
 		builder.addPoint(0, 0);
 		const paths = builder.toCustomGeometryPaths();
-		expect(paths[0].width).toBe(1);
-		expect(paths[0].height).toBe(1);
+		expect(at(paths, 0).width).toBe(1);
+		expect(at(paths, 0).height).toBe(1);
 	});
 
 	// -- toCustomGeometryPaths (smoothed mode) --------------------------------
@@ -374,12 +379,12 @@ describe('freeformPathBuilder', () => {
 	it('emits cubicBezTo segments after smooth()', () => {
 		builder.addPoint(0, 0).addPoint(50, 100).addPoint(100, 0).smooth();
 		const paths = builder.toCustomGeometryPaths();
-		const segs = paths[0].segments;
+		const segs = at(paths, 0).segments;
 		// First segment is moveTo
-		expect(segs[0].type).toBe('moveTo');
+		expect(at(segs, 0).type).toBe('moveTo');
 		// Remaining segments are cubicBezTo
 		for (let i = 1; i < segs.length; i++) {
-			expect(segs[i].type).toBe('cubicBezTo');
+			expect(at(segs, i).type).toBe('cubicBezTo');
 		}
 	});
 
@@ -413,17 +418,17 @@ describe('freeformPathBuilder', () => {
 
 		const paths = builder.toCustomGeometryPaths();
 		expect(paths).toHaveLength(1);
-		expect(paths[0].width).toBeGreaterThan(0);
-		expect(paths[0].height).toBeGreaterThan(0);
+		expect(at(paths, 0).width).toBeGreaterThan(0);
+		expect(at(paths, 0).height).toBeGreaterThan(0);
 		// Should have moveTo followed by cubicBezTo segments
-		expect(paths[0].segments[0].type).toBe('moveTo');
-		expect(paths[0].segments.filter((s) => s.type === 'cubicBezTo').length).toBeGreaterThan(0);
+		expect(at(at(paths, 0).segments, 0).type).toBe('moveTo');
+		expect(at(paths, 0).segments.filter((s) => s.type === 'cubicBezTo').length).toBeGreaterThan(0);
 	});
 
 	it('closed smoothed path includes close segment', () => {
 		builder.addPoint(0, 0).addPoint(100, 0).addPoint(100, 100).addPoint(0, 100).close().smooth();
 		const paths = builder.toCustomGeometryPaths();
-		const segs = paths[0].segments;
+		const segs = at(paths, 0).segments;
 		expect(segs[segs.length - 1]).toStrictEqual({ type: 'close' });
 	});
 });

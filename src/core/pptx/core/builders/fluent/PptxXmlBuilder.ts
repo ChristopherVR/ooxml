@@ -54,13 +54,14 @@ export class PptxXmlBuilder implements IPptxXmlBuilder {
 		if (!Number.isInteger(index)) {
 			throw new Error(`Slide index must be an integer. Received: ${index}`);
 		}
-		if (index < 0 || index >= this.data.slides.length) {
+		const slide = this.data.slides[index];
+		if (index < 0 || !slide) {
 			throw new Error(
 				`Slide index ${index} is out of range (0-${Math.max(this.data.slides.length - 1, 0)}).`,
 			);
 		}
 
-		return new PptxSlideBuilder(this.data.slides[index], this);
+		return new PptxSlideBuilder(slide, this);
 	}
 
 	/** @inheritdoc */

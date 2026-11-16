@@ -100,27 +100,25 @@ export function evaluateGeometryPaths(
 				}
 			} else if (key === 'a:cubicBezTo') {
 				const pts = ensureArray(record['a:pt']) as Array<Record<string, unknown>>;
-				if (pts.length === 3) {
-					const coords = pts.map((pt) => ({
-						x: resolveX(pt['@_x'] as string | number | undefined),
-						y: resolveY(pt['@_y'] as string | number | undefined),
-					}));
-					commands.push(
-						`C ${coords[0].x} ${coords[0].y} ${coords[1].x} ${coords[1].y} ${coords[2].x} ${coords[2].y}`,
-					);
-					penX = coords[2].x;
-					penY = coords[2].y;
+				const [c0, c1, c2] = pts.map((pt) => ({
+					x: resolveX(pt['@_x'] as string | number | undefined),
+					y: resolveY(pt['@_y'] as string | number | undefined),
+				}));
+				if (pts.length === 3 && c0 && c1 && c2) {
+					commands.push(`C ${c0.x} ${c0.y} ${c1.x} ${c1.y} ${c2.x} ${c2.y}`);
+					penX = c2.x;
+					penY = c2.y;
 				}
 			} else if (key === 'a:quadBezTo') {
 				const pts = ensureArray(record['a:pt']) as Array<Record<string, unknown>>;
-				if (pts.length === 2) {
-					const coords = pts.map((pt) => ({
-						x: resolveX(pt['@_x'] as string | number | undefined),
-						y: resolveY(pt['@_y'] as string | number | undefined),
-					}));
-					commands.push(`Q ${coords[0].x} ${coords[0].y} ${coords[1].x} ${coords[1].y}`);
-					penX = coords[1].x;
-					penY = coords[1].y;
+				const [c0, c1] = pts.map((pt) => ({
+					x: resolveX(pt['@_x'] as string | number | undefined),
+					y: resolveY(pt['@_y'] as string | number | undefined),
+				}));
+				if (pts.length === 2 && c0 && c1) {
+					commands.push(`Q ${c0.x} ${c0.y} ${c1.x} ${c1.y}`);
+					penX = c1.x;
+					penY = c1.y;
 				}
 			} else if (key === 'a:arcTo') {
 				const wR = resolveX(record['@_wR'] as string | number | undefined);

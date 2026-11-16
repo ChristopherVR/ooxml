@@ -16,16 +16,8 @@ import { reResolveElementsForColorMapChange } from '../../utils/theme-switching'
 import { withLeadingBackground } from './master-save-helpers';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeThemeEffects';
 
-/** Which slides a background style lands on. */
-export type BackgroundStyleScope =
-	| { kind: 'all' }
-	| { kind: 'slides'; slideIds: readonly string[] };
-
-/** Slides and template elements after a background style was applied. */
-export interface BackgroundStyleApplication {
-	slides: PptxSlide[];
-	templateElementsBySlideId: Record<string, PptxElement[]>;
-}
+import type { BackgroundStyleApplication, BackgroundStyleScope } from '../handler-result-types';
+export type { BackgroundStyleApplication, BackgroundStyleScope } from '../handler-result-types';
 
 interface ResolvedBackground {
 	color: string | undefined;

@@ -192,7 +192,7 @@ describe('getImageMaskStyle', () => {
 		const result = getImageMaskStyle(element);
 		expect(result).toBeDefined();
 		expect(result!.borderRadius).toBeDefined();
-		expectTypeOf(result!.borderRadius).toBeNumber();
+		expect(typeof result?.borderRadius).toBe('number');
 		expect(result!.borderRadius).toBeGreaterThan(0);
 	});
 

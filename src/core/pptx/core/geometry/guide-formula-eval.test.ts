@@ -10,6 +10,7 @@ import {
 import { evaluateFormula, parseFormula, ANGLE_SCALE } from '../../../geometry/guide-formula-eval';
 import { ooxmlArcToSvg } from '../../../geometry/ooxml-arc';
 import { evaluateGeometryPaths } from './guide-formula-paths';
+import { at } from '../../test-support/access';
 
 // Shorthand: evaluate a formula string with a given variable context.
 function evalFmla(fmla: string, vars?: Map<string, number>): number {
@@ -308,7 +309,7 @@ describe('parseGuideDefinitions', () => {
 		];
 		const guides = parseGuideDefinitions(nodes);
 		expect(guides).toHaveLength(1);
-		expect(guides[0].name).toBe('g1');
+		expect(at(guides, 0).name).toBe('g1');
 	});
 
 	it('returns empty array for empty input', () => {

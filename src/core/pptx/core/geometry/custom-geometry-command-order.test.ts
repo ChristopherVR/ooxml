@@ -9,6 +9,7 @@ import {
 	restorePathListCommandOrder,
 } from './custom-geometry-command-order';
 import { parseStructuredCustomGeometry } from './custom-geometry-parser';
+import { at } from '../../test-support/access';
 
 const ensureArray = (value: unknown): unknown[] =>
 	value === undefined ? [] : Array.isArray(value) ? value : [value];
@@ -33,7 +34,7 @@ describe('custom geometry command order', () => {
 		const parsed = parser.parse(xml) as XmlObject;
 		const paths = parseStructuredCustomGeometry(customGeometryFrom(parsed), 100, 100, ensureArray);
 
-		expect(paths[0].segments.map((segment) => segment.type)).toStrictEqual([
+		expect(at(paths, 0).segments.map((segment) => segment.type)).toStrictEqual([
 			'moveTo',
 			'lineTo',
 			'arcTo',
@@ -60,7 +61,7 @@ describe('custom geometry command order', () => {
 			100,
 			ensureArray,
 		);
-		expect(reparsedPaths[0].segments.map((segment) => segment.type)).toStrictEqual([
+		expect(at(reparsedPaths, 0).segments.map((segment) => segment.type)).toStrictEqual([
 			'moveTo',
 			'lineTo',
 			'arcTo',

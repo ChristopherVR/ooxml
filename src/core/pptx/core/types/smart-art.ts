@@ -162,7 +162,7 @@ export interface PptxSmartArtData extends DiagramData {
 	pictureSizes?: Record<string, { width: number; height: number }>;
 	nodes: PptxSmartArtNode[];
 	/** Pre-computed shapes from `ppt/diagrams/drawing*.xml`. */
-	drawingShapes?: PptxSmartArtDrawingShape[];
+	drawingShapes?: PptxSmartArtDrawingShape[] | undefined;
 	/** Background and outline chrome from `dgm:bg` / `dgm:whole`. */
 	chrome?: PptxSmartArtChrome;
 	/** Quick style from `ppt/diagrams/quickStyles*.xml`. */

@@ -119,10 +119,10 @@ export interface DiagramPresLayoutVars {
  * ```
  */
 export interface DiagramData {
-	layoutType?: string;
-	resolvedLayoutType?: DiagramLayoutType;
+	layoutType?: string | undefined;
+	resolvedLayoutType?: DiagramLayoutType | undefined;
 	/** Named layout preset (used when creating new SmartArt). */
-	layout?: DiagramLayoutPreset;
+	layout?: DiagramLayoutPreset | undefined;
 	/** Colour scheme for the SmartArt graphic. */
 	colorScheme?: DiagramColorScheme;
 	/** Visual style intensity. */
@@ -141,7 +141,7 @@ export interface DiagramData {
 	 * child limits, bullets) from `dgm:presLayoutVars` / layout `dgm:varLst`.
 	 * Consulted by the fallback layout engine for direction/org-chart hints.
 	 */
-	presLayoutVars?: DiagramPresLayoutVars;
+	presLayoutVars?: DiagramPresLayoutVars | undefined;
 	/**
 	 * The document theme's minor-Latin font (`a:fontScheme/a:minorFont/a:latin/
 	 * @typeface`): what SmartArt text actually renders in when no per-run

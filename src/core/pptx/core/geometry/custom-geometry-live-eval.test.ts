@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { at } from '../../test-support/access';
 import type { CustomGeometryRawData } from '../types';
 import {
 	evaluateCustomGeometryPathData,
@@ -58,7 +59,7 @@ describe('evaluateCustomGeometryPaths', () => {
 	it('re-evaluates structured per-sub-path segments against an override', () => {
 		const paths = evaluateCustomGeometryPaths(freeformRawData(), 200, 100, { adj1: 75000 });
 		expect(paths).toHaveLength(1);
-		expect(paths?.[0].segments).toStrictEqual([
+		expect(at(paths, 0).segments).toStrictEqual([
 			{ type: 'moveTo', pt: { x: 0, y: 0 } },
 			{ type: 'lineTo', pt: { x: 150, y: 0 } },
 			{ type: 'lineTo', pt: { x: 150, y: 100 } },

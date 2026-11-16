@@ -49,12 +49,13 @@ function parseSegments(
 				.map((point) => parsePoint(point, variables))
 				.filter((point) => point !== undefined);
 			const expected = key === 'a:cubicBezTo' ? 3 : 2;
-			if (points.length === expected) {
-				segments.push(
-					key === 'a:cubicBezTo'
-						? { type: 'cubicBezTo', pts: [points[0], points[1], points[2]] }
-						: { type: 'quadBezTo', pts: [points[0], points[1]] },
-				);
+			const [p0, p1, p2] = points;
+			if (points.length === expected && p0 && p1) {
+				if (key === 'a:quadBezTo') {
+					segments.push({ type: 'quadBezTo', pts: [p0, p1] });
+				} else if (p2) {
+					segments.push({ type: 'cubicBezTo', pts: [p0, p1, p2] });
+				}
 			}
 		} else if (key === 'a:arcTo' && command) {
 			segments.push({
@@ -130,8 +131,8 @@ export function parseStructuredCustomGeometry(
 		ensureArray((custGeom['a:gdLst'] as XmlObject | undefined)?.['a:gd']) as XmlObject[],
 	);
 	const firstPath = pathNodes[0];
-	const contextWidth = Number(firstPath['@_w']) || shapeWidth;
-	const contextHeight = Number(firstPath['@_h']) || shapeHeight;
+	const contextWidth = Number(firstPath?.['@_w']) || shapeWidth;
+	const contextHeight = Number(firstPath?.['@_h']) || shapeHeight;
 	const variables = evaluateGuides(guides, { w: contextWidth, h: contextHeight }, adjustments);
 
 	return buildCustomGeometryPathsFromNodes(

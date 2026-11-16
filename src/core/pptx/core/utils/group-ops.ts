@@ -125,8 +125,7 @@ export function groupElements(
 	const gathered: PptxElement[] = [];
 	let insertionIndex = -1;
 
-	for (let i = 0; i < elements.length; i++) {
-		const el = elements[i];
+	for (const [i, el] of elements.entries()) {
 		if (idSet.has(el.id)) {
 			gathered.push(el);
 			if (insertionIndex === -1) {
@@ -135,17 +134,17 @@ export function groupElements(
 		}
 	}
 
-	if (gathered.length < 2) {
+	const first = gathered[0];
+	if (!first || gathered.length < 2) {
 		return { elements: [...elements], groupId: null };
 	}
 
-	let minX = gathered[0].x;
-	let minY = gathered[0].y;
-	let maxX = gathered[0].x + gathered[0].width;
-	let maxY = gathered[0].y + gathered[0].height;
+	let minX = first.x;
+	let minY = first.y;
+	let maxX = first.x + first.width;
+	let maxY = first.y + first.height;
 
-	for (let i = 1; i < gathered.length; i++) {
-		const el = gathered[i];
+	for (const el of gathered.slice(1)) {
 		if (el.x < minX) {
 			minX = el.x;
 		}
@@ -186,8 +185,8 @@ export function groupElements(
 
 	// `insertionIndex` indexes the ORIGINAL array; count the survivors before it.
 	let adjustedIndex = 0;
-	for (let i = 0; i < insertionIndex; i++) {
-		if (!idSet.has(elements[i].id)) {
+	for (const el of elements.slice(0, Math.max(0, insertionIndex))) {
+		if (!idSet.has(el.id)) {
 			adjustedIndex++;
 		}
 	}
@@ -222,7 +221,7 @@ export function ungroupElements(
 	}
 
 	const group = elements[groupIndex];
-	if (group.type !== 'group') {
+	if (group?.type !== 'group') {
 		return { elements: [...elements], childIds: [] };
 	}
 

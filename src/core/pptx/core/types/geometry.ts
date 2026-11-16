@@ -119,11 +119,11 @@ export interface CustomGeometryPath {
 	/** Ordered list of drawing segments. */
 	segments: CustomGeometrySegment[];
 	/** Path fill mode (`a:path/@fill`): norm, lighten, lightenLess, darken, darkenLess, none. */
-	fillMode?: 'norm' | 'lighten' | 'lightenLess' | 'darken' | 'darkenLess' | 'none';
+	fillMode?: 'norm' | 'lighten' | 'lightenLess' | 'darken' | 'darkenLess' | 'none' | undefined;
 	/** Whether the path is stroked (`a:path/@stroke`). */
-	stroke?: boolean;
+	stroke?: boolean | undefined;
 	/** 3D extrusion compatibility (`a:path/@extrusionOk`). */
-	extrusionOk?: boolean;
+	extrusionOk?: boolean | undefined;
 }
 
 /**

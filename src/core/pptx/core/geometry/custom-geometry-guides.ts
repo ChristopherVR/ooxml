@@ -19,7 +19,7 @@
  * @module geometry/custom-geometry-guides
  */
 import type { CustomGeometryRawData } from '../types';
-import { ensureArrayValue } from '../utils';
+import { ensureArrayValue } from '../utils/element-utils';
 import {
 	evaluateGuides,
 	parseAdjustmentValues,

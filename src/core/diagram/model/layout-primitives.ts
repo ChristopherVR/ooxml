@@ -8,7 +8,7 @@
 
 export interface DiagramLocalizedText {
 	value: string;
-	language?: string;
+	language?: string | undefined;
 }
 
 export interface DiagramLayoutCategory {
@@ -52,9 +52,9 @@ export interface DiagramWhen<R = unknown> extends DiagramIteratorAttributes {
 }
 
 export interface DiagramChoose<R = unknown> {
-	name?: string;
+	name?: string | undefined;
 	when: DiagramWhen<R>[];
-	otherwise?: { name?: string; rawXml?: R } | null;
+	otherwise?: { name?: string | undefined; rawXml?: R } | null | undefined;
 	rawXml?: R;
 }
 

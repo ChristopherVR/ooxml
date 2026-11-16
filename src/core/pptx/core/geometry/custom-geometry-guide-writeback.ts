@@ -20,7 +20,7 @@
  * @module geometry/custom-geometry-guide-writeback
  */
 import type { XmlObject } from '../types';
-import { ensureArrayValue } from '../utils';
+import { ensureArrayValue } from '../utils/element-utils';
 
 /**
  * Return `custGeom` with its `a:avLst/a:gd` entries patched from `overrides`

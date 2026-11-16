@@ -125,8 +125,8 @@ export interface PptxElementBase {
 	skewX?: number;
 	/** Skew along the Y axis in degrees (parsed from `@_skewY` in 1/60000ths of a degree). */
 	skewY?: number;
-	flipHorizontal?: boolean;
-	flipVertical?: boolean;
+	flipHorizontal?: boolean | undefined;
+	flipVertical?: boolean | undefined;
 	/** Whether this element is hidden (used by the Elements Panel visibility toggle). */
 	hidden?: boolean;
 	/** Element-level opacity (0-1). */

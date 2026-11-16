@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import type { XmlObject } from '../types';
 import { customGeometryPathsToXml } from './custom-geometry';
 import { parseStructuredCustomGeometry } from './custom-geometry-parser';
+import { at } from '../../test-support/access';
+import { xmlChild, xmlChildren } from '../utils/xml-access';
 
 const ensureArray = (value: unknown): unknown[] =>
 	value === undefined ? [] : Array.isArray(value) ? value : [value];
@@ -43,7 +45,7 @@ describe('parseStructuredCustomGeometry', () => {
 
 		expect(paths).toHaveLength(2);
 		expect(paths[0]).toMatchObject({ width: 200, height: 100, fillMode: 'none', stroke: false });
-		expect(paths[0].segments).toStrictEqual([
+		expect(at(paths, 0).segments).toStrictEqual([
 			{ type: 'moveTo', pt: { x: 50, y: 0 } },
 			{ type: 'arcTo', wR: 50, hR: 25, stAng: 0, swAng: 5400000 },
 		]);
@@ -55,14 +57,14 @@ describe('parseStructuredCustomGeometry', () => {
 		});
 
 		const serialized = customGeometryPathsToXml(paths);
-		const serializedPaths = serialized['a:pathLst']['a:path'] as XmlObject[];
+		const serializedPaths = xmlChildren(xmlChild(serialized, 'a:pathLst'), 'a:path');
 		expect(serializedPaths).toHaveLength(2);
-		expect(serializedPaths[0]['a:arcTo']).toStrictEqual({
+		expect(at(serializedPaths, 0)['a:arcTo']).toStrictEqual({
 			'@_wR': '50',
 			'@_hR': '25',
 			'@_stAng': '0',
 			'@_swAng': '5400000',
 		});
-		expect(serializedPaths[1]['@_fill']).toBe('darkenLess');
+		expect(at(serializedPaths, 1)['@_fill']).toBe('darkenLess');
 	});
 });

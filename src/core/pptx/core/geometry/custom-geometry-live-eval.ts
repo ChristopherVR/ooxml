@@ -29,7 +29,7 @@ import type {
 	CustomGeometryTextRect,
 	XmlObject,
 } from '../types';
-import { ensureArrayValue } from '../utils';
+import { ensureArrayValue } from '../utils/element-utils';
 import { customGeometryPathsToXml } from './custom-geometry';
 import { restorePathListCommandOrder } from './custom-geometry-command-order';
 import { resolveCustomGeometryGuideContext } from './custom-geometry-guides';

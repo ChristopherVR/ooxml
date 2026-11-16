@@ -24,11 +24,8 @@ import { parseXml, type XmlElement } from '../../../../xml/index';
 import { HeldFormatSchemes } from './held-format-schemes';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeStyleMatrixResolve';
 
-/** Slides and template (master/layout) elements after style references were resolved again. */
-export interface StyleReferenceReResolution {
-	slides: PptxSlide[];
-	templateElementsBySlideId: Record<string, PptxElement[]>;
-}
+import type { StyleReferenceReResolution } from '../handler-result-types';
+export type { StyleReferenceReResolution } from '../handler-result-types';
 
 /** Copy `keys` of `from` onto a copy of `style`, dropping the keys `from` leaves unset. */
 function withKeys(

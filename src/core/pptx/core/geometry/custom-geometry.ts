@@ -96,9 +96,9 @@ export interface CustomGeometrySubpathSvg {
 	/** SVG path data for this single sub-path (already in the target space). */
 	d: string;
 	/** `a:path/@fill`; `undefined` means the default (`norm`, i.e. filled). */
-	fillMode?: CustomGeometryPath['fillMode'];
+	fillMode?: CustomGeometryPath['fillMode'] | undefined;
 	/** `a:path/@stroke`; `undefined`/`true` means stroked, `false` unstroked. */
-	stroke?: boolean;
+	stroke?: boolean | undefined;
 }
 
 /** Emit one sub-path's segments as an SVG `d` string, scaling coords by sx/sy. */
@@ -217,38 +217,46 @@ export function svgToCustomGeometryPaths(
 	// letter attached to its subsequent coordinate data
 	const tokens = pathData.match(/[MLCQZAmlcqza][^MLCQZAmlcqza]*/gi) ?? [];
 	for (const token of tokens) {
-		const cmd = token[0];
+		const cmd = token.charAt(0);
 		const nums = (token.slice(1).match(/-?[\d.]+/g) ?? []).map(Number);
+		const [n0, n1, n2, n3, n4, n5] = nums;
 		switch (cmd.toUpperCase()) {
 			case 'M':
-				if (nums.length >= 2) {
-					segments.push({ type: 'moveTo', pt: { x: nums[0], y: nums[1] } });
+				if (n0 !== undefined && n1 !== undefined) {
+					segments.push({ type: 'moveTo', pt: { x: n0, y: n1 } });
 				}
 				break;
 			case 'L':
-				if (nums.length >= 2) {
-					segments.push({ type: 'lineTo', pt: { x: nums[0], y: nums[1] } });
+				if (n0 !== undefined && n1 !== undefined) {
+					segments.push({ type: 'lineTo', pt: { x: n0, y: n1 } });
 				}
 				break;
 			case 'C':
-				if (nums.length >= 6) {
+				if (
+					n0 !== undefined &&
+					n1 !== undefined &&
+					n2 !== undefined &&
+					n3 !== undefined &&
+					n4 !== undefined &&
+					n5 !== undefined
+				) {
 					segments.push({
 						type: 'cubicBezTo',
 						pts: [
-							{ x: nums[0], y: nums[1] },
-							{ x: nums[2], y: nums[3] },
-							{ x: nums[4], y: nums[5] },
+							{ x: n0, y: n1 },
+							{ x: n2, y: n3 },
+							{ x: n4, y: n5 },
 						],
 					});
 				}
 				break;
 			case 'Q':
-				if (nums.length >= 4) {
+				if (n0 !== undefined && n1 !== undefined && n2 !== undefined && n3 !== undefined) {
 					segments.push({
 						type: 'quadBezTo',
 						pts: [
-							{ x: nums[0], y: nums[1] },
-							{ x: nums[2], y: nums[3] },
+							{ x: n0, y: n1 },
+							{ x: n2, y: n3 },
 						],
 					});
 				}
@@ -286,10 +294,10 @@ function pointToXml(pt: CustomGeometryPoint): XmlObject {
  * `a:rect`.
  */
 export interface CustomGeometryTypedExtras {
-	adjustHandlesXY?: AdjustHandleXY[];
-	adjustHandlesPolar?: AdjustHandlePolar[];
-	connectionSites?: ConnectionSite[];
-	textRect?: CustomGeometryTextRect;
+	adjustHandlesXY?: AdjustHandleXY[] | undefined;
+	adjustHandlesPolar?: AdjustHandlePolar[] | undefined;
+	connectionSites?: ConnectionSite[] | undefined;
+	textRect?: CustomGeometryTextRect | undefined;
 }
 
 function adjustHandleXyToXml(handle: AdjustHandleXY): XmlObject {

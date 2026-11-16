@@ -51,14 +51,14 @@ function extractSourceOrders(xml: string): string[][] {
 	const orders: string[][] = [];
 	const custGeomPattern = /<([A-Za-z_][\w.-]*:)?custGeom\b[^>]*>([\s\S]*?)<\/\1custGeom\s*>/gu;
 	for (const geometryMatch of xml.matchAll(custGeomPattern)) {
-		const geometryXml = geometryMatch[2];
+		const geometryXml = geometryMatch[2] ?? '';
 		const pathPattern = /<([A-Za-z_][\w.-]*:)?path\b[^>]*>([\s\S]*?)<\/\1path\s*>/gu;
 		for (const pathMatch of geometryXml.matchAll(pathPattern)) {
 			const order = [
-				...pathMatch[2].matchAll(/<\/?([A-Za-z_][\w.-]*:)?([A-Za-z][\w.-]*)\b[^>]*>/gu),
+				...(pathMatch[2] ?? '').matchAll(/<\/?([A-Za-z_][\w.-]*:)?([A-Za-z][\w.-]*)\b[^>]*>/gu),
 			]
-				.filter((match) => match[0][1] !== '/' && PATH_COMMANDS.has(match[2]))
-				.map((match) => match[2]);
+				.map((match) => (match[0][1] !== '/' ? match[2] : undefined))
+				.filter((name): name is string => name !== undefined && PATH_COMMANDS.has(name));
 			orders.push(order);
 		}
 	}

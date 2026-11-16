@@ -25,8 +25,8 @@ type LocalName = (key: string) => string;
 interface ChooseGroupEntry {
 	id: string;
 	ordinal: number;
-	guard?: PptxSmartArtWhen;
-	origin?: PptxSmartArtIteratorAttributes;
+	guard?: PptxSmartArtWhen | undefined;
+	origin?: PptxSmartArtIteratorAttributes | undefined;
 }
 
 /** A `layoutNode` found while walking through forEach/choose wrappers, plus the

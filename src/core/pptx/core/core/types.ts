@@ -44,8 +44,8 @@ import type {
 import type {
 	BackgroundStyleApplication,
 	BackgroundStyleScope,
-} from './runtime/PptxHandlerRuntimeBackgroundStyles';
-import type { StyleReferenceReResolution } from './runtime/PptxHandlerRuntimeThemeEffects';
+	StyleReferenceReResolution,
+} from './handler-result-types';
 import type { PptxLoadLimits } from './load-limits';
 
 export interface PptxHandlerLoadOptions {
