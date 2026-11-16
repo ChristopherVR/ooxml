@@ -50,7 +50,7 @@ export interface PptxElementBase {
 	 * animation to the element it animates across a save/reload round trip.
 	 * Absent on SDK-created elements until one is minted at save time.
 	 */
-	shapeId?: string;
+	shapeId?: string | undefined;
 	/** Element name from `cNvPr/@name`. Used for morph transition matching via the `!!` naming convention. */
 	name?: string | undefined;
 	/**
@@ -71,7 +71,7 @@ export interface PptxElementBase {
 	 * that carries `@sz` already has an explicit `a:xfrm` at the master
 	 * level, so no renderer currently derives a size from this field.
 	 */
-	placeholderSz?: string;
+	placeholderSz?: string | undefined;
 	/**
 	 * `p:nvSpPr/p:nvPr/p:ph/@orient` (only `"vert"` is meaningful per
 	 * `ST_Direction`). Captured on load for round-trip completeness. In
@@ -79,7 +79,7 @@ export interface PptxElementBase {
 	 * an explicit `a:bodyPr/@vert`, which already drives vertical-text
 	 * rendering, so this field is not currently read by any renderer.
 	 */
-	placeholderOrient?: 'vert';
+	placeholderOrient?: 'vert' | undefined;
 	x: number;
 	y: number;
 	width: number;
@@ -100,26 +100,28 @@ export interface PptxElementBase {
 	 * `undefined` for an SDK-created element or one whose transform could not
 	 * be resolved to a usable `a:off` on load.
 	 */
-	xEmu?: number;
+	xEmu?: number | undefined;
 	/** The exact EMU integer `y` was parsed from (`a:off/@_y`). See {@link xEmu}. */
-	yEmu?: number;
+	yEmu?: number | undefined;
 	/** The exact EMU integer `width` was parsed from (`a:ext/@_cx`). See {@link xEmu}. */
 	widthEmu?: number | undefined;
 	/** The exact EMU integer `height` was parsed from (`a:ext/@_cy`). See {@link xEmu}. */
 	heightEmu?: number | undefined;
 	/** Resolved load-time transform for a shape with no own a:xfrm. Used only to detect edits. */
-	inheritedTransform?: Pick<
-		PptxElementBase,
-		| 'x'
-		| 'y'
-		| 'width'
-		| 'height'
-		| 'rotation'
-		| 'skewX'
-		| 'skewY'
-		| 'flipHorizontal'
-		| 'flipVertical'
-	>;
+	inheritedTransform?:
+		| Pick<
+				PptxElementBase,
+				| 'x'
+				| 'y'
+				| 'width'
+				| 'height'
+				| 'rotation'
+				| 'skewX'
+				| 'skewY'
+				| 'flipHorizontal'
+				| 'flipVertical'
+		  >
+		| undefined;
 	rotation?: number | undefined;
 	/** Skew along the X axis in degrees (parsed from `@_skewX` in 1/60000ths of a degree). */
 	skewX?: number | undefined;
@@ -147,7 +149,7 @@ export interface PptxElementBase {
 	 * Mirrors the existing `effectDagXml` / `endParaRunProperties` raw-XML
 	 * preservation pattern.
 	 */
-	extLstXml?: XmlObject[];
+	extLstXml?: XmlObject[] | undefined;
 }
 
 /**
@@ -171,7 +173,7 @@ export interface PptxTextProperties {
 	/** Rich text segments with individual styling. */
 	textSegments?: TextSegment[] | undefined;
 	/** Per-paragraph indentation (marginLeft, indent) for multi-level bullet support. */
-	paragraphIndents?: Array<{ marginLeft?: number; indent?: number }>;
+	paragraphIndents?: Array<{ marginLeft?: number | undefined; indent?: number | undefined }>;
 	/** Placeholder prompt text inherited from layout/master (e.g. "Click to add title"). Shown as a greyed-out hint when the shape has no user-entered text. */
 	promptText?: string;
 	/**

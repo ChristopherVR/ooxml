@@ -223,27 +223,27 @@ export interface PptxCustomProperty {
  */
 export interface PptxCoreProperties {
 	/** dc:title */
-	title?: string;
+	title?: string | undefined;
 	/** dc:subject */
-	subject?: string;
+	subject?: string | undefined;
 	/** dc:creator */
-	creator?: string;
+	creator?: string | undefined;
 	/** cp:keywords */
-	keywords?: string;
+	keywords?: string | undefined;
 	/** dc:description */
-	description?: string;
+	description?: string | undefined;
 	/** cp:lastModifiedBy */
-	lastModifiedBy?: string;
+	lastModifiedBy?: string | undefined;
 	/** cp:revision */
-	revision?: string;
+	revision?: string | undefined;
 	/** dcterms:created (ISO 8601) */
-	created?: string;
+	created?: string | undefined;
 	/** dcterms:modified (ISO 8601) */
-	modified?: string;
+	modified?: string | undefined;
 	/** cp:category */
-	category?: string;
+	category?: string | undefined;
 	/** cp:contentStatus */
-	contentStatus?: string;
+	contentStatus?: string | undefined;
 }
 
 /**

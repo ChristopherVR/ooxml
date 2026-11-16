@@ -117,7 +117,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// Load M1: enforce allowed-roots prefix. Any first segment outside
 		// the OPC-defined directories is treated as an escape attempt.
 		const firstSegment = baseParts[0];
-		if (!PptxHandlerRuntime.ALLOWED_PATH_ROOTS.has(firstSegment)) {
+		if (!PptxHandlerRuntime.ALLOWED_PATH_ROOTS.has(firstSegment ?? '')) {
 			return '';
 		}
 
@@ -140,7 +140,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 		const firstSlash = resolved.indexOf('/');
 		const firstSegment = firstSlash === -1 ? resolved : resolved.substring(0, firstSlash);
-		if (!PptxHandlerRuntime.ALLOWED_PATH_ROOTS.has(firstSegment)) {
+		if (!PptxHandlerRuntime.ALLOWED_PATH_ROOTS.has(firstSegment ?? '')) {
 			return '';
 		}
 		return resolved;

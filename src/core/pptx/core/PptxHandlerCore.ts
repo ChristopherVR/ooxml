@@ -782,7 +782,7 @@ export class PptxHandlerCore {
 	 * Scan the loaded PPTX archive for all theme parts (`ppt/theme/theme*.xml`)
 	 * and return their paths and display names.
 	 */
-	public async getAvailableThemes(): Promise<Array<{ path: string; name?: string }>> {
+	public async getAvailableThemes(): Promise<Array<{ path: string; name?: string | undefined }>> {
 		return this.runtime.getAvailableThemes();
 	}
 

@@ -4,7 +4,6 @@ import {
 	ECMA_NAMESPACES,
 } from './pptx-validator-conformance-xml';
 import type { ValidationIssue } from './pptx-validator-types';
-import { at } from '../../../geometry/indexed';
 
 function add(issues: ValidationIssue[], path: string, code: string, message: string): void {
 	issues.push({ severity: 'error', code, message, path });
@@ -42,9 +41,7 @@ function checkAlternate(
 	issues: ValidationIssue[],
 ): void {
 	for (const match of xml.matchAll(new RegExp(`<${qualifier}Choice\\b([^>]*)>`, 'g'))) {
-		const requires = at(match, 1)
-			.match(/\bRequires\s*=\s*["']([^"']*)["']/)?.[1]
-			.trim();
+		const requires = (match[1] ?? '').match(/\bRequires\s*=\s*["']([^"']*)["']/)?.[1]?.trim();
 		if (!requires) {
 			add(
 				issues,

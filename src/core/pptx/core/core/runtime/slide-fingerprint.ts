@@ -172,7 +172,7 @@ function hashValue(hasher: SlideHasher, value: unknown, path: Set<object>): void
 		const stride = bytes.length > FULL_HASH_LIMIT ? Math.ceil(bytes.length / SAMPLE_BUDGET) : 1;
 		let chunk = '';
 		for (let index = 0; index < bytes.length; index += stride) {
-			chunk += String.fromCharCode(bytes[index]);
+			chunk += String.fromCharCode(bytes[index] ?? 0);
 			if (chunk.length >= 4096) {
 				hasher.update(chunk);
 				chunk = '';

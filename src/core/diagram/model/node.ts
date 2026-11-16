@@ -142,11 +142,11 @@ export interface DiagramNode<S = unknown> {
 	id: string;
 	text: string;
 	/** CT_Pt connection identifier, when the point references a connection. */
-	connectionId?: string | null;
+	connectionId?: string | null | undefined;
 	parentId?: string | undefined;
 	children?: DiagramNode<S>[];
 	/** Node type from `@_type` attribute (e.g. "doc", "node", "asst", "pres"). */
-	nodeType?: string;
+	nodeType?: string | undefined;
 	/**
 	 * The node's own quick-style role (`dgm:prSet/@presStyleLbl` from its
 	 * paired `type="pres"` presentation point, resolved via a `presOf`

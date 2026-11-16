@@ -21,7 +21,7 @@ export function reflowSmartArtPictures(
 		nodes: data.nodes.map((node) => ({
 			id: node.id,
 			text: node.text,
-			parentId: node.parentId,
+			...(node.parentId !== undefined && { parentId: node.parentId }),
 			...(node.nodeType === 'asst' ? { nodeType: 'asst' as const } : {}),
 		})),
 		source,

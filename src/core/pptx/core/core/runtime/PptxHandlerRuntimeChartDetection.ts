@@ -3,6 +3,7 @@ import type { PptxChartData } from '../../types';
 import { extractMultiLevelCategoryValues } from '../../utils/chart-multi-level-category-parser';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSmartArt';
 import { isFiniteNumber } from '../../../../units/finite';
+import { at } from '../../../../geometry/indexed';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	protected detectChartType(plotArea: XmlObject | undefined): PptxChartData['chartType'] {
@@ -46,8 +47,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 
 		// Single match
-		if (matchedKeys.length === 1) {
-			return chartElementMap[matchedKeys[0]];
+		// Each matched key was found in `chartElementMap`.
+		const only = matchedKeys.length === 1 ? chartElementMap[at(matchedKeys, 0)] : undefined;
+		if (only) {
+			return only;
 		}
 
 		// Check for Office 2016+ chart extension types (cx:chart namespace)
@@ -226,7 +229,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 		const namePoints = this.extractChartPointValues(textNode, false);
 		if (namePoints.length > 0) {
-			return namePoints[0];
+			return at(namePoints, 0);
 		}
 		return 'Series';
 	}

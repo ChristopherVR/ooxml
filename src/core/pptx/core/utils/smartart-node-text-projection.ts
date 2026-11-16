@@ -45,12 +45,13 @@ function runStyle(rPr: Record<string, unknown> | undefined, fallback: TextStyle)
 	const xml = rPr as XmlObject | undefined;
 	const color = parseRunSolidFillColor(xml);
 	const extLst = child(rPr, 'extLst');
+	const colorXml = parseRunSolidFillColorXml(xml);
 	return {
 		...fallback,
 		...parseRunPropertyAttributes(xml),
 		...parseRunFontElements(xml),
 		...(color ? { color: color.startsWith('#') ? color : `#${color}` } : {}),
-		...(parseRunSolidFillColorXml(xml) ? { colorXml: parseRunSolidFillColorXml(xml) } : {}),
+		...(colorXml ? { colorXml } : {}),
 		...(extLst ? { runPropertiesExtLstXml: extLst } : {}),
 		...(xml ? { runPropertiesXml: xml } : {}),
 	};
@@ -74,6 +75,11 @@ function paragraphStyle(paragraph: PptxSmartArtTextParagraph, fallback: TextStyl
 	const rtl = parseParagraphRtl(pPr);
 	const tabStops = parseTabStops(pPr);
 	const extLst = child(paragraph.pPr, 'extLst');
+	const paragraphSpacingBefore = parseParagraphSpacingPx(child(paragraph.pPr, 'spcBef'));
+	const paragraphSpacingAfter = parseParagraphSpacingPx(child(paragraph.pPr, 'spcAft'));
+	const lineSpacing = parseLineSpacingMultiplier(child(paragraph.pPr, 'lnSpc'));
+	const lineSpacingExactPt = parseLineSpacingExactPt(child(paragraph.pPr, 'lnSpc'));
+	const paragraphDefaultRunPropertiesXml = child(paragraph.pPr, 'defRPr');
 	return {
 		...fallback,
 		...(align ? { align } : {}),
@@ -81,22 +87,12 @@ function paragraphStyle(paragraph: PptxSmartArtTextParagraph, fallback: TextStyl
 		...parseParagraphExtraAttributes(pPr),
 		...(rtl !== undefined ? { rtl } : {}),
 		...(tabStops ? { tabStops } : {}),
-		...(parseParagraphSpacingPx(child(paragraph.pPr, 'spcBef')) !== undefined
-			? { paragraphSpacingBefore: parseParagraphSpacingPx(child(paragraph.pPr, 'spcBef')) }
-			: {}),
-		...(parseParagraphSpacingPx(child(paragraph.pPr, 'spcAft')) !== undefined
-			? { paragraphSpacingAfter: parseParagraphSpacingPx(child(paragraph.pPr, 'spcAft')) }
-			: {}),
-		...(parseLineSpacingMultiplier(child(paragraph.pPr, 'lnSpc')) !== undefined
-			? { lineSpacing: parseLineSpacingMultiplier(child(paragraph.pPr, 'lnSpc')) }
-			: {}),
-		...(parseLineSpacingExactPt(child(paragraph.pPr, 'lnSpc')) !== undefined
-			? { lineSpacingExactPt: parseLineSpacingExactPt(child(paragraph.pPr, 'lnSpc')) }
-			: {}),
+		...(paragraphSpacingBefore !== undefined ? { paragraphSpacingBefore } : {}),
+		...(paragraphSpacingAfter !== undefined ? { paragraphSpacingAfter } : {}),
+		...(lineSpacing !== undefined ? { lineSpacing } : {}),
+		...(lineSpacingExactPt !== undefined ? { lineSpacingExactPt } : {}),
 		...(extLst ? { paragraphPropertiesExtLstXml: extLst } : {}),
-		...(child(paragraph.pPr, 'defRPr')
-			? { paragraphDefaultRunPropertiesXml: child(paragraph.pPr, 'defRPr') }
-			: {}),
+		...(paragraphDefaultRunPropertiesXml ? { paragraphDefaultRunPropertiesXml } : {}),
 	};
 }
 

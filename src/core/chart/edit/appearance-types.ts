@@ -56,17 +56,19 @@ export interface ChartLineAppearance {
 	endArrow?: string;
 }
 export interface ChartTextAppearance {
-	typeface?: string | null;
-	eastAsiaTypeface?: string | null;
-	sizePt?: number | null;
-	bold?: boolean;
-	italic?: boolean;
-	fill?: Pick<ChartFillAppearance, 'kind' | 'color' | 'transparency' | 'gradient'>;
-	outline?: Pick<ChartLineAppearance, 'kind' | 'color' | 'transparency' | 'width' | 'dash'>;
-	effects?: Pick<ChartEffectsAppearance, 'shadow' | 'glow'>;
-	rotation?: number | null;
-	direction?: string | null;
-	anchor?: string | null;
+	typeface?: string | null | undefined;
+	eastAsiaTypeface?: string | null | undefined;
+	sizePt?: number | null | undefined;
+	bold?: boolean | undefined;
+	italic?: boolean | undefined;
+	fill?: Pick<ChartFillAppearance, 'kind' | 'color' | 'transparency' | 'gradient'> | undefined;
+	outline?:
+		| Pick<ChartLineAppearance, 'kind' | 'color' | 'transparency' | 'width' | 'dash'>
+		| undefined;
+	effects?: Pick<ChartEffectsAppearance, 'shadow' | 'glow'> | undefined;
+	rotation?: number | null | undefined;
+	direction?: string | null | undefined;
+	anchor?: string | null | undefined;
 	/** True wraps text in its box, false never wraps; null restores the default. */
-	wrap?: boolean | null;
+	wrap?: boolean | null | undefined;
 }

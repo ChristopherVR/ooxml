@@ -112,8 +112,8 @@ export interface GroupChildGeometry {
 	readonly y: number;
 	readonly width: number;
 	readonly height: number;
-	readonly xEmu?: number;
-	readonly yEmu?: number;
+	readonly xEmu?: number | undefined;
+	readonly yEmu?: number | undefined;
 	readonly widthEmu?: number | undefined;
 	readonly heightEmu?: number | undefined;
 	/** The child's own rotation; see `group-child-rotated-resize.ts` for why a resized ROTATED child needs it. */

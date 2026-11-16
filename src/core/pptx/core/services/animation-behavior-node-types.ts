@@ -23,14 +23,14 @@ export interface AnimBehaviorTav {
 /** Timing shared by every behaviour node kind (all in milliseconds, scaled by the caller). */
 export interface AnimBehaviorTiming {
 	durMs: number;
-	delayMs?: number;
-	accel?: number;
-	decel?: number;
-	autoRev?: boolean;
+	delayMs?: number | undefined;
+	accel?: number | undefined;
+	decel?: number | undefined;
+	autoRev?: boolean | undefined;
 	/** `p:cTn/@_fill`; most behaviour nodes omit it (inherits from the parent effect). */
-	fill?: 'hold' | 'remove';
+	fill?: 'hold' | 'remove' | undefined;
 	/** `p:cTn/@_tmFilter` (a decel/accel curve as `"t,v; t,v; ..."`). */
-	tmFilter?: string;
+	tmFilter?: string | undefined;
 }
 
 /** Params for a generic property `p:anim` (attribute interpolation) behaviour. */

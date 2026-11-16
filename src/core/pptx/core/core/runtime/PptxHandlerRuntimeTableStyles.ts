@@ -18,6 +18,7 @@ import {
 } from './table-style-entry-parse';
 import type { ResolveTableStyleImagePath } from './table-style-fill-parse';
 import { parseTableStyleSectionFill, parseTableStyleSectionText } from './table-style-fill-parse';
+import { at } from '../../../../geometry/indexed';
 
 const TABLE_STYLES_PART_PATH = 'ppt/tableStyles.xml';
 const TABLE_STYLES_RELS_PATH = 'ppt/_rels/tableStyles.xml.rels';
@@ -78,7 +79,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const encoder = new TextEncoder();
 		const result = new Map<number, Uint8Array>();
 		for (const index of targetIndices) {
-			const slide = slides[index];
+			// `resolveExportIndices` only returns indices into `slides`.
+			const slide = at(slides, index);
 			if (slide.hidden && !options.includeHidden) {
 				continue;
 			}

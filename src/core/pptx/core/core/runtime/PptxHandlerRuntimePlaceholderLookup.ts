@@ -13,7 +13,7 @@ import type { PlaceholderInfo, PlaceholderLookupContext } from './PptxHandlerRun
  */
 export interface PlaceholderNodeContext extends PlaceholderLookupContext {
 	/** The inherited graphic frame XML object from the layout/master, if any. */
-	graphicFrame?: XmlObject;
+	graphicFrame?: XmlObject | undefined;
 }
 
 /**

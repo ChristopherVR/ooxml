@@ -373,7 +373,7 @@ export interface IPptxHandlerRuntime {
 	/**
 	 * Scan the loaded PPTX archive for all theme parts.
 	 */
-	getAvailableThemes(): Promise<Array<{ path: string; name?: string }>>;
+	getAvailableThemes(): Promise<Array<{ path: string; name?: string | undefined }>>;
 	/**
 	 * Apply a different layout to an existing slide by updating the slide's
 	 * relationship to point to the new layout and re-parsing layout

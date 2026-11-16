@@ -1,4 +1,5 @@
 import type { PptxElementAnimation } from '../types';
+import { at } from '../../../geometry/indexed';
 
 export const DEFAULT_ANIMATION_DURATION_MS = 500;
 export const DEFAULT_ANIMATION_TRIGGER = 'onClick' as const;
@@ -33,7 +34,7 @@ export function upsert(
 ): PptxElementAnimation[] {
 	const idx = anims.findIndex((a) => a.elementId === elementId);
 	if (idx >= 0) {
-		const updated = updater({ ...anims[idx] });
+		const updated = updater({ ...at(anims, idx) });
 		if (updated === null) {
 			return anims.filter((a) => a.elementId !== elementId);
 		}

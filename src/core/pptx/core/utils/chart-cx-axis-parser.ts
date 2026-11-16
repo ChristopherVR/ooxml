@@ -24,9 +24,9 @@ import { collectAllText } from './chart-title-xml-ops';
 /** The subset of font fields a `cx:txPr`/`cx:unitsLabel` run reads onto. */
 interface CxFontTarget {
 	fontFamily?: string | undefined;
-	eastAsiaFontFamily?: string;
+	eastAsiaFontFamily?: string | undefined;
 	fontSize?: number | undefined;
-	fontBold?: boolean;
+	fontBold?: boolean | undefined;
 	fontColor?: string | undefined;
 }
 

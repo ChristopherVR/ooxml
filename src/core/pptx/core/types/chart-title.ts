@@ -26,7 +26,7 @@ export interface PptxChartTitleRun {
 	 * `PptxChartLegendTextStyle.fontSize`'s convention rather than the pixel
 	 * convention `TextStyle.fontSize` uses for slide text.
 	 */
-	fontSize?: number;
+	fontSize?: number | undefined;
 	/** Resolved hex colour (e.g. `"#FF0000"`) from `a:rPr/a:solidFill`. */
-	color?: string;
+	color?: string | undefined;
 }

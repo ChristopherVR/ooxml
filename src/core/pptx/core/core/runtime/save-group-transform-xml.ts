@@ -30,8 +30,8 @@ export interface GroupTransformInput {
 	readonly flipHorizontal?: boolean | undefined;
 	readonly flipVertical?: boolean | undefined;
 	/** Exact EMU this group's own `a:off`/`a:ext` were parsed from, when known. See `xfrm-emu-resolution.ts`. */
-	readonly xEmu?: number;
-	readonly yEmu?: number;
+	readonly xEmu?: number | undefined;
+	readonly yEmu?: number | undefined;
 	readonly widthEmu?: number | undefined;
 	readonly heightEmu?: number | undefined;
 	/** Exact EMU this group's own `a:chOff`/`a:chExt` were parsed from. See `group-xfrm-preservation.ts`. */
@@ -165,8 +165,8 @@ export interface GroupChildTransformInput {
 	readonly y: number;
 	readonly width: number;
 	readonly height: number;
-	readonly xEmu?: number;
-	readonly yEmu?: number;
+	readonly xEmu?: number | undefined;
+	readonly yEmu?: number | undefined;
 	readonly widthEmu?: number | undefined;
 	readonly heightEmu?: number | undefined;
 	/** See `group-child-rotated-resize.ts`: a resized ROTATED child needs its own rotation to preserve its on-screen anchor. */

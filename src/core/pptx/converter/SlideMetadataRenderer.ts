@@ -8,41 +8,41 @@ import { at } from '../../geometry/indexed';
  */
 export interface NativeAnimationLike {
 	/** Target element ID for the animation. */
-	targetId?: string;
+	targetId?: string | undefined;
 	/** Trigger type (e.g. `"onClick"`, `"afterPrevious"`). */
-	trigger?: string;
+	trigger?: string | undefined;
 	/** Animation preset class: `"entr"`, `"exit"`, `"emph"`, or `"path"`. */
-	presetClass?: string;
+	presetClass?: string | undefined;
 	/** Numeric preset identifier within the class. */
-	presetId?: number;
+	presetId?: number | undefined;
 	/** Human-readable preset name (e.g. `"Fly In"`, `"Fade"`). */
-	presetName?: string;
+	presetName?: string | undefined;
 	/** Duration of the animation in milliseconds. */
-	durationMs?: number;
+	durationMs?: number | undefined;
 	/** Delay before the animation starts in milliseconds. */
-	delayMs?: number;
+	delayMs?: number | undefined;
 	/** SVG-like motion path string for path animations. */
-	motionPath?: string;
+	motionPath?: string | undefined;
 	/** Rotation amount in degrees (for spin animations). */
-	rotationBy?: number;
+	rotationBy?: number | undefined;
 	/** Number of times the animation repeats. */
-	repeatCount?: number;
+	repeatCount?: number | undefined;
 	/** Whether the animation reverses after playing forward. */
-	autoReverse?: boolean;
+	autoReverse?: boolean | undefined;
 	/** Text build type (e.g. `"byParagraph"`). */
-	buildType?: string;
+	buildType?: string | undefined;
 }
 
 /**
  * Lightweight shape mirroring slide transition fields.
  */
 interface TransitionLike {
-	type?: string;
-	durationMs?: number;
-	direction?: string;
-	advanceOnClick?: boolean;
-	advanceAfterMs?: number;
-	soundFileName?: string;
+	type?: string | undefined;
+	durationMs?: number | undefined;
+	direction?: string | undefined;
+	advanceOnClick?: boolean | undefined;
+	advanceAfterMs?: number | undefined;
+	soundFileName?: string | undefined;
 }
 
 /**

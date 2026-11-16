@@ -21,7 +21,7 @@ export interface PptxCommentAuthorDescriptor {
 	initials: string;
 	lastCommentIndex: number;
 	colorIndex: number;
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }
 
 export class PptxSaveState {

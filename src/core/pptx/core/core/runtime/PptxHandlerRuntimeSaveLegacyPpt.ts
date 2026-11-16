@@ -162,23 +162,25 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		if (deckMasters && deckMasters.masterPaths.length > 1) {
 			// One .ppt main master per source master a slide uses, each slide
 			// pointing at its own (see `buildDeckMasterRoundTripsFromPptx`).
-			deck.masters = deckMasters.masters.map((roundTrip, i) => ({
-				roundTrip,
-				styles: convertMasterTextStyles(
+			deck.masters = deckMasters.masters.map((roundTrip, i) => {
+				const styles = convertMasterTextStyles(
 					this.legacyMasterTextStyles(slides, options, deckMasters.masterPaths[i]),
 					roundTrip.themeFonts,
-				),
-			}));
+				);
+				return styles ? { roundTrip, styles } : { roundTrip };
+			});
 			deck.slides.forEach((slide, i) => {
-				slide.masterIndex = deckMasters.slideMasterIndex[i];
+				const masterIndex = deckMasters.slideMasterIndex[i];
+				if (masterIndex !== undefined) slide.masterIndex = masterIndex;
 			});
 		} else {
 			const master = deckMasters?.masters[0];
-			deck.masterStyles = convertMasterTextStyles(
+			const masterStyles = convertMasterTextStyles(
 				this.legacyMasterTextStyles(slides, options, deckMasters?.masterPaths[0]),
 				master?.themeFonts,
 			);
-			deck.master = master;
+			if (masterStyles) deck.masterStyles = masterStyles;
+			if (master) deck.master = master;
 		}
 		return buildPptFile(deck, {
 			...(options?.pptPassword !== undefined && { password: options?.pptPassword }),

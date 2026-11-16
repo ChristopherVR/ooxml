@@ -19,21 +19,21 @@ export interface PptxAnimationBehaviorTiming {
 	/** The behavior's own fill, independent of its containing effect. */
 	fill?: 'remove' | 'freeze' | 'hold' | 'transition' | undefined;
 	/** Preserved timing profile cannot be reduced to a finite delayed one-shot set. */
-	unsupportedSetTiming?: boolean;
+	unsupportedSetTiming?: boolean | undefined;
 	/** `p:cTn/@dur` in ms; absent when `indefinite` or unset. */
-	durationMs?: number;
+	durationMs?: number | undefined;
 	/** Start offset in ms from `p:stCondLst/p:cond/@delay`, relative to the effect start. */
-	delayMs?: number;
+	delayMs?: number | undefined;
 	/** `p:cTn/@accel` as a 0..1 fraction of the behaviour's duration. */
-	accel?: number;
+	accel?: number | undefined;
 	/** `p:cTn/@decel` as a 0..1 fraction of the behaviour's duration. */
-	decel?: number;
+	decel?: number | undefined;
 	/** `p:cTn/@autoRev`: play forward, then backward, doubling the active time. */
-	autoReverse?: boolean;
+	autoReverse?: boolean | undefined;
 	/** `p:cTn/@repeatCount` in plain iterations (OOXML stores thousandths). */
-	repeatCount?: number;
+	repeatCount?: number | undefined;
 	/** `p:cTn/@tmFilter`: the raw `"t,v; t,v; ..."` time remapping list. */
-	tmFilter?: string;
+	tmFilter?: string | undefined;
 }
 
 interface BehaviorBase {

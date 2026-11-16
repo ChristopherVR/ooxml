@@ -176,7 +176,7 @@ export function extractSmartArtBuilds(
 /** Parse `p:bldOleChart` entries from the slide build list. */
 export function extractOleChartBuilds(
 	bldLst: XmlObject | undefined,
-): Array<{ spid: string; grpId: string; bld: string; animBg?: boolean }> {
+): Array<{ spid: string; grpId: string; bld: string; animBg?: boolean | undefined }> {
 	if (!bldLst) {
 		return [];
 	}

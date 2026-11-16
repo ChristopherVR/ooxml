@@ -449,7 +449,7 @@ export interface PptxChartAxisNumFmt {
 /** Typed contents of a value-axis display-unit label (`c:dispUnitsLbl`). */
 export interface PptxChartDisplayUnitsLabel {
 	/** Literal label text. Omit to preserve the source text subtree. */
-	text?: string;
+	text?: string | undefined;
 	/** Manual label placement. `null` removes only the manual layout. */
 	layout?: PptxChartManualLayout | null | undefined;
 	/** Label shape formatting. `null` removes `c:spPr`. */
@@ -460,10 +460,10 @@ export interface PptxChartDisplayUnitsLabel {
 	 * has no equivalent child, so this is only ever populated from a ChartEx
 	 * axis).
 	 */
-	fontFamily?: string;
-	fontSize?: number;
-	fontBold?: boolean;
-	fontColor?: string;
+	fontFamily?: string | undefined;
+	fontSize?: number | undefined;
+	fontBold?: boolean | undefined;
+	fontColor?: string | undefined;
 }
 
 /** Axis formatting for category, value, or date axes. */
@@ -1437,15 +1437,15 @@ export interface PptxChartData {
 	/** `null` explicitly removes an existing ChartML data table. */
 	dataTable?: PptxChartDataTable | null | undefined;
 	/** `null` explicitly removes an existing `c:dropLines` element. */
-	dropLines?: PptxChartLineStyle | null;
+	dropLines?: PptxChartLineStyle | null | undefined;
 	/** `null` explicitly removes an existing `c:hiLowLines` element. */
-	hiLowLines?: PptxChartLineStyle | null;
+	hiLowLines?: PptxChartLineStyle | null | undefined;
 	/** `null` explicitly removes an existing up/down-bars container. */
 	upDownBars?: PptxChartUpDownBars | null | undefined;
 	axes?: PptxChartAxisFormatting[];
-	floor?: PptxChart3DSurface;
-	sideWall?: PptxChart3DSurface;
-	backWall?: PptxChart3DSurface;
+	floor?: PptxChart3DSurface | undefined;
+	sideWall?: PptxChart3DSurface | undefined;
+	backWall?: PptxChart3DSurface | undefined;
 	/** Per-band surface-chart colour overrides (`c:surfaceChart/c:bandFmts`). */
 	bandFmts?: PptxChartBandFmt[];
 	/** External data source reference (c:externalData) linking to an external workbook. */

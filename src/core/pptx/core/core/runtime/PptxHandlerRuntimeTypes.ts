@@ -51,9 +51,9 @@ export interface PlaceholderInfo {
  */
 export interface PlaceholderLookupContext {
 	/** The inherited shape XML object from the layout/master, if any. */
-	shape?: XmlObject;
+	shape?: XmlObject | undefined;
 	/** The inherited picture XML object from the layout/master, if any. */
-	picture?: XmlObject;
+	picture?: XmlObject | undefined;
 }
 
 /**

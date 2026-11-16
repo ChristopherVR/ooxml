@@ -89,19 +89,19 @@ export function makeShapeElement(
 	text: string,
 	opts?: PptxCustomPathProperties & {
 		rotation?: number | undefined;
-		skewX?: number;
-		skewY?: number;
-		strokeColor?: string;
-		strokeWidth?: number;
-		fontSize?: number;
-		fontColor?: string;
-		textAlign?: 'left' | 'center' | 'right';
-		textVAlign?: 'top' | 'middle' | 'bottom';
-		cornerRadius?: number;
+		skewX?: number | undefined;
+		skewY?: number | undefined;
+		strokeColor?: string | undefined;
+		strokeWidth?: number | undefined;
+		fontSize?: number | undefined;
+		fontColor?: string | undefined;
+		textAlign?: 'left' | 'center' | 'right' | undefined;
+		textVAlign?: 'top' | 'middle' | 'bottom' | undefined;
+		cornerRadius?: number | undefined;
 		/** Preset adjustments (`a:avLst`), e.g. a pyramid tier's trapezoid `adj`. */
-		shapeAdjustments?: Record<string, number>;
+		shapeAdjustments?: Record<string, number> | undefined;
 		/** Solid fill opacity (0..1), e.g. a Venn circle's 50% alpha. */
-		fillOpacity?: number;
+		fillOpacity?: number | undefined;
 		textSegments?: TextSegment[] | undefined;
 	},
 ): ShapePptxElement {

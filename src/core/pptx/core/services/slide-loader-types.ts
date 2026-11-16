@@ -54,9 +54,9 @@ export type PptxMediaTimingMap = Map<string, PptxMediaTimingEntry>;
  */
 export interface PptxSlideNotesResult {
 	/** Plain-text representation of the notes. */
-	notes?: string;
+	notes?: string | undefined;
 	/** Rich text segments preserving formatting. */
-	notesSegments?: TextSegment[];
+	notesSegments?: TextSegment[] | undefined;
 }
 
 /**

@@ -92,13 +92,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// flags: fullScreen, loop, volume, autoPlay, playAcrossSlides,
 				// hideWhenNotPlaying, posterFramePath.
 				result.set(shapeId, {
-					fullScreen: fullScreen || undefined,
-					loop: timing.loop || undefined,
+					...(fullScreen && { fullScreen: true }),
+					...(timing.loop && { loop: true }),
 					...(posterFramePath !== undefined && { posterFramePath }),
 					...(volume !== undefined && { volume }),
-					autoPlay: timing.autoPlay || undefined,
-					playAcrossSlides: playAcrossSlides || undefined,
-					hideWhenNotPlaying: hideWhenNotPlaying || undefined,
+					...(timing.autoPlay && { autoPlay: true }),
+					...(playAcrossSlides && { playAcrossSlides: true }),
+					...(hideWhenNotPlaying && { hideWhenNotPlaying: true }),
 				});
 			}
 		}

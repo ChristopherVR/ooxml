@@ -230,7 +230,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				continue;
 			}
 
-			const itemId = match[1];
+			// The item-number group is required, so it is a string once the pattern matched.
+			const itemId = match[1] ?? '';
 			const file = this.zip.file(entry);
 			if (!file) {
 				continue;

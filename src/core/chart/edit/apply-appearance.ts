@@ -21,12 +21,12 @@ import { setChartTargetThreeD } from './three-d';
 import { editChartSpace } from './draft';
 
 export interface ChartAppearance {
-	reset?: boolean;
-	fill?: ChartFillAppearance;
+	reset?: boolean | undefined;
+	fill?: ChartFillAppearance | undefined;
 	line?: ChartLineAppearance | undefined;
-	effects?: ChartEffectsAppearance;
-	threeD?: ChartThreeDAppearance;
-	text?: ChartTextAppearance;
+	effects?: ChartEffectsAppearance | undefined;
+	threeD?: ChartThreeDAppearance | undefined;
+	text?: ChartTextAppearance | undefined;
 }
 
 function effects(

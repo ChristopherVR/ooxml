@@ -71,11 +71,11 @@ export interface DiagramColorTransformLabel {
 }
 
 export interface DiagramDefinitionMetadata {
-	uniqueId?: string;
-	minimumVersion?: string;
-	titles?: DiagramDefinitionText[];
-	descriptions?: DiagramDefinitionText[];
-	categories?: DiagramDefinitionCategory[];
+	uniqueId?: string | undefined;
+	minimumVersion?: string | undefined;
+	titles?: DiagramDefinitionText[] | undefined;
+	descriptions?: DiagramDefinitionText[] | undefined;
+	categories?: DiagramDefinitionCategory[] | undefined;
 }
 
 /** Typed CT_ColorTransform metadata and the resolved legacy color palette. */

@@ -20,7 +20,7 @@ import { objectRunProperties } from '../../utils/run-properties-neutral';
 export interface DrawingShapeGradientStop {
 	color: string;
 	position: number;
-	opacity?: number;
+	opacity?: number | undefined;
 }
 
 /** Fill / effect fields resolved from a cached drawing shape's `spPr`. */

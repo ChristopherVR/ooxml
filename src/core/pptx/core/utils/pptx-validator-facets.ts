@@ -167,7 +167,7 @@ function validateLanguage(element: XmlElement, path: string, issues: ValidationI
 
 function validateEnums(element: XmlElement, path: string, issues: ValidationIssue[]): void {
 	for (const [key, values] of Object.entries(ENUMS)) {
-		const [local, name] = key.split('@');
+		const [local = '', name = ''] = key.split('@');
 		if (local !== element.local) {
 			continue;
 		}

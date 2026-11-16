@@ -31,7 +31,7 @@ export function extractColorAnimation(
 		return undefined;
 	}
 	const components = animClrNodes.map(extractSingleColorAnimation);
-	const primary = components[0];
+	const primary = at(components, 0);
 	return components.length > 1 ? { ...primary, components } : primary;
 }
 
