@@ -3,7 +3,11 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
-import { createRibbonDisplayController, ribbonDisplayLayout } from 'ooxml-ui/pptx';
+import {
+	createRibbonDisplayController,
+	ribbonDisplayLayout,
+	ribbonTabButtons,
+} from 'ooxml-ui/pptx';
 import type { RibbonDisplayController, RibbonDisplayMode, RibbonDisplayState } from 'ooxml-ui/pptx';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
@@ -128,7 +132,7 @@ describe('ribbon display gestures on the tab row', () => {
 	it('a double click on a tab other than File toggles the ribbon between docked and tabs', () => {
 		const { controller, state } = displayHarness('always');
 		const fixture = createTabRow(controller, () => state());
-		const tabs = fixture.nativeElement.querySelectorAll('[role="tab"]') as NodeListOf<HTMLElement>;
+		const tabs = ribbonTabButtons(fixture.nativeElement as HTMLElement);
 		const file = tabs[0]!;
 		const home = tabs[1]!;
 

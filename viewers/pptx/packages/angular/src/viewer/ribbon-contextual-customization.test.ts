@@ -15,9 +15,11 @@ import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import {
 	EMPTY_RESOLVED_CUSTOMIZATION,
-	RIBBON_HOME_FAMILIES,
 	resolveCustomization,
+	RIBBON_HOME_FAMILIES,
 	ribbonCustomizationCss,
+	ribbonTab,
+	ribbonTabButtons,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide, ShapePptxElement } from 'pptx-viewer-core';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
@@ -116,10 +118,10 @@ describe('contextual ribbon tabs', () => {
 			activeTab: 'home',
 			contextualTabs: ['shapeFormat'],
 		});
-		const tab = root.querySelector<HTMLButtonElement>('[data-ribbon-contextual-tab="shapeFormat"]');
+		const tab = ribbonTab(root, '[data-ribbon-contextual-tab="shapeFormat"]');
 		expect(tab?.textContent?.trim()).toBe(translationsEn['pptx.ribbon.tab.shapeFormat']);
 		expect(tab?.getAttribute('aria-selected')).toBe('false');
-		const tabs = [...root.querySelectorAll('[role="tab"]')];
+		const tabs = [...ribbonTabButtons(root)];
 		expect(tabs.at(-1)).toBe(tab);
 	});
 

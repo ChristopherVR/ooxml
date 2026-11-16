@@ -2,6 +2,7 @@ import { Component, CUSTOM_ELEMENTS_SCHEMA, inject, signal } from '@angular/core
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
+import { ribbonTab, ribbonTabButtons } from 'ooxml-ui/pptx';
 import type { RibbonAddInTab } from 'ooxml-ui/pptx';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
@@ -58,19 +59,26 @@ describe('host ribbon tabs', () => {
 		const root = fixture.nativeElement as HTMLElement;
 		const chosen = vi.fn();
 		fixture.componentInstance.selectAddIn.subscribe(chosen);
+		// One signal per input, updated in place, as compiled signal inputs behave.
+		const addInTabs = signal(service.visible());
+		const activeAddIn = signal(service.active()?.id ?? null);
+		fixture.componentRef.setInput('activeTab', signal('insert'));
+		fixture.componentRef.setInput('addInTabs', addInTabs);
+		fixture.componentRef.setInput('activeAddIn', activeAddIn);
 		const sync = (): void => {
-			fixture.componentRef.setInput('activeTab', signal('insert'));
-			fixture.componentRef.setInput('addInTabs', signal(service.visible()));
-			fixture.componentRef.setInput('activeAddIn', signal(service.active()?.id ?? null));
+			addInTabs.set(service.visible());
+			activeAddIn.set(service.active()?.id ?? null);
 			fixture.detectChanges();
 		};
 		sync();
-		const tab = () => root.querySelector<HTMLButtonElement>('[data-ribbon-add-in-tab]');
+		const tab = () => ribbonTab(root, '[data-ribbon-add-in-tab]');
 		const selected = () =>
-			[...root.querySelectorAll('[role="tab"][aria-selected="true"]')].map((item) =>
-				item.textContent!.trim(),
-			);
-		const all = [...root.querySelectorAll('[role="tab"]')];
+			[
+				...ribbonTabButtons(root).filter((tab) =>
+					tab.matches('[role="tab"][aria-selected="true"]'),
+				),
+			].map((item) => item.textContent!.trim());
+		const all = [...ribbonTabButtons(root)];
 		expect(all.at(-1)).toBe(tab());
 		expect(all.map((item) => item.textContent!.trim())).not.toContain('Fake');
 		expect(tab()!.textContent!.trim()).toBe('Reports');
