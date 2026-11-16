@@ -213,7 +213,12 @@ export function buildParagraphs(
 				latinLineBreak: geometryOverrides.latinLineBreak === true,
 			});
 			// Text in a symbol font this device lacks shows its Unicode equivalent (#290).
-			const runs = displayableSymbolRuns(builtRuns, symbolFallbackFamily);
+			const runs = displayableSymbolRuns(
+				builtRuns,
+				symbolFallbackFamily,
+				undefined,
+				blockFont.fontFamily,
+			);
 
 			// Suppress bullets for paragraphs with no visible text content.
 			const hasVisibleTextContent = paraSegments.some(

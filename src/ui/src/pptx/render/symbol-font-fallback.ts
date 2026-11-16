@@ -98,16 +98,19 @@ function primaryFamily(fontFamily: unknown): string | undefined {
 }
 
 /**
- * A piece of text as this device can show it. Each glyph the symbol font cannot
- * paint becomes its Unicode equivalent (one UTF-16 unit, so offsets into the
- * run stay valid); a glyph with no known equivalent is left as it is.
+ * A piece of text as this device can show it. `inherited` is the family the
+ * piece paints in when it names none of its own (its run's, or the text
+ * body's). Each glyph the symbol font cannot paint becomes its Unicode
+ * equivalent (one UTF-16 unit, so offsets into the run stay valid); a glyph
+ * with no known equivalent is left as it is.
  */
 function displayablePiece<T extends { text: string; style?: RunStyle }>(
 	piece: T,
+	inherited: string | undefined,
 	fallbackFamily: string,
 	probe: SymbolGlyphProbe,
 ): T {
-	const family = primaryFamily(piece.style?.fontFamily);
+	const family = primaryFamily(piece.style?.fontFamily ?? inherited);
 	if (!family || !isSymbolEncodedFont(family) || !piece.text) return piece;
 	let changed = false;
 	let text = '';
@@ -121,25 +124,45 @@ function displayablePiece<T extends { text: string; style?: RunStyle }>(
 	return { ...piece, text, style: { ...piece.style, fontFamily: fallbackFamily } };
 }
 
+function displayablePieces<T extends { text: string; style?: RunStyle }>(
+	pieces: T[] | undefined,
+	inherited: string | undefined,
+	fallbackFamily: string,
+	probe: SymbolGlyphProbe,
+): T[] | undefined {
+	if (!pieces) return undefined;
+	const shown = pieces.map((piece) => displayablePiece(piece, inherited, fallbackFamily, probe));
+	return shown.some((piece, index) => piece !== pieces[index]) ? shown : undefined;
+}
+
 /**
  * The paragraph's runs as this device can show them: text in a symbol font the
- * browser cannot paint is rewritten in Unicode and drawn in `fallbackFamily`
- * (the text body's typeface). Runs in ordinary fonts are returned as they are.
+ * browser cannot paint is rewritten in Unicode and drawn in `fallbackFamily`.
+ * `bodyFamily` is the text body's own family, which runs that name no font of
+ * their own inherit (a text box set wholly in Wingdings). Runs in ordinary
+ * fonts are returned as they are.
  */
 export function displayableSymbolRuns(
 	runs: ParagraphRun[],
 	fallbackFamily: string,
 	probe: SymbolGlyphProbe = canvasSymbolGlyphProbe,
+	bodyFamily?: string,
 ): ParagraphRun[] {
 	return runs.map((run) => {
-		let next = displayablePiece(run, fallbackFamily, probe);
+		const runFamily = typeof run.style.fontFamily === 'string' ? run.style.fontFamily : bodyFamily;
+		let next = displayablePiece(run, bodyFamily, fallbackFamily, probe);
 		for (const key of ['scriptRuns', 'underlineWordPieces'] as const) {
-			const pieces = run[key];
-			if (!pieces) continue;
-			const shown = pieces.map((piece) => displayablePiece(piece, fallbackFamily, probe));
-			if (shown.some((piece, index) => piece !== pieces[index])) {
-				next = { ...next, [key]: shown };
-			}
+			const shown = displayablePieces(run[key], runFamily, fallbackFamily, probe);
+			if (shown) next = { ...next, [key]: shown };
+		}
+		if (run.tabLines) {
+			let changed = false;
+			const tabLines = run.tabLines.map((line) => {
+				const pieces = displayablePieces(line.pieces, runFamily, fallbackFamily, probe);
+				changed ||= pieces !== undefined;
+				return pieces ? { ...line, pieces } : line;
+			});
+			if (changed) next = { ...next, tabLines };
 		}
 		return next;
 	});
