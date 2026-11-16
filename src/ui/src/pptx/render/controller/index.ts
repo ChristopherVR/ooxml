@@ -99,3 +99,38 @@ export type {
 	FormatPaneReveal,
 	FormatPaneState,
 } from './format-pane-controller';
+export { createPresentationRehearsalController } from './presentation-rehearsal-controller';
+export type {
+	PresentationRehearsalController,
+	PresentationRehearsalControllerOptions,
+	PresentationRehearsalState,
+	RehearsalTimers,
+} from './presentation-rehearsal-controller';
+export {
+	applyPresentationInk,
+	createPresentationInkController,
+	presentationInkBySlide,
+	presentationInkOnSlide,
+	presentationInkSlideCount,
+	PRESENTATION_ERASER_RADIUS,
+	PRESENTATION_HIGHLIGHTER_COLOR,
+	PRESENTATION_HIGHLIGHTER_OPACITY,
+	PRESENTATION_HIGHLIGHTER_WIDTH,
+	PRESENTATION_PEN_COLOR,
+	PRESENTATION_PEN_WIDTH,
+} from './presentation-ink-controller';
+export type {
+	PresentationAnnotationStroke,
+	PresentationInkController,
+	PresentationInkControllerOptions,
+	PresentationInkState,
+	PresentationInkTimers,
+} from './presentation-ink-controller';
+export { createPresenterSessionController } from './presenter-session-controller';
+export type {
+	PresenterSessionChannel,
+	PresenterSessionController,
+	PresenterSessionControllerDeps,
+	PresenterSessionRole,
+	PresenterSessionState,
+} from './presenter-session-controller';
