@@ -615,6 +615,8 @@ is the acceptance bar), and the area has its own tests and real parts from `src/
   their own go through `setChartVaryColors`, `setChartBarDirection`, `setChartScatterStyle` and
   `setChartGrouping` (`chart-neutral-save-group-flags.ts`, `chart-group-flags-migration.test.ts`);
   the object-tree writers had dropped the first three.
+  The chart-wide gridline flag sets the first value axis's major gridlines
+  (`chart-neutral-save-gridlines.ts`); the object-tree writers had dropped it.
   One series of a vertical 2-D column, line or area chart can become XY (Scatter): the scatter
   group shares the category and value axes it leaves, with x values from the categories, markers
   in the series colour and smoothing off, as Excel 16 saves that edit (`setChartSeriesType`); the

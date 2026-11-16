@@ -26,6 +26,7 @@ import {
 import type { PptxChartData } from '../types';
 import { same, revertStyle } from './chart-neutral-save-common';
 import { planAxes } from './chart-neutral-save-axes';
+import { planNeutralGridlineFlag } from './chart-neutral-save-gridlines';
 import { planNeutralGroupOptions } from './chart-neutral-save-groups';
 import { planNeutralGroupSubtype } from './chart-neutral-save-subtype';
 import { planNeutralGroupFlags } from './chart-neutral-save-group-flags';
@@ -183,6 +184,7 @@ export function planWithLeftovers(
 	planTitle(before, probe, edits);
 	planLegend(before, probe, edits);
 	planAxes(before, probe, edits);
+	planNeutralGridlineFlag(before, probe, edits);
 	planNeutralGroupOptions(before, probe, edits);
 	planNeutralGroupSubtype(before, probe, edits);
 	planNeutralGroupFlags(before, probe, edits);

@@ -321,6 +321,14 @@ so those edits were lost on save. `chart-group-flags-migration.test.ts` saves ea
 70, 31 and 2 parts reload with the edit through the neutral writer and none through the object-tree
 writers; the grouping flag reloads on all 8 3-D bar parts both ways (one to the same canonical XML).
 
+Gridline flag: the chart-wide `style.hasGridlines` is read off the first value axis's
+`c:majorGridlines` and the object-tree writers never wrote it, so the flag edited on its own was
+lost on save. `chart-neutral-save-gridlines.ts` sets the major gridlines of that axis
+(`setChartAxis`), as the shared inspector's Show Gridlines patch does, and claims a flag that only
+mirrors an axis edit with it. `chart-gridline-flag-migration.test.ts`: 51 parts keep the toggled
+flag through the neutral writer; the object-tree save kept it on the 5 parts whose axis already drew
+gridlines.
+
 XY combinations: Excel 16, driven through its object model (`Series.ChartType = xlXYScatter` on a
 column or line series), saves a `c:scatterChart` that references the same category and value axes
 as the column or line group, with the categories as `c:xVal`, a 5 pt circle marker in the series
