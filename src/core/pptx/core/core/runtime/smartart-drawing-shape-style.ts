@@ -12,6 +12,9 @@
  */
 
 import type { XmlObject } from '../../types';
+import { objectBodyProperties } from '../../utils/body-properties-neutral';
+import { objectParagraphProperties } from '../../utils/paragraph-properties-neutral';
+import { objectRunProperties } from '../../utils/run-properties-neutral';
 
 /** Structured gradient stop consumed by the SmartArt drawing renderer. */
 export interface DrawingShapeGradientStop {
@@ -179,10 +182,6 @@ export function drawingTextEmuAttribute(
 	return Number.isFinite(value) ? value / emuPerPx : undefined;
 }
 
-function drawingTextBoolean(value: unknown): boolean {
-	return value === true || value === 1 || value === '1' || value === 'true';
-}
-
 /**
  * Resolve the font size + colour of a cached drawing shape from the first
  * run properties found in its `txBody`.
@@ -205,64 +204,43 @@ export function extractDrawingShapeTextStyle(
 		return { fontSize, fontColor };
 	}
 
+	// Spacing, run size, fonts, weight and slant, and the body insets and anchor
+	// are read by the shared DrawingML text codecs; the colour by the runtime's
+	// colour codec.
 	const bodyPr = deps.getChild(txBody, 'bodyPr');
 	const paragraphs = deps.getChildren(txBody, 'p');
 	for (const p of paragraphs) {
-		const pPr = deps.getChild(p, 'pPr');
-		const lineSpacing = deps.getChild(pPr, 'lnSpc');
-		const lineSpacingPercent = deps.getChild(lineSpacing, 'spcPct');
-		const lineSpacingPoints = deps.getChild(lineSpacing, 'spcPts');
-		const spacingAfter = deps.getChild(pPr, 'spcAft');
-		const spacingAfterPercent = deps.getChild(spacingAfter, 'spcPct');
-		const spacingAfterPoints = deps.getChild(spacingAfter, 'spcPts');
-		if (lineHeightRatio === undefined && lineSpacingPercent?.['@_val'] !== undefined) {
-			const raw = Number.parseInt(String(lineSpacingPercent['@_val']), 10);
-			if (Number.isFinite(raw) && raw > 0) {
-				lineHeightRatio = raw / 100000;
-			}
+		const paragraph = objectParagraphProperties(deps.getChild(p, 'pPr'));
+		const line = paragraph.lineSpacing;
+		const after = paragraph.spaceAfter;
+		if (lineHeightRatio === undefined && line?.unit === 'percent' && line.value > 0) {
+			lineHeightRatio = line.value;
 		}
-		if (lineHeight === undefined && lineSpacingPoints?.['@_val'] !== undefined) {
-			const raw = Number.parseInt(String(lineSpacingPoints['@_val']), 10);
-			if (Number.isFinite(raw) && raw > 0) {
-				lineHeight = (raw / 100) * (96 / 72);
-			}
+		if (lineHeight === undefined && line?.unit === 'points' && line.value > 0) {
+			lineHeight = line.value * (96 / 72);
 		}
-		if (lineSpacingAfterRatio === undefined && spacingAfterPercent?.['@_val'] !== undefined) {
-			const raw = Number.parseInt(String(spacingAfterPercent['@_val']), 10);
-			if (Number.isFinite(raw) && raw >= 0) {
-				lineSpacingAfterRatio = raw / 100000;
-			}
+		if (lineSpacingAfterRatio === undefined && after?.unit === 'percent' && after.value >= 0) {
+			lineSpacingAfterRatio = after.value;
 		}
-		if (lineSpacingAfter === undefined && spacingAfterPoints?.['@_val'] !== undefined) {
-			const raw = Number.parseInt(String(spacingAfterPoints['@_val']), 10);
-			if (Number.isFinite(raw) && raw >= 0) {
-				lineSpacingAfter = (raw / 100) * (96 / 72);
-			}
+		if (lineSpacingAfter === undefined && after?.unit === 'points' && after.value >= 0) {
+			lineSpacingAfter = after.value * (96 / 72);
 		}
 		const runs = deps.getChildren(p, 'r');
 		for (const r of runs) {
 			const rPr = deps.getChild(r, 'rPr');
 			if (rPr) {
-				const szRaw = parseInt(String(rPr['@_sz'] || ''), 10);
-				if (fontSize === undefined && Number.isFinite(szRaw) && szRaw > 0) {
-					fontSize = (szRaw / 100) * (96 / 72);
+				const run = objectRunProperties(rPr);
+				if (fontSize === undefined && run.sizePt !== undefined && run.sizePt > 0) {
+					fontSize = run.sizePt * (96 / 72);
 				}
 				fontColor ??= deps.parseColor(deps.getChild(rPr, 'solidFill')) ?? undefined;
-				const eastAsian = deps.getChild(rPr, 'ea');
-				const latin = deps.getChild(rPr, 'latin');
-				const complexScript = deps.getChild(rPr, 'cs');
 				fontFamily ??=
-					String(
-						eastAsian?.['@_typeface'] ||
-							latin?.['@_typeface'] ||
-							complexScript?.['@_typeface'] ||
-							'',
-					).trim() || undefined;
-				if (fontWeight === undefined && rPr['@_b'] !== undefined) {
-					fontWeight = drawingTextBoolean(rPr['@_b']) ? 700 : 400;
+					run.eastAsian?.typeface ?? run.latin?.typeface ?? run.complexScript?.typeface;
+				if (fontWeight === undefined && run.bold !== undefined) {
+					fontWeight = run.bold ? 700 : 400;
 				}
-				if (fontStyle === undefined && rPr['@_i'] !== undefined) {
-					fontStyle = drawingTextBoolean(rPr['@_i']) ? 'italic' : 'normal';
+				if (fontStyle === undefined && run.italic !== undefined) {
+					fontStyle = run.italic ? 'italic' : 'normal';
 				}
 			}
 			if (fontSize !== undefined && fontFamily !== undefined && fontColor !== undefined) {
@@ -274,6 +252,8 @@ export function extractDrawingShapeTextStyle(
 		}
 	}
 
+	const body = objectBodyProperties(bodyPr);
+	const inset = (emu: number | undefined) => (emu === undefined ? undefined : emu / emuPerPx);
 	return {
 		fontSize,
 		fontColor,
@@ -284,10 +264,10 @@ export function extractDrawingShapeTextStyle(
 		lineHeightRatio,
 		lineSpacingAfter,
 		lineSpacingAfterRatio,
-		textInsetLeft: drawingTextEmuAttribute(bodyPr, 'lIns', emuPerPx),
-		textInsetTop: drawingTextEmuAttribute(bodyPr, 'tIns', emuPerPx),
-		textInsetRight: drawingTextEmuAttribute(bodyPr, 'rIns', emuPerPx),
-		textInsetBottom: drawingTextEmuAttribute(bodyPr, 'bIns', emuPerPx),
-		textVerticalAnchor: String(bodyPr?.['@_anchor'] || '').trim() || undefined,
+		textInsetLeft: inset(body.insetLeftEmu),
+		textInsetTop: inset(body.insetTopEmu),
+		textInsetRight: inset(body.insetRightEmu),
+		textInsetBottom: inset(body.insetBottomEmu),
+		textVerticalAnchor: body.anchor,
 	};
 }

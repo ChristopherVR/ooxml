@@ -12,10 +12,15 @@
  *
  * @module body-properties-neutral
  */
-import type { DrawingAutofit, DrawingBodyProperties } from '../../../drawingml/text-model';
+import type {
+	DrawingAutofit,
+	DrawingBodyProperties,
+	DrawingTextWarp,
+} from '../../../drawingml/text-model';
 import {
 	drawingAutofitChild,
 	drawingBodyAttributeEntries,
+	drawingTextWarpEntries,
 	readDrawingBodyCodecProperties,
 } from '../../../drawingml/text-body-codec';
 import type { TextStyle, XmlObject } from '../types';
@@ -117,6 +122,18 @@ export function autofitFromDrawing(
 /** Assigns the codec's attribute entries of `value` onto an existing `a:bodyPr` node. */
 export function assignBodyAttributes(bodyPr: XmlObject, value: DrawingBodyProperties): void {
 	for (const [name, text] of drawingBodyAttributeEntries(value)) bodyPr[`@_${name}`] = text;
+}
+
+/**
+ * The object-tree `a:prstTxWarp` node of a warp. `a:avLst` is always written (empty when the warp
+ * keeps its default adjustments), as PowerPoint writes it; one guide is an object, several an array.
+ */
+export function objectTextWarp(warp: DrawingTextWarp): XmlObject {
+	const entries = drawingTextWarpEntries({ ...warp, guides: warp.guides ?? [] });
+	const node = objectAttributes(entries.attributes);
+	const guides = (entries.guides ?? []).map(objectAttributes);
+	node['a:avLst'] = guides.length > 0 ? { 'a:gd': guides.length === 1 ? guides[0] : guides } : {};
+	return node;
 }
 
 /** The object-tree node of an autofit choice, keyed by its element name. */

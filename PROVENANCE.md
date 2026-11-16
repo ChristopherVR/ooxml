@@ -3004,6 +3004,20 @@ follow-text markers) and tab stops run on one codec shared with the DOM text rea
 | `pptx/core/utils/paragraph-properties-parser.ts`, `tab-stops.ts`, the bullet readers of `PptxHandlerRuntimeBulletParsing` and `PlaceholderStyles`          | `pptx/core/utils/paragraph-properties-neutral.ts` (adapter)   | The object-tree readers were deleted; the pptx functions now convert the codec's neutral values to px and the pptx `TextStyle`/`BulletInfo` fields                      |
 | `PptxHandlerRuntimeSaveParagraphHelpers` (`a:pPr` attributes, bullets, exact line spacing), `SaveSlideUtils` spacing, `placeholder-level-style-serializer` | the codec's entries through `paragraph-properties-neutral.ts` | Values encoded by the codec; a rebuilt `a:pPr` now writes its attributes in schema order (the order PowerPoint writes) instead of the old fixed `lvl algn rtl marL ...` |
 
+## PowerPoint run effects, fills, outlines, warp and cell anchors on shared readers (2026-11-16)
+
+Source: this repository, no external code. Step 3 of `docs/agnostic-core-plan.md`.
+
+| From                                                                                                                         | To                                                        | What changed                                                                                   |
+| ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `drawingml/drawing-fill.ts` `parseDrawingLine` field code and `drawingDashLength`                                            | `src/core/drawingml/line-read.ts`                         | `readDrawingLineFields` over a `DrawingNodeView`; the DOM reader keeps the fill and source XML |
+| `a:prstTxWarp` kept verbatim in `DrawingBodyProperties.extraXml`                                                             | `DrawingBodyProperties.textWarp` (`text-body-codec.ts`)   | Typed when lossless, written back by the DOM writer                                            |
+| `applyTextRunEffects` list-effect readers (`PptxHandlerRuntimeTextRunEffects`)                                               | the shared effect reader (`findObjectEffect`)             | Object-tree attribute reads deleted                                                            |
+| `extractTextFillVariants` gradient reader (`PptxHandlerRuntimeTableStylesAndActions`)                                        | `readDrawingGradient`                                     | Object-tree stop and angle reads deleted                                                       |
+| Text outline and underline line reads (`extractTextRunStyle`)                                                                | `readDrawingLineFields`                                   | Object-tree attribute reads deleted                                                            |
+| `applyBodyProperties` warp and linked text box reads, the save text writer's warp node                                       | `text-body-codec.ts` through `body-properties-neutral.ts` | Codec values and entries                                                                       |
+| `applyCellAlignmentStyle` (`table-cell-text-style-helpers`), `extractDrawingShapeTextStyle` (`smartart-drawing-shape-style`) | the paragraph, run and body codecs                        | Object-tree attribute reads deleted                                                            |
+
 ## PowerPoint body properties on the shared DrawingML codec (2026-11-16)
 
 Source: this repository, no external code. Step 3 of `docs/agnostic-core-plan.md`: the pptx

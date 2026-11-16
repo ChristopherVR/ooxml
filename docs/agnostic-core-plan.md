@@ -306,16 +306,40 @@ would keep two XML models alive.
    is `pptx/__tests__/integration/drawingml-body-neutral-parity.test.ts` (26,999 elements, 53,047
    fields, read and saved).
 
+   **pptx run effects, fills, outlines, warp and the remaining text readers (2026-11-16).** A run's
+   `a:effectLst` members (outer, inner and preset shadow, glow, reflection, blur, soft edge) are read
+   by the shared effect reader (`findObjectEffect`, `PptxHandlerRuntimeTextRunEffects`), its
+   `a:gradFill` by `readDrawingGradient` (`extractTextFillVariants`), and its text outline and
+   underline line by the new shared `a:ln` field reader (`drawingml/line-read.ts`,
+   `readDrawingLineFields`, which `parseDrawingLine` also runs) over the object-tree view; colours
+   keep resolving through the runtime colour codec on each node (the shared resolver). The body
+   codec now types the text warp (`DrawingBodyProperties.textWarp`, `a:prstTxWarp` with its
+   `a:avLst` guides; a warp with anything else stays verbatim), which `applyBodyProperties` reads
+   and the save text writer writes through `objectTextWarp`; linked text boxes read their ids
+   through the codec's value readers; the table cell `a:tcPr` anchor, direction, `anchorCtr` and
+   overflow (the same types as on `a:bodyPr`) read through the body codec; and the SmartArt cached
+   drawing's text style (`extractDrawingShapeTextStyle`: spacing, run size, fonts, weight, slant,
+   body insets and anchor) reads through the paragraph, run and body codecs. Old and new were
+   compared over the committed decks (82,447 run property elements, 26,999 `a:bodyPr`, 23,291 text
+   bodies through the drawing style reader, 423 `a:tcPr`): equal. Body 3D (`text-body-scene3d`,
+   `text-body-sp3d`) already read through the shared 3D readers, and the bullet colour through the
+   shared colour resolver. `pptx/__tests__/integration/drawingml-line-neutral-parity.test.ts` pins
+   the line reader (7,811 `a:ln`/`a:uLn`, object tree against DOM); the effect and gradient reads
+   are pinned by `drawingml-fill-effect-neutral-parity.test.ts` and the warp by the body harness.
+
    **Remains:** painting DAG sibling composition, masks, blends, transforms and references (see
-   docs/parity-checklist.md); the text-run effect readers; theme gradient stops still come from the
+   docs/parity-checklist.md); theme gradient stops still come from the
    gradient codec over the paired object node (`rawNode`), because their `originalColorXml`
    round-trip data is object-tree XML, as does the background `bgRef` gradient; a picture theme
-   fill is not drawn; an edited theme slot is written as `srgbClr`. Of the pptx text parsers, the paragraph,
-   run and body property families run on the shared codecs (above); text warp and body 3D
-   (`a:prstTxWarp`, `text-body-scene3d`, `text-body-sp3d`), the table cell and SmartArt drawing
-   shape readers of `a:tcPr`/`a:bodyPr` anchors, the bullet colour and picture bullets, run
-   colours, fills, outlines, effects and hyperlinks, and the SmartArt text fabrication writer
-   (`smartart-fabrication-text`) still read and write their own object tree; the xlsx theme writer
+   fill is not drawn; an edited theme slot is written as `srgbClr`. Of the pptx text code, the
+   writers of run effects, fills and outlines (`text-run-effect-xml-builder`, the fill choice of
+   `createRunPropertiesFromTextStyle`) still build their object nodes themselves (the shared
+   effect, fill and line writers work on the DOM); run pattern fills and the non-schema blip
+   effects some producers put on a run `a:effectLst` (`alphaModFix`, `hsl`, `clrChange`,
+   `duotone`) are read by pptx alone; picture bullets and run picture fills stay verbatim (the
+   neutral model also keeps `a:buBlip` verbatim); hyperlinks are read by pptx; and the SmartArt
+   text fabrication writer (`smartart-fabrication-text`) stays, pinned byte-identical to the
+   diagram writer; the xlsx theme writer
    still patches the part itself (a neutral writer exists as `drawingml/write-theme.ts`; whether xlsx
    should adopt it is open).
 
@@ -803,18 +827,18 @@ workbooks passed.
 
 ### 3.8 Model gaps and parity harnesses in one place
 
-| Harness                           | What it proves                                                | Where                                                     |
-| --------------------------------- | ------------------------------------------------------------- | --------------------------------------------------------- |
-| Chart neutral parity (2026-10-08) | pptx object tree and neutral parser agree on 74 classic parts | `pptx/__tests__/integration/chart-neutral-parity.test.ts` |
-| Chart neutral edit parity (C1)    | nine edits both ways on four charts agree                     | `chart-neutral-edit-parity.test.ts`                       |
-| Chart save parity (C3)            | 13 edits on 75 parts saved both ways                          | `chart-save-parity.test.ts`                               |
-| Chart ChartEx parity (C5)         | every committed chartex part agrees                           | `chart-ex-neutral-parity.test.ts`                         |
-| ChartEx save parity (C5)          | nine edits on 15 chartex parts                                | `chart-ex-save-parity.test.ts`                            |
-| Excel chart save parity (C2)      | 26 edit kinds on 109 classic parts                            | `xlsx/write/chart-save-parity-*.test.ts`                  |
-| SmartArt text parity (S1)         | every text body of the committed fixtures                     | `smartart-text-neutral-parity.test.ts`                    |
-| SmartArt drawing parity (S3)      | 371 drawing parts, 3014 shapes                                | `smartart-drawing-shape-neutral-parity.test.ts`           |
-| Choose walkers corpus (step 2)    | every walker over 353 layout definitions                      | `smartart-choose-walkers-corpus.test.ts`                  |
-| DrawingML colour and theme (3)    | 180,651 colour elements and 383 theme parts agree             | `drawingml-color-neutral-parity.test.ts`                  |
+| Harness                           | What it proves                                                   | Where                                                     |
+| --------------------------------- | ---------------------------------------------------------------- | --------------------------------------------------------- |
+| Chart neutral parity (2026-10-08) | pptx object tree and neutral parser agree on 74 classic parts    | `pptx/__tests__/integration/chart-neutral-parity.test.ts` |
+| Chart neutral edit parity (C1)    | nine edits both ways on four charts agree                        | `chart-neutral-edit-parity.test.ts`                       |
+| Chart save parity (C3)            | 13 edits on 75 parts saved both ways                             | `chart-save-parity.test.ts`                               |
+| Chart ChartEx parity (C5)         | every committed chartex part agrees                              | `chart-ex-neutral-parity.test.ts`                         |
+| ChartEx save parity (C5)          | nine edits on 15 chartex parts                                   | `chart-ex-save-parity.test.ts`                            |
+| Excel chart save parity (C2)      | 26 edit kinds on 109 classic parts                               | `xlsx/write/chart-save-parity-*.test.ts`                  |
+| SmartArt text parity (S1)         | every text body of the committed fixtures                        | `smartart-text-neutral-parity.test.ts`                    |
+| SmartArt drawing parity (S3)      | 371 drawing parts, 3014 shapes                                   | `smartart-drawing-shape-neutral-parity.test.ts`           |
+| Choose walkers corpus (step 2)    | every walker over 353 layout definitions                         | `smartart-choose-walkers-corpus.test.ts`                  |
+| DrawingML colour and theme (3)    | 180,651 colour elements and 383 theme parts agree                | `drawingml-color-neutral-parity.test.ts`                  |
 | DrawingML theme matrices (3)      | 383 format schemes, 72,747 style refs, 366 clrMaps, theme writes | `drawingml-theme-format-scheme-parity.test.ts`            |
 
 ### 3.9 pptx strictness and the XML object model (inventory, 2026-11-16)

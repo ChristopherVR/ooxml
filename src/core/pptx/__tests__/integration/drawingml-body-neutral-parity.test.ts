@@ -90,6 +90,18 @@ function savedFamilies(value: DrawingBodyProperties): DrawingBodyProperties {
 		if (anchor) out.anchor = anchor;
 	}
 	if (out.vertical?.toLowerCase() === 'horz') delete out.vertical;
+	// The model keeps no `textNoShape` warp (it is "no warp"), and keeps `adj`/`adj1`/`adj2` only.
+	if (out.textWarp?.preset === 'textNoShape') delete out.textWarp;
+	else if (out.textWarp) {
+		const guides = (out.textWarp.guides ?? []).filter(
+			(guide) =>
+				['adj', 'adj1', 'adj2'].includes(guide.name) && /^val\s+-?\d+$/u.test(guide.formula.trim()),
+		);
+		out.textWarp = {
+			preset: out.textWarp.preset,
+			guides: guides.map((guide) => ({ name: guide.name, formula: guide.formula.trim() })),
+		};
+	}
 	if (out.autofit?.kind === 'normal') {
 		const { fontScale, lineSpacingReduction } = out.autofit;
 		out.autofit = {

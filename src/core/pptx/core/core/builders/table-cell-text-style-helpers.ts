@@ -1,3 +1,4 @@
+import { objectBodyProperties } from '../../utils/body-properties-neutral';
 import type { PptxTableCellStyle, XmlObject } from '../../types';
 
 export interface TableCellTextStyleContext {
@@ -15,15 +16,19 @@ export function applyCellAlignmentStyle(
 		return false;
 	}
 	let hasStyle = false;
+	// `a:tcPr` (CT_TableCellProperties) carries `anchor`, `vert`, `anchorCtr`
+	// and `horzOverflow` with the same types as `a:bodyPr`, so they are read by
+	// the shared DrawingML body codec.
+	const cell = objectBodyProperties(cellProperties);
 
-	if (cellProperties['@_anchor']) {
-		const anchor = String(cellProperties['@_anchor']);
+	if (cell.anchor) {
+		const anchor = cell.anchor;
 		style.vAlign = anchor === 'ctr' ? 'middle' : anchor === 'b' ? 'bottom' : 'top';
 		hasStyle = true;
 	}
 
-	if (cellProperties['@_vert']) {
-		const vertical = String(cellProperties['@_vert']);
+	if (cell.vertical) {
+		const vertical = cell.vertical;
 		// Spec values from CT_TextVerticalType (ECMA-376 §20.1.10.83) pass
 		// through verbatim so downstream code can re-emit them directly.
 		if (
@@ -42,14 +47,13 @@ export function applyCellAlignmentStyle(
 	// `@_anchorCtr` centres the text block perpendicular to text flow
 	// (CT_TableCellProperties §21.1.3.9). For horizontal text this is
 	// horizontal block-centring.
-	const anchorCtr = cellProperties['@_anchorCtr'];
-	if (anchorCtr === '1' || anchorCtr === 'true') {
+	if (cell.anchorCenter) {
 		style.anchorCtr = true;
 		hasStyle = true;
 	}
 
 	// `@_horzOverflow` (ST_TextHorzOverflowType): clip | overflow.
-	const horzOverflow = String(cellProperties['@_horzOverflow'] || '').trim();
+	const horzOverflow = cell.horizontalOverflow;
 	if (horzOverflow === 'clip' || horzOverflow === 'overflow') {
 		style.horzOverflow = horzOverflow;
 		hasStyle = true;

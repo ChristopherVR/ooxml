@@ -1,7 +1,15 @@
 import { XmlObject } from '../../types';
 import type { PptxElementWithText, TextStyle } from '../../types';
-import type { DrawingAutofit, DrawingBodyProperties } from '../../../../drawingml/text-model';
-import { assignBodyAttributes, objectAutofit } from '../../utils/body-properties-neutral';
+import type {
+	DrawingAutofit,
+	DrawingBodyProperties,
+	DrawingTextWarpGuide,
+} from '../../../../drawingml/text-model';
+import {
+	assignBodyAttributes,
+	objectAutofit,
+	objectTextWarp,
+} from '../../utils/body-properties-neutral';
 import { writeBodyPrBooleanAttrs } from '../../utils/body-properties-parser';
 import { applyTextBodyScene3d } from '../../utils/text-body-scene3d';
 import { applyTextBodySp3d } from '../../utils/text-body-sp3d-writer';
@@ -177,28 +185,20 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 		// Text warp preset
 		if (el.textStyle?.textWarpPreset) {
-			const prstTxWarpNode: XmlObject = {
-				'@_prst': el.textStyle.textWarpPreset,
-			};
-			// Round-trip adjustment values (adj / adj2)
-			const adjGds: XmlObject[] = [];
+			// Round-trip adjustment values (adj / adj2). PowerPoint always writes
+			// `a:avLst`, empty when the warp keeps its default adjustments;
+			// omitting it lost markup on every rewrite.
+			const guides: DrawingTextWarpGuide[] = [];
 			if (el.textStyle.textWarpAdj !== undefined && Number.isFinite(el.textStyle.textWarpAdj)) {
-				adjGds.push({
-					'@_name': firstWarpGuideName(el.textStyle.textWarpPreset),
-					'@_fmla': `val ${el.textStyle.textWarpAdj}`,
+				guides.push({
+					name: firstWarpGuideName(el.textStyle.textWarpPreset),
+					formula: `val ${el.textStyle.textWarpAdj}`,
 				});
 			}
 			if (el.textStyle.textWarpAdj2 !== undefined && Number.isFinite(el.textStyle.textWarpAdj2)) {
-				adjGds.push({
-					'@_name': 'adj2',
-					'@_fmla': `val ${el.textStyle.textWarpAdj2}`,
-				});
+				guides.push({ name: 'adj2', formula: `val ${el.textStyle.textWarpAdj2}` });
 			}
-			// PowerPoint always writes `a:avLst`, empty when the warp keeps its
-			// default adjustments; omitting it lost markup on every rewrite.
-			prstTxWarpNode['a:avLst'] =
-				adjGds.length > 0 ? { 'a:gd': adjGds.length === 1 ? adjGds[0] : adjGds } : {};
-			bodyPr['a:prstTxWarp'] = prstTxWarpNode;
+			bodyPr['a:prstTxWarp'] = objectTextWarp({ preset: el.textStyle.textWarpPreset, guides });
 		} else {
 			delete bodyPr['a:prstTxWarp'];
 		}

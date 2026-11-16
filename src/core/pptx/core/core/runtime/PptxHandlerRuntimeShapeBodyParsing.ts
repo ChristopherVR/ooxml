@@ -7,6 +7,8 @@ import {
 	bodyInsetsFromDrawing,
 	objectBodyProperties,
 } from '../../utils/body-properties-neutral';
+import { objectTextElementView } from '../../utils/paragraph-properties-neutral';
+import { drawingIntegerValue } from '../../../../drawingml/text-paragraph-codec';
 import { parseTextBodyScene3d } from '../../utils/text-body-scene3d';
 import { parseTextBodySp3d } from '../../utils/text-body-sp3d';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeBulletParsing';
@@ -112,12 +114,12 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const linkedTxbx = (bodyPr?.['a:linkedTxbx'] ?? txBody?.['a:linkedTxbx']) as
 			| XmlObject
 			| undefined;
-		if (linkedTxbx) {
-			const ltxId = Number.parseInt(String(linkedTxbx['@_id'] || ''), 10);
-			const ltxSeq = Number.parseInt(String(linkedTxbx['@_seq'] || '0'), 10);
-			if (Number.isFinite(ltxId)) {
+		const linkedView = objectTextElementView(linkedTxbx);
+		if (linkedTxbx && linkedView) {
+			const ltxId = drawingIntegerValue(linkedView.attribute('id'));
+			if (ltxId !== undefined) {
 				result.linkedTxbxId = ltxId;
-				result.linkedTxbxSeq = Number.isFinite(ltxSeq) ? ltxSeq : 0;
+				result.linkedTxbxSeq = drawingIntegerValue(linkedView.attribute('seq')) ?? 0;
 			}
 		}
 
@@ -164,37 +166,27 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 
 		// Text warp preset from a:prstTxWarp
-		const prstTxWarp = bodyPr['a:prstTxWarp'] as XmlObject | undefined;
-		if (prstTxWarp) {
-			const warpPreset = String(prstTxWarp['@_prst'] || '').trim();
-			if (warpPreset.length > 0 && warpPreset !== 'textNoShape') {
-				textStyle.textWarpPreset = warpPreset as PptxTextWarpPreset;
+		// The warp preset and its guides come from the shared body codec.
+		const warp = body.textWarp;
+		if (warp) {
+			if (warp.preset !== 'textNoShape') {
+				textStyle.textWarpPreset = warp.preset as PptxTextWarpPreset;
 			}
-
-			// Extract adjustment values from a:avLst/a:gd
-			const avLst = prstTxWarp['a:avLst'] as XmlObject | undefined;
-			if (avLst) {
-				const gdRaw = avLst['a:gd'];
-				const gdArr = Array.isArray(gdRaw) ? gdRaw : gdRaw ? [gdRaw] : [];
-				for (const gd of gdArr) {
-					const gdObj = gd as XmlObject;
-					const name = String(gdObj['@_name'] || '').trim();
-					const fmla = String(gdObj['@_fmla'] || '').trim();
-					// Formula is typically "val <number>"
-					const valMatch = fmla.match(/^val\s+(-?\d+)$/);
-					if (!valMatch) {
-						continue;
-					}
-					const val = parseInt(valMatch[1], 10);
-					if (!Number.isFinite(val)) {
-						continue;
-					}
-					// The wave and pour presets name their first guide `adj1`, the others `adj`.
-					if (name === 'adj' || name === 'adj1') {
-						textStyle.textWarpAdj = val;
-					} else if (name === 'adj2') {
-						textStyle.textWarpAdj2 = val;
-					}
+			for (const guide of warp.guides ?? []) {
+				// Formula is typically "val <number>"
+				const valMatch = guide.formula.trim().match(/^val\s+(-?\d+)$/);
+				if (!valMatch) {
+					continue;
+				}
+				const val = parseInt(valMatch[1], 10);
+				if (!Number.isFinite(val)) {
+					continue;
+				}
+				// The wave and pour presets name their first guide `adj1`, the others `adj`.
+				if (guide.name === 'adj' || guide.name === 'adj1') {
+					textStyle.textWarpAdj = val;
+				} else if (guide.name === 'adj2') {
+					textStyle.textWarpAdj2 = val;
 				}
 			}
 		}
