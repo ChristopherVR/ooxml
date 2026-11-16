@@ -137,6 +137,12 @@ export type {
 	CommentsPanelControllerDeps,
 	CommentsPanelState,
 } from './comments-panel-controller';
+export { createFindReplaceController } from './find-replace-controller';
+export type {
+	FindReplaceController,
+	FindReplaceControllerState,
+	FindReplaceMode,
+} from './find-replace-controller';
 export {
 	createSelectionPaneController,
 	formatSelectionPaneLabel,
