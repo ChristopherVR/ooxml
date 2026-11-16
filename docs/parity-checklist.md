@@ -146,6 +146,7 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       their first or last series to the secondary axis and merge back (`chart/edit/secondary-axis.ts`);
       PowerPoint saves the move through the same operation, so PowerPoint 16 reads the moved series
       on axis group 2 (`chart-neutral-save-series-axis.ts`, 2026-11-16).
+
 - [ ] **P1** Chart picture fills are not drawn by `src/core/chart/render`, so Word, Excel and Visio
       keep Picture or texture fill disabled; relationship allocation is shared
       (`chart/picture-parts.ts`) and PowerPoint saves through it.

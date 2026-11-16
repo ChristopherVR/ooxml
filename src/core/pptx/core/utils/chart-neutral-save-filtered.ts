@@ -21,8 +21,11 @@ import type { PptxChartData, PptxChartFilteredSeries } from '../types';
 import type { NeutralChartEdit } from './chart-neutral-save-plan';
 
 /** The parsed fields of an entry (`originalSeries` is an editing-session snapshot, never saved). */
-const entryKey = ({ originalSeries: _, ...entry }: PptxChartFilteredSeries) =>
-	JSON.stringify(entry);
+const entryKey = (entry: PptxChartFilteredSeries) => {
+	const saved: Partial<PptxChartFilteredSeries> = { ...entry };
+	delete saved.originalSeries;
+	return JSON.stringify(saved);
+};
 
 /** `before` after the filter moves `after` asks for, or `before` itself when there are none. */
 export function planNeutralFilteredSeries(

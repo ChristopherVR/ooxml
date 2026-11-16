@@ -158,13 +158,7 @@ export function useZoomViewport({
 				centerBoundsInViewport(selectionBounds, nextScale);
 			});
 		});
-	}, [
-		centerBoundsInViewport,
-		effectiveEditorDimensions,
-		fitScale,
-		selectedElements,
-		setScale,
-	]);
+	}, [centerBoundsInViewport, effectiveEditorDimensions, fitScale, selectedElements, setScale]);
 
 	// Read live by the viewport controller, so a mode change does not re-attach it.
 	const dragPansRef = useRef(dragPans);
