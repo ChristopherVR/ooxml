@@ -25,6 +25,7 @@ export * from './complex-breaks';
 export * from './font-substitution';
 export * from './metric-font-family';
 export * from './script-fonts';
+export * from './symbol-fonts';
 export * from './truetype/embedding';
 export { glyphlessTrueType, MAX_GLYPHLESS_GLYPHS } from './truetype/glyphless';
 export { parseTrueType, type TrueTypeFont } from './truetype/parse';
