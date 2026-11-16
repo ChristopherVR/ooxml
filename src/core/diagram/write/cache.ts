@@ -83,7 +83,7 @@ export function buildGeneratedDiagramCache(
 		if (resolved && !resolved.unapplied.length) themed.set(resolved.hex.toUpperCase(), color);
 	}
 	for (const shape of drawing.shapes) {
-		if (shape.has3d || shape.foldedNodeIds?.length) return undefined;
+		if ((shape.has3d && !shape.shape3d) || shape.foldedNodeIds?.length) return undefined;
 		if (shape.fill && !['none', 'solid', 'gradient', 'picture'].includes(shape.fill.kind))
 			return undefined;
 		if (

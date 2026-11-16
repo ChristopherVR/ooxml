@@ -1,5 +1,7 @@
-// A generated 2D cache, independent of Office's native layout regeneration. This is not a
+// A generated cache, independent of Office's native layout regeneration. This is not a
 // round-trip writer for a source cached part: unsupported 3D must remain in its original part.
+// Quick-style 3D (a label's bevel, extrusion, material and light rig) is written into each shape
+// as Office writes it; the diagram's spatial camera stays in the quick-style part.
 import { createOfficeGuid } from '../../crypto/uuid';
 import { normalizeStShapeType } from '../../geometry/preset-geometry-names';
 import { drawingFillXml } from '../../drawingml/write-fill';
@@ -57,6 +59,21 @@ function textBody(shape: DiagramDrawingShape): DrawingRichTextBody | undefined {
 	};
 }
 
+/** Text 3D goes into `a:bodyPr` after the autofit choice and before any extension list. */
+function withText3d(body: string, text3d: string | undefined): string {
+	if (!body || !text3d) return body;
+	const open = /<a:bodyPr\b[^>]*?(\/?)>/u.exec(body);
+	if (!open) return body;
+	if (open[1]) {
+		const start = open.index + open[0].length;
+		return `${body.slice(0, open.index)}${open[0].slice(0, -2)}>${text3d}</a:bodyPr>${body.slice(start)}`;
+	}
+	const close = body.indexOf('</a:bodyPr>', open.index);
+	const extension = body.indexOf('<a:extLst', open.index);
+	const at = extension >= 0 && extension < close ? extension : close;
+	return `${body.slice(0, at)}${text3d}${body.slice(at)}`;
+}
+
 /** Serialize generated neutral shapes, returning the GUIDs a host can bind to presentation points. */
 export function writeGeneratedDiagramDrawing(
 	drawing: DiagramDrawing,
@@ -68,7 +85,8 @@ export function writeGeneratedDiagramDrawing(
 	const modelIds = new Map<string, string>();
 	const body = drawing.shapes
 		.map((shape, index) => {
-			if (shape.has3d) throw new Error('A generated 2D drawing cannot serialize 3D SmartArt.');
+			if (shape.has3d && !shape.shape3d)
+				throw new Error('A generated drawing cannot serialize this 3D SmartArt.');
 			if (!Object.values(shape.frame).every(Number.isFinite))
 				throw new Error('The generated diagram has invalid geometry.');
 			const id =
@@ -77,7 +95,8 @@ export function writeGeneratedDiagramDrawing(
 			if (!GUID.test(id)) throw new Error('A diagram drawing requires GUID presentation ids.');
 			modelIds.set(shape.modelId, id);
 			const text = textBody(shape);
-			return `<dsp:sp modelId="${esc(id)}"><dsp:nvSpPr><dsp:cNvPr id="${index + 1}" name="Shape ${index + 1}"/><dsp:cNvSpPr/></dsp:nvSpPr>${diagramShapePropertiesXml(shape)}${text ? drawingRichTextBodyXml(text, 'dsp:txBody', DSP) : ''}</dsp:sp>`;
+			const body = text ? drawingRichTextBodyXml(text, 'dsp:txBody', DSP) : '';
+			return `<dsp:sp modelId="${esc(id)}"><dsp:nvSpPr><dsp:cNvPr id="${index + 1}" name="Shape ${index + 1}"/><dsp:cNvSpPr/></dsp:nvSpPr>${diagramShapePropertiesXml(shape)}${withText3d(body, shape.shape3d?.text3dXml)}</dsp:sp>`;
 		})
 		.join('');
 	return {
@@ -111,5 +130,7 @@ export function diagramShapePropertiesXml(shape: DiagramDrawingShape): string {
 		: `<a:prstGeom prst="${preset}">${diagramAvLstXml(shape.adjustments)}</a:prstGeom>`;
 	const frame = shape.frame;
 	const transform = `<a:xfrm${shape.rotation ? ` rot="${Math.round(shape.rotation * 60000)}"` : ''}${shape.flipHorizontal ? ' flipH="1"' : ''}${shape.flipVertical ? ' flipV="1"' : ''}><a:off x="${Math.round(frame.x)}" y="${Math.round(frame.y)}"/><a:ext cx="${Math.round(frame.width)}" cy="${Math.round(frame.height)}"/></a:xfrm>`;
-	return `<dsp:spPr>${transform}${geometry}${fill}${shape.line ? drawingLineXml(shape.line) : ''}${shape.effects ? drawingEffectsXml(shape.effects) : ''}</dsp:spPr>`;
+	// CT_ShapeProperties order: effects, then scene3d, then sp3d.
+	const threeD = `${shape.shape3d?.scene3dXml ?? ''}${shape.shape3d?.shape3dXml ?? ''}`;
+	return `<dsp:spPr>${transform}${geometry}${fill}${shape.line ? drawingLineXml(shape.line) : ''}${shape.effects ? drawingEffectsXml(shape.effects) : ''}${threeD}</dsp:spPr>`;
 }

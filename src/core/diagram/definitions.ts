@@ -1,6 +1,6 @@
 // DOM parsers for the three definition parts of a diagram: colours (`dgm:colorsDef`), quick style
 // (`dgm:styleDef`) and layout (`dgm:layoutDef`, header and root algorithm only).
-import { parseXml, type XmlDocument } from '../xml/index';
+import { buildXml, parseXml, type XmlDocument } from '../xml/index';
 import { parseDrawingColorIn, parseDrawingColorList } from '../drawingml/drawing-color';
 import {
 	NS,
@@ -109,6 +109,53 @@ function spatialScene(scene: XmlElement | undefined): boolean {
 	);
 }
 
+const A_XMLNS = ` xmlns:a="${NS.a}"`;
+const escapeAttribute = (value: string) =>
+	value.replace(/&/gu, '&amp;').replace(/"/gu, '&quot;').replace(/</gu, '&lt;');
+
+/** A `dgm:scene3d` / `dgm:sp3d` re-expressed as the DrawingML element a shape carries. */
+function drawingml3dXml(element: XmlElement, name: 'scene3d' | 'sp3d'): string {
+	const attributes = Array.from(element.attributes)
+		.filter((attribute) => !attribute.name.startsWith('xmlns'))
+		.map((attribute) => ` ${attribute.name}="${escapeAttribute(attribute.value)}"`)
+		.join('');
+	const inner = elements(element)
+		.map((child) => buildXml(child).split(A_XMLNS).join(''))
+		.join('');
+	return `<a:${name}${attributes}>${inner}</a:${name}>`;
+}
+
+/** The front view with the three-point rig, which Office leaves out of a cached shape. */
+function defaultScene(scene: XmlElement): boolean {
+	const camera = first(scene, 'camera', NS.a);
+	const rig = first(scene, 'lightRig', NS.a);
+	return (
+		elements(scene).length === 2 &&
+		camera?.getAttribute('prst') === 'orthographicFront' &&
+		elements(camera).length === 0 &&
+		rig?.getAttribute('rig') === 'threePt' &&
+		(rig.getAttribute('dir') ?? 't') === 't' &&
+		elements(rig).length === 0
+	);
+}
+
+function label3d(
+	label: XmlElement,
+): Pick<DiagramStyleLabel, 'scene3dXml' | 'shape3dXml' | 'text3dXml'> {
+	const scene = first(label, 'scene3d', NS.dgm);
+	const shape = first(label, 'sp3d', NS.dgm);
+	const textProperties = first(label, 'txPr', NS.dgm);
+	const text = (textProperties ? elements(textProperties) : [])
+		.filter((child) => child.namespaceURI === NS.a && ['scene3d', 'sp3d'].includes(child.localName))
+		.map((child) => buildXml(child).split(A_XMLNS).join(''))
+		.join('');
+	return {
+		...(scene && !defaultScene(scene) ? { scene3dXml: drawingml3dXml(scene, 'scene3d') } : {}),
+		...(shape && hasContent(shape) ? { shape3dXml: drawingml3dXml(shape, 'sp3d') } : {}),
+		...(text ? { text3dXml: text } : {}),
+	};
+}
+
 /** Parses a quick style definition part. */
 export function parseDiagramQuickStyle(source: string | XmlDocument): DiagramQuickStyleDefinition {
 	const root = rootOf(source);
@@ -117,6 +164,7 @@ export function parseDiagramQuickStyle(source: string | XmlDocument): DiagramQui
 		...parseStyleReferences(first(label, 'style', NS.dgm)),
 		hasScene3d: Boolean(first(label, 'scene3d', NS.dgm)),
 		hasShape3d: hasContent(first(label, 'sp3d', NS.dgm)),
+		...label3d(label),
 		requires3d:
 			hasContent(first(label, 'sp3d', NS.dgm)) ||
 			spatialScene(first(label, 'scene3d', NS.dgm)) ||

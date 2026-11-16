@@ -248,6 +248,12 @@ export function previewDiagramLayout(input: DiagramPreviewInput): DiagramPreview
 				if (label) {
 					shape.style = label;
 					shape.has3d = label.requires3d ?? label.hasShape3d;
+					if (shape.has3d)
+						shape.shape3d = {
+							...(label.scene3dXml ? { scene3dXml: label.scene3dXml } : {}),
+							...(label.shape3dXml ? { shape3dXml: label.shape3dXml } : {}),
+							...(label.text3dXml ? { text3dXml: label.text3dXml } : {}),
+						};
 				}
 				const contextNodeId = node.nodeId ?? node.contextNodeId;
 				if (contextNodeId) shape.sourceNodeId = contextNodeId;

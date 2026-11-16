@@ -211,6 +211,12 @@ export interface DiagramStyleLabel {
 	hasScene3d: boolean;
 	/** The label carries a non-empty `dgm:sp3d` (bevel, extrusion, material). */
 	hasShape3d: boolean;
+	/** The label's `dgm:scene3d` as `a:scene3d`, when it is not the default front view. */
+	scene3dXml?: string;
+	/** The label's non-empty `dgm:sp3d` as `a:sp3d`. */
+	shape3dXml?: string;
+	/** The label's text 3D (`dgm:txPr` children: `a:scene3d`, `a:sp3d`), as a body carries it. */
+	text3dXml?: string;
 }
 
 /** A parsed `dgm:styleDef` (quick style). */
@@ -267,6 +273,12 @@ export interface DiagramDrawingShape {
 	textFrame?: DiagramFrame;
 	/** The shape carries `a:scene3d` or `a:sp3d`; not modelled, kept only in the source part. */
 	has3d: boolean;
+	/**
+	 * Generated shapes only: the quick-style label's 3D properties, which a generated cache
+	 * writes into the shape as Office does (`a:scene3d`, `a:sp3d`). A spatial camera of the whole
+	 * diagram stays in the quick-style part; Office's own cache does not carry it either.
+	 */
+	shape3d?: { scene3dXml?: string; shape3dXml?: string; text3dXml?: string };
 }
 
 /** A parsed `dsp:drawing`: the layout the producing application last computed, cached in the package. */

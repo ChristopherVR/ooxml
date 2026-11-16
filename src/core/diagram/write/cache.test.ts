@@ -98,25 +98,36 @@ it('labels only the exact generated drawing bytes as generated, clearing stale m
 	expect((await read(`${cache.drawingXml}\n`)).generatedCache).toBeUndefined();
 });
 
-it('declines unknown algorithms and spatial scenes without fabricating an Office cache', () => {
+it('declines unknown algorithms without fabricating an Office cache', () => {
 	expect(
 		buildGeneratedDiagramCache(data(), {
 			...input,
 			source: { ...source, layoutXml: '<invalid/>' },
 		}),
 	).toBeUndefined();
-	expect(
-		buildGeneratedDiagramCache(data(), {
-			...input,
-			source: {
-				...source,
-				quickStyleXml: source.quickStyleXml.replaceAll(
-					'orthographicFront',
-					'perspectiveHeroicExtremeLeft',
+});
+
+it('keeps a spatial camera in the quick style and writes label 3D into the shapes, as Office does', () => {
+	const spatial = buildGeneratedDiagramCache(data(), {
+		...input,
+		source: {
+			...source,
+			// Only the diagram's own scene (the first, before the labels) turns spatial.
+			quickStyleXml: source.quickStyleXml
+				.replace('orthographicFront', 'perspectiveHeroicExtremeLeft')
+				.replaceAll(
+					'<dgm:sp3d/>',
+					'<dgm:sp3d prstMaterial="plastic"><a:bevelT w="120900" h="88900"/></dgm:sp3d>',
 				),
-			},
-		}),
-	).toBeUndefined();
+		},
+	})!;
+	expect(spatial.drawingXml).not.toContain('perspectiveHeroicExtremeLeft');
+	expect(spatial.drawingXml).toContain(
+		'<a:sp3d prstMaterial="plastic"><a:bevelT w="120900" h="88900"/></a:sp3d></dsp:spPr>',
+	);
+	expect(spatial.drawingXml).not.toContain(
+		'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:bevelT',
+	);
 });
 
 it('replaces only its own prior presentation points when regenerating', () => {
