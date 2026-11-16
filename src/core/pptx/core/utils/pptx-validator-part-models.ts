@@ -144,7 +144,7 @@ function attributeValue(attributes: string, name: string): string | undefined {
 
 function elementStartAttributes(xml: string, localName: string): string[] {
 	return [...xml.matchAll(new RegExp(`<(?:[\\w.-]+:)?${localName}\\b([^>]*)>`, 'g'))].map(
-		(match) => match[1],
+		(match) => match[1] ?? '',
 	);
 }
 
@@ -259,7 +259,7 @@ export async function validatePartModels(zip: JSZip, issues: ValidationIssue[]):
 			);
 			continue;
 		}
-		const rootPrefix = rootTag(xml)?.includes(':') ? rootTag(xml)!.split(':')[0] : '';
+		const rootPrefix = rootTag(xml)?.includes(':') ? (rootTag(xml)!.split(':')[0] ?? '') : '';
 		const rootNamespace = namespaces(xml).get(rootPrefix);
 		if (!(PART_NAMESPACES[contract.namespace] as readonly string[]).includes(rootNamespace ?? '')) {
 			add(

@@ -60,7 +60,7 @@ export function dataUrlToMediaBytes(dataUrl: string): {
 	const ext = MIME_TO_EXT[mime] ?? mimeSubtypeToExt(mime);
 
 	// Decode Base64 payload into a binary byte array
-	const base64 = match[2];
+	const base64 = match[2] ?? '';
 	const binary = atob(base64);
 	const bytes = new Uint8Array(binary.length);
 	for (let i = 0; i < binary.length; i++) {

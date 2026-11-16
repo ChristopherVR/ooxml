@@ -61,7 +61,7 @@ export function decodeTracePoints(text: string, channelOrder: ChannelOrder): num
 		const decoded: number[] = [];
 		for (let i = 0; i < tokens.length && i < channelOrder.length; i++) {
 			// `lastValue` and `modes` have one entry per channel and `i` is below both lengths.
-			const parsed = parseValueToken(at(tokens, i), modes[i]);
+			const parsed = parseValueToken(at(tokens, i), at(modes, i));
 			if (parsed === undefined) {
 				decoded.push(at(lastValue, i));
 				continue;

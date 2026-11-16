@@ -13,6 +13,7 @@ import type {
 import { extractAttrNameFromCBhvr } from './native-animation-attr-name';
 import { ensureArray } from './native-animation-helpers';
 import { isFiniteNumber } from '../../../units/finite';
+import { at } from '../../../geometry/indexed';
 
 /**
  * Parse `p:animClr` nodes from the child timing list.
@@ -313,7 +314,7 @@ export function extractCommand(childTnList: XmlObject | undefined): {
 		return {};
 	}
 
-	const cmd = cmdNodes[0];
+	const cmd = at(cmdNodes, 0);
 	const commandType = cmd['@_type'] ? String(cmd['@_type']) : undefined;
 	const commandString = cmd['@_cmd'] ? String(cmd['@_cmd']) : undefined;
 

@@ -144,7 +144,10 @@ export function isAlternateContentChoiceXmlSupported(requires: string, branchXml
 	const tagPattern = /<(?!\/|\?|!)([A-Za-z_][\w.-]*):([A-Za-z_][\w.-]*)\b/g;
 	let match: RegExpExecArray | null;
 	while ((match = tagPattern.exec(branchXml)) !== null) {
-		if (required.has(match[1]) && !isExtensionElementSupported(match[1], match[2])) {
+		if (
+			required.has(match[1] ?? '') &&
+			!isExtensionElementSupported(match[1] ?? '', match[2] ?? '')
+		) {
 			return false;
 		}
 	}

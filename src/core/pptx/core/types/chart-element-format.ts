@@ -211,7 +211,7 @@ export interface PptxChartTextOutline {
  * rich text runs). Each `null` removes the setting, `undefined` leaves it.
  */
 export interface PptxChartElementText {
-	fill?: PptxChartTextFill;
+	fill?: PptxChartTextFill | undefined;
 	outline?: PptxChartTextOutline;
 	/** Text shadow and glow (`a:defRPr/a:effectLst`). */
 	effects?: Pick<PptxChartElementEffects, 'shadow' | 'glow'>;
@@ -224,7 +224,7 @@ export interface PptxChartElementText {
 	/** `true` wraps text in its box (`a:bodyPr/@wrap="square"`), `false` never wraps (`none`). */
 	wrap?: boolean | null;
 	/** Italic text (`a:defRPr/@i`, and a title's runs). */
-	italic?: boolean;
+	italic?: boolean | undefined;
 }
 
 /**
@@ -234,7 +234,7 @@ export interface PptxChartElementText {
  * style draws it again; later edits recorded after a reset apply on top.
  */
 export interface PptxChartElementFormat {
-	fill?: PptxChartElementFill;
+	fill?: PptxChartElementFill | undefined;
 	line?: PptxChartElementLine;
 	effects?: PptxChartElementEffects;
 	threeD?: PptxChartElementThreeD;

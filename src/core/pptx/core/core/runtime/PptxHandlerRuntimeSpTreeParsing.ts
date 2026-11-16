@@ -220,9 +220,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		let choiceMatch: RegExpExecArray | null;
 
 		while ((choiceMatch = choiceRegex.exec(acInner)) !== null) {
-			const attrs = choiceMatch[1];
+			const attrs = choiceMatch[1] ?? '';
 			const requiresMatch = /Requires\s*=\s*"([^"]*)"/.exec(attrs);
-			const requires = requiresMatch ? requiresMatch[1] : '';
+			const requires = requiresMatch?.[1] ?? '';
 
 			const choiceBodyStart = choiceMatch.index + choiceMatch[0].length;
 			const choiceEnd = PptxHandlerRuntime.findClosingTag(acInner, 'mc:Choice', choiceBodyStart);

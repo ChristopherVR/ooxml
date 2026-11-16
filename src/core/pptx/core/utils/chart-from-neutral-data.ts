@@ -88,7 +88,8 @@ export function neutralCategoryLevels(
 		if (levelIndex > 0) {
 			let last = '';
 			for (let at = 0; at < dense.length; at++) {
-				if (dense[at]) last = dense[at];
+				const label = dense[at];
+				if (label) last = label;
 				else dense[at] = last;
 			}
 		}

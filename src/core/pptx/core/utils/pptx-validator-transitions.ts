@@ -174,12 +174,12 @@ function matchingElements(xml: string, localName: string): ElementMatch[] {
 	return [
 		...[...xml.matchAll(paired)].map((match) => ({
 			prefix: match[1] ?? '',
-			attributes: match[2],
-			body: match[3],
+			attributes: match[2] ?? '',
+			body: match[3] ?? '',
 		})),
 		...[...xml.matchAll(empty)].map((match) => ({
 			prefix: match[1] ?? '',
-			attributes: match[2],
+			attributes: match[2] ?? '',
 			body: '',
 		})),
 	];

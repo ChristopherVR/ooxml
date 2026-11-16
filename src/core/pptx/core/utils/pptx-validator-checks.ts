@@ -79,7 +79,7 @@ async function validateMediaReferences(
 			if (/^[A-Za-z][A-Za-z\d+.-]*:/.test(rel.target)) {
 				continue;
 			}
-			const resolved = resolveRelTarget(relsOwnerDir(path), rel.target.split('#')[0]);
+			const resolved = resolveRelTarget(relsOwnerDir(path), rel.target.split('#')[0] ?? '');
 			if (resolved.startsWith('ppt/media/') && !media.has(resolved)) {
 				issues.push({
 					severity: 'warning',

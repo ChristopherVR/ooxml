@@ -3,45 +3,45 @@ export interface DrawingScene3D {
 	/** Camera preset type, e.g. "orthographicFront", "perspectiveFront". */
 	cameraPreset?: string | undefined;
 	/** Camera field of view in 1/60000 degrees (`a:camera/@fov`). */
-	cameraFieldOfView?: number;
+	cameraFieldOfView?: number | undefined;
 	/** Camera zoom as an OOXML percentage fraction (`a:camera/@zoom`, 1 = 100%). */
-	cameraZoom?: number;
+	cameraZoom?: number | undefined;
 	/** Camera rotation around X axis in 1/60000 degrees. */
-	cameraRotX?: number;
+	cameraRotX?: number | undefined;
 	/** Camera rotation around Y axis in 1/60000 degrees. */
-	cameraRotY?: number;
+	cameraRotY?: number | undefined;
 	/** Camera rotation around Z axis in 1/60000 degrees. */
-	cameraRotZ?: number;
+	cameraRotZ?: number | undefined;
 	/** Light rig type, e.g. "threePt", "balanced", "harsh". */
 	lightRigType?: string | undefined;
 	/** Light rig direction, e.g. "t", "b", "l", "r", "tl". */
 	lightRigDirection?: string | undefined;
 	/** Light-rig rotation latitude in 1/60000 degrees. */
-	lightRigRotX?: number;
+	lightRigRotX?: number | undefined;
 	/** Light-rig rotation longitude in 1/60000 degrees. */
-	lightRigRotY?: number;
+	lightRigRotY?: number | undefined;
 	/** Light-rig rotation revolution in 1/60000 degrees. */
-	lightRigRotZ?: number;
+	lightRigRotZ?: number | undefined;
 	/** Whether a 3D backdrop plane is present (`a:backdrop`). */
-	hasBackdrop?: boolean;
+	hasBackdrop?: boolean | undefined;
 	/** Backdrop plane anchor X in EMU. */
-	backdropAnchorX?: number;
+	backdropAnchorX?: number | undefined;
 	/** Backdrop plane anchor Y in EMU. */
-	backdropAnchorY?: number;
+	backdropAnchorY?: number | undefined;
 	/** Backdrop plane anchor Z in EMU. */
-	backdropAnchorZ?: number;
+	backdropAnchorZ?: number | undefined;
 	/** Backdrop normal vector X component. */
-	backdropNormalX?: number;
+	backdropNormalX?: number | undefined;
 	/** Backdrop normal vector Y component. */
-	backdropNormalY?: number;
+	backdropNormalY?: number | undefined;
 	/** Backdrop normal vector Z component. */
-	backdropNormalZ?: number;
+	backdropNormalZ?: number | undefined;
 	/** Backdrop up vector X component. */
-	backdropUpX?: number;
+	backdropUpX?: number | undefined;
 	/** Backdrop up vector Y component. */
-	backdropUpY?: number;
+	backdropUpY?: number | undefined;
 	/** Backdrop up vector Z component. */
-	backdropUpZ?: number;
+	backdropUpZ?: number | undefined;
 }
 export interface DrawingText3DValues {
 	extrusionHeight?: number;

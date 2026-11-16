@@ -79,7 +79,7 @@ export interface ParsedTableStyleEffect {
  * ```
  */
 export interface TableStyleSectionPatch {
-	fill?: import('./table').ParsedTableStyleFill;
+	fill?: import('./table').ParsedTableStyleFill | undefined;
 	text?: import('./table').ParsedTableStyleText;
 	borders?: import('./table').ParsedTableStyleBorders;
 	cell3D?: import('./table').PptxTableCell3D;

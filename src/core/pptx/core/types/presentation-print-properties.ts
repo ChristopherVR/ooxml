@@ -21,5 +21,5 @@ export interface PptxPresentationPrintProperties {
 	scaleToFitPaper?: boolean | null | undefined;
 	frameSlides?: boolean | null | undefined;
 	/** Original subtree retained for unknown attributes and `p:extLst`. */
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }

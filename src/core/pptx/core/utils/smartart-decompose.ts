@@ -32,6 +32,7 @@ import {
 import { DEFAULT_ACCENT_COLORS, nextId, makeShapeElement } from './smartart-helpers';
 import { applyNodeStylesToElements } from './smartart-node-style-apply';
 import { parseSmartArtPresLayoutVars } from './smartart-pres-layout-vars';
+import { at } from '../../../geometry/indexed';
 
 // ── Pre-computed drawing shape conversion ────────────────────────────────
 
@@ -85,8 +86,8 @@ function convertDrawingShapes(
 		const fill =
 			ds.fillColor ??
 			(colorTransformFills && colorTransformFills.length > 0
-				? colorTransformFills[index % colorTransformFills.length]
-				: DEFAULT_ACCENT_COLORS[index % DEFAULT_ACCENT_COLORS.length]);
+				? at(colorTransformFills, index % colorTransformFills.length)
+				: at(DEFAULT_ACCENT_COLORS, index % DEFAULT_ACCENT_COLORS.length));
 
 		return makeShapeElement(
 			nextId('sa-draw'),
@@ -259,7 +260,7 @@ function buildEffectiveThemeMap(
 	}
 	const merged: Record<string, string> = { ...themeColorMap };
 	for (let i = 0; i < colorTransformFills.length && i < 6; i++) {
-		merged[`accent${i + 1}`] = colorTransformFills[i];
+		merged[`accent${i + 1}`] = at(colorTransformFills, i);
 	}
 	return merged;
 }

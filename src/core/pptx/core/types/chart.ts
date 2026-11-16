@@ -298,8 +298,8 @@ export interface PptxChartShapeProps {
 export interface PptxChartUpDownBars {
 	/** Gap between bars as a percentage, constrained to 0 through 500. */
 	gapWidth?: number;
-	upBars?: PptxChartShapeProps;
-	downBars?: PptxChartShapeProps;
+	upBars?: PptxChartShapeProps | undefined;
+	downBars?: PptxChartShapeProps | undefined;
 }
 
 /** Marker appearance on a chart series or data point. */
@@ -379,7 +379,7 @@ export interface PptxChartDataLabelsRange {
 export interface PptxChartDataLabel {
 	idx: number;
 	/** Suppress this data point's automatically generated label. */
-	deleted?: boolean;
+	deleted?: boolean | undefined;
 	showVal?: boolean | undefined;
 	showCatName?: boolean | undefined;
 	showSerName?: boolean | undefined;
@@ -506,7 +506,7 @@ export interface PptxChartAxisFormatting extends PptxChartAxisLabelFormatting {
 	 * Whether the axis is deleted/hidden (c:delete/@val). Written for generated
 	 * charts (absent means shown) and reconciled on save for loaded ones.
 	 */
-	deleted?: boolean;
+	deleted?: boolean | undefined;
 	/**
 	 * Display units for value axis (c:dispUnits/c:builtInUnit/@val).
 	 * When set to 'custom', the actual divisor is in {@link displayUnitsValue}.
@@ -579,8 +579,8 @@ export interface PptxChartHistogramOptions {
 	binSize?: number;
 	binCount?: number;
 	intervalClosed?: 'l' | 'r';
-	underflow?: number | 'auto';
-	overflow?: number | 'auto';
+	underflow?: number | 'auto' | undefined;
+	overflow?: number | 'auto' | undefined;
 	/**
 	 * `c:layoutPr/cx:aggregation` was authored instead of `cx:binning`: the
 	 * raw rows are CATEGORICAL (a Pareto chart's `clusteredColumn` series
@@ -613,26 +613,26 @@ export interface PptxCxValueColorPosition {
 
 /** Office 2016 ChartEx geographic series dimensions and layout options. */
 export interface PptxChartRegionMapOptions {
-	fixedColor?: string;
+	fixedColor?: string | undefined;
 	/**
 	 * Colour-by-value gradient stops (`cx:valueColors/cx:colors/cx:color`),
 	 * resolved to hex, 2 or 3 entries (matching PowerPoint's two- and
 	 * three-colour scale UI). Paired index-for-index with
 	 * {@link valueColorPositions} when both are present.
 	 */
-	valueColors?: string[];
+	valueColors?: string[] | undefined;
 	/** Gradient breakpoints for {@link valueColors} (`cx:valueColorPositions`). */
-	valueColorPositions?: PptxCxValueColorPosition[];
+	valueColorPositions?: PptxCxValueColorPosition[] | undefined;
 	/** Optional provider entity identifiers aligned with categories and values. */
-	entityIds?: string[];
+	entityIds?: string[] | undefined;
 	/** Original `cx:pt/@idx` values for category points. */
-	categorySourceIndices?: number[];
+	categorySourceIndices?: number[] | undefined;
 	/** Original `cx:pt/@idx` values for colour-value points. */
-	valueSourceIndices?: number[];
+	valueSourceIndices?: number[] | undefined;
 	/** Original `cx:pt/@idx` values for entity-ID points. */
-	entityIdSourceIndices?: number[];
-	regionLabelLayout?: 'none' | 'bestFitOnly' | 'showAll';
-	projectionType?: 'mercator' | 'miller' | 'robinson' | 'albers';
+	entityIdSourceIndices?: number[] | undefined;
+	regionLabelLayout?: 'none' | 'bestFitOnly' | 'showAll' | undefined;
+	projectionType?: 'mercator' | 'miller' | 'robinson' | 'albers' | undefined;
 	viewedRegionType?:
 		| 'dataOnly'
 		| 'postalCode'
@@ -640,15 +640,16 @@ export interface PptxChartRegionMapOptions {
 		| 'state'
 		| 'countryRegion'
 		| 'countryRegionList'
-		| 'world';
-	cultureLanguage?: string;
+		| 'world'
+		| undefined;
+	cultureLanguage?: string | undefined;
 	/** ISO-3166-1 alpha-2 region code. */
-	cultureRegion?: string;
-	attribution?: string;
+	cultureRegion?: string | undefined;
+	attribution?: string | undefined;
 	/** Opaque authored provider cache under `cx:geography/cx:geoCache`. */
-	geographyCache?: XmlObject;
+	geographyCache?: XmlObject | undefined;
 	/** Neutral raw source cache retained for the shared renderer. */
-	geographyCacheXml?: string;
+	geographyCacheXml?: string | undefined;
 }
 
 /** Layout for parent category labels in a hierarchical ChartEx treemap. */
@@ -997,7 +998,7 @@ export interface PptxChartLegendTextStyle {
 /** Per-series legend entry override (`c:legendEntry`). */
 export interface PptxChartLegendEntry {
 	index: number;
-	deleted?: boolean;
+	deleted?: boolean | undefined;
 	textStyle?: PptxChartLegendTextStyle;
 }
 
@@ -1515,7 +1516,7 @@ export interface PptxChartData {
 	/** Internal parsed palette snapshot used to detect actual edits. */
 	colorStyleOriginalPalette?: string[];
 	/** Internal parsed method snapshot used to detect actual edits. */
-	colorStyleOriginalMethod?: 'cycle' | 'withinLinear' | 'acrossLinear';
+	colorStyleOriginalMethod?: 'cycle' | 'withinLinear' | 'acrossLinear' | undefined;
 
 	/**
 	 * Pie-of-pie / Bar-of-pie options (`c:ofPieChart`, CT_OfPieChart).

@@ -103,8 +103,9 @@ function expandCategoryLevel(
 	if (levelIndex > 0) {
 		let lastLabel = '';
 		for (let index = 0; index < dense.length; index++) {
-			if (dense[index]) {
-				lastLabel = dense[index];
+			const label = dense[index];
+			if (label) {
+				lastLabel = label;
 			} else {
 				dense[index] = lastLabel;
 			}

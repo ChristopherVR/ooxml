@@ -208,7 +208,10 @@ function parseVmlGroup(node: XmlObject, idPrefix: string, index: number): GroupP
 
 		const coordOrigin = String(node['@_coordorigin'] || '0,0');
 		const coordSize = String(node['@_coordsize'] || '');
-		const [originX, originY] = coordOrigin.split(/[\s,]+/).map((s) => parseFloat(s) || 0);
+		// A missing coordinate reads as NaN, as the arithmetic on `undefined` did.
+		const [originX = NaN, originY = NaN] = coordOrigin
+			.split(/[\s,]+/)
+			.map((s) => parseFloat(s) || 0);
 
 		let childScaleX = 1;
 		let childScaleY = 1;

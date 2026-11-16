@@ -48,8 +48,10 @@ function rebuildContentTypes(zip: JSZip): string {
 	const overrides: Array<{ partName: string; contentType: string }> = [];
 
 	// Always include rels and xml defaults
-	defaults.set('rels', EXTENSION_CONTENT_TYPES.rels);
-	defaults.set('xml', EXTENSION_CONTENT_TYPES.xml);
+	for (const ext of ['rels', 'xml']) {
+		const contentType = EXTENSION_CONTENT_TYPES[ext];
+		if (contentType) defaults.set(ext, contentType);
+	}
 
 	const zipPaths = Object.keys(zip.files).filter(
 		(p) => !zip.files[p]?.dir && p !== '[Content_Types].xml',

@@ -147,13 +147,13 @@ export type ChartExAutoNumber = number | 'auto';
 /** Histogram binning (`cx:binning`). */
 export interface ChartExBinning {
 	/** `@intervalClosed`: `l` or `r`. */
-	intervalClosed?: string;
-	underflow?: ChartExAutoNumber;
-	overflow?: ChartExAutoNumber;
+	intervalClosed?: string | undefined;
+	underflow?: ChartExAutoNumber | undefined;
+	overflow?: ChartExAutoNumber | undefined;
 	/** `cx:binSize/@val`. */
-	binSize?: number;
+	binSize?: number | undefined;
 	/** `cx:binCount/@val`. */
-	binCount?: number;
+	binCount?: number | undefined;
 }
 
 /** What a series shows of its parts (`cx:layoutPr/cx:visibility`). */

@@ -53,5 +53,5 @@ export interface PptxChartDataPointPicture {
 	 * thousandths-of-a-percent value, so `amt="60000"` is `0.6`). `undefined`
 	 * when the blip carries no `alphaModFix`, meaning fully opaque.
 	 */
-	opacity?: number;
+	opacity?: number | undefined;
 }

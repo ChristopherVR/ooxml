@@ -217,19 +217,20 @@ export class ChartElementProcessor implements ElementProcessor {
 		const widths = headers.map((header) => Math.max(3, header.length));
 
 		for (let rowIndex = 0; rowIndex < categories.length; rowIndex += 1) {
-			widths[0] = Math.max(widths[0], categories[rowIndex]?.length ?? 0);
+			// `widths` has one entry per header column, so every index below is in range.
+			widths[0] = Math.max(at(widths, 0), categories[rowIndex]?.length ?? 0);
 			for (let seriesIndex = 0; seriesIndex < series.length; seriesIndex += 1) {
 				const value = String(at(series, seriesIndex).values[rowIndex] ?? '');
-				widths[seriesIndex + 1] = Math.max(widths[seriesIndex + 1], value.length);
+				widths[seriesIndex + 1] = Math.max(at(widths, seriesIndex + 1), value.length);
 			}
 			if (showPct) {
 				const pct = this.computeRowPct(series, rowIndex, totalForPct);
-				widths[widths.length - 1] = Math.max(widths[widths.length - 1], pct.length);
+				widths[widths.length - 1] = Math.max(at(widths, widths.length - 1), pct.length);
 			}
 		}
 
 		const formatRow = (cells: string[]): string => {
-			const padded = cells.map((cell, index) => cell.padEnd(widths[index]));
+			const padded = cells.map((cell, index) => cell.padEnd(at(widths, index)));
 			return `| ${padded.join(' | ')} |`;
 		};
 

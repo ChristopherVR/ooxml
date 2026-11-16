@@ -11,6 +11,7 @@ import type {
 import type { PptxSmartArtDrawingShape } from '../core/types/smart-art';
 import { relayoutSmartArt } from '../core/utils';
 import { renderFunnelChartSvg } from './svg-chart-extended';
+import { at } from '../../geometry/indexed';
 
 function esc(value: string): string {
 	return value
@@ -23,7 +24,7 @@ function esc(value: string): string {
 
 function color(series: PptxChartSeries, index: number): string {
 	const palette = ['#4472C4', '#ED7D31', '#A5A5A5', '#FFC000', '#5B9BD5', '#70AD47'];
-	return series.color ?? palette[index % palette.length];
+	return series.color ?? at(palette, index % palette.length);
 }
 
 function chartValues(element: ChartPptxElement): number[] {

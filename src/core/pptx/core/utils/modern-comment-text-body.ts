@@ -127,7 +127,8 @@ function spliceParagraph(paragraph: XmlObject, line: string): XmlObject | undefi
 	let cursor = 0;
 	let middleInserted = false;
 	for (let index = 0; index < runs.length; index += 1) {
-		const text = known[index];
+		// `known` has one text per run.
+		const text = at(known, index);
 		const start = cursor;
 		const end = cursor + text.length;
 		cursor = end;

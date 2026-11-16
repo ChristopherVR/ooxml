@@ -6,7 +6,7 @@
 
 export interface DiagramDefinitionText {
 	value: string;
-	language?: string;
+	language?: string | undefined;
 }
 
 export interface DiagramDefinitionCategory {
@@ -62,12 +62,12 @@ export interface DiagramQuickStyleLabel<Scene = unknown, Shape = unknown, Text =
 /** CT_CTStyleLabel metadata from a color-transform definition. */
 export interface DiagramColorTransformLabel {
 	name: string;
-	fill?: DiagramColorListMetadata;
-	line?: DiagramColorListMetadata;
-	effect?: DiagramColorListMetadata;
-	textLine?: DiagramColorListMetadata;
-	textFill?: DiagramColorListMetadata;
-	textEffect?: DiagramColorListMetadata;
+	fill?: DiagramColorListMetadata | undefined;
+	line?: DiagramColorListMetadata | undefined;
+	effect?: DiagramColorListMetadata | undefined;
+	textLine?: DiagramColorListMetadata | undefined;
+	textFill?: DiagramColorListMetadata | undefined;
+	textEffect?: DiagramColorListMetadata | undefined;
 }
 
 export interface DiagramDefinitionMetadata {

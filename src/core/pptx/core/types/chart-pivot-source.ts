@@ -7,5 +7,5 @@ export interface PptxChartPivotSource {
 	/** Required unsigned format identifier stored in `c:fmtId/@val`. */
 	formatId: number;
 	/** Internal source subtree used to preserve extensions and foreign markup. */
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }

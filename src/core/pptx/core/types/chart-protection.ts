@@ -13,5 +13,5 @@ export interface PptxChartProtection {
 	/** Prevent chart user-interface operations. */
 	userInterface?: boolean | null;
 	/** Internal source subtree used to preserve foreign markup during edits. */
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }

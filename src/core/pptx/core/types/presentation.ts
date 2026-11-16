@@ -62,7 +62,7 @@ export interface PptxCustomerData {
 	/** OPC content type for the custom data part. */
 	contentType?: string | undefined;
 	/** Raw `p:custData` XML retained for unknown-node preservation. */
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }
 
 /**
@@ -112,7 +112,7 @@ export interface PptxActiveXControl {
 	 */
 	fallbackImageRelId?: string | undefined;
 	/** Raw XML for round-trip preservation. */
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }
 
 /**
@@ -274,7 +274,7 @@ export interface PptxSlide {
 	 * placeholder text. When undefined, the existing notes XML is left
 	 * untouched on save and only `notes` / `notesSegments` are written.
 	 */
-	notesShapes?: PptxElement[];
+	notesShapes?: PptxElement[] | undefined;
 	/**
 	 * Per-notes-slide colour map override parsed from `<p:notes>/<p:clrMapOvr>`.
 	 * Captured for lossless round-trip of the notes-slide's colour scheme.
@@ -286,7 +286,7 @@ export interface PptxSlide {
 	/** Source package metadata for an Office 2021 p188 comment part. */
 	modernCommentPart?: PptxModernCommentPart | undefined;
 	warnings?: PptxCompatibilityWarning[];
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 	/** Per-slide colour map override parsed from `p:clrMapOvr`. */
 	clrMapOverride?: Record<string, string> | undefined;
 	/** Whether background animations should play (`p:bg/@showAnimation`). */
@@ -334,7 +334,7 @@ export interface PptxSlideSyncProperties {
 	serverSlideModifiedTime: string;
 	clientInsertedTime: string;
 	extensionList?: XmlObject | undefined;
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 	partPath?: string | undefined;
 	relationshipId?: string | undefined;
 }
@@ -508,7 +508,7 @@ export interface PptxCustomShow {
 	/** Ordered list of slide relationship IDs included in this custom show. */
 	slideRIds: string[];
 	/** Original `p:custShow` subtree used to preserve unmodelled attributes and extensions. */
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }
 
 /**
@@ -627,7 +627,7 @@ export interface PptxSmartTagsReference {
 	/** Resolved ZIP path of the referenced recognizer part, when resolvable. */
 	targetPath?: string;
 	/** Raw `p:smartTags` XML retained for lossless round-trip. */
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }
 
 /**
@@ -646,7 +646,7 @@ export interface PptxKinsoku {
 	/** Characters that cannot end a line. */
 	invalEndChars?: string;
 	/** Original leaf retained for unknown attribute preservation. */
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }
 
 /**
@@ -895,8 +895,8 @@ export interface PptxEmbeddedFont {
 	 * `undefined` on fonts that are not deferred. Not enumerable.
 	 */
 	readonly isLoaded?: boolean;
-	bold?: boolean;
-	italic?: boolean;
+	bold?: boolean | undefined;
+	italic?: boolean | undefined;
 	/** CSS font format hint (e.g. "truetype", "opentype"). */
 	format?: 'truetype' | 'opentype' | 'woff' | 'woff2' | undefined;
 	/**

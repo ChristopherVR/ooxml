@@ -15,6 +15,7 @@ import type {
 	TextSegment,
 } from '../types';
 import type { TreeNode as DiagramTreeNode } from '../../../diagram/layout/smartart-tree';
+import { at } from '../../../geometry/indexed';
 
 // ── Theme colour cycling ────────────────────────────────────────────────
 
@@ -40,7 +41,7 @@ export function accentColor(index: number, themeColorMap?: Record<string, string
 			return colour.startsWith('#') ? colour : `#${colour}`;
 		}
 	}
-	return DEFAULT_ACCENT_COLORS[index % DEFAULT_ACCENT_COLORS.length];
+	return at(DEFAULT_ACCENT_COLORS, index % DEFAULT_ACCENT_COLORS.length);
 }
 
 /** Lighten a hex colour by mixing with white. */

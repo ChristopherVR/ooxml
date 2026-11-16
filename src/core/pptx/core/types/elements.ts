@@ -763,7 +763,7 @@ export interface SummaryZoomTarget extends PptxImageProperties {
 	returnToParent?: boolean | undefined;
 	/** This tile's own `zmPr/@transitionDur` in milliseconds; see {@link ZoomPptxElement.transitionDurationMs}. */
 	transitionDurationMs?: number | undefined;
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }
 
 /**

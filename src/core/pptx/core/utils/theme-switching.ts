@@ -131,6 +131,16 @@ function remapColorWithRef(
  * Re-resolve all theme-derived colours in a ShapeStyle.
  */
 function remapShapeStyleColors(
+	style: ShapeStyle,
+	remap: Map<string, string>,
+	newColorMap: Readonly<Record<string, string>>,
+): ShapeStyle;
+function remapShapeStyleColors(
+	style: ShapeStyle | undefined,
+	remap: Map<string, string>,
+	newColorMap: Readonly<Record<string, string>>,
+): ShapeStyle | undefined;
+function remapShapeStyleColors(
 	style: ShapeStyle | undefined,
 	remap: Map<string, string>,
 	newColorMap: Readonly<Record<string, string>>,

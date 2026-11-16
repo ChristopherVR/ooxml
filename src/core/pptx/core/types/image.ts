@@ -87,7 +87,7 @@ export interface PptxBackgroundRemoval {
 	/** Strokes marking regions the user forced to be background. */
 	backgroundMarks?: PptxBackgroundRemovalMark[];
 	/** Original effect XML, retained for lossless re-emission. */
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }
 
 export interface PptxImageEffects {
@@ -100,7 +100,7 @@ export interface PptxImageEffects {
 		color1: string;
 		color2: string;
 		/** Original effect XML, retained while the resolved colours are unchanged. */
-		rawXml?: XmlObject;
+		rawXml?: XmlObject | undefined;
 	};
 	/** Grayscale flag. */
 	grayscale?: boolean;
@@ -199,7 +199,7 @@ export interface PptxImageEffects {
 		/** Whether the target colour is fully transparent (alpha = 0). */
 		clrToTransparent?: boolean;
 		/** Original effect XML, including colour transforms and extensions. */
-		rawXml?: XmlObject;
+		rawXml?: XmlObject | undefined;
 	};
 	/** Original grayscale node, including extension or foreign attributes. */
 	grayscaleRawXml?: XmlObject;
@@ -213,7 +213,7 @@ export interface PptxImageEffects {
 		/** Optional baseline colour (hex). */
 		color?: string;
 		/** Original effect XML, including colour transforms and foreign attributes. */
-		rawXml?: XmlObject;
+		rawXml?: XmlObject | undefined;
 	};
 	/** Alpha ceiling (`a:alphaCeiling`): clamps any non-zero alpha to fully opaque. Boolean flag. */
 	alphaCeiling?: boolean;
@@ -231,7 +231,7 @@ export interface PptxImageEffects {
 		/** Raw opaque XML for the `a:cont` child to preserve on save. */
 		contRawXml?: Record<string, unknown>;
 		/** Original effect XML, including foreign attributes. */
-		rawXml?: XmlObject;
+		rawXml?: XmlObject | undefined;
 		/**
 		 * Multiplicative alpha percentage (0..100+), read from a nested
 		 * `<a:alphaModFix>` inside `contRawXml` when present - the common
@@ -260,7 +260,7 @@ export interface PptxImageEffects {
 		/** Resolved hex colour. */
 		color: string;
 		/** Raw opaque colour XML for round-trip. */
-		rawXml?: Record<string, unknown>;
+		rawXml?: Record<string, unknown> | undefined;
 	};
 	/** Luminance modulation (`a:lum`): bright/contrast as fixed percentages (0..100). */
 	lum?: {
@@ -295,7 +295,7 @@ export interface PptxImageEffects {
 		 */
 		resolvedColor?: string;
 		/** Resolved opacity (0-1) of the `a:solidFill` overlay colour, when resolved. */
-		resolvedOpacity?: number;
+		resolvedOpacity?: number | undefined;
 		/**
 		 * Resolved gradient, when the overlay fill is `a:gradFill`. A renderer
 		 * composites this as an SVG paint server (`<linearGradient>` /

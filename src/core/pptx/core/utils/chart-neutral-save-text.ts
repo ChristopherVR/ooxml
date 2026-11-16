@@ -66,7 +66,7 @@ export function planNeutralChartText(
 	if (!same(before.style?.legendEntries, probe.style?.legendEntries)) {
 		const entries = (probe.style?.legendEntries ?? []).map((entry) => ({
 			index: entry.index,
-			deleted: entry.deleted,
+			...(entry.deleted !== undefined && { deleted: entry.deleted }),
 			text: neutralTextEdit(
 				before.style?.legendEntries?.find((old) => old.index === entry.index)?.textStyle,
 				entry.textStyle,

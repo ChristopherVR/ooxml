@@ -79,7 +79,8 @@ export function scanSpTreeDocumentOrder(xml: string): SpTreeChildPlan[] {
 	tagPattern.lastIndex = bodyStart + 1;
 	let match: RegExpExecArray | null;
 	while ((match = tagPattern.exec(xml))) {
-		const [, closing, tag, , selfClosing] = match;
+		// The tag-name group is required, so it is always a string once the pattern matched.
+		const [, closing, tag = '', , selfClosing] = match;
 		if (closing) {
 			if (inert > 0) {
 				inert--;

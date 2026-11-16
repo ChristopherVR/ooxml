@@ -22,9 +22,9 @@ export interface PptxChartUserShapeParagraph {
 	/** Font size in points (`a:rPr/@sz` divided by 100), when present. */
 	fontSize?: number;
 	/** Whether the first run is bold (`a:rPr/@b`). */
-	bold?: boolean;
+	bold?: boolean | undefined;
 	/** Whether the first run is italic (`a:rPr/@i`). */
-	italic?: boolean;
+	italic?: boolean | undefined;
 	/** Resolved run colour hex (e.g. `"#FF0000"`), when present. */
 	color?: string;
 	/** Paragraph alignment (`a:pPr/@algn`): left / centre / right. */
@@ -84,7 +84,7 @@ export interface PptxChartUserShapeGroupChild {
 	/** Preset geometry name (`a:prstGeom/@prst`), defaulting to `"rect"`. */
 	prst?: string;
 	/** Resolved solid-fill hex colour, when present. */
-	fill?: string;
+	fill?: string | undefined;
 	/** Resolved line/stroke hex colour, when present. */
 	stroke?: string;
 	/** Line width in points (`a:ln/@w` divided by 12700), when present. */
@@ -151,7 +151,7 @@ export interface PptxChartUserShape {
 	/** Preset geometry name (`a:prstGeom/@prst`), defaulting to `"rect"`. */
 	prst?: string;
 	/** Resolved solid-fill hex colour, when present. */
-	fill?: string;
+	fill?: string | undefined;
 	/** Resolved line/stroke hex colour, when present. */
 	stroke?: string;
 	/** Line width in points (`a:ln/@w` divided by 12700), when present. */

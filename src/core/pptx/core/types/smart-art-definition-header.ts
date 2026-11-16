@@ -6,9 +6,9 @@ export type PptxSmartArtDefinitionHeaderKind = 'layout' | 'style' | 'color';
 /** Localized CT_Name/CT_Description value. */
 export interface PptxSmartArtHeaderText {
 	value: string;
-	language?: string;
+	language?: string | undefined;
 	/** Original element retained for foreign attribute preservation. */
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }
 
 /** CT_Category, CT_SDCategory, or CT_CTCategory metadata. */
@@ -16,7 +16,7 @@ export interface PptxSmartArtHeaderCategory {
 	type: string;
 	priority: number;
 	/** Original element retained for foreign attribute preservation. */
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }
 
 /** Typed common model for the three DiagramML definition header types. */
@@ -30,7 +30,7 @@ export interface PptxSmartArtDefinitionHeader {
 	descriptions: PptxSmartArtHeaderText[];
 	categories?: PptxSmartArtHeaderCategory[] | undefined;
 	/** Original header retained for extension and foreign markup preservation. */
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }
 
 /** A layoutDefHdrLst, styleDefHdrLst, or colorsDefHdrLst root. */
@@ -38,7 +38,7 @@ export interface PptxSmartArtDefinitionHeaderList {
 	kind: PptxSmartArtDefinitionHeaderKind;
 	headers: PptxSmartArtDefinitionHeader[];
 	/** Original list root retained for namespace and foreign markup preservation. */
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }
 
 /** OPC metadata for an actual DiagramML definition part. */

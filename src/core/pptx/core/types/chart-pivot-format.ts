@@ -38,11 +38,11 @@ export interface PptxChartPivotFormat {
 	markerXml?: XmlObject | null | undefined;
 	dataLabelXml?: XmlObject | null | undefined;
 	extensionListXml?: XmlObject | null | undefined;
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }
 
 /** Editable classic ChartML `c:pivotFmts` collection. */
 export interface PptxChartPivotFormats {
 	formats: PptxChartPivotFormat[];
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }

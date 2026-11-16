@@ -18,8 +18,8 @@ interface XmlElement {
 function elements(xml: string): XmlElement[] {
 	return [...xml.matchAll(/<(?!\/|\?|!)(?:([\w.-]+):)?([\w.-]+)\b([^>]*)>/g)].map((match) => ({
 		prefix: match[1] ?? '',
-		local: match[2],
-		attributes: match[3],
+		local: match[2] ?? '',
+		attributes: match[3] ?? '',
 	}));
 }
 

@@ -50,7 +50,7 @@ function readUtf16LE(data: Uint8Array, offset: number, byteLength: number): stri
 		if (offset + i + 1 >= data.length) {
 			break;
 		}
-		const code = (data[offset + i] ?? 0) | (data[offset + i + 1] << 8);
+		const code = (data[offset + i] ?? 0) | ((data[offset + i + 1] ?? 0) << 8);
 		if (code === 0) {
 			break;
 		}

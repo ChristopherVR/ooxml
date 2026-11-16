@@ -1,4 +1,5 @@
 import type { ChartPptxElement } from '../core/types/elements';
+import { at } from '../../geometry/indexed';
 
 const DEFAULT_COLORS = ['#4472C4', '#ED7D31', '#A5A5A5', '#FFC000', '#5B9BD5', '#70AD47'];
 
@@ -37,7 +38,7 @@ export function renderFunnelChartSvg(
 			const top = y + index * stageHeight;
 			const bottom = top + Math.max(stageHeight - 1, 0.5);
 			const pointColor = series.dataPoints?.find((point) => point.idx === index)?.spPr?.fillColor;
-			const fill = pointColor ?? series.color ?? DEFAULT_COLORS[index % DEFAULT_COLORS.length];
+			const fill = pointColor ?? series.color ?? at(DEFAULT_COLORS, index % DEFAULT_COLORS.length);
 			const points = [
 				`${center - topWidth / 2},${top}`,
 				`${center + topWidth / 2},${top}`,

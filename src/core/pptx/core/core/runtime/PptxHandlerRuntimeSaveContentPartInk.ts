@@ -9,6 +9,7 @@ import { resolveXfrmEmu } from '../../utils/xfrm-emu-resolution';
 import { ensureXmlChildOrCreate } from '../../utils/xml-access';
 import type { SaveSlideContext } from './PptxHandlerRuntimeSaveElementEmbedding';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveModel3D';
+import { at } from '../../../../geometry/indexed';
 
 const CUSTOM_XML_RELATIONSHIP_TYPE =
 	'http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml';
@@ -34,7 +35,8 @@ function strokeListsEqual(
 		return false;
 	}
 	return left.every((stroke, index) => {
-		const other = right[index];
+		// Same length as `left` (checked above).
+		const other = at(right, index);
 		return (
 			stroke.path === other.path &&
 			stroke.color === other.color &&

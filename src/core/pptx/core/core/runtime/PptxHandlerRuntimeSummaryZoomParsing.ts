@@ -2,6 +2,7 @@ import type { PptxElement, SummaryZoomTarget, XmlObject, ZoomPptxElement } from 
 import { extractSectionMap } from '../../utils/presentation-section-parser';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSectionZoomParsing';
 import { isFiniteNumber } from '../../../../units/finite';
+import { at } from '../../../../geometry/indexed';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	/** Parse an Office 2016 Summary Zoom container and all section tiles. */
@@ -53,7 +54,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			const top = Math.min(...targets.map((target) => target.y));
 			const right = Math.max(...targets.map((target) => target.x + target.width));
 			const bottom = Math.max(...targets.map((target) => target.y + target.height));
-			const first = targets[0];
+			const first = at(targets, 0);
 			const result: ZoomPptxElement = {
 				id,
 				type: 'zoom',

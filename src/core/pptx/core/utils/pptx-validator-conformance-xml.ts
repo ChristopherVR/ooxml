@@ -26,7 +26,7 @@ export function namespaces(xml: string): Map<string, string> {
 	for (const match of rootAttributes(xml).matchAll(
 		/xmlns(?::([\w.-]+))?\s*=\s*["']([^"']+)["']/g,
 	)) {
-		result.set(match[1] ?? '', match[2]);
+		result.set(match[1] ?? '', match[2] ?? '');
 	}
 	return result;
 }
@@ -34,7 +34,7 @@ export function namespaces(xml: string): Map<string, string> {
 export function allNamespaceDeclarations(xml: string): Map<string, string> {
 	const result = new Map<string, string>();
 	for (const match of xml.matchAll(/xmlns(?::([\w.-]+))?\s*=\s*["']([^"']+)["']/g)) {
-		result.set(match[1] ?? '', match[2]);
+		result.set(match[1] ?? '', match[2] ?? '');
 	}
 	return result;
 }

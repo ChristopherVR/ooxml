@@ -1,6 +1,7 @@
 import type { PptxSlide, PptxThemeColorScheme } from '../types';
 import { mergeThemeColorOverride } from './theme-override-utils';
 import { buildThemeColorMap, reResolveSlideColors } from './theme-switching';
+import { at } from '../../../geometry/indexed';
 
 /**
  * Apply a colour-map override to one slide and immediately re-resolve its
@@ -14,10 +15,10 @@ export function applyThemeOverrideToSlide(
 ): PptxSlide {
 	const previousScheme = mergeThemeColorOverride(baseColorScheme, slide.clrMapOverride);
 	const nextScheme = mergeThemeColorOverride(baseColorScheme, nextOverride);
-	const [remappedSlide] = reResolveSlideColors(
-		[slide],
-		buildThemeColorMap(previousScheme),
-		nextScheme,
+	// One slide in, one slide out.
+	const remappedSlide = at(
+		reResolveSlideColors([slide], buildThemeColorMap(previousScheme), nextScheme),
+		0,
 	);
 
 	return {

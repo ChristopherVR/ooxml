@@ -1,5 +1,6 @@
 import type { PptxElement } from '../../core';
 import type { ElementProcessor, ElementProcessorContext } from './ElementProcessor';
+import { at } from '../../../geometry/indexed';
 
 interface SmartArtNodeLike {
 	id: string;
@@ -119,7 +120,7 @@ export class SmartArtElementProcessor implements ElementProcessor {
 			return '*[SmartArt relationship]*';
 		}
 		if (entries.length === 1) {
-			return entries[0];
+			return at(entries, 0);
 		}
 		return entries.join(' -> ');
 	}

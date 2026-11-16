@@ -81,7 +81,7 @@ function validatePresentation(xml: string, path: string, issues: ValidationIssue
 
 function validateDrawingDatatypes(xml: string, path: string, issues: ValidationIssue[]): void {
 	for (const match of xml.matchAll(/<a:srgbClr\b[^>]*\bval\s*=\s*["']([^"']+)["']/g)) {
-		if (!/^[0-9A-Fa-f]{6}$/.test(match[1])) {
+		if (!/^[0-9A-Fa-f]{6}$/.test(match[1] ?? '')) {
 			issue(
 				issues,
 				path,

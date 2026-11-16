@@ -65,7 +65,7 @@ export class TextSegmentRenderer {
 		const output: string[] = [];
 		for (let index = 0; index < renderedParagraphs.length; index += 1) {
 			if (index > 0) {
-				const previous = renderedParagraphs[index - 1];
+				const previous = at(renderedParagraphs, index - 1);
 				const current = at(renderedParagraphs, index);
 				output.push(previous.isListItem && current.isListItem ? '\n' : '\n\n');
 			}

@@ -61,7 +61,7 @@ export interface PptxElementBase {
 	 * without re-walking `rawXml`. Absent on non-placeholder shapes and on
 	 * SDK-created elements.
 	 */
-	placeholderType?: string;
+	placeholderType?: string | undefined;
 	/**
 	 * `p:nvSpPr/p:nvPr/p:ph/@sz` (lower-cased): `"full"`, `"half"`, or
 	 * `"quarter"`. Captured on load for round-trip completeness. Per
@@ -258,8 +258,8 @@ export interface PlaceholderTextLevelStyle {
 	 */
 	resolvedFontFamily?: string;
 	fontSize?: number;
-	bold?: boolean;
-	italic?: boolean;
+	bold?: boolean | undefined;
+	italic?: boolean | undefined;
 	color?: string;
 	/**
 	 * The `a:defRPr/a:solidFill` node this level's {@link color} came from.

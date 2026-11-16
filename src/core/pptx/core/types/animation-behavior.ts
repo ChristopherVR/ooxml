@@ -17,7 +17,7 @@ import type { PptxAnimationKeyframe } from './animation';
 /** Timing of one behaviour, from its own `p:cBhvr/p:cTn`. */
 export interface PptxAnimationBehaviorTiming {
 	/** The behavior's own fill, independent of its containing effect. */
-	fill?: 'remove' | 'freeze' | 'hold' | 'transition';
+	fill?: 'remove' | 'freeze' | 'hold' | 'transition' | undefined;
 	/** Preserved timing profile cannot be reduced to a finite delayed one-shot set. */
 	unsupportedSetTiming?: boolean;
 	/** `p:cTn/@dur` in ms; absent when `indefinite` or unset. */

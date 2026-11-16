@@ -30,8 +30,8 @@ export interface PptxViewOrigin {
 
 /** A horizontal or vertical drawing guide in slide coordinates. */
 export interface PptxViewGuide {
-	orientation?: 'horz' | 'vert';
-	position?: number;
+	orientation?: 'horz' | 'vert' | undefined;
+	position?: number | undefined;
 }
 
 /** Positive grid spacing from `p:gridSpacing`. */
@@ -84,11 +84,11 @@ export interface PptxCommonSlideViewProperties {
 	/** Whether drawing guides are shown. */
 	showGuides?: boolean | undefined;
 	/** Whether the application may vary the scale automatically. */
-	variableScale?: boolean;
+	variableScale?: boolean | undefined;
 	/** Drawing guides shown in this slide view. */
 	guides?: PptxViewGuide[] | undefined;
 	/** View origin (scroll position). */
-	origin?: PptxViewOrigin;
+	origin?: PptxViewOrigin | undefined;
 	/** View scale. */
 	scale?: PptxViewScale | undefined;
 }
@@ -116,5 +116,5 @@ export interface PptxViewProperties {
 	/** Grid spacing in positive DrawingML coordinates. */
 	gridSpacing?: PptxGridSpacing | undefined;
 	/** Raw XML preserved for lossless round-trip of unparsed attributes. */
-	rawXml?: Record<string, unknown>;
+	rawXml?: Record<string, unknown> | undefined;
 }

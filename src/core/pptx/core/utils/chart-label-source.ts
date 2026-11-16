@@ -7,6 +7,7 @@ import type { PptxExternalData, PptxChartSeries, XmlObject } from '../types';
 import { collectChartWorkbookWrite, writeChartWorkbookUpdates } from './chart-xlsx-writer';
 import { xmlAttr, xmlChild, xmlChildren } from './xml-access';
 import { parseChartFormulaRange, expandRangeAddresses } from './chart-xlsx-cellref';
+import { at } from '../../../geometry/indexed';
 
 // Shared so that, during a load, each relationship part is parsed once for every chart.
 const relationshipParser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' });
@@ -46,7 +47,8 @@ export async function chartLabelsHaveEditableSources(
 	const writes = [];
 	const labelOwners = new Map<string, string>();
 	for (const [index, node] of seriesNodes.entries()) {
-		const entry = series[index];
+		// `seriesNodes` and `series` have the same length (checked above).
+		const entry = at(series, index);
 		for (const [name, numeric, values] of [
 			['tx', false, [entry.name]],
 			['cat', false, [...categories]],

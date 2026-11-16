@@ -50,5 +50,5 @@ export interface PptxCommentMention {
 	 */
 	containerUri?: string | undefined;
 	/** Original `p188:mention` node, retained for unknown-attribute preservation. */
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }

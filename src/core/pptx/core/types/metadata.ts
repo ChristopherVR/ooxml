@@ -36,7 +36,7 @@ export interface PptxComment {
 	/** Stable GUID author identifier used by Office 2021 modern comments. */
 	authorId?: string | undefined;
 	/** Optional parent comment id for reply threading metadata. */
-	parentId?: string;
+	parentId?: string | undefined;
 	author?: string | undefined;
 	createdAt?: string | undefined;
 	x?: number | undefined;
@@ -71,10 +71,10 @@ export interface PptxComment {
 export interface PptxModernCommentAuthor {
 	id: string;
 	name: string;
-	initials?: string;
+	initials?: string | undefined;
 	userId: string;
 	providerId: string;
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }
 
 /**
@@ -109,7 +109,7 @@ export interface PptxCommentAuthor {
 	/** Colour index assigned to this author (`@_clrIdx`). */
 	clrIdx: number;
 	/** Original `p:cmAuthor` subtree, retained for unknown attribute preservation. */
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }
 
 /**
@@ -181,7 +181,7 @@ export interface PptxTagCollection {
 	/** Tags in this collection. */
 	tags: PptxTag[];
 	/** Parsed tag-list XML retained for unknown-node preservation. */
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }
 
 /**

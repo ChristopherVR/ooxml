@@ -17,15 +17,15 @@ export interface PptxEmbeddedFontDescriptor {
 
 export interface PptxEmbeddedFontListEntry {
 	font: PptxEmbeddedFontDescriptor;
-	regular?: PptxEmbeddedFontDataId | null;
-	bold?: PptxEmbeddedFontDataId | null;
-	italic?: PptxEmbeddedFontDataId | null;
-	boldItalic?: PptxEmbeddedFontDataId | null;
-	rawXml?: XmlObject;
+	regular?: PptxEmbeddedFontDataId | null | undefined;
+	bold?: PptxEmbeddedFontDataId | null | undefined;
+	italic?: PptxEmbeddedFontDataId | null | undefined;
+	boldItalic?: PptxEmbeddedFontDataId | null | undefined;
+	rawXml?: XmlObject | undefined;
 }
 
 export interface PptxEmbeddedFontList {
 	fonts: PptxEmbeddedFontListEntry[];
 	/** Original list retained for unknown attribute and child preservation. */
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }

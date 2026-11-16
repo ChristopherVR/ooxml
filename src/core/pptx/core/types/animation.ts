@@ -158,29 +158,34 @@ export type PptxAnimationTarget =
 			graphicElement?: PptxAnimationGraphicElementTarget;
 			/** `p:spTgt/p:oleChartEl`: legacy OLE chart sub-element target. */
 			oleChartElement?: PptxAnimationOleChartElementTarget;
-			rawXml?: XmlObject;
+			rawXml?: XmlObject | undefined;
 	  }
-	| { type: 'slide'; rawXml?: XmlObject }
-	| { type: 'sound'; relationshipId: string; name?: string | undefined; rawXml?: XmlObject }
-	| { type: 'ink'; shapeId: string; rawXml?: XmlObject }
+	| { type: 'slide'; rawXml?: XmlObject | undefined }
+	| {
+			type: 'sound';
+			relationshipId: string;
+			name?: string | undefined;
+			rawXml?: XmlObject | undefined;
+	  }
+	| { type: 'ink'; shapeId: string; rawXml?: XmlObject | undefined }
 	| { type: 'unknown'; rawXml: XmlObject };
 
 /** Nested build choice carried by `p:bldGraphic`. */
 export type PptxGraphicBuild =
-	| { mode: 'asOne'; rawXml?: XmlObject }
+	| { mode: 'asOne'; rawXml?: XmlObject | undefined }
 	| {
 			mode: 'sub';
 			kind: 'diagram';
 			build: string;
 			reverse: boolean;
-			rawXml?: XmlObject;
+			rawXml?: XmlObject | undefined;
 	  }
 	| {
 			mode: 'sub';
 			kind: 'chart';
 			build: string;
 			animateBackground: boolean;
-			rawXml?: XmlObject;
+			rawXml?: XmlObject | undefined;
 	  };
 
 /**
@@ -210,7 +215,7 @@ export interface PptxTimingTemplate {
 	/** Preserved `p:tnLst` (CT_TimeNodeList) subtree, verbatim. */
 	timeNodeList: XmlObject;
 	/** Preserved `p:tmpl` XML node (its attributes plus any unmodelled children). */
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }
 
 /**
@@ -237,7 +242,7 @@ export interface PptxNativeAnimation {
 	/** Full timing target, including sound and ink target variants. */
 	target?: PptxAnimationTarget;
 	/** Trigger type. */
-	trigger?: PptxAnimationTrigger;
+	trigger?: PptxAnimationTrigger | undefined;
 	/**
 	 * Shape ID that triggers this animation: the clicked shape of an
 	 * interactive sequence, or the media element of an `onMediaBookmark` one.
@@ -1002,7 +1007,7 @@ export interface PptxElementAnimation {
 	 * `onShapeClick`, or the media element whose bookmark fires it for
 	 * `onMediaBookmark`.
 	 */
-	triggerShapeId?: string;
+	triggerShapeId?: string | undefined;
 	/** Bookmark name (`p14:bmk/@name`) an `onMediaBookmark` trigger waits for. */
 	triggerBookmark?: string;
 	timingCurve?: PptxAnimationTimingCurve | undefined;

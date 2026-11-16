@@ -1,3 +1,4 @@
+import { at } from '../../../geometry/indexed';
 /**
  * The `pptx-viewer-json` document format: a portable, versioned,
  * self-contained JSON representation of a parsed presentation
@@ -76,7 +77,7 @@ export function isPptxJsonText(text: string): boolean {
 	if (text.charCodeAt(0) === 0xfeff) {
 		index = 1;
 	}
-	while (index < text.length && /\s/.test(text[index])) {
+	while (index < text.length && /\s/.test(text.charAt(index))) {
 		index++;
 	}
 	if (text[index] !== '{') {
@@ -101,7 +102,7 @@ export function decodePptxJsonText(data: ArrayBuffer | Uint8Array): string | nul
 		offset = 3;
 	}
 	// Skip ASCII whitespace, then require a leading `{`.
-	while (offset < bytes.length && isAsciiWhitespace(bytes[offset])) {
+	while (offset < bytes.length && isAsciiWhitespace(at(bytes, offset))) {
 		offset++;
 	}
 	if (offset >= bytes.length || bytes[offset] !== 0x7b /* '{' */) {

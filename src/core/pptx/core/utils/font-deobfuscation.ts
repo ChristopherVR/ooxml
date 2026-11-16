@@ -108,7 +108,8 @@ export function deobfuscateFont(fontData: Uint8Array, guid: string): Uint8Array 
 
 	// XOR first 32 bytes with key repeated twice
 	for (let i = 0; i < OBFUSCATED_BYTE_COUNT; i++) {
-		result[i] = fontData[i] ^ key[i % KEY_LENGTH];
+		// Bitwise XOR reads a missing byte as 0, as it did `undefined`.
+		result[i] = (fontData[i] ?? 0) ^ (key[i % KEY_LENGTH] ?? 0);
 	}
 
 	return result;

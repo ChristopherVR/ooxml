@@ -109,7 +109,7 @@ export function serializeTablePropertyFlags(
 		tableStyleId?: string | undefined;
 		bandRowCycle?: number | undefined;
 		bandColCycle?: number | undefined;
-		rtl?: boolean;
+		rtl?: boolean | undefined;
 	},
 ): void {
 	// An empty `<a:tblPr/>` (no attributes, no children: e.g. a "No Style,

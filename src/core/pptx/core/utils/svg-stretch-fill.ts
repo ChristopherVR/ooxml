@@ -68,7 +68,7 @@ export function forceSvgStretchFill(svgText: string): string {
 	if (!match) {
 		return svgText;
 	}
-	const attrs = match[1];
+	const attrs = match[1] ?? '';
 	const nextAttrs = PRESERVE_ASPECT_RATIO_ATTR_RE.test(attrs)
 		? attrs.replace(PRESERVE_ASPECT_RATIO_ATTR_RE, ' preserveAspectRatio="none"')
 		: `${attrs} preserveAspectRatio="none"`;

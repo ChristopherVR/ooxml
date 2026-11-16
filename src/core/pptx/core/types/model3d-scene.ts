@@ -24,7 +24,7 @@ export interface Model3DCamera {
 	/** Vertical field of view in degrees (perspective only). */
 	fovDeg?: number;
 	/** Orthographic view scale (orthographic only), when authored. */
-	orthoScale?: number;
+	orthoScale?: number | undefined;
 }
 
 /** `am3d:trans`: how the model sits in the scene. Offsets are EMU. */
