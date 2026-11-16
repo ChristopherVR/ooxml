@@ -3,6 +3,8 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 
+import { resolveDrawingColor } from '../../../drawingml/drawing-color';
+import { parseThemeXml } from '../../../drawingml/theme';
 import { NS, first, parseXml } from '../../../xml/index';
 import { masterColorMapOf } from '../../core/core/runtime/PptxHandlerRuntimeThemeLoading';
 import type { ThemePartModel } from '../../core/core/runtime/theme-part-model';
@@ -21,7 +23,9 @@ import { LegacyThemeFormatSchemeRuntime } from '../helpers/legacy-theme-format-s
  * - every style reference of every slide, layout and master, resolved against the deck's first
  *   theme;
  * - every master's `p:clrMap`;
- * - every theme part written back from the runtime's state (`buildThemeXml`, a dirty theme).
+ * - every theme part written back from the runtime's state (`buildThemeXml`, a dirty theme):
+ *   equal to the old writer outside the colour scheme, and every authored colour scheme slot
+ *   (`sysClr`, transforms) written back as the part held it, where the old writer wrote hex.
  *
  * The neutral halves the new view adds (`fill`, `line`, `effects`) are not compared. The one
  * intended difference is listed in `EXPECTED_SCHEME_DIFFERENCES`.
@@ -63,18 +67,35 @@ class ParityRuntime extends LegacyThemeFormatSchemeRuntime {
 		else this.resolveThemeEffectRef(node, style);
 		return style;
 	}
-	/** One theme part written back by the old and the new writer, as object trees. */
-	public writeTheme(themePath: string, xml: string): { legacy: unknown; next: unknown } {
+	/**
+	 * One theme part written back by the old and the new writer, as object trees without their
+	 * colour schemes (the new writer keeps authored slot colours; see `slotRoundTrips`), and the
+	 * new writer's text.
+	 */
+	public writeTheme(
+		themePath: string,
+		xml: string,
+	): { legacy: unknown; next: unknown; nextXml: string | undefined } {
 		const model = this.parseThemePartXml(xml);
 		this.cacheThemePartModel(themePath, xml, model);
 		this.themeColorMap = { ...model.colorMap };
 		this.themeFontMap = { ...model.fontMap };
 		this.globalThemeColorMapSnapshot = { ...model.colorMap };
 		this.globalThemeFontMapSnapshot = { ...model.fontMap };
-		const tree = (text: string | undefined) => (text === undefined ? undefined : this.parse(text));
+		const tree = (text: string | undefined) => {
+			if (text === undefined) return undefined;
+			const parsed = this.parse(text);
+			const elements = (parsed['a:theme'] as XmlObject | undefined)?.['a:themeElements'] as
+				| XmlObject
+				| undefined;
+			if (elements) delete elements['a:clrScheme'];
+			return parsed;
+		};
+		const nextXml = this.buildThemeXml(themePath, undefined);
 		return {
 			legacy: tree(this.legacyBuildThemeXml(themePath, undefined)),
-			next: tree(this.buildThemeXml(themePath, undefined)),
+			next: tree(nextXml),
+			nextXml,
 		};
 	}
 	public resolveLegacy(kind: RefKind, node: XmlObject): ShapeStyle {
@@ -182,6 +203,9 @@ const schemeDifferences: Difference[] = [];
 const refDifferences: Difference[] = [];
 const mapDifferences: Difference[] = [];
 const writeDifferences: Difference[] = [];
+const slotDifferences: Difference[] = [];
+let slotsWritten = 0;
+let nonSrgbSlotsWritten = 0;
 let themesWritten = 0;
 let schemesCompared = 0;
 let refsCompared = 0;
@@ -256,6 +280,18 @@ beforeAll(async () => {
 				if (!same(written.next, written.legacy)) {
 					writeDifferences.push({ label: `${name} ${part}`, ...written });
 				}
+				// Every slot whose authored colour resolves comes back as written (sysClr included).
+				const authored = parseThemeXml(xml).colorScheme.colors;
+				const rewritten = written.nextXml && parseThemeXml(written.nextXml).colorScheme.colors;
+				for (const [slot, color] of Object.entries(authored)) {
+					if (!resolveDrawingColor(color)) continue;
+					slotsWritten++;
+					if (color.kind !== 'srgb') nonSrgbSlotsWritten++;
+					const back = rewritten ? rewritten[slot as keyof typeof rewritten] : undefined;
+					if (!same(back, color)) {
+						slotDifferences.push({ label: `${name} ${part} ${slot}`, legacy: color, next: back });
+					}
+				}
 			}
 		}
 		for (const part of parts) {
@@ -300,6 +336,13 @@ describe('DrawingML theme format scheme parity over the committed decks', () => 
 		expect(refsCompared).toBeGreaterThan(60_000);
 		expect(mapsCompared).toBeGreaterThan(350);
 		expect(themesWritten).toBeGreaterThan(350);
+	});
+
+	it('writes every authored theme slot colour back as written', () => {
+		for (const d of slotDifferences.slice(0, 8)) console.log(d.label, d.legacy, d.next);
+		expect(slotsWritten).toBeGreaterThan(4_000);
+		expect(nonSrgbSlotsWritten).toBeGreaterThan(300);
+		expect(slotDifferences.map((d) => d.label)).toEqual([]);
 	});
 
 	it('writes every theme part back as the object-tree writer did', () => {

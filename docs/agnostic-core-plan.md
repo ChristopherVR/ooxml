@@ -254,13 +254,19 @@ would keep two XML models alive.
    over every committed deck: 383 format schemes, 72,747 style references (slides, layouts, masters,
    notes and SmartArt drawings), 366 master colour maps and every theme part written back agree,
    except the one theme (`e2e/absolute-path-rels.pptx`, `theme11.xml`) whose fill and background
-   lists hold an `a:blipFill`, which the old reader dropped.
+   lists hold an `a:blipFill`, which the old reader dropped. On top of the shared gradient, effect
+   and alpha readers, the theme view takes colour opacity from the neutral colours' declared alpha
+   and reads `a:scene3d`/`a:sp3d` with the shared 3D readers; table style `fillRef`, `lnRef` and
+   `effectRef` read the theme entry through the node view and the gradient reader; and the theme
+   writer keeps every slot still at its authored value as written (the harness writes back 4,596
+   resolvable slots of the corpus, 571 of them `sysClr`, all as authored).
 
    **Remains:** painting DAG sibling composition, masks, blends, transforms and references (see
-   docs/parity-checklist.md); the text-run effect readers; in the theme view the `a:scene3d`/`a:sp3d`
-   settings and table styles and backgrounds still read the paired object node (`rawNode`), a
-   picture theme fill is not drawn, and the writer writes the colour slots as `srgbClr` from the hex
-   map. The pptx text parsers still read through
+   docs/parity-checklist.md); the text-run effect readers; theme gradient stops still come from the
+   gradient codec over the paired object node (`rawNode`), because their `originalColorXml`
+   round-trip data is object-tree XML, as does the background `bgRef` gradient; a picture theme
+   fill is not drawn; an edited theme slot is written as `srgbClr`. The pptx text parsers still
+   read through
    their own object tree (the neutral model is pinned, not yet used by pptx); the xlsx theme writer
    still patches the part itself (a neutral writer exists as `drawingml/write-theme.ts`; whether xlsx
    should adopt it is open).

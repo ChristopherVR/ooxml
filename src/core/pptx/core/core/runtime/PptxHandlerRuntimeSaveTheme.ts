@@ -37,23 +37,43 @@ import {
 	type ThemeFontCollection,
 } from '../../../../drawingml/theme-model';
 import type { DrawingColor, DrawingLine } from '../../../../drawingml/types';
+import { resolveDrawingColor } from '../../../../drawingml/drawing-color';
+import { parseThemeXml } from '../../../../drawingml/theme';
 import { drawingThemeXml } from '../../../../drawingml/write-theme';
 import { XmlObject } from '../../types';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveSlideWriter';
 
 /**
- * The twelve scheme slots of a colour map as `srgbClr` colours: the in-memory map is hex-typed, so
- * a slot the original part wrote as `sysClr` is written as its resolved value; a missing or
- * malformed slot is written black.
+ * The twelve scheme slots of a colour map. The in-memory map is hex-typed: a slot whose value is
+ * still what the original part's colour resolves to keeps that colour as written (a `sysClr`
+ * with its `lastClr`, a preset or HSL colour, transforms included); an edited slot is written as
+ * `srgbClr`, and a missing or malformed one black.
  */
-function themeSlotColors(colorMap: Record<string, string>): ThemeColorScheme['colors'] {
+export function themeSlotColors(
+	colorMap: Record<string, string>,
+	original?: ThemeColorScheme,
+): ThemeColorScheme['colors'] {
 	const colors: ThemeColorScheme['colors'] = {};
 	for (const slot of THEME_COLOR_SLOTS) {
 		const hex = String(colorMap[slot] || '').replace(/^#/, '');
 		const value = hex.length === 6 ? hex.toUpperCase() : '000000';
-		colors[slot] = { kind: 'srgb', value, transforms: [] };
+		const authored = original?.colors[slot];
+		colors[slot] =
+			authored && resolveDrawingColor(authored)?.hex.toUpperCase() === `#${value}`
+				? structuredClone(authored)
+				: { kind: 'srgb', value, transforms: [] };
 	}
 	return colors;
+}
+
+/** The colour scheme of a theme part's text, or `undefined` when it does not parse. */
+function authoredColorScheme(themeXml: string | undefined): ThemeColorScheme | undefined {
+	if (themeXml === undefined) return undefined;
+	try {
+		return parseThemeXml(themeXml, 'PPTX theme').colorScheme;
+	} catch {
+		return undefined;
+	}
 }
 
 /** The major (`mj`) or minor (`mn`) fonts of a font map with their per-script faces. */
@@ -183,7 +203,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 *
 	 * The colour and font schemes are written by the shared DrawingML theme
 	 * writer (`drawingThemeXml`) from the per-master maps (or the global
-	 * fallback), each slot as `srgbClr`. The authored `a:fmtScheme` and the
+	 * fallback); a slot still at its authored value keeps its authored colour
+	 * (`sysClr`, transforms), an edited one is written as `srgbClr`. The authored `a:fmtScheme` and the
 	 * objectDefaults / extraClrSchemeLst / custClrLst / extLst subtrees are
 	 * re-emitted as captured; a part with no authored format scheme gets the
 	 * shared writer's minimal one ({@link minimalThemeFormatScheme}).
@@ -203,7 +224,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			name: themeName,
 			colorScheme: {
 				name: this.masterThemeColorSchemeNames.get(themePath) || themeName,
-				colors: themeSlotColors(colorMap),
+				colors: themeSlotColors(
+					colorMap,
+					authoredColorScheme(this.originalThemeXmlByPath.get(themePath)),
+				),
 			},
 			fontScheme: {
 				name: this.masterThemeFontSchemeNames.get(themePath) || themeName,
