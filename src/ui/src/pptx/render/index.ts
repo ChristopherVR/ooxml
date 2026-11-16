@@ -634,6 +634,7 @@ export * from './group-ops';
 // Slide-background style cascade: resolved background fields -> CSS map
 // (image -> gradient -> pattern -> solid colour precedence).
 export * from './slide-background';
+export * from './slide-background-fill';
 export * from './slide-background-patch';
 // Legacy PowerPoint 97-2003 `shadeToTitle` background hint: anchors a slide's
 // gradient background as a rectangular path gradient on its title

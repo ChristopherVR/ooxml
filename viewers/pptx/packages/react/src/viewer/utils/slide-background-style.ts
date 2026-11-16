@@ -15,7 +15,12 @@ export function getReactSlideBackgroundStyle(
 	slideSize?: SlideBackgroundSize,
 ): CSSProperties {
 	const style = getSlideBackgroundStyle(slide, slideSize);
+	// The `--pptx-slide-bg-*` custom properties a background-filled shape paints with.
+	const variables = Object.fromEntries(
+		Object.entries(style).filter(([key]) => key.startsWith('--')),
+	) as CSSProperties;
 	return {
+		...variables,
 		backgroundColor: style['background-color'] as CSSProperties['backgroundColor'],
 		backgroundImage: slide?.backgroundImage
 			? undefined

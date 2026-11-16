@@ -96,7 +96,8 @@ export function shapeFillModeChange(
 	switch (mode) {
 		case 'background':
 			// The shape paints the slide background: its own fill is not drawn
-			// and is not saved (`useBgFill`); a reopened deck resolves it.
+			// and is not saved (`useBgFill`); the canvas paints the stage's
+			// published slide background (`slide-background-fill.ts`).
 			return { useBackgroundFill: true, fillMode: 'none', fillColor: 'transparent' };
 		case 'none':
 			return { ...leaveBackground, fillMode: 'none', fillColor: 'transparent' };

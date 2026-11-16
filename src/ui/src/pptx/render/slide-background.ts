@@ -14,6 +14,7 @@ import type { PptxSlide } from 'ooxml-core/pptx';
 import { resolveShadeToTitleBackgroundImage } from './background-shade-to-title';
 import type { CssStyleMap } from './element-style-transform';
 import { getPatternSvg } from './fill-style';
+import { slideBackgroundVariables } from './slide-background-fill';
 
 /** Default slide stage colour when a slide carries no usable background. */
 export const DEFAULT_SLIDE_BACKGROUND = '#ffffff';
@@ -31,8 +32,9 @@ export interface SlideBackgroundSize {
 
 /**
  * Build the background portion of the slide stage style from a slide's
- * resolved background fields. Returns only `background-*` properties so the
- * caller can spread it into the rest of the stage style.
+ * resolved background fields. Returns only `background-*` properties, and the
+ * `--pptx-slide-bg-*` custom properties a background-filled shape paints
+ * with, so the caller can spread it into the rest of the stage style.
  */
 export function getSlideBackgroundStyle(
 	slide: PptxSlide | undefined,
@@ -83,5 +85,7 @@ export function getSlideBackgroundStyle(
 		}
 	}
 
-	return style;
+	// The same paint as custom properties, for a shape inside the stage that
+	// fills with the slide background (`slide-background-fill.ts`).
+	return { ...style, ...slideBackgroundVariables(style, slideSize) };
 }

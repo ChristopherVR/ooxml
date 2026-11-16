@@ -36,6 +36,7 @@ import { shapePathGradientField } from 'ooxml-core/diagram';
 import { buildRectPathGradientImage } from './path-gradient-rect';
 import { buildOutlineShapePathGradient } from './shape-path-gradient-fill';
 import { silhouetteFillsLayer } from './silhouette-effects';
+import { paintsLiveSlideBackground, slideBackgroundShapeFill } from './slide-background-fill';
 import { suppressesCssFill } from './subpath-fill-overlay';
 
 export {
@@ -1263,6 +1264,11 @@ export function getComputedFillStyle(
  * resolve the parent group's style through the identical pipeline.
  */
 export function resolveComputedFill(ss: ShapeStyle, element: PptxElement): ComputedFillStyle {
+	// 0. A shape switched to the slide background in this session: paint the
+	//    background the stage publishes (a loaded one carries a resolved copy).
+	if (paintsLiveSlideBackground(ss)) {
+		return slideBackgroundShapeFill(element);
+	}
 	// 1. Image fill  -  highest priority.
 	const imageFillUrl = ss.fillMode === 'image' && ss.fillImageUrl ? ss.fillImageUrl : undefined;
 	if (imageFillUrl) {
