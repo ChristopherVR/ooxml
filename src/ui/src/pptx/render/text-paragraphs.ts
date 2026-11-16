@@ -22,6 +22,8 @@ import { getSubstituteFontFamily, hasTextProperties, parsePanoseString } from 'o
 
 import { DEFAULT_FONT_FAMILY, DEFAULT_TEXT_FONT_SIZE } from '../constants';
 import { resolveParagraphBullet, resolveParagraphIndent } from './bullet-list';
+import { displayableSymbolBullet, displayableSymbolRuns } from './symbol-font-fallback';
+import { isSymbolEncodedFont } from 'ooxml-core/text';
 import { applyParagraphBaselineShift } from './paragraph-baseline';
 import { bodyTopOf } from './text-body-top-snap';
 import { armBaselineSettle } from './paragraph-baseline-settle';
@@ -135,6 +137,9 @@ export function buildParagraphs(
 	// Only used to measure the run for its PowerPoint metric compensation, so it
 	// mirrors what `buildTextBlockStyle` declares on the block itself.
 	const blockFont = resolveBlockFont(element.textStyle, fontScale);
+	const symbolFallbackFamily = isSymbolEncodedFont(blockFont.fontFamily)
+		? DEFAULT_FONT_FAMILY
+		: blockFont.fontFamily;
 	const bodyTop = bodyTopOf(element);
 	// The body's own `a:ea`/`a:cs`/`a:sym` faces and `a:tabLst`, for a run that
 	// declares none of its own (see `paragraph-run-enrich`).
@@ -192,7 +197,7 @@ export function buildParagraphs(
 				paraSegments.map((seg) => ({ segment: seg })),
 				bodyStyle?.rtl,
 			);
-			const runs: ParagraphRun[] = buildParagraphRuns({
+			const builtRuns: ParagraphRun[] = buildParagraphRuns({
 				paraSegments,
 				paraIndices,
 				markerSegment,
@@ -207,12 +212,15 @@ export function buildParagraphs(
 				eastAsianBreaks: options?.eastAsianRunPieces === false ? undefined : eastAsianBreaks,
 				latinLineBreak: geometryOverrides.latinLineBreak === true,
 			});
+			// Text in a symbol font this device lacks shows its Unicode equivalent (#290).
+			const runs = displayableSymbolRuns(builtRuns, symbolFallbackFamily);
 
 			// Suppress bullets for paragraphs with no visible text content.
 			const hasVisibleTextContent = paraSegments.some(
 				(seg) => seg !== markerSegment && Boolean(seg.text) && seg.text.trim().length > 0,
 			);
-			const bullet = hasVisibleTextContent ? bulletResult : undefined;
+			// A symbol-font marker this device cannot paint shows its Unicode equivalent (#290).
+			const bullet = hasVisibleTextContent ? displayableSymbolBullet(bulletResult) : undefined;
 
 			const indent = resolveParagraphIndent(
 				paragraphIndents?.[paraIndex],
