@@ -125,7 +125,7 @@ const defaultTimers: PresentationInkTimers = {
 export function presentationInkOnSlide(
 	state: PresentationInkState,
 	slideIndex: number = state.slideIndex,
-): readonly PresentationAnnotationStroke[] {
+): PresentationAnnotationStroke[] {
 	return state.strokes.filter((stroke) => stroke.slideIndex === slideIndex);
 }
 
