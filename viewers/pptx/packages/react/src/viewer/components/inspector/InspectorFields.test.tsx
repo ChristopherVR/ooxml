@@ -320,6 +320,37 @@ describe('imagePropertiesPanel colour effects', () => {
 			container.querySelectorAll('[data-testid="picture-duotone-preset"]').length,
 		).toBeGreaterThan(0);
 	});
+
+	it('draws the artistic effect gallery over the picture and writes the picked effect', () => {
+		const onUpdateElement = vi.fn();
+		const picture = {
+			type: 'image',
+			id: 'p1',
+			x: 0,
+			y: 0,
+			width: 10,
+			height: 10,
+			imageData: 'data:image/png;base64,AA',
+			imageEffects: { brightness: 5, artisticEffect: 'blur' },
+		} as unknown as PptxImageLikeElement;
+		act(() => {
+			root.render(
+				<ImagePropertiesPanel
+					selectedElement={picture}
+					canEdit
+					onUpdateElement={onUpdateElement}
+				/>,
+			);
+		});
+		const gallery = byTestId<HTMLElement>('picture-artistic')!;
+		const blur = gallery.querySelector<HTMLButtonElement>('[data-value="blur"]')!;
+		expect(blur.getAttribute('aria-pressed')).toBe('true');
+		expect(blur.querySelector('img')?.style.filter).toBe('blur(4px)');
+		act(() => gallery.querySelector<HTMLButtonElement>('[data-value="sepia"]')!.click());
+		expect(onUpdateElement).toHaveBeenCalledWith({
+			imageEffects: { brightness: 5, artisticEffect: 'sepia' },
+		});
+	});
 });
 
 describe('mediaPlaybackBookmarks playback fields', () => {

@@ -3,13 +3,13 @@ import {
 	imageResetPatch,
 	imageResetState,
 	PICTURE_ADJUSTMENT_SECTIONS,
+	PICTURE_ARTISTIC_SECTIONS,
 	PICTURE_EFFECT_SECTIONS,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxImageLikeElement } from 'pptx-viewer-core';
 import React from 'react';
 
 import { useTranslation } from '../../i18n/use-translation';
-import { ArtisticEffectsGallery } from './ArtisticEffectsGallery';
 import { DuotonePanel } from './DuotonePanel';
 import { ImageCropSection } from './ImageCropSection';
 import { CARD, HEADING } from './inspector-pane-constants';
@@ -35,13 +35,6 @@ export function ImagePropertiesPanel({
 	onUpdateElement,
 }: ImagePropertiesPanelProps): React.ReactElement {
 	const { t } = useTranslation();
-	const fx = selectedElement.imageEffects;
-
-	const updateEffects = (patch: Record<string, unknown>) => {
-		onUpdateElement({
-			imageEffects: { ...fx, ...patch },
-		} as Partial<PptxElement>);
-	};
 
 	return (
 		<div className={CARD}>
@@ -84,12 +77,11 @@ export function ImagePropertiesPanel({
 					onUpdateElement={onUpdateElement}
 				/>
 
-				{/* Artistic Effects Gallery */}
-				<ArtisticEffectsGallery
-					imgSrc={selectedElement.imageData}
-					fx={fx}
-					canEdit={canEdit}
-					updateEffects={updateEffects}
+				<InspectorFields
+					sections={PICTURE_ARTISTIC_SECTIONS}
+					target={selectedElement as PptxElement}
+					disabled={!canEdit}
+					onPatch={onUpdateElement}
 				/>
 
 				{/* Reset Image */}

@@ -8,12 +8,12 @@ import {
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import {
-	ARTISTIC_EFFECTS,
 	DUOTONE_PRESETS,
 	ELEMENT_ALT_TEXT_SECTIONS,
 	imageResetPatch,
 	imageResetState,
 	PICTURE_ADJUSTMENT_SECTIONS,
+	PICTURE_ARTISTIC_SECTIONS,
 	PICTURE_EFFECT_SECTIONS,
 	pictureDuotonePresetPatch,
 } from 'ooxml-ui/pptx';
@@ -23,8 +23,6 @@ import { isImageLikeElement } from 'pptx-viewer-core';
 
 import { ImageCropWashPanelComponent } from './image-crop-wash-panel.component';
 import { InspectorFieldsComponent } from './inspector-fields.component';
-
-type ImageElement = PptxElement & { imageEffects?: PptxImageEffects };
 
 export function mergeImageEffects(
 	effects: PptxImageEffects | undefined,
@@ -53,23 +51,12 @@ export function mergeImageEffects(
 				[disabled]="!canEdit()"
 				(patch)="patch.emit($event)"
 			/>
-			<label class="field field--stacked">
-				<span>{{ 'pptx.image.artisticEffects' | translate }}</span>
-				<pptx-ui-select
-					[attr.aria-label]="'pptx.image.artisticEffects' | translate"
-					[value]="effects().artisticEffect ?? 'none'"
-					(change)="onArtistic($event)"
-				>
-					@for (effect of artisticEffects; track effect[0]) {
-						<option
-							[value]="effect[0]"
-							[selected]="effect[0] === (effects().artisticEffect ?? 'none')"
-						>
-							{{ effect[1] | translate }}
-						</option>
-					}
-				</pptx-ui-select>
-			</label>
+			<pptx-inspector-fields
+				[sections]="artisticSections"
+				[target]="element()"
+				[disabled]="!canEdit()"
+				(patch)="patch.emit($event)"
+			/>
 			<pptx-inspector-fields
 				[sections]="effectSections"
 				[target]="element()"
@@ -108,16 +95,6 @@ export function mergeImageEffects(
 			display: grid;
 			gap: 9px;
 			font-size: 11px;
-		}
-		.field {
-			display: grid;
-			grid-template-columns: 78px 1fr 30px;
-			align-items: center;
-			gap: 6px;
-			color: var(--pptx-inspector-muted, #aaa);
-		}
-		.field--stacked {
-			grid-template-columns: 1fr;
 		}
 		input[type='text'],
 		select {
@@ -170,9 +147,7 @@ export class ImagePropertiesPanelComponent {
 		() => imageResetState(this.element(), this.canEdit(), true).enabled,
 	);
 
-	protected readonly image = computed(() => this.element() as ImageElement);
-	protected readonly effects = computed(() => this.image().imageEffects ?? {});
-	protected readonly artisticEffects = ARTISTIC_EFFECTS;
+	protected readonly artisticSections = PICTURE_ARTISTIC_SECTIONS;
 	protected readonly altTextSections = ELEMENT_ALT_TEXT_SECTIONS;
 	protected readonly adjustmentSections = PICTURE_ADJUSTMENT_SECTIONS;
 	protected readonly effectSections = PICTURE_EFFECT_SECTIONS;
@@ -180,17 +155,6 @@ export class ImagePropertiesPanelComponent {
 
 	static supports(element: PptxElement): boolean {
 		return isImageLikeElement(element);
-	}
-
-	private updateEffects(update: Partial<PptxImageEffects>): void {
-		this.patch.emit({
-			imageEffects: mergeImageEffects(this.effects(), update),
-		} as Partial<PptxElement>);
-	}
-
-	protected onArtistic(event: Event): void {
-		const value = (event.target as HTMLSelectElement).value;
-		this.updateEffects({ artisticEffect: value === 'none' ? undefined : value });
 	}
 
 	protected duotonePreset(preset: DuotonePreset): Partial<PptxElement> {

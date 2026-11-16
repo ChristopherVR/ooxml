@@ -1,8 +1,8 @@
 import {
-	ARTISTIC_EFFECTS,
 	DUOTONE_PRESETS,
 	ELEMENT_ALT_TEXT_SECTIONS,
 	PICTURE_ADJUSTMENT_SECTIONS,
+	PICTURE_ARTISTIC_SECTIONS,
 	PICTURE_CROP_SECTIONS,
 	PICTURE_EFFECT_SECTIONS,
 	pictureDuotonePresetPatch,
@@ -11,7 +11,6 @@ import type { PptxElement } from 'pptx-viewer-core';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';
-import { createInspectorSelect } from './controls-extra';
 import { createInspectorFields } from './inspector-fields';
 import type { InspectorHandlers, InspectorState } from './types';
 
@@ -24,8 +23,8 @@ export interface ImageSection {
  * The Image section. The adjustments, the crop insets and the alt text are
  * the shared picture descriptors (`PICTURE_ADJUSTMENT_SECTIONS`,
  * `PICTURE_CROP_SECTIONS`, `ELEMENT_ALT_TEXT_SECTIONS`) drawn by the generic
- * renderer; the compound picture controls (artistic effect, duotone, colour
- * wash, replace and reset) stay native DOM here.
+ * renderer; the artistic effect gallery and the colour effects are shared
+ * descriptors too; the duotone presets, replace and reset stay native DOM here.
  */
 export function createImageSection(
 	doc: Document,
@@ -61,24 +60,8 @@ export function createImageSection(
 	const altText = createInspectorFields(doc, t, { sections: ELEMENT_ALT_TEXT_SECTIONS, onPatch });
 	el.appendChild(adjustments.el);
 
-	const artisticLabel = doc.createElement('label');
-	artisticLabel.textContent = t('pptx.image.artisticEffects');
-	const artistic = createInspectorSelect(doc);
-	// Named explicitly: the wrapping `<label>` would otherwise lend the select
-	// its whole text content, which includes every effect name.
-	artistic.setAttribute('aria-label', t('pptx.image.artisticEffects'));
-	for (const [value, labelKey] of ARTISTIC_EFFECTS) {
-		const option = doc.createElement('option');
-		option.value = value;
-		option.textContent = t(labelKey);
-		artistic.appendChild(option);
-	}
-	artistic.addEventListener('change', () =>
-		handlers.setImageEffects({
-			artisticEffect: artistic.value === 'none' ? undefined : artistic.value,
-		}),
-	);
-	artisticLabel.appendChild(artistic);
+	// The artistic effect gallery: the shared descriptor, previewing the picture.
+	const artistic = createInspectorFields(doc, t, { sections: PICTURE_ARTISTIC_SECTIONS, onPatch });
 	// Colour wash, recolour and duotone: the shared descriptors; the duotone
 	// preset swatches below apply the shared `pictureDuotonePresetPatch`.
 	const colorEffects = createInspectorFields(doc, t, {
@@ -104,7 +87,7 @@ export function createImageSection(
 		return swatch;
 	});
 	presets.append(...presetButtons);
-	el.append(artisticLabel, colorEffects.el, presets);
+	el.append(artistic.el, colorEffects.el, presets);
 
 	el.append(crop.el, resetCrop, altText.el);
 
@@ -124,9 +107,8 @@ export function createImageSection(
 				crop.update(element, !state.isImage || !state.croppable, element.id);
 				altText.update(element, !state.isImage, element.id);
 				colorEffects.update(element, !state.isImage, element.id);
+				artistic.update(element, !state.isImage, element.id);
 			}
-			artistic.value = state.imageArtisticEffect;
-			artistic.disabled = !state.isImage;
 			replace.disabled = !state.isImage;
 			reset.disabled = !state.isImage || !state.imageResettable;
 			resetCrop.disabled = !state.isImage || !state.croppable;

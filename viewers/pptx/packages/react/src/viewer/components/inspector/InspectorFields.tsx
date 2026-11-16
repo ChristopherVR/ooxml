@@ -129,6 +129,45 @@ export function InspectorFields<T, P>({
 				</label>
 			);
 		}
+		if (field.control === 'gallery') {
+			return (
+				<div key={key} className={`flex flex-col gap-1 ${COL2}`} role='group' aria-label={label}>
+					<span className={LBL}>{label}</span>
+					<div className='grid grid-cols-4 gap-1' data-testid={field.testId}>
+						{field.options?.map((o) => {
+							const caption = inspectorOptionLabel(o, t);
+							const active = o.value === String(field.value);
+							const filter = o.previewFilter || undefined;
+							return (
+								<button
+									key={o.value}
+									type='button'
+									disabled={disabled}
+									title={caption}
+									aria-label={caption}
+									aria-pressed={active}
+									data-value={o.value}
+									className={`flex flex-col items-center gap-0.5 rounded border p-0.5 hover:bg-accent/50 ${active ? 'border-primary bg-primary/10' : 'border-border'}`}
+									onClick={() => change(sectionId, field.id, o.value)}
+								>
+									{field.previewImage ? (
+										<img
+											src={field.previewImage}
+											alt=''
+											className='h-8 w-full rounded object-cover'
+											style={{ filter }}
+										/>
+									) : (
+										<span className='h-8 w-full rounded bg-muted' style={{ filter }} />
+									)}
+									<span className='w-full truncate text-center text-[9px]'>{caption}</span>
+								</button>
+							);
+						})}
+					</div>
+				</div>
+			);
+		}
 		if (field.control === 'text' || field.control === 'textarea') {
 			const textProps = {
 				'data-testid': field.testId,

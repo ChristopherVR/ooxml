@@ -21,6 +21,8 @@
  * - `color`: a colour picker; the value is a `#rrggbb` string.
  * - `select`: a drop-down of `options`.
  * - `toggle`: a checkbox.
+ * - `gallery`: a grid of choices, each previewed on the field's picture with
+ *   its option's CSS `previewFilter` (the artistic effects).
  * - `text`: a text box (a multi-line one when the field is `multiline`); the
  *   value is the string as typed, an empty one included.
  */
@@ -32,7 +34,8 @@ export type InspectorFieldKind =
 	| 'color'
 	| 'select'
 	| 'toggle'
-	| 'text';
+	| 'text'
+	| 'gallery';
 
 /** The control a binding draws for a field kind. */
 export type InspectorFieldControl =
@@ -42,7 +45,8 @@ export type InspectorFieldControl =
 	| 'select'
 	| 'checkbox'
 	| 'text'
-	| 'textarea';
+	| 'textarea'
+	| 'gallery';
 
 /** A value a field reads or a control reports. */
 export type InspectorFieldValue = number | string | boolean;
@@ -57,6 +61,8 @@ export interface InspectorFieldOption {
 	 * slide title, a custom show name); wins over `labelKey`.
 	 */
 	label?: string;
+	/** A `gallery` choice's CSS filter, applied to the field's preview picture. */
+	previewFilter?: string;
 }
 
 /** One editable field of a section. */
@@ -85,6 +91,8 @@ export interface InspectorFieldDescriptor<T, P> {
 	optionsOf?: (target: T) => readonly InspectorFieldOption[];
 	/** The upper bound resolved at render time (a clip's live duration); wins over `max`. */
 	maxOf?: (target: T) => number | undefined;
+	/** A `gallery` field's preview picture (a URL), resolved from the target. */
+	previewImageOf?: (target: T) => string | undefined;
 	/** A `text` field takes several lines (a text area). */
 	multiline?: boolean;
 	/** Translation key of a `text` field's placeholder. */
@@ -135,6 +143,8 @@ export interface InspectorFieldView {
 	options?: readonly InspectorFieldOption[];
 	/** Translation key of a text control's placeholder. */
 	placeholderKey?: string;
+	/** A gallery's preview picture. */
+	previewImage?: string;
 }
 
 /** What a binding draws for one section. */
@@ -160,6 +170,7 @@ const CONTROL_OF: Record<InspectorFieldKind, InspectorFieldControl> = {
 	select: 'select',
 	toggle: 'checkbox',
 	text: 'text',
+	gallery: 'gallery',
 };
 
 /** Display rounding for numeric values (two decimals unless the field says otherwise). */
@@ -194,6 +205,8 @@ function fieldView<T, P>(field: InspectorFieldDescriptor<T, P>, target: T): Insp
 	const options = field.optionsOf?.(target) ?? field.options;
 	if (options !== undefined) view.options = options;
 	if (field.placeholderKey !== undefined) view.placeholderKey = field.placeholderKey;
+	const previewImage = field.previewImageOf?.(target);
+	if (previewImage !== undefined) view.previewImage = previewImage;
 	return view;
 }
 
@@ -237,6 +250,7 @@ export function coerceInspectorFieldValue<T, P>(
 		case 'text':
 			return String(raw);
 		case 'color':
+		case 'gallery':
 		case 'select': {
 			const text = String(raw).trim();
 			return text.length > 0 ? text : undefined;

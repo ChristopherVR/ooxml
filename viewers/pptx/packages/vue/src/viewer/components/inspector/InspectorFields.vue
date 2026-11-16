@@ -122,6 +122,49 @@ const checkedOf = (event: Event): boolean => (event.target as HTMLInputElement).
 					/>
 					{{ t(field.labelKey) }}
 				</label>
+				<div
+					v-else-if="field.control === 'gallery'"
+					class="pptx-vue-fields-gallery col-span-2 flex flex-col gap-1"
+					role="group"
+					:aria-label="t(field.labelKey)"
+				>
+					<span class="pptx-vue-fields-label text-muted-foreground">{{ t(field.labelKey) }}</span>
+					<div class="grid grid-cols-4 gap-1" :data-testid="field.testId">
+						<button
+							v-for="option in field.options"
+							:key="option.value"
+							type="button"
+							class="flex flex-col items-center gap-0.5 rounded border p-0.5 hover:bg-accent/50"
+							:class="
+								option.value === String(field.value)
+									? 'border-primary bg-primary/10'
+									: 'border-border'
+							"
+							:disabled="props.disabled"
+							:title="inspectorOptionLabel(option, translate)"
+							:aria-label="inspectorOptionLabel(option, translate)"
+							:aria-pressed="option.value === String(field.value)"
+							:data-value="option.value"
+							@click="onField(section.id, field.id, option.value)"
+						>
+							<img
+								v-if="field.previewImage"
+								:src="field.previewImage"
+								alt=""
+								class="h-8 w-full rounded object-cover"
+								:style="{ filter: option.previewFilter || undefined }"
+							/>
+							<span
+								v-else
+								class="h-8 w-full rounded bg-muted"
+								:style="{ filter: option.previewFilter || undefined }"
+							></span>
+							<span class="w-full truncate text-center text-[9px]">{{
+								inspectorOptionLabel(option, translate)
+							}}</span>
+						</button>
+					</div>
+				</div>
 				<label
 					v-else
 					class="pptx-vue-fields-field flex flex-col gap-1"

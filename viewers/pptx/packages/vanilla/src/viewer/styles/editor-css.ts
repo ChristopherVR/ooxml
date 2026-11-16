@@ -382,6 +382,12 @@ export const EDITOR_CSS = `
 .pptxv-field-range { flex-direction: column; align-items: stretch; }
 .pptxv-inspector-fields { display: flex; flex-direction: column; }
 .pptxv-inspector-fields-wide { grid-column: 1 / -1; }
+.pptxv-inspector-gallery { display: grid; gap: 3px; }
+.pptxv-inspector-gallery-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+.pptxv-inspector-gallery-item { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 2px; border: 1px solid var(--pptxv-border, var(--office-border, #d1d5db)); border-radius: 4px; background: none; color: inherit; cursor: pointer; }
+.pptxv-inspector-gallery-item.is-active { border-color: var(--pptxv-accent, var(--office-accent, #2563eb)); }
+.pptxv-inspector-gallery-preview { width: 100%; height: 32px; border-radius: 3px; background: var(--pptxv-muted, var(--office-surface, #f3f4f6)) center / cover no-repeat; }
+.pptxv-inspector-gallery-caption { width: 100%; overflow: hidden; font-size: 9px; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
 .pptxv-duotone-presets { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
 .pptxv-duotone-preset { width: 24px; height: 24px; padding: 0; border: 1px solid var(--pptx-border); border-radius: 50%; cursor: pointer; }
 .pptxv-duotone-preset:disabled { opacity: 0.5; cursor: default; }

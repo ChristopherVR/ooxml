@@ -94,6 +94,8 @@ export {
 	pictureDuotonePresetPatch,
 } from './picture-effect-fields';
 export type { PictureEffectSection } from './picture-effect-fields';
+export { PICTURE_ARTISTIC_SECTION, PICTURE_ARTISTIC_SECTIONS } from './picture-artistic-fields';
+export type { PictureArtisticSection } from './picture-artistic-fields';
 export type { TextBoxSection, TextBoxTarget } from './text-box-fields';
 export {
 	CHARACTER_SPACING_SECTION,

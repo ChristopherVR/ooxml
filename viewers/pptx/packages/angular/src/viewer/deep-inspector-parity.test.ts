@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import { mergeImageEffects } from './image-properties-panel.component';
@@ -43,5 +46,22 @@ describe('deep inspector parity helpers', () => {
 		expect(edit.name).toBe('Custom');
 		expect(edit.fontScheme.majorFont.latin).toBe('Aptos Display');
 		expect(edit.fontScheme.minorFont.latin).toBe('Aptos');
+	});
+});
+
+describe('picture artistic effect gallery wiring', () => {
+	const panel = readFileSync(path.join(__dirname, 'image-properties-panel.component.ts'), 'utf8');
+	const fields = readFileSync(path.join(__dirname, 'inspector-fields.component.ts'), 'utf8');
+
+	it('draws the shared gallery descriptor through the generic renderer', () => {
+		expect(panel).toContain('PICTURE_ARTISTIC_SECTIONS');
+		expect(panel).toContain('[sections]="artisticSections"');
+		expect(panel).not.toContain('ARTISTIC_EFFECTS');
+	});
+
+	it('renders a gallery field as previewed swatches that write the picked value', () => {
+		expect(fields).toContain("field.control === 'gallery'");
+		expect(fields).toContain('[style.filter]="option.previewFilter || null"');
+		expect(fields).toContain('(click)="onGallery(section.id, field.id, option.value)"');
 	});
 });

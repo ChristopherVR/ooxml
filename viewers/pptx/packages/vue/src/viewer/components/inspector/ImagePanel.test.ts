@@ -29,6 +29,24 @@ function shapeEl(): PptxElement {
 }
 
 describe('imagePanel', () => {
+	it('draws the artistic effect gallery over the picture and emits the picked effect', async () => {
+		const wrapper = mount(ImagePanel, {
+			props: {
+				element: imageEl({
+					imageData: 'data:image/png;base64,AA',
+					imageEffects: { artisticEffect: 'blur' },
+				} as Partial<PptxElement>),
+			},
+		});
+		const blur = wrapper.get('[data-testid="picture-artistic"] [data-value="blur"]');
+		expect(blur.attributes('aria-pressed')).toBe('true');
+		expect((blur.get('img').element as HTMLImageElement).style.filter).toBe('blur(4px)');
+		await wrapper.get('[data-testid="picture-artistic"] [data-value="sepia"]').trigger('click');
+		expect(wrapper.emitted('update')?.at(-1)?.[0]).toStrictEqual({
+			imageEffects: { artisticEffect: 'sepia' },
+		});
+	});
+
 	it('shows a muted note for non-image elements', () => {
 		const wrapper = mount(ImagePanel, { props: { element: shapeEl() } });
 		expect(wrapper.find('.pptx-vue-image-panel__note').exists()).toBeTruthy();

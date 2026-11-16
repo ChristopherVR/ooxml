@@ -69,7 +69,45 @@ import { RecentColorsService } from './recent-colors.service';
 					@if (section.fields.length) {
 						<div class="pptx-ng-fields__fields">
 							@for (field of section.fields; track field.id) {
-								@if (field.control === 'checkbox') {
+								@if (field.control === 'gallery') {
+									<div
+										class="pptx-ng-fields__gallery pptx-ng-fields__wide"
+										role="group"
+										[attr.aria-label]="field.labelKey | translate"
+									>
+										<span class="pptx-ng-fields__label">{{ field.labelKey | translate }}</span>
+										<div class="pptx-ng-fields__gallery-grid" [attr.data-testid]="field.testId">
+											@for (option of field.options ?? []; track option.value) {
+												<button
+													type="button"
+													[class.is-active]="option.value === '' + field.value"
+													[disabled]="disabled()"
+													[attr.title]="option.label ?? (option.labelKey | translate)"
+													[attr.aria-label]="option.label ?? (option.labelKey | translate)"
+													[attr.aria-pressed]="option.value === '' + field.value"
+													[attr.data-value]="option.value"
+													(click)="onGallery(section.id, field.id, option.value)"
+												>
+													@if (field.previewImage) {
+														<img
+															[src]="field.previewImage"
+															alt=""
+															[style.filter]="option.previewFilter || null"
+														/>
+													} @else {
+														<span
+															class="pptx-ng-fields__swatch"
+															[style.filter]="option.previewFilter || null"
+														></span>
+													}
+													<span class="pptx-ng-fields__caption">{{
+														option.label ?? (option.labelKey | translate)
+													}}</span>
+												</button>
+											}
+										</div>
+									</div>
+								} @else if (field.control === 'checkbox') {
 									<label class="pptx-ng-fields__toggle-row pptx-ng-fields__wide">
 										<pptx-ui-checkbox
 											class="pptx-ng-fields__checkbox"
@@ -263,6 +301,52 @@ import { RecentColorsService } from './recent-colors.service';
 			text-align: left;
 		}
 
+		.pptx-ng-fields__gallery {
+			display: grid;
+			gap: 3px;
+		}
+
+		.pptx-ng-fields__gallery-grid {
+			display: grid;
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+			gap: 4px;
+		}
+
+		.pptx-ng-fields__gallery-grid button {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 2px;
+			padding: 2px;
+			border: 1px solid var(--pptx-inspector-border, #444);
+			border-radius: 3px;
+			background: none;
+			color: inherit;
+			cursor: pointer;
+		}
+
+		.pptx-ng-fields__gallery-grid button.is-active {
+			border-color: var(--pptx-inspector-active, #0078d4);
+		}
+
+		.pptx-ng-fields__gallery-grid img,
+		.pptx-ng-fields__swatch {
+			width: 100%;
+			height: 32px;
+			object-fit: cover;
+			border-radius: 2px;
+			background: var(--pptx-inspector-input-bg, #2d2d2d);
+		}
+
+		.pptx-ng-fields__caption {
+			width: 100%;
+			overflow: hidden;
+			font-size: 9px;
+			text-align: center;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+
 		.pptx-ng-fields__color {
 			width: 32px;
 			height: 22px;
@@ -330,6 +414,11 @@ export class InspectorFieldsComponent<T, P> {
 			return;
 		}
 		this.emit(inspectorFieldPatch(this.sections(), sectionId, fieldId, this.target(), raw));
+	}
+
+	/** A gallery swatch was picked. */
+	protected onGallery(sectionId: string, fieldId: string, value: string): void {
+		this.emit(inspectorFieldPatch(this.sections(), sectionId, fieldId, this.target(), value));
 	}
 
 	/** One live colour controller per colour field (shared `createInspectorColorFields`). */

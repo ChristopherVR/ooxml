@@ -4,15 +4,14 @@ import {
 	imageResetPatch,
 	imageResetState,
 	PICTURE_ADJUSTMENT_SECTIONS,
+	PICTURE_ARTISTIC_SECTIONS,
 	PICTURE_EFFECT_SECTIONS,
 } from 'ooxml-ui/pptx';
-import type { PptxElement, PptxImageEffects } from 'pptx-viewer-core';
+import type { PptxElement } from 'pptx-viewer-core';
 import { isImageLikeElement } from 'pptx-viewer-core';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-import { getImageEffects } from '../../composables/useImageEditing';
-import ArtisticEffectsGallery from './ArtisticEffectsGallery.vue';
 import DuotonePanel from './DuotonePanel.vue';
 import ImageCropSection from './ImageCropSection.vue';
 import InspectorFields from './InspectorFields.vue';
@@ -22,7 +21,7 @@ import InspectorFields from './InspectorFields.vue';
  * at parity with React's ImagePropertiesPanel. The alt text and the picture
  * adjustments are the shared descriptors (`ELEMENT_ALT_TEXT_SECTIONS`,
  * `PICTURE_ADJUSTMENT_SECTIONS`) drawn by the generic renderer; the compound
- * controls are focused sub-panels (crop/replace, artistic effects, recolour,
+ * controls are focused sub-panels (crop/replace, recolour,
  * colour wash, duotone). Each sub-panel emits a shallow `Partial<PptxElement>`
  * patch (nested `imageEffects` emitted whole) which this panel relays upward;
  * the host merges it via `ops.updateElement(id, patch)`.
@@ -42,14 +41,6 @@ const emit = defineEmits<{
 const { t } = useI18n();
 
 const isImage = computed(() => isImageLikeElement(props.element));
-
-const effects = computed<PptxImageEffects | undefined>(() => getImageEffects(props.element));
-
-/** Displayable source for the artistic-effect thumbnails (embedded data URL). */
-const imgSrc = computed<string | undefined>(() => {
-	const el = props.element as unknown as { imageData?: string };
-	return typeof el.imageData === 'string' ? el.imageData : undefined;
-});
 
 /** Shared gating: enabled only while editable and an effect or crop shape is set. */
 const resetState = computed(() => imageResetState(props.element, props.canEdit, true));
@@ -87,7 +78,12 @@ function onResetPicture(): void {
 				@patch="relay"
 			/>
 
-			<ArtisticEffectsGallery :img-src="imgSrc" :fx="effects" @update="relay" />
+			<InspectorFields
+				:sections="PICTURE_ARTISTIC_SECTIONS"
+				:target="element"
+				:disabled="!canEdit"
+				@patch="relay"
+			/>
 
 			<InspectorFields
 				:sections="PICTURE_EFFECT_SECTIONS"

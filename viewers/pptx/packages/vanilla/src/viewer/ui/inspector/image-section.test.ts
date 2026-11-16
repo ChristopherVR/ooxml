@@ -106,3 +106,25 @@ describe('image section shared picture fields', () => {
 		expect(h.patchSelectedElement).toHaveBeenCalledWith({ altText: 'A cat on a mat' });
 	});
 });
+
+describe('image section artistic effect gallery', () => {
+	it('previews the picture per effect and patches the picked one', () => {
+		const h = handlers();
+		const image = createImageSection(document, createTranslator(), sectionFactory(), h);
+		const element = picture({
+			imageData: 'data:image/png;base64,AA',
+			imageEffects: { artisticEffect: 'blur' },
+		});
+		image.update(state({ selectedElement: element }));
+		const gallery = image.el.querySelector<HTMLElement>('[data-testid="picture-artistic"]')!;
+		const blur = gallery.querySelector<HTMLButtonElement>('[data-value="blur"]')!;
+		expect(blur.getAttribute('aria-pressed')).toBe('true');
+		const preview = blur.querySelector<HTMLElement>('.pptxv-inspector-gallery-preview')!;
+		expect(preview.style.filter).toBe('blur(4px)');
+		expect(preview.style.backgroundImage).toContain('data:image/png;base64,AA');
+		gallery.querySelector<HTMLButtonElement>('[data-value="none"]')!.click();
+		expect(h.patchSelectedElement).toHaveBeenCalledWith({
+			imageEffects: { artisticEffect: undefined },
+		});
+	});
+});

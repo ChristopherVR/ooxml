@@ -12,9 +12,9 @@
 		cropResetState,
 		imageResetPatch,
 		imageResetState,
-		ARTISTIC_EFFECTS,
 		DUOTONE_PRESETS,
 		PICTURE_ADJUSTMENT_SECTIONS,
+		PICTURE_ARTISTIC_SECTIONS,
 		PICTURE_EFFECT_SECTIONS,
 		pictureDuotonePresetPatch,
 		PICTURE_CROP_SECTIONS,
@@ -30,10 +30,6 @@
 	// G7: `a:picLocks/@noCrop` forbids cropping this specific picture.
 	const croppable = $derived(cropResetState(el, editor.editable, true).enabled);
 	const resetPictureEnabled = $derived(imageResetState(el, editor.editable, true).enabled);
-	const effects = $derived('imageEffects' in el ? el.imageEffects : undefined);
-	function setEffects(next: Record<string, unknown>): void {
-		editor.patchSelected({ imageEffects: { ...effects, ...next } } as Partial<PptxElement>);
-	}
 
 	function replaceImage(file: File | undefined): void {
 		if (!file) {
@@ -76,7 +72,12 @@
 
 <button type="button" class="pptx-svelte-reset-crop" disabled={!croppable} onclick={resetCrop}>{t('pptx.image.resetCrop')}</button>
 
-<label class="pptx-svelte-field"><span>{t('pptx.image.artisticEffects')}</span><pptx-ui-select aria-label={t('pptx.image.artisticEffects')} value={effects?.artisticEffect ?? 'none'} onchange={(e) => setEffects({ artisticEffect: e.currentTarget.value === 'none' ? undefined : e.currentTarget.value })}>{#each ARTISTIC_EFFECTS as preset}<option value={preset[0]}>{t(preset[1])}</option>{/each}</pptx-ui-select></label>
+<InspectorFields
+	sections={PICTURE_ARTISTIC_SECTIONS}
+	target={el}
+	disabled={!editor.editable}
+	onpatch={(patch) => editor.patchSelected(patch)}
+/>
 <InspectorFields
 	sections={PICTURE_EFFECT_SECTIONS}
 	target={el}
@@ -87,30 +88,6 @@
 <div class="pptx-svelte-duotone"><span>{t('pptx.image.duotonePresets')}</span>{#each DUOTONE_PRESETS as preset}<button type="button" data-testid="picture-duotone-preset" title={t(preset.labelKey)} aria-label={t(preset.labelKey)} disabled={!editor.editable} style={`--shadow:${preset.shadow};--highlight:${preset.highlight}`} onclick={() => editor.patchSelected(pictureDuotonePresetPatch(el, preset))}></button>{/each}</div>
 
 <style>
-	.pptx-svelte-field {
-		display: flex;
-		flex-direction: column;
-		gap: 3px;
-		margin-top: 10px;
-	}
-
-	.pptx-svelte-field:first-child {
-		margin-top: 0;
-	}
-
-	.pptx-svelte-field-label {
-		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
-	}
-
-	.pptx-svelte-field-label b {
-		color: inherit;
-		font-weight: 600;
-	}
-
-	.pptx-svelte-field input[type='range'] {
-		width: 100%;
-	}
-
-	.pptx-svelte-field select{height:26px;border:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-radius:6px;background:var(--pptx-background, var(--office-background, #ffffff));color:inherit}.pptx-svelte-duotone{display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-top:10px}.pptx-svelte-duotone>span{width:100%;color:var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));font-size:10px}.pptx-svelte-duotone button{width:24px;height:24px;border:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-radius:50%;background:linear-gradient(135deg,var(--shadow) 50%,var(--highlight) 50%);color:inherit}
+	.pptx-svelte-duotone{display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-top:10px}.pptx-svelte-duotone>span{width:100%;color:var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));font-size:10px}.pptx-svelte-duotone button{width:24px;height:24px;border:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-radius:50%;background:linear-gradient(135deg,var(--shadow) 50%,var(--highlight) 50%);color:inherit}
 	.pptx-svelte-image-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}.pptx-svelte-image-actions label,.pptx-svelte-image-actions button{display:grid;place-items:center;min-height:28px;border:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-radius:5px;background:var(--pptx-muted, var(--office-surface, #f3f4f6));color:inherit;font-size:10px}.pptx-svelte-image-actions input{position:absolute;width:1px;height:1px;opacity:0}.pptx-svelte-reset-crop{width:100%;min-height:28px;margin-top:8px;border:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-radius:5px;background:var(--pptx-muted, var(--office-surface, #f3f4f6));color:inherit;font-size:10px}
 </style>

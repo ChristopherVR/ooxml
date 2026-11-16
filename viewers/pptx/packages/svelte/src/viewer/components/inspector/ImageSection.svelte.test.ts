@@ -101,6 +101,30 @@ describe('imageSection', () => {
 		expect(current.imageEffects).toBeUndefined();
 	});
 
+	it('draws the artistic effect gallery over the picture and applies the picked effect', () => {
+		const el = imageEl({
+			imageData: 'data:image/png;base64,AA',
+			imageEffects: { artisticEffect: 'blur' },
+		});
+		const editor = makeEditor(el);
+		const { target } = mountSection(editor, el);
+		const blur = target.querySelector<HTMLButtonElement>(
+			'[data-testid="picture-artistic"] [data-value="blur"]',
+		)!;
+		expect(blur.getAttribute('aria-pressed')).toBe('true');
+		expect(blur.querySelector('img')?.style.filter).toBe('blur(4px)');
+		target
+			.querySelector<HTMLButtonElement>(
+				'[data-testid="picture-artistic"] [data-value="grayscale"]',
+			)!
+			.click();
+		flushSync();
+		expect(
+			(currentEl(editor) as { imageEffects?: { artisticEffect?: string } }).imageEffects
+				?.artisticEffect,
+		).toBe('grayscale');
+	});
+
 	it('sets brightness, contrast, and saturation via the sliders', () => {
 		const editor = makeEditor(imageEl());
 		const { target, setProps } = mountSection(editor, currentEl(editor));

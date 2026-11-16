@@ -97,7 +97,32 @@
 		{#if section.fields.length}
 			<div class="pptx-svelte-fields-grid" data-section={section.id}>
 				{#each section.fields as field (field.id)}
-					{#if field.control === 'checkbox'}
+					{#if field.control === 'gallery'}
+						<div class="pptx-svelte-fields-gallery" role="group" aria-label={t(field.labelKey)}>
+							<span>{t(field.labelKey)}</span>
+							<div class="pptx-svelte-fields-gallery-grid" data-testid={field.testId}>
+								{#each field.options ?? [] as option (option.value)}
+									<button
+										type="button"
+										class:active={option.value === String(field.value)}
+										{disabled}
+										title={inspectorOptionLabel(option, t)}
+										aria-label={inspectorOptionLabel(option, t)}
+										aria-pressed={option.value === String(field.value)}
+										data-value={option.value}
+										onclick={() => onField(section.id, field.id, option.value)}
+									>
+										{#if field.previewImage}
+											<img src={field.previewImage} alt="" style:filter={option.previewFilter || undefined} />
+										{:else}
+											<span class="swatch" style:filter={option.previewFilter || undefined}></span>
+										{/if}
+										<span class="caption">{inspectorOptionLabel(option, t)}</span>
+									</button>
+								{/each}
+							</div>
+						</div>
+					{:else if field.control === 'checkbox'}
 						<!-- svelte-ignore a11y_label_has_associated_control -- form-associated custom element -->
 						<label class="pptx-svelte-fields-check">
 							<pptx-ui-checkbox
@@ -223,6 +248,53 @@
 
 	.pptx-svelte-fields-grid .pptx-svelte-fields-wide {
 		grid-column: 1 / -1;
+	}
+
+	.pptx-svelte-fields-gallery {
+		grid-column: 1 / -1;
+		display: grid;
+		gap: 3px;
+	}
+
+	.pptx-svelte-fields-gallery-grid {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 4px;
+	}
+
+	.pptx-svelte-fields-gallery-grid button {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 2px;
+		padding: 2px;
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: 4px;
+		background: none;
+		color: inherit;
+		cursor: pointer;
+	}
+
+	.pptx-svelte-fields-gallery-grid button.active {
+		border-color: var(--pptx-primary, var(--office-accent, #2563eb));
+	}
+
+	.pptx-svelte-fields-gallery-grid img,
+	.pptx-svelte-fields-gallery-grid .swatch {
+		width: 100%;
+		height: 32px;
+		object-fit: cover;
+		border-radius: 3px;
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
+	}
+
+	.pptx-svelte-fields-gallery-grid .caption {
+		width: 100%;
+		overflow: hidden;
+		font-size: 9px;
+		text-align: center;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.pptx-svelte-fields-check {

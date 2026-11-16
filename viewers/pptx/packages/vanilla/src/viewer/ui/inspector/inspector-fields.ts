@@ -59,6 +59,8 @@ interface FieldHandle {
 	el: HTMLElement;
 	setValue(value: InspectorFieldValue): void;
 	setDisabled(disabled: boolean): void;
+	/** A gallery's preview picture, repainted in place. */
+	setPreview?(src: string | undefined): void;
 }
 
 interface SectionSlot {
@@ -132,7 +134,9 @@ export function createInspectorFields<T, P>(
 	const buildField = (sectionId: string, field: InspectorFieldView): FieldHandle => {
 		const label = t(field.labelKey);
 		let handle: FieldHandle;
-		if (field.control === 'checkbox') {
+		if (field.control === 'gallery') {
+			handle = buildGallery(sectionId, field, label);
+		} else if (field.control === 'checkbox') {
 			const box = makeCheckboxField(doc, {
 				label,
 				onChange: (checked) => change(sectionId, field.id, checked),
@@ -198,8 +202,68 @@ export function createInspectorFields<T, P>(
 			handle = { ...number, setValue: (v) => number.setValue(Number(v)) };
 		}
 		handle.el.classList.toggle('pptxv-inspector-fields-wide', field.wide);
-		tagControl(handle.el, field.testId);
+		if (field.control !== 'gallery') {
+			tagControl(handle.el, field.testId);
+		}
 		return handle;
+	};
+
+	/** A grid of choices, each previewing the field's picture through its CSS filter. */
+	const buildGallery = (
+		sectionId: string,
+		field: InspectorFieldView,
+		label: string,
+	): FieldHandle => {
+		const box = createEl(doc, 'div', 'pptxv-inspector-gallery');
+		box.setAttribute('role', 'group');
+		box.setAttribute('aria-label', label);
+		const caption = createEl(doc, 'span', 'pptxv-inspector-row-label');
+		caption.textContent = label;
+		const grid = createEl(doc, 'div', 'pptxv-inspector-gallery-grid');
+		if (field.testId) {
+			grid.setAttribute('data-testid', field.testId);
+		}
+		const items = (field.options ?? []).map((option) => {
+			const text = inspectorOptionLabel(option, t);
+			const button = createEl(doc, 'button', 'pptxv-inspector-gallery-item');
+			button.type = 'button';
+			button.title = text;
+			button.setAttribute('aria-label', text);
+			button.dataset['value'] = option.value;
+			const preview = createEl(doc, 'span', 'pptxv-inspector-gallery-preview');
+			if (option.previewFilter) {
+				preview.style.filter = option.previewFilter;
+			}
+			const name = createEl(doc, 'span', 'pptxv-inspector-gallery-caption');
+			name.textContent = text;
+			button.append(preview, name);
+			button.addEventListener('click', () => change(sectionId, field.id, option.value));
+			grid.appendChild(button);
+			return { button, preview, value: option.value };
+		});
+		box.append(caption, grid);
+		const setPreview = (src: string | undefined): void => {
+			for (const { preview } of items) {
+				preview.style.backgroundImage = src ? `url("${src.replace(/"/g, '%22')}")` : '';
+			}
+		};
+		setPreview(field.previewImage);
+		return {
+			el: box,
+			setValue: (v) => {
+				for (const { button, value } of items) {
+					const active = value === String(v);
+					button.classList.toggle('is-active', active);
+					button.setAttribute('aria-pressed', String(active));
+				}
+			},
+			setDisabled: (disabled) => {
+				for (const { button } of items) {
+					button.disabled = disabled;
+				}
+			},
+			setPreview,
+		};
 	};
 
 	const buildSection = (view: InspectorSectionView): SectionSlot => {
@@ -252,6 +316,7 @@ export function createInspectorFields<T, P>(
 					const handle = slot.fields.get(field.id);
 					handle?.setValue(field.value);
 					handle?.setDisabled(disabled);
+					handle?.setPreview?.(field.previewImage);
 				}
 			});
 		},
