@@ -392,6 +392,14 @@ cases through the neutral writer, but the second native run stopped responding i
 workbook and could not be repeated in this session, so the pie-of-pie, horizontal-bar, rejoin and
 XY-line cases have no completed native pass yet.
 
+Object-tree writers after this slice: they remain the fallback for cleared subtype settings they
+keep, a cleared series number format, a category edit in the same save as a whole-chart switch to
+XY (that save reloads with the old categories; found by the acceptance builder, not fixed here),
+splits inside a stack or of groups with unknown extensions, an orientation turn on a chart that
+already has secondary axes, parts the neutral parser cannot preserve and shared writer refusals.
+Their print settings and pivot format codecs still encode those elements for the neutral save.
+None of the object-tree writers can be deleted yet.
+
 XY combinations: Excel 16, driven through its object model (`Series.ChartType = xlXYScatter` on a
 column or line series), saves a `c:scatterChart` that references the same category and value axes
 as the column or line group, with the categories as `c:xVal`, a 5 pt circle marker in the series
