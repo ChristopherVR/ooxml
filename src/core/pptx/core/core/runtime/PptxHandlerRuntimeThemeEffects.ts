@@ -20,6 +20,7 @@ import {
 	effectIsPurelyStyleMatrix,
 	fillIsPurelyStyleMatrix,
 } from './authored-shape-style';
+import { parseXml, type XmlElement } from '../../../../xml/index';
 import { HeldFormatSchemes } from './held-format-schemes';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeStyleMatrixResolve';
 
@@ -44,6 +45,15 @@ function withKeys(
 		}
 	}
 	return next as ShapeStyle;
+}
+
+/** The DOM root of an `a:fmtScheme`'s text, or `undefined` when it does not parse. */
+function formatSchemeElement(xml: string): XmlElement | undefined {
+	try {
+		return parseXml(xml, { label: 'DrawingML format scheme' }).documentElement;
+	} catch {
+		return undefined;
+	}
 }
 
 function refNode(idx: number, colorXml: XmlObject | undefined): XmlObject {
@@ -98,13 +108,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	private parseEffectScheme(
 		preset: Pick<PptxThemeEffectScheme, 'fmtSchemeXml'>,
 	): { node: XmlObject; scheme: PptxThemeFormatScheme } | undefined {
-		const parsed = this.parser.parse(wrapFormatSchemeXml(preset.fmtSchemeXml)) as XmlObject;
+		const xml = wrapFormatSchemeXml(preset.fmtSchemeXml);
+		const parsed = this.parser.parse(xml) as XmlObject;
 		const node = parsed['a:fmtScheme'] as XmlObject | undefined;
 		if (!node) {
 			return undefined;
 		}
 		delete node['@_xmlns:a'];
-		return { node, scheme: this.parseFormatScheme(node) };
+		return { node, scheme: this.parseFormatScheme(node, formatSchemeElement(xml)) };
 	}
 
 	/**

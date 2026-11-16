@@ -14,8 +14,9 @@
  *    captures a subset.
  *
  * 2. On save, if the theme has been marked dirty
- *    ({@link PptxHandlerRuntime#dirtyThemePaths}) — the codec will
- *    regenerate the theme from in-memory state, preserving the
+ *    ({@link PptxHandlerRuntime#dirtyThemePaths}), the shared DrawingML
+ *    theme writer (`drawingThemeXml`) regenerates the colour and font
+ *    schemes from in-memory state, preserving the
  *    captured raw subtrees for the parts the model doesn't own
  *    (objectDefaults, extraClrSchemeLst, fmtScheme details, …).
  *    Otherwise the original XML is re-emitted verbatim, which guarantees
@@ -25,9 +26,76 @@
  * the master / layout persistence and the presentation persistence.
  */
 
+import {
+	drawingThemeFormatSchemeXml,
+	type ThemeFormatScheme,
+} from '../../../../drawingml/format-scheme';
+import {
+	THEME_COLOR_SLOTS,
+	type DrawingTheme,
+	type ThemeColorScheme,
+	type ThemeFontCollection,
+} from '../../../../drawingml/theme-model';
+import type { DrawingColor, DrawingLine } from '../../../../drawingml/types';
+import { drawingThemeXml } from '../../../../drawingml/write-theme';
 import { XmlObject } from '../../types';
-import type { PptxThemeColorScheme } from '../../types';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveSlideWriter';
+
+/**
+ * The twelve scheme slots of a colour map as `srgbClr` colours: the in-memory map is hex-typed, so
+ * a slot the original part wrote as `sysClr` is written as its resolved value; a missing or
+ * malformed slot is written black.
+ */
+function themeSlotColors(colorMap: Record<string, string>): ThemeColorScheme['colors'] {
+	const colors: ThemeColorScheme['colors'] = {};
+	for (const slot of THEME_COLOR_SLOTS) {
+		const hex = String(colorMap[slot] || '').replace(/^#/, '');
+		const value = hex.length === 6 ? hex.toUpperCase() : '000000';
+		colors[slot] = { kind: 'srgb', value, transforms: [] };
+	}
+	return colors;
+}
+
+/** The major (`mj`) or minor (`mn`) fonts of a font map with their per-script faces. */
+function themeFontCollection(
+	fontMap: Record<string, string>,
+	prefix: 'mj' | 'mn',
+	scripts: Record<string, string> | undefined,
+): ThemeFontCollection {
+	return {
+		latin: fontMap[`${prefix}-lt`] || 'Calibri',
+		eastAsia: fontMap[`${prefix}-ea`] || '',
+		complexScript: fontMap[`${prefix}-cs`] || '',
+		scripts: { ...scripts },
+	};
+}
+
+const PLACEHOLDER: DrawingColor = { kind: 'scheme', value: 'phClr', transforms: [] };
+
+/**
+ * The smallest schema-valid `a:fmtScheme` (CT_FillStyleList and its siblings require at least
+ * three entries), for a theme part that has none: placeholder-coloured solid fills and outlines of
+ * 0.5, 1 and 1.5 pt, and empty effect lists.
+ */
+export function minimalThemeFormatScheme(name: string): ThemeFormatScheme {
+	const fill = () => ({ fill: { kind: 'solid' as const, color: structuredClone(PLACEHOLDER) } });
+	const line = (widthEmu: number): DrawingLine => ({
+		widthEmu,
+		cap: 'flat',
+		compound: 'sng',
+		alignment: 'ctr',
+		fill: { kind: 'solid', color: structuredClone(PLACEHOLDER) },
+		dash: 'solid',
+		join: { kind: 'miter', limit: 800000 },
+	});
+	return {
+		name,
+		fillStyles: [fill(), fill(), fill()],
+		lineStyles: [line(6350), line(12700), line(19050)],
+		effectStyles: [0, 1, 2].map(() => ({ effects: { effects: [] } })),
+		backgroundFillStyles: [fill(), fill(), fill()],
+	};
+}
 
 /**
  * Public mutation API for theme state. Marking a theme dirty causes the
@@ -113,12 +181,12 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 * Returns the serialized XML string (with XML prolog), or `undefined`
 	 * if there is no source data to emit.
 	 *
-	 * - Color scheme: built from per-master color map (or global fallback).
-	 * - Font scheme: built from per-master font map + per-script entries.
-	 * - Format scheme: re-emit the original XML subtree if available; else
-	 *   build a minimal scheme from {@link themeFormatScheme}.
-	 * - objectDefaults / extraClrSchemeLst / custClrLst / extLst: re-emit
-	 *   captured raw subtrees.
+	 * The colour and font schemes are written by the shared DrawingML theme
+	 * writer (`drawingThemeXml`) from the per-master maps (or the global
+	 * fallback), each slot as `srgbClr`. The authored `a:fmtScheme` and the
+	 * objectDefaults / extraClrSchemeLst / custClrLst / extLst subtrees are
+	 * re-emitted as captured; a part with no authored format scheme gets the
+	 * shared writer's minimal one ({@link minimalThemeFormatScheme}).
 	 */
 	protected buildThemeXml(themePath: string, masterPath: string | undefined): string | undefined {
 		const colorMap =
@@ -131,50 +199,45 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			this.themeFontMap;
 
 		const themeName = this.masterThemeNames.get(themePath) || 'Office Theme';
-		const colorSchemeName = this.masterThemeColorSchemeNames.get(themePath) || themeName;
-		const fontSchemeName = this.masterThemeFontSchemeNames.get(themePath) || themeName;
+		const theme: DrawingTheme = {
+			name: themeName,
+			colorScheme: {
+				name: this.masterThemeColorSchemeNames.get(themePath) || themeName,
+				colors: themeSlotColors(colorMap),
+			},
+			fontScheme: {
+				name: this.masterThemeFontSchemeNames.get(themePath) || themeName,
+				major: themeFontCollection(fontMap, 'mj', this.masterThemeMajorFontScripts.get(themePath)),
+				minor: themeFontCollection(fontMap, 'mn', this.masterThemeMinorFontScripts.get(themePath)),
+			},
+		};
 
-		const majorScripts = this.masterThemeMajorFontScripts.get(themePath) || {};
-		const minorScripts = this.masterThemeMinorFontScripts.get(themePath) || {};
+		let themeRoot: XmlObject | undefined;
+		try {
+			const xml = drawingThemeXml(theme, {
+				formatScheme: drawingThemeFormatSchemeXml(minimalThemeFormatScheme(themeName)),
+			});
+			themeRoot = (this.parser.parse(xml) as XmlObject)['a:theme'] as XmlObject | undefined;
+		} catch (error) {
+			console.warn(`Failed to build theme XML for ${themePath}:`, error);
+			return undefined;
+		}
+		const themeElements = themeRoot?.['a:themeElements'] as XmlObject | undefined;
+		if (!themeRoot || !themeElements) {
+			return undefined;
+		}
 
-		// Build colour scheme XML object.
-		const clrScheme = this.buildClrSchemeObject(colorSchemeName, colorMap);
-		const fontScheme = this.buildFontSchemeObject(
-			fontSchemeName,
-			fontMap,
-			majorScripts,
-			minorScripts,
-		);
-
-		// Format scheme: prefer the original raw subtree (kept on the parsed
-		// theme via originalThemeXmlByPath) since the in-memory
-		// PptxThemeFormatScheme is a lossy representation. Re-extract it from
-		// the original XML by parsing once and grabbing `a:fmtScheme` verbatim.
+		// Format scheme: the original raw subtree (kept via originalThemeXmlByPath), verbatim.
 		const fmtScheme = this.extractRawSubtreeFromOriginal(themePath, [
 			'a:theme',
 			'a:themeElements',
 			'a:fmtScheme',
 		]);
-
-		const themeElements: XmlObject = {
-			'a:clrScheme': clrScheme,
-			'a:fontScheme': fontScheme,
-		};
 		if (fmtScheme !== undefined) {
 			themeElements['a:fmtScheme'] = fmtScheme as XmlObject;
-		} else {
-			// Last-resort minimal placeholder so PowerPoint doesn't reject
-			// the theme. (Required child per CT_BaseStyles.)
-			themeElements['a:fmtScheme'] = this.buildMinimalFmtScheme(themeName);
 		}
 
-		const themeRoot: XmlObject = {
-			'@_xmlns:a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
-			'@_name': themeName,
-			'a:themeElements': themeElements,
-		};
-
-		// objectDefaults — M5.
+		// objectDefaults - M5.
 		const objectDefaults = this.masterThemeObjectDefaults.get(themePath);
 		if (objectDefaults && (objectDefaults.spDef || objectDefaults.lnDef || objectDefaults.txDef)) {
 			const od: XmlObject = {};
@@ -224,83 +287,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	/**
-	 * Build the `a:clrScheme` XmlObject from a colour map. Each slot
-	 * value is interpreted as either a `#RRGGBB` srgb hex or a known
-	 * sysClr token (currently always emitted as srgbClr — the in-memory
-	 * map is hex-typed; sysClr round-trip belongs to the broader C-H3
-	 * fix to preserve original color XML and is out of scope here).
-	 */
-	protected buildClrSchemeObject(schemeName: string, colorMap: Record<string, string>): XmlObject {
-		const slot = (key: keyof PptxThemeColorScheme): XmlObject => {
-			const hex = String(colorMap[key as string] || '').replace(/^#/, '');
-			const srgb = hex.length === 6 ? hex.toUpperCase() : '000000';
-			return { 'a:srgbClr': { '@_val': srgb } };
-		};
-
-		// dk1/lt1 typically use sysClr in real Office themes (windowText /
-		// window). When the original theme's <a:dk1> (or <a:lt1>) was a
-		// sysClr we lose that nuance through the hex-only colour map. Emit
-		// srgbClr unconditionally; downstream consumers that load this file
-		// see the same resolved colour values.
-		return {
-			'@_name': schemeName,
-			'a:dk1': slot('dk1'),
-			'a:lt1': slot('lt1'),
-			'a:dk2': slot('dk2'),
-			'a:lt2': slot('lt2'),
-			'a:accent1': slot('accent1'),
-			'a:accent2': slot('accent2'),
-			'a:accent3': slot('accent3'),
-			'a:accent4': slot('accent4'),
-			'a:accent5': slot('accent5'),
-			'a:accent6': slot('accent6'),
-			'a:hlink': slot('hlink'),
-			'a:folHlink': slot('folHlink'),
-		};
-	}
-
-	/**
-	 * Build the `a:fontScheme` XmlObject from a font map plus per-script
-	 * font tables.
-	 *
-	 * Phase 4 Stream A / M4.
-	 */
-	protected buildFontSchemeObject(
-		schemeName: string,
-		fontMap: Record<string, string>,
-		majorScripts: Record<string, string>,
-		minorScripts: Record<string, string>,
-	): XmlObject {
-		const buildFontGroup = (
-			latinKey: string,
-			eaKey: string,
-			csKey: string,
-			scripts: Record<string, string>,
-		): XmlObject => {
-			const group: XmlObject = {
-				'a:latin': { '@_typeface': fontMap[latinKey] || 'Calibri' },
-				'a:ea': { '@_typeface': fontMap[eaKey] || '' },
-				'a:cs': { '@_typeface': fontMap[csKey] || '' },
-			};
-			const scriptKeys = Object.keys(scripts);
-			if (scriptKeys.length > 0) {
-				const fontEntries = scriptKeys.map((script) => ({
-					'@_script': script,
-					'@_typeface': scripts[script],
-				}));
-				group['a:font'] = fontEntries.length === 1 ? fontEntries[0] : fontEntries;
-			}
-			return group;
-		};
-
-		return {
-			'@_name': schemeName,
-			'a:majorFont': buildFontGroup('mj-lt', 'mj-ea', 'mj-cs', majorScripts),
-			'a:minorFont': buildFontGroup('mn-lt', 'mn-ea', 'mn-cs', minorScripts),
-		};
-	}
-
-	/**
 	 * Re-parse the original theme XML and pluck out a subtree by path,
 	 * returning the raw parser object. Returns `undefined` when the
 	 * original is missing or the path doesn't exist.
@@ -327,59 +313,5 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		} catch {
 			return undefined;
 		}
-	}
-
-	/**
-	 * Last-resort minimal `<a:fmtScheme>` body. Mirrors the SDK new-deck
-	 * builder's output for new presentations, scaled down to the smallest
-	 * schema-valid form.
-	 */
-	protected buildMinimalFmtScheme(name: string): XmlObject {
-		const phClrSolid = { 'a:solidFill': { 'a:schemeClr': { '@_val': 'phClr' } } };
-		return {
-			'@_name': name,
-			'a:fillStyleLst': {
-				'a:solidFill': [{ 'a:schemeClr': { '@_val': 'phClr' } }],
-				'a:gradFill': [],
-			},
-			'a:lnStyleLst': {
-				'a:ln': [
-					{
-						'@_w': '6350',
-						'@_cap': 'flat',
-						'@_cmpd': 'sng',
-						'@_algn': 'ctr',
-						...phClrSolid,
-						'a:prstDash': { '@_val': 'solid' },
-						'a:miter': { '@_lim': '800000' },
-					},
-					{
-						'@_w': '12700',
-						'@_cap': 'flat',
-						'@_cmpd': 'sng',
-						'@_algn': 'ctr',
-						...phClrSolid,
-						'a:prstDash': { '@_val': 'solid' },
-						'a:miter': { '@_lim': '800000' },
-					},
-					{
-						'@_w': '19050',
-						'@_cap': 'flat',
-						'@_cmpd': 'sng',
-						'@_algn': 'ctr',
-						...phClrSolid,
-						'a:prstDash': { '@_val': 'solid' },
-						'a:miter': { '@_lim': '800000' },
-					},
-				],
-			},
-			'a:effectStyleLst': {
-				'a:effectStyle': [{ 'a:effectLst': {} }, { 'a:effectLst': {} }, { 'a:effectLst': {} }],
-			},
-			'a:bgFillStyleLst': {
-				'a:solidFill': [{ 'a:schemeClr': { '@_val': 'phClr' } }],
-				'a:gradFill': [],
-			},
-		};
 	}
 }

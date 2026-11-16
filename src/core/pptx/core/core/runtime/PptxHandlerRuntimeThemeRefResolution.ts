@@ -2,6 +2,29 @@ import { XmlObject, ShapeStyle } from '../../types';
 import type { PptxThemeFillStyle } from '../../types';
 import { extractStyleReferenceColorXml, withThemePlaceholderColor } from '../../utils';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeThemeOverrides';
+import {
+	resolveThemeEffectStyle,
+	resolveThemeFillStyle,
+	resolveThemeLineStyle,
+} from '../../../../drawingml/format-scheme';
+import type { DrawingColor } from '../../../../drawingml/types';
+import {
+	drawingFormatSchemeOf,
+	themeEffectStyleView,
+	themeFillStyleView,
+	themeLineStyleView,
+} from './theme-format-scheme-view';
+
+/** A resolved reference colour (`#RRGGBB`) as the neutral colour `phClr` is replaced with. */
+function placeholderDrawingColor(hex: string): DrawingColor {
+	return { kind: 'srgb', value: hex.replace(/^#/, ''), transforms: [] };
+}
+
+/**
+ * Style references (`a:fillRef`, `a:lnRef`, `a:effectRef`, ECMA-376 Part 1, 20.1.4.2) against the
+ * theme format scheme. The index rules and the `phClr` substitution are the shared DrawingML
+ * resolvers' (`resolveTheme*Style`); the pptx fallbacks for a missing scheme or entry stay here.
+ */
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	/**
@@ -33,13 +56,17 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			return;
 		}
 		const overrideColor = this.parseColor(refNode);
-		if (overrideColor && effectDef.rawNode) {
-			effectDef = withThemePlaceholderColor(this.themeColorMap, overrideColor, () => {
-				const reparsed = this.parseEffectStyleList({
-					'a:effectStyle': effectDef.rawNode as XmlObject,
-				});
-				return reparsed[0] ?? effectDef;
-			});
+		if (overrideColor && (effectDef.effects || effectDef.rawNode)) {
+			const effects = resolveThemeEffectStyle(
+				drawingFormatSchemeOf(this.themeFormatScheme),
+				idx,
+				placeholderDrawingColor(overrideColor),
+			);
+			effectDef = themeEffectStyleView(
+				effects ? { effects } : {},
+				effectDef.rawNode as XmlObject | undefined,
+				this.themeStyleViewContext(overrideColor),
+			);
 		}
 
 		// Apply shadow (only if no explicit shadow was already set)
@@ -141,11 +168,19 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			}
 			return;
 		}
-		if (overrideColor && lineDef.rawNode) {
-			lineDef = withThemePlaceholderColor(this.themeColorMap, overrideColor, () => {
-				const reparsed = this.parseLineStyleList({ 'a:ln': lineDef.rawNode as XmlObject });
-				return reparsed[0] ?? lineDef;
-			});
+		if (overrideColor && lineDef.line) {
+			const line = resolveThemeLineStyle(
+				drawingFormatSchemeOf(this.themeFormatScheme),
+				idx,
+				placeholderDrawingColor(overrideColor),
+			);
+			if (line) {
+				lineDef = themeLineStyleView(
+					line,
+					lineDef.rawNode as XmlObject | undefined,
+					this.themeStyleViewContext(overrideColor),
+				);
+			}
 		}
 
 		// Apply line properties from the format scheme
@@ -238,27 +273,29 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			fillDef = this.themeFormatScheme.fillStyles[idx - 1];
 		}
 
-		if (!fillDef) {
+		// A picture entry (`a:blipFill`) is not drawn: the reference falls back to its colour.
+		if (!fillDef || fillDef.kind === 'picture') {
 			style.fillMode = 'theme';
 			style.fillColor = this.parseColor(refNode);
 			return;
 		}
 
-		// The colour child of the ref element serves as phClr override.
-		// We resolve it for use when the fill definition contains phClr tokens.
+		// The colour child of the ref element serves as phClr override: the shared resolver
+		// substitutes it into the neutral fill (solid and pattern; gradients below).
 		const overrideColor = this.parseColor(refNode);
-		const fillTag =
-			fillDef.kind === 'solid'
-				? 'a:solidFill'
-				: fillDef.kind === 'pattern'
-					? 'a:pattFill'
-					: undefined;
-		if (fillTag && overrideColor && fillDef.rawNode) {
-			const rawFillNode = fillDef.rawNode as XmlObject;
-			fillDef = withThemePlaceholderColor(this.themeColorMap, overrideColor, () => {
-				const reparsed = this.parseFillStyleList({ [fillTag]: rawFillNode } as XmlObject);
-				return reparsed[0] ?? fillDef;
-			});
+		if ((fillDef.kind === 'solid' || fillDef.kind === 'pattern') && overrideColor && fillDef.fill) {
+			const fill = resolveThemeFillStyle(
+				drawingFormatSchemeOf(this.themeFormatScheme),
+				idx,
+				placeholderDrawingColor(overrideColor),
+			);
+			if (fill) {
+				fillDef = themeFillStyleView(
+					{ fill },
+					fillDef.rawNode as XmlObject | undefined,
+					this.themeStyleViewContext(overrideColor),
+				);
+			}
 		}
 
 		switch (fillDef.kind) {

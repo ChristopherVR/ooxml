@@ -2,9 +2,29 @@ import { XmlObject } from '../../types';
 import type { PptxTheme, PptxThemeFormatScheme, PptxThemeOption } from '../../types';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeThemePartModel';
 import { colorSchemeFromMap, fontSchemeFromMap } from './theme-part-model';
+import { parseThemeColorMap } from '../../../../drawingml/theme';
+import { NS, first, parseXml, type XmlElement } from '../../../../xml/index';
 
 export function isPresentationThemePartPath(path: string): boolean {
 	return /^ppt\/theme\/(?!themeOverride)[^/]+\.xml$/iu.test(path);
+}
+
+/**
+ * The `p:clrMap` of a slide master's text (ECMA-376 Part 1, 19.3.1.6) as the alias dictionary the
+ * runtime keeps (`bg1` -> `lt1`...), read by the shared `parseThemeColorMap`: every value is an
+ * `ST_ColorSchemeIndex` token in its spec spelling, a value outside the enumeration is skipped.
+ * `undefined` when the master has no colour map (or the part does not parse).
+ */
+export function masterColorMapOf(masterXml: string): Record<string, string> | undefined {
+	let root: XmlElement;
+	try {
+		root = parseXml(masterXml, { label: 'PPTX slide master' }).documentElement;
+	} catch {
+		return undefined;
+	}
+	if (root.namespaceURI !== NS.p || root.localName !== 'sldMaster') return undefined;
+	const map: Record<string, string> = { ...parseThemeColorMap(first(root, 'clrMap', NS.p)) };
+	return Object.keys(map).length > 0 ? map : undefined;
 }
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
@@ -128,43 +148,12 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			return;
 		}
 
-		const aliasKeys = [
-			'bg1',
-			'tx1',
-			'bg2',
-			'tx2',
-			'accent1',
-			'accent2',
-			'accent3',
-			'accent4',
-			'accent5',
-			'accent6',
-			'hlink',
-			'folHlink',
-		];
-
 		for (const file of masterFiles) {
 			try {
 				// eslint-disable-next-line no-await-in-loop
 				const masterXml = (await this.readPartText(file.name)) ?? '';
-				const masterData = this.parser.parse(masterXml) as XmlObject;
-				const clrMap = (masterData?.['p:sldMaster'] as XmlObject | undefined)?.['p:clrMap'] as
-					| XmlObject
-					| undefined;
-				if (!clrMap) {
-					continue;
-				}
-
-				const aliasMap: Record<string, string> = {};
-				for (const aliasKey of aliasKeys) {
-					const mappedKey = String(clrMap[`@_${aliasKey}`] || '')
-						.trim()
-						.toLowerCase();
-					if (mappedKey) {
-						aliasMap[aliasKey] = mappedKey;
-					}
-				}
-				if (Object.keys(aliasMap).length > 0) {
+				const aliasMap = masterColorMapOf(masterXml);
+				if (aliasMap) {
 					this.masterClrMaps.set(file.name, aliasMap);
 				}
 			} catch (error) {

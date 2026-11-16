@@ -233,12 +233,34 @@ would keep two XML models alive.
    other than reflection (`PptxHandlerRuntimeTextRunEffects`) and the theme effect styles still
    read their own attributes.
 
+   **pptx theme matrices, references, colour map and theme writer (2026-11-16).** The format scheme
+   reader (`PptxHandlerRuntimeThemeFormatScheme`) reads `a:fmtScheme` with `parseThemeFormatScheme`
+   (from the theme part's own DOM, so a mixed fill list keeps document order and an `a:blipFill`
+   entry keeps its index as a `picture` entry) and projects it onto the pptx view
+   (`theme-format-scheme-view.ts`); `PptxThemeFormatScheme` entries now carry their neutral half
+   (`fill`, `line`, `effects`) and `drawingFormatSchemeOf` gives the `ThemeFormatScheme` back. The
+   `fillRef`/`lnRef`/`effectRef` resolution (`PptxHandlerRuntimeThemeRefResolution`) takes its index
+   rules and `phClr` substitution from `resolveThemeFillStyle`, `resolveThemeLineStyle` and
+   `resolveThemeEffectStyle` (the reference colour, resolved, replaces `phClr`); the old re-parse of
+   the object tree with an injected `phclr` slot is gone except inside the gradient codec. The master
+   `p:clrMap` reader is `parseThemeColorMap` (values in their `ST_ColorSchemeIndex` spelling, so
+   `folHlink` is no longer lower-cased), the theme writer (`buildThemeXml`, a dirty theme) writes the
+   colour and font schemes with `drawingThemeXml` (which now drops the namespace declarations every
+   colour fragment repeated) and a part without a format scheme gets a schema-valid minimal one
+   (three entries per list; the old one had a single fill). Theme switching adopts the part through
+   the same reader. `types/theme.ts` takes its colour slots from `ThemeColorSlot`. The old reader,
+   resolution and writer are frozen in `pptx/__tests__/helpers/legacy-theme-format-scheme.ts` and
+   compared with the new ones by `pptx/__tests__/integration/drawingml-theme-format-scheme-parity.test.ts`
+   over every committed deck: 383 format schemes, 72,747 style references (slides, layouts, masters,
+   notes and SmartArt drawings), 366 master colour maps and every theme part written back agree,
+   except the one theme (`e2e/absolute-path-rels.pptx`, `theme11.xml`) whose fill and background
+   lists hold an `a:blipFill`, which the old reader dropped.
+
    **Remains:** painting DAG sibling composition, masks, blends, transforms and references (see
-   docs/parity-checklist.md); the text-run effect readers; the format scheme reader
-   (`PptxHandlerRuntimeThemeFormatScheme`, its own `PptxThemeFormatScheme` shape next to the neutral
-   `ThemeFormatScheme`), theme ref and `phClr` resolution (`PptxHandlerRuntimeThemeRefResolution`),
-   theme switching and saving, the master `p:clrMap` reader and `types/theme.ts` still read the
-   object tree. The pptx text parsers still read through
+   docs/parity-checklist.md); the text-run effect readers; in the theme view the `a:scene3d`/`a:sp3d`
+   settings and table styles and backgrounds still read the paired object node (`rawNode`), a
+   picture theme fill is not drawn, and the writer writes the colour slots as `srgbClr` from the hex
+   map. The pptx text parsers still read through
    their own object tree (the neutral model is pinned, not yet used by pptx); the xlsx theme writer
    still patches the part itself (a neutral writer exists as `drawingml/write-theme.ts`; whether xlsx
    should adopt it is open).
@@ -739,6 +761,7 @@ workbooks passed.
 | SmartArt drawing parity (S3)      | 371 drawing parts, 3014 shapes                                | `smartart-drawing-shape-neutral-parity.test.ts`           |
 | Choose walkers corpus (step 2)    | every walker over 353 layout definitions                      | `smartart-choose-walkers-corpus.test.ts`                  |
 | DrawingML colour and theme (3)    | 180,651 colour elements and 383 theme parts agree             | `drawingml-color-neutral-parity.test.ts`                  |
+| DrawingML theme matrices (3)      | 383 format schemes, 72,747 style refs, 366 clrMaps, theme writes | `drawingml-theme-format-scheme-parity.test.ts`            |
 
 ### 3.9 pptx strictness and the XML object model (inventory, 2026-11-16)
 

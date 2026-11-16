@@ -10,6 +10,7 @@ import {
 	themeSchemesFromDrawingTheme,
 } from './theme-part-model';
 import type { ThemePartModel } from './theme-part-model';
+import { themeFormatSchemeView } from './theme-format-scheme-view';
 
 /**
  * Reading one theme part (`ppt/theme/themeN.xml`).
@@ -21,9 +22,9 @@ import type { ThemePartModel } from './theme-part-model';
  */
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	/**
-	 * Parse one theme part's XML. Side-effect free. The names, colour scheme and font scheme are
-	 * read by the shared DrawingML reader (`parseTheme`); the format scheme and the subtrees the
-	 * save re-emits verbatim come from the object tree.
+	 * Parse one theme part's XML. Side-effect free. The names and the colour, font and format
+	 * schemes are read by the shared DrawingML reader (`parseTheme`); the subtrees the save
+	 * re-emits verbatim come from the object tree.
 	 */
 	protected parseThemePartXml(themeXml: string): ThemePartModel {
 		const themeData = this.parser.parse(themeXml) as XmlObject;
@@ -33,10 +34,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// Aliases (`tx1`/`bg1`/`tx2`/`bg2`) are not baked into the colour map: they resolve LAZILY
 		// through the active master's `<p:clrMap>` at colour-lookup time (see `resolveThemeColor`),
 		// since a master may remap them (dark themes that swap `bg1` and `tx1`).
-		const schemes = themeSchemesFromDrawingTheme(
-			this.readDrawingTheme(themeXml),
-			this.getDefaultSchemeColorMap(),
-		);
+		const drawingTheme = this.readDrawingTheme(themeXml);
+		const schemes = themeSchemesFromDrawingTheme(drawingTheme, this.getDefaultSchemeColorMap());
 
 		const objectDefaultsNode = themeRoot?.['a:objectDefaults'] as XmlObject | undefined;
 		const objectDefaults = objectDefaultsNode && {
@@ -57,7 +56,15 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			extraClrSchemeLst: themeRoot?.['a:extraClrSchemeLst'] as unknown,
 			custClrLst: themeRoot?.['a:custClrLst'] as unknown,
 			extLst: themeRoot?.['a:extLst'] as unknown,
-			formatScheme: fmtScheme ? this.parseFormatScheme(fmtScheme) : undefined,
+			formatScheme: !fmtScheme
+				? undefined
+				: drawingTheme.formatScheme
+					? themeFormatSchemeView(
+							drawingTheme.formatScheme,
+							fmtScheme,
+							this.themeStyleViewContext(),
+						)
+					: this.parseFormatScheme(fmtScheme),
 		};
 	}
 

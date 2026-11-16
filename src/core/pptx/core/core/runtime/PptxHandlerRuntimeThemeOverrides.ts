@@ -1,54 +1,35 @@
 import { XmlObject } from '../../types';
 import type { PptxThemeFormatScheme } from '../../types';
 import { parseOverrideClrMapping } from './color-scheme-index';
-import {
-	PptxHandlerRuntime as PptxHandlerRuntimeBase,
-	extractFillStyleListChildOrder,
-} from './PptxHandlerRuntimeThemeFormatScheme';
+import { NS, first, parseXml, type XmlElement } from '../../../../xml/index';
+import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeThemeFormatScheme';
+
+/** The `a:fmtScheme` of a theme override part's text in the DOM, if it parses and has one. */
+function overrideFormatSchemeElement(xml: string): XmlElement | undefined {
+	try {
+		return first(
+			parseXml(xml, { label: 'PPTX theme override' }).documentElement,
+			'fmtScheme',
+			NS.a,
+		);
+	} catch {
+		return undefined;
+	}
+}
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	/**
 	 * Parse the `a:fmtScheme` element from the theme into a structured
-	 * {@link PptxThemeFormatScheme}.  Each sub-list (fillStyleLst, lnStyleLst,
-	 * effectStyleLst, bgFillStyleLst) contains up to three intensity levels
+	 * {@link PptxThemeFormatScheme} through the shared DrawingML reader. Each sub-list
+	 * (fillStyleLst, lnStyleLst, effectStyleLst, bgFillStyleLst) holds the intensity levels
 	 * (subtle / moderate / intense) referenced by 1-based index.
 	 *
-	 * When `rawXml` is supplied (the original theme/themeOverride XML
-	 * source), the document order of fill children is recovered via a
-	 * targeted regex scan and threaded into {@link parseFillStyleList} so
-	 * mixed solid/grad/blip/grpFill lists round-trip in source order even
-	 * though fast-xml-parser collapses heterogeneous siblings into typed
-	 * buckets.
+	 * Pass `source`, the same element in the DOM, when the part's text is at hand: the object tree
+	 * groups same-name siblings, so only the DOM keeps a mixed fill list (`solidFill`, `gradFill`,
+	 * `solidFill`) in document order.
 	 */
-	protected parseFormatScheme(fmtScheme: XmlObject, rawXml?: string): PptxThemeFormatScheme {
-		const name = String(fmtScheme['@_name'] || '').trim() || undefined;
-
-		const fillOrder = extractFillStyleListChildOrder(rawXml, 'a:fillStyleLst');
-		const bgFillOrder = extractFillStyleListChildOrder(rawXml, 'a:bgFillStyleLst');
-
-		// --- Fill styles (a:fillStyleLst) ---
-		const fillStyleLst = fmtScheme['a:fillStyleLst'] as XmlObject | undefined;
-		const fillStyles = this.parseFillStyleList(fillStyleLst, fillOrder);
-
-		// --- Line styles (a:lnStyleLst) ---
-		const lnStyleLst = fmtScheme['a:lnStyleLst'] as XmlObject | undefined;
-		const lineStyles = this.parseLineStyleList(lnStyleLst);
-
-		// --- Effect styles (a:effectStyleLst) ---
-		const effectStyleLst = fmtScheme['a:effectStyleLst'] as XmlObject | undefined;
-		const effectStyles = this.parseEffectStyleList(effectStyleLst);
-
-		// --- Background fill styles (a:bgFillStyleLst) ---
-		const bgFillStyleLst = fmtScheme['a:bgFillStyleLst'] as XmlObject | undefined;
-		const backgroundFillStyles = this.parseFillStyleList(bgFillStyleLst, bgFillOrder);
-
-		return {
-			name,
-			fillStyles,
-			lineStyles,
-			effectStyles,
-			backgroundFillStyles,
-		};
+	protected parseFormatScheme(fmtScheme: XmlObject, source?: XmlElement): PptxThemeFormatScheme {
+		return this.readFormatScheme(fmtScheme, source);
 	}
 
 	/**
@@ -254,7 +235,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			// Format scheme override
 			const fmtScheme = root['a:fmtScheme'] as XmlObject | undefined;
 			if (fmtScheme) {
-				result.formatSchemeOverride = this.parseFormatScheme(fmtScheme);
+				result.formatSchemeOverride = this.parseFormatScheme(
+					fmtScheme,
+					overrideFormatSchemeElement(overrideXml),
+				);
 			}
 
 			// Font scheme override (apply to themeFontMap temporarily)

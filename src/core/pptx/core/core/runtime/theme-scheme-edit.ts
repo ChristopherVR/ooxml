@@ -9,23 +9,11 @@
  * helpers take the target explicitly so the runtime can apply the same edit
  * to every theme part and every per-master map.
  */
+import { THEME_COLOR_SLOTS } from '../../../../drawingml/theme-model';
 import type { PptxThemeColorScheme, PptxThemeFontScheme, XmlObject } from '../../types';
 
-/** The twelve `a:clrScheme` slots, in schema order. */
-export const THEME_COLOR_SCHEME_KEYS: ReadonlyArray<keyof PptxThemeColorScheme> = [
-	'dk1',
-	'lt1',
-	'dk2',
-	'lt2',
-	'accent1',
-	'accent2',
-	'accent3',
-	'accent4',
-	'accent5',
-	'accent6',
-	'hlink',
-	'folHlink',
-];
+/** The twelve `a:clrScheme` slots, in schema order (the shared DrawingML slot list). */
+export const THEME_COLOR_SCHEME_KEYS: ReadonlyArray<keyof PptxThemeColorScheme> = THEME_COLOR_SLOTS;
 
 /**
  * The `p:clrMap` alias slots and where they route when a master declares no

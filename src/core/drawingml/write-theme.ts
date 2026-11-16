@@ -33,6 +33,24 @@ function fragment(
 	);
 }
 
+/**
+ * Removes the `xmlns:p` declarations an imported fragment brought along when the root already
+ * declares the same prefix with the same namespace (every colour fragment repeats `xmlns:a`).
+ */
+function dropRedundantDeclarations(root: XmlElement): void {
+	const declared = new Map<string, string>();
+	for (const attribute of Array.from(root.attributes)) {
+		if (attribute.name.startsWith('xmlns:')) declared.set(attribute.name, attribute.value);
+	}
+	const visit = (element: XmlElement) => {
+		for (const attribute of Array.from(element.attributes)) {
+			if (declared.get(attribute.name) === attribute.value) element.removeAttribute(attribute.name);
+		}
+		for (const child of elements(element)) visit(child);
+	};
+	for (const child of elements(root)) visit(child);
+}
+
 function extensionList(
 	parent: XmlElement,
 	extensions: Readonly<Record<string, string>> | undefined,
@@ -118,5 +136,6 @@ export function drawingThemeXml(theme: DrawingTheme, parts: DrawingThemeXmlParts
 	extensionList(elementsNode, parts.themeElementsExtensions, namespaces);
 	root.appendChild(doc.createElementNS(NS.a, 'a:objectDefaults'));
 	root.appendChild(doc.createElementNS(NS.a, 'a:extraClrSchemeLst'));
+	dropRedundantDeclarations(root);
 	return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n${buildXml(doc)}`;
 }
