@@ -1,4 +1,9 @@
-import { createViewerOptionsStore, resolveCustomization, THEME_CATALOG } from 'ooxml-ui/pptx';
+import {
+	createViewerOptionsStore,
+	resolveCustomization,
+	ribbonTabButtons,
+	THEME_CATALOG,
+} from 'ooxml-ui/pptx';
 import type { ViewerCustomization, ViewerOptionsStore } from 'ooxml-ui/pptx';
 import { LOCALE_CATALOG } from 'ooxml-ui/pptx/i18n';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -34,9 +39,7 @@ afterEach(() => {
 });
 
 function ribbonTabLabels(container: HTMLElement): string[] {
-	return Array.from(container.querySelectorAll('.pptxv-ribbon-tab')).map((tab) =>
-		(tab.textContent ?? '').trim(),
-	);
+	return Array.from(ribbonTabButtons(container)).map((tab) => (tab.textContent ?? '').trim());
 }
 
 /** The viewer's File > Options store (private on the class; read for assertions only). */

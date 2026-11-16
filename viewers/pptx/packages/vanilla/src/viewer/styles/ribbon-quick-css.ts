@@ -92,7 +92,6 @@ export const RIBBON_QUICK_CSS = `
 .pptxv-read-only-badge[hidden] { display: none; }
 /* ── Tab-row right-side actions ── */
 /* Right side of the tab row: Record + Share, matching React's TabRowActions. */
-.pptxv-tabrow-spacer { flex: 1; }
 .pptxv-tabrow-actions { display: inline-flex; align-items: center; gap: 4px; padding-right: 4px; }
 .pptxv-tabrow-record {
 	display: inline-flex;

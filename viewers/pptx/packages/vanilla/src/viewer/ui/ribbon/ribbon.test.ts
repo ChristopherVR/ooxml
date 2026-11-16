@@ -1,5 +1,10 @@
 import type { PptxUiSelectElement } from 'ooxml-ui/pptx';
-import { EMPTY_RIBBON_TRANSITION_DRAFT, createRibbonControlIcon } from 'ooxml-ui/pptx';
+import {
+	createRibbonControlIcon,
+	EMPTY_RIBBON_TRANSITION_DRAFT,
+	ribbonTab,
+	ribbonTabButtons,
+} from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { EditActions } from '../../editor/editor-edit-ops';
@@ -193,7 +198,7 @@ describe('createRibbon', () => {
 	it('switches the visible tab pane when a tab button is clicked', () => {
 		const t = createTranslator();
 		const ribbon = createRibbon(document, t, buildHandlers());
-		const tabs = ribbon.el.querySelectorAll<HTMLButtonElement>('.pptxv-ribbon-tab');
+		const tabs = ribbonTabButtons(ribbon.el);
 		// [file, home, insert, draw, design, transitions, animations, slide show, view]
 		tabs[2].click();
 		const panes = ribbon.el.querySelectorAll<HTMLElement>('.pptxv-ribbon-tab-content');
@@ -206,7 +211,7 @@ describe('createRibbon', () => {
 		const t = createTranslator();
 		const handlers = buildHandlers();
 		const ribbon = createRibbon(document, t, handlers);
-		const tabs = ribbon.el.querySelectorAll<HTMLButtonElement>('.pptxv-ribbon-tab');
+		const tabs = ribbonTabButtons(ribbon.el);
 		tabs[7].click();
 		const command = (id: string) =>
 			ribbon.el
@@ -240,7 +245,7 @@ describe('createRibbon', () => {
 		const t = createTranslator();
 		const handlers = buildHandlers();
 		const ribbon = createRibbon(document, t, handlers);
-		const tabs = ribbon.el.querySelectorAll<HTMLButtonElement>('.pptxv-ribbon-tab');
+		const tabs = ribbonTabButtons(ribbon.el);
 		tabs[8].click();
 		const recordButtons = Array.from(
 			ribbon.el.querySelectorAll('.pptxv-ribbon-tab-content:not([hidden]) pptx-ui-ribbon-command'),
@@ -290,11 +295,11 @@ describe('createRibbon', () => {
 		const ribbon = createRibbon(document, t, buildHandlers());
 		ribbon.setEditState({ editable: false, canUndo: false, canRedo: false });
 		expect(ribbon.el.querySelector<HTMLElement>('.pptxv-ribbon-primary')?.hidden).toBeFalsy();
-		expect(ribbon.el.querySelector<HTMLElement>('.pptxv-ribbon-tabs')?.hidden).toBeFalsy();
+		expect(ribbon.el.querySelector<HTMLElement>('pptx-ui-ribbon-tabs')?.hidden).toBeFalsy();
 
 		ribbon.setEditState({ editable: true, canUndo: true, canRedo: false });
 		expect(ribbon.el.querySelector<HTMLElement>('.pptxv-ribbon-primary')?.hidden).toBeFalsy();
-		expect(ribbon.el.querySelector<HTMLElement>('.pptxv-ribbon-tabs')?.hidden).toBeFalsy();
+		expect(ribbon.el.querySelector<HTMLElement>('pptx-ui-ribbon-tabs')?.hidden).toBeFalsy();
 	});
 
 	it('does not duplicate status-bar navigation above the ribbon tabs', () => {
@@ -309,9 +314,9 @@ describe('createRibbon', () => {
 		const t = createTranslator();
 		const handlers = buildHandlers();
 		const ribbon = createRibbon(document, t, handlers);
-		const fileTab = Array.from(
-			ribbon.el.querySelectorAll<HTMLButtonElement>('.pptxv-ribbon-tab'),
-		).find((button) => button.textContent === 'File');
+		const fileTab = Array.from(ribbonTabButtons(ribbon.el)).find(
+			(button) => button.textContent === 'File',
+		);
 		fileTab?.click();
 		const backstage = ribbon.el.querySelector<HTMLElement>('.pptxv-backstage');
 		expect(backstage?.hidden).toBeFalsy();
@@ -330,7 +335,7 @@ describe('createRibbon', () => {
 
 	it('returns to the default tab when a presentation has loaded', () => {
 		const ribbon = createRibbon(document, createTranslator(), buildHandlers());
-		Array.from(ribbon.el.querySelectorAll<HTMLButtonElement>('.pptxv-ribbon-tab'))
+		Array.from(ribbonTabButtons(ribbon.el))
 			.find((button) => button.textContent === 'File')
 			?.click();
 		expect(ribbon.el.querySelector<HTMLElement>('.pptxv-backstage')?.hidden).toBeFalsy();
@@ -344,7 +349,7 @@ describe('createRibbon', () => {
 		const t = createTranslator();
 		const handlers = buildHandlers();
 		const ribbon = createRibbon(document, t, handlers);
-		Array.from(ribbon.el.querySelectorAll<HTMLButtonElement>('.pptxv-ribbon-tab'))
+		Array.from(ribbonTabButtons(ribbon.el))
 			.find((button) => button.textContent === 'File')
 			?.click();
 		const backstage = ribbon.el.querySelector<HTMLElement>('.pptxv-backstage');
@@ -385,7 +390,7 @@ describe('createRibbon', () => {
 	it('opens viewer settings immediately from File Options', () => {
 		const handlers = buildHandlers();
 		const ribbon = createRibbon(document, createTranslator(), handlers);
-		Array.from(ribbon.el.querySelectorAll<HTMLButtonElement>('.pptxv-ribbon-tab'))
+		Array.from(ribbonTabButtons(ribbon.el))
 			.find((button) => button.textContent === 'File')
 			?.click();
 		const backstage = ribbon.el.querySelector<HTMLElement>('.pptxv-backstage');
@@ -398,7 +403,7 @@ describe('createRibbon', () => {
 	it('opens the collaboration workflow from Share with People', () => {
 		const handlers = buildHandlers();
 		const ribbon = createRibbon(document, createTranslator(), handlers);
-		Array.from(ribbon.el.querySelectorAll<HTMLButtonElement>('.pptxv-ribbon-tab'))
+		Array.from(ribbonTabButtons(ribbon.el))
 			.find((button) => button.textContent === 'File')
 			?.click();
 		const backstage = ribbon.el.querySelector<HTMLElement>('.pptxv-backstage');
@@ -436,16 +441,14 @@ describe('createRibbon', () => {
 		it('omitting hiddenActions renders every tab (backward compatible default)', () => {
 			const t = createTranslator();
 			const ribbon = createRibbon(document, t, buildHandlers());
-			const tabs = ribbon.el.querySelectorAll('.pptxv-ribbon-tab');
+			const tabs = ribbonTabButtons(ribbon.el);
 			expect(tabs).toHaveLength(12);
 		});
 
 		it('never constructs a hidden ribbon tab: no tab button and no pane content', () => {
 			const t = createTranslator();
 			const ribbon = createRibbon(document, t, buildHandlers(), ['insert']);
-			const tabLabels = Array.from(ribbon.el.querySelectorAll('.pptxv-ribbon-tab')).map(
-				(btn) => btn.textContent,
-			);
+			const tabLabels = Array.from(ribbonTabButtons(ribbon.el)).map((btn) => btn.textContent);
 			expect(tabLabels).not.toContain(t('pptx.ribbon.tab.insert'));
 			expect(ribbon.el.querySelector('pptx-ui-ribbon-insert')).toBeNull();
 		});
@@ -463,7 +466,7 @@ describe('createRibbon', () => {
 		it('hides the Broadcast action from the Slide Show tab', () => {
 			const t = createTranslator();
 			const ribbon = createRibbon(document, t, buildHandlers(), ['broadcast']);
-			const tabs = ribbon.el.querySelectorAll<HTMLButtonElement>('.pptxv-ribbon-tab');
+			const tabs = ribbonTabButtons(ribbon.el);
 			tabs[7].click();
 			expect(ribbon.el.querySelector(`[aria-label="${t('pptx.slideShow.broadcast')}"]`)).toBeNull();
 		});
@@ -471,9 +474,9 @@ describe('createRibbon', () => {
 		it('hides the Export actions grid in the File tab', () => {
 			const t = createTranslator();
 			const ribbon = createRibbon(document, t, buildHandlers(), ['export']);
-			const fileTab = Array.from(
-				ribbon.el.querySelectorAll<HTMLButtonElement>('.pptxv-ribbon-tab'),
-			).find((button) => button.textContent === 'File');
+			const fileTab = Array.from(ribbonTabButtons(ribbon.el)).find(
+				(button) => button.textContent === 'File',
+			);
 			fileTab?.click();
 			const backstage = ribbon.el.querySelector<HTMLElement>('.pptxv-backstage');
 			const exportNav = Array.from(backstage?.querySelectorAll('nav button') ?? []).find(
@@ -486,7 +489,7 @@ describe('createRibbon', () => {
 		it('hides the zoom commands from the View tab', () => {
 			const t = createTranslator();
 			const ribbon = createRibbon(document, t, buildHandlers(), ['zoom']);
-			const tabs = ribbon.el.querySelectorAll<HTMLButtonElement>('.pptxv-ribbon-tab');
+			const tabs = ribbonTabButtons(ribbon.el);
 			const viewTabIndex = Array.from(tabs).findIndex(
 				(button) => button.textContent === t('pptx.ribbon.tab.view'),
 			);
@@ -508,7 +511,7 @@ describe('host ribbon tabs', () => {
 		groups: [{ label: 'Export', commands: [{ id: 'export', label: 'Export', run }] }],
 	});
 	const tabOf = (ribbon: ReturnType<typeof createRibbon>, id: string) =>
-		ribbon.el.querySelector<HTMLButtonElement>(`[data-ribbon-add-in-tab="${id}"]`);
+		ribbonTab(ribbon.el, `[data-ribbon-add-in-tab="${id}"]`);
 
 	it('adds a tab after Help, shows its commands and reports the one chosen', () => {
 		const ribbon = createRibbon(document, createTranslator(), buildHandlers());
@@ -520,7 +523,7 @@ describe('host ribbon tabs', () => {
 			heard((event as CustomEvent).detail),
 		);
 		ribbon.setRibbonAddIns([reports(first), { ...reports(first), id: 'home', label: 'Fake' }]);
-		const tabs = [...ribbon.el.querySelectorAll('[data-pptx-chrome="ribbon-tabs"] [role="tab"]')];
+		const tabs = [...ribbonTabButtons(ribbon.el)];
 		// After the fixed tabs; a host tab cannot take a built-in id.
 		expect(tabs.at(-1)).toBe(tabOf(ribbon, 'reports'));
 		expect(tabs.map((tab) => tab.textContent)).not.toContain('Fake');
@@ -551,7 +554,7 @@ describe('host ribbon tabs', () => {
 		ribbon.setRibbonAddIns([]);
 		expect(tabOf(ribbon, 'reports')).toBeNull();
 		expect(ribbon.el.querySelector('pptx-ui-ribbon-add-in')).toBeNull();
-		const selected = ribbon.el.querySelector('[role="tab"][aria-selected="true"]')!;
+		const selected = ribbonTab(ribbon.el, '[role="tab"][aria-selected="true"]')!;
 		expect(selected.hasAttribute('data-ribbon-add-in-tab')).toBeFalsy();
 		const shown = [
 			...ribbon.el.querySelectorAll<HTMLElement>('[data-pptx-chrome="ribbon-content"]'),

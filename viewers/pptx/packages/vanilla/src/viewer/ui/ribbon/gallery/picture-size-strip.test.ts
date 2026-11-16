@@ -1,5 +1,5 @@
 import type { RibbonGalleryContext, ToolbarActionId } from 'ooxml-ui/pptx';
-import { EMPTY_RIBBON_TRANSITION_DRAFT } from 'ooxml-ui/pptx';
+import { EMPTY_RIBBON_TRANSITION_DRAFT, ribbonTab } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -79,9 +79,7 @@ function mount(hiddenActions?: ToolbarActionId[]) {
 	ribbon.setEditState({ editable: true, canUndo: false, canRedo: false });
 	ribbon.setEditable(true);
 	ribbon.updateSelection(PICTURE, selection());
-	ribbon.el
-		.querySelector<HTMLButtonElement>('[data-ribbon-contextual-tab="pictureFormat"]')!
-		.click();
+	ribbonTab(ribbon.el, '[data-ribbon-contextual-tab="pictureFormat"]')!.click();
 	const size = (hook: string) =>
 		ribbon.el.querySelector<HTMLButtonElement>(
 			`[data-ribbon-group="pictureFormat.size"] [data-pptx-ribbon-control="${hook}"]`,

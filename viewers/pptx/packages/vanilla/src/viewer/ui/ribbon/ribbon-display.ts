@@ -109,12 +109,8 @@ export function createRibbonDisplay(
 
 	button.addEventListener('click', () => controller.toggleMenu());
 	reveal.addEventListener('click', () => controller.reveal());
-	tabBar.addEventListener('dblclick', (event) => {
-		const tab = (event.target as Element).closest?.('[role="tab"]');
-		if (tab && !tab.classList.contains('pptxv-ribbon-tab-file')) {
-			controller.toggleCollapsed();
-		}
-	});
+	// A double click on a tab other than File (the shared tab row tells which).
+	tabBar.addEventListener('collapse-toggle', () => controller.toggleCollapsed());
 
 	// The shared pointer registry drops a handler only when its owner is collected, so a ribbon
 	// replaced by a chrome rebuild would keep dismissing the new ribbon's menu until then.

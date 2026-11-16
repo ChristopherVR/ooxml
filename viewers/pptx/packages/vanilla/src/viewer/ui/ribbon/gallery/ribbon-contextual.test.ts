@@ -1,5 +1,10 @@
 import type { RibbonGalleryContext } from 'ooxml-ui/pptx';
-import { EMPTY_RIBBON_TRANSITION_DRAFT, resolveCustomization } from 'ooxml-ui/pptx';
+import {
+	EMPTY_RIBBON_TRANSITION_DRAFT,
+	resolveCustomization,
+	ribbonTab,
+	ribbonTabButtons,
+} from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -89,11 +94,9 @@ const visiblePane = (root: HTMLElement): HTMLElement | undefined =>
 describe('ribbon contextual tabs (vanilla)', () => {
 	it('shows Shape Format for a shape selection without switching to it', () => {
 		const ribbon = mount();
-		expect(ribbon.el.querySelector('[data-ribbon-contextual-tab]')).toBeNull();
+		expect(ribbonTab(ribbon.el, '[data-ribbon-contextual-tab]')).toBeNull();
 		ribbon.updateSelection(shape(), selection(shape()));
-		const tab = ribbon.el.querySelector<HTMLButtonElement>(
-			'[data-ribbon-contextual-tab="shapeFormat"]',
-		);
+		const tab = ribbonTab(ribbon.el, '[data-ribbon-contextual-tab="shapeFormat"]');
 		expect(tab?.textContent).toBe('Shape Format');
 		expect(visiblePane(ribbon.el)?.querySelector('[data-ribbon-group="home.font"]')).not.toBeNull();
 
@@ -118,9 +121,7 @@ describe('ribbon contextual tabs (vanilla)', () => {
 				);
 			ribbon.updateSelection(shape(), selection(shape()));
 			expect(tiles()).toHaveLength(0);
-			ribbon.el
-				.querySelector<HTMLButtonElement>('[data-ribbon-contextual-tab="shapeFormat"]')!
-				.click();
+			ribbonTab(ribbon.el, '[data-ribbon-contextual-tab="shapeFormat"]')!.click();
 			expect(tiles()).toHaveLength(6);
 		} finally {
 			ribbon.destroy();
@@ -131,11 +132,9 @@ describe('ribbon contextual tabs (vanilla)', () => {
 	it('drops the contextual tab and falls back to Home on deselect', () => {
 		const ribbon = mount();
 		ribbon.updateSelection(shape(), selection(shape()));
-		ribbon.el
-			.querySelector<HTMLButtonElement>('[data-ribbon-contextual-tab="shapeFormat"]')!
-			.click();
+		ribbonTab(ribbon.el, '[data-ribbon-contextual-tab="shapeFormat"]')!.click();
 		ribbon.updateSelection(undefined, selection(undefined));
-		expect(ribbon.el.querySelector('[data-ribbon-contextual-tab]')).toBeNull();
+		expect(ribbonTab(ribbon.el, '[data-ribbon-contextual-tab]')).toBeNull();
 		// The pane goes with it, as in the other bindings, not just hidden.
 		expect(ribbon.el.querySelector('[data-ribbon-group="shapeFormat.shapeStyles"]')).toBeNull();
 		expect(
@@ -169,9 +168,7 @@ describe('ribbon contextual tabs (vanilla)', () => {
 			),
 		).not.toBeNull();
 		// A tab's galleries draw once it shows.
-		[...ribbon.el.querySelectorAll<HTMLButtonElement>('[role="tab"]')]
-			.find((tab) => tab.textContent?.trim() === 'Design')!
-			.click();
+		[...ribbonTabButtons(ribbon.el)].find((tab) => tab.textContent?.trim() === 'Design')!.click();
 		const variants = ribbon.el.querySelector('[data-ribbon-group="design.variants"]')!;
 		expect(variants.querySelector('[data-ribbon-gallery="themeColors"]')).not.toBeNull();
 		expect(variants.querySelector('[data-ribbon-gallery="themeFonts"]')).not.toBeNull();

@@ -1,11 +1,12 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 /**
  * Options and callbacks the vanilla viewer gained to match the other four bindings
  * (`authorName`, `filePath`, `onOpenFile`, `onContentChange`, `onModeChange`,
  * `onSlideCountChange`), driven through the real viewer.
  */
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-
+import { ribbonTabButtons } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createPptxViewer } from './PptxViewer';
@@ -118,9 +119,7 @@ describe('ribbon display options', () => {
 			(pane) => !pane.hidden,
 		);
 	const tab = (label: string): HTMLButtonElement =>
-		[...document.body.querySelectorAll<HTMLButtonElement>('.pptxv-ribbon-tab')].find(
-			(button) => button.textContent === label,
-		)!;
+		[...ribbonTabButtons(document.body)].find((button) => button.textContent === label)!;
 
 	it('lists the three PowerPoint modes and collapses the ribbon to its tab row', async () => {
 		const onRibbonDisplayChange = vi.fn();

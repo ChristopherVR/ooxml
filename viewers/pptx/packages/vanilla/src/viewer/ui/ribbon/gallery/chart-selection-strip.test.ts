@@ -1,5 +1,5 @@
 import type { RibbonGalleryContext, ToolbarActionId } from 'ooxml-ui/pptx';
-import { EMPTY_RIBBON_TRANSITION_DRAFT } from 'ooxml-ui/pptx';
+import { EMPTY_RIBBON_TRANSITION_DRAFT, ribbonTab } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -82,7 +82,7 @@ function mount(hiddenActions?: ToolbarActionId[]) {
 	ribbon.setEditState({ editable: true, canUndo: false, canRedo: false });
 	ribbon.setEditable(true);
 	ribbon.updateSelection(CHART, selection({ chartFormatTarget: 'legend' }));
-	ribbon.el.querySelector<HTMLButtonElement>('[data-ribbon-contextual-tab="chartFormat"]')!.click();
+	ribbonTab(ribbon.el, '[data-ribbon-contextual-tab="chartFormat"]')!.click();
 	const strip = ribbon.el.querySelector<HTMLElement>(
 		'[data-ribbon-group="chartFormat.currentSelection"] pptx-ui-ribbon-home-chart-selection',
 	)!;

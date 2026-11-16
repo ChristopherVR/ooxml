@@ -1,4 +1,5 @@
 // @vitest-own-worker: mounts several full viewers; see region-customization.test-support.ts.
+import { ribbonTabButtons } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -74,9 +75,9 @@ describe('vanilla host File tab pages', () => {
 				backstage: { extraPages: [{ id: 'audit', label: 'Audit log', render: mountPage }] },
 			},
 		});
-		const fileTab = Array.from(
-			container.querySelectorAll<HTMLButtonElement>('.pptxv-ribbon-tab'),
-		).find((tab) => (tab.textContent ?? '').trim() === 'File');
+		const fileTab = Array.from(ribbonTabButtons(container)).find(
+			(tab) => (tab.textContent ?? '').trim() === 'File',
+		);
 		fileTab!.click();
 		const item = Array.from(
 			container.querySelectorAll<HTMLButtonElement>('[data-pptx-backstage-nav-item]'),

@@ -1,3 +1,4 @@
+import { ribbonTab, ribbonTabButtons } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createPptxViewer } from './PptxViewer';
@@ -90,7 +91,7 @@ describe('vanilla host ribbon tabs', () => {
 		container.addEventListener('office-ribbon-add-in', (event) =>
 			heard((event as CustomEvent).detail),
 		);
-		const tab = () => container.querySelector<HTMLButtonElement>('[data-ribbon-add-in-tab]');
+		const tab = () => ribbonTab(container, '[data-ribbon-add-in-tab]');
 		expect(tab()?.textContent).toBe('Reports');
 		// A customisation change rebuilds the whole chrome: the host tab is still there.
 		viewer.hideRibbonTab('draw');
@@ -107,7 +108,7 @@ describe('vanilla host ribbon tabs', () => {
 		expect(tab()).toBeNull();
 		expect(container.querySelector('pptx-ui-ribbon-add-in')).toBeNull();
 		expect(
-			container.querySelectorAll('[data-pptx-chrome="ribbon-tabs"] [aria-selected="true"]'),
+			ribbonTabButtons(container).filter((tab) => tab.matches('[aria-selected="true"]')),
 		).toHaveLength(1);
 	});
 });

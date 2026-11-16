@@ -26,36 +26,8 @@ export const RIBBON_CSS = `
 }
 .pptxv-ribbon-primary:empty { display: none; }
 .pptxv-ribbon-primary[hidden] { display: none; }
-/* ── Tab bar ─────────────────────────────────────────────────────────── */
-.pptxv-ribbon-tabs {
-	display: flex;
-	align-items: center;
-	gap: 2px;
-	padding: 0 6px;
-	border-bottom: 1px solid var(--pptx-border);
-	overflow-x: auto;
-}
-.pptxv-ribbon-tabs[hidden] { display: none; }
-.pptxv-ribbon-tab {
-	padding: 6px 12px;
-	border: none;
-	border-bottom: 2px solid transparent;
-	background: transparent;
-	color: var(--pptx-muted-foreground);
-	font: inherit;
-	font-size: 12px;
-	font-weight: 500;
-	white-space: nowrap;
-	cursor: pointer;
-}
-.pptxv-ribbon-tab:hover { color: var(--pptx-foreground); background: var(--pptx-accent); }
-.pptxv-ribbon-tab.is-active { color: var(--pptx-foreground); border-bottom-color: var(--pptx-primary); }
-.pptxv-ribbon-tab-file { color: var(--pptx-primary); }
-.pptxv-ribbon-tab-file.is-active {
-	color: #fff;
-	background: color-mix(in srgb, var(--pptx-primary) 80%, transparent);
-	border-radius: var(--pptx-radius);
-}
+/* ── Tab bar: the shared pptx-ui-ribbon-tabs draws its tabs in its shadow root ── */
+pptx-ui-ribbon-tabs[hidden] { display: none; }
 
 /* ── Tab content + groups ────────────────────────────────────────────── */
 /* One horizontal row (React: flex flex-nowrap + overflow-x) instead of the
