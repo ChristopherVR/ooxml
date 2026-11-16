@@ -677,7 +677,7 @@ export function ViewerCanvasArea(props: ViewerCanvasAreaProps) {
 						presentationTool={annotations.presentationTool}
 						penColor={annotations.penColor}
 						highlighterColor={annotations.highlighterColor}
-						hasAnnotations={annotations.annotationStrokes.length > 0}
+						hasAnnotations={annotations.hasAnyAnnotations}
 						onSetTool={annotations.setPresentationTool}
 						onSetPenColor={annotations.setPenColor}
 						onSetHighlighterColor={annotations.setHighlighterColor}

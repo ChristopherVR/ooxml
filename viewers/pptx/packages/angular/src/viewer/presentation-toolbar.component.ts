@@ -121,7 +121,7 @@ export class PresentationToolbarComponent {
 			tool: this.annotations.tool(),
 			penColor: this.annotations.penColor(),
 			highlighterColor: this.annotations.highlighterColor(),
-			hasAnnotations: this.annotations.annotationStrokes().length > 0,
+			hasAnnotations: this.annotations.hasAnyAnnotations(),
 			blackout: this.presenterWindow.snapshot().blackout,
 			presenterViewVisible: true,
 			presenterViewActive: this.presenterMode(),

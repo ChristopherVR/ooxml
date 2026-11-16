@@ -119,6 +119,19 @@ describe('show toolbar adapter', () => {
 		expect(annotations.tool()).toBe('pen');
 	});
 
+	it('counts ink on any slide for the annotation flag, as every binding does', () => {
+		const { fixture, control, annotations } = open();
+		expect(control('clear')?.disabled).toBe(true);
+		annotations.setActiveSlide(0);
+		annotations.selectTool('pen');
+		annotations.beginStroke(10, 10);
+		annotations.extendStroke(20, 20);
+		annotations.endStroke();
+		annotations.setActiveSlide(1);
+		fixture.detectChanges();
+		expect(control('clear')?.disabled).toBe(false);
+	});
+
 	it('reflects the presenter-view state as pressed', () => {
 		expect(
 			open({ presenterMode: true }).control('presenter-view')?.getAttribute('aria-pressed'),
