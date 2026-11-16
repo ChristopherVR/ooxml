@@ -2,6 +2,10 @@
 export const en = {
 	'Generated SmartArt preview; not native Office layout.':
 		'Generated SmartArt preview; not native Office layout.',
+	'smartart.note.flat3d.one': '{n} shape with 3D drawn flat.',
+	'smartart.note.flat3d.other': '{n} shapes with 3D drawn flat.',
+	'smartart.note.approximate3d.one': '{n} shape with 3D drawn approximately.',
+	'smartart.note.approximate3d.other': '{n} shapes with 3D drawn approximately.',
 	'tab.smartart-design': 'SmartArt Design',
 	SmartArt: 'SmartArt',
 	'Insert SmartArt': 'Insert SmartArt',

@@ -4,6 +4,10 @@ import type { DiagramUiStrings } from './en';
 export const zhCN: DiagramUiStrings = {
 	'Generated SmartArt preview; not native Office layout.':
 		'生成的 SmartArt 预览；并非 Office 原生布局。',
+	'smartart.note.flat3d.one': '{n} 个三维形状按平面绘制。',
+	'smartart.note.flat3d.other': '{n} 个三维形状按平面绘制。',
+	'smartart.note.approximate3d.one': '{n} 个三维形状按近似方式绘制。',
+	'smartart.note.approximate3d.other': '{n} 个三维形状按近似方式绘制。',
 	'tab.smartart-design': 'SmartArt 设计',
 	SmartArt: 'SmartArt',
 	'Insert SmartArt': '插入 SmartArt',

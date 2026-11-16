@@ -139,8 +139,21 @@ describe('SmartArt node view', () => {
 		const notes = diagramNotes(diagram, { approximatedGeometries: ['star5'], flattened3d: 2 });
 		expect(notes.join('\n')).toContain('missing-part: colors part is absent');
 		expect(notes.join('\n')).toContain('star5');
-		expect(notes.join('\n')).toContain('2 shape(s) with 3D drawn flat');
+		expect(notes.join('\n')).toContain('2 shapes with 3D drawn flat.');
 		expect(notes.at(-1)).toMatch(/not Word-identical/);
+		const counted = { flattened3d: 1, approximated3d: 3 };
+		expect(diagramNotes(diagram, counted).join('\n')).toContain('1 shape with 3D drawn flat.');
+		expect(diagramNotes(diagram, counted).join('\n')).toContain(
+			'3 shapes with 3D drawn approximately.',
+		);
+		expect(diagramNotes(diagram, counted, undefined, undefined, 'fr').join('\n')).toContain(
+			'3 formes 3D dessinées de façon approximative.',
+		);
+		for (const locale of ['de', 'es', 'zh-CN'] as const) {
+			const text = diagramNotes(diagram, counted, undefined, undefined, locale).join('\n');
+			expect(text).not.toContain('drawn');
+			expect(text).not.toContain('smartart.note');
+		}
 	});
 });
 

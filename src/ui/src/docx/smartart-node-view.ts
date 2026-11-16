@@ -5,7 +5,12 @@ import type { NodeView } from 'prosemirror-view';
 import { defineSmartArt } from '../smartart';
 import { placementClass } from 'ooxml-core/docx/ui';
 import { previewDocxDiagram, themeDrawing } from 'ooxml-core/docx/ui';
-import { translate, type EditorLocale, type LocalizationKey } from './localization';
+import {
+	translate,
+	translateTemplate,
+	type EditorLocale,
+	type LocalizationKey,
+} from './localization';
 
 const EMU_PER_PX = 9525;
 
@@ -55,6 +60,7 @@ export function diagramNotes(
 	report: RenderReport | undefined,
 	themed?: { unappliedTransforms: string[]; alphaDropped: boolean },
 	approximate?: string,
+	locale: EditorLocale = 'en',
 ): string[] {
 	const notes = [diagram.notice];
 	for (const issue of diagram.issues) notes.push(`${issue.code}: ${issue.message}`);
@@ -62,9 +68,11 @@ export function diagramNotes(
 		notes.push(`Shapes drawn as rectangles: ${report.approximatedGeometries.join(', ')}.`);
 	if (report?.approximatedFills?.length)
 		notes.push(`Fills approximated: ${report.approximatedFills.join(', ')}.`);
-	if (report?.flattened3d) notes.push(`${report.flattened3d} shape(s) with 3D drawn flat.`);
-	if (report?.approximated3d)
-		notes.push(`${report.approximated3d} shape(s) with 3D drawn approximately.`);
+	// Counted notes, one key per count form (as `dyn.line` / `dyn.lines`), in every locale.
+	const counted = (n: number, key: 'flat3d' | 'approximate3d') =>
+		translateTemplate(locale, `smartart.note.${key}.${n === 1 ? 'one' : 'other'}`, { n });
+	if (report?.flattened3d) notes.push(counted(report.flattened3d, 'flat3d'));
+	if (report?.approximated3d) notes.push(counted(report.approximated3d, 'approximate3d'));
 	if (themed?.alphaDropped) notes.push('Transparent colours are drawn opaque.');
 	if (themed?.unappliedTransforms.length)
 		notes.push(`Colour transforms not applied: ${themed.unappliedTransforms.join(', ')}.`);
@@ -147,7 +155,7 @@ export function smartArtNodeView(
 	const writeNotes = (report?: RenderReport) => {
 		const list = document.createElement('ul');
 		for (const note of [
-			...diagramNotes(diagram, report, themed, approximate),
+			...diagramNotes(diagram, report, themed, approximate, locale),
 			...(preview?.issues.map((issue) => `${issue.code}: ${issue.message}`) ?? []),
 		]) {
 			const item = document.createElement('li');

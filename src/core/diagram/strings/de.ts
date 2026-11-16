@@ -4,6 +4,10 @@ import type { DiagramUiStrings } from './en';
 export const de: DiagramUiStrings = {
 	'Generated SmartArt preview; not native Office layout.':
 		'Generierte SmartArt-Vorschau; kein natives Office-Layout.',
+	'smartart.note.flat3d.one': '{n} Form mit 3D flach gezeichnet.',
+	'smartart.note.flat3d.other': '{n} Formen mit 3D flach gezeichnet.',
+	'smartart.note.approximate3d.one': '{n} Form mit 3D näherungsweise gezeichnet.',
+	'smartart.note.approximate3d.other': '{n} Formen mit 3D näherungsweise gezeichnet.',
 	'tab.smartart-design': 'SmartArt-Entwurf',
 	SmartArt: 'SmartArt',
 	'Insert SmartArt': 'SmartArt einfügen',
