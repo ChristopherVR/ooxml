@@ -8,7 +8,6 @@ import React, { useCallback, useMemo, useRef } from 'react';
 
 import { useController } from '../hooks/useController';
 import { useRibbonDisplayFallback } from '../hooks/useRibbonDisplayController';
-import { useToolbarVisibility } from '../hooks/useToolbarVisibility';
 import { useTranslation } from '../i18n/use-translation';
 import type { ToolbarSection } from '../types';
 import { cn } from '../utils';
@@ -47,7 +46,6 @@ export type { ToolbarProps } from './toolbar/toolbar-types';
 export function Toolbar(p: ToolbarProps): React.ReactElement {
 	const { mode, isNarrowViewport, isCompactToolbarOpen, toolbarSection, onSetToolbarSection } = p;
 	const { t } = useTranslation();
-	const { isTabVisible } = useToolbarVisibility(p.hiddenActions);
 	const viewerOptions = useViewerOptionsContext();
 	const customization = useViewerCustomizationContext();
 	// Below-ribbon Quick Access row: the shared element renders only the extras.
@@ -154,7 +152,7 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 					<>
 						<RibbonTabBar
 							onToggleCollapsed={() => ribbon.toggleCollapsed()}
-							isTabVisible={isTabVisible}
+							hiddenActions={p.hiddenActions}
 							activeSection={extraTab ? null : section}
 							contextualTabs={contextual.visible}
 							activeContextual={addIns.active ? null : contextual.active}

@@ -5,6 +5,7 @@
  * never called, a `locale` change re-labels the ribbon and an open File > Options, and File >
  * Options shows its Language category only with `onLocaleChange`, which a pick then calls.
  */
+import { ribbonTab, ribbonTabButtons } from 'ooxml-ui/pptx';
 import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 import React, { act, createRef } from 'react';
@@ -75,9 +76,7 @@ afterEach(() => {
 });
 
 const ribbonTabs = () =>
-	Array.from(container.querySelectorAll('[role="tab"]')).map(
-		(tab) => tab.textContent?.trim() ?? '',
-	);
+	Array.from(ribbonTabButtons(container)).map((tab) => tab.textContent?.trim() ?? '');
 
 const tick = (ms = 20) =>
 	act(async () => {
@@ -123,7 +122,7 @@ type OptionsDialog = HTMLElement & {
 /** Open File > Options (the File tab is the first ribbon tab, Options the last nav entry). */
 async function openOptions(): Promise<OptionsDialog> {
 	await act(async () => {
-		container.querySelector<HTMLElement>('[role="tab"]')?.click();
+		ribbonTab(container)?.click();
 	});
 	await tick();
 	const entries = document.body.querySelectorAll<HTMLElement>('[data-pptx-backstage-nav-item]');

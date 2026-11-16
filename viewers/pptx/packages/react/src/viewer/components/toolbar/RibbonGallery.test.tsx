@@ -1,5 +1,5 @@
 import type { RibbonGalleryPlacement } from 'ooxml-ui/pptx';
-import { CONTEXTUAL_TAB_GROUPS } from 'ooxml-ui/pptx';
+import { CONTEXTUAL_TAB_GROUPS, ribbonTab } from 'ooxml-ui/pptx';
 // @vitest-environment happy-dom
 /**
  * The React ribbon galleries and contextual tabs.
@@ -256,10 +256,10 @@ describe('contextual ribbon tabs', () => {
 		const render = (selectedElement: PptxElement | null) =>
 			act(() => root.render(<Harness selectedElement={selectedElement} />));
 		render(null);
-		expect(container.querySelector('[data-ribbon-contextual-tab]')).toBeNull();
+		expect(ribbonTab(container, '[data-ribbon-contextual-tab]')).toBeNull();
 
 		render(shape());
-		const tab = container.querySelector('[data-ribbon-contextual-tab="shapeFormat"]');
+		const tab = ribbonTab(container, '[data-ribbon-contextual-tab="shapeFormat"]');
 		expect(tab?.textContent).toBe('pptx.ribbon.tab.shapeFormat');
 		// Selecting never switches tabs on its own.
 		expect(tab?.getAttribute('aria-selected')).toBe('false');
@@ -274,7 +274,7 @@ describe('contextual ribbon tabs', () => {
 		expect(container.querySelector('[data-ribbon-group="insert.text"]')).toBeNull();
 
 		render(null);
-		expect(container.querySelector('[data-ribbon-contextual-tab]')).toBeNull();
+		expect(ribbonTab(container, '[data-ribbon-contextual-tab]')).toBeNull();
 		expect(sections).toStrictEqual(['home']);
 		expect(container.querySelector('[data-ribbon-group="shapeFormat.shapeStyles"]')).toBeNull();
 		expect(container.querySelector('[data-ribbon-group="home.clipboard"]')).not.toBeNull();

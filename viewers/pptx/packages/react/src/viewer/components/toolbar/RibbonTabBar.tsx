@@ -1,20 +1,20 @@
-import type { RibbonAddInTab, RibbonContextualTabId } from 'ooxml-ui/pptx';
-import {
-	RIBBON_ADD_IN_TAB_ATTR,
-	RIBBON_CONTEXTUAL_TAB_ATTR,
-	contextualTabLabelKey,
-	resolveScreenTip,
+import type {
+	PptxUiRibbonTabsElement,
+	RibbonAddInTab,
+	RibbonContextualTabId,
+	RibbonTabSelectDetail,
+	ToolbarActionId,
 } from 'ooxml-ui/pptx';
-import React from 'react';
+import { buildRibbonTabRow, resolveScreenTip } from 'ooxml-ui/pptx';
+import React, { useLayoutEffect, useRef } from 'react';
 
-import { TOOLBAR_SECTIONS } from '../../constants';
 import { useTranslation } from '../../i18n/use-translation';
 import type { ToolbarSection } from '../../types';
-import { cn } from '../../utils';
 import { useViewerOptionsContext } from '../viewer-options-context';
 
 export interface RibbonTabBarProps {
-	isTabVisible: (id: ToolbarSection) => boolean;
+	/** The host's `hiddenActions`; Customize Ribbon's hidden tabs come from the viewer options. */
+	hiddenActions?: readonly ToolbarActionId[];
 	/** The fixed tab shown, or null while a contextual tab is. */
 	activeSection: ToolbarSection | null;
 	contextualTabs: readonly RibbonContextualTabId[];
@@ -27,103 +27,64 @@ export interface RibbonTabBarProps {
 	onSelectAddIn?: (id: string) => void;
 	/** A double click on a tab other than File: switches between the docked ribbon and the tab row. */
 	onToggleCollapsed?: () => void;
-	/** Right-side tab-row content (Record / Share, the compact toggle). */
+	/** Right-side tab-row content (Record / Share, the compact toggle), in the row's actions slot. */
 	children?: React.ReactNode;
 }
 
-const TAB_BASE =
-	'relative px-3.5 py-2 text-[12px] font-medium whitespace-nowrap transition-colors max-md:min-h-[36px] max-md:px-3';
-const TAB_UNDERLINE =
-	'after:absolute after:-bottom-px after:left-0 after:right-0 after:h-[2.5px] after:bg-primary';
-
 /**
- * The ribbon tab row: the fixed tabs, the host's add-in tabs, then the contextual tabs the selection
- * brings up (PowerPoint's Shape Format, Picture Format, ...), drawn in the
- * accent colour so they read as selection-scoped.
+ * The ribbon tab row: the shared `pptx-ui-ribbon-tabs` (the tab row Word, Excel and Visio draw),
+ * fed from `buildRibbonTabRow`. This component only gathers the state and routes the element's
+ * `tab-select` and `collapse-toggle` events.
  */
 export function RibbonTabBar(p: RibbonTabBarProps): React.ReactElement {
 	const { t } = useTranslation();
 	const viewerOptions = useViewerOptionsContext();
+	const ref = useRef<PptxUiRibbonTabsElement>(null);
+	const handlers = useRef(p);
+	handlers.current = p;
+	const state = buildRibbonTabRow({
+		translate: (key) => t(key),
+		active: p.activeAddIn ?? p.activeContextual ?? p.activeSection,
+		hiddenActions: p.hiddenActions,
+		hiddenTabIds: viewerOptions.ribbon.hiddenTabIds,
+		addInTabs: p.addInTabs,
+		contextualTabs: p.contextualTabs,
+		screenTip: (label) => resolveScreenTip(viewerOptions, label),
+	});
+	useLayoutEffect(() => {
+		if (ref.current) {
+			ref.current.state = state;
+		}
+	});
+	useLayoutEffect(() => {
+		const host = ref.current;
+		if (!host) {
+			return;
+		}
+		const select = (event: Event) => {
+			const { tab, kind } = (event as CustomEvent<RibbonTabSelectDetail>).detail;
+			const current = handlers.current;
+			if (kind === 'addIn') {
+				current.onSelectAddIn?.(tab);
+			} else if (kind === 'contextual') {
+				current.onSelectContextual(tab as RibbonContextualTabId);
+			} else {
+				current.onSelectSection(tab as ToolbarSection);
+			}
+		};
+		const collapse = () => handlers.current.onToggleCollapsed?.();
+		host.addEventListener('tab-select', select);
+		host.addEventListener('collapse-toggle', collapse);
+		return () => {
+			host.removeEventListener('tab-select', select);
+			host.removeEventListener('collapse-toggle', collapse);
+		};
+	}, []);
 	return (
-		<div
-			role='tablist'
-			data-pptx-chrome='ribbon-tabs'
-			className='flex items-center border-b border-border/60 px-1 max-md:overflow-x-auto max-md:scrollbar-none'
-		>
-			{TOOLBAR_SECTIONS.filter((s) => p.isTabVisible(s.id)).map((s) => {
-				const selected = p.activeSection === s.id;
-				return (
-					<button
-						key={s.id}
-						type='button'
-						role='tab'
-						aria-selected={selected}
-						title={resolveScreenTip(viewerOptions, t(s.labelKey))}
-						onClick={() => p.onSelectSection(s.id)}
-						onDoubleClick={s.id === 'file' ? undefined : () => p.onToggleCollapsed?.()}
-						className={cn(
-							TAB_BASE,
-							selected
-								? s.id === 'file'
-									? 'text-white bg-primary/80 rounded-sm'
-									: `text-foreground ${TAB_UNDERLINE}`
-								: s.id === 'file'
-									? 'text-primary hover:bg-primary/15 rounded-sm'
-									: 'text-muted-foreground hover:text-foreground hover:bg-accent/30',
-						)}
-					>
-						{t(s.labelKey)}
-					</button>
-				);
-			})}
-			{(p.addInTabs ?? []).map((tab) => {
-				const selected = p.activeAddIn === tab.id;
-				return (
-					<button
-						key={tab.id}
-						type='button'
-						role='tab'
-						aria-selected={selected}
-						{...{ [RIBBON_ADD_IN_TAB_ATTR]: tab.id }}
-						title={resolveScreenTip(viewerOptions, tab.label)}
-						onClick={() => p.onSelectAddIn?.(tab.id)}
-						onDoubleClick={() => p.onToggleCollapsed?.()}
-						className={cn(
-							TAB_BASE,
-							selected
-								? `text-foreground ${TAB_UNDERLINE}`
-								: 'text-muted-foreground hover:text-foreground hover:bg-accent/30',
-						)}
-					>
-						{tab.label}
-					</button>
-				);
-			})}
-			{p.contextualTabs.map((id) => {
-				const selected = p.activeContextual === id;
-				const label = t(contextualTabLabelKey(id));
-				return (
-					<button
-						key={id}
-						type='button'
-						role='tab'
-						aria-selected={selected}
-						{...{ [RIBBON_CONTEXTUAL_TAB_ATTR]: id }}
-						title={resolveScreenTip(viewerOptions, label)}
-						onClick={() => p.onSelectContextual(id)}
-						onDoubleClick={() => p.onToggleCollapsed?.()}
-						className={cn(
-							TAB_BASE,
-							'text-primary',
-							selected ? TAB_UNDERLINE : 'hover:bg-primary/10',
-						)}
-					>
-						{label}
-					</button>
-				);
-			})}
-			<div className='flex-1' />
-			{p.children}
-		</div>
+		<pptx-ui-ribbon-tabs ref={ref} data-pptx-chrome='ribbon-tabs'>
+			<div slot='actions' className='flex items-center'>
+				{p.children}
+			</div>
+		</pptx-ui-ribbon-tabs>
 	);
 }

@@ -5,6 +5,7 @@
  * the host, `capabilities.edit` makes the deck read-only live, and the panels
  * and dialogs the host hid never render.
  */
+import { ribbonTabButtons } from 'ooxml-ui/pptx';
 import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React, { act, createRef } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -69,7 +70,7 @@ const tick = (ms = 20) =>
 	});
 
 function ribbonTabs(): HTMLElement[] {
-	return Array.from(container.querySelectorAll<HTMLElement>('[role="tab"]'));
+	return Array.from(ribbonTabButtons(container));
 }
 
 async function mount(

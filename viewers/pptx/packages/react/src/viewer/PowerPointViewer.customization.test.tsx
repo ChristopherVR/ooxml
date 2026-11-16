@@ -5,6 +5,7 @@
  * ribbon tab never renders, and `hideRibbonTab` / `showRibbonTab` on the
  * handle take effect live.
  */
+import { ribbonTab, ribbonTabButtons } from 'ooxml-ui/pptx';
 import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React, { act, createRef } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -99,9 +100,7 @@ async function mount(
 
 /** Labels of the rendered ribbon tabs. */
 function ribbonTabs(): string[] {
-	return Array.from(container.querySelectorAll('[role="tab"]')).map(
-		(tab) => tab.textContent?.trim() ?? '',
-	);
+	return Array.from(ribbonTabButtons(container)).map((tab) => tab.textContent?.trim() ?? '');
 }
 
 const DRAW = translationsEn['pptx.ribbon.tab.draw'];
@@ -137,7 +136,7 @@ describe('powerPointViewer host ribbon tabs', () => {
 			groups: [{ label: 'Export', commands: [{ id: 'export', label: 'Export', run }] }],
 		},
 	];
-	const tab = () => container.querySelector<HTMLButtonElement>('[data-ribbon-add-in-tab]');
+	const tab = () => ribbonTab(container, '[data-ribbon-add-in-tab]');
 
 	it('adds the host tab after Help, runs its command and returns to Home when it is removed', async () => {
 		const run = vi.fn();
@@ -148,8 +147,7 @@ describe('powerPointViewer host ribbon tabs', () => {
 		const content = await sampleDeck();
 		await mount(undefined, { ribbonAddIns: reports(run) }, content);
 		// The ribbon's own tab row: the viewer has other tab lists (inspector, comments).
-		const row = () =>
-			Array.from(container.querySelectorAll('[data-pptx-chrome="ribbon-tabs"] [role="tab"]'));
+		const row = () => Array.from(ribbonTabButtons(container));
 		expect(row().at(-1)).toBe(tab());
 		expect(tab()!.textContent).toBe('Reports');
 		expect(container.querySelector('pptx-ui-ribbon-add-in')).toBeNull();

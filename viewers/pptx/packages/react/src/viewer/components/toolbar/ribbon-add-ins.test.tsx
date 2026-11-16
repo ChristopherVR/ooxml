@@ -1,4 +1,5 @@
 // @vitest-environment happy-dom
+import { ribbonTab, ribbonTabButtons } from 'ooxml-ui/pptx';
 import type { RibbonAddInTab } from 'ooxml-ui/pptx';
 import React, { act, useCallback, useState } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -29,7 +30,6 @@ function Harness({ onFallback }: { onFallback: () => void }): React.ReactElement
 	return (
 		<div>
 			<RibbonTabBar
-				isTabVisible={() => true}
 				activeSection={addIns.active ? null : section}
 				contextualTabs={[]}
 				activeContextual={null}
@@ -68,12 +68,11 @@ describe('host ribbon tabs', () => {
 					</RibbonAddInsContext.Provider>,
 				),
 			);
-		const tab = () => container.querySelector<HTMLButtonElement>('[data-ribbon-add-in-tab]');
-		const selected = () =>
-			container.querySelector('[role="tab"][aria-selected="true"]')!.textContent;
+		const tab = () => ribbonTab(container, '[data-ribbon-add-in-tab]');
+		const selected = () => ribbonTab(container, '[role="tab"][aria-selected="true"]')!.textContent;
 		try {
 			render([reports(first), { ...reports(first), id: 'home', label: 'Fake' }]);
-			const tabs = [...container.querySelectorAll('[role="tab"]')];
+			const tabs = [...ribbonTabButtons(container)];
 			expect(tabs.at(-1)).toBe(tab());
 			expect(tabs.map((item) => item.textContent)).not.toContain('Fake');
 			expect(tab()!.textContent).toBe('Reports');

@@ -8,6 +8,7 @@
  * No `@testing-library/react` is available in this workspace, so this follows the manual
  * `createRoot` + `act` harness used elsewhere in the package.
  */
+import { ribbonTab, ribbonTabButtons } from 'ooxml-ui/pptx';
 import type { RibbonDisplayMode } from 'ooxml-ui/pptx';
 import React, { act, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -144,7 +145,7 @@ function click(element: Element): void {
 }
 
 function tabByLabel(label: string): HTMLElement {
-	const tab = Array.from(container.querySelectorAll<HTMLElement>('[role="tab"]')).find(
+	const tab = Array.from(ribbonTabButtons(container)).find(
 		(element) => element.textContent === label,
 	);
 	if (!tab) {
@@ -240,7 +241,7 @@ describe('ribbon display options in the Toolbar', () => {
 		expect(strip).not.toBeNull();
 		expect(ribbonRoot().getAttribute('data-ribbon-display')).toBe('fullScreen');
 		expect(ribbonRoot().classList.contains('hidden')).toBe(true);
-		expect(container.querySelector('[role="tab"]')).toBeNull();
+		expect(ribbonTab(container)).toBeNull();
 	});
 
 	it('pressing the strip in full-screen mode lays the ribbon over the slide, opaque', () => {

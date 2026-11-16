@@ -81,6 +81,7 @@ declare module 'react' {
 			'pptx-ui-ribbon-home-chart-selection': WebControlProps;
 			'pptx-ui-title-bar': WebControlProps;
 			'pptx-ui-ribbon-actions': WebControlProps;
+			'pptx-ui-ribbon-tabs': WebControlProps;
 		}
 	}
 }

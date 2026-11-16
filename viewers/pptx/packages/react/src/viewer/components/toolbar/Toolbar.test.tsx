@@ -458,62 +458,20 @@ describe('toolbar - tab navigation', () => {
 		expect(html).toContain('aria-label="Presentation toolbar"');
 	});
 
-	it('renders all 12 tab buttons when mode is edit', () => {
+	// The tabs themselves are drawn by the shared element client side (RibbonTabBar.test.tsx).
+	it('renders the shared tab row when mode is edit', () => {
 		const html = render(React.createElement(Toolbar, createMockToolbarProps({ mode: 'edit' })));
-		const expectedLabels = [
-			'File',
-			'Home',
-			'Insert',
-			'Draw',
-			'Design',
-			'Transitions',
-			'Animations',
-			'Slide Show',
-			'Record',
-			'Review',
-			'View',
-			'Help',
-		];
-		for (const label of expectedLabels) {
-			expect(html, `Tab "${label}" should be rendered`).toContain(`>${label}</button>`);
-		}
-		expect(expectedLabels).toHaveLength(12);
+		expect(html).toContain('<pptx-ui-ribbon-tabs data-pptx-chrome="ribbon-tabs"');
 	});
 
 	it('does not render tabs when mode is present', () => {
 		const html = render(React.createElement(Toolbar, createMockToolbarProps({ mode: 'present' })));
-		// In present mode, the ribbon tab bar should not render
-		expect(html).not.toContain('>Home</button>');
-		expect(html).not.toContain('>Insert</button>');
-		expect(html).not.toContain('>Design</button>');
+		expect(html).not.toContain('<pptx-ui-ribbon-tabs');
 	});
 
 	it('renders tabs when mode is master', () => {
 		const html = render(React.createElement(Toolbar, createMockToolbarProps({ mode: 'master' })));
-		expect(html).toContain('>Home</button>');
-		expect(html).toContain('>View</button>');
-	});
-
-	it('file tab has special primary styling', () => {
-		const html = render(React.createElement(Toolbar, createMockToolbarProps()));
-		// File tab should have bg-primary in its class
-		expect(html).toMatch(/bg-primary[^"]*">File<\/button>/u);
-	});
-
-	it('active tab has the after pseudo-element indicator class', () => {
-		const html = render(
-			React.createElement(Toolbar, createMockToolbarProps({ toolbarSection: 'insert' })),
-		);
-		// Active tab (Insert) should have after:bg-primary
-		expect(html).toMatch(/after:bg-primary[^"]*">Insert<\/button>/u);
-	});
-
-	it('inactive tabs have muted text styling', () => {
-		const html = render(
-			React.createElement(Toolbar, createMockToolbarProps({ toolbarSection: 'home' })),
-		);
-		// Draw tab (not active) should have text-muted-foreground
-		expect(html).toMatch(/text-muted-foreground[^"]*">Draw<\/button>/u);
+		expect(html).toContain('<pptx-ui-ribbon-tabs');
 	});
 });
 
@@ -1257,20 +1215,6 @@ function createHiddenActionsFileProps(hiddenActions?: ToolbarActionId[]) {
 }
 
 describe('toolbar - hiddenActions', () => {
-	it('renders every ribbon tab when hiddenActions is omitted (backward compatible)', () => {
-		const html = render(React.createElement(Toolbar, createMockToolbarProps()));
-		expect(html).toContain('>File</button>');
-		expect(html).toContain('>Review</button>');
-	});
-
-	it('omits a ribbon tab listed in hiddenActions', () => {
-		const html = render(
-			React.createElement(Toolbar, createMockToolbarProps({ hiddenActions: ['review'] })),
-		);
-		expect(html).not.toContain('>Review</button>');
-		expect(html).toContain('>Home</button>');
-	});
-
 	it('hides the tab-row Share button when "share" is hidden', () => {
 		const html = render(
 			React.createElement(Toolbar, createMockToolbarProps({ hiddenActions: ['share'] })),
