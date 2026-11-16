@@ -2,86 +2,11 @@
 import { describe, expect, it } from 'vitest';
 import { ref } from 'vue';
 
-import {
-	createStroke,
-	eraseStrokesAtPoint,
-	ERASER_RADIUS,
-	HIGHLIGHTER_OPACITY,
-	HIGHLIGHTER_WIDTH,
-	PEN_WIDTH,
-	usePresentationAnnotations,
-} from './usePresentationAnnotations';
-import type { AnnotationStroke } from './usePresentationAnnotations';
+import { usePresentationAnnotations } from './usePresentationAnnotations';
 
-// ---------------------------------------------------------------------------
-// Pure helpers
-// ---------------------------------------------------------------------------
-
-describe('createStroke', () => {
-	it('builds an opaque thin pen stroke', () => {
-		const stroke = createStroke('pen', 1, 2, '#ff0000', '#ffff00');
-		expect(stroke.points).toStrictEqual([{ x: 1, y: 2 }]);
-		expect(stroke.color).toBe('#ff0000');
-		expect(stroke.width).toBe(PEN_WIDTH);
-		expect(stroke.opacity).toBe(1);
-		expect(stroke.id).toMatch(/^stroke-/u);
-	});
-
-	it('builds a wide translucent highlighter stroke', () => {
-		const stroke = createStroke('highlighter', 3, 4, '#ff0000', '#ffff00');
-		expect(stroke.color).toBe('#ffff00');
-		expect(stroke.width).toBe(HIGHLIGHTER_WIDTH);
-		expect(stroke.opacity).toBe(HIGHLIGHTER_OPACITY);
-	});
-
-	it('produces unique ids', () => {
-		const a = createStroke('pen', 0, 0, '#000', '#fff');
-		const b = createStroke('pen', 0, 0, '#000', '#fff');
-		expect(a.id).not.toBe(b.id);
-	});
-});
-
-describe('eraseStrokesAtPoint', () => {
-	const stroke = (id: string, points: Array<{ x: number; y: number }>): AnnotationStroke => ({
-		id,
-		points,
-		color: '#000',
-		width: 2,
-		opacity: 1,
-	});
-
-	it('removes strokes within the eraser radius', () => {
-		const strokes = [stroke('a', [{ x: 100, y: 100 }]), stroke('b', [{ x: 0, y: 0 }])];
-		const result = eraseStrokesAtPoint(strokes, 0, 0);
-		expect(result).toHaveLength(1);
-		expect(result[0]?.id).toBe('a');
-	});
-
-	it('returns the same array reference when nothing is erased', () => {
-		const strokes = [stroke('a', [{ x: 500, y: 500 }])];
-		const result = eraseStrokesAtPoint(strokes, 0, 0);
-		expect(result).toBe(strokes);
-	});
-
-	it('respects the radius boundary', () => {
-		const justOutside = ERASER_RADIUS + 1;
-		const strokes = [stroke('a', [{ x: justOutside, y: 0 }])];
-		expect(eraseStrokesAtPoint(strokes, 0, 0)).toBe(strokes);
-		const justInside = ERASER_RADIUS - 1;
-		const inside = [stroke('a', [{ x: justInside, y: 0 }])];
-		expect(eraseStrokesAtPoint(inside, 0, 0)).toHaveLength(0);
-	});
-});
-
-// `buildStrokePathD` now lives in `pptx-viewer-shared`
-// (`render/annotation-overlay`, exhaustively tested there); its Vue-side pin is
-// `PresentationAnnotationOverlay.test.ts`'s "renders one path per stroke",
-// which asserts the `d` attribute through the component.
-
-// ---------------------------------------------------------------------------
-// Composable
-// ---------------------------------------------------------------------------
-
+// The stroke, eraser and per-slide rules are the shared
+// `createPresentationInkController`'s (tested in `ooxml-ui/pptx`); these pin
+// the Vue adapter's wiring onto it.
 describe('usePresentationAnnotations', () => {
 	it('toggles a tool on/off and ignores tool changes while inactive', () => {
 		const active = ref(true);

@@ -1,51 +1,39 @@
 /**
- * `usePresentationAnnotations`: Vue port of the React
- * `usePresentationAnnotations` hook.
+ * `usePresentationAnnotations`: slide-show ink for the Vue binding.
  *
- * Provides pen, highlighter, eraser, and laser-pointer tools that overlay the
- * slide canvas during presentation mode. Strokes are tracked **per slide** (so
- * they reappear when navigating back), and the eraser/clear math is pure so it
- * is unit-testable without a DOM.
- *
- * Mirrors the React semantics:
- *  - `setPresentationTool(tool)` toggles the tool (selecting the active tool
- *    again returns to `'none'`); it is a no-op while `isActive` is `false`.
- *  - When the active slide changes the current slide's strokes are saved into a
- *    per-slide map and the new slide's strokes are loaded.
- *  - Pen draws an opaque thin stroke; highlighter a wide translucent stroke.
- *  - The eraser removes any stroke whose points fall within `ERASER_RADIUS` of
- *    the erase point.
+ * The tool, colours, per-slide strokes, stroke in progress, eraser and laser
+ * live in the shared `createPresentationInkController`; this composable reads
+ * it through the one store adapter (`useController`), follows the active slide
+ * and names the state for the overlay and toolbar templates.
  *
  * @module composables/usePresentationAnnotations
  */
 
-import { computed, ref, toValue, watch } from 'vue';
-import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
+import {
+	createPresentationInkController,
+	presentationInkBySlide,
+	presentationInkOnSlide,
+} from 'ooxml-ui/pptx';
+import type { PresentationAnnotationStroke, PresentationPointerTool } from 'ooxml-ui/pptx';
+import { computed, getCurrentScope, onScopeDispose, toValue, watch } from 'vue';
+import type { ComputedRef, MaybeRefOrGetter, WritableComputedRef } from 'vue';
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
+import { useController } from './useController';
 
-export type PresentationTool = 'none' | 'laser' | 'pen' | 'highlighter' | 'eraser';
+export {
+	PRESENTATION_ERASER_RADIUS as ERASER_RADIUS,
+	PRESENTATION_HIGHLIGHTER_OPACITY as HIGHLIGHTER_OPACITY,
+	PRESENTATION_HIGHLIGHTER_WIDTH as HIGHLIGHTER_WIDTH,
+	PRESENTATION_PEN_WIDTH as PEN_WIDTH,
+} from 'ooxml-ui/pptx';
 
+export type PresentationTool = PresentationPointerTool;
 export interface AnnotationPoint {
 	x: number;
 	y: number;
 }
-
-export interface AnnotationStroke {
-	id: string;
-	points: AnnotationPoint[];
-	color: string;
-	width: number;
-	opacity: number;
-}
-
-export interface LaserPosition {
-	x: number;
-	y: number;
-}
-
+export type AnnotationStroke = PresentationAnnotationStroke;
+export type LaserPosition = AnnotationPoint;
 /** Annotations grouped by slide index. */
 export type SlideAnnotationMap = Map<number, AnnotationStroke[]>;
 
@@ -57,18 +45,20 @@ export interface UsePresentationAnnotationsOptions {
 }
 
 export interface UsePresentationAnnotationsResult {
-	presentationTool: Ref<PresentationTool>;
+	/** The armed tool. Writing it arms without toggling. */
+	presentationTool: WritableComputedRef<PresentationTool>;
+	/** Arm `tool`, or disarm it when it is already armed. */
 	setPresentationTool: (tool: PresentationTool) => void;
-	penColor: Ref<string>;
+	/** Arm `tool` without toggling (pointer options, keyboard, Blackboard). */
+	selectPresentationTool: (tool: PresentationTool) => void;
+	penColor: ComputedRef<string>;
 	setPenColor: (color: string) => void;
-	highlighterColor: Ref<string>;
+	highlighterColor: ComputedRef<string>;
 	setHighlighterColor: (color: string) => void;
 	/** Completed strokes on the active slide. */
-	annotationStrokes: Ref<AnnotationStroke[]>;
-	/** The in-progress stroke (pen/highlighter), or `null`. */
-	currentStroke: Ref<AnnotationStroke | null>;
-	/** The current laser-pointer position, or `null`. */
-	laserPosition: Ref<LaserPosition | null>;
+	annotationStrokes: ComputedRef<AnnotationStroke[]>;
+	currentStroke: ComputedRef<AnnotationStroke | null>;
+	laserPosition: ComputedRef<LaserPosition | null>;
 	handlePointerDown: (x: number, y: number) => void;
 	handlePointerMove: (x: number, y: number) => void;
 	handlePointerUp: () => void;
@@ -81,282 +71,73 @@ export interface UsePresentationAnnotationsResult {
 	clearAllAnnotations: () => void;
 	/** All annotations across all slides (for persistence on exit). */
 	allSlideAnnotations: ComputedRef<SlideAnnotationMap>;
-	/** Whether any annotations exist across all slides. */
 	hasAnyAnnotations: ComputedRef<boolean>;
 }
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-export const PEN_WIDTH = 2.5;
-export const HIGHLIGHTER_WIDTH = 14;
-export const HIGHLIGHTER_OPACITY = 0.4;
-export const ERASER_RADIUS = 16;
-
-let strokeIdCounter = 0;
-function nextStrokeId(): string {
-	strokeIdCounter += 1;
-	return `stroke-${strokeIdCounter}`;
-}
-
-// ---------------------------------------------------------------------------
-// Pure stroke math (DOM-free, unit-testable)
-// ---------------------------------------------------------------------------
-
-/** Build a new stroke for the given pen/highlighter tool at a start point. */
-export function createStroke(
-	tool: 'pen' | 'highlighter',
-	x: number,
-	y: number,
-	penColor: string,
-	highlighterColor: string,
-): AnnotationStroke {
-	const isPen = tool === 'pen';
-	return {
-		id: nextStrokeId(),
-		points: [{ x, y }],
-		color: isPen ? penColor : highlighterColor,
-		width: isPen ? PEN_WIDTH : HIGHLIGHTER_WIDTH,
-		opacity: isPen ? 1 : HIGHLIGHTER_OPACITY,
-	};
-}
-
-/**
- * Remove any stroke that passes within `radius` of `(x, y)`. Returns a new
- * array (never mutates the input); identity-equal to the input when nothing
- * was erased.
- */
-export function eraseStrokesAtPoint(
-	strokes: AnnotationStroke[],
-	x: number,
-	y: number,
-	radius = ERASER_RADIUS,
-): AnnotationStroke[] {
-	const r2 = radius * radius;
-	const filtered = strokes.filter(
-		(stroke) =>
-			!stroke.points.some((pt) => {
-				const dx = pt.x - x;
-				const dy = pt.y - y;
-				return dx * dx + dy * dy < r2;
-			}),
-	);
-	return filtered.length === strokes.length ? strokes : filtered;
-}
-
-// ---------------------------------------------------------------------------
-// Composable
-// ---------------------------------------------------------------------------
 
 export function usePresentationAnnotations(
 	options: UsePresentationAnnotationsOptions,
 ): UsePresentationAnnotationsResult {
-	const presentationTool = ref<PresentationTool>('none');
-	const penColor = ref('#ff0000');
-	const highlighterColor = ref('#ffff00');
-	const annotationStrokes = ref<AnnotationStroke[]>([]);
-	const currentStroke = ref<AnnotationStroke | null>(null);
-	const laserPosition = ref<LaserPosition | null>(null);
-
-	// Per-slide stroke storage + a version counter so the `hasAnyAnnotations`
-	// computed re-derives when the (non-reactive) map mutates.
-	const slideAnnotations: SlideAnnotationMap = new Map();
-	const annotationVersion = ref(0);
-
-	let isDrawing = false;
-	let prevSlideIndex = toValue(options.activeSlideIndex);
-
-	function bumpVersion(): void {
-		annotationVersion.value += 1;
-	}
-
-	// When the active slide changes during presentation, save the current
-	// slide's strokes and load the new slide's strokes.
+	const ink = createPresentationInkController();
+	const state = useController(ink);
+	const active = (): boolean => toValue(options.isActive);
+	ink.setSlide(toValue(options.activeSlideIndex));
+	watch(() => toValue(options.activeSlideIndex), ink.setSlide, { flush: 'sync' });
 	watch(
-		() => toValue(options.activeSlideIndex),
-		(nextIndex) => {
-			if (!toValue(options.isActive)) {
-				prevSlideIndex = nextIndex;
-				return;
-			}
-			if (prevSlideIndex === nextIndex) {
-				return;
-			}
-			if (annotationStrokes.value.length > 0) {
-				slideAnnotations.set(prevSlideIndex, annotationStrokes.value);
-			} else {
-				slideAnnotations.delete(prevSlideIndex);
-			}
-			annotationStrokes.value = slideAnnotations.get(nextIndex) ?? [];
-			currentStroke.value = null;
-			isDrawing = false;
-			bumpVersion();
-			prevSlideIndex = nextIndex;
-		},
-		{ flush: 'sync' },
-	);
-
-	// Reset transient state when presentation mode deactivates. Strokes are NOT
-	// cleared; they persist until the caller keeps or discards them.
-	watch(
-		() => toValue(options.isActive),
-		(active) => {
-			if (!active) {
-				presentationTool.value = 'none';
-				currentStroke.value = null;
-				laserPosition.value = null;
-				isDrawing = false;
+		active,
+		(isActive) => {
+			if (!isActive) {
+				ink.reset();
 			}
 		},
 		{ flush: 'sync' },
 	);
-
-	function setPresentationTool(tool: PresentationTool): void {
-		if (!toValue(options.isActive)) {
-			return;
-		}
-		presentationTool.value = presentationTool.value === tool ? 'none' : tool;
+	if (getCurrentScope()) {
+		onScopeDispose(ink.dispose);
 	}
-
-	function setPenColor(color: string): void {
-		penColor.value = color;
-	}
-
-	function setHighlighterColor(color: string): void {
-		highlighterColor.value = color;
-	}
-
-	// -- Drawing ----------------------------------------------------------------
-
-	function handlePointerDown(x: number, y: number): void {
-		if (!toValue(options.isActive)) {
-			return;
-		}
-		const tool = presentationTool.value;
-		if (tool === 'pen' || tool === 'highlighter') {
-			isDrawing = true;
-			currentStroke.value = createStroke(tool, x, y, penColor.value, highlighterColor.value);
-		}
-	}
-
-	function handlePointerMove(x: number, y: number): void {
-		if (!toValue(options.isActive) || !isDrawing) {
-			return;
-		}
-		const stroke = currentStroke.value;
-		if (!stroke) {
-			return;
-		}
-		currentStroke.value = { ...stroke, points: [...stroke.points, { x, y }] };
-	}
-
-	function handlePointerUp(): void {
-		if (!isDrawing) {
-			return;
-		}
-		isDrawing = false;
-		const stroke = currentStroke.value;
-		currentStroke.value = null;
-		if (stroke && stroke.points.length > 1) {
-			if (annotationStrokes.value.some((s) => s.id === stroke.id)) {
-				return;
+	const whenActive =
+		(action: (x: number, y: number) => void) =>
+		(x: number, y: number): void => {
+			if (active()) {
+				action(x, y);
 			}
-			const updated = [...annotationStrokes.value, stroke];
-			annotationStrokes.value = updated;
-			slideAnnotations.set(toValue(options.activeSlideIndex), updated);
-			bumpVersion();
+		};
+	const laserMove = whenActive((x, y) => {
+		if (state.value.tool === 'laser') {
+			ink.pointerMove({ x, y });
 		}
-	}
-
-	// -- Laser ------------------------------------------------------------------
-
-	function handleLaserMove(x: number, y: number): void {
-		if (!toValue(options.isActive) || presentationTool.value !== 'laser') {
-			return;
-		}
-		laserPosition.value = { x, y };
-	}
-
-	function handleLaserLeave(): void {
-		laserPosition.value = null;
-	}
-
-	// -- Eraser -----------------------------------------------------------------
-
-	function eraseAtPoint(x: number, y: number): void {
-		if (!toValue(options.isActive) || presentationTool.value !== 'eraser') {
-			return;
-		}
-		const filtered = eraseStrokesAtPoint(annotationStrokes.value, x, y);
-		if (filtered === annotationStrokes.value) {
-			return;
-		}
-		annotationStrokes.value = filtered;
-		const idx = toValue(options.activeSlideIndex);
-		if (filtered.length > 0) {
-			slideAnnotations.set(idx, filtered);
-		} else {
-			slideAnnotations.delete(idx);
-		}
-		bumpVersion();
-	}
-
-	// -- Clearing ---------------------------------------------------------------
-
-	function clearAnnotations(): void {
-		annotationStrokes.value = [];
-		currentStroke.value = null;
-		isDrawing = false;
-		slideAnnotations.delete(toValue(options.activeSlideIndex));
-		bumpVersion();
-	}
-
-	function clearAllAnnotations(): void {
-		annotationStrokes.value = [];
-		currentStroke.value = null;
-		isDrawing = false;
-		slideAnnotations.clear();
-		bumpVersion();
-	}
-
-	// -- Derived ----------------------------------------------------------------
-
-	const allSlideAnnotations = computed<SlideAnnotationMap>(() => {
-		// `annotationVersion` is referenced so the computed re-derives when the
-		// underlying (non-reactive) map mutates.
-		void annotationVersion.value;
-		const map = new Map(slideAnnotations);
-		if (annotationStrokes.value.length > 0) {
-			map.set(toValue(options.activeSlideIndex), annotationStrokes.value);
-		}
-		return map;
-	});
-
-	const hasAnyAnnotations = computed<boolean>(() => {
-		void annotationVersion.value;
-		return annotationStrokes.value.length > 0 || slideAnnotations.size > 0;
 	});
 
 	return {
-		presentationTool,
-		setPresentationTool,
-		penColor,
-		setPenColor,
-		highlighterColor,
-		setHighlighterColor,
-		annotationStrokes,
-		currentStroke,
-		laserPosition,
-		handlePointerDown,
-		handlePointerMove,
-		handlePointerUp,
-		handleLaserMove,
-		handleLaserLeave,
-		eraseAtPoint,
-		clearAnnotations,
-		clearAllAnnotations,
-		allSlideAnnotations,
-		hasAnyAnnotations,
+		presentationTool: computed({
+			get: () => state.value.tool,
+			set: (tool) => ink.setTool(tool),
+		}),
+		setPresentationTool: (tool) => {
+			if (active()) {
+				ink.toggleTool(tool);
+			}
+		},
+		selectPresentationTool: (tool) => {
+			if (active()) {
+				ink.setTool(tool);
+			}
+		},
+		penColor: computed(() => state.value.penColor),
+		setPenColor: ink.setPenColor,
+		highlighterColor: computed(() => state.value.highlighterColor),
+		setHighlighterColor: ink.setHighlighterColor,
+		annotationStrokes: computed(() => presentationInkOnSlide(state.value)),
+		currentStroke: computed(() => state.value.current),
+		laserPosition: computed(() => state.value.laser),
+		handlePointerDown: whenActive((x, y) => ink.pointerDown({ x, y })),
+		handlePointerMove: whenActive((x, y) => ink.pointerMove({ x, y })),
+		handlePointerUp: ink.pointerUp,
+		handleLaserMove: laserMove,
+		handleLaserLeave: ink.pointerLeave,
+		eraseAtPoint: whenActive((x, y) => ink.eraseAt({ x, y })),
+		clearAnnotations: ink.clearSlide,
+		clearAllAnnotations: ink.clearAll,
+		allSlideAnnotations: computed(() => presentationInkBySlide(state.value)),
+		hasAnyAnnotations: computed(() => state.value.strokes.length > 0),
 	};
 }

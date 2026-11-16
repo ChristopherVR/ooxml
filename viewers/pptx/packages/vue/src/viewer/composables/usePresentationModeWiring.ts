@@ -1,4 +1,4 @@
-import { isPresentationAudience, strokeToInkElement } from 'ooxml-ui/pptx';
+import { applyPresentationInk, isPresentationAudience } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
@@ -41,35 +41,12 @@ export function usePresentationModeWiring(
 		if (!map || map.size === 0) {
 			return;
 		}
-		// Persist kept ink annotations as `ink` elements on their slides. Strokes
-		// are converted with the shared `strokeToInkElement` helper (highlighter when
-		// the stroke is translucent), appended per slide, and committed as a single
-		// history-tracked change so the whole batch undoes together.
-		let mutated = false;
-		const nextSlides = slides.value.map((slide, index) => {
-			const strokes = map.get(index);
-			if (!strokes || strokes.length === 0) {
-				return slide;
-			}
-			const inkElements = strokes
-				.map((stroke) =>
-					strokeToInkElement({
-						points: stroke.points,
-						color: stroke.color,
-						width: stroke.width,
-						tool: stroke.opacity < 1 ? 'highlighter' : 'pen',
-					}),
-				)
-				.filter((el): el is NonNullable<typeof el> => el !== null);
-			if (inkElements.length === 0) {
-				return slide;
-			}
-			mutated = true;
-			return { ...slide, elements: [...slide.elements, ...inkElements] };
-		});
-		if (mutated) {
+		// Kept ink becomes `ink` elements on the slides it was drawn on, committed
+		// as one history-tracked change so the whole batch undoes together.
+		const nextSlides = applyPresentationInk(slides.value, [...map.values()].flat());
+		if (nextSlides !== slides.value) {
 			pushHistory();
-			slides.value = nextSlides;
+			slides.value = [...nextSlides];
 		}
 	}
 	function onPresentSlideChange(index: number): void {

@@ -1,5 +1,6 @@
 import type { AuthoredSlideRange } from 'ooxml-ui/pptx';
 import {
+	applyRehearsalTimings,
 	firstShowSlideIndex,
 	presentationEntrySlideIndex,
 	resolveShowSlideIndexes,
@@ -123,19 +124,7 @@ export function usePresentationControls(
 	const rehearsal = useRehearseTimings({
 		onSave: (timings) => {
 			pushHistory();
-			slides.value = slides.value.map((slide, index) => {
-				const advanceAfterMs = timings[index];
-				return typeof advanceAfterMs !== 'number'
-					? slide
-					: {
-							...slide,
-							transition: {
-								...slide.transition,
-								type: slide.transition?.type ?? 'none',
-								advanceAfterMs,
-							},
-						};
-			});
+			slides.value = applyRehearsalTimings(slides.value, timings);
 		},
 	});
 
@@ -146,23 +135,18 @@ export function usePresentationControls(
 
 	function startRehearsal(): void {
 		startInPresenterView.value = false;
-		rehearsal.start();
 		startPresenting();
+		rehearsal.start(presentationStartIndex.value);
 	}
 
 	function closePresentation(payload?: { annotations: SlideAnnotationMap }): void {
-		if (rehearsal.rehearsing.value) {
-			rehearsal.recordCurrentSlideTime(activeSlideIndex.value);
-			rehearsal.finish();
-		}
+		rehearsal.finish();
 		onPresentClose(payload);
 		startInPresenterView.value = false;
 	}
 
 	function handlePresentSlideChange(index: number): void {
-		if (rehearsal.rehearsing.value) {
-			rehearsal.recordCurrentSlideTime(activeSlideIndex.value);
-		}
+		rehearsal.moveTo(index);
 		onPresentSlideChange(index);
 	}
 

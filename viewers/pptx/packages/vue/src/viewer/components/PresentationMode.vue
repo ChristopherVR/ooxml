@@ -479,16 +479,16 @@ function onContextMenuSelect(id: string): void {
 			presenterMode.value = !presenterMode.value;
 			break;
 		case 'pointerArrow':
-			annotations.setPresentationTool('none');
+			annotations.selectPresentationTool('none');
 			break;
 		case 'pointerPen':
-			annotations.setPresentationTool('pen');
+			annotations.selectPresentationTool('pen');
 			break;
 		case 'pointerHighlighter':
-			annotations.setPresentationTool('highlighter');
+			annotations.selectPresentationTool('highlighter');
 			break;
 		case 'pointerLaser':
-			annotations.setPresentationTool('laser');
+			annotations.selectPresentationTool('laser');
 			break;
 		case 'eraseInk':
 			annotations.clearAnnotations();
@@ -655,7 +655,7 @@ usePresentationKeyboard({
 	firstSlideIndex: () => showOrder.first(0),
 	lastSlideIndex: () => showOrder.last(props.slides.length - 1),
 	requestClose: close,
-	setPresentationTool: annotations.setPresentationTool,
+	setPresentationTool: annotations.selectPresentationTool,
 	clearAnnotations: annotations.clearAnnotations,
 	inkMarkupVisible,
 	subtitlesOn,
