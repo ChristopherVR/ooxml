@@ -922,6 +922,7 @@ useTouchGestures({
 	background-color: #000000;
 	overflow: hidden;
 	cursor: default;
+	-webkit-user-select: none;
 	user-select: none;
 	/* Allow vertical scroll/pinch but let us interpret horizontal swipes. */
 	touch-action: pan-y;

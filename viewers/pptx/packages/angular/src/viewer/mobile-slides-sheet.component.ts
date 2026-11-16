@@ -176,6 +176,7 @@ const THUMB_W = 160;
 				font-size: 0.625rem;
 				color: rgba(255, 255, 255, 0.4);
 				line-height: 1.4;
+				-webkit-user-select: none;
 				user-select: none;
 			}
 		`,

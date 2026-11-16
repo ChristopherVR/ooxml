@@ -30,8 +30,8 @@ button.end:hover:not(:disabled), button.clear:not(:disabled):hover { color: #f87
 button.caret { width: ${m.caretWidth}px; margin-left: -${m.caretOverlap}px; border-radius: 0 ${m.controlRadius}px ${m.controlRadius}px 0; color: rgb(255 255 255 / 50%); }
 .swatch-bar { position: absolute; bottom: 2px; left: 50%; width: ${m.swatchBarWidth}px; height: ${m.swatchBarHeight}px; border-radius: 9999px; transform: translateX(-50%); }
 .divider { flex: none; width: ${m.dividerWidth}px; height: ${m.dividerHeight}px; margin: 0 ${m.dividerMarginX}px; background: ${m.dividerColor}; }
-.counter { min-width: ${m.counterMinWidth}px; padding: 0 6px; text-align: center; color: rgb(255 255 255 / 80%); font-variant-numeric: tabular-nums; user-select: none; }
-.timer { display: flex; align-items: center; gap: ${m.timerGap}px; padding: 0 4px; color: rgb(255 255 255 / 60%); font-variant-numeric: tabular-nums; user-select: none; }
+.counter { min-width: ${m.counterMinWidth}px; padding: 0 6px; text-align: center; color: rgb(255 255 255 / 80%); font-variant-numeric: tabular-nums; -webkit-user-select: none; user-select: none; }
+.timer { display: flex; align-items: center; gap: ${m.timerGap}px; padding: 0 4px; color: rgb(255 255 255 / 60%); font-variant-numeric: tabular-nums; -webkit-user-select: none; user-select: none; }
 .palette {
 	position: absolute; bottom: 100%; left: 50%; z-index: 1; width: max-content; margin-bottom: 8px; transform: translateX(-50%);
 	display: grid; grid-template-columns: repeat(${m.paletteColumns}, ${m.swatchSize}px); gap: ${m.paletteGap}px; padding: ${m.palettePadding}px;

@@ -48,6 +48,7 @@
 	font-variant-numeric: tabular-nums;
 	font-size: 0.75rem;
 	color: rgba(255, 255, 255, 0.5);
+	-webkit-user-select: none;
 	user-select: none;
 }
 
@@ -192,6 +193,7 @@
 	font-variant-numeric: tabular-nums;
 	font-size: 0.625rem;
 	color: var(--pptx-muted-foreground, rgba(255, 255, 255, 0.55));
+	-webkit-user-select: none;
 	user-select: none;
 }
 

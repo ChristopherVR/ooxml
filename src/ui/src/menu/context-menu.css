@@ -45,6 +45,7 @@
 	background: var(--office-popover);
 	color: inherit;
 	box-shadow: var(--office-shadow-lg);
+	-webkit-user-select: none;
 	user-select: none;
 }
 .menu:focus {

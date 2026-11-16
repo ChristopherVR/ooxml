@@ -167,6 +167,7 @@ export const renderZoomElement: ElementRenderer = (element, zIndex, context) => 
 			objectFit: 'contain',
 			pointerEvents: 'none',
 			userSelect: 'none',
+			WebkitUserSelect: 'none',
 			display: 'block',
 		});
 		img.src = element.imageData;

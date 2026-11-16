@@ -64,6 +64,7 @@ export function createCropOverlayView(
 		height: '100%',
 		pointerEvents: 'none',
 		userSelect: 'none',
+		WebkitUserSelect: 'none',
 	});
 	ghost.appendChild(ghostImg);
 

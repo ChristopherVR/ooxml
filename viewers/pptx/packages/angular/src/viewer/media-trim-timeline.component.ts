@@ -84,6 +84,7 @@ import type { MediaBookmark } from 'pptx-viewer-core';
 			border-radius: 4px;
 			background: var(--pptx-inspector-input-bg, #2d2d2d);
 			cursor: pointer;
+			-webkit-user-select: none;
 			user-select: none;
 		}
 		.selection {

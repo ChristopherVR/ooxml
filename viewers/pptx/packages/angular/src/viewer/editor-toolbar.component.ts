@@ -311,6 +311,7 @@ import { canGroupSelectionOnSlide, canUngroupSelectionOnSlide } from './group-lo
 			color: var(--pptx-toolbar-fg, #e0e0e0);
 			border-bottom: 1px solid var(--pptx-toolbar-border, #333);
 			min-height: 36px;
+			-webkit-user-select: none;
 			user-select: none;
 		}
 

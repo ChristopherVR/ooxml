@@ -160,6 +160,7 @@ export function enableTableResize(
 		drag = null;
 		doc.body.style.cursor = '';
 		doc.body.style.userSelect = '';
+		doc.body.style.setProperty('-webkit-user-select', '');
 		win?.removeEventListener('mousemove', onMouseMove);
 		win?.removeEventListener('mouseup', onMouseUp);
 		if (!active) {
@@ -203,6 +204,7 @@ export function enableTableResize(
 				event.stopPropagation();
 				doc.body.style.cursor = 'col-resize';
 				doc.body.style.userSelect = 'none';
+				doc.body.style.setProperty('-webkit-user-select', 'none');
 				drag = {
 					type: 'col',
 					index: i,
@@ -226,6 +228,7 @@ export function enableTableResize(
 				const tr = table.querySelectorAll<HTMLElement>('tbody > tr')[i];
 				doc.body.style.cursor = 'row-resize';
 				doc.body.style.userSelect = 'none';
+				doc.body.style.setProperty('-webkit-user-select', 'none');
 				drag = {
 					type: 'row',
 					index: i,

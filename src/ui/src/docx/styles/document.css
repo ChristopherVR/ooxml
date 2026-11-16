@@ -89,6 +89,7 @@
 .dve-paper p[data-list-label]::before {
 	content: attr(data-list-label);
 	white-space: pre;
+	-webkit-user-select: none;
 	user-select: none;
 }
 .dve-paper p[data-list-marker]:not([data-list-marker=''])::before {
@@ -196,6 +197,7 @@
 	text-align: center;
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
+	-webkit-user-select: none;
 	user-select: none;
 }
 .dve-note-reference {

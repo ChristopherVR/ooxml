@@ -57,6 +57,7 @@ function buildPoster(doc: Document, src: string, alt: string): HTMLElement {
 		objectFit: 'contain',
 		pointerEvents: 'none',
 		userSelect: 'none',
+		WebkitUserSelect: 'none',
 		display: 'block',
 	});
 	img.src = src;

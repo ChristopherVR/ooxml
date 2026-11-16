@@ -128,6 +128,7 @@ export function TableResizeOverlay({
 			drag.handleEl.style.transform = '';
 			document.body.style.cursor = '';
 			document.body.style.userSelect = '';
+			document.body.style.setProperty('-webkit-user-select', '');
 			dragRef.current = null;
 		};
 
@@ -148,6 +149,7 @@ export function TableResizeOverlay({
 		e.stopPropagation();
 		document.body.style.cursor = 'col-resize';
 		document.body.style.userSelect = 'none';
+		document.body.style.setProperty('-webkit-user-select', 'none');
 		dragRef.current = {
 			type: 'col',
 			index,
@@ -165,6 +167,7 @@ export function TableResizeOverlay({
 		const actualHeight = (tr as HTMLElement)?.offsetHeight ?? DEFAULT_ROW_HEIGHT;
 		document.body.style.cursor = 'row-resize';
 		document.body.style.userSelect = 'none';
+		document.body.style.setProperty('-webkit-user-select', 'none');
 		dragRef.current = {
 			type: 'row',
 			index,

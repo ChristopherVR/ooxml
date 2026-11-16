@@ -169,6 +169,7 @@
 		position: absolute;
 		z-index: 50;
 		display: block;
+		-webkit-user-select: none;
 		user-select: none;
 		touch-action: none;
 	}

@@ -152,6 +152,7 @@ export function PictureCropOverlay({
 							transform: ghost.transform || undefined,
 							pointerEvents: 'none',
 							userSelect: 'none',
+							WebkitUserSelect: 'none',
 						}}
 					/>
 				)}

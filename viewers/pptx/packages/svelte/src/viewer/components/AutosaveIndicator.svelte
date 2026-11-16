@@ -80,6 +80,7 @@
 		font-size: 12px;
 		line-height: 1.4;
 		white-space: nowrap;
+		-webkit-user-select: none;
 		user-select: none;
 	}
 

@@ -40,6 +40,7 @@ export const EDITOR_CSS = `
 	position: absolute;
 	z-index: 7;
 	display: block;
+	-webkit-user-select: none;
 	user-select: none;
 	touch-action: none;
 }

@@ -190,6 +190,7 @@
 	line-height: 1;
 	font-variant-numeric: tabular-nums;
 	color: var(--pptx-muted-foreground, rgba(255, 255, 255, 0.45));
+	-webkit-user-select: none;
 	user-select: none;
 }
 

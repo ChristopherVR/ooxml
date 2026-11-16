@@ -260,6 +260,7 @@ function onDateText(event: Event): void {
 	gap: 10px;
 	font-size: 12px;
 	cursor: pointer;
+	-webkit-user-select: none;
 	user-select: none;
 }
 
