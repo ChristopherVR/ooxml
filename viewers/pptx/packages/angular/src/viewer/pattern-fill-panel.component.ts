@@ -1,20 +1,14 @@
 /**
  * pattern-fill-panel.component.ts: Standalone Angular component for editing a
- * shape's pattern fill (`a:pattFill`): preset picker plus foreground /
+ * shape's pattern fill (`a:pattFill`): preset swatches plus foreground /
  * background colours.
  *
  * Selector: `pptx-pattern-fill-panel`
  *
- * Ported from / models the patterns in:
- *   packages/vue/src/viewer/components/inspector/FillPatternControls.vue
- *   packages/angular/src/viewer/gradient-picker.component.ts
- *
- * The 56-preset catalogue and each swatch's SVG preview are shared's
- * `PATTERN_PRESET_OPTIONS` / `getPatternSvg`, matching Vue's swatch grid and
- * its `data-testid="fx-pattern-swatch"` per swatch. Selecting a swatch (or
- * editing a colour) sets `shapeStyle.fillMode = 'pattern'` along with the
- * changed field, mirroring how the gradient picker implicitly switches
- * `fillMode` to `'gradient'`.
+ * The swatches (56 presets, each tile in the shape's own colours) and colours
+ * are the shared `resolveShapeFillView` pattern view, and every control is a
+ * shared `shapeFillPatch` action merged into the element with
+ * `shapeQuickStylePatch`.
  *
  * Contract:
  *   [element]     : the selected PptxElement (required)
@@ -25,7 +19,13 @@
  */
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
-import { getPatternSvg, PATTERN_PRESET_OPTIONS } from 'ooxml-ui/pptx';
+import {
+	resolveShapeFillView,
+	shapeFillModeChange,
+	shapeFillPatch,
+	shapeQuickStylePatch,
+} from 'ooxml-ui/pptx';
+import type { ShapeFillAction, ShapeFillView } from 'ooxml-ui/pptx';
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import { hasShapeProperties } from 'pptx-viewer-core';
 
@@ -43,17 +43,18 @@ import { RecentColorsService } from './recent-colors.service';
 			} @else {
 				<span class="pptx-ng-pf__label">{{ 'pptx.table.patternPreset' | translate }}</span>
 				<div class="pptx-ng-pf__grid">
-					@for (opt of presetOptions; track opt.value) {
+					@for (swatch of pattern().swatches; track swatch.value) {
 						<button
 							type="button"
-							data-testid="fx-pattern-swatch"
+							data-testid="fill-pattern-swatch"
 							class="pptx-ng-pf__swatch"
-							[class.is-active]="preset() === opt.value"
-							[title]="opt.labelKey | translate"
-							[attr.aria-pressed]="preset() === opt.value"
-							(click)="onPreset(opt.value)"
+							[class.is-active]="swatch.selected"
+							[title]="swatch.labelKey | translate"
+							[attr.aria-label]="swatch.labelKey | translate"
+							[attr.aria-pressed]="swatch.selected"
+							(click)="onPreset(swatch.value)"
 						>
-							@if (swatchUrl(opt.value); as url) {
+							@if (swatch.backgroundImage; as url) {
 								<span class="pptx-ng-pf__swatch-fill" [style.background-image]="url"></span>
 							}
 						</button>
@@ -68,8 +69,8 @@ import { RecentColorsService } from './recent-colors.service';
 						id="pf-fg"
 						type="color"
 						class="pptx-ng-pf__color"
-						[value]="foreground()"
-						(change)="onForeground($event)"
+						[value]="pattern().foreground"
+						(change)="onColor($event, 'patternForeground')"
 					/>
 				</label>
 				<label class="pptx-ng-pf__field" for="pf-bg">
@@ -80,8 +81,8 @@ import { RecentColorsService } from './recent-colors.service';
 						id="pf-bg"
 						type="color"
 						class="pptx-ng-pf__color"
-						[value]="background()"
-						(change)="onBackground($event)"
+						[value]="pattern().background"
+						(change)="onColor($event, 'patternBackground')"
 					/>
 				</label>
 			}
@@ -157,54 +158,38 @@ export class PatternFillPanelComponent {
 	/** Optional: absent in a standalone unit test with no viewer-level DI tree. */
 	private readonly recentColors = inject(RecentColorsService, { optional: true });
 
-	protected readonly presetOptions = PATTERN_PRESET_OPTIONS;
-
 	protected readonly applicable = computed(() => hasShapeProperties(this.element()));
-	protected readonly style = computed<ShapeStyle>(() => {
+	private readonly style = computed<ShapeStyle | undefined>(() => {
 		const el = this.element();
-		return hasShapeProperties(el) ? (el.shapeStyle ?? {}) : {};
+		return hasShapeProperties(el) ? el.shapeStyle : undefined;
 	});
-	protected readonly foreground = computed(() => this.style().fillColor ?? '#000000');
-	protected readonly background = computed(
-		() => this.style().fillPatternBackgroundColor ?? '#ffffff',
-	);
-	protected readonly preset = computed(() => this.style().fillPatternPreset ?? 'pct20');
 
-	protected swatchUrl(value: string): string | null {
-		const svg = getPatternSvg(value, this.foreground(), this.background());
-		return svg ? `url('data:image/svg+xml;utf8,${encodeURIComponent(svg)}')` : null;
+	/** The shared pattern view; a shape not yet in a pattern fill shows the one it would get. */
+	protected readonly pattern = computed<NonNullable<ShapeFillView['pattern']>>(() => {
+		const style = this.style();
+		const view = resolveShapeFillView(style).pattern;
+		return (
+			view ?? resolveShapeFillView({ ...style, ...shapeFillModeChange(style, 'pattern') }).pattern!
+		);
+	});
+
+	protected onPreset(preset: string): void {
+		this.act({ type: 'patternPreset', preset });
 	}
 
-	protected onPreset(value: string): void {
-		this.patchStyle({ fillPatternPreset: value });
-	}
-
-	protected onForeground(event: Event): void {
-		const value = colorValue(event);
-		if (value === null) {
+	protected onColor(event: Event, type: 'patternForeground' | 'patternBackground'): void {
+		const target = event.target;
+		if (!(target instanceof HTMLInputElement)) {
 			return;
 		}
-		this.patchStyle({ fillColor: value });
-		this.recentColors?.push(value);
+		this.act({ type, hex: target.value });
+		this.recentColors?.push(target.value);
 	}
 
-	protected onBackground(event: Event): void {
-		const value = colorValue(event);
-		if (value === null) {
-			return;
+	private act(action: ShapeFillAction): void {
+		const patch = shapeFillPatch(this.style(), action);
+		if (patch) {
+			this.patch.emit(shapeQuickStylePatch(this.element(), patch));
 		}
-		this.patchStyle({ fillPatternBackgroundColor: value });
-		this.recentColors?.push(value);
 	}
-
-	private patchStyle(changes: Partial<ShapeStyle>): void {
-		this.patch.emit({
-			shapeStyle: { ...this.style(), fillMode: 'pattern', ...changes },
-		} as Partial<PptxElement>);
-	}
-}
-
-function colorValue(event: Event): string | null {
-	const target = event.target;
-	return target instanceof HTMLInputElement ? target.value : null;
 }

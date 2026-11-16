@@ -1,13 +1,14 @@
 /**
- * gradient-picker.component.ts: Standalone Angular component for editing a
- * structured gradient fill on a selected PPTX element.
+ * gradient-picker.component.ts: Standalone Angular component for a shape's
+ * gradient stop list: one row per stop (colour with its theme grid,
+ * position, opacity, remove) and an Add Stop button.
  *
  * Selector: `pptx-gradient-picker`
  *
- * Ported from / models the patterns in:
- *   packages/react/src/viewer/components/inspector/FillAdvancedControls.tsx
- *   packages/react/src/viewer/components/inspector/FillStrokeProperties.tsx
- *   packages/angular/src/viewer/inspector-panel.component.ts
+ * The rows are the shared `resolveShapeFillView` stop views and every control
+ * is a shared `shapeFillPatch` action, merged into the element with
+ * `shapeQuickStylePatch`. The gradient type and angle are shared fill
+ * descriptor fields, drawn above it by `pptx-shape-fill-section`.
  *
  * Contract:
  *   [element]     : the selected PptxElement (required)
@@ -27,20 +28,16 @@ import {
 	CUSTOM_ELEMENTS_SCHEMA,
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
-import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
-import type { PptxElement } from 'pptx-viewer-core';
-import { ooxmlGradientAngleToCssDegrees } from 'pptx-viewer-core';
-
-import { isSelectControl } from './control-event-targets';
 import {
-	addGradientStopPatch,
-	gradientStateOf,
-	gradientStatePatch,
-	gradientStopColorCommitPatch,
-	removeGradientStopPatch,
-	updateGradientStopPatch,
-} from './gradient-picker-helpers';
-import type { GradientState, GradientStop } from './gradient-picker-helpers';
+	resolveShapeFillView,
+	shapeFillModeChange,
+	shapeFillPatch,
+	shapeQuickStylePatch,
+} from 'ooxml-ui/pptx';
+import type { ShapeFillAction, ThemeColorPickerCommit } from 'ooxml-ui/pptx';
+import type { PptxElement } from 'pptx-viewer-core';
+import { hasShapeProperties } from 'pptx-viewer-core';
+
 import { RecentColorsService } from './recent-colors.service';
 import { ThemeColorSwatchGridComponent } from './theme-color-swatch-grid.component';
 
@@ -52,103 +49,50 @@ import { ThemeColorSwatchGridComponent } from './theme-color-swatch-grid.compone
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div class="pptx-ng-grad">
-			<h4 class="pptx-ng-grad__heading">{{ 'pptx.gradient.heading' | translate }}</h4>
-
-			<!-- ── Type ────────────────────────────────────────────────── -->
-			<div class="pptx-ng-grad__row">
-				<label class="pptx-ng-grad__label" for="grad-type">{{
-					'pptx.gradient.type' | translate
-				}}</label>
-				<pptx-ui-select
-					id="grad-type"
-					class="pptx-ng-grad__select"
-					[value]="state().type"
-					(change)="onTypeChange($event)"
-				>
-					<option value="linear">{{ 'pptx.gradient.linear' | translate }}</option>
-					<option value="radial">{{ 'pptx.gradient.radial' | translate }}</option>
-				</pptx-ui-select>
+			<div class="pptx-ng-grad__stops-heading">
+				{{ 'pptx.fillAdvanced.gradientStops' | translate }}
 			</div>
-
-			<!-- ── Angle (linear only) ──────────────────────────────────── -->
-			@if (state().type === 'linear') {
-				<div class="pptx-ng-grad__row">
-					<label class="pptx-ng-grad__label" for="grad-angle">{{
-						'pptx.gradient.angle' | translate
-					}}</label>
-					<input
-						id="grad-angle"
-						class="pptx-ng-grad__input pptx-ng-grad__input--number"
-						type="number"
-						inputmode="numeric"
-						min="0"
-						max="359"
-						step="1"
-						[value]="state().angle"
-						(change)="onAngleChange($event)"
-					/>
-					<input
-						class="pptx-ng-grad__range"
-						type="range"
-						min="0"
-						max="359"
-						[value]="state().angle"
-						(input)="onAngleChange($event)"
-					/>
-				</div>
-			}
-
-			<!-- ── Preview strip ────────────────────────────────────────── -->
-			<div class="pptx-ng-grad__preview" [style.background]="previewCss()" aria-hidden="true"></div>
-
-			<!-- ── Stops ────────────────────────────────────────────────── -->
-			<div class="pptx-ng-grad__stops-heading">{{ 'pptx.gradient.stops' | translate }}</div>
-			@for (stop of state().stops; track $index) {
-				<div class="pptx-ng-grad__stop-block">
+			@for (stop of stops(); track stop.index) {
+				<div class="pptx-ng-grad__stop-block" data-testid="fill-gradient-stop">
 					<div class="pptx-ng-grad__stop-row">
-						<span class="pptx-ng-grad__stop-idx">{{ $index + 1 }}</span>
-
+						<span class="pptx-ng-grad__stop-idx">{{ stop.index + 1 }}</span>
 						<input
 							class="pptx-ng-grad__color"
 							type="color"
+							[attr.aria-label]="'pptx.gradient.stops' | translate"
 							[value]="stop.color"
-							(change)="onStopColorChange($event, $index)"
+							(change)="onStopColor($event, stop.index)"
 						/>
-
-						<label class="pptx-ng-grad__label" [for]="'grad-stop-pos-' + $index">{{
-							'pptx.gradient.position' | translate
-						}}</label>
 						<input
-							[id]="'grad-stop-pos-' + $index"
 							class="pptx-ng-grad__input pptx-ng-grad__input--number"
 							type="number"
 							inputmode="numeric"
 							min="0"
 							max="100"
 							step="1"
+							[attr.aria-label]="'pptx.gradient.position' | translate"
 							[value]="stop.position"
-							(change)="onStopPositionChange($event, $index)"
+							(change)="onPosition($event, stop.index)"
 						/>
-
-						<label class="pptx-ng-grad__label" [for]="'grad-stop-op-' + $index">α</label>
 						<input
-							[id]="'grad-stop-op-' + $index"
 							class="pptx-ng-grad__input pptx-ng-grad__input--number"
 							type="number"
-							inputmode="decimal"
+							inputmode="numeric"
 							min="0"
-							max="1"
-							step="0.05"
-							[value]="stop.opacity ?? 1"
-							(change)="onStopOpacityChange($event, $index)"
+							max="100"
+							step="1"
+							[attr.aria-label]="'pptx.strokeEffects.fillOpacity' | translate"
+							[value]="stop.opacity"
+							(change)="onOpacity($event, stop.index)"
 						/>
-
 						<button
 							type="button"
 							class="pptx-ng-grad__btn pptx-ng-grad__btn--remove"
 							data-pptx-compact
+							[disabled]="!stop.removable"
 							[title]="'pptx.gradient.removeStop' | translate"
-							(click)="onRemoveStop($index)"
+							[attr.aria-label]="'pptx.gradient.removeStop' | translate"
+							(click)="onRemove(stop.index)"
 						>
 							×
 						</button>
@@ -156,13 +100,11 @@ import { ThemeColorSwatchGridComponent } from './theme-color-swatch-grid.compone
 					<pptx-theme-color-swatch-grid
 						[selectedRef]="stop.colorRef"
 						[selectedHex]="stop.color"
-						(pick)="onStopThemePick($event, $index)"
+						(pick)="onStopThemePick($event, stop.index)"
 					/>
 				</div>
 			}
-
-			<!-- ── Add stop ─────────────────────────────────────────────── -->
-			<button type="button" class="pptx-ng-grad__btn pptx-ng-grad__btn--add" (click)="onAddStop()">
+			<button type="button" class="pptx-ng-grad__btn pptx-ng-grad__btn--add" (click)="onAdd()">
 				{{ 'pptx.gradient.addStop' | translate }}
 			</button>
 		</div>
@@ -177,29 +119,6 @@ import { ThemeColorSwatchGridComponent } from './theme-color-swatch-grid.compone
 			color: var(--pptx-inspector-fg, #e0e0e0);
 		}
 
-		.pptx-ng-grad__heading {
-			font-size: 10px;
-			font-weight: 600;
-			text-transform: uppercase;
-			letter-spacing: 0.05em;
-			color: var(--pptx-inspector-muted, #888);
-			margin: 0 0 0.25rem 0;
-		}
-
-		.pptx-ng-grad__row {
-			display: flex;
-			align-items: center;
-			gap: 0.35rem;
-		}
-
-		.pptx-ng-grad__label {
-			font-size: 10px;
-			color: var(--pptx-inspector-muted, #888);
-			min-width: 28px;
-			flex-shrink: 0;
-		}
-
-		.pptx-ng-grad__select,
 		.pptx-ng-grad__input {
 			background: var(--pptx-inspector-input-bg, #2d2d2d);
 			border: 1px solid var(--pptx-inspector-border, #444);
@@ -209,25 +128,9 @@ import { ThemeColorSwatchGridComponent } from './theme-color-swatch-grid.compone
 			font-size: 12px;
 		}
 
-		.pptx-ng-grad__select {
-			flex: 1;
-		}
-
 		.pptx-ng-grad__input--number {
 			width: 52px;
 			text-align: right;
-		}
-
-		.pptx-ng-grad__range {
-			flex: 1;
-			accent-color: var(--pptx-inspector-active, #0078d4);
-		}
-
-		.pptx-ng-grad__preview {
-			height: 20px;
-			border-radius: 4px;
-			border: 1px solid var(--pptx-inspector-border, #444);
-			margin: 0.25rem 0;
 		}
 
 		.pptx-ng-grad__stops-heading {
@@ -317,114 +220,66 @@ export class GradientPickerComponent {
 	/** Optional: absent in a standalone unit test with no viewer-level DI tree. */
 	private readonly recentColors = inject(RecentColorsService, { optional: true });
 
-	/** Derived gradient state from the current element. */
-	protected readonly state = computed<GradientState>(() => gradientStateOf(this.element()));
-
-	/** CSS gradient string for the preview strip. */
-	protected readonly previewCss = computed<string>(() => {
-		const s = this.state();
-		const stopsCss = s.stops.map((st) => `${st.color} ${st.position}%`).join(', ');
-		if (s.type === 'radial') {
-			return `radial-gradient(circle, ${stopsCss})`;
-		}
-		// `state.angle` is the authored OOXML angle, so the preview strip has to
-		// convert it the same way the canvas renderer does or it lies by 90deg.
-		return `linear-gradient(${ooxmlGradientAngleToCssDegrees(s.angle)}deg, ${stopsCss})`;
+	private readonly style = computed(() => {
+		const el = this.element();
+		return hasShapeProperties(el) ? el.shapeStyle : undefined;
 	});
 
-	// ── Type ─────────────────────────────────────────────────────────────────
+	/** The shared stop rows; a shape not yet in a gradient fill shows the stops it would get. */
+	protected readonly stops = computed(() => {
+		const style = this.style();
+		return (
+			resolveShapeFillView(style).stops ??
+			resolveShapeFillView({ ...style, ...shapeFillModeChange(style, 'gradient') }).stops ??
+			[]
+		);
+	});
 
-	protected onTypeChange(event: Event): void {
-		const val = stringFromEvent(event);
-		if (val !== 'linear' && val !== 'radial') {
-			return;
+	/** Apply a shared fill action to the element. */
+	private act(action: ShapeFillAction): void {
+		const patch = shapeFillPatch(this.style(), action);
+		if (patch) {
+			this.patch.emit(shapeQuickStylePatch(this.element(), patch));
 		}
-		const cur = this.state();
-		this.emit(gradientStatePatch(this.element(), { ...cur, type: val }));
 	}
 
-	// ── Angle ─────────────────────────────────────────────────────────────────
-
-	protected onAngleChange(event: Event): void {
-		const val = numberFromEvent(event);
-		if (val === null) {
+	/** A native pick has no theme identity, so the stop's stored `colorRef` is cleared. */
+	protected onStopColor(event: Event, index: number): void {
+		const target = event.target;
+		if (!(target instanceof HTMLInputElement) || !target.value) {
 			return;
 		}
-		const cur = this.state();
-		const angle = ((Math.round(val) % 360) + 360) % 360;
-		this.emit(gradientStatePatch(this.element(), { ...cur, angle }));
-	}
-
-	// ── Stop edits ────────────────────────────────────────────────────────────
-
-	/** No theme identity, so this always explicitly clears any stored `colorRef` (see {@link onStopThemePick}). */
-	protected onStopColorChange(event: Event, index: number): void {
-		const val = stringFromEvent(event);
-		if (!val) {
-			return;
-		}
-		this.emit(updateGradientStopPatch(this.element(), index, { color: val, colorRef: undefined }));
-		this.recentColors?.push(val);
+		this.act({ type: 'stopColor', index, hex: target.value });
+		this.recentColors?.push(target.value);
 	}
 
 	/** A theme-swatch pick: commits BOTH the resolved hex and the ref. */
 	protected onStopThemePick(commit: ThemeColorPickerCommit, index: number): void {
-		this.emit(updateGradientStopPatch(this.element(), index, gradientStopColorCommitPatch(commit)));
+		this.act({ type: 'stopColor', index, hex: commit.hex, ref: commit.ref });
 		this.recentColors?.push(commit.hex);
 	}
 
-	protected onStopPositionChange(event: Event, index: number): void {
-		const val = numberFromEvent(event);
-		if (val === null) {
-			return;
-		}
-		const position = Math.max(0, Math.min(100, val));
-		this.emit(updateGradientStopPatch(this.element(), index, { position }));
+	protected onPosition(event: Event, index: number): void {
+		this.act({ type: 'stopPosition', index, position: numberOf(event) });
 	}
 
-	protected onStopOpacityChange(event: Event, index: number): void {
-		const val = numberFromEvent(event);
-		if (val === null) {
-			return;
-		}
-		const opacity = Math.max(0, Math.min(1, val)) as GradientStop['opacity'];
-		this.emit(updateGradientStopPatch(this.element(), index, { opacity }));
+	protected onOpacity(event: Event, index: number): void {
+		this.act({ type: 'stopOpacity', index, opacity: numberOf(event) });
 	}
 
-	protected onRemoveStop(index: number): void {
-		const p = removeGradientStopPatch(this.element(), index);
-		if (p) {
-			this.emit(p);
-		}
+	protected onRemove(index: number): void {
+		this.act({ type: 'removeStop', index });
 	}
 
-	protected onAddStop(): void {
-		this.emit(addGradientStopPatch(this.element(), '#888888', 50));
-	}
-
-	// ── Internal ──────────────────────────────────────────────────────────────
-
-	private emit(p: Partial<PptxElement>): void {
-		this.patch.emit(p);
+	protected onAdd(): void {
+		this.act({ type: 'addStop' });
 	}
 }
 
-// ── Module-private helpers ────────────────────────────────────────────────────
-
-function numberFromEvent(event: Event): number | null {
+/** The number a box holds (`NaN` when empty, which the shared action ignores). */
+function numberOf(event: Event): number {
 	const target = event.target;
-	if (!(target instanceof HTMLInputElement)) {
-		return null;
-	}
-	const parsed = parseFloat(target.value);
-	return Number.isFinite(parsed) ? parsed : null;
-}
-
-function stringFromEvent(event: Event): string | null {
-	const target = event.target;
-	if (!(target instanceof HTMLInputElement) && !isSelectControl(target)) {
-		return null;
-	}
-	const val = target.value.trim();
-	return val.length > 0 ? val : null;
+	return target instanceof HTMLInputElement && target.value.trim() !== ''
+		? Number(target.value)
+		: Number.NaN;
 }

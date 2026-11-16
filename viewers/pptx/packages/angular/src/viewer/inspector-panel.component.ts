@@ -37,6 +37,7 @@ import {
 	isElementLocked,
 	rebuildDrawingShapesIfCleared,
 	resolvePalette,
+	shapeFillChange,
 	shapeQuickStylePatch,
 	strokeColorPatch,
 	textFontSizePtToPx,
@@ -69,7 +70,6 @@ import {
 	FormatSectionsComponent,
 	FormatSectionTemplateDirective,
 } from './format-sections.component';
-import { GradientPickerComponent } from './gradient-picker.component';
 import { ImagePropertiesPanelComponent } from './image-properties-panel.component';
 import { InspectorFieldsComponent } from './inspector-fields.component';
 import {
@@ -88,10 +88,10 @@ import { IsMobileService } from './is-mobile';
 import { LineFormatPanelComponent } from './line-format-panel.component';
 import { LoadContentService } from './load-content.service';
 import { MediaPropertiesPanelComponent } from './media-properties-panel.component';
-import { PatternFillPanelComponent } from './pattern-fill-panel.component';
 import { RecentColorsRowComponent } from './recent-colors-row.component';
 import { RecentColorsService } from './recent-colors.service';
 import { ShapeAuthoringPanelComponent } from './shape-authoring-panel.component';
+import { ShapeFillSectionComponent } from './shape-fill-section.component';
 import { SmartArtPropertiesComponent } from './smart-art-properties.component';
 import { TableCellFormattingComponent } from './table-cell-formatting.component';
 import { TableDataEditorComponent } from './table-data-editor.component';
@@ -109,10 +109,9 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	imports: [
 		AccessibilityTextPanelComponent,
-		GradientPickerComponent,
 		EffectsPanelComponent,
 		LineFormatPanelComponent,
-		PatternFillPanelComponent,
+		ShapeFillSectionComponent,
 		TextAdvancedPanelComponent,
 		TableDataEditorComponent,
 		TablePropertiesComponent,
@@ -339,52 +338,39 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 				</ng-template>
 				<ng-template pptxFormatSection="fill">
 					<section class="pptx-ng-inspector__section" data-pptx-inspector-section="fill-stroke">
-						@if (elementKey(); as key) {
-							<div class="pptx-ng-inspector__row" [attr.data-el-key]="key">
-								<label class="pptx-ng-inspector__label" for="insp-fill">{{
-									'pptx.inspector.fill' | translate
-								}}</label>
-								<input
-									id="insp-fill"
-									class="pptx-ng-inspector__color"
-									type="color"
-									[value]="seed().fillColor"
-									(input)="onLiveColor(fillColorInput, $event)"
-									(change)="onLiveColor(fillColorInput, $event)"
-									(blur)="onLiveColor(fillColorInput, $event)"
+						<pptx-shape-fill-section [element]="el()" (patch)="onPatch($event)">
+							@if (elementKey(); as key) {
+								<div class="pptx-ng-inspector__row" [attr.data-el-key]="key">
+									<label class="pptx-ng-inspector__label" for="insp-fill">{{
+										'pptx.inspector.fill' | translate
+									}}</label>
+									<input
+										id="insp-fill"
+										class="pptx-ng-inspector__color"
+										type="color"
+										[value]="seed().fillColor"
+										(input)="onLiveColor(fillColorInput, $event)"
+										(change)="onLiveColor(fillColorInput, $event)"
+										(blur)="onLiveColor(fillColorInput, $event)"
+									/>
+								</div>
+								<div class="pptx-ng-inspector__row" [attr.data-el-key]="key">
+									<span class="pptx-ng-inspector__label">{{
+										'pptx.inspector.fill' | translate
+									}}</span>
+									<pptx-theme-color-swatch-grid
+										[selectedRef]="fillColorRef()"
+										[selectedHex]="liveFillColor()"
+										(pick)="onFillThemeColor($event)"
+									/>
+								</div>
+								<pptx-recent-colors-row
+									[colors]="recentColors.recent()"
+									(pick)="onFillColorPick($event)"
 								/>
-							</div>
-							<div class="pptx-ng-inspector__row" [attr.data-el-key]="key">
-								<span class="pptx-ng-inspector__label">{{
-									'pptx.inspector.fill' | translate
-								}}</span>
-								<pptx-theme-color-swatch-grid
-									[selectedRef]="fillColorRef()"
-									[selectedHex]="liveFillColor()"
-									(pick)="onFillThemeColor($event)"
-								/>
-							</div>
-							<pptx-recent-colors-row
-								[colors]="recentColors.recent()"
-								(pick)="onFillColorPick($event)"
-							/>
-						}
+							}
+						</pptx-shape-fill-section>
 					</section>
-					<!-- Gradient and pattern editing stay behind their own closed disclosures, as
-					     the other bindings only show them for that fill mode: open, their stop and
-					     pattern colour inputs would sit beside the solid fill's picker. -->
-					<details class="pptx-ng-inspector__details" data-pptx-fill-advanced="gradient">
-						<summary class="pptx-ng-inspector__summary">
-							{{ 'pptx.inspector.gradientFill' | translate }}
-						</summary>
-						<pptx-gradient-picker [element]="el()" (patch)="onPatch($event)" />
-					</details>
-					<details class="pptx-ng-inspector__details" data-pptx-fill-advanced="pattern">
-						<summary class="pptx-ng-inspector__summary">
-							{{ 'pptx.table.fillPattern' | translate }}
-						</summary>
-						<pptx-pattern-fill-panel [element]="el()" (patch)="onPatch($event)" />
-					</details>
 				</ng-template>
 				<ng-template pptxFormatSection="outline" let-view>
 					<section class="pptx-ng-inspector__section">
@@ -1237,7 +1223,7 @@ export class InspectorPanelComponent {
 	 * custom colour.
 	 */
 	protected readonly fillColorInput = this.liveColorInput(fillColorOf, (cur, hex) =>
-		shapeStylePatch(cur, { fillColor: hex, fillColorRef: undefined }),
+		shapeStylePatch(cur, shapeFillChange(hex)),
 	);
 	protected readonly strokeColorInput = this.liveColorInput(strokeColorOf, (cur, hex) =>
 		strokeColorPatch(cur, hex),
@@ -1287,7 +1273,7 @@ export class InspectorPanelComponent {
 		this.editor.updateElement(
 			this.slideIndex(),
 			cur.id,
-			shapeStylePatch(cur, { fillColor: color, fillColorRef: ref }),
+			shapeStylePatch(cur, shapeFillChange(color, ref)),
 		);
 		this.recentColors.push(color);
 	}

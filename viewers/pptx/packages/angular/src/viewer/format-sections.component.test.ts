@@ -174,23 +174,19 @@ describe('Angular inspector wiring', () => {
 		expect(slide).toContain('pptxFormatSection="slide"');
 	});
 
-	it('keeps the gradient and pattern editors of the Fill section behind closed disclosures', () => {
-		// Open, their stop and pattern colour inputs sat beside the solid fill picker,
-		// showing the fill colour twice for a solid-filled shape.
+	it('draws the Fill section from the shared fill section, the solid colour projected into it', () => {
+		// The fill kind decides what shows: the solid colour only for a solid fill, the stops,
+		// swatches and picture source only for theirs (`resolveShapeFillView`).
 		const start = inspector.indexOf('<ng-template pptxFormatSection="fill">');
 		const fill = inspector.slice(start, inspector.indexOf('</ng-template>', start));
-		for (const [kind, panel] of [
-			['gradient', '<pptx-gradient-picker'],
-			['pattern', '<pptx-pattern-fill-panel'],
-		] as const) {
-			const open = fill.indexOf(
-				`<details class="pptx-ng-inspector__details" data-pptx-fill-advanced="${kind}">`,
-			);
-			expect(open, `the ${kind} disclosure`).toBeGreaterThan(-1);
-			const disclosure = fill.slice(open, fill.indexOf('</details>', open));
-			expect(disclosure).toContain(panel);
-			expect(fill.split(panel)).toHaveLength(2);
-		}
+		const section = fill.slice(
+			fill.indexOf('<pptx-shape-fill-section'),
+			fill.indexOf('</pptx-shape-fill-section>'),
+		);
+		expect(section).toContain('id="insp-fill"');
+		expect(section).toContain('<pptx-theme-color-swatch-grid');
+		expect(fill).not.toContain('<pptx-gradient-picker');
+		expect(fill).not.toContain('<pptx-pattern-fill-panel');
 	});
 
 	it('routes the context menu and the Home launchers through requestFormatPane', () => {
