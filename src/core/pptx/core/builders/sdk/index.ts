@@ -126,6 +126,7 @@ export {
 	chartSupportsErrorBars,
 	withChartSeriesErrorBars,
 } from './chart-error-bar-operations';
+export { chartSeriesTrendlinesView, withChartSeriesTrendline } from './chart-trendline-operations';
 
 // Chart drawing-overlay (c:userShapes) operations
 export {

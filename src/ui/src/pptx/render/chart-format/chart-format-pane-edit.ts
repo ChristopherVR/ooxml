@@ -27,6 +27,7 @@ import {
 	withChartElementFormat,
 	withChartLegendOptions,
 	withChartSeriesErrorBars,
+	withChartSeriesTrendline,
 	withChartSeriesOnSecondaryAxis,
 	withChartSeriesOptions,
 } from 'ooxml-core/pptx';
@@ -248,13 +249,15 @@ export function applyChartFormatField(
 			const key = field.slice(7) as 'gapWidth' | 'overlap' | 'firstSliceAngle' | 'holeSize';
 			return withChartSeriesOptions(data, { [key]: Math.round(n) });
 		}
-		if (field.startsWith('errorBars.')) {
+		if (field.startsWith('errorBars.') || field.startsWith('trendline.')) {
 			// The shared pane's neutral intent, applied to PowerPoint's model.
 			const series =
 				target.kind === 'series'
 					? pptxChartFormatSource(data).seriesOptions?.(target.seriesIndex)
 					: undefined;
 			const intent = chartAnalysisFieldIntent(series, target, field, value);
+			if (intent?.op === 'trendline')
+				return withChartSeriesTrendline(data, intent.seriesIndex, intent.index, intent.edit);
 			return intent?.op === 'errorBars'
 				? withChartSeriesErrorBars(data, intent.seriesIndex, intent.edit)
 				: null;

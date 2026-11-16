@@ -4,8 +4,9 @@
  * element view is the core's `readChartElementFormat`, so the pane keeps every
  * PowerPoint section (pattern and picture fills, effects, 3-D Format, Text
  * Options, the secondary axis) as extension sections the neutral source lacks.
- * Series of the 2-D, unstacked families also get the shared Error Bars
- * section (amount, direction, end caps and custom values).
+ * Series of the 2-D, unstacked families also get the shared Trendlines and
+ * Error Bars sections (several trendlines; amount, direction, end caps and
+ * custom values).
  *
  * @module render/chart-format/chart-format-source
  */
@@ -13,6 +14,7 @@ import type { PptxChartData } from 'ooxml-core/pptx';
 import {
 	chartModelLabelPositions,
 	chartSeriesErrorBarsView,
+	chartSeriesTrendlinesView,
 	chartSupportsErrorBars,
 	chartSupportsSecondaryAxis,
 	isChartSeriesOnSecondaryAxis,
@@ -51,7 +53,7 @@ export function pptxChartFormatSource(data: PptxChartData): ChartFormatSource {
 			gapWidth: data.barGapWidth,
 			firstSliceAngle: data.firstSliceAngle,
 			holeSize: data.doughnutHoleSize,
-			...errorBarsOf(data, seriesIndex),
+			...analysisOf(data, seriesIndex),
 		}),
 		axisOptions: (axisIndex): ChartFormatAxisView | undefined => {
 			const axis = data.axes?.[axisIndex];
@@ -107,11 +109,11 @@ export function pptxChartFormatSource(data: PptxChartData): ChartFormatSource {
 }
 
 /**
- * The Error Bars section of a series (no Trendlines section: PowerPoint's
- * trendlines are not edited through this pane yet). Custom amounts are typed
- * values; PowerPoint stores them as literals.
+ * The Trendlines and Error Bars sections of a series: a section per
+ * trendline with Add trendline, and the error bars. Custom error amounts are
+ * typed values; PowerPoint stores them as literals.
  */
-function errorBarsOf(
+function analysisOf(
 	data: PptxChartData,
 	seriesIndex: number,
 ): Pick<ChartFormatSeriesOptionsView, 'analysis'> {
@@ -121,6 +123,7 @@ function errorBarsOf(
 	return {
 		analysis: {
 			multipleTrendlines: false,
+			trendlines: chartSeriesTrendlinesView(data, seriesIndex),
 			multipleErrorBars: multiple,
 			pointCount: Math.max(1, series.values.length),
 			...(errorBars ? { errorBars } : {}),

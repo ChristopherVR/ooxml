@@ -14,10 +14,10 @@ const seriesOptions = (data = columnChart()) =>
 	buildChartFormatPaneModel(data, 'series:0', 'options');
 
 describe('PowerPoint chart error bars', () => {
-	it('shows the Error Bars section for 2-D unstacked series only', () => {
+	it('shows the Trendlines and Error Bars sections for 2-D unstacked series only', () => {
 		const sections = seriesOptions().sections.map((section) => section.id);
 		expect(sections).toContain('errorBars');
-		expect(sections).not.toContain('trendlines');
+		expect(sections).toContain('trendlines');
 		expect(seriesOptions(pieChart()).sections.map((section) => section.id)).not.toContain(
 			'errorBars',
 		);
@@ -108,5 +108,32 @@ describe('PowerPoint chart error bars', () => {
 			}
 		}
 		expect([...keys].filter((key) => !(key in translationsEn))).toEqual([]);
+	});
+
+	it('adds, edits and removes several trendlines of one series', () => {
+		let data = columnChart();
+		const set = (field: string, value: string | number | boolean) => {
+			const next = applyChartFormatField(data, 'series:0', field, value);
+			expect(next, field).not.toBeNull();
+			data = next!;
+			return data.series[0]!.trendlines;
+		};
+		expect(set('trendline.type', 'poly')).toEqual([{ trendlineType: 'polynomial', order: 2 }]);
+		expect(set('trendline.order', 3)?.[0]?.order).toBe(3);
+		expect(set('trendline.equation', true)?.[0]?.displayEq).toBe(true);
+		expect(set('trendline.add', 'movingAvg')).toEqual([
+			{ trendlineType: 'polynomial', order: 3, displayEq: true },
+			{ trendlineType: 'movingAvg', period: 2 },
+		]);
+		expect(set('trendline.1.period', 3)?.[1]?.period).toBe(3);
+		expect(set('trendline.1.forward', 1)?.[1]?.forward).toBe(1);
+		const ids = seriesOptions(data).sections.map((section) => section.id);
+		expect(ids).toEqual(expect.arrayContaining(['trendlines', 'trendline-1', 'errorBars']));
+		// A refused option leaves the chart as it is.
+		expect(applyChartFormatField(data, 'series:0', 'trendline.order', 9)).toBeNull();
+		expect(set('trendline.type', 'none')).toEqual([
+			{ trendlineType: 'movingAvg', period: 3, forward: 1 },
+		]);
+		expect(data.series[1]!.trendlines).toBeUndefined();
 	});
 });
