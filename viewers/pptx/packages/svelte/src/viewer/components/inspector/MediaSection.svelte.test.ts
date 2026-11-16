@@ -100,7 +100,7 @@ describe('mediaSection - shared playback options', () => {
 		loop.checked = true;
 		loop.dispatchEvent(new Event('change', { bubbles: true }));
 		flushSync();
-		expect((editor.slides[0]?.elements[0] as MediaPptxElement).loop).toBeTruthy();
+		expect((editor.slides[0]!.elements[0] as MediaPptxElement).loop).toBeTruthy();
 	});
 });
 

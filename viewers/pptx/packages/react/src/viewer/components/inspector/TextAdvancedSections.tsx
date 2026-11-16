@@ -70,7 +70,6 @@ export function TextAdvancedSections({
 				ts={ts}
 				canEdit={canEdit}
 				onUpdateTextStyle={onUpdateTextStyle}
-				numChange={numChange}
 				part={part}
 			/>
 

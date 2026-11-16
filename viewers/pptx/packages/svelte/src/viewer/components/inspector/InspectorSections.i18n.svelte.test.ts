@@ -370,7 +370,8 @@ describe('inspector sections translation', () => {
 			expect(painted.filter((text) => text.includes(literal))).toStrictEqual([]);
 		}
 		for (const expected of [
-			'Automatisch wiedergeben',
+			// The shared playback options' Start choice (On click / Automatically).
+			'Auf Klick',
 			'Endlosschleife',
 			'Vollbild',
 			'Lautstärke',
@@ -388,7 +389,10 @@ describe('inspector sections translation', () => {
 			'Rahmenfarbe',
 			'Elemente',
 		]) {
-			expect(painted.some((text) => text.includes(expected))).toBeTruthy();
+			expect(
+				painted.some((text) => text.includes(expected)),
+				expected,
+			).toBeTruthy();
 		}
 	});
 });

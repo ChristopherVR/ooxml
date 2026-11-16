@@ -5,16 +5,7 @@ import { LuPlus, LuTrash2, LuBookmark } from 'react-icons/lu';
 
 import { useTranslation } from '../../i18n/use-translation';
 import { InspectorFields } from './InspectorFields';
-import {
-	CARD,
-	HEADING,
-	INPUT,
-	BTN,
-	LABEL_CLS,
-	LABEL_TEXT,
-	formatTime,
-	generateBookmarkId,
-} from './TrimTimeline';
+import { CARD, HEADING, INPUT, BTN, formatTime, generateBookmarkId } from './TrimTimeline';
 
 // ==========================================================================
 // Props

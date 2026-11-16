@@ -10,7 +10,7 @@ import { useTranslation } from '../../i18n/use-translation';
 import { cn } from '../../utils';
 import { OleEditorDialog } from '../OleEditorDialog';
 import { ConnectorArrowsSection } from './ConnectorArrowsSection';
-import { CARD, HEADING, INPUT, BTN } from './inspector-pane-constants';
+import { CARD, HEADING, BTN } from './inspector-pane-constants';
 import { InspectorFields } from './InspectorFields';
 
 // ---------------------------------------------------------------------------

@@ -14,7 +14,6 @@
 import type {
 	PptxChartAxisFormatting,
 	PptxChartSeries,
-	PptxElement,
 	PptxTableCellStyle,
 	TextStyle,
 } from 'pptx-viewer-core';

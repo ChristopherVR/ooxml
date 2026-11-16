@@ -115,9 +115,6 @@ interface AdvancedTextFormattingProps {
 	ts: TextStyle | undefined;
 	canEdit: boolean;
 	onUpdateTextStyle: (updates: Partial<TextStyle>) => void;
-	numChange: (
-		fn: (v: number) => Partial<TextStyle>,
-	) => (e: React.ChangeEvent<HTMLInputElement>) => void;
 	/**
 	 * The Format pane section drawn: `font` (baseline, highlight, underline,
 	 * outline, spacing) or `paragraph` (margins, indent, text box options);
@@ -130,7 +127,6 @@ export function AdvancedTextFormatting({
 	ts,
 	canEdit,
 	onUpdateTextStyle,
-	numChange,
 	part,
 }: AdvancedTextFormattingProps): React.ReactElement {
 	const { t } = useTranslation();
