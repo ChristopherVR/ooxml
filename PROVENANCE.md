@@ -2966,3 +2966,15 @@ Source: this repository, no external code. PowerPoint's Google Fonts fallback mo
 | `src/ui/src/pptx/render/google-webfonts.ts`, `google-webfonts-link.ts`, readiness wait | `src/ui/src/fonts/webfonts.ts`                     | Installed check, managed `<link>` and bounded wait, format-neutral                        |
 
 The PowerPoint files keep their exports as re-exports. No font binaries were copied or added.
+
+## PowerPoint colour codec and theme reader on the shared DrawingML area (2026-11-16)
+
+Source: this repository, no external code. Step 3 of `docs/agnostic-core-plan.md`: the pptx colour
+codec and theme part reader now resolve through `drawingml`.
+
+| From                                                                  | To                                             | What changed                                                                                                                                                    |
+| --------------------------------------------------------------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/core/pptx/core/constants-colors.ts`                              | `src/core/drawingml/preset-colors.ts`          | Moved with `git mv`; `PRESET_COLOR_MAP`/`SYSTEM_COLOR_MAP` became `DRAWING_PRESET_COLORS`/`DRAWING_SYSTEM_COLORS`, re-exported under the old names by pptx      |
+| `src/core/pptx/core/color/color-transforms.ts` (the 26 transforms)    | `src/core/drawingml/color-transforms.ts`       | Applies a neutral transform list; `resolveDrawingColor` uses it, so gamma and RGB channel transforms and the full preset and system tables reach every format   |
+| `PptxColorTransformCodec.parseColorChoice`, `color-utils.ts` readers  | `src/core/pptx/core/color/color-transforms.ts` | Replaced by an object-tree adapter (`resolveObjectColorChoice`) over `resolveDrawingColor`; the pptx code that resolved base colours and transforms was deleted |
+| `PptxHandlerRuntimeThemePartModel.parseThemePartXml` (scheme reading) | `drawingml/theme.ts` + `theme-part-model.ts`   | Names, colour scheme and font scheme read by `parseTheme`, mapped by `themeSchemesFromDrawingTheme`; the format scheme and raw subtrees stay on the object tree |

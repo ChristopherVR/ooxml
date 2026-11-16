@@ -174,12 +174,36 @@ would keep two XML models alive.
    lists, source-preserving pattern/picture fill codecs, theme format schemes and `phClr` style
    resolution are implemented (2026-10-26). Chart and diagram consumers use them, with real
    Word/Excel/PowerPoint producer fixtures and strict parser/writer/resolver tests.
-   **Remains:** effect DAG interpretation, broader effect rendering and the remaining pptx codecs
-   (`PptxHandlerRuntimeTheme*`, `types/theme.ts`, colour, gradient and effect adapters) stay on their
-   object tree until step 6 or a parity-tested shim; the pptx text parsers still read through their own
-   object tree (the neutral model is pinned, not yet used by pptx); the xlsx theme writer still patches
-   the part itself (a neutral writer exists as `drawingml/write-theme.ts`; whether xlsx should adopt it is
-   open).
+   **pptx colour codec and theme reader (2026-11-16).** The 26 colour transforms moved from
+   `pptx/core/color/color-transforms.ts` to `drawingml/color-transforms.ts`
+   (`applyDrawingColorTransformList`), and the preset and system colour tables to
+   `drawingml/preset-colors.ts`; `resolveDrawingColor` uses both, so gamma, `invGamma` and the RGB
+   channel transforms, every `ST_PresetColorVal` and a `sysClr` without `lastClr` now resolve in Word,
+   Excel, Visio, charts and SmartArt too. The pptx readers (`PptxColorTransformCodec.parseColorChoice`,
+   `parseDrawingColorChoice` and the public `applyDrawingColorTransforms`) are an object-tree adapter
+   (`pptx/core/color/color-transforms.ts`: `objectDrawingColor`, `resolveObjectColorChoice`) over the
+   shared resolver; their own base-colour and transform code was deleted. The theme part reader
+   (`parseThemePartXml`) reads names, the colour scheme and the font scheme (with per-script faces)
+   through `parseTheme`, mapped by `themeSchemesFromDrawingTheme` (`theme-part-model.ts`). Before the
+   switch the old and new paths were compared over every part of the committed decks (364 readable
+   decks, 15,928 parts, 180,499 colour holders through the codec, the default-scheme reader, a
+   placeholder colour and the transform entry point; 383 theme parts deeply equal): identical except
+   42 colours in `three-d-smartart.pptx` drawings that repeat `a:tint`, which the old codec skipped and
+   the shared resolver applies (first occurrence), as the DOM reader does. The permanent harness is
+   `pptx/__tests__/integration/drawingml-color-neutral-parity.test.ts` (object tree against DOM for
+   every colour element, 180,651 compared, and every theme part).
+
+   **Remains:** effect DAG interpretation and broader effect rendering; the format scheme reader
+   (`PptxHandlerRuntimeThemeFormatScheme`, its own `PptxThemeFormatScheme` shape next to the neutral
+   `ThemeFormatScheme`), theme ref and `phClr` resolution (`PptxHandlerRuntimeThemeRefResolution`),
+   theme switching and saving, the master `p:clrMap` reader, `types/theme.ts`, the gradient codec
+   (`PptxGradientStyleCodec`) and the effect codecs still read the object tree; colour opacity
+   (`extractColorOpacity`, `parseDrawingColorOpacity`) is still read separately from the resolver's
+   alpha; `src/ui/src/pptx/render/drawing-color.ts` keeps its own colour-choice reader (it already
+   delegates transforms to `applyDrawingColorTransforms`). The pptx text parsers still read through
+   their own object tree (the neutral model is pinned, not yet used by pptx); the xlsx theme writer
+   still patches the part itself (a neutral writer exists as `drawingml/write-theme.ts`; whether xlsx
+   should adopt it is open).
 
 4. **Drawing shape parsing off the runtime (done for the neutral reader; remains listed).**
    `DiagramShapeView` (`diagram/drawing-view.ts`) is the resolved shape that renderers and edit operations
@@ -188,9 +212,10 @@ would keep two XML models alive.
    `parseDiagramDrawing` (which keeps each shape's text body on the neutral rich text model and its shadow
    colour) with a host `DiagramColorResolver`.
    `pptx/__tests__/integration/smartart-drawing-shape-neutral-parity.test.ts` reads all 371 committed
-   drawing parts (3014 shapes) through both readers and requires every view field to agree; the one
-   counted divergence is a colour that repeats a transform (two `a:tint`), which the pptx object tree
-   drops and the neutral resolver applies. The data part writer for a SmartArt created in memory moved to
+   drawing parts (3014 shapes) through both readers and requires every view field to agree; a colour that
+   repeats a transform (two `a:tint`) used to be counted as a divergence (the pptx object tree dropped
+   it); since the pptx codec resolves through the shared resolver (step 3, 2026-11-16) every field is
+   compared. The data part writer for a SmartArt created in memory moved to
    `diagram/write/data.ts` (`writeFabricatedDiagramData`, byte-identical to the pptx fabrication under a
    seeded id generator).
 
@@ -641,6 +666,7 @@ workbooks passed.
 | SmartArt text parity (S1)         | every text body of the committed fixtures                     | `smartart-text-neutral-parity.test.ts`                    |
 | SmartArt drawing parity (S3)      | 371 drawing parts, 3014 shapes                                | `smartart-drawing-shape-neutral-parity.test.ts`           |
 | Choose walkers corpus (step 2)    | every walker over 353 layout definitions                      | `smartart-choose-walkers-corpus.test.ts`                  |
+| DrawingML colour and theme (3)    | 180,651 colour elements and 383 theme parts agree             | `drawingml-color-neutral-parity.test.ts`                  |
 
 ### 3.9 pptx strictness and the XML object model (inventory, 2026-11-16)
 

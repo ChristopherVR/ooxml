@@ -6,6 +6,8 @@
  * it (`parseThemePart`); `getThemePartSchemes` reads any part the same way and only hands its
  * schemes out; switching a master to another part (`setSlideMasterTheme`) adopts its model.
  */
+import { resolveDrawingColor } from '../../../../drawingml/drawing-color';
+import type { DrawingTheme, ThemeFontCollection } from '../../../../drawingml/theme-model';
 import type {
 	PptxThemeColorScheme,
 	PptxThemeFontGroup,
@@ -75,5 +77,73 @@ export function fontSchemeFromMap(
 	return {
 		majorFont: fontGroup(fontMap, 'mj', majorByScript),
 		minorFont: fontGroup(fontMap, 'mn', minorByScript),
+	};
+}
+
+/** What {@link themeSchemesFromDrawingTheme} reads of a part: its names, colours and fonts. */
+export type ThemePartSchemes = Pick<
+	ThemePartModel,
+	| 'name'
+	| 'colorSchemeName'
+	| 'fontSchemeName'
+	| 'colorMap'
+	| 'fontMap'
+	| 'majorFontScripts'
+	| 'minorFontScripts'
+>;
+
+const trimmed = (value: string | undefined): string | undefined => value?.trim() || undefined;
+
+function scriptFaces(collection: ThemeFontCollection): Record<string, string> {
+	const faces: Record<string, string> = {};
+	for (const [script, face] of Object.entries(collection.scripts)) {
+		const key = script.trim();
+		const typeface = face.trim();
+		if (key && typeface) faces[key] = typeface;
+	}
+	return faces;
+}
+
+/**
+ * The pptx maps of a theme read by the shared DrawingML reader (`parseTheme`): each colour scheme
+ * slot as `#RRGGBB` over `defaults` (a slot that is missing or does not resolve keeps its default),
+ * and the `mj-*`/`mn-*` font map, where an absent or blank east Asian or complex script face falls
+ * back to the latin one. Names and typefaces are trimmed.
+ */
+export function themeSchemesFromDrawingTheme(
+	theme: DrawingTheme,
+	defaults: Readonly<Record<string, string>>,
+): ThemePartSchemes {
+	const colorMap: Record<string, string> = { ...defaults };
+	for (const key of THEME_COLOR_SCHEME_KEYS) {
+		const color = theme.colorScheme.colors[key];
+		const hex = color && resolveDrawingColor(color)?.hex;
+		if (hex) colorMap[key] = hex;
+	}
+	const fontMap: Record<string, string> = {};
+	const groups = [
+		['mj', theme.fontScheme.major],
+		['mn', theme.fontScheme.minor],
+	] as const;
+	for (const [prefix, group] of groups) {
+		const latin = trimmed(group.latin);
+		if (latin) {
+			fontMap[`${prefix}-lt`] = latin;
+			fontMap[`${prefix}-ea`] = latin;
+			fontMap[`${prefix}-cs`] = latin;
+		}
+		const eastAsia = trimmed(group.eastAsia);
+		if (eastAsia) fontMap[`${prefix}-ea`] = eastAsia;
+		const complexScript = trimmed(group.complexScript);
+		if (complexScript) fontMap[`${prefix}-cs`] = complexScript;
+	}
+	return {
+		name: trimmed(theme.name),
+		colorSchemeName: trimmed(theme.colorScheme.name),
+		fontSchemeName: trimmed(theme.fontScheme.name),
+		colorMap,
+		fontMap,
+		majorFontScripts: scriptFaces(theme.fontScheme.major),
+		minorFontScripts: scriptFaces(theme.fontScheme.minor),
 	};
 }

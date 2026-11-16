@@ -1,15 +1,15 @@
 import { XmlObject } from '../../types';
 import type { PptxThemePartSchemes } from '../../types';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeThemeRefResolution';
-import { colorSchemeFromMap, fontSchemeFromMap } from './theme-part-model';
+import { parseTheme } from '../../../../drawingml/theme';
+import { NS, parseXml } from '../../../../xml/index';
+import type { DrawingTheme } from '../../../../drawingml/theme-model';
+import {
+	colorSchemeFromMap,
+	fontSchemeFromMap,
+	themeSchemesFromDrawingTheme,
+} from './theme-part-model';
 import type { ThemePartModel } from './theme-part-model';
-import { THEME_COLOR_SCHEME_KEYS } from './theme-scheme-edit';
-
-/** The font map prefix of each `a:fontScheme` group. */
-const FONT_SLOTS = [
-	['mj', 'a:majorFont'],
-	['mn', 'a:minorFont'],
-] as const;
 
 /**
  * Reading one theme part (`ppt/theme/themeN.xml`).
@@ -20,50 +20,23 @@ const FONT_SLOTS = [
  * (`parseThemePart`); {@link getThemePartSchemes} only reads.
  */
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
-	/** Parse one theme part's XML. Side-effect free. */
+	/**
+	 * Parse one theme part's XML. Side-effect free. The names, colour scheme and font scheme are
+	 * read by the shared DrawingML reader (`parseTheme`); the format scheme and the subtrees the
+	 * save re-emits verbatim come from the object tree.
+	 */
 	protected parseThemePartXml(themeXml: string): ThemePartModel {
 		const themeData = this.parser.parse(themeXml) as XmlObject;
 		const themeRoot = themeData['a:theme'] as XmlObject | undefined;
 		const themeElements = themeRoot?.['a:themeElements'] as XmlObject | undefined;
-		const colorScheme = themeElements?.['a:clrScheme'] as XmlObject | undefined;
-		const fontScheme = themeElements?.['a:fontScheme'] as XmlObject | undefined;
 		const fmtScheme = themeElements?.['a:fmtScheme'] as XmlObject | undefined;
-		const text = (value: unknown): string | undefined => String(value || '').trim() || undefined;
-
-		const colorMap: Record<string, string> = { ...this.getDefaultSchemeColorMap() };
-		for (const key of THEME_COLOR_SCHEME_KEYS) {
-			const parsed = this.parseColorChoice(colorScheme?.[`a:${key}`] as XmlObject | undefined);
-			if (parsed) {
-				colorMap[key] = parsed;
-			}
-		}
-		// Aliases (`tx1`/`bg1`/`tx2`/`bg2`) are resolved LAZILY through the active master's
-		// `<p:clrMap>` at colour-lookup time (see `resolveThemeColor`). Baking them as `tx1 = dk1`
-		// here would leak the default mapping even when a master remaps them (dark themes that swap
-		// `bg1` and `tx1`). Phase 2 Stream B / C-H4.
-
-		const fontMap: Record<string, string> = {};
-		const typeface = (node: unknown): string | undefined =>
-			this.normalizeTypefaceToken(String((node as XmlObject | undefined)?.['@_typeface'] || ''));
-		for (const [prefix, tag] of FONT_SLOTS) {
-			const group = fontScheme?.[tag] as XmlObject | undefined;
-			const latin = typeface(group?.['a:latin']);
-			if (latin) {
-				fontMap[`${prefix}-lt`] = latin;
-				fontMap[`${prefix}-ea`] = latin;
-				fontMap[`${prefix}-cs`] = latin;
-			}
-			// The common Office layout has empty `typeface=""` placeholders, which must not stomp
-			// the latin fallback.
-			const eastAsia = typeface(group?.['a:ea']);
-			if (eastAsia) {
-				fontMap[`${prefix}-ea`] = eastAsia;
-			}
-			const complexScript = typeface(group?.['a:cs']);
-			if (complexScript) {
-				fontMap[`${prefix}-cs`] = complexScript;
-			}
-		}
+		// Aliases (`tx1`/`bg1`/`tx2`/`bg2`) are not baked into the colour map: they resolve LAZILY
+		// through the active master's `<p:clrMap>` at colour-lookup time (see `resolveThemeColor`),
+		// since a master may remap them (dark themes that swap `bg1` and `tx1`).
+		const schemes = themeSchemesFromDrawingTheme(
+			this.readDrawingTheme(themeXml),
+			this.getDefaultSchemeColorMap(),
+		);
 
 		const objectDefaultsNode = themeRoot?.['a:objectDefaults'] as XmlObject | undefined;
 		const objectDefaults = objectDefaultsNode && {
@@ -78,18 +51,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				objectDefaults.txDef !== undefined);
 
 		return {
-			name: text(themeRoot?.['@_name']),
-			colorSchemeName: text(colorScheme?.['@_name']),
-			fontSchemeName: text(fontScheme?.['@_name']),
-			colorMap,
-			fontMap,
-			// Per-script fonts (`<a:font script="Hans|Hant|Arab|...">`): M4.
-			majorFontScripts: this.collectFontScriptOverrides(
-				fontScheme?.['a:majorFont'] as XmlObject | undefined,
-			),
-			minorFontScripts: this.collectFontScriptOverrides(
-				fontScheme?.['a:minorFont'] as XmlObject | undefined,
-			),
+			...schemes,
 			// objectDefaults: M5.
 			objectDefaults: hasObjectDefaults ? objectDefaults : undefined,
 			extraClrSchemeLst: themeRoot?.['a:extraClrSchemeLst'] as unknown,
@@ -128,24 +90,21 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	/**
-	 * Parse `<a:font script="..." typeface="..."/>` children of a major or minor font node into a
-	 * `script -> typeface` dictionary. fast-xml-parser collapses repeated tags into arrays, so the
-	 * array form is walked regardless of how many siblings are present. Phase 4 Stream A / M4.
+	 * The shared reader's view of a theme part. A part whose root is not `a:theme`, or that the DOM
+	 * parser rejects (not namespace well-formed), reads as an empty theme, so its slots keep the
+	 * schema defaults.
 	 */
-	protected collectFontScriptOverrides(fontNode: XmlObject | undefined): Record<string, string> {
-		const overrides: Record<string, string> = {};
-		if (!fontNode) {
-			return overrides;
+	private readDrawingTheme(themeXml: string): DrawingTheme {
+		try {
+			const root = parseXml(themeXml, { label: 'PPTX theme' }).documentElement;
+			if (root.localName === 'theme' && root.namespaceURI === NS.a) return parseTheme(root);
+		} catch {
+			// Fall through to the empty theme.
 		}
-		const fontEntries = this.ensureArray(fontNode['a:font']) as XmlObject[];
-		for (const entry of fontEntries) {
-			const script = String(entry?.['@_script'] || '').trim();
-			const typeface = this.normalizeTypefaceToken(String(entry?.['@_typeface'] || ''));
-			if (script && typeface) {
-				overrides[script] = typeface;
-			}
-		}
-		return overrides;
+		return {
+			colorScheme: { colors: {} },
+			fontScheme: { major: { scripts: {} }, minor: { scripts: {} } },
+		};
 	}
 
 	/**
