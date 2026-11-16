@@ -9,10 +9,10 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
-		"@ai-sdk/openai-compatible": "^3.0.85",
-		"@ai-sdk/vue": "^4.0.163",
-		"ai": "^7.0.163",
-		"emf-converter": "4.25.4",
+		"@ai-sdk/openai-compatible": "^3.0.92",
+		"@ai-sdk/vue": "^4.0.172",
+		"ai": "^7.0.172",
+		"emf-converter": "4.28.1",
 		"fast-xml-parser": "^5.12.0",
 		"jspdf": "^4.2.1",
 		"jszip": "^3.10.2",
@@ -21,15 +21,15 @@
 		"pptx-viewer-locales": "workspace:*",
 		"pptx-vue-viewer": "workspace:*",
 		"vue": "^3.5.45",
-		"vue-i18n": "^11.4.18"
+		"vue-i18n": "^11.4.19"
 	},
 	"devDependencies": {
 		"@tailwindcss/vite": "^4.3.4",
 		"@types/node": "^26.6.6",
-		"@vitejs/plugin-vue": "^6.0.10",
+		"@vitejs/plugin-vue": "^6.0.11",
 		"tailwindcss": "^4.3.4",
 		"typescript": "6.0.3",
-		"vite": "^8.3.6",
+		"vite": "^8.3.8",
 		"vue-tsc": "^3.3.14"
 	}
 }
