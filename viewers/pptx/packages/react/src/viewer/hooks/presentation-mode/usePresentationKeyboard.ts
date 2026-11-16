@@ -45,10 +45,8 @@ export interface UsePresentationKeyboardInput {
 	onToggleSubtitles?: () => void;
 	onToggleBlackScreen?: () => void;
 	onToggleWhiteScreen?: () => void;
-	rehearsing: boolean;
-	recordCurrentSlideTime: (slideIndex: number) => void;
-	presentationSlideIndex: number;
-	setShowRehearsalSummary: (value: boolean) => void;
+	/** End a running rehearsal (records the current slide, opens the summary). */
+	finishRehearsal: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -79,10 +77,7 @@ export function usePresentationKeyboard(input: UsePresentationKeyboardInput): vo
 		onToggleSubtitles,
 		onToggleBlackScreen,
 		onToggleWhiteScreen,
-		rehearsing,
-		recordCurrentSlideTime,
-		presentationSlideIndex,
-		setShowRehearsalSummary,
+		finishRehearsal,
 	} = input;
 
 	// One digit buffer per running show, backing "type a slide number, Enter".
@@ -107,10 +102,7 @@ export function usePresentationKeyboard(input: UsePresentationKeyboardInput): vo
 
 			switch (mapped.action) {
 				case 'end':
-					if (rehearsing) {
-						recordCurrentSlideTime(presentationSlideIndex);
-						setShowRehearsalSummary(true);
-					}
+					finishRehearsal();
 					onSetMode('edit');
 					return;
 				case 'next':
@@ -207,9 +199,6 @@ export function usePresentationKeyboard(input: UsePresentationKeyboardInput): vo
 		onToggleSubtitles,
 		onToggleBlackScreen,
 		onToggleWhiteScreen,
-		rehearsing,
-		recordCurrentSlideTime,
-		presentationSlideIndex,
-		setShowRehearsalSummary,
+		finishRehearsal,
 	]);
 }

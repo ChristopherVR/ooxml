@@ -309,17 +309,13 @@ export function ViewerCanvasArea(props: ViewerCanvasAreaProps) {
 	);
 
 	// ── Blackboard toggle: black screen + pen armed / disarmed as a pair ──
-	// `setPresentationTool` toggles a re-selected tool off, so the tool setter
-	// is only invoked when the target differs from what is already armed.
 	const handleToggleBlackboard = useCallback(() => {
 		const next = toggleBlackboard(
 			presentation.presenterSnapshot.blackout,
 			annotations.presentationTool,
 		);
 		presentation.setPresenterBlackout(next.blackout);
-		if (next.tool !== annotations.presentationTool) {
-			annotations.setPresentationTool(next.tool);
-		}
+		annotations.selectPresentationTool(next.tool);
 	}, [annotations, presentation]);
 
 	// ── Toolbar hover handling: keep toolbar visible while hovering ────
@@ -643,7 +639,7 @@ export function ViewerCanvasArea(props: ViewerCanvasAreaProps) {
 							presentation.presenterSnapshot.blackout === value ? 'none' : value,
 						)
 					}
-					onPointerTool={(tool) => annotations.setPresentationTool(tool === 'none' ? 'none' : tool)}
+					onPointerTool={annotations.selectPresentationTool}
 					onEraseInk={annotations.clearAnnotations}
 				/>
 			)}

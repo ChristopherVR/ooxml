@@ -242,7 +242,8 @@ export function usePresentationSetup(input: UsePresentationSetupInput): Presenta
 			})();
 		},
 		// PowerPoint's Ctrl+A "arrow" is the plain pointer, i.e. no active tool.
-		onSetPointerTool: (tool) => annotations.setPresentationTool(tool === 'arrow' ? 'none' : tool),
+		onSetPointerTool: (tool) =>
+			annotations.selectPresentationTool(tool === 'arrow' ? 'none' : tool),
 		onEraseAnnotations: () => annotations.clearAnnotations(),
 		onToggleInkMarkup: () => annotations.setInkMarkupVisible(!annotations.inkMarkupVisible),
 		onToggleToolbar: () => annotations.setToolbarVisible(!annotations.toolbarVisible),

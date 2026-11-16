@@ -104,8 +104,8 @@ export function ViewerPresentationLayer(props: ViewerPresentationLayerProps) {
 
 			{mode === 'present' && presentation.rehearsing && (
 				<RehearseTimingsHud
-					presentationStartTime={presentation.presentationStartTime}
-					slideStartTime={presentation.slideStartTime}
+					slideElapsedMs={presentation.rehearsalSlideElapsedMs}
+					totalElapsedMs={presentation.rehearsalTotalElapsedMs}
 					paused={presentation.rehearsalPaused}
 					onTogglePause={presentation.toggleRehearsalPause}
 				/>

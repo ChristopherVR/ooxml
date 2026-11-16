@@ -199,9 +199,11 @@ export interface UsePresentationModeResult {
 	/** Enter rehearse-timings mode (fullscreen presentation + timing HUD). */
 	enterRehearsalMode: () => void;
 	/** Recorded timings in ms, keyed by slide index. Populated during rehearsal. */
-	recordedTimings: Record<number, number>;
-	/** Timestamp when the current slide started (ms since epoch). */
-	slideStartTime: number | null;
+	recordedTimings: Readonly<Record<number, number>>;
+	/** Time on the current slide during a rehearsal, paused time excluded. */
+	rehearsalSlideElapsedMs: number;
+	/** Time since the rehearsal started, paused time excluded. */
+	rehearsalTotalElapsedMs: number;
 	/** Whether the rehearsal summary dialog should be shown. */
 	showRehearsalSummary: boolean;
 	/** Dismiss the rehearsal summary (discard timings). */

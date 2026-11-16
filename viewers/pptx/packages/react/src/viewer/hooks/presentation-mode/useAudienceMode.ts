@@ -3,18 +3,13 @@
  * (opened by the presenter via the audience window button) and auto-enters
  * fullscreen presentation mode, syncing slides via BroadcastChannel.
  */
-import { isPresentationSessionMessage, PRESENTATION_MESSAGE_ORIGIN } from 'ooxml-ui/pptx';
+import { createPresenterSessionController } from 'ooxml-ui/pptx';
 import type { PresentationSnapshot } from 'ooxml-ui/pptx';
 import { useEffect, useRef } from 'react';
 
 import type { ViewerMode } from '../../types-core';
-import { clearAudienceContent, endAudienceDisplay } from './audience-content-store';
-import {
-	PRESENTER_CHANNEL_NAME,
-	PRESENTER_MSG_ORIGIN,
-	isAudienceTab,
-	parseAudienceNonce,
-} from './usePresenterWindow';
+import { endAudienceDisplay } from './audience-content-store';
+import { isAudienceTab } from './usePresenterWindow';
 
 export interface UseAudienceModeInput {
 	mode: ViewerMode;
@@ -33,8 +28,8 @@ export interface UseAudienceModeInput {
 /**
  * When the page was opened with the `#pptx-audience` hash, this hook:
  * 1. Auto-enters fullscreen presentation mode after content loads
- * 2. Listens on BroadcastChannel for slide-change messages from the presenter
- * 3. Exits presentation mode when the presenter sends an exit signal
+ * 2. Follows the presenter through the shared presenter session controller
+ * 3. Raises the end screen when the presenter ends the session
  */
 export function useAudienceMode(input: UseAudienceModeInput): void {
 	const {
@@ -83,70 +78,26 @@ export function useAudienceMode(input: UseAudienceModeInput): void {
 	const handlersRef = useRef({ onSetActiveSlideIndex, onSnapshot, onPresenterEnded });
 	handlersRef.current = { onSetActiveSlideIndex, onSnapshot, onPresenterEnded };
 
-	// Listen for slide changes from the presenter tab
+	// The audience half of the shared presenter session controller: adopt each
+	// snapshot, follow slide changes and end the show when the presenter does.
+	// The channel is opened ONCE; the handlers are read through the ref.
 	useEffect(() => {
 		if (!isAudienceTab()) {
 			return;
 		}
-
-		// Pin the session nonce that this audience tab was opened with. We
-		// reject any BroadcastChannel message whose sessionId does not match,
-		// so concurrent presenter sessions cannot drive each other's audiences.
-		const expectedSessionId = parseAudienceNonce();
-
-		let channel: BroadcastChannel;
-		try {
-			channel = new BroadcastChannel(PRESENTER_CHANNEL_NAME);
-		} catch {
-			return; // BroadcastChannel not supported
-		}
-
-		channel.onmessage = (event: MessageEvent) => {
-			const data = event.data;
-			if (!isPresentationSessionMessage(data) || data.origin !== PRESENTER_MSG_ORIGIN) {
-				return;
-			}
-			// If we have a session nonce, require an exact match.
-			if (expectedSessionId && data.sessionId !== expectedSessionId) {
-				return;
-			}
-
-			const handlers = handlersRef.current;
-			if (data.type === 'presenter-slide-change') {
-				handlers.onSetActiveSlideIndex(data.slideIndex);
-			}
-			if (data.type === 'presenter-state') {
-				handlers.onSetActiveSlideIndex(data.snapshot.slideIndex);
-				handlers.onSnapshot?.(data.snapshot);
-			}
-
-			if (data.type === 'presenter-exit') {
-				if (expectedSessionId) {
-					void clearAudienceContent(expectedSessionId);
-				}
-				// Never fall back to edit mode: a tab the browser refuses to close
-				// would otherwise show the full editing chrome to the room. Raise the
-				// end-of-slide-show screen instead.
+		const session = createPresenterSessionController({
+			onAudienceSnapshot: (snapshot) => handlersRef.current.onSnapshot?.(snapshot),
+			onAudienceSlide: (index) => handlersRef.current.onSetActiveSlideIndex(index),
+			// Never fall back to edit mode: a tab the browser refuses to close
+			// would otherwise show the full editing chrome to the room. Raise the
+			// end-of-slide-show screen instead.
+			onAudienceExit: () => {
 				if (endAudienceDisplay(window)) {
-					handlers.onPresenterEnded?.();
+					handlersRef.current.onPresenterEnded?.();
 				}
-			}
-		};
-
-		if (expectedSessionId) {
-			channel.postMessage({
-				origin: PRESENTATION_MESSAGE_ORIGIN,
-				type: 'audience-ready',
-				sessionId: expectedSessionId,
-			});
-		}
-
-		return () => {
-			try {
-				channel.close();
-			} catch {
-				// Ignore
-			}
-		};
+			},
+		});
+		session.connect();
+		return () => session.dispose();
 	}, []);
 }

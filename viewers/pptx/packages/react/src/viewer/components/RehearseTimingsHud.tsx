@@ -2,7 +2,7 @@
  * RehearseTimingsHud: Timing overlay shown during rehearsal mode.
  * Displays per-slide time, total elapsed time, and a pause button.
  */
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { LuPause, LuPlay } from 'react-icons/lu';
 
 import { useTranslation } from '../i18n/use-translation';
@@ -23,10 +23,10 @@ function formatMs(ms: number): string {
 // ---------------------------------------------------------------------------
 
 export interface RehearseTimingsHudProps {
-	/** Timestamp (ms) when the presentation started. */
-	presentationStartTime: number | null;
-	/** Timestamp (ms) when the current slide started. */
-	slideStartTime: number | null;
+	/** Time on the current slide (the shared rehearsal controller ticks it). */
+	slideElapsedMs: number;
+	/** Time since the rehearsal started, paused time excluded. */
+	totalElapsedMs: number;
 	/** Whether the rehearsal timer is paused. */
 	paused: boolean;
 	/** Toggle the paused state. */
@@ -38,29 +38,12 @@ export interface RehearseTimingsHudProps {
 // ---------------------------------------------------------------------------
 
 export function RehearseTimingsHud({
-	presentationStartTime,
-	slideStartTime,
+	slideElapsedMs: slideElapsed,
+	totalElapsedMs: totalElapsed,
 	paused,
 	onTogglePause,
 }: RehearseTimingsHudProps): React.ReactElement {
 	const { t } = useTranslation();
-	const [tick, setTick] = useState(0);
-
-	// Tick every 250ms so the counters update live
-	useEffect(() => {
-		if (paused) {
-			return;
-		}
-		const id = window.setInterval(() => setTick((p) => p + 1), 250);
-		return () => window.clearInterval(id);
-	}, [paused]);
-
-	const now = Date.now();
-	const slideElapsed = slideStartTime !== null ? now - slideStartTime : 0;
-	const totalElapsed = presentationStartTime !== null ? now - presentationStartTime : 0;
-
-	// Suppress unused variable warning: tick drives re-renders
-	void tick;
 
 	return (
 		<div className='fixed bottom-4 left-4 z-[9999] flex items-center gap-3 rounded-lg bg-black/80 px-4 py-2 text-white shadow-xl backdrop-blur-sm select-none'>

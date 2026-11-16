@@ -1,4 +1,5 @@
-import type { InkPptxElement, PptxSlide } from 'pptx-viewer-core';
+import { applyPresentationInk } from 'ooxml-ui/pptx';
+import type { PptxSlide } from 'pptx-viewer-core';
 /**
  * useAnnotationHandlers: Mode-switching callbacks that interact with
  * presentation annotations.  Extracted to keep the orchestrator lean.
@@ -10,7 +11,6 @@ import { stopAllPersistentAudio } from '../utils/media';
 import { mayLeaveSlideShow } from './presentation-mode/audience-content-store';
 import type { EditorHistoryResult } from './useEditorHistory';
 import type {
-	AnnotationStroke,
 	SlideAnnotationMap,
 	UsePresentationAnnotationsResult,
 } from './usePresentationAnnotations';
@@ -76,63 +76,9 @@ export function useAnnotationHandlers(input: UseAnnotationHandlersInput): Annota
 			return;
 		}
 
-		setSlides((prev) =>
-			prev.map((slide, slideIndex) => {
-				const strokes = annotationMap.get(slideIndex);
-				if (!strokes || strokes.length === 0) {
-					return slide;
-				}
-
-				const inkElements: InkPptxElement[] = strokes.map((stroke: AnnotationStroke) => {
-					let minX = Infinity;
-					let minY = Infinity;
-					let maxX = -Infinity;
-					let maxY = -Infinity;
-					for (const pt of stroke.points) {
-						if (pt.x < minX) {
-							minX = pt.x;
-						}
-						if (pt.y < minY) {
-							minY = pt.y;
-						}
-						if (pt.x > maxX) {
-							maxX = pt.x;
-						}
-						if (pt.y > maxY) {
-							maxY = pt.y;
-						}
-					}
-					const bboxWidth = Math.max(maxX - minX, 1);
-					const bboxHeight = Math.max(maxY - minY, 1);
-					const pathParts: string[] = [];
-					for (let i = 0; i < stroke.points.length; i++) {
-						const pt = stroke.points[i];
-						const rx = pt.x - minX;
-						const ry = pt.y - minY;
-						pathParts.push(i === 0 ? `M ${rx} ${ry}` : `L ${rx} ${ry}`);
-					}
-					const inkTool: 'pen' | 'highlighter' = stroke.opacity < 1 ? 'highlighter' : 'pen';
-					return {
-						id: `ink-annotation-${stroke.id}`,
-						type: 'ink' as const,
-						x: minX,
-						y: minY,
-						width: bboxWidth,
-						height: bboxHeight,
-						inkPaths: [pathParts.join(' ')],
-						inkColors: [stroke.color],
-						inkWidths: [stroke.width],
-						inkOpacities: [stroke.opacity],
-						inkTool,
-					};
-				});
-
-				return {
-					...slide,
-					elements: [...slide.elements, ...inkElements],
-				};
-			}),
-		);
+		// Kept ink becomes `ink` elements on the slides it was drawn on (the
+		// shared conversion every binding uses).
+		setSlides((prev) => [...applyPresentationInk(prev, [...annotationMap.values()].flat())]);
 
 		history.markDirty();
 		annotations.clearAllAnnotations();

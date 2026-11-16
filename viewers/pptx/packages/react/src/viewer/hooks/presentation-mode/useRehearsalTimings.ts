@@ -1,10 +1,16 @@
-import { useRef, useState, useCallback } from 'react';
+/**
+ * Rehearse Timings for the React binding: the shared
+ * `createPresentationRehearsalController` (clocks, pause, per-slide recording,
+ * display tick) read through `useController`. The hook adds only what is
+ * React's: entering the show (fullscreen inside the user gesture) and starting
+ * the clock on the slide the show actually opens on.
+ */
+import { createPresentationRehearsalController } from 'ooxml-ui/pptx';
+import type { PresentationRehearsalController } from 'ooxml-ui/pptx';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { ViewerMode } from '../../types';
-
-// ---------------------------------------------------------------------------
-// Sub-hook interface
-// ---------------------------------------------------------------------------
+import { useController } from '../useController';
 
 export interface UseRehearsalTimingsInput {
 	containerRef: React.RefObject<HTMLElement | null>;
@@ -16,22 +22,26 @@ export interface UseRehearsalTimingsInput {
 
 export interface UseRehearsalTimingsResult {
 	rehearsing: boolean;
-	setRehearsing: React.Dispatch<React.SetStateAction<boolean>>;
-	recordedTimings: Record<number, number>;
-	slideStartTime: number | null;
+	recordedTimings: Readonly<Record<number, number>>;
 	showRehearsalSummary: boolean;
-	setShowRehearsalSummary: React.Dispatch<React.SetStateAction<boolean>>;
 	rehearsalPaused: boolean;
-	recordCurrentSlideTime: (slideIndex: number) => void;
+	/** Time on the current slide, paused time excluded (the controller ticks it). */
+	slideElapsedMs: number;
+	/** Time since the rehearsal started, paused time excluded. */
+	totalElapsedMs: number;
+	/** The show moved to `slideIndex` (records the slide being left). */
+	moveRehearsal: (slideIndex: number) => void;
+	/** The show ended: record the current slide and open the summary. */
+	finishRehearsal: () => void;
+	/** A plain show is starting: drop any rehearsal. */
+	cancelRehearsal: () => void;
+	/** The show opened on `slideIndex`: start the clock if a rehearsal was requested. */
+	beginPendingRehearsal: (slideIndex: number) => void;
 	dismissRehearsalSummary: () => void;
 	saveRehearsalTimings: () => void;
 	enterRehearsalMode: () => void;
 	toggleRehearsalPause: () => void;
 }
-
-// ---------------------------------------------------------------------------
-// Hook
-// ---------------------------------------------------------------------------
 
 export function useRehearsalTimings(input: UseRehearsalTimingsInput): UseRehearsalTimingsResult {
 	const {
@@ -41,62 +51,21 @@ export function useRehearsalTimings(input: UseRehearsalTimingsInput): UseRehears
 		setPresentationStartTime,
 		setPresenterMode,
 	} = input;
-
-	const [rehearsing, setRehearsing] = useState(false);
-	const [recordedTimings, setRecordedTimings] = useState<Record<number, number>>({});
-	const [slideStartTime, setSlideStartTime] = useState<number | null>(null);
-	const [showRehearsalSummary, setShowRehearsalSummary] = useState(false);
-	const [rehearsalPaused, setRehearsalPaused] = useState(false);
-	const pauseAccumulatedRef = useRef(0);
-	const pauseStartRef = useRef<number | null>(null);
-
-	/** Record the time spent on the current slide and reset for the next one. */
-	const recordCurrentSlideTime = useCallback(
-		(slideIdx: number) => {
-			if (slideStartTime === null) {
-				return;
-			}
-			let pausedMs = pauseAccumulatedRef.current;
-			if (pauseStartRef.current !== null) {
-				pausedMs += Date.now() - pauseStartRef.current;
-			}
-			const elapsed = Date.now() - slideStartTime - pausedMs;
-			setRecordedTimings((prev) => ({
-				...prev,
-				[slideIdx]: Math.max(0, elapsed),
-			}));
-			// Reset per-slide timer
-			pauseAccumulatedRef.current = 0;
-			pauseStartRef.current = rehearsalPaused ? Date.now() : null;
-			setSlideStartTime(Date.now());
-		},
-		[slideStartTime, rehearsalPaused],
+	const [controller] = useState<PresentationRehearsalController>(() =>
+		createPresentationRehearsalController(),
 	);
+	const state = useController(controller);
+	const pendingRef = useRef(false);
+	useEffect(() => () => controller.dispose(), [controller]);
 
-	const dismissRehearsalSummary = useCallback(() => {
-		setShowRehearsalSummary(false);
-		setRehearsing(false);
-		setRecordedTimings({});
-	}, []);
-
-	const saveRehearsalTimings = useCallback(() => {
-		onSaveRehearsalTimings?.(recordedTimings);
-		setShowRehearsalSummary(false);
-		setRehearsing(false);
-	}, [onSaveRehearsalTimings, recordedTimings]);
+	const saveRef = useRef(onSaveRehearsalTimings);
+	saveRef.current = onSaveRehearsalTimings;
 
 	const enterRehearsalMode = useCallback(() => {
 		setPresenterMode(false);
-		setRehearsing(true);
-		setRecordedTimings({});
-		setRehearsalPaused(false);
-		setShowRehearsalSummary(false);
-		pauseAccumulatedRef.current = 0;
-		pauseStartRef.current = null;
-		const now = Date.now();
-		setPresentationStartTime(now);
-		setSlideStartTime(now);
-		// Request fullscreen
+		controller.discard();
+		pendingRef.current = true;
+		setPresentationStartTime(Date.now());
 		try {
 			const wrapper = containerRef.current;
 			if (wrapper && typeof wrapper.requestFullscreen === 'function') {
@@ -108,36 +77,36 @@ export function useRehearsalTimings(input: UseRehearsalTimingsInput): UseRehears
 			/* fullscreen not supported */
 		}
 		onSetMode('present');
-	}, [containerRef, onSetMode, setPresentationStartTime, setPresenterMode]);
-
-	const toggleRehearsalPause = useCallback(() => {
-		setRehearsalPaused((prev) => {
-			if (prev) {
-				// Resuming: accumulate paused time
-				if (pauseStartRef.current !== null) {
-					pauseAccumulatedRef.current += Date.now() - pauseStartRef.current;
-					pauseStartRef.current = null;
-				}
-			} else {
-				// Pausing
-				pauseStartRef.current = Date.now();
-			}
-			return !prev;
-		});
-	}, []);
+	}, [containerRef, controller, onSetMode, setPresentationStartTime, setPresenterMode]);
 
 	return {
-		rehearsing,
-		setRehearsing,
-		recordedTimings,
-		slideStartTime,
-		showRehearsalSummary,
-		setShowRehearsalSummary,
-		rehearsalPaused,
-		recordCurrentSlideTime,
-		dismissRehearsalSummary,
-		saveRehearsalTimings,
+		rehearsing: state.active,
+		recordedTimings: state.timings,
+		showRehearsalSummary: state.summaryOpen,
+		rehearsalPaused: state.paused,
+		slideElapsedMs: state.slideElapsedMs,
+		totalElapsedMs: state.totalElapsedMs,
+		moveRehearsal: controller.moveTo,
+		finishRehearsal: controller.finish,
+		cancelRehearsal: useCallback(() => {
+			pendingRef.current = false;
+			controller.discard();
+		}, [controller]),
+		beginPendingRehearsal: useCallback(
+			(slideIndex: number) => {
+				if (pendingRef.current) {
+					pendingRef.current = false;
+					controller.start(slideIndex);
+				}
+			},
+			[controller],
+		),
+		dismissRehearsalSummary: controller.discard,
+		saveRehearsalTimings: useCallback(
+			() => saveRef.current?.({ ...controller.save() }),
+			[controller],
+		),
 		enterRehearsalMode,
-		toggleRehearsalPause,
+		toggleRehearsalPause: controller.togglePause,
 	};
 }

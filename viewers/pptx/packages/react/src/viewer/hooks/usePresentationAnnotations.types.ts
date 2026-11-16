@@ -1,16 +1,12 @@
 /**
  * Types for presentation annotation state.
  */
+import type { PresentationAnnotationStroke, PresentationPointerTool } from 'ooxml-ui/pptx';
 
-export type PresentationTool = 'none' | 'laser' | 'pen' | 'highlighter' | 'eraser';
+export type PresentationTool = PresentationPointerTool;
 
-export interface AnnotationStroke {
-	id: string;
-	points: Array<{ x: number; y: number }>;
-	color: string;
-	width: number;
-	opacity: number;
-}
+/** One slide-show stroke (the shared ink controller's). */
+export type AnnotationStroke = PresentationAnnotationStroke;
 
 export interface LaserPosition {
 	x: number;
@@ -34,7 +30,10 @@ export interface UsePresentationAnnotationsInput {
 
 export interface UsePresentationAnnotationsResult {
 	presentationTool: PresentationTool;
+	/** The toolbar's tool button: arm `tool`, or disarm it when it is already armed. */
 	setPresentationTool: (tool: PresentationTool) => void;
+	/** Arm `tool` without toggling (pointer options, colour picks, Blackboard). */
+	selectPresentationTool: (tool: PresentationTool) => void;
 	penColor: string;
 	setPenColor: (color: string) => void;
 	highlighterColor: string;

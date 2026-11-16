@@ -42,8 +42,8 @@ export interface UseSlideNavigationInput {
 	startSlideAnimations: (slideIndex: number) => void;
 	presentationTimersRef: { current: number[] };
 	rehearsing: boolean;
-	recordCurrentSlideTime: (slideIndex: number) => void;
-	setShowRehearsalSummary: (value: boolean) => void;
+	/** End a running rehearsal (records the current slide, opens the summary). */
+	finishRehearsal: () => void;
 	/** `ppaction://hlinkshowjump?jump=lastslideviewed`. */
 	onLastViewed?: () => void;
 	/** `ppaction://customshow?id=<id>[&return=true]`. */
@@ -101,8 +101,7 @@ export function useSlideNavigation(input: UseSlideNavigationInput): UseSlideNavi
 		startSlideAnimations,
 		presentationTimersRef,
 		rehearsing,
-		recordCurrentSlideTime,
-		setShowRehearsalSummary,
+		finishRehearsal,
 		onLastViewed,
 		onCustomShow,
 		onOpenFile,
@@ -210,10 +209,6 @@ export function useSlideNavigation(input: UseSlideNavigationInput): UseSlideNavi
 					});
 					return;
 				}
-				// Record timing for the slide we are leaving (rehearsal mode only).
-				if (rehearsing) {
-					recordCurrentSlideTime(current);
-				}
 				transitionTo(step.index);
 				return;
 			}
@@ -222,7 +217,7 @@ export function useSlideNavigation(input: UseSlideNavigationInput): UseSlideNavi
 			}
 			// Past the last slide. Rehearsal ends with its summary.
 			if (rehearsing) {
-				recordCurrentSlideTime(current);
+				finishRehearsal();
 				try {
 					if (document.fullscreenElement) {
 						void document.exitFullscreen().catch(() => {
@@ -233,7 +228,6 @@ export function useSlideNavigation(input: UseSlideNavigationInput): UseSlideNavi
 					/* ignore */
 				}
 				onSetMode('edit');
-				setShowRehearsalSummary(true);
 				return;
 			}
 			// The presentation hook decides: a returning custom show, the black
@@ -251,12 +245,11 @@ export function useSlideNavigation(input: UseSlideNavigationInput): UseSlideNavi
 			playNextAnimationGroup,
 			presentationSlideIndex,
 			presentationTimersRef,
-			recordCurrentSlideTime,
+			finishRehearsal,
 			rehearsing,
 			seedSlideAnimations,
 			startSlideAnimations,
 			scheduleAutoAdvanceForSlide,
-			setShowRehearsalSummary,
 			slides,
 			visibleSlideIndexes,
 			setPresentationSlideVisible,
