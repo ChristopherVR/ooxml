@@ -20,6 +20,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createMarkedRoot, marked } from '../../i18n/marking-translator.test-support';
 import { InspectorFields } from './InspectorFields';
+import { TextAdvancedSections } from './TextAdvancedSections';
 
 let container: HTMLDivElement;
 let root: Root;
@@ -240,5 +241,39 @@ describe('inspectorFields (alt text and picture)', () => {
 		expect(transparency.value).toBe('40');
 		expect(transparency.disabled).toBeTruthy();
 		expect(byTestId<HTMLTextAreaElement>('element-alt-text')!.disabled).toBeTruthy();
+	});
+});
+
+describe('textAdvancedSections spacing fields', () => {
+	it('draws the shared paragraph spacing in points and writes px', () => {
+		const onUpdateTextStyle = vi.fn();
+		const element = {
+			type: 'text',
+			id: 't1',
+			x: 0,
+			y: 0,
+			width: 10,
+			height: 10,
+			textStyle: { paragraphMarginLeft: 48 },
+		} as unknown as PptxElement;
+		act(() => {
+			root.render(
+				<TextAdvancedSections
+					selectedElement={element}
+					canEdit
+					onUpdateTextStyle={onUpdateTextStyle}
+					part='paragraph'
+				/>,
+			);
+		});
+		const margin = byTestId('paragraph-marginLeft')!;
+		expect(margin.value).toBe('36');
+		expect(byTestId('font-characterSpacing')).toBeNull();
+		act(() => {
+			const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!;
+			setter.call(margin, '18');
+			margin.dispatchEvent(new Event('input', { bubbles: true }));
+		});
+		expect(onUpdateTextStyle).toHaveBeenCalledWith({ paragraphMarginLeft: 24 });
 	});
 });

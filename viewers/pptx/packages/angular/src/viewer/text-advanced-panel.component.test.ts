@@ -21,6 +21,15 @@ describe('textAdvancedPanelComponent text box options', () => {
 		expect(source).not.toContain('txadv-valign');
 	});
 
+	it('mounts the shared character and paragraph spacing descriptors', () => {
+		const source = componentSource(import.meta.dirname, 'text-advanced-panel.component.ts');
+		expect(source).toContain('[sections]="characterSpacingSections"');
+		expect(source).toContain('[sections]="paragraphSpacingSections"');
+		// The hand-written spacing, indent and RTL inputs are gone.
+		expect(source).not.toContain('txadv-spb');
+		expect(source).not.toContain('txadv-rtl');
+	});
+
 	it('reads the text style and merges a body-level patch into it', () => {
 		const panel = runInInjectionContext(
 			Injector.create({ providers: [] }),

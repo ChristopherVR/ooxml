@@ -15,15 +15,7 @@ function baseState(overrides: Partial<InspectorState> = {}): InspectorState {
 		vAlign: 'top',
 		textWrap: 'square',
 		autoFitMode: 'none',
-		characterSpacing: 0,
-		lineSpacing: 1,
-		lineSpacingExactPt: null,
-		paragraphSpacingBefore: 0,
-		paragraphSpacingAfter: 0,
-		paragraphIndent: 0,
-		paragraphMarginLeft: 0,
 		textDirection: 'horizontal',
-		textRtl: false,
 		textStyle: { color: '#ff0000' },
 		recentColors: [],
 		...overrides,
@@ -35,7 +27,6 @@ function mount() {
 		setTextVerticalAlign: vi.fn(),
 		setTextWrap: vi.fn(),
 		setAutoFitMode: vi.fn(),
-		setTextAdvanced: vi.fn(),
 		setTextStyle: vi.fn(),
 		pushRecentColor: vi.fn(),
 		liveColor: vi.fn(),
@@ -210,5 +201,23 @@ describe('createTextSection text box options', () => {
 			'[data-testid="text-box-direction"]',
 		)!;
 		expect(direction.disabled).toBeTruthy();
+	});
+});
+
+describe('createTextSection spacing fields', () => {
+	it('draws the shared spacing descriptors in points and writes the model units', () => {
+		const { section, handlers } = mount();
+		section.update(baseState({ textStyle: { paragraphSpacingBefore: 16, characterSpacing: 200 } }));
+		const before = section.el.querySelector<HTMLInputElement>(
+			'[data-testid="paragraph-spaceBefore"]',
+		)!;
+		expect(before.value).toBe('12');
+		const spacing = section.el.querySelector<HTMLInputElement>(
+			'[data-testid="font-characterSpacing"]',
+		)!;
+		expect(spacing.value).toBe('2');
+		before.value = '6';
+		before.dispatchEvent(new Event('change'));
+		expect(handlers.setTextStyle).toHaveBeenCalledWith({ paragraphSpacingBefore: 8 });
 	});
 });

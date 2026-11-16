@@ -1,11 +1,13 @@
-import { TEXT_BOX_SECTIONS } from 'ooxml-ui/pptx';
-import type { TextAdvancedChanges } from 'ooxml-ui/pptx';
+import {
+	CHARACTER_SPACING_SECTIONS,
+	PARAGRAPH_SPACING_SECTIONS,
+	TEXT_BOX_SECTIONS,
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
-import { makeColorControl, makeNumberField } from '../controls';
+import { makeColorControl } from '../controls';
 import { createRecentColorsRow } from '../recent-colors-row';
 import { createThemeColorSwatchGrid } from '../theme-color-swatch-grid';
-import { makeCheckboxField } from './controls-extra';
 import { createInspectorFields } from './inspector-fields';
 import { createTextEffectsControls } from './text-effects-controls';
 import type { InspectorHandlers, InspectorState } from './types';
@@ -18,8 +20,9 @@ export interface TextSection {
 /**
  * The Text section: text colour, the shared Text Box options
  * (`TEXT_BOX_SECTIONS`: vertical anchor, direction, autofit mode,
- * wrap-in-shape, columns, drawn by the generic renderer), paragraph spacing
- * and text effects.
+ * wrap-in-shape, columns), the shared character and paragraph spacing
+ * (`CHARACTER_SPACING_SECTIONS`, `PARAGRAPH_SPACING_SECTIONS`), all drawn by
+ * the generic renderer, and text effects.
  * Text alignment (left/center/right/justify) is already covered by the
  * ribbon's Home > Paragraph group, so it is intentionally not duplicated here.
  */
@@ -77,31 +80,21 @@ export function createTextSection(
 		onPatch: (patch) => handlers.setTextStyle(patch),
 	});
 	paragraphEl.appendChild(textBox.el);
-	const number = (label: string, key: keyof TextAdvancedChanges, min?: number) =>
-		makeNumberField(doc, {
-			label,
-			min,
-			onCommit: (value) => handlers.setTextAdvanced({ [key]: value }),
-		});
-	const characterSpacing = number(t('pptx.textAdvanced.characterSpacing'), 'characterSpacing');
-	const lineSpacing = number(t('pptx.textAdvanced.lineSpacing'), 'lineSpacing', 0);
-	const exactSpacing = number(t('pptx.textAdvanced.lineSpacingExact'), 'lineSpacingExactPt', 0);
-	const spacingBefore = number(t('pptx.textAdvanced.spaceBefore'), 'paragraphSpacingBefore', 0);
-	const spacingAfter = number(t('pptx.textAdvanced.spaceAfter'), 'paragraphSpacingAfter', 0);
-	const indent = number(t('pptx.textAdvanced.indent'), 'paragraphIndent');
-	const margin = number(t('pptx.textAdvanced.marginLeft'), 'paragraphMarginLeft');
-	const rtl = makeCheckboxField(doc, {
-		label: t('pptx.textAdvanced.rtl'),
-		onChange: (enabled) => handlers.setTextAdvanced({ rtl: enabled }),
+	// Character spacing (Font) and indentation, spacing, line spacing and
+	// direction (Paragraph): the shared descriptors, through the same
+	// body-level text-style route.
+	const characterSpacing = createInspectorFields(doc, t, {
+		sections: CHARACTER_SPACING_SECTIONS,
+		onPatch: (patch) => handlers.setTextStyle(patch),
 	});
-	const paragraphFields = [lineSpacing, exactSpacing, spacingBefore, spacingAfter, indent, margin];
-	const advanced = [characterSpacing, ...paragraphFields];
+	const paragraphSpacing = createInspectorFields(doc, t, {
+		sections: PARAGRAPH_SPACING_SECTIONS,
+		onPatch: (patch) => handlers.setTextStyle(patch),
+	});
 	el.append(characterSpacing.el);
-	paragraphEl.append(...paragraphFields.map(({ el: node }) => node), rtl.el);
+	paragraphEl.append(paragraphSpacing.el);
 	const effects = createTextEffectsControls(doc, t, handlers);
 	el.appendChild(effects.el);
-
-	const gated = [color, ...advanced, rtl];
 
 	return {
 		el,
@@ -115,18 +108,10 @@ export function createTextSection(
 			colorRecent.setColors(state.recentColors ?? []);
 			colorRecent.setDisabled(!state.canText);
 			textBox.update(state.textStyle, !state.canText);
-			characterSpacing.setValue(state.characterSpacing);
-			lineSpacing.setValue(state.lineSpacing);
-			exactSpacing.setValue(state.lineSpacingExactPt ?? 0);
-			spacingBefore.setValue(state.paragraphSpacingBefore);
-			spacingAfter.setValue(state.paragraphSpacingAfter);
-			indent.setValue(state.paragraphIndent);
-			margin.setValue(state.paragraphMarginLeft);
-			rtl.setValue(state.textRtl);
+			characterSpacing.update(state.textStyle, !state.canText);
+			paragraphSpacing.update(state.textStyle, !state.canText);
 			effects.update(state);
-			for (const c of gated) {
-				c.setDisabled(!state.canText);
-			}
+			color.setDisabled(!state.canText);
 		},
 	};
 }

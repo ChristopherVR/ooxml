@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 import {
+	CHARACTER_SPACING_SECTIONS,
+	PARAGRAPH_SPACING_SECTIONS,
 	TEXT_BOX_SECTIONS,
 	applyTextStyleUpdate,
 	text3dInheritsFromTemplate,
@@ -28,8 +30,10 @@ import ThemeColorSwatchGrid from './ThemeColorSwatchGrid.vue';
 /**
  * TextPanel: typography inspector for the Vue `pptx-vue-viewer` editor.
  *
- * Character formatting (`part="font"`) and alignment plus the shared Text Box
- * options (`TEXT_BOX_SECTIONS`, `part="paragraph"`) read from `element.textStyle`.
+ * Character formatting with the shared character spacing
+ * (`CHARACTER_SPACING_SECTIONS`, `part="font"`), and alignment plus the shared
+ * Text Box options and paragraph spacing (`TEXT_BOX_SECTIONS`,
+ * `PARAGRAPH_SPACING_SECTIONS`, `part="paragraph"`) read from `element.textStyle`.
  * Each control emits a SHALLOW `update` patch carrying the FULL merged
  * `textStyle` so the parent forwards it to `ops.updateElement(id, patch)`.
  *
@@ -255,6 +259,13 @@ function onTextEffectPatch(patch: Partial<TextStyle>): void {
 						</button>
 					</div>
 				</div>
+
+				<InspectorFields
+					:sections="CHARACTER_SPACING_SECTIONS"
+					:target="textStyle"
+					:disabled="!props.canEdit"
+					@patch="patchTextStyle"
+				/>
 			</template>
 
 			<template v-if="props.part !== 'font'">
@@ -284,6 +295,13 @@ function onTextEffectPatch(patch: Partial<TextStyle>): void {
 
 				<InspectorFields
 					:sections="TEXT_BOX_SECTIONS"
+					:target="textStyle"
+					:disabled="!props.canEdit"
+					@patch="patchTextStyle"
+				/>
+
+				<InspectorFields
+					:sections="PARAGRAPH_SPACING_SECTIONS"
 					:target="textStyle"
 					:disabled="!props.canEdit"
 					@patch="patchTextStyle"

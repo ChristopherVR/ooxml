@@ -88,6 +88,25 @@ describe('textPanel', () => {
 		expect(patch).toStrictEqual({ textStyle: { bold: false } });
 	});
 
+	it('draws the shared spacing fields in points and emits model units', async () => {
+		const wrapper = mount(TextPanel, {
+			props: { element: textEl({ paragraphSpacingAfter: 8, characterSpacing: -50 }) },
+		});
+		const after = wrapper.find('[data-testid="paragraph-spaceAfter"]');
+		expect((after.element as HTMLInputElement).value).toBe('6');
+		const spacing = wrapper.find('[data-testid="font-characterSpacing"]');
+		expect((spacing.element as HTMLInputElement).value).toBe('-0.5');
+		await setControlValue(wrapper.find('[data-testid="paragraph-lineSpacingExact"]'), '18');
+		expect(wrapper.emitted('update')?.at(-1)?.[0]).toStrictEqual({
+			textStyle: {
+				paragraphSpacingAfter: 8,
+				characterSpacing: -50,
+				lineSpacingExactPt: 18,
+				lineSpacing: undefined,
+			},
+		});
+	});
+
 	it('emits align and vAlign field names', async () => {
 		const wrapper = mount(TextPanel, { props: { element: textEl({}) } });
 		const buttons = wrapper.findAll('.pptx-vue-text-toggle');

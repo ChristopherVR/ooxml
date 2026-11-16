@@ -75,6 +75,23 @@ function mountSection(editor: EditorState, el: PptxElement): { target: HTMLEleme
 }
 
 describe('textSection', () => {
+	it('draws the shared spacing fields in points and writes model units', () => {
+		const editor = makeEditor(textEl({ textStyle: { paragraphSpacingBefore: 16 } }));
+		const { target } = mountSection(editor, currentEl(editor));
+		const before = target.querySelector<HTMLInputElement>('[data-testid="paragraph-spaceBefore"]')!;
+		expect(before.value).toBe('12');
+		const spacing = target.querySelector<HTMLInputElement>(
+			'[data-testid="font-characterSpacing"]',
+		)!;
+		spacing.value = '1.5';
+		spacing.dispatchEvent(new Event('change', { bubbles: true }));
+		flushSync();
+		expect(
+			(currentEl(editor) as { textStyle?: { characterSpacing?: number } }).textStyle
+				?.characterSpacing,
+		).toBe(150);
+	});
+
 	it('defaults vertical align to top', () => {
 		const editor = makeEditor(textEl());
 		const { target } = mountSection(editor, currentEl(editor));

@@ -3,7 +3,6 @@ import type {
 	InlineTextSelection,
 	SlideSizeEmu,
 	SlideSizeRescaleMode,
-	TextAdvancedChanges,
 } from 'ooxml-ui/pptx';
 import type {
 	PptxAnimationPreset,
@@ -180,7 +179,6 @@ export interface InspectorHandlers {
 	setTextVerticalAlign(vAlign: InspectorState['vAlign']): void;
 	setTextWrap(wrap: InspectorState['textWrap']): void;
 	setAutoFitMode(mode: InspectorState['autoFitMode']): void;
-	setTextAdvanced(patch: TextAdvancedChanges): void;
 	setTextStyle(patch: Partial<TextStyle>, selection?: InlineTextSelection | null): void;
 
 	setStrokeOpacity(opacity: number): void;
@@ -307,13 +305,6 @@ export interface InspectorState {
 	vAlign: 'top' | 'middle' | 'bottom' | 'distributed' | 'justified';
 	textWrap: 'square' | 'none';
 	autoFitMode: 'shrink' | 'normal' | 'none';
-	characterSpacing: number;
-	lineSpacing: number;
-	lineSpacingExactPt: number | null;
-	paragraphSpacingBefore: number;
-	paragraphSpacingAfter: number;
-	paragraphIndent: number;
-	paragraphMarginLeft: number;
 	textDirection:
 		| 'horizontal'
 		| 'vertical'
@@ -322,7 +313,6 @@ export interface InspectorState {
 		| 'wordArtVert'
 		| 'wordArtVertRtl'
 		| 'mongolianVert';
-	textRtl: boolean;
 	textStyle: TextStyle | undefined;
 	selectedTextRange: InlineTextSelection | null;
 	imageArtisticEffect: string;

@@ -2,15 +2,22 @@
 	/**
 	 * TextSection: the shared Text Box options (`TEXT_BOX_SECTIONS`: vertical
 	 * anchor, direction, autofit mode, wrap-in-shape, columns, drawn by
-	 * `InspectorFields`), text colour, text effects and paragraph spacing, for
-	 * elements carrying text properties. Paragraph alignment (left/center/right/
+	 * `InspectorFields`), text colour, the shared character and paragraph
+	 * spacing (`CHARACTER_SPACING_SECTIONS`, `PARAGRAPH_SPACING_SECTIONS`) and
+	 * text effects, for elements carrying text properties. Paragraph alignment (left/center/right/
 	 * justify) is already covered by the Home tab's Paragraph group
 	 * (`ParagraphGroup.svelte`), so it is intentionally not duplicated here.
 	 * The text colour picker previews every shade of a drag and commits it as
 	 * one undo step (`live-color.ts`).
 	 */
 	import type { PptxElement, PptxThemeColorRef, TextStyle } from 'pptx-viewer-core';
-	import { TEXT_BOX_SECTIONS, textColorOf, textStylePatch } from 'ooxml-ui/pptx';
+	import {
+		CHARACTER_SPACING_SECTIONS,
+		PARAGRAPH_SPACING_SECTIONS,
+		TEXT_BOX_SECTIONS,
+		textColorOf,
+		textStylePatch,
+	} from 'ooxml-ui/pptx';
 	import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
@@ -86,16 +93,23 @@
 />
 <RecentColorsRow colors={editor.mruColors} onselect={commitTextColor} />
 
+<InspectorFields
+	sections={CHARACTER_SPACING_SECTIONS}
+	target={textStyle}
+	disabled={!editor.editable}
+	onpatch={patchText}
+/>
+
 <TextEffectsSection {editor} {el} />
 {/if}
 
 {#if showParagraph}
-<div class="pptx-svelte-grid">
-	<label class="pptx-svelte-field"><span>{t('pptx.textAdvanced.lineSpacing')}</span><input type="number" min="0.5" max="5" step="0.05" value={textStyle.lineSpacing ?? 1} onchange={(event) => patchText({ lineSpacing: Number(event.currentTarget.value), lineSpacingExactPt: undefined })} /></label>
-	<label class="pptx-svelte-field"><span>{t('pptx.textAdvanced.spaceBefore')}</span><input type="number" min="0" value={textStyle.paragraphSpacingBefore ?? 0} onchange={(event) => patchText({ paragraphSpacingBefore: Number(event.currentTarget.value) })} /></label>
-	<label class="pptx-svelte-field"><span>{t('pptx.textAdvanced.spaceAfter')}</span><input type="number" min="0" value={textStyle.paragraphSpacingAfter ?? 0} onchange={(event) => patchText({ paragraphSpacingAfter: Number(event.currentTarget.value) })} /></label>
-</div>
-<label class="pptx-svelte-field-checkbox"><pptx-ui-checkbox checked={textStyle.rtl ?? false} onchange={(event) => patchText({ rtl: event.currentTarget.checked })} ></pptx-ui-checkbox><span>{t('pptx.textAdvanced.rtl')}</span></label>
+	<InspectorFields
+		sections={PARAGRAPH_SPACING_SECTIONS}
+		target={textStyle}
+		disabled={!editor.editable}
+		onpatch={patchText}
+	/>
 {/if}
 
 <style>
@@ -123,8 +137,6 @@
 		font: inherit;
 	}
 	.pptx-svelte-field input { height: 26px; box-sizing: border-box; border: 1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius: var(--pptx-radius, var(--office-radius, 4px)); background: var(--pptx-background, var(--office-background, #ffffff)); color: inherit; font: inherit; }
-	.pptx-svelte-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 6px; }
-	.pptx-svelte-grid input { min-width: 0; width: 100%; }
 
 	.pptx-svelte-text-color-field {
 		align-items: flex-start;

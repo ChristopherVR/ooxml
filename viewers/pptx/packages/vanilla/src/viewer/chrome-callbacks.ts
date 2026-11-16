@@ -377,7 +377,6 @@ export function buildChromeCallbacks(
 		setTextVerticalAlign: (vAlign) => deps.getEditActions().setTextVerticalAlign(vAlign),
 		setTextWrap: (wrap) => deps.getEditActions().setTextWrap(wrap),
 		setAutoFitMode: (mode) => deps.getEditActions().setAutoFitMode(mode),
-		setTextAdvanced: (patch) => deps.getEditActions().setTextAdvanced(patch),
 		setTextStyle: (patch, selection) => deps.getEditActions().setTextStyle(patch, selection),
 
 		setStrokeOpacity: (opacity) => deps.getEditActions().setStrokeOpacity(opacity),

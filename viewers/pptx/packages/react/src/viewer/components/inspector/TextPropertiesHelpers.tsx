@@ -1,4 +1,8 @@
-import { TEXT_BOX_SECTIONS } from 'ooxml-ui/pptx';
+import {
+	CHARACTER_SPACING_SECTIONS,
+	PARAGRAPH_SPACING_SECTIONS,
+	TEXT_BOX_SECTIONS,
+} from 'ooxml-ui/pptx';
 import type { PptxElement, TextStyle, UnderlineStyle } from 'pptx-viewer-core';
 import React from 'react';
 import {
@@ -244,57 +248,28 @@ export function AdvancedTextFormatting({
 						)}
 					</div>
 
-					{/* Character Spacing */}
-					<label className='flex flex-col gap-1'>
-						<span className='text-muted-foreground'>{t('pptx.text.characterSpacing')}</span>
-						<input
-							type='number'
-							min={-1000}
-							max={5000}
-							step={50}
-							value={Math.round(ts?.characterSpacing ?? 0)}
+					{/* Character spacing: the shared descriptor, drawn by the generic renderer. */}
+					<div className='grid grid-cols-2 gap-2'>
+						<InspectorFields
+							sections={CHARACTER_SPACING_SECTIONS}
+							target={ts}
+							onPatch={onUpdateTextStyle}
 							disabled={!canEdit}
-							onChange={numChange((v) => ({ characterSpacing: v }))}
-							className={INPUT_CLS}
 						/>
-					</label>
+					</div>
 				</>
 			)}
 
 			{paragraph && (
 				<>
-					{/* Paragraph Margins & Indent */}
+					{/* Indentation, spacing, line spacing and direction: shared descriptors. */}
 					<div className='grid grid-cols-2 gap-2'>
-						<label className='flex flex-col gap-1'>
-							<span className='text-muted-foreground'>{t('pptx.textProperties.leftMargin')}</span>
-							<input
-								type='number'
-								min={0}
-								max={500}
-								step={4}
-								value={Math.round(ts?.paragraphMarginLeft ?? 0)}
-								disabled={!canEdit}
-								onChange={numChange((v) => ({
-									paragraphMarginLeft: Math.max(0, Math.min(500, v)),
-								}))}
-								className={INPUT_CLS}
-							/>
-						</label>
-						<label className='flex flex-col gap-1'>
-							<span className='text-muted-foreground'>{t('pptx.textProperties.firstIndent')}</span>
-							<input
-								type='number'
-								min={-500}
-								max={500}
-								step={4}
-								value={Math.round(ts?.paragraphIndent ?? 0)}
-								disabled={!canEdit}
-								onChange={numChange((v) => ({
-									paragraphIndent: Math.max(-500, Math.min(500, v)),
-								}))}
-								className={INPUT_CLS}
-							/>
-						</label>
+						<InspectorFields
+							sections={PARAGRAPH_SPACING_SECTIONS}
+							target={ts}
+							onPatch={onUpdateTextStyle}
+							disabled={!canEdit}
+						/>
 					</div>
 
 					{/* Text box options (vertical alignment, direction, autofit, wrap,

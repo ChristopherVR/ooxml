@@ -83,6 +83,13 @@ export {
 } from './picture-fields';
 export type { PictureSection } from './picture-fields';
 export type { TextBoxSection, TextBoxTarget } from './text-box-fields';
+export {
+	CHARACTER_SPACING_SECTION,
+	CHARACTER_SPACING_SECTIONS,
+	PARAGRAPH_SPACING_SECTION,
+	PARAGRAPH_SPACING_SECTIONS,
+} from './paragraph-fields';
+export type { ParagraphFieldsSection, ParagraphFieldsTarget } from './paragraph-fields';
 export { TEXT_EFFECT_SECTIONS } from './text-effect-fields';
 export type { TextEffectSection, TextEffectTarget } from './text-effect-fields';
 export { FORMAT_PANEL_SECTIONS, formatPanelIn } from './format-panel-sections';
