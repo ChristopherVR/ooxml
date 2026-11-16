@@ -113,6 +113,32 @@ import { RecentColorsService } from './recent-colors.service';
 												(change)="onColor(section.id, field.id, $event)"
 												(blur)="onColor(section.id, field.id, $event)"
 											/>
+										} @else if (field.control === 'textarea') {
+											<textarea
+												class="pptx-ng-fields__input pptx-ng-fields__input--text"
+												rows="2"
+												[attr.data-testid]="field.testId"
+												[attr.aria-label]="field.labelKey | translate"
+												[attr.placeholder]="
+													field.placeholderKey ? (field.placeholderKey | translate) : null
+												"
+												[value]="field.value"
+												[disabled]="disabled()"
+												(input)="onField(section.id, field.id, $event)"
+											></textarea>
+										} @else if (field.control === 'text') {
+											<input
+												class="pptx-ng-fields__input pptx-ng-fields__input--text"
+												type="text"
+												[attr.data-testid]="field.testId"
+												[attr.aria-label]="field.labelKey | translate"
+												[attr.placeholder]="
+													field.placeholderKey ? (field.placeholderKey | translate) : null
+												"
+												[value]="field.value"
+												[disabled]="disabled()"
+												(input)="onField(section.id, field.id, $event)"
+											/>
 										} @else {
 											<input
 												class="pptx-ng-fields__input pptx-ng-fields__input--number"
@@ -219,6 +245,24 @@ import { RecentColorsService } from './recent-colors.service';
 			text-align: right;
 		}
 
+		.pptx-ng-fields__input--text {
+			box-sizing: border-box;
+			width: 100%;
+			min-width: 0;
+			flex: 1 1 auto;
+			font: inherit;
+			resize: vertical;
+		}
+
+		.pptx-ng-fields__field:has(.pptx-ng-fields__input--text) {
+			flex-direction: column;
+			align-items: stretch;
+		}
+
+		.pptx-ng-fields__field:has(.pptx-ng-fields__input--text) .pptx-ng-fields__label {
+			text-align: left;
+		}
+
 		.pptx-ng-fields__color {
 			width: 32px;
 			height: 22px;
@@ -318,6 +362,9 @@ function rawValueOf(event: Event): InspectorFieldValue | null {
 	}
 	if (target instanceof HTMLInputElement) {
 		return target.type === 'checkbox' ? target.checked : target.value;
+	}
+	if (target instanceof HTMLTextAreaElement) {
+		return target.value;
 	}
 	return isSelectControl(target) ? target.value : null;
 }

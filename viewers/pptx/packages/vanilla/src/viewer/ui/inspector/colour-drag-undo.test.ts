@@ -60,8 +60,6 @@ function mount() {
 			shapeStyle: el.shapeStyle,
 			textStyle: el.textStyle,
 			fillOpacity: 1,
-			gradientEnabled: false,
-			gradient: { type: 'linear', angle: 90, stops: [] },
 			recentColors: [],
 		} as unknown as InspectorState;
 		fill.update(state);

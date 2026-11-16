@@ -74,8 +74,6 @@ function mount() {
 			strokeColor: el.shapeStyle.strokeColor,
 			shapeStyle: el.shapeStyle,
 			fillOpacity: 1,
-			gradientEnabled: false,
-			gradient: { type: 'linear', angle: 90, stops: [] },
 			recentColors: [],
 		} as unknown as InspectorState);
 	};

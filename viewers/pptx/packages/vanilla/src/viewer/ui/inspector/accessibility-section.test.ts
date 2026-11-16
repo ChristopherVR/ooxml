@@ -1,3 +1,4 @@
+import type { PptxElement } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../../i18n';
@@ -8,54 +9,45 @@ function sectionFactory() {
 	return (): HTMLElement => document.createElement('div');
 }
 
+function shape(extra: Record<string, unknown> = {}): PptxElement {
+	return { type: 'shape', id: 's1', x: 0, y: 0, width: 10, height: 10, ...extra } as PptxElement;
+}
+
 function state(overrides: Partial<InspectorState> = {}): InspectorState {
 	return {
 		hasSelection: true,
 		showAccessibilitySection: true,
-		altText: '',
-		title: '',
+		selectedElement: shape(),
 		...overrides,
 	} as InspectorState;
 }
 
 function handlers(): InspectorHandlers {
-	return {
-		setAltText: vi.fn(),
-		setTitle: vi.fn(),
-	} as unknown as InspectorHandlers;
+	return { patchSelectedElement: vi.fn() } as unknown as InspectorHandlers;
+}
+
+function create(h = handlers()) {
+	return createAccessibilitySection(document, createTranslator(), sectionFactory(), h);
 }
 
 describe('accessibility section (alt text and title)', () => {
 	it('is hidden when nothing is selected', () => {
-		const section = createAccessibilitySection(
-			document,
-			createTranslator(),
-			sectionFactory(),
-			handlers(),
-		);
+		const section = create();
 		section.update(state({ hasSelection: false }));
 		expect(section.el.hidden).toBeTruthy();
 	});
 
 	it('is hidden for an element kind the shared descriptor excludes (e.g. a picture or group)', () => {
-		const section = createAccessibilitySection(
-			document,
-			createTranslator(),
-			sectionFactory(),
-			handlers(),
-		);
+		const section = create();
 		section.update(state({ showAccessibilitySection: false }));
 		expect(section.el.hidden).toBeTruthy();
 	});
 
 	it('shows the current altText and title for a shape', () => {
-		const section = createAccessibilitySection(
-			document,
-			createTranslator(),
-			sectionFactory(),
-			handlers(),
+		const section = create();
+		section.update(
+			state({ selectedElement: shape({ altText: 'A red rectangle', title: 'Callout' }) }),
 		);
-		section.update(state({ altText: 'A red rectangle', title: 'Callout' }));
 		expect(section.el.hidden).toBeFalsy();
 		const textarea = section.el.querySelector('textarea') as HTMLTextAreaElement;
 		const input = section.el.querySelector('input[type="text"]') as HTMLInputElement;
@@ -63,23 +55,17 @@ describe('accessibility section (alt text and title)', () => {
 		expect(input.value).toBe('Callout');
 	});
 
-	it('commits altText on change', () => {
+	it('commits altText and title as they are typed', () => {
 		const h = handlers();
-		const section = createAccessibilitySection(document, createTranslator(), sectionFactory(), h);
+		const section = create(h);
 		section.update(state());
 		const textarea = section.el.querySelector('textarea') as HTMLTextAreaElement;
 		textarea.value = 'Updated description';
-		textarea.dispatchEvent(new Event('change'));
-		expect(h.setAltText).toHaveBeenCalledWith('Updated description');
-	});
-
-	it('commits title on change', () => {
-		const h = handlers();
-		const section = createAccessibilitySection(document, createTranslator(), sectionFactory(), h);
-		section.update(state());
+		textarea.dispatchEvent(new Event('input'));
+		expect(h.patchSelectedElement).toHaveBeenCalledWith({ altText: 'Updated description' });
 		const input = section.el.querySelector('input[type="text"]') as HTMLInputElement;
 		input.value = 'Updated title';
-		input.dispatchEvent(new Event('change'));
-		expect(h.setTitle).toHaveBeenCalledWith('Updated title');
+		input.dispatchEvent(new Event('input'));
+		expect(h.patchSelectedElement).toHaveBeenCalledWith({ title: 'Updated title' });
 	});
 });

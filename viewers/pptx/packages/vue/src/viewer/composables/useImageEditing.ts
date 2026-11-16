@@ -2,34 +2,10 @@
  * useImageEditing: framework-free helpers for the image inspector.
  *
  * Holds the pure logic behind ImagePanel.vue and its sub-panels so the SFCs
- * stay thin: default effect objects, effect merging, crop math, and label
- * humanising. No Vue reactivity here - just data and functions.
+ * stay thin: default effect objects, effect merging and label humanising. No
+ * Vue reactivity here - just data and functions.
  */
 import type { PptxElement, PptxImageEffects, PptxCropShape } from 'pptx-viewer-core';
-import { useI18n } from 'vue-i18n';
-
-/** One editable crop side: the element field key plus its display label. */
-export interface CropSide {
-	/** Top-level element field, e.g. `cropLeft`. */
-	key: 'cropLeft' | 'cropTop' | 'cropRight' | 'cropBottom';
-	/** Human label shown next to the slider. */
-	label: string;
-}
-
-/**
- * The four crop sides with i18n-resolved labels. Must be called from within a
- * component's `setup()` (directly, or synchronously from another composable
- * invoked during `setup()`), matching the `useI18n()` composition rules.
- */
-export function useCropSides(): readonly CropSide[] {
-	const { t } = useI18n();
-	return [
-		{ key: 'cropLeft', label: t('pptx.image.cropLeft') },
-		{ key: 'cropTop', label: t('pptx.image.cropTop') },
-		{ key: 'cropRight', label: t('pptx.image.cropRight') },
-		{ key: 'cropBottom', label: t('pptx.image.cropBottom') },
-	] as const;
-}
 
 /** Default colour-wash effect applied when the wash toggle is switched on. */
 export const DEFAULT_COLOR_WASH: NonNullable<PptxImageEffects['colorWash']> = {
@@ -83,20 +59,6 @@ export function mergeEffectsPatch(
 ): Partial<PptxElement> {
 	const merged: PptxImageEffects = { ...current, ...patch };
 	return { imageEffects: merged } as Partial<PptxElement>;
-}
-
-/** Convert a stored crop fraction (0..1) to a 0..80 slider percentage. */
-export function cropFractionToPercent(value: number | undefined): number {
-	if (typeof value !== 'number' || !Number.isFinite(value)) {
-		return 0;
-	}
-	return Math.round(Math.max(0, Math.min(0.8, value)) * 100);
-}
-
-/** Convert a 0..80 slider percentage back to a crop fraction (0..0.8). */
-export function cropPercentToFraction(percent: number): number {
-	const clamped = Math.max(0, Math.min(80, percent));
-	return clamped / 100;
 }
 
 /**

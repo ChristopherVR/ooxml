@@ -380,6 +380,8 @@ export const EDITOR_CSS = `
 }
 .pptxv-field-select-input:disabled { opacity: 0.5; }
 .pptxv-field-range { flex-direction: column; align-items: stretch; }
+.pptxv-field-text { flex-direction: column; align-items: stretch; margin-bottom: 8px; }
+.pptxv-field-text .pptxv-field-input { width: 100%; height: auto; min-height: 26px; box-sizing: border-box; resize: vertical; }
 .pptxv-field-range-row { display: flex; align-items: center; gap: 8px; }
 .pptxv-field-range-row input[type='range'] { flex: 1; }
 .pptxv-field-range-readout {

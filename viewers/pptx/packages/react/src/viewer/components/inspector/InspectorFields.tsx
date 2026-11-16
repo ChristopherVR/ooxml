@@ -124,6 +124,27 @@ export function InspectorFields<T, P>({
 				</label>
 			);
 		}
+		if (field.control === 'text' || field.control === 'textarea') {
+			const textProps = {
+				'data-testid': field.testId,
+				'aria-label': label,
+				placeholder: field.placeholderKey ? t(field.placeholderKey) : undefined,
+				value: String(field.value),
+				disabled,
+				onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+					change(sectionId, field.id, e.target.value),
+			};
+			return (
+				<label key={key} className={cls}>
+					<span className={LBL}>{label}</span>
+					{field.control === 'textarea' ? (
+						<textarea rows={2} {...textProps} className={`${NUM} resize-none`} />
+					) : (
+						<input type='text' {...textProps} className={NUM} />
+					)}
+				</label>
+			);
+		}
 		return (
 			<label key={key} className={cls}>
 				<span className={LBL}>{label}</span>

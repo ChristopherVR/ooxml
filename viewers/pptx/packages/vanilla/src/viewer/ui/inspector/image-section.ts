@@ -1,11 +1,14 @@
-import { ARTISTIC_EFFECTS } from 'ooxml-ui/pptx';
+import {
+	ARTISTIC_EFFECTS,
+	ELEMENT_ALT_TEXT_SECTIONS,
+	PICTURE_ADJUSTMENT_SECTIONS,
+	PICTURE_CROP_SECTIONS,
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';
-import type { NumberFieldHandle } from '../controls';
-import { makeNumberField } from '../controls';
-import type { RangeFieldHandle } from './controls-extra';
 import { makeRangeField, createInspectorSelect, createInspectorCheckbox } from './controls-extra';
+import { createInspectorFields } from './inspector-fields';
 import type { InspectorHandlers, InspectorState } from './types';
 
 export interface ImageSection {
@@ -14,9 +17,11 @@ export interface ImageSection {
 }
 
 /**
- * The Image section: brightness/contrast/saturation adjustment sliders (CSS
- * `filter`-backed, see `pptx-viewer-shared/image-effects`) and a basic
- * numeric crop (four edge insets as a 0-90% fraction of that edge).
+ * The Image section. The adjustments, the crop insets and the alt text are
+ * the shared picture descriptors (`PICTURE_ADJUSTMENT_SECTIONS`,
+ * `PICTURE_CROP_SECTIONS`, `ELEMENT_ALT_TEXT_SECTIONS`) drawn by the generic
+ * renderer; the compound picture controls (artistic effect, duotone, colour
+ * wash, replace and reset) stay native DOM here.
  */
 export function createImageSection(
 	doc: Document,
@@ -41,28 +46,19 @@ export function createImageSection(
 
 	const pct = (value: number): string => `${Math.round(value)}%`;
 
-	const brightness = makeRangeField(doc, {
-		label: t('pptx.imageAdjustments.brightness'),
-		min: -100,
-		max: 100,
-		formatValue: pct,
-		onCommit: handlers.setImageBrightness,
+	const onPatch = (patch: Parameters<InspectorHandlers['patchSelectedElement']>[0]): void =>
+		handlers.patchSelectedElement(patch);
+	const adjustments = createInspectorFields(doc, t, {
+		sections: PICTURE_ADJUSTMENT_SECTIONS,
+		onPatch,
 	});
-	const contrast = makeRangeField(doc, {
-		label: t('pptx.imageAdjustments.contrast'),
-		min: -100,
-		max: 100,
-		formatValue: pct,
-		onCommit: handlers.setImageContrast,
+	const crop = createInspectorFields(doc, t, {
+		sections: PICTURE_CROP_SECTIONS,
+		onPatch,
+		sectionClassName: 'pptxv-inspector-grid',
 	});
-	const saturation = makeRangeField(doc, {
-		label: t('pptx.image.saturation'),
-		min: -100,
-		max: 100,
-		formatValue: pct,
-		onCommit: handlers.setImageSaturation,
-	});
-	el.append(brightness.el, contrast.el, saturation.el);
+	const altText = createInspectorFields(doc, t, { sections: ELEMENT_ALT_TEXT_SECTIONS, onPatch });
+	el.appendChild(adjustments.el);
 
 	const artisticLabel = doc.createElement('label');
 	artisticLabel.textContent = t('pptx.image.artisticEffects');
@@ -82,20 +78,6 @@ export function createImageSection(
 		}),
 	);
 	artisticLabel.appendChild(artistic);
-	const transparency = makeRangeField(doc, {
-		label: t('pptx.imageAdjustments.transparency'),
-		min: 0,
-		max: 100,
-		formatValue: pct,
-		onCommit: (value) => handlers.setImageEffects({ alphaModFix: 100 - value }),
-	});
-	const biLevel = makeRangeField(doc, {
-		label: t('pptx.imageAdjustments.biLevelThreshold'),
-		min: 0,
-		max: 100,
-		formatValue: pct,
-		onCommit: (value) => handlers.setImageEffects({ biLevel: value }),
-	});
 	const duotone = createEl(doc, 'div', 'pptxv-inspector-grid');
 	const colorInputs: Partial<Record<'color1' | 'color2', HTMLInputElement>> = {};
 	const duoField = (labelText: string, key: 'color1' | 'color2'): HTMLInputElement => {
@@ -123,7 +105,7 @@ export function createImageSection(
 	for (const input of [color1, color2]) {
 		input.addEventListener('change', () => handlers.pushRecentColor(input.value));
 	}
-	el.append(artisticLabel, transparency.el, biLevel.el, duotone);
+	el.append(artisticLabel, duotone);
 	const wash = createInspectorCheckbox(doc);
 	const washColor = doc.createElement('input');
 	washColor.type = 'color';
@@ -152,75 +134,27 @@ export function createImageSection(
 	washColor.addEventListener('change', () => handlers.pushRecentColor(washColor.value));
 	el.append(wash, washColor, washOpacity.el);
 
-	const cropGrid = createEl(doc, 'div', 'pptxv-inspector-grid');
-	el.appendChild(cropGrid);
-	const cropField = (
-		label: string,
-		edge: 'left' | 'top' | 'right' | 'bottom',
-	): NumberFieldHandle => {
-		const field = makeNumberField(doc, {
-			label,
-			min: 0,
-			max: 90,
-			onCommit: (value) => handlers.setImageCrop(edge, value / 100),
-		});
-		cropGrid.appendChild(field.el);
-		return field;
-	};
-	const cropLeft = cropField(t('pptx.image.cropLeft'), 'left');
-	const cropTop = cropField(t('pptx.image.cropTop'), 'top');
-	const cropRight = cropField(t('pptx.image.cropRight'), 'right');
-	const cropBottom = cropField(t('pptx.image.cropBottom'), 'bottom');
-	el.appendChild(resetCrop);
-
-	// Alt text (React's `ElementTransformControls`, Vue's `ImagePanel`,
-	// Angular's `image-properties-panel`): the accessibility description screen
-	// readers announce, and the field the Accessibility checker complains about
-	// when it is empty. Committed on change, not per keystroke, so typing a
-	// sentence is one history step.
-	const altLabel = createEl(doc, 'label', 'pptxv-field pptxv-image-alt');
-	const altCaption = createEl(doc, 'span', 'pptxv-field-label');
-	altCaption.textContent = t('pptx.image.altText');
-	const alt = doc.createElement('textarea');
-	alt.rows = 2;
-	alt.className = 'pptxv-image-alt-input';
-	alt.placeholder = t('pptx.imageTransform.altTextPlaceholder');
-	alt.setAttribute('aria-label', t('pptx.image.altText'));
-	alt.addEventListener('keydown', (event) => event.stopPropagation());
-	alt.addEventListener('change', () => handlers.setAltText(alt.value));
-	altLabel.append(altCaption, alt);
-	el.appendChild(altLabel);
-
-	const sliders: RangeFieldHandle[] = [brightness, contrast, saturation];
-	const cropFields = [cropLeft, cropTop, cropRight, cropBottom];
+	el.append(crop.el, resetCrop, altText.el);
 
 	return {
 		el,
 		update(state) {
 			el.hidden = !state.hasSelection || !state.isImage;
-			brightness.setValue(state.imageBrightness);
-			contrast.setValue(state.imageContrast);
-			saturation.setValue(state.imageSaturation);
+			const element = state.selectedElement;
+			if (element) {
+				adjustments.update(element, !state.isImage, element.id);
+				// G7: `a:picLocks/@noCrop` forbids cropping this specific picture,
+				// even on an otherwise-editable image.
+				crop.update(element, !state.isImage || !state.croppable, element.id);
+				altText.update(element, !state.isImage, element.id);
+			}
 			artistic.value = state.imageArtisticEffect;
-			transparency.setValue(state.imageTransparency);
-			biLevel.setValue(state.imageBiLevel);
 			color1.value = state.imageDuotone1;
 			color2.value = state.imageDuotone2;
 			wash.checked = Boolean(state.imageColorWash);
 			washColor.value = state.imageColorWash?.color ?? '#0066cc';
 			washOpacity.setValue(state.imageColorWash?.opacity ?? 40);
 			washOpacityValue = state.imageColorWash?.opacity ?? 40;
-			if (doc.activeElement !== alt) {
-				alt.value = state.altText;
-			}
-			alt.disabled = !state.isImage;
-			cropLeft.setValue(state.cropLeft * 100);
-			cropTop.setValue(state.cropTop * 100);
-			cropRight.setValue(state.cropRight * 100);
-			cropBottom.setValue(state.cropBottom * 100);
-			for (const c of [...sliders, transparency, biLevel]) {
-				c.setDisabled(!state.isImage);
-			}
 			artistic.disabled = !state.isImage;
 			color1.disabled = !state.isImage;
 			color2.disabled = !state.isImage;
@@ -230,11 +164,6 @@ export function createImageSection(
 			wash.disabled = !state.isImage;
 			washColor.disabled = !state.isImage;
 			washOpacity.setDisabled(!state.isImage);
-			// G7: `a:picLocks/@noCrop` forbids cropping this specific picture,
-			// even on an otherwise-editable image.
-			for (const c of cropFields) {
-				c.setDisabled(!state.isImage || !state.croppable);
-			}
 		},
 	};
 }

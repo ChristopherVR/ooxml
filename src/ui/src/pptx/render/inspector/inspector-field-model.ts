@@ -21,6 +21,8 @@
  * - `color`: a colour picker; the value is a `#rrggbb` string.
  * - `select`: a drop-down of `options`.
  * - `toggle`: a checkbox.
+ * - `text`: a text box (a multi-line one when the field is `multiline`); the
+ *   value is the string as typed, an empty one included.
  */
 export type InspectorFieldKind =
 	| 'number'
@@ -29,10 +31,18 @@ export type InspectorFieldKind =
 	| 'percent'
 	| 'color'
 	| 'select'
-	| 'toggle';
+	| 'toggle'
+	| 'text';
 
 /** The control a binding draws for a field kind. */
-export type InspectorFieldControl = 'number' | 'range' | 'color' | 'select' | 'checkbox';
+export type InspectorFieldControl =
+	| 'number'
+	| 'range'
+	| 'color'
+	| 'select'
+	| 'checkbox'
+	| 'text'
+	| 'textarea';
 
 /** A value a field reads or a control reports. */
 export type InspectorFieldValue = number | string | boolean;
@@ -63,6 +73,10 @@ export interface InspectorFieldDescriptor<T, P> {
 	/** `data-testid` of the control. */
 	testId?: string;
 	options?: readonly InspectorFieldOption[];
+	/** A `text` field takes several lines (a text area). */
+	multiline?: boolean;
+	/** Translation key of a `text` field's placeholder. */
+	placeholderKey?: string;
 	/** Hide the field for this value (the field is shown when absent). */
 	visibleWhen?: (target: T) => boolean;
 	/** The field's current value. */
@@ -107,6 +121,8 @@ export interface InspectorFieldView {
 	wide: boolean;
 	testId?: string;
 	options?: readonly InspectorFieldOption[];
+	/** Translation key of a text control's placeholder. */
+	placeholderKey?: string;
 }
 
 /** What a binding draws for one section. */
@@ -131,6 +147,7 @@ const CONTROL_OF: Record<InspectorFieldKind, InspectorFieldControl> = {
 	color: 'color',
 	select: 'select',
 	toggle: 'checkbox',
+	text: 'text',
 };
 
 /** Display rounding for numeric values (two decimals unless the field says otherwise). */
@@ -146,7 +163,7 @@ function fieldView<T, P>(field: InspectorFieldDescriptor<T, P>, target: T): Insp
 	const view: InspectorFieldView = {
 		id: field.id,
 		kind: field.kind,
-		control: CONTROL_OF[field.kind],
+		control: field.kind === 'text' && field.multiline ? 'textarea' : CONTROL_OF[field.kind],
 		labelKey: field.labelKey,
 		value: displayNumber(field.read(target), field.decimals),
 		wide: field.wide === true,
@@ -162,6 +179,7 @@ function fieldView<T, P>(field: InspectorFieldDescriptor<T, P>, target: T): Insp
 	if (field.unit !== undefined) view.unit = field.unit;
 	if (field.testId !== undefined) view.testId = field.testId;
 	if (field.options !== undefined) view.options = field.options;
+	if (field.placeholderKey !== undefined) view.placeholderKey = field.placeholderKey;
 	return view;
 }
 
@@ -201,6 +219,8 @@ export function coerceInspectorFieldValue<T, P>(
 	switch (field.kind) {
 		case 'toggle':
 			return typeof raw === 'boolean' ? raw : raw === 'true';
+		case 'text':
+			return String(raw);
 		case 'color':
 		case 'select': {
 			const text = String(raw).trim();

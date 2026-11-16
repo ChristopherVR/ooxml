@@ -1,13 +1,7 @@
 import {
 	autoFitModeOf,
 	canInteractWithElement,
-	defaultGradientState,
-	getNonVisualDescriptionFields,
-	gradientStateOf,
-	hasGradientFill,
 	hasImageOverrides,
-	imageAdjustmentsStateOf,
-	imageCropStateOf,
 	isElementLocked,
 	shouldShowAccessibilitySection,
 	tableInspectorStateOf,
@@ -78,8 +72,6 @@ export function buildInspectorState(
 ): InspectorState {
 	const shape = shapeStyleOf(el);
 	const textAdvanced = el ? textAdvancedStateOf(el) : undefined;
-	const image = el ? imageAdjustmentsStateOf(el) : undefined;
-	const crop = el ? imageCropStateOf(el) : undefined;
 	const table = el ? tableInspectorStateOf(el) : undefined;
 	const tableCell =
 		el?.type === 'table' && selectedTableCell
@@ -112,6 +104,7 @@ export function buildInspectorState(
 		oleIsLinked: el?.type === 'ole' && el.isLinked === true,
 		oleName: el?.type === 'ole' ? el.oleName : undefined,
 		oleElement: el?.type === 'ole' ? el : undefined,
+		...(el ? { selectedElement: el } : {}),
 		x: el?.x ?? 0,
 		y: el?.y ?? 0,
 		width: el?.width ?? 0,
@@ -127,8 +120,6 @@ export function buildInspectorState(
 		isConnector: el?.type === 'connector',
 		fillOpacity: shape.fillOpacity,
 		strokeOpacity: shape.strokeOpacity,
-		gradientEnabled: el !== undefined && hasGradientFill(el),
-		gradient: el ? gradientStateOf(el) : defaultGradientState(),
 		vAlign: textAdvanced?.vAlign ?? 'top',
 		textWrap: el ? textWrapOf(el) : 'square',
 		autoFitMode: el ? autoFitModeOf(el) : 'none',
@@ -143,21 +134,13 @@ export function buildInspectorState(
 		textRtl: textAdvanced?.rtl ?? false,
 		textStyle: el && 'textStyle' in el ? el.textStyle : undefined,
 		selectedTextRange,
-		imageBrightness: image?.brightness ?? 0,
-		imageContrast: image?.contrast ?? 0,
-		imageSaturation: image?.saturation ?? 0,
 		imageArtisticEffect:
 			el && isImageLikeElement(el) ? (el.imageEffects?.artisticEffect ?? 'none') : 'none',
-		imageTransparency:
-			el && isImageLikeElement(el) ? 100 - (el.imageEffects?.alphaModFix ?? 100) : 0,
-		imageBiLevel: el && isImageLikeElement(el) ? (el.imageEffects?.biLevel ?? 0) : 0,
 		imageDuotone1:
 			el && isImageLikeElement(el) ? (el.imageEffects?.duotone?.color1 ?? '#000000') : '#000000',
 		imageDuotone2:
 			el && isImageLikeElement(el) ? (el.imageEffects?.duotone?.color2 ?? '#ffffff') : '#ffffff',
 		imageColorWash: el && isImageLikeElement(el) ? el.imageEffects?.colorWash : undefined,
-		altText: el ? getNonVisualDescriptionFields(el).altText : '',
-		title: el ? getNonVisualDescriptionFields(el).title : '',
 		showAccessibilitySection: el !== undefined && shouldShowAccessibilitySection(el),
 		chartHighlightCell:
 			el?.type === 'chart' && chartPartSelection?.elementId === el.id
@@ -179,10 +162,6 @@ export function buildInspectorState(
 				? (el.posterFrameData ??
 					(el.posterFramePath ? mediaDataUrls.get(el.posterFramePath) : undefined))
 				: undefined,
-		cropLeft: crop?.cropLeft ?? 0,
-		cropTop: crop?.cropTop ?? 0,
-		cropRight: crop?.cropRight ?? 0,
-		cropBottom: crop?.cropBottom ?? 0,
 		tableHeaderRow: table?.firstRowHeader ?? false,
 		tableBandedRows: table?.bandedRows ?? false,
 		tableBandedColumns: table?.bandedColumns ?? false,

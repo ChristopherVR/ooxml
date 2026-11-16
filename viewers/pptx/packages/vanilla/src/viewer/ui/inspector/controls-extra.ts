@@ -172,3 +172,59 @@ export function makeRangeField(doc: Document, options: RangeFieldOptions): Range
 		},
 	};
 }
+
+export interface TextFieldOptions {
+	label: string;
+	/** A multi-line text area instead of a one-line box. */
+	multiline?: boolean;
+	placeholder?: string;
+	/** Fired on every keystroke with the text as typed. */
+	onInput(value: string): void;
+}
+
+export interface TextFieldHandle {
+	el: HTMLElement;
+	setValue(value: string): void;
+	setDisabled(disabled: boolean): void;
+}
+
+/**
+ * A labelled text box (or text area) reporting what is typed as it is typed.
+ * A repaint never replaces the text of the focused box, so typing is not
+ * interrupted by the update its own input causes.
+ */
+export function makeTextField(doc: Document, options: TextFieldOptions): TextFieldHandle {
+	const el = createEl(doc, 'label', 'pptxv-field pptxv-field-text');
+	const caption = createEl(doc, 'span', 'pptxv-field-label');
+	caption.textContent = options.label;
+	let input: HTMLInputElement | HTMLTextAreaElement;
+	if (options.multiline) {
+		const area = doc.createElement('textarea');
+		area.rows = 2;
+		input = area;
+	} else {
+		const box = doc.createElement('input');
+		box.type = 'text';
+		input = box;
+	}
+	input.className = 'pptxv-field-input';
+	input.setAttribute('aria-label', options.label);
+	if (options.placeholder) {
+		input.placeholder = options.placeholder;
+	}
+	// Typing in the box must not reach the editor's keyboard shortcuts.
+	input.addEventListener('keydown', (event) => event.stopPropagation());
+	input.addEventListener('input', () => options.onInput(input.value));
+	el.append(caption, input);
+	return {
+		el,
+		setValue(value) {
+			if (doc.activeElement !== input) {
+				input.value = value;
+			}
+		},
+		setDisabled(disabled) {
+			input.disabled = disabled;
+		},
+	};
+}

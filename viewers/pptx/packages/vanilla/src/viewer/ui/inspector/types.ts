@@ -1,6 +1,5 @@
 import type {
 	AnimationGroup,
-	GradientState,
 	InlineTextSelection,
 	SlideSizeEmu,
 	SlideSizeRescaleMode,
@@ -184,31 +183,18 @@ export interface InspectorHandlers {
 	setTextAdvanced(patch: TextAdvancedChanges): void;
 	setTextStyle(patch: Partial<TextStyle>, selection?: InlineTextSelection | null): void;
 
-	setFillOpacity(opacity: number): void;
 	setStrokeOpacity(opacity: number): void;
-	setGradientFill(state: GradientState): void;
-	addGradientStop(color: string, position: number): void;
-	removeGradientStop(index: number): void;
-	updateGradientStop(index: number, changes: Partial<GradientState['stops'][number]>): void;
 
-	setImageBrightness(value: number): void;
-	setImageContrast(value: number): void;
-	setImageSaturation(value: number): void;
-	setImageCrop(edge: 'left' | 'top' | 'right' | 'bottom', value: number): void;
+	/**
+	 * Apply a shared descriptor's element patch (Alt Text, picture adjustments,
+	 * crop insets) to the selection as one undo step.
+	 */
+	patchSelectedElement(patch: Partial<PptxElement>): void;
 	setImageEffects(patch: Partial<PptxImageEffects>): void;
 	replaceImage(): void;
 	resetImage(): void;
 	resetCrop(): void;
 	setElementAction(trigger: 'click' | 'hover', action: ElementAction): void;
-	/** Set the selected element's accessibility description (Alt Text field). */
-	setAltText(text: string): void;
-	/**
-	 * Set the selected element's accessibility title (`p:cNvPr/@title`).
-	 * Applies to a plain shape/text box/connector and every graphic-frame
-	 * kind (table/chart/smartArt/ole/media), not a picture (which has no
-	 * title field). See {@link PptxNonVisualDescription}.
-	 */
-	setTitle(text: string): void;
 	/**
 	 * Set the selected OLE element's Object Name (`p:oleObj/@name`, ECMA-376
 	 * SS13.3.4). A browser cannot run the native application an embedded OLE
@@ -269,6 +255,8 @@ export interface InspectorState {
 	hasSelection: boolean;
 	/** The selected element's id: what a live colour drag in the inspector belongs to. */
 	elementId?: string;
+	/** The selected element itself: what the shared element field descriptors read. */
+	selectedElement?: PptxElement;
 	isLocked: boolean;
 	/** `a:picLocks/@noCrop`: may the selected picture's crop be adjusted? */
 	croppable: boolean;
@@ -316,8 +304,6 @@ export interface InspectorState {
 	isConnector: boolean;
 	fillOpacity: number;
 	strokeOpacity: number;
-	gradientEnabled: boolean;
-	gradient: GradientState;
 	vAlign: 'top' | 'middle' | 'bottom' | 'distributed' | 'justified';
 	textWrap: 'square' | 'none';
 	autoFitMode: 'shrink' | 'normal' | 'none';
@@ -339,21 +325,12 @@ export interface InspectorState {
 	textRtl: boolean;
 	textStyle: TextStyle | undefined;
 	selectedTextRange: InlineTextSelection | null;
-	imageBrightness: number;
-	imageContrast: number;
-	imageSaturation: number;
 	imageArtisticEffect: string;
-	imageTransparency: number;
-	imageBiLevel: number;
 	imageDuotone1: string;
 	imageDuotone2: string;
 	imageColorWash?: { color: string; opacity: number };
 	actionClick?: ElementAction;
 	actionHover?: ElementAction;
-	/** The selected element's alt text (accessibility description), if any. */
-	altText: string;
-	/** The selected element's accessibility title (`p:cNvPr/@title`), if any. */
-	title: string;
 	/**
 	 * Whether the Accessibility section's own alt-text/title editor should
 	 * show for the current selection: true for a plain shape, text box,
@@ -374,10 +351,6 @@ export interface InspectorState {
 	media?: MediaPptxElement;
 	mediaPreviewUrl?: string;
 	mediaPosterUrl?: string;
-	cropLeft: number;
-	cropTop: number;
-	cropRight: number;
-	cropBottom: number;
 	tableHeaderRow: boolean;
 	tableBandedRows: boolean;
 	tableBandedColumns: boolean;

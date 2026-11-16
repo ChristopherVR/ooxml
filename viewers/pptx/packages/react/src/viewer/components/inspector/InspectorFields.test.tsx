@@ -6,12 +6,14 @@
  * descriptor's patch.
  */
 import {
+	ELEMENT_ALT_TEXT_SECTIONS,
 	ELEMENT_GEOMETRY_SECTIONS,
+	PICTURE_ADJUSTMENT_SECTIONS,
 	SHAPE_EFFECT_SECTIONS,
 	SHAPE_LINE_SECTIONS,
 	TEXT_BOX_SECTIONS,
 } from 'ooxml-ui/pptx';
-import type { ShapeStyle, TextStyle } from 'pptx-viewer-core';
+import type { PptxElement, ShapeStyle, TextStyle } from 'pptx-viewer-core';
 import React, { act } from 'react';
 import type { Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -183,5 +185,60 @@ describe('inspectorFields (text box options)', () => {
 			autofit.dispatchEvent(new Event('change', { bubbles: true }));
 		});
 		expect(onPatch).toHaveBeenLastCalledWith({ autoFitMode: 'normal', autoFit: true });
+	});
+});
+
+describe('inspectorFields (alt text and picture)', () => {
+	const picture = {
+		type: 'image',
+		id: 'p1',
+		x: 0,
+		y: 0,
+		width: 10,
+		height: 10,
+		imageEffects: { alphaModFix: 60 },
+	} as unknown as PptxElement;
+
+	function renderPicture(onPatch: (p: Partial<PptxElement>) => void, disabled = false) {
+		act(() => {
+			root.render(
+				<div className='grid grid-cols-2'>
+					<InspectorFields
+						sections={ELEMENT_ALT_TEXT_SECTIONS}
+						target={picture}
+						onPatch={onPatch}
+						disabled={disabled}
+					/>
+					<InspectorFields
+						sections={PICTURE_ADJUSTMENT_SECTIONS}
+						target={picture}
+						onPatch={onPatch}
+						disabled={disabled}
+					/>
+				</div>,
+			);
+		});
+	}
+
+	it('draws the description as a text area and writes what is typed', () => {
+		const onPatch = vi.fn();
+		renderPicture(onPatch);
+		const alt = byTestId<HTMLTextAreaElement>('element-alt-text')!;
+		expect(alt.tagName.toLowerCase()).toBe('textarea');
+		expect(byTestId('element-alt-title')).toBeNull();
+		act(() => {
+			const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!;
+			setter.call(alt, 'A sunset');
+			alt.dispatchEvent(new Event('input', { bubbles: true }));
+		});
+		expect(onPatch).toHaveBeenCalledWith({ altText: 'A sunset' });
+	});
+
+	it('shows transparency inverted from the stored opacity and disables with the pane', () => {
+		renderPicture(vi.fn(), true);
+		const transparency = byTestId('picture-transparency')!;
+		expect(transparency.value).toBe('40');
+		expect(transparency.disabled).toBeTruthy();
+		expect(byTestId<HTMLTextAreaElement>('element-alt-text')!.disabled).toBeTruthy();
 	});
 });

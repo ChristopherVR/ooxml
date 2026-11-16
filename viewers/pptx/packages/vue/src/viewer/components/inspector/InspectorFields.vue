@@ -151,6 +151,28 @@ const checkedOf = (event: Event): boolean => (event.target as HTMLInputElement).
 						@change="onColor(section.id, field.id, $event)"
 						@blur="onColor(section.id, field.id, $event)"
 					/>
+					<textarea
+						v-else-if="field.control === 'textarea'"
+						rows="2"
+						class="pptx-vue-fields-input w-full resize-none rounded border border-border bg-muted px-2 py-1"
+						:data-testid="field.testId"
+						:aria-label="t(field.labelKey)"
+						:placeholder="field.placeholderKey ? t(field.placeholderKey) : undefined"
+						:value="String(field.value)"
+						:disabled="props.disabled"
+						@input="onField(section.id, field.id, valueOf($event))"
+					></textarea>
+					<input
+						v-else-if="field.control === 'text'"
+						type="text"
+						class="pptx-vue-fields-input w-full rounded border border-border bg-muted px-2 py-1 max-md:min-h-[44px]"
+						:data-testid="field.testId"
+						:aria-label="t(field.labelKey)"
+						:placeholder="field.placeholderKey ? t(field.placeholderKey) : undefined"
+						:value="String(field.value)"
+						:disabled="props.disabled"
+						@input="onField(section.id, field.id, valueOf($event))"
+					/>
 					<input
 						v-else
 						:type="field.control"

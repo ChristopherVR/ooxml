@@ -3,7 +3,6 @@ import type { MediaPptxElement, TextStyle } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../../i18n';
-import { createImageSection } from './image-section';
 import { createMediaTrimTimeline } from './media-trim-timeline';
 import { createQuickStylesGallery } from './quick-styles-gallery';
 import { createText3DSection } from './text-3d-section';
@@ -207,31 +206,6 @@ describe('media trim timeline', () => {
 		expect(
 			timeline.el.querySelector<HTMLElement>('.pptxv-media-timeline-handle.is-start')!.hidden,
 		).toBeTruthy();
-	});
-});
-
-describe('image alt text', () => {
-	it('commits the accessibility description on change', () => {
-		const setAltText = vi.fn();
-		const handlers = {
-			setAltText,
-			replaceImage: vi.fn(),
-			resetImage: vi.fn(),
-			setImageBrightness: vi.fn(),
-			setImageContrast: vi.fn(),
-			setImageSaturation: vi.fn(),
-			setImageCrop: vi.fn(),
-			setImageEffects: vi.fn(),
-		} as unknown as InspectorHandlers;
-		const section = createImageSection(document, createTranslator(), sectionFactory(), handlers);
-		section.update(state({ isImage: true, altText: 'Old' }));
-
-		const alt = section.el.querySelector<HTMLTextAreaElement>('.pptxv-image-alt-input')!;
-		expect(alt.value).toBe('Old');
-		alt.value = 'A cat on a mat';
-		alt.dispatchEvent(new Event('change'));
-
-		expect(setAltText).toHaveBeenCalledWith('A cat on a mat');
 	});
 });
 

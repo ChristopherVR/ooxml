@@ -1,91 +1,28 @@
 <script lang="ts">
 	/**
-	 * AltTextSection: the accessibility alt-text / title editor, matching
-	 * React's `AccessibilityTextSection` / `ImagePropertiesPanel` and Vue's
-	 * `AccessibilityPanel.vue` / `ImagePanel.vue`.
-	 *
-	 * WHY it matters: `altText` is the only thing a screen reader has to go on
-	 * for a picture, shape, text box or connector, and the shared
-	 * `element-accessibility-dom` helpers already publish it as the rendered
-	 * element's `aria-label`. Without an editing surface a Svelte author
-	 * simply cannot author accessible decks.
-	 *
-	 * `getNonVisualDescriptionFields` (shared) decides which of `altText` /
-	 * `title` apply to `el`'s kind (a picture models only `altText`; a plain
-	 * shape/text box/connector and every graphic-frame kind model both), so
-	 * this component stays a thin view mounted for both cases by
-	 * `InspectorPanel.svelte`.
+	 * AltTextSection: the Alt Text fields (description and title) of the
+	 * selected element, the shared `ELEMENT_ALT_TEXT_SECTIONS` drawn by the
+	 * generic `InspectorFields`. The descriptors decide which fields apply to
+	 * `el`'s kind (a picture models only the description), so this component
+	 * is mounted for pictures and every other kind by `ElementFormatSections`.
 	 */
 	import type { PptxElement } from 'pptx-viewer-core';
-	import { getNonVisualDescriptionFields } from 'ooxml-ui/pptx';
+	import { ELEMENT_ALT_TEXT_SECTIONS, getNonVisualDescriptionFields } from 'ooxml-ui/pptx';
 
-	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';
+	import InspectorFields from './InspectorFields.svelte';
 
 	const { editor, el }: { editor: EditorState; el: PptxElement } = $props();
-	const t = useTranslator();
-	const canEdit = $derived(editor.editable);
 	const fields = $derived(getNonVisualDescriptionFields(el));
 </script>
 
 {#if fields.showAltText || fields.showTitle}
-<div data-pptx-inspector-section="alt-text">
-{#if fields.showAltText}
-	<label class="pptx-svelte-alt-text">
-		<span>{t('pptx.elementAccessibility.altText')}</span>
-		<textarea
-			rows="2"
-			disabled={!canEdit}
-			placeholder={t('pptx.elementAccessibility.altTextPlaceholder')}
-			value={fields.altText}
-			oninput={(event) =>
-				editor.applyElementPatch(el.id, {
-					altText: event.currentTarget.value,
-				} as Partial<PptxElement>)}
-		></textarea>
-	</label>
-{/if}
-
-{#if fields.showTitle}
-	<label class="pptx-svelte-alt-text">
-		<span>{t('pptx.elementAccessibility.title')}</span>
-		<input
-			type="text"
-			disabled={!canEdit}
-			placeholder={t('pptx.elementAccessibility.titlePlaceholder')}
-			value={fields.title}
-			oninput={(event) =>
-				editor.applyElementPatch(el.id, {
-					title: event.currentTarget.value,
-				} as Partial<PptxElement>)}
+	<div data-pptx-inspector-section="alt-text">
+		<InspectorFields
+			sections={ELEMENT_ALT_TEXT_SECTIONS}
+			target={el}
+			disabled={!editor.editable}
+			onpatch={(patch) => editor.applyElementPatch(el.id, patch)}
 		/>
-	</label>
+	</div>
 {/if}
-</div>
-{/if}
-
-<style>
-	.pptx-svelte-alt-text {
-		display: flex;
-		flex-direction: column;
-		gap: 3px;
-		margin-top: 10px;
-	}
-
-	.pptx-svelte-alt-text span {
-		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
-	}
-
-	.pptx-svelte-alt-text textarea,
-	.pptx-svelte-alt-text input {
-		width: 100%;
-		box-sizing: border-box;
-		padding: 4px 6px;
-		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
-		border-radius: var(--pptx-radius, var(--office-radius, 4px));
-		background: var(--pptx-background, var(--office-background, #ffffff));
-		color: inherit;
-		font: inherit;
-		resize: vertical;
-	}
-</style>

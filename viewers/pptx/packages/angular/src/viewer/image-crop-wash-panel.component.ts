@@ -8,13 +8,13 @@ import {
 	CUSTOM_ELEMENTS_SCHEMA,
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
-import { cropResetPatch, cropResetState } from 'ooxml-ui/pptx';
+import { cropResetPatch, cropResetState, PICTURE_CROP_SECTIONS } from 'ooxml-ui/pptx';
 import type { PptxCropShape, PptxElement, PptxImageEffects } from 'pptx-viewer-core';
 import { isImageLikeElement } from 'pptx-viewer-core';
 
+import { InspectorFieldsComponent } from './inspector-fields.component';
 import { RecentColorsService } from './recent-colors.service';
 
-const SIDES = ['Left', 'Top', 'Right', 'Bottom'] as const;
 const CROP_SHAPES: readonly { value: PptxCropShape; label: string; glyph: string }[] = [
 	{ value: 'none', label: 'None', glyph: '▭' },
 	{ value: 'ellipse', label: 'Ellipse', glyph: '●' },
@@ -25,12 +25,7 @@ const CROP_SHAPES: readonly { value: PptxCropShape; label: string; glyph: string
 	{ value: 'hexagon', label: 'Hexagon', glyph: '⬢' },
 	{ value: 'star', label: 'Star', glyph: '★' },
 ];
-type CropSide = (typeof SIDES)[number];
 type ImageElement = PptxElement & { imageEffects?: PptxImageEffects };
-
-export function clampImageCrop(value: number | undefined): number {
-	return Math.max(0, Math.min(0.8, Number.isFinite(value) ? (value as number) : 0));
-}
 
 export function replacementImagePatch(dataUrl: string): Partial<PptxElement> {
 	return {
@@ -45,28 +40,20 @@ export function replacementImagePatch(dataUrl: string): Partial<PptxElement> {
 	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	selector: 'pptx-image-crop-wash-panel',
 	standalone: true,
-	imports: [TranslatePipe],
+	imports: [TranslatePipe, InspectorFieldsComponent],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<section class="panel" aria-label="Image crop and color wash">
 			<label class="replace">
-				<span>Replace image</span>
+				<span>{{ 'pptx.image.replaceImage' | translate }}</span>
 				<input type="file" accept="image/*" (change)="onReplaceImage($event)" />
 			</label>
-			<div class="crop-grid">
-				@for (side of sides; track side) {
-					<label
-						><span>Crop {{ side }}</span
-						><input
-							type="range"
-							min="0"
-							max="80"
-							[value]="crop(side) * 100"
-							[disabled]="!croppable()"
-							(input)="onCrop(side, $event)"
-					/></label>
-				}
-			</div>
+			<pptx-inspector-fields
+				[sections]="cropSections"
+				[target]="element()"
+				[disabled]="!croppable()"
+				(patch)="onCrop($event)"
+			/>
 			<button type="button" [disabled]="!croppable()" (click)="resetCrop()">
 				{{ 'pptx.image.resetCrop' | translate }}
 			</button>
@@ -114,7 +101,6 @@ export function replacementImagePatch(dataUrl: string): Partial<PptxElement> {
 			padding-top: 4px;
 			font-size: 11px;
 		}
-		.crop-grid,
 		.wash {
 			display: grid;
 			grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -168,7 +154,7 @@ export class ImageCropWashPanelComponent {
 	readonly patch = output<Partial<PptxElement>>();
 	/** Optional: absent in a standalone unit test with no viewer-level DI tree. */
 	private readonly recentColors = inject(RecentColorsService, { optional: true });
-	protected readonly sides = SIDES;
+	protected readonly cropSections = PICTURE_CROP_SECTIONS;
 	protected readonly cropShapes = CROP_SHAPES;
 	protected readonly effects = computed(() => (this.element() as ImageElement).imageEffects ?? {});
 	protected readonly wash = computed(() => this.effects().colorWash);
@@ -194,16 +180,10 @@ export class ImageCropWashPanelComponent {
 		reader.readAsDataURL(file);
 	}
 
-	protected crop(side: CropSide): number {
-		return clampImageCrop(this.element()[`crop${side}` as keyof PptxElement] as number | undefined);
-	}
-	protected onCrop(side: CropSide, event: Event): void {
-		if (!isImageLikeElement(this.element()) || !this.croppable()) {
-			return;
+	protected onCrop(patch: Partial<PptxElement>): void {
+		if (isImageLikeElement(this.element()) && this.croppable()) {
+			this.patch.emit(patch);
 		}
-		this.patch.emit({
-			[`crop${side}`]: clampImageCrop(Number((event.target as HTMLInputElement).value) / 100),
-		} as Partial<PptxElement>);
 	}
 	protected resetCrop(): void {
 		if (!this.croppable()) {

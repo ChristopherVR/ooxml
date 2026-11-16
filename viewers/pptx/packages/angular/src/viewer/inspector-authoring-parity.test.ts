@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { toggleElementFlip } from './element-flip-controls.component';
 import { connectorStylePatch } from './element-misc-properties.component';
-import { clampImageCrop, replacementImagePatch } from './image-crop-wash-panel.component';
+import { replacementImagePatch } from './image-crop-wash-panel.component';
 import { shapeTypePatch } from './shape-authoring-panel.component';
 import { textWarpPatch } from './text-warp-gallery.component';
 
@@ -43,12 +43,6 @@ describe('angular inspector authoring parity', () => {
 		expect(patch.shapeType).toBe('roundRect');
 		expect(patch.shapeAdjustments.adj).toBe(16667);
 		expect(patch.shapeStyle.strokeColor).toBe('#abcdef');
-	});
-
-	it('clamps crop values to the editor range', () => {
-		expect(clampImageCrop(-1)).toBe(0);
-		expect(clampImageCrop(0.42)).toBe(0.42);
-		expect(clampImageCrop(2)).toBe(0.8);
 	});
 
 	it('replaces archived image sources with the selected data URL', () => {

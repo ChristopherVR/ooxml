@@ -247,8 +247,8 @@ describe('createInspectorActions text', () => {
 	});
 });
 
-describe('createInspectorActions fill/gradient', () => {
-	it('sets fill and stroke opacity on a shape', () => {
+describe('createInspectorActions stroke', () => {
+	it('sets the stroke opacity on a shape', () => {
 		const shape: PptxElement = {
 			type: 'shape',
 			id: 's1',
@@ -261,109 +261,24 @@ describe('createInspectorActions fill/gradient', () => {
 		} as PptxElement;
 		const { store, actions } = buildActions(shape);
 
-		actions.setFillOpacity(0.5);
 		actions.setStrokeOpacity(0.25);
 
 		const el = selectedEl(store) as {
-			shapeStyle?: { fillOpacity?: number; strokeOpacity?: number };
+			shapeStyle?: { strokeOpacity?: number };
 		};
-		expect(el.shapeStyle?.fillOpacity).toBe(0.5);
 		expect(el.shapeStyle?.strokeOpacity).toBe(0.25);
-	});
-
-	it('enables a gradient fill and can add/update/remove stops', () => {
-		const shape: PptxElement = {
-			type: 'shape',
-			id: 's1',
-			x: 0,
-			y: 0,
-			width: 10,
-			height: 10,
-			shapeType: 'rect',
-			shapeStyle: { fillColor: '#fff' },
-		} as PptxElement;
-		const { store, actions } = buildActions(shape);
-
-		actions.setGradientFill({
-			type: 'linear',
-			angle: 45,
-			stops: [
-				{ color: '#111111', position: 0 },
-				{ color: '#eeeeee', position: 100 },
-			],
-		});
-		type GradientEl = {
-			shapeStyle?: {
-				fillMode?: string;
-				fillGradientAngle?: number;
-				fillGradientStops?: Array<{ color: string; position: number }>;
-			};
-		};
-		const readEl = (): GradientEl => selectedEl(store) as GradientEl;
-
-		expect(readEl().shapeStyle?.fillMode).toBe('gradient');
-		expect(readEl().shapeStyle?.fillGradientAngle).toBe(45);
-		expect(readEl().shapeStyle?.fillGradientStops).toHaveLength(2);
-
-		actions.addGradientStop('#00ff00', 50);
-		expect(readEl().shapeStyle?.fillGradientStops).toHaveLength(3);
-
-		actions.updateGradientStop(1, { color: '#123456' });
-		expect(readEl().shapeStyle?.fillGradientStops?.[1]?.color).toBe('#123456');
-
-		actions.removeGradientStop(1);
-		expect(readEl().shapeStyle?.fillGradientStops).toHaveLength(2);
-	});
-
-	it('refuses to remove a stop when only two remain', () => {
-		const shape: PptxElement = {
-			type: 'shape',
-			id: 's1',
-			x: 0,
-			y: 0,
-			width: 10,
-			height: 10,
-			shapeType: 'rect',
-			shapeStyle: {
-				fillMode: 'gradient',
-				fillGradientStops: [
-					{ color: '#111111', position: 0 },
-					{ color: '#eeeeee', position: 100 },
-				],
-			},
-		} as PptxElement;
-		const { store, ops, actions } = buildActions(shape);
-		const before = (selectedEl(store) as { shapeStyle?: { fillGradientStops?: unknown[] } })
-			.shapeStyle?.fillGradientStops;
-
-		actions.removeGradientStop(0);
-
-		expect(
-			(selectedEl(store) as { shapeStyle?: { fillGradientStops?: unknown[] } }).shapeStyle
-				?.fillGradientStops,
-		).toStrictEqual(before);
-		expect(ops.canUndo()).toBeFalsy();
 	});
 });
 
 describe('createInspectorActions image', () => {
-	it('sets brightness/contrast/saturation and crop insets', () => {
-		const { store, actions } = buildActions(imageElement());
+	it('applies a shared descriptor patch to the selection as one undo step', () => {
+		const { store, ops, actions } = buildActions(imageElement());
 
-		actions.setImageBrightness(20);
-		actions.setImageContrast(-10);
-		actions.setImageSaturation(5);
-		actions.setImageCrop('left', 0.1);
-		actions.setImageCrop('right', 2);
+		actions.patchSelectedElement({ cropLeft: 0.1 } as Partial<PptxElement>);
 
-		const el = selectedEl(store) as {
-			imageEffects?: { brightness?: number; contrast?: number; saturation?: number };
-			cropLeft?: number;
-			cropRight?: number;
-		};
-		expect(el.imageEffects).toStrictEqual({ brightness: 20, contrast: -10, saturation: 5 });
-		expect(el.cropLeft).toBe(0.1);
-		expect(el.cropRight).toBe(0.9); // clamped
+		expect((selectedEl(store) as { cropLeft?: number }).cropLeft).toBe(0.1);
+		ops.undo();
+		expect((selectedEl(store) as { cropLeft?: number }).cropLeft).toBeUndefined();
 	});
 
 	it('authors artistic, transparency, bi-level, and duotone effects', () => {
@@ -574,22 +489,16 @@ describe('createInspectorActions toggleElementLock', () => {
 	});
 });
 
-describe('createInspectorActions setAltText / setTitle', () => {
+describe('createInspectorActions alt text patches', () => {
 	it('writes altText onto a text element (a base-element field, not image-only)', () => {
 		const { store, actions } = buildActions(textElement());
-		actions.setAltText('A red rectangle');
+		actions.patchSelectedElement({ altText: 'A red rectangle' } as Partial<PptxElement>);
 		expect((selectedEl(store) as { altText?: string }).altText).toBe('A red rectangle');
 	});
 
-	it('writes title onto a text element', () => {
-		const { store, actions } = buildActions(textElement());
-		actions.setTitle('Callout');
-		expect((selectedEl(store) as { title?: string }).title).toBe('Callout');
-	});
-
-	it('setTitle is undoable', () => {
+	it('a title patch is undoable', () => {
 		const { store, ops, actions } = buildActions(textElement());
-		actions.setTitle('Callout');
+		actions.patchSelectedElement({ title: 'Callout' } as Partial<PptxElement>);
 		expect((selectedEl(store) as { title?: string }).title).toBe('Callout');
 		ops.undo();
 		expect((selectedEl(store) as { title?: string }).title).toBeUndefined();

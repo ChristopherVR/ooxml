@@ -1,27 +1,21 @@
 import {
-	addGradientStopPatch,
 	applyStyleToSelectedSegments,
 	applyTextStyleUpdate,
 	applyUniformCellPaddingPatch,
 	autoFitModePatch,
 	buildOleObjectNamePatch,
 	elementLockTogglePatch,
-	gradientStatePatch,
-	imageAdjustmentsPatch,
-	imageCropPatch,
 	isElementLocked,
 	reflowSmartArtData,
 	remapTextToSegments,
-	removeGradientStopPatch,
 	tableInspectorPatch,
 	textAdvancedPatch,
 	textWrapPatch,
-	updateGradientStopPatch,
 	vAlignPatch,
 	switchSmartArtLayoutData,
 	withCellStyle,
 } from 'ooxml-ui/pptx';
-import type { GradientState, InlineTextSelection, TextAdvancedChanges } from 'ooxml-ui/pptx';
+import type { InlineTextSelection, TextAdvancedChanges } from 'ooxml-ui/pptx';
 import type {
 	PptxImageEffects,
 	PptxTableCellStyle,
@@ -70,23 +64,12 @@ export interface InspectorActions {
 	setTextAdvanced(patch: TextAdvancedChanges): void;
 	setTextStyle(patch: Partial<TextStyle>, selection?: InlineTextSelection | null): void;
 
-	setFillOpacity(opacity: number): void;
 	setStrokeOpacity(opacity: number): void;
-	setGradientFill(state: GradientState): void;
-	addGradientStop(color: string, position: number): void;
-	removeGradientStop(index: number): void;
-	updateGradientStop(index: number, changes: Partial<GradientState['stops'][number]>): void;
 
-	setImageBrightness(value: number): void;
-	setImageContrast(value: number): void;
-	setImageSaturation(value: number): void;
-	setImageCrop(edge: 'left' | 'top' | 'right' | 'bottom', value: number): void;
+	/** Apply a shared inspector descriptor's element patch to the selection. */
+	patchSelectedElement(patch: Partial<PptxElement>): void;
 	setImageEffects(patch: Partial<PptxImageEffects>): void;
 	setElementAction(trigger: 'click' | 'hover', action: ElementAction): void;
-	/** Set the selection's accessibility description (inspector Alt Text field). */
-	setAltText(text: string): void;
-	/** Set the selection's accessibility title (inspector Title field). */
-	setTitle(text: string): void;
 	/** Set the selected OLE element's Object Name (`p:oleObj/@name`). */
 	setOleName(name: string): void;
 	/** Patch an in-place OLE content edit (see `InspectorHandlers.setOleContent`). */
@@ -112,13 +95,6 @@ export interface InspectorActions {
 	setSmartArtLayout(layout: SmartArtLayoutType): void;
 	setSmartArtColorScheme(scheme: SmartArtColorScheme): void;
 }
-
-const CROP_KEY = {
-	left: 'cropLeft',
-	top: 'cropTop',
-	right: 'cropRight',
-	bottom: 'cropBottom',
-} as const;
 
 export function createInspectorActions(applyToSelected: ApplyToSelected): InspectorActions {
 	return {
@@ -158,26 +134,10 @@ export function createInspectorActions(applyToSelected: ApplyToSelected): Inspec
 				return applyTextStyleUpdate(el, patch, null).patch;
 			}),
 
-		setFillOpacity: (opacity) =>
-			applyToSelected((el) => patchShapeStyle(el, { fillOpacity: opacity })),
 		setStrokeOpacity: (opacity) =>
 			applyToSelected((el) => patchShapeStyle(el, { strokeOpacity: opacity })),
-		setGradientFill: (state) => applyToSelected((el) => gradientStatePatch(el, state)),
-		addGradientStop: (color, position) =>
-			applyToSelected((el) => addGradientStopPatch(el, color, position)),
-		removeGradientStop: (index) =>
-			applyToSelected((el) => removeGradientStopPatch(el, index) ?? {}),
-		updateGradientStop: (index, changes) =>
-			applyToSelected((el) => updateGradientStopPatch(el, index, changes)),
 
-		setImageBrightness: (value) =>
-			applyToSelected((el) => imageAdjustmentsPatch(el, { brightness: value })),
-		setImageContrast: (value) =>
-			applyToSelected((el) => imageAdjustmentsPatch(el, { contrast: value })),
-		setImageSaturation: (value) =>
-			applyToSelected((el) => imageAdjustmentsPatch(el, { saturation: value })),
-		setImageCrop: (edge, value) =>
-			applyToSelected((el) => imageCropPatch(el, { [CROP_KEY[edge]]: value })),
+		patchSelectedElement: (patch) => applyToSelected(() => patch),
 		setImageEffects: (patch) =>
 			applyToSelected((el) =>
 				isImageLikeElement(el)
@@ -188,13 +148,6 @@ export function createInspectorActions(applyToSelected: ApplyToSelected): Inspec
 			applyToSelected(() => ({
 				[trigger === 'click' ? 'actionClick' : 'actionHover']: elementActionToPptxAction(action),
 			})),
-		// `altText` is a base-element field, so this works for every element type
-		// the accessibility checker can complain about, not just pictures.
-		setAltText: (text) => applyToSelected(() => ({ altText: text })),
-		// `title` similarly applies to every element kind that models it (a plain
-		// shape/text box/connector and every graphic-frame kind); a picture has
-		// no title field, so this is a no-op there (the field is hidden in the UI).
-		setTitle: (text) => applyToSelected(() => ({ title: text })),
 		setOleName: (name) =>
 			applyToSelected((el) => (el.type === 'ole' ? buildOleObjectNamePatch(name) : {})),
 		setOleContent: (patch) => applyToSelected((el) => (el.type === 'ole' ? patch : {})),

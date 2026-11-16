@@ -1,18 +1,20 @@
-import { imageResetPatch, imageResetState } from 'ooxml-ui/pptx';
+import {
+	ELEMENT_ALT_TEXT_SECTIONS,
+	imageResetPatch,
+	imageResetState,
+	PICTURE_ADJUSTMENT_SECTIONS,
+} from 'ooxml-ui/pptx';
 import type { PptxElement, PptxImageLikeElement } from 'pptx-viewer-core';
 import React from 'react';
 
 import { useTranslation } from '../../i18n/use-translation';
-import { cn } from '../../utils';
-import { WebCheckbox } from '../WebControls';
 import { ArtisticEffectsGallery } from './ArtisticEffectsGallery';
 import { ColorChangeSection } from './ColorChangeSection';
 import { ColorWashSection } from './ColorWashSection';
 import { DuotonePanel } from './DuotonePanel';
-import { ImageAdjustmentsPanel } from './ImageAdjustmentsPanel';
 import { ImageCropSection } from './ImageCropSection';
-import { CARD, HEADING, INPUT } from './inspector-pane-constants';
-import { RangeSlider } from './RangeSlider';
+import { CARD, HEADING } from './inspector-pane-constants';
+import { InspectorFields } from './InspectorFields';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -46,74 +48,33 @@ export function ImagePropertiesPanel({
 		<div className={CARD}>
 			<div className={HEADING}>{t('pptx.image.properties')}</div>
 			<div className='space-y-2'>
-				{/* Alt Text */}
-				<label className='flex flex-col gap-1 text-[11px]'>
-					<span className='text-muted-foreground'>{t('pptx.image.altText')}</span>
-					<textarea
-						rows={2}
-						disabled={!canEdit}
-						className={cn(INPUT, 'resize-none text-[11px]')}
-						value={selectedElement.altText ?? ''}
-						onChange={(e) =>
-							onUpdateElement({
-								altText: e.target.value,
-							} as Partial<PptxElement>)
-						}
-					/>
-				</label>
-
-				{/* Brightness / Contrast / Saturation */}
+				{/* Alt text, adjustments and crop: shared descriptors, one renderer. */}
 				<div className='grid grid-cols-2 gap-1.5 text-[11px]'>
-					<RangeSlider
-						label={t('pptx.imageAdjustments.brightness')}
+					<InspectorFields
+						sections={ELEMENT_ALT_TEXT_SECTIONS}
+						target={selectedElement as PptxElement}
 						disabled={!canEdit}
-						value={fx?.brightness ?? 0}
-						onChange={(v) => updateEffects({ brightness: v })}
+						onPatch={onUpdateElement}
 					/>
-					<RangeSlider
-						label={t('pptx.imageAdjustments.contrast')}
+					<InspectorFields
+						sections={PICTURE_ADJUSTMENT_SECTIONS}
+						target={selectedElement as PptxElement}
 						disabled={!canEdit}
-						value={fx?.contrast ?? 0}
-						onChange={(v) => updateEffects({ contrast: v })}
-					/>
-					<RangeSlider
-						label={t('pptx.image.saturation')}
-						disabled={!canEdit}
-						value={fx?.saturation ?? 0}
-						onChange={(v) => updateEffects({ saturation: v })}
+						onPatch={onUpdateElement}
 					/>
 				</div>
 
-				{/* Crop: the only crop editor in the React binding. */}
 				<ImageCropSection
 					selectedElement={selectedElement}
 					canEdit={canEdit}
 					onUpdateElement={onUpdateElement}
 				/>
 
-				{/* Transparency / Bi-Level Threshold */}
-				<ImageAdjustmentsPanel
+				<DuotonePanel
 					selectedElement={selectedElement}
 					canEdit={canEdit}
 					onUpdateElement={onUpdateElement}
 				/>
-
-				{/* Grayscale + Duotone */}
-				<div className='grid grid-cols-2 gap-1.5 text-[11px]'>
-					<label className='flex items-center justify-between gap-2'>
-						<span className='text-muted-foreground'>{t('pptx.image.grayscale')}</span>
-						<WebCheckbox
-							disabled={!canEdit}
-							checked={Boolean(fx?.grayscale)}
-							onChange={(e) => updateEffects({ grayscale: e.target.checked })}
-						/>
-					</label>
-					<DuotonePanel
-						selectedElement={selectedElement}
-						canEdit={canEdit}
-						onUpdateElement={onUpdateElement}
-					/>
-				</div>
 
 				{/* Colour Wash */}
 				<ColorWashSection fx={fx} canEdit={canEdit} updateEffects={updateEffects} />

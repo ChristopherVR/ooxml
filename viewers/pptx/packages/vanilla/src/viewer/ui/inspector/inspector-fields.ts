@@ -14,7 +14,12 @@ import type {
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';
 import { makeColorControl, makeNumberField } from '../controls';
-import { makeCheckboxField, makeRangeField, makeSelectField } from './controls-extra';
+import {
+	makeCheckboxField,
+	makeRangeField,
+	makeSelectField,
+	makeTextField,
+} from './controls-extra';
 
 export interface InspectorFieldsOptions<T, P> {
 	/** The section descriptors to draw (from `ooxml-ui/pptx`). */
@@ -70,7 +75,8 @@ function tagControl(el: HTMLElement, testId: string | undefined): void {
 	if (!testId) {
 		return;
 	}
-	const control = el.querySelector('input, select, pptx-ui-select, pptx-ui-checkbox') ?? el;
+	const control =
+		el.querySelector('input, textarea, select, pptx-ui-select, pptx-ui-checkbox') ?? el;
 	control.setAttribute('data-testid', testId);
 }
 
@@ -152,6 +158,14 @@ export function createInspectorFields<T, P>(
 				setValue: (v) => color.setValue(String(v)),
 				setDisabled: color.setDisabled,
 			};
+		} else if (field.control === 'text' || field.control === 'textarea') {
+			const text = makeTextField(doc, {
+				label,
+				multiline: field.control === 'textarea',
+				...(field.placeholderKey ? { placeholder: t(field.placeholderKey) } : {}),
+				onInput: (value) => change(sectionId, field.id, value),
+			});
+			handle = { ...text, setValue: (v) => text.setValue(String(v)) };
 		} else if (field.control === 'range') {
 			const range = makeRangeField(doc, {
 				label,

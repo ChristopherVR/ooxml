@@ -132,6 +132,26 @@
 									{disabled}
 									use:liveColorEvents={colorInput(section.id, field.id)}
 								/>
+							{:else if field.control === 'textarea'}
+								<textarea
+									rows="2"
+									data-testid={field.testId}
+									aria-label={t(field.labelKey)}
+									placeholder={field.placeholderKey ? t(field.placeholderKey) : undefined}
+									value={String(field.value)}
+									{disabled}
+									oninput={(e) => onField(section.id, field.id, e.currentTarget.value)}
+								></textarea>
+							{:else if field.control === 'text'}
+								<input
+									type="text"
+									data-testid={field.testId}
+									aria-label={t(field.labelKey)}
+									placeholder={field.placeholderKey ? t(field.placeholderKey) : undefined}
+									value={String(field.value)}
+									{disabled}
+									oninput={(e) => onField(section.id, field.id, e.currentTarget.value)}
+								/>
 							{:else if field.control === 'range'}
 								<input
 									type="range"
@@ -210,6 +230,18 @@
 		flex-direction: row !important;
 		align-items: center;
 		gap: 6px;
+	}
+
+	.pptx-svelte-fields-grid textarea {
+		box-sizing: border-box;
+		width: 100%;
+		padding: 4px 6px;
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: 5px;
+		background: var(--pptx-background, var(--office-background, #ffffff));
+		color: inherit;
+		font: inherit;
+		resize: vertical;
 	}
 
 	.pptx-svelte-fields-grid input {

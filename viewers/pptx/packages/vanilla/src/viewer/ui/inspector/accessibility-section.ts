@@ -1,5 +1,7 @@
+import { ELEMENT_ALT_TEXT_SECTIONS } from 'ooxml-ui/pptx';
+
 import type { Translator } from '../../i18n';
-import { createEl } from '../../render';
+import { createInspectorFields } from './inspector-fields';
 import type { InspectorHandlers, InspectorState } from './types';
 
 export interface AccessibilitySection {
@@ -8,16 +10,12 @@ export interface AccessibilitySection {
 }
 
 /**
- * The Accessibility section: alt text / title editor for a plain shape, text
- * box, connector, or any graphic-frame kind (table/chart/smartArt/media/ole),
- * at parity with React's `AccessibilityTextSection`, Vue's
- * `AccessibilityPanel.vue`, Angular's `AccessibilityTextPanelComponent`, and
- * Svelte's `AltTextSection.svelte`.
- *
- * A picture's own alt text field lives in `image-section.ts`; this section
- * is gated on `state.showAccessibilitySection` (shared's
- * `shouldShowAccessibilitySection`) so it does not duplicate that. Committed
- * on change, not per keystroke, matching the image section's alt-text field.
+ * The Accessibility section: the Alt Text fields (description and title) of a
+ * shape, text box, connector or graphic frame, the shared
+ * `ELEMENT_ALT_TEXT_SECTIONS` drawn by the generic renderer. A picture's alt
+ * text is drawn in `image-section.ts` from the same descriptors, so this
+ * section is gated on `state.showAccessibilitySection` (shared's
+ * `shouldShowAccessibilitySection`).
  */
 export function createAccessibilitySection(
 	doc: Document,
@@ -27,47 +25,22 @@ export function createAccessibilitySection(
 ): AccessibilitySection {
 	const el = section(t('pptx.accessibility.heading'));
 	// Scroll target for the "Edit Alt Text" element context-menu command; see
-	// `pptx-viewer-shared`'s `context-menu-inspector-anchor.ts`.
+	// `ooxml-ui/pptx`'s `context-menu-inspector-anchor.ts`.
 	el.setAttribute('data-pptx-inspector-section', 'alt-text');
-
-	const altLabel = createEl(doc, 'label', 'pptxv-field pptxv-accessibility-alt');
-	const altCaption = createEl(doc, 'span', 'pptxv-field-label');
-	altCaption.textContent = t('pptx.elementAccessibility.altText');
-	const alt = doc.createElement('textarea');
-	alt.rows = 2;
-	alt.className = 'pptxv-accessibility-alt-input';
-	alt.placeholder = t('pptx.elementAccessibility.altTextPlaceholder');
-	alt.setAttribute('aria-label', t('pptx.elementAccessibility.altText'));
-	alt.addEventListener('keydown', (event) => event.stopPropagation());
-	alt.addEventListener('change', () => handlers.setAltText(alt.value));
-	altLabel.append(altCaption, alt);
-	el.appendChild(altLabel);
-
-	const titleLabel = createEl(doc, 'label', 'pptxv-field pptxv-accessibility-title-field');
-	const titleCaption = createEl(doc, 'span', 'pptxv-field-label');
-	titleCaption.textContent = t('pptx.elementAccessibility.title');
-	const title = doc.createElement('input');
-	title.type = 'text';
-	title.className = 'pptxv-accessibility-title-input';
-	title.placeholder = t('pptx.elementAccessibility.titlePlaceholder');
-	title.setAttribute('aria-label', t('pptx.elementAccessibility.title'));
-	title.addEventListener('keydown', (event) => event.stopPropagation());
-	title.addEventListener('change', () => handlers.setTitle(title.value));
-	titleLabel.append(titleCaption, title);
-	el.appendChild(titleLabel);
+	const fields = createInspectorFields(doc, t, {
+		sections: ELEMENT_ALT_TEXT_SECTIONS,
+		onPatch: (patch) => handlers.patchSelectedElement(patch),
+	});
+	el.appendChild(fields.el);
 
 	return {
 		el,
 		update(state) {
-			el.hidden = !state.hasSelection || !state.showAccessibilitySection;
-			if (doc.activeElement !== alt) {
-				alt.value = state.altText;
+			const element = state.selectedElement;
+			el.hidden = !state.hasSelection || !state.showAccessibilitySection || !element;
+			if (element) {
+				fields.update(element, !state.showAccessibilitySection, element.id);
 			}
-			if (doc.activeElement !== title) {
-				title.value = state.title;
-			}
-			alt.disabled = !state.showAccessibilitySection;
-			title.disabled = !state.showAccessibilitySection;
 		},
 	};
 }

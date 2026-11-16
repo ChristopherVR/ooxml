@@ -138,16 +138,16 @@ describe('imageSection', () => {
 	it('sets the four crop insets, clamped to 0-90%', () => {
 		const editor = makeEditor(imageEl());
 		const { target } = mountSection(editor, currentEl(editor));
-		const [left, top, right, bottom] = Array.from(
-			target.querySelectorAll<HTMLInputElement>('input[type="number"]'),
+		const [left, top, right, bottom] = ['cropLeft', 'cropTop', 'cropRight', 'cropBottom'].map(
+			(edge) => target.querySelector<HTMLInputElement>(`[data-testid="picture-${edge}"]`),
 		);
 		if (!left || !top || !right || !bottom) {
 			throw new Error('crop inputs not found');
 		}
 		left.value = '10';
-		left.dispatchEvent(new Event('change', { bubbles: true }));
+		left.dispatchEvent(new Event('input', { bubbles: true }));
 		right.value = '200';
-		right.dispatchEvent(new Event('change', { bubbles: true }));
+		right.dispatchEvent(new Event('input', { bubbles: true }));
 		flushSync();
 
 		const el = currentEl(editor) as ImageShape;
@@ -161,7 +161,7 @@ describe('imageSection', () => {
 		const editor = makeEditor(imageEl({ locks: { noCrop: true } }));
 		const { target } = mountSection(editor, currentEl(editor));
 		const cropInputs = Array.from(
-			target.querySelectorAll<HTMLInputElement>('input[type="number"]'),
+			target.querySelectorAll<HTMLInputElement>('[data-testid^="picture-crop"]'),
 		);
 		expect(cropInputs).toHaveLength(4);
 		for (const input of cropInputs) {
@@ -169,8 +169,25 @@ describe('imageSection', () => {
 		}
 		const [left] = cropInputs;
 		left!.value = '10';
-		left!.dispatchEvent(new Event('change', { bubbles: true }));
+		left!.dispatchEvent(new Event('input', { bubbles: true }));
 		flushSync();
 		expect((currentEl(editor) as ImageShape).cropLeft).toBeUndefined();
+	});
+
+	it('draws the shared picture adjustments: inverted transparency and grayscale', () => {
+		const editor = makeEditor(imageEl({ imageEffects: { alphaModFix: 70 } }));
+		const { target } = mountSection(editor, currentEl(editor));
+		const transparency = target.querySelector<HTMLInputElement>(
+			'[data-testid="picture-transparency"]',
+		)!;
+		expect(transparency.value).toBe('30');
+		const grayscale = target.querySelector<HTMLInputElement>('[data-testid="picture-grayscale"]')!;
+		grayscale.checked = true;
+		grayscale.dispatchEvent(new Event('change', { bubbles: true }));
+		flushSync();
+		expect((currentEl(editor) as ImageShape).imageEffects).toStrictEqual({
+			alphaModFix: 70,
+			grayscale: true,
+		});
 	});
 });

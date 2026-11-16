@@ -72,6 +72,16 @@ export type {
 	ElementGeometryTarget,
 } from './element-geometry-fields';
 export { TEXT_BOX_SECTION, TEXT_BOX_SECTIONS } from './text-box-fields';
+export { ELEMENT_ALT_TEXT_SECTION, ELEMENT_ALT_TEXT_SECTIONS } from './element-alt-text-fields';
+export type { ElementAltTextSection } from './element-alt-text-fields';
+export {
+	MAX_PICTURE_CROP_PERCENT,
+	PICTURE_ADJUSTMENT_SECTION,
+	PICTURE_ADJUSTMENT_SECTIONS,
+	PICTURE_CROP_SECTION,
+	PICTURE_CROP_SECTIONS,
+} from './picture-fields';
+export type { PictureSection } from './picture-fields';
 export type { TextBoxSection, TextBoxTarget } from './text-box-fields';
 export { TEXT_EFFECT_SECTIONS } from './text-effect-fields';
 export type { TextEffectSection, TextEffectTarget } from './text-effect-fields';

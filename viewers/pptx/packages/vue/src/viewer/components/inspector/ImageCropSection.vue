@@ -1,20 +1,15 @@
 <script setup lang="ts">
-import { cropResetPatch, cropResetState } from 'ooxml-ui/pptx';
+import { cropResetPatch, cropResetState, PICTURE_CROP_SECTIONS } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-import {
-	useCropSides,
-	cropFractionToPercent,
-	cropPercentToFraction,
-} from '../../composables/useImageEditing';
+import InspectorFields from './InspectorFields.vue';
 
 /**
- * ImageCropSection: crop-inset sliders (left/top/right/bottom), a Reset Crop
- * action, and a "Replace Image" button. Crop fields are TOP-LEVEL element
- * fields (fractions 0..1), so patches are emitted as shallow element patches
- * (e.g. `{ cropLeft: 0.05 }`), not nested under `imageEffects`.
+ * ImageCropSection: the four crop insets (the shared `PICTURE_CROP_SECTIONS`
+ * drawn by the generic renderer), a Reset Crop action, and a "Replace Image"
+ * button. Crop insets are top-level element fields (fractions 0..1).
  *
  * Replace Image reads the chosen file as a data-URL and emits `{ imageData }`
  * so the swap happens entirely within the panel (no host wiring required).
@@ -33,26 +28,13 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const sides = useCropSides();
-
 // G7: `a:picLocks/@noCrop` forbids cropping this specific picture.
 const croppable = computed(() => cropResetState(props.element, props.canEdit, true).enabled);
 
-const cropPercents = computed<Record<string, number>>(() => {
-	const el = props.element as unknown as Record<string, number | undefined>;
-	const out: Record<string, number> = {};
-	for (const side of sides) {
-		out[side.key] = cropFractionToPercent(el[side.key]);
+function onCrop(patch: Partial<PptxElement>): void {
+	if (croppable.value) {
+		emit('update', patch);
 	}
-	return out;
-});
-
-function onCrop(key: (typeof sides)[number]['key'], event: Event): void {
-	if (!croppable.value) {
-		return;
-	}
-	const percent = Number((event.target as HTMLInputElement).value);
-	emit('update', { [key]: cropPercentToFraction(percent) } as Partial<PptxElement>);
 }
 
 function onResetCrop(): void {
@@ -93,26 +75,12 @@ function onReplaceImage(event: Event): void {
 			/>
 		</label>
 
-		<label
-			v-for="side in sides"
-			:key="side.key"
-			class="pptx-vue-image-crop__slider grid grid-cols-[72px_1fr_36px] items-center gap-2"
-		>
-			<span class="text-muted-foreground">{{ side.label }}</span>
-			<input
-				type="range"
-				class="w-full accent-primary"
-				min="0"
-				max="80"
-				step="1"
-				:disabled="!croppable"
-				:value="cropPercents[side.key]"
-				@input="onCrop(side.key, $event)"
-			/>
-			<span class="text-right tabular-nums text-muted-foreground"
-				>{{ cropPercents[side.key] }}%</span
-			>
-		</label>
+		<InspectorFields
+			:sections="PICTURE_CROP_SECTIONS"
+			:target="props.element"
+			:disabled="!croppable"
+			@patch="onCrop"
+		/>
 
 		<button
 			type="button"

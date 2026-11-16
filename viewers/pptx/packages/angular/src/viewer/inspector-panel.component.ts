@@ -519,7 +519,11 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 				</ng-template>
 				<ng-template pptxFormatSection="altText">
 					@if (accessibilityTextEl(); as a11yEl) {
-						<pptx-accessibility-text-panel [element]="a11yEl" (patch)="onPatch($event)" />
+						<pptx-accessibility-text-panel
+							[element]="a11yEl"
+							[canEdit]="canEdit()"
+							(patch)="onPatch($event)"
+						/>
 					}
 				</ng-template>
 				<ng-template pptxFormatSection="action">

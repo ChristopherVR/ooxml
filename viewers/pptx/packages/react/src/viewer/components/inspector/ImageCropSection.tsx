@@ -1,7 +1,7 @@
-import { cropResetPatch, cropResetState } from 'ooxml-ui/pptx';
+import { cropResetPatch, cropResetState, PICTURE_CROP_SECTIONS } from 'ooxml-ui/pptx';
 /**
- * ImageCropSection: the four crop sliders (plus a reset) for a picture, shown
- * inside the live image-properties card.
+ * ImageCropSection: the four crop insets (the shared `PICTURE_CROP_SECTIONS`
+ * drawn by the generic renderer) plus a reset, inside the image-properties card.
  *
  * WHY it is here at all: cropping had no other entry point in React. The
  * component existed but was only reachable from the unreferenced
@@ -15,14 +15,8 @@ import { isImageLikeElement } from 'pptx-viewer-core';
 import React from 'react';
 
 import { useTranslation } from '../../i18n/use-translation';
-import { clampCropValue } from '../../utils';
 import { BTN_CLS } from './element-properties-constants';
-
-/** OOXML stores each crop as a fraction of the source edge; the UI shows %. */
-const CROP_SIDES = ['Left', 'Top', 'Right', 'Bottom'] as const;
-
-/** PowerPoint's own sliders stop well before the image collapses to nothing. */
-const MAX_CROP_PERCENT = 80;
+import { InspectorFields } from './InspectorFields';
 
 interface ImageCropSectionProps {
 	selectedElement: PptxElement;
@@ -45,27 +39,14 @@ export function ImageCropSection({
 
 	return (
 		<div className='space-y-1.5' data-pptx-image-crop>
-			{CROP_SIDES.map((side) => {
-				const key = `crop${side}` as keyof PptxElement;
-				return (
-					<label key={side} className='flex flex-col gap-1 text-[11px]'>
-						<span className='text-muted-foreground'>{t(`pptx.image.crop${side}`)}</span>
-						<input
-							type='range'
-							min={0}
-							max={MAX_CROP_PERCENT}
-							disabled={!croppable}
-							className='accent-primary'
-							value={Math.round(clampCropValue(selectedElement[key] as number | undefined) * 100)}
-							onChange={(e) =>
-								onUpdateElement({
-									[key]: Number(e.target.value) / 100,
-								} as Partial<PptxElement>)
-							}
-						/>
-					</label>
-				);
-			})}
+			<div className='grid grid-cols-2 gap-1.5 text-[11px]'>
+				<InspectorFields
+					sections={PICTURE_CROP_SECTIONS}
+					target={selectedElement as PptxElement}
+					disabled={!croppable}
+					onPatch={onUpdateElement}
+				/>
+			</div>
 			<button
 				type='button'
 				disabled={!croppable}

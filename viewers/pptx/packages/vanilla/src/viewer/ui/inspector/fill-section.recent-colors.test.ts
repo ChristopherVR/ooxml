@@ -91,8 +91,6 @@ function mount(mruColors: string[] = []) {
 		strokeWidth: 1,
 		fillOpacity: 1,
 		strokeOpacity: 1,
-		gradientEnabled: false,
-		gradient: { type: 'linear', angle: 90, stops: [] },
 		themeColorMap: THEME,
 		recentColors: currentRecentColors(store.get()),
 	} as unknown as InspectorState);

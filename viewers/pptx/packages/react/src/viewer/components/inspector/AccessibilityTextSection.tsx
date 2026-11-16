@@ -1,14 +1,10 @@
-import { getNonVisualDescriptionFields } from 'ooxml-ui/pptx';
+import { ELEMENT_ALT_TEXT_SECTIONS, getNonVisualDescriptionFields } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import React from 'react';
 
 import { useTranslation } from '../../i18n/use-translation';
-import { cn } from '../../utils';
-import { CARD, HEADING, INPUT } from './inspector-pane-constants';
-
-// ---------------------------------------------------------------------------
-// Props
-// ---------------------------------------------------------------------------
+import { CARD, HEADING } from './inspector-pane-constants';
+import { InspectorFields } from './InspectorFields';
 
 interface AccessibilityTextSectionProps {
 	selectedElement: PptxElement;
@@ -16,18 +12,11 @@ interface AccessibilityTextSectionProps {
 	onUpdateElement: (updates: Partial<PptxElement>) => void;
 }
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
 /**
- * Alt text / title editor for a plain shape, text box or connector.
- *
- * A picture's own alt text field lives in `ImagePropertiesPanel`; this
- * covers the three element kinds that only started modelling `altText` /
- * `title` once core parsed `p:cNvPr/@descr` / `@title` on `p:sp` / `p:cxnSp`
- * (see `PptxNonVisualDescription`). `getNonVisualDescriptionFields` (shared)
- * decides which fields apply so this component stays a thin view.
+ * The Accessibility card of a shape, text box, connector or graphic frame:
+ * the shared Alt Text descriptors (`ELEMENT_ALT_TEXT_SECTIONS`) drawn by the
+ * generic renderer. A picture's alt text is drawn in `ImagePropertiesPanel`
+ * from the same descriptors.
  */
 export function AccessibilityTextSection({
 	selectedElement,
@@ -36,40 +25,20 @@ export function AccessibilityTextSection({
 }: AccessibilityTextSectionProps): React.ReactElement | null {
 	const { t } = useTranslation();
 	const fields = getNonVisualDescriptionFields(selectedElement);
-
 	if (!fields.showAltText && !fields.showTitle) {
 		return null;
 	}
-
 	return (
 		<div className={CARD} data-pptx-accessibility-text data-pptx-inspector-section='alt-text'>
 			<div className={HEADING}>{t('pptx.accessibility.heading', 'Accessibility')}</div>
-			{fields.showAltText && (
-				<label className='flex flex-col gap-1 text-[11px]'>
-					<span className='text-muted-foreground'>{t('pptx.elementAccessibility.altText')}</span>
-					<textarea
-						rows={2}
-						disabled={!canEdit}
-						placeholder={t('pptx.elementAccessibility.altTextPlaceholder')}
-						className={cn(INPUT, 'resize-none text-[11px]')}
-						value={fields.altText}
-						onChange={(e) => onUpdateElement({ altText: e.target.value } as Partial<PptxElement>)}
-					/>
-				</label>
-			)}
-			{fields.showTitle && (
-				<label className='flex flex-col gap-1 text-[11px]'>
-					<span className='text-muted-foreground'>{t('pptx.elementAccessibility.title')}</span>
-					<input
-						type='text'
-						disabled={!canEdit}
-						placeholder={t('pptx.elementAccessibility.titlePlaceholder')}
-						className={cn(INPUT, 'text-[11px]')}
-						value={fields.title}
-						onChange={(e) => onUpdateElement({ title: e.target.value } as Partial<PptxElement>)}
-					/>
-				</label>
-			)}
+			<div className='grid grid-cols-2 gap-1.5 text-[11px]'>
+				<InspectorFields
+					sections={ELEMENT_ALT_TEXT_SECTIONS}
+					target={selectedElement}
+					disabled={!canEdit}
+					onPatch={onUpdateElement}
+				/>
+			</div>
 		</div>
 	);
 }

@@ -8,14 +8,21 @@ import {
 	CUSTOM_ELEMENTS_SCHEMA,
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
-import { ARTISTIC_EFFECTS, imageResetPatch, imageResetState } from 'ooxml-ui/pptx';
+import {
+	ARTISTIC_EFFECTS,
+	ELEMENT_ALT_TEXT_SECTIONS,
+	imageResetPatch,
+	imageResetState,
+	PICTURE_ADJUSTMENT_SECTIONS,
+} from 'ooxml-ui/pptx';
 import type { PptxElement, PptxImageEffects } from 'pptx-viewer-core';
 import { isImageLikeElement } from 'pptx-viewer-core';
 
 import { ImageCropWashPanelComponent } from './image-crop-wash-panel.component';
+import { InspectorFieldsComponent } from './inspector-fields.component';
 import { RecentColorsService } from './recent-colors.service';
 
-type ImageElement = PptxElement & { altText?: string; imageEffects?: PptxImageEffects };
+type ImageElement = PptxElement & { imageEffects?: PptxImageEffects };
 
 export function mergeImageEffects(
 	effects: PptxImageEffects | undefined,
@@ -28,34 +35,22 @@ export function mergeImageEffects(
 	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	selector: 'pptx-image-properties-panel',
 	standalone: true,
-	imports: [TranslatePipe, ImageCropWashPanelComponent],
+	imports: [TranslatePipe, ImageCropWashPanelComponent, InspectorFieldsComponent],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div class="pptx-ng-image-properties">
-			<label class="field field--stacked">
-				<span>{{ 'pptx.image.altText' | translate }}</span>
-				<input type="text" [value]="image().altText ?? ''" (input)="onAltText($event)" />
-			</label>
-			@for (slider of sliders; track slider.key) {
-				<label class="field">
-					<span>{{ slider.label | translate }}</span>
-					<input
-						type="range"
-						[min]="slider.min"
-						[max]="slider.max"
-						[value]="effectValue(slider.key)"
-						(input)="onEffectNumber(slider.key, $event)"
-					/>
-					<output>{{ effectValue(slider.key) }}</output>
-				</label>
-			}
-			<label class="field">
-				<span>{{ 'pptx.image.grayscale' | translate }}</span>
-				<pptx-ui-checkbox
-					[checked]="!!effects().grayscale"
-					(change)="onGrayscale($event)"
-				></pptx-ui-checkbox>
-			</label>
+			<pptx-inspector-fields
+				[sections]="altTextSections"
+				[target]="element()"
+				[disabled]="!canEdit()"
+				(patch)="patch.emit($event)"
+			/>
+			<pptx-inspector-fields
+				[sections]="adjustmentSections"
+				[target]="element()"
+				[disabled]="!canEdit()"
+				(patch)="patch.emit($event)"
+			/>
 			<label class="field field--stacked">
 				<span>{{ 'pptx.image.artisticEffects' | translate }}</span>
 				<pptx-ui-select
@@ -129,10 +124,6 @@ export function mergeImageEffects(
 			min-width: 0;
 			accent-color: var(--pptx-primary, #2563eb);
 		}
-		output {
-			text-align: right;
-			font-variant-numeric: tabular-nums;
-		}
 		.duotone {
 			display: grid;
 			grid-template-columns: 1fr 30px 30px auto;
@@ -167,39 +158,17 @@ export class ImagePropertiesPanelComponent {
 	protected readonly image = computed(() => this.element() as ImageElement);
 	protected readonly effects = computed(() => this.image().imageEffects ?? {});
 	protected readonly artisticEffects = ARTISTIC_EFFECTS;
-	protected readonly sliders = [
-		{ key: 'brightness', label: 'pptx.imageAdjustments.brightness', min: -100, max: 100 },
-		{ key: 'contrast', label: 'pptx.imageAdjustments.contrast', min: -100, max: 100 },
-		{ key: 'saturation', label: 'pptx.image.saturation', min: -100, max: 100 },
-		{ key: 'alphaModFix', label: 'pptx.imageAdjustments.transparency', min: 0, max: 100 },
-		{ key: 'biLevel', label: 'pptx.imageAdjustments.biLevelThreshold', min: 0, max: 100 },
-	] as const;
+	protected readonly altTextSections = ELEMENT_ALT_TEXT_SECTIONS;
+	protected readonly adjustmentSections = PICTURE_ADJUSTMENT_SECTIONS;
 
 	static supports(element: PptxElement): boolean {
 		return isImageLikeElement(element);
-	}
-
-	protected effectValue(key: keyof PptxImageEffects): number {
-		const value = this.effects()[key];
-		return typeof value === 'number' ? value : key === 'alphaModFix' ? 100 : 0;
 	}
 
 	private updateEffects(update: Partial<PptxImageEffects>): void {
 		this.patch.emit({
 			imageEffects: mergeImageEffects(this.effects(), update),
 		} as Partial<PptxElement>);
-	}
-
-	protected onAltText(event: Event): void {
-		this.patch.emit({ altText: (event.target as HTMLInputElement).value } as Partial<PptxElement>);
-	}
-
-	protected onEffectNumber(key: keyof PptxImageEffects, event: Event): void {
-		this.updateEffects({ [key]: Number((event.target as HTMLInputElement).value) });
-	}
-
-	protected onGrayscale(event: Event): void {
-		this.updateEffects({ grayscale: (event.target as HTMLInputElement).checked || undefined });
 	}
 
 	protected onArtistic(event: Event): void {

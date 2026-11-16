@@ -39,8 +39,8 @@ describe('imagePanel', () => {
 		const wrapper = mount(ImagePanel, {
 			props: { element: imageEl({ altText: 'hello' } as Partial<PptxElement>) },
 		});
-		const input = wrapper.get('input[type="text"]');
-		expect((input.element as HTMLInputElement).value).toBe('hello');
+		const input = wrapper.get('[data-testid="element-alt-text"]');
+		expect((input.element as HTMLTextAreaElement).value).toBe('hello');
 
 		await setControlValue(input, 'logo');
 		const events = wrapper.emitted('update');
@@ -54,9 +54,8 @@ describe('imagePanel', () => {
 				element: imageEl({ imageEffects: { contrast: 25 } } as Partial<PptxElement>),
 			},
 		});
-		// The brightness slider lives in the child ImageAdjustmentsPanel; its
-		// first range input is Brightness. ImagePanel relays the child's patch.
-		const brightness = wrapper.get('.pptx-vue-image-adjust__slider input[type="range"]');
+		// The adjustments are the shared picture descriptors; ImagePanel relays their patch.
+		const brightness = wrapper.get('[data-testid="picture-brightness"]');
 		await setControlValue(brightness, '40');
 
 		const events = wrapper.emitted('update');
@@ -69,7 +68,7 @@ describe('imagePanel', () => {
 				element: imageEl({ imageEffects: { contrast: 10 } } as Partial<PptxElement>),
 			},
 		});
-		const grayscale = wrapper.get('.pptx-vue-image-panel__grayscale');
+		const grayscale = wrapper.get('[data-testid="picture-grayscale"]');
 		await setControlValue(grayscale, true);
 
 		const events = wrapper.emitted('update');

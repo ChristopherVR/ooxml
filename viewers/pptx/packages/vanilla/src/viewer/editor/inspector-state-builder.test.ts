@@ -133,19 +133,12 @@ describe('buildInspectorState theme colour refs + themeColorMap (W3-G2)', () => 
 	});
 });
 
-describe('buildInspectorState altText/title/showAccessibilitySection', () => {
-	it('reads altText and title from a shape', () => {
+describe('buildInspectorState selectedElement/showAccessibilitySection', () => {
+	it('carries the selected element for the shared field descriptors', () => {
 		const shape = shapeEl({ altText: 'A red rectangle', title: 'Callout' });
 		const state = buildInspectorState(shape);
-		expect(state.altText).toBe('A red rectangle');
-		expect(state.title).toBe('Callout');
+		expect(state.selectedElement).toBe(shape);
 		expect(state.showAccessibilitySection).toBeTruthy();
-	});
-
-	it('defaults altText/title to empty strings when unset', () => {
-		const state = buildInspectorState(shapeEl());
-		expect(state.altText).toBe('');
-		expect(state.title).toBe('');
 	});
 
 	it('is true for text, connector and every graphic-frame kind, false for a picture/group', () => {

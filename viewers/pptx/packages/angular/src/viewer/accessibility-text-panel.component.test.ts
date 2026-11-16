@@ -60,9 +60,28 @@ describe('accessibilityTextPanelComponent source wiring', () => {
 		expect(source).not.toContain("from '../internal/shared'");
 	});
 
-	it('emits altText and title patches from their own inputs', () => {
-		expect(source).toMatch(/altText:\s*\(event\.target as HTMLTextAreaElement\)\.value/);
-		expect(source).toMatch(/title:\s*\(event\.target as HTMLInputElement\)\.value/);
+	it('draws the shared alt text descriptors with the generic renderer', () => {
+		expect(source).toContain('ELEMENT_ALT_TEXT_SECTIONS');
+		expect(source).toContain('<pptx-inspector-fields');
+		expect(source).toContain('[disabled]="!canEdit()"');
+	});
+});
+
+describe('picture panels draw the shared picture descriptors', () => {
+	const image = readFileSync(path.join(__dirname, 'image-properties-panel.component.ts'), 'utf8');
+	const crop = readFileSync(path.join(__dirname, 'image-crop-wash-panel.component.ts'), 'utf8');
+
+	it('draws alt text and the adjustments from the shared sections', () => {
+		expect(image).toContain('ELEMENT_ALT_TEXT_SECTIONS');
+		expect(image).toContain('PICTURE_ADJUSTMENT_SECTIONS');
+		// Transparency is the shared, inverted reading of alphaModFix, not the raw value.
+		expect(image).not.toContain("key: 'alphaModFix'");
+	});
+
+	it('draws the crop insets from the shared section, gated on croppable', () => {
+		expect(crop).toContain('PICTURE_CROP_SECTIONS');
+		expect(crop).toContain('[disabled]="!croppable()"');
+		expect(crop).not.toContain('Crop {{ side }}');
 	});
 });
 
@@ -71,6 +90,7 @@ describe('inspectorPanelComponent wiring for accessibility text', () => {
 
 	it('mounts pptx-accessibility-text-panel gated on accessibilityTextEl', () => {
 		expect(source).toContain('pptx-accessibility-text-panel');
+		expect(source).toMatch(/\[element\]="a11yEl"\s*\[canEdit\]="canEdit\(\)"/);
 		expect(source).toMatch(/accessibilityTextEl\(\);\s*as a11yEl/);
 		expect(source).toMatch(/AccessibilityTextPanelComponent\.supports\(this\.el\(\)\)/);
 	});

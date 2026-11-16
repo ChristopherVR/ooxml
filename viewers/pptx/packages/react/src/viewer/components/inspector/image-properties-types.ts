@@ -9,10 +9,3 @@ export interface EffectSectionProps {
 	canEdit: boolean;
 	updateEffects: (patch: Record<string, unknown>) => void;
 }
-
-export interface RangeSliderProps {
-	label: string;
-	disabled: boolean;
-	value: number;
-	onChange: (v: number) => void;
-}
