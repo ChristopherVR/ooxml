@@ -31,6 +31,7 @@ export {
 export { validateDefinedName } from './view';
 export { uniqueHeaders } from './tables';
 export { IMAGE_EXTENSIONS, chartSpaceOf, newMediaPart, type ChartPatch } from './charts';
+export { workbookChartRangeNumbers } from './chart-range-numbers';
 export type { SmartArtEditResult, SmartArtInsertion, SmartArtLayoutChange } from './smart-art';
 export { validateTableName, type TablePatch, type TableRef } from './table-edits';
 export { autoGrowRows, rowsToRefit } from './row-autofit';

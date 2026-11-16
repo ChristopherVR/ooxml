@@ -37,8 +37,8 @@ export const chartFormatJa: Readonly<Record<string, string>> = {
 	'chartFormat.trendline.backward': '後方補外',
 	'chartFormat.trendline.equation': 'グラフに数式を表示する',
 	'chartFormat.trendline.rSquared': 'グラフに R-2 乗値を表示する',
-	'chartFormat.analysis.multipleTrendlines':
-		'この系列には複数の近似曲線があります。それらの設定は保持されます。',
+	'chartFormat.section.trendlineN': '近似曲線 {{n}}',
+	'chartFormat.trendline.add': '近似曲線の追加',
 	'chartFormat.section.errorBars': '誤差範囲',
 	'chartFormat.errorBars.amount': '誤差範囲',
 	'chartFormat.errorBars.fixedVal': '固定値',
@@ -52,6 +52,12 @@ export const chartFormatJa: Readonly<Record<string, string>> = {
 	'chartFormat.errorBars.minus': '負方向',
 	'chartFormat.errorBars.cap': 'キャップ',
 	'chartFormat.errorBars.value': '誤差の値',
+	'chartFormat.errorBars.plusValues': '正の誤差の値',
+	'chartFormat.errorBars.minusValues': '負の誤差の値',
+	'chartFormat.errorBars.customHint':
+		'1, 2, 3 のような値、または Sheet1!$C$2:$C$4 のような範囲を入力します。',
+	'chartFormat.errorBars.customCachedHint':
+		'1, 2, 3 のような値、またはこのグラフに既に表示されているセル範囲を入力します。',
 	'chartFormat.analysis.multipleErrorBars':
 		'判別できない誤差範囲は保持されますが、ここでは編集できません。',
 	'chartFormat.axis.title': '軸ラベル',

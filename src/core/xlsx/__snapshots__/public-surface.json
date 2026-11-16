@@ -430,6 +430,7 @@
 	"watchExists",
 	"watchValueText",
 	"withIgnoredError",
+	"workbookChartRangeNumbers",
 	"workbookFontFamily",
 	"wrapShapeLine",
 	"wrappedLineCount",

@@ -69,21 +69,71 @@ describe('advanced shared chart pane', () => {
 		expect(sections).not.toContain('trendlines');
 		expect(sections).not.toContain('errorBars');
 	});
-	it('disables ambiguous multi-trendline controls while preserving all their source settings', () => {
+	it('gives each trendline its own section and edits only the one it shows', () => {
 		const space = columnSpace();
 		space.plotArea.groups[0]!.series[0]!.trendlines = [
 			{ trendlineType: 'linear' },
 			{ trendlineType: 'poly', order: 3 },
 		];
+		const model = buildChartFormatModel(chartSpaceFormatSource(space), 'series:0', 'options');
+		const second = model.sections.find((section) => section.id === 'trendline-1');
+		expect(second?.title).toMatchObject({
+			key: 'chartFormat.section.trendlineN',
+			params: { n: 2 },
+		});
+		expect(second?.fields.map((field) => field.id)).toContain('trendline.1.order');
+		expect(second?.fields.at(-1)?.id).toBe('trendline.add');
+		let next = edit(space, 'series:0', 'trendline.1.order', 5);
+		next = edit(next, 'series:0', 'trendline.add', 'movingAvg');
+		next = edit(next, 'series:0', 'trendline.2.period', 4);
+		next = edit(next, 'series:0', 'trendline.type', 'exp');
+		expect(
+			saved(next).plotArea.groups[0]!.series[0]!.trendlines!.map((trend) => [
+				trend.trendlineType,
+				trend.order ?? trend.period,
+			]),
+		).toEqual([
+			['exp', undefined],
+			['poly', 5],
+			['movingAvg', 4],
+		]);
+		next = edit(next, 'series:0', 'trendline.1.type', 'none');
+		expect(saved(next).plotArea.groups[0]!.series[0]!.trendlines).toHaveLength(2);
+		expect(space.plotArea.groups[0]!.series[0]!.trendlines).toHaveLength(2);
+	});
+	it('edits custom error-bar sources as values or cached ranges, refusing unknown cells', () => {
+		const start = columnSpace();
+		const range = 'Sheet1!$C$2:$C$3';
+		const west = start.plotArea.groups[0]!.series[1]!;
+		west.values = { ...west.values!, kind: 'numRef', formula: range };
+		let space = edit(start, 'series:0', 'errorBars.type', 'cust');
+		const bars = () => saved(space).plotArea.groups[0]!.series[0]!.errorBars![0]!;
+		expect(bars().plus?.cache?.points.map((point) => point.value)).toEqual(['1', '1']);
+		space = edit(space, 'series:0', 'errorBars.plusValues', '2, 3');
+		space = edit(space, 'series:0', 'errorBars.minusValues', range);
+		expect(bars()).toMatchObject({ valueType: 'cust', minus: { kind: 'numRef', formula: range } });
+		expect(bars().minus?.cache?.points.map((point) => point.value)).toEqual(['1', '2']);
+		expect(bars().plus?.cache?.points.map((point) => point.value)).toEqual(['2', '3']);
 		const source = chartSpaceFormatSource(space);
 		const model = buildChartFormatModel(source, 'series:0', 'options');
-		expect(model.sections.find((section) => section.id === 'trendlines')?.fields[0]?.disabled).toBe(
-			true,
+		const section = model.sections.find((entry) => entry.id === 'errorBars')!;
+		expect(section.fields.find((field) => field.id === 'errorBars.minusValues')?.value).toBe(range);
+		expect(section.note?.key).toBe('chartFormat.errorBars.customCachedHint');
+		const view = source.element(model.target);
+		for (const bad of ['Sheet9!$Z$1:$Z$3', '-1', 'abc'])
+			expect(chartFormatFieldIntent(view, model.target, 'errorBars.plusValues', bad)).toBeNull();
+		// A workbook resolver admits ranges the chart does not cache.
+		const workbook = chartSpaceFormatSource(space, { resolveRange: () => [5, 6, 7] });
+		const intent = chartFormatFieldIntent(
+			workbook.element(model.target),
+			model.target,
+			'errorBars.plusValues',
+			'Sheet9!$Z$1:$Z$3',
 		);
-		expect(
-			chartFormatFieldIntent(source.element(model.target), model.target, 'trendline.type', 'exp'),
-		).toBeNull();
-		expect(space.plotArea.groups[0]!.series[0]!.trendlines).toHaveLength(2);
+		expect(intent).toMatchObject({
+			op: 'errorBars',
+			edit: { plus: { formula: 'Sheet9!$Z$1:$Z$3' } },
+		});
 	});
 	it('edits source-backed shape effects, bevels, patterns and line resets with no source mutation', () => {
 		const source = columnSpace();
@@ -158,5 +208,35 @@ describe('advanced shared chart pane', () => {
 		expect(
 			pane.shadowRoot!.querySelector('[data-chart-format-field="trendline.order"]'),
 		).not.toBeNull();
+	});
+	it('adds a second trendline and types a custom error source in the rendered pane', () => {
+		const pane = document.createElement('office-ui-chart-format-pane');
+		pane.chartSpace = columnSpace();
+		pane.target = 'series:0';
+		pane.addEventListener('office-chart-format-edit', (event) => {
+			const intent = (event as ChartFormatEditEvent).detail.intent;
+			if (intent) pane.chartSpace = applyChartEditIntent(pane.chartSpace!, intent);
+		});
+		document.body.append(pane);
+		const root = pane.shadowRoot!;
+		root.querySelector<HTMLButtonElement>('[data-chart-format-tab="options"]')!.click();
+		const change = (field: string, tag: 'select' | 'input', value: string) => {
+			const control = root.querySelector<HTMLInputElement | HTMLSelectElement>(
+				`[data-chart-format-field="${field}"] ${tag}`,
+			)!;
+			control.value = value;
+			control.dispatchEvent(new Event('change'));
+		};
+		change('trendline.type', 'select', 'linear');
+		change('trendline.add', 'select', 'movingAvg');
+		expect(root.querySelector('[data-chart-format-field="trendline.1.period"]')).not.toBeNull();
+		change('errorBars.type', 'select', 'cust');
+		change('errorBars.plusValues', 'input', '0.5, 1.5');
+		const series = pane.chartSpace!.plotArea.groups[0]!.series[0]!;
+		expect(series.trendlines?.map((trend) => trend.trendlineType)).toEqual(['linear', 'movingAvg']);
+		expect(series.errorBars?.[0]?.plus?.cache?.points.map((point) => point.value)).toEqual([
+			'0.5',
+			'1.5',
+		]);
 	});
 });

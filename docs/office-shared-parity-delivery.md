@@ -103,12 +103,26 @@ manual layout, and full removal of the PowerPoint source-tree model remain outsi
 - [x] Synchronize workbook references/caches with safe external-source and hierarchy policies.
 - [x] Verify applicable bindings, history and save/reopen, including native Word/Excel ChartEx cases.
 
-These checks cover the admitted controls, not every Office formatting option. Picture media
-relationships remain host-owned. Secondary-axis authoring keeps the first flattened series as
-the primary rendering anchor; horizontal combinations, stacked multi-series splits and unknown
-group-extension splits are refused. The pane edits the first trendline, disables ambiguous multiple
-trendlines, and preserves custom error sources without offering a range editor. ChartEx exposes its
-own supported controls and refuses classic-only advanced requests.
+These checks cover the admitted controls, not every Office formatting option. Secondary-axis
+authoring keeps the first flattened series as the primary rendering anchor. A stacked or
+percent-stacked group can give up its first or last series (each axis keeps one stack), and a
+series moved back rejoins its neighbouring group and drops an unused secondary pair; a series inside
+a stack, horizontal combinations and unknown group-extension splits are refused. ChartEx secondary
+axes stay disabled. Each trendline of a series has its own pane section, with Add trendline. Custom
+error bars take literal values or a single-row or single-column range: Excel resolves ranges from
+the workbook, Word and embedded Visio only from cells the chart
+already caches, and an unknown cell refuses the edit. Picture fill relationships are allocated by
+one shared helper (`chart/picture-parts.ts`, over `opc/package-image.ts`) for the `ppt/`, `word/`,
+`xl/` and `visio/` media folders; PowerPoint saves through it. Word, Excel and Visio keep the
+picture choice disabled because the shared painter does not draw picture fills yet. ChartEx exposes
+its own supported controls and refuses classic-only advanced requests.
+
+- [x] Broaden classic secondary-axis splits to stacked ends, with merge-back and pair removal.
+- [x] Edit several trendlines per series and custom error-bar sources (values and ranges).
+- [x] Share picture fill relationship allocation across the pptx, docx, xlsx and visio packages.
+- [ ] Paint chart picture fills in the shared renderer, then admit them in Word, Excel and Visio.
+- [ ] Custom error sources in PowerPoint's own chart pane source, and native reopen evidence for
+      the new secondary, trendline and custom-source saves.
 
 ## Integration and evidence
 

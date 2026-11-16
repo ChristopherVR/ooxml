@@ -107,6 +107,13 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P1** Picture Format and Shape Format contextual tabs: missing in Excel (both); partial in
       Word Picture Format (Wrap Text, Crop and Format only), and in Word and PowerPoint Shape
       Format (no Arrange, Size or Alt Text).
+- [x] **P1** Shared chart Format pane analysis: several trendlines per series (a section each, Add
+      trendline) and custom error-bar sources as values or a range (`chart/edit/error-bar-source.ts`;
+      Excel reads its workbook, Word and Visio only cells the chart caches). Stacked groups move
+      their first or last series to the secondary axis and merge back (`chart/edit/secondary-axis.ts`).
+- [ ] **P1** Chart picture fills are not drawn by `src/core/chart/render`, so Word, Excel and Visio
+      keep Picture or texture fill disabled; relationship allocation is shared
+      (`chart/picture-parts.ts`) and PowerPoint saves through it.
 - [ ] **P2** `c:userShapes` (shapes over a chart) is parsed but not drawn; surface charts have no
       dedicated painter.
 - [x] **P2** Equation ownership audited: all 11 non-test `latex-*` and `omml-*` modules in

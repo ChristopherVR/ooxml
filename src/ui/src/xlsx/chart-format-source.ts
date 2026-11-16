@@ -11,7 +11,7 @@ import {
 	type ChartObject,
 	type Workbook,
 } from 'ooxml-core/xlsx';
-import type { ChartFormatTarget, ChartSpace } from 'ooxml-core/chart';
+import type { ChartFormatTarget, ChartRangeNumbers, ChartSpace } from 'ooxml-core/chart';
 import type { DrawingColorTheme } from 'ooxml-core/drawingml';
 import { chartSpaceFormatSource, type ChartFormatSource } from '../chart/format-pane-api';
 
@@ -35,15 +35,20 @@ export const xlsxFillsTarget = (target: ChartFormatTarget): boolean =>
 
 /**
  * The Format pane source of `chart` (whose model is `space`) with `target` selected: Excel's fill
- * controls take the Fill section of the elements they edit.
+ * controls take the Fill section of the elements they edit, and `resolveRange` reads the cells a
+ * custom error-bar source names from the workbook.
  */
 export function xlsxChartFormatSource(
 	chart: ChartObject,
 	space: ChartSpace,
 	theme: DrawingColorTheme,
 	target: ChartFormatTarget | undefined,
+	resolveRange?: ChartRangeNumbers,
 ): ChartFormatSource {
-	const source = chartSpaceFormatSource(space, { theme });
+	const source = chartSpaceFormatSource(space, {
+		theme,
+		...(resolveRange ? { resolveRange } : {}),
+	});
 	const spacing = chartBarSpacing(chart);
 	return {
 		...source,

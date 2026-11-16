@@ -37,8 +37,8 @@ export const chartFormatFr: Readonly<Record<string, string>> = {
 	'chartFormat.trendline.backward': 'Prévision en arrière',
 	'chartFormat.trendline.equation': 'Afficher l’équation',
 	'chartFormat.trendline.rSquared': 'Afficher le coefficient R carré',
-	'chartFormat.analysis.multipleTrendlines':
-		'Cette série comporte plusieurs courbes de tendance. Leurs réglages sont conservés.',
+	'chartFormat.section.trendlineN': 'Courbe de tendance {{n}}',
+	'chartFormat.trendline.add': 'Ajouter une courbe de tendance',
 	'chartFormat.section.errorBars': 'Barres d’erreur',
 	'chartFormat.errorBars.amount': 'Valeur d’erreur',
 	'chartFormat.errorBars.fixedVal': 'Valeur fixe',
@@ -52,6 +52,12 @@ export const chartFormatFr: Readonly<Record<string, string>> = {
 	'chartFormat.errorBars.minus': 'Moins',
 	'chartFormat.errorBars.cap': 'Extrémités',
 	'chartFormat.errorBars.value': 'Valeur d’erreur',
+	'chartFormat.errorBars.plusValues': 'Valeur d’erreur positive',
+	'chartFormat.errorBars.minusValues': 'Valeur d’erreur négative',
+	'chartFormat.errorBars.customHint':
+		'Saisissez des valeurs comme 1, 2, 3 ou une plage comme Sheet1!$C$2:$C$4.',
+	'chartFormat.errorBars.customCachedHint':
+		'Saisissez des valeurs comme 1, 2, 3 ou une plage de cellules que ce graphique représente déjà.',
 	'chartFormat.analysis.multipleErrorBars':
 		'Les barres d’erreur ambiguës sont conservées et ne peuvent pas être modifiées ici.',
 	'chartFormat.axis.title': 'Titre de l’axe',

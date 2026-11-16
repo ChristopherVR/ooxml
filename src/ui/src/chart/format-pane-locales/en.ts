@@ -37,8 +37,8 @@ export const chartFormatEn: Readonly<Record<string, string>> = {
 	'chartFormat.trendline.backward': 'Forecast backward',
 	'chartFormat.trendline.equation': 'Display equation',
 	'chartFormat.trendline.rSquared': 'Display R-squared',
-	'chartFormat.analysis.multipleTrendlines':
-		'This series has multiple trendlines. Their settings are preserved.',
+	'chartFormat.section.trendlineN': 'Trendline {{n}}',
+	'chartFormat.trendline.add': 'Add trendline',
 	'chartFormat.section.errorBars': 'Error bars',
 	'chartFormat.errorBars.amount': 'Error amount',
 	'chartFormat.errorBars.fixedVal': 'Fixed value',
@@ -52,6 +52,12 @@ export const chartFormatEn: Readonly<Record<string, string>> = {
 	'chartFormat.errorBars.minus': 'Minus',
 	'chartFormat.errorBars.cap': 'End caps',
 	'chartFormat.errorBars.value': 'Error value',
+	'chartFormat.errorBars.plusValues': 'Positive error value',
+	'chartFormat.errorBars.minusValues': 'Negative error value',
+	'chartFormat.errorBars.customHint':
+		'Enter values such as 1, 2, 3 or a range such as Sheet1!$C$2:$C$4.',
+	'chartFormat.errorBars.customCachedHint':
+		'Enter values such as 1, 2, 3, or a range of cells this chart already plots.',
 	'chartFormat.analysis.multipleErrorBars':
 		'Ambiguous error bars are preserved and cannot be edited here.',
 	'chartFormat.axis.title': 'Axis title',

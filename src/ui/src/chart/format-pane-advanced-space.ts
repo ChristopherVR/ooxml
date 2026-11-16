@@ -11,6 +11,8 @@ import {
 	chartSeriesMarkersSupported,
 	chartSeriesSecondaryAxisSupported,
 	chartSeriesOnSecondaryAxis,
+	chartSpaceRangeNumbers,
+	type ChartRangeNumbers,
 } from 'ooxml-core/chart';
 import type {
 	DrawingColor,
@@ -39,6 +41,8 @@ export function chartSeriesOptionsView(
 	entry: ChartSeriesEntry | undefined,
 	seriesIndex: number,
 	advanced: boolean,
+	/** Reads custom error ranges from the host's workbook; the chart's own caches otherwise. */
+	workbookRanges?: ChartRangeNumbers,
 ): ChartFormatSeriesOptionsView | undefined {
 	const group = entry?.group;
 	if (!entry || !group) return undefined;
@@ -54,9 +58,17 @@ export function chartSeriesOptionsView(
 		const errors = (entry.series.errorBars ?? []).filter(
 			(error) => (error.direction ?? 'y') === 'y',
 		);
+		const values = entry.series.values ?? entry.series.yValues;
+		const cached = chartSpaceRangeNumbers(space);
 		view.analysis = {
 			multipleTrendlines: trends.length > 1,
 			multipleErrorBars: errors.length > 1,
+			trendlines: structuredClone(trends),
+			pointCount: Math.max(1, values?.cache?.pointCount ?? values?.cache?.points.length ?? 1),
+			resolveRange: workbookRanges
+				? (formula) => workbookRanges(formula) ?? cached(formula)
+				: cached,
+			...(workbookRanges ? { workbookRanges: true } : {}),
 			...(trends[0] ? { trendline: structuredClone(trends[0]) } : {}),
 			...(errors[0] ? { errorBars: structuredClone(errors[0]) } : {}),
 		};

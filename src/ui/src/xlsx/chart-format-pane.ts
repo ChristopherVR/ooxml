@@ -4,7 +4,7 @@
 // Fill section of the chart area, plot area, title, legend and series is Excel's own fill controls,
 // slotted, which edit through `updateChart`.
 import { parseChartFormatTargetKey, type ChartFormatTarget } from 'ooxml-core/chart';
-import { chartSpaceOf, type ChartFillPart } from 'ooxml-core/xlsx';
+import { chartSpaceOf, workbookChartRangeNumbers, type ChartFillPart } from 'ooxml-core/xlsx';
 import { activeChart, editing, icon, type Command, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { chartView, createRefEvaluator } from 'ooxml-core/xlsx';
 import {
@@ -130,7 +130,14 @@ export function createChartFormatPane(ctx: EditorContext) {
 			active.refresh(undefined, undefined);
 			active.element.remove();
 		}
-		element.source = xlsxChartFormatSource(found.chart, space, theme, selected);
+		const sheet = book.sheets[ctx.activeSheet()];
+		element.source = xlsxChartFormatSource(
+			found.chart,
+			space,
+			theme,
+			selected,
+			sheet && workbookChartRangeNumbers(book, sheet),
+		);
 		element.target = target;
 		element.disabled = !ctx.commands.isEnabled(commandId());
 	};

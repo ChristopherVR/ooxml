@@ -11,7 +11,7 @@
  * @module chart/format-pane-view
  */
 import type { ChartFormatTarget, ChartGradientFill } from 'ooxml-core/chart';
-import type { ChartTrendline, ChartErrorBars } from 'ooxml-core/chart';
+import type { ChartTrendline, ChartErrorBars, ChartRangeNumbers } from 'ooxml-core/chart';
 
 import type {
 	ChartFormatChoice,
@@ -156,10 +156,19 @@ export interface ChartFormatSeriesOptionsView {
 	sliders?: boolean;
 	marker?: { symbol?: string; size?: number };
 	analysis?: {
+		/** The first trendline; `trendlines` holds every one. */
 		trendline?: ChartTrendline;
+		/** Every trendline of the series, each with its own section. */
+		trendlines?: ChartTrendline[];
 		errorBars?: ChartErrorBars;
 		multipleTrendlines: boolean;
 		multipleErrorBars: boolean;
+		/** Points of the series, over which one custom error value is repeated. */
+		pointCount?: number;
+		/** Reads a range typed as a custom error source; without it only literal values are taken. */
+		resolveRange?: ChartRangeNumbers;
+		/** `resolveRange` reads the host's workbook, not only the cells the chart caches. */
+		workbookRanges?: boolean;
 	};
 }
 

@@ -37,8 +37,8 @@ export const chartFormatEs: Readonly<Record<string, string>> = {
 	'chartFormat.trendline.backward': 'Previsión hacia atrás',
 	'chartFormat.trendline.equation': 'Mostrar ecuación',
 	'chartFormat.trendline.rSquared': 'Mostrar R cuadrado',
-	'chartFormat.analysis.multipleTrendlines':
-		'Esta serie tiene varias líneas de tendencia. Se conservan sus opciones.',
+	'chartFormat.section.trendlineN': 'Línea de tendencia {{n}}',
+	'chartFormat.trendline.add': 'Agregar línea de tendencia',
 	'chartFormat.section.errorBars': 'Barras de error',
 	'chartFormat.errorBars.amount': 'Cantidad de error',
 	'chartFormat.errorBars.fixedVal': 'Valor fijo',
@@ -52,6 +52,12 @@ export const chartFormatEs: Readonly<Record<string, string>> = {
 	'chartFormat.errorBars.minus': 'Menos',
 	'chartFormat.errorBars.cap': 'Remates',
 	'chartFormat.errorBars.value': 'Valor de error',
+	'chartFormat.errorBars.plusValues': 'Valor de error positivo',
+	'chartFormat.errorBars.minusValues': 'Valor de error negativo',
+	'chartFormat.errorBars.customHint':
+		'Escriba valores como 1, 2, 3 o un rango como Sheet1!$C$2:$C$4.',
+	'chartFormat.errorBars.customCachedHint':
+		'Escriba valores como 1, 2, 3 o un rango de celdas que este gráfico ya representa.',
 	'chartFormat.analysis.multipleErrorBars':
 		'Las barras de error ambiguas se conservan y no se pueden editar aquí.',
 	'chartFormat.axis.title': 'Título del eje',

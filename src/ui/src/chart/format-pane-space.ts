@@ -3,12 +3,20 @@
  * neutral view every product can give the pane once its chart model is a
  * `ChartSpace`. It offers shared fill, outline, effects, text, 3-D, series
  * analysis, axis, legend and label edits. Each series' capabilities decide
- * which analysis and secondary-axis controls appear. Picture allocation stays
- * with the host. Colours resolve through `theme` when given.
+ * which analysis and secondary-axis controls appear. Picture fills stay off:
+ * the shared painter does not draw them, so a host cannot preview what it would
+ * save (`chart/picture-parts` allocates their relationships for a host that
+ * does). Colours resolve through `theme` when given.
  *
  * @module chart/format-pane-space
  */
-import type { ChartAxis, ChartFormatTarget, ChartSpace, ChartSpaceSeries } from 'ooxml-core/chart';
+import type {
+	ChartAxis,
+	ChartFormatTarget,
+	ChartRangeNumbers,
+	ChartSpace,
+	ChartSpaceSeries,
+} from 'ooxml-core/chart';
 import {
 	chartGroupPaintsLine,
 	chartLabelPositions,
@@ -47,6 +55,11 @@ export interface ChartSpaceFormatSourceOptions {
 	theme?: DrawingColorTheme;
 	/** Hosts with a narrower edit contract (for example ChartEx) can retain the basic pane. */
 	advanced?: boolean;
+	/**
+	 * Reads a cell range of the host's workbook (Excel), for custom error-bar sources. Without it
+	 * a range is taken only where the chart already caches its cells.
+	 */
+	resolveRange?: ChartRangeNumbers;
 }
 
 type Resolve = (color: DrawingColor) => { hex: string; alpha: number } | undefined;
@@ -180,7 +193,13 @@ export function chartSpaceFormatSource(
 	const entries = chartSeriesEntries(space);
 	const advanced = options.advanced !== false;
 	const seriesOptions = (seriesIndex: number): ChartFormatSeriesOptionsView | undefined =>
-		chartSeriesOptionsView(space, entries[seriesIndex], seriesIndex, advanced);
+		chartSeriesOptionsView(
+			space,
+			entries[seriesIndex],
+			seriesIndex,
+			advanced,
+			options.resolveRange,
+		);
 	const describe: ChartFormatDescribe = {
 		axis: (axisIndex) => {
 			const axis = space.plotArea.axes[axisIndex];

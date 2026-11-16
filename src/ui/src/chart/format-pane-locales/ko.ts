@@ -37,8 +37,8 @@ export const chartFormatKo: Readonly<Record<string, string>> = {
 	'chartFormat.trendline.backward': '뒤로 예측',
 	'chartFormat.trendline.equation': '수식을 차트에 표시',
 	'chartFormat.trendline.rSquared': 'R-제곱 값을 차트에 표시',
-	'chartFormat.analysis.multipleTrendlines':
-		'이 계열에는 추세선이 여러 개 있습니다. 해당 설정은 유지됩니다.',
+	'chartFormat.section.trendlineN': '추세선 {{n}}',
+	'chartFormat.trendline.add': '추세선 추가',
 	'chartFormat.section.errorBars': '오차 막대',
 	'chartFormat.errorBars.amount': '오차량',
 	'chartFormat.errorBars.fixedVal': '고정 값',
@@ -52,6 +52,12 @@ export const chartFormatKo: Readonly<Record<string, string>> = {
 	'chartFormat.errorBars.minus': '음의 값',
 	'chartFormat.errorBars.cap': '끝 모양',
 	'chartFormat.errorBars.value': '오차 값',
+	'chartFormat.errorBars.plusValues': '양의 오차 값',
+	'chartFormat.errorBars.minusValues': '음의 오차 값',
+	'chartFormat.errorBars.customHint':
+		'1, 2, 3 같은 값 또는 Sheet1!$C$2:$C$4 같은 범위를 입력하십시오.',
+	'chartFormat.errorBars.customCachedHint':
+		'1, 2, 3 같은 값 또는 이 차트에 이미 표시된 셀 범위를 입력하십시오.',
 	'chartFormat.analysis.multipleErrorBars':
 		'구분할 수 없는 오차 막대는 유지되지만 여기에서 편집할 수 없습니다.',
 	'chartFormat.axis.title': '축 제목',

@@ -37,8 +37,8 @@ export const chartFormatDe: Readonly<Record<string, string>> = {
 	'chartFormat.trendline.backward': 'Prognose rückwärts',
 	'chartFormat.trendline.equation': 'Gleichung anzeigen',
 	'chartFormat.trendline.rSquared': 'Bestimmtheitsmaß anzeigen',
-	'chartFormat.analysis.multipleTrendlines':
-		'Diese Datenreihe hat mehrere Trendlinien. Ihre Einstellungen bleiben erhalten.',
+	'chartFormat.section.trendlineN': 'Trendlinie {{n}}',
+	'chartFormat.trendline.add': 'Trendlinie hinzufügen',
 	'chartFormat.section.errorBars': 'Fehlerindikatoren',
 	'chartFormat.errorBars.amount': 'Fehlerbetrag',
 	'chartFormat.errorBars.fixedVal': 'Fester Wert',
@@ -52,6 +52,12 @@ export const chartFormatDe: Readonly<Record<string, string>> = {
 	'chartFormat.errorBars.minus': 'Minus',
 	'chartFormat.errorBars.cap': 'Abschlusslinien',
 	'chartFormat.errorBars.value': 'Fehlerwert',
+	'chartFormat.errorBars.plusValues': 'Positiver Fehlerwert',
+	'chartFormat.errorBars.minusValues': 'Negativer Fehlerwert',
+	'chartFormat.errorBars.customHint':
+		'Geben Sie Werte wie 1, 2, 3 oder einen Bereich wie Sheet1!$C$2:$C$4 ein.',
+	'chartFormat.errorBars.customCachedHint':
+		'Geben Sie Werte wie 1, 2, 3 ein oder einen Zellbereich, den dieses Diagramm bereits darstellt.',
 	'chartFormat.analysis.multipleErrorBars':
 		'Mehrdeutige Fehlerindikatoren bleiben erhalten und können hier nicht bearbeitet werden.',
 	'chartFormat.axis.title': 'Achsentitel',

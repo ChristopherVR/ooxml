@@ -537,11 +537,15 @@ The labels U3 to U5 are assigned here; the remaining chart UI work was previousl
   operations and resolved appearance conversion; products supply source/relationship/history
   adapters. Shared controls cover effects, shape 3D, text, pattern fills, outline joins/ends,
   markers, trendlines/error bars, axis titles and admitted secondary-axis moves. Excel keeps its
-  richer gradient editor in a slot and uses the shared pattern editor. Picture media allocation
-  remains host-owned. Secondary authoring retains the first series as the primary render anchor;
-  horizontal combinations, stacked multi-series and unknown-extension splits are refused. The
-  pane edits one trendline and preserves custom error ranges without a range editor. ChartEx
-  exposes only its supported controls. Browser cases verify Word/Excel controls, history and
+  richer gradient editor in a slot and uses the shared pattern editor. Picture fill relationships
+  are allocated by `chart/picture-parts.ts` for every host's media folder (PowerPoint saves through
+  it); Word, Excel and Visio keep the picture choice off until the shared painter draws it.
+  Secondary authoring retains the first series as the primary render anchor; stacked groups give
+  up their first or last series and merge back on return, while a series inside a stack,
+  horizontal combinations and unknown-extension splits are refused. The pane shows a section per
+  trendline with Add trendline, and edits custom error sources as values or ranges
+  (`chart/edit/error-bar-source.ts`; Excel reads the workbook, other hosts only cached cells).
+  ChartEx exposes only its supported controls. Browser cases verify Word/Excel controls, history and
   save/reopen across six bindings and the embedded Visio workflow; native Word/Excel checks cover
   admitted ChartEx saves. Exact text, effects and 3D rendering still need broader native evidence.
 

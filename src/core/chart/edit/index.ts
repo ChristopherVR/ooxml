@@ -39,6 +39,7 @@ export * from './chartex-axis';
 export * from './chartex-point-label';
 export * from './chartex-labels';
 export * from './analysis';
+export * from './error-bar-source';
 export * from './marker';
 export * from './effects';
 export * from './text';
