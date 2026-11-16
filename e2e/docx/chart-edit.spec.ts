@@ -37,7 +37,7 @@ for (const framework of FRAMEWORKS) {
 		await editor.getByRole('button', { name: 'Insert chart', exact: true }).click();
 		const insert = dialogByHeading(editor, 'Insert Chart');
 		const gallery = insert.locator('office-ui-gallery[mode="panel"]');
-		await expect(gallery.locator('.tile svg')).toHaveCount(8);
+		await expect(gallery.locator('.tile svg')).toHaveCount(17);
 		await insert.getByLabel('Chart title', { exact: true }).fill('Results');
 		await insert.getByRole('button', { name: 'OK', exact: true }).click();
 		const chart = editor.locator('.ProseMirror [data-docx-chart="1"]');

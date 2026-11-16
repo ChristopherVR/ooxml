@@ -15,7 +15,7 @@ test('shared chart gallery supports keyboard selection, grouping edits and save/
 		.click();
 	const dialog = editor(page).locator('[data-dialog="insert-chart"]');
 	const gallery = dialog.locator('office-ui-gallery[mode="panel"]');
-	await expect(gallery.locator('.tile svg')).toHaveCount(8);
+	await expect(gallery.locator('.tile svg')).toHaveCount(17);
 	await page.setViewportSize({ width: 390, height: 844 });
 	const bounds = await gallery.boundingBox();
 	expect(bounds!.x).toBeGreaterThanOrEqual(0);
