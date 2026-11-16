@@ -673,6 +673,9 @@ is the acceptance bar), and the area has its own tests and real parts from `src/
   style bridge reuses shared DrawingML edits while keeping ChartEx data and layout semantics native
   to its model. ChartEx labels have no custom text or manual layout node in the schema and Excel 16's
   object model refuses both, so those edits stay refused (see the delivery ledger, 2026-11-16).
+  Word and Excel's shared ChartEx controls also author axis titles, visibility, gridlines, number
+  formats and display units, series names, bins, funnel gaps and region map options
+  (`axisOptions`, `seriesName`, `regionMap` actions), with native re-save evidence.
   PowerPoint's classic save also writes a series moved onto a new secondary pair as its own group
   through `setChartSeriesSecondaryAxis` (C3; native check in the delivery ledger, 2026-11-16).
   **Remains:** exact region map shapes without an Office-written geography cache, and

@@ -85,6 +85,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       line on a 0 to 100% secondary axis; `chart/pareto.ts`, `chart/ex/create-family.test.ts`), and
       Word, Excel and PowerPoint insert pareto charts as Office writes them (an owned `paretoLine`
       series and a percentage axis, observed from Excel 16's `AddChart2(-1, xlPareto)`).
+- [x] **P1** Word and Excel ChartEx editing covers axis visibility, title, gridlines, number format
+      and display units, series names, histogram and pareto bins, funnel gap width and region map
+      projection, area and labels, with native re-save evidence (delivery ledger, 2026-11-16).
+      Secondary axes, custom label text and manual label positions stay refused for ChartEx.
 - [ ] **P1** Region maps: Word, Excel and PowerPoint insert them (`cx:geography` with culture,
       projection and area, no provider cache) and the shared painter draws them over bundled,
       approximate country outlines with a translated notice. A new map has no `cx:geoCache`, and

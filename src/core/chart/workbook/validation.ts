@@ -85,7 +85,12 @@ export async function validateAtomicChartWorkbookWrites(
 				unsupported('overlapping source ranges request conflicting values');
 			destinations.set(key, { value, numeric: write.isNumeric });
 			const cell = cells.get(address);
-			if (!cell) unsupported('a source cell is missing');
+			// An absent cell is an empty one (a writer leaves blanks out); the cell writer adds it.
+			if (!cell) {
+				if (requireCurrentValues && value !== '')
+					unsupported('the workbook and chart caches disagree');
+				continue;
+			}
 			const type = cell.getAttribute('t') || 'n';
 			const text = stringItem(cell, shared);
 			if (

@@ -86,6 +86,8 @@ export function editChartExAxis(
 		if (edit.units !== undefined) {
 			if (edit.units === null) delete axis.units;
 			else {
+				if (axis.scaling?.kind !== 'val')
+					throw new RangeError('Only a value axis has display units.');
 				if (
 					![
 						'hundreds',

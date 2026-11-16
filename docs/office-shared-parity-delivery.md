@@ -528,6 +528,24 @@ a translated notice in Insert Chart. Tests: `chart/ex/create-family.test.ts`,
 `docx/chart-ex-insert.test.ts`, `xlsx/edit/chart-ex-insert.test.ts`, the Word and Excel dialog
 tests and the pptx ChartEx integration suite.
 
+### Wider ChartEx editing in Word and Excel, 2026-11-16
+
+`<office-ui-chart-ex-options>` (`chartex-options-more.ts`) adds, per axis, visibility, title,
+major and minor gridlines, number format and display units (value axes only; the core refuses
+units on a category axis), and per series the name, histogram and pareto by-category, overflow and
+underflow bins, the funnel gap width and the region map projection, area and labels, with Pareto in
+the family switch. Each control emits a neutral action (`axisOptions`, `seriesName`, `regionMap`,
+`binning`, `axis`); external sources and ambiguous hierarchy mappings stay refused. Every family's
+data sheet now skips an owned pareto line. The native run found that a data edit of a reloaded
+chart whose workbook leaves a blank cell out (a treemap parent level) was refused as "a source cell
+is missing"; an absent cell now counts as an empty one, which the cell writer adds.
+
+`chartex-acceptance-build.ts` also reloads the Word and Excel files, changes the first value,
+renames the series, sets the value axis title, thousands units and minor gridlines and the map's
+Robinson projection on every chart, and saves `-edited` copies. Office 16 opened both, Excel
+reported the expected types, and Office's own re-saves kept all 16 edited charts with every edit
+(40 of 40 charts across the five files).
+
 ### PowerPoint secondary-axis split, 2026-11-16
 
 A native check found that PowerPoint 16 read the third series of a stacked column chart on the

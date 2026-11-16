@@ -11,6 +11,9 @@ import {
 	CHART_EX_FAMILIES,
 	chartExFamilyOf,
 	chartExSpaceDataSheet,
+	applyChartExEditAction,
+	applyChartExSpaceDataSheetEdits,
+	type ChartExEditAction,
 	type ChartExFamily,
 	type ChartExSpace,
 } from '../chart/index';
@@ -19,6 +22,7 @@ import {
 	chartsIn,
 	createDocument,
 	documentDrawingBlocks,
+	editDocxChartEx,
 	loadDocx,
 	newChartImage,
 	newDocxChartEx,
@@ -45,6 +49,47 @@ const verifying = process.argv.includes('--verify');
 interface Expectation {
 	family: ChartExFamily;
 	values: number[];
+	/** Edited files: the series name, and the edited axis or map settings Office must keep. */
+	name?: string;
+	units?: string;
+	minorGridlines?: boolean;
+	axisTitle?: boolean;
+	projection?: string;
+}
+
+/** The edits each chart of an `-edited` file gets after a reload, through the shared actions. */
+function editsFor(space: ChartExSpace): ChartExEditAction[] {
+	const family = chartExFamilyOf(space);
+	const actions: ChartExEditAction[] = [{ op: 'seriesName', seriesIndex: 0, name: 'Edited' }];
+	const value = space.plotArea.axes.findIndex(
+		(axis) => axis.scaling?.kind === 'val' && axis.units?.unit !== 'percentage',
+	);
+	if (value >= 0)
+		actions.push({
+			op: 'axisOptions',
+			axisIndex: value,
+			edit: { title: 'Amount', units: 'thousands', minorGridlines: true },
+		});
+	if (family === 'regionMap')
+		actions.push({
+			op: 'regionMap',
+			seriesIndex: 0,
+			options: { projectionType: 'robinson', regionLabelLayout: 'showAll' },
+		});
+	return actions;
+}
+
+function editedExpectation(want: Expectation, space: ChartExSpace): Expectation {
+	const axis = space.plotArea.axes.some(
+		(a) => a.scaling?.kind === 'val' && a.units?.unit !== 'percentage',
+	);
+	return {
+		...want,
+		values: [99, ...want.values.slice(1)],
+		name: 'Edited',
+		...(axis ? { units: 'thousands', minorGridlines: true, axisTitle: true } : {}),
+		...(want.family === 'regionMap' ? { projection: 'robinson' } : {}),
+	};
 }
 const manifest: Record<string, Expectation[]> = {};
 
@@ -142,6 +187,43 @@ async function powerpoint(): Promise<void> {
 	manifest['powerpoint-chartex.pptx'] = expected;
 }
 
+const VALUE_EDIT = [{ kind: 'value', series: 0, category: 0, value: 99 }] as const;
+const edit = (space: ChartExSpace) =>
+	editsFor(space).reduce(
+		applyChartExEditAction,
+		applyChartExSpaceDataSheetEdits(space, [...VALUE_EDIT]),
+	);
+
+/** Reloads the Word and Excel files, edits every chart and saves `-edited` copies. */
+async function edited(): Promise<void> {
+	const doc = await loadDocx(readFileSync(join(out!, 'word-chartex.docx')));
+	const model = structuredClone(doc.model);
+	const wordWant: Expectation[] = [];
+	let w = 0;
+	for (const block of documentDrawingBlocks(model))
+		if (block.type === 'paragraph')
+			for (const run of block.runs)
+				if (run.image?.chart?.chartExSpace) {
+					const space = run.image.chart.chartExSpace;
+					wordWant.push(editedExpectation(manifest['word-chartex.docx']![w++]!, space));
+					run.image.chart = editDocxChartEx(run.image.chart, edit);
+				}
+	writeFileSync(join(out!, 'word-chartex-edited.docx'), await doc.save(model));
+	manifest['word-chartex-edited.docx'] = wordWant;
+
+	const book = await loadXlsx(readFileSync(join(out!, 'excel-chartex.xlsx')));
+	const session = createEditSession(book);
+	const excelWant: Expectation[] = [];
+	book.sheets[0]!.drawings.forEach((drawing, index) => {
+		if (drawing.kind !== 'unsupported' || !drawing.chartExSpace) return;
+		const want = manifest['excel-chartex.xlsx']![excelWant.length]!;
+		excelWant.push(editedExpectation(want, drawing.chartExSpace));
+		session.editChartEx(0, index, edit);
+	});
+	writeFileSync(join(out!, 'excel-chartex-edited.xlsx'), await saveXlsx(book));
+	manifest['excel-chartex-edited.xlsx'] = excelWant;
+}
+
 /** The extended charts of a file Office saved again, in document order. */
 async function officeSpaces(file: string): Promise<ChartExSpace[]> {
 	const bytes = readFileSync(file);
@@ -190,10 +272,23 @@ async function verify(): Promise<void> {
 			const space = spaces[index];
 			const family = space && chartExFamilyOf(space);
 			const values = space ? chartExSpaceDataSheet(space).series[0]?.values.join(',') : '';
-			const ok = family === want.family && values === want.values.join(',');
+			const name = space ? chartExSpaceDataSheet(space).series[0]?.name : undefined;
+			const axis = space?.plotArea.axes.find(
+				(a) => a.scaling?.kind === 'val' && a.units?.unit !== 'percentage',
+			);
+			const geography = space?.plotArea.series[0]?.layoutProperties?.geography;
+			const extras = [
+				want.name === undefined || name === want.name,
+				want.units === undefined || axis?.units?.unit === want.units,
+				want.minorGridlines === undefined || !!axis?.minorGridlines === want.minorGridlines,
+				want.axisTitle === undefined || !!axis?.title === want.axisTitle,
+				want.projection === undefined || geography?.projectionType === want.projection,
+			];
+			const ok =
+				family === want.family && values === want.values.join(',') && extras.every(Boolean);
 			if (!ok) failures++;
 			console.log(
-				`  #${index + 1} ${want.family}: Office kept ${family} [${values}] ${ok ? 'ok' : 'FAIL'}`,
+				`  #${index + 1} ${want.family}: Office kept ${family} [${values}]${want.name ? ` name ${name}, units ${axis?.units?.unit ?? '-'}, projection ${geography?.projectionType ?? '-'}` : ''} ${ok ? 'ok' : 'FAIL'}`,
 			);
 		});
 	}
@@ -209,6 +304,7 @@ else {
 	await word();
 	await excel();
 	await powerpoint();
+	await edited();
 	writeFileSync(join(out, 'manifest.json'), JSON.stringify(manifest, null, '\t'));
 	console.log(`wrote ${Object.keys(manifest).length} files to ${out}`);
 }

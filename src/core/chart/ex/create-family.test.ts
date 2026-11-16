@@ -143,3 +143,48 @@ describe('region maps', () => {
 		expect(auto.plotArea.series[0]!.layoutProperties!.geography!.projectionType).toBeUndefined();
 	});
 });
+
+describe('wider ChartEx authoring actions', () => {
+	const data = { categories: ['A', 'B'], series: [{ name: 'Sales', values: [3, 5] }] };
+
+	it('edits axis title, gridlines, format and units and refuses units on a category axis', () => {
+		let space = createChartExSpace(data, 'waterfall');
+		space = applyChartExEditAction(space, {
+			op: 'axisOptions',
+			axisIndex: 1,
+			edit: {
+				title: 'Amount',
+				majorGridlines: true,
+				numberFormat: { formatCode: '#,##0', sourceLinked: false },
+				units: 'thousands',
+				visible: true,
+			},
+		});
+		const xml = writeChartExSpace(space);
+		expect(xml).toContain('<cx:units unit="thousands"/>');
+		expect(xml).toContain('<cx:majorGridlines/>');
+		expect(xml).toContain('formatCode="#,##0"');
+		const axis = parseChartExSpace(xml).chartExSpace.plotArea.axes[1]!;
+		expect(axis.title?.tx?.rich).toBeDefined();
+		expect(() =>
+			applyChartExEditAction(space, {
+				op: 'axisOptions',
+				axisIndex: 0,
+				edit: { units: 'millions' },
+			}),
+		).toThrow(/value axis/);
+	});
+
+	it('renames data series only', () => {
+		const pareto = createChartExSpace(data, 'pareto');
+		const renamed = applyChartExEditAction(pareto, {
+			op: 'seriesName',
+			seriesIndex: 0,
+			name: 'Hits',
+		});
+		expect(chartExSpaceDataSheet(renamed).series[0]!.name).toBe('Hits');
+		expect(() =>
+			applyChartExEditAction(pareto, { op: 'seriesName', seriesIndex: 1, name: 'Line' }),
+		).toThrow(/data series/);
+	});
+});

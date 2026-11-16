@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { parseChartExSpace } from 'ooxml-core/chart';
+import { createChartExSpace, parseChartExSpace } from 'ooxml-core/chart';
 import { defineChartExOptions, type OfficeUiChartExOptions } from './chartex-options';
 import { chartDataSheetLabels } from './data-sheet-locales';
 import { CHART_EX_OPTIONS_STRINGS, chartExOptionsText } from './chartex-options-locales';
@@ -53,6 +53,72 @@ describe('shared ChartEx controls', () => {
 			axisIndex: 0,
 			visible: false,
 		});
+	});
+	it('emits axis title, gridline, format and unit edits and series renames', () => {
+		const element = setup();
+		element.space = createChartExSpace(
+			{ categories: ['A', 'B'], series: [{ name: 'Sales', values: [1, 2] }] },
+			'waterfall',
+		);
+		element.shadowRoot!.querySelector<HTMLSelectElement>('[aria-label="Axis"]')!.value = '1';
+		element
+			.shadowRoot!.querySelector<HTMLSelectElement>('[aria-label="Axis"]')!
+			.dispatchEvent(new Event('change'));
+		const listener = vi.fn();
+		element.addEventListener('office-chart-ex-edit', listener);
+		const fire = (label: string, value: string | boolean) => {
+			const control = element.shadowRoot!.querySelector<HTMLInputElement>(
+				`[aria-label="${label}"]`,
+			)!;
+			if (typeof value === 'boolean') control.checked = value;
+			else control.value = value;
+			control.dispatchEvent(new Event('change'));
+		};
+		fire('Axis title', 'Amount');
+		fire('Major gridlines', true);
+		fire('Number format', '#,##0');
+		fire('Display units', 'thousands');
+		fire('Series name', 'Revenue');
+		expect(listener.mock.calls.map((call) => call[0].detail.action)).toEqual([
+			{ op: 'axisOptions', axisIndex: 1, edit: { title: 'Amount' } },
+			{ op: 'axisOptions', axisIndex: 1, edit: { majorGridlines: true } },
+			{
+				op: 'axisOptions',
+				axisIndex: 1,
+				edit: { numberFormat: { formatCode: '#,##0', sourceLinked: false } },
+			},
+			{ op: 'axisOptions', axisIndex: 1, edit: { units: 'thousands' } },
+			{ op: 'seriesName', seriesIndex: 0, name: 'Revenue' },
+		]);
+	});
+	it('offers pareto as a family and map options with the honest outline notice', () => {
+		const element = setup();
+		element.space = createChartExSpace(
+			{ categories: ['A', 'B'], series: [{ name: 'Count', values: [3, 1] }] },
+			'pareto',
+		);
+		const type = element.shadowRoot!.querySelector<HTMLSelectElement>('[aria-label="Chart type"]')!;
+		expect(type.value).toBe('pareto');
+		expect(element.shadowRoot!.querySelector<HTMLButtonElement>('button')!.disabled).toBe(true);
+		element.space = createChartExSpace(
+			{ categories: ['France'], series: [{ name: 'Visitors', values: [3] }] },
+			'regionMap',
+		);
+		const listener = vi.fn();
+		element.addEventListener('office-chart-ex-edit', listener);
+		const projection = element.shadowRoot!.querySelector<HTMLSelectElement>(
+			'[aria-label="Map projection"]',
+		)!;
+		projection.value = 'robinson';
+		projection.dispatchEvent(new Event('change'));
+		expect(listener.mock.calls[0]![0].detail.action).toEqual({
+			op: 'regionMap',
+			seriesIndex: 0,
+			options: { projectionType: 'robinson' },
+		});
+		expect(element.shadowRoot!.querySelector('[role="note"]')?.textContent).toContain(
+			'approximate',
+		);
 	});
 	it('localizes all captions and refuses actions while read-only', () => {
 		const element = setup();

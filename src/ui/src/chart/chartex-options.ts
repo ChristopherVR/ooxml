@@ -2,12 +2,14 @@
 import { html, nothing, type TemplateResult } from 'lit';
 import { live } from 'lit/directives/live.js';
 import {
-	CHART_EX_LAYOUTS,
+	CHART_EX_FAMILIES,
+	chartExFamilyOf,
 	chartExSpaceDataSheet,
 	type ChartExEditAction,
-	type ChartExLayout,
+	type ChartExFamily,
 	type ChartExSpace,
 } from 'ooxml-core/chart';
+import { chartExAxisOptions, chartExSeriesOptions, type OptionsHost } from './chartex-options-more';
 import { OfficeElement, controlStyles, flag } from '../base';
 import { definer, emit } from '../registry';
 import { chartExOptionsText } from './chartex-options-locales';
@@ -65,6 +67,15 @@ export class OfficeUiChartExOptions extends OfficeElement {
 				}}
 		/></label>`;
 	}
+	private host(): OptionsHost {
+		return {
+			t: (key) => this.t(key),
+			send: (action) => this.send(action),
+			disabled: this.disabled,
+			check: (key, value, change) => this.check(key, value, change),
+			number: (key, value, change) => this.number(key, value, change),
+		};
+	}
 	protected override render(): TemplateResult | typeof nothing {
 		const space = this.space;
 		if (!space) return nothing;
@@ -74,9 +85,11 @@ export class OfficeUiChartExOptions extends OfficeElement {
 		const options = series.layoutProperties;
 		const axisIndex = Math.min(this.axisIndex, Math.max(0, space.plotArea.axes.length - 1));
 		const numeric = space.plotArea.axes[axisIndex];
-		const layoutNames: Record<ChartExLayout, Parameters<typeof chartExOptionsText>[1]> = {
+		const family = chartExFamilyOf(space) ?? 'waterfall';
+		const layoutNames: Record<ChartExFamily, Parameters<typeof chartExOptionsText>[1]> = {
 			waterfall: 'Waterfall',
 			clusteredColumn: 'Histogram',
+			pareto: 'Pareto',
 			boxWhisker: 'Box and Whisker',
 			treemap: 'Treemap',
 			sunburst: 'Sunburst',
@@ -111,10 +124,10 @@ export class OfficeUiChartExOptions extends OfficeElement {
 			<label
 				>${this.t('Chart type')}<select
 					aria-label=${this.t('Chart type')}
-					.value=${live(series.layoutId)}
+					.value=${live(family)}
 					?disabled=${this.disabled}
-					@change=${(e: Event) => this.send({ op: 'layout', layout: (e.target as HTMLSelectElement).value as ChartExLayout })}
-					>${CHART_EX_LAYOUTS.filter((layout) => layout !== 'regionMap' || series.layoutId === 'regionMap').map((layout) => html`<option value=${layout}>${this.t(layoutNames[layout])}</option>`)}</select
+					@change=${(e: Event) => this.send({ op: 'layout', layout: (e.target as HTMLSelectElement).value as ChartExFamily })}
+					>${CHART_EX_FAMILIES.filter((layout) => layout !== 'regionMap' || family === 'regionMap').map((layout) => html`<option value=${layout}>${this.t(layoutNames[layout])}</option>`)}</select
 				></label
 			>
 			<label
@@ -125,11 +138,11 @@ export class OfficeUiChartExOptions extends OfficeElement {
 						this.seriesIndex = Number((e.target as HTMLSelectElement).value);
 						this.requestUpdate();
 					}}
-					>${space.plotArea.series.map((series, i) => html`<option value=${i}>${series.tx?.value ?? series.tx?.rich?.text ?? i + 1}</option>`)}</select
+					>${space.plotArea.series.map((series, i) => html`<option value=${i}>${series.ownerIndex !== undefined && series.layoutId === 'paretoLine' ? this.t('Pareto line') : (series.tx?.value ?? series.tx?.rich?.text ?? i + 1)}</option>`)}</select
 				></label
 			>
 			<button
-				?disabled=${this.disabled || !['boxWhisker', 'clusteredColumn'].includes(series.layoutId)}
+				?disabled=${this.disabled || family === 'pareto' || !['boxWhisker', 'clusteredColumn'].includes(series.layoutId)}
 				@click=${() => this.send({ op: 'addSeries', name: `${this.t('Series')} ${space.plotArea.series.length + 1}`, templateIndex: index })}
 				>${this.t('Add series')}</button
 			>
@@ -138,6 +151,7 @@ export class OfficeUiChartExOptions extends OfficeElement {
 				@click=${() => this.send({ op: 'removeSeries', seriesIndex: index })}
 				>${this.t('Remove series')}</button
 			>
+			${chartExSeriesOptions(this.host(), space, index)}
 			${
 				series.layoutId === 'waterfall'
 					? html`<fieldset
@@ -227,7 +241,7 @@ export class OfficeUiChartExOptions extends OfficeElement {
 									this.axisIndex = Number((e.target as HTMLSelectElement).value);
 									this.requestUpdate();
 								}}
-								>${space.plotArea.axes.map((axis, i) => html`<option value=${i}>${axis.id ?? i + 1}</option>`)}</select
+								>${space.plotArea.axes.map((axis, i) => html`<option value=${i}>${this.t(axis.scaling?.kind === 'cat' ? 'Category axis' : axis.units?.unit === 'percentage' ? 'Percentage axis' : 'Value axis')} ${axis.id ?? i + 1}</option>`)}</select
 							>${
 								numeric?.scaling?.kind === 'val'
 									? html`${this.number('Minimum', value('min'), (n) => scale('min', n))}${this.number('Maximum', value('max'), (n) => scale('max', n))}${this.number(
@@ -240,7 +254,7 @@ export class OfficeUiChartExOptions extends OfficeElement {
 											if (n === undefined || n > 0) scale('minorUnit', n);
 										})}`
 									: nothing
-							}${this.check('Show tick labels', !!numeric?.tickLabels, (show) => this.send({ op: 'tickLabels', axisIndex, visible: show }))}</fieldset
+							}${this.check('Show tick labels', !!numeric?.tickLabels, (show) => this.send({ op: 'tickLabels', axisIndex, visible: show }))}${chartExAxisOptions(this.host(), space, axisIndex)}</fieldset
 						>`
 					: nothing
 			}

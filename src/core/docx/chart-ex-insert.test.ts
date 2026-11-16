@@ -69,6 +69,21 @@ describe('inserting a Word extended chart', () => {
 		expect(cells).toMatchObject({ A2: 'Category 1', B2: '45', C1: 'Series 1' });
 	});
 
+	it.each(CHART_EX_FAMILIES)('saves a data edit of a reloaded %s chart', async (family) => {
+		const loaded = await loadDocx(await insert(family));
+		const model = structuredClone(loaded.model);
+		const paragraph = model.blocks[0]!;
+		if (paragraph.type !== 'paragraph') throw new Error('paragraph');
+		const run = paragraph.runs.find((r) => 'image' in r && r.image?.chart) as TextRun & {
+			image: { chart: NonNullable<TextRun['image']>['chart'] };
+		};
+		run.image.chart = applyDocxChartExDataSheetEdits(run.image.chart!, [
+			{ kind: 'value', series: 0, category: 0, value: 99 },
+		]);
+		const chart = chartsIn((await loadDocx(await loaded.save(model))).model.blocks)[0]!;
+		expect(chartExSpaceDataSheet(chart.chartExSpace!).series[0]!.values[0]).toBe(99);
+	});
+
 	it('saves a data edit of a reloaded pareto chart to its workbook', async () => {
 		const loaded = await loadDocx(await insert('pareto'));
 		const model = structuredClone(loaded.model);
