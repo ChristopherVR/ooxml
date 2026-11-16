@@ -8,8 +8,8 @@ interface CellMergeInfo {
 	gridSpan?: number | undefined;
 	rowSpan?: number | undefined;
 	hMerge?: boolean | undefined;
-	vMerge?: boolean;
-	extraAttributes?: Record<string, string>;
+	vMerge?: boolean | undefined;
+	extraAttributes?: Record<string, string> | undefined;
 }
 
 /**
@@ -107,8 +107,8 @@ export function serializeTablePropertyFlags(
 		firstCol?: boolean | undefined;
 		lastCol?: boolean | undefined;
 		tableStyleId?: string | undefined;
-		bandRowCycle?: number;
-		bandColCycle?: number;
+		bandRowCycle?: number | undefined;
+		bandColCycle?: number | undefined;
 		rtl?: boolean;
 	},
 ): void {

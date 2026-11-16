@@ -22,6 +22,7 @@ import type { DrawingShapeStyleDeps } from './smartart-drawing-shape-style';
 import { buildSmartArtQuickStyle } from './smartart-style-label-refs';
 import { parseSmartArtTextParagraphs, smartArtParagraphsText } from './smartart-text-paragraphs';
 import { resolveSmartArtTextStyles } from './smartart-text-style-resolution';
+import { isFiniteNumber } from '../../../../units/finite';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	protected reportIncompleteSmartArtRelationships(
@@ -260,7 +261,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const strokeColor = this.parseColor(lnFill);
 		const strokeWidthRaw = lnNode ? parseInt(String(lnNode['@_w'] || ''), 10) : NaN;
 		const strokeWidth =
-			Number.isFinite(strokeWidthRaw) && strokeWidthRaw > 0 ? strokeWidthRaw / 12700 : undefined;
+			isFiniteNumber(strokeWidthRaw) && strokeWidthRaw > 0 ? strokeWidthRaw / 12700 : undefined;
 
 		const txBody = this.xmlLookupService.getChildByLocalName(sp, 'txBody');
 		const textValues: string[] = [];

@@ -33,23 +33,23 @@ import type { TextSegment, TextStyle } from './text';
  */
 export interface PptxTableCellStyle {
 	/** Font size in points (`a:rPr@sz / 100`). */
-	fontSize?: number;
-	bold?: boolean;
-	italic?: boolean;
-	underline?: boolean;
+	fontSize?: number | undefined;
+	bold?: boolean | undefined;
+	italic?: boolean | undefined;
+	underline?: boolean | undefined;
 	color?: string | undefined;
 	/**
 	 * Font family from the first run's `a:rPr/a:latin@typeface` (falling back to
 	 * `a:ea` / `a:cs`). Per-run families live on {@link PptxTableCellTextRun}.
 	 */
-	fontFamily?: string;
+	fontFamily?: string | undefined;
 	/**
 	 * Raw XML colour-choice node preserved from `a:tc/a:txBody/.../a:rPr/a:solidFill`
 	 * for round-trip serialisation. Currently unused by the cell-level writer
 	 * (cell text colour falls through `writeCellTextFormatting`), reserved for
 	 * future expansion alongside the run-properties round-trip path.
 	 */
-	colorXml?: import('./common').XmlObject;
+	colorXml?: import('./common').XmlObject | undefined;
 	/**
 	 * Typed theme colour reference for the cell text colour, set when
 	 * {@link colorXml} is a plain `a:schemeClr`. Wins on save, mirroring
@@ -57,29 +57,29 @@ export interface PptxTableCellStyle {
 	 * which describes a `ppt/tableStyles.xml` section fill rather than an
 	 * individual cell override.
 	 */
-	colorRef?: PptxThemeColorRef;
+	colorRef?: PptxThemeColorRef | undefined;
 	backgroundColor?: string | undefined;
 	/**
 	 * Raw XML colour-choice node preserved from cell `a:tcPr/a:solidFill` for
 	 * round-trip serialisation. Re-emitted verbatim when the resolved
 	 * {@link backgroundColor} still matches the original colour.
 	 */
-	backgroundColorXml?: import('./common').XmlObject;
+	backgroundColorXml?: import('./common').XmlObject | undefined;
 	/**
 	 * Typed theme colour reference for the cell fill, set when
 	 * {@link backgroundColorXml} is a plain `a:schemeClr`. Wins on save,
 	 * mirroring `ShapeStyle.fillColorRef`.
 	 */
-	backgroundColorRef?: PptxThemeColorRef;
+	backgroundColorRef?: PptxThemeColorRef | undefined;
 	borderColor?: string | undefined;
 	/** Top border width in px. */
-	borderTopWidth?: number;
+	borderTopWidth?: number | undefined;
 	/** Bottom border width in px. */
-	borderBottomWidth?: number;
+	borderBottomWidth?: number | undefined;
 	/** Left border width in px. */
-	borderLeftWidth?: number;
+	borderLeftWidth?: number | undefined;
 	/** Right border width in px. */
-	borderRightWidth?: number;
+	borderRightWidth?: number | undefined;
 	/** Top border color as hex. */
 	borderTopColor?: string | undefined;
 	/** Bottom border color as hex. */
@@ -88,8 +88,8 @@ export interface PptxTableCellStyle {
 	borderLeftColor?: string | undefined;
 	/** Right border color as hex. */
 	borderRightColor?: string | undefined;
-	align?: TextStyle['align'];
-	vAlign?: 'top' | 'middle' | 'bottom';
+	align?: TextStyle['align'] | undefined;
+	vAlign?: 'top' | 'middle' | 'bottom' | undefined;
 	/** Text direction from `a:tcPr/@vert` (spec values from CT_TextVerticalType). */
 	textDirection?:
 		| 'vert'
@@ -97,70 +97,73 @@ export interface PptxTableCellStyle {
 		| 'eaVert'
 		| 'wordArtVert'
 		| 'wordArtVertRtl'
-		| 'mongolianVert';
+		| 'mongolianVert'
+		| undefined;
 	/** Cell left margin in px (from a:tcPr > a:tcMar > a:marL). */
-	marginLeft?: number;
+	marginLeft?: number | undefined;
 	/** Cell right margin in px. */
-	marginRight?: number;
+	marginRight?: number | undefined;
 	/** Cell top margin in px. */
-	marginTop?: number;
+	marginTop?: number | undefined;
 	/** Cell bottom margin in px. */
-	marginBottom?: number;
+	marginBottom?: number | undefined;
 	/** Diagonal border top-left to bottom-right color. */
-	borderDiagDownColor?: string;
+	borderDiagDownColor?: string | undefined;
 	/** Diagonal border top-left to bottom-right width in px. */
-	borderDiagDownWidth?: number;
+	borderDiagDownWidth?: number | undefined;
 	/** Diagonal border bottom-left to top-right color. */
-	borderDiagUpColor?: string;
+	borderDiagUpColor?: string | undefined;
 	/** Diagonal border bottom-left to top-right width in px. */
-	borderDiagUpWidth?: number;
+	borderDiagUpWidth?: number | undefined;
 	/** Table cell border dash style (legacy single value). */
-	borderDash?: string;
+	borderDash?: string | undefined;
 	/**
 	 * Per-edge border dash styles: an `a:prstDash` value, or `'custom'` for an
 	 * `a:custDash`, whose pattern is in the edge's `...DashSegments`.
 	 */
-	borderTopDash?: string;
-	borderBottomDash?: string;
-	borderLeftDash?: string;
-	borderRightDash?: string;
+	borderTopDash?: string | undefined;
+	borderBottomDash?: string | undefined;
+	borderLeftDash?: string | undefined;
+	borderRightDash?: string | undefined;
 	/**
 	 * Per-edge custom dash patterns (`a:custDash/a:ds`), read and written when
 	 * the edge's dash is `'custom'`: lengths relative to the line width, in
 	 * thousandths of one percent (100000 is one line width).
 	 */
-	borderTopDashSegments?: PptxCustomDashSegment[];
-	borderBottomDashSegments?: PptxCustomDashSegment[];
-	borderLeftDashSegments?: PptxCustomDashSegment[];
-	borderRightDashSegments?: PptxCustomDashSegment[];
+	borderTopDashSegments?: PptxCustomDashSegment[] | undefined;
+	borderBottomDashSegments?: PptxCustomDashSegment[] | undefined;
+	borderLeftDashSegments?: PptxCustomDashSegment[] | undefined;
+	borderRightDashSegments?: PptxCustomDashSegment[] | undefined;
 	/** Cell text shadow colour. */
-	textShadowColor?: string;
+	textShadowColor?: string | undefined;
 	/** Cell text shadow blur radius in px. */
-	textShadowBlur?: number;
+	textShadowBlur?: number | undefined;
 	/** Cell text shadow horizontal offset in px. */
-	textShadowOffsetX?: number;
+	textShadowOffsetX?: number | undefined;
 	/** Cell text shadow vertical offset in px. */
-	textShadowOffsetY?: number;
+	textShadowOffsetY?: number | undefined;
 	/** Cell text shadow opacity (0-1). */
-	textShadowOpacity?: number;
+	textShadowOpacity?: number | undefined;
 	/** Cell text glow colour. */
-	textGlowColor?: string;
+	textGlowColor?: string | undefined;
 	/** Cell text glow radius in px. */
-	textGlowRadius?: number;
+	textGlowRadius?: number | undefined;
 	/** Cell text glow opacity (0-1). */
-	textGlowOpacity?: number;
+	textGlowOpacity?: number | undefined;
 	/** Cell fill mode: solid, gradient, pattern, image, or none. */
-	fillMode?: 'solid' | 'gradient' | 'pattern' | 'image' | 'none';
+	fillMode?: 'solid' | 'gradient' | 'pattern' | 'image' | 'none' | undefined;
 	/** Gradient fill stops (colours with positions). */
-	gradientFillStops?: Array<{
-		color: string;
-		position: number;
-		opacity?: number;
-	}>;
+	gradientFillStops?:
+		| Array<{
+				color: string;
+				position: number;
+				opacity?: number | undefined;
+		  }>
+		| undefined;
 	/** Gradient angle in degrees. */
-	gradientFillAngle?: number;
+	gradientFillAngle?: number | undefined;
 	/** Gradient type: linear or radial. */
-	gradientFillType?: 'linear' | 'radial';
+	gradientFillType?: 'linear' | 'radial' | undefined;
 	/** Path gradient sub-type. */
 	gradientFillPathType?: 'circle' | 'rect' | 'shape' | undefined;
 	/** Focal point for radial gradients (0–1 fractions). */
@@ -185,28 +188,28 @@ export interface PptxTableCellStyle {
 	 * a viewer's load pipeline resolves it further to a displayable
 	 * `data:`/`blob:` URL, written back to {@link backgroundImageFillData}.
 	 */
-	backgroundImageFillPath?: string;
+	backgroundImageFillPath?: string | undefined;
 	/**
 	 * Displayable image data (`data:` or `blob:` URL) for an image cell
 	 * fill, once resolved by the load pipeline. Renderers should prefer
 	 * this over {@link backgroundImageFillPath} when both are present.
 	 */
-	backgroundImageFillData?: string;
+	backgroundImageFillData?: string | undefined;
 	/**
 	 * Cell 3D bevel + lighting from `a:tcPr/a:cell3D` (CT_Cell3D,
 	 * ECMA-376 §21.1.3.1). Rendered as a CSS bevel treatment.
 	 */
-	cell3D?: PptxTableCell3D;
+	cell3D?: PptxTableCell3D | undefined;
 	/**
 	 * `a:tcPr/@anchorCtr` - centre the text block in the direction
 	 * perpendicular to the text flow (horizontal centring for horizontal text).
 	 */
-	anchorCtr?: boolean;
+	anchorCtr?: boolean | undefined;
 	/**
 	 * `a:tcPr/@horzOverflow` (ST_TextHorzOverflowType): `clip` clips text at
 	 * the cell edge, `overflow` (the default) lets it spill.
 	 */
-	horzOverflow?: 'clip' | 'overflow';
+	horzOverflow?: 'clip' | 'overflow' | undefined;
 }
 
 /**
@@ -228,17 +231,17 @@ export interface PptxTableCellStyle {
  */
 export interface PptxTableCell3D {
 	/** Bevel width in px (from `a:bevel@w`, EMU converted). */
-	bevelWidth?: number;
+	bevelWidth?: number | undefined;
 	/** Bevel height in px (from `a:bevel@h`, EMU converted). */
-	bevelHeight?: number;
+	bevelHeight?: number | undefined;
 	/** Bevel preset name (`a:bevel@prst`, e.g. `circle`, `relaxedInset`). */
-	bevelPreset?: string;
+	bevelPreset?: string | undefined;
 	/** Preset material (`a:cell3D@prstMaterial`, e.g. `plastic`, `metal`). */
-	material?: string;
+	material?: string | undefined;
 	/** Light rig type (`a:lightRig@rig`, e.g. `threePt`, `soft`). */
-	lightRig?: string;
+	lightRig?: string | undefined;
 	/** Light rig direction (`a:lightRig@dir`, e.g. `tl`, `t`, `tr`). */
-	lightRigDirection?: string;
+	lightRigDirection?: string | undefined;
 }
 
 /**
@@ -266,30 +269,30 @@ export interface PptxTableCellTextRun {
 	/** Run text. Empty for the break markers below. */
 	text: string;
 	/** This entry starts a new paragraph (`a:p` boundary) rather than carrying text. */
-	isParagraphBreak?: boolean;
+	isParagraphBreak?: boolean | undefined;
 	/** This entry is a soft line break (`a:br`) rather than carrying text. */
-	isLineBreak?: boolean;
+	isLineBreak?: boolean | undefined;
 	/** This entry carries an `a:fld` value rather than a literal `a:r`. */
-	isField?: true;
-	bold?: boolean;
-	italic?: boolean;
-	underline?: boolean;
-	strikethrough?: boolean;
+	isField?: true | undefined;
+	bold?: boolean | undefined;
+	italic?: boolean | undefined;
+	underline?: boolean | undefined;
+	strikethrough?: boolean | undefined;
 	/** Resolved run colour as a CSS colour string. */
-	color?: string;
+	color?: string | undefined;
 	/** Run font size in points (`a:rPr@sz` / 100). */
-	fontSize?: number;
+	fontSize?: number | undefined;
 	/** Run font family from `a:rPr/a:latin@typeface` (or `a:ea` / `a:cs`). */
-	fontFamily?: string;
+	fontFamily?: string | undefined;
 	/** Run language from `a:rPr/@lang`, such as `ko-KR`. */
-	language?: string;
+	language?: string | undefined;
 	/**
 	 * Run baseline shift from `a:rPr/@baseline`, in thousandths of a percent
 	 * (`-25000` is a 25% subscript). Positive raises the run, negative lowers it.
 	 */
-	baseline?: number;
+	baseline?: number | undefined;
 	/** Character spacing from `a:rPr/@spc`, in hundredths of a point. */
-	characterSpacing?: number;
+	characterSpacing?: number | undefined;
 }
 
 /**
@@ -327,7 +330,7 @@ export type PptxTableCellParagraph = Pick<
 	 * For a paragraph with no run, field or break: the size of its line in
 	 * points, from `a:endParaRPr@sz` (cell runs give their sizes in points too).
 	 */
-	endParaFontSize?: number;
+	endParaFontSize?: number | undefined;
 };
 
 /**
@@ -379,7 +382,7 @@ export interface PptxTableCell {
 	/** Row span (defaults to 1). */
 	rowSpan?: number | undefined;
 	/** Whether this cell is merged vertically with the cell above. */
-	vMerge?: boolean;
+	vMerge?: boolean | undefined;
 	/** Whether this cell is horizontally merged with the cell to the left (gridSpan continuation). */
 	hMerge?: boolean | undefined;
 	/**
@@ -389,7 +392,7 @@ export interface PptxTableCell {
 	 * raw XML attribute names without the `@_` prefix used by
 	 * fast-xml-parser. Re-emitted verbatim by the save writer when present.
 	 */
-	extraAttributes?: Record<string, string>;
+	extraAttributes?: Record<string, string> | undefined;
 }
 
 /**
@@ -409,7 +412,7 @@ export interface PptxTableCell {
  */
 export interface PptxTableRow {
 	/** Row height in px. */
-	height?: number;
+	height?: number | undefined;
 	cells: PptxTableCell[];
 }
 
@@ -460,13 +463,13 @@ export interface PptxTableData {
 	 * It stays set after a save, which is harmless: a later save only removes
 	 * children the model still has no value for.
 	 */
-	clearDirectCellFormatting?: boolean;
+	clearDirectCellFormatting?: boolean | undefined;
 	/** Number of rows per banding group (default 1). */
-	bandRowCycle?: number;
+	bandRowCycle?: number | undefined;
 	/** Number of columns per banding group (default 1). */
-	bandColCycle?: number;
+	bandColCycle?: number | undefined;
 	/** Right-to-left table layout from `a:tblPr/@rtl`. */
-	rtl?: boolean;
+	rtl?: boolean | undefined;
 	/**
 	 * `a:tblPr`'s OWN fill (`CT_TableProperties` §21.1.3.15's
 	 * `EG_FillProperties`), independent of any `a:tblStyleLst`-referenced style
@@ -475,7 +478,7 @@ export interface PptxTableData {
 	 * table appearance through `tableStyleId` instead, so this mainly matters
 	 * for non-PowerPoint authoring tools (issue G6).
 	 */
-	tableFill?: ParsedTableStyleFill;
+	tableFill?: ParsedTableStyleFill | undefined;
 	/**
 	 * `a:tblPr`'s own `a:effectLst` (or `a:effectDag`) effect chain,
 	 * independent of the referenced table style, decomposed into a typed
@@ -484,7 +487,7 @@ export interface PptxTableData {
 	 * normalised to `undefined` by the parser so `tableEffects` is only ever
 	 * present when there is at least one effect.
 	 */
-	tableEffects?: ParsedTableStyleEffect[];
+	tableEffects?: ParsedTableStyleEffect[] | undefined;
 	/**
 	 * Table-cell-context default text size in points, resolved from the
 	 * slide's master `p:otherStyle` (ECMA-376 §19.3.1.42 CT_TextListStyle,
@@ -498,7 +501,7 @@ export interface PptxTableData {
 	 * never authored. `undefined` when no master/otherStyle size resolves
 	 * (renderers should leave the browser default in place in that case).
 	 */
-	defaultCellFontSize?: number;
+	defaultCellFontSize?: number | undefined;
 }
 
 // ==========================================================================
@@ -536,23 +539,23 @@ export interface ParsedTableStyleFill {
 	 * a partially transparent tint of the theme colour rather than a tint/shade
 	 * blend.
 	 */
-	alpha?: number;
+	alpha?: number | undefined;
 	/** Explicit sRGB hex colour (e.g. `#FF8800`) from `a:srgbClr`. */
-	color?: string;
+	color?: string | undefined;
 	/** The fill was `a:noFill`: renders transparent and clears lower layers. */
-	noFill?: boolean;
+	noFill?: boolean | undefined;
 	/** Gradient fill parsed from `a:gradFill`. */
-	gradient?: ParsedTableStyleGradient;
+	gradient?: ParsedTableStyleGradient | undefined;
 	/** Preset pattern fill parsed from `a:pattFill`. */
-	pattern?: ParsedTableStylePattern;
+	pattern?: ParsedTableStylePattern | undefined;
 	/** Image texture fill parsed from `a:blipFill`. */
-	image?: ParsedTableStyleImage;
+	image?: ParsedTableStyleImage | undefined;
 	/**
 	 * Set when the fill was resolved from `a:tcStyle/a:fillRef`: a JSON snapshot
 	 * of the resolved fill (without this field). The save path compares it to
 	 * tell an untouched reference from an edited fill.
 	 */
-	fillRefSnapshot?: string;
+	fillRefSnapshot?: string | undefined;
 }
 
 /**
@@ -567,9 +570,9 @@ export interface ParsedTableStyleFill {
  */
 export interface ParsedTableStyleImage {
 	/** Archive-relative path, or an already-displayable external/data URL. */
-	path?: string;
+	path?: string | undefined;
 	/** Displayable URL once a load pipeline has resolved `path`. */
-	data?: string;
+	data?: string | undefined;
 }
 
 /** A single colour stop within a {@link ParsedTableStyleGradient}. */
@@ -585,7 +588,7 @@ export interface ParsedTableStyleGradient {
 	/** Ordered colour stops. */
 	stops: ParsedTableStyleGradientStop[];
 	/** Linear gradient angle in degrees (from `a:lin@ang`, 60000ths -> deg). */
-	angle?: number;
+	angle?: number | undefined;
 	/** Gradient family: linear (`a:lin`) or radial (`a:path`). */
 	type: 'linear' | 'radial';
 }
@@ -595,9 +598,9 @@ export interface ParsedTableStylePattern {
 	/** OOXML preset name (e.g. `ltDnDiag`) from `a:pattFill@prst`. */
 	preset: string;
 	/** Foreground colour (`a:fgClr`). */
-	foreground?: ParsedTableStyleFill;
+	foreground?: ParsedTableStyleFill | undefined;
 	/** Background colour (`a:bgClr`). */
-	background?: ParsedTableStyleFill;
+	background?: ParsedTableStyleFill | undefined;
 }
 
 /**
@@ -622,23 +625,23 @@ export interface ParsedTableStylePattern {
 /** Text properties from a:tcTxStyle in a table style section. */
 export interface ParsedTableStyleText {
 	/** Font bold. */
-	bold?: boolean;
+	bold?: boolean | undefined;
 	/** Font italic. */
-	italic?: boolean;
+	italic?: boolean | undefined;
 	/** Font underline (from `a:tcTxStyle@u`, any value other than `none`). */
-	underline?: boolean;
+	underline?: boolean | undefined;
 	/** Font colour as theme scheme key. */
-	fontSchemeColor?: string;
+	fontSchemeColor?: string | undefined;
 	/** Font colour tint (0-100 000). */
 	fontTint?: number | undefined;
 	/** Font colour shade (0-100 000). */
 	fontShade?: number | undefined;
 	/** Explicit sRGB hex font colour (e.g. `#FF0000`) from `a:srgbClr`. */
-	fontColor?: string;
+	fontColor?: string | undefined;
 	/** Typeface from `a:font@typeface` (latin font). */
-	fontFace?: string;
+	fontFace?: string | undefined;
 	/** Font-collection index from `a:fontRef@idx` (`minor`, `major`, `none`). */
-	fontRefIdx?: string;
+	fontRefIdx?: string | undefined;
 }
 
 /**
@@ -660,24 +663,24 @@ export interface ParsedTableStyleText {
  */
 export interface ParsedTableStyleBorder {
 	/** Line width in px (converted from the `a:ln@w` EMU value). */
-	width?: number;
+	width?: number | undefined;
 	/** OOXML `a:prstDash@val` (e.g. `solid`, `dash`, `sysDot`). */
-	dash?: string;
+	dash?: string | undefined;
 	/** Compound line type from `a:ln@cmpd` (`sng`, `dbl`, `thickThin`, ...). */
-	compound?: string;
+	compound?: string | undefined;
 	/** Border colour as a theme scheme fill (from `a:ln/a:solidFill/a:schemeClr`). */
-	fill?: ParsedTableStyleFill;
+	fill?: ParsedTableStyleFill | undefined;
 	/** Explicit hex colour when the line used `a:srgbClr` (e.g. `#808080`). */
-	color?: string;
+	color?: string | undefined;
 	/** The line was `a:noFill` - an explicit "no border" that clears lower layers. */
-	noFill?: boolean;
+	noFill?: boolean | undefined;
 	/**
 	 * Theme line-style reference (`<a:lnRef idx="N">`, the choice sibling of
 	 * `a:ln`), as the "Themed Style" built-ins use. Set alone: the line's
 	 * width, dash and colour come from the theme's `a:lnStyleLst[idx - 1]`
 	 * with its `phClr` replaced by the reference's own colour.
 	 */
-	lnRef?: import('./table-style-edit').ParsedTableFillRef;
+	lnRef?: import('./table-style-edit').ParsedTableFillRef | undefined;
 }
 
 /**
@@ -685,16 +688,16 @@ export interface ParsedTableStyleBorder {
  * `a:tcStyle/a:tcBdr` element.
  */
 export interface ParsedTableStyleBorders {
-	left?: ParsedTableStyleBorder;
-	right?: ParsedTableStyleBorder;
-	top?: ParsedTableStyleBorder;
-	bottom?: ParsedTableStyleBorder;
+	left?: ParsedTableStyleBorder | undefined;
+	right?: ParsedTableStyleBorder | undefined;
+	top?: ParsedTableStyleBorder | undefined;
+	bottom?: ParsedTableStyleBorder | undefined;
 	/** Interior horizontal borders between rows in the region. */
-	insideH?: ParsedTableStyleBorder;
+	insideH?: ParsedTableStyleBorder | undefined;
 	/** Interior vertical borders between columns in the region. */
-	insideV?: ParsedTableStyleBorder;
+	insideV?: ParsedTableStyleBorder | undefined;
 	/** Top-left to bottom-right diagonal. */
-	tl2br?: ParsedTableStyleBorder;
+	tl2br?: ParsedTableStyleBorder | undefined;
 	/**
 	 * Top-right to bottom-left diagonal (`a:tr2bl`, ECMA-376's
 	 * `CT_TableCellBorderStyle` sequence: left/right/top/bottom/insideH/
@@ -704,7 +707,7 @@ export interface ParsedTableStyleBorders {
 	 * undirected diagonal); the parser accepts the real `a:tr2bl` element and,
 	 * leniently, a legacy `a:bl2tr` this app previously wrote (issue G4).
 	 */
-	tr2bl?: ParsedTableStyleBorder;
+	tr2bl?: ParsedTableStyleBorder | undefined;
 }
 
 /**
@@ -717,23 +720,23 @@ export interface ParsedTableStyleBorders {
  */
 export interface ParsedTableBackground {
 	/** Solid fill (resolved from `a:fill > a:solidFill > a:schemeClr`). */
-	fill?: ParsedTableStyleFill;
+	fill?: ParsedTableStyleFill | undefined;
 	/**
 	 * Style-matrix fill reference (`<a:fillRef idx="N">...</a:fillRef>`),
 	 * mutually exclusive with {@link fill} (`a:fill` is the choice sibling of
 	 * `a:fillRef` in `CT_TableBackgroundStyle`).
 	 */
-	fillRef?: import('./table-style-edit').ParsedTableFillRef;
+	fillRef?: import('./table-style-edit').ParsedTableFillRef | undefined;
 	/**
 	 * Style-matrix effect reference (`<a:effectRef idx="N">...</a:effectRef>`,
 	 * "Themed Style 1/2"): the theme's effect style (usually an outer shadow)
 	 * drawn under the whole table.
 	 */
-	effectRef?: import('./table-style-edit').ParsedTableFillRef;
+	effectRef?: import('./table-style-edit').ParsedTableFillRef | undefined;
 	/** The outer shadow {@link effectRef} resolves to against a theme (set at render time). */
-	shadow?: ParsedTableBackgroundShadow;
+	shadow?: ParsedTableBackgroundShadow | undefined;
 	/** Has an `a:effectLst` child that should be round-tripped. */
-	hasEffectLst?: boolean;
+	hasEffectLst?: boolean | undefined;
 }
 
 /** The outer shadow a table style's `a:tblBg/a:effectRef` resolves to (px, colour as `#RRGGBB`). */
@@ -752,53 +755,53 @@ export interface ParsedTableStyleEntry {
 	/** Dominant accent key derived from fills (e.g. `accent1`). */
 	accentKey?: string | undefined;
 	/** Table-level background (`<a:tblBg>`). */
-	tableBackground?: ParsedTableBackground;
-	wholeTblFill?: ParsedTableStyleFill;
-	band1HFill?: ParsedTableStyleFill;
-	band2HFill?: ParsedTableStyleFill;
-	band1VFill?: ParsedTableStyleFill;
-	band2VFill?: ParsedTableStyleFill;
-	firstRowFill?: ParsedTableStyleFill;
-	lastRowFill?: ParsedTableStyleFill;
-	firstColFill?: ParsedTableStyleFill;
-	lastColFill?: ParsedTableStyleFill;
+	tableBackground?: ParsedTableBackground | undefined;
+	wholeTblFill?: ParsedTableStyleFill | undefined;
+	band1HFill?: ParsedTableStyleFill | undefined;
+	band2HFill?: ParsedTableStyleFill | undefined;
+	band1VFill?: ParsedTableStyleFill | undefined;
+	band2VFill?: ParsedTableStyleFill | undefined;
+	firstRowFill?: ParsedTableStyleFill | undefined;
+	lastRowFill?: ParsedTableStyleFill | undefined;
+	firstColFill?: ParsedTableStyleFill | undefined;
+	lastColFill?: ParsedTableStyleFill | undefined;
 	/** Corner cell fills (`<a:seCell>`, `<a:swCell>`, `<a:neCell>`, `<a:nwCell>`). */
-	seCellFill?: ParsedTableStyleFill;
-	swCellFill?: ParsedTableStyleFill;
-	neCellFill?: ParsedTableStyleFill;
-	nwCellFill?: ParsedTableStyleFill;
+	seCellFill?: ParsedTableStyleFill | undefined;
+	swCellFill?: ParsedTableStyleFill | undefined;
+	neCellFill?: ParsedTableStyleFill | undefined;
+	nwCellFill?: ParsedTableStyleFill | undefined;
 	/**
 	 * Per-role border styling from `a:tcStyle/a:tcBdr`. These supply the
 	 * gridlines/edges a styled table inherits from its table style when the
 	 * cells carry no explicit per-cell `a:lnX` overrides.
 	 */
-	wholeTblBorders?: ParsedTableStyleBorders;
-	firstRowBorders?: ParsedTableStyleBorders;
-	lastRowBorders?: ParsedTableStyleBorders;
-	firstColBorders?: ParsedTableStyleBorders;
-	lastColBorders?: ParsedTableStyleBorders;
-	band1HBorders?: ParsedTableStyleBorders;
-	band2HBorders?: ParsedTableStyleBorders;
-	band1VBorders?: ParsedTableStyleBorders;
-	band2VBorders?: ParsedTableStyleBorders;
-	seCellBorders?: ParsedTableStyleBorders;
-	swCellBorders?: ParsedTableStyleBorders;
-	neCellBorders?: ParsedTableStyleBorders;
-	nwCellBorders?: ParsedTableStyleBorders;
+	wholeTblBorders?: ParsedTableStyleBorders | undefined;
+	firstRowBorders?: ParsedTableStyleBorders | undefined;
+	lastRowBorders?: ParsedTableStyleBorders | undefined;
+	firstColBorders?: ParsedTableStyleBorders | undefined;
+	lastColBorders?: ParsedTableStyleBorders | undefined;
+	band1HBorders?: ParsedTableStyleBorders | undefined;
+	band2HBorders?: ParsedTableStyleBorders | undefined;
+	band1VBorders?: ParsedTableStyleBorders | undefined;
+	band2VBorders?: ParsedTableStyleBorders | undefined;
+	seCellBorders?: ParsedTableStyleBorders | undefined;
+	swCellBorders?: ParsedTableStyleBorders | undefined;
+	neCellBorders?: ParsedTableStyleBorders | undefined;
+	nwCellBorders?: ParsedTableStyleBorders | undefined;
 	/** Per-role text styling from a:tcTxStyle. */
-	wholeTblText?: ParsedTableStyleText;
-	firstRowText?: ParsedTableStyleText;
-	lastRowText?: ParsedTableStyleText;
-	firstColText?: ParsedTableStyleText;
-	lastColText?: ParsedTableStyleText;
-	band1HText?: ParsedTableStyleText;
-	band2HText?: ParsedTableStyleText;
-	band1VText?: ParsedTableStyleText;
-	band2VText?: ParsedTableStyleText;
-	seCellText?: ParsedTableStyleText;
-	swCellText?: ParsedTableStyleText;
-	neCellText?: ParsedTableStyleText;
-	nwCellText?: ParsedTableStyleText;
+	wholeTblText?: ParsedTableStyleText | undefined;
+	firstRowText?: ParsedTableStyleText | undefined;
+	lastRowText?: ParsedTableStyleText | undefined;
+	firstColText?: ParsedTableStyleText | undefined;
+	lastColText?: ParsedTableStyleText | undefined;
+	band1HText?: ParsedTableStyleText | undefined;
+	band2HText?: ParsedTableStyleText | undefined;
+	band1VText?: ParsedTableStyleText | undefined;
+	band2VText?: ParsedTableStyleText | undefined;
+	seCellText?: ParsedTableStyleText | undefined;
+	swCellText?: ParsedTableStyleText | undefined;
+	neCellText?: ParsedTableStyleText | undefined;
+	nwCellText?: ParsedTableStyleText | undefined;
 	/**
 	 * Per-role 3D bevel + lighting from `a:tcStyle/a:cell3D` (CT_Cell3D),
 	 * distinct from the per-cell `a:tcPr/a:cell3D` {@link PptxTableCellStyle}
@@ -806,19 +809,19 @@ export interface ParsedTableStyleEntry {
 	 * this (0 hits in the built-in catalogue), so it only matters for a
 	 * hand-authored or third-party table style.
 	 */
-	wholeTblCell3D?: PptxTableCell3D;
-	firstRowCell3D?: PptxTableCell3D;
-	lastRowCell3D?: PptxTableCell3D;
-	firstColCell3D?: PptxTableCell3D;
-	lastColCell3D?: PptxTableCell3D;
-	band1HCell3D?: PptxTableCell3D;
-	band2HCell3D?: PptxTableCell3D;
-	band1VCell3D?: PptxTableCell3D;
-	band2VCell3D?: PptxTableCell3D;
-	seCellCell3D?: PptxTableCell3D;
-	swCellCell3D?: PptxTableCell3D;
-	neCellCell3D?: PptxTableCell3D;
-	nwCellCell3D?: PptxTableCell3D;
+	wholeTblCell3D?: PptxTableCell3D | undefined;
+	firstRowCell3D?: PptxTableCell3D | undefined;
+	lastRowCell3D?: PptxTableCell3D | undefined;
+	firstColCell3D?: PptxTableCell3D | undefined;
+	lastColCell3D?: PptxTableCell3D | undefined;
+	band1HCell3D?: PptxTableCell3D | undefined;
+	band2HCell3D?: PptxTableCell3D | undefined;
+	band1VCell3D?: PptxTableCell3D | undefined;
+	band2VCell3D?: PptxTableCell3D | undefined;
+	seCellCell3D?: PptxTableCell3D | undefined;
+	swCellCell3D?: PptxTableCell3D | undefined;
+	neCellCell3D?: PptxTableCell3D | undefined;
+	nwCellCell3D?: PptxTableCell3D | undefined;
 }
 
 /**

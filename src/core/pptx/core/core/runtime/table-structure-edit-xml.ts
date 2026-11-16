@@ -1,5 +1,6 @@
 import type { PptxTableCell, PptxTableData, XmlObject } from '../../types';
 import { createDefaultXmlCell, createDefaultXmlRow, ensureArray } from './table-structural-helpers';
+import { at } from '../../../../geometry/indexed';
 
 /** Absolute source-grid position of a single structural edit. */
 export interface TableStructureEdit {
@@ -77,8 +78,9 @@ export function applyTableStructureEditXml(
 		if (action === 'insert') {
 			rows.splice(index, 0, createDefaultXmlRow(columns.length));
 		} else {
-			const removedCells = cells(rows[index]);
-			const nextCells = rows[index + 1] ? cells(rows[index + 1]) : [];
+			const removedCells = cells(at(rows, index));
+			const nextRow = rows[index + 1];
+			const nextCells = nextRow ? cells(nextRow) : [];
 			removedCells.forEach((removed, column) =>
 				promoteTextBody(
 					source?.rows[index]?.cells[column],

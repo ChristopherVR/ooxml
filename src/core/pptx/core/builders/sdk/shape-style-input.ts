@@ -10,6 +10,7 @@ import type { PptxCustomDashSegment, ShapeStyle } from '../../types/shape-style'
 import { mapPictureLayoutInput } from './picture-layout-input';
 import type { GlowInput, InnerShadowInput, ReflectionInput } from './shape-style-input-types';
 import type { FillInput, ShadowInput, StrokeInput } from './types';
+import { at } from '../../../../geometry/indexed';
 
 /** `a:custDash/a:ds` lengths are 1000ths of a percent of the line width. */
 const DASH_UNITS_PER_WIDTH = 100000;
@@ -79,8 +80,8 @@ export function customDashSegments(lengths: number[], width: number): PptxCustom
 	const segments: PptxCustomDashSegment[] = [];
 	for (let i = 0; i + 1 < values.length; i += 2) {
 		segments.push({
-			dash: Math.max(0, Math.round((values[i] / width) * DASH_UNITS_PER_WIDTH)),
-			space: Math.max(0, Math.round((values[i + 1] / width) * DASH_UNITS_PER_WIDTH)),
+			dash: Math.max(0, Math.round((at(values, i) / width) * DASH_UNITS_PER_WIDTH)),
+			space: Math.max(0, Math.round((at(values, i + 1) / width) * DASH_UNITS_PER_WIDTH)),
 		});
 	}
 	return segments;

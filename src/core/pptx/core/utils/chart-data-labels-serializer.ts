@@ -19,23 +19,25 @@ type GetLocalName = (key: string) => string;
 /** The data-label-relevant subset of `PptxChartStyle`. */
 export interface ChartDataLabelStyle {
 	hasDataLabels?: boolean;
-	dataLabels?: {
-		showValue?: boolean;
-		showCategory?: boolean;
-		showSeriesName?: boolean;
-		showPercent?: boolean;
-		showLegendKey?: boolean;
-		showBubbleSize?: boolean;
-		separator?: string;
-		showLeaderLines?: boolean | undefined;
-		position?: string;
-		/** Label-specific number format (`c:dLbls/c:numFmt/@formatCode`), distinct from the series' own cell format (C2-G16). */
-		numberFormat?: string;
-		/** PowerPoint 2013+ "Value From Cells" (`c15:datalabelsRange`); see `chart-data-labels-range.ts`. */
-		dataLabelsRange?: PptxChartDataLabelsRange;
-		/** `c15:showDataLabelsRange` at the group level, paired with {@link dataLabelsRange}. */
-		showDataLabelsRange?: boolean;
-	};
+	dataLabels?:
+		| {
+				showValue?: boolean;
+				showCategory?: boolean;
+				showSeriesName?: boolean;
+				showPercent?: boolean;
+				showLegendKey?: boolean;
+				showBubbleSize?: boolean;
+				separator?: string;
+				showLeaderLines?: boolean | undefined;
+				position?: string;
+				/** Label-specific number format (`c:dLbls/c:numFmt/@formatCode`), distinct from the series' own cell format (C2-G16). */
+				numberFormat?: string;
+				/** PowerPoint 2013+ "Value From Cells" (`c15:datalabelsRange`); see `chart-data-labels-range.ts`. */
+				dataLabelsRange?: PptxChartDataLabelsRange;
+				/** `c15:showDataLabelsRange` at the group level, paired with {@link dataLabelsRange}. */
+				showDataLabelsRange?: boolean;
+		  }
+		| undefined;
 }
 
 const POSITION_VALUES = new Set([

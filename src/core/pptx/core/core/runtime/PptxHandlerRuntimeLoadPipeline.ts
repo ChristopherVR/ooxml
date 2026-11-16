@@ -31,6 +31,7 @@ import type { LoadPartReader } from './load-part-reader';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeLoadSession';
 import { resolveTemplateImages } from './resolve-template-images';
 import { recordSlideFingerprints } from './slide-fingerprint';
+import { isFiniteNumber } from '../../../../units/finite';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	protected async buildLoadData(
@@ -66,7 +67,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const handoutMatch =
 			presentationProperties?.printProperties?.printWhat?.match(/^handouts([123469])$/u);
 		if (handoutMaster && handoutMatch) {
-			handoutMaster.slidesPerPage = Number.parseInt(handoutMatch[1], 10);
+			handoutMaster.slidesPerPage = Number.parseInt(handoutMatch[1] ?? '', 10);
 		}
 		await this.enrichAuxiliaryMasterElements(notesMaster, 'p:notesMaster');
 		await this.enrichAuxiliaryMasterElements(handoutMaster, 'p:handoutMaster');
@@ -208,7 +209,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			const obj = node as Record<string, unknown>;
 			if ('@_id' in obj) {
 				const id = parseInt(String(obj['@_id']), 10);
-				if (Number.isFinite(id) && id > max) {
+				if (isFiniteNumber(id) && id > max) {
 					max = id;
 				}
 			}
@@ -628,7 +629,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// No existing layout rel -- add one
 				const maxRId = rels.reduce((max: number, r: XmlObject) => {
 					const id = parseInt(String(r['@_Id'] || 'rId0').replace('rId', ''), 10);
-					return Number.isFinite(id) && id > max ? id : max;
+					return isFiniteNumber(id) && id > max ? id : max;
 				}, 0);
 				layoutRelId = `rId${maxRId + 1}`;
 				rels.push({

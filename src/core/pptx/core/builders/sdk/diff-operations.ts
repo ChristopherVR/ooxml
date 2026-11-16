@@ -562,7 +562,8 @@ export function diffPresentations(a: PptxData, b: PptxData): PresentationDiff {
 			continue;
 		}
 
-		const slideB = b.slides[idxB];
+		// `slideMapB` maps ids to indices of `b.slides`.
+		const slideB = at(b.slides, idxB);
 		const slideDiff = diffSlides(slideA, slideB, i);
 
 		// Only include if there are actual changes

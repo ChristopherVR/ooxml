@@ -1,4 +1,6 @@
 import type { XmlObject } from '../types';
+import { isFiniteNumber } from '../../../units/finite';
+import { at } from '../../../geometry/indexed';
 
 /** Channel names in trace-column order (upper-cased), e.g. ["X", "Y", "F"]. */
 export type ChannelOrder = string[];
@@ -58,9 +60,10 @@ export function decodeTracePoints(text: string, channelOrder: ChannelOrder): num
 		}
 		const decoded: number[] = [];
 		for (let i = 0; i < tokens.length && i < channelOrder.length; i++) {
-			const parsed = parseValueToken(tokens[i], modes[i]);
+			// `lastValue` and `modes` have one entry per channel and `i` is below both lengths.
+			const parsed = parseValueToken(at(tokens, i), modes[i]);
 			if (parsed === undefined) {
-				decoded.push(lastValue[i]);
+				decoded.push(at(lastValue, i));
 				continue;
 			}
 			modes[i] = parsed.mode;
@@ -118,7 +121,7 @@ function parseValueToken(token: string, currentMode: DiffMode): ParsedToken | un
 		return undefined;
 	}
 	const value = Number(body);
-	return Number.isFinite(value) ? { value, mode } : undefined;
+	return isFiniteNumber(value) ? { value, mode } : undefined;
 }
 
 /** Fold a parsed token into an absolute value using its (sticky) difference mode. */
@@ -128,17 +131,22 @@ function applyDiffMode(
 	lastValue: number[],
 	lastVelocity: number[],
 ): number {
+	// Missing slots read as NaN, which is what `undefined` arithmetic produced.
+	const value = lastValue[index] ?? NaN;
+	let next: number;
 	if (parsed.mode === 'single') {
 		lastVelocity[index] = parsed.value;
-		lastValue[index] += parsed.value;
+		next = value + parsed.value;
 	} else if (parsed.mode === 'double') {
-		lastVelocity[index] += parsed.value;
-		lastValue[index] += lastVelocity[index];
+		const velocity = (lastVelocity[index] ?? NaN) + parsed.value;
+		lastVelocity[index] = velocity;
+		next = value + velocity;
 	} else {
-		lastValue[index] = parsed.value;
+		next = parsed.value;
 		lastVelocity[index] = 0;
 	}
-	return lastValue[index];
+	lastValue[index] = next;
+	return next;
 }
 
 /** Build an SVG path (`M x y L x y ...`) from decoded points and channel order. */
@@ -151,7 +159,7 @@ export function pointsToSvgPath(points: number[][], channelOrder: ChannelOrder):
 	for (const point of points) {
 		const x = point[xIndex];
 		const y = point[yIndex];
-		if (!Number.isFinite(x) || !Number.isFinite(y)) {
+		if (!isFiniteNumber(x) || !isFiniteNumber(y)) {
 			continue;
 		}
 		segments.push(`${segments.length === 0 ? 'M' : 'L'} ${x} ${y}`);
@@ -168,7 +176,7 @@ export function pointsToPressures(points: number[][], channelOrder: ChannelOrder
 	const pressures: number[] = [];
 	for (const point of points) {
 		const raw = point[fIndex];
-		if (Number.isFinite(raw)) {
+		if (isFiniteNumber(raw)) {
 			// InkML force is commonly integer-encoded (0..32767); clamp to 0-1
 			// for the renderer, normalising the typical integer range.
 			const normalised = raw > 1 ? raw / 32767 : raw;
@@ -202,7 +210,7 @@ export function pointsToTimestamps(points: number[][], channelOrder: ChannelOrde
 	const timestamps: number[] = [];
 	for (const point of points) {
 		const raw = point[tIndex];
-		if (Number.isFinite(raw)) {
+		if (isFiniteNumber(raw)) {
 			timestamps.push(raw);
 		}
 	}
@@ -282,8 +290,9 @@ function tiltFromVector(
 	const oxs: number[] = [];
 	const oys: number[] = [];
 	for (const point of points) {
-		oxs.push(point[xIndex]);
-		oys.push(point[yIndex]);
+		// A missing channel becomes NaN and is skipped by the finite check below.
+		oxs.push(point[xIndex] ?? NaN);
+		oys.push(point[yIndex] ?? NaN);
 	}
 	return tiltChannelsFromXY(oxs, oys);
 }
@@ -313,7 +322,7 @@ export function tiltChannelsFromXY(
 	for (let i = 0; i < len; i++) {
 		const ox = oxs[i];
 		const oy = oys[i];
-		if (!Number.isFinite(ox) || !Number.isFinite(oy)) {
+		if (!isFiniteNumber(ox) || !isFiniteNumber(oy)) {
 			continue;
 		}
 		angles.push(Math.atan2(oy, ox));
@@ -337,13 +346,13 @@ function tiltFromAzimuthAltitude(
 	const magnitudes: number[] = [];
 	for (const point of points) {
 		const azimuth = point[azimuthIndex];
-		if (!Number.isFinite(azimuth)) {
+		if (!isFiniteNumber(azimuth)) {
 			continue;
 		}
 		angles.push((azimuth * Math.PI) / 180);
 		const altitude = altitudeIndex >= 0 ? point[altitudeIndex] : undefined;
 		magnitudes.push(
-			Number.isFinite(altitude) ? Math.max(0, Math.min(1, 1 - (altitude as number) / 90)) : 0.5,
+			isFiniteNumber(altitude) ? Math.max(0, Math.min(1, 1 - (altitude as number) / 90)) : 0.5,
 		);
 	}
 	if (angles.length === 0) {

@@ -28,7 +28,7 @@ export interface UpdateElementStyleParams {
 	 */
 	fillThemeColor?: PptxThemeColorRef;
 	fillMode?: ShapeStyle['fillMode'];
-	fillGradientStops?: Array<{ color: string; position: number; opacity?: number }>;
+	fillGradientStops?: Array<{ color: string; position: number; opacity?: number | undefined }>;
 	fillGradientAngle?: number;
 	fillGradientType?: 'linear' | 'radial';
 	fillOpacity?: number;

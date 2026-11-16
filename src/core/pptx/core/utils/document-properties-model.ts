@@ -14,6 +14,7 @@ import {
 	type CustomPropertyText,
 } from '../../../opc/properties/index';
 import type { PptxAppProperties, PptxCoreProperties, PptxCustomProperty } from '../types';
+import { isFiniteNumber } from '../../../units/finite';
 
 const CORE_FIELDS = [
 	'title',
@@ -134,7 +135,7 @@ export function applyAppOverrides(
 	}
 	for (const field of APP_NUMBER_OVERRIDES) {
 		const value = Number(overrides?.[field]);
-		if (overrides?.[field] !== undefined && Number.isFinite(value)) next[field] = Math.trunc(value);
+		if (overrides?.[field] !== undefined && isFiniteNumber(value)) next[field] = Math.trunc(value);
 	}
 	return next;
 }

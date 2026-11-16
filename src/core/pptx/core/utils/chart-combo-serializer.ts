@@ -106,10 +106,10 @@ export function consolidateComboContainersInXml(
 	getLocalName: GetLocalName,
 ): ComboConsolidation | undefined {
 	const containerKeys = Object.keys(plotArea).filter((k) => getLocalName(k).endsWith('Chart'));
-	if (containerKeys.length === 0) {
+	const primaryKey = containerKeys[0];
+	if (primaryKey === undefined) {
 		return undefined;
 	}
-	const primaryKey = containerKeys[0];
 	// Two groups of one type (a series on the secondary axis) parse as one key holding an array.
 	const containers = containerKeys.flatMap((key) =>
 		ensureArray(plotArea[key] as XmlObject | XmlObject[] | undefined)
@@ -230,7 +230,8 @@ export function applyComboSeriesTypesToXml(
 	const groups = new Map<string, XmlObject[]>();
 	const groupOrder: string[] = [];
 	for (let i = 0; i < serNodes.length; i++) {
-		const local = resolved[i];
+		// `resolved` has one entry per series, and the series count matches `serNodes` (above).
+		const local = atIndex(resolved, i);
 		if (!groups.has(local)) {
 			groups.set(local, []);
 			groupOrder.push(local);

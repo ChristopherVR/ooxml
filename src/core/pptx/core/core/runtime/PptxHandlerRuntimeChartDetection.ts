@@ -2,6 +2,7 @@ import { XmlObject } from '../../types';
 import type { PptxChartData } from '../../types';
 import { extractMultiLevelCategoryValues } from '../../utils/chart-multi-level-category-parser';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSmartArt';
+import { isFiniteNumber } from '../../../../units/finite';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	protected detectChartType(plotArea: XmlObject | undefined): PptxChartData['chartType'] {
@@ -171,7 +172,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		let maxIndex = -1;
 		for (const point of points) {
 			const index = Number.parseInt(String(point?.['@_idx'] ?? '0'), 10);
-			if (!Number.isFinite(index) || index < 0) {
+			if (!isFiniteNumber(index) || index < 0) {
 				continue;
 			}
 			const value = String(
@@ -193,7 +194,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			10,
 		);
 		const length =
-			Number.isFinite(declaredCount) && declaredCount > maxIndex + 1 ? declaredCount : maxIndex + 1;
+			isFiniteNumber(declaredCount) && declaredCount > maxIndex + 1 ? declaredCount : maxIndex + 1;
 
 		const result: string[] = [];
 		for (let index = 0; index < length; index++) {

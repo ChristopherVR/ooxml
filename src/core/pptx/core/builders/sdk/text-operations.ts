@@ -11,6 +11,7 @@
 import type { PptxElement } from '../../types/elements';
 import type { PptxSlide } from '../../types/presentation';
 import { hasTextProperties } from '../../types/type-guards';
+import { at } from '../../../../geometry/indexed';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -90,7 +91,9 @@ function execAll(regex: RegExp, text: string): RegExpExecArray[] {
 		const adjusted = [...match] as unknown as RegExpExecArray;
 		adjusted.index = offset + match.index;
 		adjusted.input = text;
-		adjusted.groups = match.groups;
+		if (match.groups) {
+			adjusted.groups = match.groups;
+		}
 		results.push(adjusted);
 
 		// Prevent infinite loop on zero-length matches
@@ -132,7 +135,8 @@ function expandReplacement(replacement: string, match: RegExpExecArray, fullText
 			continue;
 		}
 
-		const next = replacement[i + 1];
+		// `i + 1 < replacement.length` (checked above).
+		const next = replacement.charAt(i + 1);
 		if (next === '$') {
 			result += '$';
 			i += 2;
@@ -146,10 +150,10 @@ function expandReplacement(replacement: string, match: RegExpExecArray, fullText
 			result += fullText.slice(match.index + match[0].length);
 			i += 2;
 		} else if (next === '<') {
-			while (gtPtr < closeAngleIndices.length && closeAngleIndices[gtPtr] < i + 2) {
+			while (gtPtr < closeAngleIndices.length && at(closeAngleIndices, gtPtr) < i + 2) {
 				gtPtr += 1;
 			}
-			const closeIdx = gtPtr < closeAngleIndices.length ? closeAngleIndices[gtPtr] : -1;
+			const closeIdx = gtPtr < closeAngleIndices.length ? at(closeAngleIndices, gtPtr) : -1;
 			if (closeIdx === -1) {
 				result += '$';
 				i += 1;
@@ -163,10 +167,10 @@ function expandReplacement(replacement: string, match: RegExpExecArray, fullText
 			let digitsEnd = i + 2;
 			if (
 				digitsEnd < replacement.length &&
-				replacement[digitsEnd] >= '0' &&
-				replacement[digitsEnd] <= '9'
+				replacement.charAt(digitsEnd) >= '0' &&
+				replacement.charAt(digitsEnd) <= '9'
 			) {
-				digits += replacement[digitsEnd];
+				digits += at(replacement, digitsEnd);
 				digitsEnd += 1;
 			}
 			let groupIndex = Number(digits);

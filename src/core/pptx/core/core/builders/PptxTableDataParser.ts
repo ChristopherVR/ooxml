@@ -26,7 +26,7 @@ export interface PptxTableDataParserContext {
 	extractGradientFillCss?: (gradFill: XmlObject) => string | undefined;
 	extractGradientStops?: (
 		gradFill: XmlObject,
-	) => Array<{ color: string; position: number; opacity?: number }>;
+	) => Array<{ color: string; position: number; opacity?: number | undefined }>;
 	extractGradientType?: (gradFill: XmlObject) => 'linear' | 'radial';
 	extractGradientAngle?: (gradFill: XmlObject) => number;
 	extractGradientPathType?: (gradFill: XmlObject) => 'circle' | 'rect' | 'shape' | undefined;

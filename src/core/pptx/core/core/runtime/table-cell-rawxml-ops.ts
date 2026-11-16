@@ -98,7 +98,7 @@ export function updateCellTextStyleInRawXml(
 		return undefined;
 	}
 
-	const cell = cells[colIndex];
+	const cell = at(cells, colIndex);
 	const txBody = cell['a:txBody'] as XmlObject | undefined;
 	if (!txBody) {
 		return undefined;

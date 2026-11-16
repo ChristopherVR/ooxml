@@ -142,7 +142,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	/** Re-read a saved classic part before recording its next edit baseline. */
-	protected async refreshClassicChartFromPart(
+	protected override async refreshClassicChartFromPart(
 		xml: string,
 		previous: PptxChartData,
 		slidePath?: string,

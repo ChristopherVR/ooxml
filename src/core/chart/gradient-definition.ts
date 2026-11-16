@@ -19,7 +19,7 @@ export function withChartGradientDirection(
 }
 export interface ChartGradientFill {
 	type: 'linear' | 'radial';
-	stops: Array<{ color: string; position: number; opacity?: number }>;
+	stops: Array<{ color: string; position: number; opacity?: number | undefined }>;
 	angle?: number;
 	scaled?: boolean;
 	interpolation?: 'sigma-gamma22';

@@ -1081,7 +1081,7 @@ export interface PptxChartStyle {
 	/** Whether data labels are shown. */
 	hasDataLabels?: boolean;
 	/** Chart-level data-label content/position options (when `hasDataLabels`). */
-	dataLabels?: PptxChartDataLabelOptions;
+	dataLabels?: PptxChartDataLabelOptions | undefined;
 
 	/**
 	 * Font styling for the chart's own title (`c:title/c:txPr`), edited via

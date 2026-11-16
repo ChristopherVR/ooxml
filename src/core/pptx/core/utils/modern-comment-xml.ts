@@ -12,6 +12,7 @@ import {
 	rebaseCommentMentions,
 } from './modern-comment-mentions';
 import { applyModernCommentText, flattenBodyText } from './modern-comment-text-body';
+import { isFiniteNumber } from '../../../units/finite';
 
 export * from './modern-comment-constants';
 export * from './modern-comment-mentions';
@@ -82,7 +83,7 @@ const optionalNumber = (value: unknown): number | undefined => {
 		return undefined;
 	}
 	const parsed = Number(value);
-	return Number.isFinite(parsed) ? parsed : undefined;
+	return isFiniteNumber(parsed) ? parsed : undefined;
 };
 
 const parseComment = (

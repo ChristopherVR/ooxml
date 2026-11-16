@@ -11,6 +11,7 @@ import {
 import { parsePreferRelativeResize } from './picture-non-visual-parse';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeShapeParsing';
 import { parseShapeLocksFromNode, SHAPE_LOCK_CONTAINERS } from './shape-lock-containers';
+import { isFiniteNumber } from '../../../../units/finite';
 
 /** EMU values are int32 per ECMA-376 §22.1.2.4. Clamp parsed values to this range. */
 const INT32_MIN = -2_147_483_648;
@@ -22,7 +23,7 @@ const INT32_MAX = 2_147_483_647;
  */
 function parseEmuInt(value: unknown): number {
 	const parsed = parseInt(String(value ?? ''), 10);
-	if (!Number.isFinite(parsed)) {
+	if (!isFiniteNumber(parsed)) {
 		return 0;
 	}
 	if (parsed < INT32_MIN) {
@@ -306,19 +307,19 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			const tileProps: Record<string, unknown> = {};
 			if (tileNode) {
 				const txRaw = Number.parseInt(String(tileNode['@_tx'] || ''), 10);
-				if (Number.isFinite(txRaw)) {
+				if (isFiniteNumber(txRaw)) {
 					tileProps.tileOffsetX = txRaw / PptxHandlerRuntime.EMU_PER_PX;
 				}
 				const tyRaw = Number.parseInt(String(tileNode['@_ty'] || ''), 10);
-				if (Number.isFinite(tyRaw)) {
+				if (isFiniteNumber(tyRaw)) {
 					tileProps.tileOffsetY = tyRaw / PptxHandlerRuntime.EMU_PER_PX;
 				}
 				const sxRaw = Number.parseInt(String(tileNode['@_sx'] || ''), 10);
-				if (Number.isFinite(sxRaw)) {
+				if (isFiniteNumber(sxRaw)) {
 					tileProps.tileScaleX = sxRaw / 100000;
 				}
 				const syRaw = Number.parseInt(String(tileNode['@_sy'] || ''), 10);
-				if (Number.isFinite(syRaw)) {
+				if (isFiniteNumber(syRaw)) {
 					tileProps.tileScaleY = syRaw / 100000;
 				}
 				const flipStr = String(tileNode['@_flip'] || '').trim();
@@ -337,7 +338,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				String((blipFill as XmlObject | undefined)?.['@_dpi'] || ''),
 				10,
 			);
-			if (Number.isFinite(dpiRaw) && dpiRaw > 0) {
+			if (isFiniteNumber(dpiRaw) && dpiRaw > 0) {
 				tileProps.dpi = dpiRaw;
 			}
 

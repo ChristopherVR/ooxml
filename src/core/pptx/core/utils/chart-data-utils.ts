@@ -18,6 +18,7 @@ import type {
 	PptxChartSeries,
 	PptxChartType,
 } from '../types/chart';
+import { at } from '../../../geometry/indexed';
 
 // ---------------------------------------------------------------------------
 // Chart type compatibility mapping
@@ -152,7 +153,7 @@ export function chartDataUpdatePoint(
 			`Series index ${seriesIndex} is out of range. Chart has ${chartData.series.length} series.`,
 		);
 	}
-	const series = chartData.series[seriesIndex];
+	const series = at(chartData.series, seriesIndex);
 	if (pointIndex < 0 || pointIndex >= series.values.length) {
 		throw new RangeError(
 			`Point index ${pointIndex} is out of range. Series "${series.name}" has ${series.values.length} data points.`,

@@ -20,6 +20,7 @@ import { generateLayoutXml } from './layout-operations';
 import { newPresentationAppXml } from './presentation-app-properties';
 import { standardLayoutPlaceholders } from './standard-layout-placeholders';
 import type { PresentationOptions } from './types';
+import { at } from '../../../../geometry/indexed';
 
 // ---------------------------------------------------------------------------
 // Default values
@@ -463,7 +464,7 @@ export async function buildBlankPresentationArchive(
 	zip.file('ppt/slideMasters/_rels/slideMaster1.xml.rels', slideMasterRelsXml(layoutCount));
 
 	for (let i = 0; i < layoutCount; i++) {
-		const layout = STANDARD_LAYOUTS[i];
+		const layout = at(STANDARD_LAYOUTS, i);
 		zip.file(
 			`ppt/slideLayouts/slideLayout${i + 1}.xml`,
 			generateLayoutXml({

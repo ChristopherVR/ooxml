@@ -15,6 +15,7 @@ import {
 	tiltChannelsFromXY,
 } from './inkml-trace-decode';
 import type { TiltChannels } from './inkml-trace-decode';
+import { isFiniteNumber } from '../../../units/finite';
 
 // Re-exported for the existing import sites (and colocated tests): the
 // writer half of this module was split out to `inkml-content-part-writer.ts`
@@ -126,7 +127,8 @@ function mapDecodedPoints(
 ): number[][] {
 	const xi = Math.max(channelOrder.indexOf('X'), 0);
 	const yi = channelOrder.indexOf('Y') >= 0 ? channelOrder.indexOf('Y') : 1;
-	return points.map((point) => mapPoint(point[xi], point[yi]));
+	// A point missing a channel maps through NaN, as the arithmetic on `undefined` did.
+	return points.map((point) => mapPoint(point[xi] ?? NaN, point[yi] ?? NaN));
 }
 
 /**
@@ -158,7 +160,7 @@ function collectBrushes(root: XmlObject): Map<string, BrushStyle> {
 		const id = String(nsAttr(brush, 'id') ?? '');
 		brushes.set(id, {
 			color: String(properties.get('color')?.value ?? DEFAULT_BRUSH.color),
-			width: Number.isFinite(width) && width > 0 ? width : DEFAULT_BRUSH.width,
+			width: isFiniteNumber(width) && width > 0 ? width : DEFAULT_BRUSH.width,
 			opacity: brushOpacity(properties),
 		});
 	}
@@ -172,11 +174,11 @@ function collectBrushes(root: XmlObject): Map<string, BrushStyle> {
  */
 function brushOpacity(properties: Map<string, { value: unknown; units: unknown }>): number {
 	const direct = Number(properties.get('opacity')?.value);
-	if (Number.isFinite(direct)) {
+	if (isFiniteNumber(direct)) {
 		return Math.min(1, Math.max(0, direct));
 	}
 	const transparency = Number(properties.get('transparency')?.value);
-	if (Number.isFinite(transparency)) {
+	if (isFiniteNumber(transparency)) {
 		return 1 - Math.min(255, Math.max(0, transparency)) / 255;
 	}
 	return DEFAULT_BRUSH.opacity;
@@ -186,7 +188,7 @@ function tracePressures(text: string): number[] {
 	const pressures: number[] = [];
 	for (const point of text.split(',')) {
 		const values = point.trim().split(/[\s]+/u).map(Number);
-		if (values.length >= 3 && Number.isFinite(values[2])) {
+		if (values.length >= 3 && isFiniteNumber(values[2])) {
 			pressures.push(Math.max(0, Math.min(1, values[2])));
 		}
 	}
@@ -212,7 +214,7 @@ function traceTilt(text: string, azimuthEncoded: boolean): TiltChannels | undefi
 	const bs: number[] = [];
 	for (const point of text.split(',')) {
 		const values = point.trim().split(/[\s]+/u).map(Number);
-		if (values.length >= 5 && Number.isFinite(values[3]) && Number.isFinite(values[4])) {
+		if (values.length >= 5 && isFiniteNumber(values[3]) && isFiniteNumber(values[4])) {
 			as.push(values[3]);
 			bs.push(values[4]);
 		}

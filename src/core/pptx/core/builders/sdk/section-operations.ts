@@ -169,7 +169,7 @@ export function getSectionForSlide(data: PptxData, slideIndex: number): PptxSect
 		return undefined;
 	}
 
-	const slide = data.slides[slideIndex];
+	const slide = at(data.slides, slideIndex);
 	if (!slide.sectionId) {
 		return undefined;
 	}
@@ -207,7 +207,7 @@ export function moveSlidesToSection(
 			continue;
 		}
 
-		const slide = data.slides[idx];
+		const slide = at(data.slides, idx);
 
 		// Remove from current section's slideIds
 		if (slide.sectionId) {

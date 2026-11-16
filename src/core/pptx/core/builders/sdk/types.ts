@@ -134,7 +134,7 @@ export type FillInput =
 			scaled?: boolean;
 			/** Whether the gradient rotates with the shape (`@rotWithShape`). */
 			rotWithShape?: boolean;
-			stops: Array<{ color: string; position: number; opacity?: number }>;
+			stops: Array<{ color: string; position: number; opacity?: number | undefined }>;
 	  }
 	| {
 			type: 'pattern';
@@ -618,7 +618,7 @@ export type BackgroundInput =
 			 * At least two stops: `color` as `#RRGGBB`, `position` 0-1, `opacity`
 			 * 0-1 (default opaque).
 			 */
-			stops: Array<{ color: string; position: number; opacity?: number }>;
+			stops: Array<{ color: string; position: number; opacity?: number | undefined }>;
 	  }
 	| { type: 'image'; source: string };
 

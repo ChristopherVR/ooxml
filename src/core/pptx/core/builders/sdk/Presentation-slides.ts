@@ -69,7 +69,7 @@ export function duplicateSlideImpl(data: PptxData, slideIndex: number): number {
 	if (slideIndex < 0 || slideIndex >= data.slides.length) {
 		throw new RangeError(`Slide index ${slideIndex} is out of range`);
 	}
-	const cloned = duplicateSlide(data.slides[slideIndex], data.slides.length + 1);
+	const cloned = duplicateSlide(at(data.slides, slideIndex), data.slides.length + 1);
 	data.slides.push(cloned);
 	return data.slides.length - 1;
 }
@@ -102,7 +102,8 @@ export function moveSlideImpl(data: PptxData, fromIndex: number, toIndex: number
 	if (fromIndex < 0 || fromIndex >= slides.length || toIndex < 0 || toIndex >= slides.length) {
 		throw new RangeError('Slide index out of range');
 	}
-	const [slide] = slides.splice(fromIndex, 1);
+	const slide = at(slides, fromIndex);
+	slides.splice(fromIndex, 1);
 	slides.splice(toIndex, 0, slide);
 	renumberSlides(data);
 }
@@ -120,7 +121,9 @@ export function swapSlidesImpl(data: PptxData, indexA: number, indexB: number): 
 	if (indexA < 0 || indexA >= slides.length || indexB < 0 || indexB >= slides.length) {
 		throw new RangeError('Slide index out of range');
 	}
-	[slides[indexA], slides[indexB]] = [slides[indexB], slides[indexA]];
+	const slideA = at(slides, indexA);
+	slides[indexA] = at(slides, indexB);
+	slides[indexB] = slideA;
 	renumberSlides(data);
 }
 
@@ -132,7 +135,7 @@ export function swapSlidesImpl(data: PptxData, indexA: number, indexB: number): 
  */
 export function reorderSlidesImpl(data: PptxData, newOrder: number[]): void {
 	const slides = data.slides;
-	const reordered = newOrder.filter((i) => i >= 0 && i < slides.length).map((i) => slides[i]);
+	const reordered = newOrder.filter((i) => i >= 0 && i < slides.length).map((i) => at(slides, i));
 	data.slides = reordered;
 	renumberSlides(data);
 }
@@ -158,7 +161,7 @@ export function getSlideImpl(data: PptxData, index: number): PptxSlide {
 	if (index < 0 || index >= data.slides.length) {
 		throw new RangeError(`Slide index ${index} is out of range`);
 	}
-	return data.slides[index];
+	return at(data.slides, index);
 }
 
 /**

@@ -325,7 +325,7 @@ function deriveTransitionalUri(uri: string): string | undefined {
 		return undefined;
 	}
 	const segments = uri.slice(STRICT_BASE.length).split('/');
-	if (segments.length < 2 || !ALGORITHMIC_FAMILIES.has(segments[0])) {
+	if (segments.length < 2 || !ALGORITHMIC_FAMILIES.has(segments[0] ?? '')) {
 		return undefined;
 	}
 	// Insert the `2006` version segment after the family (idempotent if present).
@@ -345,7 +345,11 @@ function deriveStrictUri(uri: string): string | undefined {
 		return undefined;
 	}
 	const segments = uri.slice(TRANSITIONAL_BASE.length).split('/');
-	if (segments.length < 3 || !ALGORITHMIC_FAMILIES.has(segments[0]) || segments[1] !== '2006') {
+	if (
+		segments.length < 3 ||
+		!ALGORITHMIC_FAMILIES.has(segments[0] ?? '') ||
+		segments[1] !== '2006'
+	) {
 		return undefined;
 	}
 	// Remove the `2006` version segment that sits after the family.
@@ -509,15 +513,15 @@ function isConvertibleAttributeName(name: string): boolean {
 export function containsConvertibleStrictNamespaceAttribute(xml: string): boolean {
 	let index = 0;
 	while (index < xml.length) {
-		while (index < xml.length && !isXmlWhitespace(xml[index])) {
+		while (index < xml.length && !isXmlWhitespace(xml.charAt(index))) {
 			index++;
 		}
-		while (index < xml.length && isXmlWhitespace(xml[index])) {
+		while (index < xml.length && isXmlWhitespace(xml.charAt(index))) {
 			index++;
 		}
 
 		const nameStart = index;
-		while (index < xml.length && !isXmlWhitespace(xml[index]) && xml[index] !== '=') {
+		while (index < xml.length && !isXmlWhitespace(xml.charAt(index)) && xml[index] !== '=') {
 			index++;
 		}
 		const name = xml.slice(nameStart, index);
@@ -525,14 +529,14 @@ export function containsConvertibleStrictNamespaceAttribute(xml: string): boolea
 			continue;
 		}
 
-		while (index < xml.length && isXmlWhitespace(xml[index])) {
+		while (index < xml.length && isXmlWhitespace(xml.charAt(index))) {
 			index++;
 		}
 		if (xml[index] !== '=') {
 			continue;
 		}
 		index++;
-		while (index < xml.length && isXmlWhitespace(xml[index])) {
+		while (index < xml.length && isXmlWhitespace(xml.charAt(index))) {
 			index++;
 		}
 

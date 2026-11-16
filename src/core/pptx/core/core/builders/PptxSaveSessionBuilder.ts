@@ -2,6 +2,7 @@ import type JSZip from 'jszip';
 
 import type { PptxCommentAuthor, XmlObject } from '../../types';
 import { at } from '../../../../geometry/indexed';
+import { isFiniteNumber } from '../../../../units/finite';
 
 export type PptxSaveMediaKind = 'image' | 'audio' | 'video';
 
@@ -160,7 +161,7 @@ export class PptxSaveState {
 	}
 
 	public toEmu(value: number | undefined, fallback = 0): number {
-		if (typeof value !== 'number' || !Number.isFinite(value)) {
+		if (typeof value !== 'number' || !isFiniteNumber(value)) {
 			return fallback;
 		}
 		return Math.round(value * this.emuPerPx);
@@ -190,7 +191,7 @@ export class PptxSaveState {
 		fallbackIndex: number,
 	): number {
 		const rawIdx = Number.parseInt(String(commentId || ''), 10);
-		const commentIdx = Number.isFinite(rawIdx) ? rawIdx : fallbackIndex;
+		const commentIdx = isFiniteNumber(rawIdx) ? rawIdx : fallbackIndex;
 		const previousMax = this.commentLastIdxByAuthorId.get(authorId) ?? -1;
 		this.commentLastIdxByAuthorId.set(authorId, Math.max(previousMax, commentIdx));
 		return commentIdx;
@@ -224,7 +225,7 @@ export class PptxSaveState {
 				}
 				// Fallback for newly created authors
 				const numericAuthorId = Number.parseInt(authorId, 10);
-				const colorIndex = Number.isFinite(numericAuthorId) ? Math.max(0, numericAuthorId) : index;
+				const colorIndex = isFiniteNumber(numericAuthorId) ? Math.max(0, numericAuthorId) : index;
 				return {
 					authorId,
 					authorName,
@@ -236,7 +237,7 @@ export class PptxSaveState {
 			.sort((left, right) => {
 				const leftId = Number.parseInt(String(left.authorId || ''), 10);
 				const rightId = Number.parseInt(String(right.authorId || ''), 10);
-				if (Number.isFinite(leftId) && Number.isFinite(rightId)) {
+				if (isFiniteNumber(leftId) && isFiniteNumber(rightId)) {
 					return leftId - rightId;
 				}
 				return String(left.authorId || '').localeCompare(String(right.authorId || ''));
@@ -247,8 +248,8 @@ export class PptxSaveState {
 		zip.forEach((relativePath) => {
 			const slideMatch = relativePath.match(/^ppt\/slides\/slide(\d+)\.xml$/);
 			if (slideMatch) {
-				const numericValue = Number.parseInt(slideMatch[1], 10);
-				if (Number.isFinite(numericValue)) {
+				const numericValue = Number.parseInt(slideMatch[1] ?? '', 10);
+				if (isFiniteNumber(numericValue)) {
 					this.usedSlideNumbers.add(numericValue);
 				}
 			}
@@ -259,7 +260,10 @@ export class PptxSaveState {
 			const inkMatch = relativePath.match(/^ppt\/ink\/ink(\d+)\.xml$/u);
 			if (inkMatch) {
 				this.usedInkPaths.add(relativePath);
-				this.maxInkPartIndex = Math.max(this.maxInkPartIndex, Number.parseInt(inkMatch[1], 10));
+				this.maxInkPartIndex = Math.max(
+					this.maxInkPartIndex,
+					Number.parseInt(inkMatch[1] ?? '', 10),
+				);
 			}
 
 			const commentMatch = relativePath.match(/^ppt\/comments\/comment(\d+)\.xml$/);
@@ -268,8 +272,8 @@ export class PptxSaveState {
 			}
 
 			this.existingCommentPaths.add(relativePath);
-			const commentIndex = Number.parseInt(commentMatch[1], 10);
-			if (Number.isFinite(commentIndex)) {
+			const commentIndex = Number.parseInt(commentMatch[1] ?? '', 10);
+			if (isFiniteNumber(commentIndex)) {
 				this.maxCommentPartIndex = Math.max(this.maxCommentPartIndex, commentIndex);
 			}
 		});
@@ -286,7 +290,7 @@ export class PptxSaveState {
 			}
 
 			const numericAuthorId = Number.parseInt(authorId, 10);
-			if (Number.isFinite(numericAuthorId)) {
+			if (isFiniteNumber(numericAuthorId)) {
 				this.maxAuthorId = Math.max(this.maxAuthorId, numericAuthorId);
 			}
 		}

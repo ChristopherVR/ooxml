@@ -20,7 +20,7 @@ interface XmlLookupLike {
 export interface ChartGradientCodec {
 	extractGradientStops(
 		gradFill: XmlObject,
-	): Array<{ color: string; position: number; opacity?: number }>;
+	): Array<{ color: string; position: number; opacity?: number | undefined }>;
 	extractGradientType(gradFill: XmlObject): 'linear' | 'radial';
 	extractGradientAngle(gradFill: XmlObject): number;
 	extractGradientFocalPoint(gradFill: XmlObject): { x: number; y: number } | undefined;

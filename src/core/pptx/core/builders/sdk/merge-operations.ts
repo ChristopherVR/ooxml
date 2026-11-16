@@ -239,7 +239,7 @@ export function mergePresentation(
 	}
 
 	// Clone selected slides from source
-	const clonedSlides: PptxSlide[] = validIndices.map((i) => cloneSlide(sourceData.slides[i]));
+	const clonedSlides: PptxSlide[] = validIndices.map((i) => cloneSlide(at(sourceData.slides, i)));
 
 	// Collect existing IDs in target
 	const existingSlideIds = collectSlideIds(targetData.slides);

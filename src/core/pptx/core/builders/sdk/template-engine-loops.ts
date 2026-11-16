@@ -14,6 +14,7 @@ import { cloneSlide } from '../../utils/clone-utils';
 import { resolvePath, replaceTokensInString } from './template-engine-helpers';
 import { replaceTokensAcrossSegments, processElements } from './template-engine-segments';
 import type { TemplateData } from './template-engine-types';
+import { at } from '../../../../geometry/indexed';
 
 // ---------------------------------------------------------------------------
 // Slide-level each-block detection
@@ -30,8 +31,9 @@ export function findEachBlockOnSlide(slide: PptxSlide): string | null {
 		const text = extractFullText(element);
 		if (text) {
 			const match = /\{\{\s*#each\s+([\w.]+)\s*\}\}/.exec(text);
-			if (match) {
-				return match[1];
+			const key = match?.[1];
+			if (key !== undefined) {
+				return key;
 			}
 		}
 	}
@@ -155,10 +157,11 @@ export function expandEachBlocks(slides: PptxSlide[], data: TemplateData): PptxS
 	let i = 0;
 
 	while (i < slides.length) {
-		const eachKey = findEachBlockOnSlide(slides[i]);
+		const slide = at(slides, i);
+		const eachKey = findEachBlockOnSlide(slide);
 
 		if (!eachKey) {
-			result.push(slides[i]);
+			result.push(slide);
 			i++;
 			continue;
 		}
@@ -170,16 +173,17 @@ export function expandEachBlocks(slides: PptxSlide[], data: TemplateData): PptxS
 		// The opening tag might be on the same slide as content
 		// Collect slides until we find {{/each}}
 		// Check if open and close are on the same slide
-		if (hasEachClose(slides[i])) {
+		if (hasEachClose(slide)) {
 			// Same slide -- use it as the loop body
-			loopBodySlides.push(slides[i]);
+			loopBodySlides.push(slide);
 			closeIdx = i;
 		} else {
 			// Opening slide -- include it in the body
-			loopBodySlides.push(slides[i]);
+			loopBodySlides.push(slide);
 			for (let j = i + 1; j < slides.length; j++) {
-				loopBodySlides.push(slides[j]);
-				if (hasEachClose(slides[j])) {
+				const bodySlide = at(slides, j);
+				loopBodySlides.push(bodySlide);
+				if (hasEachClose(bodySlide)) {
 					closeIdx = j;
 					break;
 				}
@@ -188,7 +192,7 @@ export function expandEachBlocks(slides: PptxSlide[], data: TemplateData): PptxS
 
 		if (closeIdx === -1) {
 			// No closing tag found -- leave slide as-is
-			result.push(slides[i]);
+			result.push(slide);
 			i++;
 			continue;
 		}

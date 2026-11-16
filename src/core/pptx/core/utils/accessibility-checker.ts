@@ -62,9 +62,9 @@ export function parseHexColor(hex: string): [number, number, number] | null {
 		return null;
 	}
 	if (cleaned.length === 3) {
-		const r = Number.parseInt(cleaned[0] + cleaned[0], 16);
-		const g = Number.parseInt(cleaned[1] + cleaned[1], 16);
-		const b = Number.parseInt(cleaned[2] + cleaned[2], 16);
+		const r = Number.parseInt(cleaned.charAt(0).repeat(2), 16);
+		const g = Number.parseInt(cleaned.charAt(1).repeat(2), 16);
+		const b = Number.parseInt(cleaned.charAt(2).repeat(2), 16);
 		return [r, g, b];
 	}
 	if (cleaned.length === 6) {
@@ -81,10 +81,13 @@ export function parseHexColor(hex: string): [number, number, number] | null {
  * @see https://www.w3.org/TR/WCAG21/#dfn-relative-luminance
  */
 export function relativeLuminance(r: number, g: number, b: number): number {
-	const [rs, gs, bs] = [r, g, b].map((c) => {
+	const linear = (c: number): number => {
 		const s = c / 255;
 		return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-	});
+	};
+	const rs = linear(r);
+	const gs = linear(g);
+	const bs = linear(b);
 	return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
 }
 
@@ -399,7 +402,11 @@ export function checkPresentation(
 	issues.push(...checkDuplicateTitles(data.slides));
 
 	// Sort by slide index, then severity (error > warning > tip)
-	const severityOrder: Record<string, number> = { error: 0, warning: 1, tip: 2 };
+	const severityOrder: Record<AccessibilityIssueSeverity, number> = {
+		error: 0,
+		warning: 1,
+		tip: 2,
+	};
 	issues.sort(
 		(a, b) => a.slideIndex - b.slideIndex || severityOrder[a.severity] - severityOrder[b.severity],
 	);

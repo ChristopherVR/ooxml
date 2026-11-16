@@ -305,7 +305,7 @@ export interface PptxImageEffects {
 			type: 'linear' | 'radial';
 			/** Gradient angle in degrees (`a:lin/@ang`), for a linear gradient. */
 			angle?: number;
-			stops: Array<{ color: string; position: number; opacity?: number }>;
+			stops: Array<{ color: string; position: number; opacity?: number | undefined }>;
 		};
 		/**
 		 * Resolved preset pattern, when the overlay fill is `a:pattFill`. A

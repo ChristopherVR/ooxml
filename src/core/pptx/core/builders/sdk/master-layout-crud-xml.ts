@@ -68,7 +68,7 @@ export function relsPathFor(partPath: string): string {
 /** The 1-based index encoded in a `slideMaster<N>.xml` path, or `undefined`. */
 export function masterIndexFromPath(masterPath: string): number | undefined {
 	const match = masterPath.match(/slideMaster(\d+)\.xml$/);
-	return match ? parseInt(match[1], 10) : undefined;
+	return match ? parseInt(match[1] ?? '', 10) : undefined;
 }
 
 /** Count existing slide masters in the ZIP by scanning file paths. */
@@ -159,7 +159,7 @@ export async function addMasterToPresentation(zip: JSZip, masterPath: string): P
 		throw new Error('presentation.xml.rels not found');
 	}
 	const rIdMatches = [...relsContent.matchAll(/rId(\d+)/g)];
-	const maxRId = rIdMatches.reduce((max, m) => Math.max(max, parseInt(m[1], 10)), 0);
+	const maxRId = rIdMatches.reduce((max, m) => Math.max(max, parseInt(m[1] ?? '', 10)), 0);
 	const newRId = `rId${maxRId + 1}`;
 	const target = masterPath.replace(/^ppt\//, '');
 	const newRel = `  <Relationship Id="${newRId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="${target}"/>`;
@@ -171,7 +171,7 @@ export async function addMasterToPresentation(zip: JSZip, masterPath: string): P
 		throw new Error('presentation.xml not found');
 	}
 	const idMatches = [...presContent.matchAll(/sldMasterId\s+id="(\d+)"/g)];
-	const maxId = idMatches.reduce((max, m) => Math.max(max, parseInt(m[1], 10)), 2147483647);
+	const maxId = idMatches.reduce((max, m) => Math.max(max, parseInt(m[1] ?? '', 10)), 2147483647);
 	const newEntry = `    <p:sldMasterId id="${maxId + 1}" r:id="${newRId}"/>`;
 	zip.file(
 		presPath,

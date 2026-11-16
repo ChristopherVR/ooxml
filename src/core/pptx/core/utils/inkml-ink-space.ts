@@ -1,3 +1,4 @@
+import { isFiniteNumber } from '../../../units/finite';
 /**
  * The bridge between an InkML part's own coordinate system and the box the
  * `p:contentPart` occupies on the slide.
@@ -42,7 +43,7 @@ const PX_PER_UNIT: Readonly<Record<string, number>> = {
  * treated as pixels, which is what the library's own authored ink emits.
  */
 export function inkLengthToPx(value: number, units: string | undefined): number {
-	if (!Number.isFinite(value)) {
+	if (!isFiniteNumber(value)) {
 		return Number.NaN;
 	}
 	const key = String(units ?? '')
@@ -71,7 +72,7 @@ export function inkBounds(
 	for (const points of traces) {
 		for (const point of points) {
 			const [x, y] = point;
-			if (!Number.isFinite(x) || !Number.isFinite(y)) {
+			if (!isFiniteNumber(x) || !isFiniteNumber(y)) {
 				continue;
 			}
 			minX = Math.min(minX, x);
@@ -80,7 +81,7 @@ export function inkBounds(
 			maxY = Math.max(maxY, y);
 		}
 	}
-	return Number.isFinite(minX) && Number.isFinite(minY) ? { minX, minY, maxX, maxY } : undefined;
+	return isFiniteNumber(minX) && isFiniteNumber(minY) ? { minX, minY, maxX, maxY } : undefined;
 }
 
 /** The target box a content part's strokes are normalised into, in CSS px. */

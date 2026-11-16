@@ -108,7 +108,7 @@ export function replaceTokensAcrossSegments(segments: TextSegment[], data: Templ
 
 	// Process tokens in reverse order so earlier offsets remain valid
 	for (let t = tokens.length - 1; t >= 0; t--) {
-		const token = tokens[t];
+		const token = at(tokens, t);
 		const value = resolvePath(data, token.key);
 		if (value === undefined) {
 			continue;
@@ -129,14 +129,15 @@ export function replaceTokensAcrossSegments(segments: TextSegment[], data: Templ
 
 		if (startInfo.segmentIndex === endInfo.segmentIndex) {
 			// Token is entirely within one segment -- simple case
-			const seg = segments[startInfo.segmentIndex];
+			// `segmentMap` indexes into `segments`, so its segment indices are in range.
+			const seg = at(segments, startInfo.segmentIndex);
 			const before = seg.text.slice(0, startInfo.localOffset);
 			const after = seg.text.slice(endInfo.localOffset + 1);
 			seg.text = before + replacement + after;
 		} else {
 			// Token spans multiple segments
 			// Put replacement in the first segment, clear the spanned parts from others
-			const firstSeg = segments[startInfo.segmentIndex];
+			const firstSeg = at(segments, startInfo.segmentIndex);
 			const before = firstSeg.text.slice(0, startInfo.localOffset);
 			firstSeg.text = before + replacement;
 
@@ -148,7 +149,7 @@ export function replaceTokensAcrossSegments(segments: TextSegment[], data: Templ
 			}
 
 			// Trim the end segment
-			const lastSeg = segments[endInfo.segmentIndex];
+			const lastSeg = at(segments, endInfo.segmentIndex);
 			if (!lastSeg.isParagraphBreak) {
 				lastSeg.text = lastSeg.text.slice(endInfo.localOffset + 1);
 			}

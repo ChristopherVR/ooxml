@@ -36,7 +36,8 @@ export function writeTableColumnWidths(tbl: XmlObject, columnWidths: readonly nu
 	let cumulative = 0;
 	let previousBoundary = 0;
 	for (let index = 0; index < columns.length; index++) {
-		cumulative += columnWidths[index];
+		// `columnWidths` has one entry per column (checked above).
+		cumulative += at(columnWidths, index);
 		const boundary =
 			index === columns.length - 1
 				? totalWidth

@@ -63,7 +63,7 @@ export interface ShapeLockContainerSpec {
  * the locks" and deletes the node, so adding a container to this table without
  * a parser for it does not round-trip a lock - it ERASES one on first save.
  */
-export const SHAPE_LOCK_CONTAINERS: Readonly<Record<string, ShapeLockContainerSpec>> = {
+export const SHAPE_LOCK_CONTAINERS = {
 	'p:sp': {
 		nvKey: 'p:nvSpPr',
 		cNvKey: 'p:cNvSpPr',
@@ -102,7 +102,7 @@ export const SHAPE_LOCK_CONTAINERS: Readonly<Record<string, ShapeLockContainerSp
 		// shape list would emit five attributes the schema rejects.
 		permitted: ['noGrouping', 'noDrilldown', 'noSelect', 'noChangeAspect', 'noMove', 'noResize'],
 	},
-};
+} satisfies Readonly<Record<string, ShapeLockContainerSpec>>;
 
 /**
  * The lock container an element's markup actually has, preferring the shape of
@@ -131,8 +131,12 @@ export function resolveShapeLockContainer(
 			}
 		}
 	}
-	return SHAPE_LOCK_CONTAINERS[bucketKey];
+	return CONTAINERS_BY_TAG[bucketKey];
 }
+
+/** {@link SHAPE_LOCK_CONTAINERS} for lookups by an arbitrary bucket key. */
+const CONTAINERS_BY_TAG: Readonly<Record<string, ShapeLockContainerSpec | undefined>> =
+	SHAPE_LOCK_CONTAINERS;
 
 /**
  * Narrow a parsed XML value to an element node.

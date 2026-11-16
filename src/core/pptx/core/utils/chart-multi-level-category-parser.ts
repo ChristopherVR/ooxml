@@ -1,4 +1,5 @@
 import type { XmlObject } from '../types';
+import { isFiniteNumber } from '../../../units/finite';
 
 interface XmlLookupLike {
 	getChildByLocalName: (parent: XmlObject | undefined, name: string) => XmlObject | undefined;
@@ -80,7 +81,7 @@ function expandCategoryLevel(
 	let maxIndex = -1;
 	for (const point of points) {
 		const index = Number.parseInt(String(point?.['@_idx'] ?? '0'), 10);
-		if (!Number.isFinite(index) || index < 0) {
+		if (!isFiniteNumber(index) || index < 0) {
 			continue;
 		}
 		const value = String(xmlLookup.getScalarChildByLocalName(point, 'v') || '').trim();
@@ -92,7 +93,7 @@ function expandCategoryLevel(
 		}
 	}
 	const length =
-		Number.isFinite(declaredCount) && declaredCount > maxIndex + 1 ? declaredCount : maxIndex + 1;
+		isFiniteNumber(declaredCount) && declaredCount > maxIndex + 1 ? declaredCount : maxIndex + 1;
 	const dense: string[] = [];
 	for (let index = 0; index < length; index++) {
 		dense.push(byIndex.get(index) ?? '');

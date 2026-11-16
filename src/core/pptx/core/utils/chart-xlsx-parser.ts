@@ -16,6 +16,7 @@ import { openNestedZip } from './zip-open';
 import type { PptxEmbeddedWorkbookData } from '../types';
 import { preservesSpreadsheetXmlWhitespace } from './xml-whitespace';
 import { at } from '../../../geometry/indexed';
+import { isFiniteNumber } from '../../../units/finite';
 
 /** Represents a single parsed cell from the worksheet. */
 interface ParsedCell {
@@ -51,7 +52,7 @@ function parseCellReference(ref: string): { col: number; row: number } {
 	}
 	return {
 		col: columnLetterToIndex(match[1]),
-		row: Number.parseInt(match[2], 10) - 1,
+		row: Number.parseInt(match[2] ?? '', 10) - 1,
 	};
 }
 
@@ -223,7 +224,7 @@ function resolveCellValue(cell: ParsedCell, sharedStrings: string[]): string | n
 		case 's': {
 			// Shared string index
 			const idx = Number.parseInt(cell.value, 10);
-			return Number.isFinite(idx) && idx >= 0 && idx < sharedStrings.length
+			return isFiniteNumber(idx) && idx >= 0 && idx < sharedStrings.length
 				? sharedStrings[idx]
 				: cell.value;
 		}
@@ -237,7 +238,7 @@ function resolveCellValue(cell: ParsedCell, sharedStrings: string[]): string | n
 		default: {
 			// Numeric
 			const num = Number.parseFloat(cell.value);
-			return Number.isFinite(num) ? num : cell.value;
+			return isFiniteNumber(num) ? num : cell.value;
 		}
 	}
 }
@@ -380,7 +381,7 @@ export async function parseEmbeddedXlsx(
 					values.push(cellVal);
 				} else {
 					const num = Number.parseFloat(String(cellVal));
-					values.push(Number.isFinite(num) ? num : 0);
+					values.push(isFiniteNumber(num) ? num : 0);
 				}
 			}
 

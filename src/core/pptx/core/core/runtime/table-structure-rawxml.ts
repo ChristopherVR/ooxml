@@ -4,6 +4,7 @@ import { serializeCellMergeAttributes } from './save-table-merge-helpers';
 import { DEFAULT_ROW_HEIGHT_EMU, ensureArray, getTblFromRawXml } from './table-structural-helpers';
 import { applyTableStructureEditXml } from './table-structure-edit-xml';
 import type { TableStructureEdit } from './table-structure-edit-xml';
+import { at } from '../../../../geometry/indexed';
 
 export type { TableStructureEdit } from './table-structure-edit-xml';
 
@@ -109,7 +110,7 @@ export function rebuildTableStructureInRawXml(
 			// Try to reuse existing cell XML for preserved cells
 			let xmlCell: XmlObject;
 			if (ci < existingCells.length) {
-				xmlCell = existingCells[ci];
+				xmlCell = at(existingCells, ci);
 			} else {
 				xmlCell = createDefaultRebuildXmlCell();
 			}

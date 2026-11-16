@@ -50,7 +50,7 @@ export function uniqueDisplayName(existingNames: readonly string[], base: string
 	}
 	const match = base.match(/^(.*) (\d+)$/);
 	const root = match ? match[1] : base;
-	let n = match ? parseInt(match[2], 10) + 1 : 2;
+	let n = match ? parseInt(match[2] ?? '', 10) + 1 : 2;
 	while (names.has(`${root} ${n}`)) {
 		n += 1;
 	}
@@ -71,7 +71,7 @@ export function uniquePrefixedName(existingNames: readonly string[], base: strin
 	const names = new Set(existingNames);
 	const match = base.match(/^(\d+)_(.*)$/);
 	const root = match ? match[2] : base;
-	let n = match ? parseInt(match[1], 10) + 1 : 1;
+	let n = match ? parseInt(match[1] ?? '', 10) + 1 : 1;
 	let candidate = `${n}_${root}`;
 	while (names.has(candidate)) {
 		n += 1;

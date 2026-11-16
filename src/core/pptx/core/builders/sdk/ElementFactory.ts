@@ -69,6 +69,7 @@ import type {
 	LinkInput,
 	TableCellInput,
 } from './types';
+import { at } from '../../../../geometry/indexed';
 
 // ---------------------------------------------------------------------------
 // ID generation
@@ -168,7 +169,7 @@ function buildTextSegments(
 		const lines = input.split('\n');
 		const segments: TextSegment[] = [];
 		for (let i = 0; i < lines.length; i++) {
-			segments.push({ text: lines[i], style: base as TextStyle });
+			segments.push({ text: at(lines, i), style: base as TextStyle });
 			if (i < lines.length - 1) {
 				segments.push({
 					text: '\n',

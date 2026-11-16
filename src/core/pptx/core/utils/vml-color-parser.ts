@@ -1,3 +1,4 @@
+import { isFiniteNumber } from '../../../units/finite';
 /**
  * VML color and opacity value parsing.
  *
@@ -73,9 +74,9 @@ export function parseVmlColor(color: string | undefined): string | undefined {
 	// rgb(r,g,b)
 	const rgbMatch = trimmed.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/);
 	if (rgbMatch) {
-		const r = parseInt(rgbMatch[1], 10);
-		const g = parseInt(rgbMatch[2], 10);
-		const b = parseInt(rgbMatch[3], 10);
+		const r = parseInt(rgbMatch[1] ?? '', 10);
+		const g = parseInt(rgbMatch[2] ?? '', 10);
+		const b = parseInt(rgbMatch[3] ?? '', 10);
 		return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
 	}
 
@@ -102,12 +103,12 @@ export function parseVmlOpacity(value: string): number | undefined {
 	const trimmed = value.trim();
 	if (trimmed.endsWith('f')) {
 		const fixed = parseFloat(trimmed.slice(0, -1));
-		return Number.isFinite(fixed) ? fixed / 65536 : undefined;
+		return isFiniteNumber(fixed) ? fixed / 65536 : undefined;
 	}
 	if (trimmed.endsWith('%')) {
 		const pct = parseFloat(trimmed.slice(0, -1));
-		return Number.isFinite(pct) ? pct / 100 : undefined;
+		return isFiniteNumber(pct) ? pct / 100 : undefined;
 	}
 	const num = parseFloat(trimmed);
-	return Number.isFinite(num) ? Math.min(1, Math.max(0, num)) : undefined;
+	return isFiniteNumber(num) ? Math.min(1, Math.max(0, num)) : undefined;
 }

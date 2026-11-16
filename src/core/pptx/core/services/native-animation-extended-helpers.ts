@@ -12,6 +12,7 @@ import type {
 } from '../types';
 import { extractAttrNameFromCBhvr } from './native-animation-attr-name';
 import { ensureArray } from './native-animation-helpers';
+import { isFiniteNumber } from '../../../units/finite';
 
 /**
  * Parse `p:animClr` nodes from the child timing list.
@@ -349,7 +350,7 @@ export function readTimingAttr(raw: unknown): number | undefined {
 		return undefined;
 	}
 	const parsed = Number.parseInt(text, 10);
-	return Number.isFinite(parsed) ? parsed : undefined;
+	return isFiniteNumber(parsed) ? parsed : undefined;
 }
 
 /**
@@ -403,7 +404,7 @@ function behaviourEndMs(inner: XmlObject, dur: number): number {
 	const autoRev = inner['@_autoRev'];
 	const reverse = autoRev === '1' || autoRev === 'true';
 	const rawRepeat = Number.parseInt(String(inner['@_repeatCount'] ?? ''), 10);
-	const repeat = Number.isFinite(rawRepeat) && rawRepeat > 0 ? rawRepeat / 1000 : 1;
+	const repeat = isFiniteNumber(rawRepeat) && rawRepeat > 0 ? rawRepeat / 1000 : 1;
 	return delay + dur * (reverse ? 2 : 1) * repeat;
 }
 

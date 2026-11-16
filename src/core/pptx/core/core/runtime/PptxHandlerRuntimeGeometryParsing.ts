@@ -22,6 +22,7 @@ import type {
 } from '../../types';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimePlaceholderLookup';
 import { evaluatePresetAdjustmentFormula } from './preset-avlst-fmla';
+import { isFiniteNumber } from '../../../../units/finite';
 
 /**
  * Parse a signed `ST_Percentage` rect offset to a fraction, accepting both
@@ -65,7 +66,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 			if (gd?.['@_val'] !== undefined) {
 				const parsed = Number.parseInt(String(gd['@_val']), 10);
-				if (Number.isFinite(parsed)) {
+				if (isFiniteNumber(parsed)) {
 					value = parsed;
 				}
 			}
@@ -75,8 +76,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// preset form). This must never regress.
 				const match = formula.match(/^val\s+(-?\d+)$/i);
 				if (match) {
-					const parsed = Number.parseInt(match[1], 10);
-					if (Number.isFinite(parsed)) {
+					const parsed = Number.parseInt(match[1] ?? '', 10);
+					if (isFiniteNumber(parsed)) {
 						value = parsed;
 					}
 				} else {

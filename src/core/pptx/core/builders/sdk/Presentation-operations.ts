@@ -27,6 +27,7 @@ import { applyTemplate, mailMerge } from './template-engine';
 import type { TemplateData } from './template-engine';
 import { findText, replaceText, replaceTextInSlide } from './text-operations';
 import type { FindResult } from './text-operations';
+import { at } from '../../../../geometry/indexed';
 
 // -----------------------------------------------------------------------
 // Text operations
@@ -78,7 +79,7 @@ export function replaceTextOnSlideImpl(
 	if (slideIndex < 0 || slideIndex >= data.slides.length) {
 		throw new RangeError(`Slide index ${slideIndex} is out of range`);
 	}
-	return replaceTextInSlide(data.slides[slideIndex], search, replacement);
+	return replaceTextInSlide(at(data.slides, slideIndex), search, replacement);
 }
 
 // -----------------------------------------------------------------------

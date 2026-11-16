@@ -20,6 +20,7 @@ import {
 	readInheritedTransform,
 } from './graphic-frame-placeholder';
 import { parseOleUpdateAutomatic } from './ole-update-automatic';
+import { isFiniteNumber } from '../../../../units/finite';
 
 /**
  * Recognised `a:graphicData/a:extLst/a:ext` URIs that map to first-class
@@ -41,7 +42,7 @@ function ensureArrayLike<T>(value: T | T[] | undefined): T[] {
 
 function readPositiveInteger(value: unknown): number {
 	const parsed = Number.parseInt(String(value ?? ''), 10);
-	return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+	return isFiniteNumber(parsed) && parsed > 0 ? parsed : 0;
 }
 
 /**
@@ -129,7 +130,7 @@ export function parseAinkTraceText(raw: string): string | undefined {
 		}
 		const x = Number(parts[0]);
 		const y = Number(parts[1]);
-		if (!Number.isFinite(x) || !Number.isFinite(y)) {
+		if (!isFiniteNumber(x) || !isFiniteNumber(y)) {
 			continue;
 		}
 		coords.push({ x, y });
@@ -166,11 +167,11 @@ export function parseAinkTracePressures(raw: string): number[] {
 		}
 		const x = Number(parts[0]);
 		const y = Number(parts[1]);
-		if (!Number.isFinite(x) || !Number.isFinite(y)) {
+		if (!isFiniteNumber(x) || !isFiniteNumber(y)) {
 			continue;
 		}
 		const rawPressure = parts.length > 2 ? Number(parts[2]) : NaN;
-		if (Number.isFinite(rawPressure)) {
+		if (isFiniteNumber(rawPressure)) {
 			sawPressure = true;
 			pressures.push(Math.max(0, Math.min(1, rawPressure)));
 		} else {
@@ -319,7 +320,7 @@ export function decodeAinkInk(inkRoot: XmlObject): {
 			return 2;
 		}
 		const num = Number(raw);
-		return Number.isFinite(num) && num > 0 ? num : 2;
+		return isFiniteNumber(num) && num > 0 ? num : 2;
 	})();
 
 	const traces = ensureArrayLike(inkRoot['aink:trace'] as unknown as XmlObject | XmlObject[]);
@@ -357,7 +358,7 @@ export function decodeAinkInk(inkRoot: XmlObject): {
 		);
 		const traceWidthNum = traceWidthRaw.length > 0 ? Number(traceWidthRaw) : NaN;
 		inkWidths.push(
-			Number.isFinite(traceWidthNum) && traceWidthNum > 0 ? traceWidthNum : defaultWidth,
+			isFiniteNumber(traceWidthNum) && traceWidthNum > 0 ? traceWidthNum : defaultWidth,
 		);
 	}
 

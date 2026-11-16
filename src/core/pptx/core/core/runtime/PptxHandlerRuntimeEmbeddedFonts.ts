@@ -183,7 +183,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		return options;
 	}
 
-	protected resolveMasterPathForLayout(layoutPath: string): string | undefined {
+	protected override resolveMasterPathForLayout(layoutPath: string): string | undefined {
 		const layoutRels = this.slideRelsMap.get(layoutPath);
 		if (!layoutRels) {
 			return undefined;

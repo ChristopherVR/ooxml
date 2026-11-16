@@ -87,11 +87,11 @@ function findOutOfScopePrefixes(xml: string): Set<string> {
 		const parent = stack.length > 0 ? stack[stack.length - 1] : undefined;
 		let scope: Set<string> = parent ?? new Set();
 		const attrs = m[3] ?? '';
-		const names: string[] = [m[2]];
+		const names: string[] = [m[2] ?? ''];
 		ATTR_RE.lastIndex = 0;
 		let a: RegExpExecArray | null;
 		while ((a = ATTR_RE.exec(attrs))) {
-			const attrName = a[1];
+			const attrName = a[1] ?? '';
 			if (attrName.startsWith('xmlns:')) {
 				if (scope === parent) {
 					scope = new Set(parent);
@@ -138,7 +138,7 @@ export function declareUsedNamespaces(xml: string): string {
 	}
 	const rootDeclared = new Set<string>();
 	for (const r of rootTag.matchAll(DECL_RE)) {
-		rootDeclared.add(r[1]);
+		rootDeclared.add(r[1] ?? '');
 	}
 
 	// Fast path: every used prefix is declared on the root.
@@ -146,7 +146,7 @@ export function declareUsedNamespaces(xml: string): string {
 	USED_PREFIX_RE.lastIndex = 0;
 	let u: RegExpExecArray | null;
 	while ((u = USED_PREFIX_RE.exec(xml))) {
-		const prefix = u[1] ?? u[2];
+		const prefix = u[1] ?? u[2] ?? '';
 		if (prefix === 'xml' || prefix === 'xmlns' || rootDeclared.has(prefix)) {
 			continue;
 		}
@@ -161,8 +161,9 @@ export function declareUsedNamespaces(xml: string): string {
 	DECL_RE.lastIndex = 0;
 	let d: RegExpExecArray | null;
 	while ((d = DECL_RE.exec(xml))) {
-		if (!declared.has(d[1])) {
-			declared.set(d[1], d[2] ?? d[3] ?? '');
+		const declaredPrefix = d[1] ?? '';
+		if (!declared.has(declaredPrefix)) {
+			declared.set(declaredPrefix, d[2] ?? d[3] ?? '');
 		}
 	}
 	const additions: string[] = [];

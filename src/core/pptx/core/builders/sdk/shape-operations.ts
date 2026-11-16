@@ -320,7 +320,7 @@ export function interpolateShapeGeometry(from: string, to: string, t: number): s
 			const zeroArgs = Array.from<number>({ length: tCmd.args.length }).fill(0);
 			result.push({
 				type: tCmd.type,
-				args: tCmd.args.map((tVal, j) => lerp(zeroArgs[j], tVal, tc)),
+				args: tCmd.args.map((tVal, j) => lerp(zeroArgs[j] ?? 0, tVal, tc)),
 			});
 			continue;
 		}
@@ -330,7 +330,7 @@ export function interpolateShapeGeometry(from: string, to: string, t: number): s
 			const zeroArgs = Array.from<number>({ length: fCmd.args.length }).fill(0);
 			result.push({
 				type: fCmd.type,
-				args: fCmd.args.map((fVal, j) => lerp(fVal, zeroArgs[j], tc)),
+				args: fCmd.args.map((fVal, j) => lerp(fVal, zeroArgs[j] ?? 0, tc)),
 			});
 			continue;
 		}
@@ -356,9 +356,9 @@ export function interpolateShapeGeometry(from: string, to: string, t: number): s
 				type: nonZ.type,
 				args: nonZ.args.map((val, j) => {
 					if (isFromZ) {
-						return lerp(zeroArgs[j], val, tc);
+						return lerp(zeroArgs[j] ?? 0, val, tc);
 					}
-					return lerp(val, zeroArgs[j], tc);
+					return lerp(val, zeroArgs[j] ?? 0, tc);
 				}),
 			});
 			continue;
@@ -369,8 +369,8 @@ export function interpolateShapeGeometry(from: string, to: string, t: number): s
 			const maxArgs = Math.max(fCmd.args.length, tCmd.args.length);
 			const args: number[] = [];
 			for (let j = 0; j < maxArgs; j++) {
-				const fVal = j < fCmd.args.length ? fCmd.args[j] : 0;
-				const tVal = j < tCmd.args.length ? tCmd.args[j] : 0;
+				const fVal = j < fCmd.args.length ? (fCmd.args[j] ?? 0) : 0;
+				const tVal = j < tCmd.args.length ? (tCmd.args[j] ?? 0) : 0;
 				args.push(lerp(fVal, tVal, tc));
 			}
 			result.push({ type: fCmd.type, args });
@@ -384,8 +384,8 @@ export function interpolateShapeGeometry(from: string, to: string, t: number): s
 		const maxArgs = Math.max(fCmd.args.length, tCmd.args.length);
 		const args: number[] = [];
 		for (let j = 0; j < maxArgs; j++) {
-			const fVal = j < fCmd.args.length ? fCmd.args[j] : 0;
-			const tVal = j < tCmd.args.length ? tCmd.args[j] : 0;
+			const fVal = j < fCmd.args.length ? (fCmd.args[j] ?? 0) : 0;
+			const tVal = j < tCmd.args.length ? (tCmd.args[j] ?? 0) : 0;
 			args.push(lerp(fVal, tVal, tc));
 		}
 		result.push({ type: activeType, args });

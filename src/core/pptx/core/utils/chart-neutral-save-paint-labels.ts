@@ -4,7 +4,7 @@ import {
 	setChartSeriesColor,
 	type ChartDataLabelsEdit,
 } from '../../../chart/index';
-import type { PptxChartData } from '../types';
+import type { PptxChartData, PptxChartStyle } from '../types';
 import type { NeutralChartEdit } from './chart-neutral-save-plan';
 
 const FLAGS = {
@@ -23,11 +23,11 @@ export function planNeutralChartLabels(
 	edits: NeutralChartEdit[],
 	seriesIndex?: number,
 ): void {
-	const was =
+	const was: PptxChartStyle =
 		seriesIndex === undefined
 			? (before.style ?? {})
 			: { dataLabels: before.series[seriesIndex]?.dataLabelOptions };
-	const now =
+	const now: PptxChartStyle | undefined =
 		seriesIndex === undefined
 			? probe.style
 			: { dataLabels: probe.series[seriesIndex]?.dataLabelOptions };

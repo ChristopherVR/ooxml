@@ -1,6 +1,7 @@
 import type { PptxElement, SummaryZoomTarget, XmlObject, ZoomPptxElement } from '../../types';
 import { extractSectionMap } from '../../utils/presentation-section-parser';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSectionZoomParsing';
+import { isFiniteNumber } from '../../../../units/finite';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	/** Parse an Office 2016 Summary Zoom container and all section tiles. */
@@ -106,6 +107,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			return undefined;
 		}
 		const parsed = Number(value);
-		return Number.isFinite(parsed) ? parsed : undefined;
+		return isFiniteNumber(parsed) ? parsed : undefined;
 	}
 }
