@@ -10,7 +10,11 @@ import {
 import { NS, children, elements, first, type XmlElement } from './dom';
 import { parseDrawingParagraphProperties } from './read-paragraph-properties';
 import { isDrawingElement, outerXml, parseDrawingRunProperties } from './read-run-properties';
-import { readDrawingAutofit, readDrawingBodyAttributes } from './text-body-codec';
+import {
+	readDrawingAutofit,
+	readDrawingBodyAttributes,
+	readDrawingTextWarp,
+} from './text-body-codec';
 import { domTextElementView } from './text-element-view';
 import type {
 	DrawingBodyProperties,
@@ -19,6 +23,31 @@ import type {
 	DrawingParagraphItem,
 	DrawingRichTextBody,
 } from './text-model';
+
+/**
+ * Whether the typed warp holds everything `a:prstTxWarp` says: a `prst`, no attributes besides
+ * it, at most an `a:avLst` of `a:gd` guides that each have exactly `name` and `fmla`. Anything
+ * else is kept verbatim.
+ */
+function isLosslessWarp(element: XmlElement): boolean {
+	const onlyAttributes = (node: XmlElement, names: string[]) =>
+		Array.from(node.attributes).every((attribute) => names.includes(attribute.name)) &&
+		names.every((name) => node.hasAttribute(name));
+	if (!onlyAttributes(element, ['prst']) || !element.getAttribute('prst')?.trim()) return false;
+	const kids = elements(element);
+	if (kids.length > 1) return false;
+	const list = kids[0];
+	if (!list) return true;
+	if (list.localName !== 'avLst' || list.namespaceURI !== NS.a || list.attributes.length)
+		return false;
+	return elements(list).every(
+		(guide) =>
+			guide.localName === 'gd' &&
+			guide.namespaceURI === NS.a &&
+			onlyAttributes(guide, ['name', 'fmla']) &&
+			guide.getAttribute('name') === guide.getAttribute('name')?.trim(),
+	);
+}
 
 /** Reads `a:bodyPr`; `undefined` for a missing element. */
 export function parseDrawingBodyProperties(
@@ -32,6 +61,8 @@ export function parseDrawingBodyProperties(
 		const name = isDrawingElement(child) ? child.localName : '';
 		const autofit = readDrawingAutofit(name, domTextElementView(child));
 		if (autofit) out.autofit = autofit;
+		else if (name === 'prstTxWarp' && !out.textWarp && isLosslessWarp(child))
+			out.textWarp = readDrawingTextWarp(domTextElementView(child))!;
 		else if (name === 'scene3d' && children(element, 'scene3d', NS.a).length === 1)
 			out.scene3d = parseDrawingTextScene3D(child);
 		else if (

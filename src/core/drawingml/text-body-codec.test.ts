@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { NS, parseXml } from '../xml/index';
 import { parseDrawingBodyProperties } from './read-text-body';
+import { drawingRichTextBodyXml } from './write-text-body';
 import {
 	drawingAutofitChild,
 	drawingBodyAttributeEntries,
@@ -26,6 +27,29 @@ describe('DrawingML body property codec', () => {
 			autofit: { kind: 'normal', fontScale: 0.625, lineSpacingReduction: 0.2 },
 		});
 		expect(parseDrawingBodyProperties(element)).toEqual(codec);
+	});
+
+	it('reads the text warp and keeps a lossy one verbatim', () => {
+		const body = (warp: string) =>
+			parseDrawingBodyProperties(
+				parseXml(`<a:bodyPr xmlns:a="${NS.a}">${warp}</a:bodyPr>`).documentElement,
+			);
+		expect(
+			body(
+				'<a:prstTxWarp prst="textWave1"><a:avLst><a:gd name="adj1" fmla="val 12500"/></a:avLst></a:prstTxWarp>',
+			),
+		).toEqual({
+			textWarp: { preset: 'textWave1', guides: [{ name: 'adj1', formula: 'val 12500' }] },
+		});
+		expect(body('<a:prstTxWarp prst="textPlain"/>')).toEqual({ textWarp: { preset: 'textPlain' } });
+		expect(
+			body('<a:prstTxWarp prst="textPlain"><a:extLst/></a:prstTxWarp>')?.extraXml,
+		).toHaveLength(1);
+		const written = drawingRichTextBodyXml({
+			bodyProperties: { textWarp: { preset: 'textArchUp', guides: [] }, wrap: 'none' },
+			paragraphs: [],
+		});
+		expect(written).toContain('<a:prstTxWarp prst="textArchUp"><a:avLst/></a:prstTxWarp>');
 	});
 
 	it('writes schema-ordered attributes and the autofit child', () => {

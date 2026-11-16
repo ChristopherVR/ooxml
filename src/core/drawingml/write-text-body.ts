@@ -8,7 +8,11 @@ import {
 import { NS, buildXml, parseXml, type XmlDocument, type XmlElement } from '../xml/index';
 import { writeDrawingParagraphProperties } from './write-paragraph-properties';
 import { writeDrawingRunProperties } from './write-run-properties';
-import { drawingAutofitChild, drawingBodyAttributeEntries } from './text-body-codec';
+import {
+	drawingAutofitChild,
+	drawingBodyAttributeEntries,
+	drawingTextWarpEntries,
+} from './text-body-codec';
 import type {
 	DrawingBodyProperties,
 	DrawingListStyle,
@@ -45,6 +49,21 @@ export function writeDrawingBodyProperties(
 	const element = drawingElement(doc, 'bodyPr');
 	for (const [name, text] of drawingBodyAttributeEntries(value)) element.setAttribute(name, text);
 	const children: OrderedChild[] = [];
+	if (value.textWarp) {
+		const warp = drawingTextWarpEntries(value.textWarp);
+		const node = drawingElement(doc, 'prstTxWarp');
+		for (const [name, text] of warp.attributes) node.setAttribute(name, text);
+		if (warp.guides) {
+			const list = drawingElement(doc, 'avLst');
+			for (const guide of warp.guides) {
+				const gd = drawingElement(doc, 'gd');
+				for (const [name, text] of guide) gd.setAttribute(name, text);
+				list.appendChild(gd);
+			}
+			node.appendChild(list);
+		}
+		children.push({ name: 'prstTxWarp', node });
+	}
 	if (value.autofit) {
 		const autofit = drawingAutofitChild(value.autofit);
 		const node = drawingElement(doc, autofit.local);

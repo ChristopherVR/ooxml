@@ -141,6 +141,19 @@ export type DrawingAutofit =
 	| { kind: 'shape' }
 	| { kind: 'normal'; fontScale?: number; lineSpacingReduction?: number };
 
+/** One `a:gd` of a warp's `a:avLst`: the guide name and its formula as written (`val 50000`). */
+export interface DrawingTextWarpGuide {
+	name: string;
+	formula: string;
+}
+
+/** `a:prstTxWarp`: the `ST_TextShapeType` preset and its adjustments. */
+export interface DrawingTextWarp {
+	preset: string;
+	/** The `a:avLst` guides; `undefined` when the element has no `a:avLst`. */
+	guides?: DrawingTextWarpGuide[];
+}
+
 /** Body properties (`CT_TextBodyProperties`). */
 export interface DrawingBodyProperties {
 	/** `rot` in degrees. */
@@ -168,10 +181,12 @@ export interface DrawingBodyProperties {
 	upright?: boolean;
 	compatibleLineSpacing?: boolean;
 	autofit?: DrawingAutofit;
+	/** `a:prstTxWarp` (CT_PresetTextShape), the WordArt warp. */
+	textWarp?: DrawingTextWarp;
 	scene3d?: import('./text-3d-model').DrawingTextScene3D;
 	shape3d?: import('./text-3d-model').DrawingTextShape3D;
 	flatText3d?: import('./text-3d-model').DrawingFlatText3D;
-	/** `a:prstTxWarp`, `a:scene3d`, `a:sp3d`, `a:flatTx`, `a:extLst`, verbatim. */
+	/** Children the model does not cover (`a:extLst`, repeated 3D children), verbatim. */
 	extraXml?: string[];
 }
 

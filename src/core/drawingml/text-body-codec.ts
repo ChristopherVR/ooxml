@@ -1,12 +1,17 @@
 // The DrawingML body property codec (CT_TextBodyProperties, ECMA-376 Part 1, 21.1.2.1.1) for
 // `a:bodyPr`: the attributes and the autofit choice (`a:noAutofit`, `a:spAutoFit`,
-// `a:normAutofit`). Like the paragraph and run codecs it reads through a `DrawingTextElementView`,
-// so the DOM reader (`read-text-body.ts`) and PowerPoint's object-tree reader share one set of
-// rules, and it writes attribute entries in schema order. Text warp and 3D (`a:prstTxWarp`,
-// `a:scene3d`, `a:sp3d`, `a:flatTx`) are read by their own codecs.
+// `a:normAutofit`) and the text warp (`a:prstTxWarp`). Like the paragraph and run codecs it reads
+// through a `DrawingTextElementView`, so the DOM reader (`read-text-body.ts`) and PowerPoint's
+// object-tree reader share one set of rules, and it writes attribute entries in schema order. 3D
+// (`a:scene3d`, `a:sp3d`, `a:flatTx`) is read by the shared 3D readers.
 import { parseOoxmlPercent } from '../color/color-primitives';
 import type { DrawingTextElementView } from './text-element-view';
-import type { DrawingAutofit, DrawingBodyProperties } from './text-model';
+import type {
+	DrawingAutofit,
+	DrawingBodyProperties,
+	DrawingTextWarp,
+	DrawingTextWarpGuide,
+} from './text-model';
 import {
 	drawingBooleanValue,
 	drawingIntegerValue,
@@ -63,6 +68,42 @@ export function readDrawingBodyAttributes(
 	}
 }
 
+/**
+ * Reads `a:prstTxWarp`; `undefined` without a `prst`. Guides without a name or formula are left
+ * out (a reader that must be lossless compares the count with the element's `a:gd` children).
+ */
+export function readDrawingTextWarp(view: DrawingTextElementView): DrawingTextWarp | undefined {
+	const preset = drawingStringValue(view.attribute('prst'));
+	if (!preset) return undefined;
+	const list = view.child('avLst');
+	if (!list) return { preset };
+	const guides: DrawingTextWarpGuide[] = [];
+	for (const guide of list.children('gd')) {
+		const name = drawingStringValue(guide.attribute('name'));
+		const formula = guide.attribute('fmla');
+		if (name && formula !== undefined) guides.push({ name, formula });
+	}
+	return { preset, guides };
+}
+
+/** The attributes of `a:prstTxWarp` and of each `a:avLst/a:gd` (`undefined` without `a:avLst`). */
+export function drawingTextWarpEntries(warp: DrawingTextWarp): {
+	attributes: DrawingAttributeEntry[];
+	guides?: DrawingAttributeEntry[][];
+} {
+	return {
+		attributes: [['prst', warp.preset]],
+		...(warp.guides
+			? {
+					guides: warp.guides.map((guide): DrawingAttributeEntry[] => [
+						['name', guide.name],
+						['fmla', guide.formula],
+					]),
+				}
+			: {}),
+	};
+}
+
 /** The autofit children, in the order a reader that finds several prefers them. */
 export const DRAWING_AUTOFIT_CHILDREN = ['spAutoFit', 'normAutofit', 'noAutofit'] as const;
 
@@ -104,6 +145,9 @@ export function readDrawingBodyCodecProperties(
 		if (autofit) out.autofit = autofit;
 		break;
 	}
+	const warp = view.child('prstTxWarp');
+	const textWarp = warp ? readDrawingTextWarp(warp) : undefined;
+	if (textWarp) out.textWarp = textWarp;
 	return out;
 }
 
