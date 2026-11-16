@@ -8,6 +8,7 @@ import {
 	serializeConditionList,
 } from './native-animation-helpers';
 import { PptxNativeAnimationService } from './PptxNativeAnimationService';
+import { at } from '../../test-support/access';
 
 // ==========================================================================
 // parseCondition
@@ -259,8 +260,8 @@ describe('parseConditionList', () => {
 		});
 		expect(result).toBeDefined();
 		expect(result).toHaveLength(1);
-		expect(result![0].event).toBe('onClick');
-		expect(result![0].delay).toBe(0);
+		expect(at(result!, 0).event).toBe('onClick');
+		expect(at(result!, 0).delay).toBe(0);
 	});
 
 	it('parses multiple conditions', () => {
@@ -279,11 +280,11 @@ describe('parseConditionList', () => {
 		});
 		expect(result).toBeDefined();
 		expect(result).toHaveLength(3);
-		expect(result![0].event).toBe('onBegin');
-		expect(result![1].event).toBe('onClick');
-		expect(result![1].delay).toBe(500);
-		expect(result![2].event).toBe('onMouseOver');
-		expect(result![2].targetShapeId).toBe('shape1');
+		expect(at(result!, 0).event).toBe('onBegin');
+		expect(at(result!, 1).event).toBe('onClick');
+		expect(at(result!, 1).delay).toBe(500);
+		expect(at(result!, 2).event).toBe('onMouseOver');
+		expect(at(result!, 2).targetShapeId).toBe('shape1');
 	});
 
 	it('returns undefined when p:cond has no valid entries', () => {
@@ -424,8 +425,8 @@ describe('serializeConditionList', () => {
 		const conds = result!['p:cond'] as XmlObject[];
 		expect(Array.isArray(conds)).toBeTruthy();
 		expect(conds).toHaveLength(2);
-		expect(conds[0]['@_evt']).toBe('onBegin');
-		expect(conds[1]['@_evt']).toBe('onClick');
+		expect(at(conds, 0)['@_evt']).toBe('onBegin');
+		expect(at(conds, 1)['@_evt']).toBe('onClick');
 	});
 });
 
@@ -508,7 +509,7 @@ describe('condition round-trip', () => {
 			'p:cond': { '@_delay': 'indefinite' },
 		};
 		const parsed = parseConditionList(original);
-		expect(parsed![0].delay).toBe(-1);
+		expect(at(parsed!, 0).delay).toBe(-1);
 		const serialized = serializeConditionList(parsed);
 		expect((serialized!['p:cond'] as XmlObject)['@_delay']).toBe('indefinite');
 		const reparsed = parseConditionList(serialized!);
@@ -520,7 +521,7 @@ describe('condition round-trip', () => {
 			'p:cond': { '@_delay': '0', '@_tn': '7' },
 		};
 		const parsed = parseConditionList(original);
-		expect(parsed![0].targetTimeNodeId).toBe(7);
+		expect(at(parsed!, 0).targetTimeNodeId).toBe(7);
 		const serialized = serializeConditionList(parsed);
 		expect((serialized!['p:cond'] as XmlObject)['@_tn']).toBe('7');
 		const reparsed = parseConditionList(serialized!);
@@ -583,10 +584,10 @@ describe('pptxNativeAnimationService structured conditions', () => {
 		});
 		const result = service.parseNativeAnimations(slideXml);
 		expect(result).toBeDefined();
-		expect(result![0].startConditions).toBeDefined();
-		expect(result![0].startConditions).toHaveLength(1);
-		expect(result![0].startConditions![0].event).toBe('onMouseOver');
-		expect(result![0].startConditions![0].delay).toBe(200);
+		expect(at(result!, 0).startConditions).toBeDefined();
+		expect(at(result!, 0).startConditions).toHaveLength(1);
+		expect(at(at(result!, 0).startConditions!, 0).event).toBe('onMouseOver');
+		expect(at(at(result!, 0).startConditions!, 0).delay).toBe(200);
 	});
 
 	it('parses endConditions from endCondLst', () => {
@@ -630,11 +631,11 @@ describe('pptxNativeAnimationService structured conditions', () => {
 		});
 		const result = service.parseNativeAnimations(slideXml);
 		expect(result).toBeDefined();
-		expect(result![0].endConditions).toBeDefined();
-		expect(result![0].endConditions).toHaveLength(1);
-		expect(result![0].endConditions![0].event).toBe('onMouseOut');
+		expect(at(result!, 0).endConditions).toBeDefined();
+		expect(at(result!, 0).endConditions).toHaveLength(1);
+		expect(at(at(result!, 0).endConditions!, 0).event).toBe('onMouseOut');
 		// rawEndCondLst should still be preserved for backward compatibility
-		expect(result![0].rawEndCondLst).toBeDefined();
+		expect(at(result!, 0).rawEndCondLst).toBeDefined();
 	});
 
 	it('parses both start and end conditions together', () => {
@@ -684,16 +685,16 @@ describe('pptxNativeAnimationService structured conditions', () => {
 		expect(result).toBeDefined();
 
 		// Start conditions
-		expect(result![0].startConditions).toBeDefined();
-		expect(result![0].startConditions).toHaveLength(2);
-		expect(result![0].startConditions![0].event).toBe('onClick');
-		expect(result![0].startConditions![1].delay).toBe(1000);
+		expect(at(result!, 0).startConditions).toBeDefined();
+		expect(at(result!, 0).startConditions).toHaveLength(2);
+		expect(at(at(result!, 0).startConditions!, 0).event).toBe('onClick');
+		expect(at(at(result!, 0).startConditions!, 1).delay).toBe(1000);
 
 		// End conditions
-		expect(result![0].endConditions).toBeDefined();
-		expect(result![0].endConditions).toHaveLength(1);
-		expect(result![0].endConditions![0].event).toBe('onEnd');
-		expect(result![0].endConditions![0].targetTimeNodeId).toBe(3);
+		expect(at(result!, 0).endConditions).toBeDefined();
+		expect(at(result!, 0).endConditions).toHaveLength(1);
+		expect(at(at(result!, 0).endConditions!, 0).event).toBe('onEnd');
+		expect(at(at(result!, 0).endConditions!, 0).targetTimeNodeId).toBe(3);
 	});
 
 	it('does not set startConditions/endConditions when absent', () => {
@@ -731,9 +732,9 @@ describe('pptxNativeAnimationService structured conditions', () => {
 		});
 		const result = service.parseNativeAnimations(slideXml);
 		expect(result).toBeDefined();
-		expect(result![0].startConditions).toBeUndefined();
-		expect(result![0].endConditions).toBeUndefined();
-		expect(result![0].rawEndCondLst).toBeUndefined();
+		expect(at(result!, 0).startConditions).toBeUndefined();
+		expect(at(result!, 0).endConditions).toBeUndefined();
+		expect(at(result!, 0).rawEndCondLst).toBeUndefined();
 	});
 
 	it('parses interactive sequence conditions with shape targets', () => {
@@ -823,9 +824,9 @@ describe('pptxNativeAnimationService structured conditions', () => {
 		expect(interactiveAnim).toBeDefined();
 		expect(interactiveAnim!.triggerShapeId).toBe('triggerBtn');
 		expect(interactiveAnim!.startConditions).toBeDefined();
-		expect(interactiveAnim!.startConditions![0].event).toBe('onBegin');
+		expect(at(interactiveAnim!.startConditions!, 0).event).toBe('onBegin');
 		expect(interactiveAnim!.endConditions).toBeDefined();
-		expect(interactiveAnim!.endConditions![0].event).toBe('onClick');
-		expect(interactiveAnim!.endConditions![0].targetShapeId).toBe('triggerBtn');
+		expect(at(interactiveAnim!.endConditions!, 0).event).toBe('onClick');
+		expect(at(interactiveAnim!.endConditions!, 0).targetShapeId).toBe('triggerBtn');
 	});
 });

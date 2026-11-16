@@ -11,6 +11,7 @@ import { describe, it, expect, vi } from 'vitest';
 import type { XmlObject } from '../types';
 import { PptxSlideLoaderService } from './PptxSlideLoaderService';
 import type { PptxSlideLoaderParams } from './slide-loader-types';
+import { at } from '../../test-support/access';
 
 const SLIDE = 'ppt/slides/slide1.xml';
 const LAYOUT = 'ppt/slideLayouts/slideLayout1.xml';
@@ -162,7 +163,7 @@ describe('slide-level a:themeOverride', () => {
 describe('p:cSld/@name', () => {
 	it('loads the slide name onto PptxSlide.name', async () => {
 		const params = loaderParams({ 'p:sld': { 'p:cSld': { '@_name': ' Agenda ' } } }, {});
-		const [slide] = await new PptxSlideLoaderService().loadSlides(params);
+		const slide = at(await new PptxSlideLoaderService().loadSlides(params), 0);
 		expect(slide.name).toBe('Agenda');
 	});
 
@@ -170,10 +171,10 @@ describe('p:cSld/@name', () => {
 		const unnamed = await new PptxSlideLoaderService().loadSlides(
 			loaderParams({ 'p:sld': { 'p:cSld': {} } }, {}),
 		);
-		expect(unnamed[0].name).toBeUndefined();
+		expect(at(unnamed, 0).name).toBeUndefined();
 		const blank = await new PptxSlideLoaderService().loadSlides(
 			loaderParams({ 'p:sld': { 'p:cSld': { '@_name': '   ' } } }, {}),
 		);
-		expect(blank[0].name).toBeUndefined();
+		expect(at(blank, 0).name).toBeUndefined();
 	});
 });

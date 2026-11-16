@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { PptxNativeAnimation } from '../types';
 import { resolveNativeAnimationThemeColors } from './native-animation-theme-colors';
+import { at } from '../../test-support/access';
 
 describe('resolveNativeAnimationThemeColors', () => {
 	it('resolves scheme tokens on the primary and sibling colour behaviours', () => {
@@ -24,9 +25,9 @@ describe('resolveNativeAnimationThemeColors', () => {
 			bg1: '#FFFFFF',
 		};
 		const resolved = resolveNativeAnimationThemeColors(animations, (token) => colors[token]);
-		expect(resolved[0].colorAnimation?.toColor).toBe('#FFFFFF');
+		expect(at(resolved, 0).colorAnimation?.toColor).toBe('#FFFFFF');
 		expect(
-			resolved[0].colorAnimation?.components?.map((component) => component.toColor),
+			at(resolved, 0).colorAnimation?.components?.map((component) => component.toColor),
 		).toStrictEqual(['#FFFFFF', '#4472C4']);
 	});
 
@@ -38,7 +39,7 @@ describe('resolveNativeAnimationThemeColors', () => {
 			} as PptxNativeAnimation,
 		];
 		const resolved = resolveNativeAnimationThemeColors(animations, () => undefined);
-		expect(resolved[0].colorAnimation?.fromColor).toBe('#102030');
-		expect(resolved[0].colorAnimation?.toColor).toBe('custom7');
+		expect(at(resolved, 0).colorAnimation?.fromColor).toBe('#102030');
+		expect(at(resolved, 0).colorAnimation?.toColor).toBe('custom7');
 	});
 });

@@ -4,6 +4,7 @@ import type { XmlObject } from '../types';
 import { capturedPresetNativeAnimation } from './animation-behavior-native';
 import { extractBehaviors } from './native-animation-behaviors';
 import { resolveOpacitySet } from './animation-opacity-set';
+import { at, must } from '../../test-support/access';
 
 function cBhvr(attr: string | undefined, cTn: XmlObject, extra: XmlObject = {}): XmlObject {
 	return {
@@ -26,12 +27,14 @@ describe('extractBehaviors', () => {
 		{ 'p:stCondLst': { 'p:cond': [{ '@_delay': '0' }, { '@_delay': '100' }] } },
 		{ 'p:endCondLst': { 'p:cond': { '@_evt': 'onClick' } } },
 	])('retains unresolved one-shot set timing profile %j', (extra) => {
-		const behaviors = extractBehaviors({
-			'p:set': {
-				'p:cBhvr': cBhvr('style.opacity', { '@_dur': '500', ...extra }),
-				'p:to': { 'p:strVal': { '@_val': '0.4' } },
-			},
-		});
+		const behaviors = must(
+			extractBehaviors({
+				'p:set': {
+					'p:cBhvr': cBhvr('style.opacity', { '@_dur': '500', ...extra }),
+					'p:to': { 'p:strVal': { '@_val': '0.4' } },
+				},
+			}),
+		);
 		expect(behaviors[0]?.timing.unsupportedSetTiming).toBeTruthy();
 		expect(resolveOpacitySet({ targetId: 's', presetClass: 'emph', behaviors })).toBeUndefined();
 	});
@@ -101,9 +104,8 @@ describe('extractBehaviors', () => {
 			attrNames: ['ppt_y'],
 			timing: { durationMs: 664, delayMs: 664, tmFilter: '0,0; 1,1' },
 		});
-		expect(behaviors[1].kind === 'anim' && behaviors[1].keyframes[0].fmla).toBe(
-			'#ppt_y-sin(pi*$)/9',
-		);
+		const second = at(behaviors, 1);
+		expect(second.kind === 'anim' && at(second.keyframes, 0).fmla).toBe('#ppt_y-sin(pi*$)/9');
 		expect(behaviors[2]).toMatchObject({
 			additive: 'sum',
 			by: '(#ppt_h/3+#ppt_w*0.1)',

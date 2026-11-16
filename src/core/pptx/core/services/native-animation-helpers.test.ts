@@ -13,6 +13,7 @@ import {
 	isXmlObject,
 	parseTimingPercentFraction,
 } from './native-animation-helpers';
+import { at } from '../../test-support/access';
 
 describe('parseTimingPercentFraction', () => {
 	it('converts a 1000ths-of-a-percent integer to a 0..1 fraction', () => {
@@ -478,7 +479,7 @@ describe('applyBuildList', () => {
 	it('does nothing when timing has no p:bldLst', () => {
 		const animations: PptxNativeAnimation[] = [{ targetId: 'sp1' } as PptxNativeAnimation];
 		applyBuildList({}, animations);
-		expect(animations[0].buildType).toBeUndefined();
+		expect(at(animations, 0).buildType).toBeUndefined();
 	});
 
 	it('applies build type to matching animations', () => {
@@ -493,8 +494,8 @@ describe('applyBuildList', () => {
 		};
 		const animations: PptxNativeAnimation[] = [{ targetId: 'sp1' } as PptxNativeAnimation];
 		applyBuildList(timing, animations);
-		expect(animations[0].buildType).toBe('byParagraph');
-		expect(animations[0].groupId).toBe('0');
+		expect(at(animations, 0).buildType).toBe('byParagraph');
+		expect(at(animations, 0).groupId).toBe('0');
 	});
 
 	it('applies build level when bldLvl is specified', () => {
@@ -510,7 +511,7 @@ describe('applyBuildList', () => {
 		};
 		const animations: PptxNativeAnimation[] = [{ targetId: 'sp1' } as PptxNativeAnimation];
 		applyBuildList(timing, animations);
-		expect(animations[0].buildLevel).toBe(2);
+		expect(at(animations, 0).buildLevel).toBe(2);
 	});
 
 	it('does not modify animations that do not match by targetId', () => {
@@ -524,7 +525,7 @@ describe('applyBuildList', () => {
 		};
 		const animations: PptxNativeAnimation[] = [{ targetId: 'sp2' } as PptxNativeAnimation];
 		applyBuildList(timing, animations);
-		expect(animations[0].buildType).toBeUndefined();
+		expect(at(animations, 0).buildType).toBeUndefined();
 	});
 
 	it('handles multiple bldP entries', () => {
@@ -541,8 +542,8 @@ describe('applyBuildList', () => {
 			{ targetId: 'sp2' } as PptxNativeAnimation,
 		];
 		applyBuildList(timing, animations);
-		expect(animations[0].buildType).toBe('byParagraph');
-		expect(animations[1].buildType).toBe('byWord');
+		expect(at(animations, 0).buildType).toBe('byParagraph');
+		expect(at(animations, 1).buildType).toBe('byWord');
 	});
 
 	it('attaches p:tmplLst templates from a matching bldP entry', () => {
@@ -562,9 +563,9 @@ describe('applyBuildList', () => {
 		};
 		const animations: PptxNativeAnimation[] = [{ targetId: 'sp1' } as PptxNativeAnimation];
 		applyBuildList(timing, animations);
-		expect(animations[0].buildTemplates).toHaveLength(1);
-		expect(animations[0].buildTemplates?.[0].level).toBe(1);
-		expect(animations[0].buildTemplates?.[0].timeNodeList).toStrictEqual(tnLst);
+		expect(at(animations, 0).buildTemplates).toHaveLength(1);
+		expect(at(animations, 0).buildTemplates?.[0]?.level).toBe(1);
+		expect(at(animations, 0).buildTemplates?.[0]?.timeNodeList).toStrictEqual(tnLst);
 	});
 
 	it('leaves buildTemplates undefined when the bldP has no tmplLst', () => {
@@ -573,7 +574,7 @@ describe('applyBuildList', () => {
 		};
 		const animations: PptxNativeAnimation[] = [{ targetId: 'sp1' } as PptxNativeAnimation];
 		applyBuildList(timing, animations);
-		expect(animations[0].buildTemplates).toBeUndefined();
+		expect(at(animations, 0).buildTemplates).toBeUndefined();
 	});
 });
 

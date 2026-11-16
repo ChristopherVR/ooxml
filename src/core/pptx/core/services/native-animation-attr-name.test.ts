@@ -5,6 +5,7 @@ import {
 	extractAttrNameFromCBhvr,
 	extractChildKeyframeAttrName,
 } from './native-animation-attr-name';
+import { xmlFixture } from '../../test-support/access';
 
 describe('extractAttrNameFromCBhvr', () => {
 	it('returns undefined when p:cBhvr is absent', () => {
@@ -37,9 +38,9 @@ describe('extractAttrNameFromCBhvr', () => {
 	});
 
 	it('takes the first name when p:attrName is an array', () => {
-		const cBhvr: XmlObject = {
+		const cBhvr = xmlFixture({
 			'p:attrNameLst': { 'p:attrName': ['ppt_x', 'ppt_y'] },
-		};
+		});
 		expect(extractAttrNameFromCBhvr(cBhvr)).toBe('ppt_x');
 	});
 

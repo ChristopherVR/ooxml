@@ -276,5 +276,5 @@ export interface PptxSlideTransition {
 	/** Preserved extension-list XML node from `p:extLst` within the transition for lossless round-trip. */
 	rawExtLst?: XmlObject | undefined;
 	/** Original transition node, retained to preserve unknown attributes and children. */
-	rawTransition?: XmlObject;
+	rawTransition?: XmlObject | undefined;
 }

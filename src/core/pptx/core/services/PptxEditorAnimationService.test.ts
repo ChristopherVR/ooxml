@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import type { PptxElementAnimation, XmlObject } from '../types';
 import { PptxEditorAnimationService } from './PptxEditorAnimationService';
 import { PptxXmlLookupService } from './PptxXmlLookupService';
+import { at } from '../../test-support/access';
 
 const EDITOR_META_URI = 'http://example.com/editorMeta';
 const EDITOR_META_NS = 'http://example.com/ns/pptx';
@@ -96,10 +97,10 @@ describe('pptxEditorAnimationService', () => {
 			const result = service.parseEditorAnimations(slideXml);
 			expect(result).toBeDefined();
 			expect(result).toHaveLength(1);
-			expect(result![0].elementId).toBe('el1');
-			expect(result![0].entrance).toBe('fadeIn');
-			expect(result![0].durationMs).toBe(500);
-			expect(result![0].order).toBe(0);
+			expect(at(result!, 0).elementId).toBe('el1');
+			expect(at(result!, 0).entrance).toBe('fadeIn');
+			expect(at(result!, 0).durationMs).toBe(500);
+			expect(at(result!, 0).order).toBe(0);
 		});
 
 		it('parses exit and emphasis presets', () => {
@@ -113,8 +114,8 @@ describe('pptxEditorAnimationService', () => {
 			]);
 			const result = service.parseEditorAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].exit).toBe('fadeOut');
-			expect(result![0].emphasis).toBe('pulse');
+			expect(at(result!, 0).exit).toBe('fadeOut');
+			expect(at(result!, 0).emphasis).toBe('pulse');
 		});
 
 		it("sets entrance/exit/emphasis to undefined when value is 'none'", () => {
@@ -129,9 +130,9 @@ describe('pptxEditorAnimationService', () => {
 			const result = service.parseEditorAnimations(slideXml);
 			expect(result).toBeDefined();
 			// "none" presets are normalized to undefined
-			expect(result![0].entrance).toBeUndefined();
-			expect(result![0].exit).toBeUndefined();
-			expect(result![0].emphasis).toBeUndefined();
+			expect(at(result!, 0).entrance).toBeUndefined();
+			expect(at(result!, 0).exit).toBeUndefined();
+			expect(at(result!, 0).emphasis).toBeUndefined();
 		});
 
 		it('skips animation nodes without elementId', () => {
@@ -148,7 +149,7 @@ describe('pptxEditorAnimationService', () => {
 			const result = service.parseEditorAnimations(slideXml);
 			expect(result).toBeDefined();
 			expect(result).toHaveLength(1);
-			expect(result![0].elementId).toBe('el2');
+			expect(at(result!, 0).elementId).toBe('el2');
 		});
 
 		it('skips animation nodes with empty elementId', () => {
@@ -172,7 +173,7 @@ describe('pptxEditorAnimationService', () => {
 				},
 			]);
 			const result = service.parseEditorAnimations(slideXml);
-			expect(result![0].trigger).toBe('afterPrevious');
+			expect(at(result!, 0).trigger).toBe('afterPrevious');
 		});
 
 		it('parses timing curve attribute', () => {
@@ -184,7 +185,7 @@ describe('pptxEditorAnimationService', () => {
 				},
 			]);
 			const result = service.parseEditorAnimations(slideXml);
-			expect(result![0].timingCurve).toBe('ease-in');
+			expect(at(result!, 0).timingCurve).toBe('ease-in');
 		});
 
 		it('parses repeat count and mode', () => {
@@ -197,8 +198,8 @@ describe('pptxEditorAnimationService', () => {
 				},
 			]);
 			const result = service.parseEditorAnimations(slideXml);
-			expect(result![0].repeatCount).toBe(3);
-			expect(result![0].repeatMode).toBe('untilNextClick');
+			expect(at(result!, 0).repeatCount).toBe(3);
+			expect(at(result!, 0).repeatMode).toBe('untilNextClick');
 		});
 
 		it('parses direction attribute', () => {
@@ -210,7 +211,7 @@ describe('pptxEditorAnimationService', () => {
 				},
 			]);
 			const result = service.parseEditorAnimations(slideXml);
-			expect(result![0].direction).toBe('fromLeft');
+			expect(at(result!, 0).direction).toBe('fromLeft');
 		});
 
 		it('parses sequence attribute', () => {
@@ -222,7 +223,7 @@ describe('pptxEditorAnimationService', () => {
 				},
 			]);
 			const result = service.parseEditorAnimations(slideXml);
-			expect(result![0].sequence).toBe('byParagraph');
+			expect(at(result!, 0).sequence).toBe('byParagraph');
 		});
 
 		it('parses afterAnimation and afterAnimationColor', () => {
@@ -235,8 +236,8 @@ describe('pptxEditorAnimationService', () => {
 				},
 			]);
 			const result = service.parseEditorAnimations(slideXml);
-			expect(result![0].afterAnimation).toBe('dimToColor');
-			expect(result![0].afterAnimationColor).toBe('#808080');
+			expect(at(result!, 0).afterAnimation).toBe('dimToColor');
+			expect(at(result!, 0).afterAnimationColor).toBe('#808080');
 		});
 
 		it('parses motionPath attribute', () => {
@@ -247,7 +248,7 @@ describe('pptxEditorAnimationService', () => {
 				},
 			]);
 			const result = service.parseEditorAnimations(slideXml);
-			expect(result![0].motionPath).toBe('M 0 0 L 1 1');
+			expect(at(result!, 0).motionPath).toBe('M 0 0 L 1 1');
 		});
 
 		it('handles invalid numeric values gracefully', () => {
@@ -263,10 +264,10 @@ describe('pptxEditorAnimationService', () => {
 			]);
 			const result = service.parseEditorAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].durationMs).toBeUndefined();
-			expect(result![0].delayMs).toBeUndefined();
-			expect(result![0].order).toBeUndefined();
-			expect(result![0].repeatCount).toBeUndefined();
+			expect(at(result!, 0).durationMs).toBeUndefined();
+			expect(at(result!, 0).delayMs).toBeUndefined();
+			expect(at(result!, 0).order).toBeUndefined();
+			expect(at(result!, 0).repeatCount).toBeUndefined();
 		});
 
 		it('rejects negative durationMs', () => {
@@ -278,7 +279,7 @@ describe('pptxEditorAnimationService', () => {
 				},
 			]);
 			const result = service.parseEditorAnimations(slideXml);
-			expect(result![0].durationMs).toBeUndefined();
+			expect(at(result!, 0).durationMs).toBeUndefined();
 		});
 
 		it('allows delayMs of zero', () => {
@@ -290,7 +291,7 @@ describe('pptxEditorAnimationService', () => {
 				},
 			]);
 			const result = service.parseEditorAnimations(slideXml);
-			expect(result![0].delayMs).toBe(0);
+			expect(at(result!, 0).delayMs).toBe(0);
 		});
 
 		it('sorts animations by order', () => {
@@ -314,9 +315,9 @@ describe('pptxEditorAnimationService', () => {
 			const result = service.parseEditorAnimations(slideXml);
 			expect(result).toBeDefined();
 			expect(result).toHaveLength(3);
-			expect(result![0].elementId).toBe('el1');
-			expect(result![1].elementId).toBe('el2');
-			expect(result![2].elementId).toBe('el3');
+			expect(at(result!, 0).elementId).toBe('el1');
+			expect(at(result!, 1).elementId).toBe('el2');
+			expect(at(result!, 2).elementId).toBe('el3');
 		});
 
 		it('handles multiple ext entries and finds the correct one', () => {
@@ -346,7 +347,7 @@ describe('pptxEditorAnimationService', () => {
 			const result = service.parseEditorAnimations(slideXml);
 			expect(result).toBeDefined();
 			expect(result).toHaveLength(1);
-			expect(result![0].elementId).toBe('found');
+			expect(at(result!, 0).elementId).toBe('found');
 		});
 	});
 
@@ -512,7 +513,7 @@ describe('pptxEditorAnimationService', () => {
 			const extLst = slideNode['p:extLst'] as XmlObject;
 			const exts = extLst['p:ext'] as XmlObject[];
 			expect(exts).toHaveLength(1);
-			expect(exts[0]['@_uri']).toBe('http://other/uri');
+			expect(at(exts, 0)['@_uri']).toBe('http://other/uri');
 		});
 
 		it('skips animations with empty elementId', () => {
@@ -576,9 +577,9 @@ describe('pptxEditorAnimationService', () => {
 
 			const animNodes = getWrittenAnimationNodes(slideNode);
 			expect(animNodes).toHaveLength(3);
-			expect(animNodes[0]['@_elementId']).toBe('el1');
-			expect(animNodes[1]['@_elementId']).toBe('el2');
-			expect(animNodes[2]['@_elementId']).toBe('el3');
+			expect(at(animNodes, 0)['@_elementId']).toBe('el1');
+			expect(at(animNodes, 1)['@_elementId']).toBe('el2');
+			expect(at(animNodes, 2)['@_elementId']).toBe('el3');
 		});
 
 		it('replaces existing editor meta extension with new data', () => {
@@ -683,7 +684,7 @@ describe('pptxEditorAnimationService', () => {
 			expect(parsed).toBeDefined();
 			expect(parsed).toHaveLength(1);
 
-			const result = parsed![0];
+			const result = at(parsed!, 0);
 			expect(result.elementId).toBe(original.elementId);
 			expect(result.entrance).toBe(original.entrance);
 			expect(result.exit).toBe(original.exit);

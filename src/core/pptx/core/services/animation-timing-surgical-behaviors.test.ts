@@ -1,3 +1,4 @@
+import { must } from '../../test-support/access';
 import { describe, expect, it } from 'vitest';
 
 import type { PptxElementAnimation, XmlObject } from '../types';
@@ -33,7 +34,10 @@ function filters(cTn: XmlObject): string[] {
 	);
 }
 
-function behaviourTimings(cTn: XmlObject, tag: string): Array<{ dur?: string; delay?: string }> {
+function behaviourTimings(
+	cTn: XmlObject,
+	tag: string,
+): Array<{ dur?: string | undefined; delay?: string | undefined }> {
 	const children = cTn['p:childTnLst'] as XmlObject;
 	return list(children[tag] as XmlObject | XmlObject[]).map((node) => {
 		const inner = (node['p:cBhvr'] as XmlObject)['p:cTn'] as XmlObject;
@@ -49,16 +53,16 @@ function behaviourTimings(cTn: XmlObject, tag: string): Array<{ dur?: string; de
 
 describe('resolveDirectionSubtype', () => {
 	it('maps the editor direction onto the codes PowerPoint writes', () => {
-		expect(resolveDirectionSubtype(PRESET_TO_OOXML.wipeIn, 'fromLeft')).toBe(8);
-		expect(resolveDirectionSubtype(PRESET_TO_OOXML.peekIn, 'fromTop')).toBe(1);
-		expect(resolveDirectionSubtype(PRESET_TO_OOXML.stretchIn, 'fromRight')).toBe(2);
-		expect(resolveDirectionSubtype(PRESET_TO_OOXML.flyIn, 'fromTopLeft')).toBe(9);
+		expect(resolveDirectionSubtype(must(PRESET_TO_OOXML.wipeIn), 'fromLeft')).toBe(8);
+		expect(resolveDirectionSubtype(must(PRESET_TO_OOXML.peekIn), 'fromTop')).toBe(1);
+		expect(resolveDirectionSubtype(must(PRESET_TO_OOXML.stretchIn), 'fromRight')).toBe(2);
+		expect(resolveDirectionSubtype(must(PRESET_TO_OOXML.flyIn), 'fromTopLeft')).toBe(9);
 	});
 
 	it('falls back to the preset default for a direction PowerPoint does not offer', () => {
 		// Wipe has no diagonal variant; Stretch's default is "Across" (10).
-		expect(resolveDirectionSubtype(PRESET_TO_OOXML.wipeIn, 'fromTopLeft')).toBe(4);
-		expect(resolveDirectionSubtype(PRESET_TO_OOXML.stretchIn, undefined)).toBe(10);
+		expect(resolveDirectionSubtype(must(PRESET_TO_OOXML.wipeIn), 'fromTopLeft')).toBe(4);
+		expect(resolveDirectionSubtype(must(PRESET_TO_OOXML.stretchIn), undefined)).toBe(10);
 	});
 });
 
@@ -74,7 +78,7 @@ describe('refreshEffectBehaviors (surgical save of an existing effect)', () => {
 		const cTn = writtenEffect(base);
 		expect(filters(cTn)).toStrictEqual(['wipe(down)']);
 		const next = { ...base, direction: 'fromLeft' as const };
-		refreshEffectBehaviors(cTn, next, 'wipeIn', PRESET_TO_OOXML.wipeIn, '5', ids());
+		refreshEffectBehaviors(cTn, next, 'wipeIn', must(PRESET_TO_OOXML.wipeIn), '5', ids());
 		expect(cTn['@_presetSubtype']).toBe('8');
 		expect(filters(cTn)).toStrictEqual(['wipe(left)']);
 	});
@@ -82,7 +86,7 @@ describe('refreshEffectBehaviors (surgical save of an existing effect)', () => {
 	it("replaces the old preset's behaviours when the preset changes", () => {
 		const cTn = writtenEffect(base);
 		const next: PptxElementAnimation = { ...base, entrance: 'peekIn', direction: 'fromTop' };
-		refreshEffectBehaviors(cTn, next, 'peekIn', PRESET_TO_OOXML.peekIn, '5', ids());
+		refreshEffectBehaviors(cTn, next, 'peekIn', must(PRESET_TO_OOXML.peekIn), '5', ids());
 		// Peek from the top: slides down, revealed from its bottom edge.
 		expect(cTn['@_presetSubtype']).toBe('1');
 		expect(filters(cTn)).toStrictEqual(['wipe(down)']);
@@ -97,7 +101,7 @@ describe('refreshEffectBehaviors (surgical save of an existing effect)', () => {
 			cTn,
 			{ ...exit, durationMs: 2000 },
 			'flyOut',
-			PRESET_TO_OOXML.flyOut,
+			must(PRESET_TO_OOXML.flyOut),
 			'5',
 			ids(),
 		);
@@ -109,7 +113,7 @@ describe('refreshEffectBehaviors (surgical save of an existing effect)', () => {
 	it('leaves an unchanged effect exactly as authored', () => {
 		const cTn = writtenEffect(base);
 		const before = JSON.stringify(cTn);
-		refreshEffectBehaviors(cTn, base, 'wipeIn', PRESET_TO_OOXML.wipeIn, '5', ids());
+		refreshEffectBehaviors(cTn, base, 'wipeIn', must(PRESET_TO_OOXML.wipeIn), '5', ids());
 		expect(JSON.stringify(cTn)).toBe(before);
 	});
 
@@ -119,7 +123,7 @@ describe('refreshEffectBehaviors (surgical save of an existing effect)', () => {
 			cTn,
 			{ ...base, timingCurve: 'ease-out' },
 			'wipeIn',
-			PRESET_TO_OOXML.wipeIn,
+			must(PRESET_TO_OOXML.wipeIn),
 			'5',
 			ids(),
 		);

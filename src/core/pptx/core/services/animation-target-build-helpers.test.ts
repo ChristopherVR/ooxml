@@ -9,6 +9,7 @@ import {
 } from './animation-target-build-helpers';
 import { parseCondition, serializeCondition } from './native-animation-helpers';
 import { PptxNativeAnimationService } from './PptxNativeAnimationService';
+import { at } from '../../test-support/access';
 
 describe('presentationML timing target choices', () => {
 	it('round-trips a background-only shape target', () => {
@@ -256,7 +257,7 @@ describe('presentationML graphical object builds', () => {
 			'@_future': 'kept',
 			'p:bldAsOne': {},
 		};
-		const entry = extractGraphicBuilds({ 'p:bldGraphic': xml })[0];
+		const entry = at(extractGraphicBuilds({ 'p:bldGraphic': xml }), 0);
 		expect(entry.build.mode).toBe('asOne');
 		expect(serializeGraphicBuild(entry)).toStrictEqual(xml);
 	});
@@ -269,7 +270,7 @@ describe('presentationML graphical object builds', () => {
 				'a:bldDgm': { '@_bld': 'lvlAtOnce', '@_rev': '1', '@_future': 'kept' },
 			},
 		};
-		const entry = extractGraphicBuilds({ 'p:bldGraphic': xml })[0];
+		const entry = at(extractGraphicBuilds({ 'p:bldGraphic': xml }), 0);
 		expect(entry.build).toMatchObject({
 			mode: 'sub',
 			kind: 'diagram',
@@ -280,13 +281,16 @@ describe('presentationML graphical object builds', () => {
 	});
 
 	it('applies schema defaults to nested chart build properties', () => {
-		const entry = extractGraphicBuilds({
-			'p:bldGraphic': {
-				'@_spid': '9',
-				'@_grpId': '5',
-				'p:bldSub': { 'a:bldChart': {} },
-			},
-		})[0];
+		const entry = at(
+			extractGraphicBuilds({
+				'p:bldGraphic': {
+					'@_spid': '9',
+					'@_grpId': '5',
+					'p:bldSub': { 'a:bldChart': {} },
+				},
+			}),
+			0,
+		);
 		expect(entry.build).toMatchObject({
 			mode: 'sub',
 			kind: 'chart',

@@ -12,6 +12,7 @@ import {
 	extractTextTarget,
 } from './native-animation-extended-helpers';
 import { ensureArray } from './native-animation-helpers';
+import { at } from '../../test-support/access';
 
 describe('extractColorAnimation scheme-colour refs', () => {
 	it('captures a typed theme ref (with lumMod) alongside the bare scheme name', () => {
@@ -113,7 +114,7 @@ describe('extractOleChartBuilds', () => {
 		};
 		const result = extractOleChartBuilds(bldLst);
 		expect(result).toHaveLength(1);
-		expect(result[0].spid).toBe('5');
+		expect(at(result, 0).spid).toBe('5');
 	});
 
 	it("defaults grpId to '0' when not present", () => {
@@ -121,7 +122,7 @@ describe('extractOleChartBuilds', () => {
 			'p:bldOleChart': { '@_spid': '42' },
 		};
 		const result = extractOleChartBuilds(bldLst);
-		expect(result[0].grpId).toBe('0');
+		expect(at(result, 0).grpId).toBe('0');
 	});
 
 	it("defaults bld to 'allAtOnce' when not present", () => {
@@ -129,28 +130,28 @@ describe('extractOleChartBuilds', () => {
 			'p:bldOleChart': { '@_spid': '42' },
 		};
 		const result = extractOleChartBuilds(bldLst);
-		expect(result[0].bld).toBe('allAtOnce');
+		expect(at(result, 0).bld).toBe('allAtOnce');
 	});
 
 	it("sets animBg to true when @_animBg is '1'", () => {
 		const bldLst = {
 			'p:bldOleChart': { '@_spid': '1', '@_animBg': '1' },
 		};
-		expect(extractOleChartBuilds(bldLst)[0].animBg).toBeTruthy();
+		expect(at(extractOleChartBuilds(bldLst), 0).animBg).toBeTruthy();
 	});
 
 	it("sets animBg to undefined when @_animBg is not '1'", () => {
 		const bldLst = {
 			'p:bldOleChart': { '@_spid': '1', '@_animBg': '0' },
 		};
-		expect(extractOleChartBuilds(bldLst)[0].animBg).toBeUndefined();
+		expect(at(extractOleChartBuilds(bldLst), 0).animBg).toBeUndefined();
 	});
 
 	it('sets animBg to undefined when @_animBg is absent', () => {
 		const bldLst = {
 			'p:bldOleChart': { '@_spid': '1' },
 		};
-		expect(extractOleChartBuilds(bldLst)[0].animBg).toBeUndefined();
+		expect(at(extractOleChartBuilds(bldLst), 0).animBg).toBeUndefined();
 	});
 });
 
@@ -174,7 +175,7 @@ describe('extractSmartArtBuilds', () => {
 		const bldLst = {
 			'p:bldDgm': { '@_spid': '7' },
 		};
-		expect(extractSmartArtBuilds(bldLst)[0].bld).toBe('whole');
+		expect(at(extractSmartArtBuilds(bldLst), 0).bld).toBe('whole');
 	});
 
 	it('filters entries without spid', () => {
@@ -183,7 +184,7 @@ describe('extractSmartArtBuilds', () => {
 		};
 		const result = extractSmartArtBuilds(bldLst);
 		expect(result).toHaveLength(1);
-		expect(result[0].spid).toBe('8');
+		expect(at(result, 0).spid).toBe('8');
 	});
 });
 
@@ -201,9 +202,9 @@ describe('extractGraphicBuilds', () => {
 			},
 		};
 		const result = extractGraphicBuilds(bldLst);
-		expect(result[0].shapeId).toBe('55');
-		expect(result[0].groupId).toBe('7');
-		expect(result[0].build.mode).toBe('asOne');
+		expect(at(result, 0).shapeId).toBe('55');
+		expect(at(result, 0).groupId).toBe('7');
+		expect(at(result, 0).build.mode).toBe('asOne');
 	});
 
 	it('parses nested chart build properties', () => {
@@ -216,7 +217,7 @@ describe('extractGraphicBuilds', () => {
 				},
 			},
 		};
-		expect(extractGraphicBuilds(bldLst)[0].build).toMatchObject({
+		expect(at(extractGraphicBuilds(bldLst), 0).build).toMatchObject({
 			mode: 'sub',
 			kind: 'chart',
 			build: 'seriesEl',

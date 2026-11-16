@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { XmlObject } from '../types';
 import { readCommonSlideDataName, writeCommonSlideDataName } from './slide-name';
+import { xmlFixture } from '../../test-support/access';
 
 describe('readCommonSlideDataName', () => {
 	it('reads and trims p:cSld/@name', () => {
@@ -19,7 +20,9 @@ describe('readCommonSlideDataName', () => {
 	});
 
 	it('stringifies a numeric name the parser may have coerced', () => {
-		expect(readCommonSlideDataName({ 'p:sld': { 'p:cSld': { '@_name': 2026 } } })).toBe('2026');
+		expect(readCommonSlideDataName(xmlFixture({ 'p:sld': { 'p:cSld': { '@_name': 2026 } } }))).toBe(
+			'2026',
+		);
 	});
 });
 

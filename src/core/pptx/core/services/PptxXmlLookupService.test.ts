@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { XmlObject } from '../types';
 import { PptxXmlLookupService } from './PptxXmlLookupService';
+import { xmlFixture } from '../../test-support/access';
 
 describe('pptxXmlLookupService', () => {
 	const service = new PptxXmlLookupService();
@@ -101,9 +102,9 @@ describe('pptxXmlLookupService', () => {
 		});
 
 		it('filters out non-object entries in arrays', () => {
-			const parent: XmlObject = {
+			const parent = xmlFixture({
 				'p:ext': [{ '@_uri': 'ext-1' }, 'string-entry', { '@_uri': 'ext-2' }],
-			};
+			});
 			const result = service.getChildrenArrayByLocalName(parent, 'ext');
 			expect(result).toHaveLength(2);
 		});
@@ -117,9 +118,9 @@ describe('pptxXmlLookupService', () => {
 		});
 
 		it('returns empty array for scalar values', () => {
-			const parent: XmlObject = {
+			const parent = xmlFixture({
 				'p:ext': 42,
-			};
+			});
 			const result = service.getChildrenArrayByLocalName(parent, 'ext');
 			expect(result).toStrictEqual([]);
 		});
@@ -140,9 +141,9 @@ describe('pptxXmlLookupService', () => {
 		});
 
 		it('returns a numeric value as string', () => {
-			const parent: XmlObject = {
+			const parent = xmlFixture({
 				count: 42,
-			};
+			});
 			expect(service.getScalarChildByLocalName(parent, 'count')).toBe('42');
 		});
 
@@ -168,9 +169,9 @@ describe('pptxXmlLookupService', () => {
 		});
 
 		it('returns numeric 0 as string', () => {
-			const parent: XmlObject = {
+			const parent = xmlFixture({
 				'p:count': 0,
-			};
+			});
 			expect(service.getScalarChildByLocalName(parent, 'count')).toBe('0');
 		});
 	});

@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import type { XmlObject } from '../types';
 import { P14_TRANSITION_TYPES, parseP14FromExtLst, buildP14ExtLst } from './p14-transition-parser';
 import type { IPptxXmlLookupService } from './PptxXmlLookupService';
+import { at, xmlFixture } from '../../test-support/access';
 
 /**
  * Minimal mock of IPptxXmlLookupService that handles namespace-prefixed keys.
@@ -65,6 +66,9 @@ function createMockXmlLookupService(): IPptxXmlLookupService {
 		getScalarChildByLocalName(): string | undefined {
 			return undefined;
 		},
+		hasChildByLocalName(parent: XmlObject | undefined, localName: string): boolean {
+			return this.getChildByLocalName(parent, localName) !== undefined;
+		},
 	};
 }
 
@@ -114,12 +118,12 @@ describe('parseP14FromExtLst (3D transitions)', () => {
 	const lookup = createMockXmlLookupService();
 
 	it.each(['cube', 'flip', 'rotate', 'orbit'] as const)('parses p14:%s with @dir', (name) => {
-		const extLst: XmlObject = {
+		const extLst = xmlFixture({
 			'p:ext': {
 				'@_uri': '{CE6CE671-F284-4235-B8B7-4F3F06D5A82C}',
 				[`p14:${name}`]: { '@_dir': 'r' },
 			},
-		};
+		});
 		const result = parseP14FromExtLst(extLst, lookup, getXmlLocalName);
 		expect(result).toBeDefined();
 		expect(result!.type).toBe(name);
@@ -343,9 +347,9 @@ describe('buildP14ExtLst', () => {
 		expect(Array.isArray(exts)).toBeTruthy();
 		expect(exts).toHaveLength(2);
 		// First should be the new p14 transition ext
-		expect(exts[0]['p14:vortex']).toBeDefined();
+		expect(at(exts, 0)['p14:vortex']).toBeDefined();
 		// Second should be the preserved non-p14 ext
-		expect(exts[1]['mc:AlternateContent']).toBeDefined();
+		expect(at(exts, 1)['mc:AlternateContent']).toBeDefined();
 	});
 
 	it('filters out old p14 ext entries from rawExtLst', () => {
@@ -374,8 +378,8 @@ describe('buildP14ExtLst', () => {
 		expect(Array.isArray(exts)).toBeTruthy();
 		expect(exts).toHaveLength(2);
 		// Old p14:flash should be gone, replaced by p14:vortex
-		expect(exts[0]['p14:vortex']).toBeDefined();
-		expect(exts[0]['p14:flash']).toBeUndefined();
+		expect(at(exts, 0)['p14:vortex']).toBeDefined();
+		expect(at(exts, 0)['p14:flash']).toBeUndefined();
 	});
 
 	it('returns single ext object when rawExtLst has only p14 entries', () => {

@@ -51,6 +51,9 @@ function createMockXmlLookupService(): IPptxXmlLookupService {
 		getScalarChildByLocalName(): string | undefined {
 			return undefined;
 		},
+		hasChildByLocalName(parent: XmlObject | undefined, localName: string): boolean {
+			return this.getChildByLocalName(parent, localName) !== undefined;
+		},
 	};
 }
 

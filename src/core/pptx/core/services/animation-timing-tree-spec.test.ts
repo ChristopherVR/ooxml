@@ -19,6 +19,7 @@ import {
 	ensureArray,
 	isXmlObject,
 } from './native-animation-helpers';
+import { at } from '../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Spec-accurate XML tree fixtures
@@ -439,8 +440,8 @@ describe('animation timing tree: applyBuildList', () => {
 
 		applyBuildList(timing, animations);
 
-		expect(animations[0].buildType).toBe('byParagraph');
-		expect(animations[0].groupId).toBe('1');
+		expect(at(animations, 0).buildType).toBe('byParagraph');
+		expect(at(animations, 0).groupId).toBe('1');
 	});
 
 	it('should apply bldLvl from bldP entry', () => {
@@ -457,7 +458,7 @@ describe('animation timing tree: applyBuildList', () => {
 		const animations: PptxNativeAnimation[] = [{ targetId: '5', durationMs: 300 }];
 
 		applyBuildList(timing, animations);
-		expect(animations[0].buildLevel).toBe(2);
+		expect(at(animations, 0).buildLevel).toBe(2);
 	});
 
 	it('should handle multiple bldP entries matching different animations', () => {
@@ -476,8 +477,8 @@ describe('animation timing tree: applyBuildList', () => {
 		];
 
 		applyBuildList(timing, animations);
-		expect(animations[0].buildType).toBe('byParagraph');
-		expect(animations[1].buildType).toBe('byChar');
+		expect(at(animations, 0).buildType).toBe('byParagraph');
+		expect(at(animations, 1).buildType).toBe('byChar');
 	});
 
 	it('should not modify animations when no bldLst is present', () => {
@@ -485,7 +486,7 @@ describe('animation timing tree: applyBuildList', () => {
 		const animations: PptxNativeAnimation[] = [{ targetId: '3', durationMs: 500 }];
 
 		applyBuildList(timing, animations);
-		expect(animations[0].buildType).toBeUndefined();
+		expect(at(animations, 0).buildType).toBeUndefined();
 	});
 });
 

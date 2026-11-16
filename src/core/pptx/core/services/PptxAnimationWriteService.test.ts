@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { PptxElementAnimation, XmlObject } from '../types';
 import { PptxAnimationWriteService } from './PptxAnimationWriteService';
+import { at } from '../../test-support/access';
 
 describe('pptxAnimationWriteService', () => {
 	function createService(): PptxAnimationWriteService {
@@ -351,11 +352,11 @@ describe('pptxAnimationWriteService', () => {
 			expect(seqs).toHaveLength(2);
 
 			// First should be mainSeq
-			const mainSeqCTn = seqs[0]['p:cTn'] as XmlObject;
+			const mainSeqCTn = at(seqs, 0)['p:cTn'] as XmlObject;
 			expect(mainSeqCTn['@_nodeType']).toBe('mainSeq');
 
 			// Second should be interactiveSeq
-			const interSeqCTn = seqs[1]['p:cTn'] as XmlObject;
+			const interSeqCTn = at(seqs, 1)['p:cTn'] as XmlObject;
 			expect(interSeqCTn['@_nodeType']).toBe('interactiveSeq');
 		});
 

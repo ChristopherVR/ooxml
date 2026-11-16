@@ -3,6 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import type { PptxElement, XmlObject } from '../types';
 import { PptxSlideLoaderService } from './PptxSlideLoaderService';
 import type { PptxSlideLoaderParams } from './slide-loader-types';
+import { at } from '../../test-support/access';
 
 /**
  * Create a mock PptxSlideLoaderParams with all required callbacks stubbed.
@@ -176,9 +177,9 @@ describe('pptxSlideLoaderService', () => {
 
 			const result = await service.loadSlides(params);
 			expect(result).toHaveLength(1);
-			expect(result[0].id).toBe('ppt/slides/slide1.xml');
-			expect(result[0].slideNumber).toBe(1);
-			expect(result[0].rId).toBe('rId1');
+			expect(at(result, 0).id).toBe('ppt/slides/slide1.xml');
+			expect(at(result, 0).slideNumber).toBe(1);
+			expect(at(result, 0).rId).toBe('rId1');
 		});
 
 		// Regression: buBlip picture-bullet images resolve in a separate async
@@ -449,9 +450,8 @@ describe('pptxSlideLoaderService', () => {
 				} as unknown as PptxSlideLoaderParams['zip'],
 				parser: mockParser as unknown as PptxSlideLoaderParams['parser'],
 				findLayoutPathForSlide: vi.fn(() => 'ppt/slideLayouts/slideLayout1.xml'),
-				loadThemeOverride: vi.fn(async () => ({
-					themeColors: {},
-				})),
+				// The loader reads no theme colours from the override, so an empty one is equivalent.
+				loadThemeOverride: vi.fn(async () => ({})),
 				applyThemeOverrideState: vi.fn(() => restoreFn),
 			});
 
@@ -580,7 +580,7 @@ describe('pptxSlideLoaderService', () => {
 
 			const result = await service.loadSlides(params);
 			expect(result).toHaveLength(1);
-			expect(result[0].id).toBe('ppt/slides/slide1.xml');
+			expect(at(result, 0).id).toBe('ppt/slides/slide1.xml');
 		});
 	});
 });

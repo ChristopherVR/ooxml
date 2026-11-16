@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { XmlObject } from '../types';
 import { PptxNativeAnimationService } from './PptxNativeAnimationService';
+import { at } from '../../test-support/access';
 
 /**
  * Helper: wrap an animation effect in a minimal p:sld > p:timing > p:tnLst tree.
@@ -158,10 +159,10 @@ describe('pptxNativeAnimationService', () => {
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
 			expect(result).toHaveLength(1);
-			expect(result![0].targetId).toBe('shape1');
-			expect(result![0].presetClass).toBe('entr');
-			expect(result![0].presetId).toBe(10);
-			expect(result![0].durationMs).toBe(500);
+			expect(at(result!, 0).targetId).toBe('shape1');
+			expect(at(result!, 0).presetClass).toBe('entr');
+			expect(at(result!, 0).presetId).toBe(10);
+			expect(at(result!, 0).durationMs).toBe(500);
 		});
 
 		it('parses accel / decel timing percentages into 0..1 fractions', () => {
@@ -171,15 +172,15 @@ describe('pptxNativeAnimationService', () => {
 			});
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].accel).toBe(0.5);
-			expect(result![0].decel).toBe(0.25);
+			expect(at(result!, 0).accel).toBe(0.5);
+			expect(at(result!, 0).decel).toBe(0.25);
 		});
 
 		it('leaves accel / decel undefined when the attributes are absent', () => {
 			const slideXml = buildSimpleEntranceSlide('shape1');
 			const result = service.parseNativeAnimations(slideXml);
-			expect(result![0].accel).toBeUndefined();
-			expect(result![0].decel).toBeUndefined();
+			expect(at(result!, 0).accel).toBeUndefined();
+			expect(at(result!, 0).decel).toBeUndefined();
 		});
 
 		it("extracts trigger from nodeType 'afterPrevious'", () => {
@@ -188,7 +189,7 @@ describe('pptxNativeAnimationService', () => {
 			});
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].trigger).toBe('afterPrevious');
+			expect(at(result!, 0).trigger).toBe('afterPrevious');
 		});
 
 		it("extracts trigger from nodeType 'withEffect'", () => {
@@ -197,7 +198,7 @@ describe('pptxNativeAnimationService', () => {
 			});
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].trigger).toBe('withPrevious');
+			expect(at(result!, 0).trigger).toBe('withPrevious');
 		});
 
 		it("extracts trigger from nodeType 'clickEffect' as onClick", () => {
@@ -206,7 +207,7 @@ describe('pptxNativeAnimationService', () => {
 			});
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].trigger).toBe('onClick');
+			expect(at(result!, 0).trigger).toBe('onClick');
 		});
 
 		it("extracts trigger from nodeType 'afterPrev'", () => {
@@ -215,7 +216,7 @@ describe('pptxNativeAnimationService', () => {
 			});
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].trigger).toBe('afterPrevious');
+			expect(at(result!, 0).trigger).toBe('afterPrevious');
 		});
 
 		it("extracts trigger from nodeType 'afterEffect' (the real OOXML value)", () => {
@@ -231,7 +232,7 @@ describe('pptxNativeAnimationService', () => {
 			});
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].trigger).toBe('afterPrevious');
+			expect(at(result!, 0).trigger).toBe('afterPrevious');
 		});
 
 		it("extracts trigger from nodeType 'mouseOver' as onHover", () => {
@@ -240,7 +241,7 @@ describe('pptxNativeAnimationService', () => {
 			});
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].trigger).toBe('onHover');
+			expect(at(result!, 0).trigger).toBe('onHover');
 		});
 
 		it('extracts duration and delay', () => {
@@ -250,8 +251,8 @@ describe('pptxNativeAnimationService', () => {
 			});
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].durationMs).toBe(1500);
-			expect(result![0].delayMs).toBe(300);
+			expect(at(result!, 0).durationMs).toBe(1500);
+			expect(at(result!, 0).delayMs).toBe(300);
 		});
 
 		it('validates preset class against known values', () => {
@@ -290,7 +291,7 @@ describe('pptxNativeAnimationService', () => {
 			});
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].presetClass).toBeUndefined();
+			expect(at(result!, 0).presetClass).toBeUndefined();
 		});
 
 		it('detects afterDelay trigger from stCondLst with positive delay', () => {
@@ -334,8 +335,8 @@ describe('pptxNativeAnimationService', () => {
 			});
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].trigger).toBe('afterDelay');
-			expect(result![0].triggerDelayMs).toBe(2000);
+			expect(at(result!, 0).trigger).toBe('afterDelay');
+			expect(at(result!, 0).triggerDelayMs).toBe(2000);
 		});
 
 		it('parses multiple animations from nested p:par containers', () => {
@@ -397,11 +398,11 @@ describe('pptxNativeAnimationService', () => {
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
 			expect(result).toHaveLength(2);
-			expect(result![0].targetId).toBe('shape1');
-			expect(result![0].presetClass).toBe('entr');
-			expect(result![1].targetId).toBe('shape2');
-			expect(result![1].presetClass).toBe('exit');
-			expect(result![1].trigger).toBe('afterPrevious');
+			expect(at(result!, 0).targetId).toBe('shape1');
+			expect(at(result!, 0).presetClass).toBe('entr');
+			expect(at(result!, 1).targetId).toBe('shape2');
+			expect(at(result!, 1).presetClass).toBe('exit');
+			expect(at(result!, 1).trigger).toBe('afterPrevious');
 		});
 
 		it('extracts motion path from p:animMotion in child nodes', () => {
@@ -442,9 +443,9 @@ describe('pptxNativeAnimationService', () => {
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
 			expect(result).toHaveLength(1);
-			expect(result![0].targetId).toBe('shapeMotion');
-			expect(result![0].motionPath).toBe('M 0 0 L 1 1');
-			expect(result![0].motionOrigin).toBe('layout');
+			expect(at(result!, 0).targetId).toBe('shapeMotion');
+			expect(at(result!, 0).motionPath).toBe('M 0 0 L 1 1');
+			expect(at(result!, 0).motionOrigin).toBe('layout');
 		});
 
 		it('extracts rotation from p:animRot in child nodes', () => {
@@ -483,7 +484,7 @@ describe('pptxNativeAnimationService', () => {
 			});
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].rotationBy).toBe(360);
+			expect(at(result!, 0).rotationBy).toBe(360);
 		});
 
 		it('extracts scale from p:animScale in child nodes', () => {
@@ -525,8 +526,8 @@ describe('pptxNativeAnimationService', () => {
 			});
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].scaleByX).toBe(1.5);
-			expect(result![0].scaleByY).toBe(2.0);
+			expect(at(result!, 0).scaleByX).toBe(1.5);
+			expect(at(result!, 0).scaleByY).toBe(2.0);
 		});
 
 		it('extracts sound reference from p:stSnd', () => {
@@ -569,7 +570,7 @@ describe('pptxNativeAnimationService', () => {
 			});
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].soundRId).toBe('rId5');
+			expect(at(result!, 0).soundRId).toBe('rId5');
 		});
 
 		it('extracts repeat info from cTn attributes', () => {
@@ -609,8 +610,8 @@ describe('pptxNativeAnimationService', () => {
 			});
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].repeatCount).toBe(3);
-			expect(result![0].autoReverse).toBeTruthy();
+			expect(at(result!, 0).repeatCount).toBe(3);
+			expect(at(result!, 0).autoReverse).toBeTruthy();
 		});
 
 		it('applies build list to matching animations', () => {
@@ -655,8 +656,8 @@ describe('pptxNativeAnimationService', () => {
 			});
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].buildType).toBe('byParagraph');
-			expect(result![0].groupId).toBe('0');
+			expect(at(result!, 0).buildType).toBe('byParagraph');
+			expect(at(result!, 0).groupId).toBe('0');
 		});
 
 		it('applies OLE chart build info to matching animations', () => {
@@ -701,8 +702,8 @@ describe('pptxNativeAnimationService', () => {
 			});
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].groupId).toBe('5');
-			expect(result![0].oleChartBuild).toBe('series');
+			expect(at(result!, 0).groupId).toBe('5');
+			expect(at(result!, 0).oleChartBuild).toBe('series');
 		});
 
 		it('preserves rawEndCondLst from the timing node', () => {
@@ -744,8 +745,8 @@ describe('pptxNativeAnimationService', () => {
 			});
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].rawEndCondLst).toBeDefined();
-			expect((result![0].rawEndCondLst!['p:cond'] as XmlObject)['@_evt']).toBe('onClick');
+			expect(at(result!, 0).rawEndCondLst).toBeDefined();
+			expect((at(result!, 0).rawEndCondLst!['p:cond'] as XmlObject)['@_evt']).toBe('onClick');
 		});
 
 		it('marks animations inside exclusive containers', () => {
@@ -783,7 +784,7 @@ describe('pptxNativeAnimationService', () => {
 			});
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].exclusive).toBeTruthy();
+			expect(at(result!, 0).exclusive).toBeTruthy();
 		});
 
 		it('gives siblings of the same p:excl container the same exclGroupId, and a different container a different one', () => {
@@ -912,11 +913,11 @@ describe('pptxNativeAnimationService', () => {
 			});
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].textTarget).toBeDefined();
-			expect(result![0].textTarget!.type).toBe('pRg');
-			expect(result![0].textTarget!.start).toBe(0);
+			expect(at(result!, 0).textTarget).toBeDefined();
+			expect(at(result!, 0).textTarget!.type).toBe('pRg');
+			expect(at(result!, 0).textTarget!.start).toBe(0);
 			// `p:pRg/@end` is inclusive; the model's `end` is exclusive.
-			expect(result![0].textTarget!.end).toBe(4);
+			expect(at(result!, 0).textTarget!.end).toBe(4);
 		});
 
 		it('extracts color animation from p:animClr', () => {
@@ -972,11 +973,11 @@ describe('pptxNativeAnimationService', () => {
 			});
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].colorAnimation).toBeDefined();
-			expect(result![0].colorAnimation!.colorSpace).toBe('hsl');
-			expect(result![0].colorAnimation!.direction).toBe('cw');
-			expect(result![0].colorAnimation!.fromColor).toBe('#FF0000');
-			expect(result![0].colorAnimation!.toColor).toBe('#0000FF');
+			expect(at(result!, 0).colorAnimation).toBeDefined();
+			expect(at(result!, 0).colorAnimation!.colorSpace).toBe('hsl');
+			expect(at(result!, 0).colorAnimation!.direction).toBe('cw');
+			expect(at(result!, 0).colorAnimation!.fromColor).toBe('#FF0000');
+			expect(at(result!, 0).colorAnimation!.toColor).toBe('#0000FF');
 		});
 
 		// emph.15 "Bold Reveal" (COM-recorded shape: presetId 15, attrName
@@ -1016,9 +1017,9 @@ describe('pptxNativeAnimationService', () => {
 			});
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].targetId).toBe('boldShape');
-			expect(result![0].presetClass).toBe('emph');
-			expect(result![0].setAnimations).toStrictEqual([
+			expect(at(result!, 0).targetId).toBe('boldShape');
+			expect(at(result!, 0).presetClass).toBe('emph');
+			expect(at(result!, 0).setAnimations).toStrictEqual([
 				{
 					attrName: 'style.fontweight',
 					value: 'bold',
@@ -1066,7 +1067,7 @@ describe('pptxNativeAnimationService', () => {
 				},
 			});
 			const result = service.parseNativeAnimations(slideXml);
-			expect(result![0].setAnimations).toStrictEqual([
+			expect(at(result!, 0).setAnimations).toStrictEqual([
 				{
 					attrName: 'style.textdecorationunderline',
 					value: true,
@@ -1182,8 +1183,8 @@ describe('pptxNativeAnimationService', () => {
 			});
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].commandType).toBe('call');
-			expect(result![0].commandString).toBe('playFrom(0)');
+			expect(at(result!, 0).commandType).toBe('call');
+			expect(at(result!, 0).commandString).toBe('playFrom(0)');
 		});
 
 		it('extracts iterate from p:iterate in cTn', () => {
@@ -1226,10 +1227,10 @@ describe('pptxNativeAnimationService', () => {
 			});
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].iterate).toBeDefined();
-			expect(result![0].iterate!.type).toBe('lt');
-			expect(result![0].iterate!.backwards).toBeTruthy();
-			expect(result![0].iterate!.tmPct).toBe(10000);
+			expect(at(result!, 0).iterate).toBeDefined();
+			expect(at(result!, 0).iterate!.type).toBe('lt');
+			expect(at(result!, 0).iterate!.backwards).toBeTruthy();
+			expect(at(result!, 0).iterate!.tmPct).toBe(10000);
 		});
 	});
 
@@ -1346,7 +1347,7 @@ describe('pptxNativeAnimationService', () => {
 			// of advancing the slide.
 			const hiddenShapeAnims = result!.filter((a) => a.targetId === 'hiddenShape');
 			expect(hiddenShapeAnims).toHaveLength(1);
-			expect(hiddenShapeAnims[0].trigger).toBe('onShapeClick');
+			expect(at(hiddenShapeAnims, 0).trigger).toBe('onShapeClick');
 		});
 
 		it('does not emit an interactive effect as a main-sequence click step', () => {
@@ -1431,8 +1432,8 @@ describe('pptxNativeAnimationService', () => {
 
 			const toggles = result!.filter((a) => a.commandString === 'togglePause');
 			expect(toggles).toHaveLength(1);
-			expect(toggles[0].trigger).toBe('onShapeClick');
-			expect(toggles[0].triggerShapeId).toBe('video');
+			expect(at(toggles, 0).trigger).toBe('onShapeClick');
+			expect(at(toggles, 0).triggerShapeId).toBe('video');
 
 			// The only main-sequence effect is the auto-started playback command.
 			// Its `nodeType="afterEffect"` (PowerPoint's "Start: After Previous")
@@ -1441,7 +1442,7 @@ describe('pptxNativeAnimationService', () => {
 			// trigger asserted above.
 			const mainSeqAnims = result!.filter((a) => a.trigger === 'afterPrevious');
 			expect(mainSeqAnims).toHaveLength(1);
-			expect(mainSeqAnims[0].commandString).toBe('playFrom(0.0)');
+			expect(at(mainSeqAnims, 0).commandString).toBe('playFrom(0.0)');
 		});
 
 		it('still finds an interactive sequence nested below the root', () => {
@@ -1497,8 +1498,8 @@ describe('pptxNativeAnimationService', () => {
 			expect(result).toBeDefined();
 			const deep = result!.filter((a) => a.targetId === 'deepTarget');
 			expect(deep).toHaveLength(1);
-			expect(deep[0].trigger).toBe('onShapeClick');
-			expect(deep[0].triggerShapeId).toBe('deepTrigger');
+			expect(at(deep, 0).trigger).toBe('onShapeClick');
+			expect(at(deep, 0).triggerShapeId).toBe('deepTrigger');
 		});
 
 		it('skips mainSeq sequences in interactive parsing', () => {
@@ -1650,15 +1651,15 @@ describe('pptxNativeAnimationService', () => {
 				},
 			});
 			const result = service.parseNativeAnimations(slideXml);
-			expect(result![0].repeatDurMs).toBe(Infinity);
+			expect(at(result!, 0).repeatDurMs).toBe(Infinity);
 		});
 
 		it('leaves fill/restart/repeatDurMs/speedPct undefined when absent', () => {
 			const result = service.parseNativeAnimations(buildSimpleEntranceSlide('plainShape'));
 			expect(result).toBeDefined();
-			expect(result![0].fill).toBeUndefined();
-			expect(result![0].repeatDurMs).toBeUndefined();
-			expect(result![0].speedPct).toBeUndefined();
+			expect(at(result!, 0).fill).toBeUndefined();
+			expect(at(result!, 0).repeatDurMs).toBeUndefined();
+			expect(at(result!, 0).speedPct).toBeUndefined();
 		});
 
 		it('extracts @rev and @advAuto from a TEXT p:bldP, distinct from p:bldDgm/@rev', () => {
@@ -1701,8 +1702,8 @@ describe('pptxNativeAnimationService', () => {
 			});
 			const result = service.parseNativeAnimations(slideXml);
 			expect(result).toBeDefined();
-			expect(result![0].buildReverse).toBeTruthy();
-			expect(result![0].buildAdvAutoMs).toBe(2000);
+			expect(at(result!, 0).buildReverse).toBeTruthy();
+			expect(at(result!, 0).buildAdvAutoMs).toBe(2000);
 		});
 	});
 

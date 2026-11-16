@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 import { PptxCompatibilityService } from './PptxCompatibilityService';
 import type { CompatibilityWarningInput } from './PptxCompatibilityService';
+import { at } from '../../test-support/access';
 
 describe('pptxCompatibilityService', () => {
 	describe('getXmlLocalName', () => {
@@ -62,9 +63,9 @@ describe('pptxCompatibilityService', () => {
 			});
 			const warnings = svc.getWarnings();
 			expect(warnings).toHaveLength(1);
-			expect(warnings[0].code).toBe('TEST001');
-			expect(warnings[0].message).toBe('Test warning');
-			expect(warnings[0].severity).toBe('warning');
+			expect(at(warnings, 0).code).toBe('TEST001');
+			expect(at(warnings, 0).message).toBe('Test warning');
+			expect(at(warnings, 0).severity).toBe('warning');
 			vi.restoreAllMocks();
 		});
 
@@ -111,7 +112,7 @@ describe('pptxCompatibilityService', () => {
 				severity: 'info',
 				scope: 'presentation',
 			});
-			expect(svc.getWarnings()[0].severity).toBe('info');
+			expect(at(svc.getWarnings(), 0).severity).toBe('info');
 			expect(infoSpy).toHaveBeenCalledWith(
 				'[PptxHandler][info] INFO001 (presentation) Info message',
 			);
@@ -156,9 +157,9 @@ describe('pptxCompatibilityService', () => {
 				scope: 'presentation',
 			});
 			const warnings = svc.getWarnings();
-			warnings[0].message = 'Modified';
+			at(warnings, 0).message = 'Modified';
 			const warningsAgain = svc.getWarnings();
-			expect(warningsAgain[0].message).toBe('Original');
+			expect(at(warningsAgain, 0).message).toBe('Original');
 			vi.restoreAllMocks();
 		});
 
@@ -173,7 +174,7 @@ describe('pptxCompatibilityService', () => {
 				elementId: 'e1',
 				xmlPath: '/p:sld/p:cSld/p:spTree',
 			});
-			const w = svc.getWarnings()[0];
+			const w = at(svc.getWarnings(), 0);
 			expect(w.slideId).toBe('s1');
 			expect(w.elementId).toBe('e1');
 			expect(w.xmlPath).toBe('/p:sld/p:cSld/p:spTree');

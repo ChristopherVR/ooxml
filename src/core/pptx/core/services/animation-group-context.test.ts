@@ -11,6 +11,7 @@ import {
 } from './animation-group-context';
 import { PptxAnimationWriteService } from './PptxAnimationWriteService';
 import { PptxNativeAnimationService } from './PptxNativeAnimationService';
+import { at } from '../../test-support/access';
 
 const service = new PptxNativeAnimationService();
 
@@ -265,8 +266,8 @@ describe('click-step grouping metadata', () => {
 	it('gives effects sharing one wrapper p:par the same group index', () => {
 		const result = service.parseNativeAnimations(buildAutoStartTiming(autoConditions));
 		const effects = result!.filter((a) => a.presetClass === 'entr');
-		expect(effects[0].parGroupIndex).toBeDefined();
-		expect(effects[1].parGroupIndex).toBe(effects[0].parGroupIndex);
+		expect(at(effects, 0).parGroupIndex).toBeDefined();
+		expect(at(effects, 1).parGroupIndex).toBe(at(effects, 0).parGroupIndex);
 	});
 
 	it('stamps an authored wrapper offset on every effect inside it', () => {

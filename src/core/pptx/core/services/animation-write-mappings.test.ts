@@ -10,6 +10,7 @@ import {
 	OOXML_TO_PRESET_EMPH,
 	ooxmlToPresetName,
 } from './animation-write-mappings';
+import { must } from '../../test-support/access';
 
 // ---------------------------------------------------------------------------
 // PRESET_TO_OOXML
@@ -18,7 +19,7 @@ describe('pRESET_TO_OOXML', () => {
 	// ---- Entrance effects ----
 	describe('entrance effects', () => {
 		it('should map "appear" to entr, presetId 1', () => {
-			expect(PRESET_TO_OOXML['appear']).toStrictEqual({
+			expect(must(PRESET_TO_OOXML['appear'])).toStrictEqual({
 				presetClass: 'entr',
 				presetId: 1,
 				defaultSubtype: 0,
@@ -26,7 +27,7 @@ describe('pRESET_TO_OOXML', () => {
 		});
 
 		it('should map "fadeIn" to entr, presetId 10', () => {
-			expect(PRESET_TO_OOXML['fadeIn']).toStrictEqual({
+			expect(must(PRESET_TO_OOXML['fadeIn'])).toStrictEqual({
 				presetClass: 'entr',
 				presetId: 10,
 				defaultSubtype: 0,
@@ -34,7 +35,7 @@ describe('pRESET_TO_OOXML', () => {
 		});
 
 		it('should map "flyIn" to entr, presetId 2 with defaultSubtype 4', () => {
-			expect(PRESET_TO_OOXML['flyIn']).toStrictEqual({
+			expect(must(PRESET_TO_OOXML['flyIn'])).toStrictEqual({
 				presetClass: 'entr',
 				presetId: 2,
 				defaultSubtype: 4,
@@ -42,37 +43,37 @@ describe('pRESET_TO_OOXML', () => {
 		});
 
 		it('should map "zoomIn" to entr, presetId 23', () => {
-			expect(PRESET_TO_OOXML['zoomIn'].presetClass).toBe('entr');
-			expect(PRESET_TO_OOXML['zoomIn'].presetId).toBe(23);
+			expect(must(PRESET_TO_OOXML['zoomIn']).presetClass).toBe('entr');
+			expect(must(PRESET_TO_OOXML['zoomIn']).presetId).toBe(23);
 		});
 
 		it('should map "blindsIn" to entr, presetId 3', () => {
-			expect(PRESET_TO_OOXML['blindsIn'].presetClass).toBe('entr');
-			expect(PRESET_TO_OOXML['blindsIn'].presetId).toBe(3);
+			expect(must(PRESET_TO_OOXML['blindsIn']).presetClass).toBe('entr');
+			expect(must(PRESET_TO_OOXML['blindsIn']).presetId).toBe(3);
 		});
 
 		it('should map "boxIn" to entr, presetId 4', () => {
-			expect(PRESET_TO_OOXML['boxIn'].presetClass).toBe('entr');
-			expect(PRESET_TO_OOXML['boxIn'].presetId).toBe(4);
+			expect(must(PRESET_TO_OOXML['boxIn']).presetClass).toBe('entr');
+			expect(must(PRESET_TO_OOXML['boxIn']).presetId).toBe(4);
 		});
 
 		it('should map "dissolveIn" to entr, presetId 9', () => {
-			expect(PRESET_TO_OOXML['dissolveIn'].presetClass).toBe('entr');
-			expect(PRESET_TO_OOXML['dissolveIn'].presetId).toBe(9);
+			expect(must(PRESET_TO_OOXML['dissolveIn']).presetClass).toBe('entr');
+			expect(must(PRESET_TO_OOXML['dissolveIn']).presetId).toBe(9);
 		});
 
 		it('should map "wipeIn" to entr, presetId 22', () => {
-			expect(PRESET_TO_OOXML['wipeIn'].presetClass).toBe('entr');
-			expect(PRESET_TO_OOXML['wipeIn'].presetId).toBe(22);
+			expect(must(PRESET_TO_OOXML['wipeIn']).presetClass).toBe('entr');
+			expect(must(PRESET_TO_OOXML['wipeIn']).presetId).toBe(22);
 		});
 
 		it('should map "bounceIn" to entr, presetId 26 (verified via COM)', () => {
-			expect(PRESET_TO_OOXML['bounceIn'].presetClass).toBe('entr');
-			expect(PRESET_TO_OOXML['bounceIn'].presetId).toBe(26);
+			expect(must(PRESET_TO_OOXML['bounceIn']).presetClass).toBe('entr');
+			expect(must(PRESET_TO_OOXML['bounceIn']).presetId).toBe(26);
 		});
 
 		it('should map "wheelIn" to entr, presetId 21, defaultSubtype 1', () => {
-			expect(PRESET_TO_OOXML['wheelIn']).toStrictEqual({
+			expect(must(PRESET_TO_OOXML['wheelIn'])).toStrictEqual({
 				presetClass: 'entr',
 				presetId: 21,
 				defaultSubtype: 1,
@@ -80,42 +81,42 @@ describe('pRESET_TO_OOXML', () => {
 		});
 
 		it('should map "splitIn" to entr, presetId 16 (verified via COM: Split)', () => {
-			expect(PRESET_TO_OOXML['splitIn'].presetClass).toBe('entr');
-			expect(PRESET_TO_OOXML['splitIn'].presetId).toBe(16);
+			expect(must(PRESET_TO_OOXML['splitIn']).presetClass).toBe('entr');
+			expect(must(PRESET_TO_OOXML['splitIn']).presetId).toBe(16);
 		});
 
 		it('should map "randomBarsIn" to entr, presetId 14 (spec: entr.14 = Random Bars)', () => {
-			expect(PRESET_TO_OOXML['randomBarsIn'].presetClass).toBe('entr');
-			expect(PRESET_TO_OOXML['randomBarsIn'].presetId).toBe(14);
+			expect(must(PRESET_TO_OOXML['randomBarsIn']).presetClass).toBe('entr');
+			expect(must(PRESET_TO_OOXML['randomBarsIn']).presetId).toBe(14);
 		});
 
 		it('should map "expandIn" to entr, presetId 55 (COM: msoAnimEffectExpand saves 55)', () => {
-			expect(PRESET_TO_OOXML['expandIn'].presetClass).toBe('entr');
-			expect(PRESET_TO_OOXML['expandIn'].presetId).toBe(55);
+			expect(must(PRESET_TO_OOXML['expandIn']).presetClass).toBe('entr');
+			expect(must(PRESET_TO_OOXML['expandIn']).presetId).toBe(55);
 		});
 
 		it('should map "circleIn" to entr, presetId 6 (spec: entr.6 = Circle)', () => {
-			expect(PRESET_TO_OOXML['circleIn'].presetClass).toBe('entr');
-			expect(PRESET_TO_OOXML['circleIn'].presetId).toBe(6);
+			expect(must(PRESET_TO_OOXML['circleIn']).presetClass).toBe('entr');
+			expect(must(PRESET_TO_OOXML['circleIn']).presetId).toBe(6);
 		});
 
 		it('should map "floatIn" to entr, presetId 30', () => {
-			expect(PRESET_TO_OOXML['floatIn'].presetClass).toBe('entr');
+			expect(must(PRESET_TO_OOXML['floatIn']).presetClass).toBe('entr');
 			// COM-verified (`animation-behavior-captures.json`): `msoAnimEffectFloat`
 			// serialises presetID="30", not 42.
-			expect(PRESET_TO_OOXML['floatIn'].presetId).toBe(30);
+			expect(must(PRESET_TO_OOXML['floatIn']).presetId).toBe(30);
 		});
 
 		it('should map "swivel" to entr, presetId 19 (verified via COM)', () => {
-			expect(PRESET_TO_OOXML['swivel'].presetClass).toBe('entr');
-			expect(PRESET_TO_OOXML['swivel'].presetId).toBe(19);
+			expect(must(PRESET_TO_OOXML['swivel']).presetClass).toBe('entr');
+			expect(must(PRESET_TO_OOXML['swivel']).presetId).toBe(19);
 		});
 	});
 
 	// ---- Exit effects ----
 	describe('exit effects', () => {
 		it('should map "disappear" to exit, presetId 1', () => {
-			expect(PRESET_TO_OOXML['disappear']).toStrictEqual({
+			expect(must(PRESET_TO_OOXML['disappear'])).toStrictEqual({
 				presetClass: 'exit',
 				presetId: 1,
 				defaultSubtype: 0,
@@ -123,7 +124,7 @@ describe('pRESET_TO_OOXML', () => {
 		});
 
 		it('should map "fadeOut" to exit, presetId 10', () => {
-			expect(PRESET_TO_OOXML['fadeOut']).toStrictEqual({
+			expect(must(PRESET_TO_OOXML['fadeOut'])).toStrictEqual({
 				presetClass: 'exit',
 				presetId: 10,
 				defaultSubtype: 0,
@@ -131,7 +132,7 @@ describe('pRESET_TO_OOXML', () => {
 		});
 
 		it('should map "flyOut" to exit, presetId 2 with defaultSubtype 4', () => {
-			expect(PRESET_TO_OOXML['flyOut']).toStrictEqual({
+			expect(must(PRESET_TO_OOXML['flyOut'])).toStrictEqual({
 				presetClass: 'exit',
 				presetId: 2,
 				defaultSubtype: 4,
@@ -139,37 +140,37 @@ describe('pRESET_TO_OOXML', () => {
 		});
 
 		it('should map "zoomOut" to exit, presetId 23', () => {
-			expect(PRESET_TO_OOXML['zoomOut'].presetClass).toBe('exit');
-			expect(PRESET_TO_OOXML['zoomOut'].presetId).toBe(23);
+			expect(must(PRESET_TO_OOXML['zoomOut']).presetClass).toBe('exit');
+			expect(must(PRESET_TO_OOXML['zoomOut']).presetId).toBe(23);
 		});
 
 		it('should map "shrinkOut" to exit, presetId 55 (Contract; exit.6 is Circle)', () => {
-			expect(PRESET_TO_OOXML['shrinkOut'].presetClass).toBe('exit');
-			expect(PRESET_TO_OOXML['shrinkOut'].presetId).toBe(55);
+			expect(must(PRESET_TO_OOXML['shrinkOut']).presetClass).toBe('exit');
+			expect(must(PRESET_TO_OOXML['shrinkOut']).presetId).toBe(55);
 		});
 
 		it('should map "dissolveOut" to exit, presetId 9', () => {
-			expect(PRESET_TO_OOXML['dissolveOut'].presetClass).toBe('exit');
-			expect(PRESET_TO_OOXML['dissolveOut'].presetId).toBe(9);
+			expect(must(PRESET_TO_OOXML['dissolveOut']).presetClass).toBe('exit');
+			expect(must(PRESET_TO_OOXML['dissolveOut']).presetId).toBe(9);
 		});
 
 		it('should map "wipeOut" to exit, presetId 22', () => {
-			expect(PRESET_TO_OOXML['wipeOut'].presetClass).toBe('exit');
-			expect(PRESET_TO_OOXML['wipeOut'].presetId).toBe(22);
+			expect(must(PRESET_TO_OOXML['wipeOut']).presetClass).toBe('exit');
+			expect(must(PRESET_TO_OOXML['wipeOut']).presetId).toBe(22);
 		});
 
 		it('should map "bounceOut" to exit, presetId 26 (verified via COM)', () => {
-			expect(PRESET_TO_OOXML['bounceOut'].presetClass).toBe('exit');
-			expect(PRESET_TO_OOXML['bounceOut'].presetId).toBe(26);
+			expect(must(PRESET_TO_OOXML['bounceOut']).presetClass).toBe('exit');
+			expect(must(PRESET_TO_OOXML['bounceOut']).presetId).toBe(26);
 		});
 
 		it('should map "sinkDown" to exit, presetId 37 (verified via COM)', () => {
-			expect(PRESET_TO_OOXML['sinkDown'].presetClass).toBe('exit');
-			expect(PRESET_TO_OOXML['sinkDown'].presetId).toBe(37);
+			expect(must(PRESET_TO_OOXML['sinkDown']).presetClass).toBe('exit');
+			expect(must(PRESET_TO_OOXML['sinkDown']).presetId).toBe(37);
 		});
 
 		it('should map "peekOutDown" to exit, presetId 12, defaultSubtype 4 (Peek Out, verified via COM)', () => {
-			expect(PRESET_TO_OOXML['peekOutDown']).toStrictEqual({
+			expect(must(PRESET_TO_OOXML['peekOutDown'])).toStrictEqual({
 				presetClass: 'exit',
 				presetId: 12,
 				defaultSubtype: 4,
@@ -177,16 +178,16 @@ describe('pRESET_TO_OOXML', () => {
 		});
 
 		it('"peekOut" is Peek Out (exit.12) too; exit.16 is Split', () => {
-			expect(PRESET_TO_OOXML['peekOut'].presetId).toBe(12);
-			expect(PRESET_TO_OOXML['peekOutDown'].presetId).toBe(12);
-			expect(PRESET_TO_OOXML['splitOut'].presetId).toBe(16);
+			expect(must(PRESET_TO_OOXML['peekOut']).presetId).toBe(12);
+			expect(must(PRESET_TO_OOXML['peekOutDown']).presetId).toBe(12);
+			expect(must(PRESET_TO_OOXML['splitOut']).presetId).toBe(16);
 		});
 	});
 
 	// ---- Emphasis effects ----
 	describe('emphasis effects', () => {
 		it('should map "spin" to emph, presetId 8', () => {
-			expect(PRESET_TO_OOXML['spin']).toStrictEqual({
+			expect(must(PRESET_TO_OOXML['spin'])).toStrictEqual({
 				presetClass: 'emph',
 				presetId: 8,
 				defaultSubtype: 0,
@@ -194,7 +195,7 @@ describe('pRESET_TO_OOXML', () => {
 		});
 
 		it('should map "pulse" to emph, presetId 26', () => {
-			expect(PRESET_TO_OOXML['pulse']).toStrictEqual({
+			expect(must(PRESET_TO_OOXML['pulse'])).toStrictEqual({
 				presetClass: 'emph',
 				presetId: 26,
 				defaultSubtype: 0,
@@ -202,33 +203,33 @@ describe('pRESET_TO_OOXML', () => {
 		});
 
 		it('should map "growShrink" to emph, presetId 6', () => {
-			expect(PRESET_TO_OOXML['growShrink'].presetClass).toBe('emph');
-			expect(PRESET_TO_OOXML['growShrink'].presetId).toBe(6);
+			expect(must(PRESET_TO_OOXML['growShrink']).presetClass).toBe('emph');
+			expect(must(PRESET_TO_OOXML['growShrink']).presetId).toBe(6);
 		});
 
 		it('should map "teeter" to emph, presetId 32 (verified via COM)', () => {
-			expect(PRESET_TO_OOXML['teeter'].presetClass).toBe('emph');
-			expect(PRESET_TO_OOXML['teeter'].presetId).toBe(32);
+			expect(must(PRESET_TO_OOXML['teeter']).presetClass).toBe('emph');
+			expect(must(PRESET_TO_OOXML['teeter']).presetId).toBe(32);
 		});
 
 		it('should map "transparency" to emph, presetId 9', () => {
-			expect(PRESET_TO_OOXML['transparency'].presetClass).toBe('emph');
-			expect(PRESET_TO_OOXML['transparency'].presetId).toBe(9);
+			expect(must(PRESET_TO_OOXML['transparency']).presetClass).toBe('emph');
+			expect(must(PRESET_TO_OOXML['transparency']).presetId).toBe(9);
 		});
 
 		it('should map "boldFlash" to emph, presetId 10 (verified via COM)', () => {
-			expect(PRESET_TO_OOXML['boldFlash'].presetClass).toBe('emph');
-			expect(PRESET_TO_OOXML['boldFlash'].presetId).toBe(10);
+			expect(must(PRESET_TO_OOXML['boldFlash']).presetClass).toBe('emph');
+			expect(must(PRESET_TO_OOXML['boldFlash']).presetId).toBe(10);
 		});
 
 		it('should map "wave" to emph, presetId 34 (verified via COM)', () => {
-			expect(PRESET_TO_OOXML['wave'].presetClass).toBe('emph');
-			expect(PRESET_TO_OOXML['wave'].presetId).toBe(34);
+			expect(must(PRESET_TO_OOXML['wave']).presetClass).toBe('emph');
+			expect(must(PRESET_TO_OOXML['wave']).presetId).toBe(34);
 		});
 
 		it('should map "bounce" to emph, presetId 26', () => {
-			expect(PRESET_TO_OOXML['bounce'].presetClass).toBe('emph');
-			expect(PRESET_TO_OOXML['bounce'].presetId).toBe(26);
+			expect(must(PRESET_TO_OOXML['bounce']).presetClass).toBe('emph');
+			expect(must(PRESET_TO_OOXML['bounce']).presetId).toBe(26);
 		});
 	});
 
@@ -362,17 +363,17 @@ describe('oOXML_TO_PRESET reverse lookups', () => {
 	});
 
 	// A follow-up COM verification pass (this task) corrected the forward map
-	// too: `PRESET_TO_OOXML.splitIn` now writes presetId 16 (real Split) and
+	// too: `must(PRESET_TO_OOXML.splitIn)` now writes presetId 16 (real Split) and
 	// `stretchIn` writes presetId 17 (real Stretch), matching the reverse
 	// lookup below - the forward and reverse directions no longer disagree
 	// for this pair.
 	it('forward- and reverse-resolves the real entr.16 (Split) and entr.17 (Stretch) consistently', () => {
-		const split = PRESET_TO_OOXML['splitIn'];
+		const split = must(must(PRESET_TO_OOXML['splitIn']));
 		expect(split.presetClass).toBe('entr');
 		expect(split.presetId).toBe(16);
 		expect(ooxmlToPresetName({ presetClass: 'entr', presetId: 16 })).toBe('splitIn');
 
-		const stretch = PRESET_TO_OOXML['stretchIn'];
+		const stretch = must(must(PRESET_TO_OOXML['stretchIn']));
 		expect(stretch.presetClass).toBe('entr');
 		expect(stretch.presetId).toBe(17);
 		expect(ooxmlToPresetName({ presetClass: 'entr', presetId: 17 })).toBe('stretchIn');
@@ -444,7 +445,7 @@ describe('preset name round-trip via PRESET_TO_OOXML + ooxmlToPresetName', () =>
 				presetId: mapping.presetId,
 			});
 			expect(recovered, `${name} -> reverse should not be undefined`).toBeDefined();
-			const reverseMapping = PRESET_TO_OOXML[recovered!];
+			const reverseMapping = must(PRESET_TO_OOXML[must(recovered)]);
 			expect(reverseMapping, `recovered name ${recovered} should exist`).toBeDefined();
 			expect(reverseMapping.presetClass).toBe(mapping.presetClass);
 			expect(reverseMapping.presetId).toBe(mapping.presetId);

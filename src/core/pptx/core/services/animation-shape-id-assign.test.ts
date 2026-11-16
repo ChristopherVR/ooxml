@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { PptxElement, PptxElementAnimation } from '../types';
 import { remapEditorAnimationsToShapeIds } from './animation-shape-id-assign';
 import { applyConnectorShapeIds, resolveConnectorShapeIds } from './connector-shape-id-assign';
+import { at } from '../../test-support/access';
 
 function el(id: string, shapeId?: string): PptxElement {
 	return {
@@ -21,9 +22,9 @@ describe('remapEditorAnimationsToShapeIds', () => {
 		const elements = [el('slide1-shape-0', '2'), el('slide1-shape-1', '3')];
 		const anims: PptxElementAnimation[] = [{ elementId: 'slide1-shape-1', entrance: 'fadeIn' }];
 		const out = remapEditorAnimationsToShapeIds(elements, anims);
-		expect(out[0].elementId).toBe('3');
+		expect(at(out, 0).elementId).toBe('3');
 		// Original array is not mutated.
-		expect(anims[0].elementId).toBe('slide1-shape-1');
+		expect(at(anims, 0).elementId).toBe('slide1-shape-1');
 	});
 
 	it('mints a fresh shapeId for an SDK element that has none, and stamps it', () => {
@@ -32,7 +33,7 @@ describe('remapEditorAnimationsToShapeIds', () => {
 		const anims: PptxElementAnimation[] = [{ elementId: 'sdk-el', entrance: 'fadeIn' }];
 		const out = remapEditorAnimationsToShapeIds(elements, anims);
 		// Minted above the max existing shapeId (2).
-		expect(out[0].elementId).toBe('3');
+		expect(at(out, 0).elementId).toBe('3');
 		expect(target.shapeId).toBe('3');
 	});
 
@@ -41,7 +42,7 @@ describe('remapEditorAnimationsToShapeIds', () => {
 		const anims: PptxElementAnimation[] = [{ elementId: 'sdk-el' }];
 		// reservedMaxId 1 models the implicit <p:spTree> group cNvPr id.
 		const out = remapEditorAnimationsToShapeIds([target], anims, 1);
-		expect(out[0].elementId).toBe('2');
+		expect(at(out, 0).elementId).toBe('2');
 		expect(target.shapeId).toBe('2');
 	});
 
@@ -51,15 +52,15 @@ describe('remapEditorAnimationsToShapeIds', () => {
 			{ elementId: 'target-el', triggerShapeId: 'trigger-el', trigger: 'onShapeClick' },
 		];
 		const out = remapEditorAnimationsToShapeIds(elements, anims);
-		expect(out[0].elementId).toBe('5');
-		expect(out[0].triggerShapeId).toBe('4');
+		expect(at(out, 0).elementId).toBe('5');
+		expect(at(out, 0).triggerShapeId).toBe('4');
 	});
 
 	it('leaves an unresolvable elementId untouched', () => {
 		const elements = [el('slide1-shape-0', '2')];
 		const anims: PptxElementAnimation[] = [{ elementId: 'does-not-exist', entrance: 'fadeIn' }];
 		const out = remapEditorAnimationsToShapeIds(elements, anims);
-		expect(out[0].elementId).toBe('does-not-exist');
+		expect(at(out, 0).elementId).toBe('does-not-exist');
 	});
 
 	it('resolves an element nested inside a group', () => {
@@ -75,7 +76,7 @@ describe('remapEditorAnimationsToShapeIds', () => {
 		} as PptxElement;
 		const anims: PptxElementAnimation[] = [{ elementId: 'group-child', entrance: 'fadeIn' }];
 		const out = remapEditorAnimationsToShapeIds([group], anims);
-		expect(out[0].elementId).toBe('6');
+		expect(at(out, 0).elementId).toBe('6');
 	});
 });
 
@@ -98,7 +99,7 @@ describe('connector native shape IDs', () => {
 		const elements = [connector, target, animated];
 		const animation = remapEditorAnimationsToShapeIds(elements, [{ elementId: 'animated' }], 8);
 		const ids = resolveConnectorShapeIds(elements, 8);
-		expect(animation[0].elementId).toBe('9');
+		expect(at(animation, 0).elementId).toBe('9');
 		expect(ids.get('target')).toBe('11');
 		expect(ids.has('foreign')).toBeFalsy();
 		expect(connector.shapeStyle?.connectorStartConnection?.shapeId).toBe('target');

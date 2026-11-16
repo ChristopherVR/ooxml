@@ -31,7 +31,7 @@ const RECOMPUTED =
 
 async function saveDocProps(
 	bytes: Buffer,
-): Promise<{ source: JSZip; core?: string; app?: string } | undefined> {
+): Promise<{ source: JSZip; core?: string | undefined; app?: string | undefined } | undefined> {
 	const factory = new PptxRuntimeDependencyFactory();
 	let zip: JSZip;
 	try {

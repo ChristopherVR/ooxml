@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 
-import type { PptxElementAnimation, XmlObject } from '../types';
+import type { PptxAnimationPreset, PptxElementAnimation, XmlObject } from '../types';
 import { buildSingleEffectNode } from './animation-write-node-builders';
+import { at } from '../../test-support/access';
 
 function createIdAllocator(start = 1): () => number {
 	let id = start;
@@ -40,8 +41,17 @@ describe('animation behaviour table: entrance/exit filter presets', () => {
 	});
 
 	it('circle in writes filter="circle(in)"', () => {
-		const anim: PptxElementAnimation = { elementId: 'sp1', entrance: 'circleIn', durationMs: 500 };
-		const node = buildSingleEffectNode(anim, 'circleIn', 'entr', createIdAllocator())!;
+		const anim: PptxElementAnimation = {
+			elementId: 'sp1',
+			entrance: 'circleIn' as PptxAnimationPreset,
+			durationMs: 500,
+		};
+		const node = buildSingleEffectNode(
+			anim,
+			'circleIn' as PptxAnimationPreset,
+			'entr',
+			createIdAllocator(),
+		)!;
 		const childTnLst = effectChildTnLst(node);
 		const animEffect = childTnLst['p:animEffect'] as XmlObject;
 		expect(animEffect['@_filter']).toBe('circle(in)');
@@ -56,8 +66,8 @@ describe('animation behaviour table: entrance/exit filter presets', () => {
 			createIdAllocator(),
 		)!;
 		const exit = buildSingleEffectNode(
-			{ elementId: 'sp1', exit: 'splitOut', durationMs: 500 },
-			'splitOut',
+			{ elementId: 'sp1', exit: 'splitOut' as PptxAnimationPreset, durationMs: 500 },
+			'splitOut' as PptxAnimationPreset,
 			'exit',
 			createIdAllocator(),
 		)!;
@@ -73,10 +83,15 @@ describe('animation behaviour table: entrance/exit filter presets', () => {
 	it('flash once is a single un-held visibility set lasting the whole effect (COM)', () => {
 		const anim: PptxElementAnimation = {
 			elementId: 'sp1',
-			entrance: 'flashOnceIn',
+			entrance: 'flashOnceIn' as PptxAnimationPreset,
 			durationMs: 500,
 		};
-		const node = buildSingleEffectNode(anim, 'flashOnceIn', 'entr', createIdAllocator())!;
+		const node = buildSingleEffectNode(
+			anim,
+			'flashOnceIn' as PptxAnimationPreset,
+			'entr',
+			createIdAllocator(),
+		)!;
 		const childTnLst = effectChildTnLst(node);
 		expect(childTnLst['p:animEffect']).toBeUndefined();
 		const set = childTnLst['p:set'] as XmlObject;
@@ -103,8 +118,10 @@ describe('animation behaviour table: Fly In/Out', () => {
 			(n) => ((n['p:cBhvr'] as XmlObject)['p:attrNameLst'] as XmlObject)['p:attrName'] === 'ppt_y',
 		)!;
 		const tav = asArray((yAnim['p:tavLst'] as XmlObject)['p:tav'] as XmlObject | XmlObject[]);
-		expect(((tav[0]['p:val'] as XmlObject)['p:strVal'] as XmlObject)['@_val']).toBe('1+#ppt_h/2');
-		expect(((tav[1]['p:val'] as XmlObject)['p:strVal'] as XmlObject)['@_val']).toBe('#ppt_y');
+		expect(((at(tav, 0)['p:val'] as XmlObject)['p:strVal'] as XmlObject)['@_val']).toBe(
+			'1+#ppt_h/2',
+		);
+		expect(((at(tav, 1)['p:val'] as XmlObject)['p:strVal'] as XmlObject)['@_val']).toBe('#ppt_y');
 	});
 
 	it('fly out to the top (subtype 1) ends above the slide', () => {
@@ -121,8 +138,10 @@ describe('animation behaviour table: Fly In/Out', () => {
 			(n) => ((n['p:cBhvr'] as XmlObject)['p:attrNameLst'] as XmlObject)['p:attrName'] === 'ppt_y',
 		)!;
 		const tav = asArray((yAnim['p:tavLst'] as XmlObject)['p:tav'] as XmlObject | XmlObject[]);
-		expect(((tav[0]['p:val'] as XmlObject)['p:strVal'] as XmlObject)['@_val']).toBe('ppt_y');
-		expect(((tav[1]['p:val'] as XmlObject)['p:strVal'] as XmlObject)['@_val']).toBe('0-ppt_h/2');
+		expect(((at(tav, 0)['p:val'] as XmlObject)['p:strVal'] as XmlObject)['@_val']).toBe('ppt_y');
+		expect(((at(tav, 1)['p:val'] as XmlObject)['p:strVal'] as XmlObject)['@_val']).toBe(
+			'0-ppt_h/2',
+		);
 	});
 });
 
@@ -226,10 +245,15 @@ describe('animation behaviour table: emphasis', () => {
 	it('desaturate writes 3 hsl p:animClr behaviours plus a fill.type set', () => {
 		const anim: PptxElementAnimation = {
 			elementId: 'sp1',
-			emphasis: 'desaturate',
+			emphasis: 'desaturate' as PptxAnimationPreset,
 			durationMs: 500,
 		};
-		const node = buildSingleEffectNode(anim, 'desaturate', 'emph', createIdAllocator())!;
+		const node = buildSingleEffectNode(
+			anim,
+			'desaturate' as PptxAnimationPreset,
+			'emph',
+			createIdAllocator(),
+		)!;
 		const childTnLst = effectChildTnLst(node);
 		const clrNodes = asArray(childTnLst['p:animClr'] as XmlObject | XmlObject[]);
 		expect(clrNodes).toHaveLength(3);
@@ -242,10 +266,15 @@ describe('animation behaviour table: emphasis', () => {
 	it('color pulse writes 2 rgb p:animClr behaviours toward scheme bg1', () => {
 		const anim: PptxElementAnimation = {
 			elementId: 'sp1',
-			emphasis: 'colorPulse',
+			emphasis: 'colorPulse' as PptxAnimationPreset,
 			durationMs: 250,
 		};
-		const node = buildSingleEffectNode(anim, 'colorPulse', 'emph', createIdAllocator())!;
+		const node = buildSingleEffectNode(
+			anim,
+			'colorPulse' as PptxAnimationPreset,
+			'emph',
+			createIdAllocator(),
+		)!;
 		const childTnLst = effectChildTnLst(node);
 		const clrNodes = asArray(childTnLst['p:animClr'] as XmlObject | XmlObject[]);
 		expect(clrNodes).toHaveLength(2);

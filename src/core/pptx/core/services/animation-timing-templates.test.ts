@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { XmlObject } from '../types';
 import { extractBldPTemplates, serializeBldPTemplates } from './animation-timing-templates';
+import { at } from '../../test-support/access';
 
 /**
  * Hand-built markup: no fixture under `e2e/fixtures` or the corpus under
@@ -40,15 +41,15 @@ describe('extractBldPTemplates', () => {
 
 		const templates = extractBldPTemplates(bldP);
 		expect(templates).toHaveLength(1);
-		expect(templates[0].level).toBe(1);
-		expect(templates[0].timeNodeList).toBe(tnLst);
+		expect(at(templates, 0).level).toBe(1);
+		expect(at(templates, 0).timeNodeList).toBe(tnLst);
 	});
 
 	it('defaults @lvl to 0 when absent, per ST_TLLevel', () => {
 		const bldP: XmlObject = {
 			'p:tmplLst': { 'p:tmpl': { 'p:tnLst': buildTnLst() } },
 		};
-		expect(extractBldPTemplates(bldP)[0].level).toBe(0);
+		expect(at(extractBldPTemplates(bldP), 0).level).toBe(0);
 	});
 
 	it('parses multiple p:tmpl entries, one per build level', () => {

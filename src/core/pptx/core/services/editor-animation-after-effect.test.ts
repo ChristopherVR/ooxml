@@ -9,6 +9,7 @@ import {
 	setAfterAnimation,
 	setAfterAnimationColor,
 } from './editor-animation-after-effect';
+import { at } from '../../test-support/access';
 
 const BASE: PptxElementAnimation = {
 	elementId: 'el-1',
@@ -64,8 +65,8 @@ describe('getAfterAnimation', () => {
 describe('setAfterAnimation', () => {
 	it('sets dimToColor and seeds a default colour when none was set', () => {
 		const result = setAfterAnimation([BASE], 'el-1', 'dimToColor');
-		expect(result[0].afterAnimation).toBe('dimToColor');
-		expect(result[0].afterAnimationColor).toBe(DEFAULT_AFTER_ANIMATION_DIM_COLOR);
+		expect(at(result, 0).afterAnimation).toBe('dimToColor');
+		expect(at(result, 0).afterAnimationColor).toBe(DEFAULT_AFTER_ANIMATION_DIM_COLOR);
 	});
 
 	it('keeps an existing dim colour when re-selecting dimToColor', () => {
@@ -73,7 +74,7 @@ describe('setAfterAnimation', () => {
 			{ ...BASE, afterAnimation: 'dimToColor' as const, afterAnimationColor: '#123456' },
 		];
 		const result = setAfterAnimation(anims, 'el-1', 'dimToColor');
-		expect(result[0].afterAnimationColor).toBe('#123456');
+		expect(at(result, 0).afterAnimationColor).toBe('#123456');
 	});
 
 	it('clears afterAnimationColor when switching away from dimToColor', () => {
@@ -81,14 +82,14 @@ describe('setAfterAnimation', () => {
 			{ ...BASE, afterAnimation: 'dimToColor' as const, afterAnimationColor: '#123456' },
 		];
 		const result = setAfterAnimation(anims, 'el-1', 'hideAfterAnimation');
-		expect(result[0].afterAnimation).toBe('hideAfterAnimation');
-		expect(result[0].afterAnimationColor).toBeUndefined();
+		expect(at(result, 0).afterAnimation).toBe('hideAfterAnimation');
+		expect(at(result, 0).afterAnimationColor).toBeUndefined();
 	});
 
 	it('treats "none" as clearing the action', () => {
 		const anims = [{ ...BASE, afterAnimation: 'hideOnNextClick' as const }];
 		const result = setAfterAnimation(anims, 'el-1', 'none');
-		expect(result[0].afterAnimation).toBe('none');
+		expect(at(result, 0).afterAnimation).toBe('none');
 	});
 
 	it('creates a new animation entry when the element had none yet', () => {
@@ -104,7 +105,7 @@ describe('setAfterAnimationColor', () => {
 			{ ...BASE, afterAnimation: 'dimToColor' as const, afterAnimationColor: '#000000' },
 		];
 		const result = setAfterAnimationColor(anims, 'el-1', '#ABCDEF');
-		expect(result[0].afterAnimationColor).toBe('#ABCDEF');
+		expect(at(result, 0).afterAnimationColor).toBe('#ABCDEF');
 	});
 
 	it('is a no-op when dimToColor is not the active action', () => {

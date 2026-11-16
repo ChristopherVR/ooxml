@@ -100,7 +100,7 @@ describe('extractAttributeAnimations', () => {
 		});
 
 		expect(result).toHaveLength(1);
-		expect(result?.[0].bounceEnd).toBeCloseTo(0.66);
+		expect(result?.[0]?.bounceEnd).toBeCloseTo(0.66);
 	});
 
 	it('leaves bounceEnd undefined when p14:bounceEnd is absent', () => {
@@ -117,7 +117,7 @@ describe('extractAttributeAnimations', () => {
 			],
 		});
 
-		expect(result?.[0].bounceEnd).toBeUndefined();
+		expect(result?.[0]?.bounceEnd).toBeUndefined();
 	});
 
 	it('still drops a p:anim with no attrName, no keyframes, and no from/to/by', () => {

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { XmlObject } from '../types';
 import { PptxNativeAnimationService } from './PptxNativeAnimationService';
+import { at } from '../../test-support/access';
 
 /**
  * Build a minimal timing tree for a single effect `p:cTn` whose
@@ -79,13 +80,13 @@ describe('pptxNativeAnimationService: p:animEffect @filter', () => {
 		const result = service.parseNativeAnimations(slideXml);
 		expect(result).toBeDefined();
 		expect(result).toHaveLength(1);
-		expect(result![0].targetId).toBe('shape1');
+		expect(at(result!, 0).targetId).toBe('shape1');
 	});
 
 	it('parses the filter descriptor onto effectFilter', () => {
 		const slideXml = buildFilterOnlySlide('shape1', 'barn(inVertical)', { transition: 'in' });
 		const result = service.parseNativeAnimations(slideXml);
-		expect(result![0].effectFilter).toStrictEqual({
+		expect(at(result!, 0).effectFilter).toStrictEqual({
 			family: 'barn',
 			subtype: 'inVertical',
 			transition: 'in',
@@ -96,13 +97,13 @@ describe('pptxNativeAnimationService: p:animEffect @filter', () => {
 	it('derives presetClass "entr" from a default/"in" transition when @presetClass is absent', () => {
 		const slideXml = buildFilterOnlySlide('shape1', 'checkerboard(across)', { transition: 'in' });
 		const result = service.parseNativeAnimations(slideXml);
-		expect(result![0].presetClass).toBe('entr');
+		expect(at(result!, 0).presetClass).toBe('entr');
 	});
 
 	it('derives presetClass "exit" from transition="out" when @presetClass is absent', () => {
 		const slideXml = buildFilterOnlySlide('shape1', 'wipe(left)', { transition: 'out' });
 		const result = service.parseNativeAnimations(slideXml);
-		expect(result![0].presetClass).toBe('exit');
+		expect(at(result!, 0).presetClass).toBe('exit');
 	});
 
 	it('an explicit @presetClass wins over the transition-derived default', () => {
@@ -111,7 +112,7 @@ describe('pptxNativeAnimationService: p:animEffect @filter', () => {
 			presetClass: 'exit',
 		});
 		const result = service.parseNativeAnimations(slideXml);
-		expect(result![0].presetClass).toBe('exit');
+		expect(at(result!, 0).presetClass).toBe('exit');
 	});
 
 	it('still drops an effect node with neither @presetClass nor a @filter', () => {
@@ -169,8 +170,8 @@ describe('pptxNativeAnimationService: p:animEffect @filter', () => {
 			presetClass: 'entr',
 		});
 		const result = service.parseNativeAnimations(slideXml);
-		expect(result![0].presetId).toBe(22);
-		expect(result![0].presetClass).toBe('entr');
-		expect(result![0].effectFilter?.family).toBe('wipe');
+		expect(at(result!, 0).presetId).toBe(22);
+		expect(at(result!, 0).presetClass).toBe('entr');
+		expect(at(result!, 0).effectFilter?.family).toBe('wipe');
 	});
 });

@@ -7,6 +7,7 @@ import {
 	buildBuildListXml,
 	buildInteractiveSequences,
 } from './animation-write-sequence-builders';
+import { at } from '../../test-support/access';
 
 /** Simple incrementing ID allocator for tests. */
 function createIdAllocator(start = 100): () => number {
@@ -40,7 +41,7 @@ describe('buildEffectNodesForAnimation', () => {
 		};
 		const nodes = buildEffectNodesForAnimation(anim, createIdAllocator());
 		expect(nodes).toHaveLength(1);
-		const outerCTn = nodes[0]['p:cTn'] as XmlObject;
+		const outerCTn = at(nodes, 0)['p:cTn'] as XmlObject;
 		const innerPar = (outerCTn['p:childTnLst'] as XmlObject)['p:par'] as XmlObject;
 		const effectCTn = innerPar['p:cTn'] as XmlObject;
 		expect(effectCTn['@_presetClass']).toBe('entr');
@@ -226,7 +227,7 @@ describe('buildInteractiveSequences', () => {
 		];
 		const seqs = buildInteractiveSequences(animations, createIdAllocator());
 		expect(seqs).toHaveLength(1);
-		const seqCTn = seqs[0]['p:cTn'] as XmlObject;
+		const seqCTn = at(seqs, 0)['p:cTn'] as XmlObject;
 		expect(seqCTn['@_nodeType']).toBe('interactiveSeq');
 		// Check that trigger shape is referenced in start condition
 		const stCondLst = seqCTn['p:stCondLst'] as XmlObject;
@@ -285,7 +286,7 @@ describe('buildInteractiveSequences', () => {
 			},
 		];
 		const seqs = buildInteractiveSequences(animations, createIdAllocator());
-		const nextCondLst = seqs[0]['p:nextCondLst'] as XmlObject;
+		const nextCondLst = at(seqs, 0)['p:nextCondLst'] as XmlObject;
 		expect(nextCondLst).toBeDefined();
 		const cond = nextCondLst['p:cond'] as XmlObject;
 		expect(cond['@_evt']).toBe('onClick');
