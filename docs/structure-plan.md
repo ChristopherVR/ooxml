@@ -493,8 +493,8 @@ layout from the data part, so an edit drops the cached drawing.
 The Wave 6 next list was a historical checkpoint. Labels/paint saves, Word/Excel ChartEx editing,
 SmartArt styles/colours/generated caches and shared advanced chart controls have since landed.
 Current work finishes the PowerPoint compatibility-adapter migration and its exhaustive admission,
-corpus and native checks. Remaining independent framework work includes the presentation controller
-(timers, annotations, presenter window).
+corpus and native checks. The presentation controllers, the Fill inspector section and the pptx
+ribbon tab row landed on 2026-11-16 (below).
 
 The Fill inspector section landed on 2026-11-16: `SHAPE_FILL_MODE_SECTIONS` and
 `SHAPE_FILL_OPTIONS_SECTIONS` (`render/inspector/shape-fill-fields.ts`) are drawn by each binding's
@@ -525,3 +525,37 @@ templates in the element's `actions` slot; the tab panels and commands are uncha
 Display Options keep their own controller (`createRibbonDisplayController`), so the element's own
 collapse button is not used. Binding tests reach the tabs through `ribbonTabButtons` and
 `ribbonTab`, since they live in the element's shadow root.
+
+### Presentation controllers (landed 2026-11-16)
+
+Slide-show state is written once in `src/ui/src/pptx/render/controller/` and read by every pptx
+binding through its store adapter:
+
+- `createPresentationRehearsalController`: Rehearse Timings (per-slide and total clocks, pause,
+  recording, the 250 ms display tick, the summary). Saving goes through `applyRehearsalTimings`.
+- `createPresentationInkController`: the show's pen, highlighter, eraser and laser, per-slide
+  strokes, Ctrl+M markup visibility and the popup toolbar's auto-hide; `applyPresentationInk`
+  keeps ink as slide elements.
+- `createPresenterSessionController`: the audience window, deck hand-over, the BroadcastChannel
+  protocol on both sides, Swap Displays and the shared snapshot.
+
+Drift found between the bindings and the one behaviour chosen:
+
+- Rehearsal: slide floors of 1 s (Svelte) and 250 ms (vanilla) and none elsewhere; Svelte also set
+  "On mouse click" when saving; React, Vue and Angular counted paused time into the total, vanilla subtracted
+  a pause twice, and vanilla timed the editor instead of running a show. Now: no floor, both clocks
+  stop while paused, "On mouse click" is left as it was, and every binding runs the show.
+- Ink: Svelte cleared every slide (and disarmed) on "Erase All Ink on Slide" and erased on hover;
+  the pointer options of the context menu and keyboard toggled the tool off in React, Vue and
+  Angular, and an Angular colour pick could disarm the pen; React built its kept ink elements by
+  hand. Now: the toolbar's tool buttons toggle, every other path arms, Erase clears the current
+  slide, the eraser needs a press, and every binding keeps ink through `applyPresentationInk`.
+- Presenter window: only React and Angular noticed a popup the user closed; Svelte refused to open
+  without a deck while vanilla and the others navigated; Angular answered "audience ready" with the
+  slide captured at open; only Svelte, Vue and vanilla numbered their messages. Now: the popup is
+  polled, it is navigated with or without a deck, "ready" gets the current snapshot, and the stored
+  deck is cleared on close, unload and exit.
+
+Still per binding: the HUD, summary, toolbar and overlay templates, fullscreen requests inside the
+user gesture, and vanilla's DOM ink overlay (unit-square strokes, its own gesture tracking), which
+stores its strokes in the shared ink controller.

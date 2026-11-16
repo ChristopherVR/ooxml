@@ -108,6 +108,9 @@ The shared controllers, each adapted by every binding:
   and `createCollabProvider`. Each binding passes its own lazy `yjs` and `y-*` loaders, since
   those packages are optional peers of the bindings.
 - **AI panel**: `createPptxAiPanelController` (`ai/panel-controller.ts`).
+- **Slide show**: `createPresentationRehearsalController` (Rehearse Timings),
+  `createPresentationInkController` (pen, highlighter, eraser, laser, per-slide strokes; keep with
+  `applyPresentationInk`) and `createPresenterSessionController` (audience window and channel).
 - **Canvas gestures**: move, resize and rotate run on `createGestureController`
   (`render/editor-gestures.ts`: dead zone, window listeners, snapping, multi-selection snap
   exclusion, minimum size, mid-gesture lock check). A binding supplies deps and paints the
