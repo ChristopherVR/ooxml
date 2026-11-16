@@ -37,6 +37,18 @@ describe('compatibilityWarningToasts', () => {
 		]);
 	});
 
+	// The graphic-frame limitation codes used to fall through to the generic message,
+	// which shows the raw code to the user.
+	it.each([
+		['PARTIAL_OLE_SUPPORT', 'pptx.compatibility.partialOleSupport'],
+		['PARTIAL_INK_SUPPORT', 'pptx.compatibility.partialInkSupport'],
+		['UNSUPPORTED_GRAPHIC_FRAME', 'pptx.compatibility.unsupportedGraphicFrame'],
+	])('maps %s to its own message', (code, messageKey) => {
+		const [toast] = compatibilityWarningToasts([{ code, severity: 'info' }]);
+		expect(toast.messageKey).toBe(messageKey);
+		expect(toast.params).toBeUndefined();
+	});
+
 	it('dedupes identical codes, keeping the first severity', () => {
 		const toasts = compatibilityWarningToasts([
 			{ code: 'SAVE_ELEMENT_SKIPPED', severity: 'warning', elementId: 'a' },

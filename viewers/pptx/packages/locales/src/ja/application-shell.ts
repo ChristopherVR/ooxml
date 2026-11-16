@@ -177,6 +177,12 @@ export const translations = {
 		'このスライドは同期のために別のプレゼンテーションにリンクされています。このリンクは保持されますが、ここでは適用されません。',
 	'pptx.compatibility.unsupportedAlternateContentChoice':
 		'このプレゼンテーションは新しい PowerPoint の機能を使用しているため、代わりに互換性のある代替表示が使用されました。',
+	'pptx.compatibility.partialOleSupport':
+		'このプレゼンテーションには埋め込みオブジェクトがあります。画像として表示され、開くかダウンロードできます。Excel、Word、PowerPoint のオブジェクトはここで編集することもできます。',
+	'pptx.compatibility.partialInkSupport':
+		'一部のインク描画は、このビューアーで正確に表示できないペンの設定を使用しています。',
+	'pptx.compatibility.unsupportedGraphicFrame':
+		'このプレゼンテーションには、このビューアーで表示できないオブジェクトが含まれています。保存時には変更されずに保持されます。',
 	'pptx.compatibility.groupDepthExceeded':
 		'図形のグループがこのビューアーのサポートを超える深さで入れ子になっているため、平坦化されました。',
 	'pptx.compatibility.saveNotesRelationshipMissing':

@@ -170,6 +170,12 @@ export const translations = {
 		'该幻灯片链接到另一个演示文稿以进行同步；该链接已保留，但此处未应用。',
 	'pptx.compatibility.unsupportedAlternateContentChoice':
 		'此演示文稿使用了较新的 PowerPoint 功能，已采用兼容的替代方式显示。',
+	'pptx.compatibility.partialOleSupport':
+		'此演示文稿包含嵌入对象。它们以图片形式显示，可以打开或下载；Excel、Word 和 PowerPoint 对象也可以在此编辑。',
+	'pptx.compatibility.partialInkSupport':
+		'部分墨迹绘图使用了此查看器无法精确显示的笔设置。',
+	'pptx.compatibility.unsupportedGraphicFrame':
+		'此演示文稿包含此查看器无法显示的对象。保存时会原样保留。',
 	'pptx.compatibility.groupDepthExceeded':
 		'一组形状的嵌套深度超出了该查看器支持的深度，并且被展平。',
 	'pptx.compatibility.saveNotesRelationshipMissing': '保存时，演讲者备注无法链接到此幻灯片。',

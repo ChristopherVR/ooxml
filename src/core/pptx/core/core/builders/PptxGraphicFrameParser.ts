@@ -13,6 +13,7 @@ import { detectOleObjectType, inferOleExtensionFromTarget } from '../../utils/ol
 import { findVmlOlePreviewRelationshipId } from '../../utils/vml-ole-preview';
 import { resolveP14MediaForGraphicFrame } from '../runtime/media-p14-extension-resolve';
 import { parseShapeLocksFromNode, SHAPE_LOCK_CONTAINERS } from '../runtime/shape-lock-containers';
+import { readHiddenAttribute } from './element-hidden-flag';
 import type { GraphicFramePlaceholder } from './graphic-frame-placeholder';
 import {
 	hasUsableTransform,
@@ -433,7 +434,13 @@ export class PptxGraphicFrameParser implements IPptxGraphicFrameParser {
 			const { flipHorizontal, flipVertical } = this.context.readFlipState(transform);
 
 			const type = this.parseGraphicFrameType(graphicData);
-			if (slidePath) {
+			// A hidden frame (`p:cNvPr/@hidden`) is never drawn, so no
+			// rendering or editing limitation of its type applies to what the
+			// reader sees. think-cell keeps its chart data in exactly such a
+			// frame on every slide it touches (a hidden 1588-EMU OLE object
+			// named "think-cell data - do not delete"), which made every
+			// think-cell deck report PARTIAL_OLE_SUPPORT on load.
+			if (slidePath && !readHiddenAttribute(frame)) {
 				this.context.inspectGraphicFrameCompatibility(type, slidePath, id);
 			}
 

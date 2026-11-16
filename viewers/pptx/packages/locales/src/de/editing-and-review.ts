@@ -281,6 +281,12 @@ export const translations = {
 		'Diese Folie ist zur Synchronisierung mit einer anderen Präsentation verknüpft; die Verknüpfung bleibt erhalten, wird hier aber nicht angewendet.',
 	'pptx.compatibility.unsupportedAlternateContentChoice':
 		'Diese Präsentation verwendet eine neuere PowerPoint-Funktion; stattdessen wurde eine kompatible Alternative verwendet.',
+	'pptx.compatibility.partialOleSupport':
+		'Diese Präsentation enthält eingebettete Objekte. Sie werden als Bilder angezeigt und können geöffnet oder heruntergeladen werden; Excel-, Word- und PowerPoint-Objekte lassen sich auch hier bearbeiten.',
+	'pptx.compatibility.partialInkSupport':
+		'Einige Freihandzeichnungen verwenden Stifteinstellungen, die dieser Viewer nicht exakt anzeigen kann.',
+	'pptx.compatibility.unsupportedGraphicFrame':
+		'Diese Präsentation enthält ein Objekt, das dieser Viewer nicht anzeigen kann. Es bleibt beim Speichern unverändert erhalten.',
 	'pptx.compatibility.groupDepthExceeded':
 		'Eine Formengruppe ist tiefer verschachtelt, als dieser Viewer unterstützt, und wurde abgeflacht.',
 	'pptx.compatibility.saveNotesRelationshipMissing':

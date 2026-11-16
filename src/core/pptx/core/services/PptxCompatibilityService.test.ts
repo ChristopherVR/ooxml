@@ -275,6 +275,64 @@ describe('pptxCompatibilityService', () => {
 			vi.restoreAllMocks();
 		});
 
+		// PowerPoint writes every OLE object as a VML `Requires="v"` choice beside a
+		// DrawingML fallback that holds the same object plus its preview; the fallback is the
+		// newer form and loses nothing, so it is not a notice.
+		it('does not report a VML (`Requires="v"`) choice that has a fallback', () => {
+			const svc = new PptxCompatibilityService();
+			vi.spyOn(console, 'info').mockImplementation(() => {});
+			svc.inspectSlideCompatibility(
+				{
+					'p:sld': {
+						'p:cSld': {
+							'mc:AlternateContent': {
+								'mc:Choice': { '@_Requires': 'v', 'p:oleObj': { 'p:embed': {} } },
+								'mc:Fallback': { 'p:oleObj': { 'p:embed': {}, 'p:pic': {} } },
+							},
+						},
+					},
+				},
+				's1',
+			);
+			expect(svc.getWarnings()).toStrictEqual([]);
+			vi.restoreAllMocks();
+		});
+
+		it('still reports a VML choice with no fallback, or one that also needs another token', () => {
+			const svc = new PptxCompatibilityService();
+			vi.spyOn(console, 'info').mockImplementation(() => {});
+			vi.spyOn(console, 'warn').mockImplementation(() => {});
+			// Two slides: the service keeps one warning per code, slide and XML path.
+			svc.inspectSlideCompatibility(
+				{
+					'p:sld': {
+						'p:cSld': {
+							'mc:AlternateContent': { 'mc:Choice': { '@_Requires': 'v', 'p:oleObj': {} } },
+						},
+					},
+				},
+				's1',
+			);
+			svc.inspectSlideCompatibility(
+				{
+					'p:sld': {
+						'p:cSld': {
+							'mc:AlternateContent': {
+								'mc:Choice': { '@_Requires': 'v p99', 'p:oleObj': {} },
+								'mc:Fallback': { 'p:oleObj': {} },
+							},
+						},
+					},
+				},
+				's2',
+			);
+			expect(svc.getWarnings().map(({ code, severity }) => ({ code, severity }))).toStrictEqual([
+				{ code: 'UNSUPPORTED_ALTERNATE_CONTENT_CHOICE', severity: 'warning' },
+				{ code: 'UNSUPPORTED_ALTERNATE_CONTENT_CHOICE', severity: 'info' },
+			]);
+			vi.restoreAllMocks();
+		});
+
 		it('classifies partial graphic frames and legacy media references', () => {
 			const svc = new PptxCompatibilityService();
 			vi.spyOn(console, 'info').mockImplementation(() => {});

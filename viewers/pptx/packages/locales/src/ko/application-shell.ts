@@ -176,6 +176,12 @@ export const translations = {
 		'이 슬라이드는 동기화를 위해 다른 프레젠테이션에 연결되어 있습니다. 이 연결은 유지되지만 여기서는 적용되지 않습니다.',
 	'pptx.compatibility.unsupportedAlternateContentChoice':
 		'이 프레젠테이션은 최신 PowerPoint 기능을 사용하므로 대신 호환되는 대체 콘텐츠를 사용했습니다.',
+	'pptx.compatibility.partialOleSupport':
+		'이 프레젠테이션에는 포함된 개체가 있습니다. 그림으로 표시되며 열거나 다운로드할 수 있고, Excel, Word 및 PowerPoint 개체는 여기에서 편집할 수도 있습니다.',
+	'pptx.compatibility.partialInkSupport':
+		'일부 잉크 그림은 이 뷰어에서 정확하게 표시할 수 없는 펜 설정을 사용합니다.',
+	'pptx.compatibility.unsupportedGraphicFrame':
+		'이 프레젠테이션에는 이 뷰어에서 표시할 수 없는 개체가 포함되어 있습니다. 저장할 때 변경 없이 유지됩니다.',
 	'pptx.compatibility.groupDepthExceeded':
 		'도형 그룹이 이 뷰어에서 지원하는 것보다 깊게 중첩되어 있어 평면화했습니다.',
 	'pptx.compatibility.saveNotesRelationshipMissing':

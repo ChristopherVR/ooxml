@@ -443,3 +443,31 @@ describe('pptxGraphicFrameParser name/shapeId', () => {
 		expect(result.shapeId).toBeUndefined();
 	});
 });
+
+// A hidden frame is never drawn, so its type's limitation is not a notice (think-cell keeps
+// its data in a hidden OLE frame on every slide it touches).
+describe('pptxGraphicFrameParser compatibility inspection', () => {
+	function inspected(frame: XmlObject): string[] {
+		const calls: string[] = [];
+		const parser = makeParser({
+			inspectGraphicFrameCompatibility: (type) => {
+				calls.push(type);
+			},
+		});
+		parser.parseGraphicFrame(frame, 'el-1', 'ppt/slides/slide1.xml');
+		return calls;
+	}
+
+	it('inspects a visible OLE frame', () => {
+		expect(inspected(makeOleFrame({ '@_progId': 'Package', 'p:embed': {} }))).toStrictEqual([
+			'ole',
+		]);
+	});
+
+	it('does not inspect a hidden OLE frame', () => {
+		const frame = makeOleFrame({ '@_progId': 'TCLayout.ActiveDocument.1', 'p:embed': {} });
+		const nv = frame['p:nvGraphicFramePr'] as XmlObject;
+		nv['p:cNvPr'] = { ...(nv['p:cNvPr'] as XmlObject), '@_hidden': '1' };
+		expect(inspected(frame)).toStrictEqual([]);
+	});
+});

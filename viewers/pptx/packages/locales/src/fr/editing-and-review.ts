@@ -283,6 +283,12 @@ export const translations = {
 		"Cette diapositive est liée à une autre présentation pour la synchronisation ; ce lien est conservé mais n'est pas appliqué ici.",
 	'pptx.compatibility.unsupportedAlternateContentChoice':
 		'Cette présentation utilise une fonctionnalité PowerPoint plus récente ; une alternative compatible a été utilisée à la place.',
+	'pptx.compatibility.partialOleSupport':
+		'Cette présentation contient des objets incorporés. Ils s’affichent sous forme d’images et peuvent être ouverts ou téléchargés ; les objets Excel, Word et PowerPoint peuvent aussi être modifiés ici.',
+	'pptx.compatibility.partialInkSupport':
+		'Certains dessins à main levée utilisent des réglages de stylet que cette visionneuse ne peut pas afficher exactement.',
+	'pptx.compatibility.unsupportedGraphicFrame':
+		'Cette présentation contient un objet que cette visionneuse ne peut pas afficher. Il est conservé tel quel à l’enregistrement.',
 	'pptx.compatibility.groupDepthExceeded':
 		'Un groupe de formes est imbriqué plus profondément que ce que prend en charge cette visionneuse et a été aplati.',
 	'pptx.compatibility.saveNotesRelationshipMissing':
