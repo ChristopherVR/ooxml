@@ -15,6 +15,7 @@ import { openNestedZip } from './zip-open';
 
 import type { PptxEmbeddedWorkbookData } from '../types';
 import { preservesSpreadsheetXmlWhitespace } from './xml-whitespace';
+import { at } from '../../../geometry/indexed';
 
 /** Represents a single parsed cell from the worksheet. */
 interface ParsedCell {
@@ -343,7 +344,7 @@ export async function parseEmbeddedXlsx(
 			grid[r] = Array.from<string | number | undefined>({ length: maxCol + 1 }).fill(undefined);
 		}
 		for (const cell of cells) {
-			grid[cell.row][cell.col] = resolveCellValue(cell, sharedStrings);
+			at(grid, cell.row)[cell.col] = resolveCellValue(cell, sharedStrings);
 		}
 
 		// Interpret the grid:

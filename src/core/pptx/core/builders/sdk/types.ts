@@ -99,7 +99,7 @@ export type FillInput =
 	| {
 			type: 'solid';
 			color: string;
-			opacity?: number;
+			opacity?: number | undefined;
 			/**
 			 * A theme colour to use instead of a plain hex. When set, the shape
 			 * saves as `<a:schemeClr>` (e.g. `{ scheme: 'accent1', lumMod: 0.8 }`
@@ -118,7 +118,7 @@ export type FillInput =
 			 * what lands in `ShapeStyle.fillGradientAngle` and what is written back
 			 * to the file, NOT a CSS `linear-gradient()` angle.
 			 */
-			angle?: number;
+			angle?: number | undefined;
 			gradientType?: 'linear' | 'radial';
 			/**
 			 * A path gradient (`a:path/@path`) instead of a linear one. Setting it
@@ -221,18 +221,18 @@ export type LinkInput =
 // ---------------------------------------------------------------------------
 
 export interface TextStyleInput {
-	fontSize?: number;
-	fontFamily?: string;
-	bold?: boolean;
-	italic?: boolean;
-	underline?: boolean;
-	strikethrough?: boolean;
-	color?: string;
+	fontSize?: number | undefined;
+	fontFamily?: string | undefined;
+	bold?: boolean | undefined;
+	italic?: boolean | undefined;
+	underline?: boolean | undefined;
+	strikethrough?: boolean | undefined;
+	color?: string | undefined;
 	/** A theme colour for the run; see {@link FillInput}'s `themeColorRef`. */
 	themeColorRef?: PptxThemeColorRef;
-	alignment?: 'left' | 'center' | 'right' | 'justify';
-	verticalAlignment?: 'top' | 'middle' | 'bottom';
-	lineSpacing?: number;
+	alignment?: 'left' | 'center' | 'right' | 'justify' | undefined;
+	verticalAlignment?: 'top' | 'middle' | 'bottom' | undefined;
+	lineSpacing?: number | undefined;
 	spaceBefore?: number;
 	spaceAfter?: number;
 	/**
@@ -500,7 +500,7 @@ export interface ChartSeriesInput extends ChartSeriesContentInput {
 	/** One value per category; `null` is a blank point, drawn as `ChartInput.dispBlanksAs` says. */
 	values: (number | null)[];
 	/** Series colour, a hex colour (`#RRGGBB` or `RRGGBB`). */
-	color?: string;
+	color?: string | undefined;
 	/**
 	 * Gradient fill for the whole series, written as `c:ser/c:spPr/a:gradFill`.
 	 * Takes precedence over `color`. Area-filled chart types only (bar, area,
@@ -642,9 +642,9 @@ export interface AnimationInput {
 
 export interface PresentationOptions {
 	/** Slide width in EMU. Default: 12192000 (16:9 widescreen). */
-	width?: number;
+	width?: number | undefined;
 	/** Slide height in EMU. Default: 6858000 (16:9 widescreen). */
-	height?: number;
+	height?: number | undefined;
 	/** Theme configuration. */
 	theme?: PresentationThemeInput;
 	/** Presentation title (stored in docProps/core.xml). */
@@ -661,7 +661,7 @@ export interface PresentationOptions {
 	 * slide-number field shows on the first slide. Omitted when undefined, so
 	 * the spec default (`1`) applies.
 	 */
-	firstSlideNumber?: number;
+	firstSlideNumber?: number | undefined;
 	/**
 	 * Defaults for the shapes that `createSlide(...).addShape` adds. Opt-in:
 	 * without it a shape with no `fill` keeps the solid `#4472C4` fill the SDK

@@ -10,6 +10,7 @@
  */
 
 import type { TemplateData } from './template-engine-types';
+import { at } from '../../../../geometry/indexed';
 
 // ---------------------------------------------------------------------------
 // Internal constants
@@ -170,7 +171,7 @@ export function processInlineConditionals(text: string, data: TemplateData): str
 			break;
 		}
 
-		const conditionKey = match[1].trim();
+		const conditionKey = at(match, 1).trim();
 		const blockContent = match[2];
 		const show = evaluateCondition(data, conditionKey);
 

@@ -300,8 +300,8 @@ export function extractIterate(cTn: XmlObject | undefined): PptxAnimationIterate
  * Returns command type (call/evt/verb) and command string.
  */
 export function extractCommand(childTnList: XmlObject | undefined): {
-	commandType?: string;
-	commandString?: string;
+	commandType?: string | undefined;
+	commandString?: string | undefined;
 } {
 	if (!childTnList) {
 		return {};

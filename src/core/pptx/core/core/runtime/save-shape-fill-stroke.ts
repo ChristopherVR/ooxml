@@ -22,9 +22,9 @@ import { resetSpPrFormattingForStyleMatrix } from './save-shape-style-reset';
  */
 export interface ShapeFillStrokeContext {
 	/** Pre-built `a:gradFill` node, or `undefined` when none can be built. */
-	readonly gradientFillXml?: XmlObject;
+	readonly gradientFillXml?: XmlObject | undefined;
 	/** Pre-built `a:ln/a:effectLst` node, or `undefined` when there is none. */
-	readonly lineEffectListXml?: XmlObject;
+	readonly lineEffectListXml?: XmlObject | undefined;
 	/** EMU per CSS pixel (9525). */
 	readonly emuPerPx: number;
 	/**
@@ -35,7 +35,7 @@ export interface ShapeFillStrokeContext {
 	 * `undefined` for a top-level shape, or for a group child with nothing to
 	 * inherit.
 	 */
-	readonly inheritedGroupFill?: ShapeStyle;
+	readonly inheritedGroupFill?: ShapeStyle | undefined;
 	/** Resolve a preserved colour-choice node to a hex string. */
 	parseColor(colorNode: XmlObject | undefined): string | undefined;
 }

@@ -148,8 +148,8 @@ export function extractVmlRotation(styleMap: Record<string, string>): number | u
  * @returns Object indicating horizontal and/or vertical flip.
  */
 export function extractVmlFlip(styleMap: Record<string, string>): {
-	flipHorizontal?: boolean;
-	flipVertical?: boolean;
+	flipHorizontal?: boolean | undefined;
+	flipVertical?: boolean | undefined;
 } {
 	const flip = (styleMap['flip'] || '').toLowerCase();
 	return {

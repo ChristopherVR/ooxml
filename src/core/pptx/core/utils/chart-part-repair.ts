@@ -74,7 +74,7 @@ export function repairChartPartPrefixes(text: string): ChartPartRepair | undefin
 /** What {@link readChartPartModel} returns. */
 export interface ChartPartModel {
 	/** The neutral model; undefined for ChartEx and unreadable parts. */
-	chartSpace?: ChartSpace;
+	chartSpace?: ChartSpace | undefined;
 	/** `CHART_PREFIX_REPAIRED` when the part only parsed after the repair. */
 	repairIssue?: ChartParseIssue;
 }

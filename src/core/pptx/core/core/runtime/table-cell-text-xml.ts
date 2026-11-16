@@ -1,6 +1,7 @@
 import type { XmlObject } from '../../types';
 import { xmlText } from '../../utils';
 import { ensureArray as toArray } from './table-structural-helpers';
+import { at } from '../../../../geometry/indexed';
 
 type EnsureArray = (value: unknown) => XmlObject[];
 
@@ -78,7 +79,7 @@ export function rebuildCellTextBody(
 	const existingRuns = firstParagraph
 		? toArray(firstParagraph['a:r'] as XmlObject | XmlObject[] | undefined)
 		: [];
-	const firstRunProps = existingRuns.length > 0 ? existingRuns[0]['a:rPr'] : undefined;
+	const firstRunProps = existingRuns.length > 0 ? at(existingRuns, 0)['a:rPr'] : undefined;
 
 	const newRun: XmlObject = {};
 	if (firstRunProps !== undefined) {

@@ -38,7 +38,7 @@ export function saveChartPartThroughNeutral(
 	xml: string,
 	before: PptxChartData,
 	after: PptxChartData,
-	options: { retryWorkbook?: boolean } = {},
+	options: { retryWorkbook?: boolean | undefined } = {},
 ): NeutralChartSave | undefined {
 	const plan = planNeutralChartSave(before, after);
 	if (!plan) return undefined;

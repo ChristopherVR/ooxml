@@ -54,11 +54,11 @@ function numAttr(node: XmlObject | undefined, key: string): number | undefined {
  * `p:control`'s embedded `p:pic` fallback, when present.
  */
 function extractControlFallback(control: XmlObject): {
-	x?: number;
-	y?: number;
-	width?: number;
-	height?: number;
-	fallbackImageRelId?: string;
+	x?: number | undefined;
+	y?: number | undefined;
+	width?: number | undefined;
+	height?: number | undefined;
+	fallbackImageRelId?: string | undefined;
 } {
 	const pic = control['p:pic'] as XmlObject | undefined;
 	if (!pic) {

@@ -1,6 +1,7 @@
 import type JSZip from 'jszip';
 
 import type { PptxCommentAuthor, XmlObject } from '../../types';
+import { at } from '../../../../geometry/indexed';
 
 export type PptxSaveMediaKind = 'image' | 'audio' | 'video';
 
@@ -8,8 +9,8 @@ export interface PptxSaveStateConfig {
 	zip: JSZip;
 	commentAuthorMap: Map<string, string>;
 	/** Full author details for round-trip preservation of initials, lastIdx, clrIdx. */
-	commentAuthorDetails?: Map<string, PptxCommentAuthor>;
-	commentAuthorsRootXml?: XmlObject;
+	commentAuthorDetails?: Map<string, PptxCommentAuthor> | undefined;
+	commentAuthorsRootXml?: XmlObject | undefined;
 	emuPerPx: number;
 }
 
@@ -302,7 +303,7 @@ export class PptxSaveState {
 
 		return tokens
 			.slice(0, 2)
-			.map((token) => token[0].toUpperCase())
+			.map((token) => at(token, 0).toUpperCase())
 			.join('');
 	}
 }

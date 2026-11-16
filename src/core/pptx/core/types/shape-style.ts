@@ -75,7 +75,7 @@ export interface PptxCustomDashSegment {
  * ```
  */
 export interface ShapeStyle {
-	fillColor?: string;
+	fillColor?: string | undefined;
 	/**
 	 * Raw XML colour-choice node preserved from `a:solidFill` for round-trip
 	 * serialisation. Captures `a:schemeClr` / `a:sysClr` / `a:prstClr` /
@@ -94,10 +94,10 @@ export interface ShapeStyle {
 	 * is a plain hex (or a colour kind a ref cannot express).
 	 */
 	fillColorRef?: PptxThemeColorRef;
-	fillGradient?: string;
+	fillGradient?: string | undefined;
 	/** Original `gradFill` XML retained for unknown-child and extension round-tripping. */
 	fillGradientXml?: XmlObject;
-	fillMode?: 'solid' | 'gradient' | 'pattern' | 'none' | 'image' | 'theme' | 'group';
+	fillMode?: 'solid' | 'gradient' | 'pattern' | 'none' | 'image' | 'theme' | 'group' | undefined;
 	/**
 	 * `<p:sp useBgFill="1">`: the shape paints with the SLIDE BACKGROUND's fill
 	 * rather than its own or its theme style's.
@@ -110,8 +110,8 @@ export interface ShapeStyle {
 	 * to re-resolve against a changed background.
 	 */
 	useBackgroundFill?: boolean;
-	fillPatternPreset?: string;
-	fillPatternBackgroundColor?: string;
+	fillPatternPreset?: string | undefined;
+	fillPatternBackgroundColor?: string | undefined;
 	/** Original `pattFill` XML retained for unknown-child round-tripping. */
 	fillPatternXml?: XmlObject;
 	/** Raw XML node for pattern fill foreground colour (preserves color transforms). */
@@ -119,9 +119,9 @@ export interface ShapeStyle {
 	/** Raw XML node for pattern fill background colour (preserves color transforms). */
 	fillPatternBgClrXml?: XmlObject;
 	/** Data-URI or URL for image fill (when fillMode === "image"). */
-	fillImageUrl?: string;
+	fillImageUrl?: string | undefined;
 	/** How the image is sized within the shape: stretch to fill, or tile/repeat. */
-	fillImageMode?: 'stretch' | 'tile';
+	fillImageMode?: 'stretch' | 'tile' | undefined;
 	/**
 	 * Tile placement or stretch insets of a NEW picture fill, written as
 	 * `a:tile` / `a:stretch/a:fillRect`. A loaded picture fill keeps its
@@ -136,30 +136,32 @@ export interface ShapeStyle {
 	 *  picture content inside stays fixed to the page frame (upright), matching
 	 *  PowerPoint. See `pptx-viewer-shared`'s `getImageFillCounterTransform`. */
 	fillImageRotWithShape?: boolean;
-	fillGradientStops?: Array<{
-		color: string;
-		position: number;
-		opacity?: number;
-		/** Raw XML colour node preserved for round-trip (e.g. a:schemeClr with transforms). */
-		originalColorXml?: XmlObject;
-		/**
-		 * Typed theme colour reference for this stop, set when
-		 * {@link originalColorXml} is a plain `a:schemeClr`. Wins on save, same
-		 * as {@link ShapeStyle.fillColorRef}.
-		 */
-		colorRef?: PptxThemeColorRef;
-	}>;
-	fillGradientAngle?: number;
-	fillGradientType?: 'linear' | 'radial';
+	fillGradientStops?:
+		| Array<{
+				color: string;
+				position: number;
+				opacity?: number | undefined;
+				/** Raw XML colour node preserved for round-trip (e.g. a:schemeClr with transforms). */
+				originalColorXml?: XmlObject;
+				/**
+				 * Typed theme colour reference for this stop, set when
+				 * {@link originalColorXml} is a plain `a:schemeClr`. Wins on save, same
+				 * as {@link ShapeStyle.fillColorRef}.
+				 */
+				colorRef?: PptxThemeColorRef;
+		  }>
+		| undefined;
+	fillGradientAngle?: number | undefined;
+	fillGradientType?: 'linear' | 'radial' | undefined;
 	/** Path gradient sub-type from `a:path/@path` (e.g. "circle", "rect", "shape"). */
-	fillGradientPathType?: 'circle' | 'rect' | 'shape';
+	fillGradientPathType?: 'circle' | 'rect' | 'shape' | undefined;
 	/** Focal point for path (radial) gradients, derived from `a:fillToRect`.
 	 *  Values are 0..1 fractions relative to shape bounds. */
-	fillGradientFocalPoint?: { x: number; y: number };
+	fillGradientFocalPoint?: { x: number; y: number } | undefined;
 	/** Raw fillToRect LTRB values (0..1 fractions) from `a:fillToRect`.
 	 *  Defines the inner rectangle where the gradient reaches its final stop.
 	 *  l/t are insets from left/top edges; r/b are insets from right/bottom edges. */
-	fillGradientFillToRect?: { l: number; t: number; r: number; b: number };
+	fillGradientFillToRect?: { l: number; t: number; r: number; b: number } | undefined;
 	/** Raw tileRect LTRB values (0..1 fractions, may be negative) from
 	 *  `a:gradFill/a:tileRect`. Defines the rectangle the gradient tile occupies
 	 *  before any flip/tiling is applied. */
@@ -174,8 +176,8 @@ export interface ShapeStyle {
 	/** Whether the linear gradient is scaled to the shape (`a:lin/@scaled`).
 	 *  Defaults to true per the schema; preserved for round-trip. */
 	fillGradientScaled?: boolean;
-	fillOpacity?: number;
-	strokeColor?: string;
+	fillOpacity?: number | undefined;
+	strokeColor?: string | undefined;
 	/**
 	 * Raw XML colour-choice node preserved from `a:ln/a:solidFill` for
 	 * round-trip serialisation. See {@link fillColorXml} for the rationale.
@@ -222,118 +224,118 @@ export interface ShapeStyle {
 	strokePatternPreset?: string;
 	/** Background colour of a pattern outline (`a:ln/a:pattFill/a:bgClr`). */
 	strokePatternBackgroundColor?: string;
-	strokeWidth?: number;
-	strokeOpacity?: number;
-	strokeDash?: StrokeDashType;
+	strokeWidth?: number | undefined;
+	strokeOpacity?: number | undefined;
+	strokeDash?: StrokeDashType | undefined;
 	/** Line join style (`a:ln/@join`): round, bevel, or miter. */
-	lineJoin?: 'round' | 'bevel' | 'miter';
+	lineJoin?: 'round' | 'bevel' | 'miter' | undefined;
 	/** Miter limit (`a:miter/@lim`) in EMU-percent units (default 800000 = 8.0). Only meaningful when lineJoin is 'miter'. */
 	miterLimit?: number;
 	/** Line cap style (`a:ln/@cap`): flat, rnd, or sq. */
-	lineCap?: 'flat' | 'rnd' | 'sq';
+	lineCap?: 'flat' | 'rnd' | 'sq' | undefined;
 	/** Compound line type (`a:ln/@cmpd`). */
-	compoundLine?: 'sng' | 'dbl' | 'thickThin' | 'thinThick' | 'tri';
+	compoundLine?: 'sng' | 'dbl' | 'thickThin' | 'thinThick' | 'tri' | undefined;
 	/** Pen line alignment (`a:ln/@algn`): `ctr` (centre, default) or `in` (inside). */
 	lineAlignment?: 'ctr' | 'in';
-	shadowColor?: string;
+	shadowColor?: string | undefined;
 	/** Preserved source `a:effectLst`, including unknown effects and extensions. */
-	effectListXml?: XmlObject;
+	effectListXml?: XmlObject | undefined;
 	/** Original outer-shadow node used for lossless surgical updates. */
 	outerShadowXml?: XmlObject;
 	/** Resolved source shadow colour used to detect colour edits. */
-	outerShadowOriginalColor?: string;
+	outerShadowOriginalColor?: string | undefined;
 	/** Source shadow opacity used to detect alpha edits. */
-	outerShadowOriginalOpacity?: number;
-	shadowBlur?: number;
-	shadowOffsetX?: number;
-	shadowOffsetY?: number;
-	shadowOpacity?: number;
+	outerShadowOriginalOpacity?: number | undefined;
+	shadowBlur?: number | undefined;
+	shadowOffsetX?: number | undefined;
+	shadowOffsetY?: number | undefined;
+	shadowOpacity?: number | undefined;
 	/** Preset shadow name from `a:prstShdw/@prst` (e.g. "shdw1"..."shdw20"). */
-	presetShadowName?: string;
+	presetShadowName?: string | undefined;
 	/** Shadow angle in degrees (0-360). Parsed from `@_dir` (60000ths of a degree). */
 	shadowAngle?: number;
 	/** Shadow distance in pixels. Parsed from `@_dist` (EMUs). */
-	shadowDistance?: number;
+	shadowDistance?: number | undefined;
 	/** Whether shadow rotates with shape. Parsed from `@_rotWithShape`. */
-	shadowRotateWithShape?: boolean;
+	shadowRotateWithShape?: boolean | undefined;
 	/** Outer-shadow horizontal scaling (`a:outerShdw/@sx`) in 1000ths of a percent (default 100000 = 100%). */
-	shadowScaleX?: number;
+	shadowScaleX?: number | undefined;
 	/** Outer-shadow vertical scaling (`a:outerShdw/@sy`). */
-	shadowScaleY?: number;
+	shadowScaleY?: number | undefined;
 	/** Outer-shadow horizontal skew (`a:outerShdw/@kx`) in 60000ths of a degree. */
-	shadowSkewX?: number;
+	shadowSkewX?: number | undefined;
 	/** Outer-shadow vertical skew (`a:outerShdw/@ky`). */
-	shadowSkewY?: number;
+	shadowSkewY?: number | undefined;
 	/** Outer-shadow alignment (`a:outerShdw/@algn`). */
-	shadowAlignment?: 'tl' | 't' | 'tr' | 'l' | 'ctr' | 'r' | 'bl' | 'b' | 'br';
+	shadowAlignment?: 'tl' | 't' | 'tr' | 'l' | 'ctr' | 'r' | 'bl' | 'b' | 'br' | undefined;
 	/** Inner-shadow rotateWithShape (`a:innerShdw/@rotWithShape`). */
-	innerShadowRotateWithShape?: boolean;
+	innerShadowRotateWithShape?: boolean | undefined;
 	/** Reflection fade direction (`a:reflection/@fadeDir`) in 60000ths of a degree. */
-	reflectionFadeDirection?: number;
+	reflectionFadeDirection?: number | undefined;
 	/** Reflection horizontal scaling (`a:reflection/@sx`). */
-	reflectionScaleX?: number;
+	reflectionScaleX?: number | undefined;
 	/** Reflection vertical scaling (`a:reflection/@sy`). */
-	reflectionScaleY?: number;
+	reflectionScaleY?: number | undefined;
 	/** Reflection horizontal skew (`a:reflection/@kx`). */
-	reflectionSkewX?: number;
+	reflectionSkewX?: number | undefined;
 	/** Reflection vertical skew (`a:reflection/@ky`). */
-	reflectionSkewY?: number;
+	reflectionSkewY?: number | undefined;
 	/** Reflection alignment (`a:reflection/@algn`). */
-	reflectionAlignment?: 'tl' | 't' | 'tr' | 'l' | 'ctr' | 'r' | 'bl' | 'b' | 'br';
+	reflectionAlignment?: 'tl' | 't' | 'tr' | 'l' | 'ctr' | 'r' | 'bl' | 'b' | 'br' | undefined;
 	/** Reflection rotateWithShape (`a:reflection/@rotWithShape`). */
-	reflectionRotateWithShape?: boolean;
+	reflectionRotateWithShape?: boolean | undefined;
 	/** Reflection start position (`a:reflection/@stPos`) as 0-1 fraction. */
-	reflectionStartPosition?: number;
+	reflectionStartPosition?: number | undefined;
 	/** Multiple shadow layers (for advanced effects). */
 	shadows?: ShadowEffect[];
-	glowColor?: string;
+	glowColor?: string | undefined;
 	/** Original glow node used for lossless surgical updates. */
 	glowXml?: XmlObject;
 	/** Resolved source glow colour used to detect colour edits. */
-	glowOriginalColor?: string;
+	glowOriginalColor?: string | undefined;
 	/** Source glow opacity used to detect alpha edits. */
-	glowOriginalOpacity?: number;
-	glowRadius?: number;
-	glowOpacity?: number;
-	softEdgeRadius?: number;
+	glowOriginalOpacity?: number | undefined;
+	glowRadius?: number | undefined;
+	glowOpacity?: number | undefined;
+	softEdgeRadius?: number | undefined;
 	/** Inner shadow colour (`a:innerShdw`). */
-	innerShadowColor?: string;
+	innerShadowColor?: string | undefined;
 	/** Original inner-shadow node used for lossless surgical updates. */
 	innerShadowXml?: XmlObject;
 	/** Resolved source inner-shadow colour used to detect colour edits. */
-	innerShadowOriginalColor?: string;
+	innerShadowOriginalColor?: string | undefined;
 	/** Source inner-shadow opacity used to detect alpha edits. */
-	innerShadowOriginalOpacity?: number;
+	innerShadowOriginalOpacity?: number | undefined;
 	/** Inner shadow opacity (0-1). */
-	innerShadowOpacity?: number;
+	innerShadowOpacity?: number | undefined;
 	/** Inner shadow blur radius in px. */
-	innerShadowBlur?: number;
+	innerShadowBlur?: number | undefined;
 	/** Inner shadow horizontal offset in px. */
-	innerShadowOffsetX?: number;
+	innerShadowOffsetX?: number | undefined;
 	/** Inner shadow vertical offset in px. */
-	innerShadowOffsetY?: number;
+	innerShadowOffsetY?: number | undefined;
 	/** Original soft-edge node, including vendor attributes and extensions. */
 	softEdgeXml?: XmlObject;
 	/** Reflection effect — distance from shape bottom in px. */
-	reflectionBlurRadius?: number;
+	reflectionBlurRadius?: number | undefined;
 	/** Original reflection node, including vendor attributes and extensions. */
 	reflectionXml?: XmlObject;
 	/** Reflection start opacity (0-1). */
-	reflectionStartOpacity?: number;
+	reflectionStartOpacity?: number | undefined;
 	/** Reflection end opacity (0-1). */
-	reflectionEndOpacity?: number;
+	reflectionEndOpacity?: number | undefined;
 	/** Reflection end position (0-1 fraction of shape height). */
-	reflectionEndPosition?: number;
+	reflectionEndPosition?: number | undefined;
 	/** Reflection direction in degrees. */
-	reflectionDirection?: number;
+	reflectionDirection?: number | undefined;
 	/** Reflection rotation in degrees (`a:reflection/@rot` in 60000ths). */
-	reflectionRotation?: number;
+	reflectionRotation?: number | undefined;
 	/** Reflection distance in px. */
-	reflectionDistance?: number;
+	reflectionDistance?: number | undefined;
 	/** Standalone blur effect radius in px (`a:effectLst > a:blur`). */
-	blurRadius?: number;
+	blurRadius?: number | undefined;
 	/** Whether the blur effect grows the bounds of the shape (`a:blur/@grow`). */
-	blurGrow?: boolean;
+	blurGrow?: boolean | undefined;
 	connectorStartArrow?: ConnectorArrowType;
 	/** Start arrow width size ('sm' | 'med' | 'lg'). */
 	connectorStartArrowWidth?: 'sm' | 'med' | 'lg';
@@ -359,7 +361,7 @@ export interface ShapeStyle {
 	/** 3D shape extrusion/bevel from `a:sp3d`. */
 	shape3d?: Pptx3DShape;
 	/** Line-level shadow colour from `a:ln/a:effectLst/a:outerShdw`. */
-	lineShadowColor?: string;
+	lineShadowColor?: string | undefined;
 	/** Line-level shadow opacity (0-1). */
 	lineShadowOpacity?: number;
 	/** Line-level shadow blur radius in px. */
@@ -369,11 +371,11 @@ export interface ShapeStyle {
 	/** Line-level shadow vertical offset in px. */
 	lineShadowOffsetY?: number;
 	/** Line-level glow colour from `a:ln/a:effectLst/a:glow`. */
-	lineGlowColor?: string;
+	lineGlowColor?: string | undefined;
 	/** Line-level glow radius in px. */
-	lineGlowRadius?: number;
+	lineGlowRadius?: number | undefined;
 	/** Line-level glow opacity (0-1). */
-	lineGlowOpacity?: number;
+	lineGlowOpacity?: number | undefined;
 
 	// ── Effect DAG properties (from `a:effectDag`) ──
 
@@ -420,7 +422,7 @@ export interface ShapeStyle {
 	/** Duotone colour pair from effectDag `a:duotone`. */
 	dagDuotone?: { color1: string; color2: string };
 	/** Fill overlay blend mode from effectDag `a:fillOverlay/@blend`. */
-	dagFillOverlayBlend?: 'over' | 'mult' | 'screen' | 'darken' | 'lighten';
+	dagFillOverlayBlend?: 'over' | 'mult' | 'screen' | 'darken' | 'lighten' | undefined;
 	/**
 	 * Fill overlay tint colour (hex `#RRGGBB`) from effectDag `a:fillOverlay`'s
 	 * `a:solidFill`/`a:gradFill`. Painted as a blended overlay layer over the
@@ -437,7 +439,7 @@ export interface ShapeStyle {
 	// the two colliding when both happen to be present).
 
 	/** Fill overlay blend mode from a direct `a:effectLst/a:fillOverlay/@blend`. */
-	shapeFillOverlayBlend?: 'over' | 'mult' | 'screen' | 'darken' | 'lighten';
+	shapeFillOverlayBlend?: 'over' | 'mult' | 'screen' | 'darken' | 'lighten' | undefined;
 	/**
 	 * Fill overlay tint colour (hex `#RRGGBB`) from a direct
 	 * `a:effectLst/a:fillOverlay`'s `a:solidFill`/`a:gradFill`.
@@ -448,9 +450,9 @@ export interface ShapeStyle {
 	/** Original source `a:fillOverlay` node, preserved for lossless surgical updates. */
 	fillOverlayXml?: XmlObject;
 	/** Resolved source fill-overlay colour used to detect colour edits. */
-	shapeFillOverlayOriginalColor?: string;
+	shapeFillOverlayOriginalColor?: string | undefined;
 	/** Source fill-overlay opacity used to detect alpha edits. */
-	shapeFillOverlayOriginalOpacity?: number;
+	shapeFillOverlayOriginalOpacity?: number | undefined;
 
 	// ── Style references (CT_ShapeStyle §20.1.2.2.36) ─────────────────────
 	// These mirror the `<p:style>` element on a shape. They preserve the
@@ -459,15 +461,15 @@ export interface ShapeStyle {
 	// colour XML inside each ref is preserved verbatim for re-emission.
 
 	/** `<a:lnRef @idx>` — 1-based index into the theme's lnStyleLst. */
-	lnRefIdx?: number;
+	lnRefIdx?: number | undefined;
 	/** Raw XML colour child of `<a:lnRef>` (e.g. `<a:schemeClr>` with transforms). */
 	lnRefColorXml?: XmlObject;
 	/** `<a:fillRef @idx>` — 1-based index into fillStyleLst (1-3) or bgFillStyleLst (1001-1003). */
-	fillRefIdx?: number;
+	fillRefIdx?: number | undefined;
 	/** Raw XML colour child of `<a:fillRef>`. */
 	fillRefColorXml?: XmlObject;
 	/** `<a:effectRef @idx>` — 1-based index into the theme's effectStyleLst. */
-	effectRefIdx?: number;
+	effectRefIdx?: number | undefined;
 	/** Raw XML colour child of `<a:effectRef>`. */
 	effectRefColorXml?: XmlObject;
 	/** `<a:fontRef @idx>` — typically `major`, `minor`, or `none`. */
@@ -521,5 +523,5 @@ export interface ShapeStyle {
 export interface ResolvedStyleMatrix {
 	shapeStyle: ShapeStyle;
 	/** The text colour `<a:fontRef>` names, resolved to hex. */
-	fontColor?: string;
+	fontColor?: string | undefined;
 }

@@ -30,12 +30,12 @@ function findKey(
 
 /** Font and shape styling applied to the chart's own title (`c:title`). */
 export interface ChartTitleStyle {
-	fontFamily?: string;
-	fontSize?: number;
-	fontBold?: boolean;
-	fontColor?: string;
+	fontFamily?: string | undefined;
+	fontSize?: number | undefined;
+	fontBold?: boolean | undefined;
+	fontColor?: string | undefined;
 	/** Title text-box fill/border (`c:title/c:spPr`). `null` removes it. */
-	spPr?: PptxChartShapeProps | null;
+	spPr?: PptxChartShapeProps | null | undefined;
 }
 
 /** CT_Title children (2006 model) that follow `c:spPr`/`c:txPr` in schema order. */

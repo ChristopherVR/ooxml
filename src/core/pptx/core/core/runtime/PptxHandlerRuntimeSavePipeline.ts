@@ -392,7 +392,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// schema validation passes (validators iterate logical parts, so they
 		// never see directory entries).
 		for (const name of Object.keys(this.zip.files)) {
-			if (this.zip.files[name].dir) {
+			if (this.zip.files[name]?.dir) {
 				delete this.zip.files[name];
 			}
 		}

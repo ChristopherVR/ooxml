@@ -42,7 +42,7 @@ export interface LegacyThreadingParentRef {
 	authorId: string;
 	idx: string;
 	/** `p15:threadingInfo/@timeZoneBias`, preserved verbatim when present. */
-	timeZoneBias?: string;
+	timeZoneBias?: string | undefined;
 }
 
 const localName = (key: string): string =>

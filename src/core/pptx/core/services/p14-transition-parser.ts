@@ -38,9 +38,9 @@ export const P14_TRANSITION_TYPES: ReadonlySet<string> = new Set([
 
 export interface P14ParseResult {
 	type: PptxTransitionType;
-	direction?: string;
-	orient?: PptxSplitOrientation;
-	pattern?: string;
+	direction?: string | undefined;
+	orient?: PptxSplitOrientation | undefined;
+	pattern?: string | undefined;
 }
 
 /**

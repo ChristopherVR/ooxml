@@ -58,10 +58,12 @@ import {
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	/** Pending SmartArt data updates to process during save. */
-	protected pendingSmartArtUpdates?: Array<{
-		element: SmartArtPptxElement;
-		slidePath: string;
-	}>;
+	protected pendingSmartArtUpdates?:
+		| Array<{
+				element: SmartArtPptxElement;
+				slidePath: string;
+		  }>
+		| undefined;
 
 	/**
 	 * Collect SmartArt data for deferred async processing during save.

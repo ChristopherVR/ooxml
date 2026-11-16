@@ -3,6 +3,7 @@ import { XMLBuilder } from 'fast-xml-parser';
 import { orderedXmlKey, stripXmlOrderMarkers } from '../../geometry/custom-geometry-command-order';
 import type { PptxSmartArtDrawingShape, TextSegment, TextStyle, XmlObject } from '../../types';
 import { applyTextBodySp3d } from '../../utils/text-body-sp3d-writer';
+import { at } from '../../../../geometry/indexed';
 
 const builder = new XMLBuilder({
 	ignoreAttributes: false,
@@ -149,7 +150,7 @@ function splitParagraphs(segments: TextSegment[]): TextSegment[][] {
 		if (segment.isParagraphBreak) {
 			paragraphs.push([]);
 		} else {
-			paragraphs[paragraphs.length - 1].push(segment);
+			at(paragraphs, paragraphs.length - 1).push(segment);
 		}
 	}
 	return paragraphs;
@@ -175,7 +176,7 @@ function reconcileFlatText(segments: TextSegment[], desired: string): TextSegmen
 	const flush = (): void => {
 		const target = targets[targetIndex++] ?? '';
 		if (region.length > 0) {
-			const texts = region.map((index) => result[index].text);
+			const texts = region.map((index) => at(result, index).text);
 			const before = texts.join('');
 			let prefix = 0;
 			while (

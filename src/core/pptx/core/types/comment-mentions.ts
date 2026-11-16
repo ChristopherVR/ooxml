@@ -34,11 +34,11 @@ import type { XmlObject } from './common';
  */
 export interface PptxCommentMention {
 	/** `mentionId`: GUID identifying this mention instance. */
-	id?: string;
+	id?: string | undefined;
 	/** `mentionpersonId`: the `p188:author` id of the mentioned person. */
 	personId: string;
 	/** Display name resolved from the author list at parse time, when known. */
-	authorName?: string;
+	authorName?: string | undefined;
 	/** Character offset of the mentioned span in the flattened plain text. */
 	startIndex: number;
 	/** Character length of the mentioned span. */
@@ -48,7 +48,7 @@ export interface PptxCommentMention {
 	 * the list is a direct child of `p188:cm`, which is where it is written for
 	 * newly authored mentions.
 	 */
-	containerUri?: string;
+	containerUri?: string | undefined;
 	/** Original `p188:mention` node, retained for unknown-attribute preservation. */
 	rawXml?: XmlObject;
 }

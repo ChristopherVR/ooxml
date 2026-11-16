@@ -20,7 +20,7 @@ export interface EntranceExitChildren {
 	accel: number;
 	decel: number;
 	/** The preset's default `p:iterate`, when PowerPoint writes one. */
-	iterate?: { type: string; tmPct?: number };
+	iterate?: { type: string; tmPct?: number } | undefined;
 }
 
 /**

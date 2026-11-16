@@ -282,7 +282,7 @@ function resolveTcStyleFillRef(
  * generator) simply leave an unresolved `tblBg` fillRef as a reference only.
  */
 export interface TableStyleThemeContext {
-	formatScheme?: PptxThemeFormatScheme;
+	formatScheme?: PptxThemeFormatScheme | undefined;
 	colorMap?: Record<string, string>;
 }
 

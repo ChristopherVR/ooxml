@@ -1,7 +1,7 @@
 import type { DrawingColor } from './types';
 export interface DrawingScene3D {
 	/** Camera preset type, e.g. "orthographicFront", "perspectiveFront". */
-	cameraPreset?: string;
+	cameraPreset?: string | undefined;
 	/** Camera field of view in 1/60000 degrees (`a:camera/@fov`). */
 	cameraFieldOfView?: number;
 	/** Camera zoom as an OOXML percentage fraction (`a:camera/@zoom`, 1 = 100%). */
@@ -13,9 +13,9 @@ export interface DrawingScene3D {
 	/** Camera rotation around Z axis in 1/60000 degrees. */
 	cameraRotZ?: number;
 	/** Light rig type, e.g. "threePt", "balanced", "harsh". */
-	lightRigType?: string;
+	lightRigType?: string | undefined;
 	/** Light rig direction, e.g. "t", "b", "l", "r", "tl". */
-	lightRigDirection?: string;
+	lightRigDirection?: string | undefined;
 	/** Light-rig rotation latitude in 1/60000 degrees. */
 	lightRigRotX?: number;
 	/** Light-rig rotation longitude in 1/60000 degrees. */

@@ -316,9 +316,9 @@ export function applyBulletProperties(paragraphProps: XmlObject, bulletInfo: Bul
 /** Markup-only facts about the source paragraph; see `paragraph-markup-flags.ts`. */
 export interface ParagraphMarkupFlags {
 	/** The source wrote an empty `<a:pPr/>`. */
-	emptyParagraphPropertiesAuthored?: boolean;
+	emptyParagraphPropertiesAuthored?: boolean | undefined;
 	/** The source had no run content and no `a:endParaRPr`. */
-	bareParagraph?: boolean;
+	bareParagraph?: boolean | undefined;
 }
 
 /** Assemble a paragraph XML object from runs and pre-built paragraph properties. */

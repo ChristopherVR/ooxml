@@ -55,8 +55,8 @@ export function planChartExFamilyEdits(
 			const value = series.waterfallOptions;
 			edits.push((space) =>
 				setChartExWaterfall(space, i, {
-					subtotals: value.subtotalIndices,
-					connectorLines: value.connectorLines,
+					...(value.subtotalIndices !== undefined && { subtotals: value.subtotalIndices }),
+					...(value.connectorLines !== undefined && { connectorLines: value.connectorLines }),
 				}),
 			);
 			series.waterfallOptions = previous.waterfallOptions;
@@ -82,11 +82,11 @@ export function planChartExFamilyEdits(
 			const value = series.boxWhiskerOptions;
 			edits.push((space) =>
 				setChartExBoxWhisker(space, i, {
-					quartileMethod: value.quartileMethod,
-					meanLine: value.showMeanLine,
-					meanMarker: value.showMeanMarker,
-					nonoutliers: value.showInnerPoints,
-					outliers: value.showOutlierPoints,
+					...(value.quartileMethod !== undefined && { quartileMethod: value.quartileMethod }),
+					...(value.showMeanLine !== undefined && { meanLine: value.showMeanLine }),
+					...(value.showMeanMarker !== undefined && { meanMarker: value.showMeanMarker }),
+					...(value.showInnerPoints !== undefined && { nonoutliers: value.showInnerPoints }),
+					...(value.showOutlierPoints !== undefined && { outliers: value.showOutlierPoints }),
 				}),
 			);
 			series.boxWhiskerOptions = previous.boxWhiskerOptions;

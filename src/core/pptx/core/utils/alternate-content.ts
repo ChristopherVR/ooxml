@@ -131,7 +131,7 @@ export const SHAPE_TREE_ELEMENT_TAGS = new Set([
 export interface AlternateContentBlock {
 	rawAc: XmlObject;
 	selectedBranch: 'choice' | 'fallback';
-	choiceIndex?: number;
+	choiceIndex?: number | undefined;
 	childRefs: Array<{ tag: string; node: XmlObject }>;
 }
 

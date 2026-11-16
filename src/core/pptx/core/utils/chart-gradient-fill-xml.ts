@@ -10,6 +10,7 @@ import type { PptxChartGradientFill, XmlObject } from '../types';
 import type { ResolveChartColor } from './chart-color-choice';
 import { chartColorHex } from './chart-color-choice';
 import { buildSrgbColorChoice, colorsEqual } from './color-xml-preservation';
+import { at } from '../../../geometry/indexed';
 
 type GetLocalName = (key: string) => string;
 type GradientStop = PptxChartGradientFill['stops'][number];
@@ -74,9 +75,9 @@ export function chartGradientsEqual(a: PptxChartGradientFill, b: PptxChartGradie
 	const right = sortedStops(b);
 	const stopsEqual = left.every(
 		(stop, i) =>
-			positionUnits(stop.position) === positionUnits(right[i].position) &&
-			colorsEqual(stop.color, right[i].color) &&
-			opacityUnits(stop.opacity) === opacityUnits(right[i].opacity),
+			positionUnits(stop.position) === positionUnits(at(right, i).position) &&
+			colorsEqual(stop.color, at(right, i).color) &&
+			opacityUnits(stop.opacity) === opacityUnits(at(right, i).opacity),
 	);
 	if (!stopsEqual) {
 		return false;

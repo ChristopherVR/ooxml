@@ -22,13 +22,13 @@ export interface PptxSmartArtHeaderCategory {
 /** Typed common model for the three DiagramML definition header types. */
 export interface PptxSmartArtDefinitionHeader {
 	uniqueId: string;
-	minimumVersion?: string;
+	minimumVersion?: string | undefined;
 	/** CT_DiagramDefinitionHeader only. */
-	defaultStyle?: string;
-	resourceId?: number;
+	defaultStyle?: string | undefined;
+	resourceId?: number | undefined;
 	titles: PptxSmartArtHeaderText[];
 	descriptions: PptxSmartArtHeaderText[];
-	categories?: PptxSmartArtHeaderCategory[];
+	categories?: PptxSmartArtHeaderCategory[] | undefined;
 	/** Original header retained for extension and foreign markup preservation. */
 	rawXml?: XmlObject;
 }

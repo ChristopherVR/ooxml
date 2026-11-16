@@ -418,9 +418,9 @@ function normalizeConnType(type: string | undefined): string {
 function connectionKey(conn: {
 	srcId: string;
 	destId: string;
-	type?: string;
-	srcOrd?: number;
-	destOrd?: number;
+	type?: string | undefined;
+	srcOrd?: number | undefined;
+	destOrd?: number | undefined;
 }): string {
 	return [
 		conn.srcId,

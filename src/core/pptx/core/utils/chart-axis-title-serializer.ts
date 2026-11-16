@@ -193,10 +193,10 @@ export function applyChartAxisTitleToXml(
 
 /** Font styling applied to an axis title's text runs. */
 export interface ChartAxisTitleStyle {
-	fontFamily?: string;
-	fontSize?: number;
-	fontBold?: boolean;
-	fontColor?: string;
+	fontFamily?: string | undefined;
+	fontSize?: number | undefined;
+	fontBold?: boolean | undefined;
+	fontColor?: string | undefined;
 }
 
 /**

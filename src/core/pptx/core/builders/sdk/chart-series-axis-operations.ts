@@ -51,8 +51,8 @@ function valueAxes(data: PptxChartData): PptxChartAxisFormatting[] {
  * the far side (`r` / `t`) and another value axis shares its orientation.
  */
 function valueAxisPair(data: PptxChartData): {
-	primary?: PptxChartAxisFormatting;
-	secondary?: PptxChartAxisFormatting;
+	primary?: PptxChartAxisFormatting | undefined;
+	secondary?: PptxChartAxisFormatting | undefined;
 } {
 	const values = valueAxes(data);
 	const vertical = (axis: PptxChartAxisFormatting) => axis.axPos === 'l' || axis.axPos === 'r';

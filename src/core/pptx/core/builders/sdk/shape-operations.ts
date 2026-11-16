@@ -10,6 +10,7 @@
  */
 
 import type { ShapePptxElement } from '../../types/elements';
+import { at } from '../../../../geometry/indexed';
 
 // ---------------------------------------------------------------------------
 // SVG path command parsing
@@ -46,8 +47,8 @@ function parsePathData(d: string): PathCommand[] {
 	let match: RegExpExecArray | null;
 
 	while ((match = regex.exec(d)) !== null) {
-		const type = match[1].toUpperCase();
-		const argsStr = match[2].trim();
+		const type = at(match, 1).toUpperCase();
+		const argsStr = at(match, 2).trim();
 
 		if (type === 'Z') {
 			commands.push({ type: 'Z', args: [] });

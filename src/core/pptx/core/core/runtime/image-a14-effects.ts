@@ -69,7 +69,7 @@ export interface A14ImageExtension {
 	/** Every numeric attribute of the artistic effect, raw and un-normalised. */
 	artisticParams?: Record<string, number>;
 	/** PowerPoint "Remove Background" state. */
-	backgroundRemoval?: PptxBackgroundRemoval;
+	backgroundRemoval?: PptxBackgroundRemoval | undefined;
 	/** `a14:imgLayer/@r:embed`: relationship id of the pristine original image. */
 	originalImageRelId?: string;
 	/** `a14:sharpenSoften`, raw. */

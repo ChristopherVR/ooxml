@@ -7,17 +7,17 @@ export interface PptxChartAxisLabelFormatting {
 	majorTickMark?: PptxChartTickMark;
 	minorTickMark?: PptxChartTickMark;
 	/** Tick-label position from ChartML `ST_TickLblPos`. */
-	tickLblPos?: 'high' | 'low' | 'nextTo' | 'none';
+	tickLblPos?: 'high' | 'low' | 'nextTo' | 'none' | undefined;
 	/** Automatic category/date axis behavior (`c:auto`). */
-	auto?: boolean;
+	auto?: boolean | undefined;
 	/** Category-axis label alignment (`c:lblAlgn`). */
-	labelAlignment?: 'ctr' | 'l' | 'r';
+	labelAlignment?: 'ctr' | 'l' | 'r' | undefined;
 	/** Category/date label distance, from 0 through 1000 percent. */
 	labelOffset?: number;
 	/** Number of category/date labels between rendered labels. */
-	tickLabelSkip?: number;
+	tickLabelSkip?: number | undefined;
 	/** Number of category/date tick positions between major tick marks. */
-	tickMarkSkip?: number;
+	tickMarkSkip?: number | undefined;
 	/** Suppress multi-level category labels (`c:noMultiLvlLbl`). */
-	noMultiLevelLabels?: boolean;
+	noMultiLevelLabels?: boolean | undefined;
 }

@@ -16,12 +16,12 @@ const MEDIA_REFERENCE_NAMES: readonly PptxMediaReferenceKind[] = [
 export interface ParsedDrawingMediaReference {
 	kind: PptxMediaReferenceKind;
 	mediaType: 'audio' | 'video';
-	relationshipId?: string;
+	relationshipId?: string | undefined;
 	isLinked?: boolean;
-	name?: string;
-	contentType?: string;
-	audioCdStart?: PptxAudioCdPosition;
-	audioCdEnd?: PptxAudioCdPosition;
+	name?: string | undefined;
+	contentType?: string | undefined;
+	audioCdStart?: PptxAudioCdPosition | undefined;
+	audioCdEnd?: PptxAudioCdPosition | undefined;
 	rawXml: XmlObject;
 }
 

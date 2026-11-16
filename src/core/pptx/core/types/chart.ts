@@ -133,14 +133,14 @@ export interface PptxChartTrendline {
 	forward?: number;
 	backward?: number;
 	intercept?: number;
-	displayRSq?: boolean;
-	displayEq?: boolean;
+	displayRSq?: boolean | undefined;
+	displayEq?: boolean | undefined;
 	color?: string;
 	/** Trendline width in points (`c:trendline/c:spPr/a:ln/@w`, EMU / 12700). */
 	lineWidth?: number;
 	/** Trendline dash style (`c:trendline/c:spPr/a:ln/a:prstDash/@val`). */
 	lineDashStyle?: string;
-	label?: PptxChartTrendlineLabel | null;
+	label?: PptxChartTrendlineLabel | null | undefined;
 }
 
 /** Typed, commonly edited properties of `c:trendlineLbl`. */
@@ -282,11 +282,11 @@ export type PptxChartScatterStyle =
 export type PptxChartGradientFill = ChartGradientFill;
 
 export interface PptxChartShapeProps {
-	fillColor?: string;
-	strokeColor?: string;
-	strokeWidth?: number;
+	fillColor?: string | undefined;
+	strokeColor?: string | undefined;
+	strokeWidth?: number | undefined;
 	/** Line dash style (a:prstDash/@val), e.g. 'solid', 'dash', 'dot', 'lgDash'. */
-	strokeDashStyle?: string;
+	strokeDashStyle?: string | undefined;
 	/**
 	 * `a:ln/a:noFill`: the line is explicitly not drawn. Not the same as having
 	 * no line formatting, which leaves the renderer's default line in place.
@@ -306,14 +306,14 @@ export interface PptxChartUpDownBars {
 export interface PptxChartMarker {
 	symbol: PptxChartMarkerSymbol;
 	/** Marker size in points, constrained by ST_MarkerSize to 2 through 72. */
-	size?: number;
-	spPr?: PptxChartShapeProps;
+	size?: number | undefined;
+	spPr?: PptxChartShapeProps | undefined;
 }
 
 /** Per-data-point formatting override (c:dPt). */
 export interface PptxChartDataPoint {
 	idx: number;
-	spPr?: PptxChartShapeProps;
+	spPr?: PptxChartShapeProps | undefined;
 	/**
 	 * Per-point gradient fill (`c:dPt/c:spPr/a:gradFill`): one bar, column or
 	 * slice painted with its own gradient. Takes precedence over
@@ -322,9 +322,9 @@ export interface PptxChartDataPoint {
 	 * it through `setChartDataPointGradient`.
 	 */
 	gradientFill?: PptxChartGradientFill;
-	explosion?: number;
+	explosion?: number | undefined;
 	invertIfNegative?: boolean;
-	marker?: PptxChartMarker;
+	marker?: PptxChartMarker | undefined;
 	/** Render a bubble-chart point with a 3-D appearance. */
 	bubble3D?: boolean;
 	/** Per-point picture-fill flags (`c:dPt/c:pictureOptions`). */
@@ -380,20 +380,20 @@ export interface PptxChartDataLabel {
 	idx: number;
 	/** Suppress this data point's automatically generated label. */
 	deleted?: boolean;
-	showVal?: boolean;
-	showCatName?: boolean;
-	showSerName?: boolean;
+	showVal?: boolean | undefined;
+	showCatName?: boolean | undefined;
+	showSerName?: boolean | undefined;
 	showPercent?: boolean;
 	showLegendKey?: boolean;
 	showBubbleSize?: boolean;
 	position?: PptxChartDataLabelPosition;
-	text?: string;
+	text?: string | undefined;
 	/**
 	 * {@link text} was read from the cells of a "Value From Cells" range, not
 	 * from a literal `c:tx`. The save path keeps such a label linked to its
 	 * cells and writes no `c:tx`; clear this to save the text as literal.
 	 */
-	textFromCells?: boolean;
+	textFromCells?: boolean | undefined;
 	separator?: string;
 	showLeaderLines?: boolean;
 	/**
@@ -401,13 +401,13 @@ export interface PptxChartDataLabel {
 	 * precedence over the chart-level {@link PptxChartDataLabelOptions.numberFormat}
 	 * and the series' own {@link PptxChartSeries.numberFormat} when set.
 	 */
-	numberFormat?: string;
+	numberFormat?: string | undefined;
 	/**
 	 * Manually dragged label position (`c:dLbl/c:layout/c:manualLayout`), the
 	 * same CT_ManualLayout shape used for title/legend/plotArea. `null`
 	 * explicitly clears a drag back to the automatic position.
 	 */
-	layout?: PptxChartManualLayout | null;
+	layout?: PptxChartManualLayout | null | undefined;
 	/**
 	 * This label's own font (`c:dLbl/c:txPr/a:p/a:pPr/a:defRPr`, or ChartEx
 	 * `cx:dataLabel/cx:txPr`), taking precedence over the chart/series-level
@@ -415,7 +415,7 @@ export interface PptxChartDataLabel {
 	 * entry's flat text-style shape since both are the same
 	 * `.../a:p/a:pPr/a:defRPr` default-run-property style.
 	 */
-	txPr?: PptxChartLegendTextStyle;
+	txPr?: PptxChartLegendTextStyle | undefined;
 	/**
 	 * Font of this label's literal rich text (`c:dLbl/c:tx/c:rich`): the first
 	 * run's `a:rPr` over its paragraph's `a:pPr/a:defRPr`. PowerPoint draws
@@ -429,7 +429,7 @@ export interface PptxChartDataLabel {
 	 * width, and dash style for the label's callout box, taking precedence
 	 * over any chart/series-level default when set.
 	 */
-	spPr?: PptxChartShapeProps;
+	spPr?: PptxChartShapeProps | undefined;
 	/**
 	 * `c15:xForSave`: this override exists only so its properties survive a
 	 * save/reload round trip; PowerPoint merges it back onto the series'
@@ -451,9 +451,9 @@ export interface PptxChartDisplayUnitsLabel {
 	/** Literal label text. Omit to preserve the source text subtree. */
 	text?: string;
 	/** Manual label placement. `null` removes only the manual layout. */
-	layout?: PptxChartManualLayout | null;
+	layout?: PptxChartManualLayout | null | undefined;
 	/** Label shape formatting. `null` removes `c:spPr`. */
-	spPr?: PptxChartShapeProps | null;
+	spPr?: PptxChartShapeProps | null | undefined;
 	/**
 	 * The label's own run font, when it carries a distinct `txPr` from the
 	 * axis's own (ChartEx `cx:unitsLabel/cx:txPr`; classic `c:dispUnitsLbl`
@@ -476,32 +476,32 @@ export interface PptxChartAxisFormatting extends PptxChartAxisLabelFormatting {
 	/** Cross-axis identifier: the axis this axis crosses. */
 	crossAxisId?: number;
 	/** Automatic crossing mode (`c:crosses`). Mutually exclusive with `crossesAt`. */
-	crosses?: 'autoZero' | 'min' | 'max';
+	crosses?: 'autoZero' | 'min' | 'max' | undefined;
 	/** Explicit crossing value (`c:crossesAt`). Units depend on the axis type. */
 	crossesAt?: number;
 	/** Whether a value axis crosses between or at category tick marks. */
-	crossBetween?: 'between' | 'midCat';
-	numFmt?: PptxChartAxisNumFmt;
+	crossBetween?: 'between' | 'midCat' | undefined;
+	numFmt?: PptxChartAxisNumFmt | undefined;
 	titleText?: string;
 	spPr?: PptxChartShapeProps;
-	fontFamily?: string;
+	fontFamily?: string | undefined;
 	/** East Asian typeface of the axis text (`a:ea/@typeface`). */
 	eastAsiaFontFamily?: string;
-	fontSize?: number;
+	fontSize?: number | undefined;
 	fontBold?: boolean;
-	fontColor?: string;
+	fontColor?: string | undefined;
 	/** Whether major gridlines are present (`c:majorGridlines`). */
 	majorGridlines?: boolean;
 	/** Whether minor gridlines are present (`c:minorGridlines`). */
 	minorGridlines?: boolean;
-	majorGridlinesSpPr?: PptxChartShapeProps;
-	minorGridlinesSpPr?: PptxChartShapeProps;
+	majorGridlinesSpPr?: PptxChartShapeProps | undefined;
+	minorGridlinesSpPr?: PptxChartShapeProps | undefined;
 	/** Minimum axis value override (c:min/@val). */
-	min?: number;
+	min?: number | undefined;
 	/** Maximum axis value override (c:max/@val). */
-	max?: number;
+	max?: number | undefined;
 	/** Axis value direction (`c:scaling/c:orientation/@val`). */
-	orientation?: 'minMax' | 'maxMin';
+	orientation?: 'minMax' | 'maxMin' | undefined;
 	/**
 	 * Whether the axis is deleted/hidden (c:delete/@val). Written for generated
 	 * charts (absent means shown) and reconciled on save for loaded ones.
@@ -521,23 +521,24 @@ export interface PptxChartAxisFormatting extends PptxChartAxisLabelFormatting {
 		| 'hundredMillions'
 		| 'billions'
 		| 'trillions'
-		| 'custom';
+		| 'custom'
+		| undefined;
 	/** Custom display unit divisor value (c:dispUnits/c:custUnit/@val). Only used when displayUnits is 'custom'. */
-	displayUnitsValue?: number;
+	displayUnitsValue?: number | undefined;
 	/**
 	 * Display-unit label contents (`c:dispUnits/c:dispUnitsLbl`). A string is
 	 * retained as a compatibility shorthand for `{ text: string }`; `null`
 	 * explicitly removes the label.
 	 */
-	displayUnitsLabel?: string | PptxChartDisplayUnitsLabel | null;
+	displayUnitsLabel?: string | PptxChartDisplayUnitsLabel | null | undefined;
 	/** Whether logarithmic scaling is enabled (presence of c:scaling/c:logBase). */
 	logScale?: boolean;
 	/** Logarithmic base value (c:scaling/c:logBase/@val), typically 10 or e. */
-	logBase?: number;
+	logBase?: number | undefined;
 	/** Major-unit interval between primary tick marks (c:majorUnit/@val). */
-	majorUnit?: number;
+	majorUnit?: number | undefined;
 	/** Minor-unit interval between secondary tick marks (c:minorUnit/@val). */
-	minorUnit?: number;
+	minorUnit?: number | undefined;
 	/** Calendar unit used to interpret date-axis serial values. */
 	baseTimeUnit?: 'days' | 'months' | 'years';
 	majorTimeUnit?: 'days' | 'months' | 'years';
@@ -562,12 +563,12 @@ export interface PptxChartBandFmt {
 
 /** Office 2016 ChartEx box-and-whisker series layout options. */
 export interface PptxChartBoxWhiskerOptions {
-	quartileMethod?: 'inclusive' | 'exclusive';
-	showMeanLine?: boolean;
-	showMeanMarker?: boolean;
+	quartileMethod?: 'inclusive' | 'exclusive' | undefined;
+	showMeanLine?: boolean | undefined;
+	showMeanMarker?: boolean | undefined;
 	/** Show non-outlier (inner) data points. */
-	showInnerPoints?: boolean;
-	showOutlierPoints?: boolean;
+	showInnerPoints?: boolean | undefined;
+	showOutlierPoints?: boolean | undefined;
 }
 
 /** Office 2016 ChartEx histogram and Pareto series layout options. */
@@ -655,7 +656,7 @@ export type PptxChartParentLabelLayout = 'none' | 'banner' | 'overlapping';
 
 /** Per-series layout options for an Office 2016+ ChartEx treemap. */
 export interface PptxChartTreemapOptions {
-	parentLabelLayout?: PptxChartParentLabelLayout;
+	parentLabelLayout?: PptxChartParentLabelLayout | undefined;
 }
 
 /**
@@ -738,7 +739,7 @@ export interface PptxChartSeries {
 	 * the chart-level group reports "show nothing" for a chart that visibly shows
 	 * percentages. These override {@link PptxChartStyle.dataLabels}.
 	 */
-	dataLabelOptions?: PptxChartDataLabelOptions;
+	dataLabelOptions?: PptxChartDataLabelOptions | undefined;
 	/**
 	 * Whether the series line is explicitly suppressed
 	 * (`c:ser/c:spPr/a:ln/a:noFill`). Line-drawn kinds (line, scatter, radar)
@@ -777,11 +778,11 @@ export interface PptxChartSeries {
 	 * without the code `0.52` reaches the label where PowerPoint shows `52%`.
 	 */
 	numberFormat?: string;
-	color?: string;
-	trendlines?: PptxChartTrendline[];
-	errBars?: PptxChartErrBars[];
-	dataPoints?: PptxChartDataPoint[];
-	marker?: PptxChartMarker;
+	color?: string | undefined;
+	trendlines?: PptxChartTrendline[] | undefined;
+	errBars?: PptxChartErrBars[] | undefined;
+	dataPoints?: PptxChartDataPoint[] | undefined;
+	marker?: PptxChartMarker | undefined;
 	dataLabels?: PptxChartDataLabel[];
 	explosion?: number;
 	/**
@@ -803,7 +804,7 @@ export interface PptxChartSeries {
 	 */
 	smooth?: boolean;
 	/** Axis ID this series is plotted against (links to PptxChartAxisFormatting.axisId). */
-	axisId?: number;
+	axisId?: number | undefined;
 	/**
 	 * Per-series chart type, used for combo charts where individual series are
 	 * plotted with different chart types (e.g. a bar series and a line series in
@@ -819,11 +820,11 @@ export interface PptxChartSeries {
 	 * for this series alone.
 	 */
 	shape?: PptxBar3DShape;
-	boxWhiskerOptions?: PptxChartBoxWhiskerOptions;
-	histogramOptions?: PptxChartHistogramOptions;
-	waterfallOptions?: PptxChartWaterfallOptions;
+	boxWhiskerOptions?: PptxChartBoxWhiskerOptions | undefined;
+	histogramOptions?: PptxChartHistogramOptions | undefined;
+	waterfallOptions?: PptxChartWaterfallOptions | undefined;
 	regionMapOptions?: PptxChartRegionMapOptions;
-	treemapOptions?: PptxChartTreemapOptions;
+	treemapOptions?: PptxChartTreemapOptions | undefined;
 	/**
 	 * Series-level picture-fill flags (`c:ser/c:pictureOptions`), legal
 	 * wherever a per-point `c:dPt/c:pictureOptions` is (CT_BarSer): paints
@@ -907,7 +908,7 @@ export interface PptxChartFilteredSeries {
  */
 export interface PptxChartDataLabelOptions {
 	/** Label box fill/outline (`c:dLbls/c:spPr`), see `chart-data-label-box.ts`. */
-	labelShape?: PptxChartShapeProps;
+	labelShape?: PptxChartShapeProps | undefined;
 	/** Callout geometry of the label box (`c15:spPr/a:prstGeom/@prst`, e.g. `wedgeRectCallout`). */
 	calloutShape?: string;
 	/** The chart15 extension's `c15:showLeaderLines`, which wins for a moved label's leader line. */
@@ -927,7 +928,7 @@ export interface PptxChartDataLabelOptions {
 	/** Text placed between combined label components (`c:separator`). */
 	separator?: string;
 	/** Show leader lines where supported (`c:showLeaderLines`). */
-	showLeaderLines?: boolean;
+	showLeaderLines?: boolean | undefined;
 	/**
 	 * Leader-line stroke styling for offset (pie/doughnut `outEnd`/`bestFit`)
 	 * labels. Resolved from the base `c:leaderLines/c:spPr` when present, else
@@ -940,7 +941,7 @@ export interface PptxChartDataLabelOptions {
 	 * extension form. `undefined` leaves the renderer's own default leader-line
 	 * stroke.
 	 */
-	leaderLineStyle?: PptxChartShapeProps;
+	leaderLineStyle?: PptxChartShapeProps | undefined;
 	/**
 	 * Label position (`c:dLblPos`). Valid values depend on the chart type
 	 * (`ctr`, `inEnd`, `inBase`, `outEnd`, `bestFit`, `l`, `r`, `t`, `b`).
@@ -960,7 +961,7 @@ export interface PptxChartDataLabelOptions {
 	 * level and the series level cascade the same way the show flags do
 	 * (point > series > chart-type).
 	 */
-	txPr?: PptxChartLegendTextStyle;
+	txPr?: PptxChartLegendTextStyle | undefined;
 	/**
 	 * PowerPoint 2013+ "Value From Cells", series-wide form
 	 * (`c15:datalabelsRange`, chart15 uri `{CE6537A1-...}`): one cell range
@@ -981,16 +982,16 @@ export interface PptxChartDataLabelOptions {
 
 /** Typed text defaults for a single chart legend entry. */
 export interface PptxChartLegendTextStyle {
-	fontFamily?: string;
+	fontFamily?: string | undefined;
 	/**
 	 * East Asian typeface (`a:ea/@typeface`). PowerPoint draws CJK characters
 	 * in this face and everything else in {@link fontFamily}.
 	 */
-	eastAsiaFontFamily?: string;
-	fontSize?: number;
-	bold?: boolean;
-	italic?: boolean;
-	color?: string;
+	eastAsiaFontFamily?: string | undefined;
+	fontSize?: number | undefined;
+	bold?: boolean | undefined;
+	italic?: boolean | undefined;
+	color?: string | undefined;
 }
 
 /** Per-series legend entry override (`c:legendEntry`). */
@@ -1024,7 +1025,7 @@ export interface PptxChartStyle {
 	 * legend declares none, which PowerPoint draws on the right; the default is
 	 * left to the renderer so a save never adds a `c:legendPos` the source lacked.
 	 */
-	legendPosition?: string;
+	legendPosition?: string | undefined;
 	/**
 	 * Whether the legend floats over the plot instead of reserving space beside
 	 * it. Classic charts read `c:legend/c:overlay`, and PowerPoint treats a
@@ -1034,7 +1035,7 @@ export interface PptxChartStyle {
 	 */
 	legendOverlay?: boolean;
 	/** Per-series visibility and text-style overrides. */
-	legendEntries?: PptxChartLegendEntry[];
+	legendEntries?: PptxChartLegendEntry[] | undefined;
 	/**
 	 * The legend's own default text style (`c:legend/c:txPr`), falling back to
 	 * the chart-wide default (`c:chartSpace/c:txPr`) when the legend has none
@@ -1121,7 +1122,7 @@ export interface PptxExternalData {
 	/** Relationship ID referencing the external data source in the chart .rels. */
 	relId: string;
 	/** Resolved external file path or URL from the relationship target. */
-	targetPath?: string;
+	targetPath?: string | undefined;
 	/** Whether to auto-update data from the external source on open. */
 	autoUpdate?: boolean;
 	/** Raw binary data of the embedded xlsx workbook (from ppt/embeddings/). */
@@ -1226,9 +1227,9 @@ export interface PptxChartManualLayout extends ChartManualLayout {
  * A `null` region removes its manual layout without removing extensions.
  */
 export interface PptxChartLayouts {
-	title?: PptxChartManualLayout | null;
-	plotArea?: PptxChartManualLayout | null;
-	legend?: PptxChartManualLayout | null;
+	title?: PptxChartManualLayout | null | undefined;
+	plotArea?: PptxChartManualLayout | null | undefined;
+	legend?: PptxChartManualLayout | null | undefined;
 }
 
 /** Parsed data extracted from an embedded xlsx workbook. */
@@ -1271,7 +1272,7 @@ export interface PptxChartDateCategories {
 export interface PptxChartData {
 	/** ChartEx category-axis gap as a percentage of funnel bar height; absent uses Office's 33. */
 	funnelGapWidth?: number;
-	title?: string;
+	title?: string | undefined;
 	/**
 	 * Rich-text runs of the title, parsed from `c:title/c:tx/c:rich` (issue:
 	 * chart title rich text). Lossless multi-run alternative to the flat
@@ -1281,7 +1282,7 @@ export interface PptxChartData {
 	 * rich (typed) title, not a ChartEx (`cx:`) title or one authored as a
 	 * linked-cell reference.
 	 */
-	titleRuns?: PptxChartTitleRun[];
+	titleRuns?: PptxChartTitleRun[] | undefined;
 	/** Whether parsed title text can be replaced without changing its source or paragraph structure. */
 	titleTextEditable?: boolean;
 	/** Label sources passed atomic embedded-workbook preflight at load. */
@@ -1306,8 +1307,8 @@ export interface PptxChartData {
 	 * continues the previous group's label, matching how the source stores a
 	 * merged category header sparsely.
 	 */
-	categoryLevels?: string[][];
-	dateCategories?: PptxChartDateCategories;
+	categoryLevels?: string[][] | undefined;
+	dateCategories?: PptxChartDateCategories | undefined;
 	series: PptxChartSeries[];
 	/**
 	 * Series hidden from the plot by PowerPoint's "Chart Filters" feature
@@ -1330,9 +1331,9 @@ export interface PptxChartData {
 	 */
 	filteredCategoryTitle?: string[];
 	/** Chart style/formatting metadata. */
-	style?: PptxChartStyle;
+	style?: PptxChartStyle | undefined;
 	/** Grouping mode for bar/area/line charts: 'clustered' | 'stacked' | 'percentStacked' */
-	grouping?: 'clustered' | 'stacked' | 'percentStacked';
+	grouping?: 'clustered' | 'stacked' | 'percentStacked' | undefined;
 	/**
 	 * The source `c:grouping` was `standard`, which {@link grouping} folds into
 	 * `'clustered'` (a 2D bar chart draws the two the same). A 3D chart draws
@@ -1433,13 +1434,13 @@ export interface PptxChartData {
 	/** Internal: relationship ID linking the graphic frame to the chart part. */
 	chartRelationshipId?: string;
 	/** `null` explicitly removes an existing ChartML data table. */
-	dataTable?: PptxChartDataTable | null;
+	dataTable?: PptxChartDataTable | null | undefined;
 	/** `null` explicitly removes an existing `c:dropLines` element. */
 	dropLines?: PptxChartLineStyle | null;
 	/** `null` explicitly removes an existing `c:hiLowLines` element. */
 	hiLowLines?: PptxChartLineStyle | null;
 	/** `null` explicitly removes an existing up/down-bars container. */
-	upDownBars?: PptxChartUpDownBars | null;
+	upDownBars?: PptxChartUpDownBars | null | undefined;
 	axes?: PptxChartAxisFormatting[];
 	floor?: PptxChart3DSurface;
 	sideWall?: PptxChart3DSurface;
@@ -1482,7 +1483,7 @@ export interface PptxChartData {
 	 * When `true` (the default), hidden cells are excluded from the chart.
 	 * When `false`, hidden data IS plotted.
 	 */
-	plotVisibleOnly?: boolean;
+	plotVisibleOnly?: boolean | undefined;
 
 	/**
 	 * Color palette extracted from the chart's Office 2013+ color style part
@@ -1533,7 +1534,7 @@ export interface PptxChartData {
 	 * Parsed from and emitted to `c:chart/c:view3D`. Absent when the
 	 * chart XML has no `c:view3D` element.
 	 */
-	view3D?: PptxChartView3D;
+	view3D?: PptxChartView3D | undefined;
 
 	/**
 	 * Top-level chart chrome flags (`c:autoTitleDeleted`,
@@ -1546,7 +1547,7 @@ export interface PptxChartData {
 	/** `c:chartSpace/c:printSettings`; `null` removes the container on save. */
 	printSettings?: PptxChartPrintSettings | null;
 	/** `c:chartSpace/c:protection`; `null` removes the container on save. */
-	protection?: PptxChartProtection | null;
+	protection?: PptxChartProtection | null | undefined;
 	/** Editable manual placement for the title, plot area, and legend. */
 	layouts?: PptxChartLayouts;
 
@@ -1607,7 +1608,7 @@ export interface PptxChartData {
 	 * need an explicit `false`. Written for generated charts when set, and
 	 * reconciled on save for loaded ones.
 	 */
-	roundedCorners?: boolean;
+	roundedCorners?: boolean | undefined;
 
 	/**
 	 * 3-D chart depth/spacing along the series axis, as a percentage
@@ -1634,5 +1635,5 @@ export interface PptxChartData {
 	 * `c:spPr` on save. Absent on a chart the panes never touched. See
 	 * `types/chart-element-format.ts`.
 	 */
-	elementFormats?: PptxChartElementFormats;
+	elementFormats?: PptxChartElementFormats | undefined;
 }

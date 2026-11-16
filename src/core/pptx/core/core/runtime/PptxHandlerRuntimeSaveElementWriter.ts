@@ -84,11 +84,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	/** Part paths of SDK-created charts written this save (need content-type overrides). */
-	protected pendingChartPartPaths?: string[];
-	protected pendingExtendedChartPartPaths?: string[];
-	protected pendingChartColorPartPaths?: string[];
+	protected pendingChartPartPaths?: string[] | undefined;
+	protected pendingExtendedChartPartPaths?: string[] | undefined;
+	protected pendingChartColorPartPaths?: string[] | undefined;
 	/** Embedded workbooks of SDK-created charts written this save (`embedWorkbook`). */
-	protected pendingChartWorkbookPartPaths?: string[];
+	protected pendingChartWorkbookPartPaths?: string[] | undefined;
 
 	/** Pick the next free `ppt/charts/chartN.xml` path (reads the zip + pending writes). */
 	protected nextChartPartPath(): string {

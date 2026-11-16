@@ -27,7 +27,7 @@ export interface DrawingShapeGradientStop {
 export interface DrawingShapeFill {
 	/** The shape declares `a:noFill` and must not be painted at all. */
 	fillNone?: boolean;
-	fillColor?: string;
+	fillColor?: string | undefined;
 	/** Opacity (0..1) of a solid fill's colour (`a:alpha` etc.); absent when opaque. */
 	fillOpacity?: number;
 	fillGradientStops?: DrawingShapeGradientStop[];
@@ -156,18 +156,18 @@ export function extractDrawingShapeFill(
 export interface DrawingShapeTextStyle {
 	fontSize: number | undefined;
 	fontColor: string | undefined;
-	fontFamily?: string;
-	fontWeight?: number;
-	fontStyle?: 'normal' | 'italic';
-	lineHeight?: number;
-	lineHeightRatio?: number;
-	lineSpacingAfter?: number;
-	lineSpacingAfterRatio?: number;
-	textInsetLeft?: number;
-	textInsetTop?: number;
-	textInsetRight?: number;
-	textInsetBottom?: number;
-	textVerticalAnchor?: string;
+	fontFamily?: string | undefined;
+	fontWeight?: number | undefined;
+	fontStyle?: 'normal' | 'italic' | undefined;
+	lineHeight?: number | undefined;
+	lineHeightRatio?: number | undefined;
+	lineSpacingAfter?: number | undefined;
+	lineSpacingAfterRatio?: number | undefined;
+	textInsetLeft?: number | undefined;
+	textInsetTop?: number | undefined;
+	textInsetRight?: number | undefined;
+	textInsetBottom?: number | undefined;
+	textVerticalAnchor?: string | undefined;
 }
 
 export function drawingTextEmuAttribute(

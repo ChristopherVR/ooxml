@@ -16,10 +16,11 @@ import type { ChartPptxElement } from '../../types/elements';
 import type { ChartGradientInput } from './chart-gradient-input';
 import { assertChartGradientSupported, toChartGradientFill } from './chart-gradient-input';
 import { ensureDataPoint, removeEmptyDataPoint, validateSeriesIndex } from './chart-operations';
+import { at } from '../../../../geometry/indexed';
 
 function seriesChartType(element: ChartPptxElement, seriesIndex: number) {
 	const data = element.chartData!;
-	return data.series[seriesIndex].seriesChartType ?? data.chartType;
+	return at(data.series, seriesIndex).seriesChartType ?? data.chartType;
 }
 
 /**

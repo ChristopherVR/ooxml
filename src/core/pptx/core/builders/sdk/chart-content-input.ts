@@ -22,11 +22,11 @@ import type { StrokeDashType } from '../../types/common';
 /** Chart text font. Sizes are in points; colours are `#RRGGBB` or `RRGGBB`. */
 export interface ChartFontInput {
 	/** Font size in points. */
-	size?: number;
-	bold?: boolean;
-	italic?: boolean;
+	size?: number | undefined;
+	bold?: boolean | undefined;
+	italic?: boolean | undefined;
 	/** Hex colour. */
-	color?: string;
+	color?: string | undefined;
 	/** Latin typeface, e.g. `Calibri`. */
 	family?: string;
 }

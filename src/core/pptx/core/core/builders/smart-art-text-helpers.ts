@@ -1,5 +1,6 @@
 import type { XmlObject } from '../../types';
 import { xmlText } from '../../utils';
+import { at } from '../../../../geometry/indexed';
 
 /**
  * Maximum number of SmartArt content nodes parsed from a single diagram.
@@ -30,7 +31,7 @@ export function extractTextFromPoint(point: XmlObject): string | undefined {
  * text from nested `a:t` elements.
  */
 export function collectLocalTextValues(obj: unknown, targetName: string, out: string[]): void {
-	const stack: Array<{ key?: string; value: unknown }> = [{ value: obj }];
+	const stack: Array<{ key?: string | undefined; value: unknown }> = [{ value: obj }];
 	let visited = 0;
 	while (stack.length > 0 && visited++ < 1_000_000) {
 		const current = stack.pop()!;
@@ -57,7 +58,7 @@ export function collectLocalTextValues(obj: unknown, targetName: string, out: st
 		} else if (current.value && typeof current.value === 'object') {
 			const entries = Object.entries(current.value as XmlObject);
 			for (let index = entries.length - 1; index >= 0; index--) {
-				stack.push({ key: entries[index][0], value: entries[index][1] });
+				stack.push({ key: at(entries, index)[0], value: at(entries, index)[1] });
 			}
 		}
 	}

@@ -56,10 +56,10 @@ export interface AnimationBehaviorNodesResult {
 	/** The presetSubtype the tree belongs to (an unknown request falls back to the default). */
 	presetSubtype?: number;
 	/** Effect-level `accel`/`decel` PowerPoint writes for the preset, as raw attribute strings. */
-	effectAccel?: string;
-	effectDecel?: string;
+	effectAccel?: string | undefined;
+	effectDecel?: string | undefined;
 	/** The preset's default `p:iterate` (`type` + `tmPct`). */
-	iterate?: { type: string; tmPct?: number };
+	iterate?: { type: string; tmPct?: number } | undefined;
 }
 
 /**

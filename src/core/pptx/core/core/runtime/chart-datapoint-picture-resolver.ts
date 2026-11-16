@@ -19,6 +19,7 @@
  */
 import type { PptxChartData, XmlObject } from '../../types';
 import { parseChartDataPointPictureBlipRel } from '../../utils/chart-datapoint-picture';
+import { at } from '../../../../geometry/indexed';
 
 interface XmlLookupLike {
 	getChildByLocalName: (parent: XmlObject | undefined, name: string) => XmlObject | undefined;
@@ -60,7 +61,7 @@ export async function resolveDataPointPictureImages(
 		// with no c:pictureOptions sibling (impliedPicture, see its doc comment):
 		// the same blip lookup either way, just rooted at the c:ser node instead
 		// of a c:dPt child.
-		const seriesPicture = series[si].picture ?? series[si].impliedPicture;
+		const seriesPicture = at(series, si).picture ?? at(series, si).impliedPicture;
 		if (seriesPicture) {
 			const seriesRelId = parseChartDataPointPictureBlipRel(seriesNode, xmlLookup);
 			if (seriesRelId) {
@@ -76,7 +77,7 @@ export async function resolveDataPointPictureImages(
 			}
 		}
 
-		const dataPoints = series[si].dataPoints;
+		const dataPoints = at(series, si).dataPoints;
 		if (!dataPoints) {
 			continue;
 		}

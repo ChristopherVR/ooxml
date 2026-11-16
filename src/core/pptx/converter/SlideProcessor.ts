@@ -17,7 +17,7 @@ export interface SlideProcessorOptions {
 	/** Slide canvas height in CSS pixels (used for layout positioning). */
 	slideHeight: number;
 	/** When true, emit clean semantic markdown instead of positioned HTML. */
-	semanticMode?: boolean;
+	semanticMode?: boolean | undefined;
 }
 
 /**

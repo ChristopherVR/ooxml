@@ -30,13 +30,13 @@ export interface GeometryAdjustmentHandle {
 	/** Name of the adjustment guide this handle controls (e.g. "adj", "adj1"). */
 	guideName: string;
 	/** X position as a fraction of shape width (0..1), or undefined if the handle only moves vertically. */
-	xFraction?: number;
+	xFraction?: number | undefined;
 	/** Y position as a fraction of shape height (0..1), or undefined if the handle only moves horizontally. */
-	yFraction?: number;
+	yFraction?: number | undefined;
 	/** Minimum allowed value for the adjustment guide. */
-	minValue?: number;
+	minValue?: number | undefined;
 	/** Maximum allowed value for the adjustment guide. */
-	maxValue?: number;
+	maxValue?: number | undefined;
 }
 
 // ==========================================================================
@@ -161,7 +161,7 @@ export interface CustomGeometryRawData {
 	 * re-evaluating a copied `pathLstXml` still draws and saves the commands
 	 * in their authored order; see `restorePathListCommandOrder`.
 	 */
-	pathCommandOrder?: string[][];
+	pathCommandOrder?: string[][] | undefined;
 }
 
 // ==========================================================================
@@ -189,21 +189,21 @@ export interface CustomGeometryRawData {
  */
 export interface AdjustHandleXY {
 	/** Guide reference for the X axis (`@_gdRefX`). */
-	gdRefX?: string;
+	gdRefX?: string | undefined;
 	/** Guide reference for the Y axis (`@_gdRefY`). */
-	gdRefY?: string;
+	gdRefY?: string | undefined;
 	/** Minimum X value, as a formula reference (`@_minX`). */
-	minX?: string;
+	minX?: string | undefined;
 	/** Maximum X value (`@_maxX`). */
-	maxX?: string;
+	maxX?: string | undefined;
 	/** Minimum Y value (`@_minY`). */
-	minY?: string;
+	minY?: string | undefined;
 	/** Maximum Y value (`@_maxY`). */
-	maxY?: string;
+	maxY?: string | undefined;
 	/** Handle position X (formula or literal) from `a:pos/@_x`. */
-	posX?: string;
+	posX?: string | undefined;
 	/** Handle position Y from `a:pos/@_y`. */
-	posY?: string;
+	posY?: string | undefined;
 }
 
 /**
@@ -224,21 +224,21 @@ export interface AdjustHandleXY {
  */
 export interface AdjustHandlePolar {
 	/** Guide reference for the radial distance (`@_gdRefR`). */
-	gdRefR?: string;
+	gdRefR?: string | undefined;
 	/** Guide reference for the angle (`@_gdRefAng`). */
-	gdRefAng?: string;
+	gdRefAng?: string | undefined;
 	/** Minimum radial value (`@_minR`). */
-	minR?: string;
+	minR?: string | undefined;
 	/** Maximum radial value (`@_maxR`). */
-	maxR?: string;
+	maxR?: string | undefined;
 	/** Minimum angle (`@_minAng`). */
-	minAng?: string;
+	minAng?: string | undefined;
 	/** Maximum angle (`@_maxAng`). */
-	maxAng?: string;
+	maxAng?: string | undefined;
 	/** Handle position X from `a:pos/@_x`. */
-	posX?: string;
+	posX?: string | undefined;
 	/** Handle position Y from `a:pos/@_y`. */
-	posY?: string;
+	posY?: string | undefined;
 }
 
 /**
@@ -254,11 +254,11 @@ export interface AdjustHandlePolar {
  */
 export interface ConnectionSite {
 	/** Approach angle (`@_ang`) — formula or literal degree-1/60000 value. */
-	ang?: string;
+	ang?: string | undefined;
 	/** Site position X from `a:pos/@_x`. */
-	posX?: string;
+	posX?: string | undefined;
 	/** Site position Y from `a:pos/@_y`. */
-	posY?: string;
+	posY?: string | undefined;
 }
 
 /**
@@ -269,13 +269,13 @@ export interface ConnectionSite {
  */
 export interface CustomGeometryTextRect {
 	/** Left edge formula reference (`@_l`). */
-	l?: string;
+	l?: string | undefined;
 	/** Top edge (`@_t`). */
-	t?: string;
+	t?: string | undefined;
 	/** Right edge (`@_r`). */
-	r?: string;
+	r?: string | undefined;
 	/** Bottom edge (`@_b`). */
-	b?: string;
+	b?: string | undefined;
 }
 
 /**
@@ -296,32 +296,32 @@ export interface CustomGeometryTextRect {
  */
 export interface PptxCustomPathProperties {
 	/** SVG path data for custom shapes. */
-	pathData?: string;
+	pathData?: string | undefined;
 	/** Coordinate-space width for the custom path. */
-	pathWidth?: number;
+	pathWidth?: number | undefined;
 	/** Coordinate-space height for the custom path. */
-	pathHeight?: number;
+	pathHeight?: number | undefined;
 	/** Structured custom geometry paths for editing (maps to a:custGeom/a:pathLst). */
-	customGeometryPaths?: CustomGeometryPath[];
+	customGeometryPaths?: CustomGeometryPath[] | undefined;
 	/** Raw adjustment/guide/handle/connection/text-rectangle XML preserved for serialization. */
-	customGeometryRawData?: CustomGeometryRawData;
+	customGeometryRawData?: CustomGeometryRawData | undefined;
 	/**
 	 * Typed XY adjustment handles parsed from `a:custGeom/a:ahLst/a:ahXY`.
 	 * SDK-built shapes can populate this and the writer will emit `<a:ahXY>` entries
 	 * even when no raw XML was preserved.
 	 */
-	customGeometryAdjustHandlesXY?: AdjustHandleXY[];
+	customGeometryAdjustHandlesXY?: AdjustHandleXY[] | undefined;
 	/**
 	 * Typed polar adjustment handles parsed from `a:custGeom/a:ahLst/a:ahPolar`.
 	 */
-	customGeometryAdjustHandlesPolar?: AdjustHandlePolar[];
+	customGeometryAdjustHandlesPolar?: AdjustHandlePolar[] | undefined;
 	/**
 	 * Typed connection sites parsed from `a:custGeom/a:cxnLst/a:cxn`.
 	 */
-	customGeometryConnectionSites?: ConnectionSite[];
+	customGeometryConnectionSites?: ConnectionSite[] | undefined;
 	/**
 	 * Typed text rectangle parsed from `a:custGeom/a:rect`. When present this is
 	 * preferred over {@link customGeometryRawData}'s `rectXml` on save.
 	 */
-	customGeometryTextRect?: CustomGeometryTextRect;
+	customGeometryTextRect?: CustomGeometryTextRect | undefined;
 }

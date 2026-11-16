@@ -3,6 +3,7 @@ import { escapeHtml as escapeHtmlAttr, safeHrefOrHash } from './base';
 import { isCodeLikeFont, resolveListLevel, resolveListMarker } from './ListMarkerHelper';
 import type { SegmentBulletInfo } from './ListMarkerHelper';
 import { OmmlLatexConverter } from './OmmlLatexConverter';
+import { at } from '../../geometry/indexed';
 
 /**
  * Groups text segments that belong to the same paragraph.
@@ -68,7 +69,7 @@ export class TextSegmentRenderer {
 				const current = renderedParagraphs[index];
 				output.push(previous.isListItem && current.isListItem ? '\n' : '\n\n');
 			}
-			output.push(renderedParagraphs[index].text);
+			output.push(at(renderedParagraphs, index).text);
 		}
 		return output.join('');
 	}

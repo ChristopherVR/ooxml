@@ -12,6 +12,7 @@
 import type { PptxElement } from '../../types/elements';
 import type { PptxData, PptxSlide } from '../../types/presentation';
 import { cloneSlide } from '../../utils/clone-utils';
+import { at } from '../../../../geometry/indexed';
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -284,7 +285,7 @@ export function mergePresentation(
 
 	// Re-number all slide numbers (1-based) to maintain consistency
 	for (let i = 0; i < targetData.slides.length; i++) {
-		targetData.slides[i].slideNumber = i + 1;
+		at(targetData.slides, i).slideNumber = i + 1;
 	}
 
 	// Optionally merge theme colors from source

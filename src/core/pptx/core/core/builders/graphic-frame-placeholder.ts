@@ -13,13 +13,13 @@ import { normalizePlaceholderIndex } from '../../utils/placeholder-index';
 /** The `p:ph` attributes a graphic frame can carry, normalised. */
 export interface GraphicFramePlaceholder {
 	/** `@idx`, normalised (PowerPoint's `4294967295` sentinel is erased). */
-	idx?: string;
+	idx?: string | undefined;
 	/** `@type`, lower-cased (`tbl`, `chart`, `dgm`, `obj`, `media`, ...). */
-	type?: string;
+	type?: string | undefined;
 	/** `@sz`, lower-cased. */
-	sz?: string;
+	sz?: string | undefined;
 	/** `@orient`, only ever `vert` when present. */
-	orient?: 'vert';
+	orient?: 'vert' | undefined;
 }
 
 function asNode(value: unknown): XmlObject | undefined {

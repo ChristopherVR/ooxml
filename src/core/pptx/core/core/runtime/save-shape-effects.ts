@@ -12,14 +12,14 @@ import { resetSpPrEffectsForStyleMatrix } from './save-shape-style-reset';
  * when the corresponding effect is not present on the style.
  */
 export interface ShapeEffectsContext {
-	readonly outerShadowXml?: XmlObject;
-	readonly presetShadowXml?: XmlObject;
-	readonly innerShadowXml?: XmlObject;
-	readonly glowXml?: XmlObject;
-	readonly softEdgeXml?: XmlObject;
-	readonly reflectionXml?: XmlObject;
-	readonly blurXml?: XmlObject;
-	readonly fillOverlayXml?: XmlObject;
+	readonly outerShadowXml?: XmlObject | undefined;
+	readonly presetShadowXml?: XmlObject | undefined;
+	readonly innerShadowXml?: XmlObject | undefined;
+	readonly glowXml?: XmlObject | undefined;
+	readonly softEdgeXml?: XmlObject | undefined;
+	readonly reflectionXml?: XmlObject | undefined;
+	readonly blurXml?: XmlObject | undefined;
+	readonly fillOverlayXml?: XmlObject | undefined;
 }
 
 /**

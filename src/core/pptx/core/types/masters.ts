@@ -32,7 +32,7 @@ export interface PptxPlaceholderFrame {
 	/** `p:ph/@type`, lower-cased by the parser; defaults to `body` when omitted. */
 	type: string;
 	/** `p:ph/@idx`, when present. */
-	idx?: string;
+	idx?: string | undefined;
 	/** Left offset in CSS pixels, when the shape declares `a:off`. */
 	x?: number;
 	/** Top offset in CSS pixels, when the shape declares `a:off`. */
@@ -60,7 +60,7 @@ export interface PptxNotesMaster {
 	/** File path within the PPTX archive. */
 	path: string;
 	/** Background colour of the notes master. */
-	backgroundColor?: string;
+	backgroundColor?: string | undefined;
 	/** Background image data URL. */
 	backgroundImage?: string;
 	/** Crop, tiling and image effects authored on the background blip fill. */
@@ -72,7 +72,7 @@ export interface PptxNotesMaster {
 	/** Header/footer flags from `<p:hf>` on the notes master (P-H3). */
 	headerFooter?: PptxHeaderFooterFlags;
 	/** Colour map from `<p:clrMap>` (12 alias attributes). Applied at save time. */
-	clrMap?: Record<string, string>;
+	clrMap?: Record<string, string> | undefined;
 	/**
 	 * Notes text defaults from `<p:notesStyle>` (`CT_TextListStyle`, ECMA-376
 	 * §19.3.1.34): the same `a:defPPr` + `a:lvl1pPr`..`a:lvl9pPr` shape as
@@ -101,7 +101,7 @@ export interface PptxHandoutMaster {
 	/** File path within the PPTX archive. */
 	path: string;
 	/** Background colour of the handout master. */
-	backgroundColor?: string;
+	backgroundColor?: string | undefined;
 	/** Background image data URL. */
 	backgroundImage?: string;
 	/** Crop, tiling and image effects authored on the background blip fill. */
@@ -115,7 +115,7 @@ export interface PptxHandoutMaster {
 	/** Header/footer flags from `<p:hf>` on the handout master (P-H3). */
 	headerFooter?: PptxHeaderFooterFlags;
 	/** Colour map from `<p:clrMap>` (12 alias attributes). Applied at save time. */
-	clrMap?: Record<string, string>;
+	clrMap?: Record<string, string> | undefined;
 }
 
 /**
@@ -151,23 +151,23 @@ export interface PptxSlideMaster {
 	/** File path within the PPTX archive. */
 	path: string;
 	/** Human-readable name if available. */
-	name?: string;
+	name?: string | undefined;
 	/** Background colour of the slide master. */
-	backgroundColor?: string;
+	backgroundColor?: string | undefined;
 	/** Background image data URL for the slide master. */
 	backgroundImage?: string;
 	/** Crop, tiling and image effects authored on the background blip fill. */
 	backgroundImageProperties?: PptxImageProperties;
 	/** Theme file path this master references. */
-	themePath?: string;
+	themePath?: string | undefined;
 	/** Layout paths associated with this master. */
-	layoutPaths?: string[];
+	layoutPaths?: string[] | undefined;
 	/** Placeholder shapes on the master. */
-	placeholders?: PptxPlaceholderFrame[];
+	placeholders?: PptxPlaceholderFrame[] | undefined;
 	/** Parsed element shapes on the master slide (for master view rendering). */
 	elements?: PptxElement[];
 	/** Parsed slide layout objects associated with this master. */
-	layouts?: PptxSlideLayout[];
+	layouts?: PptxSlideLayout[] | undefined;
 	/** Text styles from `p:txStyles` — title, body, and other text defaults. */
 	txStyles?: PptxMasterTextStyles;
 	/** Header/footer flags from `<p:hf>` on this master (P-H3). */
@@ -184,7 +184,7 @@ export interface PptxSlideMaster {
 	 *
 	 * ECMA-376 §19.3.1.38 (CT_SlideMaster).
 	 */
-	preserve?: boolean;
+	preserve?: boolean | undefined;
 }
 
 /**
@@ -319,5 +319,5 @@ export interface PptxThemeOption {
 	/** File path within the PPTX archive (e.g. `ppt/theme/theme2.xml`). */
 	path: string;
 	/** Human-readable theme name from `a:theme/@name`, when present. */
-	name?: string;
+	name?: string | undefined;
 }

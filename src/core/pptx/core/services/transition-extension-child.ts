@@ -105,7 +105,12 @@ const P14_REQUIRED_LEFT_RIGHT: ReadonlySet<string> = new Set([
 /** `<p14:ferris dir="l"/>`, `<p14:reveal dir="r"/>`, ... for an Office 2010 transition. */
 export function buildP14DirectChild(
 	transitionType: string,
-	details: { direction?: string; orient?: string; pattern?: string; spokes?: number },
+	details: {
+		direction?: string | undefined;
+		orient?: string | undefined;
+		pattern?: string | undefined;
+		spokes?: number | undefined;
+	},
 	context: ExtensionChildContext,
 ): ExtensionChild {
 	// Cube, Rotate, Box and Orbit are all `<p14:prism/>`; only the flags differ.

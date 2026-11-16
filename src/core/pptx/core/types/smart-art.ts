@@ -102,7 +102,7 @@ export type PptxSmartArtConnection = DiagramConnection;
  */
 export interface PptxSmartArtDrawingShape extends DiagramShapeView, PptxCustomPathProperties {
 	/** Standard rich-text segments projected from the associated SmartArt node. */
-	textSegments?: TextSegment[];
+	textSegments?: TextSegment[] | undefined;
 	/**
 	 * 3D scene (camera/light rig/backdrop) from `dsp:spPr/a:scene3d`, when this
 	 * cached shape carries its own per-shape camera. Bevel quick styles
@@ -112,20 +112,20 @@ export interface PptxSmartArtDrawingShape extends DiagramShapeView, PptxCustomPa
 	 * on the whole diagram (see `PptxSmartArtQuickStyle.scene3d`) and leave this
 	 * undefined on every shape.
 	 */
-	scene3d?: Pptx3DScene;
+	scene3d?: Pptx3DScene | undefined;
 	/**
 	 * 3D extrusion/bevel/contour/material from `dsp:spPr/a:sp3d`. PowerPoint
 	 * caches this fully resolved (from the quick style's per-label `dgm:sp3d`)
 	 * on every shape for every non-flat quick style, bevel or scene alike.
 	 */
-	shape3d?: Pptx3DShape;
+	shape3d?: Pptx3DShape | undefined;
 	/**
 	 * Text-body 3D extrusion/bevel from `dsp:txBody/a:bodyPr/a:sp3d`. Rare:
 	 * present when a quick style extrudes the label text itself off the shape
 	 * face (e.g. Bird's Eye Scene: `extrusionH="28000"`), rather than only the
 	 * shape body.
 	 */
-	text3d?: Text3DStyle;
+	text3d?: Text3DStyle | undefined;
 }
 
 // Chrome types (PptxSmartArtChrome, PptxSmartArtRawBackgroundFill) live in
@@ -155,51 +155,51 @@ export type { PptxSmartArtChrome, PptxSmartArtRawBackgroundFill } from './smart-
  */
 export interface PptxSmartArtData extends DiagramData {
 	/** Source picture identities and original definitions retained across structural edits. */
-	pictureLayoutSource?: import('../../../diagram/layout-preview').DiagramLayoutSource;
+	pictureLayoutSource?: import('../../../diagram/layout-preview').DiagramLayoutSource | undefined;
 	/** Resolved host media, keyed by stable package part path. */
-	pictureUrls?: Record<string, string>;
-	pictureScheme?: Record<string, string>;
-	pictureSizes?: Record<string, { width: number; height: number }>;
+	pictureUrls?: Record<string, string> | undefined;
+	pictureScheme?: Record<string, string> | undefined;
+	pictureSizes?: Record<string, { width: number; height: number }> | undefined;
 	nodes: PptxSmartArtNode[];
 	/** Pre-computed shapes from `ppt/diagrams/drawing*.xml`. */
 	drawingShapes?: PptxSmartArtDrawingShape[] | undefined;
 	/** Background and outline chrome from `dgm:bg` / `dgm:whole`. */
-	chrome?: PptxSmartArtChrome;
+	chrome?: PptxSmartArtChrome | undefined;
 	/** Quick style from `ppt/diagrams/quickStyles*.xml`. */
-	quickStyle?: PptxSmartArtQuickStyle;
+	quickStyle?: PptxSmartArtQuickStyle | undefined;
 	/** Editable metadata from the related DiagramML layout definition. */
-	layoutDefinition?: PptxSmartArtLayoutDefinition;
+	layoutDefinition?: PptxSmartArtLayoutDefinition | undefined;
 	/** Relationship ID for the diagram data part (for round-trip save). */
-	dataRelId?: string;
+	dataRelId?: string | undefined;
 	/** Relationship ID for the diagram layout part. */
-	layoutRelId?: string;
+	layoutRelId?: string | undefined;
 	/** Relationship ID for the drawing part. */
-	drawingRelId?: string;
+	drawingRelId?: string | undefined;
 	/** Relationship ID for the colours part. */
-	colorsRelId?: string;
+	colorsRelId?: string | undefined;
 	/** Relationship ID for the quick-styles part. */
-	styleRelId?: string;
+	styleRelId?: string | undefined;
 	/**
 	 * `uniqueId` of the built-in PowerPoint layout whose definition was applied by a layout swap
 	 * (`ooxml-core/pptx/smartart-layouts`). Save writes that definition as the layout part.
 	 */
-	builtinLayoutId?: string;
+	builtinLayoutId?: string | undefined;
 	/**
 	 * A built-in colour definition (`dgm:colorsDef` XML, from `ooxml-core/diagram/builtin`) picked
 	 * in Change Colors. Save writes it as the colours part, replacing the old one as PowerPoint
 	 * does, and records its `uniqueId` on the document point.
 	 */
-	builtinColorsXml?: string;
+	builtinColorsXml?: string | undefined;
 	/** A built-in quick-style definition (`dgm:styleDef` XML) picked in SmartArt Styles; as above. */
-	builtinQuickStyleXml?: string;
+	builtinQuickStyleXml?: string | undefined;
 	/** Internal save hint: the layout definition changed in the editor. */
-	layoutDirty?: boolean;
+	layoutDirty?: boolean | undefined;
 	/** Internal save hint: typed layout-definition metadata changed. */
-	layoutDefinitionDirty?: boolean;
+	layoutDefinitionDirty?: boolean | undefined;
 	/** Internal save hint: quick-style definition metadata changed. */
-	quickStyleDirty?: boolean;
+	quickStyleDirty?: boolean | undefined;
 	/** Internal save hint: color-transform definition metadata changed. */
-	colorTransformDirty?: boolean;
+	colorTransformDirty?: boolean | undefined;
 	/** Internal save hint: cached drawing geometry or text changed in the editor. */
-	drawingDirty?: boolean;
+	drawingDirty?: boolean | undefined;
 }

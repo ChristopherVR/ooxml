@@ -33,11 +33,11 @@ export interface PptxChartPivotFormat {
 	 * for the raw fallback.
 	 */
 	marker?: PptxChartMarker;
-	shapePropertiesXml?: XmlObject | null;
-	txPrXml?: XmlObject | null;
-	markerXml?: XmlObject | null;
-	dataLabelXml?: XmlObject | null;
-	extensionListXml?: XmlObject | null;
+	shapePropertiesXml?: XmlObject | null | undefined;
+	txPrXml?: XmlObject | null | undefined;
+	markerXml?: XmlObject | null | undefined;
+	dataLabelXml?: XmlObject | null | undefined;
+	extensionListXml?: XmlObject | null | undefined;
 	rawXml?: XmlObject;
 }
 

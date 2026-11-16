@@ -15,6 +15,7 @@
  * @module core/services/animation-effect-filter-parsing
  */
 import type { PptxAnimationEffectFilter, XmlObject } from '../types';
+import { at } from '../../../geometry/indexed';
 
 /** Match a single `family(subtype)` or bare `family` filter token. */
 const FILTER_TOKEN_RE = /^([A-Za-z]+)(?:\(([^)]*)\))?$/;
@@ -25,7 +26,9 @@ const FILTER_TOKEN_RE = /^([A-Za-z]+)(?:\(([^)]*)\))?$/;
  * subtype. Returns `undefined` when the token does not match the expected
  * `name` or `name(subtype)` shape.
  */
-export function parseFilterToken(raw: string): { family: string; subtype?: string } | undefined {
+export function parseFilterToken(
+	raw: string,
+): { family: string; subtype?: string | undefined } | undefined {
 	const trimmed = raw.trim();
 	if (!trimmed) {
 		return undefined;
@@ -34,7 +37,7 @@ export function parseFilterToken(raw: string): { family: string; subtype?: strin
 	if (!match) {
 		return undefined;
 	}
-	const family = match[1].toLowerCase();
+	const family = at(match, 1).toLowerCase();
 	const subtypeToken = match[2];
 	const subtype = subtypeToken !== undefined && subtypeToken !== '' ? subtypeToken : undefined;
 	return { family, subtype };

@@ -32,19 +32,19 @@ const TIME_NODE_EVENTS = new Set(['onBegin', 'onEnd', 'begin', 'end']);
  */
 export interface AnimationGroupContext {
 	/** Whether the enclosing click-level group starts without a click. */
-	groupAutoStart?: boolean;
+	groupAutoStart?: boolean | undefined;
 	/** Index of the enclosing effect-wrapper `p:par`. */
-	parGroupIndex?: number;
+	parGroupIndex?: number | undefined;
 	/** Absolute start offset of the enclosing wrapper from its click group. */
-	parGroupDelayMs?: number;
+	parGroupDelayMs?: number | undefined;
 	/** Shared monotonic counter used to mint wrapper indexes. */
 	parCounter: { next: number };
 	/** `p:seq/@concurrent` of the innermost enclosing sequence, if any. */
-	seqConcurrent?: boolean;
+	seqConcurrent?: boolean | undefined;
 	/** `p:seq/@nextAc` of the innermost enclosing sequence, if any. */
-	seqNextAction?: 'none' | 'seek';
+	seqNextAction?: 'none' | 'seek' | undefined;
 	/** `p:seq/@prevAc` of the innermost enclosing sequence, if any. */
-	seqPrevAction?: 'none' | 'skipTimeNode';
+	seqPrevAction?: 'none' | 'skipTimeNode' | undefined;
 }
 
 /** A fresh root context for one slide's timing tree. */
@@ -158,7 +158,7 @@ export function childGroupContext(
 	cTn: XmlObject | undefined,
 	options: {
 		isClickLevelGroup: boolean;
-		mainSequence?: { autoStart: boolean; id: string };
+		mainSequence?: { autoStart: boolean; id: string } | undefined;
 	},
 ): AnimationGroupContext {
 	if (options.isClickLevelGroup) {

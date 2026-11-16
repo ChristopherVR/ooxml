@@ -90,7 +90,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		slidePath: string,
 		expected: PlaceholderInfo | null,
 		layoutPath = this.resolveLayoutPathForSlide(slidePath),
-	): { layout?: PlaceholderNodeContext; master?: PlaceholderNodeContext } {
+	): { layout?: PlaceholderNodeContext | undefined; master?: PlaceholderNodeContext | undefined } {
 		if (!layoutPath) {
 			return {};
 		}

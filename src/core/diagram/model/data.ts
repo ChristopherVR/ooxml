@@ -79,23 +79,23 @@ export type DiagramLayoutPreset =
  */
 export interface DiagramPresLayoutVars {
 	/** Flow direction (`dgm:dir`): "norm" (default) or "rev" (reversed/RTL). */
-	direction?: 'norm' | 'rev';
+	direction?: 'norm' | 'rev' | undefined;
 	/** Hierarchy branch style (`dgm:hierBranch`): std/init/l/r/hang. */
-	hierarchyBranch?: 'std' | 'init' | 'l' | 'r' | 'hang';
+	hierarchyBranch?: 'std' | 'init' | 'l' | 'r' | 'hang' | undefined;
 	/** Org-chart mode enabled (`dgm:orgChart`). */
-	orgChart?: boolean;
+	orgChart?: boolean | undefined;
 	/** Maximum children per node (`dgm:chMax`, -1 = unbounded). */
-	childMax?: number;
+	childMax?: number | undefined;
 	/** Preferred children per node (`dgm:chPref`, -1 = unbounded). */
-	childPreferred?: number;
+	childPreferred?: number | undefined;
 	/** Whether bullets are enabled (`dgm:bulletEnabled`). */
-	bulletEnabled?: boolean;
+	bulletEnabled?: boolean | undefined;
 	/** Animation-by-level setting (`dgm:animLvl`). */
-	animationLevel?: string;
+	animationLevel?: string | undefined;
 	/** Animate-one setting (`dgm:animOne`). */
-	animateOne?: string;
+	animateOne?: string | undefined;
 	/** Allowed resize handles (`dgm:resizeHandles`). */
-	resizeHandles?: string;
+	resizeHandles?: string | undefined;
 }
 
 /**
@@ -124,18 +124,18 @@ export interface DiagramData {
 	/** Named layout preset (used when creating new SmartArt). */
 	layout?: DiagramLayoutPreset | undefined;
 	/** Colour scheme for the SmartArt graphic. */
-	colorScheme?: DiagramColorScheme;
+	colorScheme?: DiagramColorScheme | undefined;
 	/** Visual style intensity. */
-	style?: DiagramStyleIntensity;
+	style?: DiagramStyleIntensity | undefined;
 	nodes: DiagramNode[];
 	/** Connections between data-model nodes. */
-	connections?: DiagramConnection[];
+	connections?: DiagramConnection[] | undefined;
 	/** Colour transform from the diagram colours part. */
-	colorTransform?: DiagramColorTransform;
+	colorTransform?: DiagramColorTransform | undefined;
 	/** Quick style from the diagram quick-style part. */
-	quickStyle?: DiagramQuickStyle;
+	quickStyle?: DiagramQuickStyle | undefined;
 	/** Editable metadata from the related DiagramML layout definition. */
-	layoutDefinition?: DiagramLayoutDefinition;
+	layoutDefinition?: DiagramLayoutDefinition | undefined;
 	/**
 	 * Presentation layout variables (direction, hierarchy branch, org-chart,
 	 * child limits, bullets) from `dgm:presLayoutVars` / layout `dgm:varLst`.
@@ -148,5 +148,5 @@ export interface DiagramData {
 	 * `a:latin` override is present (the common case; the font-fit is the one
 	 * consumer). Undefined when the theme carries no font scheme at all.
 	 */
-	themeMinorFont?: string;
+	themeMinorFont?: string | undefined;
 }

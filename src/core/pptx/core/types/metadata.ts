@@ -34,37 +34,37 @@ export interface PptxComment {
 	/** Storage vocabulary used by this comment. Omitted means legacy PresentationML. */
 	format?: 'legacy' | 'modern';
 	/** Stable GUID author identifier used by Office 2021 modern comments. */
-	authorId?: string;
+	authorId?: string | undefined;
 	/** Optional parent comment id for reply threading metadata. */
 	parentId?: string;
-	author?: string;
-	createdAt?: string;
-	x?: number;
-	y?: number;
+	author?: string | undefined;
+	createdAt?: string | undefined;
+	x?: number | undefined;
+	y?: number | undefined;
 	/** Whether this comment has been resolved/marked done. */
-	resolved?: boolean;
+	resolved?: boolean | undefined;
 	/** Native p188 status token. */
-	status?: 'active' | 'resolved' | 'closed';
+	status?: 'active' | 'resolved' | 'closed' | undefined;
 	/** Modern comment classification tags and author IDs that liked the comment. */
-	tags?: string[];
-	likes?: string[];
-	startDate?: string;
-	dueDate?: string;
-	assignedTo?: string[];
+	tags?: string[] | undefined;
+	likes?: string[] | undefined;
+	startDate?: string | undefined;
+	dueDate?: string | undefined;
+	assignedTo?: string[] | undefined;
 	/** Task completion in thousandths of a percent, from 0 through 100000. */
-	complete?: number;
-	priority?: number;
-	title?: string;
+	complete?: number | undefined;
+	priority?: number | undefined;
+	title?: string | undefined;
 	/** Modern threaded comment support (p15:threadingInfo). */
 	threadId?: string;
 	/** `@`-mentions, indexed into `text` (see {@link PptxCommentMention}). */
-	mentions?: PptxCommentMention[];
+	mentions?: PptxCommentMention[] | undefined;
 	/** Replies to this comment (for modern threaded comments). */
-	replies?: PptxComment[];
+	replies?: PptxComment[] | undefined;
 	/** ID of the element this comment is associated with (if any). */
 	elementId?: string;
 	/** Original `p:cm` subtree, retained for unknown child and extension preservation. */
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }
 
 /** Office 2021 comment author from the p188 Author part. */
@@ -134,9 +134,9 @@ export interface PptxCompatibilityWarning {
 	message: string;
 	severity: 'info' | 'warning';
 	scope: 'presentation' | 'slide' | 'element' | 'save';
-	slideId?: string;
-	elementId?: string;
-	xmlPath?: string;
+	slideId?: string | undefined;
+	elementId?: string | undefined;
+	xmlPath?: string | undefined;
 }
 
 // ==========================================================================
@@ -175,9 +175,9 @@ export interface PptxTagCollection {
 	/** Package owner of the tags relationship. New collections default to presentation. */
 	owner?: 'presentation' | 'slide' | 'part';
 	/** Source OPC part that owns the relationship, e.g. ppt/slides/slide1.xml. */
-	sourcePartPath?: string;
+	sourcePartPath?: string | undefined;
 	/** Durable relationship identifier from the owning part. */
-	relationshipId?: string;
+	relationshipId?: string | undefined;
 	/** Tags in this collection. */
 	tags: PptxTag[];
 	/** Parsed tag-list XML retained for unknown-node preservation. */
@@ -263,41 +263,41 @@ export interface PptxCoreProperties {
  */
 export interface PptxAppProperties {
 	/** Application name (e.g. "Microsoft Office PowerPoint"). */
-	application?: string;
+	application?: string | undefined;
 	/** Application version string. */
-	appVersion?: string;
+	appVersion?: string | undefined;
 	/** Presentation format (e.g. "On-screen Show (16:9)"). */
-	presentationFormat?: string;
+	presentationFormat?: string | undefined;
 	/** Total number of slides. */
-	slides?: number;
+	slides?: number | undefined;
 	/** Number of hidden slides. */
-	hiddenSlides?: number;
+	hiddenSlides?: number | undefined;
 	/** Number of notes slides. */
-	notes?: number;
+	notes?: number | undefined;
 	/** Total editing time in minutes. */
-	totalTime?: number;
+	totalTime?: number | undefined;
 	/** Number of words. */
-	words?: number;
+	words?: number | undefined;
 	/** Number of paragraphs. */
-	paragraphs?: number;
+	paragraphs?: number | undefined;
 	/** Company name. */
-	company?: string;
+	company?: string | undefined;
 	/** Manager name. */
-	manager?: string;
+	manager?: string | undefined;
 	/** Template name. */
-	template?: string;
+	template?: string | undefined;
 	/** Hyperlink base URL. */
-	hyperlinkBase?: string;
+	hyperlinkBase?: string | undefined;
 	/** Document security bitmask (`<DocSecurity>`). */
-	docSecurity?: number;
+	docSecurity?: number | undefined;
 	/** Number of multimedia clips (`<MMClips>`). */
-	mmClips?: number;
+	mmClips?: number | undefined;
 	/** Whether thumbnail images were scaled to fit (`<ScaleCrop>`). */
-	scaleCrop?: boolean;
+	scaleCrop?: boolean | undefined;
 	/** Whether hyperlinks are current (`<LinksUpToDate>`). */
-	linksUpToDate?: boolean;
+	linksUpToDate?: boolean | undefined;
 	/** Whether the document is shared (`<SharedDoc>`). */
-	sharedDoc?: boolean;
+	sharedDoc?: boolean | undefined;
 	/** Whether hyperlinks changed since last save (`<HyperlinksChanged>`). */
-	hyperlinksChanged?: boolean;
+	hyperlinksChanged?: boolean | undefined;
 }

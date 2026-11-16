@@ -120,24 +120,24 @@ export function extractSoundAction(cTn: XmlObject): {
 }
 
 export function extractChildMotionValues(childTnList: XmlObject | undefined): {
-	motionPath?: string;
-	motionOrigin?: string;
-	motionPathRotateAuto?: boolean;
-	motionPathEditMode?: string;
-	motionPtsTypes?: string;
-	motionPathRotationAngle?: number;
-	motionPathRotationCenterX?: number;
-	motionPathRotationCenterY?: number;
-	rotationBy?: number;
-	rotationFrom?: number;
-	rotationTo?: number;
-	scaleByX?: number;
-	scaleByY?: number;
-	scaleFromX?: number;
-	scaleFromY?: number;
-	scaleToX?: number;
-	scaleToY?: number;
-	scaleZoomContents?: boolean;
+	motionPath?: string | undefined;
+	motionOrigin?: string | undefined;
+	motionPathRotateAuto?: boolean | undefined;
+	motionPathEditMode?: string | undefined;
+	motionPtsTypes?: string | undefined;
+	motionPathRotationAngle?: number | undefined;
+	motionPathRotationCenterX?: number | undefined;
+	motionPathRotationCenterY?: number | undefined;
+	rotationBy?: number | undefined;
+	rotationFrom?: number | undefined;
+	rotationTo?: number | undefined;
+	scaleByX?: number | undefined;
+	scaleByY?: number | undefined;
+	scaleFromX?: number | undefined;
+	scaleFromY?: number | undefined;
+	scaleToX?: number | undefined;
+	scaleToY?: number | undefined;
+	scaleZoomContents?: boolean | undefined;
 } {
 	let motionPath: string | undefined;
 	let motionOrigin: string | undefined;
@@ -468,8 +468,8 @@ export function parseTimingPercentFraction(raw: unknown): number | undefined {
 }
 
 export function extractRepeatInfo(cTn: XmlObject): {
-	repeatCount?: number;
-	autoReverse?: boolean;
+	repeatCount?: number | undefined;
+	autoReverse?: boolean | undefined;
 } {
 	let repeatCount: number | undefined;
 	let autoReverse: boolean | undefined;

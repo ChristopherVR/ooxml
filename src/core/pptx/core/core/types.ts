@@ -82,7 +82,7 @@ export interface PptxHandlerLoadOptions {
 	 * above 65,536) throws `RangeError` before any work. `PptxHandler.loadFromJson`
 	 * applies the same limits, `maxInputBytes` to the UTF-8 size of its text.
 	 */
-	limits?: PptxLoadLimits;
+	limits?: PptxLoadLimits | undefined;
 	/**
 	 * Called once every slide is parsed, before the rest of the deck (notes
 	 * and handout masters, theme variants, document properties, thumbnail)
@@ -233,7 +233,7 @@ export interface PptxHandlerSaveOptions {
 	 * scheme is embedded directly in the `.ppt` stream rather than wrapping an
 	 * already-produced package.
 	 */
-	pptPassword?: string;
+	pptPassword?: string | undefined;
 	/**
 	 * Rasteriser for SVG pictures with no raster fallback in a `'ppt'`-format
 	 * save; ignored for every other {@link outputFormat}. When omitted the

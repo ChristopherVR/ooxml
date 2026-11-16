@@ -15,6 +15,7 @@ import { parseOverrideClrMapping } from './color-scheme-index';
 import { parseMasterColorMap } from './master-color-map';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeDocProperties';
 import { parseHeaderFooterFlags } from './PptxHandlerRuntimeMasterElements';
+import { at } from '../../../../geometry/indexed';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	/**
@@ -275,7 +276,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				return undefined;
 			}
 
-			const path = files[0].name;
+			const path = at(files, 0).name;
 			const xml = (await this.readPartText(path)) ?? '';
 			const data = this.parser.parse(xml) as XmlObject;
 			const master = data?.['p:handoutMaster'] as XmlObject | undefined;
@@ -312,7 +313,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				return undefined;
 			}
 
-			const path = files[0].name;
+			const path = at(files, 0).name;
 			const xml = (await this.readPartText(path)) ?? '';
 			const data = this.parser.parse(xml) as XmlObject;
 			const master = data?.['p:notesMaster'] as XmlObject | undefined;

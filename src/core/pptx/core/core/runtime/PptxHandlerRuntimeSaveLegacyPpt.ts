@@ -180,6 +180,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			);
 			deck.master = master;
 		}
-		return buildPptFile(deck, { password: options?.pptPassword });
+		return buildPptFile(deck, {
+			...(options?.pptPassword !== undefined && { password: options?.pptPassword }),
+		});
 	}
 }

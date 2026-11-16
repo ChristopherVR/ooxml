@@ -21,7 +21,7 @@ function dataUrlMimeType(dataUrl: string): string | undefined {
 }
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
-	private pendingOleContentTypes?: Map<string, string>;
+	private pendingOleContentTypes?: Map<string, string> | undefined;
 
 	private nextOleEmbeddingPath(extension: string): string {
 		const used = new Set<number>();

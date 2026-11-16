@@ -30,6 +30,7 @@ import { applyChartAxisPlacement, chartGridlinesLine } from './chart-axis-placem
 import type { ChartFontInput } from './chart-content-input';
 import { chartFontInput } from './chart-input-values';
 import { clearChartSeriesPointPaint } from './chart-series-point-paint';
+import { at } from '../../../../geometry/indexed';
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -156,7 +157,7 @@ export function updateChartSeriesValues(
 	values: number[],
 ): void {
 	validateSeriesIndex(element, seriesIndex);
-	element.chartData!.series[seriesIndex].values = values;
+	at(element.chartData!.series, seriesIndex).values = values;
 }
 
 /**
@@ -327,7 +328,7 @@ export function setChartSeriesTrendline(
 	trendline: PptxChartTrendline | null,
 ): void {
 	validateSeriesIndex(element, seriesIndex);
-	element.chartData!.series[seriesIndex].trendlines = trendline ? [trendline] : [];
+	at(element.chartData!.series, seriesIndex).trendlines = trendline ? [trendline] : [];
 }
 
 /**
@@ -351,7 +352,7 @@ export function setChartSeriesErrorBars(
 	errBars: PptxChartErrBars | null,
 ): void {
 	validateSeriesIndex(element, seriesIndex);
-	element.chartData!.series[seriesIndex].errBars = errBars ? [errBars] : [];
+	at(element.chartData!.series, seriesIndex).errBars = errBars ? [errBars] : [];
 }
 
 /** Axis kinds that can be addressed by {@link setChartAxis}. */
@@ -861,7 +862,7 @@ export function setChartSeriesChartType(
 ): void {
 	validateSeriesIndex(element, seriesIndex);
 	const data = element.chartData!;
-	data.series[seriesIndex].seriesChartType = seriesType ?? undefined;
+	at(data.series, seriesIndex).seriesChartType = seriesType ?? undefined;
 	// Promote to combo when at least two distinct effective types exist.
 	const effective = new Set(
 		data.series.map((s) => s.seriesChartType ?? data.chartType).filter((t) => t !== 'combo'),

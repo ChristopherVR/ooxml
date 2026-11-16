@@ -113,7 +113,7 @@ export async function validateOpcContentTypes(
 		}
 	}
 	const packageNames = new Map<string, string>();
-	for (const zipPath of Object.keys(zip.files).filter((entry) => !zip.files[entry].dir)) {
+	for (const zipPath of Object.keys(zip.files).filter((entry) => !zip.files[entry]?.dir)) {
 		const key = canonicalPartName(`/${zipPath}`);
 		const previous = packageNames.get(key);
 		if (previous && previous !== zipPath) {

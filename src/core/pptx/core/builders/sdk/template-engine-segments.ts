@@ -25,6 +25,7 @@ import {
 	processInlineConditionals,
 } from './template-engine-helpers';
 import type { TemplateData } from './template-engine-types';
+import { at } from '../../../../geometry/indexed';
 
 // ---------------------------------------------------------------------------
 // Cross-segment token replacement
@@ -83,7 +84,7 @@ export function replaceTokensAcrossSegments(segments: TextSegment[], data: Templ
 	}> = [];
 	let match: RegExpExecArray | null;
 	while ((match = PLACEHOLDER_RE.exec(fullText)) !== null) {
-		const key = match[1].trim();
+		const key = at(match, 1).trim();
 		// Skip block tags
 		if (
 			EACH_OPEN_RE.test(key) ||
@@ -141,8 +142,8 @@ export function replaceTokensAcrossSegments(segments: TextSegment[], data: Templ
 
 			// Clear fully-spanned middle segments
 			for (let s = startInfo.segmentIndex + 1; s < endInfo.segmentIndex; s++) {
-				if (!segments[s].isParagraphBreak) {
-					segments[s].text = '';
+				if (!at(segments, s).isParagraphBreak) {
+					at(segments, s).text = '';
 				}
 			}
 
@@ -245,6 +246,6 @@ export function extractPlaceholdersFromText(text: string, found: Set<string>): v
 	PLACEHOLDER_RE.lastIndex = 0;
 	let match: RegExpExecArray | null;
 	while ((match = PLACEHOLDER_RE.exec(text)) !== null) {
-		found.add(match[1].trim());
+		found.add(at(match, 1).trim());
 	}
 }

@@ -12,6 +12,7 @@ import {
 } from './pptx-validator-slide-parts';
 import { validateSlideTransitions } from './pptx-validator-transitions';
 import type { ValidationConformance, ValidationIssue } from './pptx-validator-types';
+import { at } from '../../../geometry/indexed';
 
 type Dialect = ValidationConformance['dialect'];
 
@@ -91,7 +92,7 @@ function validateDrawingDatatypes(xml: string, path: string, issues: ValidationI
 	}
 	for (const match of xml.matchAll(/<a:ext\b([^>]*)>/g)) {
 		for (const attr of ['cx', 'cy']) {
-			const value = match[1].match(new RegExp(`\\b${attr}\\s*=\\s*["']([^"']+)["']`))?.[1];
+			const value = at(match, 1).match(new RegExp(`\\b${attr}\\s*=\\s*["']([^"']+)["']`))?.[1];
 			if (value !== undefined && (!/^\d+$/.test(value) || Number(value) > 27273042329600)) {
 				issue(
 					issues,
@@ -128,7 +129,7 @@ export async function validateEcmaRules(
 ): Promise<ValidationConformance> {
 	const dialects = new Set<Dialect>();
 	const paths = Object.keys(zip.files).filter(
-		(path) => /^ppt\/.*\.xml$/.test(path) && !zip.files[path].dir,
+		(path) => /^ppt\/.*\.xml$/.test(path) && !zip.files[path]?.dir,
 	);
 	for (const path of paths) {
 		const xml = await readZipText(zip, path);

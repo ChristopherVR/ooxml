@@ -27,6 +27,7 @@ import {
 	ensureMathNamespaceOnSlideRoot,
 	slideContainsMathElement,
 } from './table-structural-ops';
+import { at } from '../../../../geometry/indexed';
 
 const shapeIdValidator = new PptxShapeIdValidator();
 
@@ -46,7 +47,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				.split(/\s+/)
 				.filter(Boolean)
 				.slice(0, 2)
-				.map((token) => token[0].toUpperCase())
+				.map((token) => at(token, 0).toUpperCase())
 				.join('');
 			this.modernCommentAuthors.set(id, {
 				id,

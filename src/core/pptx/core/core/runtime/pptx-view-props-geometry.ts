@@ -45,9 +45,9 @@ function parseRatio(node: XmlObject | undefined): { n: number; d: number } | und
 }
 
 export function parseCommonView(node: XmlObject): {
-	origin?: PptxViewOrigin;
-	scale?: PptxViewScale;
-	variableScale?: boolean;
+	origin?: PptxViewOrigin | undefined;
+	scale?: PptxViewScale | undefined;
+	variableScale?: boolean | undefined;
 } {
 	const common = viewChild(node, 'cViewPr') ?? node;
 	const originNode = viewChild(common, 'origin');

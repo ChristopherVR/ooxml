@@ -9,6 +9,7 @@ import type {
 import { getSubstituteFontFamily } from '../../core/utils/font-substitution';
 import { escapeHtml as escapeHtmlAttr } from '../base';
 import type { ElementProcessor, ElementProcessorContext } from './ElementProcessor';
+import { at } from '../../../geometry/indexed';
 
 /**
  * Allowlist of CSS named colors permitted in inline `style="..."` output.
@@ -387,7 +388,7 @@ export class TableElementProcessor implements ElementProcessor {
 		const hasHeader = tableData.firstRowHeader !== false;
 
 		for (let ri = 0; ri < rows.length; ri++) {
-			const cells = rows[ri].cells.map((cell) => {
+			const cells = at(rows, ri).cells.map((cell) => {
 				const text = this.getCellFormattedText(cell);
 				return this.escapeMarkdownTableCell(text);
 			});

@@ -135,14 +135,14 @@ export interface PersistModernCommentPackageInput {
 	parser: XMLParser;
 	xmlBuilder: XMLBuilder;
 	authors: PptxModernCommentAuthor[];
-	authorRoot?: XmlObject;
-	authorPartPath?: string;
-	authorRelationshipId?: string;
+	authorRoot?: XmlObject | undefined;
+	authorPartPath?: string | undefined;
+	authorRelationshipId?: string | undefined;
 }
 
 export async function persistModernCommentPackage(
 	init: PersistModernCommentPackageInput,
-): Promise<{ authorPartPath?: string; authorRelationshipId?: string }> {
+): Promise<{ authorPartPath?: string; authorRelationshipId?: string | undefined }> {
 	const activeCommentPaths = init.slides
 		.filter((slide) => modernComments(slide).length > 0)
 		.map((slide) => slide.modernCommentPart?.path)

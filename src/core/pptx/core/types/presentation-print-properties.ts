@@ -15,11 +15,11 @@ export type PptxPrintColorMode = 'bw' | 'gray' | 'clr';
 
 /** PresentationML `CT_PrintProperties` (`p:prnPr`). */
 export interface PptxPresentationPrintProperties {
-	printWhat?: PptxPrintOutput | null;
-	colorMode?: PptxPrintColorMode | null;
-	hiddenSlides?: boolean | null;
-	scaleToFitPaper?: boolean | null;
-	frameSlides?: boolean | null;
+	printWhat?: PptxPrintOutput | null | undefined;
+	colorMode?: PptxPrintColorMode | null | undefined;
+	hiddenSlides?: boolean | null | undefined;
+	scaleToFitPaper?: boolean | null | undefined;
+	frameSlides?: boolean | null | undefined;
 	/** Original subtree retained for unknown attributes and `p:extLst`. */
 	rawXml?: XmlObject;
 }

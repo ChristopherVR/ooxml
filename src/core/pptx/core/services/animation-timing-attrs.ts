@@ -16,7 +16,7 @@ const RESTART_VALUES: ReadonlySet<string> = new Set(['always', 'whenNotActive', 
 export interface CTnTimingAttrs {
 	fill?: PptxNativeAnimation['fill'];
 	restart?: PptxNativeAnimation['restart'];
-	repeatDurMs?: number;
+	repeatDurMs?: number | undefined;
 	speedPct?: number;
 }
 
@@ -61,7 +61,7 @@ export function extractCTnTimingAttrs(cTn: XmlObject): CTnTimingAttrs {
 /** `@rev` / `@advAuto` from a TEXT `p:bldP` (distinct from `p:bldDgm/@rev`). */
 export interface BldPResumeAttrs {
 	buildReverse?: boolean;
-	buildAdvAutoMs?: number;
+	buildAdvAutoMs?: number | undefined;
 }
 
 export function extractBldPResumeAttrs(bldP: XmlObject): BldPResumeAttrs {

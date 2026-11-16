@@ -133,29 +133,29 @@ export interface Pptx3DShape {
 	 * or back in 3D space rather than adding depth to it, most commonly used to
 	 * stack several shapes at different depths under one `a:scene3d` camera.
 	 */
-	positionZ?: number;
+	positionZ?: number | undefined;
 	/** Extrusion height in EMU. */
-	extrusionHeight?: number;
+	extrusionHeight?: number | undefined;
 	/** Extrusion colour. */
-	extrusionColor?: string;
+	extrusionColor?: string | undefined;
 	/** Contour width in EMU. */
-	contourWidth?: number;
+	contourWidth?: number | undefined;
 	/** Contour colour. */
-	contourColor?: string;
+	contourColor?: string | undefined;
 	/** Preset material, e.g. "matte", "warmMatte", "metal". */
-	presetMaterial?: string;
+	presetMaterial?: string | undefined;
 	/** Top bevel type, e.g. "circle", "relaxedInset". */
-	bevelTopType?: string;
+	bevelTopType?: string | undefined;
 	/** Top bevel width in EMU. */
-	bevelTopWidth?: number;
+	bevelTopWidth?: number | undefined;
 	/** Top bevel height in EMU. */
-	bevelTopHeight?: number;
+	bevelTopHeight?: number | undefined;
 	/** Bottom bevel type, e.g. "circle", "relaxedInset". */
-	bevelBottomType?: string;
+	bevelBottomType?: string | undefined;
 	/** Bottom bevel width in EMU. */
-	bevelBottomWidth?: number;
+	bevelBottomWidth?: number | undefined;
 	/** Bottom bevel height in EMU. */
-	bevelBottomHeight?: number;
+	bevelBottomHeight?: number | undefined;
 }
 
 // ==========================================================================

@@ -114,7 +114,7 @@ export interface PptxChartUserShapeGroupChild {
 	 * parse. See {@link PptxChartUserShape.rawXml}'s doc for the same
 	 * contract one level up.
 	 */
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 	/** Present when `kind === 'grpSp'`: this nested group's own transform. */
 	transform?: PptxChartUserShapeGroupTransform;
 	/** Present when `kind === 'grpSp'`: this nested group's own children. */
@@ -196,7 +196,7 @@ export interface PptxChartUserShape {
 	 * for `sp`/`cxnSp`, which round-trip losslessly through their typed
 	 * fields above.
 	 */
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 	/** Present when `kind === 'grpSp'`: the group's own transform. */
 	transform?: PptxChartUserShapeGroupTransform;
 	/** Present when `kind === 'grpSp'`: the grouped children, nested arbitrarily. */

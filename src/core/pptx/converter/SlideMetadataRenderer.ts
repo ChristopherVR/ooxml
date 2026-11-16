@@ -1,5 +1,6 @@
 import type { PptxSlide } from '../core';
 import { TextSegmentRenderer } from './TextSegmentRenderer';
+import { at } from '../../geometry/indexed';
 
 /**
  * Lightweight shape mirroring the native animation fields used during
@@ -177,7 +178,7 @@ export class SlideMetadataRenderer {
 			if (trigger === 'onClick' || groups.length === 0) {
 				groups.push([item]);
 			} else {
-				groups[groups.length - 1].push(item);
+				at(groups, groups.length - 1).push(item);
 			}
 		}
 		return groups;

@@ -8,6 +8,7 @@
  */
 
 import type { PptxCustomShow, PptxSlide } from '../types/presentation';
+import { at } from '../../../geometry/indexed';
 
 /**
  * Find a custom show by name (case-insensitive) or by id.
@@ -40,7 +41,7 @@ export function resolveCustomShowSlideIndices(
 ): number[] {
 	const rIdToIndex = new Map<string, number>();
 	for (let i = 0; i < slides.length; i++) {
-		rIdToIndex.set(slides[i].rId, i);
+		rIdToIndex.set(at(slides, i).rId, i);
 	}
 
 	const indices: number[] = [];

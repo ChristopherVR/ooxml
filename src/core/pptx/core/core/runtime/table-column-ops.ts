@@ -14,6 +14,7 @@ import {
 	createDefaultXmlCell,
 	getTblFromRawXml,
 } from './table-structural-helpers';
+import { at } from '../../../../geometry/indexed';
 
 // ---------------------------------------------------------------------------
 // Add Column
@@ -43,7 +44,7 @@ export function addTableColumn(
 	tableData: PptxTableData,
 	index: number,
 	rawXml?: XmlObject,
-): { tableData: PptxTableData; rawXml?: XmlObject } {
+): { tableData: PptxTableData; rawXml?: XmlObject | undefined } {
 	const colCount = tableData.columnWidths.length;
 	const clampedIndex = Math.max(0, Math.min(index, colCount));
 
@@ -179,7 +180,7 @@ export function addTableColumn(
 
 				// Check if inside a vertical merge
 				for (let r = 0; r < ri; r++) {
-					const aboveCells = ensureArray(xmlRows[r]['a:tc'] as XmlObject | XmlObject[]);
+					const aboveCells = ensureArray(at(xmlRows, r)['a:tc'] as XmlObject | XmlObject[]);
 					// After the splice the col at clampedIndex is the new one,
 					// so we check the cell that used to be at clampedIndex (now at clampedIndex in the already-processed row).
 					if (clampedIndex < aboveCells.length) {
@@ -230,7 +231,7 @@ export function removeTableColumn(
 	tableData: PptxTableData,
 	index: number,
 	rawXml?: XmlObject,
-): { tableData: PptxTableData; rawXml?: XmlObject } {
+): { tableData: PptxTableData; rawXml?: XmlObject | undefined } {
 	const colCount = tableData.columnWidths.length;
 	if (colCount <= 1) {
 		return { tableData, rawXml };

@@ -4,6 +4,7 @@ import type JSZip from 'jszip';
 import { allNamespaceDeclarations, ECMA_NAMESPACES } from './pptx-validator-conformance-xml';
 import { extractRelationships, readZipText, tryParseXml } from './pptx-validator-helpers';
 import type { ValidationIssue } from './pptx-validator-types';
+import { at } from '../../../geometry/indexed';
 
 function add(issues: ValidationIssue[], code: string, message: string): void {
 	issues.push({ severity: 'error', code, message, path: 'ppt/presentation.xml' });
@@ -25,7 +26,7 @@ function referencedIds(xml: string, element: string): Array<string | undefined> 
 	)) {
 		let id: string | undefined;
 		for (const prefix of relPrefixes) {
-			id = elementMatch[1].match(
+			id = at(elementMatch, 1).match(
 				new RegExp(`\\b${escapeRegex(prefix)}:id\\s*=\\s*["']([^"']+)["']`),
 			)?.[1];
 			if (id) {

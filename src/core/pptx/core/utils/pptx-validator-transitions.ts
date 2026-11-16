@@ -4,6 +4,7 @@ import {
 	ECMA_NAMESPACES,
 } from './pptx-validator-conformance-xml';
 import type { ValidationIssue } from './pptx-validator-types';
+import { at } from '../../../geometry/indexed';
 
 const EFFECTS = new Set([
 	'blinds',
@@ -131,7 +132,7 @@ function validateSoundAction(
 	if (starts.length === 0) {
 		return;
 	}
-	const loop = attribute(starts[0].attributes, 'loop');
+	const loop = attribute(at(starts, 0).attributes, 'loop');
 	if (loop !== undefined && !['0', '1', 'false', 'true'].includes(loop)) {
 		add(
 			issues,
@@ -140,7 +141,7 @@ function validateSoundAction(
 			`Transition sound loop "${loop}" is not an XML boolean`,
 		);
 	}
-	const sounds = matchingElements(starts[0].body, 'snd');
+	const sounds = matchingElements(at(starts, 0).body, 'snd');
 	if (sounds.length !== 1) {
 		add(
 			issues,
@@ -150,7 +151,7 @@ function validateSoundAction(
 		);
 		return;
 	}
-	const embedPrefix = sounds[0].attributes.match(
+	const embedPrefix = at(sounds, 0).attributes.match(
 		/(?:^|\s)([\w.-]+):embed\s*=\s*["'][^"']+["']/,
 	)?.[1];
 	if (!embedPrefix || !R_NAMESPACES.has(namespaces.get(embedPrefix) ?? '')) {

@@ -62,8 +62,8 @@ export const PRSTTRANS_EXT_URI = '{D42A27DB-BD31-4B8C-83A1-F6EECF244321}';
 
 export interface P15ParseResult {
 	type: PptxTransitionType;
-	invX?: boolean;
-	invY?: boolean;
+	invX?: boolean | undefined;
+	invY?: boolean | undefined;
 }
 
 function optionalBoolean(value: unknown): boolean | undefined {

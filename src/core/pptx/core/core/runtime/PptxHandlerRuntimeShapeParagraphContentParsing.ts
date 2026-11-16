@@ -8,6 +8,7 @@ import { hasOwnFontDeclaration, paragraphContentEntries } from './paragraph-sibl
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeShapeTextParsing';
 import type { ShapeTextParsingContext, ParagraphContentResult } from './PptxHandlerRuntimeTypes';
 import { parseRubyElement } from './ruby-element-parsing';
+import { at } from '../../../../geometry/indexed';
 
 /** `a:p` children that contribute renderable content, in no particular order. */
 const PARAGRAPH_CONTENT_TAGS: ReadonlySet<string> = new Set([
@@ -520,8 +521,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			// and dropping those extra fields here silently lost the independent
 			// `buClrTx`/`buSzTx`/`buFontTx` "inherit from text" markers a paragraph
 			// may still author alongside `buNone`.
-			if (xmlHasChild(pPrRaw, 'a:buNone') && segments[firstSegmentIndex].bulletInfo === undefined) {
-				segments[firstSegmentIndex].bulletInfo = paragraphBulletInfo ?? {
+			if (
+				xmlHasChild(pPrRaw, 'a:buNone') &&
+				at(segments, firstSegmentIndex).bulletInfo === undefined
+			) {
+				at(segments, firstSegmentIndex).bulletInfo = paragraphBulletInfo ?? {
 					none: true,
 					ownedByParagraph: true,
 				};
@@ -532,7 +536,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// An authored `lvl="0"` is kept as level 0 (not dropped as the
 				// schema default) so a rewritten slide re-emits the attribute.
 				if (Number.isFinite(lvlParsed) && lvlParsed >= 0) {
-					segments[firstSegmentIndex].paragraphLevel = Math.min(Math.max(lvlParsed, 0), 8);
+					at(segments, firstSegmentIndex).paragraphLevel = Math.min(Math.max(lvlParsed, 0), 8);
 				}
 			}
 			const endParaRPrRaw = p['a:endParaRPr'];
@@ -548,13 +552,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// mutations on the writer side don't leak back into the parsed
 				// XML object that other parts of the load pipeline still hold a
 				// reference to.
-				segments[firstSegmentIndex].endParaRunProperties =
+				at(segments, firstSegmentIndex).endParaRunProperties =
 					typeof endParaRPrRaw === 'object' && endParaRPrRaw !== null
 						? { ...(endParaRPrRaw as Record<string, unknown>) }
 						: {};
 			}
 			if (entries.length === 0) {
-				segments[firstSegmentIndex].paragraphInsertionStyle = withAuthoredSplit(
+				at(segments, firstSegmentIndex).paragraphInsertionStyle = withAuthoredSplit(
 					endParaRPrRaw && typeof endParaRPrRaw === 'object'
 						? this.extractTextRunStyle(
 								endParaRPrRaw as XmlObject,
@@ -586,7 +590,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						: undefined;
 			const paragraphOwnProps = this.extractParagraphOwnProperties(p, basisFontSize);
 			if (paragraphOwnProps) {
-				segments[firstSegmentIndex].paragraphProperties = paragraphOwnProps;
+				at(segments, firstSegmentIndex).paragraphProperties = paragraphOwnProps;
 			}
 			stampParagraphMarkupFlags(segments[firstSegmentIndex], p, entries.length > 0);
 		}

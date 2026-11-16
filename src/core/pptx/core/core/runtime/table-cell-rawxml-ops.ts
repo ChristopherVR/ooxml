@@ -15,6 +15,7 @@ import { ensureXmlChild, ensureXmlChildOrCreate, ensureXmlChildren } from '../..
 import { applyCellRunStyleUpdates } from './table-cell-run-style-xml';
 import { rebuildCellTextBody, tableCellTextBodyMatches } from './table-cell-text-xml';
 import { ensureArray, getTblFromRawXml } from './table-structural-helpers';
+import { at } from '../../../../geometry/indexed';
 
 // ── Cell text update ─────────────────────────────────────────────────────
 
@@ -46,13 +47,13 @@ export function updateCellTextInRawXml(
 		return undefined;
 	}
 
-	const cells = ensureArray(rows[rowIndex]['a:tc'] as XmlObject | XmlObject[] | undefined);
+	const cells = ensureArray(at(rows, rowIndex)['a:tc'] as XmlObject | XmlObject[] | undefined);
 	if (colIndex < 0 || colIndex >= cells.length) {
 		return undefined;
 	}
 
-	cells[colIndex]['a:txBody'] = rebuildCellTextBody(
-		cells[colIndex]['a:txBody'] as XmlObject | undefined,
+	at(cells, colIndex)['a:txBody'] = rebuildCellTextBody(
+		at(cells, colIndex)['a:txBody'] as XmlObject | undefined,
 		text,
 	);
 
@@ -92,7 +93,7 @@ export function updateCellTextStyleInRawXml(
 		return undefined;
 	}
 
-	const cells = ensureArray(rows[rowIndex]['a:tc'] as XmlObject | XmlObject[] | undefined);
+	const cells = ensureArray(at(rows, rowIndex)['a:tc'] as XmlObject | XmlObject[] | undefined);
 	if (colIndex < 0 || colIndex >= cells.length) {
 		return undefined;
 	}
@@ -179,7 +180,7 @@ export function updateMergeAttrsInRawXml(
 
 	for (let rIdx = 0; rIdx < Math.min(tableData.rows.length, xmlRows.length); rIdx++) {
 		const dataRow = tableData.rows[rIdx];
-		const xmlCells = ensureArray(xmlRows[rIdx]['a:tc'] as XmlObject | XmlObject[] | undefined);
+		const xmlCells = ensureArray(at(xmlRows, rIdx)['a:tc'] as XmlObject | XmlObject[] | undefined);
 
 		for (let cIdx = 0; cIdx < Math.min(dataRow.cells.length, xmlCells.length); cIdx++) {
 			const cell = dataRow.cells[cIdx];

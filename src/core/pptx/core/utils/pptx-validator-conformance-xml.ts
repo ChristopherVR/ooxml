@@ -1,3 +1,4 @@
+import { at } from '../../../geometry/indexed';
 export const ECMA_NAMESPACES = {
 	strictP: 'http://purl.oclc.org/ooxml/presentationml/main',
 	strictA: 'http://purl.oclc.org/ooxml/drawingml/main',
@@ -48,7 +49,7 @@ export function directChildren(xml: string): string[] {
 			depth--;
 		} else {
 			if (depth === 1) {
-				children.push(match[1].split(':').pop()!);
+				children.push(at(match, 1).split(':').pop()!);
 			}
 			if (!/\/\s*>$/.test(token)) {
 				depth++;

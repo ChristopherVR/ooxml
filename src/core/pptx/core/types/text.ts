@@ -79,7 +79,7 @@ export interface TextStyle {
 	 * SDK-built text, where the flat style IS the only description and must be
 	 * written out in full.
 	 */
-	authoredRunStyle?: TextStyle;
+	authoredRunStyle?: TextStyle | undefined;
 	/**
 	 * The resolved inheritance baseline {@link authoredRunStyle} was layered
 	 * on top of (shape `a:lstStyle` -> placeholder -> layout -> master
@@ -96,7 +96,7 @@ export interface TextStyle {
 	 * Holds a reference to the per-paragraph baseline object rather than a
 	 * copy, so carrying it costs one pointer per run.
 	 */
-	inheritedRunStyle?: TextStyle;
+	inheritedRunStyle?: TextStyle | undefined;
 	/**
 	 * Snapshot of the ELEMENT-scope paragraph geometry (alignment, margins,
 	 * indent, line and paragraph spacing, tab stops, rtl, line-break flags) as
@@ -144,7 +144,7 @@ export interface TextStyle {
 	 */
 	resolvedBodyProperties?: TextStyle;
 	fontFamily?: string;
-	fontSize?: number; // in points
+	fontSize?: number | undefined; // in points
 	/** When true, some form of autofit is in effect; see {@link autoFitMode} for which. */
 	autoFit?: boolean;
 	/** Explicit autofit mode from OOXML body properties.
@@ -162,9 +162,9 @@ export interface TextStyle {
 	italic?: boolean;
 	underline?: boolean;
 	/** Specific underline style (e.g. "sng", "dbl", "wavy"). Falls back to "sng" when `underline` is true. */
-	underlineStyle?: UnderlineStyle;
+	underlineStyle?: UnderlineStyle | undefined;
 	/** Underline colour as hex string (`a:uFill` / `a:uLn`). When absent, inherits text colour. */
-	underlineColor?: string;
+	underlineColor?: string | undefined;
 	/**
 	 * When true, the source authored `<a:u val="none"/>` to explicitly suppress
 	 * underline (rather than omitting the attribute entirely). Preserved so the
@@ -203,7 +203,7 @@ export interface TextStyle {
 	/** Text outline width in px (`a:rPr > a:ln/@w` in EMU). */
 	textOutlineWidth?: number;
 	/** Text outline colour as hex string (`a:rPr > a:ln > a:solidFill`). */
-	textOutlineColor?: string;
+	textOutlineColor?: string | undefined;
 	/** Text outline dash preset (`a:rPr > a:ln > a:prstDash/@val`), e.g. `dash`; absent for solid. */
 	textOutlineDash?: string;
 	/** When true, the text body has no fill (`a:rPr > a:noFill`), producing hollow/outline-only text. */
@@ -221,7 +221,7 @@ export interface TextStyle {
 	/** Kerning threshold in hundredths of a point (`a:rPr/@kern`). 0 = none. */
 	kerning?: number;
 	/** Text highlight colour as hex string (`a:highlight`). */
-	highlightColor?: string;
+	highlightColor?: string | undefined;
 	/**
 	 * Raw colour-choice XML preserved from `a:highlight` so a themed highlight
 	 * (`a:schemeClr` / `a:sysClr` / `a:prstClr`) re-emits with its original
@@ -232,21 +232,23 @@ export interface TextStyle {
 	/** Text-level gradient fill CSS string (from `a:rPr > a:gradFill`). */
 	textFillGradient?: string;
 	/** Structured gradient stops for text fill round-trip serialization. */
-	textFillGradientStops?: Array<{
-		color: string;
-		position: number;
-		opacity?: number;
-	}>;
+	textFillGradientStops?:
+		| Array<{
+				color: string;
+				position: number;
+				opacity?: number;
+		  }>
+		| undefined;
 	/** Gradient angle in degrees for text fill round-trip. */
-	textFillGradientAngle?: number;
+	textFillGradientAngle?: number | undefined;
 	/** Gradient type for text fill round-trip ('linear' | 'radial'). */
-	textFillGradientType?: 'linear' | 'radial';
+	textFillGradientType?: 'linear' | 'radial' | undefined;
 	/** Text-level pattern fill preset (from `a:rPr > a:pattFill`). */
 	textFillPattern?: string;
 	/** Text-level pattern foreground colour. */
-	textFillPatternForeground?: string;
+	textFillPatternForeground?: string | undefined;
 	/** Text-level pattern background colour. */
-	textFillPatternBackground?: string;
+	textFillPatternBackground?: string | undefined;
 	/**
 	 * Raw `a:rPr > a:blipFill` XML, preserved verbatim for round-trip
 	 * serialization AND as the input to the image resolution pass that fills
@@ -275,7 +277,7 @@ export interface TextStyle {
 	hyperlinkAction?: string;
 	/** Whether the hyperlink target is an internal slide jump (targetSlideIndex style). */
 	hyperlinkTargetSlideIndex?: number;
-	color?: string; // hex color
+	color?: string | undefined; // hex color
 	/**
 	 * Raw XML colour-choice node preserved from `a:rPr/a:solidFill` for
 	 * round-trip serialisation. Captures `a:schemeClr` / `a:sysClr` /
@@ -292,7 +294,7 @@ export interface TextStyle {
 	 * later theme change.
 	 */
 	colorRef?: PptxThemeColorRef;
-	align?: 'left' | 'center' | 'right' | 'justify' | 'justLow' | 'dist' | 'thaiDist';
+	align?: 'left' | 'center' | 'right' | 'justify' | 'justLow' | 'dist' | 'thaiDist' | undefined;
 	/**
 	 * Vertical text-box anchor (`a:bodyPr/@anchor`, `ST_TextAnchoringType`).
 	 * `distributed`/`justified` (`dist`/`just`) stretch line spacing so the
@@ -377,7 +379,7 @@ export interface TextStyle {
 	 */
 	tabStopsExplicitEmpty?: boolean;
 	/** Body text wrapping mode from `a:bodyPr/@wrap`. */
-	textWrap?: 'square' | 'none';
+	textWrap?: 'square' | 'none' | undefined;
 	/** Preset text warp type from `a:bodyPr/a:prstTxWarp`. */
 	textWarpPreset?: PptxTextWarpPreset;
 	/** Primary adjustment value for text warp (from `a:prstTxWarp/a:avLst/a:gd` with name "adj").
@@ -728,11 +730,11 @@ export interface TextStyle {
 	// ── 3D Text (from `a:bodyPr/a:sp3d` and `a:bodyPr/a:scene3d`) ──
 
 	/** 3D extrusion/bevel settings on the text body. */
-	text3d?: Text3DStyle;
+	text3d?: Text3DStyle | undefined;
 	/** 3D scene (camera + light rig) settings on the text body (`a:bodyPr/a:scene3d`). */
 	textBodyScene3d?: Pptx3DScene;
 	/** Raw `a:scene3d` subtree used to preserve extensions and unmodelled children. */
-	textBodyScene3dXml?: XmlObject;
+	textBodyScene3dXml?: XmlObject | undefined;
 	/**
 	 * `a:bodyPr/a:flatTx` - an explicit "render this text flat" marker. `sp3d`
 	 * and `flatTx` are a mutually exclusive OOXML choice (`EG_Text3D`), so a
@@ -818,7 +820,7 @@ export interface BulletInfo {
 	/** Bullet character (e.g. "•", "-", "»") from `a:buChar`. */
 	char?: string;
 	/** Auto-numbering type (e.g. "arabicPeriod", "romanUcPeriod") from `a:buAutoNum`. */
-	autoNumType?: string;
+	autoNumType?: string | undefined;
 	/** Auto-numbering start value. */
 	autoNumStartAt?: number;
 	/**
@@ -845,7 +847,7 @@ export interface BulletInfo {
 	 */
 	paragraphIndex?: number;
 	/** Bullet font family from `a:buFont`. */
-	fontFamily?: string;
+	fontFamily?: string | undefined;
 	/**
 	 * PANOSE font-matching hint from `a:buFont/@panose`. `a:buFont` is a
 	 * CT_TextFont, the same complex type as `a:latin`/`a:ea`/`a:cs`/`a:sym`
@@ -853,23 +855,23 @@ export interface BulletInfo {
 	 * bullet's own PANOSE/pitch-family/charset decide the fallback glyph
 	 * PowerPoint substitutes when the named typeface is missing.
 	 */
-	fontPanose?: string;
+	fontPanose?: string | undefined;
 	/** Font pitch-and-family byte from `a:buFont/@pitchFamily`. */
-	fontPitchFamily?: number;
+	fontPitchFamily?: number | undefined;
 	/** Font character-set byte from `a:buFont/@charset`. */
-	fontCharset?: number;
+	fontCharset?: number | undefined;
 	/** Bullet size as percentage of text font size from `a:buSzPct`. */
-	sizePercent?: number;
+	sizePercent?: number | undefined;
 	/** Bullet size in points from `a:buSzPts`. */
-	sizePts?: number;
+	sizePts?: number | undefined;
 	/** Bullet color as hex string from `a:buClr`. */
-	color?: string;
+	color?: string | undefined;
 	/**
 	 * Raw colour-choice XML captured from `<a:buClr>` so that themed bullets
 	 * (`a:schemeClr`, `a:sysClr`, `a:prstClr`) round-trip with their original
 	 * identity rather than being flattened to `<a:srgbClr/>` on save.
 	 */
-	colorXml?: XmlObject;
+	colorXml?: XmlObject | undefined;
 	/**
 	 * Typed theme colour reference for the bullet colour, set when
 	 * {@link colorXml} is a plain `a:schemeClr`. Wins on save, same as
@@ -881,7 +883,7 @@ export interface BulletInfo {
 	/** Picture bullet: relationship ID from `a:buBlip` → `a:blip[@r:embed]`. */
 	imageRelId?: string;
 	/** Picture bullet: data URL of the embedded image. */
-	imageDataUrl?: string;
+	imageDataUrl?: string | undefined;
 	/**
 	 * Raw `<a:buBlip>` XML captured at parse time. Carries the full blipFill
 	 * subtree (`a:tile`, `a:stretch`, `a:srcRect`, `a:blip > a:extLst`) so the
@@ -942,9 +944,9 @@ export interface TextSegment {
 	text: string;
 	style: TextStyle;
 	/** When this segment originated from an `a:fld` element, stores the field type (e.g. "slidenum", "datetime"). */
-	fieldType?: string;
+	fieldType?: string | undefined;
 	/** When this segment originated from an `a:fld` element, stores the field GUID. */
-	fieldGuid?: string;
+	fieldGuid?: string | undefined;
 	/**
 	 * Original attribute name used to author the field GUID — `'uuid'` for the
 	 * `a:fld/@uuid` form authored by some legacy producers, `'id'` for the
@@ -984,7 +986,7 @@ export interface TextSegment {
 	 */
 	equationNumber?: string;
 	/** Whether this segment represents a paragraph break rather than renderable text. */
-	isParagraphBreak?: boolean;
+	isParagraphBreak?: boolean | undefined;
 	/**
 	 * Whether this segment represents a soft line break (`a:br`) rather than
 	 * a paragraph terminator. Soft line breaks remain inside the same paragraph
@@ -992,7 +994,7 @@ export interface TextSegment {
 	 *
 	 * The renderer should treat the segment text as `"\n"` when present.
 	 */
-	isLineBreak?: true;
+	isLineBreak?: true | undefined;
 	/**
 	 * Raw `a:rPr` XML for an `a:br` (soft line break) segment, captured verbatim
 	 * during parse so the writer can re-emit attributes/colours/fonts that the
@@ -1001,7 +1003,7 @@ export interface TextSegment {
 	 */
 	breakRunProperties?: Record<string, unknown>;
 	/** Structured bullet info for the first segment of a paragraph. */
-	bulletInfo?: BulletInfo;
+	bulletInfo?: BulletInfo | undefined;
 	/**
 	 * Outline level for the paragraph this segment starts (`a:p/@lvl`).
 	 *
@@ -1077,12 +1079,12 @@ export interface TextSegment {
 	 * from `a:rubyPr/@hps` (half-point size) or inferred from rt run font size.
 	 * Stored in **points** for consistency with `TextStyle.fontSize`.
 	 */
-	rubyFontSize?: number;
+	rubyFontSize?: number | undefined;
 	/**
 	 * Style for the ruby (phonetic) text run, parsed from `a:rt > a:r > a:rPr`.
 	 * Used by the renderer to apply font family, colour, etc. to the `<rt>` element.
 	 */
-	rubyStyle?: TextStyle;
+	rubyStyle?: TextStyle | undefined;
 	/**
 	 * The parsed `a:rubyPr` node, kept verbatim so its attributes (`hps`,
 	 * `hpsRaise`, `hpsBaseText`, `lid`, ...) round-trip exactly; only an
@@ -1095,5 +1097,5 @@ export interface TextSegment {
 	 * flat {@link style} merges both for rendering; these let the writer give
 	 * each `a:rPr` back only its own properties (plus any later edit).
 	 */
-	rubyRunAuthoredStyles?: { outer?: TextStyle; base?: TextStyle };
+	rubyRunAuthoredStyles?: { outer?: TextStyle | undefined; base?: TextStyle | undefined };
 }

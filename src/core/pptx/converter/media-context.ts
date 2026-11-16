@@ -1,4 +1,5 @@
 import type { FileSystemAdapter } from './types';
+import { at } from '../../geometry/indexed';
 
 /**
  * Lookup table mapping common MIME types to their canonical file extensions.
@@ -26,7 +27,7 @@ function mimeSubtypeToExt(mime: string): string {
 	const parts = mime.split('/');
 	if (parts.length === 2) {
 		// Strip any non-alphanumeric characters (e.g. "+xml" becomes "xml")
-		return parts[1].replace(/[^a-z0-9]/g, '');
+		return at(parts, 1).replace(/[^a-z0-9]/g, '');
 	}
 	return 'bin';
 }
@@ -55,7 +56,7 @@ export function dataUrlToMediaBytes(dataUrl: string): {
 	if (!match) {
 		throw new Error('Invalid data URL format');
 	}
-	const mime = match[1].toLowerCase();
+	const mime = at(match, 1).toLowerCase();
 	const ext = MIME_TO_EXT[mime] ?? mimeSubtypeToExt(mime);
 
 	// Decode Base64 payload into a binary byte array

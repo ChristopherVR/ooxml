@@ -37,7 +37,7 @@ export interface PptxTableCellStyle {
 	bold?: boolean;
 	italic?: boolean;
 	underline?: boolean;
-	color?: string;
+	color?: string | undefined;
 	/**
 	 * Font family from the first run's `a:rPr/a:latin@typeface` (falling back to
 	 * `a:ea` / `a:cs`). Per-run families live on {@link PptxTableCellTextRun}.
@@ -58,7 +58,7 @@ export interface PptxTableCellStyle {
 	 * individual cell override.
 	 */
 	colorRef?: PptxThemeColorRef;
-	backgroundColor?: string;
+	backgroundColor?: string | undefined;
 	/**
 	 * Raw XML colour-choice node preserved from cell `a:tcPr/a:solidFill` for
 	 * round-trip serialisation. Re-emitted verbatim when the resolved
@@ -71,7 +71,7 @@ export interface PptxTableCellStyle {
 	 * mirroring `ShapeStyle.fillColorRef`.
 	 */
 	backgroundColorRef?: PptxThemeColorRef;
-	borderColor?: string;
+	borderColor?: string | undefined;
 	/** Top border width in px. */
 	borderTopWidth?: number;
 	/** Bottom border width in px. */
@@ -81,13 +81,13 @@ export interface PptxTableCellStyle {
 	/** Right border width in px. */
 	borderRightWidth?: number;
 	/** Top border color as hex. */
-	borderTopColor?: string;
+	borderTopColor?: string | undefined;
 	/** Bottom border color as hex. */
-	borderBottomColor?: string;
+	borderBottomColor?: string | undefined;
 	/** Left border color as hex. */
-	borderLeftColor?: string;
+	borderLeftColor?: string | undefined;
 	/** Right border color as hex. */
-	borderRightColor?: string;
+	borderRightColor?: string | undefined;
 	align?: TextStyle['align'];
 	vAlign?: 'top' | 'middle' | 'bottom';
 	/** Text direction from `a:tcPr/@vert` (spec values from CT_TextVerticalType). */
@@ -162,19 +162,19 @@ export interface PptxTableCellStyle {
 	/** Gradient type: linear or radial. */
 	gradientFillType?: 'linear' | 'radial';
 	/** Path gradient sub-type. */
-	gradientFillPathType?: 'circle' | 'rect' | 'shape';
+	gradientFillPathType?: 'circle' | 'rect' | 'shape' | undefined;
 	/** Focal point for radial gradients (0–1 fractions). */
-	gradientFillFocalPoint?: { x: number; y: number };
+	gradientFillFocalPoint?: { x: number; y: number } | undefined;
 	/** Raw fillToRect LTRB values (0–1 fractions) for gradient sizing. */
-	gradientFillFillToRect?: { l: number; t: number; r: number; b: number };
+	gradientFillFillToRect?: { l: number; t: number; r: number; b: number } | undefined;
 	/** Pre-computed CSS gradient string for rendering. */
-	gradientFillCss?: string;
+	gradientFillCss?: string | undefined;
 	/** Pattern fill preset name (e.g. "ltDnDiag"). */
-	patternFillPreset?: string;
+	patternFillPreset?: string | undefined;
 	/** Pattern fill foreground colour. */
-	patternFillForeground?: string;
+	patternFillForeground?: string | undefined;
 	/** Pattern fill background colour. */
-	patternFillBackground?: string;
+	patternFillBackground?: string | undefined;
 	/**
 	 * Image fill (`a:tcPr/a:blipFill`, CT_TableCellProperties). Resolved
 	 * archive-relative path (or external `http(s):`/`data:` URL) for the
@@ -345,7 +345,7 @@ export type PptxTableCellParagraph = Pick<
  */
 export interface PptxTableCell {
 	text: string;
-	style?: PptxTableCellStyle;
+	style?: PptxTableCellStyle | undefined;
 	/**
 	 * Per-run formatting for the cell's text, when it has any beyond what
 	 * {@link style} can express. Present only for cells whose `a:txBody`
@@ -354,7 +354,7 @@ export interface PptxTableCell {
 	 * Editing a cell's text invalidates these (the editor produces a plain
 	 * string), so an edit path must clear them alongside setting `text`.
 	 */
-	textRuns?: PptxTableCellTextRun[];
+	textRuns?: PptxTableCellTextRun[] | undefined;
 	/**
 	 * Rich text of a cell made in code, written as given: one `a:r` per
 	 * segment with its own `a:rPr` (font, size in px as in shape text, strike,
@@ -363,7 +363,7 @@ export interface PptxTableCell {
 	 * equals the segments' text, so an edit through `text` wins. The loader
 	 * never sets it; a loaded cell's runs are {@link textRuns}.
 	 */
-	textSegments?: TextSegment[];
+	textSegments?: TextSegment[] | undefined;
 	/**
 	 * Each paragraph's own layout, one entry per `a:p` in source order (the
 	 * paragraphs {@link textRuns} separates with `isParagraphBreak`). An entry
@@ -373,15 +373,15 @@ export interface PptxTableCell {
 	 * `a:pPr`. Aligning the cell gives one entry per line of {@link text}
 	 * instead; save writes as many as the cell has `a:p`.
 	 */
-	paragraphs?: PptxTableCellParagraph[];
+	paragraphs?: PptxTableCellParagraph[] | undefined;
 	/** Column span (defaults to 1). */
-	gridSpan?: number;
+	gridSpan?: number | undefined;
 	/** Row span (defaults to 1). */
-	rowSpan?: number;
+	rowSpan?: number | undefined;
 	/** Whether this cell is merged vertically with the cell above. */
 	vMerge?: boolean;
 	/** Whether this cell is horizontally merged with the cell to the left (gridSpan continuation). */
-	hMerge?: boolean;
+	hMerge?: boolean | undefined;
 	/**
 	 * Opaque round-trip storage for `a:tcPr` attributes that don't yet have
 	 * typed equivalents on {@link PptxTableCellStyle} (e.g. `horzOverflow`,
@@ -438,19 +438,19 @@ export interface PptxTableData {
 	/** Column widths as proportion of total (summing to 1). */
 	columnWidths: number[];
 	/** Whether the table has banded rows. */
-	bandedRows?: boolean;
+	bandedRows?: boolean | undefined;
 	/** Whether the first row is a header. */
-	firstRowHeader?: boolean;
+	firstRowHeader?: boolean | undefined;
 	/** Whether banded columns are enabled. */
-	bandedColumns?: boolean;
+	bandedColumns?: boolean | undefined;
 	/** Whether the last row is styled as a total row. */
-	lastRow?: boolean;
+	lastRow?: boolean | undefined;
 	/** Whether the first column is styled as a header column. */
-	firstCol?: boolean;
+	firstCol?: boolean | undefined;
 	/** Whether the last column is styled specially. */
-	lastCol?: boolean;
+	lastCol?: boolean | undefined;
 	/** Table style ID from `a:tblPr/a:tblStyle@val` or `a:tblPr@tblStyle`. */
-	tableStyleId?: string;
+	tableStyleId?: string | undefined;
 	/**
 	 * Set by a table style pick (which, like PowerPoint's, clears every cell's
 	 * direct fill and borders): the next save drops the direct `a:tcPr` fills,
@@ -526,9 +526,9 @@ export interface ParsedTableStyleFill {
 	 */
 	schemeColor: string;
 	/** Tint value (0-100 000). */
-	tint?: number;
+	tint?: number | undefined;
 	/** Shade value (0-100 000). */
-	shade?: number;
+	shade?: number | undefined;
 	/**
 	 * Alpha (opacity) value (0-100 000, where 100 000 is fully opaque) from an
 	 * `a:alpha` child of `a:schemeClr`/`a:srgbClr`. Several built-in table
@@ -630,9 +630,9 @@ export interface ParsedTableStyleText {
 	/** Font colour as theme scheme key. */
 	fontSchemeColor?: string;
 	/** Font colour tint (0-100 000). */
-	fontTint?: number;
+	fontTint?: number | undefined;
 	/** Font colour shade (0-100 000). */
-	fontShade?: number;
+	fontShade?: number | undefined;
 	/** Explicit sRGB hex font colour (e.g. `#FF0000`) from `a:srgbClr`. */
 	fontColor?: string;
 	/** Typeface from `a:font@typeface` (latin font). */
@@ -748,9 +748,9 @@ export interface ParsedTableBackgroundShadow {
 
 export interface ParsedTableStyleEntry {
 	styleId: string;
-	styleName?: string;
+	styleName?: string | undefined;
 	/** Dominant accent key derived from fills (e.g. `accent1`). */
-	accentKey?: string;
+	accentKey?: string | undefined;
 	/** Table-level background (`<a:tblBg>`). */
 	tableBackground?: ParsedTableBackground;
 	wholeTblFill?: ParsedTableStyleFill;

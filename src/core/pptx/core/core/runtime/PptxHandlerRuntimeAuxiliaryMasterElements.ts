@@ -38,8 +38,8 @@ import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRunti
 export interface MasterPartElementHost {
 	path: string;
 	elements?: PptxElement[];
-	backgroundImage?: string;
-	backgroundImageProperties?: PptxImageProperties;
+	backgroundImage?: string | undefined;
+	backgroundImageProperties?: PptxImageProperties | undefined;
 	/**
 	 * Already resolved (for a slide master or layout, by
 	 * {@link PptxHandlerRuntime.enrichSlideMasterElements}). Read here only so

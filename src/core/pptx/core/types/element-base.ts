@@ -52,7 +52,7 @@ export interface PptxElementBase {
 	 */
 	shapeId?: string;
 	/** Element name from `cNvPr/@name`. Used for morph transition matching via the `!!` naming convention. */
-	name?: string;
+	name?: string | undefined;
 	/**
 	 * `p:nvSpPr/p:nvPr/p:ph/@type` (lower-cased) when the shape is a placeholder:
 	 * `title`, `ctrtitle`, `body`, `subtitle`, `ftr`, `dt`, `sldnum`, ...
@@ -104,9 +104,9 @@ export interface PptxElementBase {
 	/** The exact EMU integer `y` was parsed from (`a:off/@_y`). See {@link xEmu}. */
 	yEmu?: number;
 	/** The exact EMU integer `width` was parsed from (`a:ext/@_cx`). See {@link xEmu}. */
-	widthEmu?: number;
+	widthEmu?: number | undefined;
 	/** The exact EMU integer `height` was parsed from (`a:ext/@_cy`). See {@link xEmu}. */
-	heightEmu?: number;
+	heightEmu?: number | undefined;
 	/** Resolved load-time transform for a shape with no own a:xfrm. Used only to detect edits. */
 	inheritedTransform?: Pick<
 		PptxElementBase,
@@ -120,24 +120,24 @@ export interface PptxElementBase {
 		| 'flipHorizontal'
 		| 'flipVertical'
 	>;
-	rotation?: number;
+	rotation?: number | undefined;
 	/** Skew along the X axis in degrees (parsed from `@_skewX` in 1/60000ths of a degree). */
-	skewX?: number;
+	skewX?: number | undefined;
 	/** Skew along the Y axis in degrees (parsed from `@_skewY` in 1/60000ths of a degree). */
-	skewY?: number;
+	skewY?: number | undefined;
 	flipHorizontal?: boolean | undefined;
 	flipVertical?: boolean | undefined;
 	/** Whether this element is hidden (used by the Elements Panel visibility toggle). */
-	hidden?: boolean;
+	hidden?: boolean | undefined;
 	/** Element-level opacity (0-1). */
-	opacity?: number;
-	rawXml?: XmlObject;
+	opacity?: number | undefined;
+	rawXml?: XmlObject | undefined;
 	/** Shape-level click action (from `a:hlinkClick` on `p:cNvPr`). */
-	actionClick?: PptxAction;
+	actionClick?: PptxAction | undefined;
 	/** Shape-level hover action (from `a:hlinkHover` on `p:cNvPr`). */
-	actionHover?: PptxAction;
+	actionHover?: PptxAction | undefined;
 	/** Shape lock attributes parsed from `p:cNvSpPr/a:spLocks`. */
-	locks?: PptxShapeLocks;
+	locks?: PptxShapeLocks | undefined;
 	/**
 	 * Opaque `<a:ext>` children captured from the shape's `<a:extLst>` whose
 	 * URI is not recognised by a typed extractor (hidden fill/line, image
@@ -166,10 +166,10 @@ export interface PptxElementBase {
  * ```
  */
 export interface PptxTextProperties {
-	text?: string;
-	textStyle?: TextStyle;
+	text?: string | undefined;
+	textStyle?: TextStyle | undefined;
 	/** Rich text segments with individual styling. */
-	textSegments?: TextSegment[];
+	textSegments?: TextSegment[] | undefined;
 	/** Per-paragraph indentation (marginLeft, indent) for multi-level bullet support. */
 	paragraphIndents?: Array<{ marginLeft?: number; indent?: number }>;
 	/** Placeholder prompt text inherited from layout/master (e.g. "Click to add title"). Shown as a greyed-out hint when the shape has no user-entered text. */
@@ -207,13 +207,13 @@ export interface PptxTextProperties {
  * ```
  */
 export interface PptxShapeProperties {
-	shapeStyle?: ShapeStyle;
+	shapeStyle?: ShapeStyle | undefined;
 	/** Preset geometry name, e.g. "rect", "ellipse", "roundRect". */
-	shapeType?: string;
+	shapeType?: string | undefined;
 	/** Geometry adjustment values, e.g. `{ adj: 16667 }`. */
-	shapeAdjustments?: Record<string, number>;
+	shapeAdjustments?: Record<string, number> | undefined;
 	/** Adjustment handles for interactive shape modification (yellow diamond handles). */
-	adjustmentHandles?: GeometryAdjustmentHandle[];
+	adjustmentHandles?: GeometryAdjustmentHandle[] | undefined;
 }
 
 // ==========================================================================
@@ -366,22 +366,22 @@ export interface PlaceholderDefaults {
 	/** Placeholder type: 'title', 'body', 'ctrTitle', 'subTitle', 'dt', 'ftr', 'sldNum', etc. */
 	type: string;
 	/** Placeholder index (when present). */
-	idx?: number;
-	bodyInsetLeft?: number;
-	bodyInsetTop?: number;
-	bodyInsetRight?: number;
-	bodyInsetBottom?: number;
-	textAnchor?: string;
-	autoFit?: boolean;
+	idx?: number | undefined;
+	bodyInsetLeft?: number | undefined;
+	bodyInsetTop?: number | undefined;
+	bodyInsetRight?: number | undefined;
+	bodyInsetBottom?: number | undefined;
+	textAnchor?: string | undefined;
+	autoFit?: boolean | undefined;
 	/** Explicit autofit mode from OOXML body properties. See {@link TextStyle.autoFitMode}. */
 	autoFitMode?: 'shrink' | 'normal' | 'none';
 	/** Font scale percentage for normAutofit (e.g. 0.9 = 90%). Only meaningful when autoFit is true. */
 	autoFitFontScale?: number;
 	/** Line spacing reduction for normAutofit (e.g. 0.2 = reduce by 20%). Only meaningful when autoFit is true. */
 	autoFitLineSpacingReduction?: number;
-	textWrap?: string;
+	textWrap?: string | undefined;
 	/** Level-specific text styles keyed 0-8. */
 	levelStyles?: Record<number, PlaceholderTextLevelStyle>;
 	/** Prompt text extracted from the layout/master placeholder (e.g. "Click to add title"). */
-	promptText?: string;
+	promptText?: string | undefined;
 }

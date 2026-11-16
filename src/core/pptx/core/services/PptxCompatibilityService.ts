@@ -20,8 +20,8 @@ export interface CompatibilityWarningInput {
 	message: string;
 	severity?: PptxCompatibilityWarning['severity'];
 	scope: PptxCompatibilityWarning['scope'];
-	slideId?: string;
-	elementId?: string;
+	slideId?: string | undefined;
+	elementId?: string | undefined;
 	xmlPath?: string;
 }
 

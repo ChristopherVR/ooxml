@@ -155,7 +155,9 @@ export class PptxHandlerRuntime {
 	 */
 	protected chartDataBaselines: Map<string, string> = new Map();
 	/** Pending chart requests also retain warned workbook writes for later retry. */
-	protected pendingChartUpdates?: Array<{ chartData: PptxChartData; slidePath: string }>;
+	protected pendingChartUpdates?:
+		| Array<{ chartData: PptxChartData; slidePath: string }>
+		| undefined;
 	/** Last fully reconciled workbook data plus whether a write-back needs retry. */
 	protected chartWorkbookDataBaselines = new Map<string, { signature: string; pending: boolean }>();
 

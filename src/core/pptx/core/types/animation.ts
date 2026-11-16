@@ -161,7 +161,7 @@ export type PptxAnimationTarget =
 			rawXml?: XmlObject;
 	  }
 	| { type: 'slide'; rawXml?: XmlObject }
-	| { type: 'sound'; relationshipId: string; name?: string; rawXml?: XmlObject }
+	| { type: 'sound'; relationshipId: string; name?: string | undefined; rawXml?: XmlObject }
 	| { type: 'ink'; shapeId: string; rawXml?: XmlObject }
 	| { type: 'unknown'; rawXml: XmlObject };
 
@@ -233,7 +233,7 @@ export interface PptxTimingTemplate {
  */
 export interface PptxNativeAnimation {
 	/** Target element/shape ID. */
-	targetId?: string;
+	targetId?: string | undefined;
 	/** Full timing target, including sound and ink target variants. */
 	target?: PptxAnimationTarget;
 	/** Trigger type. */
@@ -250,78 +250,78 @@ export interface PptxNativeAnimation {
 	/** Whether `p:endSync/p:rtn[@val="all"]` makes that sequence replayable. */
 	interactiveRestart?: boolean;
 	/** Effect preset class (entr, exit, emph, path). */
-	presetClass?: 'entr' | 'exit' | 'emph' | 'path';
+	presetClass?: 'entr' | 'exit' | 'emph' | 'path' | undefined;
 	/** Effect preset sub-type identifier. */
-	presetId?: number;
+	presetId?: number | undefined;
 	/**
 	 * Effect preset direction/variant code from `p:cTn/@presetSubtype`
 	 * (ECMA-376 CT_TLCommonTimeNodeData). For Fly In/Out this encodes the
 	 * edge/corner the object travels from as a bitmask (1=top, 2=right,
 	 * 4=bottom, 8=left; corners combine bits). Absent means the preset default.
 	 */
-	presetSubtype?: number;
+	presetSubtype?: number | undefined;
 	/** Duration in milliseconds. */
-	durationMs?: number;
+	durationMs?: number | undefined;
 	/** Delay in milliseconds. */
-	delayMs?: number;
+	delayMs?: number | undefined;
 	/**
 	 * Acceleration fraction in the range 0..1, parsed from `p:cTn/@accel`
 	 * (ST_PositiveFixedPercentage, stored as 1000ths of a percent). A non-zero
 	 * value means the effect eases in (starts slow). Absent means no easing-in.
 	 */
-	accel?: number;
+	accel?: number | undefined;
 	/**
 	 * Deceleration fraction in the range 0..1, parsed from `p:cTn/@decel`.
 	 * A non-zero value means the effect eases out (ends slow). Absent means no
 	 * easing-out. When both {@link accel} and {@link decel} are set, the effect
 	 * eases in and out.
 	 */
-	decel?: number;
+	decel?: number | undefined;
 	/** Trigger delay in milliseconds (for afterDelay). */
-	triggerDelayMs?: number;
+	triggerDelayMs?: number | undefined;
 	/** SVG path string for motion path animations (`p:animMotion/@path`). */
-	motionPath?: string;
+	motionPath?: string | undefined;
 	/** Motion origin: "layout" or "parent". */
-	motionOrigin?: string;
+	motionOrigin?: string | undefined;
 	/**
 	 * Whether the element auto-rotates to follow the motion path tangent.
 	 * Viewer-authoring-only hint: OOXML has no such flag (`p:animMotion/@rAng`
 	 * is a plain rotation angle that PowerPoint writes as "0" on every path),
 	 * so the parser never sets this.
 	 */
-	motionPathRotateAuto?: boolean;
+	motionPathRotateAuto?: boolean | undefined;
 	/** Path edit mode from `p:animMotion/@pathEditMode` (e.g. "relative", "fixed"). */
-	motionPathEditMode?: string;
+	motionPathEditMode?: string | undefined;
 	/** Comma-separated point-types string from `p:animMotion/@ptsTypes`. */
-	motionPtsTypes?: string;
+	motionPtsTypes?: string | undefined;
 	/** Authored path rotation in degrees from `p:animMotion/@rAng`. */
-	motionPathRotationAngle?: number;
+	motionPathRotationAngle?: number | undefined;
 	/** Motion-path rotation centre X in slide percentage units (`p:rCtr/@x`). */
-	motionPathRotationCenterX?: number;
+	motionPathRotationCenterX?: number | undefined;
 	/** Motion-path rotation centre Y in slide percentage units (`p:rCtr/@y`). */
-	motionPathRotationCenterY?: number;
+	motionPathRotationCenterY?: number | undefined;
 	/** Rotation angle in degrees for `p:animRot/@by` (converted from 60000ths). */
-	rotationBy?: number;
+	rotationBy?: number | undefined;
 	/** Starting rotation angle in degrees for `p:animRot/@from` (converted from 60000ths). */
-	rotationFrom?: number;
+	rotationFrom?: number | undefined;
 	/** Ending rotation angle in degrees for `p:animRot/@to` (converted from 60000ths). */
-	rotationTo?: number;
+	rotationTo?: number | undefined;
 	/** X scale factor (percentage / 100) for `p:animScale/p:by/@x`. */
-	scaleByX?: number;
+	scaleByX?: number | undefined;
 	/** Y scale factor (percentage / 100) for `p:animScale/p:by/@y`. */
-	scaleByY?: number;
+	scaleByY?: number | undefined;
 	/** Starting X scale factor for `p:animScale/p:from/@x`. */
-	scaleFromX?: number;
+	scaleFromX?: number | undefined;
 	/** Starting Y scale factor for `p:animScale/p:from/@y`. */
-	scaleFromY?: number;
+	scaleFromY?: number | undefined;
 	/** Ending X scale factor for `p:animScale/p:to/@x`. */
-	scaleToX?: number;
+	scaleToX?: number | undefined;
 	/** Ending Y scale factor for `p:animScale/p:to/@y`. */
-	scaleToY?: number;
+	scaleToY?: number | undefined;
 	/** Whether `p:animScale/@zoomContents` was set ("1"/"true"). */
-	scaleZoomContents?: boolean;
+	scaleZoomContents?: boolean | undefined;
 	/** Parsed `p:tav` keyframes from `p:tavLst` (CT_TLAnimVariantList). */
-	keyframes?: PptxAnimationKeyframe[];
+	keyframes?: PptxAnimationKeyframe[] | undefined;
 	/**
 	 * The attribute {@link keyframes} drives, from the SAME node's
 	 * `p:cBhvr/p:attrNameLst/p:attrName` (ECMA-376 S19.5.4). `p:tavLst` is
@@ -334,19 +334,19 @@ export interface PptxNativeAnimation {
 	 * `"ppt_x"` / `"ppt_y"` (position, normally driven via `p:animMotion`
 	 * instead). Absent when the behaviour carries no `p:attrNameLst`.
 	 */
-	attrName?: string;
+	attrName?: string | undefined;
 	/** Every generic `p:anim` sibling composed by the authored effect. */
-	attributeAnimations?: PptxAttributeAnimation[];
+	attributeAnimations?: PptxAttributeAnimation[] | undefined;
 	/** Repeat count (e.g. `2`, `Infinity` for indefinite). */
-	repeatCount?: number;
+	repeatCount?: number | undefined;
 	/** Whether the animation plays in reverse after completion. */
-	autoReverse?: boolean;
+	autoReverse?: boolean | undefined;
 	/** Text build type from `p:bldP/@build` in `p:bldLst`. */
 	buildType?: PptxTextBuildType;
 	/** Build level for multi-level lists from `p:bldP/@bldLvl`. */
 	buildLevel?: number;
 	/** Group ID linking a `p:bldP` entry to its timing animation node. */
-	groupId?: string;
+	groupId?: string | undefined;
 	/**
 	 * Sound relationship ID to play when animation triggers. Modern PowerPoint
 	 * (COM-verified against 2016) writes this as a `p:audio/p:cMediaNode`
@@ -356,9 +356,9 @@ export interface PptxNativeAnimation {
 	 * itself no longer writes it and does not recognise it back
 	 * (`Effect.EffectInformation.SoundEffect` reads empty against it).
 	 */
-	soundRId?: string;
+	soundRId?: string | undefined;
 	/** Resolved sound file path from relationship. */
-	soundPath?: string;
+	soundPath?: string | undefined;
 	/**
 	 * The embedded sound's `@_name` (from `p:snd`/`p:sndTgt`). For one of
 	 * PowerPoint's 19 built-in stock sounds this is the exact upper-case file
@@ -367,9 +367,9 @@ export interface PptxNativeAnimation {
 	 * value back to a gallery entry. Absent for a custom sound with no name,
 	 * or when unresolved.
 	 */
-	soundName?: string;
+	soundName?: string | undefined;
 	/** Whether to stop any currently playing sound (`p:endSnd`). */
-	stopSound?: boolean;
+	stopSound?: boolean | undefined;
 	/**
 	 * End-state behaviour from `p:cTn/@fill` (ST_TLTimeNodeFillType, ECMA-376
 	 * §19.5.27). `hold`/`freeze` mean the effect's final frame persists after
@@ -377,35 +377,35 @@ export interface PptxNativeAnimation {
 	 * to its pre-effect appearance. `transition` behaves like `hold` until the
 	 * next time node starts. Absent means the OOXML default (`remove`).
 	 */
-	fill?: 'remove' | 'freeze' | 'hold' | 'transition';
+	fill?: 'remove' | 'freeze' | 'hold' | 'transition' | undefined;
 	/**
 	 * Restart behaviour from `p:cTn/@restart` (ST_TLTimeNodeRestartType).
 	 * Absent means the OOXML default (`always`).
 	 */
-	restart?: 'always' | 'whenNotActive' | 'never';
+	restart?: 'always' | 'whenNotActive' | 'never' | undefined;
 	/**
 	 * Repeat duration in milliseconds from `p:cTn/@repeatDur`. `Infinity`
 	 * represents the literal `"indefinite"` token.
 	 */
-	repeatDurMs?: number;
+	repeatDurMs?: number | undefined;
 	/**
 	 * Playback speed multiplier from `p:cTn/@spd` (ST_Percentage, normalized
 	 * from OOXML's 1000ths-of-a-percent storage to a plain percentage, e.g.
 	 * `150` for 150% / double speed). Absent means normal (100%) speed.
 	 */
-	speedPct?: number;
+	speedPct?: number | undefined;
 	/**
 	 * Reverse the paragraph build order from `p:bldP/@rev` (TEXT build only).
 	 * Not to be confused with {@link PptxGraphicBuild}'s `reverse` field, which
 	 * carries the unrelated `p:bldDgm`/`@rev` DIAGRAM-build reverse flag.
 	 */
-	buildReverse?: boolean;
+	buildReverse?: boolean | undefined;
 	/**
 	 * Auto-advance time in milliseconds from `p:bldP/@advAuto`. `Infinity`
 	 * represents the literal `"indefinite"` token. Absent means the build
 	 * step waits for a click.
 	 */
-	buildAdvAutoMs?: number;
+	buildAdvAutoMs?: number | undefined;
 	/**
 	 * Per-build-level timing templates from a TEXT `p:bldP/p:tmplLst`
 	 * (ECMA-376 §19.5.84 CT_TLTemplateList). Parsed for round-trip only; see
@@ -417,11 +417,11 @@ export interface PptxNativeAnimation {
 	 * from `p:seq/@concurrent`. Parsed for round-trip; not yet honoured by
 	 * playback (see `docs/guide/limitations.md`).
 	 */
-	seqConcurrent?: boolean;
+	seqConcurrent?: boolean | undefined;
 	/** Next-action behaviour from `p:seq/@nextAc` (ST_TLNextActionType). */
-	seqNextAction?: 'none' | 'seek';
+	seqNextAction?: 'none' | 'seek' | undefined;
 	/** Previous-action behaviour from `p:seq/@prevAc` (ST_TLPreviousActionType). */
-	seqPrevAction?: 'none' | 'skipTimeNode';
+	seqPrevAction?: 'none' | 'skipTimeNode' | undefined;
 	/**
 	 * Whether the enclosing click-level group (a direct `p:par` child of the
 	 * `mainSeq`) begins automatically when the slide appears, rather than waiting
@@ -433,7 +433,7 @@ export interface PptxNativeAnimation {
 	 * first effect on the slide). The flat animation list cannot express that on
 	 * its own, so the parse layer stamps it here.
 	 */
-	groupAutoStart?: boolean;
+	groupAutoStart?: boolean | undefined;
 	/**
 	 * Index of the enclosing effect-wrapper `p:par` inside the click-level group.
 	 *
@@ -442,7 +442,7 @@ export interface PptxNativeAnimation {
 	 * start, NOT chained off the effect before it. Playback uses this to place
 	 * simultaneous effects at their true offsets instead of accumulating delays.
 	 */
-	parGroupIndex?: number;
+	parGroupIndex?: number | undefined;
 	/**
 	 * Absolute start offset of the enclosing effect-wrapper from its click group.
 	 *
@@ -450,17 +450,17 @@ export interface PptxNativeAnimation {
 	 * this offset separate from the effect's delay prevents playback from
 	 * replacing an authored absolute start with a duration-based approximation.
 	 */
-	parGroupDelayMs?: number;
+	parGroupDelayMs?: number | undefined;
 	/** Structured start conditions parsed from `p:stCondLst`. */
-	startConditions?: AnimationCondition[];
+	startConditions?: AnimationCondition[] | undefined;
 	/** Structured end conditions parsed from `p:endCondLst`. */
-	endConditions?: AnimationCondition[];
+	endConditions?: AnimationCondition[] | undefined;
 	/** Preserved raw `p:endCondLst` XML node for lossless round-trip. */
-	rawEndCondLst?: XmlObject;
+	rawEndCondLst?: XmlObject | undefined;
 	/** Color animation data from `p:animClr`. */
-	colorAnimation?: PptxColorAnimation;
+	colorAnimation?: PptxColorAnimation | undefined;
 	/** Text-level target: character range or paragraph range from `p:txEl`. */
-	textTarget?: PptxTextAnimationTarget;
+	textTarget?: PptxTextAnimationTarget | undefined;
 	/** Whether this animation is inside an exclusive container (`p:excl`). */
 	exclusive?: boolean;
 	/**
@@ -475,11 +475,11 @@ export interface PptxNativeAnimation {
 	 */
 	exclGroupId?: number;
 	/** Command type from `p:cmd` (@_type: call/evt/verb). */
-	commandType?: string;
+	commandType?: string | undefined;
 	/** Command string from `p:cmd` (@_cmd). */
-	commandString?: string;
+	commandString?: string | undefined;
 	/** Iteration configuration from `p:iterate`. */
-	iterate?: PptxAnimationIterate;
+	iterate?: PptxAnimationIterate | undefined;
 	/**
 	 * Discriminator for non-preset animation kinds. When `undefined`, the
 	 * entry represents the default shape-effect animation. The `'media'`
@@ -524,19 +524,19 @@ export interface PptxNativeAnimation {
 	 * attribute is surfaced separately as a typed boolean ({@link afterEffect})
 	 * because it changes write semantics for subsequent timing nodes.
 	 */
-	cTnAttributes?: Record<string, unknown>;
+	cTnAttributes?: Record<string, unknown> | undefined;
 	/** Parent timing cannot be reduced to the bounded fixed-opacity interval. */
-	unsupportedOpacitySetTiming?: boolean;
+	unsupportedOpacitySetTiming?: boolean | undefined;
 	/** Admitted isolated held whole-shape visibility flip from native preset zero. */
-	visibilitySetTiming?: PptxVisibilitySetTiming;
+	visibilitySetTiming?: PptxVisibilitySetTiming | undefined;
 	/** A retained preset-zero visibility body has an unmeasured target, value or clock. */
-	unsupportedVisibilitySet?: boolean;
+	unsupportedVisibilitySet?: boolean | undefined;
 	/**
 	 * Whether the OOXML `p:cTn/@afterEffect` flag is set. Indicates this node
 	 * runs after the parent effect's main body has completed; affects how
 	 * subsequent peer nodes are sequenced when serialised back to OOXML.
 	 */
-	afterEffect?: boolean;
+	afterEffect?: boolean | undefined;
 	/**
 	 * "After animation" end-state behaviour: dim-to-colour, hide-after-
 	 * animation, or hide-on-next-click. Populated directly by the
@@ -549,9 +549,9 @@ export interface PptxNativeAnimation {
 	 * per-element animation list has one (the model the animation panel
 	 * writes `afterAnimation` into), so an edit through our own UI always wins.
 	 */
-	afterAnimationAction?: PptxAfterAnimationAction;
+	afterAnimationAction?: PptxAfterAnimationAction | undefined;
 	/** Dim-to color hex, present when {@link afterAnimationAction} is `dimToColor` AND the dim target is an already-resolved `a:srgbClr`. */
-	afterAnimationColor?: string;
+	afterAnimationColor?: string | undefined;
 	/**
 	 * The typed theme reference when a `dimToColor` target is an `a:schemeClr`
 	 * (e.g. `accent2`) instead of `a:srgbClr`: this parse layer has no theme to
@@ -559,7 +559,7 @@ export interface PptxNativeAnimation {
 	 * playback consumer resolves this against the deck's theme colour map.
 	 * Mutually exclusive with {@link afterAnimationColor} being set.
 	 */
-	afterAnimationColorRef?: PptxThemeColorRef;
+	afterAnimationColorRef?: PptxThemeColorRef | undefined;
 	/**
 	 * Parsed `p:animEffect` filter descriptor. `presetId`/`presetClass` remain
 	 * the primary effect selector (see `resolveEffect` in `pptx-viewer-shared`);
@@ -567,7 +567,7 @@ export interface PptxNativeAnimation {
 	 * absent `presetId`), which happens for decks authored by tools other than
 	 * PowerPoint that only emit the SMIL-style filter string.
 	 */
-	effectFilter?: PptxAnimationEffectFilter;
+	effectFilter?: PptxAnimationEffectFilter | undefined;
 	/**
 	 * This effect's own `p:cTn/@_id` (a raw OOXML time-node id, not a shape
 	 * id). Lets playback resolve a `p:cond/@tn` dependency (see
@@ -575,14 +575,14 @@ export interface PptxNativeAnimation {
 	 * it names rather than assuming it is always the positionally-previous
 	 * effect. Absent when the node carried no `@_id`.
 	 */
-	nodeId?: number;
+	nodeId?: number | undefined;
 	/**
 	 * Interpolation mode for this effect's PRIMARY `p:anim`-family behaviour
 	 * (the same node {@link keyframes}/{@link attrName} were read from), from
 	 * `@_calcmode` (ST_TLAnimateBehaviorCalcMode, ECMA-376 S19.5.2). See
 	 * {@link PptxAttributeAnimation.calcMode} for the per-component version.
 	 */
-	calcMode?: 'discrete' | 'lin' | 'fmla';
+	calcMode?: 'discrete' | 'lin' | 'fmla' | undefined;
 	/**
 	 * `p:cBhvr/@_additive` (ST_TLBehaviorAdditiveType, ECMA-376 S19.5.4):
 	 * controls how this behaviour's value composites with sibling behaviours
@@ -590,24 +590,24 @@ export interface PptxNativeAnimation {
 	 * (e.g. a combined scale+rotate), `repl`/`base`/`none`/`mult` replace or
 	 * otherwise combine. Absent means the OOXML default (`base`).
 	 */
-	cBhvrAdditive?: 'base' | 'sum' | 'repl' | 'mult' | 'none';
+	cBhvrAdditive?: 'base' | 'sum' | 'repl' | 'mult' | 'none' | undefined;
 	/**
 	 * `p:cBhvr/@_accumulate` (ST_TLBehaviorAccumulateType): `always` means
 	 * each `p:cTn/@repeatCount` repeat starts from the PREVIOUS repeat's end
 	 * value (e.g. a 3x Spin totals 1080deg instead of replaying 0-360 three
 	 * times); `none` (the OOXML default) resets every repeat.
 	 */
-	cBhvrAccumulate?: 'none' | 'always';
+	cBhvrAccumulate?: 'none' | 'always' | undefined;
 	/**
 	 * `p:cBhvr/@_xfrmType` (only meaningful on `p:animMotion`): `point`
 	 * (default) or `img`, a legacy compatibility hint. Round-tripped only.
 	 */
-	cBhvrXfrmType?: 'point' | 'img';
+	cBhvrXfrmType?: 'point' | 'img' | undefined;
 	/**
 	 * `p:cBhvr/@_override` (ST_TLBehaviorOverrideType): `normal` (default) or
 	 * `childStyle`, a legacy compatibility hint. Round-tripped only.
 	 */
-	cBhvrOverride?: 'normal' | 'childStyle';
+	cBhvrOverride?: 'normal' | 'childStyle' | undefined;
 	/**
 	 * `p:set` discrete attribute assignments composed alongside this effect
 	 * (ECMA-376 S19.5.79 CT_TLSetBehavior): an instantaneous (non-interpolated)
@@ -617,7 +617,7 @@ export interface PptxNativeAnimation {
 	 * "on/off" or "size N" has nothing to interpolate. Not yet consulted by
 	 * shared playback (round-trip/typed-model only so far).
 	 */
-	setAnimations?: PptxSetAnimation[];
+	setAnimations?: PptxSetAnimation[] | undefined;
 	/**
 	 * Every behaviour child of this effect (`p:set`, `p:anim`, `p:animEffect`,
 	 * `p:animScale`, `p:animRot`, `p:animMotion`) with its own timing, as
@@ -625,7 +625,7 @@ export interface PptxNativeAnimation {
 	 * this keeps the whole tree so playback can follow what PowerPoint wrote
 	 * (see `animation-behavior-player` in `pptx-viewer-shared`).
 	 */
-	behaviors?: PptxAnimationBehavior[];
+	behaviors?: PptxAnimationBehavior[] | undefined;
 }
 
 /**
@@ -642,9 +642,9 @@ export interface PptxSetAnimation {
 	/** Discriminant indicating which `p:to` child carried the value. */
 	valueType: 'str' | 'bool' | 'int' | 'flt' | 'clr';
 	/** Duration from this behaviour's nested `p:cTn/@dur`. */
-	durationMs?: number;
+	durationMs?: number | undefined;
 	/** Start offset from this behaviour's nested `p:stCondLst`. */
-	delayMs?: number;
+	delayMs?: number | undefined;
 }
 
 /**
@@ -666,13 +666,13 @@ export interface PptxAnimationEffectFilter {
 	 * `"inVertical"`, `"across"`, `"4"`). Absent when the filter has no
 	 * subtype (e.g. bare `"dissolve"`).
 	 */
-	subtype?: string;
+	subtype?: string | undefined;
 	/**
 	 * `p:animEffect/@transition`: `"in"` reveals the target (the OOXML
 	 * default when the attribute is omitted), `"out"` conceals it, `"none"`
 	 * applies the filter without a visibility change (a static filter pass).
 	 */
-	transition?: 'in' | 'out' | 'none';
+	transition?: 'in' | 'out' | 'none' | undefined;
 	/** Raw filter string exactly as authored, for round-trip/debugging. */
 	raw: string;
 }
@@ -744,9 +744,9 @@ export interface PptxAttributeAnimation {
 	 */
 	by?: string;
 	/** Duration from this behaviour's nested `p:cTn/@dur`. */
-	durationMs?: number;
+	durationMs?: number | undefined;
 	/** Start offset from this behaviour's nested `p:stCondLst`. */
-	delayMs?: number;
+	delayMs?: number | undefined;
 	/**
 	 * Interpolation mode from this behaviour's own `@_calcmode`
 	 * (ST_TLAnimateBehaviorCalcMode, ECMA-376 S19.5.2): `discrete` snaps to
@@ -789,25 +789,25 @@ export interface PptxColorAnimation {
 	/** Color interpolation space: "hsl" or "rgb". */
 	colorSpace: 'hsl' | 'rgb';
 	/** Direction for HSL interpolation: "cw" (clockwise) or "ccw". */
-	direction?: 'cw' | 'ccw';
+	direction?: 'cw' | 'ccw' | undefined;
 	/**
 	 * Optional `p:animClr/@path` value preserved for round-trip. When set,
 	 * the colour sweep follows a path-based interpolation rather than the
 	 * straight cw/ccw arc. ECMA-376 §19.5.13 documents this attribute as a
 	 * companion to `@dir` for HSL colour-space animations.
 	 */
-	path?: string;
+	path?: string | undefined;
 	/** Starting color as hex string, or the bare scheme name (e.g. `accent1`) for a theme colour; see {@link fromColorRef}. */
-	fromColor?: string;
+	fromColor?: string | undefined;
 	/** Ending color as hex string, or the bare scheme name; see {@link toColorRef}. */
-	toColor?: string;
+	toColor?: string | undefined;
 	/**
 	 * Color delta (for "by" animations) as hex string, or the bare scheme name;
 	 * see {@link byColorRef}. For HSL colour-space animations this retains the
 	 * historical byte-packed compatibility value; consumers should prefer
 	 * {@link hslDelta}, which preserves signed values.
 	 */
-	byColor?: string;
+	byColor?: string | undefined;
 	/**
 	 * The typed theme reference when {@link fromColor} is an `a:schemeClr`
 	 * (including `tint`/`shade`/`lumMod`/`lumOff`/`alpha`), so playback can
@@ -827,18 +827,18 @@ export interface PptxColorAnimation {
 	 * OOXML units without forcing them through the legacy byte-packed `byColor`
 	 * representation.
 	 */
-	hslDelta?: PptxHslColorDelta;
+	hslDelta?: PptxHslColorDelta | undefined;
 	/**
 	 * Target attribute from `p:attrNameLst` (e.g. "fillcolor", "style.color",
 	 * "stroke.color"). Used to determine which CSS property to animate.
 	 */
-	targetAttribute?: string;
+	targetAttribute?: string | undefined;
 	/**
 	 * All sibling `p:animClr` behaviours authored for the same timing node.
 	 * The top-level fields continue to mirror the first behaviour for backwards
 	 * compatibility; this list is present only when there is more than one.
 	 */
-	components?: readonly PptxColorAnimation[];
+	components?: readonly PptxColorAnimation[] | undefined;
 }
 
 /** Text-level animation target from `p:txEl`. */
@@ -921,7 +921,7 @@ export interface AnimationCondition {
 	/** Whether the condition targets a slide (from `p:tgtEl/p:sldTgt`). */
 	targetSlide?: boolean;
 	/** Full target choice, including `p:sndTgt` and `p:inkTgt`. */
-	target?: PptxAnimationTarget;
+	target?: PptxAnimationTarget | undefined;
 }
 
 /** Iteration configuration from `p:iterate`. */
@@ -929,11 +929,11 @@ export interface PptxAnimationIterate {
 	/** Iteration type: el (element), lt (letter), wd (word). */
 	type: 'el' | 'lt' | 'wd';
 	/** Whether to iterate backwards. */
-	backwards?: boolean;
+	backwards?: boolean | undefined;
 	/** Timing interval (percentage of total duration, in 1000ths). */
-	tmPct?: number;
+	tmPct?: number | undefined;
 	/** Absolute timing interval in ms. */
-	tmAbs?: number;
+	tmAbs?: number | undefined;
 }
 
 /** Build type for text build (paragraph/word/letter) animations from `p:bldP/@build`. */
@@ -981,12 +981,12 @@ export type PptxAfterAnimationAction =
  */
 export interface PptxElementAnimation {
 	elementId: string;
-	entrance?: PptxAnimationPreset;
-	exit?: PptxAnimationPreset;
-	emphasis?: PptxAnimationPreset;
-	durationMs?: number;
-	delayMs?: number;
-	order?: number;
+	entrance?: PptxAnimationPreset | undefined;
+	exit?: PptxAnimationPreset | undefined;
+	emphasis?: PptxAnimationPreset | undefined;
+	durationMs?: number | undefined;
+	delayMs?: number | undefined;
+	order?: number | undefined;
 	/**
 	 * The {@link order} the loader derived from the slide's `p:timing` tree for
 	 * an entry whose `pptx:editorMeta` record authored no `@order`. The tree
@@ -996,7 +996,7 @@ export interface PptxElementAnimation {
 	 * only; never set it by hand.
 	 */
 	orderFromTimeline?: number;
-	trigger?: PptxAnimationTrigger;
+	trigger?: PptxAnimationTrigger | undefined;
 	/**
 	 * Shape ID that triggers this animation: the shape clicked for
 	 * `onShapeClick`, or the media element whose bookmark fires it for
@@ -1005,22 +1005,22 @@ export interface PptxElementAnimation {
 	triggerShapeId?: string;
 	/** Bookmark name (`p14:bmk/@name`) an `onMediaBookmark` trigger waits for. */
 	triggerBookmark?: string;
-	timingCurve?: PptxAnimationTimingCurve;
-	repeatCount?: number;
-	repeatMode?: PptxAnimationRepeatMode;
+	timingCurve?: PptxAnimationTimingCurve | undefined;
+	repeatCount?: number | undefined;
+	repeatMode?: PptxAnimationRepeatMode | undefined;
 	/** Direction for directional effects (fly in/out, wipe, etc.). */
-	direction?: PptxAnimationDirection;
+	direction?: PptxAnimationDirection | undefined;
 	/** Sequence mode — animate as one object or by paragraph/word/letter. */
-	sequence?: PptxAnimationSequence;
+	sequence?: PptxAnimationSequence | undefined;
 	/** What happens after the animation finishes playing. */
-	afterAnimation?: PptxAfterAnimationAction;
+	afterAnimation?: PptxAfterAnimationAction | undefined;
 	/** Dim-to color hex (used when afterAnimation is "dimToColor"). */
-	afterAnimationColor?: string;
+	afterAnimationColor?: string | undefined;
 	/** Imported after-state for controls, not an authored override or serialized extension. */
 	nativeAfterAnimation?: PptxAfterAnimationAction;
-	nativeAfterAnimationColor?: string;
+	nativeAfterAnimationColor?: string | undefined;
 	/** SVG motion path string for custom motion path animations. */
-	motionPath?: string;
+	motionPath?: string | undefined;
 	/**
 	 * Path edit mode for `p:animMotion/@pathEditMode`. Defaults to "relative"
 	 * when emitted without an explicit value.
@@ -1039,9 +1039,9 @@ export interface PptxElementAnimation {
 	 * as a `p:audio/p:cMediaNode` sibling of the effect's own `p:childTnLst`
 	 * (see `PptxNativeAnimation.soundRId` for the COM-verified detail).
 	 */
-	soundRId?: string;
+	soundRId?: string | undefined;
 	/** Resolved sound file path from relationship. */
-	soundPath?: string;
+	soundPath?: string | undefined;
 	/**
 	 * The `@_name` to write on the embedded sound (`p:sndTgt`). For a stock
 	 * gallery pick this is the exact PowerPoint file name (e.g.
@@ -1051,9 +1051,9 @@ export interface PptxElementAnimation {
 	 * `pptx-viewer-shared`'s `setEffectSound` when the pick carries a
 	 * `soundName`; absent for a custom file with no meaningful name.
 	 */
-	soundName?: string;
+	soundName?: string | undefined;
 	/** Whether to stop any currently playing sound (`p:endSnd`). */
-	stopSound?: boolean;
+	stopSound?: boolean | undefined;
 	/**
 	 * Pending, not-yet-embedded sound chosen in the authoring UI, as a
 	 * `data:audio/...;base64,...` URL. Mirrors the `imageData` /

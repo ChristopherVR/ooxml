@@ -257,5 +257,5 @@ export interface PptxDrawingGuide {
 	/** Position in EMU (converted from pos attribute). */
 	positionEmu: number;
 	/** Optional guide colour as hex string (e.g. "#FF0000"). */
-	color?: string;
+	color?: string | undefined;
 }

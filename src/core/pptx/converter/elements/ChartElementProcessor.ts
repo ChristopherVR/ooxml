@@ -8,6 +8,7 @@ import type {
 	PptxElement,
 } from '../../core';
 import type { ElementProcessor, ElementProcessorContext } from './ElementProcessor';
+import { at } from '../../../geometry/indexed';
 
 export class ChartElementProcessor implements ElementProcessor {
 	public readonly supportedTypes = ['chart'] as const;
@@ -218,7 +219,7 @@ export class ChartElementProcessor implements ElementProcessor {
 		for (let rowIndex = 0; rowIndex < categories.length; rowIndex += 1) {
 			widths[0] = Math.max(widths[0], categories[rowIndex]?.length ?? 0);
 			for (let seriesIndex = 0; seriesIndex < series.length; seriesIndex += 1) {
-				const value = String(series[seriesIndex].values[rowIndex] ?? '');
+				const value = String(at(series, seriesIndex).values[rowIndex] ?? '');
 				widths[seriesIndex + 1] = Math.max(widths[seriesIndex + 1], value.length);
 			}
 			if (showPct) {

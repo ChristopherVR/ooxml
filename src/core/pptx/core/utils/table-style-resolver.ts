@@ -18,7 +18,7 @@ import type { PptxTableCellStyle } from '../types';
 /** Fill descriptor for a single table style part. */
 export interface TableStylePartFill {
 	/** Solid colour hex (e.g. "#FF0000"). */
-	color?: string;
+	color?: string | undefined;
 	/** Gradient fill definition (opaque — passed through to the renderer). */
 	gradient?: unknown;
 	/** Pattern fill definition (opaque — passed through to the renderer). */
@@ -27,25 +27,25 @@ export interface TableStylePartFill {
 
 /** Per-edge border descriptor. */
 export interface TableStylePartBorder {
-	width?: number;
-	color?: string;
-	dash?: string;
+	width?: number | undefined;
+	color?: string | undefined;
+	dash?: string | undefined;
 }
 
 /** Border set for a single table style part. */
 export interface TableStylePartBorders {
-	top?: TableStylePartBorder;
-	bottom?: TableStylePartBorder;
-	left?: TableStylePartBorder;
-	right?: TableStylePartBorder;
+	top?: TableStylePartBorder | undefined;
+	bottom?: TableStylePartBorder | undefined;
+	left?: TableStylePartBorder | undefined;
+	right?: TableStylePartBorder | undefined;
 }
 
 /** Text formatting for a single table style part. */
 export interface TableStylePartText {
-	bold?: boolean;
-	italic?: boolean;
-	color?: string;
-	fontSize?: number;
+	bold?: boolean | undefined;
+	italic?: boolean | undefined;
+	color?: string | undefined;
+	fontSize?: number | undefined;
 }
 
 /**

@@ -327,11 +327,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	protected async extractSlideNotes(slidePath: string): Promise<{
-		notes?: string;
-		notesSegments?: TextSegment[];
-		notesShapes?: PptxElement[];
-		notesClrMapOverride?: Record<string, string>;
-		notesCSldName?: string;
+		notes?: string | undefined;
+		notesSegments?: TextSegment[] | undefined;
+		notesShapes?: PptxElement[] | undefined;
+		notesClrMapOverride?: Record<string, string> | undefined;
+		notesCSldName?: string | undefined;
 	}> {
 		const slideRels = this.slideRelsMap.get(slidePath);
 		if (!slideRels) {

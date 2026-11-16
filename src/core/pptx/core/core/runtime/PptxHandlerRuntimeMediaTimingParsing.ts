@@ -94,8 +94,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				result.set(shapeId, {
 					fullScreen: fullScreen || undefined,
 					loop: timing.loop || undefined,
-					posterFramePath,
-					volume,
+					...(posterFramePath !== undefined && { posterFramePath }),
+					...(volume !== undefined && { volume }),
 					autoPlay: timing.autoPlay || undefined,
 					playAcrossSlides: playAcrossSlides || undefined,
 					hideWhenNotPlaying: hideWhenNotPlaying || undefined,

@@ -29,7 +29,7 @@ export interface PptxChartPageMargins {
 export interface PptxChartPageSetup {
 	paperSize?: number;
 	firstPageNumber?: number;
-	orientation?: 'default' | 'portrait' | 'landscape';
+	orientation?: 'default' | 'portrait' | 'landscape' | undefined;
 	blackAndWhite?: boolean;
 	draft?: boolean;
 	useFirstPageNumber?: boolean;

@@ -220,37 +220,37 @@ export type PptxMorphOption = 'byObject' | 'byWord' | 'byChar';
 export interface PptxSlideTransition {
 	type: PptxTransitionType;
 	/** Schema-defined transition speed. Defaults to `fast` when omitted. */
-	speed?: PptxTransitionSpeed;
-	durationMs?: number;
-	direction?: string;
-	advanceOnClick?: boolean;
-	advanceAfterMs?: number;
+	speed?: PptxTransitionSpeed | undefined;
+	durationMs?: number | undefined;
+	direction?: string | undefined;
+	advanceOnClick?: boolean | undefined;
+	advanceAfterMs?: number | undefined;
 	/** Number of spokes for wheel transition (1-8). */
-	spokes?: number;
+	spokes?: number | undefined;
 	/** Pattern type for shred transition. */
-	pattern?: string;
+	pattern?: string | undefined;
 	/**
 	 * Through-black flag (OOXML `@_thruBlk`). COM-verified to actually apply to
 	 * `cut` and `fade` (see {@link TRANSITION_THRUBLK_TYPES}); parsed generically
 	 * off any standard transition child so an unexpected authored value still
 	 * round-trips.
 	 */
-	thruBlk?: boolean;
+	thruBlk?: boolean | undefined;
 	/** Split orientation (horz/vert) parsed from `@_orient`. */
-	orient?: PptxSplitOrientation;
+	orient?: PptxSplitOrientation | undefined;
 	/**
 	 * Morph granularity from `<p159:morph @option>`: how finely PowerPoint
 	 * matches content between the two slides. Only meaningful when
 	 * {@link type} is `morph`; defaults to `byObject` when the attribute is
 	 * absent, matching PowerPoint's own default.
 	 */
-	morphOption?: PptxMorphOption;
+	morphOption?: PptxMorphOption | undefined;
 	/** Relationship ID of transition sound from `p:sndAc/p:stSnd/@r:embed` when present. */
-	soundRId?: string;
+	soundRId?: string | undefined;
 	/** Embedded WAV display name from `p:stSnd/p:snd/@name`. */
-	soundName?: string;
+	soundName?: string | undefined;
 	/** Whether the transition sound repeats until another sound starts. */
-	soundLoop?: boolean;
+	soundLoop?: boolean | undefined;
 	/** Resolved transition sound media path within the package. */
 	soundPath?: string;
 	/** Human-readable sound file name (extracted from soundPath, or set by the
@@ -272,9 +272,9 @@ export interface PptxSlideTransition {
 	 */
 	stopSound?: boolean;
 	/** Preserved sound-action XML node from `p:sndAc` for lossless round-trip. */
-	rawSoundAction?: XmlObject;
+	rawSoundAction?: XmlObject | undefined;
 	/** Preserved extension-list XML node from `p:extLst` within the transition for lossless round-trip. */
-	rawExtLst?: XmlObject;
+	rawExtLst?: XmlObject | undefined;
 	/** Original transition node, retained to preserve unknown attributes and children. */
 	rawTransition?: XmlObject;
 }

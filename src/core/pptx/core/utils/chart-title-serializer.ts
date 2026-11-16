@@ -26,9 +26,9 @@ import {
 /** The title-relevant subset of `PptxChartData` / `PptxChartStyle`. */
 export interface ChartTitleModel {
 	/** The title text; `''` clears the title, `undefined` leaves it alone. */
-	title?: string;
+	title?: string | undefined;
 	/** Explicit visibility; wins over `title` when it is `false`. */
-	hasTitle?: boolean;
+	hasTitle?: boolean | undefined;
 	/**
 	 * Lossless multi-run title text (`PptxChartData.titleRuns`). When present
 	 * and non-empty, this REPLACES the rich body with one run per entry
@@ -51,10 +51,10 @@ export interface ChartTitleModel {
 	 * dropping every other run, matching what PowerPoint itself does when you
 	 * retype a chart title.
 	 */
-	titleRuns?: PptxChartTitleRun[];
+	titleRuns?: PptxChartTitleRun[] | undefined;
 	/** Preserve authored rich XML when only run text changed. */
-	titleTextOnly?: boolean;
-	titleTextOnlyStyles?: Omit<PptxChartTitleRun, 'text'>[];
+	titleTextOnly?: boolean | undefined;
+	titleTextOnlyStyles?: Omit<PptxChartTitleRun, 'text'>[] | undefined;
 }
 
 export interface ChartTitleOptions {

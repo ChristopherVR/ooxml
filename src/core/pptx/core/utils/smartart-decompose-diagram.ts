@@ -54,10 +54,14 @@ function tryLegacy(
 		palette,
 		style,
 		elementId: 'smartart-fabrication',
-		presLayoutVars: smartArtData.presLayoutVars,
-		colorRoles: smartArtData.colorTransform?.roleColors,
-		connections: smartArtData.connections,
-		fontName: smartArtData.themeMinorFont,
+		...(smartArtData.presLayoutVars !== undefined && {
+			presLayoutVars: smartArtData.presLayoutVars,
+		}),
+		...(smartArtData.colorTransform?.roleColors !== undefined && {
+			colorRoles: smartArtData.colorTransform?.roleColors,
+		}),
+		...(smartArtData.connections !== undefined && { connections: smartArtData.connections }),
+		...(smartArtData.themeMinorFont !== undefined && { fontName: smartArtData.themeMinorFont }),
 	});
 	return interpreted && interpreted.nodes.length > 0 ? interpreted : undefined;
 }

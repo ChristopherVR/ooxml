@@ -149,7 +149,7 @@ export function parseModernCommentPart(
 
 export function parseModernAuthors(data: XmlObject): {
 	authors: PptxModernCommentAuthor[];
-	root?: XmlObject;
+	root?: XmlObject | undefined;
 } {
 	const root = child(data, 'authorLst');
 	return {

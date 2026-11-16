@@ -8,7 +8,7 @@ export interface Model3DTransform {
 	y: number;
 	width: number;
 	height: number;
-	rotation?: number;
+	rotation?: number | undefined;
 }
 
 /**

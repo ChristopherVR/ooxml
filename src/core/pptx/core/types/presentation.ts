@@ -58,9 +58,9 @@ export interface PptxCustomerData {
 	/** Relationship ID referencing the custom data part. */
 	relId?: string;
 	/** Raw string content of the custom data part (if resolvable). */
-	data?: string;
+	data?: string | undefined;
 	/** OPC content type for the custom data part. */
-	contentType?: string;
+	contentType?: string | undefined;
 	/** Raw `p:custData` XML retained for unknown-node preservation. */
 	rawXml?: XmlObject;
 }
@@ -77,9 +77,9 @@ export interface PptxActiveXControl {
 	/** Relationship ID referencing the ActiveX binary part. */
 	relId: string;
 	/** Control name from @name attribute. */
-	name?: string;
+	name?: string | undefined;
 	/** Shape ID this control is linked to (from @spid). */
-	shapeId?: string;
+	shapeId?: string | undefined;
 	/**
 	 * `p:control/@showAsIcon` (CT_Control, ECMA-376 S19.3.1.2): whether the
 	 * control renders as its static icon rather than its live appearance.
@@ -137,9 +137,9 @@ export interface PptxSlideBackgroundPattern {
 	/** DrawingML preset pattern token (`@_prst`). */
 	preset: string;
 	/** Foreground colour resolved to `#RRGGBB`. */
-	fgColor?: string;
+	fgColor?: string | undefined;
 	/** Background colour resolved to `#RRGGBB`. */
-	bgColor?: string;
+	bgColor?: string | undefined;
 }
 
 /**
@@ -190,26 +190,26 @@ export interface PptxSlide {
 	 * slide NUMBER, which is 1-based and therefore never matches a real deck's
 	 * ids: the section reloads with no slides in it.
 	 */
-	slideId?: string;
+	slideId?: string | undefined;
 	sourceSlideId?: string; // Optional source slide path when creating new slides
 	/**
 	 * The slide name, `p:cSld/@name`: loaded from the part, written back on
 	 * save (an empty string clears the attribute), and settable via
 	 * `SlideBuilder.setName`.
 	 */
-	name?: string;
-	layoutPath?: string;
+	name?: string | undefined;
+	layoutPath?: string | undefined;
 	layoutName?: string;
 	slideNumber: number;
 	hidden?: boolean; // Hidden slides are skipped in presentation mode
-	sectionName?: string;
-	sectionId?: string;
+	sectionName?: string | undefined;
+	sectionId?: string | undefined;
 	elements: PptxElement[];
-	backgroundColor?: string;
-	backgroundImage?: string; // base64 data URL for background image
+	backgroundColor?: string | undefined;
+	backgroundImage?: string | undefined; // base64 data URL for background image
 	/** Crop, tiling and image effects authored on the background blip fill. */
-	backgroundImageProperties?: PptxImageProperties;
-	backgroundGradient?: string; // CSS gradient string for background
+	backgroundImageProperties?: PptxImageProperties | undefined;
+	backgroundGradient?: string | undefined; // CSS gradient string for background
 	/**
 	 * The structured form of {@link backgroundGradient}, set by
 	 * `SlideBuilder.setBackground`. Saved as `p:bg/p:bgPr/a:gradFill` while
@@ -224,7 +224,7 @@ export interface PptxSlide {
 	 * Read at load; set by the Background Styles gallery and written back on save. The flat
 	 * `backgroundColor`/`backgroundGradient` stay the painted values.
 	 */
-	backgroundStyleRef?: import('./background-style').PptxSlideBackgroundStyleRef;
+	backgroundStyleRef?: import('./background-style').PptxSlideBackgroundStyleRef | undefined;
 	/**
 	 * Pattern fill on the slide background (`<a:pattFill>` inside `<p:bgPr>`).
 	 *
@@ -235,7 +235,7 @@ export interface PptxSlide {
 	 *
 	 * ECMA-376 §20.1.8.47.
 	 */
-	backgroundPattern?: PptxSlideBackgroundPattern;
+	backgroundPattern?: PptxSlideBackgroundPattern | undefined;
 	/**
 	 * `<p:bgPr/@shadeToTitle>`: boolean flag instructing the renderer to
 	 * anchor the background gradient on the title placeholder as a
@@ -251,8 +251,8 @@ export interface PptxSlide {
 	 *
 	 * ECMA-376 §19.3.1.2 (CT_BackgroundProperties).
 	 */
-	backgroundShadeToTitle?: boolean;
-	transition?: PptxSlideTransition;
+	backgroundShadeToTitle?: boolean | undefined;
+	transition?: PptxSlideTransition | undefined;
 	animations?: PptxElementAnimation[];
 	/**
 	 * Read-only anchors for the deck's own (non-editor-authored) effect
@@ -260,11 +260,11 @@ export interface PptxSlide {
 	 * can target any position in the full sequence. See
 	 * {@link PptxAnimationTimelineAnchor}.
 	 */
-	animationTimelineAnchors?: PptxAnimationTimelineAnchor[];
+	animationTimelineAnchors?: PptxAnimationTimelineAnchor[] | undefined;
 	/** Native OOXML animation data parsed from `p:timing`. */
-	nativeAnimations?: PptxNativeAnimation[];
+	nativeAnimations?: PptxNativeAnimation[] | undefined;
 	/** Preserved raw `p:timing` XML for lossless round-trip of native animations. */
-	rawTiming?: XmlObject;
+	rawTiming?: XmlObject | undefined;
 	notes?: string | undefined;
 	/** Rich text segments for the slide notes (preserves formatting). */
 	notesSegments?: TextSegment[] | undefined;
@@ -284,48 +284,48 @@ export interface PptxSlide {
 	notesCSldName?: string;
 	comments?: PptxComment[];
 	/** Source package metadata for an Office 2021 p188 comment part. */
-	modernCommentPart?: PptxModernCommentPart;
+	modernCommentPart?: PptxModernCommentPart | undefined;
 	warnings?: PptxCompatibilityWarning[];
 	rawXml?: XmlObject;
 	/** Per-slide colour map override parsed from `p:clrMapOvr`. */
-	clrMapOverride?: Record<string, string>;
+	clrMapOverride?: Record<string, string> | undefined;
 	/** Whether background animations should play (`p:bg/@showAnimation`). */
-	backgroundShowAnimation?: boolean;
+	backgroundShowAnimation?: boolean | undefined;
 	/** Whether master slide shapes should be shown on this slide (`p:sld/@showMasterSp`). */
-	showMasterShapes?: boolean;
+	showMasterShapes?: boolean | undefined;
 	/**
 	 * Whether inherited master placeholder animations should replay on this
 	 * slide (`p:sld/@showMasterPhAnim`). Distinct from {@link showMasterShapes}:
 	 * this governs animation timing, not shape visibility. Mirrors
 	 * `p:sldLayout/@showMasterPhAnim`, ECMA-376 §19.3.1.38.
 	 */
-	showMasterPhAnim?: boolean;
+	showMasterPhAnim?: boolean | undefined;
 	/** Drawing guides parsed from slide extension list. */
-	guides?: PptxDrawingGuide[];
+	guides?: PptxDrawingGuide[] | undefined;
 	/** When explicitly `false`, the slide is unmodified and save can skip re-serialization. */
 	isDirty?: boolean;
 	/** Customer data references from `p:custDataLst` on this slide. */
-	customerData?: PptxCustomerData[];
+	customerData?: PptxCustomerData[] | undefined;
 	/** ActiveX control references from `p:controls` on this slide. */
-	activeXControls?: PptxActiveXControl[];
+	activeXControls?: PptxActiveXControl[] | undefined;
 	/**
 	 * Shapes parsed from a referenced legacy VML drawing part
 	 * (`ppt/drawings/vmlDrawing*.vml`, linked via a `legacyDrawing`
 	 * relationship). These are read-only render hints: the VML part itself is
 	 * preserved verbatim on save, so this field is not re-serialized.
 	 */
-	legacyVmlElements?: PptxElement[];
+	legacyVmlElements?: PptxElement[] | undefined;
 	/** Per-slide header/footer flags from `<p:hf>` (P-H3). */
 	headerFooterFlags?: import('./masters').PptxHeaderFooterFlags;
 	/** Server-backed slide synchronization metadata stored in a related OPC part. */
-	slideSynchronization?: PptxSlideSyncProperties;
+	slideSynchronization?: PptxSlideSyncProperties | undefined;
 }
 
 export interface PptxModernCommentPart {
 	path: string;
 	relationshipId: string;
 	/** Original p188:cmLst root, including unknown attributes and extensions. */
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }
 
 /** Metadata from a `p:sldSyncPr` slide synchronization data part. */
@@ -333,10 +333,10 @@ export interface PptxSlideSyncProperties {
 	serverSlideId: string;
 	serverSlideModifiedTime: string;
 	clientInsertedTime: string;
-	extensionList?: XmlObject;
+	extensionList?: XmlObject | undefined;
 	rawXml?: XmlObject;
-	partPath?: string;
-	relationshipId?: string;
+	partPath?: string | undefined;
+	relationshipId?: string | undefined;
 }
 
 /**
@@ -535,11 +535,11 @@ export interface PptxSection {
 	/** Ordered list of numeric slide IDs that belong to this section. */
 	slideIds: string[];
 	/** Whether the section is collapsed in the slide sorter (from p15:sectionPr). */
-	collapsed?: boolean;
+	collapsed?: boolean | undefined;
 	/** Section highlight color hex (from p15:sectionPr/@clr). */
-	color?: string;
+	color?: string | undefined;
 	/** Original section subtree used to preserve unmodelled attributes and extensions. */
-	rawXml?: XmlObject;
+	rawXml?: XmlObject | undefined;
 }
 
 /**
@@ -672,43 +672,43 @@ export interface PptxData {
 	/** Slide height in EMU (for save round-trip). */
 	heightEmu?: number;
 	/** Slide size type from `p:sldSz/@type` (e.g. "screen4x3", "screen16x9", "custom"). */
-	slideSizeType?: string;
+	slideSizeType?: string | undefined;
 	/** Notes page width in EMU (from `p:notesSz`). */
-	notesWidthEmu?: number;
+	notesWidthEmu?: number | undefined;
 	/** Notes page height in EMU (from `p:notesSz`). */
-	notesHeightEmu?: number;
+	notesHeightEmu?: number | undefined;
 	layoutOptions?: PptxLayoutOption[];
-	headerFooter?: PptxHeaderFooter;
+	headerFooter?: PptxHeaderFooter | undefined;
 	/** Presentation-level properties parsed from `presentationPr.xml`. */
-	presentationProperties?: PptxPresentationProperties;
+	presentationProperties?: PptxPresentationProperties | undefined;
 	/** Named custom slide shows from `p:custShowLst`. */
-	customShows?: PptxCustomShow[];
+	customShows?: PptxCustomShow[] | undefined;
 	/** Ordered presentation sections from `p:sectionLst` / `p14:sectionLst`. */
-	sections?: PptxSection[];
-	warnings?: PptxCompatibilityWarning[];
+	sections?: PptxSection[] | undefined;
+	warnings?: PptxCompatibilityWarning[] | undefined;
 	/** Map of theme colour scheme keys to resolved hex values. */
 	themeColorMap?: Record<string, string>;
 	/** Full parsed theme object with colours, fonts, and name. */
-	theme?: PptxTheme;
+	theme?: PptxTheme | undefined;
 	/** Available theme parts discovered in `ppt/theme/`. */
-	themeOptions?: PptxThemeOption[];
+	themeOptions?: PptxThemeOption[] | undefined;
 	/** Real theme variants from the package's `themeVariants/` parts, when it has any. */
-	themeVariants?: PptxThemeVariant[];
+	themeVariants?: PptxThemeVariant[] | undefined;
 	/** Parsed table style definitions from `ppt/tableStyles.xml`. */
-	tableStyleMap?: ParsedTableStyleMap;
+	tableStyleMap?: ParsedTableStyleMap | undefined;
 	/**
 	 * The current default table style GUID (`ppt/tableStyles.xml`'s
 	 * `a:tblStyleLst/@def`): the style PowerPoint applies to a newly inserted
 	 * table. Matches `PptxSaveOptions.tableStylesDefaultId` so a save call
 	 * that omits it can fall back to what was loaded.
 	 */
-	tableStylesDefaultId?: string;
+	tableStylesDefaultId?: string | undefined;
 	/** Whether the presentation is password-protected. */
 	isPasswordProtected?: boolean;
 	/** Embedded font data (name + binary data URL) extracted from the presentation. */
-	embeddedFonts?: PptxEmbeddedFont[];
+	embeddedFonts?: PptxEmbeddedFont[] | undefined;
 	/** Typed `p:embeddedFontLst` package metadata, including unresolved variants. */
-	embeddedFontList?: PptxEmbeddedFontList;
+	embeddedFontList?: PptxEmbeddedFontList | undefined;
 	/**
 	 * `p:presentation/@embedTrueTypeFonts` (ECMA-376 §19.2.1.26): the author's
 	 * saved preference that TrueType fonts referenced by the deck be embedded.
@@ -723,12 +723,12 @@ export interface PptxData {
 	 * which is a separate, deliberately unimplemented flag (no glyph
 	 * subsetting) that does not interact with this one.
 	 */
-	embedTrueTypeFonts?: boolean;
+	embedTrueTypeFonts?: boolean | undefined;
 	/**
 	 * `p:presentation/@firstSlideNum`: a `slidenum` field on slide `i` (0-based)
 	 * shows `firstSlideNumber + i`. Absent means the spec default, 1.
 	 */
-	firstSlideNumber?: number;
+	firstSlideNumber?: number | undefined;
 	/**
 	 * Presentation-level default text style (`p:defaultTextStyle`): the
 	 * last-resort paragraph/run-property fallback for every shape (placeholder
@@ -736,37 +736,37 @@ export interface PptxData {
 	 * Keyed the same way as {@link PptxMasterTextStyles} categories: `-1` is
 	 * `a:defPPr`, `0`-`8` are `a:lvl1pPr`-`a:lvl9pPr`.
 	 */
-	defaultTextStyle?: PptxTextStyleLevels;
+	defaultTextStyle?: PptxTextStyleLevels | undefined;
 	/** Most-recently-used colour list from presentation properties. */
-	mruColors?: string[];
+	mruColors?: string[] | undefined;
 	/** Parsed notes master data if present in the PPTX. */
-	notesMaster?: PptxNotesMaster;
+	notesMaster?: PptxNotesMaster | undefined;
 	/** Parsed handout master data if present in the PPTX. */
-	handoutMaster?: PptxHandoutMaster;
+	handoutMaster?: PptxHandoutMaster | undefined;
 	/** Structured slide master data for each master in the presentation. */
-	slideMasters?: PptxSlideMaster[];
+	slideMasters?: PptxSlideMaster[] | undefined;
 	/** Parsed tag collections attached to the presentation or slides. */
-	tags?: PptxTagCollection[];
+	tags?: PptxTagCollection[] | undefined;
 	/** Custom document properties from `docProps/custom.xml`. */
-	customProperties?: PptxCustomProperty[];
+	customProperties?: PptxCustomProperty[] | undefined;
 	/** Core document properties from `docProps/core.xml`. */
-	coreProperties?: PptxCoreProperties;
+	coreProperties?: PptxCoreProperties | undefined;
 	/** Extended (application) properties from `docProps/app.xml`. */
-	appProperties?: PptxAppProperties;
+	appProperties?: PptxAppProperties | undefined;
 	/** Whether the presentation contains VBA macros (is a .pptm file). */
-	hasMacros?: boolean;
+	hasMacros?: boolean | undefined;
 	/** Whether the presentation contains digital signatures (`_xmlsignatures/` parts). */
-	hasDigitalSignatures?: boolean;
+	hasDigitalSignatures?: boolean | undefined;
 	/** Number of digital signatures found. */
-	digitalSignatureCount?: number;
+	digitalSignatureCount?: number | undefined;
 	/** Presentation-level drawing guides from `p:extLst`. */
-	presentationGuides?: PptxDrawingGuide[];
+	presentationGuides?: PptxDrawingGuide[] | undefined;
 	/** View properties from `ppt/viewProps.xml`. */
-	viewProperties?: PptxViewProperties;
+	viewProperties?: PptxViewProperties | undefined;
 	/** Write-protection verifier from `p:modifyVerifier` in `presentation.xml`. */
-	modifyVerifier?: PptxModifyVerifier;
+	modifyVerifier?: PptxModifyVerifier | undefined;
 	/** Photo album metadata from `p:photoAlbum` in `presentation.xml`. */
-	photoAlbum?: PptxPhotoAlbum;
+	photoAlbum?: PptxPhotoAlbum | undefined;
 	/**
 	 * Legacy Smart Tags recognizer reference from `p:smartTags` in
 	 * `presentation.xml`. Read-only: there is no data model for the
@@ -774,19 +774,19 @@ export interface PptxData {
 	 * inspectable and to prove it survives a save (the owning part and its
 	 * relationship are preserved passively, like any other unmodelled part).
 	 */
-	smartTags?: PptxSmartTagsReference;
+	smartTags?: PptxSmartTagsReference | undefined;
 	/** East Asian line-break settings from `p:kinsoku` in `presentation.xml`. */
-	kinsoku?: PptxKinsoku;
+	kinsoku?: PptxKinsoku | undefined;
 	/** Custom XML data parts from `customXml/` in the OPC package. */
-	customXmlParts?: PptxCustomXmlPart[];
+	customXmlParts?: PptxCustomXmlPart[] | undefined;
 	/** Customer data references from `p:custDataLst` in `presentation.xml`. */
-	customerData?: PptxCustomerData[];
+	customerData?: PptxCustomerData[] | undefined;
 	/** Thumbnail image binary data from `docProps/thumbnail.{jpeg,png}`. */
-	thumbnailData?: Uint8Array;
+	thumbnailData?: Uint8Array | undefined;
 	/** Comment authors parsed from `ppt/commentAuthors.xml` for round-trip preservation. */
-	commentAuthors?: PptxCommentAuthor[];
+	commentAuthors?: PptxCommentAuthor[] | undefined;
 	/** Office 2021 p188 authors from the modern Author part. */
-	modernCommentAuthors?: PptxModernCommentAuthor[];
+	modernCommentAuthors?: PptxModernCommentAuthor[] | undefined;
 	/**
 	 * OOXML conformance class of the loaded file.
 	 * - `'strict'` -- ISO/IEC 29500 Strict (uses `purl.oclc.org` namespace URIs)
@@ -795,7 +795,7 @@ export interface PptxData {
 	 * When saving, if the save option `conformance` is `'preserve'` (default),
 	 * the file will be saved using the same conformance class as the original.
 	 */
-	conformance?: 'strict' | 'transitional';
+	conformance?: 'strict' | 'transitional' | undefined;
 }
 
 // ==========================================================================
@@ -916,7 +916,7 @@ export interface PptxEmbeddedFont {
 	 * The GUID used for obfuscation, either from the `fontKey` attribute
 	 * or extracted from the part path. Preserved from load for round-trip.
 	 */
-	fontGuid?: string;
+	fontGuid?: string | undefined;
 	/**
 	 * Relationship ID (e.g. `rId21`) of the font part in
 	 * `ppt/_rels/presentation.xml.rels`. Preserved from load so the save

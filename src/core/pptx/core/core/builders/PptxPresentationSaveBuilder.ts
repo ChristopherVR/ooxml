@@ -23,23 +23,23 @@ import { extractSectionMap } from '../../utils/presentation-section-parser';
 import { PRESENTATION_CHILD_ORDER, reorderObjectKeysByLocalName } from '../../utils/xml-reorder';
 
 export interface PptxPresentationSaveBuilderOptions {
-	headerFooter?: PptxHeaderFooter;
-	presentationProperties?: PptxPresentationProperties;
-	customShows?: PptxCustomShow[];
-	sections?: PptxSection[];
-	photoAlbum?: PptxPhotoAlbum;
-	kinsoku?: PptxKinsoku | null;
-	modifyVerifier?: PptxModifyVerifier | null;
+	headerFooter?: PptxHeaderFooter | undefined;
+	presentationProperties?: PptxPresentationProperties | undefined;
+	customShows?: PptxCustomShow[] | undefined;
+	sections?: PptxSection[] | undefined;
+	photoAlbum?: PptxPhotoAlbum | undefined;
+	kinsoku?: PptxKinsoku | null | undefined;
+	modifyVerifier?: PptxModifyVerifier | null | undefined;
 	/**
 	 * Slide dimensions to write instead of the load-time ones. Only the
 	 * fields that are present override; a missing `type` keeps whatever the
 	 * loaded `p:sldSz` carried, and an explicitly empty string removes it.
 	 */
-	slideSize?: PptxSlideSize;
+	slideSize?: PptxSlideSize | undefined;
 	/** `p:presentation/@embedTrueTypeFonts` to write. `undefined` preserves the loaded value. */
-	embedTrueTypeFonts?: boolean;
+	embedTrueTypeFonts?: boolean | undefined;
 	/** `p:defaultTextStyle` level edits to merge in. `undefined` preserves the loaded value. */
-	defaultTextStyle?: PptxTextStyleLevels;
+	defaultTextStyle?: PptxTextStyleLevels | undefined;
 }
 
 export interface PptxPresentationSaveBuildInput {
@@ -47,7 +47,7 @@ export interface PptxPresentationSaveBuildInput {
 	options?: PptxPresentationSaveBuilderOptions;
 	rawSlideWidthEmu: number;
 	rawSlideHeightEmu: number;
-	rawSlideSizeType?: string;
+	rawSlideSizeType?: string | undefined;
 	xmlLookupService: IPptxXmlLookupService;
 	/**
 	 * Old->new slide-reference remapping from the slides reconciler. Used to

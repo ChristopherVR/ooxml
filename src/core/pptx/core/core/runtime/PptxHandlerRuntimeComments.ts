@@ -8,6 +8,7 @@ import {
 } from '../../utils/modern-comment-xml';
 import { xmlChild } from '../../utils/xml-access';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeThemeSwitching';
+import { at } from '../../../../geometry/indexed';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	/**
@@ -279,7 +280,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 		return tokens
 			.slice(0, 2)
-			.map((token) => token[0].toUpperCase())
+			.map((token) => at(token, 0).toUpperCase())
 			.join('');
 	}
 }

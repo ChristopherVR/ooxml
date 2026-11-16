@@ -6,7 +6,7 @@ interface AlternateContentWarning {
 	message: string;
 	severity: PptxCompatibilityWarning['severity'];
 	scope: 'presentation' | 'slide';
-	slideId?: string;
+	slideId?: string | undefined;
 	xmlPath: string;
 }
 

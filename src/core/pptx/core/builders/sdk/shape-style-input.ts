@@ -210,13 +210,13 @@ function mapReflectionToShapeStyle(reflection?: ReflectionInput): Partial<ShapeS
 
 /** The fill, stroke and effect inputs a shape-like element accepts. */
 export interface ShapeStyleInputs {
-	fill?: FillInput;
-	stroke?: StrokeInput;
-	shadow?: ShadowInput;
-	innerShadow?: InnerShadowInput;
-	glow?: GlowInput;
-	softEdge?: number;
-	reflection?: ReflectionInput;
+	fill?: FillInput | undefined;
+	stroke?: StrokeInput | undefined;
+	shadow?: ShadowInput | undefined;
+	innerShadow?: InnerShadowInput | undefined;
+	glow?: GlowInput | undefined;
+	softEdge?: number | undefined;
+	reflection?: ReflectionInput | undefined;
 }
 
 export function buildShapeStyle(opts: ShapeStyleInputs): ShapeStyle | undefined {

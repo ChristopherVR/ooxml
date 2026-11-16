@@ -1,5 +1,6 @@
 import type { TextSegment, TextStyle } from '../core';
 import { getSubstituteFontFamily } from '../core/utils/font-substitution';
+import { at } from '../../geometry/indexed';
 
 /** Default font size in CSS px when none specified. */
 const DEFAULT_FONT_SIZE = 18;
@@ -137,7 +138,7 @@ function splitIntoParagraphs(
 		if (seg.isParagraphBreak || (seg.text === '\n' && !seg.isLineBreak)) {
 			paragraphs.push({ segments: [], style: seg.style });
 		} else if (seg.text || seg.isLineBreak) {
-			paragraphs[paragraphs.length - 1].segments.push(seg);
+			at(paragraphs, paragraphs.length - 1).segments.push(seg);
 		}
 	}
 	return paragraphs;
@@ -162,7 +163,7 @@ function layoutParagraphs(
 			scaleFactor *
 			1.2;
 		const flushLine = () => {
-			while (currentLine.length > 0 && /^\s+$/.test(currentLine[currentLine.length - 1].text)) {
+			while (currentLine.length > 0 && /^\s+$/.test(at(currentLine, currentLine.length - 1).text)) {
 				lineWidth -= currentLine.pop()!.measuredWidth;
 			}
 			lines.push({

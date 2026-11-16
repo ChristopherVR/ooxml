@@ -5,15 +5,15 @@ import { drawTextSegments } from './ShapeTextRenderer';
 export interface ShapeRenderInput {
 	width: number;
 	height: number;
-	shapeType?: string;
-	pathData?: string;
-	pathWidth?: number;
-	pathHeight?: number;
+	shapeType?: string | undefined;
+	pathData?: string | undefined;
+	pathWidth?: number | undefined;
+	pathHeight?: number | undefined;
 	shapeStyle?: ShapeStyle;
 	/** Optional text segments to render inside the shape. */
-	textSegments?: TextSegment[];
+	textSegments?: TextSegment[] | undefined;
 	/** Body-level text style (alignment, vertical alignment, insets). */
-	textStyle?: TextStyle;
+	textStyle?: TextStyle | undefined;
 }
 
 /** Maximum canvas dimension (px) for shapes without text. */

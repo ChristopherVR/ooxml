@@ -25,23 +25,23 @@ import type { AutoNumberSequence } from './auto-number-sequence';
  */
 export interface PlaceholderInfo {
 	/** Numeric index (`@_idx`) — distinguishes multiple body/content areas. */
-	idx?: string;
+	idx?: string | undefined;
 	/** Semantic type (`@_type`) — e.g. "title", "body", "ctrTitle", "dt". */
-	type?: string;
+	type?: string | undefined;
 	/** Size hint (`@_sz`) — e.g. "half", "quarter" for layout hinting. */
-	sz?: string;
+	sz?: string | undefined;
 	/**
 	 * Orientation (`@_orient`) — only `"vert"` is meaningful per the schema
 	 * (`ST_Direction`). Indicates the placeholder hosts a vertically-oriented
 	 * text body and should preserve that on round-trip.
 	 */
-	orient?: 'vert';
+	orient?: 'vert' | undefined;
 	/**
 	 * Whether the placeholder defines its own custom prompt text
 	 * (`@_hasCustomPrompt`). Defaults to `false`. Preserved so that authoring
 	 * tools see the same flag they wrote.
 	 */
-	hasCustomPrompt?: boolean;
+	hasCustomPrompt?: boolean | undefined;
 }
 
 /**
@@ -114,7 +114,7 @@ export interface ParagraphStyleResult {
 	/** Merged run-level default style combining body, level, and paragraph defaults. */
 	mergedDefaultRunStyle: TextStyle;
 	/** Per-paragraph indentation values (left margin and first-line indent, in pixels). */
-	indent: { marginLeft?: number; indent?: number };
+	indent: { marginLeft?: number | undefined; indent?: number | undefined };
 }
 
 /**
@@ -130,7 +130,7 @@ export interface ParagraphContentResult {
 	/** Styled text segments preserving per-run formatting. */
 	segments: TextSegment[];
 	/** Style from the first text run, used to seed the shape-level text style. */
-	seedStyle?: TextStyle;
+	seedStyle?: TextStyle | undefined;
 }
 
 /**

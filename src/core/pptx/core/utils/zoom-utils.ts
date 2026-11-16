@@ -7,6 +7,7 @@
 
 import type { PptxElement, ZoomPptxElement } from '../types/elements';
 import type { PptxSlide } from '../types/presentation';
+import { at } from '../../../geometry/indexed';
 
 /**
  * Returns `true` when the element is a zoom element.
@@ -111,7 +112,7 @@ export function getSectionSlideRange(zoomElement: ZoomPptxElement, slides: PptxS
 	const sectionId = zoomElement.targetSectionId;
 	const result: number[] = [];
 	for (let i = 0; i < slides.length; i++) {
-		if (slides[i].sectionId === sectionId) {
+		if (at(slides, i).sectionId === sectionId) {
 			result.push(i);
 		}
 	}

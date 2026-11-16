@@ -10,6 +10,7 @@
  */
 
 import type { PptxData, PptxSection } from '../../types/presentation';
+import { at } from '../../../../geometry/indexed';
 
 // ---------------------------------------------------------------------------
 // ID generation
@@ -59,7 +60,7 @@ export function addSection(data: PptxData, name: string, slideIndices: number[])
 	// Map slide indices to slide IDs
 	const slideIds = slideIndices
 		.filter((idx) => idx >= 0 && idx < data.slides.length)
-		.map((idx) => data.slides[idx].id);
+		.map((idx) => at(data.slides, idx).id);
 
 	const section: PptxSection = {
 		id: sectionId,
@@ -72,8 +73,8 @@ export function addSection(data: PptxData, name: string, slideIndices: number[])
 	// Also update section references on the slides themselves
 	for (const idx of slideIndices) {
 		if (idx >= 0 && idx < data.slides.length) {
-			data.slides[idx].sectionName = name;
-			data.slides[idx].sectionId = sectionId;
+			at(data.slides, idx).sectionName = name;
+			at(data.slides, idx).sectionId = sectionId;
 		}
 	}
 

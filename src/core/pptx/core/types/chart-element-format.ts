@@ -104,9 +104,9 @@ export interface PptxChartElementLine {
 	/** `a:prstDash/@val` (`solid`, `dash`, `sysDot`, `lgDashDot`, ...). */
 	dash?: string;
 	/** `a:ln/@cmpd`. */
-	compound?: 'sng' | 'dbl' | 'thickThin' | 'thinThick' | 'tri';
+	compound?: 'sng' | 'dbl' | 'thickThin' | 'thinThick' | 'tri' | undefined;
 	/** `a:ln/@cap`. */
-	cap?: 'rnd' | 'sq' | 'flat';
+	cap?: 'rnd' | 'sq' | 'flat' | undefined;
 	/** `a:round` / `a:bevel` / `a:miter`. */
 	join?: 'round' | 'bevel' | 'miter';
 	/** `a:headEnd/@type`. */

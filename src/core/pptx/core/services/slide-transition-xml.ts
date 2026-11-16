@@ -56,7 +56,7 @@ export interface ParsedTransitionDetails {
 	spokes?: number;
 	pattern?: string;
 	thruBlk?: boolean;
-	morphOption?: PptxMorphOption;
+	morphOption?: PptxMorphOption | undefined;
 	rawSoundAction?: XmlObject;
 	rawExtLst?: XmlObject;
 }

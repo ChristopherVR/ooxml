@@ -62,7 +62,7 @@ export interface SaveSlideContext {
 	 * instead of the colour the load pass resolved onto the child. Absent for a
 	 * top-level element.
 	 */
-	readonly inheritedGroupFill?: ShapeStyle;
+	readonly inheritedGroupFill?: ShapeStyle | undefined;
 	/**
 	 * The ENCLOSING group itself (the immediate parent whose children are
 	 * currently being serialised), which already carries the

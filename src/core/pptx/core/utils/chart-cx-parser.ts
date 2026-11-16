@@ -68,7 +68,7 @@ export function parseCxChartSeries(
 ):
 	| {
 			categories: string[];
-			categoryLevels?: string[][];
+			categoryLevels?: string[][] | undefined;
 			series: PptxChartData['series'];
 			hasDataLabels?: boolean;
 			/**

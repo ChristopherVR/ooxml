@@ -50,7 +50,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 export interface LayoutDisplayNameInput {
 	name?: string;
-	type?: string;
+	type?: string | undefined;
 	path: string;
 }
 

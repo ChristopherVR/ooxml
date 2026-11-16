@@ -20,10 +20,10 @@ import { hasShapeProperties } from '../../types';
 
 /** The resolved background of the slide these shapes belong to. */
 export interface ResolvedSlideBackground {
-	backgroundColor?: string;
-	backgroundGradient?: string;
-	backgroundImage?: string;
-	backgroundPattern?: PptxSlideBackgroundPattern;
+	backgroundColor?: string | undefined;
+	backgroundGradient?: string | undefined;
+	backgroundImage?: string | undefined;
+	backgroundPattern?: PptxSlideBackgroundPattern | undefined;
 }
 
 /**

@@ -101,7 +101,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		el: Model3DPptxElement,
 		shape: XmlObject | undefined,
 		ctx: SaveSlideContext,
-	): { relationshipId?: string } {
+	): { relationshipId?: string | undefined } {
 		const posterNode = shape?.['p16:posterImage'] as XmlObject | undefined;
 		let relationshipId = String(posterNode?.['@_r:embed'] ?? '').trim() || undefined;
 		let imagePath = el.imagePath;

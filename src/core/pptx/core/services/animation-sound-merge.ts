@@ -22,10 +22,10 @@ import type { PptxElementAnimation, PptxNativeAnimation } from '../types';
 
 /** The sound-related fields copied from a native animation record. */
 interface NativeSoundState {
-	soundRId?: string;
-	soundPath?: string;
-	soundName?: string;
-	stopSound?: boolean;
+	soundRId?: string | undefined;
+	soundPath?: string | undefined;
+	soundName?: string | undefined;
+	stopSound?: boolean | undefined;
 }
 
 export function mergeNativeSoundIntoEditorAnimations(

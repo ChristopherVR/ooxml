@@ -62,7 +62,7 @@ async function validateMediaReferences(
 	issues: ValidationIssue[],
 ): Promise<void> {
 	const media = new Set(
-		Object.keys(zip.files).filter((path) => path.startsWith('ppt/media/') && !zip.files[path].dir),
+		Object.keys(zip.files).filter((path) => path.startsWith('ppt/media/') && !zip.files[path]?.dir),
 	);
 	for (const path of Object.keys(zip.files).filter((entry) =>
 		/^ppt\/slides\/_rels\/slide\d+\.xml\.rels$/.test(entry),

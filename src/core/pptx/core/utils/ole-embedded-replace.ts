@@ -77,7 +77,7 @@ export function encodeOle10Native(fileName: string, data: Uint8Array): Uint8Arra
 /** Options for {@link replaceOleEmbedding}. */
 export interface ReplaceOleEmbeddingOptions {
 	/** File name to record when re-wrapping a generic "Package" (`Ole10Native`). */
-	fileName?: string;
+	fileName?: string | undefined;
 }
 
 /**

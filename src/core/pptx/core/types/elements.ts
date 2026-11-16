@@ -61,9 +61,9 @@ export interface PptxAccessibilityProperties {
  */
 export interface PptxNonVisualDescription {
 	/** `p:cNvPr/@descr`. */
-	altText?: string;
+	altText?: string | undefined;
 	/** `p:cNvPr/@title`. */
-	title?: string;
+	title?: string | undefined;
 }
 
 /**
@@ -238,9 +238,9 @@ export interface TablePptxElement extends PptxElementBase {
 	 * Accessibility description from `p:nvGraphicFramePr/p:cNvPr/@descr`, the
 	 * same non-visual-properties attribute a picture's alt text comes from.
 	 */
-	altText?: string;
+	altText?: string | undefined;
 	/** Accessibility title from `p:nvGraphicFramePr/p:cNvPr/@title`. */
-	title?: string;
+	title?: string | undefined;
 	/**
 	 * Unrecognised extensions captured from `a:graphicData/a:extLst` so they
 	 * round-trip losslessly. See {@link PptxGraphicFrameExtension}.
@@ -258,9 +258,9 @@ export interface ChartPptxElement extends PptxElementBase {
 	type: 'chart';
 	chartData?: PptxChartData;
 	/** Accessibility description from `p:nvGraphicFramePr/p:cNvPr/@descr`. */
-	altText?: string;
+	altText?: string | undefined;
 	/** Accessibility title from `p:nvGraphicFramePr/p:cNvPr/@title`. */
-	title?: string;
+	title?: string | undefined;
 	/** Unrecognised graphicFrame extLst extensions, captured verbatim for round-trip. */
 	extensionXml?: PptxGraphicFrameExtension[];
 }
@@ -280,9 +280,9 @@ export interface SmartArtPptxElement extends PptxElementBase {
 	type: 'smartArt';
 	smartArtData?: PptxSmartArtData;
 	/** Accessibility description from `p:nvGraphicFramePr/p:cNvPr/@descr`. */
-	altText?: string;
+	altText?: string | undefined;
 	/** Accessibility title from `p:nvGraphicFramePr/p:cNvPr/@title`. */
-	title?: string;
+	title?: string | undefined;
 	/** Unrecognised graphicFrame extLst extensions, captured verbatim for round-trip. */
 	extensionXml?: PptxGraphicFrameExtension[];
 }
@@ -325,7 +325,7 @@ export interface OlePptxElement extends PptxElementBase {
 	type: 'ole';
 	oleTarget?: string;
 	oleProgId?: string;
-	oleName?: string;
+	oleName?: string | undefined;
 	/** CLSID of the OLE object (from `@_classid`). */
 	oleClsId?: string;
 	/** Detected application type (excel, word, pdf, etc.). */
@@ -389,9 +389,9 @@ export interface OlePptxElement extends PptxElementBase {
 	 */
 	oleContentDirty?: boolean;
 	/** Accessibility description from `p:nvGraphicFramePr/p:cNvPr/@descr`. */
-	altText?: string;
+	altText?: string | undefined;
 	/** Accessibility title from `p:nvGraphicFramePr/p:cNvPr/@title`. */
-	title?: string;
+	title?: string | undefined;
 	/** Unrecognised graphicFrame extLst extensions, captured verbatim for round-trip. */
 	extensionXml?: PptxGraphicFrameExtension[];
 }
@@ -419,24 +419,24 @@ export interface OlePptxElement extends PptxElementBase {
 export interface MediaPptxElement extends PptxElementBase {
 	type: 'media';
 	mediaType?: PptxMediaType;
-	mediaPath?: string;
-	mediaData?: string;
-	mediaMimeType?: string;
+	mediaPath?: string | undefined;
+	mediaData?: string | undefined;
+	mediaMimeType?: string | undefined;
 	mediaReferenceKind?: PptxMediaReferenceKind;
-	mediaReferenceName?: string;
+	mediaReferenceName?: string | undefined;
 	/** Explicit DrawingML `audioFile/@contentType` value when present. */
-	mediaReferenceContentType?: string;
-	audioCdStart?: PptxAudioCdPosition;
-	audioCdEnd?: PptxAudioCdPosition;
+	mediaReferenceContentType?: string | undefined;
+	audioCdStart?: PptxAudioCdPosition | undefined;
+	audioCdEnd?: PptxAudioCdPosition | undefined;
 	rawMediaReferenceXml?: XmlObject;
 	/** Trim start in milliseconds (from p:cMediaNode p:cTn @st). */
-	trimStartMs?: number;
+	trimStartMs?: number | undefined;
 	/** Trim end in milliseconds (from p:cMediaNode p:cTn @end). */
-	trimEndMs?: number;
+	trimEndMs?: number | undefined;
 	/** Path to the poster/preview image inside the ZIP. */
 	posterFramePath?: string;
 	/** Base64 data-URL for the poster frame image. */
-	posterFrameData?: string;
+	posterFrameData?: string | undefined;
 	/** Poster source crop from the left edge as a 0..1 fraction. */
 	cropLeft?: number;
 	/** Poster source crop from the top edge as a 0..1 fraction. */
@@ -456,15 +456,15 @@ export interface MediaPptxElement extends PptxElementBase {
 	/** Whether media should play full-screen during presentation. */
 	fullScreen?: boolean;
 	/** Whether media should loop continuously. */
-	loop?: boolean;
+	loop?: boolean | undefined;
 	/** Fade-in duration in seconds. */
 	fadeInDuration?: number;
 	/** Fade-out duration in seconds. */
 	fadeOutDuration?: number;
 	/** Playback volume (0 to 1). */
-	volume?: number;
+	volume?: number | undefined;
 	/** Whether media auto-plays on slide entry. */
-	autoPlay?: boolean;
+	autoPlay?: boolean | undefined;
 	/** Whether audio continues playing across slide transitions (presentation mode). */
 	playAcrossSlides?: boolean;
 	/** Hide the element when media is not actively playing. */
@@ -483,7 +483,7 @@ export interface MediaPptxElement extends PptxElementBase {
 	 * Whether the media is linked (external `r:link`) rather than embedded
 	 * (`r:embed`). Defaults to embedded when undefined.
 	 */
-	isLinked?: boolean;
+	isLinked?: boolean | undefined;
 	/**
 	 * Accessibility description. Read from `p:nvGraphicFramePr/p:cNvPr/@descr`
 	 * for the `p:graphicFrame`-shaped (SDK-created) media form, or from
@@ -491,9 +491,9 @@ export interface MediaPptxElement extends PptxElementBase {
 	 * PowerPoint's usual authoring shape for a video/audio placeholder); see
 	 * `PptxHandlerRuntimePictureParsing.ts`.
 	 */
-	altText?: string;
+	altText?: string | undefined;
 	/** Accessibility title, from the same `@title` attribute on whichever `p:cNvPr` the media form uses. Same scope note as {@link altText}. */
-	title?: string;
+	title?: string | undefined;
 	/** Unrecognised graphicFrame extLst extensions, captured verbatim for round-trip. */
 	extensionXml?: PptxGraphicFrameExtension[];
 }
@@ -519,7 +519,7 @@ export interface GroupPptxElement extends PptxElementBase {
 	/** Child elements contained within this group. */
 	children: PptxElement[];
 	/** Fill style extracted from the group's `p:grpSpPr`, used for `a:grpFill` inheritance. */
-	groupFill?: ShapeStyle;
+	groupFill?: ShapeStyle | undefined;
 	/**
 	 * The SAME `p:grpSpPr` extraction as {@link groupFill}, kept whenever the
 	 * group carries a `p:grpSpPr` at all, regardless of whether it resolved to
@@ -535,7 +535,7 @@ export interface GroupPptxElement extends PptxElementBase {
 	 * read from it (`getComputedEffectStyle`); the rest of `a:effectLst` on a
 	 * group remains unsupported.
 	 */
-	groupEffectStyle?: ShapeStyle;
+	groupEffectStyle?: ShapeStyle | undefined;
 	/**
 	 * Exact EMU the group's own `a:chOff`/`a:chExt` (the coordinate space its
 	 * CHILDREN are authored in) were parsed from, alongside {@link
@@ -557,9 +557,9 @@ export interface GroupPptxElement extends PptxElementBase {
 	/** See {@link chOffXEmu}. */
 	chOffYEmu?: number;
 	/** See {@link chOffXEmu}. */
-	chExtWidthEmu?: number;
+	chExtWidthEmu?: number | undefined;
 	/** See {@link chOffXEmu}. */
-	chExtHeightEmu?: number;
+	chExtHeightEmu?: number | undefined;
 }
 
 /**
@@ -573,11 +573,11 @@ export interface InkPptxElement extends PptxElementBase {
 	/** SVG path data for ink strokes. */
 	inkPaths: string[];
 	/** Per-path stroke colours. */
-	inkColors?: string[];
+	inkColors?: string[] | undefined;
 	/** Per-path stroke widths. */
-	inkWidths?: number[];
+	inkWidths?: number[] | undefined;
 	/** Per-path opacities (0-1). */
-	inkOpacities?: number[];
+	inkOpacities?: number[] | undefined;
 	/** Drawing tool used: pen, highlighter, or eraser. */
 	inkTool?: 'pen' | 'highlighter' | 'eraser';
 	/**
@@ -588,7 +588,7 @@ export interface InkPptxElement extends PptxElementBase {
 	 * the stroke. When present, the renderer uses these values to produce
 	 * variable-width strokes that reflect stylus/pen pressure.
 	 */
-	inkPointPressures?: number[][];
+	inkPointPressures?: number[][] | undefined;
 	/**
 	 * Per-path arrays of per-point pen-tilt lean direction (degrees, straight
 	 * from `PointerEvent.tiltX` on supporting hardware).
@@ -731,7 +731,7 @@ export interface ZoomPptxElement extends PptxElementBase, PptxImageProperties {
 	 * first tile's own value; see {@link SummaryZoomTarget.returnToParent} for
 	 * the per-tile value.
 	 */
-	returnToParent?: boolean;
+	returnToParent?: boolean | undefined;
 	/**
 	 * `zmPr/@transitionDur` (MS-PPTX `CT_ZoomObjectProperties`): the
 	 * zoom-transition length in milliseconds. PowerPoint's own writer emits a
@@ -742,7 +742,7 @@ export interface ZoomPptxElement extends PptxElementBase, PptxImageProperties {
 	 * For `zoomType: 'summary'`, this mirrors the first tile's own value; see
 	 * {@link SummaryZoomTarget.transitionDurationMs} for the per-tile value.
 	 */
-	transitionDurationMs?: number;
+	transitionDurationMs?: number | undefined;
 }
 
 /** A single section tile within a PowerPoint Summary Zoom container. */
@@ -753,12 +753,12 @@ export interface SummaryZoomTarget extends PptxImageProperties {
 	y: number;
 	width: number;
 	height: number;
-	title?: string;
-	description?: string;
-	offsetFactorX?: number;
-	offsetFactorY?: number;
-	scaleFactorX?: number;
-	scaleFactorY?: number;
+	title?: string | undefined;
+	description?: string | undefined;
+	offsetFactorX?: number | undefined;
+	offsetFactorY?: number | undefined;
+	scaleFactorX?: number | undefined;
+	scaleFactorY?: number | undefined;
 	/** This tile's own `zmPr/@returnToParent`; see {@link ZoomPptxElement.returnToParent}. */
 	returnToParent?: boolean;
 	/** This tile's own `zmPr/@transitionDur` in milliseconds; see {@link ZoomPptxElement.transitionDurationMs}. */

@@ -31,11 +31,11 @@ import {
 } from './custom-properties-package';
 
 export interface PptxDocumentPropertiesSaveOptions {
-	coreProperties?: PptxCoreProperties;
-	appProperties?: PptxAppProperties;
-	customProperties?: PptxCustomProperty[];
+	coreProperties?: PptxCoreProperties | undefined;
+	appProperties?: PptxAppProperties | undefined;
+	customProperties?: PptxCustomProperty[] | undefined;
 	/** A reproducible save: `created` / `modified` are this date, the revision is not counted up. */
-	fixedDate?: Date;
+	fixedDate?: Date | undefined;
 }
 
 export interface PptxDocumentPropertiesUpdaterContext {

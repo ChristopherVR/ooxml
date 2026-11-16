@@ -276,7 +276,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				rels = await this.readPartText(relsPath);
 			}
 
-			parts.push({ id: itemId, data, schemaUri, properties, rels });
+			parts.push({
+				id: itemId,
+				data,
+				...(schemaUri !== undefined && { schemaUri }),
+				...(properties !== undefined && { properties }),
+				...(rels !== undefined && { rels }),
+			});
 		}
 
 		this.customXmlParts = parts;

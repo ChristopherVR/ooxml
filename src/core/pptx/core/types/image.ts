@@ -313,8 +313,8 @@ export interface PptxImageEffects {
 		 */
 		resolvedPattern?: {
 			preset: string;
-			foreground?: string;
-			background?: string;
+			foreground?: string | undefined;
+			background?: string | undefined;
 		};
 	};
 	/** Blur (`a:blur`): radius in EMU and grow flag. */
@@ -362,23 +362,23 @@ export type PptxCropShape =
  */
 export interface PptxImageProperties {
 	/** Base64 data-URL for the decoded image. */
-	imageData?: string;
+	imageData?: string | undefined;
 	/** Path within the PPTX ZIP archive. */
-	imagePath?: string;
+	imagePath?: string | undefined;
 	/** Base64 data-URL for an SVG variant (from blip extension asvg:svgBlip). Preferred over raster when available. */
 	svgData?: string;
 	/** Path to the SVG file within the PPTX ZIP archive. */
 	svgPath?: string;
 	/** Alt text / description from `p:cNvPr/@descr`. */
-	altText?: string;
+	altText?: string | undefined;
 	/** Crop from left edge as 0..1 fraction (OOXML `a:srcRect/@l`). */
-	cropLeft?: number;
+	cropLeft?: number | undefined;
 	/** Crop from top edge as 0..1 fraction (OOXML `a:srcRect/@t`). */
-	cropTop?: number;
+	cropTop?: number | undefined;
 	/** Crop from right edge as 0..1 fraction (OOXML `a:srcRect/@r`). */
-	cropRight?: number;
+	cropRight?: number | undefined;
 	/** Crop from bottom edge as 0..1 fraction (OOXML `a:srcRect/@b`). */
-	cropBottom?: number;
+	cropBottom?: number | undefined;
 	/**
 	 * Stretch target inset from the left frame edge as a signed fraction
 	 * (OOXML `a:stretch/a:fillRect/@l`). Unlike `cropLeft` (which selects a
@@ -386,13 +386,13 @@ export interface PptxImageProperties {
 	 * FRAME the whole image is stretched into; negative values push the
 	 * image beyond the frame edge, and the overflow is clipped.
 	 */
-	fillRectLeft?: number;
+	fillRectLeft?: number | undefined;
 	/** Stretch target inset from the top frame edge (`a:fillRect/@t`). */
-	fillRectTop?: number;
+	fillRectTop?: number | undefined;
 	/** Stretch target inset from the right frame edge (`a:fillRect/@r`). */
-	fillRectRight?: number;
+	fillRectRight?: number | undefined;
 	/** Stretch target inset from the bottom frame edge (`a:fillRect/@b`). */
-	fillRectBottom?: number;
+	fillRectBottom?: number | undefined;
 	/** Image tiling offset X in px. */
 	tileOffsetX?: number;
 	/** Image tiling offset Y in px. */
@@ -413,7 +413,7 @@ export interface PptxImageProperties {
 	 */
 	dpi?: number;
 	/** Image recolour/artistic effect properties. */
-	imageEffects?: PptxImageEffects;
+	imageEffects?: PptxImageEffects | undefined;
 	/**
 	 * Crop-to-shape (CSS clip-path shape name).
 	 *

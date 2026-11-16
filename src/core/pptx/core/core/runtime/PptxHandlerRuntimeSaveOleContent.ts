@@ -11,7 +11,7 @@ const OLE_IMAGE_RELATIONSHIP_TYPE =
 interface PendingOleContentUpdate {
 	targetPath: string;
 	newPayloadBytes: Uint8Array;
-	fileName?: string;
+	fileName?: string | undefined;
 }
 
 function resolveRelationshipTarget(
@@ -36,7 +36,7 @@ function resolveRelationshipTarget(
  * which already embeds whatever `oleEmbeddedData` holds at save time.
  */
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
-	protected pendingOleContentUpdates?: PendingOleContentUpdate[];
+	protected pendingOleContentUpdates?: PendingOleContentUpdate[] | undefined;
 	private nextOlePreviewImageIndex?: number;
 
 	private nextOlePreviewImagePath(): string {

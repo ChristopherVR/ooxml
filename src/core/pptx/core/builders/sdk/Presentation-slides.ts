@@ -12,6 +12,7 @@
 import type { PptxSlide, PptxData } from '../../types/presentation';
 import { duplicateSlide } from './slide-operations';
 import { SlideBuilder } from './SlideBuilder';
+import { at } from '../../../../geometry/indexed';
 
 /**
  * Dependencies required for slide management operations.
@@ -204,6 +205,6 @@ export function findSlidesImpl(
  */
 function renumberSlides(data: PptxData): void {
 	for (let i = 0; i < data.slides.length; i++) {
-		data.slides[i].slideNumber = i + 1;
+		at(data.slides, i).slideNumber = i + 1;
 	}
 }

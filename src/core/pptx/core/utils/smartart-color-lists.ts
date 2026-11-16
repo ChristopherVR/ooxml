@@ -128,8 +128,8 @@ interface ParsedLabel {
 	textLine: string[];
 	effect: string[];
 	textEffect: string[];
-	fillInterpolation?: PptxSmartArtColorListMetadata;
-	lineInterpolation?: PptxSmartArtColorListMetadata;
+	fillInterpolation?: PptxSmartArtColorListMetadata | undefined;
+	lineInterpolation?: PptxSmartArtColorListMetadata | undefined;
 }
 
 function parseLabel(lbl: XmlObject, deps: SmartArtColorListDeps): ParsedLabel {

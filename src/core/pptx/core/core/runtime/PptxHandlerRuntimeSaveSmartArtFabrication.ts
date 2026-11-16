@@ -71,7 +71,9 @@ const DIAGRAM_PART_KINDS = [
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	/** Content-type overrides queued for diagram parts fabricated this save. */
-	protected pendingDiagramContentTypes?: Array<{ partName: string; contentType: string }>;
+	protected pendingDiagramContentTypes?:
+		| Array<{ partName: string; contentType: string }>
+		| undefined;
 
 	/** Pick the next free `ppt/diagrams/*N.xml` index (zip + pending writes). */
 	protected nextDiagramPartIndex(): number {
@@ -137,7 +139,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					colorsUniqueId: fabricatedColorsUniqueId(data.colorScheme),
 					colorsCategory: fabricatedColorsCategory(data.colorScheme),
 				},
-				{ guidByNodeId, presentationGuidByNodeId, drawingRelId },
+				{
+					guidByNodeId,
+					presentationGuidByNodeId,
+					...(drawingRelId !== undefined && { drawingRelId }),
+				},
 			),
 			layout: buildFabricatedLayoutDefXml(family, layoutIdentity),
 			quickStyle: buildFabricatedQuickStyleXml(data.style),
