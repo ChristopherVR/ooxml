@@ -11,6 +11,7 @@ import { join } from 'node:path';
 import { PptxHandler } from '../pptx/core/PptxHandler';
 import { setChartSeriesChartType } from '../pptx/core/builders/sdk/chart-operations';
 import type { ChartPptxElement, PptxChartData } from '../pptx/core/types';
+import { planWithLeftovers } from '../pptx/core/utils/chart-neutral-save-plan';
 
 const output = process.argv[2];
 if (!output) throw new Error('Expected an output directory.');
@@ -34,6 +35,12 @@ const manifest: Record<
 		nativeType: number;
 		/** Per-series native types of a combination chart (`Series.ChartType`), when checked. */
 		nativeTypes?: number[];
+		/** Per-series axis groups (`Series.AxisGroup`: 1 primary, 2 secondary), when checked. */
+		axisGroups?: number[];
+		/** The number of chart groups (`Chart.ChartGroups().Count`), when checked. */
+		groups?: number;
+		/** Which writer saved the part. */
+		writer: string;
 		slideIndex: number;
 		slideCount: number;
 		series: { name: string; values: number[] }[];
@@ -41,8 +48,21 @@ const manifest: Record<
 		cells: { sheet: string; address: string; value: string | number }[];
 	}
 > = {};
-async function save(name: string, nativeType: number, nativeTypes?: number[]) {
+async function save(
+	name: string,
+	nativeType: number,
+	nativeTypes?: number[],
+	axisGroups?: number[],
+	groups?: number,
+) {
 	const expected = structuredClone(element.chartData!);
+	// Which writer saves the part: the neutral plan, or the object-tree writers for unclaimed fields.
+	const baseline = (
+		handler as unknown as { runtime: { chartDataBaselines: Map<string, string> } }
+	).runtime.chartDataBaselines.get(expected.chartPartPath!);
+	const unclaimed = baseline
+		? planWithLeftovers(JSON.parse(baseline) as PptxChartData, expected).unclaimed
+		: ['(no baseline)'];
 	const bytes = await handler.save(deck.slides);
 	const reopened = await new PptxHandler().load(bytes);
 	const back = (
@@ -54,7 +74,15 @@ async function save(name: string, nativeType: number, nativeTypes?: number[]) {
 		JSON.stringify(back.series.map(({ name, values }) => ({ name, values }))) !==
 			JSON.stringify(expected.series.map(({ name, values }) => ({ name, values })))
 	)
-		throw new Error(`${name}: own-host save/reopen differs`);
+		throw new Error(
+			`${name}: own-host save/reopen differs: ${JSON.stringify({
+				type: [back.chartType, expected.chartType],
+				categories: [back.categories, expected.categories],
+				series: [back.series, expected.series].map((list) =>
+					list.map(({ name, values }) => ({ name, values })),
+				),
+			})}`,
+		);
 	const zip = await JSZip.loadAsync(bytes);
 	const neutral = parseChartSpace(await zip.file(back.chartPartPath!)!.async('string')).chartSpace;
 	const cells = chartSpaceWorkbookWrites(neutral).flatMap((write) => {
@@ -72,6 +100,9 @@ async function save(name: string, nativeType: number, nativeTypes?: number[]) {
 		type: expected.chartType,
 		nativeType,
 		...(nativeTypes ? { nativeTypes } : {}),
+		...(axisGroups ? { axisGroups } : {}),
+		...(groups === undefined ? {} : { groups }),
+		writer: unclaimed.length === 0 ? 'neutral' : `object-tree (${unclaimed.join(', ')})`,
 		slideIndex: slideIndex + 1,
 		slideCount: deck.slides.length,
 		series: expected.series.map(({ name, values }) => ({ name, values })),
@@ -128,5 +159,62 @@ delete chart().gapDepth;
 await save('classic-radar.pptx', 81);
 chart().radarStyle = 'filled';
 await save('classic-radar-filled.pptx', 82);
+// Wireframe, pie-of-pie and bubble edits on kept groups.
+delete chart().radarStyle;
+chart().chartType = 'surface';
+await save('classic-surface.pptx', 83);
+chart().wireframe = true;
+await save('classic-surface-wireframe.pptx', 84);
+delete chart().wireframe;
+chart().chartType = 'ofPie';
+chart().series = [{ name: 'Split', values: [8, 6, 4, 2, 1] }];
+await save('classic-of-pie.pptx', 68);
+chart().ofPieOptions = {
+	...chart().ofPieOptions!,
+	splitType: 'pos',
+	splitPos: 2,
+	secondPieSize: 60,
+	gapWidth: 120,
+};
+await save('classic-of-pie-split.pptx', 68);
+delete chart().ofPieOptions;
+// Per-series combinations Excel 16 saves through `Series.ChartType`: a line series of horizontal
+// bars on a secondary axis pair, and a series converted back rejoining its column group.
+chart().chartType = 'bar';
+chart().barDirection = 'bar';
+chart().series = [
+	{ name: 'Bars A', values: [2, 4, 6, 8, 10] },
+	{ name: 'Bars B', values: [3, 6, 9, 12, 15] },
+	{ name: 'Line C', values: [1, 5, 7, 11, 13] },
+];
+chart().title = 'Bars and line';
+await save('classic-hbar.pptx', 57);
+setChartSeriesChartType(element, 2, 'line');
+await save('classic-hbar-line.pptx', 57, [57, 57, 65], [1, 1, 2]);
+for (const series of chart().series) delete series.seriesChartType;
+chart().chartType = 'bar';
+await save('classic-hbar-back.pptx', 57, undefined, [1, 1, 1], 1);
+chart().barDirection = 'col';
+await save('classic-columns.pptx', 51);
+setChartSeriesChartType(element, 1, 'line');
+await save('classic-columns-line.pptx', 51, [51, 65, 51]);
+for (const series of chart().series) delete series.seriesChartType;
+chart().chartType = 'bar';
+await save('classic-columns-rejoined.pptx', 51, undefined, undefined, 1);
+// An XY chart (two value axes) with one line series, and bubble options.
+chart().categories = ['1', '2', '3', '4', '5'];
+await save('classic-columns-numbered.pptx', 51);
+chart().chartType = 'scatter';
+chart().title = 'XY and line';
+await save('classic-xy.pptx', 74);
+setChartSeriesChartType(element, 2, 'line');
+await save('classic-xy-line.pptx', -4169, [-4169, -4169, 4]);
+for (const series of chart().series) delete series.seriesChartType;
+chart().chartType = 'bubble';
+chart().series = chart().series.slice(0, 2);
+await save('classic-bubble.pptx', 15);
+chart().bubbleOptions = { ...chart().bubbleOptions, bubbleScale: 55, sizeRepresents: 'w' };
+await save('classic-bubble-options.pptx', 15);
 writeFileSync(join(output, 'manifest.json'), JSON.stringify(manifest, null, 2));
+for (const [name, entry] of Object.entries(manifest)) console.log(`${name}: ${entry.writer}`);
 console.log(`Wrote ${Object.keys(manifest).length} classic chart cases to ${output}`);

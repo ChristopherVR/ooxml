@@ -365,6 +365,33 @@ actions of the shared UI and dropped entries ahead of the structure planner.
 `chart-filtered-series-migration.test.ts`: hiding on 40 parts, restoring on 2 and dropping on 2
 reload with the edit through the neutral writer; the object-tree save kept 15, 0 and 2.
 
+Horizontal-bar and XY combinations: Excel 16, driven through `Series.ChartType` on a clustered
+bar, a clustered column and an XY chart, saves a series that turns between horizontal bars and a
+vertical family on a secondary axis pair (a hidden category axis at the bottom for a vertical
+group, at the left for a horizontal one, and a value axis on the right or top crossing at its
+maximum, without gridlines), and a column, line or area series of an XY chart on the x axis turned
+into a category axis that the remaining scatter series share (`c:smooth val="0"` on them, the
+value axis crossing between categories). A column series converted to line and back rejoins its
+column group with that group's gap width. `setChartSeriesType` now writes those structures; a turn
+back joins the group of its orientation and drops the secondary pair. The object-tree writers wrote
+the XY case as a line series with `c:xVal` and `c:yVal`, which CT_LineSer does not allow
+(`chart-combo-orientation-migration.test.ts`, 2 parts); no deck holds a 2-D horizontal bar chart
+with two plain series. A whole-chart type switch now also claims the cleared settings of the type
+it leaves (pie-of-pie, bubble, radar, wireframe, 3-D bar shape), which the object-tree path had
+taken: switching a pie of pie to bars there wrote a part PowerPoint could not open.
+
+Native acceptance, 2026-11-16 (`pptx-classic-chart-acceptance.ps1 -RequireActiveDataSheet`,
+PowerPoint 16.0, 26 sequential cases, the builder now records which writer saved each case): the
+first run passed the 13 earlier cases and the surface (83), surface wireframe (84), bubble (15) and
+bubble option edits. It failed the pie-of-pie cases (PowerPoint reported 6 values for 5 points) and
+the horizontal-bar cases, which that run saved through the object-tree path described above
+("could not open the file"); the column-and-line case opened with series types 51 and 65
+(`xlLineMarkers`), and the XY chart and its line case opened as 74 and with a scatter series of 72
+(`xlXYScatterSmooth`, fixed since by writing `c:smooth`). After the fixes the builder saves all 26
+cases through the neutral writer, but the second native run stopped responding inside an Edit Data
+workbook and could not be repeated in this session, so the pie-of-pie, horizontal-bar, rejoin and
+XY-line cases have no completed native pass yet.
+
 XY combinations: Excel 16, driven through its object model (`Series.ChartType = xlXYScatter` on a
 column or line series), saves a `c:scatterChart` that references the same category and value axes
 as the column or line group, with the categories as `c:xVal`, a 5 pt circle marker in the series

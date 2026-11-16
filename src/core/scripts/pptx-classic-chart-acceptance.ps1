@@ -36,11 +36,13 @@ try {
    $chart = $charts[0]
    if ($null -eq $want.nativeTypes) { Assert-Same $chart.ChartType $want.nativeType "$($property.Name) chart type" }
    Assert-Same $chart.SeriesCollection().Count @($want.series).Count "$($property.Name) series count"
+   if ($null -ne $want.groups) { Assert-Same $chart.ChartGroups().Count $want.groups "$($property.Name) chart group count" }
    for ($index=0; $index -lt @($want.series).Count; $index++) {
     $series = $chart.SeriesCollection($index+1)
     $expected = $want.series[$index]
     Assert-Same $series.Name $expected.name 'series name'
     if ($null -ne $want.nativeTypes) { Assert-Same $series.ChartType $want.nativeTypes[$index] "$($property.Name) series $($index+1) type" }
+    if ($null -ne $want.axisGroups) { Assert-Same $series.AxisGroup $want.axisGroups[$index] "$($property.Name) series $($index+1) axis group" }
     $values = @($series.Values)
     Assert-Same $values.Count @($expected.values).Count 'series value count'
     for ($row=0; $row -lt $values.Count; $row++) { Assert-Same $values[$row] $expected.values[$row] 'series value' }

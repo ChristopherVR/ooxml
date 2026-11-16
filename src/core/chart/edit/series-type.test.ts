@@ -38,11 +38,9 @@ describe('one series combo type changes', () => {
 		const changed = setChartSeriesType(source, 0, { kind: 'area' });
 		expect(changed.plotArea.groups.map((group) => group.kind)).toEqual(['area', 'bar']);
 		expect(chartSeriesEntries(changed).map((entry) => entry.series.index)).toEqual([0, 1]);
-		expect(() => setChartSeriesType(source, 1, { kind: 'bubble' })).toThrow('vertical 2D');
-		expect(() => setChartSeriesType(source, 1, { kind: 'pie' })).toThrow('vertical 2D');
-		expect(() => setChartSeriesType(source, 1, { kind: 'line', is3D: true })).toThrow(
-			'vertical 2D',
-		);
+		expect(() => setChartSeriesType(source, 1, { kind: 'bubble' })).toThrow('2D column');
+		expect(() => setChartSeriesType(source, 1, { kind: 'pie' })).toThrow('2D column');
+		expect(() => setChartSeriesType(source, 1, { kind: 'line', is3D: true })).toThrow('2D column');
 		source.plotArea.groups[0]!.extLst = '<c:extLst/>';
 		expect(() => setChartSeriesType(source, 1, { kind: 'line' })).toThrow('unknown group');
 	});
@@ -73,7 +71,7 @@ describe('one series combo type changes', () => {
 		expect(xml).not.toMatch(/<c:scatterChart>.*<c:cat>.*<\/c:scatterChart>/su);
 		// Back to a column: the series takes its categories and values again.
 		const back = setChartSeriesType(changed, 1, { kind: 'bar' });
-		expect(back.plotArea.groups.map((group) => group.kind)).toEqual(['bar', 'bar']);
+		expect(back.plotArea.groups.map((group) => group.kind)).toEqual(['bar']);
 		expect(chartSeriesEntries(back)[1]!.series.categories).toEqual(original.categories);
 		expect(chartSeriesEntries(back)[1]!.series.values).toEqual(original.values);
 	});
@@ -87,9 +85,61 @@ describe('one series combo type changes', () => {
 		expect(series.values).toEqual(original.values);
 		expect(series.xValues).toBeUndefined();
 	});
-	it('keeps a scatter chart on two value axes a whole-chart type', () => {
+	it('turns the x value axis of an XY chart into the shared category axis, as Excel saves it', () => {
 		const scatter = setChartType(columnChart(), { kind: 'scatter' });
-		expect(() => setChartSeriesType(scatter, 1, { kind: 'line' })).toThrow('axis pair');
+		const changed = setChartSeriesType(scatter, 1, { kind: 'line' });
+		expect(changed.plotArea.groups.map((group) => group.kind)).toEqual(['scatter', 'line']);
+		expect(changed.plotArea.groups.map((group) => group.axisIds)).toEqual([
+			[11, 22],
+			[11, 22],
+		]);
+		const [x, y] = changed.plotArea.axes;
+		expect(x).toMatchObject({ kind: 'cat', id: 11, position: 'b' });
+		expect(x!.crossBetween).toBeUndefined();
+		expect(y).toMatchObject({ kind: 'val', crossBetween: 'between' });
+		const line = chartSeriesEntries(changed)[1]!.series;
+		expect(line.categories).toBeDefined();
+		expect(line.xValues).toBeUndefined();
+		expect(chartSeriesEntries(changed)[0]!.series.xValues).toBeDefined();
+		expect(parseChartSpace(writeChartSpace(changed)).issues).toEqual([]);
+	});
+	it('moves a series that turns between horizontal bars and a vertical family to a secondary pair', () => {
+		const bars = setChartType(columnChart(), { kind: 'bar', barDirection: 'bar' });
+		const changed = setChartSeriesType(bars, 1, { kind: 'line' });
+		expect(changed.plotArea.groups.map((group) => [group.kind, group.axisIds])).toEqual([
+			['bar', [11, 22]],
+			['line', [500000003, 500000004]],
+		]);
+		expect(changed.plotArea.axes.slice(2)).toMatchObject([
+			{ kind: 'cat', id: 500000003, crossAxisId: 500000004, deleted: true, position: 'b' },
+			{ kind: 'val', id: 500000004, crossAxisId: 500000003, position: 'r', crosses: 'max' },
+		]);
+		const column = setChartSeriesType(columnChart(), 1, { kind: 'bar', barDirection: 'bar' });
+		expect(column.plotArea.groups.map((group) => group.barDirection)).toEqual(['col', 'bar']);
+		expect(column.plotArea.axes.slice(2).map((axis) => axis.position)).toEqual(['l', 't']);
+		// Back to bars: the series rejoins its group and the secondary pair goes.
+		const back = setChartSeriesType(changed, 1, { kind: 'bar', barDirection: 'bar' });
+		expect(back.plotArea.groups).toHaveLength(1);
+		expect(back.plotArea.groups[0]!.series.map((series) => series.index)).toEqual([0, 1]);
+		expect(back.plotArea.axes.map((axis) => axis.id)).toEqual([11, 22]);
+		expect(() =>
+			setChartSeriesType(setChartType(columnChart(), { kind: 'scatter' }), 1, {
+				kind: 'bar',
+				barDirection: 'bar',
+			}),
+		).toThrow(/horizontal bars/u);
+	});
+	it('rejoins the group a series left when its settings differ from a new group', () => {
+		const source = columnChart();
+		const round = setChartSeriesType(setChartSeriesType(source, 1, { kind: 'line' }), 1, {
+			kind: 'bar',
+		});
+		expect(round.plotArea.groups).toHaveLength(1);
+		expect(round.plotArea.groups[0]).toMatchObject({ gapWidth: 219, overlap: -27 });
+		const { series: _round, ...joined } = round.plotArea.groups[0]!;
+		const { series: _source, ...original } = source.plotArea.groups[0]!;
+		expect(joined).toEqual(original);
+		expect(round.plotArea.groups[0]!.series.map((series) => series.index)).toEqual([0, 1]);
 	});
 	it('joins equal groups anywhere in the plot area before writing, keeping other groups apart', () => {
 		const source = columnChart();

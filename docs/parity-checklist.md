@@ -502,10 +502,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       The object-tree writers had dropped `varyColors`, bar direction, scatter style, the gridline
       flag and the series number format on save. Print settings and pivot formats are still
       encoded by PowerPoint's element codecs before the shared writer places them.
-- [ ] **P2** Per-series chart combinations: a series of a vertical 2-D category chart can become
-      column, line, area or scatter (`chart/edit/series-type.ts`, native PowerPoint reopen checked);
-      combinations on horizontal bars or on two value axes and splits inside a stack keep the
-      object-tree path, and 3-D or bubble series types switch the whole chart, as Office does.
+- [ ] **P2** Per-series chart combinations: a series of a 2-D column, bar, line, area or XY chart
+      can become column, bar, line, area or scatter (`chart/edit/series-type.ts`): a series that
+      turns between horizontal bars and a vertical family takes a secondary axis pair, a series of
+      an XY chart that takes a category family turns the x axis into a category axis, and a series
+      converted back rejoins the group it left, as Excel 16 saves each through `Series.ChartType`.
+      Splits inside a stack, groups with unknown extensions and a turn on a chart that already has
+      secondary axes keep the object-tree path; 3-D or bubble series types switch the whole chart,
+      as Office does. Groups of one type that are not neighbours after a conversion stay separate.
 - [x] `a:linkedTxbx` (Word-style linked text boxes) is not flowed: PowerPoint ignores it (measured
       with COM `Slide.Export`: the head keeps all text unclipped, successors stay empty), so the
       renderer matches by default (`setLinkedTextBoxFlow` opts in). The link is parsed and

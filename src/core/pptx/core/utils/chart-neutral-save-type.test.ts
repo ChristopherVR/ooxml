@@ -29,7 +29,7 @@ describe('classic per-series type save plan', () => {
 		const reset: NeutralChartEdit[] = [];
 		planNeutralChartType(after, structuredClone(before), reset);
 		for (const edit of reset) space = edit(space);
-		expect(space.plotArea.groups.map((group) => group.kind)).toEqual(['bar', 'bar']);
+		expect(space.plotArea.groups.map((group) => group.kind)).toEqual(['bar']);
 	});
 	it('claims the SDK promotion to combo, converting only the series whose type changed', () => {
 		const before = chart(),
@@ -62,5 +62,21 @@ describe('classic per-series type save plan', () => {
 		let space = columnChart();
 		for (const edit of edits) space = edit(space);
 		expect(space.plotArea.groups.map((group) => group.kind)).toEqual(['line', 'bar']);
+	});
+	it('claims the cleared settings of the type a whole-chart switch leaves', () => {
+		const before = {
+			...chart(),
+			chartType: 'ofPie',
+			series: [chart().series[0]!],
+			ofPieOptions: { ofPieType: 'pie', splitType: 'pos', splitPos: 2 },
+		} as PptxChartData;
+		const probe = structuredClone(before);
+		probe.chartType = 'bar';
+		probe.barDirection = 'bar';
+		delete probe.ofPieOptions;
+		const edits: NeutralChartEdit[] = [];
+		planNeutralChartType(before, probe, edits);
+		expect(same(before, probe)).toBe(true);
+		expect(edits).toHaveLength(1);
 	});
 });

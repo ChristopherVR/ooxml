@@ -55,6 +55,17 @@ export function planNeutralChartType(
 		// The switch wrote the direction the edited model asks for.
 		if (before.barDirection === undefined) delete probe.barDirection;
 		else probe.barDirection = before.barDirection;
+		// Settings of the type the chart leaves that the edit cleared go with the old group: the
+		// new group keeps only what its element allows (`setChartType`).
+		for (const key of [
+			'ofPieOptions',
+			'bubbleOptions',
+			'radarStyle',
+			'wireframe',
+			'barShape',
+		] as const)
+			if (probe[key] === undefined && before[key] !== undefined)
+				(probe as unknown as Record<string, unknown>)[key] = structuredClone(before[key]);
 	}
 	if (probe.series.length === before.series.length)
 		probe.series.forEach((series, index) => {
