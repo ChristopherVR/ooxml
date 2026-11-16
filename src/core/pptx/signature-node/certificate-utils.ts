@@ -163,7 +163,8 @@ export function verifySignatureValue(
 		if (!signatureNode) {
 			return 'not-checked';
 		}
-		const certPem = certBase64List.length > 0 ? certPemFromBase64(certBase64List[0]) : undefined;
+		const [leafCertBase64] = certBase64List;
+		const certPem = leafCertBase64 !== undefined ? certPemFromBase64(leafCertBase64) : undefined;
 		if (!certPem) {
 			return 'not-checked';
 		}
@@ -213,10 +214,12 @@ export function loadSigningMaterialFromBuffer(
 		const p12Der = forge.util.createBuffer(Buffer.from(certificateBuffer).toString('binary'));
 		const p12Asn1 = forge.asn1.fromDer(p12Der);
 		const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, certificatePassword || '');
-		const keyBag = p12.getBags({
-			bagType: forge.pki.oids.pkcs8ShroudedKeyBag,
-		})[forge.pki.oids.pkcs8ShroudedKeyBag];
-		const certBag = p12.getBags({ bagType: forge.pki.oids.certBag })[forge.pki.oids.certBag];
+		const keyBagOid = forge.pki.oids.pkcs8ShroudedKeyBag;
+		const certBagOid = forge.pki.oids.certBag;
+		const keyBag =
+			keyBagOid === undefined ? undefined : p12.getBags({ bagType: keyBagOid })[keyBagOid];
+		const certBag =
+			certBagOid === undefined ? undefined : p12.getBags({ bagType: certBagOid })[certBagOid];
 		if (!keyBag || keyBag.length === 0 || !keyBag[0]?.key) {
 			throw new Error('No private key found in PKCS#12 certificate.');
 		}

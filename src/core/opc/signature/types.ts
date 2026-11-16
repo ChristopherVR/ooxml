@@ -22,11 +22,11 @@ export type TimestampAuthorityStatus =
 
 export interface SignatureReferenceCheck {
 	uri: string;
-	resolvedPartPath?: string;
+	resolvedPartPath?: string | undefined;
 	existsInPackage: boolean;
-	digestAlgorithm?: string;
-	digestExpectedBase64?: string;
-	digestActualBase64?: string;
+	digestAlgorithm?: string | undefined;
+	digestExpectedBase64?: string | undefined;
+	digestActualBase64?: string | undefined;
 	digestStatus:
 		| 'verified'
 		| 'mismatch'
@@ -40,11 +40,11 @@ export interface SignatureReferenceCheck {
 // ── Certificate info ────────────────────────────────────────────────────
 
 export interface SignatureCertificateInfo {
-	subject?: string;
-	issuer?: string;
-	serialNumber?: string;
-	validFrom?: string;
-	validTo?: string;
+	subject?: string | undefined;
+	issuer?: string | undefined;
+	serialNumber?: string | undefined;
+	validFrom?: string | undefined;
+	validTo?: string | undefined;
 }
 
 // ── Signature detail ────────────────────────────────────────────────────
@@ -62,22 +62,22 @@ export type SignatureDetailStatus =
 
 export interface SignatureDetail {
 	path: string;
-	signatureMethod?: string;
-	canonicalizationMethod?: string;
-	signingTime?: string;
+	signatureMethod?: string | undefined;
+	canonicalizationMethod?: string | undefined;
+	signingTime?: string | undefined;
 	referenceCount: number;
 	missingPartReferences: string[];
 	unsupportedTransforms: string[];
 	referenceChecks: SignatureReferenceCheck[];
-	certificate?: SignatureCertificateInfo;
+	certificate?: SignatureCertificateInfo | undefined;
 	signatureValueStatus: 'verified' | 'invalid' | 'not-checked';
 	certificateTrustStatus: 'trusted' | 'untrusted' | 'not-checked';
-	certificateTrustError?: string;
+	certificateTrustError?: string | undefined;
 	certificateRevocationStatus: CertificateRevocationStatus;
-	certificateRevocationError?: string;
+	certificateRevocationError?: string | undefined;
 	timestampAuthorityStatus: TimestampAuthorityStatus;
-	timestampAuthorityError?: string;
-	certificateFingerprintSha256?: string;
+	timestampAuthorityError?: string | undefined;
+	certificateFingerprintSha256?: string | undefined;
 	status: SignatureDetailStatus;
 }
 

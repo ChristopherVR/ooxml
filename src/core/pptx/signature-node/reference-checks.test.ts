@@ -1,4 +1,4 @@
-import { describe, it, expect, expectTypeOf } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 import { computeDigestBase64 } from './reference-checks';
 
@@ -33,7 +33,7 @@ describe('computeDigestBase64', () => {
 		const result = computeDigestBase64(new Uint8Array([]), SHA512_URI);
 		// SHA-512 of empty data
 		expect(result).toBeDefined();
-		expectTypeOf(result).toBeString();
+		expect(typeof result).toBe('string');
 		expect(result!.length).toBeGreaterThan(0);
 	});
 

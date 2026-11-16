@@ -91,8 +91,9 @@ export async function inspectPptxDigitalSignatures(
 			const certs = extractAllTagText(signatureXml, 'X509Certificate');
 			const trust = validateCertificateChain(certs, additionalRootsPem);
 			const signatureValueStatus = verifySignatureValue(signatureXml, certs);
-			const leafCertPem = certs.length > 0 ? certPemFromBase64(certs[0]) : undefined;
-			const issuerCertPem = certs.length > 1 ? certPemFromBase64(certs[1]) : leafCertPem;
+			const [leafCert, issuerCert] = certs;
+			const leafCertPem = leafCert !== undefined ? certPemFromBase64(leafCert) : undefined;
+			const issuerCertPem = issuerCert !== undefined ? certPemFromBase64(issuerCert) : leafCertPem;
 			const revocation = leafCertPem
 				? await evaluateCertificateRevocation(leafCertPem, issuerCertPem)
 				: {
@@ -118,7 +119,7 @@ export async function inspectPptxDigitalSignatures(
 				missingPartReferences,
 				unsupportedTransforms,
 				referenceChecks,
-				certificate: certs.length > 0 ? certificateInfoFromBase64(certs[0]) : undefined,
+				certificate: leafCert !== undefined ? certificateInfoFromBase64(leafCert) : undefined,
 				signatureValueStatus,
 				certificateTrustStatus: trust.status,
 				certificateTrustError: trust.error,
