@@ -111,6 +111,8 @@ The shared controllers, each adapted by every binding:
 - **Slide show**: `createPresentationRehearsalController` (Rehearse Timings),
   `createPresentationInkController` (pen, highlighter, eraser, laser, per-slide strokes; keep with
   `applyPresentationInk`) and `createPresenterSessionController` (audience window and channel).
+- **Slide Sorter**: `createSlideSorterController` (`render/controller/slide-sorter-controller.ts`:
+  selection, sorter clipboard, zoom, menu, drag reorder, keys; `slideSorterView` for drawn values).
 - **Canvas gestures**: move, resize and rotate run on `createGestureController`
   (`render/editor-gestures.ts`: dead zone, window listeners, snapping, multi-selection snap
   exclusion, minimum size, mid-gesture lock check). A binding supplies deps and paints the
@@ -120,6 +122,8 @@ Logic without its own state is a plain function set instead:
 
 - **AI bridge**: `createPptxAiBridge` over a `PptxAiBridgePort`.
 - **Keymap**: `dispatchEditorKey` with one `EditorKeyHandlers` interface.
+- **Outline view**: `createOutlineViewSession` (`render/outline-view-session.ts`); the binding
+  calls `restoreFocus` after its render.
 - **Group press**: `resolveGroupPressTarget` and `resolveGroupDoubleClickTarget`
   (`render/group-press-target.ts`).
 - **Slide show steps**: `resolveShowForward` and `resolveShowBackward`

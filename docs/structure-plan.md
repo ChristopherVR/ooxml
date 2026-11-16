@@ -611,3 +611,44 @@ Drift found between the bindings and the one behaviour chosen:
 Still per binding: the HUD, summary, toolbar and overlay templates, fullscreen requests inside the
 user gesture, and vanilla's DOM ink overlay (unit-square strokes, its own gesture tracking), which
 stores its strokes in the shared ink controller.
+
+The show toolbar's "has annotations" flag (it enables Erase All Ink on Slide) counted only the
+current slide in React and Angular and every slide in Vue, Svelte and vanilla. Every binding now
+counts every slide, like the keep-or-discard prompt on exit. The button still clears only the
+current slide, so it can be enabled on a slide that has no ink of its own.
+
+### Slide Sorter and Outline view state (landed 2026-11-16)
+
+A survey of the five bindings outside the inspector, ranked by the framework-free lines each kept
+around an already shared policy, put the Slide Sorter first (React about 380 lines with its keyboard
+hook, Vue about 190, Angular about 150, vanilla about 140, Svelte about 60) and Outline view second
+(about 60 to 110 each). Both now run once in `ooxml-ui/pptx`:
+
+- `createSlideSorterController` (`render/controller/slide-sorter-controller.ts`): selection and
+  anchor, the sorter clipboard, zoom, the right-click menu, drag reorder and the keyboard, with
+  `slideSorterView` for the drawn values. Deck operations reach the host in descending index
+  order; each binding keeps its template, the drag `dataTransfer` and its listener lifetime.
+- `createOutlineViewSession` (`render/outline-view-session.ts`): refuse on a read-only deck,
+  apply, skip a no-op, commit, and hand the caret to the row the edit names
+  (`focusOutlineRow`); the binding only chooses when to restore focus after its render.
+
+Drift found and the behaviour chosen:
+
+- Sorter: React opened the menu (and swallowed the native one) on a read-only deck; Vue and
+  vanilla reordered a read-only deck by dragging and Svelte's move buttons stayed live; Angular and
+  Svelte had no drag reorder; only vanilla undid and redid inside the sorter; React left Escape
+  unprevented. Now: the menu, drag and deck-writing keys are refused on a read-only deck, every
+  binding drags (Angular gained a `moveSlide` output), undo and redo inside the sorter run when the
+  host passes them (vanilla does today), and every handled key is prevented and stopped.
+- Outline view: three row lookups (an escaped selector in React, Vue and Angular, an attribute
+  scan in Svelte, a map of inputs in vanilla). Now one attribute scan.
+
+Non-test binding source after this work (2026-11-16, this change alone): React 104,367 to 104,066,
+Angular 92,113 to 92,093 (it gained drag reorder), Vue 80,113 to 80,014, Svelte 66,446 to 66,358,
+vanilla 65,996 to 65,927.
+
+Still per binding, by the same survey: the comments panel (React keeps per-slide drafts, edit state
+and mention drafts the others do not, so it needs a behaviour decision before a controller), the
+slide rail's selection and context menu, the zoom viewport, the notes pane and the selection pane.
+Find and Replace already runs on the shared `find-replace-session`; only the open state and its
+shortcut remain per binding.
