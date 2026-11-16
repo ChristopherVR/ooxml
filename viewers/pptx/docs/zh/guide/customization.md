@@ -17,6 +17,16 @@ const customization: ViewerCustomization = {
 
 卡片 id 为 `presentation`、`theme`、`themeOverride`、`slideSize`、`slideTransition`、`notesHandout`、`document`、`tags`、`slide`、`slideBackground` 和 `templateBackground`。每个 id 会在绑定提供该卡片的所有位置将其隐藏。`updateCustomization({ inspector: { hiddenCards: [] } })` 可实时恢复这些卡片。卡片可见性按每个查看器独立设置，与检查器的打开和关闭无关。
 
+属性选项卡是一个“格式”窗格，包含为当前选择内容而定的可折叠分节（文本框为“字体”和“段落”，形状为“填充”和“轮廓”，另有“图片”、“表格”、“图表”、“排列”、“大小和位置”等）。使用 `inspector.hiddenSections` 隐藏分节，使用 `inspector.sectionOrder` 将分节移至前面：
+
+```ts
+const customization: ViewerCustomization = {
+	inspector: { hiddenSections: ['effects'], sectionOrder: ['sizePosition'] },
+};
+```
+
+分节 id 为 `slide`、`font`、`paragraph`、`picture`、`table`、`chart`、`smartArt`、`media`、`object`、`fill`、`outline`、`effects`、`arrange`、`sizePosition`、`altText` 和 `action`。每种选择类型下展开的分节只在当前会话中记住，不会存储任何内容。
+
 每个绑定都渲染相同的 PowerPoint 风格界面：功能区、“文件”选项卡、“文件 > 选项”（设置）对话框、右键菜单、键盘映射、幻灯片栏、检查器、状态栏以及若干对话框。大多数嵌入场景并不需要全部这些内容。展台不需要任何编辑界面；企业门户希望去掉 AI 助手，并将作者名固定为已登录用户；教学工具则只需要三个标签页的功能区。
 
 这一切都由一个对象 `ViewerCustomization` 完成，你把它传给查看器，并可在运行时修改：
@@ -232,9 +242,9 @@ export function Deck({ bytes }: { bytes: Uint8Array }) {
 
 ```vue [Vue]
 <script setup lang="ts">
-import { ref } from 'vue';
 import { PowerPointViewer } from 'pptx-vue-viewer';
 import type { PowerPointViewerExpose, ViewerCustomization } from 'pptx-vue-viewer';
+import { ref } from 'vue';
 
 defineProps<{ bytes: Uint8Array }>();
 const viewer = ref<PowerPointViewerExpose | null>(null);
@@ -1098,6 +1108,7 @@ const portal: ViewerCustomization = {
 | `advanced.display`               | Display                                 |
 | `advanced.slideShow`             | Slide Show                              |
 | `advanced.print`                 | Print                                   |
+| `advanced.pdf`                   | Save as PDF                             |
 | `ribbon.shortcutReference`       | Keyboard Shortcuts                      |
 | `quickAccess.quickAccessOptions` | Quick Access Toolbar options            |
 | `trust.trustSettings`            | Security settings                       |
@@ -1169,6 +1180,8 @@ const portal: ViewerCustomization = {
 | `advanced.printHiddenSlides`                 | boolean | `false`          | Print hidden slides                                              |
 | `advanced.printScaleToFit`                   | boolean | `false`          | Scale to fit paper                                               |
 | `advanced.printFrameSlides`                  | boolean | `false`          | Frame slides                                                     |
+| `advanced.pdfIncludeHiddenSlides`            | boolean | `false`          | Include hidden slides                                            |
+| `advanced.pdfSlidesAsPictures`               | boolean | `false`          | Save slides as pictures                                          |
 | `quickAccess.visible`                        | boolean | `true`           | Show Quick Access Toolbar                                        |
 | `quickAccess.position`                       | string  | `'above'`        | Toolbar Position                                                 |
 | `quickAccess.showCommandLabels`              | boolean | `false`          | Always show command labels                                       |

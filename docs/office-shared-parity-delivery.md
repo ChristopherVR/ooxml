@@ -240,7 +240,7 @@ Round-trip writer: `buildGeneratedDiagramCache` binds each regenerated shape for
 role Office presented to Office's own presentation point (`write/cache-presentation.ts`), so an
 edited diagram keeps Office's points and connections and only new nodes get generated points.
 Placement comes from the layout engine, not Office: on the unedited diagrams of the 229
-PowerPoint gallery fixtures and the Word fixture (`scripts/diagram/measure-source-cache-regeneration.ts`)
+PowerPoint gallery fixtures and the Word fixture (`src/core/scripts/diagram/measure-source-cache-regeneration.ts`)
 the writer admits 52 of 230; 311 of their 414 regenerated shapes bind to an Office point; the
 worst bound-shape frame deviation is within 1% of the diagram's larger side in 27 diagrams, 5% in
 34 and 10% in 36, with large gaps in Captioned Pictures, Square Accent List, Step Down Process and

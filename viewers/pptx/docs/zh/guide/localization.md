@@ -335,6 +335,8 @@ Vue 需要从 `pptx-vue-viewer/i18n` 导入 `toVueI18nSyntax`，将参考字典�
 | 西班牙语 | `i18n/es`    | `translationsEs`   |
 | 德语     | `i18n/de`    | `translationsDe`   |
 | 简体中文 | `i18n/zh-CN` | `translationsZhCN` |
+| 日语     | `i18n/ja`    | `translationsJa`   |
+| 韩语     | `i18n/ko`    | `translationsKo`   |
 
 例如：`import { translationsFr } from 'pptx-vue-viewer/i18n/fr'`。Vue 应用需要像上面的中文示例一样，先通过 `toVueI18nSyntax` 转换字典，再注册。字典本身保留其他框架使用的标准 `{{name}}` 占位符。
 
@@ -364,7 +366,7 @@ export const translationsFr: Record<TranslationKey, string> = {
 
 母语使用者和熟练使用者可以按模块贡献，无需一次审阅整套字典：
 
-1. 在 `packages/locales/src/fr`、`src/es`、`src/de` 或 `src/zh-CN` 下选择一个产品区域文件。
+1. 在 `packages/locales/src/fr`、`src/es`、`src/de`、`src/zh-CN`、`src/ja` 或 `src/ko` 下选择一个产品区域文件。
 2. 将每个值与 `src/ui/src/pptx/i18n/translations-en.ts` 中相同的键对照。
 3. 改进译文，保持点分隔的键名以及全部 `{{token}}` 占位符不变。
 4. 优先使用对应语言的 Microsoft PowerPoint 术语，尤其是 SmartArt、平滑切换、图表和母版视图。

@@ -61,22 +61,31 @@ import type { PowerPointViewerProps } from 'pptx-vue-viewer';
 
 ## 事件 {#events}
 
-| 事件                     | 载荷                                       | 说明                                                                                                                             |
-| ------------------------ | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| `@dirty-change`          | `isDirty: boolean`                         | 未保存修改标记变化时触发。                                                                                                       |
-| `@content-change`        | `content: Uint8Array`                      | 内容变化时触发，携带重新序列化的文档字节。                                                                                       |
-| `@autosave`              | `content: Uint8Array`                      | 每个自动保存周期触发，携带重新序列化的字节，参见[自动保存](#autosave)。                                                          |
-| `@active-slide-change`   | `slideIndex: number`                       | 当前幻灯片变化时触发。                                                                                                           |
-| `@zoom-change`           | `zoom: number`                             | 缩放级别变化时触发。                                                                                                             |
-| `@ribbon-display-change` | `mode: 'always' \| 'tabs' \| 'fullScreen'` | 用户选择“功能区显示选项”模式时触发。宿主修改该值时不触发。查看器只在本次生命周期内保留这一选择；如需下次访问时恢复，请自行保存。 |
-| `@slide-count-change`    | `count: number`                            | 幻灯片总数变化时触发，例如添加或删除幻灯片。                                                                                     |
-| `@selection-change`      | `elementIds: string[]`                     | 元素选区变化时触发。                                                                                                             |
-| `@mode-change`           | `mode: string`                             | 查看器模式变化时触发，例如从编辑切换到放映。                                                                                     |
-| `@start-collaboration`   | `config: CollaborationConfig`              | 用户从共享对话框启动会话时触发。                                                                                                 |
-| `@collaboration-change`  | `state: CollaborationState`                | 会话启动或停止，以及其状态、同步标记或人员变化时触发。                                                                           |
-| `@load`                  | `detail: ViewerLoadDetail`                 | 每次演示文稿无错误加载完成时触发（`slideCount`、`canvasSize`）。                                                                 |
-| `@error`                 | `message: string`                          | 每种不同的加载失败触发一次，携带便于阅读的消息。                                                                                 |
-| `@stop-collaboration`    | -                                          | 用户从共享对话框停止会话时触发。                                                                                                 |
+| 事件                     | 载荷                                                         | 说明                                                                                                                                                                                                                                                  |
+| ------------------------ | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@dirty-change`          | `isDirty: boolean`                                           | 未保存修改标记变化时触发。                                                                                                                                                                                                                            |
+| `@content-change`        | `content: Uint8Array`                                        | 内容变化时触发，携带重新序列化的文档字节。                                                                                                                                                                                                            |
+| `@autosave`              | `content: Uint8Array`                                        | 每个自动保存周期触发，携带重新序列化的字节，参见[自动保存](#autosave)。                                                                                                                                                                               |
+| `@active-slide-change`   | `slideIndex: number`                                         | 当前幻灯片变化时触发。                                                                                                                                                                                                                                |
+| `@zoom-change`           | `zoom: number`                                               | 缩放级别变化时触发。                                                                                                                                                                                                                                  |
+| `@ribbon-display-change` | `mode: 'always' \| 'tabs' \| 'fullScreen'`                   | 用户选择“功能区显示选项”模式时触发。宿主修改该值时不触发。查看器只在本次生命周期内保留这一选择；如需下次访问时恢复，请自行保存。                                                                                                                      |
+| `@slide-count-change`    | `count: number`                                              | 幻灯片总数变化时触发，例如添加或删除幻灯片。                                                                                                                                                                                                          |
+| `@selection-change`      | `elementIds: string[]`                                       | 元素选区变化时触发。                                                                                                                                                                                                                                  |
+| `onElementRenderError`   | `(error: Error, context: ElementRenderErrorContext) => void` | 作为属性（因此 `@element-render-error` 也能绑定它）。幻灯片元素因其渲染器抛出错误而被省略；`context` 为 `{ elementId, elementType, slideId }`。只省略该元素，所有界面一致。默认为 `console.error(error, context)`，回调抛出错误时同样使用此默认行为。 |
+| `@mode-change`           | `mode: string`                                               | 查看器模式变化时触发，例如从编辑切换到放映。                                                                                                                                                                                                          |
+| `@change`                | -                                                            | 提交任何文档编辑后触发（移动、调整大小、文本、撤销、重做等）。                                                                                                                                                                                        |
+| `@autosave-toggle`       | `enabled: boolean`                                           | 用户启用或禁用自动保存时触发（标题栏或“文件 > 选项”）。                                                                                                                                                                                               |
+| `@autosave-status`       | `'idle' \| 'saving' \| 'saved' \| 'error'`                   | 每次自动保存生命周期状态转换时触发。                                                                                                                                                                                                                  |
+| `@autosave-recovery`     | `record: AutosaveRecord`                                     | 发现上一次会话留下的恢复快照时触发。                                                                                                                                                                                                                  |
+| `@properties-change`     | `updates: Partial<PptxCoreProperties>`                       | 用户（或 AI 助手）更改文档属性时触发。                                                                                                                                                                                                                |
+| `@notes-update`          | `notes: string`                                              | 备注编辑后，以新的演讲者备注文本触发。                                                                                                                                                                                                                |
+| `@presentation-change`   | `presenting: boolean`                                        | 进入或退出演示（幻灯片放映）模式时触发。                                                                                                                                                                                                              |
+| `@collaboration-status`  | `status: ConnectionStatus`                                   | 每次协作连接状态转换时触发。                                                                                                                                                                                                                          |
+| `@start-collaboration`   | `config: CollaborationConfig`                                | 用户从共享对话框启动会话时触发。                                                                                                                                                                                                                      |
+| `@collaboration-change`  | `state: CollaborationState`                                  | 会话启动或停止，以及其状态、同步标记或人员变化时触发。                                                                                                                                                                                                |
+| `@load`                  | `detail: ViewerLoadDetail`                                   | 每次演示文稿无错误加载完成时触发（`slideCount`、`canvasSize`）。                                                                                                                                                                                      |
+| `@error`                 | `message: string`                                            | 每种不同的加载失败触发一次，携带便于阅读的消息。                                                                                                                                                                                                      |
+| `@stop-collaboration`    | -                                                            | 用户从共享对话框停止会话时触发。                                                                                                                                                                                                                      |
 
 在底层 `PowerPointViewerEmits` 类型中，`content` 和 `autosave` 共用一个签名，载荷为 `Uint8Array`；`active-slide-change`、`zoom-change` 和 `slide-count-change` 也共用一个签名，载荷均为 `number`。
 
@@ -203,6 +212,14 @@ interface PowerPointViewerProps {
 interface PowerPointViewerEmits {
 	(e: 'dirty-change', isDirty: boolean): void;
 	(e: 'content-change' | 'autosave', content: Uint8Array): void;
+	(e: 'change'): void;
+	(e: 'autosave-toggle', enabled: boolean): void;
+	(e: 'autosave-status', status: 'idle' | 'saving' | 'saved' | 'error'): void;
+	(e: 'autosave-recovery', record: AutosaveRecord): void;
+	(e: 'properties-change', updates: Partial<PptxCoreProperties>): void;
+	(e: 'notes-update', notes: string): void;
+	(e: 'presentation-change', presenting: boolean): void;
+	(e: 'collaboration-status', status: ConnectionStatus): void;
 	(e: 'active-slide-change' | 'zoom-change' | 'slide-count-change', value: number): void;
 	(e: 'mode-change', mode: string): void;
 	(e: 'selection-change', elementIds: string[]): void;
@@ -218,12 +235,13 @@ interface PowerPointViewerEmits {
 
 `pptx-vue-viewer` 在有未保存修改时每个间隔将崩溃恢复快照写入共享 IndexedDB 存储，并通过 `@autosave` 将序列化后的字节交给宿主。
 
-| 属性                 | 类型                           | 默认值                | 说明                                                                                           |
-| -------------------- | ------------------------------ | --------------------- | ---------------------------------------------------------------------------------------------- |
-| `autosave`           | `boolean`                      | `true`                | 用于恢复的自动保存，是标题栏开关可启用范围的策略上限，详见下文。                               |
-| `autosaveIntervalMs` | `number`                       | “文件 > 选项”中的间隔 | 有未保存修改时，两次恢复快照之间的间隔，单位为毫秒。显式值优先于用户的自动恢复设置。           |
-| `readOnly`           | `boolean`                      | `false`               | 使文稿只读。`true` 优先于 `canEdit`；`false` 只取消此限制。                                    |
-| `fileProviders`      | `readonly CloudFileProvider[]` | -                     | “文件 > 打开”中的云端位置（例如 OneDrive）。从其中打开的文件会保存回该位置，而不是 `storage`。 |
+| 属性                 | 类型                           | 默认值                | 说明                                                                                                                |
+| -------------------- | ------------------------------ | --------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `autosave`           | `boolean`                      | `true`                | 用于恢复的自动保存，是标题栏开关可启用范围的策略上限，详见下文。                                                    |
+| `autosaveIntervalMs` | `number`                       | “文件 > 选项”中的间隔 | 有未保存修改时，两次恢复快照之间的间隔，单位为毫秒。显式值优先于用户的自动恢复设置。                                |
+| `storage`            | `DocumentStorage`              | 无                    | 宿主托管存储：保存写入 `storage.save()`，恢复副本写入其恢复方法。参见[宿主托管存储](/zh/guide/host-owned-storage)。 |
+| `readOnly`           | `boolean`                      | `false`               | 使文稿只读。`true` 优先于 `canEdit`；`false` 只取消此限制。                                                         |
+| `fileProviders`      | `readonly CloudFileProvider[]` | -                     | “文件 > 打开”中的云端位置（例如 OneDrive）。从其中打开的文件会保存回该位置，而不是 `storage`。                      |
 
 ### autosave 属性和自动保存开关，谁优先 {#autosave-policy}
 

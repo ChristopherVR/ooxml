@@ -61,18 +61,18 @@ import { createAiAssistant } from 'pptx-react-viewer/ai';
 import { PowerPointViewer } from 'pptx-react-viewer/viewer';
 ```
 
-| 入口                                                               | 导出内容                                                                                                                                              |
-| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pptx-react-viewer`                                                | `PowerPointViewer`、主题工具、`renderToCanvas` 和公开类型。                                                                                           |
-| `pptx-react-viewer/no-i18next`                                     | 与根入口导出相同，但不导入 i18next 或 react-i18next（参见[不使用 react-i18next](/zh/guide/localization#without-react-i18next)）。                     |
-| `pptx-react-viewer/viewer`                                         | 同一个组件，以及可选用的 hooks 和协作组件（参见 [Hooks](/zh/react/hooks)）。                                                                          |
-| `pptx-react-viewer/ai`                                             | `createAiAssistant`、句柄类型 `PptxAiAssistant` 和 `PptxAi*` 配置类型，是传入 `ai` 的推荐方式（参见 [`/ai` 入口](/zh/guide/ai-assistant#ai-entry)）。 |
-| `pptx-react-viewer/i18n`                                           | 英文字典、`keyToLabel` 和语言目录（参见[本地化](/zh/guide/localization)）。                                                                           |
-| `pptx-react-viewer/i18n/fr`、`/i18n/es`、`/i18n/de`、`/i18n/zh-CN` | 随包提供的语言字典（`translationsFr` 等）。                                                                                                           |
-| `pptx-react-viewer/internals`                                      | `PowerPointViewer` 内部组合使用的 hooks，不受语义化版本兼容承诺保障。                                                                                 |
-| `pptx-react-viewer/styles`（或 `/styles.css`）                     | 打包好的样式表。                                                                                                                                      |
-| `pptx-react-viewer/canvas.css`                                     | 只读 `SlideCanvas` 使用的较小样式表（参见[快速上手](/zh/react/getting-started)）。                                                                    |
-| `pptx-react-viewer/theme.css`                                      | Tailwind CSS v4 的 `@theme` 令牌，供自行把查看器工具类构建进自身样式表的宿主使用。                                                                    |
+| 入口                                                                                       | 导出内容                                                                                                                                              |
+| ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pptx-react-viewer`                                                                        | `PowerPointViewer`、主题工具、`renderToCanvas` 和公开类型。                                                                                           |
+| `pptx-react-viewer/no-i18next`                                                             | 与根入口导出相同，但不导入 i18next 或 react-i18next（参见[不使用 react-i18next](/zh/guide/localization#without-react-i18next)）。                     |
+| `pptx-react-viewer/viewer`                                                                 | 同一个组件，以及可选用的 hooks 和协作组件（参见 [Hooks](/zh/react/hooks)）。                                                                          |
+| `pptx-react-viewer/ai`                                                                     | `createAiAssistant`、句柄类型 `PptxAiAssistant` 和 `PptxAi*` 配置类型，是传入 `ai` 的推荐方式（参见 [`/ai` 入口](/zh/guide/ai-assistant#ai-entry)）。 |
+| `pptx-react-viewer/i18n`                                                                   | 英文字典、`keyToLabel` 和语言目录（参见[本地化](/zh/guide/localization)）。                                                                           |
+| `pptx-react-viewer/i18n/fr`、`/i18n/es`、`/i18n/de`、`/i18n/zh-CN`、`/i18n/ja`、`/i18n/ko` | 随包提供的语言字典（`translationsFr` 等）。                                                                                                           |
+| `pptx-react-viewer/internals`                                                              | `PowerPointViewer` 内部组合使用的 hooks，不受语义化版本兼容承诺保障。                                                                                 |
+| `pptx-react-viewer/styles`（或 `/styles.css`）                                             | 打包好的样式表。                                                                                                                                      |
+| `pptx-react-viewer/canvas.css`                                                             | 只读 `SlideCanvas` 使用的较小样式表（参见[快速上手](/zh/react/getting-started)）。                                                                    |
+| `pptx-react-viewer/theme.css`                                                              | Tailwind CSS v4 的 `@theme` 令牌，供自行把查看器工具类构建进自身样式表的宿主使用。                                                                    |
 
 两个入口（`.` 和 `./viewer`）均导出 `PowerPointViewer`。`pptx-react-viewer/viewer` 还提供可按需使用、支持 tree-shaking 的 hooks 和协作组件，详见 [Hooks](/zh/react/hooks)。普通场景使用根入口即可。
 

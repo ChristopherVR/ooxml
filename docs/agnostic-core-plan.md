@@ -253,7 +253,7 @@ would keep two XML models alive.
    compared with the new ones by `pptx/__tests__/integration/drawingml-theme-format-scheme-parity.test.ts`
    over every committed deck: 383 format schemes, 72,747 style references (slides, layouts, masters,
    notes and SmartArt drawings), 366 master colour maps and every theme part written back agree,
-   except the one theme (`e2e/absolute-path-rels.pptx`, `theme11.xml`) whose fill and background
+   except the one theme (`src/core/pptx/__tests__/fixtures/e2e/absolute-path-rels.pptx`, `theme11.xml`) whose fill and background
    lists hold an `a:blipFill`, which the old reader dropped. On top of the shared gradient, effect
    and alpha readers, the theme view takes colour opacity from the neutral colours' declared alpha
    and reads `a:scene3d`/`a:sp3d` with the shared 3D readers; table style `fillRef`, `lnRef` and
@@ -765,7 +765,7 @@ The labels U3 to U5 are assigned here; the remaining chart UI work was previousl
   node and layout role Office presented binds to Office's own presentation point (`write/cache-presentation.ts`), as
   Office's cache binds `dsp:sp/@modelId`, so the data part keeps Office's points and connections and only new nodes
   get generated points. The placement is the layout engine's, not Office's: on the unedited diagrams of the 229
-  PowerPoint gallery fixtures and the Word fixture (`scripts/diagram/measure-source-cache-regeneration.ts`,
+  PowerPoint gallery fixtures and the Word fixture (`src/core/scripts/diagram/measure-source-cache-regeneration.ts`,
   2026-11-16) the writer admits 52 of 230; 311 of their 414 regenerated shapes bind to an Office point, and the bound
   shapes' worst frame deviation is within 1% of the diagram's larger side in 27 diagrams, 5% in 34 and 10% in 36
   (the Word fixture, Basic Block List, exactly). The other 178 stay uncached as before.
@@ -782,7 +782,7 @@ The labels U3 to U5 are assigned here; the remaining chart UI work was previousl
   definition ids. History retains the matching definitions, including after formatting an inserted diagram.
   The galleries of every product (Word, Excel and PowerPoint) now list Office's full built-in catalogue: 38 colour and
   14 quick-style definitions (`diagram/builtin/style-definitions.ts`, gallery metadata in `diagram/catalogue-native.ts`,
-  captured by `scripts/diagram/make-smartart-definitions.ps1` from PowerPoint 16 through COM). A pick
+  captured by `src/core/scripts/diagram/make-smartart-definitions.ps1` from PowerPoint 16 through COM). A pick
   (`builtinSmartArtFormatChange`) replaces the definition part with Office's own XML and `uniqueId`, as Office does;
   the model's five schemes and three intensities map onto the definitions they are named after. PowerPoint writes the
   picked part on save and names it on the document point (`csTypeId`, `qsTypeId`); in the editor it recolours through

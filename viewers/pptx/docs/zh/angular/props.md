@@ -31,12 +31,13 @@ Angular 没有 `forwardRef` 句柄。`PowerPointViewerComponent` 的公开方法
 
 ## 自动保存 {#autosave-policy}
 
-| 输入                 | 类型                                        | 默认值                | 说明                                                                                             |
-| -------------------- | ------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------ |
-| `autosave`           | `boolean \| undefined`                      | `true`                | 用于恢复的自动保存，是标题栏开关可启用范围的策略上限，详见下文。                                 |
-| `autosaveIntervalMs` | `number \| undefined`                       | “文件 > 选项”中的间隔 | 恢复快照的保存间隔。显式值优先于用户的自动恢复设置。                                             |
-| `readOnly`           | `boolean`                                   | `false`               | 使演示文稿只读。`true` 优先于 `canEdit`；`false` 仅取消此限制。                                  |
-| `fileProviders`      | `readonly CloudFileProvider[] \| undefined` | -                     | 用于“文件 > 打开”的云端位置（例如 OneDrive）。从其中打开的文件会保存回该位置，而不是 `storage`。 |
+| 输入                 | 类型                                        | 默认值                | 说明                                                                                                                |
+| -------------------- | ------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `autosave`           | `boolean \| undefined`                      | `true`                | 用于恢复的自动保存，是标题栏开关可启用范围的策略上限，详见下文。                                                    |
+| `autosaveIntervalMs` | `number \| undefined`                       | “文件 > 选项”中的间隔 | 恢复快照的保存间隔。显式值优先于用户的自动恢复设置。                                                                |
+| `storage`            | `DocumentStorage \| undefined`              | 无                    | 宿主托管存储：保存写入 `storage.save()`，恢复副本写入其恢复方法。参见[宿主托管存储](/zh/guide/host-owned-storage)。 |
+| `readOnly`           | `boolean`                                   | `false`               | 使演示文稿只读。`true` 优先于 `canEdit`；`false` 仅取消此限制。                                                     |
+| `fileProviders`      | `readonly CloudFileProvider[] \| undefined` | -                     | 用于“文件 > 打开”的云端位置（例如 OneDrive）。从其中打开的文件会保存回该位置，而不是 `storage`。                    |
 
 **五种绑定**遵循相同规则，统一实现在共享决策函数 `resolveAutosaveActivation` 中：
 
@@ -80,22 +81,31 @@ Angular 没有 `forwardRef` 句柄。`PowerPointViewerComponent` 的公开方法
 
 ## 事件（`@Output()`） {#events-output-s}
 
-| 输出                  | 载荷                                 | 说明                                                                                                                       |
-| --------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
-| `dirtyChange`         | `boolean`                            | 未保存修改标记切换时触发。                                                                                                 |
-| `contentChange`       | `Uint8Array`                         | 每当 [`getContent()`](/zh/angular/api) 将文稿序列化为字节时触发，携带重新序列化的文档字节。                                |
-| `activeSlideChange`   | `number`                             | 当前幻灯片变化时触发。                                                                                                     |
-| `modeChange`          | `string`                             | 查看器模式变化时触发，模式为 `'preview'`、`'edit'`、`'present'` 或 `'master'`。                                            |
-| `zoomChange`          | `number`                             | 缩放级别变化时触发。                                                                                                       |
-| `ribbonDisplayChange` | `'always' \| 'tabs' \| 'fullScreen'` | 用户选择功能区显示选项时触发。宿主修改该值时不会触发。查看器只在本次生命周期内保留该选择；如需下次访问时恢复，请自行保存。 |
-| `selectionChange`     | `string[]`                           | 元素选区变化时触发。                                                                                                       |
-| `slideCountChange`    | `number`                             | 幻灯片总数变化时触发，例如添加或删除幻灯片。                                                                               |
-| `propertiesChange`    | `Partial<PptxCoreProperties>`        | 用户在信息对话框中编辑文档属性（标题、作者等）时触发。                                                                     |
-| `startCollaboration`  | `CollaborationConfig`                | 从共享或广播对话框启动会话时触发，请据此设置 `collaboration` 输入。                                                        |
-| `stopCollaboration`   | `void`                               | 从共享或广播对话框停止会话时触发，请据此清空 `collaboration` 输入。                                                        |
-| `collaborationChange` | `CollaborationState`                 | 会话启动或停止，以及其状态、已同步标志或人员变化时触发。                                                                   |
-| `load`                | `ViewerLoadDetail`                   | 每次演示文稿无错误地加载完成时触发（`slideCount`、`canvasSize`）。                                                         |
-| `error`               | `string`                             | 每种不同的加载失败触发一次，携带易读的消息。                                                                               |
+| 输出                          | 载荷                                                         | 说明                                                                                                                                                                                                                                                         |
+| ----------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `dirtyChange`                 | `boolean`                                                    | 未保存修改标记切换时触发。                                                                                                                                                                                                                                   |
+| `contentChange`               | `Uint8Array`                                                 | 每当 [`getContent()`](/zh/angular/api) 将文稿序列化为字节时触发，携带重新序列化的文档字节。                                                                                                                                                                  |
+| `activeSlideChange`           | `number`                                                     | 当前幻灯片变化时触发。                                                                                                                                                                                                                                       |
+| `modeChange`                  | `string`                                                     | 查看器模式变化时触发，模式为 `'preview'`、`'edit'`、`'present'` 或 `'master'`。                                                                                                                                                                              |
+| `zoomChange`                  | `number`                                                     | 缩放级别变化时触发。                                                                                                                                                                                                                                         |
+| `ribbonDisplayChange`         | `'always' \| 'tabs' \| 'fullScreen'`                         | 用户选择功能区显示选项时触发。宿主修改该值时不会触发。查看器只在本次生命周期内保留该选择；如需下次访问时恢复，请自行保存。                                                                                                                                   |
+| `onElementRenderError` (输入) | `(error: Error, context: ElementRenderErrorContext) => void` | 作为输入（与 `onHyperlinkClick` 相同），省略时保持默认行为。幻灯片元素因其渲染器抛出错误而被省略；`context` 为 `{ elementId, elementType, slideId }`。只省略该元素，所有界面一致。默认为 `console.error(error, context)`，回调抛出错误时同样使用此默认行为。 |
+| `selectionChange`             | `string[]`                                                   | 元素选区变化时触发。                                                                                                                                                                                                                                         |
+| `slideCountChange`            | `number`                                                     | 幻灯片总数变化时触发，例如添加或删除幻灯片。                                                                                                                                                                                                                 |
+| `propertiesChange`            | `Partial<PptxCoreProperties>`                                | 用户在信息对话框中编辑文档属性（标题、作者等）时触发。                                                                                                                                                                                                       |
+| `documentChange`              | `void`                                                       | 提交任何文档编辑后触发（移动、调整大小、文本、撤销、重做等）。不命名为 `change`：那样也会捕获查看器内输入框的原生 `change` 事件。                                                                                                                            |
+| `autosaved`                   | `Uint8Array`                                                 | 每次写入恢复用自动保存快照时，以序列化后的文稿触发。不命名为 `autosave`：该名称属于 `autosave` 输入。                                                                                                                                                        |
+| `autosaveToggle`              | `boolean`                                                    | 用户启用或禁用自动保存时触发（标题栏或“文件 > 选项”）。                                                                                                                                                                                                      |
+| `autosaveStatus`              | `'idle' \| 'saving' \| 'saved' \| 'error'`                   | 每次自动保存生命周期状态转换时触发。                                                                                                                                                                                                                         |
+| `autosaveRecovery`            | `AutosaveRecord`                                             | 发现上一次会话留下的恢复快照时触发。内置恢复提示同时显示。                                                                                                                                                                                                   |
+| `notesUpdate`                 | `string`                                                     | 备注编辑后，以新的演讲者备注文本触发。                                                                                                                                                                                                                       |
+| `presentationChange`          | `boolean`                                                    | 进入或退出演示（幻灯片放映）模式时触发。                                                                                                                                                                                                                     |
+| `collaborationStatus`         | `ConnectionStatus`                                           | 每次协作连接状态转换时触发。                                                                                                                                                                                                                                 |
+| `startCollaboration`          | `CollaborationConfig`                                        | 从共享或广播对话框启动会话时触发，请据此设置 `collaboration` 输入。                                                                                                                                                                                          |
+| `stopCollaboration`           | `void`                                                       | 从共享或广播对话框停止会话时触发，请据此清空 `collaboration` 输入。                                                                                                                                                                                          |
+| `collaborationChange`         | `CollaborationState`                                         | 会话启动或停止，以及其状态、已同步标志或人员变化时触发。                                                                                                                                                                                                     |
+| `load`                        | `ViewerLoadDetail`                                           | 每次演示文稿无错误地加载完成时触发（`slideCount`、`canvasSize`）。                                                                                                                                                                                           |
+| `error`                       | `string`                                                     | 每种不同的加载失败触发一次，携带易读的消息。                                                                                                                                                                                                                 |
 
 ::: info 说明
 `contentChange` 提供的是 `Uint8Array`，不是布尔值。需要按需拉取内容时，请调用组件实例上的 [`getContent()`](/zh/angular/api)。
@@ -216,6 +226,14 @@ class PowerPointViewerComponent {
 	readonly dirtyChange = output<boolean>();
 	readonly contentChange = output<Uint8Array>();
 	readonly propertiesChange = output<Partial<PptxCoreProperties>>();
+	readonly documentChange = output<void>();
+	readonly autosaved = output<Uint8Array>();
+	readonly autosaveToggle = output<boolean>();
+	readonly autosaveStatus = output<'idle' | 'saving' | 'saved' | 'error'>();
+	readonly autosaveRecovery = output<AutosaveRecord>();
+	readonly notesUpdate = output<string>();
+	readonly presentationChange = output<boolean>();
+	readonly collaborationStatus = output<ConnectionStatus>();
 	readonly modeChange = output<string>();
 	readonly zoomChange = output<number>();
 	readonly ribbonDisplayChange = output<'always' | 'tabs' | 'fullScreen'>();

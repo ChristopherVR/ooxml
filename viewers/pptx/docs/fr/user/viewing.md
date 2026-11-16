@@ -49,6 +49,10 @@ Vous pouvez aussi :
 - Utiliser **onglet Affichage > Ajuster à la fenêtre** dans le ruban.
 - Pincer pour zoomer sur les appareils tactiles.
 
+Pour vous déplacer sur une diapositive plus grande que le canevas, faites défiler, faites glisser avec le bouton central de la souris, ou maintenez **Espace** et faites glisser. Dans une vue en lecture seule, où il n'y a rien à sélectionner, vous pouvez aussi faire glisser la diapositive avec le bouton gauche de la souris.
+
+Le zoom va de 10 % à 500 %, 100 % correspondant à l'ajustement de la diapositive au canevas. Passer à une autre diapositive conserve le zoom et affiche la nouvelle diapositive depuis son coin supérieur gauche.
+
 ## Modes d'affichage
 
 La barre d'état comporte trois boutons d'affichage :

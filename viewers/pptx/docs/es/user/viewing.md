@@ -49,6 +49,10 @@ También puede:
 - Usar **pestaña Vista > Ajustar a la ventana** en la cinta.
 - Pellizcar para hacer zoom en dispositivos táctiles.
 
+Para moverse por una diapositiva más grande que el lienzo, desplácese con la rueda, arrastre con el botón central del ratón o mantenga pulsada la tecla **Espacio** y arrastre. En una vista de solo lectura, donde no hay nada que seleccionar, también puede arrastrar la diapositiva con el botón izquierdo del ratón.
+
+El zoom va del 10 % al 500 %, donde el 100 % ajusta la diapositiva al lienzo. Al ir a otra diapositiva se mantiene el zoom y la nueva diapositiva se muestra desde su esquina superior izquierda.
+
 ## Modos de vista
 
 La barra de estado tiene tres botones de vista:

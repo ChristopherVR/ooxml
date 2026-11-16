@@ -539,7 +539,7 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       carry the chart style and colour style parts Office requires (without them Word and PowerPoint
       refuse the file): a fresh PowerPoint deck, Word document and Excel workbook with one chart of
       each of the eight families open in Office 16 and keep every family and value on Office's own
-      re-save (`scripts/chartex-acceptance.ps1`, 2026-11-16).
+      re-save (`src/core/scripts/chartex-acceptance.ps1`, 2026-11-16).
 - [ ] **P2** PowerPoint chart edits still saved only by the object-tree writers (no neutral
       adapter, `chart-neutral-save-plan.ts`): group `varyColors`, bar direction and scatter style on
       their own, the `standard` grouping flag, a series' own number format, the chart-wide gridline

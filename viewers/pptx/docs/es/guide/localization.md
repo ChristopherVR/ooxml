@@ -81,6 +81,8 @@ import i18nInstance from './i18n';
 
 Cambie de idioma con `i18nInstance.changeLanguage('fr')`.
 
+Configure react-i18next (`initReactI18next` con `init`, o un `I18nextProvider`) antes del primer renderizado. Ningún evento se dispara cuando react-i18next recibe por primera vez una instancia, así que un visualizador que se renderizó sin instancia cambia de idioma solo cuando su componente padre lo vuelve a renderizar: hasta entonces muestra su texto integrado en inglés y, después, usa la instancia y aplica la elección guardada o `defaultLocale`.
+
 #### Usar su propia biblioteca de i18n
 
 Para traducir el visualizador con Lingui, FormatJS o cualquier otra biblioteca en lugar de react-i18next, envuélvalo en `PptxI18nProvider` y pase una función `translate(key, params)` junto con la `locale` activa. Abarca `PowerPointViewer` y los bloques independientes (`Toolbar`, `SlideCanvas`, `SlideTemplateGalleryDialog`, ...):
@@ -113,7 +115,45 @@ function TranslatedViewer({ content }: { content: Uint8Array }) {
 
 `translate` recibe los parámetros del visualizador sin cambios: `defaultValue`, `count` y los valores de los marcadores `{{name}}`. Use los mismos nombres en su catálogo (`{name}` en sintaxis ICU); `count` es un valor simple, así que la pluralización corresponde a su catálogo. Los marcadores `{{name}}` que queden en el texto que devuelve también se rellenan, de modo que los diccionarios incluidos funcionan tal cual: `const translate: PptxTranslate = (key) => translationsFr[key];`. Cuando `translate` devuelve la propia clave, una cadena vacía o nada, o lanza un error, el visualizador muestra su texto en inglés integrado, luego el texto predeterminado de la llamada y luego una etiqueta derivada de la clave, de modo que un catálogo parcial nunca muestra una clave `pptx.*` sin traducir. Mantenga `translate` estable (una función a nivel de módulo o `useCallback`): el visualizador vuelve a traducir cada vez que cambian `translate` o `locale`.
 
-Dentro de un proveedor, el idioma pertenece al anfitrión: el visualizador nunca llama a `changeLanguage`, ignora `defaultLocale` y nunca restaura una elección de idioma guardada. Archivo > Opciones > Idioma solo aparece cuando pasa `onLocaleChange` y dos o más `availableLocales`; una elección llama a `onLocaleChange` y la selección sigue a `locale` (una `locale` regional como `fr-CA` selecciona un `fr` ofrecido). `locale` no establece la dirección del texto. Un `PowerPointViewer` lee el proveedor más cercano por encima de él; un proveedor dentro del visualizador se ignora, de modo que todo el visualizador comparte un idioma. `i18next` y `react-i18next` siguen siendo dependencias peer obligatorias en 4.x: instálelas, aunque dentro de un proveedor el visualizador no las usa. `PptxI18nProvider` es solo para React; los demás enlaces traducen como se describe a continuación.
+Dentro de un proveedor, el idioma pertenece al anfitrión: el visualizador nunca llama a `changeLanguage`, ignora `defaultLocale` y nunca restaura una elección de idioma guardada. Archivo > Opciones > Idioma solo aparece cuando pasa `onLocaleChange` y dos o más `availableLocales`; una elección llama a `onLocaleChange` y la selección sigue a `locale` (una `locale` regional como `fr-CA` selecciona un `fr` ofrecido). `locale` no establece la dirección del texto. Un `PowerPointViewer` lee el proveedor más cercano por encima de él; un proveedor dentro del visualizador se ignora, de modo que todo el visualizador comparte un idioma. `i18next` y `react-i18next` siguen siendo dependencias peer obligatorias en 4.x: instálelas, aunque dentro de un proveedor el visualizador no las usa. Para compilar sin ellas, importe desde `pptx-react-viewer/no-i18next` ([más abajo](#sin-react-i18next)). `PptxI18nProvider` es solo para React; los demás enlaces traducen como se describe a continuación.
+
+#### Sin react-i18next
+
+El punto de entrada principal importa `react-i18next` incluso cuando cada visualizador está dentro de un `PptxI18nProvider`, así que un empaquetador falla con "Can't resolve 'react-i18next'" cuando no está instalado. Un anfitrión que traduce solo mediante `PptxI18nProvider` puede importar desde `pptx-react-viewer/no-i18next` en su lugar. Tiene exactamente las mismas exportaciones y tipos que `pptx-react-viewer`, y nada de lo que carga importa `i18next` ni `react-i18next`:
+
+```bash
+npm install pptx-react-viewer react react-dom
+```
+
+npm 7 y posteriores, pnpm 8 y posteriores y Bun siguen instalando `i18next` y `react-i18next` con este comando, ya que se declaran como peers; el punto de entrada no los usa y nunca los empaqueta.
+
+```tsx
+import { PowerPointViewer, PptxI18nProvider } from 'pptx-react-viewer/no-i18next';
+```
+
+Una opción de exclusión como `--legacy-peer-deps` de npm los deja fuera, pero omite todos los peers: entonces instale también los demás peers obligatorios (`framer-motion`, `lucide-react`, `react-icons`, `jspdf`, `jszip` y `fast-xml-parser`), o la compilación falla.
+
+- Dentro de un `PptxI18nProvider` el punto de entrada se comporta exactamente igual que el principal. Un proveedor y un visualizador pueden venir de cualquiera de los dos puntos de entrada: comparten un mismo contexto.
+- Fuera de un proveedor, `PowerPointViewer` y los bloques independientes muestran el texto integrado en inglés e informan del locale `en`. Archivo > Opciones > Idioma se omite, `defaultLocale`, `availableLocales` y `onLocaleChange` no tienen efecto, y no se lee ni se escribe ninguna elección de idioma guardada.
+- La decisión de respaldo se toma para toda la aplicación, no por importación: si algún módulo de la aplicación también importa `pptx-react-viewer`, `pptx-react-viewer/viewer` o `pptx-react-viewer/internals`, react-i18next se empaqueta y los visualizadores montados fuera de un proveedor, desde cualquiera de los dos puntos de entrada, lo leen. Traducen mediante react-i18next cuando está configurado (`initReactI18next` o un `I18nextProvider`), y en caso contrario mantienen el texto integrado en inglés (react-i18next registra que no tiene instancia).
+- `pptx-react-viewer/viewer` (los hooks opcionales y los componentes de colaboración) y `pptx-react-viewer/internals` todavía no tienen equivalente sin react-i18next: importar cualquiera de los dos requiere tener instalados `i18next` y `react-i18next`, como ocurre con el punto de entrada principal.
+
+El texto integrado fuera de un proveedor solo está en inglés. Para otro idioma sin i18next, pase un diccionario incluido mediante `PptxI18nProvider`:
+
+```tsx
+import { translationsFr } from 'pptx-react-viewer/i18n/fr';
+import { PowerPointViewer, PptxI18nProvider } from 'pptx-react-viewer/no-i18next';
+
+const translate = (key: string) => translationsFr[key];
+
+function FrenchViewer({ content }: { content: Uint8Array }) {
+	return (
+		<PptxI18nProvider translate={translate} locale='fr'>
+			<PowerPointViewer content={content} />
+		</PptxI18nProvider>
+	);
+}
+```
 
 ### Vue 3
 
@@ -303,6 +343,8 @@ Los cinco paquetes del visualizador ofrecen las mismas subrutas de locale opcion
 | Español            | `i18n/es`    | `translationsEs`   |
 | Alemán             | `i18n/de`    | `translationsDe`   |
 | Chino simplificado | `i18n/zh-CN` | `translationsZhCN` |
+| Japonés            | `i18n/ja`    | `translationsJa`   |
+| Coreano            | `i18n/ko`    | `translationsKo`   |
 
 Por ejemplo, `import { translationsFr } from 'pptx-vue-viewer/i18n/fr'`.
 Las aplicaciones Vue deben pasar estos diccionarios por `toVueI18nSyntax`
@@ -340,7 +382,7 @@ Cada idioma se organiza en archivos con nombre por área de producto, como `char
 
 Los hablantes nativos y fluidos pueden ayudar sin revisar un diccionario completo:
 
-1. Elija un archivo de área de producto en `packages/locales/src/fr`, `src/es`, `src/de` o `src/zh-CN`.
+1. Elija un archivo de área de producto en `packages/locales/src/fr`, `src/es`, `src/de`, `src/zh-CN`, `src/ja` o `src/ko`.
 2. Compare cada valor con la clave correspondiente en `src/ui/src/pptx/i18n/translations-en.ts`.
 3. Mejore los valores traducidos dejando sin cambios las claves con puntos y todos los marcadores `{{token}}`.
 4. Prefiera la terminología de la interfaz localizada de Microsoft PowerPoint, especialmente para SmartArt, transiciones de transformación, gráficos y vistas patrón.

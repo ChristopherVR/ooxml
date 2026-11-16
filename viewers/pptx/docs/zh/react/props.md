@@ -20,15 +20,16 @@ import type { PowerPointViewerProps } from 'pptx-react-viewer';
 
 ## 内容 {#content}
 
-| 属性                 | 类型                           | 默认值                | 说明                                                                                           |
-| -------------------- | ------------------------------ | --------------------- | ---------------------------------------------------------------------------------------------- |
-| `content`            | `Uint8Array`                   | 必填                  | 原始 `.pptx` 字节。`ArrayBuffer` 需通过 `new Uint8Array(buf)` 包装。                           |
-| `filePath`           | `string`                       | -                     | 原始文件路径或名称，用作自动保存恢复的键，并显示在标题栏。                                     |
-| `fileName`           | `string`                       | 通用标签              | 打开文档的显示名称，显示在标题栏，例如 `quarterly-review.pptx`。                               |
-| `autosave`           | `boolean`                      | `true`                | 控制恢复快照的自动保存，是标题栏开关之上的宿主策略上限，详见[自动保存策略](#autosave-policy)。 |
-| `autosaveIntervalMs` | `number`                       | “文件 > 选项”中的间隔 | 恢复快照的保存间隔。显式值优先于用户的自动恢复设置。                                           |
-| `readOnly`           | `boolean`                      | `false`               | 使文稿只读。`true` 优先于 `canEdit`；`false` 只取消此限制。                                    |
-| `fileProviders`      | `readonly CloudFileProvider[]` | -                     | “文件 > 打开”中的云端位置（例如 OneDrive）。从其中打开的文件会保存回该位置，而不是 `storage`。 |
+| 属性                 | 类型                           | 默认值                | 说明                                                                                                                |
+| -------------------- | ------------------------------ | --------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `content`            | `Uint8Array`                   | 必填                  | 原始 `.pptx` 字节。`ArrayBuffer` 需通过 `new Uint8Array(buf)` 包装。                                                |
+| `filePath`           | `string`                       | -                     | 原始文件路径或名称，用作自动保存恢复的键，并显示在标题栏。                                                          |
+| `fileName`           | `string`                       | 通用标签              | 打开文档的显示名称，显示在标题栏，例如 `quarterly-review.pptx`。                                                    |
+| `autosave`           | `boolean`                      | `true`                | 控制恢复快照的自动保存，是标题栏开关之上的宿主策略上限，详见[自动保存策略](#autosave-policy)。                      |
+| `autosaveIntervalMs` | `number`                       | “文件 > 选项”中的间隔 | 恢复快照的保存间隔。显式值优先于用户的自动恢复设置。                                                                |
+| `storage`            | `DocumentStorage`              | 无                    | 宿主托管存储：保存写入 `storage.save()`，恢复副本写入其恢复方法。参见[宿主托管存储](/zh/guide/host-owned-storage)。 |
+| `readOnly`           | `boolean`                      | `false`               | 使文稿只读。`true` 优先于 `canEdit`；`false` 只取消此限制。                                                         |
+| `fileProviders`      | `readonly CloudFileProvider[]` | -                     | “文件 > 打开”中的云端位置（例如 OneDrive）。从其中打开的文件会保存回该位置，而不是 `storage`。                      |
 
 ::: warning content 类型
 该属性使用 `Uint8Array`，不是 `ArrayBuffer`。从 `fetch` 或文件得到 `ArrayBuffer` 后的转换方式见[快速接入](/zh/react/getting-started)。
@@ -66,17 +67,26 @@ import type { PowerPointViewerProps } from 'pptx-react-viewer';
 
 ## 回调 {#callbacks}
 
-| 属性                    | 类型                                                 | 默认值 | 说明                                                                                                                               |
-| ----------------------- | ---------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `onDirtyChange`         | `(isDirty: boolean) => void`                         | -      | 未保存修改标记变化时调用。                                                                                                         |
-| `onContentChange`       | `(content: Uint8Array) => void`                      | -      | 内容变化时返回重新序列化后的文档字节。                                                                                             |
-| `onActiveSlideChange`   | `(slideIndex: number) => void`                       | -      | 当前幻灯片变化时调用。                                                                                                             |
-| `onModeChange`          | `(mode: ViewerMode) => void`                         | -      | 模式变化时调用，例如从编辑切换到放映。                                                                                             |
-| `onZoomChange`          | `(zoom: number) => void`                             | -      | 缩放比例变化时调用。                                                                                                               |
-| `onRibbonDisplayChange` | `(mode: 'always' \| 'tabs' \| 'fullScreen') => void` | -      | 用户选择“功能区显示选项”模式时调用。宿主修改该值时不会调用。查看器只在本次生命周期内保留这一选择；如需下次访问时恢复，请自行保存。 |
-| `onSelectionChange`     | `(elementIds: string[]) => void`                     | -      | 元素选择变化时调用。                                                                                                               |
-| `onSlideCountChange`    | `(count: number) => void`                            | -      | 添加或删除幻灯片导致总数变化时调用。                                                                                               |
-| `onOpenFile`            | `() => void`                                         | -      | 覆盖“文件 > 打开”，跳过内置选择器，由宿主随后传入新的 `content`。                                                                  |
+| 属性                    | 类型                                                         | 默认值 | 说明                                                                                                                               |
+| ----------------------- | ------------------------------------------------------------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `onDirtyChange`         | `(isDirty: boolean) => void`                                 | -      | 未保存修改标记变化时调用。                                                                                                         |
+| `onContentChange`       | `(content: Uint8Array) => void`                              | -      | 内容变化时返回重新序列化后的文档字节。                                                                                             |
+| `onActiveSlideChange`   | `(slideIndex: number) => void`                               | -      | 当前幻灯片变化时调用。                                                                                                             |
+| `onModeChange`          | `(mode: ViewerMode) => void`                                 | -      | 模式变化时调用，例如从编辑切换到放映。                                                                                             |
+| `onZoomChange`          | `(zoom: number) => void`                                     | -      | 缩放比例变化时调用。                                                                                                               |
+| `onRibbonDisplayChange` | `(mode: 'always' \| 'tabs' \| 'fullScreen') => void`         | -      | 用户选择“功能区显示选项”模式时调用。宿主修改该值时不会调用。查看器只在本次生命周期内保留这一选择；如需下次访问时恢复，请自行保存。 |
+| `onSelectionChange`     | `(elementIds: string[]) => void`                             | -      | 元素选择变化时调用。                                                                                                               |
+| `onSlideCountChange`    | `(count: number) => void`                                    | -      | 添加或删除幻灯片导致总数变化时调用。                                                                                               |
+| `onChange`              | `() => void`                                                 | -      | 提交任何文档编辑后调用（移动、调整大小、文本、撤销、重做等）。                                                                     |
+| `onAutosave`            | `(content: Uint8Array) => void`                              | -      | 每次写入恢复用自动保存快照时，以序列化后的文稿调用。                                                                               |
+| `onAutosaveToggle`      | `(enabled: boolean) => void`                                 | -      | 用户启用或禁用自动保存时调用（标题栏或“文件 > 选项”）。                                                                            |
+| `onAutosaveStatus`      | `(status: 'idle' \| 'saving' \| 'saved' \| 'error') => void` | -      | 每次自动保存生命周期状态转换时调用。                                                                                               |
+| `onAutosaveRecovery`    | `(record: AutosaveRecord) => void`                           | -      | 发现上一次会话留下的恢复快照时调用。内置恢复提示同时显示。                                                                         |
+| `onPropertiesChange`    | `(updates: Partial<PptxCoreProperties>) => void`             | -      | 用户（或 AI 助手）更改文档属性时调用。                                                                                             |
+| `onNotesUpdate`         | `(notes: string) => void`                                    | -      | 演讲者备注编辑后，以新的备注文本调用。                                                                                             |
+| `onPresentationChange`  | `(presenting: boolean) => void`                              | -      | 进入或退出演示（幻灯片放映）模式时调用。                                                                                           |
+| `onCollaborationStatus` | `(status: ConnectionStatus) => void`                         | -      | 每次协作连接状态转换时调用。                                                                                                       |
+| `onOpenFile`            | `() => void`                                                 | -      | 覆盖“文件 > 打开”，跳过内置选择器，由宿主随后传入新的 `content`。                                                                  |
 
 ::: info 说明
 `onContentChange` 返回序列化文档的 `Uint8Array`，不是布尔值。需要主动获取内容时，使用句柄的 [`getContent()`](/zh/react/handle)。
@@ -152,13 +162,14 @@ import type { PowerPointViewerProps } from 'pptx-react-viewer';
 
 ## 事件、hooks 与宿主扩展 {#events-hooks-and-host-extensions}
 
-| 属性                     | 类型                                 | 说明                                                                                                                    |
-| ------------------------ | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| `onLoad`                 | `(detail: ViewerLoadDetail) => void` | 每次演示文稿无错误加载完成时触发，附带幻灯片数量和画布尺寸。                                                            |
-| `onError`                | `(message: string) => void`          | 每种不同的加载失败触发一次，附带可读消息。                                                                              |
-| `onHyperlinkClick`       | `HyperlinkClickHandler`              | 跟随链接之前触发；返回 `false` 可取消默认操作。                                                                         |
-| `ribbonAddIns`           | `readonly RibbonAddInTab[]`          | 宿主在帮助之后添加的功能区选项卡。每个命令运行其 `run` 回调，并分派冒泡的 `office-ribbon-add-in` 事件。仅限桌面功能区。 |
-| `inspectorInitiallyOpen` | `boolean`                            | 属性面板的初始可见性；省略时保持桌面和移动端默认值。                                                                    |
+| 属性                     | 类型                                                         | 说明                                                                                                                                                                                                                                                   |
+| ------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `onLoad`                 | `(detail: ViewerLoadDetail) => void`                         | 每次演示文稿无错误加载完成时触发，附带幻灯片数量和画布尺寸。                                                                                                                                                                                           |
+| `onError`                | `(message: string) => void`                                  | 每种不同的加载失败触发一次，附带可读消息。                                                                                                                                                                                                             |
+| `onElementRenderError`   | `(error: Error, context: ElementRenderErrorContext) => void` | 幻灯片元素因其渲染器抛出错误而被省略；`context` 为 `{ elementId, elementType, slideId }`。只省略该元素，所有界面一致。默认为 `console.error(error, context)`，回调抛出错误时同样使用此默认行为。参见[元素渲染错误](./hooks.md#element-render-errors)。 |
+| `onHyperlinkClick`       | `HyperlinkClickHandler`                                      | 跟随链接之前触发；返回 `false` 可取消默认操作。                                                                                                                                                                                                        |
+| `ribbonAddIns`           | `readonly RibbonAddInTab[]`                                  | 宿主在帮助之后添加的功能区选项卡。每个命令运行其 `run` 回调，并分派冒泡的 `office-ribbon-add-in` 事件。仅限桌面功能区。                                                                                                                                |
+| `inspectorInitiallyOpen` | `boolean`                                                    | 属性面板的初始可见性；省略时保持桌面和移动端默认值。                                                                                                                                                                                                   |
 
 ## 接口示意 {#interface-sketch}
 
@@ -175,9 +186,19 @@ interface PowerPointViewerProps {
 	onDirtyChange?: (isDirty: boolean) => void;
 	onContentChange?: (content: Uint8Array) => void;
 	onActiveSlideChange?: (slideIndex: number) => void;
+	onChange?: () => void;
+	onAutosave?: (content: Uint8Array) => void;
+	onAutosaveToggle?: (enabled: boolean) => void;
+	onAutosaveStatus?: (status: 'idle' | 'saving' | 'saved' | 'error') => void;
+	onAutosaveRecovery?: (record: AutosaveRecord) => void;
+	onPropertiesChange?: (updates: Partial<PptxCoreProperties>) => void;
+	onNotesUpdate?: (notes: string) => void;
+	onPresentationChange?: (presenting: boolean) => void;
+	onCollaborationStatus?: (status: ConnectionStatus) => void;
 	onOpenFile?: () => void;
 	onLoad?: (detail: ViewerLoadDetail) => void;
 	onError?: (message: string) => void;
+	onElementRenderError?: ElementRenderErrorHandler;
 	onHyperlinkClick?: HyperlinkClickHandler;
 	ribbonAddIns?: readonly RibbonAddInTab[];
 	inspectorInitiallyOpen?: boolean;

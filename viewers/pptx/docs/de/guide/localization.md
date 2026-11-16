@@ -81,6 +81,8 @@ import i18nInstance from './i18n';
 
 Sprachen wechseln Sie mit `i18nInstance.changeLanguage('fr')`.
 
+Konfigurieren Sie react-i18next (`initReactI18next` mit `init` oder ein `I18nextProvider`) vor dem ersten Rendern. Beim ersten Erhalt einer Instanz durch react-i18next wird kein Ereignis ausgelöst. Ein Viewer, der ohne Instanz gerendert wurde, wechselt daher erst, wenn sein übergeordnetes Element ihn erneut rendert: Bis dahin zeigt er seinen eingebauten englischen Text, danach verwendet er die Instanz und übernimmt die gespeicherte Sprachwahl oder `defaultLocale`.
+
 #### Eigene i18n-Bibliothek verwenden
 
 Um den Viewer mit Lingui, FormatJS oder einer anderen Bibliothek statt react-i18next zu übersetzen, umschließen Sie ihn mit `PptxI18nProvider` und übergeben eine Funktion `translate(key, params)` sowie die aktive `locale`. Das gilt für `PowerPointViewer` und die eigenständigen Bausteine (`Toolbar`, `SlideCanvas`, `SlideTemplateGalleryDialog`, ...):
@@ -113,7 +115,45 @@ function TranslatedViewer({ content }: { content: Uint8Array }) {
 
 `translate` erhält die Parameter des Viewers unverändert: `defaultValue`, `count` und die Werte der `{{name}}`-Platzhalter. Verwenden Sie dieselben Namen in Ihrem Katalog (`{name}` in ICU-Syntax); `count` ist ein einfacher Wert, die Pluralbildung gehört also in Ihren Katalog. `{{name}}`-Platzhalter, die im zurückgegebenen Text verbleiben, werden ebenfalls gefüllt, sodass die mitgelieferten Wörterbücher unverändert funktionieren: `const translate: PptxTranslate = (key) => translationsFr[key];`. Gibt `translate` den Schlüssel selbst, eine leere Zeichenkette oder nichts zurück oder wirft es einen Fehler, zeigt der Viewer seinen eingebauten englischen Text, dann den Standardtext des Aufrufs, dann ein aus dem Schlüssel abgeleitetes Label; ein unvollständiger Katalog zeigt also nie einen rohen `pptx.*`-Schlüssel. Halten Sie `translate` stabil (eine Funktion auf Modulebene oder `useCallback`): Der Viewer übersetzt neu, sobald sich `translate` oder `locale` ändert.
 
-Innerhalb eines Providers gehört die Sprache dem Host: Der Viewer ruft nie `changeLanguage` auf, ignoriert `defaultLocale` und stellt nie eine gespeicherte Sprachwahl wieder her. Datei > Optionen > Sprache erscheint nur, wenn Sie `onLocaleChange` und mindestens zwei `availableLocales` übergeben; eine Auswahl ruft `onLocaleChange` auf, und die Markierung folgt `locale` (eine regionale `locale` wie `fr-CA` markiert ein angebotenes `fr`). `locale` legt die Schreibrichtung nicht fest. Ein `PowerPointViewer` liest den nächsten Provider über ihm; ein Provider innerhalb des Viewers wird ignoriert, sodass der ganze Viewer eine Sprache teilt. `i18next` und `react-i18next` bleiben in 4.x erforderliche Peer-Abhängigkeiten: Installieren Sie sie, innerhalb eines Providers verwendet der Viewer sie aber nicht. `PptxI18nProvider` gibt es nur für React; die anderen Bindings übersetzen wie unten beschrieben.
+Innerhalb eines Providers gehört die Sprache dem Host: Der Viewer ruft nie `changeLanguage` auf, ignoriert `defaultLocale` und stellt nie eine gespeicherte Sprachwahl wieder her. Datei > Optionen > Sprache erscheint nur, wenn Sie `onLocaleChange` und mindestens zwei `availableLocales` übergeben; eine Auswahl ruft `onLocaleChange` auf, und die Markierung folgt `locale` (eine regionale `locale` wie `fr-CA` markiert ein angebotenes `fr`). `locale` legt die Schreibrichtung nicht fest. Ein `PowerPointViewer` liest den nächsten Provider über ihm; ein Provider innerhalb des Viewers wird ignoriert, sodass der ganze Viewer eine Sprache teilt. `i18next` und `react-i18next` bleiben in 4.x erforderliche Peer-Abhängigkeiten: Installieren Sie sie, innerhalb eines Providers verwendet der Viewer sie aber nicht. Um ohne sie zu bauen, importieren Sie aus `pptx-react-viewer/no-i18next` ([unten](#ohne-react-i18next)). `PptxI18nProvider` gibt es nur für React; die anderen Bindings übersetzen wie unten beschrieben.
+
+#### Ohne react-i18next
+
+Der Haupteinstieg importiert `react-i18next` auch dann, wenn jeder Viewer in einem `PptxI18nProvider` steht. Ein Bundler schlägt daher mit "Can't resolve 'react-i18next'" fehl, wenn das Paket nicht installiert ist. Ein Host, der nur über `PptxI18nProvider` übersetzt, kann stattdessen aus `pptx-react-viewer/no-i18next` importieren. Dieser Einstieg hat genau die Exporte und Typen von `pptx-react-viewer`, und nichts, was er lädt, importiert `i18next` oder `react-i18next`:
+
+```bash
+npm install pptx-react-viewer react react-dom
+```
+
+npm ab Version 7, pnpm ab Version 8 und Bun installieren `i18next` und `react-i18next` mit diesem Befehl trotzdem, da sie als Peer-Abhängigkeiten deklariert sind. Der Einstieg lässt sie ungenutzt und bündelt sie nie.
+
+```tsx
+import { PowerPointViewer, PptxI18nProvider } from 'pptx-react-viewer/no-i18next';
+```
+
+Eine Abschaltung wie npms `--legacy-peer-deps` hält sie fern, überspringt aber jede Peer-Abhängigkeit. Installieren Sie dann auch die übrigen erforderlichen Peers selbst (`framer-motion`, `lucide-react`, `react-icons`, `jspdf`, `jszip` und `fast-xml-parser`), sonst schlägt der Build fehl.
+
+- Innerhalb eines `PptxI18nProvider` verhält sich der Einstieg genau wie der Haupteinstieg. Provider und Viewer dürfen aus beiden Einstiegen stammen: Sie teilen sich einen Kontext.
+- Außerhalb eines Providers zeigen `PowerPointViewer` und die eigenständigen Bausteine den eingebauten englischen Text und melden die Locale `en`. Datei > Optionen > Sprache entfällt, `defaultLocale`, `availableLocales` und `onLocaleChange` haben keine Wirkung, und es wird keine gespeicherte Sprachwahl gelesen oder geschrieben.
+- Der Rückfall wird für die ganze App entschieden, nicht pro Import: Importiert ein beliebiges Modul der App außerdem `pptx-react-viewer`, `pptx-react-viewer/viewer` oder `pptx-react-viewer/internals`, wird react-i18next gebündelt. Viewer außerhalb eines Providers lesen dann aus beiden Einstiegen daraus. Sie übersetzen über react-i18next, wenn es konfiguriert ist (`initReactI18next` oder ein `I18nextProvider`), und behalten andernfalls den eingebauten englischen Text (react-i18next meldet, dass keine Instanz vorhanden ist).
+- `pptx-react-viewer/viewer` (die optionalen Hooks und Kollaborationskomponenten) und `pptx-react-viewer/internals` haben noch kein Gegenstück ohne react-i18next: Der Import eines der beiden erfordert installierte `i18next` und `react-i18next`, wie beim Haupteinstieg.
+
+Der eingebaute Text außerhalb eines Providers ist nur Englisch. Für eine andere Sprache ohne i18next übergeben Sie ein mitgeliefertes Wörterbuch über `PptxI18nProvider`:
+
+```tsx
+import { translationsFr } from 'pptx-react-viewer/i18n/fr';
+import { PowerPointViewer, PptxI18nProvider } from 'pptx-react-viewer/no-i18next';
+
+const translate = (key: string) => translationsFr[key];
+
+function FrenchViewer({ content }: { content: Uint8Array }) {
+	return (
+		<PptxI18nProvider translate={translate} locale='fr'>
+			<PowerPointViewer content={content} />
+		</PptxI18nProvider>
+	);
+}
+```
 
 ### Vue 3
 
@@ -303,6 +343,8 @@ Alle fünf Viewer-Pakete bieten dieselben optionalen Locale-Unterpfade:
 | Spanisch                 | `i18n/es`    | `translationsEs`   |
 | Deutsch                  | `i18n/de`    | `translationsDe`   |
 | Vereinfachtes Chinesisch | `i18n/zh-CN` | `translationsZhCN` |
+| Japanisch                | `i18n/ja`    | `translationsJa`   |
+| Koreanisch               | `i18n/ko`    | `translationsKo`   |
 
 Zum Beispiel `import { translationsFr } from 'pptx-vue-viewer/i18n/fr'`.
 Vue-Anwendungen sollten diese Wörterbücher vor der Registrierung durch `toVueI18nSyntax`
@@ -339,7 +381,7 @@ Jede Sprache ist in benannte Produktbereichsdateien wie `charts.ts`,
 
 Muttersprachler und fließend Sprechende können helfen, ohne ein ganzes Wörterbuch durchzusehen:
 
-1. Wählen Sie eine Produktbereichsdatei unter `packages/locales/src/fr`, `src/es`, `src/de` oder `src/zh-CN`.
+1. Wählen Sie eine Produktbereichsdatei unter `packages/locales/src/fr`, `src/es`, `src/de`, `src/zh-CN`, `src/ja` oder `src/ko`.
 2. Vergleichen Sie jeden Wert mit dem passenden Schlüssel in `src/ui/src/pptx/i18n/translations-en.ts`.
 3. Verbessern Sie übersetzte Werte und lassen Sie die Schlüssel mit Punkten und jeden `{{token}}`-Platzhalter unverändert.
 4. Bevorzugen Sie die Terminologie der lokalisierten Microsoft-PowerPoint-Oberfläche, besonders bei SmartArt, Morph-Übergängen, Diagrammen und Masteransichten.

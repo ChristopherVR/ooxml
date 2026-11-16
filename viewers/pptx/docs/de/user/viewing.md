@@ -49,6 +49,10 @@ Außerdem können Sie:
 - **Registerkarte Ansicht > An Fenster anpassen** im Menüband verwenden.
 - Auf Touch-Geräten zum Zoomen zwei Finger zusammen- oder auseinanderziehen.
 
+Um sich auf einer Folie zu bewegen, die größer als die Zeichenfläche ist, scrollen Sie, ziehen Sie mit der mittleren Maustaste oder halten Sie **Leertaste** gedrückt und ziehen Sie. In einer schreibgeschützten Ansicht, in der es nichts zu markieren gibt, können Sie die Folie außerdem mit der linken Maustaste ziehen.
+
+Der Zoom reicht von 10 % bis 500 %, wobei 100 % die Folie an die Zeichenfläche anpasst. Beim Wechsel zu einer anderen Folie bleibt der Zoom erhalten, und die neue Folie wird ab ihrer oberen linken Ecke angezeigt.
+
 ## Ansichtsmodi
 
 Die Statusleiste hat drei Ansichtsschaltflächen:
