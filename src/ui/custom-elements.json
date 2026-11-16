@@ -931,6 +931,10 @@
 						},
 						{
 							"kind": "field",
+							"name": "pictures"
+						},
+						{
+							"kind": "field",
 							"name": "source"
 						},
 						{
