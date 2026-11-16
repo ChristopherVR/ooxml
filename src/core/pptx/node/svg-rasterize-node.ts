@@ -11,7 +11,7 @@
  * @module pptx/node/svg-rasterize-node
  */
 
-import type { PptxSvgRasterizer } from '../core/core/types';
+import type { PptxSvgRasterizer } from '../core/core/svg-rasterizer';
 
 /** The slice of `@napi-rs/canvas` this module uses. */
 interface NodeCanvasImage {

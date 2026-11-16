@@ -15,5 +15,5 @@
  * @module pptx/node
  */
 
-export type { PptxSvgRasterizer } from '../core/core/types';
+export type { PptxSvgRasterizer } from '../core/core/svg-rasterizer';
 export { rasterizeSvgInNode } from './svg-rasterize-node';

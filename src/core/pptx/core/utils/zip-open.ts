@@ -1,6 +1,10 @@
 import type JSZip from 'jszip';
 import { openZip } from '../../../opc/zip-limits';
-import { DEFAULT_MAX_UNCOMPRESSED_BYTES, MAX_ZIP_ENTRY_COUNT, ZipBombError } from '../core/types';
+import {
+	DEFAULT_MAX_UNCOMPRESSED_BYTES,
+	MAX_ZIP_ENTRY_COUNT,
+	ZipBombError,
+} from '../core/zip-bomb';
 
 const createError = (message: string, details: { limit: number }): Error =>
 	new ZipBombError(message, details);

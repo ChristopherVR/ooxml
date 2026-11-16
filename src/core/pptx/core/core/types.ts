@@ -1,4 +1,5 @@
 import type { PptxXmlBuilder } from '../builders/fluent';
+import type { PptxSvgRasterizer } from './svg-rasterizer';
 import type {
 	PptxAppProperties,
 	PptxCoreProperties,
@@ -106,76 +107,12 @@ export interface PptxHandlerLoadOptions {
 	allowExternalImages?: boolean;
 }
 
-/**
- * Default maximum uncompressed byte budget for {@link PptxHandlerLoadOptions.maxUncompressedBytes}.
- * 500 MiB.
- */
-export const DEFAULT_MAX_UNCOMPRESSED_BYTES = 500 * 1024 * 1024;
-
-/**
- * Hard cap on archive entry count. Beyond this, the package is rejected.
- */
-export const MAX_ZIP_ENTRY_COUNT = 65536;
-
-/**
- * Thrown by the load pipeline when a ZIP archive exceeds the configured
- * uncompressed-size budget or the entry-count limit.
- */
-export class ZipBombError extends Error {
-	public readonly code = 'ZIP_BOMB';
-
-	/** Inflated bytes declared or read when a size limit failed (a lower bound while streaming). */
-	public readonly uncompressedBytes: number | undefined;
-
-	/** The value of the limit that failed. */
-	public readonly limit: number;
-
-	/** Number of archive entries, when the entry-count limit failed. */
-	public readonly entryCount: number | undefined;
-
-	/**
-	 * The `PptxLoadLimits` field behind this error (`maxUncompressedBytes` or
-	 * `maxEntries`); `undefined` for a forged size or an unsafe part name.
-	 */
-	public readonly loadLimit: 'maxUncompressedBytes' | 'maxEntries' | undefined;
-
-	/** The observed value for {@link loadLimit}, when known. */
-	public readonly actual: number | undefined;
-
-	constructor(
-		message: string,
-		details: {
-			uncompressedBytes?: number;
-			limit: number;
-			entryCount?: number;
-			loadLimit?: 'maxUncompressedBytes' | 'maxEntries';
-			actual?: number;
-		},
-	) {
-		super(message);
-		this.name = 'ZipBombError';
-		this.uncompressedBytes = details.uncompressedBytes;
-		this.limit = details.limit;
-		this.entryCount = details.entryCount;
-		this.loadLimit = details.loadLimit;
-		this.actual = details.actual;
-	}
-}
+export { DEFAULT_MAX_UNCOMPRESSED_BYTES, MAX_ZIP_ENTRY_COUNT, ZipBombError } from './zip-bomb';
 
 /** Output format for the save pipeline. */
 export type PptxSaveFormat = 'pptx' | 'ppsx' | 'pptm' | 'ppt';
 
-/**
- * Rasterises SVG bytes to PNG for a `.ppt` save (the binary format has no SVG
- * picture). `sizeFor` maps the SVG's intrinsic size in pixels (0 when it
- * declares none) to the raster size the writer wants. Resolve `undefined`
- * when the SVG cannot be rasterised; the writer then writes a placeholder
- * with a warning. `ooxml-core/pptx/node` exports one for Node.js.
- */
-export type PptxSvgRasterizer = (
-	svg: Uint8Array,
-	sizeFor: (intrinsicWidth: number, intrinsicHeight: number) => { width: number; height: number },
-) => Promise<Uint8Array | undefined>;
+export type { PptxSvgRasterizer } from './svg-rasterizer';
 
 export interface PptxHandlerSaveOptions {
 	/**
