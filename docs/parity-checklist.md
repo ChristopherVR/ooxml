@@ -494,7 +494,7 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P1** Chart and ChartEx save is not native-certified for fresh templates (a six-slide deck
       failed to open in PowerPoint).
 - [ ] **P2** PowerPoint chart edits still saved only by the object-tree writers (no neutral
-      adapter, `chart-neutral-save-plan.ts`): filtered series. Moved: group subtype settings
+      adapter, `chart-neutral-save-plan.ts`): none of the fields the 2026-11-16 probe listed. Moved: group subtype settings
       (`chart-neutral-save-subtype.ts`); group `varyColors`, bar direction, scatter style and the
       `standard` grouping flag on their own (`chart-neutral-save-group-flags.ts`); the gridline
       flag; a series' own number format; the auto-update flag, colour map override, colour style

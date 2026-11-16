@@ -35,6 +35,7 @@ import { planNeutralGroupOptions } from './chart-neutral-save-groups';
 import { planNeutralGroupSubtype } from './chart-neutral-save-subtype';
 import { planNeutralGroupFlags } from './chart-neutral-save-group-flags';
 import { planNeutralSeriesStructure } from './chart-neutral-save-structure';
+import { planNeutralFilteredSeries } from './chart-neutral-save-filtered';
 import { planNeutralChartType } from './chart-neutral-save-type';
 import { planNeutralChartFormats } from './chart-neutral-save-format';
 import { planNeutralFlatPaint } from './chart-neutral-save-flat-paint';
@@ -184,6 +185,8 @@ export function planWithLeftovers(
 ): { plan: NeutralChartSavePlan | undefined; unclaimed: string[] } {
 	const probe = structuredClone(after);
 	const edits: NeutralChartEdit[] = [];
+	// Chart Filters moves come first: the structure planner then sees no series added or removed.
+	before = planNeutralFilteredSeries(before, after, edits);
 	const original = before;
 	before = planNeutralSeriesStructure(before, after, edits);
 	planNeutralChartType(before, probe, edits);

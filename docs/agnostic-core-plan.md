@@ -623,6 +623,8 @@ is the acceptance bar), and the area has its own tests and real parts from `src/
   print settings, pivot formats, user shapes) go through `chart/edit/part-settings.ts`
   (`chart-neutral-save-part-settings.ts`); print settings and pivot formats are still encoded by
   PowerPoint's element codecs and placed as written.
+  Chart Filters hide, restore and drop series through `chart/edit/filtered-series.ts`
+  (`chart-neutral-save-filtered.ts`), in the form Excel 16 writes for `Series.IsFiltered`.
   One series of a vertical 2-D column, line or area chart can become XY (Scatter): the scatter
   group shares the category and value axes it leaves, with x values from the categories, markers
   in the series colour and smoothing off, as Excel 16 saves that edit (`setChartSeriesType`); the

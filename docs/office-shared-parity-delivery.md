@@ -352,6 +352,19 @@ palette on 31 and the user shapes removal on 1 keep the edit both ways, with the
 equal. No committed deck holds chart print settings or pivot formats; those are unit evidence
 (`chart-neutral-save-part-settings.test.ts`) and the round-trip suites.
 
+Chart Filters: `chart/edit/filtered-series.ts` hides a series into its group's
+`c15:filtered*Series` extension, restores one to its group at its `c:idx` position and drops one.
+Excel 16, driven through its object model (`Series.IsFiltered = True` on column, 3-D column, 3-D
+area, 3-D line, 3-D pie, doughnut, surface and scatter charts), writes the hidden series whole,
+under one wrapper per family (`c15:filteredBarSeries` for a 3-D column too, `filteredLineSeries`,
+`filteredAreaSeries`, `filteredPieSeries`, `filteredSurfaceSeries`, `filteredScatterSeries`) and
+with each `c:f` replaced by `c:extLst/c15:formulaRef/c15:sqref`; the operations write and read that
+form. The object-tree writers rebuilt the entry from literal caches under a wrapper named after the
+group element (`filteredBar3DSeries`). `chart-neutral-save-filtered.ts` claims the hide and restore
+actions of the shared UI and dropped entries ahead of the structure planner.
+`chart-filtered-series-migration.test.ts`: hiding on 40 parts, restoring on 2 and dropping on 2
+reload with the edit through the neutral writer; the object-tree save kept 15, 0 and 2.
+
 XY combinations: Excel 16, driven through its object model (`Series.ChartType = xlXYScatter` on a
 column or line series), saves a `c:scatterChart` that references the same category and value axes
 as the column or line group, with the categories as `c:xVal`, a 5 pt circle marker in the series

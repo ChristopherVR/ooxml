@@ -28,6 +28,7 @@ export * from './group-options';
 export * from './group-subtype';
 export * from './group-flags';
 export * from './part-settings';
+export * from './filtered-series';
 export * from './intent';
 export * from './data-sheet';
 export * from './new-chart';
