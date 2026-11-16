@@ -117,6 +117,10 @@ The shared controllers, each adapted by every binding:
   one per viewer).
 - **Selection Pane**: `createSelectionPaneController` with `selectionPaneRows` and
   `selectionPaneLabel` (rename box, drag reorder, the one row label).
+- **Find and Replace bar**: `createFindReplaceController` (open state, Ctrl+F / Ctrl+H mode, the
+  search session); route the keymap's `find` / `findReplace` to `toggle`.
+- **Slide rail**: `createSlideRailController` with `slideRailMenuEntries` (thumbnail multi-select
+  by id, the right-click menu and its command routing).
 - **Canvas gestures**: move, resize and rotate run on `createGestureController`
   (`render/editor-gestures.ts`: dead zone, window listeners, snapping, multi-selection snap
   exclusion, minimum size, mid-gesture lock check). A binding supplies deps and paints the

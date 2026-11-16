@@ -675,6 +675,35 @@ Non-test binding source after this work (2026-11-16, from 104,367 /
 vanilla 66,002. Angular, Svelte and vanilla grew where they gained comment editing and drag
 reorder; their per-binding state machines went.
 
-Still per binding: the slide rail's selection and context menu, the zoom viewport, the notes pane,
-and Find and Replace's open state and shortcut (its session already runs on the shared
-`find-replace-session`). Angular keeps its public `CommentsService`, now unused by the viewer.
+Angular keeps its public `CommentsService`, now unused by the viewer.
+
+### Find and Replace bar, slide rail and zoom (landed 2026-11-16)
+
+- `createFindReplaceController`: the bar's open state, its mode (Ctrl+F find, Ctrl+H find and
+  replace) and the search session. Ctrl+F and Ctrl+H toggle the bar and the other chord switches an
+  open bar's mode; opening searches the kept query again; closing drops the matches and keeps the
+  query, replacement and scopes. The building blocks' `createFindBarController` is now this
+  controller with its port. Drift: Ctrl+H after Ctrl+F closed the bar in React, Vue, Svelte and
+  vanilla; React did not search again on reopen; Angular's Ctrl+F opened a second, find-only bar
+  with its own search outside the shared session, and its Ctrl+H only opened the replace bar.
+  Angular's viewer now shows the one shared bar in both modes (`FindBarComponent` stays exported).
+- `createSlideRailController` with `slideRailMenuEntries`: the thumbnails pane's Ctrl/Shift
+  selection by slide id and its right-click menu (whole selection when right-clicked inside it,
+  that slide alone outside it, refused on a read-only deck) with command routing. Five copies of
+  this state went; the read-only gate had sat in three different places.
+- Zoom: the zoom state, gestures and per-slide scroll reset were already shared
+  (`viewer-zoom-store`, `attachViewportNavigation`, `resetViewportScroll`). React's Zoom to
+  Selection computation moved to `zoom-to-selection` (`selectionZoomBounds`,
+  `zoomToSelectionScale`, `selectionScrollTarget`). No binding offers a Zoom to Selection control
+  (React's hook action is not wired to one); adding it is a feature for all five.
+
+Non-test binding source after this work (from 104,367 / 92,113 / 80,113 / 66,446 / 65,996):
+React 103,318, Angular 92,165, Vue 79,804, Svelte 66,398, vanilla 66,019.
+
+Still per binding: the notes pane's draft. Each binding keeps the note's text and segments while
+typing, debounces or not (React, Vue and Angular's rich editor debounce; Svelte, vanilla and
+Angular's plain textarea save on change or blur), and decides when a slide switch or an echo of
+its own save reseeds the editor. A shared draft controller (load per slide id with an echo guard,
+debounced edit, flush on blur and before a slide switch, saving to the slide it was typed on) is
+the next step; the debounce-for-all decision and each binding's contentEditable caret handling
+make it a change of its own.
