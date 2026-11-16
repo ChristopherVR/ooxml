@@ -1,3 +1,4 @@
+import type { ShapeFillAction, ShapeFillStopView } from 'ooxml-ui/pptx';
 // @vitest-environment happy-dom
 /**
  * W3-G3: a gradient stop's colour swatch also shows the deck's theme palette
@@ -10,7 +11,6 @@ import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import type { GradientStop } from './FillStrokeHelpers';
 import { GradientStopRow } from './FillStrokeSubComponents';
 import { ThemeColorMapProvider } from './ThemeColorMapContext';
 
@@ -51,33 +51,43 @@ afterEach(() => {
 	container.remove();
 });
 
-function renderRow(stop: GradientStop, onUpdate: (stops: GradientStop[]) => void) {
-	const allStops: GradientStop[] = [stop, { color: '#ffffff', position: 100 }];
+function renderRow(stop: ShapeFillStopView, onAction: (action: ShapeFillAction) => void) {
 	act(() => {
 		root.render(
 			<ThemeColorMapProvider value={OFFICE_THEME}>
-				<GradientStopRow stop={stop} index={0} total={2} allStops={allStops} onUpdate={onUpdate} />
+				<GradientStopRow stop={stop} onAction={onAction} />
 			</ThemeColorMapProvider>,
 		);
 	});
 }
 
+const stopView = (patch: Partial<ShapeFillStopView> = {}): ShapeFillStopView => ({
+	index: 0,
+	color: '#4472c4',
+	position: 0,
+	opacity: 100,
+	removable: false,
+	...patch,
+});
+
 describe('gradientStopRow theme colour picker', () => {
 	it('commits both the resolved hex and the ref on a theme swatch click', () => {
-		let updated: GradientStop[] | undefined;
-		renderRow({ color: '#4472c4', position: 0 }, (stops) => (updated = stops));
+		let action: ShapeFillAction | undefined;
+		renderRow(stopView(), (next) => (action = next));
 		const accent1 = themeSwatch('Accent 1')!;
 		expect(accent1).not.toBeNull();
 		act(() => accent1.click());
-		expect(updated?.[0]).toMatchObject({ color: '#4472c4', colorRef: { scheme: 'accent1' } });
+		expect(action).toMatchObject({
+			type: 'stopColor',
+			index: 0,
+			hex: '#4472c4',
+			ref: { scheme: 'accent1' },
+		});
 	});
 
 	it('clears a previously-stored ref when the native colour input changes', () => {
-		let updated: GradientStop[] | undefined;
-		renderRow(
-			{ color: '#4472c4', position: 0, colorRef: { scheme: 'accent1' } },
-			(stops) => (updated = stops),
-		);
+		let action: ShapeFillAction | undefined;
+		renderRow(stopView({ colorRef: { scheme: 'accent1' } }), (next) => (action = next));
 		const input = container.querySelector('input[type="color"]') as HTMLInputElement;
 		act(() => {
 			const nativeSetter = Object.getOwnPropertyDescriptor(
@@ -87,6 +97,6 @@ describe('gradientStopRow theme colour picker', () => {
 			nativeSetter?.call(input, '#ff0000');
 			input.dispatchEvent(new Event('change', { bubbles: true }));
 		});
-		expect(updated?.[0]?.colorRef).toBeFalsy();
+		expect(action).toStrictEqual({ type: 'stopColor', index: 0, hex: '#ff0000' });
 	});
 });

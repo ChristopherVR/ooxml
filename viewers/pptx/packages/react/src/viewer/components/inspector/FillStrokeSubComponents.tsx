@@ -1,57 +1,18 @@
 import { OFFICE_COLOR_SWATCHES, officeColorSwatchLabel, shapeQuickStylePatch } from 'ooxml-ui/pptx';
+import type { ShapeFillAction, ShapeFillStopView } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxThemeColorRef, ShapeStyle } from 'pptx-viewer-core';
 import { hasShapeProperties } from 'pptx-viewer-core';
 import React from 'react';
 import { LuPipette } from 'react-icons/lu';
 
 import { useTranslation } from '../../i18n/use-translation';
-import { normalizeHexColor, openNativeEyeDropper } from '../../utils';
-import { WebSelect } from '../WebControls';
-import { SEL, RNG, SWATCH, DIS, LBL, COL2 } from './FillStrokeHelpers';
-import type { GradientStop } from './FillStrokeHelpers';
+import { openNativeEyeDropper } from '../../utils';
+import { SEL, RNG, SWATCH, DIS, LBL } from './FillStrokeHelpers';
 import { LiveColorInput } from './LiveColorInput';
 import { useRecentColors } from './RecentColorsContext';
 import { RecentColorsRow } from './RecentColorsRow';
 import { ThemeColorSwatchGrid } from './ThemeColorSwatchGrid';
 import { useRecentColorCommit } from './useRecentColorCommit';
-
-// ---------------------------------------------------------------------------
-// SelectRow
-// ---------------------------------------------------------------------------
-
-/** Render a simple <select> row. */
-export function SelectRow({
-	label,
-	value,
-	span2,
-	options,
-	onChange,
-}: {
-	label: string;
-	value: string;
-	span2?: boolean;
-	options: readonly { value: string; label: string; i18nKey?: string }[];
-	onChange: (v: string) => void;
-}): React.ReactElement {
-	const { t } = useTranslation();
-	return (
-		<label className={`flex flex-col gap-1 ${span2 ? COL2 : ''}`}>
-			<span className={LBL}>{label}</span>
-			<WebSelect
-				aria-label={label}
-				value={value}
-				onChange={(e) => onChange(e.target.value)}
-				className={SEL}
-			>
-				{options.map((o) => (
-					<option key={o.value} value={o.value}>
-						{o.i18nKey ? t(o.i18nKey) : o.label}
-					</option>
-				))}
-			</WebSelect>
-		</label>
-	);
-}
 
 // ---------------------------------------------------------------------------
 // ColorPickerRow
@@ -187,56 +148,52 @@ function shapeStyleChangePatch(
 // ---------------------------------------------------------------------------
 
 /**
- * A single gradient stop row. The theme colour grid sits below the native
- * colour input, same "swatch commits hex + ref, native input clears it"
- * contract as {@link ColorPickerRow}: picking a theme swatch keeps this stop
- * following the deck's theme after a later theme change.
+ * One row of the Fill section's gradient stop list, drawn from the shared
+ * `ShapeFillStopView`; every control reports a shared `ShapeFillAction`. The
+ * theme colour grid sits below the native colour input, same "swatch commits
+ * hex + ref, native input clears it" contract as {@link ColorPickerRow}:
+ * picking a theme swatch keeps this stop following the deck's theme after a
+ * later theme change.
  */
 export function GradientStopRow({
 	stop,
-	index,
-	total,
-	onUpdate,
-	allStops,
+	onAction,
 }: {
-	stop: GradientStop;
-	index: number;
-	total: number;
-	onUpdate: (stops: GradientStop[]) => void;
-	allStops: GradientStop[];
+	stop: ShapeFillStopView;
+	onAction: (action: ShapeFillAction) => void;
 }): React.ReactElement {
 	const { t } = useTranslation();
 	const { pushColor } = useRecentColors();
 	const commitRecentColor = useRecentColorCommit();
-	const patchStop = (patch: Partial<GradientStop>): void => {
-		const next = allStops.map((s, i) => (i === index ? { ...s, ...patch } : s));
-		onUpdate(next);
-	};
+	const { index } = stop;
 	return (
-		<div className='space-y-1'>
+		<div className='space-y-1' data-testid='fill-gradient-stop'>
 			<div className='grid grid-cols-[auto,1fr,auto] items-center gap-2'>
 				<input
 					type='color'
-					value={normalizeHexColor(stop.color, '#3b82f6')}
+					aria-label={t('pptx.gradient.stops')}
+					value={stop.color}
 					ref={commitRecentColor}
-					onChange={(e) =>
-						patchStop({ color: normalizeHexColor(e.target.value, '#3b82f6'), colorRef: undefined })
-					}
+					onChange={(e) => onAction({ type: 'stopColor', index, hex: e.target.value })}
 					className='h-7 w-10 rounded border border-border bg-muted'
 				/>
 				<input
 					type='range'
+					aria-label={t('pptx.gradient.position')}
 					min={0}
 					max={100}
-					value={Math.round(stop.position)}
-					onChange={(e) => patchStop({ position: Number(e.target.value) })}
+					value={stop.position}
+					onChange={(e) =>
+						onAction({ type: 'stopPosition', index, position: Number(e.target.value) })
+					}
 					className={RNG}
 				/>
 				<button
 					type='button'
-					disabled={total <= 2}
+					disabled={!stop.removable}
+					title={t('pptx.gradient.removeStop')}
 					className='rounded bg-muted px-2 py-1 text-[11px] hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed'
-					onClick={() => onUpdate(allStops.filter((_, i) => i !== index))}
+					onClick={() => onAction({ type: 'removeStop', index })}
 				>
 					{t('pptx.comments.remove')}
 				</button>
@@ -245,22 +202,27 @@ export function GradientStopRow({
 				selectedRef={stop.colorRef}
 				selectedHex={stop.color}
 				onPick={(c) => {
-					patchStop({ color: c.hex, colorRef: c.ref });
+					onAction({ type: 'stopColor', index, hex: c.hex, ref: c.ref });
 					pushColor(c.hex);
 				}}
 			/>
 			<div className='grid grid-cols-[auto,1fr,auto] items-center gap-2 pl-1'>
-				<span className='text-[10px] text-muted-foreground w-10 text-center'>Opacity</span>
+				<span className='text-[10px] text-muted-foreground w-10 text-center'>
+					{t('pptx.strokeEffects.fillOpacity')}
+				</span>
 				<input
 					type='range'
+					aria-label={t('pptx.strokeEffects.fillOpacity')}
 					min={0}
 					max={100}
-					value={Math.round((stop.opacity ?? 1) * 100)}
-					onChange={(e) => patchStop({ opacity: Number(e.target.value) / 100 })}
+					value={stop.opacity}
+					onChange={(e) =>
+						onAction({ type: 'stopOpacity', index, opacity: Number(e.target.value) })
+					}
 					className={RNG}
 				/>
 				<span className='text-[10px] text-muted-foreground w-[52px] text-right'>
-					{Math.round((stop.opacity ?? 1) * 100)}%
+					{stop.opacity}%
 				</span>
 			</div>
 		</div>

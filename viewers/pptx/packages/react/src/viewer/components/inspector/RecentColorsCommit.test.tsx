@@ -234,7 +234,10 @@ const CASES: Case[] = [
 		name: 'GradientStopRow',
 		inputs: 1,
 		render: (apply) => (
-			<GradientStopRow stop={stops[0]} index={0} total={2} allStops={stops} onUpdate={apply} />
+			<GradientStopRow
+				stop={{ index: 0, color: '#000000', position: 0, opacity: 100, removable: false }}
+				onAction={apply}
+			/>
 		),
 	},
 	...(['gradient', 'pattern'] as const).map((fillMode): Case => ({

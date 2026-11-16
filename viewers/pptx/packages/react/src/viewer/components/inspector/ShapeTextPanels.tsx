@@ -11,7 +11,7 @@ import React from 'react';
 
 import { SHAPE_PRESETS } from '../../constants';
 import { useTranslation } from '../../i18n/use-translation';
-import { cn, normalizeHexColor, sanitizeGradientStops } from '../../utils';
+import { cn, normalizeHexColor } from '../../utils';
 import { WebSelect } from '../WebControls';
 import { AccessibilityTextSection } from './AccessibilityTextSection';
 import { FillStrokeProperties } from './FillStrokeProperties';
@@ -122,9 +122,6 @@ export function ShapeTextPanels({
 						selectedElement={selectedElement}
 						selectedShapeStyle={selectedElement.shapeStyle}
 						selectedShapeType={selectedElement.shapeType}
-						selectedGradientStops={sanitizeGradientStops(
-							selectedElement.shapeStyle?.fillGradientStops,
-						)}
 						canEdit={canEdit}
 						onUpdateShapeStyle={onUpdateElementStyle}
 						onSetFillColor={(hex, ref) =>

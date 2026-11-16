@@ -8,12 +8,6 @@ export interface FillStrokePropertiesProps {
 	selectedElement: PptxElement;
 	selectedShapeStyle: ShapeStyle | undefined;
 	selectedShapeType: string | undefined;
-	selectedGradientStops: Array<{
-		color: string;
-		position: number;
-		opacity?: number;
-		colorRef?: PptxThemeColorRef;
-	}>;
 	canEdit: boolean;
 	onUpdateShapeStyle: (updates: Partial<ShapeStyle>) => void;
 	onSetFillColor: (color: string, ref?: PptxThemeColorRef) => void;
@@ -51,13 +45,6 @@ export const SWATCH = 'h-4 w-4 rounded border border-border';
 export const DIS = 'disabled:opacity-40 disabled:cursor-not-allowed';
 export const LBL = 'text-muted-foreground';
 export const COL2 = 'col-span-2';
-
-export type GradientStop = {
-	color: string;
-	position: number;
-	opacity?: number;
-	colorRef?: PptxThemeColorRef;
-};
 
 export const isLineish = (el: PptxElement, st: string | undefined): boolean =>
 	el.type === 'connector' || st === 'line';

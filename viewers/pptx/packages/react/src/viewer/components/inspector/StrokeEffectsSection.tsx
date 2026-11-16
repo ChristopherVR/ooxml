@@ -11,7 +11,6 @@ import React from 'react';
 import { DEFAULT_STROKE_COLOR } from '../../constants';
 import { useTranslation } from '../../i18n/use-translation';
 import { normalizeHexColor } from '../../utils';
-import { RNG, DIS, LBL } from './FillStrokeHelpers';
 import type { FillStrokePart } from './FillStrokeHelpers';
 import { ColorPickerRow } from './FillStrokeSubComponents';
 import { InspectorFields } from './InspectorFields';
@@ -22,12 +21,11 @@ import { InspectorFields } from './InspectorFields';
 
 export interface StrokeEffectsSectionProps {
 	style: ShapeStyle | undefined;
-	isLine: boolean;
 	onUpdateShapeStyle: (updates: Partial<ShapeStyle>) => void;
 	onSetStrokeColor: (color: string, ref?: PptxThemeColorRef) => void;
 	/**
-	 * The Format pane section being drawn: `fill` shows only the fill opacity,
-	 * `outline` the line, `effects` the effects; omitted, all of them.
+	 * The Format pane section being drawn: `outline` the line, `effects` the
+	 * effects; omitted, both (the fill is `ShapeFillSection`).
 	 */
 	part?: FillStrokePart;
 }
@@ -43,7 +41,6 @@ function shapeStyleOf(el: PptxElement): ShapeStyle | undefined {
 
 export function StrokeEffectsSection({
 	style,
-	isLine,
 	onUpdateShapeStyle,
 	onSetStrokeColor,
 	part,
@@ -63,22 +60,6 @@ export function StrokeEffectsSection({
 					onChange={onSetStrokeColor}
 					styleChange={(hex, current) => shapeOutlineChange(hex, undefined, current)}
 				/>
-			)}
-
-			{/* Fill Opacity */}
-			{show('fill') && (
-				<label className='flex flex-col gap-1'>
-					<span className={LBL}>{t('pptx.strokeEffects.fillOpacity')}</span>
-					<input
-						type='range'
-						min={0}
-						max={100}
-						disabled={isLine}
-						value={Math.round((style?.fillOpacity ?? 1) * 100)}
-						onChange={(e) => onUpdateShapeStyle({ fillOpacity: Number(e.target.value) / 100 })}
-						className={`${RNG} ${DIS}`}
-					/>
-				</label>
 			)}
 
 			{/* Line options (width, transparency, dash, compound, join, cap) and the
