@@ -41,7 +41,6 @@ export function usePresenterCluster(deps: PresenterClusterDeps): PresenterCluste
 
 	const presenterSession = new PresenterSession({
 		getSource: options.getSource,
-		getSlideIndex: () => viewer.current,
 		onAudienceSlide: (index) => viewer.goTo(index),
 		// The presenter ended the session: close this tab, and when the browser
 		// refuses, leave the end-of-slide-show screen up instead of the editor.

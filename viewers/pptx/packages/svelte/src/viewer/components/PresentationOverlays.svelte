@@ -90,7 +90,7 @@
 				parityUi.annotations.tool = 'laser';
 				break;
 			case 'eraseInk':
-				parityUi.annotations.clear();
+				parityUi.annotations.clearSlide();
 				break;
 			case 'blankBlack':
 				setBlankScreen('black');

@@ -1,170 +1,66 @@
-import {
-	buildPresentationAudienceUrl,
-	clearPresentationDeck,
-	createInitialPresentationSnapshot,
-	createPresentationSessionId,
-	isPresentationSessionMessage,
-	parsePresentationSessionId,
-	placeAudienceWindow,
-	PRESENTATION_CHANNEL_NAME,
-	PRESENTATION_MESSAGE_ORIGIN,
-	resolveAudienceScreenPlacement,
-	storePresentationDeck,
-	mergePresentationSnapshot,
-	swapPresentationWindows,
+import { createPresenterSessionController } from 'ooxml-ui/pptx';
+import type {
+	PresentationSnapshot,
+	PresenterSessionController,
+	PresenterSessionState,
 } from 'ooxml-ui/pptx';
-import type { PresentationSnapshot } from 'ooxml-ui/pptx';
+
+import { controllerState } from '../state/controller-state';
+import type { ControllerState } from '../state/controller-state';
 
 export interface PresenterSessionOptions {
 	getSource: () => Uint8Array | ArrayBuffer | null | undefined;
-	getSlideIndex: () => number;
 	onAudienceSlide: (index: number) => void;
 	onAudienceExit: () => void;
 }
 
+/**
+ * The presenter and audience windows for the Svelte binding: the shared
+ * `createPresenterSessionController` read through the store adapter.
+ */
 export class PresenterSession {
-	audienceOpen = $state(false);
-	snapshot = $state(createInitialPresentationSnapshot(0));
-	readonly audienceSessionId =
-		typeof window === 'undefined' ? null : parsePresentationSessionId(window.location.hash);
-	readonly isAudience = this.audienceSessionId !== null;
-	private channel: BroadcastChannel | null = null;
-	private audienceWindow: Window | null = null;
-	private presenterSessionId = '';
-	private sequence = 0;
+	readonly controller: PresenterSessionController;
+	readonly #state: ControllerState<PresenterSessionState>;
+	readonly isAudience: boolean;
 
-	constructor(private readonly options: PresenterSessionOptions) {}
+	constructor(options: PresenterSessionOptions) {
+		this.controller = createPresenterSessionController({
+			getSource: options.getSource,
+			onAudienceSlide: options.onAudienceSlide,
+			onAudienceExit: options.onAudienceExit,
+		});
+		this.#state = controllerState(this.controller);
+		this.isAudience = this.controller.getSnapshot().role === 'audience';
+	}
 
+	get audienceOpen(): boolean {
+		return this.#state.current.audienceOpen;
+	}
+	get snapshot(): PresentationSnapshot {
+		return this.#state.current.snapshot;
+	}
 	connect(): void {
-		const channel = this.getChannel();
-		if (!channel) {
-			return;
-		}
-		channel.onmessage = (event: MessageEvent) => {
-			const message = event.data;
-			if (!isPresentationSessionMessage(message)) {
-				return;
-			}
-			if (this.isAudience && message.sessionId === this.audienceSessionId) {
-				if (message.type === 'presenter-state') {
-					this.snapshot = message.snapshot;
-					this.options.onAudienceSlide(message.snapshot.slideIndex);
-				} else if (message.type === 'presenter-slide-change') {
-					this.options.onAudienceSlide(message.slideIndex);
-				} else if (message.type === 'presenter-exit') {
-					// The host decides what an ended session looks like (close the tab,
-					// else show the end screen). It must never land in the editor.
-					this.options.onAudienceExit();
-				}
-			} else if (
-				message.type === 'audience-ready' &&
-				message.sessionId === this.presenterSessionId
-			) {
-				this.sync();
-			}
-		};
-		if (this.audienceSessionId) {
-			channel.postMessage({
-				origin: PRESENTATION_MESSAGE_ORIGIN,
-				type: 'audience-ready',
-				sessionId: this.audienceSessionId,
-			});
-		}
+		this.controller.connect();
 	}
-
 	openAudience(): boolean {
-		this.closeAudience();
-		const popup = window.open(
-			'about:blank',
-			'pptx-viewer-audience',
-			'popup=yes,width=1280,height=720',
-		);
-		const source = this.options.getSource();
-		if (!popup || !source) {
-			return false;
-		}
-		this.audienceWindow = popup;
-		this.audienceOpen = true;
-		this.presenterSessionId = createPresentationSessionId();
-		const url = buildPresentationAudienceUrl(window.location.href, this.presenterSessionId);
-		void resolveAudienceScreenPlacement(window).then((placement) => {
-			if (placement && this.audienceWindow === popup && !popup.closed) {
-				placeAudienceWindow(popup, placement);
-			}
-			return undefined;
-		});
-		void storePresentationDeck(this.presenterSessionId, source)
-			.then(() => popup.location.replace(url))
-			.catch(() => this.closeAudience());
-		return true;
+		return this.controller.openAudience();
 	}
-
-	/**
-	 * Move the console to the audience screen and the audience display to this
-	 * one (the presenter console's "Swap Displays"). Resolves `false` when there
-	 * is no audience window, when the browser withholds the Window Management
-	 * permission, or when both windows already sit on the same screen, which is
-	 * why the strip's control is disabled until a display is open.
-	 */
-	async swapDisplays(): Promise<boolean> {
-		const audience = this.audienceWindow;
-		if (!audience || audience.closed) {
-			return false;
-		}
-		return swapPresentationWindows(window, audience);
+	swapDisplays(): Promise<boolean> {
+		return this.controller.swapDisplays();
 	}
-
-	sync(slideIndex = this.options.getSlideIndex()): void {
-		if (!this.presenterSessionId) {
-			return;
-		}
-		this.getChannel()?.postMessage({
-			origin: PRESENTATION_MESSAGE_ORIGIN,
-			type: 'presenter-state',
-			sessionId: this.presenterSessionId,
-			snapshot: { ...this.snapshot, slideIndex, sequence: ++this.sequence },
-		});
-	}
-
-	updateSnapshot(patch: Partial<PresentationSnapshot>): void {
-		this.snapshot = mergePresentationSnapshot(this.snapshot, patch);
-		this.sync(this.snapshot.slideIndex);
-	}
-
-	closeAudience(): void {
-		const sessionId = this.presenterSessionId;
-		if (sessionId) {
-			this.getChannel()?.postMessage({
-				origin: PRESENTATION_MESSAGE_ORIGIN,
-				type: 'presenter-exit',
-				sessionId,
-			});
-			void clearPresentationDeck(sessionId);
-		}
-		try {
-			this.audienceWindow?.close();
-		} catch {
-			/* ignore */
-		}
-		this.audienceWindow = null;
-		this.audienceOpen = false;
-		this.presenterSessionId = '';
-	}
-
-	dispose(): void {
+	/** The presenter moved to `slideIndex`. */
+	sync(slideIndex: number): void {
 		if (!this.isAudience) {
-			this.closeAudience();
+			this.controller.updateSnapshot({ slideIndex });
 		}
-		this.channel?.close();
-		this.channel = null;
 	}
-
-	private getChannel(): BroadcastChannel | null {
-		try {
-			this.channel ??= new BroadcastChannel(PRESENTATION_CHANNEL_NAME);
-			return this.channel;
-		} catch {
-			return null;
-		}
+	updateSnapshot(patch: Partial<PresentationSnapshot>): void {
+		this.controller.updateSnapshot(patch);
+	}
+	closeAudience(): void {
+		this.controller.closeAudience();
+	}
+	dispose(): void {
+		this.controller.dispose();
 	}
 }

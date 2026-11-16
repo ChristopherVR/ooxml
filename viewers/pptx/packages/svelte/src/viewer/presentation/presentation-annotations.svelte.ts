@@ -1,114 +1,100 @@
-import type { InkPoint } from 'ooxml-ui/pptx';
-import { strokeToInkElement } from 'ooxml-ui/pptx';
+import {
+	applyPresentationInk,
+	createPresentationInkController,
+	presentationInkBySlide,
+	presentationInkOnSlide,
+	presentationInkSlideCount,
+} from 'ooxml-ui/pptx';
+import type {
+	InkPoint,
+	PresentationAnnotationStroke,
+	PresentationInkController,
+	PresentationPointerTool,
+} from 'ooxml-ui/pptx';
 
 import type { EditorState } from '../editor/editor-state.svelte';
+import { controllerState } from '../state/controller-state';
 
-export type PresentationInkTool = 'none' | 'pen' | 'highlighter' | 'eraser' | 'laser';
-export interface PresentationStroke {
-	id: string;
-	points: InkPoint[];
-	color: string;
-	width: number;
-	tool: 'pen' | 'highlighter';
-}
+export type PresentationInkTool = PresentationPointerTool;
+export type PresentationStroke = PresentationAnnotationStroke;
 
+/**
+ * Slide-show ink for the Svelte binding: the shared
+ * `createPresentationInkController` read through the store adapter. The
+ * properties keep the names the templates bind to; every change goes through
+ * the controller, which owns the tool, colours and per-slide strokes.
+ */
 export class PresentationAnnotations {
-	tool = $state<PresentationInkTool>('none');
-	/**
-	 * Pen and highlighter carry SEPARATE colours, as they do in PowerPoint and
-	 * in every other binding. This used to be one `color` field with the
-	 * highlighter hardcoded to `#fde047`, which made the show toolbar's
-	 * highlighter palette a lie: picking a colour changed the pen instead.
-	 * The defaults are `PEN_COLORS[0]` and `HIGHLIGHTER_COLORS[0]`.
-	 */
-	penColor = $state('#ff0000');
-	highlighterColor = $state('#ffff00');
-	current = $state.raw<PresentationStroke | null>(null);
-	bySlide = $state.raw<Map<number, PresentationStroke[]>>(new Map());
-	laser = $state.raw<InkPoint | null>(null);
-	#sequence = 0;
+	readonly controller: PresentationInkController = createPresentationInkController();
+	readonly #state = controllerState(this.controller);
 
+	get tool(): PresentationInkTool {
+		return this.#state.current.tool;
+	}
+	set tool(tool: PresentationInkTool) {
+		this.controller.setTool(tool);
+	}
+	get penColor(): string {
+		return this.#state.current.penColor;
+	}
+	set penColor(color: string) {
+		this.controller.setPenColor(color);
+	}
+	get highlighterColor(): string {
+		return this.#state.current.highlighterColor;
+	}
+	set highlighterColor(color: string) {
+		this.controller.setHighlighterColor(color);
+	}
+	get current(): PresentationStroke | null {
+		return this.#state.current.current;
+	}
+	get laser(): InkPoint | null {
+		return this.#state.current.laser;
+	}
+	set laser(point: InkPoint | null) {
+		if (point === null) {
+			this.controller.pointerLeave();
+		}
+	}
+	get bySlide(): Map<number, PresentationStroke[]> {
+		return presentationInkBySlide(this.#state.current);
+	}
 	get count(): number {
-		return [...this.bySlide.values()].reduce((sum, strokes) => sum + strokes.length, 0);
+		return this.#state.current.strokes.length;
 	}
 	get slideCount(): number {
-		return this.bySlide.size;
+		return presentationInkSlideCount(this.#state.current);
 	}
-	strokes(index: number): PresentationStroke[] {
-		return this.bySlide.get(index) ?? [];
+	strokes(index: number): readonly PresentationStroke[] {
+		return presentationInkOnSlide(this.#state.current, index);
 	}
 
 	pointerDown(index: number, point: InkPoint): void {
-		if (this.tool === 'eraser') {
-			this.erase(index, point);
-			return;
-		}
-		if (this.tool !== 'pen' && this.tool !== 'highlighter') {
-			return;
-		}
-		this.current = {
-			id: `presentation-${++this.#sequence}`,
-			points: [point],
-			color: this.tool === 'highlighter' ? this.highlighterColor : this.penColor,
-			width: this.tool === 'highlighter' ? 14 : 2.5,
-			tool: this.tool,
-		};
+		this.controller.setSlide(index);
+		this.controller.pointerDown(point);
 	}
 	pointerMove(index: number, point: InkPoint): void {
-		if (this.tool === 'laser') {
-			this.laser = point;
-			return;
-		}
-		if (this.tool === 'eraser') {
-			this.erase(index, point);
-			return;
-		}
-		if (this.current) {
-			this.current = { ...this.current, points: [...this.current.points, point] };
-		}
+		this.controller.setSlide(index);
+		this.controller.pointerMove(point);
 	}
 	pointerUp(index: number): void {
-		const stroke = this.current;
-		this.current = null;
-		if (!stroke || stroke.points.length < 2) {
-			return;
-		}
-		const next = new Map(this.bySlide);
-		next.set(index, [...(next.get(index) ?? []), stroke]);
-		this.bySlide = next;
+		this.controller.setSlide(index);
+		this.controller.pointerUp();
 	}
-	erase(index: number, point: InkPoint): void {
-		const strokes = this.strokes(index).filter(
-			(stroke) => !stroke.points.some((p) => Math.hypot(p.x - point.x, p.y - point.y) < 16),
-		);
-		const next = new Map(this.bySlide);
-		if (strokes.length) {
-			next.set(index, strokes);
-		} else {
-			next.delete(index);
-		}
-		this.bySlide = next;
+	/** "Erase All Ink on Slide": the slide being shown. */
+	clearSlide(): void {
+		this.controller.clearSlide();
 	}
+	/** Drop every stroke and disarm (discarding at the end of the show). */
 	clear(): void {
-		this.current = null;
-		this.laser = null;
-		this.bySlide = new Map();
-		this.tool = 'none';
+		this.controller.clearAll();
+		this.controller.reset();
 	}
 	keep(editor: EditorState): void {
-		let slides = editor.slides;
-		for (const [index, strokes] of this.bySlide) {
-			const ink = strokes
-				.map((stroke) => strokeToInkElement(stroke))
-				.filter((item) => item !== null);
-			if (ink.length && slides[index]) {
-				slides = slides.map((slide, i) =>
-					i === index ? { ...slide, elements: [...slide.elements, ...ink] } : slide,
-				);
-			}
-		}
+		const slides = applyPresentationInk(editor.slides, this.controller.getSnapshot().strokes);
 		if (slides !== editor.slides) {
-			editor.commitSlides(slides);
+			editor.commitSlides([...slides]);
 		}
 		this.clear();
 	}

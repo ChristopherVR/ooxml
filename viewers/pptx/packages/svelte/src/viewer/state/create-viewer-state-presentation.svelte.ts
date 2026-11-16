@@ -160,13 +160,7 @@ export function usePresentationCluster(deps: PresentationClusterDeps): Presentat
 	});
 	$effect(() => {
 		parityUi.rehearse.move(viewer.current);
-	});
-	$effect(() => {
-		if (!parityUi.rehearse.active || parityUi.rehearse.paused) {
-			return;
-		}
-		const timer = window.setInterval(() => parityUi.rehearse.tick(), 250);
-		return () => window.clearInterval(timer);
+		parityUi.annotations.controller.setSlide(viewer.current);
 	});
 
 	// `onEndShow` re-enters the toggle these handlers themselves expose; the
@@ -192,7 +186,7 @@ export function usePresentationCluster(deps: PresentationClusterDeps): Presentat
 		setPointerTool: (tool) => {
 			parityUi.annotations.tool = tool;
 		},
-		eraseAnnotations: () => parityUi.annotations.clear(),
+		eraseAnnotations: () => parityUi.annotations.clearSlide(),
 		toggleInkMarkup: () =>
 			presenterSession.updateSnapshot({
 				inkMarkupVisible: presenterSession.snapshot.inkMarkupVisible === false,

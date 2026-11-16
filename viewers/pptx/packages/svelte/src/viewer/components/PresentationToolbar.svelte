@@ -120,7 +120,7 @@
 				break;
 			}
 			case 'clear':
-				annotations.clear();
+				annotations.clearSlide();
 				break;
 			case 'presenterView':
 				onpresenterview();

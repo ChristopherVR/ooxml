@@ -1,5 +1,5 @@
 import type { PptxSlide } from 'pptx-viewer-core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { EditorState } from '../editor/editor-state.svelte';
 import { PresentationAnnotations } from './presentation-annotations.svelte';
@@ -46,14 +46,19 @@ describe('presentation parity state', () => {
 
 	it('writes rehearsed slide timing to transitions', () => {
 		const target = editor();
-		const rehearse = new RehearseState();
-		rehearse.start(0);
-		rehearse.elapsedMs = 4300;
-		rehearse.finish();
-		rehearse.save(target);
-		expect(target.slides[0]?.transition).toMatchObject({
-			advanceAfterMs: 4300,
-			advanceOnClick: true,
-		});
+		vi.useFakeTimers();
+		try {
+			const rehearse = new RehearseState();
+			rehearse.start(0);
+			vi.advanceTimersByTime(4300);
+			expect(rehearse.elapsedMs).toBe(4250);
+			rehearse.finish();
+			rehearse.save(target);
+			// "On mouse click" stays as the slide had it (the one documented behaviour).
+			expect(target.slides[0]?.transition?.advanceAfterMs).toBe(4300);
+			expect(target.slides[0]?.transition?.advanceOnClick).toBeUndefined();
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 });
