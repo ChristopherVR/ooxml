@@ -230,7 +230,7 @@ export class SlidesPanelComponent {
 	readonly toggleSectionCollapse = output<string>();
 
 	/** Ctrl/Shift multi-select + the thumbnail context menu's open state. */
-	protected readonly rail = new SlidePaneRailSelection();
+	protected readonly rail = new SlidePaneRailSelection(() => this.canEdit());
 
 	/** The viewer's editor state; required only by an editor-bound rail. */
 	protected readonly editor = inject(EditorStateService, { optional: true });
@@ -398,9 +398,7 @@ export class SlidesPanelComponent {
 
 	onThumbContextMenu(event: MouseEvent, index: number): void {
 		event.preventDefault();
-		if (this.canEdit()) {
-			this.rail.openContextMenu(event.clientX, event.clientY, index, this.orderedIds());
-		}
+		this.rail.openContextMenu(event.clientX, event.clientY, index, this.orderedIds());
 	}
 
 	/** The thumbnail menu's Layout entry (see {@link openLayoutGallery}). */

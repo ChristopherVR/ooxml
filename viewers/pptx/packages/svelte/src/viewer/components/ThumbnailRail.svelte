@@ -37,7 +37,7 @@
 	}: ThumbnailRailProps = $props();
 
 	const t = useTranslator();
-	const railMenu = new ThumbnailRailMenu();
+	const railMenu = new ThumbnailRailMenu(() => editable);
 	const orderedIds = $derived(slides.map((s) => s.id));
 
 	function onThumbClick(event: MouseEvent, index: number): void {
@@ -49,11 +49,9 @@
 	}
 
 	function onThumbContextMenu(event: MouseEvent, index: number): void {
-		if (!editable) {
-			return;
+		if (railMenu.openContextMenu(event.clientX, event.clientY, index, orderedIds)) {
+			event.preventDefault();
 		}
-		event.preventDefault();
-		railMenu.openContextMenu(event.clientX, event.clientY, index, orderedIds);
 	}
 
 	/** PowerPoint's Enter on a focused thumbnail inserts a new slide after it. */

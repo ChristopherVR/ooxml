@@ -1,6 +1,7 @@
-import { resolveSlidePaneClick } from 'ooxml-ui/pptx';
-import { useCallback, useEffect, useState } from 'react';
+import { createSlideRailController } from 'ooxml-ui/pptx';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { useController } from '../../hooks/useController';
 import type { SectionContextMenuState, SlideContextMenuState } from './types';
 
 // ---------------------------------------------------------------------------
@@ -32,11 +33,15 @@ export interface SlidePaneCallbacks {
 		sectionIndex: number,
 		totalSections: number,
 	) => void;
+	/**
+	 * A right-click on thumbnail `slideIndex`: the menu acts on the whole selection when the slide
+	 * is part of it, else on that slide (the shared slide rail controller).
+	 */
 	handleOpenSlideCtxMenu: (
 		x: number,
 		y: number,
 		slideIndex: number,
-		selectedIndexes: number[],
+		orderedIds: readonly string[],
 	) => void;
 	closeSectionContextMenu: () => void;
 	closeSlideCtxMenu: () => void;
@@ -70,29 +75,31 @@ export function useSlidePaneCallbacks(
 	const [sectionContextMenu, setSectionContextMenu] = useState<SectionContextMenuState | null>(
 		null,
 	);
-	const [slideCtxMenu, setSlideCtxMenu] = useState<SlideContextMenuState | null>(null);
-	const [selectedSlideIds, setSelectedSlideIds] = useState<string[]>([]);
-	const [selectionAnchorId, setSelectionAnchorId] = useState<string | null>(null);
+	// The thumbnail multi-selection and its menu: the shared slide rail controller. The pane only
+	// opens the menu on an editable deck (`SlideItem`), so it is not gated again here.
+	const [rail] = useState(() => createSlideRailController({ canEdit: () => true }));
+	const railState = useController(rail);
+	const selectedSlideIds = railState.selectedIds as string[];
+	const slideCtxMenu = useMemo<SlideContextMenuState | null>(
+		() =>
+			railState.menu
+				? {
+						x: railState.menu.x,
+						y: railState.menu.y,
+						slideIndex: railState.menu.index,
+						selectedIndexes: [...railState.menu.selectedIndexes],
+					}
+				: null,
+		[railState.menu],
+	);
 
 	const handleSlideClick = useCallback(
 		(
 			event: { ctrlKey: boolean; metaKey: boolean; shiftKey: boolean },
 			slideId: string,
 			orderedIds: readonly string[],
-		) => {
-			const result = resolveSlidePaneClick({
-				clickedId: slideId,
-				orderedIds,
-				selectedIds: selectedSlideIds,
-				anchorId: selectionAnchorId,
-				ctrlKey: event.ctrlKey,
-				metaKey: event.metaKey,
-				shiftKey: event.shiftKey,
-			});
-			setSelectedSlideIds(result.selectedIds);
-			setSelectionAnchorId(result.anchorId);
-		},
-		[selectedSlideIds, selectionAnchorId],
+		) => rail.click(event, slideId, orderedIds),
+		[rail],
 	);
 
 	// Close context menus on outside click
@@ -102,11 +109,11 @@ export function useSlidePaneCallbacks(
 		}
 		const handler = () => {
 			setSectionContextMenu(null);
-			setSlideCtxMenu(null);
+			rail.closeMenu();
 		};
 		document.addEventListener('click', handler);
 		return () => document.removeEventListener('click', handler);
-	}, [sectionContextMenu, slideCtxMenu]);
+	}, [sectionContextMenu, slideCtxMenu, rail]);
 
 	// ── Drag handlers ──
 	const handleDragStart = useCallback((e: React.DragEvent, slideIndex: number) => {
@@ -182,19 +189,17 @@ export function useSlidePaneCallbacks(
 	);
 
 	const handleOpenSlideCtxMenu = useCallback(
-		(x: number, y: number, slideIndex: number, selectedIndexes: number[]) => {
-			setSlideCtxMenu({ x, y, slideIndex, selectedIndexes });
+		(x: number, y: number, slideIndex: number, orderedIds: readonly string[]) => {
+			rail.openMenu(x, y, slideIndex, orderedIds);
 		},
-		[],
+		[rail],
 	);
 
 	const closeSectionContextMenu = useCallback(() => {
 		setSectionContextMenu(null);
 	}, []);
 
-	const closeSlideCtxMenu = useCallback(() => {
-		setSlideCtxMenu(null);
-	}, []);
+	const closeSlideCtxMenu = rail.closeMenu;
 
 	return {
 		collapsedSections,

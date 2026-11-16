@@ -1,17 +1,20 @@
 /**
- * slide-pane-rail-selection.ts: Ctrl/Shift multi-select and right-click menu
- * position/target state for the slides pane rail (`SlidesPanelComponent`).
+ * slide-pane-rail-selection.ts: the slides pane rail's Ctrl/Shift multi-select and right-click
+ * menu, as signals over the shared `createSlideRailController` (`ooxml-ui/pptx`).
  *
- * A plain class (no DI, no component) so the state and its resolution are
- * unit-testable directly: this package has no TestBed (see `vitest.config.ts`),
- * and Angular `signal()`s work outside an injection context, so there is no
- * reason for this to live inside the component. Kept apart from
- * `slides-panel.component.ts` so that file stays template plus thin wiring.
+ * A plain class (no DI, no component) so it is unit-testable directly: this package has no
+ * TestBed (see `vitest.config.ts`), and Angular `signal()`s work outside an injection context.
  *
  * @module angular-viewer/slide-pane-rail-selection
  */
-import { signal } from '@angular/core';
-import { resolveSlidePaneClick } from 'ooxml-ui/pptx';
+import { computed, signal } from '@angular/core';
+import type { Signal } from '@angular/core';
+import { createSlideRailController } from 'ooxml-ui/pptx';
+import type {
+	SlidePaneContextMenuCommandId,
+	SlideRailCommands,
+	SlideRailState,
+} from 'ooxml-ui/pptx';
 
 /** Position and target of an open thumbnail context menu. */
 export interface SlidePaneContextMenuState {
@@ -23,9 +26,24 @@ export interface SlidePaneContextMenuState {
 }
 
 export class SlidePaneRailSelection {
-	readonly selectedIds = signal<string[]>([]);
-	readonly contextMenu = signal<SlidePaneContextMenuState | null>(null);
-	#anchorId: string | null = null;
+	readonly controller;
+	readonly #state = signal<SlideRailState | null>(null);
+	readonly selectedIds: Signal<string[]> = computed(() => [...this.#snapshot().selectedIds]);
+	readonly contextMenu: Signal<SlidePaneContextMenuState | null> = computed(() => {
+		const menu = this.#snapshot().menu;
+		return menu ? { ...menu, selectedIndexes: [...menu.selectedIndexes] } : null;
+	});
+
+	/** `canEdit` gates the menu (a read-only deck keeps the browser's own). */
+	constructor(canEdit: () => boolean = () => true) {
+		this.controller = createSlideRailController({ canEdit });
+		this.#state.set(this.controller.getSnapshot());
+		this.controller.subscribe(() => this.#state.set(this.controller.getSnapshot()));
+	}
+
+	#snapshot(): SlideRailState {
+		return this.#state() ?? this.controller.getSnapshot();
+	}
 
 	isSelected(slideId: string): boolean {
 		return this.selectedIds().includes(slideId);
@@ -37,38 +55,24 @@ export class SlidePaneRailSelection {
 		slideId: string,
 		orderedIds: readonly string[],
 	): void {
-		const result = resolveSlidePaneClick({
-			clickedId: slideId,
-			orderedIds,
-			selectedIds: this.selectedIds(),
-			anchorId: this.#anchorId,
-			ctrlKey: event.ctrlKey,
-			metaKey: event.metaKey,
-			shiftKey: event.shiftKey,
-		});
-		this.selectedIds.set(result.selectedIds);
-		this.#anchorId = result.anchorId;
+		this.controller.click(event, slideId, orderedIds);
 	}
 
 	/**
-	 * Open the context menu for a right-click on `index`. A slide already part
-	 * of the selection acts with the whole selection; a slide right-clicked
-	 * outside it acts on just that one, matching the per-element context menu.
+	 * Open the context menu for a right-click on `index`. A slide already part of the selection
+	 * acts with the whole selection; a slide right-clicked outside it acts on just that one.
+	 * Returns false on a read-only deck.
 	 */
-	openContextMenu(x: number, y: number, index: number, orderedIds: readonly string[]): void {
-		const slideId = orderedIds[index];
-		if (slideId === undefined) {
-			return;
-		}
-		const ids =
-			this.selectedIds().length > 0 && this.selectedIds().includes(slideId)
-				? this.selectedIds()
-				: [slideId];
-		const selectedIndexes = ids.map((id) => orderedIds.indexOf(id)).filter((i) => i !== -1);
-		this.contextMenu.set({ x, y, index, selectedIndexes });
+	openContextMenu(x: number, y: number, index: number, orderedIds: readonly string[]): boolean {
+		return this.controller.openMenu(x, y, index, orderedIds);
 	}
 
 	closeContextMenu(): void {
-		this.contextMenu.set(null);
+		this.controller.closeMenu();
+	}
+
+	/** Run a menu command on the pane's slide commands, then close the menu. */
+	run(id: SlidePaneContextMenuCommandId, commands: SlideRailCommands): void {
+		this.controller.run(id, commands);
 	}
 }

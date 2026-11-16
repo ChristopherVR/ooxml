@@ -142,6 +142,7 @@ const {
 	onSlideClick,
 	onPaneKeydown,
 	menu,
+	closeMenu,
 	menuItems,
 	onContextMenu,
 	onMenuSelect,
@@ -298,7 +299,7 @@ const {
 			:aria-label="t('pptx.slidesPane.contextMenu.newSlide')"
 			:markers="['data-pptx-slide-pane-context-menu']"
 			@select="onMenuSelect"
-			@close="menu.open = false"
+			@close="closeMenu()"
 		/>
 	</aside>
 </template>

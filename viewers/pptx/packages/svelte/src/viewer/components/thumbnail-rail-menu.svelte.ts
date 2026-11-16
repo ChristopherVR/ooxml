@@ -1,16 +1,17 @@
-import type { SlidePaneContextMenuCommandId } from 'ooxml-ui/pptx';
-import { buildSlidePaneContextMenuEntries, resolveSlidePaneClick } from 'ooxml-ui/pptx';
+import type { SlidePaneContextMenuCommandId, SlideRailCommands } from 'ooxml-ui/pptx';
+import { createSlideRailController, slideRailMenuEntries } from 'ooxml-ui/pptx';
 /**
  * thumbnail-rail-menu.svelte.ts: Ctrl/Shift multi-select and the thumbnail
  * right-click menu for `ThumbnailRail.svelte`.
  *
  * Split out of the SFC (already past the repo's 300-line guideline) so the
- * component stays template plus thin wiring. The click resolution and the
- * menu's command list are both shared (`resolveSlidePaneClick` /
- * `buildSlidePaneContextMenuEntries`); this module is only the Svelte-side
- * reactive state around them.
+ * component stays template plus thin wiring. The selection, the menu and its
+ * command routing are the shared `createSlideRailController`; this module only
+ * reads it through `controllerState`.
  */
 import type { PptxSlide } from 'pptx-viewer-core';
+
+import { controllerState } from '../state/controller-state';
 
 /** Position and target of an open thumbnail context menu. */
 export interface ThumbnailContextMenuState {
@@ -30,95 +31,52 @@ export interface ThumbnailRailMenuActions {
 }
 
 export class ThumbnailRailMenu {
-	selectedIds = $state<string[]>([]);
-	contextMenu = $state<ThumbnailContextMenuState | null>(null);
-	#anchorId: string | null = null;
+	readonly controller;
+	readonly #state;
 
-	isSelected(slideId: string): boolean {
-		return this.selectedIds.includes(slideId);
+	/** `canEdit` gates the menu (a read-only deck keeps the browser's own). */
+	constructor(canEdit: () => boolean = () => true) {
+		this.controller = createSlideRailController({ canEdit });
+		this.#state = controllerState(this.controller);
 	}
 
+	get selectedIds(): string[] {
+		return [...this.#state.current.selectedIds];
+	}
+
+	get contextMenu(): ThumbnailContextMenuState | null {
+		const menu = this.#state.current.menu;
+		return menu ? { ...menu, selectedIndexes: [...menu.selectedIndexes] } : null;
+	}
+
+	isSelected(slideId: string): boolean {
+		return this.#state.current.selectedIds.includes(slideId);
+	}
+
+	/** One click on a thumbnail: the shared Ctrl/Shift rule. */
 	onClick(
 		event: { ctrlKey: boolean; metaKey: boolean; shiftKey: boolean },
 		slideId: string,
 		orderedIds: readonly string[],
 	): void {
-		const result = resolveSlidePaneClick({
-			clickedId: slideId,
-			orderedIds,
-			selectedIds: this.selectedIds,
-			anchorId: this.#anchorId,
-			ctrlKey: event.ctrlKey,
-			metaKey: event.metaKey,
-			shiftKey: event.shiftKey,
-		});
-		this.selectedIds = result.selectedIds;
-		this.#anchorId = result.anchorId;
+		this.controller.click(event, slideId, orderedIds);
 	}
 
-	/**
-	 * Open the context menu for a right-click on `index`. A slide already part
-	 * of the selection acts with the whole selection; a slide right-clicked
-	 * outside it acts on just that one.
-	 */
-	openContextMenu(x: number, y: number, index: number, orderedIds: readonly string[]): void {
-		const slideId = orderedIds[index];
-		if (slideId === undefined) {
-			return;
-		}
-		const ids =
-			this.selectedIds.length > 0 && this.selectedIds.includes(slideId)
-				? this.selectedIds
-				: [slideId];
-		const selectedIndexes = ids.map((id) => orderedIds.indexOf(id)).filter((i) => i !== -1);
-		this.contextMenu = { x, y, index, selectedIndexes };
+	/** A right-click: the whole selection when inside it, else that slide; false when read-only. */
+	openContextMenu(x: number, y: number, index: number, orderedIds: readonly string[]): boolean {
+		return this.controller.openMenu(x, y, index, orderedIds);
 	}
 
 	closeContextMenu(): void {
-		this.contextMenu = null;
+		this.controller.closeMenu();
 	}
 
 	menuEntries(slides: readonly PptxSlide[]) {
-		const menu = this.contextMenu;
-		const selected = (menu?.selectedIndexes ?? [])
-			.map((i) => slides[i])
-			.filter((s): s is PptxSlide => Boolean(s));
-		return buildSlidePaneContextMenuEntries({
-			selectedCount: selected.length,
-			hasHiddenInSelection: selected.some((s) => s.hidden),
-			hasVisibleInSelection: selected.some((s) => !s.hidden),
-			wouldDeleteAllSlides: selected.length >= slides.length,
-		});
+		return slideRailMenuEntries(this.#state.current, slides);
 	}
 
 	/** Run a chosen command id against `actions`, then close the menu. */
 	run(id: SlidePaneContextMenuCommandId, actions: ThumbnailRailMenuActions): void {
-		const menu = this.contextMenu;
-		this.closeContextMenu();
-		if (!menu) {
-			return;
-		}
-		switch (id) {
-			case 'new-slide':
-				actions.addSlideAfter?.(menu.index);
-				break;
-			case 'duplicate':
-				actions.duplicateSlides?.(menu.selectedIndexes);
-				break;
-			case 'delete':
-				actions.deleteSlides?.(menu.selectedIndexes);
-				break;
-			case 'layout':
-				actions.openLayoutForSlide?.(menu.index, menu.x, menu.y);
-				break;
-			case 'hide':
-				actions.toggleHideSlides?.(menu.selectedIndexes);
-				break;
-			case 'add-section':
-				actions.addSectionAt?.(menu.index);
-				break;
-			default:
-				break;
-		}
+		this.controller.run(id, actions satisfies SlideRailCommands);
 	}
 }

@@ -159,21 +159,9 @@ function SlidesPaneSidebarContent({
 	// selection; a right-click elsewhere acts on just that one slide (PowerPoint
 	// parity, and what the per-element context menu already does).
 	const openSlideCtxMenu = useCallback(
-		(x: number, y: number, slideIndex: number) => {
-			const slide = slides[slideIndex];
-			if (!slide) {
-				return;
-			}
-			const idsForMenu =
-				selectedSlideIds.length > 0 && selectedSlideIds.includes(slide.id)
-					? selectedSlideIds
-					: [slide.id];
-			const selectedIndexes = idsForMenu
-				.map((id) => slides.findIndex((s) => s.id === id))
-				.filter((i) => i !== -1);
-			handleOpenSlideCtxMenu(x, y, slideIndex, selectedIndexes);
-		},
-		[slides, selectedSlideIds, handleOpenSlideCtxMenu],
+		(x: number, y: number, slideIndex: number) =>
+			handleOpenSlideCtxMenu(x, y, slideIndex, orderedIds),
+		[orderedIds, handleOpenSlideCtxMenu],
 	);
 
 	// PowerPoint's Enter on a focused thumbnail inserts a new slide after it;

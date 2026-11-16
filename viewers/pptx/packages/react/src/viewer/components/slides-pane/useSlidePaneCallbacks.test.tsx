@@ -80,3 +80,21 @@ describe('useSlidePaneCallbacks multi-select', () => {
 		expect(latest.selectedSlideIds).toStrictEqual(['s2']);
 	});
 });
+
+describe('useSlidePaneCallbacks slide menu', () => {
+	it('acts on the whole selection when right-clicked inside it, else on that slide', () => {
+		click('s2');
+		click('s3', { ctrlKey: true });
+		act(() => latest.handleOpenSlideCtxMenu(5, 6, 2, IDS));
+		expect(latest.slideCtxMenu).toStrictEqual({
+			x: 5,
+			y: 6,
+			slideIndex: 2,
+			selectedIndexes: [1, 2],
+		});
+		act(() => latest.handleOpenSlideCtxMenu(5, 6, 0, IDS));
+		expect(latest.slideCtxMenu?.selectedIndexes).toStrictEqual([0]);
+		act(() => latest.closeSlideCtxMenu());
+		expect(latest.slideCtxMenu).toBeNull();
+	});
+});

@@ -2,13 +2,13 @@
  * thumbnail-rail-menu.ts: Ctrl/Shift multi-select and right-click menu
  * position/target state for the slides pane rail (`createThumbnailRail`).
  *
- * A plain factory (no DOM, no rendering) so the state and its resolution are
- * unit-testable directly. Kept apart from `thumbnails.ts` so that file stays
- * DOM assembly, not selection logic.
+ * The selection and the menu's target are the shared `createSlideRailController`
+ * (`ooxml-ui/pptx`); this factory keeps the rail's call shape over it. Kept apart
+ * from `thumbnails.ts` so that file stays DOM assembly, not selection logic.
  *
  * @module ui/thumbnail-rail-menu
  */
-import { resolveSlidePaneClick } from 'ooxml-ui/pptx';
+import { createSlideRailController } from 'ooxml-ui/pptx';
 
 /** Position and target of an open thumbnail context menu. */
 export interface ThumbnailContextMenuState {
@@ -40,34 +40,19 @@ export interface ThumbnailRailMenu {
 }
 
 export function createThumbnailRailMenu(): ThumbnailRailMenu {
-	let selectedIds: string[] = [];
-	let anchorId: string | null = null;
-
+	// The rail offers the menu only on an editable deck (`thumbnail-events`), so it is not gated
+	// again here.
+	const rail = createSlideRailController({ canEdit: () => true });
 	return {
-		isSelected(slideId) {
-			return selectedIds.includes(slideId);
-		},
-		onClick(event, slideId, orderedIds) {
-			const result = resolveSlidePaneClick({
-				clickedId: slideId,
-				orderedIds,
-				selectedIds,
-				anchorId,
-				ctrlKey: event.ctrlKey,
-				metaKey: event.metaKey,
-				shiftKey: event.shiftKey,
-			});
-			selectedIds = result.selectedIds;
-			anchorId = result.anchorId;
-		},
+		isSelected: (slideId) => rail.getSnapshot().selectedIds.includes(slideId),
+		onClick: (event, slideId, orderedIds) => rail.click(event, slideId, orderedIds),
 		openContextMenu(x, y, index, orderedIds) {
-			const slideId = orderedIds[index];
-			if (slideId === undefined) {
+			if (!rail.openMenu(x, y, index, orderedIds)) {
 				return null;
 			}
-			const ids = selectedIds.length > 0 && selectedIds.includes(slideId) ? selectedIds : [slideId];
-			const selectedIndexes = ids.map((id) => orderedIds.indexOf(id)).filter((i) => i !== -1);
-			return { x, y, index, selectedIndexes };
+			const menu = rail.getSnapshot().menu!;
+			rail.closeMenu();
+			return { ...menu, selectedIndexes: [...menu.selectedIndexes] };
 		},
 	};
 }

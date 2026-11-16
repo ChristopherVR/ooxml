@@ -1,20 +1,21 @@
-import { buildSlidePaneContextMenuEntries, resolveSlidePaneClick } from 'ooxml-ui/pptx';
+import { createSlideRailController, slideRailMenuEntries } from 'ooxml-ui/pptx';
+import type { SlidePaneContextMenuCommandId } from 'ooxml-ui/pptx';
 /**
  * useSlidePaneRailMenu: Ctrl/Shift multi-select and the thumbnail right-click
  * menu for `SlidesPaneSidebar.vue`.
  *
  * Split out of the SFC (already past the repo's 300-line guideline once this
- * landed) so the component stays template plus thin wiring. The click
- * resolution and the menu's command list are both shared
- * (`resolveSlidePaneClick` / `buildSlidePaneContextMenuEntries`); this module
- * is only the Vue-side reactive state around them.
+ * landed) so the component stays template plus thin wiring. The selection,
+ * the menu and its command routing are the shared `createSlideRailController`;
+ * this module only reads it through `useController`.
  */
 import type { PptxSlide } from 'pptx-viewer-core';
-import { computed, ref } from 'vue';
-import type { ComputedRef, Ref } from 'vue';
+import { computed } from 'vue';
+import type { ComputedRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import type { ContextMenuItem } from '../components/ContextMenu.vue';
+import { useController } from './useController';
 
 export interface SlidePaneRailMenuEmit {
 	select: (index: number) => void;
@@ -35,11 +36,12 @@ export interface SlidePaneContextMenuState {
 }
 
 export interface UseSlidePaneRailMenuResult {
-	selectedIds: Ref<string[]>;
+	selectedIds: ComputedRef<readonly string[]>;
 	isSelected: (slideId: string) => boolean;
 	onSlideClick: (e: MouseEvent, index: number) => void;
 	onPaneKeydown: (e: KeyboardEvent) => void;
-	menu: Ref<SlidePaneContextMenuState>;
+	menu: ComputedRef<SlidePaneContextMenuState>;
+	closeMenu: () => void;
 	menuItems: ComputedRef<ContextMenuItem[]>;
 	onContextMenu: (e: MouseEvent, index: number) => void;
 	onMenuSelect: (id: string) => void;
@@ -56,28 +58,19 @@ export function useSlidePaneRailMenu(
 ): UseSlidePaneRailMenuResult {
 	const { t } = useI18n();
 
-	// Ids, not indexes: an index shifts under insert/delete/move, so an
-	// index-keyed selection silently points at the wrong slide the moment the
-	// deck changes shape.
-	const selectedIds = ref<string[]>([]);
-	const selectionAnchorId = ref<string | null>(null);
+	// The selection (by id: an index shifts under insert, delete and move), the menu and its
+	// command routing are the shared slide rail controller.
+	const rail = createSlideRailController({ canEdit });
+	const state = useController(rail);
+	const selectedIds = computed(() => state.value.selectedIds);
 	function isSelected(slideId: string): boolean {
-		return selectedIds.value.includes(slideId);
+		return state.value.selectedIds.includes(slideId);
 	}
+	const orderedIds = (): string[] => slides().map((s) => s.id);
 	function onSlideClick(e: MouseEvent, index: number): void {
 		const slide = slides()[index];
 		if (slide) {
-			const result = resolveSlidePaneClick({
-				clickedId: slide.id,
-				orderedIds: slides().map((s) => s.id),
-				selectedIds: selectedIds.value,
-				anchorId: selectionAnchorId.value,
-				ctrlKey: e.ctrlKey,
-				metaKey: e.metaKey,
-				shiftKey: e.shiftKey,
-			});
-			selectedIds.value = result.selectedIds;
-			selectionAnchorId.value = result.anchorId;
+			rail.click(e, slide.id, orderedIds());
 		}
 		emit('select', index);
 	}
@@ -90,29 +83,18 @@ export function useSlidePaneRailMenu(
 	}
 
 	// ── Slide context menu ──
-	const menu = ref<SlidePaneContextMenuState>({
-		open: false,
-		x: 0,
-		y: 0,
-		index: -1,
-		selectedIndexes: [],
+	const menu = computed<SlidePaneContextMenuState>(() => {
+		const open = state.value.menu;
+		return open
+			? { open: true, ...open, selectedIndexes: [...open.selectedIndexes] }
+			: { open: false, x: 0, y: 0, index: -1, selectedIndexes: [] };
 	});
 	const menuItems = computed<ContextMenuItem[]>(() => {
-		const selected = menu.value.selectedIndexes
-			.map((i) => slides()[i])
-			.filter((s): s is PptxSlide => Boolean(s));
-		const entries = buildSlidePaneContextMenuEntries({
-			selectedCount: selected.length,
-			hasHiddenInSelection: selected.some((s) => s.hidden),
-			hasVisibleInSelection: selected.some((s) => !s.hidden),
-			wouldDeleteAllSlides: selected.length >= slides().length,
-		});
-		return entries.flatMap((entry, index) => {
+		const count = state.value.menu?.selectedIndexes.length ?? 0;
+		return slideRailMenuEntries(state.value, slides()).flatMap((entry, index) => {
 			const item: ContextMenuItem = {
 				id: entry.id,
-				label: entry.countLabelKey
-					? t(entry.labelKey, { count: selected.length })
-					: t(entry.labelKey),
+				label: entry.countLabelKey ? t(entry.labelKey, { count }) : t(entry.labelKey),
 				disabled: entry.disabled,
 				danger: entry.id === 'delete',
 			};
@@ -122,50 +104,19 @@ export function useSlidePaneRailMenu(
 		});
 	});
 	function onContextMenu(e: MouseEvent, index: number): void {
-		if (!canEdit()) {
-			return;
+		if (rail.openMenu(e.clientX, e.clientY, index, orderedIds())) {
+			e.preventDefault();
 		}
-		e.preventDefault();
-		const slide = slides()[index];
-		const idsForMenu =
-			slide && selectedIds.value.length > 0 && selectedIds.value.includes(slide.id)
-				? selectedIds.value
-				: slide
-					? [slide.id]
-					: [];
-		const selectedIndexes = idsForMenu
-			.map((id) => slides().findIndex((s) => s.id === id))
-			.filter((i) => i !== -1);
-		menu.value = { open: true, x: e.clientX, y: e.clientY, index, selectedIndexes };
 	}
 	function onMenuSelect(id: string): void {
-		const { index, selectedIndexes, x, y } = menu.value;
-		menu.value = { ...menu.value, open: false };
-		if (index < 0) {
-			return;
-		}
-		switch (id) {
-			case 'new-slide':
-				emit('add-slide-after', index);
-				break;
-			case 'duplicate':
-				emit('duplicate', selectedIndexes);
-				break;
-			case 'delete':
-				emit('delete', selectedIndexes);
-				break;
-			case 'layout':
-				emit('layout', { index, x, y });
-				break;
-			case 'hide':
-				emit('toggle-hidden', selectedIndexes);
-				break;
-			case 'add-section':
-				emit('add-section', index);
-				break;
-			default:
-				break;
-		}
+		rail.run(id as SlidePaneContextMenuCommandId, {
+			addSlideAfter: (index) => emit('add-slide-after', index),
+			duplicateSlides: (indexes) => emit('duplicate', indexes),
+			deleteSlides: (indexes) => emit('delete', indexes),
+			openLayoutForSlide: (index, x, y) => emit('layout', { index, x, y }),
+			toggleHideSlides: (indexes) => emit('toggle-hidden', indexes),
+			addSectionAt: (index) => emit('add-section', index),
+		});
 	}
 
 	return {
@@ -174,6 +125,7 @@ export function useSlidePaneRailMenu(
 		onSlideClick,
 		onPaneKeydown,
 		menu,
+		closeMenu: rail.closeMenu,
 		menuItems,
 		onContextMenu,
 		onMenuSelect,
