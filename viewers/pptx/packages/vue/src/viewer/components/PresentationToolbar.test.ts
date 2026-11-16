@@ -108,8 +108,13 @@ describe('presentationToolbar', () => {
 		expect(wrapper.emitted('clear-annotations')).toBeUndefined();
 	});
 
+	it('keeps Erase disabled when only other slides have ink', () => {
+		const wrapper = mountToolbar({ hasAnnotations: true, hasSlideAnnotations: false });
+		expect(byName(wrapper, 'Clear Annotations')?.disabled).toBeTruthy();
+	});
+
 	it('emits clear-annotations when enabled', () => {
-		const wrapper = mountToolbar({ hasAnnotations: true });
+		const wrapper = mountToolbar({ hasAnnotations: true, hasSlideAnnotations: true });
 		byName(wrapper, 'Clear Annotations')?.click();
 		expect(wrapper.emitted('clear-annotations')).toHaveLength(1);
 	});

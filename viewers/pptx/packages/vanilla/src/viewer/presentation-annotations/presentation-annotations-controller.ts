@@ -49,6 +49,9 @@ export interface PresentationAnnotationsController {
 	getStrokes(): readonly PresentationInkStroke[];
 	setStrokes(strokes: readonly PresentationInkStroke[]): void;
 	hasAnnotations(): boolean;
+	/** Erase All Ink on Slide (E, and the show toolbar): the slide on stage only. */
+	clearSlide(): void;
+	/** Every slide's ink (leaving the show). */
 	clear(): void;
 	finishPresentation(): Promise<'none' | 'kept' | 'discarded'>;
 	dispose(): void;
@@ -112,6 +115,12 @@ export function createPresentationAnnotationsController(
 		notify();
 		mount();
 	};
+	const clearSlide = (): void => {
+		ink.setSlide(lastStage?.slideIndex ?? 0);
+		ink.clearSlide();
+		notify();
+		mount();
+	};
 	const persist = (): boolean => {
 		const slides = options.getSlides();
 		const next = applyPresentationInk(slides, strokes(), {
@@ -152,6 +161,7 @@ export function createPresentationAnnotationsController(
 			mount();
 		},
 		hasAnnotations: () => strokes().length > 0,
+		clearSlide,
 		clear,
 		async finishPresentation() {
 			if (strokes().length === 0) {

@@ -185,4 +185,25 @@ describe('createPresentationAnnotationsController', () => {
 		sync('none');
 		expect(overlay?.style.zIndex).toBe(String(PRESENT_ANNOTATION_Z));
 	});
+
+	it('erases the slide on stage only, keeping the rest of the show ink', () => {
+		const controller = createPresentationAnnotationsController({
+			doc: document,
+			t: createTranslator(),
+			getSlides: () => [slide('slide-1'), slide('slide-2')],
+			commitSlides: vi.fn(),
+		});
+		controller.setStrokes([stroke, { ...stroke, id: 'stroke-2', slideIndex: 1 }]);
+		controller.syncStage({
+			stageWrap: document.createElement('div'),
+			active: false,
+			slideIndex: 1,
+			canvasSize: { width: 960, height: 540 },
+			blackout: 'none',
+		});
+		controller.clearSlide();
+		expect(controller.getStrokes().map((ink) => ink.id)).toStrictEqual(['stroke-1']);
+		controller.clear();
+		expect(controller.hasAnnotations()).toBeFalsy();
+	});
 });

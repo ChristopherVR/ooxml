@@ -119,7 +119,7 @@ describe('show toolbar adapter', () => {
 		expect(annotations.tool()).toBe('pen');
 	});
 
-	it('counts ink on any slide for the annotation flag, as every binding does', () => {
+	it('enables Erase All Ink on Slide only for the slide on screen', () => {
 		const { fixture, control, annotations } = open();
 		expect(control('clear')?.disabled).toBe(true);
 		annotations.setActiveSlide(0);
@@ -127,9 +127,13 @@ describe('show toolbar adapter', () => {
 		annotations.beginStroke(10, 10);
 		annotations.extendStroke(20, 20);
 		annotations.endStroke();
-		annotations.setActiveSlide(1);
 		fixture.detectChanges();
 		expect(control('clear')?.disabled).toBe(false);
+		annotations.setActiveSlide(1);
+		fixture.detectChanges();
+		// The show still has ink (the exit prompt counts it), but none on this slide.
+		expect(annotations.hasAnyAnnotations()).toBe(true);
+		expect(control('clear')?.disabled).toBe(true);
 	});
 
 	it('reflects the presenter-view state as pressed', () => {

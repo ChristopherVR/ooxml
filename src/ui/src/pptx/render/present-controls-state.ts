@@ -25,7 +25,13 @@ export interface PresentToolbarViewState {
 	tool: PresentationPointerTool;
 	penColor: string;
 	highlighterColor: string;
+	/** Ink on any slide of the show (what leaving the show offers to keep). */
 	hasAnnotations: boolean;
+	/**
+	 * Ink on the slide on screen: enables Erase All Ink on Slide, which clears that slide only.
+	 * Omitted, the button follows `hasAnnotations`.
+	 */
+	hasSlideAnnotations?: boolean;
 	/** With the pen, marks the Blackboard toggle active (`isBlackboardActive`). */
 	blackout: PresentationBlackout;
 	/** Show the presenter-view toggle (default false). */

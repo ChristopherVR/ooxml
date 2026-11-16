@@ -1750,9 +1750,12 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		};
 	}
 
-	/** Discard the show's ink strokes (E, and the show toolbar's Clear button). */
+	/**
+	 * Erase All Ink on Slide (E, and the show toolbar's Erase button): the slide on stage only,
+	 * as in every binding. Leaving the show still offers to keep the other slides' ink.
+	 */
 	clearPresentationAnnotations(): void {
-		this.annotations.clear();
+		this.annotations.clearSlide();
 	}
 
 	/**
@@ -1777,7 +1780,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.lifecycle.chrome.presentationToolbar.update({
 			tool: this.presenterSnapshot.pointer?.tool ?? 'none',
 			blackout: this.presenterSnapshot.blackout,
-			hasAnnotations: (this.presenterSnapshot.inkStrokes?.length ?? 0) > 0,
+			inkSlides: (this.presenterSnapshot.inkStrokes ?? []).map((stroke) => stroke.slideIndex),
 			presenterViewActive: this.presenterView !== null,
 		});
 	}

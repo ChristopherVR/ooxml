@@ -54,7 +54,11 @@ export interface PresentationToolbarState {
 	tool: PresentationPointerTool;
 	/** Blackout state; with the pen it marks the Blackboard toggle active. */
 	blackout: PresentationBlackout;
-	hasAnnotations: boolean;
+	/**
+	 * The slide of every ink stroke: any ink at all is `hasAnnotations`, ink on `current` enables
+	 * Erase All Ink on Slide. Kept as indexes so a slide change alone updates the button.
+	 */
+	inkSlides: readonly number[];
 	presenterViewActive: boolean;
 }
 
@@ -88,7 +92,7 @@ export function createPresentationToolbar(
 		total: 0,
 		tool: 'none',
 		blackout: 'none',
-		hasAnnotations: false,
+		inkSlides: [],
 		presenterViewActive: false,
 	};
 	// The presenter snapshot carries ONE pointer colour, but PowerPoint remembers
@@ -106,8 +110,11 @@ export function createPresentationToolbar(
 	wrap.appendChild(bar);
 
 	function render(): void {
+		const { inkSlides, ...rest } = state;
 		bar.state = {
-			...state,
+			...rest,
+			hasAnnotations: inkSlides.length > 0,
+			hasSlideAnnotations: inkSlides.includes(state.current),
 			penColor,
 			highlighterColor,
 			presenterViewVisible: true,

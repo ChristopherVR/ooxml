@@ -71,6 +71,15 @@ describe('pptx-ui-present-toolbar', () => {
 		expect(middle.control('presenter-view')).not.toBeNull();
 	});
 
+	it('enables Erase All Ink on Slide only for ink on the slide on screen', () => {
+		expect(
+			mount({ hasAnnotations: true, hasSlideAnnotations: false }).control('clear').disabled,
+		).toBeTruthy();
+		expect(
+			mount({ hasAnnotations: true, hasSlideAnnotations: true }).control('clear').disabled,
+		).toBeFalsy();
+	});
+
 	it('reflects the armed tool, blackboard and presenter view as pressed', () => {
 		const { control } = mount({
 			tool: 'pen',

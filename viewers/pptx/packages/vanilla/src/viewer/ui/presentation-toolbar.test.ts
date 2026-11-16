@@ -102,7 +102,10 @@ describe('createPresentationToolbar', () => {
 		const { toolbar } = build();
 		expect((control(toolbar.el, 'clear') as HTMLButtonElement).disabled).toBeTruthy();
 
-		toolbar.update({ tool: 'pen', hasAnnotations: true, presenterViewActive: true });
+		toolbar.update({ tool: 'pen', inkSlides: [1], presenterViewActive: true });
+		// Ink on another slide only: Erase All Ink on Slide has nothing to clear here.
+		expect((control(toolbar.el, 'clear') as HTMLButtonElement).disabled).toBeTruthy();
+		toolbar.update({ inkSlides: [1, 0] });
 		expect((control(toolbar.el, 'clear') as HTMLButtonElement).disabled).toBeFalsy();
 		expect(control(toolbar.el, 'pen')?.getAttribute('aria-pressed')).toBe('true');
 		expect(control(toolbar.el, 'laser')?.getAttribute('aria-pressed')).toBe('false');
@@ -135,7 +138,7 @@ describe('createPresentationToolbar', () => {
 
 	it('routes every action handler', () => {
 		const { toolbar, handlers } = build();
-		toolbar.update({ current: 1, total: 3, hasAnnotations: true });
+		toolbar.update({ current: 1, total: 3, inkSlides: [1] });
 		control(toolbar.el, 'previous')?.click();
 		control(toolbar.el, 'next')?.click();
 		control(toolbar.el, 'laser')?.click();

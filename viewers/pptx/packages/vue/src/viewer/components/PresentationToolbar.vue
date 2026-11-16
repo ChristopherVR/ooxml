@@ -29,6 +29,8 @@ const props = withDefaults(
 		penColor: string;
 		highlighterColor: string;
 		hasAnnotations: boolean;
+		/** Ink on the slide on screen: enables Erase All Ink on Slide. */
+		hasSlideAnnotations?: boolean;
 		currentSlideIndex: number;
 		totalSlides: number;
 		/** Timestamp (ms) the presentation started, or `null`. */
@@ -61,6 +63,7 @@ const state = computed<PresentToolbarViewState>(() => ({
 	penColor: props.penColor,
 	highlighterColor: props.highlighterColor,
 	hasAnnotations: props.hasAnnotations,
+	hasSlideAnnotations: props.hasSlideAnnotations ?? props.hasAnnotations,
 	blackout: props.blackout,
 	presenterViewVisible: props.showPresenterToggle,
 	presenterViewActive: props.presenterMode,

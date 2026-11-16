@@ -147,15 +147,23 @@ describe('presentationToolbar', () => {
 		expect((control(target, 'clear') as HTMLButtonElement).disabled).toBeTruthy();
 
 		annotations.tool = 'pen';
+		// Ink on another slide only: the show has ink, the slide on screen (1) has none.
 		annotations.pointerDown(0, { x: 1, y: 1 });
 		annotations.pointerMove(0, { x: 5, y: 5 });
 		annotations.pointerUp(0);
+		flushSync();
+		expect((control(target, 'clear') as HTMLButtonElement).disabled).toBeTruthy();
+
+		annotations.pointerDown(1, { x: 1, y: 1 });
+		annotations.pointerMove(1, { x: 5, y: 5 });
+		annotations.pointerUp(1);
 		flushSync();
 		expect((control(target, 'clear') as HTMLButtonElement).disabled).toBeFalsy();
 
 		control(target, 'clear').click();
 		flushSync();
-		expect(annotations.count).toBe(0);
+		// Erase All Ink on Slide clears slide 1; slide 0 keeps its ink.
+		expect(annotations.count).toBe(1);
 	});
 
 	it('toggles an annotation tool on and back off', () => {

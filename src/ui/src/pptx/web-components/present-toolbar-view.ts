@@ -176,7 +176,7 @@ export function createPresentToolbarView(
 			counter.textContent = formatSlideCounter(state.current, state.total);
 			get('previous').disabled = state.current <= 0;
 			get('next').disabled = state.current >= state.total - 1;
-			get('clear').disabled = !state.hasAnnotations;
+			get('clear').disabled = !(state.hasSlideAnnotations ?? state.hasAnnotations);
 			const press = (id: string, on: boolean) => get(id).setAttribute('aria-pressed', String(on));
 			for (const tool of ['laser', 'pen', 'highlighter', 'eraser'] as const) {
 				press(tool, state.tool === tool);

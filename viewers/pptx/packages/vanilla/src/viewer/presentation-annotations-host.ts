@@ -9,6 +9,8 @@ import type { ViewerChrome } from './ui';
 
 export interface PresentationAnnotationsHost {
 	sync(snapshot: PresentationSnapshot): void;
+	/** Erase the ink on the slide on stage (E, and the show toolbar's Erase). */
+	clearSlide(): void;
 	/**
 	 * Discard the show's ink. The controller owns the strokes, so emptying
 	 * `snapshot.inkStrokes` alone never erased anything: the next `sync` remounted
@@ -63,6 +65,7 @@ export function createPresentationAnnotationsHost(options: {
 				blackout: snapshot.blackout,
 			});
 		},
+		clearSlide: () => controller.clearSlide(),
 		clear: () => controller.clear(),
 		finish: () => controller.finishPresentation(),
 		dispose: () => controller.dispose(),

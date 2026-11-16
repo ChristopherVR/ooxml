@@ -860,6 +860,7 @@ useTouchGestures({
 					:pen-color="annotations.penColor.value"
 					:highlighter-color="annotations.highlighterColor.value"
 					:has-annotations="annotations.hasAnyAnnotations.value"
+					:has-slide-annotations="annotations.annotationStrokes.value.length > 0"
 					:current-slide-index="nav.currentIndex.value"
 					:total-slides="slides.length"
 					:presentation-start-time="presentationStartTime"

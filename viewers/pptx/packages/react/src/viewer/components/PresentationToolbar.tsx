@@ -31,7 +31,10 @@ export interface PresentationToolbarProps {
 	presentationTool: PresentationTool;
 	penColor: string;
 	highlighterColor: string;
+	/** Ink on any slide of the show. */
 	hasAnnotations: boolean;
+	/** Ink on the slide on screen: enables Erase All Ink on Slide. */
+	hasSlideAnnotations?: boolean;
 	onSetTool: (tool: PresentationTool) => void;
 	onSetPenColor: (color: string) => void;
 	onSetHighlighterColor: (color: string) => void;
@@ -72,6 +75,7 @@ export function PresentationToolbar(p: PresentationToolbarProps): React.ReactEle
 			penColor: p.penColor,
 			highlighterColor: p.highlighterColor,
 			hasAnnotations: p.hasAnnotations,
+			hasSlideAnnotations: p.hasSlideAnnotations ?? p.hasAnnotations,
 			blackout: p.blackout,
 			presenterViewVisible: Boolean(p.onTogglePresenterView),
 			presenterViewActive: p.presenterMode === true,
