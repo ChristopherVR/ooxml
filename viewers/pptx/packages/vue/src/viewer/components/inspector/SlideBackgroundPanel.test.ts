@@ -12,12 +12,19 @@ function slide(over: Partial<PptxSlide> = {}): PptxSlide {
 }
 
 describe('slideBackgroundPanel', () => {
-	it('emits a backgroundColor patch on colour change', async () => {
+	it('emits a solid background patch from the shared colour field', async () => {
 		const wrapper = mount(SlideBackgroundPanel, { props: { slide: slide() } });
-		const input = wrapper.get('input[type="color"]');
+		const input = wrapper.get('[data-testid="slide-background-colour"]');
 		(input.element as HTMLInputElement).value = '#ff0000';
 		await input.trigger('change');
-		expect(wrapper.emitted('update')?.[0]).toStrictEqual([{ backgroundColor: '#ff0000' }]);
+		expect(wrapper.emitted('update')?.[0]).toStrictEqual([
+			{
+				backgroundColor: '#ff0000',
+				backgroundImage: undefined,
+				backgroundGradient: undefined,
+				backgroundPattern: undefined,
+			},
+		]);
 	});
 
 	it('shows Replace Image and a preview when a background image is set', () => {

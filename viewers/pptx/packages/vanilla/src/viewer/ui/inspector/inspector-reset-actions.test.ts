@@ -99,6 +99,13 @@ describe('vanilla inspector reset and clear actions', () => {
 			}) as unknown as InspectorDeckState;
 		card.update(stateFor({}));
 		expect(button(card.el, 'Clear Background')?.hidden).toBeTruthy();
+		// The shared Background fields: Hide background graphics is one slide patch.
+		const hide = card.el.querySelector<HTMLInputElement>(
+			'[data-testid="slide-hide-background-graphics"]',
+		)!;
+		hide.checked = true;
+		hide.dispatchEvent(new Event('change'));
+		expect(handlers.updateActiveSlide).toHaveBeenLastCalledWith({ showMasterShapes: false });
 		card.update(stateFor({ backgroundColor: '#123456' }, false));
 		expect(button(card.el, 'Clear Background')?.disabled).toBeTruthy();
 		card.update(stateFor({ backgroundColor: '#123456' }));

@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import {
+	inspectorFieldPatch,
 	normalizeHexColor,
 	resolveTemplateBackgroundRows,
+	SLIDE_BACKGROUND_SECTIONS,
 	slideBackgroundClearPatch,
 	slideBackgroundClearState,
 } from 'ooxml-ui/pptx';
@@ -23,6 +25,7 @@ import { useI18n } from 'vue-i18n';
 import { injectRecentColors } from '../../composables/recent-colors-context';
 import RecentColorsRow from '../RecentColorsRow.vue';
 import { CARD, HEADING } from './inspector-cards';
+import InspectorFields from './InspectorFields.vue';
 
 const props = withDefaults(
 	defineProps<{
@@ -66,18 +69,21 @@ function onTemplateColorChange(path: string, event: Event): void {
 
 const fileInput = ref<HTMLInputElement | null>(null);
 
-const colorValue = computed(() => props.slide?.backgroundColor ?? '#ffffff');
 const backgroundImage = computed(() => props.slide?.backgroundImage);
 const clearState = computed(() => slideBackgroundClearState(props.slide, props.canEdit));
 
-function onColorChange(event: Event): void {
-	const hex = (event.target as HTMLInputElement).value;
-	emit('update', { backgroundColor: hex });
-	recentColors?.push(hex);
-}
-
+/** A "Recent colours" pick: the same patch as the shared colour field. */
 function onColorPick(hex: string): void {
-	emit('update', { backgroundColor: hex });
+	const patch = inspectorFieldPatch(
+		SLIDE_BACKGROUND_SECTIONS,
+		'slideBackground',
+		'backgroundColor',
+		props.slide,
+		hex,
+	);
+	if (patch) {
+		emit('update', patch);
+	}
 	recentColors?.push(hex);
 }
 
@@ -104,34 +110,17 @@ function removeImage(): void {
 function clearBackground(): void {
 	emit('update', slideBackgroundClearPatch());
 }
-
-const hideBackgroundGraphics = computed(() => props.slide?.showMasterShapes === false);
-
-function onToggleHideBackgroundGraphics(event: Event): void {
-	const checked = (event.target as HTMLInputElement).checked;
-	emit('update', { showMasterShapes: !checked });
-}
 </script>
 
 <template>
 	<div :class="CARD">
 		<div :class="HEADING">{{ t('pptx.viewer.background') }}</div>
-		<label class="flex items-center gap-2 text-[11px]">
-			<span class="w-10 shrink-0 text-muted-foreground">{{
-				t('pptx.slideBackground.colour')
-			}}</span>
-			<input
-				type="color"
-				:value="colorValue"
-				:disabled="!canEdit"
-				class="h-6 w-8 cursor-pointer rounded border border-border bg-muted"
-				:aria-label="t('pptx.slideBackground.colourAriaLabel')"
-				@change="onColorChange"
-			/>
-			<span class="truncate text-[10px] text-muted-foreground">{{
-				slide?.backgroundColor || 'none'
-			}}</span>
-		</label>
+		<InspectorFields
+			:sections="SLIDE_BACKGROUND_SECTIONS"
+			:target="slide"
+			:disabled="!canEdit"
+			@patch="emit('update', $event)"
+		/>
 		<RecentColorsRow v-if="recentColors" :colors="recentColors.recent.value" @pick="onColorPick" />
 
 		<div class="space-y-1">
@@ -188,17 +177,6 @@ function onToggleHideBackgroundGraphics(event: Event): void {
 		>
 			{{ t('pptx.slideBackground.clearBackground') }}
 		</button>
-
-		<label class="flex items-center gap-2 text-[11px]">
-			<pptx-ui-checkbox
-				:checked="hideBackgroundGraphics"
-				:disabled="!canEdit"
-				@change="onToggleHideBackgroundGraphics"
-			/>
-			<span class="text-muted-foreground">{{
-				t('pptx.slideBackground.hideBackgroundGraphics')
-			}}</span>
-		</label>
 	</div>
 
 	<div v-if="editTemplateMode && (templateRows.layout || templateRows.master)" :class="CARD">

@@ -1,4 +1,5 @@
 import { updateSlide } from 'ooxml-ui/pptx';
+import type { PptxSlide } from 'pptx-viewer-core';
 
 import type { EditorState } from './editor-state.svelte';
 
@@ -29,6 +30,15 @@ export class EditorBackgroundController {
 		this.#editor.commitSlides(
 			updateSlide(this.#editor.slides, current, { backgroundColor: color }),
 		);
+	}
+
+	/** Apply a shared Background card field's slide patch to the current slide. */
+	patchSlide(patch: Partial<PptxSlide>): void {
+		const current = this.#editor.currentSlideIndex;
+		if (!this.#editor.editable || !this.#editor.slides[current]) {
+			return;
+		}
+		this.#editor.commitSlides(updateSlide(this.#editor.slides, current, patch));
 	}
 
 	/** Clear every background field on the current slide (fall back to layout/master). */

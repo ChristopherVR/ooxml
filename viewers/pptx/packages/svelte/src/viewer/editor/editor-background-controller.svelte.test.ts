@@ -34,6 +34,21 @@ describe('editorBackgroundController', () => {
 		expect(editor.slides[0].backgroundColor).toBeUndefined();
 	});
 
+	it('patchSlide applies a shared Background card patch to the current slide, undoably', () => {
+		const editor = make();
+		editor.setSlides([slide('a', { backgroundImage: 'data:image/png;base64,x' })]);
+		editor.backgroundOps.patchSlide({
+			backgroundColor: '#112233',
+			backgroundImage: undefined,
+			showMasterShapes: false,
+		});
+		expect(editor.slides[0].backgroundColor).toBe('#112233');
+		expect(editor.slides[0].backgroundImage).toBeUndefined();
+		expect(editor.slides[0].showMasterShapes).toBeFalsy();
+		editor.undo();
+		expect(editor.slides[0].backgroundImage).toBe('data:image/png;base64,x');
+	});
+
 	it('clearSlideBackground drops every background field on the current slide', () => {
 		const editor = make();
 		editor.setSlides([

@@ -1,5 +1,6 @@
 import {
 	resolveTemplateBackgroundRows,
+	SLIDE_BACKGROUND_SECTIONS,
 	slideBackgroundClearPatch,
 	slideBackgroundClearState,
 } from 'ooxml-ui/pptx';
@@ -9,9 +10,9 @@ import { LuX } from 'react-icons/lu';
 
 import { useTranslation } from '../../i18n/use-translation';
 import { cn, normalizeHexColor } from '../../utils';
-import { WebCheckbox } from '../WebControls';
 import { DebouncedColorInput } from './DebouncedColorInput';
 import { CARD, HEADING, BTN } from './inspector-pane-constants';
+import { InspectorFields } from './InspectorFields';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -51,21 +52,15 @@ export function SlideBackgroundPanel({
 			<div className={cn(CARD, 'space-y-2')}>
 				<div className={HEADING}>{t('pptx.viewer.background')}</div>
 
-				{/* Solid colour */}
-				<label className='flex items-center gap-2 text-[11px]'>
-					<span className='text-muted-foreground w-10 shrink-0'>
-						{t('pptx.slideBackground.colour')}
-					</span>
-					<DebouncedColorInput
-						value={normalizeHexColor(activeSlide.backgroundColor, '#ffffff')}
+				{/* Solid colour and Hide background graphics: the shared descriptors. */}
+				<div className='grid grid-cols-2 gap-1.5 text-[11px]'>
+					<InspectorFields
+						sections={SLIDE_BACKGROUND_SECTIONS}
+						target={activeSlide}
 						disabled={!canEdit}
-						className='h-6 w-8 rounded border border-border bg-muted cursor-pointer'
-						onCommit={(hex) => onUpdateSlide({ backgroundColor: hex })}
+						onPatch={onUpdateSlide}
 					/>
-					<span className='text-muted-foreground text-[10px] truncate'>
-						{activeSlide.backgroundColor || 'none'}
-					</span>
-				</label>
+				</div>
 
 				{/* Background image */}
 				<div className='space-y-1'>
@@ -136,18 +131,6 @@ export function SlideBackgroundPanel({
 						{t('pptx.slideBackground.clearBackground')}
 					</button>
 				)}
-
-				{/* Hide Background Graphics (p:sld/@showMasterSp) */}
-				<label className='flex items-center gap-2 text-[11px]'>
-					<WebCheckbox
-						checked={activeSlide.showMasterShapes === false}
-						disabled={!canEdit}
-						onChange={(e) => onUpdateSlide({ showMasterShapes: !e.target.checked })}
-					/>
-					<span className='text-muted-foreground'>
-						{t('pptx.slideBackground.hideBackgroundGraphics')}
-					</span>
-				</label>
 			</div>
 
 			{/* Master / Layout Background (template mode) */}

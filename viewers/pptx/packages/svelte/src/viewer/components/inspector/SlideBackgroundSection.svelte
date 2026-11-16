@@ -1,16 +1,18 @@
 <script lang="ts">
 	/**
-	 * SlideBackgroundSection: the active slide's own background (solid colour
-	 * plus the Clear Background action), at parity with React's
+	 * SlideBackgroundSection: the active slide's own background (the shared
+	 * `SLIDE_BACKGROUND_SECTIONS`: solid colour and Hide background graphics,
+	 * drawn by `InspectorFields`, plus the Clear Background action), at parity with React's
 	 * `SlideBackgroundPanel`, Vue's and Angular's slide-background card. Clear
 	 * visibility and enablement come from the shared
 	 * `slideBackgroundClearState`, and one click is one undo step through
 	 * `EditorState.backgroundOps`.
 	 */
-	import { normalizeHexColor, slideBackgroundClearState } from 'ooxml-ui/pptx';
+	import { SLIDE_BACKGROUND_SECTIONS, slideBackgroundClearState } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';
+	import InspectorFields from './InspectorFields.svelte';
 
 	const { editor }: { editor: EditorState } = $props();
 	const t = useTranslator();
@@ -19,16 +21,13 @@
 	const clearState = $derived(slideBackgroundClearState(slide, editor.editable));
 </script>
 
-<label class="pptx-svelte-background-colour">
-	<span>{t('pptx.slideBackground.colour')}</span>
-	<input
-		type="color"
-		disabled={!editor.editable}
-		value={normalizeHexColor(slide?.backgroundColor, '#ffffff')}
-		oninput={(e) => editor.backgroundOps.setSlideBackgroundColor(e.currentTarget.value)}
-		onchange={(e) => editor.recordRecentColor(e.currentTarget.value)}
-	/>
-</label>
+<InspectorFields
+	sections={SLIDE_BACKGROUND_SECTIONS}
+	target={slide}
+	disabled={!editor.editable}
+	onpatch={(patch) => editor.backgroundOps.patchSlide(patch)}
+	oncolorcommit={(hex) => editor.recordRecentColor(hex)}
+/>
 {#if clearState.visible}
 	<button
 		type="button"
@@ -41,11 +40,6 @@
 {/if}
 
 <style>
-	.pptx-svelte-background-colour {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-	}
 	.pptx-svelte-background-clear {
 		width: 100%;
 		min-height: 28px;

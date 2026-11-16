@@ -9,6 +9,7 @@
  */
 import { Injector, runInInjectionContext } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
+import { inspectorFieldPatch, SLIDE_BACKGROUND_SECTIONS } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
@@ -18,17 +19,12 @@ import { SlideBackgroundCardComponent } from './slide-background-card.component'
 
 /** The protected surface the template binds to. */
 interface BackgroundCardControls {
-	hideBackgroundGraphics: () => boolean;
-	onToggleHideBackgroundGraphics: (event: Event) => void;
+	backgroundSections: unknown;
+	patchSlide: (changes: Partial<PptxSlide>) => void;
 }
 
 function slide(overrides: Partial<PptxSlide> = {}): PptxSlide {
 	return { id: 's1', rId: 's1', slideNumber: 1, elements: [], ...overrides } as PptxSlide;
-}
-
-/** A change event carrying the checkbox's checked state. */
-function checkedEvent(checked: boolean): Event {
-	return { target: { checked } as HTMLInputElement } as unknown as Event;
 }
 
 function harness(overrides: Partial<PptxSlide> = {}): {
@@ -52,26 +48,30 @@ function harness(overrides: Partial<PptxSlide> = {}): {
 	return { editor, controls: card as unknown as BackgroundCardControls };
 }
 
-describe('slide background card: Hide Background Graphics', () => {
-	it('is unchecked by default (background graphics shown)', () => {
+describe('slide background card: shared Background fields', () => {
+	const hide = (target: PptxSlide | undefined, on: boolean) =>
+		inspectorFieldPatch(
+			SLIDE_BACKGROUND_SECTIONS,
+			'slideBackground',
+			'hideBackgroundGraphics',
+			target,
+			on,
+		)!;
+
+	it('mounts the shared descriptors', () => {
 		const { controls } = harness();
-		expect(controls.hideBackgroundGraphics()).toBeFalsy();
+		expect(controls.backgroundSections).toBe(SLIDE_BACKGROUND_SECTIONS);
 	});
 
-	it('is checked when showMasterShapes is false', () => {
-		const { controls } = harness({ showMasterShapes: false });
-		expect(controls.hideBackgroundGraphics()).toBeTruthy();
-	});
-
-	it('sets showMasterShapes: false on the slide when checked', () => {
+	it('sets showMasterShapes: false on the slide when Hide background graphics is ticked', () => {
 		const { editor, controls } = harness();
-		controls.onToggleHideBackgroundGraphics(checkedEvent(true));
+		controls.patchSlide(hide(editor.slides()[0], true));
 		expect(editor.slides()[0]?.showMasterShapes).toBeFalsy();
 	});
 
-	it('sets showMasterShapes: true on the slide when unchecked', () => {
+	it('sets showMasterShapes: true on the slide when it is cleared', () => {
 		const { editor, controls } = harness({ showMasterShapes: false });
-		controls.onToggleHideBackgroundGraphics(checkedEvent(false));
+		controls.patchSlide(hide(editor.slides()[0], false));
 		expect(editor.slides()[0]?.showMasterShapes).toBeTruthy();
 	});
 });

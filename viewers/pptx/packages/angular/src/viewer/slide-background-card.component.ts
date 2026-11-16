@@ -4,7 +4,9 @@
  *
  * Selector: `pptx-slide-background-card`
  *
- * Offers the three things a slide background can be: a solid colour, a picture
+ * Offers the three things a slide background can be: a solid colour (with Hide
+ * background graphics, the shared `SLIDE_BACKGROUND_SECTIONS` drawn by
+ * `pptx-inspector-fields`), a picture
  * (read as a data URL so it survives save without a media round-trip), and
  * "none". Clearing wipes colour, image AND gradient together, because leaving
  * one of the three behind is how a "cleared" background silently keeps
@@ -24,6 +26,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
 	normalizeHexColor,
 	resolveTemplateBackgroundRows,
+	SLIDE_BACKGROUND_SECTIONS,
 	slideBackgroundClearPatch,
 	slideBackgroundClearState,
 } from 'ooxml-ui/pptx';
@@ -32,6 +35,7 @@ import type { PptxSlide } from 'pptx-viewer-core';
 
 import { EditorStateService } from './editor-state.service';
 import { INSPECTOR_CARD_STYLES } from './inspector-card-styles';
+import { InspectorFieldsComponent } from './inspector-fields.component';
 import { LoadContentService } from './load-content.service';
 import { RecentColorsService } from './recent-colors.service';
 
@@ -43,7 +47,7 @@ const BACKGROUND_IMAGE_ACCEPT = 'image/png,image/jpeg,image/gif,image/webp,image
 	selector: 'pptx-slide-background-card',
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	imports: [TranslatePipe],
+	imports: [TranslatePipe, InspectorFieldsComponent],
 	template: `
 		@if (slide(); as sl) {
 			<section class="icard" data-pptx-chrome="inspector-card" [attr.data-slide-key]="slideKey()">
@@ -51,18 +55,12 @@ const BACKGROUND_IMAGE_ACCEPT = 'image/png,image/jpeg,image/gif,image/webp,image
 					{{ 'pptx.viewer.background' | translate }}
 				</h3>
 
-				<label class="icard__row">
-					<span class="icard__label">{{ 'pptx.slideBackground.colour' | translate }}</span>
-					<input
-						type="color"
-						class="bg__color"
-						[disabled]="!canEdit()"
-						[attr.aria-label]="'pptx.slideBackground.colourAriaLabel' | translate"
-						[value]="backgroundColor()"
-						(change)="onColorChange($event)"
-					/>
-					<span class="icard__value">{{ sl.backgroundColor || 'none' }}</span>
-				</label>
+				<pptx-inspector-fields
+					[sections]="backgroundSections"
+					[target]="sl"
+					[disabled]="!canEdit()"
+					(patch)="patchSlide($event)"
+				/>
 
 				<div class="icard__row">
 					<span class="icard__label">{{ 'pptx.slideBackground.image' | translate }}</span>
@@ -116,17 +114,6 @@ const BACKGROUND_IMAGE_ACCEPT = 'image/png,image/jpeg,image/gif,image/webp,image
 						{{ 'pptx.slideBackground.clearBackground' | translate }}
 					</button>
 				}
-
-				<label class="icard__row">
-					<pptx-ui-checkbox
-						[checked]="hideBackgroundGraphics()"
-						[disabled]="!canEdit()"
-						(change)="onToggleHideBackgroundGraphics($event)"
-					></pptx-ui-checkbox>
-					<span class="icard__label">{{
-						'pptx.slideBackground.hideBackgroundGraphics' | translate
-					}}</span>
-				</label>
 			</section>
 		}
 		@if (editTemplateMode() && (templateRows().layout || templateRows().master)) {
@@ -239,6 +226,7 @@ export class SlideBackgroundCardComponent {
 	private readonly recentColors = inject(RecentColorsService, { optional: true });
 
 	protected readonly imageAccept = BACKGROUND_IMAGE_ACCEPT;
+	protected readonly backgroundSections = SLIDE_BACKGROUND_SECTIONS;
 
 	protected readonly slide = computed<PptxSlide | undefined>(
 		() => this.editor.slides()[this.slideIndex()],
@@ -253,10 +241,6 @@ export class SlideBackgroundCardComponent {
 
 	protected readonly clearState = computed(() =>
 		slideBackgroundClearState(this.slide(), this.canEdit()),
-	);
-
-	protected readonly hideBackgroundGraphics = computed(
-		() => this.slide()?.showMasterShapes === false,
 	);
 
 	protected readonly editTemplateMode = this.editor.editTemplateMode;
@@ -302,12 +286,6 @@ export class SlideBackgroundCardComponent {
 		this.recentColors?.push(backgroundColor);
 	}
 
-	protected onColorChange(event: Event): void {
-		const backgroundColor = (event.target as HTMLInputElement).value;
-		this.patch({ backgroundColor });
-		this.recentColors?.push(backgroundColor);
-	}
-
 	protected onImagePicked(event: Event): void {
 		const picker = event.target as HTMLInputElement;
 		const file = picker.files?.[0];
@@ -333,9 +311,9 @@ export class SlideBackgroundCardComponent {
 		this.patch(slideBackgroundClearPatch());
 	}
 
-	protected onToggleHideBackgroundGraphics(event: Event): void {
-		const checked = (event.target as HTMLInputElement).checked;
-		this.patch({ showMasterShapes: !checked });
+	/** Apply a shared Background field's slide patch (colour, Hide background graphics). */
+	protected patchSlide(changes: Partial<PptxSlide>): void {
+		this.patch(changes);
 	}
 
 	private patch(changes: Partial<PptxSlide>): void {
