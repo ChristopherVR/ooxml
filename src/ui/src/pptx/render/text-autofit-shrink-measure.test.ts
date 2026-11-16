@@ -72,20 +72,28 @@ describe('measureNormAutofitStepHeightPx', () => {
 
 describe('resolveInlineEditNormAutofitShrink', () => {
 	let originalDescriptor: PropertyDescriptor | undefined;
+	let stubbed = false;
 
 	function stubScrollHeight(value: number): void {
 		originalDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'scrollHeight');
+		stubbed = true;
 		Object.defineProperty(HTMLElement.prototype, 'scrollHeight', {
 			configurable: true,
 			get: () => value,
 		});
 	}
 
+	// jsdom defines `scrollHeight` on Element.prototype, so there is usually no own descriptor to
+	// put back: the stub is then deleted, or it would leak into later files in the shared worker.
 	afterEach(() => {
+		if (!stubbed) return;
 		if (originalDescriptor) {
 			Object.defineProperty(HTMLElement.prototype, 'scrollHeight', originalDescriptor);
-			originalDescriptor = undefined;
+		} else {
+			delete (HTMLElement.prototype as { scrollHeight?: number }).scrollHeight;
 		}
+		originalDescriptor = undefined;
+		stubbed = false;
 	});
 
 	it('returns unchanged without measuring when there is no editor DOM node', () => {

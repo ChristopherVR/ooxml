@@ -24,6 +24,10 @@ describe('switching between a frozen and a split window', () => {
 		ctx.root.append(container);
 		dispose = mountGrid(ctx, container);
 		const scroller = ctx.root.querySelector<HTMLElement>('.xg-scroller')!;
+		// A fixed 800 x 600 viewport, so the split lies inside it whatever an earlier file in the
+		// shared worker left on the element prototypes' layout getters.
+		Object.defineProperty(scroller, 'clientWidth', { configurable: true, value: 800 });
+		Object.defineProperty(scroller, 'clientHeight', { configurable: true, value: 600 });
 		const fire = async () => {
 			scroller.dispatchEvent(new Event('scroll'));
 			await frame();
