@@ -12,9 +12,41 @@ import type { DiagramLayoutSource } from '../layout-preview';
 import { buildFabricatedColorsXml, buildFabricatedQuickStyleXml } from '../write/fabricated-styles';
 import { DIAGRAM_COLOR_ENTRIES, DIAGRAM_STYLE_ENTRIES } from '../catalogue';
 
+/**
+ * A built-in definition from the full catalogue (`builtinSmartArtFormatChange` of
+ * `ooxml-core/diagram/builtin` builds it): `value` is the short id (`accent1_2`, `3d1`) and
+ * `definitionXml` the complete definition, which replaces the part as Office does, so the saved
+ * diagram carries Office's own `uniqueId` and 3D properties.
+ */
+export interface DiagramNativeFormatChange {
+	kind: 'colors' | 'style';
+	value: string;
+	definitionXml: string;
+}
+
 export type DiagramFormatChange =
 	| { kind: 'colors'; value: DiagramColorScheme }
-	| { kind: 'style'; value: DiagramStyleIntensity };
+	| { kind: 'style'; value: DiagramStyleIntensity }
+	| DiagramNativeFormatChange;
+
+const isNative = (change: DiagramFormatChange): change is DiagramNativeFormatChange =>
+	'definitionXml' in change;
+
+/** The `uniqueId` a change gives the definition part, which a host records as applied. */
+export function diagramFormatChangeId(change: DiagramFormatChange): string {
+	if (!isNative(change)) return `urn:ooxml-core/${change.kind}/${change.value}`;
+	const root = parseXml(change.definitionXml, {
+		label: 'SmartArt formatting definition',
+	}).documentElement;
+	const id = root.getAttribute('uniqueId');
+	if (
+		root.namespaceURI !== NS.dgm ||
+		root.localName !== (change.kind === 'colors' ? 'colorsDef' : 'styleDef') ||
+		!id
+	)
+		throw new Error('The SmartArt formatting definition is invalid.');
+	return id;
+}
 const COLOR_NAMES = new Set(['schemeClr', 'srgbClr', 'scrgbClr', 'hslClr', 'prstClr', 'sysClr']);
 function ensure(parent: XmlElement, name: string, namespace: string = NS.dgm): XmlElement {
 	let node = first(parent, name, namespace);
@@ -43,6 +75,10 @@ export function writeDiagramFormatDefinition(
 	source: string | undefined,
 	change: DiagramFormatChange,
 ): string {
+	if (isNative(change)) {
+		diagramFormatChangeId(change);
+		return change.definitionXml;
+	}
 	if (
 		!(change.kind === 'colors' ? DIAGRAM_COLOR_ENTRIES : DIAGRAM_STYLE_ENTRIES).some(
 			(entry) => entry.id === change.value,
@@ -116,7 +152,7 @@ export function formatDiagramSource(
 		change.kind === 'colors' ? source?.colorsXml : source?.quickStyleXml,
 		change,
 	);
-	const id = `urn:ooxml-core/${change.kind}/${change.value}`;
+	const id = diagramFormatChangeId(change);
 	return change.kind === 'colors'
 		? { source: { ...source, colorsXml: xml }, colorsId: id }
 		: { source: { ...source, quickStyleXml: xml }, quickStyleId: id };

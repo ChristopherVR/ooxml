@@ -1,0 +1,474 @@
+﻿{
+    "powerpoint":  "16.0",
+    "build":  "20527",
+    "entries":  [
+                    {
+                        "slide":  1,
+                        "kind":  "colors",
+                        "order":  1,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent0_1",
+                        "name":  "Dark 1 Outline",
+                        "category":  "mainScheme",
+                        "description":  "Dark 1 Outline"
+                    },
+                    {
+                        "slide":  2,
+                        "kind":  "colors",
+                        "order":  2,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent0_2",
+                        "name":  "Dark 2 Outline",
+                        "category":  "mainScheme",
+                        "description":  "Dark 2 Outline"
+                    },
+                    {
+                        "slide":  3,
+                        "kind":  "colors",
+                        "order":  3,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent0_3",
+                        "name":  "Dark 2 Fill",
+                        "category":  "mainScheme",
+                        "description":  "Dark 2 Fill"
+                    },
+                    {
+                        "slide":  4,
+                        "kind":  "colors",
+                        "order":  4,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/colorful1",
+                        "name":  "Colorful - Accent Colors",
+                        "category":  "colorful",
+                        "description":  "Colorful - Accent Colors"
+                    },
+                    {
+                        "slide":  5,
+                        "kind":  "colors",
+                        "order":  5,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/colorful2",
+                        "name":  "Colorful Range - Accent Colors 2 to 3",
+                        "category":  "colorful",
+                        "description":  "Colorful Range - Accent Colors 2 to 3"
+                    },
+                    {
+                        "slide":  6,
+                        "kind":  "colors",
+                        "order":  6,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/colorful3",
+                        "name":  "Colorful Range - Accent Colors 3 to 4",
+                        "category":  "colorful",
+                        "description":  "Colorful Range - Accent Colors 3 to 4"
+                    },
+                    {
+                        "slide":  7,
+                        "kind":  "colors",
+                        "order":  7,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/colorful4",
+                        "name":  "Colorful Range - Accent Colors 4 to 5",
+                        "category":  "colorful",
+                        "description":  "Colorful Range - Accent Colors 4 to 5"
+                    },
+                    {
+                        "slide":  8,
+                        "kind":  "colors",
+                        "order":  8,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/colorful5",
+                        "name":  "Colorful Range - Accent Colors 5 to 6",
+                        "category":  "colorful",
+                        "description":  "Colorful Range - Accent Colors 5 to 6"
+                    },
+                    {
+                        "slide":  9,
+                        "kind":  "colors",
+                        "order":  9,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent1_1",
+                        "name":  "Colored Outline - Accent 1",
+                        "category":  "accent1",
+                        "description":  "Colored Outline - Accent 1"
+                    },
+                    {
+                        "slide":  10,
+                        "kind":  "colors",
+                        "order":  10,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent1_2",
+                        "name":  "Colored Fill - Accent 1",
+                        "category":  "accent1",
+                        "description":  "Colored Fill - Accent 1"
+                    },
+                    {
+                        "slide":  11,
+                        "kind":  "colors",
+                        "order":  11,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent1_3",
+                        "name":  "Gradient Range - Accent 1",
+                        "category":  "accent1",
+                        "description":  "Gradient Range - Accent 1"
+                    },
+                    {
+                        "slide":  12,
+                        "kind":  "colors",
+                        "order":  12,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent1_4",
+                        "name":  "Gradient Loop - Accent 1",
+                        "category":  "accent1",
+                        "description":  "Gradient Loop - Accent 1"
+                    },
+                    {
+                        "slide":  13,
+                        "kind":  "colors",
+                        "order":  13,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent1_5",
+                        "name":  "Transparent Gradient Range - Accent 1",
+                        "category":  "accent1",
+                        "description":  "Transparent Gradient Range - Accent 1"
+                    },
+                    {
+                        "slide":  14,
+                        "kind":  "colors",
+                        "order":  14,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent2_1",
+                        "name":  "Colored Outline - Accent 2",
+                        "category":  "accent2",
+                        "description":  "Colored Outline - Accent 2"
+                    },
+                    {
+                        "slide":  15,
+                        "kind":  "colors",
+                        "order":  15,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent2_2",
+                        "name":  "Colored Fill - Accent 2",
+                        "category":  "accent2",
+                        "description":  "Colored Fill - Accent 2"
+                    },
+                    {
+                        "slide":  16,
+                        "kind":  "colors",
+                        "order":  16,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent2_3",
+                        "name":  "Gradient Range - Accent 2",
+                        "category":  "accent2",
+                        "description":  "Gradient Range - Accent 2"
+                    },
+                    {
+                        "slide":  17,
+                        "kind":  "colors",
+                        "order":  17,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent2_4",
+                        "name":  "Gradient Loop - Accent 2",
+                        "category":  "accent2",
+                        "description":  "Gradient Loop - Accent 2"
+                    },
+                    {
+                        "slide":  18,
+                        "kind":  "colors",
+                        "order":  18,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent2_5",
+                        "name":  "Transparent Gradient Range - Accent 2",
+                        "category":  "accent2",
+                        "description":  "Transparent Gradient Range - Accent 2"
+                    },
+                    {
+                        "slide":  19,
+                        "kind":  "colors",
+                        "order":  19,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent3_1",
+                        "name":  "Colored Outline - Accent 3",
+                        "category":  "accent3",
+                        "description":  "Colored Outline - Accent 3"
+                    },
+                    {
+                        "slide":  20,
+                        "kind":  "colors",
+                        "order":  20,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent3_2",
+                        "name":  "Colored Fill - Accent 3",
+                        "category":  "accent3",
+                        "description":  "Colored Fill - Accent 3"
+                    },
+                    {
+                        "slide":  21,
+                        "kind":  "colors",
+                        "order":  21,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent3_3",
+                        "name":  "Gradient Range - Accent 3",
+                        "category":  "accent3",
+                        "description":  "Gradient Range - Accent 3"
+                    },
+                    {
+                        "slide":  22,
+                        "kind":  "colors",
+                        "order":  22,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent3_4",
+                        "name":  "Gradient Loop - Accent 3",
+                        "category":  "accent3",
+                        "description":  "Gradient Loop - Accent 3"
+                    },
+                    {
+                        "slide":  23,
+                        "kind":  "colors",
+                        "order":  23,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent3_5",
+                        "name":  "Transparent Gradient Range - Accent 3",
+                        "category":  "accent3",
+                        "description":  "Transparent Gradient Range - Accent 3"
+                    },
+                    {
+                        "slide":  24,
+                        "kind":  "colors",
+                        "order":  24,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent4_1",
+                        "name":  "Colored Outline - Accent 4",
+                        "category":  "accent4",
+                        "description":  "Colored Outline - Accent 4"
+                    },
+                    {
+                        "slide":  25,
+                        "kind":  "colors",
+                        "order":  25,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent4_2",
+                        "name":  "Colored Fill - Accent 4",
+                        "category":  "accent4",
+                        "description":  "Colored Fill - Accent 4"
+                    },
+                    {
+                        "slide":  26,
+                        "kind":  "colors",
+                        "order":  26,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent4_3",
+                        "name":  "Gradient Range - Accent 4",
+                        "category":  "accent4",
+                        "description":  "Gradient Range - Accent 4"
+                    },
+                    {
+                        "slide":  27,
+                        "kind":  "colors",
+                        "order":  27,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent4_4",
+                        "name":  "Gradient Loop - Accent 4",
+                        "category":  "accent4",
+                        "description":  "Gradient Loop - Accent 4"
+                    },
+                    {
+                        "slide":  28,
+                        "kind":  "colors",
+                        "order":  28,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent4_5",
+                        "name":  "Transparent Gradient Range - Accent 4",
+                        "category":  "accent4",
+                        "description":  "Transparent Gradient Range - Accent 4"
+                    },
+                    {
+                        "slide":  29,
+                        "kind":  "colors",
+                        "order":  29,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent5_1",
+                        "name":  "Colored Outline - Accent 5",
+                        "category":  "accent5",
+                        "description":  "Colored Outline - Accent 5"
+                    },
+                    {
+                        "slide":  30,
+                        "kind":  "colors",
+                        "order":  30,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent5_2",
+                        "name":  "Colored Fill - Accent 5",
+                        "category":  "accent5",
+                        "description":  "Colored Fill - Accent 5"
+                    },
+                    {
+                        "slide":  31,
+                        "kind":  "colors",
+                        "order":  31,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent5_3",
+                        "name":  "Gradient Range - Accent 5",
+                        "category":  "accent5",
+                        "description":  "Gradient Range - Accent 5"
+                    },
+                    {
+                        "slide":  32,
+                        "kind":  "colors",
+                        "order":  32,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent5_4",
+                        "name":  "Gradient Loop - Accent 5",
+                        "category":  "accent5",
+                        "description":  "Gradient Loop - Accent 5"
+                    },
+                    {
+                        "slide":  33,
+                        "kind":  "colors",
+                        "order":  33,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent5_5",
+                        "name":  "Transparent Gradient Range - Accent 5",
+                        "category":  "accent5",
+                        "description":  "Transparent Gradient Range - Accent 5"
+                    },
+                    {
+                        "slide":  34,
+                        "kind":  "colors",
+                        "order":  34,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent6_1",
+                        "name":  "Colored Outline - Accent 6",
+                        "category":  "accent6",
+                        "description":  "Colored Outline - Accent 6"
+                    },
+                    {
+                        "slide":  35,
+                        "kind":  "colors",
+                        "order":  35,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent6_2",
+                        "name":  "Colored Fill - Accent 6",
+                        "category":  "accent6",
+                        "description":  "Colored Fill - Accent 6"
+                    },
+                    {
+                        "slide":  36,
+                        "kind":  "colors",
+                        "order":  36,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent6_3",
+                        "name":  "Gradient Range - Accent 6",
+                        "category":  "accent6",
+                        "description":  "Gradient Range - Accent 6"
+                    },
+                    {
+                        "slide":  37,
+                        "kind":  "colors",
+                        "order":  37,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent6_4",
+                        "name":  "Gradient Loop - Accent 6",
+                        "category":  "accent6",
+                        "description":  "Gradient Loop - Accent 6"
+                    },
+                    {
+                        "slide":  38,
+                        "kind":  "colors",
+                        "order":  38,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/colors/accent6_5",
+                        "name":  "Transparent Gradient Range - Accent 6",
+                        "category":  "accent6",
+                        "description":  "Transparent Gradient Range - Accent 6"
+                    },
+                    {
+                        "slide":  39,
+                        "kind":  "style",
+                        "order":  1,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/quickstyle/simple1",
+                        "name":  "Simple Fill",
+                        "category":  "simple",
+                        "description":  "Simple Fill"
+                    },
+                    {
+                        "slide":  40,
+                        "kind":  "style",
+                        "order":  2,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/quickstyle/simple2",
+                        "name":  "White Outline",
+                        "category":  "simple",
+                        "description":  "White Outline"
+                    },
+                    {
+                        "slide":  41,
+                        "kind":  "style",
+                        "order":  3,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/quickstyle/simple3",
+                        "name":  "Subtle Effect",
+                        "category":  "simple",
+                        "description":  "Subtle Effect"
+                    },
+                    {
+                        "slide":  42,
+                        "kind":  "style",
+                        "order":  4,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/quickstyle/simple4",
+                        "name":  "Moderate Effect",
+                        "category":  "simple",
+                        "description":  "Moderate Effect"
+                    },
+                    {
+                        "slide":  43,
+                        "kind":  "style",
+                        "order":  5,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/quickstyle/simple5",
+                        "name":  "Intense Effect",
+                        "category":  "simple",
+                        "description":  "Intense Effect"
+                    },
+                    {
+                        "slide":  44,
+                        "kind":  "style",
+                        "order":  6,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/quickstyle/3d1",
+                        "name":  "Polished",
+                        "category":  "3D",
+                        "description":  ""
+                    },
+                    {
+                        "slide":  45,
+                        "kind":  "style",
+                        "order":  7,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/quickstyle/3d2",
+                        "name":  "Inset",
+                        "category":  "3D",
+                        "description":  ""
+                    },
+                    {
+                        "slide":  46,
+                        "kind":  "style",
+                        "order":  8,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/quickstyle/3d3",
+                        "name":  "Cartoon",
+                        "category":  "3D",
+                        "description":  ""
+                    },
+                    {
+                        "slide":  47,
+                        "kind":  "style",
+                        "order":  9,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/quickstyle/3d4",
+                        "name":  "Powder",
+                        "category":  "3D",
+                        "description":  ""
+                    },
+                    {
+                        "slide":  48,
+                        "kind":  "style",
+                        "order":  10,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/quickstyle/3d5",
+                        "name":  "Brick Scene",
+                        "category":  "3D",
+                        "description":  ""
+                    },
+                    {
+                        "slide":  49,
+                        "kind":  "style",
+                        "order":  11,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/quickstyle/3d6",
+                        "name":  "Flat Scene",
+                        "category":  "3D",
+                        "description":  ""
+                    },
+                    {
+                        "slide":  50,
+                        "kind":  "style",
+                        "order":  12,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/quickstyle/3d7",
+                        "name":  "Metallic Scene",
+                        "category":  "3D",
+                        "description":  ""
+                    },
+                    {
+                        "slide":  51,
+                        "kind":  "style",
+                        "order":  13,
+                        "id":  "urn:microsoft.com/office/officeart/2009/2/quickstyle/3d8",
+                        "name":  "Sunset Scene",
+                        "category":  "3D",
+                        "description":  ""
+                    },
+                    {
+                        "slide":  52,
+                        "kind":  "style",
+                        "order":  14,
+                        "id":  "urn:microsoft.com/office/officeart/2005/8/quickstyle/3d9",
+                        "name":  "Bird\u0027s Eye Scene",
+                        "category":  "3D",
+                        "description":  ""
+                    }
+                ]
+}

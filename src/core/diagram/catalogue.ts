@@ -6,6 +6,8 @@
 // `render/ribbon-galleries/smartart-gallery-patch.ts`).
 import type { DiagramColorScheme, DiagramLayoutType, DiagramStyleIntensity } from './types';
 import type { DiagramLayoutPreset } from './model/data';
+import { DIAGRAM_NATIVE_COLOR_ENTRIES, DIAGRAM_NATIVE_STYLE_ENTRIES } from './catalogue-native';
+import type { DiagramNativeColorEntry, DiagramNativeStyleEntry } from './catalogue-native-types';
 
 /** The categories of the Insert SmartArt dialog, in display order. */
 export type DiagramInsertCategory = 'list' | 'process' | 'cycle' | 'hierarchy' | 'relationship';
@@ -189,6 +191,73 @@ export const DIAGRAM_STYLE_ENTRIES: readonly DiagramStyleEntry[] = [
 	{ id: 'moderate', name: 'Moderate Effect' },
 	{ id: 'intense', name: 'Intense Effect' },
 ];
+
+export { DIAGRAM_NATIVE_COLOR_ENTRIES, DIAGRAM_NATIVE_STYLE_ENTRIES };
+export type { DiagramNativeColorEntry, DiagramNativeStyleEntry };
+
+/** The sections of the full Change Colors gallery, keyed by the definitions' Office category. */
+export const DIAGRAM_NATIVE_COLOR_SECTIONS: ReadonlyArray<{ id: string; title: string }> = [
+	{ id: 'mainScheme', title: 'Primary Theme Colors' },
+	{ id: 'colorful', title: 'Colorful' },
+	...[1, 2, 3, 4, 5, 6].map((n) => ({ id: `accent${n}`, title: `Accent ${n}` })),
+];
+
+/** The sections of the full SmartArt Styles gallery. */
+export const DIAGRAM_NATIVE_STYLE_SECTIONS: ReadonlyArray<{ id: string; title: string }> = [
+	{ id: 'simple', title: 'Best Match for Document' },
+	{ id: '3D', title: '3-D' },
+];
+
+const byId = <T extends { id: string; uniqueId: string }>(
+	entries: readonly T[],
+	id: string | undefined,
+): T | undefined =>
+	id === undefined
+		? undefined
+		: entries.find((entry) => entry.uniqueId === id || entry.id === id.split('/').at(-1));
+
+/** The built-in colour entry of a short id or `uniqueId` (an applied `colorsId`). */
+export const findDiagramNativeColor = (id: string | undefined) =>
+	byId(DIAGRAM_NATIVE_COLOR_ENTRIES, id);
+
+/** The built-in quick-style entry of a short id or `uniqueId` (an applied `quickStyleId`). */
+export const findDiagramNativeStyle = (id: string | undefined) =>
+	byId(DIAGRAM_NATIVE_STYLE_ENTRIES, id);
+
+/** The built-in definitions the model's colour schemes and style intensities are named after. */
+export const DIAGRAM_NATIVE_COLOR_FOR_SCHEME: Readonly<Record<DiagramColorScheme, string>> = {
+	colorful1: 'colorful1',
+	colorful2: 'colorful2',
+	colorful3: 'colorful3',
+	monochromatic1: 'accent1_2',
+	monochromatic2: 'accent2_2',
+};
+export const DIAGRAM_NATIVE_STYLE_FOR_INTENSITY: Readonly<Record<DiagramStyleIntensity, string>> = {
+	flat: 'simple1',
+	moderate: 'simple4',
+	intense: 'simple5',
+};
+
+/**
+ * The built-in entry a diagram's applied id stands for: a built-in `uniqueId`, or an id this
+ * package wrote for a model scheme or intensity (`urn:ooxml-core/colors/colorful2`).
+ */
+export function appliedDiagramNativeId(
+	kind: 'colors' | 'style',
+	id: string | undefined,
+): string | undefined {
+	const last = id?.split('/').at(-1);
+	if (!last) return undefined;
+	if (kind === 'colors')
+		return (
+			findDiagramNativeColor(id)?.id ??
+			(DIAGRAM_NATIVE_COLOR_FOR_SCHEME as Record<string, string>)[last]
+		);
+	return (
+		findDiagramNativeStyle(id)?.id ??
+		(DIAGRAM_NATIVE_STYLE_FOR_INTENSITY as Record<string, string>)[last]
+	);
+}
 
 /** PowerPoint's gallery order for the built-in layouts' categories, with English headings. */
 export const DIAGRAM_NAMED_LAYOUT_CATEGORIES: ReadonlyArray<readonly [string, string]> = [

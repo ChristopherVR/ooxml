@@ -6,6 +6,7 @@
 import {
 	applyDiagramNodeEdit,
 	createDiagramNodes,
+	diagramFormatChangeId,
 	formatDiagramSource,
 	type DiagramFormatChange,
 	type DiagramEditOptions,
@@ -66,7 +67,7 @@ export function formatSmartArt(
 	const object = smartArtAt(ctx, s, index);
 	if (
 		(change.kind === 'colors' ? object.colorsId : object.quickStyleId) ===
-		`urn:ooxml-core/${change.kind}/${change.value}`
+		diagramFormatChangeId(change)
 	)
 		return false;
 	const next = formatDiagramSource(

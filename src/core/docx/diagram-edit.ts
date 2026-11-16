@@ -8,6 +8,7 @@
 import {
 	applyDiagramNodeEdit,
 	createDiagramNodes,
+	diagramFormatChangeId,
 	formatDiagramSource,
 	type DiagramFormatChange,
 	type DiagramEditOptions,
@@ -24,7 +25,7 @@ export type DocxDiagramEdit = DiagramNodeEdit;
 /** One undoable global formatting change; node markup and direct overrides are preserved. */
 export function formatDocxDiagram(diagram: DocxDiagram, change: DiagramFormatChange): DocxDiagram {
 	const current = change.kind === 'colors' ? diagram.colorsId : diagram.quickStyleId;
-	if (current === `urn:ooxml-core/${change.kind}/${change.value}`) return diagram;
+	if (current === diagramFormatChangeId(change)) return diagram;
 	const next = formatDiagramSource(diagram.layoutSource, change);
 	return {
 		...withDiagramNodes(diagram, diagram.nodes),

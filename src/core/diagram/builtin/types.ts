@@ -10,3 +10,13 @@ export interface BuiltinSmartArtLayoutEntry {
 	offset: number;
 	length: number;
 }
+
+/** One built-in SmartArt colour or quick-style definition (`ooxml-core/diagram/builtin`). */
+export interface BuiltinSmartArtDefinitionEntry {
+	/** The definition's `uniqueId` URN. */
+	id: string;
+	kind: 'colors' | 'style';
+	/** Byte range of this definition's gzip member in the decoded data blob. */
+	offset: number;
+	length: number;
+}
