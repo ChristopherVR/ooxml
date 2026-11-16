@@ -507,7 +507,7 @@ pattern checkboxes, Angular closed disclosures with no kind at all; stop opacity
 0-1 elsewhere; add-stop colour and position four ways); every binding now offers PowerPoint's six
 kinds, shows the solid colour only for a solid fill, transparency 0-100 for a filled shape, per-stop
 opacity 0-100 and a pattern swatch grid, and adds a stop halfway along the last gap. A slide
-background fill saves as `useBgFill`; the canvas still draws it only after a reopen.
+background fill saves as `useBgFill` and draws at once (below).
 See the active delivery ledger and agnostic plan for implemented coverage and residual limits.
 
 The Alt Text and picture fields followed (2026-11-16): `ELEMENT_ALT_TEXT_SECTIONS`
@@ -527,18 +527,31 @@ and the Vue and Angular adjustments ignored `canEdit`. Every binding now shows t
 inverted, as PowerPoint does, crops to the shared 90% clamp on a slider, clears an effect set back
 to zero, applies alt text as typed and disables the fields with the pane.
 
-Still hand-written per binding (the next candidates, roughly in order of size): the text and
-paragraph options outside the Text Box section (character and line spacing, indents, bullets,
-columns spacing), the table section (style options, cell padding, borders, cell fill), the media
-playback and trim options, Action Settings, the picture's compound controls (artistic effect,
-duotone, colour wash and recolour), the slide background card, the OLE and group cards, and the
-docked Animation and Transition panes. Chart and SmartArt formatting already go through the shared
-elements (`office-ui-chart-format-pane`, the SmartArt picker and text pane). The slide background
-fill still draws only after a reopen: no shared path reaches the slide's resolved background when
-the Fill section writes `useBackgroundFill`, since the canvas fill resolver sees only the element.
-Either the slide stage publishes its resolved background (custom properties the fill resolver can
-read) or each binding passes the active slide's background into the fill-kind change; both touch
-every binding's canvas or inspector wiring and need a check in all five demos.
+The rest of the inspector followed the same day, one section per commit, each drawn by the
+generic renderers and checked per binding:
+
+| Section                | Shared descriptors (`render/inspector/`)                   | Drift removed                                                                                                                       |
+| ---------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Paragraph and font     | `PARAGRAPH_SPACING_SECTIONS`, `CHARACTER_SPACING_SECTIONS` | each binding showed a different subset (Vue none); all showed model units (px, hundredths of a point) where PowerPoint shows points |
+| Table                  | `TABLE_OPTIONS_SECTIONS`                                   | three option orders; band sizes, direction and cell margin each missing somewhere; "Last Row" for PowerPoint's Total Row            |
+| Picture colour effects | `PICTURE_EFFECT_SECTIONS`, `pictureDuotonePresetPatch`     | recolour only in React and Vue; duotone written on first touch in vanilla and Angular; preset labels humanised from keys            |
+| Slide Background card  | `SLIDE_BACKGROUND_SECTIONS`                                | Hide background graphics missing in three cards; a colour on a picture background was saved but never shown                         |
+| Media playback         | `MEDIA_PLAYBACK_SECTIONS`                                  | no fades in vanilla; Angular's Play Across Slides did not start the clip; switched-off flags written as `false`                     |
+| OLE card               | `OLE_OBJECT_NAME_SECTIONS`, `resolveOleSummaryRows`        | the name was trimmed per keystroke (a typed space vanished); Angular's group card was untranslated English                          |
+
+A slide background fill now draws at once: `getSlideBackgroundStyle` publishes the resolved
+background as `--pptx-slide-bg-*` custom properties on every stage, and `resolveComputedFill`
+paints a `useBackgroundFill` shape that carries no resolved copy with them, offset by the shape's
+position (`render/slide-background-fill.ts`; React's stage adapter passes the properties through).
+A framework-neutral spec (`slide-background-fill-live.spec.ts`) checks the five demos.
+
+Still per binding, by choice or for lack of time: Action Settings (its slide and custom-show
+pickers need options computed from the deck, which the field model does not yet carry), the
+artistic effect gallery (React and Vue draw it with picture thumbnails, the others as a select),
+the media trim fields (already on the shared `media-trim-range.ts` helpers, but they need the live
+clip duration), the table cell formatting and style editor, and the docked Animation and Transition
+panes. Chart and SmartArt formatting already go through the shared elements
+(`office-ui-chart-format-pane`, the SmartArt picker and text pane).
 
 ### PowerPoint tab row on `office-ui-ribbon` (landed 2026-11-16)
 
