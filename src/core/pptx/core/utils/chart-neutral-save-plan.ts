@@ -27,6 +27,7 @@ import type { PptxChartData } from '../types';
 import { same, revertStyle } from './chart-neutral-save-common';
 import { planAxes } from './chart-neutral-save-axes';
 import { planNeutralGroupOptions } from './chart-neutral-save-groups';
+import { planNeutralGroupSubtype } from './chart-neutral-save-subtype';
 import { planNeutralSeriesStructure } from './chart-neutral-save-structure';
 import { planNeutralChartType } from './chart-neutral-save-type';
 import { planNeutralChartFormats } from './chart-neutral-save-format';
@@ -182,6 +183,7 @@ export function planWithLeftovers(
 	planLegend(before, probe, edits);
 	planAxes(before, probe, edits);
 	planNeutralGroupOptions(before, probe, edits);
+	planNeutralGroupSubtype(before, probe, edits);
 	planNeutralChartAnalysis(before, probe, edits);
 	const vectors = planNeutralDataVectors(before, probe, edits);
 	const seriesData = planSeriesData(before, probe, edits) || before !== original || vectors.changed;

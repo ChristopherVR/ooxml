@@ -468,6 +468,11 @@ is the acceptance bar), and the area has its own tests and real parts from `src/
   structural data edits allocate fresh workbook ranges. Existing coherent axis-pair reassignment
   and vertical 2D category-axis combination edits preserve document-order selection indices.
   Chrome, protection and stock helpers also use shared source-preserving operations.
+  Group subtype settings (3-D bar shape and gap depth, radar style, surface wireframe, pie-of-pie
+  split, plot gap and series lines, bubble options) go through `setChartGroupSubtype`
+  (`chart/edit/group-subtype.ts`, intent `groupSubtype`) under the chart types and removal rules the
+  object-tree writers use (`chart-neutral-save-subtype.ts`); `chart-subtype-migration.test.ts`
+  saves each edit both ways over the corpus and classifies every part difference.
   Unclaimed or rejected edits retain an explicit compatibility path. Unsafe group splits,
   unsupported picture relationship changes and wider 3D/XY combinations are not silently admitted.
   The saved-part corpus compares canonical XML and reloaded models; it is implementation parity,

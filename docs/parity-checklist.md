@@ -476,6 +476,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       elements on every part type, and ratchet the counts in CI.
 - [ ] **P1** Chart and ChartEx save is not native-certified for fresh templates (a six-slide deck
       failed to open in PowerPoint).
+- [ ] **P2** PowerPoint chart edits still saved only by the object-tree writers (no neutral
+      adapter, `chart-neutral-save-plan.ts`): group `varyColors`, bar direction and scatter style on
+      their own, the `standard` grouping flag, a series' own number format, the chart-wide gridline
+      flag, the colour style part, colour map override, print settings, user shapes, pivot formats,
+      filtered series and the external data auto-update flag. Group subtype settings moved
+      (`chart-neutral-save-subtype.ts`).
 - [x] `a:linkedTxbx` (Word-style linked text boxes) is not flowed: PowerPoint ignores it (measured
       with COM `Slide.Export`: the head keeps all text unclipped, successors stay empty), so the
       renderer matches by default (`setLinkedTextBoxFlow` opts in). The link is parsed and

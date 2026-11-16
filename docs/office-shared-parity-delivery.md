@@ -253,6 +253,20 @@ geographic/Pareto creation, wider ChartEx styling/labels/axes and remaining comp
 still need explicit coverage. These checkpoints do not establish Office equivalence or lossless
 export for arbitrary documents.
 
+### Remaining PowerPoint source adapters, 2026-11-16
+
+A probe over the 75 classic chart parts of the committed decks listed the `PptxChartData` fields
+whose edits no neutral family claimed. The first follow-up family moves the group subtype settings
+the object-tree writers write (3-D bar shape, 3-D gap depth, radar style, surface wireframe,
+pie-of-pie split options and bubble options) onto the shared `setChartGroupSubtype` operation, under
+the same chart-type conditions and removal rules. `chart-subtype-migration.test.ts` saves each edit
+through both paths over every deck: 33 parts reload with the same edited value both ways; 5 save to
+the same canonical XML and the rest differ only in the recorded object-tree side effects (theme font
+pinning, JavaScript number caches, manual-layout number form, resolved outline colours, one series
+`c:shape` position). No fixture holds a pie-of-pie chart, so that case is unit evidence only. Cleared
+settings the object-tree writers keep remain on that path. Native PowerPoint reopen of these edits
+is pending.
+
 ### Documentation reconciliation, 2026-10-27
 
 Active roadmap, architecture plans, product capability pages and ribbon reviews now distinguish

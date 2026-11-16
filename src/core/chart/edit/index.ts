@@ -25,6 +25,7 @@ export * from './quick-layout';
 export * from './target';
 export * from './target-paint';
 export * from './group-options';
+export * from './group-subtype';
 export * from './intent';
 export * from './data-sheet';
 export * from './new-chart';

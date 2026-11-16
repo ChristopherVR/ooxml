@@ -22,6 +22,7 @@ import { setChartSeriesSecondaryAxis } from './secondary-axis';
 import { setChartType, type ChartTypeTarget } from './type';
 import { setChartAxis, type ChartAxisEdit } from './axes';
 import { setChartGroupOptions, type ChartGroupOptionsEdit } from './group-options';
+import { setChartGroupSubtype, type ChartGroupSubtypeEdit } from './group-subtype';
 import {
 	setChartDataLabels,
 	setChartLegend,
@@ -63,6 +64,8 @@ export type ChartEditIntent =
 	| { op: 'dataLabels'; seriesIndex?: number; edit: ChartDataLabelsEdit }
 	/** Series Options of the group holding series `seriesIndex`. */
 	| { op: 'groupOptions'; seriesIndex: number; edit: ChartGroupOptionsEdit }
+	/** Subtype settings (3-D shape, radar style, pie-of-pie split...) of the group holding a series. */
+	| { op: 'groupSubtype'; seriesIndex: number; edit: ChartGroupSubtypeEdit }
 	/** A built-in chart style: 1..48 (`c:style`) or 101..148 (`c14:style`). */
 	| { op: 'style'; id: number }
 	/** A curated Chart Styles preset (`chart/style-presets`). */
@@ -115,6 +118,8 @@ export function applyChartEditIntent(space: ChartSpace, intent: ChartEditIntent)
 			);
 		case 'groupOptions':
 			return setChartGroupOptions(space, intent.seriesIndex, intent.edit);
+		case 'groupSubtype':
+			return setChartGroupSubtype(space, intent.seriesIndex, intent.edit);
 		case 'style':
 			return setChartStyle(space, intent.id);
 		case 'stylePreset':
