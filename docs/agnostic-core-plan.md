@@ -642,6 +642,68 @@ workbooks passed.
 | SmartArt drawing parity (S3)      | 371 drawing parts, 3014 shapes                                | `smartart-drawing-shape-neutral-parity.test.ts`           |
 | Choose walkers corpus (step 2)    | every walker over 353 layout definitions                      | `smartart-choose-walkers-corpus.test.ts`                  |
 
+### 3.9 pptx strictness and the XML object model (inventory, 2026-11-16)
+
+Strict since 2026-11-16: `pptx/ui`, `pptx/node`, `pptx/signature-node`, `pptx/core/openxml` and
+`pptx/core/types` (plus the two `pptx/merge-*.ts` files). `pptx/node` and `signature-node` only
+became reachable once the zip limits and the rasterizer type left `pptx/core/core/types.ts` for
+import-free modules (`zip-bomb.ts`, `svg-rasterizer.ts`): that file and `pptx/index.ts` are hubs,
+and anything importing them pulls about 1,610 strict errors of `pptx/core` into the compilation.
+So a directory can only move once everything it imports is strict, which means working from the
+leaves inward (`types` and `openxml` first, then the utilities they feed).
+
+Measured by compiling every `src/core/pptx/**/*.ts` file under the strict base project (TypeScript
+7.0.2): 7,883 errors, counted where they are reported. TS2532 and TS18048 (possibly `undefined`,
+mostly `noUncheckedIndexedAccess` on object-tree and array access) are 5,390 of them; TS2375,
+TS2379 and TS2412 (`exactOptionalPropertyTypes`) about 1,000.
+
+| Directory                   | Source errors | Test errors | Blocked by                                    |
+| --------------------------- | ------------: | ----------: | --------------------------------------------- |
+| `pptx/core/core`            |           643 |       1,528 | itself (the runtime and the `types.ts` hub)   |
+| `pptx/core/utils`           |           486 |       1,117 | `core/core`                                   |
+| `pptx/core/builders`        |           230 |         671 | `core/core`, `core/utils`                     |
+| `pptx/editor/render`        |           169 |         587 | `ooxml-core/pptx` (the whole model)           |
+| `pptx/automation/tools`     |           136 |           1 | the whole model                               |
+| `pptx/core/ppt`             |            80 |          12 | `core/core`, `core/utils`                     |
+| `pptx/core/services`        |            69 |         372 | `core/core`, `core/utils`                     |
+| `pptx/core/geometry`        |            65 |          82 | `core/utils`                                  |
+| `pptx/automation/catalogue` |            43 |           0 | the whole model                               |
+| `pptx/converter`            |            40 |          23 | the whole model                               |
+| `pptx/__tests__`            |            32 |       1,219 | the whole model                               |
+| `pptx/cli`                  |             8 |           4 | the whole model                               |
+| `pptx/core/PptxHandler.ts`  |             2 |           0 | the whole model                               |
+| `pptx/automation/execution` |             2 |           0 | the whole model                               |
+| `pptx/editor/ai`            |             1 |           0 | the whole model (via `ooxml-core/pptx`)       |
+| `pptx/editor/loader`        |             0 |           5 | the whole model                               |
+| `pptx/core/color`           |             0 |           1 | `core/core` (colour adapters, being migrated) |
+| `pptx/automation/__tests__` |             0 |         255 | the whole model                               |
+| `pptx/smartart-layouts`     |             0 |           0 | the whole model                               |
+
+The test columns count because the strict project, unlike `tsconfig.pptx.json`, type-checks test
+files. `editor/ai` and `editor/loader` are nearly clean but import the model through
+`ooxml-core/pptx`; they move once `core` does, or sooner if they import only leaf modules.
+
+What blocks moving the object trees onto the shared `xml` area:
+
+- **The model stores trees.** `XmlObject` (`pptx/core/types/common.ts`) appears in about 600
+  source files and 164 times in `pptx/core/types` alone, as preservation fields (`rawXml`,
+  `extLstXml`, `colorChoiceXml`, ...). The `pptx-viewer-json` serializer writes the model as it
+  is (`converter/json/json-serializer.ts`), so replacing those fields with DOM nodes changes a
+  persisted shape and needs a versioned migration, not a type swap.
+- **Two parsing contracts.** `xml` is DOM (`parseXml` returns a `Document`); pptx code relies on
+  fast-xml-parser's `@_` attribute keys, the single-object-or-array child duality and bare-string
+  collapsed text. 108 source files import fast-xml-parser and 16 build parsers with their own
+  options, so the behaviour differs per call site. Section 4 already rules out an object-tree view
+  over the DOM; each call site moves to neutral readers behind a parity test, as charts and SmartArt
+  did.
+- **Writers depend on tree order.** The save pipeline rebuilds parts with `XMLBuilder` and restores
+  schema order afterwards (`merge-child-order.ts`, `core/utils/xml-reorder.ts`); a DOM writer keeps
+  document order, so each writer needs a round-trip test before it switches.
+- **Strictness and the tree type are the same work.** Most of the `noUncheckedIndexedAccess` errors
+  above are accesses into the `XmlObject | XmlObject[] | string | undefined` union; a call site that
+  moves to the neutral DOM readers loses those errors with it, so tightening a directory and moving
+  its parsing onto `xml` are best done together.
+
 ## 4. Risks
 
 - **Two XML models for a long time.** Mitigation: neutral attribute readers and `PartHost` instead of a bridge; do not build an
