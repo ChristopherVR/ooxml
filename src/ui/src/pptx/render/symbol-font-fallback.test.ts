@@ -93,4 +93,25 @@ describe('displayableSymbolRuns', () => {
 			'K✔',
 		);
 	});
+
+	it('rewrites runs that inherit a symbol font from the text body', () => {
+		const [shown] = displayableSymbolRuns([run('n')], 'Arial', () => false, '"Wingdings"');
+		expect(shown).toEqual({ text: '■', style: { fontFamily: 'Arial' } });
+	});
+
+	it('rewrites the pieces of a tabbed run along with the run', () => {
+		const source: ParagraphRun = {
+			...run('ü	ü', 'Wingdings'),
+			tabLines: [
+				{
+					pieces: [
+						{ text: 'ü', style: {} },
+						{ text: 'ü', style: {} },
+					],
+				},
+			],
+		};
+		const [shown] = displayableSymbolRuns([source], 'Arial', () => false);
+		expect(shown?.tabLines?.[0]?.pieces.map((piece) => piece.text)).toEqual(['✔', '✔']);
+	});
 });
