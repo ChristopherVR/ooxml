@@ -1,9 +1,8 @@
-import type { CanvasSize, OutlineEdit, OutlineRow } from 'ooxml-ui/pptx';
+import type { CanvasSize, OutlineRow } from 'ooxml-ui/pptx';
 import {
-	applyOutlineEdit,
 	buildOutline,
+	createOutlineViewSession,
 	listenForOutlineViewDismiss,
-	mapOutlineKey,
 	OUTLINE_LEVEL_ATTR,
 	OUTLINE_ROW_ATTR,
 	OUTLINE_SLIDE_ATTR,
@@ -63,9 +62,9 @@ function rowSignature(rows: readonly OutlineRow[]): string {
  *
  * One row per slide title at the left margin, that slide's body lines stepped
  * in beneath it. Every rule (what a row is, what Tab does, which gesture makes
- * a slide) comes from `render/outline-view` and `render/outline-view-edit` in
- * `pptx-viewer-shared`, so the five bindings cannot drift; this module is the
- * markup, the listeners and the focus restore, and nothing else.
+ * a slide) and the edit session (`createOutlineViewSession`) come from
+ * `ooxml-ui/pptx`, so the five bindings cannot drift; this module is the
+ * markup and the listeners, and nothing else.
  *
  * Each row is a real `<input>` rather than a contenteditable: caret placement,
  * IME commit and native undo are exactly what a one-line text field already
@@ -84,8 +83,7 @@ export function openOutlineViewOverlay(
 	let slides = options.slides;
 	let signature = '';
 	let closed = false;
-	// Rebuilt with the rows, so focus restore never has to escape a row key
-	// (which carries `|` and spaces) into a CSS selector.
+	// The edited row's input, kept across a keystroke so the caret stays put.
 	const inputs = new Map<string, HTMLInputElement>();
 
 	const el = createEl(doc, 'section', 'pptxv-outline-view');
@@ -111,19 +109,18 @@ export function openOutlineViewOverlay(
 	const list = createEl(doc, 'div', 'pptxv-outline-view-list');
 	el.append(header, list);
 
-	const run = (edit: OutlineEdit): void => {
-		if (!options.canEdit) {
-			return;
-		}
-		const result = applyOutlineEdit(slides, edit, { canvas: options.canvasSize });
-		if (!result.changed) {
-			return;
-		}
-		slides = result.slides;
-		options.commit(result.slides, result.activeSlideIndex);
-		render();
-		focusRow(result.focusKey);
-	};
+	const session = createOutlineViewSession({
+		slides: () => slides,
+		canvasSize: () => options.canvasSize,
+		canEdit: () => options.canEdit,
+		commit: (next, activeSlideIndex) => {
+			slides = next;
+			options.commit(next, activeSlideIndex);
+			render();
+			// The repaint is synchronous, so the row the edit names is already drawn.
+			session.restoreFocus(list);
+		},
+	});
 
 	const buildRow = (row: OutlineRow): HTMLElement => {
 		const line = createEl(doc, 'div', 'pptxv-outline-view-row', {
@@ -145,20 +142,8 @@ export function openOutlineViewOverlay(
 			'aria-label',
 			t(row.kind === 'title' ? 'pptx.outline.titleLine' : 'pptx.outline.bodyLine'),
 		);
-		input.addEventListener('input', () =>
-			run({ type: 'setText', key: row.key, text: input.value }),
-		);
-		input.addEventListener('keydown', (event) => {
-			const { edit, preventDefault } = mapOutlineKey(event, row.key);
-			if (preventDefault) {
-				// Tab would otherwise walk out of the outline entirely, and Enter would
-				// submit a surrounding form on a host page that has one.
-				event.preventDefault();
-			}
-			if (edit) {
-				run(edit);
-			}
-		});
+		input.addEventListener('input', () => session.setText(row.key, input.value));
+		input.addEventListener('keydown', (event) => session.handleKey(event, row.key));
 		inputs.set(row.key, input);
 		line.append(number, input);
 		return line;
@@ -186,15 +171,6 @@ export function openOutlineViewOverlay(
 		signature = next;
 		inputs.clear();
 		list.replaceChildren(...rows.map((row) => buildRow(row)));
-	}
-
-	/** Move the caret to the row the edit says should own it, at end of line. */
-	function focusRow(key: string | null): void {
-		const target = key ? inputs.get(key) : undefined;
-		if (target && doc.activeElement !== target) {
-			target.focus();
-			target.setSelectionRange(target.value.length, target.value.length);
-		}
 	}
 
 	const stop = options.subscribe?.((next) => {

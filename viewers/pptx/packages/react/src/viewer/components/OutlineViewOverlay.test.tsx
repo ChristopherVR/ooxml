@@ -245,6 +245,10 @@ describe('outline view overlay', () => {
 		press(rowInputs()[0], { key: 'Enter' });
 		expect(slides).toHaveLength(3);
 		expect(rowInputs()).toHaveLength(5);
+		// The caret lands on the new slide's title row once it has rendered.
+		expect(document.activeElement?.getAttribute(OUTLINE_ROW_ATTR)).toBe(
+			rowInputs()[3]!.getAttribute(OUTLINE_ROW_ATTR),
+		);
 	});
 
 	it('typing into a titleless slide creates its title', () => {

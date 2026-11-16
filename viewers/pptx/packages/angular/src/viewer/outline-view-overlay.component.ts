@@ -35,12 +35,11 @@ import {
 	OUTLINE_ROW_ATTR,
 	OUTLINE_SLIDE_ATTR,
 	OUTLINE_VIEW_ATTR,
-	applyOutlineEdit,
 	buildOutline,
+	createOutlineViewSession,
 	listenForOutlineViewDismiss,
-	mapOutlineKey,
 } from 'ooxml-ui/pptx';
-import type { CanvasSize, OutlineEdit, OutlineRow } from 'ooxml-ui/pptx';
+import type { CanvasSize, OutlineRow } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 
 import { OUTLINE_VIEW_OVERLAY_STYLES } from './outline-view-overlay.styles';
@@ -144,54 +143,28 @@ export class OutlineViewOverlayComponent implements OnInit, OnDestroy {
 		this.stopDismiss = null;
 	}
 
+	/**
+	 * The shared edit session. The caret hand-off is deferred to a microtask because the row
+	 * that should take focus may not exist yet: a new slide's title row only enters the DOM once
+	 * change detection has run over the committed deck.
+	 */
+	private readonly session = createOutlineViewSession({
+		slides: () => this.slides(),
+		canvasSize: () => this.canvasSize(),
+		canEdit: () => this.canEdit(),
+		commit: (slides, activeSlideIndex) => {
+			this.commit.emit({ slides, activeSlideIndex });
+			queueMicrotask(() => this.session.restoreFocus(this.rowsHost()?.nativeElement));
+		},
+	});
+
 	protected onInput(event: Event, key: string): void {
 		const target = event.target as HTMLInputElement | null;
-		this.run({ type: 'setText', key, text: target?.value ?? '' });
+		this.session.setText(key, target?.value ?? '');
 	}
 
 	protected onRowKeyDown(event: KeyboardEvent, key: string): void {
-		const { edit, preventDefault } = mapOutlineKey(event, key);
-		if (preventDefault) {
-			// Tab would otherwise walk out of the outline entirely, and Enter would
-			// submit a surrounding form on a host page that has one.
-			event.preventDefault();
-		}
-		if (edit) {
-			this.run(edit);
-		}
-	}
-
-	private run(edit: OutlineEdit): void {
-		if (!this.canEdit()) {
-			return;
-		}
-		const result = applyOutlineEdit(this.slides(), edit, { canvas: this.canvasSize() });
-		if (!result.changed) {
-			return;
-		}
-		this.commit.emit({ slides: result.slides, activeSlideIndex: result.activeSlideIndex });
-		this.focusRow(result.focusKey);
-	}
-
-	/**
-	 * Restore the caret after the host has re-fed the new deck.
-	 *
-	 * Deferred to a microtask because the row that should take focus may not
-	 * exist yet: a new slide's title row only enters the DOM once change
-	 * detection has run over the committed deck.
-	 */
-	private focusRow(key: string | null): void {
-		if (!key) {
-			return;
-		}
-		queueMicrotask(() => {
-			const selector = `[${OUTLINE_ROW_ATTR}="${CSS.escape(key)}"]`;
-			const target = this.rowsHost()?.nativeElement.querySelector<HTMLInputElement>(selector);
-			if (target && document.activeElement !== target) {
-				target.focus();
-				target.setSelectionRange(target.value.length, target.value.length);
-			}
-		});
+		this.session.handleKey(event, key);
 	}
 }
 

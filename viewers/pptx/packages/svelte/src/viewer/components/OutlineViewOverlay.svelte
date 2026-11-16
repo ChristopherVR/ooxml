@@ -24,12 +24,13 @@
 		OUTLINE_ROW_ATTR,
 		OUTLINE_SLIDE_ATTR,
 		OUTLINE_VIEW_ATTR,
+		buildOutline,
+		createOutlineViewSession,
 		listenForOutlineViewDismiss,
 	} from 'ooxml-ui/pptx';
 	import type { CanvasSize, OutlineRow } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
-	import { OutlineViewSession } from '../state/outline-view.svelte';
 
 	const {
 		slides,
@@ -61,17 +62,19 @@
 	// eslint-disable-next-line no-unassigned-vars
 	let container: HTMLElement | undefined;
 
-	// Built once: the session reads the deck through accessors, so it never holds
-	// a stale copy and never has to be rebuilt when the props change.
-	const session = new OutlineViewSession({
-		getSlides: () => slides,
-		getCanvasSize: () => canvasSize,
+	// The shared edit session, built once: it reads the deck through accessors, so it never
+	// holds a stale copy and never has to be rebuilt when the props change.
+	const session = createOutlineViewSession({
+		slides: () => slides,
+		canvasSize: () => canvasSize,
 		canEdit: () => canEdit,
-		onCommit: (next) => oncommit(next),
-		onActiveSlide: (index) => onactiveslide(index),
+		commit: (next, activeSlideIndex) => {
+			oncommit(next);
+			onactiveslide(activeSlideIndex);
+		},
 	});
 
-	const rows = $derived(session.rows);
+	const rows = $derived(buildOutline(slides));
 
 	// Reads `rows` so it re-runs only after the deck an edit produced has been
 	// rendered: the row that should take the caret may not exist before then.
@@ -127,7 +130,7 @@
 					aria-label={rowLabel(row)}
 					class:pptx-svelte-outline-input-title={row.kind === 'title'}
 					oninput={(event) =>
-						session.run({ type: 'setText', key: row.key, text: event.currentTarget.value })}
+						session.setText(row.key, event.currentTarget.value)}
 					onkeydown={(event) => session.handleKey(event, row.key)}
 				/>
 			</div>

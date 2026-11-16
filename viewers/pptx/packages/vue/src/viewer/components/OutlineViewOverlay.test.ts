@@ -155,6 +155,11 @@ describe('outline view overlay', () => {
 		await nextTick();
 		expect(slides()).toHaveLength(3);
 		expect(rows(wrapper)).toHaveLength(5);
+		await nextTick();
+		// The caret lands on the new slide's title row once it has rendered.
+		expect(document.activeElement?.getAttribute(OUTLINE_ROW_ATTR)).toBe(
+			rows(wrapper)[3]!.getAttribute(OUTLINE_ROW_ATTR),
+		);
 		wrapper.unmount();
 	});
 
