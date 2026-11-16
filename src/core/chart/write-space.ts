@@ -93,6 +93,7 @@ export function writeChartSpace(space: ChartSpace, options: WriteChartSpaceOptio
 		'chart',
 		titleXml(context, space.title) +
 			valXml('autoTitleDeleted', space.autoTitleDeleted) +
+			raw(context, space.pivotFormatsXml) +
 			view3DXml(space.view3D) +
 			surfaceXml(context, 'floor', space.floor) +
 			surfaceXml(context, 'sideWall', space.sideWall) +
@@ -109,6 +110,7 @@ export function writeChartSpace(space: ChartSpace, options: WriteChartSpaceOptio
 		valXml('lang', space.language) +
 		valXml('roundedCorners', space.roundedCorners) +
 		styleXml(context, space) +
+		raw(context, space.colorMapOverrideXml) +
 		chartProtectionXml(context, space.protection) +
 		chart +
 		shapePropertiesXml(context, space.spPr) +

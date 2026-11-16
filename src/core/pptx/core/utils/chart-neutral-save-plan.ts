@@ -27,6 +27,10 @@ import type { PptxChartData } from '../types';
 import { same, revertStyle } from './chart-neutral-save-common';
 import { planAxes } from './chart-neutral-save-axes';
 import { planNeutralGridlineFlag } from './chart-neutral-save-gridlines';
+import {
+	planNeutralPartSettings,
+	type NeutralChartPackageElement,
+} from './chart-neutral-save-part-settings';
 import { planNeutralGroupOptions } from './chart-neutral-save-groups';
 import { planNeutralGroupSubtype } from './chart-neutral-save-subtype';
 import { planNeutralGroupFlags } from './chart-neutral-save-group-flags';
@@ -58,6 +62,8 @@ export interface NeutralChartSavePlan {
 	rebuildWorkbook?: boolean;
 	/** Whether series names, values or categories changed (the embedded workbook follows them). */
 	seriesData: boolean;
+	/** Elements the package adapter encodes and supplies to the save (print settings...). */
+	packageElements?: NeutralChartPackageElement[];
 }
 
 /** Title text and visibility (`applyChartTitleToXml`'s flat-text cases). */
@@ -204,12 +210,14 @@ export function planWithLeftovers(
 	planNeutralChartDecorations(before, probe, edits);
 	planNeutralFlatPaint(before, probe, edits);
 	planNeutralChartSeriesColors(before, probe, edits);
+	const packageElements = planNeutralPartSettings(before, probe, edits);
 	if (!same(probe, before))
 		return { plan: undefined, unclaimed: differingPaths(before, probe, '') };
 	return {
 		plan: {
 			edits,
 			seriesData,
+			...(packageElements.length > 0 ? { packageElements } : {}),
 			...(before !== original || vectors.rebuildWorkbook ? { rebuildWorkbook: true } : {}),
 		},
 		unclaimed: [],

@@ -100,6 +100,7 @@ function namespaceDeclarations(root: XmlElement): { prefix: string; uri: string 
 const CHART = new Set([
 	'title',
 	'autoTitleDeleted',
+	'pivotFmts',
 	'view3D',
 	'floor',
 	'sideWall',
@@ -118,6 +119,7 @@ const SPACE = new Set([
 	'roundedCorners',
 	'AlternateContent',
 	'style',
+	'clrMapOvr',
 	'chart',
 	'spPr',
 	'txPr',
@@ -151,6 +153,8 @@ export function parseChartSpace(source: string | XmlElement): ChartSpaceParseRes
 	const legend = cChild(chart, 'legend');
 	const view3D = cChild(chart, 'view3D');
 	const printSettings = cChild(root, 'printSettings');
+	const colorMap = cChild(root, 'clrMapOvr');
+	const pivotFormats = cChild(chart, 'pivotFmts');
 	const chartSpace = assignDefined<ChartSpace>(
 		{ plotArea: parsePlotArea(context, cChild(chart, 'plotArea')) },
 		{
@@ -158,10 +162,12 @@ export function parseChartSpace(source: string | XmlElement): ChartSpaceParseRes
 			protection: parseChartProtection(context, cChild(root, 'protection')),
 			language: cVal(root, 'lang'),
 			roundedCorners: cBool(context, root, 'roundedCorners'),
+			colorMapOverrideXml: colorMap ? buildXml(colorMap) : undefined,
 			style: chartStyle(context, root),
 			c14Style: c14Style(root),
 			title: title ? parseTitle(context, title) : undefined,
 			autoTitleDeleted: cBool(context, chart, 'autoTitleDeleted'),
+			pivotFormatsXml: pivotFormats ? buildXml(pivotFormats) : undefined,
 			view3D: view3D ? parseView3D(context, view3D) : undefined,
 			floor: parseSurface(context, cChild(chart, 'floor')),
 			sideWall: parseSurface(context, cChild(chart, 'sideWall')),

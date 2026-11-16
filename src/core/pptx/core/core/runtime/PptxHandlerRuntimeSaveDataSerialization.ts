@@ -112,7 +112,11 @@ import {
 	ChartExSaveRefusedError,
 	saveChartExPackageThroughNeutral,
 } from '../../utils/chart-ex-neutral-package-save';
-import { saveChartPartThroughNeutral } from '../../utils/chart-neutral-save';
+import {
+	saveChartPartThroughNeutral,
+	type NeutralChartPackageElements,
+} from '../../utils/chart-neutral-save';
+import { encodeNeutralChartElements } from '../../utils/chart-neutral-package-elements';
 import {
 	prepareNeutralChartWorkbook,
 	NeutralChartSaveRefusedError,
@@ -457,13 +461,27 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// keeps every element the neutral model holds as written); anything else falls
 				// through to the object-tree writers below.
 				const baseline = this.chartDataBaselines.get(chartPartPath);
-				const neutralSave = baseline
-					? saveChartPartThroughNeutral(
-							chartXmlStr,
-							JSON.parse(baseline) as PptxChartData,
-							chartData,
-							{ retryWorkbook: this.chartWorkbookDataBaselines.get(chartPartPath)?.pending },
-						)
+				const baselineData = baseline ? (JSON.parse(baseline) as PptxChartData) : undefined;
+				// Elements PowerPoint's codecs encode and the user shapes drawing part, written once
+				// and shared by whichever path saves the part.
+				const packageElements: NeutralChartPackageElements = baselineData
+					? encodeNeutralChartElements(chartSpace, baselineData, chartData, {
+							localName: (key) => this.compatibilityService.getXmlLocalName(key),
+							build: (tree) => this.builder.build(tree),
+							parseColor: (node, placeholder) => this.parseColor(node, placeholder),
+						})
+					: {};
+				const userShapesReference = await this.reconcileChartUserShapesPart(
+					chartData,
+					chartPartPath,
+				);
+				// `undefined` (the drawing on disk already matches) keeps the authored reference.
+				if (chartData.userShapes !== undefined) packageElements.userShapes = userShapesReference;
+				const neutralSave = baselineData
+					? saveChartPartThroughNeutral(chartXmlStr, baselineData, chartData, {
+							retryWorkbook: this.chartWorkbookDataBaselines.get(chartPartPath)?.pending,
+							elements: packageElements,
+						})
 					: undefined;
 				if (neutralSave) {
 					const prepared = await prepareNeutralChartWorkbook(
@@ -1315,7 +1333,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// Drawing-overlay shapes (c:userShapes): reconciled against disk
 				// only when `chartData.userShapes` carries an actual edit signal;
 				// see `PptxHandlerRuntimeChartUserShapes` for the dirty contract.
-				await this.syncChartUserShapesToXml(chartSpace, chartData, chartPartPath);
+				this.applyChartUserShapesReference(chartSpace, userShapesReference);
 
 				await this.commitChartPart(
 					chartPartPath,

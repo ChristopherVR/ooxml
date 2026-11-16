@@ -200,12 +200,19 @@ export interface ChartSpace {
 	date1904?: boolean;
 	language?: string;
 	roundedCorners?: boolean;
+	/**
+	 * `c:clrMapOvr` as written (the part's own theme colour mapping, CT_ColorMapping), kept for
+	 * round-trip and edited by `setChartColorMapOverride`.
+	 */
+	colorMapOverrideXml?: string;
 	/** `c:style` (1..48), read through `mc:AlternateContent` when Office wraps it. */
 	style?: number;
 	/** `c14:style` (101..148), the `mc:Choice` Office writes beside the `c:style` fallback. */
 	c14Style?: number;
 	title?: ChartTitle;
 	autoTitleDeleted?: boolean;
+	/** `c:chart/c:pivotFmts` as written (pivot chart format overrides), kept for round-trip. */
+	pivotFormatsXml?: string;
 	view3D?: ChartView3D;
 	/** 3-D chart floor and walls (`c:floor`, `c:sideWall`, `c:backWall`). */
 	floor?: ChartSurface;

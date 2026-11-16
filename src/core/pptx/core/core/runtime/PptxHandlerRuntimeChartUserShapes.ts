@@ -47,8 +47,24 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		chartData: PptxChartData,
 		chartPartPath: string,
 	): Promise<void> {
+		this.applyChartUserShapesReference(
+			chartSpace,
+			await this.reconcileChartUserShapesPart(chartData, chartPartPath),
+		);
+	}
+
+	/**
+	 * Writes the drawing part (and, for a chart that had none, its relationship and content type)
+	 * that `chartData.userShapes` asks for, and returns what the chart's `c:userShapes` reference
+	 * must become: a relationship id, `null` to remove it, or `undefined` when nothing changed. The
+	 * neutral chart save and the object-tree writers share it.
+	 */
+	protected async reconcileChartUserShapesPart(
+		chartData: PptxChartData,
+		chartPartPath: string,
+	): Promise<string | null | undefined> {
 		if (chartData.userShapes === undefined) {
-			return;
+			return undefined;
 		}
 		const desired = chartData.userShapes;
 
@@ -72,18 +88,17 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 
 		if (JSON.stringify(onDisk) === JSON.stringify(desired)) {
-			return;
+			return undefined;
 		}
 
 		if (desired.length === 0) {
-			this.removeChartUserShapesNode(chartSpace);
-			return;
+			return null;
 		}
 
 		const drawingXml = this.builder.build(buildChartUserShapesDrawingXml(desired));
 		if (drawingPath) {
 			this.zip.file(drawingPath, drawingXml);
-			return;
+			return existingRel!.id;
 		}
 
 		// The chart never had a `c:userShapes` reference: fabricate a fresh
@@ -104,7 +119,16 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			chartPartPath,
 			relativePartTarget(chartPartPath, newPath),
 		);
-		this.upsertChartUserShapesNode(chartSpace, relId);
+		return relId;
+	}
+
+	/** Applies a reference {@link reconcileChartUserShapesPart} returned to an object tree. */
+	protected applyChartUserShapesReference(
+		chartSpace: XmlObject,
+		reference: string | null | undefined,
+	): void {
+		if (reference === null) this.removeChartUserShapesNode(chartSpace);
+		else if (reference !== undefined) this.upsertChartUserShapesNode(chartSpace, reference);
 	}
 
 	/**

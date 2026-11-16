@@ -494,11 +494,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P1** Chart and ChartEx save is not native-certified for fresh templates (a six-slide deck
       failed to open in PowerPoint).
 - [ ] **P2** PowerPoint chart edits still saved only by the object-tree writers (no neutral
-      adapter, `chart-neutral-save-plan.ts`): the colour style part, colour map override, print settings, user shapes, pivot formats,
-      filtered series and the external data auto-update flag. Group subtype settings
-      (`chart-neutral-save-subtype.ts`) and group `varyColors`, bar direction, scatter style and the
-      `standard` grouping flag on their own (`chart-neutral-save-group-flags.ts`; the object-tree
-      writers had dropped the first three on save) moved.
+      adapter, `chart-neutral-save-plan.ts`): filtered series. Moved: group subtype settings
+      (`chart-neutral-save-subtype.ts`); group `varyColors`, bar direction, scatter style and the
+      `standard` grouping flag on their own (`chart-neutral-save-group-flags.ts`); the gridline
+      flag; a series' own number format; the auto-update flag, colour map override, colour style
+      part, print settings, pivot formats and user shapes (`chart-neutral-save-part-settings.ts`).
+      The object-tree writers had dropped `varyColors`, bar direction, scatter style, the gridline
+      flag and the series number format on save. Print settings and pivot formats are still
+      encoded by PowerPoint's element codecs before the shared writer places them.
 - [ ] **P2** Per-series chart combinations: a series of a vertical 2-D category chart can become
       column, line, area or scatter (`chart/edit/series-type.ts`, native PowerPoint reopen checked);
       combinations on horizontal bars or on two value axes and splits inside a stack keep the

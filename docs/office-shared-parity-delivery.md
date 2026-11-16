@@ -338,6 +338,20 @@ and position when an edit only formats them, so the series keeps showing what it
 writer and none through the object-tree path. Clearing the format stays unclaimed (the cache code
 would read back).
 
+Part settings: `chart-neutral-save-part-settings.ts` claims the external data auto-update flag
+(`setChartExternalDataAutoUpdate`), the colour map override (`setChartColorMapOverride`; the model
+now keeps `c:clrMapOvr` and `c:pivotFmts` as written instead of carrying them from the source),
+the colour style part (a sibling part the save loop writes before either path), and the print
+settings, pivot formats and user shapes. Those three are encoded by the package adapter and placed
+by `setChartPrintSettingsXml`, `setChartPivotFormatsXml` and `setChartUserShapesReference`: the
+print settings and pivot formats are still encoded by PowerPoint's element codecs
+(`chart-neutral-package-elements.ts`), and the user shapes drawing part and relationship are
+written once (`reconcileChartUserShapesPart`) for whichever path saves the part.
+`chart-part-settings-migration.test.ts`: auto-update on 35 parts, the colour mapping on 75, the
+palette on 31 and the user shapes removal on 1 keep the edit both ways, with the edited elements
+equal. No committed deck holds chart print settings or pivot formats; those are unit evidence
+(`chart-neutral-save-part-settings.test.ts`) and the round-trip suites.
+
 XY combinations: Excel 16, driven through its object model (`Series.ChartType = xlXYScatter` on a
 column or line series), saves a `c:scatterChart` that references the same category and value axes
 as the column or line group, with the categories as `c:xVal`, a 5 pt circle marker in the series

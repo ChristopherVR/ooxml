@@ -13,12 +13,7 @@ import { withUnmodelledChartChildren } from './keep-unmodelled';
 import type { ChartDataSource, ChartParseIssue } from './model-series';
 
 /** The unmodelled elements `withUnmodelledChartChildren` carries into an edited part. */
-const CARRIED = new Set([
-	'c:chartSpace/c:clrMapOvr',
-	'c:chartSpace/c:pivotSource',
-	'c:chartSpace/c:protection',
-	'c:chart/c:pivotFmts',
-]);
+const CARRIED = new Set(['c:chartSpace/c:pivotSource', 'c:chartSpace/c:protection']);
 
 /** The issues an edited part would lose; empty when the part can be written from its model. */
 export function chartIssuesLostOnWrite(issues: readonly ChartParseIssue[]): ChartParseIssue[] {

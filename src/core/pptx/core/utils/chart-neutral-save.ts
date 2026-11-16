@@ -15,12 +15,26 @@ import {
 	chartSpaceWorkbookWrites,
 	chartIssuesLostOnWrite,
 	parseChartSpace,
+	setChartPivotFormatsXml,
+	setChartPrintSettingsXml,
+	setChartUserShapesReference,
 	writeChartSpaceOverSource,
 	type ChartSpace,
 } from '../../../chart/index';
 import type { PptxChartData } from '../types';
 import { planNeutralChartSave } from './chart-neutral-save-plan';
 import type { PptxChartWorkbookWrite } from './chart-xlsx-writer';
+
+/**
+ * Chart part elements the package adapter encoded for a save: the print settings and pivot formats
+ * (`null` removes the element) and the user shapes relationship id (`null` removes the reference).
+ */
+export interface NeutralChartPackageElements {
+	printSettings?: string | null;
+	pivotFormats?: string | null;
+	/** `undefined` keeps the authored reference (the drawing on disk already matched). */
+	userShapes?: string | null | undefined;
+}
 
 export interface NeutralChartSave {
 	xml: string;
@@ -38,10 +52,16 @@ export function saveChartPartThroughNeutral(
 	xml: string,
 	before: PptxChartData,
 	after: PptxChartData,
-	options: { retryWorkbook?: boolean | undefined } = {},
+	options: {
+		retryWorkbook?: boolean | undefined;
+		elements?: NeutralChartPackageElements | undefined;
+	} = {},
 ): NeutralChartSave | undefined {
 	const plan = planNeutralChartSave(before, after);
 	if (!plan) return undefined;
+	const elements = options.elements ?? {};
+	// An element the plan needs and the package adapter did not encode leaves the object-tree path.
+	if (plan.packageElements?.some((name) => !Object.hasOwn(elements, name))) return undefined;
 	let space: ChartSpace;
 	let written: string;
 	try {
@@ -49,6 +69,13 @@ export function saveChartPartThroughNeutral(
 		if (chartIssuesLostOnWrite(parsed.issues).length > 0) return undefined;
 		space = parsed.chartSpace;
 		for (const edit of plan.edits) space = edit(space);
+		for (const name of plan.packageElements ?? []) {
+			if (name === 'printSettings')
+				space = setChartPrintSettingsXml(space, elements.printSettings!);
+			if (name === 'pivotFormats') space = setChartPivotFormatsXml(space, elements.pivotFormats!);
+			if (name === 'userShapes' && elements.userShapes !== undefined)
+				space = setChartUserShapesReference(space, elements.userShapes);
+		}
 		written = writeChartSpaceOverSource(xml, space);
 	} catch {
 		// An edit the shared operation rejects (an axis bound past the other, a missing axis), or a

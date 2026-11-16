@@ -1,7 +1,8 @@
 // Saving an edited chart part over its source: `writeChartSpace` writes what `ChartSpace` models,
 // and the direct children of `c:chartSpace` and `c:chart` the parser reports as not modelled
-// (`c:clrMapOvr`, `c:pivotSource`, `c:protection`, `c:pivotFmts`) are carried over from the source
+// (`c:pivotSource`, and `c:protection` when the model leaves it alone) are carried over from the source
 // part at their schema positions, so a pivot chart or a protected chart keeps them through an edit.
+// `c:clrMapOvr` and `c:pivotFmts` are modelled as written (`colorMapOverrideXml`, `pivotFormatsXml`).
 // Unmodelled content deeper in the part (inside the plot area, a series or an axis) cannot be
 // carried this way: `keep-source.ts` says when a part has some, and such a part keeps its bytes.
 import { NS, buildXml, elements, first, parseXml, type XmlElement } from '../xml/index';
@@ -44,8 +45,8 @@ const CHART_ORDER = [
 
 /** The children `ChartSpace` does not model, by parent. */
 const UNMODELLED: Record<'space' | 'chart', ReadonlySet<string>> = {
-	space: new Set(['clrMapOvr', 'pivotSource', 'protection']),
-	chart: new Set(['pivotFmts']),
+	space: new Set(['pivotSource', 'protection']),
+	chart: new Set<string>(),
 };
 
 /** Copies the unmodelled children of `from` into `to` (same element in the written part). */
@@ -71,7 +72,7 @@ export function withUnmodelledChartChildren(
 	written: string,
 	omitProtection = false,
 ): string {
-	if (!/<(?:\w+:)?(?:clrMapOvr|pivotSource|protection|pivotFmts)\b/.test(source)) return written;
+	if (!/<(?:\w+:)?(?:pivotSource|protection)\b/.test(source)) return written;
 	const from = parseXml(source, { label: 'Chart part' }).documentElement;
 	const doc = parseXml(written, { label: 'Chart part' });
 	const to = doc.documentElement;
@@ -79,7 +80,7 @@ export function withUnmodelledChartChildren(
 		from,
 		to,
 		SPACE_ORDER,
-		omitProtection ? new Set(['clrMapOvr', 'pivotSource']) : UNMODELLED.space,
+		omitProtection ? new Set(['pivotSource']) : UNMODELLED.space,
 	);
 	const fromChart = first(from, 'chart', NS.c);
 	const toChart = first(to, 'chart', NS.c);

@@ -619,6 +619,10 @@ is the acceptance bar), and the area has its own tests and real parts from `src/
   (`chart-neutral-save-gridlines.ts`); the object-tree writers had dropped it.
   A series' own number format is written as its label number format
   (`chart-neutral-save-series-format.ts`); the object-tree writers had dropped it.
+  Part settings outside the plot area (auto-update, colour map override, colour style part,
+  print settings, pivot formats, user shapes) go through `chart/edit/part-settings.ts`
+  (`chart-neutral-save-part-settings.ts`); print settings and pivot formats are still encoded by
+  PowerPoint's element codecs and placed as written.
   One series of a vertical 2-D column, line or area chart can become XY (Scatter): the scatter
   group shares the category and value axes it leaves, with x values from the categories, markers
   in the series colour and smoothing off, as Excel 16 saves that edit (`setChartSeriesType`); the
