@@ -1,114 +1,50 @@
 <script lang="ts">
 	/**
-	 * GradientPanel: linear/radial fill-gradient sub-panel (angle + colour stops),
-	 * built entirely on the shared `gradient-picker.ts` reader/patch-builder pair
-	 * (`gradientStateOf` / `gradientStatePatch` / `addGradientStopPatch` /
-	 * `updateGradientStopPatch` / `removeGradientStopPatch`), matching the
-	 * vanilla binding's gradient sub-panel. Rendered by `FillStrokeSection` only
-	 * while the gradient toggle is on.
+	 * GradientPanel: the gradient stop list of the Fill section, one row per
+	 * shared `ShapeFillStopView` (colour with its theme grid, position,
+	 * opacity, remove) and an Add Stop button. Every control reports a shared
+	 * `ShapeFillAction`; `ShapeFillSection` turns it into the style patch. The
+	 * gradient type and angle are shared descriptor fields drawn above it.
 	 */
-	import type { PptxElement } from 'pptx-viewer-core';
-	import {
-		addGradientStopPatch,
-		gradientStateOf,
-		gradientStatePatch,
-		gradientStopColorCommitPatch,
-		removeGradientStopPatch,
-		updateGradientStopPatch,
-	} from 'ooxml-ui/pptx';
-	import type { GradientState, ThemeColorPickerCommit } from 'ooxml-ui/pptx';
+	import type { ShapeFillAction, ShapeFillStopView, ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
-	import type { EditorState } from '../../editor/editor-state.svelte';
 	import ThemeColorSwatchGrid from './ThemeColorSwatchGrid.svelte';
 
-	const { editor, el }: { editor: EditorState; el: PptxElement } = $props();
+	const {
+		stops,
+		themeColorMap,
+		onaction,
+		oncolorcommit,
+	}: {
+		stops: readonly ShapeFillStopView[];
+		themeColorMap?: Record<string, string>;
+		onaction: (action: ShapeFillAction) => void;
+		/** A settled colour pick, for the recent colours. */
+		oncolorcommit: (hex: string) => void;
+	} = $props();
 	const t = useTranslator();
 
-	const gradient = $derived(gradientStateOf(el));
-
-	function setType(type: GradientState['type']): void {
-		editor.patchSelected(gradientStatePatch(el, { ...gradient, type }));
+	function onColor(index: number, hex: string): void {
+		onaction({ type: 'stopColor', index, hex });
+		oncolorcommit(hex);
 	}
-	function setAngle(value: string): void {
-		const angle = Number(value);
-		if (Number.isFinite(angle)) {
-			editor.patchSelected(gradientStatePatch(el, { ...gradient, angle }));
-		}
-	}
-	function addStop(): void {
-		const stops = gradient.stops;
-		const lastPos = stops[stops.length - 1]?.position ?? 100;
-		const prevPos = stops[stops.length - 2]?.position ?? 0;
-		editor.patchSelected(addGradientStopPatch(el, '#ffffff', Math.round((lastPos + prevPos) / 2)));
-	}
-	/**
-	 * Native colour input: always clears `colorRef`, since a plain hex has no
-	 * theme identity for PowerPoint to reapply (React/Vue `GradientStopRow`
-	 * parity).
-	 */
-	function updateStopColor(index: number, color: string): void {
-		editor.patchSelected(updateGradientStopPatch(el, index, { color, colorRef: undefined }));
-		editor.recordRecentColor(color);
-	}
-	/** Theme swatch pick: commits both the resolved hex and its theme ref. */
-	function updateStopTheme(index: number, commit: ThemeColorPickerCommit): void {
-		editor.patchSelected(updateGradientStopPatch(el, index, gradientStopColorCommitPatch(commit)));
-		editor.recordRecentColor(commit.hex);
-	}
-	function updateStopPosition(index: number, value: string): void {
-		const position = Number(value);
-		if (Number.isFinite(position)) {
-			editor.patchSelected(updateGradientStopPatch(el, index, { position }));
-		}
-	}
-	function removeStop(index: number): void {
-		const patch = removeGradientStopPatch(el, index);
-		if (patch) {
-			editor.patchSelected(patch);
-		}
+	function onTheme(index: number, commit: ThemeColorPickerCommit): void {
+		onaction({ type: 'stopColor', index, hex: commit.hex, ref: commit.ref });
+		oncolorcommit(commit.hex);
 	}
 </script>
 
 <div class="pptx-svelte-gradient">
-	<div class="pptx-svelte-gradient-type">
-		<button
-			type="button"
-			class:pptx-svelte-gradient-on={gradient.type === 'linear'}
-			onclick={() => setType('linear')}
-		>
-			{t('pptx.gradient.linear')}
-		</button>
-		<button
-			type="button"
-			class:pptx-svelte-gradient-on={gradient.type === 'radial'}
-			onclick={() => setType('radial')}
-		>
-			{t('pptx.gradient.radial')}
-		</button>
-	</div>
-
-	<label class="pptx-svelte-gradient-angle">
-		<span>{t('pptx.gradient.angle')}</span>
-		<input
-			type="number"
-			min="0"
-			max="360"
-			value={gradient.angle}
-			disabled={gradient.type === 'radial'}
-			onchange={(e) => setAngle(e.currentTarget.value)}
-		/>
-	</label>
-
 	<div class="pptx-svelte-gradient-stops">
-		{#each gradient.stops as stop, index (index)}
-			<div class="pptx-svelte-gradient-stop-group">
+		{#each stops as stop (stop.index)}
+			<div class="pptx-svelte-gradient-stop-group" data-testid="fill-gradient-stop">
 				<div class="pptx-svelte-gradient-stop">
 					<input
 						type="color"
 						aria-label={t('pptx.gradient.stops')}
 						value={stop.color}
-						onchange={(e) => updateStopColor(index, e.currentTarget.value)}
+						onchange={(e) => onColor(stop.index, e.currentTarget.value)}
 					/>
 					<input
 						type="number"
@@ -116,30 +52,48 @@
 						max="100"
 						aria-label={t('pptx.gradient.position')}
 						value={stop.position}
-						onchange={(e) => updateStopPosition(index, e.currentTarget.value)}
+						onchange={(e) =>
+							onaction({
+								type: 'stopPosition',
+								index: stop.index,
+								position: Number(e.currentTarget.value),
+							})}
+					/>
+					<input
+						type="number"
+						min="0"
+						max="100"
+						aria-label={t('pptx.strokeEffects.fillOpacity')}
+						value={stop.opacity}
+						onchange={(e) =>
+							onaction({
+								type: 'stopOpacity',
+								index: stop.index,
+								opacity: Number(e.currentTarget.value),
+							})}
 					/>
 					<button
 						type="button"
 						class="pptx-svelte-gradient-remove"
-						disabled={gradient.stops.length <= 2}
+						disabled={!stop.removable}
 						aria-label={t('pptx.gradient.removeStop')}
 						title={t('pptx.gradient.removeStop')}
-						onclick={() => removeStop(index)}
+						onclick={() => onaction({ type: 'removeStop', index: stop.index })}
 					>
 						&#10005;
 					</button>
 				</div>
 				<ThemeColorSwatchGrid
-					themeColorMap={editor.themeColorMap}
+					{themeColorMap}
 					selectedRef={stop.colorRef}
 					selectedHex={stop.color}
-					onpick={(commit) => updateStopTheme(index, commit)}
+					onpick={(commit) => onTheme(stop.index, commit)}
 				/>
 			</div>
 		{/each}
 	</div>
 
-	<button type="button" class="pptx-svelte-gradient-add" onclick={addStop}>
+	<button type="button" class="pptx-svelte-gradient-add" onclick={() => onaction({ type: 'addStop' })}>
 		{t('pptx.gradient.addStop')}
 	</button>
 </div>
@@ -152,49 +106,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
-	}
-
-	.pptx-svelte-gradient-type {
-		display: flex;
-		gap: 6px;
-	}
-
-	.pptx-svelte-gradient-type button {
-		flex: 1;
-		height: 26px;
-		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
-		border-radius: var(--pptx-radius, var(--office-radius, 4px));
-		background: var(--pptx-background, var(--office-background, #ffffff));
-		color: inherit;
-		cursor: pointer;
-		font: inherit;
-	}
-
-	.pptx-svelte-gradient-on {
-		background: var(--pptx-primary, var(--office-accent, #2563eb)) !important;
-		color: #fff !important;
-		border-color: var(--pptx-primary, var(--office-accent, #2563eb)) !important;
-	}
-
-	.pptx-svelte-gradient-angle {
-		display: flex;
-		flex-direction: column;
-		gap: 3px;
-	}
-
-	.pptx-svelte-gradient-angle span {
-		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
-	}
-
-	.pptx-svelte-gradient-angle input {
-		height: 26px;
-		box-sizing: border-box;
-		padding: 0 6px;
-		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
-		border-radius: var(--pptx-radius, var(--office-radius, 4px));
-		background: var(--pptx-background, var(--office-background, #ffffff));
-		color: inherit;
-		font: inherit;
 	}
 
 	.pptx-svelte-gradient-stops {
@@ -211,7 +122,7 @@
 
 	.pptx-svelte-gradient-stop {
 		display: grid;
-		grid-template-columns: 32px 1fr 24px;
+		grid-template-columns: 32px 1fr 1fr 24px;
 		align-items: center;
 		gap: 6px;
 	}

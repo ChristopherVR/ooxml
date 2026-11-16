@@ -3,11 +3,12 @@ import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { EditorState } from '../../editor/editor-state.svelte';
-import GradientPanel from './GradientPanel.svelte';
+import ShapeFillSection from './ShapeFillSection.svelte';
 
 /**
- * GradientPanel tests: linear/radial type toggle, angle, and add/update/
- * remove colour stops, all built on the shared `gradient-picker.ts`. Named
+ * Gradient fill tests through the Fill section: the shared type and angle
+ * descriptors, and add/update/remove colour stops (`GradientPanel`) through
+ * the shared fill actions. Named
  * `*.svelte.test.ts` so `mountPanel`'s props object can be wrapped in
  * `$state(...)` and refreshed between chained interactions (see
  * `notes-panel.svelte.test.ts`).
@@ -74,7 +75,7 @@ function mountPanel(editor: EditorState, el: PptxElement): MountResult {
 	const target = document.createElement('div');
 	document.body.appendChild(target);
 	const props = $state({ editor, el });
-	const instance = mount(GradientPanel, { target, props });
+	const instance = mount(ShapeFillSection, { target, props });
 	flushSync();
 	cleanup = () => {
 		unmount(instance);
@@ -94,17 +95,19 @@ describe('gradientPanel', () => {
 		const editor = makeEditor(gradientShapeEl());
 		const { target } = mountPanel(editor, currentEl(editor));
 		expect(target.querySelectorAll('.pptx-svelte-gradient-stop')).toHaveLength(2);
-		const angle = target.querySelector<HTMLInputElement>('.pptx-svelte-gradient-angle input');
+		const angle = target.querySelector<HTMLInputElement>('[data-testid="fill-gradient-angle"]');
 		expect(angle?.value).toBe('90');
 	});
 
 	it('switches gradient type to radial', () => {
 		const editor = makeEditor(gradientShapeEl());
 		const { target } = mountPanel(editor, currentEl(editor));
-		const [, radialBtn] = target.querySelectorAll<HTMLButtonElement>(
-			'.pptx-svelte-gradient-type button',
-		);
-		radialBtn?.click();
+		const type = target.querySelector<HTMLSelectElement>('[data-testid="fill-gradient-type"]');
+		if (!type) {
+			throw new Error('gradient type select not found');
+		}
+		type.value = 'radial';
+		type.dispatchEvent(new Event('change', { bubbles: true }));
 		flushSync();
 
 		expect((currentEl(editor) as ShapeStyleShape).shapeStyle?.fillGradientType).toBe('radial');
@@ -113,7 +116,7 @@ describe('gradientPanel', () => {
 	it('changes the angle', () => {
 		const editor = makeEditor(gradientShapeEl());
 		const { target } = mountPanel(editor, currentEl(editor));
-		const angle = target.querySelector<HTMLInputElement>('.pptx-svelte-gradient-angle input');
+		const angle = target.querySelector<HTMLInputElement>('[data-testid="fill-gradient-angle"]');
 		if (!angle) {
 			throw new Error('angle input not found');
 		}

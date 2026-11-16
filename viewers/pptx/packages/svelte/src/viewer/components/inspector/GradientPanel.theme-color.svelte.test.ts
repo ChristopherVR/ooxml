@@ -3,7 +3,7 @@ import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { EditorState } from '../../editor/editor-state.svelte';
-import GradientPanel from './GradientPanel.svelte';
+import ShapeFillSection from './ShapeFillSection.svelte';
 import { themeSwatch } from './theme-color-grid.test-support';
 
 /**
@@ -92,7 +92,7 @@ function stops(
 function mountPanel(editor: EditorState, el: PptxElement): HTMLElement {
 	const target = document.createElement('div');
 	document.body.appendChild(target);
-	const instance = mount(GradientPanel, { target, props: { editor, el } });
+	const instance = mount(ShapeFillSection, { target, props: { editor, el } });
 	flushSync();
 	cleanup = () => {
 		unmount(instance);

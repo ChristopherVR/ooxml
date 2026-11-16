@@ -1,45 +1,24 @@
 <script lang="ts">
 	/**
-	 * FillStrokeSection: flat fill/stroke colour (as before), the fill opacity
-	 * slider, the shared Line options (`SHAPE_LINE_SECTIONS`: width,
-	 * transparency, dash, compound, join, cap, drawn by `InspectorFields`),
-	 * a gradient-fill toggle, and a pattern-fill toggle
-	 * (mutually exclusive with gradient, both mutually exclusive with solid).
-	 * When the gradient toggle is on, {@link GradientPanel} renders the
-	 * linear/radial + angle + stop editor built on the shared
-	 * `gradient-picker.ts`; when the pattern toggle is on,
-	 * {@link PatternFillPanel} renders the 56-preset swatch grid built on
-	 * shared `fill-pattern-label-keys.ts` / `fill-style.ts`, matching the
-	 * vanilla binding's scope. Shown only for elements that pass
-	 * `hasShapeProperties`. The fill and line colour pickers preview every
-	 * shade of a drag and commit it as one undo step (`live-color.ts`).
+	 * FillStrokeSection: the shape's Fill ({@link ShapeFillSection}: the shared
+	 * fill descriptors and actions) and its Line (the line colour with its
+	 * theme grid and recent colours, then the shared Line options
+	 * `SHAPE_LINE_SECTIONS` drawn by `InspectorFields`). Shown only for
+	 * elements that pass `hasShapeProperties`. The line colour picker previews
+	 * every shade of a drag and commits it as one undo step (`live-color.ts`).
 	 */
 	import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 	import { hasShapeProperties } from 'pptx-viewer-core';
 	import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
-	import {
-		fillColorOf,
-		gradientStateOf,
-		gradientStatePatch,
-		hasGradientFill,
-		SHAPE_LINE_SECTIONS,
-		shapeQuickStylePatch,
-		strokeColorOf,
-	} from 'ooxml-ui/pptx';
+	import { SHAPE_LINE_SECTIONS, shapeQuickStylePatch, strokeColorOf } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';
-	import {
-		fillOpacityOf,
-		setFillOpacityPatch,
-		setSolidFillPatch,
-		setStrokeColorPatch,
-	} from '../../editor';
-	import GradientPanel from './GradientPanel.svelte';
+	import { setStrokeColorPatch } from '../../editor';
 	import InspectorFields from './InspectorFields.svelte';
 	import { liveColorEvents, liveElementColor } from './live-color';
-	import PatternFillPanel from './PatternFillPanel.svelte';
 	import RecentColorsRow from './RecentColorsRow.svelte';
+	import ShapeFillSection from './ShapeFillSection.svelte';
 	import ThemeColorSwatchGrid from './ThemeColorSwatchGrid.svelte';
 
 	const {
@@ -56,49 +35,15 @@
 	const showLine = $derived(part !== 'fill');
 	const t = useTranslator();
 
-	const fill = $derived(fillColorOf(el));
 	const stroke = $derived(strokeColorOf(el));
-	const fillOpacity = $derived(fillOpacityOf(el));
 	const shapeStyle = $derived(hasShapeProperties(el) ? el.shapeStyle : undefined);
-	const gradientOn = $derived(hasGradientFill(el));
-	const patternOn = $derived(
-		hasShapeProperties(el) ? el.shapeStyle?.fillMode === 'pattern' : false,
-	);
 
-	function pct(value: number): string {
-		return `${Math.round(value * 100)}%`;
-	}
-
-	function toggleGradient(checked: boolean): void {
-		if (checked) {
-			editor.patchSelected(gradientStatePatch(el, gradientStateOf(el)));
-		} else {
-			editor.patchSelected(setSolidFillPatch(el, fill));
-		}
-	}
-
-	const fillInput = liveElementColor(
-		() => editor,
-		() => el,
-		fillColorOf,
-		(cur, hex) => setSolidFillPatch(cur, hex, undefined),
-	);
 	const strokeInput = liveElementColor(
 		() => editor,
 		() => el,
 		strokeColorOf,
 		(cur, hex) => setStrokeColorPatch(cur, hex, undefined),
 	);
-
-	function commitFill(hex: string): void {
-		editor.patchSelected(setSolidFillPatch(el, hex, undefined));
-		editor.recordRecentColor(hex);
-	}
-
-	function commitFillTheme(commit: ThemeColorPickerCommit): void {
-		editor.patchSelected(setSolidFillPatch(el, commit.hex, commit.ref));
-		editor.recordRecentColor(commit.hex);
-	}
 
 	function commitStroke(hex: string): void {
 		editor.patchSelected(setStrokeColorPatch(el, hex, undefined));
@@ -110,7 +55,6 @@
 		editor.recordRecentColor(commit.hex);
 	}
 
-	const fillColorRef = $derived(hasShapeProperties(el) ? el.shapeStyle?.fillColorRef : undefined);
 	const strokeColorRef = $derived(
 		hasShapeProperties(el) ? el.shapeStyle?.strokeColorRef : undefined,
 	);
@@ -118,47 +62,15 @@
 	function patchLine(patch: Partial<ShapeStyle>): void {
 		editor.patchSelected(shapeQuickStylePatch(el, patch));
 	}
-
-	function togglePattern(checked: boolean): void {
-		if (checked) {
-			const style = hasShapeProperties(el) ? el.shapeStyle : undefined;
-			editor.patchSelected({
-				shapeStyle: {
-					...style,
-					fillMode: 'pattern',
-					fillPatternPreset: style?.fillPatternPreset ?? 'pct20',
-					fillColor: fill,
-					fillPatternBackgroundColor: style?.fillPatternBackgroundColor ?? '#ffffff',
-				},
-			} as Partial<PptxElement>);
-		} else {
-			editor.patchSelected(setSolidFillPatch(el, fill));
-		}
-	}
 </script>
 
-<div
-	class="pptx-svelte-inspector-color-row"
-	data-pptx-inspector-section={showFill ? 'fill-stroke' : undefined}
->
-	{#if showFill}
-	<label class="pptx-svelte-inspector-color">
-		<span>{t('pptx.inspector.fill')}</span>
-		<input
-			type="color"
-			value={/^#/.test(fill) ? fill : '#ffffff'}
-			use:liveColorEvents={fillInput}
-		/>
-		<ThemeColorSwatchGrid
-			themeColorMap={editor.themeColorMap}
-			selectedRef={fillColorRef}
-			selectedHex={fill}
-			onpick={commitFillTheme}
-		/>
-		<RecentColorsRow colors={editor.mruColors} onselect={commitFill} />
-	</label>
-	{/if}
-	{#if showLine}
+{#if showFill}
+	<div class="pptx-svelte-inspector-fill" data-pptx-inspector-section="fill-stroke">
+		<ShapeFillSection {editor} {el} />
+	</div>
+{/if}
+
+{#if showLine}
 	<label class="pptx-svelte-inspector-color">
 		<span>{t('pptx.inspector.line')}</span>
 		<input
@@ -174,61 +86,12 @@
 		/>
 		<RecentColorsRow colors={editor.mruColors} onselect={commitStroke} />
 	</label>
-	{/if}
-</div>
-
-{#if showFill}
-<label class="pptx-svelte-field">
-	<span class="pptx-svelte-field-label"
-		>{t('pptx.strokeEffects.fillOpacity')} <b>{pct(fillOpacity)}</b></span
-	>
-	<input
-		type="range"
-		min="0"
-		max="1"
-		step="0.01"
-		value={fillOpacity}
-		oninput={(e) => editor.patchSelected(setFillOpacityPatch(el, Number(e.currentTarget.value)))}
-	/>
-</label>
-{/if}
-{#if showLine}
-<InspectorFields sections={SHAPE_LINE_SECTIONS} target={shapeStyle} onpatch={patchLine} />
-{/if}
-
-{#if showFill}
-<label class="pptx-svelte-field-checkbox">
-	<pptx-ui-checkbox
-		checked={gradientOn}
-		onchange={(e) => toggleGradient(e.currentTarget.checked)}
-	></pptx-ui-checkbox>
-	<span>{t('pptx.fill.gradient')}</span>
-</label>
-
-{#if gradientOn}
-	<GradientPanel {editor} {el} />
-{/if}
-
-<label class="pptx-svelte-field-checkbox">
-	<pptx-ui-checkbox
-		checked={patternOn}
-		onchange={(e) => togglePattern(e.currentTarget.checked)}
-	></pptx-ui-checkbox>
-	<span>{t('pptx.table.patternPreset')}</span>
-</label>
-
-{#if patternOn}
-	<PatternFillPanel {editor} {el} />
-{/if}
+	<InspectorFields sections={SHAPE_LINE_SECTIONS} target={shapeStyle} onpatch={patchLine} />
 {/if}
 
 <style>
-	/* Fill above Line, as in the other bindings: side by side, the two theme
-	   grids (ten 16px swatches each) were wider than the 288px panel. */
-	.pptx-svelte-inspector-color-row {
-		display: flex;
-		flex-direction: column;
-		gap: 12px;
+	.pptx-svelte-inspector-fill {
+		margin-bottom: 12px;
 	}
 
 	.pptx-svelte-inspector-color {
@@ -248,34 +111,6 @@
 		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 4px;
 		background: transparent;
-		cursor: pointer;
-	}
-
-	.pptx-svelte-field {
-		display: flex;
-		flex-direction: column;
-		gap: 3px;
-		margin-top: 10px;
-	}
-
-	.pptx-svelte-field-label {
-		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
-	}
-
-	.pptx-svelte-field-label b {
-		color: inherit;
-		font-weight: 600;
-	}
-
-	.pptx-svelte-field input[type='range'] {
-		width: 100%;
-	}
-
-	.pptx-svelte-field-checkbox {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		margin-top: 10px;
 		cursor: pointer;
 	}
 </style>
