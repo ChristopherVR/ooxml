@@ -42,10 +42,12 @@ export function planNeutralSeriesStructure(
 		values: series.values,
 		...(series.color === undefined ? {} : { color: series.color }),
 	});
+	// A new series' axis (Plot Series On) is claimed by the axis planners that run after this one.
+	const withoutAxis = ({ axisId: _axis, ...item }: PptxChartSeries) => item;
 	if (
 		added.some(
 			(item) =>
-				!same(item, basic(item)) ||
+				!same(withoutAxis(item), basic(item)) ||
 				(item.color !== undefined && !/^#?[\da-f]{6}$/i.test(item.color)),
 		)
 	)

@@ -5,7 +5,6 @@ import {
 	setChartErrorBars,
 	setChartMarker,
 	setChartSeriesOptions,
-	setChartSeriesAxis,
 	editChartShapeProperties,
 	numberSource,
 	type ChartTrendlineEdit,
@@ -24,6 +23,7 @@ import type { NeutralChartEdit } from './chart-neutral-save-plan';
 import { same } from './chart-neutral-save-common';
 import { neutralShapeEdit } from './chart-neutral-save-shape';
 import { planNeutralChartPoints } from './chart-neutral-save-points';
+import { seriesAxisEdit } from './chart-neutral-save-series-axis';
 
 const lineShape = (value: PptxChartTrendline | PptxChartErrBars | undefined) =>
 	value && {
@@ -193,7 +193,7 @@ export function planNeutralChartAnalysis(
 		}
 		if (old.axisId !== series.axisId) {
 			const id = series.axisId ?? null;
-			edits.push((space) => setChartSeriesAxis(space, seriesIndex, id));
+			edits.push(seriesAxisEdit(probe, seriesIndex, id));
 			series.axisId = old.axisId;
 		}
 		const options: ChartSeriesOptionsEdit = {};

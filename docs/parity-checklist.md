@@ -138,6 +138,13 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       secondary group: the model move succeeds, but the saved part keeps one stacked group and
       PowerPoint reads the series on the primary axis (`chart-analysis-native-acceptance.ps1`).
       Word and Excel save the same move natively.
+
+      their first or last series to the secondary axis and merge back (`chart/edit/secondary-axis.ts`);
+      PowerPoint saves the move through the same operation, so PowerPoint 16 reads the moved series
+      on axis group 2 (`chart-neutral-save-series-axis.ts`, 2026-11-16).
+- [ ] **P1** Chart picture fills are not drawn by `src/core/chart/render`, so Word, Excel and Visio
+      keep Picture or texture fill disabled; relationship allocation is shared
+      (`chart/picture-parts.ts`) and PowerPoint saves through it.
 - [ ] **P2** `c:userShapes` (shapes over a chart) is parsed but not drawn; surface charts have no
       dedicated painter.
 - [x] **P2** Equation ownership audited: all 11 non-test `latex-*` and `omml-*` modules in

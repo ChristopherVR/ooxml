@@ -528,6 +528,20 @@ a translated notice in Insert Chart. Tests: `chart/ex/create-family.test.ts`,
 `docx/chart-ex-insert.test.ts`, `xlsx/edit/chart-ex-insert.test.ts`, the Word and Excel dialog
 tests and the pptx ChartEx integration suite.
 
+### PowerPoint secondary-axis split, 2026-11-16
+
+A native check found that PowerPoint 16 read the third series of a stacked column chart on the
+primary axis after `withChartSeriesOnSecondaryAxis` moved it: the model added the secondary pair,
+but the save plan left the new axes and the new series' axis unclaimed, so the object-tree writer
+kept one stacked group. `planNeutralSeriesAxisPair` now claims a move onto a new pair (or off the
+last series of one) and saves it with `setChartSeriesSecondaryAxis`, the operation Word and Excel
+use: the series gets its own stacked `c:barChart` on the model's axis ids, and a move back rejoins
+the primary group and drops the unused pair. A move onto axes the part already has stays a
+validated `setChartSeriesAxis` reassignment. PowerPoint 16 reopened the saved deck with series 1
+and 2 on `AxisGroup` 1 and series 3 on `AxisGroup` 2, all `xlColumnStacked` (52). Tests:
+`chart-secondary-axis-split-roundtrip.test.ts` (move, reload, move back) and the updated
+`chart-neutral-save-analysis.test.ts`.
+
 ### Final repository verification, 2026-10-27
 
 At `7776ac5d5`, `bun run verify --jobs 4` passed all 46 CI-planned steps from the isolated integration

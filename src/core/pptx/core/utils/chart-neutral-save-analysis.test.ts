@@ -254,9 +254,10 @@ describe('classic neutral analysis save claims', () => {
 		).toEqual([0, 1]);
 		const reset = structuredClone(after);
 		delete reset.series[1]!.axisId;
-		expect(
-			run(writeChartSpaceOverSource(xml, space), after, reset).space.plotArea.groups[1]?.axisIds,
-		).toEqual([11, 22]);
+		// Moving back rejoins the primary group and drops the unused pair, as Word and Excel save it.
+		const back = run(writeChartSpaceOverSource(xml, space), after, reset).space;
+		expect(back.plotArea.groups.map((group) => group.axisIds)).toEqual([[11, 22]]);
+		expect(back.plotArea.axes.map((axis) => axis.id)).toEqual([11, 22]);
 		expect(() =>
 			run(xml.replace('<c:crossAx val="33"/>', '<c:crossAx val="999"/>'), before, after),
 		).toThrow('coherent');

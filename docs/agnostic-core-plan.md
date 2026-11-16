@@ -673,6 +673,8 @@ is the acceptance bar), and the area has its own tests and real parts from `src/
   style bridge reuses shared DrawingML edits while keeping ChartEx data and layout semantics native
   to its model. ChartEx labels have no custom text or manual layout node in the schema and Excel 16's
   object model refuses both, so those edits stay refused (see the delivery ledger, 2026-11-16).
+  PowerPoint's classic save also writes a series moved onto a new secondary pair as its own group
+  through `setChartSeriesSecondaryAxis` (C3; native check in the delivery ledger, 2026-11-16).
   **Remains:** exact region map shapes without an Office-written geography cache, and
   removal of the remaining compatibility paths only
   after regression and native checks. The complete Office ChartEx authoring surface is not claimed.

@@ -31,6 +31,7 @@ import {
 	planNeutralPartSettings,
 	type NeutralChartPackageElement,
 } from './chart-neutral-save-part-settings';
+import { planNeutralSeriesAxisPair } from './chart-neutral-save-series-axis';
 import { planNeutralGroupOptions } from './chart-neutral-save-groups';
 import { planNeutralGroupSubtype } from './chart-neutral-save-subtype';
 import { planNeutralGroupFlags } from './chart-neutral-save-group-flags';
@@ -193,6 +194,7 @@ export function planWithLeftovers(
 	planNeutralTitleRuns(before, probe, edits);
 	planTitle(before, probe, edits);
 	planLegend(before, probe, edits);
+	planNeutralSeriesAxisPair(before, probe, edits);
 	planAxes(before, probe, edits);
 	planNeutralGridlineFlag(before, probe, edits);
 	planNeutralGroupOptions(before, probe, edits);
