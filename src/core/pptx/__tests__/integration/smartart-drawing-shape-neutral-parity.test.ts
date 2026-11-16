@@ -4,11 +4,8 @@ import path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import {
-	parseDiagramDrawing,
 	readDiagramDrawingShapes,
 	resolveDrawingColor,
-	type DiagramColor,
-	type DiagramDrawingShape,
 	type DiagramShapeView,
 } from '../../../diagram/index';
 import { PptxRuntimeDependencyFactory } from '../../core/core/factories/PptxRuntimeDependencyFactory';
@@ -27,10 +24,10 @@ import type { PptxSmartArtDrawingShape, XmlObject } from '../../core/types';
  * are compared, not the theme. Group shapes (`dsp:grpSp`) are compared at top level only, since
  * the pptx reader does not descend into groups.
  *
- * One known divergence is counted rather than compared: a colour that repeats a transform (two
- * `a:tint` children, as some 3D quick styles cache their gradient stops). The object tree groups
- * same-name siblings into an array the pptx colour codec does not read, so pptx skips those
- * transforms; the neutral resolver applies them. Which one PowerPoint matches is not established.
+ * A colour that repeats a transform (two `a:tint` children, as some 3D quick styles cache their
+ * gradient stops) used to diverge: the pptx codec skipped the array the object tree makes of them.
+ * Since the codec resolves through the shared resolver (docs/agnostic-core-plan.md step 3), both
+ * readers apply the first of each name and every field is compared.
  */
 
 const CORE = path.resolve(__dirname, '../../..');
@@ -158,21 +155,6 @@ const differences: Difference[] = [];
 let shapesCompared = 0;
 let partsCompared = 0;
 let fieldsCompared = 0;
-let repeatedTransformFields = 0;
-
-const REPEATED_TRANSFORM_FIELDS = new Set(['fillColor', 'fillGradientStops']);
-
-const colorRepeats = (color: DiagramColor | undefined) =>
-	!!color &&
-	new Set(color.transforms.map((transform) => transform.name)).size !== color.transforms.length;
-
-/** The shape's fill holds a colour with a repeated transform (see the module comment). */
-function repeatsTransform(shape: DiagramDrawingShape): boolean {
-	const fill = shape.fill;
-	if (fill?.kind === 'solid') return colorRepeats(fill.color);
-	if (fill?.kind === 'gradient') return fill.stops.some((stop) => colorRepeats(stop.color));
-	return false;
-}
 
 beforeAll(async () => {
 	for (const file of packages()) {
@@ -192,11 +174,6 @@ beforeAll(async () => {
 			const pptxShapes = list(entry(spTree, 'sp'))
 				.map((sp, index) => runtime.shape(sp, index))
 				.filter((shape): shape is PptxSmartArtDrawingShape => shape !== null);
-			const repeated = new Set(
-				parseDiagramDrawing(xml, part)
-					.shapes.filter(repeatsTransform)
-					.map((shape) => shape.modelId),
-			);
 			const topLevel = new Set(
 				list(entry(spTree, 'sp')).map((sp, index) =>
 					String(
@@ -227,10 +204,6 @@ beforeAll(async () => {
 				const left = normalise(pptxShape);
 				const right = normalise(neutralShapes[index]!);
 				for (const field of new Set([...Object.keys(left), ...Object.keys(right)])) {
-					if (repeated.has(pptxShape.id) && REPEATED_TRANSFORM_FIELDS.has(field)) {
-						repeatedTransformFields++;
-						continue;
-					}
 					fieldsCompared++;
 					if (JSON.stringify(left[field]) !== JSON.stringify(right[field]))
 						differences.push({
@@ -250,8 +223,6 @@ describe('SmartArt drawing shapes: pptx runtime vs neutral DOM reader', () => {
 		expect(partsCompared).toBeGreaterThan(300);
 		expect(shapesCompared).toBeGreaterThan(2000);
 		expect(fieldsCompared).toBeGreaterThan(20000);
-		// The repeated-transform divergence stays confined to a few 3D gradient shapes.
-		expect(repeatedTransformFields).toBeLessThan(200);
 	});
 
 	it('agrees on every shape of every committed drawing part', () => {
