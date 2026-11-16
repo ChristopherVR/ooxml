@@ -173,9 +173,11 @@ export interface PptxTextProperties {
 	/** Rich text segments with individual styling. */
 	textSegments?: TextSegment[] | undefined;
 	/** Per-paragraph indentation (marginLeft, indent) for multi-level bullet support. */
-	paragraphIndents?: Array<{ marginLeft?: number | undefined; indent?: number | undefined }>;
+	paragraphIndents?:
+		| Array<{ marginLeft?: number | undefined; indent?: number | undefined }>
+		| undefined;
 	/** Placeholder prompt text inherited from layout/master (e.g. "Click to add title"). Shown as a greyed-out hint when the shape has no user-entered text. */
-	promptText?: string;
+	promptText?: string | undefined;
 	/**
 	 * The string {@link text} was INHERITED from, when this is a header / footer /
 	 * date / slide-number placeholder whose own body the file leaves empty.
@@ -188,11 +190,11 @@ export interface PptxTextProperties {
 	 * therefore leaves the authored empty body alone while `text` still equals
 	 * this value, and writes a genuine per-slide override once it does not.
 	 */
-	inheritedPlaceholderText?: string;
+	inheritedPlaceholderText?: string | undefined;
 	/** Linked text box chain ID from `a:bodyPr > a:linkedTxbx/@id` or `a:txbx > a:linkedTxbx/@id`. Text overflows from one linked frame to the next. */
-	linkedTxbxId?: number;
+	linkedTxbxId?: number | undefined;
 	/** Sequence number within a linked text box chain (0-based). */
-	linkedTxbxSeq?: number;
+	linkedTxbxSeq?: number | undefined;
 }
 
 /**
@@ -240,7 +242,7 @@ export interface PptxShapeProperties {
  * ```
  */
 export interface PlaceholderTextLevelStyle {
-	fontFamily?: string;
+	fontFamily?: string | undefined;
 	/**
 	 * The RAW `a:defRPr/a:latin/@typeface` string (verbatim: a theme alias
 	 * such as `+mj-lt`/`+mn-lt`, or a literal face name) {@link fontFamily}
@@ -251,18 +253,18 @@ export interface PlaceholderTextLevelStyle {
 	 * about the deck is rewritten, even when this level was never touched.
 	 * Absent when the level declares no `a:latin`.
 	 */
-	fontTypefaceXml?: string;
+	fontTypefaceXml?: string | undefined;
 	/**
 	 * Snapshot of {@link fontFamily} exactly as parsed, before any edit. The
 	 * save path diffs the live value against this: unchanged means re-emit
 	 * {@link fontTypefaceXml} verbatim (preserve the alias); different means
 	 * a genuine edit, so the new literal name is written instead.
 	 */
-	resolvedFontFamily?: string;
-	fontSize?: number;
+	resolvedFontFamily?: string | undefined;
+	fontSize?: number | undefined;
 	bold?: boolean | undefined;
 	italic?: boolean | undefined;
-	color?: string;
+	color?: string | undefined;
 	/**
 	 * The `a:defRPr/a:solidFill` node this level's {@link color} came from.
 	 *
@@ -273,13 +275,13 @@ export interface PlaceholderTextLevelStyle {
 	 * that is inheriting it; {@link color} is only the reading taken at parse
 	 * time. Absent when the level declares no colour, or declares a literal one.
 	 */
-	colorChoiceXml?: XmlObject;
-	bulletChar?: string;
-	bulletAutoNumType?: string;
-	bulletFontFamily?: string;
-	bulletSizePercent?: number;
+	colorChoiceXml?: XmlObject | undefined;
+	bulletChar?: string | undefined;
+	bulletAutoNumType?: string | undefined;
+	bulletFontFamily?: string | undefined;
+	bulletSizePercent?: number | undefined;
 	/** Bullet colour from `a:buClr` as hex string. */
-	bulletColor?: string;
+	bulletColor?: string | undefined;
 	/**
 	 * The colour-choice node inside `a:buClr` this level's {@link bulletColor}
 	 * resolved from (`a:schemeClr` / `a:sysClr` / `a:prstClr` / `a:srgbClr`,
@@ -287,35 +289,35 @@ export interface PlaceholderTextLevelStyle {
 	 * verbatim on save so a themed bullet is not downgraded to a literal
 	 * `a:srgbClr`. Absent when the level declares no bullet colour.
 	 */
-	bulletColorXml?: XmlObject;
+	bulletColorXml?: XmlObject | undefined;
 	/** Bullet size in points from `a:buSzPts`. */
-	bulletSizePts?: number;
+	bulletSizePts?: number | undefined;
 	/** True when `a:buNone` is present at this level. */
-	bulletNone?: boolean;
-	marginLeft?: number; // indent in px (from `@_marL` EMU)
+	bulletNone?: boolean | undefined;
+	marginLeft?: number | undefined; // indent in px (from `@_marL` EMU)
 	/** Paragraph right margin in px (from `@_marR` EMU). */
-	marginRight?: number;
-	indent?: number; // first-line indent in px (from `@_indent` EMU)
+	marginRight?: number | undefined;
+	indent?: number | undefined; // first-line indent in px (from `@_indent` EMU)
 	/**
 	 * Paragraph alignment as a `TextStyle['align']` token (`left`, `center`,
 	 * `right`, `justify`, `justLow`, `dist`, `thaiDist`), never the raw OOXML
 	 * `@algn` value.
 	 */
-	alignment?: string;
+	alignment?: string | undefined;
 	/** Right-to-left paragraph direction (`@rtl`). */
-	rtl?: boolean;
+	rtl?: boolean | undefined;
 	/** Tab stops from `a:tabLst/a:tab` (positions in px). */
-	tabStops?: TextStyle['tabStops'];
-	lineSpacing?: number;
-	lineSpacingExactPt?: number;
+	tabStops?: TextStyle['tabStops'] | undefined;
+	lineSpacing?: number | undefined;
+	lineSpacingExactPt?: number | undefined;
 	/**
 	 * Space before the paragraph in px, resolved from EITHER `a:spcPts`
 	 * (absolute) or `a:spcPct` (a percentage of this level's own `a:defRPr`
 	 * font size) - the OOXML source is not distinguishable from this field
 	 * alone. See {@link spaceBeforePercent} / {@link resolvedSpaceBefore}.
 	 */
-	spaceBefore?: number;
-	spaceAfter?: number;
+	spaceBefore?: number | undefined;
+	spaceAfter?: number | undefined;
 	/**
 	 * Snapshot of {@link spaceBefore} / {@link spaceAfter} exactly as parsed.
 	 * Diffed the same way as {@link resolvedFontFamily}: unchanged means the
@@ -324,26 +326,26 @@ export interface PlaceholderTextLevelStyle {
 	 * that has since moved away from the snapshot is a genuine edit and is
 	 * always written as `a:spcPts`, since an editor works in absolute units.
 	 */
-	resolvedSpaceBefore?: number;
-	resolvedSpaceAfter?: number;
+	resolvedSpaceBefore?: number | undefined;
+	resolvedSpaceAfter?: number | undefined;
 	/**
 	 * The raw `a:spcPct` fraction (e.g. `0.2` for 20%) {@link spaceBefore} /
 	 * {@link spaceAfter} was resolved from, when the source used percentage
 	 * spacing rather than `a:spcPts`. Absent when the source used `a:spcPts`
 	 * (or authored no spacing at all).
 	 */
-	spaceBeforePercent?: number;
-	spaceAfterPercent?: number;
+	spaceBeforePercent?: number | undefined;
+	spaceAfterPercent?: number | undefined;
 	/** Default tab interval in CSS pixels (`a:lvlXpPr/@defTabSz`). */
-	defaultTabSize?: number;
+	defaultTabSize?: number | undefined;
 	/** Whether East Asian line-breaking rules are enabled. */
-	eaLineBreak?: boolean;
+	eaLineBreak?: boolean | undefined;
 	/** Whether Latin line-breaking rules are enabled. */
-	latinLineBreak?: boolean;
+	latinLineBreak?: boolean | undefined;
 	/** Font vertical alignment within the text line. */
-	fontAlignment?: string;
+	fontAlignment?: string | undefined;
 	/** Whether end punctuation may hang outside the text frame. */
-	hangingPunctuation?: boolean;
+	hangingPunctuation?: boolean | undefined;
 }
 
 /**
@@ -376,14 +378,14 @@ export interface PlaceholderDefaults {
 	textAnchor?: string | undefined;
 	autoFit?: boolean | undefined;
 	/** Explicit autofit mode from OOXML body properties. See {@link TextStyle.autoFitMode}. */
-	autoFitMode?: 'shrink' | 'normal' | 'none';
+	autoFitMode?: 'shrink' | 'normal' | 'none' | undefined;
 	/** Font scale percentage for normAutofit (e.g. 0.9 = 90%). Only meaningful when autoFit is true. */
-	autoFitFontScale?: number;
+	autoFitFontScale?: number | undefined;
 	/** Line spacing reduction for normAutofit (e.g. 0.2 = reduce by 20%). Only meaningful when autoFit is true. */
-	autoFitLineSpacingReduction?: number;
+	autoFitLineSpacingReduction?: number | undefined;
 	textWrap?: string | undefined;
 	/** Level-specific text styles keyed 0-8. */
-	levelStyles?: Record<number, PlaceholderTextLevelStyle>;
+	levelStyles?: Record<number, PlaceholderTextLevelStyle> | undefined;
 	/** Prompt text extracted from the layout/master placeholder (e.g. "Click to add title"). */
 	promptText?: string | undefined;
 }

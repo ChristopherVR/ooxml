@@ -100,8 +100,8 @@ import { resolveRotatedChildResizeOffset } from './group-child-rotated-resize';
 
 /** The subset of `GroupPptxElement` describing its captured child coordinate space. */
 export interface GroupChildSpaceEmu {
-	readonly chOffXEmu?: number;
-	readonly chOffYEmu?: number;
+	readonly chOffXEmu?: number | undefined;
+	readonly chOffYEmu?: number | undefined;
 	readonly chExtWidthEmu?: number | undefined;
 	readonly chExtHeightEmu?: number | undefined;
 }

@@ -35,8 +35,8 @@ export interface GroupTransformInput {
 	readonly widthEmu?: number | undefined;
 	readonly heightEmu?: number | undefined;
 	/** Exact EMU this group's own `a:chOff`/`a:chExt` were parsed from. See `group-xfrm-preservation.ts`. */
-	readonly chOffXEmu?: number;
-	readonly chOffYEmu?: number;
+	readonly chOffXEmu?: number | undefined;
+	readonly chOffYEmu?: number | undefined;
 	readonly chExtWidthEmu?: number | undefined;
 	readonly chExtHeightEmu?: number | undefined;
 }

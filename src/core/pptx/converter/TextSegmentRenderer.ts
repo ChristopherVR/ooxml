@@ -27,7 +27,9 @@ interface ParagraphRenderResult {
  * Options controlling how text segments are rendered.
  */
 export interface TextSegmentRenderOptions {
-	paragraphIndents?: Array<{ marginLeft?: number | undefined; indent?: number }> | undefined;
+	paragraphIndents?:
+		| Array<{ marginLeft?: number | undefined; indent?: number | undefined }>
+		| undefined;
 	slideNumber?: number;
 	dateTimeText?: string;
 	inlineMode?: boolean;

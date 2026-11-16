@@ -47,7 +47,7 @@ export interface PptxAccessibilityProperties {
 	 * aria-label / Markdown export should skip describing the element even
 	 * when {@link PptxImageProperties.altText} (or similar) is present.
 	 */
-	isDecorative?: boolean;
+	isDecorative?: boolean | undefined;
 }
 
 /**
@@ -81,7 +81,7 @@ export interface PptxPictureNonVisualProperties {
 	 * semantics, which only diverges from `preferRelativeResize="0"` on a
 	 * second resize after a crop).
 	 */
-	preferRelativeResize?: boolean;
+	preferRelativeResize?: boolean | undefined;
 }
 
 /**
@@ -233,7 +233,7 @@ export interface PptxGraphicFrameExtension {
 export interface TablePptxElement extends PptxElementBase {
 	type: 'table';
 	/** Parsed table cell data for editing. */
-	tableData?: PptxTableData;
+	tableData?: PptxTableData | undefined;
 	/**
 	 * Accessibility description from `p:nvGraphicFramePr/p:cNvPr/@descr`, the
 	 * same non-visual-properties attribute a picture's alt text comes from.
@@ -245,7 +245,7 @@ export interface TablePptxElement extends PptxElementBase {
 	 * Unrecognised extensions captured from `a:graphicData/a:extLst` so they
 	 * round-trip losslessly. See {@link PptxGraphicFrameExtension}.
 	 */
-	extensionXml?: PptxGraphicFrameExtension[];
+	extensionXml?: PptxGraphicFrameExtension[] | undefined;
 }
 
 /**
@@ -256,13 +256,13 @@ export interface TablePptxElement extends PptxElementBase {
  */
 export interface ChartPptxElement extends PptxElementBase {
 	type: 'chart';
-	chartData?: PptxChartData;
+	chartData?: PptxChartData | undefined;
 	/** Accessibility description from `p:nvGraphicFramePr/p:cNvPr/@descr`. */
 	altText?: string | undefined;
 	/** Accessibility title from `p:nvGraphicFramePr/p:cNvPr/@title`. */
 	title?: string | undefined;
 	/** Unrecognised graphicFrame extLst extensions, captured verbatim for round-trip. */
-	extensionXml?: PptxGraphicFrameExtension[];
+	extensionXml?: PptxGraphicFrameExtension[] | undefined;
 }
 
 /**
@@ -278,13 +278,13 @@ export interface ChartPptxElement extends PptxElementBase {
  */
 export interface SmartArtPptxElement extends PptxElementBase {
 	type: 'smartArt';
-	smartArtData?: PptxSmartArtData;
+	smartArtData?: PptxSmartArtData | undefined;
 	/** Accessibility description from `p:nvGraphicFramePr/p:cNvPr/@descr`. */
 	altText?: string | undefined;
 	/** Accessibility title from `p:nvGraphicFramePr/p:cNvPr/@title`. */
 	title?: string | undefined;
 	/** Unrecognised graphicFrame extLst extensions, captured verbatim for round-trip. */
-	extensionXml?: PptxGraphicFrameExtension[];
+	extensionXml?: PptxGraphicFrameExtension[] | undefined;
 }
 
 /**
@@ -323,31 +323,31 @@ export type OleObjectType =
  */
 export interface OlePptxElement extends PptxElementBase {
 	type: 'ole';
-	oleTarget?: string;
-	oleProgId?: string;
+	oleTarget?: string | undefined;
+	oleProgId?: string | undefined;
 	oleName?: string | undefined;
 	/** CLSID of the OLE object (from `@_classid`). */
-	oleClsId?: string;
+	oleClsId?: string | undefined;
 	/** Detected application type (excel, word, pdf, etc.). */
-	oleObjectType?: OleObjectType;
+	oleObjectType?: OleObjectType | undefined;
 	/** File extension for the embedded binary (e.g. "xlsx", "docx"). */
-	oleFileExtension?: string;
+	oleFileExtension?: string | undefined;
 	/** Original file name when available. */
-	fileName?: string;
+	fileName?: string | undefined;
 	/** Whether this is a linked (vs. embedded) object. */
-	isLinked?: boolean;
+	isLinked?: boolean | undefined;
 	/** External file path for linked OLE objects (TargetMode="External"). */
-	externalPath?: string;
+	externalPath?: string | undefined;
 	/** Data-URL or path for the OLE preview image. */
-	previewImage?: string;
+	previewImage?: string | undefined;
 	/** Decoded preview image as a data-URL. */
-	previewImageData?: string;
+	previewImageData?: string | undefined;
 	/** Whether the OLE object is shown as an icon (`p:oleObj/@showAsIcon`). */
-	oleShowAsIcon?: boolean;
+	oleShowAsIcon?: boolean | undefined;
 	/** Authored display width of the OLE object preview, in EMU (`@imgW`). */
-	oleImgW?: number;
+	oleImgW?: number | undefined;
 	/** Authored display height of the OLE object preview, in EMU (`@imgH`). */
-	oleImgH?: number;
+	oleImgH?: number | undefined;
 	/**
 	 * The recovered embedded payload as a data-URL (e.g.
 	 * `data:application/vnd...;base64,...`), suitable for download or
@@ -358,19 +358,19 @@ export interface OlePptxElement extends PptxElementBase {
 	 * Stored as a data-URL string to mirror how images store decoded bytes
 	 * ({@link ImagePptxElement.imageData}) and to stay serialization-safe.
 	 */
-	oleEmbeddedData?: string;
+	oleEmbeddedData?: string | undefined;
 	/** Original file name of the embedded payload when recoverable. */
-	oleEmbeddedFileName?: string;
+	oleEmbeddedFileName?: string | undefined;
 	/** MIME type of the embedded payload, derived from its extension/ProgID. */
-	oleEmbeddedMimeType?: string;
+	oleEmbeddedMimeType?: string | undefined;
 	/** Size of the embedded payload in bytes. */
-	oleEmbeddedByteSize?: number;
+	oleEmbeddedByteSize?: number | undefined;
 	/**
 	 * `p:link/@followColorScheme` (`ST_OleObjectFollowColorScheme`): whether a
 	 * LINKED OLE object's icon recolours to match the presentation theme.
 	 * Only meaningful when {@link isLinked} is `true`. ECMA-376 §19.3.1.28.
 	 */
-	oleFollowColorScheme?: 'none' | 'full' | 'textAndBackground';
+	oleFollowColorScheme?: 'none' | 'full' | 'textAndBackground' | undefined;
 	/**
 	 * `p:link/@updateAutomatic` (`CT_OleObjectLink`, ECMA-376 §19.3.2.4):
 	 * whether a LINKED OLE object refreshes automatically from its source
@@ -378,7 +378,7 @@ export interface OlePptxElement extends PptxElementBase {
 	 * Only meaningful when {@link isLinked} is `true`. The schema default is
 	 * `false`; `undefined` means the source authored no explicit value.
 	 */
-	oleUpdateAutomatic?: boolean;
+	oleUpdateAutomatic?: boolean | undefined;
 	/**
 	 * Set by the in-viewer OLE content editors (`ole-edit-api.ts`) whenever
 	 * `oleEmbeddedData` and/or `previewImageData` have been changed in memory
@@ -387,13 +387,13 @@ export interface OlePptxElement extends PptxElementBase {
 	 * `PptxSlide.isDirty`. The save writer clears it once the pending write
 	 * has been queued.
 	 */
-	oleContentDirty?: boolean;
+	oleContentDirty?: boolean | undefined;
 	/** Accessibility description from `p:nvGraphicFramePr/p:cNvPr/@descr`. */
 	altText?: string | undefined;
 	/** Accessibility title from `p:nvGraphicFramePr/p:cNvPr/@title`. */
 	title?: string | undefined;
 	/** Unrecognised graphicFrame extLst extensions, captured verbatim for round-trip. */
-	extensionXml?: PptxGraphicFrameExtension[];
+	extensionXml?: PptxGraphicFrameExtension[] | undefined;
 }
 
 /**
@@ -418,67 +418,67 @@ export interface OlePptxElement extends PptxElementBase {
  */
 export interface MediaPptxElement extends PptxElementBase {
 	type: 'media';
-	mediaType?: PptxMediaType;
+	mediaType?: PptxMediaType | undefined;
 	mediaPath?: string | undefined;
 	mediaData?: string | undefined;
 	mediaMimeType?: string | undefined;
-	mediaReferenceKind?: PptxMediaReferenceKind;
+	mediaReferenceKind?: PptxMediaReferenceKind | undefined;
 	mediaReferenceName?: string | undefined;
 	/** Explicit DrawingML `audioFile/@contentType` value when present. */
 	mediaReferenceContentType?: string | undefined;
 	audioCdStart?: PptxAudioCdPosition | undefined;
 	audioCdEnd?: PptxAudioCdPosition | undefined;
-	rawMediaReferenceXml?: XmlObject;
+	rawMediaReferenceXml?: XmlObject | undefined;
 	/** Trim start in milliseconds (from p:cMediaNode p:cTn @st). */
 	trimStartMs?: number | undefined;
 	/** Trim end in milliseconds (from p:cMediaNode p:cTn @end). */
 	trimEndMs?: number | undefined;
 	/** Path to the poster/preview image inside the ZIP. */
-	posterFramePath?: string;
+	posterFramePath?: string | undefined;
 	/** Base64 data-URL for the poster frame image. */
 	posterFrameData?: string | undefined;
 	/** Poster source crop from the left edge as a 0..1 fraction. */
-	cropLeft?: number;
+	cropLeft?: number | undefined;
 	/** Poster source crop from the top edge as a 0..1 fraction. */
-	cropTop?: number;
+	cropTop?: number | undefined;
 	/** Poster source crop from the right edge as a 0..1 fraction. */
-	cropRight?: number;
+	cropRight?: number | undefined;
 	/** Poster source crop from the bottom edge as a 0..1 fraction. */
-	cropBottom?: number;
+	cropBottom?: number | undefined;
 	/** Poster stretch-target inset from the left frame edge. */
-	fillRectLeft?: number;
+	fillRectLeft?: number | undefined;
 	/** Poster stretch-target inset from the top frame edge. */
-	fillRectTop?: number;
+	fillRectTop?: number | undefined;
 	/** Poster stretch-target inset from the right frame edge. */
-	fillRectRight?: number;
+	fillRectRight?: number | undefined;
 	/** Poster stretch-target inset from the bottom frame edge. */
-	fillRectBottom?: number;
+	fillRectBottom?: number | undefined;
 	/** Whether media should play full-screen during presentation. */
-	fullScreen?: boolean;
+	fullScreen?: boolean | undefined;
 	/** Whether media should loop continuously. */
 	loop?: boolean | undefined;
 	/** Fade-in duration in seconds. */
-	fadeInDuration?: number;
+	fadeInDuration?: number | undefined;
 	/** Fade-out duration in seconds. */
-	fadeOutDuration?: number;
+	fadeOutDuration?: number | undefined;
 	/** Playback volume (0 to 1). */
 	volume?: number | undefined;
 	/** Whether media auto-plays on slide entry. */
 	autoPlay?: boolean | undefined;
 	/** Whether audio continues playing across slide transitions (presentation mode). */
-	playAcrossSlides?: boolean;
+	playAcrossSlides?: boolean | undefined;
 	/** Hide the element when media is not actively playing. */
-	hideWhenNotPlaying?: boolean;
+	hideWhenNotPlaying?: boolean | undefined;
 	/** Named time bookmarks within the clip. */
-	bookmarks?: MediaBookmark[];
+	bookmarks?: MediaBookmark[] | undefined;
 	/** Playback speed multiplier (1 = normal, 2 = double, 0.5 = half). */
-	playbackSpeed?: number;
+	playbackSpeed?: number | undefined;
 	/** Runtime-extracted metadata (duration, resolution, codec). */
-	metadata?: MediaMetadata;
+	metadata?: MediaMetadata | undefined;
 	/** Closed caption / subtitle tracks. */
-	captionTracks?: MediaCaptionTrack[];
+	captionTracks?: MediaCaptionTrack[] | undefined;
 	/** Whether the media source is missing/broken (file not found in archive). */
-	mediaMissing?: boolean;
+	mediaMissing?: boolean | undefined;
 	/**
 	 * Whether the media is linked (external `r:link`) rather than embedded
 	 * (`r:embed`). Defaults to embedded when undefined.
@@ -495,7 +495,7 @@ export interface MediaPptxElement extends PptxElementBase {
 	/** Accessibility title, from the same `@title` attribute on whichever `p:cNvPr` the media form uses. Same scope note as {@link altText}. */
 	title?: string | undefined;
 	/** Unrecognised graphicFrame extLst extensions, captured verbatim for round-trip. */
-	extensionXml?: PptxGraphicFrameExtension[];
+	extensionXml?: PptxGraphicFrameExtension[] | undefined;
 }
 
 /**
@@ -553,9 +553,9 @@ export interface GroupPptxElement extends PptxElementBase {
 	 * degenerate). See `group-shape-geometry.ts`'s module doc for why a group
 	 * needs two coordinate systems at all.
 	 */
-	chOffXEmu?: number;
+	chOffXEmu?: number | undefined;
 	/** See {@link chOffXEmu}. */
-	chOffYEmu?: number;
+	chOffYEmu?: number | undefined;
 	/** See {@link chOffXEmu}. */
 	chExtWidthEmu?: number | undefined;
 	/** See {@link chOffXEmu}. */
@@ -579,7 +579,7 @@ export interface InkPptxElement extends PptxElementBase {
 	/** Per-path opacities (0-1). */
 	inkOpacities?: number[] | undefined;
 	/** Drawing tool used: pen, highlighter, or eraser. */
-	inkTool?: 'pen' | 'highlighter' | 'eraser';
+	inkTool?: 'pen' | 'highlighter' | 'eraser' | undefined;
 	/**
 	 * Per-path arrays of per-point pressure values (0-1).
 	 *
@@ -604,11 +604,11 @@ export interface InkPptxElement extends PptxElementBase {
 	 * perpendicular to the lean direction, approximating a chisel-tip
 	 * calligraphy nib.
 	 */
-	inkPointTiltX?: number[][];
+	inkPointTiltX?: number[][] | undefined;
 	/** Per-path, per-point pen-tilt lean direction (degrees), paired with {@link inkPointTiltX}. */
-	inkPointTiltY?: number[][];
+	inkPointTiltY?: number[][] | undefined;
 	/** Unrecognised graphicFrame extLst extensions, captured verbatim for round-trip. */
-	extensionXml?: PptxGraphicFrameExtension[];
+	extensionXml?: PptxGraphicFrameExtension[] | undefined;
 }
 
 /**
@@ -625,7 +625,7 @@ export interface ContentPartInkStroke {
 	 * When present, the renderer uses these values to produce
 	 * variable-width strokes that reflect stylus/pen pressure.
 	 */
-	pressures?: number[];
+	pressures?: number[] | undefined;
 	/**
 	 * Per-point pen-tilt lean direction (radians), decoded from the source
 	 * InkML's `OTx`/`OTy` tilt-offset channels or its `AZIMUTH` channel.
@@ -635,12 +635,12 @@ export interface ContentPartInkStroke {
 	 * calligraphic (chisel-tip) nib. Absent when the source declared no tilt
 	 * channel, in which case rendering is unaffected.
 	 */
-	tiltAngles?: number[];
+	tiltAngles?: number[] | undefined;
 	/**
 	 * Per-point pen-tilt strength (0 upright, 1 maximally leaned), paired with
 	 * {@link tiltAngles}.
 	 */
-	tiltMagnitudes?: number[];
+	tiltMagnitudes?: number[] | undefined;
 	/**
 	 * Which InkML channel pair {@link tiltAngles}/{@link tiltMagnitudes} were
 	 * decoded from: `'azimuthAltitude'` when the source declared `AZIMUTH`
@@ -654,7 +654,7 @@ export interface ContentPartInkStroke {
 	 * the rendered lean is identical either way; only the written channel
 	 * NAMES differ.
 	 */
-	tiltEncoding?: 'vector' | 'azimuthAltitude';
+	tiltEncoding?: 'vector' | 'azimuthAltitude' | undefined;
 	/**
 	 * Per-point timestamps (milliseconds), decoded from the source InkML
 	 * trace's `T` channel when it declared one.
@@ -668,7 +668,7 @@ export interface ContentPartInkStroke {
 	 * timestamp to time its reveal instead of the fixed per-stroke cascade; see
 	 * `pptx-viewer-shared`'s `render/ink-replay-timeline.ts`.
 	 */
-	pointTimestamps?: number[];
+	pointTimestamps?: number[] | undefined;
 }
 
 /**
@@ -679,11 +679,11 @@ export interface ContentPartInkStroke {
 export interface ContentPartPptxElement extends PptxElementBase {
 	type: 'contentPart';
 	/** Ink strokes contained in this content part. */
-	inkStrokes?: ContentPartInkStroke[];
+	inkStrokes?: ContentPartInkStroke[] | undefined;
 	/** Package path of the related InkML part. */
-	inkPartPath?: string;
+	inkPartPath?: string | undefined;
 	/** Parsed InkML root retained for unknown-node preservation on dirty save. */
-	inkPartRawXml?: XmlObject;
+	inkPartRawXml?: XmlObject | undefined;
 }
 
 /**
@@ -710,11 +710,11 @@ export interface ZoomPptxElement extends PptxElementBase, PptxImageProperties {
 	/** Zero-based index of the target slide. */
 	targetSlideIndex: number;
 	/** Section ID for section zoom. */
-	targetSectionId?: string;
+	targetSectionId?: string | undefined;
 	/** Ordered section tiles in a Summary Zoom container. */
-	summaryTargets?: SummaryZoomTarget[];
+	summaryTargets?: SummaryZoomTarget[] | undefined;
 	/** Layout mode authored on the Summary Zoom container. */
-	summaryLayout?: 'grid' | 'fixed';
+	summaryLayout?: 'grid' | 'fixed' | undefined;
 	/**
 	 * `zmPr/@returnToParent` (MS-PPTX `CT_ZoomObjectProperties`, shared by all
 	 * three Zoom kinds): whether continuing forward from the destination slide
@@ -777,27 +777,27 @@ export interface SummaryZoomTarget extends PptxImageProperties {
 export interface Model3DPptxElement extends PptxElementBase, PptxImageProperties {
 	type: 'model3d';
 	/** Path to the 3D model file inside the ZIP. */
-	modelPath?: string;
+	modelPath?: string | undefined;
 	/** Base64 data URL of the 3D model binary. */
-	modelData?: string;
+	modelData?: string | undefined;
 	/** MIME type of the model (e.g. "model/gltf-binary"). */
-	modelMimeType?: string;
+	modelMimeType?: string | undefined;
 	/** Poster/preview image shown when 3D rendering is unavailable. */
-	posterImage?: string;
+	posterImage?: string | undefined;
 	/**
 	 * Authored camera, model transform and lights (`am3d:camera`, `am3d:trans`,
 	 * lights). Read-only view: the XML round-trips via `rawXml`.
 	 */
-	scene?: Model3DSceneData;
+	scene?: Model3DSceneData | undefined;
 	/** Unrecognised graphicFrame extLst extensions, captured verbatim for round-trip. */
-	extensionXml?: PptxGraphicFrameExtension[];
+	extensionXml?: PptxGraphicFrameExtension[] | undefined;
 }
 
 /** An element whose type is not recognised by the parser. */
 export interface UnknownPptxElement extends PptxElementBase {
 	type: 'unknown';
 	/** Unrecognised graphicFrame extLst extensions, captured verbatim for round-trip. */
-	extensionXml?: PptxGraphicFrameExtension[];
+	extensionXml?: PptxGraphicFrameExtension[] | undefined;
 }
 
 // ==========================================================================

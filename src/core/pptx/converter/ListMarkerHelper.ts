@@ -7,7 +7,9 @@ export type SegmentBulletInfo = NonNullable<TextSegment['bulletInfo']>;
 export function resolveListLevel(
 	bulletInfo: SegmentBulletInfo,
 	paragraphIndex: number,
-	paragraphIndents: Array<{ marginLeft?: number; indent?: number }> | undefined,
+	paragraphIndents:
+		| Array<{ marginLeft?: number | undefined; indent?: number | undefined }>
+		| undefined,
 ): number {
 	const explicitLevel = readNumericProp(bulletInfo, 'level');
 	if (typeof explicitLevel === 'number') {
