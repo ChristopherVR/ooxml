@@ -113,6 +113,10 @@ The shared controllers, each adapted by every binding:
   `applyPresentationInk`) and `createPresenterSessionController` (audience window and channel).
 - **Slide Sorter**: `createSlideSorterController` (`render/controller/slide-sorter-controller.ts`:
   selection, sorter clipboard, zoom, menu, drag reorder, keys; `slideSorterView` for drawn values).
+- **Comments panel**: `createCommentsPanelController` (per-slide drafts, edits and reply composers,
+  one per viewer).
+- **Selection Pane**: `createSelectionPaneController` with `selectionPaneRows` and
+  `selectionPaneLabel` (rename box, drag reorder, the one row label).
 - **Canvas gestures**: move, resize and rotate run on `createGestureController`
   (`render/editor-gestures.ts`: dead zone, window listeners, snapping, multi-selection snap
   exclusion, minimum size, mid-gesture lock check). A binding supplies deps and paints the

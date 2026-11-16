@@ -647,8 +647,34 @@ Non-test binding source after this work (2026-11-16, this change alone): React 1
 Angular 92,113 to 92,093 (it gained drag reorder), Vue 80,113 to 80,014, Svelte 66,446 to 66,358,
 vanilla 65,996 to 65,927.
 
-Still per binding, by the same survey: the comments panel (React keeps per-slide drafts, edit state
-and mention drafts the others do not, so it needs a behaviour decision before a controller), the
-slide rail's selection and context menu, the zoom viewport, the notes pane and the selection pane.
-Find and Replace already runs on the shared `find-replace-session`; only the open state and its
-shortcut remain per binding.
+### Comments panel, Selection Pane and the show's Erase button (landed 2026-11-16)
+
+- `createCommentsPanelController` (`render/controller/comments-panel-controller.ts`), one per
+  viewer: the new-comment draft and its mentions per slide, the comment being edited per slide,
+  one reply composer that opens empty, and add, edit (at any depth), delete, resolve and reply
+  through the binding's undoable deck commit. React's behaviour is the one chosen, because the
+  other bindings lacked features rather than differed: Vue, Angular and Svelte kept one draft for
+  the whole deck (it followed you to the next slide) and dropped it when the panel closed, had no
+  edit in place, and only React anchored a new comment to the selected element; vanilla's
+  workspace pane and inspector tab kept separate drafts. Vue provides the controller to every
+  `CommentsPanel`, Angular through `CommentsPanelStateService`, Svelte through `commentsPanelFor`;
+  a panel mounted outside a viewer lists comments read-only.
+- `createSelectionPaneController` with `selectionPaneRows` and `selectionPaneLabel`: the rename
+  box and drag reorder, and one row label (name, else text, else the translated "{type} {number}").
+  Drift: React labelled in English whatever the locale, vanilla capitalised the type id, Angular
+  showed the element id, Svelte the lower-case type numbered from the top; the rename box started
+  from the label, the id or the bare name; Angular renamed and vanilla dragged on a read-only
+  deck; Angular and Svelte could not drag. The box now closes before focus returns to the viewer
+  root, so the blur that focus move causes never commits a cancelled rename.
+- The show toolbar's state gains `hasSlideAnnotations`: Erase All Ink on Slide is enabled for ink
+  on the slide on screen only, while `hasAnnotations` keeps meaning ink anywhere in the show.
+  Vanilla's Erase (button and E) cleared every slide's ink; it now clears the slide on stage.
+
+Non-test binding source after this work (2026-11-16, from 104,367 /
+92,113 / 80,113 / 66,446 / 65,996): React 103,395, Angular 92,172, Vue 79,816, Svelte 66,438,
+vanilla 66,002. Angular, Svelte and vanilla grew where they gained comment editing and drag
+reorder; their per-binding state machines went.
+
+Still per binding: the slide rail's selection and context menu, the zoom viewport, the notes pane,
+and Find and Replace's open state and shortcut (its session already runs on the shared
+`find-replace-session`). Angular keeps its public `CommentsService`, now unused by the viewer.
