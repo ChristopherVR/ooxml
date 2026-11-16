@@ -495,5 +495,18 @@ The Wave 6 next list was a historical checkpoint. Labels/paint saves, Word/Excel
 SmartArt styles/colours/generated caches and shared advanced chart controls have since landed.
 Current work finishes the PowerPoint compatibility-adapter migration and its exhaustive admission,
 corpus and native checks. Remaining independent framework work includes the presentation controller
-(timers, annotations, presenter window), Fill inspector section and pptx ribbon tab-row migration.
+(timers, annotations, presenter window) and pptx ribbon tab-row migration.
+
+The Fill inspector section landed on 2026-11-16: `SHAPE_FILL_MODE_SECTIONS` and
+`SHAPE_FILL_OPTIONS_SECTIONS` (`render/inspector/shape-fill-fields.ts`) are drawn by each binding's
+generic field renderer, and `resolveShapeFillView` with the typed `shapeFillPatch` actions
+(`shape-fill-actions.ts`, stop edits in `shape-fill-stops.ts` over `ooxml-core/chart`'s stop list
+operations) drive the compound controls each binding keeps as a native template: the solid colour
+with its theme grid, the stop rows, the pattern swatches and the picture source. The bindings had
+drifted (React a five-kind select, Vue four kinds and no picture, Svelte and vanilla gradient and
+pattern checkboxes, Angular closed disclosures with no kind at all; stop opacity 0-100 in React,
+0-1 elsewhere; add-stop colour and position four ways); every binding now offers PowerPoint's six
+kinds, shows the solid colour only for a solid fill, transparency 0-100 for a filled shape, per-stop
+opacity 0-100 and a pattern swatch grid, and adds a stop halfway along the last gap. A slide
+background fill saves as `useBgFill`; the canvas still draws it only after a reopen.
 See the active delivery ledger and agnostic plan for implemented coverage and residual limits.

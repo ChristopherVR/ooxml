@@ -522,6 +522,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       edits apply to the primary element only; Vue shows the slide inspector for
       multi-selections; tables have no table-wide Font/Paragraph section; section reordering is
       visual only (tab order unchanged).
+- [ ] **P2** Format Shape > Fill: the six kinds (no fill, solid, gradient, picture, pattern, slide
+      background) are one shared section in all five bindings, and a slide background fill saves
+      as `useBgFill`. Open: a shape switched to a slide background fill draws no fill until the
+      deck is reopened (the canvas does not resolve the slide background onto it); no gradient
+      presets, direction gallery or per-stop brightness; the picture fill has no tile offsets,
+      scale, alignment or mirror fields.
 - [x] **P1** Save as PDF writes vector pages at the slide size: shapes, gradients, pictures, inline
       SVG charts and selectable text with the deck's embedded fonts subset in; hidden slides are
       left out unless Options > Advanced > Save as PDF includes them; effects PDF cannot express
