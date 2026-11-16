@@ -68,6 +68,12 @@ const CODE_MESSAGE_KEYS: Readonly<Record<string, string>> = {
 	EXTERNAL_IMAGE_REFERENCE: 'pptx.compatibility.externalImageReference',
 	SLIDE_SYNCHRONIZATION_METADATA: 'pptx.compatibility.slideSynchronizationMetadata',
 	UNSUPPORTED_ALTERNATE_CONTENT_CHOICE: 'pptx.compatibility.unsupportedAlternateContentChoice',
+	// The graphic-frame limitations (GRAPHIC_FRAME_LIMITATIONS in core's
+	// compatibility-child-sets.ts) had no entry, so their toast showed the
+	// generic message with the raw code.
+	PARTIAL_OLE_SUPPORT: 'pptx.compatibility.partialOleSupport',
+	PARTIAL_INK_SUPPORT: 'pptx.compatibility.partialInkSupport',
+	UNSUPPORTED_GRAPHIC_FRAME: 'pptx.compatibility.unsupportedGraphicFrame',
 	'group-depth-exceeded': 'pptx.compatibility.groupDepthExceeded',
 	SAVE_NOTES_RELATIONSHIP_MISSING: 'pptx.compatibility.saveNotesRelationshipMissing',
 	SAVE_NOTES_PART_MISSING: 'pptx.compatibility.saveNotesPartMissing',

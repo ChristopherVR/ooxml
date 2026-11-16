@@ -4144,6 +4144,12 @@ export const translationsEn: Record<string, string> = {
 		'This slide is linked to another presentation for synchronization; that link is preserved but not applied here.',
 	'pptx.compatibility.unsupportedAlternateContentChoice':
 		'This presentation uses a newer PowerPoint feature; a compatible fallback was used instead.',
+	'pptx.compatibility.partialOleSupport':
+		'This presentation has embedded objects. They show as pictures and can be opened or downloaded; Excel, Word and PowerPoint objects can also be edited here.',
+	'pptx.compatibility.partialInkSupport':
+		'Some ink drawings use pen settings this viewer cannot show exactly.',
+	'pptx.compatibility.unsupportedGraphicFrame':
+		'This presentation contains an object this viewer cannot show. It is kept unchanged when you save.',
 	'pptx.compatibility.groupDepthExceeded':
 		'A group of shapes is nested more deeply than this viewer supports and was flattened.',
 	'pptx.compatibility.saveNotesRelationshipMissing':

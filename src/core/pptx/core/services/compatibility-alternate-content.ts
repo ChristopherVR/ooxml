@@ -33,6 +33,9 @@ export function inspectAlternateContentWarnings(
 					if (isAlternateContentChoiceSupported(choice)) {
 						continue;
 					}
+					if (isLegacyChoiceWithFallback(choice, block)) {
+						continue;
+					}
 					const requires = String(choice['@_Requires'] || '(missing)');
 					report({
 						code: 'UNSUPPORTED_ALTERNATE_CONTENT_CHOICE',
@@ -47,6 +50,31 @@ export function inspectAlternateContentWarnings(
 		}
 		inspectAlternateContentWarnings(value, scope, slideId, `${path}/${key}`, report);
 	}
+}
+
+/**
+ * `Requires` tokens that name an OLDER format than the `mc:Fallback`
+ * beside them, so taking the Fallback loses nothing.
+ *
+ * PowerPoint writes every OLE object and ActiveX control as an `mc:Choice
+ * Requires="v"` (VML, the pre-2007 drawing format) next to an `mc:Fallback`
+ * holding the same `p:oleObj` / `p:control` plus its DrawingML preview
+ * `p:pic`. The reader takes the Fallback, which is the modern form, so
+ * reporting the Choice told the user a "newer PowerPoint feature" had been
+ * replaced when nothing was. A Choice with no Fallback, or one that also
+ * requires any other unsupported token, still reports.
+ */
+const LEGACY_CHOICE_NAMESPACES: ReadonlySet<string> = new Set(['v']);
+
+function isLegacyChoiceWithFallback(choice: XmlObject, block: XmlObject | undefined): boolean {
+	if (!block?.['mc:Fallback']) {
+		return false;
+	}
+	const tokens = String(choice['@_Requires'] ?? '')
+		.trim()
+		.split(/\s+/)
+		.filter(Boolean);
+	return tokens.length > 0 && tokens.every((token) => LEGACY_CHOICE_NAMESPACES.has(token));
 }
 
 function asArray(value: unknown): XmlObject[] {
