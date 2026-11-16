@@ -94,6 +94,8 @@ remain outside this delivery.
       every product's galleries; a pick writes Office's own definition and `uniqueId`.
 - [x] Write quick-style 3D (label `scene3d`, `sp3d`, text 3D) into Word and Excel generated caches
       as Office's own caches carry it; keep the spatial camera in the quick-style part.
+- [x] Name the galleries in every product locale in Word and Excel, from PowerPoint's translations
+      (agent-authored; not verified against Office's localized gallery names).
 - [ ] Regenerate a source cache Office laid out (round-trip writer), draw spatial scenes, and show
       a 3-D pick in PowerPoint's editor before reopening.
 

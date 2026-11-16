@@ -1,4 +1,5 @@
 import { smartArtColorsGalleryState, smartArtStylesGalleryState } from './galleries';
+import { DIAGRAM_UI_STRINGS } from 'ooxml-core/diagram';
 import { smartArtLayoutTileSvg } from './tiles';
 
 describe('SmartArt Design gallery state', () => {
@@ -67,5 +68,32 @@ describe('SmartArt Design gallery state', () => {
 		const fallback = smartArtLayoutTileSvg('nope', 'red;x', { width: 56, height: 36 });
 		expect(fallback).toContain('#4472C4');
 		expect(fallback).not.toContain('red;x');
+	});
+
+	it('names every gallery title, section and entry in each translated locale', () => {
+		for (const locale of ['fr', 'de', 'es', 'zh-CN'] as const) {
+			const strings: Record<string, string> = DIAGRAM_UI_STRINGS[locale];
+			const t = (english: string) => strings[english] ?? `MISSING:${english}`;
+			for (const state of [
+				smartArtColorsGalleryState({}, undefined, t),
+				smartArtStylesGalleryState(undefined, undefined, t),
+			]) {
+				const labels = [
+					state.label,
+					...state.sections.flatMap((section) => [
+						section.title,
+						...section.items.map((item) => item.label),
+					]),
+				];
+				expect(labels.filter((label) => label?.startsWith('MISSING:'))).toEqual([]);
+				expect(new Set(labels).size).toBe(labels.length);
+			}
+		}
+		expect(DIAGRAM_UI_STRINGS.fr['Transparent Gradient Range - Accent 4']).toBe(
+			'Plage de dégradé transparente - Accentuation 4',
+		);
+		expect(DIAGRAM_UI_STRINGS.de['Colorful Range - Accent Colors 5 to 6']).toBe(
+			'Farbiger Bereich - Akzentfarben 5 bis 6',
+		);
 	});
 });

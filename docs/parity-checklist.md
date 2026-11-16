@@ -101,7 +101,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       extrusion, material, light rig and text 3-D as Office's cache does. 82 Word 16 and Excel 16
       files reopened natively with the expected ids (2026-11-16). Remaining: the gallery tiles
       are hints, not renderings; PowerPoint previews a pick at the nearest model intensity and
-      colour patch until reopen; Word and Excel do not translate the gallery names.
+      colour patch until reopen. Word and Excel show the gallery names in every locale from
+      PowerPoint's translations, which are agent-authored and unverified against Office's own
+      localized names.
 - [ ] **P1** Proofing is the browser's `spellcheck` attribute everywhere: no grammar, thesaurus,
       custom dictionary, ignore list or proofing-language engine.
 - [ ] **P1** Picture Format and Shape Format contextual tabs: missing in Excel (both); partial in

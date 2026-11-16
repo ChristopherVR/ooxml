@@ -752,8 +752,11 @@ The labels U3 to U5 are assigned here; the remaining chart UI work was previousl
   the model's five schemes and three intensities map onto the definitions they are named after. PowerPoint writes the
   picked part on save and names it on the document point (`csTypeId`, `qsTypeId`); in the editor it recolours through
   its existing colour patch and the nearest intensity, so a 3-D pick shows its true look only after reopening.
-  **Remains:** rich text authoring in Excel's text pane, 3D formatting controls beyond the gallery, drawing spatial
-  scenes, and translated gallery names in Word and Excel.
+  Word and Excel name the gallery titles, sections and all 52 entries in every product locale
+  (`diagram/strings/gallery.ts`), expanded from PowerPoint's own `pptx.gallery.smartArt*` translations so the
+  three products agree; those translations are agent-authored and not verified against Office's localized names.
+  **Remains:** rich text authoring in Excel's text pane, 3D formatting controls beyond the gallery, and drawing spatial
+  scenes.
 
   Acceptance on 2026-11-16: the extended `smartart-format-acceptance-build.ts` produced 41 Word and 41 Excel files
   (the three model combinations, then each of the 38 colour definitions with the 14 quick styles in turn) and
