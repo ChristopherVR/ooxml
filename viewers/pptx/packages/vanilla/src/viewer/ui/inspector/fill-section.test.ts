@@ -99,16 +99,16 @@ describe('createFillSection line options', () => {
 	});
 });
 
-describe('createFillSection pattern-fill panel', () => {
-	it('is hidden until the shape is in pattern fill mode', () => {
+describe('createFillSection fill kinds', () => {
+	const byTestId = <E extends HTMLElement = HTMLInputElement>(root: HTMLElement, id: string) =>
+		root.querySelector<E>(`[data-testid="${id}"]`);
+
+	it('shows the pattern swatches only for a pattern fill', () => {
 		const { section } = mount();
 		section.update(baseState());
 		const panel = section.el.querySelector('.pptxv-inspector-pattern') as HTMLElement;
 		expect(panel.hidden).toBeTruthy();
-	});
 
-	it('shows the preset + background controls when shapeStyle.fillMode is "pattern"', () => {
-		const { section } = mount();
 		section.update(
 			baseState({
 				shapeStyle: {
@@ -118,61 +118,72 @@ describe('createFillSection pattern-fill panel', () => {
 				},
 			} as unknown as Partial<InspectorState>),
 		);
-		const panel = section.el.querySelector('.pptxv-inspector-pattern') as HTMLElement;
 		expect(panel.hidden).toBeFalsy();
-		const select = panel.querySelector('pptx-ui-select')!;
-		expect(select.value).toBe('cross');
+		const swatches = panel.querySelectorAll<HTMLButtonElement>(
+			'[data-testid="fill-pattern-swatch"]',
+		);
+		expect(swatches).toHaveLength(56);
+		const pressed = [...swatches].filter((s) => s.getAttribute('aria-pressed') === 'true');
+		expect(pressed.map((s) => s.title)).toStrictEqual(['pptx.fillPatterns.cross']);
 	});
 
-	it('turning the pattern toggle on writes fillMode: pattern with a default preset', () => {
+	it('switches the fill kind through the shared mode patch', () => {
 		const { section, handlers } = mount();
 		section.update(baseState());
-		const toggle = section.el.querySelector('.pptxv-inspector-pattern')
-			?.previousElementSibling as HTMLElement;
-		const checkbox = toggle.querySelector('pptx-ui-checkbox') as HTMLInputElement;
+		const select = byTestId<HTMLSelectElement>(section.el, 'fill-mode')!;
+		expect(select.value).toBe('solid');
 
-		checkbox.checked = true;
-		checkbox.dispatchEvent(new Event('change'));
+		select.value = 'pattern';
+		select.dispatchEvent(new Event('change'));
 
 		expect(handlers.setShapeStyle).toHaveBeenCalledWith(
 			expect.objectContaining({ fillMode: 'pattern', fillPatternPreset: 'pct20' }),
 		);
 	});
 
-	it('turning the pattern toggle off reverts to a solid fill', () => {
-		const { section, handlers } = mount();
+	it('hides the solid colour group for a non-solid fill', () => {
+		const { section } = mount();
 		section.update(
-			baseState({
-				shapeStyle: { fillMode: 'pattern', fillPatternPreset: 'cross' },
-			} as unknown as Partial<InspectorState>),
+			baseState({ shapeStyle: { fillMode: 'none' } } as unknown as Partial<InspectorState>),
 		);
-		const toggle = section.el.querySelector('.pptxv-inspector-pattern')
-			?.previousElementSibling as HTMLElement;
-		const checkbox = toggle.querySelector('pptx-ui-checkbox') as HTMLInputElement;
-
-		checkbox.checked = false;
-		checkbox.dispatchEvent(new Event('change'));
-
-		expect(handlers.setShapeFill).toHaveBeenCalledWith('#4f86ff');
+		const fillGroup = section.el.querySelector<HTMLElement>(
+			'.pptxv-inspector-color-group[aria-label="pptx.inspector.fill"]',
+		)!;
+		expect(fillGroup.hidden).toBeTruthy();
 	});
 
-	it('changing the preset select writes fillPatternPreset', () => {
+	it('picking a pattern swatch writes fillPatternPreset', () => {
 		const { section, handlers } = mount();
 		section.update(
 			baseState({
 				shapeStyle: { fillMode: 'pattern', fillPatternPreset: 'cross' },
 			} as unknown as Partial<InspectorState>),
 		);
-		const select = section.el.querySelector(
-			'.pptxv-inspector-pattern pptx-ui-select',
-		) as HTMLSelectElement;
-
-		select.value = 'dotGrid';
-		select.dispatchEvent(new Event('change'));
+		section.el
+			.querySelectorAll<HTMLButtonElement>('[data-testid="fill-pattern-swatch"]')[3]!
+			.click();
 
 		expect(handlers.setShapeStyle).toHaveBeenCalledWith({
 			fillMode: 'pattern',
-			fillPatternPreset: 'dotGrid',
+			fillPatternPreset: 'pct25',
+		});
+	});
+
+	it('shows the picture source and tiling for a picture fill', () => {
+		const { section, handlers } = mount();
+		section.update(
+			baseState({
+				shapeStyle: { fillMode: 'image', fillImageUrl: 'data:x' },
+			} as unknown as Partial<InspectorState>),
+		);
+		const url = byTestId(section.el, 'fill-image-url')!;
+		expect(url.value).toBe('data:x');
+		expect(byTestId(section.el, 'fill-image-mode')).not.toBeNull();
+		url.value = 'data:y';
+		url.dispatchEvent(new Event('change'));
+		expect(handlers.setShapeStyle).toHaveBeenCalledWith({
+			fillMode: 'image',
+			fillImageUrl: 'data:y',
 		});
 	});
 });
@@ -305,18 +316,19 @@ describe('createFillSection Fill and Line groups', () => {
 describe('createFillSection gradient stop theme colour grid', () => {
 	function gradientState(): Partial<InspectorState> {
 		return {
-			gradientEnabled: true,
-			gradient: {
-				type: 'linear',
-				angle: 90,
-				stops: [
+			shapeStyle: {
+				fillMode: 'gradient',
+				fillGradientStops: [
 					{ color: '#ff0000', position: 0 },
 					{ color: '#ed7d31', position: 100, colorRef: { scheme: 'accent2' } },
 				],
 			},
 			themeColorMap: OFFICE_THEME,
-		};
+		} as unknown as Partial<InspectorState>;
 	}
+
+	const stopsOf = (handlers: InspectorHandlers) =>
+		vi.mocked(handlers.setShapeStyle).mock.calls[0]?.[0].fillGradientStops;
 
 	it('renders one theme-swatch grid per gradient stop, hidden until a theme is loaded', () => {
 		const { section } = mount();
@@ -345,7 +357,7 @@ describe('createFillSection gradient stop theme colour grid', () => {
 			'.pptxv-inspector-gradient-stops pptx-ui-color-grid',
 		);
 		themeSwatch(grids[0], 'Accent 2')!.click();
-		expect(handlers.updateGradientStop).toHaveBeenCalledExactlyOnceWith(0, {
+		expect(stopsOf(handlers)?.[0]).toMatchObject({
 			color: '#ed7d31',
 			colorRef: { scheme: 'accent2' },
 		});
@@ -371,9 +383,6 @@ describe('createFillSection gradient stop theme colour grid', () => {
 		);
 		colorInputs[1].value = '#00ff00';
 		colorInputs[1].dispatchEvent(new Event('input'));
-		expect(handlers.updateGradientStop).toHaveBeenCalledExactlyOnceWith(1, {
-			color: '#00ff00',
-			colorRef: undefined,
-		});
+		expect(stopsOf(handlers)?.[1]).toMatchObject({ color: '#00ff00', colorRef: undefined });
 	});
 });

@@ -139,6 +139,27 @@ export const INSPECTOR_EXTRAS_CSS = `
 }
 .pptxv-inspector-pattern[hidden],
 .pptxv-inspector-pattern:empty { display: none; }
+.pptxv-inspector-pattern-grid {
+	display: grid;
+	grid-template-columns: repeat(8, 1fr);
+	gap: 4px;
+	max-height: 160px;
+	overflow-y: auto;
+}
+.pptxv-inspector-pattern-swatch {
+	aspect-ratio: 1;
+	padding: 0;
+	border: 1px solid var(--pptx-border);
+	border-radius: 4px;
+	background-color: #ffffff;
+	background-repeat: repeat;
+	background-size: 8px 8px;
+	cursor: pointer;
+}
+.pptxv-inspector-pattern-swatch[aria-pressed='true'] {
+	border-color: var(--pptx-primary);
+	outline: 2px solid var(--pptx-primary);
+}
 /*
  * Alt text and title stack their caption over a full-width field, as React's section does. Side by
  * side in the inline .pptxv-field box, the title's caption and a text input of the browser's default
