@@ -21,7 +21,7 @@ describe('action settings panel', () => {
 		const wrapper = mount(ActionSettingsPanel, {
 			props: { element, slideCount: 5 },
 		});
-		const url = wrapper.find('input[type="url"]');
+		const url = wrapper.find('[data-testid="action-url-url"]');
 		await setControlValue(url, 'https://openai.com');
 		expect(wrapper.emitted('update')?.at(-1)?.[0]).toMatchObject({
 			actionClick: { url: 'https://openai.com' },
@@ -33,34 +33,36 @@ describe('action settings panel', () => {
 		// as "none", so without the pending-type rule the select would snap back
 		// and this input would never appear.
 		const wrapper = mount(ActionSettingsPanel, { props: { element: bare, slideCount: 5 } });
-		expect(wrapper.find('input[type="url"]').exists()).toBeFalsy();
+		expect(wrapper.find('[data-testid="action-url-url"]').exists()).toBeFalsy();
 
 		await setControlValue(wrapper.findAll('pptx-ui-select')[0], 'url');
 
-		expect(wrapper.find('input[type="url"]').exists()).toBeTruthy();
+		expect(wrapper.find('[data-testid="action-url-url"]').exists()).toBeTruthy();
 		expect(wrapper.emitted('update')).toBeUndefined();
 	});
 
 	it('round-trips the url once a target is entered', async () => {
 		const wrapper = mount(ActionSettingsPanel, { props: { element: bare, slideCount: 5 } });
 		await setControlValue(wrapper.findAll('pptx-ui-select')[0], 'url');
-		await setControlValue(wrapper.find('input[type="url"]'), 'https://example.org/');
+		await setControlValue(wrapper.find('[data-testid="action-url-url"]'), 'https://example.org/');
 
 		expect(wrapper.emitted('update')?.at(-1)?.[0]).toMatchObject({
 			actionClick: { url: 'https://example.org/' },
 		});
 		await wrapper.setProps({ element: { ...bare, actionClick: { url: 'https://example.org/' } } });
 		expect(wrapper.findAll('pptx-ui-select')[0].element.value).toBe('url');
-		expect(wrapper.find<HTMLInputElement>('input[type="url"]').element.value).toBe(
+		expect(wrapper.find<HTMLInputElement>('[data-testid="action-url-url"]').element.value).toBe(
 			'https://example.org/',
 		);
 	});
 
-	it('reveals the slide spinner as soon as "Go to Slide" is picked', async () => {
+	it('reveals the slide picker as soon as "Go to Slide" is picked', async () => {
 		const wrapper = mount(ActionSettingsPanel, { props: { element: bare, slideCount: 5 } });
 		await setControlValue(wrapper.findAll('pptx-ui-select')[1], 'slide');
 
-		expect(wrapper.find('input[type="number"]').exists()).toBeTruthy();
+		expect(wrapper.find('[data-testid="action-slide"]').exists()).toBeTruthy();
+		// One choice per slide of the deck, after the "pick one" entry.
+		expect(wrapper.findAll('[data-testid="action-slide"] option')).toHaveLength(6);
 		expect(wrapper.emitted('update')).toBeUndefined();
 	});
 
@@ -69,29 +71,20 @@ describe('action settings panel', () => {
 			props: { element: bare, slideCount: 5 },
 		});
 		await setControlValue(wrapper.findAll('pptx-ui-select')[1], 'slide');
-		await setControlValue(wrapper.find('input[type="number"]'), 4);
+		await setControlValue(wrapper.find('[data-testid="action-slide"]'), '3');
 		expect(wrapper.emitted('update')?.at(-1)?.[0]).toMatchObject({
 			actionHover: { targetSlideIndex: 3 },
-		});
-	});
-
-	it('clamps a slide number past the end of the deck', async () => {
-		const wrapper = mount(ActionSettingsPanel, { props: { element: bare, slideCount: 5 } });
-		await setControlValue(wrapper.findAll('pptx-ui-select')[0], 'slide');
-		await setControlValue(wrapper.find('input[type="number"]'), 99);
-		expect(wrapper.emitted('update')?.at(-1)?.[0]).toMatchObject({
-			actionClick: { targetSlideIndex: 4 },
 		});
 	});
 
 	it('drops a half-made pick when the inspector moves to another element', async () => {
 		const wrapper = mount(ActionSettingsPanel, { props: { element: bare, slideCount: 5 } });
 		await setControlValue(wrapper.findAll('pptx-ui-select')[0], 'url');
-		expect(wrapper.find('input[type="url"]').exists()).toBeTruthy();
+		expect(wrapper.find('[data-testid="action-url-url"]').exists()).toBeTruthy();
 
 		await wrapper.setProps({ element: { ...bare, id: 'shape-2' } });
 
-		expect(wrapper.find('input[type="url"]').exists()).toBeFalsy();
+		expect(wrapper.find('[data-testid="action-url-url"]').exists()).toBeFalsy();
 		expect(wrapper.findAll('pptx-ui-select')[0].element.value).toBe('none');
 	});
 
@@ -180,7 +173,10 @@ describe('action settings panel: openFile / openPresentation', () => {
 	it('reuses the url target field for openPresentation', async () => {
 		const wrapper = mount(ActionSettingsPanel, { props: { element: bare, slideCount: 5 } });
 		await setControlValue(wrapper.findAll('pptx-ui-select')[0], 'openPresentation');
-		await setControlValue(wrapper.find('input[type="text"]'), 'other-deck.pptx');
+		await setControlValue(
+			wrapper.find('[data-testid="action-openPresentation-url"]'),
+			'other-deck.pptx',
+		);
 		expect(wrapper.emitted('update')?.at(-1)?.[0]).toMatchObject({
 			actionClick: { action: expect.stringContaining('hlinkpres'), url: 'other-deck.pptx' },
 		});
@@ -189,7 +185,7 @@ describe('action settings panel: openFile / openPresentation', () => {
 	it('reuses the url target field for runProgram', async () => {
 		const wrapper = mount(ActionSettingsPanel, { props: { element: bare, slideCount: 5 } });
 		await setControlValue(wrapper.findAll('pptx-ui-select')[0], 'runProgram');
-		const target = wrapper.find('input[type="text"]');
+		const target = wrapper.find('[data-testid="action-runProgram-url"]');
 		expect(target.exists()).toBeTruthy();
 		await setControlValue(target, 'notepad.exe C:\\temp\\notes.txt');
 		expect(wrapper.emitted('update')?.at(-1)?.[0]).toMatchObject({

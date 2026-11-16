@@ -6,24 +6,14 @@ import {
 	input,
 	output,
 	signal,
-	CUSTOM_ELEMENTS_SCHEMA,
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
-import {
-	canCommitActionType,
-	ELEMENT_ACTION_TYPE_OPTIONS,
-	resolveActionType,
-	toSlideIndex,
-} from 'ooxml-ui/pptx';
-import type {
-	ElementAction,
-	ElementActionType,
-	PptxCustomShow,
-	PptxElement,
-} from 'pptx-viewer-core';
-import { elementActionToPptxAction, pptxActionToElementAction } from 'pptx-viewer-core';
+import { ACTION_SETTINGS_SECTIONS, actionSettingsTargetOf, resolveActionType } from 'ooxml-ui/pptx';
+import type { ActionSettingsChange, ActionSettingsTarget } from 'ooxml-ui/pptx';
+import type { ElementActionType, PptxCustomShow, PptxElement } from 'pptx-viewer-core';
+import { elementActionToPptxAction } from 'pptx-viewer-core';
 
-import { ActionTargetFieldsComponent } from './action-target-fields.component';
+import { InspectorFieldsComponent } from './inspector-fields.component';
 import { LoadContentService } from './load-content.service';
 
 type Trigger = 'click' | 'hover';
@@ -72,41 +62,22 @@ export function displayedActionType(
 }
 
 @Component({
-	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	selector: 'pptx-action-settings-panel',
 	standalone: true,
-	imports: [TranslatePipe, ActionTargetFieldsComponent],
+	imports: [TranslatePipe, InspectorFieldsComponent],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
-		<section class="pptx-ng-action">
+		<section class="pptx-ng-action" data-pptx-action-settings>
 			<h3 class="pptx-ng-action__heading">{{ 'pptx.action.title' | translate }}</h3>
 			@for (trigger of triggers; track trigger) {
-				<div class="pptx-ng-action__trigger">
-					<label class="pptx-ng-action__label" [for]="'action-' + trigger">
+				<div class="pptx-ng-action__trigger" [attr.data-pptx-action-trigger]="trigger">
+					<span class="pptx-ng-action__label">
 						{{ (trigger === 'click' ? 'pptx.action.onClick' : 'pptx.action.onHover') | translate }}
-					</label>
-					<pptx-ui-select
-						[id]="'action-' + trigger"
-						class="pptx-ng-action__input"
-						[value]="typeFor(trigger)"
-						(change)="onType($event, trigger)"
-					>
-						@for (option of actionTypes; track option.value) {
-							<option [value]="option.value" [selected]="option.value === typeFor(trigger)">
-								{{ option.labelKey | translate }}
-							</option>
-						}
-					</pptx-ui-select>
-					<pptx-action-target-fields
-						[type]="typeFor(trigger)"
-						[action]="actionFor(trigger)"
-						[slideCount]="slideCount()"
-						[customShows]="customShows()"
-						[idPrefix]="'action-' + trigger"
-						(urlChange)="onUrl($event, trigger)"
-						(slideChange)="onSlide($event, trigger)"
-						(customShowChange)="onCustomShow($event, trigger)"
-						(returnAfterChange)="onReturnAfter($event, trigger)"
+					</span>
+					<pptx-inspector-fields
+						[sections]="sections"
+						[target]="targetFor(trigger)"
+						(patch)="onChange(trigger, $event)"
 					/>
 				</div>
 			}
@@ -116,32 +87,15 @@ export function displayedActionType(
 		.pptx-ng-action {
 			display: grid;
 			gap: 8px;
+			font-size: 11px;
 		}
 		.pptx-ng-action__heading {
 			margin: 0;
-			color: var(--pptx-inspector-muted, #aaa);
-			font-size: 11px;
-			letter-spacing: 0.04em;
-			text-transform: uppercase;
-		}
-		.pptx-ng-action__trigger {
-			display: grid;
-			gap: 4px;
-		}
-		.pptx-ng-action__label {
-			color: var(--pptx-inspector-muted, #aaa);
 			font-size: 11px;
 			font-weight: 600;
 		}
-		.pptx-ng-action__input {
-			box-sizing: border-box;
-			width: 100%;
-			padding: 4px 6px;
-			border: 1px solid var(--pptx-inspector-border, #444);
-			border-radius: 3px;
-			background: var(--pptx-inspector-input-bg, #2d2d2d);
-			color: inherit;
-			font-size: 11px;
+		.pptx-ng-action__label {
+			color: var(--pptx-inspector-muted, #aaa);
 		}
 	`,
 })
@@ -151,102 +105,46 @@ export class ActionSettingsPanelComponent {
 	readonly patch = output<Partial<PptxElement>>();
 
 	protected readonly triggers = ['click', 'hover'] as const;
-	protected readonly actionTypes = ELEMENT_ACTION_TYPE_OPTIONS;
+	/** One trigger's shared Action Settings descriptors (`ACTION_SETTINGS_SECTIONS`). */
+	protected readonly sections = ACTION_SETTINGS_SECTIONS;
 	/**
-	 * The type the user just picked, per trigger.
-	 *
-	 * WHY it exists: "Go to URL" / "Go to Slide" only become a stored action once
-	 * they carry a target, so controls driven purely by the committed element
-	 * never revealed the input needed to supply that target, leaving both kinds
-	 * unreachable. The pick is tagged with its element id so moving the inspector
-	 * to another shape does not carry a half-made choice across.
+	 * The type the user just picked, per trigger, tagged with its element id so
+	 * moving the inspector to another shape does not carry a half-made choice
+	 * across.
 	 */
 	private readonly pending = signal<PendingActionType>(NO_PENDING_ACTION_TYPE);
-	private readonly clickAction = computed(() =>
-		this.element().actionClick
-			? pptxActionToElementAction(this.element().actionClick!, 'click')
-			: undefined,
-	);
-	private readonly hoverAction = computed(() =>
-		this.element().actionHover
-			? pptxActionToElementAction(this.element().actionHover!, 'hover')
-			: undefined,
-	);
 
-	protected actionFor(trigger: Trigger): ElementAction | undefined {
-		return trigger === 'click' ? this.clickAction() : this.hoverAction();
-	}
-
-	/** The action type this trigger's controls should render right now. */
-	protected typeFor(trigger: Trigger): ElementActionType {
-		return displayedActionType(
-			this.pending(),
-			this.element().id,
-			trigger,
-			this.actionFor(trigger)?.type,
-		);
-	}
-
-	/** `data.customShows`, for the `customShow` type's target `<pptx-ui-select>`. */
+	/** `data.customShows`, for the `customShow` target choices. */
 	private readonly loader = inject(LoadContentService, { optional: true });
 	protected readonly customShows = computed<readonly PptxCustomShow[]>(
 		() => this.loader?.customShows() ?? [],
 	);
 
-	private update(trigger: Trigger, next: Partial<ElementAction>): void {
-		const type = next.type ?? this.typeFor(trigger);
-		const action = elementActionToPptxAction({
+	/** One trigger's context: its action, the pending pick and the deck's choices. */
+	protected targetFor(trigger: Trigger): ActionSettingsTarget {
+		const pending = this.pending();
+		const element = this.element();
+		const picked = pending.elementId === element.id ? pending.types[trigger] : undefined;
+		return actionSettingsTargetOf(
+			element,
 			trigger,
-			...this.actionFor(trigger),
-			...next,
-			type,
-		});
-		this.patch.emit(
-			(trigger === 'click'
-				? { actionClick: action }
-				: { actionHover: action }) as Partial<PptxElement>,
+			picked,
+			this.slideCount(),
+			this.customShows().map((show) => ({ id: show.id, name: show.name })),
 		);
 	}
 
-	protected onType(event: Event, trigger: Trigger): void {
-		const type = (event.target as HTMLSelectElement).value as ElementActionType;
-		const elementId = this.element().id;
-		this.pending.update((previous) => withPendingActionType(previous, elementId, trigger, type));
-		const current = this.actionFor(trigger);
-		const target = {
-			url: current?.url,
-			slideIndex: current?.slideIndex,
-			customShowId: current?.customShowId,
-		};
-		// `typeFor(trigger)` (fed by `pending` above) is what makes the target
-		// control (URL / slide number / custom-show select) appear at all, the
-		// same set `actionTypeNeedsTarget` names; `canCommitActionType` is the
-		// separate question of whether THIS pick may be written yet (it already
-		// carries a target, or needs none).
-		if (canCommitActionType(type, target)) {
-			this.update(trigger, { type });
+	protected onChange(trigger: Trigger, change: ActionSettingsChange): void {
+		this.pending.set(
+			withPendingActionType(this.pending(), this.element().id, trigger, change.pendingType),
+		);
+		if (change.commit) {
+			const action = elementActionToPptxAction(change.commit);
+			this.patch.emit(
+				(trigger === 'click'
+					? { actionClick: action }
+					: { actionHover: action }) as Partial<PptxElement>,
+			);
 		}
-	}
-
-	protected onUrl(url: string, trigger: Trigger): void {
-		this.update(trigger, { url });
-	}
-
-	protected onSlide(oneBasedSlide: number, trigger: Trigger): void {
-		const index = toSlideIndex(oneBasedSlide, this.slideCount());
-		if (index !== undefined) {
-			this.update(trigger, { slideIndex: index });
-		}
-	}
-
-	protected onCustomShow(customShowId: string, trigger: Trigger): void {
-		if (!customShowId) {
-			return;
-		}
-		this.update(trigger, { customShowId });
-	}
-
-	protected onReturnAfter(returnAfter: boolean, trigger: Trigger): void {
-		this.update(trigger, { returnAfter });
 	}
 }

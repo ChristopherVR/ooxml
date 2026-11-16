@@ -1,4 +1,3 @@
-import type { PptxSlide } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { translationsEn } from '../../i18n/translations-en';
@@ -11,15 +10,10 @@ import {
 } from './inspector-field-model';
 import { inspectorOptionLabel } from './inspector-option-label';
 
-const slides = [
-	{ id: 's1', rId: 'r1', slideNumber: 1, elements: [] },
-	{ id: 's2', rId: 'r2', slideNumber: 2, elements: [] },
-] as unknown as PptxSlide[];
-
 const target = (extra: Partial<ActionSettingsTarget> = {}): ActionSettingsTarget => ({
 	trigger: 'click',
 	action: undefined,
-	slides,
+	slideTitles: [undefined, 'Results'],
 	customShows: [{ id: '7', name: 'Short version' }],
 	...extra,
 });
@@ -54,7 +48,7 @@ describe('action settings fields', () => {
 		expect(slide.options!.map((o) => [o.value, inspectorOptionLabel(o, (k) => k)])).toStrictEqual([
 			['', 'pptx.action.slideNumberPlaceholder'],
 			['0', '1'],
-			['1', '2'],
+			['1', '2. Results'],
 		]);
 		expect(patch(target({ pendingType: 'slide' }), 'slide', '1')).toMatchObject({
 			commit: { type: 'slide', slideIndex: 1 },

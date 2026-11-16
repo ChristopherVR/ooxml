@@ -52,7 +52,9 @@ function selects(target: HTMLElement): HTMLSelectElement[] {
 
 function setValue(control: HTMLSelectElement | HTMLInputElement, value: string): void {
 	control.value = value;
-	control.dispatchEvent(new Event('change', { bubbles: true }));
+	// A text field writes as it is typed; a choice on change.
+	const typed = control instanceof HTMLInputElement && control.type === 'text';
+	control.dispatchEvent(new Event(typed ? 'input' : 'change', { bubbles: true }));
 	flushSync();
 }
 
@@ -62,8 +64,11 @@ describe('actionSettingsPanel', () => {
 		const triggers = selects(target);
 
 		expect(triggers).toHaveLength(2);
-		expect(triggers[0].getAttribute('aria-label')).toBe('On Click');
-		expect(triggers[1].getAttribute('aria-label')).toBe('On Hover');
+		const blocks = Array.from(target.querySelectorAll('[data-pptx-action-trigger]'));
+		expect(blocks.map((block) => block.querySelector('span')?.textContent)).toStrictEqual([
+			'On Click',
+			'On Hover',
+		]);
 		expect(triggers.every((select) => select.value === 'none')).toBeTruthy();
 	});
 
@@ -107,14 +112,15 @@ describe('actionSettingsPanel', () => {
 		expect(updated.actionClick).toBeUndefined();
 	});
 
-	it('converts the 1-based slide number to a 0-based index and clamps it', () => {
+	it('offers the slides of the deck as choices and writes a 0-based index', () => {
 		const el = shapeEl();
 		const { target, editor } = mountPanel(el, 3);
 
 		setValue(selects(target)[0], 'slide');
-		const slide = target.querySelector<HTMLInputElement>('input[type="number"]');
+		const slide = target.querySelector<HTMLSelectElement>('[data-testid="action-slide"]');
 		expect(slide).not.toBeNull();
-		setValue(slide!, '99');
+		expect(slide!.querySelectorAll('option')).toHaveLength(4);
+		setValue(slide!, '2');
 
 		const updated = editor.slides[0]?.elements?.[0] as PptxElement;
 		expect(updated.actionClick?.targetSlideIndex).toBe(2);

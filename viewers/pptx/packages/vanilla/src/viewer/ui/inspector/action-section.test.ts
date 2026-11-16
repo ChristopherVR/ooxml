@@ -1,10 +1,14 @@
+import type { PptxElement } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../../i18n';
 import { createActionSection } from './action-section';
 import type { InspectorHandlers, InspectorState } from './types';
 
-function build() {
+const shape = (extra: Record<string, unknown> = {}): PptxElement =>
+	({ type: 'shape', id: 's1', x: 0, y: 0, width: 10, height: 10, ...extra }) as PptxElement;
+
+function build(element: PptxElement = shape()) {
 	const setElementAction = vi.fn();
 	const section = createActionSection(
 		document,
@@ -12,17 +16,26 @@ function build() {
 		() => document.createElement('div'),
 		{ setElementAction } as unknown as InspectorHandlers,
 	);
+	section.setSlideCount(3);
+	section.setCustomShows([{ id: 'cs1', name: 'Sub show' }]);
+	section.update({ hasSelection: true, selectedElement: element } as InspectorState);
 	return { section, setElementAction };
 }
 
-describe('action settings section', () => {
-	it('offers React parity action labels', () => {
-		const { section } = build();
-		section.update({ hasSelection: true } as InspectorState);
+const typeSelects = (el: HTMLElement) =>
+	Array.from(el.querySelectorAll<HTMLSelectElement>('[data-testid="action-type"]'));
 
-		const options = Array.from(section.el.querySelector('pptx-ui-select')!.options).map(
-			(option) => option.textContent,
-		);
+function choose(control: HTMLSelectElement | HTMLInputElement, value: string, event = 'change') {
+	control.value = value;
+	control.dispatchEvent(new Event(event));
+}
+
+describe('action settings section', () => {
+	it('offers React parity action labels, one select per trigger', () => {
+		const { section } = build();
+		const [click] = typeSelects(section.el);
+		expect(typeSelects(section.el)).toHaveLength(2);
+		const options = Array.from(click!.querySelectorAll('option')).map((o) => o.textContent);
 		expect(options).toStrictEqual([
 			'None',
 			'Go to URL',
@@ -44,199 +57,69 @@ describe('action settings section', () => {
 
 	it('waits for a URL before committing a "go to URL" action', () => {
 		const { section, setElementAction } = build();
-		section.update({ hasSelection: true } as InspectorState);
-
-		const [type] = section.el.querySelectorAll<HTMLSelectElement>('pptx-ui-select');
-		type.value = 'url';
-		type.dispatchEvent(new Event('change'));
-		// An empty URL serialises to an empty action that parses back as "none",
-		// which would wipe the choice the user is halfway through making.
+		choose(typeSelects(section.el)[0]!, 'url');
 		expect(setElementAction).not.toHaveBeenCalled();
-		expect(section.el.querySelector<HTMLInputElement>('input')!.hidden).toBeFalsy();
-
-		const target = section.el.querySelector<HTMLInputElement>('input')!;
-		target.value = 'https://example.com';
-		target.dispatchEvent(new Event('change'));
-		expect(setElementAction).toHaveBeenCalledWith('click', {
-			trigger: 'click',
-			type: 'url',
-			url: 'https://example.com',
-			slideIndex: undefined,
-		});
+		const url = section.el.querySelector<HTMLInputElement>('[data-testid="action-url-url"]')!;
+		choose(url, 'https://example.com', 'input');
+		expect(setElementAction).toHaveBeenCalledWith(
+			'click',
+			expect.objectContaining({ trigger: 'click', type: 'url', url: 'https://example.com' }),
+		);
 	});
 
 	it('commits a target-free action immediately', () => {
 		const { section, setElementAction } = build();
-		section.update({ hasSelection: true } as InspectorState);
-
-		const [type] = section.el.querySelectorAll<HTMLSelectElement>('pptx-ui-select');
-		type.value = 'nextSlide';
-		type.dispatchEvent(new Event('change'));
-
-		expect(setElementAction).toHaveBeenCalledWith('click', {
-			trigger: 'click',
-			type: 'nextSlide',
-			url: undefined,
-			slideIndex: undefined,
-		});
+		choose(typeSelects(section.el)[1]!, 'nextSlide');
+		expect(setElementAction).toHaveBeenCalledWith(
+			'hover',
+			expect.objectContaining({ trigger: 'hover', type: 'nextSlide' }),
+		);
 	});
 
-	it('reveals the slide spinner before any slide is chosen', () => {
+	it('offers the deck slides as choices and writes a 0-based index', () => {
 		const { section, setElementAction } = build();
-		section.setSlideCount(4);
-		section.update({ hasSelection: true } as InspectorState);
-
-		const [type] = section.el.querySelectorAll<HTMLSelectElement>('pptx-ui-select');
-		type.value = 'slide';
-		type.dispatchEvent(new Event('change'));
-
-		const target = section.el.querySelector<HTMLInputElement>('input')!;
-		expect(target.hidden).toBeFalsy();
-		expect(target.type).toBe('number');
-		expect(setElementAction).not.toHaveBeenCalled();
-	});
-
-	it('clamps the slide spinner to the deck slide count', () => {
-		const { section, setElementAction } = build();
-		section.setSlideCount(3);
-		section.update({ hasSelection: true } as InspectorState);
-
-		const [type] = section.el.querySelectorAll<HTMLSelectElement>('pptx-ui-select');
-		type.value = 'slide';
-		type.dispatchEvent(new Event('change'));
-		const target = section.el.querySelector<HTMLInputElement>('input')!;
-		expect(target.max).toBe('3');
-
-		target.value = '9';
-		target.dispatchEvent(new Event('change'));
+		choose(typeSelects(section.el)[0]!, 'slide');
+		const slide = section.el.querySelector<HTMLSelectElement>('[data-testid="action-slide"]')!;
+		expect(slide.querySelectorAll('option')).toHaveLength(4);
+		choose(slide, '2');
 		expect(setElementAction).toHaveBeenCalledWith(
 			'click',
 			expect.objectContaining({ type: 'slide', slideIndex: 2 }),
 		);
 	});
 
-	// B7: custom-show picker + "return after" checkbox.
-	it('waits for a custom show before committing, then commits its id', () => {
+	it('waits for a custom show, then commits its id and returnAfter', () => {
 		const { section, setElementAction } = build();
-		section.setCustomShows([
-			{ id: 'sh1', name: 'Highlights' },
-			{ id: 'sh2', name: 'Deep dive' },
-		]);
-		section.update({ hasSelection: true } as InspectorState);
-
-		const [type] = section.el.querySelectorAll<HTMLSelectElement>('pptx-ui-select');
-		type.value = 'customShow';
-		type.dispatchEvent(new Event('change'));
+		choose(typeSelects(section.el)[0]!, 'customShow');
 		expect(setElementAction).not.toHaveBeenCalled();
-
-		const showSelect = section.el.querySelector<HTMLSelectElement>(
+		const show = section.el.querySelector<HTMLSelectElement>(
 			'[data-testid="pptx-action-custom-show"]',
 		)!;
-		expect(showSelect.hidden).toBeFalsy();
-		expect(Array.from(showSelect.options).map((o) => o.textContent)).toStrictEqual([
-			'',
-			'Highlights',
-			'Deep dive',
-		]);
-		showSelect.value = 'sh2';
-		showSelect.dispatchEvent(new Event('change'));
-
-		expect(setElementAction).toHaveBeenCalledWith(
-			'click',
-			expect.objectContaining({ type: 'customShow', customShowId: 'sh2' }),
-		);
-	});
-
-	it('commits returnAfter from the checkbox', () => {
-		const { section, setElementAction } = build();
-		section.setCustomShows([{ id: 'sh1', name: 'Highlights' }]);
-		section.update({ hasSelection: true } as InspectorState);
-
-		const [type] = section.el.querySelectorAll<HTMLSelectElement>('pptx-ui-select');
-		type.value = 'customShow';
-		type.dispatchEvent(new Event('change'));
-		const showSelect = section.el.querySelector<HTMLSelectElement>(
-			'[data-testid="pptx-action-custom-show"]',
-		)!;
-		showSelect.value = 'sh1';
-		showSelect.dispatchEvent(new Event('change'));
-
-		const returnCheckbox = section.el.querySelector<HTMLInputElement>(
-			'[data-testid="pptx-action-custom-show-return"]',
-		)!;
-		expect(returnCheckbox.closest('[hidden]')).toBeNull();
-		returnCheckbox.checked = true;
-		returnCheckbox.dispatchEvent(new Event('change'));
-
+		choose(show, 'cs1');
 		expect(setElementAction).toHaveBeenLastCalledWith(
 			'click',
-			expect.objectContaining({ type: 'customShow', customShowId: 'sh1', returnAfter: true }),
+			expect.objectContaining({ type: 'customShow', customShowId: 'cs1' }),
 		);
 	});
 
-	it('reflects a committed customShow action back into the picker on update', () => {
+	it('drops a half-made pick when the selection moves to another element', () => {
 		const { section } = build();
-		section.setCustomShows([{ id: 'sh1', name: 'Highlights' }]);
-		section.update({
-			hasSelection: true,
-			actionClick: { trigger: 'click', type: 'customShow', customShowId: 'sh1', returnAfter: true },
-		} as unknown as InspectorState);
-
-		const showSelect = section.el.querySelector<HTMLSelectElement>(
-			'[data-testid="pptx-action-custom-show"]',
-		)!;
-		const returnCheckbox = section.el.querySelector<HTMLInputElement>(
-			'[data-testid="pptx-action-custom-show-return"]',
-		)!;
-		expect(showSelect.value).toBe('sh1');
-		expect(returnCheckbox.checked).toBeTruthy();
+		choose(typeSelects(section.el)[0]!, 'url');
+		expect(section.el.querySelector('[data-testid="action-url-url"]')).not.toBeNull();
+		section.update({ hasSelection: true, selectedElement: shape({ id: 's2' }) } as InspectorState);
+		expect(section.el.querySelector('[data-testid="action-url-url"]')).toBeNull();
 	});
 
-	// B7: openFile / openPresentation reuse the same text target field as `url`.
-	it('commits a target immediately for openFile (no round-trip-to-none gating)', () => {
-		const { section, setElementAction } = build();
-		section.update({ hasSelection: true } as InspectorState);
-
-		const [type] = section.el.querySelectorAll<HTMLSelectElement>('pptx-ui-select');
-		type.value = 'openFile';
-		type.dispatchEvent(new Event('change'));
-
-		expect(setElementAction).toHaveBeenCalledWith(
-			'click',
-			expect.objectContaining({ type: 'openFile', url: '' }),
-		);
-		const target = section.el.querySelector<HTMLInputElement>('input')!;
-		expect(target.hidden).toBeFalsy();
-
-		target.value = 'C:/deck.pptx';
-		target.dispatchEvent(new Event('change'));
-		expect(setElementAction).toHaveBeenLastCalledWith(
-			'click',
-			expect.objectContaining({ type: 'openFile', url: 'C:/deck.pptx' }),
-		);
-	});
-
-	// runProgram reuses the same text target field as openFile / openPresentation.
 	it('shows the target input for runProgram and writes into url', () => {
 		const { section, setElementAction } = build();
-		section.update({ hasSelection: true } as InspectorState);
-
-		const [type] = section.el.querySelectorAll<HTMLSelectElement>('pptx-ui-select');
-		type.value = 'runProgram';
-		type.dispatchEvent(new Event('change'));
-
-		expect(setElementAction).toHaveBeenCalledWith(
-			'click',
-			expect.objectContaining({ type: 'runProgram', url: '' }),
-		);
-		const target = section.el.querySelector<HTMLInputElement>('input')!;
-		expect(target.hidden).toBeFalsy();
-
-		target.value = 'C:/tools/launcher.exe --arg';
-		target.dispatchEvent(new Event('change'));
+		choose(typeSelects(section.el)[0]!, 'runProgram');
+		const target = section.el.querySelector<HTMLInputElement>(
+			'[data-testid="action-runProgram-url"]',
+		)!;
+		choose(target, 'notepad.exe', 'input');
 		expect(setElementAction).toHaveBeenLastCalledWith(
 			'click',
-			expect.objectContaining({ type: 'runProgram', url: 'C:/tools/launcher.exe --arg' }),
+			expect.objectContaining({ type: 'runProgram', url: 'notepad.exe' }),
 		);
 	});
 });

@@ -82,26 +82,12 @@ describe('wave-4 action types (customShow / openFile / openPresentation)', () =>
 		expect(canCommitActionType('runProgram', {})).toBeTruthy();
 	});
 
-	it('renders the custom-show target select, return-after checkbox, and file/presentation/run-program target input', () => {
-		// The per-trigger target controls live in the sub-component
-		// `ActionTargetFieldsComponent`, split out to keep this file under the
-		// repo's 300-LOC cap.
-		const source = readFileSync(path.join(__dirname, 'action-target-fields.component.ts'), 'utf8');
-		expect(source).toContain('data-testid="pptx-action-custom-show"');
-		expect(source).toContain('data-testid="pptx-action-custom-show-return"');
-		expect(source).toContain(
-			"type() === 'openFile' || type() === 'openPresentation' || type() === 'runProgram'",
-		);
-		expect(source).toContain('@for (show of customShows(); track show.id)');
-	});
-
-	it('the panel wires the sub-component to its own state and commit handlers', () => {
+	it('draws each trigger from the shared Action Settings descriptors and commits their changes', () => {
 		const source = readFileSync(path.join(__dirname, 'action-settings-panel.component.ts'), 'utf8');
-		expect(source).toContain('<pptx-action-target-fields');
-		expect(source).toContain('[type]="typeFor(trigger)"');
-		expect(source).toContain('[customShows]="customShows()"');
-		expect(source).toContain('(customShowChange)="onCustomShow($event, trigger)"');
-		expect(source).toContain('(returnAfterChange)="onReturnAfter($event, trigger)"');
+		expect(source).toContain('[sections]="sections"');
+		expect(source).toContain('[target]="targetFor(trigger)"');
+		expect(source).toContain('(patch)="onChange(trigger, $event)"');
+		expect(source).toContain('actionSettingsTargetOf(');
 	});
 });
 

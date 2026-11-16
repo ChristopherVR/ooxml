@@ -36,7 +36,8 @@ export interface ActionSettingsTarget {
 	action: ElementAction | undefined;
 	/** The type picked but not yet committed (it still needs its target). */
 	pendingType?: ElementActionType;
-	slides: readonly PptxSlide[];
+	/** The deck's slides in order, by title (`undefined` for an untitled slide). */
+	slideTitles: readonly (string | undefined)[];
 	customShows: readonly { id: string; name: string }[];
 }
 
@@ -103,8 +104,7 @@ function slideOptions(target: ActionSettingsTarget): InspectorFieldOption[] {
 	if (target.action?.slideIndex === undefined) {
 		options.push({ value: '', labelKey: 'pptx.action.slideNumberPlaceholder' });
 	}
-	target.slides.forEach((slide, index) => {
-		const title = resolveSlideTitle(slide);
+	target.slideTitles.forEach((title, index) => {
 		options.push({
 			value: String(index),
 			labelKey: '',
@@ -157,7 +157,7 @@ export const ACTION_SETTINGS_SECTION: ActionSettingsSection = {
 			kind: 'select',
 			labelKey: 'pptx.hyperlink.customShowLabel',
 			wide: true,
-			testId: 'action-custom-show',
+			testId: 'pptx-action-custom-show',
 			visibleWhen: typeIs('customShow'),
 			optionsOf: customShowOptions,
 			read: (target) => target.action?.customShowId ?? '',
@@ -167,7 +167,7 @@ export const ACTION_SETTINGS_SECTION: ActionSettingsSection = {
 			id: 'returnAfter',
 			kind: 'toggle',
 			labelKey: 'pptx.hyperlink.customShowReturn',
-			testId: 'action-custom-show-return',
+			testId: 'pptx-action-custom-show-return',
 			visibleWhen: typeIs('customShow'),
 			read: (target) => target.action?.returnAfter === true,
 			write: (target, value) => change(target, 'customShow', { returnAfter: value === true }),
@@ -187,7 +187,8 @@ export function actionSettingsTargetOf(
 	element: PptxElement,
 	trigger: 'click' | 'hover',
 	pendingType: ElementActionType | undefined,
-	slides: readonly PptxSlide[],
+	/** The deck's slides, or only their count when a binding has no more. */
+	slides: readonly PptxSlide[] | number,
 	customShows: readonly { id: string; name: string }[],
 ): ActionSettingsTarget {
 	const raw = trigger === 'click' ? element.actionClick : element.actionHover;
@@ -199,7 +200,11 @@ export function actionSettingsTargetOf(
 				slideIndex: parsed.slideIndex ?? raw?.targetSlideIndex,
 			}
 		: undefined;
-	const target: ActionSettingsTarget = { trigger, action, slides, customShows };
+	const slideTitles =
+		typeof slides === 'number'
+			? Array.from({ length: slides }, (): string | undefined => undefined)
+			: slides.map((slide) => resolveSlideTitle(slide));
+	const target: ActionSettingsTarget = { trigger, action, slideTitles, customShows };
 	if (pendingType !== undefined) {
 		target.pendingType = pendingType;
 	}
