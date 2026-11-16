@@ -1,5 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import type { VueWrapper } from '@vue/test-utils';
+import { ribbonTab, ribbonTabButtons } from 'ooxml-ui/pptx';
 import type { ViewerCustomization } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -13,7 +14,7 @@ import type { PowerPointViewerExpose } from './types';
  * of the shared decision functions cannot see).
  */
 function tabLabels(wrapper: VueWrapper): string[] {
-	return wrapper.findAll('[role="tab"]').map((tab) => tab.text().trim());
+	return ribbonTabButtons(wrapper.element).map((tab) => tab.textContent?.trim() ?? '');
 }
 
 async function mountViewer(customization?: ViewerCustomization): Promise<VueWrapper> {
@@ -147,17 +148,15 @@ describe('powerPointViewer host ribbon tabs', () => {
 		await flushPromises();
 		const root = mounted.element as HTMLElement;
 		root.addEventListener('office-ribbon-add-in', (event) => heard((event as CustomEvent).detail));
-		const tab = () => root.querySelector<HTMLButtonElement>('[data-ribbon-add-in-tab]');
+		const tab = () => ribbonTab(root, '[data-ribbon-add-in-tab]');
 		const selected = () =>
 			// The ribbon's own tab row: the viewer has other tab lists (inspector).
 			[
-				...root.querySelectorAll(
-					'[data-pptx-chrome="ribbon-tabs"] [role="tab"][aria-selected="true"]',
+				...ribbonTabButtons(root).filter((tab) =>
+					tab.matches('[role="tab"][aria-selected="true"]'),
 				),
 			].map((item) => item.textContent?.trim());
-		expect([...root.querySelectorAll('[data-pptx-chrome="ribbon-tabs"] [role="tab"]')].at(-1)).toBe(
-			tab(),
-		);
+		expect([...ribbonTabButtons(root)].at(-1)).toBe(tab());
 		expect(root.querySelector('pptx-ui-ribbon-add-in')).toBeNull();
 		tab()!.click();
 		await flushPromises();

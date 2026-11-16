@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import type { RibbonAddInTab } from 'ooxml-ui/pptx';
-import { TOOLBAR_TABS } from 'ooxml-ui/pptx';
+import { ribbonTab, ribbonTabButtons, TOOLBAR_TABS } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h, nextTick, ref, shallowRef } from 'vue';
 
@@ -69,12 +69,14 @@ describe('host ribbon tabs', () => {
 		wrapper.element.addEventListener('office-ribbon-add-in', (event) =>
 			heard((event as CustomEvent).detail),
 		);
-		const tab = () => wrapper.element.querySelector<HTMLButtonElement>('[data-ribbon-add-in-tab]');
+		const tab = () => ribbonTab(wrapper.element, '[data-ribbon-add-in-tab]');
 		const selected = () =>
-			[...wrapper.element.querySelectorAll('[role="tab"][aria-selected="true"]')].map((item) =>
-				item.textContent!.trim(),
-			);
-		const all = [...wrapper.element.querySelectorAll('[role="tab"]')];
+			[
+				...ribbonTabButtons(wrapper.element).filter((tab) =>
+					tab.matches('[role="tab"][aria-selected="true"]'),
+				),
+			].map((item) => item.textContent!.trim());
+		const all = [...ribbonTabButtons(wrapper.element)];
 		expect(all.at(-1)).toBe(tab());
 		expect(all.map((item) => item.textContent!.trim())).not.toContain('Fake');
 		expect(wrapper.element.querySelector('pptx-ui-ribbon-add-in')).toBeNull();

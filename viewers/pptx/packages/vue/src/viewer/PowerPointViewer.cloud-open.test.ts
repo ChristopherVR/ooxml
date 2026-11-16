@@ -1,10 +1,11 @@
+import { flushPromises, mount } from '@vue/test-utils';
+import type { VueWrapper } from '@vue/test-utils';
 /**
  * File > Open > a cloud place, end to end through the real `PowerPointViewer.vue`: the opened file
  * loads like any open, File > Save goes to the file's own storage instead of the host's, and a file
  * the service leaves read-only stays read-only.
  */
-import { flushPromises, mount } from '@vue/test-utils';
-import type { VueWrapper } from '@vue/test-utils';
+import { ribbonTabButtons } from 'ooxml-ui/pptx';
 import type { CloudFileProvider, CloudOpenedFile, DocumentStorage } from 'ooxml-ui/pptx';
 import { PptxHandler } from 'pptx-viewer-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -82,9 +83,7 @@ async function click(element: Element | null | undefined): Promise<void> {
 /** File tab, Open, the OneDrive place; then the place reports `file` as opened. */
 async function openFromCloud(file: CloudOpenedFile): Promise<void> {
 	const root = mounted!.element.parentElement ?? document.body;
-	await click(
-		[...root.querySelectorAll('[role="tab"]')].find((tab) => tab.textContent?.trim() === 'File'),
-	);
+	await click([...ribbonTabButtons(root)].find((tab) => tab.textContent?.trim() === 'File'));
 	await click(
 		[...document.querySelectorAll('[data-pptx-backstage-nav-item]')].find(
 			(item) => item.textContent?.trim() === 'Open',

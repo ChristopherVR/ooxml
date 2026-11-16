@@ -1,4 +1,5 @@
 import { mount } from '@vue/test-utils';
+import { ribbonTabButtons } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { createRibbonPropsFixture } from './ribbon-props-fixture';
@@ -13,7 +14,7 @@ import RibbonToolbar from './RibbonToolbar.vue';
 describe('ribbonToolbar', () => {
 	it('renders every ribbon tab by default (hiddenActions omitted)', () => {
 		const wrapper = mount(RibbonToolbar, { props: createRibbonPropsFixture() });
-		const tabTexts = wrapper.findAll('[role="tab"]').map((tab) => tab.text());
+		const tabTexts = ribbonTabButtons(wrapper.element).map((tab) => tab.textContent);
 		for (const label of ['Home', 'Insert', 'Design', 'View']) {
 			expect(tabTexts).toContain(label);
 		}
@@ -39,7 +40,7 @@ describe('ribbonToolbar', () => {
 		const wrapper = mount(RibbonToolbar, {
 			props: createRibbonPropsFixture({ hiddenActions: ['insert'] }),
 		});
-		const tabTexts = wrapper.findAll('[role="tab"]').map((tab) => tab.text());
+		const tabTexts = ribbonTabButtons(wrapper.element).map((tab) => tab.textContent);
 		expect(tabTexts).not.toContain('Insert');
 		expect(tabTexts).toContain('Home');
 	});

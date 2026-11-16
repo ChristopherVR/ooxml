@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import type { VueWrapper } from '@vue/test-utils';
-import { createRibbonDisplayController } from 'ooxml-ui/pptx';
+import { createRibbonDisplayController, ribbonTabButtons } from 'ooxml-ui/pptx';
 import type { RibbonDisplayController } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -52,9 +52,9 @@ describe('ribbonToolbar ribbon display', () => {
 		);
 		expect(contentWrapper(wrapper).style.display).toBe('none');
 
-		const home = wrapper.findAll('[role="tab"]').find((tab) => tab.text() === 'Home');
+		const home = ribbonTabButtons(wrapper.element).find((tab) => tab.textContent === 'Home');
 		expect(home).toBeDefined();
-		await home?.trigger('click');
+		home?.click();
 		await sync();
 		expect(controller.getSnapshot().peek).toBe(true);
 		expect(contentWrapper(wrapper).style.display).not.toBe('none');

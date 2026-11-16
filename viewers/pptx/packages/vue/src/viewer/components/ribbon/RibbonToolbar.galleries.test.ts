@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import type { VueWrapper } from '@vue/test-utils';
-import { isRibbonControlId, isRibbonGroupId, TOOLBAR_TABS } from 'ooxml-ui/pptx';
+import { isRibbonControlId, isRibbonGroupId, ribbonTab, TOOLBAR_TABS } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -39,13 +39,13 @@ describe('ribbonToolbar contextual tabs', () => {
 	it('shows Shape Format for a shape selection and falls back to Home without one', async () => {
 		const onSetToolbarSection = vi.fn();
 		const wrapper = mountRibbon({ selectedElement: shape(), onSetToolbarSection });
-		const tab = wrapper.get('[data-ribbon-contextual-tab="shapeFormat"]');
-		expect(tab.text()).toBe('Shape Format');
-		await tab.trigger('click');
+		const tab = () => ribbonTab(wrapper.element, '[data-ribbon-contextual-tab="shapeFormat"]')!;
+		expect(tab().textContent).toBe('Shape Format');
+		tab().click();
 		expect(onSetToolbarSection).toHaveBeenCalledWith('shapeFormat');
 
 		await wrapper.setProps({ toolbarSection: 'shapeFormat' });
-		expect(tab.attributes('aria-selected')).toBe('true');
+		expect(tab().getAttribute('aria-selected')).toBe('true');
 		expect(wrapper.find('[data-ribbon-group="shapeFormat.shapeStyles"]').exists()).toBeTruthy();
 		expect(
 			wrapper.find('[data-ribbon-control="shapeFormat.shapeStyles.gallery"]').exists(),
@@ -54,7 +54,7 @@ describe('ribbonToolbar contextual tabs', () => {
 
 		onSetToolbarSection.mockClear();
 		await wrapper.setProps({ selectedElement: null });
-		expect(wrapper.find('[data-ribbon-contextual-tab]').exists()).toBeFalsy();
+		expect(ribbonTab(wrapper.element, '[data-ribbon-contextual-tab]')).toBeNull();
 		expect(onSetToolbarSection).toHaveBeenCalledWith('home');
 		expect(wrapper.find('[data-ribbon-group="home.clipboard"]').exists()).toBeTruthy();
 		expect(wrapper.find('[data-ribbon-group="shapeFormat.shapeStyles"]').exists()).toBeFalsy();

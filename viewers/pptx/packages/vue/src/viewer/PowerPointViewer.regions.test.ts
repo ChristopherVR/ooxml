@@ -1,5 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import type { VueWrapper } from '@vue/test-utils';
+import { ribbonTabButtons } from 'ooxml-ui/pptx';
 import type {
 	ViewerCustomization,
 	ViewerRegionContext,
@@ -129,8 +130,10 @@ describe('powerPointViewer host regions', () => {
 		mounted = await mountViewer({
 			backstage: { extraPages: [{ id: 'reports', label: 'Reports', render: renderer }] },
 		});
-		const fileTab = mounted.findAll('[role="tab"]').find((tab) => tab.text().trim() === 'File');
-		await fileTab!.trigger('click');
+		const fileTab = ribbonTabButtons(mounted.element).find(
+			(tab) => tab.textContent?.trim() === 'File',
+		);
+		fileTab!.click();
 		await flushPromises();
 		const navItem = mounted
 			.findAll('[data-pptx-backstage-nav-item]')
