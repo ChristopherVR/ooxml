@@ -126,6 +126,19 @@ export type {
 	PresentationInkState,
 	PresentationInkTimers,
 } from './presentation-ink-controller';
+export { createSlideSorterController, slideSorterView } from './slide-sorter-controller';
+export type {
+	SlideSorterClickModifiers,
+	SlideSorterCommand,
+	SlideSorterController,
+	SlideSorterControllerDeps,
+	SlideSorterControllerOptions,
+	SlideSorterControllerState,
+	SlideSorterKeyEvent,
+	SlideSorterMenuState,
+	SlideSorterOperation,
+	SlideSorterView,
+} from './slide-sorter-controller';
 export { createPresenterSessionController } from './presenter-session-controller';
 export type {
 	PresenterSessionChannel,
