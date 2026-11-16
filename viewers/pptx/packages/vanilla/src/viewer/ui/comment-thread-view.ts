@@ -1,6 +1,6 @@
-import { trimCommentMentions } from 'ooxml-ui/pptx';
 import type { PptxComment, PptxCommentMention, PptxModernCommentAuthor } from 'pptx-viewer-core';
 
+import type { CommentsPanelBinding } from '../editor/editor-comment-actions';
 import type { Translator } from '../i18n';
 import { createEl } from '../render';
 import { renderCommentBody } from './comment-body';
@@ -18,15 +18,9 @@ import { attachCommentMentionTypeahead } from './comment-mention-typeahead';
  * that is what the stylesheet already carries.
  *
  * Replying is offered on top-level comments only (React's `depth === 0` rule);
- * editing works on replies too.
+ * editing works on replies too. The edit and reply drafts are the viewer's
+ * shared comments panel controller, so they survive a re-render and a re-open.
  */
-
-export interface CommentThreadHandlers {
-	addCommentReply(parentId: string, text: string, mentions?: PptxCommentMention[]): void;
-	editComment(id: string, text: string): void;
-	deleteComment(id: string): void;
-	toggleCommentResolved(id: string): void;
-}
 
 export interface CommentThreadView {
 	/** The list container; append it wherever the surface wants the threads. */
@@ -38,18 +32,20 @@ export interface CommentThreadView {
 export function createCommentThreadView(
 	doc: Document,
 	t: Translator,
-	handlers: CommentThreadHandlers,
+	/** The viewer's shared comments panel state: the edit and reply drafts live there. */
+	panel: CommentsPanelBinding,
 	/** Authors offered by the reply draft's `@`-mention typeahead. */
 	getMentionAuthors: () => readonly PptxModernCommentAuthor[] = () => [],
 ): CommentThreadView {
 	const el = createEl(doc, 'div', 'pptxv-inspector-comment-list');
 
-	// Local UI state, survives store-driven re-renders.
-	let editingId: string | null = null;
-	let editDraft = '';
-	let replyingId: string | null = null;
-	let replyDraft = '';
-	let replyMentions: PptxCommentMention[] = [];
+	const state = () => panel.controller.getSnapshot();
+	const editingId = (): string | null => state().editingIdBySlideId[panel.slideId()] ?? null;
+	const replyDraft = (id: string): string => state().replyDraftById[id] ?? '';
+	const replyMentions = (id: string): PptxCommentMention[] => [
+		...(state().replyMentionsById[id] ?? []),
+	];
+	// Collapsed reply lists are this view's own; they survive store-driven re-renders.
 	const collapsedReplies = new Set<string>();
 	let comments: readonly PptxComment[] = [];
 	let editable = false;
@@ -82,21 +78,18 @@ export function createCommentThreadView(
 
 	const renderEditForm = (comment: PptxComment): HTMLElement => {
 		const form = createEl(doc, 'div', 'pptxv-inspector-comment-edit');
-		const area = draftBox(editDraft, '', (next) => {
-			editDraft = next;
-		});
+		const area = draftBox(state().editDraftById[comment.id] ?? '', '', (next) =>
+			panel.controller.setEditDraft(comment.id, next),
+		);
 		area.setAttribute('aria-label', t('pptx.comments.edit'));
 		const actions = createEl(doc, 'div', 'pptxv-inspector-comment-actions');
 		actions.append(
 			actionBtn(t('pptx.comments.save'), () => {
-				if (editDraft.trim()) {
-					handlers.editComment(comment.id, editDraft.trim());
-				}
-				editingId = null;
+				panel.controller.saveEdit(panel.slideIndex(), comment.id);
 				render();
 			}),
 			actionBtn(t('pptx.comments.cancel'), () => {
-				editingId = null;
+				panel.controller.cancelEdit(panel.slideId());
 				render();
 			}),
 		);
@@ -107,13 +100,11 @@ export function createCommentThreadView(
 	const renderReplyForm = (comment: PptxComment): HTMLElement => {
 		const form = createEl(doc, 'div', 'pptxv-inspector-comment-reply-form');
 		const area = draftBox(
-			replyDraft,
+			replyDraft(comment.id),
 			t('pptx.comments.replyPlaceholder', {
 				author: comment.author || t('pptx.comments.unknownAuthor'),
 			}),
-			(next) => {
-				replyDraft = next;
-			},
+			(next) => panel.controller.setReplyDraft(comment.id, next),
 		);
 		area.setAttribute('aria-label', t('pptx.comments.reply'));
 		const mentionTypeahead = attachCommentMentionTypeahead({
@@ -121,29 +112,22 @@ export function createCommentThreadView(
 			t,
 			field: area,
 			getAuthors: getMentionAuthors,
-			getMentions: () => replyMentions,
+			getMentions: () => replyMentions(comment.id),
 			onChange: (next) => {
-				replyDraft = next.text;
-				replyMentions = next.mentions;
+				area.value = next.text;
+				panel.controller.setReplyDraft(comment.id, next.text, next.mentions);
 			},
 		});
 		const actions = createEl(doc, 'div', 'pptxv-inspector-comment-actions');
 		actions.append(
 			actionBtn(t('pptx.comments.addReply'), () => {
-				// The mentions index the draft as typed: they move with its trim.
-				const { text, mentions } = trimCommentMentions(replyDraft, replyMentions);
-				if (text) {
-					handlers.addCommentReply(comment.id, text, mentions);
-				}
 				mentionTypeahead.destroy();
-				replyingId = null;
-				replyDraft = '';
-				replyMentions = [];
+				panel.controller.submitReply(panel.slideIndex(), comment.id);
 				render();
 			}),
 			actionBtn(t('pptx.comments.cancel'), () => {
 				mentionTypeahead.destroy();
-				replyingId = null;
+				panel.controller.cancelReply();
 				render();
 			}),
 		);
@@ -155,26 +139,25 @@ export function createCommentThreadView(
 		const actions = createEl(doc, 'div', 'pptxv-inspector-comment-actions');
 		actions.appendChild(
 			actionBtn(t('pptx.comments.edit'), () => {
-				editingId = comment.id;
-				editDraft = comment.text;
+				panel.controller.startEdit(panel.slideId(), comment.id);
 				render();
 			}),
 		);
 		if (depth === 0) {
 			actions.appendChild(
 				actionBtn(t('pptx.comments.reply'), () => {
-					replyingId = comment.id;
-					replyDraft = '';
-					replyMentions = [];
+					panel.controller.startReply(comment.id);
 					render();
 				}),
 			);
 		}
 		actions.append(
 			actionBtn(t(comment.resolved ? 'pptx.comments.unresolve' : 'pptx.comments.resolve'), () =>
-				handlers.toggleCommentResolved(comment.id),
+				panel.controller.toggleResolved(panel.slideIndex(), comment.id),
 			),
-			actionBtn(t('pptx.comments.delete'), () => handlers.deleteComment(comment.id)),
+			actionBtn(t('pptx.comments.delete'), () =>
+				panel.controller.remove(panel.slideIndex(), comment.id),
+			),
 		);
 		return actions;
 	};
@@ -221,7 +204,7 @@ export function createCommentThreadView(
 		}
 		row.appendChild(meta);
 
-		if (editingId === comment.id) {
+		if (editingId() === comment.id) {
 			row.appendChild(renderEditForm(comment));
 		} else {
 			const text = createEl(doc, 'p', 'pptxv-inspector-comment-text');
@@ -235,7 +218,7 @@ export function createCommentThreadView(
 		if ((comment.replies ?? []).length > 0) {
 			row.appendChild(renderReplies(comment, rowEditable, depth));
 		}
-		if (replyingId === comment.id) {
+		if (state().replyingToId === comment.id) {
 			row.appendChild(renderReplyForm(comment));
 		}
 		return row;

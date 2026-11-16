@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, test, vi } from 'vitest';
 
 import { createTranslator } from '../i18n';
 import { openCommentsPanel } from './comments-panel';
+import { createTestCommentsPanel } from './comments-panel.test-support';
 import { openCustomShowsDialog } from './custom-shows-dialog';
 import { allButtons } from './dialog-footer.test-support';
 import { openHyperlinkEditDialog } from './hyperlink-edit-dialog';
@@ -246,27 +247,21 @@ describe('workspace parity panels', () => {
 			.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 		expect(onDuplicate).toHaveBeenCalledWith(0);
 		document.body.replaceChildren();
-		const addComment = vi.fn(() => 'comment');
+		const deck = createTestCommentsPanel([]);
 		openCommentsPanel(
 			document,
 			document.body,
 			createTranslator(),
-			{ getComments: () => [], getAuthors: () => [], subscribe: () => () => undefined },
-			{
-				addComment,
-				addCommentReply: vi.fn(),
-				editComment: vi.fn(),
-				deleteComment: vi.fn(),
-				toggleCommentResolved: vi.fn(),
-				applyChanges: vi.fn(),
-			},
+			{ getComments: deck.comments, getAuthors: () => [], subscribe: () => () => undefined },
+			deck.panel,
 		);
 		const draft = document.querySelector('textarea')!;
 		draft.value = 'Review this';
+		draft.dispatchEvent(new Event('input'));
 		allButtons(document)
 			.find((button) => button.textContent === 'Add Comment')!
 			.click();
-		expect(addComment).toHaveBeenCalledWith('Review this', undefined, []);
+		expect(deck.comments()).toStrictEqual([expect.objectContaining({ text: 'Review this' })]);
 		// The pane is LIVE now: it stays open after an add and clears the draft.
 		expect(document.querySelector('[data-pptx-comments-panel]')).not.toBeNull();
 		expect(draft.value).toBe('');
@@ -289,14 +284,7 @@ describe('workspace parity panels', () => {
 					return () => undefined;
 				},
 			},
-			{
-				addComment: vi.fn(() => null),
-				addCommentReply: vi.fn(),
-				editComment: vi.fn(),
-				deleteComment: vi.fn(),
-				toggleCommentResolved: vi.fn(),
-				applyChanges: vi.fn(),
-			},
+			createTestCommentsPanel([...comments]).panel,
 		);
 		// The pane renders the SAME threaded view as the inspector Comments tab
 		// (shared `createCommentThreadView`), so it offers a Reply affordance.
@@ -313,24 +301,15 @@ describe('workspace parity panels', () => {
 	});
 
 	it('submits a reply from the workspace comments pane', () => {
-		const addCommentReply = vi.fn();
+		const deck = createTestCommentsPanel([
+			{ id: 'c1', text: 'First pass', author: 'Alice', resolved: false },
+		]);
 		openCommentsPanel(
 			document,
 			document.body,
 			createTranslator(),
-			{
-				getComments: () => [{ id: 'c1', text: 'First pass', author: 'Alice', resolved: false }],
-				getAuthors: () => [],
-				subscribe: () => () => undefined,
-			},
-			{
-				addComment: vi.fn(() => null),
-				addCommentReply,
-				editComment: vi.fn(),
-				deleteComment: vi.fn(),
-				toggleCommentResolved: vi.fn(),
-				applyChanges: vi.fn(),
-			},
+			{ getComments: deck.comments, getAuthors: () => [], subscribe: () => () => undefined },
+			deck.panel,
 		);
 		// `pptx.comments.reply` (open the composer) and `pptx.comments.addReply`
 		// (submit it) both read "Reply", so the submit is the LAST match, which
@@ -344,7 +323,7 @@ describe('workspace parity panels', () => {
 		replyBox.value = 'Looks good';
 		replyBox.dispatchEvent(new Event('input'));
 		replyButtons().at(-1)!.click();
-		expect(addCommentReply).toHaveBeenCalledWith('c1', 'Looks good', []);
+		expect(deck.comments()[0]!.replies![0]!.text).toBe('Looks good');
 	});
 
 	it('creates custom shows and applies safe hyperlinks', () => {

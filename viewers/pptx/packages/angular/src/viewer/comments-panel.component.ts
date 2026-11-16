@@ -3,45 +3,28 @@
  *
  * Selector: `pptx-comments-panel`
  *
- * Presentational only: it renders the supplied `comments` (already filtered to
- * the active slide by the host, nested replies included) and surfaces
- * add / remove / resolve / reply intents via outputs. The host owns state and
- * commits history-aware comment-array writes.
- *
- * Timestamps are formatted with the core `formatCommentTimestamp` helper so the
- * Angular binding matches the React/Vue formatting exactly.
+ * It renders the supplied `comments` (the active slide's, nested replies included). The drafts,
+ * the comment being edited, the open reply composer and every command are the viewer's shared
+ * comments panel controller (`CommentsPanelStateService`), so a half-typed comment stays with its
+ * slide and the side rail and the inspector's Comments tab show the same drafts.
  *
  * Usage:
  * ```html
- * <pptx-comments-panel
- *   [comments]="slideComments()"
- *   [authorName]="userName()"
- *   (add)="onAddComment($event)"
- *   (remove)="onRemoveComment($event)"
- *   (resolve)="onResolveComment($event)"
- *   (reply)="onReplyComment($event)"
- * />
+ * <pptx-comments-panel [comments]="slideComments()" [authorName]="userName()" />
  * ```
  */
 
-import {
-	ChangeDetectionStrategy,
-	Component,
-	computed,
-	inject,
-	input,
-	output,
-	signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { trimCommentMentions } from 'ooxml-ui/pptx';
+import { createCommentsPanelController, INITIAL_COMMENTS_PANEL_STATE } from 'ooxml-ui/pptx';
+import type { CommentsPanelController, CommentsPanelState } from 'ooxml-ui/pptx';
 import type { PptxComment, PptxCommentMention, PptxModernCommentAuthor } from 'pptx-viewer-core';
 import { formatCommentTimestamp } from 'pptx-viewer-core';
 
 import { CommentBodyComponent } from './comment-body.component';
 import { CommentMentionTextareaComponent } from './comment-mention-textarea.component';
+import { CommentsPanelStateService } from './comments-panel-state.service';
 
-/** The trimmed text plus the mention spans an add/reply submit carries. */
 export interface CommentSubmission {
 	text: string;
 	mentions: PptxCommentMention[];
@@ -56,70 +39,92 @@ export interface CommentSubmission {
 	styleUrl: './comments-panel.component.css',
 })
 export class CommentsPanelComponent {
-	// -------------------------------------------------------------------------
-	// Inputs / outputs
-	// -------------------------------------------------------------------------
-
 	/** The active slide's comments (already filtered to the active slide). */
 	readonly comments = input<PptxComment[]>([]);
 
 	private readonly translate = inject(TranslateService);
 
-	/** Display name shown in the compose label ("Commenting as …"). */
+	/** Display name shown in the compose label ("Commenting as ..."). */
 	readonly authorName = input<string>(this.translate.instant('pptx.comments.defaultAuthorName'));
 
 	/** Office 2021 modern comment authors, for the `@`-mention typeahead. */
 	readonly modernCommentAuthors = input<readonly PptxModernCommentAuthor[]>([]);
 
-	/** Emits the trimmed comment text (+ mentions) the user wants to add. */
-	readonly add = output<CommentSubmission>();
+	/**
+	 * The viewer's shared comments panel state (drafts, edits and reply composers, per slide).
+	 * Outside a viewer there is no deck to write to, so the panel lists the comments read-only.
+	 */
+	private readonly panel = inject(CommentsPanelStateService, { optional: true });
+	protected readonly controller: CommentsPanelController =
+		this.panel?.controller ??
+		createCommentsPanelController({
+			slides: () => [],
+			canEdit: () => false,
+			authorName: () => '',
+			commit: () => undefined,
+		});
+	private readonly state = computed<CommentsPanelState>(
+		() => this.panel?.state() ?? INITIAL_COMMENTS_PANEL_STATE,
+	);
+	protected readonly slideId = computed(() => this.panel?.slideId() ?? '');
+	protected readonly canEdit = computed(() => this.panel?.canEdit() ?? false);
+	private slideIndex(): number {
+		return this.panel?.slideIndex() ?? 0;
+	}
 
-	/** Emits the id of a comment the user wants to remove. */
-	readonly remove = output<string>();
-
-	/** Emits the id of a comment whose resolved flag should toggle. */
-	readonly resolve = output<string>();
-
-	/** Emits the parent comment id + trimmed text (+ mentions) of a threaded reply. */
-	readonly reply = output<{ parentId: string } & CommentSubmission>();
-
-	// -------------------------------------------------------------------------
-	// Draft state
-	// -------------------------------------------------------------------------
-
-	/** Current text typed into the compose textarea. */
-	readonly draft = signal('');
+	/** The active slide's new-comment draft, as typed. */
+	readonly draft = computed(() => this.state().draftBySlideId[this.slideId()] ?? '');
 	/** `@`-mentions recorded in {@link draft} so far. */
-	readonly draftMentions = signal<PptxCommentMention[]>([]);
-
+	readonly draftMentions = computed(
+		() => (this.state().draftMentionsBySlideId[this.slideId()] ?? []) as PptxCommentMention[],
+	);
 	/** Whether the draft has non-whitespace content (enables the submit button). */
-	readonly canAdd = computed<boolean>(() => this.draft().trim().length > 0);
+	readonly canAdd = computed<boolean>(() => this.canEdit() && this.draft().trim().length > 0);
 
+	/** The comment being edited on this slide, or null. */
+	readonly editingId = computed(() => this.state().editingIdBySlideId[this.slideId()] ?? null);
 	/** Id of the comment whose reply composer is open (one at a time). */
-	readonly replyingTo = signal<string | null>(null);
+	readonly replyingTo = computed(() => this.state().replyingToId);
 
-	/** Current text typed into the open reply composer. */
-	readonly replyDraft = signal('');
-	/** `@`-mentions recorded in {@link replyDraft} so far. */
-	readonly replyMentions = signal<PptxCommentMention[]>([]);
+	protected setDraft(text: string): void {
+		this.controller.setDraft(this.slideId(), text);
+	}
 
-	/** Whether the reply draft has content (enables the reply submit button). */
-	readonly canReply = computed<boolean>(() => this.replyDraft().trim().length > 0);
-
-	// -------------------------------------------------------------------------
-	// Event handlers
-	// -------------------------------------------------------------------------
+	protected setDraftMentions(mentions: PptxCommentMention[]): void {
+		this.controller.setDraft(this.slideId(), this.draft(), mentions);
+	}
 
 	submit(event: Event): void {
 		event.preventDefault();
-		// The mentions index the draft as typed: they move with its trim.
-		const submission = trimCommentMentions(this.draft(), this.draftMentions());
-		if (submission.text.length === 0) {
-			return;
-		}
-		this.add.emit(submission);
-		this.draft.set('');
-		this.draftMentions.set([]);
+		this.controller.add(this.slideIndex());
+	}
+
+	protected removeComment(id: string): void {
+		this.controller.remove(this.slideIndex(), id);
+	}
+
+	protected toggleResolved(id: string): void {
+		this.controller.toggleResolved(this.slideIndex(), id);
+	}
+
+	protected startEdit(id: string): void {
+		this.controller.startEdit(this.slideId(), id);
+	}
+
+	protected cancelEdit(): void {
+		this.controller.cancelEdit(this.slideId());
+	}
+
+	protected editDraft(id: string): string {
+		return this.state().editDraftById[id] ?? '';
+	}
+
+	protected setEditDraft(id: string, event: Event): void {
+		this.controller.setEditDraft(id, (event.target as HTMLTextAreaElement).value);
+	}
+
+	protected saveEdit(id: string): void {
+		this.controller.saveEdit(this.slideIndex(), id);
 	}
 
 	/** Localized reply-composer placeholder ("Reply to <author>..."). */
@@ -129,26 +134,33 @@ export class CommentsPanelComponent {
 		});
 	}
 
-	/** Open the reply composer under `parentId` (closing any other composer). */
+	/** Open the reply composer under `parentId` (closing any other composer), empty. */
 	startReply(parentId: string): void {
-		this.replyingTo.set(parentId);
-		this.replyDraft.set('');
-		this.replyMentions.set([]);
+		this.controller.startReply(parentId);
 	}
 
 	cancelReply(): void {
-		this.replyingTo.set(null);
-		this.replyDraft.set('');
-		this.replyMentions.set([]);
+		this.controller.cancelReply();
+	}
+
+	protected replyDraft(id: string): string {
+		return this.state().replyDraftById[id] ?? '';
+	}
+
+	protected replyMentions(id: string): PptxCommentMention[] {
+		return (this.state().replyMentionsById[id] ?? []) as PptxCommentMention[];
+	}
+
+	protected setReplyDraft(id: string, text: string): void {
+		this.controller.setReplyDraft(id, text);
+	}
+
+	protected setReplyMentions(id: string, mentions: PptxCommentMention[]): void {
+		this.controller.setReplyDraft(id, this.replyDraft(id), mentions);
 	}
 
 	submitReply(parentId: string): void {
-		const submission = trimCommentMentions(this.replyDraft(), this.replyMentions());
-		if (submission.text.length === 0) {
-			return;
-		}
-		this.reply.emit({ parentId, ...submission });
-		this.cancelReply();
+		this.controller.submitReply(this.slideIndex(), parentId);
 	}
 
 	formatTimestamp(value: string | undefined): string {

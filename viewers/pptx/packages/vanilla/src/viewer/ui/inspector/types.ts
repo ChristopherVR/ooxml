@@ -38,6 +38,7 @@ import type {
 } from 'pptx-viewer-core';
 
 import type { AnimationTimingPatch } from '../../editor/editor-animation-actions';
+import type { CommentsPanelBinding } from '../../editor/editor-comment-actions';
 import type { GeometryPatch } from '../../editor/editor-edit-ops';
 import type { LiveColorEventType, LiveColorTarget } from '../../editor/editor-live-colors';
 import type { TableCellPosition, TableStructureAction } from '../../editor/table-editor-mutations';
@@ -110,6 +111,8 @@ export interface InspectorHandlers {
 	 * when the deck has content and the new size differs from the current one).
 	 */
 	applySlideSizeRescale(size: SlideSizeEmu, mode: SlideSizeRescaleMode): void;
+	/** The viewer's shared comments panel state (drafts, edits and reply composers, per slide). */
+	commentsPanel(): CommentsPanelBinding;
 	/** Add a comment on the current slide (Comments tab). */
 	addComment(text: string, mentions?: PptxCommentMention[]): void;
 	/** Append a reply under a top-level comment (Comments tab reply form). */

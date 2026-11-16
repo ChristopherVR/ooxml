@@ -1294,6 +1294,8 @@ const comments = useCommentsWiring({
 	slides,
 	authorName: authorNameRef,
 	pushHistory: history.pushHistory,
+	canEdit: () => canEditEffective.value,
+	selectedElementId: () => selectedElementIds.value[0],
 });
 
 // -- Collaboration (Yjs) + broadcast -----------------------------------

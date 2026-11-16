@@ -16,9 +16,44 @@ import type { PptxCommentMention, PptxModernCommentAuthor } from 'pptx-viewer-co
  * all pure shared helpers (`render/comment-mentions`); this class only tracks
  * the caret, the open/dismissed state, and the highlighted suggestion.
  */
+/**
+ * Where a composer's draft lives when something outside it owns the draft (the shared comments
+ * panel controller keeps drafts per slide). `write` without mentions keeps the recorded ones.
+ */
+export interface CommentComposeDraft {
+	read(): { text: string; mentions: readonly PptxCommentMention[] };
+	write(text: string, mentions?: readonly PptxCommentMention[]): void;
+}
+
 export class CommentComposeState {
-	text = $state('');
-	mentions = $state<PptxCommentMention[]>([]);
+	#text = $state('');
+	#mentions = $state<PptxCommentMention[]>([]);
+	readonly #draft: CommentComposeDraft | undefined;
+
+	constructor(draft?: CommentComposeDraft) {
+		this.#draft = draft;
+	}
+
+	get text(): string {
+		return this.#draft ? this.#draft.read().text : this.#text;
+	}
+	set text(value: string) {
+		if (this.#draft) {
+			this.#draft.write(value);
+		} else {
+			this.#text = value;
+		}
+	}
+	get mentions(): PptxCommentMention[] {
+		return this.#draft ? [...this.#draft.read().mentions] : this.#mentions;
+	}
+	set mentions(value: PptxCommentMention[]) {
+		if (this.#draft) {
+			this.#draft.write(this.text, value);
+		} else {
+			this.#mentions = value;
+		}
+	}
 	#caret = $state(0);
 	/** Escape dismisses the popup for the CURRENT query; typing re-opens it. */
 	#dismissedAtCaret = $state<number | null>(null);

@@ -1,8 +1,10 @@
 <script lang="ts">
 	/**
 	 * ReviewCommentsPanel: history-aware comment review for the active slide.
-	 * Comment list transforms are shared with the other framework bindings; this
-	 * component only owns the compact review UI and writes through EditorState.
+	 * The drafts, the comment being edited, the open reply composer and every
+	 * command are the viewer's shared comments panel controller
+	 * (`commentsPanelFor`), so a half-typed comment stays with its slide; this
+	 * component only owns the compact review UI.
 	 *
 	 * Wave-4 B5: both composers (new comment, reply) offer an `@`-mention
 	 * typeahead ({@link CommentComposeState} + {@link CommentMentionSuggestions}),
@@ -12,19 +14,16 @@
 	 * The accepted mentions index the draft as typed; `addCommentToList` /
 	 * `replyToCommentInList` (shared) store them moved with the draft's trim.
 	 */
-	import type { PptxComment, PptxModernCommentAuthor, PptxSlide } from 'pptx-viewer-core';
-	import {
-		addCommentToList,
-		removeCommentFromList,
-		replyToCommentInList,
-		toggleCommentResolvedInList,
-	} from 'ooxml-ui/pptx';
+	import type { PptxModernCommentAuthor } from 'pptx-viewer-core';
+	import { untrack } from 'svelte';
 
 	import { useTranslator } from '../../../../i18n/context';
 	import { useViewerOptions } from '../../../state/viewer-options-context';
 	import CommentBody from '../../CommentBody.svelte';
 	import type { EditorState } from '../../../editor/editor-state.svelte';
+	import { controllerState } from '../../../state/controller-state';
 	import { CommentComposeState } from './comment-compose.svelte';
+	import { commentsPanelFor } from './comments-panel';
 	import CommentMentionSuggestions from './CommentMentionSuggestions.svelte';
 	import CommentReplyThread from './CommentReplyThread.svelte';
 
@@ -48,11 +47,37 @@
 			optionsState.options.general.userName ||
 			t('pptx.comments.defaultAuthorName'),
 	);
-	const compose = new CommentComposeState();
-	// Which comment has its reply composer open (one at a time).
-	let replyingTo = $state<string | null>(null);
-	const reply = new CommentComposeState();
+	// One viewer, one controller: the editor prop never changes for a mounted panel.
+	const controller = commentsPanelFor(untrack(() => editor), () => authorName);
+	const panel = controllerState(controller);
 	const slide = $derived(editor.slides[editor.currentSlideIndex]);
+	const slideId = $derived(slide?.id ?? '');
+	// Both composers keep their drafts in the controller: the new comment per slide, the reply
+	// per parent comment.
+	const compose = new CommentComposeState({
+		read: () => ({
+			text: panel.current.draftBySlideId[slideId] ?? '',
+			mentions: panel.current.draftMentionsBySlideId[slideId] ?? [],
+		}),
+		write: (text, mentions) => controller.setDraft(slideId, text, mentions),
+	});
+	const replyingTo = $derived(panel.current.replyingToId);
+	const reply = new CommentComposeState({
+		read: () => ({
+			text: replyingTo ? (panel.current.replyDraftById[replyingTo] ?? '') : '',
+			mentions: replyingTo ? (panel.current.replyMentionsById[replyingTo] ?? []) : [],
+		}),
+		write: (text, mentions) => {
+			if (replyingTo) {
+				controller.setReplyDraft(replyingTo, text, mentions);
+			}
+		},
+	});
+	const editingId = $derived(panel.current.editingIdBySlideId[slideId] ?? null);
+	$effect(() => {
+		void editor.slides;
+		controller.pruneDrafts();
+	});
 	const comments = $derived(slide?.comments ?? []);
 	const selectedLabel = $derived(editor.selectedElement?.type ?? null);
 	/**
@@ -72,62 +97,29 @@
 		})),
 	]);
 
-	function replaceComments(next: PptxComment[]): void {
-		const index = editor.currentSlideIndex;
-		const slides = editor.slides.map((item, itemIndex) =>
-			itemIndex === index ? { ...item, comments: next } : item,
-		) as PptxSlide[];
-		editor.commitSlides(slides);
-	}
-
 	function addComment(): void {
-		const next = addCommentToList(
-			comments,
-			compose.text,
-			authorName,
-			undefined,
-			undefined,
-			undefined,
-			compose.mentions,
-		);
-		if (!next) {
-			return;
-		}
-		replaceComments(next);
-		compose.reset();
+		controller.add(editor.currentSlideIndex);
 	}
 
 	function toggleResolved(id: string): void {
-		const next = toggleCommentResolvedInList(comments, id);
-		if (next) {
-			replaceComments(next);
-		}
+		controller.toggleResolved(editor.currentSlideIndex, id);
 	}
 
 	function removeComment(id: string): void {
-		const next = removeCommentFromList(comments, id);
-		if (next) {
-			replaceComments(next);
-		}
+		controller.remove(editor.currentSlideIndex, id);
 	}
 
 	function startReply(id: string): void {
-		replyingTo = id;
+		controller.startReply(id);
 		reply.reset();
 	}
 
 	function cancelReply(): void {
-		replyingTo = null;
-		reply.reset();
+		controller.cancelReply();
 	}
 
 	function submitReply(id: string): void {
-		const next = replyToCommentInList(comments, id, reply.text, authorName, reply.mentions);
-		if (!next) {
-			return;
-		}
-		replaceComments(next);
-		cancelReply();
+		controller.submitReply(editor.currentSlideIndex, id);
 	}
 
 	// Wire a composer's `<textarea>` to its `CommentComposeState` for the
@@ -193,7 +185,7 @@
 				onselect={(author) => compose.accept(author)}
 			/>
 		</div>
-		<button type="button" disabled={!compose.text.trim()} onclick={addComment}>{t('pptx.comments.addComment')}</button>
+		<button type="button" disabled={!editor.editable || !compose.text.trim()} onclick={addComment}>{t('pptx.comments.addComment')}</button>
 	</div>
 
 	{#if comments.length === 0}
@@ -206,11 +198,28 @@
 						<strong>{comment.author ?? t('pptx.comments.unknownAuthor')}</strong>
 						{#if comment.resolved}<span>{t('pptx.comments.resolved')}</span>{/if}
 					</div>
-					<p><CommentBody text={comment.text} mentions={comment.mentions} /></p>
+					{#if editingId === comment.id}
+						<div class="pptx-svelte-comment-reply-compose">
+							<textarea
+								class="pptx-svelte-comment-edit"
+								rows="2"
+								aria-label={t('pptx.comments.edit')}
+								value={panel.current.editDraftById[comment.id] ?? ''}
+								oninput={(event) => controller.setEditDraft(comment.id, event.currentTarget.value)}
+							></textarea>
+							<div class="pptx-svelte-comment-reply-buttons">
+								<button type="button" class="pptx-svelte-comment-reply-cancel" onclick={() => controller.cancelEdit(slideId)}>{t('pptx.comments.cancel')}</button>
+								<button type="button" class="pptx-svelte-comment-reply-submit" disabled={!(panel.current.editDraftById[comment.id] ?? '').trim()} onclick={() => controller.saveEdit(editor.currentSlideIndex, comment.id)}>{t('pptx.comments.save')}</button>
+							</div>
+						</div>
+					{:else}
+						<p><CommentBody text={comment.text} mentions={comment.mentions} /></p>
+					{/if}
 					<CommentReplyThread replies={comment.replies ?? []} />
 					<div class="pptx-svelte-comment-actions">
 						<button type="button" onclick={() => toggleResolved(comment.id)}>{comment.resolved ? t('pptx.comments.reopen') : t('pptx.comments.resolve')}</button>
 						<button type="button" onclick={() => startReply(comment.id)}>{t('pptx.comments.reply')}</button>
+						{#if editor.editable && editingId !== comment.id}<button type="button" class="pptx-svelte-comment-edit-button" onclick={() => controller.startEdit(slideId, comment.id)}>{t('pptx.comments.edit')}</button>{/if}
 						<button type="button" onclick={() => removeComment(comment.id)}>{t('pptx.comments.remove')}</button>
 					</div>
 					{#if replyingTo === comment.id}

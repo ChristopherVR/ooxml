@@ -343,6 +343,7 @@ export function buildChromeCallbacks(
 		updateCanvasSize: (size) => deps.getEditActions().updateCanvasSize(size),
 		updateSlideSize: (size) => deps.getEditActions().updateSlideSize(size),
 		applySlideSizeRescale: (size, mode) => deps.getEditActions().applySlideSizeRescale(size, mode),
+		commentsPanel: () => deps.getEditActions().comments.panel,
 		addComment: (text, mentions) =>
 			void deps.getEditActions().comments.addComment(text, undefined, mentions),
 		addCommentReply: (parentId, text, mentions) =>

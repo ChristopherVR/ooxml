@@ -22,9 +22,34 @@
 							<time class="pptx-ng-comments__time">{{ ts }}</time>
 						}
 					</div>
-					<p class="pptx-ng-comments__text">
-						<pptx-comment-body [text]="comment.text" [mentions]="comment.mentions" />
-					</p>
+					@if (editingId() === comment.id) {
+						<div class="pptx-ng-comments__edit">
+							<textarea
+								class="pptx-ng-comments__edit-textarea"
+								rows="2"
+								[attr.aria-label]="'pptx.comments.edit' | translate"
+								[value]="editDraft(comment.id)"
+								(input)="setEditDraft(comment.id, $event)"
+							></textarea>
+							<div class="pptx-ng-comments__reply-actions">
+								<button type="button" class="pptx-ng-comments__action" (click)="cancelEdit()">
+									{{ 'pptx.comments.cancel' | translate }}
+								</button>
+								<button
+									type="button"
+									class="pptx-ng-comments__reply-submit"
+									[disabled]="editDraft(comment.id).trim().length === 0"
+									(click)="saveEdit(comment.id)"
+								>
+									{{ 'pptx.comments.save' | translate }}
+								</button>
+							</div>
+						</div>
+					} @else {
+						<p class="pptx-ng-comments__text">
+							<pptx-comment-body [text]="comment.text" [mentions]="comment.mentions" />
+						</p>
+					}
 
 					<!-- Threaded replies, nested inside the parent card -->
 					@if (comment.replies && comment.replies.length > 0) {
@@ -53,7 +78,7 @@
 							class="pptx-ng-comments__action"
 							[attr.data-comment-id]="comment.id"
 							[attr.aria-pressed]="comment.resolved ? 'true' : 'false'"
-							(click)="resolve.emit(comment.id)"
+							(click)="toggleResolved(comment.id)"
 						>
 							{{
 								(comment.resolved ? 'pptx.comments.reopen' : 'pptx.comments.resolve') | translate
@@ -67,12 +92,22 @@
 						>
 							{{ 'pptx.comments.reply' | translate }}
 						</button>
+						@if (canEdit() && editingId() !== comment.id) {
+							<button
+								type="button"
+								class="pptx-ng-comments__action pptx-ng-comments__action--edit"
+								[attr.data-comment-id]="comment.id"
+								(click)="startEdit(comment.id)"
+							>
+								{{ 'pptx.comments.edit' | translate }}
+							</button>
+						}
 						<button
 							type="button"
 							class="pptx-ng-comments__action pptx-ng-comments__action--danger"
 							[attr.data-comment-id]="comment.id"
 							[attr.aria-label]="'pptx.comments.removeComment' | translate"
-							(click)="remove.emit(comment.id)"
+							(click)="removeComment(comment.id)"
 						>
 							{{ 'pptx.comments.remove' | translate }}
 						</button>
@@ -82,15 +117,15 @@
 					@if (replyingTo() === comment.id) {
 						<div class="pptx-ng-comments__reply-compose">
 							<pptx-comment-mention-textarea
-								[text]="replyDraft()"
-								[mentions]="replyMentions()"
+								[text]="replyDraft(comment.id)"
+								[mentions]="replyMentions(comment.id)"
 								[authors]="modernCommentAuthors()"
 								textareaClass="pptx-ng-comments__reply-textarea"
 								[rows]="2"
 								[placeholder]="replyPlaceholder(comment)"
 								[ariaLabel]="'pptx.comments.reply' | translate"
-								(textChange)="replyDraft.set($event)"
-								(mentionsChange)="replyMentions.set($event)"
+								(textChange)="setReplyDraft(comment.id, $event)"
+								(mentionsChange)="setReplyMentions(comment.id, $event)"
 							/>
 							<div class="pptx-ng-comments__reply-actions">
 								<button type="button" class="pptx-ng-comments__action" (click)="cancelReply()">
@@ -99,7 +134,7 @@
 								<button
 									type="button"
 									class="pptx-ng-comments__reply-submit"
-									[disabled]="!canReply()"
+									[disabled]="replyDraft(comment.id).trim().length === 0"
 									(click)="submitReply(comment.id)"
 								>
 									{{ 'pptx.comments.reply' | translate }}
@@ -131,8 +166,8 @@
 			[rows]="3"
 			[placeholder]="'pptx.comments.writePlaceholder' | translate"
 			[ariaLabel]="'pptx.comments.addComment' | translate"
-			(textChange)="draft.set($event)"
-			(mentionsChange)="draftMentions.set($event)"
+			(textChange)="setDraft($event)"
+			(mentionsChange)="setDraftMentions($event)"
 		/>
 		<button
 			type="submit"

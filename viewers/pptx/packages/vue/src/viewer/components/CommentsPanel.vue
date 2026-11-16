@@ -1,22 +1,22 @@
 <script setup lang="ts">
-import { trimCommentMentions } from 'ooxml-ui/pptx';
+import { createCommentsPanelController } from 'ooxml-ui/pptx';
 import type { PptxComment, PptxCommentMention, PptxModernCommentAuthor } from 'pptx-viewer-core';
 import { formatCommentTimestamp } from 'pptx-viewer-core';
-import { computed, ref } from 'vue';
+import { computed, inject } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { COMMENTS_PANEL_CONTEXT } from '../composables/comments-panel-context';
+import { useController } from '../composables/useController';
 import CommentBody from './CommentBody.vue';
 import CommentMentionTextarea from './CommentMentionTextarea.vue';
 
 /**
  * CommentsPanel: side panel listing the active slide's comments.
  *
- * Presentational only: it renders the supplied `comments` (already filtered to
- * the active slide by the host) and surfaces add / remove / resolve intents via
- * emits. The host owns state and commits history-aware comment-array writes.
- *
- * Timestamps are formatted with the core `formatCommentTimestamp` helper so the
- * Vue binding matches the React/Angular formatting exactly.
+ * It renders the supplied `comments` (the active slide's, sliced by the host); the drafts, the
+ * comment being edited, the open reply composer and every command are the viewer's shared
+ * comments panel controller, provided by `useCommentsWiring`, so a half-typed comment stays with
+ * its slide and every panel under the viewer shows the same drafts.
  */
 const props = defineProps<{
 	comments: PptxComment[];
@@ -31,66 +31,50 @@ const props = defineProps<{
 	modernCommentAuthors?: PptxModernCommentAuthor[];
 }>();
 
-const emit = defineEmits<{
-	add: [payload: { text: string; mentions?: PptxCommentMention[] }];
-	remove: [id: string];
-	resolve: [id: string];
-	reply: [payload: { parentId: string; text: string; mentions?: PptxCommentMention[] }];
-}>();
-
 const { t } = useI18n();
+
+// Outside a viewer (a host mounting the panel on its own) there is no deck to write to, so the
+// panel lists the comments read-only.
+const context = inject(COMMENTS_PANEL_CONTEXT, null) ?? {
+	controller: createCommentsPanelController({
+		slides: () => [],
+		canEdit: () => false,
+		authorName: () => props.authorName,
+		commit: () => undefined,
+	}),
+	slideIndex: () => 0,
+	slideId: () => undefined,
+	canEdit: () => false,
+};
+const { controller } = context;
+const state = useController(controller);
+const slideId = computed(() => context.slideId() ?? '');
+const slideIndex = (): number => context.slideIndex();
+const canEdit = computed(() => context.canEdit());
 
 const mentionAuthors = computed(() => props.modernCommentAuthors ?? []);
 
-const draft = ref('');
-const draftMentions = ref<PptxCommentMention[]>([]);
-
-// Which comment currently has its reply box open, plus per-comment draft text
-// and mentions. Only one reply box is open at a time, so a flat record keyed
-// by comment id (rather than a single pair) just keeps a cancelled draft's
-// mentions from leaking onto the next comment's reply box.
-const replyingTo = ref<string | null>(null);
-const replyDrafts = ref<Record<string, string>>({});
-const replyMentions = ref<Record<string, PptxCommentMention[]>>({});
-
-function startReply(id: string): void {
-	replyingTo.value = id;
-	if (!(id in replyDrafts.value)) {
-		replyDrafts.value = { ...replyDrafts.value, [id]: '' };
-		replyMentions.value = { ...replyMentions.value, [id]: [] };
-	}
-}
-
-function submitReply(id: string): void {
-	// The mentions index the draft as typed: they move with its trim.
-	const { text, mentions } = trimCommentMentions(
-		replyDrafts.value[id] ?? '',
-		replyMentions.value[id],
-	);
-	if (text.length === 0) {
-		return;
-	}
-	emit('reply', { parentId: id, text, mentions });
-	const nextDrafts = { ...replyDrafts.value };
-	delete nextDrafts[id];
-	replyDrafts.value = nextDrafts;
-	const nextMentions = { ...replyMentions.value };
-	delete nextMentions[id];
-	replyMentions.value = nextMentions;
-	replyingTo.value = null;
-}
-
-const canAdd = computed<boolean>(() => draft.value.trim().length > 0);
-
+const draft = computed({
+	get: () => state.value.draftBySlideId[slideId.value] ?? '',
+	set: (text: string) => controller.setDraft(slideId.value, text),
+});
+const draftMentions = computed(
+	() => (state.value.draftMentionsBySlideId[slideId.value] ?? []) as PptxCommentMention[],
+);
+const setDraftMentions = (mentions: PptxCommentMention[]): void =>
+	controller.setDraft(slideId.value, draft.value, mentions);
+const canAdd = computed<boolean>(() => canEdit.value && draft.value.trim().length > 0);
 const submit = (): void => {
-	const { text, mentions } = trimCommentMentions(draft.value, draftMentions.value);
-	if (text.length === 0) {
-		return;
-	}
-	emit('add', { text, mentions });
-	draft.value = '';
-	draftMentions.value = [];
+	controller.add(slideIndex());
 };
+
+const editingId = computed(() => state.value.editingIdBySlideId[slideId.value] ?? null);
+const editDraft = (id: string): string => state.value.editDraftById[id] ?? '';
+
+const replyingTo = computed(() => state.value.replyingToId);
+const replyDraft = (id: string): string => state.value.replyDraftById[id] ?? '';
+const replyMentions = (id: string): PptxCommentMention[] =>
+	(state.value.replyMentionsById[id] ?? []) as PptxCommentMention[];
 
 const formatTimestamp = (value: string | undefined): string => formatCommentTimestamp(value);
 </script>
@@ -137,7 +121,38 @@ const formatTimestamp = (value: string | undefined): string => formatCommentTime
 						{{ formatTimestamp(comment.createdAt) }}
 					</time>
 				</div>
-				<p class="pptx-comments-panel__text m-0 mb-2 whitespace-pre-wrap break-words text-[13px]">
+				<div v-if="editingId === comment.id" class="mb-2 flex flex-col gap-1.5">
+					<textarea
+						class="pptx-comments-panel__edit w-full resize-y rounded-md border border-border bg-background p-2 text-[13px] text-foreground"
+						rows="2"
+						:aria-label="t('pptx.comments.edit')"
+						:value="editDraft(comment.id)"
+						@input="
+							controller.setEditDraft(comment.id, ($event.target as HTMLTextAreaElement).value)
+						"
+					></textarea>
+					<div class="flex justify-end gap-2">
+						<button
+							type="button"
+							class="cursor-pointer rounded-md border border-border bg-transparent px-2 py-1 text-xs text-foreground hover:bg-muted"
+							@click="controller.cancelEdit(slideId)"
+						>
+							{{ t('pptx.comments.cancel') }}
+						</button>
+						<button
+							type="button"
+							class="cursor-pointer rounded-md border-none bg-primary px-2.5 py-1 text-xs text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
+							:disabled="editDraft(comment.id).trim().length === 0"
+							@click="controller.saveEdit(slideIndex(), comment.id)"
+						>
+							{{ t('pptx.comments.save') }}
+						</button>
+					</div>
+				</div>
+				<p
+					v-else
+					class="pptx-comments-panel__text m-0 mb-2 whitespace-pre-wrap break-words text-[13px]"
+				>
 					<CommentBody :text="comment.text" :mentions="comment.mentions" />
 				</p>
 
@@ -175,7 +190,7 @@ const formatTimestamp = (value: string | undefined): string => formatCommentTime
 						class="pptx-comments-panel__action cursor-pointer rounded-md border border-border bg-transparent px-2 py-1 text-xs text-foreground hover:bg-muted max-md:min-h-[44px]!"
 						:data-comment-id="comment.id"
 						:aria-pressed="comment.resolved ? 'true' : 'false'"
-						@click="emit('resolve', comment.id)"
+						@click="controller.toggleResolved(slideIndex(), comment.id)"
 					>
 						{{ comment.resolved ? t('pptx.comments.reopen') : t('pptx.comments.resolve') }}
 					</button>
@@ -183,16 +198,25 @@ const formatTimestamp = (value: string | undefined): string => formatCommentTime
 						type="button"
 						class="pptx-comments-panel__action cursor-pointer rounded-md border border-border bg-transparent px-2 py-1 text-xs text-foreground hover:bg-muted max-md:min-h-[44px]!"
 						:data-comment-id="comment.id"
-						@click="startReply(comment.id)"
+						@click="controller.startReply(comment.id)"
 					>
 						{{ t('pptx.comments.reply') }}
+					</button>
+					<button
+						v-if="canEdit && editingId !== comment.id"
+						type="button"
+						class="pptx-comments-panel__action pptx-comments-panel__action--edit cursor-pointer rounded-md border border-border bg-transparent px-2 py-1 text-xs text-foreground hover:bg-muted max-md:min-h-[44px]!"
+						:data-comment-id="comment.id"
+						@click="controller.startEdit(slideId, comment.id)"
+					>
+						{{ t('pptx.comments.edit') }}
 					</button>
 					<button
 						type="button"
 						class="pptx-comments-panel__action pptx-comments-panel__action--danger cursor-pointer rounded-md border border-border bg-transparent px-2 py-1 text-xs text-red-400 hover:bg-muted max-md:min-h-[44px]!"
 						:data-comment-id="comment.id"
 						:aria-label="t('pptx.comments.removeComment')"
-						@click="emit('remove', comment.id)"
+						@click="controller.remove(slideIndex(), comment.id)"
 					>
 						{{ t('pptx.comments.remove') }}
 					</button>
@@ -201,29 +225,29 @@ const formatTimestamp = (value: string | undefined): string => formatCommentTime
 				<!-- Reply composer -->
 				<div v-if="replyingTo === comment.id" class="mt-2 flex flex-col gap-1.5">
 					<CommentMentionTextarea
-						:model-value="replyDrafts[comment.id] ?? ''"
-						:mentions="replyMentions[comment.id] ?? []"
+						:model-value="replyDraft(comment.id)"
+						:mentions="replyMentions(comment.id)"
 						:authors="mentionAuthors"
 						textarea-class="w-full resize-y rounded-md border border-border bg-background p-2 text-[12px] text-foreground"
 						:rows="2"
 						:placeholder="t('pptx.comments.replyPlaceholder')"
 						:aria-label="t('pptx.comments.reply')"
-						@update:model-value="replyDrafts[comment.id] = $event"
-						@update:mentions="replyMentions[comment.id] = $event"
+						@update:model-value="controller.setReplyDraft(comment.id, $event)"
+						@update:mentions="controller.setReplyDraft(comment.id, replyDraft(comment.id), $event)"
 					/>
 					<div class="flex justify-end gap-2">
 						<button
 							type="button"
 							class="cursor-pointer rounded-md border border-border bg-transparent px-2 py-1 text-xs text-foreground hover:bg-muted"
-							@click="replyingTo = null"
+							@click="controller.cancelReply()"
 						>
 							{{ t('pptx.comments.cancel') }}
 						</button>
 						<button
 							type="button"
 							class="cursor-pointer rounded-md border-none bg-primary px-2.5 py-1 text-xs text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
-							:disabled="(replyDrafts[comment.id] ?? '').trim().length === 0"
-							@click="submitReply(comment.id)"
+							:disabled="replyDraft(comment.id).trim().length === 0"
+							@click="controller.submitReply(slideIndex(), comment.id)"
 						>
 							{{ t('pptx.comments.reply') }}
 						</button>
@@ -258,7 +282,7 @@ const formatTimestamp = (value: string | undefined): string => formatCommentTime
 				:rows="3"
 				:placeholder="t('pptx.comments.addCommentPlaceholder')"
 				:aria-label="t('pptx.comments.addComment')"
-				@update:mentions="draftMentions = $event"
+				@update:mentions="setDraftMentions"
 			/>
 			<button
 				type="submit"

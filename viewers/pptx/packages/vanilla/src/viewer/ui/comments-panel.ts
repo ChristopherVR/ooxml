@@ -1,6 +1,6 @@
 import type { PptxComment, PptxCommentMention, PptxModernCommentAuthor } from 'pptx-viewer-core';
 
-import type { CommentActions } from '../editor/editor-comment-actions';
+import type { CommentsPanelBinding } from '../editor/editor-comment-actions';
 import type { Translator } from '../i18n';
 import { createEl } from '../render';
 import { attachCommentMentionTypeahead } from './comment-mention-typeahead';
@@ -36,7 +36,8 @@ export function openCommentsPanel(
 	host: HTMLElement,
 	t: Translator,
 	model: CommentsPanelModel,
-	actions: CommentActions,
+	/** The viewer's shared comments panel state: drafts and commands. */
+	panel: CommentsPanelBinding,
 ): void {
 	const existing = host.querySelector<DisposablePane>('[data-pptx-comments-panel]');
 	existing?.[DISPOSE]?.();
@@ -58,7 +59,7 @@ export function openCommentsPanel(
 	// The SAME threaded view the inspector Comments tab renders, so the pane a
 	// canvas "Add Comment" lands in offers replies too (it used to offer only
 	// save/resolve/delete, leaving no way to reply without closing it).
-	const threads = createCommentThreadView(doc, t, actions, model.getAuthors);
+	const threads = createCommentThreadView(doc, t, panel, model.getAuthors);
 	const empty = createEl(doc, 'p');
 	empty.textContent = t('pptx.comments.noneOnSlide');
 	list.append(threads.el, empty);
@@ -69,30 +70,39 @@ export function openCommentsPanel(
 		threads.update(comments, true);
 	};
 
+	// The new-comment draft is the slide's, kept by the shared controller.
 	const draft = createEl(doc, 'textarea');
 	draft.placeholder = t('pptx.comments.addPlaceholder');
-	let draftMentions: PptxCommentMention[] = [];
+	const draftMentions = (): PptxCommentMention[] => [
+		...(panel.controller.getSnapshot().draftMentionsBySlideId[panel.slideId()] ?? []),
+	];
+	let draftSlideId = panel.slideId();
+	const showDraft = (): void => {
+		draftSlideId = panel.slideId();
+		draft.value = panel.controller.getSnapshot().draftBySlideId[draftSlideId] ?? '';
+	};
+	draft.addEventListener('input', () => panel.controller.setDraft(panel.slideId(), draft.value));
 	const draftMentionTypeahead = attachCommentMentionTypeahead({
 		doc,
 		t,
 		field: draft,
 		getAuthors: model.getAuthors,
-		getMentions: () => draftMentions,
+		getMentions: draftMentions,
 		onChange: (next) => {
 			draft.value = next.text;
-			draftMentions = next.mentions;
+			panel.controller.setDraft(panel.slideId(), next.text, next.mentions);
 		},
 	});
 	const add = createEl(doc, 'button');
 	add.type = 'button';
 	add.textContent = t('pptx.comments.addComment');
 	add.addEventListener('click', () => {
-		if (actions.addComment(draft.value, undefined, draftMentions)) {
+		if (panel.controller.add(panel.slideIndex())) {
 			// The subscription re-renders the card list; the pane stays open.
-			draft.value = '';
-			draftMentions = [];
+			showDraft();
 		}
 	});
+	showDraft();
 	list.append(draft, draftMentionTypeahead.el, add);
 	pane.appendChild(list);
 
@@ -108,6 +118,9 @@ export function openCommentsPanel(
 		if (!pane.isConnected) {
 			dispose();
 			return;
+		}
+		if (panel.slideId() !== draftSlideId) {
+			showDraft();
 		}
 		const next = model.getComments();
 		if (next !== lastRendered) {

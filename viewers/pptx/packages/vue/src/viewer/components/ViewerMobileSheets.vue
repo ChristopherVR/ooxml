@@ -84,9 +84,6 @@ function panelVisible(panel: ViewerPanelId): boolean {
 }
 
 /** Commit a comments mutation through the history-aware wiring. */
-function commit(next: Parameters<UseCommentsWiringResult['commitComments']>[0]): void {
-	props.comments.commitComments(next);
-}
 </script>
 
 <template>
@@ -182,15 +179,9 @@ function commit(next: Parameters<UseCommentsWiringResult['commitComments']>[0]):
 	>
 		<CommentsPanel
 			embedded
-			:comments="comments.commentsApi.slideComments.value"
+			:comments="comments.activeComments.value"
 			:author-name="authorName"
 			:modern-comment-authors="deck.modernCommentAuthors.value"
-			@add="
-				(p) => commit(comments.commentsApi.addComment(p.text, undefined, undefined, p.mentions))
-			"
-			@remove="(id) => commit(comments.commentsApi.removeComment(id))"
-			@resolve="(id) => commit(comments.commentsApi.resolveComment(id))"
-			@reply="(p) => commit(comments.commentsApi.replyToComment(p.parentId, p.text, p.mentions))"
 		/>
 	</MobileSheet>
 </template>

@@ -280,7 +280,7 @@ export function createParityWorkflows(host: ParityWorkflowHost): ParityWorkflows
 					},
 					subscribe: (listener) => host.store.subscribe(() => listener()),
 				},
-				host.editor.getEditActions().comments,
+				host.editor.getEditActions().comments.panel,
 			);
 		},
 		openHyperlink() {

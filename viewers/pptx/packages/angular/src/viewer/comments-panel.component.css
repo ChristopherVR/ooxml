@@ -207,3 +207,18 @@
 		min-height: 44px;
 	}
 }
+
+.pptx-ng-comments__edit {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	margin-bottom: 8px;
+}
+
+.pptx-ng-comments__edit-textarea {
+	width: 100%;
+	box-sizing: border-box;
+	resize: vertical;
+	font: inherit;
+	font-size: 13px;
+}

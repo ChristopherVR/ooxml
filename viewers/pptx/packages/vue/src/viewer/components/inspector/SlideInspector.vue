@@ -17,7 +17,6 @@ import type { SlideSizeEmu } from 'ooxml-ui/pptx';
 import type {
 	PptxAppProperties,
 	PptxComment,
-	PptxCommentMention,
 	PptxCoreProperties,
 	PptxCustomProperty,
 	PptxElement,
@@ -87,10 +86,6 @@ const emit = defineEmits<{
 	'update-tag-collections': [next: PptxTagCollection[]];
 	'set-template-background': [path: string, backgroundColor: string];
 	'select-element': [id: string];
-	'comment-add': [payload: { text: string; mentions?: PptxCommentMention[] }];
-	'comment-remove': [id: string];
-	'comment-resolve': [id: string];
-	'comment-reply': [payload: { parentId: string; text: string; mentions?: PptxCommentMention[] }];
 	close: [];
 }>();
 
@@ -182,10 +177,6 @@ watch(
 				:comments="comments ?? []"
 				:author-name="authorName"
 				:modern-comment-authors="modernCommentAuthors ?? []"
-				@add="(payload) => emit('comment-add', payload)"
-				@remove="(id) => emit('comment-remove', id)"
-				@resolve="(id) => emit('comment-resolve', id)"
-				@reply="(payload) => emit('comment-reply', payload)"
 			/>
 		</div>
 	</aside>

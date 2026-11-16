@@ -1,6 +1,6 @@
-import { trimCommentMentions } from 'ooxml-ui/pptx';
 import type { PptxCommentMention } from 'pptx-viewer-core';
 
+import type { CommentsPanelBinding } from '../../editor/editor-comment-actions';
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';
 import { attachCommentMentionTypeahead } from '../comment-mention-typeahead';
@@ -12,10 +12,7 @@ export interface CommentsTab {
 	update(state: InspectorDeckState): void;
 }
 
-type CommentsHandlers = Pick<
-	InspectorHandlers,
-	'addComment' | 'addCommentReply' | 'editComment' | 'deleteComment' | 'toggleCommentResolved'
->;
+type CommentsHandlers = Pick<InspectorHandlers, 'commentsPanel'>;
 
 /**
  * The inspector's Comments tab: current-slide comment threads with nested
@@ -24,7 +21,8 @@ type CommentsHandlers = Pick<
  *
  * The thread list itself is `createCommentThreadView`, shared with the
  * workspace Comments pane so vanilla's two comment surfaces cannot offer
- * different affordances.
+ * different affordances, and both read the viewer's shared comments panel
+ * controller, so the draft typed here is the one the pane shows.
  */
 export function createCommentsTab(
 	doc: Document,
@@ -33,7 +31,16 @@ export function createCommentsTab(
 ): CommentsTab {
 	const el = createEl(doc, 'div', 'pptxv-inspector-comments');
 	let mentionAuthors: InspectorDeckState['commentMentionAuthors'] = [];
-	const threads = createCommentThreadView(doc, t, handlers, () => mentionAuthors);
+	// Read lazily: the editor's actions exist only once the viewer has wired them.
+	const panel: CommentsPanelBinding = {
+		get controller() {
+			return handlers.commentsPanel().controller;
+		},
+		slideIndex: () => handlers.commentsPanel().slideIndex(),
+		slideId: () => handlers.commentsPanel().slideId(),
+		canEdit: () => handlers.commentsPanel().canEdit(),
+	};
+	const threads = createCommentThreadView(doc, t, panel, () => mentionAuthors);
 	el.appendChild(threads.el);
 	const empty = createEl(doc, 'p', 'pptxv-inspector-empty');
 	empty.textContent = t('pptx.comments.noComments');
@@ -45,28 +52,27 @@ export function createCommentsTab(
 	input.rows = 2;
 	input.placeholder = t('pptx.comments.addCommentPlaceholder');
 	input.setAttribute('aria-label', t('pptx.comments.addComment'));
-	let draftMentions: PptxCommentMention[] = [];
+	const draftMentions = (): PptxCommentMention[] => [
+		...(panel.controller.getSnapshot().draftMentionsBySlideId[panel.slideId()] ?? []),
+	];
+	input.addEventListener('input', () => panel.controller.setDraft(panel.slideId(), input.value));
 	const draftMentionTypeahead = attachCommentMentionTypeahead({
 		doc,
 		t,
 		field: input,
 		getAuthors: () => mentionAuthors,
-		getMentions: () => draftMentions,
+		getMentions: draftMentions,
 		onChange: (next) => {
 			input.value = next.text;
-			draftMentions = next.mentions;
+			panel.controller.setDraft(panel.slideId(), next.text, next.mentions);
 		},
 	});
 	const addBtn = createEl(doc, 'button', 'pptxv-inspector-deck-btn');
 	addBtn.type = 'button';
 	addBtn.textContent = t('pptx.comments.addComment');
 	addBtn.addEventListener('click', () => {
-		// The mentions index the draft as typed: they move with its trim.
-		const { text, mentions } = trimCommentMentions(input.value, draftMentions);
-		if (text) {
-			handlers.addComment(text, mentions);
+		if (panel.controller.add(panel.slideIndex())) {
 			input.value = '';
-			draftMentions = [];
 		}
 	});
 	addBox.append(input, draftMentionTypeahead.el, addBtn);
@@ -76,6 +82,10 @@ export function createCommentsTab(
 		el,
 		update(state) {
 			mentionAuthors = state.commentMentionAuthors;
+			// The slide's own draft (a slide change brings its draft with it); not while typing.
+			if (input.ownerDocument.activeElement !== input) {
+				input.value = panel.controller.getSnapshot().draftBySlideId[panel.slideId()] ?? '';
+			}
 			empty.hidden = state.comments.length > 0;
 			addBox.hidden = !state.editable;
 			threads.update(state.comments, state.editable);

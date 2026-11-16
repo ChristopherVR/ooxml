@@ -28,6 +28,7 @@ import { AutosaveService } from './autosave.service';
 import { ChartFormatPaneService } from './chart-format-pane.service';
 import { ChartPartSelectionService } from './chart-part-selection.service';
 import { CollaborationService } from './collaboration.service';
+import { CommentsPanelStateService } from './comments-panel-state.service';
 import { CustomFontsService } from './custom-fonts.service';
 import { EditorStateService } from './editor-state.service';
 import { EmbeddedFontsService } from './embedded-fonts.service';
@@ -128,4 +129,5 @@ export const POWER_POINT_VIEWER_PROVIDERS = [
 	OutlineAuthoringService,
 	PictureCropService,
 	ReviewCommentsNavigationService,
+	CommentsPanelStateService,
 ] as const;

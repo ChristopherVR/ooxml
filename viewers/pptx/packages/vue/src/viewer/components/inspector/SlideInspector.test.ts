@@ -136,13 +136,14 @@ describe('slideInspector', () => {
 		expect(wrapper.emitted('select-element')?.[0]).toStrictEqual(['a']);
 	});
 
-	it('hosts the comments panel on the Comments tab and relays adds', async () => {
+	it('hosts the comments panel on the Comments tab', async () => {
+		// The panel's commands are the viewer's shared comments controller (CommentsPanel.test.ts);
+		// mounted on its own, without a viewer, it lists the comments read-only.
 		const wrapper = mount(SlideInspector, { props: { ...baseProps, comments: [] } });
 		const commentsTab = wrapper.findAll('button').find((b) => b.text().includes('Comments'));
 		await commentsTab!.trigger('click');
-		await setControlValue(wrapper.get('textarea'), 'First!');
-		await wrapper.get('form').trigger('submit.prevent');
-		expect(wrapper.emitted('comment-add')?.[0]).toStrictEqual([{ text: 'First!', mentions: [] }]);
+		expect(wrapper.find('.pptx-comments-panel').exists()).toBeTruthy();
+		expect(wrapper.get('[data-testid="add-comment"]').attributes('disabled')).toBeDefined();
 	});
 
 	it('emits close from the tab strip close button', async () => {

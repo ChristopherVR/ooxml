@@ -144,13 +144,7 @@ import { ChartFormatPaneHostComponent } from './chart-format-pane-host.component
 import { CollaborationCursorsComponent } from './collaboration-cursors.component';
 import { CollaborationService } from './collaboration.service';
 import { CommentMarkersOverlayComponent } from './comment-markers-overlay.component';
-import {
-	addCommentToList,
-	removeCommentFromList,
-	replyToCommentInList,
-	toggleCommentResolvedInList,
-} from './comments-helpers';
-import type { CommentSubmission } from './comments-panel.component';
+import { CommentsPanelStateService } from './comments-panel-state.service';
 import { CommentsPanelComponent } from './comments-panel.component';
 import { CompatToastsComponent } from './compat-toasts.component';
 import { controllerSignal } from './controller-signal';
@@ -833,10 +827,6 @@ const noopClose = (): void => undefined;
 										<pptx-comments-panel
 											[comments]="activeComments()"
 											[modernCommentAuthors]="loader.modernCommentAuthors()"
-											(add)="onCommentAdd($event)"
-											(remove)="onCommentRemove($event)"
-											(resolve)="onCommentResolve($event)"
-											(reply)="onCommentReply($event)"
 										/>
 									}
 									@case ('selection') {
@@ -867,10 +857,6 @@ const noopClose = (): void => undefined;
 											[selectedElement]="selectedElement()"
 											[comments]="activeComments()"
 											[modernCommentAuthors]="loader.modernCommentAuthors()"
-											(commentAdd)="onCommentAdd($event)"
-											(commentRemove)="onCommentRemove($event)"
-											(commentResolve)="onCommentResolve($event)"
-											(commentReply)="onCommentReply($event)"
 										/>
 									}
 								}
@@ -2068,6 +2054,7 @@ export class PowerPointViewerComponent
 	protected readonly mobileSheetSvc = inject(ViewerMobileSheetService);
 	protected readonly inspectorPanel = inject(ViewerInspectorPanelService);
 	private readonly reviewNav = inject(ReviewCommentsNavigationService);
+	private readonly commentsPanel = inject(CommentsPanelStateService);
 	protected readonly fileIO = inject(ViewerFileIOService);
 	protected readonly themeGallery = inject(ViewerThemeGalleryService);
 	private readonly deckStyle = inject(ViewerDeckStyleService);
@@ -2648,6 +2635,12 @@ export class PowerPointViewerComponent
 
 	constructor() {
 		super();
+		this.commentsPanel.attach({
+			activeSlideIndex: () => this.activeSlideIndex(),
+			canEdit: () => this.canEdit(),
+			authorName: () => this.commentAuthorName(),
+			selectedElementId: () => this.editor.selectedIds()[0],
+		});
 		inject(ElementRenderErrors, { self: true }).reporter = () => this.onElementRenderError();
 		this.regions.attach(() => ({
 			viewer: this,
@@ -4554,52 +4547,6 @@ export class PowerPointViewerComponent
 	 */
 	private commentAuthorName(): string {
 		return this.authorName() || this.viewerOpts.options().general.userName || 'You';
-	}
-
-	/** Append a comment, with its `@`-mention spans, to the active slide (one history entry). */
-	onCommentAdd(submission: CommentSubmission): void {
-		const next = addCommentToList(
-			this.activeComments(),
-			submission.text,
-			this.commentAuthorName(),
-			undefined,
-			undefined,
-			undefined,
-			submission.mentions,
-		);
-		if (next) {
-			this.editor.updateSlide(this.activeSlideIndex(), { comments: next });
-		}
-	}
-
-	/** Remove a comment from the active slide. */
-	onCommentRemove(id: string): void {
-		const next = removeCommentFromList(this.activeComments(), id);
-		if (next) {
-			this.editor.updateSlide(this.activeSlideIndex(), { comments: next });
-		}
-	}
-
-	/** Toggle a comment's resolved flag on the active slide. */
-	onCommentResolve(id: string): void {
-		const next = toggleCommentResolvedInList(this.activeComments(), id);
-		if (next) {
-			this.editor.updateSlide(this.activeSlideIndex(), { comments: next });
-		}
-	}
-
-	/** Append a threaded reply, with its `@`-mention spans, under a top-level comment. */
-	onCommentReply(event: { parentId: string } & CommentSubmission): void {
-		const next = replyToCommentInList(
-			this.activeComments(),
-			event.parentId,
-			event.text,
-			this.commentAuthorName(),
-			event.mentions,
-		);
-		if (next) {
-			this.editor.updateSlide(this.activeSlideIndex(), { comments: next });
-		}
 	}
 
 	/**

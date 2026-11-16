@@ -1,9 +1,10 @@
 import type { PptxComment, PptxCommentMention } from 'pptx-viewer-core';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { createTranslator } from '../i18n';
 import { renderCommentBody } from './comment-body';
 import { createCommentThreadView } from './comment-thread-view';
+import { createTestCommentsPanel } from './comments-panel.test-support';
 
 const BOB = '{2CB2E9D0-D392-EB21-5D46-FBA34C1295E6}';
 
@@ -49,12 +50,11 @@ describe('commentThreadView mentions', () => {
 	};
 
 	it('highlights mentions in the threaded comment list', () => {
-		const view = createCommentThreadView(document, createTranslator(), {
-			addCommentReply: vi.fn(),
-			editComment: vi.fn(),
-			deleteComment: vi.fn(),
-			toggleCommentResolved: vi.fn(),
-		});
+		const view = createCommentThreadView(
+			document,
+			createTranslator(),
+			createTestCommentsPanel([comment]).panel,
+		);
 		view.update([comment], true);
 		const mention = view.el.querySelector('[data-pptx-comment-mention]');
 		expect(mention?.textContent).toBe('Bob Example');

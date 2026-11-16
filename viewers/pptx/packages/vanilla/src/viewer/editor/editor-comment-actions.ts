@@ -2,9 +2,10 @@
 // other binding (including the nested-reply tree traversal for edit/delete/
 // resolve, which used to be reimplemented here); this module only wires them
 // to the editor store's history-aware commit path.
-import type { SlideCommentsChange } from 'ooxml-ui/pptx';
+import type { CommentsPanelController, SlideCommentsChange } from 'ooxml-ui/pptx';
 import {
 	addCommentToList,
+	createCommentsPanelController,
 	editCommentInList,
 	removeCommentFromList,
 	replyToCommentInList,
@@ -18,7 +19,21 @@ import type { PptxComment, PptxCommentMention, PptxSlide } from 'pptx-viewer-cor
 import type { Store, ViewerState } from '../state';
 import type { EditorOps } from './editor-operations';
 
+/**
+ * The viewer's one comments panel controller (`ooxml-ui/pptx`: drafts, edits and reply composers,
+ * per slide) and the slide the comment surfaces show. The workspace Comments pane and the
+ * inspector's Comments tab both read it, so a half-typed comment stays with its slide.
+ */
+export interface CommentsPanelBinding {
+	controller: CommentsPanelController;
+	slideIndex(): number;
+	slideId(): string;
+	canEdit(): boolean;
+}
+
 export interface CommentActions {
+	/** The shared panel state every comment surface draws. */
+	panel: CommentsPanelBinding;
 	addComment(text: string, elementId?: string, mentions?: PptxCommentMention[]): string | null;
 	/**
 	 * Append a reply under a top-level comment (React's `handleSubmitReply`
@@ -75,7 +90,37 @@ export function createCommentActions(deps: {
 		return next;
 	};
 
+	const controller = createCommentsPanelController({
+		slides: () => deps.store.get().slides,
+		canEdit: () => deps.store.get().editable,
+		authorName,
+		selectedElementId: () => deps.store.get().selectedElementId,
+		commit: (slides) => {
+			deps.ops.pushHistory();
+			deps.store.set({ slides });
+			deps.ops.commitChange();
+		},
+	});
+	// Drafts for slides that no longer exist go with them.
+	let seenSlides = deps.store.get().slides;
+	deps.store.subscribe((state) => {
+		if (state.slides !== seenSlides) {
+			seenSlides = state.slides;
+			controller.pruneDrafts();
+		}
+	});
+	const panel: CommentsPanelBinding = {
+		controller,
+		slideIndex: () => deps.store.get().currentSlide,
+		slideId: () => {
+			const state = deps.store.get();
+			return state.slides[state.currentSlide]?.id ?? '';
+		},
+		canEdit: () => deps.store.get().editable,
+	};
+
 	return {
+		panel,
 		addComment(text, elementId, mentions) {
 			const next = applyToActiveComments((comments) => {
 				return addCommentToList(

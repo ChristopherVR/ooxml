@@ -21,7 +21,6 @@ export * from './viewer/composables/useChartEditing';
 export * from './viewer/composables/useCollaboration';
 export * from './viewer/composables/useCollaborationWiring';
 export * from './viewer/composables/use-color-change-image';
-export * from './viewer/composables/useComments';
 export * from './viewer/composables/useCommentsWiring';
 export * from './viewer/composables/useContextMenu';
 export * from './viewer/composables/useCustomShows';

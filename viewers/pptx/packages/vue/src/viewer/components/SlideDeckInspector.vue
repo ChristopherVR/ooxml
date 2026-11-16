@@ -64,9 +64,6 @@ const region = useRegion('inspector');
 const regionContext = computed(() => region.context(props.onClose));
 
 /** Commit a comments mutation through the history-aware wiring. */
-function commit(next: Parameters<UseCommentsWiringResult['commitComments']>[0]): void {
-	props.comments.commitComments(next);
-}
 </script>
 
 <template>
@@ -119,7 +116,7 @@ function commit(next: Parameters<UseCommentsWiringResult['commitComments']>[0]):
 		:app-properties="deck.appProperties.value"
 		:custom-properties="deck.customProperties.value"
 		:tag-collections="deck.tagCollections.value"
-		:comments="comments.commentsApi.slideComments.value"
+		:comments="comments.activeComments.value"
 		:author-name="authorName"
 		:modern-comment-authors="deck.modernCommentAuthors.value"
 		@slide-update="onSlideUpdate"
@@ -134,14 +131,6 @@ function commit(next: Parameters<UseCommentsWiringResult['commitComments']>[0]):
 		@set-template-background="deckActions.setTemplateBackground"
 		:get-template-background-color="deckActions.getTemplateBackgroundColor"
 		@select-element="onSelectElement"
-		@comment-add="
-			(p) => commit(comments.commentsApi.addComment(p.text, undefined, undefined, p.mentions))
-		"
-		@comment-remove="(id) => commit(comments.commentsApi.removeComment(id))"
-		@comment-resolve="(id) => commit(comments.commentsApi.resolveComment(id))"
-		@comment-reply="
-			(p) => commit(comments.commentsApi.replyToComment(p.parentId, p.text, p.mentions))
-		"
 		@close="onClose"
 	/>
 
