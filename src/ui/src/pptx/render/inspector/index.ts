@@ -104,6 +104,12 @@ export {
 export type { ParagraphFieldsSection, ParagraphFieldsTarget } from './paragraph-fields';
 export { TABLE_OPTIONS_SECTION, TABLE_OPTIONS_SECTIONS } from './table-option-fields';
 export type { TableOptionsSection, TableOptionsTarget } from './table-option-fields';
+export {
+	TABLE_CELL_MARGIN_SECTION,
+	TABLE_CELL_SECTIONS,
+	TABLE_CELL_TEXT_SECTION,
+} from './table-cell-fields';
+export type { TableCellSection, TableCellTarget } from './table-cell-fields';
 export { SLIDE_BACKGROUND_SECTION, SLIDE_BACKGROUND_SECTIONS } from './slide-background-fields';
 export type { SlideBackgroundSection, SlideBackgroundTarget } from './slide-background-fields';
 export { MEDIA_PLAYBACK_SECTION, MEDIA_PLAYBACK_SECTIONS } from './media-playback-fields';

@@ -30,11 +30,13 @@ describe('table cell alignment pickers', () => {
 			'left',
 			'center',
 			'right',
+			'justify',
 		]);
 		expect(Array.from(align.options).map((option) => option.textContent)).toStrictEqual([
 			'pptx.textPanel.alignLeft',
 			'pptx.textPanel.alignCenter',
 			'pptx.textPanel.alignRight',
+			'pptx.textPanel.alignJustify',
 		]);
 	});
 

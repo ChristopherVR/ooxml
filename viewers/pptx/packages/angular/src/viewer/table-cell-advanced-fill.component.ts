@@ -1,6 +1,7 @@
 /**
  * table-cell-advanced-fill.component.ts: advanced (gradient / pattern) cell fill
- * plus cell margin controls for the table cell-formatting inspector.
+ * for the table cell-formatting inspector (the margins are the shared
+ * `TABLE_CELL_SECTIONS`).
  *
  * Selector: `pptx-table-cell-advanced-fill`
  *
@@ -170,23 +171,6 @@ type GradientStop = { color: string; position: number };
 					</div>
 				</div>
 			}
-
-			<div class="pptx-tcaf__grid2">
-				@for (m of margins; track m.key) {
-					<label class="pptx-tcaf__field">
-						<span class="pptx-tcaf__lbl">{{ m.label | translate }}</span>
-						<input
-							type="number"
-							class="pptx-tcaf__num"
-							min="0"
-							max="200"
-							[disabled]="!canEdit()"
-							[value]="marginValue(m.key)"
-							(change)="onMargin(m.key, $event)"
-						/>
-					</label>
-				}
-			</div>
 		</div>
 	`,
 	styles: `
@@ -283,25 +267,11 @@ export class TableCellAdvancedFillComponent {
 
 	/** Spell a preset: the picker used to offer `ltHorz` / `narVert` verbatim. */
 	protected patternLabelKey = fillPatternLabelKey;
-	protected readonly margins: ReadonlyArray<{
-		key: 'marginTop' | 'marginBottom' | 'marginLeft' | 'marginRight';
-		label: string;
-	}> = [
-		{ key: 'marginTop', label: 'pptx.table.marginTop' },
-		{ key: 'marginBottom', label: 'pptx.table.marginBottom' },
-		{ key: 'marginLeft', label: 'pptx.table.marginLeft' },
-		{ key: 'marginRight', label: 'pptx.table.marginRight' },
-	];
-
 	protected readonly fillMode = computed(() => this.cellStyle().fillMode ?? 'solid');
 	protected readonly gradType = computed(() => this.cellStyle().gradientFillType ?? 'linear');
 	protected readonly stops = computed<GradientStop[]>(
 		() => this.cellStyle().gradientFillStops ?? [],
 	);
-
-	protected marginValue(key: 'marginTop' | 'marginBottom' | 'marginLeft' | 'marginRight'): number {
-		return inspectorNumber(this.cellStyle()[key], 0);
-	}
 
 	protected gradientAngleValue(): number {
 		return inspectorNumber(this.cellStyle().gradientFillAngle, 90);
@@ -373,16 +343,6 @@ export class TableCellAdvancedFillComponent {
 
 	protected onPatternBg(event: Event): void {
 		this.styleChange.emit({ patternFillBackground: inputValue(event) });
-	}
-
-	protected onMargin(
-		key: 'marginTop' | 'marginBottom' | 'marginLeft' | 'marginRight',
-		event: Event,
-	): void {
-		const value = numberValue(event);
-		if (value !== null) {
-			this.styleChange.emit({ [key]: value });
-		}
 	}
 
 	/**

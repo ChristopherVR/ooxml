@@ -1,12 +1,12 @@
-import { inspectorNumber, withCellStyle } from 'ooxml-ui/pptx';
+import { TABLE_CELL_SECTIONS, withCellStyle } from 'ooxml-ui/pptx';
 import type { PptxTableCellStyle, PptxTableData } from 'pptx-viewer-core';
 import React from 'react';
 
 import { useTranslation } from '../../i18n/use-translation';
 import type { TableCellEditorState } from '../../types';
-import { cn, normalizeHexColor } from '../../utils';
-import { DebouncedColorInput } from './DebouncedColorInput';
-import { HEADING, CARD, INPUT, BTN } from './inspector-pane-constants';
+import { cn } from '../../utils';
+import { HEADING, CARD, BTN } from './inspector-pane-constants';
+import { InspectorFields } from './InspectorFields';
 import {
 	computeMergeCellRight,
 	computeMergeCellDown,
@@ -65,20 +65,6 @@ export function TableCellFormattingPanel({
 				{t('pptx.table.cell', { row: rowIndex + 1, col: columnIndex + 1 })}
 			</div>
 			<div className='space-y-2'>
-				{/* Font Size */}
-				<label className='flex items-center gap-2 text-[11px]'>
-					<span className='w-10 text-muted-foreground'>{t('pptx.table.fontSize')}</span>
-					<input
-						type='number'
-						disabled={!canEdit}
-						className={INPUT}
-						min={6}
-						max={200}
-						value={inspectorNumber(cs.fontSize, 14)}
-						onChange={(e) => updateCellStyle({ fontSize: Number(e.target.value) })}
-					/>
-				</label>
-
 				{/* Colors */}
 				<div className='grid grid-cols-2 gap-1.5'>
 					<TableCellColorField
@@ -101,122 +87,21 @@ export function TableCellFormattingPanel({
 					/>
 				</div>
 
-				{/* Advanced Cell Fill & Margins */}
+				{/* Advanced Cell Fill */}
 				<TableCellAdvancedFill
 					cellStyle={cs}
 					canEdit={canEdit}
 					onUpdateCellStyle={updateCellStyle}
 				/>
 
-				{/* Bold / Italic / Underline */}
-				<div className='flex gap-1'>
-					{(
-						[
-							['bold', 'B', 'font-bold'],
-							['italic', 'I', 'italic'],
-							['underline', 'U', 'underline'],
-						] as const
-					).map(([key, lbl, cls]) => (
-						<button
-							key={key}
-							type='button'
-							disabled={!canEdit}
-							className={cn(
-								'px-2 py-1 rounded text-[11px] transition-colors',
-								cls,
-								cs[key] ? 'bg-primary text-white' : 'bg-muted hover:bg-accent',
-							)}
-							onClick={() => updateCellStyle({ [key]: !cs[key] })}
-						>
-							{lbl}
-						</button>
-					))}
-				</div>
-
-				{/* Horizontal Alignment */}
-				<div className='flex gap-1'>
-					{(
-						[
-							['left', 'L'],
-							['center', 'C'],
-							['right', 'R'],
-						] as const
-					).map(([val, lbl]) => (
-						<button
-							key={val}
-							type='button'
-							disabled={!canEdit}
-							className={cn(
-								'px-2 py-1 rounded text-[11px] transition-colors',
-								cs.align === val ? 'bg-primary text-white' : 'bg-muted hover:bg-accent',
-							)}
-							onClick={() => updateCellStyle({ align: val })}
-						>
-							{lbl}
-						</button>
-					))}
-				</div>
-
-				{/* Vertical Alignment */}
-				<div className='flex gap-1'>
-					{(
-						[
-							['top', 'T'],
-							['middle', 'M'],
-							['bottom', 'B'],
-						] as const
-					).map(([val, lbl]) => (
-						<button
-							key={val}
-							type='button'
-							disabled={!canEdit}
-							className={cn(
-								'px-2 py-1 rounded text-[11px] transition-colors',
-								cs.vAlign === val ? 'bg-primary text-white' : 'bg-muted hover:bg-accent',
-							)}
-							onClick={() => updateCellStyle({ vAlign: val })}
-						>
-							{lbl}
-						</button>
-					))}
-				</div>
-
-				{/* Cell Borders */}
-				<div className='space-y-1.5'>
-					<span className='text-muted-foreground text-[11px]'>{t('pptx.table.cellBorders')}</span>
-					<div className='grid grid-cols-2 gap-1.5'>
-						{(
-							[
-								['Top', 'borderTopColor', 'borderTopWidth'],
-								['Bottom', 'borderBottomColor', 'borderBottomWidth'],
-								['Left', 'borderLeftColor', 'borderLeftWidth'],
-								['Right', 'borderRightColor', 'borderRightWidth'],
-							] as const
-						).map(([edge, colorKey, widthKey]) => (
-							<div key={edge} className='flex flex-col gap-0.5'>
-								<span className='text-[10px] text-muted-foreground'>
-									{t(`pptx.table.border${edge}`)}
-								</span>
-								<div className='flex gap-1 items-center'>
-									<DebouncedColorInput
-										disabled={!canEdit}
-										value={normalizeHexColor(cs[colorKey] as string | undefined, '#374151')}
-										className='w-7 h-6 rounded border border-border bg-transparent cursor-pointer shrink-0'
-										onCommit={(hex) => updateCellStyle({ [colorKey]: hex })}
-									/>
-									<input
-										type='number'
-										disabled={!canEdit}
-										className={cn(INPUT, 'w-14')}
-										min={0}
-										max={10}
-										value={inspectorNumber(cs[widthKey] as number | undefined, 1)}
-										onChange={(e) => updateCellStyle({ [widthKey]: Number(e.target.value) })}
-									/>
-								</div>
-							</div>
-						))}
-					</div>
+				{/* Size, emphasis, alignment, margins and borders: shared descriptors. */}
+				<div className='grid grid-cols-2 gap-1.5 text-[11px]'>
+					<InspectorFields
+						sections={TABLE_CELL_SECTIONS}
+						target={cs}
+						disabled={!canEdit}
+						onPatch={updateCellStyle}
+					/>
 				</div>
 
 				{/* Merge / Split */}

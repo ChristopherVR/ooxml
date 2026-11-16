@@ -70,8 +70,12 @@ describe('table inspector number display', () => {
 		const values = Array.from(
 			target.querySelectorAll<HTMLInputElement>('input[type="number"]'),
 		).map((input) => input.value);
-		expect(values.filter((value) => value === '2.03')).toHaveLength(4);
-		expect(values.filter((value) => value === '5.33')).toHaveLength(4);
+		// Cell borders and margins show in points, as PowerPoint shows them.
+		expect(values.filter((value) => value === '1.52')).toHaveLength(4);
+		const margins = Array.from(
+			target.querySelectorAll<HTMLInputElement>('[data-testid^="table-cell-margin"]'),
+		).map((input) => input.value);
+		expect(margins).toStrictEqual(['4', '4', '4', '4']);
 		expect(values).toContain('38.93');
 		expect(values.filter((value) => /\.\d{3,}/u.test(value))).toStrictEqual([]);
 	});

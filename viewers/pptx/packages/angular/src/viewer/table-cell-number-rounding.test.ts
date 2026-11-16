@@ -6,6 +6,7 @@
  * source-text guard, like the other component tests in this package.
  */
 import { Injector, runInInjectionContext } from '@angular/core';
+import { resolveInspectorSections, TABLE_CELL_SECTIONS } from 'ooxml-ui/pptx';
 import type { PptxTableCellStyle } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
@@ -30,34 +31,24 @@ function create<T>(make: () => T): T {
 	return runInInjectionContext(Injector.create({ providers: [] }), make);
 }
 
-interface FormattingValues {
-	style: () => PptxTableCellStyle;
-	widthOf: (key: 'borderTopWidth') => number;
-	fontSizeValue: () => number;
-}
-
 interface FillValues {
 	cellStyle: () => PptxTableCellStyle;
-	marginValue: (key: 'marginLeft') => number;
 	gradientAngleValue: () => number;
 }
 
 describe('table inspector number display', () => {
-	it('rounds the cell font size and border width', () => {
-		const component = create(
-			() => new TableCellFormattingComponent(),
-		) as unknown as FormattingValues;
-		Object.defineProperty(component, 'style', { value: () => STYLE });
-
-		expect(component.widthOf('borderTopWidth')).toBe(2.03);
-		expect(component.fontSizeValue()).toBe(10.5);
+	it('shows the cell size, border width and margins in points through the shared fields', () => {
+		const [text, margins, top] = resolveInspectorSections(TABLE_CELL_SECTIONS, STYLE);
+		expect(text!.fields.find((f) => f.id === 'fontSize')?.value).toBe(10.5);
+		expect(top!.fields.find((f) => f.id === 'width')?.value).toBe(1.52);
+		expect(margins!.fields.find((f) => f.id === 'marginLeft')?.value).toBe(4);
+		expect(create(() => new TableCellFormattingComponent())).toBeTruthy();
 	});
 
-	it('rounds the cell margins and gradient angle', () => {
+	it('rounds the gradient angle', () => {
 		const component = create(() => new TableCellAdvancedFillComponent()) as unknown as FillValues;
 		Object.defineProperty(component, 'cellStyle', { value: () => STYLE });
 
-		expect(component.marginValue('marginLeft')).toBe(5.33);
 		expect(component.gradientAngleValue()).toBe(33.33);
 	});
 
@@ -73,8 +64,7 @@ describe('table inspector number display', () => {
 		const formatting = componentSource(import.meta.dirname, 'table-cell-formatting.component.ts');
 		const fill = componentSource(import.meta.dirname, 'table-cell-advanced-fill.component.ts');
 		const properties = componentSource(import.meta.dirname, 'table-properties.component.ts');
-		expect(formatting).toContain('[value]="fontSizeValue()"');
-		expect(formatting).toContain('[value]="widthOf(edge.widthKey)"');
+		expect(formatting).toContain('[sections]="cellSections"');
 		expect(fill).toContain('[value]="gradientAngleValue()"');
 		expect(properties).toContain('[value]="rowHeightValue(row.height)"');
 	});

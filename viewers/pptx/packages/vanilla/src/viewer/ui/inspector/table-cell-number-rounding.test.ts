@@ -33,11 +33,15 @@ function numberInputs(root: HTMLElement): string[] {
 }
 
 describe('table cell inspector number display', () => {
-	it('shows border width and padding with two decimals at most', () => {
+	it('shows the border width and margin in points, rounded', () => {
 		const panel = createTableCellFormatting(document, identity, HANDLERS);
 		panel.update(STATE);
 
-		expect(numberInputs(panel.el)).toStrictEqual(['10.5', '2.03', '5.33']);
+		const value = (id: string) =>
+			panel.el.querySelector<HTMLInputElement>(`[data-testid="${id}"]`)!.value;
+		expect(value('table-cell-fontSize')).toBe('10.5');
+		expect(value('table-cell-borderTop-width')).toBe('1.52');
+		expect(value('table-cell-marginLeft')).toBe('4');
 	});
 
 	it('commits a typed value as typed, without rounding it', () => {
@@ -46,13 +50,15 @@ describe('table cell inspector number display', () => {
 			setTableCellStyles,
 		} as unknown as InspectorHandlers);
 		panel.update(STATE);
-		const borderWidth = panel.el.querySelectorAll<HTMLInputElement>('input[type="number"]')[1]!;
-		borderWidth.value = '2.025';
+		const borderWidth = panel.el.querySelector<HTMLInputElement>(
+			'[data-testid="table-cell-borderTop-width"]',
+		)!;
+		borderWidth.value = '1.5';
 		borderWidth.dispatchEvent(new Event('change'));
 
 		expect(setTableCellStyles).toHaveBeenCalledWith(
 			[{ row: 0, column: 0 }],
-			expect.objectContaining({ borderTopWidth: 2.025 }),
+			expect.objectContaining({ borderTopWidth: 2 }),
 		);
 	});
 

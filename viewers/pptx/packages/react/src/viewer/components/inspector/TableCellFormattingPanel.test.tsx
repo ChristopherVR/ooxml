@@ -49,10 +49,11 @@ describe('tableCellFormattingPanel', () => {
 				/>,
 			);
 		});
-		const left = [...container.querySelectorAll('button')].find(
-			(button) => button.textContent === 'L',
-		);
-		act(() => left!.click());
+		const align = container.querySelector<HTMLSelectElement>('[data-testid="table-cell-align"]')!;
+		act(() => {
+			align.value = 'left';
+			align.dispatchEvent(new Event('change', { bubbles: true }));
+		});
 		expect(onUpdateTableData.mock.calls[0][0].rows?.[0].cells[0]).toMatchObject({
 			style: { align: 'left' },
 			paragraphs: [{ align: 'left' }, { align: 'left' }],
@@ -98,8 +99,9 @@ describe('tableCellFormattingPanel', () => {
 		const values = [...container.querySelectorAll<HTMLInputElement>('input[type="number"]')].map(
 			(input) => input.value,
 		);
-		expect(values.filter((value) => value === '2.03')).toHaveLength(4);
-		expect(values.filter((value) => value === '5.33')).toHaveLength(4);
+		// Shown in points, as PowerPoint shows them: 1.52 pt borders, 4 pt margins.
+		expect(values.filter((value) => value === '1.52')).toHaveLength(4);
+		expect(values.filter((value) => value === '4')).toHaveLength(4);
 		expect(values.filter((value) => /\.\d{3,}/u.test(value))).toStrictEqual([]);
 	});
 });

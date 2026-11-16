@@ -9,7 +9,6 @@ import {
 	GRADIENT_TYPE_OPTIONS,
 	LBL,
 	NUM,
-	SECTION_HEADING,
 	SEL,
 } from './table-cell-advanced-fill-constants';
 import { TableCellPatternFill } from './TableCellPatternFill';
@@ -98,38 +97,6 @@ export function TableCellAdvancedFill({
 					onUpdateCellStyle={onUpdateCellStyle}
 				/>
 			)}
-
-			{/* Cell Margins */}
-			<div className='space-y-1'>
-				<span className={SECTION_HEADING}>{t('pptx.table.margins')}</span>
-				<div className='grid grid-cols-2 gap-1.5'>
-					{(
-						[
-							['marginTop', 'pptx.table.marginTop'],
-							['marginBottom', 'pptx.table.marginBottom'],
-							['marginLeft', 'pptx.table.marginLeft'],
-							['marginRight', 'pptx.table.marginRight'],
-						] as const
-					).map(([key, i18nKey]) => (
-						<label key={key} className='flex flex-col gap-0.5'>
-							<span className={LBL}>{t(i18nKey)}</span>
-							<input
-								type='number'
-								disabled={!canEdit}
-								className={NUM}
-								min={0}
-								max={200}
-								value={inspectorNumber(cellStyle[key], 0)}
-								onChange={(e) =>
-									onUpdateCellStyle({
-										[key]: Number(e.target.value),
-									})
-								}
-							/>
-						</label>
-					))}
-				</div>
-			</div>
 		</div>
 	);
 }

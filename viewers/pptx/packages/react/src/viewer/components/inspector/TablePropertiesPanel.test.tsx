@@ -223,9 +223,12 @@ describe('tablePropertiesPanel', () => {
 		const original = structuredClone(element);
 		const onUpdate = vi.fn();
 		render(element, onUpdate, { rowIndex: 0, columnIndex: 0 });
-		const bold = host.querySelector<HTMLButtonElement>('button.font-bold');
+		const bold = host.querySelector<HTMLInputElement>('[data-testid="table-cell-bold"]');
 		expect(bold).not.toBeNull();
-		act(() => bold!.click());
+		act(() => {
+			bold!.checked = true;
+			bold!.dispatchEvent(new Event('change', { bubbles: true }));
+		});
 		expect(onUpdate).toHaveBeenCalledOnce();
 		expect(onUpdate.mock.calls[0][0]).not.toHaveProperty('rawXml');
 		expect(onUpdate.mock.calls[0][0].tableData.rows[0].cells[0].style.bold).toBeTruthy();

@@ -14,7 +14,7 @@ import { injectRecentColors } from '../../composables/recent-colors-context';
 /**
  * TableCellAdvancedFill: Vue port of React's inspector
  * `TableCellAdvancedFill.tsx`. Advanced (gradient / pattern) cell fill controls
- * plus cell margins. Fill-mode, gradient-type and pattern-preset option lists
+ * (the cell margins are the shared `TABLE_CELL_SECTIONS`). Fill-mode, gradient-type and pattern-preset option lists
  * come from `pptx-viewer-shared` (`render/table-advanced-fill.ts`,
  * `render/fill-pattern-label-keys.ts`); their i18n keys are resolved via
  * vue-i18n's `t()` against the host dictionary.
@@ -30,13 +30,6 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const recentColors = injectRecentColors();
-
-const MARGIN_FIELDS: Array<[keyof PptxTableCellStyle, string]> = [
-	['marginTop', 'pptx.table.marginTop'],
-	['marginBottom', 'pptx.table.marginBottom'],
-	['marginLeft', 'pptx.table.marginLeft'],
-	['marginRight', 'pptx.table.marginRight'],
-];
 
 const fillMode = computed(() => props.cellStyle.fillMode ?? 'solid');
 const gradientType = computed(() => props.cellStyle.gradientFillType ?? 'linear');
@@ -213,27 +206,6 @@ function addStop(): void {
 							emit('update', { patternFillBackground: ($event.target as HTMLInputElement).value })
 						"
 						@change="recentColors?.push(($event.target as HTMLInputElement).value)"
-					/>
-				</label>
-			</div>
-		</div>
-
-		<!-- Cell margins -->
-		<div class="flex flex-col gap-1">
-			<span class="text-[11px] uppercase tracking-wide text-muted-foreground">{{
-				t('pptx.table.margins')
-			}}</span>
-			<div class="grid grid-cols-2 gap-1.5">
-				<label v-for="[key, i18nKey] in MARGIN_FIELDS" :key="key" class="flex flex-col gap-0.5">
-					<span class="text-[11px] text-muted-foreground">{{ t(i18nKey) }}</span>
-					<input
-						type="number"
-						class="w-full rounded border border-border bg-muted px-1.5 py-0.5 text-[11px]"
-						:disabled="!canEdit"
-						min="0"
-						max="200"
-						:value="inspectorNumber(cellStyle[key] as number | undefined, 0)"
-						@input="emit('update', { [key]: Number(($event.target as HTMLInputElement).value) })"
 					/>
 				</label>
 			</div>
