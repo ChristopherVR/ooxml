@@ -137,6 +137,20 @@ export type {
 	CommentsPanelControllerDeps,
 	CommentsPanelState,
 } from './comments-panel-controller';
+export {
+	createSelectionPaneController,
+	formatSelectionPaneLabel,
+	SELECTION_PANE_TYPE_KEYS,
+	selectionPaneLabel,
+	selectionPaneRows,
+} from './selection-pane-controller';
+export type {
+	SelectionPaneController,
+	SelectionPaneControllerDeps,
+	SelectionPaneLabel,
+	SelectionPaneRow,
+	SelectionPaneState,
+} from './selection-pane-controller';
 export { createSlideSorterController, slideSorterView } from './slide-sorter-controller';
 export type {
 	SlideSorterClickModifiers,
