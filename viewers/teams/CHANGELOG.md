@@ -5,6 +5,14 @@ packages released that day and merges their entries; the full history of each pa
 own `CHANGELOG.md` (`packages/<name>/`, `mcp/`, `server/`). The release workflow writes these
 sections (`scripts/viewer-changelogs.mjs`); do not edit them by hand.
 
+## 2026-11-16
+
+_Releases: openteams-server@1.1.3_
+
+### Dependencies
+
+- **deps:** Take the open dependency updates in one change ([8eab074](https://github.com/ChristopherVR/ooxml/commit/8eab0749af462b944cda96a92e723132e9031f7a))
+
 ## 2026-11-13
 
 _Releases: openteams-react-viewer@1.1.2, openteams-angular-viewer@1.1.2, openteams-vanilla-viewer@1.1.2, openteams-server@1.1.2_

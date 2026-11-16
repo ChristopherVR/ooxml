@@ -5,6 +5,14 @@ packages released that day and merges their entries; the full history of each pa
 own `CHANGELOG.md` (`packages/<name>/`, `mcp/`, `server/`). The release workflow writes these
 sections (`scripts/viewer-changelogs.mjs`); do not edit them by hand.
 
+## 2026-11-16
+
+_Releases: visio-react-viewer@1.4.1, visio-vue-viewer@1.4.1, visio-angular-viewer@1.4.1, visio-svelte-viewer@1.4.1, visio-solid-viewer@1.4.1, visio-vanilla-viewer@1.4.1_
+
+### Dependencies
+
+- **deps:** Take the open dependency updates in one change ([8eab074](https://github.com/ChristopherVR/ooxml/commit/8eab0749af462b944cda96a92e723132e9031f7a))
+
 ## 2026-11-13
 
 _Releases: visio-core@1.1.2, visio-react-viewer@1.4.0, visio-vue-viewer@1.4.0, visio-angular-viewer@1.4.0, visio-svelte-viewer@1.4.0, visio-solid-viewer@1.4.0, visio-vanilla-viewer@1.4.0_

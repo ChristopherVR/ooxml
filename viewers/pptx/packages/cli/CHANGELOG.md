@@ -7,6 +7,20 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [2.42.2](https://github.com/ChristopherVR/ooxml/releases/tag/@christophervr/pptx-viewer@2.42.2) - 2026-11-16
+
+### Bug Fixes
+
+- **pptx:** Accept i18next 27 and react-i18next 18 as react viewer peers ([cdfe2b2](https://github.com/ChristopherVR/ooxml/commit/cdfe2b24272c17362889d10c5deb24d07582ab19))
+
+### Dependencies
+
+- **deps:** Merge dependabot development group and jsdom 31 ([eb65de6](https://github.com/ChristopherVR/ooxml/commit/eb65de67a495cbd4d775c995d5ac25f08322fbf9))
+
+### Chores
+
+- **deps-dev:** Bump the development-minor-and-patch group with 15 updates ([f9d1598](https://github.com/ChristopherVR/ooxml/commit/f9d15981d99b0dee22754c9711ed1755ae5d666a))
+
 ## [2.42.1](https://github.com/ChristopherVR/ooxml/releases/tag/@christophervr/pptx-viewer@2.42.1) - 2026-11-06
 
 ### Documentation

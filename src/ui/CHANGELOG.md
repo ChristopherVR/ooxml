@@ -7,6 +7,63 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.54.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.54.0) - 2026-11-16
+
+### Features
+
+- **diagram:** Name the smartart galleries in every locale ([d753545](https://github.com/ChristopherVR/ooxml/commit/d753545c195d57a0a50110f9928d4f40a412ef93))
+- **ui:** Draw smartart 3d and scene cameras approximately in svg ([52565c8](https://github.com/ChristopherVR/ooxml/commit/52565c8c66f67fd089c2d819094d4fcb78a29d43))
+- **pptx:** Preview a 3-d smartart style pick in the editor ([f6a49c7](https://github.com/ChristopherVR/ooxml/commit/f6a49c7d025319f8c77af5bc945859e6c6cceb18))
+- **ui:** Offer picture fills in the shared chart Format pane ([73c1540](https://github.com/ChristopherVR/ooxml/commit/73c15404aa990fb0ab4f63ad82931d0ff306e40f))
+- **docx:** Read, paint and save chart picture fills ([f61b254](https://github.com/ChristopherVR/ooxml/commit/f61b254dedbe0c24b2dec435e2cbcc3bdcc780b7))
+- **xlsx:** Paint and save chart picture fills ([1ab86c5](https://github.com/ChristopherVR/ooxml/commit/1ab86c50821dc191bd76f2e70910218fef1aa634))
+- **visio:** Offer picture fills in Format Chart ([b61636a](https://github.com/ChristopherVR/ooxml/commit/b61636af9f25d4f37e7da1ccd29b6f4837671107))
+- **pptx:** Edit error bars in the chart Format pane ([9dddc65](https://github.com/ChristopherVR/ooxml/commit/9dddc65d545db3aa8dd37481dabd010fb59a3644))
+- **pptx:** Edit trendlines in the chart Format pane ([1a10b04](https://github.com/ChristopherVR/ooxml/commit/1a10b048cc53a0d412d3fb110cdf53bbd6bf9c44))
+- **chart:** Insert pareto, map and every chartex family in office hosts ([b7c5c20](https://github.com/ChristopherVR/ooxml/commit/b7c5c2050830092620b01fc2fe58d895024a0693))
+- **chart:** Author chartex axes, series names, bins and map options ([ae90807](https://github.com/ChristopherVR/ooxml/commit/ae9080702e26cd5e291068fb46c895790d45b888))
+- **pptx:** Resolve inspector field choices and bounds from the target ([4e7a89e](https://github.com/ChristopherVR/ooxml/commit/4e7a89eb756036483201e19a6ed2525fa812039f))
+- **pptx:** Draw the artistic effect gallery from a shared descriptor ([ed32afa](https://github.com/ChristopherVR/ooxml/commit/ed32afa173e2464c42daf6a6a6a1a36c94b3fbd8))
+- **ui:** Add the shared slide sorter controller ([2c7ea37](https://github.com/ChristopherVR/ooxml/commit/2c7ea37fa752478c9e559172139de0b3d0e1b529))
+- **ui:** Add the shared outline view edit session ([f9ccda4](https://github.com/ChristopherVR/ooxml/commit/f9ccda429d01a8cf355501cc6061ebc1027dd409))
+- **ui:** Add the shared comments panel controller ([31025c6](https://github.com/ChristopherVR/ooxml/commit/31025c61f9e50ac46b9367c15c2edf2aea35a28f))
+- **ui:** Add the shared selection pane controller and row labels ([b95aac0](https://github.com/ChristopherVR/ooxml/commit/b95aac05ae957c1cbb0ceb93a9d8d8b27acd3998))
+- **ui:** Add the shared find and replace bar controller ([04d02e9](https://github.com/ChristopherVR/ooxml/commit/04d02e9cc0e97d2ad79f99e8a1dfe59c1b04ce46))
+- **ui:** Add the shared slide rail controller ([854bf8a](https://github.com/ChristopherVR/ooxml/commit/854bf8a9d69428445075e5bb4118b45e51bec5d7))
+
+### Bug Fixes
+
+- **diagram:** Translate the smartart 3d render notes in every locale ([a5f30d3](https://github.com/ChristopherVR/ooxml/commit/a5f30d3ab5686615a8e03a4823c291346125f2e8))
+- **pptx:** Draw a slide background fill on the canvas at once ([de43928](https://github.com/ChristopherVR/ooxml/commit/de439289743cd4f1ab31a198d0555b0f5677cf33))
+- **pptx:** Enable Erase All Ink on Slide only for the slide's own ink ([c228dc4](https://github.com/ChristopherVR/ooxml/commit/c228dc4f20f267955feb707330128bb4686ab0e2))
+
+### Refactor
+
+- **pptx:** Read colour opacity through the shared resolver alpha ([364931a](https://github.com/ChristopherVR/ooxml/commit/364931adfa14f8a9bb570effbc75811b37354578))
+- **pptx:** Draw alt text and picture fields from shared descriptors ([284911c](https://github.com/ChristopherVR/ooxml/commit/284911cf480d5754b9c7fc5ac4e9fe39a72e26c3))
+- **pptx:** Draw paragraph and character spacing from shared descriptors ([f22ec0b](https://github.com/ChristopherVR/ooxml/commit/f22ec0bd170dc8a28b7cb64463387b828fae42c4))
+- **pptx:** Draw the table options from shared descriptors ([653aa51](https://github.com/ChristopherVR/ooxml/commit/653aa512e6f73649dcbd8fe6bf47b37fc3585a96))
+- **pptx:** Draw the picture colour effects from shared descriptors ([8057444](https://github.com/ChristopherVR/ooxml/commit/805744474f36c528717fa698dbb5ae4b2ae30c48))
+- **pptx:** Draw the slide Background card fields from shared descriptors ([1106901](https://github.com/ChristopherVR/ooxml/commit/11069016062cb496d8a4a700ba377cb953c6f035))
+- **pptx:** Draw the media playback options from shared descriptors ([2ba4d6f](https://github.com/ChristopherVR/ooxml/commit/2ba4d6f1800cc56dfeee2c287088f22762ea5885))
+- **pptx:** Draw the OLE object card from shared descriptors ([771c5d6](https://github.com/ChristopherVR/ooxml/commit/771c5d6a296cbb55bb4d6b375243c493c9235307))
+- **pptx:** Draw Action Settings from shared descriptors ([2e72f5e](https://github.com/ChristopherVR/ooxml/commit/2e72f5e297800f5b41262f17f7a653d3d12007eb))
+- **pptx:** Draw the media trim fields from shared descriptors ([bfa0cf7](https://github.com/ChristopherVR/ooxml/commit/bfa0cf719061e34aeb05bad0d813b662b8eefdc8))
+- **pptx:** Draw the table cell formatting from shared descriptors ([fd88bcd](https://github.com/ChristopherVR/ooxml/commit/fd88bcda532dd514b87b343f5bdb7fed1a822bd6))
+- **ui:** Share the zoom to selection computation ([9b5912f](https://github.com/ChristopherVR/ooxml/commit/9b5912fd9d67daf49a214120f1811ad4f08081d9))
+
+### Testing
+
+- **docx:** Record the new chartex and units exports in the public surface ([cd4a970](https://github.com/ChristopherVR/ooxml/commit/cd4a9702d2cdcb56a0b5bbf14f38d1db7d18d7a7))
+- **xlsx:** Wait for the grid to reposition after a split switch ([46a72ea](https://github.com/ChristopherVR/ooxml/commit/46a72eae820e3698636cfb65506c7cc235dacdbc))
+- **ui:** Pin the split switch viewport and remove leaked scrollHeight stubs ([068bbca](https://github.com/ChristopherVR/ooxml/commit/068bbca400f827103e4a262c4b6a1ee444dc3c14))
+
+### Dependencies
+
+- **deps:** Take the open dependency updates in one change ([8eab074](https://github.com/ChristopherVR/ooxml/commit/8eab0749af462b944cda96a92e723132e9031f7a))
+- **deps:** Keep jsdom on 30 until the tests follow its css output ([f35ce9c](https://github.com/ChristopherVR/ooxml/commit/f35ce9c3a156d72e21abe24dce384f379af27a5a))
+- **deps:** Update jsdom to 31 and read styles the engine's way in tests ([953f0e4](https://github.com/ChristopherVR/ooxml/commit/953f0e4a5e9a8d152edd3ea2169088f3248574a6))
+
 ## [1.53.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.53.0) - 2026-11-16
 
 ### Features
