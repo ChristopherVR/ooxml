@@ -91,6 +91,8 @@ export interface ChartSummarySeries extends ChartMarkerSummary {
 	fill?: DrawingFill;
 	/** Non-solid individual point fills; solid point overrides use pointColors. */
 	pointFills?: Record<number, DrawingFill>;
+	/** A bar or column picture fill stacks along the bar (`c:pictureOptions/c:pictureFormat`). */
+	pictureStack?: boolean;
 	/** Opaque imported DrawingML effect list, retained during chart regeneration. */
 	effectsXml?: string;
 	/** Data labels the painter draws at each point (`c:dLbls`). */

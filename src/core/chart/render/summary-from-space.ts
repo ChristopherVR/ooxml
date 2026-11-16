@@ -8,6 +8,7 @@ import type { ChartDataLabels, ChartShapeProperties, ChartSpaceSeries } from '..
 import type { ChartStyleDefinition } from '../style-definition';
 import type { DrawingColor, DrawingFill } from '../../drawingml/types';
 import { summaryAnalysis } from './summary-analysis';
+import { chartPictureOptionsStack } from './chart-picture-paint';
 import { summaryDataLabels } from './summary-labels';
 import type {
 	ChartSummary,
@@ -91,6 +92,8 @@ export function chartSummarySeries(
 	}
 	if (Object.keys(points).length) out.pointColors = points;
 	if (Object.keys(pointFills).length) out.pointFills = pointFills;
+	if ('pictureOptionsXml' in source && chartPictureOptionsStack(source.pictureOptionsXml))
+		out.pictureStack = true;
 	const dataLabels = summaryDataLabels(source, groupLabels);
 	if (dataLabels) out.dataLabels = dataLabels;
 	Object.assign(out, summaryAnalysis(source));

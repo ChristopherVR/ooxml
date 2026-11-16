@@ -7,6 +7,11 @@ import { resolveDrawingColor } from '../../drawingml/drawing-color';
 import { drawingColorCss } from '../../drawingml/drawing-color-css';
 import { resolveDrawingShadowXml } from '../../drawingml/drawing-shadow';
 import { resolveChartGradient, type ChartGradientFill } from '../gradient-definition';
+import {
+	chartPicturePaint,
+	type ChartPicturePaint,
+	type ChartPictureSource,
+} from './chart-picture-paint';
 import { autoSeriesColor, chartColorScheme } from './chart-colors';
 import { strokeOf, analysisView } from './chart-view-analysis';
 import type { ChartSeriesView } from './chart-view';
@@ -23,6 +28,8 @@ export interface ChartViewOptions<S extends ChartSummarySeries> {
 	evaluateRef?: EvaluateRef;
 	/** A host colour for the series, used after its DrawingML paint and before the palette. */
 	seriesColor?: (series: S, index: number) => string | undefined;
+	/** The URL of a picture fill's relationship id; picture fills are not painted without it. */
+	pictureSource?: ChartPictureSource;
 }
 
 const isRefError = (value: unknown): value is { readonly error: string } =>
@@ -68,6 +75,7 @@ export interface SeriesContext<S extends ChartSummarySeries> {
 	seriesColor: ChartViewOptions<S>['seriesColor'];
 	drawingColor: (color: ChartSummarySeries['drawingColor']) => string | undefined;
 	gradient: (fill: ChartSummarySeries['fill']) => ChartGradientFill | undefined;
+	picture: (fill: ChartSummarySeries['fill'], stack?: boolean) => ChartPicturePaint | undefined;
 }
 
 export function seriesContext<S extends ChartSummarySeries>(
@@ -93,6 +101,7 @@ export function seriesContext<S extends ChartSummarySeries>(
 						resolveDrawingColor(color, resolver, { transformOrder: 'document' }),
 					)
 				: undefined,
+		picture: (fill, stack) => chartPicturePaint(fill, options.pictureSource, stack),
 	};
 }
 
@@ -150,6 +159,15 @@ export function seriesView<S extends ChartSummarySeries>(
 		}),
 	);
 	if (Object.keys(points).length) view.pointGradients = points;
+	const picture = ctx.picture(s.fill, s.pictureStack);
+	if (picture) view.picture = picture;
+	const pictures = Object.fromEntries(
+		Object.entries(s.pointFills ?? {}).flatMap(([key, fill]) => {
+			const value = ctx.picture(fill, s.pictureStack);
+			return value ? [[key, value]] : [];
+		}),
+	);
+	if (Object.keys(pictures).length) view.pointPictures = pictures;
 	Object.assign(
 		view,
 		analysisView(s, color, ctx.drawingColor),

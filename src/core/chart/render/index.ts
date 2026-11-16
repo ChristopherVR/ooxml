@@ -21,6 +21,15 @@ export type {
 	ChartTrendlineView,
 } from './chart-view-analysis';
 export { renderChartSvg, type ChartSvgOptions } from './chart-svg';
+export {
+	chartPicturePaint,
+	chartPicturePattern,
+	chartPictureSize,
+	type ChartPictureBox,
+	type ChartPictureMode,
+	type ChartPicturePaint,
+	type ChartPictureSource,
+} from './chart-picture-paint';
 export { autoSeriesColor, chartColorScheme, modulateLuminance } from './chart-colors';
 export { THEME_SLOTS, DEFAULT_THEME_COLORS, themeColor } from './theme-palette';
 export {

@@ -30,6 +30,7 @@ export * from './style-definition';
 export * from './built-in-text-style';
 export * from './read-style';
 export * from './read-formatting';
+export * from './space-formatting';
 export * from './write-axis-formatting';
 export * from './write-fill-formatting';
 export * from './gradient-definition';

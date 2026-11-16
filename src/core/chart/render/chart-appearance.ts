@@ -14,11 +14,15 @@ import { resolveChartGradient, type ChartGradientFill } from '../gradient-defini
 import { resolveDrawingShadowXml, type DrawingSvgShadow } from '../../drawingml/drawing-shadow';
 import { builtInChartTextStyle, effectiveBuiltInChartStyle } from '../built-in-text-style';
 import { inheritChartText } from '../text-inheritance';
+import type { DrawingFill } from '../../drawingml/types';
+import type { ChartPicturePaint } from './chart-picture-paint';
 
 export interface ChartAppearanceEntry extends ResolvedChartStyleEntry {
 	textShadow?: DrawingSvgShadow;
 	textShadowFilter?: string;
 	gradient?: ChartGradientFill;
+	/** A picture fill of the element (chart area, plot area, title, legend). */
+	picture?: ChartPicturePaint;
 	typeface?: string;
 	axisVisible?: boolean;
 	labelsVisible?: boolean;
@@ -45,6 +49,7 @@ function typeface(entry: ChartStyleEntry, theme: ChartThemePalette): string | un
 export function chartAppearance(
 	chart: ChartSummary,
 	theme: ChartThemePalette,
+	picture?: (fill: DrawingFill) => ChartPicturePaint | undefined,
 ): ChartAppearance | undefined {
 	const defaults = builtInChartTextStyle(effectiveBuiltInChartStyle(chart.formatting));
 	const entries: Record<string, ChartStyleEntry> = {};
@@ -91,6 +96,8 @@ export function chartAppearance(
 		if (entry.fill?.kind === 'gradient') {
 			(out[part] ??= {}).gradient = resolveChartGradient(entry.fill, resolve);
 		}
+		const paint = entry.fill?.kind === 'picture' ? picture?.(entry.fill) : undefined;
+		if (paint) (out[part] ??= {}).picture = paint;
 	}
 	return out;
 }

@@ -236,6 +236,13 @@ export interface ChartSpace {
 	 * in document order, so extension lists keep the prefixes they were written with.
 	 */
 	namespaceDeclarations?: { prefix: string; uri: string }[];
+	/**
+	 * Not part of the XML: the picture of each picture fill's relationship id, as a URL (a `data:`
+	 * URL), so the painter can draw it. A host fills in the pictures it read from the package; a
+	 * Format pane edit adds a picture under a pending id (`chart/picture-parts`), which the host
+	 * stores as a media part and replaces with a real relationship id when it saves.
+	 */
+	pictureSources?: Record<string, string>;
 }
 
 /** What {@link parseChartSpace} returns: the model and what it did not model. */

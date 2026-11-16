@@ -110,7 +110,8 @@ export async function embedPackageImage(
 	let n = 1;
 	while (taken.has(`${folder}image${n}.${extension}`.toLowerCase())) n++;
 	const partName = `${folder}image${n}.${extension}`;
-	zip.file(partName, image.bytes);
+	// No folder entries: the package lists parts only.
+	zip.file(partName, image.bytes, { createFolders: false });
 	await ensureImageDefault(zip, extension);
 	return ensureRelationship(
 		zip,

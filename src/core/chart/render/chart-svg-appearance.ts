@@ -6,6 +6,7 @@ import { buildChartGradientDef, type ChartGradientFill } from '../gradient-defin
 import { chartGradientMarkup } from '../gradient-markup';
 import { cssFontFamily } from '../../text/css-font-family';
 import { svgDropShadowElement, type DrawingSvgShadow } from '../../drawingml/drawing-shadow';
+import { chartPicturePattern, type ChartPicturePaint } from './chart-picture-paint';
 
 /** Each standalone SVG needs distinct gradient targets when inserted beside other charts. */
 let nextPaintId = 0;
@@ -41,9 +42,18 @@ export function chartGradientPaint(
 		defs.push(chartGradientMarkup(def));
 		return `url(#${def.id})`;
 	};
-	for (const part of ['chartArea', 'plotArea'] as const) {
+	const picture = (paint: ChartPicturePaint, suffix: string) => {
+		const id = `${prefix}-${suffix}-picture`;
+		defs.push(chartPicturePattern(id, paint));
+		return `url(#${id})`;
+	};
+	for (const part of ['chartArea', 'plotArea', 'title', 'legend'] as const) {
 		const entry = appearance[part];
-		if (!entry?.gradient) continue;
+		if (entry?.picture) {
+			appearance[part] = { ...entry, fillColor: picture(entry.picture, part) };
+			continue;
+		}
+		if (part === 'title' || part === 'legend' || !entry?.gradient) continue;
 		if (part === 'plotArea' && ['circle', 'shape'].includes(entry.gradient.path ?? '')) continue;
 		appearance[part] = {
 			...entry,
@@ -62,6 +72,12 @@ export function chartGradientPaint(
 			view.pointColors = [...(source.pointColors ?? [])];
 			for (const [key, gradient] of Object.entries(source.pointGradients))
 				view.pointColors[Number(key)] = paint(gradient, `s${index}-p${key}`, bounds);
+		}
+		if (source.picture) view.color = picture(source.picture, `s${index}`);
+		if (source.pointPictures) {
+			view.pointColors = [...(view.pointColors ?? source.pointColors ?? [])];
+			for (const [key, value] of Object.entries(source.pointPictures))
+				view.pointColors[Number(key)] = picture(value, `s${index}-p${key}`);
 		}
 		return view;
 	});

@@ -13,6 +13,7 @@ import {
 	type ChartErrorBarsEdit,
 } from './analysis';
 import { setChartMarker } from './marker';
+import { setChartTargetPicture, type ChartPictureEdit } from './picture';
 import { setChartTargetLineOptions, type ChartLineEdit } from './line-options';
 import { setChartTargetPattern, type ChartPatternEdit } from './pattern';
 import { setChartTargetEffect, type ChartEffectEdit } from './effects';
@@ -53,6 +54,8 @@ export type ChartEditIntent =
 	| { op: 'view3D'; edit: Partial<ChartView3D> }
 	/** Replace a target's fill; `undefined` returns it to the chart style ("Automatic"). */
 	| { op: 'fill'; target: ChartFormatTarget; fill: DrawingFill | undefined }
+	/** A picture fill: a new picture (`src`, a `data:` URL) and its tiling and transparency. */
+	| { op: 'picture'; target: ChartFormatTarget; edit: ChartPictureEdit }
 	/** Replace a target's outline, or with `merge` change only the given outline settings. */
 	| { op: 'line'; target: ChartFormatTarget; line: DrawingLine | undefined; merge?: boolean }
 	/** Transparency (0..100) of a target's solid fill or solid outline, keeping its colour. */
@@ -102,6 +105,8 @@ export function applyChartEditIntent(space: ChartSpace, intent: ChartEditIntent)
 			return setChartView3D(space, intent.edit);
 		case 'fill':
 			return setChartTargetFill(space, intent.target, intent.fill);
+		case 'picture':
+			return setChartTargetPicture(space, intent.target, intent.edit);
 		case 'line':
 			return setChartTargetLine(space, intent.target, intent.line, intent.merge);
 		case 'transparency':

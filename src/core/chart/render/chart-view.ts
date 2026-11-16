@@ -21,6 +21,7 @@ import { valueAxis } from './chart-value-axis';
 export { categoryTotals } from './chart-value-axis';
 import { chartAppearance, type ChartAppearance } from './chart-appearance';
 import type { ChartGradientFill } from '../gradient-definition';
+import type { ChartPicturePaint } from './chart-picture-paint';
 import type { DrawingSvgShadow } from '../../drawingml/drawing-shadow';
 import { chartTitleText, type ChartTitleText } from './chart-title-text';
 import type { ChartErrorBarsView, ChartTrendlineView } from './chart-view-analysis';
@@ -58,6 +59,9 @@ export interface ChartSeriesView extends ChartMarkerSeriesView {
 	shadowFilter?: string;
 	gradient?: ChartGradientFill;
 	pointGradients?: Record<number, ChartGradientFill>;
+	/** A picture fill (`a:blipFill`) of the series, and of individual points. */
+	picture?: ChartPicturePaint;
+	pointPictures?: Record<number, ChartPicturePaint>;
 	name: string;
 	values: (number | null)[];
 	/** Scatter and bubble X values (numeric categories, or 1..n when the categories are text). */
@@ -269,7 +273,7 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 	if (legendFormatting?.overlay !== undefined) model.legendOverlay = legendFormatting.overlay;
 	const titleText = chartTitleText(chart, theme);
 	if (titleText) model.titleText = titleText;
-	const appearance = chartAppearance(chart, theme);
+	const appearance = chartAppearance(chart, theme, (fill) => ctx.picture(fill));
 	if (appearance) model.appearance = appearance;
 
 	if (type === 'scatter' || type === 'bubble') {

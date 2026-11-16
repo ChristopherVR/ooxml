@@ -48,6 +48,7 @@ export * from './three-d';
 export * from './secondary-axis';
 export * from './line-options';
 export * from './pattern';
+export * from './picture';
 export * from './appearance-types';
 export * from './format-values';
 export * from './chartex-action';

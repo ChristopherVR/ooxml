@@ -6,6 +6,7 @@ import { chartBarSpacing } from './chart-spacing';
 import { buildChartGradientDef } from '../gradient-definition';
 import { chartGradientMarkup } from '../gradient-markup';
 import { barLabels, type BarMark } from './chart-svg-labels';
+import { chartPicturePattern } from './chart-picture-paint';
 
 /** The cluster geometry of a bar or column group, and where series `si`'s bar starts in its band. */
 export function barLayout(model: ChartViewModel, frame: Frame) {
@@ -69,6 +70,17 @@ export function bars(
 			const box = model.horizontal
 				? { x: Math.min(a, b), y: center + offset, w: Math.abs(b - a), h: barSize }
 				: { x: center + offset, y: Math.min(a, b), w: barSize, h: Math.abs(b - a) };
+			// A stacked or tiled picture is laid out along this bar, from its base.
+			const picture =
+				s.pointPictures?.[i] ?? (s.pointColors?.[i] === undefined ? s.picture : undefined);
+			const baseId = picture && picture.mode !== 'stretch' && color.match(/^url\(#(.+)\)$/)?.[1];
+			if (picture && baseId) {
+				const id = `${baseId}-mark${i}`;
+				// `a` is the bar's base on the value axis, `b` its end.
+				const from = model.horizontal ? (b < a ? 'right' : 'left') : b > a ? 'top' : 'bottom';
+				out.push(`<defs>${chartPicturePattern(id, picture, { ...box, from })}</defs>`);
+				color = `url(#${id})`;
+			}
 			out.push(rect(box.x, box.y, box.w, box.h, color, s.shadowFilter));
 			out.push('</g>');
 			marks.push({ series: s, index: i, ...box, negative: v < 0 });

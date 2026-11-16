@@ -5,6 +5,7 @@ import { themeSlotHex } from '../../drawingml/theme-color';
 import type { ThemeColorScheme } from '../../drawingml/theme-model';
 import type { ChartSpace } from '../model';
 import { renderChartSvg, type ChartSvgOptions } from './chart-svg';
+import type { ChartPictureSource } from './chart-picture-paint';
 import { chartSummaryView } from './chart-view';
 import { chartSummaryFromSpace, type ChartSummaryExtras } from './summary-from-space';
 import type { ChartSummary, ChartSummaryType, ChartThemePalette } from './summary';
@@ -44,6 +45,11 @@ export interface RenderChartSpaceOptions extends ChartSvgOptions, ChartSummaryEx
 	/** The document theme's colour scheme; missing slots use the Office defaults. */
 	theme?: ThemeColorScheme;
 	fonts?: ChartThemeFonts;
+	/**
+	 * The URL of a picture fill's relationship id. Defaults to the part's own
+	 * `ChartSpace.pictureSources`; picture fills it cannot resolve are not painted.
+	 */
+	pictureSource?: ChartPictureSource;
 }
 
 /** A DrawingML colour scheme and fonts as the painter's theme palette. */
@@ -77,14 +83,26 @@ export function chartSpaceKind(space: ChartSpace): {
 
 /** A standalone SVG document for a parsed chart part, from its cached values. */
 export function renderChartSpaceSvg(space: ChartSpace, options: RenderChartSpaceOptions): string {
-	const { width, height, theme, fonts, formatting, colorPalette, styleDefinition, ...svg } =
-		options;
+	const {
+		width,
+		height,
+		theme,
+		fonts,
+		formatting,
+		colorPalette,
+		styleDefinition,
+		pictureSource,
+		...svg
+	} = options;
 	const summary = chartSummaryFromSpace(space, {
 		...(formatting ? { formatting } : {}),
 		...(colorPalette !== undefined ? { colorPalette } : {}),
 		...(styleDefinition ? { styleDefinition } : {}),
 	});
-	const view = chartSummaryView(summary, chartThemePalette(theme, fonts));
+	const sources = space.pictureSources;
+	const view = chartSummaryView(summary, chartThemePalette(theme, fonts), {
+		pictureSource: pictureSource ?? ((relId) => sources?.[relId]),
+	});
 	return renderChartSvg(view, width, height, svg);
 }
 
@@ -96,7 +114,11 @@ export function renderChartSummarySvg(
 	summary: ChartSummary,
 	options: Omit<RenderChartSpaceOptions, 'formatting' | 'colorPalette' | 'styleDefinition'>,
 ): string {
-	const { width, height, theme, fonts, ...svg } = options;
-	const view = chartSummaryView(summary, chartThemePalette(theme, fonts));
+	const { width, height, theme, fonts, pictureSource, ...svg } = options;
+	const view = chartSummaryView(
+		summary,
+		chartThemePalette(theme, fonts),
+		pictureSource ? { pictureSource } : {},
+	);
 	return renderChartSvg(view, width, height, svg);
 }
