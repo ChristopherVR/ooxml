@@ -121,11 +121,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       `a:tile` scale, offset and alignment, stacked along bars for `c:pictureOptions`, with
       transparency) on series, points, the plot area and the chart area, and Word, Excel and Visio
       offer Picture or texture fill, saving pending pictures through `chart/picture-parts.ts`.
-      Not painted: tile mirroring, `stackScale` units (drawn as `stack`), crop rectangles and
-      picture effects other than transparency.
-- [x] **P1** PowerPoint's chart Format pane edits error bars (amount, direction, end caps and
-      custom values) in all five bindings; custom amounts are literal values (PowerPoint's model
-      keeps no custom range), and its trendlines are not edited through that pane yet.
+      Tiles mirror by `flip`, `stackScale` stacks one picture per `c:pictureStackUnit` and
+      `a:srcRect` crops the picture; picture effects other than transparency are not painted.
+- [x] **P1** PowerPoint's chart Format pane edits several trendlines per series (type, order,
+      period, forecasts, equation and R-squared, Add trendline) and error bars (amount, direction,
+      end caps and custom values) in all five bindings; custom error amounts are literal values
+      (PowerPoint's model keeps no custom range).
 - [ ] **P1** PowerPoint saves a stacked group's last series moved to the secondary axis without the
       secondary group: the model move succeeds, but the saved part keeps one stacked group and
       PowerPoint reads the series on the primary axis (`chart-analysis-native-acceptance.ps1`).

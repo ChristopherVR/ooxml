@@ -125,8 +125,9 @@ one shared helper (`chart/picture-parts.ts`, over `opc/package-image.ts`) for ev
 folder. The shared painter draws picture fills (stretched, tiled, stacked along bars, with
 transparency) from `ChartSpace.pictureSources`; a Format pane picture is filed under a pending id
 and stored as a media part on save, so Word, Excel and Visio (whose chart is an embedded workbook,
-pictures in its `xl/media/`) offer Picture or texture fill. PowerPoint's pane edits error bars
-(amount, direction, caps and custom values, kept as literals) in all five bindings. ChartEx exposes
+pictures in its `xl/media/`) offer Picture or texture fill; tiles mirror, `stackScale` stacks
+by value-axis units and `a:srcRect` crops. PowerPoint's pane edits several trendlines and error
+bars (amount, direction, caps and custom values, kept as literals) in all five bindings. ChartEx exposes
 its own supported controls and refuses classic-only advanced requests.
 
 - [x] Broaden classic secondary-axis splits to stacked ends, with merge-back and pair removal.
@@ -354,10 +355,14 @@ No custom-label node is invented.
   (docx, xlsx and visio packages), `xlsx/edit/chart-picture-fill.test.ts`,
   `xlsx/embedded-chart-space.test.ts`, `ui/src/docx/chart-format-pane.test.ts`,
   `ui/src/xlsx/chart-format-pane.test.ts`, `ui/src/visio/viewer-chart-editor.test.ts`.
-- PowerPoint: `withChartSeriesErrorBars` and the pane's Error Bars section
-  (`ui/src/pptx/render/chart-format/chart-format-error-bars.test.ts`).
+- PowerPoint: `withChartSeriesTrendline`, `withChartSeriesErrorBars` and the pane's Trendlines
+  and Error Bars sections (`ui/src/pptx/render/chart-format/chart-format-error-bars.test.ts`), saved
+  and reopened through `PptxHandler` (`pptx/core/builders/sdk/chart-analysis-save.test.ts`).
+- Painter gaps closed: tile mirroring (`flip` x, y, xy), `stackScale` with `c:pictureStackUnit`
+  and `a:srcRect` crops (`chart/render/chart-picture-paint.test.ts`).
 - Native (`src/core/scripts/chart-analysis-native-acceptance.ps1`, Word, Excel and PowerPoint
-  16.0 through COM, one application at a time): a clustered column with two trendlines, custom
+  16.0 through COM, one application at a time; PowerPoint's trendlines set through
+  `withChartSeriesTrendline`): a clustered column with two trendlines, custom
   error values and picture fills on a series and the plot area, and a stacked column whose last
   series moved to the secondary axis. Word (`word-analysis.docx`, 2 charts), Excel
   (`excel-analysis.xlsx`, 2 charts, no repair log) and PowerPoint (`powerpoint-analysis.pptx`)

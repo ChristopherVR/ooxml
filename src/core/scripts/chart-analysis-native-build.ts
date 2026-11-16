@@ -3,7 +3,7 @@
 // picture fill on its second series and a tiled picture on its plot area, and a stacked column
 // chart whose last series moved to the secondary axis. Word and Excel get the edits through
 // `applyChartEditIntent` (what their Format panes send), PowerPoint through its own chart
-// operations (what its pane applies). Each file is reopened by its own host first; manifest.json
+// operations (what its pane applies: withChartSeriesTrendline, withChartSeriesErrorBars). Each file is reopened by its own host first; manifest.json
 // lists what `chart-analysis-native-acceptance.ps1` checks through each application's COM model.
 //
 //   bun scripts/chart-analysis-native-build.ts <output folder>
@@ -33,6 +33,7 @@ import { saveXlsx } from '../xlsx/write/index';
 import { PptxHandler } from '../pptx/core/PptxHandler';
 import { withChartElementFormat } from '../pptx/core/builders/sdk/chart-element-format-operations';
 import { withChartSeriesErrorBars } from '../pptx/core/builders/sdk/chart-error-bar-operations';
+import { withChartSeriesTrendline } from '../pptx/core/builders/sdk/chart-trendline-operations';
 import { withChartSeriesOnSecondaryAxis } from '../pptx/core/builders/sdk/chart-series-axis-operations';
 import type { ChartPptxElement, PptxChartData } from '../pptx/core/types';
 
@@ -243,20 +244,9 @@ const manifest: Record<
 	await save(
 		'powerpoint-analysis.pptx',
 		(data) => {
-			let next: PptxChartData = {
-				...data,
-				series: data.series.map((series, index) =>
-					index === 0
-						? {
-								...series,
-								trendlines: [
-									{ trendlineType: 'linear' },
-									{ trendlineType: 'movingAvg', period: 2 },
-								],
-							}
-						: series,
-				),
-			};
+			// The trendline intents the shared pane sends, through PowerPoint's operation.
+			let next = withChartSeriesTrendline(data, 0, 0, { type: 'linear' });
+			next = withChartSeriesTrendline(next, 0, 1, { type: 'movingAvg', period: 2 });
 			next = withChartSeriesErrorBars(next, 0, {
 				valueType: 'cust',
 				plus: literal('1, 2, 3, 4, 5', 5),
