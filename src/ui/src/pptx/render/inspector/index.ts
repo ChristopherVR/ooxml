@@ -90,6 +90,8 @@ export {
 	PARAGRAPH_SPACING_SECTIONS,
 } from './paragraph-fields';
 export type { ParagraphFieldsSection, ParagraphFieldsTarget } from './paragraph-fields';
+export { TABLE_OPTIONS_SECTION, TABLE_OPTIONS_SECTIONS } from './table-option-fields';
+export type { TableOptionsSection, TableOptionsTarget } from './table-option-fields';
 export { TEXT_EFFECT_SECTIONS } from './text-effect-fields';
 export type { TextEffectSection, TextEffectTarget } from './text-effect-fields';
 export { FORMAT_PANEL_SECTIONS, formatPanelIn } from './format-panel-sections';

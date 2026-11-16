@@ -139,9 +139,10 @@ describe('tableSection', () => {
 	it('toggles header row and banded rows', () => {
 		const editor = makeEditor(tableEl());
 		const { target, setProps } = mountSection(editor, currentEl(editor));
-		const [headerRow, bandedRows] = Array.from(
-			target.querySelectorAll<HTMLInputElement>('pptx-ui-checkbox'),
+		const headerRow = target.querySelector<HTMLInputElement>(
+			'[data-testid="table-firstRowHeader"]',
 		);
+		const bandedRows = target.querySelector<HTMLInputElement>('[data-testid="table-bandedRows"]');
 		headerRow?.click();
 		flushSync();
 		// Re-sync the `el` prop with the just-committed slides (as the live
@@ -157,14 +158,14 @@ describe('tableSection', () => {
 		expect(data?.bandedRows).toBeTruthy();
 	});
 
-	it('applies a uniform cell padding to every cell', () => {
+	it('applies a uniform cell margin (in points) to every cell', () => {
 		const editor = makeEditor(tableEl());
 		const { target } = mountSection(editor, currentEl(editor));
-		const padding = target.querySelector<HTMLInputElement>('input[type="number"]');
+		const padding = target.querySelector<HTMLInputElement>('[data-testid="table-cellMargin"]');
 		if (!padding) {
-			throw new Error('cell padding input not found');
+			throw new Error('cell margin input not found');
 		}
-		padding.value = '8';
+		padding.value = '6';
 		padding.dispatchEvent(new Event('change', { bubbles: true }));
 		flushSync();
 

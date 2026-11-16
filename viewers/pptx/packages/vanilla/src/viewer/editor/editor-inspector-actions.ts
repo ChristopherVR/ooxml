@@ -1,14 +1,12 @@
 import {
 	applyStyleToSelectedSegments,
 	applyTextStyleUpdate,
-	applyUniformCellPaddingPatch,
 	autoFitModePatch,
 	buildOleObjectNamePatch,
 	elementLockTogglePatch,
 	isElementLocked,
 	reflowSmartArtData,
 	remapTextToSegments,
-	tableInspectorPatch,
 	textAdvancedPatch,
 	textWrapPatch,
 	vAlignPatch,
@@ -77,9 +75,6 @@ export interface InspectorActions {
 	setChartData(data: PptxChartData): void;
 	setMediaProperties(patch: Partial<MediaPptxElement>): void;
 
-	setTableHeaderRow(enabled: boolean): void;
-	setTableBandedRows(enabled: boolean): void;
-	setTableCellPadding(padding: number): void;
 	setTableOptions(patch: Partial<PptxTableData>, cellStyle?: Partial<PptxTableCellStyle>): void;
 	/** Replace the selection's whole table data (inspector data grid). */
 	setTableData(data: PptxTableData, rawXml?: XmlObject): void;
@@ -155,12 +150,6 @@ export function createInspectorActions(applyToSelected: ApplyToSelected): Inspec
 			applyToSelected((el) => (el.type === 'chart' ? { chartData: data } : {})),
 		setMediaProperties: (patch) => applyToSelected((el) => (el.type === 'media' ? patch : {})),
 
-		setTableHeaderRow: (enabled) =>
-			applyToSelected((el) => tableInspectorPatch(el, { firstRowHeader: enabled })),
-		setTableBandedRows: (enabled) =>
-			applyToSelected((el) => tableInspectorPatch(el, { bandedRows: enabled })),
-		setTableCellPadding: (padding) =>
-			applyToSelected((el) => applyUniformCellPaddingPatch(el, padding)),
 		setTableOptions: (patch, cellStyle) =>
 			applyToSelected((el) => {
 				if (el.type !== 'table' || !el.tableData) {

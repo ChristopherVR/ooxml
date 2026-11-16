@@ -56,23 +56,17 @@ describe('tableStyleOptions', () => {
 		expect(patch.rows?.[1].cells[0].style?.borderColor).toBe('#B4C6E7');
 	});
 
-	it('emits firstCol/lastCol/lastRow toggle patches keyed to the shared TableInspectorChanges flags', async () => {
+	it('emits firstCol/lastCol/lastRow toggle patches from the shared table options', async () => {
 		const wrapper = mount(TableStyleOptions, {
 			props: { tableData: tableData(), canEdit: true },
 		});
 
-		const checkboxes = wrapper.findAll('pptx-ui-checkbox');
-		// TOGGLES order: bandedRows, firstRowHeader, bandedColumns, firstCol, lastCol, lastRow.
-		await setControlValue(checkboxes[3], true);
-		expect((wrapper.emitted('update') as unknown[][]).at(-1)?.[0]).toStrictEqual({
-			firstCol: true,
-		});
-
-		await setControlValue(checkboxes[4], true);
-		expect((wrapper.emitted('update') as unknown[][]).at(-1)?.[0]).toStrictEqual({ lastCol: true });
-
-		await setControlValue(checkboxes[5], true);
-		expect((wrapper.emitted('update') as unknown[][]).at(-1)?.[0]).toStrictEqual({ lastRow: true });
+		for (const flag of ['firstCol', 'lastCol', 'lastRow'] as const) {
+			await setControlValue(wrapper.find(`[data-testid="table-${flag}"]`), true);
+			expect((wrapper.emitted('update') as unknown[][]).at(-1)?.[0]).toStrictEqual({
+				[flag]: true,
+			});
+		}
 	});
 
 	it('enables "Edit style..." with no tableStyleId, and assigns a created style to the table', async () => {

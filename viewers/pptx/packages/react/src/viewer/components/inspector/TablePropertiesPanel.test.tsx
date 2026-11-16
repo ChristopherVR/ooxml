@@ -124,6 +124,20 @@ function render(
 }
 
 describe('tablePropertiesPanel', () => {
+	it('draws the shared table options and merges a toggle into the table data', () => {
+		const onUpdate = vi.fn();
+		render(table(), onUpdate);
+		expect(host.querySelector('[data-testid="table-bandRowCycle"]')).toBeNull();
+		const total = host.querySelector<HTMLInputElement>('[data-testid="table-lastRow"]')!;
+		act(() => {
+			total.checked = true;
+			total.dispatchEvent(new Event('change', { bubbles: true }));
+		});
+		expect(onUpdate).toHaveBeenLastCalledWith({
+			tableData: expect.objectContaining({ lastRow: true }),
+		});
+	});
+
 	it.each([
 		{
 			command: 'mergeRight',

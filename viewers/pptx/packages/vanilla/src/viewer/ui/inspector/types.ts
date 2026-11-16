@@ -213,9 +213,6 @@ export interface InspectorHandlers {
 	setChartData(data: PptxChartData): void;
 	setMediaProperties(patch: Partial<MediaPptxElement>): void;
 
-	setTableHeaderRow(enabled: boolean): void;
-	setTableBandedRows(enabled: boolean): void;
-	setTableCellPadding(padding: number): void;
 	setTableOptions(patch: Partial<PptxTableData>, cellStyle?: Partial<PptxTableCellStyle>): void;
 	/**
 	 * Replace the selected table's whole `tableData` (inspector data grid).
@@ -341,17 +338,9 @@ export interface InspectorState {
 	media?: MediaPptxElement;
 	mediaPreviewUrl?: string;
 	mediaPosterUrl?: string;
-	tableHeaderRow: boolean;
-	tableBandedRows: boolean;
-	tableBandedColumns: boolean;
-	tableLastRow: boolean;
-	tableFirstCol: boolean;
-	tableLastCol: boolean;
-	tableRtl: boolean;
 	tableStyleId: string;
 	tableCellBackground: string;
 	tableCellBorder: string;
-	tableCellPadding: number;
 	selectedTableCell: { row: number; column: number } | null;
 	selectedTableCells: Array<{ row: number; column: number }>;
 	tableCellStyle: PptxTableCellStyle | undefined;

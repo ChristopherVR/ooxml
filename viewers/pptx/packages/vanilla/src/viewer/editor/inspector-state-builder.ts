@@ -4,7 +4,6 @@ import {
 	hasImageOverrides,
 	isElementLocked,
 	shouldShowAccessibilitySection,
-	tableInspectorStateOf,
 	textAdvancedStateOf,
 	textWrapOf,
 } from 'ooxml-ui/pptx';
@@ -72,7 +71,6 @@ export function buildInspectorState(
 ): InspectorState {
 	const shape = shapeStyleOf(el);
 	const textAdvanced = el ? textAdvancedStateOf(el) : undefined;
-	const table = el ? tableInspectorStateOf(el) : undefined;
 	const tableCell =
 		el?.type === 'table' && selectedTableCell
 			? el.tableData?.rows[selectedTableCell.row]?.cells[selectedTableCell.column]
@@ -154,13 +152,6 @@ export function buildInspectorState(
 				? (el.posterFrameData ??
 					(el.posterFramePath ? mediaDataUrls.get(el.posterFramePath) : undefined))
 				: undefined,
-		tableHeaderRow: table?.firstRowHeader ?? false,
-		tableBandedRows: table?.bandedRows ?? false,
-		tableBandedColumns: table?.bandedColumns ?? false,
-		tableLastRow: el?.type === 'table' ? (el.tableData?.lastRow ?? false) : false,
-		tableFirstCol: el?.type === 'table' ? (el.tableData?.firstCol ?? false) : false,
-		tableLastCol: el?.type === 'table' ? (el.tableData?.lastCol ?? false) : false,
-		tableRtl: el?.type === 'table' ? (el.tableData?.rtl ?? false) : false,
 		tableStyleId: el?.type === 'table' ? (el.tableData?.tableStyleId ?? '') : '',
 		tableCellBackground:
 			el?.type === 'table'
@@ -170,7 +161,6 @@ export function buildInspectorState(
 			el?.type === 'table'
 				? (el.tableData?.rows[0]?.cells[0]?.style?.borderColor ?? '#000000')
 				: '#000000',
-		tableCellPadding: table?.cellPadding ?? 0,
 		selectedTableCell: tableCell ? selectedTableCell : null,
 		selectedTableCells: tableCell ? selectedTableCells : [],
 		tableCellStyle: tableCell?.style,

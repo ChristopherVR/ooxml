@@ -20,28 +20,6 @@ import { ooxmlGradientAngleToCssDegrees } from 'pptx-viewer-core';
 /** Default row height (px) used when a row has no explicit height. */
 export const DEFAULT_TABLE_ROW_HEIGHT = 32;
 
-/** The boolean structure/style flags on `PptxTableData` the toggles can flip. */
-export type TableBooleanFlag =
-	| 'bandedRows'
-	| 'firstRowHeader'
-	| 'bandedColumns'
-	| 'firstCol'
-	| 'lastCol'
-	| 'lastRow';
-
-/** The structure / style toggle flags shown as checkboxes, with i18n dictionary keys. */
-export const TABLE_STRUCTURE_TOGGLES: ReadonlyArray<{
-	key: TableBooleanFlag;
-	labelKey: string;
-}> = [
-	{ key: 'bandedRows', labelKey: 'pptx.table.bandedRows' },
-	{ key: 'firstRowHeader', labelKey: 'pptx.table.headerRow' },
-	{ key: 'bandedColumns', labelKey: 'pptx.table.bandedColumns' },
-	{ key: 'firstCol', labelKey: 'pptx.table.firstColumn' },
-	{ key: 'lastCol', labelKey: 'pptx.table.lastColumn' },
-	{ key: 'lastRow', labelKey: 'pptx.table.lastRow' },
-];
-
 /**
  * Build a CSS gradient string from structured cell-style gradient fields, so
  * the renderer (which reads `gradientFillCss`) shows an edited gradient live.

@@ -4,6 +4,7 @@ import {
 	evenRowHeights,
 	inspectorNumber,
 	redistributeColumnWidth,
+	TABLE_OPTIONS_SECTIONS,
 	tableStyleAssignmentUpdate,
 } from 'ooxml-ui/pptx';
 /* oxlint-disable eslint/one-var -- independent, unrelated locals; merging them
@@ -15,8 +16,8 @@ import React, { useState } from 'react';
 import { TABLE_STYLE_PRESETS } from '../../constants';
 import { useTranslation } from '../../i18n/use-translation';
 import type { TableCellEditorState } from '../../types';
-import { WebCheckbox } from '../WebControls';
 import { HEADING, CARD, INPUT, BTN } from './inspector-pane-constants';
+import { InspectorFields } from './InspectorFields';
 import { TableCellFormattingPanel } from './TableCellFormattingPanel';
 import { TableStyleEditor } from './TableStyleEditor';
 
@@ -86,68 +87,15 @@ export function TablePropertiesPanel({
 				<div className='text-[11px] text-muted-foreground mb-2'>
 					{t('pptx.table.rowsColumns', { rows: rowCount, cols: colCount })}
 				</div>
-				<div className='space-y-1'>
-					{(
-						[
-							['bandedRows', 'pptx.table.bandedRows'],
-							['firstRowHeader', 'pptx.table.headerRow'],
-							['bandedColumns', 'pptx.table.bandedColumns'],
-							['firstCol', 'pptx.table.firstColumn'],
-							['lastCol', 'pptx.table.lastColumn'],
-							['lastRow', 'pptx.table.lastRow'],
-						] as const
-					).map(([key, i18nKey]) => (
-						<label key={key} className='flex items-center gap-2 cursor-pointer'>
-							<WebCheckbox
-								disabled={!canEdit}
-								checked={Boolean(td[key as keyof typeof td])}
-								onChange={(e) => updateTableData({ [key]: e.target.checked })}
-								className='accent-primary'
-							/>
-							<span className='text-[11px]'>{t(i18nKey)}</span>
-						</label>
-					))}
+				{/* Table Style Options, band sizes, direction and cell margin: shared descriptors. */}
+				<div className='grid grid-cols-2 gap-1.5 text-[11px]'>
+					<InspectorFields
+						sections={TABLE_OPTIONS_SECTIONS}
+						target={td}
+						disabled={!canEdit}
+						onPatch={updateTableData}
+					/>
 				</div>
-				{td.bandedRows && (
-					<label className='flex items-center gap-2 mt-1'>
-						<span className='text-[11px] text-muted-foreground'>
-							{t('pptx.table.bandRowCycle')}
-						</span>
-						<input
-							type='number'
-							min={1}
-							max={99}
-							disabled={!canEdit}
-							value={td.bandRowCycle ?? 1}
-							onChange={(e) =>
-								updateTableData({
-									bandRowCycle: Math.max(1, parseInt(e.target.value, 10) || 1),
-								})
-							}
-							className='w-14 rounded border border-border bg-background px-1 py-0.5 text-[11px]'
-						/>
-					</label>
-				)}
-				{td.bandedColumns && (
-					<label className='flex items-center gap-2 mt-1'>
-						<span className='text-[11px] text-muted-foreground'>
-							{t('pptx.table.bandColCycle')}
-						</span>
-						<input
-							type='number'
-							min={1}
-							max={99}
-							disabled={!canEdit}
-							value={td.bandColCycle ?? 1}
-							onChange={(e) =>
-								updateTableData({
-									bandColCycle: Math.max(1, parseInt(e.target.value, 10) || 1),
-								})
-							}
-							className='w-14 rounded border border-border bg-background px-1 py-0.5 text-[11px]'
-						/>
-					</label>
-				)}
 			</div>
 
 			{/* Table Style Presets */}

@@ -7,7 +7,6 @@
 	} from 'pptx-viewer-core';
 	import {
 		applyTableStylePreset,
-		applyUniformCellPaddingPatch,
 		evenColumnWidths,
 		evenRowHeights,
 		insertTableElementColumn,
@@ -16,14 +15,14 @@
 		removeTableElementColumn,
 		removeTableElementRow,
 		redistributeColumnWidth,
+		TABLE_OPTIONS_SECTIONS,
 		TABLE_STYLE_PRESETS,
-		tableInspectorPatch,
-		tableInspectorStateOf,
 		tableStyleAssignmentUpdate,
 	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';
+	import InspectorFields from './InspectorFields.svelte';
 	import TableCellSection from './TableCellSection.svelte';
 	import TableStyleEditor from './TableStyleEditor.svelte';
 
@@ -46,7 +45,6 @@
 		onDeleteTableStyle?: (styleId: string) => void;
 	} = $props();
 	const t = useTranslator();
-	const inspectorState = $derived(tableInspectorStateOf(el));
 	const tableElement = $derived(el.type === 'table' ? (el as TablePptxElement) : undefined);
 	const table = $derived(tableElement?.tableData);
 	// eslint-disable-next-line prefer-const
@@ -81,20 +79,15 @@
 		});
 	}
 
-	function setCellPadding(value: string): void {
-		const padding = Number(value);
-		if (Number.isFinite(padding)) {
-			editor.patchSelected(applyUniformCellPaddingPatch(el, padding));
-		}
-	}
 </script>
 
 {#if table}
-	<div class="checks">
-		{#each [['firstRowHeader', 'pptx.table.headerRow'], ['bandedRows', 'pptx.table.bandedRows'], ['bandedColumns', 'pptx.table.bandedColumns'], ['firstCol', 'pptx.table.firstColumn'], ['lastCol', 'pptx.table.lastColumn'], ['lastRow', 'pptx.table.lastRow']] as option}
-			<label><pptx-ui-checkbox checked={Boolean(table[option[0] as keyof PptxTableData])} onchange={(event) => editor.patchSelected(tableInspectorPatch(el, { [option[0]]: event.currentTarget.checked }))} ></pptx-ui-checkbox>{t(option[1])}</label>
-		{/each}
-	</div>
+	<InspectorFields
+		sections={TABLE_OPTIONS_SECTIONS}
+		target={table}
+		disabled={!editor.editable}
+		onpatch={patchData}
+	/>
 	<div class="presets">
 		<span class="presets-label">{t('pptx.table.stylePresets')}</span>
 		<div class="presets-grid">
@@ -129,13 +122,10 @@
 		/>
 	{/if}
 
-	<label>{t('pptx.table.cellPadding')}<input type="number" min="0" value={Math.round(inspectorState.cellPadding)} onchange={(event) => setCellPadding(event.currentTarget.value)} /></label>
 	<div class="structure"><label>{t('pptx.table.rowNumber')}<input type="number" min="1" max={table.rows.length} value={activeRow + 1} onchange={(event) => (activeRow = Math.max(0, Number(event.currentTarget.value) - 1))} /></label><button type="button" onclick={() => editStructure((element) => insertTableElementRow(element, activeRow, 'below'))}>{t('pptx.table.insertRow')}</button><button type="button" disabled={table.rows.length <= 1} onclick={() => editStructure((element) => removeTableElementRow(element, activeRow))}>{t('pptx.table.deleteRow')}</button><label>{t('pptx.table.columnNumber')}<input type="number" min="1" max={table.columnWidths.length} value={activeColumn + 1} onchange={(event) => (activeColumn = Math.max(0, Number(event.currentTarget.value) - 1))} /></label><button type="button" onclick={() => editStructure((element) => insertTableElementColumn(element, activeColumn, 'right'))}>{t('pptx.table.insertColumn')}</button><button type="button" disabled={table.columnWidths.length <= 1} onclick={() => editStructure((element) => removeTableElementColumn(element, activeColumn))}>{t('pptx.table.deleteColumn')}</button></div>
-	{#if table.bandedRows}<label>{t('pptx.table.bandRowCycle')}<input type="number" min="1" value={table.bandRowCycle ?? 1} onchange={(event) => patchData({ bandRowCycle: Math.max(1, Number(event.currentTarget.value)) })} /></label>{/if}
-	{#if table.bandedColumns}<label>{t('pptx.table.bandColCycle')}<input type="number" min="1" value={table.bandColCycle ?? 1} onchange={(event) => patchData({ bandColCycle: Math.max(1, Number(event.currentTarget.value)) })} /></label>{/if}
 	<details><summary>{t('pptx.table.columnWidths')}</summary><button type="button" onclick={() => patchData({ columnWidths: evenColumnWidths(table.columnWidths.length) })}>{t('pptx.table.distributeEvenly')}</button>{#each table.columnWidths as width, index}<label>{t('pptx.table.columnIndex', { index: index + 1 })}<input type="range" min="5" max="80" value={Math.round(width * 100)} onchange={(event) => patchData({ columnWidths: redistributeColumnWidth(table.columnWidths, index, Number(event.currentTarget.value) / 100) })} /></label>{/each}</details>
 	<details><summary>{t('pptx.table.rowHeights')}</summary><button type="button" onclick={() => patchData({ rows: evenRowHeights(table.rows) })}>{t('pptx.table.distributeEvenly')}</button>{#each table.rows as row, index}<label>{t('pptx.table.rowIndex', { index: index + 1 })}<input type="number" min="16" max="500" value={inspectorNumber(row.height, 32)} onchange={(event) => patchData({rows:table.rows.map((item,i)=>i===index?{...item,height:Number(event.currentTarget.value)}:item)})} /></label>{/each}</details>
 	<TableCellSection {editor} {table} onpatch={patchData} />
 {/if}
 
-<style>.checks{display:grid;grid-template-columns:1fr 1fr;gap:6px}.checks label{display:flex;align-items:center}.structure{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;align-items:end;margin-top:7px}.structure button{height:26px}label{display:grid;gap:3px;margin-top:7px;color:var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));font-size:10px}input{min-width:0;height:26px;border:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-radius:5px;background:var(--pptx-background, var(--office-background, #ffffff));color:inherit}details{margin-top:8px}summary{cursor:pointer;font-weight:600}button{margin-top:6px;border:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-radius:5px;padding:4px 7px;background:var(--pptx-muted, var(--office-surface, #f3f4f6));color:inherit}.presets{margin-top:7px}.presets-label{display:block;margin-bottom:4px;color:var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));font-size:10px}.presets-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.preset-swatch{display:flex;flex-direction:column;height:40px;margin:0;padding:0;overflow:hidden;border:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-radius:5px;background:none;cursor:pointer}.preset-swatch:hover{border-color:var(--pptx-primary, var(--office-accent, #2563eb))}.preset-swatch span{flex:1}.preset-swatch span:last-child{border-top:1px solid}</style>
+<style>.structure{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;align-items:end;margin-top:7px}.structure button{height:26px}label{display:grid;gap:3px;margin-top:7px;color:var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));font-size:10px}input{min-width:0;height:26px;border:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-radius:5px;background:var(--pptx-background, var(--office-background, #ffffff));color:inherit}details{margin-top:8px}summary{cursor:pointer;font-weight:600}button{margin-top:6px;border:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-radius:5px;padding:4px 7px;background:var(--pptx-muted, var(--office-surface, #f3f4f6));color:inherit}.presets{margin-top:7px}.presets-label{display:block;margin-bottom:4px;color:var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));font-size:10px}.presets-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.preset-swatch{display:flex;flex-direction:column;height:40px;margin:0;padding:0;overflow:hidden;border:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-radius:5px;background:none;cursor:pointer}.preset-swatch:hover{border-color:var(--pptx-primary, var(--office-accent, #2563eb))}.preset-swatch span{flex:1}.preset-swatch span:last-child{border-top:1px solid}</style>

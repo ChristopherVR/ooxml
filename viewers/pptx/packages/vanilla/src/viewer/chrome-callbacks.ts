@@ -393,9 +393,6 @@ export function buildChromeCallbacks(
 		setChartData: (data) => deps.getEditActions().setChartData(data),
 		setMediaProperties: (patch) => deps.getEditActions().setMediaProperties(patch),
 
-		setTableHeaderRow: (enabled) => deps.getEditActions().setTableHeaderRow(enabled),
-		setTableBandedRows: (enabled) => deps.getEditActions().setTableBandedRows(enabled),
-		setTableCellPadding: (padding) => deps.getEditActions().setTableCellPadding(padding),
 		setTableOptions: (patch, cellStyle) => deps.getEditActions().setTableOptions(patch, cellStyle),
 		setTableData: (data, rawXml) => deps.getEditActions().setTableData(data, rawXml),
 		setTableCellStyle: (row, column, patch) =>

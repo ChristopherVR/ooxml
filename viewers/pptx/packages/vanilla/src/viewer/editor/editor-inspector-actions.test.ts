@@ -333,27 +333,16 @@ describe('createInspectorActions chart and action settings', () => {
 });
 
 describe('createInspectorActions table', () => {
-	it('toggles header row / banded rows and applies uniform cell padding', () => {
+	it('merges a table options patch into the table data', () => {
 		const { store, actions } = buildActions(tableElement());
 
-		actions.setTableHeaderRow(true);
-		actions.setTableBandedRows(true);
-		actions.setTableCellPadding(8);
+		actions.setTableOptions({ firstRowHeader: true, bandedRows: true });
 
 		const el = selectedEl(store) as {
-			tableData?: {
-				firstRowHeader?: boolean;
-				bandedRows?: boolean;
-				rows: Array<{ cells: Array<{ style?: { marginLeft?: number } }> }>;
-			};
+			tableData?: { firstRowHeader?: boolean; bandedRows?: boolean };
 		};
 		expect(el.tableData?.firstRowHeader).toBeTruthy();
 		expect(el.tableData?.bandedRows).toBeTruthy();
-		for (const row of el.tableData?.rows ?? []) {
-			for (const cell of row.cells) {
-				expect(cell.style?.marginLeft).toBe(8);
-			}
-		}
 	});
 
 	it('formats only the selected table cell', () => {

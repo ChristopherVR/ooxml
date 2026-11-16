@@ -28,15 +28,15 @@ import {
 	evenRowHeights,
 	inspectorNumber,
 	redistributeColumnWidth,
+	TABLE_OPTIONS_SECTIONS,
 	TABLE_STYLE_PRESETS,
 	tableStyleAssignmentUpdate,
 } from 'ooxml-ui/pptx';
 import type { ParsedTableStyleMap, PptxTableData, TablePptxElement } from 'pptx-viewer-core';
 
-import { isCheckboxControl } from './control-event-targets';
+import { InspectorFieldsComponent } from './inspector-fields.component';
 import { patchTableData } from './table-data-helpers';
-import type { TableBooleanFlag } from './table-properties-helpers';
-import { DEFAULT_TABLE_ROW_HEIGHT, TABLE_STRUCTURE_TOGGLES } from './table-properties-helpers';
+import { DEFAULT_TABLE_ROW_HEIGHT } from './table-properties-helpers';
 import { TableStyleEditorLauncherComponent } from './table-style-editor-launcher.component';
 
 @Component({
@@ -44,53 +44,18 @@ import { TableStyleEditorLauncherComponent } from './table-style-editor-launcher
 	selector: 'pptx-table-properties',
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	imports: [TranslatePipe, TableStyleEditorLauncherComponent],
+	imports: [TranslatePipe, InspectorFieldsComponent, TableStyleEditorLauncherComponent],
 	template: `
 		@if (td(); as data) {
 			<div class="pptx-tp">
 				<div class="pptx-tp__dims">{{ data.rows.length }} rows × {{ colCount() }} cols</div>
 
-				<div class="pptx-tp__toggles">
-					@for (toggle of toggles; track toggle.key) {
-						<label class="pptx-tp__check">
-							<pptx-ui-checkbox
-								[disabled]="!canEdit()"
-								[checked]="!!data[toggle.key]"
-								(change)="onToggle(toggle.key, $event)"
-							></pptx-ui-checkbox>
-							<span>{{ toggle.labelKey | translate }}</span>
-						</label>
-					}
-				</div>
-
-				@if (data.bandedRows) {
-					<label class="pptx-tp__field">
-						<span class="pptx-tp__lbl">{{ 'pptx.table.bandRowCycle' | translate }}</span>
-						<input
-							type="number"
-							class="pptx-tp__num"
-							min="1"
-							max="99"
-							[disabled]="!canEdit()"
-							[value]="data.bandRowCycle ?? 1"
-							(change)="onCycle('bandRowCycle', $event)"
-						/>
-					</label>
-				}
-				@if (data.bandedColumns) {
-					<label class="pptx-tp__field">
-						<span class="pptx-tp__lbl">{{ 'pptx.table.bandColCycle' | translate }}</span>
-						<input
-							type="number"
-							class="pptx-tp__num"
-							min="1"
-							max="99"
-							[disabled]="!canEdit()"
-							[value]="data.bandColCycle ?? 1"
-							(change)="onCycle('bandColCycle', $event)"
-						/>
-					</label>
-				}
+				<pptx-inspector-fields
+					[sections]="optionSections"
+					[target]="data"
+					[disabled]="!canEdit()"
+					(patch)="emit($event)"
+				/>
 
 				<span class="pptx-tp__lbl">{{ 'pptx.table.stylePresets' | translate }}</span>
 				<div class="pptx-tp__presets">
@@ -183,18 +148,6 @@ import { TableStyleEditorLauncherComponent } from './table-style-editor-launcher
 			font-size: 10px;
 			color: var(--pptx-inspector-muted, #888);
 		}
-		.pptx-tp__toggles {
-			display: flex;
-			flex-direction: column;
-			gap: 0.2rem;
-		}
-		.pptx-tp__check {
-			display: flex;
-			align-items: center;
-			gap: 0.4rem;
-			font-size: 11px;
-			cursor: pointer;
-		}
 		.pptx-tp__field {
 			display: flex;
 			align-items: center;
@@ -284,7 +237,7 @@ export class TablePropertiesComponent {
 	/** Record a styleId for save-time removal from `ppt/tableStyles.xml`. */
 	readonly deleteTableStyle = output<string>();
 
-	protected readonly toggles = TABLE_STRUCTURE_TOGGLES;
+	protected readonly optionSections = TABLE_OPTIONS_SECTIONS;
 	protected readonly presets = TABLE_STYLE_PRESETS;
 	protected readonly defaultRowHeight = DEFAULT_TABLE_ROW_HEIGHT;
 
@@ -297,20 +250,6 @@ export class TablePropertiesComponent {
 
 	protected pct(fraction: number): number {
 		return Math.round(fraction * 100);
-	}
-
-	protected onToggle(key: TableBooleanFlag, event: Event): void {
-		const t = event.target;
-		if (isCheckboxControl(t)) {
-			this.emit({ [key]: t.checked });
-		}
-	}
-
-	protected onCycle(key: 'bandRowCycle' | 'bandColCycle', event: Event): void {
-		const n = numberFrom(event);
-		if (n !== null) {
-			this.emit({ [key]: Math.max(1, Math.round(n)) });
-		}
 	}
 
 	protected onPreset(preset: TableStylePreset): void {
@@ -356,7 +295,7 @@ export class TablePropertiesComponent {
 		this.emit(tableStyleAssignmentUpdate(styleId));
 	}
 
-	private emit(patch: Partial<PptxTableData>): void {
+	protected emit(patch: Partial<PptxTableData>): void {
 		this.elementChange.emit(patchTableData(this.element(), patch));
 	}
 }

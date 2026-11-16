@@ -28,17 +28,9 @@ function state(overrides: Partial<InspectorState> = {}): InspectorState {
 	return {
 		hasSelection: true,
 		isTable: true,
-		tableHeaderRow: false,
-		tableBandedRows: false,
-		tableBandedColumns: false,
-		tableLastRow: false,
-		tableFirstCol: false,
-		tableLastCol: false,
-		tableRtl: false,
 		tableStyleId: '',
 		tableCellBackground: '#ffffff',
 		tableCellBorder: '#000000',
-		tableCellPadding: 4,
 		tableElement: tableElement(),
 		selectedTableCell: null,
 		selectedTableCells: [],
@@ -48,6 +40,21 @@ function state(overrides: Partial<InspectorState> = {}): InspectorState {
 		...overrides,
 	} as InspectorState;
 }
+
+describe('table options', () => {
+	it('draws the shared table options and merges a toggle into the table data', () => {
+		const setTableOptions = vi.fn();
+		const section = createTableSection(document, createTranslator(), sectionFactory(), {
+			setTableOptions,
+		} as unknown as InspectorHandlers);
+		section.update(state());
+		expect(section.el.querySelector('[data-testid="table-bandRowCycle"]')).toBeNull();
+		const total = section.el.querySelector<HTMLInputElement>('[data-testid="table-lastRow"]')!;
+		total.checked = true;
+		total.dispatchEvent(new Event('change'));
+		expect(setTableOptions).toHaveBeenCalledWith({ lastRow: true });
+	});
+});
 
 describe('table style presets gallery', () => {
 	it('renders one swatch per shared preset', async () => {

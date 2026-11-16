@@ -12,6 +12,7 @@ import { Injector, runInInjectionContext } from '@angular/core';
 import type { TablePptxElement } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
+import { componentSource } from './component-source.test-support';
 import { TablePropertiesComponent } from './table-properties.component';
 
 function tableElement(): TablePptxElement {
@@ -37,6 +38,12 @@ function harness(element: TablePptxElement) {
 }
 
 describe('tablePropertiesComponent', () => {
+	it('draws the shared table options with the generic renderer', () => {
+		const source = componentSource(import.meta.dirname, 'table-properties.component.ts');
+		expect(source).toContain('[sections]="optionSections"');
+		expect(source).not.toContain('onToggle(');
+	});
+
 	it('assigns a newly-created style id to the table via elementChange', () => {
 		const component = harness(tableElement());
 		let emitted: TablePptxElement | undefined;

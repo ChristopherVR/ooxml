@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { TableInspectorChanges } from 'ooxml-ui/pptx';
 import {
 	applyTableStylePreset,
+	TABLE_OPTIONS_SECTIONS,
 	TABLE_STYLE_PRESETS,
 	tableStyleAssignmentUpdate,
 } from 'ooxml-ui/pptx';
@@ -9,11 +9,12 @@ import type { ParsedTableStyleMap, PptxTableData } from 'pptx-viewer-core';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import InspectorFields from './InspectorFields.vue';
 import TableStyleEditor from './TableStyleEditor.vue';
 
 /**
- * TableStyleOptions: Vue port of the structure/style toggles + quick-style
- * preset grid from React's inspector `TablePropertiesPanel.tsx`. Emits a
+ * TableStyleOptions: the shared table options (`TABLE_OPTIONS_SECTIONS`, drawn
+ * by the generic renderer) and the quick-style preset grid. Emits a
  * `Partial<PptxTableData>` patch (banding flags, band cycle counts, or a full
  * re-styled `rows` array) that the parent merges into the element's tableData.
  *
@@ -37,27 +38,6 @@ const showStyleEditor = ref(false);
 
 const { t } = useI18n();
 
-// Keyed to `TableInspectorChanges` (shared `table-inspector.ts`): the
-// authoritative set of table-level style flags the inspector may toggle, so an
-// addition/removal there is a type error here instead of a silent drift.
-const TOGGLES: Array<[keyof TableInspectorChanges, string]> = [
-	['bandedRows', 'pptx.table.bandedRows'],
-	['firstRowHeader', 'pptx.table.headerRow'],
-	['bandedColumns', 'pptx.table.bandedColumns'],
-	['firstCol', 'pptx.table.firstColumn'],
-	['lastCol', 'pptx.table.lastColumn'],
-	['lastRow', 'pptx.table.lastRow'],
-];
-
-function toggle(key: keyof TableInspectorChanges, event: Event): void {
-	emit('update', { [key]: (event.target as HTMLInputElement).checked });
-}
-
-function setCycle(key: 'bandRowCycle' | 'bandColCycle', event: Event): void {
-	const value = Math.max(1, parseInt((event.target as HTMLInputElement).value, 10) || 1);
-	emit('update', { [key]: value });
-}
-
 function applyPreset(preset: (typeof TABLE_STYLE_PRESETS)[number]): void {
 	emit('update', { rows: applyTableStylePreset(props.tableData, preset) });
 }
@@ -70,44 +50,12 @@ function assignStyle(styleId: string): void {
 
 <template>
 	<div class="flex flex-col gap-2">
-		<div class="flex flex-col gap-1">
-			<label
-				v-for="[key, label] in TOGGLES"
-				:key="key"
-				class="flex cursor-pointer items-center gap-2 text-[11px]"
-			>
-				<pptx-ui-checkbox
-					:disabled="!canEdit"
-					:checked="Boolean(tableData[key])"
-					@change="toggle(key, $event)"
-				/>
-				<span>{{ t(label) }}</span>
-			</label>
-			<label v-if="tableData.bandedRows" class="mt-1 flex items-center gap-2 text-[11px]">
-				<span class="text-muted-foreground">{{ t('pptx.table.bandRowCycle') }}</span>
-				<input
-					type="number"
-					class="w-14 rounded border border-border bg-background px-1 py-0.5 text-[11px]"
-					:disabled="!canEdit"
-					min="1"
-					max="99"
-					:value="tableData.bandRowCycle ?? 1"
-					@input="setCycle('bandRowCycle', $event)"
-				/>
-			</label>
-			<label v-if="tableData.bandedColumns" class="mt-1 flex items-center gap-2 text-[11px]">
-				<span class="text-muted-foreground">{{ t('pptx.table.bandColCycle') }}</span>
-				<input
-					type="number"
-					class="w-14 rounded border border-border bg-background px-1 py-0.5 text-[11px]"
-					:disabled="!canEdit"
-					min="1"
-					max="99"
-					:value="tableData.bandColCycle ?? 1"
-					@input="setCycle('bandColCycle', $event)"
-				/>
-			</label>
-		</div>
+		<InspectorFields
+			:sections="TABLE_OPTIONS_SECTIONS"
+			:target="tableData"
+			:disabled="!canEdit"
+			@patch="emit('update', $event)"
+		/>
 
 		<div class="flex flex-col gap-1">
 			<span class="text-[11px] font-medium">{{ t('pptx.table.stylePresets') }}</span>
