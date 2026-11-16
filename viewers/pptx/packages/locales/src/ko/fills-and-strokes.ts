@@ -6,6 +6,8 @@ export const translations = {
 	'pptx.fill.gradient': '그라데이션',
 	'pptx.fill.color': '색',
 	'pptx.fill.opacityPercent': '불투명도({{value}}%)',
+	'pptx.fill.picture': '그림',
+	'pptx.fill.slideBackground': '슬라이드 배경',
 	'pptx.gradient.heading': '그라데이션 채우기',
 	'pptx.gradient.type': '종류',
 	'pptx.gradient.linear': '선형',

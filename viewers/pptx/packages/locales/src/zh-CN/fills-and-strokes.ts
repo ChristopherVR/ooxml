@@ -6,6 +6,8 @@ export const translations = {
 	'pptx.fill.gradient': '渐变',
 	'pptx.fill.color': '颜色',
 	'pptx.fill.opacityPercent': '不透明度 ({{value}}%)',
+	'pptx.fill.picture': '图片',
+	'pptx.fill.slideBackground': '幻灯片背景',
 	'pptx.gradient.heading': '渐变填充',
 	'pptx.gradient.type': '类型',
 	'pptx.gradient.linear': '线性',

@@ -1031,6 +1031,8 @@ export const translationsEn: Record<string, string> = {
 	'pptx.fill.gradient': 'Gradient',
 	'pptx.fill.color': 'Color',
 	'pptx.fill.opacityPercent': 'Opacity ({{value}}%)',
+	'pptx.fill.picture': 'Picture',
+	'pptx.fill.slideBackground': 'Slide background',
 
 	// Inspector (additions) / arrange (additions)
 	'pptx.inspector.properties': 'Properties',

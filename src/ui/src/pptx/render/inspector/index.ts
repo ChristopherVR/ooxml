@@ -31,6 +31,35 @@ export type {
 export { SHAPE_BEVEL_OPTIONS } from './shape-effect-fields-more';
 export { SHAPE_EFFECT_SECTIONS } from './shape-effect-sections';
 export { SHAPE_LINE_SECTION, SHAPE_LINE_SECTIONS } from './shape-line-fields';
+export {
+	DEFAULT_PATTERN_BACKGROUND,
+	DEFAULT_PATTERN_PRESET,
+	isUsableFillColor,
+	SHAPE_FILL_MODE_OPTIONS,
+	SHAPE_FILL_MODE_SECTION,
+	SHAPE_FILL_MODE_SECTIONS,
+	SHAPE_FILL_OPTIONS_SECTION,
+	SHAPE_FILL_OPTIONS_SECTIONS,
+	shapeFillColorOf,
+	shapeFillModeChange,
+	shapeFillModeOf,
+} from './shape-fill-fields';
+export type { ShapeFillMode, ShapeFillSection, ShapeFillTarget } from './shape-fill-fields';
+export {
+	addShapeFillStop,
+	editShapeFillStop,
+	removeShapeFillStop,
+	shapeFillStopsOf,
+} from './shape-fill-stops';
+export type { ShapeFillStop } from './shape-fill-stops';
+export { resolveShapeFillView, shapeFillPatch } from './shape-fill-actions';
+export type {
+	ShapeFillAction,
+	ShapeFillPatternSwatch,
+	ShapeFillStopView,
+	ShapeFillView,
+} from './shape-fill-actions';
+
 export type { ShapeLineSection } from './shape-line-fields';
 export {
 	ELEMENT_GEOMETRY_SECTION,

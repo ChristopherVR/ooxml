@@ -6,6 +6,8 @@ export const translations = {
 	'pptx.fill.gradient': 'Dégradé',
 	'pptx.fill.color': 'Couleur',
 	'pptx.fill.opacityPercent': 'Opacité ({{value}}%)',
+	'pptx.fill.picture': 'Image',
+	'pptx.fill.slideBackground': 'Arrière-plan de la diapositive',
 	'pptx.gradient.heading': 'Remplissage dégradé',
 	'pptx.gradient.type': 'Type',
 	'pptx.gradient.linear': 'Linéaire',

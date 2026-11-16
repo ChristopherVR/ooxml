@@ -6,6 +6,8 @@ export const translations = {
 	'pptx.fill.gradient': 'グラデーション',
 	'pptx.fill.color': '色',
 	'pptx.fill.opacityPercent': '不透明度 ({{value}}%)',
+	'pptx.fill.picture': '図',
+	'pptx.fill.slideBackground': 'スライドの背景',
 	'pptx.gradient.heading': '塗りつぶし (グラデーション)',
 	'pptx.gradient.type': '種類',
 	'pptx.gradient.linear': '線形',
