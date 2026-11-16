@@ -105,6 +105,8 @@ export { TABLE_OPTIONS_SECTION, TABLE_OPTIONS_SECTIONS } from './table-option-fi
 export type { TableOptionsSection, TableOptionsTarget } from './table-option-fields';
 export { SLIDE_BACKGROUND_SECTION, SLIDE_BACKGROUND_SECTIONS } from './slide-background-fields';
 export type { SlideBackgroundSection, SlideBackgroundTarget } from './slide-background-fields';
+export { MEDIA_PLAYBACK_SECTION, MEDIA_PLAYBACK_SECTIONS } from './media-playback-fields';
+export type { MediaPlaybackSection } from './media-playback-fields';
 export { TEXT_EFFECT_SECTIONS } from './text-effect-fields';
 export type { TextEffectSection, TextEffectTarget } from './text-effect-fields';
 export { FORMAT_PANEL_SECTIONS, formatPanelIn } from './format-panel-sections';

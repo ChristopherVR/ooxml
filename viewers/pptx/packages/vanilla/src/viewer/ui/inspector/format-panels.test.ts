@@ -224,6 +224,27 @@ describe('media section trim timeline wiring', () => {
 		expect(section.el.querySelector('.pptxv-media-timeline')).not.toBeNull();
 	});
 
+	it('draws the shared playback options and writes a media patch', async () => {
+		const { createMediaSection } = await import('./media-section');
+		const setMediaProperties = vi.fn();
+		const section = createMediaSection(document, createTranslator(), sectionFactory(), {
+			setMediaProperties,
+		} as unknown as InspectorHandlers);
+		section.update(
+			state({
+				isMedia: true,
+				media: { type: 'media', id: 'm1', mediaType: 'audio' } as MediaPptxElement,
+			}),
+		);
+		expect(section.el.querySelector('[data-testid="media-fullScreen"]')).toBeNull();
+		const across = section.el.querySelector<HTMLInputElement>(
+			'[data-testid="media-playAcrossSlides"]',
+		)!;
+		across.checked = true;
+		across.dispatchEvent(new Event('change'));
+		expect(setMediaProperties).toHaveBeenCalledWith({ playAcrossSlides: true, autoPlay: true });
+	});
+
 	/**
 	 * `trimEndMs` is `p14:trim/@end`'s distance from the clip's TAIL
 	 * (COM-verified). The "Trim End" number field used to bind that distance

@@ -3,11 +3,12 @@ import {
 	mediaTrimEndMsFromAbsoluteMs,
 	mediaTrimResetPatch,
 	mediaTrimResetState,
+	MEDIA_PLAYBACK_SECTIONS,
 } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { makeNumberField } from '../controls';
-import { makeCheckboxField, makeRangeField, makeSelectField } from './controls-extra';
+import { createInspectorFields } from './inspector-fields';
 import { createMediaTrimTimeline } from './media-trim-timeline';
 import type { InspectorHandlers, InspectorState } from './types';
 
@@ -47,40 +48,12 @@ export function createMediaSection(
 	const poster = doc.createElement('img');
 	poster.className = 'pptxv-media-poster';
 	poster.alt = t('pptx.media.posterFrame');
-	const autoPlay = makeCheckboxField(doc, {
-		label: t('pptx.media.autoPlay'),
-		onChange: (enabled) => handlers.setMediaProperties({ autoPlay: enabled }),
-	});
-	const loop = makeCheckboxField(doc, {
-		label: t('pptx.media.loop'),
-		onChange: (enabled) => handlers.setMediaProperties({ loop: enabled }),
-	});
-	const across = makeCheckboxField(doc, {
-		label: t('pptx.media.playAcrossSlides'),
-		onChange: (playAcrossSlides) => handlers.setMediaProperties({ playAcrossSlides }),
-	});
-	const fullScreen = makeCheckboxField(doc, {
-		label: t('pptx.media.fullScreen'),
-		onChange: (enabled) => handlers.setMediaProperties({ fullScreen: enabled }),
-	});
-	const hide = makeCheckboxField(doc, {
-		label: t('pptx.media.hideWhenNotPlaying'),
-		onChange: (hideWhenNotPlaying) => handlers.setMediaProperties({ hideWhenNotPlaying }),
-	});
-	const volume = makeRangeField(doc, {
-		label: t('pptx.media.volume'),
-		min: 0,
-		max: 100,
-		formatValue: (value) => `${Math.round(value)}%`,
-		onCommit: (value) => handlers.setMediaProperties({ volume: value / 100 }),
-	});
-	const speed = makeSelectField(doc, {
-		label: t('pptx.media.playbackSpeed'),
-		options: [0.5, 0.75, 1, 1.25, 1.5, 2].map((value) => ({
-			value: String(value),
-			label: `${value}x`,
-		})),
-		onChange: (value) => handlers.setMediaProperties({ playbackSpeed: Number(value) }),
+	// Volume, start, play across slides, loop, full screen, hide while not
+	// playing, fades and speed: the shared descriptors.
+	const playback = createInspectorFields(doc, t, {
+		sections: MEDIA_PLAYBACK_SECTIONS,
+		onPatch: (patch) =>
+			handlers.setMediaProperties(patch as Parameters<InspectorHandlers['setMediaProperties']>[0]),
 	});
 	const trimStart = makeNumberField(doc, {
 		label: t('pptx.media.trimStart'),
@@ -136,7 +109,6 @@ export function createMediaSection(
 	);
 	const metadata = doc.createElement('output');
 	metadata.className = 'pptxv-media-metadata';
-	const toggles = [autoPlay, loop, across, fullScreen, hide];
 
 	// Scrub bar with draggable trim handles + bookmark ticks (React's
 	// `TrimTimeline`). It reads the live `<video>` for duration/playhead, so it
@@ -171,9 +143,7 @@ export function createMediaSection(
 		preview,
 		poster,
 		timeline.el,
-		...toggles.map(({ el: node }) => node),
-		volume.el,
-		speed.el,
+		playback.el,
 		trimStart.el,
 		trimEnd.el,
 		resetTrim,
@@ -197,13 +167,9 @@ export function createMediaSection(
 			preview.poster = state.mediaPosterUrl ?? '';
 			poster.src = state.mediaPosterUrl ?? '';
 			poster.hidden = !state.mediaPosterUrl;
-			autoPlay.setValue(media?.autoPlay ?? false);
-			loop.setValue(media?.loop ?? false);
-			across.setValue(media?.playAcrossSlides ?? false);
-			fullScreen.setValue(media?.fullScreen ?? false);
-			hide.setValue(media?.hideWhenNotPlaying ?? false);
-			volume.setValue((media?.volume ?? 1) * 100);
-			speed.setValue(String(media?.playbackSpeed ?? 1));
+			if (media) {
+				playback.update(media, !state.isMedia, media.id);
+			}
 			trimStart.setValue(media?.trimStartMs ?? 0);
 			trimEnd.setValue(mediaTrimEndAbsoluteMs(resolveDurationMs(), media?.trimEndMs ?? 0));
 			bookmarks.control.value = (media?.bookmarks ?? [])
@@ -215,7 +181,7 @@ export function createMediaSection(
 			metadata.textContent = media?.metadata
 				? `${media.metadata.duration ?? 0}s, ${media.metadata.videoWidth ?? 0} x ${media.metadata.videoHeight ?? 0}, ${media.metadata.codecInfo ?? media.mediaMimeType ?? ''}`
 				: (media?.mediaMimeType ?? '');
-			for (const control of [...toggles, volume, speed, trimStart, trimEnd]) {
+			for (const control of [trimStart, trimEnd]) {
 				control.setDisabled(!state.isMedia);
 			}
 			resetTrim.hidden = !state.isMedia || !mediaTrimResetState(media, true).visible;

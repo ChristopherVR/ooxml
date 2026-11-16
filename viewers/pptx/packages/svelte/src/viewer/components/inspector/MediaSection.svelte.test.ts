@@ -91,6 +91,19 @@ function trimEndInput(target: HTMLElement): HTMLInputElement {
 	return input;
 }
 
+describe('mediaSection - shared playback options', () => {
+	it('draws the shared playback fields and writes a media patch', () => {
+		const editor = makeEditor(mediaElement());
+		const target = mountSection(editor);
+		expect(target.querySelector('[data-testid="media-playAcrossSlides"]')).toBeNull();
+		const loop = target.querySelector<HTMLInputElement>('[data-testid="media-loop"]')!;
+		loop.checked = true;
+		loop.dispatchEvent(new Event('change', { bubbles: true }));
+		flushSync();
+		expect((editor.slides[0]?.elements[0] as MediaPptxElement).loop).toBeTruthy();
+	});
+});
+
 describe('mediaSection - trim-end absolute conversion', () => {
 	it('shows 15000 (15s) for a 20s clip with trimEndMs=5000', () => {
 		const editor = makeEditor(mediaElement({ trimEndMs: 5000 }));

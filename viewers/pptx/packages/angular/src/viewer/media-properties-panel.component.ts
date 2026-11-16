@@ -13,20 +13,20 @@ import {
 	mediaTrimEndMsFromAbsoluteMs,
 	mediaTrimResetPatch,
 	mediaTrimResetState,
+	MEDIA_PLAYBACK_SECTIONS,
 } from 'ooxml-ui/pptx';
 import type { MediaBookmark, MediaPptxElement, PptxElement } from 'pptx-viewer-core';
 
+import { InspectorFieldsComponent } from './inspector-fields.component';
 import { LoadContentService } from './load-content.service';
 import { MediaPreviewComponent } from './media-preview.component';
 import { appendMediaBookmark } from './media-properties-helpers';
-
-const SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4] as const;
 
 @Component({
 	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	selector: 'pptx-media-properties-panel',
 	standalone: true,
-	imports: [TranslatePipe, MediaPreviewComponent],
+	imports: [TranslatePipe, InspectorFieldsComponent, MediaPreviewComponent],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div class="pptx-ng-media-properties">
@@ -61,62 +61,12 @@ const SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4] as const;
 					{{ 'pptx.media.resetTrim' | translate }}
 				</button>
 			}
-			<label class="row">
-				<span>{{ 'pptx.media.volume' | translate }}</span>
-				<input
-					type="range"
-					min="0"
-					max="100"
-					[value]="volumePercent()"
-					(input)="volumeChange($event)"
-				/>
-				<output>{{ volumePercent() }}%</output>
-			</label>
-			<label class="row">
-				<span>{{ 'pptx.media.speed' | translate }}</span>
-				<pptx-ui-select
-					[attr.aria-label]="'pptx.media.speed' | translate"
-					[value]="media().playbackSpeed ?? 1"
-					(change)="numberPatch('playbackSpeed', $event)"
-				>
-					@for (speed of speeds; track speed) {
-						<option [value]="speed" [selected]="speed === (media().playbackSpeed ?? 1)">
-							{{ speed }}x
-						</option>
-					}
-				</pptx-ui-select>
-			</label>
-			<div class="grid two">
-				<label>
-					<span>{{ 'pptx.media.fadeIn' | translate }}</span>
-					<input
-						type="number"
-						min="0"
-						step="0.1"
-						[value]="media().fadeInDuration ?? 0"
-						(change)="numberPatch('fadeInDuration', $event)"
-					/>
-				</label>
-				<label>
-					<span>{{ 'pptx.media.fadeOut' | translate }}</span>
-					<input
-						type="number"
-						min="0"
-						step="0.1"
-						[value]="media().fadeOutDuration ?? 0"
-						(change)="numberPatch('fadeOutDuration', $event)"
-					/>
-				</label>
-			</div>
-			@for (toggle of toggles(); track toggle.key) {
-				<label class="row">
-					<span>{{ toggle.label | translate }}</span>
-					<pptx-ui-checkbox
-						[checked]="toggle.value"
-						(change)="booleanPatch(toggle.key, $event)"
-					></pptx-ui-checkbox>
-				</label>
-			}
+			<pptx-inspector-fields
+				[sections]="playbackSections"
+				[target]="media()"
+				[disabled]="!canEdit()"
+				(patch)="patch.emit($event)"
+			/>
 			<section class="bookmarks">
 				<div class="bookmark-head">
 					<strong>{{ 'pptx.media.bookmarks' | translate }}</strong>
@@ -226,7 +176,7 @@ export class MediaPropertiesPanelComponent {
 	private readonly loader = inject(LoadContentService, { optional: true });
 	protected readonly media = computed(() => this.element());
 	protected readonly mediaDataUrls = computed(() => this.loader?.mediaDataUrls() ?? new Map());
-	protected readonly speeds = SPEEDS;
+	protected readonly playbackSections = MEDIA_PLAYBACK_SECTIONS;
 	/**
 	 * `trimEndMs` is `p14:trim/@end`, the distance from the clip's TAIL
 	 * (COM-verified), not an absolute stop time. The "Trim end" field shows the
@@ -240,34 +190,6 @@ export class MediaPropertiesPanelComponent {
 	protected readonly trimEndAbsoluteMs = computed(() =>
 		mediaTrimEndAbsoluteMs(this.durationMs(), this.media().trimEndMs ?? 0),
 	);
-	protected readonly volumePercent = computed(() => Math.round((this.media().volume ?? 1) * 100));
-	protected readonly toggles = computed(
-		() =>
-			[
-				{
-					key: 'autoPlay',
-					label: 'pptx.media.startAutomatically',
-					value: Boolean(this.media().autoPlay),
-				},
-				{ key: 'loop', label: 'pptx.media.loop', value: Boolean(this.media().loop) },
-				{
-					key: 'playAcrossSlides',
-					label: 'pptx.media.playAcrossSlides',
-					value: Boolean(this.media().playAcrossSlides),
-				},
-				{
-					key: 'fullScreen',
-					label: 'pptx.media.fullScreen',
-					value: Boolean(this.media().fullScreen),
-				},
-				{
-					key: 'hideWhenNotPlaying',
-					label: 'pptx.media.hideWhenNotPlaying',
-					value: Boolean(this.media().hideWhenNotPlaying),
-				},
-			] as const,
-	);
-
 	protected numberPatch(key: keyof MediaPptxElement, event: Event): void {
 		this.patch.emit({
 			[key]: Number((event.target as HTMLInputElement).value),
@@ -279,18 +201,6 @@ export class MediaPropertiesPanelComponent {
 		const absoluteMs = Number((event.target as HTMLInputElement).value);
 		this.patch.emit({
 			trimEndMs: mediaTrimEndMsFromAbsoluteMs(this.durationMs(), absoluteMs),
-		} as Partial<PptxElement>);
-	}
-
-	protected volumeChange(event: Event): void {
-		this.patch.emit({
-			volume: Number((event.target as HTMLInputElement).value) / 100,
-		} as Partial<PptxElement>);
-	}
-
-	protected booleanPatch(key: keyof MediaPptxElement, event: Event): void {
-		this.patch.emit({
-			[key]: (event.target as HTMLInputElement).checked || undefined,
 		} as Partial<PptxElement>);
 	}
 

@@ -38,3 +38,15 @@ describe('mediaPropertiesPanelComponent trim-end field', () => {
 		expect(mediaTrimEndMsFromAbsoluteMs(20000, 15000)).toBe(5000);
 	});
 });
+
+describe('mediaPropertiesPanelComponent playback options', () => {
+	it('draws the shared playback descriptors with the generic renderer', () => {
+		const source = readFileSync(
+			path.join(__dirname, 'media-properties-panel.component.ts'),
+			'utf8',
+		);
+		expect(source).toContain('[sections]="playbackSections"');
+		expect(source).toContain('[disabled]="!canEdit()"');
+		expect(source).not.toContain('booleanPatch(');
+	});
+});

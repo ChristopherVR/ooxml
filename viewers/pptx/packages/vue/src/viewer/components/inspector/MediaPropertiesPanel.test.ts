@@ -3,6 +3,7 @@ import type { MediaPptxElement } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
 import MediaPropertiesPanel from './MediaPropertiesPanel.vue';
+import { setControlValue } from './test-control-value';
 
 function mediaElement(patch: Partial<MediaPptxElement> = {}): MediaPptxElement {
 	return {
@@ -18,6 +19,15 @@ function mediaElement(patch: Partial<MediaPptxElement> = {}): MediaPptxElement {
 }
 
 describe('media properties panel', () => {
+	it('draws the shared playback options and relays a media patch', async () => {
+		const wrapper = mount(MediaPropertiesPanel, {
+			props: { element: mediaElement({ mediaData: 'data:video/mp4;base64,AAAA' }), canEdit: true },
+		});
+		expect(wrapper.find('[data-testid="media-playAcrossSlides"]').exists()).toBeFalsy();
+		await setControlValue(wrapper.get('[data-testid="media-start"]'), 'auto');
+		expect(wrapper.emitted('update')?.at(-1)?.[0]).toStrictEqual({ autoPlay: true });
+	});
+
 	it('previews relationship-backed media through the viewer URL map', () => {
 		const wrapper = mount(MediaPropertiesPanel, {
 			props: {

@@ -13,7 +13,13 @@ import {
 	SHAPE_LINE_SECTIONS,
 	TEXT_BOX_SECTIONS,
 } from 'ooxml-ui/pptx';
-import type { PptxElement, PptxImageLikeElement, ShapeStyle, TextStyle } from 'pptx-viewer-core';
+import type {
+	MediaPptxElement,
+	PptxElement,
+	PptxImageLikeElement,
+	ShapeStyle,
+	TextStyle,
+} from 'pptx-viewer-core';
 import React, { act } from 'react';
 import type { Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -21,6 +27,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMarkedRoot, marked } from '../../i18n/marking-translator.test-support';
 import { ImagePropertiesPanel } from './ImagePropertiesPanel';
 import { InspectorFields } from './InspectorFields';
+import { MediaPlaybackBookmarks } from './MediaPlaybackBookmarks';
 import { TextAdvancedSections } from './TextAdvancedSections';
 
 let container: HTMLDivElement;
@@ -312,5 +319,39 @@ describe('imagePropertiesPanel colour effects', () => {
 		expect(
 			container.querySelectorAll('[data-testid="picture-duotone-preset"]').length,
 		).toBeGreaterThan(0);
+	});
+});
+
+describe('mediaPlaybackBookmarks playback fields', () => {
+	it('draws the shared playback options and writes a media patch', () => {
+		const onUpdateElement = vi.fn();
+		const video = {
+			type: 'media',
+			id: 'm1',
+			x: 0,
+			y: 0,
+			width: 10,
+			height: 10,
+			mediaType: 'video',
+		} as unknown as MediaPptxElement;
+		act(() => {
+			root.render(
+				<MediaPlaybackBookmarks
+					element={video}
+					canEdit
+					currentTime={0}
+					bookmarks={[]}
+					onUpdateElement={onUpdateElement}
+					onSeekTo={vi.fn()}
+				/>,
+			);
+		});
+		expect(byTestId('media-playAcrossSlides')).toBeNull();
+		const loop = byTestId('media-loop')!;
+		act(() => {
+			loop.checked = true;
+			loop.dispatchEvent(new Event('change', { bubbles: true }));
+		});
+		expect(onUpdateElement).toHaveBeenCalledWith({ loop: true });
 	});
 });
