@@ -12,15 +12,13 @@
  * Provide it once on the viewer component (`providers: [ViewerFindReplaceService]`).
  */
 
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable } from '@angular/core';
+import type { Signal } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
-import {
-	DEFAULT_FIND_REPLACE_OPTIONS,
-	findReplaceSessionActions,
-	INITIAL_FIND_REPLACE_SESSION,
-} from 'ooxml-ui/pptx';
-import type { FindReplaceSession } from 'ooxml-ui/pptx';
+import { createFindReplaceController, DEFAULT_FIND_REPLACE_OPTIONS } from 'ooxml-ui/pptx';
+import type { FindReplaceMode, FindReplaceSession } from 'ooxml-ui/pptx';
 
+import { controllerSignal } from './controller-signal';
 import { EditorStateService } from './editor-state.service';
 import type { FindEvent, ReplaceEvent } from './find-replace-bar.component';
 
@@ -30,56 +28,69 @@ export class ViewerFindReplaceService {
 	private readonly translate = inject(TranslateService);
 
 	/** Find-in-slides bar visibility. */
-	readonly showFind = signal(false);
-	/** Find-and-replace bar visibility (edit mode only). */
-	readonly showFindReplace = signal(false);
-	/** The find-and-replace bar's session; the bar's fields are bound to it. */
-	readonly session = signal<FindReplaceSession>(INITIAL_FIND_REPLACE_SESSION);
-	readonly results = computed(() => this.session().matches);
-	/** Zero-based current match; -1 when there is none. */
-	readonly activeIndex = computed(() => this.session().current);
-
-	/** Navigate the viewer to a slide index (bound from the host component). */
 	private goTo: (index: number) => void = () => undefined;
 
-	private readonly actions = findReplaceSessionActions(
-		{ get: () => this.session(), set: (next) => this.session.set(next) },
-		{
-			slides: () => this.editor.slides(),
-			commit: (slides, scope) =>
-				this.editor.applyReplacement(
-					slides,
-					this.translate.instant(
-						scope === 'all' ? 'pptx.undoAction.replaceAll' : 'pptx.undoAction.replace',
-					),
+	/** The bar's open state and mode plus the search session: the shared controller. */
+	private readonly actions = createFindReplaceController({
+		slides: () => this.editor.slides(),
+		commit: (slides, scope) =>
+			this.editor.applyReplacement(
+				slides,
+				this.translate.instant(
+					scope === 'all' ? 'pptx.undoAction.replaceAll' : 'pptx.undoAction.replace',
 				),
-			navigate: ({ slideIndex, elementId }) => {
-				this.goTo(slideIndex);
-				this.editor.select(elementId ? [elementId] : []);
-			},
+			),
+		navigate: ({ slideIndex, elementId }) => {
+			this.goTo(slideIndex);
+			this.editor.select(elementId ? [elementId] : []);
 		},
-	);
+	});
+	private readonly state = controllerSignal(this.actions);
 
-	/** Wire the host's slide-navigation callback (called once from the constructor). */
+	/** Whether the bar is open (either mode). */
+	readonly isOpen: Signal<boolean> = computed(() => this.state().open);
+	/** Find mode (Ctrl+F). */
+	readonly showFind: Signal<boolean> = computed(
+		() => this.state().open && this.state().mode === 'find',
+	);
+	/** Find and Replace mode (Ctrl+H). */
+	readonly showFindReplace: Signal<boolean> = computed(
+		() => this.state().open && this.state().mode === 'replace',
+	);
+	readonly session: Signal<FindReplaceSession> = computed(() => this.state().session);
+	readonly results = computed(() => this.session().matches);
+	readonly activeIndex = computed(() => this.session().current);
+
 	bind(goTo: (index: number) => void): void {
 		this.goTo = goTo;
 	}
 
-	/** Open the find/replace bar (mutually exclusive with the find-only bar). */
-	openFindReplace(): void {
-		const wasOpen = this.showFindReplace();
-		this.showFind.set(false);
-		this.showFindReplace.set(true);
-		if (!wasOpen) {
-			// The bar shows the query the session kept; search it again from the first match.
-			this.actions.search();
-		}
+	/** Open the bar in `mode` (searching the kept query again), or switch an open bar's mode. */
+	open(mode: FindReplaceMode = 'find'): void {
+		this.actions.open(mode);
 	}
 
-	/** Close the find/replace bar; its matches go with it. */
-	closeFindReplace(): void {
-		this.showFindReplace.set(false);
+	openFindReplace(): void {
+		this.actions.open('replace');
+	}
+
+	/** Close the bar: the matches go, the query, replacement and scopes stay. */
+	close(): void {
 		this.actions.close();
+	}
+
+	closeFindReplace(): void {
+		this.actions.close();
+	}
+
+	/** Ctrl+F / Ctrl+H and the toolbar: close the bar open in `mode`, switch, or open it. */
+	toggle(mode: FindReplaceMode = 'find'): void {
+		this.actions.toggle(mode);
+	}
+
+	/** The deck changed (a replace searches again once the replaced slides land). */
+	slidesChanged(): void {
+		this.actions.slidesChanged();
 	}
 
 	onFind(evt: FindEvent): void {

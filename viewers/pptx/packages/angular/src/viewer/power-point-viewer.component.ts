@@ -158,7 +158,6 @@ import { ElementRenderErrors } from './element-boundary.directive';
 import { EmbeddedFontsService } from './embedded-fonts.service';
 import { ExportProgressModalComponent } from './export-progress-modal.component';
 import { renderElementPngBlob, renderElementPngDataUrl } from './export-raster-tiles';
-import { FindBarComponent } from './find-bar.component';
 import { FindReplaceBarComponent } from './find-replace-bar.component';
 import { FollowModeBarComponent } from './follow-mode-bar.component';
 import { GoogleWebfontsService } from './google-webfonts.service';
@@ -300,7 +299,6 @@ const noopClose = (): void => undefined;
 		OutlineViewOverlayComponent,
 		ReadingViewOverlayComponent,
 		SlideDefaultInspectorComponent,
-		FindBarComponent,
 		FindReplaceBarComponent,
 		SlidesPanelComponent,
 		StatusBarComponent,
@@ -440,7 +438,7 @@ const noopClose = (): void => undefined;
 							[canRedo]="editor.canRedo()"
 							[undoLabel]="editor.undoLabel()"
 							[redoLabel]="editor.redoLabel()"
-							[findReplaceOpen]="findReplace.showFind() || findReplace.showFindReplace()"
+							[findReplaceOpen]="findReplace.isOpen()"
 							[hiddenActions]="effectiveHiddenActions()"
 							[quickAccess]="customizationService.quickAccess(viewerOpts.options().quickAccess)"
 							(toggleAutosave)="toggleAutosave()"
@@ -469,7 +467,7 @@ const noopClose = (): void => undefined;
 						[inspectorOpen]="inspectorPanel.inspectorPaneOpen()"
 						[commentsOpen]="inspectorPanel.activePanel() === 'comments'"
 						[commentCount]="activeComments().length"
-						[findOpen]="findReplace.showFind() || findReplace.showFindReplace()"
+						[findOpen]="findReplace.isOpen()"
 						[collabConnected]="collab.connected()"
 						[connectedCount]="collab.connectedCount()"
 						[spellCheckEnabled]="spellCheck()"
@@ -480,7 +478,7 @@ const noopClose = (): void => undefined;
 						(zoomIn)="zoomSvc.zoomIn()"
 						(zoomOut)="zoomSvc.zoomOut()"
 						(zoomReset)="zoomSvc.zoomReset()"
-						(find)="findReplace.showFind.set(true)"
+						(find)="findReplace.open('find')"
 						(present)="presentationMode.present()"
 						(presentFromBeginning)="presentationMode.presentFromBeginning()"
 						(presenter)="presentationMode.presentPresenter()"
@@ -1129,15 +1127,7 @@ const noopClose = (): void => undefined;
 				}
 			}
 
-			@if (findReplace.showFind() && customizationService.panelVisible('findReplace')) {
-				<pptx-find-bar
-					[slides]="loader.slides()"
-					(navigate)="goTo($event)"
-					(closed)="findReplace.showFind.set(false)"
-				/>
-			}
-
-			@if (findReplace.showFindReplace() && customizationService.panelVisible('findReplace')) {
+			@if (findReplace.isOpen() && customizationService.panelVisible('findReplace')) {
 				<pptx-find-replace-bar
 					[query]="findReplace.session().query"
 					[replacement]="findReplace.session().replacement"
@@ -1406,7 +1396,7 @@ const noopClose = (): void => undefined;
 					[canEdit]="canEdit()"
 					[hiddenActions]="effectiveHiddenActions()"
 					(closed)="mobileSheetSvc.mobileSheet.set(null)"
-					(openFind)="findReplace.showFind.set(true)"
+					(openFind)="findReplace.open('find')"
 					(openSorter)="showSorter.set(true)"
 					(toggleNotes)="mobileSheetSvc.toggleNotes()"
 					(insertText)="mobileSheetSvc.onMobileInsert()"
@@ -4272,11 +4262,7 @@ export class PowerPointViewerComponent
 
 	/** Toggle the Find & Replace panel from the title-bar search button. */
 	protected toggleFindReplace(): void {
-		if (this.findReplace.showFindReplace()) {
-			this.findReplace.closeFindReplace();
-			return;
-		}
-		this.findReplace.openFindReplace();
+		this.findReplace.toggle('replace');
 	}
 
 	/** Dispatch a command from the title-bar search palette. */

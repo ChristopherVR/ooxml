@@ -208,4 +208,23 @@ describe('useFindReplace', () => {
 		expect(fr.matchCount.value).toBe(2);
 		expect(fr.currentMatch.value).toBe(0);
 	});
+
+	it('follows the host open flag both ways and keeps the bar open on Ctrl+H', async () => {
+		const slides = ref(makeSlides());
+		const open = ref(false);
+		const fr = useFindReplace({ slides, showMatch: () => {}, pushHistory: () => {}, open });
+		fr.toggle('find');
+		await nextTick();
+		expect(open.value).toBeTruthy();
+		fr.query.value = 'world';
+		expect(fr.matchCount.value).toBe(2);
+		fr.toggle('replace');
+		expect(fr.open.value).toBeTruthy();
+		open.value = false;
+		await nextTick();
+		expect(fr.matchCount.value).toBe(0);
+		open.value = true;
+		await nextTick();
+		expect(fr.matchCount.value).toBe(2);
+	});
 });

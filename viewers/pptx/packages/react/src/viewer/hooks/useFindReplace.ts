@@ -1,16 +1,16 @@
 import {
-	findReplaceSessionActions,
-	INITIAL_FIND_REPLACE_SESSION,
+	createFindReplaceController,
 	isEditorTextInputTarget,
 	mapCustomizedEditorKey,
 } from 'ooxml-ui/pptx';
-import type { FindReplaceSession, FindResult, ResolvedKeyboardCustomization } from 'ooxml-ui/pptx';
+import type { FindResult, ResolvedKeyboardCustomization } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-// The match descriptor, the search / replace implementations and the session around them
-// (`find-replace-session`) are shared with the other bindings; this hook keeps the session in
-// React state.
+import { useController } from './useController';
+
+// The bar's open state, its mode and the search session are the shared
+// `createFindReplaceController`; this hook reads it through `useController`.
 export type { FindResult } from 'ooxml-ui/pptx';
 interface UseFindReplaceInput {
 	slides: PptxSlide[];
@@ -57,42 +57,22 @@ export function useFindReplace({
 	onMarkDirty,
 	keyboard,
 }: UseFindReplaceInput): UseFindReplaceResult {
-	const [findReplaceOpen, setFindReplaceOpen] = useState(false);
-	const [session, setSession] = useState<FindReplaceSession>(INITIAL_FIND_REPLACE_SESSION);
 	// The actions run long after the render that made them, so they read the latest slides and
-	// callbacks, and the store reads a ref rather than this render's `session`.
+	// callbacks through a ref.
 	const latest = useRef({ slides, onShowMatch, onUpdateSlides, onMarkDirty });
 	latest.current = { slides, onShowMatch, onUpdateSlides, onMarkDirty };
-	const latestSession = useRef(session);
-	// One set of actions for the hook's lifetime (they read everything through the refs).
+	// One controller for the hook's lifetime (it reads everything through the ref).
 	const [actions] = useState(() =>
-		findReplaceSessionActions(
-			{
-				get: () => latestSession.current,
-				set: (next) => {
-					latestSession.current = next;
-					setSession(next);
-				},
+		createFindReplaceController({
+			slides: () => latest.current.slides,
+			commit: (next) => {
+				latest.current.onUpdateSlides(() => next as PptxSlide[]);
+				latest.current.onMarkDirty();
 			},
-			{
-				slides: () => latest.current.slides,
-				commit: (next) => {
-					latest.current.onUpdateSlides(() => next as PptxSlide[]);
-					latest.current.onMarkDirty();
-				},
-				navigate: ({ slideIndex, elementId }) => latest.current.onShowMatch(slideIndex, elementId),
-			},
-		),
+			navigate: ({ slideIndex, elementId }) => latest.current.onShowMatch(slideIndex, elementId),
+		}),
 	);
-
-	// Closing the bar drops the matches. They also drive the canvas highlight
-	// overlay, which is not gated on `findReplaceOpen`, so leaving them set
-	// kept the match boxes painted on the slide after the bar was gone.
-	useEffect(() => {
-		if (!findReplaceOpen) {
-			actions.close();
-		}
-	}, [findReplaceOpen, actions]);
+	const { open: findReplaceOpen, session } = useController(actions);
 
 	// React's slides land a render after a replace commits them, so the session
 	// searches again here, once they have. It does nothing after an ordinary
@@ -106,6 +86,7 @@ export function useFindReplace({
 
 	const handlers = useMemo(
 		() => ({
+			setFindReplaceOpen: actions.setOpen,
 			setFindQuery: (query: string) => actions.search({ query }),
 			setReplaceQuery: actions.setReplacement,
 			setFindMatchCase: (matchCase: boolean) => actions.search({ options: { matchCase } }),
@@ -128,13 +109,8 @@ export function useFindReplace({
 	);
 
 	// ── Keyboard shortcut: Ctrl/Cmd+F or Ctrl/Cmd+H toggles the find bar ──
-	// The chord itself is decided by the shared editor keymap, not here. This
-	// used to be a hand-rolled `event.key === 'f'` test, which is why Angular,
-	// Svelte and Vanilla never got the shortcut at all: there was nothing in
-	// shared for them to adopt. Note `key === 'f'` also missed Ctrl+Shift+F,
-	// which `mapEditorKey` folds in via `toLowerCase()`. Ctrl+H (PowerPoint's
-	// Find & Replace) opens the same single bar: it already renders both the
-	// find and replace rows together, so there is no separate mode to enter.
+	// The chord is decided by the shared editor keymap and the toggle by the
+	// shared controller (Ctrl+H switches an open Ctrl+F bar to its replace mode).
 	useEffect(() => {
 		const handler = (event: KeyboardEvent) => {
 			const { action } = mapCustomizedEditorKey(
@@ -145,19 +121,17 @@ export function useFindReplace({
 				},
 				keyboard,
 			);
-			if (action !== 'find' && action !== 'findReplace') {
-				return;
+			if (action === 'find' || action === 'findReplace') {
+				event.preventDefault();
+				actions.handleShortcut(action);
 			}
-			event.preventDefault();
-			setFindReplaceOpen((prev) => !prev);
 		};
 		window.addEventListener('keydown', handler);
 		return () => window.removeEventListener('keydown', handler);
-	}, [mode, keyboard]);
+	}, [mode, keyboard, actions]);
 
 	return {
 		findReplaceOpen,
-		setFindReplaceOpen,
 		findQuery: session.query,
 		replaceQuery: session.replacement,
 		findMatchCase: session.options.matchCase,

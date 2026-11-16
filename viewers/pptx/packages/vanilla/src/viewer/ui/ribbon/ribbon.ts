@@ -1,3 +1,4 @@
+import type { FindReplaceMode } from 'ooxml-ui/pptx';
 import type {
 	AccountAuthConfig,
 	PptxUiRibbonAddInElement,
@@ -126,9 +127,9 @@ export function createRibbon(
 		handlers.nav.getCustomization?.() ?? EMPTY_RESOLVED_CUSTOMIZATION;
 	const findReplace = createFindReplacePanel(doc, t, handlers.findReplace);
 	el.appendChild(findReplace.el);
-	const toggleFindReplace = (): void => {
+	const toggleFindReplace = (mode?: FindReplaceMode): void => {
 		if (isPanelVisible(resolved(), 'findReplace')) {
-			findReplace.toggle();
+			findReplace.toggle(mode);
 		}
 	};
 

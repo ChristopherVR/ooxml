@@ -24,6 +24,11 @@ export interface UseEditorKeyboardInput {
 	/** A slide show (or rehearsal) is actually running, not merely previewing. */
 	presenting: Ref<boolean>;
 	findOpen: Ref<boolean>;
+	/**
+	 * Ctrl+F / Ctrl+H through the shared find and replace controller (Ctrl+H switches an open
+	 * Ctrl+F bar to its replace mode). Without it the shortcut flips {@link findOpen}.
+	 */
+	toggleFind?: (mode: 'find' | 'replace') => void;
 	selectedElementIds: Ref<string[]>;
 	activeSlide: ComputedRef<PptxSlide | undefined>;
 	activeSlideIndex: Ref<number>;
@@ -223,12 +228,20 @@ export function useEditorKeyboard(input: UseEditorKeyboardInput): UseEditorKeybo
 				onEscape();
 			},
 			find: () => {
-				findOpen.value = !findOpen.value;
+				if (input.toggleFind) {
+					input.toggleFind('find');
+				} else {
+					findOpen.value = !findOpen.value;
+				}
 			},
-			// Vue has one find/replace panel showing both rows at once, so Ctrl+H
-			// opens the same panel Ctrl+F does; there is no distinct replace mode.
+			// Vue has one find/replace panel showing both rows at once; the shared
+			// controller keeps it open when Ctrl+H follows Ctrl+F.
 			findReplace: () => {
-				findOpen.value = !findOpen.value;
+				if (input.toggleFind) {
+					input.toggleFind('replace');
+				} else {
+					findOpen.value = !findOpen.value;
+				}
 			},
 			alignLeft: () => ribbonUpdateTextStyle({ align: 'left' }),
 			alignCenter: () => ribbonUpdateTextStyle({ align: 'center' }),

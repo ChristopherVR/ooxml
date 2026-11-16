@@ -182,10 +182,10 @@ export function useEditorUiCluster(deps: EditorUiClusterDeps): EditorUiCluster {
 		},
 		// `findReplace` is constructed just below; the closure only runs on a real
 		// key press, long after this function has returned.
-		toggleFind: () => findReplace.toggle(),
-		// Ctrl+H: PowerPoint's Find & Replace. The panel has no distinct
-		// find-only/replace mode, so this is the same toggle as Ctrl+F.
-		toggleFindReplace: () => findReplace.toggle(),
+		toggleFind: () => findReplace.toggle('find'),
+		// Ctrl+H: PowerPoint's Find & Replace. One bar shows both rows; the shared
+		// controller switches an open bar's mode rather than closing it.
+		toggleFindReplace: () => findReplace.toggle('replace'),
 		newSlide: () => deps.newSlide?.(),
 	});
 

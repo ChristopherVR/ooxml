@@ -13,7 +13,7 @@
  */
 
 import { Injector, signal } from '@angular/core';
-import { textFontSizePtToPx } from 'ooxml-ui/pptx';
+import { createFindReplaceController, textFontSizePtToPx } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -70,10 +70,10 @@ interface Harness {
 	service: ViewerKeyboardService;
 	editor: ReturnType<typeof editorStub>;
 	showShortcuts: ReturnType<typeof signal<boolean>>;
-	/** The small find bar (Ctrl+F opens this one). */
-	showFind: ReturnType<typeof signal<boolean>>;
-	/** The full find-and-replace bar, reachable from Home > Editing > Replace. */
-	showFindReplace: ReturnType<typeof signal<boolean>>;
+	/** The bar open in find mode (Ctrl+F). */
+	showFind: () => boolean;
+	/** The bar open in find-and-replace mode (Ctrl+H). */
+	showFindReplace: () => boolean;
 	painterActive: ReturnType<typeof signal<boolean>>;
 	cancelPainter: ReturnType<typeof vi.fn>;
 	togglePainter: ReturnType<typeof vi.fn>;
@@ -101,18 +101,26 @@ function harness(
 ): Harness {
 	const editor = editorStub(options.hasSelection ?? true, options.selectedIds ?? []);
 	const showShortcuts = signal(false);
-	const showFind = signal(options.findOpen ?? false);
-	const showFindReplace = signal(options.findReplaceOpen ?? false);
+	// The real shared bar controller over an empty deck: the keyboard only toggles it.
+	const bar = createFindReplaceController({
+		slides: () => [],
+		commit: () => undefined,
+		navigate: () => undefined,
+	});
+	if (options.findOpen) {
+		bar.open('find');
+	}
+	if (options.findReplaceOpen) {
+		bar.open('replace');
+	}
+	const showFind = (): boolean => bar.getSnapshot().open && bar.getSnapshot().mode === 'find';
+	const showFindReplace = (): boolean =>
+		bar.getSnapshot().open && bar.getSnapshot().mode === 'replace';
 	const painterActive = signal(options.painterActive ?? false);
 	const cancelPainter = vi.fn();
 	const togglePainter = vi.fn();
 	const applyPainterToTarget = vi.fn();
 	const showHyperlink = signal(false);
-	const openFindReplace = vi.fn(() => {
-		showFind.set(false);
-		showFindReplace.set(true);
-	});
-	const closeFindReplace = vi.fn(() => showFindReplace.set(false));
 	const goPrev = vi.fn();
 	const goNext = vi.fn();
 	const presentFromBeginning = vi.fn();
@@ -139,8 +147,7 @@ function harness(
 				useValue: {
 					showFind,
 					showFindReplace,
-					openFindReplace,
-					closeFindReplace,
+					toggle: bar.toggle,
 				} as unknown as ViewerFindReplaceService,
 			},
 			{
@@ -383,14 +390,12 @@ describe('viewerKeyboardService: find', () => {
 		expect(h.showFind()).toBeFalsy();
 	});
 
-	it('treats the full find-and-replace bar as open, and closes that too', () => {
-		// Angular is the only binding with two panels; without this branch the
-		// chord would swap the replace bar for the smaller find bar, where every
-		// other binding simply closes.
+	it('switches an open find-and-replace bar to find mode instead of closing it', () => {
+		// One bar, two modes (the shared controller): the other chord switches the mode.
 		const h = harness({ findReplaceOpen: true });
 		h.press('f', { ctrlKey: true });
 		expect(h.showFindReplace()).toBeFalsy();
-		expect(h.showFind()).toBeFalsy();
+		expect(h.showFind()).toBeTruthy();
 	});
 
 	it('leaves a bare "f" alone', () => {
@@ -400,10 +405,12 @@ describe('viewerKeyboardService: find', () => {
 		expect(event.defaultPrevented).toBeFalsy();
 	});
 
-	it('opens the full find-and-replace bar on Ctrl+H, distinct from Ctrl+F', () => {
+	it('opens the find-and-replace mode on Ctrl+H, and Ctrl+H again closes it', () => {
 		const h = harness();
 		h.press('h', { ctrlKey: true });
 		expect(h.showFindReplace()).toBeTruthy();
+		h.press('h', { ctrlKey: true });
+		expect(h.showFindReplace()).toBeFalsy();
 	});
 });
 

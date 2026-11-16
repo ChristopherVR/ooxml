@@ -1,3 +1,5 @@
+import type { FindReplaceMode } from 'ooxml-ui/pptx';
+
 import type { FindReplaceActions } from '../../editor/editor-find-replace-actions';
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';
@@ -6,7 +8,8 @@ import { createInspectorCheckbox } from '../inspector/controls-extra';
 
 export interface FindReplacePanel {
 	el: HTMLElement;
-	toggle(): void;
+	/** Ctrl+F / Ctrl+H and Home > Editing: close the bar open in `mode`, switch it, or open it. */
+	toggle(mode?: FindReplaceMode): void;
 	setOpen(open: boolean): void;
 	isOpen(): boolean;
 	setEditable(editable: boolean): void;
@@ -213,7 +216,8 @@ export function createFindReplacePanel(
 	);
 	el.append(row, status, hint);
 
-	const setOpen = (next: boolean): void => {
+	/** Paint the open flag (focus, visibility, status) the bar now has. */
+	const show = (next: boolean): void => {
 		if (next === open) {
 			if (open) {
 				queryInput.focus();
@@ -242,9 +246,26 @@ export function createFindReplacePanel(
 		}
 	};
 
+	// With the shared bar controller the open flag is its (the session's close, and the search
+	// again on open, happen there); this panel paints the flag the bar reports after each command.
+	// A host without the controller (or a stub) keeps the panel's own flag.
+	const barOpen = (fallback: boolean): boolean => actions.bar?.getSnapshot?.()?.open ?? fallback;
+	const setOpen = (next: boolean): void => {
+		actions.bar?.setOpen(next);
+		show(barOpen(next));
+	};
+	const toggle = (mode?: FindReplaceMode): void => {
+		if (actions.bar) {
+			actions.bar.toggle(mode);
+			show(barOpen(!open));
+		} else {
+			setOpen(!open);
+		}
+	};
+
 	return {
 		el,
-		toggle: () => setOpen(!open),
+		toggle,
 		setOpen,
 		isOpen: () => open,
 		setEditable(editable) {

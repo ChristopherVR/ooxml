@@ -1647,6 +1647,7 @@ const { showShortcuts, onEditorKeydown, copySelected, cutSelected, selectAllElem
 		hasSelection: selection.hasSelection,
 		presenting: presentation.presenting,
 		findOpen,
+		toggleFind: find.toggle,
 		selectedElementIds,
 		activeSlide,
 		activeSlideIndex,

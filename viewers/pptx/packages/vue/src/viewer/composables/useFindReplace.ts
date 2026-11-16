@@ -1,12 +1,14 @@
-import { findReplaceSessionActions, INITIAL_FIND_REPLACE_SESSION } from 'ooxml-ui/pptx';
-import type { FindReplaceOptions, FindReplaceSession, FindResult } from 'ooxml-ui/pptx';
+import { createFindReplaceController } from 'ooxml-ui/pptx';
+import type { FindReplaceMode, FindReplaceOptions, FindResult } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import type { ComputedRef, Ref, WritableComputedRef } from 'vue';
-import { computed, shallowRef, watch } from 'vue';
+import { computed, watch } from 'vue';
 
-// The match descriptor, the search / replace implementations and the session around them
-// (`find-replace-session`) are shared with the other bindings; this composable keeps the
-// session in a ref.
+import { useController } from './useController';
+
+// The match descriptor, the search / replace implementations, the session and the bar's open
+// state are shared with the other bindings (`createFindReplaceController`); this composable
+// exposes them as refs the bar can `v-model`.
 export type { FindResult } from 'ooxml-ui/pptx';
 
 export interface UseFindReplaceInput {
@@ -20,11 +22,18 @@ export interface UseFindReplaceInput {
 	showMatch: (slideIndex: number, ids: string[]) => void;
 	/** Snapshot the current document onto the undo/redo history stack. */
 	pushHistory: () => void;
-	/** Whether the bar is open: closing it drops the matches, opening it searches again. */
+	/**
+	 * A host-owned open flag to follow (closing it drops the matches, opening it searches
+	 * again). Without it the bar's open state is {@link UseFindReplaceResult.open} alone.
+	 */
 	open?: Ref<boolean>;
 }
 
 export interface UseFindReplaceResult {
+	/** Whether the bar is open; writing it opens (searching again) or closes the bar. */
+	open: WritableComputedRef<boolean>;
+	/** Ctrl+F / Ctrl+H: close the bar open in `mode`, switch its mode, or open it. */
+	toggle: (mode?: FindReplaceMode) => void;
 	query: WritableComputedRef<string>;
 	replacement: WritableComputedRef<string>;
 	matchCase: WritableComputedRef<boolean>;
@@ -42,48 +51,60 @@ export interface UseFindReplaceResult {
 }
 
 /**
- * Find-and-replace state for the Vue editor: the shared `find-replace-session` in a ref, exposed
- * as refs the bar can `v-model`. Setting the query or a scope searches at once; a replace
- * snapshots history first, reassigns `slides.value` to the core's immutable result and searches
- * again, and an ordinary edit leaves the matches alone.
+ * Find-and-replace state for the Vue editor: the shared `createFindReplaceController` read
+ * through `useController`. Setting the query or a scope searches at once; a replace snapshots
+ * history first, reassigns `slides.value` to the core's immutable result and searches again,
+ * and an ordinary edit leaves the matches alone.
  */
 export function useFindReplace({
 	slides,
 	showMatch,
 	pushHistory,
-	open,
+	open: hostOpen,
 }: UseFindReplaceInput): UseFindReplaceResult {
-	const session = shallowRef<FindReplaceSession>(INITIAL_FIND_REPLACE_SESSION);
-	const actions = findReplaceSessionActions(
-		{ get: () => session.value, set: (next) => (session.value = next) },
-		{
-			slides: () => slides.value,
-			commit: (next) => {
-				pushHistory();
-				slides.value = next as PptxSlide[];
-			},
-			navigate: ({ slideIndex, elementId }) => showMatch(slideIndex, elementId ? [elementId] : []),
+	const controller = createFindReplaceController({
+		slides: () => slides.value,
+		commit: (next) => {
+			pushHistory();
+			slides.value = next as PptxSlide[];
 		},
-	);
+		navigate: ({ slideIndex, elementId }) => showMatch(slideIndex, elementId ? [elementId] : []),
+	});
+	const state = useController(controller);
+	const session = computed(() => state.value.session);
+
+	if (hostOpen) {
+		// Two-way: the host's flag drives the bar, and a shortcut toggle writes back to it.
+		watch(hostOpen, (isOpen) => controller.setOpen(isOpen), { immediate: true });
+		watch(
+			() => state.value.open,
+			(isOpen) => {
+				if (hostOpen.value !== isOpen) {
+					hostOpen.value = isOpen;
+				}
+			},
+		);
+	}
 
 	const option = (key: keyof FindReplaceOptions): WritableComputedRef<boolean> =>
 		computed({
 			get: () => session.value.options[key],
-			set: (value) => actions.search({ options: { [key]: value } }),
+			set: (value) => controller.search({ options: { [key]: value } }),
 		});
 
-	if (open) {
-		watch(open, (isOpen) => (isOpen ? actions.search() : actions.close()));
-	}
-
 	return {
+		open: computed({
+			get: () => state.value.open,
+			set: (value) => controller.setOpen(value),
+		}),
+		toggle: controller.toggle,
 		query: computed({
 			get: () => session.value.query,
-			set: (query) => actions.search({ query }),
+			set: (query) => controller.search({ query }),
 		}),
 		replacement: computed({
 			get: () => session.value.replacement,
-			set: actions.setReplacement,
+			set: controller.setReplacement,
 		}),
 		matchCase: option('matchCase'),
 		includeNotes: option('includeNotes'),
@@ -92,13 +113,13 @@ export function useFindReplace({
 		matches: computed(() => session.value.matches),
 		matchCount: computed(() => session.value.matches.length),
 		currentMatch: computed(() => session.value.current),
-		next: actions.next,
-		prev: actions.previous,
+		next: controller.next,
+		prev: controller.previous,
 		replaceCurrent: () => {
-			actions.replaceCurrent();
+			controller.replaceCurrent();
 		},
 		replaceAll: () => {
-			actions.replaceAll();
+			controller.replaceAll();
 		},
 	};
 }

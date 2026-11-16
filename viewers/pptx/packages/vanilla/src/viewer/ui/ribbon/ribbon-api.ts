@@ -39,7 +39,8 @@ export interface Ribbon {
 	 * Editing > Find; exposed so the editor keymap can drive Ctrl/Cmd+F, which
 	 * this binding had no shortcut for at all.
 	 */
-	toggleFindReplace(): void;
+	/** Close the bar open in `mode`, switch its mode, or open it (Ctrl+F / Ctrl+H). */
+	toggleFindReplace(mode?: 'find' | 'replace'): void;
 	openEquationEditor(id: string, omml: Record<string, unknown>): void;
 	/** Title-bar command search: the Insert > Equation panel, SmartArt dialog, Design > Slide Size and Browse Themes. */
 	toggleEquationPanel(): void;

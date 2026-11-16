@@ -176,4 +176,23 @@ describe('useFindReplace', () => {
 		expect(h.api().findResults).toHaveLength(1);
 		expect(h.onShowMatch).toHaveBeenLastCalledWith(1, null);
 	});
+
+	it('toggles with Ctrl+F, keeps the bar open on Ctrl+H, and searches again on reopen', () => {
+		const { api } = mount([textSlide('a', 'foo foo')]);
+		const press = (key: string) =>
+			act(() => {
+				window.dispatchEvent(new KeyboardEvent('keydown', { key, ctrlKey: true }));
+			});
+		press('f');
+		expect(api().findReplaceOpen).toBeTruthy();
+		act(() => api().setFindQuery('foo'));
+		expect(api().findResults).toHaveLength(2);
+		press('h');
+		expect(api().findReplaceOpen).toBeTruthy();
+		press('h');
+		expect(api().findReplaceOpen).toBeFalsy();
+		expect(api().findResults).toHaveLength(0);
+		press('f');
+		expect(api().findResults).toHaveLength(2);
+	});
 });

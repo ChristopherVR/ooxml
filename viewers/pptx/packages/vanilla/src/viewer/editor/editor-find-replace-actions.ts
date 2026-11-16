@@ -1,12 +1,16 @@
 import {
+	createFindReplaceController,
 	DEFAULT_FIND_REPLACE_OPTIONS,
 	findInSlides,
 	findReplacementAvailability,
-	findReplaceSessionActions,
 	findReplaceStatus,
-	INITIAL_FIND_REPLACE_SESSION,
 } from 'ooxml-ui/pptx';
-import type { FindReplaceOptions, FindReplaceSession, FindReplaceStatus } from 'ooxml-ui/pptx';
+import type {
+	FindReplaceController,
+	FindReplaceMode,
+	FindReplaceOptions,
+	FindReplaceStatus,
+} from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from '../state';
 import { clampSlideIndex } from '../state';
@@ -66,6 +70,13 @@ export interface FindReplaceActions {
 	status?(): FindReplaceStatus;
 	/** The panel closed: drop the matches (the query stays for the next search). */
 	close?(): void;
+	/**
+	 * The shared bar controller (open state and mode plus the session), so the panel's open
+	 * flag follows the one rule every binding has; a host without it keeps its own flag.
+	 */
+	bar?: Pick<FindReplaceController, 'getSnapshot' | 'setOpen'> & {
+		toggle(mode?: FindReplaceMode): void;
+	};
 }
 
 export interface FindReplaceActionsDeps {
@@ -88,39 +99,34 @@ const sameScopes = (a: FindReplaceOptions, b: FindReplaceOptions): boolean =>
 
 export function createFindReplaceActions(deps: FindReplaceActionsDeps): FindReplaceActions {
 	const { store, ops } = deps;
-	let session: FindReplaceSession = INITIAL_FIND_REPLACE_SESSION;
-	const actions = findReplaceSessionActions(
-		{
-			get: () => session,
-			set: (next) => {
-				session = next;
-				// The canvas marks the matches in the text (see `ViewerState.findMatches`).
-				const state = store.get();
-				if (state.findMatches !== next.matches || state.findMatchIndex !== next.current) {
-					store.set({ findMatches: next.matches, findMatchIndex: next.current });
-				}
-			},
+	const actions = createFindReplaceController({
+		slides: () => store.get().slides,
+		commit: (slides) => {
+			ops.pushHistory();
+			store.set({ slides: [...slides] });
+			ops.commitChange();
 		},
-		{
-			slides: () => store.get().slides,
-			commit: (slides) => {
-				ops.pushHistory();
-				store.set({ slides: [...slides] });
-				ops.commitChange();
-			},
-			navigate: ({ slideIndex, elementId }) => {
-				const state = store.get();
-				// The editor drops the selection on a slide change, so go first, then select.
-				if (state.currentSlide !== slideIndex) {
-					store.set({ currentSlide: clampSlideIndex(slideIndex, state.slides.length) });
-				}
-				ops.select(elementId);
-			},
+		navigate: ({ slideIndex, elementId }) => {
+			const state = store.get();
+			// The editor drops the selection on a slide change, so go first, then select.
+			if (state.currentSlide !== slideIndex) {
+				store.set({ currentSlide: clampSlideIndex(slideIndex, state.slides.length) });
+			}
+			ops.select(elementId);
 		},
-	);
+	});
+	const current = () => actions.getSnapshot().session;
+	// The canvas marks the matches in the text (see `ViewerState.findMatches`).
+	actions.subscribe(() => {
+		const next = current();
+		const state = store.get();
+		if (state.findMatches !== next.matches || state.findMatchIndex !== next.current) {
+			store.set({ findMatches: next.matches, findMatchIndex: next.current });
+		}
+	});
 	/** Whether the session already holds the search for this query and these scopes. */
 	const holds = (query: string, options: FindReplaceOptions): boolean =>
-		session.query === query && sameScopes(session.options, options);
+		current().query === query && sameScopes(current().options, options);
 	/** Bring the session to the panel's fields before a replace. */
 	const prepare = (query: string, replacement: string, options: FindReplaceOptions): boolean => {
 		if (!store.get().editable || !query) {
@@ -137,7 +143,7 @@ export function createFindReplaceActions(deps: FindReplaceActionsDeps): FindRepl
 		replacementAvailability(query, matchCase, includeNotes, includeChartTitles, includeChartData) {
 			const options = scopes(matchCase, includeNotes, includeChartTitles, includeChartData);
 			return holds(query, options)
-				? findReplacementAvailability(session.matches, session.current)
+				? findReplacementAvailability(current().matches, current().current)
 				: findReplacementAvailability(findInSlides(store.get().slides, query, options), 0);
 		},
 		search(query, matchCase, includeNotes, includeChartTitles, includeChartData) {
@@ -145,7 +151,7 @@ export function createFindReplaceActions(deps: FindReplaceActionsDeps): FindRepl
 				query,
 				options: scopes(matchCase, includeNotes, includeChartTitles, includeChartData),
 			});
-			return session.matches.length;
+			return current().matches.length;
 		},
 		replaceCurrent(
 			query,
@@ -164,7 +170,8 @@ export function createFindReplaceActions(deps: FindReplaceActionsDeps): FindRepl
 		},
 		next: actions.next,
 		previous: actions.previous,
-		status: () => findReplaceStatus(session),
+		status: () => findReplaceStatus(current()),
 		close: actions.close,
+		bar: actions,
 	};
 }

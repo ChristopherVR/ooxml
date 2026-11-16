@@ -265,9 +265,9 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 	};
 
 	/** Ctrl+F / Ctrl+H: the host's find bar when it takes it, else the ribbon's panel. */
-	const toggleFindReplace = (): void => {
+	const toggleFindReplace = (mode?: 'find' | 'replace'): void => {
 		if (!deps.requestHostDialog?.({ kind: 'find' })) {
-			deps.getChrome().ribbon?.toggleFindReplace();
+			deps.getChrome().ribbon?.toggleFindReplace(mode);
 		}
 	};
 
@@ -365,8 +365,10 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 				editActions.clearFormatting();
 				return true;
 			case 'find':
+				toggleFindReplace('find');
+				return true;
 			case 'findReplace':
-				toggleFindReplace();
+				toggleFindReplace('replace');
 				return true;
 			default:
 				return false;
@@ -600,7 +602,7 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		// Same action as Home > Editing > Find. Null when the host disabled the
 		// ribbon, in which case there is no find panel to open and the chord
 		// correctly does nothing.
-		toggleFind: () => toggleFindReplace(),
+		toggleFind: () => toggleFindReplace('find'),
 		closeShortcuts: () => {
 			const panel = deps.getChrome().shortcuts;
 			if (!panel.isOpen()) {
@@ -615,7 +617,7 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		pasteFormat: pasteFormatOntoSelection,
 		addSlide: () => editActions.addSlide(),
 		openHyperlink: openHyperlinkForSelection,
-		toggleFindReplace: () => toggleFindReplace(),
+		toggleFindReplace: () => toggleFindReplace('replace'),
 		clearFormatting: () => editActions.clearFormatting(),
 		cycleSelection: (direction) => {
 			const state = store.get();

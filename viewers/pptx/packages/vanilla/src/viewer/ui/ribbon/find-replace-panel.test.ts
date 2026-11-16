@@ -156,4 +156,17 @@ describe('createFindReplacePanel', () => {
 		p.view.setOpen(true);
 		expect(p.status()).toBe('1 of 3');
 	});
+
+	it('keeps the bar open when Ctrl+H follows Ctrl+F, and searches again on reopen', () => {
+		const p = panel();
+		p.type('quarter');
+		expect(p.store.get().findMatches).toHaveLength(3);
+		p.view.toggle('replace');
+		expect(p.view.isOpen()).toBeTruthy();
+		p.view.toggle('replace');
+		expect(p.view.isOpen()).toBeFalsy();
+		expect(p.store.get().findMatches).toHaveLength(0);
+		p.view.toggle('find');
+		expect(p.store.get().findMatches).toHaveLength(3);
+	});
 });

@@ -1,17 +1,19 @@
-import { findReplaceSessionActions, INITIAL_FIND_REPLACE_SESSION } from 'ooxml-ui/pptx';
+import { createFindReplaceController } from 'ooxml-ui/pptx';
 import type {
+	FindReplaceController,
+	FindReplaceMode,
 	FindReplaceOptions,
-	FindReplaceSession,
-	FindReplaceSessionActions,
 	FindResult,
 } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 
+import { controllerState } from '../state/controller-state';
+import type { ControllerState } from '../state/controller-state';
+
 /**
- * Reactive Find & Replace panel state for the Home tab's Editing group.
- * The session (matches, current match, replace plans, the search after a
- * replace) is the shared `find-replace-session` model, kept here in
- * `$state.raw`; this class adds the panel's open flag and routes every replace
+ * Reactive Find & Replace panel state for the Home tab's Editing group: the
+ * shared `createFindReplaceController` (the bar's open flag and mode, and the
+ * search session) read through `controllerState`, with every replace routed
  * through the host's history-tracked commit so undo/redo cover it.
  */
 export interface FindReplaceDeps {
@@ -23,39 +25,47 @@ export interface FindReplaceDeps {
 }
 
 export class FindReplaceState {
-	open = $state(false);
-	#session = $state.raw<FindReplaceSession>(INITIAL_FIND_REPLACE_SESSION);
-	readonly #actions: FindReplaceSessionActions;
+	readonly controller: FindReplaceController;
+	readonly #state: ControllerState<ReturnType<FindReplaceController['getSnapshot']>>;
 
 	constructor(deps: FindReplaceDeps) {
-		this.#actions = findReplaceSessionActions(
-			{
-				get: () => this.#session,
-				set: (next) => {
-					this.#session = next;
-				},
-			},
-			{
-				slides: () => deps.getSlides(),
-				commit: (next) => deps.commitSlides([...next]),
-				navigate: ({ slideIndex, elementId }) => deps.onNavigate?.(slideIndex, elementId),
-			},
-		);
+		this.controller = createFindReplaceController({
+			slides: () => deps.getSlides(),
+			commit: (next) => deps.commitSlides([...next]),
+			navigate: ({ slideIndex, elementId }) => deps.onNavigate?.(slideIndex, elementId),
+		});
+		this.#state = controllerState(this.controller);
 	}
 
-	/** The query; setting it searches. */
+	get #session() {
+		return this.#state.current.session;
+	}
+
+	/** Whether the bar is open; setting it opens (searching again) or closes it. */
+	get open(): boolean {
+		return this.#state.current.open;
+	}
+	set open(open: boolean) {
+		this.controller.setOpen(open);
+	}
+
+	/** Find (Ctrl+F) or Find and Replace (Ctrl+H). */
+	get mode(): FindReplaceMode {
+		return this.#state.current.mode;
+	}
+
 	get query(): string {
 		return this.#session.query;
 	}
 	set query(query: string) {
-		this.#actions.search({ query });
+		this.controller.search({ query });
 	}
 
 	get replacement(): string {
 		return this.#session.replacement;
 	}
 	set replacement(replacement: string) {
-		this.#actions.setReplacement(replacement);
+		this.controller.setReplacement(replacement);
 	}
 
 	get matchCase(): boolean {
@@ -103,45 +113,39 @@ export class FindReplaceState {
 		return this.results.length;
 	}
 
-	toggle(): void {
-		if (this.open) {
-			this.close();
-			return;
-		}
-		this.open = true;
-		this.search();
+	/** Ctrl+F / Ctrl+H: close the bar open in `mode`, switch its mode, or open it. */
+	toggle(mode?: FindReplaceMode): void {
+		this.controller.toggle(mode);
 	}
 
-	/** Close the panel; its matches go with it. */
 	close(): void {
-		this.open = false;
-		this.#actions.close();
+		this.controller.close();
 	}
 
 	/** Re-run the search from the current query and scopes and jump to the first match. */
 	search(): void {
-		this.#actions.search();
+		this.controller.search();
 	}
 
 	next(): void {
-		this.#actions.next();
+		this.controller.next();
 	}
 
 	prev(): void {
-		this.#actions.previous();
+		this.controller.previous();
 	}
 
 	/** Replace the current match, then move on to the next one. */
 	replaceCurrent(): void {
-		this.#actions.replaceCurrent();
+		this.controller.replaceCurrent();
 	}
 
 	/** Replace every match of the current query, then search again. */
 	replaceAll(): void {
-		this.#actions.replaceAll();
+		this.controller.replaceAll();
 	}
 
 	#setOption(options: Partial<FindReplaceOptions>): void {
-		this.#actions.search({ options });
+		this.controller.search({ options });
 	}
 }

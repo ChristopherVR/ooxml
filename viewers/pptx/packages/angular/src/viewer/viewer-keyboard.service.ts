@@ -154,7 +154,7 @@ export class ViewerKeyboardService {
 			pasteFormat: () => this.pasteFormat(),
 			newSlide: () => this.editor.addSlide(idx),
 			hyperlink: () => this.openHyperlink(),
-			findReplace: () => this.findReplace.openFindReplace(),
+			findReplace: () => this.findReplace.toggle('replace'),
 			clearFormatting: () =>
 				this.applyTextPatch(idx, {
 					bold: false,
@@ -212,12 +212,7 @@ export class ViewerKeyboardService {
 	 * bar, which is what every other binding's single-panel toggle does.
 	 */
 	private toggleFind(): void {
-		if (this.findReplace.showFind() || this.findReplace.showFindReplace()) {
-			this.findReplace.showFind.set(false);
-			this.findReplace.closeFindReplace();
-			return;
-		}
-		this.findReplace.showFind.set(true);
+		this.findReplace.toggle('find');
 	}
 
 	/**

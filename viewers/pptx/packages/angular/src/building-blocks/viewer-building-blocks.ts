@@ -203,8 +203,7 @@ export class ViewerBuildingBlocks {
 			const replace = this.findService.showFindReplace();
 			if (find || replace) {
 				untracked(() => {
-					this.findService.showFind.set(false);
-					this.findService.showFindReplace.set(false);
+					this.findService.close();
 					if (find) {
 						this.findBar.toggle();
 					} else {
