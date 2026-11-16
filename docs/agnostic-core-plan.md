@@ -293,14 +293,28 @@ would keep two XML models alive.
    `pptx/__tests__/integration/drawingml-run-neutral-parity.test.ts` (80,232 elements, 150,587
    fields, read and saved).
 
+   **pptx body properties (2026-11-16).** `drawingml/text-body-codec.ts` holds the `a:bodyPr`
+   attribute and autofit rules over the same element view; the DOM reader and writer use it, and
+   so does pptx through `pptx/core/utils/body-properties-neutral.ts`: `applyBodyProperties`
+   (`PptxHandlerRuntimeShapeBodyParsing`), `body-properties-parser`, the placeholder defaults
+   (`PptxHandlerRuntimePlaceholderDefaults`) and the body writer of `applyTextBodyContent`
+   (`PptxHandlerRuntimeSaveTextWriter`: anchor, direction, columns, overflow, wrap, insets, flags,
+   autofit). The unused duplicate `text-body-properties-parser` was deleted. Old and new were
+   compared over the committed decks' 26,999 `a:bodyPr` elements (read style and written node) and
+   21,186 shapes' placeholder defaults: equal; 427 bodies written from scratch list their attributes
+   in schema order, while a merge into an existing `a:bodyPr` keeps its order. The permanent harness
+   is `pptx/__tests__/integration/drawingml-body-neutral-parity.test.ts` (26,999 elements, 53,047
+   fields, read and saved).
+
    **Remains:** painting DAG sibling composition, masks, blends, transforms and references (see
    docs/parity-checklist.md); the text-run effect readers; theme gradient stops still come from the
    gradient codec over the paired object node (`rawNode`), because their `originalColorXml`
    round-trip data is object-tree XML, as does the background `bgRef` gradient; a picture theme
-   fill is not drawn; an edited theme slot is written as `srgbClr`. Of the pptx text parsers, the paragraph
-   and run property families run on the shared codecs (above); body properties (`a:bodyPr`:
-   `PptxHandlerRuntimeShapeBodyParsing`, `text-body-properties-parser`, the save text writer), the
-   bullet colour and picture bullets, and the SmartArt text fabrication writer
+   fill is not drawn; an edited theme slot is written as `srgbClr`. Of the pptx text parsers, the paragraph,
+   run and body property families run on the shared codecs (above); text warp and body 3D
+   (`a:prstTxWarp`, `text-body-scene3d`, `text-body-sp3d`), the table cell and SmartArt drawing
+   shape readers of `a:tcPr`/`a:bodyPr` anchors, the bullet colour and picture bullets, run
+   colours, fills, outlines, effects and hyperlinks, and the SmartArt text fabrication writer
    (`smartart-fabrication-text`) still read and write their own object tree; the xlsx theme writer
    still patches the part itself (a neutral writer exists as `drawingml/write-theme.ts`; whether xlsx
    should adopt it is open).

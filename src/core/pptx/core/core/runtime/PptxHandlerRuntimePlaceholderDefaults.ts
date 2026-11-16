@@ -1,4 +1,9 @@
 import { XmlObject, PlaceholderTextLevelStyle, PlaceholderDefaults } from '../../types';
+import {
+	autofitFromDrawing,
+	bodyInsetsFromDrawing,
+	objectBodyProperties,
+} from '../../utils/body-properties-neutral';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimePlaceholderStyles';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
@@ -29,69 +34,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const txBody = shape['p:txBody'] as XmlObject | undefined;
 		const bodyPr = txBody?.['a:bodyPr'] as XmlObject | undefined;
 		if (bodyPr) {
-			const lIns = bodyPr['@_lIns'];
-			if (lIns !== undefined) {
-				const val = Number.parseInt(String(lIns), 10);
-				if (Number.isFinite(val)) {
-					defaults.bodyInsetLeft = val / PptxHandlerRuntime.EMU_PER_PX;
-				}
+			// Insets, anchor, autofit and wrap through the shared DrawingML body codec.
+			const body = objectBodyProperties(bodyPr);
+			Object.assign(defaults, bodyInsetsFromDrawing(body));
+			if (body.anchor) {
+				defaults.textAnchor = body.anchor;
 			}
-			const tIns = bodyPr['@_tIns'];
-			if (tIns !== undefined) {
-				const val = Number.parseInt(String(tIns), 10);
-				if (Number.isFinite(val)) {
-					defaults.bodyInsetTop = val / PptxHandlerRuntime.EMU_PER_PX;
-				}
-			}
-			const rIns = bodyPr['@_rIns'];
-			if (rIns !== undefined) {
-				const val = Number.parseInt(String(rIns), 10);
-				if (Number.isFinite(val)) {
-					defaults.bodyInsetRight = val / PptxHandlerRuntime.EMU_PER_PX;
-				}
-			}
-			const bIns = bodyPr['@_bIns'];
-			if (bIns !== undefined) {
-				const val = Number.parseInt(String(bIns), 10);
-				if (Number.isFinite(val)) {
-					defaults.bodyInsetBottom = val / PptxHandlerRuntime.EMU_PER_PX;
-				}
-			}
-			const anchor = String(bodyPr['@_anchor'] || '').trim();
-			if (anchor.length > 0) {
-				defaults.textAnchor = anchor;
-			}
-
-			if (bodyPr['a:spAutoFit'] !== undefined) {
-				defaults.autoFit = true;
-				defaults.autoFitMode = 'shrink';
-			} else if (bodyPr['a:normAutofit'] !== undefined) {
-				defaults.autoFit = true;
-				defaults.autoFitMode = 'normal';
-				const fontScaleRaw = parseInt(
-					String((bodyPr['a:normAutofit'] as Record<string, unknown>)?.['@_fontScale'] || ''),
-					10,
-				);
-				if (Number.isFinite(fontScaleRaw) && fontScaleRaw > 0) {
-					// OOXML fontScale is in thousandths of a percent (90000 = 90%)
-					defaults.autoFitFontScale = fontScaleRaw / 100000;
-				}
-				const lnSpcReductionRaw = parseInt(
-					String((bodyPr['a:normAutofit'] as Record<string, unknown>)?.['@_lnSpcReduction'] || ''),
-					10,
-				);
-				if (Number.isFinite(lnSpcReductionRaw) && lnSpcReductionRaw > 0) {
-					// OOXML lnSpcReduction is in thousandths of a percent (20000 = 20%)
-					defaults.autoFitLineSpacingReduction = lnSpcReductionRaw / 100000;
-				}
-			} else if (bodyPr['a:noAutofit'] !== undefined) {
-				defaults.autoFit = false;
-				defaults.autoFitMode = 'none';
-			}
-
-			const wrapAttr = String(bodyPr['@_wrap'] || '')
-				.trim()
-				.toLowerCase();
+			Object.assign(defaults, autofitFromDrawing(body.autofit));
+			const wrapAttr = body.wrap?.toLowerCase();
 			if (wrapAttr === 'none' || wrapAttr === 'square') {
 				defaults.textWrap = wrapAttr;
 			}

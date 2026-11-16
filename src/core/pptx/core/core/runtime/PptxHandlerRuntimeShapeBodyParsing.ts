@@ -1,7 +1,12 @@
 import { XmlObject, TextStyle } from '../../types';
 import type { PptxShapeLocks, PptxTextWarpPreset } from '../../types';
 import { selectAlternateContentBranch as selectACBranch } from '../../utils/alternate-content';
-import { parseBodyPrBooleanAttrs } from '../../utils/body-properties-parser';
+import {
+	autofitFromDrawing,
+	bodyFlagsFromDrawing,
+	bodyInsetsFromDrawing,
+	objectBodyProperties,
+} from '../../utils/body-properties-neutral';
 import { parseTextBodyScene3d } from '../../utils/text-body-scene3d';
 import { parseTextBodySp3d } from '../../utils/text-body-sp3d';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeBulletParsing';
@@ -120,32 +125,40 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			return result;
 		}
 
-		const verticalAlign = this.textVerticalAlignFromDrawingValue(bodyPr['@_anchor']);
+		// The attributes and the autofit choice are read by the shared DrawingML
+		// body codec (`body-properties-neutral`); text warp, 3D and linked text
+		// boxes are read here and by their own readers.
+		const body = objectBodyProperties(bodyPr);
+
+		const verticalAlign = this.textVerticalAlignFromDrawingValue(body.anchor);
 		if (verticalAlign) {
 			textStyle.vAlign = verticalAlign;
 		}
 
-		const textDirection = this.textDirectionFromDrawingValue(bodyPr['@_vert']);
+		const textDirection = this.textDirectionFromDrawingValue(body.vertical);
 		if (textDirection) {
 			textStyle.textDirection = textDirection;
 		}
 
-		const bodyColumnCount = this.normalizeTextColumnCount(bodyPr['@_numCol']);
+		const bodyColumnCount = this.normalizeTextColumnCount(body.columnCount);
 		if (bodyColumnCount && bodyColumnCount > 1) {
 			textStyle.columnCount = bodyColumnCount;
 		}
 
-		const spcColRaw = parseInt(String(bodyPr['@_spcCol'] || ''), 10);
-		if (Number.isFinite(spcColRaw) && spcColRaw > 0) {
-			textStyle.columnSpacing = spcColRaw / PptxHandlerRuntime.EMU_PER_PX;
+		if (body.columnSpacingEmu !== undefined && body.columnSpacingEmu > 0) {
+			textStyle.columnSpacing = body.columnSpacingEmu / PptxHandlerRuntime.EMU_PER_PX;
 		}
 
-		const hOverflowRaw = bodyPr['@_horzOverflow'] ?? bodyPr['@_hOverflow'];
-		const hOverflow = String(hOverflowRaw || '').trim();
+		// `@hOverflow` is not a CT_TextBodyProperties attribute, but some
+		// producers write it for `@horzOverflow`; it is read as a fallback.
+		const hOverflow =
+			bodyPr['@_horzOverflow'] !== undefined
+				? body.horizontalOverflow
+				: String(bodyPr['@_hOverflow'] ?? '').trim();
 		if (hOverflow === 'overflow' || hOverflow === 'clip') {
 			textStyle.hOverflow = hOverflow;
 		}
-		const vertOverflow = String(bodyPr['@_vertOverflow'] || '').trim();
+		const vertOverflow = body.verticalOverflow;
 		if (vertOverflow === 'overflow' || vertOverflow === 'clip' || vertOverflow === 'ellipsis') {
 			textStyle.vertOverflow = vertOverflow;
 		}
@@ -192,69 +205,18 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		parseTextBodyScene3d(bodyPr, textStyle);
 
 		// Auto-fit
-		if (bodyPr['a:spAutoFit'] !== undefined) {
-			textStyle.autoFit = true;
-			textStyle.autoFitMode = 'shrink';
-		} else if (bodyPr['a:normAutofit'] !== undefined) {
-			textStyle.autoFit = true;
-			textStyle.autoFitMode = 'normal';
-			const fontScaleRaw = parseInt(
-				String((bodyPr['a:normAutofit'] as Record<string, unknown>)?.['@_fontScale'] || ''),
-				10,
-			);
-			if (Number.isFinite(fontScaleRaw) && fontScaleRaw > 0) {
-				textStyle.autoFitFontScale = fontScaleRaw / 100000;
-			}
-			const lnSpcReductionRaw = parseInt(
-				String((bodyPr['a:normAutofit'] as Record<string, unknown>)?.['@_lnSpcReduction'] || ''),
-				10,
-			);
-			if (Number.isFinite(lnSpcReductionRaw) && lnSpcReductionRaw > 0) {
-				textStyle.autoFitLineSpacingReduction = lnSpcReductionRaw / 100000;
-			}
-		} else if (bodyPr['a:noAutofit'] !== undefined) {
-			textStyle.autoFit = false;
-			textStyle.autoFitMode = 'none';
-		}
+		Object.assign(textStyle, autofitFromDrawing(body.autofit));
 
 		// Text wrapping mode from a:bodyPr/@wrap
-		const wrapAttr = String(bodyPr['@_wrap'] || '')
-			.trim()
-			.toLowerCase();
+		const wrapAttr = body.wrap?.toLowerCase();
 		if (wrapAttr === 'none') {
 			textStyle.textWrap = 'none';
 		} else if (wrapAttr === 'square') {
 			textStyle.textWrap = 'square';
 		}
 
-		// Body text insets (lIns, tIns, rIns, bIns — EMU values)
-		const parseInset = (attr: string): number | undefined => {
-			const raw = bodyPr[attr];
-			if (raw === undefined) {
-				return undefined;
-			}
-			const val = Number.parseInt(String(raw), 10);
-			return Number.isFinite(val) ? val / PptxHandlerRuntime.EMU_PER_PX : undefined;
-		};
-		const lIns = parseInset('@_lIns');
-		if (lIns !== undefined) {
-			textStyle.bodyInsetLeft = lIns;
-		}
-		const tIns = parseInset('@_tIns');
-		if (tIns !== undefined) {
-			textStyle.bodyInsetTop = tIns;
-		}
-		const rIns = parseInset('@_rIns');
-		if (rIns !== undefined) {
-			textStyle.bodyInsetRight = rIns;
-		}
-		const bIns = parseInset('@_bIns');
-		if (bIns !== undefined) {
-			textStyle.bodyInsetBottom = bIns;
-		}
-
-		// Additional bodyPr boolean attributes
-		parseBodyPrBooleanAttrs(bodyPr, textStyle);
+		// Body text insets (lIns, tIns, rIns, bIns; EMU values) and the flags
+		Object.assign(textStyle, bodyInsetsFromDrawing(body), bodyFlagsFromDrawing(body));
 
 		return result;
 	}

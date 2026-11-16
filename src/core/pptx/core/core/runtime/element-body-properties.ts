@@ -58,7 +58,7 @@ export const ELEMENT_BODY_PROPERTY_KEYS = [
 	'textBodyRotation',
 ] as const satisfies ReadonlyArray<keyof TextStyle>;
 
-type ElementBodyPropertyKey = (typeof ELEMENT_BODY_PROPERTY_KEYS)[number];
+export type ElementBodyPropertyKey = (typeof ELEMENT_BODY_PROPERTY_KEYS)[number];
 
 /** Whether the element style says anything at all about body-level properties. */
 export function hasElementBodyProperties(style: TextStyle | undefined): boolean {

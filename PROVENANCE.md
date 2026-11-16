@@ -3004,6 +3004,19 @@ follow-text markers) and tab stops run on one codec shared with the DOM text rea
 | `pptx/core/utils/paragraph-properties-parser.ts`, `tab-stops.ts`, the bullet readers of `PptxHandlerRuntimeBulletParsing` and `PlaceholderStyles`          | `pptx/core/utils/paragraph-properties-neutral.ts` (adapter)   | The object-tree readers were deleted; the pptx functions now convert the codec's neutral values to px and the pptx `TextStyle`/`BulletInfo` fields                      |
 | `PptxHandlerRuntimeSaveParagraphHelpers` (`a:pPr` attributes, bullets, exact line spacing), `SaveSlideUtils` spacing, `placeholder-level-style-serializer` | the codec's entries through `paragraph-properties-neutral.ts` | Values encoded by the codec; a rebuilt `a:pPr` now writes its attributes in schema order (the order PowerPoint writes) instead of the old fixed `lvl algn rtl marL ...` |
 
+## PowerPoint body properties on the shared DrawingML codec (2026-11-16)
+
+Source: this repository, no external code. Step 3 of `docs/agnostic-core-plan.md`: the pptx
+reader and writer of the `a:bodyPr` attributes and autofit choice run on one codec shared with
+the DOM text reader and writer.
+
+| From                                                                                                                                                                                     | To                                                     | What changed                                                                                                      |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `drawingml/read-text-body.ts` and `write-text-body.ts` `a:bodyPr` attribute and autofit code                                                                                             | `src/core/drawingml/text-body-codec.ts`                | Rewritten over the `DrawingTextElementView`; attribute entries in schema order                                    |
+| `applyBodyProperties` attribute and autofit reading (`PptxHandlerRuntimeShapeBodyParsing`), `body-properties-parser`, the placeholder defaults (`PptxHandlerRuntimePlaceholderDefaults`) | `pptx/core/utils/body-properties-neutral.ts` (adapter) | The object-tree readers were deleted; the pptx code converts the codec's neutral values to the `TextStyle` fields |
+| The `a:bodyPr` writer of `applyTextBodyContent` (`PptxHandlerRuntimeSaveTextWriter`)                                                                                                     | the codec's entries, merged into the existing node     | Values encoded by the codec                                                                                       |
+| `pptx/core/utils/text-body-properties-parser.ts` and its test                                                                                                                            | (deleted)                                              | An unused duplicate of the runtime reader                                                                         |
+
 ## PowerPoint run properties on the shared DrawingML codec (2026-11-16)
 
 Source: this repository, no external code. Step 3 of `docs/agnostic-core-plan.md`: the pptx
