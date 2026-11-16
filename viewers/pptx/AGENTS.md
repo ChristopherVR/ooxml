@@ -122,6 +122,10 @@ Logic without its own state is a plain function set instead:
 - **Slide show steps**: `resolveShowForward` and `resolveShowBackward`
   (`render/presentation-show-step.ts`); the binding performs the step with its own index,
   overlay and timers.
+- **Ribbon tab row**: `buildRibbonTabRow` (`render/ribbon-tab-row.ts`) drawn by the shared
+  `pptx-ui-ribbon-tabs` (`office-ui-ribbon`); the binding routes `tab-select` by its `kind` and
+  `collapse-toggle` to the Ribbon Display Options controller. The tabs live in the element's
+  shadow root: tests find them with `ribbonTabButtons` and `ribbonTab`.
 
 Both rules are expanded, with the concrete failures that motivated them, under
 [Key Conventions](#key-conventions).

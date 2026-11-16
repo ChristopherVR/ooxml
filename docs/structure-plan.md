@@ -369,8 +369,7 @@ Implementation:
   `pptx-ui-ribbon-actions` subclass at the right end of their own tab row
   (Record, Comments, Share). Word gained a Share entry point (a cancelable
   `file-command`, the host supplies the transport). The pptx tab row itself
-  is still a per-binding look-alike of the shared ribbon tabs; replacing it
-  with `office-ui-ribbon` is the remaining unification step.
+  moved onto `office-ui-ribbon` on 2026-11-16 (section 5).
 
 ### Wave 5 (open items, status 2026-10-22)
 
@@ -495,7 +494,7 @@ The Wave 6 next list was a historical checkpoint. Labels/paint saves, Word/Excel
 SmartArt styles/colours/generated caches and shared advanced chart controls have since landed.
 Current work finishes the PowerPoint compatibility-adapter migration and its exhaustive admission,
 corpus and native checks. Remaining independent framework work includes the presentation controller
-(timers, annotations, presenter window) and pptx ribbon tab-row migration.
+(timers, annotations, presenter window).
 
 The Fill inspector section landed on 2026-11-16: `SHAPE_FILL_MODE_SECTIONS` and
 `SHAPE_FILL_OPTIONS_SECTIONS` (`render/inspector/shape-fill-fields.ts`) are drawn by each binding's
@@ -510,3 +509,19 @@ kinds, shows the solid colour only for a solid fill, transparency 0-100 for a fi
 opacity 0-100 and a pattern swatch grid, and adds a stop halfway along the last gap. A slide
 background fill saves as `useBgFill`; the canvas still draws it only after a reopen.
 See the active delivery ledger and agnostic plan for implemented coverage and residual limits.
+
+### PowerPoint tab row on `office-ui-ribbon` (landed 2026-11-16)
+
+The five PowerPoint bindings draw their ribbon tab row with `pptx-ui-ribbon-tabs`, the shared
+`office-ui-ribbon` under the pptx tag (token bridge, `tab-select` and `collapse-toggle` events).
+`office-ui-ribbon` gained `items`, a tab row whose panels live elsewhere: the host owns the
+selection and hears every choice, so a click on the selected tab still peeks a collapsed ribbon.
+One descriptor, `buildRibbonTabRow` (`src/ui/src/pptx/render/ribbon-tab-row.ts`), decides the tabs
+(fixed tabs with File first, add-in tabs, then the contextual tabs such as Shape Format, Picture
+Format, Chart Design and Table Design), their labels, ScreenTips and kinds, and the selected tab;
+`hiddenActions` and Customize Ribbon filter it. Each binding builds that state from its own stores
+and routes the two events. Record, Comments and Share, and Ribbon Display Options stay native
+templates in the element's `actions` slot; the tab panels and commands are unchanged. Ribbon
+Display Options keep their own controller (`createRibbonDisplayController`), so the element's own
+collapse button is not used. Binding tests reach the tabs through `ribbonTabButtons` and
+`ribbonTab`, since they live in the element's shadow root.
