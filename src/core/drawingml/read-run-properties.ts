@@ -1,8 +1,8 @@
 // DrawingML run properties reader (`a:rPr`, `a:defRPr`, `a:endParaRPr`, CT_TextCharacterProperties)
-// over the shared DOM. Semantics follow the PowerPoint reader this replaces
-// (`pptx/core/utils/text-run-properties-parser.ts`): tolerant booleans, an authored `baseline="0"`
-// kept, typefaces trimmed; values stay in the file's units.
-import { parseOoxmlPercent } from '../color/color-primitives';
+// over the shared DOM. The attribute, font slot and `a:rtl` rules are the shared run codec's
+// (`text-run-codec.ts`, which PowerPoint's object-tree reader also runs): an authored
+// `baseline="0"` kept, typefaces trimmed; values stay in the file's units. This reader adds the
+// fills, outline, highlight and hyperlinks and keeps unknown children verbatim.
 import { parseDrawingColorIn } from './drawing-color';
 import { fillElementOf, parseDrawingFill, parseDrawingLine } from './drawing-fill';
 import {
@@ -10,7 +10,6 @@ import {
 	attributeReader,
 	booleanAttribute,
 	elements,
-	integerAttribute,
 	stringAttribute,
 	type XmlElement,
 } from './dom';
@@ -18,6 +17,11 @@ import type { DrawingFont, DrawingHyperlink, DrawingRunProperties } from './text
 import { buildXml } from '../xml/index';
 import { domTextElementView } from './text-element-view';
 import { readDrawingFont } from './text-paragraph-codec';
+import {
+	DRAWING_RUN_FONT_SLOTS,
+	readDrawingRunAttributes,
+	readDrawingRunRightToLeft,
+} from './text-run-codec';
 
 /** The outer XML of an element, for children kept verbatim. */
 export function outerXml(element: XmlElement): string {
@@ -61,54 +65,8 @@ export function parseDrawingHyperlink(element: XmlElement): DrawingHyperlink {
 	return link;
 }
 
-const BOOLEAN_ATTRIBUTES = [
-	['bold', 'b'],
-	['italic', 'i'],
-	['kumimoji', 'kumimoji'],
-	['normalizeHeight', 'normalizeH'],
-	['noProof', 'noProof'],
-	['dirty', 'dirty'],
-	['spellingError', 'err'],
-	['smartTagClean', 'smtClean'],
-] as const;
-
-const STRING_ATTRIBUTES = [
-	['underline', 'u'],
-	['strike', 'strike'],
-	['caps', 'cap'],
-	['language', 'lang'],
-	['altLanguage', 'altLang'],
-	['bookmark', 'bmk'],
-] as const;
-
-const FONT_SLOTS = {
-	latin: 'latin',
-	ea: 'eastAsian',
-	cs: 'complexScript',
-	sym: 'symbol',
-} as const;
-
-function readAttributes(element: XmlElement, out: DrawingRunProperties): void {
-	const size = integerAttribute(element, 'sz');
-	if (size !== undefined) out.sizePt = size / 100;
-	for (const [key, name] of BOOLEAN_ATTRIBUTES) {
-		const value = booleanAttribute(element, name);
-		if (value !== undefined) out[key] = value;
-	}
-	for (const [key, name] of STRING_ATTRIBUTES) {
-		const value = stringAttribute(element, name);
-		if (value) out[key] = value;
-	}
-	const baseline = attributeReader(element)('baseline');
-	const baselineFraction = baseline === undefined ? undefined : parseOoxmlPercent(baseline);
-	if (baselineFraction !== undefined) out.baseline = baselineFraction;
-	const spacing = integerAttribute(element, 'spc');
-	if (spacing !== undefined) out.spacingPt = spacing / 100;
-	const kern = integerAttribute(element, 'kern');
-	if (kern !== undefined) out.kernPt = kern / 100;
-	const smartTagId = integerAttribute(element, 'smtId');
-	if (smartTagId !== undefined) out.smartTagId = smartTagId;
-}
+const FONT_SLOTS: Record<string, (typeof DRAWING_RUN_FONT_SLOTS)[number][1]> =
+	Object.fromEntries(DRAWING_RUN_FONT_SLOTS);
 
 function readChild(child: XmlElement, out: DrawingRunProperties, extra: string[]): void {
 	const name = child.localName;
@@ -120,9 +78,9 @@ function readChild(child: XmlElement, out: DrawingRunProperties, extra: string[]
 		const line = parseDrawingLine(child);
 		if (line) out.line = line;
 		out.lineSourceXml = outerXml(child);
-	} else if (name in FONT_SLOTS) {
+	} else if (Object.hasOwn(FONT_SLOTS, name)) {
 		const font = parseDrawingFont(child);
-		if (font) out[FONT_SLOTS[name as keyof typeof FONT_SLOTS]] = font;
+		if (font) out[FONT_SLOTS[name]!] = font;
 		else extra.push(outerXml(child));
 	} else if (name === 'highlight') {
 		const color = parseDrawingColorIn(child);
@@ -136,10 +94,8 @@ function readChild(child: XmlElement, out: DrawingRunProperties, extra: string[]
 		else extra.push(outerXml(child));
 	} else if (name === 'hlinkClick') out.hyperlinkClick = parseDrawingHyperlink(child);
 	else if (name === 'hlinkMouseOver') out.hyperlinkMouseOver = parseDrawingHyperlink(child);
-	else if (name === 'rtl') {
-		const value = booleanAttribute(child, 'val');
-		out.rightToLeft = value ?? true;
-	} else extra.push(outerXml(child));
+	else if (name === 'rtl') out.rightToLeft = readDrawingRunRightToLeft(domTextElementView(child));
+	else extra.push(outerXml(child));
 }
 
 /** Fills the shared fill writer can express; others stay verbatim in `extraXml`. */
@@ -151,7 +107,7 @@ export function parseDrawingRunProperties(
 ): DrawingRunProperties | undefined {
 	if (!element) return undefined;
 	const out: DrawingRunProperties = {};
-	readAttributes(element, out);
+	readDrawingRunAttributes(domTextElementView(element), out);
 	const extra: string[] = [];
 	const fillElement = fillElementOf(element);
 	for (const child of elements(element)) {

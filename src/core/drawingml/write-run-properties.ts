@@ -6,13 +6,13 @@ import { drawingFillXml } from './write-fill';
 import { patchDrawingLine } from './write-line';
 import type { DrawingFont, DrawingHyperlink, DrawingRunProperties } from './text-model';
 import { drawingFontEntries } from './text-paragraph-codec';
+import { drawingRunAttributeEntries } from './text-run-codec';
 import {
 	appendInSchemaOrder,
 	drawingElement,
 	importDrawingXml,
 	keptChildren,
 	setBoolean,
-	setScaled,
 	setValue,
 	type OrderedChild,
 } from './write-text-xml';
@@ -67,25 +67,7 @@ function writeHyperlink(doc: XmlDocument, local: string, link: DrawingHyperlink)
 }
 
 function setAttributes(element: XmlElement, value: DrawingRunProperties): void {
-	setBoolean(element, 'kumimoji', value.kumimoji);
-	setValue(element, 'lang', value.language);
-	setValue(element, 'altLang', value.altLanguage);
-	setScaled(element, 'sz', value.sizePt, 100);
-	setBoolean(element, 'b', value.bold);
-	setBoolean(element, 'i', value.italic);
-	setValue(element, 'u', value.underline);
-	setValue(element, 'strike', value.strike);
-	setScaled(element, 'kern', value.kernPt, 100);
-	setValue(element, 'cap', value.caps);
-	setScaled(element, 'spc', value.spacingPt, 100);
-	setBoolean(element, 'normalizeH', value.normalizeHeight);
-	setScaled(element, 'baseline', value.baseline, 100000);
-	setBoolean(element, 'noProof', value.noProof);
-	setBoolean(element, 'dirty', value.dirty);
-	setBoolean(element, 'err', value.spellingError);
-	setBoolean(element, 'smtClean', value.smartTagClean);
-	setValue(element, 'smtId', value.smartTagId);
-	setValue(element, 'bmk', value.bookmark);
+	for (const [name, text] of drawingRunAttributeEntries(value)) element.setAttribute(name, text);
 }
 
 function fillChild(doc: XmlDocument, fill: DrawingRunProperties['fill']): OrderedChild | undefined {

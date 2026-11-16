@@ -42,6 +42,7 @@ export * from './theme-color';
 export * from './text-model';
 export * from './text-element-view';
 export * from './text-paragraph-codec';
+export * from './text-run-codec';
 export {
 	parseDrawingFont,
 	parseDrawingHyperlink,
