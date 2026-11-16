@@ -126,6 +126,17 @@ export type {
 	PresentationInkState,
 	PresentationInkTimers,
 } from './presentation-ink-controller';
+export {
+	createCommentsPanelController,
+	findCommentInThread,
+	INITIAL_COMMENTS_PANEL_STATE,
+	replaceSlideComments,
+} from './comments-panel-controller';
+export type {
+	CommentsPanelController,
+	CommentsPanelControllerDeps,
+	CommentsPanelState,
+} from './comments-panel-controller';
 export { createSlideSorterController, slideSorterView } from './slide-sorter-controller';
 export type {
 	SlideSorterClickModifiers,
