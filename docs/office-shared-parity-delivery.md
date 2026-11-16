@@ -121,17 +121,22 @@ axes stay disabled. Each trendline of a series has its own pane section, with Ad
 error bars take literal values or a single-row or single-column range: Excel resolves ranges from
 the workbook, Word and embedded Visio only from cells the chart
 already caches, and an unknown cell refuses the edit. Picture fill relationships are allocated by
-one shared helper (`chart/picture-parts.ts`, over `opc/package-image.ts`) for the `ppt/`, `word/`,
-`xl/` and `visio/` media folders; PowerPoint saves through it. Word, Excel and Visio keep the
-picture choice disabled because the shared painter does not draw picture fills yet. ChartEx exposes
+one shared helper (`chart/picture-parts.ts`, over `opc/package-image.ts`) for every host's media
+folder. The shared painter draws picture fills (stretched, tiled, stacked along bars, with
+transparency) from `ChartSpace.pictureSources`; a Format pane picture is filed under a pending id
+and stored as a media part on save, so Word, Excel and Visio (whose chart is an embedded workbook,
+pictures in its `xl/media/`) offer Picture or texture fill. PowerPoint's pane edits error bars
+(amount, direction, caps and custom values, kept as literals) in all five bindings. ChartEx exposes
 its own supported controls and refuses classic-only advanced requests.
 
 - [x] Broaden classic secondary-axis splits to stacked ends, with merge-back and pair removal.
 - [x] Edit several trendlines per series and custom error-bar sources (values and ranges).
 - [x] Share picture fill relationship allocation across the pptx, docx, xlsx and visio packages.
-- [ ] Paint chart picture fills in the shared renderer, then admit them in Word, Excel and Visio.
-- [ ] Custom error sources in PowerPoint's own chart pane source, and native reopen evidence for
-      the new secondary, trendline and custom-source saves.
+- [x] Paint chart picture fills in the shared renderer, then admit them in Word, Excel and Visio.
+- [x] Custom error sources in PowerPoint's own chart pane source, and native reopen evidence for
+      the new secondary, trendline and custom-source saves (see the 2026-11-16 entry below).
+- [ ] PowerPoint's save of a stacked group's end series moved to the secondary axis (natively read
+      as primary).
 
 ## Integration and evidence
 
@@ -337,6 +342,29 @@ visibility flags. Per-point visibility, position, separator, number format, font
 already go through the shared `pointLabel` action in PowerPoint, Word and Excel; a PowerPoint edit
 of a ChartEx label's text or manual position stays refused, now with a message naming the cause.
 No custom-label node is invented.
+
+### Chart picture fills, error bars and native analysis checks, 2026-11-16
+
+- Shared painter: picture fills on series, points, plot area, chart area, title and legend
+  (`chart/render/chart-picture-paint.ts`); `picture` intent and pending pictures
+  (`chart/edit/picture.ts`); load and save helpers in `chart/picture-parts.ts`.
+- Hosts: Word reads chart pictures at load and stores pending ones for edited and new charts;
+  Excel resolves them from the source package and stores them once the package is zipped; Visio's
+  embedded workbook does the same. Save and reopen tests: `chart/picture-fill-flow.test.ts`
+  (docx, xlsx and visio packages), `xlsx/edit/chart-picture-fill.test.ts`,
+  `xlsx/embedded-chart-space.test.ts`, `ui/src/docx/chart-format-pane.test.ts`,
+  `ui/src/xlsx/chart-format-pane.test.ts`, `ui/src/visio/viewer-chart-editor.test.ts`.
+- PowerPoint: `withChartSeriesErrorBars` and the pane's Error Bars section
+  (`ui/src/pptx/render/chart-format/chart-format-error-bars.test.ts`).
+- Native (`src/core/scripts/chart-analysis-native-acceptance.ps1`, Word, Excel and PowerPoint
+  16.0 through COM, one application at a time): a clustered column with two trendlines, custom
+  error values and picture fills on a series and the plot area, and a stacked column whose last
+  series moved to the secondary axis. Word (`word-analysis.docx`, 2 charts), Excel
+  (`excel-analysis.xlsx`, 2 charts, no repair log) and PowerPoint (`powerpoint-analysis.pptx`)
+  open and read back the series axis groups, trendline counts, error bars and picture or texture
+  fill types. `powerpoint-stacked-secondary.pptx` fails: PowerPoint reads series 3 on the primary
+  axis, because PowerPoint's save does not write the stacked end move (open above). Reads only;
+  painting is not compared.
 
 ### Documentation reconciliation, 2026-10-27
 

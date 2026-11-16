@@ -690,8 +690,10 @@ The labels U3 to U5 are assigned here; the remaining chart UI work was previousl
   adapters. Shared controls cover effects, shape 3D, text, pattern fills, outline joins/ends,
   markers, trendlines/error bars, axis titles and admitted secondary-axis moves. Excel keeps its
   richer gradient editor in a slot and uses the shared pattern editor. Picture fill relationships
-  are allocated by `chart/picture-parts.ts` for every host's media folder (PowerPoint saves through
-  it); Word, Excel and Visio keep the picture choice off until the shared painter draws it.
+  are allocated by `chart/picture-parts.ts` for every host's media folder; the shared painter draws
+  picture fills from `ChartSpace.pictureSources`, a pane picture waits under a pending id until its
+  host saves it, and Word, Excel and Visio offer Picture or texture fill. PowerPoint's pane edits
+  error bars with custom values through `withChartSeriesErrorBars`.
   Secondary authoring retains the first series as the primary render anchor; stacked groups give
   up their first or last series and merge back on return, while a series inside a stack,
   horizontal combinations and unknown-extension splits are refused. The pane shows a section per

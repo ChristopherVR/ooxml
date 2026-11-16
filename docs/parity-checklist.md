@@ -117,9 +117,19 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       trendline) and custom error-bar sources as values or a range (`chart/edit/error-bar-source.ts`;
       Excel reads its workbook, Word and Visio only cells the chart caches). Stacked groups move
       their first or last series to the secondary axis and merge back (`chart/edit/secondary-axis.ts`).
-- [ ] **P1** Chart picture fills are not drawn by `src/core/chart/render`, so Word, Excel and Visio
-      keep Picture or texture fill disabled; relationship allocation is shared
-      (`chart/picture-parts.ts`) and PowerPoint saves through it.
+- [x] **P1** Chart picture fills are drawn by `src/core/chart/render` (stretched, tiled with
+      `a:tile` scale, offset and alignment, stacked along bars for `c:pictureOptions`, with
+      transparency) on series, points, the plot area and the chart area, and Word, Excel and Visio
+      offer Picture or texture fill, saving pending pictures through `chart/picture-parts.ts`.
+      Not painted: tile mirroring, `stackScale` units (drawn as `stack`), crop rectangles and
+      picture effects other than transparency.
+- [x] **P1** PowerPoint's chart Format pane edits error bars (amount, direction, end caps and
+      custom values) in all five bindings; custom amounts are literal values (PowerPoint's model
+      keeps no custom range), and its trendlines are not edited through that pane yet.
+- [ ] **P1** PowerPoint saves a stacked group's last series moved to the secondary axis without the
+      secondary group: the model move succeeds, but the saved part keeps one stacked group and
+      PowerPoint reads the series on the primary axis (`chart-analysis-native-acceptance.ps1`).
+      Word and Excel save the same move natively.
 - [ ] **P2** `c:userShapes` (shapes over a chart) is parsed but not drawn; surface charts have no
       dedicated painter.
 - [x] **P2** Equation ownership audited: all 11 non-test `latex-*` and `omml-*` modules in
