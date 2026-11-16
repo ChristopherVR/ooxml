@@ -91,7 +91,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P1** Equations in Excel text boxes and in Visio (`ooxml-core/math` and
       `src/ui/src/docx/equation-*` are the template).
 - [ ] **P1** SmartArt layouts the preview marks approximate (`src/core/diagram/layout-preview.ts`),
-      3-D rendering (a spatial camera is not drawn; 3-D shapes paint flattened) and bent hierarchy
+      3-D rendering in Word and Excel (approximate: a lit SVG bevel, stacked extrusion copies and
+      the Scene styles' camera as a per-shape affine projection; no hidden surfaces, material
+      model or contour, and not compared against Office's pixels) and bent hierarchy
       connectors; the built-in catalogue has 176 layouts (`diagram/builtin/catalog.ts`), not yet
       checked against Office's gallery.
 - [x] **P1** SmartArt Change Colors and SmartArt Styles offer Office's full built-in catalogue in

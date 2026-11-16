@@ -1,6 +1,6 @@
 import type { DiagramPictureResolver } from './smartart-picture';
 import { hexToRgbChannels } from 'ooxml-core/color';
-import { resolveDrawingColor } from 'ooxml-core/diagram';
+import { resolveDiagramSceneCamera, resolveDrawingColor } from 'ooxml-core/diagram';
 import type { DiagramDrawing } from 'ooxml-core/diagram';
 import type { DrawingColor } from 'ooxml-core/drawingml';
 
@@ -8,6 +8,7 @@ import { diagramShapeElement } from './smartart-geometry';
 import { diagramFill } from './smartart-paint';
 import { diagramTextElement } from './smartart-text';
 import { diagramEffects } from './smartart-effects';
+import { paintDiagramShape3d, projectedPlacement, type SmartArt3dPlacement } from './smartart-3d';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const EMU_PER_PX = 9525;
@@ -16,8 +17,15 @@ export interface SmartArtRenderReport {
 	shapeCount: number;
 	/** Preset geometries drawn as a plain rectangle because no outline is available here. */
 	approximatedGeometries: string[];
-	/** Shapes that carry 3D scene data: drawn flat, the 3D is kept only in the source part. */
+	/** Shapes that carry 3D the painter cannot draw: drawn flat, the 3D kept in the source part. */
 	flattened3d: number;
+	/**
+	 * Shapes drawn with approximate 3D: a lit bevel, an extrusion along the camera's depth and a
+	 * diagram's spatial camera as a per-shape affine projection. Not Office's 3D renderer.
+	 */
+	approximated3d?: number;
+	/** The spatial camera preset the diagram was projected through. */
+	camera?: string;
 	/** Unsupported fill kinds and approximated path-gradient geometries. */
 	approximatedFills: string[];
 	/** Text layouts that require unavailable fonts or unsupported typography. */
@@ -57,6 +65,16 @@ export function colorToCss(
 	return '#9ca3af';
 }
 
+function diagramExtent(drawing: DiagramDrawing): { width: number; height: number } {
+	let width = 0;
+	let height = 0;
+	for (const { frame } of drawing.shapes) {
+		width = Math.max(width, frame.x + frame.width);
+		height = Math.max(height, frame.y + frame.height);
+	}
+	return { width, height };
+}
+
 /** Render a core `DiagramDrawing` into an `<svg>`: pure DOM construction, no markup injection. */
 export function renderDiagramDrawing(
 	doc: Document,
@@ -76,6 +94,10 @@ export function renderDiagramDrawing(
 	svg.append(defs);
 	let right = 0;
 	let bottom = 0;
+	const camera = resolveDiagramSceneCamera(drawing.scene3d);
+	const extent = drawing.extentEmu ?? diagramExtent(drawing);
+	const centre = { x: extent.width / EMU_PER_PX / 2, y: extent.height / EMU_PER_PX / 2 };
+	if (camera) report.camera = drawing.scene3d?.cameraPreset ?? 'rotation';
 	for (const shape of drawing.shapes) {
 		const { frame } = shape;
 		right = Math.max(right, (frame.x + frame.width) / EMU_PER_PX);
@@ -86,7 +108,23 @@ export function renderDiagramDrawing(
 		const cy = frame.height / EMU_PER_PX / 2;
 		const fx = shape.flipHorizontal ? -1 : 1;
 		const fy = shape.flipVertical ? -1 : 1;
-		const transform = [`translate(${frame.x / EMU_PER_PX} ${frame.y / EMU_PER_PX})`];
+		const placement: SmartArt3dPlacement | undefined = camera
+			? {
+					camera,
+					centre,
+					matrix: projectedPlacement(camera, centre, {
+						x: frame.x / EMU_PER_PX,
+						y: frame.y / EMU_PER_PX,
+						width: frame.width / EMU_PER_PX,
+						height: frame.height / EMU_PER_PX,
+					}),
+				}
+			: undefined;
+		const transform = [
+			placement
+				? `matrix(${placement.matrix.join(' ')})`
+				: `translate(${frame.x / EMU_PER_PX} ${frame.y / EMU_PER_PX})`,
+		];
 		if (shape.rotation) transform.push(`rotate(${shape.rotation} ${cx} ${cy})`);
 		if (fx !== 1 || fy !== 1) {
 			transform.push(`translate(${cx} ${cy}) scale(${fx} ${fy}) translate(${-cx} ${-cy})`);
@@ -123,9 +161,14 @@ export function renderDiagramDrawing(
 				String(Math.max(0.5, (shape.line?.widthEmu ?? 9525) / EMU_PER_PX)),
 			);
 		group.append(body);
-		if (shape.has3d) {
-			report.flattened3d += 1;
-			group.setAttribute('data-flattened-3d', '');
+		if (shape.has3d || placement) {
+			if (paintDiagramShape3d(doc, defs, group, body, shape, placement)) {
+				report.approximated3d = (report.approximated3d ?? 0) + 1;
+				group.setAttribute('data-approximated-3d', '');
+			} else {
+				report.flattened3d += 1;
+				group.setAttribute('data-flattened-3d', '');
+			}
 		}
 		if (shape.text?.text) group.append(diagramTextElement(doc, shape, scheme, fonts, report));
 		svg.append(group);

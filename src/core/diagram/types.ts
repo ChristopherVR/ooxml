@@ -15,6 +15,7 @@ import type {
 } from '../drawingml/types';
 import type { DrawingRichTextBody } from '../drawingml/text-model';
 import type { DrawingEffectList } from '../drawingml/effect-model';
+import type { DrawingScene3D, DrawingText3DValues } from '../drawingml/text-3d-model';
 
 export type { AttributeReader } from '../drawingml/types';
 import type { DiagramNeutralTextParagraph } from './text/node-text-neutral';
@@ -279,6 +280,14 @@ export interface DiagramDrawingShape {
 	 * diagram stays in the quick-style part; Office's own cache does not carry it either.
 	 */
 	shape3d?: { scene3dXml?: string; shape3dXml?: string; text3dXml?: string };
+	/** The shape's own `a:scene3d` and `a:sp3d` as values, read from a cached drawing. */
+	view3d?: DiagramShape3dView;
+}
+
+/** A shape's 3D: the camera and light of its own scene, and its bevels, extrusion and material. */
+export interface DiagramShape3dView {
+	scene?: DrawingScene3D;
+	shape?: DrawingText3DValues;
 }
 
 /** A parsed `dsp:drawing`: the layout the producing application last computed, cached in the package. */
@@ -287,6 +296,11 @@ export interface DiagramDrawing {
 	extentEmu?: { width: number; height: number };
 	/** Cached drawing relationship id to internal image package part. External media is never resolved. */
 	pictureParts?: Record<string, string>;
+	/**
+	 * The diagram's spatial camera (`dgm:styleDef/dgm:scene3d` of its quick style), when it turns
+	 * the diagram away from the front view. Office keeps it in the quick-style part, not in the cache.
+	 */
+	scene3d?: DrawingScene3D;
 	shapes: DiagramDrawingShape[];
 	issues: DiagramIssue[];
 }

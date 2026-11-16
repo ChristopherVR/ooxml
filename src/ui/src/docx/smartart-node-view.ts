@@ -14,6 +14,7 @@ interface RenderReport {
 	approximatedGeometries?: string[];
 	approximatedFills?: string[];
 	flattened3d?: number;
+	approximated3d?: number;
 }
 
 type SmartArtElement = HTMLElement & {
@@ -62,6 +63,8 @@ export function diagramNotes(
 	if (report?.approximatedFills?.length)
 		notes.push(`Fills approximated: ${report.approximatedFills.join(', ')}.`);
 	if (report?.flattened3d) notes.push(`${report.flattened3d} shape(s) with 3D drawn flat.`);
+	if (report?.approximated3d)
+		notes.push(`${report.approximated3d} shape(s) with 3D drawn approximately.`);
 	if (themed?.alphaDropped) notes.push('Transparent colours are drawn opaque.');
 	if (themed?.unappliedTransforms.length)
 		notes.push(`Colour transforms not applied: ${themed.unappliedTransforms.join(', ')}.`);

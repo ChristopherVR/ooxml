@@ -17,6 +17,7 @@ import type { DiagramDrawing, DiagramIssue } from './types';
 import type { DiagramPictureSource } from './picture-layout';
 import { applyDiagramPictureSources } from './picture-layout';
 import { applyDiagramRoleColors } from './layout-role-style';
+import { diagramQuickStyle3d } from './scene-3d';
 
 /** Original part text, JSON-safe so hosts can retain it through undo and collaboration. */
 export interface DiagramLayoutSource {
@@ -232,6 +233,10 @@ export function previewDiagramLayout(input: DiagramPreviewInput): DiagramPreview
 			});
 			const drawing = diagramDrawingFromViews(views);
 			drawing.extentEmu = { ...input.extentEmu };
+			const scene = input.source?.quickStyleXml
+				? diagramQuickStyle3d(input.source.quickStyleXml).scene
+				: undefined;
+			if (scene) drawing.scene3d = scene;
 			const colors = input.source?.colorsXml
 				? parseDiagramColors(input.source.colorsXml)
 				: undefined;

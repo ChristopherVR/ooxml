@@ -12,6 +12,7 @@ import { parseDrawingColorIn } from '../drawingml/drawing-color';
 import { parseDrawingRichTextBody } from '../drawingml/read-text-body';
 import { parseDrawingEffects } from '../drawingml/drawing-effects';
 import { NS, first, stringAttribute, type XmlElement } from './dom';
+import { readDiagramShape3d } from './scene-3d';
 import type { DiagramDrawing, DiagramDrawingShape, DiagramIssue } from './types';
 
 interface GroupTransform {
@@ -92,6 +93,10 @@ function parseShape(
 		geometry,
 		has3d: Boolean(first(spPr, 'scene3d', NS.a) || first(spPr, 'sp3d', NS.a)),
 	};
+	if (shape.has3d) {
+		const view3d = readDiagramShape3d(spPr);
+		if (view3d) shape.view3d = view3d;
+	}
 	if (transform.rotation !== undefined) shape.rotation = transform.rotation;
 	if (transform.flipHorizontal) shape.flipHorizontal = true;
 	if (transform.flipVertical) shape.flipVertical = true;

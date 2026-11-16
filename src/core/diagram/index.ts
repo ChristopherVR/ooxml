@@ -23,6 +23,8 @@ export * from '../drawingml/drawing-fill';
 export * from '../drawingml/drawing-text';
 export * from '../drawingml/drawing-geometry';
 export * from './drawing';
+export * from './scene-3d';
+export * from './scene-camera';
 export * from './drawing-bounds';
 export * from './drawing-view';
 export * from './drawing-from-views';

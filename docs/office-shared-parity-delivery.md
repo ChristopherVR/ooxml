@@ -96,8 +96,10 @@ remain outside this delivery.
       as Office's own caches carry it; keep the spatial camera in the quick-style part.
 - [x] Name the galleries in every product locale in Word and Excel, from PowerPoint's translations
       (agent-authored; not verified against Office's localized gallery names).
-- [ ] Regenerate a source cache Office laid out (round-trip writer), draw spatial scenes, and show
-      a 3-D pick in PowerPoint's editor before reopening.
+- [x] Draw 3D in the shared painter, approximately: lit bevels, extrusion along the camera's depth
+      and the Scene styles' spatial camera (`smartart-3d.ts`, `diagram/scene-camera.ts`).
+- [ ] Regenerate a source cache Office laid out (round-trip writer), and show a 3-D pick in
+      PowerPoint's editor before reopening.
 
 ## 6. Shared chart controls and ChartEx consumers
 

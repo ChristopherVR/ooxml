@@ -755,8 +755,13 @@ The labels U3 to U5 are assigned here; the remaining chart UI work was previousl
   Word and Excel name the gallery titles, sections and all 52 entries in every product locale
   (`diagram/strings/gallery.ts`), expanded from PowerPoint's own `pptx.gallery.smartArt*` translations so the
   three products agree; those translations are agent-authored and not verified against Office's localized names.
-  **Remains:** rich text authoring in Excel's text pane, 3D formatting controls beyond the gallery, and drawing spatial
-  scenes.
+  The shared SVG painter (`src/ui/src/smartart/smartart-3d.ts`) draws Word and Excel SmartArt 3D approximately: a bevel lit
+  by an SVG specular filter from the label's light rig, an extrusion as stacked darkened copies along the camera's depth,
+  and the Scene styles' spatial camera as a per-shape affine projection through the fitted scene camera that PowerPoint's
+  lit scene uses too (`diagram/scene-camera.ts`, moved from the pptx renderer). Loaders and the preview carry the quick style's
+  camera on the drawing (`DiagramDrawing.scene3d`), since Office keeps it out of the cache. It has no hidden-surface removal,
+  material model or contour and has not been compared against Office's pixels.
+  **Remains:** rich text authoring in Excel's text pane and 3D formatting controls beyond the gallery.
 
   Acceptance on 2026-11-16: the extended `smartart-format-acceptance-build.ts` produced 41 Word and 41 Excel files
   (the three model combinations, then each of the 38 colour definitions with the 14 quick styles in turn) and

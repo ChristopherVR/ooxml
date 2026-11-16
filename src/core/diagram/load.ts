@@ -24,6 +24,7 @@ import type {
 	DiagramQuickStyleDefinition,
 	DiagramRelationshipIds,
 } from './types';
+import { diagramQuickStyle3d } from './scene-3d';
 
 /** A part host that can also read part text. */
 export interface DiagramPackageHost extends DiagramPartHost {
@@ -185,6 +186,10 @@ export async function loadDiagram(
 				});
 			}
 			issues.push(...drawing.issues);
+			const scene = layoutSource.quickStyleXml
+				? diagramQuickStyle3d(layoutSource.quickStyleXml).scene
+				: undefined;
+			if (scene) drawing.scene3d = scene;
 		}
 	} else if (data)
 		issues.push({
