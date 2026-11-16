@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 
 import JSZip from 'jszip';
 import type { ExternalCollaborationSession } from 'ooxml-ui/pptx';
-import { readSlidesFromYDoc, reconcileSlidesInYDoc } from 'ooxml-ui/pptx';
+import { readSlidesFromYDoc, reconcileSlidesInYDoc, ribbonTabButtons } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -311,7 +311,7 @@ describe('powerPointViewer', () => {
 
 	it('opens the dedicated master and layout navigation workspace', async () => {
 		const { target } = await mountViewer({ editable: true });
-		const viewTab = [...target.querySelectorAll<HTMLButtonElement>('.pptx-svelte-ribbon-tab')].find(
+		const viewTab = ribbonTabButtons(target).find(
 			(button) => button.textContent?.trim() === 'View',
 		);
 		viewTab?.click();
@@ -358,7 +358,7 @@ describe('powerPointViewer', () => {
 				(button) => button.textContent?.trim() === text,
 			);
 
-		[...target.querySelectorAll<HTMLButtonElement>('.pptx-svelte-ribbon-tab')]
+		ribbonTabButtons(target)
 			.find((button) => button.textContent?.trim() === 'File')
 			?.click();
 		flushSync();
@@ -381,7 +381,7 @@ describe('powerPointViewer', () => {
 	 */
 	it('renders the File backstage outside the ribbon content row', async () => {
 		const { target } = await mountViewer({ editable: true });
-		[...target.querySelectorAll<HTMLButtonElement>('.pptx-svelte-ribbon-tab')]
+		ribbonTabButtons(target)
 			.find((button) => button.textContent?.trim() === 'File')
 			?.click();
 		flushSync();

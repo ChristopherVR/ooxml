@@ -76,7 +76,7 @@ test('a selected SmartArt shows its contextual tab and Change Colors applies a s
 	await colors.click();
 	const popup = page.locator('[data-ribbon-gallery-popup="smartArtColors"]');
 	await expect(popup).toBeVisible();
-	await popup.locator('[data-gallery-item="monochromatic2"]').click();
+	await popup.locator('[data-gallery-item="accent2_2"]').click();
 	await expect(popup).toHaveCount(0);
 
 	await expect

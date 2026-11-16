@@ -85,7 +85,11 @@ async function readTabControls(page: Page, tab: string): Promise<RibbonControl[]
 		if (!(toolbar instanceof HTMLElement)) {
 			throw new Error('no presentation toolbar on the page');
 		}
-		const tablist = toolbar.querySelector('[role="tablist"]');
+		// The tab row is the shared `pptx-ui-ribbon-tabs` element, whose tablist lives in its
+		// shadow root; older markup kept it in the light DOM.
+		const tablist =
+			toolbar.querySelector('[role="tablist"]') ??
+			toolbar.querySelector('pptx-ui-ribbon-tabs')?.shadowRoot?.querySelector('[role="tablist"]');
 		if (!(tablist instanceof HTMLElement)) {
 			throw new Error('the presentation toolbar exposes no tablist');
 		}

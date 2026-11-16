@@ -123,13 +123,13 @@ describe('office-ui-smartart', () => {
 						color: {
 							kind: 'srgb',
 							value: 'FF0000',
-							transforms: [{ name: 'redMod', value: '50000' }],
+							transforms: [{ name: 'futureMod', value: '50000' }],
 						},
 					},
 				}),
 			],
 		};
-		expect(art.report?.unappliedColorTransforms).toEqual(['redMod']);
+		expect(art.report?.unappliedColorTransforms).toEqual(['futureMod']);
 	});
 	it('draws a core DiagramDrawing as an SVG image with an accessible name', () => {
 		const el = mount();

@@ -22,13 +22,13 @@ for (const scenario of [
 		tab: 'smartArtDesign',
 		gallery: 'smartArtStyles',
 		deck: 'smartart-build-reveal.pptx',
-		item: 'intense',
+		item: 'simple5',
 	},
 	{
 		tab: 'smartArtDesign',
 		gallery: 'smartArtColors',
 		deck: 'smartart-build-reveal.pptx',
-		item: 'monochromatic2',
+		item: 'accent2_2',
 	},
 ]) {
 	test(`${scenario.tab}/${scenario.gallery} uses shared galleries and retains picks across save and reload`, async ({

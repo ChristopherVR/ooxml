@@ -276,7 +276,7 @@ test('Picture Format stacks Corrections, Color and Artistic Effects in one colum
 	const triggers = ribbon(page).locator(
 		'[data-ribbon-group="pictureFormat.adjust"] pptx-ui-ribbon-gallery',
 	);
-	expect(await triggers.count()).toBe(3);
+	await expect(triggers).toHaveCount(3);
 	const boxes = await triggers.evaluateAll((items) =>
 		items.map((item) => {
 			const rect = item.getBoundingClientRect();
@@ -299,7 +299,7 @@ test('SmartArt Design offers Create Graphic, Layouts and Reset with working Add 
 	const create = bar.locator(
 		'[data-ribbon-group="smartArtDesign.createGraphic"] pptx-ui-ribbon-gallery',
 	);
-	expect(await create.count()).toBe(10);
+	await expect(create).toHaveCount(10);
 	const ys = await create.evaluateAll((items) =>
 		items.map((item) => Math.round(item.getBoundingClientRect().y)),
 	);
