@@ -59,10 +59,10 @@ export type TableStyleEditorFieldEdit =
 export interface TableStyleSectionEditPayload {
 	readonly styleId: string;
 	readonly section: string;
-	readonly fill?: ParsedTableStyleFill;
-	readonly text?: ParsedTableStyleText;
-	readonly borders?: ParsedTableStyleBorders;
-	readonly cell3D?: PptxTableCell3D;
+	readonly fill?: ParsedTableStyleFill | undefined;
+	readonly text?: ParsedTableStyleText | undefined;
+	readonly borders?: ParsedTableStyleBorders | undefined;
+	readonly cell3D?: PptxTableCell3D | undefined;
 }
 
 export interface TableStyleEditorEditResult {
@@ -89,7 +89,7 @@ export interface TableStyleEditContext {
 	 * reference (`a:lnRef`) starts from the referenced line, so the facets the
 	 * edit does not touch (width, dash) keep the theme's values.
 	 */
-	readonly formatScheme?: PptxThemeFormatScheme;
+	readonly formatScheme?: PptxThemeFormatScheme | undefined;
 }
 
 function patchBorderSide(

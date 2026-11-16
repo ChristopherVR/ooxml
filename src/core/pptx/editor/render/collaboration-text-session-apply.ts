@@ -10,6 +10,7 @@ import {
 	textSessionInsertionAttributes,
 	textSessionParagraphPatches,
 } from './collaboration-text-session-paragraph';
+import { at } from '../../../geometry/indexed';
 
 export interface ObservedTextSessionUnit<Position> extends TextSessionUnit {
 	start: Position;
@@ -98,7 +99,7 @@ export function applyTextSessionPlan<Position>(
 			let end = index + 1;
 			while (
 				end < batch.to &&
-				desired[end].attributes === desired[index].attributes &&
+				at(desired, end).attributes === at(desired, index).attributes &&
 				paragraphPatches.get(end) === paragraphPatches.get(index)
 			) {
 				end++;
@@ -109,7 +110,7 @@ export function applyTextSessionPlan<Position>(
 					.slice(index, end)
 					.map((unit) => unit.text)
 					.join(''),
-				textSessionInsertionAttributes(desired[index].attributes, paragraphPatches.get(index)),
+				textSessionInsertionAttributes(at(desired, index).attributes, paragraphPatches.get(index)),
 			);
 			offset += end - index;
 			index = end;
@@ -135,7 +136,7 @@ export function applyTextSessionPlan<Position>(
 		}
 		const unit = previous[oldIndex];
 		const paragraph = paragraphPatches.get(index);
-		if (!paragraph && textSessionAttributesEqual(unit.attributes, desired[index].attributes)) {
+		if (!paragraph && textSessionAttributesEqual(unit.attributes, at(desired, index).attributes)) {
 			continue;
 		}
 		const current = range(unit);
@@ -145,7 +146,7 @@ export function applyTextSessionPlan<Position>(
 		const patch = {
 			...textSessionAttributePatch(
 				unit.attributes,
-				desired[index].attributes,
+				at(desired, index).attributes,
 				liveUnits?.[current.start]?.attributes ?? {},
 			),
 			...paragraph,
@@ -173,6 +174,6 @@ export function applyTextSessionPlan<Position>(
 	}
 	return indices.map((oldIndex, index) => ({
 		...(oldIndex === null ? inserted.get(index)! : previous[oldIndex]),
-		attributes: desired[index].attributes,
+		attributes: at(desired, index).attributes,
 	}));
 }

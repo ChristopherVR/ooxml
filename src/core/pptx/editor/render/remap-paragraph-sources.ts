@@ -2,10 +2,11 @@ import type { TextSegment } from 'ooxml-core/pptx';
 
 import { isBulletMarkerSegment } from './bullet-toggle';
 import { withoutRenderedBulletPrefix } from './remap-text-bullets';
+import { at } from '../../../geometry/indexed';
 
 export interface RemapSourceParagraph {
 	segments: TextSegment[];
-	terminator?: TextSegment;
+	terminator?: TextSegment | undefined;
 }
 
 /**
@@ -92,9 +93,9 @@ export function alignParagraphSources(
 		const lengths = Array.from({ length: oldCount + 1 }, () => new Uint16Array(newCount + 1));
 		for (let old = oldCount - 1; old >= 0; old--) {
 			for (let next = newCount - 1; next >= 0; next--) {
-				lengths[old][next] = matches(texts[prefix + next], original[prefix + old])
-					? lengths[old + 1][next + 1] + 1
-					: Math.max(lengths[old + 1][next], lengths[old][next + 1]);
+				at(lengths, old)[next] = matches(texts[prefix + next], original[prefix + old])
+					? at(lengths, old + 1)[next + 1] + 1
+					: Math.max(at(lengths, old + 1)[next], at(lengths, old)[next + 1]);
 			}
 		}
 		let old = 0;
@@ -102,7 +103,7 @@ export function alignParagraphSources(
 		while (old < oldCount && next < newCount) {
 			if (matches(texts[prefix + next], original[prefix + old])) {
 				anchors.push([prefix + next++, prefix + old++]);
-			} else if (lengths[old + 1][next] >= lengths[old][next + 1]) {
+			} else if (at(lengths, old + 1)[next] >= at(lengths, old)[next + 1]) {
 				// Ties discard the old candidate first, consistently with token diff.
 				old++;
 			} else {

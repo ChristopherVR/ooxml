@@ -123,7 +123,9 @@ export async function executeToolWithContext<T>(
 	filePath: string,
 	execCtx: ExecutionContext,
 	toolFn: (ctx: ToolContext) => ToolResult<T> | Promise<ToolResult<T>>,
-): Promise<T & { savedToDisk?: boolean; routedThroughCollaboration?: boolean }> {
+): Promise<
+	T & { savedToDisk?: boolean | undefined; routedThroughCollaboration?: boolean | undefined }
+> {
 	const { pptxData, rawBytes } = await loadPresentation(filePath, execCtx);
 
 	const toolResult = await toolFn({ pptxData });
@@ -140,7 +142,7 @@ export async function executeToolWithContext<T>(
 	}
 
 	return toolResult.result as T & {
-		savedToDisk?: boolean;
-		routedThroughCollaboration?: boolean;
+		savedToDisk?: boolean | undefined;
+		routedThroughCollaboration?: boolean | undefined;
 	};
 }

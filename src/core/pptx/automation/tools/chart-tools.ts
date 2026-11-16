@@ -21,25 +21,28 @@ import {
 import type { ToolContext, ToolResult } from '../types';
 import { applyParetoChartTypeAlias } from './chart-pareto';
 import { validateSlideIndex } from './helpers';
+import { at } from '../../../geometry/indexed';
 
 // ── updateChart ──────────────────────────────────────────────────────────────
 
 export interface UpdateChartParams {
 	slideIndex: number;
 	elementId: string;
-	chartType?: string;
-	title?: string;
-	grouping?: 'clustered' | 'stacked' | 'percentStacked';
-	legend?: { show?: boolean; position?: string };
-	dataLabels?: {
-		show?: boolean;
-		showValue?: boolean;
-		showCategory?: boolean;
-		showSeriesName?: boolean;
-		showPercent?: boolean;
-	};
-	axis?: { type: string; edit: ChartAxisEdit };
-	categories?: string[];
+	chartType?: string | undefined;
+	title?: string | undefined;
+	grouping?: 'clustered' | 'stacked' | 'percentStacked' | undefined;
+	legend?: { show?: boolean | undefined; position?: string | undefined } | undefined;
+	dataLabels?:
+		| {
+				show?: boolean | undefined;
+				showValue?: boolean | undefined;
+				showCategory?: boolean | undefined;
+				showSeriesName?: boolean | undefined;
+				showPercent?: boolean | undefined;
+		  }
+		| undefined;
+	axis?: { type: string; edit: ChartAxisEdit } | undefined;
+	categories?: string[] | undefined;
 }
 
 export function updateChart(
@@ -51,7 +54,7 @@ export function updateChart(
 		throw new Error(err);
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 	const el = slide.elements.find((e) => e.id === params.elementId);
 	if (!el) {
 		throw new Error(`Element '${params.elementId}' not found on slide ${params.slideIndex}.`);
@@ -97,7 +100,7 @@ export interface AddChartSeriesParams {
 	elementId: string;
 	name: string;
 	values: number[];
-	color?: string;
+	color?: string | undefined;
 }
 
 export function addChartSeriesT(
@@ -109,7 +112,7 @@ export function addChartSeriesT(
 		throw new Error(err);
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 	const el = slide.elements.find((e) => e.id === params.elementId);
 	if (!el) {
 		throw new Error(`Element '${params.elementId}' not found on slide ${params.slideIndex}.`);
@@ -146,7 +149,7 @@ export function removeChartSeriesT(
 		throw new Error(err);
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 	const el = slide.elements.find((e) => e.id === params.elementId);
 	if (!el) {
 		throw new Error(`Element '${params.elementId}' not found on slide ${params.slideIndex}.`);
@@ -184,7 +187,7 @@ export function updateChartSeriesData(
 		throw new Error(err);
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 	const el = slide.elements.find((e) => e.id === params.elementId);
 	if (!el) {
 		throw new Error(`Element '${params.elementId}' not found on slide ${params.slideIndex}.`);
@@ -204,14 +207,14 @@ export function updateChartSeriesData(
 export interface CreateChartParams {
 	slideIndex: number;
 	chartType: string;
-	x?: number;
-	y?: number;
-	width?: number;
-	height?: number;
-	title?: string;
-	categories?: string[];
-	series?: Array<{ name: string; values: number[]; color?: string }>;
-	legend?: { show: boolean; position?: string };
+	x?: number | undefined;
+	y?: number | undefined;
+	width?: number | undefined;
+	height?: number | undefined;
+	title?: string | undefined;
+	categories?: string[] | undefined;
+	series?: Array<{ name: string; values: number[]; color?: string | undefined }> | undefined;
+	legend?: { show: boolean; position?: string | undefined } | undefined;
 }
 
 export interface CreateChartResult {
@@ -253,7 +256,7 @@ export function createChart(
 
 	const chart = builder.build();
 	applyParetoChartTypeAlias(chart, params.chartType);
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 	slide.elements.push(chart);
 
 	return {

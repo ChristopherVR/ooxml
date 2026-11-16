@@ -227,8 +227,8 @@ export function overrideParagraphProperties(
 
 /** The parts of a text element below its body style that a paragraph update rewrites. */
 export interface ParagraphLevelPatch {
-	textSegments?: TextSegment[];
-	paragraphIndents?: { marginLeft?: number; indent?: number }[];
+	textSegments?: TextSegment[] | undefined;
+	paragraphIndents?: { marginLeft?: number | undefined; indent?: number | undefined }[] | undefined;
 }
 
 /**

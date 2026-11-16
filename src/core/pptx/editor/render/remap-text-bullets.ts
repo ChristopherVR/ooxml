@@ -4,6 +4,7 @@ import { breakAutoNumberRun, createAutoNumberSequence, nextAutoNumber } from 'oo
 import { resolveParagraphBullet } from './bullet-list';
 import { isBulletMarkerSegment } from './bullet-toggle';
 import { isParagraphSeparatorSegment } from './text-segment-paragraph-break';
+import { isFiniteNumber } from '../../../units/finite';
 
 function trailingWhitespace(text: string): string {
 	return text.slice(text.trimEnd().length);
@@ -125,7 +126,7 @@ export function continueListParagraph(
 	}
 	if (
 		bullet.isNumbered &&
-		(typeof paragraphIndex !== 'number' || !Number.isFinite(paragraphIndex))
+		(typeof paragraphIndex !== 'number' || !isFiniteNumber(paragraphIndex))
 	) {
 		return segments;
 	}
@@ -135,7 +136,7 @@ export function continueListParagraph(
 		...first,
 		bulletInfo: {
 			...donor.bulletInfo,
-			...(bullet.isNumbered && typeof paragraphIndex === 'number' && Number.isFinite(paragraphIndex)
+			...(bullet.isNumbered && typeof paragraphIndex === 'number' && isFiniteNumber(paragraphIndex)
 				? { paragraphIndex: paragraphIndex + 1 }
 				: {}),
 		},
@@ -147,7 +148,7 @@ export function continueListParagraph(
 	if (
 		bullet.isNumbered &&
 		typeof paragraphIndex === 'number' &&
-		Number.isFinite(paragraphIndex) &&
+		isFiniteNumber(paragraphIndex) &&
 		isBulletMarkerSegment(donor)
 	) {
 		const resolved = resolveParagraphBullet(continued);

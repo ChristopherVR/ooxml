@@ -6,6 +6,7 @@
  */
 
 import type { PptxElement, PptxSlide, PptxSmartArtNode } from 'ooxml-core/pptx';
+import { at } from '../../../geometry/indexed';
 
 /**
  * A single slide that matched a text search query.
@@ -157,7 +158,7 @@ export function searchSlides(slides: readonly PptxSlide[], query: string): Slide
 	const results: SlideSearchMatch[] = [];
 
 	for (let i = 0; i < slides.length; i++) {
-		const slide = slides[i];
+		const slide = at(slides, i);
 		const text = collectSlideText(slide);
 		const lowerText = text.toLowerCase();
 

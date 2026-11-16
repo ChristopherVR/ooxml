@@ -53,8 +53,8 @@ function explode(segments: readonly TextSegment[]): Char[] {
 
 /** A paragraph's own layout and source markup, carried by its first segment. */
 interface Layout {
-	properties?: TextStyle;
-	paragraph?: TextSegment['tableParagraph'];
+	properties?: TextStyle | undefined;
+	paragraph?: TextSegment['tableParagraph'] | undefined;
 }
 
 function paragraphLayouts(segments: readonly TextSegment[]): Array<Layout | undefined> {

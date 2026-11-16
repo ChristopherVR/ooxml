@@ -9,11 +9,11 @@ export interface MergePresentationParams {
 	/** The source presentation data to merge FROM. */
 	sourceData: PptxData;
 	/** Specific slide indices from source to merge. If omitted, all slides. */
-	slideIndices?: number[];
+	slideIndices?: number[] | undefined;
 	/** Where to insert in the target (0-based). Defaults to end. */
-	insertAt?: number;
+	insertAt?: number | undefined;
 	/** Whether to keep the source theme. */
-	keepSourceTheme?: boolean;
+	keepSourceTheme?: boolean | undefined;
 }
 
 export interface MergePresentationResult {

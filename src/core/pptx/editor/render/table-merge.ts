@@ -17,6 +17,7 @@
 import type { PptxTableCell, PptxTableData } from 'ooxml-core/pptx';
 
 import { withCellText } from './table-cell-edit';
+import { at } from '../../../geometry/indexed';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -49,10 +50,10 @@ export function computeBoundingRect(cells: CellCoord[]): CellRect | undefined {
 		return undefined;
 	}
 
-	let startRow = cells[0].row;
-	let startCol = cells[0].col;
-	let endRow = cells[0].row;
-	let endCol = cells[0].col;
+	let startRow = at(cells, 0).row;
+	let startCol = at(cells, 0).col;
+	let endRow = at(cells, 0).row;
+	let endCol = at(cells, 0).col;
 
 	for (const { row, col } of cells) {
 		if (row < startRow) {
@@ -190,7 +191,7 @@ export function canMergeCells(cells: CellCoord[], tableData: PptxTableData): boo
 			return false;
 		}
 		for (let c = rect.startCol; c <= rect.endCol; c++) {
-			if (!tableData.rows[r].cells[c]) {
+			if (!at(tableData.rows, r).cells[c]) {
 				return false;
 			}
 		}

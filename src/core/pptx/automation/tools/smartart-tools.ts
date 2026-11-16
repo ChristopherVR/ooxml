@@ -11,6 +11,7 @@ import {
 
 import type { ToolContext, ToolResult } from '../types';
 import { validateSlideIndex } from './helpers';
+import { at } from '../../../geometry/indexed';
 
 // ── manageSmartArt ───────────────────────────────────────────────────────────
 
@@ -26,23 +27,23 @@ export interface ManageSmartArtParams {
 		| 'demoteNode'
 		| 'decompose'
 		| 'getNodes';
-	nodeId?: string;
-	text?: string;
-	afterNodeId?: string;
-	direction?: number;
+	nodeId?: string | undefined;
+	text?: string | undefined;
+	afterNodeId?: string | undefined;
+	direction?: number | undefined;
 }
 
 export interface SmartArtNodeInfo {
 	id: string;
 	text: string;
-	children?: SmartArtNodeInfo[];
+	children?: SmartArtNodeInfo[] | undefined;
 }
 
 export interface ManageSmartArtResult {
 	action: string;
 	elementId: string;
-	nodes?: SmartArtNodeInfo[];
-	decomposedCount?: number;
+	nodes?: SmartArtNodeInfo[] | undefined;
+	decomposedCount?: number | undefined;
 }
 
 function extractNodes(data: PptxSmartArtData): SmartArtNodeInfo[] {
@@ -65,7 +66,7 @@ export function manageSmartArt(
 		throw new Error(err);
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 	const el = slide.elements.find((e) => e.id === params.elementId);
 	if (!el) {
 		throw new Error(`Element '${params.elementId}' not found on slide ${params.slideIndex}.`);

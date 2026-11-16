@@ -92,9 +92,9 @@ export type DeckSavePurpose = 'user-file' | 'recovery-snapshot';
  * `'recovery-snapshot'` overrides the password.
  */
 export interface DeckSaveIntent {
-	password?: string | null;
-	passwordProtected?: boolean;
-	purpose?: DeckSavePurpose;
+	password?: string | null | undefined;
+	passwordProtected?: boolean | undefined;
+	purpose?: DeckSavePurpose | undefined;
 }
 
 /**

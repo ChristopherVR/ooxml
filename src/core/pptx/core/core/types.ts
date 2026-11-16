@@ -49,7 +49,7 @@ import type {
 import type { PptxLoadLimits } from './load-limits';
 
 export interface PptxHandlerLoadOptions {
-	eagerDecodeImages?: boolean;
+	eagerDecodeImages?: boolean | undefined;
 	/**
 	 * When `false` (default), embedded font variants are returned without
 	 * decompressing or de-obfuscating their parts: each variant's `dataUrl`,
@@ -126,7 +126,7 @@ export interface PptxHandlerSaveOptions {
 	headerFooter?: PptxHeaderFooter | undefined;
 	presentationProperties?: PptxPresentationProperties | undefined;
 	customShows?: PptxCustomShow[] | undefined;
-	sections?: PptxSection[];
+	sections?: PptxSection[] | undefined;
 	coreProperties?: PptxCoreProperties;
 	appProperties?: PptxAppProperties;
 	customProperties?: PptxCustomProperty[];
@@ -193,7 +193,7 @@ export interface PptxHandlerSaveOptions {
 	 * preserved verbatim. Omitting the option round-trips the original
 	 * part untouched.
 	 */
-	tableStyles?: ParsedTableStyleMap;
+	tableStyles?: ParsedTableStyleMap | undefined;
 	/**
 	 * Set `ppt/tableStyles.xml`'s `<a:tblStyleLst @def>` to this style GUID
 	 * (normalised to uppercase-with-braces). `undefined` preserves the

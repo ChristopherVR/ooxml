@@ -1,6 +1,7 @@
 /** Shared logical table edits for the editor and the PPTX automation tools. */
 import type { PptxTableCell, PptxTableData } from '../../core/types';
 import type { TableStructureEdit } from '../../core/core/runtime/table-structure-edit-xml';
+import { at } from '../../../geometry/indexed';
 
 /** Default pixel height assigned to a freshly inserted row. */
 export const DEFAULT_INSERTED_ROW_HEIGHT = 40;
@@ -64,7 +65,7 @@ function updateIntersectingMerges(
 					const content = promote && anchor.text ? anchor : cell;
 					// DrawingML repeats the height along the top edge and the width
 					// along the left edge of a rectangular merge (MS-OE376, tbl).
-					rows[r].cells[c] = {
+					at(rows, r).cells[c] = {
 						...cell,
 						text: content.text,
 						textRuns: content.textRuns,

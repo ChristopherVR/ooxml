@@ -14,6 +14,7 @@ import {
 	renumberRemappedParagraphs,
 	withoutRenderedBulletPrefix,
 } from './remap-text-bullets';
+import { at } from '../../../geometry/indexed';
 
 /**
  * Whether an original segment is ATOMIC: its rendered text is not what is
@@ -93,15 +94,16 @@ export function remapTextToSegments(
 	// Split into editor lines at paragraph and soft (`a:br`) breaks, both "\n" in
 	// editor text. Keep each terminator: an empty paragraph's metadata lives on
 	// it, and `softBreakBetween` re-emits a soft one between lines of a paragraph.
-	const originalParagraphs: Array<{ segments: TextSegment[]; terminator?: TextSegment }> = [
-		{ segments: [] },
-	];
+	const originalParagraphs: Array<{
+		segments: TextSegment[];
+		terminator?: TextSegment | undefined;
+	}> = [{ segments: [] }];
 	for (const seg of originalSegments) {
 		if (seg.text === '\n' || seg.isParagraphBreak || seg.isLineBreak) {
-			originalParagraphs[originalParagraphs.length - 1].terminator = seg;
+			at(originalParagraphs, originalParagraphs.length - 1).terminator = seg;
 			originalParagraphs.push({ segments: [] });
 		} else {
-			originalParagraphs[originalParagraphs.length - 1].segments.push(seg);
+			at(originalParagraphs, originalParagraphs.length - 1).segments.push(seg);
 		}
 	}
 
@@ -146,13 +148,13 @@ export function remapTextToSegments(
 			return [dedicatedMarker, ...content];
 		}
 
-		const paragraphBulletInfo = paraOrigSegments[0].bulletInfo;
+		const paragraphBulletInfo = at(paraOrigSegments, 0).bulletInfo;
 
 		if (paraNewText.length === 0) {
-			const emptyStyle = { ...paraOrigSegments[0].style };
+			const emptyStyle = { ...at(paraOrigSegments, 0).style };
 			const result: TextSegment[] = [{ text: '', style: emptyStyle }];
 			if (paragraphBulletInfo) {
-				result[0].bulletInfo = paragraphBulletInfo;
+				at(result, 0).bulletInfo = paragraphBulletInfo;
 			}
 			return result;
 		}
@@ -163,11 +165,11 @@ export function remapTextToSegments(
 			const result: TextSegment[] = [
 				copySegmentMetadata(isOriginalParagraph ? paraOrigSegments[0] : undefined, {
 					text: paraNewText,
-					style: { ...paraOrigSegments[0].style },
+					style: { ...at(paraOrigSegments, 0).style },
 				}),
 			];
 			if (paragraphBulletInfo) {
-				result[0].bulletInfo = paragraphBulletInfo;
+				at(result, 0).bulletInfo = paragraphBulletInfo;
 			}
 			return result;
 		}
@@ -176,7 +178,7 @@ export function remapTextToSegments(
 		let newPos = 0;
 
 		for (let i = 0; i < paraOrigSegments.length; i++) {
-			const origSeg = paraOrigSegments[i];
+			const origSeg = at(paraOrigSegments, i);
 			// An atomic (field/equation) segment never gets the "last segment
 			// absorbs everything left over" treatment, even when it IS the last
 			// segment - see `isAtomicOriginalSegment`.
@@ -228,7 +230,7 @@ export function remapTextToSegments(
 				isOriginalParagraph ? paraOrigSegments[0] : undefined,
 				{
 					text: paraNewText,
-					style: { ...paraOrigSegments[0].style },
+					style: { ...at(paraOrigSegments, 0).style },
 				},
 			);
 			if (paragraphBulletInfo) {
@@ -266,8 +268,8 @@ export function remapTextToSegments(
 		let paraSegments = restoreParagraphMetadata(
 			originalParagraph?.segments[0] ?? originalParagraph?.terminator,
 			(originalParagraph &&
-				remapEmptyParagraph(newParagraphTexts[pi], origPara, originalParagraph.terminator)) ??
-				remapParagraph(newParagraphTexts[pi], origPara, originalParagraph !== undefined),
+				remapEmptyParagraph(at(newParagraphTexts, pi), origPara, originalParagraph.terminator)) ??
+				remapParagraph(at(newParagraphTexts, pi), origPara, originalParagraph !== undefined),
 		);
 		// New items follow their local list, without inheriting paragraph spacing
 		// or end-run properties reserved for an aligned original paragraph.

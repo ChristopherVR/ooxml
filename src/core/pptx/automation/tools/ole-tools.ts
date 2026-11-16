@@ -20,6 +20,7 @@ import type {
 
 import type { ToolContext, ToolResult } from '../types';
 import { validateSlideIndex } from './helpers';
+import { at } from '../../../geometry/indexed';
 
 /**
  * Locate an OLE element on a slide by id, or throw a descriptive error.
@@ -35,7 +36,7 @@ function resolveOleElement(
 	if (err) {
 		throw new Error(err);
 	}
-	const slide = ctx.pptxData.slides[slideIndex];
+	const slide = at(ctx.pptxData.slides, slideIndex);
 	const index = slide.elements.findIndex((e) => e.id === elementId);
 	if (index === -1) {
 		throw new Error(`Element '${elementId}' not found on slide ${slideIndex}.`);
@@ -67,13 +68,13 @@ export interface GetOleContentResult {
 	/** Whether `ole_set_*` can act on this object; `false` steers to `ole_replace_file`. */
 	editable: boolean;
 	/** Human-readable note, set when `editable` is `false`. */
-	message?: string;
+	message?: string | undefined;
 	/** Present when `kind` is `sheet-xlsx` or `sheet-xls`. */
-	sheet?: OleSheetGrid;
+	sheet?: OleSheetGrid | undefined;
 	/** Present when `kind` is `document-docx` or `document-doc`. */
-	paragraphs?: string[];
+	paragraphs?: string[] | undefined;
 	/** Present when `kind` is `deck-pptx`: every slide's text-element inventory. */
-	deckSlides?: OleNestedDeckSlideDetail[];
+	deckSlides?: OleNestedDeckSlideDetail[] | undefined;
 }
 
 /**
@@ -256,7 +257,7 @@ export interface ReplaceOleFileParams {
 	/** New payload as a base64 data URL, e.g. `data:application/pdf;base64,...`. */
 	fileData: string;
 	/** Optional new file name; also updates the resolved MIME type. */
-	fileName?: string;
+	fileName?: string | undefined;
 }
 
 /**

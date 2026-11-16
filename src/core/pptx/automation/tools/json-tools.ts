@@ -7,7 +7,7 @@ import type { ToolContext, ToolResult } from '../types';
 
 export interface ExportToJsonParams {
 	/** Pretty-print with 2-space indentation. Default `true`. */
-	pretty?: boolean;
+	pretty?: boolean | undefined;
 }
 
 export interface ExportToJsonResult {

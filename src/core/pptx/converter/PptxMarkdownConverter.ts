@@ -33,9 +33,9 @@ export interface PptxConverterOptions extends ConversionOptions {
 	slideRange?:
 		| {
 				/** First slide to include (1-based, default 1). */
-				start?: number;
+				start?: number | undefined;
 				/** Last slide to include (1-based, default = last slide). */
-				end?: number;
+				end?: number | undefined;
 		  }
 		| undefined;
 	/**

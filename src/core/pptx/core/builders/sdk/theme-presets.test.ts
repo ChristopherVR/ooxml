@@ -61,10 +61,10 @@ describe('theme-presets', () => {
 			});
 
 			it('has fonts with majorFont and minorFont as non-empty strings', () => {
-				expectTypeOf(preset.fonts.majorFont).toBeString();
-				expect(preset.fonts.majorFont.length).toBeGreaterThan(0);
-				expectTypeOf(preset.fonts.minorFont).toBeString();
-				expect(preset.fonts.minorFont.length).toBeGreaterThan(0);
+				expect(typeof preset.fonts.majorFont).toBe('string');
+				expect(preset.fonts.majorFont?.length).toBeGreaterThan(0);
+				expect(typeof preset.fonts.minorFont).toBe('string');
+				expect(preset.fonts.minorFont?.length).toBeGreaterThan(0);
 			});
 		});
 	});

@@ -11,6 +11,7 @@
  * @module render/chart-user-shape-edit
  */
 import type { PptxChartUserShape } from 'ooxml-core/pptx';
+import { isFiniteNumber } from '../../../units/finite';
 
 /** EMU per CSS pixel at 96 DPI, mirroring core's `EMU_PER_PIXEL`. */
 const EMU_PER_PIXEL = 9525;
@@ -22,12 +23,12 @@ export interface ChartUserShapeDescriptor {
 	kind: PptxChartUserShape['kind'];
 	anchor: 'rel' | 'abs';
 	from: { x: number; y: number };
-	to?: { x: number; y: number };
-	ext?: { cx: number; cy: number };
-	fill?: string;
-	stroke?: string;
+	to?: { x: number; y: number } | undefined;
+	ext?: { cx: number; cy: number } | undefined;
+	fill?: string | undefined;
+	stroke?: string | undefined;
 	/** Joined paragraph text, for a compact list-row label. */
-	text?: string;
+	text?: string | undefined;
 	/** Whether an inspector can move/resize/recolour this kind (only `sp`/`cxnSp` are editable). */
 	editable: boolean;
 }
@@ -160,11 +161,11 @@ export function withChartUserShapeRemoved(
 export function validateChartUserShapeAnchor(
 	shape: Pick<PptxChartUserShape, 'anchor' | 'from' | 'to' | 'ext'>,
 ): string | undefined {
-	if (!shape.from || !Number.isFinite(shape.from.x) || !Number.isFinite(shape.from.y)) {
+	if (!shape.from || !isFiniteNumber(shape.from.x) || !isFiniteNumber(shape.from.y)) {
 		return 'A chart overlay shape needs a valid anchor position.';
 	}
 	if (shape.anchor === 'rel') {
-		if (!shape.to || !Number.isFinite(shape.to.x) || !Number.isFinite(shape.to.y)) {
+		if (!shape.to || !isFiniteNumber(shape.to.x) || !isFiniteNumber(shape.to.y)) {
 			return 'A relative-size overlay anchor needs a valid opposite corner.';
 		}
 		if (shape.to.x <= shape.from.x || shape.to.y <= shape.from.y) {

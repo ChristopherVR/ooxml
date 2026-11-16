@@ -16,7 +16,7 @@ export interface LocalTextReplacement {
 export interface TextSessionCorrespondence {
 	readonly retainedIndices: readonly (number | null)[];
 	/** Old carriers for known paragraph attributes, independently of character identity. */
-	readonly paragraphSources?: readonly (number | null)[];
+	readonly paragraphSources?: readonly (number | null)[] | undefined;
 }
 
 export type LocalTextEdit = LocalTextReplacement | TextSessionCorrespondence;

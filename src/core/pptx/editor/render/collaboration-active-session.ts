@@ -25,7 +25,7 @@ export interface ActiveSessionRemoteUserInput {
 	clientId: number | string;
 	userName: string;
 	userColor: string;
-	userAvatar?: string;
+	userAvatar?: string | undefined;
 	activeSlideIndex: number;
 }
 
@@ -37,10 +37,10 @@ export interface ActiveSessionUserDescriptor {
 	/** Up to 2 uppercase characters, for the avatar-circle fallback. */
 	initials: string;
 	color: string;
-	avatarUrl?: string;
+	avatarUrl?: string | undefined;
 	isLocal: boolean;
 	/** 1-based slide number the remote user is viewing; unset for the local entry. */
-	slideNumber?: number;
+	slideNumber?: number | undefined;
 }
 
 const DEFAULT_LOCAL_COLOR = '#6366f1';
@@ -67,9 +67,9 @@ export interface BuildActiveSessionUsersParams {
 	 * user type custom initials independent of their display name). Falls back
 	 * to `getUserInitials(localUserName)` when unset or blank.
 	 */
-	localUserInitials?: string;
+	localUserInitials?: string | undefined;
 	/** Falls back to the same default colour React's dialog has always used. */
-	localUserColor?: string;
+	localUserColor?: string | undefined;
 	remoteUsers: readonly ActiveSessionRemoteUserInput[];
 }
 

@@ -57,13 +57,13 @@ export const THEME_COLOR_PALETTE_COLUMNS: readonly PptxThemeColorSchemeName[] = 
 export interface PptxThemeColorRef {
 	scheme: PptxThemeColorSchemeName;
 	/** `a:lumMod`: multiply HSL luminance (PowerPoint's "Lighter/Darker" rows). */
-	lumMod?: number;
+	lumMod?: number | undefined;
 	/** `a:lumOff`: add to HSL luminance after `lumMod` ("Lighter N%" rows). */
-	lumOff?: number;
+	lumOff?: number | undefined;
 	/** `a:tint`: blend towards white. */
-	tint?: number;
+	tint?: number | undefined;
 	/** `a:shade`: blend towards black. */
-	shade?: number;
+	shade?: number | undefined;
 	/** `a:alpha`: opacity fraction (1 = opaque). */
-	alpha?: number;
+	alpha?: number | undefined;
 }

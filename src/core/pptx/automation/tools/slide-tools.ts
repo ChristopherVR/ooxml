@@ -5,6 +5,7 @@ import { emuToPixels } from '../../core/builders/sdk/units';
 
 import type { ToolContext, ToolResult } from '../types';
 import { generateSlideId, describeElement, validateSlideIndex } from './helpers';
+import { at } from '../../../geometry/indexed';
 
 export interface GetSlideResult {
 	slideIndex: number;
@@ -26,7 +27,7 @@ export function getSlide(
 		throw new Error(err);
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 	return {
 		pptxData: ctx.pptxData,
 		dirty: false,
@@ -44,8 +45,8 @@ export function getSlide(
 }
 
 export interface AddSlideParams {
-	insertAfterIndex?: number;
-	backgroundColor?: string;
+	insertAfterIndex?: number | undefined;
+	backgroundColor?: string | undefined;
 }
 
 export interface AddSlideResult {
@@ -156,7 +157,7 @@ export function reorderSlides(
 
 export interface DuplicateSlideParams {
 	slideIndex: number;
-	targetIndex?: number;
+	targetIndex?: number | undefined;
 }
 
 export function duplicateSlide(
@@ -189,11 +190,11 @@ export function duplicateSlide(
 
 export interface UpdateSlidePropertiesParams {
 	slideIndex: number;
-	backgroundColor?: string;
-	backgroundGradient?: string;
-	backgroundImage?: string;
-	notes?: string;
-	hidden?: boolean;
+	backgroundColor?: string | undefined;
+	backgroundGradient?: string | undefined;
+	backgroundImage?: string | undefined;
+	notes?: string | undefined;
+	hidden?: boolean | undefined;
 }
 
 export function updateSlideProperties(
@@ -205,7 +206,7 @@ export function updateSlideProperties(
 		throw new Error(err);
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 	if (params.backgroundColor !== undefined) {
 		slide.backgroundColor = params.backgroundColor;
 	}
@@ -232,10 +233,10 @@ export function updateSlideProperties(
 export interface SetSlideTransitionParams {
 	slideIndex: number;
 	type: string;
-	durationMs?: number;
-	direction?: string;
-	advanceOnClick?: boolean;
-	advanceAfterMs?: number;
+	durationMs?: number | undefined;
+	direction?: string | undefined;
+	advanceOnClick?: boolean | undefined;
+	advanceAfterMs?: number | undefined;
 }
 
 export function setSlideTransition(
@@ -247,7 +248,7 @@ export function setSlideTransition(
 		throw new Error(err);
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 	if (params.type === 'none') {
 		slide.transition = undefined;
 	} else {

@@ -25,7 +25,7 @@ export interface MergeOptions {
 	/** Which slides to take from source (0-based indices). Default: all */
 	slideIndices?: number[];
 	/** Where to insert in target (0-based). Default: end */
-	insertAt?: number;
+	insertAt?: number | undefined;
 	/** Whether to keep source theme (false = use target theme). Default: false */
 	keepSourceTheme?: boolean;
 }

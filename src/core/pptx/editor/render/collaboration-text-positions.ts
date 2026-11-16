@@ -1,14 +1,14 @@
 /** Identity-preserving changes from a CRDT snapshot, not a plain-text diff. */
 export interface TextPositionChange {
-	retain?: number;
-	delete?: number;
-	insert?: string;
+	retain?: number | undefined;
+	delete?: number | undefined;
+	insert?: string | undefined;
 }
 
 interface TextPositionCell {
 	index: number;
-	left?: TextPositionCell;
-	right?: TextPositionCell;
+	left?: TextPositionCell | undefined;
+	right?: TextPositionCell | undefined;
 }
 
 export interface TrackedTextPosition {

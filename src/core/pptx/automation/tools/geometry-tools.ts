@@ -3,6 +3,7 @@ import { replaceShapeGeometry, replaceWithCustomGeometry } from '../../index';
 
 import type { ToolContext, ToolResult } from '../types';
 import { validateSlideIndex } from './helpers';
+import { at } from '../../../geometry/indexed';
 
 // ── replaceGeometry ──────────────────────────────────────────────────────────
 
@@ -10,15 +11,15 @@ export interface ReplaceGeometryParams {
 	slideIndex: number;
 	elementId: string;
 	/** New preset shape type (e.g. "roundRect", "star5", "ellipse"). */
-	shapeType?: string;
+	shapeType?: string | undefined;
 	/** Custom SVG path data (mutually exclusive with shapeType). */
-	svgPath?: string;
+	svgPath?: string | undefined;
 	/** Width of the custom path coordinate space. */
-	pathWidth?: number;
+	pathWidth?: number | undefined;
 	/** Height of the custom path coordinate space. */
-	pathHeight?: number;
+	pathHeight?: number | undefined;
 	/** Adjustment values for the new geometry. */
-	adjustments?: Record<string, number>;
+	adjustments?: Record<string, number> | undefined;
 }
 
 export function replaceGeometry(
@@ -30,7 +31,7 @@ export function replaceGeometry(
 		throw new Error(err);
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 	const el = slide.elements.find((e) => e.id === params.elementId);
 	if (!el) {
 		throw new Error(`Element '${params.elementId}' not found on slide ${params.slideIndex}.`);

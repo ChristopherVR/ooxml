@@ -103,7 +103,7 @@ export interface CreateTableStyleOptions {
 	 * point (all fill/text/border/cell3D/background sections), with a fresh
 	 * `styleId` substituted in. Omit for a blank style with no sections.
 	 */
-	basedOn?: import('./table').ParsedTableStyleEntry;
+	basedOn?: import('./table').ParsedTableStyleEntry | undefined;
 	/**
 	 * Explicit style GUID (braced, e.g. `{...}`). When omitted a new GUID is
 	 * generated (`globalThis.crypto.randomUUID()` when available).

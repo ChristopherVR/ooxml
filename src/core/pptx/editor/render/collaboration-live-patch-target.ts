@@ -17,19 +17,19 @@ import { remapTextToSegments } from './remap-text';
 
 /** Interim geometry for an element mid-gesture. All fields optional. */
 export interface LiveGeometryPatch {
-	x?: number;
-	y?: number;
-	width?: number;
-	height?: number;
-	rotation?: number;
+	x?: number | undefined;
+	y?: number | undefined;
+	width?: number | undefined;
+	height?: number | undefined;
+	rotation?: number | undefined;
 }
 
 export const GEOMETRY_KEYS = ['x', 'y', 'width', 'height', 'rotation'] as const;
 
 /** The element's pre-edit rich text, used to remap the interim plain text. */
 export interface LiveTextSource {
-	textSegments?: TextSegment[];
-	textStyle?: TextStyle;
+	textSegments?: TextSegment[] | undefined;
+	textStyle?: TextStyle | undefined;
 }
 
 export interface PendingTextPatch {
@@ -40,8 +40,8 @@ export interface PendingTextPatch {
 export interface PendingPatch {
 	slideId: string | undefined;
 	elementId: string;
-	geometry?: LiveGeometryPatch;
-	text?: PendingTextPatch;
+	geometry?: LiveGeometryPatch | undefined;
+	text?: PendingTextPatch | undefined;
 }
 
 /** Interim text longer than this is left to the commit path (safety valve). */

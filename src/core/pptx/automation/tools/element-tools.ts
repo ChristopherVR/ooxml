@@ -23,43 +23,44 @@ import type { ToolContext, ToolResult } from '../types';
 import { validateSlideIndex, generateElementId } from './helpers';
 import { applyElementAltText, applyElementTitle } from './style-tools';
 import { setElementText } from './text-editing';
+import { at } from '../../../geometry/indexed';
 
 // ── addElement ──────────────────────────────────────────────────────────────
 
 export interface AddElementParams {
 	slideIndex: number;
 	type: 'text' | 'shape' | 'image' | 'table' | 'connector';
-	x?: number;
-	y?: number;
-	width?: number;
-	height?: number;
+	x?: number | undefined;
+	y?: number | undefined;
+	width?: number | undefined;
+	height?: number | undefined;
 	// text / shape / connector
-	text?: string;
-	fontSize?: number;
-	fontFamily?: string;
-	fontColor?: string;
-	bold?: boolean;
-	italic?: boolean;
-	underline?: boolean;
-	alignment?: 'left' | 'center' | 'right' | 'justify';
+	text?: string | undefined;
+	fontSize?: number | undefined;
+	fontFamily?: string | undefined;
+	fontColor?: string | undefined;
+	bold?: boolean | undefined;
+	italic?: boolean | undefined;
+	underline?: boolean | undefined;
+	alignment?: 'left' | 'center' | 'right' | 'justify' | undefined;
 	// shape / connector
-	shapeType?: string;
-	fillColor?: string;
-	strokeColor?: string;
-	strokeWidth?: number;
+	shapeType?: string | undefined;
+	fillColor?: string | undefined;
+	strokeColor?: string | undefined;
+	strokeWidth?: number | undefined;
 	// image
-	imageData?: string;
-	altText?: string;
+	imageData?: string | undefined;
+	altText?: string | undefined;
 	// table
-	rows?: number;
-	columns?: number;
-	cellData?: string[][];
-	headerRow?: boolean;
+	rows?: number | undefined;
+	columns?: number | undefined;
+	cellData?: string[][] | undefined;
+	headerRow?: boolean | undefined;
 	// connector
-	startArrow?: string;
-	endArrow?: string;
-	startShapeId?: string;
-	endShapeId?: string;
+	startArrow?: string | undefined;
+	endArrow?: string | undefined;
+	startShapeId?: string | undefined;
+	endShapeId?: string | undefined;
 }
 
 export interface AddElementResult {
@@ -76,7 +77,7 @@ export function addElement(
 		throw new Error(err);
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 	const id = generateElementId();
 	const x = params.x ?? 100;
 	const y = params.y ?? 100;
@@ -205,12 +206,12 @@ export function addElement(
 					strokeWidth: params.strokeWidth ?? 1,
 					connectorStartArrow: params.startArrow as ConnectorPptxElement['shapeStyle'] extends
 						| undefined
-						| { connectorStartArrow?: infer A }
+						| { connectorStartArrow?: (infer A) | undefined }
 						? A
 						: never,
 					connectorEndArrow: params.endArrow as ConnectorPptxElement['shapeStyle'] extends
 						| undefined
-						| { connectorEndArrow?: infer A }
+						| { connectorEndArrow?: (infer A) | undefined }
 						? A
 						: never,
 				},
@@ -236,38 +237,38 @@ export function addElement(
 export interface UpdateElementParams {
 	slideIndex: number;
 	elementId: string;
-	x?: number;
-	y?: number;
-	width?: number;
-	height?: number;
-	rotation?: number;
-	text?: string;
-	textSegments?: TextSegment[];
-	fontSize?: number;
-	fontFamily?: string;
-	fontColor?: string;
+	x?: number | undefined;
+	y?: number | undefined;
+	width?: number | undefined;
+	height?: number | undefined;
+	rotation?: number | undefined;
+	text?: string | undefined;
+	textSegments?: TextSegment[] | undefined;
+	fontSize?: number | undefined;
+	fontFamily?: string | undefined;
+	fontColor?: string | undefined;
 	/**
 	 * A theme colour for the run text (`{ scheme: 'accent1', lumMod: 0.8 }`).
 	 * Wins on save (`<a:schemeClr>` instead of a canonical `<a:srgbClr>`), and
 	 * resolves `fontColor` immediately when `fontColor` was not also given.
 	 * Passing `fontColor` alone clears a previously-set text theme colour.
 	 */
-	fontThemeColor?: PptxThemeColorRef;
-	bold?: boolean;
-	italic?: boolean;
-	underline?: boolean;
-	alignment?: 'left' | 'center' | 'right' | 'justify';
-	fillColor?: string;
-	strokeColor?: string;
-	strokeWidth?: number;
-	opacity?: number;
-	hidden?: boolean;
-	flipH?: boolean;
-	flipV?: boolean;
+	fontThemeColor?: PptxThemeColorRef | undefined;
+	bold?: boolean | undefined;
+	italic?: boolean | undefined;
+	underline?: boolean | undefined;
+	alignment?: 'left' | 'center' | 'right' | 'justify' | undefined;
+	fillColor?: string | undefined;
+	strokeColor?: string | undefined;
+	strokeWidth?: number | undefined;
+	opacity?: number | undefined;
+	hidden?: boolean | undefined;
+	flipH?: boolean | undefined;
+	flipV?: boolean | undefined;
 	/** Accessibility description; see {@link applyElementAltText} for the accepted kinds. */
-	altText?: string;
+	altText?: string | undefined;
 	/** Accessibility title; see {@link applyElementTitle} for the accepted kinds. */
-	title?: string;
+	title?: string | undefined;
 }
 
 export function updateElement(
@@ -279,7 +280,7 @@ export function updateElement(
 		throw new Error(err);
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 	const el = slide.elements.find((e) => e.id === params.elementId);
 	if (!el) {
 		throw new Error(`Element '${params.elementId}' not found on slide ${params.slideIndex}.`);
@@ -412,7 +413,7 @@ export function renameElement(
 		throw new Error(err);
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 	const el = slide.elements.find((e) => e.id === params.elementId);
 	if (!el) {
 		throw new Error(`Element '${params.elementId}' not found on slide ${params.slideIndex}.`);
@@ -448,7 +449,7 @@ export function deleteElements(
 		throw new Error(err);
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 	const idSet = new Set(params.elementIds);
 	const existingIds = new Set(slide.elements.map((element) => element.id));
 	const notFound = params.elementIds.filter((id) => !existingIds.has(id));
@@ -472,11 +473,11 @@ export interface ArrangeElementsParams {
 	slideIndex: number;
 	action: 'align' | 'reorderLayer';
 	// align
-	elementIds?: string[];
-	alignment?: 'left' | 'right' | 'top' | 'bottom' | 'centerH' | 'centerV';
+	elementIds?: string[] | undefined;
+	alignment?: 'left' | 'right' | 'top' | 'bottom' | 'centerH' | 'centerV' | undefined;
 	// reorderLayer
-	elementId?: string;
-	layerAction?: 'bringToFront' | 'sendToBack' | 'bringForward' | 'sendBackward';
+	elementId?: string | undefined;
+	layerAction?: 'bringToFront' | 'sendToBack' | 'bringForward' | 'sendBackward' | undefined;
 }
 
 export function arrangeElements(
@@ -488,7 +489,7 @@ export function arrangeElements(
 		throw new Error(err);
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 
 	if (params.action === 'align') {
 		if (!params.elementIds || params.elementIds.length === 0) {
@@ -555,7 +556,8 @@ export function arrangeElements(
 		if (idx < 0) {
 			throw new Error(`Element '${params.elementId}' not found.`);
 		}
-		const [el] = slide.elements.splice(idx, 1);
+		const el = at(slide.elements, idx);
+		slide.elements.splice(idx, 1);
 		switch (params.layerAction) {
 			case 'bringToFront':
 				slide.elements.push(el);
@@ -594,9 +596,9 @@ export function arrangeElements(
 export interface CloneElementParams {
 	slideIndex: number;
 	elementId: string;
-	targetSlideIndexes?: number[];
-	offsetX?: number;
-	offsetY?: number;
+	targetSlideIndexes?: number[] | undefined;
+	offsetX?: number | undefined;
+	offsetY?: number | undefined;
 }
 
 export interface CloneElementResult {
@@ -612,7 +614,7 @@ export function cloneElement(
 		throw new Error(err);
 	}
 
-	const srcSlide = ctx.pptxData.slides[params.slideIndex];
+	const srcSlide = at(ctx.pptxData.slides, params.slideIndex);
 	const original = srcSlide.elements.find((e) => e.id === params.elementId);
 	if (!original) {
 		throw new Error(`Element '${params.elementId}' not found on slide ${params.slideIndex}.`);
@@ -638,7 +640,7 @@ export function cloneElement(
 		reassignDescendantIds(clone, () => makeStoreAwareId(intoTemplate, original.id));
 		clone.x += offsetX;
 		clone.y += offsetY;
-		ctx.pptxData.slides[targetIdx].elements.push(clone);
+		at(ctx.pptxData.slides, targetIdx).elements.push(clone);
 		clonedIds.push(clone.id);
 	}
 
@@ -654,11 +656,11 @@ export function cloneElement(
 export interface SetElementAnimationParams {
 	slideIndex: number;
 	elementId: string;
-	entrance?: string;
-	exit?: string;
-	durationMs?: number;
-	delayMs?: number;
-	order?: number;
+	entrance?: string | undefined;
+	exit?: string | undefined;
+	durationMs?: number | undefined;
+	delayMs?: number | undefined;
+	order?: number | undefined;
 }
 
 export function setElementAnimation(
@@ -670,7 +672,7 @@ export function setElementAnimation(
 		throw new Error(err);
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 	const elExists = slide.elements.some((e) => e.id === params.elementId);
 	if (!elExists) {
 		throw new Error(`Element '${params.elementId}' not found on slide ${params.slideIndex}.`);
@@ -739,7 +741,7 @@ export function groupElements(
 		throw new Error('At least 2 elements are required to form a group.');
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 	const idSet = new Set(params.elementIds);
 	const found = new Set(slide.elements.filter((e) => idSet.has(e.id)).map((e) => e.id));
 	if (found.size !== idSet.size) {
@@ -783,7 +785,7 @@ export function ungroupElements(
 		throw new Error(err);
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 	const group = slide.elements.find((e) => e.id === params.groupElementId);
 	if (!group) {
 		throw new Error(`Group element '${params.groupElementId}' not found.`);
@@ -825,13 +827,13 @@ export function ungroupElements(
 export interface BatchUpdateElementsParams {
 	slideIndex: number;
 	elementIds: string[];
-	x?: number;
-	y?: number;
-	width?: number;
-	height?: number;
-	rotation?: number;
-	opacity?: number;
-	hidden?: boolean;
+	x?: number | undefined;
+	y?: number | undefined;
+	width?: number | undefined;
+	height?: number | undefined;
+	rotation?: number | undefined;
+	opacity?: number | undefined;
+	hidden?: boolean | undefined;
 }
 
 export function batchUpdateElements(
@@ -843,7 +845,7 @@ export function batchUpdateElements(
 		throw new Error(err);
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 	const idSet = new Set(params.elementIds);
 	let count = 0;
 

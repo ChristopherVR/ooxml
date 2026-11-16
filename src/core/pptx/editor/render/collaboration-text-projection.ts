@@ -5,6 +5,7 @@ import type { DeltaOp } from './collaboration-text-codec';
 import { encodeSegmentsToDelta } from './collaboration-text-codec';
 import { inlineListBodyText } from './inline-list-body';
 import { isParagraphSeparatorSegment } from './text-segment-paragraph-break';
+import { at } from '../../../geometry/indexed';
 
 export interface CollaborationTextSpan {
 	readonly segmentIndex: number;
@@ -91,7 +92,7 @@ export function createCollaborationTextProjection(
 		expected.length !== actual.length ||
 		expected.some(
 			(run, index) =>
-				run.text !== actual[index].text || run.attributes !== actual[index].attributes,
+				run.text !== at(actual, index).text || run.attributes !== at(actual, index).attributes,
 		)
 	) {
 		return undefined;

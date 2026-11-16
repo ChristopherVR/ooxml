@@ -106,7 +106,7 @@ export function setChartType(element: ChartPptxElement, newType: PptxChartType):
  */
 export function addChartSeries(
 	element: ChartPptxElement,
-	series: { name: string; values: number[]; color?: string },
+	series: { name: string; values: number[]; color?: string | undefined },
 ): void {
 	ensureChartData(element);
 	element.chartData.series.push({
@@ -228,7 +228,7 @@ export type PptxChartLegendPosition = 'b' | 'tr' | 'l' | 'r' | 't';
  */
 export function setChartLegend(
 	element: ChartPptxElement,
-	options: { show?: boolean; position?: PptxChartLegendPosition },
+	options: { show?: boolean | undefined; position?: PptxChartLegendPosition },
 ): void {
 	ensureChartData(element);
 	const style = (element.chartData.style ??= {});
@@ -265,8 +265,8 @@ export function setChartLegend(
 export function setChartDataLabels(
 	element: ChartPptxElement,
 	edit: {
-		show?: boolean;
-		showValue?: boolean;
+		show?: boolean | undefined;
+		showValue?: boolean | undefined;
 		showCategory?: boolean;
 		showSeriesName?: boolean;
 		showPercent?: boolean;
@@ -377,8 +377,8 @@ export type PptxChartAxisType = PptxChartAxisFormatting['axisType'];
  *   clear it so the axis falls back to its automatic behaviour.
  */
 export interface ChartAxisEdit {
-	min?: number | null;
-	max?: number | null;
+	min?: number | null | undefined;
+	max?: number | null | undefined;
 	majorUnit?: number | null;
 	minorUnit?: number | null;
 	orientation?: PptxChartAxisFormatting['orientation'] | null;
@@ -818,7 +818,7 @@ export function setChartSeriesMarker(
 	seriesIndex: number,
 	marker:
 		| PptxChartMarker
-		| { symbol?: PptxChartMarkerSymbol; size?: number; fillColor?: string }
+		| { symbol?: PptxChartMarkerSymbol | undefined; size?: number | undefined; fillColor?: string }
 		| null,
 ): void {
 	const series = validatedSeries(element, seriesIndex);
@@ -999,7 +999,11 @@ export function setChartDataPointMarker(
 	element: ChartPptxElement,
 	seriesIndex: number,
 	pointIndex: number,
-	marker: { symbol?: PptxChartMarkerSymbol; size?: number; fillColor?: string } | null,
+	marker: {
+		symbol?: PptxChartMarkerSymbol | undefined;
+		size?: number | undefined;
+		fillColor?: string;
+	} | null,
 ): void {
 	const series = validatedSeries(element, seriesIndex);
 	if (marker === null) {

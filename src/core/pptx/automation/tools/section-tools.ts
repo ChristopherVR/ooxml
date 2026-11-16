@@ -12,26 +12,26 @@ import type { ToolContext, ToolResult } from '../types';
 
 export interface ManageSectionsParams {
 	action: 'list' | 'add' | 'remove' | 'reorder' | 'moveSlides' | 'getForSlide';
-	name?: string;
-	slideIndices?: number[];
-	sectionId?: string;
-	sectionIds?: string[];
-	slideIndex?: number;
+	name?: string | undefined;
+	slideIndices?: number[] | undefined;
+	sectionId?: string | undefined;
+	sectionIds?: string[] | undefined;
+	slideIndex?: number | undefined;
 }
 
 export interface SectionInfo {
 	id: string;
 	name: string;
 	slideIds: string[];
-	collapsed?: boolean;
-	color?: string;
+	collapsed?: boolean | undefined;
+	color?: string | undefined;
 }
 
 export interface ManageSectionsResult {
 	action: string;
-	sections?: SectionInfo[];
-	section?: SectionInfo | null;
-	success?: boolean;
+	sections?: SectionInfo[] | undefined;
+	section?: SectionInfo | null | undefined;
+	success?: boolean | undefined;
 }
 
 export function manageSections(

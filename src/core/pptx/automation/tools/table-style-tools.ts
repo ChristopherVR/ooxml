@@ -16,6 +16,7 @@ import type {
 
 import type { ToolContext, ToolResult } from '../types';
 import { validateSlideIndex } from './helpers';
+import { at } from '../../../geometry/indexed';
 
 function findTableElement(
 	ctx: ToolContext,
@@ -26,7 +27,7 @@ function findTableElement(
 	if (err) {
 		throw new Error(err);
 	}
-	const slide = ctx.pptxData.slides[slideIndex];
+	const slide = at(ctx.pptxData.slides, slideIndex);
 	const el = slide.elements.find((e) => e.id === elementId);
 	if (!el) {
 		throw new Error(`Element '${elementId}' not found on slide ${slideIndex}.`);
@@ -55,11 +56,11 @@ function tableStyleIdsInUse(ctx: ToolContext): Set<string> {
 export interface SetTableStyleSectionParams {
 	styleId: string;
 	section: TableStylePartName;
-	styleName?: string;
-	fill?: ParsedTableStyleFill;
-	text?: ParsedTableStyleText;
-	borders?: ParsedTableStyleBorders;
-	cell3D?: PptxTableCell3D;
+	styleName?: string | undefined;
+	fill?: ParsedTableStyleFill | undefined;
+	text?: ParsedTableStyleText | undefined;
+	borders?: ParsedTableStyleBorders | undefined;
+	cell3D?: PptxTableCell3D | undefined;
 }
 
 /**
@@ -123,9 +124,9 @@ export function setTableStyleSection(
 export interface CreateTableStyleParams {
 	styleName: string;
 	/** Deep-clone every section from this existing style GUID as the starting point. */
-	basedOnStyleId?: string;
+	basedOnStyleId?: string | undefined;
 	/** Repoint `ppt/tableStyles.xml`'s `@def` at the new style on save. */
-	setAsDefault?: boolean;
+	setAsDefault?: boolean | undefined;
 }
 
 export function createTableStyle(
@@ -158,7 +159,7 @@ export function createTableStyle(
 export interface DeleteTableStyleParams {
 	styleId: string;
 	/** Delete even though a table on some slide still references this style. */
-	force?: boolean;
+	force?: boolean | undefined;
 }
 
 export function deleteTableStyle(
@@ -199,13 +200,13 @@ export interface AssignTableStyleParams {
 	 * `ppt/tableStyles.xml/a:tblStyleLst/@def`) when omitted, matching what
 	 * PowerPoint's "Insert > Table" applies without an explicit style choice.
 	 */
-	styleId?: string;
-	bandedRows?: boolean;
-	bandedColumns?: boolean;
-	firstRowHeader?: boolean;
-	lastRow?: boolean;
-	firstCol?: boolean;
-	lastCol?: boolean;
+	styleId?: string | undefined;
+	bandedRows?: boolean | undefined;
+	bandedColumns?: boolean | undefined;
+	firstRowHeader?: boolean | undefined;
+	lastRow?: boolean | undefined;
+	firstCol?: boolean | undefined;
+	lastCol?: boolean | undefined;
 }
 
 /**

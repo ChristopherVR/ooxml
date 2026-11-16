@@ -2,6 +2,7 @@ import { setElementLocked } from '../../index';
 
 import type { ToolContext, ToolResult } from '../types';
 import { validateSlideIndex } from './helpers';
+import { at } from '../../../geometry/indexed';
 
 // ── setElementLockT ──────────────────────────────────────────────────────────
 
@@ -9,11 +10,11 @@ export interface SetElementLockParams {
 	slideIndex: number;
 	elementId: string;
 	locked: boolean;
-	noMove?: boolean;
-	noResize?: boolean;
-	noRotation?: boolean;
-	noSelect?: boolean;
-	noTextEdit?: boolean;
+	noMove?: boolean | undefined;
+	noResize?: boolean | undefined;
+	noRotation?: boolean | undefined;
+	noSelect?: boolean | undefined;
+	noTextEdit?: boolean | undefined;
 }
 
 export function setElementLockT(
@@ -25,7 +26,7 @@ export function setElementLockT(
 		throw new Error(err);
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 	const idx = slide.elements.findIndex((e) => e.id === params.elementId);
 	if (idx < 0) {
 		throw new Error(`Element '${params.elementId}' not found on slide ${params.slideIndex}.`);

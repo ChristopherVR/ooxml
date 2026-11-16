@@ -20,6 +20,7 @@ import {
 	handleCreate,
 	handleDiff,
 } from './commands';
+import { at } from '../test-support/access';
 
 // ---------------------------------------------------------------------------
 // Test fixture: build a minimal PPTX in memory
@@ -253,7 +254,7 @@ describe('handleFind', () => {
 		const result = await handleFind(multiSlideBytes, 'Third');
 		if (result.totalCount > 0) {
 			// "Third" should be on the 3rd slide (index 2)
-			expect(result.matches[0].slideIndex).toBe(2);
+			expect(at(result.matches, 0).slideIndex).toBe(2);
 		}
 	});
 
@@ -399,7 +400,7 @@ describe('handleDiff', () => {
 		expect(result.slideCountA).toBe(0);
 		expect(result.slideCountB).toBe(1);
 		expect(result.slideDiffs).toHaveLength(1);
-		expect(result.slideDiffs[0].status).toBe('added');
+		expect(at(result.slideDiffs, 0).status).toBe('added');
 	});
 
 	it('detects removed slides when A has more slides', async () => {
@@ -407,7 +408,7 @@ describe('handleDiff', () => {
 		expect(result.slideCountA).toBe(1);
 		expect(result.slideCountB).toBe(0);
 		expect(result.slideDiffs).toHaveLength(1);
-		expect(result.slideDiffs[0].status).toBe('removed');
+		expect(at(result.slideDiffs, 0).status).toBe('removed');
 	});
 
 	it('includes text differences for modified slides', async () => {
@@ -417,7 +418,7 @@ describe('handleDiff', () => {
 		// The first slide should be modified with text differences
 		const modifiedSlides = result.slideDiffs.filter((d) => d.status === 'modified');
 		if (modifiedSlides.length > 0) {
-			expect(modifiedSlides[0].textDifferences).toBeDefined();
+			expect(at(modifiedSlides, 0).textDifferences).toBeDefined();
 		}
 	});
 

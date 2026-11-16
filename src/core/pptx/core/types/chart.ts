@@ -128,16 +128,16 @@ export type PptxChartTrendlineType = ChartTrendlineKind;
 export interface PptxChartTrendline {
 	trendlineType: PptxChartTrendlineType;
 	name?: string;
-	order?: number;
-	period?: number;
+	order?: number | undefined;
+	period?: number | undefined;
 	forward?: number;
 	backward?: number;
 	intercept?: number;
 	displayRSq?: boolean | undefined;
 	displayEq?: boolean | undefined;
-	color?: string;
+	color?: string | undefined;
 	/** Trendline width in points (`c:trendline/c:spPr/a:ln/@w`, EMU / 12700). */
-	lineWidth?: number;
+	lineWidth?: number | undefined;
 	/** Trendline dash style (`c:trendline/c:spPr/a:ln/a:prstDash/@val`). */
 	lineDashStyle?: string;
 	label?: PptxChartTrendlineLabel | null | undefined;
@@ -183,10 +183,10 @@ export interface PptxChartErrBars {
 	direction: PptxChartErrBarDir;
 	barType: PptxChartErrBarType;
 	valType: PptxChartErrValType;
-	val?: number;
-	customPlus?: number[];
-	customMinus?: number[];
-	noEndCap?: boolean;
+	val?: number | undefined;
+	customPlus?: number[] | undefined;
+	customMinus?: number[] | undefined;
+	noEndCap?: boolean | undefined;
 	color?: string;
 	/** Error-bar line width in points (`c:errBars/c:spPr/a:ln/@w`, EMU / 12700). */
 	width?: number;
@@ -237,9 +237,9 @@ export interface PptxChartDataTable {
  * ```
  */
 export interface PptxChartLineStyle {
-	color?: string;
-	width?: number;
-	dashStyle?: string;
+	color?: string | undefined;
+	width?: number | undefined;
+	dashStyle?: string | undefined;
 }
 
 /** Marker symbol types for line/scatter chart data points. */

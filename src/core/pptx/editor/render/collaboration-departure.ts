@@ -39,9 +39,9 @@ export interface DepartureNotice {
  * uses, so this stays in step with the protocol without adding a dependency.
  */
 export interface AwarenessStatesLike {
-	clientID?: number;
-	states?: Map<number, Record<string, unknown>>;
-	emit?: (name: string, args: unknown[]) => void;
+	clientID?: number | undefined;
+	states?: Map<number, Record<string, unknown>> | undefined;
+	emit?: ((name: string, args: unknown[]) => void) | undefined;
 }
 
 /** The structural slice of `BroadcastChannel` this module needs. */
@@ -107,7 +107,9 @@ function readNotice(data: unknown, roomId: string, selfId: number | undefined): 
 }
 
 function defaultFactory(name: string): DepartureChannelLike | null {
-	const scope = globalThis as { BroadcastChannel?: new (name: string) => DepartureChannelLike };
+	const scope = globalThis as {
+		BroadcastChannel?: (new (name: string) => DepartureChannelLike) | undefined;
+	};
 	if (!scope.BroadcastChannel) {
 		return null;
 	}

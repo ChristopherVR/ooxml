@@ -13,7 +13,7 @@
 
 export interface DeltaOp {
 	insert?: unknown;
-	attributes?: Record<string, unknown>;
+	attributes?: Record<string, unknown> | undefined;
 }
 
 export interface YTextLike {

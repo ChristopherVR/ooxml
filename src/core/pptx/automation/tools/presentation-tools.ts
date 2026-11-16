@@ -7,8 +7,8 @@ import type { ToolContext, ToolResult } from '../types';
 export function getPresentationProperties(ctx: ToolContext): ToolResult<{
 	properties: PptxPresentationProperties | undefined;
 	slideCount: number;
-	width?: number;
-	height?: number;
+	width?: number | undefined;
+	height?: number | undefined;
 }> {
 	return {
 		pptxData: ctx.pptxData,
@@ -25,16 +25,16 @@ export function getPresentationProperties(ctx: ToolContext): ToolResult<{
 // ── updatePresentationProperties ─────────────────────────────────────────────
 
 export interface UpdatePresentationPropertiesParams {
-	showType?: 'presented' | 'browsed' | 'kiosk';
-	loopContinuously?: boolean;
-	showWithNarration?: boolean;
-	showWithAnimation?: boolean;
-	advanceMode?: 'manual' | 'useTimings';
-	showSlidesMode?: 'all' | 'customShow' | 'range';
-	showSlidesFrom?: number;
-	showSlidesTo?: number;
-	showSlidesCustomShowId?: string;
-	penColor?: string;
+	showType?: 'presented' | 'browsed' | 'kiosk' | undefined;
+	loopContinuously?: boolean | undefined;
+	showWithNarration?: boolean | undefined;
+	showWithAnimation?: boolean | undefined;
+	advanceMode?: 'manual' | 'useTimings' | undefined;
+	showSlidesMode?: 'all' | 'customShow' | 'range' | undefined;
+	showSlidesFrom?: number | undefined;
+	showSlidesTo?: number | undefined;
+	showSlidesCustomShowId?: string | undefined;
+	penColor?: string | undefined;
 }
 
 export function updatePresentationProperties(

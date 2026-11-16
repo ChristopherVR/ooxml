@@ -13,6 +13,7 @@ import {
 import { formatAutoNumber } from './bullet-autonum';
 import { resolveParagraphBullet } from './bullet-list';
 import { isParagraphSeparatorSegment } from './text-segment-paragraph-break';
+import { at } from '../../../geometry/indexed';
 
 export type ParagraphBulletKind = 'bullet' | 'numbered' | 'none';
 
@@ -181,8 +182,8 @@ export interface BulletParagraphRange {
 
 /** Only text properties change; unsupported elements return an empty patch. */
 export interface ElementBulletPatch {
-	textSegments?: TextSegment[];
-	textStyle?: TextStyle;
+	textSegments?: TextSegment[] | undefined;
+	textStyle?: TextStyle | undefined;
 }
 
 function elementSegments(element: PptxElement): TextSegment[] {
@@ -204,7 +205,7 @@ function elementSegments(element: PptxElement): TextSegment[] {
 export interface BulletParagraph {
 	segments: TextSegment[];
 	indices: number[];
-	terminator?: TextSegment;
+	terminator?: TextSegment | undefined;
 }
 
 /** Split a segment list into paragraphs, keeping each paragraph's terminator. */
@@ -212,11 +213,11 @@ export function splitBulletParagraphs(segments: readonly TextSegment[]): BulletP
 	const paragraphs: BulletParagraph[] = [{ segments: [], indices: [] }];
 	for (const [index, segment] of segments.entries()) {
 		if (isParagraphSeparatorSegment(segment)) {
-			paragraphs[paragraphs.length - 1].terminator = segment;
+			at(paragraphs, paragraphs.length - 1).terminator = segment;
 			paragraphs.push({ segments: [], indices: [] });
 		} else {
-			paragraphs[paragraphs.length - 1].segments.push(segment);
-			paragraphs[paragraphs.length - 1].indices.push(index);
+			at(paragraphs, paragraphs.length - 1).segments.push(segment);
+			at(paragraphs, paragraphs.length - 1).indices.push(index);
 		}
 	}
 	return paragraphs;

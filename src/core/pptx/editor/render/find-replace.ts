@@ -9,6 +9,7 @@ import { chartSourceReferenceCounts, findMatchChartSource } from './chart-find-s
 import type { PptxSlide } from '../../index';
 import { findSlideTextTargets, isFindBreak, replaceFindRuns } from './find-text-targets';
 import { replaceFindTarget } from './find-replace-target';
+import { at } from '../../../geometry/indexed';
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -27,33 +28,33 @@ export interface FindResult {
 	/** Number of characters matched (equals `query.length`). */
 	length: number;
 	/** Child indexes inside the selected top-level group, when the match is nested. */
-	elementPath?: number[];
+	elementPath?: number[] | undefined;
 	/** Table-cell coordinates, when the match belongs to a table. */
-	tableCell?: { rowIndex: number; colIndex: number };
+	tableCell?: { rowIndex: number; colIndex: number } | undefined;
 	/** Data-model node id, when the match belongs to SmartArt. */
-	smartArtNodeId?: string;
+	smartArtNodeId?: string | undefined;
 	/** Offset within this object's run stream, used to resolve overlapping replacements. */
-	textOffset?: number;
+	textOffset?: number | undefined;
 	/** Speaker-note body match, rather than a canvas element. */
-	notes?: boolean;
+	notes?: boolean | undefined;
 	/** Match in the chart title rather than the shape's own text. */
-	chartTitle?: boolean;
-	chartSeriesIndex?: number;
-	chartCategoryIndex?: number;
+	chartTitle?: boolean | undefined;
+	chartSeriesIndex?: number | undefined;
+	chartCategoryIndex?: number | undefined;
 	/** Linked or complex chart text is searchable but requires source editing. */
-	readOnly?: boolean;
+	readOnly?: boolean | undefined;
 }
 
 /** Options passed to search and replace helpers. */
 export interface FindOptions {
 	/** When `true`, the search is case-sensitive. Defaults to `false`. */
-	matchCase?: boolean;
+	matchCase?: boolean | undefined;
 	/** Search speaker notes as well as editable slide text. */
-	includeNotes?: boolean;
+	includeNotes?: boolean | undefined;
 	/** Include chart titles. Enabled by default; disable to replace only ordinary slide text. */
-	includeChartTitles?: boolean;
+	includeChartTitles?: boolean | undefined;
 	/** Opt-in search of series names and category labels, with transactional source editing. */
-	includeChartData?: boolean;
+	includeChartData?: boolean | undefined;
 }
 
 /** Result returned by {@link replaceInSlides} and {@link replaceMatch}. */
@@ -105,7 +106,7 @@ export function findInSlides(
 	const chartSources = chartSourceReferenceCounts(slides);
 
 	for (let slideIndex = 0; slideIndex < slides.length; slideIndex++) {
-		const slide = slides[slideIndex];
+		const slide = at(slides, slideIndex);
 		for (const { runs, ...target } of findSlideTextTargets(
 			slide,
 			opts.includeNotes,

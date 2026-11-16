@@ -16,6 +16,7 @@
  */
 
 import type { PptxTableData, PptxTableRow, TablePptxElement } from 'ooxml-core/pptx';
+import { at } from '../../../geometry/indexed';
 
 /** Direction of a table merge. */
 export type TableMergeDirection = 'vertical' | 'horizontal';
@@ -23,9 +24,9 @@ export type TableMergeDirection = 'vertical' | 'horizontal';
 /** Options for {@link mergeTableElements}. */
 export interface MergeTableOptions {
 	/** How to combine the tables. Default `'vertical'`. */
-	direction?: TableMergeDirection;
+	direction?: TableMergeDirection | undefined;
 	/** Id for the merged element. A fresh one is generated when omitted. */
-	id?: string;
+	id?: string | undefined;
 }
 
 /** Effective column count of a table (widest row, or declared column widths). */
@@ -97,7 +98,7 @@ function mergeHorizontal(aData: PptxTableData, bData: PptxTableData): PptxTableD
 	const bRows = structuredClone(bData.rows);
 	const rows: PptxTableRow[] = aRows.map((row, i) => ({
 		...row,
-		cells: [...row.cells, ...bRows[i].cells],
+		cells: [...row.cells, ...at(bRows, i).cells],
 	}));
 	return {
 		...aData,

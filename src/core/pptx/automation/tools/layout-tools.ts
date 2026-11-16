@@ -2,13 +2,14 @@ import { findLayoutByName, findLayoutByType } from '../../index';
 
 import type { ToolContext, ToolResult } from '../types';
 import { generateElementId, validateSlideIndex } from './helpers';
+import { at } from '../../../geometry/indexed';
 
 // ── getLayouts ───────────────────────────────────────────────────────────────
 
 export interface LayoutInfo {
 	name: string;
-	path?: string;
-	type?: string;
+	path?: string | undefined;
+	type?: string | undefined;
 }
 
 export interface GetLayoutsResult {
@@ -53,8 +54,8 @@ export function getLayouts(ctx: ToolContext): ToolResult<GetLayoutsResult> {
 
 export interface ApplyLayoutParams {
 	slideIndex: number;
-	layoutName?: string;
-	layoutType?: string;
+	layoutName?: string | undefined;
+	layoutType?: string | undefined;
 }
 
 export interface ApplyLayoutResult {
@@ -86,7 +87,7 @@ export function applyLayout(
 		);
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 	slide.layoutName = layout.name;
 	if (layout.path) {
 		slide.layoutPath = layout.path;

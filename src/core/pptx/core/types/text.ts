@@ -159,8 +159,8 @@ export interface TextStyle {
 	/** Line spacing reduction for normAutofit (e.g. 0.2 = reduce by 20%). Only meaningful when autoFit is true. */
 	autoFitLineSpacingReduction?: number;
 	bold?: boolean | undefined;
-	italic?: boolean;
-	underline?: boolean;
+	italic?: boolean | undefined;
+	underline?: boolean | undefined;
 	/** Specific underline style (e.g. "sng", "dbl", "wavy"). Falls back to "sng" when `underline` is true. */
 	underlineStyle?: UnderlineStyle | undefined;
 	/** Underline colour as hex string (`a:uFill` / `a:uLn`). When absent, inherits text colour. */
@@ -293,7 +293,7 @@ export interface TextStyle {
 	 * {@link color}, so the text keeps following the theme palette after a
 	 * later theme change.
 	 */
-	colorRef?: PptxThemeColorRef;
+	colorRef?: PptxThemeColorRef | undefined;
 	align?: 'left' | 'center' | 'right' | 'justify' | 'justLow' | 'dist' | 'thaiDist' | undefined;
 	/**
 	 * Vertical text-box anchor (`a:bodyPr/@anchor`, `ST_TextAnchoringType`).
@@ -408,7 +408,7 @@ export interface TextStyle {
 	 * rendering; this preserves the token linkage so the writer re-emits the
 	 * token rather than the flattened face (see #84).
 	 */
-	latinFontThemeToken?: string;
+	latinFontThemeToken?: string | undefined;
 	/** Theme-font token authored on `a:ea` (e.g. `+mn-ea`), when present. */
 	eastAsiaFontThemeToken?: string;
 	/** Theme-font token authored on `a:cs` (e.g. `+mn-cs`), when present. */
@@ -528,15 +528,15 @@ export interface TextStyle {
 	// ── Paragraph properties (additional) ──
 
 	/** Default tab size in px (`a:pPr/@defTabSz` in EMU). */
-	defaultTabSize?: number;
+	defaultTabSize?: number | undefined;
 	/** East Asian line break flag (`a:pPr/@eaLnBrk`). */
-	eaLineBreak?: boolean;
+	eaLineBreak?: boolean | undefined;
 	/** Latin line break flag (`a:pPr/@latinLnBrk`). */
-	latinLineBreak?: boolean;
+	latinLineBreak?: boolean | undefined;
 	/** Font alignment (`a:pPr/@fontAlgn`): 'auto' | 'base' | 'ctr' | 't' | 'b'. */
-	fontAlignment?: string;
+	fontAlignment?: string | undefined;
 	/** Hanging punctuation flag (`a:pPr/@hangingPunct`). */
-	hangingPunctuation?: boolean;
+	hangingPunctuation?: boolean | undefined;
 
 	// ── Text body properties (additional) ──
 
@@ -1011,7 +1011,7 @@ export interface TextSegment {
 	 * convention used for {@link bulletInfo}). Stored as the raw OOXML
 	 * value (0 = top level, 1-8 = nested) and serialised back when non-zero.
 	 */
-	paragraphLevel?: number;
+	paragraphLevel?: number | undefined;
 	/**
 	 * Raw `a:endParaRPr` XML node for the paragraph this segment starts.
 	 *
@@ -1044,7 +1044,7 @@ export interface TextSegment {
 	 * paragraph. Only the paragraph-geometry keys of {@link TextStyle} are
 	 * populated; unrelated fields fall back to the shape-level style.
 	 */
-	paragraphProperties?: TextStyle;
+	paragraphProperties?: TextStyle | undefined;
 	/**
 	 * The paragraph this segment starts authored an EMPTY `<a:pPr/>`. Only
 	 * meaningful on the first segment of a paragraph. The writer re-emits the

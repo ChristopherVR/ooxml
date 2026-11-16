@@ -4,19 +4,19 @@ import type { PptxConverterOptions } from '../../index';
 import type { ToolContext, ToolResult } from '../types';
 
 export interface ConvertToMarkdownParams {
-	outputDir?: string;
-	mediaFolderName?: string;
-	includeMetadata?: boolean;
-	slideRange?: { start?: number; end?: number };
-	includeSpeakerNotes?: boolean;
-	semanticMode?: boolean;
-	sourceName?: string;
+	outputDir?: string | undefined;
+	mediaFolderName?: string | undefined;
+	includeMetadata?: boolean | undefined;
+	slideRange?: { start?: number | undefined; end?: number | undefined } | undefined;
+	includeSpeakerNotes?: boolean | undefined;
+	semanticMode?: boolean | undefined;
+	sourceName?: string | undefined;
 	/**
 	 * Root directory under which `outputDir` must resolve. Only meaningful when
 	 * {@link ConvertToMarkdownParams.scopeOutputDir} is supplied. Defaults to
 	 * `process.env.PPTX_TOOLS_ROOT` if set, else `process.cwd()`.
 	 */
-	rootDir?: string;
+	rootDir?: string | undefined;
 	/**
 	 * Optional host-supplied guard that resolves `outputDir` under `rootDir` and
 	 * rejects traversal escapes.
@@ -30,7 +30,7 @@ export interface ConvertToMarkdownParams {
 	 * makes browser builds warn. So the MCP server injects
 	 * {@link resolveScopedDir} instead and browsers simply omit it.
 	 */
-	scopeOutputDir?: (outputDir: string, rootDir?: string) => string;
+	scopeOutputDir?: ((outputDir: string, rootDir?: string) => string) | undefined;
 }
 
 export interface ConvertToMarkdownResult {

@@ -93,8 +93,8 @@ export interface CreateResult {
 export interface SlideDiffEntry {
 	slideNumber: number;
 	status: 'added' | 'removed' | 'modified' | 'unchanged';
-	elementCountA?: number;
-	elementCountB?: number;
+	elementCountA?: number | undefined;
+	elementCountB?: number | undefined;
 	textDifferences?: string[] | undefined;
 }
 
@@ -120,7 +120,7 @@ export interface DiffResult {
  */
 async function loadPptx(
 	bytes: Uint8Array,
-	options?: { eagerDecodeImages?: boolean },
+	options?: { eagerDecodeImages?: boolean | undefined },
 ): Promise<{ handler: PptxHandler; data: PptxData }> {
 	const handler = new PptxHandler();
 	const data = await handler.load(bytes.buffer as ArrayBuffer, options);
@@ -176,7 +176,7 @@ function countElements(elements: PptxElement[]): number {
 function extractSlideText(elements: PptxElement[]): string[] {
 	const texts: string[] = [];
 	for (const el of elements) {
-		if ('text' in el && typeof (el as { text?: string }).text === 'string') {
+		if ('text' in el && typeof (el as { text?: string | undefined }).text === 'string') {
 			const text = (el as { text: string }).text;
 			if (text.trim()) {
 				texts.push(text);
@@ -250,7 +250,7 @@ export async function handleInfo(bytes: Uint8Array): Promise<InfoResult> {
  */
 export async function handleExportSvg(
 	bytes: Uint8Array,
-	options?: { slideIndices?: number[]; includeHidden?: boolean },
+	options?: { slideIndices?: number[] | undefined; includeHidden?: boolean | undefined },
 ): Promise<ExportSvgResult> {
 	const { data } = await loadPptx(bytes, { eagerDecodeImages: true });
 	for (const slide of data.slides) {
@@ -274,10 +274,10 @@ export async function handleExportSvg(
 export async function handleExportMd(
 	bytes: Uint8Array,
 	options?: {
-		sourceName?: string;
-		includeSpeakerNotes?: boolean;
-		semanticMode?: boolean;
-		slideRange?: { start?: number; end?: number };
+		sourceName?: string | undefined;
+		includeSpeakerNotes?: boolean | undefined;
+		semanticMode?: boolean | undefined;
+		slideRange?: { start?: number | undefined; end?: number | undefined } | undefined;
 	},
 ): Promise<ExportMdResult> {
 	const { data } = await loadPptx(bytes, { eagerDecodeImages: true });
@@ -326,7 +326,7 @@ export async function handleMerge(
 export async function handleFind(
 	bytes: Uint8Array,
 	search: string,
-	options?: { caseSensitive?: boolean },
+	options?: { caseSensitive?: boolean | undefined },
 ): Promise<FindCommandResult> {
 	const { data } = await loadPptx(bytes);
 
@@ -350,7 +350,7 @@ export async function handleReplace(
 	bytes: Uint8Array,
 	search: string,
 	replacement: string,
-	options?: { caseSensitive?: boolean },
+	options?: { caseSensitive?: boolean | undefined },
 ): Promise<ReplaceResult> {
 	const { handler, data } = await loadPptx(bytes);
 
@@ -372,15 +372,17 @@ export async function handleReplace(
  * Create a new blank presentation.
  */
 export async function handleCreate(options?: {
-	title?: string;
-	creator?: string;
-	theme?: {
-		name?: string;
-		colors?: Record<string, string>;
-		fonts?: { majorFont?: string; minorFont?: string };
-	};
-	width?: number;
-	height?: number;
+	title?: string | undefined;
+	creator?: string | undefined;
+	theme?:
+		| {
+				name?: string | undefined;
+				colors?: Record<string, string> | undefined;
+				fonts?: { majorFont?: string | undefined; minorFont?: string | undefined } | undefined;
+		  }
+		| undefined;
+	width?: number | undefined;
+	height?: number | undefined;
 }): Promise<CreateResult> {
 	const { handler, data, createSlide } = await PptxHandler.createBlank({
 		title: options?.title,

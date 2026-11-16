@@ -41,7 +41,7 @@ export type TableCellTextStyleUpdate = Partial<
 		PptxTableCellStyle,
 		'bold' | 'italic' | 'underline' | 'color' | 'fontFamily' | 'fontSize' | 'align'
 	>
-> & { strikethrough?: boolean };
+> & { strikethrough?: boolean | undefined };
 
 const RUN_KEYS = [
 	'bold',

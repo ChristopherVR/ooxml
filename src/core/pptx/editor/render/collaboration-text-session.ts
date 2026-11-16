@@ -9,15 +9,16 @@ import {
 	textSessionPlan,
 	textSessionUnits,
 } from './collaboration-text-session-delta';
+import { at } from '../../../geometry/indexed';
 
 /** Supplied by the binding's existing Yjs runtime, bound to this exact Y.Text. */
 export interface TextSessionPositions<Position> {
 	capture: (index: number, association: number) => Position;
 	resolve: (position: Position) => number | null;
 	/** Synchronize tracked positions once per batch, including in-transaction writes. */
-	refresh?: () => boolean | void;
+	refresh?: (() => boolean | void) | undefined;
 	/** Release only resources created for this session. */
-	dispose?: () => void;
+	dispose?: (() => void) | undefined;
 }
 
 /** Opaque acknowledgement identity for an exact remote snapshot painted by an adapter. */
@@ -104,7 +105,7 @@ export function createCollaborationTextSession<Position>({
 			const units = baseline!;
 			const position =
 				association < 0 && index > 0
-					? units[index - 1].end
+					? at(units, index - 1).end
 					: (units[index]?.start ?? units[index - 1]?.end ?? emptyBoundary);
 			return () => (active() ? positions.resolve(position) : null);
 		},
@@ -130,7 +131,7 @@ export function createCollaborationTextSession<Position>({
 				(!paragraphSources ||
 					paragraphSources.every((source, index) => source === null || source === index)) &&
 				desired.every((unit, index) =>
-					textSessionAttributesEqual(previous[index].attributes, unit.attributes),
+					textSessionAttributesEqual(at(previous, index).attributes, unit.attributes),
 				)
 			) {
 				return true;

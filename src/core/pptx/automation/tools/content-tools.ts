@@ -4,6 +4,7 @@ import type { PptxElementWithText, TablePptxElement } from '../../index';
 import type { ToolContext, ToolResult } from '../types';
 import { validateSlideIndex } from './helpers';
 import { replaceElementText } from './text-editing';
+import { at } from '../../../geometry/indexed';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -43,9 +44,9 @@ function buildSearchRegex(query: string, useRegex: boolean, caseSensitive: boole
 
 export interface FindTextParams {
 	query: string;
-	useRegex?: boolean;
-	caseSensitive?: boolean;
-	slideIndexes?: number[];
+	useRegex?: boolean | undefined;
+	caseSensitive?: boolean | undefined;
+	slideIndexes?: number[] | undefined;
 }
 
 export interface TextMatch {
@@ -90,7 +91,7 @@ export function findText(ctx: ToolContext, params: FindTextParams): ToolResult<F
 			throw new Error(err);
 		}
 
-		const slide = ctx.pptxData.slides[si];
+		const slide = at(ctx.pptxData.slides, si);
 
 		for (const el of slide.elements) {
 			if (hasTextProperties(el)) {
@@ -172,9 +173,9 @@ export function findText(ctx: ToolContext, params: FindTextParams): ToolResult<F
 export interface ReplaceTextParams {
 	query: string;
 	replacement: string;
-	useRegex?: boolean;
-	caseSensitive?: boolean;
-	slideIndexes?: number[];
+	useRegex?: boolean | undefined;
+	caseSensitive?: boolean | undefined;
+	slideIndexes?: number[] | undefined;
 }
 
 export interface ReplaceTextResult {
@@ -213,7 +214,7 @@ export function replaceText(
 			throw new Error(err);
 		}
 
-		const slide = ctx.pptxData.slides[si];
+		const slide = at(ctx.pptxData.slides, si);
 
 		for (const el of slide.elements) {
 			if (hasTextProperties(el)) {
@@ -273,28 +274,28 @@ export function replaceText(
 
 export interface ManageCommentsParams {
 	action: 'list' | 'add' | 'delete' | 'resolve';
-	slideIndex?: number;
-	text?: string;
-	author?: string;
-	commentId?: string;
-	resolved?: boolean;
-	includeResolved?: boolean;
+	slideIndex?: number | undefined;
+	text?: string | undefined;
+	author?: string | undefined;
+	commentId?: string | undefined;
+	resolved?: boolean | undefined;
+	includeResolved?: boolean | undefined;
 }
 
 export interface CommentInfo {
 	id: string;
 	slideIndex: number;
 	text: string;
-	author?: string;
-	createdAt?: string;
-	resolved?: boolean;
+	author?: string | undefined;
+	createdAt?: string | undefined;
+	resolved?: boolean | undefined;
 }
 
 export interface ManageCommentsResult {
 	action: string;
-	comments?: CommentInfo[];
-	commentId?: string;
-	count?: number;
+	comments?: CommentInfo[] | undefined;
+	commentId?: string | undefined;
+	count?: number | undefined;
 }
 
 export function manageComments(
@@ -308,7 +309,7 @@ export function manageComments(
 				if (params.slideIndex !== undefined && si !== params.slideIndex) {
 					continue;
 				}
-				const slide = ctx.pptxData.slides[si];
+				const slide = at(ctx.pptxData.slides, si);
 				for (const c of slide.comments ?? []) {
 					if (!params.includeResolved && c.resolved) {
 						continue;
@@ -341,7 +342,7 @@ export function manageComments(
 			if (!params.text) {
 				throw new Error('text is required for add action.');
 			}
-			const slide = ctx.pptxData.slides[params.slideIndex];
+			const slide = at(ctx.pptxData.slides, params.slideIndex);
 			if (!slide.comments) {
 				slide.comments = [];
 			}

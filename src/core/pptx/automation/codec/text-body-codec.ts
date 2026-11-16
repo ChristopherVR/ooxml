@@ -111,7 +111,7 @@ export function encodeTextBodyToYText(segments: unknown[], ytext: YText): void {
 export function decodeTextBodyFromYText(ytext: YText): Record<string, unknown>[] {
 	const delta = ytext.toDelta() as Array<{
 		insert?: unknown;
-		attributes?: Record<string, string>;
+		attributes?: Record<string, string> | undefined;
 	}>;
 	const segments: Record<string, unknown>[] = [];
 	for (const op of delta) {

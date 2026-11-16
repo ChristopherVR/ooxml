@@ -9,6 +9,7 @@ import type {
 
 import type { ToolContext, ToolResult } from '../types';
 import { validateSlideIndex } from './helpers';
+import { at } from '../../../geometry/indexed';
 
 // ── updateElementStyle ────────────────────────────────────────────────────────
 
@@ -16,7 +17,7 @@ export interface UpdateElementStyleParams {
 	slideIndex: number;
 	elementId: string;
 	// fill
-	fillColor?: string;
+	fillColor?: string | undefined;
 	/**
 	 * A theme colour for the fill (`{ scheme: 'accent1', lumMod: 0.8 }`).
 	 * Wins on save: the shape is written as `<a:schemeClr>` instead of a
@@ -26,51 +27,53 @@ export interface UpdateElementStyleParams {
 	 * Passing `fillColor` alone (no `fillThemeColor`) clears any previously
 	 * set fill theme colour, matching a user typing a custom hex.
 	 */
-	fillThemeColor?: PptxThemeColorRef;
-	fillMode?: ShapeStyle['fillMode'];
-	fillGradientStops?: Array<{ color: string; position: number; opacity?: number | undefined }>;
-	fillGradientAngle?: number;
-	fillGradientType?: 'linear' | 'radial';
-	fillOpacity?: number;
+	fillThemeColor?: PptxThemeColorRef | undefined;
+	fillMode?: ShapeStyle['fillMode'] | undefined;
+	fillGradientStops?:
+		| Array<{ color: string; position: number; opacity?: number | undefined }>
+		| undefined;
+	fillGradientAngle?: number | undefined;
+	fillGradientType?: 'linear' | 'radial' | undefined;
+	fillOpacity?: number | undefined;
 	// stroke
-	strokeColor?: string;
+	strokeColor?: string | undefined;
 	/** A theme colour for the outline; see {@link fillThemeColor}. */
-	strokeThemeColor?: PptxThemeColorRef;
-	strokeWidth?: number;
-	strokeDash?: ShapeStyle['strokeDash'];
-	strokeOpacity?: number;
+	strokeThemeColor?: PptxThemeColorRef | undefined;
+	strokeWidth?: number | undefined;
+	strokeDash?: ShapeStyle['strokeDash'] | undefined;
+	strokeOpacity?: number | undefined;
 	// shadow
-	shadowColor?: string;
-	shadowBlur?: number;
-	shadowOffsetX?: number;
-	shadowOffsetY?: number;
-	shadowOpacity?: number;
+	shadowColor?: string | undefined;
+	shadowBlur?: number | undefined;
+	shadowOffsetX?: number | undefined;
+	shadowOffsetY?: number | undefined;
+	shadowOpacity?: number | undefined;
 	// glow
-	glowColor?: string;
-	glowRadius?: number;
-	glowOpacity?: number;
-	softEdgeRadius?: number;
+	glowColor?: string | undefined;
+	glowRadius?: number | undefined;
+	glowOpacity?: number | undefined;
+	softEdgeRadius?: number | undefined;
 	// image-specific
-	cropLeft?: number;
-	cropTop?: number;
-	cropRight?: number;
-	cropBottom?: number;
-	brightness?: number;
-	contrast?: number;
-	grayscale?: boolean;
+	cropLeft?: number | undefined;
+	cropTop?: number | undefined;
+	cropRight?: number | undefined;
+	cropBottom?: number | undefined;
+	brightness?: number | undefined;
+	contrast?: number | undefined;
+	grayscale?: boolean | undefined;
 	/**
 	 * Accessibility description (`p:cNvPr/@descr`). Accepted for pictures,
 	 * every graphic frame kind (table, chart, smartArt, ole, media), and a
 	 * plain shape / text box / connector: the core writer serialises all
 	 * eight kinds, so the tool must not stop at images.
 	 */
-	altText?: string;
+	altText?: string | undefined;
 	/**
 	 * Accessibility title (`p:cNvPr/@title`). Accepted for every kind that
 	 * models it: table, chart, smartArt, ole, media, text, shape and
 	 * connector (a picture has no separate title field, only `altText`).
 	 */
-	title?: string;
+	title?: string | undefined;
 }
 
 /** Element kinds whose core type models `altText` and whose writer persists it. */
@@ -101,7 +104,7 @@ export function applyElementAltText(el: PptxElement, altText: string): void {
 				`only ${[...ALT_TEXT_ELEMENT_TYPES].join(', ')} elements do.`,
 		);
 	}
-	(el as { altText?: string }).altText = altText;
+	(el as { altText?: string | undefined }).altText = altText;
 }
 
 /**
@@ -115,7 +118,7 @@ export function applyElementTitle(el: PptxElement, title: string): void {
 				`only ${[...TITLE_ELEMENT_TYPES].join(', ')} elements do.`,
 		);
 	}
-	(el as { title?: string }).title = title;
+	(el as { title?: string | undefined }).title = title;
 }
 
 export function updateElementStyle(
@@ -127,7 +130,7 @@ export function updateElementStyle(
 		throw new Error(err);
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 	const el = slide.elements.find((e) => e.id === params.elementId);
 	if (!el) {
 		throw new Error(`Element '${params.elementId}' not found on slide ${params.slideIndex}.`);
@@ -278,7 +281,7 @@ export function updateElementStyle(
 
 export interface AccessibilityIssue {
 	slideIndex: number;
-	elementId?: string;
+	elementId?: string | undefined;
 	severity: 'error' | 'warning' | 'info';
 	message: string;
 }
@@ -296,7 +299,7 @@ export function runAccessibilityCheck(ctx: ToolContext): ToolResult<Accessibilit
 	const issues: AccessibilityIssue[] = [];
 
 	for (let si = 0; si < ctx.pptxData.slides.length; si++) {
-		const slide = ctx.pptxData.slides[si];
+		const slide = at(ctx.pptxData.slides, si);
 		let slideHasText = false;
 
 		for (const el of slide.elements) {

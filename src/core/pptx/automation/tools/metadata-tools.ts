@@ -5,9 +5,9 @@ import type { ToolContext, ToolResult } from '../types';
 // ── getMetadata ──────────────────────────────────────────────────────────────
 
 export interface MetadataResult {
-	coreProperties?: PptxCoreProperties;
-	appProperties?: PptxAppProperties;
-	customProperties?: PptxCustomProperty[];
+	coreProperties?: PptxCoreProperties | undefined;
+	appProperties?: PptxAppProperties | undefined;
+	customProperties?: PptxCustomProperty[] | undefined;
 	slideCount: number;
 }
 
@@ -27,16 +27,16 @@ export function getMetadata(ctx: ToolContext): ToolResult<MetadataResult> {
 // ── updateMetadata ───────────────────────────────────────────────────────────
 
 export interface UpdateMetadataParams {
-	title?: string;
-	subject?: string;
-	creator?: string;
-	keywords?: string;
-	description?: string;
-	lastModifiedBy?: string;
-	category?: string;
-	company?: string;
-	manager?: string;
-	customProperties?: Array<{ name: string; value: string | number | boolean }>;
+	title?: string | undefined;
+	subject?: string | undefined;
+	creator?: string | undefined;
+	keywords?: string | undefined;
+	description?: string | undefined;
+	lastModifiedBy?: string | undefined;
+	category?: string | undefined;
+	company?: string | undefined;
+	manager?: string | undefined;
+	customProperties?: Array<{ name: string; value: string | number | boolean }> | undefined;
 }
 
 export function updateMetadata(

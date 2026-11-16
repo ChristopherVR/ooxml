@@ -20,20 +20,20 @@ import { formatAutoNumber } from './bullet-autonum';
 export interface ParagraphBulletResult {
 	marker: string;
 	isNumbered: boolean;
-	color?: string;
-	fontFamily?: string;
-	sizePts?: number;
-	sizePercent?: number;
-	picture?: PictureBulletMarker;
+	color?: string | undefined;
+	fontFamily?: string | undefined;
+	sizePts?: number | undefined;
+	sizePercent?: number | undefined;
+	picture?: PictureBulletMarker | undefined;
 }
 
 /** Framework-neutral picture-bullet source, sizing, and accessible fallback. */
 export interface PictureBulletMarker {
-	src?: string;
+	src?: string | undefined;
 	sizePx: number;
 	fallbackMarker: string;
 	accessibleLabel: string;
-	imageRelId?: string;
+	imageRelId?: string | undefined;
 }
 
 /** Resolve React-compatible picture-bullet sizing and fallback metadata. */
@@ -140,16 +140,16 @@ export function bulletIndentPx(level: number | undefined): number {
 
 /** Per-paragraph indent metadata from `PptxTextProperties.paragraphIndents`. */
 export interface ParagraphIndent {
-	marginLeft?: number;
-	indent?: number;
+	marginLeft?: number | undefined;
+	indent?: number | undefined;
 }
 
 /** Resolved CSS hanging-indent layout for a paragraph (px). */
 export interface ParagraphIndentLayout {
 	/** `margin-left` in px (whole-paragraph indent), or `undefined` for none. */
-	marginLeftPx?: number;
+	marginLeftPx?: number | undefined;
 	/** `text-indent` in px (first-line / hanging indent), or `undefined`. */
-	textIndentPx?: number;
+	textIndentPx?: number | undefined;
 }
 
 /**

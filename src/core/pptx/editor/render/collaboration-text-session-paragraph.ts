@@ -1,5 +1,6 @@
 import type { TextSessionUnit } from './collaboration-text-session-delta';
 import { mergeTextSessionObjectAttribute } from './collaboration-text-session-delta';
+import { at } from '../../../geometry/indexed';
 
 const paragraphKeys = ['bi', 'pl', 'pr', 'pi', 'pp'] as const;
 type ParagraphPatch = Record<string, string | null>;
@@ -14,12 +15,12 @@ function readParagraphAttributes(
 	if (carrier) return carrier;
 	// A separator may itself carry an empty paragraph; it cannot borrow from its
 	// neighbour after deletion. Other carriers can relocate onto surviving body.
-	if (previous[source].attributes.pb === '1') return {};
+	if (at(previous, source).attributes.pb === '1') return {};
 	let start = source;
-	while (start > 0 && previous[start - 1].attributes.pb !== '1') start--;
+	while (start > 0 && at(previous, start - 1).attributes.pb !== '1') start--;
 	for (
 		let index = start;
-		index < previous.length && previous[index].attributes.pb !== '1';
+		index < previous.length && at(previous, index).attributes.pb !== '1';
 		index++
 	) {
 		const current = readCurrent(index);
@@ -41,7 +42,7 @@ export function textSessionParagraphPatches(
 		if (source === null) {
 			continue;
 		}
-		const after = desired[index].attributes;
+		const after = at(desired, index).attributes;
 		let byAttributes = cache.get(source);
 		if (!byAttributes) {
 			byAttributes = new Map();
@@ -49,7 +50,7 @@ export function textSessionParagraphPatches(
 		}
 		let patch = byAttributes.get(after);
 		if (!patch) {
-			const before = previous[source].attributes;
+			const before = at(previous, source).attributes;
 			const current = readParagraphAttributes(previous, source, readCurrent);
 			patch = {};
 			for (const key of paragraphKeys) {

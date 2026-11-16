@@ -90,7 +90,9 @@ export interface YjsFactories {
 	createArray: () => YArrayLike;
 	createText: () => YTextLike;
 	/** Track character identities using the binding's existing Yjs runtime. */
-	createTextPositions?: (text: YTextEditableLike) => TextSessionPositions<TrackedTextPosition>;
+	createTextPositions?:
+		| ((text: YTextEditableLike) => TextSessionPositions<TrackedTextPosition>)
+		| undefined;
 }
 
 // ---------------------------------------------------------------------------

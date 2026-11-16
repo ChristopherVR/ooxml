@@ -82,7 +82,11 @@ export function describeElement(el: PptxElement): Record<string, unknown> {
 	}
 
 	if (el.type === 'image' || el.type === 'picture') {
-		const img = el as { altText?: string; imagePath?: string; imageData?: string };
+		const img = el as {
+			altText?: string | undefined;
+			imagePath?: string | undefined;
+			imageData?: string | undefined;
+		};
 		if (img.altText) {
 			base.altText = img.altText;
 		}
@@ -106,7 +110,7 @@ export function describeElement(el: PptxElement): Record<string, unknown> {
 	}
 
 	if (el.type === 'group') {
-		const grp = el as { children?: PptxElement[] };
+		const grp = el as { children?: PptxElement[] | undefined };
 		base.childCount = grp.children?.length ?? 0;
 	}
 

@@ -11,7 +11,9 @@
 		"skipLibCheck": true,
 		"esModuleInterop": true,
 		"declaration": true,
-		"types": ["node", "vitest/globals"]
+		"types": ["node", "vitest/globals"],
+		// The editor modules import the model by its package name, as consumers do.
+		"paths": { "ooxml-core/pptx": ["./pptx/index.ts"] }
 	},
 	"include": ["**/*.ts"],
 	"exclude": [
@@ -19,8 +21,7 @@
 		"**/node_modules/**",
 		"pptx/__tests__/**",
 		"pptx/automation/**",
-		"pptx/cli/**",
-		"pptx/editor/**",
+		"pptx/editor/render/**",
 		"scripts/**",
 		"tsup*.config.ts",
 		"tsdown*.config.ts",

@@ -8,6 +8,7 @@
  * a palette fixed in one binding must not silently differ in another.
  */
 import type { PptxThemeColorScheme } from 'ooxml-core/pptx';
+import { at } from '../../../geometry/indexed';
 
 // ---------------------------------------------------------------------------
 // Preset theme definitions: actual Microsoft Office colour palettes
@@ -217,7 +218,7 @@ export const PRESET_THEMES: PresetTheme[] = [
  * The Office scheme, used to fill slots a parsed theme leaves undefined so the
  * editor always paints 12 swatches instead of a ragged grid.
  */
-export const DEFAULT_THEME_COLOR_SCHEME: PptxThemeColorScheme = PRESET_THEMES[0].colorScheme;
+export const DEFAULT_THEME_COLOR_SCHEME: PptxThemeColorScheme = at(PRESET_THEMES, 0).colorScheme;
 
 // ---------------------------------------------------------------------------
 // Common fonts for dropdowns

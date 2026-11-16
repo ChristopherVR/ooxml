@@ -10,20 +10,20 @@ import { chartLabelsAreEditable } from './chart-label-editability';
 
 export interface FindTextTarget {
 	elementId: string;
-	notes?: boolean;
-	elementPath?: number[];
-	tableCell?: { rowIndex: number; colIndex: number };
-	smartArtNodeId?: string;
-	chartTitle?: boolean;
-	chartSeriesIndex?: number;
-	chartCategoryIndex?: number;
-	readOnly?: boolean;
+	notes?: boolean | undefined;
+	elementPath?: number[] | undefined;
+	tableCell?: { rowIndex: number; colIndex: number } | undefined;
+	smartArtNodeId?: string | undefined;
+	chartTitle?: boolean | undefined;
+	chartSeriesIndex?: number | undefined;
+	chartCategoryIndex?: number | undefined;
+	readOnly?: boolean | undefined;
 	runs: readonly FindTextRun[];
 }
 export interface FindTextRun {
 	text: string;
-	isParagraphBreak?: boolean;
-	isLineBreak?: boolean;
+	isParagraphBreak?: boolean | undefined;
+	isLineBreak?: boolean | undefined;
 }
 
 export function* smartArtNodes(nodes: readonly PptxSmartArtNode[]): Generator<PptxSmartArtNode> {

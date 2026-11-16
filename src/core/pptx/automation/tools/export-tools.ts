@@ -3,14 +3,15 @@ import type { SvgExportOptions } from '../../index';
 
 import type { ToolContext, ToolResult } from '../types';
 import { validateSlideIndex } from './helpers';
+import { at } from '../../../geometry/indexed';
 
 // ── exportToSvg ──────────────────────────────────────────────────────────────
 
 export interface ExportToSvgParams {
-	slideIndices?: number[];
-	includeHidden?: boolean;
-	defaultFontFamily?: string;
-	defaultFontSize?: number;
+	slideIndices?: number[] | undefined;
+	includeHidden?: boolean | undefined;
+	defaultFontFamily?: string | undefined;
+	defaultFontSize?: number | undefined;
 }
 
 export interface ExportToSvgResult {
@@ -58,8 +59,8 @@ export function exportToSvg(
 
 export interface ExportSlideSvgParams {
 	slideIndex: number;
-	defaultFontFamily?: string;
-	defaultFontSize?: number;
+	defaultFontFamily?: string | undefined;
+	defaultFontSize?: number | undefined;
 }
 
 export interface ExportSlideSvgResult {
@@ -76,7 +77,7 @@ export function exportSlideSvg(
 		throw new Error(err);
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 	const width = ctx.pptxData.width ?? 960;
 	const height = ctx.pptxData.height ?? 540;
 	const options: SvgExportOptions = {};

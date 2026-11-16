@@ -708,8 +708,8 @@ export interface PresentationThemeInput {
 		| undefined;
 	fonts?:
 		| {
-				majorFont?: string;
-				minorFont?: string;
+				majorFont?: string | undefined;
+				minorFont?: string | undefined;
 		  }
 		| undefined;
 }

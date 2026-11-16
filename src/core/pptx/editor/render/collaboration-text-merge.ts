@@ -19,6 +19,7 @@
 
 import type { DeltaOp, YTextLike } from './collaboration-text-codec';
 import { isYTextLike } from './collaboration-text-codec';
+import { at } from '../../../geometry/indexed';
 
 /** Y.Text surface needed for in-place edits (delete/format on top of insert). */
 export interface YTextEditableLike extends YTextLike {
@@ -127,9 +128,9 @@ function reconcileAttributeRuns(ytext: YTextEditableLike, desiredOps: DeltaOp[])
 		const dAttrs = (dop.attributes ?? {}) as Record<string, string>;
 		let remaining = dop.insert.length;
 		while (remaining > 0 && ci < currentOps.length) {
-			const cText = currentOps[ci].insert as string;
+			const cText = at(currentOps, ci).insert as string;
 			const len = Math.min(cText.length - cOff, remaining);
-			const cAttrs = (currentOps[ci].attributes ?? {}) as Record<string, string>;
+			const cAttrs = (at(currentOps, ci).attributes ?? {}) as Record<string, string>;
 			if (!attrsEqual(cAttrs, dAttrs)) {
 				const patch: Record<string, string | null> = {};
 				for (const key of Object.keys(dAttrs)) {

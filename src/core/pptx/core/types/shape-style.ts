@@ -93,7 +93,7 @@ export interface ShapeStyle {
 	 * the theme palette after a later theme change. `undefined` means the fill
 	 * is a plain hex (or a colour kind a ref cannot express).
 	 */
-	fillColorRef?: PptxThemeColorRef;
+	fillColorRef?: PptxThemeColorRef | undefined;
 	fillGradient?: string | undefined;
 	/** Original `gradFill` XML retained for unknown-child and extension round-tripping. */
 	fillGradientXml?: XmlObject;
@@ -188,7 +188,7 @@ export interface ShapeStyle {
 	 * {@link fillColorRef}: set when {@link strokeColorXml} is a plain
 	 * `a:schemeClr`, and wins on save.
 	 */
-	strokeColorRef?: PptxThemeColorRef;
+	strokeColorRef?: PptxThemeColorRef | undefined;
 	/**
 	 * Kind of fill painted on the outline (`a:ln` child). Distinguishes a solid
 	 * outline from a gradient/pattern/none outline so save can emit the correct

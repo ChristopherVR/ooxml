@@ -9,6 +9,7 @@ import {
 
 import type { ToolContext, ToolResult } from '../types';
 import { validateSlideIndex } from './helpers';
+import { at } from '../../../geometry/indexed';
 
 // ── updateTableCells ─────────────────────────────────────────────────────────
 
@@ -27,7 +28,7 @@ export function updateTableCells(
 		throw new Error(err);
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 	const el = slide.elements.find((e) => e.id === params.elementId);
 	if (!el) {
 		throw new Error(`Element '${params.elementId}' not found on slide ${params.slideIndex}.`);
@@ -70,9 +71,9 @@ export interface ManageTableStructureParams {
 	slideIndex: number;
 	elementId: string;
 	action: 'insertRow' | 'deleteRow' | 'insertColumn' | 'deleteColumn';
-	position?: number;
-	referenceIndex?: number;
-	cellTexts?: string[];
+	position?: number | undefined;
+	referenceIndex?: number | undefined;
+	cellTexts?: string[] | undefined;
 }
 
 export function manageTableStructure(
@@ -84,7 +85,7 @@ export function manageTableStructure(
 		throw new Error(err);
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 	const el = slide.elements.find((e) => e.id === params.elementId);
 	if (!el) {
 		throw new Error(`Element '${params.elementId}' not found on slide ${params.slideIndex}.`);

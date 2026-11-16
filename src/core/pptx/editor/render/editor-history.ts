@@ -1,3 +1,4 @@
+import { at } from '../../../geometry/indexed';
 /**
  * editor-history.ts: Generic undo/redo history stack.
  *
@@ -60,7 +61,7 @@ export interface EditorHistoryOptions {
 	 * When exceeded, the oldest entry is silently dropped.
 	 * @default DEFAULT_EDITOR_HISTORY_DEPTH (100)
 	 */
-	maxDepth?: number;
+	maxDepth?: number | undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -119,7 +120,7 @@ export class EditorHistory<T> {
 			return undefined;
 		}
 
-		return this._past[this._past.length - 1].label;
+		return at(this._past, this._past.length - 1).label;
 	}
 
 	/**
@@ -132,7 +133,7 @@ export class EditorHistory<T> {
 			return undefined;
 		}
 
-		return this._future[this._future.length - 1].label;
+		return at(this._future, this._future.length - 1).label;
 	}
 
 	/** Number of entries currently on the undo (past) stack. */

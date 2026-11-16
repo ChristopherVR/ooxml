@@ -5,6 +5,7 @@ import {
 	applyTableStyleImagePatches,
 	collectTableStyleImagePaths,
 } from './table-style-image-paths';
+import { must } from '../../test-support/access';
 
 function mapWith(
 	styleId: string,
@@ -86,10 +87,10 @@ describe('applyTableStyleImagePatches', () => {
 		const patched = applyTableStyleImagePatches(map, resolvedMap, refs);
 
 		expect(patched).not.toBe(map);
-		expect(patched['{S1}'].wholeTblFill?.image?.data).toBe('blob:resolved-1');
+		expect(must(patched['{S1}']).wholeTblFill?.image?.data).toBe('blob:resolved-1');
 		// Untouched sections/fields are not mutated in place.
-		expect(patched['{S1}'].firstRowFill).toBe(map['{S1}'].firstRowFill);
-		expect(map['{S1}'].wholeTblFill?.image?.data).toBeUndefined();
+		expect(must(patched['{S1}']).firstRowFill).toBe(must(map['{S1}']).firstRowFill);
+		expect(must(map['{S1}']).wholeTblFill?.image?.data).toBeUndefined();
 	});
 
 	it('returns the same reference when nothing resolved', () => {

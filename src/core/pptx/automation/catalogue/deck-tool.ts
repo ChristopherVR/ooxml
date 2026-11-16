@@ -25,7 +25,7 @@ export function deckTool<S extends FileShape>(
 	description: string,
 	schema: z.ZodObject<S>,
 	fn: (ctx: ToolContext, params: DeckParams<S>) => ToolResult | Promise<ToolResult>,
-	options: { returnsText?: boolean } = {},
+	options: { returnsText?: boolean | undefined } = {},
 ): AutomationTool {
 	const { filePath: _filePath, ...input } = schema.shape;
 	const definition = { name, description, format: 'pptx' as const, input };

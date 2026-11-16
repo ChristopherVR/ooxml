@@ -14,6 +14,7 @@
  */
 
 import type { PptxSection, PptxSlide } from 'ooxml-core/pptx';
+import { at } from '../../../geometry/indexed';
 
 // ---------------------------------------------------------------------------
 // Result type
@@ -29,8 +30,8 @@ export interface SectionMutationResult {
 export interface SectionGroupDescriptor {
 	id: string;
 	name: string;
-	collapsed?: boolean;
-	color?: string;
+	collapsed?: boolean | undefined;
+	color?: string | undefined;
 }
 
 /** A declared section paired with its slides, or the trailing ungrouped slides. */
@@ -150,7 +151,7 @@ export function addSection(
 	// belong to the same current section, until the next different section.
 	const claimedSlideIndexes: number[] = [];
 	for (let i = afterSlideIndex; i < slides.length; i++) {
-		if (i === afterSlideIndex || slides[i].sectionId === currentSectionId) {
+		if (i === afterSlideIndex || at(slides, i).sectionId === currentSectionId) {
 			claimedSlideIndexes.push(i);
 		} else {
 			break;

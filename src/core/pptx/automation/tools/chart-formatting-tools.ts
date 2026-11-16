@@ -13,6 +13,7 @@ import {
 
 import type { ToolContext, ToolResult } from '../types';
 import { validateSlideIndex } from './helpers';
+import { at } from '../../../geometry/indexed';
 
 /**
  * MCP tools for the chart formatting constructs W3-D1 moved from
@@ -37,7 +38,7 @@ function findChartElement(
 	if (err) {
 		throw new Error(err);
 	}
-	const slide = ctx.pptxData.slides[slideIndex];
+	const slide = at(ctx.pptxData.slides, slideIndex);
 	const el = slide.elements.find((e) => e.id === elementId);
 	if (!el) {
 		throw new Error(`Element '${elementId}' not found on slide ${slideIndex}.`);
@@ -56,15 +57,22 @@ export interface FormatChartDataPointParams {
 	seriesIndex: number;
 	pointIndex: number;
 	/** Fill colour; `null` clears just the style entirely (see `clearStyle`). */
-	fillColor?: string;
-	strokeColor?: string;
-	strokeWidth?: number;
-	strokeDashStyle?: string;
+	fillColor?: string | undefined;
+	strokeColor?: string | undefined;
+	strokeWidth?: number | undefined;
+	strokeDashStyle?: string | undefined;
 	/** Remove all `c:dPt/c:spPr` formatting for this point. */
-	clearStyle?: boolean;
+	clearStyle?: boolean | undefined;
 	/** Pie/doughnut slice pull-out distance (0-100). `null` clears it. */
-	explosion?: number | null;
-	marker?: { symbol?: PptxChartMarkerSymbol; size?: number; fillColor?: string } | null;
+	explosion?: number | null | undefined;
+	marker?:
+		| {
+				symbol?: PptxChartMarkerSymbol | undefined;
+				size?: number | undefined;
+				fillColor?: string | undefined;
+		  }
+		| null
+		| undefined;
 }
 
 export function formatChartDataPoint(
@@ -104,30 +112,36 @@ export interface FormatChartDataLabelParams {
 	seriesIndex: number;
 	pointIndex: number;
 	/** Pass with no other field, and `remove: true`, to drop the override entirely. */
-	remove?: boolean;
-	showValue?: boolean;
-	showCategory?: boolean;
-	showSeriesName?: boolean;
-	showPercent?: boolean;
-	showLegendKey?: boolean;
-	position?: 'bestFit' | 'b' | 'ctr' | 'inBase' | 'inEnd' | 'l' | 'outEnd' | 'r' | 't';
+	remove?: boolean | undefined;
+	showValue?: boolean | undefined;
+	showCategory?: boolean | undefined;
+	showSeriesName?: boolean | undefined;
+	showPercent?: boolean | undefined;
+	showLegendKey?: boolean | undefined;
+	position?: 'bestFit' | 'b' | 'ctr' | 'inBase' | 'inEnd' | 'l' | 'outEnd' | 'r' | 't' | undefined;
 	/** Custom label text. Pass `''` to clear it. */
-	text?: string;
+	text?: string | undefined;
 	/** This label's own fill/line formatting; `null` removes it. */
-	spPr?: {
-		fillColor?: string;
-		strokeColor?: string;
-		strokeWidth?: number;
-		strokeDashStyle?: string;
-	} | null;
+	spPr?:
+		| {
+				fillColor?: string | undefined;
+				strokeColor?: string | undefined;
+				strokeWidth?: number | undefined;
+				strokeDashStyle?: string | undefined;
+		  }
+		| null
+		| undefined;
 	/** This label's own font; `null` removes it. */
-	txPr?: {
-		fontFamily?: string;
-		fontSize?: number;
-		bold?: boolean;
-		italic?: boolean;
-		color?: string;
-	} | null;
+	txPr?:
+		| {
+				fontFamily?: string | undefined;
+				fontSize?: number | undefined;
+				bold?: boolean | undefined;
+				italic?: boolean | undefined;
+				color?: string | undefined;
+		  }
+		| null
+		| undefined;
 }
 
 export function formatChartDataLabel(
@@ -159,25 +173,40 @@ export interface FormatChartSeriesParams {
 	slideIndex: number;
 	elementId: string;
 	seriesIndex: number;
-	marker?: {
-		symbol?: PptxChartMarkerSymbol;
-		size?: number;
-		fillColor?: string;
-		strokeColor?: string;
-		strokeWidth?: number;
-		strokeDashStyle?: string;
-	} | null;
-	trendline?: {
-		trendlineType: 'linear' | 'exponential' | 'logarithmic' | 'polynomial' | 'power' | 'movingAvg';
-		color?: string;
-		lineWidth?: number;
-		lineDashStyle?: string;
-		order?: number;
-		period?: number;
-		displayEq?: boolean;
-		displayRSq?: boolean;
-	} | null;
-	errorBars?: (PptxChartErrBars & { width?: number; dashStyle?: string }) | null;
+	marker?:
+		| {
+				symbol?: PptxChartMarkerSymbol | undefined;
+				size?: number | undefined;
+				fillColor?: string | undefined;
+				strokeColor?: string | undefined;
+				strokeWidth?: number | undefined;
+				strokeDashStyle?: string | undefined;
+		  }
+		| null
+		| undefined;
+	trendline?:
+		| {
+				trendlineType:
+					| 'linear'
+					| 'exponential'
+					| 'logarithmic'
+					| 'polynomial'
+					| 'power'
+					| 'movingAvg';
+				color?: string | undefined;
+				lineWidth?: number | undefined;
+				lineDashStyle?: string | undefined;
+				order?: number | undefined;
+				period?: number | undefined;
+				displayEq?: boolean | undefined;
+				displayRSq?: boolean | undefined;
+		  }
+		| null
+		| undefined;
+	errorBars?:
+		| (PptxChartErrBars & { width?: number | undefined; dashStyle?: string | undefined })
+		| null
+		| undefined;
 }
 
 export function formatChartSeries(
@@ -230,7 +259,11 @@ export interface SetChartHelperLineParams {
 	elementId: string;
 	line: 'dropLines' | 'hiLowLines';
 	/** `null` removes the line entirely. */
-	style: { color?: string; width?: number; dashStyle?: string } | null;
+	style: {
+		color?: string | undefined;
+		width?: number | undefined;
+		dashStyle?: string | undefined;
+	} | null;
 }
 
 export function setChartHelperLineT(

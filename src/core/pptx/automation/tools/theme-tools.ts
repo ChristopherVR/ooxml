@@ -11,9 +11,9 @@ import type { ToolContext, ToolResult } from '../types';
 // ── getThemeInfo ─────────────────────────────────────────────────────────────
 
 export interface ThemeInfo {
-	themeName?: string;
-	colorScheme?: PptxThemeColorScheme;
-	fontScheme?: PptxThemeFontScheme;
+	themeName?: string | undefined;
+	colorScheme?: PptxThemeColorScheme | undefined;
+	fontScheme?: PptxThemeFontScheme | undefined;
 	availablePresets: string[];
 }
 
@@ -76,18 +76,18 @@ export function applyThemePreset(
 // ── updateThemeColors ────────────────────────────────────────────────────────
 
 export interface UpdateThemeColorsParams {
-	dk1?: string;
-	lt1?: string;
-	dk2?: string;
-	lt2?: string;
-	accent1?: string;
-	accent2?: string;
-	accent3?: string;
-	accent4?: string;
-	accent5?: string;
-	accent6?: string;
-	hlink?: string;
-	folHlink?: string;
+	dk1?: string | undefined;
+	lt1?: string | undefined;
+	dk2?: string | undefined;
+	lt2?: string | undefined;
+	accent1?: string | undefined;
+	accent2?: string | undefined;
+	accent3?: string | undefined;
+	accent4?: string | undefined;
+	accent5?: string | undefined;
+	accent6?: string | undefined;
+	hlink?: string | undefined;
+	folHlink?: string | undefined;
 }
 
 export function updateThemeColors(
@@ -132,8 +132,8 @@ export function updateThemeColors(
 // ── updateThemeFonts ─────────────────────────────────────────────────────────
 
 export interface UpdateThemeFontsParams {
-	majorFont?: string;
-	minorFont?: string;
+	majorFont?: string | undefined;
+	minorFont?: string | undefined;
 }
 
 export function updateThemeFonts(

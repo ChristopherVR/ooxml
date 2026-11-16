@@ -19,7 +19,7 @@ export function chartSourceReferenceCounts(slides: readonly PptxSlide[]): Map<st
 /** Resolve the actual model source; never trust an editable flag carried by a caller's match. */
 export function findMatchChartSource(
 	slides: readonly PptxSlide[],
-	match: { slideIndex: number; elementId: string; elementPath?: number[] },
+	match: { slideIndex: number; elementId: string; elementPath?: number[] | undefined },
 ): string | undefined {
 	let element = slides[match.slideIndex]?.elements.find((item) => item.id === match.elementId);
 	for (const index of match.elementPath ?? []) {

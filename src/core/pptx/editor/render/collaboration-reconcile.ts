@@ -41,6 +41,7 @@ import {
 } from './collaboration-text-codec';
 import { hasCollaborationTextLease } from './collaboration-text-lease';
 import { isYTextEditable, mergeDeltaIntoYText } from './collaboration-text-merge';
+import { at } from '../../../geometry/indexed';
 
 /** Transaction origin used for local reconcile writes. */
 export const LOCAL_SYNC_ORIGIN = 'pptx-viewer:local-sync';
@@ -222,7 +223,7 @@ function reconcileYArrayById<T>(
 
 	// Pass 2: walk desired order; update in place, move, or insert.
 	for (let pos = 0; pos < items.length; pos++) {
-		const item = items[pos];
+		const item = at(items, pos);
 		const id = adapter.idOf(item);
 		const idAtPos = pos < arr.length ? mapIdAt(arr, pos) : undefined;
 

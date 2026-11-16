@@ -2,33 +2,42 @@ import type { PptxAction } from '../../index';
 
 import type { ToolContext, ToolResult } from '../types';
 import { validateSlideIndex } from './helpers';
+import { at } from '../../../geometry/indexed';
 
 // ── manageHyperlinks ─────────────────────────────────────────────────────────
 
 export interface ManageHyperlinksParams {
 	slideIndex: number;
 	action: 'list' | 'set' | 'remove';
-	elementId?: string;
-	trigger?: 'click' | 'hover';
-	url?: string;
-	tooltip?: string;
-	targetSlideIndex?: number;
-	actionType?: 'url' | 'slide' | 'nextSlide' | 'prevSlide' | 'firstSlide' | 'lastSlide' | 'endShow';
+	elementId?: string | undefined;
+	trigger?: 'click' | 'hover' | undefined;
+	url?: string | undefined;
+	tooltip?: string | undefined;
+	targetSlideIndex?: number | undefined;
+	actionType?:
+		| 'url'
+		| 'slide'
+		| 'nextSlide'
+		| 'prevSlide'
+		| 'firstSlide'
+		| 'lastSlide'
+		| 'endShow'
+		| undefined;
 }
 
 export interface HyperlinkInfo {
 	elementId: string;
 	trigger: 'click' | 'hover';
-	url?: string;
-	tooltip?: string;
-	targetSlideIndex?: number;
-	actionType?: string;
+	url?: string | undefined;
+	tooltip?: string | undefined;
+	targetSlideIndex?: number | undefined;
+	actionType?: string | undefined;
 }
 
 export interface ManageHyperlinksResult {
 	action: string;
-	hyperlinks?: HyperlinkInfo[];
-	elementId?: string;
+	hyperlinks?: HyperlinkInfo[] | undefined;
+	elementId?: string | undefined;
 }
 
 export function manageHyperlinks(
@@ -40,7 +49,7 @@ export function manageHyperlinks(
 		throw new Error(err);
 	}
 
-	const slide = ctx.pptxData.slides[params.slideIndex];
+	const slide = at(ctx.pptxData.slides, params.slideIndex);
 
 	switch (params.action) {
 		case 'list': {

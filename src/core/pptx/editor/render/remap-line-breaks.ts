@@ -17,6 +17,7 @@
 import type { TextSegment } from 'ooxml-core/pptx';
 
 import type { RemapSourceParagraph } from './remap-paragraph-sources';
+import { at } from '../../../geometry/indexed';
 
 /** Whether a segment is a soft line break rather than a paragraph separator. */
 export function isSoftLineBreak(segment: TextSegment): boolean {
@@ -44,6 +45,6 @@ export function softBreakBetween(
 			return undefined;
 		}
 	}
-	const terminator = lines[next - 1].terminator as TextSegment;
+	const terminator = at(lines, next - 1).terminator as TextSegment;
 	return { ...terminator, text: '\n', style: { ...terminator.style } };
 }

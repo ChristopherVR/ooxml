@@ -29,6 +29,7 @@ import type { GroupPptxElement, PptxElement } from 'ooxml-core/pptx';
 
 import { walkAndPatchElements } from '../loader/element-patch-walker';
 import { canDrillDown, canInteractWithElement } from './element-locks';
+import { at as atIndex } from '../../../geometry/indexed';
 
 function isGroup(el: PptxElement): el is GroupPptxElement {
 	return el.type === 'group' && Array.isArray((el as GroupPptxElement).children);
@@ -153,7 +154,10 @@ export function updateElementInTree(
 	if (!path) {
 		return elements;
 	}
-	const patch = { ...updates } as Partial<PptxElement> & { x?: number; y?: number };
+	const patch = { ...updates } as Partial<PptxElement> & {
+		x?: number | undefined;
+		y?: number | undefined;
+	};
 	if (path.length > 1) {
 		const offset = ancestorOffset(path) ?? { dx: 0, dy: 0 };
 		if (typeof patch.x === 'number') {
@@ -253,7 +257,7 @@ export function drillSelectionForClick(
 	if (!selectedPath || selectedPath.length === 0) {
 		return top;
 	}
-	const selectedId = selectedPath[selectedPath.length - 1].id;
+	const selectedId = atIndex(selectedPath, selectedPath.length - 1).id;
 	const at = chain.indexOf(selectedId);
 	if (at === 0) {
 		return selectedId;
@@ -288,5 +292,5 @@ export function parentSelection(
 	selectedId: string,
 ): string | null {
 	const path = findElementPath(elements, selectedId);
-	return path && path.length > 1 ? path[path.length - 2].id : null;
+	return path && path.length > 1 ? atIndex(path, path.length - 2).id : null;
 }

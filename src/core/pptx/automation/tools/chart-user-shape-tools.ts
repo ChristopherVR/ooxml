@@ -8,6 +8,7 @@ import {
 
 import type { ToolContext, ToolResult } from '../types';
 import { validateSlideIndex } from './helpers';
+import { at } from '../../../geometry/indexed';
 
 /**
  * Chart drawing-overlay (`c:userShapes`) tools (C2-G10 edit/serialize
@@ -31,7 +32,7 @@ function findChartElement(
 	if (err) {
 		throw new Error(err);
 	}
-	const slide = ctx.pptxData.slides[slideIndex];
+	const slide = at(ctx.pptxData.slides, slideIndex);
 	const el = slide.elements.find((e) => e.id === elementId);
 	if (!el) {
 		throw new Error(`Element '${elementId}' not found on slide ${slideIndex}.`);
@@ -44,17 +45,17 @@ function findChartElement(
 
 /** The overlay-shape fields an AI tool call can set, flattened from `PptxChartUserShape`. */
 export interface ChartUserShapeInput {
-	kind?: 'sp' | 'cxnSp';
-	anchor?: 'rel' | 'abs';
+	kind?: 'sp' | 'cxnSp' | undefined;
+	anchor?: 'rel' | 'abs' | undefined;
 	from: { x: number; y: number };
-	to?: { x: number; y: number };
-	ext?: { cx: number; cy: number };
-	prst?: string;
-	fill?: string;
-	stroke?: string;
-	strokeWidth?: number;
+	to?: { x: number; y: number } | undefined;
+	ext?: { cx: number; cy: number } | undefined;
+	prst?: string | undefined;
+	fill?: string | undefined;
+	stroke?: string | undefined;
+	strokeWidth?: number | undefined;
 	/** Plain text content; mapped onto a single centred paragraph. */
-	text?: string;
+	text?: string | undefined;
 }
 
 function buildShape(input: ChartUserShapeInput): PptxChartUserShape {

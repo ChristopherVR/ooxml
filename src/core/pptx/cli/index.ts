@@ -28,6 +28,7 @@ import {
 	handleCreate,
 	handleDiff,
 } from './commands';
+import { at } from '../../geometry/indexed';
 
 // ---------------------------------------------------------------------------
 // Argument helpers
@@ -158,7 +159,7 @@ async function cmdExportSvg(args: string[]): Promise<void> {
 
 	for (let i = 0; i < result.svgs.length; i++) {
 		const outPath = path.join(outputDir, `slide_${i + 1}.svg`);
-		writeFileBytes(outPath, result.svgs[i]);
+		writeFileBytes(outPath, at(result.svgs, i));
 		console.log(`Written: ${outPath}`);
 	}
 

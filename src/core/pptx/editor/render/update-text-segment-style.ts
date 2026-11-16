@@ -11,7 +11,7 @@ import { mergeTextStyleUpdate } from './font-family-update';
 export function updateTextSegmentStyle(
 	segment: TextSegment,
 	updates: Partial<TextStyle>,
-	options: { updateBodyStyle?: boolean; inherited?: TextStyle | undefined } = {},
+	options: { updateBodyStyle?: boolean | undefined; inherited?: TextStyle | undefined } = {},
 ): TextSegment {
 	const { inherited } = options;
 	return {

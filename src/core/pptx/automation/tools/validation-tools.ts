@@ -12,7 +12,7 @@ export interface ValidatePresentationResult {
 		severity: string;
 		code: string;
 		message: string;
-		path?: string;
+		path?: string | undefined;
 	}>;
 }
 

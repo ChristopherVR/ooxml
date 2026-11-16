@@ -24,13 +24,13 @@ export interface ManageCustomShowsParams {
 		| 'moveSlide'
 		| 'copy'
 		| 'delete';
-	showId?: string;
-	name?: string;
-	slideIndices?: number[];
-	positions?: number[];
-	from?: number;
-	to?: number;
-	index?: number;
+	showId?: string | undefined;
+	name?: string | undefined;
+	slideIndices?: number[] | undefined;
+	positions?: number[] | undefined;
+	from?: number | undefined;
+	to?: number | undefined;
+	index?: number | undefined;
 }
 
 export interface CustomShowInfo {
@@ -42,10 +42,10 @@ export interface CustomShowInfo {
 
 export interface ManageCustomShowsResult {
 	action: string;
-	shows?: CustomShowInfo[];
-	show?: CustomShowInfo | null;
+	shows?: CustomShowInfo[] | undefined;
+	show?: CustomShowInfo | null | undefined;
 	/** Actions and hyperlinks that jumped into a deleted show and were removed. */
-	clearedActions?: number;
+	clearedActions?: number | undefined;
 }
 
 function describeShow(show: PptxCustomShow, data: PptxData): CustomShowInfo {
@@ -92,7 +92,7 @@ export function manageCustomShows(
 		shows: PptxCustomShow[],
 		result: ManageCustomShowsResult,
 	): ToolResult<ManageCustomShowsResult> => {
-		(data as { customShows?: PptxCustomShow[] }).customShows = shows;
+		(data as { customShows?: PptxCustomShow[] | undefined }).customShows = shows;
 		return { pptxData: data, dirty: true, result, saveOptions: { customShows: shows } };
 	};
 	const unknown = (id: string): Error => new Error(`No custom show with id ${id}.`);
