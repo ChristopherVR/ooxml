@@ -10,9 +10,9 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@ai-sdk/openai-compatible": "^3.0.85",
-		"ai": "^7.0.163",
-		"emf-converter": "4.25.4",
+		"@ai-sdk/openai-compatible": "^3.0.92",
+		"ai": "^7.0.172",
+		"emf-converter": "4.28.1",
 		"fast-xml-parser": "^5.12.0",
 		"jszip": "^3.10.2",
 		"ooxml-demo-onedrive": "workspace:*",
@@ -29,7 +29,7 @@
 		"pptx-viewer-shared": "workspace:*",
 		"tailwindcss": "^4.3.4",
 		"typescript": "^7.0.2",
-		"vite": "^8.3.6",
+		"vite": "^8.3.8",
 		"vitest": "^5.1.0",
 		"y-protocols": "^1.0.7"
 	}

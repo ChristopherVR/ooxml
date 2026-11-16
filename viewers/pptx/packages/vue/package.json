@@ -141,7 +141,7 @@
 	"dependencies": {
 		"clsx": "^2.1.1",
 		"dompurify": "^3.4.17",
-		"html2canvas-pro": "^2.6.3",
+		"html2canvas-pro": "^2.6.4",
 		"jspdf": "^4.2.1",
 		"lucide-vue-next": "^1.0.0",
 		"ooxml-core": "^1.51.1",
@@ -150,7 +150,7 @@
 		"tailwind-merge": "^3.7.0"
 	},
 	"devDependencies": {
-		"@ai-sdk/vue": "^4.0.163",
+		"@ai-sdk/vue": "^4.0.172",
 		"@rollup/plugin-terser": "^1.0.2",
 		"@tailwindcss/cli": "^4.3.4",
 		"@types/dompurify": "^3.2.0",
@@ -167,7 +167,7 @@
 		"terser": "^5.51.2",
 		"three": "^0.187.0",
 		"typescript": "6.0.3",
-		"vite": "^8.3.6",
+		"vite": "^8.3.8",
 		"vite-plugin-dts": "^5.1.2",
 		"vitest": "^5.1.0",
 		"vue-tsc": "^3.3.14",

@@ -291,7 +291,7 @@
 	},
 	"dependencies": {
 		"@xmldom/xmldom": "^0.9.12",
-		"emf-converter": "^4.25.4",
+		"emf-converter": "^4.28.1",
 		"fast-xml-parser": "^5.12.0",
 		"fflate": "^0.8.3",
 		"jszip": "^3.10.2",
@@ -301,7 +301,7 @@
 		"prosemirror-commands": "^1.7.2",
 		"prosemirror-history": "^1.5.1",
 		"prosemirror-keymap": "^1.2.3",
-		"prosemirror-model": "^1.25.12",
+		"prosemirror-model": "^1.25.13",
 		"prosemirror-state": "^1.4.4",
 		"prosemirror-transform": "^1.12.5",
 		"prosemirror-view": "^1.42.8",

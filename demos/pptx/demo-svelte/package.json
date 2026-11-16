@@ -9,11 +9,11 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
-		"@ai-sdk/openai-compatible": "^3.0.85",
-		"@ai-sdk/svelte": "^5.0.163",
-		"@lucide/svelte": "^1.69.0",
-		"ai": "^7.0.163",
-		"emf-converter": "4.25.4",
+		"@ai-sdk/openai-compatible": "^3.0.92",
+		"@ai-sdk/svelte": "^5.0.172",
+		"@lucide/svelte": "^1.72.0",
+		"ai": "^7.0.172",
+		"emf-converter": "4.28.1",
 		"fast-xml-parser": "^5.12.0",
 		"jszip": "^3.10.2",
 		"ooxml-demo-onedrive": "workspace:*",
@@ -31,6 +31,6 @@
 		"@types/node": "^26.6.6",
 		"tailwindcss": "^4.3.4",
 		"typescript": "6.0.3",
-		"vite": "^8.3.6"
+		"vite": "^8.3.8"
 	}
 }

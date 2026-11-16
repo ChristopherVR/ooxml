@@ -7,14 +7,14 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
-		"emf-converter": "4.25.4",
+		"emf-converter": "4.28.1",
 		"fast-xml-parser": "^5.12.0",
-		"framer-motion": "^14.9.1",
-		"html2canvas-pro": "^2.6.3",
+		"framer-motion": "^14.13.0",
+		"html2canvas-pro": "^2.6.4",
 		"i18next": "^26.7.2",
 		"jspdf": "^4.2.1",
 		"jszip": "^3.10.2",
-		"lucide-react": "^1.69.0",
+		"lucide-react": "^1.72.0",
 		"ooxml-demo-onedrive": "workspace:*",
 		"pptx-react-viewer": "workspace:*",
 		"pptx-viewer-core": "workspace:*",
@@ -25,16 +25,16 @@
 		"react-icons": "^5.7.0"
 	},
 	"devDependencies": {
-		"@ai-sdk/openai-compatible": "^3.0.85",
-		"@ai-sdk/react": "^4.0.167",
+		"@ai-sdk/openai-compatible": "^3.0.92",
+		"@ai-sdk/react": "^4.0.176",
 		"@tailwindcss/vite": "^4.3.4",
 		"@types/node": "^26.6.6",
 		"@types/react": "^19.3.0",
 		"@types/react-dom": "^19.3.0",
-		"@vitejs/plugin-react": "^6.2.1",
-		"ai": "^7.0.163",
+		"@vitejs/plugin-react": "^6.3.0",
+		"ai": "^7.0.172",
 		"tailwindcss": "^4.3.4",
 		"typescript": "^7.0.2",
-		"vite": "^8.3.6"
+		"vite": "^8.3.8"
 	}
 }
