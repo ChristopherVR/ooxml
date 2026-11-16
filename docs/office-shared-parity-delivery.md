@@ -329,6 +329,15 @@ mirrors an axis edit with it. `chart-gridline-flag-migration.test.ts`: 51 parts 
 flag through the neutral writer; the object-tree save kept it on the 5 parts whose axis already drew
 gridlines.
 
+Series number format: `PptxChartSeries.numberFormat` is read from the series' label number
+format, falling back to the value cache's code, and the object-tree writers never wrote it.
+`chart-neutral-save-series-format.ts` writes it as the series' label number format, not linked to
+the source; `setChartDataLabels` now gives a series without labels of its own its group's switches
+and position when an edit only formats them, so the series keeps showing what it showed.
+`chart-series-number-format-migration.test.ts`: all 75 parts keep the edit through the neutral
+writer and none through the object-tree path. Clearing the format stays unclaimed (the cache code
+would read back).
+
 XY combinations: Excel 16, driven through its object model (`Series.ChartType = xlXYScatter` on a
 column or line series), saves a `c:scatterChart` that references the same category and value axes
 as the column or line group, with the categories as `c:xVal`, a 5 pt circle marker in the series

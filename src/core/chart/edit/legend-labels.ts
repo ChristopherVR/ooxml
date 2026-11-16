@@ -101,6 +101,27 @@ function applyLabels(current: ChartDataLabels | undefined, edit: ChartDataLabels
 }
 
 /**
+ * The labels a series takes when an edit only formats them (a number format or separator) and the
+ * series has none of its own: the switches and position of its group's labels, so the series shows
+ * what it showed before. Any other edit starts from Office's switched-off labels.
+ */
+function inheritedLabels(
+	group: ChartDataLabels | undefined,
+	edit: ChartDataLabelsEdit,
+): ChartDataLabels | undefined {
+	const formatOnly =
+		edit.show === undefined &&
+		edit.position === undefined &&
+		SWITCHES.every((key) => edit[key] === undefined);
+	if (!formatOnly || !group || group.deleted) return undefined;
+	const labels = newLabels();
+	for (const key of SWITCHES) if (group[key] !== undefined) labels[key] = group[key];
+	if (group.position !== undefined) labels.position = group.position;
+	if (group.separator !== undefined) labels.separator = group.separator;
+	return labels;
+}
+
+/**
  * Edits the data labels of the whole chart (every group's `c:dLbls`) or of one series. Hiding the
  * chart's labels also removes every series' own labels, as Office's Chart Elements box does; hiding
  * one series' labels writes switched-off labels on it so the group's labels do not show through.
@@ -115,7 +136,7 @@ export function setChartDataLabels(
 		if (target.series !== undefined) {
 			const { group, series } = chartSeriesEntryAt(draft, target.series);
 			if (edit.position) assertChartLabelPosition(group, edit.position);
-			const next = applyLabels(series.dataLabels, edit);
+			const next = applyLabels(series.dataLabels ?? inheritedLabels(group.dataLabels, edit), edit);
 			assignOrDelete(series, 'dataLabels', next);
 			return;
 		}

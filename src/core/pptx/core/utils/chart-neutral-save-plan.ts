@@ -43,6 +43,7 @@ import { planNeutralChartAnalysis } from './chart-neutral-save-analysis';
 import { planNeutralLabelFormatting } from './chart-neutral-save-label-format';
 import { planNeutralChartDecorations } from './chart-neutral-save-decorations';
 import { planNeutralTitleRuns } from './chart-neutral-save-title-runs';
+import { planNeutralSeriesNumberFormat } from './chart-neutral-save-series-format';
 import { planNeutralDataVectors } from './chart-neutral-save-data-vectors';
 import {
 	planNeutralChartLabels,
@@ -193,6 +194,7 @@ export function planWithLeftovers(
 	const seriesData = planSeriesData(before, probe, edits) || before !== original || vectors.changed;
 	planNeutralChartLabels(before, probe, edits);
 	planNeutralLabelFormatting(before, probe, edits);
+	planNeutralSeriesNumberFormat(before, probe, edits);
 	planNeutralChartFormats(before, probe, edits);
 	planNeutralChartText(before, probe, edits);
 	planNeutralChartLayout(before, probe, edits);
