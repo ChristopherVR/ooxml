@@ -7,6 +7,42 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.78.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@4.78.0) - 2026-11-16
+
+### Features
+
+- **drawingml:** Apply every colour transform in the shared resolver ([6c5e659](https://github.com/ChristopherVR/ooxml/commit/6c5e6597c78afee9000cb393b4d2d5bbc81f3a68))
+- **diagram:** Write quick-style 3d into generated smartart caches ([78b5628](https://github.com/ChristopherVR/ooxml/commit/78b5628982ddb73a13236a02ea102d21b6148622))
+- **diagram:** Add office's built-in smartart colour and style catalogue ([5f6945c](https://github.com/ChristopherVR/ooxml/commit/5f6945c6d368338cb2ce30b8fda7207ffc4dc4a2))
+- **pptx:** Save built-in smartart colour and style definitions ([a7118e2](https://github.com/ChristopherVR/ooxml/commit/a7118e28626f32038a1c96375cdb649c9df11412))
+- **ui:** Offer the full built-in smartart catalogue in every gallery ([874d9b6](https://github.com/ChristopherVR/ooxml/commit/874d9b6655a9bee8f43826b588a2c15131f5fcde))
+- **chart:** Move stacked end series to a secondary axis ([18939eb](https://github.com/ChristopherVR/ooxml/commit/18939eb3109ec15b29e5009a69c2226a4dd071c5))
+- **chart:** Share chart picture fill relationship allocation ([d4eae7a](https://github.com/ChristopherVR/ooxml/commit/d4eae7a7d86fd6cf610173c65ea259adf4db343e))
+- **chart:** Edit several trendlines and custom error-bar sources ([cb341f8](https://github.com/ChristopherVR/ooxml/commit/cb341f80f00f10f7a44fc3cc012efb2a3cdf6b6c))
+- **pptx:** Save chart group subtype edits through the shared writer ([66db72e](https://github.com/ChristopherVR/ooxml/commit/66db72e3f4cf4fefa2430c64a4740982098ab0d9))
+- **chart:** Admit scatter series in category-axis combinations ([0469d25](https://github.com/ChristopherVR/ooxml/commit/0469d25693629d057c16b28cfda468e37fbc2a15))
+- **ui:** Describe the pptx inspector fill section once ([742d965](https://github.com/ChristopherVR/ooxml/commit/742d965d4a172aceec2e1c5011ff4351fff3c65e))
+- **locales:** Name the pptx ribbon tab list in every locale ([60ef4b0](https://github.com/ChristopherVR/ooxml/commit/60ef4b097eb8db6a70a15278d4c5f79b71b3a56a))
+
+### Bug Fixes
+
+- **pptx:** Name the chartex custom label refusal ([ccafe0c](https://github.com/ChristopherVR/ooxml/commit/ccafe0cbc43e8d34be1f85e11a1ce9f127bb0e33))
+- **pptx:** Save the slide background fill flag a shape edit sets ([ab35ea5](https://github.com/ChristopherVR/ooxml/commit/ab35ea5704ede2c49ca5cceaa624b11c6925c246))
+
+### Refactor
+
+- **pptx:** Move zip limits and svg rasterizer type into leaf modules ([30751d6](https://github.com/ChristopherVR/ooxml/commit/30751d6d5d1bc052eb10233b66bf70174d8f0392))
+- **pptx:** Compile node, signature-node, openxml and types strict ([c0afa3d](https://github.com/ChristopherVR/ooxml/commit/c0afa3da90528b6ed91cea8f5b8cb81cdee52b00))
+- **pptx:** Resolve colour choices through the drawingml resolver ([6c765f5](https://github.com/ChristopherVR/ooxml/commit/6c765f5fbe0baacfc0ac2ba03fdf4531aa1f9b85))
+- **pptx:** Read theme colour and font schemes through drawingml ([e55830a](https://github.com/ChristopherVR/ooxml/commit/e55830a23222c1dbea1094f9235fc172510f6e2e))
+- **vue:** Draw the inspector fill section from shared descriptors ([45e44b1](https://github.com/ChristopherVR/ooxml/commit/45e44b1dc1126af6db0526cf6ce313a3565cb04e))
+- **vue:** Draw the ribbon tab row with pptx-ui-ribbon-tabs ([c4b0cb4](https://github.com/ChristopherVR/ooxml/commit/c4b0cb420d6491cb357f70f7e68ba0adcf090781))
+- **vue:** Run slide-show state on the shared presentation controllers ([adda13c](https://github.com/ChristopherVR/ooxml/commit/adda13cc7e972680f56d3878f9d26103254ee21e))
+
+### Testing
+
+- **pptx:** Accept self-closing chart subtype elements ([ff2022c](https://github.com/ChristopherVR/ooxml/commit/ff2022ca8ba812606bc0e828295300839ede33a2))
+
 ## [4.77.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@4.77.1) - 2026-11-15
 
 ### Bug Fixes

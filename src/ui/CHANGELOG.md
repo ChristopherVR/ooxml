@@ -7,6 +7,24 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.53.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.53.0) - 2026-11-16
+
+### Features
+
+- **ui:** Offer the full built-in smartart catalogue in every gallery ([874d9b6](https://github.com/ChristopherVR/ooxml/commit/874d9b6655a9bee8f43826b588a2c15131f5fcde))
+- **chart:** Edit several trendlines and custom error-bar sources ([cb341f8](https://github.com/ChristopherVR/ooxml/commit/cb341f80f00f10f7a44fc3cc012efb2a3cdf6b6c))
+- **ui:** Describe the pptx inspector fill section once ([742d965](https://github.com/ChristopherVR/ooxml/commit/742d965d4a172aceec2e1c5011ff4351fff3c65e))
+- **ui:** Draw the pptx ribbon tab row on office-ui-ribbon ([bb31df6](https://github.com/ChristopherVR/ooxml/commit/bb31df6ef627b020fc51ba7833b8bc9108ae5fb5))
+- **ui:** Add headless presentation controllers for pptx ([5d1cdad](https://github.com/ChristopherVR/ooxml/commit/5d1cdad9989590677cdab72d494645484592c06e))
+
+### Bug Fixes
+
+- **ui:** Return a mutable stroke list from presentationInkOnSlide ([6798de9](https://github.com/ChristopherVR/ooxml/commit/6798de9282b73747b19c8e27c1ee39e093e065c7))
+
+### Testing
+
+- **pptx:** Follow the shared ribbon tab row and catalogue ids in tests ([af9a13e](https://github.com/ChristopherVR/ooxml/commit/af9a13ed9fbb5bbe0205652a8aaf192a15dfb36d))
+
 ## [1.52.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.52.1) - 2026-11-15
 
 ### Bug Fixes
