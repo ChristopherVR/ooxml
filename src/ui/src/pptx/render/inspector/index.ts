@@ -21,6 +21,7 @@ export type {
 	InspectorSectionToggle,
 	InspectorSectionView,
 } from './inspector-field-model';
+export { inspectorOptionLabel } from './inspector-option-label';
 export { createInspectorColorFields } from './inspector-color-fields';
 export type { InspectorColorFieldsOptions } from './inspector-color-fields';
 export type {
@@ -113,6 +114,17 @@ export {
 	resolveOleSummaryRows,
 } from './ole-fields';
 export type { OleSection, OleSummaryRow } from './ole-fields';
+export {
+	ACTION_SETTINGS_SECTION,
+	ACTION_SETTINGS_SECTIONS,
+	actionSettingsTargetOf,
+	actionSettingsType,
+} from './action-settings-fields';
+export type {
+	ActionSettingsChange,
+	ActionSettingsSection,
+	ActionSettingsTarget,
+} from './action-settings-fields';
 export { TEXT_EFFECT_SECTIONS } from './text-effect-fields';
 export type { TextEffectSection, TextEffectTarget } from './text-effect-fields';
 export { FORMAT_PANEL_SECTIONS, formatPanelIn } from './format-panel-sections';

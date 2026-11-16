@@ -97,7 +97,7 @@ import { RecentColorsService } from './recent-colors.service';
 														[value]="option.value"
 														[selected]="option.value === '' + field.value"
 													>
-														{{ option.labelKey | translate }}
+														{{ option.label ?? (option.labelKey | translate) }}
 													</option>
 												}
 											</pptx-ui-select>

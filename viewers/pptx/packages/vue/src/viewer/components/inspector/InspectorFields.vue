@@ -3,6 +3,7 @@ import {
 	createInspectorColorFields,
 	handleLiveColorEvent,
 	inspectorFieldPatch,
+	inspectorOptionLabel,
 	inspectorTogglePatch,
 	resolveInspectorSections,
 } from 'ooxml-ui/pptx';
@@ -47,6 +48,7 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+const translate = (key: string): string => t(key);
 const recentColors = injectRecentColors();
 
 const views = computed(() => resolveInspectorSections(props.sections, props.target));
@@ -136,7 +138,7 @@ const checkedOf = (event: Event): boolean => (event.target as HTMLInputElement).
 						@change="onField(section.id, field.id, valueOf($event))"
 					>
 						<option v-for="option in field.options" :key="option.value" :value="option.value">
-							{{ t(option.labelKey) }}
+							{{ inspectorOptionLabel(option, translate) }}
 						</option>
 					</pptx-ui-select>
 					<input

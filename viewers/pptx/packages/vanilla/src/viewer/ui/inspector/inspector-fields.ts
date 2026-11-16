@@ -1,6 +1,7 @@
 import {
 	createInspectorColorFields,
 	inspectorFieldPatch,
+	inspectorOptionLabel,
 	inspectorTogglePatch,
 	resolveInspectorSections,
 } from 'ooxml-ui/pptx';
@@ -67,8 +68,15 @@ interface SectionSlot {
 	fields: Map<string, FieldHandle>;
 }
 
+/** A section's shape: its toggle, its visible fields and their choices (resolved per target). */
 const signatureOf = (view: InspectorSectionView): string =>
-	`${view.on}|${view.fields.map((field) => field.id).join(',')}`;
+	`${view.on}|${view.fields
+		.map((field) =>
+			field.options
+				? `${field.id}:${field.options.map((o) => `${o.value}=${o.label ?? ''}`).join(';')}`
+				: field.id,
+		)
+		.join(',')}`;
 
 /** Put `testId` on the control inside a field row built by the shared factories. */
 function tagControl(el: HTMLElement, testId: string | undefined): void {
@@ -133,7 +141,10 @@ export function createInspectorFields<T, P>(
 		} else if (field.control === 'select') {
 			const select = makeSelectField<string>(doc, {
 				label,
-				options: (field.options ?? []).map((o) => ({ value: o.value, label: t(o.labelKey) })),
+				options: (field.options ?? []).map((o) => ({
+					value: o.value,
+					label: inspectorOptionLabel(o, t),
+				})),
 				onChange: (value) => change(sectionId, field.id, value),
 			});
 			handle = { ...select, setValue: (v) => select.setValue(String(v)) };

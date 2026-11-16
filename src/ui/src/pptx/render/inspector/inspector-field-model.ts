@@ -52,6 +52,11 @@ export interface InspectorFieldOption {
 	value: string;
 	/** Translation key of the choice's label. */
 	labelKey: string;
+	/**
+	 * A label shown as it is, for a choice that comes from the document (a
+	 * slide title, a custom show name); wins over `labelKey`.
+	 */
+	label?: string;
 }
 
 /** One editable field of a section. */
@@ -73,6 +78,13 @@ export interface InspectorFieldDescriptor<T, P> {
 	/** `data-testid` of the control. */
 	testId?: string;
 	options?: readonly InspectorFieldOption[];
+	/**
+	 * The choices resolved at render time from the value the descriptors read
+	 * (the deck's slides, its custom shows); wins over `options`.
+	 */
+	optionsOf?: (target: T) => readonly InspectorFieldOption[];
+	/** The upper bound resolved at render time (a clip's live duration); wins over `max`. */
+	maxOf?: (target: T) => number | undefined;
 	/** A `text` field takes several lines (a text area). */
 	multiline?: boolean;
 	/** Translation key of a `text` field's placeholder. */
@@ -173,12 +185,14 @@ function fieldView<T, P>(field: InspectorFieldDescriptor<T, P>, target: T): Insp
 		view.max = field.max ?? 100;
 	} else {
 		if (field.min !== undefined) view.min = field.min;
-		if (field.max !== undefined) view.max = field.max;
+		const max = field.maxOf?.(target) ?? field.max;
+		if (max !== undefined) view.max = max;
 	}
 	if (field.step !== undefined) view.step = field.step;
 	if (field.unit !== undefined) view.unit = field.unit;
 	if (field.testId !== undefined) view.testId = field.testId;
-	if (field.options !== undefined) view.options = field.options;
+	const options = field.optionsOf?.(target) ?? field.options;
+	if (options !== undefined) view.options = options;
 	if (field.placeholderKey !== undefined) view.placeholderKey = field.placeholderKey;
 	return view;
 }
@@ -215,6 +229,7 @@ export function resolveInspectorSections<T, P>(
 export function coerceInspectorFieldValue<T, P>(
 	field: InspectorFieldDescriptor<T, P>,
 	raw: InspectorFieldValue,
+	target?: T,
 ): InspectorFieldValue | undefined {
 	switch (field.kind) {
 		case 'toggle':
@@ -238,7 +253,8 @@ export function coerceInspectorFieldValue<T, P>(
 				return ((n % 360) + 360) % 360;
 			}
 			const lo = field.min ?? (field.kind === 'percent' ? 0 : -Infinity);
-			const hi = field.max ?? (field.kind === 'percent' ? 100 : Infinity);
+			const liveMax = target !== undefined ? field.maxOf?.(target) : undefined;
+			const hi = liveMax ?? field.max ?? (field.kind === 'percent' ? 100 : Infinity);
 			return Math.max(lo, Math.min(hi, n));
 		}
 	}
@@ -266,7 +282,7 @@ export function inspectorFieldPatch<T, P>(
 	if (!field) {
 		return undefined;
 	}
-	const value = coerceInspectorFieldValue(field, raw);
+	const value = coerceInspectorFieldValue(field, raw, target);
 	return value === undefined ? undefined : field.write(target, value);
 }
 

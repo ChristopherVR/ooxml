@@ -14,6 +14,7 @@
 	import {
 		createInspectorColorFields,
 		inspectorFieldPatch,
+		inspectorOptionLabel,
 		inspectorTogglePatch,
 		resolveInspectorSections,
 	} from 'ooxml-ui/pptx';
@@ -120,7 +121,7 @@
 									onchange={(e) => onField(section.id, field.id, e.currentTarget.value)}
 								>
 									{#each field.options ?? [] as option (option.value)}
-										<option value={option.value}>{t(option.labelKey)}</option>
+										<option value={option.value}>{inspectorOptionLabel(option, t)}</option>
 									{/each}
 								</pptx-ui-select>
 							{:else if field.control === 'color'}

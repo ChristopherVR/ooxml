@@ -1,4 +1,9 @@
-import { inspectorFieldPatch, inspectorTogglePatch, resolveInspectorSections } from 'ooxml-ui/pptx';
+import {
+	inspectorFieldPatch,
+	inspectorOptionLabel,
+	inspectorTogglePatch,
+	resolveInspectorSections,
+} from 'ooxml-ui/pptx';
 import type {
 	InspectorFieldValue,
 	InspectorFieldView,
@@ -88,7 +93,7 @@ export function InspectorFields<T, P>({
 					>
 						{field.options?.map((o) => (
 							<option key={o.value} value={o.value}>
-								{t(o.labelKey)}
+								{inspectorOptionLabel(o, t)}
 							</option>
 						))}
 					</WebSelect>
