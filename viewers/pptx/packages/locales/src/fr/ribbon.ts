@@ -56,6 +56,7 @@ export const translations = {
 	'pptx.ribbon.tab.review': 'Révision',
 	'pptx.ribbon.tab.view': 'Affichage',
 	'pptx.ribbon.tab.help': 'Aide',
+	'pptx.ribbon.tabsAria': 'Onglets du ruban',
 	'pptx.ribbon.tool.select': 'Sélection',
 	'pptx.ribbon.tool.pen': 'Stylo',
 	'pptx.ribbon.tool.highlighter': 'Surligneur',

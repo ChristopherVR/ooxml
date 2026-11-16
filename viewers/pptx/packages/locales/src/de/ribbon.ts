@@ -56,6 +56,7 @@ export const translations = {
 	'pptx.ribbon.tab.review': 'Überprüfen',
 	'pptx.ribbon.tab.view': 'Ansicht',
 	'pptx.ribbon.tab.help': 'Hilfe',
+	'pptx.ribbon.tabsAria': 'Menübandregisterkarten',
 	'pptx.ribbon.tool.select': 'Auswahl',
 	'pptx.ribbon.tool.pen': 'Stift',
 	'pptx.ribbon.tool.highlighter': 'Textmarker',

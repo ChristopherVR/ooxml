@@ -56,6 +56,7 @@ export const translations = {
 	'pptx.ribbon.tab.review': '校閲',
 	'pptx.ribbon.tab.view': '表示',
 	'pptx.ribbon.tab.help': 'ヘルプ',
+	'pptx.ribbon.tabsAria': 'リボン タブ',
 	'pptx.ribbon.tool.select': '選択',
 	'pptx.ribbon.tool.pen': 'ペン',
 	'pptx.ribbon.tool.highlighter': '蛍光ペン',
