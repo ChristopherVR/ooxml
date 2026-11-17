@@ -75,7 +75,7 @@ export const translations = {
 	'pptx.backstage.card.png.body': '高品質の PNG 画像を作成します。',
 	'pptx.backstage.card.video.title': 'ビデオの作成',
 	'pptx.backstage.card.video.body':
-		'スライドのタイミングとアニメーションを WebM としてエクスポートします。',
+		'スライドのタイミングとアニメーションをビデオとしてエクスポートします。',
 	'pptx.backstage.card.gif.title': 'アニメーション GIF の作成',
 	'pptx.backstage.card.gif.body': 'コンパクトなループ プレビューを作成します。',
 	'pptx.backstage.card.json.title': 'JSON としてエクスポート',

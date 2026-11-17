@@ -85,7 +85,7 @@ export const translations = {
 	'pptx.ribbon.exportCurrentSlidePng': '현재 슬라이드를 PNG로 내보내기',
 	'pptx.ribbon.exportDeckPdf': '프레젠테이션을 PDF로 내보내기',
 	'pptx.ribbon.exportGifTitle': 'GIF로 내보내기',
-	'pptx.ribbon.exportWebmVideo': 'WebM 비디오로 내보내기',
+	'pptx.ribbon.exportWebmVideo': '비디오로 내보내기',
 	'pptx.ribbon.exporting': '내보내는 중…',
 	'pptx.ribbon.properties': '속성',
 	'pptx.ribbon.signatures': '서명',

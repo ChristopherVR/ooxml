@@ -194,7 +194,7 @@ export const translations = {
 	'pptx.export.gifAnimated': 'Animiertes GIF',
 	'pptx.export.pdfAllSlides': 'PDF (alle Folien)',
 	'pptx.export.pngCurrentSlide': 'PNG (aktuelle Folie)',
-	'pptx.export.webmVideo': 'WebM-Video',
+	'pptx.export.webmVideo': 'Video',
 	'pptx.fontEmbedding.embedInFile': 'Schriftarten in Datei einbetten',
 	'pptx.fontEmbedding.noCustomFonts': 'Keine benutzerdefinierten Schriftarten zum Einbetten.',
 	'pptx.headerFooter.fixedDate': 'Festes Datum',

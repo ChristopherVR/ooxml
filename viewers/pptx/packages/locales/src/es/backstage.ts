@@ -79,7 +79,7 @@ export const translations = {
 	'pptx.backstage.card.png.body': 'Cree una imagen PNG de alta calidad.',
 	'pptx.backstage.card.video.title': 'Crear un vídeo',
 	'pptx.backstage.card.video.body':
-		'Exporte los intervalos de diapositivas y las animaciones como WebM.',
+		'Exportar los intervalos y las animaciones de las diapositivas como vídeo.',
 	'pptx.backstage.card.gif.title': 'Crear un GIF animado',
 	'pptx.backstage.card.gif.body': 'Cree una vista previa compacta en bucle.',
 	'pptx.backstage.card.json.title': 'Exportar como JSON',

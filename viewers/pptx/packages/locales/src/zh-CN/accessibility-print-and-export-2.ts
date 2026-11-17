@@ -6,7 +6,7 @@ export const translations = {
 	'pptx.export.gifAnimated': 'GIF 动画',
 	'pptx.export.pdfAllSlides': 'PDF（所有幻灯片）',
 	'pptx.export.pngCurrentSlide': 'PNG（当前幻灯片）',
-	'pptx.export.webmVideo': 'WebM 视频',
+	'pptx.export.webmVideo': '视频',
 	'pptx.fontEmbedding.embedInFile': '在文件中嵌入字体',
 	'pptx.fontEmbedding.noCustomFonts': '无需嵌入自定义字体。',
 	'pptx.headerFooter.fixedDate': '固定日期',

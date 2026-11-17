@@ -71,7 +71,7 @@ export const translations = {
 	'pptx.backstage.card.png.title': '현재 슬라이드 내보내기',
 	'pptx.backstage.card.png.body': '고품질 PNG 이미지를 만듭니다.',
 	'pptx.backstage.card.video.title': '비디오 만들기',
-	'pptx.backstage.card.video.body': '슬라이드 시간과 애니메이션을 WebM으로 내보냅니다.',
+	'pptx.backstage.card.video.body': '슬라이드 타이밍과 애니메이션을 비디오로 내보냅니다.',
 	'pptx.backstage.card.gif.title': '애니메이션 GIF 만들기',
 	'pptx.backstage.card.gif.body': '반복 재생되는 간결한 미리 보기를 만듭니다.',
 	'pptx.backstage.card.json.title': 'JSON으로 내보내기',

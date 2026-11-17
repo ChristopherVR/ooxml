@@ -92,7 +92,7 @@ export const BACKSTAGE_CARDS: Readonly<Record<BackstageCardId, BackstageCard>> =
 	),
 	pdf: card('pdf', 'Create PDF', 'Publish a portable document with one page per slide.'),
 	png: card('png', 'Export current slide', 'Create a high-quality PNG image.'),
-	video: card('video', 'Create a Video', 'Export slide timings and animations as WebM.'),
+	video: card('video', 'Create a Video', 'Export slide timings and animations as a video.'),
 	gif: card('gif', 'Create an Animated GIF', 'Make a compact looping preview.'),
 	json: card(
 		'json',

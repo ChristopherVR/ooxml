@@ -6,7 +6,7 @@ export const translations = {
 	'pptx.export.gifAnimated': 'アニメーション GIF',
 	'pptx.export.pdfAllSlides': 'PDF (すべてのスライド)',
 	'pptx.export.pngCurrentSlide': 'PNG (現在のスライド)',
-	'pptx.export.webmVideo': 'WebM ビデオ',
+	'pptx.export.webmVideo': 'ビデオ',
 	'pptx.fontEmbedding.embedInFile': 'ファイルにフォントを埋め込む',
 	'pptx.fontEmbedding.noCustomFonts': '埋め込むカスタム フォントはありません。',
 	'pptx.headerFooter.fixedDate': '固定',

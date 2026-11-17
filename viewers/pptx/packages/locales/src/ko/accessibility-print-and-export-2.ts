@@ -6,7 +6,7 @@ export const translations = {
 	'pptx.export.gifAnimated': '애니메이션 GIF',
 	'pptx.export.pdfAllSlides': 'PDF(모든 슬라이드)',
 	'pptx.export.pngCurrentSlide': 'PNG(현재 슬라이드)',
-	'pptx.export.webmVideo': 'WebM 비디오',
+	'pptx.export.webmVideo': '비디오',
 	'pptx.fontEmbedding.embedInFile': '파일의 글꼴 포함',
 	'pptx.fontEmbedding.noCustomFonts': '포함할 사용자 지정 글꼴이 없습니다.',
 	'pptx.headerFooter.fixedDate': '고정',
