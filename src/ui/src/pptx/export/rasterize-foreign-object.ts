@@ -23,6 +23,8 @@
  * `html-to-image`/`dom-to-image` use `data:` URLs.
  */
 
+import { currentWebKitEnvironment, isWebKitEngine } from '../render/webkit-engine';
+
 /** Thrown when the canvas could not be read back after drawing (taint, or a load failure). */
 export class ForeignObjectRasterError extends Error {
 	constructor(
@@ -34,14 +36,38 @@ export class ForeignObjectRasterError extends Error {
 	}
 }
 
-function loadImage(src: string): Promise<HTMLImageElement> {
-	return new Promise((resolve, reject) => {
-		const img = new Image();
-		img.onload = () => resolve(img);
-		img.onerror = (event) =>
+async function loadImage(src: string): Promise<HTMLImageElement> {
+	const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+		const image = new Image();
+		image.onload = () => resolve(image);
+		image.onerror = (event) =>
 			reject(new ForeignObjectRasterError('SVG image failed to load', event));
-		img.src = src;
+		image.src = src;
 	});
+	// `onload` can fire before the pixels are decoded; drawing then paints a blank or partial image.
+	// A failed decode is not fatal: the image did load, and the taint probe still checks the draw.
+	if (typeof img.decode === 'function') await img.decode().catch(() => undefined);
+	return img;
+}
+
+/** Wait one animation frame (a timer where there is none). */
+function nextFrame(): Promise<void> {
+	return new Promise((resolve) => {
+		if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => resolve());
+		else setTimeout(resolve, 16);
+	});
+}
+
+/** Engine hooks for {@link rasterizeForeignObjectSvg}, injectable for tests. */
+export interface ForeignObjectRasterOptions {
+	/**
+	 * Draw, wait a frame and draw again. WebKit decodes the `data:` images and fonts inside an SVG
+	 * image lazily, so its first `drawImage` can miss pictures and fall back fonts; the second draw
+	 * paints them. Defaults to whether the page runs on WebKit.
+	 */
+	redrawAfterFrame?: boolean;
+	/** The frame wait used between the two WebKit draws. */
+	nextFrame?: () => Promise<void>;
 }
 
 /** The `data:` URL prefix every foreignObject raster image is loaded from. */
@@ -67,6 +93,7 @@ export async function rasterizeForeignObjectSvg(
 	outputWidth: number,
 	outputHeight: number,
 	backgroundColor?: string,
+	options: ForeignObjectRasterOptions = {},
 ): Promise<HTMLCanvasElement> {
 	const img = await loadImage(foreignObjectSvgToDataUrl(svg));
 
@@ -77,11 +104,19 @@ export async function rasterizeForeignObjectSvg(
 	if (!ctx) {
 		throw new ForeignObjectRasterError('2D canvas context unavailable');
 	}
-	if (backgroundColor) {
-		ctx.fillStyle = backgroundColor;
-		ctx.fillRect(0, 0, outputWidth, outputHeight);
+	const draw = () => {
+		ctx.clearRect(0, 0, outputWidth, outputHeight);
+		if (backgroundColor) {
+			ctx.fillStyle = backgroundColor;
+			ctx.fillRect(0, 0, outputWidth, outputHeight);
+		}
+		ctx.drawImage(img, 0, 0, outputWidth, outputHeight);
+	};
+	draw();
+	if (options.redrawAfterFrame ?? isWebKitEngine(currentWebKitEnvironment())) {
+		await (options.nextFrame ?? nextFrame)();
+		draw();
 	}
-	ctx.drawImage(img, 0, 0, outputWidth, outputHeight);
 
 	try {
 		ctx.getImageData(0, 0, 1, 1);
