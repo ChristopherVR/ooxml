@@ -5,6 +5,15 @@ packages released that day and merges their entries; the full history of each pa
 own `CHANGELOG.md` (`packages/<name>/`, `mcp/`, `server/`). The release workflow writes these
 sections (`scripts/viewer-changelogs.mjs`); do not edit them by hand.
 
+## 2026-11-17
+
+_Releases: pptx-react-viewer@4.80.1, pptx-vue-viewer@4.79.1, pptx-angular-viewer@4.79.1, pptx-svelte-viewer@4.79.1, pptx-vanilla-viewer@3.79.1_
+
+### Bug Fixes
+
+- **pptx:** Preserve filtered combo chart series ([2b6fce9](https://github.com/ChristopherVR/ooxml/commit/2b6fce99f8d317e9302c86a965c376827593080f))
+- **pptx:** No compatibility notice for hidden OLE frames and VML choices ([#301](https://github.com/ChristopherVR/ooxml/issues/301)) ([8449e8b](https://github.com/ChristopherVR/ooxml/commit/8449e8b20046941494f7650a0574bf45674ba15f))
+
 ## 2026-11-16
 
 _Releases: @christophervr/pptx-viewer@2.42.2, pptx-react-viewer@4.80.0, pptx-react-viewer@4.79.0, pptx-vue-viewer@4.79.0, pptx-vue-viewer@4.78.0, pptx-angular-viewer@4.79.0, pptx-angular-viewer@4.78.0, pptx-svelte-viewer@4.79.0, pptx-svelte-viewer@4.78.0, pptx-vanilla-viewer@3.79.0, pptx-vanilla-viewer@3.78.0_

@@ -7,6 +7,17 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.54.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.54.1) - 2026-11-17
+
+### Bug Fixes
+
+- **pptx:** Preserve filtered combo chart series ([2b6fce9](https://github.com/ChristopherVR/ooxml/commit/2b6fce99f8d317e9302c86a965c376827593080f))
+- **pptx:** No compatibility notice for hidden OLE frames and VML choices ([#301](https://github.com/ChristopherVR/ooxml/issues/301)) ([8449e8b](https://github.com/ChristopherVR/ooxml/commit/8449e8b20046941494f7650a0574bf45674ba15f))
+
+### Testing
+
+- **ui:** Keep animation frames alive after a test fakes the timers ([53ccd97](https://github.com/ChristopherVR/ooxml/commit/53ccd976a5de222c91875ac9ff35d17b9da632d1))
+
 ## [1.54.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.54.0) - 2026-11-16
 
 ### Features
