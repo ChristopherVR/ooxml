@@ -248,6 +248,42 @@ describe('createNotesPanel', () => {
 		}
 	});
 
+	it('prints notes through a window on iPadOS, where an iframe would print the parent page', () => {
+		vi.stubGlobal('navigator', {
+			userAgent:
+				'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Safari/605.1.15',
+			maxTouchPoints: 5,
+		});
+		const write = vi.fn();
+		const printWindow = {
+			document: { open: vi.fn(), write, close: vi.fn(), readyState: 'loading' },
+			addEventListener: vi.fn(),
+			removeEventListener: vi.fn(),
+			focus: vi.fn(),
+			print: vi.fn(),
+			close: vi.fn(),
+		};
+		const open = vi.spyOn(window, 'open').mockReturnValue(printWindow as unknown as Window);
+		try {
+			const t = createTranslator();
+			const panel = createNotesPanel(document, t, vi.fn(), vi.fn());
+			panel.update({
+				slide: buildSlide({ notes: 'Tablet notes.', slideNumber: 1 }),
+				editable: true,
+			});
+			const framesBefore = document.body.querySelectorAll('iframe[aria-hidden="true"]').length;
+			toolbarControl(panel.el, `[aria-label="${t('pptx.notes.printNotes')}"]`)?.click();
+			expect(open).toHaveBeenCalledOnce();
+			expect(String(write.mock.calls[0]?.[0])).toContain('Tablet notes.');
+			expect(document.body.querySelectorAll('iframe[aria-hidden="true"]')).toHaveLength(
+				framesBefore,
+			);
+		} finally {
+			vi.unstubAllGlobals();
+			open.mockRestore();
+		}
+	});
+
 	it('does nothing when the print button is clicked with no slide selected', () => {
 		const t = createTranslator();
 		const panel = createNotesPanel(document, t, vi.fn(), vi.fn());
