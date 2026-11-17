@@ -68,6 +68,7 @@ describe('resolveExportBaseName', () => {
 		expect(resolveExportBaseName('Deck.png')).toBe('Deck');
 		expect(resolveExportBaseName('Deck.gif')).toBe('Deck');
 		expect(resolveExportBaseName('Deck.webm')).toBe('Deck');
+		expect(resolveExportBaseName('Deck.MP4')).toBe('Deck');
 	});
 
 	it('leaves an unrecognised extension untouched', () => {

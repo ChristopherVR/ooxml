@@ -16,10 +16,10 @@ const FALLBACK_DOWNLOAD_NAME = 'presentation.pptx',
 	EXPORT_BASE_NAME_FALLBACK = 'presentation',
 	/**
 	 * Extensions {@link resolveExportBaseName} strips by default: every format the
-	 * export surface (PNG/PDF/GIF/WebM) or the original source deck (pptx) can be
+	 * export surface (PNG/PDF/GIF/WebM/MP4) or the original source deck (pptx) can be
 	 * named after. Bare, lower-case, no leading dot.
 	 */
-	DEFAULT_EXPORT_STRIP_EXTENSIONS = ['pptx', 'pdf', 'png', 'gif', 'webm'],
+	DEFAULT_EXPORT_STRIP_EXTENSIONS = ['pptx', 'pdf', 'png', 'gif', 'webm', 'mp4'],
 	/**
 	 * Revoke delay (ms) after triggering a download click. Safari on iPadOS and
 	 * iOS shows a download sheet first and reads the object URL only once the
@@ -90,7 +90,7 @@ export function sanitizeDownloadFilename(input: string | undefined | null): stri
  * @param sourceName - The raw source file name, or `undefined` when none is
  *   known yet.
  * @param extensions - Extensions to strip, without the leading dot. Defaults
- *   to the full export-surface set (`pptx`, `pdf`, `png`, `gif`, `webm`).
+ *   to the full export-surface set (`pptx`, `pdf`, `png`, `gif`, `webm`, `mp4`).
  */
 export function resolveExportBaseName(
 	sourceName: string | undefined,

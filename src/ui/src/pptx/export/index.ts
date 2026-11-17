@@ -79,6 +79,8 @@ export * from './print-job';
 // Pure WebM video planning: frame-segment timing, fps maths, MediaRecorder MIME
 // selection. The MediaRecorder/canvas capture driver stays in each binding.
 export * from './video-plan';
+// The recorded container (WebM, or MP4 on Safari) chosen with `isTypeSupported`, and its file name.
+export * from './video-format';
 // Pure PNG byte framing (CRC-32, chunk assembly, filter-type-0 scanlines) plus
 // the `CompressionStream('deflate')`-driven streaming encoder that turns
 // row-bands into a full PNG without ever holding the whole image in memory.

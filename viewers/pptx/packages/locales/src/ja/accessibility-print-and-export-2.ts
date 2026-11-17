@@ -62,6 +62,8 @@ export const translations = {
 		'ノートの PDF エクスポート用にキャプチャされたスライドがありません',
 	'pptx.export.errorNoSlidesPdf': 'PDF のエクスポート用にキャプチャされたスライドがありません',
 	'pptx.export.errorNoSlidesVideo': 'ビデオのエクスポート用にキャプチャされたスライドがありません',
+	'pptx.export.errorVideoUnsupported':
+		'このブラウザーではビデオを録画できません。スライドを GIF としてエクスポートするか、別のブラウザーをお試しください。',
 	'pptx.export.recording': '録画中',
 	'pptx.export.recordingVideo': 'ビデオを録画しています...',
 	'pptx.export.rendering': 'レンダリング中',
