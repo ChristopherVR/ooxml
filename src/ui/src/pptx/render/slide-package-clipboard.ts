@@ -2,12 +2,13 @@ import type { PptxData, PptxElement, PptxHandler as Handler, PptxSlide } from 'o
 import {
 	PptxHandler,
 	createSlideClipboardPackage,
-	deserializeSlidePackageClipboard,
 	SLIDE_PACKAGE_CLIPBOARD_MIME,
 	importSlidePackage,
 	serializeSlidePackageClipboard,
 } from 'ooxml-core/pptx';
 import { cloneSlide } from './clone';
+import { clearInPageSlidePackage, storeInPageSlidePackage } from './slide-package-page-store';
+import { readSlidePackage, writeSystemPreview } from './slide-package-transport';
 import { collectElementText } from './slide-search';
 import { buildSaveSlides, partitionTemplateElements } from './template-editing';
 import {
@@ -66,7 +67,6 @@ export function createSlidePackageClipboard(initialHost: SlidePackageClipboardHo
 			const before = snapshot();
 			if (!indexes.length) throw new Error('Select slides to copy');
 			const clipboard = globalThis.navigator?.clipboard;
-			if (!clipboard) throw new Error('System clipboard is unavailable in this browser');
 			const slides = buildSaveSlides(before.slides, before.templateElementsBySlideId).map(
 				cloneSlide,
 			);
@@ -76,20 +76,29 @@ export function createSlidePackageClipboard(initialHost: SlidePackageClipboardHo
 					.save(slides)
 					.then((bytes) => createSlideClipboardPackage(bytes, indexes))
 					.then(serializeSlidePackageClipboard);
-				if (
-					typeof ClipboardItem === 'undefined' ||
-					!ClipboardItem.supports?.(SLIDE_PACKAGE_CLIPBOARD_MIME) ||
-					!clipboard.write
-				) {
-					await text;
-					throw new Error('This browser does not support slide packages in the system clipboard');
-				}
 				const preview = indexes
 					.map(
 						(index) =>
 							slides[index]?.elements.map(collectElementText).filter(Boolean).join('\n') ?? '',
 					)
 					.join('\n\n');
+				const canWriteItems = typeof ClipboardItem !== 'undefined' && !!clipboard?.write;
+				const picture =
+					canWriteItems && host.renderSlidePng && (ClipboardItem.supports?.('image/png') ?? true)
+						? host
+								.renderSlidePng(indexes[0] as number)
+								.then((png) => (png ? png : Promise.reject(new Error('No slide picture'))))
+						: undefined;
+				picture?.catch(() => undefined);
+				if (!canWriteItems || ClipboardItem.supports?.(SLIDE_PACKAGE_CLIPBOARD_MIME) !== true) {
+					// Safari and iPadOS have no custom clipboard formats: keep the package in the page so
+					// slides still paste between decks here, and give other applications the text and
+					// picture. The system write starts synchronously, inside the user's gesture.
+					const system = writeSystemPreview(clipboard, canWriteItems, preview, picture);
+					storeInPageSlidePackage({ text: await text, preview });
+					await system;
+					return;
+				}
 				const blob = text.then(
 					(value) => new Blob([value], { type: SLIDE_PACKAGE_CLIPBOARD_MIME.slice(4) }),
 				);
@@ -97,25 +106,20 @@ export function createSlidePackageClipboard(initialHost: SlidePackageClipboardHo
 					[SLIDE_PACKAGE_CLIPBOARD_MIME]: blob,
 					'text/plain': new Blob([preview], { type: 'text/plain' }),
 				};
-				const picture =
-					host.renderSlidePng && (ClipboardItem.supports?.('image/png') ?? true)
-						? host
-								.renderSlidePng(indexes[0] as number)
-								.then((png) => (png ? png : Promise.reject(new Error('No slide picture'))))
-						: undefined;
-				if (picture) {
-					picture.catch(() => undefined);
-					formats['image/png'] = picture;
-				}
-				const write = clipboard.write([new ClipboardItem(formats)]);
+				if (picture) formats['image/png'] = picture;
+				const write = clipboard!.write([new ClipboardItem(formats)]);
 				const settled = await Promise.allSettled([write, text]);
 				if (settled[1]?.status === 'rejected') throw settled[1].reason;
 				if (settled[0]?.status === 'rejected') {
 					if (!picture) throw settled[0].reason;
 					// The picture failed: the package and its text still go to the clipboard.
 					delete formats['image/png'];
-					await clipboard.write([new ClipboardItem(formats)]);
+					await clipboard!.write([new ClipboardItem(formats)]);
 				}
+				storeInPageSlidePackage({ text: await text, preview });
+			} catch (error) {
+				clearInPageSlidePackage();
+				throw error;
 			} finally {
 				pending = false;
 			}
@@ -124,19 +128,12 @@ export function createSlidePackageClipboard(initialHost: SlidePackageClipboardHo
 			const before = snapshot();
 			if (before.editable === false) throw new Error('Presentation is read-only');
 			const clipboard = globalThis.navigator?.clipboard;
-			if (!clipboard?.readText) throw new Error('System clipboard is unavailable in this browser');
 			pending = true;
 			let handler: Handler | undefined,
 				committed = false;
 			const urls: string[] = [];
 			try {
-				const items = clipboard.read ? await clipboard.read() : [];
-				const item = items.find((value) => value.types.includes(SLIDE_PACKAGE_CLIPBOARD_MIME));
-				const text = item
-					? await (await item.getType(SLIDE_PACKAGE_CLIPBOARD_MIME)).text()
-					: await clipboard.readText();
-				const source = deserializeSlidePackageClipboard(text);
-				if (!source) throw new Error('The clipboard does not contain copied PowerPoint slides');
+				const source = await readSlidePackage(clipboard);
 				const destination = await before.handler.save(
 					buildSaveSlides(before.slides, before.templateElementsBySlideId).map(cloneSlide),
 				);
