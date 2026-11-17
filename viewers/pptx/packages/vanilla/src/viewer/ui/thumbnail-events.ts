@@ -32,6 +32,7 @@ export function wireThumbnailRowEvents(
 		onSelect(index);
 	});
 	if (menu) {
+		button.dataset.pptxTouchPress = 'menu';
 		button.addEventListener('contextmenu', (event) => {
 			event.preventDefault();
 			const slides = getSlides();

@@ -70,6 +70,7 @@
 						(click)="onThumbClick(i, $event)"
 						(dblclick)="select.emit(i)"
 						(contextmenu)="onThumbContextMenu($event, i)"
+						data-pptx-touch-press="menu dblclick"
 						(dragstart)="onDragStart(i, $event)"
 						(dragover)="onDragOver(i, $event)"
 						(dragleave)="controller.dragLeave()"
