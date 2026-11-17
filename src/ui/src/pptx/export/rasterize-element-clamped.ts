@@ -13,6 +13,7 @@
  * practice: a source many thousands of CSS pixels wide, far beyond any real
  * slide).
  */
+import { maxCanvasAreaFor } from '../render/canvas-area-cap';
 import { getMaxCanvasDimension } from '../render/canvas-size-probe';
 import type { RasterizeElementCanvasResult, RasterizeElementOptions } from './rasterize-element';
 import { rasterizeElement } from './rasterize-element';
@@ -25,10 +26,45 @@ export interface RasterizeElementClampedResult extends RasterizeElementCanvasRes
 	effectiveScale: number;
 }
 
+/** The tile planner rounds to whole pixels; this is the size it will plan for `scale`. */
+function plannedPixels(natural: number, scale: number): number {
+	return Math.max(1, Math.round(natural * scale));
+}
+
+/**
+ * The largest scale <= `requestedScale` at which a `naturalWidth` x `naturalHeight` raster fits one
+ * canvas: no edge over `maxDim` and no more than `maxArea` pixels (iOS caps the area at 4096 x 4096
+ * even where a 16384-pixel edge works). Both axes shrink by the same factor, so the aspect ratio holds.
+ */
+export function clampScaleToCanvas(
+	naturalWidth: number,
+	naturalHeight: number,
+	requestedScale: number,
+	maxDim: number,
+	maxArea: number = Number.POSITIVE_INFINITY,
+): number {
+	const fullWidth = naturalWidth * requestedScale;
+	const fullHeight = naturalHeight * requestedScale;
+	const largestEdge = Math.max(fullWidth, fullHeight);
+	const edgeFactor = largestEdge > maxDim ? maxDim / largestEdge : 1;
+	const area = fullWidth * fullHeight;
+	const areaFactor = area > maxArea ? Math.sqrt(maxArea / area) : 1;
+	let scale = requestedScale * Math.min(edgeFactor, areaFactor);
+	// Rounding to whole pixels can push the planned raster one pixel over a cap; step down until
+	// the planner keeps it in one canvas.
+	for (let step = 0; step < 64; step++) {
+		const width = plannedPixels(naturalWidth, scale);
+		const height = plannedPixels(naturalHeight, scale);
+		if (width <= maxDim && height <= maxDim && width * height <= maxArea) break;
+		scale *= 0.999;
+	}
+	return scale;
+}
+
 /**
  * Rasterise `element`, reducing `options.scale` (preserving aspect ratio) so
- * the full raster never exceeds the browser's canvas-dimension cap, and
- * therefore never tiles.
+ * the full raster never exceeds the browser's canvas-dimension or area cap,
+ * and therefore never tiles.
  */
 export async function rasterizeElementClampedToCanvas(
 	element: HTMLElement,
@@ -39,16 +75,20 @@ export async function rasterizeElementClampedToCanvas(
 ): Promise<RasterizeElementClampedResult> {
 	const requestedScale = options.scale && options.scale > 0 ? options.scale : 1;
 	const maxDim = options.maxCanvasDim ?? getMaxCanvasDimension();
-	const fullWidth = naturalWidth * requestedScale;
-	const fullHeight = naturalHeight * requestedScale;
-	const largestEdge = Math.max(fullWidth, fullHeight);
-	const clampFactor = largestEdge > maxDim ? maxDim / largestEdge : 1;
-	const effectiveScale = requestedScale * clampFactor;
+	const maxArea = options.maxCanvasArea ?? maxCanvasAreaFor(maxDim);
+	const effectiveScale = clampScaleToCanvas(
+		naturalWidth,
+		naturalHeight,
+		requestedScale,
+		maxDim,
+		maxArea,
+	);
 
 	const result = await rasterizeElement(element, naturalWidth, naturalHeight, doc, {
 		...options,
 		scale: effectiveScale,
 		maxCanvasDim: maxDim,
+		maxCanvasArea: maxArea,
 	});
 
 	if (result.kind !== 'canvas') {
@@ -60,5 +100,5 @@ export async function rasterizeElementClampedToCanvas(
 		);
 	}
 
-	return { ...result, clamped: clampFactor < 1, effectiveScale };
+	return { ...result, clamped: effectiveScale < requestedScale, effectiveScale };
 }

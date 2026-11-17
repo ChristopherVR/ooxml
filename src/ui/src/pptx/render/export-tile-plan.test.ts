@@ -66,6 +66,25 @@ describe('computeExportTilePlan', () => {
 	});
 });
 
+describe('computeExportTilePlan with an area cap', () => {
+	it('tiles a raster that fits every axis but not the iOS area cap', () => {
+		// 8000 x 4500 fits a 16384 edge but is 36 megapixels, over iOS's 16,777,216.
+		const plan = computeExportTilePlan(8000, 4500, 16384, 16_777_216);
+		expect(plan.tiled).toBe(true);
+		let covered = 0;
+		for (const tile of plan.tiles) {
+			expect(tile.width * tile.height).toBeLessThanOrEqual(16_777_216);
+			covered += tile.width * tile.height;
+		}
+		expect(covered).toBe(8000 * 4500);
+	});
+	it('keeps a raster under both caps in one tile', () => {
+		const plan = computeExportTilePlan(3840, 2160, 16384, 16_777_216);
+		expect(plan.tiled).toBe(false);
+		expect(plan.tiles).toHaveLength(1);
+	});
+});
+
 describe('tileRectToSourceRect', () => {
 	it('divides the tile rect by the export scale', () => {
 		const rect = tileRectToSourceRect(
