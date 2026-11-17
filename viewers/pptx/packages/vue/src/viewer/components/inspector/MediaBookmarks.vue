@@ -82,7 +82,7 @@ const BTN = 'rounded bg-muted hover:bg-accent px-2 py-1 text-[11px] transition-c
 				<button
 					v-if="canEdit"
 					type="button"
-					class="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-opacity"
+					class="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100 text-red-400 hover:text-red-300 transition-opacity"
 					:title="t('pptx.media.removeBookmark')"
 					@click="removeBookmark(bmk.id)"
 				>

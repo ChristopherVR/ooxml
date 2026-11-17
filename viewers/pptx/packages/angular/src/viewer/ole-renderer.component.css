@@ -73,6 +73,13 @@
 .pptx-ng-ole-actions:focus-within {
 	opacity: 1;
 }
+
+/* Touch screens have no hover (iOS Safari, issue #290): keep the bar visible there. */
+@media (hover: none), (pointer: coarse) {
+	.pptx-ng-ole-actions {
+		opacity: 1;
+	}
+}
 .pptx-ng-ole-action {
 	font-size: 11px;
 	line-height: 1;

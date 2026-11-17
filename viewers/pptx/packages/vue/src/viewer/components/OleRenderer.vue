@@ -354,6 +354,13 @@ const placeholderStyle = computed<CSSProperties>(() => ({
 	opacity: 1;
 }
 
+/* Touch screens have no hover (iOS Safari, issue #290): keep the bar visible there. */
+@media (hover: none), (pointer: coarse) {
+	.pptx-vue-ole-actions {
+		opacity: 1;
+	}
+}
+
 .pptx-vue-ole-meta {
 	margin-right: auto;
 	color: rgba(0, 0, 0, 0.55);
