@@ -1077,3 +1077,12 @@ installed Visio 16 build is used to check that saved files open without repair.
   comment whitespace, solid theme backgrounds and Visio infinite-line stencil previews. Kept
   remaining work explicit, including new mention authoring, untranslated function descriptions,
   exact Word tint rounding, rich comments, non-solid backgrounds and periodic NURBS.
+
+### Symbol-font fallback (#290)
+
+- [x] PowerPoint's common Wingdings bullets and mapped Symbol/Wingdings text have
+      Unicode substitution and an offline bundled symbol font fallback in the
+      shared renderer. Evidence: `symbol-bullet-paragraph.test.ts`,
+      `symbol-font-fallback.spec.ts`.
+- [ ] Full Wingdings 2/3 and Webdings mapping, exact symbol-outline parity, and
+      coverage outside the bundled U+2000-2BFF subset remain incomplete.

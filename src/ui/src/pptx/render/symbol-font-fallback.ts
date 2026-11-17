@@ -16,6 +16,7 @@ import { isSymbolEncodedFont, symbolCharToUnicode, symbolTextToUnicode } from 'o
 import type { ParagraphBulletResult } from './bullet-list';
 import type { ParagraphRun } from './paragraph-types';
 import type { RunStyle } from './text-run-style';
+import { withSymbolFallback } from '../../fonts/symbol-fallback';
 
 /** Reports whether `family` really paints `char`, rather than a fallback font. */
 export type SymbolGlyphProbe = (family: string, char: string) => boolean;
@@ -61,19 +62,22 @@ export const canvasSymbolGlyphProbe: SymbolGlyphProbe = (family, char) => {
 			return Math.abs(ctx.measureText(char).width - fallback) > 0.01;
 		});
 	}
-	probeCache.set(key, painted);
+	// A font can arrive after the first render (embedded or host supplied).
+	// Never retain a negative result across that load.
+	if (painted) probeCache.set(key, true);
 	return painted;
 };
 
 /**
  * The bullet as this device can show it: unchanged unless its font is a symbol
  * font the browser cannot paint the marker in, in which case the marker is its
- * Unicode equivalent (a plain bullet when none is known) and the bullet drops
- * its font so the marker is drawn in the paragraph's typeface.
+ * Unicode equivalent (a plain bullet when none is known), drawn in the paragraph
+ * typeface with the bundled symbol font as its last resort.
  */
 export function displayableSymbolBullet(
 	bullet: ParagraphBulletResult | undefined,
 	probe: SymbolGlyphProbe = canvasSymbolGlyphProbe,
+	paragraphFamily?: string,
 ): ParagraphBulletResult | undefined {
 	const family = bullet?.fontFamily;
 	if (!bullet || bullet.isNumbered || bullet.picture || !family || !isSymbolEncodedFont(family)) {
@@ -85,7 +89,11 @@ export function displayableSymbolBullet(
 		return bullet;
 	}
 	const { fontFamily: _symbolFont, ...rest } = bullet;
-	return { ...rest, marker: symbolTextToUnicode(family, marker) ?? '\u2022' };
+	return {
+		...rest,
+		marker: symbolTextToUnicode(family, marker) ?? '\u2022',
+		fontFamily: withSymbolFallback(paragraphFamily ?? 'sans-serif'),
+	};
 }
 
 function primaryFamily(fontFamily: unknown): string | undefined {
@@ -121,7 +129,11 @@ function displayablePiece<T extends { text: string; style?: RunStyle }>(
 		text += mapped ?? char;
 	}
 	if (!changed) return piece;
-	return { ...piece, text, style: { ...piece.style, fontFamily: fallbackFamily } };
+	return {
+		...piece,
+		text,
+		style: { ...piece.style, fontFamily: withSymbolFallback(fallbackFamily) },
+	};
 }
 
 function displayablePieces<T extends { text: string; style?: RunStyle }>(

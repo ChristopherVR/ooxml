@@ -3068,3 +3068,13 @@ Moved within this repository, from the PowerPoint renderer in `ooxml-ui` to the 
 | ------------------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `src/ui/src/pptx/render/visual-3d-camera-presets.ts`                            | `src/core/drawingml/camera-presets.ts` | Moved with `git mv`; the pptx module re-exports `CAMERA_PRESET_MAP`, `DEFAULT_CUSTOM_REF_PX` and `CameraPresetConfig`                                                 |
 | `src/ui/src/pptx/render/smartart-3d-scene-camera.ts` (presets, resolve, matrix) | `src/core/diagram/scene-camera.ts`     | Renamed `DIAGRAM_SCENE_CAMERA_PRESETS`, `resolveDiagramSceneCamera`, `diagramSceneCameraMatrix`; adds `projectDiagramScenePoint`; pptx re-exports under the old names |
+
+## Offline symbol fallback (issue #290)
+
+- Source: https://github.com/google/fonts, commit `7b6724ac7ececc713e9ba93af309f7520c9a80a3`.
+- Path: `ofl/notosanssymbols2/NotoSansSymbols2-Regular.ttf`.
+- Source SHA-256: `7d5fb73b7ca67a6798101741f5d280a3d016a56a197afcd4199dbb57b4b82a21`.
+- Destination: `src/ui/src/fonts/assets/symbol-fallback-data.ts`.
+- Changes: subset to U+2000-2BFF with fontTools 4.65.0, WOFF2 encoding, inline data URL.
+- Licence: SIL OFL 1.1, included in `src/ui/NOTICE` and beside the source asset.
+- Rebuild: `python src/ui/scripts/build-symbol-fallback.py <downloaded-ttf>`.

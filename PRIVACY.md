@@ -208,3 +208,15 @@ Scripts that are not shipped contact external services when a maintainer runs th
 registry, GitHub, Discord announcements, Google Fonts' metadata feed (to refresh the font
 catalogue) and a translation API (to draft locale files). None of them run in a reader's
 browser.
+
+### Offline PowerPoint symbol fallback
+
+When Wingdings or Symbol is unavailable, the PowerPoint renderer translates known
+characters to Unicode and tries the paragraph font, then a bundled Noto Sans
+Symbols 2 subset (U+2000-2BFF). The subset is inline WOFF2 data, enabled without
+font downloads. It makes no outbound request, sends no document or font names,
+and creates no persistent storage. Image/print exports collect the same font
+rule. Host CSP must permit `font-src data:` and the viewer's inline styles; the
+site and desktop policies already do. The font-download setting does not disable
+this local fallback. This is approximate symbol substitution, not exact Wingdings
+outlines; unmapped symbol bullets use a plain bullet.

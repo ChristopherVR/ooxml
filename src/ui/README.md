@@ -541,3 +541,15 @@ notification/repaint from endlessly re-decoding a just-evicted image. If full or
 a source key exceeds the budget, additional async sampling uses the existing
 point/series-colour fallback until `releasePptxRenderCaches()` starts a new epoch.
 Synchronously decoded colours still render even when they cannot be memoised.
+
+### Offline PowerPoint symbol fallback
+
+When Wingdings or Symbol is unavailable, the PowerPoint renderer translates known
+characters to Unicode and tries the paragraph font, then a bundled Noto Sans
+Symbols 2 subset (U+2000-2BFF). The subset is inline WOFF2 data, enabled without
+font downloads. It makes no outbound request, sends no document or font names,
+and creates no persistent storage. Image/print exports collect the same font
+rule. Host CSP must permit `font-src data:` and the viewer's inline styles; the
+site and desktop policies already do. The font-download setting does not disable
+this local fallback. This is approximate symbol substitution, not exact Wingdings
+outlines; unmapped symbol bullets use a plain bullet.

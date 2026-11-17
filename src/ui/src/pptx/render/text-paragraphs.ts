@@ -225,7 +225,16 @@ export function buildParagraphs(
 				(seg) => seg !== markerSegment && Boolean(seg.text) && seg.text.trim().length > 0,
 			);
 			// A symbol-font marker this device cannot paint shows its Unicode equivalent (#290).
-			const bullet = hasVisibleTextContent ? displayableSymbolBullet(bulletResult) : undefined;
+			const paragraphFamily = paraSegments.find(
+				(seg) => seg !== markerSegment && !isSymbolEncodedFont(seg.style?.fontFamily),
+			)?.style?.fontFamily;
+			const bullet = hasVisibleTextContent
+				? displayableSymbolBullet(
+						bulletResult,
+						undefined,
+						paragraphFamily ? getSubstituteFontFamily(paragraphFamily) : symbolFallbackFamily,
+					)
+				: undefined;
 
 			const indent = resolveParagraphIndent(
 				paragraphIndents?.[paraIndex],

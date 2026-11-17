@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { withSymbolFallback } from '../../fonts/symbol-fallback';
 
 import type { ParagraphBulletResult } from './bullet-list';
 import type { ParagraphRun } from './paragraph-types';
@@ -23,6 +24,7 @@ describe('displayableSymbolBullet (issue #290)', () => {
 			isNumbered: false,
 			color: '#C00000',
 			sizePercent: 100,
+			fontFamily: withSymbolFallback('sans-serif'),
 		});
 	});
 
@@ -60,7 +62,10 @@ describe('displayableSymbolRuns', () => {
 			'Georgia',
 			() => false,
 		);
-		expect(shown).toEqual({ text: '✔✔', style: { fontFamily: 'Georgia', color: '#111111' } });
+		expect(shown).toEqual({
+			text: '✔✔',
+			style: { fontFamily: withSymbolFallback('Georgia'), color: '#111111' },
+		});
 		expect(shown?.text).toHaveLength(2);
 	});
 
@@ -72,7 +77,7 @@ describe('displayableSymbolRuns', () => {
 		const [shown] = displayableSymbolRuns([source], 'Arial', () => false);
 		expect(shown?.scriptRuns).toEqual([
 			{ text: 'x ' },
-			{ text: 'α•', style: { fontFamily: 'Arial' } },
+			{ text: 'α•', style: { fontFamily: withSymbolFallback('Arial') } },
 		]);
 	});
 
@@ -96,7 +101,7 @@ describe('displayableSymbolRuns', () => {
 
 	it('rewrites runs that inherit a symbol font from the text body', () => {
 		const [shown] = displayableSymbolRuns([run('n')], 'Arial', () => false, '"Wingdings"');
-		expect(shown).toEqual({ text: '■', style: { fontFamily: 'Arial' } });
+		expect(shown).toEqual({ text: '■', style: { fontFamily: withSymbolFallback('Arial') } });
 	});
 
 	it('rewrites the pieces of a tabbed run along with the run', () => {
