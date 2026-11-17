@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { VideoExportUnsupportedError } from 'ooxml-ui/pptx';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderElementToTiledCanvas } from './export-helpers';
@@ -33,7 +34,7 @@ vi.mock<typeof import('./export-helpers')>(import('./export-helpers'), () => ({
  */
 class MockMediaRecorder {
 	static instances: MockMediaRecorder[] = [];
-	static isTypeSupported = vi.fn(() => true);
+	static isTypeSupported = vi.fn((_mime: string) => true);
 
 	ondataavailable: ((event: { data: Blob }) => void) | null = null;
 	onstop: (() => void) | null = null;
@@ -103,6 +104,34 @@ describe('exportAllSlidesAsVideo', () => {
 		expect(renderElementToTiledCanvas).toHaveBeenCalledWith(stageEl, 1);
 		expect(blob.type).toBe('video/webm');
 		expect(drawImage).toHaveBeenCalledWith({ width: 8, height: 6 }, 0, 0);
+	});
+
+	it('records MP4 where the browser records no WebM (Safari)', async () => {
+		MockMediaRecorder.isTypeSupported.mockImplementation((mime: string) =>
+			mime.startsWith('video/mp4'),
+		);
+		const ref = { current: makeMockElement() } as React.RefObject<HTMLElement | null>;
+		try {
+			const blob = await exportAllSlidesAsVideo(ref, 1, vi.fn(), 0, { slideDurationMs: 10 });
+			expect(blob.type).toBe('video/mp4');
+			expect(MockMediaRecorder.instances[0]?.options?.mimeType).toMatch(/^video[/]mp4/u);
+		} finally {
+			MockMediaRecorder.isTypeSupported.mockReturnValue(true);
+		}
+	});
+
+	it('reports unsupported before capturing when no container can be recorded', async () => {
+		MockMediaRecorder.isTypeSupported.mockReturnValue(false);
+		vi.mocked(renderElementToTiledCanvas).mockClear();
+		const ref = { current: makeMockElement() } as React.RefObject<HTMLElement | null>;
+		try {
+			await expect(exportAllSlidesAsVideo(ref, 1, vi.fn(), 0)).rejects.toThrow(
+				VideoExportUnsupportedError,
+			);
+			expect(renderElementToTiledCanvas).not.toHaveBeenCalled();
+		} finally {
+			MockMediaRecorder.isTypeSupported.mockReturnValue(true);
+		}
 	});
 
 	it('honors an explicit capture scale (e.g. from resolveExportCaptureDecision)', async () => {
