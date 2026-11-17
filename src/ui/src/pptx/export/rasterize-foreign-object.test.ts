@@ -42,6 +42,7 @@ function installFakeCanvas(tainted: boolean): { drawImage: ReturnType<typeof vi.
 	const ctx = {
 		fillStyle: '',
 		fillRect: vi.fn(),
+		clearRect: vi.fn(),
 		drawImage,
 		getImageData: tainted
 			? vi.fn(() => {
@@ -98,5 +99,39 @@ describe('rasterizeForeignObjectSvg', () => {
 		installFakeImage('load');
 		installFakeCanvas(true);
 		await expect(rasterizeForeignObjectSvg(SVG, 4, 4)).rejects.toThrow(/tainted/u);
+	});
+
+	it('awaits decode() before drawing, so lazily decoded pixels are not missed', async () => {
+		installFakeImage('load');
+		const order: string[] = [];
+		const decode = vi.fn(async () => {
+			order.push('decode');
+		});
+		vi.stubGlobal(
+			'Image',
+			class extends (globalThis.Image as unknown as new () => object) {
+				decode = decode;
+			},
+		);
+		const { drawImage } = installFakeCanvas(false);
+		drawImage.mockImplementation(() => order.push('draw'));
+		await rasterizeForeignObjectSvg(SVG, 4, 4, undefined, { redrawAfterFrame: false });
+		expect(order).toEqual(['decode', 'draw']);
+	});
+
+	it('draws again after a frame on WebKit, keeping the taint probe', async () => {
+		installFakeImage('load');
+		const { drawImage } = installFakeCanvas(false);
+		const frame = vi.fn(async () => undefined);
+		await rasterizeForeignObjectSvg(SVG, 4, 4, '#fff', {
+			redrawAfterFrame: true,
+			nextFrame: frame,
+		});
+		expect(frame).toHaveBeenCalledOnce();
+		expect(drawImage).toHaveBeenCalledTimes(2);
+		installFakeCanvas(true);
+		await expect(
+			rasterizeForeignObjectSvg(SVG, 4, 4, undefined, { redrawAfterFrame: true, nextFrame: frame }),
+		).rejects.toThrow(/tainted/u);
 	});
 });
