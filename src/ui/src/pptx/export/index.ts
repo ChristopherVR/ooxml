@@ -73,6 +73,8 @@ export * from './print-document';
 // DOM-touching print-window open/finish lifecycle (window.open-based paths
 // only; the popup-blocking fix every binding needs lives here once).
 export * from './print-window';
+// Print one HTML document: a hidden iframe, or a window on iOS (which prints the parent page for an iframe).
+export * from './print-frame';
 // The print job plan every binding's Print dialog runs (slides, output path,
 // window timing, translated title) and the documents it assembles.
 export * from './print-job';
