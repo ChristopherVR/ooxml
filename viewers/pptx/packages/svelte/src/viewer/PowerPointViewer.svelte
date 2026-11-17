@@ -15,6 +15,7 @@
 	import {
 		buildUserFontFaceStyles,
 		attachViewerHyperlinks,
+		installTouchPress,
 	createCloudDocumentController,
 	createSaveProgressController,
 		INSPECTOR_PANEL_DEFAULT_WIDTH,
@@ -155,6 +156,10 @@
 				vm.optionsState.confirmHyperlink(url, t, rootEl),
 		});
 	});
+	// Touch long-press / double-tap (issue #290): iOS Safari fires no contextmenu
+	// on a long-press and no reliable dblclick, so the shared installer synthesises
+	// them on the controls that opt in with `data-pptx-touch-press`.
+	$effect(() => (rootEl ? installTouchPress(rootEl) : undefined));
 	useCustomizationConstraints(customization, vm.optionsState);
 
 	// Ribbon Display Options: one controller per viewer, created here and never per render.

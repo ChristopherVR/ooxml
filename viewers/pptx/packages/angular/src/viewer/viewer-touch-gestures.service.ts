@@ -9,8 +9,10 @@
  *     (`!canEdit()`): in edit mode single-finger gestures belong to element
  *     manipulation (move/resize/rotate), so we never hijack them. The large
  *     ‹ › buttons remain available for explicit navigation in all modes;
- *   - long-press in edit mode opens the editor context menu at the press point
- *     for the current selection (mirrors React's onLongPress path).
+ *   - long-press and double-tap are not handled here: {@link setupTouchPress}
+ *     installs the shared `installTouchPress` on the viewer root, which turns
+ *     them into `contextmenu` / `dblclick` on the controls that opt in with
+ *     `data-pptx-touch-press` (issue #290), the canvas included.
  *
  * Extracted from {@link PowerPointViewerComponent}: the component calls
  * {@link setup} once from its constructor with the `<main>` element accessor and
@@ -22,7 +24,7 @@
  */
 
 import { afterNextRender, DestroyRef, inject, Injectable } from '@angular/core';
-import type { PptxElement } from 'pptx-viewer-core';
+import { installTouchPress } from 'ooxml-ui/pptx';
 
 import { attachTouchGestures } from './touch-gestures';
 import { ViewerZoomService } from './viewer-zoom.service';
@@ -31,10 +33,8 @@ import { ViewerZoomService } from './viewer-zoom.service';
 interface TouchGesturesHost {
 	readonly canEdit: () => boolean;
 	readonly presenting: () => boolean;
-	readonly selectedElement: () => PptxElement | null;
 	readonly goPrev: () => void;
 	readonly goNext: () => void;
-	readonly setContextMenuPos: (pos: { x: number; y: number }) => void;
 }
 
 @Injectable()
@@ -68,19 +68,22 @@ export class ViewerTouchGesturesService {
 							host.goNext();
 						}
 					},
-					onLongPress: (x, y) => {
-						if (!host.canEdit() || host.presenting()) {
-							return;
-						}
-						const selected = host.selectedElement();
-						if (!selected) {
-							return;
-						}
-						host.setContextMenuPos({ x, y });
-					},
 				},
 			});
 			this.destroyRef.onDestroy(teardown);
+		});
+	}
+
+	/**
+	 * Turn a touch long-press into `contextmenu` and a double-tap into `dblclick`
+	 * under `rootEl()` (iOS Safari fires neither; issue #290).
+	 */
+	setupTouchPress(rootEl: () => HTMLElement | undefined): void {
+		afterNextRender(() => {
+			const el = rootEl();
+			if (el) {
+				this.destroyRef.onDestroy(installTouchPress(el));
+			}
 		});
 	}
 }

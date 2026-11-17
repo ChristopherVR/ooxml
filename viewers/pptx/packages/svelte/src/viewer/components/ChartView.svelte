@@ -193,6 +193,7 @@
 		data-pptx-element={interactive || marked ? 'true' : undefined}
 		onpointerdown={interactiveArmed ? onChartPointerDown : undefined}
 		ondblclick={interactiveArmed ? onChartDblClick : undefined}
+		data-pptx-touch-press={interactiveArmed ? 'dblclick' : undefined}
 	>
 		<!-- Interaction-only hit target for a degenerate chart; see `hitTarget`. -->
 		{#if hitTarget}

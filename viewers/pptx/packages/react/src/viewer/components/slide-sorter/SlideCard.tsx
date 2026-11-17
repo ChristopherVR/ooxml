@@ -72,6 +72,7 @@ function SlideCardImpl({
 				slide.hidden && 'opacity-40',
 			)}
 			data-pptx-chrome='sorter-tile'
+			data-pptx-touch-press='menu dblclick'
 			data-pptx-selected={isSelected}
 			data-pptx-slide-hidden={cue.marker}
 			aria-describedby={cue.labelId}

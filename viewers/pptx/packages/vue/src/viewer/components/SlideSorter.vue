@@ -203,6 +203,7 @@ onBeforeUnmount(() => {
 				@click="controller.select(index, $event)"
 				@dblclick="emit('select', index)"
 				@contextmenu="openContextMenu(index, $event)"
+				data-pptx-touch-press="menu dblclick"
 				@dragstart="onDragStart(index, $event)"
 				@dragover="onDragOver(index, $event)"
 				@drop="onDrop(index, $event)"
