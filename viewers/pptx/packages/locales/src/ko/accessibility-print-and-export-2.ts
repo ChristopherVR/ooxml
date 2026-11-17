@@ -62,6 +62,8 @@ export const translations = {
 		'슬라이드 노트 PDF 내보내기를 위해 캡처된 슬라이드가 없습니다',
 	'pptx.export.errorNoSlidesPdf': 'PDF 내보내기를 위해 캡처된 슬라이드가 없습니다',
 	'pptx.export.errorNoSlidesVideo': '비디오 내보내기를 위해 캡처된 슬라이드가 없습니다',
+	'pptx.export.errorVideoUnsupported':
+		'이 브라우저에서는 비디오를 녹화할 수 없습니다. 슬라이드를 GIF로 내보내거나 다른 브라우저를 사용해 보세요.',
 	'pptx.export.recording': '녹화 중',
 	'pptx.export.recordingVideo': '비디오 녹화 중...',
 	'pptx.export.rendering': '렌더링 중',

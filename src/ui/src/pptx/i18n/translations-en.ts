@@ -3068,6 +3068,8 @@ export const translationsEn: Record<string, string> = {
 	'pptx.export.errorNoSlidesNotesPdf': 'No slides were captured for notes PDF export',
 	'pptx.export.errorNoSlidesPdf': 'No slides were captured for PDF export',
 	'pptx.export.errorNoSlidesVideo': 'No slides were captured for video export',
+	'pptx.export.errorVideoUnsupported':
+		'This browser cannot record video. Export the slides as a GIF, or try another browser.',
 	'pptx.export.recording': 'Recording',
 	'pptx.export.recordingVideo': 'Recording video...',
 	'pptx.export.rendering': 'Rendering',

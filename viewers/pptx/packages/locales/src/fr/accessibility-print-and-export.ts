@@ -250,6 +250,8 @@ export const translations = {
 		"Aucune diapositive n'a été capturée pour l'exportation PDF des notes",
 	'pptx.export.errorNoSlidesPdf': "Aucune diapositive n'a été capturée pour l'exportation PDF",
 	'pptx.export.errorNoSlidesVideo': "Aucune diapositive n'a été capturée pour l'exportation vidéo",
+	'pptx.export.errorVideoUnsupported':
+		'Ce navigateur ne peut pas enregistrer de vidéo. Exportez les diapositives au format GIF ou essayez un autre navigateur.',
 	'pptx.export.recording': 'Enregistrement',
 	'pptx.export.recordingVideo': 'Enregistrement vidéo...',
 	'pptx.export.rendering': 'Rendu',
