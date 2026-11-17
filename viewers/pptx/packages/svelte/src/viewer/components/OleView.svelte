@@ -209,6 +209,13 @@
 		opacity: 1;
 	}
 
+	/* Touch screens have no hover (iOS Safari, issue #290): keep the bar visible there. */
+	@media (hover: none), (pointer: coarse) {
+		.pptx-svelte-ole-actions {
+			opacity: 1;
+		}
+	}
+
 	.pptx-svelte-ole-meta {
 		margin-right: auto;
 		color: rgba(0, 0, 0, 0.55);

@@ -94,7 +94,7 @@ function OleActionFooter({
 
 	return (
 		<div
-			className='absolute inset-x-0 bottom-0 z-20 flex items-center justify-between gap-2 px-2 py-1 bg-black/70 text-white text-[10px] opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100'
+			className='absolute inset-x-0 bottom-0 z-20 flex items-center justify-between gap-2 px-2 py-1 bg-black/70 text-white text-[10px] opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100'
 			onPointerDown={stopPointer}
 			onMouseDown={stopPointer}
 			onClick={stopPointer}

@@ -55,7 +55,7 @@ export function AiHistoryList({ chats, activeChatId, onResume, onDelete }: AiHis
 						onClick={() => onDelete(chat.id)}
 						title={t('pptx.ai.deleteChat')}
 						aria-label={t('pptx.ai.deleteChat')}
-						className='shrink-0 rounded-sm p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100'
+						className='shrink-0 rounded-sm p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100'
 					>
 						<LuTrash2 className='w-3.5 h-3.5' />
 					</button>
