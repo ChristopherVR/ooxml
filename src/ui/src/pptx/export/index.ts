@@ -96,6 +96,8 @@ export * from './rasterize-foreign-object';
 // `probeMaxCanvasDimension` re-exports the cached probe from
 // `render/canvas-size-probe.ts` under this directory's own import convention.
 export * from './canvas-size-probe';
+// The canvas area cap (iOS WebKit's 4096 x 4096) and `releaseCanvas`, which frees a backing store early.
+export * from '../render/canvas-area-cap';
 export * from './rasterize-element-strategy';
 // The raw per-tile canvases (no PNG stitching), for a caller that can place
 // several images itself - PDF/notes-PDF pages, which have no canvas-size

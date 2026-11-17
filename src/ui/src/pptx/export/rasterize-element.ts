@@ -18,6 +18,7 @@ import type { RasterStrategy, RasterStrategyOptions } from './rasterize-element-
  * directly) should prefer that over stitching, since a PDF page has no
  * canvas-size limit to escape in the first place.
  */
+import { releaseCanvas } from '../render/canvas-area-cap';
 import type { RasterizedTile } from './rasterize-element-tiles';
 import { groupTilesByRow, rasterizeElementTiles } from './rasterize-element-tiles';
 import { encodePngFromRowBands } from './streaming-png-encoder';
@@ -31,6 +32,11 @@ export interface RasterizeElementOptions {
 	backgroundColor?: string;
 	/** Override the probed canvas-dimension cap (mainly a test seam). */
 	maxCanvasDim?: number;
+	/**
+	 * Override the canvas area cap (width x height). Defaults to `maxCanvasAreaFor(maxCanvasDim)`,
+	 * which applies iOS WebKit's 4096 x 4096 area limit there.
+	 */
+	maxCanvasArea?: number;
 	/** `'html2canvas'` skips straight to the documented legacy fallback. Default `'auto'`. */
 	mode?: RasterStrategyOptions['mode'];
 	/** Re-windows the existing vector-SVG export pipeline; see `rasterize-element-strategy.ts`. */
@@ -84,6 +90,8 @@ async function stitchTilesToPng(
 					height: tile.canvas.height,
 				};
 			});
+			// The row's pixels are copied out: free its canvases now (iOS caps total canvas memory).
+			for (const tile of rowTiles) releaseCanvas(tile.canvas);
 			yield {
 				pixels: combineTileRowPixels(pixelTiles, fullWidth),
 				bandHeight: pixelTiles[0].height,

@@ -35,7 +35,7 @@ export interface ExportTilePlan {
 	fullWidth: number;
 	/** Full raster height in device pixels. */
 	fullHeight: number;
-	/** `false` when the full raster already fits within `maxDim` on both axes. */
+	/** `false` when the full raster already fits within `maxDim` on both axes (and `maxArea`). */
 	tiled: boolean;
 	/** Column count (1 when `tiled` is `false`). */
 	cols: number;
@@ -51,23 +51,28 @@ const MIN_TILE_DIM = 256;
 /**
  * Compute the tile plan for a `fullWidth` x `fullHeight` device-pixel raster
  * given the browser's maximum single-axis canvas dimension (`maxDim`, from
- * {@link probeMaxCanvasDimension}).
+ * {@link probeMaxCanvasDimension}) and, optionally, its maximum canvas area
+ * (`maxArea`, from `maxCanvasAreaFor`: iOS caps a canvas at 4096 x 4096 pixels
+ * of area even though a 16384-wide strip works).
  *
  * Tiles are laid out on a uniform grid sized so every tile is <= `maxDim` on
- * both axes; the last column/row absorbs the remainder so tiles are not
- * needlessly small. `maxDim` is clamped to at least {@link MIN_TILE_DIM} so a
- * degenerate probe result cannot produce an unusable (or infinite) grid.
+ * both axes and <= `maxArea` in pixel count; the last column/row absorbs the
+ * remainder so tiles are not needlessly small. `maxDim` is clamped to at least
+ * {@link MIN_TILE_DIM} (and `maxArea` to its square) so a degenerate probe
+ * result cannot produce an unusable (or infinite) grid.
  */
 export function computeExportTilePlan(
 	fullWidth: number,
 	fullHeight: number,
 	maxDim: number,
+	maxArea: number = Number.POSITIVE_INFINITY,
 ): ExportTilePlan {
 	const safeMax = Math.max(MIN_TILE_DIM, Math.floor(maxDim));
+	const safeArea = Math.max(MIN_TILE_DIM * MIN_TILE_DIM, Math.floor(maxArea));
 	const fw = Math.max(1, Math.round(fullWidth));
 	const fh = Math.max(1, Math.round(fullHeight));
 
-	if (fw <= safeMax && fh <= safeMax) {
+	if (fw <= safeMax && fh <= safeMax && fw * fh <= safeArea) {
 		return {
 			fullWidth: fw,
 			fullHeight: fh,
@@ -78,8 +83,13 @@ export function computeExportTilePlan(
 		};
 	}
 
-	const cols = Math.ceil(fw / safeMax);
-	const rows = Math.ceil(fh / safeMax);
+	let cols = Math.ceil(fw / safeMax);
+	let rows = Math.ceil(fh / safeMax);
+	// Split the longer tile side until each tile also fits the area cap.
+	while (Math.ceil(fw / cols) * Math.ceil(fh / rows) > safeArea) {
+		if (Math.ceil(fw / cols) >= Math.ceil(fh / rows)) cols++;
+		else rows++;
+	}
 	const baseTileW = Math.ceil(fw / cols);
 	const baseTileH = Math.ceil(fh / rows);
 

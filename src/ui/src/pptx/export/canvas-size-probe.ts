@@ -55,6 +55,9 @@ function canvasReportsMarker(
 		ctx.fillRect(dim - 1, 0, 1, 1);
 		const pixel = ctx.getImageData(dim - 1, 0, 1, 1).data;
 		const ok = pixel[0] === MARKER.r && pixel[1] === MARKER.g && pixel[2] === MARKER.b;
+		// Give the strip's backing store back at once (iOS budgets total canvas memory).
+		canvas.width = 0;
+		canvas.height = 0;
 		return { ok, probeFailed: false };
 	} catch {
 		return { ok: false, probeFailed: false };
