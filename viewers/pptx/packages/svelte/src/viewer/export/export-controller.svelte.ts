@@ -18,6 +18,7 @@ import {
 	rasterResultToPngDataUrl,
 	resolveExportBaseName,
 	runPdfExport,
+	videoFileName,
 } from 'ooxml-ui/pptx';
 import type { PptxData, PptxSlide } from 'pptx-viewer-core';
 
@@ -313,7 +314,7 @@ export class ExportController {
 	}
 
 	/**
-	 * Export every slide as a WebM video download (MediaRecorder over a canvas
+	 * Export every slide as a video download (WebM, or MP4 on Safari) (MediaRecorder over a canvas
 	 * capture stream, timing from the shared `planVideoSegments` plan); see
 	 * `export-video.ts`. Supports progress + AbortSignal like `exportPdf`.
 	 */
@@ -330,7 +331,7 @@ export class ExportController {
 				},
 				options,
 			);
-			downloadBlob(blob, `${resolveExportBaseName(this.#deps.fileName)}.webm`);
+			downloadBlob(blob, videoFileName(resolveExportBaseName(this.#deps.fileName), blob));
 		} finally {
 			this.exporting = false;
 		}

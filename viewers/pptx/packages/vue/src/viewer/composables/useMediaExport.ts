@@ -3,9 +3,9 @@
    guard clauses); merging them isn't a style choice here. */
 import {
 	downloadBlob as sharedDownloadBlob,
-	pickSupportedMimeType,
+	requireVideoRecordingFormat,
 	stopCaptureStream,
-	WEBM_MIME_CANDIDATES,
+	videoFileName,
 } from 'ooxml-ui/pptx';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
@@ -175,6 +175,8 @@ export function useMediaExport(options: UseMediaExportOptions): UseMediaExportRe
 		exporting.value = true;
 		progress.value = 0;
 		try {
+			// WebM, or MP4 on Safari; fails before the slow capture when neither can be recorded.
+			const format = requireVideoRecordingFormat();
 			// Phase 1: rasterise every slide to a canvas.
 			const canvases: HTMLCanvasElement[] = [];
 			for (let i = 0; i < total; i++) {
@@ -198,7 +200,7 @@ export function useMediaExport(options: UseMediaExportOptions): UseMediaExportRe
 			}
 
 			const recorder = createRecorder(recordingCanvas, fps, {
-					mimeType: pickSupportedMimeType([...WEBM_MIME_CANDIDATES]),
+					mimeType: format.mimeType,
 					videoBitsPerSecond,
 				}),
 				chunks: Blob[] = [];
@@ -248,10 +250,10 @@ export function useMediaExport(options: UseMediaExportOptions): UseMediaExportRe
 				recorder.stop();
 				await recorderDone;
 
-				const blob = new Blob(chunks, { type: 'video/webm' });
+				const blob = new Blob(chunks, { type: format.blobType });
 				onProgress?.(total, total);
 				progress.value = 95;
-				downloadBlob(blob, `${resolveBaseName(options.fileName)}.webm`);
+				downloadBlob(blob, videoFileName(resolveBaseName(options.fileName), blob));
 				progress.value = 100;
 				return blob;
 			} finally {

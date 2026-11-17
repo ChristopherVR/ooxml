@@ -1,3 +1,4 @@
+import { VideoExportUnsupportedError } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { RecorderLike, VideoCaptureDeps } from './export-video';
@@ -127,6 +128,33 @@ describe('exportSlidesToWebmBlob', () => {
 		const options = harness.recorderOptions();
 		expect(options?.mimeType).toMatch(/^video\/webm/u);
 		expect(options?.videoBitsPerSecond).toBe(123);
+	});
+
+	it('records MP4 where MediaRecorder supports only MP4 (Safari)', async () => {
+		vi.stubGlobal('MediaRecorder', {
+			isTypeSupported: (mime: string) => mime.startsWith('video/mp4'),
+		});
+		try {
+			const harness = make();
+			const blob = await exportSlidesToWebmBlob(harness.deps, { slideDurationMs: 40 });
+			expect(harness.recorderOptions()?.mimeType).toMatch(/^video[/]mp4/u);
+			expect(blob.type).toBe('video/mp4');
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+
+	it('reports unsupported before capturing when MediaRecorder supports no container', async () => {
+		vi.stubGlobal('MediaRecorder', { isTypeSupported: () => false });
+		try {
+			const harness = make();
+			await expect(exportSlidesToWebmBlob(harness.deps)).rejects.toThrow(
+				VideoExportUnsupportedError,
+			);
+			expect(harness.rasterizeSlide).not.toHaveBeenCalled();
+		} finally {
+			vi.unstubAllGlobals();
+		}
 	});
 
 	it('rejects immediately when the signal is already aborted', async () => {
