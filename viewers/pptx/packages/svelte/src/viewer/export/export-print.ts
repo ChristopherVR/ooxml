@@ -4,6 +4,7 @@ import {
 	buildRasterPrintJobDocument,
 	buildVectorPrintJobDocument,
 	planPrintJob,
+	printHtmlDocument,
 	printJobRasterFallback,
 } from 'ooxml-ui/pptx';
 import type { PptxHandoutMaster, PptxSlide } from 'pptx-viewer-core';
@@ -25,7 +26,9 @@ import { exportSlideToSvg } from './export-svg';
  * **Print surface / popup-blocker caveats:** the default opener renders the
  * document into a hidden same-origin `<iframe srcdoc>` and calls
  * `contentWindow.print()`, so no popup window is involved and popup blockers
- * cannot interfere (`document.write` is avoided too). A host that prefers a
+ * cannot interfere (`document.write` is avoided too). iOS and iPadOS print the
+ * parent page for an iframe, so there it opens a print window instead, which a
+ * popup blocker can refuse once the print flow has awaited its capture. A host that prefers a
  * visible print window can inject its own {@link OpenPrintWindow} via the
  * controller deps; note that a `window.open`-based opener only succeeds inside
  * a user gesture (a click handler) and returns `null` under popup blockers,
@@ -68,44 +71,14 @@ export interface PrintDeps {
 	getTranslator?(): Translator;
 }
 
-/** How long the hidden print iframe survives if `afterprint` never fires. */
-const PRINT_FRAME_FALLBACK_TTL_MS = 60_000;
-
 /**
- * Default opener: mount the document in a hidden same-origin iframe (via
- * `srcdoc`, no `document.write`) and print its content window. The frame is
- * removed after `afterprint`, with a TTL fallback for browsers that never
- * fire it on iframe windows.
+ * Default opener: the shared `printHtmlDocument`, which mounts the document in a hidden
+ * same-origin iframe (via `srcdoc`, no `document.write`) and prints it once loaded, removing the
+ * frame after `afterprint`. iOS and iPadOS print the parent page for an iframe, so there it opens
+ * a print window instead and returns `false` when that popup is blocked.
  */
 export function defaultOpenPrintWindow(htmlDocument: string): boolean {
-	const frame = document.createElement('iframe');
-	frame.setAttribute('aria-hidden', 'true');
-	Object.assign(frame.style, {
-		position: 'fixed',
-		right: '0',
-		bottom: '0',
-		width: '0',
-		height: '0',
-		border: '0',
-		visibility: 'hidden',
-	});
-	const cleanup = (): void => {
-		setTimeout(() => frame.remove(), 500);
-	};
-	frame.addEventListener('load', () => {
-		const win = frame.contentWindow;
-		if (!win) {
-			frame.remove();
-			return;
-		}
-		win.addEventListener('afterprint', cleanup, { once: true });
-		win.focus();
-		win.print();
-	});
-	frame.srcdoc = htmlDocument;
-	document.body.appendChild(frame);
-	setTimeout(() => frame.remove(), PRINT_FRAME_FALLBACK_TTL_MS);
-	return true;
+	return printHtmlDocument(htmlDocument);
 }
 
 /** The vector document of a `vector` plan, or `undefined` when the SVG export threw. */
