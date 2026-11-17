@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.80.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.80.0) - 2026-11-17
+
+### Features
+
+- **text:** Map symbol-font glyphs to their unicode equivalents ([3e3a5ea](https://github.com/ChristopherVR/ooxml/commit/3e3a5eaeb08e945e041d458209515c2e65f029cc))
+
 ## [4.79.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.79.1) - 2026-11-17
 
 ### Bug Fixes

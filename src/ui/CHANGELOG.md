@@ -7,6 +7,15 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.54.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.54.2) - 2026-11-17
+
+### Bug Fixes
+
+- **ui:** Paint symbol-font bullets and text where the font is missing ([daa0cbe](https://github.com/ChristopherVR/ooxml/commit/daa0cbe4bce001e19137831fc55784e8e7836412))
+- **ui:** Remap symbol-font text inherited from the body and in tab runs ([e89c9da](https://github.com/ChristopherVR/ooxml/commit/e89c9dae9332efb6ad40b1ba93c913454c32f8ad))
+- **pptx:** Bundle an offline fallback for missing symbol glyphs ([a92d15f](https://github.com/ChristopherVR/ooxml/commit/a92d15f3ac0cad34125147b97101ea64d1e658a3))
+- **pptx:** Preserve Unicode symbol bullets ([ecf4dab](https://github.com/ChristopherVR/ooxml/commit/ecf4dab63a96f8a16da15c59d557d284b9002d78))
+
 ## [1.54.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.54.1) - 2026-11-17
 
 ### Bug Fixes

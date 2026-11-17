@@ -7,7 +7,11 @@ sections (`scripts/viewer-changelogs.mjs`); do not edit them by hand.
 
 ## 2026-11-17
 
-_Releases: pptx-react-viewer@4.80.1, pptx-vue-viewer@4.79.1, pptx-angular-viewer@4.79.1, pptx-svelte-viewer@4.79.1, pptx-vanilla-viewer@3.79.1_
+_Releases: pptx-react-viewer@4.81.0, pptx-react-viewer@4.80.1, pptx-vue-viewer@4.80.0, pptx-vue-viewer@4.79.1, pptx-angular-viewer@4.80.0, pptx-angular-viewer@4.79.1, pptx-svelte-viewer@4.80.0, pptx-svelte-viewer@4.79.1, pptx-vanilla-viewer@3.80.0, pptx-vanilla-viewer@3.79.1_
+
+### Features
+
+- **text:** Map symbol-font glyphs to their unicode equivalents ([3e3a5ea](https://github.com/ChristopherVR/ooxml/commit/3e3a5eaeb08e945e041d458209515c2e65f029cc))
 
 ### Bug Fixes
 
