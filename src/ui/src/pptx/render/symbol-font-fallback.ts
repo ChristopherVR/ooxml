@@ -88,9 +88,13 @@ export function displayableSymbolBullet(
 	if (glyphs.length === 0 || glyphs.every((char) => probe(family, char))) {
 		return bullet;
 	}
-	const { fontFamily: _symbolFont, ...rest } = bullet;
+	// A marker outside the legacy byte and private-use ranges already has a
+	// Unicode meaning. Preserve it and let the browser fall through the font stack.
+	if (glyphs.every((char) => !/[\u0000-\u00ff\p{Co}]/u.test(char))) {
+		return { ...bullet, fontFamily: withSymbolFallback(family) };
+	}
 	return {
-		...rest,
+		...bullet,
 		marker: symbolTextToUnicode(family, marker) ?? '\u2022',
 		fontFamily: withSymbolFallback(paragraphFamily ?? 'sans-serif'),
 	};

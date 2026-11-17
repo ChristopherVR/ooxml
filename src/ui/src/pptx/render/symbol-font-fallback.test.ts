@@ -32,6 +32,14 @@ describe('displayableSymbolBullet (issue #290)', () => {
 		expect(displayableSymbolBullet(square, () => true)).toBe(square);
 	});
 
+	it('preserves an already Unicode marker when the symbol font cannot paint it', () => {
+		const arrow = { ...square, marker: '\u25ba' };
+		expect(displayableSymbolBullet(arrow, () => false)).toEqual({
+			...arrow,
+			fontFamily: withSymbolFallback('Wingdings'),
+		});
+	});
+
 	it('falls back to a plain bullet for a glyph with no known equivalent', () => {
 		const unknown = { ...square, marker: 'K' };
 		expect(displayableSymbolBullet(unknown, () => false)?.marker).toBe('•');
