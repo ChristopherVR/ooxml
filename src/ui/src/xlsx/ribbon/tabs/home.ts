@@ -1,6 +1,6 @@
 // Home tab, in Excel's group order: Clipboard, Font, Alignment, Number, Styles, Cells, Editing.
 import type { RibbonTab } from 'ooxml-core/xlsx/ui';
-import { FONT_NAMES, FONT_SIZES, BORDER_PRESETS } from 'ooxml-core/xlsx/ui';
+import { FONT_NAMES, FONT_SIZES, BORDER_PRESETS, icon } from 'ooxml-core/xlsx/ui';
 import { ORIENTATIONS } from 'ooxml-core/xlsx/ui';
 import { ACCOUNTING_FORMATS, numberFormatOptions } from 'ooxml-core/xlsx/ui';
 import { homeStyleGroups, items, sep } from './home-groups';
@@ -76,10 +76,11 @@ export function homeTab(): RibbonTab {
 						command: 'home.borders',
 						size: 'small',
 						menu: [
-							...BORDER_PRESETS.map(([preset, label]) => ({
+							...BORDER_PRESETS.map(([preset, label, glyph]) => ({
 								command: 'home.borders',
 								arg: preset,
 								label,
+								icon: icon(glyph),
 							})),
 							sep,
 							{ command: 'home.borders-more' },

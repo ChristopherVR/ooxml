@@ -82,12 +82,12 @@ export const BORDER_PRESETS: ReadonlyArray<readonly [BorderPreset, string, strin
 	['all', 'All Borders', 'borderAll'],
 	['outside', 'Outside Borders', 'borderOutside'],
 	['thickOutside', 'Thick Outside Borders', 'borderThick'],
-	['doubleBottom', 'Bottom Double Border', 'borderBottom'],
-	['thickBottom', 'Thick Bottom Border', 'borderBottom'],
-	['topAndBottom', 'Top and Bottom Border', 'borderOutside'],
+	['doubleBottom', 'Bottom Double Border', 'borderDoubleBottom'],
+	['thickBottom', 'Thick Bottom Border', 'borderThickBottom'],
+	['topAndBottom', 'Top and Bottom Border', 'borderTopAndBottom'],
 	['inside', 'Inside Borders', 'borderInside'],
-	['insideH', 'Inside Horizontal Borders', 'borderInside'],
-	['insideV', 'Inside Vertical Borders', 'borderInside'],
+	['insideH', 'Inside Horizontal Borders', 'borderInsideH'],
+	['insideV', 'Inside Vertical Borders', 'borderInsideV'],
 ];
 
 let lastBorder: BorderPreset = 'bottom';

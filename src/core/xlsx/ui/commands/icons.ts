@@ -1,6 +1,9 @@
 // Spreadsheet ribbon glyphs: stroke paths on a 20x20 grid (ooxml-ui draws them with
 // `currentColor`, round caps and joins). Registered once with `registerIcon`, prefixed `xl-`.
 const GRID = 'M3 3h14v14H3z';
+const DOTTED_ABOVE_BOTTOM =
+	'M3 3h.1M7 3h.1M11 3h.1M15 3h.1M3 7h.1M3 11h.1M17 7h.1M17 11h.1M17 3h.1';
+const DOTTED_CORNERS = 'M3 3h.1M17 3h.1M3 17h.1M17 17h.1';
 
 export const SHEET_ICONS: Readonly<Record<string, string>> = {
 	paste: 'M7 3h6v2.5H7zM5.5 4H4v13h12V4h-1.5M7 10h6M7 13h4',
@@ -17,7 +20,9 @@ export const SHEET_ICONS: Readonly<Record<string, string>> = {
 	fontColor: 'M5 13 10 3l5 10M7 9h6M3 17h14',
 	fillColor: 'M4 9l5-5 6 6-5 5zM9 4 7 2M15 10l1.5 3a1.5 1.5 0 1 1-3 0zM3 17h14',
 	borderAll: `${GRID}M3 10h14M10 3v14`,
-	borderBottom: 'M3 17h14M3 3h.1M7 3h.1M11 3h.1M15 3h.1M3 7h.1M3 11h.1M17 7h.1M17 11h.1M17 3h.1',
+	borderBottom: `M3 17h14${DOTTED_ABOVE_BOTTOM}`,
+	borderDoubleBottom: `M3 17h14M3 13.5h14${DOTTED_ABOVE_BOTTOM}`,
+	borderThickBottom: `M3 18h14v-1.5H3z${DOTTED_ABOVE_BOTTOM}`,
 	borderTop: 'M3 3h14M3 17h.1M7 17h.1M11 17h.1M15 17h.1M3 9h.1M3 13h.1M17 9h.1M17 13h.1M17 17h.1',
 	borderLeft: 'M3 3v14M17 3h.1M17 7h.1M17 11h.1M17 15h.1M7 3h.1M11 3h.1M7 17h.1M11 17h.1M17 17h.1',
 	borderRight: 'M17 3v14M3 3h.1M3 7h.1M3 11h.1M3 15h.1M7 3h.1M11 3h.1M7 17h.1M11 17h.1M3 17h.1',
@@ -25,7 +30,10 @@ export const SHEET_ICONS: Readonly<Record<string, string>> = {
 		'M3 3h.1M7 3h.1M11 3h.1M15 3h.1M3 7h.1M3 11h.1M3 15h.1M17 7h.1M17 11h.1M17 15h.1M7 17h.1M11 17h.1M17 3h.1M3 17h.1M17 17h.1',
 	borderOutside: GRID,
 	borderThick: 'M2.5 2.5h15v15h-15zM4 4h12v12H4z',
-	borderInside: 'M3 10h14M10 3v14M3 3h.1M17 3h.1M3 17h.1M17 17h.1',
+	borderTopAndBottom: 'M3 3h14M3 17h14M3 7h.1M3 11h.1M3 14h.1M17 7h.1M17 11h.1M17 14h.1',
+	borderInside: `M3 10h14M10 3v14${DOTTED_CORNERS}`,
+	borderInsideH: `M3 10h14${DOTTED_CORNERS}`,
+	borderInsideV: `M10 3v14${DOTTED_CORNERS}`,
 	borderMore: `${GRID}M3 10h14M10 3v14M13 13l4 4`,
 	alignTop: 'M3 3h14M7 6h6M7 9h6M10 9v6',
 	alignMiddle: 'M3 10h14M7 5h6M7 15h6M10 2v4M10 14v4',

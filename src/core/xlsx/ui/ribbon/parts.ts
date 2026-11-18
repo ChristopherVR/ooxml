@@ -65,7 +65,7 @@ export type RibbonControl =
 	| { kind: 'separator' };
 
 export type RibbonMenuItem =
-	| { command: string; arg?: unknown; label?: string }
+	| { command: string; arg?: unknown; label?: string; icon?: string }
 	| { separator: true };
 
 export interface RibbonGroup {

@@ -110,10 +110,11 @@ export function menuEntries(scope: RenderScope, items: RibbonMenuItem[]): MenuEn
 		}
 		const command = ctx.commands.get(item.command);
 		if (!command || scope.isHidden(command.id)) continue;
+		const icon = item.icon ?? command.icon;
 		const checked = item.arg === undefined ? safe(() => command.checked?.(ctx)) : undefined;
 		entries.push({
 			label: ctx.t(item.label ?? command.label),
-			...(command.icon ? { icon: command.icon } : {}),
+			...(icon ? { icon } : {}),
 			...(command.shortcut ? { shortcut: command.shortcut } : {}),
 			...(checked === undefined ? {} : { checked }),
 			disabled: !ctx.commands.isEnabled(command.id),
