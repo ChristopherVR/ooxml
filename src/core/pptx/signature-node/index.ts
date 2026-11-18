@@ -110,4 +110,4 @@ export {
 
 export { signPptxWithCertificate } from './signing';
 
-export { inspectPptxDigitalSignatures } from './inspection';
+export { inspectPptxDigitalSignatures, type InspectPptxSignatureOptions } from './inspection';

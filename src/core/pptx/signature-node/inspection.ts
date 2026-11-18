@@ -36,6 +36,15 @@ import {
 	buildReferenceChecksFromSignatureXml,
 } from './reference-checks';
 
+/** Options of {@link inspectPptxDigitalSignatures}. */
+export interface InspectPptxSignatureOptions {
+	/**
+	 * Ask the OCSP responder named in each signing certificate for its revocation status. Default
+	 * true; with false no request is made and the status is `not-checked`.
+	 */
+	checkRevocation?: boolean;
+}
+
 /**
  * Inspect all digital signatures in a PPTX package.
  *
@@ -47,10 +56,12 @@ import {
  * - Timestamp authority evaluation
  *
  * @param data - The raw PPTX file bytes.
+ * @param options - Set `checkRevocation: false` to make no network request.
  * @returns A comprehensive digital signature report.
  */
 export async function inspectPptxDigitalSignatures(
 	data: Uint8Array,
+	options: InspectPptxSignatureOptions = {},
 ): Promise<DigitalSignatureReport> {
 	try {
 		const zip = await openPptxZip(Buffer.from(data));
@@ -94,13 +105,14 @@ export async function inspectPptxDigitalSignatures(
 			const [leafCert, issuerCert] = certs;
 			const leafCertPem = leafCert !== undefined ? certPemFromBase64(leafCert) : undefined;
 			const issuerCertPem = issuerCert !== undefined ? certPemFromBase64(issuerCert) : leafCertPem;
-			const revocation = leafCertPem
-				? await evaluateCertificateRevocation(leafCertPem, issuerCertPem)
-				: {
-						status: 'not-checked' as const,
-						checkedOcspUrls: [],
-						checkedCrlUrls: [],
-					};
+			const revocation =
+				leafCertPem && options.checkRevocation !== false
+					? await evaluateCertificateRevocation(leafCertPem, issuerCertPem)
+					: {
+							status: 'not-checked' as const,
+							checkedOcspUrls: [],
+							checkedCrlUrls: [],
+						};
 			const timestamp = await evaluateTimestampAuthority(signatureXml);
 			const detailBase = {
 				path: signaturePath,
