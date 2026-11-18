@@ -8,6 +8,8 @@ import * as decoding from 'lib0/decoding';
 import * as Y from 'yjs';
 import { MAX_UPDATE_BYTES } from '../collab/codec';
 import { MESSAGE_SYNC } from '../collab/transport-provider';
+import { CHATS_MAP } from './chat-records';
+import { checkChatRow } from './validate-chats';
 import { checkOwnedRow, checkPinRow, isOwnedMap } from './validate-owned';
 import {
 	CHAT_MEMBERS,
@@ -85,6 +87,7 @@ const isTrackedMap = (name: string): boolean =>
 	name.startsWith(PINS_PREFIX) ||
 	name === ROSTER ||
 	name === CHAT_MEMBERS ||
+	name === CHATS_MAP ||
 	isOwnedMap(name);
 
 /** What the walk needs of a shared type; its event type parameter is irrelevant here. */
@@ -225,8 +228,9 @@ function checkReaction(
  * Channels and tabs (rows with a `createdBy`) and pins follow the rules of `validate-owned.ts`.
  * Meetings follow the same owner rule (`organizerId`). A roster row may be written only under the
  * actor's own id. A chat member may be added only by a member and removed only by themselves or a
- * moderator. Message text and the reactions per message are capped (`maxMessageChars`,
- * `maxReactionsPerMessage`). Everything else passes; see the coverage list in docs/teams-area.md.
+ * moderator, and the chat directory follows `validate-chats.ts`. Message text and the reactions
+ * per message are capped (`maxMessageChars`, `maxReactionsPerMessage`). Everything else passes;
+ * see the coverage list in docs/teams-area.md.
  *
  * An update that depends on state the server lacks stays pending in Yjs and would be applied later
  * unchecked, so it is refused as `incomplete-update`.
@@ -267,6 +271,7 @@ export function validateTeamsUpdate(
 					found = checkPinRow(name, rowId, was, now, actor, doc);
 				else if (name === ROSTER) found = checkRosterRow(rowId, was, now, actor);
 				else if (name === CHAT_MEMBERS) found = checkMemberKey(rowId, beforeMap, afterMap, actor);
+				else if (name === CHATS_MAP) found = checkChatRow(rowId, was, now, actor);
 				else found = checkOwnedRow(name, rowId, was, now, actor);
 				if (found) violations.push(found);
 			}

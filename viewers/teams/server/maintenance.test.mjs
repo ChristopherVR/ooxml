@@ -1,7 +1,15 @@
 // node --test server/maintenance.test.mjs
 // Room compaction (including a write cut short), the /metrics endpoint and the JSON logger.
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+	existsSync,
+	mkdirSync,
+	mkdtempSync,
+	readdirSync,
+	readFileSync,
+	rmSync,
+	writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, describe, it } from 'node:test';
@@ -12,6 +20,9 @@ import { createLogger, createMetrics } from './metrics.mjs';
 import {
 	compactSnapshotFile,
 	compactUpdate,
+	migrateStorageNames,
+	nameFromStorage,
+	storageName,
 	sweepRoomTemps,
 	writeFileAtomic,
 } from './room-store.mjs';
@@ -99,10 +110,11 @@ describe('room compaction', () => {
 		try {
 			const { doc, text } = fragmentedSnapshot();
 			mkdirSyncRooms(dir);
-			const file = join(dir, 'rooms', 'team.bin');
+			const file = join(dir, 'rooms', `${storageName('team')}.bin`);
+			const idle = join(dir, 'rooms', `${storageName('idle')}.bin`);
 			// Pad the snapshot with a redundant copy so the compacted form is strictly smaller.
 			const padded = Y.mergeUpdates([Y.encodeStateAsUpdate(doc), Y.encodeStateAsUpdate(doc)]);
-			writeFileSync(join(dir, 'rooms', 'idle.bin'), padded);
+			writeFileSync(idle, padded);
 			writeFileSync(file, padded);
 			const server = createTeamsServer({
 				dataDir: dir,
@@ -113,12 +125,120 @@ describe('room compaction', () => {
 			servers.push(server);
 			server.compactRooms();
 			const check = new Y.Doc();
-			Y.applyUpdate(check, readFileSync(join(dir, 'rooms', 'idle.bin')));
+			Y.applyUpdate(check, readFileSync(idle));
 			assert.equal(check.getText('t').toString(), text);
-			assert.ok(readFileSync(join(dir, 'rooms', 'idle.bin')).length <= padded.length);
+			assert.ok(readFileSync(idle).length <= padded.length);
 			assert.equal(existsSync(file), true);
 		} finally {
 			for (const s of servers) await s.close();
+			rmSync(dir, { recursive: true, force: true });
+		}
+	});
+});
+
+describe('storage names', () => {
+	it('keeps every room name apart on any disk and can be read back', () => {
+		for (const name of ['a', 'general', 'A-b_C', 'NUL', 'x'.repeat(128)]) {
+			assert.equal(nameFromStorage(storageName(name)), name);
+			assert.match(storageName(name), /^=[a-z2-7]+$/u);
+		}
+		assert.notEqual(storageName('Room'), storageName('room'));
+		assert.ok(`${storageName('x'.repeat(128))}.bin.00000000.tmp`.length < 255);
+		assert.equal(nameFromStorage('general'), null, 'a raw name from an older version');
+		assert.equal(nameFromStorage('=A'), null);
+		assert.equal(nameFromStorage('=b'), null, 'not what any name encodes to');
+	});
+
+	it('stores an upper-case spelling of a chat room as that room only on a case-insensitive disk', () => {
+		const dir = tmp();
+		try {
+			const real = 'chat-0123456789abcdef-g1';
+			const alias = real.toUpperCase().replace('0123456789ABCDEF', '0123456789ABCDEF');
+			writeFileSync(join(dir, `${alias}.bin`), 'content');
+			const caseInsensitive = existsSync(join(dir, `${real}.bin`));
+			assert.equal(migrateStorageNames(dir, '.bin'), 1);
+			assert.deepEqual(readdirSync(dir), [`${storageName(caseInsensitive ? real : alias)}.bin`]);
+		} finally {
+			rmSync(dir, { recursive: true, force: true });
+		}
+	});
+
+	it('leaves an entry alone when its new name is taken, and says so', () => {
+		const dir = tmp();
+		try {
+			writeFileSync(join(dir, 'team.bin'), 'old');
+			writeFileSync(join(dir, `${storageName('team')}.bin`), 'new');
+			const logs = [];
+			assert.equal(
+				migrateStorageNames(dir, '.bin', (m) => logs.push(m)),
+				0,
+			);
+			assert.equal(readFileSync(join(dir, 'team.bin'), 'utf8'), 'old');
+			assert.match(logs.join(), /could not migrate team\.bin/u);
+		} finally {
+			rmSync(dir, { recursive: true, force: true });
+		}
+	});
+
+	it('migrates a data directory at start-up and keeps rooms, files and access', async () => {
+		const dir = tmp();
+		const chat = 'chat-0123456789abcdef-g-g-1-1';
+		const snapshot = (fill) => {
+			const doc = new Y.Doc();
+			fill(doc);
+			return Y.encodeStateAsUpdate(doc);
+		};
+		mkdirSync(join(dir, 'rooms'));
+		mkdirSync(join(dir, 'files', 'acme'), { recursive: true });
+		mkdirSync(join(dir, 'files', chat), { recursive: true });
+		mkdirSync(join(dir, 'file-meta'));
+		writeFileSync(
+			join(dir, 'rooms', 'acme.bin'),
+			snapshot((doc) => doc.getMap('m').set('k', 'kept')),
+		);
+		writeFileSync(
+			join(dir, 'rooms', `${chat}.bin`),
+			snapshot((doc) => doc.getMap('teams:chat-members').set('ann', true)),
+		);
+		writeFileSync(join(dir, 'files', 'acme', 'a.txt'), 'shared');
+		writeFileSync(join(dir, 'files', chat, 'b.txt'), 'private');
+		writeFileSync(join(dir, 'file-meta', 'acme.json'), JSON.stringify({ 'a.txt': 'ann' }));
+		const boot = async () => {
+			const server = createTeamsServer({ dataDir: dir, insecureDev: true, log: () => {} });
+			const { port } = await server.listen(0, '127.0.0.1');
+			return { server, base: `http://127.0.0.1:${port}`, port };
+		};
+		const get = (ctx, path, user) =>
+			fetch(`${ctx.base}${path}`, { headers: { 'X-Teams-User': user } });
+		const dial = (ctx, room, user) =>
+			new Promise((resolve) => {
+				const ws = new WebSocket(`ws://127.0.0.1:${ctx.port}/sync/${room}?user=${user}`);
+				ws.on('open', () => (ws.close(), resolve('open')));
+				ws.on('unexpected-response', (_q, res) => resolve(res.statusCode));
+				ws.on('error', () => {});
+			});
+		try {
+			// Twice: the second start finds nothing left to move and sees the same data.
+			for (let run = 0; run < 2; run++) {
+				const ctx = await boot();
+				try {
+					assert.deepEqual(
+						readdirSync(join(dir, 'rooms')).sort(),
+						[`${storageName('acme')}.bin`, `${storageName(chat)}.bin`].sort(),
+					);
+					assert.equal(await (await get(ctx, '/files/acme/a.txt', 'ann')).text(), 'shared');
+					const listed = await (await get(ctx, '/files/acme', 'ann')).json();
+					assert.equal(listed.files[0].uploader, 'ann');
+					assert.equal(await (await get(ctx, `/files/${chat}/b.txt`, 'ann')).text(), 'private');
+					assert.equal((await get(ctx, `/files/${chat}/b.txt`, 'eve')).status, 403);
+					assert.equal(await dial(ctx, chat, 'ann'), 'open');
+					assert.equal(await dial(ctx, chat, 'eve'), 403);
+					assert.equal(ctx.server.isSyncRoomEmpty('acme'), false);
+				} finally {
+					await ctx.server.close();
+				}
+			}
+		} finally {
 			rmSync(dir, { recursive: true, force: true });
 		}
 	});

@@ -18,7 +18,7 @@ const ownerField = (map: string): string => (map === MEETINGS ? 'organizerId' : 
 export const isOwnedMap = (name: string): boolean => OWNED_MAPS.includes(name);
 
 /** The same Yjs row with the same content: an insert that lost a concurrent write to its key. */
-function isSameRow(before: Y.Map<unknown>, next: Y.Map<unknown>): boolean {
+export function isSameRow(before: Y.Map<unknown>, next: Y.Map<unknown>): boolean {
 	return (
 		next._item !== null &&
 		before._item !== null &&
@@ -90,7 +90,7 @@ export function checkPinRow(
 		return { code: 'malformed-row', ...at };
 	const members = doc.share.has(CHAT_MEMBERS) ? doc.getMap<unknown>(CHAT_MEMBERS) : undefined;
 	const exempt = actor.moderator === true && after === undefined;
-	if (members && members.size > 0 && !members.has(actor.id) && !exempt)
+	if (members && members.size > 0 && members.get(actor.id) !== true && !exempt)
 		return { code: 'not-member', ...at };
 	if (after === undefined) return null;
 	if (pinnedBy(after) === actor.id) return null;

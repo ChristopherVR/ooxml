@@ -1,6 +1,7 @@
 // Reference bring-your-own server for the teams viewers. One process, three jobs:
 //   ws  /sync/<room>      y-websocket compatible Yjs document + awareness server (persisted to disk);
-//                         chat-* rooms (private chats) admit only the members listed in the room
+//                         chat-* rooms (private chats) admit only the members listed in the room,
+//                         and only the people a chat id names can create one
 //   ws  /signal/<room>    WebRTC signaling relay (forwards JSON to the other sockets of the room)
 //   http POST|GET /files/<id>/<name>   plain file storage for attachments
 //   http POST /files/link/<id>/<name>  short-lived signed download link (token in Authorization)
@@ -47,13 +48,21 @@ import {
 	protocolOfUrl,
 	validateTeamsSyncMessage,
 } from './validator.generated.mjs';
-import { authorizeChatJoin, isChatRoom, roomMembers } from './chat-access.mjs';
+import {
+	CHAT_MEMBERS_MAP,
+	authorizeChatJoin,
+	isChatRoom,
+	isChatRoomAlias,
+	roomMembers,
+} from './chat-access.mjs';
 import { createFileStore } from './files.mjs';
 import { createLogger, createMetrics } from './metrics.mjs';
 import {
 	compactSnapshotFile,
 	compactUpdate,
+	migrateStorageNames,
 	snapshotNames,
+	storageName,
 	sweepRoomTemps,
 	writeFileAtomic,
 } from './room-store.mjs';
@@ -244,8 +253,10 @@ export function createTeamsServer(options = {}) {
 	mkdirSync(roomsDir, { recursive: true });
 	mkdirSync(filesDir, { recursive: true });
 	const fileStore = createFileStore({ filesDir, metaDir: join(dataDir, 'file-meta'), log });
-	// Nothing is in flight yet: drop what interrupted writes left behind.
+	// Nothing is in flight yet: drop what interrupted writes left behind, then bring room names
+	// from older versions over to the case-safe form.
 	sweepRoomTemps(roomsDir);
+	migrateStorageNames(roomsDir, '.bin', log);
 	fileStore.sweep(0);
 
 	// ---- metrics ------------------------------------------------------------------------------
@@ -321,7 +332,7 @@ export function createTeamsServer(options = {}) {
 	// ---- sync rooms -------------------------------------------------------------------------
 	/** @type {Map<string, any>} */
 	const syncRooms = new Map();
-	const snapshotPath = (name) => join(roomsDir, `${name}.bin`);
+	const snapshotPath = (name) => join(roomsDir, `${storageName(name)}.bin`);
 
 	const send = (ws, message) => {
 		if (ws.readyState === WS_OPEN) ws.send(message, (err) => err && ws.close());
@@ -337,18 +348,21 @@ export function createTeamsServer(options = {}) {
 		}
 	}
 
-	/** The members stored for a chat room, read without keeping a room that nobody joined. */
-	function membersOf(name) {
+	/**
+	 * The members stored for a chat room and whether the room has started, read without keeping a
+	 * room that nobody joined. A snapshot that cannot be read counts as started: it is not a new room.
+	 */
+	function chatRoomState(name) {
 		const live = syncRooms.get(name);
-		if (live) return roomMembers(live.doc);
+		if (live) return { members: roomMembers(live.doc), started: live.doc.store.clients.size > 0 };
 		const file = snapshotPath(name);
-		if (!existsSync(file)) return new Set();
+		if (!existsSync(file)) return { members: new Set(), started: false };
 		const doc = new Y.Doc();
 		try {
 			Y.applyUpdate(doc, readFileSync(file));
-			return roomMembers(doc);
+			return { members: roomMembers(doc), started: true };
 		} catch {
-			return new Set();
+			return { members: new Set(), started: true };
 		} finally {
 			doc.destroy();
 		}
@@ -357,7 +371,6 @@ export function createTeamsServer(options = {}) {
 	/** Close the sockets of people who are no longer listed as members of a chat room. */
 	function enforceMembers(room) {
 		const members = roomMembers(room.doc);
-		if (members.size === 0) return;
 		for (const [ws, user] of room.users) if (!members.has(user)) ws.close(1008, 'not a member');
 	}
 
@@ -467,11 +480,16 @@ export function createTeamsServer(options = {}) {
 		if (grant) room.grants.set(ws, grant);
 		const readOnly = grant?.access === 'read';
 		if (admission) {
-			// A new chat room starts with the members its first socket listed.
-			if (admission.seed.length > 0 && roomMembers(room.doc).size === 0)
+			// Only a room with nothing in it is seeded. The check repeats here because an
+			// `authorizeSync` hook can run between the admission and this point.
+			if (admission.seed.length > 0 && room.doc.store.clients.size === 0)
 				room.doc.transact(() => {
-					for (const id of admission.seed) room.doc.getMap('teams:chat-members').set(id, true);
+					for (const id of admission.seed) room.doc.getMap(CHAT_MEMBERS_MAP).set(id, true);
 				});
+			if (!roomMembers(room.doc).has(admission.user)) {
+				ws.close(1008, 'not a member');
+				return leaveSync(name, room, ws);
+			}
 			room.users.set(ws, admission.user);
 		}
 		room.conns.set(ws, new Set());
@@ -864,7 +882,9 @@ export function createTeamsServer(options = {}) {
 	function fileAccess(scope, who, signedRead) {
 		if (signedRead) return 0;
 		if (who.bad || (authRequired && !who.verified)) return 401;
-		if (isChatRoom(scope) && (who.user === null || !membersOf(scope).has(who.user))) return 403;
+		if (isChatRoomAlias(scope)) return 403;
+		if (isChatRoom(scope) && (who.user === null || !chatRoomState(scope).members.has(who.user)))
+			return 403;
 		return 0;
 	}
 
@@ -1005,13 +1025,16 @@ export function createTeamsServer(options = {}) {
 		}
 		// Private chats: only the people listed in the room's member map may join.
 		let admission = null;
+		if (m[1] === 'sync' && isChatRoomAlias(name)) return reject(socket, '403 Forbidden');
 		if (m[1] === 'sync' && isChatRoom(name)) {
 			const user = sessionUser ?? url.searchParams.get('user') ?? '';
+			const state = chatRoomState(name);
 			const verdict = authorizeChatJoin({
 				name,
 				user,
 				members: url.searchParams.get('members'),
-				existing: membersOf(name),
+				existing: state.members,
+				started: state.started,
 			});
 			if (!verdict.ok) return reject(socket, '403 Forbidden');
 			admission = { seed: verdict.seed, user };

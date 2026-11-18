@@ -4,7 +4,12 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { isChatRoom, shortHash } from './chat-access.mjs';
-import { writeFileAtomic } from './room-store.mjs';
+import {
+	migrateStorageNames,
+	nameFromStorage,
+	storageName,
+	writeFileAtomic,
+} from './room-store.mjs';
 
 const PART = /^\..+\.part$/u;
 const CHAT_HASH = /^chat-([0-9a-f]{16})-/u;
@@ -27,10 +32,12 @@ const quiet = (fn, fallback) => {
 export function createFileStore({ filesDir, metaDir, log = () => {} }) {
 	mkdirSync(filesDir, { recursive: true });
 	mkdirSync(metaDir, { recursive: true });
+	migrateStorageNames(filesDir, '', log);
+	migrateStorageNames(metaDir, '.json', log);
 	/** @type {Map<string, number>} quota key -> bytes stored */
 	const usage = new Map();
-	const dirOf = (scope) => join(filesDir, scope);
-	const metaPath = (scope) => join(metaDir, `${scope}.json`);
+	const dirOf = (scope) => join(filesDir, storageName(scope));
+	const metaPath = (scope) => join(metaDir, `${storageName(scope)}.json`);
 
 	const readOwners = (scope) =>
 		quiet(() => {
@@ -45,10 +52,9 @@ export function createFileStore({ filesDir, metaDir, log = () => {} }) {
 		}
 	};
 	const scopes = () =>
-		quiet(
-			() => readdirSync(filesDir, { withFileTypes: true }).filter((e) => e.isDirectory()),
-			[],
-		).map((e) => e.name);
+		quiet(() => readdirSync(filesDir, { withFileTypes: true }).filter((e) => e.isDirectory()), [])
+			.map((e) => nameFromStorage(e.name))
+			.filter((scope) => scope !== null);
 	const filesOf = (scope) =>
 		quiet(
 			() =>

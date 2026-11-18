@@ -2,8 +2,10 @@
 // chat directory; every chat the person belongs to gets a Y.Doc of its own (its own sync room),
 // so people who are not members never receive its messages: the reference server refuses them the
 // room, and this model never opens, reads or writes a chat the person is not a member of. The
-// returned object is a drop-in `ChatStore`, so everything built on channels (threads, pins,
-// reactions, mentions, drafts, activity) works unchanged in a chat. DOM-free. New code.
+// room's member list changes only through this person's own actions (creating a group, adding
+// people, leaving), never by copying what somebody else wrote in the directory. The returned
+// object is a drop-in `ChatStore`, so everything built on channels (threads, pins, reactions,
+// mentions, drafts, activity) works unchanged in a chat. DOM-free. New code.
 import * as Y from 'yjs';
 import type { ChatStore, ChatUser } from './chat';
 import { createChatStore } from './chat';
@@ -49,7 +51,6 @@ export interface ChatRooms extends ChatStore {
 	createGroup: (input: {
 		others: readonly ChatMember[];
 		name?: string;
-		id?: string;
 		meetingId?: string;
 	}) => ChatInfo | null;
 	renameChat: (id: string, name: string) => boolean;
@@ -81,18 +82,15 @@ export function createChatRooms(options: ChatRoomsOptions): ChatRooms {
 		for (const l of [...listeners]) l();
 	};
 
-	/** Keep the chat document's member map equal to the directory: the server admits by it. */
-	const mirrorMembers = (chat: ChatInfo, chatDoc: Y.Doc): void => {
-		const map = chatDoc.getMap<boolean>(CHAT_MEMBERS_MAP);
-		const want = new Set(chat.members.map((m) => m.id));
-		// The server lets a member drop only themselves; a stale view must not delete others.
-		const stale = [...map.keys()].filter(
-			(k) => !want.has(k) && (k === user.id || user.moderator === true),
-		);
-		const missing = [...want].filter((k) => map.get(k) !== true);
-		if (!stale.length && !missing.length) return;
-		chatDoc.transact(() => {
-			for (const k of stale) map.delete(k);
+	const membersOf = (id: string): Y.Map<boolean> | undefined =>
+		open.get(id)?.doc.getMap<boolean>(CHAT_MEMBERS_MAP);
+
+	/** This person lets `people` into the chat's room: the list the server admits sockets by. */
+	const admit = (id: string, people: readonly ChatMember[]): void => {
+		const map = membersOf(id);
+		const missing = people.map((p) => p.id).filter((k) => map?.get(k) !== true);
+		if (!map || !missing.length) return;
+		open.get(id)?.doc.transact(() => {
 			for (const k of missing) map.set(k, true);
 		});
 	};
@@ -101,9 +99,7 @@ export function createChatRooms(options: ChatRoomsOptions): ChatRooms {
 		const wanted = new Map(mineNow().map((c) => [c.id, c]));
 		for (const [id, entry] of open)
 			if (!wanted.has(id)) {
-				// Take the person off the member list the server admits by, then let a last notice flush.
-				const info = directory.get(id);
-				if (info) mirrorMembers(info, entry.doc);
+				// Let a last notice and member list change flush before the room closes.
 				open.delete(id);
 				entry.off();
 				const close = (): void => {
@@ -117,13 +113,8 @@ export function createChatRooms(options: ChatRoomsOptions): ChatRooms {
 			}
 		let changed = false;
 		for (const [id, chat] of wanted) {
-			const existing = open.get(id);
-			if (existing) {
-				mirrorMembers(chat, existing.doc);
-				continue;
-			}
+			if (open.has(id)) continue;
 			const chatDoc = options.createDoc?.(chat) ?? new Y.Doc();
-			mirrorMembers(chat, chatDoc);
 			const store = createChatStore(chatDoc, user);
 			store.createChannel({ id, name: 'Chat', kind: 'direct' });
 			const handle = openRoom(chat, chatDoc);
@@ -166,9 +157,14 @@ export function createChatRooms(options: ChatRoomsOptions): ChatRooms {
 		if (userId !== user.id && user.moderator !== true) return false;
 		// Say it while the chat is still open on this device.
 		if (userId === user.id) notice(id, `${user.name} left the chat`);
+		// Held from here: the directory change below can close this person's room right away.
+		const members = membersOf(id);
 		const ok = directory.remove(id, userId);
 		if (ok && userId !== user.id) notice(id, `${user.name} removed ${gone.name} from the chat`);
-		if (ok) sync();
+		if (ok) {
+			members?.delete(userId);
+			sync();
+		}
 		return ok;
 	};
 
@@ -184,6 +180,7 @@ export function createChatRooms(options: ChatRoomsOptions): ChatRooms {
 		createGroup(input) {
 			const info = directory.createGroup(input);
 			sync();
+			if (info) admit(info.id, info.members);
 			return info;
 		},
 		renameChat(id, name) {
@@ -200,7 +197,7 @@ export function createChatRooms(options: ChatRoomsOptions): ChatRooms {
 		addPeople(id, people) {
 			const added = directory.add(id, people);
 			if (added.length) {
-				sync();
+				admit(id, added);
 				notice(id, systemText('joined the chat', names(added)));
 			}
 			return added;
