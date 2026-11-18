@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.54.3](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.54.3) - 2026-11-18
+
+### Bug Fixes
+
+- **xlsx:** Show the correct icons in the Borders menu ([23f4f70](https://github.com/ChristopherVR/ooxml/commit/23f4f705c859b14cef31e515c893396af67a7886))
+
 ## [1.54.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.54.2) - 2026-11-17
 
 ### Bug Fixes

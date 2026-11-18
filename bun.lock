@@ -459,7 +459,7 @@
     },
     "src/core": {
       "name": "ooxml-core",
-      "version": "1.54.0",
+      "version": "1.54.1",
       "bin": {
         "pptx": "./dist/pptx/cli/index.mjs",
       },
@@ -516,7 +516,7 @@
     },
     "src/ui": {
       "name": "ooxml-ui",
-      "version": "1.54.2",
+      "version": "1.54.3",
       "dependencies": {
         "dompurify": "^3.4.17",
         "emf-converter": "4.28.1",
