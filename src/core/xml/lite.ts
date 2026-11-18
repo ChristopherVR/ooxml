@@ -59,7 +59,13 @@ export class LiteElement {
 	}
 }
 
-const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
+const ENTITIES: ReadonlyMap<string, string> = new Map([
+	['amp', '&'],
+	['lt', '<'],
+	['gt', '>'],
+	['quot', '"'],
+	['apos', "'"],
+]);
 const REFERENCE = /&(?:#x([0-9A-Fa-f]+)|#([0-9]+)|([A-Za-z]+));/g;
 
 /** Decodes entity references; undefined when an `&` is not a known, well-formed reference. */
@@ -70,7 +76,7 @@ function decode(text: string): string | undefined {
 	const out = text.replace(REFERENCE, (all, hex: string, dec: string, name: string) => {
 		found++;
 		if (name !== undefined) {
-			const value = ENTITIES[name];
+			const value = ENTITIES.get(name);
 			if (value === undefined) ok = false;
 			return value ?? all;
 		}
@@ -149,8 +155,10 @@ export function* liteChildElements(
  */
 function* topLevelNodes(
 	xml: string,
-	namespaces: LiteNamespaces,
+	declared: LiteNamespaces,
 ): Generator<LiteNode, boolean, undefined> {
+	// Prefixes come from the document: a Map answers only for the ones really declared.
+	const namespaces = new Map(Object.entries(declared));
 	const source = hasLineEnds(xml)
 		? xml.replace(/\r[\n\u0085]/g, '\n').replace(/[\r\u0085\u2028\u2029]/g, '\n')
 		: xml;
@@ -236,7 +244,7 @@ function skipCommentOrCdata(source: string, lt: number, parent: LiteElement): nu
 function startTag(
 	source: string,
 	from: number,
-	namespaces: LiteNamespaces,
+	namespaces: ReadonlyMap<string, string>,
 ): { element: LiteElement; selfClosing: boolean; end: number } | undefined {
 	const n = source.length;
 	let i = from;
@@ -253,7 +261,7 @@ function startTag(
 	if (i === from || colon === from || colon === i - 1) return undefined;
 	const tagName = source.slice(from, i);
 	const prefix = colon < 0 ? '' : source.slice(from, colon);
-	const ns = namespaces[prefix];
+	const ns = namespaces.get(prefix);
 	if (ns === undefined && prefix) return undefined;
 	const element = new LiteElement(
 		tagName,
@@ -275,7 +283,7 @@ function startTag(
 		if (!name || /[\s<>/"']/.test(name) || name.startsWith('xmlns')) return undefined;
 		// The DOM parser rejects an attribute prefix that is not declared (`xml` always is).
 		const attrPrefix = name.includes(':') ? name.slice(0, name.indexOf(':')) : '';
-		if (attrPrefix && attrPrefix !== 'xml' && !namespaces[attrPrefix]) return undefined;
+		if (attrPrefix && attrPrefix !== 'xml' && !namespaces.get(attrPrefix)) return undefined;
 		let q = eq + 1;
 		while (q < n && isSpace(source.charCodeAt(q))) q++;
 		const quote = source[q];

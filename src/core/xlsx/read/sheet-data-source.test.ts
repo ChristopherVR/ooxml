@@ -64,6 +64,11 @@ function lightRows(xml: string): XmlElement[] | undefined {
 }
 
 describe('splitSheetData', () => {
+	it('does not take an Object member for a declared prefix', () => {
+		const xml = `<worksheet xmlns="${NS.x}"><constructor:sheetData></constructor:sheetData></worksheet>`;
+		expect(splitSheetData(xml)).toBeUndefined();
+	});
+
 	it.each(FIXTURES)('reads the cells of %s exactly as the DOM does', async (name) => {
 		const bytes = readFileSync(path.join(import.meta.dirname, '..', '__fixtures__', name));
 		const parts = await readZipParts(new Uint8Array(bytes));

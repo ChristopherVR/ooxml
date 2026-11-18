@@ -33,6 +33,10 @@ function shape(element: XmlElement): Shape {
 
 /** Fragments the light reader leaves to the full parser. */
 const DECLINED: [string, string][] = [
+	['an entity named after an Object member', '<t>&constructor;</t>'],
+	['an attribute entity named after an Object member', '<t a="&toString;"/>'],
+	['an element prefix named after an Object member', '<constructor:row/>'],
+	['an attribute prefix named after an Object member', '<row toString:a="1"/>'],
 	['an undeclared element prefix', '<y:row/>'],
 	['a namespace declaration', '<row xmlns="urn:other"/>'],
 	['a prefixed namespace declaration', '<row xmlns:y="urn:y"/>'],
