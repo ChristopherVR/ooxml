@@ -12,7 +12,7 @@
  * component; the `<Suspense>` below is required so Vue has somewhere to mount
  * it once that import resolves.
  */
-import { LoaderCircle, Sparkles, TriangleAlert, X } from 'lucide-vue-next';
+import { LoaderCircle, Sparkles, TriangleAlert, X } from '@lucide/vue';
 import type { PptxAiBridge, PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';

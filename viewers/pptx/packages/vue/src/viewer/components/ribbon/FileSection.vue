@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft, Settings } from 'lucide-vue-next';
+import { ArrowLeft, Settings } from '@lucide/vue';
 import {
 	BACKSTAGE_BACK_CLASSES,
 	BACKSTAGE_NAV,

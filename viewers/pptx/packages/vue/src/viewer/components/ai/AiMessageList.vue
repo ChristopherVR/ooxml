@@ -5,7 +5,7 @@
  * presentational; auto-scrolls to the newest message.
  */
 import type { UIMessage } from 'ai';
-import { Bot, Sparkles, User } from 'lucide-vue-next';
+import { Bot, Sparkles, User } from '@lucide/vue';
 import { toRenderableParts } from 'ooxml-ui/pptx/ai';
 import { nextTick, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';

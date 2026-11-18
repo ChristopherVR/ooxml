@@ -14,12 +14,12 @@ import {
 	ShieldAlert,
 	Type,
 	Video,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 /**
  * Shared style tokens + data tables for the Office-style ribbon: the Vue port
  * of React's `toolbar/toolbar-constants.tsx`. Class strings are copied verbatim
  * so the Vue ribbon renders pixel-for-pixel with React's Tailwind chrome; the
- * JSX icon arrays become arrays of `lucide-vue-next` component references
+ * JSX icon arrays become arrays of `@lucide/vue` component references
  * (rendered via `<component :is="…" />`) since `react-icons/lu` ≅ Lucide.
  */
 import type { Component } from 'vue';

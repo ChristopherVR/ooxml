@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** The Selection Pane: rows, rename box and drag reorder from the shared selection pane controller. */
-import { Eye, EyeOff, GripVertical } from 'lucide-vue-next';
+import { Eye, EyeOff, GripVertical } from '@lucide/vue';
 import {
 	createSelectionPaneController,
 	formatSelectionPaneLabel,
