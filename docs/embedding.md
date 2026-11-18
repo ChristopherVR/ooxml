@@ -328,13 +328,17 @@ await host.call('xlsx_set_cells', {
 });
 ```
 
+A PowerPoint viewer has no editor element yet, so register it with its handle and however your app
+loads a deck: `host.register('deck', { format: 'pptx', save: () => viewer.getContent(), load: showDeck })`.
+
 - **Every call names its document.** `target` is required and there is no "current document", so one
   assistant can work across several open editors without editing the wrong one. `host.targets()`
   lists what is registered, with each document's format and read-only state, for the model's prompt.
 - **Reads see unsaved work.** A read runs on what the editor would save now, so it includes edits the
   user has not saved.
 - **Edits respect the editor.** A read-only editor is never edited. An edit is refused (nothing is
-  loaded) when the user changed the document while the tool or your `review` ran, and edits to one
+  loaded) when the user changed the document while the tool or your `review` ran (the revision and
+  modified date PowerPoint saves restamp do not count as a change), and edits to one
   document run one at a time. `review` is where a host asks the user to accept a change.
 - **Create tools are not offered**: they have no document to target. Build the file with the tool
   and open it as a new document yourself.

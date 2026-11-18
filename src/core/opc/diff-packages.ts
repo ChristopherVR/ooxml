@@ -16,11 +16,13 @@ const sameBytes = (a: Uint8Array, b: Uint8Array) =>
 /**
  * Compare two packages part by part on their uncompressed content, so re-compression or a
  * different part order is not reported. For diagnostics (what changed in a cloud copy since it was
- * opened); it reads every part, so keep it off hot paths.
+ * opened); it reads every part, so keep it off hot paths. `equivalent` can accept two different
+ * byte sequences of one part as the same content.
  */
 export async function diffOpcPackages(
 	base: Uint8Array,
 	other: Uint8Array,
+	options: { equivalent?(part: string, a: Uint8Array, b: Uint8Array): boolean } = {},
 ): Promise<OpcPackageDiff> {
 	const [left, right] = await Promise.all([JSZip.loadAsync(base), JSZip.loadAsync(other)]);
 	const names = (zip: JSZip) =>
@@ -38,7 +40,7 @@ export async function diffOpcPackages(
 			left.file(name)!.async('uint8array'),
 			right.file(name)!.async('uint8array'),
 		]);
-		if (!sameBytes(a, b)) changed.push(name);
+		if (!sameBytes(a, b) && !options.equivalent?.(name, a, b)) changed.push(name);
 	}
 	return {
 		added: [...rightNames].filter((name) => !leftNames.has(name)).sort(),

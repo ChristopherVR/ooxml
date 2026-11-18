@@ -1,4 +1,5 @@
 import { sha256 } from '../digest/sha256';
+import { diffOpcPackages } from '../opc/diff-packages';
 import type { AutomationFormat, AutomationTool } from './tools/types';
 
 /**
@@ -78,6 +79,22 @@ export interface LiveToolHost {
 const digest = (bytes: Uint8Array) =>
 	Array.from(sha256(bytes), (byte) => byte.toString(16).padStart(2, '0')).join('');
 
+/** What every PowerPoint save restamps, so it says nothing about the document's content. */
+const SAVE_STAMPS =
+	/<cp:revision>[^<]*<\/cp:revision>|<dcterms:modified\b[^>]*>[^<]*<\/dcterms:modified>/gu;
+const withoutSaveStamps = (bytes: Uint8Array) =>
+	new TextDecoder().decode(bytes).replace(SAVE_STAMPS, '');
+
+/** Whether two saves of a document hold the same content. */
+async function sameDocument(format: AutomationFormat, a: Uint8Array, b: Uint8Array) {
+	if (format !== 'pptx') return digest(a) === digest(b);
+	const { added, removed, changed } = await diffOpcPackages(a, b, {
+		equivalent: (part, left, right) =>
+			part === 'docProps/core.xml' && withoutSaveStamps(left) === withoutSaveStamps(right),
+	});
+	return added.length + removed.length + changed.length === 0;
+}
+
 /** `tools` is the catalogue to serve: `automationTools.docx`, `pptxTools` and so on, in any mix. */
 export function createLiveToolHost(
 	tools: readonly AutomationTool[],
@@ -129,7 +146,7 @@ export function createLiveToolHost(
 		// silently drop that, so refuse and let the caller read the document again.
 		if (editor.readOnly)
 			throw new Error(`"${target}" became read-only, so the edit was not applied.`);
-		if (digest(new Uint8Array(await editor.save())) !== digest(before))
+		if (!(await sameDocument(editor.format, before, new Uint8Array(await editor.save()))))
 			throw new Error(`"${target}" changed while the edit was prepared; read it again and retry.`);
 		await editor.load(after);
 		return { target, tool: name, result, changed: true };
@@ -203,8 +220,9 @@ export interface LiveEditorElement {
 }
 
 /**
- * Adapts a mounted editor element (`<docx-editor>`, `<xlsx-editor>`, `<pptx-editor>`,
- * `<visio-editor>`) so it can be registered with a host. `name` is the file name the editor shows.
+ * Adapts a mounted editor element (`<docx-editor>`, `<xlsx-editor>`, `<visio-editor>`) so it can be
+ * registered with a host. `name` is the file name the editor shows. A PowerPoint viewer has no such
+ * element: register `{ format: 'pptx', save: () => viewer.getContent(), load }`.
  */
 export function liveEditorFromElement(
 	format: AutomationFormat,

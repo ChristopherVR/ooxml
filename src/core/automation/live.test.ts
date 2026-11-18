@@ -1,3 +1,6 @@
+import { pptxTools } from '../pptx/automation/index';
+import { createTestPptxBytes } from '../pptx/automation/__tests__/helpers/create-test-pptx';
+import { PptxHandler, type PptxData } from '../pptx/index';
 import { createLiveToolHost, liveEditorFromElement, type LiveEditor } from './live';
 import { createXlsxFromSheets } from './outline';
 import { automationTools } from './tools/index';
@@ -198,4 +201,56 @@ test('elements adapt by format: Visio exports, the rest save bytes', async () =>
 		commitEdit: () => false,
 	});
 	await expect(Promise.resolve().then(() => editing.save())).rejects.toThrow('cell edit');
+});
+
+/** A PowerPoint editor over the real handler: every save restamps the revision and date. */
+async function deckEditor() {
+	let handler = new PptxHandler();
+	let deck: PptxData = await handler.load(new Uint8Array(await createTestPptxBytes(2)).buffer);
+	return {
+		format: 'pptx' as const,
+		deck: () => deck,
+		save: () => handler.save(deck.slides),
+		async load(bytes: Uint8Array) {
+			handler = new PptxHandler();
+			deck = await handler.load(new Uint8Array(bytes).buffer);
+		},
+	};
+}
+
+test('a PowerPoint deck can be edited live, again and again', async () => {
+	const editor = await deckEditor();
+	const host = createLiveToolHost(pptxTools, {
+		// A date stamp has a resolution of a second, so a review this long changes it.
+		review: () => new Promise((resolve) => setTimeout(() => resolve(true), 1100)),
+	});
+	host.register('deck', editor);
+	const elementId = editor.deck().slides[0]?.elements[0]?.id;
+
+	for (const x of [11, 22]) {
+		const edit = await host.call('update_element', {
+			target: 'deck',
+			params: { slideIndex: 0, elementId, x },
+		});
+		expect(edit.changed).toBe(true);
+		expect(editor.deck().slides[0]?.elements[0]?.x).toBe(x);
+	}
+});
+
+test('a PowerPoint edit is refused when the user changed the deck meanwhile', async () => {
+	const editor = await deckEditor();
+	const host = createLiveToolHost(pptxTools, {
+		review: () => {
+			const slide = editor.deck().slides[1];
+			if (slide?.elements[0]) slide.elements[0].x = 345;
+			return true;
+		},
+	});
+	host.register('deck', editor);
+	const elementId = editor.deck().slides[0]?.elements[0]?.id;
+
+	await expect(
+		host.call('update_element', { target: 'deck', params: { slideIndex: 0, elementId, x: 9 } }),
+	).rejects.toThrow(/changed while the edit was prepared/u);
+	expect(editor.deck().slides[0]?.elements[0]?.x).not.toBe(9);
 });
