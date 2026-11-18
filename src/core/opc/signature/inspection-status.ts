@@ -14,8 +14,10 @@ import type {
 } from './types';
 
 /**
- * Compute the overall status for an individual signature detail
- * based on its reference checks, trust, revocation, and timestamp statuses.
+ * Compute the overall status for an individual signature detail.
+ *
+ * `verified` and `certificate-untrusted` both mean the integrity checks passed: the signature
+ * value verified, every signed reference verified, and those references cover the content.
  *
  * @param detail - A partial `SignatureDetail` with the fields needed for status computation.
  * @param policy - The validation policy controlling revocation/timestamp strictness.
@@ -27,6 +29,7 @@ export function computeDetailStatus(
 		| 'signatureValueStatus'
 		| 'missingPartReferences'
 		| 'referenceChecks'
+		| 'coverageGaps'
 		| 'certificateTrustStatus'
 		| 'certificateRevocationStatus'
 		| 'timestampAuthorityStatus'
@@ -34,12 +37,12 @@ export function computeDetailStatus(
 	policy: SignatureValidationPolicy,
 ): SignatureDetailStatus {
 	const hasDigestMismatch = detail.referenceChecks.some(
-		(check) => check.digestStatus === 'mismatch',
+		(check) => check.digestStatus === 'mismatch' || check.digestStatus === 'content-type-mismatch',
 	);
 	const hasMissingPart = detail.missingPartReferences.length > 0;
-	const hasVerifiedDigest = detail.referenceChecks.some(
-		(check) => check.digestStatus === 'verified',
-	);
+	const everyReferenceVerified =
+		detail.referenceChecks.length > 0 &&
+		detail.referenceChecks.every((check) => check.digestStatus === 'verified');
 	const revocationUnknown =
 		detail.certificateRevocationStatus === 'unknown' ||
 		detail.certificateRevocationStatus === 'not-checked' ||
@@ -79,13 +82,16 @@ export function computeDetailStatus(
 	if (detail.timestampAuthorityStatus === 'untrusted') {
 		return 'timestamp-untrusted';
 	}
-	if (detail.certificateTrustStatus === 'untrusted' && detail.signatureValueStatus === 'verified') {
+	if (detail.signatureValueStatus !== 'verified' || !everyReferenceVerified) {
+		return 'structural-only';
+	}
+	if (detail.coverageGaps.length > 0) {
+		return 'coverage-incomplete';
+	}
+	if (detail.certificateTrustStatus === 'untrusted') {
 		return 'certificate-untrusted';
 	}
-	if (hasVerifiedDigest && detail.signatureValueStatus === 'verified') {
-		return 'verified';
-	}
-	return 'structural-only';
+	return detail.certificateTrustStatus === 'trusted' ? 'verified' : 'structural-only';
 }
 
 /**
@@ -97,30 +103,21 @@ export function computeDetailStatus(
 export function computeVerificationStatus(
 	details: SignatureDetail[],
 ): DigitalSignatureReport['verificationStatus'] {
-	const hasInvalidSignature = details.some((detail) => detail.status === 'signature-invalid');
-	const hasMissing = details.some((detail) => detail.status === 'reference-missing');
-	const hasMismatch = details.some((detail) => detail.status === 'digest-mismatch');
-	const hasUntrusted = details.some((detail) => detail.status === 'certificate-untrusted');
-	const hasRevoked = details.some((detail) => detail.status === 'certificate-revoked');
-	const hasTimestampInvalid = details.some((detail) => detail.status === 'timestamp-invalid');
-	const hasTimestampUntrusted = details.some((detail) => detail.status === 'timestamp-untrusted');
-	const allVerified = details.every((detail) => detail.status === 'verified');
-
-	return hasInvalidSignature
-		? 'signature-invalid'
-		: hasRevoked
-			? 'certificate-revoked'
-			: hasTimestampInvalid
-				? 'timestamp-invalid'
-				: hasTimestampUntrusted
-					? 'timestamp-untrusted'
-					: hasMissing
-						? 'reference-missing'
-						: hasMismatch
-							? 'digest-mismatch'
-							: allVerified
-								? 'verified-trusted'
-								: hasUntrusted
-									? 'verified-untrusted'
-									: 'present-not-verified';
+	const has = (status: SignatureDetailStatus) => details.some((detail) => detail.status === status);
+	if (has('signature-invalid')) return 'signature-invalid';
+	if (has('certificate-revoked')) return 'certificate-revoked';
+	if (has('timestamp-invalid')) return 'timestamp-invalid';
+	if (has('timestamp-untrusted')) return 'timestamp-untrusted';
+	if (has('reference-missing')) return 'reference-missing';
+	if (has('digest-mismatch')) return 'digest-mismatch';
+	if (has('coverage-incomplete')) return 'coverage-incomplete';
+	if (details.length > 0 && details.every((detail) => detail.status === 'verified')) {
+		return 'verified-trusted';
+	}
+	const integrityVerified =
+		details.length > 0 &&
+		details.every(
+			(detail) => detail.status === 'verified' || detail.status === 'certificate-untrusted',
+		);
+	return integrityVerified ? 'verified-untrusted' : 'present-not-verified';
 }

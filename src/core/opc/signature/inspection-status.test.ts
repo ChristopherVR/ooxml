@@ -33,6 +33,7 @@ function mockDetail(
 			| 'signatureValueStatus'
 			| 'missingPartReferences'
 			| 'referenceChecks'
+			| 'coverageGaps'
 			| 'certificateTrustStatus'
 			| 'certificateRevocationStatus'
 			| 'timestampAuthorityStatus'
@@ -43,6 +44,7 @@ function mockDetail(
 	| 'signatureValueStatus'
 	| 'missingPartReferences'
 	| 'referenceChecks'
+	| 'coverageGaps'
 	| 'certificateTrustStatus'
 	| 'certificateRevocationStatus'
 	| 'timestampAuthorityStatus'
@@ -51,6 +53,7 @@ function mockDetail(
 		signatureValueStatus: 'verified',
 		missingPartReferences: [],
 		referenceChecks: [mockReferenceCheck()],
+		coverageGaps: [],
 		certificateTrustStatus: 'trusted',
 		certificateRevocationStatus: 'good',
 		timestampAuthorityStatus: 'valid',
@@ -66,6 +69,8 @@ function mockFullDetail(overrides: Partial<SignatureDetail> = {}): SignatureDeta
 		missingPartReferences: [],
 		unsupportedTransforms: [],
 		referenceChecks: [mockReferenceCheck()],
+		uncoveredParts: [],
+		coverageGaps: [],
 		signatureValueStatus: 'verified',
 		certificateTrustStatus: 'trusted',
 		certificateRevocationStatus: 'good',
@@ -116,6 +121,36 @@ describe('computeDetailStatus', () => {
 			certificateTrustStatus: 'not-checked',
 		});
 		expect(computeDetailStatus(detail, defaultPolicy)).toBe('structural-only');
+	});
+
+	it('does not verify when any signed reference is unverified', () => {
+		const detail = mockDetail({
+			referenceChecks: [
+				mockReferenceCheck(),
+				mockReferenceCheck({ uri: '#idPackageObject', digestStatus: 'insufficient-data' }),
+			],
+		});
+		expect(computeDetailStatus(detail, defaultPolicy)).toBe('structural-only');
+	});
+
+	it('does not verify a signature without references', () => {
+		const detail = mockDetail({ referenceChecks: [] });
+		expect(computeDetailStatus(detail, defaultPolicy)).toBe('structural-only');
+	});
+
+	it('reports a content type mismatch as a digest mismatch', () => {
+		const detail = mockDetail({
+			referenceChecks: [mockReferenceCheck({ digestStatus: 'content-type-mismatch' })],
+		});
+		expect(computeDetailStatus(detail, defaultPolicy)).toBe('digest-mismatch');
+	});
+
+	it('reports coverage gaps ahead of certificate trust', () => {
+		const detail = mockDetail({
+			coverageGaps: [{ kind: 'unsigned-part', part: 'ppt/slides/slide1.xml' }],
+			certificateTrustStatus: 'untrusted',
+		});
+		expect(computeDetailStatus(detail, defaultPolicy)).toBe('coverage-incomplete');
 	});
 
 	it('returns certificate-untrusted when trust is untrusted but signature is verified', () => {
@@ -215,6 +250,22 @@ describe('computeVerificationStatus', () => {
 			mockFullDetail({ status: 'certificate-untrusted' }),
 		];
 		expect(computeVerificationStatus(details)).toBe('verified-untrusted');
+	});
+
+	it('does not report verified-untrusted beside an unverifiable signature', () => {
+		const details = [
+			mockFullDetail({ status: 'certificate-untrusted' }),
+			mockFullDetail({ status: 'structural-only' }),
+		];
+		expect(computeVerificationStatus(details)).toBe('present-not-verified');
+	});
+
+	it('returns coverage-incomplete ahead of a verified signature', () => {
+		const details = [
+			mockFullDetail({ status: 'verified' }),
+			mockFullDetail({ status: 'coverage-incomplete' }),
+		];
+		expect(computeVerificationStatus(details)).toBe('coverage-incomplete');
 	});
 
 	it('returns present-not-verified for structural-only details', () => {

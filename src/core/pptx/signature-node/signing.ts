@@ -1,7 +1,7 @@
 /**
  * PPTX digital signature creation.
  *
- * Node-only — signs all content in a PPTX package with a certificate
+ * Node-only - signs all content in a PPTX package with a certificate
  * and returns the signed data along with a verification report.
  */
 
@@ -26,7 +26,13 @@ import type {
 import { escapeXmlAttr, escapeXmlText, isValidBase64 } from '../core/utils/signature-xml-utils';
 import { loadSigningMaterialFromBuffer, pemCertificateToBase64 } from './certificate-utils';
 import { inspectPptxDigitalSignatures } from './inspection';
-import { canonicalizeSignedInfoXml } from './xml-canonicalization';
+import {
+	canonicalizeNode,
+	canonicalizeSignedInfoXml,
+	childElements,
+	INCLUSIVE_C14N,
+	parseStrictXml,
+} from './xml-canonicalization';
 
 async function upsertRootOriginRelationship(zip: JSZip): Promise<void> {
 	const parser = new DOMParser();
@@ -116,11 +122,39 @@ async function buildOfficeReferenceList(zip: JSZip): Promise<OfficeSignatureRefe
 	return references;
 }
 
+const SIGNING_TIME_OBJECT_ID = 'idSigningTime';
+
+/** The `Object` carrying the signing time, and the reference that protects it. */
+function buildSigningTimeObject(digestMethod: string): {
+	objectXml: string;
+	reference: OfficeSignatureReference;
+} {
+	const objectXml =
+		`<Object Id="${SIGNING_TIME_OBJECT_ID}"><SignatureProperties>` +
+		`<SignatureProperty Target="#idPackageSignature">` +
+		`<SigningTime>${escapeXmlText(new Date().toISOString())}</SigningTime>` +
+		'</SignatureProperty></SignatureProperties></Object>';
+	const context = parseStrictXml(`<Signature xmlns="${XMLDSIG_NS}">${objectXml}</Signature>`);
+	const canonical = canonicalizeNode(childElements(context.documentElement!)[0]!, INCLUSIVE_C14N);
+	return {
+		objectXml,
+		reference: {
+			uri: `#${SIGNING_TIME_OBJECT_ID}`,
+			digestMethod,
+			digestValue: crypto.createHash('sha256').update(canonical, 'utf8').digest('base64'),
+		},
+	};
+}
+
 function buildOfficeSignatureXml(
-	references: OfficeSignatureReference[],
+	partReferences: OfficeSignatureReference[],
 	privateKeyPem: string,
 	certificatePem: string,
 ): string {
+	const { objectXml, reference: signingTimeReference } = buildSigningTimeObject(
+		'http://www.w3.org/2001/04/xmlenc#sha256',
+	);
+	const references = [...partReferences, signingTimeReference];
 	const signedInfoReferencesXml = references
 		.map(
 			(reference) =>
@@ -148,14 +182,11 @@ function buildOfficeSignatureXml(
 	if (!isValidBase64(certificateBase64)) {
 		throw new Error('X.509 certificate is not valid base64');
 	}
-	const signingTime = new Date().toISOString();
 	return (
-		`<Signature xmlns="${XMLDSIG_NS}">${signedInfoXml}` +
+		`<Signature xmlns="${XMLDSIG_NS}" Id="idPackageSignature">${signedInfoXml}` +
 		`<SignatureValue>${escapeXmlText(signatureValueBase64)}</SignatureValue>` +
 		`<KeyInfo><X509Data><X509Certificate>${escapeXmlText(certificateBase64)}</X509Certificate></X509Data></KeyInfo>` +
-		`<Object><SignatureProperties><SignatureProperty>` +
-		`<SigningTime>${escapeXmlText(signingTime)}</SigningTime>` +
-		`</SignatureProperty></SignatureProperties></Object></Signature>`
+		`${objectXml}</Signature>`
 	);
 }
 

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { normalizePartPath, resolveReferenceUriToPart } from './reference-utils';
+import { normalizePartPath, parseReferenceUri, resolveReferenceUriToPart } from './reference-utils';
 
 describe('normalizePartPath', () => {
 	it('converts backslashes to forward slashes', () => {
@@ -63,12 +63,37 @@ describe('resolveReferenceUriToPart', () => {
 		);
 	});
 
-	it('handles a URI with query-like content type suffix', () => {
+	it('strips the ContentType query from a part URI', () => {
 		const result = resolveReferenceUriToPart('/ppt/presentation.xml?ContentType=application/xml');
-		expect(result).toBe('ppt/presentation.xml?ContentType=application/xml');
+		expect(result).toBe('ppt/presentation.xml');
+	});
+
+	it.each([
+		'/ppt/../secret.xml',
+		'/ppt/./slide.xml',
+		'/ppt//slide.xml',
+		'/ppt/slide.xml#fragment',
+		'/ppt/slide.xml?Other=1',
+		'/ppt/slide.xml?ContentType=a?ContentType=b',
+		'/ppt/%zz.xml',
+	])('rejects the ambiguous part URI %s', (uri) => {
+		expect(resolveReferenceUriToPart(uri)).toBeUndefined();
 	});
 
 	it('trims surrounding whitespace before processing', () => {
 		expect(resolveReferenceUriToPart('  /ppt/slides/slide1.xml  ')).toBe('ppt/slides/slide1.xml');
+	});
+});
+
+describe('parseReferenceUri', () => {
+	it('returns the part path and its declared content type', () => {
+		expect(parseReferenceUri('/ppt/slide%201.xml?ContentType=application/xml')).toStrictEqual({
+			partPath: 'ppt/slide 1.xml',
+			contentType: 'application/xml',
+		});
+	});
+
+	it('omits the content type when the URI has no query', () => {
+		expect(parseReferenceUri('/ppt/slide1.xml')).toStrictEqual({ partPath: 'ppt/slide1.xml' });
 	});
 });

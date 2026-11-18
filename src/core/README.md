@@ -102,6 +102,10 @@ npm install ooxml-core
 
 Optional peer dependencies enable specific features: `node-forge` and `xml-crypto` for digital signatures (`/pptx/signature-node`), and `@napi-rs/canvas` for server-side rasterisation. The `.ppt` writer's Node rasteriser for SVG pictures lives in the Node-only `/pptx/node` entry, so `ooxml-core/pptx` never references `@napi-rs/canvas` and browser builds of it never see that package. A `.ppt` save rasterises an SVG picture that has no raster fallback with the DOM. In Node.js, where there is no DOM, pass a rasteriser (`save(slides, { outputFormat: 'ppt', rasterizeSvg: rasterizeSvgInNode })`, with `rasterizeSvgInNode` from `ooxml-core/pptx/node`); without one the picture is written as a placeholder with a `ppt-image-format-unsupported` warning. Earlier releases loaded `@napi-rs/canvas` from `ooxml-core/pptx` itself for this.
 
+### Verifying digital signatures
+
+`inspectPptxDigitalSignatures` from `ooxml-core/pptx/signature-node` reads any OPC package. It reports `verified-trusted` only when every signature value and every signed reference verifies, the signed references cover the document content, and the signer's certificate permits document signing and chains to a root you configured with `PPTX_VIEWER_TRUST_ROOTS_PEM` or `PPTX_VIEWER_TRUST_ROOTS_FILE`. No roots are trusted by default, so an intact signature reports `verified-untrusted` until you configure them. `coverage-incomplete` means the signature is valid but leaves document content unsigned. Parts a signature leaves out, such as document properties and thumbnails, are listed in each detail's `uncoveredParts`.
+
 ## Quick start
 
 **Open a Word document, change it, save it**

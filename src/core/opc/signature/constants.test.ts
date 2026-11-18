@@ -3,7 +3,6 @@ import { describe, it, expect, expectTypeOf } from 'vitest';
 import {
 	DIGITAL_SIGNATURE_ORIGIN_REL_TYPE,
 	DIGITAL_SIGNATURE_REL_TYPE,
-	PPTX_VIEWER_MANIFEST_NS,
 	XMLDSIG_NS,
 	OPC_RELATIONSHIP_TRANSFORM,
 	XML_TRANSFORM_ENVELOPED_SIGNATURE,
@@ -31,10 +30,6 @@ describe('signature-constants', () => {
 	});
 
 	describe('namespace constants', () => {
-		it('pPTX_VIEWER_MANIFEST_NS is the expected URN', () => {
-			expect(PPTX_VIEWER_MANIFEST_NS).toBe('urn:pptx-viewer:ooxml-signature:v1');
-		});
-
 		it('xMLDSIG_NS is the W3C XML Digital Signature namespace', () => {
 			expect(XMLDSIG_NS).toBe('http://www.w3.org/2000/09/xmldsig#');
 		});
@@ -53,9 +48,9 @@ describe('signature-constants', () => {
 	});
 
 	describe('sUPPORTED_XML_CANON_TRANSFORMS', () => {
-		it('is a Set with 5 entries', () => {
+		it('is a Set of the 4 canonicalization algorithms', () => {
 			expect(SUPPORTED_XML_CANON_TRANSFORMS).toBeInstanceOf(Set);
-			expect(SUPPORTED_XML_CANON_TRANSFORMS.size).toBe(5);
+			expect(SUPPORTED_XML_CANON_TRANSFORMS.size).toBe(4);
 		});
 
 		it('includes the C14N 1.0 algorithm', () => {
@@ -84,8 +79,8 @@ describe('signature-constants', () => {
 			).toBeTruthy();
 		});
 
-		it('includes the enveloped signature transform', () => {
-			expect(SUPPORTED_XML_CANON_TRANSFORMS.has(XML_TRANSFORM_ENVELOPED_SIGNATURE)).toBeTruthy();
+		it('excludes the enveloped signature transform, which OPC signatures do not use', () => {
+			expect(SUPPORTED_XML_CANON_TRANSFORMS.has(XML_TRANSFORM_ENVELOPED_SIGNATURE)).toBeFalsy();
 		});
 	});
 
