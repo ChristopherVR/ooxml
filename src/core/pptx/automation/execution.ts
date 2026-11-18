@@ -1,5 +1,5 @@
 import { PptxHandler } from '../index';
-import type { PptxData } from '../index';
+import type { PptxData, PptxHandlerSaveOptions, PptxTheme } from '../index';
 
 import type { ExecutionContext, ToolContext, ToolResult } from './types';
 
@@ -53,18 +53,57 @@ export async function saveDeckBytes(
 	original: Uint8Array,
 ): Promise<Uint8Array> {
 	const handler = new PptxHandler();
-	await handler.load(arrayBufferOf(original));
-	return handler.save(result.pptxData.slides, {
-		headerFooter: result.pptxData.headerFooter,
-		sections: result.pptxData.sections,
-		presentationProperties: result.pptxData.presentationProperties,
-		customShows: result.pptxData.customShows,
+	const loaded = await handler.load(arrayBufferOf(original));
+	const deck = result.pptxData;
+	await saveThemeEdits(handler, loaded.theme, deck.theme);
+	return handler.save(deck.slides, {
+		headerFooter: deck.headerFooter,
+		sections: deck.sections,
+		presentationProperties: deck.presentationProperties,
+		customShows: deck.customShows,
 		// `pptxData.tableStyleMap` carries any in-memory table-style edits a tool made (e.g.
 		// `set_table_style_section`, `create_table_style`); without forwarding it here those edits
 		// were silently dropped on save even though the core save pipeline supports them.
-		tableStyles: result.pptxData.tableStyleMap,
+		tableStyles: deck.tableStyleMap,
+		...editedDocumentProperties(loaded, deck),
 		...result.saveOptions,
 	});
+}
+
+const differs = (a: unknown, b: unknown) => JSON.stringify(a) !== JSON.stringify(b);
+
+/** Theme parts are only rewritten on request, so a tool's theme edit has to be applied to them. */
+async function saveThemeEdits(
+	handler: PptxHandler,
+	loaded: PptxTheme | undefined,
+	edited: PptxTheme | undefined,
+): Promise<void> {
+	if (edited?.colorScheme && differs(loaded?.colorScheme, edited.colorScheme))
+		await handler.updateThemeColorScheme(edited.colorScheme);
+	if (edited?.fontScheme && differs(loaded?.fontScheme, edited.fontScheme))
+		await handler.updateThemeFontScheme(edited.fontScheme);
+	if (edited?.name && edited.name !== loaded?.name) await handler.updateThemeName(edited.name);
+}
+
+/** The document property groups a tool changed; untouched groups stay as the file has them. */
+function editedDocumentProperties(
+	loaded: PptxData,
+	edited: PptxData,
+): Pick<PptxHandlerSaveOptions, 'coreProperties' | 'appProperties' | 'customProperties'> {
+	return {
+		...(edited.coreProperties &&
+			differs(loaded.coreProperties, edited.coreProperties) && {
+				coreProperties: edited.coreProperties,
+			}),
+		...(edited.appProperties &&
+			differs(loaded.appProperties, edited.appProperties) && {
+				appProperties: edited.appProperties,
+			}),
+		...(edited.customProperties &&
+			differs(loaded.customProperties, edited.customProperties) && {
+				customProperties: edited.customProperties,
+			}),
+	};
 }
 
 /**
