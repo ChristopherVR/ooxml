@@ -40,6 +40,8 @@ export interface ZipLimits {
 		message: string,
 		details: { limit: number; kind: ZipLimitKind; actual?: number | undefined },
 	) => Error;
+	/** Builds the error thrown when the input is not a readable zip; defaults to the reader's. */
+	createOpenError?: (cause: unknown) => Error;
 }
 
 /** Thrown when a package breaks a size, entry-count or part-name limit. */
@@ -305,7 +307,10 @@ export function guardZip(zip: JSZip, limits: ZipLimits = {}): JSZip {
 	return zip;
 }
 
-/** Opens a zip with the input-size cap, then guards it (see {@link guardZip}). */
+/**
+ * Opens a zip with the input-size cap, then guards it (see {@link guardZip}). This is the one
+ * place a package is opened: `scripts/check-zip-open.mjs` refuses any other `loadAsync`.
+ */
 export async function openZip(
 	input: Uint8Array | ArrayBuffer,
 	limits: ZipLimits = {},
@@ -320,5 +325,11 @@ export async function openZip(
 			'maxInputBytes',
 			bytes.byteLength,
 		);
-	return guardZip(await JSZip.loadAsync(bytes), limits);
+	let zip: JSZip;
+	try {
+		zip = await JSZip.loadAsync(bytes);
+	} catch (error) {
+		throw limits.createOpenError?.(error) ?? error;
+	}
+	return guardZip(zip, limits);
 }

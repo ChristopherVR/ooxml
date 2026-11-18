@@ -1,6 +1,9 @@
+import { deflateRawSync } from 'node:zlib';
+
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 
+import { deflateZeros, lyingZipOf } from '../../../opc/__fixtures__/lying-zip';
 import { inspectSignaturesFromBuffer, parseSignaturesFromBuffer } from './signature-package-list';
 
 async function digestOf(text: string): Promise<string> {
@@ -51,5 +54,27 @@ describe('package signature listing', () => {
 			await inspectSignaturesFromBuffer(await zip.generateAsync({ type: 'uint8array' })),
 		).toEqual([]);
 		expect(await inspectSignaturesFromBuffer(new Uint8Array([1, 2, 3]))).toEqual([]);
+	});
+
+	describe('oversized packages', () => {
+		const xml = Buffer.from(signatureXml('/ppt/presentation.xml', 'AAAA'));
+
+		it('lists nothing when a part declares more than a package may hold', async () => {
+			const bomb = lyingZipOf([
+				{ name: '_xmlsignatures/sig1.xml', data: deflateRawSync(xml), declared: xml.length },
+				{ name: 'ppt/media/a.bin', data: deflateRawSync(xml), declared: 600 << 20 },
+			]);
+			expect(await parseSignaturesFromBuffer(bomb)).toEqual([]);
+			expect(await inspectSignaturesFromBuffer(bomb)).toEqual([]);
+		});
+
+		it('lists nothing when a signature part is too large to be one', async () => {
+			const size = 32 << 20;
+			const bomb = lyingZipOf([
+				{ name: '_xmlsignatures/sig1.xml', data: await deflateZeros(size), declared: size },
+			]);
+			expect(await parseSignaturesFromBuffer(bomb)).toEqual([]);
+			expect(await inspectSignaturesFromBuffer(bomb)).toEqual([]);
+		});
 	});
 });

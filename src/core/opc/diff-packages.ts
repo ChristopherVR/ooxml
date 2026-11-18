@@ -1,4 +1,5 @@
-import JSZip from 'jszip';
+import type JSZip from 'jszip';
+import { openZip } from './zip-limits';
 
 /** The parts that differ between two OOXML packages, by part name. */
 export interface OpcPackageDiff {
@@ -16,13 +17,17 @@ const sameBytes = (a: Uint8Array, b: Uint8Array) =>
 /**
  * Compare two packages part by part on their uncompressed content, so re-compression or a
  * different part order is not reported. For diagnostics (what changed in a cloud copy since it was
- * opened); it reads every part, so keep it off hot paths.
+ * opened); it reads every part, so keep it off hot paths. Rejects a package over the default
+ * {@link openZip} limits.
  */
 export async function diffOpcPackages(
 	base: Uint8Array,
 	other: Uint8Array,
 ): Promise<OpcPackageDiff> {
-	const [left, right] = await Promise.all([JSZip.loadAsync(base), JSZip.loadAsync(other)]);
+	const [left, right] = await Promise.all([
+		openZip(base, { label: 'Package' }),
+		openZip(other, { label: 'Package' }),
+	]);
 	const names = (zip: JSZip) =>
 		new Set(
 			Object.values(zip.files)

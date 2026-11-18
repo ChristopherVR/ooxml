@@ -121,6 +121,8 @@ jobs:
         env:
           BASE: ${{ fromJSON(needs.plan.outputs.plan).base }}
         run: node scripts/check-em-dashes.mjs "$BASE"
+      - name: Packages open only through the zip guard
+        run: node scripts/check-zip-open.mjs
 
   typecheck-strict:
     needs: plan

@@ -1,10 +1,14 @@
 // Reading a local package for the snapshot: the zip, its layout and the items of a list part.
-import JSZip from 'jszip';
+import type JSZip from 'jszip';
+import { openZip } from '../../opc/zip-limits';
+import { DEFAULTS, visioZipLimits } from '../package-common';
 import { dirName, parseRelationships, relsPathOf, resolveTarget } from './package';
 import { attrOf, scanContainer } from './scan';
 import { REL_MARK } from './schema';
 
-export const readZip = (bytes: Uint8Array): Promise<JSZip> => JSZip.loadAsync(bytes);
+/** Opens a local package under the limits a drawing is opened with. */
+export const readZip = (bytes: Uint8Array): Promise<JSZip> =>
+	openZip(bytes, visioZipLimits(DEFAULTS));
 export const zipText = async (zip: JSZip, path: string): Promise<string | undefined> =>
 	zip.file(path)?.async('string');
 

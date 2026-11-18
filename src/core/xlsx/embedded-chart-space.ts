@@ -6,7 +6,6 @@
 // written at A1 of the chart's sheet (series names across row 1, categories down column A), as
 // Insert > Chart lays it out, and every series' references are pointed at it; a chart whose data
 // lived elsewhere has that data replaced by the block. Formatting-only edits leave the cells alone.
-import JSZip from 'jszip';
 import { chartSpaceDataSheet } from '../chart/edit/data-sheet';
 import { editChartSpace } from '../chart/edit/draft';
 import { categorySource } from '../chart/edit/series-data';
@@ -28,6 +27,8 @@ import { columnLabel, quoteSheetName } from './address';
 import { createEditSession } from './edit/session';
 import type { CellValue, Workbook } from './model';
 import { loadXlsx } from './read/index';
+import { resolveLoadLimits } from './read/limits';
+import { openPackage } from './read/package';
 import { saveXlsx } from './write/index';
 
 export interface EmbeddedChartSpace {
@@ -157,7 +158,10 @@ export async function writeEmbeddedChartSpace(
 	const previous = chartSpaceDataSheet(found.space);
 	const dataChanged = !sameSheet(previous, chartSpaceDataSheet(space));
 	const next = dataChanged ? writeDataBlock(workbook, found.sheet, space, previous) : space;
-	const zip = await JSZip.loadAsync(dataChanged ? await saveXlsx(workbook) : bytes);
+	const zip = await openPackage(
+		dataChanged ? await saveXlsx(workbook) : bytes,
+		resolveLoadLimits(),
+	);
 	// No folder entries: an Open XML package lists parts only.
 	zip.file(
 		found.partName,

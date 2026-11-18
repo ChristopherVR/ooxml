@@ -45,6 +45,15 @@ describe('openZip', () => {
 	it('rejects an oversized input', async () => {
 		await expect(openZip(new Uint8Array(10), { maxInputBytes: 5 })).rejects.toThrow(/input limit/);
 	});
+	it('reports unreadable input through createOpenError', async () => {
+		const createOpenError = (cause: unknown) => new Error('Not a package', { cause });
+		const opened = openZip(new Uint8Array([1, 2, 3]), { createOpenError });
+		await expect(opened).rejects.toThrow('Not a package');
+		await expect(opened).rejects.toHaveProperty('cause');
+	});
+	it('keeps the reader error without createOpenError', async () => {
+		await expect(openZip(new Uint8Array([1, 2, 3]))).rejects.toThrow(/zip/i);
+	});
 });
 
 describe('limit kinds', () => {

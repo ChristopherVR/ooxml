@@ -1,5 +1,4 @@
-import JSZip from 'jszip';
-import { guardZip } from '../../../../opc/zip-limits';
+import { openZip } from '../../../../opc/zip-limits';
 
 import { XmlObject } from '../../types';
 import type { PptxElement, PptxSection, PptxCustomXmlPart } from '../../types';
@@ -80,21 +79,20 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 
 		const maxBytes = limits.maxUncompressedBytes;
-		let loaded: JSZip;
-		try {
-			loaded = await JSZip.loadAsync(data);
-		} catch (error) {
-			const message = error instanceof Error ? error.message : 'Unable to read zip container.';
-			throw new Error(`Invalid PPTX package: ${message}`, { cause: error });
-		}
 		// Zip-bomb guard: header sizes are attacker-controlled, so every later read of an entry
-		// is streamed and capped by the bytes it actually inflates to (opc/zip-limits).
-		this.zip = guardZip(loaded, {
+		// is streamed and capped by the bytes it actually inflates to (opc/zip-limits). `load()`
+		// has already applied `maxInputBytes` with its own error.
+		this.zip = await openZip(data, {
 			label: 'PPTX',
+			maxInputBytes: Number.POSITIVE_INFINITY,
 			maxEntries: limits.maxEntries,
 			maxEntryBytes: maxBytes,
 			maxTotalBytes: maxBytes,
 			createError: createPptxZipBombError,
+			createOpenError: (cause) => {
+				const message = cause instanceof Error ? cause.message : 'Unable to read zip container.';
+				return new Error(`Invalid PPTX package: ${message}`, { cause });
+			},
 		});
 		this.loadLimits = limits;
 		this.loadedShapeCount = 0;

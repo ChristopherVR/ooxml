@@ -1,7 +1,8 @@
 import { XMLParser } from 'fast-xml-parser';
-import JSZip from 'jszip';
+import type JSZip from 'jszip';
 
 import { resolveReferenceUriToPart } from '../../../opc/signature/reference-utils';
+import { declaredEntrySize } from '../../../opc/zip-limits';
 import {
 	type ParsedSignature,
 	type SignatureDigestStatus,
@@ -9,6 +10,7 @@ import {
 	verifySignatureDigests,
 } from './signature-detection';
 import { decodeXmlEntities } from './xml-entities';
+import { openPptxZip } from './zip-open';
 
 type XmlObject = Record<string, unknown>;
 
@@ -23,6 +25,12 @@ export interface PackageSignatureInfo extends ParsedSignature {
 }
 
 const SIGNATURE_PART = /^_xmlsignatures\/.+\.xml$/u;
+
+/**
+ * Largest signature part read. A signature holds digests and a few certificates, so this is far
+ * above a real one, and the XML parser never sees a part the size of a whole package.
+ */
+const MAX_SIGNATURE_PART_BYTES = 16 * 1024 * 1024;
 
 function signatureParser(): XMLParser {
 	// Mirrors the loader's parser: numeric character references in a certificate DN are decoded
@@ -44,6 +52,8 @@ async function readSignatures(zip: JSZip): Promise<ParsedSignature[]> {
 	for (const path of Object.keys(zip.files)) {
 		const file = zip.file(path);
 		if (file && SIGNATURE_PART.test(path)) {
+			if (declaredEntrySize(file) > MAX_SIGNATURE_PART_BYTES)
+				throw new Error(`Signature part ${path} is too large`);
 			result.push(parseSignatureXml(parser.parse(await file.async('string')) as XmlObject, path));
 		}
 	}
@@ -58,7 +68,7 @@ export async function parseSignaturesFromBuffer(
 	buffer: ArrayBuffer | Uint8Array,
 ): Promise<ParsedSignature[]> {
 	try {
-		return await readSignatures(await JSZip.loadAsync(buffer));
+		return await readSignatures(await openPptxZip(buffer));
 	} catch {
 		return [];
 	}
@@ -72,7 +82,7 @@ export async function inspectSignaturesFromBuffer(
 	buffer: ArrayBuffer | Uint8Array,
 ): Promise<PackageSignatureInfo[]> {
 	try {
-		const zip = await JSZip.loadAsync(buffer);
+		const zip = await openPptxZip(buffer);
 		const result: PackageSignatureInfo[] = [];
 		for (const signature of await readSignatures(zip)) {
 			const integrity = await verifySignatureDigests(signature, async (uri) => {
