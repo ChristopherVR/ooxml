@@ -30,7 +30,12 @@ export function renderEquations(
 	if (equations.length === 0) {
 		return null;
 	}
-	const wrapper = createEl(context.document, 'div', 'pptxv-equations', buildEquationBlockStyle(getTextBlockStyle(element)));
+	const wrapper = createEl(
+		context.document,
+		'div',
+		'pptxv-equations',
+		buildEquationBlockStyle(getTextBlockStyle(element)),
+	);
 	for (const segment of equations) {
 		const mathml = convertOmmlToMathMl(segment.equationXml as OmmlNode);
 		if (!mathml) {

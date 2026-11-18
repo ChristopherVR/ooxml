@@ -65,9 +65,8 @@ separately unless you want to call the SDK directly.
 
 ```vue
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
 import { PowerPointViewer, type PowerPointViewerExpose } from 'pptx-vue-viewer';
-
+import { ref, onMounted } from 'vue';
 // Base chrome styles (toolbar, thumbnails, layout). Import once.
 import 'pptx-vue-viewer/styles';
 

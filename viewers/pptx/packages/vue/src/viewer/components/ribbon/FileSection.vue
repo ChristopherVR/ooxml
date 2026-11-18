@@ -241,7 +241,9 @@ function selectPage(id: string): void {
 						:labels.prop="placeLabels"
 						:locale.prop="locale"
 						:selected.prop="placeId ?? 'device'"
-						@office-open-place-change="placeId = ($event as CustomEvent<{ place: string }>).detail.place"
+						@office-open-place-change="
+							placeId = ($event as CustomEvent<{ place: string }>).detail.place
+						"
 						@office-cloud-file-open="
 							openCloudFile(($event as CustomEvent<{ file: CloudOpenedFile }>).detail.file)
 						"
