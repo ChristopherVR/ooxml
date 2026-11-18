@@ -85,7 +85,7 @@
         "@angular/platform-browser": "^22.3.0",
         "@ngx-translate/core": "^18.1.0",
         "ai": "^7.0.177",
-        "emf-converter": "4.28.1",
+        "emf-converter": "5.0.0",
         "fast-xml-parser": "^5.12.1",
         "html2canvas-pro": "^2.6.4",
         "jspdf": "^4.2.1",
@@ -111,7 +111,7 @@
       "dependencies": {
         "@ai-sdk/openai-compatible": "^3.0.93",
         "ai": "^7.0.177",
-        "emf-converter": "4.28.1",
+        "emf-converter": "5.0.0",
         "fast-xml-parser": "^5.12.1",
         "jszip": "^3.10.2",
         "ooxml-ui": "workspace:*",
@@ -136,7 +136,7 @@
     "demos/pptx/demo-react": {
       "name": "pptx-react-demo",
       "dependencies": {
-        "emf-converter": "4.28.1",
+        "emf-converter": "5.0.0",
         "fast-xml-parser": "^5.12.1",
         "framer-motion": "^14.14.0",
         "html2canvas-pro": "^2.6.4",
@@ -174,7 +174,7 @@
         "@ai-sdk/svelte": "^5.0.177",
         "@lucide/svelte": "^1.75.0",
         "ai": "^7.0.177",
-        "emf-converter": "4.28.1",
+        "emf-converter": "5.0.0",
         "fast-xml-parser": "^5.12.1",
         "jszip": "^3.10.2",
         "ooxml-demo-onedrive": "workspace:*",
@@ -214,7 +214,7 @@
       "dependencies": {
         "@ai-sdk/openai-compatible": "^3.0.93",
         "ai": "^7.0.177",
-        "emf-converter": "4.28.1",
+        "emf-converter": "5.0.0",
         "fast-xml-parser": "^5.12.1",
         "jszip": "^3.10.2",
         "ooxml-demo-onedrive": "workspace:*",
@@ -242,7 +242,7 @@
         "@ai-sdk/openai-compatible": "^3.0.93",
         "@ai-sdk/vue": "^4.0.177",
         "ai": "^7.0.177",
-        "emf-converter": "4.28.1",
+        "emf-converter": "5.0.0",
         "fast-xml-parser": "^5.12.1",
         "jspdf": "^4.2.1",
         "jszip": "^3.10.2",
@@ -271,7 +271,7 @@
       },
       "devDependencies": {
         "@types/node": "^26.6.6",
-        "emf-converter": "4.28.1",
+        "emf-converter": "5.0.0",
         "vite": "^8.3.8",
       },
     },
@@ -465,12 +465,12 @@
       },
       "dependencies": {
         "@xmldom/xmldom": "^0.9.12",
-        "emf-converter": "^4.28.1",
+        "emf-converter": "^5.0.0",
         "fast-xml-parser": "^5.12.1",
         "fflate": "^0.8.3",
         "jszip": "^3.10.2",
         "lib0": "^0.2.120",
-        "mtx-decompressor": "^1.8.1",
+        "mtx-decompressor": "^1.9.0",
         "prosemirror-collab": "^1.3.1",
         "prosemirror-commands": "^1.7.2",
         "prosemirror-history": "^1.5.1",
@@ -519,7 +519,7 @@
       "version": "1.54.3",
       "dependencies": {
         "dompurify": "^3.4.18",
-        "emf-converter": "4.28.1",
+        "emf-converter": "5.0.0",
         "lit": "^3.3.3",
         "ooxml-core": "*",
         "opentype.js": "^2.0.0",
@@ -934,7 +934,7 @@
         "@types/node": "^26.6.6",
         "@types/node-forge": "^1.3.14",
         "@xmldom/xmldom": "^0.9.12",
-        "emf-converter": "^4.28.1",
+        "emf-converter": "^5.0.0",
         "fast-xml-parser": "^5.12.1",
         "jszip": "^3.10.2",
         "node-forge": "^1.4.3",
@@ -1384,7 +1384,7 @@
       "name": "@christophervr/visio-viewer",
       "version": "0.0.0",
       "dependencies": {
-        "emf-converter": "4.28.1",
+        "emf-converter": "5.0.0",
         "ooxml-core": "*",
         "ooxml-ui": "*",
       },
@@ -1427,7 +1427,7 @@
       "name": "visio-angular-viewer",
       "version": "1.4.1",
       "dependencies": {
-        "emf-converter": "4.28.1",
+        "emf-converter": "5.0.0",
         "ooxml-core": "*",
         "ooxml-ui": "*",
         "visio-core": "^1.1.2",
@@ -1477,7 +1477,7 @@
       "name": "visio-react-viewer",
       "version": "1.4.1",
       "dependencies": {
-        "emf-converter": "4.28.1",
+        "emf-converter": "5.0.0",
         "ooxml-core": "*",
         "ooxml-ui": "*",
         "visio-core": "^1.1.2",
@@ -1495,7 +1495,7 @@
       "name": "visio-solid-viewer",
       "version": "1.4.1",
       "dependencies": {
-        "emf-converter": "4.28.1",
+        "emf-converter": "5.0.0",
         "ooxml-core": "*",
         "ooxml-ui": "*",
         "visio-core": "^1.1.2",
@@ -1508,7 +1508,7 @@
       "name": "visio-svelte-viewer",
       "version": "1.4.1",
       "dependencies": {
-        "emf-converter": "4.28.1",
+        "emf-converter": "5.0.0",
         "ooxml-core": "*",
         "ooxml-ui": "*",
         "visio-core": "^1.1.2",
@@ -1521,7 +1521,7 @@
       "name": "visio-vanilla-viewer",
       "version": "1.4.1",
       "dependencies": {
-        "emf-converter": "4.28.1",
+        "emf-converter": "5.0.0",
         "ooxml-core": "*",
         "ooxml-ui": "*",
         "visio-core": "^1.1.2",
@@ -1531,7 +1531,7 @@
       "name": "visio-vue-viewer",
       "version": "1.4.1",
       "dependencies": {
-        "emf-converter": "4.28.1",
+        "emf-converter": "5.0.0",
         "ooxml-core": "*",
         "ooxml-ui": "*",
         "visio-core": "^1.1.2",
@@ -2803,7 +2803,7 @@
 
     "electron-to-chromium": ["electron-to-chromium@1.5.444", "", {}, "sha512-5ss/uJfoDYDHT0lfJzT6FbcskIzROIOPf0BbbFkGcvDzoJU7i//9GDrwwIHQVmIsrAGiF3ihpADBRIsrEFt1rQ=="],
 
-    "emf-converter": ["emf-converter@4.28.1", "", { "peerDependencies": { "@napi-rs/canvas": "^1.0.9" }, "optionalPeers": ["@napi-rs/canvas"], "bin": { "emf-converter": "dist/cli.mjs" } }, "sha512-XaWKMHMWNUJUlzISyaSfYo2PlpH9Ye4DQDejYrT3MHabjo8iEKi6Zl1rabshT5dokPYZiXstgII+0mFkmLnlbA=="],
+    "emf-converter": ["emf-converter@5.0.0", "", { "peerDependencies": { "@napi-rs/canvas": "^1.0.9" }, "optionalPeers": ["@napi-rs/canvas"], "bin": { "emf-converter": "dist/cli.mjs" } }, "sha512-0GbBR8MgiVxS5aEoSG1u9O9I2NBHGc5AcLe01uq055AKf9Bxr3J482wY6rGbGYyQc42KSI6roYgA4DH1Aao+1g=="],
 
     "emoji-regex": ["emoji-regex@10.6.0", "", {}, "sha512-toUI84YS5YmxW219erniWD0CIVOo46xGKColeNQRgOzDorgBi1v4D71/OFzgD9GO2UGKIv1C3Sp8DAn0+j5w7A=="],
 
@@ -3197,7 +3197,7 @@
 
     "msgpackr-extract": ["msgpackr-extract@3.0.4", "", { "dependencies": { "node-gyp-build-optional-packages": "5.2.2" }, "optionalDependencies": { "@msgpackr-extract/msgpackr-extract-darwin-arm64": "3.0.4", "@msgpackr-extract/msgpackr-extract-darwin-x64": "3.0.4", "@msgpackr-extract/msgpackr-extract-linux-arm": "3.0.4", "@msgpackr-extract/msgpackr-extract-linux-arm64": "3.0.4", "@msgpackr-extract/msgpackr-extract-linux-x64": "3.0.4", "@msgpackr-extract/msgpackr-extract-win32-x64": "3.0.4" }, "bin": { "download-msgpackr-prebuilds": "bin/download-prebuilds.js" } }, "sha512-4kmO/MdyUIkLIvTPr8VHLil4AtoKIoniWPIEk5+CDy0xnWC84azhSFmuJ7PxZdsYtiP5kEeQsORAVIeMgxT+Hw=="],
 
-    "mtx-decompressor": ["mtx-decompressor@1.8.1", "", {}, "sha512-I2MH30VFYmj9aXYBlpzdEnMvHcdfOlWaeNUnYo92PpyeCDNAp9mOnkUJxgLkNT3OY1bxb0Rzv4aRrERn7O3H6g=="],
+    "mtx-decompressor": ["mtx-decompressor@1.9.0", "", {}, "sha512-gQ+oQRw5BSolUlvO4CjTKgAg2K28cb0aAafdcyN2V9GxsxZAFyfrqyZ7z48f+3CGpnTC2bAeNal2HtNpFunBvQ=="],
 
     "muggle-string": ["muggle-string@0.4.1", "", {}, "sha512-VNTrAak/KhO2i8dqqnqnAHOa3cYBwXEZe9h+D5h/1ZqFSTEFHdM65lR7RoIqq3tBBYavsOXV84NoHXZ0AkPyqQ=="],
 
