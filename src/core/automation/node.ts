@@ -3,6 +3,38 @@ import { basename, dirname, extname, isAbsolute, relative, resolve, sep } from '
 import { randomUUID } from 'node:crypto';
 import type { AutomationTool } from './tools/types';
 
+const OUTSIDE_ROOT = 'Path is outside the configured root';
+
+/**
+ * A path segment that does not mean the same file everywhere: an alternate data stream or drive
+ * (`:`), characters Windows rejects or expands, a trailing dot or space Windows drops, and the
+ * reserved device names, with or without an extension.
+ */
+const UNSAFE_SEGMENT =
+	/[\u0000-\u001f:<>"|?*]|[. ]$|^(?:con|prn|aux|nul|com[0-9¹²³]|lpt[0-9¹²³]|conin\$|conout\$)(?:[. ].*)?$/iu;
+
+/**
+ * The root-relative form of a caller's path, judged on its text alone: nothing here touches the
+ * filesystem, so a refused path (a UNC host above all) is never contacted. Every refusal is the
+ * same error, so it says nothing about what exists. An absolute path is accepted only when it is
+ * textually inside the root.
+ */
+function confineLexically(rootDir: string, file: string): string {
+	if (/^[\\/]{2}/.test(file)) throw new Error(OUTSIDE_ROOT);
+	const path = isAbsolute(file) ? relative(resolve(rootDir), file) : file;
+	if (isAbsolute(path) || /^[\\/]/.test(path)) throw new Error(OUTSIDE_ROOT);
+	const kept: string[] = [];
+	for (const segment of path.split(/[\\/]/)) {
+		if (segment === '' || segment === '.') continue;
+		if (segment === '..') {
+			if (kept.length === 0) throw new Error(OUTSIDE_ROOT);
+			kept.pop();
+		} else if (UNSAFE_SEGMENT.test(segment)) throw new Error(OUTSIDE_ROOT);
+		else kept.push(segment);
+	}
+	return kept.join(sep);
+}
+
 export interface ByteEditResult {
 	/** Absent when the edit changed nothing. */
 	bytes?: Uint8Array | undefined;
@@ -38,14 +70,20 @@ export function createFileOperations(rootDir = process.cwd()) {
 		}
 	}
 	async function pathFor(file: string, extensions: readonly string[]) {
+		const lexical = confineLexically(rootDir, file);
+		const checkExtension = (target: string) => {
+			if (!extensions.includes(extname(target).toLowerCase()))
+				throw new Error('Unsupported file extension');
+		};
+		checkExtension(lexical);
 		const root = await realpath(resolve(rootDir));
-		const path = resolve(root, file);
+		const path = resolve(root, lexical);
 		const parent = await realpath(dirname(path));
 		let actual = resolve(parent, basename(path));
 		const inside = (target: string) => {
 			const rel = relative(root, target);
 			if (rel === '..' || rel.startsWith('../') || rel.startsWith('..\\') || isAbsolute(rel))
-				throw new Error('Path is outside the configured root');
+				throw new Error(OUTSIDE_ROOT);
 		};
 		inside(actual);
 		try {
@@ -54,8 +92,7 @@ export function createFileOperations(rootDir = process.cwd()) {
 		} catch (error) {
 			if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
 		}
-		if (!extensions.includes(extname(actual).toLowerCase()))
-			throw new Error('Unsupported file extension');
+		checkExtension(actual);
 		return actual;
 	}
 	async function read(path: string) {
@@ -102,8 +139,9 @@ export function createFileOperations(rootDir = process.cwd()) {
 	}
 	/** Confine a directory (it may not exist yet) and return its root-relative path. */
 	async function directoryFor(dir: string) {
+		const lexical = confineLexically(rootDir, dir);
 		const root = await realpath(resolve(rootDir));
-		let probe = resolve(root, dir);
+		let probe = resolve(root, lexical);
 		const rest: string[] = [];
 		for (;;) {
 			try {
@@ -120,7 +158,7 @@ export function createFileOperations(rootDir = process.cwd()) {
 		const actual = resolve(probe, ...rest);
 		const r = relative(root, actual);
 		if (r === '..' || r.startsWith('../') || r.startsWith('..\\') || isAbsolute(r))
-			throw new Error('Path is outside the configured root');
+			throw new Error(OUTSIDE_ROOT);
 		return r.split(sep).join('/') || '.';
 	}
 	const api = {
