@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { MAX_HISTOGRAM_BINS } from '../histogram-binning';
 import { chartExSummary } from './summary-from-chartex';
 import { chartSummaryView } from './chart-view';
 import { chartThemePalette, renderChartSummarySvg } from './render-space';
@@ -134,5 +135,22 @@ describe('histogram painting', () => {
 		)!.summary!;
 		const view = chartSummaryView(summary, chartThemePalette(undefined));
 		expect(view.series[0]!.values).toEqual([6, 9, 5]);
+	});
+
+	it.each([
+		['bin count', '<cx:binCount val="200000000"/>'],
+		['bin size', '<cx:binSize val="0.000000001"/>'],
+	])('paints a hostile %s within the bin limit and reports it', (_, binning) => {
+		const result = chartExSummary(histogramXml(`<cx:binning>${binning}</cx:binning>`))!;
+		expect(result.histogramBinsLimited).toBe(true);
+		const view = chartSummaryView(result.summary!, chartThemePalette(undefined));
+		expect(view.series[0]!.values).toHaveLength(MAX_HISTOGRAM_BINS);
+		const svg = renderChartSummarySvg(result.summary!, { width: 300, height: 200 });
+		expect(svg.length).toBeLessThan(2_000_000);
+	});
+
+	it('reports nothing for a chart within the limit', () => {
+		const xml = histogramXml('<cx:binning><cx:binCount val="4"/></cx:binning>');
+		expect(chartExSummary(xml)).not.toHaveProperty('histogramBinsLimited');
 	});
 });

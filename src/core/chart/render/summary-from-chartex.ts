@@ -7,6 +7,7 @@ import type { DrawingColor } from '../../drawingml/types';
 import { parseXml, type XmlElement } from '../../xml/index';
 import type { ChartExData, ChartExDimension, ChartExSeries, ChartExSpace } from '../ex/model';
 import { isChartExRoot, parseChartExSpace } from '../ex/parse';
+import { histogramBinsLimited } from '../histogram-binning';
 import type { ChartSummary, ChartSummarySeries, HistogramSummaryOptions } from './summary';
 
 /** The data of a series: its own `cx:data`, else the shared one named by `cx:dataId`. */
@@ -90,6 +91,8 @@ export interface ChartExSummary {
 	/** `cx:series/@layoutId` of the first series (`waterfall`, `clusteredColumn`, `funnel`...). */
 	layoutId: string;
 	summary?: ChartSummary;
+	/** The histogram asks for more bins than are drawn (see `MAX_HISTOGRAM_BINS`). */
+	histogramBinsLimited?: boolean;
 }
 
 const LEGEND_POSITIONS = ['r', 'l', 't', 'b', 'tr'];
@@ -257,5 +260,12 @@ export function chartExSummaryFromModel(space: ChartExSpace): ChartExSummary {
 			summary.histogram.pareto = stroke?.kind === 'solid' ? { lineColor: stroke.color } : {};
 		}
 	}
-	return { layoutId, summary };
+	const limited =
+		summary.histogram !== undefined &&
+		!summary.histogram.aggregateByCategory &&
+		histogramBinsLimited(
+			series.values.map((value) => value ?? Number.NaN),
+			summary.histogram,
+		);
+	return { layoutId, summary, ...(limited ? { histogramBinsLimited: true } : {}) };
 }
