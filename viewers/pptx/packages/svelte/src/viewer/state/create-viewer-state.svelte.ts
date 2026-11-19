@@ -315,6 +315,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 		getStageHolderEl: options.getStageHolderEl,
 		getRootEl: options.getRootEl,
 		isPresentModeEnabled: () => isFeatureEnabled(getCustomization(), 'presentMode'),
+		getLinkedContentAllowed: () => externalContent.allowed,
 	});
 	presentationApi.current = presentationCluster.presentation;
 

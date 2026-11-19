@@ -501,6 +501,7 @@ export function createRenderController(deps: RenderControllerDeps): RenderContro
 				presenting: state.presenting,
 				showWithAnimation: state.presentationProperties.showWithAnimation,
 				mediaDataUrls: state.mediaDataUrls,
+				getLinkedContentAllowed: deps.getLinkedContentAllowed,
 				reRenderElements,
 				// PowerPoint shows a slide you step BACK onto with its builds already
 				// played; the store marks the pending entry as backward.

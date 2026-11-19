@@ -34,5 +34,26 @@
 		"site/",
 		"**/__fixtures__/**",
 		".playwright-mcp/"
+	],
+	"overrides": [
+		{
+			// Every sound a PowerPoint viewer plays from a deck goes through `playDeckSound`
+			// (render/deck-sound.ts), which withholds a linked sound until the viewer allows
+			// linked content. Anything else that builds an `Audio` skips that consent.
+			"files": ["src/ui/src/pptx/**"],
+			"rules": {
+				"no-restricted-globals": [
+					"error",
+					{
+						"name": "Audio",
+						"message": "Play deck sounds with playDeckSound (render/deck-sound.ts): it applies the viewer's linked-content consent."
+					}
+				]
+			}
+		},
+		{
+			"files": ["src/ui/src/pptx/render/deck-sound.ts", "src/ui/src/pptx/**/*.test.ts"],
+			"rules": { "no-restricted-globals": "off" }
+		}
 	]
 }

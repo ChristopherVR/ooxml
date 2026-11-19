@@ -867,6 +867,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 				containerRef,
 				content,
 				mediaDataUrls: state.mediaDataUrls,
+				linkedContent: externalContent.allowed,
 				presentationProperties: state.presentationProperties,
 				setMode: state.setMode,
 				setActiveSlideIndex: state.setActiveSlideIndex,

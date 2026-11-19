@@ -1888,7 +1888,6 @@ export const translationsEn: Record<string, string> = {
 	'pptx.masterView.slideMastersTitle': 'Slide Masters',
 	'pptx.masterView.notesMasterTitle': 'Notes Master',
 	'pptx.masterView.handoutMasterTitle': 'Handout Master',
-	'pptx.masterView.collapse': 'Collapse master pane',
 
 	// Mobile presenter view (Vue)
 	'pptx.mpresenter.noSlides': 'No slides to present.',

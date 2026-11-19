@@ -22,9 +22,9 @@
 		resolveTransitionDurationMs,
 	} from 'ooxml-ui/pptx';
 	import type { CanvasSize, CssStyleMap } from 'ooxml-ui/pptx';
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount, untrack } from 'svelte';
 
-	import { playAnimationSound, stopAnimationSound } from './animation-sound';
+	import { getLinkedContentGetter } from '../state/linked-content';
 	import FragmentedTransitionLayer from './FragmentedTransitionLayer.svelte';
 	import MorphExtraLayers from './MorphExtraLayers.svelte';
 	import { useMorphTransitionOverlay } from './use-morph-transition-overlay.svelte';
@@ -48,6 +48,7 @@
 		transition: PptxSlideTransition | undefined;
 		ondone: () => void;
 	} = $props();
+	const getLinkedContent = getLinkedContentGetter();
 
 	const animations = $derived(resolveSlideTransition(transition));
 	/** Effective duration (ms); `0` for instant (none/cut). */
@@ -109,22 +110,20 @@
 
 	/**
 	 * Play or stop this transition's sound action (`p:sndAc/p:stSnd`/`p:endSnd`)
-	 * the instant it starts. `transition.soundPath` is a raw in-archive path;
-	 * `mediaDataUrls` is the same Blob-URL cache the load pipeline
-	 * pre-populates for it (`collectAnimationSoundPaths`, extended to also
-	 * collect a slide transition's own sound). Reuses the per-effect sound
-	 * singleton (`animation-sound.ts`) so a transition sound and an animation
-	 * sound cannot talk over each other, matching PowerPoint's "one sound
-	 * plays at a time" behaviour. NOT stopped on this component's own
-	 * destroy: a "Loop Until Next Sound" sound must keep playing across the
+	 * the instant it starts. `transition.soundPath` is an archive path the load
+	 * pipeline put in `mediaDataUrls` (`collectAnimationSoundPaths`), or a linked
+	 * sound's web address, played only once this viewer allows linked content
+	 * (read untracked: Enable Content mid-transition does not replay it). It
+	 * shares the effect sounds' one-sound-at-a-time channel. NOT stopped on this
+	 * component's own destroy: a "Loop Until Next Sound" sound must keep playing across the
 	 * static period between this overlay tearing down and the next
 	 * transition's own sound action; the presentation controller stops it on
 	 * leaving the show.
 	 */
 	$effect(() => {
-		applySlideTransitionSound(transition, (soundPath) => mediaDataUrls.get(soundPath), {
-			play: playAnimationSound,
-			stop: stopAnimationSound,
+		applySlideTransitionSound(transition, {
+			mediaUrls: mediaDataUrls,
+			linkedContent: untrack(getLinkedContent),
 		});
 	});
 

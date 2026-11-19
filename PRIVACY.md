@@ -17,22 +17,22 @@ network request must update this file in the same commit.
 
 ## Summary
 
-| What                                             | Goes to                                     | On by default                    | Turn it off or redirect it                                         |
-| ------------------------------------------------ | ------------------------------------------- | -------------------------------- | ------------------------------------------------------------------ |
-| PowerPoint: fonts not installed or embedded      | `fonts.googleapis.com`, `fonts.gstatic.com` | Yes                              | `googleFonts` option; File > Options > Trust Center; suite setting |
-| Word, Excel, Visio: fonts not installed          | `fonts.googleapis.com`, `fonts.gstatic.com` | No (yes in the suite)            | `googleFonts` property; Trust Center (off by default); suite       |
-| PowerPoint: linked pictures, media, video embeds | Any URL the deck links to                   | No: only after Enable Content    | `allowExternalContent` option; Trust Center; suite setting         |
-| PowerPoint: Share / Broadcast without a server   | `wss://y-webrtc-eu.fly.dev`, public STUN    | Only when the user starts it     | Configure a signaling server or `serverUrl`                        |
-| PowerPoint: Share / Broadcast with a server      | The host's or user's server                 | Only when the user starts it     | Do not start a session                                             |
-| PowerPoint (Node): signature inspection          | The OCSP responder named in the certificate | When a signature value verifies  | No switch today (see below)                                        |
-| Teams: sync and signaling                        | The configured `syncUrl` and `signalingUrl` | Only when a server is configured | Local mode                                                         |
-| Teams: calls                                     | `stun:stun.l.google.com:19302`, then peers  | Yes, when a call starts          | `iceServers` (your own STUN/TURN, or `[]`)                         |
-| Teams: website tabs                              | The URL a member added                      | When the tab is opened           | Do not add or open website tabs                                    |
-| Suite: AI assistant                              | The provider the user or policy selects     | No (offline by default)          | `ai-config.json`                                                   |
-| Suite: OneDrive                                  | `graph.microsoft.com`, Microsoft sign-in    | No (host must enable it)         | Do not configure it                                                |
-| Suite: app updates                               | The suite's own origin (`sw.js`)            | Yes                              | Not applicable (same origin)                                       |
-| Any product: hyperlinks, help links              | The link target                             | Only when clicked                | Not applicable                                                     |
-| Host-supplied document URLs                      | The URL the host passes                     | Only when the host passes one    | Pass bytes instead                                                 |
+| What                                               | Goes to                                     | On by default                    | Turn it off or redirect it                                         |
+| -------------------------------------------------- | ------------------------------------------- | -------------------------------- | ------------------------------------------------------------------ |
+| PowerPoint: fonts not installed or embedded        | `fonts.googleapis.com`, `fonts.gstatic.com` | Yes                              | `googleFonts` option; File > Options > Trust Center; suite setting |
+| Word, Excel, Visio: fonts not installed            | `fonts.googleapis.com`, `fonts.gstatic.com` | No (yes in the suite)            | `googleFonts` property; Trust Center (off by default); suite       |
+| PowerPoint: linked pictures, media, sounds, embeds | Any URL the deck links to                   | No: only after Enable Content    | `allowExternalContent` option; Trust Center; suite setting         |
+| PowerPoint: Share / Broadcast without a server     | `wss://y-webrtc-eu.fly.dev`, public STUN    | Only when the user starts it     | Configure a signaling server or `serverUrl`                        |
+| PowerPoint: Share / Broadcast with a server        | The host's or user's server                 | Only when the user starts it     | Do not start a session                                             |
+| PowerPoint (Node): signature inspection            | The OCSP responder named in the certificate | When a signature value verifies  | No switch today (see below)                                        |
+| Teams: sync and signaling                          | The configured `syncUrl` and `signalingUrl` | Only when a server is configured | Local mode                                                         |
+| Teams: calls                                       | `stun:stun.l.google.com:19302`, then peers  | Yes, when a call starts          | `iceServers` (your own STUN/TURN, or `[]`)                         |
+| Teams: website tabs                                | The URL a member added                      | When the tab is opened           | Do not add or open website tabs                                    |
+| Suite: AI assistant                                | The provider the user or policy selects     | No (offline by default)          | `ai-config.json`                                                   |
+| Suite: OneDrive                                    | `graph.microsoft.com`, Microsoft sign-in    | No (host must enable it)         | Do not configure it                                                |
+| Suite: app updates                                 | The suite's own origin (`sw.js`)            | Yes                              | Not applicable (same origin)                                       |
+| Any product: hyperlinks, help links                | The link target                             | Only when clicked                | Not applicable                                                     |
+| Host-supplied document URLs                        | The URL the host passes                     | Only when the host passes one    | Pass bytes instead                                                 |
 
 Every request also sends what any browser request sends: the reader's IP address, the browser's
 user agent and, for some requests, a `Referer`. That is the main privacy cost of each third-party
@@ -77,13 +77,15 @@ from PowerPoint. [docs/font-loading.md](docs/font-loading.md) describes the whol
 ### Linked external content
 
 A deck can link (rather than embed) pictures, shape fills, picture bullets, 3D model posters,
-audio and video at an external URL, and can insert an online video (YouTube, Vimeo) that is
-shown in the provider's embed frame.
+audio, video and the sounds that play with animations, slide transitions and hyperlinks at an
+external URL, and can insert an online video (YouTube, Vimeo) that is shown in the provider's
+embed frame.
 
 - **Trigger:** choosing **Enable Content** on the security bar of a deck with such links, as in
   Microsoft PowerPoint, or a host or Trust Center setting that allows them without asking.
 - **Sent:** requests to each linked URL, which tells that server that the deck was opened.
-  An online video frame loads the provider's page and whatever it loads.
+  A linked sound is requested when it plays in the slide show. An online video frame loads the
+  provider's page and whatever it loads.
 - **Default:** off. Opening a deck requests none of its linked content; a security bar ("References
   to external pictures and other media have been blocked") offers Enable Content for that
   presentation. Enabling lasts until another presentation is opened and is not stored. In a

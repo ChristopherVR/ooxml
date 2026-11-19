@@ -74,7 +74,6 @@ export const translations = {
 	'pptx.masterView.slideMastersTitle': 'スライド マスター',
 	'pptx.masterView.notesMasterTitle': 'ノート マスター',
 	'pptx.masterView.handoutMasterTitle': '配布資料マスター',
-	'pptx.masterView.collapse': 'マスター ウィンドウを折りたたむ',
 	'pptx.notesMaster.phSlideImage': 'スライド イメージ',
 	'pptx.notesMaster.phNotesBody': 'ノートの本文',
 	'pptx.notesMaster.phDate': '日付',

@@ -2,57 +2,51 @@
  * Linked web content in a viewer's own view of the deck.
  *
  * A deck can link a picture, fill, background, bullet, table texture, poster,
- * audio or video to a web address instead of embedding it. The document model
- * keeps that address as the deck's content: it is saved, collaborated and
- * undone like any other field. Whether the browser may fetch it is a choice
- * each viewer makes for itself (`external-content-policy`), so the gate sits
- * where the model becomes markup: every surface that draws or plays the deck
- * reads it through {@link linkedContentView}, which withholds the addresses
- * until that viewer allows them. Enabling the content redraws; nothing
- * reloads and nothing in the model changes.
+ * sound, audio, video or model to a web address instead of embedding it. The
+ * document model keeps that address as the deck's content: it is saved,
+ * collaborated and undone like any other field. Whether the browser may fetch
+ * it is a choice each viewer makes for itself (`external-content-policy`), so
+ * the gate sits where the model becomes markup: every surface that draws the
+ * deck reads it through {@link linkedContentView}, which withholds the
+ * addresses until that viewer allows them, and every sound it plays goes
+ * through `deck-sound`. Enabling the content redraws; nothing reloads and
+ * nothing in the model changes.
  *
  * @module render/options/linked-content
  */
 
 /**
- * Model fields whose value a surface hands the browser to fetch (an image
- * `src`, a CSS `url()`, a media source, or the address an online video embed
- * is derived from). Hyperlinks and other addresses that open only when
- * clicked are not listed: they are never fetched by drawing the deck.
+ * A model field names a resource the browser fetches when its name says so:
+ * it ends in `Path`, `Data`, `Url`, `Image` or `Src` (`imagePath`, `svgData`,
+ * `fillImageUrl`, `posterImage`, `soundPath`, a table style picture's `path`
+ * and `data`). The rule is the field's role, not a list of kinds, so a kind of
+ * linked content added later is withheld from the day it is parsed.
  */
-const FETCHED_FIELDS: ReadonlySet<string> = new Set([
-	'imageData',
-	'imagePath',
-	'svgData',
-	'svgPath',
-	'posterImage',
-	'posterFrameData',
-	'posterFramePath',
-	'previewImageData',
-	'mediaData',
-	'mediaPath',
-	'fillImageUrl',
-	'backgroundImage',
-	'imageDataUrl',
-	'textFillBlipUrl',
-	'backgroundImageFillPath',
-	'backgroundImageFillData',
-]);
+const RESOURCE_FIELD = /(?:path|data|url|image|src)$/iu;
 
-/** A table style's picture fill (`ParsedTableStyleFill.image`) names its picture with these. */
-const TABLE_STYLE_IMAGE_KEY = 'image';
-const TABLE_STYLE_IMAGE_FIELDS: ReadonlySet<string> = new Set(['path', 'data']);
+/**
+ * Resource-named fields that hold an address the deck only opens when it is
+ * clicked (a hyperlink action, a link that failed validation, a linked
+ * workbook), so drawing never fetches them.
+ */
+const CLICKED_ADDRESS_FIELDS: ReadonlySet<string> = new Set([
+	'url',
+	'hyperlinkInvalidUrl',
+	'targetPath',
+]);
 
 /** Whether `value` is a web address a browser would fetch (`http:` or `https:`). */
 export function isWebAddress(value: unknown): value is string {
 	return typeof value === 'string' && /^https?:\/\//iu.test(value);
 }
 
-function isFetchedField(key: string, parentKey: string | undefined): boolean {
-	return (
-		FETCHED_FIELDS.has(key) ||
-		(parentKey === TABLE_STYLE_IMAGE_KEY && TABLE_STYLE_IMAGE_FIELDS.has(key))
-	);
+/**
+ * Whether a web address under `key` is fetched when the deck is drawn. XML the
+ * model keeps verbatim (`@_` attributes) holds namespace and schema
+ * identifiers, never something a surface fetches.
+ */
+function isFetchedField(key: string): boolean {
+	return !key.startsWith('@_') && RESOURCE_FIELD.test(key) && !CLICKED_ADDRESS_FIELDS.has(key);
 }
 
 function isTraversable(value: unknown): value is Record<string, unknown> | unknown[] {
@@ -72,7 +66,7 @@ const linksByValue = new WeakMap<object, boolean>();
 // Each withheld copy back to the model object it was made from (`restoreLinkedContent`).
 const modelByView = new WeakMap<object, object>();
 
-function withhold(value: unknown, parentKey: string | undefined, seen: Set<object>): unknown {
+function withhold(value: unknown, seen: Set<object>): unknown {
 	if (!isTraversable(value) || seen.has(value)) {
 		return value;
 	}
@@ -85,7 +79,7 @@ function withhold(value: unknown, parentKey: string | undefined, seen: Set<objec
 	if (Array.isArray(value)) {
 		let copy: unknown[] | undefined;
 		value.forEach((item, index) => {
-			const next = withhold(item, parentKey, seen);
+			const next = withhold(item, seen);
 			if (next !== item) {
 				copy ??= [...value];
 				copy[index] = next;
@@ -95,12 +89,12 @@ function withhold(value: unknown, parentKey: string | undefined, seen: Set<objec
 	} else {
 		let copy: Record<string, unknown> | undefined;
 		for (const [key, item] of Object.entries(value)) {
-			if (isFetchedField(key, parentKey) && isWebAddress(item)) {
+			if (isFetchedField(key) && isWebAddress(item)) {
 				copy ??= { ...value };
 				delete copy[key];
 				continue;
 			}
-			const next = withhold(item, key, seen);
+			const next = withhold(item, seen);
 			if (next !== item) {
 				copy ??= { ...value };
 				copy[key] = next;
@@ -144,7 +138,7 @@ function restore(value: unknown, seen: Set<object>): unknown {
 	return result;
 }
 
-function links(value: unknown, parentKey: string | undefined, seen: Set<object>): boolean {
+function links(value: unknown, seen: Set<object>): boolean {
 	if (!isTraversable(value) || seen.has(value)) {
 		return false;
 	}
@@ -154,9 +148,9 @@ function links(value: unknown, parentKey: string | undefined, seen: Set<object>)
 	}
 	seen.add(value);
 	const found = Array.isArray(value)
-		? value.some((item) => links(item, parentKey, seen))
+		? value.some((item) => links(item, seen))
 		: Object.entries(value).some(([key, item]) =>
-				isFetchedField(key, parentKey) && isWebAddress(item) ? true : links(item, key, seen),
+				isFetchedField(key) && isWebAddress(item) ? true : links(item, seen),
 			);
 	seen.delete(value);
 	linksByValue.set(value, found);
@@ -170,7 +164,7 @@ function links(value: unknown, parentKey: string | undefined, seen: Set<object>)
  * the rest are shallow copies. Pure: the model itself is never changed.
  */
 export function withholdLinkedContent<T>(value: T): T {
-	return withhold(value, undefined, new Set()) as T;
+	return withhold(value, new Set()) as T;
 }
 
 /**
@@ -185,7 +179,7 @@ export function restoreLinkedContent<T>(value: T): T {
 
 /** Whether `value` holds a linked web address that {@link withholdLinkedContent} would remove. */
 export function hasLinkedContent(value: unknown): boolean {
-	return links(value, undefined, new Set());
+	return links(value, new Set());
 }
 
 /**

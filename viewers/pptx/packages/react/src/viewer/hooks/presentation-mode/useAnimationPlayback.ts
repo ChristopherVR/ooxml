@@ -1,19 +1,21 @@
 import type { PlaybackContext } from 'ooxml-ui/pptx';
 import {
 	advanceMainSequence,
+	BUILT_IN_SOUNDS,
 	cancelBuildReveal,
 	clearPlaybackTimers,
 	createActiveAnimationGroup,
 	PresentationAnimationController,
+	playDeckSound,
 	playGroup,
 	resolveMediaBookmarkTimesMs,
 	resolveMediaTimeNodeElementIds,
+	stopDeckSound,
 } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { useRef, useState, useCallback, useEffect } from 'react';
 
 import type { PresentationAnimationRuntime } from '../../types';
-import { playAnimationSound, stopAnimationSound } from '../../utils/animation-sound';
 import type { ElementAnimationState } from '../../utils/animation-timeline';
 import {
 	scheduleEntranceAnimationTimers,
@@ -180,8 +182,9 @@ export function useAnimationPlayback(input: UseAnimationPlaybackInput): UseAnima
 			timers: presentationTimersRef.current,
 			buildHandle: buildRafRef,
 			onPlayActionSound,
-			playSound: playAnimationSound,
-			stopSound: stopAnimationSound,
+			// Without the viewer's sound handler only sounds that need no media map or consent play.
+			playSound: (soundPath) => playDeckSound(soundPath, BUILT_IN_SOUNDS),
+			stopSound: stopDeckSound,
 			mediaTimeNodeElementIds: mediaTimeNodeElementIdsRef.current,
 			mediaBookmarkTimesMs: mediaBookmarkTimesMsRef.current,
 		};

@@ -154,3 +154,75 @@ describe('a viewer model with its links', () => {
 		});
 	});
 });
+
+const WAV_DATA =
+	'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+const AUDIO_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/audio';
+const ACTION_SOUND_SHAPE = `<p:sp><p:nvSpPr><p:cNvPr id="903" name="Action sound"><a:hlinkClick r:id="" action="ppaction://noaction"><a:snd r:embed="rIdLinkedClickSound" name="click.wav"/></a:hlinkClick></p:cNvPr><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="914400" cy="914400"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:sp>`;
+
+/** A slide whose transition sound, effect sound and hyperlink sound are linked to {@link LINKED_ORIGIN}. */
+async function linkedSoundDeck(): Promise<ArrayBuffer> {
+	const { handler, data, createSlide } = await PresentationBuilder.create();
+	const slide = createSlide('Blank').build();
+	slide.elements.push({
+		id: 'animated',
+		type: 'shape',
+		x: 0,
+		y: 0,
+		width: 100,
+		height: 100,
+		shapeType: 'rect',
+	} as PptxElement);
+	slide.transition = { type: 'fade', durationMs: 300, soundData: WAV_DATA } as never;
+	slide.animations = [
+		{
+			id: 'a1',
+			elementId: 'animated',
+			entrance: 'appear',
+			trigger: 'onClick',
+			soundData: WAV_DATA,
+		},
+	] as never;
+	data.slides.push(slide);
+	const zip = await JSZip.loadAsync(await handler.save(data.slides));
+	const slidePath = 'ppt/slides/slide1.xml';
+	const relsPath = 'ppt/slides/_rels/slide1.xml.rels';
+	const slideXml = await zip.file(slidePath)!.async('string');
+	zip.file(slidePath, slideXml.replace('</p:spTree>', `${ACTION_SOUND_SHAPE}</p:spTree>`));
+	const rels = await zip.file(relsPath)!.async('string');
+	const linkedRels = rels.replace(
+		/(<Relationship\b[^>]*?)Target="\.\.\/media\/([^"]+\.wav)"/gu,
+		(_match, before: string, file: string) =>
+			`${before}Target="${LINKED_ORIGIN}/${file}" TargetMode="External"`,
+	);
+	expect(linkedRels.match(/TargetMode="External"/gu)?.length).toBeGreaterThanOrEqual(2);
+	zip.file(
+		relsPath,
+		linkedRels.replace(
+			'</Relationships>',
+			`<Relationship Id="rIdLinkedClickSound" Type="${AUDIO_REL}" Target="${LINKED_ORIGIN}/click.wav" TargetMode="External"/></Relationships>`,
+		),
+	);
+	const bytes = await zip.generateAsync({ type: 'uint8array' });
+	return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+}
+
+describe('linked sounds', () => {
+	it('keeps the linked address of a transition, effect and hyperlink sound', async () => {
+		const [slide] = await loadSlides(true, await linkedSoundDeck());
+		expect(slide!.transition?.soundPath).toMatch(new RegExp(`^${LINKED_ORIGIN}/[^/]+\.wav$`, 'u'));
+		expect(slide!.nativeAnimations?.find((anim) => anim.soundPath)?.soundPath).toMatch(
+			new RegExp(`^${LINKED_ORIGIN}/[^/]+\.wav$`, 'u'),
+		);
+		expect(byName(slide!, 'Action sound').actionClick?.soundPath).toBe(
+			`${LINKED_ORIGIN}/click.wav`,
+		);
+	});
+
+	it('references none of them when allowExternalImages is false', async () => {
+		const [slide] = await loadSlides(false, await linkedSoundDeck());
+		expect(slide!.transition?.soundRId).toBeDefined();
+		expect(slide!.transition?.soundPath).toBeUndefined();
+		expect(JSON.stringify(slide)).not.toContain(LINKED_ORIGIN);
+	});
+});
