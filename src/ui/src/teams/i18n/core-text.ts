@@ -1,7 +1,7 @@
 // The core (`ooxml-core/teams`) words its notices and errors in English. The UI shows them in the
 // display locale by matching the known messages and swapping in the dictionary's wording. A
 // message this table does not know (a server's own error text, say) is shown as written.
-import type { MessageParams } from 'ooxml-core/i18n';
+import { translateCollabText, type MessageParams } from 'ooxml-core/i18n';
 import type { TeamsI18n, TeamsKey } from './translator';
 
 type Rule = readonly [
@@ -71,6 +71,9 @@ const RULES: readonly Rule[] = [
 /** A core notice or error message in the display locale; unknown text is returned unchanged. */
 export function localizeCoreText(text: string, i18n: TeamsI18n): string {
 	if (i18n.locale === 'en') return text;
+	// Why sharing stopped, worded once for every product.
+	const shared = translateCollabText(text, i18n.locale);
+	if (shared !== text) return shared;
 	for (const [pattern, key, params] of RULES) {
 		const match = pattern.exec(text);
 		if (match) return i18n.t(key, params?.(match));

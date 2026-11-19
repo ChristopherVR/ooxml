@@ -102,13 +102,35 @@ describe('vanilla presentation action runner (B7)', () => {
 
 	it("oleVerb opens the clicked OLE object's recovered embedding", () => {
 		const openSpy = vi.spyOn(window, 'open').mockReturnValue(null);
+		const objectUrls = URL as unknown as Record<string, unknown>;
+		const saved = { create: objectUrls.createObjectURL, revoke: objectUrls.revokeObjectURL };
+		objectUrls.createObjectURL = () => 'blob:http://localhost/ole-payload';
+		objectUrls.revokeObjectURL = () => {};
+		vi.useFakeTimers();
 		const slide = {
 			id: 's1',
-			elements: [{ id: 'ole1', type: 'ole', oleEmbeddedData: 'blob:http://localhost/ole-payload' }],
+			elements: [
+				{ id: 'ole1', type: 'ole', oleEmbeddedData: 'data:application/pdf;base64,JVBERi0=' },
+			],
 		} as unknown as PptxSlide;
 		const { runner } = harness({ getCurrentSlide: () => slide });
 		runner.oleVerb?.(-1, 'ole1');
 		expect(openSpy).toHaveBeenCalledWith('blob:http://localhost/ole-payload', '_blank');
+		vi.runAllTimers();
+		vi.useRealTimers();
+		objectUrls.createObjectURL = saved.create;
+		objectUrls.revokeObjectURL = saved.revoke;
+	});
+
+	it('oleVerb never navigates to an embedding that is not a data: URL', () => {
+		const openSpy = vi.spyOn(window, 'open').mockReturnValue(null);
+		const slide = {
+			id: 's1',
+			elements: [{ id: 'ole1', type: 'ole', oleEmbeddedData: 'javascript:alert(1)' }],
+		} as unknown as PptxSlide;
+		const { runner } = harness({ getCurrentSlide: () => slide });
+		runner.oleVerb?.(-1, 'ole1');
+		expect(openSpy).not.toHaveBeenCalled();
 	});
 
 	it('oleVerb is a no-op without a slide, an element, or a recovered embedding', () => {

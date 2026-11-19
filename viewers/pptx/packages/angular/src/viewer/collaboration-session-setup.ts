@@ -13,6 +13,7 @@ import type {
 	CollaborationConfig,
 	CollaborationHistoryTarget,
 	CollaborationLivePatcher,
+	CompatibilityWarningToast,
 	ConnectionStatus,
 	ExternalCollaborationReadiness,
 	YDocLike,
@@ -31,6 +32,8 @@ export interface ConnectOptions {
 	/** The editor history; Undo and Redo go through the room's own history while it is writable. */
 	history?: CollaborationHistoryTarget;
 	onRemoteSlides?: (slides: PptxSlide[]) => void;
+	/** Show a notice in the viewer's stack: why sharing stopped, when an update was refused. */
+	onNotice?: (toast: CompatibilityWarningToast) => void;
 	canvasWidth?: number;
 	canvasHeight?: number;
 	getSourceBytes?: () => Uint8Array | null;

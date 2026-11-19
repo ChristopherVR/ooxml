@@ -75,6 +75,27 @@ describe('openOwnedCollaboration', () => {
 		expect(prepared.externalSession!.awareness.getLocalState()).toBeNull();
 	});
 
+	it('reports an update the owned session refused', async () => {
+		const hub = createMemoryHub();
+		const owned = openOwnedCollaboration(
+			resolveCollaborationConfig({
+				roomId: 'room-1',
+				provider: transportProvider({ transport: hub.createTransport('room-1') }),
+				user: { name: 'Ada' },
+			})!,
+		);
+		const refused: string[] = [];
+		owned.onRefused((code) => refused.push(code));
+		const prepared = (await owned.ready)!;
+		const evil = hub.createTransport('room-1');
+		evil.connect({ open: () => {}, close: () => {}, message: () => {}, error: () => {} });
+		// A whole sync update whose struct has an unknown content type.
+		evil.send(new Uint8Array([0, 2, 5, 1, 1, 1, 0, 0x1f]));
+		expect(refused).toEqual(['malformed']);
+		expect(prepared.externalSession!.getSnapshot().status).toBe('error');
+		owned.release();
+	});
+
 	it('release destroys the owned session only, never a borrowed host session', async () => {
 		const hub = createMemoryHub();
 		const host = hostSession(hub);

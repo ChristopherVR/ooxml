@@ -1,7 +1,6 @@
 import {
 	buildRunProgramNotice,
-	downloadDataUrl,
-	openUrlInNewTab,
+	openOrDownloadPayload,
 	resolveOleVerbTarget,
 	safeOpenUrl,
 	toggleStageElementMedia,
@@ -79,11 +78,11 @@ export function buildPresentationActionRunner(
 			if (!target) {
 				return;
 			}
-			if (target.action === 'download') {
-				downloadDataUrl(target.url, target.fileName ?? 'download');
-			} else {
-				openUrlInNewTab(target.url);
-			}
+			openOrDownloadPayload(
+				target.url,
+				target.fileName ?? 'download',
+				target.action === 'download',
+			);
 		},
 		// A browser cannot launch a local executable: show a non-blocking notice
 		// naming the exact command PowerPoint would have run instead of doing

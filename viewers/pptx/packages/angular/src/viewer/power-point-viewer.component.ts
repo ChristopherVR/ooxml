@@ -71,6 +71,7 @@ import {
 	createRibbonDisplayController,
 	attachTableCellsPaste,
 	applyRehearsalTimings,
+	createRemoteValueNotifier,
 } from 'ooxml-ui/pptx';
 import type {
 	GoogleFontsOption,
@@ -1953,6 +1954,8 @@ export class PowerPointViewerComponent
 
 	protected readonly loader = inject(LoadContentService);
 	protected readonly loadNotices = inject(LoadNoticesService);
+	/** Toast for values a collaboration peer sent that were left out. */
+	private readonly remoteValueNotice = createRemoteValueNotifier();
 	protected readonly editor = inject(EditorStateService);
 	private readonly slidePackageClipboard = createSlidePackageClipboard({
 		getSnapshot: () => {
@@ -3109,7 +3112,14 @@ export class PowerPointViewerComponent
 			authorName: () => this.authorName(),
 			shareDefaults: () => this.shareDefaults(),
 			getTemplateElements: () => this.editor.templateElementsBySlideId(),
-			applyRemoteSlides: (slides) => this.editor.applyRemoteSlides(slides),
+			applyRemoteSlides: (slides) => {
+				this.editor.applyRemoteSlides(slides);
+				const toast = this.remoteValueNotice(slides);
+				if (toast) {
+					this.loadNotices.notify(toast);
+				}
+			},
+			notify: (toast) => this.loadNotices.notify(toast),
 			history: this.editor,
 			canvasSize: () => this.loader.canvasSize(),
 			getSourceBytes: () => this.fileIO.sourceBytes(),

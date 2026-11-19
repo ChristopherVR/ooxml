@@ -4,6 +4,7 @@ import {
 	dataUrlToBlob,
 	downloadBlob,
 	downloadDataUrl,
+	openOrDownloadPayload,
 	openUrlInNewTab,
 	resolveExportBaseName,
 	sanitizeDownloadFilename,
@@ -145,6 +146,14 @@ describe('downloadBlob / downloadDataUrl', () => {
 		downloadDataUrl('data:image/png;base64,AAAA', 'con"*?.png');
 		expect(anchor.download).toBe('con___.png');
 	});
+
+	it('downloadDataUrl never follows a link that is not a data: or blob: URL', () => {
+		downloadDataUrl('javascript:alert(1)', 'x.txt');
+		downloadDataUrl('https://example.com/a.pdf', 'a.pdf');
+		expect(anchor.click).not.toHaveBeenCalled();
+		downloadDataUrl('blob:https://example.com/1', 'a.pdf');
+		expect(anchor.click).toHaveBeenCalledOnce();
+	});
 });
 
 describe('dataUrlToBlob', () => {
@@ -203,9 +212,33 @@ describe('openUrlInNewTab', () => {
 		expect(revokeObjectURL).toHaveBeenCalledWith('blob:opened');
 	});
 
-	it('opens a non-data URL as-is without creating an object URL', () => {
-		openUrlInNewTab('https://example.com/x.pdf');
+	it('opens nothing but data: URLs of an inert type, read from the URL itself', () => {
+		for (const url of [
+			'https://example.com/x.pdf',
+			'javascript:localStorage.x=1',
+			'data:text/html,<script>1</script>',
+			'data:image/svg+xml,<svg/>',
+			'blob:https://example.com/1',
+		]) {
+			expect(openUrlInNewTab(url)).toBe(false);
+		}
 		expect(createObjectURL).not.toHaveBeenCalled();
-		expect(open).toHaveBeenCalledWith('https://example.com/x.pdf', '_blank');
+		expect(open).not.toHaveBeenCalled();
+		expect(openUrlInNewTab('data:application/pdf;base64,JVBERi0=')).toBe(true);
+	});
+
+	it('downloads a payload no tab may open', () => {
+		const anchor = { href: '', download: '', click: vi.fn(), remove: vi.fn() };
+		vi.stubGlobal('document', {
+			createElement: () => anchor,
+			body: { appendChild: vi.fn() },
+		});
+		openOrDownloadPayload('data:text/html,<b>x</b>', 'page.html');
+		expect(open).not.toHaveBeenCalled();
+		expect(anchor.click).toHaveBeenCalledOnce();
+		openOrDownloadPayload('javascript:alert(1)', 'x');
+		expect(anchor.click).toHaveBeenCalledOnce();
+		openOrDownloadPayload('data:application/pdf;base64,JVBERi0=', 'a.pdf');
+		expect(open).toHaveBeenCalledOnce();
 	});
 });

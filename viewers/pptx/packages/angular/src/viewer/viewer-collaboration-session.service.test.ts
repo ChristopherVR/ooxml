@@ -49,6 +49,7 @@ function createSession(): { svc: ViewerCollaborationSessionService; collab: Coll
 		shareDefaults: () => undefined,
 		getTemplateElements: () => ({}),
 		applyRemoteSlides: () => undefined,
+		notify: () => undefined,
 		canvasSize: () => ({ width: 960, height: 540 }),
 		getSourceBytes: () => null,
 		currentSlides: () => [],

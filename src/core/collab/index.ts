@@ -18,6 +18,8 @@ export * from './ordering';
 export * from './policy';
 export * from './presence';
 export * from './provider';
+export * from './provider-guard';
+export * from './refusal';
 export * from './session';
 export * from './share';
 export * from './transport-provider';

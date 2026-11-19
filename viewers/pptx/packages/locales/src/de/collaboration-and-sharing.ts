@@ -16,6 +16,14 @@ export const translations = {
 	'pptx.collaboration.status.connecting': 'Verbinden...',
 	'pptx.collaboration.status.disconnected': 'Getrennt',
 	'pptx.collaboration.status.error': 'Verbindungsfehler',
+	'pptx.collaboration.refused.tooLarge':
+		'Eine Änderung aus der freigegebenen Sitzung ist zu groß, um hier übernommen zu werden, daher wurde die Freigabe beendet. Ihre Kopie ist unverändert.',
+	'pptx.collaboration.refused.malformed':
+		'Eine Änderung aus der freigegebenen Sitzung konnte nicht gelesen werden, daher wurde die Freigabe beendet. Ihre Kopie ist unverändert.',
+	'pptx.collaboration.refused.serverRejected':
+		'Der Server hat Ihre letzte Änderung abgelehnt, daher wurde die Freigabe beendet. Ihre Kopie behält die Änderung.',
+	'pptx.collaboration.refused.serverFull':
+		'Das freigegebene Dokument hat die Größenbeschränkung des Servers erreicht, daher wurde die Freigabe beendet. Ihre Kopie behält Ihre letzte Änderung.',
 	'pptx.collaboration.statusAriaLabel': 'Zusammenarbeit: {{status}}',
 	'pptx.collaboration.userCount': '{{count}} Nutzer',
 	'pptx.collaboration.youLabel': '{{name}} (Sie)',

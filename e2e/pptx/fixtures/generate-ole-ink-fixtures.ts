@@ -269,7 +269,7 @@ const IMAGE_REL_TYPE = 'http://schemas.openxmlformats.org/officeDocument/2006/re
  * for an embedded PDF, matched by `detectOleObjectType`'s `/^AcroExch\./`
  * pattern -> `oleObjectType: 'pdf'`, `oleFileExtension: 'pdf'`), so:
  *   - `mimeTypeForOleFile` resolves the synthesised `${oleName}.pdf` file
- *     name to `application/pdf`, which `isBrowserOpenableMime` allows, so
+ *     name to `application/pdf`, which `isBrowserOpenableDataUrl` allows, so
  *     the viewer's "Open" action renders (in addition to "Download").
  *   - The embedding binary is the real PDF bytes stored directly (not OLE2-
  *     wrapped): `unwrapOleEmbedding` passes plain, non-compound-file bytes
