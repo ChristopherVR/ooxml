@@ -20,21 +20,32 @@ export interface UpdateLimits {
 }
 
 /**
- * Bytes of update per struct (and per delete range) the default budget allows. The densest
- * legitimate first sync measured, an Excel sheet of boolean cells, spends 8.6 bytes per struct, so
- * an update a real document produces uses less than half its budget whatever its size; a frame of
- * two-byte structs holds twice its budget and is refused before it is decoded. A frame at the
- * budget costs about as much memory to decode as a legitimate update of the same size.
+ * Bytes of update per struct the default budget allows. The densest legitimate first sync
+ * measured, an Excel sheet of boolean cells, spends 8.6 bytes per struct, so an update a real
+ * document produces uses less than half its budget whatever its size; a frame of two-byte structs
+ * holds twice its budget and is refused before it is decoded. A frame at the budget costs about as
+ * much memory to decode as a legitimate update of the same size.
  */
 export const MIN_BYTES_PER_STRUCT = 4;
 
-/** The default budget of an update of `bytes` bytes: one struct and one delete range per 4 bytes. */
+/**
+ * Bytes of update per deleted range the default budget allows: the smallest a range and a client
+ * header encode to, so every well-formed delete set fits. An update that only deletes text early
+ * in a document legitimately spends 2 to 3 bytes per range, and a range costs a few times less
+ * memory to decode than a struct (a frame of 32 MiB of ranges peaks under 1 GB, as a dense
+ * workbook of that size does).
+ */
+export const MIN_BYTES_PER_DELETE_RANGE = 2;
+
+/** The default budget of an update of `bytes` bytes (see the two constants above). */
 export function defaultUpdateLimits(bytes: number): {
 	maxStructs: number;
 	maxDeleteRanges: number;
 } {
-	const budget = Math.ceil(bytes / MIN_BYTES_PER_STRUCT);
-	return { maxStructs: budget, maxDeleteRanges: budget };
+	return {
+		maxStructs: Math.ceil(bytes / MIN_BYTES_PER_STRUCT),
+		maxDeleteRanges: Math.ceil(bytes / MIN_BYTES_PER_DELETE_RANGE),
+	};
 }
 
 export type UpdateScan =

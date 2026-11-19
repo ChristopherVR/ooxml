@@ -186,6 +186,27 @@ describe('malformed input', () => {
 		expect(a.doc.getText('t').toString()).toBe('safe!');
 	});
 
+	it('keeps syncing when a local document listener throws on a remote update', () => {
+		const hub = createMemoryHub();
+		const a = join(hub, 'Ada');
+		const b = join(hub, 'Bob');
+		const errors: Error[] = [];
+		b.on('error', (error) => errors.push(error));
+		const listener = (): never => {
+			throw new Error('binding bug');
+		};
+		b.doc.getText('t').observe(listener);
+		a.doc.getText('t').insert(0, 'one');
+		b.doc.getText('t').unobserve(listener);
+		a.doc.getText('t').insert(3, ' two');
+		expect(errors.map((error) => error.message)).toEqual([
+			'a document listener failed: binding bug',
+		]);
+		expect(b.status).toBe('connected');
+		expect(b.refusal).toBeUndefined();
+		expect(b.doc.getText('t').toString()).toBe('one two');
+	});
+
 	it('stops syncing at a refused update, keeps the document and says why', () => {
 		const hub = createMemoryHub();
 		const a = join(hub, 'Ada');

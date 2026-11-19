@@ -9,9 +9,12 @@ import * as Y from "yjs";
 
 // ../../src/core/collab/update-scan.ts
 var MIN_BYTES_PER_STRUCT = 4;
+var MIN_BYTES_PER_DELETE_RANGE = 2;
 function defaultUpdateLimits(bytes) {
-  const budget = Math.ceil(bytes / MIN_BYTES_PER_STRUCT);
-  return { maxStructs: budget, maxDeleteRanges: budget };
+  return {
+    maxStructs: Math.ceil(bytes / MIN_BYTES_PER_STRUCT),
+    maxDeleteRanges: Math.ceil(bytes / MIN_BYTES_PER_DELETE_RANGE)
+  };
 }
 var MAX_ANY_DEPTH = 64;
 var Overrun = class extends Error {

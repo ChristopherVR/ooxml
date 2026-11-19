@@ -10,7 +10,7 @@ import * as decoding from 'lib0/decoding';
 import * as encoding from 'lib0/encoding';
 import * as awarenessProtocol from 'y-protocols/awareness';
 import * as Y from 'yjs';
-import { applyUpdateSafe, MAX_UPDATE_BYTES } from './codec';
+import { MAX_UPDATE_BYTES, validateUpdate } from './codec';
 import { Emitter } from './emitter';
 import { UpdateRefusedError } from './refusal';
 import type {
@@ -143,8 +143,17 @@ export function createTransportProvider(
 			return send(encoder);
 		}
 		if (kind !== SYNC_STEP2 && kind !== SYNC_UPDATE) return fail(`unknown sync message ${kind}`);
-		const result = applyUpdateSafe(doc, payload, origin, { maxBytes: maxMessageBytes });
-		if (!result.ok) return refuse(new UpdateRefusedError(result.code, result.reason));
+		const checked = validateUpdate(payload, maxMessageBytes);
+		if (!checked.ok) return refuse(new UpdateRefusedError(checked.code, checked.reason));
+		try {
+			Y.applyUpdate(doc, payload, origin);
+		} catch (cause) {
+			// The update was well formed and Yjs integrated it; a listener of the document threw.
+			// That is this client's error, not a refusal, so sync goes on.
+			return fail(
+				`a document listener failed: ${cause instanceof Error ? cause.message : String(cause)}`,
+			);
+		}
 		if (kind === SYNC_STEP2) setSynced(true);
 	};
 

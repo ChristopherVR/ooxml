@@ -100,6 +100,23 @@ describe('scanUpdate', () => {
 		expect(scanUpdate(Y.encodeStateAsUpdate(text), { maxDeleteRanges: 10 }).ok).toBe(false);
 	});
 
+	it('admits an update that only deletes characters spread through a short text', () => {
+		// What replacing text in a deck sends: many one-character ranges at small clocks, about two
+		// bytes each, refused before deleted ranges had their own budget.
+		const doc = new Y.Doc();
+		const text = doc.getText('t');
+		for (let i = 0; i < 40; i++) text.insert(i, 'x');
+		const updates: Uint8Array[] = [];
+		doc.on('update', (update: Uint8Array) => updates.push(update));
+		doc.transact(() => {
+			for (let i = 39; i >= 0; i -= 2) text.delete(i, 1);
+		});
+		const [update] = updates as [Uint8Array];
+		const scan = scanUpdate(update);
+		expect(scan).toMatchObject({ ok: true, deleteRanges: 21 });
+		expect(update.byteLength).toBeLessThan(21 * 4);
+	});
+
 	it('admits long lists of primitive values', () => {
 		// Primitive values cost no budget: a long list of small numbers is about one byte each.
 		const numbers = new Y.Doc();

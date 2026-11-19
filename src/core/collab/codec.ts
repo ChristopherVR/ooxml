@@ -8,6 +8,7 @@ import { scanUpdate, type UpdateLimits } from './update-scan';
 
 export {
 	defaultUpdateLimits,
+	MIN_BYTES_PER_DELETE_RANGE,
 	MIN_BYTES_PER_STRUCT,
 	scanUpdate,
 	type UpdateLimits,
