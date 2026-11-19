@@ -65,6 +65,19 @@ describe('installTouchPress', () => {
 		expect(clicks).toHaveBeenCalledTimes(1);
 	});
 
+	it('lets every click through before any gesture, even when the clock reads zero', () => {
+		// A page clock starts at 0 (and fake timers keep it there), which no deadline may cover.
+		const now = vi.spyOn(performance, 'now').mockReturnValue(0);
+		try {
+			const clicks = vi.fn();
+			host.addEventListener('click', clicks);
+			inner.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+			expect(clicks).toHaveBeenCalledTimes(1);
+		} finally {
+			now.mockRestore();
+		}
+	});
+
 	it('turns a double-tap into a dblclick', () => {
 		const dbl = vi.fn();
 		host.addEventListener('dblclick', dbl);

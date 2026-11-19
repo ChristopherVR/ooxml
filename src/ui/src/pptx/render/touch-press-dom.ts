@@ -98,9 +98,10 @@ function dispatchMouse(target: Element, type: 'contextmenu' | 'dblclick', x: num
  */
 export function installTouchPress(root: HTMLElement): () => void {
 	const now = (): number => root.ownerDocument.defaultView?.performance.now() ?? Date.now();
-	let suppressClickUntil = 0;
-	let suppressMenuUntil = 0;
-	let suppressDblClickUntil = 0;
+	// Deadlines for ignoring a gesture's twin; -Infinity is "none", so no clock reading falls inside.
+	let suppressClickUntil = Number.NEGATIVE_INFINITY;
+	let suppressMenuUntil = Number.NEGATIVE_INFINITY;
+	let suppressDblClickUntil = Number.NEGATIVE_INFINITY;
 	let selectLocked: { element: HTMLElement; previous: string } | null = null;
 
 	const unlockSelect = (): void => {
@@ -174,7 +175,7 @@ export function installTouchPress(root: HTMLElement): () => void {
 	};
 	const onClick = (event: MouseEvent): void => {
 		if (now() <= suppressClickUntil) {
-			suppressClickUntil = 0;
+			suppressClickUntil = Number.NEGATIVE_INFINITY;
 			event.preventDefault();
 			event.stopPropagation();
 		}
