@@ -157,6 +157,7 @@ export type {
 	OfficeStatusButton,
 	OfficeStatusText,
 } from './chrome/status-bar';
+export { zoomFitName } from './chrome/status-bar';
 export type { OfficeTab, OfficeTabReorderEvent, OfficeTabSelectEvent } from './chrome/tab-strip';
 export type { OfficeSearchCommand } from './menu/command-search';
 export {

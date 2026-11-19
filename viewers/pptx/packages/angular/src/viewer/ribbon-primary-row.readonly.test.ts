@@ -9,6 +9,7 @@ import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 import { translationsEn } from '../../../../../../src/ui/src/pptx/i18n';
+import { labelNameMismatches } from '../../../../../../src/ui/src/test-support/label-in-name';
 import { RibbonPrimaryRowComponent } from './ribbon-primary-row.component';
 
 beforeAll(() => {
@@ -47,5 +48,14 @@ describe('ribbon primary row read-only badge', () => {
 
 	it('omits the badge when editing is allowed', () => {
 		expect(open(true).badge()).toBeNull();
+	});
+});
+
+describe('ribbon primary row names (WCAG 2.5.3)', () => {
+	it('names every labelled button with the text it shows', () => {
+		const { fixture } = open(true);
+		const root = fixture.nativeElement as HTMLElement;
+		expect(root.textContent).toContain('Custom shows');
+		expect(labelNameMismatches(root)).toEqual([]);
 	});
 });

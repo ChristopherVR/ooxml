@@ -23,7 +23,7 @@ export const frNavigation = fromValues([
 	'Appliquez un style de titre pour afficher les titres du document ici.',
 ]);
 export const deNavigation = fromValues([
-	'Navigationsbereich',
+	'Bereich „Navigation“',
 	'Navigation',
 	'Überschriften',
 	'Navigationsbereich schließen',

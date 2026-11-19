@@ -61,34 +61,31 @@ export const FONT_ICONS: Record<string, RibbonIconArtwork> = {
 			{ tag: 'line', attrs: { x1: '4', x2: '20', y1: '12', y2: '12' } },
 		],
 	},
+	// Glyphs are drawn as paths, never <text>: text in an icon would become part of the visible
+	// label, and the button's name (Text Shadow) would no longer contain it (WCAG 2.5.3).
 	'home.font.shadow': {
-		attrs: { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' },
+		attrs: {
+			viewBox: '0 0 24 24',
+			fill: 'none',
+			stroke: 'currentColor',
+			'stroke-width': '2.4',
+			'stroke-linecap': 'round',
+		},
 		children: [
 			{
-				tag: 'text',
+				tag: 'path',
 				attrs: {
-					x: '6',
-					y: '17',
-					'font-size': '16',
-					'font-weight': 'bold',
-					fill: 'currentColor',
-					stroke: 'none',
-				},
-				text: 'S',
-			},
-			{
-				tag: 'text',
-				attrs: {
-					x: '7.5',
-					y: '18.5',
-					'font-size': '16',
-					'font-weight': 'bold',
-					fill: 'none',
-					stroke: 'currentColor',
-					'stroke-width': '0.5',
+					d: 'M15.5 7.6C14.9 6.4 13.6 5.6 12 5.6c-2 0-3.5 1.1-3.5 2.7 0 3.7 7.2 2.1 7.2 5.8 0 1.7-1.6 2.9-3.7 2.9-1.8 0-3.3-.8-4-2.2',
+					transform: 'translate(1.5 1.5)',
+					'stroke-width': '1',
 					opacity: '0.4',
 				},
-				text: 'S',
+			},
+			{
+				tag: 'path',
+				attrs: {
+					d: 'M15.5 7.6C14.9 6.4 13.6 5.6 12 5.6c-2 0-3.5 1.1-3.5 2.7 0 3.7 7.2 2.1 7.2 5.8 0 1.7-1.6 2.9-3.7 2.9-1.8 0-3.3-.8-4-2.2',
+				},
 			},
 		],
 	},
@@ -145,16 +142,12 @@ export const FONT_ICONS: Record<string, RibbonIconArtwork> = {
 		attrs: { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.5' },
 		children: [
 			{
-				tag: 'text',
+				tag: 'path',
 				attrs: {
-					x: '4',
-					y: '16',
-					'font-size': '11',
-					'font-weight': 'bold',
-					fill: 'currentColor',
-					stroke: 'none',
+					d: 'M4 16 7.5 6l3.5 10M5.2 12.6h4.6M13 6l3.5 10L20 6',
+					'stroke-width': '2',
+					'stroke-linejoin': 'round',
 				},
-				text: 'AV',
 			},
 			{ tag: 'path', attrs: { d: 'M3 20 L1 20 M3 20 L5 20', 'stroke-width': '1.5' } },
 			{ tag: 'path', attrs: { d: 'M21 20 L19 20 M21 20 L23 20', 'stroke-width': '1.5' } },

@@ -69,7 +69,7 @@ export function buildOtherPanels(panels: Map<string, HTMLElement>): void {
 				'Insert picture',
 				'picture',
 				{ type: 'insertPicture' },
-				{ large: true, caption: 'Pictures' },
+				{ large: true, caption: 'Picture' },
 			),
 			tool('Shapes', 'shapes', { type: 'shapePicker' }, { large: true }),
 			tool(
@@ -444,7 +444,7 @@ export function buildOtherPanels(panels: Map<string, HTMLElement>): void {
 					'Different odd and even pages',
 					'oddEven',
 					{ type: 'evenOddHeaders' },
-					{ inline: true, caption: 'Different odd & even pages' },
+					{ inline: true },
 				),
 			),
 		),

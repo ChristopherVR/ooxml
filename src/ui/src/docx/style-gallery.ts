@@ -74,7 +74,9 @@ export function createStyleTile(
 	tile.addEventListener('click', () => choose(style.id));
 	const sample = document.createElement('span');
 	sample.className = 'style-sample';
-	sample.textContent = SAMPLE;
+	// The sample is a picture of the style, drawn by CSS, so the tile is named by the style alone.
+	sample.dataset.sample = SAMPLE;
+	sample.setAttribute('aria-hidden', 'true');
 	previewStyle(sample, style.id, model, kind);
 	const name = document.createElement('span');
 	name.className = 'style-name';

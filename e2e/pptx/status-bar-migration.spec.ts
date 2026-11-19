@@ -20,7 +20,7 @@ test('the shared status bar exposes the counter, save state and named controls',
 	for (const name of ['Normal view', 'Slide sorter', 'Slide show', 'Zoom out', 'Zoom in']) {
 		await expect(bar(page).getByRole('button', { name, exact: true })).toBeVisible();
 	}
-	await expect(bar(page).getByRole('button', { name: 'Zoom to fit', exact: true })).toHaveText(
+	await expect(bar(page).getByRole('button', { name: /^\d+%, Zoom to fit$/u })).toHaveText(
 		/^\d+%$/u,
 	);
 	// Normal is the active view on load; the bar is not a landmark.

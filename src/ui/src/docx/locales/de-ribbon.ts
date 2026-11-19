@@ -216,7 +216,7 @@ export const deRibbon: RibbonStrings = {
 	'Change case': 'Groß-/Kleinschreibung ändern',
 	'Format painter': 'Format übertragen',
 	'Show paragraph marks': 'Absatzmarken anzeigen',
-	'Select all': 'Alles auswählen',
+	'Select all': 'Alles markieren',
 	Find: 'Suchen',
 	'Sentence case': 'Satzanfang groß',
 	lowercase: 'kleinbuchstaben',

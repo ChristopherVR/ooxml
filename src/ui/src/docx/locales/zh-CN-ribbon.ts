@@ -213,7 +213,7 @@ export const zhCNRibbon: RibbonStrings = {
 	'Change case': '更改大小写',
 	'Format painter': '格式刷',
 	'Show paragraph marks': '显示段落标记',
-	'Select all': '全选',
+	'Select all': '全部选择',
 	Find: '查找',
 	'Sentence case': '句首字母大写',
 	lowercase: '小写',
