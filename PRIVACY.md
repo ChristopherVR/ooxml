@@ -169,7 +169,8 @@ The suite uses the editors above, so their sections apply. In addition:
 - **AI assistant:** off the network by default (the shipped `ai-config.json` selects the offline
   assistant). When the user or the deployment's policy selects a provider, the prompt, the
   conversation and the document context it needs are sent to that provider, under the
-  provider's own terms. Keys stay in session storage unless the user chooses to remember them.
+  provider's own terms. Keys stay in this tab's session storage only and are cleared when it
+  closes; keys an earlier version remembered in localStorage are deleted when the app loads.
   See [docs/suite-ai-config.md](docs/suite-ai-config.md).
 - **OneDrive:** off unless the host configures it. Files and the access token then go to
   Microsoft Graph. See [docs/onedrive-integration.md](docs/onedrive-integration.md).
@@ -202,7 +203,7 @@ Nothing below is sent anywhere by this code. Clearing the site's data removes it
 - **Suite:** the document library, attachments, versions and chat history in IndexedDB per
   profile; profiles, favourites, theme (`ooxml-suite-theme`), fonts (`ooxml-suite-fonts`), the
   other Settings (`ooxml-suite-settings`) and AI preferences in localStorage; AI keys in session
-  storage, or localStorage when the user chooses to remember them. Settings > Privacy shows how
+  storage only. Settings > Privacy shows how
   much space the app uses and can ask the browser to keep it when space runs low
   (`navigator.storage.persist`); nothing is sent.
 

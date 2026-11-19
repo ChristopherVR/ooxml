@@ -1,10 +1,11 @@
 /**
  * The models a user can pick: the offline preview (if the policy allows it), the connections the
  * deployment provides and, when allowed, connections the user added. Requests go straight from
- * this page to the chosen endpoint. Keys a user enters stay in this tab's session storage unless
- * they ask to remember them on this device; managed gateways need no key in the browser at all.
+ * this page to the chosen endpoint. Keys a user enters stay in this tab's session storage only
+ * (keys.js); managed gateways need no key in the browser at all.
  */
 import { currentProfile } from '../profile-state.js';
+import { keyFor, storeKey } from './keys.js';
 import { offlineReply } from './offline.js';
 import { currentPolicy } from './policy.js';
 import { authHeaders, provider } from './provider-catalog.js';
@@ -12,7 +13,6 @@ import { authHeaders, provider } from './provider-catalog.js';
 export { providers, provider } from './provider-catalog.js';
 
 const stateKey = () => `ooxml-suite-ai-v2-${currentProfile().id}`;
-const keysKey = () => `ooxml-suite-ai-keys-v2-${currentProfile().id}`;
 const listeners = new Set();
 const offline = {
 	id: 'offline',
@@ -54,7 +54,7 @@ function state() {
 				model: v1.model,
 			},
 		];
-		if (v1.key) storeKey(id, v1.key, Boolean(v1.remember));
+		if (v1.key) storeKey(id, v1.key);
 		writeJson(localStorage, stateKey(), { active: id, user });
 		return { active: id, user };
 	}
@@ -64,17 +64,6 @@ const saveState = (next) => {
 	writeJson(localStorage, stateKey(), next);
 	for (const listener of listeners) listener();
 };
-function keyFor(id) {
-	return readJson(sessionStorage, keysKey())?.[id] ?? readJson(localStorage, keysKey())?.[id] ?? '';
-}
-function storeKey(id, key, remember) {
-	for (const storage of [sessionStorage, localStorage]) {
-		const keys = readJson(storage, keysKey()) ?? {};
-		delete keys[id];
-		if (key && (storage === localStorage) === remember) keys[id] = key;
-		writeJson(storage, keysKey(), keys);
-	}
-}
 
 /** Every model the user may pick, in menu order. */
 export function connections() {
@@ -124,16 +113,11 @@ export function chosenModel(c) {
 	const picked = readJson(localStorage, `${stateKey()}-model-${c.id}`);
 	return c.models?.includes(picked) ? picked : c.model;
 }
-export function setKey(id, key, remember) {
-	storeKey(id, key, remember);
+export function setKey(id, key) {
+	storeKey(id, key);
 	for (const listener of listeners) listener();
 }
-export const hasRememberedKey = (id) => Boolean(readJson(localStorage, keysKey())?.[id]);
-export function saveUserConnection(
-	{ id, label, provider: providerId, endpoint, model },
-	key,
-	remember,
-) {
+export function saveUserConnection({ id, label, provider: providerId, endpoint, model }, key) {
 	const next = state();
 	const connection = {
 		id: id ?? crypto.randomUUID(),
@@ -144,7 +128,7 @@ export function saveUserConnection(
 	};
 	next.user = [...next.user.filter((c) => c.id !== connection.id), connection];
 	next.active = connection.id;
-	if (key !== undefined) storeKey(connection.id, key, remember);
+	if (key !== undefined) storeKey(connection.id, key);
 	saveState(next);
 	return connection;
 }
@@ -152,7 +136,7 @@ export function removeUserConnection(id) {
 	const next = state();
 	next.user = next.user.filter((c) => c.id !== id);
 	if (next.active === id) next.active = null;
-	storeKey(id, '', false);
+	storeKey(id, '');
 	saveState(next);
 }
 export function onConnection(listener) {

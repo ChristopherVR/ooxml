@@ -80,15 +80,15 @@ Whatever the policy, a user can still turn three conveniences on or off for them
 
 ## Connections
 
-| Field      | Meaning                                                                                                                                                  |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`       | Letters, digits, `-` and `_`; unique.                                                                                                                    |
-| `label`    | The name in the model menu.                                                                                                                              |
-| `provider` | One of the provider ids below.                                                                                                                           |
-| `endpoint` | The chat endpoint; defaults to the provider's.                                                                                                           |
-| `model`    | The model name; or `models`, a list the user chooses from in the model menu.                                                                             |
-| `keyMode`  | `user` (each user enters their own key, kept in the tab unless they choose to remember it) or `none` (no key in the browser: a gateway or local server). |
-| `headers`  | Extra request headers, for example a gateway's tenant id. Never put secrets here: the file is public to everyone who can load the app.                   |
+| Field      | Meaning                                                                                                                                                             |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`       | Letters, digits, `-` and `_`; unique.                                                                                                                               |
+| `label`    | The name in the model menu.                                                                                                                                         |
+| `provider` | One of the provider ids below.                                                                                                                                      |
+| `endpoint` | The chat endpoint; defaults to the provider's.                                                                                                                      |
+| `model`    | The model name; or `models`, a list the user chooses from in the model menu.                                                                                        |
+| `keyMode`  | `user` (each user enters their own key, kept in the tab's session storage and cleared when it closes) or `none` (no key in the browser: a gateway or local server). |
+| `headers`  | Extra request headers, for example a gateway's tenant id. Never put secrets here: the file is public to everyone who can load the app.                              |
 
 Keys never belong in `ai-config.json`. To give users a model without handing them a key, run an OpenAI-compatible gateway that authenticates them (for example with your single sign-on, through cookies it scopes itself) and adds the provider key on the server, and configure it with `"provider": "gateway"` and `"keyMode": "none"`.
 

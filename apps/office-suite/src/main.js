@@ -3,6 +3,7 @@ import { listEmbeddedPackages } from 'ooxml-core/opc';
 import { SuiteSessions } from './session.js';
 import { showVersions, withVersions } from './versions.js';
 import { assistantEnabled, currentPolicy, loadPolicy } from './ai/policy.js';
+import { forgetRememberedKeys } from './ai/keys.js';
 import { mountTabOrder } from './tabs.js';
 import { blankDocument, preloadEditor } from './editors.js';
 import { mountTeams, shareDocument, localDocumentId } from './teams.js';
@@ -616,6 +617,8 @@ $('tabs').addEventListener('keydown', (event) => {
 	tabs[next].click();
 });
 task(async () => {
+	// Earlier versions could keep AI keys in local storage, which every page of a shared origin reads.
+	forgetRememberedKeys();
 	await refresh();
 	// The assistant is off unless the deployment configures it (ai/policy.js).
 	await loadPolicy();
