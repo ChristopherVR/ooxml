@@ -81,7 +81,7 @@ import type { ViewerLineEndpoints } from './viewer-line-endpoints';
 import type { ViewerControlHandles } from './viewer-control-handles';
 import type { ViewerRotationHandle } from './viewer-rotation-handle';
 import type { ViewerResizeHandles } from './viewer-resize-handles';
-import { editErrorMessage } from 'ooxml-core/visio/ui';
+import { editErrorMessage, editSizeLimit } from 'ooxml-core/visio/ui';
 import { registerViewerControls } from './office-ui';
 import { exportPageSvg, type SvgExportOptions, type SvgExportResult } from './export-svg';
 import { exportPagePng } from './viewer-export';
@@ -663,6 +663,13 @@ export class VisioViewerElement extends BaseElement {
 		// A destroyed or superseded viewer keeps no name from a late load.
 		if (this.#disposed || token !== this.#loadToken) return;
 		this.#fileName = typeof File !== 'undefined' && source instanceof File ? source.name : '';
+		// Said once it opens, not on the first refused edit: the drawing is read-only here.
+		const tooLarge = editSizeLimit(this.controller.state.document);
+		if (tooLarge)
+			this.#announcement = translateRibbonText(
+				normalizeVisioLocale(this.#locale()),
+				`${tooLarge} It opens read-only.`,
+			);
 		this.#render(this.controller.state);
 		// Now the drawing has its name: offer back a copy kept from an earlier, unsaved session.
 		this.#recover.opened();
@@ -1173,7 +1180,12 @@ export class VisioViewerElement extends BaseElement {
 				? 'Updating diagram…'
 				: ((state.error &&
 						translateRibbonText(normalizeVisioLocale(this.#locale()), state.error.message)) ??
-					(state.edit.error ? `Edit rejected: ${editErrorMessage(state.edit.error)}` : undefined) ??
+					(state.edit.error
+						? translateRibbonText(
+								normalizeVisioLocale(this.#locale()),
+								`Edit rejected: ${editErrorMessage(state.edit.error)}`,
+							)
+						: undefined) ??
 					this.#announcement ??
 					'');
 		// Routine announcements are for assistive technology; errors also show, as Visio's do.

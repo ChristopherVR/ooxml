@@ -112,4 +112,16 @@ export const enText: Readonly<Record<string, string>> = {
 		'This drawing would need more than {limit} MB of memory to open, more than this viewer allows.',
 	'This {size} KB drawing would need more than {limit} MB of memory to open, far more than drawings of its size need.':
 		'This {size} KB drawing would need more than {limit} MB of memory to open, far more than drawings of its size need.',
+	'This drawing would need more than {limit} MB of memory to edit, more than this viewer allows.':
+		'This drawing would need more than {limit} MB of memory to edit, more than this viewer allows.',
+	'This {size} KB drawing would need more than {limit} MB of memory to edit, far more than drawings of its size need.':
+		'This {size} KB drawing would need more than {limit} MB of memory to edit, far more than drawings of its size need.',
+	'This drawing is too large to edit here: its pages hold about {cells} ShapeSheet cells, more than the {limit} an edit can follow.':
+		'This drawing is too large to edit here: its pages hold about {cells} ShapeSheet cells, more than the {limit} an edit can follow.',
+	'This drawing is too large to edit here: an edit would need more than {limit} MB of memory.':
+		'This drawing is too large to edit here: an edit would need more than {limit} MB of memory.',
+	'This drawing is too large to edit: an edit follows at most {limit} ShapeSheet cells.':
+		'This drawing is too large to edit: an edit follows at most {limit} ShapeSheet cells.',
+	'It opens read-only.': 'It opens read-only.',
+	'Edit rejected': 'Edit rejected',
 };

@@ -110,4 +110,16 @@ export const zhCNText: Readonly<Record<string, string>> = {
 		'打开此绘图需要超过 {limit} MB 内存，超出此查看器允许的范围。',
 	'This {size} KB drawing would need more than {limit} MB of memory to open, far more than drawings of its size need.':
 		'打开此 {size} KB 的绘图需要超过 {limit} MB 内存，远超同等大小的绘图所需。',
+	'This drawing would need more than {limit} MB of memory to edit, more than this viewer allows.':
+		'编辑此绘图需要超过 {limit} MB 内存，超出此查看器允许的范围。',
+	'This {size} KB drawing would need more than {limit} MB of memory to edit, far more than drawings of its size need.':
+		'编辑此 {size} KB 的绘图需要超过 {limit} MB 内存，远超同等大小的绘图所需。',
+	'This drawing is too large to edit here: its pages hold about {cells} ShapeSheet cells, more than the {limit} an edit can follow.':
+		'此绘图太大，无法在此编辑：其页面包含约 {cells} 个 ShapeSheet 单元格，超过编辑可跟踪的 {limit} 个。',
+	'This drawing is too large to edit here: an edit would need more than {limit} MB of memory.':
+		'此绘图太大，无法在此编辑：编辑需要超过 {limit} MB 内存。',
+	'This drawing is too large to edit: an edit follows at most {limit} ShapeSheet cells.':
+		'此绘图太大，无法编辑：编辑最多跟踪 {limit} 个 ShapeSheet 单元格。',
+	'It opens read-only.': '它以只读方式打开。',
+	'Edit rejected': '编辑被拒绝',
 };

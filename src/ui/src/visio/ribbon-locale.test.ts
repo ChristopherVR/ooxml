@@ -136,3 +136,29 @@ describe('load refusals', () => {
 		}
 	});
 });
+
+describe('edit refusals', () => {
+	it('tells the user in their language why a drawing cannot be edited', () => {
+		expect(
+			translateRibbonText(
+				'de',
+				'Edit rejected: This drawing is too large to edit: an edit follows at most 100000 ShapeSheet cells.',
+			),
+		).toBe(
+			'Bearbeitung abgelehnt: Diese Zeichnung ist zu groß zum Bearbeiten: Eine Bearbeitung folgt höchstens 100000 ShapeSheet-Zellen.',
+		);
+		for (const locale of VISIO_LOCALES.filter((locale) => locale !== 'en')) {
+			for (const message of [
+				'Edit rejected: This drawing is too large to edit: an edit follows at most 100000 ShapeSheet cells.',
+				'Edit rejected: This drawing would need more than 600 MB of memory to edit, more than this viewer allows.',
+				'Edit rejected: This 48 KB drawing would need more than 756 MB of memory to edit, far more than drawings of its size need.',
+				'This drawing is too large to edit here: its pages hold about 260000 ShapeSheet cells, more than the 100000 an edit can follow. It opens read-only.',
+				'This drawing is too large to edit here: an edit would need more than 480 MB of memory. It opens read-only.',
+			]) {
+				const translated = translateRibbonText(locale, message);
+				expect(translated, locale).not.toMatch(/Edit rejected|too large|would need|read-only/);
+				for (const number of message.match(/\d+/g)!) expect(translated).toContain(number);
+			}
+		}
+	});
+});

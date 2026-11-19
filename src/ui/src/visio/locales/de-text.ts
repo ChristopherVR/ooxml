@@ -118,4 +118,16 @@ export const deText: Readonly<Record<string, string>> = {
 		'Diese Zeichnung würde zum Öffnen mehr als {limit} MB Arbeitsspeicher benötigen, mehr als dieser Viewer zulässt.',
 	'This {size} KB drawing would need more than {limit} MB of memory to open, far more than drawings of its size need.':
 		'Diese Zeichnung mit {size} KB würde zum Öffnen mehr als {limit} MB Arbeitsspeicher benötigen, weit mehr als Zeichnungen dieser Größe brauchen.',
+	'This drawing would need more than {limit} MB of memory to edit, more than this viewer allows.':
+		'Diese Zeichnung würde zum Bearbeiten mehr als {limit} MB Arbeitsspeicher benötigen, mehr als dieser Viewer zulässt.',
+	'This {size} KB drawing would need more than {limit} MB of memory to edit, far more than drawings of its size need.':
+		'Diese Zeichnung mit {size} KB würde zum Bearbeiten mehr als {limit} MB Arbeitsspeicher benötigen, weit mehr als Zeichnungen dieser Größe brauchen.',
+	'This drawing is too large to edit here: its pages hold about {cells} ShapeSheet cells, more than the {limit} an edit can follow.':
+		'Diese Zeichnung ist zu groß, um sie hier zu bearbeiten: Ihre Seiten enthalten etwa {cells} ShapeSheet-Zellen, mehr als die {limit}, denen eine Bearbeitung folgen kann.',
+	'This drawing is too large to edit here: an edit would need more than {limit} MB of memory.':
+		'Diese Zeichnung ist zu groß, um sie hier zu bearbeiten: Eine Bearbeitung würde mehr als {limit} MB Arbeitsspeicher benötigen.',
+	'This drawing is too large to edit: an edit follows at most {limit} ShapeSheet cells.':
+		'Diese Zeichnung ist zu groß zum Bearbeiten: Eine Bearbeitung folgt höchstens {limit} ShapeSheet-Zellen.',
+	'It opens read-only.': 'Sie wird schreibgeschützt geöffnet.',
+	'Edit rejected': 'Bearbeitung abgelehnt',
 };

@@ -114,4 +114,16 @@ export const esText: Readonly<Record<string, string>> = {
 		'Este dibujo necesitaría más de {limit} MB de memoria para abrirse, más de lo que permite este visor.',
 	'This {size} KB drawing would need more than {limit} MB of memory to open, far more than drawings of its size need.':
 		'Este dibujo de {size} KB necesitaría más de {limit} MB de memoria para abrirse, mucho más de lo que necesitan los dibujos de su tamaño.',
+	'This drawing would need more than {limit} MB of memory to edit, more than this viewer allows.':
+		'Este dibujo necesitaría más de {limit} MB de memoria para editarse, más de lo que permite este visor.',
+	'This {size} KB drawing would need more than {limit} MB of memory to edit, far more than drawings of its size need.':
+		'Este dibujo de {size} KB necesitaría más de {limit} MB de memoria para editarse, mucho más de lo que necesitan los dibujos de su tamaño.',
+	'This drawing is too large to edit here: its pages hold about {cells} ShapeSheet cells, more than the {limit} an edit can follow.':
+		'Este dibujo es demasiado grande para editarlo aquí: sus páginas contienen unas {cells} celdas de ShapeSheet, más de las {limit} que puede seguir una edición.',
+	'This drawing is too large to edit here: an edit would need more than {limit} MB of memory.':
+		'Este dibujo es demasiado grande para editarlo aquí: una edición necesitaría más de {limit} MB de memoria.',
+	'This drawing is too large to edit: an edit follows at most {limit} ShapeSheet cells.':
+		'Este dibujo es demasiado grande para editarlo: una edición sigue como máximo {limit} celdas de ShapeSheet.',
+	'It opens read-only.': 'Se abre en modo de solo lectura.',
+	'Edit rejected': 'Edición rechazada',
 };
