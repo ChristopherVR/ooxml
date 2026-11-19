@@ -1,8 +1,9 @@
-import { mkdir, mkdtemp, readdir, rm, symlink, writeFile } from 'node:fs/promises';
+import { execSync } from 'node:child_process';
+import { mkdir, mkdtemp, readdir, realpath, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { vi } from 'vitest';
-import { createFileOperations } from './node';
+import { createFileOperations, isUnsafePathSegment } from './node';
 
 async function withRoot(run: (root: string, outside: string) => Promise<void>) {
 	const root = await mkdtemp(join(tmpdir(), 'ooxml-root-'));
@@ -68,24 +69,11 @@ describe('file operations confinement', () => {
 describe('lexical path refusal', () => {
 	const REFUSED = 'Path is outside the configured root';
 	const B = '\\';
-	const refused = [
-		`${B}${B}127.0.0.1${B}C$${B}Windows${B}x.docx`,
-		`${B}${B}127.0.0.1${B}C$${B}missing${B}x.docx`,
-		`${B}${B}host${B}share${B}x.docx`,
-		'//host/share/x.docx',
-		`${B}${B}?${B}C:${B}x.docx`,
-		`${B}${B}.${B}C:${B}x.docx`,
-		`${B}${B}.${B}pipe${B}x.docx`,
-		'//./pipe/x.docx',
-		'//?/UNC/host/share/x.docx',
+	const windowsOnly = [
 		'C:x.docx',
 		'C:../x.docx',
 		'C:/elsewhere/x.docx',
 		`C:${B}elsewhere${B}x.docx`,
-		'../outside-exists/a.docx',
-		'../outside-missing/a.docx',
-		`..${B}outside${B}a.docx`,
-		'sub/../../a.docx',
 		'plain.bat:s.docx',
 		'a.docx:s',
 		'a.docx::$DATA',
@@ -102,6 +90,23 @@ describe('lexical path refusal', () => {
 		'.. /a.docx',
 		'a?.docx',
 		'a*.docx',
+	];
+	const refused = [
+		...(process.platform === 'win32' ? windowsOnly : []),
+		`${B}${B}127.0.0.1${B}C$${B}Windows${B}x.docx`,
+		`${B}${B}127.0.0.1${B}C$${B}missing${B}x.docx`,
+		`${B}${B}host${B}share${B}x.docx`,
+		'//host/share/x.docx',
+		`${B}${B}?${B}C:${B}x.docx`,
+		`${B}${B}.${B}C:${B}x.docx`,
+		`${B}${B}.${B}pipe${B}x.docx`,
+		'//./pipe/x.docx',
+		'//?/UNC/host/share/x.docx',
+		`${B}rooted${B}x.docx`,
+		'../outside-exists/a.docx',
+		'../outside-missing/a.docx',
+		`..${B}outside${B}a.docx`,
+		'sub/../../a.docx',
 		'a\u0000.docx',
 	];
 
@@ -117,13 +122,78 @@ describe('lexical path refusal', () => {
 		expect(read).not.toHaveBeenCalled();
 	});
 
-	test('an alternate stream name creates nothing', async () => {
+	test.runIf(process.platform === 'win32')('an alternate stream name creates nothing', async () => {
 		await withRoot(async (root) => {
 			const files = createFileOperations(root);
 			await expect(
 				files.create('plain.bat:s.docx', ['.docx'], async () => new Uint8Array([1])),
 			).rejects.toThrow(REFUSED);
 			expect(await readdir(root)).toEqual([]);
+		});
+	});
+
+	test('names are refused only where the platform gives them another meaning', () => {
+		for (const name of ['a: b.docx', 'aux', 'v1.', 'why?.docx', 'NUL.docx', 'trailing ']) {
+			expect(isUnsafePathSegment(name, 'win32')).toBe(true);
+			expect(isUnsafePathSegment(name, 'linux')).toBe(false);
+		}
+		expect(isUnsafePathSegment('a\u0000b', 'linux')).toBe(true);
+	});
+
+	test.runIf(process.platform !== 'win32')('POSIX keeps names Windows refuses', async () => {
+		await withRoot(async (root) => {
+			const files = createFileOperations(root);
+			for (const name of ['a: b.docx', 'aux/a.docx', 'v1./a.docx', 'why?.docx']) {
+				await mkdir(join(root, name, '..'), { recursive: true });
+				await writeFile(join(root, name), new Uint8Array([1]));
+				expect([...(await files.readFile(name, ['.docx']))]).toEqual([1]);
+			}
+		});
+	});
+
+	test('an absolute path may reach the root through a link', async () => {
+		await withRoot(async (root, outside) => {
+			await writeFile(join(root, 'a.docx'), new Uint8Array([1]));
+			const spelled = join(outside, 'link-to-root');
+			if (!(await link(root, spelled))) return;
+			const viaReal = createFileOperations(root);
+			const viaLink = createFileOperations(spelled);
+			const real = join(await realpath(root), 'a.docx');
+			expect([...(await viaReal.readFile(join(spelled, 'a.docx'), ['.docx']))]).toEqual([1]);
+			expect([...(await viaLink.readFile(real, ['.docx']))]).toEqual([1]);
+			expect([...(await viaLink.readFile(join(spelled, 'a.docx'), ['.docx']))]).toEqual([1]);
+			expect(await viaReal.directory(spelled)).toBe('.');
+			const created = await viaReal.create(join(spelled, 'new.docx'), ['.docx'], async () =>
+				Uint8Array.of(2),
+			);
+			expect(created.filePath).toBe('new.docx');
+		});
+	});
+
+	test('an absolute link spelling cannot leave the root', async () => {
+		await withRoot(async (root, outside) => {
+			await writeFile(join(outside, 'secret.docx'), new Uint8Array([1]));
+			if (!(await link(outside, join(root, 'escape')))) return;
+			const files = createFileOperations(root);
+			for (const path of [
+				join(root, 'escape', 'secret.docx'),
+				join(outside, 'secret.docx'),
+				join(outside, 'missing', 'x.docx'),
+			])
+				await expect(files.readFile(path, ['.docx'])).rejects.toThrow(new Error(REFUSED));
+		});
+	});
+
+	test.runIf(process.platform === 'win32')('a short path name reaches the same root', async () => {
+		await withRoot(async (root) => {
+			await writeFile(join(root, 'a.docx'), new Uint8Array([1]));
+			const short = execSync(`cmd /c for %I in ("${root}") do @echo %~sI`, {
+				encoding: 'utf8',
+			}).trim();
+			const files = createFileOperations(root);
+			expect([...(await files.readFile(join(short, 'a.docx'), ['.docx']))]).toEqual([1]);
+			const fromShort = createFileOperations(short);
+			expect([...(await fromShort.readFile(join(root, 'a.docx'), ['.docx']))]).toEqual([1]);
 		});
 	});
 

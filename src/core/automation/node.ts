@@ -1,38 +1,66 @@
 import { link, open, realpath, rename, unlink } from 'node:fs/promises';
-import { basename, dirname, extname, isAbsolute, relative, resolve, sep } from 'node:path';
+import { basename, dirname, extname, isAbsolute, parse, relative, resolve, sep } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { AutomationTool } from './tools/types';
 
 const OUTSIDE_ROOT = 'Path is outside the configured root';
 
 /**
- * A path segment that does not mean the same file everywhere: an alternate data stream or drive
+ * A Windows path segment that does not name the file it spells: an alternate data stream or drive
  * (`:`), characters Windows rejects or expands, a trailing dot or space Windows drops, and the
  * reserved device names, with or without an extension.
  */
-const UNSAFE_SEGMENT =
+const WINDOWS_UNSAFE_SEGMENT =
 	/[\u0000-\u001f:<>"|?*]|[. ]$|^(?:con|prn|aux|nul|com[0-9¹²³]|lpt[0-9¹²³]|conin\$|conout\$)(?:[. ].*)?$/iu;
 
+/** Whether `segment` is refused on `platform`; POSIX file names may hold anything but NUL. */
+export const isUnsafePathSegment = (segment: string, platform = process.platform): boolean =>
+	platform === 'win32' ? WINDOWS_UNSAFE_SEGMENT.test(segment) : segment.includes('\0');
+
+const leavesRoot = (path: string) =>
+	path === '..' || path.startsWith(`..${sep}`) || isAbsolute(path);
+
 /**
- * The root-relative form of a caller's path, judged on its text alone: nothing here touches the
- * filesystem, so a refused path (a UNC host above all) is never contacted. Every refusal is the
- * same error, so it says nothing about what exists. An absolute path is accepted only when it is
- * textually inside the root.
+ * A caller's path judged on its text alone: nothing here touches the filesystem, so a refused path
+ * (a UNC host above all) is never contacted. Every refusal is the same error, so it says nothing
+ * about what exists. Returns the path relative to the root or, for an absolute path spelled
+ * differently from the root (through a link, a short name or the real path), that absolute path
+ * for {@link createFileOperations} to resolve.
  */
 function confineLexically(rootDir: string, file: string): string {
-	if (/^[\\/]{2}/.test(file)) throw new Error(OUTSIDE_ROOT);
-	const path = isAbsolute(file) ? relative(resolve(rootDir), file) : file;
-	if (isAbsolute(path) || /^[\\/]/.test(path)) throw new Error(OUTSIDE_ROOT);
+	if (/^[\\/]{2}|^\\/.test(file)) throw new Error(OUTSIDE_ROOT);
+	const { root } = parse(file);
+	// On Windows only a drive root is a root: a bare `/x` or `C:x` depends on the current drive.
+	if (process.platform === 'win32' && root !== '' && !/^[a-z]:[\\/]$/iu.test(root))
+		throw new Error(OUTSIDE_ROOT);
 	const kept: string[] = [];
-	for (const segment of path.split(/[\\/]/)) {
+	for (const segment of file.slice(root.length).split(/[\\/]/)) {
 		if (segment === '' || segment === '.') continue;
 		if (segment === '..') {
 			if (kept.length === 0) throw new Error(OUTSIDE_ROOT);
 			kept.pop();
-		} else if (UNSAFE_SEGMENT.test(segment)) throw new Error(OUTSIDE_ROOT);
+		} else if (isUnsafePathSegment(segment)) throw new Error(OUTSIDE_ROOT);
 		else kept.push(segment);
 	}
-	return kept.join(sep);
+	const path = kept.join(sep);
+	if (root === '') return path;
+	const inside = relative(resolve(rootDir), root + path);
+	return leavesRoot(inside) ? root + path : inside;
+}
+
+/** `path` with links resolved as far as it exists; the rest cannot be a link yet. */
+async function realPathOfExisting(path: string): Promise<string> {
+	const rest: string[] = [];
+	for (let probe = path; ;) {
+		try {
+			return resolve(await realpath(probe), ...rest);
+		} catch (error) {
+			const parent = dirname(probe);
+			if ((error as NodeJS.ErrnoException).code !== 'ENOENT' || parent === probe) throw error;
+			rest.unshift(basename(probe));
+			probe = parent;
+		}
+	}
 }
 
 export interface ByteEditResult {
@@ -69,8 +97,22 @@ export function createFileOperations(rootDir = process.cwd()) {
 			throw safe;
 		}
 	}
-	async function pathFor(file: string, extensions: readonly string[]) {
+	/** The root-relative form of `file`; any failure to place an absolute path is a refusal. */
+	async function underRoot(file: string) {
 		const lexical = confineLexically(rootDir, file);
+		if (!isAbsolute(lexical)) return lexical;
+		const inside = await Promise.all([
+			realpath(resolve(rootDir)),
+			realPathOfExisting(lexical),
+		]).then(
+			([root, actual]) => relative(root, actual),
+			() => '..',
+		);
+		if (leavesRoot(inside)) throw new Error(OUTSIDE_ROOT);
+		return inside;
+	}
+	async function pathFor(file: string, extensions: readonly string[]) {
+		const lexical = await underRoot(file);
 		const checkExtension = (target: string) => {
 			if (!extensions.includes(extname(target).toLowerCase()))
 				throw new Error('Unsupported file extension');
@@ -81,9 +123,7 @@ export function createFileOperations(rootDir = process.cwd()) {
 		const parent = await realpath(dirname(path));
 		let actual = resolve(parent, basename(path));
 		const inside = (target: string) => {
-			const rel = relative(root, target);
-			if (rel === '..' || rel.startsWith('../') || rel.startsWith('..\\') || isAbsolute(rel))
-				throw new Error(OUTSIDE_ROOT);
+			if (leavesRoot(relative(root, target))) throw new Error(OUTSIDE_ROOT);
 		};
 		inside(actual);
 		try {
@@ -139,27 +179,11 @@ export function createFileOperations(rootDir = process.cwd()) {
 	}
 	/** Confine a directory (it may not exist yet) and return its root-relative path. */
 	async function directoryFor(dir: string) {
-		const lexical = confineLexically(rootDir, dir);
+		const lexical = await underRoot(dir);
 		const root = await realpath(resolve(rootDir));
-		let probe = resolve(root, lexical);
-		const rest: string[] = [];
-		for (;;) {
-			try {
-				probe = await realpath(probe);
-				break;
-			} catch (error) {
-				if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
-				const parent = dirname(probe);
-				if (parent === probe) throw error;
-				rest.unshift(basename(probe));
-				probe = parent;
-			}
-		}
-		const actual = resolve(probe, ...rest);
-		const r = relative(root, actual);
-		if (r === '..' || r.startsWith('../') || r.startsWith('..\\') || isAbsolute(r))
-			throw new Error(OUTSIDE_ROOT);
-		return r.split(sep).join('/') || '.';
+		const inside = relative(root, await realPathOfExisting(resolve(root, lexical)));
+		if (leavesRoot(inside)) throw new Error(OUTSIDE_ROOT);
+		return inside.split(sep).join('/') || '.';
 	}
 	const api = {
 		async inspect<T>(
