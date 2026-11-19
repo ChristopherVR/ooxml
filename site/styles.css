@@ -1061,4 +1061,8 @@ dialog h2 {
 	.app-rail button[aria-current='true']:before {
 		background: Highlight;
 	}
+	.app-rail button[aria-current='true'] .app-tag {
+		border-color: HighlightText;
+		color: HighlightText;
+	}
 }
