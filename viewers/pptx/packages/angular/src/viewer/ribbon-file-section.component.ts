@@ -1,15 +1,15 @@
+import type { AfterViewInit, OnDestroy } from '@angular/core';
 import {
-	afterNextRender,
 	ChangeDetectionStrategy,
 	Component,
 	CUSTOM_ELEMENTS_SCHEMA,
 	computed,
-	DestroyRef,
 	ElementRef,
 	inject,
 	input,
 	output,
 	signal,
+	viewChild,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -103,7 +103,7 @@ export function visibleMainNav(
 	templateUrl: './ribbon-file-section.component.html',
 	styleUrl: './ribbon-file-section.component.css',
 })
-export class RibbonFileSectionComponent {
+export class RibbonFileSectionComponent implements AfterViewInit, OnDestroy {
 	readonly fileName = input<string>();
 	readonly slideCount = input(0);
 	readonly exporting = input(false);
@@ -115,6 +115,7 @@ export class RibbonFileSectionComponent {
 	/** Optional sign-in hook point for the Account page. Absent/disabled by default. */
 	readonly accountAuth = input<AccountAuthConfig | undefined>(undefined);
 	readonly close = output<void>();
+	private readonly panel = viewChild<ElementRef<HTMLElement>>('panel');
 	readonly createPresentation = output<string>();
 	readonly openFile = output<void>();
 	readonly openRecentFile = output<string>();
@@ -256,16 +257,6 @@ export class RibbonFileSectionComponent {
 	);
 
 	constructor() {
-		// The backstage covers the editor: focus goes in, stays in, and Escape goes back.
-		const host = inject<ElementRef<HTMLElement>>(ElementRef);
-		let release = (): void => {};
-		afterNextRender(() => {
-			const panel = host.nativeElement.querySelector<HTMLElement>('[role="dialog"]');
-			if (panel) {
-				release = activateModalFocus(panel, { onEscape: () => this.close.emit() });
-			}
-		});
-		inject(DestroyRef).onDestroy(() => release());
 		void (async () =>
 			this.recent.set(
 				await listBackstageRecentFiles(
@@ -274,6 +265,20 @@ export class RibbonFileSectionComponent {
 					this.fileIO?.storage(),
 				),
 			))();
+	}
+
+	private releaseFocus = (): void => {};
+
+	/** The backstage covers the editor: focus goes in, stays in, and Escape goes back. */
+	ngAfterViewInit(): void {
+		const panel = this.panel()?.nativeElement;
+		if (panel) {
+			this.releaseFocus = activateModalFocus(panel, { onEscape: () => this.close.emit() });
+		}
+	}
+
+	ngOnDestroy(): void {
+		this.releaseFocus();
 	}
 
 	protected date(timestamp: number): string {
