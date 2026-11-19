@@ -355,9 +355,18 @@ options remain unresolved. Nothing is navigated or fetched during parsing.
 
 Default package limits: 32 MiB input, 2,048 entries, 16 MiB per inflated entry,
 128 MiB total declared/actual inflated bytes, 200:1 compression ratio, 16 MiB XML
-characters, 128 XML nesting depth, 250,000 XML nodes per part, one million XML nodes
+characters, 128 XML nesting depth, 1,250,000 XML nodes per part, two million XML nodes
 across the package, and a ten-second cooperative
-deadline. ZIP validation checks local and central headers, CRCs, aliases, traversal,
+deadline. The node limit admits a 10,000-shape page at 125 nodes a shape (the 90th
+percentile of the page parts in this repository's fixtures, which range from 32 to 170
+nodes a shape; the median is 90). Measured at the limit in V8 on a shared desktop, a page
+of 13,800 plain shapes loaded in 6.1 to 7.0 s with a peak of about 590 MB of heap, and
+the densest XML the limits allow (empty elements and one-letter text) in 3.0 to 5.3 s with
+about 660 MB; a 10,000-shape page took 4.4 to 5.3 s and 465 MB. The deadline is checked
+between steps, not inside the DOM construction of one part, so the viewer's parse worker
+also has a 15-second hard timeout. A refused part reports the shapes it holds ("The page
+has 12000 shapes, more than this viewer can open"), or its node count when it holds none.
+ZIP validation checks local and central headers, CRCs, aliases, traversal,
 overlap and unsupported encryption/ZIP64. XML rejects DTD/entity declarations and
 malformed or ambiguous namespace constructs. Internal relationships must resolve
 inside the package to existing parts.

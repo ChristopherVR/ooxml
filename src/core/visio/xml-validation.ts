@@ -22,6 +22,16 @@ function lookupNamespace(scope: NamespaceScope | undefined, prefix: string): str
 	}
 	return undefined;
 }
+/**
+ * Why a part over the node limit is refused, in words a user can act on: the shapes the part
+ * holds (counted from their start tags, since the part is never parsed), else its node count.
+ */
+export function nodeLimitMessage(xml: string, limit: number): string {
+	const shapes = xml.match(/<(?:[\w.-]+:)?Shape[\s/>]/g)?.length ?? 0;
+	return shapes
+		? `The page has ${shapes} shapes, more than this viewer can open (it reads at most ${limit} XML nodes per part).`
+		: `A part of this drawing has more than ${limit} XML nodes, more than this viewer can open.`;
+}
 /** Bound DOM construction first and reject the malformed input that tolerant XML parsers repair. */
 export function inspectXml(
 	xml: string,
@@ -40,7 +50,7 @@ export function inspectXml(
 		roots = 0,
 		at = 0;
 	const node = () => {
-		if (++nodes > limits.maxXmlNodes) fail('LIMIT_XML', 'XML node limit exceeded');
+		if (++nodes > limits.maxXmlNodes) fail('LIMIT_XML', nodeLimitMessage(xml, limits.maxXmlNodes));
 	};
 	const text = (value: string) => {
 		if (/&(?!(?:amp|lt|gt|apos|quot|#\d+|#x[\da-fA-F]+);)/.test(value))

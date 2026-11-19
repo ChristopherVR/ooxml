@@ -99,4 +99,10 @@ export const zhCNText: Readonly<Record<string, string>> = {
 	Options: '选项',
 	Share: '共享',
 	'Style {n}': '样式 {n}',
+	'The page has {count} shapes, more than this viewer can open (it reads at most {limit} XML nodes per part).':
+		'此页面有 {count} 个形状，超出此查看器可打开的范围（每个部件最多读取 {limit} 个 XML 节点）。',
+	'A part of this drawing has more than {limit} XML nodes, more than this viewer can open.':
+		'此绘图的某个部件有超过 {limit} 个 XML 节点，超出此查看器可打开的范围。',
+	'This drawing has more than {limit} XML nodes in all, more than this viewer can open.':
+		'此绘图总共有超过 {limit} 个 XML 节点，超出此查看器可打开的范围。',
 };

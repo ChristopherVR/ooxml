@@ -318,6 +318,25 @@ describe('VisioPackage', () => {
 		await xmlError('<Root><A/><B/></Root>', 'LIMIT_XML', { maxXmlNodes: 2 });
 		await xmlError('<Root><A><B/></A></Root>', 'LIMIT_XML', { maxXmlDepth: 2 });
 	});
+	it('says how many shapes a part over the node limit holds, else how many nodes it passed', async () => {
+		const shapes = '<Shape ID="1"><Cell N="PinX" V="1"/></Shape>'.repeat(3);
+		const page = await VisioPackage.open(
+			one(`<PageContents><Shapes>${shapes}</Shapes></PageContents>`),
+			{
+				maxXmlNodes: 5,
+			},
+		);
+		await expect(page.readXml('visio/document.xml')).rejects.toMatchObject({
+			code: 'LIMIT_XML',
+			message:
+				'The page has 3 shapes, more than this viewer can open (it reads at most 5 XML nodes per part).',
+		});
+		const part = await VisioPackage.open(one('<Root><A/><B/></Root>'), { maxXmlNodes: 2 });
+		await expect(part.readXml('visio/document.xml')).rejects.toMatchObject({
+			code: 'LIMIT_XML',
+			message: 'A part of this drawing has more than 2 XML nodes, more than this viewer can open.',
+		});
+	});
 	it('enforces a processing deadline on open and subsequent reads', async () => {
 		const now = Date.now(),
 			clock = vi.spyOn(Date, 'now').mockReturnValue(now);
@@ -439,6 +458,9 @@ describe('aggregate XML output budget', () => {
 		await pkg.readXml('a.xml');
 		await pkg.readXml('b.xml');
 		await pkg.readXml('c.xml');
-		await expect(pkg.readXml('d.xml')).rejects.toMatchObject({ code: 'LIMIT_XML_TOTAL' });
+		await expect(pkg.readXml('d.xml')).rejects.toMatchObject({
+			code: 'LIMIT_XML_TOTAL',
+			message: 'This drawing has more than 3 XML nodes in all, more than this viewer can open.',
+		});
 	});
 });
