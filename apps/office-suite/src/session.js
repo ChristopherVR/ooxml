@@ -1,18 +1,26 @@
 import { replaceEmbeddedPackage } from 'ooxml-core/opc';
 import { mountEditor } from './editors.js';
 import { cloudReadOnly } from './cloud-files.js';
+import { lockInput } from './session-lock.js';
+import { displayLanguage, onSettings } from './settings.js';
 
 /** One live editor per document id. Save operations are serialized per session. */
 export class SuiteSessions {
 	constructor(store, host, update, command) {
 		Object.assign(this, { store, host, update, command });
 		this.sessions = new Map();
+		// The editors show the display language, whatever the workspace around them is written in.
+		onSettings((_settings, keys) => {
+			if (!keys.includes('locale')) return;
+			for (const { node } of this.sessions.values()) Object.assign(node, displayLanguage());
+		});
 	}
 	async open(doc) {
 		if (this.sessions.has(doc.id)) return this.sessions.get(doc.id).ready;
 		const node = document.createElement('section');
 		node.className = 'document-host';
 		node.setAttribute('aria-label', doc.name);
+		Object.assign(node, displayLanguage());
 		this.host.append(node);
 		const session = { doc, node, version: 0, saved: 0, loading: true, pending: Promise.resolve() };
 		this.sessions.set(doc.id, session);
@@ -168,16 +176,13 @@ export class SuiteSessions {
 			unlock();
 		}
 	}
+	/** Refuse input to these documents until the returned function runs; focus stays put. */
 	lock(ids) {
-		const nodes = ids.map((id) => this.sessions.get(id)?.node).filter(Boolean);
-		const states = nodes.map((node) => node.inert);
-		nodes.forEach((node) => {
-			node.inert = true;
-		});
-		return () =>
-			nodes.forEach((node, index) => {
-				node.inert = states[index];
-			});
+		const unlocks = ids
+			.map((id) => this.sessions.get(id)?.node)
+			.filter(Boolean)
+			.map(lockInput);
+		return () => unlocks.forEach((unlock) => unlock());
 	}
 	async reload(doc) {
 		const s = this.sessions.get(doc.id);
