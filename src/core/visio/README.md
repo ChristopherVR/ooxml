@@ -369,14 +369,14 @@ generated pages of identical shapes about 2,100, so only XML far denser than rea
 data meets the second bound. A refused package reports `LIMIT_XML_MEMORY` and the memory
 its XML would need.
 
-Measured in Node 24 under a 1 GiB heap cap, one parse per fresh process, three runs each,
-with peak heap read from the garbage collector trace: a 48 KB file holding two parts of the
-densest XML (empty elements and one-letter text) is refused in 0.2 to 0.3 s at 14 to 16 MB
-of heap, where the limits without the budget loaded it in 4.5 to 7.2 s at about 1 GB; a
-page of 10,000 plain shapes (164 KB) loads in 3.8 to 4.7 s at about 500 MB, and one of
-13,800 shapes in 5.2 to 6.6 s at 650 to 685 MB. The heaviest file the budget lets through,
-428 KB of the densest XML, loads in 2.4 to 2.6 s at 730 to 760 MB; with a second such part
-it is refused after the first, in 2.3 to 3.6 s at 750 to 800 MB. The deadline is checked
+Measured in Node 24 under a 1 GiB heap cap, one parse per fresh process, six runs each in
+two sessions, with peak heap read from the garbage collector trace: a 48 KB file holding two
+parts of the densest XML (empty elements and one-letter text) is refused in 0.2 to 0.3 s at
+14 to 18 MB of heap, where the limits without the budget loaded it in 4.5 to 7.2 s at about
+1 GB; a page of 10,000 plain shapes (164 KB) loads in 3.0 to 4.7 s at about 500 MB, and one
+of 13,800 shapes in 4.4 to 6.6 s at 650 to 685 MB. The heaviest file the budget lets through,
+428 KB of the densest XML, loads in 2.0 to 2.6 s at 730 to 810 MB; with a second such part it
+is refused after the first, in 1.7 to 3.6 s at 750 to 800 MB. The deadline is checked
 between steps, not inside the DOM construction of one part (which the per-part node limit
 bounds), so the viewer's parse worker also has a 15-second hard timeout. A part over the
 node limit reports the shapes it holds ("The page has 16000 shapes, more than this viewer

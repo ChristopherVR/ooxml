@@ -56,7 +56,7 @@ export const DEFAULTS: VisioPackageLimits = {
 	// Memory is bounded by the heap estimate, not the node counts: a 10,000-shape page at the
 	// 90th percentile of 54 KB of heap a shape, plus 64 MiB for masters, themes and other parts.
 	// Measured peaks (README, Bounded processing): about 500 MB for 10,000 plain shapes and
-	// 760 MB for the densest XML the budget lets through; a 48 KB file of the densest XML is
+	// 810 MB for the densest XML the budget lets through; a 48 KB file of the densest XML is
 	// refused in 0.2 s at 16 MB, where the node limits alone let it reach 1 GB.
 	maxXmlHeapBytes: 600 * 1024 * 1024,
 	// Drawings Visio saves estimate 90 to 145 bytes per input byte, generated pages of identical
