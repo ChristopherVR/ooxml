@@ -12,11 +12,14 @@ import type {
 	ChartShapeProperties,
 	ChartTextBody,
 } from './model-series';
+import type { ChartPointLimit } from './point-limit';
 import { innerXml } from './xml-fragment';
 
 /** Collects issues while a chart part is parsed. */
 export interface ChartParseContext {
 	issues: ChartParseIssue[];
+	/** The blank point slots each cache of this part may use. */
+	pointLimit?: ChartPointLimit;
 }
 
 /** The first chart-namespace child (lenient: un-namespaced test XML matches too). */

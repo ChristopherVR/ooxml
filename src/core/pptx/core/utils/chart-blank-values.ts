@@ -11,6 +11,7 @@
  */
 
 import type { XmlObject } from '../types';
+import { chartPointLength } from '../../../chart/point-limit';
 
 interface XmlLookupLike {
 	getChildByLocalName(parent: XmlObject | undefined, name: string): XmlObject | undefined;
@@ -59,8 +60,7 @@ export function extractSeriesNumbersWithBlanks(
 		String(xml.getChildByLocalName(cache, 'ptCount')?.['@_val'] ?? ''),
 		10,
 	);
-	const length =
-		Number.isFinite(declaredCount) && declaredCount > maxIndex + 1 ? declaredCount : maxIndex + 1;
+	const length = chartPointLength(points.length, maxIndex + 1, declaredCount);
 	if (length <= 0) {
 		return [];
 	}

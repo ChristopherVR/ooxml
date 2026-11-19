@@ -29,11 +29,18 @@ import {
 	textProperties,
 	type ChartParseContext,
 } from './parse-util';
+import { limitParsedChartPoints } from './point-limit';
 
-function parseCache(node: XmlElement): ChartDataCache {
-	const cache: ChartDataCache = {
-		type: node.localName === 'numCache' || node.localName === 'numLit' ? 'number' : 'string',
-		points: children(node, 'pt', NS.c).map((pt) => {
+/** `@val` of a `c:ptCount` child, when it is a count. */
+function declaredCount(node: XmlElement): number | undefined {
+	const count = Number(cVal(node, 'ptCount') ?? Number.NaN);
+	return Number.isInteger(count) && count >= 0 ? count : undefined;
+}
+
+function parseCache(context: ChartParseContext, node: XmlElement): ChartDataCache {
+	const { points, pointCount } = limitParsedChartPoints(
+		context,
+		children(node, 'pt', NS.c).map((pt) => {
 			const point: ChartCachePoint = { value: cChild(pt, 'v')?.textContent ?? '' };
 			const index = Number(attribute(pt, 'idx') ?? Number.NaN);
 			if (Number.isInteger(index) && index >= 0) point.index = index;
@@ -41,16 +48,23 @@ function parseCache(node: XmlElement): ChartDataCache {
 			if (formatCode !== undefined) point.formatCode = formatCode;
 			return point;
 		}),
+		declaredCount(node),
+	);
+	const cache: ChartDataCache = {
+		type: node.localName === 'numCache' || node.localName === 'numLit' ? 'number' : 'string',
+		points,
 	};
-	const count = Number(cVal(node, 'ptCount') ?? Number.NaN);
-	if (Number.isInteger(count) && count >= 0) cache.pointCount = count;
+	if (pointCount !== undefined) cache.pointCount = pointCount;
 	const formatCode = cChild(node, 'formatCode')?.textContent;
 	if (formatCode) cache.formatCode = formatCode;
 	return cache;
 }
 
 /** A data source element (`c:cat`, `c:val`, `c:tx`...): reference and cache, or literal values. */
-export function parseDataSource(element: XmlElement | undefined): ChartDataSource | undefined {
+export function parseDataSource(
+	context: ChartParseContext,
+	element: XmlElement | undefined,
+): ChartDataSource | undefined {
 	if (!element) return undefined;
 	const source: ChartDataSource = {};
 	const ref =
@@ -60,19 +74,20 @@ export function parseDataSource(element: XmlElement | undefined): ChartDataSourc
 		const formula = cChild(ref, 'f')?.textContent;
 		if (formula) source.formula = formula;
 		const cache = cChild(ref, 'numCache') ?? cChild(ref, 'strCache');
-		if (cache) source.cache = parseCache(cache);
+		if (cache) source.cache = parseCache(context, cache);
 		const levels = cChild(ref, 'multiLvlStrCache');
 		if (levels) {
-			source.levels = children(levels, 'lvl', NS.c).map(parseCache);
-			const count = Number(cVal(levels, 'ptCount') ?? Number.NaN);
-			if (Number.isInteger(count) && count >= 0) source.levelPointCount = count;
+			source.levels = children(levels, 'lvl', NS.c).map((level) => parseCache(context, level));
+			const count = declaredCount(levels);
+			if (count !== undefined)
+				source.levelPointCount = limitParsedChartPoints(context, [], count).pointCount!;
 		}
 		return source;
 	}
 	const literal = cChild(element, 'numLit') ?? cChild(element, 'strLit');
 	if (literal) {
 		source.kind = literal.localName as ChartDataSourceKind;
-		source.cache = parseCache(literal);
+		source.cache = parseCache(context, literal);
 	}
 	return source;
 }
@@ -88,7 +103,7 @@ export function parseChartText(
 	const rich = chartTextBody(cChild(tx, 'rich'));
 	if (rich) text.rich = rich;
 	if (cChild(tx, 'strRef')) {
-		const reference = parseDataSource(tx);
+		const reference = parseDataSource(context, tx);
 		if (reference) text.reference = reference;
 	}
 	const value = allowValue ? cChild(tx, 'v')?.textContent : undefined;

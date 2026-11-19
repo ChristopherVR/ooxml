@@ -5,6 +5,7 @@
 // from xlsx `edit/chart-colors.ts`); the caller records the new palette id in the colour style part.
 import type { DrawingColor, DrawingFill } from '../../drawingml/types';
 import { chartPaletteSeriesColorChoice, findChartColorPalette } from '../color-palettes';
+import { chartCachePointCount } from '../data-cache';
 import { findChartStylePreset } from '../style-presets';
 import type { ChartSpace } from '../model';
 import type { ChartShapeProperties } from '../model-series';
@@ -67,7 +68,7 @@ export function applyChartColorPalette(space: ChartSpace, from: number, to: numb
 			recolorShape(series.marker?.spPr, old, choice);
 			const radial =
 				(group.kind === 'pie' || group.kind === 'doughnut') && group.varyColors !== false;
-			const points = series.values?.cache?.pointCount ?? series.values?.cache?.points.length ?? 0;
+			const points = chartCachePointCount(series.values?.cache);
 			for (const point of series.dataPoints) {
 				const at = point.index ?? 0;
 				recolorShape(
@@ -113,7 +114,7 @@ export function applyChartStylePreset(space: ChartSpace, id: string): ChartSpace
 			const radial =
 				(group.kind === 'pie' || group.kind === 'doughnut') && group.varyColors !== false;
 			if (radial) {
-				const count = series.values?.cache?.pointCount ?? series.values?.cache?.points.length ?? 0;
+				const count = chartCachePointCount(series.values?.cache);
 				const points = new Map(series.dataPoints.map((point) => [point.index ?? 0, point]));
 				for (let at = 0; at < count; at++) {
 					const point = points.get(at) ?? { index: at };

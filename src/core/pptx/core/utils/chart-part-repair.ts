@@ -9,6 +9,7 @@
  * @module chart-part-repair
  */
 import { parseChartSpace, type ChartParseIssue, type ChartSpace } from '../../../chart/index';
+import { CHART_POINTS_LIMITED } from '../../../chart/point-limit';
 
 /** The standard namespaces of the Office chart prefixes the repair may declare. */
 export const OFFICE_CHART_PREFIXES: Readonly<Record<string, string>> = {
@@ -77,11 +78,15 @@ export interface ChartPartModel {
 	chartSpace?: ChartSpace | undefined;
 	/** `CHART_PREFIX_REPAIRED` when the part only parsed after the repair. */
 	repairIssue?: ChartParseIssue;
+	/** `CHART_POINTS_LIMITED` when the part declares more blank points than are read. */
+	pointLimitIssue?: ChartParseIssue;
 }
 
-function parseClassic(text: string): ChartSpace | undefined {
+function parseClassic(text: string): ChartPartModel {
 	const { chartSpace, issues } = parseChartSpace(text);
-	return issues.some((issue) => issue.code === 'CHART_ROOT_UNEXPECTED') ? undefined : chartSpace;
+	if (issues.some((issue) => issue.code === 'CHART_ROOT_UNEXPECTED')) return {};
+	const pointLimitIssue = issues.find((issue) => issue.code === CHART_POINTS_LIMITED);
+	return { chartSpace, ...(pointLimitIssue ? { pointLimitIssue } : {}) };
 }
 
 /**
@@ -91,18 +96,18 @@ function parseClassic(text: string): ChartSpace | undefined {
  */
 export function readChartPartModel(text: string): ChartPartModel {
 	try {
-		return { chartSpace: parseClassic(text) };
+		return parseClassic(text);
 	} catch {
 		const repair = repairChartPartPrefixes(text);
 		if (!repair) return {};
 		try {
-			const chartSpace = parseClassic(repair.text);
+			const parsed = parseClassic(repair.text);
 			const what = [
 				...(repair.declared.length ? [`declared ${repair.declared.join(', ')}`] : []),
 				...(repair.rewroteOwnOutput ? ['rewrote xmlns elements and c15:v'] : []),
 			].join('; ');
 			return {
-				...(chartSpace ? { chartSpace } : {}),
+				...parsed,
 				repairIssue: {
 					code: 'CHART_PREFIX_REPAIRED',
 					message: `The chart part was not namespace well-formed and was repaired to load (${what}).`,

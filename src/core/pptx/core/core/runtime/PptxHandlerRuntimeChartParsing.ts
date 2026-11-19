@@ -45,6 +45,11 @@ import {
 	type ChartTreeReader,
 } from '../../utils/chart-from-neutral';
 import { readChartPartModel } from '../../utils/chart-part-repair';
+import {
+	CHART_POINTS_LIMITED,
+	MAX_CHART_BLANK_POINTS,
+	chartPointLimitOfXml,
+} from '../../../../chart/point-limit';
 import { parseChartTitleRuns } from '../../utils/chart-title-runs-parser';
 
 import { resolveDataPointPictureImages } from './chart-datapoint-picture-resolver';
@@ -57,6 +62,8 @@ interface ChartTree {
 	chartSpace: XmlObject | undefined;
 	chartRoot: XmlObject | undefined;
 	plotArea: XmlObject;
+	/** The part as text. */
+	text: string;
 }
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
@@ -107,12 +114,17 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			this.currentSlideClrMapOverride = clrMapOvr;
 		}
 		try {
-			const { chartSpace: neutral, repairIssue } = readChartPartModel(chartPart.text);
-			if (repairIssue) {
+			const {
+				chartSpace: neutral,
+				repairIssue,
+				pointLimitIssue,
+			} = readChartPartModel(chartPart.text);
+			for (const issue of [repairIssue, pointLimitIssue]) {
+				if (!issue) continue;
 				this.compatibilityService.reportWarning({
-					code: repairIssue.code,
-					message: repairIssue.message,
-					severity: 'info',
+					code: issue.code,
+					message: issue.message,
+					severity: issue === pointLimitIssue ? 'warning' : 'info',
 					scope: 'element',
 					xmlPath: chartPart.partPath,
 				});
@@ -131,7 +143,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			}
 			const chart = await this.buildClassicChart(
 				neutral,
-				{ chartSpace, chartRoot, plotArea },
+				{ chartSpace, chartRoot, plotArea, text: chartPart.text },
 				chartPart.partPath,
 				chartRelationshipId,
 			);
@@ -179,7 +191,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			if (clrMapOvr) this.currentSlideClrMapOverride = clrMapOvr;
 			const chart = await this.buildClassicChart(
 				neutral,
-				{ chartSpace, chartRoot, plotArea },
+				{ chartSpace, chartRoot, plotArea, text: xml },
 				previous.chartPartPath,
 				previous.chartRelationshipId,
 			);
@@ -228,7 +240,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			const axisId = [...group.axisIds]
 				.reverse()
 				.find((id) => axes.some((axis) => axis.axisType === 'valAx' && axis.axisId === id));
-			const hidden = parseFilteredSeries(node, reader.xml);
+			const hidden = parseFilteredSeries(node, reader.xml, reader.pointLimit);
 			if (hidden) {
 				for (const entry of hidden) {
 					if (seriesChartType) entry.seriesChartType = seriesChartType;
@@ -337,7 +349,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		chartRelationshipId: string,
 	): Promise<PptxChartData | undefined> {
 		const { chartSpace, chartRoot, plotArea } = tree;
-		const reader = this.chartTreeReader();
+		const reader = { ...this.chartTreeReader(), pointLimit: chartPointLimitOfXml(tree.text) };
 		const colorAdapter = { parseColor: reader.parseColor };
 		const chartType = chartTypeFromNeutral(neutral);
 		const groups = pairGroupNodes(neutral.plotArea.groups, plotArea, reader.localName);
@@ -347,6 +359,15 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		);
 		const { categories, categoryLevels } = neutralCategories(neutral.plotArea.groups);
 		const built = this.buildChartSeries(groups, chartType, categories, axes, reader);
+		if (reader.pointLimit.limited) {
+			this.compatibilityService.reportWarning({
+				code: CHART_POINTS_LIMITED,
+				message: `Hidden series or label ranges declare more than the ${MAX_CHART_BLANK_POINTS} blank points read per chart; the rest are left out.`,
+				severity: 'warning',
+				scope: 'element',
+				xmlPath: chartPartPath,
+			});
+		}
 		if (built.series.length === 0) {
 			return undefined;
 		}

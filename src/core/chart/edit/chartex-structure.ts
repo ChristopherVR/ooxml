@@ -1,5 +1,6 @@
 // Structural ChartEx edits preserve data sets, formatting and unrelated family metadata.
 import type { ChartExAxis, ChartExDataLabel, ChartExSeries, ChartExSpace } from '../ex/model';
+import { chartPointsLength } from '../point-limit';
 import { chartExAxisAt, chartExSeriesAt, editChartExSpace } from './chartex';
 import { chartExValueType } from './chartex-data';
 
@@ -37,11 +38,7 @@ export function addChartExSeries(
 			delete dimension.nameFormula;
 			if (dimension.kind === 'numDim')
 				for (const level of dimension.levels) {
-					const count = Math.max(
-						level.pointCount ?? 0,
-						...level.points.map((point) => (point.index ?? 0) + 1),
-						0,
-					);
+					const count = chartPointsLength(level.points, level.pointCount);
 					level.pointCount = count;
 					level.points = Array.from({ length: count }, (_, index) => ({ index, value: '0' }));
 				}

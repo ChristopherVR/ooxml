@@ -16,6 +16,7 @@ import type {
 	ChartText,
 	ChartTitle,
 } from '../../../chart/index';
+import { chartPointLength } from '../../../chart/point-limit';
 import type { PptxChartDateCategories } from '../types';
 import { isFiniteNumber } from '../../../units/finite';
 
@@ -39,8 +40,7 @@ function expandCache<T>(
 		if (value !== undefined) byIndex.set(index, value);
 		maxIndex = Math.max(maxIndex, index);
 	}
-	const length = declared !== undefined && declared > maxIndex + 1 ? declared : maxIndex + 1;
-	return { byIndex, length };
+	return { byIndex, length: chartPointLength(cache.points.length, maxIndex + 1, declared) };
 }
 
 const readNumber = (text: string) => {
@@ -83,7 +83,7 @@ export function neutralCategoryLevels(
 	if (source?.kind !== 'multiLvlStrRef' || !source.levels?.length) return undefined;
 	const levels = source.levels.map((level, levelIndex) => {
 		const expanded = expandCache(level, readText, source.levelPointCount);
-		const length = expanded?.length ?? Math.max(source.levelPointCount ?? 0, 0);
+		const length = expanded?.length ?? chartPointLength(0, 0, source.levelPointCount);
 		const dense = Array.from({ length }, (_, at) => expanded?.byIndex.get(at) ?? '');
 		if (levelIndex > 0) {
 			let last = '';

@@ -5,6 +5,7 @@ import {
 	type ChartDataSheetEdit,
 } from '../data-sheet';
 import type { ChartExData, ChartExDimension, ChartExLevel, ChartExSpace } from '../ex/model';
+import { chartDensePoints } from '../point-limit';
 import { chartExSeriesAt, editChartExSpace, renameChartExSeries } from './chartex';
 import { chartExValueType } from './chartex-data';
 import { addChartExSeries, removeChartExSeries } from './chartex-structure';
@@ -34,18 +35,8 @@ export function chartExSeriesDimension(
 			(d.type === type || (!numeric && d.type === undefined)),
 	);
 }
-export function chartExLevelValues(level: ChartExLevel | undefined): string[] {
-	const count = Math.max(
-		level?.pointCount ?? 0,
-		...(level?.points ?? []).map((p) => (p.index ?? 0) + 1),
-		0,
-	);
-	const values = Array<string>(count).fill('');
-	for (const point of level?.points ?? [])
-		if (point.index !== undefined && point.index >= 0 && point.index < count)
-			values[point.index] = point.value;
-	return values;
-}
+export const chartExLevelValues = (level: ChartExLevel | undefined): string[] =>
+	chartDensePoints(level?.points ?? [], level?.pointCount, (point) => point.value, '');
 /**
  * The plot positions of the series that own data, in sheet order. A series drawn from another one
  * (a pareto line, `@ownerIdx`) has no data of its own and no row in the data sheet.

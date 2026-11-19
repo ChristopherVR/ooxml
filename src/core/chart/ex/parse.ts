@@ -14,6 +14,7 @@ import {
 	textProperties,
 	type ChartParseContext,
 } from './parse-util';
+import { chartPointLimitOfPart } from '../point-limit';
 import { parseAxis } from './parse-axis';
 import { parseSeries } from './parse-series';
 import { parseChartData, parseLegend, parseTitle } from './parse-text';
@@ -86,6 +87,7 @@ export function parseChartExSpace(source: string | XmlElement): ChartExSpacePars
 			issues: context.issues,
 		};
 	}
+	context.pointLimit = chartPointLimitOfPart(root);
 	reportUnmodelled(context, root, SPACE);
 	const chart = cxChild(root, 'chart');
 	if (!chart)

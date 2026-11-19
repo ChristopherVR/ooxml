@@ -21,6 +21,7 @@ import {
 	textProperties,
 	type ChartParseContext,
 } from './parse-util';
+import { chartPointLimitOfPart } from './point-limit';
 
 const LEGEND = new Set(['legendPos', 'legendEntry', 'layout', 'overlay', 'spPr', 'txPr', 'extLst']);
 
@@ -144,6 +145,7 @@ export function parseChartSpace(source: string | XmlElement): ChartSpaceParseRes
 		});
 		return { chartSpace: { plotArea: { groups: [], axes: [] } }, issues: context.issues };
 	}
+	context.pointLimit = chartPointLimitOfPart(root);
 	reportUnmodelled(context, root, SPACE);
 	const chart = cChild(root, 'chart');
 	if (!chart)

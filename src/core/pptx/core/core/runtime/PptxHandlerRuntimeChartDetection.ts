@@ -3,6 +3,7 @@ import type { PptxChartData } from '../../types';
 import { extractMultiLevelCategoryValues } from '../../utils/chart-multi-level-category-parser';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSmartArt';
 import { isFiniteNumber } from '../../../../units/finite';
+import { chartPointLength } from '../../../../chart/point-limit';
 import { at } from '../../../../geometry/indexed';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
@@ -196,8 +197,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			String(this.xmlLookupService.getChildByLocalName(cacheNode, 'ptCount')?.['@_val'] ?? ''),
 			10,
 		);
-		const length =
-			isFiniteNumber(declaredCount) && declaredCount > maxIndex + 1 ? declaredCount : maxIndex + 1;
+		const length = chartPointLength(points.length, maxIndex + 1, declaredCount);
 
 		const result: string[] = [];
 		for (let index = 0; index < length; index++) {
