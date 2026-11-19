@@ -2,14 +2,17 @@
 // y-websocket wire format (message type 0 = sync, 1 = awareness; sync sub-types step1/step2/update),
 // so a stock y-websocket server works with a WebSocket transport. Inbound payloads are decoded
 // defensively: a malformed or oversized message is reported as an `error` event and dropped, never
-// thrown, and updates are validated before they touch the document (see codec.ts).
+// thrown, and updates are validated before they touch the document (see codec.ts). A refused
+// update stops the sync: this copy would lack it, and every later change that builds on it, so the
+// provider disconnects with status `error` and an `UpdateRefusedError` instead of drifting silently.
 // New code written for the collab area; protocol constants follow y-protocols.
 import * as decoding from 'lib0/decoding';
 import * as encoding from 'lib0/encoding';
 import * as awarenessProtocol from 'y-protocols/awareness';
 import * as Y from 'yjs';
-import { applyUpdateSafe, MAX_UPDATE_BYTES } from './codec';
+import { MAX_UPDATE_BYTES, validateUpdate } from './codec';
 import { Emitter } from './emitter';
+import { UpdateRefusedError } from './refusal';
 import type {
 	ConnectionStatus,
 	ProviderContext,
@@ -47,6 +50,8 @@ export function createTransportProvider(
 	let synced = false;
 	let open = false;
 	let destroyed = false;
+	/** An update was refused: the connection ends in `error` until `connect` is called again. */
+	let refused = false;
 	const origin = {}; // identifies our own writes so they are not echoed back
 
 	const setStatus = (next: ConnectionStatus): void => {
@@ -60,6 +65,17 @@ export function createTransportProvider(
 		events.emit('synced', next);
 	};
 	const fail = (reason: string): void => events.emit('error', new Error(reason));
+	/** Stop syncing: the document keeps what it has, and nothing more is sent or received. */
+	// The reason comes first, so a listener hearing the status change already knows why.
+	const refuse = (error: UpdateRefusedError): void => {
+		refused = true;
+		events.emit('error', error);
+		transport.disconnect();
+		open = false;
+		setSynced(false);
+		dropRemotePeers();
+		setStatus('error');
+	};
 
 	const send = (encoder: encoding.Encoder): void => {
 		if (open) transport.send(encoding.toUint8Array(encoder));
@@ -127,15 +143,28 @@ export function createTransportProvider(
 			return send(encoder);
 		}
 		if (kind !== SYNC_STEP2 && kind !== SYNC_UPDATE) return fail(`unknown sync message ${kind}`);
-		const result = applyUpdateSafe(doc, payload, origin, { maxBytes: maxMessageBytes });
-		if (!result.ok) return fail(result.reason);
+		const checked = validateUpdate(payload, maxMessageBytes);
+		if (!checked.ok) return refuse(new UpdateRefusedError(checked.code, checked.reason));
+		try {
+			Y.applyUpdate(doc, payload, origin);
+		} catch (cause) {
+			// The update was well formed and Yjs integrated it; a listener of the document threw.
+			// That is this client's error, not a refusal, so sync goes on.
+			return fail(
+				`a document listener failed: ${cause instanceof Error ? cause.message : String(cause)}`,
+			);
+		}
 		if (kind === SYNC_STEP2) setSynced(true);
 	};
 
 	const onMessage = (data: Uint8Array): void => {
 		if (destroyed) return;
-		if (!(data instanceof Uint8Array) || data.byteLength === 0 || data.byteLength > maxMessageBytes)
-			return fail('message is empty, not binary, or too large');
+		if (data instanceof Uint8Array && data.byteLength > maxMessageBytes)
+			return refuse(
+				new UpdateRefusedError('too-large', `message exceeds the ${maxMessageBytes} byte limit`),
+			);
+		if (!(data instanceof Uint8Array) || data.byteLength === 0)
+			return fail('message is empty or not binary');
 		try {
 			const decoder = decoding.createDecoder(data);
 			const type = decoding.readVarUint(decoder);
@@ -160,6 +189,7 @@ export function createTransportProvider(
 
 	const connect = (): void => {
 		if (destroyed) return;
+		refused = false;
 		setStatus('connecting');
 		transport.connect({
 			open: () => {
@@ -172,10 +202,11 @@ export function createTransportProvider(
 				open = false;
 				setSynced(false);
 				dropRemotePeers();
-				if (!destroyed) setStatus('disconnected');
+				if (!destroyed) setStatus(refused ? 'error' : 'disconnected');
 			},
 			message: onMessage,
 			error: (error) => {
+				if (error instanceof UpdateRefusedError) refused = true;
 				events.emit('error', error);
 				if (!open) setStatus('error');
 			},

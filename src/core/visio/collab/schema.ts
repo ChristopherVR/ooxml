@@ -35,6 +35,8 @@
 // inert for that room: it never writes and never rebuilds the drawing from it. There is no
 // migration: version 1 rooms (one entry per whole shape) hold data this schema cannot merge.
 import * as Y from 'yjs';
+import { isWellFormedContentType } from '../../opc/safe-resource-url';
+import { isSharedMediaPath } from './package';
 import type { PieceEntry } from './pieces';
 
 export const SCHEMA_VERSION = 4;
@@ -272,6 +274,8 @@ export function mediaEntry(value: unknown): MediaEntry | undefined {
 	const hash = str(value.hash);
 	const ct = str(value.ct);
 	if (path === undefined || hash === undefined || ct === undefined) return undefined;
+	// A peer names the part and its type: it may only add a media part of a well-formed type.
+	if (!isSharedMediaPath(path) || !isWellFormedContentType(ct)) return undefined;
 	return { path, hash, ct, d: value.d === true, ...opt('b', str(value.b)) };
 }
 export function connectEntry(value: unknown): ConnectEntry | undefined {

@@ -8,6 +8,7 @@ import type {
 	CollaborationLivePatcher,
 	CollaborationRole,
 	CollaborationShellState,
+	CompatibilityWarningToast,
 } from 'ooxml-ui/pptx';
 /**
  * Types for the `useCollaboration` composable.
@@ -37,6 +38,8 @@ export interface UseCollaborationOptions {
 	slides: Ref<import('pptx-viewer-core').PptxSlide[]>;
 	/** Called when a remote peer broadcasts a newer slide set. */
 	onRemoteSlides: (slides: import('pptx-viewer-core').PptxSlide[]) => void;
+	/** Show a notice in the viewer's stack: why sharing stopped, when an update was refused. */
+	onNotice?: (toast: CompatibilityWarningToast) => void;
 	/** This user's cursor/label colour. */
 	userColor?: string;
 	/**

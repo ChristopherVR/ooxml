@@ -1302,6 +1302,7 @@ const comments = useCommentsWiring({
 const collaboration = useCollaborationWiring({
 	slides,
 	history,
+	onNotice: (toast) => compatToasts.notify(toast),
 	slidesPaused: () => deckStyleHeld.value,
 	loadVersion,
 	// A room may replace the host's own deck (a late joiner's bootstrap load),

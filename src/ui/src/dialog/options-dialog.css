@@ -43,7 +43,7 @@ nav button:hover {
 }
 nav button[aria-selected='true'] {
 	background: color-mix(in srgb, var(--office-accent) 14%, transparent);
-	color: var(--office-accent);
+	color: var(--office-accent-ink);
 	font-weight: 600;
 }
 nav button:focus-visible {
@@ -189,7 +189,7 @@ input[type='checkbox']:focus-visible {
 	border-radius: 50%;
 	font-size: var(--office-font-size-3xs);
 	font-style: normal;
-	color: var(--office-accent);
+	color: var(--office-accent-ink);
 	opacity: 0.75;
 	cursor: help;
 }

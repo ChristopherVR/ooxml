@@ -16,6 +16,14 @@ export const translations = {
 	'pptx.collaboration.status.connecting': '接続しています...',
 	'pptx.collaboration.status.disconnected': '切断されました',
 	'pptx.collaboration.status.error': '接続エラー',
+	'pptx.collaboration.refused.tooLarge':
+		'共有セッションからの変更が大きすぎてここでは適用できないため、共有を停止しました。お使いのコピーは変更されていません。',
+	'pptx.collaboration.refused.malformed':
+		'共有セッションからの変更を読み取れなかったため、共有を停止しました。お使いのコピーは変更されていません。',
+	'pptx.collaboration.refused.serverRejected':
+		'サーバーが最新の変更を拒否したため、共有を停止しました。お使いのコピーにはその変更が残っています。',
+	'pptx.collaboration.refused.serverFull':
+		'共有ドキュメントがサーバーのサイズ上限に達したため、共有を停止しました。お使いのコピーには最新の変更が残っています。',
 	'pptx.collaboration.statusAriaLabel': '共同編集: {{status}}',
 	'pptx.collaboration.userCount': '{{count}} 人のユーザー',
 	'pptx.collaboration.youLabel': '{{name}} (自分)',

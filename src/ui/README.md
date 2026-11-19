@@ -169,10 +169,11 @@ root. Product canvases and `prepareOfficeUiBlock()` use this host-aware installa
 the latter checks again after native framework insertion. Theme attributes inside Angular shadow
 views and other shadow containers therefore work alongside inherited custom properties.
 
-Use semantic `--office-*` palette tokens on a shared ancestor to theme all controls. When overriding
-a specific derived control token, such as `--office-select-background`, apply it to the actual
-control. Product compatibility bridges recompute dependent defaults on their inner chrome so those
-controls follow the product palette.
+Use semantic `--office-*` palette tokens on a shared ancestor to theme all controls. Derived
+tokens, such as `--office-select-background` or `--office-accent-ink`, are never declared by the
+theme: each control resolves them where it reads them, so overriding `--office-background` or
+`--office-accent` on any container also changes the selects and the accent text inside it. A host
+may still set a derived token itself, on `:root` or on any container.
 
 Importing an entry never touches the DOM (SSR-safe). Elements are defined by the `define*` /
 `register*` functions, which are idempotent, no-ops without a `window`, and refuse to coexist
@@ -415,12 +416,29 @@ Every control is token based: no colour, length, radius, font size, shadow, dura
 is written literally. `OFFICE_TOKENS` (from `ooxml-ui/theme`) is the single table of
 `--office-*` tokens and their defaults; controls read them through `tok(name)`, which expands to
 `var(--office-…, <default>)`, so they render correctly with or without the installed theme.
-`THEME_CSS` declares every default on `:root`, plus dark-mode and forced-colours values. Override
-any token on `:root` or on any container to retheme or resize the suite:
+`THEME_CSS` declares every literal default on `:root`, plus dark-mode and forced-colours values;
+a token whose default reads another token (`isDerivedToken`) resolves where it is read instead.
+Override any token on `:root` or on any container to retheme or resize the suite:
 
 - semantic colours: `--office-foreground`, `-background`, `-surface`, `-selected`, `-border`,
   `-accent`, `-accent-foreground`, `-ring`, `-danger`, `-warning`, `-info`, `-popover`, `-overlay`,
   `-notice-*`, `-paper`;
+- contrast roles: `--office-accent-ink` (the accent as text, at least 4.5:1 on the background and
+  selected fills; by default the accent itself under `color-scheme: light` and a lighter tint of
+  it under `color-scheme: dark`), `--office-teams-brand-ink` (the same for the Teams brand)
+  and `--office-control-border` (form control boundaries, at least 3:1; decorative dividers keep
+  `--office-border`). `contrastRatio` and `readableTextColor` in `ooxml-core/color` check a pair;
+- colour scheme: `--office-color-scheme` (`light` by default, `dark` in the theme's dark scopes)
+  is the scheme as a value. The Word, Excel and Visio editors set their own `color-scheme` from
+  it, so the accent ink inside them is read with the scheme of the theme rather than of the page.
+  A page that sets only CSS `color-scheme: dark` on a container therefore gets light editors in
+  it; set `--office-color-scheme: dark` there as well, or use `data-office-theme="dark"`, which
+  sets both;
+- document canvas: `--office-canvas-gridline` (Excel gridlines, `#e1e1e1`) and
+  `--office-canvas-link` (hyperlinks on paper, `#0563c1`). Themes never remap these, so a theme
+  cannot change how a document looks. In forced-colours mode Word's paper and Excel's sheet
+  follow the system colours (`Canvas`, `CanvasText`, gridlines `GrayText`) while Visio's drawing
+  keeps its own; this has not yet been compared with Office's own contrast-theme rendering;
 - scales: `--office-space-*`, `--office-radius-*`, `--office-font-size-*`, `--office-icon-size-*`,
   `--office-control-height-*`, `--office-shadow-*`, `--office-duration-*`, `--office-z-*`;
 - component tokens that default to the scales, for example `--office-checkbox-size`,

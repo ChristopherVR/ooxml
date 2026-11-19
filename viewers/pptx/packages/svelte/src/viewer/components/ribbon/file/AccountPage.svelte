@@ -216,7 +216,7 @@
 	.name-field input {
 		height: 36px;
 		padding: 0 12px;
-		border: 1px solid var(--pptx-input, var(--office-border, #d1d5db));
+		border: 1px solid var(--pptx-input, var(--office-control-border, #8a8886));
 		background: var(--pptx-card, var(--office-surface, #f3f4f6));
 		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
 		font-size: 13px;

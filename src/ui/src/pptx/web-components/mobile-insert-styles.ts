@@ -31,5 +31,7 @@ ${TABLE_PICKER_CSS}
 @media (forced-colors: active) {
 	.tile, .shape, .row { border-color: ButtonText; background: Canvas; }
 	.tile svg, .row svg, .back { color: ButtonText; }
+	.row[aria-current="true"] { forced-color-adjust: none; border-color: Highlight; background: Highlight; color: HighlightText; }
+	.row[aria-current="true"] svg { forced-color-adjust: none; color: HighlightText; }
 }
 `;

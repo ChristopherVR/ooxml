@@ -38,6 +38,12 @@ import {
 	readAssetFields,
 	writeAssetFields,
 } from './collaboration-assets';
+import {
+	type RemoteValueRejection,
+	sanitizeRemoteElements,
+	sanitizeRemoteSlide,
+	sharedSlideRecord,
+} from './collaboration-remote-values';
 import type { YTextLike } from './collaboration-text-codec';
 import { encodeTextBody, decodeTextBody, isYTextLike } from './collaboration-text-codec';
 import type { YTextEditableLike } from './collaboration-text-merge';
@@ -46,6 +52,7 @@ import type { TextSessionPositions } from './collaboration-text-session';
 import { inlineListBodyText } from './inline-list-body';
 
 export * from './collaboration-assets';
+export * from './collaboration-remote-values';
 export * from './collaboration-text-codec';
 
 // ---------------------------------------------------------------------------
@@ -398,7 +405,7 @@ export function writeSlideToYMap(
 	factories: YjsFactories,
 	assets: YMapLike,
 ): void {
-	const rec = slide as unknown as Record<string, unknown>;
+	const rec = sharedSlideRecord(slide);
 	for (const key of SCALAR_SLIDE_KEYS) {
 		if (rec[key] !== undefined && !isLocalOnlyUrl(rec[key])) {
 			ymap.set(key, rec[key]);
@@ -418,6 +425,10 @@ export function writeSlideToYMap(
 	ymap.set('elements', elemArr);
 }
 
+/**
+ * Read one slide written by any peer. Its elements and resource fields are checked on the
+ * way out (see collaboration-remote-values.ts), so what is returned is safe to render.
+ */
 export function readSlideFromYMap(ymap: YMapLike, assets: YMapLike): PptxSlide {
 	const slide: Record<string, unknown> = {};
 	for (const key of SCALAR_SLIDE_KEYS) {
@@ -443,7 +454,9 @@ export function readSlideFromYMap(ymap: YMapLike, assets: YMapLike): PptxSlide {
 			elements.push(readElementFromYMap(elemArr.get(i) as YMapLike, assets));
 		}
 	}
-	slide.elements = elements;
+	const rejected: RemoteValueRejection[] = [];
+	slide.elements = sanitizeRemoteElements(elements, rejected);
+	sanitizeRemoteSlide(slide, rejected);
 	return slide as unknown as PptxSlide;
 }
 

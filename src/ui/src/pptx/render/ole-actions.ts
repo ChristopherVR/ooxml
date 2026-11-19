@@ -2,7 +2,7 @@
  * ole-actions.ts - framework-agnostic helpers for the OLE download/open UI.
  *
  * Shared by the binding OLE renderers to format the recovered embedded payload
- * size and decide whether its MIME type can be opened directly in a browser tab
+ * size and decide whether its payload can be opened directly in a browser tab
  * (vs download-only). Pure functions, no framework or DOM dependencies.
  *
  * @module shared/render/ole-actions
@@ -39,29 +39,13 @@ export function formatBytes(bytes?: number): string | undefined {
 }
 
 /**
- * Whether a payload of the given MIME type can be opened directly in a browser
- * tab (PDF, raster images, plain text, JSON). Everything else is download-only.
- * Markup types are refused on purpose: a document served from the viewer's
- * origin as `text/html`, `image/svg+xml` or any XML/XHTML type can run script
- * there, so any MIME containing `xml` or `html` is excluded. Matching is
- * case-insensitive and ignores any trailing `; charset=...` parameter.
+ * Whether an embedded payload can be opened directly in a browser tab (PDF,
+ * raster images, plain text, CSV, JSON) rather than only downloaded. The type
+ * is read from the `data:` URL itself, never from the separate MIME field, so
+ * a payload whose claimed type disagrees with its URL cannot be opened as
+ * markup on the viewer's origin. `openUrlInNewTab` applies the same check.
  */
-export function isBrowserOpenableMime(mime?: string): boolean {
-	if (!mime) {
-		return false;
-	}
-	const value = mime.split(';', 1)[0]?.trim().toLowerCase() ?? '';
-	if (value.length === 0) {
-		return false;
-	}
-	if (/xml|html/u.test(value)) {
-		return false;
-	}
-	if (value.startsWith('image/') || value.startsWith('text/')) {
-		return true;
-	}
-	return value === 'application/pdf' || value === 'application/json';
-}
+export { isBrowserOpenableDataUrl } from 'ooxml-core/opc';
 
 /**
  * Whether an OLE element's interactive Download / (browser-openable) Open

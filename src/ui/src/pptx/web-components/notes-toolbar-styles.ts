@@ -47,7 +47,7 @@ svg { flex: none; width: 14px; height: 14px; fill: none; stroke: currentColor; s
 @media (forced-colors: active) {
 	.group, button.mode, .popover { border-color: CanvasText; background: Canvas; color: CanvasText; }
 	button { color: ButtonText; }
-	button:hover:not(:disabled) { background: Highlight; color: HighlightText; }
+	button:hover:not(:disabled) { forced-color-adjust: none; background: Highlight; color: HighlightText; }
 	button:disabled { color: GrayText; opacity: 1; }
 	button:focus-visible, .popover input:focus-visible { outline-color: Highlight; }
 	.actions .insert { background: ButtonFace; color: ButtonText; border: 1px solid ButtonText; }

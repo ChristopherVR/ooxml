@@ -1,0 +1,125 @@
+{
+	"$comment": "Checks that fail today, each with the 2.0 work package that closes it and the text its failure message contains (`fails`). A listed check passes only while it fails that way: it fails as soon as the gap closes (delete the entry in that commit) and when it fails for any other reason. Entries may be removed but never added or given another `fails` (check-baseline.mjs).",
+	"gaps": {
+		"keyboard/teams/f6": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-10",
+			"why": "Teams has no region keys: F6 does nothing from the composer",
+			"fails": "F6: textarea \"Message\" <composer>"
+		},
+		"keyboard/vsdx/f6": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-10",
+			"why": "Visio has no F6 regions: F6 does nothing from the canvas",
+			"fails": "F6: div[region] \"Diagram canvas\" <canvas>"
+		},
+		"reflow/320x256/docx/office/document": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "the ribbon and page margins leave the page under half the window wide",
+			"fails": "the document is at least half the window wide"
+		},
+		"reflow/320x256/docx/simple/document": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "the page is shown under half the window wide",
+			"fails": "the document is at least half the window wide"
+		},
+		"reflow/320x256/teams/controls": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "the app bar and the composer are cut off with nothing to scroll them into view",
+			"fails": "controls outside the window that nothing scrolls to"
+		},
+		"reflow/320x256/vsdx/office/controls": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "status bar and ribbon controls are cut off with nothing to scroll them into view",
+			"fails": "controls outside the window that nothing scrolls to"
+		},
+		"reflow/320x256/vsdx/simple/controls": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "Presentation Mode is cut off with nothing to scroll it into view",
+			"fails": "controls outside the window that nothing scrolls to"
+		},
+		"reflow/320x256/xlsx/office/document": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "the ribbon leaves the grid under a quarter of the window tall",
+			"fails": "the document is at least a quarter of the window tall"
+		},
+		"reflow/360x225/chat/controls": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "Attach, the model picker and Send are cut off with nothing to scroll them into view",
+			"fails": "controls outside the window that nothing scrolls to"
+		},
+		"reflow/360x225/docx/office/document": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "the ribbon and page margins leave the page under half the window wide",
+			"fails": "the document is at least half the window wide"
+		},
+		"reflow/360x225/docx/simple/document": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "the page is shown under half the window wide",
+			"fails": "the document is at least half the window wide"
+		},
+		"reflow/360x225/teams/controls": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "the app bar and the composer are cut off with nothing to scroll them into view",
+			"fails": "controls outside the window that nothing scrolls to"
+		},
+		"reflow/360x225/vsdx/office/controls": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "status bar and ribbon controls are cut off with nothing to scroll them into view",
+			"fails": "controls outside the window that nothing scrolls to"
+		},
+		"reflow/360x225/vsdx/simple/controls": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "Presentation Mode is cut off with nothing to scroll it into view",
+			"fails": "controls outside the window that nothing scrolls to"
+		},
+		"reflow/360x225/xlsx/office/document": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "the ribbon leaves the grid under a quarter of the window tall",
+			"fails": "the document is at least a quarter of the window tall"
+		},
+		"tree/docx/editor-name": {
+			"owner": "P2 Word semantics and typing",
+			"finding": "A11Y-04",
+			"why": "the editing area is an unnamed generic element, not a multi-line text box",
+			"fails": "rich-text text boxes found: 0"
+		},
+		"tree/docx/headings": {
+			"owner": "P2 Word semantics and typing",
+			"finding": "A11Y-04",
+			"why": "headings render as paragraphs with no heading role or level",
+			"fails": "headings found: 0"
+		},
+		"tree/docx/table-headers": {
+			"owner": "P2 Word semantics and typing",
+			"finding": "A11Y-04",
+			"why": "a repeated header row renders as ordinary cells",
+			"fails": "column headers found: 0"
+		},
+		"tree/pptx/slide-name": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-12",
+			"why": "the slide is named Slide, with no number or title",
+			"fails": "slide names: [\"Slide\"]"
+		},
+		"tree/xlsx/gridcells": {
+			"owner": "P4 Excel semantics and calculation budget",
+			"finding": "A11Y-06",
+			"why": "the grid exposes no rows or cells, only the active cell's input",
+			"fails": "rows in the grid: 0"
+		}
+	}
+}

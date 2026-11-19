@@ -219,3 +219,25 @@ td[data-sdt-cell][data-sdt-kind='date']:is(:hover, .dve-sdt-active)::after {
 	background-color: var(--dve-editable-region, rgba(255, 213, 79, 0.35));
 	box-shadow: inset 0 -1px 0 rgba(191, 144, 0, 0.55);
 }
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	/* The control holding the caret: a system highlight outline, title tab and arrow. */
+	.dve-sdt.dve-sdt-active,
+	p[data-sdt-block].dve-sdt-active,
+	td[data-sdt-cell].dve-sdt-active {
+		outline-color: Highlight !important;
+	}
+	.dve-sdt-active::before,
+	.dve-sdt-active::after {
+		forced-color-adjust: none;
+		background: Highlight !important;
+		color: HighlightText !important;
+	}
+	.sdt-calendar-grid button.selected {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
+}

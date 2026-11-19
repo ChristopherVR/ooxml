@@ -13,14 +13,16 @@
 	height: var(--office-target-size);
 	padding: 0 var(--office-space-2);
 	box-sizing: border-box;
-	border: var(--office-border-width) solid transparent;
+	border: var(--office-border-width) solid var(--office-field-border);
 	border-radius: var(--office-radius);
 	color: var(--office-muted-foreground);
 }
 .field:hover,
 .field:focus-within {
-	border-color: var(--office-border);
 	background: var(--office-background);
+}
+.field:focus-within {
+	border-color: var(--office-field-border-focus);
 }
 input {
 	flex: 1;
@@ -95,6 +97,7 @@ li.empty {
 		color: CanvasText;
 	}
 	li[data-active] {
+		forced-color-adjust: none;
 		background: Highlight;
 		color: HighlightText;
 	}

@@ -3,6 +3,7 @@
 // session through `applyExternal` (outside its history). Undo is a Y.UndoManager tracking only
 // local edits, so it never reverts a collaborator's work: route Ctrl+Z through the binding.
 import * as Y from 'yjs';
+import type { LeftOutValue } from '../../collab/refusal';
 import type { CollabSession } from '../../collab/session';
 import type { CellRange } from '../address';
 import type { EditSession, WorkbookChange } from '../edit/types';
@@ -28,6 +29,11 @@ export type WorkbookCollabHost = Pick<
 export interface WorkbookBindingOptions {
 	/** A remote change could not be applied (it is skipped; the room is still converged). */
 	onError?: (error: unknown) => void;
+	/**
+	 * Values a collaborator wrote that fail their field's check (a script link target, a malformed
+	 * cell) were left out of a remote change, listed once per change.
+	 */
+	onLeftOut?: (values: readonly LeftOutValue[]) => void;
 }
 
 export interface WorkbookBinding {
@@ -99,15 +105,19 @@ export function bindWorkbookSession(
 	const apply = (all: boolean, kind: 'remote' | 'undo' | 'redo' = 'remote'): void => {
 		const pending = all ? emptyDirty(true) : dirty;
 		dirty = emptyDirty();
+		const leftOut: LeftOutValue[] = [];
 		try {
 			edit.applyExternal(() => {
-				const change = applyShared(shared, keys, workbook, pending);
+				const change = applyShared(shared, keys, workbook, pending, undefined, (value) =>
+					leftOut.push(value),
+				);
 				if (change) change.kind = kind;
 				return change;
 			});
 		} catch (error) {
 			options.onError?.(error);
 		}
+		if (leftOut.length) options.onLeftOut?.(leftOut);
 	};
 
 	const settle = (): void => {

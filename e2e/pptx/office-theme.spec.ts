@@ -112,6 +112,7 @@ test('Office tokens theme actual chrome and shadow controls while legacy inputs 
 			'--office-surface': '#243447',
 			'--office-foreground': '#e7effb',
 			'--office-border': '#617992',
+			'--office-control-border': '#8ea4bb',
 			'--office-accent': '#a78bfa',
 			'--office-ring': '#c4b5fd',
 			'--office-font': 'Courier New, monospace',
@@ -128,7 +129,8 @@ test('Office tokens theme actual chrome and shadow controls while legacy inputs 
 		expect(part.color, name).toBe('rgb(231, 239, 251)');
 		expect(part.font, name).toContain('Courier New');
 	}
-	expect(custom.field.border).toBe('rgb(97, 121, 146)');
+	// Form fields take the control boundary, not the divider colour.
+	expect(custom.field.border).toBe('rgb(142, 164, 187)');
 	expect(custom.check.background).toBe('rgb(167, 139, 250)');
 	const field = page.locator('#office-theme-probe pptx-ui-select button');
 	await page.keyboard.press('Tab');

@@ -7,8 +7,10 @@ import {
 	createCollabSession,
 	createMemoryHub,
 	transportProvider,
+	UPDATE_REFUSAL_MESSAGES,
 	type CollabSession,
 } from 'ooxml-core/collab';
+import { collabStrings } from 'ooxml-core/i18n';
 import { getCell } from 'ooxml-core/xlsx';
 import { sanitizeXlsxPresence, type XlsxPresence } from 'ooxml-core/xlsx/collab';
 import type { EditorCore } from './editor-core';
@@ -126,6 +128,27 @@ describe('<xlsx-editor> collaboration', () => {
 		expect(a.element.readOnly).toBe(true);
 		a.element.removeAttribute('read-only');
 		expect(a.element.readOnly).toBe(false);
+	});
+
+	it('explains a refused update in the display language and stops sharing', async () => {
+		const { hub, a } = await pair();
+		a.element.locale = 'de';
+		const errors: string[] = [];
+		a.element.addEventListener('workbook-error', (event) =>
+			errors.push((event as CustomEvent<{ message: string }>).detail.message),
+		);
+		const evil = hub.createTransport('book');
+		evil.connect({ open: () => {}, close: () => {}, message: () => {}, error: () => {} });
+		// A whole sync update whose struct has an unknown content type.
+		evil.send(new Uint8Array([0, 2, 5, 1, 1, 1, 0, 0x1f]));
+		await wait();
+		const german = collabStrings.de[UPDATE_REFUSAL_MESSAGES.malformed]!;
+		const root = a.element.shadowRoot ?? a.element;
+		const toasts = [...root.querySelectorAll('.xve-toast-text')].map((node) => node.textContent);
+		expect(toasts).toContain(german);
+		expect(toasts.some((text) => text?.startsWith('Verbindung'))).toBe(false);
+		expect(errors).toContain(german);
+		expect(a.element.collaborationState).toMatchObject({ status: 'error', refusal: 'malformed' });
 	});
 
 	it('adopts the room and carries edits both ways', async () => {

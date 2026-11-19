@@ -3,7 +3,7 @@
  *
  * The pure type-resolution helpers (resolveOleType / getOleType* / aria / badge /
  * display name / placeholder style) and the size/MIME helpers (formatBytes /
- * isBrowserOpenableMime) now live in `pptx-viewer-shared` and are re-exported
+ * isBrowserOpenableDataUrl) now live in `pptx-viewer-shared` and are re-exported
  * here so the component (and tests) keep importing them from one local module.
  *
  * The presentational action-model builders below stay local for now; they are
@@ -17,7 +17,7 @@ import type { TranslateService } from '@ngx-translate/core';
 import {
 	formatBytes,
 	getOleTypeLabel,
-	isBrowserOpenableMime,
+	isBrowserOpenableDataUrl,
 	mediaSurfaceOf,
 	oleActionsVisible,
 	resolveOleType,
@@ -33,7 +33,7 @@ export {
 	getOleTypeColor,
 	getOleTypeLabel,
 	getPlaceholderStyle,
-	isBrowserOpenableMime,
+	isBrowserOpenableDataUrl,
 	resolveOleType,
 } from 'ooxml-ui/pptx';
 export type { ResolvedOleType } from 'ooxml-ui/pptx';
@@ -140,7 +140,7 @@ export function buildOleActionModel(
 ): OleActionModel {
 	const downloadHref = el.oleEmbeddedData;
 	const canDownload = typeof downloadHref === 'string' && downloadHref.length > 0;
-	const canOpen = canDownload && isBrowserOpenableMime(el.oleEmbeddedMimeType);
+	const canOpen = canDownload && isBrowserOpenableDataUrl(el.oleEmbeddedData);
 	return {
 		canDownload,
 		canOpen,

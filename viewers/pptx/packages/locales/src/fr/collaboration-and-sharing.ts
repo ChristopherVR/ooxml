@@ -16,6 +16,14 @@ export const translations = {
 	'pptx.collaboration.status.connecting': 'Connexion...',
 	'pptx.collaboration.status.disconnected': 'Déconnecté',
 	'pptx.collaboration.status.error': 'Erreur de connexion',
+	'pptx.collaboration.refused.tooLarge':
+		"Une modification de la session partagée est trop volumineuse pour être appliquée ici. Le partage s'est donc arrêté. Votre copie n'a pas été modifiée.",
+	'pptx.collaboration.refused.malformed':
+		"Une modification de la session partagée n'a pas pu être lue. Le partage s'est donc arrêté. Votre copie n'a pas été modifiée.",
+	'pptx.collaboration.refused.serverRejected':
+		"Le serveur a refusé votre dernière modification. Le partage s'est donc arrêté. Votre copie conserve la modification.",
+	'pptx.collaboration.refused.serverFull':
+		"Le document partagé a atteint la taille maximale du serveur. Le partage s'est donc arrêté. Votre copie conserve votre dernière modification.",
 	'pptx.collaboration.statusAriaLabel': 'Collaboration : {{status}}',
 	'pptx.collaboration.userCount': '{{count}} utilisateur(s)',
 	'pptx.collaboration.youLabel': '{{name}} (vous)',

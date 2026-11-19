@@ -14,4 +14,9 @@ export const RIBBON_TABS_CSS = `
 	background: var(--office-accent); color: var(--office-accent-foreground);
 }
 [role='tab'][data-tab='file'][aria-selected='true']::after { content: none; }
+@media (forced-colors: active) {
+	[role='tab'][data-tab='file'][aria-selected='true'] {
+		forced-color-adjust: none; background: Highlight; color: HighlightText;
+	}
+}
 `;

@@ -65,7 +65,7 @@
 .tab[aria-selected='true'] {
 	border-color: var(--office-border);
 	background: var(--office-background);
-	color: var(--office-accent);
+	color: var(--office-accent-ink);
 	font-weight: 600;
 	box-shadow: inset 0 var(--office-border-width-thick) 0 var(--office-accent);
 }
@@ -94,7 +94,8 @@ svg {
 	:host {
 		border-top-color: CanvasText;
 	}
-	.tab[aria-selected='true'] {
+	.tab[aria-selected='true'],
+	:host([plain]) .tab[aria-selected='true'] {
 		background: Highlight;
 		color: HighlightText;
 		forced-color-adjust: none;

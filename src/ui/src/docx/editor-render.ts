@@ -1,3 +1,4 @@
+import { isUpdateRefusal } from 'ooxml-core/collab';
 import { EditorState, Plugin } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import type { EditorCore } from './editor-core';
@@ -56,9 +57,10 @@ export function renderDocument(core: EditorCore): void {
 											core.shell.review?.commentsPanel.refresh();
 											core.refreshControls();
 										});
-										const errors = binding.session.on('error', (error) =>
-											core.host.reportError(error),
-										);
+										// The room reports refusals, which can come before this binding exists.
+										const errors = binding.session.on('error', (error) => {
+											if (!isUpdateRefusal(error)) core.host.reportError(error);
+										});
 										return {
 											destroy: () => {
 												media();

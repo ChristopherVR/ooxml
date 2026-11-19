@@ -1,5 +1,6 @@
 import { definer } from '../../registry';
 import { html, nothing, unsafeCSS, type PropertyValues } from 'lit';
+import { withTokens } from '../../base';
 import { TeamsLitElement } from '../i18n/lit-element';
 import { contentUrl, readContent, type FileEntry, type TeamsClient } from 'ooxml-core/teams';
 import { downloadBytes } from '../../xlsx/file-commands';
@@ -10,7 +11,7 @@ const fileKey = (file: FileEntry | null | undefined): string =>
 	JSON.stringify([file?.channelId, file?.messageId, file?.url, file?.name]);
 
 export class TeamsFileActions extends TeamsLitElement {
-	static override styles = unsafeCSS(css);
+	static override styles = unsafeCSS(withTokens(css));
 	static override properties = {
 		file: { attribute: false },
 		client: { attribute: false },

@@ -1,4 +1,5 @@
 import { html, type PropertyValues } from 'lit';
+import { readableTextColor } from 'ooxml-core/color';
 import { definer } from '../registry';
 import { initialsOf } from '../presence';
 import { TeamsElement, colorFor, withStyles } from './base';
@@ -54,7 +55,9 @@ export class OfficeUiAvatar extends TeamsElement {
 	protected override render() {
 		const background = this.color || colorFor(this.seed || this.name);
 		return html`
-			<span class="face" style="background:${background}">${initialsOf(this.name)}</span>
+			<span class="face" style="background:${background};color:${readableTextColor(background)}"
+				>${initialsOf(this.name)}</span
+			>
 			${
 				this.presence
 					? html`<span

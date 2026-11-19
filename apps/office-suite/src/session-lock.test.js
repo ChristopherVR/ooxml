@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { isLocked, lockInput, takeComposed } from './session-lock.js';
+import { isLocked, lockInput, takeComposed, takeQueued } from './session-lock.js';
 
 /** The part of an element the lock touches. */
 class FakeHost extends EventTarget {
@@ -14,9 +14,9 @@ class FakeHost extends EventTarget {
 	}
 }
 
-function press(target, key) {
+function press(target, key, modifiers = {}) {
 	const event = new Event('keydown', { cancelable: true });
-	event.key = key;
+	Object.assign(event, { key, ...modifiers });
 	target.dispatchEvent(event);
 	return event;
 }
@@ -75,4 +75,18 @@ test('only the last release of overlapping locks reports that the editor is free
 	assert.equal(first(), false);
 	assert.equal(second(), true);
 	assert.equal(second(), false);
+});
+
+test('Ctrl+S or Cmd+S pressed while locked is refused and queued once, other keys are not', () => {
+	const host = new FakeHost();
+	const unlock = lockInput(host);
+	assert.equal(press(host, 's', { ctrlKey: true }).defaultPrevented, true);
+	press(host, 's', { metaKey: true });
+	press(host, 's');
+	press(host, 'z', { ctrlKey: true });
+	unlock();
+	assert.deepEqual(takeQueued(host), ['save']);
+	assert.deepEqual(takeQueued(host), []);
+	press(host, 's', { ctrlKey: true });
+	assert.deepEqual(takeQueued(host), [], 'an unlocked editor saves the usual way');
 });

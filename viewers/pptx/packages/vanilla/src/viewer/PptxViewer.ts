@@ -1,4 +1,5 @@
 import {
+	createRemoteValueNotifier,
 	applySlidePasteTemplates,
 	buildDeckSaveOptions,
 	buildUserFontFaceStyles,
@@ -745,6 +746,17 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 				callbacks: options,
 			}),
 		);
+		// Values a collaboration peer sent that were left out: one toast per new
+		// rejection, however the slides were adopted from the room.
+		const remoteValueNotice = createRemoteValueNotifier();
+		this.store.subscribe((state, previous) => {
+			const toast = state.slides === previous.slides ? undefined : remoteValueNotice(state.slides);
+			if (toast) {
+				this.store.set({
+					compatToasts: [toast, ...state.compatToasts.filter((entry) => entry.id !== toast.id)],
+				});
+			}
+		});
 		this.store.subscribe((state, previous) => {
 			if (this.presenterSession.getSnapshot().role === 'presenter') {
 				this.presenterSession.updateSnapshot({ slideIndex: state.currentSlide });

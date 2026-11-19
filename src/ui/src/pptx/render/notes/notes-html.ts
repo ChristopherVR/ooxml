@@ -11,7 +11,7 @@
 
 import type { BulletInfo, TextSegment, TextStyle } from 'ooxml-core/pptx';
 
-import { isUrlSafe } from '../hyperlink-security';
+import { resolveHyperlinkHref } from '../hyperlink-security';
 import {
 	INDENT_PX,
 	escapeHtml,
@@ -213,8 +213,9 @@ export function segmentsToEditorHtml(segments: TextSegment[]): string {
 
 					const text = escapeHtml(segment.text);
 
-					if (segment.style.hyperlink && isUrlSafe(segment.style.hyperlink)) {
-						const href = escapeHtml(segment.style.hyperlink);
+					const link = resolveHyperlinkHref(segment.style.hyperlink);
+					if (link) {
+						const href = escapeHtml(link);
 						return `<a href="${href}" style="color:#4a9eff;text-decoration:underline;cursor:pointer" data-hyperlink="${href}">${text}</a>`;
 					}
 

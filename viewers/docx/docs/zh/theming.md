@@ -44,18 +44,19 @@ editor.themeColors = {
 };
 ```
 
-| 令牌                                   | 作用                           |
-| -------------------------------------- | ------------------------------ |
-| `background`、`foreground`             | 应用外壳（标题栏、窗口）       |
-| `card`、`cardForeground`               | 功能区、面板和状态栏的表面     |
-| `popover`、`popoverForeground`         | 菜单、对话框和其他浮动表面     |
-| `primary`、`primaryForeground`         | 品牌色和主要操作颜色           |
-| `secondary`、`secondaryForeground`     | 次要表面                       |
-| `muted`、`mutedForeground`             | 弱化的表面，也是页面背后的区域 |
-| `accent`、`accentForeground`           | 悬停和选中的高亮               |
-| `destructive`、`destructiveForeground` | 破坏性操作                     |
-| `border`、`input`、`ring`              | 边框、输入框轮廓、焦点环       |
-| `radius`                               | 基础圆角半径，例如 `4px`       |
+| 令牌                                   | 作用                                                                 |
+| -------------------------------------- | -------------------------------------------------------------------- |
+| `background`、`foreground`             | 应用外壳（标题栏、窗口）                                             |
+| `card`、`cardForeground`               | 功能区、面板和状态栏的表面                                           |
+| `popover`、`popoverForeground`         | 菜单、对话框和其他浮动表面                                           |
+| `primary`、`primaryForeground`         | 品牌色和主要操作颜色                                                 |
+| `primaryInk`                           | 作为界面和选中区域上文字的主色，对比度至少 4.5:1（默认为 `primary`） |
+| `secondary`、`secondaryForeground`     | 次要表面                                                             |
+| `muted`、`mutedForeground`             | 弱化的表面，也是页面背后的区域                                       |
+| `accent`、`accentForeground`           | 悬停和选中的高亮                                                     |
+| `destructive`、`destructiveForeground` | 破坏性操作                                                           |
+| `border`、`input`、`ring`              | 边框、输入框轮廓、焦点环                                             |
+| `radius`                               | 基础圆角半径，例如 `4px`                                             |
 
 传入 `undefined` 可清除这些覆盖。
 

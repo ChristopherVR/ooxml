@@ -34,21 +34,22 @@ Die Standardakzentfarbe hat sich dadurch geändert. Der Viewer hat früher `#395
 
 Die früheren Tokens `--vv-*` funktionieren weiterhin. Jedes davon hat, wenn es gesetzt ist, Vorrang vor dem Token `--office-*`, das es nachbildet; ist es nicht gesetzt, greift der Viewer auf das gemeinsame Token zurück. Verwenden Sie sie, um nur diesen Viewer umzugestalten, ohne den Rest der Seite zu berühren.
 
-| Token              | Fällt zurück auf             | Rolle                                      |
-| ------------------ | ---------------------------- | ------------------------------------------ |
-| `--vv-font`        | `--office-font`              | Schriftfamilie                             |
-| `--vv-background`  | `--office-surface`           | Hintergrund des Fensters                   |
-| `--vv-surface`     | `--office-background`        | Fläche der Multifunktionsleiste und Panels |
-| `--vv-secondary`   | `--office-surface`           | Sekundäre Fläche                           |
-| `--vv-shadow`      | `--office-shadow`            | Seitenschatten                             |
-| `--vv-ink`         | `--office-foreground`        | Primärer Text                              |
-| `--vv-muted`       | `--office-muted-foreground`  | Sekundärer Text                            |
-| `--vv-border`      | `--office-border`            | Rahmen                                     |
-| `--vv-accent`      | `--office-accent`            | Akzentfarbe                                |
-| `--vv-accent-soft` | 10 % der Akzentfarbe         | Weiche Akzentfläche (Hover, Auswahl)       |
-| `--vv-accent-ink`  | `--office-accent-foreground` | Text auf der Akzentfarbe                   |
-| `--vv-focus`       | `--office-ring`              | Fokusring                                  |
-| `--vv-danger`      | `--office-danger`            | Zerstörerische und Fehlerzustände          |
+| Token              | Fällt zurück auf                          | Rolle                                                                                              |
+| ------------------ | ----------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `--vv-font`        | `--office-font`                           | Schriftfamilie                                                                                     |
+| `--vv-background`  | `--office-surface`                        | Hintergrund des Fensters                                                                           |
+| `--vv-surface`     | `--office-background`                     | Fläche der Multifunktionsleiste und Panels                                                         |
+| `--vv-secondary`   | `--office-surface`                        | Sekundäre Fläche                                                                                   |
+| `--vv-shadow`      | `--office-shadow`                         | Seitenschatten                                                                                     |
+| `--vv-ink`         | `--office-foreground`                     | Primärer Text                                                                                      |
+| `--vv-muted`       | `--office-muted-foreground`               | Sekundärer Text                                                                                    |
+| `--vv-border`      | `--office-border`                         | Rahmen                                                                                             |
+| `--vv-accent`      | `--office-accent`                         | Akzentfarbe                                                                                        |
+| `--vv-accent-soft` | 10 % der Akzentfarbe                      | Weiche Akzentfläche (Hover, Auswahl)                                                               |
+| `--vv-accent-ink`  | `--office-accent-foreground`              | Text auf der Akzentfarbe                                                                           |
+| `--vv-accent-text` | `--vv-accent`, dann `--office-accent-ink` | Akzentfarbe als Text (aktuelles Seitenregister, Akzentbeschriftungen); mindestens 4,5:1 zur Fläche |
+| `--vv-focus`       | `--office-ring`                           | Fokusring                                                                                          |
+| `--vv-danger`      | `--office-danger`                         | Zerstörerische und Fehlerzustände                                                                  |
 
 Der Playground setzt `data-theme="light" | "dark"` am Dokumentstamm und liefert passende Werte `--vv-*` in `demos/visio/demo/workspace.css` für die eigene Seitengestaltung (Startbildschirm, Workspace-Hülle). Diese Datei funktioniert weiterhin, weil Überschreibungen `--vv-*` noch wirken.
 

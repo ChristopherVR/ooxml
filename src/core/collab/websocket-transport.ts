@@ -3,6 +3,7 @@
 // the mixed-content check fails fast instead of waiting out a socket the browser will never open.
 // New code written for the collab area; the reconnect policy mirrors y-websocket's.
 import type { Transport, TransportHandlers } from './provider';
+import { UpdateRefusedError } from './refusal';
 import { isMixedContentBlocked } from './validation';
 
 /** The structural slice of `WebSocket` this transport uses. */
@@ -41,6 +42,8 @@ export interface WebSocketTransportOptions {
 const OPEN = 1;
 /** WebSocket close code the reference server uses for policy refusals. */
 const POLICY_VIOLATION = 1008;
+/** Close code for a message the server will not take: too big, too complex, or a full document. */
+const MESSAGE_TOO_BIG = 1009;
 const POLICY_BASE_DELAY_MS = 5000;
 const POLICY_MAX_DELAY_MS = 60_000;
 /** A connection that stayed up this long was healthy: its later refusal starts a fresh count. */
@@ -97,27 +100,31 @@ export function createWebSocketTransport(options: WebSocketTransportOptions): Tr
 		ws.onclose = (event) => {
 			if (socket !== ws) return;
 			socket = null;
-			active.close(event.reason);
-			if (stopped) return;
+			if (stopped) return active.close(event.reason);
+			/** Give up: the reason comes before the close, so listeners know why the connection ends. */
+			const stop = (error: Error): void => {
+				stopped = true;
+				active.error(error);
+				active.close(event.reason);
+			};
+			if (event.code === MESSAGE_TOO_BIG) {
+				// The same change would be sent again on every reconnect.
+				const reason = event.reason || 'message too big';
+				const code = /document too large/i.test(reason) ? 'server-full' : 'server-rejected';
+				return stop(new UpdateRefusedError(code, reason));
+			}
 			const policy = event.code === POLICY_VIOLATION;
 			if (!policy || Date.now() - openedAt > POLICY_RESET_MS) policyCloses = 0;
 			if (policy) policyCloses++;
-			if (++failures > maxRetries) {
-				stopped = true;
-				return active.error(new Error('WebSocket reconnect attempts exhausted'));
-			}
+			if (++failures > maxRetries) return stop(new Error('WebSocket reconnect attempts exhausted'));
+			// The server closed on purpose (rejected update, rate limit, revoked session): say why, and
+			// wait longer each time. A rejected update would be sent again on every reconnect.
+			const reason = event.reason || 'connection refused by the server';
+			if (policy && reason.startsWith('update rejected') && policyCloses >= maxRejectedRetries)
+				return stop(new UpdateRefusedError('server-rejected', reason));
+			active.close(event.reason);
 			let delay = Math.min(maxDelayMs, baseDelayMs * 2 ** (failures - 1));
 			if (policy) {
-				// The server closed on purpose (rejected update, rate limit, revoked session): say why,
-				// and wait longer each time. A rejected update would be sent again on every reconnect.
-				const reason = event.reason || 'connection refused by the server';
-				const rejected = reason.startsWith('update rejected');
-				if (rejected && policyCloses >= maxRejectedRetries) {
-					stopped = true;
-					return active.error(
-						new Error(`The server rejected your changes and sync stopped: ${reason}`),
-					);
-				}
 				active.error(new Error(`The server closed the connection: ${reason}`));
 				delay = Math.max(
 					delay,

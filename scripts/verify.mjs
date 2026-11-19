@@ -99,6 +99,11 @@ const add = (id, cmd, cwd = '.', needs = [], extra = {}) => {
 	return id;
 };
 
+/** The PowerPoint demos to build: the browser suite's projects, or all five for the gates. */
+function demoProjects(projects) {
+	return browser && p.a11y?.pptx ? ['react', 'vue', 'angular', 'vanilla', 'svelte'] : projects;
+}
+
 /** A build skipped while its inputs hash equals the stamp in its `dist`. */
 function buildStep(id, cmd, cwd, dir, { extra = [], needs = [] } = {}) {
 	const dist = join(ROOT, dir, 'dist');
@@ -208,11 +213,46 @@ if (p.pptx.run) {
 	}
 	if (browser && p.pptx.e2e?.projects?.length) {
 		const demos = add('pptx:demos', 'bun e2e-build.ts', 'viewers/pptx', ['pptx:build', ...BUILT], {
-			env: { PPTX_E2E_PROJECTS: p.pptx.e2e.projects.join(',') },
+			env: { PPTX_E2E_PROJECTS: demoProjects(p.pptx.e2e.projects).join(',') },
 		});
 		add('pptx:e2e', pptxBrowserCommand(p.pptx.e2e), 'viewers/pptx', [demos], {
 			exclusive: true,
 			env: { PPTX_E2E_SERVE: 'preview' },
+		});
+	}
+}
+
+// The accessibility gates (e2e/a11y): their typecheck, unit tests and baseline check always, the
+// browser run with --browser, on the built suite and, when PowerPoint is reached, all five demos.
+// The baselines are compared with the base branch, --full too; a base git cannot find fails.
+if (p.a11y?.run) {
+	add(
+		'a11y:checks',
+		`bun run typecheck && bun run test:unit && node check-baseline.mjs --base ${base}`,
+		'e2e/a11y',
+	);
+	if (browser) {
+		const needs = [
+			add('a11y:suite', 'node scripts/build-suite.mjs', '.', BUILT),
+			add('a11y:install', PLAYWRIGHT_INSTALL, 'e2e/a11y', BUILT),
+		];
+		if (p.a11y.pptx) {
+			// One demo build serves both suites: pptx:demos builds all five when the gates run.
+			if (!steps.some((step) => step.id === 'pptx:demos')) {
+				const packages = steps.some((step) => step.id === 'pptx:build')
+					? 'pptx:build'
+					: add('a11y:pptx-packages', 'bun run build:packages', 'viewers/pptx', BUILT);
+				add('pptx:demos', 'bun e2e-build.ts', 'viewers/pptx', [packages, ...BUILT], {
+					env: { PPTX_E2E_PROJECTS: demoProjects([]).join(',') },
+				});
+			}
+			needs.push('pptx:demos');
+		}
+		const projects = p.a11y.projects.map((project) => `--project=${project}`).join(' ');
+		const specs = p.a11y.specs.join(' ');
+		add('a11y:browser', `bun run test -- ${projects} ${specs}`.trim(), 'e2e/a11y', needs, {
+			exclusive: true,
+			env: { A11Y_PORT: process.env.A11Y_PORT ?? '4610' },
 		});
 	}
 }
