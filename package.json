@@ -58,7 +58,7 @@
 		"check:changelog": "node scripts/check-changelog-sections.mjs",
 		"release:plan": "node scripts/release-plan.mjs",
 		"release:publish": "node scripts/publish-released.mjs",
-		"changelog:unreleased": "bunx git-cliff --config cliff.toml --tag-pattern \"^ooxml-core@\" --unreleased",
+		"changelog:unreleased": "git-cliff --config cliff.toml --tag-pattern \"^ooxml-core@\" --unreleased",
 		"test:mcp": "node --test mcp/test/*.test.js",
 		"lint": "oxlint --ignore-pattern=viewers/",
 		"lint:fix": "oxlint --fix --ignore-pattern=viewers/",
@@ -71,12 +71,17 @@
 	},
 	"devDependencies": {
 		"esbuild": "^0.28.2",
+		"git-cliff": "2.14.2",
 		"oxfmt": "^0.79.0",
-		"oxlint": "^1.94.0"
+		"oxlint": "^1.94.0",
+		"pkg-pr-new": "0.0.94",
+		"yaml": "2.9.1"
 	},
 	"overrides": {
 		"argparse": "^2.0.1",
-		"esbuild": "^0.28.2"
+		"esbuild": "^0.28.2",
+		"glob": "^14.0.2",
+		"minimatch": "^11.0.1"
 	},
 	"engines": {
 		"node": ">=22"
