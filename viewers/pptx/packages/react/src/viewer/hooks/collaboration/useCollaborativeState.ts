@@ -50,7 +50,8 @@ export function useCollaborativeState({
 	const userColor = sanitizeColor(config?.userColor, '#6366f1');
 
 	const session = useCollaborationSession({ config: ownedSession.holding ? undefined : config });
-	const { awareness, doc, clientId, synced, retry, refusal } = session;
+	const { awareness, doc, clientId, synced, retry } = session;
+	const refusal = ownedSession.refusal ?? session.refusal;
 	const status = ownedSession.status ?? session.status;
 
 	const { remoteUsers, broadcastPresence } = usePresenceTracking({
