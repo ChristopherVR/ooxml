@@ -359,6 +359,10 @@ export class VisioViewerElement extends BaseElement {
 			this.#notes,
 			this.#root.querySelector('.backstage-notes')!,
 			this.#root.querySelector('.shape-inspector')!,
+			(from, to) =>
+				translateRibbonText(normalizeVisioLocale(this.#locale()), 'Connects {from} to {to}')
+					.replace('{from}', from)
+					.replace('{to}', to),
 		);
 		this.#chrome = new ViewerChrome(this.#root, this.controller);
 		this.#panZoom = new ViewerPanZoom(this.#root, this.#viewport, this.controller, (open) =>
