@@ -18,12 +18,8 @@ import { buildStamp } from '../build-stamp';
  * `/styles` alias maps to the emitted CSS asset. (Published consumers resolve
  * these via the generated `dist/package.json` `exports` instead.)
  *
- * jit: true is required because Vite 8 / Rolldown transpiles @Component with
- * standard TypeScript decorators instead of running the Angular AOT compiler
- * on local demo components, so no ɵcmp factory is emitted and Angular must
- * fall back to JIT at runtime. Enabling jit mode bundles @angular/compiler
- * so that fallback works. The published pptx-angular-viewer library is still
- * fully AOT-compiled by ng-packagr and is unaffected by this setting.
+ * The demo is compiled ahead of time (`jit: false`): the published site's Content Security Policy
+ * allows script only from the site and never `eval`, and Angular's JIT compiler needs `eval`.
  */
 const angularLibDist = resolve(__dirname, '../../../viewers/pptx/packages/angular/dist');
 
@@ -49,7 +45,7 @@ export default defineConfig({
 	// CI sets DEMO_BASE so the demo's asset URLs resolve under that subpath.
 	base: process.env.DEMO_BASE ?? '/',
 	plugins: [
-		angular({ tsconfig: './tsconfig.json', jit: true }),
+		angular({ tsconfig: './tsconfig.json', jit: false }),
 		buildStamp(resolve(__dirname, '../../../viewers/pptx/packages/angular/package.json')),
 	],
 	resolve: {
