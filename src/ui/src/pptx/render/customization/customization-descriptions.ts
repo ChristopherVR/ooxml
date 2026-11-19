@@ -135,7 +135,7 @@ export const EDITOR_SHORTCUT_DESCRIPTIONS: Record<EditorKeyActionName, string> =
 	newSlide: 'New slide (Ctrl/Cmd+M).',
 	hyperlink: 'Insert or edit a hyperlink (Ctrl/Cmd+K).',
 	clearFormatting: 'Clear character formatting (Ctrl/Cmd+Space).',
-	cycleSelectionNext: 'Select the next element (Tab).',
-	cycleSelectionPrev: 'Select the previous element (Shift+Tab).',
+	cycleSelectionNext: 'Select the next element (Tab, inside the slide).',
+	cycleSelectionPrev: 'Select the previous element (Shift+Tab, inside the slide).',
 	pasteSpecial: 'Paste Special (Ctrl/Cmd+Alt+V).',
 };

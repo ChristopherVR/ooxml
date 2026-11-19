@@ -1,4 +1,5 @@
 import {
+	announceSlideObject,
 	cycleSelectableElement,
 	isFeatureEnabled,
 	stepFontSizePt,
@@ -195,6 +196,7 @@ export function useEditorKeyboard(input: UseEditorKeyboardInput): UseEditorKeybo
 		const nextId = cycleSelectableElement(ids, selectedElementIds.value[0] ?? null, direction);
 		if (nextId) {
 			selectElement(nextId, false);
+			announceSlideObject(document, nextId);
 		}
 	}
 

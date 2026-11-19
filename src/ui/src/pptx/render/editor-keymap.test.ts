@@ -408,24 +408,30 @@ describe('mapEditorKey clear formatting', () => {
 });
 
 describe('mapEditorKey selection cycling (Tab)', () => {
-	it('maps Tab and Shift+Tab when nothing is being typed into', () => {
-		expect(mapEditorKey(press('Tab')).action).toBe('cycleSelectionNext');
-		expect(mapEditorKey(press('Tab', { shiftKey: true })).action).toBe('cycleSelectionPrev');
+	const INSIDE = { slideFocus: 'objects' } as const;
+
+	it('maps Tab and Shift+Tab inside the slide', () => {
+		expect(mapEditorKey(press('Tab'), INSIDE).action).toBe('cycleSelectionNext');
+		expect(mapEditorKey(press('Tab', { shiftKey: true }), INSIDE).action).toBe(
+			'cycleSelectionPrev',
+		);
 	});
 
 	it('cycles with or without an existing selection', () => {
-		expect(mapEditorKey(press('Tab'), SELECTED).action).toBe('cycleSelectionNext');
+		expect(mapEditorKey(press('Tab'), { ...SELECTED, ...INSIDE }).action).toBe(
+			'cycleSelectionNext',
+		);
 	});
 
 	it('leaves Ctrl+Tab and Cmd+Tab to the browser/OS tab switcher', () => {
-		expect(mapEditorKey(press('Tab', { ctrlKey: true })).action).toBeNull();
-		expect(mapEditorKey(press('Tab', { metaKey: true })).action).toBeNull();
+		expect(mapEditorKey(press('Tab', { ctrlKey: true }), INSIDE).action).toBeNull();
+		expect(mapEditorKey(press('Tab', { metaKey: true }), INSIDE).action).toBeNull();
 	});
 
 	it('stands down while editing text, drawing, or in a foreign text field', () => {
-		expect(mapEditorKey(press('Tab'), { isEditingText: true }).action).toBeNull();
-		expect(mapEditorKey(press('Tab'), { isDrawing: true }).action).toBeNull();
-		expect(mapEditorKey(press('Tab'), { isTextInputTarget: true }).action).toBeNull();
+		expect(mapEditorKey(press('Tab'), { ...INSIDE, isEditingText: true }).action).toBeNull();
+		expect(mapEditorKey(press('Tab'), { ...INSIDE, isDrawing: true }).action).toBeNull();
+		expect(mapEditorKey(press('Tab'), { ...INSIDE, isTextInputTarget: true }).action).toBeNull();
 	});
 });
 

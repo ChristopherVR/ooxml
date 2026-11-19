@@ -2,6 +2,7 @@ import type { GestureController, SnapLine } from 'ooxml-ui/pptx';
 import {
 	applyReroutedConnectors,
 	createGestureController,
+	announceSlideObject,
 	cycleSelectableElement,
 	filterInteractableIds,
 	fontSizeOf,
@@ -237,6 +238,7 @@ export function createEditorKeydown(host: EditorControllerHost): (event: Keyboar
 			const nextId = cycleSelectableElement(ids, editor.selectedElementId, direction);
 			if (nextId) {
 				editor.select(nextId);
+				announceSlideObject(document, nextId);
 			}
 		},
 		onPasteSpecial: () => {

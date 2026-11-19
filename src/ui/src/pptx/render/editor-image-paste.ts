@@ -26,7 +26,8 @@ function isCanvasTarget(root: HTMLElement, canvas: HTMLElement, node: EventTarge
 	const element = node as Element | null;
 	return Boolean(
 		element?.nodeType === 1 &&
-		(element === root || canvas.contains(element)) &&
+		// The root, the canvas, or anything between them (the focusable slide viewport).
+		(element.contains(canvas) || canvas.contains(element)) &&
 		element.closest(`[${ROOT_ATTRIBUTE}]`) === root &&
 		!element.closest(TEXT_OR_DIALOG),
 	);

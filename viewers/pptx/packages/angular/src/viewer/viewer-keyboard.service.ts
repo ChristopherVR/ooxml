@@ -23,6 +23,7 @@
 
 import { inject, Injectable } from '@angular/core';
 import {
+	announceSlideObject,
 	cycleSelectableElement,
 	dispatchEditorKey,
 	EMPTY_RESOLVED_CUSTOMIZATION,
@@ -199,6 +200,7 @@ export class ViewerKeyboardService {
 		const nextId = cycleSelectableElement(ids, this.editor.selectedIds()[0] ?? null, direction);
 		if (nextId) {
 			this.editor.select([nextId]);
+			announceSlideObject(document, nextId);
 		}
 	}
 

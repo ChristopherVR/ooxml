@@ -477,11 +477,11 @@ test.describe('PowerPoint 365 editing shortcuts (alignment, font size, format pa
 	});
 
 	test("Tab cycles the selection forward through the slide's elements", async ({ page }) => {
-		// Tab from no selection lands on the first element; deleting it proves a
-		// selection happened without depending on which of the two the binding
+		// Enter goes into the slide and selects the first element; deleting it proves
+		// a selection happened without depending on which of the two the binding
 		// treats as "first" in tab order.
 		await loadDeck(page, TWO_SHAPES);
-		await pressShortcut(page, 'Tab', 400);
+		await pressShortcut(page, 'Enter', 400);
 		await pressShortcut(page, 'Delete', 600);
 		await expect(slideElements(page), 'one Tab press must select exactly one element').toHaveCount(
 			1,
@@ -489,33 +489,34 @@ test.describe('PowerPoint 365 editing shortcuts (alignment, font size, format pa
 		const survivorOfOneTab = await slideElements(page).first().textContent();
 
 		await loadDeck(page, TWO_SHAPES);
-		await pressShortcut(page, 'Tab', 400);
+		await pressShortcut(page, 'Enter', 400);
 		await pressShortcut(page, 'Tab', 400);
 		await pressShortcut(page, 'Delete', 600);
 		const survivorOfTwoTabs = await slideElements(page).first().textContent();
 
 		expect(
 			survivorOfTwoTabs,
-			'a second Tab must move the selection to a DIFFERENT element than the first, so deleting ' +
-				'after two presses removes the other shape than deleting after one',
+			'Tab must move the selection to a DIFFERENT element than the first, so deleting after it ' +
+				'removes the other shape than deleting straight after Enter',
 		).not.toBe(survivorOfOneTab);
 	});
 
 	test('Shift+Tab cycles the selection backward', async ({ page }) => {
 		await loadDeck(page, TWO_SHAPES);
-		await pressShortcut(page, 'Tab', 400);
+		await pressShortcut(page, 'Enter', 400);
 		await pressShortcut(page, 'Delete', 600);
-		const survivorOfTabForward = await slideElements(page).first().textContent();
+		const survivorOfFirst = await slideElements(page).first().textContent();
 
 		await loadDeck(page, TWO_SHAPES);
+		await pressShortcut(page, 'Enter', 400);
 		await pressShortcut(page, 'Shift+Tab', 400);
 		await pressShortcut(page, 'Delete', 600);
 		const survivorOfTabBackward = await slideElements(page).first().textContent();
 
 		expect(
 			survivorOfTabBackward,
-			'Shift+Tab must move the opposite direction from Tab, landing on the other element',
-		).not.toBe(survivorOfTabForward);
+			'Shift+Tab must move to the other element, wrapping from the first',
+		).not.toBe(survivorOfFirst);
 	});
 });
 

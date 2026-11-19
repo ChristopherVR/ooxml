@@ -1,5 +1,6 @@
 import type { ResolvedCustomization } from 'ooxml-ui/pptx';
 import {
+	announceSlideObject,
 	cycleSelectableElement,
 	parentSelection,
 	stepFontSizePt,
@@ -226,5 +227,6 @@ function cycleSelection(
 	const nextId = cycleSelectableElement(ids, state.selectedElementId, direction);
 	if (nextId) {
 		ops.applySelection(nextId, [nextId]);
+		announceSlideObject(document, nextId);
 	}
 }
