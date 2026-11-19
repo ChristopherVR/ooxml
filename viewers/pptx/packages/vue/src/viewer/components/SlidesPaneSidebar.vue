@@ -120,12 +120,15 @@ watch(
 	[() => props.activeIndex, itemHeight],
 	async ([index]) => {
 		await nextTick();
-		// Focus stays on the current row, as in PowerPoint's thumbnail pane.
-		if (railHasFocus(listEl.value)) {
-			focusCurrentRow(listEl.value);
-		}
+		// Focus stays on the current row, as in PowerPoint's thumbnail pane: read
+		// before the reveal can drop the focused row, moved once the row renders.
+		const keepFocus = railHasFocus(listEl.value);
 		if (shouldVirtualize.value) {
 			virtualWindow.reveal(index);
+		}
+		if (keepFocus) {
+			await nextTick();
+			focusCurrentRow(listEl.value);
 		}
 	},
 	{ immediate: true },

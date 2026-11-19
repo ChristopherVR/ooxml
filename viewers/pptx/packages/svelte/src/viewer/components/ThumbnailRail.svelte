@@ -24,6 +24,7 @@
 		editorThumbnailStep,
 	} from 'ooxml-ui/pptx';
 	import type { SectionContextMenuCommandId } from 'ooxml-ui/pptx';
+	import { tick } from 'svelte';
 
 	import { useTranslator } from '../../i18n/context';
 	import SectionContextMenu from './SectionContextMenu.svelte';
@@ -108,12 +109,14 @@
 	});
 	$effect(() => {
 		const index = current;
-		// Focus stays on the current row, as in PowerPoint's thumbnail pane.
-		if (railHasFocus(railEl)) {
-			focusCurrentRow(railEl);
-		}
+		// Focus stays on the current row, as in PowerPoint's thumbnail pane: read
+		// before the reveal can drop the focused row, moved once the row renders.
+		const keepFocus = railHasFocus(railEl);
 		if (shouldVirtualize && railEl) {
 			virtualWindow.reveal(index);
+		}
+		if (keepFocus) {
+			void tick().then(() => focusCurrentRow(railEl));
 		}
 	});
 

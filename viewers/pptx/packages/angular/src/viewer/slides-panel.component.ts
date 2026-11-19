@@ -1,5 +1,6 @@
 import { NgStyle } from '@angular/common';
 import {
+	afterNextRender,
 	afterRenderEffect,
 	ChangeDetectionStrategy,
 	Component,
@@ -9,6 +10,7 @@ import {
 	ElementRef,
 	HostListener,
 	inject,
+	Injector,
 	input,
 	NgZone,
 	output,
@@ -336,6 +338,7 @@ export class SlidesPanelComponent {
 
 	constructor() {
 		const zone = inject(NgZone);
+		const injector = inject(Injector);
 		effect(() => {
 			this.virtualWindow.setShape({
 				totalItems: this.deck().length,
@@ -350,13 +353,15 @@ export class SlidesPanelComponent {
 		afterRenderEffect(() => {
 			const index = this.activeIndex();
 			this.itemHeight();
-			// Focus stays on the current row, as in PowerPoint's thumbnail pane.
+			// Focus stays on the current row, as in PowerPoint's thumbnail pane: read
+			// before the reveal can drop the focused row, moved once the row renders.
 			const viewport = this.scrollViewport();
-			if (railHasFocus(viewport)) {
-				focusCurrentRow(viewport);
-			}
+			const keepFocus = railHasFocus(viewport);
 			if (viewport && this.shouldVirtualize()) {
 				this.virtualWindow.reveal(index);
+			}
+			if (keepFocus) {
+				afterNextRender(() => focusCurrentRow(viewport), { injector });
 			}
 		});
 		effect(() => {
