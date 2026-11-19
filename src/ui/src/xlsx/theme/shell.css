@@ -8,6 +8,8 @@
 	--ink: var(--xve-foreground, var(--office-foreground));
 	--muted: var(--xve-muted-foreground, var(--office-muted-foreground));
 	--line: var(--xve-border, var(--office-border));
+	/* Form control boundaries (combo boxes, fields): 3:1 against the chrome. */
+	--control-line: var(--xlsx-theme-input);
 	--surface: var(--xve-card, var(--office-surface));
 	--chrome: var(--xve-background, var(--office-background));
 	display: block;
@@ -144,4 +146,14 @@
 	font-size: 11px;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.xve-icon-button[aria-pressed='true'] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
 }

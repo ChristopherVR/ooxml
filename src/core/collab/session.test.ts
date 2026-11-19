@@ -1,6 +1,8 @@
 import * as Y from 'yjs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { applyUpdateSafe } from './codec';
+import { collaborationStateOf } from './embedding';
+import { UpdateRefusedError } from './refusal';
 import { adaptYjsProvider } from './external-provider';
 import { createMemoryHub } from './memory-transport';
 import { createCollabSession, type CollabSession } from './session';
@@ -164,7 +166,7 @@ describe('reconnect and offline edits', () => {
 });
 
 describe('malformed input', () => {
-	it('rejects garbage, truncated and oversized messages without corrupting the document', () => {
+	it('rejects garbage and truncated messages without corrupting the document', () => {
 		const hub = createMemoryHub();
 		const a = join(hub, 'Ada');
 		a.doc.getText('t').insert(0, 'safe');
@@ -173,15 +175,65 @@ describe('malformed input', () => {
 		const evil = hub.createTransport('room-1');
 		const sender = { send: (bytes: Uint8Array) => evil.send(bytes) };
 		evil.connect({ open: () => {}, close: () => {}, message: () => {}, error: () => {} });
-		sender.send(new Uint8Array([0, 2, 5, 1, 2])); // sync update with truncated payload
 		sender.send(new Uint8Array([0, 9, 0])); // unknown sync sub-type
 		sender.send(new Uint8Array([1, 3, 9])); // truncated awareness
 		sender.send(new Uint8Array([0])); // type only
 		sender.send(new Uint8Array(0)); // empty
-		expect(errors.length).toBeGreaterThanOrEqual(4);
+		expect(errors.length).toBeGreaterThanOrEqual(3);
+		expect(a.status).toBe('connected');
 		expect(a.doc.getText('t').toString()).toBe('safe');
 		a.doc.getText('t').insert(4, '!');
 		expect(a.doc.getText('t').toString()).toBe('safe!');
+	});
+
+	it('keeps syncing when a local document listener throws on a remote update', () => {
+		const hub = createMemoryHub();
+		const a = join(hub, 'Ada');
+		const b = join(hub, 'Bob');
+		const errors: Error[] = [];
+		b.on('error', (error) => errors.push(error));
+		const listener = (): never => {
+			throw new Error('binding bug');
+		};
+		b.doc.getText('t').observe(listener);
+		a.doc.getText('t').insert(0, 'one');
+		b.doc.getText('t').unobserve(listener);
+		a.doc.getText('t').insert(3, ' two');
+		expect(errors.map((error) => error.message)).toEqual([
+			'a document listener failed: binding bug',
+		]);
+		expect(b.status).toBe('connected');
+		expect(b.refusal).toBeUndefined();
+		expect(b.doc.getText('t').toString()).toBe('one two');
+	});
+
+	it('stops syncing at a refused update, keeps the document and says why', () => {
+		const hub = createMemoryHub();
+		const a = join(hub, 'Ada');
+		const b = join(hub, 'Bob');
+		a.doc.getText('t').insert(0, 'safe');
+		const errors: Error[] = [];
+		a.on('error', (error) => errors.push(error));
+		const evil = hub.createTransport('room-1');
+		evil.connect({ open: () => {}, close: () => {}, message: () => {}, error: () => {} });
+		// A whole sync update whose struct has an unknown content type.
+		evil.send(new Uint8Array([0, 2, 5, 1, 1, 1, 0, 0x1f]));
+		expect(errors).toHaveLength(1);
+		expect(errors[0]).toBeInstanceOf(UpdateRefusedError);
+		expect(errors[0]).toMatchObject({ code: 'malformed' });
+		expect(a.status).toBe('error');
+		expect(a.refusal).toBe('malformed');
+		expect(collaborationStateOf(a)).toMatchObject({ status: 'error', refusal: 'malformed' });
+		// Nothing more is exchanged until the session reconnects.
+		b.doc.getText('t').insert(0, 'later ');
+		expect(a.doc.getText('t').toString()).toBe('safe');
+		// The refused update reached Bob too; both rejoin.
+		expect(b.status).toBe('error');
+		b.reconnect();
+		a.reconnect();
+		expect(a.status).toBe('connected');
+		expect(a.refusal).toBeUndefined();
+		expect(a.doc.getText('t').toString()).toBe(b.doc.getText('t').toString());
 	});
 
 	it('applyUpdateSafe refuses non-updates and leaves the doc untouched', () => {

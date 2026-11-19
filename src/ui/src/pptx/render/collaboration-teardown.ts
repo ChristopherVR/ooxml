@@ -22,72 +22,34 @@
  * back/forward cache and may come back. We only leave in that case when the
  * caller supplied a `rejoin`, and then rejoin from `pageshow`.
  *
+ * The leave message is obeyed only when the embedding window (or the frame
+ * itself) sends it from an allowed origin: the frame's own origin unless the
+ * host names others in `CollaborationConfig.leaveMessageOrigin`. The listeners
+ * are core's `registerTeardown` (`ooxml-core/collab`) with the pptx message name.
+ *
  * The window is injected (structurally typed) so bindings can unit-test the
  * behaviour without a DOM.
  */
 
+import {
+	LEGACY_PPTX_LEAVE_MESSAGE,
+	registerTeardown,
+	type TeardownEventLike,
+	type TeardownListener,
+	type TeardownOptions,
+	type TeardownWindowLike,
+} from 'ooxml-core/collab';
+
+export type { TeardownEventLike, TeardownListener, TeardownWindowLike };
+
 /**
  * `postMessage` payload an embedding page can send into a viewer frame to make
  * it leave its collaboration room before the frame is destroyed:
- * `frame.contentWindow?.postMessage({ type: COLLAB_LEAVE_MESSAGE }, '*')`.
+ * `frame.contentWindow?.postMessage({ type: COLLAB_LEAVE_MESSAGE }, viewerOrigin)`.
  */
-export const COLLAB_LEAVE_MESSAGE = 'pptx-viewer:collab-leave';
+export const COLLAB_LEAVE_MESSAGE = LEGACY_PPTX_LEAVE_MESSAGE;
 
-/** The subset of `PageTransitionEvent` / `MessageEvent` these listeners read. */
-export interface TeardownEventLike {
-	/** `pagehide` / `pageshow` only: whether the document entered the bfcache. */
-	readonly persisted?: boolean;
-	/** `message` only: the posted payload. */
-	readonly data?: unknown;
-}
-
-/** A listener registered by {@link registerCollaborationTeardown}. */
-export type TeardownListener = (event: TeardownEventLike) => void;
-
-/** The structural slice of `window` this module needs. */
-export interface TeardownWindowLike {
-	addEventListener: (type: string, listener: TeardownListener) => void;
-	removeEventListener: (type: string, listener: TeardownListener) => void;
-}
-
-export interface CollaborationTeardownOptions {
-	/**
-	 * Leave the room: clear the local awareness state and destroy the transport.
-	 * Called at most once per "departure"; must tolerate being called when no
-	 * session is active.
-	 */
-	leave: () => void;
-	/**
-	 * Optional: re-establish the session after a bfcache restore. Supplying it
-	 * also opts the session into leaving on a persisted `pagehide`; without it a
-	 * bfcache'd page keeps its session so it still works when restored.
-	 */
-	rejoin?: () => void;
-	/** Borrowed sessions wait for pagehide, since beforeunload may be canceled. */
-	leaveOnBeforeUnload?: boolean | (() => boolean);
-	/** Window to listen on. Defaults to the ambient `window` when present. */
-	target?: TeardownWindowLike;
-}
-
-/** Resolve the listener target without depending on DOM lib types. */
-function resolveTarget(target?: TeardownWindowLike): TeardownWindowLike | null {
-	if (target) {
-		return target;
-	}
-	const scope = globalThis as { window?: TeardownWindowLike };
-	return scope.window ?? null;
-}
-
-/** Whether a `message` event carries the leave request. */
-function isLeaveMessage(data: unknown): boolean {
-	if (typeof data === 'string') {
-		return data === COLLAB_LEAVE_MESSAGE;
-	}
-	if (typeof data !== 'object' || data === null) {
-		return false;
-	}
-	return (data as { type?: unknown }).type === COLLAB_LEAVE_MESSAGE;
-}
+export type CollaborationTeardownOptions = Omit<TeardownOptions, 'leaveMessage'>;
 
 /**
  * Register document-teardown listeners that make the local peer leave its
@@ -97,66 +59,7 @@ function isLeaveMessage(data: unknown): boolean {
  * Safe to call in a non-browser environment: it becomes a no-op disposer.
  */
 export function registerCollaborationTeardown(options: CollaborationTeardownOptions): () => void {
-	const target = resolveTarget(options.target);
-	if (!target) {
-		return () => {};
-	}
-
-	const { leave, rejoin } = options;
-	let left = false;
-
-	const doLeave = (): void => {
-		if (left) {
-			return;
-		}
-		left = true;
-		leave();
-	};
-
-	const onPageHide: TeardownListener = (event) => {
-		if (event.persisted === true && !rejoin) {
-			// Bfcache'd with no way back into the room: keep the session so the
-			// restored page keeps working rather than silently going offline.
-			return;
-		}
-		doLeave();
-	};
-
-	const onBeforeUnload: TeardownListener = () => {
-		const allowed =
-			typeof options.leaveOnBeforeUnload === 'function'
-				? options.leaveOnBeforeUnload()
-				: options.leaveOnBeforeUnload !== false;
-		if (allowed) {
-			doLeave();
-		}
-	};
-
-	const onPageShow: TeardownListener = (event) => {
-		if (event.persisted !== true || !left || !rejoin) {
-			return;
-		}
-		left = false;
-		rejoin();
-	};
-
-	const onMessage: TeardownListener = (event) => {
-		if (isLeaveMessage(event.data)) {
-			doLeave();
-		}
-	};
-
-	target.addEventListener('pagehide', onPageHide);
-	target.addEventListener('beforeunload', onBeforeUnload);
-	target.addEventListener('pageshow', onPageShow);
-	target.addEventListener('message', onMessage);
-
-	return () => {
-		target.removeEventListener('pagehide', onPageHide);
-		target.removeEventListener('beforeunload', onBeforeUnload);
-		target.removeEventListener('pageshow', onPageShow);
-		target.removeEventListener('message', onMessage);
-	};
+	return registerTeardown({ ...options, leaveMessage: COLLAB_LEAVE_MESSAGE });
 }
 
 /** The slice of a Yjs `Awareness` needed to withdraw the local presence. */

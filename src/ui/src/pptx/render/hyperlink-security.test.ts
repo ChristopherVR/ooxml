@@ -24,9 +24,11 @@ describe('isUrlSafe', () => {
 		expect(isUrlSafe('mailto:user@example.com')).toBeTruthy();
 	});
 
-	it('uses the common authoring scheme policy', () => {
+	it('uses the common authoring scheme policy: other schemes are kept, never followed', () => {
 		expect(isUrlSafe('tel:+1234567890')).toBeTruthy();
-		expect(isUrlSafe('custom:example')).toBeFalsy();
+		expect(isUrlSafe('custom:example')).toBeTruthy();
+		expect(resolveHyperlinkHref('custom:example')).toBeUndefined();
+		expect(isUrlSafe('javascript:alert(1)')).toBeFalsy();
 	});
 
 	it('accepts ftp URLs', () => {

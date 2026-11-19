@@ -6,7 +6,7 @@
  * @module collaboration/types
  */
 
-import type { CollaborationWriteBackState } from 'ooxml-core/collab';
+import type { CollaborationWriteBackState, UpdateRefusalCode } from 'ooxml-core/collab';
 import type {
 	CollaborationConfig,
 	CollaborationFailure,
@@ -117,6 +117,8 @@ export interface CollaborationContextValue {
 	synced: boolean;
 	/** Manually retry the WebSocket connection after a timeout or error. */
 	retry: () => void;
+	/** Why sharing stopped, when an update from the room was refused (status `error`). */
+	refusal?: UpdateRefusalCode | null;
 	/** The local awareness client id, once the session has one. */
 	clientId?: number | null;
 	/** The owner's write-back status, as the document sync last reported it. */

@@ -13,6 +13,7 @@ export const lightTheme: EditorTheme = {
 	popoverForeground: '#1f1f1f',
 	primary: '#185abd',
 	primaryForeground: '#ffffff',
+	primaryInk: '#185abd',
 	secondary: '#eceae8',
 	secondaryForeground: '#1f1f1f',
 	muted: '#eceae8',
@@ -22,7 +23,7 @@ export const lightTheme: EditorTheme = {
 	destructive: '#dc2626',
 	destructiveForeground: '#ffffff',
 	border: '#e1dfdd',
-	input: '#c8c6c4',
+	input: '#8a8886',
 	ring: '#185abd',
 	radius: '4px',
 };
@@ -40,6 +41,7 @@ export const darkTheme: EditorTheme = {
 	popoverForeground: '#f3f4f6',
 	primary: '#4f8ef7',
 	primaryForeground: '#ffffff',
+	primaryInk: '#8ab4ff',
 	secondary: '#1f2937',
 	secondaryForeground: '#f3f4f6',
 	muted: '#1f2937',
@@ -49,7 +51,7 @@ export const darkTheme: EditorTheme = {
 	destructive: '#ef4444',
 	destructiveForeground: '#ffffff',
 	border: '#374151',
-	input: '#374151',
+	input: '#6b7280',
 	ring: '#4f8ef7',
 	radius: '4px',
 };

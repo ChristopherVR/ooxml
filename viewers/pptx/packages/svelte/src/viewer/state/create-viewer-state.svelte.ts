@@ -185,6 +185,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 		getOptionsIntervalSeconds: () => editorUi.optionsState.autosaveIntervalSeconds,
 		// Forward reference too: read only when a snapshot is written.
 		getInlineEditingId: () => editorUi.controller.editingId,
+		notify: (toast) => editorUi.compatToasts.notify(toast),
 	});
 	// `.current` is filled in once `deck` is constructed below. The keyboard
 	// shortcut that needs it (Ctrl+M) is only ever invoked on a real key press,

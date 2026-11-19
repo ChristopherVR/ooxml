@@ -5,7 +5,8 @@ import type { OfficeUiChannelList } from './channel-list';
 import type { OfficeUiChatComposer } from './chat-composer';
 import type { ChatMessage, OfficeUiChatList } from './chat-list';
 import { initialsOf } from '../presence';
-import { dayLabel, formatSize } from './base';
+import { contrastRatio, readableTextColor } from 'ooxml-core/color';
+import { colorFor, dayLabel, formatSize } from './base';
 import { formatElapsed } from './call-controls';
 
 beforeAll(() => registerOfficeUi());
@@ -59,6 +60,21 @@ describe('office-ui-avatar', () => {
 		expect(q(el, '.face').textContent).toBe('GH');
 		expect(el.getAttribute('aria-label')).toBe('Grace Hopper, Busy');
 		expect(q(el, '.presence').getAttribute('data-presence')).toBe('busy');
+	});
+
+	it('draws initials in the colour that reads best on the avatar, at least 4.5:1', async () => {
+		const light = await mount('office-ui-avatar', { name: 'Ada', color: '#ffd335' } as never);
+		expect(q<HTMLElement>(light, '.face').getAttribute('style')).toContain('color:#000000');
+		for (const name of ['Ada Lovelace', 'Grace Hopper', 'Alan Turing', 'Edsger Dijkstra', 'Xena']) {
+			const background = colorFor(name);
+			expect(contrastRatio(readableTextColor(background), background), name).toBeGreaterThanOrEqual(
+				4.5,
+			);
+			const el = await mount('office-ui-avatar', { name } as never);
+			expect(q<HTMLElement>(el, '.face').getAttribute('style')).toContain(
+				`color:${readableTextColor(background)}`,
+			);
+		}
 	});
 });
 

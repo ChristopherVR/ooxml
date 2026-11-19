@@ -34,21 +34,22 @@ La couleur d'accentuation par défaut a changé à cette occasion. Le visualiseu
 
 Les anciens jetons `--vv-*` fonctionnent toujours. Chacun, lorsqu'il est défini, l'emporte sur le jeton `--office-*` qu'il alias ; lorsqu'il n'est pas défini, le visualiseur revient au jeton partagé. Utilisez-les pour restyler ce seul visualiseur sans toucher au reste de la page.
 
-| Jeton              | Revient à                    | Rôle                                             |
-| ------------------ | ---------------------------- | ------------------------------------------------ |
-| `--vv-font`        | `--office-font`              | Famille de police                                |
-| `--vv-background`  | `--office-surface`           | Arrière-plan de la fenêtre                       |
-| `--vv-surface`     | `--office-background`        | Surface du ruban et des volets                   |
-| `--vv-secondary`   | `--office-surface`           | Surface secondaire                               |
-| `--vv-shadow`      | `--office-shadow`            | Ombre de la page                                 |
-| `--vv-ink`         | `--office-foreground`        | Texte principal                                  |
-| `--vv-muted`       | `--office-muted-foreground`  | Texte secondaire                                 |
-| `--vv-border`      | `--office-border`            | Bordures                                         |
-| `--vv-accent`      | `--office-accent`            | Couleur d'accentuation                           |
-| `--vv-accent-soft` | 10 % de l'accentuation       | Surface d'accentuation douce (survol, sélection) |
-| `--vv-accent-ink`  | `--office-accent-foreground` | Texte sur la couleur d'accentuation              |
-| `--vv-focus`       | `--office-ring`              | Anneau de focus                                  |
-| `--vv-danger`      | `--office-danger`            | États destructifs et d'erreur                    |
+| Jeton              | Revient à                                 | Rôle                                                                                                         |
+| ------------------ | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `--vv-font`        | `--office-font`                           | Famille de police                                                                                            |
+| `--vv-background`  | `--office-surface`                        | Arrière-plan de la fenêtre                                                                                   |
+| `--vv-surface`     | `--office-background`                     | Surface du ruban et des volets                                                                               |
+| `--vv-secondary`   | `--office-surface`                        | Surface secondaire                                                                                           |
+| `--vv-shadow`      | `--office-shadow`                         | Ombre de la page                                                                                             |
+| `--vv-ink`         | `--office-foreground`                     | Texte principal                                                                                              |
+| `--vv-muted`       | `--office-muted-foreground`               | Texte secondaire                                                                                             |
+| `--vv-border`      | `--office-border`                         | Bordures                                                                                                     |
+| `--vv-accent`      | `--office-accent`                         | Couleur d'accentuation                                                                                       |
+| `--vv-accent-soft` | 10 % de l'accentuation                    | Surface d'accentuation douce (survol, sélection)                                                             |
+| `--vv-accent-ink`  | `--office-accent-foreground`              | Texte sur la couleur d'accentuation                                                                          |
+| `--vv-accent-text` | `--vv-accent`, puis `--office-accent-ink` | La couleur d'accentuation en texte (onglet de page actif, libellés d'accent) ; au moins 4,5:1 sur la surface |
+| `--vv-focus`       | `--office-ring`                           | Anneau de focus                                                                                              |
+| `--vv-danger`      | `--office-danger`                         | États destructifs et d'erreur                                                                                |
 
 La démo définit `data-theme="light" | "dark"` sur la racine du document et fournit des valeurs `--vv-*` correspondantes dans `demos/visio/demo/workspace.css` pour sa propre interface de page (écran d'accueil, enveloppe de l'espace de travail) ; ce fichier continue de fonctionner, car les remplacements `--vv-*` restent appliqués.
 

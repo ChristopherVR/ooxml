@@ -3,6 +3,7 @@
 // file only decides what is on screen (`render`) and forwards user intent to client actions.
 import { definer } from '../../registry';
 import { type LitElement, html, nothing, unsafeCSS, type PropertyValues } from 'lit';
+import { withTokens } from '../../base';
 import { TeamsLitElement } from '../i18n/lit-element';
 import { describeActivityIn } from '../i18n/describe';
 import { localizeCoreText } from '../i18n/core-text';
@@ -124,7 +125,7 @@ const RAIL = [
 }[];
 
 export class TeamsApp extends TeamsLitElement {
-	static override styles = [unsafeCSS(LOCAL_THEME), unsafeCSS(css)];
+	static override styles = [unsafeCSS(LOCAL_THEME), unsafeCSS(withTokens(css))];
 	static override properties = {
 		workspaceId: { type: String, attribute: 'workspace-id' },
 		userName: { type: String, attribute: 'user-name' },

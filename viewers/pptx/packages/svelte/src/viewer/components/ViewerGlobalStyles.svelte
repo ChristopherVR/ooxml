@@ -104,6 +104,20 @@
 			outline: 2px solid Highlight;
 			outline-offset: 2px;
 		}
+		/* Contrast themes drop the accent fills that mark a pressed toggle, a selected tab or option and
+		 * the current slide. !important keeps a more specific accent rule from winning over these. */
+		:global(.pptx-svelte-viewer :is([aria-pressed='true'], [aria-selected='true'])) {
+			forced-color-adjust: none;
+			background: Highlight !important;
+			color: HighlightText !important;
+		}
+		:global(.pptx-svelte-viewer :is([aria-pressed='true'], [aria-selected='true']) *) {
+			color: inherit !important;
+		}
+		:global(.pptx-svelte-viewer [aria-current]:not([aria-current='false'])) {
+			outline: 2px solid Highlight !important;
+			outline-offset: -2px;
+		}
 	}
 
 	@media (max-width: 767px), (max-width: 1023px) and (max-height: 520px) {

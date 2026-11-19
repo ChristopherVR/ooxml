@@ -333,4 +333,11 @@ export interface CollaborationConfig {
 	writeBackDebounceMs?: number;
 	/** Retries of a rejected `onWriteBack` with exponential backoff. Default: none. */
 	writeBackRetry?: WriteBackRetry;
+	/**
+	 * Origins allowed to make an embedded viewer leave its room with the
+	 * `COLLAB_LEAVE_MESSAGE` `postMessage`. Defaults to the viewer's own origin;
+	 * a host page on another origin names its origin here (`'*'` accepts any).
+	 * Only the embedding window may send the message, whatever its origin.
+	 */
+	leaveMessageOrigin?: string | readonly string[];
 }

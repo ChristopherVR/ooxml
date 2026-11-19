@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ArrowLeft, Settings } from '@lucide/vue';
 import {
-	activateModalFocus,
+	activateBackstage,
 	BACKSTAGE_BACK_CLASSES,
 	BACKSTAGE_NAV,
 	BACKSTAGE_NAV_CLASSES,
@@ -57,15 +57,15 @@ function createPresentation(templateId: string): void {
 function openCloudFile(file: CloudOpenedFile): void {
 	run(() => cloud.open(file));
 }
-// The backstage covers the editor: focus goes in, stays in, and Escape goes back.
+// The backstage covers the viewer: focus goes in, stays in, and Escape goes back to File.
 const panelRef = ref<HTMLElement | null>(null);
-let releaseFocus = (): void => {};
+let releaseBackstage = (): void => {};
 onMounted(() => {
 	if (panelRef.value) {
-		releaseFocus = activateModalFocus(panelRef.value, { onEscape: () => props.onClose() });
+		releaseBackstage = activateBackstage(panelRef.value, () => props.onClose());
 	}
 });
-onBeforeUnmount(() => releaseFocus());
+onBeforeUnmount(() => releaseBackstage());
 onMounted(
 	() =>
 		void listBackstageRecentFiles(t, props.recentPresentationsCount, storage()).then(

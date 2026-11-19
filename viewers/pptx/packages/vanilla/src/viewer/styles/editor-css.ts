@@ -95,7 +95,7 @@ export const EDITOR_CSS = `
 	width: 64px;
 	height: 26px;
 	padding: 2px 6px;
-	border: 1px solid var(--pptx-border);
+	border: 1px solid var(--pptx-input);
 	border-radius: var(--pptx-radius);
 	background: var(--pptx-background);
 	color: var(--pptx-foreground);

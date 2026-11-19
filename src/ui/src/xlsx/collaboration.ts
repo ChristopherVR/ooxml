@@ -153,8 +153,15 @@ export class XlsxCollaboration {
 		if (!edit) throw new Error('Open or create a workbook before sharing it.');
 		const session =
 			options.session ?? createRoomSession(collab, xlsx, options, this.host.userName());
+		let leftOutShown = false;
 		const binding = xlsx.bindWorkbookSession(session, edit, {
 			onError: (error) => this.host.error(asError(error)),
+			// Once per session: a dismissed notice does not return with every remote change.
+			onLeftOut: () => {
+				if (leftOutShown) return;
+				leftOutShown = true;
+				this.host.toast(this.host.t(collab.LEFT_OUT_MESSAGE), 'warning');
+			},
 		});
 		const active: Active = { collab, session, binding, owned: !options.session, stop: [] };
 		this.#active = active;
@@ -167,7 +174,11 @@ export class XlsxCollaboration {
 			session.on('peers', () => this.#changed()),
 			session.on('synced', () => this.#changed()),
 			session.on('status', (status) => this.#status(status)),
-			session.on('error', (error) => this.host.error(error)),
+			session.on('error', (error) => {
+				// A refused update stops sharing; say why in the user's language.
+				if (collab.isUpdateRefusal(error)) this.host.toast(this.host.t(error.message), 'error');
+				this.host.error(error);
+			}),
 			edit.onChange((change) => {
 				// Sheets a peer added, moved or removed shift where remote selections land.
 				if (change.external) this.#notify();
@@ -246,7 +257,9 @@ export class XlsxCollaboration {
 		} else if (
 			(status === 'disconnected' || status === 'error') &&
 			this.#connected &&
-			!this.#lost
+			!this.#lost &&
+			// A refusal was already explained, and the connection does not come back by itself.
+			!this.#active?.session.refusal
 		) {
 			this.#lost = true;
 			this.host.toast(
@@ -276,7 +289,7 @@ export function collaborationFor(core: EditorCore): XlsxCollaboration {
 		userName: () => core.authorName,
 		t: core.ctx.t,
 		toast: (message, kind) => core.shell?.toast(message, kind),
-		error: (error) => emit(host, 'workbook-error', { error, message: error.message }),
+		error: (error) => emit(host, 'workbook-error', { error, message: core.ctx.t(error.message) }),
 		changed: (state) => {
 			emit(host, 'collaboration-change', state);
 			core.requestRender();

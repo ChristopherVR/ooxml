@@ -59,4 +59,9 @@ export const EDITOR_CONTROLS_CSS = `
   }
   ${R} [data-pptx-chrome="split-caret"]:not([data-size]) svg { width: 10px; height: 10px; stroke-width: 2.2; }
 }
+@media (min-width: 768px) and (forced-colors: active) {
+  ${BTN}[aria-pressed="true"] {
+    forced-color-adjust: none; background: Highlight; color: HighlightText; box-shadow: none;
+  }
+}
 `;

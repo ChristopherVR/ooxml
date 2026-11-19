@@ -8,6 +8,8 @@ export * from './merge-snapshots';
 export * from './diff-packages';
 export * from './clone-part-graph';
 export * from './safe-href';
+export * from './safe-resource-url';
+export * from './picture-url';
 export * from './embedded-packages';
 export * from './properties/index';
 export * as signature from './signature/index';

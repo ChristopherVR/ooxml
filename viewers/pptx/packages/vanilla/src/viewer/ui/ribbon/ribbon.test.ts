@@ -345,6 +345,45 @@ describe('createRibbon', () => {
 		expect(ribbon.el.querySelector<HTMLElement>('.pptxv-ribbon-home-content')?.hidden).toBeFalsy();
 	});
 
+	it('keeps the backstage on the viewer host and returns to File on Escape', async () => {
+		const outside = document.createElement('button');
+		const host = document.createElement('div');
+		host.setAttribute('data-pptx-theme-root', '');
+		document.body.append(outside, host);
+		vi.spyOn(host, 'getBoundingClientRect').mockReturnValue({
+			left: 160,
+			top: 40,
+			width: 1000,
+			height: 700,
+		} as DOMRect);
+		const ribbon = createRibbon(document, createTranslator(), buildHandlers());
+		host.append(ribbon.el);
+		const fileTab = Array.from(ribbonTabButtons(ribbon.el)).find(
+			(button) => button.textContent === 'File',
+		)!;
+		fileTab.focus();
+		fileTab.click();
+		await Promise.resolve();
+		const backstage = ribbon.el.querySelector<HTMLElement>('.pptxv-backstage')!;
+		expect([
+			backstage.style.left,
+			backstage.style.top,
+			backstage.style.width,
+			backstage.style.height,
+		]).toStrictEqual(['160px', '40px', '1000px', '700px']);
+		const escape = (target: Element) =>
+			target.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		escape(outside);
+		expect(backstage.hidden).toBeFalsy();
+		escape(backstage.querySelector('button')!);
+		expect(backstage.hidden).toBeTruthy();
+		const root = fileTab.getRootNode() as Document | ShadowRoot;
+		expect(root.activeElement).toBe(fileTab);
+		host.remove();
+		outside.remove();
+		vi.restoreAllMocks();
+	});
+
 	it('offers a PowerPoint 97-2003 (.ppt) card on the Save As page', () => {
 		const t = createTranslator();
 		const handlers = buildHandlers();

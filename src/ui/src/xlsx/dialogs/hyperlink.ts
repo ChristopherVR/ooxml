@@ -1,7 +1,7 @@
 // Insert > Link: a web page or file address, a place in this workbook, or an e-mail address.
 // What may be stored is the core's shared hyperlink policy (`hyperlinkPolicy` of ooxml-core/opc):
-// http, https, mailto, ftp, file and scheme-less paths; script schemes and disguised schemes are
-// refused with the policy's reason.
+// any well-formed scheme and scheme-less paths; script schemes and disguised schemes are refused
+// with the policy's reason.
 import {
 	type Hyperlink,
 	getCell,
@@ -21,7 +21,6 @@ export const HYPERLINK_REJECTIONS: Readonly<Record<HyperlinkRejection, string>> 
 	'script-scheme': 'Addresses that run scripts (javascript:, vbscript:, data:) are not allowed.',
 	'obfuscated-scheme': 'This address hides its protocol and is not allowed.',
 	'control-characters': 'This address contains control characters and is not allowed.',
-	'unsupported-scheme': 'This address uses a protocol that is not allowed.',
 	'not-openable': 'This address uses a protocol that is not allowed.',
 };
 
@@ -33,7 +32,7 @@ export function checkAddress(text: string): { href: string } | { reason: Hyperli
 	const value = text.trim();
 	const href = /^www\./i.test(value) ? `https://${value}` : value;
 	const policy = hyperlinkPolicy(href);
-	return policy.store ? { href } : { reason: policy.reason ?? 'unsupported-scheme' };
+	return policy.store ? { href } : { reason: policy.reason ?? 'empty' };
 }
 
 export function safeAddress(text: string): string | undefined {

@@ -20,7 +20,7 @@
 	height: var(--office-field-height);
 	gap: var(--office-space-1-5);
 	padding-inline: var(--office-space-3-5);
-	border-color: var(--office-border);
+	border-color: var(--office-field-border);
 	border-radius: var(--office-radius-md);
 	background: var(--office-background);
 }

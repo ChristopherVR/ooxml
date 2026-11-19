@@ -105,4 +105,13 @@ ${(['docx', 'xlsx', 'visio', 'pptx'] as const).map(productAliases).join('\n')}
 :where([data-office-block="inspector"] dt) { font-weight: ${value('--office-font-weight-bold')}; }
 :where([data-office-block="inspector"] dd) { margin: 0; overflow-wrap: anywhere; }
 :where([data-office-block="inspector"] a) { color: var(--_office-block-accent); }
+@media (forced-colors: active) {
+  :where([data-office-block] [aria-pressed="true"], [data-office-block] [aria-pressed="mixed"],
+    [data-office-block] [aria-selected="true"]) {
+    forced-color-adjust: none;
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+}
 `;

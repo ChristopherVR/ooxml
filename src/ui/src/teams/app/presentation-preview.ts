@@ -1,5 +1,6 @@
 import { definer } from '../../registry';
 import { html, nothing, unsafeCSS } from 'lit';
+import { withTokens } from '../../base';
 import { TeamsLitElement } from '../i18n/lit-element';
 import { styleMap } from 'lit/directives/style-map.js';
 import type { LoadedPresentation, ElementRendererRegistry } from 'ooxml-ui/pptx/dom';
@@ -7,7 +8,7 @@ import css from './presentation-preview.css?raw';
 
 /** An embedded reading surface over the shared PowerPoint DOM renderer. */
 export class TeamsPresentationPreview extends TeamsLitElement {
-	static override styles = unsafeCSS(css);
+	static override styles = unsafeCSS(withTokens(css));
 	static override properties = {
 		data: { state: true },
 		slide: { state: true },

@@ -48,18 +48,19 @@ Los colores de las celdas del libro y el tema del documento no cambian; el papel
 
 `themeColors` sigue admitido para las sustituciones por editor. Cada clave se convierte en una propiedad personalizada `--xve-<kebab-key>` en el elemento host, con el mismo conjunto de tokens que usa el editor de Word (`--dve-*` allí), de modo que un único sistema de diseño puede controlar ambos:
 
-| Clave                                  | Se usa para                                         |
-| -------------------------------------- | --------------------------------------------------- |
-| `background`, `foreground`             | Lienzo del editor y texto                           |
-| `card`, `cardForeground`               | Cinta y paneles                                     |
-| `popover`, `popoverForeground`         | Menús y desplegables                                |
-| `primary`, `primaryForeground`         | Acento (barra de título, selección, pestaña activa) |
-| `secondary`, `secondaryForeground`     | Botones secundarios                                 |
-| `muted`, `mutedForeground`             | Encabezados, sugerencias, texto deshabilitado       |
-| `accent`, `accentForeground`           | Estados al pasar el cursor y al pulsar              |
-| `destructive`, `destructiveForeground` | Errores                                             |
-| `border`, `input`, `ring`              | Líneas, campos y anillos de foco                    |
-| `radius`                               | Radio de las esquinas                               |
+| Clave                                  | Se usa para                                                                                                |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `background`, `foreground`             | Lienzo del editor y texto                                                                                  |
+| `card`, `cardForeground`               | Cinta y paneles                                                                                            |
+| `popover`, `popoverForeground`         | Menús y desplegables                                                                                       |
+| `primary`, `primaryForeground`         | Acento (barra de título, selección, pestaña activa)                                                        |
+| `primaryInk`                           | El color principal como texto sobre la interfaz y las selecciones, al menos 4,5:1 (por defecto, `primary`) |
+| `secondary`, `secondaryForeground`     | Botones secundarios                                                                                        |
+| `muted`, `mutedForeground`             | Encabezados, sugerencias, texto deshabilitado                                                              |
+| `accent`, `accentForeground`           | Estados al pasar el cursor y al pulsar                                                                     |
+| `destructive`, `destructiveForeground` | Errores                                                                                                    |
+| `border`, `input`, `ring`              | Líneas, campos y anillos de foco                                                                           |
+| `radius`                               | Radio de las esquinas                                                                                      |
 
 ```ts
 editor.themeColors = { primary: '#1f9d63', ring: '#1f9d63', radius: '6px' };

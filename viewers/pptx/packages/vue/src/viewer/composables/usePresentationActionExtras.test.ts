@@ -188,7 +188,7 @@ describe('usePresentationActionExtras', () => {
 
 	describe('oleVerb', () => {
 		it('does nothing when the click carried no element', () => {
-			currentSlide = slide('rId1', [oleElement('ole-1', 'blob:http://localhost/ole-payload')]);
+			currentSlide = slide('rId1', [oleElement('ole-1', 'data:application/pdf;base64,JVBERi0=')]);
 			const extras = build();
 			const openSpy = vi.spyOn(window, 'open').mockReturnValue(null);
 			extras.oleVerb(-1, undefined);
@@ -197,13 +197,22 @@ describe('usePresentationActionExtras', () => {
 		});
 
 		it("opens the clicked element's embedded payload", () => {
-			currentSlide = slide('rId1', [oleElement('ole-1', 'blob:http://localhost/ole-payload')]);
+			currentSlide = slide('rId1', [oleElement('ole-1', 'data:application/pdf;base64,JVBERi0=')]);
 			const extras = build();
 			const openSpy = vi.spyOn(window, 'open').mockReturnValue(null);
+			const objectUrls = URL as unknown as Record<string, unknown>;
+			const saved = { create: objectUrls.createObjectURL, revoke: objectUrls.revokeObjectURL };
+			objectUrls.createObjectURL = () => 'blob:http://localhost/ole-payload';
+			objectUrls.revokeObjectURL = () => {};
+			vi.useFakeTimers();
 
 			extras.oleVerb(-1, 'ole-1');
 
 			expect(openSpy).toHaveBeenCalledWith('blob:http://localhost/ole-payload', '_blank');
+			vi.runAllTimers();
+			vi.useRealTimers();
+			objectUrls.createObjectURL = saved.create;
+			objectUrls.revokeObjectURL = saved.revoke;
 			openSpy.mockRestore();
 		});
 

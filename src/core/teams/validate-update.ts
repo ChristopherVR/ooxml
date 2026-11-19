@@ -7,6 +7,7 @@
 import * as decoding from 'lib0/decoding';
 import * as Y from 'yjs';
 import { MAX_UPDATE_BYTES } from '../collab/codec';
+import { scanUpdate, type UpdateLimits } from '../collab/update-scan';
 import { MESSAGE_SYNC } from '../collab/transport-provider';
 import { CHATS_MAP } from './chat-records';
 import { type RowRevert, checkChatRow } from './validate-chats';
@@ -70,7 +71,7 @@ export interface UpdateViolation {
 }
 
 /** Size limits of an update, a message's text and the reactions of one message. */
-export type ValidateOptions = ContentLimits & { maxBytes?: number };
+export type ValidateOptions = ContentLimits & UpdateLimits & { maxBytes?: number };
 
 /**
  * `reverts` lists what an accepted update changed but its sender may no longer change. Refusing it
@@ -260,6 +261,8 @@ export function validateTeamsUpdate(
 ): UpdateVerdict {
 	if (!(update instanceof Uint8Array) || update.byteLength > (options.maxBytes ?? MAX_UPDATE_BYTES))
 		return fail({ code: 'invalid-update' });
+	// Before anything is decoded: a small frame must not make Yjs allocate millions of structs.
+	if (!scanUpdate(update, options).ok) return fail({ code: 'invalid-update' });
 	const scratch = new Y.Doc();
 	const touched: Touched = { rows: new Map(), reactions: new Set() };
 	const reverts: RowRevert[] = [];

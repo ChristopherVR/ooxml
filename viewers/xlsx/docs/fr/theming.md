@@ -48,18 +48,19 @@ Les couleurs des cellules du classeur et le thème du document restent inchangé
 
 `themeColors` reste pris en charge pour les surcharges par éditeur. Chaque clé devient une propriété personnalisée `--xve-<clé-en-kebab-case>` sur l’élément hôte, avec le même ensemble de jetons que celui de l’éditeur Word (`--dve-*` là-bas), afin qu’un seul système de design puisse piloter les deux :
 
-| Clé                                    | Utilisée pour                                    |
-| -------------------------------------- | ------------------------------------------------ |
-| `background`, `foreground`             | Canevas et texte de l’éditeur                    |
-| `card`, `cardForeground`               | Ruban et panneaux                                |
-| `popover`, `popoverForeground`         | Menus et listes déroulantes                      |
-| `primary`, `primaryForeground`         | Accent (barre de titre, sélection, onglet actif) |
-| `secondary`, `secondaryForeground`     | Boutons secondaires                              |
-| `muted`, `mutedForeground`             | En-têtes, indications, texte désactivé           |
-| `accent`, `accentForeground`           | États au survol et enfoncés                      |
-| `destructive`, `destructiveForeground` | Erreurs                                          |
-| `border`, `input`, `ring`              | Lignes, champs et anneaux de focus               |
-| `radius`                               | Rayon des coins                                  |
+| Clé                                    | Utilisée pour                                                                                              |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `background`, `foreground`             | Canevas et texte de l’éditeur                                                                              |
+| `card`, `cardForeground`               | Ruban et panneaux                                                                                          |
+| `popover`, `popoverForeground`         | Menus et listes déroulantes                                                                                |
+| `primary`, `primaryForeground`         | Accent (barre de titre, sélection, onglet actif)                                                           |
+| `primaryInk`                           | La couleur principale comme texte sur l'interface et les sélections, au moins 4,5:1 (par défaut `primary`) |
+| `secondary`, `secondaryForeground`     | Boutons secondaires                                                                                        |
+| `muted`, `mutedForeground`             | En-têtes, indications, texte désactivé                                                                     |
+| `accent`, `accentForeground`           | États au survol et enfoncés                                                                                |
+| `destructive`, `destructiveForeground` | Erreurs                                                                                                    |
+| `border`, `input`, `ring`              | Lignes, champs et anneaux de focus                                                                         |
+| `radius`                               | Rayon des coins                                                                                            |
 
 ```ts
 editor.themeColors = { primary: '#1f9d63', ring: '#1f9d63', radius: '6px' };

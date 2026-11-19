@@ -1,5 +1,6 @@
 import { definer } from '../../registry';
 import { html, unsafeCSS, type PropertyValues } from 'lit';
+import { withTokens } from '../../base';
 import { TeamsLitElement } from '../i18n/lit-element';
 import type { ChannelTab, TeamsClient } from 'ooxml-core/teams';
 import type { FileEmbeds, SaveFileCopy } from './content-preview';
@@ -9,7 +10,7 @@ import css from './channel-tab.css?raw';
 
 /** Resolves shared tab references to local, short-lived preview URLs. */
 export class TeamsChannelTab extends TeamsLitElement {
-	static override styles = unsafeCSS(css);
+	static override styles = unsafeCSS(withTokens(css));
 	static override properties = {
 		tab: { attribute: false },
 		client: { attribute: false },

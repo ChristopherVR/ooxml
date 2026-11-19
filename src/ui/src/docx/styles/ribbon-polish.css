@@ -87,3 +87,14 @@
 .ribbon-menu:not(.ribbon-menu-compact):not(.ribbon-menu-caret) > .ribbon-icon:last-of-type {
 	margin-top: -3px;
 }
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.ribbon-group button[aria-pressed='true'],
+	.ribbon-group button[aria-pressed='true']:hover:not(:disabled) {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
+}

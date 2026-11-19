@@ -1,8 +1,13 @@
-import type { AutosaveDisabledReason, CollaborationShellState } from 'ooxml-ui/pptx';
+import type {
+	AutosaveDisabledReason,
+	CollaborationShellState,
+	CompatibilityWarningToast,
+} from 'ooxml-ui/pptx';
 import {
 	autosaveStatusKind,
 	buildDeckSaveOptions,
 	createCollaborationStateReporter,
+	createRemoteValueNotifier,
 	resolveAutosaveActivation,
 	resolveAutosaveIntervalMs,
 	resolveCollaborationShellState,
@@ -39,6 +44,8 @@ export interface CollabClusterDeps {
 	getOptionsIntervalSeconds?: () => number | undefined;
 	/** The element whose inline editor is open (its draft goes into the snapshot). */
 	getInlineEditingId?: () => string | null;
+	/** Show a toast (a forward reference: the toast stack is built after this cluster). */
+	notify?: (toast: CompatibilityWarningToast) => void;
 }
 
 export interface CollabCluster {
@@ -90,6 +97,7 @@ export interface CollabCluster {
  */
 export function useCollabCluster(deps: CollabClusterDeps): CollabCluster {
 	const { loader, viewer, editor, options } = deps;
+	const remoteValueNotice = createRemoteValueNotifier();
 
 	function sourceBytes(): Uint8Array | null {
 		const source = options.getSource();
@@ -100,8 +108,15 @@ export function useCollabCluster(deps: CollabClusterDeps): CollabCluster {
 	}
 	const collab = new CollaborationController({
 		getSlides: () => editor.committedRenderedSlides,
-		applyRemoteSlides: (slides: PptxSlide[]) => editor.applyRemoteSlides(slides),
+		applyRemoteSlides: (slides: PptxSlide[]) => {
+			editor.applyRemoteSlides(slides);
+			const toast = remoteValueNotice(slides);
+			if (toast) {
+				deps.notify?.(toast);
+			}
+		},
 		getConfig: () => options.collaboration,
+		onNotice: (toast) => deps.notify?.(toast),
 		getHistory: () => editor.history.controller,
 		getSourceBytes: sourceBytes,
 		// Session-level save options (view properties, table styles, tags, deck

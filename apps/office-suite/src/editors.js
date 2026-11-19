@@ -77,6 +77,18 @@ const PREVIEW_CAPABILITIES = Object.freeze({
 	copy: false,
 });
 
+/** Resolves once a Visio controller has no edit or load in progress. */
+function settled(controller) {
+	return new Promise((resolve) => {
+		// `subscribe` calls back at once with the current state, before it returns `stop`.
+		const stop = controller.subscribe((state) => {
+			if (state.edit.busy || state.loading) return;
+			resolve();
+			queueMicrotask(() => stop());
+		});
+	});
+}
+
 /** Why a command refused while the assistant's suggestions show. */
 export const previewRefusal = (name) =>
 	new Error(
@@ -247,9 +259,9 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 			element.theme = theme.mode;
 			element.themeColors = {
 				...editorColors(theme),
-				...(doc.kind === 'xlsx'
-					? { selectionBorder: theme.accent, headerActiveBg: editorColors(theme).accent }
-					: {}),
+				// The selection outline and header text follow the accent and its ink through
+				// `primary` and `primaryInk`; only the selected header's fill is set here.
+				...(doc.kind === 'xlsx' ? { headerActiveBg: editorColors(theme).accent } : {}),
 				radius: editorRadius(),
 			};
 		}
@@ -372,9 +384,15 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 				element.selectShapes([{ id: change.shapeId, name: '', pageId: change.pageId }]);
 			}
 		},
-		flush: () => {
+		/**
+		 * Finishes what the user started before the document is read: Excel's cell edit, and the
+		 * Visio edit still being written (an arrow-key nudge takes a moment), so a save asked for
+		 * straight after it waits for it instead of failing.
+		 */
+		flush: async () => {
 			if (element.commitEdit && !element.commitEdit())
 				throw new Error('Finish the current cell edit.');
+			if (doc.kind === 'vsdx') await settled(element.controller);
 		},
 		view: editorView(element, doc.kind),
 		dispose: () => {

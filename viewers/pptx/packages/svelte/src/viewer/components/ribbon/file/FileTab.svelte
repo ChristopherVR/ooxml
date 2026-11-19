@@ -19,7 +19,7 @@
 	import Share2 from '@lucide/svelte/icons/share-2';
 	import Type from '@lucide/svelte/icons/type';
 	import Video from '@lucide/svelte/icons/video';
-	import { activateModalFocus, BACKSTAGE_NAV, BACKSTAGE_TEMPLATES, backstageCardsFor, backstageNavEntries, customizeBackstageCards, formatBackstageDate, formatBackstageSize, isActionHidden, listBackstageRecentFiles, CLOUD_OPEN_ACCEPT, openPlacesLabels } from 'ooxml-ui/pptx';
+	import { activateBackstage, BACKSTAGE_NAV, BACKSTAGE_TEMPLATES, backstageCardsFor, backstageNavEntries, customizeBackstageCards, formatBackstageDate, formatBackstageSize, isActionHidden, listBackstageRecentFiles, CLOUD_OPEN_ACCEPT, openPlacesLabels } from 'ooxml-ui/pptx';
 	import type { CloudOpenedFile, ViewerRegionContext, AccountAuthConfig, BackstageCardId, BackstagePage, BackstageRecentFile, ToolbarActionId } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../../i18n/context';
 	import { useViewerCustomization } from '../../../state/viewer-customization.svelte';
@@ -45,9 +45,9 @@
 	const pageId = $derived<string>(nav.some((item) => item.id === requestedPage) ? requestedPage : (nav.find((item) => item.id === 'home') ?? nav[0])?.id ?? 'home');
 	const hostEntry = $derived(nav.find((item) => item.id === pageId)?.host);
 	// The built-in page id; a host page has none (its body is a region), so it reads as 'home' only for typing.
-	// The backstage covers the editor: focus goes in, stays in, and Escape goes back.
+	// The backstage covers the viewer: focus goes in, stays in, and Escape goes back to File.
 	function modalFocus(node: HTMLElement): { destroy(): void } {
-		return { destroy: activateModalFocus(node, { onEscape: () => onclose() }) };
+		return { destroy: activateBackstage(node, () => onclose()) };
 	}
 	const page = $derived<BackstagePage>(hostEntry ? 'close' : (pageId as BackstagePage));
 	const bodyRenderer = $derived(hostEntry ? hostEntry.render : customization.regionRenderer(`backstage.${page}`));

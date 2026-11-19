@@ -1,7 +1,10 @@
 // Sharing and co-editing strings (File > Share, the title bar's Share button and the
 // connection notices). English key -> zh-CN text.
+import { collabStrings } from '../../../../i18n/index';
 
 export const collab: Record<string, string> = {
+	// Refusals and left-out content, shared by every product.
+	...collabStrings['zh-CN'],
 	Share: '共享',
 	'Session name': '会话名称',
 	'Start sharing': '开始共享',

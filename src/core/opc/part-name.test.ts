@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { partNameToken } from './part-name';
+import { isSafeIdToken, partNameToken, safeIdToken } from './part-name';
 
 describe('partNameToken', () => {
 	it('keeps ordinary part names unchanged so derived ids stay stable', () => {
@@ -24,5 +24,27 @@ describe('partNameToken', () => {
 
 	it('survives a lone surrogate', () => {
 		expect(partNameToken('a\ud800b')).toBe('a%EF%BF%BDb');
+	});
+});
+
+describe('safeIdToken', () => {
+	it('keeps ids the loader and the editor build', () => {
+		for (const id of [
+			'ppt/slides/slide1.xml-shape-0',
+			'ppt/slides/slide%201.xml-shape-3',
+			'layout-el-1763526000000-a1b2c3d',
+			'tbl-merged-mhx1-abc123',
+		]) {
+			expect(isSafeIdToken(id)).toBe(true);
+			expect(safeIdToken(id)).toBe(id);
+		}
+	});
+
+	it('encodes any other text the way the loader encodes part names', () => {
+		expect(isSafeIdToken('x"><img>')).toBe(false);
+		expect(safeIdToken('ppt/slides/slide 1.xml-shape-0')).toBe('ppt/slides/slide%201.xml-shape-0');
+		expect(safeIdToken('a</style>')).toMatch(/^[A-Za-z0-9\-._~/%]+$/u);
+		expect(isSafeIdToken('')).toBe(false);
+		expect(isSafeIdToken('50%')).toBe(false);
 	});
 });

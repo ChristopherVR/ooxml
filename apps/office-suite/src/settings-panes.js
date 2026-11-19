@@ -4,7 +4,8 @@
  * of `office-ui-options-dialog`; `settings-dialog.js` puts them in and wires their events.
  */
 import { escape } from './ui.js';
-import { accents, themePreferences } from './themes.js';
+import { themePreferences } from './themes.js';
+import { accents } from './theme-tokens.js';
 import { fontDownloads, normalizeFontServer } from './font-downloads.js';
 import { settings } from './settings.js';
 

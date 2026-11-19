@@ -1,6 +1,7 @@
 import * as Y from 'yjs';
 import { describe, expect, it, vi } from 'vitest';
 import { createAssetSync } from './assets';
+import { UPDATE_REFUSAL_MESSAGES, UpdateRefusedError } from './refusal';
 import {
 	createPresencePublisher,
 	borrowAwareness,
@@ -272,9 +273,12 @@ describe('policy', () => {
 describe('lifecycle', () => {
 	it('leaves once on pagehide, honours bfcache and rejoin', () => {
 		const listeners = new Map<string, TeardownListener>();
+		const embedder = {};
 		const target = {
 			addEventListener: (t: string, l: TeardownListener) => listeners.set(t, l),
 			removeEventListener: (t: string) => listeners.delete(t),
+			parent: embedder,
+			location: { origin: 'https://app.example' },
 		};
 		const leave = vi.fn();
 		const rejoin = vi.fn();
@@ -284,10 +288,42 @@ describe('lifecycle', () => {
 		expect(leave).toHaveBeenCalledTimes(1);
 		listeners.get('pageshow')!({ persisted: true });
 		expect(rejoin).toHaveBeenCalledTimes(1);
-		listeners.get('message')!({ data: { type: 'ooxml-core:collab-leave' } });
+		listeners.get('message')!({
+			data: { type: 'ooxml-core:collab-leave' },
+			origin: 'https://app.example',
+			source: embedder,
+		});
 		expect(leave).toHaveBeenCalledTimes(2);
 		dispose();
 		expect(listeners.size).toBe(0);
+	});
+	it('obeys the leave message only from the embedder and an allowed origin', () => {
+		const listeners = new Map<string, TeardownListener>();
+		const embedder = {};
+		const target = {
+			addEventListener: (t: string, l: TeardownListener) => listeners.set(t, l),
+			removeEventListener: () => {},
+			parent: embedder,
+			location: { origin: 'https://viewer.example' },
+		};
+		const send = (origin: string, source: unknown) =>
+			listeners.get('message')!({ data: 'ooxml-core:collab-leave', origin, source });
+		const leave = vi.fn();
+		registerTeardown({ leave, target });
+		send('https://evil.example', embedder);
+		send('https://viewer.example', {});
+		send('https://viewer.example', undefined);
+		expect(leave).not.toHaveBeenCalled();
+		send('https://viewer.example', embedder);
+		expect(leave).toHaveBeenCalledTimes(1);
+
+		listeners.clear();
+		const hosted = vi.fn();
+		registerTeardown({ leave: hosted, target, leaveMessageOrigin: ['https://host.example'] });
+		send('https://viewer.example', embedder);
+		expect(hosted).not.toHaveBeenCalled();
+		send('https://host.example', embedder);
+		expect(hosted).toHaveBeenCalledTimes(1);
 	});
 	it('ignores persisted pagehide without rejoin', () => {
 		const listeners = new Map<string, TeardownListener>();
@@ -493,11 +529,38 @@ describe('websocket transport', () => {
 		vi.advanceTimersByTime(1);
 		expect(FakeSocket.instances).toHaveLength(3);
 		refuse();
-		expect(handlers.error.mock.calls.at(-1)![0].message).toContain('sync stopped');
+		expect(handlers.error.mock.calls.at(-1)![0]).toMatchObject({
+			code: 'server-rejected',
+			detail: 'update rejected: foreign-row',
+			message: UPDATE_REFUSAL_MESSAGES['server-rejected'],
+		});
 		vi.advanceTimersByTime(600_000);
 		expect(FakeSocket.instances).toHaveLength(3);
 		transport.disconnect();
 		vi.useRealTimers();
+	});
+	it('stops at once when the server will not take a change (1009), with the reason', () => {
+		for (const [reason, code] of [
+			['update too complex', 'server-rejected'],
+			['document too large', 'server-full'],
+			['', 'server-rejected'],
+		] as const) {
+			vi.useFakeTimers();
+			FakeSocket.instances = [];
+			const transport = createWebSocketTransport({ url: 'wss://h/c/r', WebSocket: FakeSocket });
+			const handlers = { open: vi.fn(), close: vi.fn(), message: vi.fn(), error: vi.fn() };
+			transport.connect(handlers);
+			const socket = FakeSocket.instances[0]!;
+			socket.readyState = 1;
+			socket.onopen!({});
+			socket.onclose!({ code: 1009, reason });
+			expect(handlers.error).toHaveBeenCalledOnce();
+			expect(handlers.error.mock.calls[0]![0]).toBeInstanceOf(UpdateRefusedError);
+			expect(handlers.error.mock.calls[0]![0].code).toBe(code);
+			vi.advanceTimersByTime(600_000);
+			expect(FakeSocket.instances).toHaveLength(1);
+			vi.useRealTimers();
+		}
 	});
 	it('fails fast on mixed content', () => {
 		const handlers = { open: vi.fn(), close: vi.fn(), message: vi.fn(), error: vi.fn() };

@@ -51,6 +51,7 @@ export function useCollaborativeState({
 
 	const session = useCollaborationSession({ config: ownedSession.holding ? undefined : config });
 	const { awareness, doc, clientId, synced, retry } = session;
+	const refusal = ownedSession.refusal ?? session.refusal;
 	const status = ownedSession.status ?? session.status;
 	const failure = ownedSession.status ? ownedSession.failure : session.failure;
 
@@ -87,6 +88,7 @@ export function useCollaborativeState({
 						doc,
 						synced,
 						retry,
+						refusal,
 						clientId,
 						writeBack,
 						reportWriteBack,
@@ -102,6 +104,7 @@ export function useCollaborativeState({
 			doc,
 			synced,
 			retry,
+			refusal,
 			clientId,
 			writeBack,
 		],

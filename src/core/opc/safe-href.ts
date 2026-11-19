@@ -4,11 +4,13 @@
  * - `isSafeHyperlinkHref` is the original strict check (http, https, mailto only) used by
  *   callers that write external relationships from user input; its behaviour is unchanged.
  * - `hyperlinkPolicy` separates two questions: may the href be **stored** in the document
- *   (http, https, mailto, ftp, file, relative paths, UNC and drive paths, in-document
- *   locations such as `#Sheet2!A1`), and may a viewer **open** it on click (http, https and
- *   mailto only). Script-capable schemes (`javascript:`, `vbscript:`, `data:`, `mhtml:` and
- *   relatives) are never stored or opened, including when hidden behind case changes,
- *   whitespace, control characters or zero-width characters.
+ *   (any well-formed scheme, as Office keeps `tel:`, `sip:`, `msteams:` or `onenote:` links,
+ *   plus relative paths, UNC and drive paths and in-document locations such as `#Sheet2!A1`),
+ *   and may a viewer **open** it on click (http, https and mailto, plus schemes a host opts
+ *   in). Script-capable schemes (`javascript:`, `vbscript:`, `data:`, `mhtml:` and relatives)
+ *   are never stored or opened, including when hidden behind case changes, whitespace,
+ *   control characters or zero-width characters. A stored link that may not be opened must
+ *   not be rendered as a live anchor either.
  *
  * The obfuscation hardening follows `isUrlSafe` of pptx-viewer
  * (`packages/shared/src/render/hyperlink-security.ts`); see PROVENANCE.md.
@@ -28,7 +30,6 @@ export type HyperlinkRejection =
 	| 'script-scheme'
 	| 'obfuscated-scheme'
 	| 'control-characters'
-	| 'unsupported-scheme'
 	| 'not-openable';
 
 /** The verdict of {@link hyperlinkPolicy}; `reason` is set whenever `store` or `open` is false. */
@@ -49,7 +50,6 @@ export interface HyperlinkPolicyOptions {
 }
 
 const OPEN_SCHEMES = new Set(['http', 'https', 'mailto']);
-const STORE_SCHEMES = new Set([...OPEN_SCHEMES, 'ftp', 'file']);
 // Schemes that run script or render attacker-supplied documents. Listed even though the
 // allowlist already rejects them, so the reason reported is the precise one.
 const SCRIPT_SCHEMES = new Set([
@@ -100,14 +100,11 @@ export function hyperlinkPolicy(
 	if (scheme !== undefined && !trimmed.toLowerCase().startsWith(`${scheme}:`))
 		return reject('obfuscated-scheme');
 	if (CONTROL.test(trimmed)) return reject('control-characters');
-	// A one-letter "scheme" is a Windows drive path (C:\Reports\q1.xlsx).
 	if (scheme === undefined) return options.openRelative ? { store: true, open: true } : STORE_ONLY;
-	if (scheme.length === 1) return STORE_ONLY;
 	if (OPEN_SCHEMES.has(scheme)) return { store: true, open: true };
 	if (options.additionalOpenSchemes?.some((allowed) => allowed.toLowerCase() === scheme))
 		return { store: true, open: true };
-	if (STORE_SCHEMES.has(scheme)) return STORE_ONLY;
-	return reject('unsupported-scheme');
+	return STORE_ONLY;
 }
 
 /** True when the href may be written to the document (see {@link hyperlinkPolicy}). */

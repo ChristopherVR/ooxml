@@ -2,6 +2,7 @@
 // transaction and concurrent edits to other cells, rows or sheets are left alone. Call inside
 // `doc.transact`.
 import type * as Y from 'yjs';
+import type { LeftOutValue } from '../../collab/refusal';
 import {
 	type CellRange,
 	formatAddress,
@@ -28,11 +29,17 @@ import { PrefixStore } from './keyed';
 import { type PartHost, writeSheetParts } from './sheet-parts';
 import { StyleBridge, sharedStyleKey } from './styles';
 
-/** Item identity and key minting of one sheet's keyed parts. */
-export const partHost = (shared: SharedWorkbook, keys: SheetKeys, sheetKey: string): PartHost => ({
+/** Item identity and key minting of one sheet's keyed parts; `refuse` hears values left out. */
+export const partHost = (
+	shared: SharedWorkbook,
+	keys: SheetKeys,
+	sheetKey: string,
+	refuse?: (value: LeftOutValue) => void,
+): PartHost => ({
 	store: (part) => new PrefixStore(shared.parts[part], sheetKey),
 	ids: (part) => keys.ids(sheetKey, part),
 	mint: () => keys.mint(),
+	...(refuse && { refuse: (part, field) => refuse({ part, field }) }),
 });
 
 /** What a write covers: the whole workbook, or one sheet (optionally only some cell ranges). */

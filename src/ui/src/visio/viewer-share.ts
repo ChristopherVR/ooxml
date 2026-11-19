@@ -1,4 +1,5 @@
 import type { CollabSession, CollaborationState } from 'ooxml-core/collab';
+import { translateCollabText } from 'ooxml-core/i18n';
 import {
 	sanitizeVisioPresence,
 	VISIO_INITIAL_PRESENCE,
@@ -58,6 +59,8 @@ export class ViewerShare {
 	onError: (error: Error) => void = () => {};
 	/** File > Share > Share with people: the element opens the Share dialog. */
 	onOpen: () => void = () => {};
+	/** The display language, for the reason sharing stopped. */
+	locale: () => string = () => '';
 	constructor(
 		root: ShadowRoot,
 		private readonly controller: ViewerController,
@@ -202,6 +205,13 @@ export class ViewerShare {
 				session.on('peers', () => this.#changed()),
 				session.on('synced', () => this.#changed()),
 				session.on('status', () => this.#changed()),
+				// A refused update stops sharing: say why, in the display language.
+				session.on('error', (error) => {
+					if (!collab.isUpdateRefusal(error)) return;
+					const message = translateCollabText(error.message, this.locale() || undefined);
+					this.#say(message);
+					this.onError(new collab.UpdateRefusedError(error.code, error.detail, message));
+				}),
 			],
 		};
 		this.#say(`Sharing as ${session.identity.userName} in session ${session.roomId}.`);

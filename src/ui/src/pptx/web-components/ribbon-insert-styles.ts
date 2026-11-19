@@ -62,6 +62,7 @@ ${TABLE_PICKER_CSS}
 }
 @media (forced-colors:active) {
 	.list { border-color:ButtonText; }
+	.list button[aria-current] { forced-color-adjust:none; background:Highlight; color:HighlightText; }
 	.trigger svg:first-child { color:ButtonText; }
 	.trigger:focus-visible,.list button:focus-visible { outline-color:Highlight; }
 	.trigger:disabled,.primary:disabled { color:GrayText; opacity:1; }

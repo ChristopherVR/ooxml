@@ -1,6 +1,6 @@
 import { Settings } from 'lucide';
 import {
-	activateModalFocus,
+	activateBackstage,
 	BACKSTAGE_NAV,
 	BACKSTAGE_TEMPLATES,
 	backstageNavEntries,
@@ -346,9 +346,9 @@ export function createFileTab(
 				return;
 			}
 			visible = next;
-			// The backstage covers the editor: focus goes in, stays in, and Escape goes back.
+			// The backstage covers the viewer: focus goes in, stays in, and Escape goes back to File.
 			releaseFocus();
-			releaseFocus = next ? activateModalFocus(el, { onEscape: onClose }) : () => {};
+			releaseFocus = next ? activateBackstage(el, onClose) : () => {};
 			if (!next) {
 				releaseRegion();
 			} else if (hostPageOrReplaced()) {

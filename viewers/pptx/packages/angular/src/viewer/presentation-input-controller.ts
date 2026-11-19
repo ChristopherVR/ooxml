@@ -4,10 +4,9 @@ import {
 	createPresentationKeyBuffer,
 	createWheelStepBuffer,
 	findHighlightClickTarget,
-	downloadDataUrl,
 	mapPresentationKey,
 	mapPresentationWheel,
-	openUrlInNewTab,
+	openOrDownloadPayload,
 	resolveOleVerbTarget,
 	resolvePresentationClick,
 	runPresentationAction,
@@ -284,11 +283,11 @@ export class PresentationInputController {
 				if (!oleTarget) {
 					return;
 				}
-				if (oleTarget.action === 'download') {
-					downloadDataUrl(oleTarget.url, oleTarget.fileName ?? 'download');
-				} else {
-					openUrlInNewTab(oleTarget.url);
-				}
+				openOrDownloadPayload(
+					oleTarget.url,
+					oleTarget.fileName ?? 'download',
+					oleTarget.action === 'download',
+				);
 			},
 		});
 		return 'action';

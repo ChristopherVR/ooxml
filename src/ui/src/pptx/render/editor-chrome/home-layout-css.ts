@@ -146,7 +146,7 @@ export const EDITOR_HOME_LAYOUT_CSS = `
   ${R} [data-pptx-chrome="arrange-controls"] :is([data-ribbon-control="home.arrange.duplicate"], [data-ribbon-control="home.arrange.delete"]) { order: 3; }
   ${R} [data-ribbon-control="home.arrange.outlineWidth"] {
     box-sizing: border-box; flex: none; width: 52px; height: 24px; padding: 0 4px;
-    border: 1px solid var(--pptx-border); border-radius: 4px; background: transparent;
+    border: 1px solid var(--pptx-input); border-radius: 4px; background: transparent;
     font-size: 12px; line-height: 16px; color: var(--pptx-foreground); text-align: center;
   }
   ${R} [data-ribbon-control="home.arrange.outlineWidth"]:disabled { opacity: .4; }

@@ -4,7 +4,7 @@ import {
 	registerCollaborationTeardown,
 } from 'ooxml-ui/pptx';
 import type { BorrowedCollaborationAwareness, ExternalCollaborationSession } from 'ooxml-ui/pptx';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import type { UseYjsProviderResult } from './useYjsProvider';
 
@@ -20,14 +20,18 @@ const inactive: ExternalYjsSessionResult = {
 	synced: false,
 	// A host session reports no start reason.
 	failure: null,
-	// An external transport can only be retried by its owner.
+	// An external transport can only be retried, or refuse an update, by its owner.
 	retry: () => {},
+	refusal: null,
 };
 
 /** Attach to host resources without owning their network or lifetime. */
 export function useExternalYjsSession(
 	session: ExternalCollaborationSession | undefined,
+	leaveMessageOrigin?: string | readonly string[],
 ): ExternalYjsSessionResult {
+	const origin = useRef(leaveMessageOrigin);
+	origin.current = leaveMessageOrigin;
 	const [binding, setBinding] = useState<{
 		session: ExternalCollaborationSession;
 		value: ExternalYjsSessionResult;
@@ -57,6 +61,7 @@ export function useExternalYjsSession(
 							clientId: session.awareness.clientID,
 							failure: null,
 							retry: inactive.retry,
+							refusal: null,
 						},
 					});
 				});
@@ -74,6 +79,7 @@ export function useExternalYjsSession(
 			leave,
 			rejoin: attach,
 			leaveOnBeforeUnload: false,
+			leaveMessageOrigin: () => origin.current,
 		});
 		return () => {
 			unregister();

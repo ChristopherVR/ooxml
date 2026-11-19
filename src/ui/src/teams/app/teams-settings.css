@@ -121,7 +121,7 @@ nav button:hover {
 }
 nav button[aria-selected='true'] {
 	background: var(--office-teams-brand-subtle);
-	color: var(--office-teams-brand);
+	color: var(--office-teams-brand-ink);
 	font-weight: var(--office-font-weight-bold);
 }
 .settings-content {
@@ -273,4 +273,15 @@ button.primary:hover {
 }
 .notification-choice small {
 	color: var(--office-teams-text-subtle);
+}
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	nav button[aria-selected='true'],
+	.notification-choice:has(input:checked) {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
 }

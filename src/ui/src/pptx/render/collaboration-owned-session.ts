@@ -1,4 +1,4 @@
-import type { CollabSession } from 'ooxml-core/collab';
+import type { CollabSession, UpdateRefusalCode } from 'ooxml-core/collab';
 
 import type { CollaborationConfig } from '../types';
 import {
@@ -42,6 +42,8 @@ export interface OwnedCollaboration {
 	readonly ready: Promise<CollaborationConfig | null>;
 	/** Destroy the owned session, now or as soon as the lazy runtime import settles. */
 	release: () => void;
+	/** Hear each update the owned session refused (it has stopped syncing by then). */
+	onRefused: (listener: (code: UpdateRefusalCode) => void) => void;
 }
 
 /**
@@ -81,12 +83,11 @@ export function openOwnedCollaboration(config: CollaborationConfig): OwnedCollab
 		session = undefined;
 		current?.destroy();
 	};
+	const refusals: ((code: UpdateRefusalCode) => void)[] = [];
 	const ready = (async (): Promise<CollaborationConfig | null> => {
 		validateRoomId(config.roomId);
-		const { openCollaborationSession, NO_BROADCAST_MESSAGE } = await loadCollaborationModule(
-			'ooxml-core/collab',
-			() => import('ooxml-core/collab'),
-		);
+		const { isUpdateRefusal, openCollaborationSession, NO_BROADCAST_MESSAGE } =
+			await loadCollaborationModule('ooxml-core/collab', () => import('ooxml-core/collab'));
 		if (released) {
 			return null;
 		}
@@ -124,6 +125,9 @@ export function openOwnedCollaboration(config: CollaborationConfig): OwnedCollab
 		}
 		session = opened.session;
 		keepPowerPointPresence(opened.session.awareness);
+		opened.session.on('error', (error) => {
+			if (isUpdateRefusal(error)) for (const listener of refusals) listener(error.code);
+		});
 		return {
 			...config,
 			userName: config.userName || opened.session.identity.userName,
@@ -137,5 +141,6 @@ export function openOwnedCollaboration(config: CollaborationConfig): OwnedCollab
 			released = true;
 			destroy();
 		},
+		onRefused: (listener) => refusals.push(listener),
 	};
 }

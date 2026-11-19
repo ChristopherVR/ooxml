@@ -14,6 +14,7 @@ import { readNames } from './names';
 import { type SharedWorkbook, childMap, jsonEqual } from './schema';
 import { applySheetParts } from './sheet-parts';
 import { partHost } from './write';
+import type { LeftOutValue } from '../../collab/refusal';
 
 /** Whether the room's writers share the object-list parts (see write.ts). */
 const sharesParts = (shared: SharedWorkbook): boolean => shared.meta.get('parts') === 1;
@@ -22,13 +23,17 @@ import { StyleBridge } from './styles';
 
 type Touched = { sheet: number; row: number; col: number };
 
-/** Applies `dirty` to the workbook; undefined when nothing in the model changed. */
+/**
+ * Applies `dirty` to the workbook; undefined when nothing in the model changed. Each value a peer
+ * wrote that fails its field's check is left out and told to `refuse`.
+ */
 export function applyShared(
 	shared: SharedWorkbook,
 	keys: SheetKeys,
 	workbook: Workbook,
 	dirty: Dirty,
 	label = 'Remote change',
+	refuse?: (value: LeftOutValue) => void,
 ): ExternalChange | undefined {
 	const defaultKey = shared.meta.get('defaultStyle');
 	const styles = new StyleBridge(workbook, shared.styles, String(defaultKey ?? ''), false);
@@ -71,7 +76,7 @@ export function applyShared(
 		}
 		if (
 			sharesParts(shared) &&
-			applySheetParts(sheet, partHost(shared, keys, key), full ? undefined : part.parts)
+			applySheetParts(sheet, partHost(shared, keys, key, refuse), full ? undefined : part.parts)
 		)
 			sheetsTouched.add(index);
 		const cells = childMap(map, 'cells');
@@ -83,6 +88,7 @@ export function applyShared(
 			const local = getCell(sheet, at.row, at.col);
 			if (local && jsonEqual(encodeCell(local, styles.keyOf), raw)) return;
 			const cell = raw === undefined ? undefined : decodeCell(raw, styles.idOf);
+			if (raw !== undefined && !cell) refuse?.({ part: 'cells', field: 'entry' });
 			if (cell) putCell(sheet, at.row, at.col, cell);
 			else if (local && !isSpilledCell(local)) deleteCell(sheet, at.row, at.col);
 			else return;

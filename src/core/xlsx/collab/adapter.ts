@@ -3,6 +3,7 @@
 // Products with an edit session should prefer `bindWorkbookSession`, which writes per edit.
 import type * as Y from 'yjs';
 import type { DocumentAdapter } from '../../collab/binding';
+import { LEFT_OUT_MESSAGE } from '../../collab/refusal';
 import type { Workbook } from '../model';
 import { createWorkbook } from '../workbook';
 import { applyShared } from './apply';
@@ -23,7 +24,10 @@ export interface XlsxAdapterOptions {
 /** Whether the shared document holds no workbook yet. */
 export const isSharedWorkbookEmpty = (doc: Y.Doc): boolean => sharedWorkbook(doc).sheets.size === 0;
 
-/** Materialises the shared workbook (onto a clone of `base` when given). */
+/**
+ * Materialises the shared workbook (onto a clone of `base` when given). A value a peer wrote that
+ * fails its field's check is left out, and the workbook's `warnings` say so.
+ */
 export function readSharedWorkbook(doc: Y.Doc, base?: Workbook): Workbook {
 	const shared = sharedWorkbook(doc);
 	const workbook = base ? structuredClone(base) : createWorkbook();
@@ -31,7 +35,12 @@ export function readSharedWorkbook(doc: Y.Doc, base?: Workbook): Workbook {
 		const style = shared.styles.get(String(shared.meta.get('defaultStyle')));
 		if (isCellStyle(style)) workbook.styles = [structuredClone(style)];
 	}
-	applyShared(shared, new SheetKeys(doc.clientID), workbook, emptyDirty(true));
+	let leftOut = false;
+	applyShared(shared, new SheetKeys(doc.clientID), workbook, emptyDirty(true), undefined, () => {
+		leftOut = true;
+	});
+	if (leftOut && !workbook.warnings.includes(LEFT_OUT_MESSAGE))
+		workbook.warnings.push(LEFT_OUT_MESSAGE);
 	return workbook;
 }
 

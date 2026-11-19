@@ -22,6 +22,7 @@ import {
 	bindCollaborationHistory,
 	buildCollaborationState,
 	collaborationHistoryReady,
+	collaborationRefusalToast,
 	createCollaborationSessionController,
 	writeBackReport,
 	DEFAULT_CURSOR_COLOR,
@@ -81,6 +82,7 @@ export class CollaborationController {
 			onBegin: (config) => this.#document.begin(config),
 			onOpen: (live, config) => this.#attach(live, config),
 			onClose: () => this.#detach(),
+			onRefused: (code) => this.#deps.onNotice?.(collaborationRefusalToast(code)),
 		});
 		this.#state = controllerState(this.#session);
 

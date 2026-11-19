@@ -234,7 +234,7 @@
 	display: inline-flex;
 	align-items: stretch;
 	height: 24px;
-	border: 1px solid var(--line);
+	border: 1px solid var(--control-line);
 	border-radius: 3px;
 	background: var(--surface);
 }
@@ -266,7 +266,7 @@
 .ribbon-group select.ribbon-select {
 	height: 24px;
 	padding: 0 6px;
-	border: 1px solid var(--line);
+	border: 1px solid var(--control-line);
 	border-radius: 3px;
 	background: var(--surface);
 	color: var(--ink);
@@ -379,4 +379,14 @@
 }
 .ribbon-icon[data-accent='orange'] {
 	color: var(--ribbon-accent-orange);
+}
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.ribbon-group button[aria-pressed='true'] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
 }

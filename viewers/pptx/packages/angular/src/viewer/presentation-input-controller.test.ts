@@ -197,14 +197,38 @@ describe('presentationInputController show-runner verbs', () => {
 		const slide = slideWithAction({ action: 'ppaction://ole?verb=0' });
 		const element = slide.elements[0] as unknown as Record<string, unknown>;
 		element.type = 'ole';
-		element.oleEmbeddedData = 'blob:http://localhost/ole-payload';
+		element.oleEmbeddedData = 'data:application/pdf;base64,JVBERi0=';
 		const openSpy = vi.spyOn(window, 'open').mockReturnValue(null);
+		const objectUrls = URL as unknown as Record<string, unknown>;
+		const saved = { create: objectUrls.createObjectURL, revoke: objectUrls.revokeObjectURL };
+		objectUrls.createObjectURL = () => 'blob:http://localhost/ole-payload';
+		objectUrls.revokeObjectURL = () => {};
+		vi.useFakeTimers();
 		const { controller } = makeController(slide);
 		controller.handleBodyClick({
 			button: 0,
 			target: stageClickTarget('el-1'),
 		} as unknown as MouseEvent);
 		expect(openSpy).toHaveBeenCalledWith('blob:http://localhost/ole-payload', '_blank');
+		vi.runAllTimers();
+		vi.useRealTimers();
+		objectUrls.createObjectURL = saved.create;
+		objectUrls.revokeObjectURL = saved.revoke;
+		openSpy.mockRestore();
+	});
+
+	it('oleVerb never navigates to an embedding that is not a data: URL', () => {
+		const slide = slideWithAction({ action: 'ppaction://ole?verb=0' });
+		const element = slide.elements[0] as unknown as Record<string, unknown>;
+		element.type = 'ole';
+		element.oleEmbeddedData = 'javascript:alert(1)';
+		const openSpy = vi.spyOn(window, 'open').mockReturnValue(null);
+		const { controller } = makeController(slide);
+		controller.handleBodyClick({
+			button: 0,
+			target: stageClickTarget('el-1'),
+		} as unknown as MouseEvent);
+		expect(openSpy).not.toHaveBeenCalled();
 		openSpy.mockRestore();
 	});
 

@@ -6,6 +6,228 @@ import * as Y7 from "yjs";
 
 // ../../src/core/collab/codec.ts
 import * as Y from "yjs";
+
+// ../../src/core/collab/update-scan.ts
+var MIN_BYTES_PER_STRUCT = 4;
+var MIN_BYTES_PER_DELETE_RANGE = 2;
+function defaultUpdateLimits(bytes) {
+  return {
+    maxStructs: Math.ceil(bytes / MIN_BYTES_PER_STRUCT),
+    maxDeleteRanges: Math.ceil(bytes / MIN_BYTES_PER_DELETE_RANGE)
+  };
+}
+var MAX_ANY_DEPTH = 64;
+var Overrun = class extends Error {
+  constructor(message, overLimit = false) {
+    super(message);
+    this.overLimit = overLimit;
+  }
+  overLimit;
+};
+var Cursor = class {
+  constructor(bytes) {
+    this.bytes = bytes;
+  }
+  bytes;
+  pos = 0;
+  byte() {
+    if (this.pos >= this.bytes.length) throw new Overrun("unexpected end of update");
+    return this.bytes[this.pos++];
+  }
+  /** An unsigned varint (lib0 `readVarUint`), refused beyond the safe integer range. */
+  uint() {
+    let value = 0;
+    let multiplier = 1;
+    for (; ; ) {
+      const byte = this.byte();
+      value += (byte & 127) * multiplier;
+      if (byte < 128) return value;
+      multiplier *= 128;
+      if (multiplier > Number.MAX_SAFE_INTEGER) throw new Overrun("varint out of range");
+    }
+  }
+  /** A signed varint (lib0 `readVarInt`): the same continuation rule, so skip it the same way. */
+  skipInt() {
+    let length = 0;
+    while (this.byte() >= 128) {
+      if (++length > 9) throw new Overrun("varint out of range");
+    }
+  }
+  skip(length) {
+    if (length > this.bytes.length - this.pos) throw new Overrun("unexpected end of update");
+    this.pos += length;
+  }
+  /** A length-prefixed string or byte array. */
+  skipBuffer() {
+    this.skip(this.uint());
+  }
+};
+var Budget = class {
+  constructor(limits) {
+    this.limits = limits;
+  }
+  limits;
+  structs = 0;
+  deleteRanges = 0;
+  addStructs(count) {
+    this.structs += count;
+    if (this.structs > this.limits.maxStructs)
+      throw new Overrun(`update holds more than ${this.limits.maxStructs} structs`, true);
+  }
+  addDeleteRanges(count) {
+    this.deleteRanges += count;
+    if (this.deleteRanges > this.limits.maxDeleteRanges)
+      throw new Overrun(
+        `update holds more than ${this.limits.maxDeleteRanges} deleted ranges`,
+        true
+      );
+  }
+};
+function skipAny(cursor, budget, depth) {
+  if (depth > MAX_ANY_DEPTH) throw new Overrun("value nested too deeply");
+  const tag = cursor.byte();
+  switch (tag) {
+    case 127:
+    // undefined
+    case 126:
+    // null
+    case 121:
+    // false
+    case 120:
+      return;
+    case 125:
+      return cursor.skipInt();
+    case 124:
+      return cursor.skip(4);
+    case 123:
+    // float64
+    case 122:
+      return cursor.skip(8);
+    case 119:
+      return cursor.skipBuffer();
+    case 116:
+      budget.addStructs(1);
+      return cursor.skipBuffer();
+    case 118: {
+      const length = cursor.uint();
+      budget.addStructs(1);
+      for (let i = 0; i < length; i++) {
+        cursor.skipBuffer();
+        skipAny(cursor, budget, depth + 1);
+      }
+      return;
+    }
+    case 117: {
+      const length = cursor.uint();
+      budget.addStructs(1);
+      for (let i = 0; i < length; i++) skipAny(cursor, budget, depth + 1);
+      return;
+    }
+    default:
+      throw new Overrun(`unknown value type ${tag}`);
+  }
+}
+var BIT6 = 32;
+var BIT7 = 64;
+var BIT8 = 128;
+var BITS5 = 31;
+var NAMED_TYPE_REFS = /* @__PURE__ */ new Set([3, 5]);
+function skipContent(cursor, budget, ref) {
+  switch (ref) {
+    case 1:
+      cursor.uint();
+      return;
+    case 2: {
+      const length = cursor.uint();
+      budget.addStructs(length);
+      for (let i = 0; i < length; i++) cursor.skipBuffer();
+      return;
+    }
+    case 3:
+    // binary
+    case 4:
+    // string
+    case 5:
+      cursor.skipBuffer();
+      return;
+    case 6:
+      cursor.skipBuffer();
+      cursor.skipBuffer();
+      return;
+    case 7:
+      if (NAMED_TYPE_REFS.has(cursor.uint())) cursor.skipBuffer();
+      return;
+    case 8: {
+      const length = cursor.uint();
+      budget.addStructs(1);
+      for (let i = 0; i < length; i++) skipAny(cursor, budget, 0);
+      return;
+    }
+    case 9:
+      cursor.skipBuffer();
+      skipAny(cursor, budget, 0);
+      return;
+    default:
+      throw new Overrun(`unknown content type ${ref}`);
+  }
+}
+function skipId(cursor) {
+  cursor.uint();
+  cursor.uint();
+}
+function skipStruct(cursor, budget) {
+  const info = cursor.byte();
+  const ref = info & BITS5;
+  if (ref === 0 || ref === 10) {
+    cursor.uint();
+    return;
+  }
+  if (info & BIT8) skipId(cursor);
+  if (info & BIT7) skipId(cursor);
+  if ((info & (BIT7 | BIT8)) === 0) {
+    if (cursor.uint() === 1) cursor.skipBuffer();
+    else skipId(cursor);
+    if (info & BIT6) cursor.skipBuffer();
+  }
+  skipContent(cursor, budget, ref);
+}
+function scanUpdate(update, limits = {}) {
+  const defaults = defaultUpdateLimits(update.byteLength);
+  const budget = new Budget({
+    maxStructs: limits.maxStructs ?? defaults.maxStructs,
+    maxDeleteRanges: limits.maxDeleteRanges ?? defaults.maxDeleteRanges
+  });
+  const cursor = new Cursor(update);
+  try {
+    const clients = cursor.uint();
+    for (let i = 0; i < clients; i++) {
+      const structs = cursor.uint();
+      budget.addStructs(structs + 1);
+      cursor.uint();
+      cursor.uint();
+      for (let j = 0; j < structs; j++) skipStruct(cursor, budget);
+    }
+    const deleteClients = cursor.uint();
+    for (let i = 0; i < deleteClients; i++) {
+      cursor.uint();
+      const ranges = cursor.uint();
+      budget.addDeleteRanges(ranges + 1);
+      for (let j = 0; j < ranges; j++) skipId(cursor);
+    }
+    return {
+      ok: true,
+      structs: budget.structs,
+      deleteRanges: budget.deleteRanges,
+      bytesRead: cursor.pos
+    };
+  } catch (cause) {
+    if (cause instanceof Overrun)
+      return { ok: false, reason: cause.message, overLimit: cause.overLimit };
+    throw cause;
+  }
+}
+
+// ../../src/core/collab/codec.ts
 var MAX_UPDATE_BYTES = 32 * 1024 * 1024;
 
 // ../../src/core/collab/transport-provider.ts
@@ -546,6 +768,7 @@ function checkReaction(key, beforeHas, afterHas, actor) {
 function validateTeamsUpdate(doc, update, actor, options = {}) {
   if (!(update instanceof Uint8Array) || update.byteLength > (options.maxBytes ?? MAX_UPDATE_BYTES))
     return fail({ code: "invalid-update" });
+  if (!scanUpdate(update, options).ok) return fail({ code: "invalid-update" });
   const scratch = new Y7.Doc();
   const touched = { rows: /* @__PURE__ */ new Map(), reactions: /* @__PURE__ */ new Set() };
   const reverts = [];
@@ -642,6 +865,7 @@ export {
   isCurrentChatId,
   isGroupChatIdOf,
   protocolOfUrl,
+  scanUpdate,
   shortHash,
   validateTeamsSyncMessage,
   validateTeamsUpdate

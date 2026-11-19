@@ -167,3 +167,14 @@ input:disabled {
 	color: var(--office-muted-foreground);
 	font-size: var(--office-font-size-xs);
 }
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.line[aria-selected='true'] input,
+	.toggle[aria-pressed='true'] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
+}

@@ -23,6 +23,7 @@
 import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
 
 import { getAssetsMap, isLocalOnlyUrl, reconcileAssetFields } from './collaboration-assets';
+import { sharedSlideRecord } from './collaboration-remote-values';
 import type { YArrayLike, YDocLike, YjsFactories, YMapLike } from './collaboration-sync';
 import {
 	COMPLEX_ELEMENT_FIELDS,
@@ -274,7 +275,7 @@ export function reconcileSlideYMap(
 	factories: YjsFactories,
 	assets: YMapLike,
 ): void {
-	const rec = slide as unknown as Record<string, unknown>;
+	const rec = sharedSlideRecord(slide);
 	reconcileScalars(ymap, rec, SCALAR_SLIDE_KEYS);
 	reconcileComplexFields(ymap, rec, COMPLEX_SLIDE_FIELDS);
 

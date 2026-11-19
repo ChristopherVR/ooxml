@@ -79,4 +79,11 @@ describe('resolveOleVerbTarget', () => {
 		expect(resolveOleVerbTarget(slide, 'ole3')).toBeUndefined();
 		expect(resolveOleVerbTarget(slide, 'missing')).toBeUndefined();
 	});
+
+	it('never acts on an embedding that is not a data: URL', () => {
+		for (const url of ['javascript:alert(1)', 'https://example.com/a.pdf', 'blob:x']) {
+			const slide = slideOf([ole('ole4', { oleEmbeddedData: url } as Partial<PptxElement>)]);
+			expect(resolveOleVerbTarget(slide, 'ole4', 1)).toBeUndefined();
+		}
+	});
 });

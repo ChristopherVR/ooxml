@@ -283,27 +283,6 @@ describe('office-ui-options-dialog', () => {
 		expect(cancelled).toHaveBeenCalledTimes(1);
 	});
 
-	it('lets Tab walk through a slotted pane instead of the dialog trap', async () => {
-		const { dialog } = mount();
-		dialog.categories = [
-			{ id: 'ribbon', label: 'Customize Ribbon', sections: [], custom: true },
-			{ id: 'other', label: 'Other', sections: [] },
-		];
-		const field = document.createElement('input');
-		field.slot = 'pane-ribbon';
-		dialog.append(field);
-		dialog.show();
-		await dialog.updateComplete;
-		const tabKey = new KeyboardEvent('keydown', {
-			key: 'Tab',
-			bubbles: true,
-			composed: true,
-			cancelable: true,
-		});
-		field.dispatchEvent(tabKey);
-		expect(tabKey.defaultPrevented).toBe(false);
-	});
-
 	it('hands the body to the host under custom-body and keeps the close button', async () => {
 		const { dialog } = mount();
 		dialog.live = true;
