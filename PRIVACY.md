@@ -172,27 +172,44 @@ The suite uses the editors above, so their sections apply. In addition:
 - **AI assistant:** off the network by default (the shipped `ai-config.json` selects the offline
   assistant). When the user or the deployment's policy selects a provider, the prompt, the
   conversation and the document context it needs are sent to that provider, under the
-  provider's own terms. Keys stay in this tab's session storage only and are cleared when it
-  closes; keys an earlier version remembered in localStorage are deleted when the app loads.
-  See [docs/suite-ai-config.md](docs/suite-ai-config.md).
+  provider's own terms. The context is the files the user attached; hidden and very hidden
+  sheets and the cells of hidden rows and columns are left out unless the deployment's policy sets
+  `context.includeHidden`. Keys stay in this tab's session storage only and are cleared when it
+  closes; keys an earlier version remembered in localStorage are deleted when the app loads. A
+  saved model is used only while the policy still allows its provider. See
+  [docs/suite-ai-config.md](docs/suite-ai-config.md).
 - **OneDrive:** off unless the host configures it. Files and the access token then go to
   Microsoft Graph. See [docs/onedrive-integration.md](docs/onedrive-integration.md).
 - **Shared AI chats:** sync over the configured collaboration or Teams server, otherwise stay in
-  this browser. When the deployment's `ai-config.json` sets `collaboration.credentialsUrl` (off by
-  default), the suite sends a `GET` with the user's cookies to that URL right before a shared chat
-  connects, and again before each reconnect or once the token expires, to get a short-lived token
-  for the sync server. No document or chat content is sent, and the token is kept in memory only.
-  Leave the field empty to turn the request off; a sync server that needs a token then cannot be
-  used.
+  this browser. The room, and so the sync server, receives each request's text, each reply's
+  text as shown (which can quote attached files), the model's label, the names and kinds of
+  attached files and the number of edits and new files a reply proposed. The files themselves,
+  the reply's raw text, the proposed edits with their before-and-after text, and file ids stay on
+  the asker's device. When the deployment's `ai-config.json` sets `collaboration.credentialsUrl`
+  (off by default), the suite sends a `GET` with the user's cookies to that URL right before a
+  shared chat connects, and again before each reconnect or once the token expires, to get a
+  short-lived token for the sync server. No document or chat content is sent, and the token is
+  kept in memory only. Leave the field empty to turn the request off; a sync server that needs a
+  token then cannot be used.
 - **Updates:** the installed app checks its own origin for a new `sw.js` at start, on focus and
   hourly. The service worker caches only the app's own files, and serves a saved copy only while
   it matches the SHA-256 the build recorded for it; a copy that does not is deleted and fetched
   again from the site. The shell's script and style tags carry subresource integrity.
-- **Desktop:** the Tauri shell has no updater, telemetry or plugins and reads and writes only
-  the files the user opens. Its window only shows the bundled app: a web or `mailto:` link the
-  user follows opens in the system's default browser or mail client, and other destinations
-  (another site in the window, `file:` addresses, new in-app windows) are refused. The operating system's WebView (WebView2, WKWebView) may send its
-  vendor's own diagnostics under the operating system's settings.
+- **Desktop:** the Tauri shell has no updater, telemetry or plugins. It reads and writes the
+  files the user opens, and lists the file names inside a folder the user connects so they can be
+  found; nothing is sent. Its window only shows the bundled app: a web or `mailto:` link the user
+  follows opens in the system's default browser or mail client, and other destinations (another
+  site in the window, `file:` addresses, new in-app windows) are refused. The operating system's
+  WebView (WebView2, WKWebView) may send its vendor's own diagnostics under the operating
+  system's settings.
+
+## MCP servers (`mcp/` and the viewers' MCP packages)
+
+The MCP servers make no network request of their own: they read and write files under the root
+they are given and answer over stdio. On Windows, a file path naming a network share can make the
+system contact that host while the path is checked, before it is refused. The Excel tools refuse
+formulas that would make Excel or another spreadsheet application fetch data, open links or call
+an AI service when the workbook is opened (see [docs/mcp.md](docs/mcp.md)).
 
 ## Data kept on the device
 

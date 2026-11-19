@@ -4,7 +4,7 @@
  * data:
  *
  *  - `capabilities` rewrite into the dialogs, features and command lists they
- *    stand for (`export: false` hides the Export dialog, and so on);
+ *    stand for (`export: false` hides the Export dialog and Save As, and so on);
  *  - each dialog and panel lists the toolbar buttons, ribbon controls, menu
  *    entries, shortcuts, File pages and cards that open it, so hiding the
  *    dialog or panel hides its entry points too.
@@ -12,7 +12,7 @@
  * @module render/customization/customization-entry-points
  */
 import type { BackstagePage } from '../backstage';
-import type { BackstageCardId } from '../backstage-cards';
+import { BACKSTAGE_PAGE_CARDS, type BackstageCardId } from '../backstage-cards';
 import type { ContextMenuCommandId } from '../context-menu-commands';
 import type { EditorKeyActionName } from '../editor-keymap';
 import type { ToolbarActionId } from '../toolbar-actions';
@@ -119,6 +119,14 @@ export function expandCapabilities(c: ViewerCustomization): ViewerCustomization 
 		hiddenDialogs: union(c.hiddenDialogs, dialogs),
 		disabledFeatures: union(c.disabledFeatures, features),
 	};
+	// Save As writes a copy too, so `export: false` removes it as it does in Word and Excel.
+	if (caps.export === false) {
+		next.backstage = {
+			...c.backstage,
+			hiddenPages: union(c.backstage?.hiddenPages, ['saveAs']),
+			hiddenCards: union(c.backstage?.hiddenCards, BACKSTAGE_PAGE_CARDS.saveAs ?? []),
+		};
+	}
 	if (caps.copy === false) {
 		next.contextMenu = {
 			...c.contextMenu,

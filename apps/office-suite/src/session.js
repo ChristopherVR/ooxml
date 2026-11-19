@@ -1,11 +1,15 @@
 import { replaceEmbeddedPackage } from 'ooxml-core/opc';
-import { mountEditor } from './editors.js';
+import { mountEditor, previewRefusal } from './editors.js';
 import { cloudReadOnly } from './cloud-files.js';
 import { isLocked, lockInput, takeComposed } from './session-lock.js';
 import { deepActive, focusPlace, holds, returnFocus } from './focus-place.js';
 import { displayLanguage, onSettings } from './settings.js';
 
-/** One live editor per document id. Save operations are serialized per session. */
+/**
+ * One live editor per document id. Save operations are serialized per session. A session whose
+ * editor shows the assistant's suggestions (`preview`, see {@link SuiteSessions.setPreview}) is
+ * never saved, exported, printed or copied out until the review applies, discards or keeps them.
+ */
 export class SuiteSessions {
 	constructor(store, host, update, command) {
 		Object.assign(this, { store, host, update, command });
@@ -57,6 +61,8 @@ export class SuiteSessions {
 	async save(id, { cloud = true } = {}) {
 		const s = await this.sessions.get(id)?.ready;
 		if (!s) return this.store.get(id);
+		// The assistant's suggestions on screen are a preview: only their review panel saves them.
+		if (s.preview) throw previewRefusal(s.doc.name);
 		const run = async () => {
 			s.editor.flush?.();
 			if (s.version === s.saved) {
@@ -133,6 +139,25 @@ export class SuiteSessions {
 		s.pending = result.catch(() => {});
 		return result;
 	}
+	/**
+	 * Marks `session` as showing the assistant's suggestions (ai/review.js) or not. While it does,
+	 * the suite refuses to save or download it and its editor offers no command that takes the
+	 * document out of the suite (Save As, Export, Print, Share, Copy).
+	 */
+	setPreview(session, on) {
+		session.preview = on;
+		session.editor.hold?.(on);
+		session.node.toggleAttribute('data-preview', on);
+	}
+	/**
+	 * The document as a request to the assistant reads it: the user's own edits are saved first,
+	 * while a document showing the assistant's suggestions is read as last saved and its
+	 * suggestions stay unsaved.
+	 */
+	async forContext(id) {
+		const s = await this.sessions.get(id)?.ready;
+		return s?.preview ? this.store.get(id) : this.save(id, { cloud: false });
+	}
 	isDirty(id) {
 		return this.isEdited(id) || Boolean(this.sessions.get(id)?.doc.cloud?.pending);
 	}
@@ -140,6 +165,7 @@ export class SuiteSessions {
 	async export(id) {
 		const session = await this.sessions.get(id)?.ready;
 		if (!session) return this.store.get(id);
+		if (session.preview) throw previewRefusal(session.doc.name);
 		const unlock = this.lock([id]);
 		try {
 			session.editor.flush?.();
