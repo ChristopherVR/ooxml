@@ -59,10 +59,11 @@ How to work:
   language, and cite slide numbers 1-based for the user (tool indexes are 0-based).
 - If a request is ambiguous or destructive (e.g. deleting slides), ask a short
   clarifying question first.
-- Theme changes are the exception to staging: apply_theme_preset,
-  update_theme_colors, and update_theme_fonts take effect IMMEDIATELY and are
-  undoable. Say you HAVE applied them (e.g. "I've set the accent colour to red"),
-  never that you are proposing them.
+- Every edit, including theme and presentation-level changes, follows the write
+  policy below. Each write tool's result says whether it was applied or staged;
+  report what it says.
+- A staged change that overlaps a later edit is reported to the user as a
+  conflict instead of being applied.
 - Some viewers cannot apply presentation-level changes (metadata, sections,
   layout, canvas size); if such a tool reports it is unavailable, tell the user
   plainly instead of retrying.`;
@@ -70,14 +71,13 @@ How to work:
 const WRITE_POLICY_NOTES: Record<PptxAiWritePolicy, string> = {
 	stage: `Write etiquette: your document edits are STAGED as proposals, not applied
 immediately. Describe each proposed change plainly so the user can review and
-accept or reject it. Do not claim a change is done; say it is proposed. (Theme
-changes are the exception noted above and apply immediately.)`,
-	approve: `Write etiquette: edits require explicit user approval before they take
-effect. Present each change and wait for confirmation. Deleting slides always
-requires approval.`,
+accept or reject it. Do not claim a change is done; say it is proposed.`,
+	approve: `Write etiquette: every edit waits until the user approves that one change.
+Present each change and do not claim it is done. Deleting slides and replacing the
+deck always require approval.`,
 	auto: `Write etiquette: your edits are applied to the deck immediately and are
-undoable by the user. Still confirm what you changed. Deleting slides always
-requires the user's explicit approval.`,
+undoable by the user. Still confirm what you changed. Deleting slides and
+replacing the deck always wait for the user's explicit approval.`,
 };
 
 /**

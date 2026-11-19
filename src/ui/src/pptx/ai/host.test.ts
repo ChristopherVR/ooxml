@@ -58,6 +58,7 @@ describe('ooxml-ui/pptx/ai/host', () => {
 				'aiFixDirective',
 				'applyElementUpdate',
 				'applyShapeStyleUpdate',
+				'canAcceptAllProposals',
 				'applyTextUpdate',
 				'buildChatLogExport',
 				'buildChatLogMarkdown',

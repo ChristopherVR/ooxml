@@ -137,6 +137,9 @@ export const translationsEn: Record<string, string> = {
 	'pptx.ai.accept': 'Apply',
 	'pptx.ai.reject': 'Discard',
 	'pptx.ai.acceptAll': 'Apply all',
+	'pptx.ai.proposalConflict':
+		'This part of the deck changed after the proposal, so it was not applied. Discard it or try again.',
+	'pptx.ai.proposalNeedsApproval': 'Needs your approval',
 	'pptx.ai.pendingChanges': 'Suggested changes ({{count}})',
 	'pptx.ai.moreChanges': '+{{count}} more',
 	// Canvas -> Ask AI affordances

@@ -51,6 +51,7 @@ function fakeController(bridge: PptxAiBridge): VanillaChatController {
 		subscribe: () => () => undefined,
 		proposals,
 		changeAnimator: createAiChangeAnimator(),
+		getLastFinish: () => undefined,
 	};
 }
 
@@ -210,6 +211,7 @@ describe('createAiPanel', () => {
 			subscribe: () => () => undefined,
 			proposals: new ProposalStore(bridge),
 			changeAnimator: createAiChangeAnimator(),
+			getLastFinish: () => undefined,
 		};
 		const store = createStore({ ...createInitialViewerState(), currentSlide: 4 });
 		const focus = createAiFocusController({ store, requestOpen: () => undefined });

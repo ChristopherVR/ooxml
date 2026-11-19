@@ -7,7 +7,7 @@
  */
 
 import type { ProposalView } from 'ooxml-ui/pptx/ai';
-import { humanizeDiffLine } from 'ooxml-ui/pptx/ai';
+import { canAcceptAllProposals, humanizeDiffLine } from 'ooxml-ui/pptx/ai';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';
@@ -37,7 +37,7 @@ export function renderProposals(
 	const title = createEl(doc, 'span', 'pptxv-ai-proposals-title');
 	title.textContent = t('pptx.ai.pendingChanges', { count: proposals.length });
 	header.appendChild(title);
-	if (proposals.length > 1) {
+	if (canAcceptAllProposals(proposals)) {
 		const acceptAll = createEl(doc, 'button', 'pptxv-ai-proposal-btn is-accept-all');
 		acceptAll.type = 'button';
 		acceptAll.textContent = t('pptx.ai.acceptAll');
@@ -78,6 +78,18 @@ function renderProposalCard(
 			list.appendChild(item);
 		}
 		card.appendChild(list);
+	}
+
+	if (proposal.requiresApproval && !proposal.conflict) {
+		const notice = createEl(doc, 'div', 'pptxv-ai-proposal-notice');
+		notice.textContent = t('pptx.ai.proposalNeedsApproval');
+		card.appendChild(notice);
+	}
+	if (proposal.conflict) {
+		const notice = createEl(doc, 'div', 'pptxv-ai-proposal-notice is-conflict');
+		notice.setAttribute('role', 'alert');
+		notice.textContent = t('pptx.ai.proposalConflict');
+		card.appendChild(notice);
 	}
 
 	const actions = createEl(doc, 'div', 'pptxv-ai-proposal-actions');

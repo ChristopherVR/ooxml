@@ -8,8 +8,8 @@
  * Each entry pairs the MCP zod schema (with the server-only `filePath` field
  * omitted, since the AI operates on the open deck, not a path) with the MCP
  * function and a commit strategy ({@link SharedToolSpec.commit}). Read tools
- * return data; slide tools stage reviewable proposals; theme/deck tools apply
- * through the binding's dedicated choke points.
+ * return data; every write goes through the active write policy and lands
+ * through the bridge write its commit strategy names.
  *
  * Viewer-only concepts with no MCP equivalent (navigation, whole-deck outline,
  * table merge) live in the bespoke executors and are merged in by the registry.
@@ -420,7 +420,7 @@ export const MCP_TOOL_ENTRIES: Record<string, McpToolEntry> = {
 		'Apply layout',
 	),
 
-	// ── theme (applied immediately, undoable) ────────────────────────────────────
+	// ── theme ────────────────────────────────────
 	apply_theme_preset: entry(
 		'Apply a built-in theme preset.',
 		mcpSchemas.ApplyThemePresetSchema,

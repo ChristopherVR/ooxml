@@ -1,0 +1,63 @@
+import { useChat } from '@ai-sdk/vue';
+import { mount } from '@vue/test-utils';
+import type { ChatTransport } from 'ai';
+import { createAiChatSession } from 'ooxml-ui/pptx/ai';
+import type { PptxAiBridge, PptxAiConfig, PptxAiUIMessage } from 'ooxml-ui/pptx/ai';
+import type { PptxSlide } from 'pptx-viewer-core';
+import { describe, expect, it, vi } from 'vitest';
+import { defineComponent, h } from 'vue';
+
+import { useAiConversation } from './useAiConversation';
+
+const slides = [
+	{ id: 's1', slideNumber: 1, elements: [] },
+	{ id: 's2', slideNumber: 2, elements: [] },
+] as unknown as PptxSlide[];
+
+const bridge = {
+	getDeckMeta: () => ({ slideCount: 2, activeSlideIndex: 0, width: 960, height: 540 }),
+	getSlides: () => slides,
+	getActiveSlideIndex: () => 0,
+	getTheme: () => undefined,
+	getHandler: () => undefined,
+	goToSlide: () => undefined,
+	selectElements: () => undefined,
+	applySlidesUpdate: () => undefined,
+	updateElement: () => undefined,
+	applyTheme: () => undefined,
+} satisfies PptxAiBridge;
+
+describe('useAiConversation', () => {
+	it('sends the deck context the session adds to every request', async () => {
+		const requests: PptxAiUIMessage[][] = [];
+		const transport = {
+			async sendMessages(options: { messages: PptxAiUIMessage[] }) {
+				requests.push(options.messages);
+				return new ReadableStream({
+					start(controller) {
+						controller.enqueue({ type: 'start' });
+						controller.enqueue({ type: 'finish', finishReason: 'stop' });
+						controller.close();
+					},
+				});
+			},
+			reconnectToStream: async () => null,
+		} as unknown as ChatTransport<PptxAiUIMessage>;
+		const config: PptxAiConfig = { connection: { kind: 'transport', transport } };
+		const session = await createAiChatSession(bridge, config);
+		let send: (text: string) => void = () => undefined;
+		mount(
+			defineComponent({
+				setup() {
+					send = useAiConversation(useChat, session, config).send;
+					return () => h('div');
+				},
+			}),
+		);
+
+		send('hello');
+
+		await vi.waitFor(() => expect(requests).toHaveLength(1));
+		expect(JSON.stringify(requests[0])).toContain('Deck: Untitled - 2 slide(s)');
+	});
+});

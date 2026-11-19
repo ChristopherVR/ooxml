@@ -21,6 +21,8 @@ export const translations = {
 	'pptx.ai.accept': '应用',
 	'pptx.ai.reject': '放弃',
 	'pptx.ai.acceptAll': '全部应用',
+	'pptx.ai.proposalConflict': '提出建议后此部分已更改，因此未应用。请放弃或重试。',
+	'pptx.ai.proposalNeedsApproval': '需要您的批准',
 	'pptx.ai.pendingChanges': '建议的更改 ({{count}})',
 	'pptx.ai.moreChanges': '另有 {{count}} 项',
 	'pptx.ai.askAboutElement': '向AI询问这个问题',

@@ -95,7 +95,7 @@ export type { ToolCanvasTarget } from './tool-target';
 // Panel presentation and history helpers are also runtime-free. Angular keeps its
 // components in one FESM, but loads the chat engine through an external import().
 export { createAiChatHistoryController, deckIdFromBridge } from './chat-history-controller';
-export { humanizeDiffLine } from './proposals-diff';
+export { canAcceptAllProposals, humanizeDiffLine } from './proposals-diff';
 export { toRenderableParts } from './ui-parts';
 export { describeToolActivity, summarizeToolArgs, toolLabel } from './tool-summary';
 export { toolCanvasTarget } from './tool-target';

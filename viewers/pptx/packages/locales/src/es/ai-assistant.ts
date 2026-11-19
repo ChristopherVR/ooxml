@@ -21,6 +21,9 @@ export const translations = {
 	'pptx.ai.accept': 'Aceptar',
 	'pptx.ai.reject': 'Rechazar',
 	'pptx.ai.acceptAll': 'Aceptar todo',
+	'pptx.ai.proposalConflict':
+		'Esta parte de la presentación cambió después de la propuesta, por lo que no se aplicó. Recházala o inténtalo de nuevo.',
+	'pptx.ai.proposalNeedsApproval': 'Requiere tu aprobación',
 	'pptx.ai.pendingChanges': 'Cambios pendientes ({{count}})',
 	'pptx.ai.moreChanges': '+{{count}} más',
 	'pptx.ai.applied': 'Aplicado',

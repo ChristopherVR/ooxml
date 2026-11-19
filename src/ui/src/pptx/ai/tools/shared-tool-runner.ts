@@ -6,26 +6,24 @@
  * Each MCP tool is a pure(ish) `PptxData` transform: `fn(ctx, params) ->
  * { pptxData, result, dirty }`. Here we assemble a working {@link PptxData} from
  * the bridge's live slides + theme (overlaid on the binding's full parsed data
- * when it exposes {@link PptxAiBridge.getDeckData}), run the transform, and
- * commit the result through the binding's existing undoable write choke points:
+ * when it exposes {@link PptxAiBridge.getDeckData}), run the transform, and send
+ * every write through {@link routeDeckWrite}, so the active write policy decides
+ * whether it is applied or held for review. The commit strategy only names the
+ * bridge write that lands it as one Ctrl+Z:
  *
- * - `slides` tools  -> {@link routeWrite} (staged proposal, or applied when the
- *   write policy is `auto`), so element/table/chart/smartart/etc. edits are
- *   reviewable and land as one Ctrl+Z.
- * - `theme`  tools  -> {@link PptxAiBridge.applyTheme} (immediate + undoable,
- *   matching the "theme is the exception to staging" rule).
- * - `deck`   tools  -> {@link PptxAiBridge.applyDeckData} for presentation-level
- *   state (metadata, sections, canvas size, presentation properties, layouts);
- *   reported as unavailable when the binding does not implement that optional
- *   seam, while every slide/theme tool keeps working.
- * - `read`   tools  -> return the tool's result value, no commit.
+ * - `slides` -> {@link PptxAiBridge.applySlidesUpdate}.
+ * - `theme`  -> {@link PptxAiBridge.applyTheme}.
+ * - `deck`   -> {@link PptxAiBridge.applyDeckData} for presentation-level state
+ *   (metadata, sections, canvas size, presentation properties); reported as
+ *   unavailable when the binding does not implement that optional seam.
+ * - `read`   -> return the tool's result value, no commit.
  */
 
-import type { PptxData } from 'ooxml-core/pptx';
 import type { ToolContext, ToolResult } from 'ooxml-core/pptx/automation';
 
+import { readLiveDeck } from '../proposals';
 import type { AiToolContext } from './executor-base';
-import { routeWrite } from './executor-base';
+import { routeDeckWrite } from './executor-base';
 
 /** How a shared tool's output is committed to the live deck. */
 export type SharedToolCommit = 'read' | 'slides' | 'theme' | 'deck';
@@ -48,20 +46,6 @@ export interface SharedToolSpec {
 	forceApproval?: boolean;
 }
 
-/** Assemble a working PptxData from the bridge's live state (no live-ref mutation). */
-function buildWorkingData(ctx: AiToolContext): PptxData {
-	const meta = ctx.bridge.getDeckMeta();
-	const base = ctx.bridge.getDeckData?.();
-	const working: PptxData = base
-		? structuredClone(base)
-		: ({ slides: [], width: meta.width, height: meta.height } as PptxData);
-	working.slides = structuredClone(ctx.bridge.getSlides());
-	working.theme = ctx.bridge.getTheme() ?? working.theme;
-	working.width = meta.width;
-	working.height = meta.height;
-	return working;
-}
-
 /** Spread a tool result value into an object so we can annotate it with write status. */
 function asObject(value: unknown): Record<string, unknown> {
 	return value && typeof value === 'object'
@@ -70,8 +54,8 @@ function asObject(value: unknown): Record<string, unknown> {
 }
 
 /**
- * Run one `pptx-viewer-mcp` tool against the live deck and commit per its
- * {@link SharedToolSpec.commit} strategy. Returns a JSON-serialisable value for
+ * Run one `pptx-viewer-mcp` tool on a private copy of the live deck and route
+ * any change through the write policy. Returns a JSON-serialisable value for
  * the model: the tool's own result for reads, plus write-routing status
  * (`staged` / `applied` / `proposalId` / `summary`) for writes.
  */
@@ -80,34 +64,24 @@ export async function runSharedTool(
 	spec: SharedToolSpec,
 	input: unknown,
 ): Promise<unknown> {
-	const working = buildWorkingData(ctx);
-	const toolCtx: ToolContext = { pptxData: working };
+	const before = structuredClone(readLiveDeck(ctx.bridge));
+	const toolCtx: ToolContext = { pptxData: structuredClone(before) };
 	const res = await spec.fn(toolCtx, input as never);
 
 	if (spec.commit === 'read' || !res.dirty) {
 		return res.result;
 	}
-	const next = res.pptxData;
-
-	if (spec.commit === 'theme') {
-		if (next.theme) {
-			ctx.bridge.applyTheme(next.theme);
-		}
-		return { ...asObject(res.result), applied: true };
+	if (spec.commit === 'deck' && !ctx.bridge.applyDeckData) {
+		throw new Error(
+			'This change affects presentation-level data (metadata, sections, layout, or canvas size), which this viewer cannot apply yet.',
+		);
 	}
-
-	if (spec.commit === 'deck') {
-		if (!ctx.bridge.applyDeckData) {
-			throw new Error(
-				'This change affects presentation-level data (metadata, sections, layout, or canvas size), which this viewer cannot apply yet.',
-			);
-		}
-		ctx.bridge.applyDeckData(() => structuredClone(next), spec.label);
-		return { ...asObject(res.result), applied: true };
-	}
-
-	// commit === 'slides': route the computed next slides through the write policy.
-	const nextSlides = next.slides;
-	const write = routeWrite(ctx, spec.label, () => structuredClone(nextSlides), spec.forceApproval);
+	const write = routeDeckWrite(ctx, {
+		label: spec.label,
+		commit: spec.commit,
+		before,
+		after: res.pptxData,
+		forceApproval: spec.forceApproval,
+	});
 	return { ...asObject(res.result), ...write };
 }

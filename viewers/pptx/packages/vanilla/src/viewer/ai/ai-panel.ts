@@ -210,7 +210,9 @@ export async function createAiPanel(deps: AiPanelDeps): Promise<AiPanel> {
 		host.classList.toggle('is-busy', busy);
 		sendBtn.setAttribute('aria-label', t(busy ? 'pptx.ai.stop' : 'pptx.ai.send'));
 		errorLine.hidden = !snapshot.error;
-		errorLine.textContent = snapshot.error ? t('pptx.ai.errorPrefix') : '';
+		errorLine.textContent = snapshot.error
+			? `${t('pptx.ai.errorPrefix')}: ${snapshot.error.message}`
+			: '';
 		messages.scrollTop = messages.scrollHeight;
 		driveLiveFocus(snapshot);
 	};

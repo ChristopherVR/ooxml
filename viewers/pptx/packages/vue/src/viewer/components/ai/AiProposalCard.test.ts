@@ -96,4 +96,18 @@ describe('aiProposalCard', () => {
 		expect(applied).toHaveLength(0);
 		expect(store.size).toBe(0);
 	});
+
+	it('says when a change conflicted or needs its own approval', () => {
+		const base = { id: 'p1', label: 'Edit', summary: [], createdAt: 0 };
+		const conflicted = mount(AiProposalCard, {
+			props: { proposal: { ...base, requiresApproval: false, conflict: 'el-1 changed' } },
+		});
+		expect(conflicted.get('[role="alert"]').text()).toContain('changed after the proposal');
+
+		const approval = mount(AiProposalCard, {
+			props: { proposal: { ...base, requiresApproval: true } },
+		});
+		expect(approval.text()).toContain('Needs your approval');
+		expect(approval.find('[role="alert"]').exists()).toBe(false);
+	});
 });

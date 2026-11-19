@@ -70,9 +70,10 @@ describe('tool registry', () => {
 	it('routes presentation-level tools through applyDeckData', async () => {
 		const { bridge, proposals, executors } = setup();
 		const result = (await executors.get('update_metadata')!({ title: 'Q3 Deck' })) as {
-			applied?: boolean;
+			proposalId: string;
 		};
-		expect(result.applied).toBeTruthy();
+		expect(bridge.getDeckData?.()?.coreProperties?.title).toBeUndefined();
+		expect(proposals.apply(result.proposalId)).toBe(true);
 		expect(bridge.getDeckData?.()?.coreProperties?.title).toBe('Q3 Deck');
 		expect(proposals.size).toBe(0);
 		expect(bridge.edits.at(-1)?.label).toBe('Update metadata');

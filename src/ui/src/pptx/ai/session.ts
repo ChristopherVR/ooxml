@@ -17,12 +17,18 @@ import type { PptxAiConfig, PptxAiToolName, PptxAiUIMessage } from './config';
 import { resolveChatTransport } from './config';
 import { loadAiSdk } from './loader';
 import { ProposalStore } from './proposals';
+import type { PptxAiRunFinish } from './run-limits';
+import { RunLimiter } from './run-limits';
+import { createSessionTransport } from './session-transport';
 import { buildSystemPrompt } from './system-prompt';
 import { buildToolExecutors, buildToolSet } from './tools';
 
 /** Everything a binding needs to construct its chat instance. */
 export interface PptxAiChatSession {
-	/** Transport to hand to `Chat` / `useChat`. */
+	/**
+	 * Transport to hand to `Chat` / `useChat`. It adds the deck and focus context
+	 * to every request and enforces the run limits, for every connection kind.
+	 */
 	transport: ChatTransport<PptxAiUIMessage>;
 	/** Schema-only tool set, for client-side rendering of tool calls. */
 	tools: ToolSet;
@@ -65,6 +71,8 @@ export interface PptxAiChatSession {
 	 * their `onToolCall` handler and forward the result to `chat.addToolOutput`.
 	 */
 	executeToolCall(toolName: string, input: unknown): Promise<unknown>;
+	/** How the latest model request ended; `reason: 'limit'` when a run limit stopped it. */
+	getLastFinish(): PptxAiRunFinish | undefined;
 }
 
 /**
@@ -86,24 +94,44 @@ export async function createAiChatSession(
 
 	const changeAnimator = createAiChangeAnimator(config.changeAnimation);
 	const proposals = new ProposalStore(bridge, changeAnimator);
-	const executors = buildToolExecutors(bridge, proposals, config, changeAnimator);
+	const connection = config.connection;
+	const limiter = new RunLimiter({
+		...(connection.kind === 'model' && connection.maxSteps !== undefined
+			? { maxSteps: connection.maxSteps }
+			: {}),
+		...config.limits,
+	});
+	const executors = buildToolExecutors(bridge, proposals, config, limiter);
 	const tools = buildToolSet(sdk, config, executors, { withExecute: false });
 	const systemPrompt = buildSystemPrompt({
 		writePolicy: config.writePolicy ?? 'stage',
 		extras: config.systemPromptExtras,
 	});
 
-	const connection = config.connection;
 	const toolsWithExecute =
 		connection.kind === 'model'
 			? buildToolSet(sdk, config, executors, { withExecute: true })
 			: undefined;
-	const transport = resolveChatTransport({
-		sdk,
-		connection,
-		toolsWithExecute,
-		system: systemPrompt,
-	});
+	let lastFinish: PptxAiRunFinish | undefined;
+	const transport = createSessionTransport(
+		resolveChatTransport({
+			sdk,
+			connection,
+			toolsWithExecute,
+			system: systemPrompt,
+			maxSteps: limiter.maxSteps,
+			shouldStop: () => limiter.tripped !== undefined,
+		}),
+		{
+			bridge,
+			contextStrategy: config.contextStrategy ?? 'outline',
+			limiter,
+			agentLoop: connection.kind === 'model',
+			onFinish: (finish) => {
+				lastFinish = finish;
+			},
+		},
+	);
 
 	return {
 		transport,
@@ -122,5 +150,6 @@ export async function createAiChatSession(
 			}
 			return executor(input);
 		},
+		getLastFinish: () => lastFinish,
 	};
 }

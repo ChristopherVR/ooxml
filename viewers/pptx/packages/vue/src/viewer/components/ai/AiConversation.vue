@@ -31,7 +31,7 @@ import type {
 	PptxAiConfig,
 	PptxAiUIMessage,
 } from 'ooxml-ui/pptx/ai';
-import { deckIdFromBridge } from 'ooxml-ui/pptx/ai';
+import { canAcceptAllProposals, deckIdFromBridge } from 'ooxml-ui/pptx/ai';
 import { computed, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -209,7 +209,7 @@ function onAcceptAll(): void {
 					{{ t('pptx.ai.pendingChanges', { count: proposals.length }) }}
 				</span>
 				<button
-					v-if="proposals.length > 1"
+					v-if="canAcceptAllProposals(proposals)"
 					type="button"
 					class="rounded-sm bg-primary/90 px-2 py-0.5 text-[11px] font-medium text-primary-foreground hover:bg-primary"
 					@click="onAcceptAll"

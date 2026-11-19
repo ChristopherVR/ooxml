@@ -15,6 +15,7 @@ import type { AiChangeAnimator } from './change-animator';
 import type { PptxAiConfig, PptxAiUIMessage } from './config';
 import { loadAiSdk } from './loader';
 import type { ProposalStore } from './proposals';
+import type { PptxAiRunFinish } from './run-limits';
 import { createAiChatSession } from './session';
 
 /** Immutable view of the chat at a point in time. */
@@ -52,6 +53,8 @@ export interface VanillaChatController {
 	 * the motion + glow (see the shared change-animation helpers).
 	 */
 	readonly changeAnimator: AiChangeAnimator;
+	/** How the latest model request ended; `reason: 'limit'` when a run limit stopped it. */
+	getLastFinish(): PptxAiRunFinish | undefined;
 }
 
 interface ToolOutputArg {
@@ -177,6 +180,7 @@ export async function createVanillaChat(options: {
 		},
 		proposals: session.proposals,
 		changeAnimator: session.changeAnimator,
+		getLastFinish: session.getLastFinish,
 	};
 }
 

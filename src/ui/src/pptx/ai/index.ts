@@ -59,8 +59,15 @@ export { buildDeckContext, buildFocusedTargetsContext } from './focused-context'
 export type { FocusedContextOptions } from './focused-context';
 
 export { ProposalStore } from './proposals';
-export type { ProposalView, StagedProposal } from './proposals';
-export { diffSlides, humanizeDiffLine } from './proposals-diff';
+export type { ProposalCommit, ProposalView, ProposedWrite, StagedProposal } from './proposals';
+export { DEFAULT_RUN_LIMITS, RunLimitError } from './run-limits';
+export type {
+	PptxAiFinishReason,
+	PptxAiRunFinish,
+	PptxAiRunLimit,
+	PptxAiRunLimits,
+} from './run-limits';
+export { canAcceptAllProposals, diffSlides, humanizeDiffLine } from './proposals-diff';
 
 export {
 	buildDeckOutline,

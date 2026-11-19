@@ -36,6 +36,16 @@ export function AiProposalCard({ proposal, onAccept, onReject }: AiProposalCardP
 					))}
 				</ul>
 			)}
+			{proposal.requiresApproval && !proposal.conflict && (
+				<div className='mt-1.5 text-[11px] font-medium text-foreground'>
+					{t('pptx.ai.proposalNeedsApproval')}
+				</div>
+			)}
+			{proposal.conflict && (
+				<div role='alert' className='mt-1.5 text-[11px] font-medium text-destructive'>
+					{t('pptx.ai.proposalConflict')}
+				</div>
+			)}
 			<div className='mt-2 flex items-center gap-2'>
 				<button
 					type='button'

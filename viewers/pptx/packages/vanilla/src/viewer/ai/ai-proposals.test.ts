@@ -48,4 +48,45 @@ describe('renderProposals round-3 cards', () => {
 		expect(accept).toHaveBeenCalledWith('p1');
 		expect(reject).toHaveBeenCalledWith('p1');
 	});
+
+	it('says when a change conflicted or needs its own approval', () => {
+		const host = document.createElement('div');
+		const callbacks = {
+			accept: () => undefined,
+			reject: () => undefined,
+			acceptAll: () => undefined,
+		};
+		renderProposals(
+			document,
+			host,
+			[
+				proposal({ id: 'a', conflict: 'el-1 changed', requiresApproval: false }),
+				proposal({ id: 'b', requiresApproval: true }),
+			],
+			t,
+			callbacks,
+		);
+
+		expect(host.querySelector('[role="alert"]')?.textContent).toContain(
+			'changed after the proposal',
+		);
+		expect(host.textContent).toContain('Needs your approval');
+		expect(host.querySelector('.is-accept-all')).toBeNull();
+	});
+
+	it('offers Accept all only for changes it can apply', () => {
+		const host = document.createElement('div');
+		renderProposals(
+			document,
+			host,
+			[
+				proposal({ id: 'a', requiresApproval: false }),
+				proposal({ id: 'b', requiresApproval: false }),
+			],
+			t,
+			{ accept: () => undefined, reject: () => undefined, acceptAll: () => undefined },
+		);
+
+		expect(host.querySelector('.is-accept-all')).not.toBeNull();
+	});
 });

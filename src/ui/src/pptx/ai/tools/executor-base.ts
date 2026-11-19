@@ -4,20 +4,17 @@
  * helpers for locating slides / elements inside an updater.
  */
 
-import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
+import type { PptxData, PptxElement, PptxSlide } from 'ooxml-core/pptx';
 
 import type { PptxAiBridge, PptxAiSlidesUpdater } from '../bridge';
-import type { AiChangeAnimator } from '../change-animator';
 import type { PptxAiWritePolicy } from '../config';
-import type { ProposalStore } from '../proposals';
+import type { ProposalCommit, ProposalStore } from '../proposals';
 
 /** Context every tool executor receives. */
 export interface AiToolContext {
 	bridge: PptxAiBridge;
 	proposals: ProposalStore;
 	writePolicy: PptxAiWritePolicy;
-	/** Optional canvas change animator (present when the host enables it). */
-	animator?: AiChangeAnimator;
 }
 
 /** A tool executor: validated `input` in, JSON-serialisable output out. */
@@ -37,34 +34,55 @@ export interface WriteRouteResult {
 	summary: string[];
 }
 
+/** A computed change to the deck, on its way through the write policy. */
+export interface DeckWrite {
+	label: string;
+	commit: ProposalCommit;
+	before: PptxData;
+	after: PptxData;
+	/** Destructive tools ask the user under every policy. */
+	forceApproval?: boolean;
+}
+
 /**
- * Route a slides mutation through the active write policy.
+ * Route a write through the active policy. This is the one path to the deck.
  *
- * `'auto'` applies immediately (unless `forceApproval`); `'stage'` / `'approve'`
- * (and any `forceApproval` tool such as `delete_slides`) register a proposal.
+ * - `'auto'` applies it now, unless the tool forces approval.
+ * - `'stage'` holds it for review; "accept all" may apply it.
+ * - `'approve'`, and any `forceApproval` tool such as `delete_slides`, hold it
+ *   until the user accepts that one change.
  */
+export function routeDeckWrite(ctx: AiToolContext, write: DeckWrite): WriteRouteResult {
+	const forced = write.forceApproval === true;
+	const requiresApproval = forced || ctx.writePolicy === 'approve';
+	const { forceApproval: _forceApproval, ...proposed } = write;
+	const proposal = ctx.proposals.propose({ ...proposed, requiresApproval });
+	if (ctx.writePolicy === 'auto' && !forced) {
+		if (!ctx.proposals.apply(proposal.id)) {
+			const reason = ctx.proposals.get(proposal.id)?.conflict;
+			ctx.proposals.revert(proposal.id);
+			throw new Error(reason ?? `${write.label} could not be applied.`);
+		}
+		return { applied: true, summary: proposal.summary };
+	}
+	return { staged: true, proposalId: proposal.id, requiresApproval, summary: proposal.summary };
+}
+
+/** Route a slides updater through the active write policy. */
 export function routeWrite(
 	ctx: AiToolContext,
 	label: string,
 	updater: PptxAiSlidesUpdater,
 	forceApproval = false,
 ): WriteRouteResult {
-	if (ctx.writePolicy === 'auto' && !forceApproval) {
-		const before = ctx.bridge.getSlides();
-		const after = ctx.animator ? updater(structuredClone(before)) : null;
-		ctx.bridge.applySlidesUpdate(updater, label);
-		if (after) {
-			ctx.animator?.publish(before, after);
-		}
-		return { applied: true, summary: [label] };
-	}
-	const proposal = ctx.proposals.stage(label, updater);
-	return {
-		staged: true,
-		proposalId: proposal.id,
-		requiresApproval: forceApproval || ctx.writePolicy === 'approve',
-		summary: proposal.summary,
-	};
+	const slides = ctx.bridge.getSlides();
+	return routeDeckWrite(ctx, {
+		label,
+		commit: 'slides',
+		before: { slides } as PptxData,
+		after: { slides: updater(structuredClone(slides)) } as PptxData,
+		forceApproval,
+	});
 }
 
 /** Assert a slide index is in range, returning the slide. */

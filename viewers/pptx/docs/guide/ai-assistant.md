@@ -173,18 +173,56 @@ const ai: PptxAiConfig = { connection: { kind: 'transport', transport: myTranspo
 
 By default (`writePolicy: 'stage'`) every edit the assistant makes is **staged**,
 not applied. The panel shows a proposal card with a short summary of the change
-and Accept / Reject / Accept all buttons. Accepting commits the change through
-the viewer's own editor history as a single entry, so one Ctrl+Z reverts an
-accepted AI edit. Rejecting discards it. Read tools (reading slides, finding
+and Apply / Discard buttons, plus Apply all when more than one change can be
+applied. Applying commits the change through the viewer's own editor history as
+a single entry, so one Ctrl+Z reverts it. Read tools (reading slides, finding
 text) and navigation run immediately and are never staged.
 
-`writePolicy` options:
+`writePolicy` applies to every tool that changes the deck, theme and
+presentation-level tools included:
 
-| Value               | Behavior                                                                                                                     |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `'stage'` (default) | Writes are staged for explicit accept / reject.                                                                              |
-| `'approve'`         | Uses the AI SDK's native per-call approval prompt.                                                                           |
-| `'auto'`            | Writes apply immediately (still undoable). Destructive tools such as `delete_slides` always require confirmation regardless. |
+| Value               | Behavior                                                                   |
+| ------------------- | -------------------------------------------------------------------------- |
+| `'stage'` (default) | Writes wait for review. The user applies each one, or all of them at once. |
+| `'approve'`         | Writes wait for review, and each one must be applied on its own.           |
+| `'auto'`            | Writes apply immediately (still undoable).                                 |
+
+`delete_slides` and `import_from_json` always wait until the user applies that one
+change, under every policy. Apply all leaves them pending.
+
+A proposal records what it changes, not a copy of the deck. Applying it replays
+the change on the deck as it is at that moment, so several proposals and anything
+the user edited in the meantime all survive. When the same content has changed
+since the proposal was made, it is not applied: the card reports the conflict and
+the user can discard it or try again.
+
+The assistant's tool arguments are checked against each tool's schema before the
+tool runs. A call that does not match is returned to the model as an error and
+changes nothing.
+
+## Run limits {#run-limits}
+
+One user message starts a run, which lasts until the model stops calling tools. A
+run ends early, with a message in the panel, when it reaches a limit:
+
+```ts
+const ai: PptxAiConfig = {
+	connection: { kind: 'endpoint', api: '/api/ai/chat' },
+	limits: {
+		maxSteps: 16, // model requests
+		maxToolCalls: 48,
+		maxRunMs: 600_000,
+		maxRepeatedToolCalls: 4, // the same tool with the same input
+	},
+};
+```
+
+The values above are the defaults. The panel also says so when a reply was cut off
+by the length limit, stopped by a content filter or ended without a finish signal.
+`session.getLastFinish()` (and `getLastFinish()` on the Vanilla chat controller)
+returns how the latest request ended: `reason` is one of `stop`, `tool-calls`,
+`length`, `filtered`, `cancelled`, `error`, `limit` or `unknown`, with `limit` naming
+`steps`, `tool-calls`, `time` or `repeats` when one ended the run.
 
 ## What the assistant can do (tools)
 
@@ -214,7 +252,7 @@ UI (selection, navigation, the resolved deck overview).
   `manage_smart_art`, `apply_template`
 - **Slide structure** (6): `add_slide`, `duplicate_slide`, `delete_slides`,
   `reorder_slides`, `update_slide_properties`, `set_slide_transition`
-- **Theme** (3): `apply_theme_preset`, `update_theme_colors`, `update_theme_fonts`
+- **Theme** (3, reviewed like every other edit): `apply_theme_preset`, `update_theme_colors`, `update_theme_fonts`
 - **Presentation level** (7): `set_canvas_size`, `update_metadata`, `manage_sections`, `manage_custom_shows`,
   `update_presentation_properties`, `import_from_json`, `apply_layout`
 
@@ -234,7 +272,8 @@ const ai: PptxAiConfig = {
 ## Deck context
 
 `contextStrategy` controls how much of the deck is sent to the model with each
-turn, in addition to what the model fetches itself via the read tools.
+request in every binding, in addition to what the model fetches itself via the read
+tools. What the user has focused on is sent as well, whatever the strategy.
 
 | Value                 | Sent each turn                                    |
 | --------------------- | ------------------------------------------------- |
