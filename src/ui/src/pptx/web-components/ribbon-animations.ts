@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import { canRequestAnimations } from '../render';
 import type { RibbonAnimationsIntent, RibbonAnimationsViewState } from '../render';
 import { attachRibbonAnimationsStyles } from './ribbon-animations-styles';
@@ -47,5 +48,5 @@ export function definePptxRibbonAnimations(registry: CustomElementRegistry): voi
 			this.view.sync(this.model);
 		}
 	}
-	registry.define('pptx-ui-ribbon-animations', RibbonAnimations);
+	defineElement(registry, 'pptx-ui-ribbon-animations', RibbonAnimations);
 }

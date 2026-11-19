@@ -33,7 +33,7 @@ describe('createPrintLayoutController', () => {
 			expect(controller.layoutVersion()).toBe(1);
 			expect(controller.element.textContent).toContain('Latest input');
 		} finally {
-			controller.destroy();
+			controller.disconnect();
 			vi.useRealTimers();
 		}
 	});
@@ -43,7 +43,7 @@ describe('createPrintLayoutController', () => {
 		const controller = createPrintLayoutController(scrollContainer, () => {});
 		expect(controller.element.hidden).toBe(true);
 		expect(controller.pageStatus()).toBeNull();
-		controller.destroy();
+		controller.disconnect();
 	});
 
 	it('debounces scheduleRelayout and produces a paginated render', () => {
@@ -59,7 +59,7 @@ describe('createPrintLayoutController', () => {
 			vi.runAllTimers();
 			expect(controller.element.querySelectorAll('.dve-print-page').length).toBeGreaterThan(0);
 			expect(controller.pageStatus()?.total).toBeGreaterThan(0);
-			controller.destroy();
+			controller.disconnect();
 			scrollContainer.remove();
 		} finally {
 			vi.useRealTimers();
@@ -76,7 +76,7 @@ describe('createPrintLayoutController', () => {
 			expect(controller.layoutVersion()).toBe(1);
 			vi.runAllTimers();
 			expect(controller.layoutVersion()).toBe(1);
-			controller.destroy();
+			controller.disconnect();
 		} finally {
 			vi.useRealTimers();
 		}
@@ -95,7 +95,7 @@ describe('createPrintLayoutController', () => {
 			document.body.append(controller.element);
 			line.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 0 }));
 			expect(onRequestCursor).toHaveBeenCalledWith('p1', expect.any(Number));
-			controller.destroy();
+			controller.disconnect();
 			scrollContainer.remove();
 		} finally {
 			vi.useRealTimers();

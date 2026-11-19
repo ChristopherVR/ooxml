@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import type { ChartDataSheetEdit } from 'ooxml-core/chart';
 import { chartDataApplySheetEdits, chartDataToSheet } from 'ooxml-core/pptx';
 import type { PptxChartData } from 'ooxml-core/pptx';
@@ -112,7 +113,8 @@ export function definePptxChartDataSheet(registry: CustomElementRegistry): void 
 			this.fire('pptx-chart-data-change', detail);
 		}
 	}
-	registry.define(
+	defineElement(
+		registry,
 		'pptx-ui-chart-data-sheet',
 		PptxChartDataSheet as unknown as CustomElementConstructor,
 	);

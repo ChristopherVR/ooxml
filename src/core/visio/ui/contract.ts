@@ -15,6 +15,11 @@ export interface ViewerProperties {
 	canEdit?: boolean;
 	/** Makes the drawing read-only (default false). True wins over `canEdit`. */
 	readOnly?: boolean;
+	/**
+	 * Interface language, such as `fr` or `zh-CN`. Empty lets the viewer choose: the language picked
+	 * in File > Options, then `lang`, the page's language and the browser's.
+	 */
+	locale?: string;
 	document: VisioDocument | null;
 	pageIndex: number;
 	zoom: number;
@@ -81,6 +86,7 @@ export type ViewerCallbacks = {
 export const propertyKeys = [
 	'canEdit',
 	'readOnly',
+	'locale',
 	'document',
 	'pageIndex',
 	'zoom',

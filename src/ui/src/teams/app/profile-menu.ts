@@ -1,3 +1,4 @@
+import { definer } from '../../registry';
 import { html, nothing, unsafeCSS, type PropertyValues } from 'lit';
 import {
 	type PresenceStatus,
@@ -273,7 +274,4 @@ export class TeamsProfileMenu extends TeamsLitElement {
 	}
 }
 
-export function defineTeamsProfileMenu(): void {
-	if (!customElements.get('teams-profile-menu'))
-		customElements.define('teams-profile-menu', TeamsProfileMenu);
-}
+export const defineTeamsProfileMenu = definer('teams-profile-menu', () => TeamsProfileMenu);

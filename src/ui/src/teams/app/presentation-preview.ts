@@ -1,3 +1,4 @@
+import { definer } from '../../registry';
 import { html, nothing, unsafeCSS } from 'lit';
 import { TeamsLitElement } from '../i18n/lit-element';
 import { styleMap } from 'lit/directives/style-map.js';
@@ -263,7 +264,7 @@ ${slide.elements
 	}
 }
 
-export function defineTeamsPresentationPreview(): void {
-	if (globalThis.customElements && !customElements.get('teams-presentation-preview'))
-		customElements.define('teams-presentation-preview', TeamsPresentationPreview);
-}
+export const defineTeamsPresentationPreview = definer(
+	'teams-presentation-preview',
+	() => TeamsPresentationPreview,
+);

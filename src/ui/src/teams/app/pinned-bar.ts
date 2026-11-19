@@ -1,3 +1,4 @@
+import { definer } from '../../registry';
 import { html, nothing, unsafeCSS } from 'lit';
 import { TeamsLitElement } from '../i18n/lit-element';
 import type { PinnedMessage } from 'ooxml-core/teams';
@@ -95,7 +96,4 @@ export class TeamsPinnedBar extends TeamsLitElement {
 	}
 }
 
-export function defineTeamsPinnedBar(): void {
-	if (!customElements.get('teams-pinned-bar'))
-		customElements.define('teams-pinned-bar', TeamsPinnedBar);
-}
+export const defineTeamsPinnedBar = definer('teams-pinned-bar', () => TeamsPinnedBar);

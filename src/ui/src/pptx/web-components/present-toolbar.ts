@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import type { PresentToolbarIntent, PresentToolbarViewState } from '../render';
 import { attachControlStyles } from './control-styles';
 import { PRESENT_TOOLBAR_STYLES } from './present-toolbar-styles';
@@ -97,5 +98,5 @@ export function definePptxPresentToolbar(registry: CustomElementRegistry): void 
 			this.view.render(this.model);
 		}
 	}
-	registry.define('pptx-ui-present-toolbar', PresentToolbar);
+	defineElement(registry, 'pptx-ui-present-toolbar', PresentToolbar);
 }

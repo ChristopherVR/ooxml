@@ -1,3 +1,4 @@
+import type { ContextMenu } from './context-menu';
 import type { CloudFileProvider, DocumentStorage } from 'ooxml-core/embedding';
 import type { SurfaceHostActions } from './building-blocks-actions';
 import type { RibbonAddInTab } from '../ribbon/add-in-tabs';
@@ -70,6 +71,7 @@ export interface ShellParts {
 	headings?: HeadingNavigator;
 	/** The docked Format pane of the selected chart. */
 	chartFormat?: DocxChartFormatPane;
+	contextMenu?: ContextMenu;
 }
 
 /**

@@ -1,3 +1,4 @@
+import { definer } from '../../registry';
 import { html, nothing, type PropertyValues } from 'lit';
 import { type MeetingView, occurrenceAt } from 'ooxml-core/teams';
 import { formatWhen } from '../base';
@@ -204,9 +205,7 @@ export class TeamsMeetingDetails extends TeamsDialog {
 	}
 }
 
-export function defineTeamsMeetingDetails(
-	registry: CustomElementRegistry | undefined = globalThis.customElements,
-): void {
-	if (registry && !registry.get('teams-meeting-details'))
-		registry.define('teams-meeting-details', TeamsMeetingDetails);
-}
+export const defineTeamsMeetingDetails = definer(
+	'teams-meeting-details',
+	() => TeamsMeetingDetails,
+);
