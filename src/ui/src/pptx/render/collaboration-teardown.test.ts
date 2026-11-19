@@ -16,9 +16,22 @@ interface FakeWindow extends TeardownWindowLike {
 	count: (type: string) => number;
 }
 
+/** The page embedding the viewer frame, and its origin. */
+const embedder = {};
+const ORIGIN = 'https://viewer.example';
+
+/** A leave request as the embedding page sends it. */
+const fromEmbedder = (data: unknown): TeardownEventLike => ({
+	data,
+	origin: ORIGIN,
+	source: embedder,
+});
+
 function makeWindow(): FakeWindow {
 	const listeners = new Map<string, Set<TeardownListener>>();
 	return {
+		parent: embedder,
+		location: { origin: ORIGIN },
 		addEventListener: (type, listener) => {
 			const set = listeners.get(type) ?? new Set<TeardownListener>();
 			set.add(listener);
@@ -122,7 +135,7 @@ describe('registerCollaborationTeardown', () => {
 		const leave = vi.fn();
 		registerCollaborationTeardown({ leave, target });
 
-		target.emit('message', { data: { type: COLLAB_LEAVE_MESSAGE } });
+		target.emit('message', fromEmbedder({ type: COLLAB_LEAVE_MESSAGE }));
 
 		expect(leave).toHaveBeenCalledOnce();
 	});
@@ -132,12 +145,42 @@ describe('registerCollaborationTeardown', () => {
 		const leave = vi.fn();
 		registerCollaborationTeardown({ leave, target });
 
-		target.emit('message', { data: { type: 'something-else' } });
-		target.emit('message', { data: 'hello' });
-		target.emit('message', { data: null });
+		target.emit('message', fromEmbedder({ type: 'something-else' }));
+		target.emit('message', fromEmbedder('hello'));
+		target.emit('message', fromEmbedder(null));
 		expect(leave).not.toHaveBeenCalled();
 
+		target.emit('message', fromEmbedder(COLLAB_LEAVE_MESSAGE));
+		expect(leave).toHaveBeenCalledOnce();
+	});
+
+	it('ignores a leave message from another origin or another window', () => {
+		const target = makeWindow();
+		const leave = vi.fn();
+		registerCollaborationTeardown({ leave, target });
+
+		target.emit('message', {
+			data: COLLAB_LEAVE_MESSAGE,
+			origin: 'https://evil.example',
+			source: embedder,
+		});
+		target.emit('message', { data: COLLAB_LEAVE_MESSAGE, origin: ORIGIN, source: {} });
 		target.emit('message', { data: COLLAB_LEAVE_MESSAGE });
+		expect(leave).not.toHaveBeenCalled();
+	});
+
+	it('obeys an embedder on another origin the host names', () => {
+		const target = makeWindow();
+		const leave = vi.fn();
+		registerCollaborationTeardown({ leave, target, leaveMessageOrigin: 'https://host.example' });
+
+		target.emit('message', fromEmbedder(COLLAB_LEAVE_MESSAGE));
+		expect(leave).not.toHaveBeenCalled();
+		target.emit('message', {
+			data: COLLAB_LEAVE_MESSAGE,
+			origin: 'https://host.example',
+			source: embedder,
+		});
 		expect(leave).toHaveBeenCalledOnce();
 	});
 

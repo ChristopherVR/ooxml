@@ -107,6 +107,7 @@ export function useYjsProvider({ config: inputConfig }: UseYjsProviderInput): Us
 		const disposeTeardown = registerCollaborationTeardown({
 			leave: () => controller.stop(),
 			rejoin: () => void controller.retry(),
+			leaveMessageOrigin: () => controller.getSnapshot().config?.leaveMessageOrigin,
 		});
 		return () => {
 			disposeTeardown();

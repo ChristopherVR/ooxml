@@ -303,6 +303,7 @@ export function createCollaborationSessionController(
 			? () => {}
 			: registerCollaborationTeardown({
 					leaveOnBeforeUnload: () => !store.getSnapshot().prepared?.externalSession,
+					leaveMessageOrigin: () => store.getSnapshot().config?.leaveMessageOrigin,
 					leave: stop,
 					rejoin: () => void retry(),
 				});

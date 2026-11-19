@@ -48,7 +48,12 @@ export interface SessionOptions<P extends object = object> {
 	/** Called once when local writes become allowed; seed the document here. */
 	onReady?: (state: { synced: boolean }) => void;
 	/** Register pagehide/beforeunload leave handling and the same-browser departure channel. */
-	teardown?: boolean | Pick<TeardownOptions, 'target' | 'leaveOnBeforeUnload' | 'leaveMessage'>;
+	teardown?:
+		| boolean
+		| Pick<
+				TeardownOptions,
+				'target' | 'leaveOnBeforeUnload' | 'leaveMessage' | 'leaveMessageOrigin'
+		  >;
 	/** Heartbeat (ms) that republishes presence and ages out stale peers. Default 10 s; 0 disables. */
 	heartbeatMs?: number;
 }
