@@ -49,8 +49,8 @@ describe('shapeEffectOverlay gradient outline', () => {
 	it('strokes the outline with a paint server instead of one flat colour', () => {
 		const html = markup(shape());
 		expect(html).toContain('<linearGradient');
-		expect(html).toContain('id="pptx-stroke-ppt_slides_slide4_xml-shape-3"');
-		expect(html).toContain('stroke="url(#pptx-stroke-ppt_slides_slide4_xml-shape-3)"');
+		expect(html).toContain('id="pptx-stroke-ppt_2f_slides_2f_slide4.xml-shape-3"');
+		expect(html).toContain('stroke="url(#pptx-stroke-ppt_2f_slides_2f_slide4.xml-shape-3)"');
 		expect(html).toContain('stop-color="#F0FDFE"');
 		expect(html).toContain('stop-color="#BFBFBF"');
 		// The averaged stand-in must not be painted.
@@ -154,8 +154,8 @@ describe('shapeEffectOverlay pattern outline', () => {
 		const html = markup(patternShape());
 		expect(html).toContain('<pattern');
 		expect(html).toContain('patternUnits="userSpaceOnUse"');
-		expect(html).toContain('id="pptx-strokepat-ppt_slides_slide4_xml-shape-3"');
-		expect(html).toContain('stroke="url(#pptx-strokepat-ppt_slides_slide4_xml-shape-3)"');
+		expect(html).toContain('id="pptx-strokepat-ppt_2f_slides_2f_slide4.xml-shape-3"');
+		expect(html).toContain('stroke="url(#pptx-strokepat-ppt_2f_slides_2f_slide4.xml-shape-3)"');
 	});
 
 	it('carries both pattern colours in the tile', () => {

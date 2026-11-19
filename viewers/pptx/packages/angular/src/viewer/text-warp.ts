@@ -6,6 +6,7 @@ import {
 	hasGlyphEnvelope,
 	resolveWarpRunPaint,
 	substituteFieldText,
+	svgIdToken,
 	warpParagraphLayouts,
 } from 'ooxml-ui/pptx';
 import type {
@@ -241,7 +242,7 @@ export function getTextWarp(
 
 	const width = element.width;
 	const height = element.height;
-	const pathIdPrefix = `ng-warp-${element.id}`;
+	const pathIdPrefix = `ng-warp-${svgIdToken(element.id)}`;
 
 	// Envelope presets (inflate/deflate/can) get a true per-glyph height warp
 	// instead of a shared-baseline `<textPath>`, across every paragraph: line

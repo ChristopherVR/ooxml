@@ -1,4 +1,4 @@
-import { getImageColorWashStyle, getImageSvgFilters } from 'ooxml-ui/pptx';
+import { getImageColorWashStyle, getImageDuotoneFilterId, getImageSvgFilters } from 'ooxml-ui/pptx';
 import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import type { PptxElement } from 'pptx-viewer-core';
 import { isImageLikeElement } from 'pptx-viewer-core';
@@ -14,7 +14,9 @@ function renderImageEffectDefinitions(
 	excludeDuotone = false,
 ): React.ReactNode {
 	return getImageSvgFilters(element)
-		.filter((definition) => !excludeDuotone || definition.id !== `duotone-${element.id}`)
+		.filter(
+			(definition) => !excludeDuotone || definition.id !== getImageDuotoneFilterId(element.id),
+		)
 		.map((definition) => (
 			<svg
 				key={definition.id}
