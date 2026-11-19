@@ -62,16 +62,16 @@ async function remember(build, clientId) {
 	if (clientId)
 		await (await caches.open(build.cache)).put(await mark(build, clientId), new Response(''));
 }
-/** The other builds whose caches are still kept. */
-async function older() {
+/** The other builds whose caches are still kept: older ones, or a newer one not yet active. */
+async function others() {
 	return (await caches.keys())
 		.filter((name) => name.startsWith(PREFIX) && name !== CACHE)
 		.map((name) => ({ cache: name, version: name.slice(PREFIX.length) }));
 }
-/** The older build marked as run by `clientId` that ships `href`, with its checked table. */
+/** The other build marked as run by `clientId` that ships `href`, with its checked table. */
 async function builtFor(clientId, href) {
 	if (!clientId) return undefined;
-	for (const build of await older()) {
+	for (const build of await others()) {
 		if (!(await runs(build, clientId))) continue;
 		const text = await (await (await caches.open(build.cache)).match(TABLE))?.text();
 		if (text === undefined || hex(await sha256(text)) !== build.version) continue;
@@ -81,20 +81,31 @@ async function builtFor(clientId, href) {
 	return undefined;
 }
 /**
- * Deletes each older build's cache once no window or worker runs it. At activation it also
- * deletes caches without a table: an unfinished install, or a build from before tables were kept.
+ * Deletes the marks of clients that are gone, and each other build's cache once no window or
+ * worker runs it. Only the activating worker knows every other build is older, so it alone also
+ * deletes a cache no client was ever marked by, and one without a table (an unfinished install, or
+ * a build from before tables were kept). Before that, such a cache may be a newer build waiting to
+ * activate. `arriving` is the window a navigation is opening, which is not a client yet.
  * Resolves to the clients it checked.
  */
-async function prune(unfinished) {
+async function prune(activating, arriving) {
 	const clients = await self.clients.matchAll({ includeUncontrolled: true, type: 'all' });
-	for (const build of await older()) {
-		if (!(await (await caches.open(build.cache)).match(TABLE))) {
-			if (unfinished) await caches.delete(build.cache);
+	const ids = clients.map((client) => client.id);
+	if (arriving) ids.push(arriving);
+	for (const build of [current, ...(await others())]) {
+		const cache = await caches.open(build.cache);
+		const live = new Set(await Promise.all(ids.map((id) => mark(build, id))));
+		const marks = (await cache.keys())
+			.map((request) => request.url)
+			.filter((href) => href.startsWith(MARKS));
+		const used = marks.some((href) => live.has(href));
+		const finished = !!(await cache.match(TABLE));
+		const older = activating ? !used || !finished : marks.length > 0 && !used;
+		if (build !== current && older) {
+			await caches.delete(build.cache);
 			continue;
 		}
-		let used = false;
-		for (const client of clients) used ||= await runs(build, client.id);
-		if (!used) await caches.delete(build.cache);
+		for (const href of marks) if (!live.has(href)) await cache.delete(href);
 	}
 	return clients;
 }
@@ -140,7 +151,7 @@ self.addEventListener('activate', (event) =>
 			// A window no build has marked was loaded before any worker ran (a first visit), so it
 			// is taken as this build's. A wrong guess only offers files a build shipped, checked
 			// against that build's table.
-			const builds = await older();
+			const builds = await others();
 			for (const client of clients) {
 				let marked = false;
 				for (const build of builds) marked ||= await runs(build, client.id);
@@ -188,7 +199,7 @@ self.addEventListener('fetch', (event) => {
 		url.search = '';
 		if (!current.files.has(url.href)) return;
 		event.respondWith(page(event, url.href));
-		event.waitUntil(prune(false));
+		event.waitUntil(prune(false, event.resultingClientId));
 		return;
 	}
 	if (current.files.has(url.href)) event.respondWith(file(event, current, url.href));

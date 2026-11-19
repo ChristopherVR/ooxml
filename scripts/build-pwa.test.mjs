@@ -310,3 +310,50 @@ test('the worker version is the hash of the file table it saves', () => {
 		version,
 	);
 });
+
+test('a page load the previous build handles before the update activates keeps the new build', async () => {
+	const a = await runningA();
+	const b = worker(builds.B, { stores: a.stores, clients: ['w1'] });
+	await b.run('install');
+	// The previous build still controls the page until the new one activates.
+	const before = worker(builds.A, { stores: a.stores, clients: ['w1', 'w4'] });
+	await before.run('fetch', navigate(`${ORIGIN}index.html`, 'w4'));
+	assert.ok(appKeys(a.stores).includes(b.name), 'the installed build is kept');
+	await b.run('activate');
+
+	const down = worker(builds.B, { network: offline, stores: a.stores, clients: ['w5'] });
+	const shell = await down.run('fetch', navigate(`${ORIGIN}index.html`, 'w5'));
+	assert.equal(await shell.text(), read(builds.B, 'index.html').toString(), 'B works offline');
+	const boot = await down.run('fetch', chunk('boot-2.js', 'w5'));
+	assert.equal(await boot.text(), read(builds.B, 'suite-assets/boot-2.js').toString());
+});
+
+test('page loads keep one mark per open window', async () => {
+	const a = await runningA();
+	for (let i = 0; i < 20; i++) {
+		// Each load opens a window that is not a client yet, and the one before it has closed.
+		const load = worker(builds.A, { stores: a.stores, clients: ['w1'] });
+		await load.run('fetch', navigate(`${ORIGIN}index.html`, `n${i}`));
+	}
+	const marks = [...a.cache().keys()].filter((href) => href.includes('/.ooxml-sw/client/'));
+	assert.equal(marks.length, 2, 'w1 and the window the last load opened');
+
+	// The window the last load opened still gets its build's chunks after an update.
+	const b = worker(builds.B, { stores: a.stores, clients: ['w1', 'n19'] });
+	await b.run('install');
+	await b.run('activate');
+	const old = await b.run('fetch', chunk('boot-1.js', 'n19'));
+	assert.equal(await old.text(), read(builds.A, 'suite-assets/boot-1.js').toString());
+});
+
+test('a build no window runs is deleted at the next activation, over several deploys', async () => {
+	const a = await runningA();
+	const b = worker(builds.B, { stores: a.stores, clients: ['w1'] });
+	await b.run('install');
+	await b.run('activate');
+	// A rollback to A with only a window that B never served open.
+	const back = worker(builds.A, { stores: a.stores, clients: ['w9'] });
+	await back.run('install');
+	await back.run('activate');
+	assert.deepEqual(appKeys(a.stores), [a.name]);
+});
