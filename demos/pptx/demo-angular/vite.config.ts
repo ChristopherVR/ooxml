@@ -1,9 +1,8 @@
-import { createRequire, registerHooks } from 'node:module';
 import { resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
 
 import { defineConfig } from 'vite';
 
+import { angularAot } from '../../angular-aot.mjs';
 import { buildStamp } from '../build-stamp';
 
 /**
@@ -18,34 +17,17 @@ import { buildStamp } from '../build-stamp';
  * `/styles` alias maps to the emitted CSS asset. (Published consumers resolve
  * these via the generated `dist/package.json` `exports` instead.)
  *
- * The demo is compiled ahead of time (`jit: false`): the published site's Content Security Policy
- * allows script only from the site and never `eval`, and Angular's JIT compiler needs `eval`.
+ * The demo is compiled ahead of time (`angularAot`, shared with the other Angular demos): the
+ * published site's Content Security Policy never allows `eval`, which Angular's JIT compiler needs.
  */
 const angularLibDist = resolve(__dirname, '../../../viewers/pptx/packages/angular/dist');
-
-// The Analog plugin loads `typescript` without declaring it, so under the root workspace's
-// isolated linker it resolves Bun's shared fallback: the core's TypeScript 7, the native port
-// without the JS compiler API the plugin calls. Point its imports at the TypeScript this demo
-// depends on, then load the plugin (dynamically, so the hook is in place first).
-const demoTypescript = pathToFileURL(
-	createRequire(resolve(__dirname, 'package.json')).resolve('typescript'),
-).href;
-registerHooks({
-	resolve(specifier, context, next) {
-		if (specifier === 'typescript' && context.parentURL?.includes('/@analogjs/')) {
-			return { url: demoTypescript, format: 'commonjs', shortCircuit: true };
-		}
-		return next(specifier, context);
-	},
-});
-const { default: angular } = await import('@analogjs/vite-plugin-angular');
 
 export default defineConfig({
 	// Served from a subpath (e.g. /pptx-viewer/demo-angular/) on GitHub Pages.
 	// CI sets DEMO_BASE so the demo's asset URLs resolve under that subpath.
 	base: process.env.DEMO_BASE ?? '/',
 	plugins: [
-		angular({ tsconfig: './tsconfig.json', jit: false }),
+		await angularAot(resolve(__dirname, 'package.json'), resolve(__dirname, 'tsconfig.json')),
 		buildStamp(resolve(__dirname, '../../../viewers/pptx/packages/angular/package.json')),
 	],
 	resolve: {
