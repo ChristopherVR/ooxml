@@ -308,9 +308,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P2** Fill-handle drag autofill exists in `grid/grid-pointer.ts`. The browser regression
       `e2e/xlsx/fill-handle.spec.ts` drags a two-cell numeric series to five cells and checks one-step
       undo and redo in all six bindings.
-- [ ] **P2** The grid exposes no rows or cells to assistive technology, only the active cell's
-      input (`grid/grid-a11y.ts`). `e2e/a11y/tree.spec.ts` checks for grid cells as an expected
-      failure, and the axe baseline allows its missing row parents until they are fixed.
+- [x] **P2** The grid exposes the shown window to assistive technology as rows of column headers,
+      row headers and grid cells with sheet positions (`grid/grid-a11y.ts`, the window and the
+      cell description in `src/core/xlsx/layout/accessibility.ts`); the active cell is the focus
+      sink's active descendant, and its label names the table column, formula and comment and
+      follows edits made without moving the selection. Pictures are named by their alt text.
+      `grid/grid-a11y.test.ts`, `e2e/xlsx/grid-a11y.spec.ts` and `e2e/a11y/tree.spec.ts` cover it,
+      and the axe baseline no longer allows missing rows, row parents or unnamed images in Excel.
+      Excel's own screen-reader output was not compared.
 
 ### Ribbon
 

@@ -39,7 +39,7 @@ describe('mountGrid', () => {
 		putCell(wb.sheets[0]!, 0, 0, { value: 'Hello' });
 		const { ctx } = setup(wb);
 		const grid = ctx.root.querySelector('[role="grid"]')!;
-		expect(grid.getAttribute('aria-rowcount')).toBe('1048576');
+		expect(grid.getAttribute('aria-rowcount')).toBe('1048577');
 		expect(ctx.root.querySelector('.xg-c .xg-tx')?.textContent).toBe('Hello');
 		expect(
 			[...ctx.root.querySelectorAll('.xg-hdr-col .xg-hd')].some((n) => n.textContent === 'A'),
