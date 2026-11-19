@@ -142,6 +142,7 @@ Private chats add rules to the sync contract. The server, not the first client t
 - A new group room (`g-<32 hex>-<24 hex>`, `createGroupChatId`) starts with only the creator the id is bound to (`isGroupChatIdOf`). The creator then adds the others with ordinary updates, which the validator checks. Other people are refused until they are listed, and their clients retry. Meeting chats are group chats. `?members=` is ignored here.
 - Any other id, including the `dm-<16 hex>`, `g-g-...` and `mt-...` ids of earlier versions, cannot start a room. Rooms that already exist under those ids keep working for the people they list.
 - A room that holds anything is never started again, so an emptied member list closes it for good. The server closes the sockets of people removed from the map.
+- Leaving is a change to this map, written by the person who leaves. Someone who leaves while offline stays listed until their client next syncs the room, so the client keeps that room open, and its local copy across a restart, until then (`leavingChats`).
 - A name that differs from a chat room only by letter case (`isChatRoomAlias`) is refused for sync and for files.
 
 Identity is a claim unless the server has accounts (see Authentication below).
@@ -332,9 +333,14 @@ non-moderator actor (the user id of the **signed session**, never a claimed one)
   member removes anyone. Someone who was never in the group is refused. Someone who is or was in it
   but may not make the change (removed while offline, no longer a moderator) is not refused, because
   the same update would come back on every reconnect and stop their sync: the verdict is
-  `{ ok: true, reverts }`, and a server applies the update and then `applyUpdateReverts(doc, reverts)`,
-  which puts those fields back;
-- message text and reactions per message are capped, see the limits below.
+  `{ ok: true, reverts }`, and a server applies the update and `applyUpdateReverts(doc, reverts)` in
+  one transaction, which puts those fields back. That transaction's origin must not be the sender's
+  connection, because the sender has to receive the reverts as well;
+- message text and reactions per message are capped, see the limits below;
+- no row may take on a value JSON cannot carry (a big integer): `malformed-row`. One that is already
+  stored stays readable and does not block other changes to its row.
+
+`validateTeamsUpdate` never throws: anything it cannot check is refused as `invalid-update`.
 
 **Client behaviour.** `POST /auth/session` answers `role`; `TeamsSession.role` and
 `TeamsState.moderator` carry it, and `<teams-app>` offers Hide on others' messages, rename and
@@ -344,12 +350,19 @@ WebSocket transport backs off and gives up after three consecutive `update rejec
 
 `validateTeamsSyncMessage(doc, message, actor)` does the same for a raw y-websocket message (sync
 step 2 and update are checked, everything else passes). The reference server
-(`viewers/teams/server`) calls it in the `ws.on('message')` handler of `handleSync` before
-`readSyncMessage`, for every sync room (workspace and private chats), with the room's document and
-the user of the **signed session**; on `{ ok: false }` it logs the violation codes, closes the socket
-with 1008 (`update rejected: <codes>`) and does not apply the message. It applies only to sockets
-that carry a verified identity (a session, from `users` or the `authenticate` hook); without
-accounts the user is a claim and nothing is enforced. `enforceAuthorship: false` (or
+(`viewers/teams/server`) calls it in the `ws.on('message')` handler of `handleSync` before applying
+anything, for every sync room (workspace and private chats), with the room's document and the user
+of the **signed session**; on `{ ok: false }` it logs the violation codes, closes the socket with
+1008 (`update rejected: <codes>`) and does not apply the message. It applies only to sockets that
+carry a verified identity (a session, from `users` or the `authenticate` hook); without accounts the
+user is a claim and nothing is enforced.
+
+Applying is all or nothing, on every socket. A Yjs transaction that throws keeps what it had done,
+so the server first proves the update, and any reverts, on a copy of the room (the validator's copy
+already proves an update without reverts). It then applies them to the room in one transaction, which
+makes one broadcast. If anything fails, the room is unchanged, nobody hears of the update, and the
+socket closes with 1008 (`update rejected: invalid-update`). Messages a socket sent after the one that
+got it closed are ignored. `enforceAuthorship: false` (or
 `TEAMS_ENFORCE_AUTHORSHIP=0`) turns it off. The moderator flag comes from the session (a `users`
 entry `{ "credential": "...", "role": "moderator" }`, or `role: 'moderator'` returned by
 `authenticate`).

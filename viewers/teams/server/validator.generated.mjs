@@ -271,8 +271,33 @@ var CHAT_MEMBERS = "teams:chat-members";
 var OWNED_MAPS = [CHANNELS, TABS, MEETINGS];
 var ownerField = (map) => map === MEETINGS ? "organizerId" : "createdBy";
 var isOwnedMap = (name) => OWNED_MAPS.includes(name);
+var plain = (value) => value instanceof Y4.AbstractType ? value.toJSON() : value;
+function sameContent(a, b) {
+  const x = plain(a);
+  const y = plain(b);
+  if (Object.is(x, y) || x === y) return true;
+  if (typeof x !== "object" || typeof y !== "object" || x === null || y === null) return false;
+  if (Array.isArray(x) !== Array.isArray(y)) return false;
+  const keys = Object.keys(x);
+  return keys.length === Object.keys(y).length && keys.every(
+    (key) => Object.hasOwn(y, key) && sameContent(x[key], y[key])
+  );
+}
+function isSupportedValue(value) {
+  const content = plain(value);
+  if (typeof content === "bigint") return false;
+  if (content === null || typeof content !== "object" || ArrayBuffer.isView(content)) return true;
+  return Object.values(content).every(isSupportedValue);
+}
+function writesUnsupportedValue(before, after) {
+  if (!(after instanceof Y4.Map)) return !isSupportedValue(after) && !sameContent(before, after);
+  const prior = before instanceof Y4.Map ? before : void 0;
+  for (const [key, value] of after.entries())
+    if (!isSupportedValue(value) && !sameContent(prior?.get(key), value)) return true;
+  return false;
+}
 function isSameRow(before, next) {
-  return next._item !== null && before._item !== null && Y4.compareIDs(next._item.id, before._item.id) && JSON.stringify(before.toJSON()) === JSON.stringify(next.toJSON());
+  return next._item !== null && before._item !== null && Y4.compareIDs(next._item.id, before._item.id) && sameContent(before, next);
 }
 function checkOwnedRow(map, rowId, before, after, actor) {
   const at = { map, key: rowId };
@@ -303,7 +328,7 @@ function checkPinRow(map, rowId, before, after, actor, doc) {
     return { code: "not-member", ...at };
   if (after === void 0) return null;
   if (pinnedBy(after) === actor.id) return null;
-  if (before !== void 0 && JSON.stringify(before) === JSON.stringify(after)) return null;
+  if (before !== void 0 && sameContent(before, after)) return null;
   return { code: "forged-author", ...at };
 }
 
@@ -328,7 +353,6 @@ function strictChat(id, row) {
 }
 var memberIds = (chat) => new Set(chat.members.map((m) => m.id));
 var sameIds = (a, b) => a.size === b.size && [...a].every((id) => b.has(id));
-var sameValue = (a, b) => a === b || JSON.stringify(a) === JSON.stringify(b);
 var isCleanName = (value) => typeof value === "string" && sanitizeChannelName(value) === value;
 function checkNewRow(id, row, actor, at) {
   const chat = strictChat(id, row);
@@ -365,7 +389,7 @@ function checkGroupEdit(id, prior, next, actor, at, reverts) {
   for (const key of /* @__PURE__ */ new Set([...prior.keys(), ...next.keys()])) {
     const value = prior.get(key);
     const written = next.get(key);
-    if (sameValue(value, written)) continue;
+    if (sameContent(value, written)) continue;
     if (key !== "name" && ROW_FIELDS.has(key)) return { code: "foreign-row", ...at };
     const may = mayWriteGroupField(key, written, actor, isMember);
     if (may === null) return { code: "malformed-row", ...at };
@@ -486,7 +510,7 @@ function isHideOnly(before, after) {
   const keys = /* @__PURE__ */ new Set([...before.keys(), ...after.keys()]);
   for (const key of keys) {
     if (key === "deleted") continue;
-    if (JSON.stringify(before.get(key)) !== JSON.stringify(after.get(key))) return false;
+    if (!sameContent(before.get(key), after.get(key))) return false;
   }
   return true;
 }
@@ -498,7 +522,7 @@ function checkRow(map, rowId, before, after, actor) {
     return next === void 0 || next.get("authorId") === actor.id ? null : { code: "forged-author", ...at };
   }
   const owner = authorOf(before);
-  if (next !== void 0 && before instanceof Y7.Map && next._item && before._item && Y7.compareIDs(next._item.id, before._item.id) && JSON.stringify(before.toJSON()) === JSON.stringify(next.toJSON()))
+  if (next !== void 0 && before instanceof Y7.Map && next._item && before._item && Y7.compareIDs(next._item.id, before._item.id) && sameContent(before, next))
     return null;
   if (owner === actor.id) {
     return next === void 0 || next.get("authorId") === owner ? null : { code: "author-changed", ...at };
@@ -529,11 +553,6 @@ function validateTeamsUpdate(doc, update, actor, options = {}) {
     Y7.applyUpdate(scratch, Y7.encodeStateAsUpdate(doc));
     scratch.on("afterTransaction", (txn) => collectTouched(scratch, txn, touched));
     Y7.applyUpdate(scratch, update);
-  } catch {
-    scratch.destroy();
-    return fail({ code: "invalid-update" });
-  }
-  try {
     if (scratch.store.pendingStructs !== null || scratch.store.pendingDs !== null)
       return fail({ code: "incomplete-update" });
     const violations = [];
@@ -544,7 +563,9 @@ function validateTeamsUpdate(doc, update, actor, options = {}) {
         const was = beforeMap?.get(rowId);
         const now = afterMap?.get(rowId);
         let found;
-        if (name.startsWith(MESSAGES_PREFIX))
+        if (writesUnsupportedValue(was, now))
+          found = { code: "malformed-row", map: name, key: rowId };
+        else if (name.startsWith(MESSAGES_PREFIX))
           found = checkRow(name, rowId, was, now, actor) ?? checkMessageSize(name, rowId, now, options);
         else if (name.startsWith(PINS_PREFIX))
           found = checkPinRow(name, rowId, was, now, actor, doc);
@@ -576,6 +597,8 @@ function validateTeamsUpdate(doc, update, actor, options = {}) {
     }
     if (violations.length) return { ok: false, violations };
     return reverts.length ? { ok: true, reverts } : OK;
+  } catch {
+    return fail({ code: "invalid-update" });
   } finally {
     scratch.destroy();
   }

@@ -10,7 +10,13 @@ import { MAX_UPDATE_BYTES } from '../collab/codec';
 import { MESSAGE_SYNC } from '../collab/transport-provider';
 import { CHATS_MAP } from './chat-records';
 import { type RowRevert, checkChatRow } from './validate-chats';
-import { checkOwnedRow, checkPinRow, isOwnedMap } from './validate-owned';
+import {
+	checkOwnedRow,
+	checkPinRow,
+	isOwnedMap,
+	sameContent,
+	writesUnsupportedValue,
+} from './validate-owned';
 import {
 	CHAT_MEMBERS,
 	type ContentLimits,
@@ -42,7 +48,7 @@ export type UpdateViolationCode =
 	| 'foreign-row'
 	/** The author of an existing row was changed. */
 	| 'author-changed'
-	/** A message row is not a map, or a reaction key has the wrong shape. */
+	/** A row is not a map or takes an unsupported value, or a reaction key has the wrong shape. */
 	| 'malformed-row'
 	/** A reaction was added or removed in somebody else's name. */
 	| 'foreign-reaction'
@@ -52,7 +58,7 @@ export type UpdateViolationCode =
 	| 'incomplete-update'
 	/** A message is longer, or a message has more reactions, than the configured limits allow. */
 	| 'content-too-large'
-	/** The bytes are not a valid Yjs update, or are too large. */
+	/** The bytes are not a valid Yjs update, are too large, or could not be checked. */
 	| 'invalid-update';
 
 export interface UpdateViolation {
@@ -158,7 +164,7 @@ function isHideOnly(before: Y.Map<unknown>, after: Y.Map<unknown>): boolean {
 	const keys = new Set([...before.keys(), ...after.keys()]);
 	for (const key of keys) {
 		if (key === 'deleted') continue;
-		if (JSON.stringify(before.get(key)) !== JSON.stringify(after.get(key))) return false;
+		if (!sameContent(before.get(key), after.get(key))) return false;
 	}
 	return true;
 }
@@ -187,7 +193,7 @@ function checkRow(
 		next._item &&
 		before._item &&
 		Y.compareIDs(next._item.id, before._item.id) &&
-		JSON.stringify(before.toJSON()) === JSON.stringify(next.toJSON())
+		sameContent(before, next)
 	)
 		return null;
 	if (owner === actor.id) {
@@ -243,7 +249,8 @@ function checkReaction(
  * see the coverage list in docs/teams-area.md.
  *
  * An update that depends on state the server lacks stays pending in Yjs and would be applied later
- * unchecked, so it is refused as `incomplete-update`.
+ * unchecked, so it is refused as `incomplete-update`. No row may take on a value JSON cannot carry
+ * (`malformed-row`). This never throws: what cannot be checked is refused as `invalid-update`.
  */
 export function validateTeamsUpdate(
 	doc: Y.Doc,
@@ -260,11 +267,6 @@ export function validateTeamsUpdate(
 		Y.applyUpdate(scratch, Y.encodeStateAsUpdate(doc));
 		scratch.on('afterTransaction', (txn: Y.Transaction) => collectTouched(scratch, txn, touched));
 		Y.applyUpdate(scratch, update);
-	} catch {
-		scratch.destroy();
-		return fail({ code: 'invalid-update' });
-	}
-	try {
 		if (scratch.store.pendingStructs !== null || scratch.store.pendingDs !== null)
 			return fail({ code: 'incomplete-update' });
 		const violations: UpdateViolation[] = [];
@@ -275,7 +277,9 @@ export function validateTeamsUpdate(
 				const was = beforeMap?.get(rowId);
 				const now = afterMap?.get(rowId);
 				let found: UpdateViolation | null;
-				if (name.startsWith(MESSAGES_PREFIX))
+				if (writesUnsupportedValue(was, now))
+					found = { code: 'malformed-row', map: name, key: rowId };
+				else if (name.startsWith(MESSAGES_PREFIX))
 					found =
 						checkRow(name, rowId, was, now, actor) ?? checkMessageSize(name, rowId, now, options);
 				else if (name.startsWith(PINS_PREFIX))
@@ -308,6 +312,8 @@ export function validateTeamsUpdate(
 		}
 		if (violations.length) return { ok: false, violations };
 		return reverts.length ? { ok: true, reverts } : OK;
+	} catch {
+		return fail({ code: 'invalid-update' });
 	} finally {
 		scratch.destroy();
 	}

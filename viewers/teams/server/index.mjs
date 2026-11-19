@@ -83,6 +83,8 @@ const MESSAGE_QUERY_AWARENESS = 3;
 const ROOM = /^[\w-]{1,128}$/u;
 /** WebSocket subprotocol marker: `openteams`, plus `openteams.session.<token>` to carry a credential. */
 const SUBPROTOCOL = 'openteams';
+/** The longest reason a WebSocket close frame can carry, in bytes. */
+const MAX_CLOSE_REASON = 123;
 
 /** TEAMS_TRUST_PROXY: `1`/`true` trusts one proxy hop, a number N trusts N hops, anything else none. */
 function parseTrustProxy(value) {
@@ -476,6 +478,21 @@ export function createTeamsServer(options = {}) {
 		}
 	}
 
+	/**
+	 * Throw unless `update` and its reverts apply to a copy of the room. A Yjs transaction that throws
+	 * keeps and broadcasts what it had done, so a failure has to come before the room is touched.
+	 */
+	function rehearseUpdate(doc, update, reverts) {
+		const scratch = new Y.Doc();
+		try {
+			Y.applyUpdate(scratch, Y.encodeStateAsUpdate(doc));
+			Y.applyUpdate(scratch, update);
+			if (reverts) applyUpdateReverts(scratch, reverts);
+		} finally {
+			scratch.destroy();
+		}
+	}
+
 	function handleSync(ws, name, admission, grant, actor) {
 		const room = getRoom(name);
 		if (grant) room.grants.set(ws, grant);
@@ -497,6 +514,8 @@ export function createTeamsServer(options = {}) {
 		ws.binaryType = 'arraybuffer';
 		const bucket = createBucket(limits.messageRate, limits.messageBurst);
 		ws.on('message', (data) => {
+			// A socket being closed was refused: what it sent after that does not count.
+			if (ws.readyState !== WS_OPEN) return;
 			if (!bucket.take()) {
 				countRateLimited({ scope: 'socket' });
 				return void ws.close(1008, 'rate limit');
@@ -505,11 +524,19 @@ export function createTeamsServer(options = {}) {
 				const decoder = decoding.createDecoder(new Uint8Array(data));
 				const type = decoding.readVarUint(decoder);
 				if (type === MESSAGE_SYNC) {
+					const kind = decoding.readVarUint(decoder);
+					if (kind === syncProtocol.messageYjsSyncStep1) {
+						const encoder = encoding.createEncoder();
+						encoding.writeVarUint(encoder, MESSAGE_SYNC);
+						syncProtocol.readSyncStep1(decoder, encoder, room.doc);
+						return send(ws, encoding.toUint8Array(encoder));
+					}
 					// A read-only socket may ask for the document (step 1), never change it.
-					if (readOnly && decoding.peekVarUint(decoder) !== syncProtocol.messageYjsSyncStep1)
-						return;
+					if (readOnly) return;
+					if (kind !== syncProtocol.messageYjsSyncStep2 && kind !== syncProtocol.messageYjsUpdate)
+						throw new Error(`unknown sync message ${kind}`);
 					let reverts;
-					if (actor && decoding.peekVarUint(decoder) !== syncProtocol.messageYjsSyncStep1) {
+					if (actor) {
 						const verdict = validateTeamsSyncMessage(
 							room.doc,
 							new Uint8Array(data),
@@ -521,7 +548,7 @@ export function createTeamsServer(options = {}) {
 							for (const code of new Set(verdict.violations.map((v) => v.code)))
 								countRejected({ code });
 							log(`sync ${name}: update from ${actor.id} rejected (${codes})`);
-							return void ws.close(1008, `update rejected: ${codes}`);
+							return void ws.close(1008, `update rejected: ${codes}`.slice(0, MAX_CLOSE_REASON));
 						}
 						reverts = verdict.reverts;
 					}
@@ -534,12 +561,18 @@ export function createTeamsServer(options = {}) {
 							return void ws.close(1009, 'document too large');
 						}
 					}
+					const update = decoding.readVarUint8Array(decoder);
+					// The validator has already applied an update without reverts to a copy.
+					if (!actor || reverts) rehearseUpdate(room.doc, update, reverts);
+					// One transaction, so one broadcast. Reverts must reach the sender too.
+					room.doc.transact(
+						() => {
+							Y.applyUpdate(room.doc, update, ws);
+							if (reverts) applyUpdateReverts(room.doc, reverts);
+						},
+						reverts ? null : ws,
+					);
 					room.bytes += data.byteLength;
-					const encoder = encoding.createEncoder();
-					encoding.writeVarUint(encoder, MESSAGE_SYNC);
-					syncProtocol.readSyncMessage(decoder, encoder, room.doc, ws);
-					if (reverts) applyUpdateReverts(room.doc, reverts);
-					if (encoding.length(encoder) > 1) send(ws, encoding.toUint8Array(encoder));
 				} else if (type === MESSAGE_AWARENESS) {
 					// A connection may only speak for the client ids it announced itself.
 					const update = filterAwareness(decoding.readVarUint8Array(decoder), ws, room.owners);
@@ -557,7 +590,9 @@ export function createTeamsServer(options = {}) {
 					}
 				}
 			} catch (error) {
-				log(`sync ${name}: dropped malformed message (${error.message})`);
+				countRejected({ code: 'invalid-update' });
+				log(`sync ${name}: closing a socket whose message failed (${error.message})`);
+				ws.close(1008, 'update rejected: invalid-update');
 			}
 		});
 		ws.on('close', () => leaveSync(name, room, ws));

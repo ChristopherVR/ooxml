@@ -246,7 +246,7 @@ export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace 
 				user: { name: user.name },
 			});
 			chatSession.on('synced', (synced) => synced && onSynced());
-			return { destroy: () => chatSession.destroy() };
+			return { synced: () => chatSession.synced, destroy: () => chatSession.destroy() };
 		},
 	});
 

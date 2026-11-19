@@ -15,7 +15,7 @@ import {
 } from './chat-records';
 import { sanitizeChannelName } from './model';
 import type { UpdateActor, UpdateViolation } from './validate-update';
-import { isSameRow } from './validate-owned';
+import { isSameRow, sameContent } from './validate-owned';
 
 const ROW_FIELDS = new Set(['kind', 'name', 'members', 'createdAt', 'createdBy', 'meetingId']);
 
@@ -50,8 +50,6 @@ function strictChat(id: string, row: Y.Map<unknown>): ChatInfo | null {
 const memberIds = (chat: ChatInfo): Set<string> => new Set(chat.members.map((m) => m.id));
 const sameIds = (a: Set<string>, b: Set<string>): boolean =>
 	a.size === b.size && [...a].every((id) => b.has(id));
-const sameValue = (a: unknown, b: unknown): boolean =>
-	a === b || JSON.stringify(a) === JSON.stringify(b);
 const isCleanName = (value: unknown): value is string =>
 	typeof value === 'string' && sanitizeChannelName(value) === value;
 
@@ -122,7 +120,7 @@ function checkGroupEdit(
 	for (const key of new Set([...prior.keys(), ...next.keys()])) {
 		const value = prior.get(key);
 		const written = next.get(key);
-		if (sameValue(value, written)) continue;
+		if (sameContent(value, written)) continue;
 		if (key !== 'name' && ROW_FIELDS.has(key)) return { code: 'foreign-row', ...at };
 		const may = mayWriteGroupField(key, written, actor, isMember);
 		if (may === null) return { code: 'malformed-row', ...at };

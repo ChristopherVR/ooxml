@@ -100,6 +100,11 @@ Yjs client ids and who may post where are not checked; the full list is in the c
 `docs/teams-area.md`. A close with `1008 update rejected` is shown to the person, and the client
 backs off (5 s, 10 s, ...) and stops after three in a row instead of reconnecting in a loop.
 
+On every socket, with or without accounts, an update is applied whole or not at all. It is tried on
+a copy of the room first, so one that cannot be checked or applied changes nothing, reaches nobody
+else, and closes its sender's socket with `1008 update rejected: invalid-update`. The copy costs time
+proportional to the size of the room for each update.
+
 ## Accounts and sessions
 
 The server needs a way to check a credential (see above); without one it only starts with

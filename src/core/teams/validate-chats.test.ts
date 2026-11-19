@@ -1,8 +1,9 @@
 import * as Y from 'yjs';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createChatStore } from './chat';
 import { createChatRooms } from './chat-rooms';
 import {
+	type ChatInfo,
 	type ChatMember,
 	createChatDirectory,
 	createGroupChatId,
@@ -377,6 +378,57 @@ describe('changing a group from several clients at once', () => {
 	});
 });
 
+describe('values a row cannot hold', () => {
+	const big = BigInt(1);
+	const groupOf = (doc: Y.Doc): string =>
+		createChatDirectory(doc, ann).createGroup({ others: [bob] })!.id;
+
+	it('refuses a new row that carries one, and does not throw', () => {
+		const server = new Y.Doc();
+		const client = copy(server);
+		const id = createGroupChatId('ann');
+		const update = capture(client, () =>
+			writeRow(client, id, {
+				kind: 'group',
+				name: '',
+				members: [{ ...ann, extra: big }, bob],
+				createdAt: 1,
+				createdBy: 'ann',
+			}),
+		);
+		expect(codes(validateTeamsUpdate(server, update, actor('ann')))).toEqual(['malformed-row']);
+	});
+
+	it('refuses one written over a field of a row someone may edit', () => {
+		const server = new Y.Doc();
+		const id = groupOf(server);
+		const client = copy(server);
+		const update = capture(client, () => rowOf(client, id).set('name', big));
+		expect(codes(validateTeamsUpdate(server, update, actor('ann')))).toEqual(['malformed-row']);
+	});
+
+	it('does not stop the people of a row that already holds one', () => {
+		const server = new Y.Doc();
+		const id = groupOf(server);
+		rowOf(server, id).set('members', [{ ...ann, extra: big }, bob]);
+		const client = copy(server);
+		const update = capture(client, () => createChatDirectory(client, bob).rename(id, 'Crew'));
+		expect(validateTeamsUpdate(server, update, actor('bob'))).toEqual({ ok: true });
+	});
+
+	it('answers with a refusal whatever goes wrong during the check', () => {
+		const server = new Y.Doc();
+		const client = copy(server);
+		const update = capture(client, () => client.getMap('teams:roster').set('ann', new Y.Map()));
+		const broken = {
+			get id(): string {
+				throw new Error('unreadable');
+			},
+		};
+		expect(codes(validateTeamsUpdate(server, update, broken))).toEqual(['invalid-update']);
+	});
+});
+
 describe('the client and the room member list', () => {
 	function roomsFor(user: ChatMember, doc: Y.Doc) {
 		const chatDocs = new Map<string, Y.Doc>();
@@ -386,7 +438,7 @@ describe('the client and the room member list', () => {
 			user,
 			openRoom: (chat, chatDoc) => {
 				chatDocs.set(chat.id, chatDoc);
-				return { destroy: () => undefined };
+				return { synced: () => true, destroy: () => undefined };
 			},
 		});
 		const members = (id: string): string[] =>
@@ -438,7 +490,7 @@ describe('the client and the room member list', () => {
 				openRoom: (chat, chatDoc, onSynced) => {
 					chatDocs.set(chat.id, chatDoc);
 					roomSynced.set(chat.id, onSynced);
-					return { destroy: () => undefined };
+					return { synced: () => false, destroy: () => undefined };
 				},
 			});
 			return {
@@ -474,6 +526,150 @@ describe('the client and the room member list', () => {
 			client.directorySynced();
 			expect(client.members(id)).toEqual([]);
 			client.rooms.destroy();
+		});
+	});
+
+	describe('after leaving while out of touch', () => {
+		function device(user: ChatMember, doc: Y.Doc, restore?: (chat: ChatInfo) => Y.Doc) {
+			const rooms = new Map<
+				string,
+				{ doc: Y.Doc; synced: boolean; onSynced: () => void; destroyed: boolean }
+			>();
+			const directoryListeners = new Set<() => void>();
+			let directorySynced = false;
+			const chat = createChatRooms({
+				doc,
+				base: createChatStore(doc, user),
+				user,
+				...(restore ? { createDoc: restore } : {}),
+				directorySync: {
+					synced: () => directorySynced,
+					onSynced: (listener) => {
+						directoryListeners.add(listener);
+						return () => directoryListeners.delete(listener);
+					},
+				},
+				openRoom: (info, chatDoc, onSynced) => {
+					const room = { doc: chatDoc, synced: false, onSynced, destroyed: false };
+					rooms.set(info.id, room);
+					return {
+						synced: () => room.synced,
+						destroy: () => {
+							room.destroyed = true;
+						},
+					};
+				},
+			});
+			return {
+				chat,
+				room: (id: string) => rooms.get(id)!,
+				roomSyncs: (id: string) => {
+					const room = rooms.get(id)!;
+					room.synced = true;
+					room.onSynced();
+				},
+				directorySyncs: () => {
+					directorySynced = true;
+					for (const listener of directoryListeners) listener();
+				},
+			};
+		}
+		const listed = (doc: Y.Doc, id: string): boolean =>
+			doc.getMap<boolean>('teams:chat-members').get(id) === true;
+
+		beforeEach(() => void vi.useFakeTimers());
+		afterEach(() => void vi.useRealTimers());
+
+		function leftOffline() {
+			const doc = new Y.Doc();
+			const id = createChatDirectory(doc, ann).createGroup({ others: [bob, cy] })!.id;
+			const client = device(bob, doc);
+			client.room(id).doc.getMap<boolean>('teams:chat-members').set('bob', true);
+			expect(client.chat.leaveChat(id)).toBe(true);
+			return { doc, id, client };
+		}
+
+		it('keeps the room open until it syncs, however long that takes', () => {
+			const { id, client } = leftOffline();
+			vi.advanceTimersByTime(3_600_000);
+			expect(client.room(id).destroyed).toBe(false);
+			expect(client.chat.leavingChats()).toEqual([id]);
+			expect(listed(client.room(id).doc, 'bob')).toBe(false);
+
+			client.directorySyncs();
+			client.roomSyncs(id);
+			vi.advanceTimersByTime(1500);
+			expect(client.room(id).destroyed).toBe(true);
+			expect(client.chat.leavingChats()).toEqual([]);
+			client.chat.destroy();
+		});
+
+		it('leaves a room that only shows them as listed once it syncs', () => {
+			const doc = new Y.Doc();
+			const id = createChatDirectory(doc, ann).createGroup({ others: [bob, cy] })!.id;
+			const client = device(bob, doc);
+			expect(client.chat.leaveChat(id)).toBe(true);
+			client.room(id).doc.getMap<boolean>('teams:chat-members').set('bob', true);
+			client.roomSyncs(id);
+			expect(listed(client.room(id).doc, 'bob')).toBe(false);
+			client.chat.destroy();
+		});
+
+		it('stops waiting for a room the server refuses once the workspace is back', () => {
+			const { id, client } = leftOffline();
+			client.directorySyncs();
+			vi.advanceTimersByTime(29_000);
+			expect(client.room(id).destroyed).toBe(false);
+			vi.advanceTimersByTime(1000);
+			expect(client.room(id).destroyed).toBe(true);
+			client.chat.destroy();
+		});
+
+		it('takes up an undelivered leave again after a restart', () => {
+			const { doc, id, client } = leftOffline();
+			const kept = Y.encodeStateAsUpdate(client.room(id).doc);
+			client.chat.destroy();
+
+			const next = device(bob, doc, () => {
+				const restored = new Y.Doc();
+				Y.applyUpdate(restored, kept);
+				return restored;
+			});
+			expect(next.chat.chat(id)).toBeNull();
+			expect(next.chat.leavingChats()).toEqual([id]);
+			next.directorySyncs();
+			next.roomSyncs(id);
+			vi.advanceTimersByTime(1500);
+			expect(next.room(id).destroyed).toBe(true);
+			next.chat.destroy();
+		});
+
+		it('opens nothing for a chat left long ago or lost to a removal', () => {
+			const { doc, id, client } = leftOffline();
+			client.chat.destroy();
+			const empty = device(bob, doc, () => new Y.Doc());
+			expect(empty.chat.leavingChats()).toEqual([]);
+			empty.chat.destroy();
+
+			const stillListed = device(bob, doc, () => {
+				const restored = new Y.Doc();
+				restored.getMap<boolean>('teams:chat-members').set('bob', true);
+				return restored;
+			});
+			expect(stillListed.chat.leavingChats()).toEqual([]);
+			expect(stillListed.chat.chat(id)).toBeNull();
+			stillListed.chat.destroy();
+		});
+
+		it('carries on in the same room when added back before the leave went through', async () => {
+			const { doc, id, client } = leftOffline();
+			createChatDirectory(doc, ann).add(id, [bob]);
+			await Promise.resolve();
+			expect(client.chat.chat(id)?.id).toBe(id);
+			expect(client.chat.leavingChats()).toEqual([]);
+			expect(client.room(id).destroyed).toBe(false);
+			expect(listed(client.room(id).doc, 'bob')).toBe(true);
+			client.chat.destroy();
 		});
 	});
 

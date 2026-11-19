@@ -114,7 +114,7 @@ describe('private chats on the reference server', () => {
 		});
 	before(async () => {
 		dir = mkdtempSync(join(tmpdir(), 'teams-chat-access-'));
-		server = createTeamsServer({ dataDir: dir, insecureDev: true });
+		server = createTeamsServer({ dataDir: dir, insecureDev: true, maxConnectionsPerIp: 200 });
 		port = (await server.listen(0, '127.0.0.1')).port;
 	});
 	after(async () => {
@@ -190,6 +190,93 @@ describe('private chats on the reference server', () => {
 		assert.equal(await Promise.race([cySocket.closed, sleep(4000).then(() => 'still open')]), 1008);
 		assert.equal((await dial(workspace, id, { user: 'cy' })).status, 403);
 		assert.equal((await dial(workspace, id, { user: 'dan' })).status, 'open');
+	});
+
+	describe('leaving while offline', () => {
+		/** A WebSocket class whose connections can be cut, and fail while they are. */
+		function network() {
+			const net = { offline: false, live: new Set() };
+			net.WebSocket = class extends WebSocket {
+				constructor(url, protocols) {
+					super(net.offline ? 'ws://127.0.0.1:9/' : url, protocols);
+					net.live.add(this);
+					this.on('close', () => net.live.delete(this));
+				}
+			};
+			net.cut = () => {
+				net.offline = true;
+				for (const ws of net.live) ws.close();
+			};
+			return net;
+		}
+		const memoryStorage = () => {
+			const items = new Map();
+			return {
+				getItem: (key) => items.get(key) ?? null,
+				setItem: (key, value) => void items.set(key, value),
+			};
+		};
+		const device = (name, workspaceId, net, storage) => {
+			const c = createTeamsClient({
+				workspaceId,
+				user: { id: name, name },
+				config: config(),
+				WebSocket: net.WebSocket,
+				...(storage ? { storage } : {}),
+				reminderCheckMs: 0,
+			});
+			clients.push(c);
+			return c;
+		};
+		/** Ada's group with bob and cy; cy went offline and left longer ago than rooms linger. */
+		async function leftOffline(workspace, storage) {
+			const net = network();
+			const ada = client('ada', workspace);
+			client('bob', workspace);
+			const cy = device('cy', workspace, net, storage);
+			assert.ok(await until(() => ada.getState().contacts.length === 2));
+			const id = ada.createGroupChat(['bob', 'cy'], 'Crew');
+			await ada.send({ text: 'welcome' });
+			assert.ok(await until(() => cy.getState().chats.some((c) => c.id === id)));
+			await sleep(200);
+			net.cut();
+			await sleep(100);
+			assert.equal(cy.leaveChat(id), true);
+			await sleep(1800);
+			const stillListed = await dial(workspace, id, { user: 'cy' });
+			assert.equal(stillListed.status, 'open', 'the server has not heard yet');
+			stillListed.ws.close();
+			return { id, net, ada, cy };
+		}
+		const refused = (workspace, id) =>
+			until(async () => {
+				const attempt = await dial(workspace, id, { user: 'cy' });
+				attempt.ws?.close();
+				await sleep(100);
+				return attempt.status === 403;
+			}, 15_000);
+
+		it('takes effect in the room once the client is back', async () => {
+			const workspace = 'chat-ws-offline-1';
+			const { id, net, ada } = await leftOffline(workspace);
+			net.offline = false;
+			assert.ok(await refused(workspace, id), 'the room no longer admits them');
+			assert.ok(await until(() => ada.getState().chats[0]?.members.length === 2));
+			ada.select(id);
+			assert.ok(
+				await until(() => ada.getState().messages.some((m) => m.text === 'cy left the chat')),
+			);
+		});
+
+		it('survives closing the app before the client is back', async () => {
+			const workspace = 'chat-ws-offline-2';
+			const storage = memoryStorage();
+			const { id, net, cy } = await leftOffline(workspace, storage);
+			cy.destroy();
+			net.offline = false;
+			device('cy', workspace, net, storage);
+			assert.ok(await refused(workspace, id), 'the room no longer admits them');
+		});
 	});
 
 	it('gives a meeting its chat under an id only the organizer can start', async () => {

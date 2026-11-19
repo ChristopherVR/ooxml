@@ -5,11 +5,15 @@
 // room's member list changes only through this person's own actions (creating a group, adding
 // people, leaving), never by copying what somebody else wrote in the directory. One repair: the
 // creator of a group admits its listed people again when the room opens, in case a crash came
-// between creating the group and admitting them. The returned object is a drop-in `ChatStore`, so everything built on channels (threads, pins, reactions,
-// mentions, drafts, activity) works unchanged in a chat. DOM-free. New code.
+// between creating the group and admitting them. Leaving is written to the room like any other
+// change, so a room left while offline stays open until it has synced, and its local copy outlives
+// a restart for the same reason. The returned object is a drop-in `ChatStore`, so everything built
+// on channels (threads, pins, reactions, mentions, drafts, activity) works unchanged in a chat.
+// DOM-free. New code.
 import * as Y from 'yjs';
 import type { ChatStore, ChatUser } from './chat';
 import { createChatStore } from './chat';
+import { CHATS_MAP, memberStanding } from './chat-records';
 import {
 	type ChatDirectory,
 	type ChatInfo,
@@ -27,6 +31,8 @@ import type { ReactionEvent } from './chat';
 export const CHAT_MEMBERS_MAP = 'teams:chat-members';
 
 export interface ChatRoomHandle {
+	/** Whether the room has caught up with the server over its current connection. */
+	synced: () => boolean;
 	destroy: () => void;
 }
 
@@ -62,6 +68,8 @@ export interface ChatRooms extends ChatStore {
 	addPeople: (id: string, people: readonly ChatMember[]) => ChatMember[];
 	removePerson: (id: string, userId: string) => boolean;
 	leaveChat: (id: string) => boolean;
+	/** Chats the person left whose room may not know yet. Their local copy must be kept. */
+	leavingChats: () => string[];
 	/** Whether a message id is a chat the person belongs to. */
 	isChat: (id: string) => boolean;
 }
@@ -73,7 +81,20 @@ interface Open {
 	off: () => void;
 }
 
+/** A room this person left, kept open until it has what they wrote there. */
+interface Leaving {
+	room: Open;
+	/** The room has synced since they left: only the grace period remains. */
+	delivered: boolean;
+	timer: ReturnType<typeof setTimeout> | undefined;
+}
+
 const CLOSE_GRACE_MS = 1500;
+/**
+ * How long a left room may stay out of reach while the workspace is in sync. Both use one server,
+ * so by then the server is refusing this room, and the person is out of it already.
+ */
+const LEAVE_TIMEOUT_MS = 30_000;
 const systemText = (verb: string, names: string[]): string => `${names.join(', ')} ${verb}`;
 
 export function createChatRooms(options: ChatRoomsOptions): ChatRooms {
@@ -82,6 +103,7 @@ export function createChatRooms(options: ChatRoomsOptions): ChatRooms {
 	const open = new Map<string, Open>();
 	const listeners = new Set<() => void>();
 	const closing = new Set<() => void>();
+	const leaving = new Map<string, Leaving>();
 	const mineNow = (): ChatInfo[] => directory.list().filter((c) => isChatMember(c, user.id));
 	const notify = (): void => {
 		for (const l of [...listeners]) l();
@@ -110,24 +132,81 @@ export function createChatRooms(options: ChatRoomsOptions): ChatRooms {
 		const chat = directory.get(id);
 		if (chat && isChatMember(chat, user.id)) admit(id, chat.members);
 	};
+	const directoryCurrent = (): boolean => options.directorySync?.synced() ?? true;
+	const release = (room: Open): void => {
+		room.handle.destroy();
+		room.store.destroy();
+		room.doc.destroy();
+	};
+	const finishLeave = (id: string): void => {
+		const entry = leaving.get(id);
+		if (!entry) return;
+		leaving.delete(id);
+		release(entry.room);
+	};
+	/** Sets the timer a left room now waits on. Offline there is none: the next sync comes back here. */
+	const settleLeave = (id: string): void => {
+		const entry = leaving.get(id);
+		if (!entry || entry.delivered) return;
+		clearTimeout(entry.timer);
+		entry.timer = undefined;
+		if (entry.room.handle.synced()) {
+			// A room that had not synced before they left only now shows them as listed.
+			entry.room.doc.getMap<boolean>(CHAT_MEMBERS_MAP).delete(user.id);
+			entry.delivered = true;
+			entry.timer = setTimeout(() => finishLeave(id), CLOSE_GRACE_MS);
+		} else if (directoryCurrent()) {
+			entry.timer = setTimeout(() => {
+				if (directoryCurrent()) finishLeave(id);
+			}, LEAVE_TIMEOUT_MS);
+		}
+	};
+	const startLeave = (id: string, room: Open): void => {
+		leaving.set(id, { room, delivered: false, timer: undefined });
+		settleLeave(id);
+	};
+	/** Added back before the leave was finished: the room carries on, with this person in it. */
+	const rejoin = (id: string, { room, timer }: Leaving): void => {
+		leaving.delete(id);
+		clearTimeout(timer);
+		const members = room.doc.getMap<boolean>(CHAT_MEMBERS_MAP);
+		if (members.get(user.id) !== true) members.set(user.id, true);
+		open.set(id, { ...room, off: room.store.observe(notify) });
+	};
 	const stopDirectorySync = options.directorySync?.onSynced(() => {
 		for (const id of [...toReadmit]) readmit(id);
+		for (const id of [...leaving.keys()]) settleLeave(id);
 	});
 
-	const sync = (): void => {
+	const openChat = (chat: ChatInfo, chatDoc: Y.Doc): Open => {
+		const { id } = chat;
+		const store = createChatStore(chatDoc, user);
+		store.createChannel({ id, name: 'Chat', kind: 'direct' });
+		const handle = openRoom(chat, chatDoc, () => {
+			syncedRooms.add(id);
+			readmit(id);
+			settleLeave(id);
+		});
+		return { doc: chatDoc, store, handle, off: store.observe(notify) };
+	};
+
+	/** Opens and closes rooms to match the directory. `left` is a chat this person just left. */
+	const sync = (left?: string): void => {
 		const wanted = new Map(mineNow().map((c) => [c.id, c]));
 		for (const [id, entry] of open)
 			if (!wanted.has(id)) {
-				// Let a last notice and member list change flush before the room closes.
 				open.delete(id);
 				toReadmit.delete(id);
 				syncedRooms.delete(id);
 				entry.off();
+				if (id === left) {
+					startLeave(id, entry);
+					continue;
+				}
+				// Let a last notice and member list change flush before the room closes.
 				const close = (): void => {
 					closing.delete(close);
-					entry.handle.destroy();
-					entry.store.destroy();
-					entry.doc.destroy();
+					release(entry);
 				};
 				closing.add(close);
 				setTimeout(close, CLOSE_GRACE_MS);
@@ -135,25 +214,45 @@ export function createChatRooms(options: ChatRoomsOptions): ChatRooms {
 		let changed = false;
 		for (const [id, chat] of wanted) {
 			if (open.has(id)) continue;
-			const chatDoc = options.createDoc?.(chat) ?? new Y.Doc();
-			const store = createChatStore(chatDoc, user);
-			store.createChannel({ id, name: 'Chat', kind: 'direct' });
-			if (chat.kind === 'group' && isGroupChatIdOf(id, user.id)) toReadmit.add(id);
-			const handle = openRoom(chat, chatDoc, () => {
-				syncedRooms.add(id);
-				readmit(id);
-			});
-			open.set(id, { doc: chatDoc, store, handle, off: store.observe(notify) });
-			readmit(id);
 			changed = true;
+			const pending = leaving.get(id);
+			if (pending) {
+				rejoin(id, pending);
+				continue;
+			}
+			if (chat.kind === 'group' && isGroupChatIdOf(id, user.id)) toReadmit.add(id);
+			open.set(id, openChat(chat, options.createDoc?.(chat) ?? new Y.Doc()));
+			readmit(id);
 		}
 		if (changed) notify();
 	};
+
+	/**
+	 * Picks up leaves an earlier session could not deliver. The local copy of such a room was kept,
+	 * and no longer lists this person. Any other chat they are out of has nothing left to send.
+	 */
+	const resumeLeaves = (): void => {
+		const { createDoc } = options;
+		if (!createDoc) return;
+		doc.getMap<unknown>(CHATS_MAP).forEach((row, id) => {
+			if (!(row instanceof Y.Map) || memberStanding(row, user.id) !== 'former') return;
+			const chat = directory.get(id);
+			if (!chat || open.has(id)) return;
+			const chatDoc = createDoc(chat);
+			const listed = chatDoc.getMap<boolean>(CHAT_MEMBERS_MAP).get(user.id) === true;
+			if (listed || chatDoc.store.clients.size === 0) return chatDoc.destroy();
+			const room = openChat(chat, chatDoc);
+			room.off();
+			startLeave(id, room);
+		});
+	};
+
 	const stopBase = base.observe(() => {
 		sync();
 		notify();
 	});
 	sync();
+	resumeLeaves();
 
 	const storeOf = (id: string): ChatStore | undefined => open.get(id)?.store;
 	const route = <T>(id: string, fallback: T, fn: (s: ChatStore) => T, other: () => T): T => {
@@ -189,7 +288,7 @@ export function createChatRooms(options: ChatRoomsOptions): ChatRooms {
 		if (ok && userId !== user.id) notice(id, `${user.name} removed ${gone.name} from the chat`);
 		if (ok) {
 			members?.delete(userId);
-			sync();
+			sync(userId === user.id ? id : undefined);
 		}
 		return ok;
 	};
@@ -230,6 +329,7 @@ export function createChatRooms(options: ChatRoomsOptions): ChatRooms {
 		},
 		removePerson,
 		leaveChat: (id) => removePerson(id, user.id),
+		leavingChats: () => [...leaving.keys()],
 		channels() {
 			const real = base.channels().filter((c) => c.kind !== 'direct');
 			return [...real, ...mineNow().map(asChannel)];
@@ -309,6 +409,11 @@ export function createChatRooms(options: ChatRoomsOptions): ChatRooms {
 			stopBase();
 			stopDirectorySync?.();
 			for (const close of [...closing]) close();
+			for (const { room, timer } of leaving.values()) {
+				clearTimeout(timer);
+				release(room);
+			}
+			leaving.clear();
 			for (const entry of open.values()) {
 				entry.off();
 				entry.handle.destroy();
