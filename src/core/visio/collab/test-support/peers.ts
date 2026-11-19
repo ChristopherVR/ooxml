@@ -1,6 +1,7 @@
 // In-memory peers for the Visio collaboration tests: a package-backed editor on a real collab
 // session over the memory transport.
 import JSZip from 'jszip';
+import * as Y from 'yjs';
 import { createMemoryHub } from '../../../collab/memory-transport';
 import { type CollabSession, createCollabSession } from '../../../collab/session';
 import { transportProvider } from '../../../collab/transport-provider';
@@ -14,9 +15,14 @@ import {
 } from '../bind';
 
 export const wait = (ms = 30) => new Promise((resolve) => setTimeout(resolve, ms));
+/** How long the peers may take, by the clock: a loaded runner stretches every step alike. */
+const PATIENCE_MS = 20_000;
 export async function until(check: () => boolean | Promise<boolean>, message = 'condition') {
-	for (let i = 0; i < 300 && !(await check()); i++) await wait(10);
-	if (!(await check())) throw new Error(`Timed out waiting for ${message}`);
+	const deadline = Date.now() + PATIENCE_MS;
+	while (!(await check())) {
+		if (Date.now() > deadline) throw new Error(`Timed out waiting for ${message}`);
+		await wait(10);
+	}
 }
 
 /** An editor over package bytes: edits go through the real VSDX writer. */
@@ -126,9 +132,30 @@ export function createRoom() {
 }
 export type Peer = ReturnType<ReturnType<typeof createRoom>['join']>;
 
-/** Waits until both peers have finished publishing and applying. */
+/** The updates a peer's room holds. */
+const room = (peer: Peer): string => Y.encodeStateVector(peer.session.doc).join();
+/** What a peer has done so far: its room and the drawings it applied or edited. */
+const progress = (peer: Peer): string => `${room(peer)}|${peer.side.editor.version()}`;
+
+/**
+ * Waits until the peers have nothing left to do: a whole round of `idle()` (and of the timers
+ * it schedules) changes no room or drawing, and every room holds the same updates. Delivery over
+ * the memory hub is synchronous, so this follows the bindings' own signals instead of sleeping.
+ */
 export async function settle(...peers: Peer[]) {
-	await wait(60);
-	for (let round = 0; round < 3; round++) for (const peer of peers) await peer.binding.idle();
-	await wait(60);
+	const deadline = Date.now() + PATIENCE_MS;
+	for (;;) {
+		const before = peers.map(progress);
+		await Promise.all(peers.map((peer) => peer.binding.idle()));
+		await wait(0);
+		const still = peers.every((peer, i) => progress(peer) === before[i]);
+		if (still && new Set(peers.map(room)).size === 1) return;
+		if (Date.now() > deadline) throw new Error('Timed out waiting for the peers to settle');
+	}
+}
+
+/** Waits until the peer's drawing is in the room, so a peer that joins next adopts it. */
+export async function published(peer: Peer) {
+	await until(() => peer.session.doc.getMap('visio:meta').size > 0, 'publish');
+	await settle(peer);
 }

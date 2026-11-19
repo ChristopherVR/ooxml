@@ -13,7 +13,7 @@ import {
 	joinFrom,
 	seedPeer,
 } from './test-support/doc-peers';
-import { createRoom, settle, until, wait } from './test-support/peers';
+import { createRoom, published, settle, until } from './test-support/peers';
 
 const pageName = (zip: JSZip): string =>
 	Object.keys(zip.files).find((name) => /^visio\/pages\/page\d+\.xml$/.test(name))!;
@@ -161,7 +161,7 @@ describe('undo of a formula edit that a collision re-targeted', () => {
 		rooms.push(room);
 		const seed = (await editVsdx(await createVsdx(), [rect('1', 1), rect('2', 3)])).bytes;
 		const a = room.join('Ada', seed);
-		await wait();
+		await published(a);
 		const b = room.join('Bob', await createVsdx(), { seed: false });
 		await until(async () => (await b.side.model()).pages[0]!.shapes.length === 2, 'join');
 		await settle(a, b);
