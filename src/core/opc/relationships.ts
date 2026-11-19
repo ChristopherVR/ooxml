@@ -69,8 +69,8 @@ function readStrictRelationship(element: XmlElement): Relationship {
 /**
  * Reads a relationships part for a security decision, in document order. Anything the schema
  * (ECMA-376 Part 2, 6.5.3) does not allow throws, so every reader of an accepted part sees the same
- * relationships. As in the schema, `Target` may be empty (`xsd:anyURI`) and `Id`s are unique as
- * exact strings (`xsd:ID`), so `rId1` and `RID1` are two relationships.
+ * relationships. As in the schema, `Target` may be empty (`xsd:anyURI`) and `Id`s are unique after
+ * `xsd:ID` whitespace collapse: `rId1` and `RID1` are two relationships, `rId1` and `rId1 ` are one.
  * {@link parseRelationships} is the tolerant reader for opening documents.
  */
 export function parseRelationshipsPart(xml: string): Relationship[] {
@@ -80,7 +80,7 @@ export function parseRelationshipsPart(xml: string): Relationship[] {
 	}
 	assertOnlyAttributes(root, NO_ATTRIBUTES);
 	const relationships = elements(root).map(readStrictRelationship);
-	const ids = new Set(relationships.map(({ id }) => id));
+	const ids = new Set(relationships.map(({ id }) => id.replace(/[\t\n\r ]+/gu, ' ').trim()));
 	if (ids.size !== relationships.length) {
 		throw new Error('Relationships part: duplicate Id.');
 	}

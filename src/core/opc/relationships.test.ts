@@ -38,6 +38,11 @@ describe('parseRelationshipsPart', () => {
 		]);
 	});
 
+	it.each(['rId1 ', ' rId1', '  rId1  '])('refuses Id %j beside rId1', (id) => {
+		const xml = part(VALID + relationship(`Id="${id}" Type="${TYPE}" Target="b.xml"`));
+		expect(() => parseRelationshipsPart(xml)).toThrow(/duplicate Id/u);
+	});
+
 	it('keeps Ids that differ only in case apart, as xsd:ID does', () => {
 		const xml = part(VALID + relationship(`Id="RID1" Type="${TYPE}" Target="b.xml"`));
 		expect(parseRelationshipsPart(xml).map(({ id }) => id)).toEqual(['rId1', 'RID1']);
