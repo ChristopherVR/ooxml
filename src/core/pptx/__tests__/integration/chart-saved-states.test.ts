@@ -104,4 +104,28 @@ describe('undoing a chart row edit after the chart was saved', () => {
 		);
 		handler.dispose();
 	});
+
+	it('saves a second state from a released one with ranges that read its own data', async () => {
+		const { handler, data } = await open(new ChartPartRevisions(0));
+		const loaded = data.slides.map(cloneSlide);
+		removeRow(data.slides);
+		await handler.save(data.slides);
+		const chart = chartOf(data.slides);
+		chart.chartData = chartDataApplySheetEdits(chart.chartData!, [{ kind: 'add-series' }])!;
+		await handler.save(data.slides);
+		const twoSeries = data.slides.map(cloneSlide);
+		const shown = structuredClone(chartOf(twoSeries).chartData!);
+		// Both states are released: the first save moves the loaded data onto a new sheet, and the
+		// second saves data whose rows and series that part no longer has.
+		await handler.save(loaded.map(cloneSlide));
+		const redone = await handler.save(twoSeries.map(cloneSlide));
+		const reads = await workbookReads(redone);
+		expect(reads).toHaveLength(2);
+		for (const { read, cached } of reads) expect(read).toEqual(cached);
+		const reloaded = chartOf((await new PptxHandler().load(redone)).slides).chartData!;
+		expect(reloaded.series.map((series) => series.values)).toEqual(
+			shown.series.map((series) => series.values),
+		);
+		handler.dispose();
+	});
 });

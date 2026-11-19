@@ -54,7 +54,11 @@ import { parseChartTitleRuns } from '../../utils/chart-title-runs-parser';
 
 import { resolveDataPointPictureImages } from './chart-datapoint-picture-resolver';
 import { resolveChartElementPictures } from './chart-element-pictures';
-import { applyEmbeddedWorkbookFallback, needsEmbeddedWorkbook } from './chart-embedded-fallback';
+import {
+	applyEmbeddedWorkbookFallback,
+	hasUncachedCategoryReference,
+	needsEmbeddedWorkbook,
+} from './chart-embedded-fallback';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeChartExParsing';
 
 /** The object-tree nodes of a chart part. */
@@ -402,8 +406,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 		const facts = await this.readChartPartFacts(chartSpace, chartRoot, chartPartPath);
 		// The embedded workbook is opened only for what the part does not cache itself.
+		const categoriesUncached = hasUncachedCategoryReference(neutral.plotArea.groups);
 		const workbook =
-			needsEmbeddedWorkbook(chartType, categories, built.series) ||
+			needsEmbeddedWorkbook(chartType, categories, built.series, categoriesUncached) ||
 			(rawDateCategories && neutral.date1904 === undefined)
 				? await this.parseEmbeddedWorkbook(facts.externalData)
 				: undefined;
@@ -411,7 +416,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const dateCategories = rawDateCategories
 			? { ...rawDateCategories, date1904: neutral.date1904 ?? workbook?.date1904 ?? false }
 			: undefined;
-		const filled = applyEmbeddedWorkbookFallback(chartType, categories, built.series, workbook);
+		const filled = applyEmbeddedWorkbookFallback(
+			chartType,
+			categories,
+			built.series,
+			workbook,
+			categoriesUncached,
+		);
 		const dataLabelTextEditable =
 			!categoryLevels &&
 			!dateCategories &&

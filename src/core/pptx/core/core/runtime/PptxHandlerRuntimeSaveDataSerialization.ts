@@ -119,6 +119,7 @@ import {
 import { encodeNeutralChartElements } from '../../utils/chart-neutral-package-elements';
 import {
 	prepareNeutralChartWorkbook,
+	rebaseConflictingChartRanges,
 	NeutralChartSaveRefusedError,
 } from './chart-neutral-workbook-save';
 import { xmlChild, xmlPath } from '../../utils/xml-access';
@@ -1404,8 +1405,22 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				: undefined);
 		const retry = workbookBaseline?.retry;
 		const previousXml = await this.zip.file(chartPartPath)?.async('string');
-		if (retry || signature !== previousSignature) {
-			const inStep = retry?.chartXml ?? previousXml;
+		const dataChanged = retry !== undefined || signature !== previousSignature;
+		// The part the workbook is in step with.
+		const inStep = retry?.chartXml ?? previousXml;
+		// Changed data whose ranges cannot hold it gets ranges of its own, so the part and the
+		// workbook agree whichever writer produced the part and whichever state the data came from.
+		const rebased =
+			workbookRebased || !dataChanged
+				? undefined
+				: await rebaseConflictingChartRanges(this.zip, chartData, xml, inStep, (base, target) =>
+						this.resolveImagePath(base, target),
+					);
+		if (rebased !== undefined) {
+			xml = rebased;
+			workbookRebased = true;
+		}
+		if (dataChanged) {
 			const { complete, written } = await saveChartExternalWorkbookUpdates(
 				{
 					zip: this.zip,
