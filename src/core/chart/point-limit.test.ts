@@ -9,7 +9,8 @@ import { writeChartExSpaceOverSource } from './ex/keep-source';
 import { chartIssuesLostOnWrite, writeChartSpaceOverSource } from './keep-source';
 import { parseChartSpace } from './parse-space';
 import { applyChartStylePreset } from './edit/style';
-import { addChartCategory, setChartSeriesValues } from './edit/series';
+import { setChartSeriesValues } from './edit/series';
+import { addChartCategory } from './edit/series-rows';
 import {
 	CHART_POINTS_LIMITED,
 	MAX_CACHE_BLANK_POINTS,
@@ -218,9 +219,11 @@ describe('saving a chart whose view is cut', () => {
 		);
 	});
 
-	it('refuses to change the length of a cut view', () => {
+	it('adds a category to a cut view inside the declared range', () => {
 		const { chartSpace } = parseChartSpace(cutPart);
-		expect(() => addChartCategory(chartSpace, 'New')).toThrow(RangeError);
+		const cache = addChartCategory(chartSpace, 'New').plotArea.groups[0]!.series[0]!.values!.cache!;
+		expect(cache.pointCount).toBe(HUGE);
+		expect(cache.points.at(-1)).toMatchObject({ index: HUGE - 1, value: '9' });
 	});
 
 	it('keeps the ChartEx source bytes, and its count through an edit', () => {
@@ -255,26 +258,26 @@ describe('embedded workbook writes of a sparse chart', () => {
 	const space = () => parseChartSpace(part).chartSpace;
 
 	it('leaves the blank cells of a range alone', () => {
-		const [write] = chartSpaceWorkbookWrites(space(), space());
-		expect(write).toMatchObject({ formula: 'S!$B$2:$B$9' });
-		expect(write!.values).toEqual(['1', null, '3', null, null, null, null, null]);
+		const [write] = chartSpaceWorkbookWrites(space());
+		expect(write).toMatchObject({ formula: 'S!$B$2:$B$9', cellCount: 8 });
+		expect(chartSpaceWorkbookWrites(space(), space())).toEqual([]);
+		expect(write!.cells).toEqual([
+			{ index: 0, value: '1' },
+			{ index: 2, value: '3' },
+		]);
 	});
 
 	it('empties the cell of a point the edit removed', () => {
 		const edited = setChartSeriesValues(space(), 0, [1, null, null, null, null, null, null, null]);
-		expect(chartSpaceWorkbookWrites(edited, space())[0]!.values.slice(0, 3)).toEqual([
-			'1',
-			null,
-			'',
-		]);
+		expect(chartSpaceWorkbookWrites(edited, space())[0]!.cells).toEqual([{ index: 2, value: '' }]);
 	});
 
 	it('names every cell of the range when a cut view reaches only the first', () => {
 		const xml = part.replace('<c:ptCount val="8"/>', '<c:ptCount val="8"/>');
 		const { chartSpace } = parseChartSpace(xml, { pointBudget: chartPointBudget(0) });
-		const [write] = chartSpaceWorkbookWrites(chartSpace, chartSpace);
+		const [write] = chartSpaceWorkbookWrites(chartSpace);
 		expect(write!.cellCount).toBe(8);
-		expect(write!.values).toEqual(['1', null]);
+		expect(write!.cells.map((cell) => cell.index)).toEqual([0, 2]);
 	});
 });
 

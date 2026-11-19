@@ -117,15 +117,11 @@ describe('ChartEx workbook mapping', () => {
 		const space = of('treemap');
 		const writes = chartExSpaceWorkbookWrites(space);
 		const sheet = chartExSpaceDataSheet(space);
-		expect(writes.find((w) => w.formula === 'Sheet1!$T$2:$T$6')?.values).toEqual(
-			sheet.categoryLevels[1],
-		);
-		expect(writes.find((w) => w.formula === 'Sheet1!$U$2:$U$6')?.values).toEqual(
-			sheet.categoryLevels[0],
-		);
-		expect(writes.find((w) => w.formula === 'Sheet1!$V$1')?.values).toEqual([
-			sheet.series[0]!.name,
-		]);
+		const texts = (formula: string) =>
+			writes.find((w) => w.formula === formula)?.cells.map((cell) => cell.value);
+		expect(texts('Sheet1!$T$2:$T$6')).toEqual(sheet.categoryLevels[1]);
+		expect(texts('Sheet1!$U$2:$U$6')).toEqual(sheet.categoryLevels[0]);
+		expect(texts('Sheet1!$V$1')).toEqual([sheet.series[0]!.name]);
 	});
 	it('resolves host defined names but rejects external and mismatched sources', () => {
 		const space = of('waterfall');

@@ -36,6 +36,18 @@ describe('chart data sheet adapters', () => {
 		expect(next?.series[2]).toMatchObject({ name: 'Series 3', values: [0, 0, 0] });
 	});
 
+	it('leaves the rows it passes over blank when a value lands past the end of a series', () => {
+		const next = chartDataApplySheetEdits(data, [
+			{ kind: 'value', series: 1, category: 2, value: 7 },
+		]);
+		expect(next?.series[1]?.blanks).toEqual([false, true, false]);
+		expect(chartDataToSheet(next!).series[1]!.values).toEqual([4, null, 7]);
+		const filled = chartDataApplySheetEdits(next!, [
+			{ kind: 'value', series: 1, category: 1, value: 5 },
+		]);
+		expect(chartDataToSheet(filled!).series[1]!.values).toEqual([4, 5, 7]);
+	});
+
 	it('returns null when every edit is refused', () => {
 		const one = { ...data, series: [data.series[0]] } as PptxChartData;
 		expect(chartDataApplySheetEdits(one, [{ kind: 'remove-series', series: 0 }])).toBeNull();

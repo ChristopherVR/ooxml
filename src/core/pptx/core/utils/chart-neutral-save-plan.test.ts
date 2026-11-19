@@ -4,6 +4,7 @@ import { parseChartSpace, writeChartSpace } from '../../../chart/index';
 import type { PptxChartData } from '../types';
 import { planNeutralChartSave } from './chart-neutral-save-plan';
 import { saveChartPartThroughNeutral } from './chart-neutral-save';
+import { chartPartWorkbookWrites } from '../../../chart/workbook/space-writes';
 import { withChartElementFormat } from '../builders/sdk/chart-element-format-operations';
 
 const PART =
@@ -41,6 +42,8 @@ const edited = (edit: (chart: PptxChartData) => void): PptxChartData => {
 
 const save = (edit: (chart: PptxChartData) => void) =>
 	saveChartPartThroughNeutral(PART, before(), edited(edit));
+
+const writesOf = (saved: { xml: string }) => chartPartWorkbookWrites(PART, saved.xml);
 
 describe('planNeutralChartSave', () => {
 	it('saves stock-style decorations and display-unit labels without dropping axes', () => {
@@ -101,7 +104,7 @@ describe('planNeutralChartSave', () => {
 		expect(model.protection?.formatting).toBe(true);
 		expect(model.displayBlanksAs).toBe('span');
 		expect(model.plotArea.dataTable?.showKeys).toBe(true);
-		expect(saved!.workbookWrites).toEqual([]);
+		expect(writesOf(saved!)).toEqual([]);
 	});
 	it('saves point labels and axis/label shapes without rebuilding cached data', () => {
 		const saved = save((chart) => {
@@ -128,7 +131,7 @@ describe('planNeutralChartSave', () => {
 		});
 		expect(label.spPr!.line!.widthEmu).toBe(25400);
 		expect(saved!.xml).toContain('<c:v>4.4000000000000004</c:v>');
-		expect(saved!.workbookWrites).toEqual([]);
+		expect(writesOf(saved!)).toEqual([]);
 	});
 	it('saves title, legend entry, axis fonts and manual layout through shared operations', () => {
 		const saved = save((chart) => {
@@ -144,7 +147,7 @@ describe('planNeutralChartSave', () => {
 		const model = parseChartSpace(saved!.xml).chartSpace;
 		expect(model.legend!.entries[0]!.index).toBe(3);
 		expect(model.plotArea.layout).toMatchObject({ x: 0.2, width: 0.6 });
-		expect(saved!.workbookWrites).toEqual([]);
+		expect(writesOf(saved!)).toEqual([]);
 	});
 	it('saves a real Format pane edit including its mirrored preview fields', () => {
 		const next = withChartElementFormat(
@@ -161,7 +164,7 @@ describe('planNeutralChartSave', () => {
 		expect(saved.xml).toContain('<a:alpha val="75000"/>');
 		expect(saved.xml).toContain('<a:softEdge rad="25400"/>');
 		expect(saved.xml).toContain('<c:v>4.4000000000000004</c:v>');
-		expect(saved.workbookWrites).toEqual([]);
+		expect(writesOf(saved)).toEqual([]);
 	});
 	it('changes a chart family with its shared schema and axis conversion', () => {
 		const saved = save((chart) => {
@@ -183,7 +186,7 @@ describe('planNeutralChartSave', () => {
 		expect(saveChartPartThroughNeutral(PART, original, cleared)!.xml).not.toContain('gapWidth');
 	});
 	it('plans nothing for an unchanged chart, and an empty style is no change', () => {
-		expect(planNeutralChartSave(before(), before())).toEqual({ edits: [], seriesData: false });
+		expect(planNeutralChartSave(before(), before())).toEqual({ edits: [] });
 		const withoutStyle = { ...before(), style: undefined };
 		expect(planNeutralChartSave(withoutStyle, { ...withoutStyle, style: {} })?.edits).toEqual([]);
 	});
@@ -264,10 +267,13 @@ describe('saveChartPartThroughNeutral: title and legend', () => {
 	});
 
 	it('hands back workbook writes when the chart data changed', () => {
-		expect(save((c) => (c.series[0]!.name = 'Revenue'))!.workbookWrites).toEqual([
-			{ formula: 'Sheet1!$B$1', isNumeric: false, values: ['Revenue'] },
-			{ formula: 'Sheet1!$A$2:$A$3', isNumeric: false, values: ['Q1', 'Q2'] },
-			{ formula: 'Sheet1!$B$2:$B$3', isNumeric: true, values: ['4.4', '2'] },
+		expect(writesOf(save((c) => (c.series[0]!.name = 'Revenue'))!)).toEqual([
+			{
+				formula: 'Sheet1!$B$1',
+				isNumeric: false,
+				cells: [{ index: 0, value: 'Revenue' }],
+				cellCount: 1,
+			},
 		]);
 		expect(writeChartSpace(parseChartSpace(PART).chartSpace)).toBe(PART);
 	});
@@ -334,10 +340,11 @@ describe('saveChartPartThroughNeutral: series data', () => {
 			formula: 'Sheet1!$B$1',
 			cache: { points: [{ index: 0, value: 'South' }] },
 		});
-		expect(saved.workbookWrites[0]).toEqual({
+		expect(writesOf(saved)[0]).toEqual({
 			formula: 'Sheet1!$B$1',
 			isNumeric: false,
-			values: ['South'],
+			cells: [{ index: 0, value: 'South' }],
+			cellCount: 1,
 		});
 	});
 
@@ -348,7 +355,10 @@ describe('saveChartPartThroughNeutral: series data', () => {
 			c.categories = ['H1', 'H2'];
 		})!;
 		const written = series(saved.xml);
-		expect(saved.workbookWrites.find((item) => item.isNumeric)?.values).toEqual(['7', '']);
+		expect(writesOf(saved).find((item) => item.isNumeric)?.cells).toEqual([
+			{ index: 0, value: '7' },
+			{ index: 1, value: '' },
+		]);
 		expect(written.values?.cache).toMatchObject({
 			pointCount: 2,
 			points: [{ index: 0, value: '7' }],
@@ -357,7 +367,7 @@ describe('saveChartPartThroughNeutral: series data', () => {
 		expect(written.categories?.cache?.points.map((p) => p.value)).toEqual(['H1', 'H2']);
 		// Untouched series and caches keep the text Office wrote ("4.4000000000000004").
 		expect(save((c) => (c.title = 'Revenue'))!.xml).toContain('<c:v>4.4000000000000004</c:v>');
-		expect(save((c) => (c.title = 'Revenue'))!.workbookWrites).toEqual([]);
+		expect(writesOf(save((c) => (c.title = 'Revenue'))!)).toEqual([]);
 	});
 
 	it('adds a series and admits shared leaf-level category edits', () => {

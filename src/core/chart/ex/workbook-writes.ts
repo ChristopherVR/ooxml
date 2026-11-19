@@ -1,8 +1,14 @@
 // Map ChartEx caches to exact local workbook vectors, including multi-column hierarchies.
-import type { ChartExDimension, ChartExSpace } from './model';
-import { chartExLevelValues } from '../edit/chartex-sheet';
+import type {
+	ChartExData,
+	ChartExDimension,
+	ChartExLevel,
+	ChartExSpace,
+	ChartExText,
+} from './model';
 import { formatCellAddress, parseChartFormulaRange } from '../workbook/cellref';
 import { quoteChartSheetName } from '../workbook/layout';
+import { chartCacheCellChanges, chartCacheCellCount } from '../workbook/space-writes';
 import type { ChartWorkbookWrite } from '../workbook/writer';
 
 export type ChartExFormulaResolver = (formula: string) => string | undefined;
@@ -27,10 +33,18 @@ export function chartExLocalRange(formula: string, resolve?: ChartExFormulaResol
 	return range;
 }
 
-function dimensionWrites(
+interface LevelRange {
+	formula: string;
+	isNumeric: boolean;
+	level: ChartExLevel;
+	cellCount: number;
+}
+
+/** The worksheet vector of every cached level of a dimension. */
+function dimensionRanges(
 	dimension: ChartExDimension,
 	resolve?: ChartExFormulaResolver,
-): ChartWorkbookWrite[] {
+): LevelRange[] {
 	if (!dimension.formula) return [];
 	const range = chartExLocalRange(dimension.formula.formula, resolve);
 	const horizontal =
@@ -45,8 +59,7 @@ function dimensionWrites(
 	if (levelCount !== dimension.levels.length)
 		throw new Error('ChartEx source dimensions do not match cached levels.');
 	return dimension.levels.map((level, index) => {
-		const values = chartExLevelValues(level);
-		if (values.length !== count)
+		if (chartCacheCellCount(level) !== count)
 			throw new Error('ChartEx source range does not match cached points.');
 		// Office stores hierarchy levels leaf-first, while worksheet columns are outermost-first.
 		const offset = dimension.kind === 'strDim' ? levelCount - 1 - index : index;
@@ -63,30 +76,58 @@ function dimensionWrites(
 		return {
 			formula: `${quoteChartSheetName(range.sheetName)}!${first === last ? first : `${first}:${last}`}`,
 			isNumeric: dimension.kind === 'numDim',
-			values,
+			level,
+			cellCount: count,
 		};
 	});
 }
-/** Atomic workbook writes implied by every authored dimension and linked name/title. */
+
+const allData = (space: ChartExSpace): ChartExData[] => [
+	...space.chartData.data,
+	...space.plotArea.series.flatMap((series) => (series.data ? [series.data] : [])),
+];
+
+const levelRanges = (space: ChartExSpace, resolve?: ChartExFormulaResolver) =>
+	allData(space).flatMap((data) =>
+		data.dimensions.flatMap((dimension) => dimensionRanges(dimension, resolve)),
+	);
+
+/**
+ * Workbook writes for every authored dimension and linked name or title: all cached points, or with
+ * `before` (the chart as loaded) only the cells the edit changed.
+ */
 export function chartExSpaceWorkbookWrites(
 	space: ChartExSpace,
 	resolve?: ChartExFormulaResolver,
+	before?: ChartExSpace,
 ): ChartWorkbookWrite[] {
+	const prior = new Map(
+		before ? levelRanges(before, resolve).map((item) => [item.formula, item.level]) : [],
+	);
 	const writes: ChartWorkbookWrite[] = [];
-	for (const data of [
-		...space.chartData.data,
-		...space.plotArea.series.flatMap((series) => (series.data ? [series.data] : [])),
-	])
-		for (const dimension of data.dimensions) writes.push(...dimensionWrites(dimension, resolve));
-	for (const text of [space.title?.tx, ...space.plotArea.series.map((series) => series.tx)])
+	for (const { formula, isNumeric, level, cellCount } of levelRanges(space, resolve)) {
+		const cells = chartCacheCellChanges(level, prior.get(formula));
+		if (cells.length || !before) writes.push({ formula, isNumeric, cells, cellCount });
+	}
+	const textOf = (tx: ChartExText) => tx.value ?? tx.rich?.text ?? '';
+	const texts = (from: ChartExSpace) => [from.title?.tx, ...from.plotArea.series.map((s) => s.tx)];
+	const priorTexts = new Map(
+		(before ? texts(before) : []).flatMap((tx) =>
+			tx?.formula ? [[tx.formula.formula, textOf(tx)] as const] : [],
+		),
+	);
+	for (const text of texts(space))
 		if (text?.formula) {
 			const r = chartExLocalRange(text.formula.formula, resolve);
 			if (r.start.row !== r.end.row || r.start.col !== r.end.col)
 				throw new Error('ChartEx text source must be one cell.');
+			const value = textOf(text);
+			if (before && priorTexts.get(text.formula.formula) === value) continue;
 			writes.push({
 				formula: `${quoteChartSheetName(r.sheetName)}!${absolute(r.start.col, r.start.row)}`,
 				isNumeric: false,
-				values: [text.value ?? text.rich?.text ?? ''],
+				cells: [{ index: 0, value }],
+				cellCount: 1,
 			});
 		}
 	return writes;

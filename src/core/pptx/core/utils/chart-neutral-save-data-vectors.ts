@@ -9,16 +9,14 @@ import {
 import type { PptxChartData } from '../types';
 import type { NeutralChartEdit } from './chart-neutral-save-plan';
 import { same } from './chart-neutral-save-common';
-/** Run before planSeriesData; use changed for seriesData and rebuildWorkbook for fresh ranges. */
+/** Run before planSeriesData; rebuildWorkbook asks for fresh worksheet ranges. */
 export function planNeutralDataVectors(
 	before: PptxChartData,
 	probe: PptxChartData,
 	edits: NeutralChartEdit[],
-): { changed: boolean; rebuildWorkbook: boolean } {
-	let changed = false;
+): { rebuildWorkbook: boolean } {
 	let rebuildWorkbook = false;
 	const claim = (rebuild = true) => {
-		changed = true;
 		rebuildWorkbook ||= rebuild;
 	};
 	if (
@@ -66,5 +64,5 @@ export function planNeutralDataVectors(
 			claim();
 		}
 	}
-	return { changed, rebuildWorkbook };
+	return { rebuildWorkbook };
 }

@@ -164,7 +164,15 @@ export function chartDataUpdatePoint(
 	newValues[pointIndex] = value;
 
 	const newSeries = chartData.series.map((s, i) =>
-		i === seriesIndex ? { ...s, values: newValues } : s,
+		i === seriesIndex
+			? {
+					...s,
+					values: newValues,
+					...(s.blanks?.[pointIndex]
+						? { blanks: s.blanks.map((blank, at) => blank && at !== pointIndex) }
+						: {}),
+				}
+			: s,
 	);
 
 	return { ...chartData, series: newSeries };
@@ -257,6 +265,10 @@ export function chartDataAddCategory(
 // Remove category
 // ---------------------------------------------------------------------------
 
+/** The rows of a chart's data: its categories, or the longest series when it has fewer. */
+export const chartDataRowCount = (chartData: PptxChartData): number =>
+	Math.max(chartData.categories.length, ...chartData.series.map((s) => s.values.length));
+
 /**
  * Remove a category (data point column) by index.
  *
@@ -285,9 +297,10 @@ export function chartDataRemoveCategory(
 	categoryIndex: number,
 	followDataPoint = true,
 ): PptxChartData {
-	if (categoryIndex < 0 || categoryIndex >= chartData.categories.length) {
+	const rows = chartDataRowCount(chartData);
+	if (categoryIndex < 0 || categoryIndex >= rows) {
 		throw new RangeError(
-			`Category index ${categoryIndex} is out of range. Chart has ${chartData.categories.length} categories.`,
+			`Category index ${categoryIndex} is out of range. Chart has ${rows} categories.`,
 		);
 	}
 
@@ -297,6 +310,7 @@ export function chartDataRemoveCategory(
 		series: chartData.series.map((s) => ({
 			...s,
 			values: s.values.filter((_, i) => i !== categoryIndex),
+			...(s.blanks ? { blanks: s.blanks.filter((_, i) => i !== categoryIndex) } : {}),
 			...(s.dataPoints && followDataPoint
 				? { dataPoints: reindexDataPoints(s.dataPoints, categoryIndex) }
 				: {}),

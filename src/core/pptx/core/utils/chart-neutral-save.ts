@@ -12,7 +12,6 @@
  */
 
 import {
-	chartSpaceWorkbookWrites,
 	chartIssuesLostOnWrite,
 	parseChartSpace,
 	setChartPivotFormatsXml,
@@ -23,7 +22,6 @@ import {
 } from '../../../chart/index';
 import type { PptxChartData } from '../types';
 import { planNeutralChartSave } from './chart-neutral-save-plan';
-import type { PptxChartWorkbookWrite } from './chart-xlsx-writer';
 
 /**
  * Chart part elements the package adapter encoded for a save: the print settings and pivot formats
@@ -40,8 +38,8 @@ export interface NeutralChartSave {
 	xml: string;
 	/** Rebase these caches atomically with a new embedded worksheet before committing the part. */
 	workbookModel?: ChartSpace;
-	/** The embedded-workbook writes of every series, as the object-tree save collects them. */
-	workbookWrites: PptxChartWorkbookWrite[];
+	/** The workbook already holds the chart's data, on a sheet made for this save. */
+	workbookRebased?: boolean;
 }
 
 /**
@@ -52,24 +50,19 @@ export function saveChartPartThroughNeutral(
 	xml: string,
 	before: PptxChartData,
 	after: PptxChartData,
-	options: {
-		retryWorkbook?: boolean | undefined;
-		elements?: NeutralChartPackageElements | undefined;
-	} = {},
+	options: { elements?: NeutralChartPackageElements | undefined } = {},
 ): NeutralChartSave | undefined {
 	const plan = planNeutralChartSave(before, after);
 	if (!plan) return undefined;
 	const elements = options.elements ?? {};
 	// An element the plan needs and the package adapter did not encode leaves the object-tree path.
 	if (plan.packageElements?.some((name) => !Object.hasOwn(elements, name))) return undefined;
-	let loaded: ChartSpace;
 	let space: ChartSpace;
 	let written: string;
 	try {
 		const parsed = parseChartSpace(xml);
 		if (chartIssuesLostOnWrite(parsed.issues).length > 0) return undefined;
-		loaded = parsed.chartSpace;
-		space = loaded;
+		space = parsed.chartSpace;
 		for (const edit of plan.edits) space = edit(space);
 		for (const name of plan.packageElements ?? []) {
 			if (name === 'printSettings')
@@ -87,8 +80,6 @@ export function saveChartPartThroughNeutral(
 	}
 	return {
 		xml: written,
-		workbookWrites:
-			plan.seriesData || options.retryWorkbook ? chartSpaceWorkbookWrites(space, loaded) : [],
 		...(plan.rebuildWorkbook ? { workbookModel: space } : {}),
 	};
 }

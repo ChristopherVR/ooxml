@@ -42,7 +42,7 @@ async function prepareWorkbook(
 	const xml = writeChartSpaceOverSource(saved.xml, model!);
 	zip.file(path, allocated.bytes);
 	syncIds();
-	return { xml, workbookWrites: [] };
+	return { xml, workbookRebased: true };
 }
 
 export class NeutralChartSaveRefusedError extends Error {}

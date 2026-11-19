@@ -73,12 +73,11 @@ export async function validateAtomicChartWorkbookWrites(
 			)
 		)
 			unsupported('a source cell lies outside the worksheet limits');
-		const addressAt = rangeCellAddress(range, write.cellCount ?? write.values.length);
+		const addressAt = rangeCellAddress(range, write.cellCount);
 		const path = paths.get(range.sheetName.toLowerCase());
 		const cells = path ? cellsByPath.get(path) : undefined;
 		if (!addressAt || !path || !cells) unsupported('a source range cannot be resolved');
-		for (const [index, value] of write.values.entries()) {
-			if (value === null) continue;
+		for (const { index, value } of write.cells) {
 			const address = addressAt(index);
 			const key = `${path}!${address}`;
 			const prior = destinations.get(key);

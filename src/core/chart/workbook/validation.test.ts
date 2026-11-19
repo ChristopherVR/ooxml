@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 
-import { writeChartWorkbookUpdates } from './writer';
+import { chartWorkbookCells, writeChartWorkbookUpdates } from './writer';
 
 async function workbook(
 	cell = '<c r="A1" s="4" t="inlineStr"><is><t>Old</t></is></c>',
@@ -24,7 +24,11 @@ async function workbook(
 	return zip.generateAsync({ type: 'uint8array' });
 }
 
-const write = { formula: 'Data!$A$1', isNumeric: false, values: ['New'] };
+const cellsOf = (values: string[]) => ({
+	cells: chartWorkbookCells(values),
+	cellCount: values.length,
+});
+const write = { formula: 'Data!$A$1', isNumeric: false, ...cellsOf(['New']) };
 
 describe('atomic chart workbook label transactions', () => {
 	it('changes only the addressed cells and preserves worksheet formatting and unrelated parts', async () => {
@@ -59,7 +63,7 @@ describe('atomic chart workbook label transactions', () => {
 	});
 	it('rejects conflicting overlapping writes, but accepts duplicate identical references', async () => {
 		await expect(
-			writeChartWorkbookUpdates(await workbook(), [write, { ...write, values: ['Conflict'] }], {
+			writeChartWorkbookUpdates(await workbook(), [write, { ...write, ...cellsOf(['Conflict']) }], {
 				atomic: true,
 			}),
 		).rejects.toThrow('conflicting');

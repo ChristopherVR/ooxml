@@ -8,8 +8,8 @@
  * formula to a worksheet part and the cells it names, and rewrites only those cells; other
  * sheets, styles, formatting and unrelated cells are left as they are.
  *
- * Scope: a straight vector reference (one row or one column) whose length matches the values is
- * written; anything else (a structural change the formula was not updated for, a defined name, a
+ * Scope: a straight vector reference (one row or one column) of `cellCount` cells is written;
+ * anything else (a structural change the formula was not updated for, a defined name, a
  * reference this module does not parse, a missing worksheet) is counted in
  * {@link ChartWorkbookWriteResult.unresolved} for the caller to report. The non-atomic mode never
  * throws. Writing a value into a cell drops a formula the cell held, as typing over it in Excel
@@ -29,16 +29,27 @@ import { applyCellWritesToWorksheet, childrenNamed, type ChartCellWrite } from '
 import { sharedStringTexts, syncWorksheetTables } from './tables';
 import { validateAtomicChartWorkbookWrites } from './validation';
 
+/** One cell of a chart data reference: its position in the range and its new text. */
+export interface ChartWorkbookCell {
+	index: number;
+	/** The cell's new content; empty clears it. */
+	value: string;
+}
+
 /** One chart data reference (series name, categories or values) to write back. */
 export interface ChartWorkbookWrite {
 	/** The `c:f` formula naming the source cells (e.g. `"Sheet1!$B$2:$B$4"`). */
 	formula: string;
 	isNumeric: boolean;
-	/** Values in on-sheet order from the first cell; `null` leaves a cell as it is. */
-	values: readonly (string | null)[];
-	/** The cells the formula names, when `values` reaches only the first of them. */
-	cellCount?: number;
+	/** The cells to change; every other cell of the range stays as it is. */
+	cells: readonly ChartWorkbookCell[];
+	/** How many cells the formula names; a range of another size is not written. */
+	cellCount: number;
 }
+
+/** Every value of a whole range as cells to write. */
+export const chartWorkbookCells = (values: readonly string[]): ChartWorkbookCell[] =>
+	values.map((value, index) => ({ index, value }));
 
 /** Result of applying a batch of writes to an embedded workbook. */
 export interface ChartWorkbookWriteResult {
@@ -87,7 +98,7 @@ export async function worksheetPathsByName(zip: JSZip): Promise<Map<string, stri
 
 interface ResolvedWrite {
 	address: (index: number) => string;
-	values: readonly (string | null)[];
+	cells: readonly ChartWorkbookCell[];
 	isNumeric: boolean;
 }
 
@@ -123,15 +134,13 @@ export async function writeChartWorkbookUpdates(
 	for (const write of writes) {
 		const range = parseChartFormulaRange(write.formula);
 		const sheetPath = range ? sheetPathByName.get(range.sheetName.toLowerCase()) : undefined;
-		const address = range
-			? rangeCellAddress(range, write.cellCount ?? write.values.length)
-			: undefined;
+		const address = range ? rangeCellAddress(range, write.cellCount) : undefined;
 		if (!range || !sheetPath || !address) {
 			unresolved += 1;
 			continue;
 		}
 		const bucket = writesBySheet.get(sheetPath) ?? [];
-		bucket.push({ address, values: write.values, isNumeric: write.isNumeric });
+		bucket.push({ address, cells: write.cells, isNumeric: write.isNumeric });
 		writesBySheet.set(sheetPath, bucket);
 	}
 	let changed = false;
@@ -144,10 +153,8 @@ export async function writeChartWorkbookUpdates(
 		}
 		try {
 			const doc = parseXml(await file.async('string'), { label: 'Worksheet' });
-			const cellWrites: ChartCellWrite[] = resolved.flatMap(({ address, values, isNumeric }) =>
-				values.flatMap((value, index) =>
-					value === null ? [] : [{ ref: address(index), isNumeric, value }],
-				),
+			const cellWrites: ChartCellWrite[] = resolved.flatMap(({ address, cells, isNumeric }) =>
+				cells.map(({ index, value }) => ({ ref: address(index), isNumeric, value })),
 			);
 			if (applyCellWritesToWorksheet(doc, cellWrites, shared)) {
 				await syncWorksheetTables(zip, sheetPath, doc, cellWrites, shared);

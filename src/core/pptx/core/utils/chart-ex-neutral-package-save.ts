@@ -67,7 +67,7 @@ async function saveChartExPackage(
 				/* Structural dimensions need a fresh sheet. */
 			}
 			const vectors = (writes: readonly ChartWorkbookWrite[]) =>
-				writes.map((write) => [write.formula, write.isNumeric, write.values.length]);
+				writes.map((write) => [write.formula, write.isNumeric, write.cellCount]);
 			if (
 				prior &&
 				next &&
@@ -76,7 +76,11 @@ async function saveChartExPackage(
 				JSON.stringify(vectors(prior)) === JSON.stringify(vectors(next))
 			) {
 				await writeChartWorkbookUpdates(bytes, prior, { atomic: true, requireCurrentValues: true });
-				const updated = await writeChartWorkbookUpdates(bytes, next, { atomic: true });
+				const updated = await writeChartWorkbookUpdates(
+					bytes,
+					chartExSpaceWorkbookWrites(space, undefined, original),
+					{ atomic: true },
+				);
 				workbook = { part: target, bytes: updated.bytes ?? bytes };
 			} else {
 				const rebased = await appendChartExWorkbookData(bytes, original, space);

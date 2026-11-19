@@ -4,16 +4,14 @@ import { parseChartSpace } from '../parse-space';
 import { writeChartSpace } from '../write-space';
 import { chartSpaceSeries } from './draft';
 import {
-	addChartCategory,
 	addChartSeries,
 	moveChartSeries,
-	removeChartCategory,
 	removeChartSeries,
 	renameChartSeries,
 	setChartCategories,
-	setChartDataPointValue,
 	setChartSeriesValues,
 } from './series';
+import { addChartCategory, removeChartCategory, setChartDataPointValue } from './series-rows';
 import { columnChart } from './test-support/column-chart';
 
 const values = (space: ReturnType<typeof columnChart>, i: number) =>

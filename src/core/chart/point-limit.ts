@@ -43,7 +43,8 @@ const slotOf = (point: ChartPointSlot, next: number) =>
 		? point.index
 		: next;
 
-function pointsEnd(points: readonly ChartPointSlot[]): number {
+/** One past the highest slot `points` occupy. */
+export function chartPointsEnd(points: readonly ChartPointSlot[]): number {
 	let end = 0;
 	for (const point of points) end = Math.max(end, slotOf(point, end) + 1);
 	return end;
@@ -110,7 +111,7 @@ export function parsedChartViewLength(
 ): number | undefined {
 	const budget = (context.pointBudget ??= chartPointBudget());
 	const cuts = budget.cuts;
-	const end = pointsEnd(points);
+	const end = chartPointsEnd(points);
 	const length = limitChartPointLength(budget, points.length, end, declared, context.viewAllowance);
 	if (budget.cuts === cuts) return undefined;
 	if (!context.pointsLimited) {
@@ -129,10 +130,12 @@ export const chartPointsLength = (
 	cache: ChartPointCache,
 	declared: number | undefined = cache.pointCount,
 ): number =>
-	cache.viewLength ?? chartPointLength(cache.points.length, pointsEnd(cache.points), declared);
+	cache.viewLength ?? chartPointLength(cache.points.length, chartPointsEnd(cache.points), declared);
 
 /** The points of `cache` with their slots, in file order. */
-function slottedPoints<P extends ChartPointSlot>(cache: ChartPointCache<P>): [number, P][] {
+export function slottedPoints<P extends ChartPointSlot>(
+	cache: Pick<ChartPointCache<P>, 'points'>,
+): [number, P][] {
 	let next = 0;
 	return cache.points.map((point) => {
 		const slot = slotOf(point, next);
@@ -151,22 +154,113 @@ export const chartPointsPastView = <P extends ChartPointSlot>(cache: ChartPointC
 		? []
 		: slottedPoints(cache).flatMap(([slot, point]) => (slot < cache.viewLength! ? [] : [point]));
 
+/** `cache` holding `entries` in slot order, each point carrying its slot. */
+function withSlots<P extends ChartPointSlot, C extends ChartPointCache<P>>(
+	cache: C,
+	entries: readonly (readonly [number, P])[],
+	pointCount: number | undefined,
+	viewLength: number | undefined,
+): C {
+	const next = { ...cache } as C & { points: P[]; pointCount?: number; viewLength?: number };
+	next.points = [...entries]
+		.sort((a, b) => a[0] - b[0])
+		.map(([slot, point]) => (point.index === slot ? point : { ...point, index: slot }));
+	if (pointCount === undefined) delete next.pointCount;
+	else next.pointCount = pointCount;
+	if (viewLength === undefined) delete next.viewLength;
+	else next.viewLength = viewLength;
+	return next;
+}
+
+const reaching = (length: number | undefined, slot: number) =>
+	length === undefined ? undefined : Math.max(length, slot + 1);
+
+/** `cache` with `point` in `slot`, or with that slot emptied. Every other point stays. */
+export function chartCacheWithPoint<P extends ChartPointSlot, C extends ChartPointCache<P>>(
+	cache: C,
+	slot: number,
+	point: P | undefined,
+): C {
+	const kept = slottedPoints<P>(cache).filter(([at]) => at !== slot);
+	return withSlots<P, C>(
+		cache,
+		point ? [...kept, [slot, point]] : kept,
+		point ? reaching(cache.pointCount, slot) : cache.pointCount,
+		reaching(cache.viewLength, slot),
+	);
+}
+
+/**
+ * `cache` with one more row at `slot`, which holds `point` unless the file already has a point
+ * there. A declared range that reaches the slot keeps its count.
+ */
+export function chartCacheWithRow<P extends ChartPointSlot, C extends ChartPointCache<P>>(
+	cache: C,
+	slot: number,
+	point: P | undefined,
+): C {
+	const entries = slottedPoints<P>(cache);
+	return withSlots<P, C>(
+		cache,
+		point && !entries.some(([at]) => at === slot) ? [...entries, [slot, point]] : entries,
+		reaching(cache.pointCount, slot),
+		reaching(cache.viewLength, slot),
+	);
+}
+
+/**
+ * `cache` without the row at `slot`: later points move up one. A cut view keeps its declared count,
+ * because the range the count describes is still there; a complete cache gets one slot shorter.
+ */
+export function chartCacheWithoutRow<P extends ChartPointSlot, C extends ChartPointCache<P>>(
+	cache: C,
+	slot: number,
+): C {
+	const { pointCount, viewLength } = cache;
+	const entries = slottedPoints<P>(cache).flatMap(([at, point]): [number, P][] =>
+		at === slot ? [] : [[at > slot ? at - 1 : at, point]],
+	);
+	const shorter = (length: number | undefined) =>
+		length !== undefined && slot < length ? length - 1 : length;
+	return withSlots<P, C>(
+		cache,
+		entries,
+		viewLength === undefined ? shorter(pointCount) : pointCount,
+		shorter(viewLength),
+	);
+}
+
 /**
  * The count and points of a cache rewritten from a whole view of `length` slots. A cut view keeps
- * the declared count and the points past its end; changing its length would misplace them.
+ * the declared count and the points past its end: a shorter view lost rows, so those points move up
+ * with it, and a longer one takes only the slots the file leaves free.
  */
 export function chartCacheOverView<P extends ChartPointSlot>(
 	written: P[],
 	length: number,
 	previous: ChartPointCache<P> | undefined,
 ): { pointCount?: number; points: P[]; viewLength?: number } {
-	if (previous?.viewLength === undefined) return { pointCount: length, points: written };
-	if (length !== previous.viewLength)
-		throw new RangeError('This chart has more points than can be added to or removed from');
+	const view = previous?.viewLength;
+	if (previous === undefined || view === undefined) return { pointCount: length, points: written };
+	const removed = Math.max(0, view - length);
+	const past = slottedPoints(previous).flatMap(([slot, point]): [number, P][] =>
+		slot < view ? [] : [[slot - removed, point]],
+	);
+	const taken = new Set(past.map(([slot]) => slot));
+	const fresh = slottedPoints<P>({ points: written }).filter(([slot]) => !taken.has(slot));
+	const viewLength = fresh.reduce((end, [slot]) => Math.max(end, slot + 1), Math.min(view, length));
+	const { points } = withSlots<P, ChartPointCache<P>>(
+		{ points: [] },
+		[...fresh, ...past],
+		undefined,
+		undefined,
+	);
 	return {
-		...(previous.pointCount === undefined ? {} : { pointCount: previous.pointCount }),
-		points: [...written, ...chartPointsPastView(previous)],
-		viewLength: previous.viewLength,
+		...(previous.pointCount === undefined
+			? {}
+			: { pointCount: Math.max(previous.pointCount, viewLength) }),
+		points: points as P[],
+		viewLength,
 	};
 }
 

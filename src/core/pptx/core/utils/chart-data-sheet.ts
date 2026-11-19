@@ -12,6 +12,7 @@
  */
 import type { ChartDataSheet, ChartDataSheetEdit } from '../../../chart/data-sheet';
 import type { PptxChartData } from '../types/chart';
+import { chartDataRowCount } from './chart-data-utils';
 import {
 	chartGridAddCategory,
 	chartGridAddSeries,
@@ -21,34 +22,40 @@ import {
 	chartGridSetCellValue,
 } from './chart-grid-operations';
 
-/** The sheet a chart's data shows: a series shorter than the categories reads as blank cells. */
+/** The sheet a chart's data shows: blank points and rows past a series' end read as blank cells. */
 export function chartDataToSheet(data: PptxChartData): ChartDataSheet {
-	const count = data.categories.length;
+	const count = chartDataRowCount(data);
 	return {
-		categories: [...data.categories],
+		categories: Array.from({ length: count }, (_, index) => data.categories[index] ?? ''),
 		series: data.series.map((series) => ({
 			name: series.name,
 			values: Array.from({ length: count }, (_, index) => {
 				const value = series.values[index];
-				return typeof value === 'number' && Number.isFinite(value) ? value : null;
+				return !series.blanks?.[index] && typeof value === 'number' && Number.isFinite(value)
+					? value
+					: null;
 			}),
 		})),
 	};
 }
 
-/** Pads a ragged series (legal in OOXML) with zeroes up to `index` so its cell can be written. */
+/** Extends a ragged series (legal in OOXML) with blanks up to `index` so its cell can be written. */
 function padSeries(data: PptxChartData, seriesIndex: number, index: number): PptxChartData {
 	const series = data.series[seriesIndex];
 	if (!series || index < series.values.length) {
 		return data;
 	}
-	const values = [...series.values];
-	while (values.length <= index) {
-		values.push(0);
-	}
+	const length = index + 1;
+	const values = Array.from({ length }, (_, at) => series.values[at] ?? 0);
+	const blanks = Array.from(
+		{ length },
+		(_, at) => at >= series.values.length || (series.blanks?.[at] ?? false),
+	);
 	return {
 		...data,
-		series: data.series.map((entry, i) => (i === seriesIndex ? { ...entry, values } : entry)),
+		series: data.series.map((entry, i) =>
+			i === seriesIndex ? { ...entry, values, blanks } : entry,
+		),
 	};
 }
 
@@ -60,7 +67,7 @@ export function chartDataApplySheetEdit(
 ): PptxChartData | null {
 	switch (edit.kind) {
 		case 'value':
-			if (edit.category < 0 || edit.category >= data.categories.length) {
+			if (edit.category < 0 || edit.category >= chartDataRowCount(data)) {
 				return null;
 			}
 			return chartGridSetCellValue(

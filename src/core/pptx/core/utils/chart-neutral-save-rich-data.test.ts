@@ -41,7 +41,6 @@ it('claims date cache edits and requests a fresh workbook range without changing
 	probe.categories = ['New 1', 'New 2'];
 	const edits: NeutralChartEdit[] = [];
 	expect(planNeutralDataVectors(old, probe, edits)).toEqual({
-		changed: true,
 		rebuildWorkbook: true,
 	});
 	expect(probe).toEqual(old);
@@ -71,6 +70,8 @@ it('claims per-series X and bubble sizes independently and refuses an implicit d
 	const date = { ...structuredClone(before), dateCategories: { values: [1, 2], date1904: false } };
 	const changed = structuredClone(date);
 	changed.dateCategories.date1904 = true;
-	expect(planNeutralDataVectors(date, changed, []).changed).toBe(false);
+	const refused: NeutralChartEdit[] = [];
+	planNeutralDataVectors(date, changed, refused);
+	expect(refused).toEqual([]);
 	expect(changed.dateCategories.date1904).toBe(true);
 });

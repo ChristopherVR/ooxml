@@ -22,6 +22,7 @@ import {
 	chartDataAddSeries,
 	chartDataRemoveCategory,
 	chartDataRemoveSeries,
+	chartDataRowCount,
 	chartDataUpdatePoint,
 } from './chart-data-utils';
 
@@ -74,12 +75,8 @@ export function chartGridRemoveCategory(
 	categoryIndex: number,
 	followDataPoint = true,
 ): PptxChartData | null {
-	if (
-		data.categories.length <= 1 ||
-		!Number.isInteger(categoryIndex) ||
-		categoryIndex < 0 ||
-		categoryIndex >= data.categories.length
-	) {
+	const rows = chartDataRowCount(data);
+	if (rows <= 1 || !Number.isInteger(categoryIndex) || categoryIndex < 0 || categoryIndex >= rows) {
 		return null;
 	}
 	return chartDataRemoveCategory(data, categoryIndex, followDataPoint);
@@ -129,7 +126,7 @@ export function chartGridSetCellValue(
 	if (
 		!Number.isInteger(categoryIndex) ||
 		categoryIndex < 0 ||
-		categoryIndex >= data.categories.length
+		categoryIndex >= chartDataRowCount(data)
 	) {
 		return null;
 	}

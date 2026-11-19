@@ -159,7 +159,10 @@ export class PptxHandlerRuntime {
 		| Array<{ chartData: PptxChartData; slidePath: string }>
 		| undefined;
 	/** Last fully reconciled workbook data plus whether a write-back needs retry. */
-	protected chartWorkbookDataBaselines = new Map<string, { signature: string; pending: boolean }>();
+	protected chartWorkbookDataBaselines = new Map<
+		string,
+		{ signature: string; pending: boolean; pendingFrom?: string }
+	>();
 
 	/** Per-slide relationship maps: slide path -> (rId -> target path). */
 	protected slideRelsMap: Map<string, Map<string, string>> = new Map();

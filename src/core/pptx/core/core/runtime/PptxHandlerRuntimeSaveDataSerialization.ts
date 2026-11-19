@@ -106,9 +106,8 @@ import { applyChartTitleToXml } from '../../utils/chart-title-serializer';
 import { applyChartTitleStyleToXml } from '../../utils/chart-title-style-serializer';
 import { applySeriesTrendlinesToXml } from '../../utils/chart-trendline-serializer';
 import { applyChartUpDownBars } from '../../utils/chart-up-down-bars';
-import { chartWorkbookValues } from '../../../../chart/workbook/space-writes';
-import type { PptxChartWorkbookWrite } from '../../utils/chart-xlsx-writer';
-import { collectChartWorkbookWrite } from '../../utils/chart-xlsx-writer';
+import { chartCacheOverView } from '../../../../chart/point-limit';
+import { chartPartWorkbookWrites } from '../../../../chart/workbook/space-writes';
 import {
 	ChartExSaveRefusedError,
 	saveChartExPackageThroughNeutral,
@@ -434,12 +433,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				const authoredFormats = chartData.elementFormats
 					? this.readAuthoredChartElementFormats(chartXmlStr, chartData)
 					: undefined;
-				// Collected alongside the cache rewrite below and, once the chart
-				// XML is written back, handed to the embedded-workbook writer so
-				// "Edit Data in Excel" reflects the same edit; see
-				// `saveChartExternalWorkbookUpdates`.
-				const workbookWrites: PptxChartWorkbookWrite[] = [];
-
 				const chartSpace = this.xmlLookupService.getChildByLocalName(chartXmlData, 'chartSpace');
 				if (!chartSpace) {
 					continue;
@@ -481,7 +474,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				if (chartData.userShapes !== undefined) packageElements.userShapes = userShapesReference;
 				const neutralSave = baselineData
 					? saveChartPartThroughNeutral(chartXmlStr, baselineData, chartData, {
-							retryWorkbook: this.chartWorkbookDataBaselines.get(chartPartPath)?.pending,
 							elements: packageElements,
 						})
 					: undefined;
@@ -496,8 +488,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						chartPartPath,
 						slidePath,
 						chartData,
-						prepared.workbookWrites,
 						prepared.xml,
+						prepared.workbookRebased,
 					);
 					continue;
 				}
@@ -661,7 +653,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					const txNode = this.xmlLookupService.getChildByLocalName(seriesNode, 'tx');
 					if (txNode) {
 						this.updateChartCacheValues(txNode, false, [seriesData.name]);
-						this.pushChartWorkbookWrite(workbookWrites, txNode, false, [seriesData.name]);
 					}
 
 					// Update category labels on every series (not just the first)
@@ -676,13 +667,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 							? baselineData?.dateCategories?.values.map(String)
 							: baselineData?.categories;
 						this.updateChartCacheValues(catNode, catIsNumeric, catValues, catBefore);
-						this.pushChartWorkbookWrite(
-							workbookWrites,
-							catNode,
-							catIsNumeric,
-							catValues,
-							catBefore,
-						);
 					}
 
 					// Update values
@@ -694,7 +678,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						const previous = baselineData?.series[si];
 						const before = previous && chartSeriesCacheValues(previous);
 						this.updateChartCacheValues(valNode, true, values, before);
-						this.pushChartWorkbookWrite(workbookWrites, valNode, true, values, before);
 					}
 
 					// Update series colour. Create `c:spPr` when the loaded series has
@@ -1352,7 +1335,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					chartPartPath,
 					slidePath,
 					chartData,
-					workbookWrites,
 					this.builder.build(chartXmlData),
 				);
 			} catch (e) {
@@ -1375,20 +1357,19 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	/**
-	 * Write a chart part's new XML, after mirroring a changed series cache into
-	 * its embedded workbook, and record the saved model as the part's baseline.
+	 * Write a chart part's new XML, after mirroring what the edit changed in its caches into the
+	 * embedded workbook, so "Edit Data in Excel" shows the same data. A write that could not land
+	 * stays pending against the part it started from, so a later save still sends those cells.
+	 * `workbookRebased` means the workbook already holds the chart's data on a new sheet.
 	 */
 	private async commitChartPart(
 		chartPartPath: string,
 		slidePath: string,
 		chartData: PptxChartData,
-		workbookWrites: PptxChartWorkbookWrite[],
 		xml: string,
+		workbookRebased = false,
 	): Promise<void> {
-		// Mirror the same edit into the embedded workbook (`ppt/embeddings/*.xlsx`)
-		// so "Edit Data in Excel" and any Excel recalculation see the new
-		// values too, instead of silently reverting them. Degrades to a
-		// compatibility warning, never throws; see
+		// Degrades to a compatibility warning, never throws; see
 		// `saveChartExternalWorkbookUpdates`.
 		const serializedBaseline = this.chartDataBaselines.get(chartPartPath);
 		const signature = chartWorkbookDataSignature(chartData);
@@ -1400,6 +1381,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				: undefined);
 		const workbookDataChanged = workbookBaseline?.pending || signature !== previousSignature;
 		if (workbookDataChanged) {
+			const inStep =
+				workbookBaseline?.pendingFrom ?? (await this.zip.file(chartPartPath)?.async('string'));
 			const complete = await saveChartExternalWorkbookUpdates(
 				{
 					zip: this.zip,
@@ -1409,12 +1392,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				chartPartPath,
 				slidePath,
 				chartData.externalData,
-				workbookWrites,
+				workbookRebased || inStep === undefined ? [] : chartPartWorkbookWrites(inStep, xml),
 				chartData.dataLabelTextOnly ?? false,
 			);
 			this.chartWorkbookDataBaselines.set(chartPartPath, {
 				signature: complete ? signature : (previousSignature ?? signature),
 				pending: !complete,
+				...(complete || inStep === undefined ? {} : { pendingFrom: inStep }),
 			});
 		}
 		this.zip.file(chartPartPath, xml);
@@ -1531,37 +1515,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	/**
-	 * Collect a workbook write-back entry for one chart cache container (a
-	 * series' `c:tx`, `c:cat`/`c:xVal`, or `c:val`/`c:yVal`), pushing it onto
-	 * `workbookWrites` when the container names a `c:f` formula reference.
-	 * Call alongside {@link updateChartCacheValues} with the SAME arguments
-	 * so the embedded workbook and the chart cache always agree. A no-op
-	 * when the container has no formula reference (e.g. a brand-new series
-	 * built without one), so it is always safe to call.
-	 */
-	protected pushChartWorkbookWrite(
-		workbookWrites: PptxChartWorkbookWrite[],
-		container: XmlObject | undefined,
-		isNumeric: boolean,
-		values: string[],
-		before: readonly string[] = [],
-	): void {
-		const write = collectChartWorkbookWrite(
-			this.xmlLookupService,
-			container,
-			isNumeric,
-			chartWorkbookValues(values, before),
-		);
-		if (write) {
-			workbookWrites.push(write);
-		}
-	}
-
-	/**
 	 * Update the cached point values in a chart reference node
 	 * (numRef/strRef or numLit/strLit) from the chart's view of them. `before` is the view as
-	 * loaded: an unchanged view leaves the cache as written, and a view that shows only the start of
-	 * the declared points keeps the count and the points past its end.
+	 * loaded: an unchanged view leaves the cache as written.
 	 */
 	protected updateChartCacheValues(
 		container: XmlObject,
@@ -1597,26 +1553,34 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 
 		const ptCountNode = this.xmlLookupService.getChildByLocalName(cacheNode, 'ptCount');
-		const cutView =
-			before?.length === values.length && Number(ptCountNode?.['@_val']) > values.length;
-		if (ptCountNode && !cutView) {
-			ptCountNode['@_val'] = String(values.length);
-		}
-
 		// Find the key used for pt elements
 		const ptKey = Object.keys(cacheNode).find(
 			(key) => this.compatibilityService.getXmlLocalName(key) === 'pt',
 		);
+		const declared = Number(ptCountNode?.['@_val']);
+		if (before && declared > before.length) {
+			// The view shows only the start of the declared points: those past it are kept, moved up
+			// with any rows the edit removed, and the count stays.
+			const slotted = (node: XmlObject) => ({ index: Number(node['@_idx']), node });
+			const next = chartCacheOverView(buildChartPoints(values).map(slotted), values.length, {
+				points: this.xmlLookupService.getChildrenArrayByLocalName(cacheNode, 'pt').map(slotted),
+				pointCount: declared,
+				viewLength: before.length,
+			});
+			if (ptCountNode) ptCountNode['@_val'] = String(next.pointCount ?? declared);
+			cacheNode[ptKey ?? 'c:pt'] = next.points.map(({ index, node }) => ({
+				...node,
+				'@_idx': String(index),
+			}));
+			return;
+		}
+		if (ptCountNode) {
+			ptCountNode['@_val'] = String(values.length);
+		}
 		if (!ptKey) {
 			return;
 		}
-
-		const pastView = cutView
-			? this.xmlLookupService
-					.getChildrenArrayByLocalName(cacheNode, 'pt')
-					.filter((point) => Number(point['@_idx']) >= values.length)
-			: [];
-		cacheNode[ptKey] = [...buildChartPoints(values), ...pastView];
+		cacheNode[ptKey] = buildChartPoints(values);
 	}
 
 	/** Replace the first text value found deep in the node tree. */

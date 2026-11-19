@@ -51,10 +51,11 @@ export async function appendChartWorkbookSheet(
 	const rows = rowsForName(sheetName);
 	if (rows.length > 1048576 || rows.some((row) => row.length > 16384))
 		throw new RangeError('Chart data exceeds worksheet bounds.');
-	for (const row of rows)
+	rows.forEach((row) => {
 		for (const value of row)
 			if (typeof value === 'number' && !Number.isFinite(value))
 				throw new RangeError('Chart workbook numbers must be finite.');
+	});
 	const taken = new Set(Object.keys(zip.files).map((name) => name.toLowerCase()));
 	let part = '';
 	for (let n = 1; ; n++) {

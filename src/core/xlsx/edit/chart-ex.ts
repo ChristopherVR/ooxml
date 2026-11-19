@@ -102,7 +102,7 @@ export function editChartEx(
 			throw new Error('A worksheet chart cannot edit an external workbook source.');
 		let rebase = false;
 		try {
-			writes = chartExSpaceWorkbookWrites(next, host.resolve);
+			writes = chartExSpaceWorkbookWrites(next, host.resolve, before);
 			if (
 				next.plotArea.series.some(
 					(series) =>
@@ -134,7 +134,7 @@ export function editChartEx(
 	for (const write of writes) {
 		const { range, s: sheet } = host.target(write.formula);
 		const horizontal = range.start.row === range.end.row;
-		write.values.forEach((text, i) => {
+		write.cells.forEach(({ index: i, value: text }) => {
 			const row = range.start.row + (horizontal ? 0 : i),
 				col = range.start.col + (horizontal ? i : 0);
 			const cell = getCell(ctx.workbook.sheets[sheet]!, row, col);

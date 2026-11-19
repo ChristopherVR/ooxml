@@ -48,13 +48,15 @@ export function numberSource(
 	};
 }
 
-/** A category source holding `values` (numbers when every value is one), keeping the reference. */
+/** A category source holding `values` (numbers when every label is one), keeping the reference. */
 export function categorySource(
 	values: readonly ChartCategoryValue[],
 	previous: ChartDataSource | undefined,
 	formula?: string,
 ): ChartDataSource {
-	const numeric = values.length > 0 && values.every((value) => typeof value === 'number');
+	const numeric =
+		values.some((value) => typeof value === 'number') &&
+		values.every((value) => typeof value === 'number' || value === null);
 	const reference =
 		formula ??
 		(previous?.kind === 'numRef' ||

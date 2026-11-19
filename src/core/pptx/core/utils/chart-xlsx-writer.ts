@@ -10,7 +10,7 @@
  * @module chart-xlsx-writer
  */
 
-import type { ChartWorkbookWrite } from '../../../chart/workbook/writer';
+import { chartWorkbookCells, type ChartWorkbookWrite } from '../../../chart/workbook/writer';
 import type { IPptxXmlLookupService } from '../services';
 import type { XmlObject } from '../types';
 
@@ -34,7 +34,7 @@ export function collectChartWorkbookWrite(
 	xmlLookupService: IPptxXmlLookupService,
 	container: XmlObject | undefined,
 	isNumeric: boolean,
-	values: readonly (string | null)[],
+	values: readonly string[],
 ): PptxChartWorkbookWrite | undefined {
 	if (!container) {
 		return undefined;
@@ -47,7 +47,7 @@ export function collectChartWorkbookWrite(
 	return {
 		formula,
 		isNumeric,
-		values,
-		...(declared > values.length ? { cellCount: declared } : {}),
+		cells: chartWorkbookCells(values),
+		cellCount: declared > values.length ? declared : values.length,
 	};
 }

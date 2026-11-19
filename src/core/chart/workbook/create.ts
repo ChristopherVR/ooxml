@@ -91,14 +91,20 @@ function workbookPackage(worksheetXml: string, sheetName: string): Promise<Uint8
 	return zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
 }
 
-/** A literal worksheet block, using the same cell serializer as newly authored chart workbooks. */
+/**
+ * A literal worksheet block, using the same cell serializer as newly authored chart workbooks.
+ * `rows` may be sparse: a missing row, like a row of empty cells, is not written.
+ */
 export function chartWorkbookRowsXml(
 	rows: readonly (readonly (string | number | null)[])[],
 ): string {
-	const count = Math.max(1, ...rows.map((row) => row.length));
-	const body = rows
-		.map((row, r) => `<row r="${r + 1}">${row.map((value, c) => cell(c, r, value)).join('')}</row>`)
-		.join('');
+	let count = 1;
+	const body: string[] = [];
+	rows.forEach((row, r) => {
+		count = Math.max(count, row.length);
+		const cells = row.map((value, c) => cell(c, r, value)).join('');
+		if (cells) body.push(`<row r="${r + 1}">${cells}</row>`);
+	});
 	const last = formatCellAddress({ col: count - 1, row: Math.max(0, rows.length - 1) });
-	return `${DECLARATION}<worksheet xmlns="${MAIN}" xmlns:r="${REL}"><dimension ref="A1:${last}"/><sheetData>${body}</sheetData><pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/></worksheet>`;
+	return `${DECLARATION}<worksheet xmlns="${MAIN}" xmlns:r="${REL}"><dimension ref="A1:${last}"/><sheetData>${body.join('')}</sheetData><pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/></worksheet>`;
 }
