@@ -8,6 +8,7 @@ import type {
 import { children, first, getW, named, parseXml, type XmlDocument, type XmlElement } from './xml';
 import { parseRunProperties } from './run-properties';
 import { parseOnOff } from './simple-types';
+import { inheritanceCycleEntries } from './style-inheritance';
 import { parseCellMargins } from './table-margins';
 import { parseShadingFill, parseShadingThemeFill, parseTableBorders } from './table-borders';
 
@@ -77,20 +78,8 @@ export function parseTableStyleCatalog(xml: string): TableStyleCatalog {
 			conditional,
 		};
 	}
-	const warnings: string[] = [];
-	for (const style of Object.values(styles)) {
-		const seen = new Set<string>([style.id]);
-		let parent = style.basedOn;
-		while (parent && styles[parent]) {
-			if (seen.has(parent)) {
-				warnings.push(
-					`Table style inheritance cycle detected at "${parent}"; cyclic inheritance is ignored.`,
-				);
-				break;
-			}
-			seen.add(parent);
-			parent = styles[parent]?.basedOn;
-		}
-	}
-	return { styles, warnings: [...new Set(warnings)] };
+	const warnings = inheritanceCycleEntries(styles).map(
+		(id) => `Table style inheritance cycle detected at "${id}"; cyclic inheritance is ignored.`,
+	);
+	return { styles, warnings };
 }
