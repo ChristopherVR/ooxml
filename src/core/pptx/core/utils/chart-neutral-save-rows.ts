@@ -3,6 +3,7 @@
 // keeps the rest; what is left of the difference is ordinary cell edits for the planners after this.
 import { addChartCategory, removeChartCategory } from '../../../chart/index';
 import type { PptxChartData, PptxChartSeries } from '../types';
+import { chartDataRowCount } from './chart-data-utils';
 import type { NeutralChartEdit } from './chart-neutral-save-plan';
 
 const rowOf = (chart: PptxChartData, row: number) =>
@@ -13,8 +14,8 @@ const rowOf = (chart: PptxChartData, row: number) =>
 
 /** The rows of `before` that `after` no longer has, found by the rows either side of each gap. */
 function removedRows(before: PptxChartData, after: PptxChartData): number[] {
-	const total = before.categories.length;
-	const remaining = after.categories.length;
+	const total = chartDataRowCount(before);
+	const remaining = chartDataRowCount(after);
 	const removed: number[] = [];
 	let left = total - remaining;
 	/** How many rows of `before` from `row` are gone, given `after` continues at `at`. */
@@ -58,15 +59,17 @@ function withoutRows(series: PptxChartSeries, removed: readonly number[]): PptxC
 }
 
 /**
- * Plans the rows `after` gained or lost and returns `before` as those edits leave it. A chart whose
- * categories are not one plain list keeps to the whole-vector planners.
+ * Plans the rows `after` gained or lost and returns `before` as those edits leave it. Rows are the
+ * chart's, not one series': removing a row past the end of a series' view still moves that series'
+ * later points up, as deleting the worksheet row does in Excel. A chart whose categories are not
+ * one plain list keeps to the whole-vector planners.
  */
 export function planNeutralCategoryRows(
 	before: PptxChartData,
 	after: PptxChartData,
 	edits: NeutralChartEdit[],
 ): PptxChartData {
-	const added = after.categories.length - before.categories.length;
+	const added = chartDataRowCount(after) - chartDataRowCount(before);
 	if (
 		added === 0 ||
 		before.series.length !== after.series.length ||

@@ -4,22 +4,14 @@
 // shared, so a category edit applies to every series unless one is named.
 // Scatter and bubble series hold their data as x and y values; the operations map categories to
 // x values and values to y values there.
-import type { ChartGroupKind, ChartPlotGroup, ChartSpace } from '../model';
+import type { ChartSpace } from '../model';
 import type { ChartShapeProperties, ChartSpaceSeries } from '../model-series';
 import { chartSeriesEntryAt, chartSpaceSeries, editChartSpace } from './draft';
 import type { ChartSeriesValue } from '../data-sheet';
 import { categorySource, numberSource, type ChartCategoryValue } from './series-data';
+import { chartCategoryKey, chartValueKey } from './series-keys';
 
-/** Scatter and bubble series plot x and y values instead of categories and values. */
-export const isXYChartKind = (kind: ChartGroupKind): boolean =>
-	kind === 'scatter' || kind === 'bubble';
-
-/** The series field holding a group's values: y values on scatter and bubble charts. */
-export const chartValueKey = (group: ChartPlotGroup): 'yValues' | 'values' =>
-	isXYChartKind(group.kind) ? 'yValues' : 'values';
-/** The series field holding a group's categories: x values on scatter and bubble charts. */
-export const chartCategoryKey = (group: ChartPlotGroup): 'xValues' | 'categories' =>
-	isXYChartKind(group.kind) ? 'xValues' : 'categories';
+export { isXYChartKind } from './series-keys';
 
 export interface NewChartSeries {
 	name?: string;

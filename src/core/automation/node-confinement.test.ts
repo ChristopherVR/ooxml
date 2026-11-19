@@ -3,7 +3,8 @@ import { mkdir, mkdtemp, readdir, realpath, rm, symlink, writeFile } from 'node:
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { vi } from 'vitest';
-import { createFileOperations, isUnsafePathSegment, pathSegments } from './node';
+import { createFileOperations } from './node';
+import { isUnsafePathSegment, pathSegments } from './node-paths';
 
 async function withRoot(run: (root: string, outside: string) => Promise<void>) {
 	const root = await mkdtemp(join(tmpdir(), 'ooxml-root-'));

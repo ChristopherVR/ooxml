@@ -1,25 +1,10 @@
 import { link, open, realpath, rename, unlink } from 'node:fs/promises';
 import { basename, dirname, extname, isAbsolute, parse, relative, resolve, sep } from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { isUnsafePathSegment, pathSegments } from './node-paths';
 import type { AutomationTool } from './tools/types';
 
 const OUTSIDE_ROOT = 'Path is outside the configured root';
-
-/**
- * A Windows path segment that does not name the file it spells: an alternate data stream or drive
- * (`:`), characters Windows rejects or expands, a trailing dot or space Windows drops, and the
- * reserved device names, with or without an extension.
- */
-const WINDOWS_UNSAFE_SEGMENT =
-	/[\u0000-\u001f:<>"|?*]|[. ]$|^(?:con|prn|aux|nul|com[0-9¹²³]|lpt[0-9¹²³]|conin\$|conout\$)(?:[. ].*)?$/iu;
-
-/** Whether `segment` is refused on `platform`; POSIX file names may hold anything but NUL. */
-export const isUnsafePathSegment = (segment: string, platform = process.platform): boolean =>
-	platform === 'win32' ? WINDOWS_UNSAFE_SEGMENT.test(segment) : segment.includes('\0');
-
-/** The segments of `path`; a backslash separates them only on Windows, elsewhere it is a name character. */
-export const pathSegments = (path: string, platform = process.platform): string[] =>
-	path.split(platform === 'win32' ? /[\\/]/ : /\//);
 
 const leavesRoot = (path: string) =>
 	path === '..' || path.startsWith(`..${sep}`) || isAbsolute(path);
@@ -38,8 +23,7 @@ function confineLexically(rootDir: string, file: string): string {
 	if (process.platform === 'win32' && root !== '' && !/^[a-z]:[\\/]$/iu.test(root))
 		throw new Error(OUTSIDE_ROOT);
 	const kept: string[] = [];
-	const separators = process.platform === 'win32' ? /[\\/]/ : /\//;
-	for (const segment of file.slice(root.length).split(separators)) {
+	for (const segment of pathSegments(file.slice(root.length))) {
 		if (segment === '' || segment === '.') continue;
 		if (segment === '..') {
 			if (kept.length === 0) throw new Error(OUTSIDE_ROOT);

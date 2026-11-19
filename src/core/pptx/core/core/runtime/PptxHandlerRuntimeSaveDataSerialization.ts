@@ -341,7 +341,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		this.chartDataBaselines.set(chartData.chartPartPath, JSON.stringify(chartData));
 		this.chartWorkbookDataBaselines.set(chartData.chartPartPath, {
 			signature: chartWorkbookDataSignature(chartData),
-			pending: false,
 		});
 	}
 
@@ -396,7 +395,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			// sibling, and let the original bytes flow through.
 			if (
 				chartData.chartPartPath &&
-				!this.chartWorkbookDataBaselines.get(chartData.chartPartPath)?.pending &&
+				!this.chartWorkbookDataBaselines.get(chartData.chartPartPath)?.retry &&
 				this.chartDataBaselines.get(chartData.chartPartPath) === JSON.stringify(chartData)
 			) {
 				continue;
@@ -424,6 +423,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			if (!chartFile) {
 				continue;
 			}
+			// A write-back that did not fully land starts again from the workbook it was applied to.
+			const retryWorkbook = this.chartWorkbookDataBaselines.get(chartPartPath)?.retry?.workbook;
+			if (retryWorkbook) this.zip.file(retryWorkbook.partName, retryWorkbook.bytes);
 
 			try {
 				const chartXmlStr = await chartFile.async('string');
@@ -449,6 +451,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						chartXmlStr,
 					)
 				) {
+					// Another writer owns the part now and saved the workbook as it found it.
+					this.chartWorkbookDataBaselines.delete(chartPartPath);
 					continue;
 				}
 
@@ -1352,14 +1356,16 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		this.pendingChartUpdates = this.pendingChartUpdates.filter(
 			({ chartData }) =>
 				chartData.chartPartPath &&
-				this.chartWorkbookDataBaselines.get(chartData.chartPartPath)?.pending,
+				this.chartWorkbookDataBaselines.get(chartData.chartPartPath)?.retry,
 		);
 	}
 
 	/**
 	 * Write a chart part's new XML, after mirroring what the edit changed in its caches into the
-	 * embedded workbook, so "Edit Data in Excel" shows the same data. A write that could not land
-	 * stays pending against the part it started from, so a later save still sends those cells.
+	 * embedded workbook, so "Edit Data in Excel" shows the same data. A write that could not fully
+	 * land keeps the part and the workbook it started from: the next save puts that workbook back
+	 * and writes the whole difference again, so cells a partial write changed follow the chart
+	 * through later edits and undo.
 	 * `workbookRebased` means the workbook already holds the chart's data on a new sheet.
 	 */
 	private async commitChartPart(
@@ -1379,11 +1385,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			(serializedBaseline
 				? chartWorkbookDataSignature(JSON.parse(serializedBaseline) as PptxChartData)
 				: undefined);
-		const workbookDataChanged = workbookBaseline?.pending || signature !== previousSignature;
-		if (workbookDataChanged) {
-			const inStep =
-				workbookBaseline?.pendingFrom ?? (await this.zip.file(chartPartPath)?.async('string'));
-			const complete = await saveChartExternalWorkbookUpdates(
+		const retry = workbookBaseline?.retry;
+		if (retry || signature !== previousSignature) {
+			const inStep = retry?.chartXml ?? (await this.zip.file(chartPartPath)?.async('string'));
+			const { complete, before } = await saveChartExternalWorkbookUpdates(
 				{
 					zip: this.zip,
 					resolveImagePath: (basePath, target) => this.resolveImagePath(basePath, target),
@@ -1397,12 +1402,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			);
 			this.chartWorkbookDataBaselines.set(chartPartPath, {
 				signature: complete ? signature : (previousSignature ?? signature),
-				pending: !complete,
-				...(complete || inStep === undefined ? {} : { pendingFrom: inStep }),
+				...(complete || inStep === undefined
+					? {}
+					: { retry: { chartXml: inStep, ...(before ? { workbook: before } : {}) } }),
 			});
 		}
 		this.zip.file(chartPartPath, xml);
-		if (!this.chartWorkbookDataBaselines.get(chartPartPath)?.pending) {
+		if (!this.chartWorkbookDataBaselines.get(chartPartPath)?.retry) {
 			const refreshed = await this.refreshClassicChartFromPart(xml, chartData, slidePath);
 			if (refreshed) {
 				for (const key of Object.keys(chartData))
@@ -1410,7 +1416,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				Object.assign(chartData, refreshed);
 				this.chartWorkbookDataBaselines.set(chartPartPath, {
 					signature: chartWorkbookDataSignature(chartData),
-					pending: false,
 				});
 			}
 		}

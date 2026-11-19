@@ -23,6 +23,18 @@ export interface ChartExternalWorkbookSaveDeps {
 	reportWarning(warning: CompatibilityWarningInput): void;
 }
 
+/** An embedded workbook as it was read before a write-back changed it. */
+export interface ChartWorkbookBytes {
+	partName: string;
+	bytes: Uint8Array;
+}
+
+/** Whether every write landed, and the workbook the writes were applied to, when one was read. */
+export interface ChartExternalWorkbookSaveResult {
+	complete: boolean;
+	before?: ChartWorkbookBytes;
+}
+
 /**
  * Rewrite a chart's embedded workbook to match its edited series/category/
  * name data. Atomic label edits throw on unsupported sources; other edits report warnings.
@@ -34,7 +46,7 @@ export async function saveChartExternalWorkbookUpdates(
 	externalData: PptxExternalData | undefined,
 	writes: readonly PptxChartWorkbookWrite[],
 	atomic = false,
-): Promise<boolean> {
+): Promise<ChartExternalWorkbookSaveResult> {
 	const target = externalData
 		? {
 				...(externalData.targetPath
@@ -43,9 +55,14 @@ export async function saveChartExternalWorkbookUpdates(
 				...(externalData.isExternal ? { external: true } : {}),
 			}
 		: undefined;
-	return saveChartWorkbookUpdates(
+	let before: ChartWorkbookBytes | undefined;
+	const complete = await saveChartWorkbookUpdates(
 		{
-			read: async (partName) => deps.zip.file(partName)?.async('uint8array'),
+			read: async (partName) => {
+				const bytes = await deps.zip.file(partName)?.async('uint8array');
+				if (bytes) before = { partName, bytes };
+				return bytes;
+			},
 			write: (partName, bytes) => {
 				deps.zip.file(partName, bytes);
 			},
@@ -66,4 +83,5 @@ export async function saveChartExternalWorkbookUpdates(
 				}),
 		},
 	);
+	return before ? { complete, before } : { complete };
 }

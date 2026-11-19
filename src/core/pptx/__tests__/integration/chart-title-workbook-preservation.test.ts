@@ -107,7 +107,7 @@ it('retries a warned workbook write on a later save instead of treating the chan
 	const actual = workbookSave.saveChartExternalWorkbookUpdates;
 	const spy = vi
 		.spyOn(workbookSave, 'saveChartExternalWorkbookUpdates')
-		.mockResolvedValueOnce(false)
+		.mockResolvedValueOnce({ complete: false })
 		.mockImplementation(actual);
 	try {
 		await handler.save(data.slides);

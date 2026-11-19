@@ -31,7 +31,9 @@ const PR = 'http://schemas.openxmlformats.org/package/2006/relationships';
 const COLUMNS = 'BCDEF';
 const HEADS = ['One', 'Two', 'Three', 'Four', 'Five'];
 
-const cached: Record<number, [number, number][]> = {
+type Points = Record<number, [number, number][]>;
+
+const cached: Points = {
 	0: [
 		[0, 1],
 		[1, 2],
@@ -61,20 +63,20 @@ const cached: Record<number, [number, number][]> = {
 	],
 };
 
-const series = (index: number) => {
+const series = (points: Points) => (index: number) => {
 	const column = COLUMNS[index]!;
-	const pts = cached[index]!.map(([at, v]) => `<c:pt idx="${at}"><c:v>${v}</c:v></c:pt>`).join('');
+	const pts = points[index]!.map(([at, v]) => `<c:pt idx="${at}"><c:v>${v}</c:v></c:pt>`).join('');
 	return `<c:ser><c:idx val="${index}"/><c:order val="${index}"/><c:tx><c:strRef><c:f>Sheet1!$${column}$1</c:f><c:strCache><c:ptCount val="1"/><c:pt idx="0"><c:v>${HEADS[index]}</c:v></c:pt></c:strCache></c:strRef></c:tx><c:val><c:numRef><c:f>Sheet1!$${column}$2:$${column}$1048576</c:f><c:numCache><c:formatCode>General</c:formatCode><c:ptCount val="${FULL}"/>${pts}</c:numCache></c:numRef></c:val></c:ser>`;
 };
 const external = '<c:externalData r:id="rIdWb"><c:autoUpdate val="0"/></c:externalData>';
-const chartXml = (data = external) =>
-	`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<c:chartSpace xmlns:c="${C}" xmlns:a="${A}" xmlns:r="${R}"><c:chart><c:autoTitleDeleted val="1"/><c:plotArea><c:layout/><c:barChart><c:barDir val="col"/><c:grouping val="clustered"/><c:varyColors val="0"/>${[0, 1, 2, 3, 4].map(series).join('')}<c:axId val="1"/><c:axId val="2"/></c:barChart><c:catAx><c:axId val="1"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="b"/><c:crossAx val="2"/></c:catAx><c:valAx><c:axId val="2"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="l"/><c:crossAx val="1"/></c:valAx></c:plotArea><c:plotVisOnly val="1"/></c:chart>${data}</c:chartSpace>`;
+const chartXml = (data = external, points = cached) =>
+	`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<c:chartSpace xmlns:c="${C}" xmlns:a="${A}" xmlns:r="${R}"><c:chart><c:autoTitleDeleted val="1"/><c:plotArea><c:layout/><c:barChart><c:barDir val="col"/><c:grouping val="clustered"/><c:varyColors val="0"/>${[0, 1, 2, 3, 4].map(series(points)).join('')}<c:axId val="1"/><c:axId val="2"/></c:barChart><c:catAx><c:axId val="1"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="b"/><c:crossAx val="2"/></c:catAx><c:valAx><c:axId val="2"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="l"/><c:crossAx val="1"/></c:valAx></c:plotArea><c:plotVisOnly val="1"/></c:chart>${data}</c:chartSpace>`;
 
-function workbookRows() {
+function workbookRows(points = cached) {
 	const rows: (string | number | null)[][] = [];
 	rows[0] = [null, ...HEADS];
-	for (const [index, points] of Object.entries(cached))
-		for (const [at, value] of points) (rows[at + 1] ??= [])[Number(index) + 1] = value;
+	for (const [index, list] of Object.entries(points))
+		for (const [at, value] of list) (rows[at + 1] ??= [])[Number(index) + 1] = value;
 	rows[2]![2] = 'not a number';
 	return rows;
 }
@@ -83,10 +85,13 @@ const zipBytes = (zip: JSZip) => zip.generateAsync({ type: 'uint8array' });
 const fixture = (relative: string) => readFileSync(path.join(import.meta.dirname, relative));
 const chartRels = `<Relationships xmlns="${PR}"><Relationship Id="rIdWb" Type="${R}/package" Target="../embeddings/Book1.xlsx"/></Relationships>`;
 
-async function embed(zip: JSZip, folder: 'word' | 'ppt', name: string) {
-	zip.file(`${folder}/charts/${name}`, chartXml());
+async function embed(zip: JSZip, folder: 'word' | 'ppt', name: string, points: Points) {
+	zip.file(`${folder}/charts/${name}`, chartXml(external, points));
 	zip.file(`${folder}/charts/_rels/${name}.rels`, chartRels);
-	zip.file(`${folder}/embeddings/Book1.xlsx`, await createChartWorkbookFromRows(workbookRows()));
+	zip.file(
+		`${folder}/embeddings/Book1.xlsx`,
+		await createChartWorkbookFromRows(workbookRows(points)),
+	);
 	const types = await zip.file('[Content_Types].xml')!.async('string');
 	if (!/Extension="xlsx"/.test(types))
 		zip.file(
@@ -112,9 +117,9 @@ async function saved(bytes: Uint8Array, folder: string, name: string): Promise<S
 	};
 }
 
-async function editInWord(edits: ChartDataSheetEdit[]): Promise<Saved> {
+async function editInWord(edits: ChartDataSheetEdit[], points = cached): Promise<Saved> {
 	const zip = await JSZip.loadAsync(fixture('../docx/__fixtures__/chart.docx'));
-	await embed(zip, 'word', 'chart1.xml');
+	await embed(zip, 'word', 'chart1.xml', points);
 	const loaded = await loadDocx(await zipBytes(zip));
 	const model = structuredClone(loaded.model) as DocumentModel;
 	for (const block of documentDrawingBlocks(model))
@@ -126,11 +131,11 @@ async function editInWord(edits: ChartDataSheetEdit[]): Promise<Saved> {
 	return saved(await loaded.save(model), 'word', 'chart1.xml');
 }
 
-async function editInPowerPoint(edits: ChartDataSheetEdit[]): Promise<Saved> {
+async function editInPowerPoint(edits: ChartDataSheetEdit[], points = cached): Promise<Saved> {
 	const zip = await JSZip.loadAsync(
 		fixture('../pptx/__tests__/fixtures/embedded-assets-sample.pptx'),
 	);
-	await embed(zip, 'ppt', 'big.xml');
+	await embed(zip, 'ppt', 'big.xml', points);
 	const slide = Object.keys(zip.files).find((name) => /^ppt\/slides\/slide\d+\.xml$/.test(name))!;
 	const rels = slide.replace('slides/', 'slides/_rels/') + '.rels';
 	const change = async (name: string, edit: (xml: string) => string) =>
@@ -169,7 +174,7 @@ async function editInPowerPoint(edits: ChartDataSheetEdit[]): Promise<Saved> {
 	return saved(out, 'ppt', 'big.xml');
 }
 
-async function editInVisio(edits: ChartDataSheetEdit[]): Promise<Saved> {
+async function editInVisio(edits: ChartDataSheetEdit[], points = cached): Promise<Saved> {
 	const zip = await JSZip.loadAsync(
 		(await gridChartWorkbook(
 			[
@@ -180,9 +185,9 @@ async function editInVisio(edits: ChartDataSheetEdit[]): Promise<Saved> {
 		))!,
 	);
 	const part = Object.keys(zip.files).find((name) => /^xl\/charts\/chart\d+\.xml$/.test(name))!;
-	zip.file(part, chartXml(''));
+	zip.file(part, chartXml('', points));
 	// The sheet keeps its drawing; only its cells become those of the large chart.
-	const rows = await JSZip.loadAsync(await createChartWorkbookFromRows(workbookRows()));
+	const rows = await JSZip.loadAsync(await createChartWorkbookFromRows(workbookRows(points)));
 	const sheetData = /<sheetData>.*<\/sheetData>/su.exec(
 		await rows.file('xl/worksheets/sheet1.xml')!.async('string'),
 	)![0];
@@ -239,6 +244,19 @@ describe.each([
 	it('removes a category and keeps the point in the last row of the range', async () => {
 		const out = await edit([{ kind: 'remove-category', category: 0 }]);
 		expect(counts(out.xml).filter((count) => count === FULL)).toHaveLength(5);
+		expect(hasPoint(out.xml, 2, LAST - 1)).toBe(true);
+		expect(hasPoint(out.xml, 2, LAST)).toBe(false);
+	}, 60_000);
+
+	it('removes a row past the view of a series and still moves its later points up', async () => {
+		// Only the last series reaches row 10, past the cut view of the third. Deleting that
+		// worksheet row in Excel moves every column's cells below it up, the far point included.
+		const out = await edit([{ kind: 'remove-category', category: 10 }], {
+			...cached,
+			4: [...cached[4]!, [10, 2]],
+		});
+		expect(counts(out.xml).filter((count) => count === FULL)).toHaveLength(5);
+		expect(hasPoint(out.xml, 4, 10)).toBe(false);
 		expect(hasPoint(out.xml, 2, LAST - 1)).toBe(true);
 		expect(hasPoint(out.xml, 2, LAST)).toBe(false);
 	}, 60_000);

@@ -66,6 +66,7 @@ import type {
 	IPptxTableDataParser,
 } from '../builders';
 import type { IPptxRuntimeDependencyFactory } from '../factories';
+import type { ChartWorkbookBytes } from './chart-external-workbook-save';
 import { LoadPartReader, readPartText, readPartXml } from './load-part-reader';
 import { TemplateElementBaselineTracker } from './template-element-baselines';
 
@@ -158,10 +159,14 @@ export class PptxHandlerRuntime {
 	protected pendingChartUpdates?:
 		| Array<{ chartData: PptxChartData; slidePath: string }>
 		| undefined;
-	/** Last fully reconciled workbook data plus whether a write-back needs retry. */
+	/**
+	 * Last fully reconciled workbook data. `retry` is set while a write-back did not fully land: the
+	 * chart part and the workbook as they were before it, which the next save restores and writes
+	 * from again, so the workbook always ends up holding what the chart holds.
+	 */
 	protected chartWorkbookDataBaselines = new Map<
 		string,
-		{ signature: string; pending: boolean; pendingFrom?: string }
+		{ signature: string; retry?: { chartXml: string; workbook?: ChartWorkbookBytes } }
 	>();
 
 	/** Per-slide relationship maps: slide path -> (rId -> target path). */

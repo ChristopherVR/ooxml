@@ -11,7 +11,7 @@ import {
 	chartPointsLength,
 } from '../point-limit';
 import { chartSeriesEntries, chartSeriesEntryAt, editChartSpace } from './draft';
-import { chartCategoryKey, chartValueKey } from './series';
+import { chartCategoryKey, chartValueKey } from './series-keys';
 import type { ChartCategoryValue } from './series-data';
 
 /** How many rows a source reaches: its own cache or longest category level. */
