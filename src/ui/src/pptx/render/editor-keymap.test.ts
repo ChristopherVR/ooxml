@@ -435,6 +435,28 @@ describe('mapEditorKey selection cycling (Tab)', () => {
 	});
 });
 
+describe('mapEditorKey Enter on the slide', () => {
+	it('goes in from the slide pane and edits the selected object once inside', () => {
+		expect(mapEditorKey(press('Enter'), { slideFocus: 'pane' }).action).toBe('cycleSelectionNext');
+		expect(mapEditorKey(press('Enter'), { ...SELECTED, slideFocus: 'objects' }).action).toBe(
+			'editText',
+		);
+		expect(mapEditorKey(press('Enter'), { slideFocus: 'objects' }).action).toBeNull();
+	});
+
+	it('leaves Enter alone outside the slide and while typing', () => {
+		expect(mapEditorKey(press('Enter'), SELECTED).action).toBeNull();
+		expect(
+			mapEditorKey(press('Enter'), { ...SELECTED, slideFocus: 'objects', isEditingText: true })
+				.action,
+		).toBeNull();
+		expect(
+			mapEditorKey(press('Enter', { shiftKey: true }), { ...SELECTED, slideFocus: 'objects' })
+				.action,
+		).toBeNull();
+	});
+});
+
 describe('mapInlineTextFormatKey', () => {
 	it('maps Ctrl/Cmd+B/I/U to their format property', () => {
 		expect(mapInlineTextFormatKey(press('b', { ctrlKey: true }))).toBe('bold');

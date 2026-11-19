@@ -30,6 +30,8 @@ export interface UseEditorKeyboardInput {
 	 * Ctrl+F bar to its replace mode). Without it the shortcut flips {@link findOpen}.
 	 */
 	toggleFind?: (mode: 'find' | 'replace') => void;
+	/** Enter inside the slide: edit the text of the element `id`, as a press on it does. */
+	editElementText?: (id: string) => void;
 	selectedElementIds: Ref<string[]>;
 	activeSlide: ComputedRef<PptxSlide | undefined>;
 	activeSlideIndex: Ref<number>;
@@ -265,6 +267,12 @@ export function useEditorKeyboard(input: UseEditorKeyboardInput): UseEditorKeybo
 				}),
 			cycleSelectionNext: () => cycleSelection('next'),
 			cycleSelectionPrev: () => cycleSelection('prev'),
+			editText: () => {
+				const id = selectedElementIds.value[0];
+				if (id) {
+					input.editElementText?.(id);
+				}
+			},
 			pasteSpecial: onPasteSpecial,
 		},
 		canEdit,

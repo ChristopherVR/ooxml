@@ -3,6 +3,7 @@ import {
 	createSaveRevisionController,
 	announceSlideObject,
 	cycleSelectableElement,
+	editSlideObjectText,
 	deliverSavedPresentation,
 	isCleanAfterSave,
 	isDialogAvailable,
@@ -629,6 +630,7 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 				announceSlideObject(doc, nextId);
 			}
 		},
+		editText: () => editSlideObjectText(doc, store.get().selectedElementId),
 		onPasteSpecial: () => {
 			const customization = deps.getCustomization?.();
 			if (

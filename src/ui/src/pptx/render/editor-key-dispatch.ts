@@ -22,6 +22,7 @@ import {
 	editorKeyEventTarget,
 	enterSlideObjects,
 	leaveSlideObjects,
+	isInsideModal,
 	slideKeyFocus,
 } from './slide-keyboard-focus';
 import { mapSlideShowStartKey } from './slide-show-start-keymap';
@@ -117,6 +118,10 @@ export function dispatchEditorKey(
 	state: EditorKeyDispatchState,
 	handlers: EditorKeyHandlers,
 ): EditorKeyDispatchResult {
+	// An open dialog keeps the keyboard: Delete on its button must not delete the selection.
+	if (isInsideModal(event)) {
+		return null;
+	}
 	const started = startShow(event, state, handlers);
 	if (started !== null) {
 		return started;

@@ -84,6 +84,11 @@ export const VIEWER_SHORTCUT_REFERENCE: readonly ShortcutReferenceItem[] = [
 	},
 	{ actionKey: 'pptx.shortcuts.action.enterSlide', shortcut: 'Enter', group: 'navigation' },
 	{
+		actionKey: 'pptx.shortcuts.action.editObjectText',
+		shortcut: 'Enter',
+		group: 'editing',
+	},
+	{
 		actionKey: 'pptx.shortcuts.action.cycleObjects',
 		shortcut: 'Tab, Shift+Tab',
 		group: 'navigation',

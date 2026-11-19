@@ -1,8 +1,11 @@
 import {
+	afterNextRender,
 	ChangeDetectionStrategy,
 	Component,
 	CUSTOM_ELEMENTS_SCHEMA,
 	computed,
+	DestroyRef,
+	ElementRef,
 	inject,
 	input,
 	output,
@@ -11,6 +14,7 @@ import {
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
+	activateModalFocus,
 	BACKSTAGE_NAV,
 	BACKSTAGE_TEMPLATES,
 	backstageCardsFor,
@@ -252,6 +256,16 @@ export class RibbonFileSectionComponent {
 	);
 
 	constructor() {
+		// The backstage covers the editor: focus goes in, stays in, and Escape goes back.
+		const host = inject<ElementRef<HTMLElement>>(ElementRef);
+		let release = (): void => {};
+		afterNextRender(() => {
+			const panel = host.nativeElement.querySelector<HTMLElement>('[role="dialog"]');
+			if (panel) {
+				release = activateModalFocus(panel, { onEscape: () => this.close.emit() });
+			}
+		});
+		inject(DestroyRef).onDestroy(() => release());
 		void (async () =>
 			this.recent.set(
 				await listBackstageRecentFiles(

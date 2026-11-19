@@ -54,6 +54,7 @@ import {
 	placeCaretAt,
 	readEditableText,
 	readListActivationSelection,
+	restoreEditorKeyboardFocus,
 	resolveConnectorEndpointUpdate,
 	resolveGroupDoubleClickTarget,
 	resolveGroupPressTarget,
@@ -1180,7 +1181,8 @@ export class SlideCanvasComponent implements SlideContext {
 			// browser opening its bookmark dialog over the deck.
 			event.preventDefault();
 			event.stopPropagation();
-			if (chord === 'commit') {
+			// Back to the slide; the blur that causes is the commit.
+			if (chord === 'commit' && !restoreEditorKeyboardFocus(editor)) {
 				editor.blur();
 			}
 		} else if (event.key === 'Enter') {

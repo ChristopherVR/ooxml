@@ -2794,6 +2794,7 @@ export const translationsEn: Record<string, string> = {
 	'pptx.shortcuts.action.pasteElement': 'Paste element',
 	'pptx.shortcuts.action.prevSlide': 'Previous slide (no selection)',
 	'pptx.shortcuts.action.selectAll': 'Select all elements',
+	'pptx.shortcuts.action.editObjectText': 'Edit the text of the selected object',
 	'pptx.shortcuts.action.enterSlide': 'Go into the slide (select its first object)',
 	'pptx.shortcuts.action.cycleObjects': 'Next or previous object on the slide',
 	'pptx.shortcuts.action.leaveSlide': 'Clear the selection, then leave the slide',

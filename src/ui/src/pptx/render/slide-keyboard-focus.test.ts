@@ -3,9 +3,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { dispatchEditorKey } from './editor-key-dispatch';
 import { mapEditorKey } from './editor-keymap';
+import { handleNotesFieldKey } from './notes/notes-keys';
 import {
 	announceSlideObject,
 	attachSlideKeyboardFocus,
+	editSlideObjectText,
 	slideKeyFocus,
 } from './slide-keyboard-focus';
 
@@ -224,5 +226,76 @@ describe('F6 between panes', () => {
 		field.focus();
 		expect(press(field, 'F6').defaultPrevented).toBe(false);
 		expect(document.activeElement).toBe(field);
+	});
+});
+
+describe('the notes field', () => {
+	it('lets Tab and F6 through, and Escape goes back to the slide', () => {
+		const { viewport, notes, slideRow } = mountViewer();
+		const keys = (event: Event) => handleNotesFieldKey(event as KeyboardEvent);
+		notes.addEventListener('keydown', keys);
+		notes.focus();
+		const tab = press(notes, 'Tab');
+		expect(tab.defaultPrevented).toBe(false);
+		press(notes, 'F6');
+		expect(document.activeElement).toBe(slideRow);
+		notes.focus();
+		press(notes, 'Escape');
+		expect(document.activeElement).toBe(viewport);
+		expect(slideKeyFocus(viewport)).toBe('pane');
+	});
+
+	it('commits on Ctrl+Enter and goes back to the slide, but leaves an IME alone', () => {
+		const { viewport, notes } = mountViewer();
+		const commit = vi.fn();
+		notes.addEventListener('keydown', (event) => handleNotesFieldKey(event, commit));
+		notes.focus();
+		press(notes, 'Escape', { isComposing: true });
+		expect(document.activeElement).toBe(notes);
+		const enter = press(notes, 'Enter', { ctrlKey: true });
+		expect(commit).toHaveBeenCalledTimes(1);
+		expect(enter.defaultPrevented).toBe(true);
+		expect(document.activeElement).toBe(viewport);
+	});
+});
+
+describe('Enter on a selected object', () => {
+	it('double-clicks the object on the slide, as the mouse does to edit its text', () => {
+		const { viewport } = mountViewer();
+		const shape = viewport.querySelector('[data-element-id="b"]')!;
+		const onDoubleClick = vi.fn();
+		shape.addEventListener('dblclick', onDoubleClick);
+		editSlideObjectText(document, 'b');
+		editSlideObjectText(document, null);
+		editSlideObjectText(document, 'missing');
+		expect(onDoubleClick).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe('keys inside a dialog', () => {
+	it('never reach the editor keymap, unless the dialog holds the viewer', () => {
+		const { viewport } = mountViewer();
+		const dialog = document.createElement('div');
+		dialog.setAttribute('role', 'dialog');
+		dialog.setAttribute('aria-modal', 'true');
+		const button = dialog.appendChild(document.createElement('button'));
+		document.body.append(dialog);
+		const remove = vi.fn();
+		const pressDelete = (target: Element) => {
+			target.addEventListener(
+				'keydown',
+				(event) => dispatchEditorKey(event, { hasSelection: true }, { delete: remove }),
+				{ once: true },
+			);
+			press(target, 'Delete');
+		};
+		pressDelete(button);
+		expect(remove).not.toHaveBeenCalled();
+
+		const host = document.createElement('dialog');
+		document.body.append(host);
+		host.append(viewport.closest('[data-pptx-editor-chrome]')!);
+		pressDelete(viewport);
+		expect(remove).toHaveBeenCalledTimes(1);
 	});
 });

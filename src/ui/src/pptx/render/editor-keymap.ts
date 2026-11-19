@@ -81,6 +81,7 @@ export type EditorKeyActionName =
 	| 'clearFormatting'
 	| 'cycleSelectionNext'
 	| 'cycleSelectionPrev'
+	| 'editText'
 	| 'pasteSpecial';
 
 /** Result of resolving one key press; `null` means "not ours, leave it alone". */
@@ -256,9 +257,15 @@ export function mapEditorKey(
 		return { action: 'delete' };
 	}
 
-	// Enter on the focused slide goes in and selects its first object.
-	if (key === 'Enter' && !mod && !alt && !input.shiftKey && state.slideFocus === 'pane') {
-		return { action: 'cycleSelectionNext' };
+	// Enter on the focused slide goes in and selects its first object; inside, it
+	// edits the selected object's text, as in PowerPoint.
+	if (key === 'Enter' && !mod && !alt && !input.shiftKey) {
+		if (state.slideFocus === 'pane') {
+			return { action: 'cycleSelectionNext' };
+		}
+		if (state.slideFocus === 'objects' && state.hasSelection) {
+			return { action: 'editText' };
+		}
 	}
 
 	// Inside the slide, Tab walks its objects as in PowerPoint. Everywhere else

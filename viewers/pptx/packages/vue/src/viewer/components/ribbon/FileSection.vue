@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ArrowLeft, Settings } from 'lucide-vue-next';
 import {
+	activateModalFocus,
 	BACKSTAGE_BACK_CLASSES,
 	BACKSTAGE_NAV,
 	BACKSTAGE_NAV_CLASSES,
@@ -20,7 +21,7 @@ import type {
 	ViewerRegionContext,
 	ViewerRegionId,
 } from 'ooxml-ui/pptx';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import { useToolbarVisibility } from '../../composables/useToolbarVisibility';
@@ -56,6 +57,15 @@ function createPresentation(templateId: string): void {
 function openCloudFile(file: CloudOpenedFile): void {
 	run(() => cloud.open(file));
 }
+// The backstage covers the editor: focus goes in, stays in, and Escape goes back.
+const panelRef = ref<HTMLElement | null>(null);
+let releaseFocus = (): void => {};
+onMounted(() => {
+	if (panelRef.value) {
+		releaseFocus = activateModalFocus(panelRef.value, { onEscape: () => props.onClose() });
+	}
+});
+onBeforeUnmount(() => releaseFocus());
 onMounted(
 	() =>
 		void listBackstageRecentFiles(t, props.recentPresentationsCount, storage()).then(
@@ -140,6 +150,7 @@ function selectPage(id: string): void {
 
 <template>
 	<div
+		ref="panelRef"
 		class="fixed inset-0 z-[200] flex bg-background font-[Aptos,Segoe_UI,sans-serif] text-foreground max-md:flex-col"
 		role="dialog"
 		aria-modal="true"
@@ -241,7 +252,9 @@ function selectPage(id: string): void {
 						:labels.prop="placeLabels"
 						:locale.prop="locale"
 						:selected.prop="placeId ?? 'device'"
-						@office-open-place-change="placeId = ($event as CustomEvent<{ place: string }>).detail.place"
+						@office-open-place-change="
+							placeId = ($event as CustomEvent<{ place: string }>).detail.place
+						"
 						@office-cloud-file-open="
 							openCloudFile(($event as CustomEvent<{ file: CloudOpenedFile }>).detail.file)
 						"

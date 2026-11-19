@@ -18,6 +18,7 @@ export interface EditorImagePasteOptions {
 }
 
 const ROOT_ATTRIBUTE = 'data-pptx-image-paste-root';
+const VIEWPORT_SELECTOR = '[data-pptx-viewport]';
 const TEXT_OR_DIALOG =
 	'input, textarea, select, [contenteditable]:not([contenteditable="false"]), ' +
 	'[role="textbox"], [role="menu"], [role="menuitem"], [role="dialog"], dialog';
@@ -94,7 +95,7 @@ export function attachEditorImagePaste(
 		) {
 			// Keep native paste routed here after a prevented canvas gesture, even
 			// when focus previously belonged to a ribbon button or inline editor.
-			root.focus({ preventScroll: true });
+			root.focus({ preventScroll: true, focusVisible: false });
 		}
 	};
 
@@ -153,7 +154,9 @@ export function attachEditorImagePaste(
 		root.removeEventListener('pointerdown', onPointerDown, true);
 		root.removeEventListener('focusin', onFocusIn);
 		cancelPending();
-		if (previousTabIndex === null) {
+		// The slide viewport stays a Tab stop: the slide pane owns it and outlives this
+		// listener, which rebinds on every slide, so removing it would drop focus.
+		if (previousTabIndex === null && !root.matches(VIEWPORT_SELECTOR)) {
 			root.removeAttribute('tabindex');
 		}
 		if (previousRootAttribute === null) {

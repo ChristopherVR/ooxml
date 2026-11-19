@@ -4,6 +4,7 @@ import {
 	createGestureController,
 	announceSlideObject,
 	cycleSelectableElement,
+	editSlideObjectText,
 	filterInteractableIds,
 	fontSizeOf,
 	parentSelection,
@@ -241,6 +242,7 @@ export function createEditorKeydown(host: EditorControllerHost): (event: Keyboar
 				announceSlideObject(document, nextId);
 			}
 		},
+		editText: () => editSlideObjectText(document, editor.selectedElementId),
 		onPasteSpecial: () => {
 			if (editor.hasClipboard) {
 				editor.pasteSpecialDialogOpen = true;

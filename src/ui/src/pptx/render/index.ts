@@ -1326,7 +1326,12 @@ export * from './editor-keymap';
 // keymap's own action names (`dispatchEditorKey` + `EditorKeyHandlers`).
 export * from './editor-key-dispatch';
 export * from './selection-cycle';
-export { announceSlideObject, editorKeyEventTarget, slideKeyFocus } from './slide-keyboard-focus';
+export {
+	announceSlideObject,
+	editSlideObjectText,
+	editorKeyEventTarget,
+	slideKeyFocus,
+} from './slide-keyboard-focus';
 export type { SlideKeyFocus } from './slide-keyboard-focus';
 // Start-a-show keys (F5 / Shift+F5): kept apart from the editor keymap because
 // they must fire on a read-only host and from inside a text field, which the

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import DialogFooter from '../../DialogFooter.svelte';
 	import {
+		activateModalFocus,
 		buildClearHyperlinkPatch,
 		buildHyperlinkPatch,
 		hasExistingLink,
@@ -20,6 +21,11 @@
 	// eslint-disable-next-line prefer-const
 	let tooltip = $state(draft.tooltip);
 	const showRemoveLink = $derived(hasExistingLink(element));
+
+	// Focus goes in, stays in, Escape cancels, and focus returns to where it was opened.
+	function modalFocus(node: HTMLElement): { destroy(): void } {
+		return { destroy: activateModalFocus(node, { onEscape: () => onclose() }) };
+	}
 
 	function save(): void {
 		if (element) {
@@ -45,7 +51,7 @@
 	     `pptx.hyperlink.title` / `.address` / `.screenTip` do not exist, so the
 	     translator's key-to-label fallback silently titled this dialog "Title"
 	     and labelled its fields "Address" / "Screen Tip" by accident. -->
-	<section role="dialog" tabindex="-1" aria-modal="true" aria-label={t('pptx.hyperlink.editTitle')}>
+	<section role="dialog" tabindex="-1" aria-modal="true" aria-label={t('pptx.hyperlink.editTitle')} use:modalFocus>
 		<h2>{t('pptx.hyperlink.editTitle')}</h2>
 		<label>{t('pptx.hyperlink.urlLabel')}<input type="url" bind:value={url} /></label>
 		<label>{t('pptx.hyperlink.tooltipLabel')}<input bind:value={tooltip} /></label>

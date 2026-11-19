@@ -203,6 +203,7 @@ export const translations = {
 	'pptx.shortcuts.action.pasteElement': '要素の貼り付け',
 	'pptx.shortcuts.action.prevSlide': '前のスライド (選択なし)',
 	'pptx.shortcuts.action.selectAll': 'すべての要素を選択',
+	'pptx.shortcuts.action.editObjectText': '選択したオブジェクトのテキストを編集',
 	'pptx.shortcuts.action.enterSlide': 'スライドに入る (最初のオブジェクトを選択)',
 	'pptx.shortcuts.action.cycleObjects': 'スライドの次または前のオブジェクト',
 	'pptx.shortcuts.action.leaveSlide': '選択を解除してからスライドを離れる',

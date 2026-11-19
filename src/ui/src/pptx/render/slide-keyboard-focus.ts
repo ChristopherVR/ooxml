@@ -82,6 +82,37 @@ export function leaveSlideObjects(target: unknown): void {
 	viewportOf(target)?.removeAttribute(OBJECTS_ATTRIBUTE);
 }
 
+/** Focus the slide of the viewer that holds `from` (a notes field, say), as its one Tab stop. */
+export function focusSlidePane(from: unknown): boolean {
+	const element = from as Partial<Element> | null;
+	if (typeof element?.closest !== 'function') {
+		return false;
+	}
+	const scope = element.closest(VIEWER_SELECTOR) ?? element.ownerDocument;
+	const viewport = scope?.querySelector<HTMLElement>(VIEWPORT_SELECTOR);
+	viewport?.focus({ preventScroll: true });
+	return Boolean(viewport);
+}
+
+/** Enter on a selected object: open it for text editing, as a double-click does. */
+export function editSlideObjectText(root: ParentNode, elementId: string | null | undefined): void {
+	const node = elementId ? findCanvasElementNode(root, elementId, { canvasOnly: true }) : null;
+	if (!node) {
+		return;
+	}
+	const box = node.getBoundingClientRect();
+	node.dispatchEvent(
+		new MouseEvent('dblclick', {
+			bubbles: true,
+			cancelable: true,
+			composed: true,
+			detail: 2,
+			clientX: box.left + box.width / 2,
+			clientY: box.top + box.height / 2,
+		}),
+	);
+}
+
 /** Say which object Tab reached: selecting one moves no focus for a screen reader to follow. */
 export function announceSlideObject(root: ParentNode, elementId: string): void {
 	const node = findCanvasElementNode(root, elementId, { canvasOnly: true });
@@ -152,15 +183,17 @@ export function moveEditorPaneFocus(viewport: HTMLElement, direction: 1 | -1): b
 	return true;
 }
 
-/** True when the key press belongs to a dialog, which keeps the keyboard to itself. */
-function isInsideModal(event: Event): boolean {
-	return event
-		.composedPath()
-		.some(
-			(node) =>
-				node instanceof Element &&
-				(node.localName === 'dialog' || node.getAttribute('aria-modal') === 'true'),
-		);
+/**
+ * True when the key press belongs to a dialog over the editor, which keeps the keyboard
+ * to itself. A host dialog that holds the whole viewer does not count.
+ */
+export function isInsideModal(event: { composedPath?: () => EventTarget[] }): boolean {
+	const modal = (event.composedPath?.() ?? []).find(
+		(node): node is Element =>
+			node instanceof Element &&
+			(node.localName === 'dialog' || node.getAttribute('aria-modal') === 'true'),
+	);
+	return Boolean(modal && !modal.querySelector(VIEWPORT_SELECTOR));
 }
 
 /**
@@ -223,7 +256,8 @@ export function attachSlideKeyboardFocus(host: HTMLElement, isActive: () => bool
 	};
 	// Pressing on the slide goes in, as a click selects there. A gesture handler that
 	// prevents the default also prevents the focus move, so it is made here. A field
-	// being edited keeps the caret.
+	// being edited keeps the caret. A scripted focus would match :focus-visible, so it
+	// says it came from the pointer and the ring waits for the keyboard.
 	const onPointerDown = (event: PointerEvent): void => {
 		if (!viewport || viewportOf(event.target) !== viewport || !isActive()) {
 			return;
@@ -231,7 +265,7 @@ export function attachSlideKeyboardFocus(host: HTMLElement, isActive: () => bool
 		enterSlideObjects(viewport);
 		const active = modalActiveElement(doc);
 		if (!isEditorTextInputTarget(active) && !isEditorTextInputTarget(event.target)) {
-			viewport.focus({ preventScroll: true });
+			viewport.focus({ preventScroll: true, focusVisible: false });
 		}
 	};
 	const onFocusIn = (event: FocusEvent): void => {

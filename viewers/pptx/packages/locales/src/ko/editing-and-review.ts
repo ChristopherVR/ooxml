@@ -203,6 +203,7 @@ export const translations = {
 	'pptx.shortcuts.action.pasteElement': '요소 붙여넣기',
 	'pptx.shortcuts.action.prevSlide': '이전 슬라이드(선택 항목 없음)',
 	'pptx.shortcuts.action.selectAll': '모든 요소 선택',
+	'pptx.shortcuts.action.editObjectText': '선택한 개체의 텍스트 편집',
 	'pptx.shortcuts.action.enterSlide': '슬라이드로 들어가기(첫 개체 선택)',
 	'pptx.shortcuts.action.cycleObjects': '슬라이드의 다음 또는 이전 개체',
 	'pptx.shortcuts.action.leaveSlide': '선택을 해제한 다음 슬라이드에서 나가기',

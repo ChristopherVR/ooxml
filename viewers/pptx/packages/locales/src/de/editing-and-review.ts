@@ -203,6 +203,7 @@ export const translations = {
 	'pptx.shortcuts.action.pasteElement': 'Element einfügen',
 	'pptx.shortcuts.action.prevSlide': 'Vorherige Folie (ohne Auswahl)',
 	'pptx.shortcuts.action.selectAll': 'Alle Elemente auswählen',
+	'pptx.shortcuts.action.editObjectText': 'Text des ausgewählten Objekts bearbeiten',
 	'pptx.shortcuts.action.enterSlide': 'Zur Folie wechseln (erstes Objekt auswählen)',
 	'pptx.shortcuts.action.cycleObjects': 'Nächstes oder vorheriges Objekt auf der Folie',
 	'pptx.shortcuts.action.leaveSlide': 'Auswahl aufheben, dann Folie verlassen',

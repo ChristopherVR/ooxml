@@ -11,6 +11,7 @@ import {
 	placeCaretAt,
 	readEditableText,
 	readListActivationSelection,
+	restoreEditorKeyboardFocus,
 	restoreInlineListBodySelection,
 	seedPlainInlineText,
 	spaceBeforeCaretRange,
@@ -271,7 +272,8 @@ function onKeydown(event: KeyboardEvent): void {
 	if (chord) {
 		event.preventDefault();
 		event.stopPropagation();
-		if (chord === 'commit') {
+		// Back to the slide; the blur that causes is the commit.
+		if (chord === 'commit' && !restoreEditorKeyboardFocus(editorRef.value)) {
 			editorRef.value?.blur();
 		}
 		return;

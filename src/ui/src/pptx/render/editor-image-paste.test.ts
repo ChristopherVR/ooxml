@@ -324,6 +324,22 @@ describe('attachEditorImagePaste', () => {
 		expect(root.hasAttribute('tabindex')).toBeFalsy();
 	});
 
+	it('keeps the focused slide viewport a Tab stop when it rebinds for the next slide', () => {
+		const root = document.createElement('div');
+		root.setAttribute('data-pptx-viewport', '');
+		const canvas = document.createElement('div');
+		root.append(canvas);
+		document.body.append(root);
+		const options = { getCanvas: () => canvas, getTarget: () => null, insertElement: vi.fn() };
+		attachEditorImagePaste(root, options)();
+		root.focus();
+		const detach = attachEditorImagePaste(root, options);
+		disposers.push(detach);
+		detach();
+		expect(root.tabIndex).toBe(0);
+		expect(document.activeElement).toBe(root);
+	});
+
 	it('moves focus from ribbon and inline text to the canvas, without stealing actual text presses', () => {
 		const editor = setup();
 		const ribbon = document.createElement('button');

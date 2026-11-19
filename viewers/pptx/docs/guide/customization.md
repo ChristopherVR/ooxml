@@ -1557,6 +1557,7 @@ Use the customization prop/input/option or `setCustomization` / `updateCustomiza
 | `clearFormatting`    | Clear character formatting (Ctrl/Cmd+Space).                           |
 | `cycleSelectionNext` | Select the next element (Tab, inside the slide).                       |
 | `cycleSelectionPrev` | Select the previous element (Shift+Tab, inside the slide).             |
+| `editText`           | Edit the text of the selected object (Enter, inside the slide).        |
 | `pasteSpecial`       | Paste Special (Ctrl/Cmd+Alt+V).                                        |
 
 ### Panels (`hiddenPanels`)
