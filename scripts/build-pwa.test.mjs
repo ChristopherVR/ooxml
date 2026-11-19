@@ -65,6 +65,11 @@ test('every shell script and style tag carries the integrity of the file it load
 	}
 });
 
+/** The workers' clock; a test moves it forward to let time pass. */
+const clock = { now: Date.now() };
+/** How long the worker keeps a mark whose client it does not list (MARK_GRACE). */
+const MARK_GRACE = 60_000;
+
 /**
  * A deploy's sw.js run against an in-memory Cache Storage, network and set of open windows, as a
  * browser would. `stores` is Cache Storage, shared by every worker of the origin.
@@ -109,6 +114,7 @@ function worker(out, { network = site(out), stores = new Map(), clients = [] } =
 		Response,
 		TextEncoder,
 		JSON,
+		Date: { now: () => clock.now },
 		setTimeout,
 		Uint8Array,
 		Error,
@@ -221,7 +227,8 @@ test('a window still on the previous build keeps loading its chunks after an upd
 	const stranger = await b.run('fetch', chunk('boot-1.js', 'w2'));
 	assert.equal(stranger.status, 404, 'only a window the previous build served gets its files');
 
-	// Once the window has reloaded or closed, the next page load deletes the previous build.
+	// Once the window has reloaded or closed, a page load after the grace deletes the previous build.
+	clock.now += MARK_GRACE;
 	const later = worker(builds.B, { stores: a.stores, clients: ['w3'] });
 	await later.run('fetch', navigate(`${ORIGIN}index.html`, 'w3'));
 	assert.deepEqual(appKeys(a.stores), [b.name]);
@@ -328,15 +335,17 @@ test('a page load the previous build handles before the update activates keeps t
 	assert.equal(await boot.text(), read(builds.B, 'suite-assets/boot-2.js').toString());
 });
 
+const marksOf = (cache) => [...cache.keys()].filter((href) => href.includes('/.ooxml-sw/client/'));
+
 test('page loads keep one mark per open window', async () => {
 	const a = await runningA();
 	for (let i = 0; i < 20; i++) {
 		// Each load opens a window that is not a client yet, and the one before it has closed.
+		clock.now += MARK_GRACE;
 		const load = worker(builds.A, { stores: a.stores, clients: ['w1'] });
 		await load.run('fetch', navigate(`${ORIGIN}index.html`, `n${i}`));
 	}
-	const marks = [...a.cache().keys()].filter((href) => href.includes('/.ooxml-sw/client/'));
-	assert.equal(marks.length, 2, 'w1 and the window the last load opened');
+	assert.equal(marksOf(a.cache()).length, 2, 'w1 and the window the last load opened');
 
 	// The window the last load opened still gets its build's chunks after an update.
 	const b = worker(builds.B, { stores: a.stores, clients: ['w1', 'n19'] });
@@ -356,4 +365,47 @@ test('a build no window runs is deleted at the next activation, over several dep
 	await back.run('install');
 	await back.run('activate');
 	assert.deepEqual(appKeys(a.stores), [a.name]);
+});
+
+const INDEX = `${ORIGIN}index.html`;
+
+// Two windows open at once (a restored session): w3's navigation lists the clients before w2 is
+// one, after w2's page response marked it.
+test('a window opened during another navigation keeps its build after an update', async () => {
+	const a = await runningA();
+	await worker(builds.A, { stores: a.stores, clients: ['w1'] }).run('fetch', navigate(INDEX, 'w2'));
+	await worker(builds.A, { stores: a.stores, clients: ['w1'] }).run('fetch', navigate(INDEX, 'w3'));
+	const b = worker(builds.B, { stores: a.stores, clients: ['w1', 'w2', 'w3'] });
+	await b.run('install');
+	await b.run('activate');
+	const old = await b.run('fetch', chunk('boot-1.js', 'w2'));
+	assert.equal(old.status, 200, `w2 gets A's chunk, got ${old.status}`);
+	assert.equal(await old.text(), read(builds.A, 'suite-assets/boot-1.js').toString());
+});
+
+// A dedicated worker is marked when its script is served, before it is a client.
+test("a worker started during a navigation's prune keeps its build after an update", async () => {
+	const a = await runningA();
+	const script = [...a.cache().keys()].find((href) => /suite\.js\?v=/u.test(href));
+	await a.run('fetch', { request: request(script), resultingClientId: 'k1' });
+	await worker(builds.A, { stores: a.stores, clients: ['w1'] }).run('fetch', navigate(INDEX, 'w3'));
+	const b = worker(builds.B, { stores: a.stores, clients: ['w1', 'k1', 'w3'] });
+	await b.run('install');
+	await b.run('activate');
+	const old = await b.run('fetch', chunk('boot-1.js', 'k1'));
+	assert.equal(old.status, 200, `k1 gets A's chunk, got ${old.status}`);
+});
+
+test('a starting window keeps an older build until its mark goes stale', async () => {
+	const a = await runningA();
+	clock.now += MARK_GRACE;
+	await worker(builds.A, { stores: a.stores, clients: ['w1'] }).run('fetch', navigate(INDEX, 'w2'));
+	const b = worker(builds.B, { stores: a.stores, clients: [] });
+	await b.run('install');
+	// w1 has closed and w2 is not listed yet: its fresh mark keeps A.
+	await b.run('activate');
+	assert.ok(appKeys(a.stores).includes(a.name), "A's cache is kept for w2");
+	clock.now += MARK_GRACE;
+	await worker(builds.B, { stores: a.stores, clients: [] }).run('fetch', navigate(INDEX, 'w4'));
+	assert.deepEqual(appKeys(a.stores), [b.name], 'A goes once no client runs it');
 });

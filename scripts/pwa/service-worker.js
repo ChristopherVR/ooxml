@@ -58,9 +58,22 @@ async function saved(build, href) {
 const mark = async (build, clientId) => MARKS + hex(await sha256(`${clientId}\n${build.version}`));
 const runs = async (build, clientId) =>
 	!!(await (await caches.open(build.cache)).match(await mark(build, clientId)));
+/** A mark holds when it was written, as `Date.now()` text. */
 async function remember(build, clientId) {
 	if (clientId)
-		await (await caches.open(build.cache)).put(await mark(build, clientId), new Response(''));
+		await (
+			await caches.open(build.cache)
+		).put(await mark(build, clientId), new Response(String(Date.now())));
+}
+/**
+ * How long a mark outlives its client's absence from `clients.matchAll`. A window or worker is
+ * marked when its page or script is served, before it is a client, so a prune that listed the
+ * clients just before must not take a fresh mark for a closed client's.
+ */
+const MARK_GRACE = 60_000;
+async function fresh(cache, href) {
+	const age = Date.now() - Number(await (await cache.match(href))?.text());
+	return age >= 0 && age < MARK_GRACE;
 }
 /** The other builds whose caches are still kept: older ones, or a newer one not yet active. */
 async function others() {
@@ -82,10 +95,11 @@ async function builtFor(clientId, href) {
 }
 /**
  * Deletes the marks of clients that are gone, and each other build's cache once no window or
- * worker runs it. Only the activating worker knows every other build is older, so it alone also
- * deletes a cache no client was ever marked by, and one without a table (an unfinished install, or
- * a build from before tables were kept). Before that, such a cache may be a newer build waiting to
- * activate. `arriving` is the window a navigation is opening, which is not a client yet.
+ * worker runs it. A mark younger than MARK_GRACE counts as a client that is still starting. Only
+ * the activating worker knows every other build is older, so it alone also deletes a cache no
+ * client was ever marked by, and one without a table (an unfinished install, or a build from
+ * before tables were kept). Before that, such a cache may be a newer build waiting to activate.
+ * `arriving` is the window a navigation is opening, which is not a client yet.
  * Resolves to the clients it checked.
  */
 async function prune(activating, arriving) {
@@ -98,14 +112,16 @@ async function prune(activating, arriving) {
 		const marks = (await cache.keys())
 			.map((request) => request.url)
 			.filter((href) => href.startsWith(MARKS));
-		const used = marks.some((href) => live.has(href));
+		const stale = [];
+		for (const href of marks) if (!live.has(href) && !(await fresh(cache, href))) stale.push(href);
+		const used = stale.length < marks.length;
 		const finished = !!(await cache.match(TABLE));
 		const older = activating ? !used || !finished : marks.length > 0 && !used;
 		if (build !== current && older) {
 			await caches.delete(build.cache);
 			continue;
 		}
-		for (const href of marks) if (!live.has(href)) await cache.delete(href);
+		for (const href of stale) await cache.delete(href);
 	}
 	return clients;
 }
