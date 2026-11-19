@@ -16,6 +16,7 @@
  *
  * @module render/collaboration-provider
  */
+import { guardProviderUpdates, type MessageHandlerProviderLike } from 'ooxml-core/collab';
 import type { CollaborationConfig, CollaborationTransport } from '../types';
 import { createDepartureChannel } from './collaboration-departure';
 import type { AwarenessLike } from './collaboration-presence-publisher';
@@ -136,6 +137,8 @@ export async function createCollabProvider(
 		doc as never,
 		config.authToken ? { params: { token: config.authToken } } : undefined,
 	);
+	// y-websocket applies sync messages itself: scan each update before it does.
+	guardProviderUpdates(provider as MessageHandlerProviderLike);
 	const awareness = provider.awareness as AwarenessLike;
 	const departure = createDepartureChannel(config.roomId, awareness as never);
 	return {

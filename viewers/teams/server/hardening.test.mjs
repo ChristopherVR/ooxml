@@ -6,6 +6,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, describe, it } from 'node:test';
+import * as encoding from 'lib0/encoding';
 import { WebSocket } from 'ws';
 import { createTeamsServer } from './index.mjs';
 
@@ -71,6 +72,28 @@ describe('teams server hardening', () => {
 		});
 	after(() => {
 		for (const dir of dirs) rmSync(dir, { recursive: true, force: true });
+	});
+
+	it('closes a socket whose update would allocate too many structs, before decoding it', async () => {
+		const { server, port } = await start({ maxUpdateStructs: 1000 });
+		const sync = await open(port, '/sync/bomb');
+		assert.equal(sync.ok, true);
+		// One client declaring 5000 two-byte structs, framed as a sync update.
+		const body = encoding.createEncoder();
+		for (const n of [1, 5000, 42, 0]) encoding.writeVarUint(body, n);
+		for (let i = 0; i < 5000; i++) {
+			encoding.writeUint8(body, 0);
+			encoding.writeVarUint(body, 1);
+		}
+		encoding.writeVarUint(body, 0);
+		const frame = encoding.createEncoder();
+		encoding.writeVarUint(frame, 0);
+		encoding.writeVarUint(frame, 2);
+		encoding.writeVarUint8Array(frame, encoding.toUint8Array(body));
+		sync.ws.send(encoding.toUint8Array(frame));
+		assert.equal(await sync.closed, 1009);
+		assert.equal(await raw(port, '/health'), 200);
+		await server.close();
 	});
 
 	it('answers bad percent-encoding with 400 instead of crashing', async () => {

@@ -60,6 +60,26 @@ import {
 
 `packageAdapter({ name?, maxBytes? })` is a ready-made `DocumentAdapter<{ bytes, revision }>` that shares the whole saved package (VSDX, DOCX, PPTX, XLSX). It is the fallback for products whose edits produce a new package and have no mergeable mapping (Excel and Visio have their own adapters, below). It never merges: the last package written wins, and packages above `maxBytes` (32 MiB by default) are refused.
 
+## Update limits (`scanUpdate`)
+
+Yjs allocates one object per struct, per value inside a JSON or `any` content and per delete range while it decodes an update. A struct can be two bytes long, so a byte limit alone let a 32 MiB frame allocate about 16.8 million objects, enough to exhaust a 1 GiB heap. `scanUpdate(update, limits)` walks the v1 encoding with a cursor, allocates nothing in proportion to the update, and refuses one over budget before any of it is decoded. `validateUpdate` and `applyUpdateSafe` run it first, so `transportProvider` (WebSocket, BroadcastChannel and memory transports) and the Teams server check every inbound update; `guardProviderUpdates(provider)` does the same for a y-websocket `WebsocketProvider`, which applies sync messages itself (PowerPoint's websocket transport and `adaptYjsProvider` call it).
+
+`DEFAULT_UPDATE_LIMITS` is 2,000,000 structs and 1,000,000 delete ranges per update. Measured on 2026-11-19, first syncs (the whole document in one update) of legitimate rooms:
+
+| Room                                                 | Update size | Structs | Delete ranges |
+| ---------------------------------------------------- | ----------- | ------- | ------------- |
+| Largest PowerPoint fixture deck                      | -           | 27,474  | -             |
+| All 124 PowerPoint fixture decks' slides in one deck | 37.0 MB     | 132,283 | 2             |
+| Excel, 100,000 numeric cells                         | 2.7 MB      | 400,039 | 0             |
+| Largest Visio fixture drawing                        | -           | 27,999  | -             |
+| Word, 3,000 blocks (a fixture repeated 200 times)    | 36.4 MB     | 50,401  | 0             |
+| Teams, one channel with 20,000 messages              | 3.9 MB      | 260,001 | 0             |
+| Text after 50,000 random inserts and deletes         | 0.7 MB      | 37,571  | 4,358         |
+
+Excel is the densest at about four structs per cell, so the default admits a first sync of roughly 500,000 cells. Decoding 2,000,000 two-byte structs takes about 160 MB of heap and 0.6 s in Node 24; the 16.8 million of the 32 MiB frame are refused after a scan of a few milliseconds. Pass `maxStructs` and `maxDeleteRanges` (in `ApplyOptions`, `validateUpdate`'s `limits` or `guardProviderUpdates`'s options) to change them; the Teams server takes `maxUpdateStructs`.
+
+A y-webrtc provider applies peer messages inside y-webrtc with no hook, so it is not scanned; what one WebRTC data channel message can allocate is bounded only by the browser's maximum message size (256 KiB in Chromium, larger in Firefox). A provider a host supplies itself is the host's to guard; `guardProviderUpdates` covers y-websocket ones.
+
 ## Write-back scheduler (`createWriteBackScheduler`)
 
 One DOM-free scheduler for the elected writer (a room's owner), shared by the PowerPoint and Visio editors (`write-back.ts`, `write-back-lifecycle.ts`):
@@ -94,7 +114,7 @@ The document engine behind the contract still differs per product (Excel merges 
 
 ## Honest limits
 
-- Validation checks structure and size, not semantics: a well-formed update from an authorised peer can still carry content the product must validate when it reads the model back.
+- Validation checks structure and size, not semantics: a well-formed update from an authorised peer can still carry content the product must validate when it reads the model back. PowerPoint checks element ids, resource URLs and MIME types as it reads slides from the room (`collaboration-remote-values.ts`).
 - There is no authentication, authorisation or persistence here; `role: 'viewer'` is advisory on the client. A server must enforce permissions. `demos/pptx/demo-host-review` shows one way (signed room tickets, `openteams-server`'s `authorizeSync` hook dropping writes from read-only sockets, live access changes); its recipe is the PowerPoint guide "Review inside your application" (`viewers/pptx/docs/guide/review-workflow.md`).
 - Awareness has no integrity protection; presence is sanitised for display, not trusted.
 - Asset entries are not garbage-collected when their owner is deleted.

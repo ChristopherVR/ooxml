@@ -45,6 +45,7 @@ Flags: `--insecure-dev`, `--insecure` (see `TEAMS_INSECURE`) and `--trust-proxy[
 | `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`      | Open sockets overall (default 500) and per remote address (20).                                                                                                          |
 | `TEAMS_MAX_ROOMS`                                            | Sync rooms and call rooms (default 1000 each).                                                                                                                           |
 | `TEAMS_MAX_DOC_MB`                                           | Largest persisted room document in MB (default 64); updates past it are rejected.                                                                                        |
+| `TEAMS_MAX_UPDATE_STRUCTS`                                   | Most structs one update may hold (default 2,000,000), counted before the update is decoded; a socket sending more is closed.                                             |
 | `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`                  | Messages per second (default 100) and burst (200) for each socket; a socket over it is closed.                                                                           |
 | `TEAMS_WORKSPACE_QUOTA_MB`                                   | Files per workspace in MB (default 1024; a private chat counts for its workspace); uploads past it get 507.                                                              |
 | `TEAMS_FILES_QUOTA_MB`                                       | Optional ceiling on the whole files directory in MB (off by default); uploads past it get 507.                                                                           |
@@ -54,7 +55,7 @@ Flags: `--insecure-dev`, `--insecure` (see `TEAMS_INSECURE`) and `--trust-proxy[
 | `TEAMS_DATA`                                                 | Data directory (default `./data`): room snapshots and files.                                                                                                             |
 
 The same limits are options of `createTeamsServer` (`maxConnections`, `maxConnectionsPerIp`,
-`maxRooms`, `maxDocBytes`, `messageRate`, `messageBurst`, `workspaceQuotaBytes`, `filesQuotaBytes`,
+`maxRooms`, `maxDocBytes`, `maxUpdateStructs`, `messageRate`, `messageBurst`, `workspaceQuotaBytes`, `filesQuotaBytes`,
 `metricsToken`, `compactIntervalMs`, `sweepIntervalMs`, `insecure`, `insecureDev`, `trustProxy`).
 
 Or embed it:

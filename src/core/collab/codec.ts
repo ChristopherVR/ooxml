@@ -3,12 +3,21 @@
 // and never validated what a peer sent.
 import * as Y from 'yjs';
 
+import { scanUpdate, type UpdateLimits } from './update-scan';
+
+export {
+	DEFAULT_UPDATE_LIMITS,
+	scanUpdate,
+	type UpdateLimits,
+	type UpdateScan,
+} from './update-scan';
+
 /** Default upper bound for one inbound update or snapshot (32 MiB). */
 export const MAX_UPDATE_BYTES = 32 * 1024 * 1024;
 
 export type ApplyResult = { ok: true } | { ok: false; reason: string };
 
-export interface ApplyOptions {
+export interface ApplyOptions extends UpdateLimits {
 	/** Reject payloads larger than this. Default {@link MAX_UPDATE_BYTES}. */
 	maxBytes?: number;
 	/** Structurally decode the update before touching the document. Default true. */
@@ -30,15 +39,23 @@ export function encodeStateVector(doc: Y.Doc): Uint8Array {
 }
 
 /**
- * Check that `update` is a well-formed Yjs update without applying it. Decoding happens before any
+ * Check that `update` is a well-formed Yjs update without applying it. A bounded structure scan
+ * ({@link scanUpdate}) runs first, so a frame that would make Yjs allocate more structs than
+ * `limits` allow is refused before anything is decoded; decoding then happens before any
  * integration, so a payload that fails here can never half-apply (a malformed delete set would
  * otherwise throw only after structs were integrated).
  */
-export function validateUpdate(update: unknown, maxBytes: number = MAX_UPDATE_BYTES): ApplyResult {
+export function validateUpdate(
+	update: unknown,
+	maxBytes: number = MAX_UPDATE_BYTES,
+	limits: UpdateLimits = {},
+): ApplyResult {
 	if (!(update instanceof Uint8Array)) return { ok: false, reason: 'update must be a Uint8Array' };
 	if (update.byteLength === 0) return { ok: false, reason: 'update is empty' };
 	if (update.byteLength > maxBytes)
 		return { ok: false, reason: `update exceeds the ${maxBytes} byte limit` };
+	const scan = scanUpdate(update, limits);
+	if (!scan.ok) return { ok: false, reason: scan.reason };
 	try {
 		Y.decodeUpdate(update);
 		return { ok: true };
@@ -62,7 +79,7 @@ export function applyUpdateSafe(
 			? update instanceof Uint8Array && update.byteLength <= (options.maxBytes ?? MAX_UPDATE_BYTES)
 				? ({ ok: true } as const)
 				: ({ ok: false, reason: 'invalid or oversized update' } as const)
-			: validateUpdate(update, options.maxBytes);
+			: validateUpdate(update, options.maxBytes, options);
 	if (!checked.ok) return checked;
 	try {
 		Y.applyUpdate(doc, update as Uint8Array, origin);

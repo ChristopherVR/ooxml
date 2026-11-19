@@ -43,10 +43,12 @@ import {
 } from './auth.mjs';
 import { createSlidingLimiter } from './rate-limit.mjs';
 import {
+	DEFAULT_UPDATE_LIMITS,
 	PROTOCOL_PARAM,
 	PROTOCOL_VERSION,
 	applyUpdateReverts,
 	protocolOfUrl,
+	scanUpdate,
 	validateTeamsSyncMessage,
 } from './validator.generated.mjs';
 import {
@@ -151,7 +153,7 @@ const unlinkQuiet = (path) => {
  *   sessionRate?: { windowMs?: number, perIp?: number, perUser?: number }, maxFileBytes?: number, maxSyncBytes?: number, maxSignalBytes?: number,
  *   maxConnections?: number, maxConnectionsPerIp?: number, maxRooms?: number, maxDocBytes?: number,
  *   metricsToken?: string, compactIntervalMs?: number, sweepIntervalMs?: number, workspaceQuotaBytes?: number,
- *   messageRate?: number, messageBurst?: number, filesQuotaBytes?: number, enforceAuthorship?: boolean, maxMessageChars?: number, maxReactionsPerMessage?: number,
+ *   messageRate?: number, messageBurst?: number, filesQuotaBytes?: number, enforceAuthorship?: boolean, maxMessageChars?: number, maxReactionsPerMessage?: number, maxUpdateStructs?: number,
  *   authorizeSync?: (request: { room: string, user: string | null, url: URL,
  *   headers: Record<string, string | string[] | undefined> }) => SyncVerdict | Promise<SyncVerdict>,
  *   log?: (m: string) => void }} [options]
@@ -190,6 +192,17 @@ export function createTeamsServer(options = {}) {
 		options.maxReactionsPerMessage ?? Number(process.env.TEAMS_MAX_REACTIONS_PER_MESSAGE);
 	if (Number.isInteger(maxReactions) && maxReactions > 0)
 		contentLimits.maxReactionsPerMessage = maxReactions;
+	// What one update may make Yjs allocate, checked before it is decoded (see "Limits" in the README).
+	const maxUpdateStructs = options.maxUpdateStructs ?? Number(process.env.TEAMS_MAX_UPDATE_STRUCTS);
+	const updateLimits = {
+		maxStructs:
+			Number.isInteger(maxUpdateStructs) && maxUpdateStructs > 0
+				? maxUpdateStructs
+				: DEFAULT_UPDATE_LIMITS.maxStructs,
+		maxDeleteRanges: DEFAULT_UPDATE_LIMITS.maxDeleteRanges,
+	};
+	contentLimits.maxStructs = updateLimits.maxStructs;
+	contentLimits.maxDeleteRanges = updateLimits.maxDeleteRanges;
 	const authenticate = options.authenticate ?? (users ? authenticateFromUsers(users) : undefined);
 	// Per-room permissions decided by the host (see "Per-room permissions" in the README).
 	const authorizeSync = typeof options.authorizeSync === 'function' ? options.authorizeSync : null;
@@ -535,6 +548,14 @@ export function createTeamsServer(options = {}) {
 					if (readOnly) return;
 					if (kind !== syncProtocol.messageYjsSyncStep2 && kind !== syncProtocol.messageYjsUpdate)
 						throw new Error(`unknown sync message ${kind}`);
+					const update = decoding.readVarUint8Array(decoder);
+					// Counted without decoding, so a small frame cannot allocate millions of structs.
+					const scan = scanUpdate(update, updateLimits);
+					if (!scan.ok) {
+						countRejected({ code: 'update_too_complex' });
+						log(`sync ${name}: update refused before decoding (${scan.reason})`);
+						return void ws.close(1009, 'update too complex');
+					}
 					let reverts;
 					if (actor) {
 						const verdict = validateTeamsSyncMessage(
@@ -561,7 +582,6 @@ export function createTeamsServer(options = {}) {
 							return void ws.close(1009, 'document too large');
 						}
 					}
-					const update = decoding.readVarUint8Array(decoder);
 					// The validator has already applied an update without reverts to a copy.
 					if (!actor || reverts) rehearseUpdate(room.doc, update, reverts);
 					// One transaction, so one broadcast. Reverts must reach the sender too.
