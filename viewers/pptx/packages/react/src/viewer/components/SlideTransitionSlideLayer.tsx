@@ -11,6 +11,7 @@ import React from 'react';
 import type { CanvasSize } from '../types';
 import { normalizeHexColor } from '../utils';
 import type { ElementRenderErrorHandler } from './ElementErrorBoundary';
+import { useLinkedContentView } from './linked-content-context';
 import { SlideBackgroundImageLayer } from './SlideBackgroundImageLayer';
 import { StaticElementRenderer } from './StaticElementRenderer';
 
@@ -22,11 +23,12 @@ export interface SlideLayerProps {
 }
 
 export function SlideLayer({
-	slide,
+	slide: modelSlide,
 	templateElements,
 	canvasSize,
 	onElementRenderError,
 }: SlideLayerProps): React.ReactElement {
+	const slide = useLinkedContentView(modelSlide);
 	const safeWidth = Math.max(canvasSize.width, 1);
 	const safeHeight = Math.max(canvasSize.height, 1);
 	const elements = [...visibleTemplateElements(slide, templateElements), ...slide.elements];

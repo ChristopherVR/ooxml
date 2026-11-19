@@ -74,9 +74,18 @@ canvas stay. Remote cursors and selections draw on the canvas. `state` also carr
 
 As in Microsoft PowerPoint, a deck that links pictures or media to the web opens without
 downloading them. The canvas does not draw PowerPoint's security bar: `blocks.externalContent` (a
-computed ref of `{ barVisible, enable, close }`) says when to show it. Render the exported
-`ExternalContentBar` (or your own) and wire its `enable` event to `enable()` (it reloads this presentation as it stands, with its saved and unsaved edits and the slide on screen, and with its linked content; unsaved edits stay unsaved and undo history starts over) and
-its `close` event to `close()`. A new presentation asks again. The `allowExternalContent` option (`true` or `false`) answers for the user, and then the bar never shows.
+computed ref of `{ barVisible, allowed, enable, close }`) says when to show it. Render the exported
+`ExternalContentBar` (or your own) and wire its `enable` event to `enable()` and its `close` event
+to `close()`. Enable Content redraws the canvas and the slides pane with the linked content
+without reloading: the slide on screen, unsaved edits, undo history, autosave and a collaboration
+session carry on. `close()` hides the bar and keeps the content blocked. The choice belongs to this
+viewer and this presentation: a new presentation asks again, and each collaborator decides for
+themselves. The `allowExternalContent` option (`true` or `false`) answers for the user, and then
+the bar never shows; changing it applies at once.
+
+`allowed` says whether the blocks draw the linked content. A shell that draws slides itself passes
+it as the `linkedContent` prop of `SlideThumbnail`, `SlidesPane` or `SlideCanvas`; without that
+prop, outside the viewer, linked content is withheld.
 
 ```vue
 <ExternalContentBar

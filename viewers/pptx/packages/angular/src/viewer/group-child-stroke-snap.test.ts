@@ -17,7 +17,7 @@ describe('angular: group child strokes snap by absolute position', () => {
 	it('links a group to its children where it renders them', () => {
 		const source = readFileSync(path.join(__dirname, 'element-renderer.component.ts'), 'utf8');
 		expect(source).toMatch(
-			/getGroupChildParentFill\(this\.element\(\), this\.parentGroupFill\(\)\)/u,
+			/getGroupChildParentFill\(this\.drawn\(\), this\.parentGroupFill\(\)\)/u,
 		);
 	});
 

@@ -154,7 +154,7 @@ export interface MountChromeDeps extends ChromeCallbackDeps {
 	enableExternalContent(): void;
 	/** The security bar's close button. */
 	closeExternalContentBar(): void;
-	/** Whether the chrome shows the security bar for the loaded deck (`externalContentBarVisible`). */
+	/** Whether the chrome shows the security bar for the loaded deck (`resolveExternalContentView`). */
 	externalContentBarInChrome(): boolean;
 	/** One compatibility toast's own dismiss button. */
 	dismissCompatToast(id: string): void;
@@ -782,7 +782,7 @@ export interface ChromeHost {
 	enableExternalContent(): void;
 	/** The security bar's close button. */
 	closeExternalContentBar(): void;
-	/** Whether the chrome shows the security bar for the loaded deck (`externalContentBarVisible`). */
+	/** Whether the chrome shows the security bar for the loaded deck (`resolveExternalContentView`). */
 	externalContentBarInChrome(): boolean;
 	/** One compatibility toast's own dismiss button. */
 	dismissCompatToast(id: string): void;

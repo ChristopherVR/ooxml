@@ -31,12 +31,14 @@ import {
 	CROP_MODE_HINT_KEY,
 	dragCropHandle,
 	getImageSrc,
+	linkedContentView,
 	panCropImage,
 	toElementAxes,
 } from 'ooxml-ui/pptx';
 import type { CropDragStart, CropHandleId } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 
+import { injectLinkedContentAllowed } from './external-content.service';
 import { PictureCropService } from './picture-crop.service';
 
 /** A live crop gesture: a handle drag, or a pan (`handle === null`). */
@@ -147,7 +149,14 @@ export class CropOverlayComponent implements OnDestroy {
 	protected readonly hintKey = CROP_MODE_HINT_KEY;
 	protected readonly ariaKey = CROP_HANDLE_ARIA_KEY;
 	protected readonly overlay = computed(() => buildCropOverlay(this.element(), this.zoom()));
-	protected readonly imageSrc = computed(() => getImageSrc(this.element(), this.mediaDataUrls()));
+	private readonly linkedContentAllowed = injectLinkedContentAllowed();
+	/** The picture as drawn: a linked one only once this viewer allows linked content. */
+	protected readonly imageSrc = computed(() =>
+		getImageSrc(
+			linkedContentView(this.element(), this.linkedContentAllowed()),
+			this.mediaDataUrls(),
+		),
+	);
 	/** One screen pixel, in slide pixels. */
 	protected readonly stroke = computed(() => 1 / (this.zoom() || 1));
 

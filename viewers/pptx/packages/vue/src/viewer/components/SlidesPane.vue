@@ -76,6 +76,11 @@ const props = withDefaults(
 		theme?: PptxTheme;
 		/** Parsed table styles (`useLoadContent().tableStyleMap`), for tables in thumbnails. */
 		tableStyleMap?: ParsedTableStyleMap;
+		/**
+		 * Draw the deck's linked web content (`blocks.externalContent.allowed`). Unset keeps the
+		 * surrounding viewer's decision; outside a viewer, linked content is withheld.
+		 */
+		linkedContent?: boolean;
 	}>(),
 	{
 		templateElementsBySlideId: () => ({}),
@@ -88,6 +93,8 @@ const props = withDefaults(
 		locale: undefined,
 		theme: undefined,
 		tableStyleMap: undefined,
+		// Unset, not `false`: Vue casts an absent boolean prop to `false` otherwise.
+		linkedContent: undefined,
 	},
 );
 

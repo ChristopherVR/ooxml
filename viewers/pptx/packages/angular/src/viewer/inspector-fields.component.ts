@@ -29,6 +29,7 @@ import {
 	handleLiveColorEvent,
 	inspectorFieldPatch,
 	inspectorTogglePatch,
+	linkedContentUrl,
 	resolveInspectorSections,
 } from 'ooxml-ui/pptx';
 import type {
@@ -38,6 +39,7 @@ import type {
 } from 'ooxml-ui/pptx';
 
 import { isCheckboxControl, isSelectControl } from './control-event-targets';
+import { injectLinkedContentAllowed } from './external-content.service';
 import { RecentColorsService } from './recent-colors.service';
 
 @Component({
@@ -88,9 +90,9 @@ import { RecentColorsService } from './recent-colors.service';
 													[attr.data-value]="option.value"
 													(click)="onGallery(section.id, field.id, option.value)"
 												>
-													@if (field.previewImage) {
+													@if (previewUrl(field.previewImage); as preview) {
 														<img
-															[src]="field.previewImage"
+															[src]="preview"
 															alt=""
 															[style.filter]="option.previewFilter || null"
 														/>
@@ -381,6 +383,11 @@ export class InspectorFieldsComponent<T, P> {
 
 	/** Emits the patch a control change produces. */
 	readonly patch = output<P>();
+	private readonly linkedContentAllowed = injectLinkedContentAllowed();
+	/** A gallery preview picture; a linked one only once this viewer allows linked content. */
+	protected previewUrl(url: string | undefined): string | undefined {
+		return linkedContentUrl(url, this.linkedContentAllowed());
+	}
 	/** The identity of the element `target` belongs to (its id), for the colour fields. */
 	readonly targetKey = input('');
 	/** What the descriptors read on element `key` now: a drag the selection left goes back on it. */

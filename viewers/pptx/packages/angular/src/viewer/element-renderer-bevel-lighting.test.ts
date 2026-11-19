@@ -45,7 +45,7 @@ describe('wiring into element-renderer.component (bevel lighting <filter> parity
 		expect(source).toContain('private readonly sanitizer = inject(DomSanitizer);');
 		expect(source).toContain("from './bevel-lighting-filter';");
 		expect(source).toMatch(
-			/readonly bevelLightingFilter = computed<BevelLightingFilterDef \| undefined>\(\(\) =>\s*resolveBevelLightingFilter\(this\.element\(\), this\.sanitizer\),?\s*\);/u,
+			/readonly bevelLightingFilter = computed<BevelLightingFilterDef \| undefined>\(\(\) =>\s*resolveBevelLightingFilter\(this\.drawn\(\), this\.sanitizer\),?\s*\);/u,
 		);
 	});
 

@@ -244,8 +244,13 @@ export function useViewerBuildingBlocksState(
 	});
 
 	const canInsertElement = !readOnlyRec.locked && !viewerOptions.trust.openInProtectedView;
-	// PowerPoint's default for linked web content, per presentation, as in `PowerPointViewer`.
-	const externalContent = useExternalContentConsent(content, allowExternalContent, viewerOptions);
+	// PowerPoint's default for linked web content, per presentation and viewer, as in
+	// `PowerPointViewer`.
+	const externalContent = useExternalContentConsent(content, allowExternalContent, viewerOptions, [
+		slides,
+		state.templateElementsBySlideId,
+		state.tableStyleMap,
+	]);
 	const {
 		exportHandlers,
 		printHandlers,
@@ -256,7 +261,6 @@ export function useViewerBuildingBlocksState(
 		autosaveStatus,
 		loadVersion,
 		handlerRef: integrationHandlerRef,
-		serializeForRecovery,
 	} = useViewerIntegration({
 		state,
 		zoom,
@@ -274,10 +278,8 @@ export function useViewerBuildingBlocksState(
 		// Host `googleFonts` first, else Trust Center > "Download fonts", as in `PowerPointViewer`.
 		googleFonts: resolveEffectiveGoogleFonts(googleFonts, viewerOptions),
 		limits,
-		// Linked web content: the same per-presentation consent `PowerPointViewer` keeps.
-		allowExternalImages: externalContent.allowExternalImages,
-		externalContentReload: externalContent.reload,
-		onLinkedWebContent: externalContent.reportLoad,
+		// The model keeps the linked addresses; the blocks draw them per `externalContent.allowed`.
+		allowExternalImages: true,
 		setReadOnlyRecommendation: readOnlyRec.setRecommendation,
 		setModifyVerifier: readOnlyRec.setModifyVerifier,
 		canInsertElement,
@@ -329,12 +331,8 @@ export function useViewerBuildingBlocksState(
 		hasModifyVerifier: readOnlyRec.modifyVerifier !== undefined,
 		externalContent: {
 			barVisible: externalContent.barVisible,
-			enable: () =>
-				externalContent.enable({
-					isDirty: state.isDirty,
-					activeSlideIndex,
-					serialize: serializeForRecovery,
-				}),
+			allowed: externalContent.allowed,
+			enable: externalContent.enable,
 			close: externalContent.close,
 		},
 		handlerRef: integrationHandlerRef,

@@ -95,7 +95,7 @@ Während einer Bildschirmpräsentation werden Notizen Ihnen (nicht dem Publikum)
 
 Manche Präsentationen verknüpfen Bilder, Audio oder Video mit einer Webadresse, statt sie in der Datei zu speichern. Wie in Microsoft PowerPoint werden sie beim Öffnen nicht heruntergeladen, denn der Download teilt dem Server mit, dass Sie die Präsentation geöffnet haben. Eine Leiste unter dem Menüband meldet, dass Verweise auf externe Bilder und andere Medien blockiert wurden. Sie erscheint auch, wenn der Viewer keine Symbolleiste hat.
 
-- Klicken Sie auf **Inhalt aktivieren**, um sie für diese Präsentation herunterzuladen. Die Präsentation wird im aktuellen Zustand erneut geöffnet: Ihre Änderungen, gespeichert oder nicht, und die angezeigte Folie bleiben erhalten, ungespeicherte Änderungen bleiben ungespeichert. Der Rückgängig-Verlauf beginnt neu, Änderungen von davor lassen sich also nicht mehr rückgängig machen.
+- Klicken Sie auf **Inhalt aktivieren**, um sie für diese Präsentation herunterzuladen. Nichts wird neu geöffnet: Ihre Änderungen, gespeichert oder nicht, die angezeigte Folie und der Rückgängig-Verlauf bleiben, wie sie sind. In einer gemeinsamen Sitzung entscheidet jede Person selbst.
 - Klicken Sie auf die Schließen-Schaltfläche, um sie blockiert zu lassen.
 - Die Wahl gilt, bis Sie eine andere Präsentation öffnen. Um verknüpfte Inhalte ohne Nachfrage herunterzuladen, aktivieren Sie **Datei > Optionen > Trust Center > Externe Inhalte zulassen**.
 

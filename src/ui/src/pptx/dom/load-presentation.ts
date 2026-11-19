@@ -108,8 +108,6 @@ export interface LoadedPresentation {
 	notesMaster?: PptxNotesMaster;
 	handoutMaster?: PptxHandoutMaster;
 	hasMacros: boolean;
-	/** The deck links pictures or media to web addresses (`PptxData.hasLinkedWebContent`). */
-	hasLinkedWebContent: boolean;
 	notesCanvasSize?: CanvasSize;
 	/** Blob URLs created during the load; revoke them when replacing/destroying. */
 	blobUrls: string[];
@@ -211,7 +209,6 @@ export async function loadPresentation(
 			notesMaster: parsed.notesMaster,
 			handoutMaster: parsed.handoutMaster,
 			hasMacros: parsed.hasMacros ?? false,
-			hasLinkedWebContent: parsed.hasLinkedWebContent === true,
 			modifyVerifier: parsed.modifyVerifier,
 			warnings: parsed.warnings ?? [],
 			slideSize:

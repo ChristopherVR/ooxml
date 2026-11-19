@@ -91,8 +91,6 @@ export class PptxLoadDataBuilder {
 
 	private hasMacros: boolean | undefined;
 
-	private hasLinkedWebContent: boolean | undefined;
-
 	private hasDigitalSignatures: boolean | undefined;
 
 	private digitalSignatureCount: number | undefined;
@@ -266,11 +264,6 @@ export class PptxLoadDataBuilder {
 		return this;
 	}
 
-	public withHasLinkedWebContent(hasLinkedWebContent: boolean | undefined): this {
-		this.hasLinkedWebContent = hasLinkedWebContent;
-		return this;
-	}
-
 	public withHasDigitalSignatures(hasDigitalSignatures: boolean | undefined): this {
 		this.hasDigitalSignatures = hasDigitalSignatures;
 		return this;
@@ -390,7 +383,6 @@ export class PptxLoadDataBuilder {
 			themeOptions: this.themeOptions,
 			themeVariants: this.themeVariants,
 			hasMacros: this.hasMacros,
-			hasLinkedWebContent: this.hasLinkedWebContent,
 			hasDigitalSignatures: this.hasDigitalSignatures,
 			digitalSignatureCount: this.digitalSignatureCount,
 			presentationGuides: this.presentationGuides,

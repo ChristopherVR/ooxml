@@ -11,6 +11,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { CanvasSize } from '../types';
 import { normalizeHexColor } from '../utils';
 import type { ElementRenderErrorHandler } from './ElementErrorBoundary';
+import { useLinkedContentView } from './linked-content-context';
 import { StaticElementRenderer } from './StaticElementRenderer';
 
 // ---------------------------------------------------------------------------
@@ -30,12 +31,13 @@ export interface ScaledSlidePreviewProps {
 // ---------------------------------------------------------------------------
 
 function ScaledSlidePreviewImpl({
-	slide,
+	slide: modelSlide,
 	templateElements,
 	canvasSize,
 	className,
 	onElementRenderError,
 }: ScaledSlidePreviewProps): React.ReactElement {
+	const slide = useLinkedContentView(modelSlide);
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [containerWidth, setContainerWidth] = useState(0);
 

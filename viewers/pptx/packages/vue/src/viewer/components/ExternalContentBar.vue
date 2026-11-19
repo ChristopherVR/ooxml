@@ -4,8 +4,8 @@
  * pictures and media were not downloaded ("SECURITY WARNING ... Enable
  * Content"). A thin adapter around the shared `pptx-ui-external-content-bar`:
  * the element owns the markup and strings; this gives it the translator and
- * re-emits its two requests. Whether it shows is the shared
- * `externalContentBarVisible`, decided by the viewer.
+ * re-emits its two requests. Whether it shows is `barVisible` from the shared
+ * `resolveExternalContentView`, decided by the viewer.
  */
 import { dispatchExternalContentBarIntent } from 'ooxml-ui/pptx';
 import { computed } from 'vue';

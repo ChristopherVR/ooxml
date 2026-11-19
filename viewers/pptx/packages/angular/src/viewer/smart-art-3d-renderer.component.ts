@@ -28,6 +28,7 @@ import type { PptxElement } from 'pptx-viewer-core';
 import { EditorStateService } from './editor-state.service';
 import { getContainerStyle } from './element-style';
 import type { StyleMap } from './element-style';
+import { modelElementById } from './external-content.service';
 import { Rendering3DService } from './rendering-3d.service';
 import { SLIDE_CONTEXT } from './slide-context';
 import {
@@ -35,7 +36,7 @@ import {
 	getSmartArtData,
 	toNode3DEditBox,
 } from './smart-art-3d-renderer-helpers';
-import { commitNodeText, findOwningSlideIndex } from './smart-art-inline-edit';
+import { commitNodeText } from './smart-art-inline-edit';
 import type { InlineEditState } from './smart-art-inline-edit';
 import { SmartArtRendererComponent } from './smart-art-renderer.component';
 import { ThreeViewComponent } from './three-view.component';
@@ -230,21 +231,14 @@ export class SmartArt3DRendererComponent {
 
 	/** Apply a fill colour to a node through the same commit path as a text edit. */
 	handleChangeNodeStyle(nodeId: string, fill: string): void {
-		const next = commitSmartArtNodeFill(this.element(), nodeId, fill);
-		if (!next || !this.editor) {
-			return;
-		}
-		const slideIndex = findOwningSlideIndex(
-			this.editor.slides(),
-			this.element().id,
-			this.slideContext?.slideId() ?? null,
-		);
-		if (slideIndex < 0) {
+		const model = this.modelElement();
+		const next = model && commitSmartArtNodeFill(model.element, nodeId, fill);
+		if (!model || !next || !this.editor) {
 			return;
 		}
 		this.hoveredNodeId.set(null);
 		this.hoveredNodeRect.set(null);
-		this.editor.updateElement(slideIndex, this.element().id, {
+		this.editor.updateElement(model.slideIndex, this.element().id, {
 			smartArtData: next,
 		} as Partial<PptxElement>);
 	}
@@ -290,24 +284,22 @@ export class SmartArt3DRendererComponent {
 	}
 
 	private applyCommit(nodeId: string, text: string): void {
-		const data = this.smartArtData();
-		if (!data || !this.editor) {
+		const model = this.modelElement();
+		const data = model && getSmartArtData(model.element);
+		if (!model || !data || !this.editor) {
 			return;
 		}
 		const next = commitNodeText(data, nodeId, text);
 		if (next === data) {
 			return;
 		} // no-op: text unchanged
-		const slideIndex = findOwningSlideIndex(
-			this.editor.slides(),
-			this.element().id,
-			this.slideContext?.slideId() ?? null,
-		);
-		if (slideIndex < 0) {
-			return;
-		}
-		this.editor.updateElement(slideIndex, this.element().id, {
+		this.editor.updateElement(model.slideIndex, this.element().id, {
 			smartArtData: next,
 		} as Partial<PptxElement>);
+	}
+
+	/** The model element and its slide, for edits: the drawn element may withhold linked content. */
+	private modelElement() {
+		return modelElementById(this.editor, this.element().id, this.slideContext?.slideId() ?? null);
 	}
 }

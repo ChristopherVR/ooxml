@@ -3,6 +3,7 @@ import {
 	canInteractWithElement,
 	createCollaborationShell,
 	createDefaultRegistry,
+	createExternalContentBar,
 	createInitialViewerState,
 	createStore,
 	describeCollaborationShellState,
@@ -10,6 +11,7 @@ import {
 	getViewerCss,
 	loadPresentation,
 	renderSlideStage,
+	resolveExternalContentView,
 	revokeBlobUrls,
 } from 'pptx-vanilla-viewer';
 import type { LoadedPresentation, PptxElement } from 'pptx-vanilla-viewer';
@@ -53,7 +55,25 @@ export function mountHostOwnedHeadlessEditor(
 	const canvasArea = document.createElement('div');
 	canvasArea.style.cssText = 'flex:1;min-width:0;overflow:auto';
 	canvasArea.append(viewport);
-	shellRoot.append(status, body);
+	// PowerPoint's security bar for linked pictures and media. The choice is this shell's own:
+	// it is never sent to the room, so each participant enables content for themselves.
+	const linkedContent = () => {
+		const state = store.get();
+		return resolveExternalContentView({
+			host: undefined,
+			options: { trust: { allowExternalContent: false } },
+			enabled: state.externalContentEnabled,
+			closed: state.externalContentBarClosed,
+			content: state.slides,
+		});
+	};
+	const securityBar = createExternalContentBar(
+		document,
+		t,
+		() => store.set({ externalContentEnabled: true }),
+		() => store.set({ externalContentBarClosed: true }),
+	);
+	shellRoot.append(status, securityBar.anchor, body);
 	root.replaceChildren(style, shellRoot);
 	let loaded: LoadedPresentation | undefined;
 	let scale = 1;
@@ -80,7 +100,12 @@ export function mountHostOwnedHeadlessEditor(
 		getScale: () => scale,
 		onChange: () => render(),
 	});
-	const railOptions = { store, getLoaded: () => loaded, commitInline: () => inline.commit() };
+	const railOptions = {
+		store,
+		getLoaded: () => loaded,
+		getLinkedContent: () => linkedContent().allowed,
+		commitInline: () => inline.commit(),
+	};
 	// `?hostStrip=1`: the host's own strip of thumbnails instead of the slides pane.
 	const slidesPane = hostThumbnailStripRequested()
 		? mountHostSlideStrip(body, railOptions)
@@ -107,6 +132,8 @@ export function mountHostOwnedHeadlessEditor(
 			drag = undefined;
 		}
 		status.textContent = describeCollaborationShellState(collaboration.getState(), t);
+		const view = linkedContent();
+		securityBar.update(view.barVisible);
 		const slide = store.get().slides[state.currentSlide];
 		if (!slide) {
 			return;
@@ -119,6 +146,7 @@ export function mountHostOwnedHeadlessEditor(
 			renderSlideStage({
 				document,
 				slide,
+				linkedContent: view.allowed,
 				canvasSize: state.canvasSize,
 				registry,
 				t,
@@ -144,7 +172,9 @@ export function mountHostOwnedHeadlessEditor(
 			state.slides !== previous.slides ||
 			state.currentSlide !== previous.currentSlide ||
 			state.canvasSize !== previous.canvasSize ||
-			state.editable !== previous.editable
+			state.editable !== previous.editable ||
+			state.externalContentEnabled !== previous.externalContentEnabled ||
+			state.externalContentBarClosed !== previous.externalContentBarClosed
 		) {
 			render();
 		}
@@ -202,7 +232,10 @@ export function mountHostOwnedHeadlessEditor(
 			return;
 		}
 		collaboration.controller.beginContentLoad('bootstrap');
-		const result = await loadPresentation(host.source.slice().buffer);
+		// The model keeps the deck's linked addresses; `linkedContent()` decides what is drawn.
+		const result = await loadPresentation(host.source.slice().buffer, {
+			allowExternalImages: true,
+		});
 		if (destroyed) {
 			result.handler.dispose();
 			revokeBlobUrls(result.blobUrls);

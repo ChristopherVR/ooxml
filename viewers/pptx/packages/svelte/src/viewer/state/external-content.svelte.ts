@@ -1,81 +1,75 @@
-import {
-	externalContentBarVisible,
-	prepareExternalContentReload,
-	recoverySnapshotIntent,
+import { resolveExternalContentView } from 'ooxml-ui/pptx';
+import type {
+	ExternalContentOptions,
+	ExternalContentView,
+	ViewerExternalContentBar,
 } from 'ooxml-ui/pptx';
-import { tick } from 'svelte';
-
-import { serializeEditorState } from '../editor/editor-document-lifecycle';
-import type { EditorState } from '../editor/editor-state.svelte';
-import type { PresentationLoader } from './presentation-loader.svelte';
-import type { ViewerState } from './viewer-state.svelte';
 
 export interface ExternalContentDeps {
-	loader: PresentationLoader;
-	editor: EditorState;
-	viewer: ViewerState;
+	/** The loader's `loadCount`: each finished load is another presentation. */
+	getLoadCount: () => number;
 	/** The host `allowExternalContent` prop. */
 	getHost: () => boolean | undefined;
+	/** The viewer options; Trust Center > "Allow external content" applies at once. */
+	getOptions: () => ExternalContentOptions;
+	/** What the viewer draws: its slides, template elements and table style map. */
+	getContent: () => unknown;
+}
+
+interface Consent {
+	load: number;
+	enabled: boolean;
+	closed: boolean;
 }
 
 /**
- * PowerPoint's security bar for linked pictures and media
- * (`<pptx-ui-external-content-bar>`): whether it shows, and what its two
- * buttons do. The consent itself lives on the loader, which clears it when
- * another presentation loads; the rules are the shared
- * `external-content-policy` ones.
+ * PowerPoint's security bar for linked pictures and media, and whether this
+ * viewer draws them (shared `resolveExternalContentView`). Consent is this
+ * viewer's own and belongs to the presentation it was given for: the next load
+ * asks again, while slides adopted from a collaboration room keep it. Enable
+ * Content only redraws (`provideLinkedContent`): the deck, undo history, dirty
+ * state, autosave and a collaboration session carry on untouched.
  */
-export class ExternalContentState {
+export class ExternalContentState implements ViewerExternalContentBar {
 	readonly #deps: ExternalContentDeps;
+	#consent = $state.raw<Consent>({ load: -1, enabled: false, closed: false });
+	readonly #view: ExternalContentView = $derived.by(() => {
+		const own = this.#consent.load === this.#deps.getLoadCount();
+		return resolveExternalContentView({
+			host: this.#deps.getHost(),
+			options: this.#deps.getOptions(),
+			enabled: own && this.#consent.enabled,
+			closed: own && this.#consent.closed,
+			content: this.#deps.getContent(),
+		});
+	});
 
 	constructor(deps: ExternalContentDeps) {
 		this.#deps = deps;
 	}
 
-	/** Whether the security bar shows for the presentation now open (reactive). */
-	get barVisible(): boolean {
-		const { loader } = this.#deps;
-		return externalContentBarVisible({
-			hasLinkedWebContent: loader.hasLinkedWebContent,
-			// Enable Content hides the bar at once, while its reload runs.
-			allowed: loader.externalContentAllowed || loader.externalContentEnabled,
-			host: this.#deps.getHost(),
-			closed: loader.externalContentBarClosed,
-		});
+	/** Surfaces draw the linked content (reactive). */
+	get allowed(): boolean {
+		return this.#view.allowed;
 	}
 
-	/**
-	 * Enable Content: reload the presentation as it stands (the shared
-	 * `prepareExternalContentReload`) with its linked content. Saved and unsaved
-	 * edits come along; unsaved ones stay unsaved, and the slide on screen
-	 * stays. Undo history starts over.
-	 */
-	async enable(): Promise<void> {
-		const { loader, editor, viewer } = this.#deps;
-		const reload = await prepareExternalContentReload({
-			serializeCurrentDeck: async () =>
-				editor.getHandler()
-					? serializeEditorState(editor, 'pptx', recoverySnapshotIntent(editor.saveIntent()))
-					: null,
-			isDirty: editor.dirty,
-			slideIndex: viewer.current,
-		});
-		if (!reload) {
-			return;
-		}
-		await loader.reloadWithExternalContent(reload.bytes);
-		// The load seeds the editor and resets the slide from an effect.
-		await tick();
-		if (loader.error === null && viewer.slideCount > 0) {
-			viewer.goTo(Math.min(reload.slideIndex, viewer.slideCount - 1));
-		}
-		if (reload.keepDirty) {
-			editor.dirty = true;
-		}
+	/** Whether the security bar shows (reactive). */
+	get barVisible(): boolean {
+		return this.#view.barVisible;
 	}
+
+	/** Enable Content: draw this presentation's linked content, for this viewer only. */
+	readonly enable = (): void => {
+		this.#consent = { ...this.#own(), enabled: true };
+	};
 
 	/** Close: hide the bar; the content stays blocked. */
-	close(): void {
-		this.#deps.loader.externalContentBarClosed = true;
+	readonly close = (): void => {
+		this.#consent = { ...this.#own(), closed: true };
+	};
+
+	#own(): Consent {
+		const load = this.#deps.getLoadCount();
+		return this.#consent.load === load ? this.#consent : { load, enabled: false, closed: false };
 	}
 }

@@ -518,13 +518,15 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P1** Linked pictures and media follow PowerPoint's default: nothing linked is downloaded
       when a deck opens, and a translated security bar offers Enable Content for that
       presentation (all five bindings and the suite; host `allowExternalContent` changes it).
+      Enable Content redraws without reloading, keeps undo history, and is each collaborator's
+      own choice.
       Evidence: [powerpoint-external-content.md](powerpoint-external-content.md),
       `e2e/pptx/allow-external-content.spec.ts`.
 - [ ] **P2** Blocked linked content differs from PowerPoint in three ways
       ([powerpoint-external-content.md](powerpoint-external-content.md)): a blocked picture has no
       "PowerPoint has blocked automatic download of this picture" placeholder, intranet hosts are
       blocked too (PowerPoint downloads them), and after Enable Content an online video's frame
-      loads with its slide instead of on Play.
+      loads with its slide (when PowerPoint first contacts the provider was not observed).
 - [ ] **P1** 40 coverage-manifest constructs are `preserve: unassessed` and 30 `edit: unassessed`
       (`src/core/pptx/core/openxml/openxml-coverage*.ts`): add a dirty-save round trip with unknown
       elements on every part type, and ratchet the counts in CI.

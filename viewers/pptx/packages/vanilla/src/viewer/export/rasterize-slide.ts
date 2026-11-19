@@ -62,6 +62,11 @@ export interface RasterizeSlideDeps {
 	 */
 	getPieChart3D(): boolean;
 	/**
+	 * Whether this viewer draws the deck's linked web content now, read fresh on every export so
+	 * an export made before Enable Content contacts no linked server. Omitted withholds it.
+	 */
+	getLinkedContentAllowed?(): boolean;
+	/**
 	 * Options > Advanced > "Default resolution" / "Do not compress images"
 	 * raster-scale multiplier (see `resolveImageResolutionScale` in
 	 * `pptx-viewer-shared`), applied on top of the baseline capture scale so
@@ -199,6 +204,7 @@ export function createRasterizeSlide(deps: RasterizeSlideDeps): RasterizeSlideCo
 		);
 		const stage = renderSlideStage({
 			document: deps.doc,
+			linkedContent: deps.getLinkedContentAllowed?.() ?? false,
 			slide: template.length ? { ...slide, elements: [...template, ...slide.elements] } : slide,
 			canvasSize: state.canvasSize,
 			mediaDataUrls: state.mediaDataUrls,

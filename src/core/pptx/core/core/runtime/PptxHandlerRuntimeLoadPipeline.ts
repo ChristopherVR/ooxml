@@ -139,7 +139,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			.withCoreProperties(coreProperties)
 			.withAppProperties(appProperties)
 			.withHasMacros(this.vbaProjectBin !== null ? true : undefined)
-			.withHasLinkedWebContent(this.linkedWebContent || undefined)
 			.withHasDigitalSignatures(this.signatureDetection?.hasSignatures || undefined)
 			.withDigitalSignatureCount(
 				this.signatureDetection?.signatureCount && this.signatureDetection.signatureCount > 0

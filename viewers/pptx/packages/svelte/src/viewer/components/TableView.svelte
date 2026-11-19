@@ -10,6 +10,7 @@
 	 */
 	import {
 		canDrillDown,
+		linkedContentView,
 		resolveTableCellEditEnd,
 		screenStrokeWidth,
 		shouldRenderHitTarget,
@@ -19,6 +20,7 @@
 
 	import { buildTableRows, columnWidthStyles, tableRootStyle } from '../render';
 	import { getContainerStyle, getElementHitTargetStyle, styleToString } from '../style';
+	import { getLinkedContentGetter } from '../state/linked-content';
 	import { useTableStyleContext } from '../state/render-context';
 	import { useTableCellSelection } from '../state/table-cell-selection-context';
 	import type { ElementRendererProps } from './props';
@@ -45,7 +47,9 @@
 	);
 
 	const tableData = $derived(element.type === 'table' ? element.tableData : undefined);
-	const tableStyleContext = $derived(useTableStyleContext());
+	// The deck's table styles as this viewer may fetch their linked picture fills.
+	const getLinkedContent = getLinkedContentGetter();
+	const tableStyleContext = $derived(linkedContentView(useTableStyleContext(), getLinkedContent()));
 	const rows = $derived(tableData ? buildTableRows(tableData, tableStyleContext) : []);
 	const colWidths = $derived(tableData ? columnWidthStyles(tableData) : []);
 	const tableStyle = $derived(tableRootStyle(tableData));

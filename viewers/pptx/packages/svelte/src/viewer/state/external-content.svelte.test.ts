@@ -7,13 +7,14 @@ import { flushSync, mount, tick, unmount } from 'svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import ExternalContentBar from '../components/ExternalContentBar.svelte';
+import PowerPointViewer from '../PowerPointViewer.svelte';
 import type { ViewerStateBag } from './create-viewer-state-types';
 import CreateViewerStateHarness from './CreateViewerStateHarness.svelte';
 
 /**
  * Linked external content follows PowerPoint's default in the Svelte binding:
- * nothing linked is referenced on open, the security bar offers Enable Content
- * for that presentation, and the host `allowExternalContent` switch overrides it.
+ * the deck keeps its links, nothing drawn references them on open, and Enable
+ * Content draws them for this viewer without reloading or touching the deck.
  */
 
 const ORIGIN = 'https://linked-content.test';
@@ -46,13 +47,13 @@ afterEach(() => {
 	vi.restoreAllMocks();
 });
 
-function renderHarness(allowExternalContent?: boolean): ViewerStateBag {
+function renderHarness(props: { allowExternalContent?: boolean; filePath?: string } = {}) {
 	let captured: ViewerStateBag | undefined;
 	const instance = mount(CreateViewerStateHarness, {
 		target: document.createElement('div'),
 		props: {
 			editable: true,
-			...(allowExternalContent === undefined ? {} : { allowExternalContent }),
+			...props,
 			onready: (state: ViewerStateBag) => {
 				captured = state;
 			},
@@ -69,102 +70,156 @@ async function open(state: ViewerStateBag, bytes: Uint8Array): Promise<void> {
 	await tick();
 }
 
-const references = (state: ViewerStateBag) => JSON.stringify(state.editor.slides).includes(ORIGIN);
+const modelLinks = (state: ViewerStateBag) => JSON.stringify(state.editor.slides).includes(ORIGIN);
 
 describe('linked external content (Svelte)', () => {
-	it('references nothing linked on open and shows the security bar', async () => {
+	it('keeps the link in the model, draws nothing from it and shows the bar', async () => {
 		const state = renderHarness();
 		const load = vi.spyOn(PptxHandler.prototype, 'load');
 		await open(state, await linkedDeck());
-		expect(load.mock.calls[0]?.[1]).toHaveProperty('allowExternalImages', false);
-		expect(state.loader.hasLinkedWebContent).toBeTruthy();
-		expect(references(state)).toBeFalsy();
+		expect(load.mock.calls[0]?.[1]).toHaveProperty('allowExternalImages', true);
+		expect(modelLinks(state)).toBeTruthy();
+		expect(state.externalContent.allowed).toBeFalsy();
 		expect(state.externalContent.barVisible).toBeTruthy();
 	});
 
-	it('enabling reloads with the linked content, keeps the slide and hides the bar', async () => {
+	it('enabling redraws without a load and leaves the deck, slide and dirty state alone', async () => {
 		const state = renderHarness();
 		await open(state, await linkedDeck());
 		state.viewer.goTo(2);
+		const slides = state.editor.slides;
+		const json = JSON.stringify(slides);
 		const load = vi.spyOn(PptxHandler.prototype, 'load');
-		await state.externalContent.enable();
-		expect(load.mock.calls[0]?.[1]).toHaveProperty('allowExternalImages', true);
-		expect(references(state)).toBeTruthy();
+		state.externalContent.enable();
+		flushSync();
+		expect(load).not.toHaveBeenCalled();
+		expect(state.externalContent.allowed).toBeTruthy();
 		expect(state.externalContent.barVisible).toBeFalsy();
+		expect(state.editor.slides).toBe(slides);
+		expect(JSON.stringify(state.editor.slides)).toBe(json);
 		expect(state.viewer.current).toBe(2);
 		expect(state.editor.dirty).toBeFalsy();
 	});
 
-	it('enabling keeps edits saved before it, and the next save writes them', async () => {
+	it('enabling keeps unsaved edits and their undo history', async () => {
 		const state = renderHarness();
 		await open(state, await linkedDeck());
 		const count = state.editor.slides.length;
+		state.editor.commitSlides(state.editor.slides.slice(0, -1));
+		expect(state.editor.dirty).toBeTruthy();
+		state.externalContent.enable();
+		flushSync();
+		expect(state.editor.slides).toHaveLength(count - 1);
+		expect(state.editor.dirty).toBeTruthy();
+		expect(state.editor.canUndo).toBeTruthy();
+		state.editor.undo();
+		flushSync();
+		expect(state.editor.slides).toHaveLength(count);
+		expect(state.externalContent.allowed).toBeTruthy();
+	});
+
+	it('autosave still schedules a snapshot for an edit made after Enable Content', async () => {
+		const state = renderHarness({ filePath: 'linked.pptx' });
+		await open(state, await linkedDeck());
+		flushSync();
+		state.externalContent.enable();
+		flushSync();
+		await tick();
+		expect(state.autosaveCtl.isDirty).toBeFalsy();
+		state.editor.commitSlides(state.editor.slides.slice(0, -1));
+		flushSync();
+		expect(state.autosaveCtl.isDirty).toBeTruthy();
+	});
+
+	it('a save after an edit made while blocked keeps the link', async () => {
+		const state = renderHarness();
+		await open(state, await linkedDeck());
 		state.editor.commitSlides(state.editor.slides.slice(0, -1));
 		const saved = await state.editingApi.getSaveSnapshot();
-		expect(state.editingApi.acknowledgeSave(saved.revision).status).toBe('clean');
-		expect(state.editor.dirty).toBeFalsy();
-		await state.externalContent.enable();
-		expect(references(state)).toBeTruthy();
-		expect(state.editor.slides).toHaveLength(count - 1);
-		expect(state.editor.dirty).toBeFalsy();
-		const next = await state.editingApi.getSaveSnapshot();
-		const slideFiles = async (bytes: Uint8Array) =>
-			Object.keys((await JSZip.loadAsync(bytes)).files).filter((name) =>
-				/^ppt\/slides\/slide\d+\.xml$/u.test(name),
-			);
-		expect(await slideFiles(next.content)).toHaveLength(count - 1);
-	});
-
-	it('enabling keeps unsaved edits, still unsaved', async () => {
-		const state = renderHarness();
-		await open(state, await linkedDeck());
-		const count = state.editor.slides.length;
-		state.editor.commitSlides(state.editor.slides.slice(0, -1));
-		expect(state.editor.dirty).toBeTruthy();
-		await state.externalContent.enable();
-		expect(state.editor.slides).toHaveLength(count - 1);
-		expect(references(state)).toBeTruthy();
-		expect(state.editor.dirty).toBeTruthy();
-	});
-
-	it('asks again for the next presentation', async () => {
-		const state = renderHarness();
-		await open(state, await linkedDeck());
-		await state.externalContent.enable();
-		expect(references(state)).toBeTruthy();
-		await open(state, await linkedDeck());
-		expect(state.loader.externalContentEnabled).toBeFalsy();
-		expect(references(state)).toBeFalsy();
-		expect(state.externalContent.barVisible).toBeTruthy();
+		const zip = await JSZip.loadAsync(saved.content);
+		const rels = await zip.file('ppt/slides/_rels/slide1.xml.rels')!.async('string');
+		const slide = await zip.file('ppt/slides/slide1.xml')!.async('string');
+		expect(rels).toMatch(new RegExp(`Target="${ORIGIN}/fill.png"[^>]*TargetMode="External"`, 'u'));
+		expect(slide).toContain('r:link=');
 	});
 
 	it('closing hides the bar and keeps the content blocked', async () => {
 		const state = renderHarness();
 		await open(state, await linkedDeck());
 		state.externalContent.close();
+		flushSync();
 		expect(state.externalContent.barVisible).toBeFalsy();
-		expect(references(state)).toBeFalsy();
+		expect(state.externalContent.allowed).toBeFalsy();
 	});
 
-	it('host false blocks without the bar; host true loads without it', async () => {
-		const blocked = renderHarness(false);
+	it('asks again for the next presentation', async () => {
+		const state = renderHarness();
+		await open(state, await linkedDeck());
+		state.externalContent.enable();
+		flushSync();
+		expect(state.externalContent.allowed).toBeTruthy();
+		await open(state, await linkedDeck());
+		expect(state.externalContent.allowed).toBeFalsy();
+		expect(state.externalContent.barVisible).toBeTruthy();
+	});
+
+	it('applies the Trust Center option at once', async () => {
+		const state = renderHarness();
+		await open(state, await linkedDeck());
+		state.optionsState.setValue('trust', 'allowExternalContent', true);
+		flushSync();
+		expect(state.externalContent.allowed).toBeTruthy();
+		expect(state.externalContent.barVisible).toBeFalsy();
+	});
+
+	it('host false blocks without the bar; host true draws without it', async () => {
+		const blocked = renderHarness({ allowExternalContent: false });
 		await open(blocked, await linkedDeck());
-		expect(references(blocked)).toBeFalsy();
+		expect(modelLinks(blocked)).toBeTruthy();
+		expect(blocked.externalContent.allowed).toBeFalsy();
 		expect(blocked.externalContent.barVisible).toBeFalsy();
 		cleanup?.();
 
-		const allowed = renderHarness(true);
+		const allowed = renderHarness({ allowExternalContent: true });
 		await open(allowed, await linkedDeck());
-		expect(references(allowed)).toBeTruthy();
+		expect(allowed.externalContent.allowed).toBeTruthy();
 		expect(allowed.externalContent.barVisible).toBeFalsy();
 	});
 
 	it('shows no bar for a deck without linked content', async () => {
 		const state = renderHarness();
 		await open(state, new Uint8Array(readFileSync(FIXTURE)));
-		expect(state.loader.hasLinkedWebContent).toBeFalsy();
 		expect(state.externalContent.barVisible).toBeFalsy();
 	});
+});
+
+describe('powerPointViewer linked content', () => {
+	it('draws the linked picture only after Enable Content, without reloading', async () => {
+		const source = await linkedDeck();
+		const target = document.createElement('div');
+		document.body.append(target);
+		const onload = vi.fn();
+		const instance = mount(PowerPointViewer, { target, props: { source, editable: true, onload } });
+		cleanup = () => {
+			unmount(instance);
+			target.remove();
+		};
+		flushSync();
+		await vi.waitFor(() => expect(onload).toHaveBeenCalledOnce(), { timeout: 15000 });
+		flushSync();
+		const bar = () => target.querySelector('pptx-ui-external-content-bar');
+		await vi.waitFor(() => expect(bar()).not.toBeNull());
+		expect(target.innerHTML).not.toContain(ORIGIN);
+
+		const load = vi.spyOn(PptxHandler.prototype, 'load');
+		bar()!.dispatchEvent(
+			new CustomEvent('external-content-request', { detail: { id: 'action' }, bubbles: true }),
+		);
+		flushSync();
+		await vi.waitFor(() => expect(target.innerHTML).toContain(ORIGIN));
+		expect(bar()).toBeNull();
+		expect(load).not.toHaveBeenCalled();
+	}, 30000);
 });
 
 describe('externalContentBar', () => {

@@ -43,8 +43,6 @@ import {
 	recoverySnapshotIntent,
 	resolve3DRenderingFlags,
 	resolveAllowExternalContent,
-	externalContentBarVisible,
-	prepareExternalContentReload,
 	resolveEffectiveGoogleFonts,
 	resolveAutosaveActivation,
 	resolveAutosaveIntervalMs,
@@ -161,6 +159,7 @@ import { EmbeddedFontsService } from './embedded-fonts.service';
 import { ExportProgressModalComponent } from './export-progress-modal.component';
 import { renderElementPngBlob, renderElementPngDataUrl } from './export-raster-tiles';
 import { ExternalContentBarComponent } from './external-content-bar.component';
+import { ExternalContentService } from './external-content.service';
 import { FindReplaceBarComponent } from './find-replace-bar.component';
 import { FollowModeBarComponent } from './follow-mode-bar.component';
 import { GoogleWebfontsService } from './google-webfonts.service';
@@ -426,10 +425,10 @@ const noopClose = (): void => undefined;
 						(cancelPassword)="loadNotices.cancelPasswordPrompt()"
 					/>
 				}
-				@if (externalContentBarShown()) {
+				@if (externalContent.barVisible()) {
 					<pptx-external-content-bar
-						(enable)="enableExternalContent()"
-						(closeBar)="loader.closeExternalContentBar()"
+						(enable)="externalContent.enable()"
+						(closeBar)="externalContent.close()"
 					/>
 				}
 				@if (!mobile.isMobile() && toolbarVisible()) {
@@ -1803,7 +1802,7 @@ export class PowerPointViewerComponent
 	 * `false`: nothing is fetched and no bar shows. `true`: it is fetched
 	 * without asking. Either value locks the Trust Center option to match.
 	 * Google Fonts requests are separate (see `googleFonts`).
-	 * A change applies from the next load.
+	 * A change applies at once: the slides redraw, nothing reloads.
 	 */
 	readonly allowExternalContent = input<boolean | undefined>(undefined);
 	/**
@@ -1964,6 +1963,8 @@ export class PowerPointViewerComponent
 	readonly pdfExportReport = output<VectorPdfExportResult>();
 
 	protected readonly loader = inject(LoadContentService);
+	/** PowerPoint's security bar for linked web content (see `allowExternalContent`). */
+	protected readonly externalContent = inject(ExternalContentService);
 	protected readonly loadNotices = inject(LoadNoticesService);
 	protected readonly editor = inject(EditorStateService);
 	private readonly slidePackageClipboard = createSlidePackageClipboard({
@@ -2156,45 +2157,6 @@ export class PowerPointViewerComponent
 	/** Lift Protected View's read-only lock for the current document (File > Options > Trust Center). */
 	protected enableEditing(): void {
 		this.protectedViewDismissed.set(true);
-	}
-
-	/**
-	 * PowerPoint's security bar: the deck links pictures or media from the web
-	 * that this load left out, and neither the host nor the user has settled it.
-	 */
-	protected readonly externalContentBarShown = computed(() =>
-		externalContentBarVisible({
-			hasLinkedWebContent: this.loader.hasLinkedWebContent(),
-			allowed: this.loader.externalContentAllowed(),
-			host: this.allowExternalContent(),
-			closed: this.loader.externalContent().closed,
-		}),
-	);
-
-	/**
-	 * Where the viewer stood when Enable Content reloaded the deck, so the
-	 * seeding effect keeps the slide and the unsaved state instead of treating
-	 * the reload as a newly opened presentation.
-	 */
-	private externalContentReturn: { slideIndex: number; dirty: boolean } | null = null;
-
-	/**
-	 * Enable Content: reload this presentation as it stands (the shared
-	 * `prepareExternalContentReload` over the recovery serialisation) with its
-	 * linked content. Saved and unsaved edits come along; unsaved ones stay
-	 * unsaved. Undo history starts over.
-	 */
-	protected async enableExternalContent(): Promise<void> {
-		const reload = await prepareExternalContentReload({
-			serializeCurrentDeck: () => this.serializeCurrentDeck(null),
-			isDirty: this.editor.dirty(),
-			slideIndex: this.activeSlideIndex(),
-		});
-		if (!reload) {
-			return;
-		}
-		this.externalContentReturn = { slideIndex: reload.slideIndex, dirty: reload.keepDirty };
-		await this.loader.enableExternalContent(reload.bytes);
 	}
 
 	/**
@@ -2845,25 +2807,14 @@ export class PowerPointViewerComponent
 			const slides = this.loader.slides();
 			untracked(() => {
 				this.editor.setSlides(slides, this.loader.sections());
-				// Enable Content reloaded the same presentation: keep the slide, the unsaved
-				// state and what the user already settled on its notices.
-				const kept = this.loader.lastLoadWasExternalContentReload
-					? this.externalContentReturn
-					: null;
-				this.externalContentReturn = null;
-				if (kept) {
-					this.activeSlideIndex.set(resolveInitialSlideIndex(kept.slideIndex, slides.length));
-					this.editor.dirty.set(kept.dirty);
-				} else {
-					// Host `initialSlide`, clamped by the shared helper every binding uses.
-					this.activeSlideIndex.set(resolveInitialSlideIndex(this.initialSlide(), slides.length));
-					// A newly opened document is protected again even if the previous
-					// one was unlocked via "Enable Editing" this session.
-					this.protectedViewDismissed.set(false);
-					// The read-only banner and compatibility toasts are per-document
-					// diagnostics; a newly opened deck starts with neither dismissed.
-					this.loadNotices.resetForLoad();
-				}
+				// Host `initialSlide`, clamped by the shared helper every binding uses.
+				this.activeSlideIndex.set(resolveInitialSlideIndex(this.initialSlide(), slides.length));
+				// A newly opened document is protected again even if the previous
+				// one was unlocked via "Enable Editing" this session.
+				this.protectedViewDismissed.set(false);
+				// The read-only banner and compatibility toasts are per-document
+				// diagnostics; a newly opened deck starts with neither dismissed.
+				this.loadNotices.resetForLoad();
 				// Seed the grid/snap/guides toggles from THIS deck's own
 				// `ppt/viewProps.xml`, falling back to whatever the toggles already
 				// read (a deck that says nothing about a field keeps the prior one).
@@ -4468,11 +4419,9 @@ export class PowerPointViewerComponent
 	 * an unrecoverable encrypted snapshot (the bug React and Vue shipped).
 	 */
 	private async serializeForAutosave(draft: InlineTextDraft | null): Promise<Uint8Array | null> {
-		return this.canEdit() ? this.serializeCurrentDeck(draft) : null;
-	}
-
-	/** The deck as it stands, as {@link serializeForAutosave} writes it, whether or not editable. */
-	private serializeCurrentDeck(draft: InlineTextDraft | null): Promise<Uint8Array> {
+		if (!this.canEdit()) {
+			return null;
+		}
 		// A Design gallery hover preview is never part of a recovery snapshot.
 		const saved = this.deckStyle.savedDeck();
 		return this.loader.saveSlides(

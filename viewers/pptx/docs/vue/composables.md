@@ -283,6 +283,27 @@ Feed both from the same `useLoadContent` values:
 The thumbnail fills its container's width and is as tall as `previewWidth` at the deck's aspect
 ratio, so give the container that width. It needs the same `pptx-vue-viewer/styles` stylesheet.
 
+### Linked pictures and media
+
+`SlideCanvas`, `SlidesPane` and `SlideThumbnail` draw a deck's linked web pictures and media only
+when their `linkedContent` prop is `true`; without it they withhold them. To follow PowerPoint's
+security bar in your own shell, load with `getAllowExternalImages: () => true` (the deck keeps its
+links, and saves keep them), keep the consent with `useExternalContentConsent` (exported from
+`/viewer`) and pass its `allowed` on. Enable Content then only redraws: nothing reloads and undo
+history is kept.
+
+```ts
+const deck = useLoadContent(() => props.bytes, { getAllowExternalImages: () => true });
+const externalContent = useExternalContentConsent({
+	content: () => props.bytes,
+	host: () => undefined,
+	options: () => ({ trust: { allowExternalContent: false } }),
+	drawn: () => [deck.slides.value, deck.templateElementsBySlideId.value, deck.tableStyleMap.value],
+});
+// <ExternalContentBar v-if="externalContent.barVisible" @enable="externalContent.enable"
+//   @close="externalContent.close" />, and :linked-content="externalContent.allowed" on each surface.
+```
+
 ### `useCollaboration`
 
 `useCollaboration` manages a Yjs session, presence, cursors, and elected-writer synchronization

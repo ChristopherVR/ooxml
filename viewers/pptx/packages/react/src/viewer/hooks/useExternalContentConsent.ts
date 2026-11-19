@@ -1,118 +1,62 @@
-import {
-	externalContentBarVisible,
-	prepareExternalContentReload,
-	resolveAllowExternalContent,
-} from 'ooxml-ui/pptx';
-import type { ExternalContentReload as SharedReload, ViewerOptions } from 'ooxml-ui/pptx';
+import { resolveExternalContentView } from 'ooxml-ui/pptx';
+import type { ViewerOptions } from 'ooxml-ui/pptx';
 /**
  * useExternalContentConsent: PowerPoint's security bar for linked pictures and
- * media (shared `external-content-policy`), kept per presentation.
+ * media (shared `external-content-policy`), kept per presentation and per
+ * viewer.
  *
  * Consent belongs to the `content` it was given for, so opening another
  * presentation (host prop, File > Open, a version or recovery copy) starts
- * blocked again without a reset effect, while the reload Enable Content asks
- * for keeps the same `content` and its consent.
+ * blocked again without a reset effect. Enable Content only changes what this
+ * viewer draws (`LinkedContentContext`): the deck, its unsaved state, undo
+ * history, autosave and a collaboration session are untouched, and a
+ * collaborator decides for themselves.
  */
 import { useCallback, useState } from 'react';
 
-type Content = ArrayBuffer | Uint8Array;
-
-/** What a finished load reports: whether the deck links web content, and whether it was fetched. */
-export interface LinkedWebContentLoad {
-	hasLinkedWebContent: boolean;
-	allowed: boolean;
-}
-
-/**
- * Enable Content's reload of the presentation `content`: from `bytes` (the deck
- * as it stood, the shared `prepareExternalContentReload`), keeping it marked
- * unsaved when it was, on the slide that was showing.
- */
-export interface ExternalContentReload extends SharedReload {
-	content: Content;
-}
-
-/** What Enable Content reads from the viewer when it runs. */
-export interface ExternalContentEnableSource {
-	isDirty: boolean;
-	activeSlideIndex: number;
-	/** The deck as the viewer serializes it for recovery (plaintext, with unsaved edits). */
-	serialize: () => Promise<Uint8Array | null>;
-}
+type Content = ArrayBuffer | Uint8Array | null;
 
 interface Consent {
-	content: Content | null;
+	content: Content;
 	enabled: boolean;
 	closed: boolean;
 }
 
 const NO_CONSENT: Consent = { content: null, enabled: false, closed: false };
 
+/**
+ * @param content The presentation source the consent is for.
+ * @param drawn What the viewer draws (its slides, template elements, table styles), read for
+ *   linked content: a deck adopted from a collaboration room counts as much as a loaded one.
+ */
 export function useExternalContentConsent(
-	content: Content | null,
+	content: Content,
 	host: boolean | undefined,
 	options: Pick<ViewerOptions, 'trust'>,
+	drawn: unknown,
 ) {
 	const [consent, setConsent] = useState<Consent>(NO_CONSENT);
-	const [load, setLoad] = useState<(LinkedWebContentLoad & { content: Content | null }) | null>(
-		null,
-	);
-	const [reload, setReload] = useState<ExternalContentReload | null>(null);
-
-	const own = content !== null && consent.content === content;
-	const enabled = own && consent.enabled;
-	const closed = own && consent.closed;
-	const current = load && load.content === content ? load : null;
-
-	const reportLoad = useCallback(
-		(value: LinkedWebContentLoad) => setLoad({ ...value, content }),
-		[content],
-	);
+	const own = consent.content === content;
+	const view = resolveExternalContentView({
+		host,
+		options,
+		enabled: own && consent.enabled,
+		closed: own && consent.closed,
+		content: drawn,
+	});
 	const enable = useCallback(
-		(source: ExternalContentEnableSource) => {
-			if (!content) {
-				return;
-			}
-			void (async () => {
-				const reload = await prepareExternalContentReload({
-					serializeCurrentDeck: source.serialize,
-					isDirty: source.isDirty,
-					slideIndex: source.activeSlideIndex,
-				});
-				if (reload) {
-					setConsent({ content, enabled: true, closed: false });
-					setReload({ ...reload, content });
-				}
-			})();
-		},
+		() => setConsent((previous) => ({ ...ownConsent(previous, content), enabled: true })),
 		[content],
 	);
-	const close = useCallback(() => {
-		if (content) {
-			setConsent((previous) => ({
-				content,
-				enabled: previous.content === content && previous.enabled,
-				closed: true,
-			}));
-		}
-	}, [content]);
+	const close = useCallback(
+		() => setConsent((previous) => ({ ...ownConsent(previous, content), closed: true })),
+		[content],
+	);
+	return { ...view, enable, close };
+}
 
-	return {
-		/** The main load's `allowExternalImages`: host, Trust Center, or Enable Content here. */
-		allowExternalImages: resolveAllowExternalContent(host, options, enabled),
-		/** Whether the security bar shows for the loaded presentation. */
-		barVisible: externalContentBarVisible({
-			hasLinkedWebContent: current?.hasLinkedWebContent,
-			allowed: (current?.allowed ?? false) || enabled,
-			host,
-			closed,
-		}),
-		/** The pending Enable Content reload, for `useLoadContent`. */
-		reload,
-		reportLoad,
-		enable,
-		close,
-	};
+function ownConsent(previous: Consent, content: Content): Consent {
+	return previous.content === content ? previous : { ...NO_CONSENT, content };
 }
 
 export type ExternalContentConsent = ReturnType<typeof useExternalContentConsent>;

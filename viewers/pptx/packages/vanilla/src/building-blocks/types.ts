@@ -68,7 +68,9 @@ export interface ViewerBuildingBlocks {
 	 * PowerPoint's security bar for linked pictures and media: a deck that links them to the web
 	 * opens without downloading them. The canvas does not draw the bar; mount it with
 	 * {@link mountExternalContentBar}, or draw your own while `barVisible`, wiring Enable Content
-	 * and Close to `enable` and `close`. Read it again after `subscribe` fires.
+	 * and Close to `enable` and `close`. Enable Content only redraws: nothing reloads, and a
+	 * collaborator decides for themselves. Slides your shell draws itself (its own thumbnails)
+	 * go through `linkedContentView(slide, allowed)`. Read it again after `subscribe` fires.
 	 */
 	readonly externalContent: ViewerExternalContentBar;
 	/** The full viewer instance behind the canvas, for its imperative API; null until mounted. */

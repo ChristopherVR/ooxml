@@ -293,8 +293,9 @@ export interface PowerPointViewerProps {
 	 * the user turned on File > Options > Trust Center > "Allow external
 	 * content" (off by default). `false`: none of it is fetched and no bar
 	 * shows. `true`: it is fetched without asking. Either value locks the
-	 * Trust Center option to match. Google Fonts requests are separate (see
-	 * `googleFonts`). A change applies from the next load.
+	 * Trust Center option to match. Enable Content and a change of this value
+	 * apply at once: the deck redraws without reloading and keeps its undo
+	 * history. Google Fonts requests are separate (see `googleFonts`).
 	 */
 	allowExternalContent?: boolean;
 	/**

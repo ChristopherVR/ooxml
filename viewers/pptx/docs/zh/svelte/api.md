@@ -282,11 +282,11 @@ const current = viewer?.getCustomization();
 </div>
 ```
 
-这些属性是扁平的，因此宿主也可以用自己的状态驱动缩略图栏：`slides`（已合并版式和母版元素，与画布的绘制方式一致）、`activeSlideIndex`、`canvasSize`、`mediaDataUrls`、`sections`、`canEdit`、`onselectslide` / `onmoveslide` / `onaddslide` / `onaddslideafter` / `onduplicateslides` / `ondeleteslides` / `onhideslides` 及节相关回调，以及用 `ooxml-ui/pptx` 中的 `buildSlidesPaneFieldContext` 和 `buildSlidesPaneTableStyleContext` 构建的 `fieldContext` 和 `tableStyleContext`，使缩略图像画布一样替换字段（包括编号不从 1 开始的演示文稿中的幻灯片编号）和表格颜色。幻灯片右键菜单中的“版式”项会将该幻灯片设为当前幻灯片，并调用可选的 `onopenlayoutgallery({ slideIndex, x, y })`，因为这些构建模块不渲染版式库。缩略图栏自身没有折叠控件：要隐藏它，请按条件渲染。`SlidesPane` 也从包根入口导出，需要 `pptx-svelte-viewer/styles.css`。
+这些属性是扁平的，因此宿主也可以用自己的状态驱动缩略图栏：`slides`（已合并版式和母版元素，与画布的绘制方式一致）、`activeSlideIndex`、`canvasSize`、`mediaDataUrls`、`sections`、`canEdit`、`onselectslide` / `onmoveslide` / `onaddslide` / `onaddslideafter` / `onduplicateslides` / `ondeleteslides` / `onhideslides` 及节相关回调，以及用 `ooxml-ui/pptx` 中的 `buildSlidesPaneFieldContext` 和 `buildSlidesPaneTableStyleContext` 构建的 `fieldContext` 和 `tableStyleContext`，使缩略图像画布一样替换字段（包括编号不从 1 开始的演示文稿中的幻灯片编号）和表格颜色，以及 `linkedContent`（`state.externalContent.allowed`），使缩略图在查看器允许后绘制演示文稿链接的网络内容。幻灯片右键菜单中的“版式”项会将该幻灯片设为当前幻灯片，并调用可选的 `onopenlayoutgallery({ slideIndex, x, y })`，因为这些构建模块不渲染版式库。缩略图栏自身没有折叠控件：要隐藏它，请按条件渲染。`SlidesPane` 也从包根入口导出，需要 `pptx-svelte-viewer/styles.css`。
 
 ### 单张幻灯片缩略图 {#single-slide-thumbnail}
 
-`SlideThumbnail`（与其 `SlideThumbnailProps` 类型一起，从包根入口和 `pptx-svelte-viewer/viewer` 导出）按 `SlidesPane` 的方式绘制一张幻灯片，供维护自己缩略图条的宿主使用。它根据幻灯片模型渲染，因此会跟随未保存的编辑；它是静态的：没有选择、编辑、指针处理、焦点停靠或元素 id。设置了切换效果（“剪切”除外）的幻灯片会在右上角以小标记显示切换名称，各绑定的缩略图一致（Svelte 的 `SlidesPane` 不绘制该标记）。其属性为 `slide`、`templateElements`（绘制在幻灯片自身元素之下的版式和母版元素；默认为空）、`canvasSize` 和 `previewWidth`（像素；默认为缩略图栏的缩略图宽度；高度按演示文稿的宽高比计算），以及与 `SlidesPane` 共用的属性：`mediaDataUrls`、`fieldContext` 和 `tableStyleContext`。请用同一个 `createSlidesPaneProps` 结果驱动它。这些 `slides` 已合并版式和母版元素，因此对它们请将 `templateElements` 留空。
+`SlideThumbnail`（与其 `SlideThumbnailProps` 类型一起，从包根入口和 `pptx-svelte-viewer/viewer` 导出）按 `SlidesPane` 的方式绘制一张幻灯片，供维护自己缩略图条的宿主使用。它根据幻灯片模型渲染，因此会跟随未保存的编辑；它是静态的：没有选择、编辑、指针处理、焦点停靠或元素 id。设置了切换效果（“剪切”除外）的幻灯片会在右上角以小标记显示切换名称，各绑定的缩略图一致（Svelte 的 `SlidesPane` 不绘制该标记）。其属性为 `slide`、`templateElements`（绘制在幻灯片自身元素之下的版式和母版元素；默认为空）、`canvasSize` 和 `previewWidth`（像素；默认为缩略图栏的缩略图宽度；高度按演示文稿的宽高比计算），以及与 `SlidesPane` 共用的属性：`mediaDataUrls`、`fieldContext`、`tableStyleContext` 和 `linkedContent`（是否绘制演示文稿链接的网络内容：`state.externalContent.allowed`；未设置时沿用外层 `createViewerState` 的选择，在其之外则不绘制）。请用同一个 `createSlidesPaneProps` 结果驱动它。这些 `slides` 已合并版式和母版元素，因此对它们请将 `templateElements` 留空。
 
 ```svelte
 <script lang="ts">
@@ -306,6 +306,7 @@ const current = viewer?.getCustomization();
 				mediaDataUrls={paneProps.mediaDataUrls}
 				fieldContext={paneProps.fieldContext}
 				tableStyleContext={paneProps.tableStyleContext}
+				linkedContent={paneProps.linkedContent}
 			/>
 		</li>
 	{/each}

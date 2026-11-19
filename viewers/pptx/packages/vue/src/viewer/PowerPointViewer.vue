@@ -54,8 +54,7 @@ import {
 	resolve3DRenderingFlags,
 	isEditingAllowed,
 	loadedThemeName,
-	externalContentBarVisible,
-	prepareExternalContentReload,
+	linkedContentView,
 	resolveAllowExternalContent,
 	resolveEffectiveGoogleFonts,
 	resolveAutosaveIntervalSeconds,
@@ -94,7 +93,6 @@ import type {
 import {
 	computed,
 	inject,
-	nextTick,
 	onBeforeUnmount,
 	onMounted,
 	provide,
@@ -144,6 +142,7 @@ import { provideElementRenderErrorReporter } from './composables/element-render-
 import { FieldContextKey } from './composables/field-context';
 import { FormatPaneKey } from './composables/format-pane-context';
 import { InspectorPreviewKey } from './composables/inspector-preview-context';
+import { provideLinkedContent } from './composables/linked-content';
 import { MergeCropKey } from './composables/merge-crop-context';
 import { RecentColorsKey } from './composables/recent-colors-context';
 import { Rendering3DFlagsKey } from './composables/rendering-3d-flags';
@@ -177,6 +176,7 @@ import { useElementDrag } from './composables/useElementDrag';
 import { useElementInsertion } from './composables/useElementInsertion';
 import { useEmbeddedFonts } from './composables/useEmbeddedFonts';
 import { useExportWiring } from './composables/useExportWiring';
+import { useExternalContentConsent } from './composables/useExternalContentConsent';
 import { useFindReplace } from './composables/useFindReplace';
 import { useFontEmbedding } from './composables/useFontEmbedding';
 import { useFormatPainter } from './composables/useFormatPainter';
@@ -346,25 +346,6 @@ const loadVersion = ref(0);
 // Protect-Presentation secret so a protected deck serialises encrypted.
 const password = usePasswordProtection();
 
-// -- Linked external content (PowerPoint's security bar) ----------------
-// What the user chose on the security bar, for one presentation: the content
-// source it was chosen for. A different presentation (host `content`, File >
-// Open, Recent, a restored version) is a different `activeContent`, so it
-// starts blocked again without a reset racing the load; the reload Enable
-// Content starts keeps the same source, so the choice holds for it.
-interface ExternalContentConsent {
-	document: Uint8Array | ArrayBuffer;
-	enabled: boolean;
-	closed: boolean;
-}
-const externalContentConsent = shallowRef<ExternalContentConsent | null>(null);
-const currentExternalContentConsent = (): ExternalContentConsent | null =>
-	externalContentConsent.value?.document === activeContent.value
-		? externalContentConsent.value
-		: null;
-/** The slide to show after an Enable Content reload, instead of the host's `initialSlide`. */
-let slideAfterReload: number | undefined;
-
 // Full PowerPoint File > Options model (persisted). Declared ahead of
 // `useLoadContent` (rather than down with the rest of the settings wiring)
 // because the load path itself reads Trust Center > "Allow external content"
@@ -425,29 +406,16 @@ const deck = useLoadContent(() => activeContent.value, {
 	onContentApplied: () => {
 		loadVersion.value += 1;
 		// Host `initialSlide`, clamped into the freshly applied deck (every
-		// binding uses the shared `resolveInitialSlideIndex`); an Enable Content
-		// reload stays on the slide the user was on.
-		const keep = slideAfterReload;
-		slideAfterReload = undefined;
-		activeSlideIndex.value =
-			keep === undefined
-				? resolveInitialSlideIndex(props.initialSlide, slides.value.length)
-				: Math.max(0, Math.min(keep, slides.value.length - 1));
+		// binding uses the shared `resolveInitialSlideIndex`).
+		activeSlideIndex.value = resolveInitialSlideIndex(props.initialSlide, slides.value.length);
 	},
 	getSaveIntent: () => ({
 		password: password.presentationPassword.value,
 		passwordProtected: password.isPasswordProtected.value,
 	}),
-	// Linked pictures and media: the host switch, else Trust Center > "Allow
-	// external content" (off by default, like PowerPoint) or Enable Content on
-	// the security bar for this presentation. Blocked, core leaves every
-	// http(s) URL out of the parsed deck.
-	getAllowExternalImages: () =>
-		resolveAllowExternalContent(
-			props.allowExternalContent,
-			viewerOptions.value,
-			currentExternalContentConsent()?.enabled === true,
-		),
+	// The model keeps the deck's linked addresses; what is fetched is this viewer's choice,
+	// made where the deck is drawn (`provideLinkedContent`), so Enable Content only redraws.
+	getAllowExternalImages: () => true,
 	// Host load limits: read per load, so changing the prop never reloads the deck.
 	getLimits: () => props.limits,
 	getGoogleFonts: () => effectiveGoogleFonts.value,
@@ -488,9 +456,17 @@ const {
 	handler,
 	getContent,
 	getRecoverySnapshot,
-	hasLinkedWebContent,
-	externalContentAllowed,
 } = deck;
+
+// PowerPoint's security bar for linked pictures and media: per presentation, per viewer.
+// Every surface below draws through `allowed`; the bar and its two actions follow it.
+const externalContent = useExternalContentConsent({
+	content: () => activeContent.value,
+	host: () => props.allowExternalContent,
+	options: () => viewerOptions.value,
+	drawn: () => [slides.value, templateElementsBySlideId.value, tableStyleMap.value],
+});
+provideLinkedContent(() => externalContent.value.allowed);
 
 // -- Trust Center > Protected View --------------------------------------
 // A freshly loaded document opens read-only when the option is on; "Enable
@@ -1035,7 +1011,8 @@ const { exportStageRef, exportSlide, rasterizeSlide, exportProgressCtl, onExport
 
 // Print renders vector slides; notes and handouts are rasterised.
 const printer = usePrint({
-	slides: mergedSlides,
+	// Vector print draws the model in a print window: as this viewer may fetch it.
+	slides: computed(() => linkedContentView(mergedSlides.value, externalContent.value.allowed)),
 	activeSlideIndex,
 	rasterizeSlide,
 	slideSize: canvasSize,
@@ -1265,66 +1242,6 @@ const {
 	emitAutosave: (bytes) => emit('autosave', bytes),
 	captureVersion: (label, at) => versionHistoryWiring.versionHistory.capture(label, at),
 });
-
-// -- Linked external content: the security bar's two actions -------------
-const showExternalContentBar = computed(() => {
-	const consent = currentExternalContentConsent();
-	return externalContentBarVisible({
-		hasLinkedWebContent: hasLinkedWebContent.value,
-		// Enable Content hides the bar at once; the reload it starts then applies.
-		allowed: externalContentAllowed.value || consent?.enabled === true,
-		host: props.allowExternalContent,
-		closed: consent?.closed === true,
-	});
-});
-
-/**
- * Enable Content: reload this presentation as it stands (the shared
- * `prepareExternalContentReload`) with its linked content. Saved and unsaved
- * edits come along through the recovery serialisation (blocked links survive a
- * save); unsaved ones stay unsaved. The slide stays; Undo starts over, because
- * its steps hold the deck without the linked content.
- */
-async function enableExternalContent(): Promise<void> {
-	const document = activeContent.value;
-	const dirty = autosave.isDirty.value;
-	try {
-		const reload = await prepareExternalContentReload({
-			serializeCurrentDeck: () => getRecoverySnapshot(),
-			isDirty: dirty,
-			slideIndex: activeSlideIndex.value,
-		});
-		if (!reload || activeContent.value !== document) {
-			return;
-		}
-		externalContentConsent.value = { document, enabled: true, closed: false };
-		slideAfterReload = reload.slideIndex;
-		await deck.reload(reload.bytes);
-	} catch (reloadError) {
-		slideAfterReload = undefined;
-		emit('error', reloadError instanceof Error ? reloadError.message : String(reloadError));
-		return;
-	}
-	if (activeContent.value !== document) {
-		return;
-	}
-	selection.selectedElementIds.value = [];
-	history.clearHistory();
-	if (dirty) {
-		// The autosave wiring clears the flag once loading settles; restore it after.
-		await nextTick();
-		autosave.isDirty.value = true;
-	}
-}
-
-/** Close: hide the bar; the content stays blocked for this presentation. */
-function closeExternalContentBar(): void {
-	externalContentConsent.value = {
-		document: activeContent.value,
-		enabled: currentExternalContentConsent()?.enabled === true,
-		closed: true,
-	};
-}
 
 // -- Crash-recovery prompt --------------------------------------------
 // Vue wrote snapshots and never offered one back; the decision and the copy are
@@ -2303,11 +2220,7 @@ if (blocksBridge) {
 		headerFooter,
 		firstSlideNumber: deck.firstSlideNumber,
 		theme: pptxTheme,
-		externalContent: () => ({
-			barVisible: showExternalContentBar.value,
-			enable: () => void enableExternalContent(),
-			close: closeExternalContentBar,
-		}),
+		externalContent: () => externalContent.value,
 		tableStyleMap,
 	});
 }
@@ -2533,13 +2446,13 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 			</template>
 
 			<!-- PowerPoint's security bar under the ribbon: the deck's linked pictures and media
-			     were not downloaded; Enable Content reloads it, as it stands, with them. It shows
-			     without the toolbar too, since it is the only way to enable that content; inside
-			     a building-blocks canvas the host shell renders it from `externalContent`. -->
+			     are not drawn; Enable Content draws them without reloading. It shows without the
+			     toolbar too, since it is the only way to enable that content; inside a
+			     building-blocks canvas the host shell renders it from `externalContent`. -->
 			<ExternalContentBar
-				v-if="!presentation.presenting.value && !blocksBridge && showExternalContentBar"
-				@enable="enableExternalContent"
-				@close="closeExternalContentBar"
+				v-if="!presentation.presenting.value && !blocksBridge && externalContent.barVisible"
+				@enable="externalContent.enable"
+				@close="externalContent.close"
 			/>
 
 			<!-- Hidden pickers for Insert > Image / Media -->

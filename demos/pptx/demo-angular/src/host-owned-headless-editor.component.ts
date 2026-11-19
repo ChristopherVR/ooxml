@@ -12,6 +12,8 @@ import {
 	CollaborationCursorsComponent,
 	createSlidesPanelEditorCommands,
 	describeCollaborationShellState,
+	ExternalContentBarComponent,
+	ExternalContentService,
 	POWER_POINT_VIEWER_PROVIDERS,
 	RemoteSelectionOverlayComponent,
 	SlideCanvasComponent,
@@ -55,6 +57,7 @@ const HOST_STRIP = {
 		SlideThumbnailComponent,
 		CollaborationCursorsComponent,
 		RemoteSelectionOverlayComponent,
+		ExternalContentBarComponent,
 	],
 	styles: `
 		:host {
@@ -92,6 +95,14 @@ const HOST_STRIP = {
 			@if (shell.loader.error(); as error) {
 				<p role="alert">{{ error }}</p>
 			}
+			<!-- PowerPoint's security bar for linked pictures and media; this shell's own choice,
+			     never sent to the room, so each participant enables content for themselves. -->
+			@if (externalContent.barVisible()) {
+				<pptx-external-content-bar
+					(enable)="externalContent.enable()"
+					(closeBar)="externalContent.close()"
+				/>
+			}
 			<div class="custom-body">
 				@if (strip.enabled) {
 					<!-- A host-owned strip of public thumbnails, from the rail's inputs. -->
@@ -117,6 +128,7 @@ const HOST_STRIP = {
 									[firstSlideNumber]="shell.loader.firstSlideNumber()"
 									[theme]="shell.loader.theme()"
 									[tableStyleMap]="shell.loader.tableStyleMap()"
+									[linkedContent]="externalContent.allowed()"
 								/>
 							</button>
 						}
@@ -197,6 +209,8 @@ const HOST_STRIP = {
 export class HostOwnedHeadlessEditorComponent {
 	readonly host = input.required<HostOwnedDemo>();
 	readonly shell = inject(ViewerCollaborationShellService);
+	/** What this shell draws of the deck's linked web content, and its security bar. */
+	readonly externalContent = inject(ExternalContentService);
 	readonly scale = signal(1);
 	readonly strip = HOST_STRIP;
 	private readonly canvas = viewChild(SlideCanvasComponent);

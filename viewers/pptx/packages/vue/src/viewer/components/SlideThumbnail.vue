@@ -37,6 +37,8 @@ const props = withDefaults(defineProps<SlideThumbnailProps>(), {
 	locale: undefined,
 	theme: undefined,
 	tableStyleMap: undefined,
+	// Unset, not `false`: Vue casts an absent boolean prop to `false` otherwise.
+	linkedContent: undefined,
 });
 
 provideSlidesPaneContexts(() => props);

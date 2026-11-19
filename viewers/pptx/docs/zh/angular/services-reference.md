@@ -24,6 +24,7 @@ import { AutosaveService, ViewerExportService } from 'pptx-angular-viewer/intern
 | ----------------------------------- | ------------------------------------------------------------------- |
 | `AutosaveService`                   | 定时自动保存调度和状态。                                            |
 | `CanvasFitService`                  | 编辑器视口的适应宽度和画布尺寸计算。                                |
+| `ExternalContentService`            | 链接网络内容的安全栏：启用内容后只重绘，不重新加载。                |
 | `FieldContextService`               | 文本渲染的字段和占位符上下文，例如日期、幻灯片编号等。              |
 | `InkDrawingService`                 | 绘图工具的自由墨迹笔画状态。                                        |
 | `RulerGuidesService`                | 编辑器画布的标尺刻度和参考线状态。                                  |

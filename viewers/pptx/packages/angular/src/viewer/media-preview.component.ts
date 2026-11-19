@@ -9,9 +9,10 @@ import {
 	viewChild,
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
-import { formatMediaTime } from 'ooxml-ui/pptx';
+import { formatMediaTime, linkedContentUrl } from 'ooxml-ui/pptx';
 import type { MediaPptxElement, PptxElement } from 'pptx-viewer-core';
 
+import { injectLinkedContentAllowed } from './external-content.service';
 import { resolveMediaSrc } from './media-renderer-helpers';
 import { MediaTrimTimelineComponent } from './media-trim-timeline.component';
 
@@ -34,7 +35,7 @@ import { MediaTrimTimelineComponent } from './media-trim-timeline.component';
 					<video
 						#mediaEl
 						[src]="src"
-						[poster]="element().posterFrameData ?? null"
+						[poster]="poster() ?? null"
 						preload="metadata"
 						(timeupdate)="syncTime()"
 						(durationchange)="syncDuration()"
@@ -75,10 +76,10 @@ import { MediaTrimTimelineComponent } from './media-trim-timeline.component';
 					(seek)="seekTo($event)"
 				/>
 			}
-			@if (element().posterFrameData || duration() > 0 || element().mediaPath) {
+			@if (poster() || duration() > 0 || element().mediaPath) {
 				<div class="info">
 					<strong>{{ 'pptx.media.info' | translate }}</strong>
-					@if (element().posterFrameData; as poster) {
+					@if (poster(); as poster) {
 						<img [src]="poster" [alt]="'pptx.media.posterFrame' | translate" />
 					}
 					@if (duration() > 0) {
@@ -190,7 +191,17 @@ export class MediaPreviewComponent {
 	protected readonly currentTime = signal(0);
 	protected readonly liveDuration = signal(0);
 	protected readonly isPlaying = signal(false);
-	protected readonly source = computed(() => resolveMediaSrc(this.element(), this.mediaDataUrls()));
+	private readonly linkedContentAllowed = injectLinkedContentAllowed();
+	/** The clip and poster frame as this viewer may fetch them (linked ones after Enable Content). */
+	protected readonly source = computed(() =>
+		linkedContentUrl(
+			resolveMediaSrc(this.element(), this.mediaDataUrls()),
+			this.linkedContentAllowed(),
+		),
+	);
+	protected readonly poster = computed(() =>
+		linkedContentUrl(this.element().posterFrameData, this.linkedContentAllowed()),
+	);
 	protected readonly duration = computed(
 		() => this.liveDuration() || this.element().metadata?.duration || 0,
 	);

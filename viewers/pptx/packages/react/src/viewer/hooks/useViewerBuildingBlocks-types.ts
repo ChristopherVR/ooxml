@@ -139,7 +139,10 @@ export interface ViewerBuildingBlocksResult {
 	/**
 	 * PowerPoint's security bar for linked pictures and media: a deck that links them to the web
 	 * opens without downloading them, and a custom shell renders `<ExternalContentBar>` while
-	 * `barVisible`, wiring Enable Content and Close to `enable` and `close`.
+	 * `barVisible`, wiring Enable Content and Close to `enable` and `close`. Enable Content only
+	 * redraws: nothing reloads, undo history stays, and collaborators decide for themselves.
+	 * `canvasProps` and `slidesPaneProps` carry `allowed` as `linkedContent`; pass it to any
+	 * `SlideThumbnail` the shell draws itself.
 	 */
 	externalContent: ViewerExternalContentBar;
 	/**

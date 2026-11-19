@@ -1,5 +1,8 @@
 export { useLoadContent } from './useLoadContent';
 export type { UseLoadContentOptions, UseLoadContentResult } from './useLoadContent';
+// PowerPoint's security bar for linked content, for a shell that draws the deck itself.
+export { useExternalContentConsent } from './useExternalContentConsent';
+export type { UseExternalContentConsentInput } from './useExternalContentConsent';
 export {
 	collectMediaElements,
 	collectImagePaths,

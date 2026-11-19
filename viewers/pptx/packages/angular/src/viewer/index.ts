@@ -146,6 +146,8 @@ export { resolveParagraphBullet, formatAutoNumber, bulletIndentPx } from './text
 export { EquationRendererComponent } from './equation-renderer.component';
 export { ommlToMathml, convertOmmlToMathMl } from 'ooxml-ui/pptx';
 export { LoadContentService } from './load-content.service';
+// Per-viewer consent for linked web content: the security bar a custom shell renders.
+export { ExternalContentService } from './external-content.service';
 export { ViewerCollaborationShellService } from './viewer-collaboration-shell.service';
 export { RemoteSelectionOverlayComponent } from './remote-selection-overlay.component';
 export type { ViewerCollaborationShellOptions } from './viewer-collaboration-shell.service';

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {
-	commitSmartArtNodeFill,
 	elementInLocalFrame,
 	measureSvgViewportRect,
 	resolvePalette,
@@ -144,12 +143,9 @@ function onHoverLeave(event: MouseEvent): void {
 	onHoverMouseLeave();
 }
 
-/** Apply a fill colour to a node through the host's style commit. */
+/** Apply a fill colour to a node; the host edits the model element by id. */
 function handleChangeNodeStyle(nodeId: string, fill: string): void {
-	const next = commitSmartArtNodeFill(props.element, nodeId, fill);
-	if (next) {
-		nodeEdit?.commitStyle?.(props.element.id, { smartArtData: next } as Partial<PptxElement>);
-	}
+	nodeEdit?.commitNodeFill?.(props.element.id, nodeId, fill);
 }
 
 function onOverlayDblClick(e: MouseEvent): void {

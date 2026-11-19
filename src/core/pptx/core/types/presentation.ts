@@ -755,13 +755,6 @@ export interface PptxData {
 	appProperties?: PptxAppProperties | undefined;
 	/** Whether the presentation contains VBA macros (is a .pptm file). */
 	hasMacros?: boolean | undefined;
-	/**
-	 * Whether pictures or media in the parts read link to a web (`http:` or
-	 * `https:`) address instead of being embedded. The load references them
-	 * only with `allowExternalImages`; without it, a viewer offers the
-	 * download the way PowerPoint's security bar does.
-	 */
-	hasLinkedWebContent?: boolean | undefined;
 	/** Whether the presentation contains digital signatures (`_xmlsignatures/` parts). */
 	hasDigitalSignatures?: boolean | undefined;
 	/** Number of digital signatures found. */

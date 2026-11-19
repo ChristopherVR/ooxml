@@ -14,6 +14,8 @@ import { t } from './demo-i18n';
 export interface HostSlideStripOptions {
 	store: Store<ViewerState>;
 	getLoaded(): LoadedPresentation | undefined;
+	/** Whether the shell draws the deck's linked web content now. */
+	getLinkedContent(): boolean;
 	/** Commit an open inline text edit first; false keeps the editor open (invalid edit). */
 	commitInline(): boolean;
 }
@@ -58,6 +60,7 @@ export function mountHostSlideStrip(
 						slide,
 						canvasSize: state.canvasSize,
 						previewWidth: HOST_STRIP_THUMBNAIL_WIDTH,
+						linkedContent: options.getLinkedContent(),
 						mediaDataUrls: loaded?.mediaDataUrls,
 						headerFooter: loaded?.headerFooter,
 						customProperties: loaded?.customProperties,
@@ -78,7 +81,8 @@ export function mountHostSlideStrip(
 		if (
 			state.slides !== previous.slides ||
 			state.currentSlide !== previous.currentSlide ||
-			state.canvasSize !== previous.canvasSize
+			state.canvasSize !== previous.canvasSize ||
+			state.externalContentEnabled !== previous.externalContentEnabled
 		) {
 			draw();
 		}

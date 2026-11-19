@@ -3,8 +3,8 @@
  * Linked external content follows Microsoft PowerPoint's default: opening a deck
  * downloads none of its linked pictures and media, and a security bar offers
  * Enable Content for that presentation, with or without the toolbar and in the
- * building blocks' host shell. Enabling reloads the deck as it stands, so an
- * edit saved before it survives the next save. The host `allowExternalContent` switch
+ * building blocks' host shell. Enabling only redraws: the deck, its unsaved edits
+ * and undo history stay, and saves keep the pictures linked. The host `allowExternalContent` switch
  * (the demos' `?allowExternalContent=0|1`, see `demos/pptx/shared/demo-root-options.ts`)
  * blocks without the bar or downloads without asking. The deck links pictures
  * and a video to an external origin, answered here with `page.route`, so every
@@ -177,7 +177,7 @@ test.describe('linked external content', () => {
 		await securityBar(page).getByRole('button', { name: 'Enable Content' }).click();
 		await expect.poll(() => requestedPaths(requests)).toContain(LINKED_PICTURES.shapeFill);
 		await expect(securityBar(page)).toBeHidden();
-		// The edit is still there and still saved: the reload used the deck as it stood.
+		// The edit is still there and still saved: nothing reloaded.
 		expect(await firstElementX(page)).toBe(before + 10);
 		await expect(page.getByTestId('host-save-state')).toContainText('"dirty":false');
 
@@ -186,6 +186,24 @@ test.describe('linked external content', () => {
 		expect(offsets(next)).toEqual(offsets(saved));
 		// The linked pictures stay linked, not embedded.
 		expect(next).toContain('r:link="rIdLinkedFill"');
+	});
+
+	test('keeps an unsaved edit unsaved and undoable through Enable Content', async ({ page }) => {
+		const requests = await recordExternalRequests(page);
+		await openExternalDeck(page, '?hostSave=1');
+		const before = await firstElementX(page);
+		await page.getByTestId('host-save-edit').click();
+		await expect.poll(() => firstElementX(page)).toBe(before + 10);
+		await securityBar(page).getByRole('button', { name: 'Enable Content' }).click();
+		await expect.poll(() => requestedPaths(requests)).toContain(LINKED_PICTURES.shapeFill);
+		expect(await firstElementX(page)).toBe(before + 10);
+		await expect(page.getByTestId('host-save-state')).toContainText('"dirty":true');
+		// Undo history survives: the edit made before Enable Content can be undone.
+		await page.getByTestId('host-save-undo').click();
+		await expect.poll(() => firstElementX(page)).toBe(before);
+		// Undo never takes the linked content away again.
+		await expect(securityBar(page)).toHaveCount(0);
+		expect(await externalReferences(page)).not.toEqual([]);
 	});
 
 	test('shows the security bar with the toolbar off', async ({ page }) => {
@@ -223,13 +241,14 @@ test.describe('linked external content', () => {
 		await openExternalDeck(page);
 		await securityBar(page).getByRole('button', { name: 'Enable Content' }).click();
 		await expect.poll(() => requestedPaths(requests)).toContain(LINKED_PICTURES.shapeFill);
-		// Let every request the enabled deck started land before counting the next open's.
-		await page.waitForLoadState('networkidle');
-		requests.length = 0;
 		// Opening the presentation again asks again, as PowerPoint does. (The demos offer the file
 		// input only on their start page; each binding's unit tests cover a second deck opened in
-		// the same viewer.)
-		await openExternalDeck(page);
+		// the same viewer.) Count from the new page on: until it replaces the enabled one, that
+		// page's video can still ask for more of its file.
+		await resetTabSession(page);
+		await page.goto('/');
+		requests.length = 0;
+		await chooseExternalDeck(page);
 		await expect(securityBar(page)).toBeVisible();
 		await expectNothingRequested(page, requests);
 	});

@@ -29,7 +29,7 @@ describe('text-style emphasis override reaches every element type', () => {
 		const body = source.slice(start, source.indexOf(');', start));
 		expect(body).not.toContain('hasTextProperties');
 		expect(body).toContain(
-			'buildTextStyleOverrideCss(this.element().id, this.animationState()?.textStyle)',
+			'buildTextStyleOverrideCss(this.drawn().id, this.animationState()?.textStyle)',
 		);
 	});
 

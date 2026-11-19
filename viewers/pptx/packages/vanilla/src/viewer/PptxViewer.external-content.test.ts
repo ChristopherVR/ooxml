@@ -56,13 +56,18 @@ function mount(options: PptxViewerOptions = {}) {
 	const viewer = createPptxViewer(container, { googleFonts: false, ...options });
 	active.push(viewer);
 	const bar = () => container.querySelector('pptx-ui-external-content-bar');
-	/** Whether the last load could download linked content (core may call `load` more than once per open). */
-	const allowed = () => load.mock.lastCall?.[1]?.allowExternalImages === true;
 	const state = () =>
 		(viewer as unknown as { store: { get(): { slides: unknown; dirty: boolean } } }).store.get();
-	/** Whether any element of the open deck references the linked origin. */
-	const referencesOrigin = () => JSON.stringify(state().slides).includes(LINKED_ORIGIN);
-	return { container, viewer, bar, allowed, referencesOrigin, state };
+	/** Whether anything drawn (stage, thumbnails) would make the browser contact the linked origin. */
+	const drawsOrigin = () =>
+		[...container.querySelectorAll('*')].some((node) =>
+			['src', 'poster', 'href', 'style'].some((name) =>
+				node.getAttribute(name)?.includes(LINKED_ORIGIN),
+			),
+		);
+	/** Whether the open deck's model keeps its links. */
+	const modelLinks = () => JSON.stringify(state().slides).includes(LINKED_ORIGIN);
+	return { container, viewer, bar, load, drawsOrigin, modelLinks, state };
 }
 
 function request(bar: Element, id: 'action' | 'close'): void {
@@ -70,60 +75,56 @@ function request(bar: Element, id: 'action' | 'close'): void {
 }
 
 describe('vanilla linked external content', () => {
-	it('blocks a linked deck on open and shows the security bar', async () => {
-		const { viewer, bar, allowed, referencesOrigin } = mount();
+	it('draws nothing linked on open, keeps the links in the deck and shows the security bar', async () => {
+		const { viewer, bar, drawsOrigin, modelLinks } = mount();
 		await viewer.loadFile(await linkedDeck());
-		expect(allowed()).toBeFalsy();
-		expect(referencesOrigin()).toBeFalsy();
+		expect(drawsOrigin()).toBe(false);
+		expect(modelLinks()).toBe(true);
 		expect(bar()).not.toBeNull();
 	});
 
-	it('reloads the presentation with its linked content on Enable Content', async () => {
-		const { viewer, bar, allowed, referencesOrigin, state } = mount();
+	it('draws the linked content on Enable Content without reloading or changing the deck', async () => {
+		const { viewer, bar, load, drawsOrigin, state } = mount();
 		await viewer.loadFile(await linkedDeck());
+		const loads = load.mock.calls.length;
+		const slides = state().slides;
 		request(bar()!, 'action');
-		await vi.waitFor(() => expect(allowed()).toBeTruthy());
-		await vi.waitFor(() => expect(referencesOrigin()).toBeTruthy());
+		expect(drawsOrigin()).toBe(true);
 		expect(bar()).toBeNull();
-		expect(state().dirty).toBeFalsy();
+		expect(load.mock.calls.length).toBe(loads);
+		expect(state().slides).toBe(slides);
+		expect(state().dirty).toBe(false);
 	});
 
-	it('keeps edits saved before Enable Content, and the next save writes them', async () => {
-		const { viewer, bar, referencesOrigin, state } = mount({ editable: true });
+	it('keeps unsaved edits and their undo through Enable Content', async () => {
+		const { viewer, bar, drawsOrigin, state } = mount({ editable: true });
+		await viewer.loadFile(await linkedDeck());
+		const [first] = viewer.getElements(0);
+		viewer.updateElement(first!.id, { x: first!.x + 40 } as never);
+		request(bar()!, 'action');
+		expect(drawsOrigin()).toBe(true);
+		expect(viewer.getElements(0)[0]!.x).toBe(first!.x + 40);
+		expect(state().dirty).toBe(true);
+		expect(viewer.canUndo()).toBe(true);
+		viewer.undo();
+		expect(viewer.getElements(0)[0]!.x).toBe(first!.x);
+		// Undo never takes the links away: they are the deck's content.
+		expect(drawsOrigin()).toBe(true);
+	});
+
+	it('saves the pictures still linked after an edit made while they are blocked', async () => {
+		const { viewer } = mount({ editable: true });
 		await viewer.loadFile(await linkedDeck());
 		const [first] = viewer.getElements(0);
 		viewer.updateElement(first!.id, { x: first!.x + 40 } as never);
 		const saved = await viewer.getSaveSnapshot();
-		expect(viewer.acknowledgeSave(saved.revision).status).toBe('clean');
-		expect(state().dirty).toBeFalsy();
-		request(bar()!, 'action');
-		await vi.waitFor(() => expect(referencesOrigin()).toBeTruthy());
-		expect(viewer.getElements(0)[0]!.x).toBe(first!.x + 40);
-		expect(state().dirty).toBeFalsy();
-		const next = await viewer.getSaveSnapshot();
-		const slide = await (
-			await JSZip.loadAsync(next.content)
-		)
-			.file('ppt/slides/slide1.xml')!
-			.async('string');
-		const savedSlide = await (
-			await JSZip.loadAsync(saved.content)
-		)
-			.file('ppt/slides/slide1.xml')!
-			.async('string');
-		expect(slide).toContain('r:link="rIdLinkedFill"');
-		expect(slide.match(/<a:off [^>]*>/u)?.[0]).toBe(savedSlide.match(/<a:off [^>]*>/u)?.[0]);
-	});
-
-	it('keeps unsaved edits unsaved through Enable Content', async () => {
-		const { viewer, bar, referencesOrigin, state } = mount({ editable: true });
-		await viewer.loadFile(await linkedDeck());
-		const [first] = viewer.getElements(0);
-		viewer.updateElement(first!.id, { x: first!.x + 40 } as never);
-		request(bar()!, 'action');
-		await vi.waitFor(() => expect(referencesOrigin()).toBeTruthy());
-		expect(viewer.getElements(0)[0]!.x).toBe(first!.x + 40);
-		expect(state().dirty).toBeTruthy();
+		const zip = await JSZip.loadAsync(saved.content);
+		expect(await zip.file('ppt/slides/slide1.xml')!.async('string')).toContain(
+			'r:link="rIdLinkedFill"',
+		);
+		expect(await zip.file('ppt/slides/_rels/slide1.xml.rels')!.async('string')).toContain(
+			`Target="${LINKED_ORIGIN}/fill.png" TargetMode="External"`,
+		);
 	});
 
 	it('shows the bar without the toolbar', async () => {
@@ -133,35 +134,33 @@ describe('vanilla linked external content', () => {
 	});
 
 	it('asks again for the next presentation', async () => {
-		const { viewer, bar, allowed } = mount();
+		const { viewer, bar, drawsOrigin } = mount();
 		await viewer.loadFile(await linkedDeck());
 		request(bar()!, 'action');
-		await vi.waitFor(() => expect(allowed()).toBeTruthy());
+		expect(drawsOrigin()).toBe(true);
 		await viewer.loadFile(await linkedDeck());
-		expect(allowed()).toBeFalsy();
+		expect(drawsOrigin()).toBe(false);
 		expect(bar()).not.toBeNull();
 	});
 
 	it('keeps the content blocked when the bar is closed', async () => {
-		const { viewer, bar, allowed, referencesOrigin } = mount();
+		const { viewer, bar, drawsOrigin } = mount();
 		await viewer.loadFile(await linkedDeck());
 		request(bar()!, 'close');
 		expect(bar()).toBeNull();
-		expect(allowed()).toBeFalsy();
-		expect(referencesOrigin()).toBeFalsy();
+		expect(drawsOrigin()).toBe(false);
 	});
 
 	it('shows no bar when the host blocks linked content, and none it allows', async () => {
 		const blocked = mount({ allowExternalContent: false });
 		await blocked.viewer.loadFile(await linkedDeck());
-		expect(blocked.allowed()).toBeFalsy();
+		expect(blocked.drawsOrigin()).toBe(false);
 		expect(blocked.bar()).toBeNull();
 
 		vi.restoreAllMocks();
 		const allowedByHost = mount({ allowExternalContent: true });
 		await allowedByHost.viewer.loadFile(await linkedDeck());
-		expect(allowedByHost.allowed()).toBeTruthy();
-		expect(allowedByHost.referencesOrigin()).toBeTruthy();
+		expect(allowedByHost.drawsOrigin()).toBe(true);
 		expect(allowedByHost.bar()).toBeNull();
 	});
 

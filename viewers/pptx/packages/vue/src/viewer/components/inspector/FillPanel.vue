@@ -14,6 +14,7 @@ import { hasShapeProperties } from 'pptx-viewer-core';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { useLinkedContentUrl } from '../../composables/linked-content';
 import { injectRecentColors } from '../../composables/recent-colors-context';
 import { useLiveElementColor } from '../../composables/useLiveElementColor';
 import RecentColorsRow from '../RecentColorsRow.vue';
@@ -49,6 +50,8 @@ const style = computed<ShapeStyle | undefined>(() =>
 );
 
 const view = computed(() => resolveShapeFillView(style.value));
+/** The picture fill preview: a linked picture only once this viewer allows linked content. */
+const imagePreview = useLinkedContentUrl(() => view.value.image?.url);
 
 function patchStyle(patch: Partial<ShapeStyle>): void {
 	emit('update', shapeStylePatch(props.element, patch));
@@ -210,8 +213,8 @@ const valueOf = (event: Event): string => (event.target as HTMLInputElement).val
 					<input type="file" accept="image/*" class="text-xs" @change="onImageFile" />
 				</label>
 				<img
-					v-if="view.image.url"
-					:src="view.image.url"
+					v-if="imagePreview"
+					:src="imagePreview"
 					:alt="t('pptx.fillAdvanced.fillPreviewAlt')"
 					class="h-16 w-full rounded border border-border object-cover"
 				/>

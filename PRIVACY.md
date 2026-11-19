@@ -86,7 +86,10 @@ shown in the provider's embed frame.
   An online video frame loads the provider's page and whatever it loads.
 - **Default:** off. Opening a deck requests none of its linked content; a security bar ("References
   to external pictures and other media have been blocked") offers Enable Content for that
-  presentation. Enabling lasts until another presentation is opened and is not stored. The core
+  presentation. Enabling lasts until another presentation is opened and is not stored. In a
+  collaboration session the linked addresses travel with the shared deck, but each participant's
+  viewer requests them only after that participant chooses Enable Content; one participant's
+  choice is never sent to the others. The core
   parser's own `allowExternalImages` option is off too, so `ooxml-core/pptx` used directly
   fetches nothing. [docs/powerpoint-external-content.md](docs/powerpoint-external-content.md)
   records PowerPoint's own default and how it was established.

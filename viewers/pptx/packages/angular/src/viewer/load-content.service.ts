@@ -69,6 +69,16 @@ import {
 import { GOOGLE_WEBFONTS_LINK_ID } from './google-webfonts.service';
 import { ViewerOptionsService } from './viewer-options.service';
 
+/** What the user chose on the security bar for one presentation. */
+export interface ExternalContentConsent {
+	/** Enable Content: draw the deck's linked web content. */
+	readonly enabled: boolean;
+	/** The bar's close button: hide it, keep the content withheld. */
+	readonly closed: boolean;
+}
+
+const NO_EXTERNAL_CONTENT_CONSENT: ExternalContentConsent = { enabled: false, closed: false };
+
 /**
  * `LoadContentService`: Angular port of the React `useLoadContent` hook and
  * the Vue `useLoadContent` composable.
@@ -89,7 +99,9 @@ import { ViewerOptionsService } from './viewer-options.service';
 @Injectable()
 export class LoadContentService {
 	private pendingInlineEditReader?: () => PendingInlineTextEdit | undefined;
-	private hostAllowExternalContentReader?: () => boolean | undefined;
+	private readonly hostAllowExternalContentReader = signal<(() => boolean | undefined) | undefined>(
+		undefined,
+	);
 	private hostLimitsReader?: () => PptxLoadLimits | undefined;
 	/** The host `limits` input, read (untracked) at the start of each load. */
 	bindHostLimits(reader: () => PptxLoadLimits | undefined): void {
@@ -103,66 +115,33 @@ export class LoadContentService {
 	bindHostGoogleFonts(reader: () => GoogleFontsOption | undefined): void {
 		this.hostGoogleFontsReader = reader;
 	}
-	/** The host `allowExternalContent` input; when set it overrides the Trust Center option per load. */
+	/** The host `allowExternalContent` input; when set it overrides the Trust Center option. */
 	bindHostAllowExternalContent(reader: () => boolean | undefined): void {
-		this.hostAllowExternalContentReader = reader;
+		this.hostAllowExternalContentReader.set(reader);
 	}
 
-	/** The host `allowExternalContent` input, read untracked. */
+	/** The host `allowExternalContent` input now (tracked, so a live change redraws). */
 	hostAllowExternalContent(): boolean | undefined {
-		return untracked(() => this.hostAllowExternalContentReader?.());
+		return this.hostAllowExternalContentReader()?.();
 	}
 
 	/**
-	 * Whether the next deck this viewer loads may reference linked http(s)
-	 * content: the host `allowExternalContent` input when set, otherwise the
-	 * Trust Center option or Enable Content for this presentation. Read
-	 * untracked, so calling it never subscribes.
+	 * Security bar choices for the presentation now open (PowerPoint's Enable Content and the
+	 * bar's close button). Reset when another presentation loads; never stored.
+	 */
+	readonly externalContentConsent = signal<ExternalContentConsent>(NO_EXTERNAL_CONTENT_CONSENT);
+
+	/**
+	 * Whether an auxiliary load (Compare) may reference linked http(s) content: the host
+	 * `allowExternalContent` input when set, otherwise the Trust Center option. Read untracked,
+	 * so calling it never subscribes.
 	 */
 	resolveAllowExternalImages(): boolean {
 		return untracked(() => {
-			const host = this.hostAllowExternalContentReader?.();
+			const host = this.hostAllowExternalContent();
 			const options = this.optionsService?.options();
-			const enabled = this.externalContent().enabled;
-			return options ? resolveAllowExternalContent(host, options, enabled) : host === true;
+			return options ? resolveAllowExternalContent(host, options) : host === true;
 		});
-	}
-
-	/**
-	 * What the user chose on the security bar for the presentation now open
-	 * (PowerPoint's "Enable Content"). Every load starts it over except the
-	 * reload {@link enableExternalContent} makes; it is never stored.
-	 */
-	readonly externalContent = signal<{ enabled: boolean; closed: boolean }>({
-		enabled: false,
-		closed: false,
-	});
-	/** The loaded deck links pictures or media to web addresses (`PptxData.hasLinkedWebContent`). */
-	readonly hasLinkedWebContent = signal(false);
-	/** Whether the load now shown referenced its linked content (`allowExternalImages`). */
-	readonly externalContentAllowed = signal(false);
-	/**
-	 * Whether the load now shown is the reload {@link enableExternalContent}
-	 * made, so the viewer keeps its place instead of treating it as a newly
-	 * opened presentation. Plain field: read once by the seeding effect.
-	 */
-	lastLoadWasExternalContentReload = false;
-
-	/**
-	 * Enable Content: reload `source` (the presentation now open, or its
-	 * unsaved state serialised) with its linked content, keeping the choice
-	 * for this presentation.
-	 */
-	enableExternalContent(source: Uint8Array | ArrayBuffer): Promise<void> {
-		this.externalContent.set({ enabled: true, closed: false });
-		// A copy: the parser may consume the buffer it is given, and `source` is still the deck's.
-		const copy = source instanceof Uint8Array ? source.slice() : source.slice(0);
-		return this.load(copy, { keepExternalContentConsent: true });
-	}
-
-	/** The security bar's close button: hide it, keep the content blocked. */
-	closeExternalContentBar(): void {
-		this.externalContent.update((current) => ({ ...current, closed: true }));
 	}
 	/** Viewer-scoped current list session. Saving never commits or blurs it. */
 	bindPendingInlineEdit(reader: () => PendingInlineTextEdit | undefined): void {
@@ -459,16 +438,9 @@ export class LoadContentService {
 	}
 
 	/** Parse the supplied `.pptx` bytes into the reactive signals. */
-	async load(
-		raw: Uint8Array | ArrayBuffer | null | undefined,
-		{ keepExternalContentConsent = false }: { keepExternalContentConsent?: boolean } = {},
-	): Promise<void> {
+	async load(raw: Uint8Array | ArrayBuffer | null | undefined): Promise<void> {
 		if (!raw) {
 			return;
-		}
-		// A different presentation asks again (PowerPoint's Enable Content lasts for one file).
-		if (!keepExternalContentConsent) {
-			this.externalContent.set({ enabled: false, closed: false });
 		}
 		const token = ++this.renderToken;
 		const newHandler = new PptxHandler();
@@ -499,20 +471,9 @@ export class LoadContentService {
 			const sigBuffer = (buffer as ArrayBuffer).slice(0);
 
 			const previousHandler = this.handler;
-			// Trust Center > "Allow external content": gates linked (non-embedded)
-			// http(s) image URLs. Defaults to blocked when the options service is
-			// unreachable (e.g. constructed outside DI in a unit test).
-			//
-			// Read UNTRACKED: this runs synchronously inside the viewer's load
-			// effect, before the first await, so a tracked read here made that
-			// effect depend on the whole Options store. Every preference write
-			// (the AutoSave switch, a View toggle, an Options dialog field) then
-			// re-parsed the deck from its original bytes, which re-seeded the
-			// editor and threw away unsaved edits and the undo history. The option
-			// is a load-time input, exactly as in React (`[content]` deps only).
-			// The host `allowExternalContent` input wins over the option when set.
-			const allowExternalImages = this.resolveAllowExternalImages();
-			// The host `limits` input, read untracked for the same reason.
+			// The host `limits` input, read UNTRACKED: this runs synchronously inside
+			// the viewer's load effect, before the first await, so a tracked read here
+			// would re-parse the deck (and drop unsaved edits) whenever it changed.
 			const limits = untracked(() => this.hostLimitsReader?.());
 			// ── The deck's Google Fonts webfonts ─────
 			// Started as soon as core has parsed the slides (`onSlidesParsed`), so the
@@ -556,7 +517,9 @@ export class LoadContentService {
 				});
 			}
 			const parsed = await newHandler.load(buffer as ArrayBuffer, {
-				allowExternalImages,
+				// The model keeps linked web addresses as deck content; what is fetched is
+				// decided where it is drawn (`ExternalContentService`).
+				allowExternalImages: true,
 				limits,
 				onSlidesParsed: (deck) => startWebfonts([...deck.slides], [...deck.embeddedFonts]),
 			});
@@ -663,11 +626,10 @@ export class LoadContentService {
 			this.revokeBlobUrls(Array.from(this.mediaDataUrls().values()));
 			this.revokeBlobUrls(this.activeBlobUrls);
 			this.activeBlobUrls = loadBlobUrls;
+			// Another presentation: the security bar asks again.
+			this.externalContentConsent.set(NO_EXTERNAL_CONTENT_CONSENT);
 			resources.commit();
 			this.handler = newHandler;
-			this.lastLoadWasExternalContentReload = keepExternalContentConsent;
-			this.hasLinkedWebContent.set(parsed.hasLinkedWebContent === true);
-			this.externalContentAllowed.set(allowExternalImages);
 			this.slides.set(nextSlides);
 			this.parsedData.set({ ...parsed, slides: nextSlides, tableStyleMap: nextTableStyleMap });
 			this.mediaDataUrls.set(nextMediaUrls);

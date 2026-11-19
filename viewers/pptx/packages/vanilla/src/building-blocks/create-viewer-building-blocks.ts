@@ -157,6 +157,7 @@ export function createViewerBuildingBlocks(
 
 	const externalContent = (): ViewerExternalContentBar => ({
 		barVisible: viewer?.externalContentBarVisible() ?? false,
+		allowed: viewer?.linkedContentAllowed() ?? false,
 		enable: () => viewer?.enableExternalContent(),
 		close: () => viewer?.closeExternalContentBar(),
 	});

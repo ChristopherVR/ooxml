@@ -59,7 +59,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		this.eagerDecodeImages = options.eagerDecodeImages ?? false;
 		this.eagerDecodeEmbeddedFonts = options.eagerDecodeEmbeddedFonts === true;
 		this.allowExternalImages = options.allowExternalImages === true;
-		this.linkedWebContent = false;
 		if (data.byteLength < 4) {
 			throw new Error('Invalid PPTX binary: file is empty or truncated.');
 		}

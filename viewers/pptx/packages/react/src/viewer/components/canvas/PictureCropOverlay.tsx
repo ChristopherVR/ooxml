@@ -12,6 +12,7 @@ import React, { useEffect, useRef } from 'react';
 
 import { useTranslation } from '../../i18n/use-translation';
 import { imgSrc } from '../elements/ImageRenderer';
+import { useLinkedContentUrl } from '../linked-content-context';
 
 export interface PictureCropOverlayProps {
 	/** The picture in crop mode, as it is right now (live). */
@@ -100,7 +101,7 @@ export function PictureCropOverlay({
 	};
 
 	const { ghost, frame, handles } = overlay;
-	const src = imgSrc(element);
+	const src = useLinkedContentUrl(imgSrc(element));
 	return (
 		<div
 			data-pptx-crop-overlay='true'

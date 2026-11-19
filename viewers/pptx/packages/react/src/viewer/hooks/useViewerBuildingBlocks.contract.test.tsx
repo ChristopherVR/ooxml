@@ -16,6 +16,7 @@ import type { BuildingBlocksContractOptions } from '../../../../shared/test-util
 import { runExternalContentContract } from '../../../../shared/test-utils/external-content-contract.mjs';
 import type { ExternalContentContractHarness } from '../../../../shared/test-utils/external-content-contract.mjs';
 import { ExternalContentBar } from '../components/ExternalContentBar';
+import { SlideCanvas } from '../components/SlideCanvas';
 import { useViewerBuildingBlocks } from './useViewerBuildingBlocks';
 import type { ViewerBuildingBlocksResult } from './useViewerBuildingBlocks';
 
@@ -34,6 +35,7 @@ function reactHarness(): ExternalContentContractHarness {
 				{externalContent.barVisible && (
 					<ExternalContentBar onEnable={externalContent.enable} onClose={externalContent.close} />
 				)}
+				<SlideCanvas {...blocks.canvasProps} />
 			</div>
 		);
 	}

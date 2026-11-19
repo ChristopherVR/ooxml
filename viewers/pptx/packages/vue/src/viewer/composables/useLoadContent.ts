@@ -216,20 +216,6 @@ export interface UseLoadContentResult {
 	 * compat-warning toast stack.
 	 */
 	compatibilityWarnings: ShallowRef<PptxCompatibilityWarning[]>;
-	/**
-	 * The loaded deck links pictures or media to web addresses (core's
-	 * `hasLinkedWebContent`). With {@link externalContentAllowed} false, they
-	 * were left out and the viewer shows PowerPoint's security bar.
-	 */
-	hasLinkedWebContent: Ref<boolean>;
-	/** The `allowExternalImages` the loaded deck was parsed with. */
-	externalContentAllowed: Ref<boolean>;
-	/**
-	 * Parse `bytes` in place of the current deck without changing the content
-	 * source: Enable Content reloads the same presentation with its linked
-	 * content. Resolves once the load has applied (or failed).
-	 */
-	reload: (bytes: Uint8Array | ArrayBuffer) => Promise<void>;
 	/** Serialise the current presentation back to `.pptx` bytes. */
 	getContent: () => Promise<Uint8Array>;
 	/**
@@ -275,11 +261,10 @@ export interface UseLoadContentOptions {
 	 */
 	getEmbedFonts?: () => boolean;
 	/**
-	 * Whether this load may reference linked (`http://`/`https://`) pictures and
-	 * media: the shared `resolveAllowExternalContent` (host switch, Trust Center
-	 * option, Enable Content for this presentation). Omitted or `false` (core's
-	 * own default) leaves them out. A getter, not a value, so it is read at each
-	 * load, the same convention as {@link getSaveIntent} and {@link getEmbedFonts}.
+	 * Whether the parsed deck keeps its linked (`http://`/`https://`) picture
+	 * and media addresses; omitted or `false` (core's own default) leaves them
+	 * out. `PowerPointViewer` passes `true`: the model keeps them and each
+	 * surface withholds them until the viewer allows linked content.
 	 */
 	getAllowExternalImages?: () => boolean;
 	/**
@@ -324,8 +309,6 @@ export function useLoadContent(
 	const customProperties = shallowRef<PptxCustomProperty[]>([]);
 	const modifyVerifier = shallowRef<PptxModifyVerifier | undefined>(undefined);
 	const compatibilityWarnings = shallowRef<PptxCompatibilityWarning[]>([]);
-	const hasLinkedWebContent = ref(false);
-	const externalContentAllowed = ref(false);
 	const appProperties = shallowRef<PptxAppProperties | undefined>(undefined);
 	const tagCollections = shallowRef<PptxTagCollection[]>([]);
 	const embeddedFonts = shallowRef<PptxEmbeddedFont[]>([]);
@@ -433,9 +416,8 @@ export function useLoadContent(
 					googleFontsBase: resolveGoogleFontsCss2Base(options?.getGoogleFonts?.()),
 				});
 			}
-			const allowExternalImages = options?.getAllowExternalImages?.() === true;
 			const parsed = await newHandler.load(buffer as ArrayBuffer, {
-				allowExternalImages,
+				allowExternalImages: options?.getAllowExternalImages?.(),
 				limits: options?.getLimits?.(),
 				onSlidesParsed: (deck) => startWebfonts([...deck.slides], [...deck.embeddedFonts]),
 			});
@@ -586,8 +568,6 @@ export function useLoadContent(
 			customProperties.value = parsed.customProperties ?? [];
 			modifyVerifier.value = parsed.modifyVerifier;
 			compatibilityWarnings.value = newHandler.getCompatibilityWarnings();
-			hasLinkedWebContent.value = parsed.hasLinkedWebContent === true;
-			externalContentAllowed.value = allowExternalImages;
 			appProperties.value = parsed.appProperties;
 			tagCollections.value = parsed.tags ?? [];
 			embeddedFonts.value = parsed.embeddedFonts ?? [];
@@ -777,9 +757,6 @@ export function useLoadContent(
 		customProperties,
 		modifyVerifier,
 		compatibilityWarnings,
-		hasLinkedWebContent,
-		externalContentAllowed,
-		reload: load,
 		appProperties,
 		tagCollections,
 		embeddedFonts,

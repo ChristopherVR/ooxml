@@ -98,6 +98,11 @@ export interface RenderControllerDeps {
 	 */
 	getPieChart3D(): boolean;
 	/**
+	 * Whether this viewer draws the deck's linked web content now (`linkedContentAllowed`):
+	 * every stage, thumbnail and preview this controller builds passes it on.
+	 */
+	getLinkedContentAllowed(): boolean;
+	/**
 	 * `viewerOptions.advanced.pixelateMosaicAnimation`. `true` plays the
 	 * blocky mosaic reveal for `p:animEffect/@filter="pixelate"`; `false`
 	 * (the default, matching PowerPoint's own behaviour) snaps the element
@@ -233,6 +238,7 @@ export function createRenderController(deps: RenderControllerDeps): RenderContro
 		return renderSlideStage({
 			document: doc,
 			slide: renderSlide,
+			linkedContent: deps.getLinkedContentAllowed(),
 			canvasSize,
 			mediaDataUrls: state.mediaDataUrls,
 			colorScheme: state.colorScheme,

@@ -50,12 +50,14 @@ function slide(elements: PptxElement[]): PptxSlide {
 			[templateElements]="templates()"
 			[canvasSize]="{ width: 960, height: 540 }"
 			[previewWidth]="120"
+			[linkedContent]="linkedContent()"
 		/>
 	`,
 })
 class ThumbnailHostComponent {
 	readonly slide = signal<PptxSlide>(slide([]));
 	readonly templates = signal<readonly PptxElement[]>([]);
+	readonly linkedContent = signal<boolean | undefined>(undefined);
 }
 
 beforeAll(async () => {
@@ -132,6 +134,25 @@ describe('slideThumbnailComponent', () => {
 		fixture.componentInstance.slide.set({ ...base, slideNumber: 7 });
 		fixture.detectChanges();
 		expect(stage(fixture)?.textContent?.trim()).toBe('7');
+	});
+
+	it('draws linked web content only when the host passes linkedContent', () => {
+		const url = 'https://linked-content.test/fill.png';
+		const linked = { ...shape('linked'), shapeStyle: { fillMode: 'image', fillImageUrl: url } };
+		const fixture = mount([linked as unknown as PptxElement]);
+		fixture.componentInstance.slide.update((current) => ({
+			...current,
+			backgroundImage: `${url}?background`,
+		}));
+		fixture.detectChanges();
+		expect(root(fixture).innerHTML, 'withheld outside a viewer').not.toContain(url);
+		fixture.componentInstance.linkedContent.set(true);
+		fixture.detectChanges();
+		expect(root(fixture).innerHTML).toContain(url);
+		expect(root(fixture).innerHTML).toContain(`${url}?background`);
+		fixture.componentInstance.linkedContent.set(false);
+		fixture.detectChanges();
+		expect(root(fixture).innerHTML).not.toContain(url);
 	});
 
 	// The same badge, from the same shared descriptor, in every binding.

@@ -69,6 +69,11 @@ export function getElementIdFromEvent(e: React.MouseEvent): string | null {
 export interface SlideCanvasProps {
 	/** Reports an element omitted after a React render/lifecycle error; defaults to console.error. */
 	onElementRenderError?: ElementRenderErrorHandler;
+	/**
+	 * Draw the deck's linked web content: `externalContent.allowed` from the building blocks.
+	 * Unset keeps the surrounding viewer's choice, and withholds it outside a viewer.
+	 */
+	linkedContent?: boolean;
 	/** The viewer-owned live channel; absent for static/custom non-collaborative canvases. */
 	livePatcher?: CollaborationLivePatcher;
 	registerInlineEditReader?: (elementId: string, read: () => InlineListReadResult) => () => void;

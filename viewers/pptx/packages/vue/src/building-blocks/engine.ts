@@ -154,6 +154,7 @@ function createEngine(c: Context): BuildingBlocksEngine {
 			firstSlideNumber: c.firstSlideNumber.value,
 			theme: c.theme.value,
 			tableStyleMap: c.tableStyleMap.value,
+			linkedContent: c.externalContent().allowed,
 			goTo: (index) => {
 				c.activeSlideIndex.value = index;
 			},

@@ -14,6 +14,7 @@ import type { PptxElement } from 'pptx-viewer-core';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { useLinkedContentUrl } from '../composables/linked-content';
 import { useCropOverlayDrag } from '../composables/useCropOverlayDrag';
 
 const props = defineProps<{
@@ -23,6 +24,8 @@ const props = defineProps<{
 	applyLive: (update: CropElementUpdate) => void;
 }>();
 const { t } = useI18n();
+/** The picture as this viewer may fetch it: a linked one only once linked content is allowed. */
+const drawnImageSrc = useLinkedContentUrl(() => props.imageSrc);
 
 const overlay = computed(() => buildCropOverlay(props.element, props.zoom));
 const rootStyle = computed(() => ({
@@ -66,8 +69,8 @@ const drag = useCropOverlayDrag({
 			@pointerdown="drag.onPointerDown($event, null)"
 		>
 			<img
-				v-if="imageSrc"
-				:src="imageSrc"
+				v-if="drawnImageSrc"
+				:src="drawnImageSrc"
 				alt=""
 				draggable="false"
 				:style="{

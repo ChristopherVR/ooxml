@@ -30,12 +30,15 @@ import {
 	tableCellPointerIntent,
 	tableContainerCss,
 	tableFrameCss,
+	linkedContentView,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxTableData, PptxTableRow, TablePptxElement } from 'pptx-viewer-core';
 
 import { EditorStateService } from './editor-state.service';
 import type { StyleMap } from './element-style';
+import { injectLinkedContentAllowed, modelElementById } from './external-content.service';
 import { LoadContentService } from './load-content.service';
+import { SLIDE_CONTEXT } from './slide-context';
 import {
 	buildColStyles,
 	buildTableViewModel,
@@ -151,6 +154,8 @@ export class TableRendererComponent {
 	private readonly loader = inject(LoadContentService, { optional: true });
 	/** A surface's own table style context (the thumbnail rail's), preferred over the loader's. */
 	private readonly styleOverride = inject(TABLE_STYLE_CONTEXT_OVERRIDE, { optional: true });
+	private readonly linkedContentAllowed = injectLinkedContentAllowed();
+	private readonly slideContext = inject(SLIDE_CONTEXT, { optional: true });
 
 	/** The table element to render. Must be `type === 'table'`. */
 	readonly element = input.required<PptxElement>();
@@ -193,12 +198,13 @@ export class TableRendererComponent {
 	 * table style's `a:fontRef@idx` resolve to a concrete font family.
 	 */
 	private readonly styleCtx = computed<TableStyleContext | undefined>(() => {
-		if (this.styleOverride) {
-			return this.styleOverride();
-		}
-		return this.loader
-			? tableStyleContextFor(this.loader.tableStyleMap(), this.loader.theme())
-			: undefined;
+		const context = this.styleOverride
+			? this.styleOverride()
+			: this.loader
+				? tableStyleContextFor(this.loader.tableStyleMap(), this.loader.theme())
+				: undefined;
+		// A table style's picture fill is drawn only once this viewer allows linked content.
+		return linkedContentView(context, this.linkedContentAllowed());
 	});
 
 	/** The table style's drop shadow (Themed Style 1/2), drawn on the table's frame. */
@@ -240,6 +246,16 @@ export class TableRendererComponent {
 	private tableData(): PptxTableData | undefined {
 		const el = this.element();
 		return el.type === 'table' ? (el as TablePptxElement).tableData : undefined;
+	}
+
+	/** The model's table data, for edits: the drawn element may withhold linked content. */
+	private modelTableData(): PptxTableData | undefined {
+		const found = modelElementById(
+			this.editorState,
+			this.element().id,
+			this.slideContext?.slideId() ?? null,
+		);
+		return found?.element.type === 'table' ? found.element.tableData : this.tableData();
 	}
 
 	/** True when the given cell (original grid coords) is being edited. */
@@ -365,7 +381,7 @@ export class TableRendererComponent {
 	}
 	/** Persist a column-width drag by emitting new table data. */
 	onResizeColumns(newWidths: number[]): void {
-		const td = this.tableData();
+		const td = this.modelTableData();
 		if (!td) {
 			return;
 		}
@@ -377,7 +393,7 @@ export class TableRendererComponent {
 
 	/** Persist a row-height drag by emitting new table data. */
 	onResizeRow(event: { index: number; height: number }): void {
-		const td = this.tableData();
+		const td = this.modelTableData();
 		if (!td) {
 			return;
 		}

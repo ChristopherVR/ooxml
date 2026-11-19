@@ -68,7 +68,7 @@ statement about Microsoft Office says where it comes from:
    files)". No source here covers current PowerPoint administrative templates or security
    baselines, and they were not checked.
 3. Microsoft Support, [PowerPoint 2013 or PowerPoint 2010 stops working after you repair a presentation](https://support.microsoft.com/en-us/topic/powerpoint-2013-or-powerpoint-2010-stops-working-after-you-repair-a-presentation-0e04c3d0-b3dc-c043-8c49-7dbe6b82bfd7)
-   (applies to PowerPoint 2013, PowerPoint 2010 and PowerPoint Home and Student 2010). The article
+   (KB 982972, also at <https://support.microsoft.com/kb/982972>; both resolved on 2026-11-20; applies to PowerPoint 2013, PowerPoint 2010 and PowerPoint Home and Student 2010). The article
    is about a crash after a repair. It says that opening a presentation that contains links to an
    OLE object shows a security message, that its workaround is to click **Cancel** instead of
    **Update Links**, and that reopening a saved copy prompts "to update the presentation links".
@@ -140,15 +140,25 @@ Every PowerPoint request carried the user agent `Mozilla/4.0 (compatible; ms-off
 
 ### PowerPoint
 
-The default matches PowerPoint's: opening a deck sends no request for its linked pictures, shape
-and table fills, picture bullets, 3D model posters, audio, video or online video. When the deck
-has such links (`PptxData.hasLinkedWebContent`), the viewer shows a translated security bar under
-the ribbon: "SECURITY WARNING References to external pictures and other media have been blocked."
-with **Enable Content** and a close button. Enable Content reloads the presentation as it
-currently stands, saved and unsaved edits included, this time with its linked content. The slide
-shown stays shown, the presentation keeps its unsaved state, and undo history starts over. The
-choice lasts until another presentation is opened. Close hides the bar and keeps the content
-blocked. Nothing is stored.
+Opening a deck sends no request for its linked pictures, shape and table fills, picture bullets,
+3D model posters, audio, video or online video. For pictures, audio and video this matches what
+PowerPoint was observed to do on open (see Observations). For online video it is OOXML's own
+choice: when PowerPoint first contacts the video provider was not observed, and no source says
+(inferred to be the safer default from source 1, which lists linked media among the external
+content Office blocks).
+
+When the deck has such links, the viewer shows a translated security bar under the ribbon:
+"SECURITY WARNING References to external pictures and other media have been blocked." with
+**Enable Content** and a close button. Enable Content draws the linked content in that viewer.
+Nothing is reloaded: the slide shown, unsaved edits, the unsaved state, undo history, AutoRecover
+and a collaboration session carry on as they were. The choice lasts until another presentation is
+opened. Close hides the bar and keeps the content blocked. Nothing is stored.
+
+How it works: the presentation model always keeps the linked addresses as the deck's content, so
+saves keep their `r:link` relationships and collaborators receive the same deck. Whether the
+browser may fetch them is decided by each viewer where it draws the deck, so in a shared session
+each participant sees the bar and chooses for themselves; one participant's Enable Content never
+makes another's browser contact the linked server.
 
 Differences from PowerPoint:
 

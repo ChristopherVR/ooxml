@@ -95,7 +95,7 @@ Durante una presentación, las notas se le muestran a usted (no al público) en 
 
 Algunas presentaciones vinculan imágenes, audio o vídeo a una dirección web en lugar de guardarlos en el archivo. Como en Microsoft PowerPoint, no se descargan al abrir la presentación, porque la descarga le indica a ese servidor que la ha abierto. Una barra bajo la cinta avisa de que se han bloqueado las referencias a imágenes y otros elementos multimedia externos. Aparece aunque el visor no tenga barra de herramientas.
 
-- Haga clic en **Habilitar contenido** para descargarlos en esta presentación. La presentación se vuelve a abrir tal como está: se conservan sus cambios, guardados o no, y la diapositiva en pantalla, y los cambios sin guardar siguen sin guardar. El historial de deshacer empieza de nuevo, así que no puede deshacer los cambios anteriores.
+- Haga clic en **Habilitar contenido** para descargarlos en esta presentación. No se vuelve a abrir nada: sus cambios, guardados o no, la diapositiva en pantalla y el historial de deshacer se quedan como están. En una sesión compartida, cada persona decide por sí misma.
 - Haga clic en el botón de cierre para mantenerlos bloqueados.
 - La elección dura hasta que abre otra presentación. Para descargar el contenido vinculado sin preguntar, active **Archivo > Opciones > Centro de confianza > Permitir contenido externo**.
 

@@ -14,8 +14,6 @@ import {
 	clearAutosaveSnapshots,
 	createSlidePackageClipboard,
 	DEFAULT_VIEWER_OPTIONS,
-	recoverySnapshotIntent,
-	saveDeckWithPassword,
 	deleteAutosaveSnapshot,
 	describeFontEmbedding,
 	endAudienceDisplay,
@@ -67,6 +65,7 @@ import type {
 	CloudOpenedFile,
 	DocumentStorage,
 	EmbeddedFontsSheet,
+	ExternalContentView,
 	ReadOnlySessionActions,
 	SlidePackageClipboard,
 	SlidePasteRequest,
@@ -117,7 +116,7 @@ import { createEditorController } from './editor';
 import type { HostDialogRequest } from './editor/editor-controller';
 import type { ExportLifecycle } from './export-lifecycle';
 import { createExportLifecycle } from './export-lifecycle';
-import { enableExternalContent, externalContentBarShown } from './external-content';
+import { externalContentView } from './external-content';
 import { glyphOutlineFontCache } from './glyph-outline-cache';
 import type { Translator } from './i18n';
 import { createTranslator } from './i18n';
@@ -271,6 +270,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	/** Tags in-flight webfont resolutions; only the newest deck may apply its result. */
 	private webfontsToken = 0;
 	private detachFontDownloads: (() => void) | null = null;
+	private detachExternalContentOption: (() => void) | null = null;
 	/** The current deck's fonts in the module-wide glyph-outline cache; released on destroy. */
 	private readonly outlineFonts = createEmbeddedOutlineFontsSlot(glyphOutlineFontCache);
 	/** Host/user intent is retained while collaboration temporarily disables editing. */
@@ -383,15 +383,6 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 				// our private DOM and clicks the Back button.
 				this.lifecycle?.chrome.ribbon?.showDefaultTab();
 			},
-			// The host `allowExternalContent` option, else Trust Center > "Allow external
-			// content" or Enable Content for this presentation. The options controller is
-			// constructed after this one, hence the lazy read (see its own comment).
-			getAllowExternalContent: (enabledForDocument) =>
-				resolveAllowExternalContent(
-					this.hostAllowExternalContent,
-					this.optionsController?.getOptions() ?? DEFAULT_VIEWER_OPTIONS,
-					enabledForDocument,
-				),
 			getGoogleFontsBase: () => this.googleFontsBase(),
 			shouldOpenProtectedView: () => this.optionsController?.isProtectedView() ?? false,
 			setEditableForLoad: (editable) => this.setEditable(editable),
@@ -409,6 +400,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			getLineChart3D: () => this.effective3DFlags().lineChart3D,
 			getAreaChart3D: () => this.effective3DFlags().areaChart3D,
 			getPieChart3D: () => this.effective3DFlags().pieChart3D,
+			getLinkedContentAllowed: () => this.linkedContentAllowed(),
 			// Read lazily: the options controller is constructed further down.
 			getElementRenderErrorHandler: () => this.options.onElementRenderError,
 			getPixelateMosaicAnimation: () =>
@@ -585,6 +577,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			getLineChart3D: () => this.effective3DFlags().lineChart3D,
 			getAreaChart3D: () => this.effective3DFlags().areaChart3D,
 			getPieChart3D: () => this.effective3DFlags().pieChart3D,
+			getLinkedContentAllowed: () => this.linkedContentAllowed(),
 			getImageResolutionScale: () =>
 				resolveImageResolutionScale(this.optionsController.getOptions()),
 			getIncludeHiddenSlides: () => this.optionsController.getOptions().advanced.printHiddenSlides,
@@ -754,8 +747,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 				renderer: this.renderer,
 				callbacks: options,
 				externalContentBarInChrome: (state) =>
-					this.showsExternalContentBar() &&
-					externalContentBarShown(state, this.hostAllowExternalContent),
+					this.showsExternalContentBar() && this.externalContentViewOf(state).barVisible,
 			}),
 		);
 		this.store.subscribe((state, previous) => {
@@ -887,6 +879,11 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		// persisted File > Options values (undo depth, ribbon visibility, root
 		// classes, ScreenTips, etc.) for the first time.
 		this.optionsController.applyAll();
+		// Trust Center > "Allow external content" applies to the open deck at once.
+		this.detachExternalContentOption = this.optionsController.optionsStore.subscribeSelector(
+			(o) => o.trust.allowExternalContent,
+			() => this.redrawLinkedContent(),
+		);
 		// Trust Center > "Download fonts" applies to the open deck at once: off
 		// removes the managed webfont `<link>`, on adds it back.
 		this.detachFontDownloads = this.optionsController.optionsStore.subscribeSelector(
@@ -1994,27 +1991,13 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.readOnlyActions.dismiss();
 	}
 
-	/** Enable Content on the security bar: reopen this presentation, as it stands, with its linked content. */
+	/**
+	 * Enable Content on the security bar: draw this presentation's linked pictures and media,
+	 * in this viewer only. Nothing reloads: the deck, its unsaved state, the slide on screen,
+	 * undo history, autosave and a collaboration session carry on as they were.
+	 */
 	enableExternalContent(): void {
-		void enableExternalContent({
-			store: this.store,
-			loading: this.loading,
-			serializeForRecovery: async () => {
-				const handler = this.loading.getHandler();
-				const state = this.store.get();
-				return handler
-					? saveDeckWithPassword(
-							handler,
-							[...state.slides],
-							undefined,
-							recoverySnapshotIntent({
-								password: state.presentationPassword,
-								passwordProtected: state.isPasswordProtected,
-							}),
-						)
-					: null;
-			},
-		});
+		this.store.set({ externalContentEnabled: true });
 	}
 
 	/** The security bar's close button: the linked content stays blocked. */
@@ -2024,7 +2007,27 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 
 	/** Whether the security bar shows for the loaded deck. */
 	externalContentBarVisible(): boolean {
-		return externalContentBarShown(this.store.get(), this.hostAllowExternalContent);
+		return this.externalContentViewOf(this.store.get()).barVisible;
+	}
+
+	/** Whether this viewer draws the deck's linked web content now. */
+	linkedContentAllowed(): boolean {
+		return this.externalContentViewOf(this.store.get()).allowed;
+	}
+
+	private externalContentViewOf(state: ViewerState): ExternalContentView {
+		return externalContentView(
+			state,
+			this.hostAllowExternalContent,
+			this.optionsController?.getOptions() ?? DEFAULT_VIEWER_OPTIONS,
+		);
+	}
+
+	/** Redraw after a change to what may be fetched that the store does not hold. */
+	private redrawLinkedContent(): void {
+		this.lifecycle.chrome.setExternalContentBar(this.externalContentBarInChrome());
+		this.renderer.renderThumbnails();
+		this.renderer.renderStage();
 	}
 
 	/**
@@ -2040,13 +2043,10 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		return this.showsExternalContentBar() && this.externalContentBarVisible();
 	}
 
-	/**
-	 * A live host `allowExternalContent` (the building blocks): applies to the next load, and
-	 * `false` removes the security bar at once.
-	 */
+	/** A live host `allowExternalContent` (the building blocks): applies to the open deck at once. */
 	protected setHostAllowExternalContent(allow: boolean | undefined): void {
 		this.hostAllowExternalContent = allow;
-		this.lifecycle.chrome.setExternalContentBar(this.externalContentBarInChrome());
+		this.redrawLinkedContent();
 	}
 
 	/** The read-only recommendation banner's password form "Cancel": closes the prompt without unlocking. */
@@ -2434,6 +2434,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.detachSignatureWarning?.();
 		this.detachOutlineFonts?.();
 		this.detachFontDownloads?.();
+		this.detachExternalContentOption?.();
 		this.loading.invalidate();
 		this.editor.destroy();
 		this.annotations.dispose();

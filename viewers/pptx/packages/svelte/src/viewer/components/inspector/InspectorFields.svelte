@@ -16,11 +16,13 @@
 		inspectorFieldPatch,
 		inspectorOptionLabel,
 		inspectorTogglePatch,
+		linkedContentUrl,
 		resolveInspectorSections,
 	} from 'ooxml-ui/pptx';
 	import type { InspectorFieldValue, InspectorSectionDescriptor } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
+	import { getLinkedContentGetter } from '../../state/linked-content';
 	import { liveColorEvents } from './live-color';
 
 	const {
@@ -51,6 +53,8 @@
 	const t = useTranslator();
 
 	const views = $derived(resolveInspectorSections(sections, target));
+	// A field preview draws the selected picture; a linked one only once this viewer allows it.
+	const getLinkedContent = getLinkedContentGetter();
 
 	function onField(sectionId: string, fieldId: string, raw: InspectorFieldValue): void {
 		const patch = inspectorFieldPatch(sections, sectionId, fieldId, target, raw);
@@ -112,8 +116,8 @@
 										data-value={option.value}
 										onclick={() => onField(section.id, field.id, option.value)}
 									>
-										{#if field.previewImage}
-											<img src={field.previewImage} alt="" style:filter={option.previewFilter || undefined} />
+										{#if linkedContentUrl(field.previewImage, getLinkedContent())}
+											<img src={linkedContentUrl(field.previewImage, getLinkedContent())} alt="" style:filter={option.previewFilter || undefined} />
 										{:else}
 											<span class="swatch" style:filter={option.previewFilter || undefined}></span>
 										{/if}

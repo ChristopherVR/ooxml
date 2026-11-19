@@ -234,6 +234,22 @@ const sectionOps = useSectionOperations({
 
 缩略图填满其容器的宽度，高度为 `previewWidth` 按演示文稿宽高比计算的值，因此请为容器设置该宽度。它同样需要 `pptx-vue-viewer/styles` 样式表。
 
+### 链接的图片和媒体 {#linked-pictures-and-media}
+
+只有当 `linkedContent` 属性为 `true` 时，`SlideCanvas`、`SlidesPane` 和 `SlideThumbnail` 才会绘制演示文稿链接到网络的图片和媒体；未设置时不会绘制。若要在自己的外框中沿用 PowerPoint 的安全栏，请以 `getAllowExternalImages: () => true` 加载（演示文稿保留其链接，保存时也会保留），用 `useExternalContentConsent`（从 `/viewer` 导出）保存用户的选择，并把其 `allowed` 传下去。之后“启用内容”只会重新绘制：不会重新加载，撤消历史也会保留。
+
+```ts
+const deck = useLoadContent(() => props.bytes, { getAllowExternalImages: () => true });
+const externalContent = useExternalContentConsent({
+	content: () => props.bytes,
+	host: () => undefined,
+	options: () => ({ trust: { allowExternalContent: false } }),
+	drawn: () => [deck.slides.value, deck.templateElementsBySlideId.value, deck.tableStyleMap.value],
+});
+// <ExternalContentBar v-if="externalContent.barVisible" @enable="externalContent.enable"
+//   @close="externalContent.close" />，并在每个绘制面上设置 :linked-content="externalContent.allowed"。
+```
+
 ### `useCollaboration` {#usecollaboration}
 
 `useCollaboration` 可以在不使用查看器组件的情况下管理 Yjs 会话、在线状态、光标和选定写入者同步。完整说明请参见[实时协作](/zh/vue/collaboration)。

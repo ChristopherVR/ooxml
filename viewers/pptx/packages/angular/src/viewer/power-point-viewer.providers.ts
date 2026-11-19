@@ -33,6 +33,10 @@ import { CustomFontsService } from './custom-fonts.service';
 import { EditorStateService } from './editor-state.service';
 import { EmbeddedFontsService } from './embedded-fonts.service';
 import { ExportService } from './export.service';
+import {
+	ExternalContentService,
+	LINKED_CONTENT_ALLOWED_PROVIDER,
+} from './external-content.service';
 import { FieldContextService } from './field-context.service';
 import { GoogleWebfontsService } from './google-webfonts.service';
 import { IsMobileService } from './is-mobile';
@@ -82,6 +86,8 @@ import { ZoomTargetService } from './zoom-target.service';
 export const POWER_POINT_VIEWER_PROVIDERS = [
 	LoadContentService,
 	LoadNoticesService,
+	ExternalContentService,
+	LINKED_CONTENT_ALLOWED_PROVIDER,
 	ExportService,
 	EditorStateService,
 	ChartPartSelectionService,

@@ -9,6 +9,7 @@ import {
 	getBackgroundAnimationState,
 	isElementHidden,
 	inlineElementPointerEvents,
+	linkedContentView,
 	probeElementRenderFault,
 } from 'ooxml-ui/pptx';
 import type {
@@ -38,6 +39,7 @@ import {
 import { ElementRendererShapeComponent } from './element-renderer-shape.component';
 import { getDuotoneFilterDef } from './element-style';
 import type { StyleMap } from './element-style';
+import { injectLinkedContentAllowed } from './external-content.service';
 import { ImageRendererComponent } from './image-renderer.component';
 import { ReflectionMirrorContentComponent } from './reflection-mirror-content.component';
 import { Rendering3DService } from './rendering-3d.service';
@@ -73,7 +75,14 @@ export { shouldPreventHyperlinkNavigation } from './hyperlink-confirm';
 	templateUrl: './element-renderer.component.html',
 })
 export class ElementRendererComponent implements DoCheck {
+	/** The model element. */
 	readonly element = input.required<PptxElement>();
+	private readonly linkedContentAllowed = injectLinkedContentAllowed();
+	/**
+	 * The element as this viewer may draw it: linked web content withheld until Enable Content
+	 * (`LINKED_CONTENT_ALLOWED`). Everything below draws this; edits go by element id.
+	 */
+	readonly drawn = computed(() => linkedContentView(this.element(), this.linkedContentAllowed()));
 
 	/** Test-only fault hook (inert unless a test page sets it), inside this element's boundary. */
 	ngDoCheck(): void {
@@ -99,7 +108,7 @@ export class ElementRendererComponent implements DoCheck {
 	private readonly sanitizer = inject(DomSanitizer);
 	readonly smartArt3D = computed(() => this.rendering3D?.flags().smartArt3D ?? false);
 	/** Whether the Selection Pane has hidden this element; see the empty first `@case`. */
-	readonly isHidden = computed(() => isElementHidden(this.element()));
+	readonly isHidden = computed(() => isElementHidden(this.drawn()));
 	/** Obstacle rects (slide coords) for connector A* routing. */
 	readonly obstacles = input<readonly Rect[]>([]);
 	readonly canvasWidth = input<number>(0);
@@ -138,7 +147,7 @@ export class ElementRendererComponent implements DoCheck {
 
 	/** `data-element-id` for this element, or null on a miniature surface. */
 	readonly elementIdAttr = computed<string | null>(() =>
-		this.exposeElementId() ? this.element().id : null,
+		this.exposeElementId() ? this.drawn().id : null,
 	);
 
 	/** Whether this element's root carries `data-pptx-element="true"`. */
@@ -217,7 +226,7 @@ export class ElementRendererComponent implements DoCheck {
 	readonly tableChange = output<{ id: string; tableData: PptxTableData }>();
 
 	/** Duotone SVG `<filter>` descriptor, if any. */
-	readonly duotoneFilter = computed(() => getDuotoneFilterDef(this.element()));
+	readonly duotoneFilter = computed(() => getDuotoneFilterDef(this.drawn()));
 
 	/**
 	 * Soft-edge feather `<filter>` descriptor (id + radius). The template
@@ -225,17 +234,17 @@ export class ElementRendererComponent implements DoCheck {
 	 * resolves. Undefined otherwise.
 	 */
 	readonly softEdgeFilter = computed<SoftEdgeFilterDef | undefined>(() =>
-		getSoftEdgeFilterDef(this.element()),
+		getSoftEdgeFilterDef(this.drawn()),
 	);
 
 	/** `a:sp3d` bevel lighting `<filter>` descriptor; see `bevel-lighting-filter.ts`. */
 	readonly bevelLightingFilter = computed<BevelLightingFilterDef | undefined>(() =>
-		resolveBevelLightingFilter(this.element(), this.sanitizer),
+		resolveBevelLightingFilter(this.drawn(), this.sanitizer),
 	);
 
 	/** Silhouette shadow / glow `<filter>` of a non-rectangular shape. */
 	readonly silhouetteFilter = computed<SilhouetteFilterDef | undefined>(() =>
-		resolveSilhouetteFilter(this.element(), this.sanitizer),
+		resolveSilhouetteFilter(this.drawn(), this.sanitizer),
 	);
 
 	/**
@@ -245,7 +254,7 @@ export class ElementRendererComponent implements DoCheck {
 	 * mirroring how `ImageRendererComponent` already does the same.
 	 */
 	readonly reflection = computed<ReflectionOverlay | undefined>(() =>
-		getReflectionOverlay(this.element()),
+		getReflectionOverlay(this.drawn()),
 	);
 
 	/**
@@ -254,7 +263,7 @@ export class ElementRendererComponent implements DoCheck {
 	 * the `p:animClr` fill/stroke relinquish.
 	 */
 	readonly animationState = computed<ElementAnimationState | undefined>(() =>
-		this.playback?.presentationElementStates().get(this.element().id),
+		this.playback?.presentationElementStates().get(this.drawn().id),
 	);
 
 	/**
@@ -267,22 +276,22 @@ export class ElementRendererComponent implements DoCheck {
 	 * element's `data-element-id`, which every branch below carries.
 	 */
 	readonly textStyleOverrideCss = computed<string | undefined>(() =>
-		buildTextStyleOverrideCss(this.element().id, this.animationState()?.textStyle),
+		buildTextStyleOverrideCss(this.drawn().id, this.animationState()?.textStyle),
 	);
 
 	/** Live per-sub-element animation states for the staged text-build split. */
 	readonly subElementAnimStates = computed(() => this.playback?.presentationElementStates());
 
 	readonly containerStyle = computed<StyleMap>(() =>
-		buildElementContainerStyle(this.element(), this.zIndex(), this.editTemplateMode()),
+		buildElementContainerStyle(this.drawn(), this.zIndex(), this.editTemplateMode()),
 	);
 	/** Fill/stroke/effects container style; see `buildShapeContainerStyle`'s doc. */
 	readonly shapeContainerStyle = computed<StyleMap>(() => {
 		const state =
-			getBackgroundAnimationState(this.element(), this.subElementAnimStates()) ??
+			getBackgroundAnimationState(this.drawn(), this.subElementAnimStates()) ??
 			this.animationState();
 		return buildShapeContainerStyle(
-			this.element(),
+			this.drawn(),
 			this.zIndex(),
 			this.parentGroupFill(),
 			state?.animatesFill,
@@ -292,7 +301,7 @@ export class ElementRendererComponent implements DoCheck {
 		);
 	});
 	readonly children = computed<PptxElement[]>(() => {
-		const el = this.element();
+		const el = this.drawn();
 		return el.type === 'group' ? (el.children ?? []) : [];
 	});
 
@@ -304,17 +313,17 @@ export class ElementRendererComponent implements DoCheck {
 	 * only" version left a shape inside a fill-less nested group transparent.
 	 */
 	readonly childParentGroupFill = computed<ShapeStyle | undefined>(() =>
-		getGroupChildParentFill(this.element(), this.parentGroupFill()),
+		getGroupChildParentFill(this.drawn(), this.parentGroupFill()),
 	);
 
-	readonly isShapeLike = computed(() => isShapeLikeElement(this.element()));
-	readonly isImageLike = computed(() => isImageLikeElement(this.element()));
+	readonly isShapeLike = computed(() => isShapeLikeElement(this.drawn()));
+	readonly isImageLike = computed(() => isImageLikeElement(this.drawn()));
 
 	/** Element kinds routed to `ElementRendererGraphicsComponent`; see `GRAPHICS_ELEMENT_TYPES`. */
-	readonly isGraphicsElement = computed(() => GRAPHICS_ELEMENT_TYPES.has(this.element().type));
+	readonly isGraphicsElement = computed(() => GRAPHICS_ELEMENT_TYPES.has(this.drawn().type));
 	/** Hit target for a degenerate `group`; other branches compute their own (issue #285). */
 	readonly hitTargetStyle = computed(() =>
-		buildHitTargetOverlayStyle(this.element(), this.editable(), this.presenting()),
+		buildHitTargetOverlayStyle(this.drawn(), this.editable(), this.presenting()),
 	);
 
 	readonly placeholderLabel = computed(() => {
@@ -322,7 +331,7 @@ export class ElementRendererComponent implements DoCheck {
 			group: 'pptx.elementType.group',
 			media: 'pptx.elementType.media',
 		};
-		const key = map[this.element().type];
-		return key ? this.translate.instant(key) : this.element().type;
+		const key = map[this.drawn().type];
+		return key ? this.translate.instant(key) : this.drawn().type;
 	});
 }

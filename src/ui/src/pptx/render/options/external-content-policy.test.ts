@@ -6,10 +6,9 @@ import { customizeOptionsTabs } from '../customization/customization-surfaces';
 import {
 	dispatchExternalContentBarIntent,
 	EXTERNAL_CONTENT_SETTING_ID,
-	externalContentBarVisible,
 	lockExternalContentSetting,
-	prepareExternalContentReload,
 	resolveAllowExternalContent,
+	resolveExternalContentView,
 } from './external-content-policy';
 import { DEFAULT_VIEWER_OPTIONS } from './viewer-options';
 import { createViewerOptionsStore } from './viewer-options-store';
@@ -36,56 +35,47 @@ describe('resolveAllowExternalContent', () => {
 	});
 });
 
-describe('externalContentBarVisible', () => {
-	const shown = {
-		hasLinkedWebContent: true,
-		allowed: false,
+describe('resolveExternalContentView', () => {
+	const linkedSlide = { id: 's1', elements: [{ id: 'p', imageData: 'https://cdn.test/a.png' }] };
+	const blocked = {
 		host: undefined,
+		options: trust(false),
+		enabled: false,
 		closed: false,
+		content: [linkedSlide],
 	} as const;
 
-	it('shows for a deck whose linked content the load left out', () => {
-		expect(externalContentBarVisible(shown)).toBe(true);
+	it('withholds linked content and shows the bar, as PowerPoint does on open', () => {
+		expect(resolveExternalContentView(blocked)).toStrictEqual({ allowed: false, barVisible: true });
 	});
 
-	it('hides without linked content, once allowed, when the host blocks or the user closes it', () => {
-		expect(externalContentBarVisible({ ...shown, hasLinkedWebContent: undefined })).toBe(false);
-		expect(externalContentBarVisible({ ...shown, allowed: true })).toBe(false);
-		expect(externalContentBarVisible({ ...shown, host: false })).toBe(false);
-		expect(externalContentBarVisible({ ...shown, closed: true })).toBe(false);
-	});
-});
-
-describe('prepareExternalContentReload', () => {
-	const current = new Uint8Array([1, 2, 3]);
-
-	it('reloads the deck as it stands even with nothing unsaved', async () => {
-		await expect(
-			prepareExternalContentReload({
-				serializeCurrentDeck: async () => current,
-				isDirty: false,
-				slideIndex: 2,
-			}),
-		).resolves.toStrictEqual({ bytes: current, keepDirty: false, slideIndex: 2 });
-	});
-
-	it('keeps unsaved changes unsaved', async () => {
-		const reload = await prepareExternalContentReload({
-			serializeCurrentDeck: async () => current,
-			isDirty: true,
-			slideIndex: 0,
+	it('draws the content once enabled, and the bar goes', () => {
+		expect(resolveExternalContentView({ ...blocked, enabled: true })).toStrictEqual({
+			allowed: true,
+			barVisible: false,
 		});
-		expect(reload?.keepDirty).toBe(true);
 	});
 
-	it('reloads nothing without a deck', async () => {
-		await expect(
-			prepareExternalContentReload({
-				serializeCurrentDeck: async () => null,
-				isDirty: false,
-				slideIndex: 0,
-			}),
-		).resolves.toBeNull();
+	it('has no bar without linked content, when the host blocks or once closed', () => {
+		expect(resolveExternalContentView({ ...blocked, content: [] }).barVisible).toBe(false);
+		expect(resolveExternalContentView({ ...blocked, host: false })).toStrictEqual({
+			allowed: false,
+			barVisible: false,
+		});
+		expect(resolveExternalContentView({ ...blocked, closed: true })).toStrictEqual({
+			allowed: false,
+			barVisible: false,
+		});
+	});
+
+	it('lets the host block what the user enabled, and allow without asking', () => {
+		expect(resolveExternalContentView({ ...blocked, host: false, enabled: true }).allowed).toBe(
+			false,
+		);
+		expect(resolveExternalContentView({ ...blocked, host: true })).toStrictEqual({
+			allowed: true,
+			barVisible: false,
+		});
 	});
 });
 

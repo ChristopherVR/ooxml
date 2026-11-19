@@ -66,24 +66,17 @@ async function linkedContentDeck(): Promise<ArrayBuffer> {
 	return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
 }
 
-async function loadDeck(
-	allowExternalImages: boolean,
-	bytes?: ArrayBuffer,
-): Promise<{ slides: PptxSlide[]; hasLinkedWebContent: boolean | undefined }> {
+async function loadSlides(allowExternalImages: boolean, bytes?: ArrayBuffer): Promise<PptxSlide[]> {
 	const handler = new PptxHandler();
 	try {
 		const data = await handler.load(bytes ?? (await linkedContentDeck()), {
 			allowExternalImages,
 			eagerDecodeImages: true,
 		});
-		return { slides: data.slides, hasLinkedWebContent: data.hasLinkedWebContent };
+		return data.slides;
 	} finally {
 		handler.dispose();
 	}
-}
-
-async function loadSlides(allowExternalImages: boolean): Promise<PptxSlide[]> {
-	return (await loadDeck(allowExternalImages)).slides;
 }
 
 function byName(slide: PptxSlide, name: string): PptxElement {
@@ -126,33 +119,37 @@ describe('linked content beyond p:pic', () => {
 	});
 });
 
-describe('hasLinkedWebContent', () => {
-	it('reports linked web pictures whether or not the load fetched them', async () => {
-		expect((await loadDeck(false)).hasLinkedWebContent).toBe(true);
-		expect((await loadDeck(true)).hasLinkedWebContent).toBe(true);
-	});
-
-	it('is unset for a deck whose pictures are all embedded', async () => {
-		const { handler, data, createSlide } = await PresentationBuilder.create();
-		data.slides.push(createSlide('Blank').build());
-		const bytes = await handler.save(data.slides);
-		const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-		expect((await loadDeck(false, buffer as ArrayBuffer)).hasLinkedWebContent).toBeUndefined();
-	});
-
-	it('keeps blocked links through a save, so they can be enabled later', async () => {
+describe('a viewer model with its links', () => {
+	it('saves an edited deck with its pictures still linked, never embedded', async () => {
 		const handler = new PptxHandler();
 		let saved: Uint8Array;
 		try {
-			const data = await handler.load(await linkedContentDeck(), { allowExternalImages: false });
-			saved = await handler.save(data.slides);
+			// Viewers load with the addresses and decide per viewer what to fetch.
+			const data = await handler.load(await linkedContentDeck(), { allowExternalImages: true });
+			const slides = data.slides.map((slide) => ({
+				...slide,
+				isDirty: true,
+				elements: slide.elements.map((element) =>
+					(element as { name?: string }).name === 'Linked fill'
+						? { ...element, x: element.x + 10 }
+						: element,
+				),
+			}));
+			saved = await handler.save(slides);
 		} finally {
 			handler.dispose();
 		}
+		const zip = await JSZip.loadAsync(saved);
+		const slideXml = await zip.file('ppt/slides/slide1.xml')!.async('string');
+		const rels = await zip.file('ppt/slides/_rels/slide1.xml.rels')!.async('string');
+		expect(slideXml).toContain('r:link="rIdLinkedFill"');
+		expect(rels).toContain(`Target="${LINKED_ORIGIN}/fill.png" TargetMode="External"`);
+		expect(rels).toContain(`Target="${LINKED_ORIGIN}/bullet.png" TargetMode="External"`);
+		expect(Object.keys(zip.files).some((name) => name.includes('fill.png'))).toBe(false);
+
 		const buffer = saved.buffer.slice(saved.byteOffset, saved.byteOffset + saved.byteLength);
-		const reopened = await loadDeck(true, buffer as ArrayBuffer);
-		expect(reopened.hasLinkedWebContent).toBe(true);
-		expect(byName(reopened.slides[0]!, 'Linked fill')).toMatchObject({
+		const [reopened] = await loadSlides(true, buffer as ArrayBuffer);
+		expect(byName(reopened!, 'Linked fill')).toMatchObject({
 			imageData: `${LINKED_ORIGIN}/fill.png`,
 		});
 	});

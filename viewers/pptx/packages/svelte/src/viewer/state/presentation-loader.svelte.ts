@@ -108,17 +108,6 @@ export class PresentationLoader {
 	isPasswordProtected = $state(false);
 	/** Whether the loaded package contains a VBA project. */
 	hasMacros = $state(false);
-	/** Whether the deck links pictures or media to web addresses (`PptxData.hasLinkedWebContent`). */
-	hasLinkedWebContent = $state(false);
-	/** Whether the current load referenced that linked content (its `allowExternalImages`). */
-	externalContentAllowed = $state(false);
-	/**
-	 * Enable Content on the security bar, for the presentation now open. Never
-	 * stored; a load of another presentation ({@link load}) clears it.
-	 */
-	externalContentEnabled = $state(false);
-	/** The user closed the security bar for the presentation now open. */
-	externalContentBarClosed = $state(false);
 	notesCanvasSize = $state.raw<CanvasSize | undefined>(undefined);
 	/** Packaged theme parts (`ppt/theme/*.xml`) selectable in the inspector. */
 	themeOptions = $state.raw<PptxThemeOption[]>([]);
@@ -203,29 +192,8 @@ export class PresentationLoader {
 	 */
 	getGoogleFonts: () => GoogleFontsOption | undefined = () => undefined;
 
-	/**
-	 * Parse a `.pptx` buffer into reactive viewer state. A new presentation:
-	 * its linked content starts blocked again, as PowerPoint asks per file.
-	 */
-	load(raw: Uint8Array | ArrayBuffer, origin: CollabLoadOrigin = 'user'): Promise<void> {
-		this.externalContentEnabled = false;
-		this.externalContentBarClosed = false;
-		return this.#load(raw, origin);
-	}
-
-	/**
-	 * Enable Content: load the presentation now open again with its linked
-	 * content, from `raw`: the deck as it stands (`prepareExternalContentReload`).
-	 */
-	async reloadWithExternalContent(raw: Uint8Array): Promise<void> {
-		const wasProtected = this.isPasswordProtected;
-		this.externalContentEnabled = true;
-		await this.#load(raw, this.loadOrigin);
-		// `raw` is the plaintext recovery serialisation of the same presentation.
-		this.isPasswordProtected = wasProtected;
-	}
-
-	async #load(raw: Uint8Array | ArrayBuffer, origin: CollabLoadOrigin): Promise<void> {
+	/** Parse a `.pptx` buffer into reactive viewer state. */
+	async load(raw: Uint8Array | ArrayBuffer, origin: CollabLoadOrigin = 'user'): Promise<void> {
 		this.loadOrigin = origin;
 		const token = ++this.#renderToken;
 		const newHandler = new PptxHandler();
@@ -284,9 +252,8 @@ export class PresentationLoader {
 					googleFontsBase: resolveGoogleFontsCss2Base(this.getGoogleFonts()),
 				});
 			}
-			const loadOptions = this.getLoadOptions();
 			const parsed = await newHandler.load(buffer as ArrayBuffer, {
-				...loadOptions,
+				...this.getLoadOptions(),
 				onSlidesParsed: (deck) => startWebfonts([...deck.slides], [...deck.embeddedFonts]),
 			});
 			if (token !== this.#renderToken) {
@@ -349,8 +316,6 @@ export class PresentationLoader {
 			this.digitalSignatureCount = parsed.digitalSignatureCount ?? 0;
 			this.isPasswordProtected = parsed.isPasswordProtected ?? false;
 			this.hasMacros = parsed.hasMacros ?? false;
-			this.hasLinkedWebContent = parsed.hasLinkedWebContent === true;
-			this.externalContentAllowed = loadOptions.allowExternalImages === true;
 			// 9525 EMU per pixel (matches React/Vue's useLoadContent conversion).
 			this.notesCanvasSize =
 				parsed.notesWidthEmu && parsed.notesHeightEmu

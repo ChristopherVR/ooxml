@@ -22,6 +22,7 @@ import type { PptxSlide, PptxSlideMaster } from 'pptx-viewer-core';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { useLinkedContentUrl } from '../../composables/linked-content';
 import { injectRecentColors } from '../../composables/recent-colors-context';
 import RecentColorsRow from '../RecentColorsRow.vue';
 import { CARD, HEADING } from './inspector-cards';
@@ -70,6 +71,8 @@ function onTemplateColorChange(path: string, event: Event): void {
 const fileInput = ref<HTMLInputElement | null>(null);
 
 const backgroundImage = computed(() => props.slide?.backgroundImage);
+/** The preview draws a linked background only once this viewer allows linked content. */
+const backgroundPreview = useLinkedContentUrl(() => backgroundImage.value);
 const clearState = computed(() => slideBackgroundClearState(props.slide, props.canEdit));
 
 /** A "Recent colours" pick: the same patch as the shared colour field. */
@@ -151,7 +154,8 @@ function clearBackground(): void {
 			</div>
 			<div v-if="backgroundImage" class="relative mt-1">
 				<img
-					:src="backgroundImage"
+					v-if="backgroundPreview"
+					:src="backgroundPreview"
 					:alt="t('pptx.slideBackground.backgroundPreview')"
 					class="h-16 w-full rounded border border-border object-cover"
 				/>

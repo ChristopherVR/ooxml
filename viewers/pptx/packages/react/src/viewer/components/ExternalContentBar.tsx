@@ -12,7 +12,7 @@ import { useTranslation } from '../i18n/use-translation';
  * `external-content-request` to the two callbacks.
  */
 export interface ExternalContentBarProps {
-	/** Enable Content: reload this presentation with its linked content. */
+	/** Enable Content: draw this presentation's linked content, in this viewer only. */
 	onEnable: () => void;
 	/** Close the bar; the content stays blocked. */
 	onClose: () => void;

@@ -1,6 +1,7 @@
 export * from './autocorrect';
 export * from './external-content-policy';
 export * from './font-download-policy';
+export * from './linked-content';
 export * from './options-dialog-binding';
 export * from './options-dialog-model';
 export * from './quick-access';

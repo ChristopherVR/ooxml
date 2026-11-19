@@ -40,6 +40,7 @@ import { setSmartArtNodeStyle } from 'pptx-viewer-core';
 
 import { EditorStateService } from './editor-state.service';
 import type { StyleMap } from './element-style';
+import { modelElementById } from './external-content.service';
 import { SLIDE_CONTEXT } from './slide-context';
 import {
 	buildChromeStyle,
@@ -54,7 +55,6 @@ import {
 	beginNodeEdit,
 	canEditSmartArtNodes,
 	commitNodeText,
-	findOwningSlideIndex,
 } from './smart-art-inline-edit';
 import type { InlineEditState } from './smart-art-inline-edit';
 import {
@@ -487,24 +487,15 @@ export class SmartArtRendererComponent {
 
 	/** Commit edited text through the shared editor state (one history entry). */
 	private applyCommit(nodeId: string, text: string): void {
-		const data = this.smartArtData();
-		const editor = this.editor;
-		if (!data || !editor) {
+		const model = this.modelSmartArt();
+		if (!model || !this.editor) {
 			return;
 		}
-		const next = commitNodeText(data, nodeId, text);
-		if (next === data) {
+		const next = commitNodeText(model.data, nodeId, text);
+		if (next === model.data) {
 			return;
 		}
-		const slideIndex = findOwningSlideIndex(
-			editor.slides(),
-			this.element().id,
-			this.slideContext?.slideId() ?? null,
-		);
-		if (slideIndex < 0) {
-			return;
-		}
-		editor.updateElement(slideIndex, this.element().id, {
+		this.editor.updateElement(model.slideIndex, this.element().id, {
 			smartArtData: this.reflow(next),
 		} as Partial<PptxElement>);
 		// Announce the commit to assistive technology via the polite live region.
@@ -595,25 +586,29 @@ export class SmartArtRendererComponent {
 	}
 
 	protected handleChangeNodeStyle(nodeId: string, fill: string): void {
-		const data = this.smartArtData();
-		if (!data || !this.editor) {
+		const model = this.modelSmartArt();
+		if (!model || !this.editor) {
 			return;
 		}
-		const next = setSmartArtNodeStyle(data, nodeId, { fillColor: fill });
-		if (next === data) {
+		const next = setSmartArtNodeStyle(model.data, nodeId, { fillColor: fill });
+		if (next === model.data) {
 			return;
 		}
-		const slideIndex = findOwningSlideIndex(
-			this.editor.slides(),
+		this.editor.updateElement(model.slideIndex, this.element().id, {
+			smartArtData: this.reflow(next),
+		} as Partial<PptxElement>);
+	}
+
+	/** The model's SmartArt and its slide, for edits: the drawn element may withhold linked content. */
+	private modelSmartArt(): { slideIndex: number; data: PptxSmartArtData } | undefined {
+		const found = modelElementById(
+			this.editor,
 			this.element().id,
 			this.slideContext?.slideId() ?? null,
 		);
-		if (slideIndex < 0) {
-			return;
-		}
-		this.editor.updateElement(slideIndex, this.element().id, {
-			smartArtData: this.reflow(next),
-		} as Partial<PptxElement>);
+		return found?.element.type === 'smartArt' && found.element.smartArtData
+			? { slideIndex: found.slideIndex, data: found.element.smartArtData }
+			: undefined;
 	}
 
 	/**

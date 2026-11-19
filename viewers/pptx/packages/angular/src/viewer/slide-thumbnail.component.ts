@@ -55,7 +55,8 @@ const NO_TEMPLATE_ELEMENTS: readonly PptxElement[] = [];
  * `templateElementsBySlideId[slide.id]`, `canvasSize`, `mediaDataUrls`,
  * `headerFooter`, `customProperties`, `firstSlideNumber`, `locale`, `theme`
  * and `tableStyleMap` (each context falls back to the enclosing deck loader
- * when unset, as the rail's do).
+ * when unset, as the rail's do), and `linkedContent` from the building blocks'
+ * `externalContent().allowed`.
  * ```html
  * @for (slide of shell.editor.slides(); track slide.id) {
  *   <pptx-slide-thumbnail
@@ -63,6 +64,7 @@ const NO_TEMPLATE_ELEMENTS: readonly PptxElement[] = [];
  *     [templateElements]="shell.editor.templateElementsBySlideId()[slide.id] ?? []"
  *     [canvasSize]="shell.loader.canvasSize()"
  *     [mediaDataUrls]="shell.loader.mediaDataUrls()"
+ *     [linkedContent]="blocks.externalContent().allowed"
  *     [previewWidth]="160"
  *   />
  * }
@@ -96,6 +98,7 @@ const NO_TEMPLATE_ELEMENTS: readonly PptxElement[] = [];
 				[editable]="false"
 				[autoFit]="false"
 				[interactive]="false"
+				[linkedContent]="linkedContent()"
 			/>
 			@if (transitionBadge(); as badge) {
 				<div
@@ -135,6 +138,12 @@ export class SlideThumbnailComponent {
 	readonly previewWidth = input<number>(EDITOR_THUMBNAIL_WIDTH);
 	/** Media asset lookup table (package path to data URL), as the rail takes it. */
 	readonly mediaDataUrls = input<Map<string, string>>(new Map());
+	/**
+	 * Whether the thumbnail draws the deck's linked web content: pass the building blocks'
+	 * `externalContent().allowed`, so it redraws on Enable Content. Unset follows the enclosing
+	 * viewer; outside one, linked content is withheld.
+	 */
+	readonly linkedContent = input<boolean | undefined>(undefined);
 
 	// ── Thumbnail contexts (each falls back to the enclosing deck loader) ────
 

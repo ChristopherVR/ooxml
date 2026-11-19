@@ -34,6 +34,7 @@ function openLayoutGallery(request: { slideIndex: number; x: number; y: number }
 			:first-slide-number="pane.firstSlideNumber"
 			:theme="pane.theme"
 			:table-style-map="pane.tableStyleMap"
+			:linked-content="pane.linkedContent"
 			@select="pane.goTo"
 			@move-slide="pane.slideOps.moveSlide"
 			@add-slide="pane.slideOps.addSlide()"

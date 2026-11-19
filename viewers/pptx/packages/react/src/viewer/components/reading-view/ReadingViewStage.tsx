@@ -15,6 +15,7 @@ import React from 'react';
 import type { CanvasSize } from '../../types';
 import { normalizeHexColor } from '../../utils';
 import type { ElementRenderErrorHandler } from '../ElementErrorBoundary';
+import { useLinkedContentView } from '../linked-content-context';
 import { StaticElementRenderer } from '../StaticElementRenderer';
 
 export interface ReadingViewStageProps {
@@ -27,12 +28,13 @@ export interface ReadingViewStageProps {
 }
 
 export function ReadingViewStage({
-	slide,
+	slide: modelSlide,
 	templateElements,
 	canvasSize,
 	scale,
 	onElementRenderError,
 }: ReadingViewStageProps): React.ReactElement | null {
+	const slide = useLinkedContentView(modelSlide);
 	if (scale <= 0) {
 		// Before the first layout pass there is no honest size to draw at.
 		return null;

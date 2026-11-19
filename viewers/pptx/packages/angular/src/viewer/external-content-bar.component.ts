@@ -6,7 +6,7 @@
  *
  * A thin adapter around the shared `pptx-ui-external-content-bar` element,
  * which owns the markup and the strings ("SECURITY WARNING ... Enable
- * Content"). The viewer decides when it shows (`externalContentBarVisible`)
+ * Content"). The viewer decides when it shows (`ExternalContentService`)
  * and what Enable Content does; this component only translates and routes
  * the element's `external-content-request` through the shared
  * `dispatchExternalContentBarIntent`.
@@ -38,7 +38,7 @@ import { translationsSignal } from './translations-signal';
 	`,
 })
 export class ExternalContentBarComponent {
-	/** Enable Content: reload the presentation with its linked content. */
+	/** Enable Content: draw the presentation's linked content. */
 	readonly enable = output<void>();
 	/** The close button: hide the bar, keep the content blocked. */
 	readonly closeBar = output<void>();

@@ -76,7 +76,9 @@ export function createStateSync(deps: StateSyncDeps): StoreListener<ViewerState>
 				// A catalogue webfont's glyph-outline bytes just landed (see
 				// glyph-outline-cache.ts): repaint so an already-rendered WordArt
 				// envelope glyph in that family picks up outline warping.
-				state.outlineFontsTick !== previous.outlineFontsTick) &&
+				state.outlineFontsTick !== previous.outlineFontsTick ||
+				// Enable Content: the linked pictures and media are drawn now.
+				state.externalContentEnabled !== previous.externalContentEnabled) &&
 				!state.interactionActive) ||
 			(previous.interactionActive && !state.interactionActive)
 		) {
@@ -99,6 +101,7 @@ export function createStateSync(deps: StateSyncDeps): StoreListener<ViewerState>
 			state.headerFooter !== previous.headerFooter ||
 			state.customProperties !== previous.customProperties ||
 			state.tableStyleMap !== previous.tableStyleMap ||
+			state.externalContentEnabled !== previous.externalContentEnabled ||
 			// The Find bar's marks are painted into the text.
 			state.findMatches !== previous.findMatches ||
 			state.findMatchIndex !== previous.findMatchIndex ||
@@ -173,9 +176,13 @@ export function createStateSync(deps: StateSyncDeps): StoreListener<ViewerState>
 		if (state.protectedView !== previous.protectedView) {
 			chrome.setProtectedView(state.protectedView);
 		}
+		// The bar follows the content this viewer draws (a collaborator's slides included) and
+		// this viewer's own choice.
 		if (
-			state.hasLinkedWebContent !== previous.hasLinkedWebContent ||
-			state.externalContentAllowed !== previous.externalContentAllowed ||
+			state.slides !== previous.slides ||
+			state.templateElementsBySlideId !== previous.templateElementsBySlideId ||
+			state.tableStyleMap !== previous.tableStyleMap ||
+			state.externalContentEnabled !== previous.externalContentEnabled ||
 			state.externalContentBarClosed !== previous.externalContentBarClosed
 		) {
 			chrome.setExternalContentBar(deps.externalContentBarInChrome(state));

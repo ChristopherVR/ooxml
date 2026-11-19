@@ -24,6 +24,7 @@ import {
 } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
+	linkedContentUrl,
 	normalizeHexColor,
 	resolveTemplateBackgroundRows,
 	SLIDE_BACKGROUND_SECTIONS,
@@ -34,6 +35,7 @@ import type { TemplateBackgroundRow } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 
 import { EditorStateService } from './editor-state.service';
+import { injectLinkedContentAllowed } from './external-content.service';
 import { INSPECTOR_CARD_STYLES } from './inspector-card-styles';
 import { InspectorFieldsComponent } from './inspector-fields.component';
 import { LoadContentService } from './load-content.service';
@@ -88,9 +90,11 @@ const BACKGROUND_IMAGE_ACCEPT = 'image/png,image/jpeg,image/gif,image/webp,image
 					</button>
 				</div>
 
-				@if (sl.backgroundImage; as image) {
+				@if (sl.backgroundImage) {
 					<div class="bg__preview">
-						<img [src]="image" [alt]="'pptx.slideBackground.backgroundPreview' | translate" />
+						@if (backgroundPreview(); as image) {
+							<img [src]="image" [alt]="'pptx.slideBackground.backgroundPreview' | translate" />
+						}
 						<button
 							type="button"
 							class="bg__remove"
@@ -230,6 +234,12 @@ export class SlideBackgroundCardComponent {
 
 	protected readonly slide = computed<PptxSlide | undefined>(
 		() => this.editor.slides()[this.slideIndex()],
+	);
+
+	private readonly linkedContentAllowed = injectLinkedContentAllowed();
+	/** The background picture preview; a linked one only once this viewer allows linked content. */
+	protected readonly backgroundPreview = computed(() =>
+		linkedContentUrl(this.slide()?.backgroundImage, this.linkedContentAllowed()),
 	);
 
 	/** Stable per-slide key so the colour input reseeds only on slide change. */

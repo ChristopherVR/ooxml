@@ -29,7 +29,6 @@ import type {
 	PptxSmartArtNode,
 	SmartArtStyle,
 } from 'pptx-viewer-core';
-import { setSmartArtNodeStyle } from 'pptx-viewer-core';
 import type { CSSProperties } from 'vue';
 import { computed, nextTick, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -387,16 +386,9 @@ function cancelEdit(): void {
 	edit.cancel();
 }
 
-/** Apply a fill colour to a node by id, routing through the host commitStyle op. */
+/** Apply a fill colour to a node by id; the host edits the model element by id. */
 function handleChangeNodeStyle(nodeId: string, fill: string): void {
-	const data = smartArtData.value;
-	if (!data || !nodeEdit) {
-		return;
-	}
-	const next = setSmartArtNodeStyle(data, nodeId, { fillColor: fill });
-	if (next !== data) {
-		nodeEdit.commitStyle?.(props.element.id, { smartArtData: next } as Partial<PptxElement>);
-	}
+	nodeEdit?.commitNodeFill?.(props.element.id, nodeId, fill);
 }
 
 /**

@@ -66,7 +66,6 @@ import type {
 	IPptxTableDataParser,
 } from '../builders';
 import type { IPptxRuntimeDependencyFactory } from '../factories';
-import { isLinkedWebContent } from './linked-web-content';
 import { LoadPartReader, readPartText, readPartXml } from './load-part-reader';
 import { TemplateElementBaselineTracker } from './template-element-baselines';
 
@@ -221,13 +220,6 @@ export class PptxHandlerRuntime {
 	 * `allowExternalImages` load option.
 	 */
 	protected allowExternalImages = false;
-
-	/**
-	 * Whether a relationship read during this load links a picture or media
-	 * file to a web address (`isLinkedWebContent`). Reported on the load
-	 * result as `hasLinkedWebContent`.
-	 */
-	protected linkedWebContent = false;
 
 	/** Ordered slide file paths (populated during load for action target resolution). */
 	protected orderedSlidePaths: string[] = [];
@@ -670,12 +662,8 @@ export class PptxHandlerRuntime {
 				continue;
 			}
 			targets.set(String(id), String(target));
-			const targetMode = String(entry['@_TargetMode'] ?? '');
-			if (targetMode.toLowerCase() === 'external') {
+			if (String(entry['@_TargetMode'] ?? '').toLowerCase() === 'external') {
 				externalIds.add(String(id));
-			}
-			if (isLinkedWebContent(String(entry['@_Type'] ?? ''), String(target), targetMode)) {
-				this.linkedWebContent = true;
 			}
 		}
 

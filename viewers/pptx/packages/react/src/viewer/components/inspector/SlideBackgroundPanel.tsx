@@ -10,6 +10,7 @@ import { LuX } from 'react-icons/lu';
 
 import { useTranslation } from '../../i18n/use-translation';
 import { cn, normalizeHexColor } from '../../utils';
+import { useLinkedContentUrl } from '../linked-content-context';
 import { DebouncedColorInput } from './DebouncedColorInput';
 import { CARD, HEADING, BTN } from './inspector-pane-constants';
 import { InspectorFields } from './InspectorFields';
@@ -43,6 +44,7 @@ export function SlideBackgroundPanel({
 	onSetTemplateBackground,
 	onGetTemplateBackgroundColor,
 }: SlideBackgroundPanelProps): React.ReactElement {
+	const backgroundPreview = useLinkedContentUrl(activeSlide.backgroundImage);
 	const { t } = useTranslation();
 	const bgImageInputRef = useRef<HTMLInputElement>(null);
 
@@ -100,10 +102,10 @@ export function SlideBackgroundPanel({
 								: t('pptx.slideBackground.chooseImage')}
 						</button>
 					</div>
-					{activeSlide.backgroundImage && (
+					{backgroundPreview && (
 						<div className='relative mt-1'>
 							<img
-								src={activeSlide.backgroundImage}
+								src={backgroundPreview}
 								alt={t('pptx.slideBackground.backgroundPreview')}
 								className='w-full h-16 object-cover rounded border border-border'
 							/>

@@ -13,11 +13,14 @@ export interface ExternalContentContractZip {
 	}>;
 }
 
-/** A building-blocks harness whose `mount` also renders the binding's `ExternalContentBar`. */
+/**
+ * A building-blocks harness whose `mount` renders the canvas and the binding's
+ * `ExternalContentBar` into the host element it is given.
+ */
 export interface ExternalContentContractHarness extends BuildingBlocksContractHarness {
 	/** The blocks' `externalContent` (`ViewerExternalContentBar` from `ooxml-ui/pptx`), read now. */
-	externalContent(): { barVisible: boolean; enable(): void; close(): void };
-	/** The slides the blocks show now (`PptxSlide[]`), to see whether they reference the link. */
+	externalContent(): { barVisible: boolean; allowed: boolean; enable(): void; close(): void };
+	/** The blocks' deck model now (`PptxSlide[]`), which keeps the link whatever is drawn. */
 	slides(): readonly unknown[];
 }
 

@@ -471,7 +471,7 @@
 	<!-- PowerPoint's security bar sits under the ribbon, and shows even without the toolbar so
 	     blocked linked content can still be enabled. -->
 	{#if vm.chromeVisible && vm.externalContent.barVisible}
-		<ExternalContentBar onenable={() => void vm.externalContent.enable()} onclose={() => vm.externalContent.close()} />
+		<ExternalContentBar onenable={vm.externalContent.enable} onclose={vm.externalContent.close} />
 	{/if}
 	<ExportProgressModal
 		open={exportUi.open}

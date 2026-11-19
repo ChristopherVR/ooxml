@@ -209,7 +209,13 @@ export function useViewerBuildingBlocks(
 		shellState: computed(() => shellView.value.shellState),
 		collaborationState: computed(() => shellView.value.collaborationState),
 		externalContent: computed(
-			() => engine()?.externalContent() ?? { barVisible: false, enable: () => {}, close: () => {} },
+			() =>
+				engine()?.externalContent() ?? {
+					barVisible: false,
+					allowed: false,
+					enable: () => {},
+					close: () => {},
+				},
 		),
 		viewer: bridge.viewer,
 		options,

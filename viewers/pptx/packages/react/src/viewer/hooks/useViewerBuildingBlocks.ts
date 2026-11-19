@@ -296,6 +296,7 @@ export function useViewerBuildingBlocks(
 
 	canvasProps.collaborationOverlay = overlay;
 	canvasProps.onElementRenderError = input.onElementRenderError;
+	canvasProps.linkedContent = externalContent.allowed;
 	const slidesPaneProps = useSlidesPaneProps({
 		state,
 		slides,
@@ -308,6 +309,7 @@ export function useViewerBuildingBlocks(
 		onOpenLayoutGallery,
 	});
 	slidesPaneProps.onElementRenderError = input.onElementRenderError;
+	slidesPaneProps.linkedContent = externalContent.allowed;
 	// The same shell (projection and shared state) every binding hands its custom chrome.
 	const { shellState, collaborationState } = useMemo(
 		() =>

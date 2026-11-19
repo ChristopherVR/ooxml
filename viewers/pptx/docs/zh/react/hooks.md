@@ -168,7 +168,7 @@ const blocks = useViewerBuildingBlocks({ content, initialSlide: 4 });
 
 ### 链接的图片和媒体
 
-与 Microsoft PowerPoint 相同，链接到网络图片或媒体的演示文稿在打开时不会下载这些内容。`blocks.externalContent.barVisible` 表示何时显示 PowerPoint 的安全栏；渲染导出的 `<ExternalContentBar>`（或自己的控件），并将按钮连接到 `blocks.externalContent.enable()`（按当前状态重新加载该演示文稿及其链接内容：已保存和未保存的编辑以及当前幻灯片都会保留，未保存的编辑仍为未保存，撤消历史记录会重新开始）和 `close()`。打开新的演示文稿时会再次询问。`allowExternalContent` 选项（`true` 或 `false`）会代替用户作答，此时不显示安全栏。
+与 Microsoft PowerPoint 相同，链接到网络图片或媒体的演示文稿在打开时不会下载这些内容。`blocks.externalContent.barVisible` 表示何时显示 PowerPoint 的安全栏；渲染导出的 `<ExternalContentBar>`（或自己的控件），并将按钮连接到 `blocks.externalContent.enable()` 和 `close()`。启用内容只会重新绘制：不会重新加载，编辑、未保存状态、当前幻灯片和撤消历史记录都会保留；在协作会话中，每位参与者各自启用。`canvasProps` 和 `slidesPaneProps` 以 `linkedContent` 传递 `blocks.externalContent.allowed`；宿主自行绘制的 `<SlideThumbnail>` 也应传入它。打开新的演示文稿时会再次询问。`allowExternalContent` 选项（`true` 或 `false`）会代替用户作答，此时不显示安全栏。
 
 ```tsx
 {

@@ -41,14 +41,6 @@ export interface LoadingControllerDeps {
 	/** Called synchronously right after a parsed deck was applied to the store. */
 	onContentApplied?: (origin: CollabLoadOrigin) => void;
 	/**
-	 * Whether the deck about to load may download its linked pictures and media
-	 * (`resolveAllowExternalContent`), given whether the user chose Enable
-	 * Content for it. Lazily read: the options controller is constructed after
-	 * the loading controller, see `PptxViewer`'s constructor order. Omitted
-	 * defaults to core's own safe-by-default `allowExternalImages: false`.
-	 */
-	getAllowExternalContent?: (enabledForDocument: boolean) => boolean;
-	/**
 	 * The CSS2 base the load waits on for its webfonts (host `googleFonts`,
 	 * else Trust Center > "Download fonts"), `null` when downloads are off.
 	 * Read per load; omitted resolves the host `googleFonts` option alone.
@@ -74,12 +66,6 @@ export interface LoadOptions {
 	 * not for opening one, which is what Protected View gates.
 	 */
 	skipProtectedView?: boolean;
-	/**
-	 * Enable Content on the security bar: this load downloads the linked
-	 * pictures and media of the presentation being reloaded. Every other load
-	 * starts blocked again, as PowerPoint asks once per presentation.
-	 */
-	enableExternalContent?: boolean;
 }
 
 export interface LoadingController {
@@ -183,10 +169,10 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 						: resolveGoogleFontsCss2Base(options.googleFonts),
 				});
 			}
-			const allowExternalImages =
-				deps.getAllowExternalContent?.(loadOptions?.enableExternalContent === true) ?? false;
+			// The model keeps the deck's linked addresses; the stage decides per viewer what is
+			// fetched (`linkedContent`), so Enable Content only redraws.
 			const loaded = await loadPresentation(buffer, {
-				allowExternalImages,
+				allowExternalImages: true,
 				limits: options.limits,
 				onSlidesParsed: ({ slides, embeddedFonts }) => startWebfonts(slides, embeddedFonts),
 			});
@@ -240,8 +226,8 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 				readOnlyRecommendation: recommendation.kind === null ? null : recommendation,
 				...readOnlySession,
 				modifyVerifier: loaded.modifyVerifier ?? undefined,
-				hasLinkedWebContent: loaded.hasLinkedWebContent === true,
-				externalContentAllowed: allowExternalImages,
+				// A new presentation asks again, as PowerPoint does.
+				externalContentEnabled: false,
 				externalContentBarClosed: false,
 				compatToasts,
 				...deckViewPreferences,

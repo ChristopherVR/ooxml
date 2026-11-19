@@ -36,6 +36,7 @@ import type { FieldSubstitutionContext } from '../../utils/text-field-substituti
 import { ElementRenderErrorReportingContext } from '../ElementErrorBoundary';
 import type { ElementRenderErrorHandler } from '../ElementErrorBoundary';
 import { ElementRenderer } from '../ElementRenderer';
+import { useLinkedContentView } from '../linked-content-context';
 import { SlideBackgroundImageLayer } from '../SlideBackgroundImageLayer';
 import { useStageAnimationTriggers } from './useStageAnimationTriggers';
 import type { StageAnimationTriggers } from './useStageAnimationTriggers';
@@ -114,6 +115,7 @@ function PresentationStageContent({
 	children,
 	screenOverlay,
 }: PresentationStageProps) {
+	const backgroundSlide = useLinkedContentView(activeSlide);
 	const containerRef = useRef<HTMLDivElement>(null);
 	const triggerHandlers = useStageAnimationTriggers(
 		containerRef,
@@ -209,7 +211,7 @@ function PresentationStageContent({
 							// the stage publishes its own size for those calc() offsets.
 							'--pptx-slide-w': `${safeWidth}px`,
 							'--pptx-slide-h': `${safeHeight}px`,
-							...getReactSlideBackgroundStyle(activeSlide, {
+							...getReactSlideBackgroundStyle(backgroundSlide, {
 								widthPx: canvasSize.width,
 								heightPx: canvasSize.height,
 							}),

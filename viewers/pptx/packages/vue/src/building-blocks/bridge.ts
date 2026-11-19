@@ -59,6 +59,8 @@ export interface SlidesPaneBinding {
 	firstSlideNumber: number | undefined;
 	theme: PptxTheme | undefined;
 	tableStyleMap: ParsedTableStyleMap | undefined;
+	/** The viewer draws the deck's linked web content (`externalContent().allowed`). */
+	linkedContent: boolean;
 	goTo(index: number): void;
 	toggleSlideHidden(index: number): void;
 	slideOps: UseSlideOperationsResult;

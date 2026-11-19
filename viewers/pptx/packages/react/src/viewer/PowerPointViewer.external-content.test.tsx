@@ -1,10 +1,11 @@
 // @vitest-environment happy-dom
 /**
  * Linked web content follows PowerPoint's default in `PowerPointViewer`: a deck
- * that links a picture to another server opens without referencing it and shows
- * the security bar; Enable Content reloads that presentation with the link,
- * Close keeps it blocked, a new presentation asks again, and the host's `false`
- * blocks without a bar.
+ * that links a picture to another server opens without drawing it and shows the
+ * security bar; Enable Content draws it without reloading (the deck, its unsaved
+ * edits and undo history stay), Close keeps it blocked, a new presentation asks
+ * again, and the host's `false` blocks without a bar. The model always keeps the
+ * link, so a save writes it back.
  */
 import JSZip from 'jszip';
 import { translationsEn } from 'ooxml-ui/pptx/i18n';
@@ -95,7 +96,8 @@ async function settle(done: () => boolean): Promise<void> {
 }
 
 const bar = () => container.querySelector('pptx-ui-external-content-bar');
-const linkedReferenced = () => container.innerHTML.includes(ORIGIN);
+/** Whether anything the viewer draws would make the browser contact the linked server. */
+const linkedDrawn = () => container.innerHTML.includes(ORIGIN);
 
 type Handle = import('../types').PowerPointViewerHandle;
 let handle: Handle | null = null;
@@ -129,55 +131,55 @@ async function request(id: 'action' | 'close'): Promise<void> {
 	});
 }
 
-// A whole viewer loads (twice for Enable Content) in each test.
+// A whole viewer loads in each test.
 describe('linked web content in PowerPointViewer', { timeout: 60_000 }, () => {
-	it('opens blocked with the security bar, and Enable Content reloads with the link', async () => {
+	it('opens blocked with the security bar, and Enable Content draws the link without a reload', async () => {
 		await open(await linkedDeck());
-		expect(loads).toStrictEqual([false]);
+		// The model keeps the link; only drawing is gated.
+		expect(loads).toStrictEqual([true]);
 		expect(bar()).not.toBeNull();
-		expect(linkedReferenced()).toBeFalsy();
+		expect(linkedDrawn()).toBe(false);
+		const slides = handle!.getSlides();
 
 		await request('action');
-		await settle(() => loads.length === 2 && bar() === null && linkedReferenced());
-		expect(loads).toStrictEqual([false, true]);
+		await settle(() => bar() === null && linkedDrawn());
+		expect(loads).toStrictEqual([true]);
 		expect(bar()).toBeNull();
-		expect(linkedReferenced()).toBeTruthy();
+		expect(linkedDrawn()).toBe(true);
+		expect(handle!.getSlides()).toStrictEqual(slides);
 	});
 
-	it('keeps edits saved before Enable Content, and the next save writes them', async () => {
+	it('keeps unsaved edits, the dirty state and undo through Enable Content', async () => {
+		await open(await linkedDeck(), undefined, { canEdit: true });
+		const [first] = handle!.getElements(0);
+		await act(async () => {
+			handle!.updateElement(first!.id, { x: first!.x + 40 });
+		});
+		await request('action');
+		await settle(() => linkedDrawn());
+		expect(handle!.getElements(0)[0]!.x).toBe(first!.x + 40);
+		expect(handle!.isDirty()).toBe(true);
+		await act(async () => {
+			handle!.undo();
+		});
+		expect(handle!.getElements(0)[0]!.x).toBe(first!.x);
+		expect(linkedDrawn()).toBe(true);
+	});
+
+	it('saves the picture still linked after an edit made while it is blocked', async () => {
 		await open(await linkedDeck(), undefined, { canEdit: true });
 		const [first] = handle!.getElements(0);
 		await act(async () => {
 			handle!.updateElement(first!.id, { x: first!.x + 40 });
 		});
 		const saved = await handle!.getSaveSnapshot();
-		await act(async () => {
-			expect(handle!.acknowledgeSave(saved.revision).status).toBe('clean');
-		});
-		expect(handle!.isDirty()).toBe(false);
-		await request('action');
-		await settle(() => loads.length === 2 && linkedReferenced());
-		expect(linkedReferenced()).toBeTruthy();
-		expect(handle!.getElements(0)[0]!.x).toBe(first!.x + 40);
-		expect(handle!.isDirty()).toBe(false);
-		const next = await handle!.getSaveSnapshot();
-		const slideXml = async (bytes: Uint8Array) =>
-			(await JSZip.loadAsync(bytes)).file('ppt/slides/slide1.xml')!.async('string');
-		const offset = (xml: string) => xml.match(/<a:off [^>]*>/u)?.[0];
-		expect(offset(await slideXml(next.content))).toBe(offset(await slideXml(saved.content)));
-		expect(await slideXml(next.content)).toContain('r:link="rIdLinkedFill"');
-	});
-
-	it('keeps unsaved edits unsaved through Enable Content', async () => {
-		await open(await linkedDeck(), undefined, { canEdit: true });
-		const [first] = handle!.getElements(0);
-		await act(async () => {
-			handle!.updateElement(first!.id, { x: first!.x + 40 });
-		});
-		await request('action');
-		await settle(() => loads.length === 2 && linkedReferenced());
-		expect(handle!.getElements(0)[0]!.x).toBe(first!.x + 40);
-		expect(handle!.isDirty()).toBe(true);
+		const zip = await JSZip.loadAsync(saved.content);
+		expect(await zip.file('ppt/slides/slide1.xml')!.async('string')).toContain(
+			'r:link="rIdLinkedFill"',
+		);
+		expect(await zip.file('ppt/slides/_rels/slide1.xml.rels')!.async('string')).toContain(
+			`Target="${ORIGIN}/fill.png" TargetMode="External"`,
+		);
 	});
 
 	it('shows the bar without the toolbar', async () => {
@@ -190,31 +192,29 @@ describe('linked web content in PowerPointViewer', { timeout: 60_000 }, () => {
 		await request('close');
 		expect(bar()).toBeNull();
 		await settle(() => false);
-		expect(loads).toStrictEqual([false]);
-		expect(linkedReferenced()).toBeFalsy();
+		expect(linkedDrawn()).toBe(false);
 	});
 
 	it('asks again for the next presentation', async () => {
 		const deck = await linkedDeck();
 		await open(deck);
 		await request('action');
-		await settle(() => loads.length === 2 && bar() === null);
+		await settle(() => bar() === null && linkedDrawn());
 		await open(deck.slice());
-		expect(loads).toStrictEqual([false, true, false]);
 		expect(bar()).not.toBeNull();
-		expect(linkedReferenced()).toBeFalsy();
+		expect(linkedDrawn()).toBe(false);
 	});
 
 	it('shows no bar when the host blocks linked content', async () => {
 		await open(await linkedDeck(), false);
-		expect(loads).toStrictEqual([false]);
 		expect(bar()).toBeNull();
-		expect(linkedReferenced()).toBeFalsy();
+		expect(linkedDrawn()).toBe(false);
 	});
 
-	it('loads the link without a bar when the host allows it', async () => {
+	it('draws the link without a bar when the host allows it', async () => {
 		await open(await linkedDeck(), true);
-		expect(loads).toStrictEqual([true]);
 		expect(bar()).toBeNull();
+		await settle(() => linkedDrawn());
+		expect(linkedDrawn()).toBe(true);
 	});
 });

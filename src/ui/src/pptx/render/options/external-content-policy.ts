@@ -1,6 +1,6 @@
 /**
- * Linked external content: whether a deck may make the browser contact other
- * servers for pictures and media it links (`TargetMode="External"`, http(s))
+ * Linked external content: whether a viewer may make the browser contact other
+ * servers for pictures and media a deck links (`TargetMode="External"`, http(s))
  * instead of embedding.
  *
  * The default is Microsoft PowerPoint's (see `docs/powerpoint-external-content.md`):
@@ -12,29 +12,35 @@
  * asking (PowerPoint's "Unblock automatic download of linked images" policy),
  * `false` blocks without the bar. Either locks the Trust Center option
  * `trust.allowExternalContent`, which is off by default; a user who turns it
- * on downloads without asking. Every binding feeds the result of
- * {@link resolveAllowExternalContent} to the loader's `allowExternalImages`
- * option, shows the bar when {@link externalContentBarVisible} says so, reloads
- * from {@link prepareExternalContentReload} on Enable Content and folds
- * {@link lockExternalContentSetting} into the options locks; no rule is
+ * on downloads without asking.
+ *
+ * The deck's model always keeps the linked addresses (viewers load with
+ * `allowExternalImages: true`); what is fetched is decided per viewer, where the
+ * model is drawn (`linked-content`). Every binding derives `allowed` and the bar
+ * from {@link resolveExternalContentView}, draws through `linkedContentView` and
+ * folds {@link lockExternalContentSetting} into the options locks; no rule is
  * re-derived per binding.
  *
  * @module render/options/external-content-policy
  */
 import type { OptionsSettingId, OptionsSettingValues } from '../customization/customization-types';
-import type { ViewerOptions } from './viewer-options';
+import { hasLinkedContent } from './linked-content';
+import type { ViewerTrustOptions } from './viewer-options';
+
+/** The one option the rule reads: Trust Center > "Allow external content". */
+export type ExternalContentOptions = { trust: Pick<ViewerTrustOptions, 'allowExternalContent'> };
 
 /** The `<group>.<key>` id of the Trust Center setting the host switch locks. */
 export const EXTERNAL_CONTENT_SETTING_ID: OptionsSettingId = 'trust.allowExternalContent';
 
 /**
- * Whether a load may fetch linked external content: the host value when set,
+ * Whether a viewer may fetch linked external content: the host value when set,
  * otherwise the user's Trust Center option or Enable Content on the security
  * bar for this presentation (`enabledForDocument`).
  */
 export function resolveAllowExternalContent(
 	host: boolean | undefined,
-	options: Pick<ViewerOptions, 'trust'>,
+	options: ExternalContentOptions,
 	enabledForDocument = false,
 ): boolean {
 	if (typeof host === 'boolean') {
@@ -43,66 +49,46 @@ export function resolveAllowExternalContent(
 	return options.trust.allowExternalContent || enabledForDocument;
 }
 
-/** What decides whether the security bar shows for the loaded deck. */
-export interface ExternalContentBarInput {
-	/** The load result's `hasLinkedWebContent`. */
-	hasLinkedWebContent: boolean | undefined;
-	/** What the load used, from {@link resolveAllowExternalContent}. */
-	allowed: boolean;
+/** What decides what a viewer shows of the deck's linked web content. */
+export interface ExternalContentViewInput {
 	/** The host `allowExternalContent` switch. */
 	host: boolean | undefined;
+	/** The viewer's options; `trust.allowExternalContent` is the Trust Center switch. */
+	options: ExternalContentOptions;
+	/** The user chose Enable Content for this presentation. */
+	enabled: boolean;
 	/** The user closed the bar for this presentation. */
 	closed: boolean;
-}
-
-/**
- * PowerPoint's security bar: the deck links web content this load left out,
- * the host has not blocked it outright, and the user has not closed the bar.
- */
-export function externalContentBarVisible(input: ExternalContentBarInput): boolean {
-	return (
-		input.hasLinkedWebContent === true && !input.allowed && input.host !== false && !input.closed
-	);
-}
-
-/** What Enable Content reads from the viewer at the moment the user chooses it. */
-export interface ExternalContentEnableSource {
 	/**
-	 * The presentation as it stands, saved and unsaved edits included, in bytes the
-	 * viewer can read back (the recovery serialisation: plaintext, never encrypted).
-	 * Null when no deck is loaded.
+	 * What the viewer draws: its slides, and anything else of the deck it renders (template
+	 * elements, the table style map). Read with `hasLinkedContent`.
 	 */
-	serializeCurrentDeck(): Promise<Uint8Array | null>;
-	/** The deck has unsaved changes; they stay unsaved after the reload. */
-	isDirty: boolean;
-	/** The slide on screen, which the reload keeps. */
-	slideIndex: number;
+	content: unknown;
 }
 
-/** The reload Enable Content asks a binding to make, with linked content allowed. */
-export interface ExternalContentReload {
-	/** The current deck, from {@link ExternalContentEnableSource.serializeCurrentDeck}. */
-	bytes: Uint8Array;
-	/** Mark the reloaded deck unsaved, as it was. */
-	keepDirty: boolean;
-	/** The slide to show after the reload, clamped by the binding. */
-	slideIndex: number;
+/** What a viewer shows of the deck's linked web content. */
+export interface ExternalContentView {
+	/** Surfaces draw the content itself (`linkedContentView(value, allowed)`). */
+	allowed: boolean;
+	/**
+	 * PowerPoint's security bar: the deck links web content this viewer withholds, the host
+	 * has not blocked it outright and the user has not closed the bar.
+	 */
+	barVisible: boolean;
 }
 
 /**
- * Enable Content's reload. It is always the deck as it now stands: the bytes it
- * was opened from would bring back what was edited since, saved or not, and the
- * next save would write that old deck over the saved one. Null when there is
- * no deck to serialise, in which case nothing reloads.
- *
- * The reload starts undo history over: the steps before it hold the deck
- * without its linked content, so undoing into them would remove it again.
+ * The one rule every binding and building block follows. Consent is this viewer's own: it is
+ * never stored in the deck or sent to collaborators, so each participant decides for itself,
+ * and Enable Content only redraws.
  */
-export async function prepareExternalContentReload(
-	source: ExternalContentEnableSource,
-): Promise<ExternalContentReload | null> {
-	const bytes = await source.serializeCurrentDeck();
-	return bytes ? { bytes, keepDirty: source.isDirty, slideIndex: source.slideIndex } : null;
+export function resolveExternalContentView(input: ExternalContentViewInput): ExternalContentView {
+	const allowed = resolveAllowExternalContent(input.host, input.options, input.enabled);
+	return {
+		allowed,
+		barVisible:
+			!allowed && input.host !== false && !input.closed && hasLinkedContent(input.content),
+	};
 }
 
 /**
@@ -113,7 +99,12 @@ export async function prepareExternalContentReload(
 export interface ViewerExternalContentBar {
 	/** The deck links pictures or media to the web, and they were not downloaded. */
 	barVisible: boolean;
-	/** Enable Content: reload this presentation as it stands, with its linked content. */
+	/**
+	 * This viewer draws the linked content. A shell that draws slides itself (its own
+	 * thumbnails) reads them through `linkedContentView(value, allowed)`.
+	 */
+	allowed: boolean;
+	/** Enable Content: draw this presentation's linked content, for this viewer only. */
 	enable: () => void;
 	/** Close the bar; the content stays blocked. */
 	close: () => void;
@@ -124,7 +115,7 @@ export type ExternalContentBarIntent = { id: 'action' | 'close' };
 
 /** A host's handler per bar request; a request without one does nothing. */
 export interface ExternalContentBarIntentHandlers {
-	/** Enable Content: reload this presentation with its linked content. */
+	/** Enable Content: draw this presentation's linked content. */
 	enable?: (() => void) | undefined;
 	/** Close: hide the bar and keep the content blocked. */
 	close?: (() => void) | undefined;

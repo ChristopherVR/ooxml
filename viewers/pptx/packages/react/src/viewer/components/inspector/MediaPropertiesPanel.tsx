@@ -3,6 +3,7 @@ import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { LuPlay, LuPause, LuInfo } from 'react-icons/lu';
 
 import { useTranslation } from '../../i18n/use-translation';
+import { useLinkedContentUrl } from '../linked-content-context';
 import { MediaInspector } from './MediaInspector';
 import { MediaPlaybackBookmarks } from './MediaPlaybackBookmarks';
 import {
@@ -42,8 +43,11 @@ export function MediaPropertiesPanel({
 	const [currentTime, setCurrentTime] = useState(0);
 	const [duration, setDuration] = useState(0);
 
-	const dataUrl =
-		element.mediaData ?? (element.mediaPath ? mediaDataUrls.get(element.mediaPath) : undefined);
+	// The preview plays a linked file only once this viewer allows linked content.
+	const dataUrl = useLinkedContentUrl(
+		element.mediaData ?? (element.mediaPath ? mediaDataUrls.get(element.mediaPath) : undefined),
+	);
+	const posterFrame = useLinkedContentUrl(element.posterFrameData);
 
 	const bookmarks = element.bookmarks ?? [];
 	const isVideo = element.mediaType === 'video';
@@ -223,17 +227,17 @@ export function MediaPropertiesPanel({
 			/>
 
 			{/* ── Media Info ── */}
-			{(extractedMetadata || element.posterFrameData) && (
+			{(extractedMetadata || posterFrame) && (
 				<div className={CARD}>
 					<div className={HEADING}>
 						<LuInfo className='inline w-3 h-3 mr-1' />
 						{t('pptx.media.info')}
 					</div>
-					{element.posterFrameData && (
+					{posterFrame && (
 						<div className='space-y-1'>
 							<div className={`text-[11px] ${LABEL_TEXT}`}>{t('pptx.media.posterFrame')}</div>
 							<img
-								src={element.posterFrameData}
+								src={posterFrame}
 								alt={t('pptx.media.posterFrame')}
 								className='w-full max-h-20 object-contain rounded bg-black/20'
 							/>

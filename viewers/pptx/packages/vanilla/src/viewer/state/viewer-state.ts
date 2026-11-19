@@ -322,16 +322,11 @@ export interface ViewerState {
 	cropSession: CropSession | null;
 	spellCheckEnabled: boolean;
 	/**
-	 * The loaded deck links pictures or media to web addresses (core's
-	 * `hasLinkedWebContent`). Reset on every load.
+	 * The user chose Enable Content on the security bar for this presentation, in this viewer
+	 * only (`resolveExternalContentView`). Reset on every load; a collaborator's choice never
+	 * reaches it.
 	 */
-	hasLinkedWebContent: boolean;
-	/**
-	 * Whether the current load downloaded that linked content: the host
-	 * `allowExternalContent`, else Trust Center > "Allow external content" or
-	 * Enable Content on the security bar for this presentation.
-	 */
-	externalContentAllowed: boolean;
+	externalContentEnabled: boolean;
 	/** The user closed the security bar for this presentation. Reset on every load. */
 	externalContentBarClosed: boolean;
 	/**
@@ -487,8 +482,7 @@ export function createInitialViewerState(inspectorInitiallyOpen?: boolean): View
 		eyedropperActive: false,
 		cropSession: null,
 		spellCheckEnabled: false,
-		hasLinkedWebContent: false,
-		externalContentAllowed: false,
+		externalContentEnabled: false,
 		externalContentBarClosed: false,
 		readOnlyRecommendation: null,
 		readOnlyBannerDismissed: false,

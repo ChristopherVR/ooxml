@@ -47,7 +47,6 @@ import { useContentLifecycle } from './useContentLifecycle';
 import type { EditorHistoryResult } from './useEditorHistory';
 import type { EditorOperationsResult } from './useEditorOperations';
 import { useElementUpdateBatch } from './useElementUpdateBatch';
-import type { ExternalContentReload, LinkedWebContentLoad } from './useExternalContentConsent';
 import type { IOHandlersResult } from './useIOHandlers';
 import { useIOHandlers } from './useIOHandlers';
 import { useKeyboardShortcutWiring } from './useKeyboardShortcutWiring';
@@ -101,10 +100,6 @@ export interface UseViewerIntegrationInput {
 	autosaveIntervalMs?: number;
 	/** File > Options > Trust Center > "Allow external content"; forwarded to `useContentLifecycle`. */
 	allowExternalImages?: boolean;
-	/** Enable Content's reload (see `useExternalContentConsent`); forwarded to `useContentLifecycle`. */
-	externalContentReload?: ExternalContentReload | null;
-	/** Reports each load's linked web content; forwarded to `useContentLifecycle`. */
-	onLinkedWebContent?: (load: LinkedWebContentLoad) => void;
 	/** Host `initialSlide` prop: the slide shown after each load; forwarded to `useContentLifecycle`. */
 	initialSlide?: number;
 	/** Host `googleFonts` prop: the Google Fonts fallback policy; forwarded to `useFontInjection`. */
@@ -213,8 +208,6 @@ export interface ViewerIntegrationResult {
 	 * slides when a local load lands mid-session (see useYjsDocumentSync).
 	 */
 	loadVersion: number;
-	/** The deck serialized for the viewer to read back (plaintext, unsaved edits included). */
-	serializeForRecovery: () => Promise<Uint8Array | null>;
 }
 
 // ---------------------------------------------------------------------------
@@ -312,35 +305,32 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 	// ── Content lifecycle (load, font, serialize, autosave) ───────
 	const [isEncryptedDialogOpen, setIsEncryptedDialogOpen] = useState(false);
 	const [loadVersion, setLoadVersion] = useState(0);
-	const { handlerRef, serializeSlides, serializeForRecovery, autosaveStatus, getChangeSources } =
-		useContentLifecycle({
-			content,
-			filePath,
-			storage,
-			autosaveEnabled,
-			autosaveIntervalMs,
-			onAutosave,
-			// The File > Fonts toggle, finally reaching a save call.
-			embedFonts: dialogs.embedFontsEnabled,
-			slides,
-			state,
-			history,
-			ops: editorOps.ops,
-			transformCommittedText: input.transformCommittedText,
-			actionSoundHandlerRef,
-			setIsEncryptedDialogOpen,
-			password: dialogs.presentationPassword ?? undefined,
-			onContentApplied: () => setLoadVersion((v) => v + 1),
-			allowExternalImages,
-			externalContentReload: input.externalContentReload,
-			onLinkedWebContent: input.onLinkedWebContent,
-			initialSlide,
-			googleFonts,
-			limits,
-			setReadOnlyRecommendation,
-			setModifyVerifier,
-			setCompatToasts,
-		});
+	const { handlerRef, serializeSlides, autosaveStatus, getChangeSources } = useContentLifecycle({
+		content,
+		filePath,
+		storage,
+		autosaveEnabled,
+		autosaveIntervalMs,
+		onAutosave,
+		// The File > Fonts toggle, finally reaching a save call.
+		embedFonts: dialogs.embedFontsEnabled,
+		slides,
+		state,
+		history,
+		ops: editorOps.ops,
+		transformCommittedText: input.transformCommittedText,
+		actionSoundHandlerRef,
+		setIsEncryptedDialogOpen,
+		password: dialogs.presentationPassword ?? undefined,
+		onContentApplied: () => setLoadVersion((v) => v + 1),
+		allowExternalImages,
+		initialSlide,
+		googleFonts,
+		limits,
+		setReadOnlyRecommendation,
+		setModifyVerifier,
+		setCompatToasts,
+	});
 
 	// ── I/O handlers (export, print, theme, properties) ───────────
 	const { exportHandlers, printHandlers, themeHandlers, propertyHandlers } = useIOHandlers({
@@ -711,6 +701,5 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 		handlerRef,
 		viewerApi: viewerApiRef.current,
 		loadVersion,
-		serializeForRecovery,
 	};
 }

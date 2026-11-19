@@ -122,4 +122,24 @@ describe('slideThumbnail', () => {
 		expect(drawn(wrapper).map((node) => node.style.left)).toStrictEqual(['200px']);
 		wrapper.unmount();
 	});
+
+	it('draws a linked picture fill only once `linkedContent` allows it, keeping the slide as given', async () => {
+		const linked = 'https://linked-content.test/fill.png';
+		const picture = {
+			...shape('linked'),
+			shapeStyle: { fillMode: 'image', fillImageUrl: linked },
+		} as unknown as PptxElement;
+		const given = slide([picture]);
+		const wrapper = mount(SlideThumbnail, {
+			props: { slide: given, canvasSize, previewWidth: 120 },
+		});
+		// Outside a viewer, with no `linkedContent`, linked content is withheld.
+		expect(wrapper.html()).not.toContain(linked);
+		await wrapper.setProps({ linkedContent: true });
+		expect(wrapper.html()).toContain(linked);
+		await wrapper.setProps({ linkedContent: false });
+		expect(wrapper.html()).not.toContain(linked);
+		expect(JSON.stringify(given)).toContain(linked);
+		wrapper.unmount();
+	});
 });

@@ -66,7 +66,6 @@ import {
 	resolveMediaElementSource,
 } from './load-content-helpers';
 import type { EditorHistoryResult } from './useEditorHistory';
-import type { ExternalContentReload, LinkedWebContentLoad } from './useExternalContentConsent';
 import { GOOGLE_FONTS_LINK_ID } from './useFontInjection';
 
 /* ------------------------------------------------------------------ */
@@ -152,14 +151,6 @@ export interface UseLoadContentInput {
 	 */
 	allowExternalImages?: boolean;
 	/**
-	 * Enable Content on the security bar: reload `content` from these bytes
-	 * (see `useExternalContentConsent`). Ignored once `content` is another
-	 * presentation.
-	 */
-	externalContentReload?: ExternalContentReload | null;
-	/** Called after a load applies, with whether the deck links web content and whether it was fetched. */
-	onLinkedWebContent?: (load: LinkedWebContentLoad) => void;
-	/**
 	 * Host `initialSlide` prop: the zero-based slide shown after each load,
 	 * clamped by the shared `resolveInitialSlideIndex`. Read through a ref, so
 	 * changing it never reloads the deck; it applies on the next load.
@@ -230,8 +221,6 @@ export function useLoadContent({
 	setIsEncrypted,
 	onContentApplied,
 	allowExternalImages,
-	externalContentReload,
-	onLinkedWebContent,
 	initialSlide,
 	limits,
 }: UseLoadContentInput): UseLoadContentResult {
@@ -255,9 +244,6 @@ export function useLoadContent({
 		}
 		let cancelled = false;
 		const token = ++renderTokenRef.current;
-		// Enable Content reloads this same presentation; a reload for another one is stale.
-		const reload = externalContentReload?.content === content ? externalContentReload : null;
-		const source = reload ? reload.bytes : content;
 
 		// Track Blob URLs created in this load cycle so they can be revoked
 		// on unmount or when a new file is loaded.
@@ -273,9 +259,9 @@ export function useLoadContent({
 				setFontProgress?.(null);
 				setError(null);
 				const buffer =
-					source instanceof Uint8Array
-						? source.buffer.slice(source.byteOffset, source.byteOffset + source.byteLength)
-						: source;
+					content instanceof Uint8Array
+						? content.buffer.slice(content.byteOffset, content.byteOffset + content.byteLength)
+						: content;
 				originalBufferRef.current = buffer instanceof ArrayBuffer ? buffer : null;
 
 				// ── Large file warning ──────────────────────────────────────
@@ -330,8 +316,9 @@ export function useLoadContent({
 						googleFontsBase: resolveGoogleFontsCss2Base(googleFontsRef.current),
 					});
 				}
-				// Linked web content loads only when allowed (the shared
-				// `resolveAllowExternalContent`: host, Trust Center or Enable Content).
+				// Trust Center > "Allow external content" (default off, matching
+				// core's own SSRF/privacy-safe default): only pass `true` through
+				// when the option is explicitly on.
 				const parsed = await handler.load(buffer as ArrayBuffer, {
 					allowExternalImages,
 					limits: limitsRef.current,
@@ -535,18 +522,11 @@ export function useLoadContent({
 				);
 
 				setActiveSlideIndex(
-					reload
-						? Math.max(0, Math.min(reload.slideIndex, parsed.slides.length - 1))
-						: resolveInitialSlideIndex(initialSlideRef.current, parsed.slides.length),
+					resolveInitialSlideIndex(initialSlideRef.current, parsed.slides.length),
 				);
 				clearSelection();
-				// A reload of unsaved edits stays unsaved.
-				setIsDirty(reload?.keepDirty === true);
+				setIsDirty(false);
 				history.resetHistory();
-				onLinkedWebContent?.({
-					hasLinkedWebContent: parsed.hasLinkedWebContent === true,
-					allowed: allowExternalImages === true,
-				});
 				onContentApplied?.();
 			} catch (err) {
 				if (!cancelled && token === renderTokenRef.current) {
@@ -585,7 +565,7 @@ export function useLoadContent({
 			}
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [content, externalContentReload]);
+	}, [content]);
 
 	return { handlerRef };
 }
