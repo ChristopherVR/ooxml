@@ -85,8 +85,13 @@ export async function reviewInDocument({ ref, items, store, sessions, open, refr
 		'p',
 		'review-help',
 		word
-			? 'Shown in the document as tracked changes by Assistant. Accept or reject each one from the Review tab and choose Close to keep the result, or decide for all of them here. Nothing is saved until then.'
+			? 'Shown in the document as tracked changes by Assistant. Accept or reject each one from the Review tab and choose Close to keep the result, or decide for all of them here.'
 			: 'The document shows these changes in place. Select one to find it; undo any you do not want, then apply the rest.',
+	);
+	const held = el(
+		'p',
+		'review-help',
+		`Until you ${word ? 'decide' : 'apply or discard them'}, nothing is saved, and Save As, Export, Download, Print, Share and Copy are off for this document.`,
 	);
 	const list = el('ol', 'review-list');
 	items.forEach(({ change, detail }, i) => {
@@ -133,10 +138,10 @@ export async function reviewInDocument({ ref, items, store, sessions, open, refr
 		leave.onclick = () => finish();
 		actions.append(leave);
 	}
-	panel.append(head, help, list, effects, actions);
+	panel.append(head, help, held, list, effects, actions);
 
 	function finish() {
-		session.preview = false;
+		sessions.setPreview(session, false);
 		session.editor.readOnly?.(false);
 		panel.remove();
 	}
@@ -174,8 +179,8 @@ export async function reviewInDocument({ ref, items, store, sessions, open, refr
 		});
 
 	// Until the panel applies, discards or (Word) keeps the suggestions, the session is a preview:
-	// it is not saved or downloaded, and a request reads the file as last saved.
-	session.preview = true;
+	// nothing takes it out of the suite, and a request reads the file as last saved.
+	sessions.setPreview(session, true);
 	try {
 		await preview();
 	} catch (error) {

@@ -1,17 +1,11 @@
 import { replaceEmbeddedPackage } from 'ooxml-core/opc';
-import { mountEditor } from './editors.js';
+import { mountEditor, previewRefusal } from './editors.js';
 import { cloudReadOnly } from './cloud-files.js';
-
-/** Why a document showing the assistant's suggestions is neither saved nor downloaded. */
-const reviewing = (session) =>
-	new Error(
-		`${session.doc.name} is showing the assistant's suggestions. Apply or discard them in the suggestions panel first.`,
-	);
 
 /**
  * One live editor per document id. Save operations are serialized per session. A session whose
- * editor shows the assistant's suggestions (`preview`, set by ai/review.js) is never saved or
- * exported until the review applies, discards or keeps them.
+ * editor shows the assistant's suggestions (`preview`, see {@link SuiteSessions.setPreview}) is
+ * never saved, exported, printed or copied out until the review applies, discards or keeps them.
  */
 export class SuiteSessions {
 	constructor(store, host, update, command) {
@@ -59,7 +53,7 @@ export class SuiteSessions {
 		const s = await this.sessions.get(id)?.ready;
 		if (!s) return this.store.get(id);
 		// The assistant's suggestions on screen are a preview: only their review panel saves them.
-		if (s.preview) throw reviewing(s);
+		if (s.preview) throw previewRefusal(s.doc.name);
 		const run = async () => {
 			s.editor.flush?.();
 			if (s.version === s.saved) {
@@ -137,6 +131,16 @@ export class SuiteSessions {
 		return result;
 	}
 	/**
+	 * Marks `session` as showing the assistant's suggestions (ai/review.js) or not. While it does,
+	 * the suite refuses to save or download it and its editor offers no command that takes the
+	 * document out of the suite (Save As, Export, Print, Share, Copy).
+	 */
+	setPreview(session, on) {
+		session.preview = on;
+		session.editor.hold?.(on);
+		session.node.toggleAttribute('data-preview', on);
+	}
+	/**
 	 * The document as a request to the assistant reads it: the user's own edits are saved first,
 	 * while a document showing the assistant's suggestions is read as last saved and its
 	 * suggestions stay unsaved.
@@ -152,7 +156,7 @@ export class SuiteSessions {
 	async export(id) {
 		const session = await this.sessions.get(id)?.ready;
 		if (!session) return this.store.get(id);
-		if (session.preview) throw reviewing(session);
+		if (session.preview) throw previewRefusal(session.doc.name);
 		const unlock = this.lock([id]);
 		try {
 			session.editor.flush?.();
