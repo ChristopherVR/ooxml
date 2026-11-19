@@ -6,7 +6,6 @@ import { $, badge, escape, choose, task } from '../ui.js';
 import { contextMenu } from '../context-menu.js';
 import { icon } from '../icons.js';
 import {
-	checkEndpoint,
 	chosenModel,
 	connections,
 	currentConnection,
@@ -111,7 +110,7 @@ export function openConnectionForm(existing) {
 					id: existing?.id,
 					label: String(values.get('label')).trim() || spec.name,
 					provider: spec.id,
-					endpoint: checkEndpoint(values.get('endpoint')),
+					endpoint: String(values.get('endpoint')),
 					model: String(values.get('model')).trim(),
 				},
 				existing && !key ? undefined : key,

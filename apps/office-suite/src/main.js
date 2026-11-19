@@ -4,7 +4,7 @@ import { SuiteSessions } from './session.js';
 import { showVersions, withVersions } from './versions.js';
 import { assistantEnabled, currentPolicy, loadPolicy } from './ai/policy.js';
 import { mountTabOrder } from './tabs.js';
-import { blankDocument, preloadEditor } from './editors.js';
+import { blankDocument, preloadEditor, previewRefusal } from './editors.js';
 import { mountTeams, shareDocument, localDocumentId } from './teams.js';
 import { $, apps, badge, escape, notify, task, download, choose, tag, teamsApp } from './ui.js';
 import { mountThemes } from './themes.js';
@@ -526,6 +526,20 @@ window.addEventListener('beforeunload', (event) => {
 		event.returnValue = '';
 	}
 });
+// Ctrl+P reaches the browser's own Print where an editor does not take it: while the document on
+// screen shows the assistant's suggestions it is refused, before any editor sees the key.
+window.addEventListener(
+	'keydown',
+	(event) => {
+		const shown = sessions.sessions.get(active);
+		if (!shown?.preview || !(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'p')
+			return;
+		event.preventDefault();
+		event.stopPropagation();
+		notify(previewRefusal(shown.doc.name));
+	},
+	true,
+);
 document.addEventListener('keydown', (event) => {
 	if ((event.ctrlKey || event.metaKey) && event.key === 's' && active) {
 		event.preventDefault();

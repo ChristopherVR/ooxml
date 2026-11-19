@@ -50,7 +50,7 @@ Commits **must** follow [Conventional Commits](https://www.conventionalcommits.o
 ```
 
 - **type**: `feat` (minor bump); `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `ci`, `style`, `chore`, `revert` (patch bump). A `!` after the type/scope, or a `BREAKING CHANGE:` footer, bumps major.
-- **scope**: the area: `units`, `color`, `geometry`, `xml`, `opc`, `docx`, `pptx`, `xlsx`, `visio`, `drawingml`, `chart`, `math`, `text`, `i18n`, `ribbon`, `teams`, `automation`, `collab`, `ui`, `site`, `ci`, `deps`, `docs`.
+- **scope**: the area: `units`, `color`, `geometry`, `xml`, `opc`, `docx`, `pptx`, `xlsx`, `visio`, `drawingml`, `chart`, `math`, `text`, `i18n`, `ribbon`, `teams`, `automation`, `ai`, `collab`, `ui`, `site`, `ci`, `deps`, `docs`.
 - **subject**: imperative, lower-case, no trailing period, header at most 72 characters.
 
 Whether a commit releases at all is decided by the **paths it touches**, not its type: only changes to a package's published files release a new version of that package (for `ooxml-core`: `src/core/` outside tests, the bundler and declaration configs, the manifest's shipping fields, the licence files; for `ooxml-ui`: everything under `src/ui/` outside tests). Tests, docs, CI and fixtures never do, whatever their type, and a test-only `feat` does not raise the bump level. See [docs/releasing.md](docs/releasing.md).

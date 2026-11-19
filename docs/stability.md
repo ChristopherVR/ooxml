@@ -67,8 +67,9 @@ Excel (`@christophervr/xlsx-core`):
   `detectWorkbookFormat` with their option and error types (`DataIntegrityError`).
 - The workbook model and cell access: `model`, `address`, `cells`, `workbook`, `styles`,
   `createWorkbook`, `createWorksheet`, `getCell`, `putCell`, `parseAddress`, `formatAddress`.
-- The formula engine, number formats (`numfmt`), the editing commands (`edit/`), pivots,
-  slicers, and `compareWorkbooks` with its report.
+- The formula engine and its policy for automated writers (`formulaPolicyIssue`,
+  `cellInputPolicyIssue`, `RESTRICTED_FORMULA_FUNCTIONS`), number formats (`numfmt`), the editing
+  commands (`edit/`), pivots, slicers, and `compareWorkbooks` with its report.
 
 Not supported (internal): everything in `layout/` (the DOM-free grid metrics, colours, cell views
 and chart SVG the Excel UI paints with; those are consumed through `ooxml-ui`), and the read and
