@@ -6,6 +6,12 @@
 import { needsChooser, showChooser } from './start.js';
 import { onNewVersion, registerWorker } from './updates.js';
 
+// The site's Content Security Policy never allows `eval`. Zod (in the lazily loaded assistant and
+// automation chunks) probes for it with `Function('')` when it builds its first object schema,
+// which the browser reports as a violation; with its JIT off it skips the probe and validates the
+// same way. Set before any chunk that loads Zod.
+(globalThis.__zod_globalConfig ??= {}).jitless = true;
+
 // Updates are checked from the first paint. While the chooser is up nothing can be lost, so a
 // newer build simply reloads into itself; once the workspace is open, pwa.js offers the reload.
 if (/^https?:$/.test(location.protocol)) {
