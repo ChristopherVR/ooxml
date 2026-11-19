@@ -9,8 +9,11 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-/** @param {string} outfile where to write the module */
-export async function bundleSuite(outfile) {
+/**
+ * @param {string} outfile where to write the module
+ * @param {{ logLevel?: 'info' | 'warn' | 'error' | 'silent' }} [options]
+ */
+export async function bundleSuite(outfile, { logLevel = 'info' } = {}) {
 	// Remove only the known generated chunk directory inside this build's output directory.
 	const output = resolve(dirname(outfile));
 	const chunks = resolve(output, 'suite-assets');
@@ -20,6 +23,7 @@ export async function bundleSuite(outfile) {
 	const { build } = await import(pathToFileURL(application.resolve('vite')).href);
 	const result = await build({
 		configFile: false,
+		logLevel,
 		root: join(ROOT, 'apps/office-suite/src'),
 		base: './',
 		publicDir: false,

@@ -771,3 +771,45 @@ test('the baselines are compared with a real commit, even for a full plan', () =
 	assert.equal(baselineBase(['gone', 'origin/main', 'HEAD^'], commitOf), 'p');
 	assert.equal(baselineBase(['gone'], commitOf), '');
 });
+
+test('the byte budgets run when shipped code, the suite site or the budgets change', () => {
+	for (const file of [
+		'src/core/xml/parse.ts',
+		'src/ui/src/docx/editor-core.ts',
+		'src/ui/tsup.config.ts',
+		'apps/office-suite/src/main.js',
+		'viewers/pptx/packages/vanilla/src/viewer/PptxViewer.ts',
+		'site/index.html',
+		'scripts/perf-budgets.json',
+		'scripts/perf-budget-routes.mjs',
+		'scripts/build-suite.mjs',
+	]) {
+		const result = plan([file]);
+		assert.equal(result.budgets, true, file);
+		// The job measures the core and ooxml-ui builds.
+		assert.equal(result.build && result.ui, true, file);
+	}
+	for (const file of [
+		'src/core/xml/parse.test.ts',
+		'apps/office-suite/src/settings.test.js',
+		'scripts/perf-budgets.test.mjs',
+		'site/docs/index.html',
+		'viewers/docx/packages/react/src/index.ts',
+		'docs/performance-budgets.md',
+	])
+		assert.equal(plan([file]).budgets, false, file);
+	assert.equal(plan([], { full: true }).budgets, true);
+});
+
+test('ci-success waits on the byte budgets, which run on the build job output', () => {
+	const workflow = readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8');
+	const job = workflow.match(/^  perf-budgets:\r?\n([\s\S]*?)(?=^  \S)/m)?.[1] ?? '';
+	assert.match(job, /needs: \[plan, build\]/u);
+	assert.match(job, /plan\.outputs\.plan\)\.budgets/u);
+	assert.match(job, /name: core-dist/u);
+	assert.match(job, /name: ui-dist/u);
+	assert.match(job, /path: ~\/\.cache\/ms-playwright/u);
+	assert.match(job, /node scripts\/perf-budgets\.mjs check/u);
+	const needs = /^  ci-success:[\s\S]*?needs:\s*\[([^\]]*)\]/m.exec(workflow)?.[1] ?? '';
+	assert.match(needs, /\bperf-budgets\b/u);
+});

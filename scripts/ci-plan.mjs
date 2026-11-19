@@ -378,6 +378,13 @@ export const A11Y_SHARDS = { withPowerPoint: 2, suiteOnly: 1 };
 const A11Y_REACH =
 	/^(src\/ui\/|apps\/office-suite\/|site\/|viewers\/|demos\/|e2e\/a11y\/|scripts\/(build-suite|bundle-suite|build-pwa|preview-site|browser-performance)\.mjs$)/;
 
+/**
+ * What the byte budgets measure (scripts/perf-budgets.mjs): the built core and ooxml-ui, and the
+ * suite site, its shell and the bundle with the PowerPoint viewer sources it compiles in.
+ */
+const BUDGET_REACH =
+	/^(src\/(core|ui)\/|apps\/office-suite\/|viewers\/pptx\/packages\/|site\/(?!docs\/)|scripts\/(perf-budgets\.json|(perf-budgets|perf-budget-routes|bundle-size|bundle-suite|build-suite|build-pwa|shell-css|preview-site)\.mjs)$)/;
+
 /** The core's writers: what a save writes, which the export round trip (`export.spec.ts`) reads. */
 const CORE_WRITER = /^src\/core\/.*(writ|serializ|save)/i;
 
@@ -623,6 +630,8 @@ export function plan(changed, { full = false, testFiles, reference = false } = {
 	const a11y = a11yPlan(live, { everything, pptxReached });
 	// The pptx typecheck covers the pptx area and the shared areas it compiles against.
 	const pptxTypes = src.some((file) => viewersOfArea(file.split('/')[2]).includes('pptx'));
+	// A test cannot change what ships, so it moves no budget.
+	const budgets = everything || live.some((file) => BUDGET_REACH.test(file) && !isTestFile(file));
 
 	const testsNeeded = everything || core;
 	return {
@@ -648,7 +657,8 @@ export function plan(changed, { full = false, testFiles, reference = false } = {
 			viewerList.length > 0 ||
 			viewerBrowser.length > 0 ||
 			pptx.run ||
-			a11y.run,
+			a11y.run ||
+			budgets,
 		build:
 			everything ||
 			coreCode ||
@@ -656,9 +666,12 @@ export function plan(changed, { full = false, testFiles, reference = false } = {
 			viewerList.length > 0 ||
 			viewerBrowser.length > 0 ||
 			pptx.run ||
-			a11y.run,
+			a11y.run ||
+			budgets,
 		checks: { core: everything || coreCode || uiCode, ui: everything || ui || coreCode },
 		scripts: everything || scripts,
+		// The byte budgets of the entry points and the suite's screens (perf-budgets job).
+		budgets,
 		mcp: everything || mcp,
 		viewers: viewerList.map(({ name, dir, verify }) => ({ name, dir, verify: verify.join('\n') })),
 		viewerBrowser,
