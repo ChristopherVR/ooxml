@@ -1,5 +1,6 @@
 /** Visio ribbon strings for the fr locale (text), keyed by the English text. Not reviewed by a native speaker. */
 export const frText: Readonly<Record<string, string>> = {
+	'Connects {from} to {to}': 'Relie {from} à {to}',
 	'This chart contains unsupported content and is read-only. Its original workbook is preserved.':
 		'Ce graphique contient du contenu non pris en charge et est en lecture seule. Son classeur d’origine est conservé.',
 	'Diagram controls': 'Commandes du diagramme',

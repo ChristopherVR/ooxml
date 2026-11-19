@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import { defineTitleBar } from '../../controls';
 import type { OfficeTitleBarState } from '../../controls';
 import { registerIcon } from '../../icons';
@@ -189,5 +190,5 @@ export function definePptxTitleBar(registry: CustomElementRegistry): void {
 			setShared.call(this, officeTitleBarState(this.#model, this.placement));
 		}
 	}
-	registry.define('pptx-ui-title-bar', PptxTitleBar);
+	defineElement(registry, 'pptx-ui-title-bar', PptxTitleBar);
 }

@@ -7,6 +7,7 @@ import { selectedShape } from './shape-inspector';
 import { wireViewerInputs } from './viewer-input';
 import { viewerStyles } from './styles';
 import { canvasAndRibbonStyles, visioThemeAliases } from './styles/index';
+import { defineOnce } from '../registry';
 import { installOfficeUiThemeFor } from '../theme';
 import { createRibbon } from './ribbon';
 import { wireInlineGalleries } from './ribbon-inline-galleries';
@@ -359,6 +360,10 @@ export class VisioViewerElement extends BaseElement {
 			this.#notes,
 			this.#root.querySelector('.backstage-notes')!,
 			this.#root.querySelector('.shape-inspector')!,
+			(from, to) =>
+				translateRibbonText(normalizeVisioLocale(this.#locale()), 'Connects {from} to {to}')
+					.replace('{from}', from)
+					.replace('{to}', to),
 		);
 		this.#chrome = new ViewerChrome(this.#root, this.controller);
 		this.#panZoom = new ViewerPanZoom(this.#root, this.#viewport, this.controller, (open) =>
@@ -565,6 +570,17 @@ export class VisioViewerElement extends BaseElement {
 	 * product colour). Reflects the `status-bar` attribute; `--vv-status-background` and
 	 * `--vv-status-ink` recolour either.
 	 */
+	/**
+	 * The interface language (the `locale` attribute). Empty when the host has not chosen one: the
+	 * ribbon then follows File > Options, `lang`, the page and the browser, in that order.
+	 */
+	get locale(): string {
+		return this.getAttribute('locale') ?? '';
+	}
+	set locale(value: string | null | undefined) {
+		if (value) this.setAttribute('locale', value);
+		else this.removeAttribute('locale');
+	}
 	get statusBar(): StatusBarTheme {
 		return this.getAttribute('status-bar') === 'colorful' ? 'colorful' : 'neutral';
 	}
@@ -1153,8 +1169,7 @@ export class VisioViewerElement extends BaseElement {
 export function registerVisioViewer(): void {
 	if (typeof customElements === 'undefined')
 		throw new Error('Register the Visio viewer in a browser.');
-	if (!customElements.get('visio-viewer'))
-		customElements.define('visio-viewer', VisioViewerElement);
+	defineOnce(customElements, 'visio-viewer', () => VisioViewerElement);
 }
 declare global {
 	interface HTMLElementTagNameMap {

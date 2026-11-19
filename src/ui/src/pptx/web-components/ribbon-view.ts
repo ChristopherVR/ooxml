@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import { canRequestView } from '../render';
 import type { RibbonViewIntent, RibbonViewState } from '../render';
 import { attachRibbonViewStyles } from './ribbon-view-styles';
@@ -61,5 +62,5 @@ export function definePptxRibbonView(registry: CustomElementRegistry): void {
 			this.view.sync(this.model);
 		}
 	}
-	registry.define('pptx-ui-ribbon-view', RibbonView);
+	defineElement(registry, 'pptx-ui-ribbon-view', RibbonView);
 }

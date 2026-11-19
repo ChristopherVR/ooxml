@@ -17,6 +17,8 @@
  * - **Zoom at the pointer.** Ctrl/Cmd+wheel, and Safari's pinch gesture
  *   events, zoom so that the point of the slide under the pointer stays under
  *   the pointer, like PowerPoint's Ctrl+wheel.
+ * - **Keyboard.** The viewport is the slide pane: a Tab stop with an explicit way
+ *   into and out of the slide's objects (see `slide-keyboard-focus`).
  * - **Pan by dragging.** Middle-button drag, or primary-button drag while
  *   Space is held, scrolls a slide that is larger than the viewport. When the
  *   binding reports that a plain drag has nothing to select (a read-only view),
@@ -25,6 +27,7 @@
  *
  * @module render/viewport-navigation
  */
+import { attachSlideKeyboardFocus } from './slide-keyboard-focus';
 import { createWheelStepBuffer, mapEditingWheel } from './wheel-intent';
 
 /** The slide stage inside a viewport: the region every binding marks as the slide. */
@@ -138,10 +141,9 @@ export function resetViewportScroll(viewport: Pick<HTMLElement, 'scrollLeft' | '
 }
 
 /**
- * Elements whose own Space handling (typing, pressing) must win over pan. Not
- * `isEditorControlTarget` from `editor-key-target`: that treats everything
- * inside the slide viewport as the canvas, and a focused button there (a chart
- * or table quick action) must still be pressed by Space.
+ * Elements whose own Space handling (typing, pressing) must win over pan. A
+ * focused button on the slide (a chart or table quick action) counts: it must
+ * still be pressed by Space.
  */
 const SPACE_OWNER_SELECTOR = [
 	'input',
@@ -523,6 +525,7 @@ export function attachViewportNavigation(
 		releaseSpace();
 	};
 
+	const detachKeyboardFocus = attachSlideKeyboardFocus(viewport, isActive);
 	viewport.addEventListener('wheel', onWheel, { passive: false });
 	for (const type of TOUCH_EVENTS) {
 		viewport.addEventListener(type, onTouches, { passive: true });
@@ -541,6 +544,7 @@ export function attachViewportNavigation(
 	win?.addEventListener('blur', onWindowBlur);
 
 	return () => {
+		detachKeyboardFocus();
 		if (frame !== 0) {
 			cancelFrame(frame);
 			frame = 0;

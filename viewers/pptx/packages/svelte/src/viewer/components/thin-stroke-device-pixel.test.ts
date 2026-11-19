@@ -155,7 +155,9 @@ describe('svelte: thin strokes stay one device pixel on screen', () => {
 				shapeStyle: { strokeColor: '#000000', strokeWidth: 1 },
 			}),
 		]);
-		const path = root.querySelector<SVGElement>('[data-element-id="rect"] svg[data-pptx-outline] path');
+		const path = root.querySelector<SVGElement>(
+			'[data-element-id="rect"] svg[data-pptx-outline] path',
+		);
 		const transform = path?.getAttribute('style') ?? '';
 		expect(transform).toContain('scale(calc((80px');
 		expect(transform).toContain('(67.3333px');

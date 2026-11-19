@@ -1,6 +1,7 @@
 import { PasswordRequiredError } from '../../crypto/errors';
 import { decryptOoxmlPackage, isEncryptedOoxmlPackage } from '../../crypto/index';
 import type { LoadedDocument } from '../model';
+import type { DocxLoadLimits } from '../package-limits';
 import { loadDocx } from '../parse';
 import { loadLegacyDoc } from './legacy-doc';
 
@@ -30,6 +31,8 @@ export interface LoadDocumentOptions {
 	 * `IncorrectPasswordError` (`code: 'incorrect-password'`).
 	 */
 	password?: string;
+	/** Size limits on the package and its parts (see {@link DocxLoadLimits}). */
+	limits?: DocxLoadLimits;
 }
 
 const ENCRYPTED_WARNING =
@@ -42,7 +45,8 @@ export async function loadDocument(
 ): Promise<LoadedDocument> {
 	const format = detectDocumentFormat(input);
 	if (format === 'doc') return loadLegacyDoc(input);
-	if (format === 'docx') return loadDocx(input);
+	const docxOptions = options.limits ? { limits: options.limits } : {};
+	if (format === 'docx') return loadDocx(input, docxOptions);
 	if (options.password === undefined) {
 		throw new PasswordRequiredError(
 			'This document is password protected. Enter the password to open it.',
@@ -50,7 +54,7 @@ export async function loadDocument(
 	}
 	const plain = await decryptOoxmlPackage(input, options.password);
 	if (!isZip(plain)) throw new Error('The decrypted file is not a Word document package.');
-	const loaded = await loadDocx(plain);
+	const loaded = await loadDocx(plain, docxOptions);
 	loaded.model.warnings.push(ENCRYPTED_WARNING);
 	return loaded;
 }

@@ -49,7 +49,7 @@ import { parseChartTitleRuns } from '../../utils/chart-title-runs-parser';
 
 import { resolveDataPointPictureImages } from './chart-datapoint-picture-resolver';
 import { resolveChartElementPictures } from './chart-element-pictures';
-import { applyEmbeddedWorkbookFallback } from './chart-embedded-fallback';
+import { applyEmbeddedWorkbookFallback, needsEmbeddedWorkbook } from './chart-embedded-fallback';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeChartExParsing';
 
 /** The object-tree nodes of a chart part. */
@@ -379,7 +379,12 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const linesAndChrome = this.readChartLinesAndChrome(neutral, tree, groups, reader);
 
 		const facts = await this.readChartPartFacts(chartSpace, chartRoot, chartPartPath);
-		const workbook = facts.embeddedWorkbookData;
+		// The embedded workbook is opened only for what the part does not cache itself.
+		const workbook =
+			needsEmbeddedWorkbook(chartType, categories, built.series) ||
+			(rawDateCategories && neutral.date1904 === undefined)
+				? await this.parseEmbeddedWorkbook(facts.externalData)
+				: undefined;
 		// The chart's own `c:date1904` is authoritative over the embedded workbook's setting.
 		const dateCategories = rawDateCategories
 			? { ...rawDateCategories, date1904: neutral.date1904 ?? workbook?.date1904 ?? false }
@@ -490,6 +495,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			...(elementFormats ? { elementFormats } : {}),
 			...(bandFmts ? { bandFmts } : {}),
 			...facts,
+			...(workbook ? { embeddedWorkbookData: workbook } : {}),
 			...(neutral.plotVisibleOnly !== undefined
 				? { plotVisibleOnly: neutral.plotVisibleOnly }
 				: {}),

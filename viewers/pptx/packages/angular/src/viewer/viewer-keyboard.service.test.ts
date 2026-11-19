@@ -83,7 +83,11 @@ interface Harness {
 	goNext: ReturnType<typeof vi.fn>;
 	presentFromBeginning: ReturnType<typeof vi.fn>;
 	present: ReturnType<typeof vi.fn>;
-	press: (key: string, modifiers?: Partial<KeyboardEventInit>) => KeyboardEvent;
+	press: (
+		key: string,
+		modifiers?: Partial<KeyboardEventInit>,
+		target?: EventTarget,
+	) => KeyboardEvent;
 }
 
 function harness(
@@ -191,8 +195,9 @@ function harness(
 		goNext,
 		presentFromBeginning,
 		present,
-		press(key, modifiers = {}) {
+		press(key, modifiers = {}, target) {
 			const event = new KeyboardEvent('keydown', { key, cancelable: true, ...modifiers });
+			if (target) Object.defineProperty(event, 'target', { value: target });
 			service.handleKeyDown(event);
 			return event;
 		},
@@ -534,31 +539,39 @@ describe('viewerKeyboardService: Tab cycles the selection', () => {
 		return [blank, blank, target];
 	}
 
+	/** The slide viewport after the user has gone into the slide. */
+	function enteredSlide(): HTMLElement {
+		const slide = document.createElement('div');
+		slide.setAttribute('data-pptx-viewport', '');
+		slide.setAttribute('data-pptx-slide-objects', '');
+		return slide;
+	}
+
 	it('selects the first element on Tab with nothing selected', () => {
 		const h = harness({ hasSelection: false });
 		h.editor.slides.set(slidesWith(['a', 'b', 'c']));
-		h.press('Tab');
+		h.press('Tab', {}, enteredSlide());
 		expect(h.editor.select).toHaveBeenCalledWith(['a']);
 	});
 
 	it('advances to the next element on Tab', () => {
 		const h = harness({ hasSelection: true, selectedIds: ['a'] });
 		h.editor.slides.set(slidesWith(['a', 'b', 'c']));
-		h.press('Tab');
+		h.press('Tab', {}, enteredSlide());
 		expect(h.editor.select).toHaveBeenCalledWith(['b']);
 	});
 
 	it('moves to the previous element on Shift+Tab', () => {
 		const h = harness({ hasSelection: true, selectedIds: ['b'] });
 		h.editor.slides.set(slidesWith(['a', 'b', 'c']));
-		h.press('Tab', { shiftKey: true });
+		h.press('Tab', { shiftKey: true }, enteredSlide());
 		expect(h.editor.select).toHaveBeenCalledWith(['a']);
 	});
 
 	it('does not cycle while editing text', () => {
 		const h = harness({ hasSelection: false, isEditingText: true });
 		h.editor.slides.set(slidesWith(['a', 'b']));
-		h.press('Tab');
+		h.press('Tab', {}, enteredSlide());
 		expect(h.editor.select).not.toHaveBeenCalled();
 	});
 

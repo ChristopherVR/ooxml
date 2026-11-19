@@ -1,5 +1,6 @@
 import { Settings } from 'lucide';
 import {
+	activateModalFocus,
 	BACKSTAGE_NAV,
 	BACKSTAGE_TEMPLATES,
 	backstageNavEntries,
@@ -75,6 +76,7 @@ export function createFileTab(
 		? 'home'
 		: (navItems[0]?.id ?? 'home');
 	let visible = false;
+	let releaseFocus = (): void => {};
 	let regionHandle: RegionHandle | null = null;
 	let hasMacros = false;
 	let query = '';
@@ -344,6 +346,9 @@ export function createFileTab(
 				return;
 			}
 			visible = next;
+			// The backstage covers the editor: focus goes in, stays in, and Escape goes back.
+			releaseFocus();
+			releaseFocus = next ? activateModalFocus(el, { onEscape: onClose }) : () => {};
 			if (!next) {
 				releaseRegion();
 			} else if (hostPageOrReplaced()) {

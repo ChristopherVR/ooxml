@@ -95,8 +95,8 @@ export function App({ content }: { content: ArrayBuffer }) {
 
 ```vue
 <script setup lang="ts">
-import { ref } from 'vue';
 import { PowerPointViewer } from 'pptx-vue-viewer';
+import { ref } from 'vue';
 import 'pptx-vue-viewer/styles';
 
 const content = ref<ArrayBuffer | null>(null);

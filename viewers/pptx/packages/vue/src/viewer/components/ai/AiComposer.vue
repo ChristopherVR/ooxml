@@ -3,7 +3,7 @@
  * AiComposer: the message input row (auto-growing textarea + send / stop
  * button). Enter sends, Shift+Enter inserts a newline. Purely presentational.
  */
-import { Send, Square } from 'lucide-vue-next';
+import { Send, Square } from '@lucide/vue';
 import { computed, nextTick, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 

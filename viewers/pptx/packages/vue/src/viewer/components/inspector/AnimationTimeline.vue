@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { GripVertical } from 'lucide-vue-next';
+import { GripVertical } from '@lucide/vue';
 import type { AnimationTimelineRow } from 'ooxml-ui/pptx';
 import {
 	applyAnimationTimelineOrder,

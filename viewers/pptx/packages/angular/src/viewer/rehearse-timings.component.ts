@@ -66,13 +66,15 @@ function formatMs(ms: number): string {
 				aria-live="off"
 			>
 				<div>
-					<small class="block text-slate-300">{{ 'pptx.rehearse.slideTime' | translate }}</small
-					><span class="font-mono text-lg">{{ slideTime() }}</span>
+					<small class="block text-slate-300">{{
+						'pptx.rehearse.slideTime' | translate
+					}}</small><span class="font-mono text-lg">{{ slideTime() }}</span>
 				</div>
 				<div class="h-8 w-px bg-white/30"></div>
 				<div>
-					<small class="block text-slate-300">{{ 'pptx.rehearse.totalTime' | translate }}</small
-					><span class="font-mono text-lg">{{ totalElapsed() }}</span>
+					<small class="block text-slate-300">{{
+						'pptx.rehearse.totalTime' | translate
+					}}</small><span class="font-mono text-lg">{{ totalElapsed() }}</span>
 				</div>
 				<button
 					type="button"

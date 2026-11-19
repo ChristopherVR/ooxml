@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { X } from 'lucide-vue-next';
+import { X } from '@lucide/vue';
 import { activateModalFocus } from 'ooxml-ui/pptx';
 import type { ViewerDialogRegionId } from 'ooxml-ui/pptx';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';

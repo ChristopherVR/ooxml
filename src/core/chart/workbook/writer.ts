@@ -51,6 +51,8 @@ export interface ChartWorkbookWriteOptions {
 	atomic?: boolean;
 	/** With `atomic`: the cells must still hold the values the chart cache had. */
 	requireCurrentValues?: boolean;
+	/** Check every write as it would be applied, but return no bytes (nothing is packaged). */
+	dryRun?: boolean;
 }
 
 const WORKBOOK_PART = 'xl/workbook.xml';
@@ -145,7 +147,7 @@ export async function writeChartWorkbookUpdates(
 			);
 			if (applyCellWritesToWorksheet(doc, cellWrites, shared)) {
 				await syncWorksheetTables(zip, sheetPath, doc, cellWrites, shared);
-				zip.file(sheetPath, buildXml(doc));
+				if (!options.dryRun) zip.file(sheetPath, buildXml(doc));
 				changed = true;
 			}
 		} catch {
@@ -154,7 +156,7 @@ export async function writeChartWorkbookUpdates(
 	}
 	if (options.atomic && unresolved > 0)
 		throw new Error('Chart label replacement could not update every source range.');
-	if (!changed) return { unresolved };
+	if (!changed || options.dryRun) return { unresolved };
 	const bytes = await zip.generateAsync({
 		type: 'uint8array',
 		compression: 'DEFLATE',

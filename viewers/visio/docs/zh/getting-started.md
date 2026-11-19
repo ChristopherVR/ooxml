@@ -113,7 +113,7 @@ bun run dev
 
 | 接口     | 当前约定                                                                                                                                                                               |
 | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 属性     | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `ribbonAddIns`, `collaboration`, `storage`, `fileProviders`, `customization`                                    |
+| 属性     | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `locale`, `ribbonAddIns`, `collaboration`, `storage`, `fileProviders`, `customization`                          |
 | 事件     | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change`, `file-command` |
 | 生命周期 | `update`, `load`, `fit`, `exportSvg`, `createPrintSnapshot`, `replacePlainText`, `undo`, `redo`, `cancelEdit`, `exportVsdx`, `destroy`                                                 |
 

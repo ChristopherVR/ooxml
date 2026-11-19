@@ -1,3 +1,4 @@
+import { definer } from '../../registry';
 import { html, nothing, type PropertyValues } from 'lit';
 import { type ContactView, MAX_CHANNEL_NAME_CHARS, MAX_CHAT_MEMBERS } from 'ooxml-core/teams';
 import { dialogStyles, TeamsDialog } from './dialog-base';
@@ -93,9 +94,4 @@ export class TeamsNewChatDialog extends TeamsDialog {
 	}
 }
 
-export function defineTeamsNewChatDialog(
-	registry: CustomElementRegistry | undefined = globalThis.customElements,
-): void {
-	if (registry && !registry.get('teams-new-chat-dialog'))
-		registry.define('teams-new-chat-dialog', TeamsNewChatDialog);
-}
+export const defineTeamsNewChatDialog = definer('teams-new-chat-dialog', () => TeamsNewChatDialog);

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { X } from 'lucide-vue-next';
+import { X } from '@lucide/vue';
 /**
  * HeaderFooterPanel: edit the presentation's header/footer placeholders.
  *

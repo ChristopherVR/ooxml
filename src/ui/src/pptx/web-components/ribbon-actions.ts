@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import { defineRibbonActions, type OfficeUiRibbonActions } from '../../ribbon/ribbon-actions';
 import type { TabRowActionsViewState } from '../render';
 import { attachControlStyles } from './control-styles';
@@ -35,7 +36,8 @@ export function definePptxRibbonActions(registry: CustomElementRegistry): void {
 			}
 		}
 	}
-	registry.define(
+	defineElement(
+		registry,
 		'pptx-ui-ribbon-actions',
 		PptxRibbonActions as unknown as CustomElementConstructor,
 	);

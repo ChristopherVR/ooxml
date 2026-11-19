@@ -16,7 +16,7 @@
  * arrive as one event per slide, highest index first, so each duplicate lands
  * right after its source and deletions never shift the indexes still to go.
  */
-import { Plus } from 'lucide-vue-next';
+import { Plus } from '@lucide/vue';
 import {
 	buildSaveSlides,
 	createSlidesPaneBulkSlideOps,

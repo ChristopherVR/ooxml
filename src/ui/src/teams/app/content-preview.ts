@@ -1,3 +1,4 @@
+import { definer } from '../../registry';
 import { html, nothing, unsafeCSS, type PropertyValues } from 'lit';
 import { TeamsLitElement } from '../i18n/lit-element';
 import { keyed } from 'lit/directives/keyed.js';
@@ -380,7 +381,7 @@ export class TeamsContentPreview extends TeamsLitElement {
 	}
 }
 
-export function defineTeamsContentPreview(): void {
-	if (globalThis.customElements && !customElements.get('teams-content-preview'))
-		customElements.define('teams-content-preview', TeamsContentPreview);
-}
+export const defineTeamsContentPreview = definer(
+	'teams-content-preview',
+	() => TeamsContentPreview,
+);

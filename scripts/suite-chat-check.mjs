@@ -118,11 +118,31 @@ try {
 	await guest.locator('.chat-msg.from-user', { hasText: 'product launch' }).waitFor();
 	await guest.locator('.chat-msg.from-assistant .ai-create-card').waitFor();
 	await page.locator('#chat-people', { hasText: 'other' }).waitFor();
+	// Joining reads none of the history aloud; what arrives afterwards is announced politely.
+	assert.equal(await guest.locator('#chat-reply-status').textContent(), '');
+	await page.evaluate(() => {
+		const status = document.getElementById('chat-reply-status');
+		globalThis.heard = [];
+		new MutationObserver(() => globalThis.heard.push(status.textContent)).observe(status, {
+			childList: true,
+			characterData: true,
+			subtree: true,
+		});
+	});
 	await guest.locator('#chat-input').fill('Make a budget workbook for the launch');
 	await guest.locator('#chat-send').click();
 	await page.locator('.chat-msg.from-user', { hasText: 'budget workbook' }).waitFor();
 	await page.locator('.chat-msg.from-assistant', { hasText: 'budget.xlsx' }).waitFor();
-	console.log('A shared chat synced requests and replies between two pages');
+	const heard = await page.waitForFunction(
+		() => globalThis.heard.includes('Assistant replied') && globalThis.heard,
+	);
+	const said = await heard.jsonValue();
+	assert.equal(await page.locator('#chat-reply-status').getAttribute('role'), 'status');
+	assert.ok(
+		said.some((text) => /: Make a budget workbook for the launch$/u.test(text)),
+		said.join(' | '),
+	);
+	console.log('A shared chat synced requests and replies between two pages, and announced them');
 	await guest.close();
 
 	// Suggestions show inside the document: Word as tracked changes, PowerPoint in place.

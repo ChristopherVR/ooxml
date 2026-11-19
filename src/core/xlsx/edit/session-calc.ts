@@ -9,8 +9,13 @@ import { type CalcHint, type HistoryStep, touchedCells } from './history';
 
 type Position = { sheet: number; row: number; col: number };
 
+/** Whether a step changed anything formulas depend on besides its cells. */
 const isStructural = (step: HistoryStep): boolean =>
-	step.structural || step.entries.some((entry) => entry.before.kind !== 'cells');
+	step.structural === true ||
+	step.entries.some(
+		({ before }) =>
+			before.kind !== 'cells' && !(before.kind === 'rowInfo' && step.structural === 'layout'),
+	);
 
 /** What the engine must follow for a step applied, undone or redone; undefined when it cannot. */
 function hintFor(step: HistoryStep, mode: 'apply' | 'undo' | 'redo'): CalcHint | undefined {

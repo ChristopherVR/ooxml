@@ -1,3 +1,4 @@
+import { definer } from '../../registry';
 import { html, nothing, unsafeCSS } from 'lit';
 import { TeamsLitElement } from '../i18n/lit-element';
 import { styleMap } from 'lit/directives/style-map.js';
@@ -238,9 +239,9 @@ export class TeamsPresentationPreview extends TeamsLitElement {
 				<summary>${this.t('pptx.slideText')}</summary>
 				<pre>
 ${slide.elements
-						.filter((element) => 'text' in element && element.text)
-						.map((element) => ('text' in element ? element.text : ''))
-						.join('\n\n')}</pre>
+	.filter((element) => 'text' in element && element.text)
+	.map((element) => ('text' in element ? element.text : ''))
+	.join('\n\n')}</pre>
 			</details>
 			${
 				slide.notes
@@ -263,7 +264,7 @@ ${slide.elements
 	}
 }
 
-export function defineTeamsPresentationPreview(): void {
-	if (globalThis.customElements && !customElements.get('teams-presentation-preview'))
-		customElements.define('teams-presentation-preview', TeamsPresentationPreview);
-}
+export const defineTeamsPresentationPreview = definer(
+	'teams-presentation-preview',
+	() => TeamsPresentationPreview,
+);

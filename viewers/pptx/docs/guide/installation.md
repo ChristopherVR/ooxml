@@ -79,8 +79,8 @@ bun add pptx-vue-viewer vue vue-i18n
 
 ```vue
 <script setup lang="ts">
-import { ref } from 'vue';
 import { PowerPointViewer } from 'pptx-vue-viewer';
+import { ref } from 'vue';
 
 const content = ref<ArrayBuffer | null>(null);
 </script>

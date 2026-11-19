@@ -6,7 +6,7 @@
  * copied verbatim, open state stays prop-driven (`isOverflowMenuOpen` /
  * `onSetOverflowMenuOpen`) exactly as React, and each OV key maps to its handler.
  */
-import { Ellipsis } from 'lucide-vue-next';
+import { Ellipsis } from '@lucide/vue';
 import { isDialogAvailable } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';

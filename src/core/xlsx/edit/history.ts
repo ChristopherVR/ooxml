@@ -1,5 +1,5 @@
 import { type CellRange, cellKey, normalizeRange } from '../address';
-import { deleteCell, forEachCellInRange, getCell, putCell } from '../cells';
+import { deleteCell, forEachCellInRange, putCell } from '../cells';
 import type { Cell, DefinedName, Workbook, Worksheet } from '../model';
 import {
 	type RefsData,
@@ -110,15 +110,19 @@ export type CalcHint =
 	| { kind: 'shift'; sheet: number; shift: { axis: 'row' | 'col'; at: number; count: number } }
 	| { kind: 'rename'; from: string; to: string };
 
+/**
+ * What a step did to the sheet's structure. `true` changed rows, columns or sheets: views rebuild
+ * their metrics and formulas recalculate. `layout` only re-fitted row heights: views still rebuild,
+ * but no formula reads a height, so only the edited cells' dependents recalculate.
+ */
+export type StepStructure = boolean | 'layout';
+
 export interface HistoryStep {
 	label: string;
 	entries: HistoryEntry[];
-	structural: boolean;
+	structural: StepStructure;
 	calc?: CalcHint;
 }
-
-/** Positions a small range covers are probed directly; larger ones scan the stored rows. */
-const PROBE_LIMIT = 4096;
 
 function captureCells(sheet: Worksheet, ranges: CellRange[]): [number, number, Cell][] {
 	const cells: [number, number, Cell][] = [];
@@ -132,17 +136,7 @@ function captureCells(sheet: Worksheet, ranges: CellRange[]): [number, number, C
 		}
 		cells.push([row, col, cloneCell(cell)]);
 	};
-	for (const raw of ranges) {
-		const range = normalizeRange(raw);
-		const area = (range.end.row - range.start.row + 1) * (range.end.col - range.start.col + 1);
-		if (area > PROBE_LIMIT || area > sheet.rows.size) forEachCellInRange(sheet, range, take);
-		else
-			for (let row = range.start.row; row <= range.end.row; row++)
-				for (let col = range.start.col; col <= range.end.col; col++) {
-					const cell = getCell(sheet, row, col);
-					if (cell) take(cell, row, col);
-				}
-	}
+	for (const range of ranges) forEachCellInRange(sheet, normalizeRange(range), take);
 	return cells;
 }
 
