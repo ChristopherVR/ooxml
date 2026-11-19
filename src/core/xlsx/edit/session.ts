@@ -111,7 +111,7 @@ export function createEditSession(
 		const change: WorkbookChange = {
 			kind: current.kind,
 			label: current.step.label,
-			structural: current.step.structural,
+			structural: !!current.step.structural,
 		};
 		if (current.sheet !== undefined) change.sheet = current.sheet;
 		if (current.ranges.length) change.ranges = current.ranges;
@@ -159,7 +159,8 @@ export function createEditSession(
 		if (!outer) {
 			// A hint describes one command; a step made of several cannot be followed in place.
 			delete current.step.calc;
-			if (info.structural) current.step.structural = true;
+			if (info.structural && current.step.structural !== true)
+				current.step.structural = info.structural;
 			if (current.sheet === undefined && info.sheet !== undefined) current.sheet = info.sheet;
 			current.ranges.push(...(info.ranges ?? []));
 		}
@@ -218,7 +219,7 @@ export function createEditSession(
 		const step = kind === 'undo' ? history.undo(workbook) : history.redo(workbook);
 		if (!step) return false;
 		recalc(step, kind);
-		emit({ kind, label: step.label, structural: step.structural });
+		emit({ kind, label: step.label, structural: !!step.structural });
 		return true;
 	};
 

@@ -52,7 +52,7 @@ export function autoGrowRows(
 				else sheet.rowInfo.delete(row);
 			}
 		},
-		{ sheet: s, structural: true },
+		{ sheet: s, structural: 'layout' },
 	);
 	return changed;
 }
