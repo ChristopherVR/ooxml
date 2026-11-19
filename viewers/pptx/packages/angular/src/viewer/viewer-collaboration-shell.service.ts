@@ -41,7 +41,8 @@ export class ViewerCollaborationShellService {
 	readonly canvasEditing = inject(ViewerCanvasEditingService);
 	readonly cursor = inject(ViewerCollabCursorService);
 	private readonly session = inject(ViewerCollaborationSessionService);
-	private readonly notices = inject(LoadNoticesService);
+	// Optional: a host may list this service without the notice stack (then nothing is shown).
+	private readonly notices = inject(LoadNoticesService, { optional: true });
 	private readonly options = signal<ViewerCollaborationShellOptions | null>(null);
 	private readonly loadedContent = signal<Uint8Array | ArrayBuffer | null>(null);
 
@@ -75,7 +76,7 @@ export class ViewerCollaborationShellService {
 			shareDefaults: () => undefined,
 			getTemplateElements: () => this.editor.templateElementsBySlideId(),
 			applyRemoteSlides: (slides) => this.editor.applyRemoteSlides(slides),
-			notify: (toast) => this.notices.notify(toast),
+			notify: (toast) => this.notices?.notify(toast),
 			history: this.editor,
 			canvasSize: () => this.loader.canvasSize(),
 			getSourceBytes: () => {
