@@ -1,10 +1,13 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
 
+import { createDeferredRows } from './deferred-rows';
 import type { FrameScheduler } from './virtualized-list';
 import {
 	computeVirtualRange,
 	createVirtualWindow,
+	DEFERRED_FILL_FRAME_BUDGET_MS,
+	DEFERRED_FILL_SETTLE_MS,
 	SLIDE_VIRTUALIZATION_THRESHOLD,
 } from './virtualized-list';
 
@@ -135,5 +138,103 @@ describe('createVirtualWindow', () => {
 		flush();
 		expect(onChange).not.toHaveBeenCalled();
 		el.remove();
+	});
+});
+
+describe('deferred row fills', () => {
+	const clockFrames = () => {
+		let time = 0;
+		let frames: (() => void)[] = [];
+		let timers: { at: number; run: () => void }[] = [];
+		const scheduler: FrameScheduler = {
+			request: (callback) => frames.push(callback),
+			cancel: () => {},
+			delay: (callback, ms) => timers.push({ at: time + ms, run: callback }),
+			cancelDelay: () => {},
+			now: () => time,
+		};
+		return {
+			scheduler,
+			advance(ms: number) {
+				time += ms;
+				const due = timers.filter((timer) => timer.at <= time);
+				timers = timers.filter((timer) => timer.at > time);
+				due.forEach((timer) => timer.run());
+			},
+			frame() {
+				const run = frames;
+				frames = [];
+				run.forEach((callback) => callback());
+			},
+			tick(ms = 4) {
+				time += ms;
+			},
+		};
+	};
+	const scroller = () => {
+		const el = document.createElement('div');
+		document.body.appendChild(el);
+		return el;
+	};
+
+	it('fills rows only once scrolling has paused', () => {
+		const clock = clockFrames();
+		const el = scroller();
+		const view = createVirtualWindow(
+			{ totalItems: 200, itemHeight: 100 },
+			() => {},
+			clock.scheduler,
+		);
+		view.attach(el);
+		const filled: string[] = [];
+		el.dispatchEvent(new Event('scroll'));
+		view.defer('a', () => filled.push('a'));
+		clock.frame();
+		expect(filled).toStrictEqual([]);
+		clock.advance(DEFERRED_FILL_SETTLE_MS);
+		clock.frame();
+		expect(filled).toStrictEqual(['a']);
+		view.destroy();
+		el.remove();
+	});
+
+	it('stops a frame of fills at its budget and continues in the next frame', () => {
+		const clock = clockFrames();
+		const view = createVirtualWindow(
+			{ totalItems: 200, itemHeight: 100 },
+			() => {},
+			clock.scheduler,
+		);
+		const filled: string[] = [];
+		for (const key of ['a', 'b', 'c']) {
+			view.defer(key, () => {
+				filled.push(key);
+				clock.tick(DEFERRED_FILL_FRAME_BUDGET_MS);
+			});
+		}
+		clock.frame();
+		expect(filled).toStrictEqual(['a']);
+		clock.frame();
+		expect(filled).toStrictEqual(['a', 'b']);
+		view.destroy();
+	});
+
+	it('never fills a row that left the window first', () => {
+		const clock = clockFrames();
+		const view = createVirtualWindow(
+			{ totalItems: 200, itemHeight: 100 },
+			() => {},
+			clock.scheduler,
+		);
+		const ready: string[][] = [];
+		const rows = createDeferredRows(view, (keys) => ready.push([...keys]));
+		rows.sync(['a', 'b']);
+		rows.sync(['b', 'c']);
+		clock.frame();
+		expect(ready.at(-1)).toStrictEqual(['b', 'c']);
+		rows.sync(['c']);
+		expect(ready.at(-1)).toStrictEqual(['c']);
+		rows.destroy();
+		view.destroy();
 	});
 });

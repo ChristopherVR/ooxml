@@ -7,7 +7,10 @@
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import EyeOff from '@lucide/svelte/icons/eye-off';
 	import {
+		createDeferredRows,
 		createVirtualWindow,
+		focusCurrentRow,
+		railHasFocus,
 		groupSlidesBySection,
 		HIDDEN_SLIDE_DIM_OPACITY,
 		HIDDEN_SLIDE_LABEL_KEY,
@@ -91,10 +94,26 @@
 		virtualWindow.attach(railEl ?? null);
 		return () => virtualWindow.attach(null);
 	});
-	$effect(() => () => virtualWindow.destroy());
+	// Rows new to the window build their thumbnail once scrolling pauses.
+	let readyRows = $state.raw<ReadonlySet<string>>(new Set());
+	const deferredRows = createDeferredRows(virtualWindow, (ready) => {
+		readyRows = ready;
+	});
 	$effect(() => {
+		deferredRows.sync(shouldVirtualize ? renderedSlides.map(({ slide }) => slide.id) : []);
+	});
+	$effect(() => () => {
+		deferredRows.destroy();
+		virtualWindow.destroy();
+	});
+	$effect(() => {
+		const index = current;
+		// Focus stays on the current row, as in PowerPoint's thumbnail pane.
+		if (railHasFocus(railEl)) {
+			focusCurrentRow(railEl);
+		}
 		if (shouldVirtualize && railEl) {
-			virtualWindow.reveal(current);
+			virtualWindow.reveal(index);
 		}
 	});
 
@@ -205,7 +224,9 @@
 		>
 		<span class="pptx-svelte-thumb-frame" data-pptx-chrome="slide-frame" style={`width: ${THUMB_WIDTH}px; height: ${thumbHeight}px`}>
 			<span class="pptx-svelte-thumb-stage" style={cue.hidden ? `opacity: ${HIDDEN_SLIDE_DIM_OPACITY}` : undefined}>
-				<SlideStage {slide} {canvasSize} {mediaDataUrls} scale={thumbScale} />
+				{#if !shouldVirtualize || readyRows.has(slide.id)}
+					<SlideStage {slide} {canvasSize} {mediaDataUrls} scale={thumbScale} />
+				{/if}
 			</span>
 			{#if cue.hidden}
 				<span class="pptx-svelte-thumb-hidden" id={cue.labelId}>

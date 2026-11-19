@@ -430,6 +430,27 @@ describe('navigating between slides is not an edit', () => {
 		expect(harness.canUndo()).toBeFalsy();
 	});
 
+	it('does not serialize the deck again for a slide selection', () => {
+		const harness = mount();
+		act(() => {
+			harness.goToSlide(1);
+		});
+		const stringify = vi.spyOn(JSON, 'stringify');
+		try {
+			act(() => {
+				harness.goToSlide(0);
+			});
+			act(() => {
+				harness.goToSlide(1);
+			});
+			expect(stringify).not.toHaveBeenCalled();
+		} finally {
+			stringify.mockRestore();
+		}
+		expect(harness.dirtyReports()).toBe(0);
+		expect(harness.canUndo()).toBeFalsy();
+	});
+
 	it('still records the next real edit, so the gate cannot swallow one', () => {
 		const harness = mount();
 

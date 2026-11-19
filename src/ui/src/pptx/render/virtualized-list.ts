@@ -67,11 +67,22 @@ export interface VirtualListShape {
 	overscan?: number;
 }
 
-/** Runs a callback before the next paint; replaceable in tests. */
+/** Frames, timers and the clock a virtual window runs on; replaceable in tests. */
 export interface FrameScheduler {
+	/** Run `callback` before the next paint. */
 	request(callback: () => void): unknown;
 	cancel(handle: unknown): void;
+	/** Run `callback` after `ms` milliseconds; defaults to `setTimeout`. */
+	delay?(callback: () => void, ms: number): unknown;
+	cancelDelay?(handle: unknown): void;
+	/** Milliseconds on a monotonic clock; defaults to `performance.now`. */
+	now?(): number;
 }
+
+/** Deferred row fills wait this long after the last scroll event. */
+export const DEFERRED_FILL_SETTLE_MS = 120;
+/** Deferred row fills stop for the frame once they have taken this long. */
+export const DEFERRED_FILL_FRAME_BUDGET_MS = 8;
 
 const animationFrames: FrameScheduler = {
 	request: (callback) =>
@@ -106,7 +117,16 @@ export interface VirtualWindow {
 	 * the same update.
 	 */
 	reveal(index: number, behavior?: ScrollBehavior): void;
-	/** Stop listening and drop any pending frame. */
+	/**
+	 * Run `fill` for row `key` once scrolling has paused, a frame's budget at a
+	 * time, so a fast scroll paints row shells at frame rate and fills the rows
+	 * still in view when it stops. A new request for a key replaces its pending
+	 * one.
+	 */
+	defer(key: string, fill: () => void): void;
+	/** Drop the pending fill of a row that left the window. */
+	cancelDeferred(key: string): void;
+	/** Stop listening and drop any pending frame and fill. */
 	destroy(): void;
 }
 
@@ -157,8 +177,62 @@ export function createVirtualWindow(
 		}
 	};
 
+	// ── Deferred row fills ──
+	const now = (): number => frames.now?.() ?? performance.now();
+	const fills = new Map<string, () => void>();
+	let lastScrollAt = Number.NEGATIVE_INFINITY;
+	let fillFrame: unknown = null;
+	let fillTimer: unknown = null;
+	const delay = (callback: () => void, ms: number): unknown =>
+		frames.delay ? frames.delay(callback, ms) : setTimeout(callback, ms);
+	const cancelFillWork = (): void => {
+		if (fillFrame !== null) {
+			frames.cancel(fillFrame);
+			fillFrame = null;
+		}
+		if (fillTimer !== null) {
+			if (frames.cancelDelay) {
+				frames.cancelDelay(fillTimer);
+			} else {
+				clearTimeout(fillTimer as ReturnType<typeof setTimeout>);
+			}
+			fillTimer = null;
+		}
+	};
+	const pumpFills = (): void => {
+		fillFrame = null;
+		const quietFor = now() - lastScrollAt;
+		if (quietFor < DEFERRED_FILL_SETTLE_MS) {
+			fillTimer = delay(() => {
+				fillTimer = null;
+				scheduleFills();
+			}, DEFERRED_FILL_SETTLE_MS - quietFor);
+			return;
+		}
+		const start = now();
+		for (const [key, fill] of fills) {
+			fills.delete(key);
+			fill();
+			if (now() - start >= DEFERRED_FILL_FRAME_BUDGET_MS) {
+				break;
+			}
+		}
+		if (fills.size > 0) {
+			scheduleFills();
+		}
+	};
+	const scheduleFills = (): void => {
+		if (fillFrame === null && fillTimer === null && fills.size > 0) {
+			fillFrame = frames.request(pumpFills);
+		}
+	};
+	const onScroll = (): void => {
+		lastScrollAt = now();
+		schedule();
+	};
+
 	const detach = (): void => {
-		container?.removeEventListener('scroll', schedule);
+		container?.removeEventListener('scroll', onScroll);
 		resizeObserver?.disconnect();
 		resizeObserver = null;
 		container = null;
@@ -175,7 +249,7 @@ export function createVirtualWindow(
 			detach();
 			container = el;
 			if (el) {
-				el.addEventListener('scroll', schedule, { passive: true });
+				el.addEventListener('scroll', onScroll, { passive: true });
 				if (typeof ResizeObserver !== 'undefined') {
 					resizeObserver = new ResizeObserver(schedule);
 					resizeObserver.observe(el);
@@ -208,8 +282,18 @@ export function createVirtualWindow(
 			}
 			recompute();
 		},
+		defer(key, fill) {
+			fills.delete(key);
+			fills.set(key, fill);
+			scheduleFills();
+		},
+		cancelDeferred(key) {
+			fills.delete(key);
+		},
 		destroy() {
 			cancelPending();
+			cancelFillWork();
+			fills.clear();
 			detach();
 		},
 	};

@@ -1,4 +1,9 @@
-import { editorThumbnailWidth, SLIDE_VIRTUALIZATION_THRESHOLD } from 'ooxml-ui/pptx';
+import {
+	editorThumbnailWidth,
+	focusCurrentRow,
+	railHasFocus,
+	SLIDE_VIRTUALIZATION_THRESHOLD,
+} from 'ooxml-ui/pptx';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import { LuPlus } from 'react-icons/lu';
 
@@ -197,14 +202,44 @@ function SlidesPaneSidebarContent({
 	// Determine whether virtualization is warranted
 	const shouldVirtualize = slides.length >= VIRTUALIZATION_THRESHOLD;
 
-	const { startIndex, endIndex, totalHeight, offsetY, scrollContainerRef, scrollToIndex } =
-		useVirtualizedSlides({
-			totalItems: shouldVirtualize ? flatItems.length : 0,
-			itemHeight: estimatedItemHeight,
-		});
+	const {
+		startIndex,
+		endIndex,
+		totalHeight,
+		offsetY,
+		scrollContainerRef,
+		scrollToIndex,
+		syncRows,
+		readyRows,
+	} = useVirtualizedSlides({
+		totalItems: shouldVirtualize ? flatItems.length : 0,
+		itemHeight: estimatedItemHeight,
+	});
+
+	// Rows new to the window build their thumbnail once scrolling pauses.
+	const windowSlideIds = useMemo(
+		() =>
+			shouldVirtualize
+				? flatItems.slice(startIndex, endIndex + 1).flatMap((item) => {
+						const slide = item.type === 'slide' ? slides[item.slideIndex] : undefined;
+						return slide ? [slide.id] : [];
+					})
+				: [],
+		[endIndex, flatItems, shouldVirtualize, slides, startIndex],
+	);
+	useEffect(() => {
+		syncRows(windowSlideIds);
+	}, [syncRows, windowSlideIds]);
 
 	// ── Auto-scroll active slide into view ──
 	useEffect(() => {
+		// Focus stays on the current row, as in PowerPoint's thumbnail pane.
+		const list = slideRefs.current
+			.get(activeSlideIndex)
+			?.closest('[data-pptx-chrome="slide-list"]');
+		if (railHasFocus(list)) {
+			focusCurrentRow(list);
+		}
 		if (shouldVirtualize) {
 			// Find the flat index of the active slide
 			const flatIdx = flatItems.findIndex(
@@ -326,6 +361,7 @@ function SlidesPaneSidebarContent({
 										onDragOver={handleDragOver}
 										onDrop={handleDrop}
 										slideRef={setSlideRef(item.slideIndex)}
+										thumbnailReady={readyRows.has(slide.id)}
 									/>
 								);
 							})}

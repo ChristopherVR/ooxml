@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { EyeOff, MessageSquare, Plus } from '@lucide/vue';
 import {
+	createDeferredRows,
 	createVirtualWindow,
+	focusCurrentRow,
+	railHasFocus,
 	HIDDEN_SLIDE_LABEL_KEY,
 	HIDDEN_SLIDE_SLASH_GRADIENT,
 	hiddenSlideCue,
@@ -92,7 +95,15 @@ watch([() => props.slides.length, itemHeight], ([totalItems, height]) =>
 	virtualWindow.setShape({ totalItems, itemHeight: height }),
 );
 watch(listEl, (el) => virtualWindow.attach(el), { flush: 'sync' });
-onBeforeUnmount(() => virtualWindow.destroy());
+// Rows new to the window build their thumbnail once scrolling pauses.
+const readyRows = shallowRef<ReadonlySet<string>>(new Set());
+const deferredRows = createDeferredRows(virtualWindow, (ready) => {
+	readyRows.value = ready;
+});
+onBeforeUnmount(() => {
+	deferredRows.destroy();
+	virtualWindow.destroy();
+});
 const renderedSlides = computed(() => {
 	const start = shouldVirtualize.value ? virtualRange.value.startIndex : 0;
 	const end = shouldVirtualize.value ? virtualRange.value.endIndex : props.slides.length - 1;
@@ -101,9 +112,18 @@ const renderedSlides = computed(() => {
 		.map((slide, offset) => ({ slide, index: start + offset }));
 });
 watch(
+	renderedSlides,
+	(rows) => deferredRows.sync(shouldVirtualize.value ? rows.map(({ slide }) => slide.id) : []),
+	{ immediate: true },
+);
+watch(
 	[() => props.activeIndex, itemHeight],
 	async ([index]) => {
 		await nextTick();
+		// Focus stays on the current row, as in PowerPoint's thumbnail pane.
+		if (railHasFocus(listEl.value)) {
+			focusCurrentRow(listEl.value);
+		}
 		if (shouldVirtualize.value) {
 			virtualWindow.reveal(index);
 		}
@@ -239,6 +259,7 @@ const {
 							:style="{ width: `${thumbWidth}px`, height: `${previewHeight}px`, flex: 'none' }"
 						>
 							<SlideStage
+								v-if="!shouldVirtualize || readyRows.has(slide.id)"
 								:slide="slide"
 								:canvas-size="canvasSize"
 								:media-data-urls="mediaDataUrls"

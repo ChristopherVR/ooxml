@@ -18,7 +18,10 @@ import {
 import { LucidePlus } from '@lucide/angular';
 import { TranslatePipe } from '@ngx-translate/core';
 import {
+	createDeferredRows,
 	createVirtualWindow,
+	focusCurrentRow,
+	railHasFocus,
 	EDITOR_THUMBNAIL_WIDTH,
 	EDITOR_SLIDE_RAIL_WIDTH,
 	editorThumbnailStep,
@@ -265,6 +268,12 @@ export class SlidesPanelComponent {
 	);
 	private readonly range = signal(this.virtualWindow.range);
 	readonly virtualRange = this.range.asReadonly();
+	/** Rows new to the window build their thumbnail once scrolling pauses. */
+	private readonly ready = signal<ReadonlySet<string>>(new Set());
+	readonly readyRows = this.ready.asReadonly();
+	private readonly deferredRows = createDeferredRows(this.virtualWindow, (ready) =>
+		this.ready.set(ready),
+	);
 
 	// ── Resolved deck (inputs, else the enclosing editor) ────────────────────
 
@@ -341,11 +350,23 @@ export class SlidesPanelComponent {
 		afterRenderEffect(() => {
 			const index = this.activeIndex();
 			this.itemHeight();
-			if (this.scrollViewport() && this.shouldVirtualize()) {
+			// Focus stays on the current row, as in PowerPoint's thumbnail pane.
+			const viewport = this.scrollViewport();
+			if (railHasFocus(viewport)) {
+				focusCurrentRow(viewport);
+			}
+			if (viewport && this.shouldVirtualize()) {
 				this.virtualWindow.reveal(index);
 			}
 		});
-		inject(DestroyRef).onDestroy(() => this.virtualWindow.destroy());
+		effect(() => {
+			const rows = this.renderedSlides();
+			this.deferredRows.sync(this.shouldVirtualize() ? rows.map(({ slide }) => slide.id) : []);
+		});
+		inject(DestroyRef).onDestroy(() => {
+			this.deferredRows.destroy();
+			this.virtualWindow.destroy();
+		});
 	}
 
 	// ── Drag-to-reorder (the rail's reorder path; there are no per-card buttons) ──

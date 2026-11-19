@@ -110,17 +110,19 @@
 									data-pptx-chrome="slide-frame"
 									[ngStyle]="clipStyle()"
 								>
-									<pptx-slide-canvas
-										[slide]="slide"
-										[templateElements]="templateMap()[slide.id] ?? []"
-										[canvasSize]="canvasSize()"
-										[mediaDataUrls]="mediaDataUrls()"
-										[zoom]="thumbZoom()"
-										[editable]="false"
-										[autoFit]="false"
-										[interactive]="false"
-										[style.opacity]="hidden.hidden ? dimOpacity : null"
-									/>
+									@if (!shouldVirtualize() || readyRows().has(slide.id)) {
+										<pptx-slide-canvas
+											[slide]="slide"
+											[templateElements]="templateMap()[slide.id] ?? []"
+											[canvasSize]="canvasSize()"
+											[mediaDataUrls]="mediaDataUrls()"
+											[zoom]="thumbZoom()"
+											[editable]="false"
+											[autoFit]="false"
+											[interactive]="false"
+											[style.opacity]="hidden.hidden ? dimOpacity : null"
+										/>
+									}
 									@if (hidden.hidden) {
 										<!-- Announced through aria-describedby, so the accessible name
 										     stays exactly "Go to slide {{ i + 1 }}". -->

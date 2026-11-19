@@ -1,6 +1,8 @@
 import {
 	computeVirtualRange,
 	createVirtualWindow,
+	focusCurrentRow,
+	railHasFocus,
 	EDITOR_THUMBNAIL_WIDTH,
 	EDITOR_SLIDE_RAIL_WIDTH,
 	editorThumbnailStep,
@@ -158,6 +160,20 @@ export function createThumbnailRail(
 	window.dataset.pptxChrome = 'slide-window';
 	space.appendChild(window);
 	const virtualWindow = createVirtualWindow({ totalItems: 0, itemHeight: 1 }, () => renderWindow());
+	/**
+	 * Rows entering a virtualized window while scrolling get their thumbnail
+	 * once scrolling pauses; an explicit render paints every row at once.
+	 */
+	let deferEntering = true;
+	const deferredStage = (slide: PptxSlide, scale: number): HTMLElement => {
+		const pending = createEl(doc, 'span', 'pptxv-thumb-pending');
+		virtualWindow.defer(slide.id, () => {
+			if (pending.isConnected && sourceRenderStage) {
+				pending.replaceWith(sourceRenderStage(slide, scale));
+			}
+		});
+		return pending;
+	};
 
 	const buildButton = (slide: PptxSlide, index: number, scale: number): HTMLButtonElement => {
 		const btn = createThumbnailRow(
@@ -166,7 +182,7 @@ export function createThumbnailRail(
 			slide,
 			index,
 			sourceCanvasSize,
-			sourceRenderStage!,
+			virtualized && deferEntering ? deferredStage : sourceRenderStage!,
 			scale,
 		);
 		wireThumbnailRowEvents(btn, slide, index, {
@@ -195,6 +211,9 @@ export function createThumbnailRail(
 	/** Drop every row, so the next window builds each one again. */
 	const clearRows = (): void => {
 		disposePptxRenderStage(list);
+		for (const id of rows.keys()) {
+			virtualWindow.cancelDeferred(id);
+		}
 		rows = new Map();
 		buttons = new Map();
 	};
@@ -229,6 +248,7 @@ export function createThumbnailRail(
 			if (wanted.get(id) !== row.index || sourceSlides[row.index] !== row.slide) {
 				leaving.push(row.el);
 				rows.delete(id);
+				virtualWindow.cancelDeferred(id);
 			}
 		}
 		// Only views of leaving rows may move into entering rows; a kept row's
@@ -300,6 +320,7 @@ export function createThumbnailRail(
 			// styles reach the thumbnails without changing the slide objects.
 			const views = collectThreeViews(list);
 			const scale = THUMB_STAGE_WIDTH / Math.max(canvasSize.width, 1);
+			deferEntering = false;
 			withReusableThreeViews(views, () => {
 				clearRows();
 				if (sourceSections.length > 0) {
@@ -332,17 +353,23 @@ export function createThumbnailRail(
 				virtualWindow.setShape({ totalItems: slides.length, itemHeight });
 				renderWindow();
 			});
+			deferEntering = true;
 			this.setActive(activeIndex);
 		},
 		setActive(index) {
 			const changed = index !== activeIndex;
 			activeIndex = index;
+			// Checked first: the reveal can remove the row that holds focus.
+			const keepFocus = changed && railHasFocus(list);
 			if (virtualized) {
 				// Builds rows only when the reveal moved the window.
 				virtualWindow.reveal(index);
 			}
 			if (changed || !buttons.get(index)?.hasAttribute('aria-current')) {
 				markActive();
+			}
+			if (keepFocus) {
+				focusCurrentRow(list);
 			}
 			const active = buttons.get(index);
 			if (!virtualized && active && typeof active.scrollIntoView === 'function') {

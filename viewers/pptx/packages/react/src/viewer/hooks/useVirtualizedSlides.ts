@@ -8,8 +8,8 @@
  *
  * @module useVirtualizedSlides
  */
-import { createVirtualWindow, DEFAULT_VIRTUAL_OVERSCAN } from 'ooxml-ui/pptx';
-import type { VirtualizedRange, VirtualWindow } from 'ooxml-ui/pptx';
+import { createDeferredRows, createVirtualWindow, DEFAULT_VIRTUAL_OVERSCAN } from 'ooxml-ui/pptx';
+import type { DeferredRows, VirtualizedRange, VirtualWindow } from 'ooxml-ui/pptx';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 export { computeVirtualRange } from 'ooxml-ui/pptx';
@@ -35,6 +35,14 @@ export interface VirtualizedSlidesResult extends VirtualizedRange {
 	scrollContainerRef: (el: HTMLDivElement | null) => void;
 	/** Call this to scroll a specific index into view. */
 	scrollToIndex: (index: number, behavior?: ScrollBehavior) => void;
+	/**
+	 * Report the keys of the rows now rendered. A row new to the window is
+	 * listed in `readyRows` once scrolling pauses, so its thumbnail is built
+	 * then rather than during the scroll.
+	 */
+	syncRows: (keys: readonly string[]) => void;
+	/** Rendered rows whose deferred thumbnail may be built. */
+	readyRows: ReadonlySet<string>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -53,6 +61,10 @@ export function useVirtualizedSlides({
 	const viewRef = useRef<VirtualWindow | null>(null);
 	viewRef.current ??= createVirtualWindow({ totalItems, itemHeight, overscan }, setRange);
 	const view = viewRef.current;
+	const [readyRows, setReadyRows] = useState<ReadonlySet<string>>(() => new Set());
+	const rowsRef = useRef<DeferredRows | null>(null);
+	rowsRef.current ??= createDeferredRows(view, setReadyRows);
+	const deferredRows = rowsRef.current;
 	// The container is tracked in state, not only in a ref: the rail renders it
 	// only while open, so it can mount after this hook's first effect. A
 	// mount-once effect then never saw it, the viewport stayed 0 px tall and
@@ -69,7 +81,17 @@ export function useVirtualizedSlides({
 		return () => view.attach(null);
 	}, [view, container]);
 
-	useEffect(() => () => view.destroy(), [view]);
+	useEffect(
+		() => () => {
+			deferredRows.destroy();
+			view.destroy();
+		},
+		[deferredRows, view],
+	);
+	const syncRows = useCallback(
+		(keys: readonly string[]) => deferredRows.sync(keys),
+		[deferredRows],
+	);
 
 	const scrollToIndex = useCallback(
 		(index: number, behavior: ScrollBehavior = 'smooth') => view.reveal(index, behavior),
@@ -80,5 +102,7 @@ export function useVirtualizedSlides({
 		...(range ?? view.range),
 		scrollContainerRef,
 		scrollToIndex,
+		syncRows,
+		readyRows,
 	};
 }
