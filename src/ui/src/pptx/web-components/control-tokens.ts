@@ -34,7 +34,7 @@ export const CONTROL_TOKENS = {
 	'--pptx-checkbox-size': '16px',
 	'--pptx-checkbox-size-touch': '22px',
 	'--pptx-checkbox-radius': '3px',
-	'--pptx-checkbox-border': 'var(--pptx-border, #374151)',
+	'--pptx-checkbox-border': 'var(--pptx-input, #374151)',
 	'--pptx-checkbox-bg': 'var(--pptx-background, #030712)',
 	'--pptx-checkbox-accent': 'var(--pptx-primary, #6366f1)',
 	'--pptx-checkbox-accent-fg': 'var(--pptx-primary-foreground, #fff)',

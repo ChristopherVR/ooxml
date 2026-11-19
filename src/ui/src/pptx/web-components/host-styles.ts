@@ -16,7 +16,7 @@ pptx-ui-search {
 	padding-inline: ${tok('--pptx-space-3')};
 }
 pptx-ui-search[variant="titlebar"] {
-	border-color: var(--pptx-border, #374151);
+	border-color: ${tok('--pptx-field-border')};
 	border-radius: 6px;
 	padding-inline: 14px;
 }

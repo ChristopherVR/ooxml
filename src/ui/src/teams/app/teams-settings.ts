@@ -2,6 +2,7 @@
 // Connection changes are validated by the core before the host applies them.
 import { definer } from '../../registry';
 import { html, nothing, unsafeCSS, type PropertyValues } from 'lit';
+import { withTokens } from '../../base';
 import { TeamsLitElement } from '../i18n/lit-element';
 import {
 	type NotificationSettings,
@@ -27,7 +28,7 @@ export type TeamsTheme = 'system' | 'light' | 'dark';
  * `teams-settings-close` `{}`.
  */
 export class TeamsSettings extends TeamsLitElement {
-	static override styles = [unsafeCSS(css), unsafeCSS(previewCss)];
+	static override styles = [unsafeCSS(withTokens(css)), unsafeCSS(withTokens(previewCss))];
 	static override properties = {
 		config: { attribute: false },
 		open: { type: Boolean, reflect: true },

@@ -80,7 +80,7 @@ button {
 .search input {
 	width: 100%;
 	padding: var(--office-space-2) var(--office-space-4);
-	border: var(--office-border-width) solid var(--office-teams-divider);
+	border: var(--office-border-width) solid var(--office-field-border);
 	border-radius: var(--office-radius-full);
 	background: var(--office-background);
 	color: inherit;

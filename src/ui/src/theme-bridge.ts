@@ -20,7 +20,7 @@ export const LEGACY_OFFICE_THEME_TOKENS = {
 	destructive: '--office-danger',
 	'destructive-foreground': '--office-danger-foreground',
 	border: '--office-border',
-	input: '--office-border',
+	input: '--office-control-border',
 	ring: '--office-ring',
 	radius: '--office-radius',
 	font: '--office-font',
@@ -48,6 +48,7 @@ export function legacyThemeAliases(
 export function legacyThemeBridge(selector: string, privatePrefix: string): string {
 	return shadcnBridge(selector, privatePrefix, {
 		extra: {
+			'--office-control-border': `var(${privatePrefix}input)`,
 			'--office-font': `var(${privatePrefix}font)`,
 			'--office-radius': `var(${privatePrefix}radius)`,
 		},
@@ -94,41 +95,15 @@ const SHADCN_NAMES: ReadonlyArray<readonly [OfficeToken, string, string?]> = [
 	return fallbackName ? [token, name, fallbackName] : [token, name];
 });
 
-/** The `--office-*` tokens a token's default reads, such as `--office-background` for selects. */
-const reads = (value: string) => [...value.matchAll(/var\((--office-[\w-]+)/g)].map((m) => m[1]!);
-
 /**
- * The tokens whose defaults read (directly or through another default) one of `bridged`. The
- * theme declares those defaults on `:root`, and a `var()` resolves where it is declared, so a
- * bridge that only re-points `--office-background` would leave `--office-select-background`
- * holding the page's colour (black selects on a light viewer when the system is dark).
- */
-function derivedTokens(bridged: ReadonlySet<string>): [string, string][] {
-	const derived = new Map<string, string>();
-	let grew = true;
-	while (grew) {
-		grew = false;
-		for (const [name, value] of Object.entries(OFFICE_TOKENS)) {
-			if (bridged.has(name) || derived.has(name)) continue;
-			if (reads(value).some((token) => bridged.has(token) || derived.has(token))) {
-				derived.set(name, value);
-				grew = true;
-			}
-		}
-	}
-	return [...derived];
-}
-
-/**
- * `selector { --office-x: value; ... }` for a mapping; entries without a value are skipped. The
- * tokens derived from a mapped one are declared again on the selector with their defaults, so they
- * follow the product's colours instead of the page's.
+ * `selector { --office-x: value; ... }` for a mapping; entries without a value are skipped. Tokens
+ * derived from a mapped one (`--office-select-background` from `--office-background`) need no
+ * entry: the theme never declares them, so they resolve where they are read and follow the bridge.
  */
 export function themeBridge(selector: string, map: ThemeBridgeMap): string {
-	const mapped = Object.entries(map).filter((entry): entry is [string, string] => !!entry[1]);
-	const lines = [...mapped, ...derivedTokens(new Set(mapped.map(([name]) => name)))].map(
-		([name, value]) => `\t${name}: ${value};`,
-	);
+	const lines = Object.entries(map)
+		.filter((entry): entry is [string, string] => !!entry[1])
+		.map(([name, value]) => `\t${name}: ${value};`);
 	return `${selector} {\n${lines.join('\n')}\n}\n`;
 }
 

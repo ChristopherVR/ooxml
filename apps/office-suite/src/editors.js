@@ -247,9 +247,9 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 			element.theme = theme.mode;
 			element.themeColors = {
 				...editorColors(theme),
-				...(doc.kind === 'xlsx'
-					? { selectionBorder: theme.accent, headerActiveBg: editorColors(theme).accent }
-					: {}),
+				// The selection outline and header text follow the accent and its ink through
+				// `primary` and `primaryInk`; only the selected header's fill is set here.
+				...(doc.kind === 'xlsx' ? { headerActiveBg: editorColors(theme).accent } : {}),
 				radius: editorRadius(),
 			};
 		}

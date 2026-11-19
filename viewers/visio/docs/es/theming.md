@@ -34,21 +34,22 @@ El color de énfasis por defecto ha cambiado con esto. Antes el visor tenía fij
 
 Los tokens `--vv-*` anteriores siguen funcionando. Cada uno, cuando se define, prevalece sobre el token `--office-*` al que equivale; cuando no se define, el visor recurre al token compartido. Úselos para dar estilo solo a este visor sin tocar el resto de la página.
 
-| Token              | Recurre a                    | Función                                                         |
-| ------------------ | ---------------------------- | --------------------------------------------------------------- |
-| `--vv-font`        | `--office-font`              | Familia tipográfica                                             |
-| `--vv-background`  | `--office-surface`           | Fondo de la ventana                                             |
-| `--vv-surface`     | `--office-background`        | Superficie de la cinta y los paneles                            |
-| `--vv-secondary`   | `--office-surface`           | Superficie secundaria                                           |
-| `--vv-shadow`      | `--office-shadow`            | Sombra de la página                                             |
-| `--vv-ink`         | `--office-foreground`        | Texto principal                                                 |
-| `--vv-muted`       | `--office-muted-foreground`  | Texto secundario                                                |
-| `--vv-border`      | `--office-border`            | Bordes                                                          |
-| `--vv-accent`      | `--office-accent`            | Color de énfasis                                                |
-| `--vv-accent-soft` | 10 % del énfasis             | Superficie de énfasis suave (al pasar el puntero, seleccionado) |
-| `--vv-accent-ink`  | `--office-accent-foreground` | Texto sobre el color de énfasis                                 |
-| `--vv-focus`       | `--office-ring`              | Anillo de foco                                                  |
-| `--vv-danger`      | `--office-danger`            | Estados destructivos y de error                                 |
+| Token              | Recurre a                                  | Función                                                                                                             |
+| ------------------ | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `--vv-font`        | `--office-font`                            | Familia tipográfica                                                                                                 |
+| `--vv-background`  | `--office-surface`                         | Fondo de la ventana                                                                                                 |
+| `--vv-surface`     | `--office-background`                      | Superficie de la cinta y los paneles                                                                                |
+| `--vv-secondary`   | `--office-surface`                         | Superficie secundaria                                                                                               |
+| `--vv-shadow`      | `--office-shadow`                          | Sombra de la página                                                                                                 |
+| `--vv-ink`         | `--office-foreground`                      | Texto principal                                                                                                     |
+| `--vv-muted`       | `--office-muted-foreground`                | Texto secundario                                                                                                    |
+| `--vv-border`      | `--office-border`                          | Bordes                                                                                                              |
+| `--vv-accent`      | `--office-accent`                          | Color de énfasis                                                                                                    |
+| `--vv-accent-soft` | 10 % del énfasis                           | Superficie de énfasis suave (al pasar el puntero, seleccionado)                                                     |
+| `--vv-accent-ink`  | `--office-accent-foreground`               | Texto sobre el color de énfasis                                                                                     |
+| `--vv-accent-text` | `--vv-accent`, luego `--office-accent-ink` | El color de énfasis como texto (pestaña de página actual, etiquetas de énfasis); al menos 4,5:1 sobre la superficie |
+| `--vv-focus`       | `--office-ring`                            | Anillo de foco                                                                                                      |
+| `--vv-danger`      | `--office-danger`                          | Estados destructivos y de error                                                                                     |
 
 El área de pruebas define `data-theme="light" | "dark"` en la raíz del documento y aporta valores `--vv-*` coincidentes en `demos/visio/demo/workspace.css` para la interfaz de su propia página (pantalla de inicio, shell del espacio de trabajo); ese archivo sigue funcionando porque las sobrescrituras `--vv-*` siguen aplicándose.
 

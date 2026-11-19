@@ -28,7 +28,8 @@ describe('theme tokens', () => {
 	});
 
 	it('inherits shared Office theme values without shadow-local defaults', () => {
-		expect(themeTokenText).toContain(':host{color-scheme:inherit;');
+		// The editor reads the accent ink in the Office palette's scheme, not the host page's.
+		expect(themeTokenText).toContain(':host{color-scheme:var(--office-color-scheme, light);');
 		expect(editorStyleText).not.toContain('--xve-background:');
 		expect(themeTokenText).not.toContain('--office-background:');
 		expect(editorStyleText).toContain('.xve-frame {');

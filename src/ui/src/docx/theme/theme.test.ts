@@ -34,7 +34,7 @@ describe('theme tokens', () => {
 		);
 		expect(themeTokenText).not.toMatch(/--dve-[a-z-]+:/);
 		expect(themeTokenText).not.toMatch(/--office-[a-z-]+:/);
-		expect(themeTokenText).toContain('color-scheme:inherit');
+		expect(themeTokenText).toContain('color-scheme:var(--office-color-scheme, light)');
 	});
 });
 

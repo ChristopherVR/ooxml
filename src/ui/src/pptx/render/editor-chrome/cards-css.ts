@@ -105,5 +105,9 @@ export const EDITOR_CARDS_CSS = `
 }
 @media (min-width: 768px) and (forced-colors: active) {
   ${C} :is(${SURFACES}, [data-pptx-chrome="ribbon"], [data-pptx-viewport]) { border-color: CanvasText; }
+  ${C} [data-pptx-chrome="inspector-tabs"] button[aria-selected="true"] {
+    forced-color-adjust: none; background: Highlight !important; color: HighlightText !important;
+    box-shadow: none;
+  }
 }
 `;

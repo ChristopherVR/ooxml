@@ -12,6 +12,8 @@
 	--ink: var(--dve-foreground, var(--office-foreground, #1f2937));
 	--muted: var(--dve-muted-foreground, var(--office-muted-foreground, #6b7280));
 	--line: var(--dve-border, var(--office-border, #d1d5db));
+	/* Form control boundaries (combo boxes, fields): 3:1 against the chrome. */
+	--control-line: var(--_dve-input);
 	--canvas: var(--dve-muted, var(--office-surface, #f3f4f6));
 	--surface: var(--dve-card, var(--office-surface, #f3f4f6));
 	--chrome: var(--dve-background, var(--office-background, #fff));

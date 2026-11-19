@@ -33,6 +33,7 @@ const CSS = `
 .xg-assist-tip{background:var(--xve-popover, var(--office-popover, #fff));border:1px solid var(--xve-border, var(--office-border, #c8c6c4));box-shadow:0 2px 6px rgba(0,0,0,.12);padding:2px 6px;white-space:nowrap}
 .xg-assist-name{color:var(--xve-primary, var(--office-accent, #0f6cbd));text-decoration:underline}
 .xg-assist-param-active{font-weight:700}
+@media (forced-colors:active){.xg-assist-option[aria-selected="true"]{forced-color-adjust:none;background:Highlight;color:HighlightText}}
 `;
 
 const styleRoot = (container: HTMLElement): ShadowRoot | HTMLElement => {

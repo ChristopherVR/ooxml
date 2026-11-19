@@ -7,6 +7,7 @@ export const viewerStyles = `
 * { box-sizing:border-box; }
 [hidden] { display:none !important; }
 button,select,input,textarea { font:inherit; color:inherit; border:1px solid var(--_vv-border); background:var(--_vv-surface); border-radius:4px; min-height:28px; padding:3px 8px; }
+select,input,textarea { border-color:var(--office-control-border,#8a8886); }
 button { cursor:pointer; }
 button:hover:enabled { background:var(--_vv-accent-soft); border-color:var(--_vv-accent); }
 button:disabled { opacity:.4; cursor:default; }
@@ -87,4 +88,7 @@ summary::marker { color:var(--_vv-muted); font-size:10px; }
  .status { flex-wrap:nowrap; gap:4px; min-height:48px; }
 }
 @media(prefers-reduced-motion:reduce) { * { scroll-behavior:auto !important; } }
+@media(forced-colors:active) {
+  button[aria-pressed="true"] { forced-color-adjust:none; border-color:Highlight; background:Highlight; color:HighlightText; }
+}
 `;

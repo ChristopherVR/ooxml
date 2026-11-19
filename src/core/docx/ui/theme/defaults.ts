@@ -23,7 +23,7 @@ export const lightTheme: EditorTheme = {
 	destructive: '#dc2626',
 	destructiveForeground: '#ffffff',
 	border: '#e1dfdd',
-	input: '#c8c6c4',
+	input: '#8a8886',
 	ring: '#185abd',
 	radius: '4px',
 };
@@ -51,7 +51,7 @@ export const darkTheme: EditorTheme = {
 	destructive: '#ef4444',
 	destructiveForeground: '#ffffff',
 	border: '#374151',
-	input: '#374151',
+	input: '#6b7280',
 	ring: '#4f8ef7',
 	radius: '4px',
 };

@@ -94,7 +94,8 @@ svg {
 	:host {
 		border-top-color: CanvasText;
 	}
-	.tab[aria-selected='true'] {
+	.tab[aria-selected='true'],
+	:host([plain]) .tab[aria-selected='true'] {
 		background: Highlight;
 		color: HighlightText;
 		forced-color-adjust: none;

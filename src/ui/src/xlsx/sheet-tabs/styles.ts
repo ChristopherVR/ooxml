@@ -83,7 +83,7 @@ export const TABS_CSS = `
 }
 .xst-tab.xst-active {
 	background: var(--xve-card, var(--office-background, #ffffff));
-	color: var(--office-accent-ink, var(--office-accent, #217346));
+	color: var(--xve-selection-border, var(--office-accent-ink, var(--office-accent, #217346)));
 	font-weight: 600;
 }
 .xst-tab.xst-active::after {
@@ -119,6 +119,6 @@ export const TABS_CSS = `
 /* Forced colours: the active sheet is a system-highlighted tab, not weight alone. */
 @media (forced-colors: active) {
 .xst-tab.xst-active{forced-color-adjust:none;background:Highlight;color:HighlightText}
-.xst-tab.xst-active::after{background:HighlightText}
+.xst-tab.xst-active::after,.xst-tab.xst-active.xst-colored::after{background:HighlightText}
 }
 `;

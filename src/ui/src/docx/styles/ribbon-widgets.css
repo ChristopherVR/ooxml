@@ -60,7 +60,7 @@
 	display: inline-flex;
 	align-items: stretch;
 	height: 26px;
-	border: 1px solid var(--line);
+	border: 1px solid var(--control-line);
 	border-radius: 3px;
 	background: var(--surface);
 }

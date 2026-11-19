@@ -1,5 +1,6 @@
 import { definer } from '../../registry';
 import { html, nothing, unsafeCSS, type PropertyValues } from 'lit';
+import { withTokens } from '../../base';
 import { TeamsLitElement } from '../i18n/lit-element';
 import { keyed } from 'lit/directives/keyed.js';
 import {
@@ -23,7 +24,7 @@ export type FileEmbeds = Partial<Record<OfficeKind, (detail: OpenFileDetail) => 
 export type SaveFileCopy = (file: File, options?: FileOperationOptions) => Promise<void>;
 
 export class TeamsContentPreview extends TeamsLitElement {
-	static override styles = unsafeCSS(css);
+	static override styles = unsafeCSS(withTokens(css));
 	static override properties = {
 		detail: { attribute: false },
 		embeds: { attribute: false },

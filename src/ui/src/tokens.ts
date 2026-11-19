@@ -5,8 +5,10 @@ import { LOOK_TOKENS } from './look-tokens';
  * shadow, motion and layering value the controls use. Controls never write a literal; they read
  * `tok('--office-…')`, which expands to `var(--office-…, <default>)`, so a control renders
  * correctly with or without the installed theme and a host overrides any token on `:root` or on
- * any container. `THEME_CSS` (theme.ts) declares these defaults on `:root` plus dark and
- * forced-colours values. Component tokens default to the semantic ones.
+ * any container. `THEME_CSS` (theme.ts) declares the literal defaults on `:root` plus dark and
+ * forced-colours values. A token whose default reads another token (a derived token, such as the
+ * component tokens and `--office-accent-ink`) is never declared there: it resolves where it is
+ * read, so a container that overrides `--office-accent` also changes the accent text inside it.
  */
 export const OFFICE_TOKENS = {
 	// Colour: semantic
@@ -20,8 +22,12 @@ export const OFFICE_TOKENS = {
 	'--office-control-border': '#8a8886',
 	'--office-accent': '#2563eb',
 	'--office-accent-foreground': '#ffffff',
-	/** The accent as text on the background or a selected fill: at least 4.5:1. */
-	'--office-accent-ink': 'var(--office-accent, #2563eb)',
+	/**
+	 * The accent as text on the background or a selected fill: at least 4.5:1. It is the accent
+	 * itself in a light scheme and a lighter tint of it in a dark one (`color-scheme` decides).
+	 */
+	'--office-accent-ink':
+		'light-dark(var(--office-accent, #2563eb), color-mix(in srgb, var(--office-accent, #2563eb) 60%, #fff))',
 	'--office-ring': '#2563eb',
 	'--office-danger': '#b91c1c',
 	'--office-danger-foreground': '#ffffff',
@@ -40,6 +46,11 @@ export const OFFICE_TOKENS = {
 	'--office-keytip-border': '#8a8886',
 	'--office-highlight': '#dc2626',
 	'--office-paper': '#ffffff',
+	/**
+	 * The scope's colour scheme as a value (`light` or `dark`), for chrome drawn inside a region that
+	 * pins its own `color-scheme` (a sheet's paper) to set the scheme the accent ink is read with.
+	 */
+	'--office-color-scheme': 'light',
 	// Document canvas: what a document paints. Themes never remap these, so a theme cannot change a
 	// document's appearance; only forced-colours mode replaces them.
 	/** Hyperlink text on paper (the default Office theme's hyperlink colour). */
@@ -274,12 +285,14 @@ export const OFFICE_TOKENS = {
 	'--office-app-brand-foreground': '#ffffff',
 	// Component: team workspace (a Teams-like surface)
 	'--office-teams-brand': '#5b5fc7',
-	'--office-teams-brand-hover': 'color-mix(in srgb, var(--office-teams-brand, #5b5fc7) 85%, #000)',
+	'--office-teams-brand-hover':
+		'light-dark(color-mix(in srgb, var(--office-teams-brand, #5b5fc7) 85%, #000), color-mix(in srgb, var(--office-teams-brand, #5b5fc7) 85%, #fff))',
 	'--office-teams-brand-pressed': '#3f4296',
 	'--office-teams-brand-subtle': '#e8ebfa',
 	'--office-teams-brand-foreground': '#ffffff',
 	/** The brand as text on the panel or a brand-subtle fill: at least 4.5:1. */
-	'--office-teams-brand-ink': 'var(--office-teams-brand, #5b5fc7)',
+	'--office-teams-brand-ink':
+		'light-dark(var(--office-teams-brand, #5b5fc7), color-mix(in srgb, var(--office-teams-brand, #5b5fc7) 60%, #fff))',
 	'--office-teams-rail': '#ebebeb',
 	'--office-teams-panel': '#f5f5f5',
 	'--office-teams-bubble': '#f5f5f5',
@@ -313,6 +326,11 @@ export const OFFICE_TOKENS = {
 } as const;
 
 export type OfficeToken = keyof typeof OFFICE_TOKENS;
+
+/** Whether a token's default reads another token, so it resolves where it is read. */
+export function isDerivedToken(name: OfficeToken): boolean {
+	return OFFICE_TOKENS[name].includes('var(--office-');
+}
 
 /** `var(--office-…, <default>)` for a declared token. The default comes from the table. */
 export function tok(name: OfficeToken): string {

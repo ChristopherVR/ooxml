@@ -12,7 +12,7 @@
 .box {
 	position: relative;
 	border: var(--office-border-width) solid var(--office-teams-divider);
-	border-block-end: var(--office-border-width-thick) solid var(--office-teams-divider);
+	border-block-end: var(--office-border-width-thick) solid var(--office-field-border);
 	border-radius: var(--office-radius-md);
 	background: var(--office-field-background);
 }

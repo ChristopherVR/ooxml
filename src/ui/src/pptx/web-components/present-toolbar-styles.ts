@@ -44,8 +44,8 @@ button.swatch[aria-pressed="true"] { border-color: #fff; }
 @media (forced-colors: active) {
 	.bar { border-color: CanvasText; background: Canvas; color: CanvasText; }
 	button, .counter, .timer { color: ButtonText; }
-	button:hover:not(:disabled) { background: Highlight; color: HighlightText; }
-	button[aria-pressed="true"] { border: 2px solid Highlight; }
+	button:hover:not(:disabled) { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+	button[aria-pressed="true"], button.swatch[aria-pressed="true"] { border: 2px solid Highlight; }
 	button:focus-visible { outline-color: Highlight; }
 	.divider { background: CanvasText; } .palette { border-color: CanvasText; background: Canvas; }
 }

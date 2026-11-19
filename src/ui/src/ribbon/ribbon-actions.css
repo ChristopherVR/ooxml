@@ -38,7 +38,7 @@
 .mode-select {
 	height: var(--office-control-height-md);
 	padding: 0 var(--office-space-1-5) 0 calc(var(--office-space-2) * 2 + var(--office-icon-size-md));
-	border: var(--office-border-width) solid var(--office-border);
+	border: var(--office-border-width) solid var(--office-field-border);
 	border-radius: var(--office-radius-sm);
 	background: var(--office-background);
 	color: var(--office-foreground);

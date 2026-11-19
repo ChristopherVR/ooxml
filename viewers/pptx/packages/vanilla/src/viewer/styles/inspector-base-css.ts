@@ -29,7 +29,7 @@ export const INSPECTOR_BASE_CSS = `
 	height: 26px;
 	margin: 0;
 	padding: 2px 6px;
-	border: 1px solid var(--pptx-border);
+	border: 1px solid var(--pptx-input);
 	border-radius: var(--pptx-radius);
 	background: var(--pptx-background);
 	color: var(--pptx-foreground);

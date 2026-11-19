@@ -3,7 +3,7 @@
 // focus rings, control boundaries and filled controls at 3:1. Colours come from the suite's own
 // tables (theme-tokens.js, site/themes.css); the maths is ooxml-core/color.
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import {
 	accents,
@@ -48,6 +48,7 @@ function pairs(accent, mode) {
 		surface: site.surface,
 		rail: site.rail,
 		'surface-alt': site['surface-alt'],
+		sunken: site.sunken,
 		selected: site.selected,
 	};
 	const list = [];
@@ -90,7 +91,33 @@ function pairs(accent, mode) {
 	for (const [name, surface] of Object.entries(siteSurfaces)) {
 		list.push([`suite accent ink on ${name}`, theme.accentInk, surface, WCAG_TEXT_CONTRAST]);
 		list.push([`suite focus ring on ${name}`, theme.accent, surface, WCAG_NON_TEXT_CONTRAST]);
+		list.push([
+			`suite control boundary on ${name}`,
+			site['control-line'],
+			surface,
+			WCAG_NON_TEXT_CONTRAST,
+		]);
 	}
+	// Surfaces named after where they appear, so a failure names the product surface.
+	list.push([
+		'maturity tag on the current rail item',
+		theme.accentInk,
+		site.selected,
+		WCAG_TEXT_CONTRAST,
+	]);
+	list.push([
+		'Visio current page tab on the page bar',
+		office['accent-ink'],
+		c.secondary,
+		WCAG_TEXT_CONTRAST,
+	]);
+	list.push([
+		'Excel selected header on its fill',
+		office['accent-ink'],
+		c.accent,
+		WCAG_TEXT_CONTRAST,
+	]);
+	list.push(['ribbon tab on the ribbon', office['accent-ink'], c.background, WCAG_TEXT_CONTRAST]);
 	list.push(['suite text on accent', site['accent-fg'], theme.accent, WCAG_TEXT_CONTRAST]);
 	return list;
 }
@@ -106,6 +133,23 @@ for (const [accent, mode] of CASES) {
 		assert.deepEqual(failures, []);
 	});
 }
+
+test('suite text takes the accent ink, never the raw accent', () => {
+	// The raw accent is a fill colour; as text it falls under 4.5:1 on dark and selected surfaces.
+	const site = new URL('../site/', import.meta.url);
+	const offenders = readdirSync(site)
+		.filter((name) => name.endsWith('.css'))
+		.flatMap((name) =>
+			[...readFileSync(new URL(name, site), 'utf8').matchAll(/(?:^|[;{\s])color:\s*([^;]+);/g)]
+				.filter(([, value]) =>
+					/var\(--(?:blue|accent)\)|var\(--tone,\s*var\(--blue\)\)/.test(value),
+				)
+				.map(([whole]) => `${name}: ${whole.trim()}`),
+		);
+	assert.deepEqual(offenders, []);
+	// The maturity tag's tone defaults to the ink, so the current rail item's tag reads at 4.5:1.
+	assert.match(readFileSync(new URL('styles.css', site), 'utf8'), /--tone: var\(--accent-ink\);/);
+});
 
 test('the suite leaves hover tokens to their accent-derived defaults', () => {
 	for (const [accent, mode] of CASES) {

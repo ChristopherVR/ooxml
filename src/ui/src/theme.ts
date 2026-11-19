@@ -1,6 +1,6 @@
 import { CARDS_LOOK_CSS } from './look';
 import { LOOK_DARK_TOKENS } from './look-tokens';
-import { OFFICE_TOKENS, TOUCH } from './tokens';
+import { isDerivedToken, OFFICE_TOKENS, TOUCH, type OfficeToken } from './tokens';
 import { themeBridge } from './theme-bridge';
 import {
 	BUILDING_BLOCKS_CSS,
@@ -32,7 +32,15 @@ export {
 	type OfficeLook,
 } from './look';
 export { LOOK_DARK_TOKENS, LOOK_TOKENS } from './look-tokens';
-export { COMPACT, FOCUS_RING, OFFICE_TOKENS, tok, TOUCH, type OfficeToken } from './tokens';
+export {
+	COMPACT,
+	FOCUS_RING,
+	isDerivedToken,
+	OFFICE_TOKENS,
+	tok,
+	TOUCH,
+	type OfficeToken,
+} from './tokens';
 
 /**
  * Theme-token foundation. Custom properties cross shadow boundaries, so one `<style>` in the
@@ -48,7 +56,7 @@ const DARK = `
 	--office-surface: #1f2937;
 	--office-border: #374151;
 	--office-accent: #6366f1;
-	--office-accent-ink: color-mix(in srgb, var(--office-accent, #6366f1) 60%, #fff);
+	--office-color-scheme: dark;
 	--office-ring: #818cf8;
 	--office-danger: #f87171;
 	--office-selected: #374151;
@@ -58,9 +66,7 @@ const DARK = `
 	--office-info: #60a5fa;
 	--office-warning: #f59e0b;
 	--office-teams-brand: #7f85f5;
-	--office-teams-brand-hover: color-mix(in srgb, var(--office-teams-brand, #7f85f5) 85%, #fff);
 	--office-teams-brand-subtle: #2f2f4a;
-	--office-teams-brand-ink: color-mix(in srgb, var(--office-teams-brand, #7f85f5) 60%, #fff);
 	--office-teams-rail: #141414;
 	--office-teams-panel: #1f1f1f;
 	--office-teams-bubble: #2d2d2d;
@@ -73,8 +79,13 @@ ${Object.entries(LOOK_DARK_TOKENS)
 	.map(([name, value]) => `\t${name}: ${value};`)
 	.join('\n')}`;
 
-/** Every token's default on `:root`, generated from the token table. */
+/**
+ * Every literal default on `:root`, generated from the token table. Derived tokens stay out: a
+ * custom property resolves its `var()` where it is declared, so declaring one here would freeze it
+ * to the page's colours and a container's override of the token it reads would never reach it.
+ */
 const LIGHT = Object.entries(OFFICE_TOKENS)
+	.filter(([name]) => !isDerivedToken(name as OfficeToken))
 	.map(([name, value]) => `\t${name}: ${value};`)
 	.join('\n');
 
