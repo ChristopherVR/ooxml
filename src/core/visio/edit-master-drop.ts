@@ -147,7 +147,9 @@ export async function editVsdxMasterDrops(
 		touched.add(drop.pageId);
 		// Visio maps the master's layers onto the page by name and adds the missing ones.
 		if (info.layers.length && !info.group) {
-			const page = (await parseVsdx(bytes)).pages.find((item) => item.id === drop.pageId);
+			const page = (
+				await parseVsdx(bytes, options.limits ? { limits: options.limits } : {})
+			).pages.find((item) => item.id === drop.pageId);
 			const known = new Map(
 				(page?.layers ?? []).map((layer) => [layer.name.toLowerCase(), layer.id]),
 			);
@@ -192,5 +194,5 @@ export async function editVsdxMasterDrops(
 		changedParts: [...changed],
 		diagnostics: diagnostics.filter((item) => item.code !== 'edit-layers-experimental'),
 	};
-	return growAutoSizePages(touched, result, apply);
+	return growAutoSizePages(touched, result, options.limits, apply);
 }

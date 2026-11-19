@@ -5,6 +5,7 @@ import { ViewerController } from './controller';
 import { demoDocument } from 'ooxml-core/visio/ui';
 import { registerViewerControls } from './office-ui';
 import { ViewerCommands } from './viewer-commands';
+import { ViewerZoomGesture } from './viewer-zoom-gesture';
 import { nextShapeId } from './viewer-draw-tool';
 import { createRibbon } from './ribbon';
 import { createRulers } from './viewer-ruler';
@@ -67,6 +68,7 @@ async function setup(source = true, noOp = false, model = demoDocument) {
 	const calls: string[] = [];
 	const commands = new ViewerCommands({
 		root,
+		zoom: new ViewerZoomGesture(viewport, controller),
 		viewport,
 		rulers,
 		controller,

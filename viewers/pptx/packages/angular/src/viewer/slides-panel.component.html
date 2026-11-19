@@ -1,12 +1,10 @@
 <div class="pptx-ng-spanel" data-pptx-chrome="slides" [style.width.px]="railWidth">
 	<!-- Scrollable slide list -->
 	<div
-		#scrollViewport
 		class="pptx-ng-spanel-scroll"
 		data-pptx-chrome="slide-list"
 		role="listbox"
 		[attr.aria-label]="'pptx.sections.slides' | translate"
-		(scroll)="onScroll()"
 	>
 		<div
 			class="pptx-ng-spanel-space"
@@ -77,6 +75,8 @@
 							[attr.data-pptx-slide-hidden]="hidden.marker ?? null"
 							role="option"
 							[attr.aria-selected]="i === activeIndex()"
+							[attr.aria-setsize]="shouldVirtualize() ? deck().length : null"
+							[attr.aria-posinset]="shouldVirtualize() ? i + 1 : null"
 							[attr.aria-label]="'pptx.notes.slideN' | translate: { n: i + 1 }"
 							[attr.draggable]="canEdit()"
 							(contextmenu)="onThumbContextMenu($event, i)"
@@ -112,17 +112,19 @@
 									data-pptx-chrome="slide-frame"
 									[ngStyle]="clipStyle()"
 								>
-									<pptx-slide-canvas
-										[slide]="slide"
-										[templateElements]="templateMap()[slide.id] ?? []"
-										[canvasSize]="canvasSize()"
-										[mediaDataUrls]="mediaDataUrls()"
-										[zoom]="thumbZoom()"
-										[editable]="false"
-										[autoFit]="false"
-										[interactive]="false"
-										[style.opacity]="hidden.hidden ? dimOpacity : null"
-									/>
+									@if (!shouldVirtualize() || readyRows().has(slide.id)) {
+										<pptx-slide-canvas
+											[slide]="slide"
+											[templateElements]="templateMap()[slide.id] ?? []"
+											[canvasSize]="canvasSize()"
+											[mediaDataUrls]="mediaDataUrls()"
+											[zoom]="thumbZoom()"
+											[editable]="false"
+											[autoFit]="false"
+											[interactive]="false"
+											[style.opacity]="hidden.hidden ? dimOpacity : null"
+										/>
+									}
 									@if (hidden.hidden) {
 										<!-- Announced through aria-describedby, so the accessible name
 										     stays exactly "Go to slide {{ i + 1 }}". -->

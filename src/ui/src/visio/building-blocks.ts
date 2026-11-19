@@ -107,7 +107,7 @@ export function mountDiagramCanvas(host: HTMLElement, controller: ViewerControll
 		void clipboard.run(operation, event).catch(report);
 	});
 	const offInputs = wireViewerInputs(
-		{ viewport, zoomSlider: slider },
+		{ viewport, zoomSlider: slider, zoom: editing.pointer.zoom },
 		controller,
 		fit,
 		announce,

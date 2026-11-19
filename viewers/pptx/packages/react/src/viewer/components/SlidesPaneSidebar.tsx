@@ -1,4 +1,9 @@
-import { editorThumbnailWidth, SLIDE_VIRTUALIZATION_THRESHOLD } from 'ooxml-ui/pptx';
+import {
+	editorThumbnailWidth,
+	focusCurrentRow,
+	railHasFocus,
+	SLIDE_VIRTUALIZATION_THRESHOLD,
+} from 'ooxml-ui/pptx';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import { LuPlus } from 'react-icons/lu';
 
@@ -197,21 +202,59 @@ function SlidesPaneSidebarContent({
 	// Determine whether virtualization is warranted
 	const shouldVirtualize = slides.length >= VIRTUALIZATION_THRESHOLD;
 
-	const { startIndex, endIndex, totalHeight, offsetY, scrollContainerRef, scrollToIndex } =
-		useVirtualizedSlides({
-			totalItems: shouldVirtualize ? flatItems.length : 0,
-			itemHeight: estimatedItemHeight,
-		});
+	const {
+		startIndex,
+		endIndex,
+		totalHeight,
+		offsetY,
+		scrollContainerRef,
+		scrollToIndex,
+		syncRows,
+		readyRows,
+	} = useVirtualizedSlides({
+		totalItems: shouldVirtualize ? flatItems.length : 0,
+		itemHeight: estimatedItemHeight,
+	});
+
+	// Rows new to the window build their thumbnail once scrolling pauses.
+	const windowSlideIds = useMemo(
+		() =>
+			shouldVirtualize
+				? flatItems.slice(startIndex, endIndex + 1).flatMap((item) => {
+						const slide = item.type === 'slide' ? slides[item.slideIndex] : undefined;
+						return slide ? [slide.id] : [];
+					})
+				: [],
+		[endIndex, flatItems, shouldVirtualize, slides, startIndex],
+	);
+	useEffect(() => {
+		syncRows(windowSlideIds);
+	}, [syncRows, windowSlideIds]);
+
+	const listRef = useRef<HTMLDivElement | null>(null);
+	const refocusRef = useRef(false);
+	const setListRef = useCallback(
+		(el: HTMLDivElement | null) => {
+			listRef.current = el;
+			scrollContainerRef(el);
+		},
+		[scrollContainerRef],
+	);
 
 	// ── Auto-scroll active slide into view ──
 	useEffect(() => {
+		// Focus stays on the current row, as in PowerPoint's thumbnail pane; the
+		// row may render only after the window moves, so the move is pending.
+		if (railHasFocus(listRef.current)) {
+			refocusRef.current = true;
+		}
 		if (shouldVirtualize) {
 			// Find the flat index of the active slide
 			const flatIdx = flatItems.findIndex(
 				(item) => item.type === 'slide' && item.slideIndex === activeSlideIndex,
 			);
 			if (flatIdx >= 0) {
-				scrollToIndex(flatIdx);
+				scrollToIndex(flatIdx, 'auto');
 			}
 		} else {
 			// Non-virtualized: use DOM scrollIntoView
@@ -221,6 +264,22 @@ function SlidesPaneSidebarContent({
 			}
 		}
 	}, [activeSlideIndex, shouldVirtualize, scrollToIndex, flatItems]);
+	// After every commit: move a pending focus once the current row exists.
+	useEffect(() => {
+		const list = listRef.current;
+		const active = list?.ownerDocument.activeElement;
+		if (!refocusRef.current || !list) {
+			return;
+		}
+		if (active && active !== list.ownerDocument.body && !list.contains(active)) {
+			refocusRef.current = false;
+			return;
+		}
+		if (list.querySelector('[data-pptx-chrome="slide-row"][aria-current="true"]')) {
+			refocusRef.current = false;
+			focusCurrentRow(list);
+		}
+	});
 
 	// Focus rename input when it appears
 	useEffect(() => {
@@ -251,7 +310,7 @@ function SlidesPaneSidebarContent({
 
 		return (
 			<div
-				ref={scrollContainerRef}
+				ref={setListRef}
 				data-pptx-chrome='slide-list'
 				className='flex-1 overflow-y-auto px-1.5 pb-2'
 			>
@@ -265,7 +324,11 @@ function SlidesPaneSidebarContent({
 							right: 0,
 						}}
 					>
-						<div className='space-y-1' data-pptx-chrome='slide-window'>
+						<div
+							className='space-y-1'
+							data-pptx-chrome='slide-window'
+							role={showSectionHeaders ? undefined : 'list'}
+						>
 							{visibleItems.map((item) => {
 								if (item.type === 'section') {
 									const section = sectionGroups[item.sectionIndex];
@@ -302,7 +365,7 @@ function SlidesPaneSidebarContent({
 								if (!slide) {
 									return null;
 								}
-								return (
+								const row = (
 									<SlideItem
 										key={slide.id ?? item.slideIndex}
 										slide={slide}
@@ -326,7 +389,21 @@ function SlidesPaneSidebarContent({
 										onDragOver={handleDragOver}
 										onDrop={handleDrop}
 										slideRef={setSlideRef(item.slideIndex)}
+										thumbnailReady={readyRows.has(slide.id)}
 									/>
+								);
+								// The window holds only some rows, so each says where it sits in the deck.
+								return showSectionHeaders ? (
+									row
+								) : (
+									<div
+										key={slide.id ?? item.slideIndex}
+										role='listitem'
+										aria-setsize={slides.length}
+										aria-posinset={item.slideIndex + 1}
+									>
+										{row}
+									</div>
 								);
 							})}
 						</div>
@@ -338,7 +415,11 @@ function SlidesPaneSidebarContent({
 
 	// ── Render (non-virtualized, for small presentations) ──
 	const renderNonVirtualized = () => (
-		<div data-pptx-chrome='slide-list' className='flex-1 space-y-1 overflow-y-auto px-1.5 pb-2'>
+		<div
+			ref={setListRef}
+			data-pptx-chrome='slide-list'
+			className='flex-1 space-y-1 overflow-y-auto px-1.5 pb-2'
+		>
 			{sectionGroups.map((section) => {
 				const isCollapsed = effectiveCollapsed[section.id] ?? false;
 				const facts = declaredSectionFacts(sectionGroups, section.id);

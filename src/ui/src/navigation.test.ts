@@ -111,6 +111,37 @@ describe('office-ui-tab-strip', () => {
 		expect(seen).toHaveLength(4);
 	});
 
+	it('scrolls the selected tab into view only when the selection or the tabs change', () => {
+		const scrolled: string[] = [];
+		const proto = HTMLElement.prototype as { scrollIntoView?: unknown };
+		const had = Object.hasOwn(proto, 'scrollIntoView');
+		const original = proto.scrollIntoView;
+		proto.scrollIntoView = function (this: HTMLElement) {
+			scrolled.push(this.dataset.id ?? '');
+		};
+		try {
+			const el = make<Strip>('<office-ui-tab-strip></office-ui-tab-strip>');
+			el.tabs = tabs;
+			el.selected = 'p1';
+			expect(scrolled.at(-1)).toBe('p1');
+			scrolled.length = 0;
+			// What a host writes on every state change (Visio: each zoom step) must not scroll.
+			el.selected = 'p1';
+			el.toggleAttribute('add-disabled', true);
+			el.toggleAttribute('reorderable', true);
+			el.setAttribute('add-title', 'Insert Page');
+			el.setAttribute('label', 'Pages');
+			expect(scrolled).toEqual([]);
+			el.selected = 'p3';
+			expect(scrolled).toEqual(['p3']);
+			el.tabs = [...tabs, { id: 'p4', label: 'Appendix' }];
+			expect(scrolled).toEqual(['p3', 'p3']);
+		} finally {
+			if (had) proto.scrollIntoView = original;
+			else delete proto.scrollIntoView;
+		}
+	});
+
 	it('lets the host cancel a selection and ignores input when disabled', () => {
 		const el = make<Strip>('<office-ui-tab-strip></office-ui-tab-strip>');
 		el.tabs = tabs;

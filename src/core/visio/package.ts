@@ -13,6 +13,7 @@ import {
 } from './package-common';
 import { inspectZip } from './zip-validation';
 import { inspectXml, inspectNamespaces } from './xml-validation';
+import { operationMemory, type VisioMemoryBudget } from './memory-budget';
 export {
 	VisioPackageError,
 	type VisioPackageLimits,
@@ -46,12 +47,20 @@ export class VisioPackage {
 	private noted: Set<string> | undefined;
 	private totalOutput = 0;
 	private totalXmlNodes = 0;
+	/** The budget of the read or edit that opened this package, shared with its other packages. */
+	readonly memory: VisioMemoryBudget;
+	/** Estimated heap of the XML this package has parsed, one copy of each part. */
+	xmlHeap = 0;
 	private constructor(
 		private readonly zip: JSZip,
 		private readonly entries: Map<string, Entry>,
 		private readonly limits: VisioPackageLimits,
 		private readonly deadline: number,
+		inputBytes: number,
+		/** Copies of each part the reader may hold: an edit copies what it changes. */
+		private readonly copies: 1 | 2,
 	) {
+		this.memory = operationMemory(limits, inputBytes);
 		for (const entry of entries.values())
 			if (!entry.directory) this.decodedNames.set(decodePath(entry.name), entry.name);
 	}
@@ -63,6 +72,7 @@ export class VisioPackage {
 	static async open(
 		input: Uint8Array | ArrayBuffer,
 		options: Partial<VisioPackageLimits> = {},
+		copies: 1 | 2 = 1,
 	): Promise<VisioPackage> {
 		const limits = { ...DEFAULTS, ...options };
 		for (const value of Object.values(limits))
@@ -86,7 +96,7 @@ export class VisioPackage {
 				Object.keys(zip.files).some((name) => !entries.has(name))
 			)
 				fail('ZIP_MISMATCH', 'ZIP loader changed validated entry names');
-			return new VisioPackage(zip, entries, limits, deadline);
+			return new VisioPackage(zip, entries, limits, deadline, bytes.byteLength, copies);
 		} catch (error) {
 			if (error instanceof VisioPackageError) throw error;
 			return fail(
@@ -94,6 +104,12 @@ export class VisioPackage {
 				`Invalid ZIP: ${error instanceof Error ? error.message : String(error)}`,
 			);
 		}
+	}
+
+	/** Gives back what this reader charged for parsed XML once none of its parts is referenced. */
+	releaseXml(): void {
+		this.memory.used -= this.xmlHeap * this.copies;
+		this.xmlHeap = 0;
 	}
 
 	/**
@@ -253,9 +269,21 @@ export class VisioPackage {
 						? 'utf-16be'
 						: 'utf-8';
 			const xml = new TextDecoder(encoding, { fatal: true }).decode(bytes);
-			this.totalXmlNodes += inspectXml(xml, this.limits, this.check, encoding);
+			const before = this.memory.used;
+			this.totalXmlNodes += inspectXml(
+				xml,
+				this.limits,
+				this.check,
+				encoding,
+				this.memory,
+				this.copies,
+			);
+			this.xmlHeap += (this.memory.used - before) / this.copies;
 			if (this.totalXmlNodes > this.limits.maxTotalXmlNodes)
-				fail('LIMIT_XML_TOTAL', 'Aggregate XML node limit exceeded');
+				fail(
+					'LIMIT_XML_TOTAL',
+					`This drawing has more than ${this.limits.maxTotalXmlNodes} XML nodes in all, more than this viewer can open.`,
+				);
 			const root = parseXml(xml, { label: 'VSDX' }).documentElement;
 			inspectNamespaces(root, this.check);
 			this.check();

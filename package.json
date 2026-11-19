@@ -67,6 +67,7 @@
 		"test:suite:simple-view": "node scripts/suite-simple-view-check.mjs",
 		"test:suite:pptx-chart": "node scripts/suite-pptx-chart-check.mjs",
 		"test:suite:files": "node scripts/suite-files-check.mjs",
+		"test:suite:requests": "node scripts/suite-requests-check.mjs",
 		"test:suite:review": "node scripts/suite-review-check.mjs",
 		"test:suite:visio-presentation": "node scripts/suite-visio-presentation-check.mjs"
 	},

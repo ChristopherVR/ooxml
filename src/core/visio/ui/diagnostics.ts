@@ -36,3 +36,9 @@ export function compatibilityNotes(
 export function compatibilityText(note: CompatibilityNote): string {
 	return note.message + (note.count > 1 ? ` (${note.count} occurrences)` : '');
 }
+/** Why a drawing is too large to edit here (the read's `edit-size-limit` note), or undefined. */
+export function editSizeLimit(
+	document: { readonly diagnostics: readonly VisioDiagnostic[] } | null | undefined,
+): string | undefined {
+	return document?.diagnostics.find((diagnostic) => diagnostic.code === 'edit-size-limit')?.message;
+}

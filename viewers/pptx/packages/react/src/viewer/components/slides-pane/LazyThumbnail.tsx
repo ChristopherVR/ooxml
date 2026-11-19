@@ -32,6 +32,11 @@ interface LazyThumbnailProps {
 	fieldContext?: FieldSubstitutionContext;
 	/** Theme + table style map for resolving table band/header colours. */
 	tableStyleContext?: TableStyleContext;
+	/**
+	 * Set by a virtualized rail: the thumbnail renders once this is true (the
+	 * rail sets it when scrolling pauses) instead of when the row intersects.
+	 */
+	ready?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -46,13 +51,14 @@ function LazyThumbnailInner({
 	previewWidth,
 	fieldContext,
 	tableStyleContext,
+	ready,
 }: LazyThumbnailProps): React.ReactElement {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [isVisible, setIsVisible] = useState(false);
 
 	useEffect(() => {
 		const el = containerRef.current;
-		if (!el) {
+		if (!el || ready !== undefined) {
 			return;
 		}
 
@@ -81,11 +87,11 @@ function LazyThumbnailInner({
 		return () => {
 			observer.disconnect();
 		};
-	}, []);
+	}, [ready]);
 
 	return (
 		<div ref={containerRef}>
-			{isVisible ? (
+			{(ready ?? isVisible) ? (
 				<SlideThumbnail
 					slide={slide}
 					templateElements={templateElements}

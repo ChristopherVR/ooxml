@@ -355,9 +355,68 @@ options remain unresolved. Nothing is navigated or fetched during parsing.
 
 Default package limits: 32 MiB input, 2,048 entries, 16 MiB per inflated entry,
 128 MiB total declared/actual inflated bytes, 200:1 compression ratio, 16 MiB XML
-characters, 128 XML nesting depth, 250,000 XML nodes per part, one million XML nodes
-across the package, and a ten-second cooperative
-deadline. ZIP validation checks local and central headers, CRCs, aliases, traversal,
+characters, 128 XML nesting depth, 1,500,000 XML nodes per part, two million XML nodes
+across the package, a memory budget, and a ten-second cooperative deadline.
+
+Memory is bounded by the budget of the operation. A read (`parseVsdx`) or an edit
+(`editVsdx`) has one budget, shared by every package it opens (an edit reads its own output
+again to check it, and some edits read the drawing again to follow text sizes or Auto Size)
+and by the model a read builds. Each XML part is costed while it is scanned, before its DOM
+is built, at the heap the shared XML parser was measured to keep: 800 bytes an element, 240
+an attribute, 140 any other node and one a character. An edit charges each part it reads
+twice, since it may copy it. The model is costed as it is built: 3 KB a shape, 16 bytes a
+geometry command, 200 bytes a text run or paragraph and 2 bytes a character. A step that
+settles (one transaction of an edit, or a read inside an edit) gives back what it charged,
+except the model a read returns. A refused read or edit reports `LIMIT_XML_MEMORY` and the
+memory it would need.
+
+The budget is `maxXmlHeapBytes`. By default it follows the host's heap: the V8 heap limit
+Node and Deno report (`v8.getHeapStatistics().heap_size_limit`) or a Chromium page reports
+(`performance.memory.jsHeapSizeLimit`), less 256 MiB (V8's young generation, 192 MiB of
+Node's limit that parsed XML cannot use, and the host's own objects), divided by 1.6, the
+most heap measured for each byte charged. Where the runtime reports no limit (Firefox,
+Safari, web workers, Bun's JavaScriptCore), a 1 GiB heap is assumed: 480 MiB. A host whose
+heap also holds other large data, or that runs several reads at once, sets it lower. A read
+also takes no more than 4,096 bytes for each byte of the file once past 64 MiB
+(`maxXmlHeapPerInputByte`), so a small file cannot open into a large heap. Drawings Visio
+saves cost 90 to 3,100 bytes per input byte (the high end is thousands of identical
+rectangles) and generated pages of identical shapes about 2,100.
+
+| Node heap (`--max-old-space-size`) | `heap_size_limit` | Budget  |
+| ---------------------------------- | ----------------- | ------- |
+| 512 MiB                            | 704 MiB           | 280 MiB |
+| 768 MiB                            | 960 MiB           | 440 MiB |
+| 1 GiB                              | 1,216 MiB         | 600 MiB |
+| Node 24's default on a 64-bit host | about 4.2 GiB     | 2.5 GiB |
+| not reported (browsers' workers)   | 1 GiB assumed     | 480 MiB |
+
+A page of 10,000 Basic Shapes rectangles that Visio saved (211 KB, 1.28 million XML nodes)
+is charged 466 MiB, so a host needs a heap limit of about 1,000 MiB to open it
+(`--max-old-space-size=820` in Node); a page of 10,000 plain generated shapes (164 KB) is
+charged 367 MiB. An edit is charged up to four times what a read of the drawing is (two
+copies of what it reads, two of what it reads back), and its dependency index follows at most
+100,000 ShapeSheet cells, about 3,800 shapes. A read says when either would refuse an edit:
+its diagnostics then start with `edit-size-limit` ("This drawing is too large to edit here:
+..."), and the Visio viewer opens the drawing read-only and says why.
+
+Measured in Node 24, one read or edit per fresh process under `--max-old-space-size` of 512,
+768 and 1024 MiB, with peak heap read from the garbage collector trace: 29 files (the dense-XML
+files that exhausted a 512 or 768 MiB heap before this budget, files sized to fill each
+budget, generated pages of up to 13,800 shapes and Visio-saved pages of up to 10,000
+rectangles) read twice at each size, and nine of them moved, renamed and retyped once at each
+size. None of the 255 runs exhausted the heap: each opened or edited, or was refused with
+`LIMIT_XML_MEMORY` (or, for an edit, by one of its own limits). Peaks stayed at or below
+385 MB, 648 MB and 902 MB for reads and 503 MB, 621 MB and 873 MB for edits. The 10,000-rectangle
+page opened in 3.4 to 4.0 s at 650 to 710 MB with a 1 GiB heap (five runs) and was refused
+with 768 MiB; the 10,000-shape generated page opened in 2.0 to 2.4 s at about 500 MB. Edits
+finished within 6 s; before, an edit kept a separate budget for each package it opened,
+reached 1.4 to 2.5 GB and ran past the deadline. The deadline is checked between steps, not
+inside the DOM construction of one part (which the per-part node limit bounds), so the
+viewer's parse worker also has a 15-second hard timeout. A part over the node limit reports
+the shapes it holds ("The page has 18000 shapes, more than this viewer can open"), or its
+node count when it holds none.
+
+ZIP validation checks local and central headers, CRCs, aliases, traversal,
 overlap and unsupported encryption/ZIP64. XML rejects DTD/entity declarations and
 malformed or ambiguous namespace constructs. Internal relationships must resolve
 inside the package to existing parts.

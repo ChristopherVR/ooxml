@@ -1,4 +1,5 @@
 import { mount } from '@vue/test-utils';
+import { editorThumbnailStep } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
@@ -88,5 +89,25 @@ describe('slidesPaneSidebar', () => {
 		expect(wrapper.find('[data-virtualized="true"]').exists()).toBeTruthy();
 		expect(wrapper.findAll('[aria-label^="Go to slide "]').length).toBeLessThan(30);
 		expect(wrapper.find('[data-slide-index="80"]').attributes('aria-current')).toBe('true');
+	});
+
+	it('follows scrolling in the next frame, building the rows that entered', async () => {
+		const slides = Array.from({ length: 100 }, (_, index) => slide(`s-${index}`));
+		const wrapper = mount(SlidesPaneSidebar, {
+			props: { ...base, slides, activeIndex: 0 },
+			attachTo: document.body,
+		});
+		await wrapper.vm.$nextTick();
+		expect(wrapper.find('[data-slide-index="60"]').exists()).toBeFalsy();
+		const list = wrapper.get('[data-pptx-chrome="slide-list"]').element as HTMLElement;
+		list.scrollTop = 59 * editorThumbnailStep(960, 540);
+		list.dispatchEvent(new Event('scroll'));
+		await new Promise<void>((resolve) => {
+			requestAnimationFrame(() => resolve());
+		});
+		await wrapper.vm.$nextTick();
+		expect(wrapper.find('[data-slide-index="60"]').exists()).toBeTruthy();
+		expect(wrapper.find('[data-slide-index="0"]').exists()).toBeFalsy();
+		wrapper.unmount();
 	});
 });

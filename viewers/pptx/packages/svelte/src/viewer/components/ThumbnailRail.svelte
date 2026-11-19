@@ -7,7 +7,10 @@
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import EyeOff from '@lucide/svelte/icons/eye-off';
 	import {
-		computeVirtualRange,
+		createDeferredRows,
+		createVirtualWindow,
+		focusCurrentRow,
+		railHasFocus,
 		groupSlidesBySection,
 		HIDDEN_SLIDE_DIM_OPACITY,
 		HIDDEN_SLIDE_LABEL_KEY,
@@ -21,6 +24,7 @@
 		editorThumbnailStep,
 	} from 'ooxml-ui/pptx';
 	import type { SectionContextMenuCommandId } from 'ooxml-ui/pptx';
+	import { tick } from 'svelte';
 
 	import { useTranslator } from '../../i18n/context';
 	import SectionContextMenu from './SectionContextMenu.svelte';
@@ -72,32 +76,56 @@
 	let draggedIndex = $state<number | null>(null);
 	// eslint-disable-next-line prefer-const
 	let railEl = $state<HTMLElement>();
-	let scrollTop = $state(0);
-	let viewportHeight = $state(600);
-	const virtualRange = $derived(
-		computeVirtualRange(slides.length, itemHeight, scrollTop, viewportHeight),
-	);
+	// The shared window reads scroll once per frame and reports only a change of
+	// rendered rows, so the rail re-renders when a row enters, not per scroll event.
+	const virtualWindow = createVirtualWindow({ totalItems: 0, itemHeight: 1 }, (range) => {
+		virtualRange = range;
+	});
+	let virtualRange = $state.raw(virtualWindow.range);
 	const renderedSlides = $derived.by(() => {
 		const start = shouldVirtualize ? virtualRange.startIndex : 0;
 		const end = shouldVirtualize ? virtualRange.endIndex : slides.length - 1;
 		return slides.slice(start, end + 1).map((slide, offset) => ({ slide, index: start + offset }));
 	});
 
-	function onScroll(): void {
-		if (!railEl) {return;}
-		scrollTop = railEl.scrollTop;
-		viewportHeight = railEl.clientHeight || 600;
-	}
-
 	$effect(() => {
-		if (!shouldVirtualize || !railEl) {return;}
-		const top = current * itemHeight;
-		const bottom = top + itemHeight;
-		if (top < railEl.scrollTop) {railEl.scrollTop = top;}
-		else if (bottom > railEl.scrollTop + viewportHeight) {
-			railEl.scrollTop = Math.max(0, bottom - viewportHeight);
+		virtualWindow.setShape({ totalItems: slides.length, itemHeight });
+	});
+	$effect(() => {
+		virtualWindow.attach(railEl ?? null);
+		return () => virtualWindow.attach(null);
+	});
+	// Rows new to the window build their thumbnail once scrolling pauses.
+	let readyRows = $state.raw<ReadonlySet<string>>(new Set());
+	const deferredRows = createDeferredRows(virtualWindow, (ready) => {
+		readyRows = ready;
+	});
+	$effect(() => {
+		deferredRows.sync(shouldVirtualize ? renderedSlides.map(({ slide }) => slide.id) : []);
+	});
+	$effect(() => () => {
+		deferredRows.destroy();
+		virtualWindow.destroy();
+	});
+	$effect(() => {
+		const index = current;
+		// Focus stays on the current row, as in PowerPoint's thumbnail pane: read
+		// before the reveal can drop the focused row, moved once the row renders.
+		const keepFocus = railHasFocus(railEl);
+		if (shouldVirtualize && railEl) {
+			virtualWindow.reveal(index);
 		}
-		onScroll();
+		if (keepFocus) {
+			void tick().then(() => focusCurrentRow(railEl));
+		}
+	});
+	// A change of slides can remove the focused row (an undone New Slide): focus moves to the
+	// current row rather than falling to the page, where the editor's shortcuts no longer reach.
+	$effect(() => {
+		void slides;
+		if (railHasFocus(railEl)) {
+			focusCurrentRow(railEl);
+		}
 	});
 
 	function onDragStart(index: number, event: DragEvent): void {
@@ -207,7 +235,9 @@
 		>
 		<span class="pptx-svelte-thumb-frame" data-pptx-chrome="slide-frame" style={`width: ${THUMB_WIDTH}px; height: ${thumbHeight}px`}>
 			<span class="pptx-svelte-thumb-stage" style={cue.hidden ? `opacity: ${HIDDEN_SLIDE_DIM_OPACITY}` : undefined}>
-				<SlideStage {slide} {canvasSize} {mediaDataUrls} scale={thumbScale} />
+				{#if !shouldVirtualize || readyRows.has(slide.id)}
+					<SlideStage {slide} {canvasSize} {mediaDataUrls} scale={thumbScale} />
+				{/if}
 			</span>
 			{#if cue.hidden}
 				<span class="pptx-svelte-thumb-hidden" id={cue.labelId}>
@@ -221,7 +251,7 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -- Enter here only catches the keydown bubbled up from a focused (interactive) thumbnail button -->
 <nav data-pptx-chrome="slides" style={`width:${fullWidth ? '100%' : `${EDITOR_SLIDE_RAIL_WIDTH}px`}`} class="pptx-svelte-thumbs" aria-label={t('pptx.sections.slides')} onkeydown={onRailKeydown}>
-	<div bind:this={railEl} bind:clientHeight={viewportHeight} class="pptx-svelte-thumbs-scroll" data-pptx-chrome="slide-list" onscroll={onScroll}>
+	<div bind:this={railEl} class="pptx-svelte-thumbs-scroll" data-pptx-chrome="slide-list">
 	{#if hasSections}
 		{#each sectionGroups as group, groupIndex (group.section?.id ?? 'ungrouped')}
 			<section class="pptx-svelte-section" data-section-id={group.section?.id}>
@@ -250,9 +280,12 @@
 		{/each}
 	{:else}
 	<div class="pptx-svelte-thumbs-space" data-virtualized={shouldVirtualize ? 'true' : undefined} style={shouldVirtualize ? `height:${virtualRange.totalHeight}px` : undefined}>
-	<div class="pptx-svelte-thumbs-window" data-pptx-chrome="slide-window" style={shouldVirtualize ? `position:absolute;inset-inline:0;top:${virtualRange.offsetY}px` : undefined}>
+	<div class="pptx-svelte-thumbs-window" data-pptx-chrome="slide-window" role={shouldVirtualize ? 'list' : undefined} style={shouldVirtualize ? `position:absolute;inset-inline:0;top:${virtualRange.offsetY}px` : undefined}>
+	<!-- The window holds only some rows, so each says where it sits in the deck. -->
 	{#each renderedSlides as { slide, index } (slide.id)}
-		{@render thumbnail(slide, index)}
+		<div role={shouldVirtualize ? 'listitem' : undefined} aria-setsize={shouldVirtualize ? slides.length : undefined} aria-posinset={shouldVirtualize ? index + 1 : undefined}>
+			{@render thumbnail(slide, index)}
+		</div>
 	{/each}
 	</div>
 	</div>

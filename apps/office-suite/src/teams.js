@@ -1,6 +1,5 @@
 import { workspaceUrl, workspaceId } from './product.js';
 import { notify, download } from './ui.js';
-import { uploadTeamsServerFile, readContent } from 'ooxml-core/teams';
 import { onTheme, currentTheme, setThemeMode } from './themes.js';
 import { attachments, attachmentUrl, localAttachmentId, showAttachment } from './attachments.js';
 import { applyOfficeTheme } from './theme-tokens.js';
@@ -8,6 +7,8 @@ import { currentProfile, teamsWorkspace, onProfile } from './profile-state.js';
 import { displayLanguage, onSettings } from './settings.js';
 
 export const documentUrl = (id) => workspaceUrl('file', id);
+// The Teams core is the bulk of the Teams page, so it loads with it, not with every landing page.
+const teamsCore = () => import('ooxml-core/teams');
 export const localDocumentId = (raw) => workspaceId(raw, 'file');
 export async function mountTeams(host, store, open, refresh) {
 	const { defineTeamsApp } = await import('ooxml-ui/teams');
@@ -31,7 +32,7 @@ export async function mountTeams(host, store, open, refresh) {
 	teams.userId = profile.userId;
 	teams.uploadFile = async (file, context) => {
 		if (teams.client?.getState().mode === 'server')
-			return uploadTeamsServerFile(
+			return (await teamsCore()).uploadTeamsServerFile(
 				teams.client.workspace.config,
 				context.workspaceId,
 				file,
@@ -81,6 +82,7 @@ export async function mountTeams(host, store, open, refresh) {
 				else {
 					if (!url || !/^https?:$/u.test(new URL(url).protocol))
 						throw new Error('Attachment URL is unavailable.');
+					const { readContent } = await teamsCore();
 					const bytes = await readContent(url, AbortSignal.timeout(60000), 32 * 1024 * 1024);
 					if (!/\.(docx|xlsx|pptx|vsdx)$/iu.test(attachment.name)) {
 						const file = await attachments.create(

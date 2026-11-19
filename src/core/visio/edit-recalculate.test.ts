@@ -172,7 +172,7 @@ describe('dependency-aware ShapeSheet cache writeback', () => {
 		);
 		for (const options of [{ maxCells: 1 }, { maxAffectedCells: 1 }, { maxSteps: 1 }])
 			expect(() => recalculateVisioCells(new Map([['0', root]]), widthChange, options)).toThrow(
-				/limit/,
+				/limit|too large to edit/,
 			);
 	});
 	it('proves deletion unreferenced across formula cells and Connect records', () => {

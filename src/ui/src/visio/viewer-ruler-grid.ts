@@ -182,14 +182,22 @@ export class ViewerRulerGrid {
 			(state.loading || this.controller.documentGeneration !== this.#generation)
 		)
 			this.dialog.close();
-		// The canvas grid follows the page: step and origin per axis, in screen pixels.
+		// The canvas grid follows the page: step and origin per axis, in inches of the canvas's
+		// `--vv-inch`, so zooming leaves them alone. A custom property change restyles every shape.
 		const svg = this.root.querySelector<SVGSVGElement>('.viewport svg.paper');
 		if (!svg) return;
 		const steps = this.steps(state);
-		const pixels = 96 * (state.zoom || 1);
-		svg.style.setProperty('--_vv-grid-x', `${steps.x * pixels}px`);
-		svg.style.setProperty('--_vv-grid-y', `${steps.y * pixels}px`);
-		svg.style.setProperty('--_vv-grid-origin-x', `${steps.originX * pixels}px`);
-		svg.style.setProperty('--_vv-grid-origin-y', `${steps.originY * pixels}px`);
+		const written = `${steps.x} ${steps.y} ${steps.originX} ${steps.originY}`;
+		if (this.#grid?.svg === svg && this.#grid.written === written) return;
+		this.#grid = { svg, written };
+		for (const [name, inches] of [
+			['--_vv-grid-x', steps.x],
+			['--_vv-grid-y', steps.y],
+			['--_vv-grid-origin-x', steps.originX],
+			['--_vv-grid-origin-y', steps.originY],
+		] as const)
+			svg.style.setProperty(name, `calc(var(--vv-inch, 96px) * ${inches})`);
 	}
+	/** The page and grid steps last written, so a re-render with the same grid writes nothing. */
+	#grid: { svg: SVGSVGElement; written: string } | undefined;
 }

@@ -2,6 +2,7 @@ import type { VisioPageReorder } from 'ooxml-core/visio';
 import type { VisioGridSteps } from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
 import { planDeleteSelection } from './viewer-delete';
+import type { ViewerZoomGesture } from './viewer-zoom-gesture';
 import {
 	editErrorMessage,
 	isEditCancellation,
@@ -51,6 +52,8 @@ interface CommandHost {
 	viewport: HTMLElement;
 	rulers: Rulers;
 	controller: ViewerController;
+	/** Ctrl+wheel zoom previews through the canvas's interactive zoom. */
+	zoom: ViewerZoomGesture;
 	fit(mode: 'page' | 'width'): void;
 	togglePane(pane: 'shapes' | 'inspector'): void;
 	reveal(panel: 'edit' | 'notes' | 'selection' | 'format', focusText: boolean): void;
@@ -371,10 +374,11 @@ export class ViewerCommands {
 		viewport.addEventListener(
 			'wheel',
 			(event) => {
-				if (!event.ctrlKey && !event.metaKey) return;
+				// Scrolling works on the rendered page: a zoom still previewing settles first.
+				if (!event.ctrlKey && !event.metaKey) return this.host.zoom.settle();
 				event.preventDefault();
-				const zoom = this.host.controller.state.zoom;
-				this.host.controller.setZoom(event.deltaY < 0 ? zoom * 1.1 : zoom / 1.1);
+				const zoom = this.host.zoom.zoom;
+				this.host.zoom.zoomTo(event.deltaY < 0 ? zoom * 1.1 : zoom / 1.1);
 			},
 			{ ...options, passive: false },
 		);
