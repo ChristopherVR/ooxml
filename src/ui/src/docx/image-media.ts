@@ -1,5 +1,6 @@
 import { pictureNeedsSvg, pictureSvg } from '../picture-view';
 import { imageContentType } from 'ooxml-core/drawingml';
+import { normalizeMimeType } from 'ooxml-core/opc';
 import { DOMSerializer, type Node as ProseMirrorNode } from 'prosemirror-model';
 import type { EditorView, NodeView } from 'prosemirror-view';
 import { NodeSelection } from 'prosemirror-state';
@@ -11,6 +12,16 @@ import { parseDiagram, smartArtNodeView } from './smartart-node-view';
 import { shapeNodeView } from './shape-node-view';
 import type { ThemeCatalog } from 'ooxml-core/docx';
 import type { EditorLocale } from './localization';
+
+/**
+ * The type a picture's object URL is created with. The node's `contentType` can come from a
+ * collaboration peer, and an object URL opened in its own tab is rendered by that type in this
+ * origin, so only an image type is used; anything else falls back to the type of the part name.
+ */
+function pictureType(partName: string, contentType: string): string {
+	const type = normalizeMimeType(contentType);
+	return type?.startsWith('image/') ? type : imageContentType(partName);
+}
 
 /**
  * Resolves inline picture bytes (kept off the JSON model by docx-core) into object URLs. URLs are
@@ -26,7 +37,9 @@ export class ImageMediaCache {
 		if (cached) return cached;
 		const bytes = this.lookup(partName);
 		if (!bytes || typeof URL.createObjectURL !== 'function') return undefined;
-		const url = URL.createObjectURL(new Blob([bytes.slice()], { type: contentType }));
+		const url = URL.createObjectURL(
+			new Blob([bytes.slice()], { type: pictureType(partName, contentType) }),
+		);
 		this.urls.set(partName, url);
 		return url;
 	}

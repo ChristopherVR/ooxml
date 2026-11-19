@@ -3,6 +3,7 @@ import { signedTwips, twips } from 'ooxml-core/docx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createDocument } from 'ooxml-core/docx';
 import { DocxEditorElement, registerDocxEditor } from './index';
+import { ImageMediaCache } from './image-media';
 import { placementClass } from 'ooxml-core/docx/ui';
 import { at } from './test-support';
 
@@ -151,5 +152,24 @@ describe('floating picture classes', () => {
 		);
 		expect(placementClass(json({ wrap: 'none', behindText: true }))).toBe('');
 		expect(placementClass(null)).toBe('');
+	});
+});
+
+describe('ImageMediaCache', () => {
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	it('creates picture URLs with an image type, whatever type a node claims', () => {
+		const types: string[] = [];
+		URL.createObjectURL = vi.fn((blob: Blob) => {
+			types.push(blob.type);
+			return `blob:${types.length}`;
+		});
+		const cache = new ImageMediaCache(() => new Uint8Array([1, 2, 3]));
+		cache.urlFor('word/media/a.png', 'image/png');
+		cache.urlFor('word/media/b.png', 'text/html');
+		cache.urlFor('word/media/c.bin', 'application/xhtml+xml');
+		expect(types).toEqual(['image/png', 'image/png', 'application/octet-stream']);
 	});
 });

@@ -9,6 +9,7 @@
 //   charts    minted key -> ChartObject, last writer wins per chart (anchor, name, `chartSpace`)
 // Everything the model carries for an item (preserved extension XML inside a rule or chart, the
 // chart's neutral `chartSpace`) travels in the entry verbatim; entries are validated on decode.
+import { isStorableHyperlinkHref } from '../../opc/safe-href';
 import { formatAddress, formatRange, parseAddress, parseRange } from '../address';
 import type { CellRange } from '../address';
 import type {
@@ -147,12 +148,19 @@ export const linkSpec: PartSpec<Hyperlink> = {
 		const { range, ...rest } = clone(link);
 		return { r: formatRange(range), ...rest };
 	},
+	// A peer wrote these fields: keep only text, and only a target the hyperlink policy lets a
+	// document hold (no script or disguised schemes); the sinks check again before opening.
 	decode: (raw) => {
 		if (!isRecord(raw) || !isText(raw.r, 24)) return undefined;
 		const range = parseRange(raw.r);
 		if (!range) return undefined;
-		const { r: _r, ...rest } = clone(raw);
-		return { ...(rest as object), range } as Hyperlink;
+		const link: Hyperlink = { range };
+		if (isText(raw.target, 8192) && isStorableHyperlinkHref(raw.target)) link.target = raw.target;
+		for (const field of ['location', 'tooltip', 'display'] as const) {
+			const value = raw[field];
+			if (isText(value)) link[field] = value;
+		}
+		return link;
 	},
 	fixedKey: (e) => String((e as { r?: unknown }).r),
 };
