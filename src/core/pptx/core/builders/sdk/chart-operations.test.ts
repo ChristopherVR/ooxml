@@ -685,6 +685,22 @@ describe('removeChartCategory', () => {
 		expect(at(el.chartData!.series, 0).values).toStrictEqual([100, 300]);
 		expect(el.chartData!.structureEdits).toStrictEqual([{ kind: 'remove-category', category: 1 }]);
 	});
+
+	it('edits the chart data and series a caller already holds', () => {
+		const el = makeTestChart();
+		const data = el.chartData!;
+		const series = at(data.series, 0);
+		removeChartCategory(el, 0);
+		addChartCategory(el, 'Q4');
+		expect(el.chartData).toBe(data);
+		expect(at(data.series, 0)).toBe(series);
+		expect(data.categories).toStrictEqual(['Q2', 'Q3', 'Q4']);
+		expect(series.values).toStrictEqual([200, 300, 0]);
+		expect(data.structureEdits).toStrictEqual([
+			{ kind: 'remove-category', category: 0 },
+			{ kind: 'add-category' },
+		]);
+	});
 });
 
 // ===========================================================================

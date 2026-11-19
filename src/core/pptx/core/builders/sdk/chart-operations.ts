@@ -17,6 +17,7 @@ import {
 } from '../../utils/chart-data-utils';
 import type {
 	PptxChartAxisFormatting,
+	PptxChartData,
 	PptxChartDataLabel,
 	PptxChartDataLabelOptions,
 	PptxChartDataPoint,
@@ -53,6 +54,29 @@ export function ensureChartData(
 			'Chart element has no chartData. Cannot perform chart operations on an uninitialised chart.',
 		);
 	}
+}
+
+/** Gives `target` the fields of `next`, keeping the object. */
+function assignInPlace<T extends object>(target: T, next: T): void {
+	for (const key of Object.keys(target))
+		if (!Object.hasOwn(next, key)) delete target[key as keyof T];
+	Object.assign(target, next);
+}
+
+/**
+ * Makes `next`, an edited copy of `element`'s chart data with the same series, the data of
+ * `element` in place, so a caller holding the chart data or one of its series sees the edit.
+ */
+function editChartDataInPlace(element: ChartPptxElement, next: PptxChartData): void {
+	ensureChartData(element);
+	const held = element.chartData;
+	next.series.forEach((series, index) => {
+		const kept = held.series[index];
+		if (!kept) return;
+		assignInPlace(kept, series);
+		next.series[index] = kept;
+	});
+	assignInPlace(held, next);
 }
 
 /**
@@ -591,7 +615,7 @@ export function updateChartDataPoint(
  */
 export function addChartCategory(element: ChartPptxElement, categoryName: string): void {
 	ensureChartData(element);
-	element.chartData = chartDataAddCategory(element.chartData, categoryName);
+	editChartDataInPlace(element, chartDataAddCategory(element.chartData, categoryName));
 }
 
 /**
@@ -609,7 +633,7 @@ export function addChartCategory(element: ChartPptxElement, categoryName: string
  */
 export function removeChartCategory(element: ChartPptxElement, categoryIndex: number): void {
 	ensureChartData(element);
-	element.chartData = chartDataRemoveCategory(element.chartData, categoryIndex);
+	editChartDataInPlace(element, chartDataRemoveCategory(element.chartData, categoryIndex));
 }
 
 /**
