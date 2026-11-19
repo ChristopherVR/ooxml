@@ -84,10 +84,14 @@ function comparison(op: string, x: Scalar, y: Scalar): Scalar {
 	}
 }
 
+/** The longest text a cell holds; `&` and CONCATENATE cut a longer result to it, as Excel does. */
+export const MAX_CELL_TEXT = 32_767;
+
 function concat(x: Scalar, y: Scalar): Scalar {
 	if (isError(x)) return x;
 	if (isError(y)) return y;
-	return toText(x) + toText(y);
+	const text = toText(x) + toText(y);
+	return text.length > MAX_CELL_TEXT ? text.slice(0, MAX_CELL_TEXT) : text;
 }
 
 /** Applies a binary operator to two scalars. */

@@ -1,6 +1,7 @@
 import { compileWildcard } from './wildcard';
 import { check, compareScalars, finite, toBool, toNumber, toText } from '../coerce';
 import type { CallContext } from '../context';
+import { textKey } from '../text-compare';
 import { parseNumberText } from '../text-number';
 import {
 	ERR,
@@ -96,7 +97,11 @@ export function flatValues(ctx: CallContext, value: Value): Scalar[] {
 /** Builds a case-insensitive matcher for `*`, `?` and `~` wildcards (no regex backtracking). */
 export const wildcardRegex = compileWildcard;
 
+/** Whether a lookup value is a pattern: MATCH and SEARCH read `~` as an escape even alone. */
 export const hasWildcards = (text: string): boolean => /[*?~]/.test(text);
+
+/** Whether a criterion is a pattern: without `*` or `?`, COUNTIF reads `~` as plain text. */
+export const hasCriteriaWildcards = (text: string): boolean => /[*?]/.test(text);
 
 /** A predicate for COUNTIF-style criteria (`">5"`, `"<>x"`, `"a*"`, 7, TRUE, `""`). */
 export function makeCriteria(criteria: Scalar): (value: Scalar) => boolean {
@@ -108,7 +113,8 @@ export function makeCriteria(criteria: Scalar): (value: Scalar) => boolean {
 				: typeof value === 'string' && parseNumberText(value) === criteria;
 	}
 	if (typeof criteria === 'boolean') return (value) => value === criteria;
-	if (criteria === null) return (value) => value === null || value === '';
+	// A blank criterion cell is the number 0: COUNTIF(A:A,B1) with B1 empty counts zeros, not blanks.
+	if (criteria === null) return makeCriteria(0);
 	const match = /^(<=|>=|<>|<|>|=)?([\s\S]*)$/.exec(criteria);
 	const op = match?.[1] ?? '';
 	const operandText = match?.[2] ?? '';
@@ -135,12 +141,12 @@ export function makeCriteria(criteria: Scalar): (value: Scalar) => boolean {
 			test = (value) => value === asBool;
 		} else if (errorOperand) {
 			test = (value) => isError(value) && value.error === errorOperand;
-		} else if (hasWildcards(operandText)) {
+		} else if (hasCriteriaWildcards(operandText)) {
 			const regex = wildcardRegex(operandText);
 			test = (value) => typeof value === 'string' && regex.test(value);
 		} else {
-			const lower = operandText.toLowerCase();
-			test = (value) => typeof value === 'string' && value.toLowerCase() === lower;
+			const key = textKey(operandText);
+			test = (value) => typeof value === 'string' && textKey(value) === key;
 		}
 		return op === '<>' ? (value) => !test(value) : test;
 	}

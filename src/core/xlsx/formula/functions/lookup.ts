@@ -79,7 +79,7 @@ function vhlookup(args: Value[], ctx: CallContext, vertical: boolean): Value {
 	if (index < 1) fail(ERR.VALUE);
 	if (index > (vertical ? cols : rows)) fail(ERR.REF);
 	const keys = line(ctx, table, vertical ? 'col' : 'row', 0);
-	const at = approximate ? findAscending(keys, lookup) : findExact(keys, lookup, true);
+	const at = approximate ? findAscending(keys, lookup) : findExact(keys, lookup, true, 'chars');
 	if (at < 0) fail(ERR.NA);
 	return vertical ? cellOf(table, at, index - 1) : cellOf(table, index - 1, at);
 }
@@ -90,7 +90,7 @@ function match(args: Value[], ctx: CallContext): number {
 	const { vector } = vectorOf(ctx, lookupArray(args[1] ?? null));
 	const at =
 		type === 0
-			? findExact(vector, lookup, true)
+			? findExact(vector, lookup, true, 'chars')
 			: type > 0
 				? findAscending(vector, lookup)
 				: findDescending(vector, lookup);

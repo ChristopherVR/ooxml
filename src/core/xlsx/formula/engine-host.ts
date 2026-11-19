@@ -12,6 +12,7 @@ import { AreaIndex, ColumnIndex, ReverseIndex } from './graph-index';
 import { ParseCache } from './parse-cache';
 import { PassCache } from './pass-cache';
 import { sheetBounds } from './sheet-scan';
+import type { TextRule } from './text-compare';
 import { clearFootprint, isSpilledCell } from './spill';
 import { type Area, err, Matrix, type Scalar, type Value } from './values';
 
@@ -142,8 +143,9 @@ export abstract class EngineHost implements EvalHost {
 		read: (index: number) => Scalar,
 		lookup: Scalar,
 		reverse: boolean,
+		rule: TextRule,
 	): number | undefined {
-		return this.passCache.findExact(vector, length, read, lookup, reverse);
+		return this.passCache.findExact(vector, length, read, lookup, reverse, rule);
 	}
 
 	forEachStored(

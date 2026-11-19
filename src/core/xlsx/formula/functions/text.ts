@@ -1,4 +1,5 @@
 import { toText } from '../coerce';
+import { MAX_CELL_TEXT } from '../operators';
 import type { CallContext } from '../context';
 import { ERR, fail, isError, type Value } from '../values';
 import { bool, num, optNum, spec, str, wildcardRegex } from './helpers';
@@ -7,9 +8,12 @@ import { TEXT_CONVERT } from './text-convert';
 import { left, lower, proper, right, upper } from './text-case';
 
 const C = 'Text';
-const MAX_TEXT = 32_767;
+const MAX_TEXT = MAX_CELL_TEXT;
 
+/** SUBSTITUTE, REPLACE and REPT refuse a result longer than a cell holds. */
 const limit = (text: string): string => (text.length > MAX_TEXT ? fail(ERR.VALUE) : text);
+/** CONCAT and TEXTJOIN report a result longer than a cell holds as `#CALC!`. */
+const joined = (text: string): string => (text.length > MAX_TEXT ? fail(ERR.CALC) : text);
 
 function find(args: Value[], insensitive: boolean): number {
 	const needle = str(args[0]);
@@ -42,7 +46,10 @@ function joinValues(ctx: CallContext, args: Value[]): string[] {
 export const TEXT_FUNCTIONS: FunctionSpec[] = [
 	...TEXT_CONVERT,
 	spec('CONCATENATE', C, 'CONCATENATE(text1, [text2], ...)', 'Joins text items.', 1, 255, (args) =>
-		limit(args.map((a) => str(a)).join('')),
+		args
+			.map((a) => str(a))
+			.join('')
+			.slice(0, MAX_TEXT),
 	),
 	spec(
 		'CONCAT',
@@ -51,7 +58,7 @@ export const TEXT_FUNCTIONS: FunctionSpec[] = [
 		'Joins text from items and ranges.',
 		1,
 		255,
-		(args, ctx) => limit(joinValues(ctx, args).join('')),
+		(args, ctx) => joined(joinValues(ctx, args).join('')),
 		['any'],
 	),
 	spec(
@@ -73,7 +80,7 @@ export const TEXT_FUNCTIONS: FunctionSpec[] = [
 				if (i > 0) out += delimiters.length ? delimiters[(i - 1) % delimiters.length] : '';
 				out += p;
 			});
-			return limit(out);
+			return joined(out);
 		},
 		['any'],
 	),

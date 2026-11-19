@@ -1,4 +1,5 @@
 import { compareScalars, toBool } from '../coerce';
+import { textKey } from '../text-compare';
 import type { CallContext } from '../context';
 import { ERR, fail, isError, Matrix, type Scalar, type Value } from '../values';
 import { ARRAY_SHAPE_FUNCTIONS } from './array-shape';
@@ -126,9 +127,7 @@ function unique(args: Value[], ctx: CallContext): Value {
 	if (byCol) m = transpose(m);
 	const keyOf = (row: Scalar[]): string =>
 		JSON.stringify(
-			row.map((v) =>
-				isError(v) ? `#${v.error}` : typeof v === 'string' ? `s${v.toLowerCase()}` : v,
-			),
+			row.map((v) => (isError(v) ? `#${v.error}` : typeof v === 'string' ? `s${textKey(v)}` : v)),
 		);
 	const counts = new Map<string, { row: Scalar[]; count: number }>();
 	for (const row of m.data) {

@@ -7,6 +7,8 @@ import type { FunctionSpec } from './types';
 import { windows1252CodePoint, windows1252HighByte } from '../../../text/windows-1252';
 
 const C = 'Text';
+/** The longest format TEXT takes and the longest text it returns. */
+const MAX_TEXT_RESULT = 255;
 
 /** Formats with thousands separators and fixed decimals (FIXED, DOLLAR). */
 function fixed(value: number, decimals: number, commas: boolean): string {
@@ -35,7 +37,11 @@ export const TEXT_CONVERT: FunctionSpec[] = [
 			if (isError(value)) return value;
 			if (typeof value === 'string') value = parseNumberText(value) ?? value;
 			if (typeof value === 'boolean') value = value ? 'TRUE' : 'FALSE';
-			return formatValue(value, str(args[1]), { date1904: ctx.date1904 }).text;
+			const format = str(args[1]);
+			// Excel's TEXT takes a format of at most 255 characters and returns at most 255.
+			if (format.length > MAX_TEXT_RESULT) fail(ERR.VALUE);
+			const text = formatValue(value, format, { date1904: ctx.date1904 }).text;
+			return text.length > MAX_TEXT_RESULT ? fail(ERR.VALUE) : text;
 		},
 	),
 	spec('VALUE', C, 'VALUE(text)', 'Converts text to a number.', 1, 1, (args) => {

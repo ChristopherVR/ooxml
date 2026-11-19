@@ -1,6 +1,7 @@
 // Vector access and search shared by MATCH, XMATCH, VLOOKUP, HLOOKUP, LOOKUP and XLOOKUP.
 import { compareScalars } from '../coerce';
 import type { CallContext } from '../context';
+import { ruleKey, type TextRule } from '../text-compare';
 import { ERR, fail, isError, Matrix, RefValue, type Scalar, type Value } from '../values';
 import { hasWildcards, wildcardRegex } from './helpers';
 
@@ -12,7 +13,7 @@ export interface Vector {
 	logicalLength?: number;
 	get(index: number): Scalar;
 	/** An exact search through the recalculation's shared index; undefined means scan. */
-	indexed?(lookup: Scalar, reverse: boolean): number | undefined;
+	indexed?(lookup: Scalar, reverse: boolean, rule: TextRule): number | undefined;
 }
 
 /** Vectors shorter than this are always scanned: an index could not pay for itself. */
@@ -49,8 +50,8 @@ export function line(ctx: CallContext, value: Value, axis: 'row' | 'col', index:
 			length,
 			logicalLength,
 			get,
-			indexed: (lookup, reverse) =>
-				host.findExact?.(`${area.sheet}:${id}:${length}`, length, get, lookup, reverse),
+			indexed: (lookup, reverse, rule) =>
+				host.findExact?.(`${area.sheet}:${id}:${length}`, length, get, lookup, reverse, rule),
 		});
 		if (axis === 'col') {
 			const col = start.col + index;
@@ -91,21 +92,33 @@ const sameKind = (a: Scalar, b: Scalar): boolean =>
 const compareLookup = (a: Scalar, b: Scalar): number =>
 	a === null ? (b === null ? 0 : 1) : b === null ? -1 : compareScalars(a as never, b as never);
 
-/** An exact-match predicate (case-insensitive text, optional wildcards). */
-export function exactMatcher(lookup: Scalar, wildcards: boolean): (v: Scalar) => boolean {
+/**
+ * An exact-match predicate: text under `rule` (optionally with wildcards), numbers exactly, since
+ * an exact lookup tells 0.1+0.2 from 0.3 although `=` does not.
+ */
+export function exactMatcher(
+	lookup: Scalar,
+	wildcards: boolean,
+	rule: TextRule,
+): (v: Scalar) => boolean {
 	if (typeof lookup === 'string' && wildcards && hasWildcards(lookup)) {
 		const regex = wildcardRegex(lookup);
 		return (v) => typeof v === 'string' && regex.test(v);
 	}
 	if (lookup === null) return (v) => v === null;
-	return (v) =>
-		!isError(v) && v !== null && sameKind(v, lookup) && compareScalars(v, lookup as never) === 0;
+	if (typeof lookup === 'number') return (v) => v === lookup;
+	if (typeof lookup === 'string') {
+		const key = ruleKey(lookup, rule);
+		return (v) => typeof v === 'string' && ruleKey(v, rule) === key;
+	}
+	return typeof lookup === 'boolean' ? (v) => v === lookup : () => false;
 }
 
 export function findExact(
 	vector: Vector,
 	lookup: Scalar,
 	wildcards: boolean,
+	rule: TextRule,
 	reverse = false,
 ): number {
 	const logicalLength = vector.logicalLength ?? vector.length;
@@ -114,8 +127,8 @@ export function findExact(
 	const pattern = wildcards && typeof lookup === 'string' && hasWildcards(lookup);
 	const at =
 		(vector.length >= MIN_INDEXED_LENGTH && !pattern
-			? vector.indexed?.(lookup, reverse)
-			: undefined) ?? scanExact(vector, exactMatcher(lookup, wildcards), reverse);
+			? vector.indexed?.(lookup, reverse, rule)
+			: undefined) ?? scanExact(vector, exactMatcher(lookup, wildcards, rule), reverse);
 	return at < 0 && blankTail ? vector.length : at;
 }
 
@@ -265,7 +278,8 @@ export function xsearch(
 		const descending = searchMode === -2;
 		const at = findSorted(vector, lookup, descending);
 		const found =
-			at >= 0 && exactMatcher(lookup, false)(at < vector.length ? vector.get(at) : null);
+			at >= 0 &&
+			exactMatcher(lookup, false, 'linguistic')(at < vector.length ? vector.get(at) : null);
 		if (matchMode === 0) {
 			return found ? at : -1;
 		}
@@ -276,6 +290,6 @@ export function xsearch(
 	}
 	const reverse = searchMode === -1;
 	if (matchMode === 0 || matchMode === 2)
-		return findExact(vector, lookup, matchMode === 2, reverse);
+		return findExact(vector, lookup, matchMode === 2, 'linguistic', reverse);
 	return findNearest(vector, lookup, matchMode as -1 | 1, reverse);
 }

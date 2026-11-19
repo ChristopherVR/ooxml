@@ -1,23 +1,19 @@
 // What one evaluation pass reads once and reuses: range blocks, exact-match searches and the
 // results of aggregates over ranges. Every entry describes cells whose formulas are already
 // computed, so it stays true until a stored value changes under it (see `PassCache.clear`).
-import { round15 } from './text-number';
+import { ruleKey, type TextRule } from './text-compare';
 import type { Matrix, Scalar, Value } from './values';
 
 type ExactKey = number | string | boolean | null;
 
 /**
- * The value `exactMatcher` treats as equal to `value`, for hashing: lower-cased text, and numbers
- * at the 15 significant digits `compareNumbers` compares (two numbers that round alike are always
- * within its closeness bound, so equal keys and equal numbers are the same thing). Errors and NaN
+ * The value `exactMatcher` treats as equal to `value` under `rule`, for hashing: text by the rule's
+ * key, numbers exactly (an exact lookup tells 0.1+0.2 from 0.3, as Excel's does). Errors and NaN
  * equal nothing, so they have no key.
  */
-function exactKey(value: Scalar): ExactKey | undefined {
-	if (typeof value === 'number') {
-		if (Number.isNaN(value)) return undefined;
-		return Number.isInteger(value) && Math.abs(value) < 1e15 ? value : round15(value);
-	}
-	if (typeof value === 'string') return value.toLowerCase();
+function exactKey(value: Scalar, rule: TextRule): ExactKey | undefined {
+	if (typeof value === 'number') return Number.isNaN(value) ? undefined : value;
+	if (typeof value === 'string') return ruleKey(value, rule);
 	return typeof value === 'boolean' || value === null ? value : undefined;
 }
 
@@ -35,10 +31,11 @@ export class ExactSearch {
 	constructor(
 		private readonly length: number,
 		private readonly reverse: boolean,
+		private readonly rule: TextRule,
 	) {}
 
 	find(lookup: Scalar, read: (index: number) => Scalar): number {
-		const target = exactKey(lookup);
+		const target = exactKey(lookup, this.rule);
 		const known = target === undefined ? undefined : this.first.get(target);
 		if (known !== undefined) return known;
 		this.busy = true;
@@ -53,7 +50,7 @@ export class ExactSearch {
 		while (this.visited < this.length) {
 			const at = this.reverse ? this.length - 1 - this.visited : this.visited;
 			// Counted after the read: one that unwinds to compute a formula first is repeated.
-			const key = exactKey(read(at));
+			const key = exactKey(read(at), this.rule);
 			this.visited++;
 			if (key === undefined) continue;
 			if (!this.first.has(key)) this.first.set(key, at);
@@ -109,15 +106,16 @@ export class PassCache {
 		read: (index: number) => Scalar,
 		lookup: Scalar,
 		reverse: boolean,
+		rule: TextRule,
 	): number | undefined {
 		if (!this.state.active()) return undefined;
-		const key = `${reverse ? 'r' : 'f'}${vector}`;
+		const key = `${reverse ? 'r' : 'f'}${rule}${vector}`;
 		let search = this.searches.get(key);
 		if (search === undefined) {
 			this.searches.set(key, null);
 			return undefined;
 		}
-		if (!search) this.searches.set(key, (search = new ExactSearch(length, reverse)));
+		if (!search) this.searches.set(key, (search = new ExactSearch(length, reverse, rule)));
 		// A lookup computed while this index reads its cells scans on its own, as it would alone.
 		else if (search.busy) return undefined;
 		const cycleReads = this.state.cycleReads();

@@ -1,6 +1,7 @@
 import type { CellRange } from '../address';
 import type { Workbook } from '../model';
 import type { FormulaAst, FormulaError } from './ast';
+import type { TextRule } from './text-compare';
 import type { Matrix, RefValue, Scalar, Scope, Value } from './values';
 
 /** What the evaluator needs from its environment; the calc engine implements it. */
@@ -34,6 +35,7 @@ export interface EvalHost {
 		read: (index: number) => Scalar,
 		lookup: Scalar,
 		reverse: boolean,
+		rule: TextRule,
 	): number | undefined;
 	/** One past the last stored row and column of a sheet. */
 	bounds(sheet: number): { rows: number; cols: number };

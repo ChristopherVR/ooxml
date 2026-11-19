@@ -1,5 +1,7 @@
 // A backtracking-free matcher for Excel wildcards (`*`, `?`, `~` escape). It replaces a generated
-// regular expression, whose repeated `*` groups backtrack exponentially on long text.
+// regular expression, whose repeated `*` groups backtrack exponentially on long text. Characters
+// match by their simple case folding (see text-compare.ts).
+import { foldChar, foldText } from '../text-compare';
 
 /** A run of text between `*`s: a character, or `null` for `?` (any one character). */
 type Segment = (string | null)[];
@@ -11,9 +13,8 @@ export interface Wildcard {
 	search(text: string, from?: number): number;
 }
 
-const lower = (ch: string | undefined): string => (ch ?? '').toLowerCase();
-const fold = (text: string): string[] =>
-	Array.from({ length: text.length }, (_, i) => lower(text[i]));
+const lower = (ch: string | undefined): string => foldChar(ch ?? '');
+const fold = (text: string): string[] => foldText(text).split('');
 
 interface Parsed {
 	segments: Segment[];
@@ -32,8 +33,9 @@ function parse(pattern: string): Parsed {
 	};
 	for (let i = 0; i < pattern.length; i++) {
 		const ch = pattern[i] ?? '';
-		if (ch === '~' && i + 1 < pattern.length) {
-			current.push(lower(pattern[++i]));
+		if (ch === '~') {
+			// A trailing `~` escapes nothing and is dropped: SEARCH("a~","ba~") is 2.
+			if (i + 1 < pattern.length) current.push(lower(pattern[++i]));
 			trailingStar = false;
 		} else if (ch === '*') {
 			if (i === 0) leadingStar = true;
