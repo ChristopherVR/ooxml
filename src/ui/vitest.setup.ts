@@ -14,11 +14,6 @@ if (typeof HTMLCanvasElement !== 'undefined')
 	HTMLCanvasElement.prototype.getContext = (() =>
 		null) as typeof HTMLCanvasElement.prototype.getContext;
 
-// happy-dom answers checkVisibility from one flat view of custom properties, so tokens that refer
-// to each other on different elements (the Visio bridge) overflow its stack. Browsers resolve those
-// per element. Nothing here has layout to check.
-if ('happyDOM' in globalThis) HTMLElement.prototype.checkVisibility = () => true;
-
 // `vi.waitFor` polls for 1s by default. Mounting a viewer in jsdom costs about a second per ribbon
 // render, so under a parallel run a source-backed edit can settle after that and the wait fails
 // although the behaviour is right. Give it the same headroom as `testTimeout`, keeping any explicit

@@ -22,11 +22,6 @@ function isHiddenBranch(element: HTMLElement): boolean {
 	return style?.display === 'none' || style?.visibility === 'hidden';
 }
 
-/** Whether a candidate is rendered, ancestors included. */
-function isRendered(element: HTMLElement): boolean {
-	return element.checkVisibility?.({ visibilityProperty: true }) ?? true;
-}
-
 /** What is rendered under `node`: slotted content for a slot, shadow content for a host. */
 function renderedChildren(node: Element | ShadowRoot): Element[] {
 	if (node instanceof Element && node.localName === 'slot') {
@@ -45,7 +40,7 @@ function focusableElements(root: Element | ShadowRoot, found: HTMLElement[] = []
 	for (const child of renderedChildren(root)) {
 		if (child instanceof HTMLElement) {
 			if (isHiddenBranch(child)) continue;
-			if (child.matches(MODAL_FOCUSABLE_SELECTOR) && isRendered(child)) found.push(child);
+			if (child.matches(MODAL_FOCUSABLE_SELECTOR)) found.push(child);
 		}
 		focusableElements(child, found);
 	}
@@ -61,9 +56,14 @@ function deepActiveElement(doc: Document): Element | null {
 	return active;
 }
 
-/** Tabbable elements of `panel` in the order Tab visits them, reaching into open shadow roots. */
+/**
+ * Tabbable elements of `panel` in the order Tab visits them, reaching into open shadow roots.
+ * Only laid-out elements count; with no layout at all (a test DOM) every candidate does.
+ */
 export function modalFocusableElements(panel: HTMLElement): HTMLElement[] {
-	return focusableElements(panel);
+	const stops = focusableElements(panel);
+	const shown = stops.filter((stop) => stop.getClientRects().length > 0);
+	return shown.length > 0 ? shown : stops;
 }
 
 /** The focused element of `doc`, resolved through nested open shadow roots. */
