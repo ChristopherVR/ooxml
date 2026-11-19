@@ -1,7 +1,7 @@
 // Browser checks for keyboard and screen reader users around assistant edits in the suite: applying
-// and undoing an edit keeps keyboard focus on a control, and a user working in the document keeps
-// their place (caret, active cell, shape or slide) while the file reloads. Run against a preview
-// of suite-dist:
+// and undoing an edit keeps keyboard focus on a control, a user working in the document keeps
+// their place (caret, active cell, shape or slide) while the file reloads, and text an input
+// method writes while the edit is saved is not lost. Run against a preview of suite-dist:
 //   SUITE_URL=http://127.0.0.1:8191 node scripts/suite-keyboard-check.mjs [docx,xlsx,pptx,vsdx]
 import { createRequire } from 'node:module';
 import { readFile } from 'node:fs/promises';
@@ -233,6 +233,24 @@ try {
 		console.log(`${kind}: an assistant edit kept focus and the place (${before})`);
 	}
 
+	if (KINDS.includes('docx')) {
+		// An input method writes while the edit is being saved: the text survives the reload.
+		const page = await open('docx');
+		await workIn(page, 'docx');
+		await page.evaluate(() => (globalThis.__hold = true));
+		await apply(page).evaluate((button) => button.click());
+		await page.waitForFunction(() => globalThis.__release);
+		const cdp = await page.context().newCDPSession(page);
+		await cdp.send('Input.imeSetComposition', { text: 'あ', selectionStart: 1, selectionEnd: 1 });
+		await cdp.send('Input.insertText', { text: 'あ' });
+		await page.evaluate(() => globalThis.__release());
+		await undo(page).waitFor();
+		await page.waitForTimeout(500);
+		assert.match(await page.locator('.ProseMirror').first().textContent(), /あ/u);
+		assert.equal(await dirty(page), true, 'the composed text is an unsaved edit');
+		await page.context().close();
+		console.log('docx: text composed while an edit was saved is kept and shown as unsaved');
+	}
 	assert.deepEqual(errors, []);
 } finally {
 	await browser.close();

@@ -1,8 +1,8 @@
 import { replaceEmbeddedPackage } from 'ooxml-core/opc';
 import { mountEditor } from './editors.js';
 import { cloudReadOnly } from './cloud-files.js';
-import { lockInput } from './session-lock.js';
-import { focusPlace, returnFocus } from './focus-place.js';
+import { isLocked, lockInput, takeComposed } from './session-lock.js';
+import { deepActive, focusPlace, holds, returnFocus } from './focus-place.js';
 import { displayLanguage, onSettings } from './settings.js';
 
 /** One live editor per document id. Save operations are serialized per session. */
@@ -179,11 +179,29 @@ export class SuiteSessions {
 	}
 	/** Refuse input to these documents until the returned function runs; focus stays put. */
 	lock(ids) {
-		const unlocks = ids
-			.map((id) => this.sessions.get(id)?.node)
-			.filter(Boolean)
-			.map(lockInput);
-		return () => unlocks.forEach((unlock) => unlock());
+		const locked = ids.map((id) => this.sessions.get(id)).filter(Boolean);
+		const unlocks = locked.map((s) => lockInput(s.node));
+		return () =>
+			locked.forEach((s, index) => {
+				if (unlocks[index]()) this.settleComposed(s);
+			});
+	}
+	/**
+	 * Accounts for what an input method wrote while the document was locked. Text a reload threw
+	 * away is typed again where the caret is; text still in the editor is an unsaved edit, so the
+	 * tab shows it and the next save keeps it.
+	 */
+	settleComposed(s) {
+		const lost = s.lostComposition;
+		s.lostComposition = '';
+		if (lost) {
+			if (!holds(s.node, deepActive())) s.editor.focus?.();
+			if (holds(s.node, deepActive())) document.execCommand('insertText', false, lost);
+		}
+		if (takeComposed(s.node)) {
+			s.version++;
+			this.update();
+		}
 	}
 	async reload(doc) {
 		const s = this.sessions.get(doc.id);
@@ -207,6 +225,8 @@ export class SuiteSessions {
 			await s.editor.load(doc.bytes);
 			back?.(Boolean(place));
 			if (place && !returnFocus(s.node, place)) s.editor.focus?.();
+			// The new content lacks what an input method wrote during the lock: type it again.
+			s.lostComposition = (s.lostComposition ?? '') + takeComposed(s.node);
 			s.doc = doc;
 			s.version = 0;
 			s.saved = 0;
@@ -215,6 +235,7 @@ export class SuiteSessions {
 		} finally {
 			s.loading = false;
 		}
+		if (!isLocked(s.node)) this.settleComposed(s);
 	}
 	/** Moves a tab to `index` among the open documents; tab order is the map's order. */
 	move(id, index) {

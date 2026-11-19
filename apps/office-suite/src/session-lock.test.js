@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { lockInput } from './session-lock.js';
+import { isLocked, lockInput, takeComposed } from './session-lock.js';
 
 /** The part of an element the lock touches. */
 class FakeHost extends EventTarget {
@@ -46,4 +46,33 @@ test('overlapping locks hold until the last is released, and releasing twice is 
 	assert.equal(press(host, 'x').defaultPrevented, true);
 	second();
 	assert.equal(press(host, 'x').defaultPrevented, false);
+});
+
+function compose(target, data) {
+	const event = new Event('compositionend');
+	event.data = data;
+	target.dispatchEvent(event);
+}
+
+test('text an input method commits while locked is recorded once, and only while locked', () => {
+	const host = new FakeHost();
+	compose(host, 'a');
+	const unlock = lockInput(host);
+	assert.equal(isLocked(host), true);
+	compose(host, 'あ');
+	compose(host, 'い');
+	assert.equal(unlock(), true);
+	assert.equal(isLocked(host), false);
+	compose(host, 'b');
+	assert.equal(takeComposed(host), 'あい');
+	assert.equal(takeComposed(host), '');
+});
+
+test('only the last release of overlapping locks reports that the editor is free', () => {
+	const host = new FakeHost();
+	const first = lockInput(host);
+	const second = lockInput(host);
+	assert.equal(first(), false);
+	assert.equal(second(), true);
+	assert.equal(second(), false);
 });
