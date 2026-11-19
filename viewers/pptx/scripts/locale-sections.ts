@@ -22,6 +22,7 @@ const SECTION_DEFINITIONS = [
 			'viewer',
 			'mode',
 			'readOnly',
+			'externalContent',
 			'compatibility',
 			'overflow',
 		],
