@@ -31,7 +31,7 @@ network request must update this file in the same commit.
 | Suite: AI assistant                              | The provider the user or policy selects     | No (offline by default)           | `ai-config.json`                                                   |
 | Suite: OneDrive                                  | `graph.microsoft.com`, Microsoft sign-in    | No (host must enable it)          | Do not configure it                                                |
 | Suite: app updates                               | The suite's own origin (`sw.js`)            | Yes                               | Not applicable (same origin)                                       |
-| Any product: hyperlinks, help links              | The link target                             | Only when clicked                 | Not applicable                                                     |
+| Any product: hyperlinks, help links              | The link target, in a new tab               | Only when clicked                 | Not applicable                                                     |
 | Host-supplied document URLs                      | The URL the host passes                     | Only when the host passes one     | Pass bytes instead                                                 |
 
 Every request also sends what any browser request sends: the reader's IP address, the browser's
@@ -86,6 +86,9 @@ shown in the provider's embed frame.
 - **Default:** the viewer's Trust Center option "Allow external content" is on. The core
   parser's own `allowExternalImages` option is off, so `ooxml-core/pptx` used directly fetches
   nothing.
+- **Hyperlinks:** a link opens only when clicked, always in a new tab with `noopener` and
+  `noreferrer`, whatever frame the deck names. `file:` and `ftp:` links are kept in the deck but
+  never opened.
 - **Off:** the host option `allowExternalContent: false`, or the Trust Center option. Teams
   presentation previews always block it. In the OOXML Office suite, Settings > Privacy >
   "Block linked pictures and media in presentations" passes `false` to every deck opened next.
@@ -147,15 +150,22 @@ Hyperlinks and in-product help links open only when the reader follows them.
   to your own STUN/TURN servers, or to `[]` to use none. Audio and video flow between peers or
   through the TURN server you configure.
 - **Website tabs:** a website tab loads the URL a member added, in a frame, for everyone who
-  opens it.
+  opens it. A host's Content Security Policy decides which sites may be framed: the OOXML Office
+  suite frames none, so there the tab offers "Open externally", which opens the site in a new
+  browser tab.
 
 ## OOXML Office suite (`apps/office-suite`, the GitHub Pages site and the desktop app)
 
 The suite uses the editors above, so their sections apply. In addition:
 
+- **One script policy for the whole site:** the GitHub Pages origin is shared with other project
+  sites, so every published page (the suite, its 404 page, every viewer's documentation and demos)
+  and the desktop app carry the same Content Security Policy from `scripts/csp.mjs`: script only
+  from the site itself, never inline, and frames only from the site and the online-video players
+  (`www.youtube.com`, `player.vimeo.com`). The Pages build fails on a page without it.
 - **Fonts:** Settings > Fonts chooses Google Fonts (the default), your own font server, or no
-  downloads, for PowerPoint, Word, Excel and Visio alike. The site's Content Security Policy allows only Google's two font
-  hosts; a deployment that uses its own font server adds that server to the policy.
+  downloads, for PowerPoint, Word, Excel and Visio alike. The policy allows only Google's two
+  font hosts; a deployment that uses its own font server adds that server to it.
 - **AI assistant:** off the network by default (the shipped `ai-config.json` selects the offline
   assistant). When the user or the deployment's policy selects a provider, the prompt, the
   conversation and the document context it needs are sent to that provider, under the
@@ -166,9 +176,13 @@ The suite uses the editors above, so their sections apply. In addition:
 - **Shared AI chats:** sync over the configured collaboration or Teams server, otherwise stay in
   this browser.
 - **Updates:** the installed app checks its own origin for a new `sw.js` at start, on focus and
-  hourly. The service worker caches only the app's own files.
+  hourly. The service worker caches only the app's own files, and serves a saved copy only while
+  it matches the SHA-256 the build recorded for it; a copy that does not is deleted and fetched
+  again from the site. The shell's script and style tags carry subresource integrity.
 - **Desktop:** the Tauri shell has no updater, telemetry or plugins and reads and writes only
-  the files the user opens. The operating system's WebView (WebView2, WKWebView) may send its
+  the files the user opens. Its window only shows the bundled app: a web or `mailto:` link the
+  user follows opens in the system's default browser or mail client, and other destinations
+  (another site in the window, `file:` addresses, new in-app windows) are refused. The operating system's WebView (WebView2, WKWebView) may send its
   vendor's own diagnostics under the operating system's settings.
 
 ## Data kept on the device
@@ -218,6 +232,6 @@ Symbols 2 subset (U+2000-2BFF). The subset is inline WOFF2 data, enabled without
 font downloads. It makes no outbound request, sends no document or font names,
 and creates no persistent storage. Image/print exports collect the same font
 rule. Host CSP must permit `font-src data:` and the viewer's inline styles; the
-site and desktop policies already do. The font-download setting does not disable
+published pages' and desktop policy (`scripts/csp.mjs`) already does. The font-download setting does not disable
 this local fallback. This is approximate symbol substitution, not exact Wingdings
 outlines; unmapped symbol bullets use a plain bullet.

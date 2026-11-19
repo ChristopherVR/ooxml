@@ -2,16 +2,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<!-- GitHub Pages cannot send headers, so the policy is a meta tag. connect-src stays broad on
-		     purpose: the assistant and team servers are user-configured endpoints. ipc: and
-		     http://ipc.localhost are the Tauri desktop IPC channel (the desktop shell loads this page).
-		     fonts.googleapis.com and fonts.gstatic.com serve fonts a document uses but neither the
-		     device nor the file has (Settings > Fonts turns that off); a deployment that
-		     points the setting at its own font server adds that server here. See docs/font-loading.md. -->
-		<meta
-			http-equiv="Content-Security-Policy"
-			content="default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; connect-src 'self' ipc: http://ipc.localhost https: wss: ws://localhost:* ws://127.0.0.1:* http://localhost:* http://127.0.0.1:*; worker-src 'self' blob:; frame-src 'self' https://christophervr.github.io; manifest-src 'self'"
-		/>
+		<!-- The build writes the Content Security Policy first in this head (scripts/csp.mjs). -->
 		<meta name="ooxml-root" content="./" />
 		<meta name="theme-color" content="#0f6cbd" />
 		<link rel="manifest" href="manifest.webmanifest" />

@@ -3,6 +3,7 @@ import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { bundleSuite } from './bundle-suite.mjs';
 import { buildPwa } from './build-pwa.mjs';
+import { applyContentSecurityPolicy, assertContentSecurityPolicy } from './csp.mjs';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const out = join(root, 'suite-dist');
 await mkdir(out, { recursive: true });
@@ -30,4 +31,7 @@ for (const name of [
 	await cp(join(root, 'site', name), join(out, name));
 await cp(join(root, 'site', 'docs'), join(out, 'docs'), { recursive: true });
 await bundleSuite(join(out, 'suite.js'));
+// The policy goes in before the PWA build, which copies the shell and hashes every file.
+applyContentSecurityPolicy(out);
 await buildPwa(out);
+assertContentSecurityPolicy(out);

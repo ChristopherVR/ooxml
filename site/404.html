@@ -2,10 +2,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<meta
-			http-equiv="Content-Security-Policy"
-			content="default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; connect-src 'self' ipc: http://ipc.localhost https: wss: ws://localhost:* ws://127.0.0.1:* http://localhost:* http://127.0.0.1:*; worker-src 'self' blob:; frame-src 'self' https://christophervr.github.io; manifest-src 'self'"
-		/>
+		<!-- The build writes the Content Security Policy first in this head (scripts/csp.mjs). -->
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="robots" content="noindex" />
 		<!-- Served for any missing path on the Pages site, so every URL here is resolved from the site root. -->
