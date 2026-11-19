@@ -1,3 +1,4 @@
+import { partNameToken } from '../../../../opc/part-name';
 import { XmlObject, TextSegment, TextStyle, PptxElement } from '../../types';
 import type { ConnectorTextResult } from '../builders/PptxConnectorParser';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeGroupParsing';
@@ -130,7 +131,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// slides. Without this, the first picture on every slide gets the same
 		// id (e.g. "pic-0"), which collapses the collectImagePaths →
 		// elementPatches image pipeline so one slide's image overwrites others.
-		const slidePrefix = slidePath ? `${slidePath}-` : '';
+		// The path comes from the package, so ids take its safe token.
+		const slidePrefix = slidePath ? `${partNameToken(slidePath)}-` : '';
 		return this.parseSpTreeChildren(
 			spTree as Record<string, unknown>,
 			slidePath,

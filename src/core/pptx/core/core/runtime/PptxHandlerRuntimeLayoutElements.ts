@@ -2,6 +2,7 @@ import { XmlObject, PptxElement } from '../../types';
 import { partRelsPath } from '../../utils/part-rels-path';
 import { stripParentDirSegments } from '../../utils/strip-parent-dir-segments';
 import { xmlAttr, xmlChild, xmlPath } from '../../utils/xml-access';
+import { partFileToken } from './master-part-tags';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeAuxiliaryMasterElements';
 import type { PlaceholderInfo } from './PptxHandlerRuntimeTypes';
 
@@ -57,11 +58,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// Namespace generated element IDs with the owning layout part so that
 		// e.g. slideLayout4's first picture doesn't collide with slideLayout7's
 		// (indexInType is only unique within a single layout's own spTree).
-		const layoutToken =
-			layoutPath
-				.split('/')
-				.pop()
-				?.replace(/\.xml$/u, '') ?? layoutPath;
+		const layoutToken = partFileToken(layoutPath);
 
 		try {
 			const layoutXmlStr = await this.readPartText(layoutPath);
