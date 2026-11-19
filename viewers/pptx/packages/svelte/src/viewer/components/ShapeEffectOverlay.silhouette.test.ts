@@ -176,4 +176,21 @@ describe('shape-following shadow (svelte)', () => {
 		flushSync();
 		expect(target.innerHTML).toContain('data-pptx-silhouette-fill');
 	});
+
+	it('keeps a hostile element id inside the text of its style element', () => {
+		const target = document.createElement('div');
+		document.body.appendChild(target);
+		const element = {
+			...triangle(),
+			id: 'x"]{}</style><i data-injected="1">',
+			text: 'hello',
+		} as unknown as PptxElement;
+		mounted = mount(ShapeEffectOverlay, {
+			target,
+			props: { element, mediaDataUrls: new Map<string, string>(), zIndex: 1 },
+		});
+		flushSync();
+		expect(target.querySelector('[data-injected]')).toBeNull();
+		expect(target.querySelector('style')?.textContent).toContain('pointer-events:auto');
+	});
 });

@@ -57,8 +57,8 @@ describe('buildTextStyleOverrideCss', () => {
 	it('escapes a quote in the element id in both rules', () => {
 		const css = buildTextStyleOverrideCss('el"1', { bold: true });
 		expect(css).toBe(
-			'[data-element-id="el\\"1"] [style] { font-weight: bold !important; }\n' +
-				'[data-element-id="el\\"1"] text, [data-element-id="el\\"1"] tspan { font-weight: bold !important; }',
+			'[data-element-id="el\\22 1"] [style] { font-weight: bold !important; }\n' +
+				'[data-element-id="el\\22 1"] text, [data-element-id="el\\22 1"] tspan { font-weight: bold !important; }',
 		);
 	});
 });
