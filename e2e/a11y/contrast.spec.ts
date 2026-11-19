@@ -15,17 +15,20 @@ const PAIRS = {
 	'text on accent': ['--office-accent-foreground', '--office-accent', 4.5],
 	'accent text on background': ['--accent-ink', '--office-background', 4.5],
 	'Teams brand button text': ['--office-teams-brand-foreground', '--office-teams-brand', 4.5],
-	'link on the document page': ['--office-accent', '--office-paper', 4.5],
+	'link on the document page': ['--office-canvas-link', '--office-paper', 4.5],
 	'focus ring on background': ['--office-ring', '--office-background', 3],
 	'focus ring on surface': ['--office-ring', '--office-surface', 3],
 	'accent indicator on background': ['--office-accent', '--office-background', 3],
-	'control border on background': ['--office-border', '--office-background', 3],
+	// Form control boundaries; `--office-border` is left to decorative dividers, which 1.4.11 exempts.
+	'control border on background': ['--office-control-border', '--office-background', 3],
 } as const satisfies Record<string, readonly [string, string, number]>;
 type Pair = keyof typeof PAIRS;
 
 /** Defaults the elements fall back to when the suite does not set a token on the page root. */
 const FALLBACK: Record<string, string> = {
 	'--office-paper': '#ffffff',
+	'--office-canvas-link': '#0563c1',
+	'--office-control-border': '#8a8886',
 	'--office-teams-brand': 'var(--office-accent)',
 	'--office-teams-brand-foreground': '#ffffff',
 };

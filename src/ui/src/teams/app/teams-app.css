@@ -80,7 +80,7 @@ button {
 .search input {
 	width: 100%;
 	padding: var(--office-space-2) var(--office-space-4);
-	border: var(--office-border-width) solid var(--office-teams-divider);
+	border: var(--office-border-width) solid var(--office-field-border);
 	border-radius: var(--office-radius-full);
 	background: var(--office-background);
 	color: inherit;
@@ -735,7 +735,7 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 	height: 2.3em;
 	border-radius: var(--office-radius-full);
 	background: var(--office-teams-bubble);
-	color: var(--office-teams-brand);
+	color: var(--office-teams-brand-ink);
 }
 .chat-head .chat-people {
 	display: inline-flex;
@@ -817,4 +817,14 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 	background: var(--office-teams-panel);
 	color: var(--office-foreground);
 	font-size: var(--office-font-size-sm);
+}
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.tabs button[aria-selected='true'] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
 }

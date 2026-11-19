@@ -451,6 +451,7 @@ export class VisioViewerElement extends BaseElement {
 			profile: () => this.#profile.profile,
 			locale: () => this.#locale(),
 		});
+		this.#share.locale = () => this.#locale();
 		this.#share.onError = (error) =>
 			this.dispatchEvent(
 				new CustomEvent('document-error', { detail: error, bubbles: true, composed: true }),

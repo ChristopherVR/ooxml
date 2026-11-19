@@ -1,30 +1,6 @@
 {
 	"$comment": "Checks that fail today, each with the 2.0 work package that closes it and the text its failure message contains (`fails`). A listed check passes only while it fails that way: it fails as soon as the gap closes (delete the entry in that commit) and when it fails for any other reason. Entries may be removed but never added or given another `fails` (check-baseline.mjs).",
 	"gaps": {
-		"contrast/dark/control border on background": {
-			"owner": "N11 Canvas and forced-colours fixes",
-			"finding": "A11Y-14",
-			"why": "the border token controls use is 1.35:1 on the background",
-			"fails": "--office-border on --office-background"
-		},
-		"contrast/dark/link on the document page": {
-			"owner": "N11 Canvas and forced-colours fixes",
-			"finding": "A11Y-13",
-			"why": "Word links on the white page use the dark-mode accent, 2.13:1 to 2.86:1",
-			"fails": "--office-accent on --office-paper"
-		},
-		"contrast/dark/Teams brand button text": {
-			"owner": "N11 Canvas and forced-colours fixes",
-			"finding": "A11Y-13",
-			"why": "white text on the dark-mode accent, 2.13:1 to 2.86:1",
-			"fails": "--office-teams-brand-foreground on --office-teams-brand"
-		},
-		"contrast/light/control border on background": {
-			"owner": "N11 Canvas and forced-colours fixes",
-			"finding": "A11Y-14",
-			"why": "the border token controls use is 1.25:1 on the background",
-			"fails": "--office-border on --office-background"
-		},
 		"keyboard/teams/f6": {
 			"owner": "P8 Ribbon navigation and reflow",
 			"finding": "A11Y-10",

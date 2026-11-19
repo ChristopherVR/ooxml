@@ -276,3 +276,14 @@
 	border-top: 1px solid var(--line);
 	border-radius: 0;
 }
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.table-picker-grid [role='gridcell'].active,
+	.ribbon-gallery-menu button[aria-checked='true'] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
+}

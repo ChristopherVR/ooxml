@@ -110,7 +110,7 @@
 		align-items: flex-end;
 		gap: 6px;
 		padding: 6px 8px;
-		border: 1px solid var(--pptx-input, var(--office-border, #d1d5db));
+		border: 1px solid var(--pptx-input, var(--office-control-border, #8a8886));
 		border-radius: var(--pptx-radius, var(--office-radius, 4px));
 		background: var(--pptx-background, var(--office-background, #ffffff));
 	}

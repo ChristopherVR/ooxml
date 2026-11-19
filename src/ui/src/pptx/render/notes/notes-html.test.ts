@@ -56,6 +56,14 @@ describe('segmentsToEditorHtml', () => {
 		expect(html).toContain('<span>evil</span>');
 	});
 
+	it('keeps a stored link that may not be opened as plain text, not a live anchor', () => {
+		const html = segmentsToEditorHtml([
+			{ text: 'diagnose', style: { hyperlink: 'ms-officecmd:example' } },
+		]);
+		expect(html).not.toContain('<a ');
+		expect(html).toContain('<span>diagnose</span>');
+	});
+
 	it('escapes HTML special characters in text content', () => {
 		const html = segmentsToEditorHtml([{ text: '<script>alert("xss")</script>', style: {} }]);
 		expect(html).toContain('&lt;script&gt;');

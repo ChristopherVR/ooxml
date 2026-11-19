@@ -47,12 +47,13 @@ The PowerPoint editor maps its `--pptx-*` variables to the `--office-*` contract
 element, so its theming API did not change. The other products follow the same contract with their
 own prefixed overrides as fallbacks.
 
-| pptx                            | ooxml-ui                     |
-| ------------------------------- | ---------------------------- |
-| `--pptx-foreground`             | `--office-foreground`        |
-| `--pptx-muted-foreground`       | `--office-muted-foreground`  |
-| `--pptx-background`             | `--office-background`        |
-| `--pptx-border`, `--pptx-input` | `--office-border`            |
-| `--pptx-primary`                | `--office-accent`            |
-| `--pptx-primary-foreground`     | `--office-accent-foreground` |
-| `--pptx-ring`                   | `--office-ring`              |
+| pptx                        | ooxml-ui                     |
+| --------------------------- | ---------------------------- |
+| `--pptx-foreground`         | `--office-foreground`        |
+| `--pptx-muted-foreground`   | `--office-muted-foreground`  |
+| `--pptx-background`         | `--office-background`        |
+| `--pptx-border`             | `--office-border`            |
+| `--pptx-input`              | `--office-control-border`    |
+| `--pptx-primary`            | `--office-accent`            |
+| `--pptx-primary-foreground` | `--office-accent-foreground` |
+| `--pptx-ring`               | `--office-ring`              |

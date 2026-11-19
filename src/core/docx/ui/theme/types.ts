@@ -20,6 +20,8 @@ export interface EditorTheme {
 	/** Brand and primary action color. */
 	primary: string;
 	primaryForeground: string;
+	/** The primary as text on the background or a selected fill (at least 4.5:1); defaults to `primary`. */
+	primaryInk?: string;
 	secondary: string;
 	secondaryForeground: string;
 	/** Muted surface; also the area behind the document pages. */

@@ -33,7 +33,7 @@ export const defaultThemeColors: ViewerThemeColors = {
 	destructiveForeground: '#ffffff', // white
 
 	border: '#374151', // gray-700
-	input: '#374151', // gray-700
+	input: '#6b7280', // gray-500: form boundaries at 3:1
 	ring: '#6366f1', // indigo-500
 };
 
@@ -71,7 +71,7 @@ export const lightThemeColors: ViewerThemeColors = {
 	destructiveForeground: '#ffffff',
 
 	border: '#e2e8f0', // slate-200
-	input: '#e2e8f0', // slate-200
+	input: '#64748b', // slate-500: form boundaries at 3:1
 	ring: '#4f46e5', // indigo-600
 };
 

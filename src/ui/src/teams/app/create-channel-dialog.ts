@@ -1,5 +1,6 @@
 import { definer } from '../../registry';
 import { html, nothing, unsafeCSS, type PropertyValues } from 'lit';
+import { withTokens } from '../../base';
 import { TeamsLitElement } from '../i18n/lit-element';
 import {
 	MAX_CHANNEL_NAME_CHARS,
@@ -10,7 +11,7 @@ import css from './create-channel-dialog.css?raw';
 
 /** Standard channel creation. The host owns the client and checks unsaved Office content. */
 export class TeamsCreateChannelDialog extends TeamsLitElement {
-	static override styles = unsafeCSS(css);
+	static override styles = unsafeCSS(withTokens(css));
 	static override properties = {
 		open: { type: Boolean, reflect: true },
 		create: { attribute: false },

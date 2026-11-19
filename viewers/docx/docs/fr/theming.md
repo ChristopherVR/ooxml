@@ -44,18 +44,19 @@ editor.themeColors = {
 };
 ```
 
-| Jeton                                  | Rôle                                                    |
-| -------------------------------------- | ------------------------------------------------------- |
-| `background`, `foreground`             | Chrome de l'application (barre de titre, fenêtre)       |
-| `card`, `cardForeground`               | Surface du ruban, des panneaux et de la barre d'état    |
-| `popover`, `popoverForeground`         | Menus, boîtes de dialogue et autres surfaces flottantes |
-| `primary`, `primaryForeground`         | Couleur de marque et de l'action principale             |
-| `secondary`, `secondaryForeground`     | Surfaces secondaires                                    |
-| `muted`, `mutedForeground`             | Surface atténuée, également la zone derrière les pages  |
-| `accent`, `accentForeground`           | Surbrillance au survol et à la sélection                |
-| `destructive`, `destructiveForeground` | Actions destructives                                    |
-| `border`, `input`, `ring`              | Bordures, contours des champs, anneau de focus          |
-| `radius`                               | Rayon d'arrondi de base, par exemple `4px`              |
+| Jeton                                  | Rôle                                                                                                       |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `background`, `foreground`             | Chrome de l'application (barre de titre, fenêtre)                                                          |
+| `card`, `cardForeground`               | Surface du ruban, des panneaux et de la barre d'état                                                       |
+| `popover`, `popoverForeground`         | Menus, boîtes de dialogue et autres surfaces flottantes                                                    |
+| `primary`, `primaryForeground`         | Couleur de marque et de l'action principale                                                                |
+| `primaryInk`                           | La couleur principale comme texte sur l'interface et les sélections, au moins 4,5:1 (par défaut `primary`) |
+| `secondary`, `secondaryForeground`     | Surfaces secondaires                                                                                       |
+| `muted`, `mutedForeground`             | Surface atténuée, également la zone derrière les pages                                                     |
+| `accent`, `accentForeground`           | Surbrillance au survol et à la sélection                                                                   |
+| `destructive`, `destructiveForeground` | Actions destructives                                                                                       |
+| `border`, `input`, `ring`              | Bordures, contours des champs, anneau de focus                                                             |
+| `radius`                               | Rayon d'arrondi de base, par exemple `4px`                                                                 |
 
 Passez `undefined` pour effacer les surcharges.
 

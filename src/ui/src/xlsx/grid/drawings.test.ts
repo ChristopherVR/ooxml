@@ -65,3 +65,28 @@ it('uses source crop geometry when painting an Excel picture', () => {
 	layer.destroy();
 	view.destroy();
 });
+
+it('shows an SVG picture from an opaque-origin data URL, never a blob of this origin', () => {
+	const wb = createWorkbook();
+	const svg = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"/>');
+	(wb as { source?: unknown }).source = { parts: new Map([['xl/media/image1.svg', svg]]) };
+	wb.sheets[0]!.drawings.push({
+		kind: 'image',
+		partName: 'xl/media/image1.svg',
+		contentType: 'image/svg+xml',
+		anchor: {
+			from: { row: 0, col: 0, rowOffset: 0, colOffset: 0 },
+			ext: { cx: 952500, cy: 476250 },
+		},
+	});
+	const ctx = createTestContext(wb);
+	const container = document.createElement('div');
+	ctx.root.append(container);
+	const view = new GridView(ctx, container);
+	const layer = new DrawingLayer(view);
+	layer.render();
+	const img = container.querySelector<HTMLImageElement>('.xg-obj img')!;
+	expect(img.getAttribute('src')?.startsWith('data:image/svg+xml;base64,')).toBe(true);
+	layer.destroy();
+	view.destroy();
+});

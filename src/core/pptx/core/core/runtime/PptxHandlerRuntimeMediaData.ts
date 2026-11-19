@@ -8,7 +8,7 @@ import type { MediaTimingData } from './PptxHandlerRuntimeImageEffects';
 import { requiresBase64DataUrl } from './PptxHandlerRuntimeMediaParsingUtils';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeMediaTimingParsing';
 import { decodeTiffToPngBlob } from './tiff-to-png';
-import { at } from '../../../../geometry/indexed';
+import { pictureUrl } from '../../../../opc/picture-url';
 
 // Re-exported for backward compatibility: existing callers/tests import this
 // from here rather than from `tiff-to-png.ts` directly.
@@ -28,27 +28,23 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	/**
-	 * Convert raw image bytes to a URL suitable for <img src>.
-	 * Uses Blob URLs in browsers (avoids 33% base64 overhead),
-	 * falls back to data URIs in Node.js.
+	 * Convert raw image bytes to a URL suitable for <img src>: a Blob URL for an inert raster
+	 * picture in a browser (no base64 overhead), a data URI otherwise. An SVG picture always gets a
+	 * data URI, whose origin is opaque, so opening it in its own tab never runs it in the app's
+	 * origin (see `pictureUrl` in `opc`). Models keep data URIs for their viewer.
 	 */
 	private createImageUrl(bytes: ArrayBuffer, mimeType: string): string {
-		if (CAN_USE_BLOB_URLS && !requiresBase64DataUrl(mimeType)) {
-			// Wrap in a fresh Uint8Array to satisfy the BlobPart constraint
-			// (ArrayBuffer is always accepted, but TS strict mode can complain
-			// about SharedArrayBuffer in Uint8Array.buffer).
-			const blob = new Blob([new Uint8Array(bytes)], { type: mimeType });
-			const blobUrl = URL.createObjectURL(blob);
-			this.blobUrlCache.add(blobUrl);
-			return blobUrl;
+		const url = pictureUrl(
+			new Uint8Array(bytes),
+			mimeType,
+			CAN_USE_BLOB_URLS && !requiresBase64DataUrl(mimeType)
+				? (blob) => URL.createObjectURL(blob)
+				: null,
+		);
+		if (url.startsWith('blob:')) {
+			this.blobUrlCache.add(url);
 		}
-		// Fallback: base64 data URI for non-browser environments
-		const uint8 = new Uint8Array(bytes);
-		let binary = '';
-		for (let i = 0; i < uint8.length; i++) {
-			binary += String.fromCharCode(at(uint8, i));
-		}
-		return `data:${mimeType};base64,${btoa(binary)}`;
+		return url;
 	}
 
 	async getImageData(imagePath: string): Promise<string | undefined> {

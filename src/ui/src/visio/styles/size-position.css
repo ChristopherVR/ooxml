@@ -43,7 +43,7 @@
 }
 .size-caption strong {
 	writing-mode: vertical-rl;
-	color: var(--_vv-accent);
+	color: var(--_vv-accent-text);
 	font-size: 10px;
 	font-weight: 700;
 	letter-spacing: 0.04em;

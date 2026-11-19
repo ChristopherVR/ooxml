@@ -61,7 +61,7 @@
 	background: var(--office-surface);
 }
 [role='tab'][aria-selected='true'] {
-	color: var(--office-accent);
+	color: var(--office-accent-ink);
 }
 [role='tab'][aria-selected='true']::after {
 	content: '';
@@ -180,7 +180,12 @@ slot[name='actions'] {
 	.file {
 		border: var(--office-border-width) solid ButtonText;
 	}
-	[role='tab'][aria-selected='true']::after {
+	[role='tab'][aria-selected='true'],
+	[role='tab'][data-contextual][aria-selected='true'] {
+		color: CanvasText;
+	}
+	[role='tab'][aria-selected='true']::after,
+	[role='tab'][data-contextual][aria-selected='true']::after {
 		background: Highlight;
 	}
 }

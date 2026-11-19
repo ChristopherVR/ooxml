@@ -6,6 +6,7 @@ import { themeBridge } from '../../theme-bridge';
  * `inch` is not a colour: it is the canvas scale set by `viewer-canvas.ts`.
  */
 export const visioThemeAliases = `:host {
+  color-scheme:var(--office-color-scheme,light);
   --_vv-font:var(--vv-font,var(--office-font,'Segoe UI',Arial,sans-serif));
   --_vv-bg:var(--vv-background,var(--office-surface,#eceae8));
   --_vv-surface:var(--vv-surface,var(--office-background,#fff));
@@ -16,6 +17,7 @@ export const visioThemeAliases = `:host {
   --_vv-accent:var(--vv-accent,var(--office-accent,#3955a3));
   --_vv-accent-soft:var(--vv-accent-soft,color-mix(in srgb,var(--_vv-accent) 10%,transparent));
   --_vv-accent-ink:var(--vv-accent-ink,var(--office-accent-foreground,#fff));
+  --_vv-accent-text:var(--vv-accent-text,var(--vv-accent,var(--office-accent-ink,light-dark(var(--_vv-accent),color-mix(in srgb,var(--_vv-accent) 60%,#fff)))));
   --_vv-focus:var(--vv-focus,var(--office-ring,var(--_vv-accent)));
   --_vv-danger:var(--vv-danger,var(--office-danger,#b42318));
   --_vv-shadow:var(--vv-shadow,var(--office-shadow,0 2px 8px rgb(0 0 0 / 14%)));
@@ -42,6 +44,7 @@ export const visioThemeBridge = themeBridge(':host > *', {
 	// Hover and selected rows: an opaque accent tint over the page, not the shared cool grey.
 	'--office-selected': 'color-mix(in srgb, var(--_vv-accent) 12%, var(--_vv-surface))',
 	'--office-accent-foreground': 'var(--_vv-accent-ink)',
+	'--office-accent-ink': 'var(--_vv-accent-text)',
 	'--office-ring': 'var(--_vv-focus)',
 	'--office-font': 'var(--_vv-font)',
 });

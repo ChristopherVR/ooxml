@@ -349,3 +349,15 @@ html.reduce-motion *::after {
 	transition-duration: 0.01ms !important;
 	scroll-behavior: auto !important;
 }
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.settings-modes input:checked + .theme-preview,
+	.settings-accents input:checked + .settings-swatch,
+	.settings-choice:has(input[type='radio']:checked) {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
+}

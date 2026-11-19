@@ -82,8 +82,8 @@ export const TABS_CSS = `
 	background: color-mix(in srgb, var(--xst-color) 22%, transparent);
 }
 .xst-tab.xst-active {
-	background: var(--xve-sheet-bg, var(--office-paper, #ffffff));
-	color: var(--xve-selection-border, var(--office-accent, #217346));
+	background: var(--xve-card, var(--office-background, #ffffff));
+	color: var(--xve-selection-border, var(--office-accent-ink, var(--office-accent, #217346)));
 	font-weight: 600;
 }
 .xst-tab.xst-active::after {
@@ -115,5 +115,10 @@ export const TABS_CSS = `
 .xst{height:${MIN_TOUCH_TARGET_PX + 4}px}
 .xst-btn{width:${MIN_TOUCH_TARGET_PX}px;height:${MIN_TOUCH_TARGET_PX}px}
 .xst-tab{min-width:${MIN_TOUCH_TARGET_PX}px;min-height:${MIN_TOUCH_TARGET_PX}px}
+}
+/* Forced colours: the active sheet is a system-highlighted tab, not weight alone. */
+@media (forced-colors: active) {
+.xst-tab.xst-active{forced-color-adjust:none;background:Highlight;color:HighlightText}
+.xst-tab.xst-active::after,.xst-tab.xst-active.xst-colored::after{background:HighlightText}
 }
 `;

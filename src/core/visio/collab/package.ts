@@ -125,15 +125,33 @@ export function ensureType(xml: string, path: string, declared: DeclaredType): s
 	const close = xml.lastIndexOf('</');
 	if (close < 0) return xml;
 	const ext = /\.([^./]+)$/.exec(path)?.[1];
+	const type = escapeAttribute(declared.type);
 	const tag =
 		declared.byDefault && ext
-			? `<Default Extension="${ext}" ContentType="${declared.type}"/>`
-			: `<Override PartName="/${path}" ContentType="${declared.type}"/>`;
+			? `<Default Extension="${escapeAttribute(ext)}" ContentType="${type}"/>`
+			: `<Override PartName="/${escapeAttribute(path)}" ContentType="${type}"/>`;
 	return xml.slice(0, close) + tag + xml.slice(close);
 }
 
+const escapeAttribute = (value: string): string =>
+	value.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
+
 /** True for a package part directly inside a `media` folder. */
 export const isMediaPart = (path: string): boolean => /(^|\/)media\/[^/]+$/i.test(path);
+
+// Backslashes and control characters, which no package part name a peer sends may hold.
+// eslint-disable-next-line no-control-regex
+const UNSAFE_PATH_CHARS = /[\\\u0000-\u001f\u007f]/u;
+
+/**
+ * True for a media part path a peer may name: inside a `media` folder, relative, and with no
+ * `..` segment, backslash or control character, so it can only add a media part.
+ */
+export const isSharedMediaPath = (path: string): boolean =>
+	isMediaPart(path) &&
+	!path.startsWith('/') &&
+	!path.split('/').includes('..') &&
+	!UNSAFE_PATH_CHARS.test(path);
 
 /** Relative target from the directory `dir` to the part `path`. */
 export function relativeTarget(dir: string, path: string): string {

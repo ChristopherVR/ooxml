@@ -1,4 +1,8 @@
-import type { CollaborationConfig, CollaborationHistoryTarget } from 'ooxml-ui/pptx';
+import type {
+	CollaborationConfig,
+	CollaborationHistoryTarget,
+	CompatibilityWarningToast,
+} from 'ooxml-ui/pptx';
 /**
  * collaboration-deps.ts: the host-dependency seam for `CollaborationController`.
  * Split from `collaboration.svelte.ts` purely to keep that class within the
@@ -33,6 +37,8 @@ export interface CollaborationDeps {
 	onStart?: (config: CollaborationConfig) => void;
 	/** Fired when a session stops (host observability). */
 	onStop?: () => void;
+	/** Show a notice in the viewer's stack: why sharing stopped, when an update was refused. */
+	onNotice?: (toast: CompatibilityWarningToast) => void;
 	/** Session factory seam (defaults to the real yjs + transport wiring). */
 	createSession?: CollabSessionFactory;
 }

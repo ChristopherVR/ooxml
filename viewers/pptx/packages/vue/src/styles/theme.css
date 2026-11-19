@@ -44,7 +44,7 @@
 	);
 
 	--color-border: var(--pptx-border, var(--office-border, #d1d5db));
-	--color-input: var(--pptx-input, var(--office-border, #d1d5db));
+	--color-input: var(--pptx-input, var(--office-control-border, #8a8886));
 	--color-ring: var(--pptx-ring, var(--office-ring, #2563eb));
 
 	/* ── Radius ──────────────────────────────────────────────────────── */
@@ -196,5 +196,19 @@
 	:where(.pptx-vue-viewer) [data-pptx-search-surface]:focus-within {
 		outline: 2px solid Highlight;
 		outline-offset: 2px;
+	}
+	/* Contrast themes drop the accent fills that mark a pressed toggle, a selected tab or option and
+	 * the current slide. !important keeps a more specific accent rule from winning over these. */
+	:where(.pptx-vue-viewer) :is([aria-pressed='true'], [aria-selected='true']) {
+		forced-color-adjust: none;
+		background: Highlight !important;
+		color: HighlightText !important;
+	}
+	:where(.pptx-vue-viewer) :is([aria-pressed='true'], [aria-selected='true']) * {
+		color: inherit !important;
+	}
+	:where(.pptx-vue-viewer) [aria-current]:not([aria-current='false']) {
+		outline: 2px solid Highlight !important;
+		outline-offset: -2px;
 	}
 }

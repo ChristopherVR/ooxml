@@ -7,7 +7,7 @@ import {
 	getOleTypeColor,
 	getOleTypeLabel,
 	getPlaceholderStyle,
-	isBrowserOpenableMime,
+	isBrowserOpenableDataUrl,
 	resolveOleType,
 } from 'ooxml-ui/pptx';
 import type { OlePptxElement } from 'pptx-viewer-core';
@@ -82,7 +82,7 @@ export function buildOleView(element: OlePptxElement): OleView {
 		embeddedData: element.oleEmbeddedData,
 		downloadName: element.oleEmbeddedFileName ?? element.fileName ?? typeLabel,
 		size: formatBytes(element.oleEmbeddedByteSize),
-		canOpen: isBrowserOpenableMime(element.oleEmbeddedMimeType),
+		canOpen: isBrowserOpenableDataUrl(element.oleEmbeddedData),
 	};
 }
 

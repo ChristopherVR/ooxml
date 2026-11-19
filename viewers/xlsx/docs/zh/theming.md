@@ -36,18 +36,19 @@ installOfficeUiTheme();
 
 `themeColors` 仍然支持针对每个编辑器进行覆盖。每个键都会在宿主元素上成为一个 `--xve-<kebab-key>` 自定义属性，其令牌集与 Word 编辑器所用的相同（在 Word 中为 `--dve-*`），因此同一套设计系统可以同时驱动两者：
 
-| 键                                     | 用途                               |
-| -------------------------------------- | ---------------------------------- |
-| `background`、`foreground`             | 编辑器画布和文本                   |
-| `card`、`cardForeground`               | 功能区和面板                       |
-| `popover`、`popoverForeground`         | 菜单和下拉列表                     |
-| `primary`、`primaryForeground`         | 强调色（标题栏、选区、活动选项卡） |
-| `secondary`、`secondaryForeground`     | 次要按钮                           |
-| `muted`、`mutedForeground`             | 标题、提示和禁用文本               |
-| `accent`、`accentForeground`           | 悬停和按下状态                     |
-| `destructive`、`destructiveForeground` | 错误                               |
-| `border`、`input`、`ring`              | 线条、输入框和焦点环               |
-| `radius`                               | 圆角半径                           |
+| 键                                     | 用途                                                                 |
+| -------------------------------------- | -------------------------------------------------------------------- |
+| `background`、`foreground`             | 编辑器画布和文本                                                     |
+| `card`、`cardForeground`               | 功能区和面板                                                         |
+| `popover`、`popoverForeground`         | 菜单和下拉列表                                                       |
+| `primary`、`primaryForeground`         | 强调色（标题栏、选区、活动选项卡）                                   |
+| `primaryInk`                           | 作为界面和选中区域上文字的主色，对比度至少 4.5:1（默认为 `primary`） |
+| `secondary`、`secondaryForeground`     | 次要按钮                                                             |
+| `muted`、`mutedForeground`             | 标题、提示和禁用文本                                                 |
+| `accent`、`accentForeground`           | 悬停和按下状态                                                       |
+| `destructive`、`destructiveForeground` | 错误                                                                 |
+| `border`、`input`、`ring`              | 线条、输入框和焦点环                                                 |
+| `radius`                               | 圆角半径                                                             |
 
 ```ts
 editor.themeColors = { primary: '#1f9d63', ring: '#1f9d63', radius: '6px' };

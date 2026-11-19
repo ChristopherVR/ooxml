@@ -12,6 +12,11 @@ it('resolves legacy compatibility on a separate host from the canonical chrome b
 	expect(chrome).toContain('.frame {');
 	expect(chrome).toContain('--office-background: var(--_dve-background);');
 	expect(chrome).toContain('--office-radius: var(--_dve-radius);');
+	// A product's `input` colour is the boundary of the shared form controls inside it.
+	expect(aliases).toContain(
+		'--_dve-input: var(--dve-input, var(--office-control-border, #8a8886));',
+	);
+	expect(chrome).toContain('--office-control-border: var(--_dve-input);');
 	expect(chrome).not.toContain('--dve-background');
 });
 
@@ -25,16 +30,11 @@ describe('themeBridge', () => {
 		expect(css).not.toContain('--office-border:');
 	});
 
-	it('declares the tokens derived from a mapped one again, so they follow the product', () => {
-		// The page theme resolves `--office-select-background` on :root; without this a light
-		// viewer on a dark system painted its selects with the page's dark background.
+	it('declares only the mapped tokens; derived ones resolve where they are read', () => {
+		// Re-declaring `--office-select-background` here would freeze it to this selector, so a
+		// host's own `--office-select-background` on a container above would stop reaching it.
 		const css = themeBridge(':host > *', { '--office-background': 'var(--surface)' });
-		expect(css).toContain('--office-select-background: var(--office-background, #ffffff);');
-		expect(css).toContain('--office-field-background: var(--office-background, #ffffff);');
-		// Through another derived token too.
-		expect(css).toContain('--office-popover: var(--office-background, #ffffff);');
-		expect(css).toContain('--office-select-option-active:');
-		expect(css).not.toContain('--office-field-border:');
+		expect(css).toBe(':host > * {\n\t--office-background: var(--surface);\n}\n');
 	});
 });
 
@@ -52,6 +52,15 @@ describe('shadcnBridge', () => {
 	it('falls back from the popover text to the plain foreground', () => {
 		expect(css).toContain(
 			'--office-popover-foreground: var(--dve-popover-foreground, var(--dve-foreground));',
+		);
+	});
+
+	it('takes the accent ink from the product ink, else its primary', () => {
+		expect(css).toContain('--office-accent-ink: var(--dve-primary-ink, var(--dve-primary));');
+		// The compatibility layer prefers a host's own primary over the inherited ink, so a custom
+		// primary keeps colouring text, and otherwise inherits the page's ink.
+		expect(legacyThemeAliases(':host', '--xve-', '--_x-')).toContain(
+			'--_x-primary-ink: var(--xve-primary-ink, var(--xve-primary, var(--office-accent-ink, light-dark(',
 		);
 	});
 
