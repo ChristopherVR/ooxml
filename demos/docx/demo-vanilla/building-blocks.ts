@@ -134,34 +134,22 @@ async function mountNative() {
 			},
 		});
 	} else if (framework === 'angular') {
-		await import('@angular/compiler');
 		const [
 			{ createApplication },
-			{ Component, createComponent, provideZonelessChangeDetection, signal },
-			native,
+			{ createComponent, provideZonelessChangeDetection },
+			composition,
 		] = await Promise.all([
 			import('@angular/platform-browser'),
 			import('@angular/core'),
-			import('../../../viewers/docx/packages/angular/src/building-blocks'),
+			import('./building-blocks-angular'),
 		]);
-		class Host {
-			options = signal(initial);
-			blocks = native.createViewerBuildingBlocks(() => this.options());
-		}
-		Component({
-			standalone: true,
-			imports: [
-				native.DocumentCanvasComponent,
-				native.ToolbarComponent,
-				native.PageNavigationComponent,
-				native.StatusBarComponent,
+		const app = await createApplication({
+			providers: [
+				provideZonelessChangeDetection(),
+				{ provide: composition.INITIAL_OPTIONS, useValue: initial },
 			],
-			providers: [native.ViewerBuildingBlocks],
-			template:
-				'<word-document-canvas [class]="blocks.mode()" [canvasProps]="blocks.canvasProps" /> @if (blocks.toolbarProps(); as toolbar) { <word-toolbar [toolbarProps]="toolbar" /> } @if (blocks.navigationProps(); as navigation) { <word-page-navigation [navigationProps]="navigation" /> } @if (blocks.statusProps(); as status) { <word-status-bar [statusProps]="status" /> }',
-		})(Host);
-		const app = await createApplication({ providers: [provideZonelessChangeDetection()] });
-		const component = createComponent(Host, {
+		});
+		const component = createComponent(composition.NativeComposition, {
 			environmentInjector: app.injector,
 			hostElement: host,
 		});

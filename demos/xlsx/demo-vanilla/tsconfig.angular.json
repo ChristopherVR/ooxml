@@ -1,0 +1,7 @@
+{
+	"extends": "../../../viewers/xlsx/tsconfig.json",
+	"include": [
+		"../../../viewers/xlsx/packages/bindings/src/angular.ts",
+		"../../../viewers/xlsx/packages/angular/src/test-support/native-host.ts"
+	]
+}

@@ -85,7 +85,6 @@ export async function mountFramework(
 			},
 		}) as unknown as EditorHandle;
 	} else if (framework === 'angular') {
-		await import('@angular/compiler');
 		const [
 			{ createApplication },
 			{ provideZonelessChangeDetection, createComponent },
