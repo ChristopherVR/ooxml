@@ -23,7 +23,7 @@
  *  - function-prop callbacks -> emits ({@link PowerPointViewerEmits}).
  *  - `theme` context      -> `provideViewerTheme` + `useThemeStyle`.
  */
-import { ShieldAlert } from 'lucide-vue-next';
+import { ShieldAlert } from '@lucide/vue';
 import {
 	autosaveStatusKind,
 	createCollaborationStateReporter,
@@ -1307,6 +1307,7 @@ const comments = useCommentsWiring({
 const collaboration = useCollaborationWiring({
 	slides,
 	history,
+	onNotice: (toast) => compatToasts.notify(toast),
 	slidesPaused: () => deckStyleHeld.value,
 	loadVersion,
 	// A room may replace the host's own deck (a late joiner's bootstrap load),
@@ -1651,6 +1652,7 @@ watch(
 const { showShortcuts, onEditorKeydown, copySelected, cutSelected, selectAllElements } =
 	useEditorKeyboard({
 		canEdit: () => canEditEffective.value,
+		editElementText: (id) => requestElementEdit(id),
 		canPaste: () => clipboard.hasClipboard.value && Boolean(activeSlide.value),
 		hasSelection: selection.hasSelection,
 		presenting: presentation.presenting,

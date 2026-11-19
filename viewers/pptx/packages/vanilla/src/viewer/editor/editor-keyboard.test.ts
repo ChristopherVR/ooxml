@@ -27,6 +27,19 @@ function makeDeps(overrides: Partial<EditorKeyboardDeps> = {}): EditorKeyboardDe
 	};
 }
 
+/** The slide viewport after the user has gone into the slide: Tab walks its objects there. */
+function enteredSlide(): HTMLElement {
+	const slide = document.createElement('div');
+	slide.setAttribute('data-pptx-viewport', '');
+	slide.setAttribute('data-pptx-slide-objects', '');
+	return slide;
+}
+
+function onSlide(event: KeyboardEvent): KeyboardEvent {
+	Object.defineProperty(event, 'target', { value: enteredSlide() });
+	return event;
+}
+
 function keydown(key: string, opts: Partial<KeyboardEventInit> = {}): KeyboardEvent {
 	return new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...opts });
 }
@@ -247,8 +260,8 @@ describe('createEditorKeydownHandler: PowerPoint 365 shortcuts', () => {
 	it('cycles the selection forward on Tab and backward on Shift+Tab', () => {
 		const cycleSelection = vi.fn();
 		const handler = createEditorKeydownHandler(makeDeps({ cycleSelection }));
-		handler(keydown('Tab'));
-		handler(keydown('Tab', { shiftKey: true }));
+		handler(onSlide(keydown('Tab')));
+		handler(onSlide(keydown('Tab', { shiftKey: true })));
 		expect(cycleSelection.mock.calls).toStrictEqual([['next'], ['prev']]);
 	});
 

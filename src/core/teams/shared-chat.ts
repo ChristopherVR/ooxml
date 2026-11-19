@@ -26,7 +26,11 @@ export interface SharedChatMessage {
 	ts: number;
 	/** The asker's client is still writing this reply. */
 	streaming: boolean;
-	/** The host's own fields (attached file names, proposed actions, versions). JSON only; re-validate it. */
+	/**
+	 * The host's own fields, JSON only; re-validate them. Everyone in the room and the sync server
+	 * read them, so a host puts only what every participant may see here (the suite writes file
+	 * names and counts, never proposals or file text).
+	 */
 	data: Record<string, unknown>;
 }
 

@@ -28,6 +28,7 @@ Alle Adapter akzeptieren dieselben Eigenschaften:
 - `showToolbar`: Sichtbarkeit der Symbolleiste
 - `canEdit`: Bearbeitungsberechtigung. Der vollständige Viewer ist standardmäßig bearbeitbar; `false` macht ihn schreibgeschützt (Auswahl, Suche, Zoom und Export funktionieren weiterhin). Die Bausteine sind dagegen standardmäßig schreibgeschützt, siehe [Bausteine](/de/building-blocks)
 - `readOnly`: eine eigene Einschränkung. `true` macht die Zeichnung schreibgeschützt und hat Vorrang vor `canEdit`; `false` oder ausgelassen hebt nur diese Einschränkung auf
+- `locale`: Sprache der Oberfläche, zum Beispiel `fr` oder `zh-CN`. Ohne Angabe gilt die unter „Datei > Optionen“ gewählte Sprache, dann `lang`, die Sprache der Seite und die des Browsers
 - `ribbonAddIns`: Tabs, die der Host nach „Hilfe“ hinzufügt (siehe [Ribbon-Add-in-Tabs](/de/api#ribbon-add-in-tabs))
 - `collaboration`: teilt die geöffnete Zeichnung, solange der Wert gesetzt ist, in einem Raum; `null` beendet die Freigabe (siehe [Zusammenarbeit](/de/collaboration))
 - `storage` und `customization`: vom Host verwaltetes Speichern und Öffnen sowie das gemeinsame Anpassungsobjekt (siehe [Anpassung](/de/api#customization) und [Vom Host verwalteter Speicher](/api#host-owned-storage-and-file-commands))

@@ -36,6 +36,9 @@ const openMenus = new WeakMap<EditorContext, ContextMenuHandle>();
 export const currentContextMenu = (ctx: EditorContext): ContextMenuHandle | undefined =>
 	openMenus.get(ctx);
 
+/** Closes the menu open for a context, if any. */
+export const closeContextMenu = (ctx: EditorContext): void => openMenus.get(ctx)?.close();
+
 function entryDisabled(ctx: EditorContext, entry: MenuEntry): boolean {
 	if (entry.disabled) return true;
 	if (entry.command)

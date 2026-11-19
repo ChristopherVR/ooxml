@@ -7,8 +7,10 @@ import {
 	createCollabSession,
 	createMemoryHub,
 	transportProvider,
+	UPDATE_REFUSAL_MESSAGES,
 	type CollabSession,
 } from 'ooxml-core/collab';
+import { collabStrings } from 'ooxml-core/i18n';
 import type { EditorView } from 'prosemirror-view';
 import type { DocxCollaborationState } from './index';
 import { DocxEditorElement } from './index';
@@ -122,6 +124,27 @@ describe('docx-editor collaboration property', () => {
 		editor.collaboration = null;
 		expect(editor.collaborationState.active).toBe(false);
 		expect(errors).toEqual([]);
+	});
+
+	it('reports a refused update in the display language, even for a host session', async () => {
+		const hub = createMemoryHub();
+		const a = mount();
+		a.setAttribute('locale', 'fr');
+		const errors: Error[] = [];
+		a.addEventListener('document-error', (event) => errors.push(event.detail));
+		a.collaboration = { session: hostSession(hub, 'Ada'), intent: 'create' };
+		await wait();
+		const evil = hub.createTransport('word');
+		evil.connect({ open: () => {}, close: () => {}, message: () => {}, error: () => {} });
+		// A whole sync update whose struct has an unknown content type.
+		evil.send(new Uint8Array([0, 2, 5, 1, 1, 1, 0, 0x1f]));
+		await wait();
+		expect(errors).toHaveLength(1);
+		expect(errors[0]).toMatchObject({
+			code: 'malformed',
+			message: collabStrings.fr[UPDATE_REFUSAL_MESSAGES.malformed],
+		});
+		expect(a.collaborationState).toMatchObject({ status: 'error', refusal: 'malformed' });
 	});
 
 	it('reports an invalid room as document-error without throwing', async () => {
@@ -239,5 +262,32 @@ describe('docx-editor collaboration property', () => {
 		await wait();
 		expect(textOf(b)).toBe(before);
 		expect(textOf(a)).toBe(before);
+	});
+});
+
+describe('docx-editor collaboration while removed', () => {
+	it('stays shared through a move, leaves while removed and rejoins when back', async () => {
+		const hub = createMemoryHub();
+		const a = mount();
+		const b = mount();
+		a.collaboration = { session: hostSession(hub, 'Ada'), intent: 'create' };
+		await wait();
+		viewOf(a).dispatch(viewOf(a).state.tr.insertText('one ', 1));
+		b.collaboration = { session: hostSession(hub, 'Bob'), intent: 'join' };
+		await wait();
+		const other = document.createElement('div');
+		document.body.append(other);
+		other.append(a);
+		await wait();
+		expect(a.collaborationState.active).toBe(true);
+		a.remove();
+		await wait();
+		expect(a.collaborationState.active).toBe(false);
+		viewOf(b).dispatch(viewOf(b).state.tr.insertText('away ', 1));
+		document.body.append(a);
+		await wait(60);
+		expect(a.collaborationState.active).toBe(true);
+		expect(textOf(a)).toBe(textOf(b));
+		expect(textOf(a)).toContain('away');
 	});
 });

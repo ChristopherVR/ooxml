@@ -181,5 +181,7 @@ describe('validateTeamsUpdate: pins', () => {
 		);
 		expect(codes(validateTeamsUpdate(server, update, bob))).toEqual(['not-member']);
 		expect(validateTeamsUpdate(server, update, mod)).toEqual({ ok: true });
+		server.getMap('teams:chat-members').set('bob', false);
+		expect(codes(validateTeamsUpdate(server, update, bob))).toEqual(['not-member']);
 	});
 });

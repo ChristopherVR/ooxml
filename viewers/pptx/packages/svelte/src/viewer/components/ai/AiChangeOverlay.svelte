@@ -84,7 +84,7 @@
 
 <svelte:head>
 	{#if batch}
-		{@html `<style>${aiChangeAnimationCss(batch.config)}</style>`}
+		<svelte:element this={'style'}>{aiChangeAnimationCss(batch.config)}</svelte:element>
 	{/if}
 </svelte:head>
 

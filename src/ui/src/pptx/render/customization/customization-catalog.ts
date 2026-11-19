@@ -180,6 +180,7 @@ export const EDITOR_SHORTCUT_ACTION_IDS = exhaustive<EditorKeyActionName>()([
 	'clearFormatting',
 	'cycleSelectionNext',
 	'cycleSelectionPrev',
+	'editText',
 	'pasteSpecial',
 ]);
 

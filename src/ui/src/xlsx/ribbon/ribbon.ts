@@ -8,7 +8,7 @@ import { normalizeEditorLocale, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { defineRibbon } from '../../controls';
 import { commandButton, el, renderControl, type RenderScope } from './controls';
 import { ribbonIcon } from './icons';
-import { attachRibbonOverflow, refitRibbon } from './overflow';
+import { attachRibbonOverflow, closeRibbonOverflow, refitRibbon } from './overflow';
 import {
 	onRibbonTabsChange,
 	ribbonTabs,
@@ -40,7 +40,10 @@ export interface Ribbon {
 	/** Alt / F10: focus the selected tab and show the tab KeyTips. */
 	showKeyTips(): void;
 	focus(): void;
-	destroy(): void;
+	/** Follows tab registrations and panel sizes; tabs registered while away are built now. */
+	connect(): void;
+	/** Lets go of everything outside the ribbon, so a removed editor can be collected. */
+	disconnect(): void;
 }
 
 const isSmall = (control: RibbonControl): boolean =>
@@ -138,6 +141,7 @@ export function createRibbon(ctx: EditorContext, handlers: RibbonHandlers): Ribb
 	root.toggleAttribute('collapsible', true);
 	let scope: RenderScope = { ctx, doc, updates: [], isHidden: handlers.isHidden };
 	let tabs: RibbonTab[] = [];
+	let stopListening: (() => void) | undefined;
 	let stopOverflow = () => {};
 	let stopGalleries = () => {};
 	let addIns: readonly RibbonAddInTab[] = [];
@@ -165,8 +169,7 @@ export function createRibbon(ctx: EditorContext, handlers: RibbonHandlers): Ribb
 	root.addEventListener('office-ribbon-file', () => handlers.openBackstage());
 
 	const build = () => {
-		stopOverflow();
-		stopGalleries();
+		unobserve();
 		closeRibbonPopover();
 		scope = { ctx, doc, updates: [], isHidden: handlers.isHidden };
 		tabs = [...ribbonTabs()];
@@ -192,8 +195,18 @@ export function createRibbon(ctx: EditorContext, handlers: RibbonHandlers): Ribb
 		}
 		syncAddIns();
 		refresh();
+		if (stopListening) observe();
+	};
+
+	const observe = () => {
 		stopOverflow = attachRibbonOverflow(root);
 		stopGalleries = wireCellStyleGalleries(root);
+	};
+
+	const unobserve = () => {
+		stopOverflow();
+		stopGalleries();
+		stopOverflow = stopGalleries = () => {};
 	};
 
 	const refresh = () => {
@@ -210,7 +223,6 @@ export function createRibbon(ctx: EditorContext, handlers: RibbonHandlers): Ribb
 		applyRibbonVisibility(root, handlers.isHidden);
 	};
 
-	const stopListening = onRibbonTabsChange(() => build());
 	build();
 	return {
 		element: root,
@@ -222,7 +234,7 @@ export function createRibbon(ctx: EditorContext, handlers: RibbonHandlers): Ribb
 			const before = root.querySelector('[data-add-in]');
 			syncAddIns();
 			// Equal tabs keep their panels; only new panels need the overflow measured again.
-			if (root.querySelector('[data-add-in]') === before) return;
+			if (root.querySelector('[data-add-in]') === before || !stopListening) return;
 			stopOverflow();
 			stopOverflow = attachRibbonOverflow(root);
 		},
@@ -232,11 +244,20 @@ export function createRibbon(ctx: EditorContext, handlers: RibbonHandlers): Ribb
 			showTabKeyTips(root, select);
 		},
 		focus: () => root.focusTab(),
-		destroy: () => {
-			stopListening();
-			stopOverflow();
-			stopGalleries();
-			closeRibbonPopover();
+		connect: () => {
+			if (stopListening) return;
+			stopListening = onRibbonTabsChange(build);
+			const current = ribbonTabs();
+			if (current.length === tabs.length && current.every((tab, index) => tab === tabs[index]))
+				observe();
+			else build();
+		},
+		disconnect: () => {
+			stopListening?.();
+			stopListening = undefined;
+			unobserve();
+			closeRibbonPopover(ctx.host);
+			closeRibbonOverflow(ctx.host);
 		},
 	};
 }

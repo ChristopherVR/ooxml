@@ -7,7 +7,8 @@
 .paper [data-shape-id]:focus-visible {
 	outline: none;
 }
-.paper [data-shape-id]:focus-visible > [data-geometry] {
+.paper [data-shape-id]:focus-visible > [data-geometry],
+.paper [role='group'][data-shape-id]:focus-visible [data-geometry] {
 	stroke: var(--_vv-focus) !important;
 	stroke-width: 0.04 !important;
 	stroke-dasharray: 0.08 0.05;
@@ -221,6 +222,13 @@
 .viewport,
 .viewport .paper {
 	touch-action: none;
+}
+/*
+ * The drawing keeps its own compositor layer: an interactive zoom scales it with a transform
+ * (viewer-zoom-gesture.ts) and must not repaint the whole page before its first frame.
+ */
+.viewport > .paper {
+	will-change: transform;
 }
 /* Visio's yellow control handles; a handle that cannot be moved is grey. */
 .paper [data-control-handle] {

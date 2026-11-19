@@ -60,7 +60,7 @@
 	display: inline-flex;
 	align-items: stretch;
 	height: 26px;
-	border: 1px solid var(--line);
+	border: 1px solid var(--control-line);
 	border-radius: 3px;
 	background: var(--surface);
 }
@@ -188,4 +188,15 @@
 }
 .ribbon-group .ribbon-launcher:hover:not(:disabled) {
 	color: var(--ink);
+}
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.ribbon-list button[aria-selected='true'],
+	.ribbon-group .ribbon-gallery .style-tile[aria-pressed='true'] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
 }

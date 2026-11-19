@@ -2,7 +2,7 @@
 	{
 		"name": "xlsx_apply_proposal",
 		"kind": "edit",
-		"version": 1,
+		"version": 2,
 		"extensions": [
 			".xlsx",
 			".xlsm"
@@ -540,7 +540,7 @@
 	{
 		"name": "xlsx_propose_edits",
 		"kind": "read",
-		"version": 1,
+		"version": 2,
 		"extensions": [
 			".xlsx",
 			".xlsm"
@@ -1045,7 +1045,7 @@
 	{
 		"name": "xlsx_set_cells",
 		"kind": "edit",
-		"version": 1,
+		"version": 2,
 		"extensions": [
 			".xlsx",
 			".xlsm"

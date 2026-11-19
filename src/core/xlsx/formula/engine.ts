@@ -181,7 +181,7 @@ class Engine extends EngineStructure implements CalcEngine {
 		// Formulas reading any changed cell: one query per rectangle of them, not per cell.
 		for (const area of [...changed, ...changeAreas(written)])
 			reverse.dependents(area.sheet, area.range, seeds);
-		for (const node of this.allNodes()) if (node.volatile) seeds.add(node);
+		for (const node of this.volatiles()) seeds.add(node);
 		this.run(seeds, false);
 	}
 

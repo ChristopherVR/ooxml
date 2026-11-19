@@ -15,6 +15,12 @@ function topLevel(node: XmlElement, container: XmlElement): XmlElement {
 	return current;
 }
 
+const hasElementChild = (node: XmlElement): boolean => {
+	for (let child = node.firstChild; child; child = child.nextSibling)
+		if (child.nodeType === 1) return true;
+	return false;
+};
+
 /** Drops sdt wrappers left without content after their blocks were deleted. */
 function pruneEmptyControls(flat: FlatBlock[]): void {
 	for (const entry of flat) {
@@ -22,8 +28,7 @@ function pruneEmptyControls(flat: FlatBlock[]): void {
 		while (sdt) {
 			const content = sdtContent(sdt);
 			const parent = sdt.parentNode as XmlElement | null;
-			if (!parent || (content && Array.from(content.childNodes).some((n) => n.nodeType === 1)))
-				break;
+			if (!parent || (content && hasElementChild(content))) break;
 			parent.removeChild(sdt);
 			const outer = parent.parentNode as XmlElement | null;
 			sdt = isSdt(outer) ? outer : undefined;
@@ -44,12 +49,10 @@ export function placeBlocksById(
 	anchor: XmlElement | null,
 ): boolean {
 	const oldSet = new Set(flat.map((entry) => entry.element));
-	const keptInOrder = nodes.filter((node) => oldSet.has(node));
-	const documentOrder = flat
-		.map((entry) => entry.element)
-		.filter((node) => keptInOrder.includes(node));
-	if (keptInOrder.some((node, index) => node !== documentOrder[index])) return false;
 	const outputSet = new Set(nodes);
+	const keptInOrder = nodes.filter((node) => oldSet.has(node));
+	const documentOrder = flat.map((entry) => entry.element).filter((node) => outputSet.has(node));
+	if (keptInOrder.some((node, index) => node !== documentOrder[index])) return false;
 	for (const entry of flat)
 		if (!outputSet.has(entry.element)) entry.element.parentNode?.removeChild(entry.element);
 	pruneEmptyControls(flat);
@@ -67,7 +70,8 @@ export function placeBlocksById(
 			const reference = sameControl ? previous.node : topLevel(previous.node, container);
 			(reference.parentNode as XmlElement).insertBefore(node, reference.nextSibling);
 		} else {
-			const next = nodes.slice(index + 1).find((candidate) => oldSet.has(candidate));
+			// No kept block comes before this one, so the next kept block is the first of them.
+			const next = keptInOrder[0];
 			if (next) topLevel(next, container).parentNode!.insertBefore(node, topLevel(next, container));
 			else container.insertBefore(node, anchor);
 		}
@@ -91,8 +95,10 @@ export function syncBlockControls(
 ): void {
 	const bySdt = new Map<XmlElement, Block>();
 	const dropped = new Map<XmlElement, boolean>();
+	const indexOf = new Map(nodes.map((node, index) => [node, index]));
 	flat.forEach((entry) => {
-		const block = blocks[nodes.indexOf(entry.element)];
+		const index = indexOf.get(entry.element);
+		const block = index === undefined ? undefined : blocks[index];
 		// A deleted block has no say: the blocks that remain decide whether their control stays.
 		if (!entry.sdt || !block) return;
 		if (block.contentControl && !bySdt.has(entry.sdt)) bySdt.set(entry.sdt, block);

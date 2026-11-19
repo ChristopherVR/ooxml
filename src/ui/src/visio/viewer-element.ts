@@ -7,6 +7,7 @@ import { selectedShape } from './shape-inspector';
 import { wireViewerInputs } from './viewer-input';
 import { viewerStyles } from './styles';
 import { canvasAndRibbonStyles, visioThemeAliases } from './styles/index';
+import { defineOnce } from '../registry';
 import { installOfficeUiThemeFor } from '../theme';
 import { createRibbon } from './ribbon';
 import { wireInlineGalleries } from './ribbon-inline-galleries';
@@ -80,7 +81,7 @@ import type { ViewerLineEndpoints } from './viewer-line-endpoints';
 import type { ViewerControlHandles } from './viewer-control-handles';
 import type { ViewerRotationHandle } from './viewer-rotation-handle';
 import type { ViewerResizeHandles } from './viewer-resize-handles';
-import { editErrorMessage } from 'ooxml-core/visio/ui';
+import { editErrorMessage, editSizeLimit } from 'ooxml-core/visio/ui';
 import { registerViewerControls } from './office-ui';
 import { exportPageSvg, type SvgExportOptions, type SvgExportResult } from './export-svg';
 import { exportPagePng } from './viewer-export';
@@ -359,9 +360,19 @@ export class VisioViewerElement extends BaseElement {
 			this.#notes,
 			this.#root.querySelector('.backstage-notes')!,
 			this.#root.querySelector('.shape-inspector')!,
+			(from, to) =>
+				translateRibbonText(normalizeVisioLocale(this.#locale()), 'Connects {from} to {to}')
+					.replace('{from}', from)
+					.replace('{to}', to),
 		);
 		this.#chrome = new ViewerChrome(this.#root, this.controller);
-		this.#panZoom = new ViewerPanZoom(this.#root, this.#viewport, this.controller, (open) =>
+		const zoom = this.#pointer.zoom;
+		zoom.onPreview = (value) => {
+			this.#zoomSlider.value = Math.round(value * 100);
+			// The rotation handle sits over the drawing window, not on the scaled paper.
+			this.#rotationHandle.render(this.controller.state);
+		};
+		this.#panZoom = new ViewerPanZoom(this.#root, this.#viewport, this.controller, zoom, (open) =>
 			this.#root.querySelector('[command="pan-zoom"]')?.setAttribute('checked', String(open)),
 		);
 		this.#inlineSize = new ViewerInlineSize(this.#root, this.controller);
@@ -378,6 +389,7 @@ export class VisioViewerElement extends BaseElement {
 			root: this.#root,
 			viewport: this.#viewport,
 			controller: this.controller,
+			zoom,
 			toolChanged: () => {
 				this.#pointer.render(this.controller.state);
 				this.#lineEndpoints.render(this.controller.state);
@@ -446,6 +458,7 @@ export class VisioViewerElement extends BaseElement {
 			profile: () => this.#profile.profile,
 			locale: () => this.#locale(),
 		});
+		this.#share.locale = () => this.#locale();
 		this.#share.onError = (error) =>
 			this.dispatchEvent(
 				new CustomEvent('document-error', { detail: error, bubbles: true, composed: true }),
@@ -565,6 +578,17 @@ export class VisioViewerElement extends BaseElement {
 	 * product colour). Reflects the `status-bar` attribute; `--vv-status-background` and
 	 * `--vv-status-ink` recolour either.
 	 */
+	/**
+	 * The interface language (the `locale` attribute). Empty when the host has not chosen one: the
+	 * ribbon then follows File > Options, `lang`, the page and the browser, in that order.
+	 */
+	get locale(): string {
+		return this.getAttribute('locale') ?? '';
+	}
+	set locale(value: string | null | undefined) {
+		if (value) this.setAttribute('locale', value);
+		else this.removeAttribute('locale');
+	}
 	get statusBar(): StatusBarTheme {
 		return this.getAttribute('status-bar') === 'colorful' ? 'colorful' : 'neutral';
 	}
@@ -622,16 +646,30 @@ export class VisioViewerElement extends BaseElement {
 		this.#assertAlive();
 		const token = ++this.#loadToken;
 		this.#forgetOpenedFile();
-		if (source instanceof Blob) {
-			await this.controller.loadSource(() => {
-				if (source.size > MAX_INPUT_BYTES)
-					throw new Error('This viewer accepts files up to 32 MiB.');
-				return source.arrayBuffer();
-			});
-		} else await this.controller.load(source);
+		try {
+			if (source instanceof Blob) {
+				await this.controller.loadSource(() => {
+					if (source.size > MAX_INPUT_BYTES)
+						throw new Error('This viewer accepts files up to 32 MiB.');
+					return source.arrayBuffer();
+				});
+			} else await this.controller.load(source);
+		} catch (error) {
+			// A host shows the refusal as the viewer does: in the viewer's language.
+			const message = error instanceof Error ? error.message : '';
+			const shown = translateRibbonText(normalizeVisioLocale(this.#locale()), message);
+			throw shown === message ? error : new Error(shown, { cause: error });
+		}
 		// A destroyed or superseded viewer keeps no name from a late load.
 		if (this.#disposed || token !== this.#loadToken) return;
 		this.#fileName = typeof File !== 'undefined' && source instanceof File ? source.name : '';
+		// Said once it opens, not on the first refused edit: the drawing is read-only here.
+		const tooLarge = editSizeLimit(this.controller.state.document);
+		if (tooLarge)
+			this.#announcement = translateRibbonText(
+				normalizeVisioLocale(this.#locale()),
+				`${tooLarge} It opens read-only.`,
+			);
 		this.#render(this.controller.state);
 		// Now the drawing has its name: offer back a copy kept from an earlier, unsaved session.
 		this.#recover.opened();
@@ -1030,6 +1068,7 @@ export class VisioViewerElement extends BaseElement {
 			{
 				viewport: this.#viewport,
 				zoomSlider: this.#zoomSlider,
+				zoom: this.#pointer.zoom,
 			},
 			this.controller,
 			(mode) => this.#fit(mode),
@@ -1139,8 +1178,14 @@ export class VisioViewerElement extends BaseElement {
 			? 'Opening diagram…'
 			: state.edit.busy
 				? 'Updating diagram…'
-				: (state.error?.message ??
-					(state.edit.error ? `Edit rejected: ${editErrorMessage(state.edit.error)}` : undefined) ??
+				: ((state.error &&
+						translateRibbonText(normalizeVisioLocale(this.#locale()), state.error.message)) ??
+					(state.edit.error
+						? translateRibbonText(
+								normalizeVisioLocale(this.#locale()),
+								`Edit rejected: ${editErrorMessage(state.edit.error)}`,
+							)
+						: undefined) ??
 					this.#announcement ??
 					'');
 		// Routine announcements are for assistive technology; errors also show, as Visio's do.
@@ -1153,8 +1198,7 @@ export class VisioViewerElement extends BaseElement {
 export function registerVisioViewer(): void {
 	if (typeof customElements === 'undefined')
 		throw new Error('Register the Visio viewer in a browser.');
-	if (!customElements.get('visio-viewer'))
-		customElements.define('visio-viewer', VisioViewerElement);
+	defineOnce(customElements, 'visio-viewer', () => VisioViewerElement);
 }
 declare global {
 	interface HTMLElementTagNameMap {

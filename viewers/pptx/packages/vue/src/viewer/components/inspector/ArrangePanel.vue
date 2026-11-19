@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Lock, LockOpen } from 'lucide-vue-next';
+import { Lock, LockOpen } from '@lucide/vue';
 import { ELEMENT_GEOMETRY_SECTIONS, elementLockTogglePatch, isElementLocked } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import { computed } from 'vue';

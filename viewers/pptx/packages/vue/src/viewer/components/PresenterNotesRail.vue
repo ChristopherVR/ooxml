@@ -11,7 +11,7 @@
  * and `pptx.statusBar.*` for text that already had a canonical equivalent,
  * which is how four near-duplicate namespaces came to describe one console.
  */
-import { ChevronLeft, ChevronRight, Minus, Plus, X } from 'lucide-vue-next';
+import { ChevronLeft, ChevronRight, Minus, Plus, X } from '@lucide/vue';
 import type { AuthoredSlideRange } from 'ooxml-ui/pptx';
 import {
 	nextPresentedSlide,

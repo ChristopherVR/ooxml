@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { X } from 'lucide-vue-next';
+import { X } from '@lucide/vue';
 /**
  * ThemeGallery - Design ▸ Themes. The Vue 3 port of React's
  * `toolbar/ThemeGallery`: a centered modal of the built-in gallery themes

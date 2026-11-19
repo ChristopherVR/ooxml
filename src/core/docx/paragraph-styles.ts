@@ -5,6 +5,12 @@ import type {
 	ParagraphStyleDefinition,
 } from './model';
 import { first, getW, named, parseXml, type XmlDocument, type XmlElement } from './xml';
+import {
+	cachedResolver,
+	chainResolver,
+	defaultStyleId,
+	inheritanceCycleEntries,
+} from './style-inheritance';
 import { parseParagraphBorders, parseShadingFill } from './table-borders';
 import { alignFromJustification, parseJustification } from './paragraph-alignment';
 import {
@@ -137,40 +143,32 @@ export function parseParagraphStyleCatalog(xml: string): ParagraphStyleCatalog {
 			formatting: parseFormatting(first(element, 'pPr')),
 		};
 	}
-	const warnings: string[] = [];
-	for (const style of Object.values(styles)) {
-		const seen = new Set<string>([style.id]);
-		let parent = style.basedOn;
-		while (parent && styles[parent]) {
-			if (seen.has(parent)) {
-				warnings.push(
-					`Paragraph style inheritance cycle detected at “${parent}”; cyclic inheritance is ignored.`,
-				);
-				break;
-			}
-			seen.add(parent);
-			parent = styles[parent]?.basedOn;
-		}
-	}
-	return { docDefaults: parseFormatting(pDefaults), styles, warnings: [...new Set(warnings)] };
+	const warnings = inheritanceCycleEntries(styles).map(
+		(id) => `Paragraph style inheritance cycle detected at “${id}”; cyclic inheritance is ignored.`,
+	);
+	return { docDefaults: parseFormatting(pDefaults), styles, warnings };
 }
 
-function applyStyle(
+type Resolver<R> = (id: string | undefined) => R | undefined;
+const formattingResolvers = new WeakMap<object, Resolver<ParagraphFormatting>>();
+const numberingResolvers = new WeakMap<
+	object,
+	Resolver<Pick<ParagraphStyleDefinition, 'numbering'>>
+>();
+
+/** The formatting a style's chain gives, each style's `formatting` assigned root first. */
+function styleFormatting(
 	styleId: string | undefined,
 	catalog: ParagraphStyleCatalog,
-	out: ParagraphFormatting,
-): void {
-	const chain: ParagraphStyleDefinition[] = [];
-	const visited = new Set<string>();
-	let current = styleId;
-	while (current && !visited.has(current)) {
-		visited.add(current);
-		const style = catalog.styles[current];
-		if (!style) break;
-		chain.push(style);
-		current = style.basedOn;
-	}
-	for (const style of chain.reverse()) Object.assign(out, style.formatting);
+): ParagraphFormatting | undefined {
+	return cachedResolver(formattingResolvers, catalog.styles, () =>
+		chainResolver(
+			catalog.styles,
+			(style) => style.formatting,
+			(resolved, formatting) => Object.assign({}, resolved, formatting),
+			{},
+		),
+	)(styleId);
 }
 
 /** Resolves defaults and style ancestry without modifying paragraph direct properties. */
@@ -180,8 +178,7 @@ export function resolveParagraphFormatting(
 ): ParagraphFormatting {
 	const result: ParagraphFormatting = { ...catalog.docDefaults };
 	const explicitStyle = paragraph.style;
-	const defaultStyle = Object.values(catalog.styles).find((style) => style.isDefault)?.id;
-	applyStyle(explicitStyle || defaultStyle, catalog, result);
+	Object.assign(result, styleFormatting(explicitStyle || defaultStyleId(catalog.styles), catalog));
 	const direct: ParagraphFormatting = {};
 	const keys: (keyof ParagraphFormatting)[] = [
 		'align',
@@ -234,15 +231,12 @@ export function resolveStyleNumbering(
 	styleId: string | undefined,
 	catalog: ParagraphStyleCatalog,
 ): { numId: number; level: number } | undefined {
-	const chain: ParagraphStyleDefinition[] = [];
-	const visited = new Set<string>();
-	let current = styleId;
-	while (current && !visited.has(current)) {
-		visited.add(current);
-		const style = catalog.styles[current];
-		if (!style) break;
-		chain.push(style);
-		current = style.basedOn;
-	}
-	return chain.find((style) => style.numbering)?.numbering;
+	return cachedResolver(numberingResolvers, catalog.styles, () =>
+		chainResolver<ParagraphStyleDefinition, Pick<ParagraphStyleDefinition, 'numbering'>>(
+			catalog.styles,
+			(style) => (style.numbering ? { numbering: style.numbering } : undefined),
+			(_resolved, nearer) => nearer,
+			{},
+		),
+	)(styleId || undefined)?.numbering;
 }

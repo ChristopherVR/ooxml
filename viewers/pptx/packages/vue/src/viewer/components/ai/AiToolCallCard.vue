@@ -24,7 +24,7 @@ import {
 	TriangleAlert,
 	Type,
 	Wrench,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 import type { RenderableToolPart, ToolActivityIcon } from 'ooxml-ui/pptx/ai';
 import { describeToolActivity, summarizeToolArgs, toolLabel } from 'ooxml-ui/pptx/ai';
 import type { Component } from 'vue';

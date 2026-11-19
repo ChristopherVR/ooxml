@@ -34,9 +34,13 @@ describe('explicit host protocol compatibility', () => {
 			}).open,
 		).toBe(false);
 	});
-	it('keeps drive paths stored only and unknown schemes blocked', () => {
+	it('keeps drive paths and schemes it did not opt in stored only', () => {
 		expect(isOpenableHyperlinkHref('C:\\report.pptx', options)).toBe(false);
-		expect(isStorableHyperlinkHref('custom:thing', options)).toBe(false);
+		expect(hyperlinkPolicy('custom:thing', options)).toEqual({
+			store: true,
+			open: false,
+			reason: 'not-openable',
+		});
 	});
 });
 
@@ -129,13 +133,17 @@ describe('hyperlinkPolicy: rejected', () => {
 			expect(hyperlinkPolicy(href).reason).toBe('control-characters');
 	});
 
-	it('rejects unknown schemes', () => {
-		for (const href of ['tel:+123', 'ms-word:ofe|u|https://x', 'chrome://settings', 'about:blank'])
-			expect(hyperlinkPolicy(href)).toEqual({
-				store: false,
-				open: false,
-				reason: 'unsupported-scheme',
-			});
+	it('stores but never opens the other schemes Office keeps', () => {
+		for (const href of [
+			'tel:+123',
+			'sip:alice@example.com',
+			'msteams:/l/chat/0/0?users=a@example.com',
+			'onenote:https://example.com/notes.one',
+			'ms-word:ofe|u|https://x',
+			'chrome://settings',
+			'about:blank',
+		])
+			expect(hyperlinkPolicy(href)).toEqual({ store: true, open: false, reason: 'not-openable' });
 	});
 
 	it('rejects empty and missing values', () => {

@@ -7,7 +7,7 @@
  * and `v-model:match-case`, passes the live `matchCount`/`currentIndex`, and
  * listens for the navigation/replace/close intents as emits.
  */
-import { CaseSensitive, ChevronDown, ChevronUp, X } from 'lucide-vue-next';
+import { CaseSensitive, ChevronDown, ChevronUp, X } from '@lucide/vue';
 import { findReplacementAvailability } from 'ooxml-ui/pptx';
 import type { FindResult } from 'ooxml-ui/pptx';
 import { computed } from 'vue';

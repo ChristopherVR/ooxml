@@ -27,6 +27,7 @@
 - `showToolbar`：工具栏的可见性
 - `canEdit`：编辑权限。完整查看器默认可编辑；`false` 使其只读（选择、搜索、缩放和导出仍然可用）。构建模块则默认为只读，参见[构建模块](/zh/building-blocks)
 - `readOnly`：独立的限制。`true` 使图纸只读，并优先于 `canEdit`；`false` 或省略时，则只解除该限制
+- `locale`：界面语言，例如 `fr` 或 `zh-CN`。省略时依次使用“文件 > 选项”中选择的语言、`lang`、页面语言和浏览器语言
 - `ribbonAddIns`：宿主在“帮助”之后添加的选项卡（参见[功能区加载项选项卡](/zh/api#ribbon-add-in-tabs)）
 - `collaboration`：设置期间在房间中共享已打开的图纸，设为 `null` 则停止共享（参见[协作](/zh/collaboration)）
 - `storage` 和 `customization`：宿主自有的保存和打开，以及共享的自定义对象（参见[自定义](/zh/api#customization)和[宿主自有存储](/api#host-owned-storage-and-file-commands)）

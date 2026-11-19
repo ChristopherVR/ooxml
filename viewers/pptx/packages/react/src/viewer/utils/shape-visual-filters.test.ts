@@ -25,8 +25,8 @@ describe('getDuotoneFilterId', () => {
 		expect(getDuotoneFilterId('')).toBe('duotone-');
 	});
 
-	it('preserves special characters in the element ID', () => {
-		expect(getDuotoneFilterId('a-b_c.d')).toBe('duotone-a-b_c.d');
+	it('encodes characters unsafe in an SVG reference', () => {
+		expect(getDuotoneFilterId('a-b_c.d')).toBe('duotone-a-b_5f_c.d');
 	});
 });
 

@@ -1,18 +1,30 @@
-import { replaceEmbeddedPackage } from 'ooxml-core/opc';
-import { mountEditor } from './editors.js';
+import { mountEditor, previewRefusal } from './editors.js';
 import { cloudReadOnly } from './cloud-files.js';
+import { isLocked, lockInput, takeComposed, takeQueued } from './session-lock.js';
+import { deepActive, focusPlace, holds, returnFocus } from './focus-place.js';
+import { displayLanguage, onSettings } from './settings.js';
 
-/** One live editor per document id. Save operations are serialized per session. */
+/**
+ * One live editor per document id. Save operations are serialized per session. A session whose
+ * editor shows the assistant's suggestions (`preview`, see {@link SuiteSessions.setPreview}) is
+ * never saved, exported, printed or copied out until the review applies, discards or keeps them.
+ */
 export class SuiteSessions {
 	constructor(store, host, update, command) {
 		Object.assign(this, { store, host, update, command });
 		this.sessions = new Map();
+		// The editors show the display language, whatever the workspace around them is written in.
+		onSettings((_settings, keys) => {
+			if (!keys.includes('locale')) return;
+			for (const { node } of this.sessions.values()) Object.assign(node, displayLanguage());
+		});
 	}
 	async open(doc) {
 		if (this.sessions.has(doc.id)) return this.sessions.get(doc.id).ready;
 		const node = document.createElement('section');
 		node.className = 'document-host';
 		node.setAttribute('aria-label', doc.name);
+		Object.assign(node, displayLanguage());
 		this.host.append(node);
 		const session = { doc, node, version: 0, saved: 0, loading: true, pending: Promise.resolve() };
 		this.sessions.set(doc.id, session);
@@ -48,8 +60,10 @@ export class SuiteSessions {
 	async save(id, { cloud = true } = {}) {
 		const s = await this.sessions.get(id)?.ready;
 		if (!s) return this.store.get(id);
+		// The assistant's suggestions on screen are a preview: only their review panel saves them.
+		if (s.preview) throw previewRefusal(s.doc.name);
 		const run = async () => {
-			s.editor.flush?.();
+			await s.editor.flush?.();
 			if (s.version === s.saved) {
 				const latest = await this.store.get(id);
 				if (latest.revision !== s.doc.revision) await this.reload(latest);
@@ -79,6 +93,7 @@ export class SuiteSessions {
 					throw new Error('Save the parent document before saving its embedded document.');
 				if (parent.revision !== p.revision)
 					throw new Error('The parent changed. Reopen the embedded document before saving.');
+				const { replaceEmbeddedPackage } = await import('ooxml-core/opc');
 				const bytes = await replaceEmbeddedPackage(parent.bytes, p.path, next.bytes);
 				next.parent = { ...p, revision: parent.revision + 1 };
 				changes.push({ document: next, expected: next.revision - 1 });
@@ -124,6 +139,25 @@ export class SuiteSessions {
 		s.pending = result.catch(() => {});
 		return result;
 	}
+	/**
+	 * Marks `session` as showing the assistant's suggestions (ai/review.js) or not. While it does,
+	 * the suite refuses to save or download it and its editor offers no command that takes the
+	 * document out of the suite (Save As, Export, Print, Share, Copy).
+	 */
+	setPreview(session, on) {
+		session.preview = on;
+		session.editor.hold?.(on);
+		session.node.toggleAttribute('data-preview', on);
+	}
+	/**
+	 * The document as a request to the assistant reads it: the user's own edits are saved first,
+	 * while a document showing the assistant's suggestions is read as last saved and its
+	 * suggestions stay unsaved.
+	 */
+	async forContext(id) {
+		const s = await this.sessions.get(id)?.ready;
+		return s?.preview ? this.store.get(id) : this.save(id, { cloud: false });
+	}
 	isDirty(id) {
 		return this.isEdited(id) || Boolean(this.sessions.get(id)?.doc.cloud?.pending);
 	}
@@ -131,9 +165,10 @@ export class SuiteSessions {
 	async export(id) {
 		const session = await this.sessions.get(id)?.ready;
 		if (!session) return this.store.get(id);
+		if (session.preview) throw previewRefusal(session.doc.name);
 		const unlock = this.lock([id]);
 		try {
-			session.editor.flush?.();
+			await session.editor.flush?.();
 			return { ...session.doc, bytes: await session.editor.save() };
 		} finally {
 			unlock();
@@ -168,16 +203,38 @@ export class SuiteSessions {
 			unlock();
 		}
 	}
+	/**
+	 * Refuse input to these documents until the returned function runs; focus stays put. A save
+	 * asked for meanwhile runs once the last lock on its document is released.
+	 */
 	lock(ids) {
-		const nodes = ids.map((id) => this.sessions.get(id)?.node).filter(Boolean);
-		const states = nodes.map((node) => node.inert);
-		nodes.forEach((node) => {
-			node.inert = true;
-		});
+		const locked = ids.map((id) => this.sessions.get(id)).filter(Boolean);
+		const unlocks = locked.map((s) => lockInput(s.node));
 		return () =>
-			nodes.forEach((node, index) => {
-				node.inert = states[index];
+			locked.forEach((s, index) => {
+				if (!unlocks[index]()) return;
+				this.settleComposed(s);
+				// The suite's command callback reports a failure itself.
+				for (const command of takeQueued(s.node))
+					void this.command(command, s.doc.id).catch(() => {});
 			});
+	}
+	/**
+	 * Accounts for what an input method wrote while the document was locked. Text a reload threw
+	 * away is typed again where the caret is; text still in the editor is an unsaved edit, so the
+	 * tab shows it and the next save keeps it.
+	 */
+	settleComposed(s) {
+		const lost = s.lostComposition;
+		s.lostComposition = '';
+		if (lost) {
+			if (!holds(s.node, deepActive())) s.editor.focus?.();
+			if (holds(s.node, deepActive())) document.execCommand('insertText', false, lost);
+		}
+		if (takeComposed(s.node)) {
+			s.version++;
+			this.update();
+		}
 	}
 	async reload(doc) {
 		const s = this.sessions.get(doc.id);
@@ -193,9 +250,16 @@ export class SuiteSessions {
 						doc.bytes.some((value, i) => value !== doc.cloud.baseline[i]),
 				},
 			};
+		// The user stays on the same cells, caret, slide or page, and keeps keyboard focus.
+		const place = focusPlace(s.node);
+		const back = s.editor.keep?.();
 		s.loading = true;
 		try {
 			await s.editor.load(doc.bytes);
+			back?.(Boolean(place));
+			if (place && !returnFocus(s.node, place)) s.editor.focus?.();
+			// The new content lacks what an input method wrote during the lock: type it again.
+			s.lostComposition = (s.lostComposition ?? '') + takeComposed(s.node);
 			s.doc = doc;
 			s.version = 0;
 			s.saved = 0;
@@ -204,6 +268,7 @@ export class SuiteSessions {
 		} finally {
 			s.loading = false;
 		}
+		if (!isLocked(s.node)) this.settleComposed(s);
 	}
 	/** Moves a tab to `index` among the open documents; tab order is the map's order. */
 	move(id, index) {

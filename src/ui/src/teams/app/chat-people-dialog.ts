@@ -1,3 +1,4 @@
+import { definer } from '../../registry';
 import { html, nothing, type PropertyValues } from 'lit';
 import { type ChatView, type ContactView, MAX_CHANNEL_NAME_CHARS } from 'ooxml-core/teams';
 import { dialogStyles, TeamsDialog } from './dialog-base';
@@ -142,9 +143,7 @@ export class TeamsChatPeopleDialog extends TeamsDialog {
 	}
 }
 
-export function defineTeamsChatPeopleDialog(
-	registry: CustomElementRegistry | undefined = globalThis.customElements,
-): void {
-	if (registry && !registry.get('teams-chat-people-dialog'))
-		registry.define('teams-chat-people-dialog', TeamsChatPeopleDialog);
-}
+export const defineTeamsChatPeopleDialog = definer(
+	'teams-chat-people-dialog',
+	() => TeamsChatPeopleDialog,
+);

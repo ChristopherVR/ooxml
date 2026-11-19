@@ -7,6 +7,7 @@ import {
 	createPlainNotesSegments,
 	defaultRichEnabled,
 	handleEditorAnchorClick,
+	handleNotesFieldKey,
 	insertHyperlinkAtSelection,
 	normalizeNotesLinkUrl,
 	readEditorSegments,
@@ -164,16 +165,7 @@ export function useNotesEditor(
 	}
 
 	function onRichKeydown(event: KeyboardEvent): void {
-		event.stopPropagation();
-		if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
-			emitNow(draftText);
-			richEditorRef.value?.blur();
-			return;
-		}
-		if (event.key === 'Tab') {
-			event.preventDefault();
-			paragraphCommand(event.shiftKey ? 'outdent' : 'indent');
-		}
+		handleNotesFieldKey(event, () => emitNow(draftText));
 	}
 
 	function onEditorClick(event: MouseEvent): void {

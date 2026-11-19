@@ -19,7 +19,6 @@ export * from './roster';
 export * from './time-zone';
 export type { ChatActions } from './chat-actions';
 export type { MeetingActions, MeetingFormInput } from './meeting-actions';
-export { meetingChatId } from './meeting-actions';
 export type { MeetingReminders } from './meeting-reminders';
 export * from './mention-text';
 export * from './mentions';

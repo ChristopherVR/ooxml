@@ -1,7 +1,8 @@
 import { NS, elements, parseXml } from '../xml/index';
+import { asciiLowerCase, partNameKey } from './part-names';
 
 export interface ContentTypes {
-	/** Extension (lower case, no dot) to content type. */
+	/** Extension (ASCII lower case, no dot) to content type. */
 	defaults: Map<string, string>;
 	/** Part name (leading slash) to content type. */
 	overrides: Map<string, string>;
@@ -20,7 +21,7 @@ export function parseContentTypes(xml: string | undefined): ContentTypes {
 		if (!contentType) continue;
 		if (node.localName === 'Default') {
 			const extension = node.getAttribute('Extension');
-			if (extension) defaults.set(extension.toLowerCase(), contentType);
+			if (extension) defaults.set(asciiLowerCase(extension), contentType);
 		} else if (node.localName === 'Override') {
 			const partName = node.getAttribute('PartName');
 			if (partName) overrides.set(partName, contentType);
@@ -29,13 +30,24 @@ export function parseContentTypes(xml: string | undefined): ContentTypes {
 	return { defaults, overrides };
 }
 
+/** The `Override` for a part. Part names match ASCII case-insensitively (ECMA-376 Part 2, 7.2.3.5). */
+function overrideFor(types: ContentTypes, partName: string): string | undefined {
+	const exact = types.overrides.get(partName.startsWith('/') ? partName : `/${partName}`);
+	if (exact) return exact;
+	const key = partNameKey(partName);
+	for (const [name, contentType] of types.overrides) {
+		if (partNameKey(name) === key) return contentType;
+	}
+	return undefined;
+}
+
 /** The content type of a part: its override if declared, else the default for its extension. */
 export function contentTypeForPart(types: ContentTypes, partName: string): string | undefined {
-	const overridePath = partName.startsWith('/') ? partName : `/${partName}`;
-	const override = types.overrides.get(overridePath);
+	const override = overrideFor(types, partName);
 	if (override) return override;
-	const extension = partName.split('.').pop()?.toLowerCase();
-	return extension ? types.defaults.get(extension) : undefined;
+	const lastSegment = partName.slice(partName.lastIndexOf('/') + 1);
+	const dot = lastSegment.lastIndexOf('.');
+	return dot < 0 ? undefined : types.defaults.get(asciiLowerCase(lastSegment.slice(dot + 1)));
 }
 
 export function buildContentTypesXml(types: ContentTypes): string {
@@ -61,7 +73,8 @@ export function ensureContentTypeDefault(
 	contentType: string,
 ): string {
 	const types = parseContentTypes(xml);
-	if (types.defaults.has(extension.toLowerCase())) return xml ?? buildContentTypesXml(types);
-	types.defaults.set(extension.toLowerCase(), contentType);
+	const key = asciiLowerCase(extension);
+	if (types.defaults.has(key)) return xml ?? buildContentTypesXml(types);
+	types.defaults.set(key, contentType);
 	return buildContentTypesXml(types);
 }

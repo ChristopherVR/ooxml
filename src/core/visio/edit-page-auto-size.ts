@@ -3,7 +3,7 @@ import { related, visioXml } from './parts';
 import { attribute, children } from './sheet';
 import type { VisioPackage } from './package';
 import type { VisioEdit } from './edit-commands';
-import type { EditVsdxResult } from './edit';
+import type { EditVsdxOptions, EditVsdxResult } from './edit';
 import type { VisioPage } from './model';
 import { visioPrintTile } from './paper-sizes';
 
@@ -87,10 +87,11 @@ export function visioAutoSizeGrowth(
 export async function growAutoSizePages(
 	touched: ReadonlySet<string>,
 	result: EditVsdxResult,
+	limits: EditVsdxOptions['limits'],
 	apply: (bytes: Uint8Array, edits: readonly VisioEdit[]) => Promise<EditVsdxResult>,
 ): Promise<EditVsdxResult> {
 	if (!result.changedParts.length || !touched.size) return result;
-	const document = await parseVsdx(result.bytes);
+	const document = await parseVsdx(result.bytes, limits ? { limits } : {});
 	const growth: VisioEdit[] = [];
 	for (const page of document.pages) {
 		if (!touched.has(page.id) || page.drawingResizeType !== 1 || page.isBackground) continue;

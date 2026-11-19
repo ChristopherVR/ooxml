@@ -29,6 +29,8 @@
  */
 import type { PptxImageEffects, PptxImagePrerenderedCorrections } from 'ooxml-core/pptx';
 
+import { svgIdToken } from './svg-id';
+
 type CorrectionKey = keyof PptxImagePrerenderedCorrections;
 
 /** Structural equality for the small flat records the four corrections use. */
@@ -153,7 +155,7 @@ export function getImageCorrectionsFilterTokens(imageEffects: PptxImageEffects):
 
 /** Stable SVG filter ID for an element's sharpen correction. */
 export function getImageSharpenFilterId(elementId: string): string {
-	return `sharpen-${elementId}`;
+	return `sharpen-${svgIdToken(elementId)}`;
 }
 
 /**

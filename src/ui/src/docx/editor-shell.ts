@@ -299,6 +299,7 @@ function attachSurface(core: EditorCore): void {
 /** A disconnected editor releases input listeners; reconnection binds the retained shell again. */
 function attachPrintEditing(core: EditorCore): void {
 	const { shell } = core;
+	shell.printLayout?.connect();
 	if (shell.printEditing || !shell.printLayout || !shell.paper) return;
 	// Before the bridge, so a selected picture takes the arrow keys ahead of caret navigation.
 	shell.printFloats = attachPrintFloatSelection({

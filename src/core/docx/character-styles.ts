@@ -3,6 +3,7 @@ import type { CharacterStyleDefinition, RunStyleCatalog } from './run-style-mode
 import { first, getW, named, parseXml, type XmlDocument, type XmlElement } from './xml';
 import { parseRunProperties } from './run-properties';
 import { parseOnOff } from './simple-types';
+import { inheritanceCycleEntries } from './style-inheritance';
 
 function styleElements(document: XmlDocument): XmlElement[] {
 	return Array.from(document.getElementsByTagName('*')).filter(
@@ -39,26 +40,14 @@ export function parseRunStyleCatalog(xml: string): RunStyleCatalog {
 			...(eastAsiaLanguage ? { eastAsiaLanguage } : {}),
 		};
 	}
-	const warnings: string[] = [];
-	for (const style of Object.values(styles)) {
-		const seen = new Set<string>([style.id]);
-		let parent = style.basedOn;
-		while (parent && styles[parent]) {
-			if (seen.has(parent)) {
-				warnings.push(
-					`Character style inheritance cycle detected at "${parent}"; cyclic inheritance is ignored.`,
-				);
-				break;
-			}
-			seen.add(parent);
-			parent = styles[parent]?.basedOn;
-		}
-	}
+	const warnings = inheritanceCycleEntries(styles).map(
+		(id) => `Character style inheritance cycle detected at "${id}"; cyclic inheritance is ignored.`,
+	);
 	const docDefaultsEastAsiaLanguage = eastAsiaLanguageOf(first(defaults, 'rPr'));
 	return {
 		docDefaults: parseRunProperties(first(defaults, 'rPr')),
 		...(docDefaultsEastAsiaLanguage ? { docDefaultsEastAsiaLanguage } : {}),
 		styles,
-		warnings: [...new Set(warnings)],
+		warnings,
 	};
 }

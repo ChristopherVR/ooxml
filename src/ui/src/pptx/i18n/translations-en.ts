@@ -316,6 +316,14 @@ export const translationsEn: Record<string, string> = {
 	'pptx.collaboration.status.connecting': 'Connecting...',
 	'pptx.collaboration.status.disconnected': 'Disconnected',
 	'pptx.collaboration.status.error': 'Connection error',
+	'pptx.collaboration.refused.tooLarge':
+		'A change from the shared session is too large to apply here, so sharing stopped. Your copy is unchanged.',
+	'pptx.collaboration.refused.malformed':
+		'A change from the shared session could not be read, so sharing stopped. Your copy is unchanged.',
+	'pptx.collaboration.refused.serverRejected':
+		'The server refused your latest change, so sharing stopped. Your copy keeps the change.',
+	'pptx.collaboration.refused.serverFull':
+		'The shared document has reached the size limit of the server, so sharing stopped. Your copy keeps your latest change.',
 	'pptx.collaboration.statusAriaLabel': 'Collaboration: {{status}}',
 	'pptx.collaboration.userCount': '{{count}} user(s)',
 	'pptx.collaboration.youLabel': '{{name}} (you)',
@@ -2799,6 +2807,11 @@ export const translationsEn: Record<string, string> = {
 	'pptx.shortcuts.action.pasteElement': 'Paste element',
 	'pptx.shortcuts.action.prevSlide': 'Previous slide (no selection)',
 	'pptx.shortcuts.action.selectAll': 'Select all elements',
+	'pptx.shortcuts.action.editObjectText': 'Edit the text of the selected object',
+	'pptx.shortcuts.action.enterSlide': 'Go into the slide (select its first object)',
+	'pptx.shortcuts.action.cycleObjects': 'Next or previous object on the slide',
+	'pptx.shortcuts.action.leaveSlide': 'Clear the selection, then leave the slide',
+	'pptx.shortcuts.action.movePane': 'Move between panes',
 	'pptx.shortcuts.action.zoomCanvas': 'Zoom canvas',
 	'pptx.shortcuts.close': 'Close',
 	'pptx.shortcuts.group.editing': 'Editing',
@@ -4193,6 +4206,8 @@ export const translationsEn: Record<string, string> = {
 		'An embedded font has a licence that does not allow it to be used, so a substitute font is shown. Its font data is kept in the file.',
 	'pptx.compatibility.embeddedFontNotEmbeddable':
 		'A font was not embedded because its licence does not allow embedding it in an editable presentation.',
+	'pptx.compatibility.collaborationValueRejected':
+		'Content a collaborator sent was left out because it is not allowed here, such as an unsafe link or file type.',
 	'pptx.compatibility.exportBackendUnavailable':
 		'Export to this format is not available in the current environment.',
 

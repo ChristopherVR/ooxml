@@ -26,8 +26,16 @@ export const HTMLElementBase = (
 ) as typeof HTMLElement;
 
 export class XlsxEditorApi extends HTMLElementBase {
-	/** Set before mounting to omit application UI. */
-	surfaceOnly = false;
+	#surfaceOnly = false;
+	/** Choose before connecting. This mode mounts only the grid, without application UI. */
+	get surfaceOnly(): boolean {
+		return this.#surfaceOnly;
+	}
+	set surfaceOnly(value: boolean) {
+		if (this.shadowRoot && Boolean(value) !== this.#surfaceOnly)
+			throw new Error('Choose surfaceOnly before mounting the editor.');
+		this.#surfaceOnly = Boolean(value);
+	}
 	getToolbarProps(): SpreadsheetToolbarProps {
 		return spreadsheetToolbarProps(this.core);
 	}

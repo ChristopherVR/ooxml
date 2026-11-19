@@ -9,10 +9,10 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@ai-sdk/openai-compatible": "^3.0.92",
-		"ai": "^7.0.172",
-		"emf-converter": "4.28.1",
-		"fast-xml-parser": "^5.12.0",
+		"@ai-sdk/openai-compatible": "^3.0.93",
+		"ai": "^7.0.177",
+		"emf-converter": "5.0.0",
+		"fast-xml-parser": "^5.12.1",
 		"jszip": "^3.10.2",
 		"ooxml-ui": "workspace:*",
 		"openteams-server": "workspace:*",
@@ -29,7 +29,7 @@
 		"@types/ws": "^8.18.2",
 		"pptx-viewer-shared": "workspace:*",
 		"typescript": "^7.0.2",
-		"vitest": "^5.1.0",
+		"vitest": "^5.1.1",
 		"ws": "^8.23.0"
 	}
 }

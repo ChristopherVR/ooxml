@@ -7,7 +7,7 @@ import {
 	getOleIconShapes,
 	getOleTypeColor,
 	getOleTypeLabel,
-	isBrowserOpenableMime,
+	isBrowserOpenableDataUrl,
 	mediaSurfaceOf,
 	oleActionsVisible,
 	openUrlInNewTab,
@@ -122,13 +122,8 @@ const displayName = computed(() => (ole.value ? getOleDisplayName(ole.value) : t
 /** Human-readable size of the embedded payload, if known. */
 const sizeLabel = computed<string | undefined>(() => formatBytes(ole.value?.oleEmbeddedByteSize));
 
-/** The embedded MIME type, if known. */
-const mimeType = computed<string | undefined>(() => ole.value?.oleEmbeddedMimeType);
-
 /** Whether to offer an inline "Open" action (browser-renderable payload). */
-const canOpenInBrowser = computed<boolean>(
-	() => Boolean(embeddedData.value) && isBrowserOpenableMime(mimeType.value),
-);
+const canOpenInBrowser = computed<boolean>(() => isBrowserOpenableDataUrl(embeddedData.value));
 
 /** The application that produced the object (progId), if known. */
 const application = computed<string | undefined>(() => ole.value?.oleProgId);

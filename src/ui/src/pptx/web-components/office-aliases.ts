@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import {
 	defineButton,
 	defineCheckbox,
@@ -81,7 +82,8 @@ export function definePptxCheckbox(registry: CustomElementRegistry): void {
 	if (registry.get('pptx-ui-checkbox')) {
 		return;
 	}
-	registry.define(
+	defineElement(
+		registry,
 		'pptx-ui-checkbox',
 		class extends bridged(
 			base(registry, defineCheckbox, 'office-ui-checkbox'),
@@ -93,7 +95,8 @@ export function definePptxSwitch(registry: CustomElementRegistry): void {
 	if (registry.get('pptx-ui-switch')) {
 		return;
 	}
-	registry.define(
+	defineElement(
+		registry,
 		'pptx-ui-switch',
 		class extends bridged(base(registry, defineSwitch, 'office-ui-switch'), 'pptx-ui-switch') {},
 	);
@@ -102,7 +105,8 @@ export function definePptxRadio(registry: CustomElementRegistry): void {
 	if (registry.get('pptx-ui-radio')) {
 		return;
 	}
-	registry.define(
+	defineElement(
+		registry,
 		'pptx-ui-radio',
 		class extends bridged(base(registry, defineRadio, 'office-ui-radio'), 'pptx-ui-radio') {},
 	);
@@ -112,7 +116,8 @@ export function definePptxOpenPlaces(registry: CustomElementRegistry): void {
 	if (registry.get('pptx-ui-open-places')) {
 		return;
 	}
-	registry.define(
+	defineElement(
+		registry,
 		'pptx-ui-open-places',
 		class extends bridged(
 			base(registry, defineOpenPlaces, 'office-ui-open-places'),
@@ -125,7 +130,8 @@ export function definePptxConnectedServices(registry: CustomElementRegistry): vo
 	if (registry.get('pptx-ui-connected-services')) {
 		return;
 	}
-	registry.define(
+	defineElement(
+		registry,
 		'pptx-ui-connected-services',
 		class extends bridged(
 			base(registry, defineConnectedServices, 'office-ui-connected-services'),
@@ -137,7 +143,8 @@ export function definePptxSearchField(registry: CustomElementRegistry): void {
 	if (registry.get('pptx-ui-search')) {
 		return;
 	}
-	registry.define(
+	defineElement(
+		registry,
 		'pptx-ui-search',
 		class extends bridged(
 			base(registry, defineSearchField, 'office-ui-search'),
@@ -157,7 +164,8 @@ export function definePptxColorGrid(registry: CustomElementRegistry): void {
 	if (registry.get('pptx-ui-color-grid')) {
 		return;
 	}
-	registry.define(
+	defineElement(
+		registry,
 		'pptx-ui-color-grid',
 		class extends bridged(
 			base(registry, defineColorGrid, 'office-ui-color-grid'),
@@ -171,7 +179,8 @@ export function definePptxSelect(registry: CustomElementRegistry): void {
 	if (registry.get('pptx-ui-select')) {
 		return;
 	}
-	registry.define(
+	defineElement(
+		registry,
 		'pptx-ui-select',
 		class extends bridged(base(registry, defineSelect, 'office-ui-select'), 'pptx-ui-select') {},
 	);
@@ -188,7 +197,8 @@ export function definePptxRibbonToggle(registry: CustomElementRegistry): void {
 		base(registry, defineRibbonToggle, 'office-ui-ribbon-toggle'),
 		'pptx-ui-ribbon-toggle',
 	);
-	registry.define(
+	defineElement(
+		registry,
 		'pptx-ui-ribbon-toggle',
 		class extends Base {
 			static requestEvent = 'toggle-request';
@@ -226,7 +236,7 @@ export function definePptxDialogFooter(registry: CustomElementRegistry): void {
 			};
 		}
 	}
-	registry.define('pptx-ui-dialog-footer', PptxDialogFooter as unknown as Ctor);
+	defineElement(registry, 'pptx-ui-dialog-footer', PptxDialogFooter as unknown as Ctor);
 }
 
 export function definePptxCompatToasts(registry: CustomElementRegistry): void {
@@ -288,7 +298,7 @@ export function definePptxCompatToasts(registry: CustomElementRegistry): void {
 			};
 		}
 	}
-	registry.define('pptx-ui-compat-toasts', PptxCompatToasts as unknown as Ctor);
+	defineElement(registry, 'pptx-ui-compat-toasts', PptxCompatToasts as unknown as Ctor);
 }
 
 export function definePptxReadOnlyBanner(registry: CustomElementRegistry): void {
@@ -338,7 +348,7 @@ export function definePptxReadOnlyBanner(registry: CustomElementRegistry): void 
 			};
 		}
 	}
-	registry.define('pptx-ui-read-only-banner', PptxReadOnlyBanner as unknown as Ctor);
+	defineElement(registry, 'pptx-ui-read-only-banner', PptxReadOnlyBanner as unknown as Ctor);
 }
 
 export function definePptxPasteOptions(registry: CustomElementRegistry): void {
@@ -385,7 +395,7 @@ export function definePptxPasteOptions(registry: CustomElementRegistry): void {
 			this.placeInPixels();
 		}
 	}
-	registry.define('pptx-ui-paste-options', PptxPasteOptions as unknown as Ctor);
+	defineElement(registry, 'pptx-ui-paste-options', PptxPasteOptions as unknown as Ctor);
 }
 
 /** pptx glyphs live under a `pptx:` prefix in the shared icon registry, so they never collide. */
@@ -471,7 +481,7 @@ export function definePptxRibbonCommand(registry: CustomElementRegistry): void {
 			}
 		}
 	}
-	registry.define('pptx-ui-ribbon-command', PptxRibbonCommand as unknown as Ctor);
+	defineElement(registry, 'pptx-ui-ribbon-command', PptxRibbonCommand as unknown as Ctor);
 }
 
 /**
@@ -509,7 +519,7 @@ export function definePptxRibbonGroup(registry: CustomElementRegistry): void {
 			return `pptx:${this.getAttribute('icon') ?? 'layers'}`;
 		}
 	}
-	registry.define('pptx-ui-ribbon-group', PptxRibbonGroup as unknown as Ctor);
+	defineElement(registry, 'pptx-ui-ribbon-group', PptxRibbonGroup as unknown as Ctor);
 }
 
 /**
@@ -524,7 +534,8 @@ export function definePptxContextMenu(registry: CustomElementRegistry): void {
 		base(registry, defineContextMenu, 'office-ui-context-menu'),
 		'pptx-ui-context-menu',
 	);
-	registry.define(
+	defineElement(
+		registry,
 		'pptx-ui-context-menu',
 		class extends Base {
 			static requestEvent = 'menu-request';
@@ -565,5 +576,5 @@ export function definePptxExportProgress(registry: CustomElementRegistry): void 
 			};
 		}
 	}
-	registry.define('pptx-ui-export-progress', PptxExportProgress as unknown as Ctor);
+	defineElement(registry, 'pptx-ui-export-progress', PptxExportProgress as unknown as Ctor);
 }

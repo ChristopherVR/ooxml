@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import type { SmartArtLayout } from 'ooxml-core/pptx';
 
 import { defineSmartArtPicker } from '../../smartart/smartart-picker';
@@ -217,5 +218,5 @@ export function definePptxInsertSmartArtDialog(registry: CustomElementRegistry):
 		}
 	}
 
-	registry.define('pptx-ui-insert-smartart-dialog', InsertSmartArtDialog);
+	defineElement(registry, 'pptx-ui-insert-smartart-dialog', InsertSmartArtDialog);
 }

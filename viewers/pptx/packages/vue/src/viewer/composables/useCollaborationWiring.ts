@@ -4,8 +4,13 @@ import type {
 	CollaborationHistoryTarget,
 	CollaborationInput,
 	CollaborationTransport,
+	CompatibilityWarningToast,
 } from 'ooxml-ui/pptx';
-import { buildBroadcastViewerUrl, shouldAutoFollowBroadcaster } from 'ooxml-ui/pptx';
+import {
+	buildBroadcastViewerUrl,
+	createRemoteValueNotifier,
+	shouldAutoFollowBroadcaster,
+} from 'ooxml-ui/pptx';
 import type { PptxElement, PptxHandlerSaveOptions, PptxSlide } from 'pptx-viewer-core';
 import { computed, ref, watch } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
@@ -30,6 +35,8 @@ export interface UseCollaborationWiringInput {
 	getTemplateElements: () => Record<string, PptxElement[]>;
 	/** True while a gallery hover preview shows over the slides. */
 	slidesPaused?: () => boolean;
+	/** Show a toast, such as the notice that values a peer sent were left out. */
+	onNotice?: (toast: CompatibilityWarningToast) => void;
 	/** Retain the loaded source bytes for elected-writer (role 'owner') write-back. */
 	getSourceBytes: () => Uint8Array | null;
 	/**
@@ -105,6 +112,7 @@ export function useCollaborationWiring(
 		onStopCollaboration,
 	} = input;
 
+	const remoteValueNotice = createRemoteValueNotifier();
 	// oxlint-disable-next-line eslint/one-var -- distinct concerns, forcing one statement hurts readability
 	const collab = useCollaboration({
 		collaboration: collaborationProp,
@@ -116,7 +124,12 @@ export function useCollaborationWiring(
 		onRemoteSlides: (remote) => {
 			// oxlint-disable-next-line react/immutability -- Vue ref write, not a React prop mutation
 			slides.value = remote;
+			const toast = remoteValueNotice(remote);
+			if (toast) {
+				input.onNotice?.(toast);
+			}
 		},
+		...(input.onNotice ? { onNotice: input.onNotice } : {}),
 		getTemplateElements,
 		...(input.slidesPaused ? { slidesPaused: input.slidesPaused } : {}),
 		getSourceBytes,

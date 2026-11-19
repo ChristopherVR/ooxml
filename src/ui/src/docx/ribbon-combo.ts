@@ -68,6 +68,7 @@ export function comboBox(
 	input.setAttribute('aria-label', label);
 	input.setAttribute('aria-autocomplete', 'list');
 	input.setAttribute('aria-haspopup', 'listbox');
+	input.setAttribute('aria-expanded', 'false');
 	input.autocomplete = 'off';
 	input.spellcheck = false;
 	input.comboItems = options.preview

@@ -37,7 +37,7 @@ export const vermilionLightColors: ViewerThemeColors = {
 	destructiveForeground: '#ffffff',
 
 	border: '#e6e2d9',
-	input: '#e6e2d9',
+	input: '#8a8580',
 	ring: '#c2431f',
 };
 
@@ -68,7 +68,7 @@ export const vermilionDarkColors: ViewerThemeColors = {
 	destructiveForeground: '#ffffff',
 
 	border: '#272c33',
-	input: '#272c33',
+	input: '#6b7079',
 	ring: '#e86a40',
 };
 

@@ -1,7 +1,10 @@
 // Sharing and co-editing strings (File > Share, the title bar's Share button and the
 // connection notices). English key -> de text.
+import { collabStrings } from '../../../../i18n/index';
 
 export const collab: Record<string, string> = {
+	// Refusals and left-out content, shared by every product.
+	...collabStrings.de,
 	Share: 'Freigeben',
 	'Session name': 'Sitzungsname',
 	'Start sharing': 'Freigabe starten',

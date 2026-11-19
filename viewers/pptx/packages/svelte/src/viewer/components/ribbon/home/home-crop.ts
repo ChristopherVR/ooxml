@@ -1,4 +1,10 @@
-import { cropFill, cropFit, cropToAspectRatio, dispatchCropRequest } from 'ooxml-ui/pptx';
+import {
+	cropFill,
+	cropFit,
+	cropToAspectRatio,
+	dispatchCropRequest,
+	elementIdSelector,
+} from 'ooxml-ui/pptx';
 import type { CropElementUpdate, NaturalImageSize } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 
@@ -9,9 +15,7 @@ function naturalSizeOf(element: PptxElement): NaturalImageSize | undefined {
 	const img =
 		typeof document === 'undefined'
 			? null
-			: document.querySelector<HTMLImageElement>(
-					`[data-element-id="${CSS.escape(element.id)}"] img`,
-				);
+			: document.querySelector<HTMLImageElement>(`${elementIdSelector(element.id)} img`);
 	return img && img.naturalWidth > 0 && img.naturalHeight > 0
 		? { width: img.naturalWidth, height: img.naturalHeight }
 		: undefined;

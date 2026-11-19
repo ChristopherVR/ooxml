@@ -1,16 +1,20 @@
+import type { AfterViewInit, OnDestroy } from '@angular/core';
 import {
 	ChangeDetectionStrategy,
 	Component,
 	CUSTOM_ELEMENTS_SCHEMA,
 	computed,
+	ElementRef,
 	inject,
 	input,
 	output,
 	signal,
+	viewChild,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
+	activateBackstage,
 	BACKSTAGE_NAV,
 	BACKSTAGE_TEMPLATES,
 	backstageCardsFor,
@@ -99,7 +103,7 @@ export function visibleMainNav(
 	templateUrl: './ribbon-file-section.component.html',
 	styleUrl: './ribbon-file-section.component.css',
 })
-export class RibbonFileSectionComponent {
+export class RibbonFileSectionComponent implements AfterViewInit, OnDestroy {
 	readonly fileName = input<string>();
 	readonly slideCount = input(0);
 	readonly exporting = input(false);
@@ -111,6 +115,7 @@ export class RibbonFileSectionComponent {
 	/** Optional sign-in hook point for the Account page. Absent/disabled by default. */
 	readonly accountAuth = input<AccountAuthConfig | undefined>(undefined);
 	readonly close = output<void>();
+	private readonly panel = viewChild<ElementRef<HTMLElement>>('panel');
 	readonly createPresentation = output<string>();
 	readonly openFile = output<void>();
 	readonly openRecentFile = output<string>();
@@ -260,6 +265,20 @@ export class RibbonFileSectionComponent {
 					this.fileIO?.storage(),
 				),
 			))();
+	}
+
+	private releaseBackstage = (): void => {};
+
+	/** The backstage covers the viewer: focus goes in, stays in, and Escape goes back to File. */
+	ngAfterViewInit(): void {
+		const panel = this.panel()?.nativeElement;
+		if (panel) {
+			this.releaseBackstage = activateBackstage(panel, () => this.close.emit());
+		}
+	}
+
+	ngOnDestroy(): void {
+		this.releaseBackstage();
 	}
 
 	protected date(timestamp: number): string {

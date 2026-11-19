@@ -1,5 +1,6 @@
 import { pictureNeedsSvg, pictureSvg } from '../picture-view';
 import { imageContentType } from 'ooxml-core/drawingml';
+import { normalizeMimeType, pictureUrl } from 'ooxml-core/opc';
 import { DOMSerializer, type Node as ProseMirrorNode } from 'prosemirror-model';
 import type { EditorView, NodeView } from 'prosemirror-view';
 import { NodeSelection } from 'prosemirror-state';
@@ -13,8 +14,18 @@ import type { ThemeCatalog } from 'ooxml-core/docx';
 import type { EditorLocale } from './localization';
 
 /**
- * Resolves inline picture bytes (kept off the JSON model by docx-core) into object URLs. URLs are
- * cached per package part and revoked together when the owning editor releases the cache.
+ * The type a picture's URL is created with. The node's `contentType` can come from a collaboration
+ * peer, so only an image type is used; anything else falls back to the type of the part name.
+ */
+function pictureType(partName: string, contentType: string): string {
+	const type = normalizeMimeType(contentType);
+	return type?.startsWith('image/') ? type : imageContentType(partName);
+}
+
+/**
+ * Resolves inline picture bytes (kept off the JSON model by docx-core) into URLs: object URLs for
+ * raster pictures, opaque-origin `data:` URLs for SVG ones (see `pictureUrl`). URLs are cached per
+ * package part and revoked together when the owning editor releases the cache.
  */
 export class ImageMediaCache {
 	private readonly urls = new Map<string, string>();
@@ -26,7 +37,7 @@ export class ImageMediaCache {
 		if (cached) return cached;
 		const bytes = this.lookup(partName);
 		if (!bytes || typeof URL.createObjectURL !== 'function') return undefined;
-		const url = URL.createObjectURL(new Blob([bytes.slice()], { type: contentType }));
+		const url = pictureUrl(bytes, pictureType(partName, contentType));
 		this.urls.set(partName, url);
 		return url;
 	}

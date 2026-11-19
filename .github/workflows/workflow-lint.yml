@@ -3,7 +3,9 @@ name: Workflow lint
 # Checks the workflows and composite actions themselves: actionlint for syntax, expressions and the
 # shell inside `run:` blocks (through shellcheck, preinstalled on the runner), and zizmor for
 # security mistakes such as template injection, over-broad tokens and unpinned third-party actions
-# (policy in .github/zizmor.yml). Both report as annotations on the PR's diff.
+# (policy in .github/zizmor.yml). Both report as annotations on the PR's diff. The policy job adds
+# the rules neither checks (scripts/workflow-lint.mjs): every bunx or npx runs a package bun.lock
+# pins, and no job whose token can write runs third-party code.
 on:
   pull_request:
     paths:
@@ -12,6 +14,11 @@ on:
       - '.github/zizmor.yml'
       - '.github/workflow-lint/**'
       - '.github/dependabot.yml'
+      # The policy job also reads the lockfile; scripts/workflow-lint.test.mjs runs the same check
+      # whenever a script changes.
+      - 'bun.lock'
+      - 'package.json'
+      - 'scripts/workflow-lint.mjs'
   push:
     branches: [main]
     paths:
@@ -20,6 +27,11 @@ on:
       - '.github/zizmor.yml'
       - '.github/workflow-lint/**'
       - '.github/dependabot.yml'
+      # The policy job also reads the lockfile; scripts/workflow-lint.test.mjs runs the same check
+      # whenever a script changes.
+      - 'bun.lock'
+      - 'package.json'
+      - 'scripts/workflow-lint.mjs'
   schedule:
     - cron: '23 5 * * 1' # weekly: zizmor's online audits learn about newly vulnerable actions
   workflow_dispatch:
@@ -35,6 +47,16 @@ env:
   ACTIONLINT_VERSION: 1.7.12.25
 
 jobs:
+  policy:
+    name: supply-chain policy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: node scripts/workflow-lint.mjs
+
   actionlint:
     name: actionlint
     runs-on: ubuntu-latest

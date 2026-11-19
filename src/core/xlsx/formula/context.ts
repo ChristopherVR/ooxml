@@ -19,6 +19,22 @@ export interface EvalHost {
 	 * that many formulas read). Optional: callers fall back to `readCell`.
 	 */
 	readBlock?(sheet: number, range: CellRange): Matrix;
+	/**
+	 * `compute()`, reused for the rest of a recalculation by calls with the same `key`. Optional:
+	 * callers fall back to computing.
+	 */
+	memoized?(key: string, compute: () => Value): Value;
+	/**
+	 * The first (or, with `reverse`, last) position of `vector` holding `lookup`, or -1, from an
+	 * index shared by the searches of a recalculation; undefined when the caller should scan.
+	 */
+	findExact?(
+		vector: string,
+		length: number,
+		read: (index: number) => Scalar,
+		lookup: Scalar,
+		reverse: boolean,
+	): number | undefined;
 	/** One past the last stored row and column of a sheet. */
 	bounds(sheet: number): { rows: number; cols: number };
 	/** The spill range anchored at a cell, if it currently spills. */

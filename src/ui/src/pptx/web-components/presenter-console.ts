@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import { PRESENTER_CONSOLE_CONTROLS } from '../render';
 import type { PresenterConsoleIntent, PresenterConsoleViewState } from '../render';
 import { attachControlStyles } from './control-styles';
@@ -112,5 +113,5 @@ export function definePptxPresenterConsole(registry: CustomElementRegistry): voi
 			}
 		}
 	}
-	registry.define('pptx-ui-presenter-console', PresenterConsole);
+	defineElement(registry, 'pptx-ui-presenter-console', PresenterConsole);
 }

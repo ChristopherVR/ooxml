@@ -3,6 +3,7 @@ import { createDocument } from 'ooxml-core/docx';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { afterEach, describe, expect, it } from 'vitest';
 import { syncFontControls } from './font-sync';
+import { closeRibbonPopover } from './ribbon-popover';
 import { runStylesPlugin } from './run-styles';
 import {
 	comboBox,
@@ -20,6 +21,25 @@ const combo = (ribbon: HTMLElement, label: string) =>
 	ribbon.querySelector<ComboInput>(`input[aria-label="${label}"]`)!;
 
 describe('font input parsing', () => {
+	it('exposes the required combobox state, closed until its list opens', () => {
+		const wrap = comboBox(
+			'Font size',
+			['10', '11'],
+			(value) => value,
+			(value) => ({ type: 'font', key: 'size', value }),
+		);
+		document.body.append(wrap);
+		const input = wrap.querySelector('input')!;
+		expect(input.getAttribute('aria-expanded')).toBe('false');
+		input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+		expect(input.getAttribute('aria-expanded')).toBe('true');
+		expect(
+			document.getElementById(input.getAttribute('aria-controls')!)?.getAttribute('role'),
+		).toBe('listbox');
+		closeRibbonPopover();
+		expect(input.getAttribute('aria-expanded')).toBe('false');
+		expect(input.hasAttribute('aria-controls')).toBe(false);
+	});
 	it('uses the shared catalogue to deduplicate font choices without changing size ordering', () => {
 		const family = comboBox(
 			'Font family',

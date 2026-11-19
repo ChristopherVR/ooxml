@@ -20,7 +20,7 @@ h2 {
 	border: 0;
 	border-radius: var(--office-radius-md);
 	background: transparent;
-	color: var(--office-teams-brand);
+	color: var(--office-teams-brand-ink);
 }
 .new:hover {
 	background: var(--office-selected);
@@ -71,7 +71,7 @@ ul {
 	height: 2.3em;
 	border-radius: var(--office-radius-full);
 	background: var(--office-teams-bubble);
-	color: var(--office-teams-brand);
+	color: var(--office-teams-brand-ink);
 }
 .text {
 	display: grid;
@@ -124,5 +124,18 @@ time {
 	.row {
 		min-width: var(--office-touch-target, 44px);
 		min-height: var(--office-touch-target, 44px);
+	}
+}
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.row[aria-current='true'] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
+	.row[aria-current='true']::before {
+		background: Highlight;
 	}
 }

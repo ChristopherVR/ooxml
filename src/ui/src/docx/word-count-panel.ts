@@ -1,6 +1,7 @@
 import type { EditorView } from 'prosemirror-view';
 import { countWords } from 'ooxml-core/docx/ui';
 import { localeOf, translate, type EditorLocale } from './localization';
+import { composedWithin } from '../composed';
 
 export interface DocumentCounts {
 	words: number;
@@ -32,6 +33,12 @@ export function documentCounts(view: EditorView, language?: string): DocumentCou
 }
 
 let close: (() => void) | undefined;
+let open: HTMLElement | undefined;
+
+/** Closes the word count panel, if one is open (inside `scope`, when given). */
+export function closeWordCount(scope?: Node): void {
+	if (!scope || composedWithin(open, scope)) close?.();
+}
 
 /** Shows the counts in a small dismissible panel under `anchor`. */
 export function showWordCount(
@@ -73,10 +80,11 @@ export function showWordCount(
 	};
 	document.addEventListener('pointerdown', outside, true);
 	document.addEventListener('keydown', escape, true);
+	open = panel;
 	close = () => {
 		document.removeEventListener('pointerdown', outside, true);
 		document.removeEventListener('keydown', escape, true);
 		panel.remove();
-		close = undefined;
+		close = open = undefined;
 	};
 }

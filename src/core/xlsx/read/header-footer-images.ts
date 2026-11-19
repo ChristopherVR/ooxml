@@ -2,6 +2,7 @@
 // are named `LH`, `CH`, `RH`, `LF`, `CF`, `RF` (with `FIRST` or `EVEN` for those pages) and point
 // at image parts through `o:relid`. Read for display only; the VML part is kept verbatim.
 import { relAttr, type XmlElement } from '../../xml/index';
+import { xmlTags } from '../../xml/tags';
 import type { HeaderFooterImage } from '../model';
 import type { SourceIndex } from './package';
 
@@ -16,6 +17,20 @@ function styleLength(style: string, property: string): number {
 	return match ? Number(match[1]) * (UNIT_PT[(match[2] ?? 'pt').toLowerCase()] ?? 1) : 0;
 }
 
+/** Each `v:shape` element's attributes and its first `v:imagedata`'s, in document order. */
+function* vmlShapes(vml: string): Generator<{ attributes: string; data: string | undefined }> {
+	let shape: { attributes: string; data: string | undefined } | undefined;
+	for (const tag of xmlTags(vml)) {
+		if (shape === undefined) {
+			if (!tag.closing && !tag.selfClosing && tag.name === 'v:shape')
+				shape = { attributes: tag.attributes, data: undefined };
+		} else if (tag.closing && tag.name === 'v:shape') {
+			yield shape;
+			shape = undefined;
+		} else if (!tag.closing && tag.name === 'v:imagedata') shape.data ??= tag.attributes;
+	}
+}
+
 export function readHeaderFooterImages(
 	source: SourceIndex,
 	sheetPart: string,
@@ -28,10 +43,9 @@ export function readHeaderFooterImages(
 	if (!vmlPart || !vml) return undefined;
 	const rels = source.rels(vmlPart);
 	const images: Record<string, HeaderFooterImage> = {};
-	for (const match of vml.matchAll(/<v:shape\b([^>]*)>([\s\S]*?)<\/v:shape>/g)) {
-		const id = /\bid="([^"]+)"/.exec(match[1] ?? '')?.[1];
-		const style = /style=(?:'([^']*)'|"([^"]*)")/.exec(match[1] ?? '');
-		const data = /<v:imagedata\b([^>]*)>/.exec(match[2] ?? '')?.[1];
+	for (const { attributes, data } of vmlShapes(vml)) {
+		const id = /\bid="([^"]+)"/.exec(attributes)?.[1];
+		const style = /style=(?:'([^']*)'|"([^"]*)")/.exec(attributes);
 		const relId = /\bo:relid="([^"]+)"/.exec(data ?? '')?.[1];
 		const imageRel = relId ? rels.get(relId) : undefined;
 		const partName = imageRel ? source.target(vmlPart, imageRel) : undefined;

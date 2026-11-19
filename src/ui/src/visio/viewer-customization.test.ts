@@ -175,6 +175,23 @@ describe('<visio-viewer> customization menus and Quick Access', () => {
 	});
 });
 
+describe('<visio-viewer> shape reports and the capabilities', () => {
+	it('drops Export CSV with export and Copy with copy, and shows them again after', () => {
+		const { viewer, root } = mount();
+		const button = (command: string) =>
+			root.querySelector<HTMLElement>(`.shape-report-dialog [command="${command}"]`)!;
+		expect(button('shape-report-export-csv').hidden).toBe(false);
+		viewer.element.customization = { capabilities: { export: false, copy: false } };
+		expect(button('shape-report-export-csv').hidden).toBe(true);
+		expect(button('shape-report-copy').hidden).toBe(true);
+		expect(button('shape-report-close').hidden).toBe(false);
+		viewer.element.customization = null;
+		expect(button('shape-report-export-csv').hidden).toBe(false);
+		expect(button('shape-report-copy').hidden).toBe(false);
+		viewer.destroy();
+	});
+});
+
 describe('<visio-viewer> customization and the other read-only locks', () => {
 	it('a customization or canEdit never lifts a viewer role, and leaving keeps edit: false', () => {
 		const { viewer } = mount();

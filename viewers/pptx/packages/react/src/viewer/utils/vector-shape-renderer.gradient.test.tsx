@@ -55,8 +55,8 @@ describe('renderVectorShape freeform gradient fill', () => {
 	it('paints the path with an SVG paint server, not the representative solid', () => {
 		const html = markup(freeform(LINEAR));
 		expect(html).toContain('<linearGradient');
-		expect(html).toContain('id="pptx-grad-ppt_slides_slide3_xml-shape-9"');
-		expect(html).toContain('fill="url(#pptx-grad-ppt_slides_slide3_xml-shape-9)"');
+		expect(html).toContain('id="pptx-grad-ppt_2f_slides_2f_slide3.xml-shape-9"');
+		expect(html).toContain('fill="url(#pptx-grad-ppt_2f_slides_2f_slide3.xml-shape-9)"');
 		// The averaged stand-in colour must not be painted as a flat fill.
 		expect(html).not.toContain('fill="#BDBDBD"');
 	});
@@ -128,7 +128,7 @@ describe('renderVectorShape freeform rect-path gradient fill', () => {
 				],
 			}),
 		);
-		expect(html).toContain('fill="url(#pptx-grad-ppt_slides_slide3_xml-shape-9)"');
+		expect(html).toContain('fill="url(#pptx-grad-ppt_2f_slides_2f_slide3.xml-shape-9)"');
 		// Without `patternContentUnits="objectBoundingBox"` the tile's 1x1 image is a single
 		// user unit inside a 100x50 path, so the whole fill rendered blank in React only.
 		expect(html).toMatch(/<pattern[^>]*patternContentUnits="objectBoundingBox"/u);

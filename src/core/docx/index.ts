@@ -24,6 +24,7 @@ export {
 	isThemeColorToken,
 } from './theme-color';
 export { loadDocx } from './parse';
+export { DEFAULT_DOCX_LOAD_LIMITS, type DocxLoadLimits } from './package-limits';
 export { cellSourceBlocks } from './cell-blocks';
 export {
 	DIAGRAM_GRAPHIC_URI,

@@ -3,7 +3,6 @@ import JSZip from 'jszip';
 import { openZip } from '../opc/zip-limits';
 import { dropAddedFolders, entryNames } from '../opc/zip-folders';
 import { stripPackageSignatures } from '../opc/signature/index';
-import { DOCX_ZIP_LIMITS } from './package-limits';
 import type { DocumentModel, PendingMediaPart, SaveOptions } from './model';
 import { stampModified } from './save-modified';
 import { applyStyleFormatting } from './style-formatting-package';
@@ -45,14 +44,14 @@ import { parseRelationships } from './package-parts';
 
 const RELS_PART = 'word/_rels/document.xml.rels';
 
-const contexts = new WeakMap<DocumentModel, { context: PackageContext; base: DocumentModel }>();
+const contexts = new WeakMap<DocumentModel, PackageContext>();
 
-export function remember(
-	model: DocumentModel,
-	context: PackageContext,
-	base: DocumentModel = context.base,
-): void {
-	contexts.set(model, { context, base: structuredClone(base) });
+/**
+ * Saves of `model` patch the package `context` was read from. Saving never changes
+ * `context.base` (the model as loaded), so every model saved against one package shares it.
+ */
+export function remember(model: DocumentModel, context: PackageContext): void {
+	contexts.set(model, context);
 }
 function newDocument(): XmlDocument {
 	return parseXml(
@@ -111,10 +110,10 @@ export async function saveDocx(
 	}
 	const binding = contexts.get(model);
 	if (binding && JSON.stringify(model) === JSON.stringify(binding.base))
-		return new Uint8Array(binding.context.original);
+		return new Uint8Array(binding.original);
 	assertValidDocumentModel(model);
 	model = numberMoveNames(
-		numberRevisionIds(numberCommentIds(model), maxWordId(binding?.context.sourceXml)),
+		numberRevisionIds(numberCommentIds(model), maxWordId(binding?.sourceXml)),
 	);
 	if (binding && !differsOnlyByStyleNumbering(model.paragraphStyles, binding.base.paragraphStyles))
 		throw new Error(
@@ -139,9 +138,9 @@ export async function saveDocx(
 		throw new Error(
 			'Editing the theme catalog is not supported; source theme1.xml/settings.xml are preserved unchanged.',
 		);
-	const zip = binding ? await openZip(binding.context.original, DOCX_ZIP_LIMITS) : new JSZip();
+	const zip = binding ? await openZip(binding.original, binding.zipLimits) : new JSZip();
 	const sourceEntries = entryNames(zip);
-	let document = binding ? parseXml(binding.context.sourceXml) : newDocument();
+	let document = binding ? parseXml(binding.sourceXml) : newDocument();
 	const docPrIds = new DocPrIdAllocator();
 	await docPrIds.reserveFromPackage(zip);
 	if (!binding) {
@@ -175,7 +174,7 @@ export async function saveDocx(
 		try {
 			written = write(document, preferred);
 		} catch {
-			document = binding ? parseXml(binding.context.sourceXml) : newDocument();
+			document = binding ? parseXml(binding.sourceXml) : newDocument();
 		}
 	const { newRelationships } = written ?? write(document, model);
 	if (model.pageColor !== binding?.base.pageColor) applyPageBackground(document, model.pageColor);
@@ -240,7 +239,7 @@ export async function saveDocx(
 	}
 	if (JSON.stringify(model.comments ?? []) !== JSON.stringify(binding?.base.comments ?? []))
 		await applyComments(zip, model.comments ?? []);
-	if (binding) await applyDataBindings(zip, model, binding.base, binding.context.sourceXml);
+	if (binding) await applyDataBindings(zip, model, binding.base, binding.sourceXml);
 	await applyPackageInformation(zip, model.packageInformation, binding?.base.packageInformation);
 	const privacy = model.packageInformation;
 	if (privacy?.removePersonalInformation)

@@ -1,3 +1,4 @@
+import type { UpdateRefusalCode } from 'ooxml-core/collab';
 import { needsOwnedSession, openOwnedCollaboration } from 'ooxml-ui/pptx';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -8,11 +9,22 @@ export interface OwnedCollaboration {
 	config: CollaborationConfig | undefined;
 	/** The session is being opened (or failed): nothing may connect with the input yet. */
 	holding: boolean;
-	/** `connecting` while opening, `error` when it could not open; otherwise `undefined`. */
+	/**
+	 * `connecting` while opening, `error` when it could not open or refused an update; otherwise
+	 * `undefined`.
+	 */
 	status: Extract<ConnectionStatus, 'connecting' | 'error'> | undefined;
+	/** Why the owned session stopped sharing, when it refused an update from the room. */
+	refusal: UpdateRefusalCode | null;
 }
 
-type Opened = { source: CollaborationConfig; prepared: CollaborationConfig } | { failed: true };
+type Opened =
+	| {
+			source: CollaborationConfig;
+			prepared: CollaborationConfig;
+			refusal: UpdateRefusalCode | null;
+	  }
+	| { failed: true };
 
 /**
  * Opens the session a `provider` or same-browser (BroadcastChannel) config needs and destroys it
@@ -29,10 +41,20 @@ export function useOwnedCollaboration(config: CollaborationConfig | undefined): 
 		}
 		const owned = openOwnedCollaboration(config);
 		let live = true;
+		// A refusal can arrive before React has stored the prepared config.
+		let refusal: UpdateRefusalCode | null = null;
+		owned.onRefused((code) => {
+			refusal = code;
+			if (live) {
+				setOpened((current) =>
+					current && 'prepared' in current ? { ...current, refusal } : current,
+				);
+			}
+		});
 		owned.ready.then(
 			(prepared) => {
 				if (live && prepared) {
-					setOpened({ source: config, prepared });
+					setOpened({ source: config, prepared, refusal });
 				}
 			},
 			() => {
@@ -61,15 +83,16 @@ export function useOwnedCollaboration(config: CollaborationConfig | undefined): 
 	]);
 	return useMemo((): OwnedCollaboration => {
 		if (!needs) {
-			return { config, holding: false, status: undefined };
+			return { config, holding: false, status: undefined, refusal: null };
 		}
 		if (opened && 'prepared' in opened) {
 			return {
 				config: { ...config!, externalSession: opened.prepared.externalSession! },
 				holding: false,
-				status: undefined,
+				status: opened.refusal ? 'error' : undefined,
+				refusal: opened.refusal,
 			};
 		}
-		return { config, holding: true, status: opened ? 'error' : 'connecting' };
+		return { config, holding: true, status: opened ? 'error' : 'connecting', refusal: null };
 	}, [needs, config, opened]);
 }

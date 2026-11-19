@@ -48,7 +48,7 @@ describe('Original formatting in Print Layout', () => {
 				vi.runAllTimers();
 				expect(controller.element.innerHTML).toBe(final);
 			} finally {
-				controller.destroy();
+				controller.disconnect();
 				vi.useRealTimers();
 			}
 		});
@@ -99,7 +99,7 @@ describe('Original formatting in Print Layout', () => {
 			expect(note).toHaveBeenCalledTimes(3);
 			expect(print).toHaveBeenCalledOnce();
 		} finally {
-			controller.destroy();
+			controller.disconnect();
 			print.mockRestore();
 			vi.useRealTimers();
 		}

@@ -36,7 +36,7 @@ forms).
 
 | Surface    | Contract                                                                                                                                                                               |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Properties | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `ribbonAddIns`, `collaboration`, `storage`, `fileProviders`, `customization`                                    |
+| Properties | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `locale`, `ribbonAddIns`, `collaboration`, `storage`, `fileProviders`, `customization`                          |
 | Events     | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change`, `file-command` |
 
 - `canEdit` (boolean) is the editing permission. The full viewer is editable by default and
@@ -52,6 +52,11 @@ forms).
   saved. A host that persists `exportVsdx()` itself calls it afterwards: `edit.dirty` becomes
   `false`, a `document-change` of kind `save` is emitted, and later edits and undo steps are
   measured from that point. It does nothing for a drawing that cannot be saved back.
+- During an interactive zoom (Ctrl+wheel, a pinch, the zoom slider, the + and - keys) the drawing is
+  scaled as a preview, and the zoom is applied once input pauses for 300 ms, the gesture ends, or a
+  pointer press or scroll needs the rendered page. `zoom-change` (the new zoom) fires then, once per
+  gesture, with the zoom the gesture ended at; until then the `zoom` property and the controller
+  state still hold the zoom the gesture started from, up to 300 ms behind what the user sees.
 - `collaboration` (`VisioCollaborationOptions | null`) shares the open drawing in a room while it is
   set. `collaboration-change` carries a `CollaborationState` when sharing starts or stops and when
   its status, sync or people change. On the element (`viewer.element` of a handle),

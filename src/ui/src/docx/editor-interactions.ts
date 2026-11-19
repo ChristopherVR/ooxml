@@ -55,6 +55,7 @@ export function attachEditorInteractions(core: EditorCore, frame: HTMLElement): 
 		warn: (message) => emit(element, 'document-warning', message),
 		customization: () => core.viewOptions.customization,
 	});
+	shell.contextMenu = menu;
 	// `copy: false`: the capture phase reaches the host before the editing surface, so neither
 	// the editor nor the browser copies.
 	for (const type of ['copy', 'cut'] as const)

@@ -7,8 +7,17 @@
 import * as decoding from 'lib0/decoding';
 import * as Y from 'yjs';
 import { MAX_UPDATE_BYTES } from '../collab/codec';
+import { scanUpdate, type UpdateLimits } from '../collab/update-scan';
 import { MESSAGE_SYNC } from '../collab/transport-provider';
-import { checkOwnedRow, checkPinRow, isOwnedMap } from './validate-owned';
+import { CHATS_MAP } from './chat-records';
+import { type RowRevert, checkChatRow } from './validate-chats';
+import {
+	checkOwnedRow,
+	checkPinRow,
+	isOwnedMap,
+	sameContent,
+	writesUnsupportedValue,
+} from './validate-owned';
 import {
 	CHAT_MEMBERS,
 	type ContentLimits,
@@ -40,7 +49,7 @@ export type UpdateViolationCode =
 	| 'foreign-row'
 	/** The author of an existing row was changed. */
 	| 'author-changed'
-	/** A message row is not a map, or a reaction key has the wrong shape. */
+	/** A row is not a map or takes an unsupported value, or a reaction key has the wrong shape. */
 	| 'malformed-row'
 	/** A reaction was added or removed in somebody else's name. */
 	| 'foreign-reaction'
@@ -50,7 +59,7 @@ export type UpdateViolationCode =
 	| 'incomplete-update'
 	/** A message is longer, or a message has more reactions, than the configured limits allow. */
 	| 'content-too-large'
-	/** The bytes are not a valid Yjs update, or are too large. */
+	/** The bytes are not a valid Yjs update, are too large, or could not be checked. */
 	| 'invalid-update';
 
 export interface UpdateViolation {
@@ -62,9 +71,18 @@ export interface UpdateViolation {
 }
 
 /** Size limits of an update, a message's text and the reactions of one message. */
-export type ValidateOptions = ContentLimits & { maxBytes?: number };
+export type ValidateOptions = ContentLimits & UpdateLimits & { maxBytes?: number };
 
-export type UpdateVerdict = { ok: true } | { ok: false; violations: UpdateViolation[] };
+/**
+ * `reverts` lists what an accepted update changed but its sender may no longer change. Refusing it
+ * would refuse it again on every reconnect, so a server applies the update and then passes this
+ * list to {@link applyUpdateReverts}.
+ */
+export type UpdateVerdict =
+	| { ok: true; reverts?: RowRevert[] }
+	| { ok: false; violations: UpdateViolation[] };
+
+export { applyUpdateReverts, type RowRevert } from './validate-chats';
 
 const OK: UpdateVerdict = { ok: true };
 const fail = (...violations: UpdateViolation[]): UpdateVerdict => ({ ok: false, violations });
@@ -85,6 +103,7 @@ const isTrackedMap = (name: string): boolean =>
 	name.startsWith(PINS_PREFIX) ||
 	name === ROSTER ||
 	name === CHAT_MEMBERS ||
+	name === CHATS_MAP ||
 	isOwnedMap(name);
 
 /** What the walk needs of a shared type; its event type parameter is irrelevant here. */
@@ -146,7 +165,7 @@ function isHideOnly(before: Y.Map<unknown>, after: Y.Map<unknown>): boolean {
 	const keys = new Set([...before.keys(), ...after.keys()]);
 	for (const key of keys) {
 		if (key === 'deleted') continue;
-		if (JSON.stringify(before.get(key)) !== JSON.stringify(after.get(key))) return false;
+		if (!sameContent(before.get(key), after.get(key))) return false;
 	}
 	return true;
 }
@@ -175,7 +194,7 @@ function checkRow(
 		next._item &&
 		before._item &&
 		Y.compareIDs(next._item.id, before._item.id) &&
-		JSON.stringify(before.toJSON()) === JSON.stringify(next.toJSON())
+		sameContent(before, next)
 	)
 		return null;
 	if (owner === actor.id) {
@@ -225,11 +244,14 @@ function checkReaction(
  * Channels and tabs (rows with a `createdBy`) and pins follow the rules of `validate-owned.ts`.
  * Meetings follow the same owner rule (`organizerId`). A roster row may be written only under the
  * actor's own id. A chat member may be added only by a member and removed only by themselves or a
- * moderator. Message text and the reactions per message are capped (`maxMessageChars`,
- * `maxReactionsPerMessage`). Everything else passes; see the coverage list in docs/teams-area.md.
+ * moderator. The chat directory follows `validate-chats.ts`, which answers an out-of-date edit with
+ * `reverts` on an accepted verdict. Message text and the reactions
+ * per message are capped (`maxMessageChars`, `maxReactionsPerMessage`). Everything else passes;
+ * see the coverage list in docs/teams-area.md.
  *
  * An update that depends on state the server lacks stays pending in Yjs and would be applied later
- * unchecked, so it is refused as `incomplete-update`.
+ * unchecked, so it is refused as `incomplete-update`. No row may take on a value JSON cannot carry
+ * (`malformed-row`). This never throws: what cannot be checked is refused as `invalid-update`.
  */
 export function validateTeamsUpdate(
 	doc: Y.Doc,
@@ -239,17 +261,15 @@ export function validateTeamsUpdate(
 ): UpdateVerdict {
 	if (!(update instanceof Uint8Array) || update.byteLength > (options.maxBytes ?? MAX_UPDATE_BYTES))
 		return fail({ code: 'invalid-update' });
+	// Before anything is decoded: a small frame must not make Yjs allocate millions of structs.
+	if (!scanUpdate(update, options).ok) return fail({ code: 'invalid-update' });
 	const scratch = new Y.Doc();
 	const touched: Touched = { rows: new Map(), reactions: new Set() };
+	const reverts: RowRevert[] = [];
 	try {
 		Y.applyUpdate(scratch, Y.encodeStateAsUpdate(doc));
 		scratch.on('afterTransaction', (txn: Y.Transaction) => collectTouched(scratch, txn, touched));
 		Y.applyUpdate(scratch, update);
-	} catch {
-		scratch.destroy();
-		return fail({ code: 'invalid-update' });
-	}
-	try {
 		if (scratch.store.pendingStructs !== null || scratch.store.pendingDs !== null)
 			return fail({ code: 'incomplete-update' });
 		const violations: UpdateViolation[] = [];
@@ -260,13 +280,16 @@ export function validateTeamsUpdate(
 				const was = beforeMap?.get(rowId);
 				const now = afterMap?.get(rowId);
 				let found: UpdateViolation | null;
-				if (name.startsWith(MESSAGES_PREFIX))
+				if (writesUnsupportedValue(was, now))
+					found = { code: 'malformed-row', map: name, key: rowId };
+				else if (name.startsWith(MESSAGES_PREFIX))
 					found =
 						checkRow(name, rowId, was, now, actor) ?? checkMessageSize(name, rowId, now, options);
 				else if (name.startsWith(PINS_PREFIX))
 					found = checkPinRow(name, rowId, was, now, actor, doc);
 				else if (name === ROSTER) found = checkRosterRow(rowId, was, now, actor);
 				else if (name === CHAT_MEMBERS) found = checkMemberKey(rowId, beforeMap, afterMap, actor);
+				else if (name === CHATS_MAP) found = checkChatRow(rowId, was, now, actor, reverts);
 				else found = checkOwnedRow(name, rowId, was, now, actor);
 				if (found) violations.push(found);
 			}
@@ -290,7 +313,10 @@ export function validateTeamsUpdate(
 			const found = checkReactionCount(messageId, afterReactions, options);
 			if (found) violations.push(found);
 		}
-		return violations.length ? { ok: false, violations } : OK;
+		if (violations.length) return { ok: false, violations };
+		return reverts.length ? { ok: true, reverts } : OK;
+	} catch {
+		return fail({ code: 'invalid-update' });
 	} finally {
 		scratch.destroy();
 	}

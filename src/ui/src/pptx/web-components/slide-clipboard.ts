@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import { attachControlStyles } from './control-styles';
 export interface PptxUiSlideClipboardElement extends HTMLElement {
 	copyAction: (() => Promise<void>) | undefined;
@@ -92,5 +93,5 @@ export function definePptxSlideClipboard(registry: CustomElementRegistry): void 
 			}
 		}
 	}
-	registry.define('pptx-ui-slide-clipboard', SlideClipboard);
+	defineElement(registry, 'pptx-ui-slide-clipboard', SlideClipboard);
 }

@@ -56,7 +56,9 @@ is a visible diff. See [stability.md](stability.md).
   edit as tracked changes) and `docx_fill_form_fields`.
 - Excel, reads first and every read bounded: `xlsx_inspect` (sheets and their sizes; start here),
   `xlsx_read_range` (at most 10,000 cells), `xlsx_read_filled_cells` (one sheet or all, at most
-  10,000 cells, default 2,000, with per-sheet totals and omitted counts), `xlsx_find` (at most
+  10,000 cells, default 2,000, with per-sheet totals and omitted counts; the function behind it,
+  `readXlsxFilledCells`, takes `hidden: 'omit'` to leave hidden sheets, rows and columns out and
+  count them, as the suite's assistant does), `xlsx_find` (at most
   1,000 matches plus the total) and `xlsx_read_table` (at most 10,000 cells); then
   `xlsx_create` and `xlsx_set_cells` (at most 10,000 inputs, recalculated by the core).
   `xlsx_propose_edits` (read-only: the diff of a list of edits and a sealed proposal) and
@@ -67,6 +69,27 @@ is a visible diff. See [stability.md](stability.md).
 
 Unsupported edits reject and core warnings and diagnostics are returned. These APIs do not imply
 Word, Excel or Visio parity or lossless export.
+
+### Formulas an agent may write
+
+`xlsx_set_cells`, `xlsx_propose_edits` and `xlsx_apply_proposal` (schema version 2) refuse a
+formula, in a cell or a defined name, that can reach outside the workbook (`WEBSERVICE`,
+`FILTERXML`, `HYPERLINK`, `IMAGE`, `RTD`, `CALL`, `REGISTER`, `STOCKHISTORY`, the `CUBE`
+functions, `PY` and the import functions of other spreadsheet applications), calls an XLL add-in
+function (`_xll.Name`), evaluates text as a formula or runs code, DDE or file access through the
+Excel 4.0 macro functions a defined name can call (`EVALUATE`, `EXEC`, `RUN`, `INITIATE`,
+`FOPEN`, `FWRITE` and similar), sends cell data to an AI service (`COPILOT`, `TRANSLATE`,
+`DETECTLANGUAGE`) or refers to another workbook or a file path, and one the formula parser cannot
+read (a DDE link, for example). The check reads the
+formula with the core's parser (`formulaPolicyIssue` in `ooxml-core/xlsx`), so a function is found
+wherever its name appears: called, passed by name to `MAP`, `LET` or `LAMBDA`, or written with a
+storage prefix such as `_xlfn._xlws.`. Text inside a string literal is never a match. The same
+policy applies to `createXlsxFromSheets`, `setXlsxCells`, `applyXlsxEdits` and the proposal
+functions, and the error names the cell.
+
+The opt-out is the host's, never the caller's: a host that trusts every caller registers
+`createXlsxTools({ formulas: 'unrestricted' })` instead of `xlsxTools`, or passes
+`{ formulas: 'unrestricted' }` to the functions. No tool parameter turns the check off.
 
 XLSX inspection reports, per sheet, its state (`visible`, `hidden`, `veryHidden`), its used
 range (the cells it stores, formatting included) with row and column counts, and its tables

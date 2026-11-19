@@ -33,7 +33,7 @@ async function pair() {
 	const room = newRoom();
 	const queue: (() => void)[] = [];
 	const a = room.join('Ada', (await editVsdx(await createVsdx(), [rect('1', 1)])).bytes);
-	await wait();
+	await until(() => a.session.doc.getMap('visio:meta').size > 0, 'publish');
 	const b = room.join('Bob', await createVsdx(), { schedule: (run) => void queue.push(run) });
 	await until(async () => (await b.side.model()).pages[0]!.shapes.length === 1, 'join');
 	await settle(a, b);

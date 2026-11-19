@@ -336,7 +336,8 @@ export {
 export {
 	DIGITAL_SIGNATURE_ORIGIN_REL_TYPE,
 	DIGITAL_SIGNATURE_REL_TYPE,
-	PPTX_VIEWER_MANIFEST_NS,
+	OPC_DIGITAL_SIGNATURE_NS,
+	OPC_RELATIONSHIPS_NS,
 	XMLDSIG_NS,
 	OPC_RELATIONSHIP_TRANSFORM,
 	XML_TRANSFORM_ENVELOPED_SIGNATURE,
@@ -355,6 +356,7 @@ export type {
 	TimestampAuthorityStatus,
 	SignatureReferenceCheck,
 	SignatureCertificateInfo as SignatureNodeCertificateInfo,
+	SignatureCoverageGap,
 	SignatureDetailStatus,
 	SignatureDetail,
 	DigitalSignatureVerificationStatus,
@@ -366,6 +368,7 @@ export type {
 	ReferenceTransformResult,
 	SignatureValidationPolicy,
 	OfficeSignatureReference,
+	PackageRelationship,
 } from './signature-types';
 
 export {
@@ -377,7 +380,11 @@ export {
 	extractAllTagText,
 } from './signature-xml-utils';
 
-export { normalizePartPath, resolveReferenceUriToPart } from './signature-reference-utils';
+export {
+	parseReferenceUri,
+	resolveReferenceUriToPart,
+	type ParsedReferenceUri,
+} from './signature-reference-utils';
 
 export { computeDigestBase64 as computeDigestBase64WebCrypto } from './signature-digest';
 

@@ -1,6 +1,9 @@
 /** Semantic hooks keep this stylesheet independent of framework class names. */
 export const EDITOR_LAYOUT_CSS = `
 [data-pptx-editor-chrome] [data-pptx-chrome][hidden] { display: none !important; }
+[data-pptx-editor-chrome] [data-pptx-viewport]:focus-visible {
+  outline: 2px solid var(--pptx-ring, currentColor); outline-offset: -2px;
+}
 @media (min-width: 768px) {
   [data-pptx-editor-chrome] [data-pptx-title-bar] {
     background: color-mix(in oklab, var(--pptx-secondary) 80%, transparent);

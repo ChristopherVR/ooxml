@@ -97,8 +97,9 @@ describe('native cached connector jump geometry', () => {
 		for (const scene of [changed, copySnapshotScene(changed)]) {
 			const next = scene.pages[0]!;
 			const target = next.shapes.find((shape) => shape.id === '1')!;
-			const path = (visioLineJumpPaths(next).get(target) ??
-				target.geometry.map((geometry) => geometry.path))[0]!;
+			const path = (
+				visioLineJumpPaths(next).get(target) ?? target.geometry.map((geometry) => geometry.path)
+			)[0]!;
 			expect(path).not.toContain('A');
 			expect(path.match(/M /g)).toHaveLength(2);
 		}

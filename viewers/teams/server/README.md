@@ -45,6 +45,7 @@ Flags: `--insecure-dev`, `--insecure` (see `TEAMS_INSECURE`) and `--trust-proxy[
 | `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`      | Open sockets overall (default 500) and per remote address (20).                                                                                                          |
 | `TEAMS_MAX_ROOMS`                                            | Sync rooms and call rooms (default 1000 each).                                                                                                                           |
 | `TEAMS_MAX_DOC_MB`                                           | Largest persisted room document in MB (default 64); updates past it are rejected.                                                                                        |
+| `TEAMS_MAX_UPDATE_STRUCTS`                                   | Most structs one update may hold (default one per 4 bytes of the update), counted before the update is decoded; a socket sending more is closed.                         |
 | `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`                  | Messages per second (default 100) and burst (200) for each socket; a socket over it is closed.                                                                           |
 | `TEAMS_WORKSPACE_QUOTA_MB`                                   | Files per workspace in MB (default 1024; a private chat counts for its workspace); uploads past it get 507.                                                              |
 | `TEAMS_FILES_QUOTA_MB`                                       | Optional ceiling on the whole files directory in MB (off by default); uploads past it get 507.                                                                           |
@@ -54,7 +55,8 @@ Flags: `--insecure-dev`, `--insecure` (see `TEAMS_INSECURE`) and `--trust-proxy[
 | `TEAMS_DATA`                                                 | Data directory (default `./data`): room snapshots and files.                                                                                                             |
 
 The same limits are options of `createTeamsServer` (`maxConnections`, `maxConnectionsPerIp`,
-`maxRooms`, `maxDocBytes`, `messageRate`, `messageBurst`, `workspaceQuotaBytes`, `filesQuotaBytes`,
+`maxRooms`, `maxDocBytes`, `maxUpdateStructs`, `maxSyncBytes` (largest sync message: 32 MiB, or a 64th of
+the heap when smaller, so a 512 MiB heap takes 8 MiB messages), `messageRate`, `messageBurst`, `workspaceQuotaBytes`, `filesQuotaBytes`,
 `metricsToken`, `compactIntervalMs`, `sweepIntervalMs`, `insecure`, `insecureDev`, `trustProxy`).
 
 Or embed it:
@@ -76,7 +78,9 @@ With accounts, every sync message from a socket is checked against the room docu
 applied (`validateTeamsSyncMessage` of ooxml-core, bundled into `validator.generated.mjs`). A
 signed-in user may only post messages and reactions as themselves, edit or delete their own
 messages, create channels and tabs as themselves, rename, archive or delete only the channels and
-tabs they created, and pin as themselves (in a private chat, only members pin). A violating message
+tabs they created, and pin as themselves (in a private chat, only members pin). The chat directory
+is checked too: only a chat's members change its row, its kind and creator never change, and a 1:1
+row never changes at all. A violating message
 is not applied and the socket is closed with 1008 (`update rejected: forged-author`), so the client
 resyncs. A user with the `moderator` role may additionally hide or remove anybody's messages and
 reactions and change anybody's channels, tabs and meetings, remove anybody from a private chat and
@@ -97,6 +101,11 @@ message text and reactions per message are capped (`maxMessageChars`, `maxReacti
 Yjs client ids and who may post where are not checked; the full list is in the core's
 `docs/teams-area.md`. A close with `1008 update rejected` is shown to the person, and the client
 backs off (5 s, 10 s, ...) and stops after three in a row instead of reconnecting in a loop.
+
+On every socket, with or without accounts, an update is applied whole or not at all. It is tried on
+a copy of the room first, so one that cannot be checked or applied changes nothing, reaches nobody
+else, and closes its sender's socket with `1008 update rejected: invalid-update`. The copy costs time
+proportional to the size of the room for each update.
 
 ## Accounts and sessions
 
@@ -220,12 +229,14 @@ uses all of this for collaborative PowerPoint review.
 - **All members of a room trust each other** (the workspace room, and each private chat's room). The server only moves Yjs bytes, so any member can edit
   or delete other people's messages and forge author ids and roles.
 - **Private chats have their own rooms.** A room named `chat-<16 hex>-<chat id>` admits a socket
-  only when its `?user=<id>` is listed in the room's `teams:chat-members` map; the first socket of a
-  new room lists the members in `?members=<id>,<id>` (a 1:1 `dm-` room must list exactly the two
-  people its id was derived from), and sockets of people removed from the map are closed. This keeps
-  workspace members who are not on the list out of the room. Without accounts the `user` is a claim,
-  so anyone holding the token can claim another person's id; with accounts (above) it comes from
-  the signed session.
+  only when its user is `true` in the room's `teams:chat-members` map, and sockets of people removed
+  from the map are closed. Nobody chooses the members of a new room: a 1:1 room (`dm-<32 hex>`) is
+  created for the two people its id was derived from (the opener passes them in
+  `?members=<id>,<id>`), and a group room (`g-<32 hex>-<24 hex>`) for the one person its id is bound
+  to, who then adds the others through validated updates. A room that has held anything is never
+  created again, even with an empty member list, and a name that differs from a chat room only by
+  letter case is refused. Without accounts the `user` is a claim, so anyone holding the token can
+  claim another person's id; with accounts (above) it comes from the signed session.
 - **The token and session travel in the `Sec-WebSocket-Protocol` header**
   (`openteams, openteams.session.<session>, openteams.token.<token>`; the server echoes only
   `openteams`), which keeps them out of URLs and access logs. The shipped client sends them that
@@ -235,7 +246,7 @@ uses all of this for collaborative PowerPoint review.
 - **Authorship is enforced for signed-in users** (see Authorship below).
 - **Protocol version.** Clients announce `proto=<n>`. A client whose major version the server does
   not speak is accepted at the handshake and closed with 1008 and a reason such as `unsupported
-  protocol version 2: this server speaks 1`. A missing `proto` is accepted (older clients) and
+  protocol version 1: this server speaks 2`. A missing `proto` is accepted (older clients) and
   logged.
 - **Defaults are local.** Without a token the server refuses a non-loopback `HOST` (unless
   `TEAMS_INSECURE=1`) and accepts only loopback origins, so a website you visit cannot drive a server
@@ -258,7 +269,13 @@ uses all of this for collaborative PowerPoint review.
   file for five minutes.
 - **Listing and deleting.** `GET /files/<scope>` answers `{ files: [{ name, size, modified, uploader }] }`;
   `DELETE /files/<scope>/<name>` is allowed to the uploader or a moderator. Uploader records live in
-  `file-meta/<scope>.json` (files from older versions have none: only a moderator may delete them).
+  `file-meta/=<name>.json` (files from older versions have none: only a moderator may delete them).
+- **Stored names.** Rooms, file scopes and uploader records are stored under `=` and the lower-case
+  base32 of their exact name, so names that differ only by case stay apart on every disk. The first
+  start of this version renames what an older one stored; an older server cannot read the result.
+  An entry named after a chat id only this version issues (`dm-` and 32 hex digits, or a new `g-`
+  id, in any spelling) is not migrated: it moves to a `.quarantine` folder beside it, is logged, and
+  is never read.
 - **Cleanup and quotas.** Uploads stream to a hidden `.part` file that failed uploads remove; start-up removes
   every leftover and a timer (`sweepIntervalMs`) those older than an hour. The quota is per workspace
   (`TEAMS_WORKSPACE_QUOTA_MB`).

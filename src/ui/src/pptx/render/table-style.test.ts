@@ -77,9 +77,7 @@ describe('cellStyleToCss', () => {
 			borderTopDash: 'dash',
 		} as PptxTableCellStyle;
 		const css = cellStyleToCss(style);
-		expect(css.borderTop).toBe(
-			'max(2px, var(--pptx-device-px, 0px)) dashed #123456',
-		);
+		expect(css.borderTop).toBe('max(2px, var(--pptx-device-px, 0px)) dashed #123456');
 	});
 
 	it('should prefer gradient over solid background', () => {
@@ -474,18 +472,10 @@ describe('getTableCellBandStyle - table-style borders (issue #71)', () => {
 			tableStyleMap: borderStyleMap(),
 		});
 		// Interior cell: all four edges come from insideH / insideV.
-		expect(css?.borderTop).toBe(
-			'max(1px, var(--pptx-device-px, 0px)) solid #808080',
-		);
-		expect(css?.borderBottom).toBe(
-			'max(1px, var(--pptx-device-px, 0px)) solid #808080',
-		);
-		expect(css?.borderLeft).toBe(
-			'max(1px, var(--pptx-device-px, 0px)) solid #808080',
-		);
-		expect(css?.borderRight).toBe(
-			'max(1px, var(--pptx-device-px, 0px)) solid #808080',
-		);
+		expect(css?.borderTop).toBe('max(1px, var(--pptx-device-px, 0px)) solid #808080');
+		expect(css?.borderBottom).toBe('max(1px, var(--pptx-device-px, 0px)) solid #808080');
+		expect(css?.borderLeft).toBe('max(1px, var(--pptx-device-px, 0px)) solid #808080');
+		expect(css?.borderRight).toBe('max(1px, var(--pptx-device-px, 0px)) solid #808080');
 	});
 
 	it('uses the outer edge sides at the table boundary', () => {
@@ -493,18 +483,10 @@ describe('getTableCellBandStyle - table-style borders (issue #71)', () => {
 			tableStyleMap: borderStyleMap(),
 		});
 		// Top-left cell: top+left are outer edges, bottom+right are interior.
-		expect(css?.borderTop).toBe(
-			'max(2px, var(--pptx-device-px, 0px)) solid #404040',
-		);
-		expect(css?.borderLeft).toBe(
-			'max(2px, var(--pptx-device-px, 0px)) solid #404040',
-		);
-		expect(css?.borderBottom).toBe(
-			'max(1px, var(--pptx-device-px, 0px)) solid #808080',
-		);
-		expect(css?.borderRight).toBe(
-			'max(1px, var(--pptx-device-px, 0px)) solid #808080',
-		);
+		expect(css?.borderTop).toBe('max(2px, var(--pptx-device-px, 0px)) solid #404040');
+		expect(css?.borderLeft).toBe('max(2px, var(--pptx-device-px, 0px)) solid #404040');
+		expect(css?.borderBottom).toBe('max(1px, var(--pptx-device-px, 0px)) solid #808080');
+		expect(css?.borderRight).toBe('max(1px, var(--pptx-device-px, 0px)) solid #808080');
 	});
 
 	it('resolves scheme-colour border fills via the theme colour scheme', () => {
@@ -521,9 +503,7 @@ describe('getTableCellBandStyle - table-style borders (issue #71)', () => {
 			tableStyleMap: map,
 			colorScheme,
 		});
-		expect(css?.borderTop).toBe(
-			'max(1px, var(--pptx-device-px, 0px)) solid #123456',
-		);
+		expect(css?.borderTop).toBe('max(1px, var(--pptx-device-px, 0px)) solid #123456');
 	});
 
 	it('lets a higher-precedence section supersede the total-row fallback', () => {
@@ -541,9 +521,7 @@ describe('getTableCellBandStyle - table-style borders (issue #71)', () => {
 		};
 		const css = getTableCellBandStyle(td, 2, 0, 3, 2, { tableStyleMap: map });
 		// Style-defined last-row top border replaces the hardcoded 2px line.
-		expect(css?.borderTop).toBe(
-			'max(3px, var(--pptx-device-px, 0px)) dashed #FF0000',
-		);
+		expect(css?.borderTop).toBe('max(3px, var(--pptx-device-px, 0px)) dashed #FF0000');
 	});
 });
 

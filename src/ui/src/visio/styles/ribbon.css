@@ -167,6 +167,8 @@ office-ui-menu-button[data-active]::part(button) {
 	flex: 1;
 	min-width: 0;
 	border-top: 0;
+	/* The page bar's own surface, not the accent tint: the current page's accent label needs 4.5:1. */
+	background: transparent;
 }
 office-ui-status-bar.status {
 	gap: 16px;

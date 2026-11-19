@@ -96,7 +96,7 @@ export default defineConfig({
 				// `ooxml-ui` depends on the core, so inlining it here as well would ship it twice.
 				'ooxml-core',
 				/^ooxml-core\//u,
-				'lucide-vue-next',
+				'@lucide/vue',
 				'jspdf',
 				'html2canvas-pro',
 				'jszip',

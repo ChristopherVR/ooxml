@@ -3,6 +3,7 @@
 // are declared with `declare` and set in the constructor so class fields never shadow Lit's
 // accessors. Events are plain bubbling, composed CustomEvents, like every other ooxml-ui control.
 import { unsafeCSS, type CSSResult, type PropertyDeclarations, type PropertyValues } from 'lit';
+import { hslToRgb, toHex } from 'ooxml-core/color';
 import type { MessageParams } from 'ooxml-core/i18n';
 import { OfficeElement, controlStyles } from '../base';
 import { inheritLocale, LOCALE_HOST, pushLocale, type LocaleHost } from './i18n/runtime';
@@ -68,7 +69,8 @@ export class TeamsElement extends OfficeElement {
 export function colorFor(id: string): string {
 	let hue = 0;
 	for (const ch of id) hue = (hue * 31 + ch.charCodeAt(0)) % 360;
-	return `hsl(${hue} 45% 42%)`;
+	const { r, g, b } = hslToRgb(hue, 0.45, 0.42);
+	return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toLowerCase();
 }
 
 const DAY_MS = 86_400_000;

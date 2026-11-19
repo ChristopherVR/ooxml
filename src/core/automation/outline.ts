@@ -2,9 +2,11 @@ import { createDocument, type Block } from '../docx/model';
 import { ensureListDefinition } from '../docx/numbering-editing';
 import { loadDocx } from '../docx/parse';
 import { saveDocx } from '../docx/save';
+import { formatAddress } from '../xlsx/address';
 import { createWorkbook, validateSheetName } from '../xlsx/workbook';
 import { createEditSession } from '../xlsx/edit/session';
 import { saveXlsx } from '../xlsx/write/save';
+import { refusedFormula, type XlsxFormulaOptions } from './xlsx-edits';
 
 /**
  * Structured content a host (an assistant, a template, an import) turns into a new file. The
@@ -76,9 +78,13 @@ export async function createDocxFromOutline(
 	return loaded.save();
 }
 
-/** A new workbook with one sheet per entry, each filled from its rows starting at A1. */
+/**
+ * A new workbook with one sheet per entry, each filled from its rows starting at A1. Formulas go
+ * through the same policy as edits (`options.formulas`, restricted by default).
+ */
 export async function createXlsxFromSheets(
 	sheets: readonly XlsxOutlineSheet[],
+	options: XlsxFormulaOptions = {},
 ): Promise<Uint8Array> {
 	if (!Array.isArray(sheets) || !sheets.length || sheets.length > 50)
 		throw new Error('A workbook needs 1 to 50 sheets');
@@ -101,12 +107,14 @@ export async function createXlsxFromSheets(
 					if (++cells > 100_000) throw new Error('A workbook outline has at most 100000 cells');
 					if (!['string', 'number', 'boolean'].includes(typeof value))
 						throw new Error('Cells hold text, numbers or booleans');
-					session.setCellInput(
-						index,
-						r,
-						c,
-						typeof value === 'boolean' ? (value ? 'TRUE' : 'FALSE') : text(String(value)),
-					);
+					const input =
+						typeof value === 'boolean' ? (value ? 'TRUE' : 'FALSE') : text(String(value));
+					const refused = refusedFormula(input, options);
+					if (refused)
+						throw new Error(
+							`${sheet.name}!${formatAddress({ row: r, col: c })}: the formula was refused because ${refused}`,
+						);
+					session.setCellInput(index, r, c, input);
 				});
 			}),
 		);

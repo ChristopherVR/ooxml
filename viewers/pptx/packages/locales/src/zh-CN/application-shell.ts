@@ -172,8 +172,7 @@ export const translations = {
 		'此演示文稿使用了较新的 PowerPoint 功能，已采用兼容的替代方式显示。',
 	'pptx.compatibility.partialOleSupport':
 		'此演示文稿包含嵌入对象。它们以图片形式显示，可以打开或下载；Excel、Word 和 PowerPoint 对象也可以在此编辑。',
-	'pptx.compatibility.partialInkSupport':
-		'部分墨迹绘图使用了此查看器无法精确显示的笔设置。',
+	'pptx.compatibility.partialInkSupport': '部分墨迹绘图使用了此查看器无法精确显示的笔设置。',
 	'pptx.compatibility.unsupportedGraphicFrame':
 		'此演示文稿包含此查看器无法显示的对象。保存时会原样保留。',
 	'pptx.compatibility.groupDepthExceeded':
@@ -207,6 +206,8 @@ export const translations = {
 		'嵌入字体的许可不允许使用该字体，因此显示替代字体。其字体数据保留在文件中。',
 	'pptx.compatibility.embeddedFontNotEmbeddable':
 		'未嵌入某个字体，因为其许可不允许将其嵌入到可编辑的演示文稿中。',
+	'pptx.compatibility.collaborationValueRejected':
+		'协作者发送的内容因不允许在此使用（例如不安全的链接或文件类型）而被省略。',
 	'pptx.compatibility.exportBackendUnavailable': '当前环境中无法导出为此格式。',
 	'pptx.readOnly.bannerTitle': '只读',
 	'pptx.readOnly.editAnyway': '无论如何编辑',

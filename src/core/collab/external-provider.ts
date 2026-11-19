@@ -4,6 +4,7 @@
 // Extracted from pptx-viewer `collaboration-external-session.ts` (subscription semantics) and the
 // per-binding provider wiring; see PROVENANCE.md.
 import type * as Y from 'yjs';
+import { guardProviderUpdates, type MessageHandlerProviderLike } from './provider-guard';
 import { Emitter } from './emitter';
 import type { HostAwareness } from './awareness';
 import type { ConnectionStatus, ProviderEvents, SyncProvider } from './provider';
@@ -33,6 +34,17 @@ export interface YjsProviderLike {
  */
 export function adaptYjsProvider(provider: YjsProviderLike): SyncProvider {
 	const events = new Emitter<ProviderEvents>();
+	// A y-websocket provider applies sync messages itself; scan each update before it does. A refused
+	// update stops the sync, as it does for `transportProvider`.
+	guardProviderUpdates(provider as MessageHandlerProviderLike, {
+		onRejected: (error) => {
+			if (destroyed) return;
+			events.emit('error', error);
+			provider.disconnect?.();
+			setSynced(false);
+			setStatus('error');
+		},
+	});
 	let destroyed = false;
 	let status: ConnectionStatus =
 		provider.wsconnected || provider.connected

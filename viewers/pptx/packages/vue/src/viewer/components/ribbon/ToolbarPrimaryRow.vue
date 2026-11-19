@@ -13,7 +13,7 @@
  * `useCollaboration()` context; in Vue collaboration is host-instantiated (not a
  * ribbon-level context), so that purely-decorative avatar cluster is omitted.
  */
-import { PanelLeft, PanelRight, Settings, Sparkles } from 'lucide-vue-next';
+import { PanelLeft, PanelRight, Settings, Sparkles } from '@lucide/vue';
 import {
 	isDialogAvailable,
 	isPanelVisible,

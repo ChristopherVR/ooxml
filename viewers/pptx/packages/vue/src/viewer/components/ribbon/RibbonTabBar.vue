@@ -5,7 +5,7 @@
  * Display Options (or collapse) button in its actions slot. Extracted from `RibbonToolbar.vue`;
  * the props are the ones `RibbonToolbar` already reads off `RibbonProps`.
  */
-import { ChevronDown, ChevronUp } from 'lucide-vue-next';
+import { ChevronDown, ChevronUp } from '@lucide/vue';
 import { buildRibbonTabRow, RIBBON_DISPLAY_OPTIONS_LABEL_KEY } from 'ooxml-ui/pptx';
 import type {
 	RibbonAddInTab,

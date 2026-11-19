@@ -204,6 +204,11 @@ export const translations = {
 	'pptx.shortcuts.action.pasteElement': 'Pegar elemento',
 	'pptx.shortcuts.action.prevSlide': 'Diapositiva anterior (sin selección)',
 	'pptx.shortcuts.action.selectAll': 'Seleccionar todos los elementos',
+	'pptx.shortcuts.action.editObjectText': 'Editar el texto del objeto seleccionado',
+	'pptx.shortcuts.action.enterSlide': 'Entrar en la diapositiva (seleccionar su primer objeto)',
+	'pptx.shortcuts.action.cycleObjects': 'Objeto siguiente o anterior de la diapositiva',
+	'pptx.shortcuts.action.leaveSlide': 'Borrar la selección y salir de la diapositiva',
+	'pptx.shortcuts.action.movePane': 'Moverse entre paneles',
 	'pptx.shortcuts.action.zoomCanvas': 'Ampliar/reducir el lienzo',
 	'pptx.shortcuts.close': 'Cerrar',
 	'pptx.shortcuts.group.editing': 'Edición',
@@ -328,6 +333,8 @@ export const translations = {
 		'La licencia de una fuente incrustada no permite usarla, por lo que se muestra una fuente sustituta. Sus datos se conservan en el archivo.',
 	'pptx.compatibility.embeddedFontNotEmbeddable':
 		'Una fuente no se incrustó porque su licencia no permite incrustarla en una presentación editable.',
+	'pptx.compatibility.collaborationValueRejected':
+		'Se omitió contenido enviado por un colaborador porque no está permitido aquí, como un vínculo o un tipo de archivo no seguro.',
 	'pptx.compatibility.exportBackendUnavailable':
 		'La exportación a este formato no está disponible en el entorno actual.',
 } as const;

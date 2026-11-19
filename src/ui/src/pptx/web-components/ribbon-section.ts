@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import { defineRibbonSection } from '../../controls';
 
 import type { RibbonGroupView } from '../render/ribbon-command-view';
@@ -32,5 +33,5 @@ export function definePptxRibbonSection(registry: CustomElementRegistry): void {
 		static groupIdAttribute = 'data-ribbon-group';
 		static commandIdAttribute = 'data-ribbon-control';
 	}
-	registry.define('pptx-ui-ribbon-section', PptxRibbonSection);
+	defineElement(registry, 'pptx-ui-ribbon-section', PptxRibbonSection);
 }

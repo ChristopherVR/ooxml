@@ -25,6 +25,21 @@ describe('shared lifecycle binding', () => {
 		expect(current).toHaveBeenCalledTimes(1);
 		viewer.destroy();
 	});
+	it('forwards the interface language and clears it with an empty value', () => {
+		const host = document.createElement('div');
+		document.body.append(host);
+		const viewer = mountViewer(host, { locale: 'fr' });
+		expect(viewer.element.locale).toBe('fr');
+		expect(viewer.element.getAttribute('locale')).toBe('fr');
+		const frenchHome = () => viewer.element.shadowRoot!.querySelector('[aria-label*="Accueil"]');
+		expect(frenchHome()).not.toBeNull();
+		viewer.update({ locale: 'de' });
+		expect(viewer.element.locale).toBe('de');
+		expect(frenchHome()).toBeNull();
+		viewer.update({ locale: '' });
+		expect(viewer.element.hasAttribute('locale')).toBe(false);
+		viewer.destroy();
+	});
 	it('accepts A -> B -> C -> B replacements without stale echo suppression', () => {
 		const host = document.createElement('div');
 		const a = demoDocument,

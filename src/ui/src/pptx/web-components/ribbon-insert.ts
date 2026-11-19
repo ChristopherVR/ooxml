@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import { canRequestInsert } from '../render';
 import type { RibbonInsertIntent, RibbonInsertState } from '../render';
 import { attachRibbonInsertStyles } from './ribbon-insert-styles';
@@ -89,5 +90,5 @@ export function definePptxRibbonInsert(registry: CustomElementRegistry): void {
 			this.view.sync(this.model);
 		}
 	}
-	registry.define('pptx-ui-ribbon-insert', RibbonInsert);
+	defineElement(registry, 'pptx-ui-ribbon-insert', RibbonInsert);
 }

@@ -1,5 +1,6 @@
 import {
 	canInteractWithElement,
+	elementIdSelector,
 	parentSelection,
 	resolveGroupDoubleClickTarget,
 	resolveGroupPressTarget,
@@ -214,7 +215,7 @@ export function useCanvasPointer(options: UseCanvasPointerOptions): UseCanvasPoi
 	function handleDoubleTap(event: PointerEvent, doubleTapId: string): boolean {
 		const el = options.findActiveElement(doubleTapId);
 		if (el?.type === 'table') {
-			const tableHost = document.querySelector(`[data-element-id="${doubleTapId}"]`);
+			const tableHost = document.querySelector(elementIdSelector(doubleTapId));
 			const tds = tableHost?.querySelectorAll('td');
 			let closestTd: HTMLElement | null = null;
 			if (tds && tds.length > 0) {

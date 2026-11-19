@@ -19,6 +19,7 @@ export const VisioViewer = defineVueBinding({
 	props: {
 		canEdit: { type: Boolean, default: undefined },
 		readOnly: { type: Boolean, default: undefined },
+		locale: { type: String, default: undefined },
 		document: { type: Object as PropType<ViewerProperties['document']>, default: undefined },
 		pageIndex: { type: Number, default: undefined },
 		zoom: { type: Number, default: undefined },

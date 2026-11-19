@@ -1,5 +1,6 @@
 /** Visio ribbon strings for the es locale (text), keyed by the English text. Not reviewed by a native speaker. */
 export const esText: Readonly<Record<string, string>> = {
+	'Connects {from} to {to}': 'Conecta {from} con {to}',
 	'This chart contains unsupported content and is read-only. Its original workbook is preserved.':
 		'Este gráfico contiene contenido no compatible y es de solo lectura. Se conserva su libro original.',
 	'Diagram controls': 'Controles del diagrama',
@@ -103,4 +104,26 @@ export const esText: Readonly<Record<string, string>> = {
 	Options: 'Opciones',
 	Share: 'Compartir',
 	'Style {n}': 'Estilo {n}',
+	'The page has {count} shapes, more than this viewer can open (it reads at most {limit} XML nodes per part).':
+		'La página tiene {count} formas, más de las que este visor puede abrir (lee como máximo {limit} nodos XML por parte).',
+	'A part of this drawing has more than {limit} XML nodes, more than this viewer can open.':
+		'Una parte de este dibujo tiene más de {limit} nodos XML, más de los que este visor puede abrir.',
+	'This drawing has more than {limit} XML nodes in all, more than this viewer can open.':
+		'Este dibujo tiene más de {limit} nodos XML en total, más de los que este visor puede abrir.',
+	'This drawing would need more than {limit} MB of memory to open, more than this viewer allows.':
+		'Este dibujo necesitaría más de {limit} MB de memoria para abrirse, más de lo que permite este visor.',
+	'This {size} KB drawing would need more than {limit} MB of memory to open, far more than drawings of its size need.':
+		'Este dibujo de {size} KB necesitaría más de {limit} MB de memoria para abrirse, mucho más de lo que necesitan los dibujos de su tamaño.',
+	'This drawing would need more than {limit} MB of memory to edit, more than this viewer allows.':
+		'Este dibujo necesitaría más de {limit} MB de memoria para editarse, más de lo que permite este visor.',
+	'This {size} KB drawing would need more than {limit} MB of memory to edit, far more than drawings of its size need.':
+		'Este dibujo de {size} KB necesitaría más de {limit} MB de memoria para editarse, mucho más de lo que necesitan los dibujos de su tamaño.',
+	'This drawing is too large to edit here: its pages hold about {cells} ShapeSheet cells, more than the {limit} an edit can follow.':
+		'Este dibujo es demasiado grande para editarlo aquí: sus páginas contienen unas {cells} celdas de ShapeSheet, más de las {limit} que puede seguir una edición.',
+	'This drawing is too large to edit here: an edit would need more than {limit} MB of memory.':
+		'Este dibujo es demasiado grande para editarlo aquí: una edición necesitaría más de {limit} MB de memoria.',
+	'This drawing is too large to edit: an edit follows at most {limit} ShapeSheet cells.':
+		'Este dibujo es demasiado grande para editarlo: una edición sigue como máximo {limit} celdas de ShapeSheet.',
+	'It opens read-only.': 'Se abre en modo de solo lectura.',
+	'Edit rejected': 'Edición rechazada',
 };

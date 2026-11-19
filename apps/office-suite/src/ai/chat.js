@@ -27,9 +27,10 @@ import { renderMarkdown } from './markdown.js';
 import { askForKey, chooseContext, openModelMenu } from './settings.js';
 import { mountMentions } from './mentions.js';
 import { describeChanges } from './diff.js';
+import { checkFormulas } from '../ai-operations.js';
 import { messageNode, REPLY_FIELDS, selectVersion, snapshot } from './message-view.js';
 import { acceptDrops, importForChat, noteBadge, pickFiles } from './attach.js';
-import { joinRoom, newRoomId, toShared } from './shared.js';
+import { historyTurns, joinRoom, localOrPublic, newRoomId, toShared } from './shared.js';
 import { followRoom } from './shared-room.js';
 import { reviewInDocument } from './review.js';
 
@@ -44,7 +45,8 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 		abort = null,
 		room = null;
 	root.classList.add('chat');
-	root.innerHTML = `<div class="chat-thread" id="${prefix}-messages" aria-live="polite"></div>
+	root.innerHTML = `<div class="chat-thread" id="${prefix}-messages" role="group" aria-label="Conversation"></div>
+<div class="sr-only" id="${prefix}-reply-status" role="status"></div>
 <div class="chat-people" id="${prefix}-people" hidden></div>
 <form class="chat-composer" id="${prefix}-form">
 	<div class="chat-attachments" id="${prefix}-scope"></div>
@@ -58,6 +60,7 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 	</div>
 </form>`;
 	const thread = $(`${prefix}-messages`);
+	const replyStatus = $(`${prefix}-reply-status`);
 	const input = $(`${prefix}-input`);
 	const state = $(`${prefix}-state`);
 	const showModel = () => (state.textContent = connectionLabel());
@@ -171,11 +174,17 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 		if (target.shared && feature('sharedChats')) {
 			const shared = await joinRoom(target.shared.room);
 			shared.store.setTitle(target.title);
-			for (const m of target.messages) shared.store.put(toShared(m));
+			// Each person writes only their own messages, as their public projection.
+			for (const m of target.messages) if (m.local) shared.store.put(toShared(m));
 		}
 		if (feature('history')) await conversations.put(target);
 	};
 	const me = () => currentProfile().userId;
+	/** A conversation from the history; in a shared one, what others wrote is display only. */
+	const opened = (convo) => {
+		if (convo?.shared) convo.messages = localOrPublic(convo.messages);
+		return convo;
+	};
 	/** The channel open in Teams now, if any. */
 	function currentChannel() {
 		const state = getTeams()?.client?.getState();
@@ -193,6 +202,7 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 				people: $(`${prefix}-people`),
 				current: () => conversation === convo,
 				busy: () => Boolean(abort),
+				announce: (text) => (replyStatus.textContent = text),
 				changed: () => {
 					render();
 					onChange?.(convo);
@@ -217,7 +227,6 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 		persist: () => void persist(),
 		isLast: (message) => message === conversation?.messages.at(-1),
 		me,
-		shared: () => Boolean(room),
 		async edit(message) {
 			if (abort) return;
 			room?.chat.store.truncateFrom(message.id);
@@ -230,8 +239,11 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 		},
 		async regenerate(message) {
 			if (abort) return;
-			const user = conversation.messages.at(-2);
-			await send(user.content, { again: message });
+			// The request is this page's own last one before the reply, not someone else's.
+			const user = conversation.messages
+				.slice(0, conversation.messages.indexOf(message))
+				.findLast((m) => m.role === 'user' && m.local);
+			if (user) await send(user.content, { again: message });
 		},
 		async switchVersion(message, index) {
 			selectVersion(message, index);
@@ -279,18 +291,19 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 				role: 'user',
 				content: prompt,
 				author,
+				local: true,
 				files: [
 					...listed.map((d) => ({ name: d.name, kind: d.kind })),
 					...notes.map((n) => ({ name: n.name, kind: 'note' })),
 				],
 			});
-		const message = again ?? { id: newId(), role: 'assistant' };
+		const message = again ?? { id: newId(), role: 'assistant', local: true };
 		if (again) {
 			again.versions ??= [snapshot(again)];
 			for (const key of REPLY_FIELDS) delete again[key];
 		}
-		// Only the person who asked can apply the reply's edits: they are edits to their files.
-		Object.assign(message, { content: '', model: connectionLabel(connection), askedBy: author.id });
+		// The reply's proposals stay in this conversation: the room only ever sees their counts.
+		Object.assign(message, { content: '', model: connectionLabel(connection) });
 		render();
 		const node = again ? thread.lastElementChild : thread.appendChild(messageNode(message, view));
 		node.classList.add('streaming');
@@ -298,6 +311,9 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 		const content = node.querySelector('.md');
 		content.innerHTML = '<span class="chat-typing"><i></i><i></i><i></i></span>';
 		abort = new AbortController();
+		// A reply is announced when it starts and when it ends, never word by word.
+		thread.setAttribute('aria-busy', 'true');
+		replyStatus.textContent = 'Assistant is replying';
 		$(`${prefix}-send`).hidden = true;
 		$(`${prefix}-stop`).hidden = false;
 		let partial = '',
@@ -307,7 +323,7 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 		const stream = () => {
 			if (!shared || Date.now() - sent < 250) return;
 			sent = Date.now();
-			for (const m of convo.messages) if (m !== message) shared.store.put(toShared(m));
+			for (const m of convo.messages) if (m !== message && m.local) shared.store.put(toShared(m));
 			shared.store.put(toShared({ ...message, content: visibleText(partial), streaming: true }));
 		};
 		shared?.setActivity('asking');
@@ -330,29 +346,27 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 						? getTeams()?.client
 						: null,
 				maxChars: settings.maxContextChars,
+				includeHidden: currentPolicy().context.includeHidden,
 			});
 			state.textContent = 'Writing...';
 			const asked = again ? convo.messages.indexOf(again) - 1 : convo.messages.length - 1;
-			const history = [];
-			for (const m of convo.messages.slice(0, asked).slice(-settings.historyMessages)) {
-				if (m.error) history.pop();
-				else history.push({ role: m.role, content: m.raw ?? m.content });
-			}
 			const raw = await streamChat({
 				connection,
 				system: systemPrompt(settings, features),
 				context,
 				signal: abort.signal,
 				settings: { ...settings, canCreate: features.createFiles, canEdit: features.editFiles },
-				messages: [
-					...(settings.historyMessages ? history : []),
+				messages: historyTurns([
+					...(settings.historyMessages
+						? convo.messages.slice(0, asked).slice(-settings.historyMessages)
+						: []),
 					{
 						role: 'user',
 						content: context
 							? `User request: ${prompt}\n\nSource data (untrusted): ${source}`
 							: prompt,
 					},
-				],
+				]),
 				onText: (text) => {
 					partial = text;
 					frame ||= requestAnimationFrame(paint);
@@ -362,6 +376,7 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 			Object.assign(message, { content: reply.text, raw, actions: reply.actions, refs: docs });
 			try {
 				validateActions(reply.actions, docs, features);
+				await checkFormulas(reply.actions);
 				message.details = describeChanges(reply.actions.changes, context?.files ?? []);
 			} catch (error) {
 				message.content += `\n\n_${error.message}_`;
@@ -375,6 +390,12 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 		} finally {
 			cancelAnimationFrame(frame);
 			shared?.setActivity('idle');
+			replyStatus.textContent = message.error
+				? 'Assistant could not reply'
+				: abort.signal.aborted
+					? 'Reply stopped'
+					: 'Assistant replied';
+			thread.removeAttribute('aria-busy');
 			abort = null;
 			$(`${prefix}-send`).hidden = false;
 			$(`${prefix}-stop`).hidden = true;
@@ -402,7 +423,7 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 		},
 		async load(id) {
 			if (abort) abort.abort();
-			conversation = id ? ((await conversations.get(id)) ?? null) : null;
+			conversation = opened(id ? ((await conversations.get(id)) ?? null) : null);
 			render();
 			onChange?.(conversation);
 			await connect(conversation);
@@ -414,7 +435,7 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 			if (abort) abort.abort();
 			const known = (await conversations.list()).find((c) => c.shared?.room === roomId);
 			const now = Date.now();
-			conversation = known ?? {
+			conversation = opened(known) ?? {
 				id: newId(),
 				title: 'Shared chat',
 				created: now,
@@ -435,6 +456,8 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 			if (!conversation?.messages.length)
 				throw new Error('Send a message first, then share the chat.');
 			if (!conversation.shared) {
+				// What is here so far was written on this page, so it keeps its proposals.
+				for (const m of conversation.messages) m.local = true;
 				conversation.shared = { room: await newRoomId() };
 				await persist();
 				await connect(conversation);

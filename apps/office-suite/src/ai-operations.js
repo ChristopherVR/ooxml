@@ -16,8 +16,10 @@ function fit(list, budget) {
 /**
  * A file as the assistant reads it, within `budget` JSON characters. Nothing is cut silently: when
  * the budget runs out the view says what it left out (`omitted`), so the model can say so too.
+ * Hidden sheets, rows and columns of a workbook are left out unless `includeHidden` (the policy's
+ * `context.includeHidden`), and the note counts them.
  */
-export async function inspect(doc, budget = 150000) {
+export async function inspect(doc, budget = 150000, { includeHidden = false } = {}) {
 	const { inspectDocx, readXlsxFilledCells, inspectVisio } = await automation();
 	if (doc.kind === 'docx') {
 		const source = await inspectDocx(doc.bytes);
@@ -41,15 +43,31 @@ export async function inspect(doc, budget = 150000) {
 	}
 	if (doc.kind === 'xlsx') {
 		// A filled cell is about 60 JSON characters; read as many as the budget holds.
-		const book = await readXlsxFilledCells(doc.bytes, { maxCells: Math.floor(budget / 60) });
+		const book = await readXlsxFilledCells(doc.bytes, {
+			maxCells: Math.floor(budget / 60),
+			hidden: includeHidden ? 'include' : 'omit',
+		});
 		const left = book.sheets.filter((s) => s.omitted);
+		const notes = [
+			...(book.hidden?.sheets
+				? [
+						`${book.hidden.sheets} hidden sheet${book.hidden.sheets === 1 ? ' was' : 's were'} left out.`,
+					]
+				: []),
+			...(book.hidden?.cells
+				? [
+						`${book.hidden.cells} filled cell${book.hidden.cells === 1 ? '' : 's'} in hidden rows or columns ${book.hidden.cells === 1 ? 'was' : 'were'} left out.`,
+					]
+				: []),
+			...(left.length
+				? [
+						`Left out to fit: ${left.map((s) => `${s.omitted} of ${s.total} filled cells on ${s.name}`).join('; ')}.`,
+					]
+				: []),
+		];
 		return {
 			sheets: book.sheets.map(({ index, name, cells }) => ({ index, name, cells })),
-			...(left.length
-				? {
-						omitted: `Left out to fit: ${left.map((s) => `${s.omitted} of ${s.total} filled cells on ${s.name}`).join('; ')}.`,
-					}
-				: {}),
+			...(notes.length ? { omitted: notes.join(' ') } : {}),
 		};
 	}
 	const view =
@@ -67,24 +85,36 @@ export async function inspect(doc, budget = 150000) {
 	};
 }
 
-// Functions that fetch data, open links or load code when a formula is evaluated.
-const BLOCKED_FUNCTION =
-	/(?:^|[^A-Z0-9_.])(?:_XL[A-Z]*\.)?(?:WEBSERVICE|FILTERXML|HYPERLINK|IMAGE|RTD|CALL|REGISTER(?:\.ID)?)\s*\(/i;
-// Links, UNC shares and drive paths. Matched anywhere, including inside string literals, which
-// is deliberately conservative because the formula is not tokenised here.
-const EXTERNAL_TARGET = /http|www\.|file:|ftp:|\\\\|[a-z]:\\/i;
-
-/** Returns why a proposed cell input is unsafe, or null when it is allowed. */
-export function formulaProblem(input) {
-	if (!/^\s*=/.test(input)) return null;
-	const formula = input.trim();
-	if (BLOCKED_FUNCTION.test(formula))
-		return 'it calls a function that can fetch data, open links or run code';
-	if (formula.includes('|')) return 'DDE pipe references are not allowed';
-	if (EXTERNAL_TARGET.test(formula)) return 'it refers to a link or a file path';
-	for (const match of formula.matchAll(/\[([^\]]*)/g))
-		if (/[.\\/:]|^\s*\d+\s*$/.test(match[1])) return 'it refers to an external workbook';
-	return null;
+/**
+ * Throws when a proposed cell edit or new workbook holds a formula the core refuses: one that can
+ * reach outside the workbook, calls an AI service or refers to another workbook or a file,
+ * wherever the function appears (`refusedFormula` in `ooxml-core/automation`). The core refuses
+ * them again when the edit is applied or the file is built.
+ */
+export async function checkFormulas({ changes = [], create = [] }) {
+	const [{ refusedFormula }, { formatAddress }] = await Promise.all([
+		automation(),
+		import('ooxml-core/xlsx'),
+	]);
+	const check = (where, input) => {
+		const why = refusedFormula(input);
+		if (why)
+			throw new Error(
+				`The proposed formula in ${where} was rejected because ${why}. Ask again without it.`,
+			);
+	};
+	for (const change of changes)
+		if (change.type === 'cells') for (const cell of change.cells) check(cell.address, cell.input);
+	for (const item of create)
+		if (item.type === 'xlsx')
+			for (const sheet of item.sheets)
+				(Array.isArray(sheet.rows) ? sheet.rows : []).forEach((row, r) =>
+					(Array.isArray(row) ? row : []).forEach(
+						(value, c) =>
+							typeof value === 'string' &&
+							check(`${sheet.name}!${formatAddress({ row: r, col: c })}`, value),
+					),
+				);
 }
 
 export function validateChanges(changes, docs) {
@@ -132,14 +162,6 @@ export function validateChanges(changes, docs) {
 				))
 		)
 			throw new Error('Invalid cell edits.');
-		if (c.type === 'cells')
-			for (const cell of c.cells) {
-				const problem = formulaProblem(cell.input);
-				if (problem)
-					throw new Error(
-						`The proposed formula in ${cell.address} was rejected because ${problem}. Ask again without it.`,
-					);
-			}
 	}
 }
 /** The core's workbook edits for the `cells` changes to one file, in order. */

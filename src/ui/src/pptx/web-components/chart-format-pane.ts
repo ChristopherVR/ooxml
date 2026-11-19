@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import type { PptxChartData } from 'ooxml-core/pptx';
 
 import {
@@ -115,5 +116,5 @@ export function definePptxChartFormatPane(registry: CustomElementRegistry): void
 			);
 		}
 	}
-	registry.define('pptx-ui-chart-format-pane', ChartFormatPaneElement);
+	defineElement(registry, 'pptx-ui-chart-format-pane', ChartFormatPaneElement);
 }

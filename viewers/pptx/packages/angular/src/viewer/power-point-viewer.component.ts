@@ -71,6 +71,7 @@ import {
 	createRibbonDisplayController,
 	attachTableCellsPaste,
 	applyRehearsalTimings,
+	createRemoteValueNotifier,
 } from 'ooxml-ui/pptx';
 import type {
 	GoogleFontsOption,
@@ -397,8 +398,7 @@ const noopClose = (): void => undefined;
 					>
 						<span class="h-4 w-4 shrink-0 text-amber-400" aria-hidden="true">&#128274;</span>
 						<p class="flex-1 text-xs text-amber-200">
-							<strong>{{ 'pptx.security.protectedViewTitle' | translate }}</strong
-							>:
+							<strong>{{ 'pptx.security.protectedViewTitle' | translate }}</strong>:
 							{{ 'pptx.options.trust.protectedViewInfo' | translate }}
 						</p>
 						<button
@@ -1954,6 +1954,8 @@ export class PowerPointViewerComponent
 
 	protected readonly loader = inject(LoadContentService);
 	protected readonly loadNotices = inject(LoadNoticesService);
+	/** Toast for values a collaboration peer sent that were left out. */
+	private readonly remoteValueNotice = createRemoteValueNotifier();
 	protected readonly editor = inject(EditorStateService);
 	private readonly slidePackageClipboard = createSlidePackageClipboard({
 		getSnapshot: () => {
@@ -3111,8 +3113,15 @@ export class PowerPointViewerComponent
 			authorName: () => this.authorName(),
 			shareDefaults: () => this.shareDefaults(),
 			getTemplateElements: () => this.editor.templateElementsBySlideId(),
-			applyRemoteSlides: (slides) => this.editor.applyRemoteSlides(slides),
+			applyRemoteSlides: (slides) => {
+				this.editor.applyRemoteSlides(slides);
+				const toast = this.remoteValueNotice(slides);
+				if (toast) {
+					this.loadNotices.notify(toast);
+				}
+			},
 			onRoomReplacedDeck: () => this.loader.markDeckLoad(),
+			notify: (toast) => this.loadNotices.notify(toast),
 			history: this.editor,
 			canvasSize: () => this.loader.canvasSize(),
 			getSourceBytes: () => this.fileIO.sourceBytes(),

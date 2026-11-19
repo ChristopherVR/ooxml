@@ -35,4 +35,11 @@ export { deleteSheetInFormula, moveReferencesInFormula, type MoveSpec } from './
 export { renameTableInFormula } from './table-refs';
 export { structuredToA1, type StructuredTarget } from './structured-to-a1';
 export { needsArrayEvaluation } from './array-context';
+export {
+	cellInputPolicyIssue,
+	type FormulaPolicyConcern,
+	type FormulaPolicyIssue,
+	formulaPolicyIssue,
+	RESTRICTED_FORMULA_FUNCTIONS,
+} from './policy';
 export * from './editor-text';

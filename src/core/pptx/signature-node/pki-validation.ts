@@ -1,15 +1,13 @@
 /**
- * PKI validation utilities — PEM/fingerprint certificate helpers and
- * timestamp-authority evaluation for OOXML digital signatures.
+ * PKI validation utilities: PEM/fingerprint certificate helpers and the
+ * timestamp status of OOXML digital signatures.
  *
  * OCSP revocation checking lives in `./ocsp.ts`.
  *
- * Node-only — depends on `node:crypto` and `node-forge`.
+ * Node-only: depends on `node:crypto`.
  */
 
 import crypto from 'node:crypto';
-
-import forge from 'node-forge';
 
 import type { TimestampAuthorityStatus } from '../core/utils/signature-types';
 import { findTimestampTagContent } from './timestamp-tag-scanner';
@@ -47,43 +45,19 @@ export function certFingerprintSha256(certPem: string): string | undefined {
 }
 
 // ---------------------------------------------------------------------------
-// ASN.1 navigation helpers
-// ---------------------------------------------------------------------------
-
-function asn1Child(node: forge.asn1.Asn1, index: number): forge.asn1.Asn1 | undefined {
-	return Array.isArray(node.value) ? (node.value[index] as forge.asn1.Asn1 | undefined) : undefined;
-}
-
-// ---------------------------------------------------------------------------
 // Public: timestamp authority evaluation
 // ---------------------------------------------------------------------------
 
+/**
+ * Timestamp tokens sit in unsigned markup and are not validated: their CMS signature, TSA chain and
+ * message imprint are never checked. So a token is reported `not-checked`, never `valid`, and a
+ * policy that requires a timestamp is not met by one.
+ */
 export async function evaluateTimestampAuthority(
 	signatureXml: string,
 ): Promise<{ status: TimestampAuthorityStatus; error?: string }> {
-	try {
-		const content = findTimestampTagContent(signatureXml);
-		if (!content?.trim()) {
-			return { status: 'not-present' };
-		}
-		const tokenBase64 = content.replace(/\s+/g, '');
-		const tokenDer = Buffer.from(tokenBase64, 'base64');
-		if (tokenDer.length === 0) {
-			return { status: 'invalid', error: 'Empty timestamp token.' };
-		}
-		const asn1 = forge.asn1.fromDer(forge.util.createBuffer(tokenDer.toString('binary')));
-		const contentType = asn1Child(asn1, 0);
-		if (!contentType) {
-			return {
-				status: 'invalid',
-				error: 'Malformed timestamp token structure.',
-			};
-		}
-		return { status: 'valid' };
-	} catch (err) {
-		return {
-			status: 'error',
-			error: `Timestamp evaluation failed: ${String(err)}`,
-		};
+	if (!findTimestampTagContent(signatureXml)?.trim()) {
+		return { status: 'not-present' };
 	}
+	return { status: 'not-checked', error: 'Timestamp tokens are not validated.' };
 }

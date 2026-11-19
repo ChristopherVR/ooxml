@@ -1,4 +1,5 @@
 import { createEffect, createSignal, onCleanup, type Accessor } from 'solid-js';
+import { getNextElement, isServer, ssrElement } from 'solid-js/web';
 import {
 	bindTeams,
 	createTeams,
@@ -16,11 +17,19 @@ export type { TeamsClient, TeamsClientOptions, TeamsProps, TeamsState } from 'te
 /**
  * Returns the `<teams-app>` element; use it as `{Teams(props)}` inside JSX. A plain function (no
  * JSX transform needed) keeps the package a lifecycle adapter: props are re-applied reactively
- * and handlers are read at event time.
+ * and handlers are read at event time. On the server it renders the empty element, which the
+ * browser claims while hydrating.
  */
 export function Teams(props: TeamsElementProps & { class?: string | undefined }): HTMLElement {
+	if (isServer)
+		return ssrElement(
+			'teams-app',
+			{ class: props.class ?? props.className, style: 'display:block;height:100%' },
+			undefined,
+			true,
+		) as unknown as HTMLElement;
 	defineTeamsApp();
-	const el = document.createElement('teams-app') as TeamsApp;
+	const el = getNextElement(() => document.createElement('teams-app')) as TeamsApp;
 	el.style.display = 'block';
 	el.style.height = '100%';
 	const binding = bindTeams(el, () => props);

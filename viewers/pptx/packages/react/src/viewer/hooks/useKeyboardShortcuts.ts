@@ -120,6 +120,8 @@ export interface UseKeyboardShortcutsInput {
 	onCycleSelectionNext?: () => void;
 	/** Shift+Tab: select the previous element on the slide. */
 	onCycleSelectionPrev?: () => void;
+	/** Enter inside the slide: edit the selected element's text. */
+	onEditText?: () => void;
 	/** Ctrl/Cmd+Alt+V: open the Paste Special dialog. */
 	onPasteSpecial?: () => void;
 }
@@ -205,6 +207,7 @@ function toEditorKeyHandlers(current: UseKeyboardShortcutsInput): EditorKeyHandl
 		clearFormatting: current.onClearFormatting,
 		cycleSelectionNext: current.onCycleSelectionNext,
 		cycleSelectionPrev: current.onCycleSelectionPrev,
+		editText: current.onEditText,
 		pasteSpecial: current.onPasteSpecial,
 	};
 }

@@ -1,4 +1,6 @@
+import { definer } from '../../registry';
 import { html, nothing, unsafeCSS, type PropertyValues } from 'lit';
+import { withTokens } from '../../base';
 import { TeamsLitElement } from '../i18n/lit-element';
 import {
 	filterFiles,
@@ -20,7 +22,7 @@ import { icon } from '../icons';
 
 /** File controls bind to channel-capturing core actions; uploaded bytes never enter UI state. */
 export class TeamsFilesPanel extends TeamsLitElement {
-	static override styles = unsafeCSS(css);
+	static override styles = unsafeCSS(withTokens(css));
 	static override properties = {
 		client: { attribute: false },
 		files: { attribute: false },
@@ -345,7 +347,4 @@ export class TeamsFilesPanel extends TeamsLitElement {
 	}
 }
 
-export function defineTeamsFilesPanel(): void {
-	if (globalThis.customElements && !customElements.get('teams-files-panel'))
-		customElements.define('teams-files-panel', TeamsFilesPanel);
-}
+export const defineTeamsFilesPanel = definer('teams-files-panel', () => TeamsFilesPanel);

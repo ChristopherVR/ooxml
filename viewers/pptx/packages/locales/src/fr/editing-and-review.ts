@@ -205,6 +205,11 @@ export const translations = {
 	'pptx.shortcuts.action.pasteElement': "Coller l'élément",
 	'pptx.shortcuts.action.prevSlide': 'Diapositive précédente (sans sélection)',
 	'pptx.shortcuts.action.selectAll': 'Sélectionner tous les éléments',
+	'pptx.shortcuts.action.editObjectText': 'Modifier le texte de l’objet sélectionné',
+	'pptx.shortcuts.action.enterSlide': 'Entrer dans la diapositive (sélectionner son premier objet)',
+	'pptx.shortcuts.action.cycleObjects': 'Objet suivant ou précédent de la diapositive',
+	'pptx.shortcuts.action.leaveSlide': 'Effacer la sélection, puis quitter la diapositive',
+	'pptx.shortcuts.action.movePane': 'Passer d’un volet à l’autre',
 	'pptx.shortcuts.action.zoomCanvas': 'Zoomer sur le plan de travail',
 	'pptx.shortcuts.close': 'Fermer',
 	'pptx.shortcuts.group.editing': 'Édition',
@@ -329,6 +334,8 @@ export const translations = {
 		"La licence d'une police incorporée n'autorise pas son utilisation : une police de substitution est affichée. Ses données restent dans le fichier.",
 	'pptx.compatibility.embeddedFontNotEmbeddable':
 		"Une police n'a pas été incorporée, car sa licence n'autorise pas son incorporation dans une présentation modifiable.",
+	'pptx.compatibility.collaborationValueRejected':
+		"Du contenu envoyé par un collaborateur a été ignoré, car il n'est pas autorisé ici, par exemple un lien ou un type de fichier non sécurisé.",
 	'pptx.compatibility.exportBackendUnavailable':
 		"L'exportation vers ce format n'est pas disponible dans l'environnement actuel.",
 } as const;

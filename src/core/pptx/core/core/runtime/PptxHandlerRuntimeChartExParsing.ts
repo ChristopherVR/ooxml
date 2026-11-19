@@ -26,7 +26,6 @@ import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRunti
 type ChartPartFacts = Pick<
 	PptxChartData,
 	| 'externalData'
-	| 'embeddedWorkbookData'
 	| 'pivotSource'
 	| 'colorPalette'
 	| 'themeAccentColors'
@@ -46,7 +45,8 @@ type ChartPartFacts = Pick<
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	/**
 	 * The facts of a chart part that live outside the plot (or in other parts): the external data
-	 * reference and the embedded workbook's rows, pivot source and formats, the colour-style and
+	 * reference (the embedded workbook's bytes, which are parsed only when the chart needs its
+	 * rows), pivot source and formats, the colour-style and
 	 * chart-style parts, layouts, user shapes, print settings and protection. Only the facts that
 	 * are present are set.
 	 */
@@ -57,7 +57,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	): Promise<ChartPartFacts> {
 		const localName = (key: string) => this.compatibilityService.getXmlLocalName(key);
 		const externalData = await this.parseChartExternalData(chartSpace, chartPartPath);
-		const embeddedWorkbookData = await this.parseEmbeddedWorkbook(externalData);
 		const pivotSource = this.parsePivotSource(chartSpace);
 		// Office 2013+ colour style (colorsN.xml) and the separate chart style part (styleN.xml),
 		// which carries the built-in style's per-element font, line and fill defaults.
@@ -74,7 +73,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const protection = parseChartProtection(chartSpace, localName);
 		return {
 			...(externalData ? { externalData } : {}),
-			...(embeddedWorkbookData ? { embeddedWorkbookData } : {}),
 			...(pivotSource ? { pivotSource } : {}),
 			...(chartColorStyle?.palette ? { colorPalette: chartColorStyle.palette } : {}),
 			...(themeAccentColors ? { themeAccentColors } : {}),

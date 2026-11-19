@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { compatibilityWarningToasts } from './compatibility-warning-toasts';
+import {
+	compatibilityWarningToasts,
+	createRemoteValueNotifier,
+} from './compatibility-warning-toasts';
 
 describe('compatibilityWarningToasts', () => {
 	it('maps a known code to its message key', () => {
@@ -86,5 +89,27 @@ describe('compatibilityWarningToasts', () => {
 			{ code: 'group-depth-exceeded', severity: 'warning' },
 		]);
 		expect(toasts[0].messageKey).toBe('pptx.compatibility.groupDepthExceeded');
+	});
+});
+
+describe('createRemoteValueNotifier', () => {
+	const rejected = (elementId: string) => ({
+		code: 'COLLABORATION_REMOTE_VALUE_REJECTED',
+		severity: 'warning' as const,
+		message: 'left out',
+		elementId,
+	});
+
+	it('gives a translated toast once per rejection a peer caused', () => {
+		const notice = createRemoteValueNotifier();
+		expect(notice([{ id: 's1', warnings: [] }])).toBeUndefined();
+		const toast = notice([{ id: 's1', warnings: [rejected('a')] }]);
+		expect(toast?.messageKey).toBe('pptx.compatibility.collaborationValueRejected');
+		expect(toast?.severity).toBe('warning');
+		// The same rejection, read again with the next remote change, is not reported again.
+		expect(notice([{ id: 's1', warnings: [rejected('a')] }])).toBeUndefined();
+		expect(notice([{ id: 's1', warnings: [rejected('a'), rejected('b')] }])?.id).toBe(
+			'COLLABORATION_REMOTE_VALUE_REJECTED',
+		);
 	});
 });

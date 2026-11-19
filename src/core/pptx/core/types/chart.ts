@@ -1458,9 +1458,10 @@ export interface PptxChartData {
 	/**
 	 * Parsed data from the embedded xlsx workbook (from ppt/embeddings/).
 	 *
-	 * When a chart references an embedded Excel workbook via `c:externalData`,
-	 * the xlsx is parsed to extract categories and series. This data serves as
-	 * a fallback when the chart XML's cached series data is empty or incomplete.
+	 * Present only when the load needed it: a chart part that caches no categories, no series
+	 * values or no scatter x values takes them from the embedded workbook, and a date axis without
+	 * `c:date1904` reads the workbook's date system. Otherwise the workbook is not opened; its
+	 * bytes stay on `externalData.embeddedWorkbookData`, which `parseEmbeddedXlsx` reads.
 	 */
 	embeddedWorkbookData?: PptxEmbeddedWorkbookData;
 

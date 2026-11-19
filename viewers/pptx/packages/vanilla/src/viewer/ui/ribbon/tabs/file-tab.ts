@@ -1,5 +1,6 @@
 import { Settings } from 'lucide';
 import {
+	activateBackstage,
 	BACKSTAGE_NAV,
 	BACKSTAGE_TEMPLATES,
 	backstageNavEntries,
@@ -75,6 +76,7 @@ export function createFileTab(
 		? 'home'
 		: (navItems[0]?.id ?? 'home');
 	let visible = false;
+	let releaseFocus = (): void => {};
 	let regionHandle: RegionHandle | null = null;
 	let hasMacros = false;
 	let query = '';
@@ -344,6 +346,9 @@ export function createFileTab(
 				return;
 			}
 			visible = next;
+			// The backstage covers the viewer: focus goes in, stays in, and Escape goes back to File.
+			releaseFocus();
+			releaseFocus = next ? activateBackstage(el, onClose) : () => {};
 			if (!next) {
 				releaseRegion();
 			} else if (hostPageOrReplaced()) {

@@ -1,5 +1,6 @@
 /** Visio ribbon strings for the zh-CN locale (text), keyed by the English text. Not reviewed by a native speaker. */
 export const zhCNText: Readonly<Record<string, string>> = {
+	'Connects {from} to {to}': '连接 {from} 与 {to}',
 	'This chart contains unsupported content and is read-only. Its original workbook is preserved.':
 		'此图表包含不受支持的内容，只能以只读方式查看。其原始工作簿将予以保留。',
 	'Diagram controls': '图表控件',
@@ -99,4 +100,26 @@ export const zhCNText: Readonly<Record<string, string>> = {
 	Options: '选项',
 	Share: '共享',
 	'Style {n}': '样式 {n}',
+	'The page has {count} shapes, more than this viewer can open (it reads at most {limit} XML nodes per part).':
+		'此页面有 {count} 个形状，超出此查看器可打开的范围（每个部件最多读取 {limit} 个 XML 节点）。',
+	'A part of this drawing has more than {limit} XML nodes, more than this viewer can open.':
+		'此绘图的某个部件有超过 {limit} 个 XML 节点，超出此查看器可打开的范围。',
+	'This drawing has more than {limit} XML nodes in all, more than this viewer can open.':
+		'此绘图总共有超过 {limit} 个 XML 节点，超出此查看器可打开的范围。',
+	'This drawing would need more than {limit} MB of memory to open, more than this viewer allows.':
+		'打开此绘图需要超过 {limit} MB 内存，超出此查看器允许的范围。',
+	'This {size} KB drawing would need more than {limit} MB of memory to open, far more than drawings of its size need.':
+		'打开此 {size} KB 的绘图需要超过 {limit} MB 内存，远超同等大小的绘图所需。',
+	'This drawing would need more than {limit} MB of memory to edit, more than this viewer allows.':
+		'编辑此绘图需要超过 {limit} MB 内存，超出此查看器允许的范围。',
+	'This {size} KB drawing would need more than {limit} MB of memory to edit, far more than drawings of its size need.':
+		'编辑此 {size} KB 的绘图需要超过 {limit} MB 内存，远超同等大小的绘图所需。',
+	'This drawing is too large to edit here: its pages hold about {cells} ShapeSheet cells, more than the {limit} an edit can follow.':
+		'此绘图太大，无法在此编辑：其页面包含约 {cells} 个 ShapeSheet 单元格，超过编辑可跟踪的 {limit} 个。',
+	'This drawing is too large to edit here: an edit would need more than {limit} MB of memory.':
+		'此绘图太大，无法在此编辑：编辑需要超过 {limit} MB 内存。',
+	'This drawing is too large to edit: an edit follows at most {limit} ShapeSheet cells.':
+		'此绘图太大，无法编辑：编辑最多跟踪 {limit} 个 ShapeSheet 单元格。',
+	'It opens read-only.': '它以只读方式打开。',
+	'Edit rejected': '编辑被拒绝',
 };

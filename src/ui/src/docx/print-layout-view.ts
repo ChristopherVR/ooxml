@@ -38,6 +38,10 @@ export interface PrintLayoutController {
 	scrollToPage(page: number): void;
 	/** Approximations collected by the last layout pass (see `LayoutResult.approximations`). */
 	approximations(): string[];
+	/** Starts following print and font events; fonts that arrived while away are measured afresh. */
+	connect(): void;
+	/** Stops following them and drops any pending layout, so nothing global holds the editor. */
+	disconnect(): void;
 	/** Lays out immediately (no debounce) and opens the browser print dialog for the paginated render. */
 	print(model: DocumentModel, note: (message: string) => void): void;
 	/**
@@ -46,7 +50,6 @@ export interface PrintLayoutController {
 	 * mounted while held, so scrolling a long document does not tear the open editor down.
 	 */
 	holdLayout(held: boolean, page?: number): void;
-	destroy(): void;
 }
 
 export function createPrintLayoutController(
@@ -71,7 +74,6 @@ export function createPrintLayoutController(
 			relayout(model);
 		}
 	};
-	fonts?.addEventListener?.('loadingdone', onFontsLoaded);
 	const element = document.createElement('div');
 	element.className = 'dve-print-pages';
 	element.hidden = true;
@@ -94,8 +96,7 @@ export function createPrintLayoutController(
 	const afterPrint = () => {
 		if (element.isConnected && !element.hidden) handle?.showPages(currentPage - 1, pins());
 	};
-	window.addEventListener('beforeprint', beforePrint);
-	window.addEventListener('afterprint', afterPrint);
+	let connection: 'new' | 'connected' | 'disconnected' = 'new';
 
 	let held = false;
 	let heldModel: DocumentModel | null = null;
@@ -255,14 +256,24 @@ export function createPrintLayoutController(
 				handle?.showPages(currentPage - 1, pins());
 			}
 		},
-		destroy() {
+		connect() {
+			if (connection === 'connected') return;
+			if (connection === 'disconnected')
+				session = createLayoutSession(createCanvasMeasurer(), { incremental: true });
+			connection = 'connected';
+			fonts?.addEventListener?.('loadingdone', onFontsLoaded);
+			window.addEventListener('beforeprint', beforePrint);
+			window.addEventListener('afterprint', afterPrint);
+		},
+		disconnect() {
+			if (connection !== 'connected') return;
+			connection = 'disconnected';
 			if (timer) clearTimeout(timer);
-			element.removeEventListener('click', onClick);
+			timer = undefined;
+			pendingModel = null;
 			fonts?.removeEventListener?.('loadingdone', onFontsLoaded);
 			window.removeEventListener('beforeprint', beforePrint);
 			window.removeEventListener('afterprint', afterPrint);
-			lastModel = null;
-			pendingModel = null;
 		},
 	};
 }

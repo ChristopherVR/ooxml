@@ -17,13 +17,54 @@ const ownerField = (map: string): string => (map === MEETINGS ? 'organizerId' : 
 
 export const isOwnedMap = (name: string): boolean => OWNED_MAPS.includes(name);
 
+const plain = (value: unknown): unknown =>
+	value instanceof Y.AbstractType ? (value.toJSON() as unknown) : value;
+
+/** Whether two stored values hold the same content, whatever they hold. */
+export function sameContent(a: unknown, b: unknown): boolean {
+	const x = plain(a);
+	const y = plain(b);
+	if (Object.is(x, y) || x === y) return true;
+	if (typeof x !== 'object' || typeof y !== 'object' || x === null || y === null) return false;
+	if (Array.isArray(x) !== Array.isArray(y)) return false;
+	const keys = Object.keys(x);
+	return (
+		keys.length === Object.keys(y).length &&
+		keys.every(
+			(key) =>
+				Object.hasOwn(y, key) &&
+				sameContent((x as Record<string, unknown>)[key], (y as Record<string, unknown>)[key]),
+		)
+	);
+}
+
+/** Whether a row may hold this value: everything JSON can carry, and binary data. */
+function isSupportedValue(value: unknown): boolean {
+	const content = plain(value);
+	if (typeof content === 'bigint') return false;
+	if (content === null || typeof content !== 'object' || ArrayBuffer.isView(content)) return true;
+	return Object.values(content).every(isSupportedValue);
+}
+
+/**
+ * Whether this change puts an unsupported value into a row. One that is already stored does not
+ * count, so it cannot stop the people of that row from changing the rest of it.
+ */
+export function writesUnsupportedValue(before: unknown, after: unknown): boolean {
+	if (!(after instanceof Y.Map)) return !isSupportedValue(after) && !sameContent(before, after);
+	const prior = before instanceof Y.Map ? before : undefined;
+	for (const [key, value] of after.entries())
+		if (!isSupportedValue(value) && !sameContent(prior?.get(key), value)) return true;
+	return false;
+}
+
 /** The same Yjs row with the same content: an insert that lost a concurrent write to its key. */
-function isSameRow(before: Y.Map<unknown>, next: Y.Map<unknown>): boolean {
+export function isSameRow(before: Y.Map<unknown>, next: Y.Map<unknown>): boolean {
 	return (
 		next._item !== null &&
 		before._item !== null &&
 		Y.compareIDs(next._item.id, before._item.id) &&
-		JSON.stringify(before.toJSON()) === JSON.stringify(next.toJSON())
+		sameContent(before, next)
 	);
 }
 
@@ -90,11 +131,11 @@ export function checkPinRow(
 		return { code: 'malformed-row', ...at };
 	const members = doc.share.has(CHAT_MEMBERS) ? doc.getMap<unknown>(CHAT_MEMBERS) : undefined;
 	const exempt = actor.moderator === true && after === undefined;
-	if (members && members.size > 0 && !members.has(actor.id) && !exempt)
+	if (members && members.size > 0 && members.get(actor.id) !== true && !exempt)
 		return { code: 'not-member', ...at };
 	if (after === undefined) return null;
 	if (pinnedBy(after) === actor.id) return null;
 	// Unchanged content (an insert that lost a concurrent write) keeps its original pinner.
-	if (before !== undefined && JSON.stringify(before) === JSON.stringify(after)) return null;
+	if (before !== undefined && sameContent(before, after)) return null;
 	return { code: 'forged-author', ...at };
 }

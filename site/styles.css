@@ -383,10 +383,11 @@ p:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 	padding: 2px 5px;
 	border-radius: 3px;
 	border: 1px solid color-mix(in srgb, var(--tone, var(--blue)) 40%, transparent);
-	color: var(--tone, var(--blue));
+	color: var(--tone, var(--accent-ink));
 	margin-left: 7px;
 	vertical-align: 2px;
-	--tone: var(--blue);
+	/* The accent as text: 4.5:1 on the rail, the canvas and the current item's selected fill. */
+	--tone: var(--accent-ink);
 }
 .app-tag[data-tone='alpha'] {
 	--tone: #b07a17;
@@ -477,7 +478,7 @@ p:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 	width: min(560px, 44vw);
 	height: 34px;
 	background: var(--sunken);
-	border: 1px solid transparent;
+	border: 1px solid var(--control-line);
 	border-radius: 6px;
 	padding: 0 8px 0 10px;
 	color: var(--muted);
@@ -519,7 +520,7 @@ p:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 	padding: 7px 12px;
 	gap: 7px;
 	font-size: 13px;
-	color: var(--blue);
+	color: var(--accent-ink);
 }
 #assistant-toggle[aria-expanded='true'] {
 	background: var(--selected);
@@ -569,7 +570,7 @@ p:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 	place-items: center;
 	border: 1px solid var(--line);
 	background: var(--surface);
-	color: var(--blue);
+	color: var(--accent-ink);
 	border-radius: 8px;
 	font-family: var(--font-display);
 	font-weight: 700;
@@ -595,7 +596,8 @@ p:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 	font-size: 9.5px;
 }
 .workspace-caret {
-	color: var(--faint);
+	/* The switcher caret is a glyph: muted text keeps it at 4.5:1 on the sidebar. */
+	color: var(--muted);
 }
 .app-rail {
 	width: 100%;
@@ -647,7 +649,7 @@ p:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 }
 .app-rail button[aria-current='true'] {
 	background: var(--selected);
-	color: var(--blue);
+	color: var(--accent-ink);
 	font-weight: 600;
 }
 .app-rail button[aria-current='true']:before {
@@ -897,6 +899,12 @@ body[data-layout='office'] #actions-more {
 	background: var(--surface);
 	color: var(--text);
 }
+/* The browser's own Print never prints the assistant's suggestions before they are applied. */
+@media print {
+	.document-host[data-preview] {
+		display: none;
+	}
+}
 .document-host > docx-editor,
 .document-host > xlsx-editor {
 	display: block;
@@ -1047,4 +1055,22 @@ dialog h2 {
 .cloud-conflict-details ul {
 	margin: 4px 0 8px;
 	padding-left: 18px;
+}
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.app-rail button[aria-current='true'],
+	.tabs [aria-selected='true'] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
+	.app-rail button[aria-current='true']:before {
+		background: Highlight;
+	}
+	.app-rail button[aria-current='true'] .app-tag {
+		border-color: HighlightText;
+		color: HighlightText;
+	}
 }

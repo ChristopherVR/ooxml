@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createDocument, loadDocx, type DocumentModel } from 'ooxml-core/docx';
 import { DocxEditorElement, registerDocxEditor } from './index';
 import {
@@ -285,5 +285,31 @@ describe('ribbon action ids', () => {
 		))
 			ids.add(ribbonControlId(control) ?? `unmapped:${control.getAttribute('aria-label')}`);
 		expect([...ids].sort()).toEqual([...RIBBON_ACTION_IDS].sort());
+	});
+});
+
+describe('text selection API', () => {
+	// ProseMirror's focus() calls execCommand, which jsdom does not implement.
+	beforeEach(() => {
+		Object.defineProperty(document, 'execCommand', { value: vi.fn(), configurable: true });
+	});
+	afterEach(() => {
+		document.body.replaceChildren();
+		delete (document as { execCommand?: unknown }).execCommand;
+	});
+
+	it('hands the caret to a host and puts it back after the document is replaced', () => {
+		const editor = mount(paragraphs(2));
+		expect(editor.getTextSelection()).toEqual({ from: 1, to: 1 });
+		editor.focusText({ from: 5, to: 9 });
+		expect(editor.getTextSelection()).toEqual({ from: 5, to: 9 });
+		editor.documentModel = paragraphs(2);
+		expect(editor.getTextSelection()).toEqual({ from: 1, to: 1 });
+		// A range past the end of the new document is clamped to it.
+		editor.focusText({ from: 5, to: 100000 });
+		const back = editor.getTextSelection()!;
+		expect(back.from).toBe(5);
+		expect(back.to).toBeLessThan(1000);
+		expect(shell(editor).activeElement?.classList.contains('ProseMirror')).toBe(true);
 	});
 });

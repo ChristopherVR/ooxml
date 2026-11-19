@@ -86,7 +86,7 @@ export abstract class EngineCore extends EngineHost {
 
 	protected evaluateSet(dirty: Set<FormulaNode>, full: boolean): void {
 		this.boundsCache.clear();
-		this.blockCache.clear();
+		this.passCache.clear();
 		const columns = this.columns();
 		const footprints = this.footprintsBy();
 		const succCache = new Map<FormulaNode, FormulaNode[]>();
@@ -122,7 +122,7 @@ export abstract class EngineCore extends EngineHost {
 			}
 		} finally {
 			this.pending = undefined;
-			this.blockCache.clear();
+			this.passCache.clear();
 		}
 	}
 
@@ -187,7 +187,8 @@ export abstract class EngineCore extends EngineHost {
 	}
 
 	protected markCycle(node: FormulaNode): void {
-		this.pending?.delete(node);
+		// A formula still pending was never read, so nothing cached holds its old value.
+		if (!this.pending?.delete(node)) this.passCache.clear();
 		this.cycles.add(node);
 		const cell = this.workbook.sheets[node.sheet]?.rows.get(node.row)?.get(node.col);
 		if (cell && !node.keepCached) this.store(node, cell, 0);
@@ -228,7 +229,7 @@ export abstract class EngineCore extends EngineHost {
 		if (!sameRange(before, node.spill) || !sameRange(blockedBefore, node.blockedSpill)) {
 			this.updateOrder(node, before, blockedBefore);
 			this.footprintIndex = undefined;
-			this.blockCache.clear();
+			this.passCache.clear();
 		}
 		if (node.spill || node.blockedSpill || node.arrayRange) this.footprints.add(node);
 		else this.footprints.delete(node);

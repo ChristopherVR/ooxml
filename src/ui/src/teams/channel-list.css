@@ -118,3 +118,16 @@ ul[hidden] {
 		min-height: var(--office-touch-target, 44px);
 	}
 }
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.row[aria-current='true'] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
+	.row[aria-current='true']::before {
+		background: Highlight;
+	}
+}

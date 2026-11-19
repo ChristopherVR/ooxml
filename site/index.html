@@ -33,7 +33,7 @@
 		<script type="module" src="suite.js"></script>
 	</head>
 	<body>
-		<header class="suite-header">
+		<header class="suite-header" lang="en">
 			<button
 				id="launcher-toggle"
 				popovertarget="app-launcher"
@@ -61,6 +61,7 @@
 			<button
 				id="assistant-toggle"
 				class="ai-only"
+				aria-label="Assistant"
 				aria-expanded="false"
 				aria-controls="assistant"
 			></button>
@@ -100,7 +101,7 @@
 		></section>
 		<div id="drawer-scrim" class="drawer-scrim"></div>
 		<div class="suite-layout">
-			<aside class="workspace-sidebar">
+			<aside class="workspace-sidebar" lang="en">
 				<button
 					class="workspace-switch"
 					popovertarget="workspace-menu"
@@ -124,8 +125,9 @@
 				</div>
 			</aside>
 			<div class="suite-body">
-				<div class="tab-row">
-					<div id="tabs" class="tabs" role="tablist" aria-label="Open documents"></div>
+				<div class="tab-row" lang="en">
+					<div id="tabs-list" class="sr-only" role="tablist" aria-label="Open documents"></div>
+					<div id="tabs" class="tabs"></div>
 					<div class="document-commandbar">
 						<button id="back-teams" hidden>‹ Back to Teams</button
 						><button id="back-parent" hidden>‹ Parent document</button>
@@ -166,7 +168,7 @@
 								><output id="doc-position" aria-live="off"></output><button id="doc-next"></button>
 							</div>
 						</div>
-						<span id="save-state" role="status"></span><button id="layout-toggle"></button
+						<span id="save-state"></span><button id="layout-toggle"></button
 						><button id="ask-ai" class="ask-ai ai-only" aria-label="Ask AI about this file"></button
 						><button id="share" class="primary" data-menu>Share in Teams</button
 						><button id="actions-more" aria-label="More actions" aria-haspopup="menu"></button
@@ -175,14 +177,14 @@
 				</div>
 				<div class="work-row">
 					<main class="work-main">
-						<section id="chat" class="chat-view" aria-label="Chat" hidden></section>
+						<section id="chat" class="chat-view" lang="en" aria-label="Chat" hidden></section>
 						<section
 							id="cloud-view"
 							class="cloud-view"
 							aria-label="OneDrive files"
 							hidden
 						></section>
-						<section id="home" class="home">
+						<section id="home" class="home" lang="en">
 							<svg class="rings rings--home" viewBox="0 0 100 100" aria-hidden="true">
 								<circle cx="50" cy="50" r="47" />
 								<circle cx="50" cy="50" r="33" />
@@ -273,7 +275,7 @@
 							<div id="editors"></div>
 						</section>
 					</main>
-					<aside id="assistant" class="assistant" aria-label="Assistant" hidden>
+					<aside id="assistant" class="assistant" lang="en" aria-label="Assistant" hidden>
 						<header>
 							<h2>Assistant</h2>
 							<div class="assistant-actions">
@@ -285,7 +287,7 @@
 						<div id="assistant-chat" class="assistant-chat"></div>
 					</aside>
 				</div>
-				<footer class="statusbar">
+				<footer class="statusbar" lang="en">
 					<span id="status" role="status">Ready</span
 					><span id="workspace-status">Personal workspace · This device</span>
 				</footer>

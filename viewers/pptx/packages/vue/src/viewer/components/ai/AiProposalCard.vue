@@ -6,7 +6,7 @@
  * full description is shown (never truncated); long lists scroll rather than
  * clip. The accept/reject callbacks route through the proposal store.
  */
-import { Check, X } from 'lucide-vue-next';
+import { Check, X } from '@lucide/vue';
 import type { ProposalView } from 'ooxml-ui/pptx/ai';
 import { humanizeDiffLine } from 'ooxml-ui/pptx/ai';
 import { computed } from 'vue';

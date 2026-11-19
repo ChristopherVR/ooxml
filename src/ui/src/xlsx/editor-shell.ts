@@ -38,6 +38,7 @@ import { createTitleBar, type SaveState, type TitleBar } from './title-bar';
 import { createToaster } from './toast';
 import { packagePassword } from './dialogs/package-password';
 import { attachShareDialog, type ShareDialogController } from '../dialog/share-controller';
+import { modalFocusableElements } from '../dialog/focus';
 import { createChartFormatPane } from './chart-format-pane';
 import { createChartExPane } from './chart-ex-pane';
 import { createSmartArtController } from './smartart-controller';
@@ -274,8 +275,9 @@ export function buildShell(core: EditorCore): Shell {
 	const focusRegion = (region: HTMLElement) => {
 		if (region === ribbon.element) return ribbon.focus();
 		if (region === gridHost) return ctx.grid()?.focus();
-		(region.shadowRoot ?? region)
-			.querySelector<HTMLElement>('input, button:not(:disabled), [tabindex="0"]')
+		// The first stop that is laid out: a hidden button (no compatibility notes) takes no focus.
+		modalFocusableElements(region)
+			.find((stop) => stop.getClientRects().length)
 			?.focus();
 	};
 	const actions = (action: ShellAction) => {
@@ -299,9 +301,15 @@ export function buildShell(core: EditorCore): Shell {
 		const active = root.activeElement;
 		const at = list.findIndex((region) => active && region.contains(active));
 		const step = action === 'next-region' ? 1 : -1;
-		const next = list[(at + step + list.length) % list.length] ?? gridHost;
+		const from = at >= 0 ? at : step > 0 ? -1 : list.length;
 		hideKeyTips();
-		focusRegion(next);
+		// A region with nothing to focus is passed over, so F6 never stops on one.
+		for (let i = 1; i <= list.length; i++) {
+			const region = list[(from + step * i + list.length * 2) % list.length]!;
+			focusRegion(region);
+			const now = root.activeElement;
+			if (now && region.contains(now)) return;
+		}
 	};
 	installKeyboard(ctx, actions);
 	const share = attachShareDialog({

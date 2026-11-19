@@ -8,7 +8,7 @@
  * Emits `update` with a SHALLOW `{ bookmarks }` patch, and `seek` when a
  * bookmark row is clicked.
  */
-import { Plus, Trash2 } from 'lucide-vue-next';
+import { Plus, Trash2 } from '@lucide/vue';
 import type { MediaBookmark, PptxElement } from 'pptx-viewer-core';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';

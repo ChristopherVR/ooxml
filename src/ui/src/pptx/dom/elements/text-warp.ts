@@ -12,6 +12,7 @@ import {
 	groupIntoParagraphs,
 	hasGlyphEnvelope,
 	shouldUseSvgWarp,
+	svgIdToken,
 } from '../../index';
 
 import { getGlyphOutline } from '../glyph-outline-cache';
@@ -177,7 +178,7 @@ function renderGlyphWarp(
 				'data-glyph-slices': g.slices.length,
 			});
 			g.slices.forEach((slice, sliceIndex) => {
-				const clipId = `${element.id.replace(/[^a-zA-Z0-9_-]/gu, '_')}-warp-l${lineIndex}-g${glyphIndex}-s${sliceIndex}`;
+				const clipId = `${svgIdToken(element.id)}-warp-l${lineIndex}-g${glyphIndex}-s${sliceIndex}`;
 				const clipPath = createSvgEl(context.document, 'clipPath', {
 					id: clipId,
 					clipPathUnits: 'userSpaceOnUse',
@@ -232,7 +233,7 @@ function renderPathWarp(
 		style,
 	);
 	paragraphs.forEach((paragraph, index) => {
-		const id = `${element.id.replace(/[^a-zA-Z0-9_-]/gu, '_')}-warp-${index}`;
+		const id = `${svgIdToken(element.id)}-warp-${index}`;
 		defs.appendChild(
 			createSvgEl(context.document, 'path', {
 				id,

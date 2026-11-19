@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Check, ChevronDown, ChevronRight, Minus, Move, Plus, Type, X } from 'lucide-vue-next';
+import { Check, ChevronDown, ChevronRight, Minus, Move, Plus, Type, X } from '@lucide/vue';
 import { describeElementChange } from 'ooxml-ui/pptx';
 import type { Component } from 'vue';
 import { computed, ref } from 'vue';

@@ -1,4 +1,6 @@
+import { definer } from '../../registry';
 import { html, nothing, unsafeCSS } from 'lit';
+import { withTokens } from '../../base';
 import { TeamsLitElement } from '../i18n/lit-element';
 import { styleMap } from 'lit/directives/style-map.js';
 import type { LoadedPresentation, ElementRendererRegistry } from 'ooxml-ui/pptx/dom';
@@ -6,7 +8,7 @@ import css from './presentation-preview.css?raw';
 
 /** An embedded reading surface over the shared PowerPoint DOM renderer. */
 export class TeamsPresentationPreview extends TeamsLitElement {
-	static override styles = unsafeCSS(css);
+	static override styles = unsafeCSS(withTokens(css));
 	static override properties = {
 		data: { state: true },
 		slide: { state: true },
@@ -238,9 +240,9 @@ export class TeamsPresentationPreview extends TeamsLitElement {
 				<summary>${this.t('pptx.slideText')}</summary>
 				<pre>
 ${slide.elements
-						.filter((element) => 'text' in element && element.text)
-						.map((element) => ('text' in element ? element.text : ''))
-						.join('\n\n')}</pre>
+	.filter((element) => 'text' in element && element.text)
+	.map((element) => ('text' in element ? element.text : ''))
+	.join('\n\n')}</pre>
 			</details>
 			${
 				slide.notes
@@ -263,7 +265,7 @@ ${slide.elements
 	}
 }
 
-export function defineTeamsPresentationPreview(): void {
-	if (globalThis.customElements && !customElements.get('teams-presentation-preview'))
-		customElements.define('teams-presentation-preview', TeamsPresentationPreview);
-}
+export const defineTeamsPresentationPreview = definer(
+	'teams-presentation-preview',
+	() => TeamsPresentationPreview,
+);

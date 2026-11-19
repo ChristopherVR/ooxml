@@ -1,3 +1,4 @@
+import { composedWithin } from '../composed';
 import { ensureRibbonTouchStyle, syncScrollMore, type ScrollMoreLabel } from './scroll-more';
 
 /**
@@ -41,12 +42,13 @@ export interface RibbonOverflow {
 	attach(root: HTMLElement): () => void;
 	/** Re-measures every panel of `root` (after a tab switch or a locale change). */
 	refit(root: HTMLElement): void;
-	/** Closes the open dropdown, putting its controls back. */
-	close(): void;
+	/** Closes the open dropdown, putting its controls back; with `scope`, only one inside it. */
+	close(scope?: Node): void;
 }
 
 export function createRibbonOverflow(options: RibbonOverflowOptions): RibbonOverflow {
 	let closeOpen: (() => void) | undefined;
+	let open: HTMLElement | undefined;
 
 	function overflowButton(group: HTMLElement): HTMLButtonElement {
 		const doc = group.ownerDocument;
@@ -91,6 +93,7 @@ export function createRibbonOverflow(options: RibbonOverflowOptions): RibbonOver
 		const width = doc.defaultView?.innerWidth ?? 1024;
 		pop.style.left = `${Math.max(4, Math.min(box.left, width - pop.offsetWidth - 8))}px`;
 		button.setAttribute('aria-expanded', 'true');
+		open = pop;
 		const outside = (event: Event) => {
 			const path = event.composedPath();
 			const inside = path.some(
@@ -118,7 +121,7 @@ export function createRibbonOverflow(options: RibbonOverflowOptions): RibbonOver
 			group.prepend(...moved);
 			pop.remove();
 			button.removeAttribute('aria-expanded');
-			closeOpen = undefined;
+			closeOpen = open = undefined;
 		};
 	}
 
@@ -210,6 +213,8 @@ export function createRibbonOverflow(options: RibbonOverflowOptions): RibbonOver
 		refit(root) {
 			for (const panel of panelsOf(root)) fitPanel(panel);
 		},
-		close: () => closeOpen?.(),
+		close: (scope) => {
+			if (!scope || composedWithin(open, scope)) closeOpen?.();
+		},
 	};
 }

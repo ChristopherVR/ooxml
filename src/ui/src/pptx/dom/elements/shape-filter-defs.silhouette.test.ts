@@ -142,4 +142,15 @@ describe('shape-following shadow (vanilla)', () => {
 		const svg = renderShapeSubpathFillOverlay(document, triangle());
 		expect(svg?.hasAttribute('data-pptx-silhouette-fill')).toBe(true);
 	});
+
+	it('keeps a hostile element id inside the text of its style element', () => {
+		const element = {
+			...triangle(),
+			id: 'x"]{}</style><i data-injected="1">',
+			text: 'hello',
+		} as unknown as PptxElement;
+		const svg = renderHollowHitOutline(document, element);
+		expect(svg?.querySelector('[data-injected]')).toBeNull();
+		expect(svg?.querySelector('style')?.textContent).toContain('pointer-events:auto');
+	});
 });

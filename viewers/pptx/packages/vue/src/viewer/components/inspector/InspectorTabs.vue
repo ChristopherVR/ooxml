@@ -2,9 +2,9 @@
 /**
  * InspectorTabs: the [Elements | Properties | Comments] tab strip at the top of
  * the right inspector, mirroring React's `InspectorPaneHeader` (same layout and
- * active-tab styling, `react-icons/lu` glyphs mapped to `lucide-vue-next`).
+ * active-tab styling, `react-icons/lu` glyphs mapped to `@lucide/vue`).
  */
-import { Layers, MessageSquare, Settings2, X } from 'lucide-vue-next';
+import { Layers, MessageSquare, Settings2, X } from '@lucide/vue';
 import { getDensePanelTouchTargetPx } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';

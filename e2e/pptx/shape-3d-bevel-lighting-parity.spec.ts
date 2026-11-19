@@ -64,7 +64,7 @@ async function loadDeck(page: Page): Promise<void> {
 interface BevelFilterState {
 	/** The largest matching element's own CSS `filter`. */
 	filterCss: string;
-	/** Whether a `<filter id="bevel-light-<full-id>">` exists ANYWHERE in the document. */
+	/** Whether the element's CSS filter resolves to a `bevel-light-*` `<filter>`. */
 	defFound: boolean;
 	/** That `<filter>`'s markup contains the real lighting primitives, not a placeholder. */
 	hasLightingPrimitives: boolean;
@@ -73,13 +73,11 @@ interface BevelFilterState {
 /**
  * Read the bevel-lighting wiring for the largest element with this id suffix,
  * so a slide-rail thumbnail copy can never win (mirrors `shape-3d-compound
- * .spec.ts`'s `paintOf`). The `<filter>` def is looked up GLOBALLY by the
- * element's own full `data-element-id` (not nested under the host node): the
- * five bindings place the hidden `<svg><defs>` differently relative to the
- * element's own box (sibling vs. nested), so asserting on the deterministic
- * id is the only binding-neutral way to find it. The viewer re-ids every def per
- * painted copy (`<id>~<n>`, the authored id kept in `data-pptx-sid`), so the def
- * is the one the element's own CSS filter points at.
+ * .spec.ts`'s `paintOf`). The `<filter>` def is looked up GLOBALLY through the
+ * element's own CSS filter (not nested under the host node): the five bindings
+ * place the hidden `<svg><defs>` differently relative to the element's own box
+ * (sibling vs. nested). The viewer re-ids every def per painted copy (`<id>~<n>`,
+ * the authored id kept in `data-pptx-sid`).
  */
 async function bevelFilterStateOf(page: Page, idSuffix: string): Promise<BevelFilterState | null> {
 	return page.evaluate((suffix) => {
@@ -98,9 +96,7 @@ async function bevelFilterStateOf(page: Page, idSuffix: string): Promise<BevelFi
 		if (!best) {
 			return null;
 		}
-		const fullId = best.dataset.elementId ?? '';
 		const filterCss = getComputedStyle(best).filter;
-		const authored = `bevel-light-${fullId}`;
 		// Computed `url()`s may carry the page URL before the fragment.
 		const def =
 			[...filterCss.matchAll(/url\([^)]*#([^"')\s]+)/gu)]
@@ -108,7 +104,7 @@ async function bevelFilterStateOf(page: Page, idSuffix: string): Promise<BevelFi
 				.find(
 					(node) =>
 						node !== null &&
-						(node.id === authored || node.getAttribute('data-pptx-sid') === authored),
+						(node.getAttribute('data-pptx-sid') ?? node.id).startsWith('bevel-light-'),
 				) ?? null;
 		const markup = def?.outerHTML ?? '';
 		return {

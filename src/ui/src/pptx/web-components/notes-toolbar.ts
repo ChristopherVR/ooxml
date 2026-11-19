@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import { NOTES_TOOLBAR_DEFAULT_STATE } from '../render';
 import type { NotesToolbarIntent, NotesToolbarViewState } from '../render';
 import { attachControlStyles } from './control-styles';
@@ -52,5 +53,5 @@ export function definePptxNotesToolbar(registry: CustomElementRegistry): void {
 			this.view.dispose();
 		}
 	}
-	registry.define('pptx-ui-notes-toolbar', NotesToolbar);
+	defineElement(registry, 'pptx-ui-notes-toolbar', NotesToolbar);
 }

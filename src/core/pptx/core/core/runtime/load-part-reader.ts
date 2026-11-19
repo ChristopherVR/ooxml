@@ -21,6 +21,7 @@
  *
  * @module load-part-reader
  */
+import { canonicalRelationshipsXml } from '../../../../opc/relationships';
 import type { XmlObject } from '../../types';
 
 interface TextPartFile {
@@ -46,7 +47,9 @@ const openReaders = new WeakMap<object, LoadPartReader>();
 /** Owns package text and relationship reads for one load, never for editing or save. */
 export class LoadPartReader {
 	private readonly parts = new Map<string, PartEntry>();
+	private readonly derived = new Map<string, Promise<unknown>>();
 	private closed = false;
+	private strictRelationships = false;
 
 	constructor(readonly zip: TextPartStore) {
 		openReaders.set(zip, this);
@@ -75,6 +78,32 @@ export class LoadPartReader {
 		return entry;
 	}
 
+	/**
+	 * From now on relationship parts reach the parser as the strict reader saw them, so a signed
+	 * package loads exactly the relationships its verifier read.
+	 */
+	useStrictRelationships(): void {
+		this.strictRelationships = true;
+		this.parts.clear();
+		this.derived.clear();
+	}
+
+	/** `compute()`, run once per key while the load lasts (a failure is not kept). */
+	derive<T>(key: string, compute: () => Promise<T>): Promise<T> {
+		let value = this.derived.get(key) as Promise<T> | undefined;
+		if (!value) {
+			const pending = compute();
+			this.derived.set(key, pending);
+			pending.catch(() => {
+				if (this.derived.get(key) === pending) {
+					this.derived.delete(key);
+				}
+			});
+			value = pending;
+		}
+		return value;
+	}
+
 	readText(path: string): Promise<string | undefined> {
 		return this.entry(path)?.text ?? Promise.resolve(undefined);
 	}
@@ -91,7 +120,9 @@ export class LoadPartReader {
 		// before Strict detection is not reused after that wrapper is installed.
 		let parsed = entry.relationships.get(parser);
 		if (!parsed) {
-			const pending = entry.text.then((text) => parseText(parser, text));
+			const pending = entry.text.then((text) =>
+				parseText(parser, this.strictRelationships ? canonicalRelationshipsXml(text) : text),
+			);
 			entry.relationships.set(parser, pending);
 			pending.catch(() => {
 				if (entry.relationships.get(parser) === pending) {
@@ -115,6 +146,7 @@ export class LoadPartReader {
 			openReaders.delete(this.zip);
 		}
 		this.parts.clear();
+		this.derived.clear();
 	}
 }
 
@@ -132,6 +164,19 @@ export function readPartText(zip: TextPartStore, path: string): Promise<string |
 		return reader.readText(path);
 	}
 	return zip.file(path)?.async('string') ?? Promise.resolve(undefined);
+}
+
+/**
+ * A value derived from package parts, computed once while a load is open for `zip` (every chart of
+ * the load shares it) and afresh outside a load, where the package may have changed.
+ */
+export function deriveForLoad<T>(
+	zip: TextPartStore,
+	key: string,
+	compute: () => Promise<T>,
+): Promise<T> {
+	const reader = openReaders.get(zip);
+	return reader ? reader.derive(key, compute) : compute();
 }
 
 /**

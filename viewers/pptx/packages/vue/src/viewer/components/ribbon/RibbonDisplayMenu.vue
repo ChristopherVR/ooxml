@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Check } from 'lucide-vue-next';
+import { Check } from '@lucide/vue';
 /**
  * RibbonDisplayMenu: the Ribbon Display Options menu (Full-screen mode, Show tabs only,
  * Always show Ribbon) under the right end of the tab row. The anchor it sits in has no height,

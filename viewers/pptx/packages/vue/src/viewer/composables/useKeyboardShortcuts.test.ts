@@ -457,8 +457,11 @@ describe('useKeyboardShortcuts', () => {
 				{ cycleSelectionNext, cycleSelectionPrev },
 				{ hasSelection: ref(false) },
 			);
-			api.handleKeyDown(makeKeyEvent({ key: 'Tab' }));
-			api.handleKeyDown(makeKeyEvent({ key: 'Tab', shiftKey: true }));
+			const slide = document.createElement('div');
+			slide.setAttribute('data-pptx-viewport', '');
+			slide.setAttribute('data-pptx-slide-objects', '');
+			api.handleKeyDown(makeKeyEvent({ key: 'Tab', target: slide }));
+			api.handleKeyDown(makeKeyEvent({ key: 'Tab', shiftKey: true, target: slide }));
 			expect(cycleSelectionNext).toHaveBeenCalledOnce();
 			expect(cycleSelectionPrev).toHaveBeenCalledOnce();
 			stop();

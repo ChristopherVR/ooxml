@@ -5,7 +5,7 @@
  * the shared command catalog. Vue counterpart of React's
  * `settings/OptionsQuickAccessPane.tsx`.
  */
-import { ChevronDown, ChevronUp } from 'lucide-vue-next';
+import { ChevronDown, ChevronUp } from '@lucide/vue';
 import type { ViewerOptions } from 'ooxml-ui/pptx';
 import {
 	addQuickAccessCommand,

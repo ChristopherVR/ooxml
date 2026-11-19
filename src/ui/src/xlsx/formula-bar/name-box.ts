@@ -3,6 +3,7 @@
 import { formatAddress, type CellRange } from 'ooxml-core/xlsx';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { h } from '../grid/dom';
+import { findShortcut, isMacPlatform } from '../keyboard';
 import { absoluteReference, nameForRange, resolveNameBox } from 'ooxml-core/xlsx/ui';
 
 export interface NameBox {
@@ -130,7 +131,8 @@ export function createNameBox(ctx: EditorContext, doc: Document): NameBox {
 			event.preventDefault();
 			openList();
 		}
-		event.stopPropagation();
+		// Typing stays here, but keys that work everywhere (F6, F1, KeyTips) reach the shell.
+		if (!findShortcut(event, isMacPlatform())?.global) event.stopPropagation();
 	};
 	const onFocus = () => input.select();
 	const onBlur = () => {

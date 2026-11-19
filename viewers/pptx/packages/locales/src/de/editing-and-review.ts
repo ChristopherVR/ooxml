@@ -203,6 +203,11 @@ export const translations = {
 	'pptx.shortcuts.action.pasteElement': 'Element einfügen',
 	'pptx.shortcuts.action.prevSlide': 'Vorherige Folie (ohne Auswahl)',
 	'pptx.shortcuts.action.selectAll': 'Alle Elemente auswählen',
+	'pptx.shortcuts.action.editObjectText': 'Text des ausgewählten Objekts bearbeiten',
+	'pptx.shortcuts.action.enterSlide': 'Zur Folie wechseln (erstes Objekt auswählen)',
+	'pptx.shortcuts.action.cycleObjects': 'Nächstes oder vorheriges Objekt auf der Folie',
+	'pptx.shortcuts.action.leaveSlide': 'Auswahl aufheben, dann Folie verlassen',
+	'pptx.shortcuts.action.movePane': 'Zwischen Bereichen wechseln',
 	'pptx.shortcuts.action.zoomCanvas': 'Arbeitsbereich zoomen',
 	'pptx.shortcuts.close': 'Schließen',
 	'pptx.shortcuts.group.editing': 'Bearbeitung',
@@ -327,6 +332,8 @@ export const translations = {
 		'Die Lizenz einer eingebetteten Schriftart erlaubt ihre Verwendung nicht, daher wird eine Ersatzschrift angezeigt. Ihre Schriftdaten bleiben in der Datei.',
 	'pptx.compatibility.embeddedFontNotEmbeddable':
 		'Eine Schriftart wurde nicht eingebettet, weil ihre Lizenz das Einbetten in eine bearbeitbare Präsentation nicht erlaubt.',
+	'pptx.compatibility.collaborationValueRejected':
+		'Inhalte, die ein Mitbearbeiter gesendet hat, wurden ausgelassen, weil sie hier nicht zulässig sind, etwa ein unsicherer Link oder Dateityp.',
 	'pptx.compatibility.exportBackendUnavailable':
 		'Der Export in dieses Format ist in der aktuellen Umgebung nicht verfügbar.',
 } as const;

@@ -2,7 +2,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { OFFICE_UI_TAGS, registerOfficeUi } from './index';
 import { THEME_CSS } from './theme';
-import { OFFICE_TOKENS, tok } from './tokens';
+import { isDerivedToken, OFFICE_TOKENS, tok, type OfficeToken } from './tokens';
 
 beforeAll(() => registerOfficeUi());
 
@@ -31,11 +31,24 @@ function shadowCss(tag: string): string {
 
 /** Strip token references (with their defaults), media queries and keyframe percentages. */
 function outsideTokens(css: string): string {
-	let text = css.replace(/@media[^{]*\{/g, '{');
-	// Remove var(...) including nested parentheses in defaults.
-	for (let i = 0; i < 5; i++)
-		text = text.replace(/var\(--[\w-]+(?:,(?:[^()]|\([^()]*\))*)?\)/g, 'T');
-	return text;
+	const text = css.replace(/@media[^{]*\{/g, '{');
+	// Remove each var(...) with its default, however deeply the default nests parentheses.
+	let out = '';
+	for (let i = 0; i < text.length;) {
+		if (!text.startsWith('var(--', i)) {
+			out += text[i++];
+			continue;
+		}
+		let depth = 0;
+		i += 'var'.length;
+		do {
+			if (text[i] === '(') depth++;
+			else if (text[i] === ')') depth--;
+			i++;
+		} while (depth && i < text.length);
+		out += 'T';
+	}
+	return out;
 }
 
 /** Set inline by the element that draws with them, so they have no theme default. */
@@ -46,10 +59,25 @@ const PER_ELEMENT = new Set([
 ]);
 
 describe('design tokens', () => {
-	it('declares every token on :root in the theme, with the table default', () => {
+	it('declares every literal token on :root in the theme, with the table default', () => {
 		for (const [name, value] of Object.entries(OFFICE_TOKENS))
-			expect(THEME_CSS, name).toContain(`${name}: ${value};`);
+			if (!isDerivedToken(name as OfficeToken))
+				expect(THEME_CSS, name).toContain(`${name}: ${value};`);
 		expect(tok('--office-accent')).toBe('var(--office-accent, #2563eb)');
+	});
+
+	it('never declares a derived token in the theme, so it resolves where it is read', () => {
+		// Declared on :root, `--office-accent-ink: var(--office-accent)` would be computed there, and
+		// a container's own `--office-accent` would no longer reach the accent text inside it.
+		const derived = Object.keys(OFFICE_TOKENS).filter((name) =>
+			isDerivedToken(name as OfficeToken),
+		);
+		expect(derived).toContain('--office-accent-ink');
+		expect(derived).toContain('--office-field-border');
+		for (const name of derived) expect(THEME_CSS, name).not.toContain(`${name}:`);
+		expect(tok('--office-field-border')).toBe(
+			'var(--office-field-border, var(--office-control-border, #8a8886))',
+		);
 	});
 
 	it('gives every control CSS free of raw colours and lengths outside tokens', () => {

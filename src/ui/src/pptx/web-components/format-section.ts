@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import { defineFormatSection } from '../../controls';
 import { base, bridged } from './office-aliases';
 
@@ -10,7 +11,8 @@ export function definePptxFormatSection(registry: CustomElementRegistry): void {
 	if (registry.get('pptx-ui-format-section')) {
 		return;
 	}
-	registry.define(
+	defineElement(
+		registry,
 		'pptx-ui-format-section',
 		class extends bridged(
 			base(registry, defineFormatSection, 'office-ui-format-section'),

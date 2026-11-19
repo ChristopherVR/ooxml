@@ -10,6 +10,8 @@
  * download, short enough not to leak the object URL.
  */
 
+import { isBrowserOpenableDataUrl } from 'ooxml-core/opc';
+
 /** Default fallback name used when a download filename is empty or unusable. */
 const FALLBACK_DOWNLOAD_NAME = 'presentation.pptx',
 	/** Fallback stem used by {@link resolveExportBaseName} when no usable name remains. */
@@ -126,10 +128,16 @@ export function downloadBlob(blob: Blob, filename: string): void {
  * Trigger a browser download for a data-URL string. `filename` is run through
  * {@link sanitizeDownloadFilename} before being applied; see {@link downloadBlob}.
  *
+ * Anything but a `data:` or `blob:` URL is ignored: a link with another scheme,
+ * such as `javascript:`, would be followed instead of downloaded.
+ *
  * @param dataUrl  - The `data:` (or object) URL to download.
  * @param filename - The suggested download name (sanitized before use).
  */
 export function downloadDataUrl(dataUrl: string, filename: string): void {
+	if (!/^(?:data|blob):/iu.test(dataUrl)) {
+		return;
+	}
 	const anchor = document.createElement('a');
 	anchor.href = dataUrl;
 	anchor.download = sanitizeDownloadFilename(filename);
@@ -172,18 +180,24 @@ export function dataUrlToBlob(dataUrl: string): Blob | undefined {
 }
 
 /**
- * Open a payload in a new browser tab. Chromium (and other browsers) silently
- * refuse to navigate a new top-level browsing context straight to a `data:`
- * URL, so a data URL is first converted to a Blob object URL - which browsers
- * do allow a new tab to open - and revoked after {@link OPEN_REVOKE_DELAY_MS}
- * once the new document has had time to fetch it. Non-`data:` URLs (http(s),
- * blob) are opened as-is.
+ * Open an embedded payload in a new browser tab. The tab shares this page's
+ * origin, so only a `data:` URL whose own type is inert in a browser (PDF,
+ * plain text, CSV, JSON, raster images; see `isBrowserOpenableDataUrl` in
+ * `ooxml-core/opc`) is opened. Any other URL or type is refused, whatever a
+ * separate MIME field claims. Chromium (and other browsers) silently refuse to
+ * navigate a new top-level browsing context straight to a `data:` URL, so the
+ * payload is converted to a Blob object URL first and revoked after
+ * {@link OPEN_REVOKE_DELAY_MS}, once the new document has had time to fetch it.
  *
- * @param url - The payload URL (typically a recovered `data:` URL).
+ * @param url - The payload URL (a recovered `data:` URL).
+ * @returns Whether a tab was opened; a caller offers a download otherwise.
  */
-export function openUrlInNewTab(url: string): void {
-	const blob = url.startsWith('data:') ? dataUrlToBlob(url) : undefined,
-		target = blob ? URL.createObjectURL(blob) : url,
+export function openUrlInNewTab(url: string): boolean {
+	const blob = isBrowserOpenableDataUrl(url) ? dataUrlToBlob(url) : undefined;
+	if (!blob) {
+		return false;
+	}
+	const target = URL.createObjectURL(blob),
 		// NB: no `noopener` here. A `blob:` object URL is resolved from the opener's
 		// origin-partitioned blob store, and Chromium refuses to resolve it in the
 		// disconnected browsing context `noopener` creates (the new tab lands on an
@@ -197,9 +211,21 @@ export function openUrlInNewTab(url: string): void {
 			// Some browsers disallow reassigning `opener`; best-effort only.
 		}
 	}
-	if (blob) {
-		setTimeout(() => {
-			URL.revokeObjectURL(target);
-		}, OPEN_REVOKE_DELAY_MS);
+	setTimeout(() => {
+		URL.revokeObjectURL(target);
+	}, OPEN_REVOKE_DELAY_MS);
+	return opened !== null;
+}
+
+/**
+ * Show an embedded payload the way a browser can: in a new tab when
+ * {@link openUrlInNewTab} allows it and `download` is false, otherwise as a
+ * file download. Every binding's OLE verb runs through this, so a payload no
+ * tab may open still reaches the user, as a file.
+ */
+export function openOrDownloadPayload(url: string, fileName: string, download = false): void {
+	if (!download && openUrlInNewTab(url)) {
+		return;
 	}
+	downloadDataUrl(url, fileName);
 }

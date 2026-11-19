@@ -208,5 +208,10 @@
 		"name": "size: XL",
 		"color": "c32607",
 		"description": "1,000 or more changed lines"
+	},
+	{
+		"name": "preview-packages",
+		"color": "5319e7",
+		"description": "Maintainer approval to publish preview packages of a fork's current head"
 	}
 ]

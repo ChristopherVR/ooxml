@@ -20,6 +20,28 @@ const button = (label, primary) => {
 	b.type = 'button';
 	return b;
 };
+/**
+ * Runs a card button's work once at a time. The button is marked busy rather than disabled while
+ * it runs, because disabling the focused button drops keyboard focus to the page. `then` says
+ * where focus goes when the work replaces the button; it moves only if the button had focus.
+ */
+function busy(control, work, then) {
+	if (control.getAttribute('aria-disabled') === 'true') return Promise.resolve();
+	control.setAttribute('aria-disabled', 'true');
+	const had = document.activeElement === control;
+	return work().then(
+		(result) => {
+			// The button was removed with focus on it, so focus fell to the page.
+			if (had && !control.isConnected && document.activeElement === document.body)
+				then?.()?.focus();
+			return result;
+		},
+		(error) => {
+			control.removeAttribute('aria-disabled');
+			throw error;
+		},
+	);
+}
 
 function preview(change, detail) {
 	if (change.type === 'cells') {
@@ -169,7 +191,7 @@ export function proposalCard({
 	async function current(docs) {
 		const latest = [];
 		for (const doc of docs) {
-			sessions.sessions.get(doc.id)?.editor?.flush?.();
+			await sessions.sessions.get(doc.id)?.editor?.flush?.();
 			const stored = await store.get(doc.id);
 			if (!stored || sessions.isDirty(doc.id) || stored.revision !== doc.revision)
 				throw new Error(`${doc.name} changed. Ask again using the latest version.`);
@@ -177,60 +199,66 @@ export function proposalCard({
 		}
 		return latest;
 	}
-	apply.onclick = () =>
-		task(async () => {
-			// Edits already applied from a document review are not applied twice.
-			const chosen = changes.filter((_, i) => boxes[i].checked && !boxes[i].disabled);
-			const targets = refs.filter((d) => chosen.some((c) => c.documentId === d.id));
-			apply.disabled = true;
-			const unlock = sessions.lock(targets.map((d) => d.id));
-			try {
-				const docs = await current(targets);
-				const next = await prepareChanges(chosen, docs, proposals);
-				await current(targets);
-				await store.commit(
-					next.map((document) => ({ document, expected: document.revision - 1 })),
-					'Assistant edits',
+	let undo;
+	apply.onclick = () => task(() => busy(apply, applyChosen, () => undo));
+	async function applyChosen() {
+		// Edits already applied from a document review are not applied twice.
+		const chosen = changes.filter((_, i) => boxes[i].checked && !boxes[i].disabled);
+		const targets = refs.filter((d) => chosen.some((c) => c.documentId === d.id));
+		const unlock = sessions.lock(targets.map((d) => d.id));
+		try {
+			const docs = await current(targets);
+			const next = await prepareChanges(chosen, docs, proposals);
+			await current(targets);
+			await store.commit(
+				next.map((document) => ({ document, expected: document.revision - 1 })),
+				'Assistant edits',
+			);
+			for (const doc of next) await sessions.reload(doc);
+			await refresh();
+			save?.({ applied: boxes.map((b) => b.checked) });
+			for (const box of boxes) box.disabled = true;
+			description.textContent = `Applied ${chosen.length} of ${changes.length}. The previous version of each file was kept, and you can undo this set while the files remain unchanged.`;
+			actions.replaceChildren();
+			undo = button('Undo these changes');
+			actions.append(undo);
+			if (showVersions)
+				for (const doc of next) {
+					const history = button(next.length > 1 ? `History: ${doc.name}` : 'Version history');
+					history.title = `Version history of ${doc.name}`;
+					history.onclick = () => showVersions(doc.id);
+					actions.append(history);
+				}
+			// Once undone, focus moves to the next action, else to the note saying so.
+			const after = () => actions.querySelector('button') ?? description;
+			undo.onclick = () =>
+				task(() =>
+					busy(
+						undo,
+						async () => {
+							await current(next);
+							const restored = next.map((d) => ({
+								...docs.find((old) => old.id === d.id),
+								revision: d.revision + 1,
+								modified: Date.now(),
+							}));
+							await store.commit(
+								restored.map((document) => ({ document, expected: document.revision - 1 })),
+								'Undid assistant edits',
+							);
+							for (const doc of restored) await sessions.reload(doc);
+							await refresh();
+							undo.remove();
+							description.textContent = 'Changes undone.';
+						},
+						after,
+					),
 				);
-				for (const doc of next) await sessions.reload(doc);
-				await refresh();
-				save?.({ applied: boxes.map((b) => b.checked) });
-				for (const box of boxes) box.disabled = true;
-				description.textContent = `Applied ${chosen.length} of ${changes.length}. The previous version of each file was kept, and you can undo this set while the files remain unchanged.`;
-				actions.replaceChildren();
-				const undo = button('Undo these changes');
-				actions.append(undo);
-				if (showVersions)
-					for (const doc of next) {
-						const history = button(next.length > 1 ? `History: ${doc.name}` : 'Version history');
-						history.title = `Version history of ${doc.name}`;
-						history.onclick = () => showVersions(doc.id);
-						actions.append(history);
-					}
-				undo.onclick = () =>
-					task(async () => {
-						await current(next);
-						const restored = next.map((d) => ({
-							...docs.find((old) => old.id === d.id),
-							revision: d.revision + 1,
-							modified: Date.now(),
-						}));
-						await store.commit(
-							restored.map((document) => ({ document, expected: document.revision - 1 })),
-							'Undid assistant edits',
-						);
-						for (const doc of restored) await sessions.reload(doc);
-						await refresh();
-						undo.remove();
-						description.textContent = 'Changes undone.';
-					});
-			} catch (error) {
-				apply.disabled = false;
-				throw error;
-			} finally {
-				unlock();
-			}
-		});
+		} finally {
+			unlock();
+		}
+	}
+	description.tabIndex = -1;
 	return panel;
 }
 

@@ -29,6 +29,7 @@ Tous les adaptateurs acceptent les mêmes propriétés :
 - `showToolbar` : visibilité de la barre d'outils
 - `canEdit` : autorisation de modification. Le visualiseur complet est modifiable par défaut ; `false` le passe en lecture seule (la sélection, la recherche, le zoom et l'export continuent de fonctionner). Les blocs de construction sont en lecture seule par défaut, voir [blocs de construction](/fr/building-blocks)
 - `readOnly` : une restriction propre. `true` rend le dessin en lecture seule et l'emporte sur `canEdit` ; `false` ou omis ne lève que cette restriction
+- `locale` : langue de l'interface, par exemple `fr` ou `zh-CN`. Sans valeur, la visionneuse utilise la langue choisie dans Fichier > Options, puis `lang`, la langue de la page et celle du navigateur
 - `ribbonAddIns` : onglets que l'hôte ajoute après Aide (voir [Onglets complémentaires du ruban](/fr/api#ribbon-add-in-tabs))
 - `collaboration` : partage le dessin ouvert dans une salle tant qu'il est défini ; `null` le quitte (voir [collaboration](/fr/collaboration))
 - `storage` et `customization` : enregistrement et ouverture gérés par l'hôte, et l'objet de personnalisation partagé (voir [Personnalisation](/fr/api#customization) et [Stockage géré par l'hôte](/api#host-owned-storage-and-file-commands))

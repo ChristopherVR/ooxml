@@ -36,18 +36,19 @@ Optionale native Steuerelemente nehmen die gemeinsamen Stile über Markierungen 
 
 `themeColors` wird weiterhin für Überschreibungen je Editor unterstützt. Jeder Schlüssel wird zu einer benutzerdefinierten Eigenschaft `--xve-<kebab-key>` am Host-Element, mit derselben Token-Menge, die der Word-Editor verwendet (dort `--dve-*`), sodass ein Designsystem beide steuern kann:
 
-| Schlüssel                              | Verwendet für                                       |
-| -------------------------------------- | --------------------------------------------------- |
-| `background`, `foreground`             | Editor-Arbeitsfläche und Text                       |
-| `card`, `cardForeground`               | Menüband und Bereiche                               |
-| `popover`, `popoverForeground`         | Menüs und Dropdown-Listen                           |
-| `primary`, `primaryForeground`         | Akzent (Titelleiste, Auswahl, aktive Registerkarte) |
-| `secondary`, `secondaryForeground`     | Sekundäre Schaltflächen                             |
-| `muted`, `mutedForeground`             | Kopfzeilen, Hinweise, deaktivierter Text            |
-| `accent`, `accentForeground`           | Zustände bei Hover und beim Drücken                 |
-| `destructive`, `destructiveForeground` | Fehler                                              |
-| `border`, `input`, `ring`              | Linien, Felder und Fokusrahmen                      |
-| `radius`                               | Eckenradius                                         |
+| Schlüssel                              | Verwendet für                                                                                          |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `background`, `foreground`             | Editor-Arbeitsfläche und Text                                                                          |
+| `card`, `cardForeground`               | Menüband und Bereiche                                                                                  |
+| `popover`, `popoverForeground`         | Menüs und Dropdown-Listen                                                                              |
+| `primary`, `primaryForeground`         | Akzent (Titelleiste, Auswahl, aktive Registerkarte)                                                    |
+| `primaryInk`                           | Primärfarbe als Text auf der Oberfläche und auf Auswahlflächen, mindestens 4,5:1 (Standard: `primary`) |
+| `secondary`, `secondaryForeground`     | Sekundäre Schaltflächen                                                                                |
+| `muted`, `mutedForeground`             | Kopfzeilen, Hinweise, deaktivierter Text                                                               |
+| `accent`, `accentForeground`           | Zustände bei Hover und beim Drücken                                                                    |
+| `destructive`, `destructiveForeground` | Fehler                                                                                                 |
+| `border`, `input`, `ring`              | Linien, Felder und Fokusrahmen                                                                         |
+| `radius`                               | Eckenradius                                                                                            |
 
 ```ts
 editor.themeColors = { primary: '#1f9d63', ring: '#1f9d63', radius: '6px' };

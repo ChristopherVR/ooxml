@@ -12,6 +12,7 @@ import * as syncProtocol from 'y-protocols/sync';
 import * as Y from 'yjs';
 import { WebSocket } from 'ws';
 import { createTeamsServer, forwardedClient } from './index.mjs';
+import { storageName } from './room-store.mjs';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const binPath = new URL('./bin.mjs', import.meta.url).pathname.replace(/^\/(\w:)/u, '$1');
@@ -111,7 +112,7 @@ describe('secure by default', () => {
 		syncProtocol.writeUpdate(encoder, Y.encodeStateAsUpdate(doc));
 		ws.send(encoding.toUint8Array(encoder));
 		await sleep(150); // delivered, well inside the 500 ms debounce
-		const file = join(dataDir, 'rooms', 'flush-room.bin');
+		const file = join(dataDir, 'rooms', `${storageName('flush-room')}.bin`);
 		assert.equal(existsSync(file), false, 'not yet written by the debounce');
 		await server.close();
 		const restored = new Y.Doc();

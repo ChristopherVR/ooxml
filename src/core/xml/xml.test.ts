@@ -36,6 +36,17 @@ describe('parseXml', () => {
 			expect(buildXml(parseXml(`${declaration}${gap}${DOC}`))).toBe(`${declaration}${gap}${DOC}`);
 	});
 
+	it('reads a part that starts with a byte order mark', () => {
+		const declaration = '<?xml version="1.0" encoding="UTF-8"?>';
+		expect(buildXml(parseXml(`\uFEFF${declaration}${DOC}`))).toBe(`${declaration}${DOC}`);
+	});
+
+	it('rejects a second byte order mark', () => {
+		expect(() => parseXml(`\uFEFF\uFEFF<?xml version="1.0"?>${DOC}`)).toThrow(
+			/^Invalid OOXML XML:/,
+		);
+	});
+
 	it('rejects DTD and entity declarations before parsing', () => {
 		expect(() => parseXml('<!DOCTYPE a [<!ENTITY x "y">]><a>&x;</a>')).toThrow(
 			'OOXML XML with DTD or entity declarations is not supported',

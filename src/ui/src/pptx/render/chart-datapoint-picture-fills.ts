@@ -21,6 +21,7 @@ import type { PptxChartData } from 'ooxml-core/pptx';
 import { resolveDataPointPictureFill } from './chart-datapoint-picture-resolve';
 import { buildPictureFillPatternDef } from './chart-picture-pattern-def';
 import type { ChartSvgDef, SvgPrimitive, SvgRect } from './chart-view-model-types';
+import { svgIdToken } from './svg-id';
 
 /**
  * Apply every resolvable `c:dPt/c:pictureOptions` picture fill found among
@@ -70,7 +71,7 @@ export function applyDataPointPictureFills(
 		if (!resolved) {
 			return primitive;
 		}
-		const patternId = `${elementId}-${resolved.patternId}`;
+		const patternId = svgIdToken(`${elementId}-${resolved.patternId}`);
 		defs.push(
 			buildPictureFillPatternDef(
 				patternId,

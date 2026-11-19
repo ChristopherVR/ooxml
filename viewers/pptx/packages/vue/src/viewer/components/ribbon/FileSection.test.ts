@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils';
 import type { VueWrapper } from '@vue/test-utils';
 import { resolveCustomization } from 'ooxml-ui/pptx';
 import type { ToolbarActionId, ViewerCustomization } from 'ooxml-ui/pptx';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { shallowRef } from 'vue';
 
 import { ViewerCustomizationKey } from '../../composables/useViewerCustomization';
@@ -56,6 +56,40 @@ describe('fileSection', () => {
 		const wrapper = mountFileSection(['export']);
 		expect(navLabels(wrapper)).not.toContain('Export');
 		expect(wrapper.text()).not.toContain('Create PDF');
+	});
+});
+
+describe('fileSection host containment', () => {
+	it('sits on the viewer host box and closes on Escape pressed inside it', () => {
+		const outside = document.createElement('button');
+		const host = document.createElement('div');
+		host.setAttribute('data-pptx-theme-root', '');
+		document.body.append(outside, host);
+		vi.spyOn(host, 'getBoundingClientRect').mockReturnValue({
+			left: 160,
+			top: 40,
+			width: 1000,
+			height: 700,
+		} as DOMRect);
+		const onClose = vi.fn();
+		const wrapper = mount(FileSection, { props: { ...BASE_PROPS, onClose }, attachTo: host });
+		const panel = wrapper.get('[role="dialog"]').element as HTMLElement;
+		expect([
+			panel.style.left,
+			panel.style.top,
+			panel.style.width,
+			panel.style.height,
+		]).toStrictEqual(['160px', '40px', '1000px', '700px']);
+		const escape = (target: Element) =>
+			target.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		escape(outside);
+		expect(onClose).not.toHaveBeenCalled();
+		escape(panel.querySelector('button')!);
+		expect(onClose).toHaveBeenCalledOnce();
+		wrapper.unmount();
+		host.remove();
+		outside.remove();
+		vi.restoreAllMocks();
 	});
 });
 

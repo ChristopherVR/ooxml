@@ -25,6 +25,7 @@
 
 import { editorNudgeDelta, editorSlideStep } from './editor-keymap-arrows';
 import { resolveChord, resolveLiveFormatChord } from './editor-keymap-chords';
+import type { SlideKeyFocus } from './slide-keyboard-focus';
 
 export {
 	NUDGE_LARGE,
@@ -33,7 +34,7 @@ export {
 	editorSlideStep,
 } from './editor-keymap-arrows';
 export { mapInlineEditorChord, mapInlineTextFormatKey } from './editor-keymap-chords';
-export { isEditorControlTarget, isEditorTextInputTarget } from './editor-key-target';
+export { isEditorTextInputTarget } from './editor-key-target';
 export type {
 	InlineEditorChord,
 	InlineEditorChordInput,
@@ -80,6 +81,7 @@ export type EditorKeyActionName =
 	| 'clearFormatting'
 	| 'cycleSelectionNext'
 	| 'cycleSelectionPrev'
+	| 'editText'
 	| 'pasteSpecial';
 
 /** Result of resolving one key press; `null` means "not ours, leave it alone". */
@@ -117,10 +119,10 @@ export interface EditorKeyGuard {
 	/** The event originated in an `<input>`, `<textarea>`, `<select>` or contenteditable. */
 	isTextInputTarget: boolean;
 	/**
-	 * The event originated on a focusable chrome control (see
-	 * `isEditorControlTarget`), where Tab is the browser's focus navigation.
+	 * Where the key press sits relative to the slide (see `slideKeyFocus`): Tab
+	 * walks the objects only once the user has gone into the slide.
 	 */
-	isControlTarget: boolean;
+	slideFocus: SlideKeyFocus;
 }
 
 /** Guard defaults, so a caller only states the flags it actually tracks. */
@@ -132,15 +134,14 @@ const GUARD_DEFAULTS: EditorKeyGuard = {
 	isEditingText: false,
 	isDrawing: false,
 	isTextInputTarget: false,
-	isControlTarget: false,
+	slideFocus: 'outside',
 };
 
 // ---------------------------------------------------------------------------
 // Target inspection
 // ---------------------------------------------------------------------------
 
-// `isEditorTextInputTarget` / `isEditorControlTarget` live in
-// `./editor-key-target` and are re-exported above.
+// `isEditorTextInputTarget` lives in `./editor-key-target` and is re-exported above.
 
 // ---------------------------------------------------------------------------
 // Mapping
@@ -163,7 +164,8 @@ const NO_ACTION: EditorKeyResult = { action: null };
  *  5. the typing gates, so every other shortcut never fires out of a text field;
  *  6. `?` and Ctrl/Cmd+`/` (one command, two keys), before the other chords,
  *     because `?` is a bare printable key;
- *  7. Delete/Backspace, Tab (selection cycling), chords, arrows.
+ *  7. Delete/Backspace, Enter and Tab on the slide (selection cycling), chords,
+ *     arrows.
  *
  * Selection-gated commands (copy, cut, duplicate, delete, nudge, group,
  * ungroup) return `null` with an empty selection rather than firing a no-op, so
@@ -255,11 +257,21 @@ export function mapEditorKey(
 		return { action: 'delete' };
 	}
 
-	// Tab cycles the selection through the slide's elements when nothing is
-	// being typed into; Ctrl+Tab / Cmd+Tab are the browser/OS's own tab
-	// switchers and must be left alone. Tab on a chrome control (a ribbon
-	// button, a File backstage row, a dialog field) is focus navigation.
-	if (key === 'Tab' && !mod && !alt && !state.isControlTarget) {
+	// Enter on the focused slide goes in and selects its first object; inside, it
+	// edits the selected object's text, as in PowerPoint.
+	if (key === 'Enter' && !mod && !alt && !input.shiftKey) {
+		if (state.slideFocus === 'pane') {
+			return { action: 'cycleSelectionNext' };
+		}
+		if (state.slideFocus === 'objects' && state.hasSelection) {
+			return { action: 'editText' };
+		}
+	}
+
+	// Inside the slide, Tab walks its objects as in PowerPoint. Everywhere else
+	// it is the browser's focus navigation, so the keyboard can always move on;
+	// Ctrl+Tab / Cmd+Tab are the browser/OS's own tab switchers.
+	if (key === 'Tab' && !mod && !alt && state.slideFocus === 'objects') {
 		return { action: input.shiftKey ? 'cycleSelectionPrev' : 'cycleSelectionNext' };
 	}
 

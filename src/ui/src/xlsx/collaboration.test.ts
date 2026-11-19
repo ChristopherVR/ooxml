@@ -7,8 +7,10 @@ import {
 	createCollabSession,
 	createMemoryHub,
 	transportProvider,
+	UPDATE_REFUSAL_MESSAGES,
 	type CollabSession,
 } from 'ooxml-core/collab';
+import { collabStrings } from 'ooxml-core/i18n';
 import { getCell } from 'ooxml-core/xlsx';
 import { sanitizeXlsxPresence, type XlsxPresence } from 'ooxml-core/xlsx/collab';
 import type { EditorCore } from './editor-core';
@@ -126,6 +128,27 @@ describe('<xlsx-editor> collaboration', () => {
 		expect(a.element.readOnly).toBe(true);
 		a.element.removeAttribute('read-only');
 		expect(a.element.readOnly).toBe(false);
+	});
+
+	it('explains a refused update in the display language and stops sharing', async () => {
+		const { hub, a } = await pair();
+		a.element.locale = 'de';
+		const errors: string[] = [];
+		a.element.addEventListener('workbook-error', (event) =>
+			errors.push((event as CustomEvent<{ message: string }>).detail.message),
+		);
+		const evil = hub.createTransport('book');
+		evil.connect({ open: () => {}, close: () => {}, message: () => {}, error: () => {} });
+		// A whole sync update whose struct has an unknown content type.
+		evil.send(new Uint8Array([0, 2, 5, 1, 1, 1, 0, 0x1f]));
+		await wait();
+		const german = collabStrings.de[UPDATE_REFUSAL_MESSAGES.malformed]!;
+		const root = a.element.shadowRoot ?? a.element;
+		const toasts = [...root.querySelectorAll('.xve-toast-text')].map((node) => node.textContent);
+		expect(toasts).toContain(german);
+		expect(toasts.some((text) => text?.startsWith('Verbindung'))).toBe(false);
+		expect(errors).toContain(german);
+		expect(a.element.collaborationState).toMatchObject({ status: 'error', refusal: 'malformed' });
 	});
 
 	it('adopts the room and carries edits both ways', async () => {
@@ -257,6 +280,55 @@ describe('<xlsx-editor> collaboration', () => {
 		await wait();
 		expect(announced).toEqual(['share']);
 		expect(dialog.open).toBe(true);
+	});
+});
+
+describe('<xlsx-editor> collaboration while removed', () => {
+	const until = async (check: () => boolean) => {
+		for (let i = 0; i < 100 && !check(); i++) await wait(20);
+		expect(check()).toBe(true);
+	};
+
+	it('keeps a room it opened through a move, leaves it while removed and rejoins when back', async () => {
+		const roomId = `moved-${Math.random().toString(36).slice(2, 10)}`;
+		const a = editor();
+		const b = editor();
+		a.edit().setCellInput(0, 0, 0, 'room');
+		a.element.collaboration = { roomId, user: { name: 'Ada' } };
+		await until(() => a.element.collaborationState.active);
+		b.element.collaboration = { roomId, intent: 'join', user: { name: 'Bob' } };
+		const people = () => b.element.collaborationState.people.length;
+		await until(() => people() === 2 && value(b, 0, 0) === 'room');
+		const other = document.createElement('div');
+		document.body.append(other);
+		other.append(a.element);
+		await wait();
+		expect(a.element.collaborationState.active).toBe(true);
+		a.element.remove();
+		await wait();
+		expect(a.element.collaborationState.active).toBe(false);
+		await until(() => people() === 1);
+		b.edit().setCellInput(0, 1, 0, 'while away');
+		document.body.append(a.element);
+		await until(() => people() === 2 && value(a, 1, 0) === 'while away');
+		a.element.collaboration = null;
+		b.element.collaboration = null;
+	});
+
+	it('rejoins a room started with startCollaboration once attached again', async () => {
+		const hub = createMemoryHub();
+		const a = editor();
+		await a.element.startCollaboration({ session: join(hub, 'Ada', '#2563eb') });
+		a.element.remove();
+		await wait();
+		expect(a.element.collaborationState.active).toBe(false);
+		document.body.append(a.element);
+		await until(() => a.element.collaborationState.active);
+		a.element.stopCollaboration();
+		a.element.remove();
+		document.body.append(a.element);
+		await wait();
+		expect(a.element.collaborationState.active).toBe(false);
 	});
 });
 

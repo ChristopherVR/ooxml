@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { formatBytes, isBrowserOpenableMime, oleActionsVisible } from './ole-actions';
+import { formatBytes, isBrowserOpenableDataUrl, oleActionsVisible } from './ole-actions';
 
 describe('formatBytes', () => {
 	it('returns undefined for missing or invalid input', () => {
@@ -25,37 +25,42 @@ describe('formatBytes', () => {
 	});
 });
 
-describe('isBrowserOpenableMime', () => {
-	it('returns true for pdf, raster images, plain text and json', () => {
-		expect(isBrowserOpenableMime('application/pdf')).toBeTruthy();
-		expect(isBrowserOpenableMime('image/png')).toBeTruthy();
-		expect(isBrowserOpenableMime('text/plain')).toBeTruthy();
-		expect(isBrowserOpenableMime('application/json')).toBeTruthy();
-		expect(isBrowserOpenableMime('IMAGE/JPEG')).toBeTruthy();
+describe('isBrowserOpenableDataUrl', () => {
+	it('opens pdf, raster images, plain text and json payloads', () => {
+		for (const type of [
+			'application/pdf',
+			'image/png',
+			'text/plain',
+			'application/json',
+			'IMAGE/JPEG',
+		]) {
+			expect(isBrowserOpenableDataUrl(`data:${type};base64,AAAA`)).toBe(true);
+		}
+		expect(isBrowserOpenableDataUrl('data:TEXT/Plain;charset=UTF-8,hi')).toBe(true);
 	});
 
 	it('refuses markup types that can run script on the viewer origin', () => {
-		expect(isBrowserOpenableMime('image/svg+xml')).toBeFalsy();
-		expect(isBrowserOpenableMime('IMAGE/SVG+XML; charset=utf-8')).toBeFalsy();
-		expect(isBrowserOpenableMime('text/html')).toBeFalsy();
-		expect(isBrowserOpenableMime('text/xml')).toBeFalsy();
-		expect(isBrowserOpenableMime('application/xml')).toBeFalsy();
-		expect(isBrowserOpenableMime('application/xhtml+xml')).toBeFalsy();
-		expect(isBrowserOpenableMime('application/vnd.custom+xml')).toBeFalsy();
+		for (const type of [
+			'image/svg+xml',
+			'text/html',
+			'text/xml',
+			'application/xml',
+			'application/xhtml+xml',
+			'application/vnd.custom+xml',
+		]) {
+			expect(isBrowserOpenableDataUrl(`data:${type},x`)).toBe(false);
+		}
 	});
 
-	it('is case-insensitive and ignores charset parameters', () => {
-		expect(isBrowserOpenableMime('TEXT/Plain; charset=UTF-8')).toBeTruthy();
-		expect(isBrowserOpenableMime('Application/PDF')).toBeTruthy();
-	});
-
-	it('returns false for office/binary types and missing input', () => {
-		expect(isBrowserOpenableMime(undefined)).toBeFalsy();
-		expect(isBrowserOpenableMime('')).toBeFalsy();
+	it('reads the type from the URL, not from anything a field claims', () => {
+		expect(isBrowserOpenableDataUrl('javascript:alert(1)')).toBe(false);
+		expect(isBrowserOpenableDataUrl('https://example.com/a.pdf')).toBe(false);
+		expect(isBrowserOpenableDataUrl(undefined)).toBe(false);
 		expect(
-			isBrowserOpenableMime('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
-		).toBeFalsy();
-		expect(isBrowserOpenableMime('application/octet-stream')).toBeFalsy();
+			isBrowserOpenableDataUrl(
+				'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,AA',
+			),
+		).toBe(false);
 	});
 });
 

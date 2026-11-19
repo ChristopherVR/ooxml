@@ -6,6 +6,7 @@ import {
 	cropFrameOf,
 	cropSessionChanged,
 	cropToAspectRatio,
+	elementIdSelector,
 	readCropInsets,
 	startCropSession,
 } from 'ooxml-ui/pptx';
@@ -103,8 +104,7 @@ const currentCrop = (element: PptxElement): CropElementUpdate => ({
 
 /** The rendered bitmap's natural size, when the picture is on screen and decoded. */
 function naturalSizeOf(doc: Document, id: string): NaturalImageSize | undefined {
-	const escaped = typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(id) : id;
-	const img = doc.querySelector<HTMLImageElement>(`[data-element-id="${escaped}"] img`);
+	const img = doc.querySelector<HTMLImageElement>(`${elementIdSelector(id)} img`);
 	return img && img.naturalWidth > 0 && img.naturalHeight > 0
 		? { width: img.naturalWidth, height: img.naturalHeight }
 		: undefined;

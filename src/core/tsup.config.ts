@@ -12,6 +12,7 @@ export default defineConfig({
 		'chart/region-map/index': 'chart/region-map/index.ts',
 		'text/index': 'text/index.ts',
 		'i18n/index': 'i18n/index.ts',
+		'ai/index': 'ai/index.ts',
 		'ribbon/index': 'ribbon/index.ts',
 		'embedding/index': 'embedding/index.ts',
 		'embedding/onedrive/index': 'embedding/onedrive/index.ts',

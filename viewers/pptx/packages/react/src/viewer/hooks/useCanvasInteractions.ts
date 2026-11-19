@@ -3,6 +3,7 @@ import {
 	beginShapeAdjustment,
 	buildInlineTextCommitPatch,
 	canInteractWithElement,
+	elementIdSelector,
 	filterInteractableIds,
 	resolveGroupDoubleClickTarget,
 	resolveGroupPressTarget,
@@ -405,7 +406,7 @@ export function useCanvasInteractions(
 			if (el) {
 				startPositions[id] = { x: el.x, y: el.y };
 			}
-			const domEl = document.querySelector(`[data-element-id="${id}"]`) as HTMLElement | null;
+			const domEl = document.querySelector(elementIdSelector(id)) as HTMLElement | null;
 			if (domEl) {
 				domEls.set(id, domEl);
 			}
@@ -505,7 +506,7 @@ export function useCanvasInteractions(
 			startHeight: el.height,
 			handle: handle as 'nw' | 'ne' | 'sw' | 'se' | 'n' | 's' | 'e' | 'w',
 			moved: false,
-			domEl: document.querySelector(`[data-element-id="${elementId}"]`) as HTMLElement | null,
+			domEl: document.querySelector(elementIdSelector(elementId)) as HTMLElement | null,
 			lastX: el.x,
 			lastY: el.y,
 			lastWidth: el.width,

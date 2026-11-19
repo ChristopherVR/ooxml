@@ -52,8 +52,8 @@ describe('connectorRenderer', () => {
 		});
 		const line = wrapper.get('line');
 		expect(line.attributes('marker-end')).toContain('url(#');
-		// id is sanitised from the element id ("cxn 1" → "cxn_1")
-		expect(wrapper.find('marker#cxn_1-end').exists()).toBeTruthy();
+		// id is sanitised from the element id ("cxn 1" → "cxn_20_1")
+		expect(wrapper.find('marker#cxn_20_1-end').exists()).toBeTruthy();
 	});
 
 	it('omits markers when no arrows are set', () => {
@@ -69,7 +69,7 @@ describe('connectorRenderer', () => {
 				zIndex: 0,
 			},
 		});
-		const marker = wrapper.get('marker#cxn_1-end');
+		const marker = wrapper.get('marker#cxn_20_1-end');
 		expect(marker.attributes('markerWidth')).toBe('3');
 		expect(marker.attributes('markerHeight')).toBe('3');
 	});
@@ -87,7 +87,7 @@ describe('connectorRenderer', () => {
 				zIndex: 0,
 			},
 		});
-		const marker = wrapper.get('marker#cxn_1-end');
+		const marker = wrapper.get('marker#cxn_20_1-end');
 		// Length and width use independent PowerPoint size tokens.
 		expect(marker.attributes('markerWidth')).toBe('5');
 		expect(marker.attributes('markerHeight')).toBe('2');
@@ -106,7 +106,7 @@ describe('connectorRenderer', () => {
 				zIndex: 0,
 			},
 		});
-		const path = wrapper.get('marker#cxn_1-end path');
+		const path = wrapper.get('marker#cxn_20_1-end path');
 		expect(path.attributes('fill')).toBe('none');
 		expect(path.attributes('stroke')).toBe('#ff0000');
 	});
@@ -120,7 +120,7 @@ describe('connectorRenderer', () => {
 				zIndex: 0,
 			},
 		});
-		const path = wrapper.get('marker#cxn_1-end path');
+		const path = wrapper.get('marker#cxn_20_1-end path');
 		expect(path.attributes('fill')).toBe('#ff0000');
 		expect(path.attributes('stroke')).toBeUndefined();
 	});

@@ -12,7 +12,7 @@
  * `position: fixed` fills the browser window without requesting fullscreen,
  * matching both PowerPoint's behaviour and the reference binding.
  */
-import { ChevronLeft, ChevronRight, X } from 'lucide-vue-next';
+import { ChevronLeft, ChevronRight, X } from '@lucide/vue';
 import {
 	canGoNext,
 	canGoPrevious,

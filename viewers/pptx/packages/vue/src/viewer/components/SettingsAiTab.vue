@@ -4,7 +4,7 @@
  * including every tool call's input/output, as a downloadable JSON or Markdown
  * log for debugging. Rendered only when the host enables the `ai` prop.
  */
-import { Bug, Download } from 'lucide-vue-next';
+import { Bug, Download } from '@lucide/vue';
 import type { PptxAiChatStore } from 'ooxml-ui/pptx/ai/host';
 import { createChatHistoryStore } from 'ooxml-ui/pptx/ai/host';
 import { computed, onMounted, ref } from 'vue';

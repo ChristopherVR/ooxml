@@ -97,6 +97,9 @@ updates:
       # take 7 yet. Check those upstreams first, then bump by hand.
       - dependency-name: 'typescript'
         update-types: ['version-update:semver-major']
+      # Solid 2 needs a stable vite-plugin-solid and babel-preset-solid; both are prerelease only.
+      - dependency-name: 'solid-js'
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: 'github-actions'
     directory: '/'

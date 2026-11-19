@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { X } from 'lucide-vue-next';
+import { X } from '@lucide/vue';
 import { seriesColorClearState } from 'ooxml-ui/pptx';
 import type { PptxChartSeries } from 'pptx-viewer-core';
 import { useI18n } from 'vue-i18n';

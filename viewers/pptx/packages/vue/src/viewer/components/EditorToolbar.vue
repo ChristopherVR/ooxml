@@ -8,7 +8,7 @@
  * enablement state via its props (`canUndo`, `canRedo`, `hasSelection`) and
  * displays the current zoom level (`zoomPercent`).
  *
- * Icons come from `lucide-vue-next`, matching the `react-icons/lu` glyph React
+ * Icons come from `@lucide/vue`, matching the `react-icons/lu` glyph React
  * picks for the same control so both bindings read identically. The shape
  * presets keep their literal inline SVG outlines: they preview the shape that
  * is about to be inserted rather than naming a command.
@@ -16,7 +16,7 @@
  * The Arrange group is extracted into ArrangeButtonGroup.vue to keep this
  * file under the 300-LOC limit.
  */
-import { Minus, Plus, Redo, Type, Undo } from 'lucide-vue-next';
+import { Minus, Plus, Redo, Type, Undo } from '@lucide/vue';
 import { useI18n } from 'vue-i18n';
 
 import ArrangeButtonGroup from './ArrangeButtonGroup.vue';

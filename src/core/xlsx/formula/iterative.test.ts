@@ -21,6 +21,16 @@ describe('iterative calculation', () => {
 		expect(wb.warnings).toContain(CIRCULAR_REFERENCE_WARNING);
 	});
 
+	it('reads current values through ranges on every pass', () => {
+		const wb = iterating(
+			{ A1: '=C1+1', A2: 1, A3: 1, A4: 1, A5: 1, C1: '=SUMIF(A1:A5,">0",A1:A5)' },
+			4,
+			0,
+		);
+		engine(wb).recalculateAll();
+		expect([get(wb, 'A1'), get(wb, 'C1')]).toEqual([20, 19]);
+	});
+
 	it('runs a self-reference for the iteration count', () => {
 		const wb = iterating({ A1: '=A1+1' }, 25);
 		engine(wb).recalculateAll();

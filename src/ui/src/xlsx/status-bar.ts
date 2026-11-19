@@ -40,6 +40,9 @@ const STAT_LABELS: Record<StatKey, string> = {
 	max: 'Maximum',
 	sum: 'Sum',
 };
+/** Sheets with more stored rows than this compute selection statistics after the next paint. */
+const DEFERRED_STATS_ROWS = 20_000;
+
 const STAT_ORDER: StatKey[] = ['average', 'count', 'numericCount', 'min', 'max', 'sum'];
 
 const MODE_LABELS = { ready: 'Ready', enter: 'Enter', edit: 'Edit', point: 'Point' } as const;
@@ -187,10 +190,29 @@ export function createStatusBar(ctx: EditorContext, handlers: StatusBarHandlers)
 					],
 		};
 	};
+	const showStats = () => {
+		stats.textContent = statisticsText(ctx, shown, layout.stats);
+	};
+	// On a large sheet the statistics wait for the frame that paints the new selection, so a
+	// whole-column click shows at once and its sum follows.
+	let statsQueued = false;
+	const queueStats = (frame: (paint: () => void) => number) => {
+		if (statsQueued) return;
+		statsQueued = true;
+		frame(() =>
+			setTimeout(() => {
+				statsQueued = false;
+				showStats();
+			}),
+		);
+	};
 	const refresh = () => {
 		render();
-		stats.textContent = statisticsText(ctx, shown, layout.stats);
 		slider.value = zoom();
+		const rows = ctx.workbook()?.sheets?.[ctx.selection.get().sheet]?.rows?.size ?? 0;
+		const frame = doc.defaultView?.requestAnimationFrame?.bind(doc.defaultView);
+		if (frame && rows > DEFERRED_STATS_ROWS) queueStats(frame);
+		else showStats();
 	};
 	const relocalize = () => {
 		slider.setAttribute('out-label', ctx.t('Zoom out'));

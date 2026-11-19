@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** Slide previews over the shared `createSlideSorterController`; this file only draws it. */
-import { X } from 'lucide-vue-next';
+import { X } from '@lucide/vue';
 import {
 	createSlideSorterController,
 	HIDDEN_SLIDE_SLASH_GRADIENT,

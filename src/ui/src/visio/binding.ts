@@ -74,6 +74,7 @@ export function mountViewer(container: HTMLElement, initial: ViewerOptions = {})
 			if (key === 'canEdit' && options.canEdit !== undefined) element.canEdit = options.canEdit;
 			else if (key === 'readOnly' && options.readOnly !== undefined)
 				element.readOnly = options.readOnly;
+			else if (key === 'locale' && options.locale !== undefined) element.locale = options.locale;
 			else if (key === 'document' && options.document !== undefined) {
 				if (element.document !== options.document) element.document = options.document;
 			} else if (key === 'pageIndex' && options.pageIndex !== undefined)

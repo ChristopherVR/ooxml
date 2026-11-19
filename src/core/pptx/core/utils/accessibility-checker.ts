@@ -15,6 +15,7 @@ import type { PptxElement } from '../types/elements';
 import type { PptxData, PptxSlide } from '../types/presentation';
 import type { PptxTableData } from '../types/table';
 import { at } from '../../../geometry/indexed';
+import { contrastRatio, parseHexColor, relativeLuminance } from '../../../color/contrast';
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -49,63 +50,14 @@ export interface AccessibilityCheckOptions {
 }
 
 // ---------------------------------------------------------------------------
-// Colour helpers (WCAG 2.1 relative luminance + contrast ratio)
+// Colour helpers (WCAG 2.x, shared in ooxml-core/color)
 // ---------------------------------------------------------------------------
 
-/**
- * Parse a hex colour string into [R, G, B] in 0–255.
- * Accepts `#RGB`, `#RRGGBB`, `RGB`, `RRGGBB`.
- */
-export function parseHexColor(hex: string): [number, number, number] | null {
-	const cleaned = hex.replace(/^#/, '');
-	if (!/^[\da-fA-F]+$/.test(cleaned)) {
-		return null;
-	}
-	if (cleaned.length === 3) {
-		const r = Number.parseInt(cleaned.charAt(0).repeat(2), 16);
-		const g = Number.parseInt(cleaned.charAt(1).repeat(2), 16);
-		const b = Number.parseInt(cleaned.charAt(2).repeat(2), 16);
-		return [r, g, b];
-	}
-	if (cleaned.length === 6) {
-		const r = Number.parseInt(cleaned.slice(0, 2), 16);
-		const g = Number.parseInt(cleaned.slice(2, 4), 16);
-		const b = Number.parseInt(cleaned.slice(4, 6), 16);
-		return [r, g, b];
-	}
-	return null;
-}
+export { parseHexColor, relativeLuminance };
 
-/**
- * WCAG 2.1 relative luminance of an sRGB colour.
- * @see https://www.w3.org/TR/WCAG21/#dfn-relative-luminance
- */
-export function relativeLuminance(r: number, g: number, b: number): number {
-	const linear = (c: number): number => {
-		const s = c / 255;
-		return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-	};
-	const rs = linear(r);
-	const gs = linear(g);
-	const bs = linear(b);
-	return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
-}
-
-/**
- * WCAG 2.1 contrast ratio between two hex colours.
- * Returns a value in [1, 21].
- */
+/** WCAG contrast ratio between two hex colours, in [1, 21]; an unparseable colour counts as 21. */
 export function computeContrastRatio(fg: string, bg: string): number {
-	const fgRgb = parseHexColor(fg);
-	const bgRgb = parseHexColor(bg);
-	if (!fgRgb || !bgRgb) {
-		return 21;
-	} // can't parse → assume OK
-	const l1 = relativeLuminance(...fgRgb);
-	const l2 = relativeLuminance(...bgRgb);
-	const lighter = Math.max(l1, l2);
-	const darker = Math.min(l1, l2);
-	return (lighter + 0.05) / (darker + 0.05);
+	return contrastRatio(fg, bg) ?? 21;
 }
 
 // ---------------------------------------------------------------------------

@@ -60,6 +60,42 @@ import {
 
 `packageAdapter({ name?, maxBytes? })` is a ready-made `DocumentAdapter<{ bytes, revision }>` that shares the whole saved package (VSDX, DOCX, PPTX, XLSX). It is the fallback for products whose edits produce a new package and have no mergeable mapping (Excel and Visio have their own adapters, below). It never merges: the last package written wins, and packages above `maxBytes` (32 MiB by default) are refused.
 
+## Update limits (`scanUpdate`)
+
+Yjs allocates one object per struct, per delete range and per object, array or byte array inside a JSON or `any` content while it decodes an update. A struct can be two bytes long, so a byte limit alone let a 32 MiB frame allocate about 16.8 million objects, enough to exhaust a 1 GiB heap. `scanUpdate(update, limits)` walks the v1 encoding with a cursor, allocates nothing in proportion to the update, and refuses one over budget before any of it is decoded. Primitive values are not counted: each takes at least a byte of the update and allocates little more. `validateUpdate` and `applyUpdateSafe` run it first, so `transportProvider` (WebSocket, BroadcastChannel and memory transports) and the Teams server check every inbound update; `guardProviderUpdates(provider)` does the same for a y-websocket `WebsocketProvider`, which applies sync messages itself (PowerPoint's websocket transport and `adaptYjsProvider` call it).
+
+The budget is proportional to the update: `defaultUpdateLimits(bytes)` allows one struct per `MIN_BYTES_PER_STRUCT` (4) bytes and one deleted range per `MIN_BYTES_PER_DELETE_RANGE` (2) bytes. Measured on 2026-11-19, first syncs (the whole document in one update) of legitimate documents, counted as `scanUpdate` counts:
+
+| Document                                              | Update size | Structs   | Bytes per struct |
+| ----------------------------------------------------- | ----------- | --------- | ---------------- |
+| Excel, 500,000 boolean cells (the densest measured)   | 12.9 MB     | 1,500,032 | 8.6              |
+| Excel, 500,000 numeric cells                          | 14.4 MB     | 1,500,032 | 9.6              |
+| Excel, 1,200,000 mixed cells (text, styled, formulas) | 44.0 MB     | 3,600,039 | 12.2             |
+| Excel, 500,000 styled cells                           | 21.3 MB     | 1,500,053 | 14.2             |
+| Word, 20,000 paragraphs, every word formatted         | 14.7 MB     | 840,001   | 17.5             |
+| Teams, one channel with 20,000 messages               | 4.0 MB      | 220,014   | 18.3             |
+| Text after 50,000 random inserts and deletes          | 0.6 MB      | 34,841    | 17.7             |
+| Text with every other character deleted               | 2.5 MB      | 200,001   | 12.4             |
+| Densest PowerPoint fixture deck                       | 2 KB        | 68        | 30.5             |
+| Densest Visio fixture drawing                         | 0.9 MB      | 20,555    | 44.8             |
+
+Excel spends three structs per cell (the map entry, its `any` content and the cell object), so every first sync a real document produces uses less than half its budget, at any size. Deleted ranges get the smallest budget every well-formed delete set meets, because an update that only deletes characters early in a document legitimately spends 2 to 3 bytes per range, and a range costs a few times less to decode than a struct (32 MiB of ranges peaks under 1 GB of memory, as a dense workbook of that size does). A frame of two-byte structs holds twice its budget and is refused after a scan of a few milliseconds. A frame exactly at the budget costs about as much memory to decode as a legitimate update of the same size: in Node 24, checking and applying a 16 MiB first sync of a dense workbook, or a 16 MiB frame at the budget, peaks near 0.6 GB, and 30 MiB of either near 1.1 GB to 1.7 GB. The frame size, not the struct count, is therefore what bounds a server's memory, and the Teams server's default largest sync message is 32 MiB or a 64th of its heap, whichever is smaller (8 MiB for a 512 MiB heap, which was measured to survive 8 MiB frames at the budget and to fail on some 16 MiB ones). Browser clients keep `MAX_UPDATE_BYTES` (32 MiB) so the first sync of a large workbook or a document with many pictures still opens. Pass `maxStructs` and `maxDeleteRanges` (in `ApplyOptions`, `validateUpdate`'s `limits` or `guardProviderUpdates`'s options) to set absolute limits instead; the Teams server takes `maxUpdateStructs` and `maxSyncBytes`.
+
+A y-webrtc provider applies peer messages inside y-webrtc with no hook, so it is not scanned; what one WebRTC data channel message can allocate is bounded only by the browser's maximum message size (256 KiB in Chromium, larger in Firefox). A provider a host supplies itself is the host's to guard; `guardProviderUpdates` covers y-websocket ones.
+
+## Refusals (`UpdateRefusedError`)
+
+A refused update would leave the copy without it, and without every later change built on it, so a refusal stops the sync instead of letting the copy drift silently. `transportProvider` and `adaptYjsProvider` disconnect, report status `error` and emit an `UpdateRefusedError` (reason first, so a listener that hears the status change already knows why). The session records the code as `refusal` until it connects again, `collaborationStateOf` reports it, and the document is never changed by the refused update. The WebSocket transport turns the server's refusals into the same error: a close with code 1009 (a change too large or too complex, or a full document) stops at once, and a repeated 1008 `update rejected` stops after `maxRejectedRetries`.
+
+| Code              | When                                                      |
+| ----------------- | --------------------------------------------------------- |
+| `too-large`       | An update from the room is over its byte or struct budget |
+| `malformed`       | An update from the room is not a well-formed Yjs update   |
+| `server-rejected` | The server refused a change this client sent              |
+| `server-full`     | The shared document is at the server's size limit         |
+
+`message` is the English sentence to show and the key of `collabStrings` (`ooxml-core/i18n`), which holds every locale; `translateCollabText(message, locale)` translates it. `isUpdateRefusal(error)` also recognises an error from another copy of the package. Each product shows the sentence in its display language: Excel and PowerPoint as a toast, Word and Visio through `document-error` (Visio also on File > Share), Teams as a notice. `LEFT_OUT_MESSAGE` is the sentence for values a collaborator sent that were left out because their field does not allow them (`onLeftOut` of `bindWorkbookSession`, PowerPoint's remote-value warnings).
+
 ## Write-back scheduler (`createWriteBackScheduler`)
 
 One DOM-free scheduler for the elected writer (a room's owner), shared by the PowerPoint and Visio editors (`write-back.ts`, `write-back-lifecycle.ts`):
@@ -94,7 +130,7 @@ The document engine behind the contract still differs per product (Excel merges 
 
 ## Honest limits
 
-- Validation checks structure and size, not semantics: a well-formed update from an authorised peer can still carry content the product must validate when it reads the model back.
+- Validation checks structure and size, not semantics: a well-formed update from an authorised peer can still carry content the product must validate when it reads the model back. PowerPoint checks element ids, resource URLs and MIME types as it reads slides from the room (`collaboration-remote-values.ts`).
 - There is no authentication, authorisation or persistence here; `role: 'viewer'` is advisory on the client. A server must enforce permissions. `demos/pptx/demo-host-review` shows one way (signed room tickets, `openteams-server`'s `authorizeSync` hook dropping writes from read-only sockets, live access changes); its recipe is the PowerPoint guide "Review inside your application" (`viewers/pptx/docs/guide/review-workflow.md`).
 - Awareness has no integrity protection; presence is sanitised for display, not trusted.
 - Asset entries are not garbage-collected when their owner is deleted.

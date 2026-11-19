@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import {
 	ribbonAddInGroupViews,
 	runRibbonAddInCommand,
@@ -68,5 +69,5 @@ export function definePptxRibbonAddIn(registry: CustomElementRegistry): void {
 				: []) as unknown as readonly RibbonGroupView[];
 		}
 	}
-	registry.define('pptx-ui-ribbon-add-in', PptxRibbonAddIn);
+	defineElement(registry, 'pptx-ui-ribbon-add-in', PptxRibbonAddIn);
 }

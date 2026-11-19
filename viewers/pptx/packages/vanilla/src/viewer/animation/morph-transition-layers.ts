@@ -1,5 +1,6 @@
 import type { MorphCopyPart, MorphTransitionPlan } from 'ooxml-ui/pptx';
 import {
+	elementIdSelector,
 	MORPH_CROSSFADE_GROUP_CSS_TEXT,
 	MORPH_CROSSFADE_HALF_BLEND_MODE,
 	morphOverlayStackSlots,
@@ -66,7 +67,7 @@ export function keepOnlyElements(stage: HTMLElement, ids: readonly string[]): HT
  */
 export function stackInRunOrder(stage: HTMLElement, ids: readonly string[]): HTMLElement {
 	ids.forEach((id, rank) => {
-		const node = stage.querySelector<HTMLElement>(`[data-element-id="${CSS.escape(id)}"]`);
+		const node = stage.querySelector<HTMLElement>(elementIdSelector(id));
 		if (node) {
 			node.style.zIndex = String(rank + 1);
 		}
@@ -95,7 +96,7 @@ export function materializeMorphCopy(
 	if (sourceId === undefined) {
 		return stage;
 	}
-	const node = stage.querySelector<HTMLElement>(`[data-element-id="${CSS.escape(sourceId)}"]`);
+	const node = stage.querySelector<HTMLElement>(elementIdSelector(sourceId));
 	if (node) {
 		const clone = node.cloneNode(true) as HTMLElement;
 		clone.dataset.elementId = id;
@@ -155,10 +156,8 @@ function replaceOutgoingTextLayouts(
 	replacements: ReadonlyMap<string, string> | undefined,
 ): void {
 	for (const [outgoingId, incomingId] of replacements ?? []) {
-		const old = stage.querySelector<HTMLElement>(`[data-element-id="${CSS.escape(outgoingId)}"]`);
-		const target = incoming.querySelector<HTMLElement>(
-			`[data-element-id="${CSS.escape(incomingId)}"]`,
-		);
+		const old = stage.querySelector<HTMLElement>(elementIdSelector(outgoingId));
+		const target = incoming.querySelector<HTMLElement>(elementIdSelector(incomingId));
 		if (!old || !target) continue;
 		const replacement = target.cloneNode(true) as HTMLElement;
 		replacement.dataset.elementId = outgoingId;

@@ -9,6 +9,7 @@ import {
 	isWedgeCalloutPresetShape,
 	screenStrokeWidth,
 	svgGradientFillRef,
+	svgIdToken,
 	svgLineCap,
 } from 'ooxml-ui/pptx';
 import {
@@ -252,7 +253,7 @@ export function renderVectorShape(
 		const viewWidth = Math.max(element.width, 1);
 		const viewHeight = Math.max(element.height, 1);
 		const { pathData } = getConnectorPathGeometry(element);
-		const markerSeed = element.id.replace(/[^a-zA-Z0-9_-]/gu, '_');
+		const markerSeed = svgIdToken(element.id);
 		const startMarkerId = `${markerSeed}-start-arrow`;
 		const endMarkerId = `${markerSeed}-end-arrow`;
 		const startArrow = element.shapeStyle?.connectorStartArrow;

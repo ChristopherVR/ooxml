@@ -5,7 +5,7 @@
  * clear that history lives in this browser. All persistence lives in
  * `useAiChatHistory`; this component only emits. Mirrors React's AiHistoryMenu.
  */
-import { MessageSquare, Plus, Trash2 } from 'lucide-vue-next';
+import { MessageSquare, Plus, Trash2 } from '@lucide/vue';
 import type { PptxAiChatSummary } from 'ooxml-ui/pptx/ai';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';

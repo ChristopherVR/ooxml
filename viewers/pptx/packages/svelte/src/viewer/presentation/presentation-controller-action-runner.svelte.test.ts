@@ -231,9 +231,14 @@ describe('presentationController action runner: oleVerb', () => {
 	}
 
 	it("opens the clicked OLE object's recovered embedding in a new tab", () => {
-		const deck = oleDeck('blob:http://localhost/ole-payload');
+		const deck = oleDeck('data:application/pdf;base64,JVBERi0=');
 		const navigate = vi.fn();
 		const openSpy = vi.spyOn(window, 'open').mockReturnValue(null);
+		const objectUrls = URL as unknown as Record<string, unknown>;
+		const saved = { create: objectUrls.createObjectURL, revoke: objectUrls.revokeObjectURL };
+		objectUrls.createObjectURL = () => 'blob:http://localhost/ole-payload';
+		objectUrls.revokeObjectURL = () => {};
+		vi.useFakeTimers();
 		const controller = new PresentationController({
 			getSlides: () => deck.slides,
 			getCurrentIndex: () => deck.index,
@@ -243,6 +248,10 @@ describe('presentationController action runner: oleVerb', () => {
 		controller.handleStageClick(clickTargetFor('ole1'));
 		expect(openSpy).toHaveBeenCalledWith('blob:http://localhost/ole-payload', '_blank');
 		expect(navigate).not.toHaveBeenCalled();
+		vi.runAllTimers();
+		vi.useRealTimers();
+		objectUrls.createObjectURL = saved.create;
+		objectUrls.revokeObjectURL = saved.revoke;
 		openSpy.mockRestore();
 	});
 

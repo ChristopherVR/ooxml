@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useId, useState, useRef } from 'react';
 import { LuX } from 'react-icons/lu';
 
 import { useModalDismissDrag } from '../hooks';
+import { useModalFocus } from '../hooks/useModalFocus';
 import { useTranslation } from '../i18n/use-translation';
 import { cn } from '../utils';
 import { DialogFooter } from './DialogFooter';
@@ -57,6 +58,10 @@ export function HyperlinkEditDialog({
 	const { t } = useTranslation();
 	const { panelStyle, handlers: dragHandlers } = useModalDismissDrag(onCancel);
 	const inputRef = useRef<HTMLInputElement>(null);
+	const panelRef = useRef<HTMLDivElement>(null);
+	const titleId = useId();
+	// Focus goes in, stays in, Escape cancels, and focus returns to the opener.
+	useModalFocus(open, panelRef, onCancel, inputRef);
 
 	const detectedType = detectTargetType(initialUrl, initialAction);
 	const emailParts = parseEmailUrl(initialUrl || '');
@@ -77,12 +82,6 @@ export function HyperlinkEditDialog({
 	const [slideNumber, setSlideNumber] = useState(detectedSlide);
 	const [filePath, setFilePath] = useState(detectedType === 'file' ? initialUrl || '' : '');
 	const [actionVerb, setActionVerb] = useState<HyperlinkActionVerb>(detectedVerb);
-
-	useEffect(() => {
-		if (open) {
-			setTimeout(() => inputRef.current?.focus(), 50);
-		}
-	}, [open]);
 
 	if (!open) {
 		return null;
@@ -120,6 +119,10 @@ export function HyperlinkEditDialog({
 				className='fixed inset-0 flex items-center justify-center pointer-events-none'
 			>
 				<div
+					ref={panelRef}
+					role='dialog'
+					aria-modal='true'
+					aria-labelledby={titleId}
 					style={panelStyle}
 					className='pointer-events-auto w-[440px] rounded-lg border border-border bg-popover shadow-2xl max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:top-auto max-md:w-full max-md:max-h-[88dvh] max-md:overflow-y-auto max-md:rounded-t-2xl max-md:rounded-b-none max-md:border-x-0 max-md:border-b-0 max-md:pb-[max(env(safe-area-inset-bottom),0px)]'
 					onClick={(e) => e.stopPropagation()}
@@ -129,12 +132,13 @@ export function HyperlinkEditDialog({
 						{...dragHandlers}
 						className='flex items-center justify-between px-4 py-3 border-b border-border touch-none'
 					>
-						<h2 className='text-sm font-semibold text-foreground'>
+						<h2 id={titleId} className='text-sm font-semibold text-foreground'>
 							{t('pptx.hyperlink.editTitle')}
 						</h2>
 						<button
 							type='button'
 							className='text-muted-foreground hover:text-foreground'
+							aria-label={t('pptx.common.close')}
 							onClick={onCancel}
 						>
 							<LuX className='w-4 h-4' />

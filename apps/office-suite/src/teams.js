@@ -1,12 +1,14 @@
 import { workspaceUrl, workspaceId } from './product.js';
 import { notify, download } from './ui.js';
-import { uploadTeamsServerFile, readContent } from 'ooxml-core/teams';
 import { onTheme, currentTheme, setThemeMode } from './themes.js';
 import { attachments, attachmentUrl, localAttachmentId, showAttachment } from './attachments.js';
 import { applyOfficeTheme } from './theme-tokens.js';
 import { currentProfile, teamsWorkspace, onProfile } from './profile-state.js';
+import { displayLanguage, onSettings } from './settings.js';
 
 export const documentUrl = (id) => workspaceUrl('file', id);
+// The Teams core is the bulk of the Teams page, so it loads with it, not with every landing page.
+const teamsCore = () => import('ooxml-core/teams');
 export const localDocumentId = (raw) => workspaceId(raw, 'file');
 export async function mountTeams(host, store, open, refresh) {
 	const { defineTeamsApp } = await import('ooxml-ui/teams');
@@ -16,16 +18,21 @@ export async function mountTeams(host, store, open, refresh) {
 	teams.toggleAttribute('host-profile', true);
 	teams.setAttribute('host-theme', '');
 	teams.addEventListener('teams-settings-theme', (event) => setThemeMode(event.detail.theme));
-	// The suite has no language preference of its own yet: it shows Teams in the page language
-	// (`<html lang>`) when that is one Teams ships, else English. A host that does set a language
-	// passes it the same way, as the `locale` property of <teams-app>.
-	teams.locale = document.documentElement.lang || '';
+	// Teams shows the display language when it ships it, else English. A host passes its own
+	// language the same way, as the `locale` property of <teams-app>.
+	Object.assign(teams, displayLanguage());
+	teams.locale = teams.lang;
+	onSettings((next, keys) => {
+		if (!keys.includes('locale')) return;
+		Object.assign(teams, displayLanguage(next));
+		teams.locale = teams.lang;
+	});
 	teams.workspaceId = teamsWorkspace();
 	teams.userName = profile.name;
 	teams.userId = profile.userId;
 	teams.uploadFile = async (file, context) => {
 		if (teams.client?.getState().mode === 'server')
-			return uploadTeamsServerFile(
+			return (await teamsCore()).uploadTeamsServerFile(
 				teams.client.workspace.config,
 				context.workspaceId,
 				file,
@@ -75,6 +82,7 @@ export async function mountTeams(host, store, open, refresh) {
 				else {
 					if (!url || !/^https?:$/u.test(new URL(url).protocol))
 						throw new Error('Attachment URL is unavailable.');
+					const { readContent } = await teamsCore();
 					const bytes = await readContent(url, AbortSignal.timeout(60000), 32 * 1024 * 1024);
 					if (!/\.(docx|xlsx|pptx|vsdx)$/iu.test(attachment.name)) {
 						const file = await attachments.create(

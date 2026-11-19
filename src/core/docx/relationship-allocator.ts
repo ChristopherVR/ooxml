@@ -5,7 +5,7 @@ import { RELATIONSHIP_TYPES, isSafeHyperlinkHref, nextRelationshipId } from '../
 import type { ChartExSpace, ChartSpace } from '../chart/index';
 import { DocPrIdAllocator } from './docpr-ids';
 import { isWordNavigableHref } from './hyperlink';
-import { isElement, REL_NS, type XmlDocument, type XmlElement } from './xml';
+import { isElement, REL_NS, type XmlDocument } from './xml';
 
 export const HYPERLINK_RELATIONSHIP_TYPE = RELATIONSHIP_TYPES.hyperlink;
 export const IMAGE_RELATIONSHIP_TYPE = RELATIONSHIP_TYPES.image;
@@ -43,12 +43,18 @@ export interface NewDiagramPart {
 /** Walks every element/attribute in a parsed document.xml to find relationship ids already in use. */
 export function scanUsedRelationshipIds(doc: XmlDocument): Set<string> {
 	const used = new Set<string>();
-	const visit = (node: XmlElement) => {
-		for (const attribute of Array.from(node.attributes))
-			if (attribute.namespaceURI === REL_NS) used.add(attribute.value);
-		for (const child of Array.from(node.childNodes)) if (isElement(child)) visit(child);
-	};
-	if (doc.documentElement) visit(doc.documentElement);
+	// Iterative and allocation-free: this runs over the whole body on every save.
+	const stack: Node[] = doc.documentElement ? [doc.documentElement] : [];
+	while (stack.length) {
+		const node = stack.pop()!;
+		if (!isElement(node)) continue;
+		const attributes = node.attributes;
+		for (let index = 0; index < attributes.length; index++) {
+			const attribute = attributes.item(index);
+			if (attribute?.namespaceURI === REL_NS) used.add(attribute.value);
+		}
+		for (let child = node.firstChild; child; child = child.nextSibling) stack.push(child);
+	}
 	return used;
 }
 

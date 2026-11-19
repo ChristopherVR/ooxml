@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import { EMPTY_RIBBON_TRANSITION_DRAFT, canRequestTransitions } from '../render';
 import type { RibbonTransitionsIntent, RibbonTransitionsViewState } from '../render';
 import { attachRibbonTransitionsStyles } from './ribbon-transitions-styles';
@@ -73,5 +74,5 @@ export function definePptxRibbonTransitions(registry: CustomElementRegistry): vo
 			this.view.sync(this.model);
 		}
 	}
-	registry.define('pptx-ui-ribbon-transitions', RibbonTransitions);
+	defineElement(registry, 'pptx-ui-ribbon-transitions', RibbonTransitions);
 }

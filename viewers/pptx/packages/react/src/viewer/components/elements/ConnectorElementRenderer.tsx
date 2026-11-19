@@ -5,6 +5,7 @@ import {
 	connectorStrandScreenWidth,
 	connectorWrapperTransform,
 	getSelectionOutlineColor,
+	svgIdToken,
 	svgLineCap,
 } from 'ooxml-ui/pptx';
 import { hasShapeProperties, hasTextProperties } from 'pptx-viewer-core';
@@ -84,7 +85,7 @@ const ConnectorElementRendererMemo: React.FC<ConnectorRendererProps> = /* @__PUR
 		const startArrow = ss?.connectorStartArrow;
 		const endArrow = ss?.connectorEndArrow;
 		const compoundLine = ss?.compoundLine;
-		const markerSeed = el.id.replace(/[^a-zA-Z0-9_-]/gu, '_');
+		const markerSeed = svgIdToken(el.id);
 		const startMarkerId = `${markerSeed}-sel-start`;
 		const endMarkerId = `${markerSeed}-sel-end`;
 

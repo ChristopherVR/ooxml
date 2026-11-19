@@ -30,6 +30,7 @@ All adapters accept the same properties:
 - `showToolbar`: toolbar visibility
 - `canEdit`: editing permission. The full viewer defaults to editable; `false` makes it read-only (selection, search, zoom and export keep working). The building blocks default to read-only instead, see [building blocks](building-blocks.md)
 - `readOnly`: a restriction of its own. `true` makes the drawing read-only and wins over `canEdit`; `false` or omitted lifts only that restriction
+- `locale`: interface language, such as `fr` or `zh-CN`. When omitted, the viewer uses the language chosen in File > Options, then `lang`, the page's language and the browser's
 - `ribbonAddIns`: tabs the host adds after Help (see [Ribbon add-in tabs](api.md#ribbon-add-in-tabs))
 - `collaboration`: shares the open drawing in a room while set, `null` leaves it (see [collaboration](collaboration.md))
 - `storage` and `customization`: host-owned save and open, and the shared customization object (see [Customization](api.md#customization) and [Host-owned storage](api.md#host-owned-storage-and-file-commands))

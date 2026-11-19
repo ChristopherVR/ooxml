@@ -10135,6 +10135,7 @@ _Releases: pptx-react-viewer@1.2.0, pptx-vue-viewer@1.2.0, pptx-angular-viewer@1
 - Updated action to latest version (by @ChristopherVR) ([6a19377](https://github.com/ChristopherVR/pptx-viewer/commit/6a19377fbaceed3bfdf908eb7a5f3e92a5a81ced))
 - Removed obsolete snapshots and split tests further in pipeline (by @ChristopherVR) ([cb5a1d6](https://github.com/ChristopherVR/pptx-viewer/commit/cb5a1d6a21a41778bb61da8575969cc28a91f5a3))
 - Fix format issue (by @ChristopherVR) ([20f767b](https://github.com/ChristopherVR/pptx-viewer/commit/20f767bed24db2b453d7857f635e3941695aaea2))
+
 ## 2026-07-03
 
 _Releases: @christophervr/pptx-viewer@1.1.46, pptx-react-viewer@1.1.78, pptx-react-viewer@1.1.74, pptx-react-viewer@1.1.73, pptx-vue-viewer@1.1.89, pptx-vue-viewer@1.1.85, pptx-vue-viewer@1.1.83, pptx-vue-viewer@1.1.81, pptx-angular-viewer@1.1.63, pptx-angular-viewer@1.1.59, pptx-angular-viewer@1.1.57_

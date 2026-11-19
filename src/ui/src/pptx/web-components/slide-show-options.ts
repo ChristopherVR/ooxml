@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import type { PptxPresentationProperties } from 'ooxml-core/pptx';
 
 import { readSlideShowOption, SLIDE_SHOW_OPTIONS, slideShowOptionChange } from '../render';
@@ -115,5 +116,5 @@ export function definePptxSlideShowOptions(registry: CustomElementRegistry): voi
 			}
 		}
 	}
-	registry.define('pptx-ui-slide-show-options', SlideShowOptions);
+	defineElement(registry, 'pptx-ui-slide-show-options', SlideShowOptions);
 }

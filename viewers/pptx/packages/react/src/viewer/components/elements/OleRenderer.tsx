@@ -1,4 +1,4 @@
-import { formatBytes, isBrowserOpenableMime, openUrlInNewTab } from 'ooxml-ui/pptx';
+import { formatBytes, isBrowserOpenableDataUrl, openUrlInNewTab } from 'ooxml-ui/pptx';
 import type { OlePptxElement } from 'pptx-viewer-core';
 import React from 'react';
 
@@ -44,7 +44,7 @@ function buildEmbedInfo(el: OlePptxElement): OleEmbedInfo {
 		progId: el.oleProgId,
 		typeLabel: getOleTypeLabel(resolveOleType(el)),
 		canDownload,
-		canOpenInBrowser: canDownload && isBrowserOpenableMime(el.oleEmbeddedMimeType),
+		canOpenInBrowser: canDownload && isBrowserOpenableDataUrl(el.oleEmbeddedData),
 	};
 }
 

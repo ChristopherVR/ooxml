@@ -15,7 +15,7 @@
 	font-size: 0.85em;
 }
 .dve-paper a.dve-link {
-	color: var(--word);
+	color: var(--office-canvas-link, #0563c1);
 	text-decoration: underline;
 	cursor: text;
 }
@@ -317,4 +317,14 @@
 	margin: -30px auto 8px;
 	border: 1px solid var(--line);
 	pointer-events: none;
+}
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.dve-font-tabs button[aria-selected='true'] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
 }

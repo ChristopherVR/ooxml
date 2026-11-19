@@ -1,4 +1,6 @@
+import { definer } from '../../registry';
 import { html, nothing, unsafeCSS, type PropertyValues } from 'lit';
+import { withTokens } from '../../base';
 import { TeamsLitElement } from '../i18n/lit-element';
 import css from './teams-sign-in.css?raw';
 
@@ -17,7 +19,7 @@ export interface SignInSubmit {
  * attempt and never leaves this element except in that event.
  */
 export class TeamsSignIn extends TeamsLitElement {
-	static override styles = unsafeCSS(css);
+	static override styles = unsafeCSS(withTokens(css));
 	static override properties = {
 		userId: { type: String },
 		notice: { type: String },
@@ -130,6 +132,4 @@ export class TeamsSignIn extends TeamsLitElement {
 	}
 }
 
-export function defineTeamsSignIn(): void {
-	if (!customElements.get('teams-sign-in')) customElements.define('teams-sign-in', TeamsSignIn);
-}
+export const defineTeamsSignIn = definer('teams-sign-in', () => TeamsSignIn);

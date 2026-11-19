@@ -1,10 +1,9 @@
 import { SuiteDocumentStore } from 'ooxml-ui/suite';
-import { listEmbeddedPackages } from 'ooxml-core/opc';
 import { SuiteSessions } from './session.js';
 import { showVersions, withVersions } from './versions.js';
 import { assistantEnabled, currentPolicy, loadPolicy } from './ai/policy.js';
 import { mountTabOrder } from './tabs.js';
-import { blankDocument, preloadEditor } from './editors.js';
+import { blankDocument, preloadEditor, previewRefusal } from './editors.js';
 import { mountTeams, shareDocument, localDocumentId } from './teams.js';
 import { $, apps, badge, escape, notify, task, download, choose, tag, teamsApp } from './ui.js';
 import { mountThemes } from './themes.js';
@@ -129,18 +128,23 @@ function renderTabs() {
 	$('tabs').hidden = !teamsTabOpen && !chatTabOpen && !sessions.sessions.size;
 	$('tabs').innerHTML =
 		(chatTabOpen
-			? `<button role="tab" aria-selected="${view === 'chat'}" data-chat>${icon('spark')}Chat</button>`
+			? `<button role="tab" id="tab-chat" aria-selected="${view === 'chat'}" data-chat>${icon('spark')}Chat</button>`
 			: '') +
-		`<button role="tab" aria-selected="${view === 'home'}" data-home>Home</button>` +
+		`<button role="tab" id="tab-home" aria-selected="${view === 'home'}" data-home>Home</button>` +
 		(teamsTabOpen
-			? `<button role="tab" aria-selected="${view === 'teams'}" data-teams>Teams</button>`
+			? `<button role="tab" id="tab-teams" aria-selected="${view === 'teams'}" data-teams>Teams</button>`
 			: '') +
 		[...sessions.sessions.values()]
 			.map(
 				(s) =>
-					`<span class="file-tab" draggable="true" data-tab="${s.doc.id}" title="Drag to reorder, or onto a chat to attach it"><button role="tab" aria-selected="${s.doc.id === active && view === 'editor'}" data-open="${s.doc.id}">${badge(s.doc.kind)}<span class="tab-name">${escape(s.doc.name)}</span>${sessions.isDirty(s.doc.id) ? ' •' : ''}</button><button data-close="${s.doc.id}" aria-label="Close ${escape(s.doc.name)}">×</button></span>`,
+					`<span class="file-tab" draggable="true" data-tab="${s.doc.id}" title="Drag to reorder, or onto a chat to attach it"><button role="tab" id="tab-${s.doc.id}" aria-selected="${s.doc.id === active && view === 'editor'}" data-open="${s.doc.id}">${badge(s.doc.kind)}<span class="tab-name">${escape(s.doc.name)}</span>${sessions.isDirty(s.doc.id) ? ' •' : ''}</button><button data-close="${s.doc.id}" aria-label="Close ${escape(s.doc.name)}">×</button></span>`,
 			)
 			.join('');
+	// The tabs sit beside their close buttons, which a tablist may not contain, so the list owns them.
+	$('tabs-list').setAttribute(
+		'aria-owns',
+		[...$('tabs').querySelectorAll('[role=tab]')].map((tab) => tab.id).join(' '),
+	);
 	const activeSession = sessions.sessions.get(active);
 	const activeDoc = activeSession?.doc;
 	$('save').disabled = !activeSession || activeSession.cloudReadOnly;
@@ -306,6 +310,7 @@ async function importFiles(items) {
 }
 async function embeddings() {
 	const doc = await sessions.save(active);
+	const { listEmbeddedPackages } = await import('ooxml-core/opc');
 	const embedded = await listEmbeddedPackages(doc.bytes);
 	const content = document.createElement('div');
 	content.innerHTML =
@@ -521,6 +526,20 @@ window.addEventListener('beforeunload', (event) => {
 		event.returnValue = '';
 	}
 });
+// Ctrl+P reaches the browser's own Print where an editor does not take it: while the document on
+// screen shows the assistant's suggestions it is refused, before any editor sees the key.
+window.addEventListener(
+	'keydown',
+	(event) => {
+		const shown = sessions.sessions.get(active);
+		if (!shown?.preview || !(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'p')
+			return;
+		event.preventDefault();
+		event.stopPropagation();
+		notify(previewRefusal(shown.doc.name));
+	},
+	true,
+);
 document.addEventListener('keydown', (event) => {
 	if ((event.ctrlKey || event.metaKey) && event.key === 's' && active) {
 		event.preventDefault();
@@ -529,6 +548,7 @@ document.addEventListener('keydown', (event) => {
 	// "/" focuses the search from anywhere in the shell, as the hint beside it says.
 	if (
 		event.key === '/' &&
+		settings().searchShortcut &&
 		!event.ctrlKey &&
 		!event.metaKey &&
 		!event.altKey &&

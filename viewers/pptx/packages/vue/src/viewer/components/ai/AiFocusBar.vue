@@ -9,7 +9,7 @@
  * A one-click "Merge selected tables" directive still surfaces when the focus is
  * exactly two tables.
  */
-import { Crosshair, GitMerge, Pin, PinOff, X } from 'lucide-vue-next';
+import { Crosshair, GitMerge, Pin, PinOff, X } from '@lucide/vue';
 import type { PptxAiFocusedTarget } from 'ooxml-ui/pptx/ai';
 import { focusTargetChips, isTwoTableFocus, mergeTablesDirective } from 'ooxml-ui/pptx/ai';
 import type { PptxSlide } from 'pptx-viewer-core';

@@ -14,7 +14,7 @@
  * the editor chrome, never during a running show, so the two stacks never
  * compete for the same screen.
  */
-import { X } from 'lucide-vue-next';
+import { X } from '@lucide/vue';
 import type { RunProgramNotice } from 'ooxml-ui/pptx';
 import { canUseClipboard, compatToastStackStyle } from 'ooxml-ui/pptx';
 import { useI18n } from 'vue-i18n';

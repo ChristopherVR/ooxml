@@ -19,7 +19,6 @@ export const REPLY_FIELDS = [
 	'error',
 	'applied',
 	'created',
-	'askedBy',
 ];
 export const snapshot = (message) =>
 	Object.fromEntries(
@@ -37,7 +36,37 @@ function note(className, text) {
 	return Object.assign(document.createElement('p'), { className, textContent: text });
 }
 
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+/** What someone else's reply proposed, as counts: its edits and files are theirs alone. */
+function remoteNotes({ edits = 0, newFiles = 0, applied = 0 }) {
+	const out = [];
+	if (edits && applied)
+		out.push(
+			note(
+				'chat-note',
+				`${applied} of ${plural(edits, 'proposed edit was', 'proposed edits were')} applied.`,
+			),
+		);
+	else if (edits)
+		out.push(
+			note(
+				'chat-note',
+				`${plural(edits, 'edit was', 'edits were')} proposed for the files of the person who asked. Only they can review and apply ${edits === 1 ? 'it' : 'them'}.`,
+			),
+		);
+	if (newFiles)
+		out.push(
+			note(
+				'chat-note',
+				`${plural(newFiles, 'new file was', 'new files were')} proposed to the person who asked. Only they can create ${newFiles === 1 ? 'it' : 'them'}.`,
+			),
+		);
+	return out;
+}
+
 function cards(message, ctx) {
+	if (message.remote) return remoteNotes(message);
 	const out = [];
 	const save = (patch) => {
 		Object.assign(message, patch);
@@ -45,15 +74,7 @@ function cards(message, ctx) {
 	};
 	try {
 		const { changes = [], create = [] } = message.actions ?? {};
-		const mine = !message.askedBy || message.askedBy === ctx.me();
-		if (changes.length && !mine && !message.applied)
-			out.push(
-				note(
-					'chat-note',
-					`${changes.length} edit${changes.length === 1 ? ' was' : 's were'} proposed for the files of the person who asked. Only they can review and apply ${changes.length === 1 ? 'it' : 'them'}.`,
-				),
-			);
-		else if (changes.length && message.applied) {
+		if (changes.length && message.applied) {
 			const count = Array.isArray(message.applied)
 				? message.applied.filter(Boolean).length
 				: changes.length;
@@ -72,10 +93,7 @@ function cards(message, ctx) {
 			out.push(
 				...creationCards({
 					items: create,
-					// In a shared chat each person creates their own copy of a new file.
-					created: ctx.shared()
-						? ((message.createdBy ??= {})[ctx.me()] ??= {})
-						: (message.created ??= {}),
+					created: (message.created ??= {}),
 					save,
 					openCreated: ctx.settings().openCreatedFiles,
 					store: ctx.cardDeps.store,
@@ -114,8 +132,9 @@ function actionsBar(message, ctx) {
 		await navigator.clipboard.writeText(message.content);
 		notify('Copied to the clipboard');
 	});
-	const own = !message.author || message.author.id === ctx.me();
-	if (message.role === 'user' && own) add('edit', 'Edit and resend', () => ctx.edit(message));
+	// Only this page's own messages can be resent or regenerated.
+	if (message.remote) return bar;
+	if (message.role === 'user') add('edit', 'Edit and resend', () => ctx.edit(message));
 	else if (ctx.isLast(message)) add('refresh', 'Regenerate', () => ctx.regenerate(message));
 	return bar;
 }
@@ -123,6 +142,11 @@ function actionsBar(message, ctx) {
 export function messageNode(message, ctx) {
 	const node = document.createElement('article');
 	node.className = `chat-msg from-${message.role}`;
+	const own = !message.author || message.author.id === ctx.me();
+	node.setAttribute(
+		'aria-label',
+		message.role === 'user' ? (own ? 'You' : message.author.name) : 'Assistant',
+	);
 	if (message.role === 'user') {
 		const bubble = document.createElement('div');
 		bubble.className = 'chat-bubble';
@@ -137,7 +161,7 @@ export function messageNode(message, ctx) {
 				.join('');
 			bubble.prepend(files);
 		}
-		if (ctx.shared() && message.author && message.author.id !== ctx.me())
+		if (message.remote)
 			node.append(
 				Object.assign(document.createElement('span'), {
 					className: 'chat-author',
@@ -152,10 +176,9 @@ export function messageNode(message, ctx) {
 	body.className = 'chat-body';
 	const meta = document.createElement('div');
 	meta.className = 'chat-meta';
-	meta.textContent =
-		ctx.shared() && message.author && message.author.id !== ctx.me()
-			? `${message.model ?? 'Assistant'} · asked by ${message.author.name}`
-			: (message.model ?? 'Assistant');
+	meta.textContent = message.remote
+		? `${message.model ?? 'Assistant'} · asked by ${message.author?.name || 'someone'}`
+		: (message.model ?? 'Assistant');
 	const content = document.createElement('div');
 	content.className = 'md';
 	if (message.error) {

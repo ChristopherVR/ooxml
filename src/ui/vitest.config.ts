@@ -62,6 +62,12 @@ const AREAS = {
 				// Node resolves solid-js to its server build, where effects never run; the bindings
 				// tests mount Solid components in a DOM, so they need the browser build.
 				{
+					find: /^solid-js\/web$/,
+					replacement: fileURLToPath(
+						new URL('./node_modules/solid-js/web/dist/web.js', import.meta.url),
+					),
+				},
+				{
 					find: /^solid-js$/,
 					replacement: fileURLToPath(
 						new URL('./node_modules/solid-js/dist/solid.js', import.meta.url),

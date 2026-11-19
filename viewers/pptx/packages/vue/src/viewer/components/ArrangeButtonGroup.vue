@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDown, ChevronUp, Copy, Paintbrush, Trash2 } from 'lucide-vue-next';
+import { ChevronDown, ChevronUp, Copy, Paintbrush, Trash2 } from '@lucide/vue';
 import { useI18n } from 'vue-i18n';
 /**
  * ArrangeButtonGroup: Arrange / selection actions extracted from EditorToolbar

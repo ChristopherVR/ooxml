@@ -1,7 +1,7 @@
 import { XMLParser } from 'fast-xml-parser';
 import type JSZip from 'jszip';
 
-import { readPartXml } from '../core/runtime/load-part-reader';
+import { deriveForLoad, readPartXml } from '../core/runtime/load-part-reader';
 import type { IPptxXmlLookupService } from '../services';
 import type { PptxExternalData, PptxChartSeries, XmlObject } from '../types';
 import { collectChartWorkbookWrite, writeChartWorkbookUpdates } from './chart-xlsx-writer';
@@ -19,6 +19,27 @@ function formulaCount(value: unknown): number {
 		(total, [key, child]) => total + (key === 'f' || key.endsWith(':f') ? 1 : formulaCount(child)),
 		0,
 	);
+}
+
+/** How many internal relationships, in any part, target each part of the package. */
+async function relationshipTargetCounts(
+	zip: JSZip,
+	resolve: (base: string, target: string) => string,
+): Promise<Map<string, number>> {
+	const counts = new Map<string, number>();
+	for (const path of Object.keys(zip.files)) {
+		if (!path.endsWith('.rels') || !path.includes('/_rels/')) continue;
+		const source = path.replace('/_rels/', '/').slice(0, -5);
+		const tree = await readPartXml(zip, relationshipParser, path);
+		for (const rel of xmlChildren(xmlChild(tree, 'Relationships'), 'Relationship')) {
+			const relationshipTarget = xmlAttr(rel, 'Target');
+			if (relationshipTarget && xmlAttr(rel, 'TargetMode') !== 'External') {
+				const target = resolve(source, relationshipTarget);
+				counts.set(target, (counts.get(target) ?? 0) + 1);
+			}
+		}
+	}
+	return counts;
 }
 
 /** Conservative load-time preflight for editing classic chart labels and their source cells. */
@@ -82,26 +103,16 @@ export async function chartLabelsHaveEditableSources(
 	if (!external) return writes.length === 0;
 	if (!external.targetPath || !external.embeddedWorkbookData) return false;
 	const target = resolve(chartPartPath, external.targetPath);
-	let references = 0;
 	try {
-		for (const path of Object.keys(zip.files)) {
-			if (!path.endsWith('.rels') || !path.includes('/_rels/')) continue;
-			const source = path.replace('/_rels/', '/').slice(0, -5);
-			const tree = await readPartXml(zip, relationshipParser, path);
-			for (const rel of xmlChildren(xmlChild(tree, 'Relationships'), 'Relationship')) {
-				const relationshipTarget = xmlAttr(rel, 'Target');
-				if (
-					relationshipTarget &&
-					xmlAttr(rel, 'TargetMode') !== 'External' &&
-					resolve(source, relationshipTarget) === target
-				)
-					references++;
-			}
-		}
-		if (references !== 1) return false;
+		// The workbook must belong to this chart alone. Every chart of a load shares one count.
+		const counts = await deriveForLoad(zip, 'chart-label-source:relationship-targets', () =>
+			relationshipTargetCounts(zip, resolve),
+		);
+		if (counts.get(target) !== 1) return false;
 		await writeChartWorkbookUpdates(external.embeddedWorkbookData, writes, {
 			atomic: true,
 			requireCurrentValues: true,
+			dryRun: true,
 		});
 		return true;
 	} catch {

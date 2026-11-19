@@ -44,18 +44,19 @@ editor.themeColors = {
 };
 ```
 
-| Token                                  | Rolle                                                       |
-| -------------------------------------- | ----------------------------------------------------------- |
-| `background`, `foreground`             | Anwendungsrahmen (Titelleiste, Fenster)                     |
-| `card`, `cardForeground`               | Fläche von Multifunktionsleiste, Bereichen und Statusleiste |
-| `popover`, `popoverForeground`         | Menüs, Dialoge und andere schwebende Flächen                |
-| `primary`, `primaryForeground`         | Markenfarbe und Farbe der Hauptaktion                       |
-| `secondary`, `secondaryForeground`     | Sekundäre Flächen                                           |
-| `muted`, `mutedForeground`             | Gedämpfte Fläche, auch der Bereich hinter den Seiten        |
-| `accent`, `accentForeground`           | Hervorhebung bei Hover und Auswahl                          |
-| `destructive`, `destructiveForeground` | Aktionen, die Daten löschen                                 |
-| `border`, `input`, `ring`              | Rahmen, Umrisse von Eingabefeldern, Fokusring               |
-| `radius`                               | Grundlegender Eckenradius, zum Beispiel `4px`               |
+| Token                                  | Rolle                                                                                                  |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `background`, `foreground`             | Anwendungsrahmen (Titelleiste, Fenster)                                                                |
+| `card`, `cardForeground`               | Fläche von Multifunktionsleiste, Bereichen und Statusleiste                                            |
+| `popover`, `popoverForeground`         | Menüs, Dialoge und andere schwebende Flächen                                                           |
+| `primary`, `primaryForeground`         | Markenfarbe und Farbe der Hauptaktion                                                                  |
+| `primaryInk`                           | Primärfarbe als Text auf der Oberfläche und auf Auswahlflächen, mindestens 4,5:1 (Standard: `primary`) |
+| `secondary`, `secondaryForeground`     | Sekundäre Flächen                                                                                      |
+| `muted`, `mutedForeground`             | Gedämpfte Fläche, auch der Bereich hinter den Seiten                                                   |
+| `accent`, `accentForeground`           | Hervorhebung bei Hover und Auswahl                                                                     |
+| `destructive`, `destructiveForeground` | Aktionen, die Daten löschen                                                                            |
+| `border`, `input`, `ring`              | Rahmen, Umrisse von Eingabefeldern, Fokusring                                                          |
+| `radius`                               | Grundlegender Eckenradius, zum Beispiel `4px`                                                          |
 
 Übergeben Sie `undefined`, um die Überschreibungen zu entfernen.
 

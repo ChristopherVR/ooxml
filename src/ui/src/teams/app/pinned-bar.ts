@@ -1,4 +1,6 @@
+import { definer } from '../../registry';
 import { html, nothing, unsafeCSS } from 'lit';
+import { withTokens } from '../../base';
 import { TeamsLitElement } from '../i18n/lit-element';
 import type { PinnedMessage } from 'ooxml-core/teams';
 import { icon } from '../icons';
@@ -17,7 +19,7 @@ const snippet = (m: PinnedMessage['message'], attachment: string): string => {
  * `teams-pinned-open` `{ messageId }` (jump to the message) and `teams-pinned-unpin` `{ messageId }`.
  */
 export class TeamsPinnedBar extends TeamsLitElement {
-	static override styles = unsafeCSS(css);
+	static override styles = unsafeCSS(withTokens(css));
 	static override properties = { pinned: { attribute: false }, expanded: { state: true } };
 	declare pinned: PinnedMessage[];
 	declare expanded: boolean;
@@ -95,7 +97,4 @@ export class TeamsPinnedBar extends TeamsLitElement {
 	}
 }
 
-export function defineTeamsPinnedBar(): void {
-	if (!customElements.get('teams-pinned-bar'))
-		customElements.define('teams-pinned-bar', TeamsPinnedBar);
-}
+export const defineTeamsPinnedBar = definer('teams-pinned-bar', () => TeamsPinnedBar);

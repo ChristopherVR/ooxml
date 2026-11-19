@@ -7,6 +7,8 @@
  * chain.
  */
 
+import { partNameToken } from '../../../../opc/part-name';
+
 /** Root tags of the parts whose shape tree the Slide Master view can edit. */
 export type MasterPartRootTag = 'p:notesMaster' | 'p:handoutMaster' | 'p:sldMaster' | 'p:sldLayout';
 
@@ -16,6 +18,12 @@ const MASTER_PART_ID_PREFIX: Record<MasterPartRootTag, string> = {
 	'p:sldMaster': 'slide-master-',
 	'p:sldLayout': 'slide-layout-',
 };
+
+/** The part's file name without `.xml`, safe to use inside an element id. */
+export function partFileToken(partPath: string): string {
+	const fileName = partPath.slice(partPath.lastIndexOf('/') + 1);
+	return partNameToken(fileName.replace(/\.xml$/u, ''));
+}
 
 /**
  * Build the element-id prefix for one part.
@@ -35,10 +43,5 @@ export function masterPartIdPrefix(rootTag: MasterPartRootTag, partPath: string)
 	if (rootTag === 'p:notesMaster' || rootTag === 'p:handoutMaster') {
 		return base;
 	}
-	const token =
-		partPath
-			.split('/')
-			.pop()
-			?.replace(/\.xml$/u, '') ?? partPath;
-	return `${base}${token}-`;
+	return `${base}${partFileToken(partPath)}-`;
 }

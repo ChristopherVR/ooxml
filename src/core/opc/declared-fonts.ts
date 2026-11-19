@@ -13,6 +13,7 @@
  * @module opc/declared-fonts
  */
 import { strFromU8, unzipSync } from 'fflate';
+import { xmlTags } from '../xml/tags';
 
 export interface DeclaredFonts {
 	/** Families the package names, in first-seen order, theme references (`+mn-lt`) excluded. */
@@ -43,7 +44,8 @@ const FAMILY_PATTERNS: readonly RegExp[] = [
 	/<w:font\s+w:name="([^"]+)"/gu,
 	/\bw:(?:ascii|hAnsi|eastAsia|cs)="([^"]+)"/gu,
 	/<name\s+val="([^"]+)"/gu,
-	/<FaceName\b[^>]*?\bNameU="([^"]+)"/gu,
+	// `[^<>]` keeps a tag that never ends from rescanning the rest of the part.
+	/<FaceName\b[^<>]*?\bNameU="([^"]+)"/gu,
 ];
 
 const decodeXml = (value: string) =>
@@ -62,17 +64,30 @@ function add(into: Map<string, string>, raw: string): void {
 	if (!into.has(key)) into.set(key, family);
 }
 
+const WORD_EMBEDS = new Set([
+	'w:embedRegular',
+	'w:embedBold',
+	'w:embedItalic',
+	'w:embedBoldItalic',
+]);
+
 /** Embedded families: PowerPoint's `p:embeddedFont`, Word's fonts with `w:embed*` children. */
 function collectEmbedded(name: string, xml: string, into: Map<string, string>): void {
 	if (name === 'ppt/presentation.xml') {
-		for (const match of xml.matchAll(/<p:embeddedFont>\s*<p:font\b[^>]*?\btypeface="([^"]+)"/gu)) {
+		for (const match of xml.matchAll(/<p:embeddedFont>\s*<p:font\b[^<>]*?\btypeface="([^"]+)"/gu)) {
 			if (match[1]) add(into, match[1]);
 		}
 	}
 	if (name === 'word/fontTable.xml') {
-		for (const match of xml.matchAll(/<w:font\s+w:name="([^"]+)"[^>]*>([\s\S]*?)<\/w:font>/gu)) {
-			if (match[1] && /<w:embed(Regular|Bold|Italic|BoldItalic)\b/u.test(match[2] ?? '')) {
-				add(into, match[1]);
+		let font: string | undefined;
+		let open = false;
+		for (const tag of xmlTags(xml)) {
+			if (tag.name === 'w:font') {
+				open = !tag.closing && !tag.selfClosing;
+				font = open ? /^\s+w:name="([^"]+)"/u.exec(tag.attributes)?.[1] : undefined;
+			} else if (open && font && !tag.closing && WORD_EMBEDS.has(tag.name)) {
+				add(into, font);
+				font = undefined;
 			}
 		}
 	}

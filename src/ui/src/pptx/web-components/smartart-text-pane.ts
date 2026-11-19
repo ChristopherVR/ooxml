@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import type { PptxSmartArtData, PptxSmartArtNodeStyle } from 'ooxml-core/pptx';
 import { defineSmartArtTextPane } from '../../smartart/smartart-text-pane';
 import type {
@@ -154,7 +155,8 @@ export function definePptxSmartArtTextPane(registry: CustomElementRegistry): voi
 			this.fire('pptx-smartart-data-change', detail);
 		}
 	}
-	registry.define(
+	defineElement(
+		registry,
 		'pptx-ui-smartart-text-pane',
 		PptxSmartArtTextPane as unknown as CustomElementConstructor,
 	);

@@ -65,6 +65,37 @@ export function preloadEditor(kind) {
 export const SUITE_FILE_COMMANDS = new Set(['save', 'new', 'open', 'share']);
 
 /**
+ * What an editor showing the assistant's suggestions cannot do: every way its own commands take
+ * the document out of the suite (Save As, Export, Download, Print, Share and Copy, in each
+ * product's File tab, ribbon, menus and shortcuts). Save stays and goes to the suite, which
+ * refuses it while the suggestions show.
+ */
+const PREVIEW_CAPABILITIES = Object.freeze({
+	export: false,
+	print: false,
+	share: false,
+	copy: false,
+});
+
+/** Resolves once a Visio controller has no edit or load in progress. */
+function settled(controller) {
+	return new Promise((resolve) => {
+		// `subscribe` calls back at once with the current state, before it returns `stop`.
+		const stop = controller.subscribe((state) => {
+			if (state.edit.busy || state.loading) return;
+			resolve();
+			queueMicrotask(() => stop());
+		});
+	});
+}
+
+/** Why a command refused while the assistant's suggestions show. */
+export const previewRefusal = (name) =>
+	new Error(
+		`${name} is showing the assistant's suggestions. Apply or discard them in the suggestions panel first.`,
+	);
+
+/**
  * Mounts the editor for `doc` in `host`. `changed` runs after an edit, `command` takes over the
  * file commands and `moved` runs when the slide or page in view, or the selection's formatting,
  * changes. The returned object carries `view`, what the Simple view command bar drives: `undo`,
@@ -75,6 +106,8 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 	let accessReadOnly = cloudReadOnly(doc);
 	if (doc.kind === 'pptx') {
 		const { createPptxViewer } = await import('pptx-vanilla-viewer');
+		// True while the deck shows the assistant's suggestions (`hold`).
+		let held = false;
 		let loading = true;
 		let loadFailed = false;
 		const googleFonts = googleFontsOption();
@@ -104,8 +137,9 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 			onOpenFile: () => command('open'),
 			storage: {
 				async save(bytes, meta) {
-					if (meta.reason === 'saveAs') download({ bytes, name: meta.fileName });
-					else await command('save');
+					if (meta.reason !== 'saveAs') await command('save');
+					else if (held) throw previewRefusal(doc.name);
+					else download({ bytes, name: meta.fileName });
 				},
 			},
 			onChange: changed,
@@ -164,10 +198,20 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 				}
 				if (loadFailed) throw new Error('The presentation could not be opened.');
 			},
+			/** Notes the slide in view; the returned function goes back to it after a reload. */
+			keep: () => {
+				const slide = viewer.getCurrentSlide();
+				return () => slide < viewer.getSlideCount() && viewer.goToSlide(slide);
+			},
 			readOnly: (on) => viewer.setEditable(!(on || accessReadOnly)),
 			setCloudReadOnly: (on) => {
 				accessReadOnly = on;
 				viewer.setEditable(!on);
+			},
+			hold: (on) => {
+				held = on;
+				for (const id of Object.keys(PREVIEW_CAPABILITIES))
+					viewer.setCapability(id, on ? false : undefined);
 			},
 			/** Shows where a proposed change lands: its slide, with its shape selected. */
 			reveal(change) {
@@ -215,9 +259,9 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 			element.theme = theme.mode;
 			element.themeColors = {
 				...editorColors(theme),
-				...(doc.kind === 'xlsx'
-					? { selectionBorder: theme.accent, headerActiveBg: editorColors(theme).accent }
-					: {}),
+				// The selection outline and header text follow the accent and its ink through
+				// `primary` and `primaryInk`; only the selected header's fill is set here.
+				...(doc.kind === 'xlsx' ? { headerActiveBg: editorColors(theme).accent } : {}),
 				radius: editorRadius(),
 			};
 		}
@@ -241,7 +285,12 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 	for (const name of ['document-change', 'workbook-change'])
 		element.addEventListener(name, changed);
 	// Selection and formatting changes that do not edit the document still move the bar's state.
-	if (doc.kind === 'xlsx') element.addEventListener('selection-change', moved);
+	let selection = null;
+	if (doc.kind === 'xlsx')
+		element.addEventListener('selection-change', (event) => {
+			selection = event.detail;
+			moved();
+		});
 	const stopState = doc.kind === 'docx' ? element.subscribeEditorState(moved) : undefined;
 	let stop;
 	if (doc.kind === 'vsdx') {
@@ -284,12 +333,43 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 		focus: () => {
 			if (doc.kind === 'xlsx') element.focusGrid();
 		},
+		/**
+		 * Notes where the user is: the sheet and cells, the caret or the page. The returned function
+		 * goes back there after a reload, and into the document when `focus` says it had focus.
+		 */
+		keep() {
+			if (doc.kind === 'xlsx') {
+				const at = selection;
+				return (focus) => {
+					try {
+						if (at) {
+							element.setActiveSheet(at.sheet);
+							element.select(at.ref);
+						}
+					} catch {
+						// The sheet or cells are gone from the new file; the workbook's own selection stays.
+					}
+					if (focus) element.focusGrid();
+				};
+			}
+			if (doc.kind === 'docx') {
+				const range = element.getTextSelection();
+				return (focus) => focus && element.focusText(range);
+			}
+			const page = element.pageIndex;
+			return () => {
+				if (page < (element.controller.state.document?.pages.length ?? 0)) element.pageIndex = page;
+			};
+		},
 		// While the assistant previews a change the drawing is read-only (Visio's canEdit is off), so
 		// nothing is edited during a review; Discard reloads the stored file and Apply saves the preview.
 		readOnly: (on) => setEditorReadOnly(element, doc.kind, on || accessReadOnly),
 		setCloudReadOnly: (on) => {
 			accessReadOnly = on;
 			setEditorReadOnly(element, doc.kind, on);
+		},
+		hold: (on) => {
+			element.customization = on ? { capabilities: PREVIEW_CAPABILITIES } : null;
 		},
 		/** Shows where a proposed change lands, selected in the editor. Word shows its own redlines. */
 		reveal(change) {
@@ -304,9 +384,15 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 				element.selectShapes([{ id: change.shapeId, name: '', pageId: change.pageId }]);
 			}
 		},
-		flush: () => {
+		/**
+		 * Finishes what the user started before the document is read: Excel's cell edit, and the
+		 * Visio edit still being written (an arrow-key nudge takes a moment), so a save asked for
+		 * straight after it waits for it instead of failing.
+		 */
+		flush: async () => {
 			if (element.commitEdit && !element.commitEdit())
 				throw new Error('Finish the current cell edit.');
+			if (doc.kind === 'vsdx') await settled(element.controller);
 		},
 		view: editorView(element, doc.kind),
 		dispose: () => {
@@ -356,10 +442,16 @@ function editorView(element, kind) {
 	};
 }
 
+/** A new empty file, made with the format's own area, which its editor loads anyway. */
 export async function blankDocument(kind) {
-	const api = kind === 'pptx' ? null : await import('ooxml-core/automation');
-	if (kind === 'docx') return api.createDocx(['']);
-	if (kind === 'xlsx') return api.createXlsx(['Sheet1']);
+	if (kind === 'docx') {
+		const { createDocument, saveDocx } = await import('ooxml-core/docx');
+		return saveDocx(createDocument());
+	}
+	if (kind === 'xlsx') {
+		const { createWorkbook, saveXlsx } = await import('ooxml-core/xlsx');
+		return saveXlsx(createWorkbook());
+	}
 	if (kind === 'pptx') {
 		const { PresentationBuilder } = await import('ooxml-core/pptx');
 		const { handler, data } = await PresentationBuilder.create({ initialSlideCount: 1 });

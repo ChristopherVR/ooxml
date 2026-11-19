@@ -121,6 +121,11 @@ export const translationsDe: Partial<Record<TranslationKey, string>> = {
 	'pptx.shortcuts.action.nextSlide': 'Nachste Folie (ohne Auswahl)',
 	'pptx.shortcuts.action.prevSlide': 'Vorherige Folie (ohne Auswahl)',
 	'pptx.shortcuts.action.selectAll': 'Alle Elemente auswahlen',
+	'pptx.shortcuts.action.enterSlide': 'Zur Folie wechseln (erstes Objekt auswählen)',
+	'pptx.shortcuts.action.editObjectText': 'Text des ausgewählten Objekts bearbeiten',
+	'pptx.shortcuts.action.cycleObjects': 'Nächstes oder vorheriges Objekt auf der Folie',
+	'pptx.shortcuts.action.leaveSlide': 'Auswahl aufheben, dann Folie verlassen',
+	'pptx.shortcuts.action.movePane': 'Zwischen Bereichen wechseln',
 	'pptx.shortcuts.group.editing': 'Bearbeitung',
 	'pptx.shortcuts.group.navigation': 'Navigation',
 

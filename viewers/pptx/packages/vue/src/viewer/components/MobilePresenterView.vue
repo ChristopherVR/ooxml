@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronLeft, ChevronRight, X } from 'lucide-vue-next';
+import { ChevronLeft, ChevronRight, X } from '@lucide/vue';
 import type { AuthoredSlideRange } from 'ooxml-ui/pptx';
 import {
 	formatMobileElapsed,

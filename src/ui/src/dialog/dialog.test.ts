@@ -89,39 +89,26 @@ describe('office-ui-dialog', () => {
 		expect(reasons).toEqual(['close-button']);
 	});
 
-	it('traps Tab: from the last light-DOM control to the close button and around', () => {
-		const { dialog, ok } = mount('open');
-		const close = dialog.shadowRoot!.querySelector('.close') as HTMLElement;
-		const field = dialog.querySelector('#field') as HTMLElement;
-		ok.focus();
-		const forward = key(ok, 'Tab');
-		// Wrapping is only prevented at the ends; ok is last light-DOM item, the close button is the real last.
-		expect(forward).toBe(true);
-		close.focus();
-		expect(key(close, 'Tab')).toBe(false);
-		expect(document.activeElement).toBe(field);
-		expect(key(field, 'Tab', { shiftKey: true })).toBe(false);
+	// Tab order only exists in a real browser: e2e/a11y/dialog.spec.ts and e2e/docx/dialog-focus.spec.ts.
+	it('closes on Escape when focus has ended up outside', () => {
+		const { dialog, opener } = mount('open');
+		opener.focus();
+		key(opener, 'Escape');
+		expect(dialog.open).toBe(false);
 	});
 
-	it('finds the controls inside a composite element and moves Tab through them', () => {
-		document.body.innerHTML = '<office-ui-dialog open heading="Pick"></office-ui-dialog>';
-		const dialog = document.querySelector('office-ui-dialog') as Dialog;
-		const picker = document.createElement('div');
-		const inner = picker.attachShadow({ mode: 'open' });
-		inner.innerHTML = '<button id="first">A</button><button id="last">B</button>';
-		const ok = document.createElement('button');
-		ok.slot = 'footer';
-		dialog.append(picker, ok);
-		const [first, last] = [...inner.querySelectorAll('button')] as HTMLElement[];
-		dialog.open = false;
-		dialog.open = true;
-		expect(inner.activeElement).toBe(first);
-		// Inside the picker the browser moves focus; the dialog does not interfere.
-		last!.focus();
-		expect(key(last!, 'Tab')).toBe(true);
-		first!.focus();
-		expect(key(first!, 'Tab', { shiftKey: true })).toBe(false);
-		expect(dialog.shadowRoot!.activeElement).toBe(dialog.shadowRoot!.querySelector('.close'));
+	it('gives the keyboard to the newest of two open dialogs', () => {
+		const { dialog } = mount('open');
+		const inner = document.createElement('office-ui-dialog') as Dialog;
+		inner.setAttribute('heading', 'Inner');
+		inner.append(document.createElement('input'));
+		document.body.append(inner);
+		inner.show();
+		key(document.body, 'Escape');
+		expect(inner.open).toBe(false);
+		expect(dialog.open).toBe(true);
+		key(document.body, 'Escape');
+		expect(dialog.open).toBe(false);
 	});
 
 	it('hides the footer without footer content', () => {

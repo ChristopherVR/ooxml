@@ -5,9 +5,56 @@ import type { Block, Paragraph } from './model';
 import { hasSpecialBreak, isModeledBreak } from './breaks';
 import { textContent, WORD_NS, type XmlDocument, type XmlElement } from './xml';
 
-function hasAny(document: XmlDocument, names: string[]): boolean {
-	return names.some((name) => document.getElementsByTagNameNS(WORD_NS, name).length > 0);
+/** WordprocessingML elements the loader looks for anywhere in `document.xml`. */
+const SCANNED = new Set([
+	'body',
+	'numPr',
+	'object',
+	'altChunk',
+	'fldSimple',
+	'instrText',
+	'fldChar',
+	'moveFrom',
+	'moveTo',
+	'rPrChange',
+	'pPrChange',
+	'ffData',
+	'tblPrChange',
+	'trPrChange',
+	'tcPrChange',
+	'smartTag',
+	'customXml',
+	'br',
+	'cr',
+]);
+
+/** The scanned elements of a document, by local name, in document order. */
+export type WordElementIndex = ReadonlyMap<string, readonly XmlElement[]>;
+
+/** One walk of `document` collecting every element the load needs to find by name. */
+export function indexWordElements(document: XmlDocument): WordElementIndex {
+	const found = new Map<string, XmlElement[]>();
+	const root = document.documentElement;
+	if (!root) return found;
+	// Iterative, so a deep document cannot overflow the stack; children are visited in order.
+	const stack: Node[] = [root];
+	while (stack.length) {
+		const node = stack.pop()!;
+		if (node.nodeType !== 1) continue;
+		const element = node as XmlElement;
+		if (element.namespaceURI === WORD_NS && SCANNED.has(element.localName)) {
+			const list = found.get(element.localName);
+			if (list) list.push(element);
+			else found.set(element.localName, [element]);
+		}
+		for (let child = element.lastChild; child; child = child.previousSibling) stack.push(child);
+	}
+	return found;
 }
+
+const hasAny = (index: WordElementIndex, names: string[]): boolean =>
+	names.some((name) => index.has(name));
+const all = (index: WordElementIndex, name: string): readonly XmlElement[] => index.get(name) ?? [];
 
 /** Whether the element sits inside a paragraph rather than around paragraphs or tables. */
 function insideParagraph(element: XmlElement): boolean {
@@ -21,7 +68,7 @@ function insideParagraph(element: XmlElement): boolean {
 }
 
 /** Warnings derived from raw XML feature scans (features not represented in the model at all). */
-export function warningsFor(document: XmlDocument): string[] {
+export function warningsFor(index: WordElementIndex): string[] {
 	const warnings: string[] = [];
 	const features: [string[], string][] = [
 		[['object'], 'Embedded OLE objects (w:object) are preserved but rendered as a placeholder.'],
@@ -51,29 +98,18 @@ export function warningsFor(document: XmlDocument): string[] {
 			'Table-structure tracked changes are preserved in the source XML but are not represented in the document model.',
 		],
 	];
-	for (const [names, message] of features) if (hasAny(document, names)) warnings.push(message);
-	if (
-		Array.from(document.getElementsByTagNameNS(WORD_NS, 'instrText')).some((el) =>
-			/HYPERLINK/i.test(textContent(el)),
-		)
-	)
+	for (const [names, message] of features) if (hasAny(index, names)) warnings.push(message);
+	if (all(index, 'instrText').some((el) => /HYPERLINK/i.test(textContent(el))))
 		warnings.push(
 			'Complex HYPERLINK field codes (w:fldChar/w:instrText) are preserved but not parsed as links; their result text edits as plain text.',
 		);
-	if (
-		hasAny(document, ['smartTag']) ||
-		Array.from(document.getElementsByTagNameNS(WORD_NS, 'customXml')).some(insideParagraph)
-	)
+	if (hasAny(index, ['smartTag']) || all(index, 'customXml').some(insideParagraph))
 		warnings.push(
 			'Smart tags and custom XML markup inside paragraphs are read as their text; an edit keeps the markup around text it leaves as it was and removes it from text it changes.',
 		);
 	const specialBreak =
-		Array.from(document.getElementsByTagNameNS(WORD_NS, 'br')).some(
-			(br: XmlElement) => hasSpecialBreak(br) && !isModeledBreak(br),
-		) ||
-		Array.from(document.getElementsByTagNameNS(WORD_NS, 'cr')).some(
-			(cr: XmlElement) => cr.attributes.length > 0,
-		);
+		all(index, 'br').some((br) => hasSpecialBreak(br) && !isModeledBreak(br)) ||
+		all(index, 'cr').some((cr) => cr.attributes.length > 0);
 	if (specialBreak)
 		warnings.push(
 			'Some non-line breaks other than page and column breaks are not distinguished from line breaks in the document model; edits to paragraphs containing them are rejected to preserve the original XML.',

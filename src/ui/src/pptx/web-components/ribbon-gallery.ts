@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import { defineGallery } from '../../controls';
 import type { OfficeGalleryItem, OfficeGalleryState } from '../../controls';
 import { getIcon, paintIcon, registerIcon } from '../../icons';
@@ -204,7 +205,8 @@ export function definePptxRibbonGallery(registry: CustomElementRegistry): void {
 			}
 		}
 	}
-	registry.define(
+	defineElement(
+		registry,
 		'pptx-ui-ribbon-gallery',
 		PptxRibbonGallery as unknown as CustomElementConstructor,
 	);

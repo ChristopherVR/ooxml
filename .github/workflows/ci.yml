@@ -49,7 +49,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
 
 env:
-  BUN_VERSION: 1.4.2
+  BUN_VERSION: 1.4.4
   NODE_VERSION: 24
 
 jobs:
@@ -446,7 +446,7 @@ jobs:
     needs: [plan, build]
     if: |
       !cancelled() && needs.build.result == 'success' &&
-      fromJSON(needs.plan.outputs.plan).pptx.run
+      (fromJSON(needs.plan.outputs.plan).pptx.run || fromJSON(needs.plan.outputs.plan).a11y.pptx)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -465,14 +465,15 @@ jobs:
       - name: Build the packages
         working-directory: viewers/pptx
         run: bun run build:packages
+      # The accessibility gates drive all five demos, so they build every one.
       - name: Build browser demos once for every shard
-        if: fromJSON(needs.plan.outputs.plan).pptx.e2e.projects[0] != null
+        if: fromJSON(needs.plan.outputs.plan).pptx.e2e.projects[0] != null || fromJSON(needs.plan.outputs.plan).a11y.pptx
         working-directory: viewers/pptx
         env:
-          PPTX_E2E_PROJECTS: ${{ join(fromJSON(needs.plan.outputs.plan).pptx.e2e.projects, ',') }}
+          PPTX_E2E_PROJECTS: ${{ fromJSON(needs.plan.outputs.plan).a11y.pptx && 'react,vue,angular,vanilla,svelte' || join(fromJSON(needs.plan.outputs.plan).pptx.e2e.projects, ',') }}
         run: bun e2e-build.ts
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        if: fromJSON(needs.plan.outputs.plan).pptx.e2e.projects[0] != null
+        if: fromJSON(needs.plan.outputs.plan).pptx.e2e.projects[0] != null || fromJSON(needs.plan.outputs.plan).a11y.pptx
         with:
           name: pptx-demo-dist
           path: |
@@ -518,6 +519,91 @@ jobs:
             viewers/pptx/packages/angular/src/internal/shared-src/
             viewers/pptx/packages/angular/src/internal/version.ts
           retention-days: 1
+
+  # The accessibility gates (e2e/a11y): the keyboard contract, axe against a baseline that can only
+  # shrink, the accessibility tree, token contrast, reflow and the export round trip, against the
+  # built suite and, when the change reaches PowerPoint, the five demos pptx-build made.
+  a11y:
+    name: a11y (${{ matrix.shard }}/${{ matrix.total }})
+    needs: [plan, build, pptx-build]
+    if: |
+      !cancelled() && needs.build.result == 'success' &&
+      fromJSON(needs.plan.outputs.plan).a11y.run &&
+      (needs.pptx-build.result == 'success' || !fromJSON(needs.plan.outputs.plan).a11y.pptx)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.plan).a11y.matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: core-dist
+          path: src/core/dist
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: ui-dist
+          path: src/ui/dist
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        if: fromJSON(needs.plan.outputs.plan).a11y.pptx
+        with:
+          name: pptx-demo-dist
+          path: demos/pptx
+      # Every plan names a commit to compare with (baselineBase in ci-plan.mjs), full plans too; an
+      # empty or unknown base fails this step instead of skipping the comparison.
+      - name: Baselines only shrink
+        if: matrix.shard == 1
+        working-directory: e2e/a11y
+        env:
+          BASE: ${{ fromJSON(needs.plan.outputs.plan).a11y.base }}
+        run: |
+          bun run typecheck
+          node --test check-baseline.test.mjs
+          node check-baseline.mjs --base "$BASE"
+      - name: Build the suite
+        run: node scripts/build-suite.mjs
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - name: Install Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        working-directory: e2e/a11y
+        run: bun x playwright install --with-deps chromium
+      - name: Install Chromium system libraries
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        working-directory: e2e/a11y
+        run: bun x playwright install-deps chromium
+      - name: Run the gates
+        working-directory: e2e/a11y
+        env:
+          PROJECTS: ${{ join(fromJSON(needs.plan.outputs.plan).a11y.projects, ' ') }}
+          # Empty runs every spec; a core writer change alone runs the export round trip.
+          SPECS: ${{ join(fromJSON(needs.plan.outputs.plan).a11y.specs, ' ') }}
+          SHARD: ${{ matrix.shard }}/${{ matrix.total }}
+        run: |
+          args=()
+          for project in $PROJECTS; do args+=("--project=$project"); done
+          # shellcheck disable=SC2086 # spec names have no spaces
+          bun run test -- "${args[@]}" $SPECS --shard="$SHARD"
+      - name: Preserve the report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: a11y-report-${{ matrix.shard }}
+          path: |
+            e2e/a11y/playwright-report/
+            e2e/a11y/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
 
   core-package-checks:
     needs: [plan, build]
@@ -842,6 +928,7 @@ jobs:
         pptx-test,
         pptx-e2e,
         pptx-e2e-packaged,
+        a11y,
       ]
     runs-on: ubuntu-latest
     steps:

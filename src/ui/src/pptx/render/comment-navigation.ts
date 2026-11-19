@@ -12,6 +12,7 @@
 import type { PptxComment } from 'ooxml-core/pptx';
 
 import { removeCommentFromList } from './comments-list';
+import { escapeCssAttributeValue } from './css-escape';
 
 /** The slide fields comment navigation reads and rewrites. */
 export interface SlideWithComments {
@@ -139,10 +140,6 @@ function ensureActiveStyle(doc: Document | null): void {
 	doc.head.append(style);
 }
 
-function escapeAttr(value: string): string {
-	return value.replace(/["\\]/gu, '\\$&');
-}
-
 /**
  * Scroll the row of comment `id` into view, focus it and mark it active (clearing the mark on
  * every other row). Returns false when no row is rendered (the panel is closed).
@@ -151,7 +148,9 @@ export function revealComment(root: ParentNode, id: string): boolean {
 	for (const stale of root.querySelectorAll(`[${COMMENT_ACTIVE_ATTR}]`)) {
 		stale.removeAttribute(COMMENT_ACTIVE_ATTR);
 	}
-	const row = root.querySelector<HTMLElement>(`[${COMMENT_ID_ATTR}="${escapeAttr(id)}"]`);
+	const row = root.querySelector<HTMLElement>(
+		`[${COMMENT_ID_ATTR}="${escapeCssAttributeValue(id)}"]`,
+	);
 	if (!row) {
 		return false;
 	}

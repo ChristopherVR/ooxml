@@ -1,7 +1,13 @@
 export * from './docx';
 export * from './docx-forms';
 export * from './xlsx';
-export { applyXlsxEdits, XLSX_EDIT_LIMITS, type XlsxEdit } from './xlsx-edits';
+export {
+	applyXlsxEdits,
+	refusedFormula,
+	XLSX_EDIT_LIMITS,
+	type XlsxEdit,
+	type XlsxFormulaOptions,
+} from './xlsx-edits';
 export * from './xlsx-proposal';
 export {
 	checkEditProposal,

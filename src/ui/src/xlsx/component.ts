@@ -1,3 +1,4 @@
+import { definer } from '../registry';
 import { installOfficeUiThemeFor } from '../theme';
 /**
  * `<xlsx-editor>`: the properties, attributes and lifecycle. Methods are in element-api.ts, state
@@ -13,6 +14,7 @@ import {
 	reflectAttribute,
 } from './editor-attributes';
 import type { RibbonAddInTab } from '../ribbon/add-in-tabs';
+import { closeContextMenu } from './context-menu';
 import { buildShell, type Shell } from './editor-shell';
 import { XlsxEditorApi } from './element-api';
 import { buildSurface } from './surface-shell';
@@ -76,8 +78,12 @@ export class XlsxEditorElement extends XlsxEditorApi {
 	private shell: Shell | undefined;
 	private disposeSurface: (() => void) | undefined;
 	private addIns: readonly RibbonAddInTab[] = [];
+	private leaving: ReturnType<typeof setTimeout> | undefined;
 
 	connectedCallback(): void {
+		clearTimeout(this.leaving);
+		this.leaving = undefined;
+		this.core.collab.resume();
 		installOfficeUiThemeFor(this);
 		this.core.webfonts.connect();
 		if (this.surfaceOnly) {
@@ -85,26 +91,42 @@ export class XlsxEditorElement extends XlsxEditorApi {
 			this.core.requestRender();
 			return;
 		}
-		if (this.shell) return;
+		if (this.shell) {
+			this.shell.ribbon.connect();
+			return;
+		}
 		this.shell = buildShell(this.core);
 		this.chrome = this.shell.chrome;
 		this.openShare = () => this.shell?.share.open();
 		this.closeBackstage = () => this.shell?.backstage.close();
 		if (this.addIns.length) this.shell.ribbon.setAddIns(this.addIns);
+		this.shell.ribbon.connect();
 		this.core.requestRender();
 	}
 
-	attributeChangedCallback(name: string, _old: string | null, value: string | null): void {
-		if (isXlsxEditorAttribute(name)) applyAttribute(this, name, value);
+	/**
+	 * Applies the attribute as it is now: a change made inside another element reaction is reported
+	 * late, after newer writes, and its own value would undo them.
+	 */
+	attributeChangedCallback(name: string): void {
+		if (isXlsxEditorAttribute(name)) applyAttribute(this, name, this.getAttribute(name));
 	}
 	disconnectedCallback(): void {
 		this.core.webfonts.disconnect();
 		// Host File tab pages unmount with the editor; showing one again remounts it.
 		this.shell?.backstage.destroy();
+		this.shell?.ribbon.disconnect();
+		closeContextMenu(this.core.ctx);
+		this.core.ctx.grid()?.closePopups?.();
 		if (this.disposeSurface) {
 			this.disposeSurface();
 			this.disposeSurface = undefined;
 		}
+		// Still away once this task ends, so not a move between parents: leave the room until it is back.
+		this.leaving ??= setTimeout(() => {
+			this.leaving = undefined;
+			if (!this.isConnected) this.core.collab.park();
+		});
 	}
 
 	/** Interface language: `en`, `fr`, `de`, `es`, `zh-CN` (any tag mapping to one). */
@@ -289,8 +311,5 @@ declare global {
 	}
 }
 
-/** Registers `<xlsx-editor>` once; a no-op without `customElements` (server rendering). */
-export function defineXlsxEditor(): void {
-	if (typeof customElements === 'undefined' || customElements.get('xlsx-editor')) return;
-	customElements.define('xlsx-editor', XlsxEditorElement);
-}
+/** Registers `<xlsx-editor>` once; a no-op without a DOM (server rendering). */
+export const defineXlsxEditor = definer('xlsx-editor', () => XlsxEditorElement);

@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import type { PptxTheme } from 'ooxml-core/pptx';
 
 import { createThemeEditorEdit } from '../render';
@@ -128,5 +129,5 @@ export function definePptxThemeEditor(registry: CustomElementRegistry): void {
 			this.view.paint(this.draft, this.text, this.locked);
 		}
 	}
-	registry.define('pptx-ui-theme-editor', ThemeEditorElement);
+	defineElement(registry, 'pptx-ui-theme-editor', ThemeEditorElement);
 }

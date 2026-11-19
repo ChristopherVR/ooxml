@@ -186,6 +186,18 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 	 * cheap hash differs do we fall back to a full deep stringify comparison.
 	 */
 	const lastCheapHashRef = useRef<string>('');
+	/**
+	 * The document inputs the tracking effect last settled on. While they are
+	 * the same objects, a re-run can only be a slide change: state updates
+	 * replace these objects, and every edit commit bumps a nonce in `key`.
+	 */
+	const lastExaminedRef = useRef<{
+		key: string;
+		slides: readonly PptxSlide[];
+		templates: Record<string, PptxElement[]>;
+		theme: PptxTheme | undefined;
+		slideMasters: readonly PptxSlideMaster[] | undefined;
+	} | null>(null);
 	const isApplyingHistoryRef = useRef(false);
 	const trackingHeldRef = useRef(false);
 	const unlockHistoryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -382,6 +394,7 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 	const resetHistory = useCallback(
 		(initialSnapshot?: EditorHistorySnapshot | null) => {
 			history.clear();
+			lastExaminedRef.current = null;
 			if (initialSnapshot) {
 				const clonedInitial = cloneHistorySnapshot(initialSnapshot);
 				lastHistorySnapshotRef.current = clonedInitial;
@@ -447,6 +460,34 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 		if (cheapHash === lastCheapHashRef.current) {
 			return;
 		}
+		const examinedKey = `${pointerCommitNonce}|${editCommitNonce}|${pointerReleaseNonce}|${canvasSize.width}x${canvasSize.height}`;
+		const settle = (): void => {
+			lastCheapHashRef.current = cheapHash;
+			lastExaminedRef.current = {
+				key: examinedKey,
+				slides,
+				templates: templateElementsBySlideId,
+				theme,
+				slideMasters,
+			};
+		};
+		const examined = lastExaminedRef.current;
+		if (
+			examined?.key === examinedKey &&
+			examined.slides === slides &&
+			examined.templates === templateElementsBySlideId &&
+			examined.theme === theme &&
+			examined.slideMasters === slideMasters
+		) {
+			// Only the slide index moved: skip cloning and serializing the deck,
+			// which made every slide change cost time in proportion to the deck.
+			const previous = lastHistorySnapshotRef.current;
+			if (previous && previous.activeSlideIndex !== activeSlideIndex) {
+				lastHistorySnapshotRef.current = { ...previous, activeSlideIndex };
+			}
+			lastCheapHashRef.current = cheapHash;
+			return;
+		}
 
 		const snapshot = buildHistorySnapshot();
 		// Document only: see `serializeDocument`. A slide selection reaches here
@@ -465,7 +506,7 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 					activeSlideIndex: snapshot.activeSlideIndex,
 				};
 			}
-			lastCheapHashRef.current = cheapHash;
+			settle();
 			return;
 		}
 
@@ -476,7 +517,7 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 		if (!previousSnapshot || differsOnlyInMasterSet(previousSnapshot, snapshot)) {
 			lastHistorySnapshotRef.current = snapshot;
 			lastHistorySerializedRef.current = serialized;
-			lastCheapHashRef.current = cheapHash;
+			settle();
 			return;
 		}
 
@@ -489,7 +530,7 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 		history.record(previousSnapshot, previousSnapshot.actionLabel);
 		lastHistorySnapshotRef.current = snapshot;
 		lastHistorySerializedRef.current = serialized;
-		lastCheapHashRef.current = cheapHash;
+		settle();
 	}, [
 		activeSlideIndex,
 		buildHistorySnapshot,
@@ -504,6 +545,9 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 		pointerCommitNonce,
 		pointerReleaseNonce,
 		slides,
+		slideMasters,
+		templateElementsBySlideId,
+		theme,
 	]);
 
 	// -- Public API ---------------------------------------------------------

@@ -3,13 +3,15 @@
  * viewport so the ribbon's overflow clipping never cuts them, dismissed by Escape, a press
  * elsewhere or a choice. Mirrors docx-viewer's ribbon-popover.ts.
  */
+import { composedWithin } from '../../composed';
 import { ribbonIcon } from './icons';
 
 let closeOpen: (() => void) | undefined;
+let open: HTMLElement | undefined;
 
-/** Closes whichever ribbon popover is open. */
-export function closeRibbonPopover(): void {
-	closeOpen?.();
+/** Closes whichever ribbon popover is open, or only one inside `scope`. */
+export function closeRibbonPopover(scope?: Node): void {
+	if (!scope || composedWithin(open, scope)) closeOpen?.();
 }
 
 export function isPopoverOpen(): boolean {
@@ -43,6 +45,7 @@ export function mountPopover(
 	if (pop.offsetHeight && box.bottom + pop.offsetHeight > height - 8)
 		pop.style.top = `${Math.max(4, height - pop.offsetHeight - 8)}px`;
 	expanded.setAttribute('aria-expanded', 'true');
+	open = pop;
 	const outside = (event: Event) => {
 		const path = event.composedPath();
 		if (!path.includes(pop) && !path.includes(anchor)) closeOpen?.();
@@ -62,7 +65,7 @@ export function mountPopover(
 		doc.removeEventListener('keydown', escape, true);
 		pop.remove();
 		expanded.setAttribute('aria-expanded', 'false');
-		closeOpen = undefined;
+		closeOpen = open = undefined;
 		if (restoreFocus && anchor.isConnected) anchor.focus({ preventScroll: true });
 		onClose?.();
 	};

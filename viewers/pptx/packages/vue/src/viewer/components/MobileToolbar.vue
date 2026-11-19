@@ -19,7 +19,7 @@
  * Conventions vs. React:
  *  - the aggregate `ToolbarProps` becomes our `RibbonProps` bundle (the same
  *    one the host assembles for the desktop ribbon),
- *  - `react-icons/lu` glyphs map to `lucide-vue-next`,
+ *  - `react-icons/lu` glyphs map to `@lucide/vue`,
  *  - the section sheet's open state is owned here (local `ref`), exactly like
  *    React's `useState`.
  */

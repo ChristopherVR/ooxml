@@ -593,9 +593,7 @@ function onZoneClick(e: MouseEvent): void {
 				<p class="demo-hint">{{ t('demo.dropzone.loadingBroadcast') }}</p>
 			</template>
 			<template v-else-if="urlRoom">
-				<p class="demo-join">
-					{{ t('demo.dropzone.joiningSession') }} <code>{{ urlRoom }}</code>
-				</p>
+				<p class="demo-join">{{ t('demo.dropzone.joiningSession') }} <code>{{ urlRoom }}</code></p>
 				<label class="demo-hint" for="file-input">{{ t('demo.dropzone.hintCollab') }}</label>
 			</template>
 			<template v-else>
@@ -630,12 +628,7 @@ function onZoneClick(e: MouseEvent): void {
 
 <style>
 body {
-	font-family:
-		system-ui,
-		-apple-system,
-		'Segoe UI',
-		Roboto,
-		sans-serif;
+	font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 	/* Never let demo chrome overflow horizontally; on mobile a wider-than-viewport
 	   page expands the layout viewport and mis-anchors the viewer's fixed bottom bar. */
 	overflow-x: hidden;

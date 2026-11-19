@@ -31,13 +31,14 @@
  */
 import {
 	dispatchEditorKey,
-	isEditorControlTarget,
+	editorKeyEventTarget,
 	isEditorTextInputTarget,
 	mapCustomizedEditorKey,
 	NUDGE_LARGE,
 	NUDGE_SMALL,
+	slideKeyFocus,
 } from 'ooxml-ui/pptx';
-import type { ResolvedKeyboardCustomization } from 'ooxml-ui/pptx';
+import type { ResolvedKeyboardCustomization, SlideKeyFocus } from 'ooxml-ui/pptx';
 import { onMounted, onScopeDispose, toValue } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 
@@ -121,8 +122,8 @@ export interface ShortcutGuardState {
 	tableEditorIsEditing: boolean;
 	activeTool: string;
 	isTextInput: boolean;
-	/** The event came from a focusable chrome control (Tab stays focus navigation). */
-	isControl?: boolean;
+	/** Where the key press sits relative to the slide (Tab walks objects only inside it). */
+	slideFocus?: SlideKeyFocus;
 }
 
 /**
@@ -152,7 +153,7 @@ export function resolveShortcutAction(
 			isEditingText: Boolean(guard.inlineEditingElementId || guard.tableEditorIsEditing),
 			isDrawing: guard.activeTool !== 'select',
 			isTextInputTarget: guard.isTextInput,
-			isControlTarget: guard.isControl ?? false,
+			slideFocus: guard.slideFocus ?? 'outside',
 		},
 		keyboard,
 	);
@@ -183,7 +184,7 @@ export function useKeyboardShortcuts(
 			tableEditorIsEditing: resolveFlag(options.tableEditorIsEditing, false),
 			activeTool: resolveFlag(options.activeTool, 'select'),
 			isTextInput: eventTargetIsTextInput(event),
-			isControl: isEditorControlTarget(event.target),
+			slideFocus: slideKeyFocus(editorKeyEventTarget(event)),
 		};
 	}
 
@@ -217,7 +218,7 @@ export function useKeyboardShortcuts(
 				isEditingText: Boolean(guard.inlineEditingElementId || guard.tableEditorIsEditing),
 				isDrawing: guard.activeTool !== 'select',
 				isTextInputTarget: guard.isTextInput,
-				isControlTarget: guard.isControl ?? false,
+				slideFocus: guard.slideFocus ?? 'outside',
 				keyboard: options.keyboard?.(),
 			},
 			actions,

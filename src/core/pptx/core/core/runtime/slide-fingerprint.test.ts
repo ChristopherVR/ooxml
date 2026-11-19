@@ -144,6 +144,31 @@ describe('fingerprintSlide', () => {
 		expect(fingerprintSlide(slide as unknown as PptxSlide)).not.toBe(first);
 	});
 
+	it('hashes a subtree shared by reference as its copies, and sees an edit inside it', () => {
+		const shared = {
+			'a:rPr': { '@_sz': '1800', 'a:solidFill': { 'a:srgbClr': { '@_val': 'FF0000' } } },
+		};
+		const slide = (left: unknown, right: unknown) =>
+			({ ...baseSlide(), rawXml: { left, right, again: [left, right] } }) as unknown as PptxSlide;
+		const sharing = slide(shared, shared);
+		const copies = slide(structuredClone(shared), JSON.parse(JSON.stringify(shared)));
+		expect(fingerprintSlide(sharing)).toBe(fingerprintSlide(copies));
+		const before = fingerprintSlide(sharing);
+		shared['a:rPr']['a:solidFill']['a:srgbClr']['@_val'] = '00FF00';
+		expect(fingerprintSlide(sharing)).not.toBe(before);
+	});
+
+	it('hashes a deeply shared structure in linear time', () => {
+		// Each level holds the next twice: 2^60 paths, 61 distinct objects.
+		let node: Record<string, unknown> = { leaf: 'text' };
+		for (let level = 0; level < 60; level++) node = { first: node, second: node, level };
+		const slide = { ...baseSlide(), rawXml: node } as unknown as PptxSlide;
+		const start = performance.now();
+		const fingerprint = fingerprintSlide(slide);
+		expect(performance.now() - start).toBeLessThan(1000);
+		expect(fingerprint).not.toContain('unhashable');
+	});
+
 	it('ignores callbacks, whose identity changes on every render', () => {
 		const slide = { ...baseSlide(), onThing: () => 1 } as unknown as PptxSlide;
 		const other = { ...baseSlide(), onThing: () => 2 } as unknown as PptxSlide;

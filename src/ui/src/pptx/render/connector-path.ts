@@ -26,6 +26,7 @@ import { snapPlacement } from './device-pixel-group';
 import { snappedStrokeTransform } from './device-pixel-stroke';
 import { routeOrthogonalConnector, waypointsToPathD } from './connector-router';
 import type { RouterRect } from './connector-router';
+import { svgIdToken } from './svg-id';
 import {
 	connectorKind,
 	getCompoundLineOffsets,
@@ -198,7 +199,7 @@ export function buildConnectorGeometry(
 		}
 	}
 
-	const markerSeed = element.id.replace(/[^a-zA-Z0-9_-]/gu, '_');
+	const markerSeed = svgIdToken(element.id);
 	const startMarkerId = `${markerSeed}-start`;
 	const endMarkerId = `${markerSeed}-end`;
 

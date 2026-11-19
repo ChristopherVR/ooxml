@@ -2,10 +2,232 @@
 // protocol.ts (ooxml-core). Do not edit; run `node scripts/bundle-validator.mjs` instead.
 // ../../src/core/teams/validate-update.ts
 import * as decoding2 from "lib0/decoding";
-import * as Y5 from "yjs";
+import * as Y7 from "yjs";
 
 // ../../src/core/collab/codec.ts
 import * as Y from "yjs";
+
+// ../../src/core/collab/update-scan.ts
+var MIN_BYTES_PER_STRUCT = 4;
+var MIN_BYTES_PER_DELETE_RANGE = 2;
+function defaultUpdateLimits(bytes) {
+  return {
+    maxStructs: Math.ceil(bytes / MIN_BYTES_PER_STRUCT),
+    maxDeleteRanges: Math.ceil(bytes / MIN_BYTES_PER_DELETE_RANGE)
+  };
+}
+var MAX_ANY_DEPTH = 64;
+var Overrun = class extends Error {
+  constructor(message, overLimit = false) {
+    super(message);
+    this.overLimit = overLimit;
+  }
+  overLimit;
+};
+var Cursor = class {
+  constructor(bytes) {
+    this.bytes = bytes;
+  }
+  bytes;
+  pos = 0;
+  byte() {
+    if (this.pos >= this.bytes.length) throw new Overrun("unexpected end of update");
+    return this.bytes[this.pos++];
+  }
+  /** An unsigned varint (lib0 `readVarUint`), refused beyond the safe integer range. */
+  uint() {
+    let value = 0;
+    let multiplier = 1;
+    for (; ; ) {
+      const byte = this.byte();
+      value += (byte & 127) * multiplier;
+      if (byte < 128) return value;
+      multiplier *= 128;
+      if (multiplier > Number.MAX_SAFE_INTEGER) throw new Overrun("varint out of range");
+    }
+  }
+  /** A signed varint (lib0 `readVarInt`): the same continuation rule, so skip it the same way. */
+  skipInt() {
+    let length = 0;
+    while (this.byte() >= 128) {
+      if (++length > 9) throw new Overrun("varint out of range");
+    }
+  }
+  skip(length) {
+    if (length > this.bytes.length - this.pos) throw new Overrun("unexpected end of update");
+    this.pos += length;
+  }
+  /** A length-prefixed string or byte array. */
+  skipBuffer() {
+    this.skip(this.uint());
+  }
+};
+var Budget = class {
+  constructor(limits) {
+    this.limits = limits;
+  }
+  limits;
+  structs = 0;
+  deleteRanges = 0;
+  addStructs(count) {
+    this.structs += count;
+    if (this.structs > this.limits.maxStructs)
+      throw new Overrun(`update holds more than ${this.limits.maxStructs} structs`, true);
+  }
+  addDeleteRanges(count) {
+    this.deleteRanges += count;
+    if (this.deleteRanges > this.limits.maxDeleteRanges)
+      throw new Overrun(
+        `update holds more than ${this.limits.maxDeleteRanges} deleted ranges`,
+        true
+      );
+  }
+};
+function skipAny(cursor, budget, depth) {
+  if (depth > MAX_ANY_DEPTH) throw new Overrun("value nested too deeply");
+  const tag = cursor.byte();
+  switch (tag) {
+    case 127:
+    // undefined
+    case 126:
+    // null
+    case 121:
+    // false
+    case 120:
+      return;
+    case 125:
+      return cursor.skipInt();
+    case 124:
+      return cursor.skip(4);
+    case 123:
+    // float64
+    case 122:
+      return cursor.skip(8);
+    case 119:
+      return cursor.skipBuffer();
+    case 116:
+      budget.addStructs(1);
+      return cursor.skipBuffer();
+    case 118: {
+      const length = cursor.uint();
+      budget.addStructs(1);
+      for (let i = 0; i < length; i++) {
+        cursor.skipBuffer();
+        skipAny(cursor, budget, depth + 1);
+      }
+      return;
+    }
+    case 117: {
+      const length = cursor.uint();
+      budget.addStructs(1);
+      for (let i = 0; i < length; i++) skipAny(cursor, budget, depth + 1);
+      return;
+    }
+    default:
+      throw new Overrun(`unknown value type ${tag}`);
+  }
+}
+var BIT6 = 32;
+var BIT7 = 64;
+var BIT8 = 128;
+var BITS5 = 31;
+var NAMED_TYPE_REFS = /* @__PURE__ */ new Set([3, 5]);
+function skipContent(cursor, budget, ref) {
+  switch (ref) {
+    case 1:
+      cursor.uint();
+      return;
+    case 2: {
+      const length = cursor.uint();
+      budget.addStructs(length);
+      for (let i = 0; i < length; i++) cursor.skipBuffer();
+      return;
+    }
+    case 3:
+    // binary
+    case 4:
+    // string
+    case 5:
+      cursor.skipBuffer();
+      return;
+    case 6:
+      cursor.skipBuffer();
+      cursor.skipBuffer();
+      return;
+    case 7:
+      if (NAMED_TYPE_REFS.has(cursor.uint())) cursor.skipBuffer();
+      return;
+    case 8: {
+      const length = cursor.uint();
+      budget.addStructs(1);
+      for (let i = 0; i < length; i++) skipAny(cursor, budget, 0);
+      return;
+    }
+    case 9:
+      cursor.skipBuffer();
+      skipAny(cursor, budget, 0);
+      return;
+    default:
+      throw new Overrun(`unknown content type ${ref}`);
+  }
+}
+function skipId(cursor) {
+  cursor.uint();
+  cursor.uint();
+}
+function skipStruct(cursor, budget) {
+  const info = cursor.byte();
+  const ref = info & BITS5;
+  if (ref === 0 || ref === 10) {
+    cursor.uint();
+    return;
+  }
+  if (info & BIT8) skipId(cursor);
+  if (info & BIT7) skipId(cursor);
+  if ((info & (BIT7 | BIT8)) === 0) {
+    if (cursor.uint() === 1) cursor.skipBuffer();
+    else skipId(cursor);
+    if (info & BIT6) cursor.skipBuffer();
+  }
+  skipContent(cursor, budget, ref);
+}
+function scanUpdate(update, limits = {}) {
+  const defaults = defaultUpdateLimits(update.byteLength);
+  const budget = new Budget({
+    maxStructs: limits.maxStructs ?? defaults.maxStructs,
+    maxDeleteRanges: limits.maxDeleteRanges ?? defaults.maxDeleteRanges
+  });
+  const cursor = new Cursor(update);
+  try {
+    const clients = cursor.uint();
+    for (let i = 0; i < clients; i++) {
+      const structs = cursor.uint();
+      budget.addStructs(structs + 1);
+      cursor.uint();
+      cursor.uint();
+      for (let j = 0; j < structs; j++) skipStruct(cursor, budget);
+    }
+    const deleteClients = cursor.uint();
+    for (let i = 0; i < deleteClients; i++) {
+      cursor.uint();
+      const ranges = cursor.uint();
+      budget.addDeleteRanges(ranges + 1);
+      for (let j = 0; j < ranges; j++) skipId(cursor);
+    }
+    return {
+      ok: true,
+      structs: budget.structs,
+      deleteRanges: budget.deleteRanges,
+      bytesRead: cursor.pos
+    };
+  } catch (cause) {
+    if (cause instanceof Overrun)
+      return { ok: false, reason: cause.message, overLimit: cause.overLimit };
+    throw cause;
+  }
+}
+
+// ../../src/core/collab/codec.ts
 var MAX_UPDATE_BYTES = 32 * 1024 * 1024;
 
 // ../../src/core/collab/transport-provider.ts
@@ -15,8 +237,255 @@ import * as awarenessProtocol from "y-protocols/awareness";
 import * as Y2 from "yjs";
 var MESSAGE_SYNC = 0;
 
-// ../../src/core/teams/validate-owned.ts
+// ../../src/core/teams/chat-records.ts
 import * as Y3 from "yjs";
+
+// ../../src/core/digest/sha256.ts
+var K = new Uint32Array([
+  1116352408,
+  1899447441,
+  3049323471,
+  3921009573,
+  961987163,
+  1508970993,
+  2453635748,
+  2870763221,
+  3624381080,
+  310598401,
+  607225278,
+  1426881987,
+  1925078388,
+  2162078206,
+  2614888103,
+  3248222580,
+  3835390401,
+  4022224774,
+  264347078,
+  604807628,
+  770255983,
+  1249150122,
+  1555081692,
+  1996064986,
+  2554220882,
+  2821834349,
+  2952996808,
+  3210313671,
+  3336571891,
+  3584528711,
+  113926993,
+  338241895,
+  666307205,
+  773529912,
+  1294757372,
+  1396182291,
+  1695183700,
+  1986661051,
+  2177026350,
+  2456956037,
+  2730485921,
+  2820302411,
+  3259730800,
+  3345764771,
+  3516065817,
+  3600352804,
+  4094571909,
+  275423344,
+  430227734,
+  506948616,
+  659060556,
+  883997877,
+  958139571,
+  1322822218,
+  1537002063,
+  1747873779,
+  1955562222,
+  2024104815,
+  2227730452,
+  2361852424,
+  2428436474,
+  2756734187,
+  3204031479,
+  3329325298
+]);
+var IV = [
+  1779033703,
+  3144134277,
+  1013904242,
+  2773480762,
+  1359893119,
+  2600822924,
+  528734635,
+  1541459225
+];
+var W = new Uint32Array(64);
+var rotr = (x, n) => x >>> n | x << 32 - n;
+function compress(h, view, offset) {
+  for (let i = 0; i < 16; i++) W[i] = view.getUint32(offset + i * 4);
+  for (let i = 16; i < 64; i++) {
+    const a2 = W[i - 15];
+    const b2 = W[i - 2];
+    const s0 = rotr(a2, 7) ^ rotr(a2, 18) ^ a2 >>> 3;
+    const s1 = rotr(b2, 17) ^ rotr(b2, 19) ^ b2 >>> 10;
+    W[i] = W[i - 16] + s0 + W[i - 7] + s1 >>> 0;
+  }
+  let a = h[0], b = h[1], c = h[2], d = h[3], e = h[4], f = h[5], g = h[6], k = h[7];
+  for (let i = 0; i < 64; i++) {
+    const S1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
+    const ch = e & f ^ ~e & g;
+    const t1 = k + S1 + ch + K[i] + W[i] >>> 0;
+    const S0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
+    const maj = a & b ^ a & c ^ b & c;
+    const t2 = S0 + maj >>> 0;
+    k = g;
+    g = f;
+    f = e;
+    e = d + t1 >>> 0;
+    d = c;
+    c = b;
+    b = a;
+    a = t1 + t2 >>> 0;
+  }
+  h[0] = h[0] + a >>> 0;
+  h[1] = h[1] + b >>> 0;
+  h[2] = h[2] + c >>> 0;
+  h[3] = h[3] + d >>> 0;
+  h[4] = h[4] + e >>> 0;
+  h[5] = h[5] + f >>> 0;
+  h[6] = h[6] + g >>> 0;
+  h[7] = h[7] + k >>> 0;
+}
+function pad64(data) {
+  const padded = new Uint8Array(Math.ceil((data.length + 9) / 64) * 64);
+  padded.set(data);
+  padded[data.length] = 128;
+  const bits = data.length * 8;
+  const view = new DataView(padded.buffer);
+  view.setUint32(padded.length - 8, Math.floor(bits / 4294967296));
+  view.setUint32(padded.length - 4, bits >>> 0);
+  return view;
+}
+function wordsOut(h) {
+  const out = new Uint8Array(h.length * 4);
+  const view = new DataView(out.buffer);
+  for (let i = 0; i < h.length; i++) view.setUint32(i * 4, h[i]);
+  return out;
+}
+function sha256(data) {
+  const h = new Uint32Array(IV);
+  const view = pad64(data);
+  for (let offset = 0; offset < view.byteLength; offset += 64) compress(h, view, offset);
+  return wordsOut(h);
+}
+
+// ../../src/core/collab/validation.ts
+function stripHtmlTags(text) {
+  let result = "";
+  let insideTag = false;
+  for (const char of text) {
+    if (char === "<") insideTag = true;
+    else if (char === ">") insideTag = false;
+    else if (!insideTag) result += char;
+  }
+  return result;
+}
+
+// ../../src/core/teams/model.ts
+var MAX_CHANNEL_NAME_CHARS = 80;
+function sanitizeChannelName(name) {
+  if (typeof name !== "string") return "";
+  return stripHtmlTags(name).replace(/\s+/gu, " ").trim().slice(0, MAX_CHANNEL_NAME_CHARS);
+}
+
+// ../../src/core/teams/chat-records.ts
+var MAX_CHAT_MEMBERS = 50;
+var CHATS_MAP = "teams:chats";
+var MEMBER_KEY = "member:";
+var SAFE_USER = /^[\w.@:+-]{1,64}$/u;
+var SAFE_CHAT = /^[\w-]{1,64}$/u;
+var GROUP_CHAT = /^g-([0-9a-f]{32})-([0-9a-f]{24})$/u;
+var isChatUserId = (id) => typeof id === "string" && SAFE_USER.test(id);
+function shortHash(value) {
+  let a = 2166136261;
+  let b = 16777619 ^ value.length;
+  for (let i = 0; i < value.length; i++) {
+    const c = value.charCodeAt(i);
+    a = Math.imul(a ^ c, 16777619) >>> 0;
+    b = Math.imul(b ^ c + i, 2246822507) >>> 0;
+  }
+  return a.toString(16).padStart(8, "0") + b.toString(16).padStart(8, "0");
+}
+var toHex = (bytes) => Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+var digestHex = (text, bytes) => toHex(sha256(new TextEncoder().encode(text)).subarray(0, bytes));
+var directChatId = (a, b) => `dm-${digestHex(`openteams-direct
+${[a, b].sort().join("\n")}`, 16)}`;
+var legacyDirectChatId = (a, b) => `dm-${shortHash([a, b].sort().join("\n"))}`;
+var groupTag = (nonce, creator) => digestHex(`openteams-group
+${nonce}
+${creator}`, 12);
+function isGroupChatIdOf(id, creator) {
+  const match = GROUP_CHAT.exec(id);
+  return match !== null && match[2] === groupTag(match[1], creator);
+}
+function sanitizeMembers(raw) {
+  if (!Array.isArray(raw)) return [];
+  const seen = /* @__PURE__ */ new Set();
+  const out = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const { id, name } = item;
+    if (!isChatUserId(id) || seen.has(id)) continue;
+    seen.add(id);
+    out.push({ id, name: sanitizeChannelName(name) || "Unknown" });
+    if (out.length >= MAX_CHAT_MEMBERS) break;
+  }
+  return out;
+}
+var memberKey = (userId) => `${MEMBER_KEY}${userId}`;
+var userOfMemberKey = (key) => key.startsWith(MEMBER_KEY) ? key.slice(MEMBER_KEY.length) : null;
+function memberStanding(row, userId) {
+  const entry = row.get(memberKey(userId));
+  if (entry !== void 0) return typeof entry === "string" ? "member" : "former";
+  return sanitizeMembers(row.get("members")).some((m) => m.id === userId) ? "member" : "stranger";
+}
+function groupMembers(row) {
+  const members = new Map(sanitizeMembers(row.get("members")).map((m) => [m.id, m]));
+  for (const key of [...row.keys()].sort()) {
+    const id = userOfMemberKey(key);
+    if (id === null || !isChatUserId(id)) continue;
+    const name = row.get(key);
+    if (typeof name === "string")
+      members.set(id, { id, name: sanitizeChannelName(name) || "Unknown" });
+    else members.delete(id);
+  }
+  return [...members.values()].slice(0, MAX_CHAT_MEMBERS);
+}
+var isDirectRow = (id, members) => {
+  const [a, b] = members;
+  return members.length === 2 && a !== void 0 && b !== void 0 && (id === directChatId(a.id, b.id) || id === legacyDirectChatId(a.id, b.id));
+};
+function readChatRow(id, raw) {
+  if (!(raw instanceof Y3.Map) || !SAFE_CHAT.test(id)) return null;
+  const kind = raw.get("kind");
+  if (kind !== "direct" && kind !== "group") return null;
+  const members = kind === "group" ? groupMembers(raw) : sanitizeMembers(raw.get("members"));
+  if (members.length === 0 || kind === "direct" && !isDirectRow(id, members)) return null;
+  const meetingId = raw.get("meetingId");
+  return {
+    id,
+    kind,
+    name: kind === "group" ? sanitizeChannelName(raw.get("name")) : "",
+    members,
+    createdAt: Number(raw.get("createdAt")) || 0,
+    createdBy: String(raw.get("createdBy") ?? "").slice(0, 160),
+    ...typeof meetingId === "string" && SAFE_CHAT.test(meetingId) ? { meetingId } : {}
+  };
+}
+
+// ../../src/core/teams/validate-chats.ts
+import * as Y5 from "yjs";
+
+// ../../src/core/teams/validate-owned.ts
+import * as Y4 from "yjs";
 var CHANNELS = "teams:channels";
 var TABS = "teams:tabs";
 var MEETINGS = "teams:meetings";
@@ -24,17 +493,42 @@ var CHAT_MEMBERS = "teams:chat-members";
 var OWNED_MAPS = [CHANNELS, TABS, MEETINGS];
 var ownerField = (map) => map === MEETINGS ? "organizerId" : "createdBy";
 var isOwnedMap = (name) => OWNED_MAPS.includes(name);
+var plain = (value) => value instanceof Y4.AbstractType ? value.toJSON() : value;
+function sameContent(a, b) {
+  const x = plain(a);
+  const y = plain(b);
+  if (Object.is(x, y) || x === y) return true;
+  if (typeof x !== "object" || typeof y !== "object" || x === null || y === null) return false;
+  if (Array.isArray(x) !== Array.isArray(y)) return false;
+  const keys = Object.keys(x);
+  return keys.length === Object.keys(y).length && keys.every(
+    (key) => Object.hasOwn(y, key) && sameContent(x[key], y[key])
+  );
+}
+function isSupportedValue(value) {
+  const content = plain(value);
+  if (typeof content === "bigint") return false;
+  if (content === null || typeof content !== "object" || ArrayBuffer.isView(content)) return true;
+  return Object.values(content).every(isSupportedValue);
+}
+function writesUnsupportedValue(before, after) {
+  if (!(after instanceof Y4.Map)) return !isSupportedValue(after) && !sameContent(before, after);
+  const prior = before instanceof Y4.Map ? before : void 0;
+  for (const [key, value] of after.entries())
+    if (!isSupportedValue(value) && !sameContent(prior?.get(key), value)) return true;
+  return false;
+}
 function isSameRow(before, next) {
-  return next._item !== null && before._item !== null && Y3.compareIDs(next._item.id, before._item.id) && JSON.stringify(before.toJSON()) === JSON.stringify(next.toJSON());
+  return next._item !== null && before._item !== null && Y4.compareIDs(next._item.id, before._item.id) && sameContent(before, next);
 }
 function checkOwnedRow(map, rowId, before, after, actor) {
   const at = { map, key: rowId };
   const field = ownerField(map);
-  if (after !== void 0 && !(after instanceof Y3.Map)) return { code: "malformed-row", ...at };
+  if (after !== void 0 && !(after instanceof Y4.Map)) return { code: "malformed-row", ...at };
   const next = after;
   if (before === void 0)
     return next === void 0 || next.get(field) === actor.id ? null : { code: "forged-author", ...at };
-  const prior = before instanceof Y3.Map ? before : void 0;
+  const prior = before instanceof Y4.Map ? before : void 0;
   if (prior && next && isSameRow(prior, next)) return null;
   const owner = prior?.get(field);
   if (owner === actor.id)
@@ -52,43 +546,121 @@ function checkPinRow(map, rowId, before, after, actor, doc) {
     return { code: "malformed-row", ...at };
   const members = doc.share.has(CHAT_MEMBERS) ? doc.getMap(CHAT_MEMBERS) : void 0;
   const exempt = actor.moderator === true && after === void 0;
-  if (members && members.size > 0 && !members.has(actor.id) && !exempt)
+  if (members && members.size > 0 && members.get(actor.id) !== true && !exempt)
     return { code: "not-member", ...at };
   if (after === void 0) return null;
   if (pinnedBy(after) === actor.id) return null;
-  if (before !== void 0 && JSON.stringify(before) === JSON.stringify(after)) return null;
+  if (before !== void 0 && sameContent(before, after)) return null;
   return { code: "forged-author", ...at };
 }
 
+// ../../src/core/teams/validate-chats.ts
+var ROW_FIELDS = /* @__PURE__ */ new Set(["kind", "name", "members", "createdAt", "createdBy", "meetingId"]);
+function applyUpdateReverts(doc, reverts) {
+  const chats = doc.getMap(CHATS_MAP);
+  doc.transact(() => {
+    for (const { chat, key, value } of reverts) {
+      const row = chats.get(chat);
+      if (!(row instanceof Y5.Map)) continue;
+      if (value === void 0) row.delete(key);
+      else row.set(key, value);
+    }
+  });
+}
+function strictChat(id, row) {
+  const chat = readChatRow(id, row);
+  const raw = row.get("members");
+  if (!chat || !Array.isArray(raw) || raw.length !== chat.members.length) return null;
+  return [...row.keys()].every((key) => ROW_FIELDS.has(key)) ? chat : null;
+}
+var memberIds = (chat) => new Set(chat.members.map((m) => m.id));
+var sameIds = (a, b) => a.size === b.size && [...a].every((id) => b.has(id));
+var isCleanName = (value) => typeof value === "string" && sanitizeChannelName(value) === value;
+function checkNewRow(id, row, actor, at) {
+  const chat = strictChat(id, row);
+  if (!chat) return { code: "malformed-row", ...at };
+  if (row.get("createdBy") !== actor.id) return { code: "forged-author", ...at };
+  if (!memberIds(chat).has(actor.id)) return { code: "not-member", ...at };
+  if (chat.kind === "group")
+    return isGroupChatIdOf(id, actor.id) ? null : { code: "forged-author", ...at };
+  const [a, b] = chat.members;
+  return a && b && id === directChatId(a.id, b.id) ? null : { code: "malformed-row", ...at };
+}
+function checkDirectEdit(id, prior, next, actor, at) {
+  const was = readChatRow(id, prior);
+  if (!was) return { code: "foreign-row", ...at };
+  const had = memberIds(was);
+  if (!had.has(actor.id)) return { code: "not-member", ...at };
+  const now = strictChat(id, next);
+  if (!now || now.kind !== was.kind) return { code: "malformed-row", ...at };
+  const replaced = !(next._item && prior._item && Y5.compareIDs(next._item.id, prior._item.id));
+  return replaced && next.get("createdBy") === actor.id && sameIds(had, memberIds(now)) ? null : { code: "foreign-row", ...at };
+}
+function mayWriteGroupField(key, value, actor, isMember) {
+  if (key === "name") return isCleanName(value) ? isMember : null;
+  const userId = userOfMemberKey(key);
+  if (userId === null || !isChatUserId(userId)) return null;
+  if (value === null) return userId === actor.id || isMember && actor.moderator === true;
+  return isCleanName(value) && value !== "" ? isMember : null;
+}
+function checkGroupEdit(id, prior, next, actor, at, reverts) {
+  if (!(next._item && prior._item && Y5.compareIDs(next._item.id, prior._item.id)))
+    return { code: "foreign-row", ...at };
+  const isMember = memberStanding(prior, actor.id) === "member";
+  const undo = [];
+  for (const key of /* @__PURE__ */ new Set([...prior.keys(), ...next.keys()])) {
+    const value = prior.get(key);
+    const written = next.get(key);
+    if (sameContent(value, written)) continue;
+    if (key !== "name" && ROW_FIELDS.has(key)) return { code: "foreign-row", ...at };
+    const may = mayWriteGroupField(key, written, actor, isMember);
+    if (may === null) return { code: "malformed-row", ...at };
+    if (!may) undo.push({ chat: id, key, value });
+  }
+  reverts.push(...undo);
+  return null;
+}
+function checkChatRow(id, before, after, actor, reverts) {
+  const at = { map: CHATS_MAP, key: id };
+  if (after !== void 0 && !(after instanceof Y5.Map)) return { code: "malformed-row", ...at };
+  const next = after;
+  if (before === void 0) return next ? checkNewRow(id, next, actor, at) : null;
+  if (!next || !(before instanceof Y5.Map)) return { code: "foreign-row", ...at };
+  const prior = before;
+  if (isSameRow(prior, next)) return null;
+  if (prior.get("kind") !== "group") return checkDirectEdit(id, prior, next, actor, at);
+  if (memberStanding(prior, actor.id) === "stranger") return { code: "not-member", ...at };
+  return checkGroupEdit(id, prior, next, actor, at, reverts);
+}
+
 // ../../src/core/teams/validate-members.ts
-import * as Y4 from "yjs";
+import * as Y6 from "yjs";
 var ROSTER = "teams:roster";
 var CHAT_MEMBERS2 = "teams:chat-members";
 var DEFAULT_MAX_MESSAGE_CHARS = 32768;
 var DEFAULT_MAX_REACTIONS_PER_MESSAGE = 200;
 function checkRosterRow(rowId, before, after, actor) {
   const at = { map: ROSTER, key: rowId };
-  if (after !== void 0 && !(after instanceof Y4.Map)) return { code: "malformed-row", ...at };
+  if (after !== void 0 && !(after instanceof Y6.Map)) return { code: "malformed-row", ...at };
   if (rowId === actor.id) return null;
   if (actor.moderator === true && after === void 0 && before !== void 0) return null;
   return { code: "foreign-row", ...at };
 }
 function checkMemberKey(userId, before, after, actor) {
   const at = { map: CHAT_MEMBERS2, key: userId };
-  const was = before?.has(userId) === true;
-  const now = after?.has(userId) === true;
+  if (after?.has(userId) === true && after.get(userId) !== true)
+    return { code: "malformed-row", ...at };
+  const was = before?.get(userId) === true;
+  const now = after?.get(userId) === true;
   if (was === now) return null;
   if (now) {
-    if (after?.get(userId) !== true) return { code: "malformed-row", ...at };
-    if (actor.moderator === true) return null;
-    const existing = before !== void 0 && before.size > 0;
-    const allowed = existing ? before.has(actor.id) : after?.has(actor.id) === true;
-    return allowed ? null : { code: "not-member", ...at };
+    if (!isChatUserId(userId)) return { code: "malformed-row", ...at };
+    return actor.moderator === true || before?.get(actor.id) === true ? null : { code: "not-member", ...at };
   }
   return userId === actor.id || actor.moderator === true ? null : { code: "foreign-row", ...at };
 }
 function checkMessageSize(map, rowId, after, limits) {
-  if (!(after instanceof Y4.Map)) return null;
+  if (!(after instanceof Y6.Map)) return null;
   const text = after.get("text");
   const max = limits.maxMessageChars ?? DEFAULT_MAX_MESSAGE_CHARS;
   return typeof text === "string" && text.length > max ? { code: "content-too-large", map, key: rowId } : null;
@@ -117,7 +689,7 @@ function mapOf(doc, name) {
     return void 0;
   }
 }
-var isTrackedMap = (name) => name.startsWith(MESSAGES_PREFIX) || name.startsWith(PINS_PREFIX) || name === ROSTER || name === CHAT_MEMBERS2 || isOwnedMap(name);
+var isTrackedMap = (name) => name.startsWith(MESSAGES_PREFIX) || name.startsWith(PINS_PREFIX) || name === ROSTER || name === CHAT_MEMBERS2 || name === CHATS_MAP || isOwnedMap(name);
 function rootName(doc, type) {
   for (const [name, root] of doc.share) if (root === type) return name;
   return void 0;
@@ -138,7 +710,7 @@ function collectTouched(doc, txn, into) {
       continue;
     }
     let node = type;
-    while (node._item && node._item.parent instanceof Y5.AbstractType) {
+    while (node._item && node._item.parent instanceof Y7.AbstractType) {
       const parent = node._item.parent;
       if (parent._item === null) {
         const name = rootName(doc, parent);
@@ -154,35 +726,35 @@ function collectTouched(doc, txn, into) {
     }
   }
 }
-var authorOf = (row) => row instanceof Y5.Map ? row.get("authorId") : void 0;
+var authorOf = (row) => row instanceof Y7.Map ? row.get("authorId") : void 0;
 function isHideOnly(before, after) {
   if (after.get("deleted") !== true) return false;
   const keys = /* @__PURE__ */ new Set([...before.keys(), ...after.keys()]);
   for (const key of keys) {
     if (key === "deleted") continue;
-    if (JSON.stringify(before.get(key)) !== JSON.stringify(after.get(key))) return false;
+    if (!sameContent(before.get(key), after.get(key))) return false;
   }
   return true;
 }
 function checkRow(map, rowId, before, after, actor) {
   const at = { map, key: rowId };
-  if (after !== void 0 && !(after instanceof Y5.Map)) return { code: "malformed-row", ...at };
+  if (after !== void 0 && !(after instanceof Y7.Map)) return { code: "malformed-row", ...at };
   const next = after;
   if (before === void 0) {
     return next === void 0 || next.get("authorId") === actor.id ? null : { code: "forged-author", ...at };
   }
   const owner = authorOf(before);
-  if (next !== void 0 && before instanceof Y5.Map && next._item && before._item && Y5.compareIDs(next._item.id, before._item.id) && JSON.stringify(before.toJSON()) === JSON.stringify(next.toJSON()))
+  if (next !== void 0 && before instanceof Y7.Map && next._item && before._item && Y7.compareIDs(next._item.id, before._item.id) && sameContent(before, next))
     return null;
   if (owner === actor.id) {
     return next === void 0 || next.get("authorId") === owner ? null : { code: "author-changed", ...at };
   }
-  const replaced = next !== void 0 && before instanceof Y5.Map && !(next._item && before._item && Y5.compareIDs(next._item.id, before._item.id));
+  const replaced = next !== void 0 && before instanceof Y7.Map && !(next._item && before._item && Y7.compareIDs(next._item.id, before._item.id));
   if (replaced && rowId.startsWith(TAB_ROOT_PREFIX) && next?.get("authorId") === actor.id)
     return null;
   if (actor.moderator === true) {
     if (next === void 0) return null;
-    if (!replaced && before instanceof Y5.Map && isHideOnly(before, next)) return null;
+    if (!replaced && before instanceof Y7.Map && isHideOnly(before, next)) return null;
   }
   return { code: "foreign-row", ...at };
 }
@@ -196,17 +768,14 @@ function checkReaction(key, beforeHas, afterHas, actor) {
 function validateTeamsUpdate(doc, update, actor, options = {}) {
   if (!(update instanceof Uint8Array) || update.byteLength > (options.maxBytes ?? MAX_UPDATE_BYTES))
     return fail({ code: "invalid-update" });
-  const scratch = new Y5.Doc();
+  if (!scanUpdate(update, options).ok) return fail({ code: "invalid-update" });
+  const scratch = new Y7.Doc();
   const touched = { rows: /* @__PURE__ */ new Map(), reactions: /* @__PURE__ */ new Set() };
+  const reverts = [];
   try {
-    Y5.applyUpdate(scratch, Y5.encodeStateAsUpdate(doc));
+    Y7.applyUpdate(scratch, Y7.encodeStateAsUpdate(doc));
     scratch.on("afterTransaction", (txn) => collectTouched(scratch, txn, touched));
-    Y5.applyUpdate(scratch, update);
-  } catch {
-    scratch.destroy();
-    return fail({ code: "invalid-update" });
-  }
-  try {
+    Y7.applyUpdate(scratch, update);
     if (scratch.store.pendingStructs !== null || scratch.store.pendingDs !== null)
       return fail({ code: "incomplete-update" });
     const violations = [];
@@ -217,12 +786,15 @@ function validateTeamsUpdate(doc, update, actor, options = {}) {
         const was = beforeMap?.get(rowId);
         const now = afterMap?.get(rowId);
         let found;
-        if (name.startsWith(MESSAGES_PREFIX))
+        if (writesUnsupportedValue(was, now))
+          found = { code: "malformed-row", map: name, key: rowId };
+        else if (name.startsWith(MESSAGES_PREFIX))
           found = checkRow(name, rowId, was, now, actor) ?? checkMessageSize(name, rowId, now, options);
         else if (name.startsWith(PINS_PREFIX))
           found = checkPinRow(name, rowId, was, now, actor, doc);
         else if (name === ROSTER) found = checkRosterRow(rowId, was, now, actor);
         else if (name === CHAT_MEMBERS2) found = checkMemberKey(rowId, beforeMap, afterMap, actor);
+        else if (name === CHATS_MAP) found = checkChatRow(rowId, was, now, actor, reverts);
         else found = checkOwnedRow(name, rowId, was, now, actor);
         if (found) violations.push(found);
       }
@@ -246,7 +818,10 @@ function validateTeamsUpdate(doc, update, actor, options = {}) {
       const found = checkReactionCount(messageId, afterReactions, options);
       if (found) violations.push(found);
     }
-    return violations.length ? { ok: false, violations } : OK;
+    if (violations.length) return { ok: false, violations };
+    return reverts.length ? { ok: true, reverts } : OK;
+  } catch {
+    return fail({ code: "invalid-update" });
   } finally {
     scratch.destroy();
   }
@@ -266,8 +841,15 @@ function validateTeamsSyncMessage(doc, message, actor, options = {}) {
 }
 
 // ../../src/core/teams/protocol.ts
-var PROTOCOL_VERSION = 1;
+var PROTOCOL_VERSION = 2;
 var PROTOCOL_PARAM = "proto";
+var CHAT_ROOM_PATTERN = /^chat-[0-9a-f]{16}-[\w-]+$/u;
+var DIRECT_CHAT_ID_PATTERN = /^dm-[0-9a-f]{32}$/u;
+var GROUP_CHAT_ID_PATTERN = /^g-[0-9a-f]{32}-[0-9a-f]{24}$/u;
+var isCurrentChatId = (id) => DIRECT_CHAT_ID_PATTERN.test(id) || GROUP_CHAT_ID_PATTERN.test(id);
+var isChatRoom = (room) => CHAT_ROOM_PATTERN.test(room);
+var chatIdOfRoom = (room) => isChatRoom(room) ? room.slice("chat-".length + 16 + 1) : null;
+var isChatRoomAlias = (room) => /^chat-[0-9a-f]{16}-/iu.test(room) && !isChatRoom(room);
 function protocolOfUrl(url) {
   const raw = new URL(url, "http://placeholder.invalid").searchParams.get(PROTOCOL_PARAM);
   return raw !== null && /^[1-9]\d{0,5}$/u.test(raw) ? Number(raw) : null;
@@ -275,7 +857,16 @@ function protocolOfUrl(url) {
 export {
   PROTOCOL_PARAM,
   PROTOCOL_VERSION,
+  applyUpdateReverts,
+  chatIdOfRoom,
+  directChatId,
+  isChatRoom,
+  isChatRoomAlias,
+  isCurrentChatId,
+  isGroupChatIdOf,
   protocolOfUrl,
+  scanUpdate,
+  shortHash,
   validateTeamsSyncMessage,
   validateTeamsUpdate
 };

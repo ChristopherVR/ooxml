@@ -1,4 +1,6 @@
+import { definer } from '../../registry';
 import { html, nothing, unsafeCSS, type PropertyValues } from 'lit';
+import { withTokens } from '../../base';
 import { TeamsLitElement } from '../i18n/lit-element';
 import {
 	contentUrl,
@@ -33,7 +35,7 @@ const fileKey = (file: FileEntry): string => JSON.stringify([file.messageId, fil
 
 /** Supported apps configure existing channel content. Creation stays with the owning host/core. */
 export class TeamsAddTabDialog extends TeamsLitElement {
-	static override styles = unsafeCSS(css);
+	static override styles = unsafeCSS(withTokens(css));
 	static override properties = {
 		open: { type: Boolean },
 		client: { attribute: false },
@@ -300,7 +302,4 @@ export class TeamsAddTabDialog extends TeamsLitElement {
 		</dialog>`;
 	}
 }
-export function defineTeamsAddTabDialog(): void {
-	if (!customElements.get('teams-add-tab-dialog'))
-		customElements.define('teams-add-tab-dialog', TeamsAddTabDialog);
-}
+export const defineTeamsAddTabDialog = definer('teams-add-tab-dialog', () => TeamsAddTabDialog);

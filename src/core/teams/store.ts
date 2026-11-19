@@ -26,6 +26,7 @@ import { shouldNotify } from './notifications';
 import { createMessageTransfers, type MessageTransfer } from './message-transfer';
 import { checkFileAbort, withFileAbort, type FileOperationOptions } from './file-transfer';
 import { chatRoomId } from './chats';
+import { PROTOCOL_VERSION } from './protocol';
 import { fileRequestHeaders, uploadTeamsServerFile } from './server-file-storage';
 import type { ChannelTab, TabContent } from './tabs';
 import { channelThreads, type MessageThread } from './threads';
@@ -297,7 +298,12 @@ export interface TeamsClient extends ChatActions, MeetingActions {
 	destroy: () => void;
 }
 
-const STORAGE_DOC = 'teams:doc:';
+const OLD_STORAGE_DOC = 'teams:doc:';
+/**
+ * Snapshots belong to one protocol version. An older one can hold offline changes the server now
+ * refuses, and a refused change would be sent again on every connection.
+ */
+const STORAGE_DOC = `${OLD_STORAGE_DOC}${PROTOCOL_VERSION}:`;
 const STORAGE_READ = 'teams:read:';
 const MAX_SNAPSHOT_CHARS = 3_000_000;
 const TYPING_MS = 4000;
@@ -305,6 +311,7 @@ const TYPING_MS = 4000;
 function restoreDoc(storage: StorageLike | undefined, id: string): Y.Doc {
 	const doc = new Y.Doc();
 	try {
+		if (storage?.getItem(OLD_STORAGE_DOC + id)) storage.setItem(OLD_STORAGE_DOC + id, '');
 		const bytes = fromBase64(storage?.getItem(STORAGE_DOC + id) ?? '');
 		if (bytes) Y.applyUpdate(doc, bytes);
 	} catch {
@@ -593,10 +600,10 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			if (text.length <= MAX_SNAPSHOT_CHARS) storage.setItem(STORAGE_DOC + workspaceId, text);
 			storage.setItem(STORAGE_READ + workspaceId, JSON.stringify(lastRead));
 			storage.setItem(selectionKey, selected);
-			const mine = new Set(ws.chat.chats().map((c) => c.id));
+			const kept = new Set([...ws.chat.chats().map((c) => c.id), ...ws.chat.leavingChats()]);
 			for (const [id, chatDoc] of chatDocs) {
-				// A chat you left is dropped from this device; the rest keep a local copy.
-				const text = mine.has(id) ? toBase64(Y.encodeStateAsUpdate(chatDoc)) : '';
+				// A chat you left is dropped from this device once its room knows; the rest keep a copy.
+				const text = kept.has(id) ? toBase64(Y.encodeStateAsUpdate(chatDoc)) : '';
 				if (text.length <= MAX_SNAPSHOT_CHARS) storage.setItem(chatDocKey(id), text);
 			}
 		} catch {

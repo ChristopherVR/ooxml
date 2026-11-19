@@ -2,7 +2,7 @@
 import { MIN_TOUCH_TARGET_PX, TOUCH_CONTROL_MEDIA } from '../../touch-targets';
 export const FORMULA_BAR_CSS = `
 .xfb{position:relative;display:flex;align-items:stretch;gap:0;min-height:26px;padding:3px 6px;box-sizing:border-box;background:var(--xve-background, var(--office-background, #fff));border-bottom:1px solid var(--xve-border, var(--office-border, #e1dfdd));font:var(--office-font-size,13px)/var(--office-line-height,1.4) var(--xve-font, var(--office-font, system-ui, sans-serif));color:var(--xve-foreground, var(--office-foreground, #252423))}
-.xfb-namebox{position:relative;display:flex;align-items:center;width:110px;flex:none;border:1px solid var(--xve-input, var(--office-border, #c8c6c4));border-radius:var(--xve-radius, var(--office-radius, 2px));background:var(--xve-background, var(--office-background, #fff))}
+.xfb-namebox{position:relative;display:flex;align-items:center;width:110px;flex:none;border:1px solid var(--xve-input, var(--office-control-border, #8a8886));border-radius:var(--xve-radius, var(--office-radius, 2px));background:var(--xve-background, var(--office-background, #fff))}
 .xfb-name{flex:1;min-width:0;border:0;outline:0;background:transparent;color:inherit;font:inherit;padding:0 4px;height:20px}
 .xfb-namebox:focus-within{border-color:var(--xve-ring, var(--office-ring, #217346))}
 .xfb-name-toggle{border:0;background:transparent;color:inherit;width:16px;height:20px;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer}
@@ -17,8 +17,8 @@ export const FORMULA_BAR_CSS = `
 .xfb-cancel,.xfb-enter{display:none}
 .xfb-editing .xfb-cancel,.xfb-editing .xfb-enter{display:flex}
 .xfb-fx i{font-family:Cambria,'Times New Roman',serif;font-size:13px}
-.xfb-input{flex:1;min-width:0;height:20px;border:1px solid transparent;border-radius:var(--xve-radius, var(--office-radius, 2px))}
-.xfb-input:focus-within{border-color:var(--xve-input, var(--office-border, #c8c6c4))}
+.xfb-input{flex:1;min-width:0;height:20px;border:1px solid var(--xve-input, var(--office-control-border, #8a8886));border-radius:var(--xve-radius, var(--office-radius, 2px))}
+.xfb-input:focus-within{border-color:var(--xve-ring, var(--office-ring, #217346))}
 .xfb-expanded .xfb-input{height:76px}
 .xfb-expand{align-self:flex-start;flex:none;margin-left:2px}
 .xfb-expanded .xfb-expand svg{transform:rotate(180deg)}

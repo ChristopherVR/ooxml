@@ -9,6 +9,7 @@ import {
 	mapInlineEditorChord,
 	mapInlineTextFormatKey,
 	placeCaretAt,
+	restoreEditorKeyboardFocus,
 	restoreInlineListBodySelection,
 	takePendingCaretPoint,
 } from 'ooxml-ui/pptx';
@@ -218,7 +219,8 @@ export class InlineListEditorComponent implements AfterViewInit, OnChanges, OnDe
 			// stops the browser opening its bookmark dialog.
 			event.preventDefault();
 			event.stopPropagation();
-			if (chord === 'commit') {
+			// Back to the slide; the blur that causes is the commit.
+			if (chord === 'commit' && !restoreEditorKeyboardFocus(this.editor().nativeElement)) {
 				this.blur();
 			}
 		} else {

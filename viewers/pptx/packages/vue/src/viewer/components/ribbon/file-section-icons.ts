@@ -11,7 +11,7 @@ import {
 	Upload,
 	UserRound,
 	X,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 import type { BackstagePage } from 'ooxml-ui/pptx';
 import type { Component } from 'vue';
 

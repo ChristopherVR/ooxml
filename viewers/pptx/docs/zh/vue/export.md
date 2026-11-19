@@ -64,9 +64,9 @@ const all: string[] = exportAllSlidesToSvg(pptxData, options);
 
 ```vue
 <script setup lang="ts">
-import { ref } from 'vue';
 import { PowerPointViewer, exportSlideToSvg } from 'pptx-vue-viewer';
 import type { PowerPointViewerExpose } from 'pptx-vue-viewer';
+import { ref } from 'vue';
 
 const viewer = ref<PowerPointViewerExpose>();
 

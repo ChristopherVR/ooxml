@@ -53,6 +53,8 @@ With that preview running, `bun run test:demos` checks all 23 built framework de
 
 `bun run test:suite:simple-view` checks the default layout (the bar, the More menu, slide navigation, the ribbon coming back without a reload, the remembered PowerPoint ribbon mode); the other suite checks start in the ribbon layout through `scripts/suite-check-init.mjs`, because they press its controls. Run `bun run test:suite` against the preview URL (default localhost:8128, override with `SUITE_URL`; the preview above listens on 8123, so set `SUITE_URL` to match it). The browser check uses actual editors and round-trips downloaded files. Only the external AI provider is stubbed; it asserts the supplied Word and Excel context, applies a proposal and undoes it. Unit tests cover package preservation, missing embedded targets, atomic storage conflicts, presentation text edits and Teams host events.
 
+`bun run test:suite:requests` (default `SUITE_URL` http://127.0.0.1:8123, the preview's port) reads the request list of the start page, the home, each product landing page and New in each app: the page links one stylesheet, the landing pages load neither the Teams core nor the package tooling, and New loads neither the automation bundle nor the SmartArt definitions. The build serves the shell styles in `site/` as one content-hashed `shell-<hash>.css` (`scripts/shell-css.mjs`); `themes.css` also stays on its own for the docs hub and the not-found page.
+
 ## Boundaries
 
 Ordinary imported files are local to the current browser/WebView profile. A host-configured OneDrive

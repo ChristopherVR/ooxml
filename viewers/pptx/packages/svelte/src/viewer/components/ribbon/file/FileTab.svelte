@@ -19,7 +19,7 @@
 	import Share2 from '@lucide/svelte/icons/share-2';
 	import Type from '@lucide/svelte/icons/type';
 	import Video from '@lucide/svelte/icons/video';
-	import { BACKSTAGE_NAV, BACKSTAGE_TEMPLATES, backstageCardsFor, backstageNavEntries, customizeBackstageCards, formatBackstageDate, formatBackstageSize, isActionHidden, listBackstageRecentFiles, CLOUD_OPEN_ACCEPT, openPlacesLabels } from 'ooxml-ui/pptx';
+	import { activateBackstage, BACKSTAGE_NAV, BACKSTAGE_TEMPLATES, backstageCardsFor, backstageNavEntries, customizeBackstageCards, formatBackstageDate, formatBackstageSize, isActionHidden, listBackstageRecentFiles, CLOUD_OPEN_ACCEPT, openPlacesLabels } from 'ooxml-ui/pptx';
 	import type { CloudOpenedFile, ViewerRegionContext, AccountAuthConfig, BackstageCardId, BackstagePage, BackstageRecentFile, ToolbarActionId } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../../i18n/context';
 	import { useViewerCustomization } from '../../../state/viewer-customization.svelte';
@@ -45,6 +45,10 @@
 	const pageId = $derived<string>(nav.some((item) => item.id === requestedPage) ? requestedPage : (nav.find((item) => item.id === 'home') ?? nav[0])?.id ?? 'home');
 	const hostEntry = $derived(nav.find((item) => item.id === pageId)?.host);
 	// The built-in page id; a host page has none (its body is a region), so it reads as 'home' only for typing.
+	// The backstage covers the viewer: focus goes in, stays in, and Escape goes back to File.
+	function modalFocus(node: HTMLElement): { destroy(): void } {
+		return { destroy: activateBackstage(node, () => onclose()) };
+	}
 	const page = $derived<BackstagePage>(hostEntry ? 'close' : (pageId as BackstagePage));
 	const bodyRenderer = $derived(hostEntry ? hostEntry.render : customization.regionRenderer(`backstage.${page}`));
 	// File > Open places: "This device" plus one per host `fileProviders` entry (none: the page stays as it was).
@@ -67,7 +71,7 @@
 	const navLabel = (item: (typeof nav)[number]): string => (item.host ? item.label : t(item.labelKey ?? ''));
 </script>
 
-<div class="bs" role="dialog" aria-modal="true" aria-label={t('pptx.backstage.title')}>
+<div class="bs" role="dialog" aria-modal="true" aria-label={t('pptx.backstage.title')} use:modalFocus>
 	<aside><div class="back-row"><button class="back" type="button" aria-label={t('pptx.backstage.back')} onclick={onclose}><BackstageNavIcon page="back" /></button></div><nav>
 		{#each nav.filter((item) => item.group !== 'footer') as item}<button type="button" data-pptx-backstage-nav-item aria-current={pageId === item.id ? 'page' : undefined} class:active={pageId === item.id} onclick={() => select(item.id)}><span>{#if !item.host}<BackstageNavIcon page={item.id as BackstagePage} />{/if}</span>{navLabel(item)}</button>{/each}<i></i>
 		{#each nav.filter((item) => item.group === 'footer') as item}<button type="button" data-pptx-backstage-nav-item aria-current={pageId === item.id ? 'page' : undefined} class:active={pageId === item.id} onclick={() => select(item.id)}><span>{#if !item.host}<BackstageNavIcon page={item.id as BackstagePage} />{/if}</span>{navLabel(item)}</button>{/each}

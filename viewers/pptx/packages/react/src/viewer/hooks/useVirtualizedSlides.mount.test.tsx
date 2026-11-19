@@ -33,10 +33,14 @@ function rail(): HTMLDivElement {
 	return el;
 }
 
-function scrollTo(el: HTMLDivElement, top: number): void {
-	act(() => {
+/** Scroll, then let the frame the window reads scroll in run. */
+async function scrollTo(el: HTMLDivElement, top: number): Promise<void> {
+	await act(async () => {
 		el.scrollTop = top;
 		el.dispatchEvent(new Event('scroll'));
+		await new Promise<void>((resolve) => {
+			requestAnimationFrame(() => resolve());
+		});
 	});
 }
 
@@ -52,18 +56,44 @@ afterEach(() => {
 });
 
 describe('useVirtualizedSlides with a late container', () => {
-	it('tracks a container that mounts after the first render', () => {
+	it('re-renders once per frame of scrolling, and only when rows change', async () => {
+		let renders = 0;
+		function Counted(): React.ReactElement {
+			const v = useVirtualizedSlides({ totalItems: 112, itemHeight: 100, overscan: 2 });
+			renders += 1;
+			range = { startIndex: v.startIndex };
+			return <div data-testid='rail' ref={v.scrollContainerRef} />;
+		}
+		act(() => root.render(<Counted />));
+		const el = rail();
+		const settled = renders;
+		await act(async () => {
+			for (const top of [3000, 3010, 3020, 3030]) {
+				el.scrollTop = top;
+				el.dispatchEvent(new Event('scroll'));
+			}
+			await new Promise<void>((resolve) => {
+				requestAnimationFrame(() => resolve());
+			});
+		});
+		expect(renders - settled).toBe(1);
+		expect(range.startIndex).toBe(28);
+		await scrollTo(el, 3040);
+		expect(renders - settled).toBe(1);
+	});
+
+	it('tracks a container that mounts after the first render', async () => {
 		act(() => root.render(<Rail open={false} />));
 		act(() => root.render(<Rail open />));
-		scrollTo(rail(), 5000);
+		await scrollTo(rail(), 5000);
 		expect(range.startIndex).toBeGreaterThan(40);
 	});
 
-	it('follows a container that is closed and reopened', () => {
+	it('follows a container that is closed and reopened', async () => {
 		act(() => root.render(<Rail open />));
 		act(() => root.render(<Rail open={false} />));
 		act(() => root.render(<Rail open />));
-		scrollTo(rail(), 8000);
+		await scrollTo(rail(), 8000);
 		expect(range.startIndex).toBeGreaterThan(70);
 	});
 });

@@ -27,10 +27,11 @@ import type { PptxElement, PptxImageEffects } from 'ooxml-core/pptx';
 import { isImageLikeElement } from 'ooxml-core/pptx';
 
 import { getPatternTile } from './fill-style';
+import { svgIdToken } from './svg-id';
 
 /** Stable SVG filter ID for a blip fill-overlay effect on an element. */
 export function getImageFillOverlayFilterId(elementId: string): string {
-	return `imgoverlay-${elementId}`;
+	return `imgoverlay-${svgIdToken(elementId)}`;
 }
 
 /** Map an OOXML `a:fillOverlay/@blend` token to an SVG `feBlend` `mode`. */

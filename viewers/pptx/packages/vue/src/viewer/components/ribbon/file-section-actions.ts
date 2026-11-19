@@ -15,7 +15,7 @@ import {
 	ShieldAlert,
 	Type,
 	Video,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 import {
 	backstageCardsFor,
 	customizeBackstageCards,
@@ -33,7 +33,7 @@ import type { FileSectionProps } from './file-section-types';
 
 /**
  * `[titleKey, bodyKey, icon, onClick, titleFallback, bodyFallback]` action card
- * shown on a backstage page. The icon is a `lucide-vue-next` component, picked
+ * shown on a backstage page. The icon is a `@lucide/vue` component, picked
  * to match the `react-icons/lu` glyph React renders for the same card.
  */
 export type FileSectionAction = readonly [

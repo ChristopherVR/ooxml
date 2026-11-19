@@ -29,6 +29,38 @@ const guard = (fn: () => Value): Value => {
 	}
 };
 
+/** Aggregates whose result depends on nothing but the values of their arguments. */
+const RANGE_AGGREGATES: ReadonlySet<string> = new Set([
+	'SUM',
+	'PRODUCT',
+	'COUNT',
+	'COUNTA',
+	'AVERAGE',
+	'MAX',
+	'MIN',
+	'MEDIAN',
+]);
+
+/** Smaller ranges are summed faster than a shared result could be looked up. */
+const MIN_MEMOIZED_CELLS = 64;
+
+/** Identifies an aggregate over ranges large enough for its result to be worth sharing. */
+function aggregateKey(spec: FunctionSpec, args: readonly Value[]): string | undefined {
+	if (!args.length || !RANGE_AGGREGATES.has(spec.name)) return undefined;
+	let cells = 0;
+	for (const arg of args) {
+		if (!(arg instanceof RefValue)) return undefined;
+		for (const { range } of arg.areas)
+			cells += (range.end.row - range.start.row + 1) * (range.end.col - range.start.col + 1);
+	}
+	if (cells < MIN_MEMOIZED_CELLS) return undefined;
+	let key = spec.name;
+	for (const arg of args as readonly RefValue[])
+		for (const { sheet, range } of arg.areas)
+			key += `|${sheet}:${range.start.row}:${range.start.col}:${range.end.row}:${range.end.col}`;
+	return key;
+}
+
 /** Evaluates a function call node. */
 export function callFunction(node: Extract<FormulaAst, { type: 'call' }>, frame: Frame): Value {
 	const local = frame.scope?.get(normalizeLocalName(node.rawName));
@@ -75,7 +107,9 @@ export function callFunction(node: Extract<FormulaAst, { type: 'call' }>, frame:
 		if (node.args[i]?.type === 'missing' && fallback !== undefined)
 			args[i] = typeof fallback === 'function' ? guard(() => fallback(args, ctx)) : fallback;
 	}
-	return applyFunction(spec, args, ctx);
+	const key = frame.host.memoized ? aggregateKey(spec, args) : undefined;
+	const apply = () => applyFunction(spec, args, ctx);
+	return key ? (frame.host.memoized?.(key, apply) ?? apply()) : apply();
 }
 
 /** Calls a function implementation, lifting it over arrays passed to `value` parameters. */

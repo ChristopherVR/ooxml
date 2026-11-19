@@ -28,6 +28,7 @@ Todos los adaptadores aceptan las mismas propiedades:
 - `showToolbar`: visibilidad de la barra de herramientas
 - `canEdit`: permiso de edición. El visor completo es editable por defecto; `false` lo deja en solo lectura (la selección, la búsqueda, el zoom y la exportación siguen funcionando). Los bloques de construcción son de solo lectura por defecto, consulte [bloques de construcción](/es/building-blocks)
 - `readOnly`: una restricción propia. `true` hace el dibujo de solo lectura y prevalece sobre `canEdit`; `false` u omitido levanta únicamente esa restricción
+- `locale`: idioma de la interfaz, como `fr` o `zh-CN`. Si se omite, el visor usa el idioma elegido en Archivo > Opciones, luego `lang`, el idioma de la página y el del navegador
 - `ribbonAddIns`: pestañas que el anfitrión añade después de Ayuda (consulte [Pestañas de complementos de la cinta](/es/api#ribbon-add-in-tabs))
 - `collaboration`: comparte el dibujo abierto en una sala mientras esté definido; `null` lo deja (consulte [colaboración](/es/collaboration))
 - `storage` y `customization`: guardado y apertura gestionados por el anfitrión, y el objeto de personalización compartido (consulte [Personalización](/es/api#customization) y [Almacenamiento gestionado por el anfitrión](/api#host-owned-storage-and-file-commands))

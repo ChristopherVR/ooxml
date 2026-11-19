@@ -16,6 +16,7 @@ import {
 	patchTableMargins,
 } from './write-table-properties';
 import { orderChildren } from './element-order';
+import { replaceSlots } from './write-slots';
 import { children, first, makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml';
 
 export type ParagraphWriter = (
@@ -24,12 +25,6 @@ export type ParagraphWriter = (
 	node: XmlElement,
 	base?: Paragraph,
 ) => XmlElement;
-export type SlotsWriter = (
-	doc: XmlDocument,
-	parent: XmlElement,
-	old: XmlElement[],
-	next: XmlElement[],
-) => void;
 /** Writes the tables nested in a surviving cell back into that cell's source XML. */
 export type NestedWriter = (
 	doc: XmlDocument,
@@ -128,7 +123,6 @@ export function writeRestructuredTable(
 	node: XmlElement,
 	base: Table,
 	writeParagraph: ParagraphWriter,
-	replaceSlots: SlotsWriter,
 	writeNested: NestedWriter,
 ): XmlElement {
 	if (table.rows.some((row) => !row.length || row.some((cell) => !cell.paragraphs.length)))
@@ -194,14 +188,14 @@ export function writeRestructuredTable(
 					: makeW(doc, 'p');
 				return writeParagraph(doc, paragraph, element, found?.model);
 			});
-			replaceSlots(doc, tc, oldParagraphs, nextParagraphs);
+			replaceSlots(tc, oldParagraphs, nextParagraphs);
 			if (reuse) writeNested(doc, tc, cell, reuse.model);
 			return tc;
 		});
-		replaceSlots(doc, tr, sourceRow === undefined ? [] : (oldCells[sourceRow] ?? []), nextCells);
+		replaceSlots(tr, sourceRow === undefined ? [] : (oldCells[sourceRow] ?? []), nextCells);
 		return tr;
 	});
-	replaceSlots(doc, node, oldRows, nextRows);
+	replaceSlots(node, oldRows, nextRows);
 	patchTableMargins(doc, table, node, base);
 	patchGrid(doc, node, table);
 	return node;

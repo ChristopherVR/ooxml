@@ -60,6 +60,8 @@ Die anderen Frameworks verwenden dieselben Optionen: siehe die [Framework-Leitf�
 
 Die Komponenten-Referenz (oder das Vanilla-Handle) stellt `load(bytes)` und `save()` bereit. Beim Laden werden DOCX und das ältere `.doc` erkannt. Passwortgeschützte Dateien werden nur über `loadDocument(bytes, { password })` aus `ooxml-core/docx/load` geöffnet; `load()` des Elements nimmt kein Passwort entgegen und meldet eine solche Datei daher als `document-error`.
 
+Das Laden ist durch Größengrenzen gegen Zip-Bomben begrenzt: 50 MiB komprimiert, 5.000 Teile, 200 MiB entpackt und 25 MiB für `word/document.xml`. Ein Host, der größere Dokumente erwartet, übergibt `limits` an `loadDocx(bytes, { limits })` oder `loadDocument(bytes, { limits })`, zum Beispiel `{ maxDocumentPartBytes: 100 * 1024 * 1024 }`; `DEFAULT_DOCX_LOAD_LIMITS` nennt die Vorgaben, und beim Speichern gelten die Grenzen, mit denen das Dokument geladen wurde.
+
 ```ts
 const bytes = new Uint8Array(await file.arrayBuffer());
 await editor.load(bytes);

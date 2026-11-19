@@ -1,40 +1,40 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+// @vitest-environment jsdom
+import { describe, expect, it } from 'vitest';
 
 import { elementIdSelector, escapeCssAttributeValue } from './css-escape';
 
+const HOSTILE_IDS = [
+	'a"b',
+	'trailing\\',
+	'\\"',
+	"it's",
+	'line\nbreak',
+	'x"],[data-other="y',
+	'</style><i data-injected="1">',
+];
+
 describe('escapeCssAttributeValue', () => {
-	afterEach(() => {
-		vi.unstubAllGlobals();
-	});
-
-	it('prefers CSS.escape when the platform provides it', () => {
-		const escape = vi.fn((value: string) => `<${value}>`);
-		vi.stubGlobal('CSS', { escape });
-		expect(escapeCssAttributeValue('shape-1')).toBe('<shape-1>');
-		expect(escape).toHaveBeenCalledWith('shape-1');
-	});
-
-	it('escapes the quote in the fallback', () => {
-		vi.stubGlobal('CSS', undefined);
-		expect(escapeCssAttributeValue('a"b')).toBe('a\\"b');
-	});
-
-	it('escapes the backslash in the fallback so it cannot swallow the closing quote', () => {
-		vi.stubGlobal('CSS', undefined);
-		expect(escapeCssAttributeValue('a\\')).toBe('a\\\\');
-		// Escaping in one pass: the backslash added for the quote is not re-escaped.
-		expect(escapeCssAttributeValue('\\"')).toBe('\\\\\\"');
-	});
-
-	it('leaves ordinary ids untouched in the fallback', () => {
-		vi.stubGlobal('CSS', undefined);
+	it('leaves ordinary ids untouched', () => {
 		expect(escapeCssAttributeValue('ppt/slides/slide1.xml-shape-9')).toBe(
 			'ppt/slides/slide1.xml-shape-9',
 		);
 	});
 
-	it('builds the data-element-id selector', () => {
-		vi.stubGlobal('CSS', undefined);
-		expect(elementIdSelector('x"y')).toBe('[data-element-id="x\\"y"]');
+	it('leaves nothing an HTML parser or a CSS string would act on', () => {
+		for (const id of HOSTILE_IDS) {
+			expect(escapeCssAttributeValue(id)).not.toMatch(/["'<>&\n]/u);
+		}
+	});
+
+	it('selects exactly the element carrying the original id', () => {
+		for (const id of HOSTILE_IDS) {
+			const root = document.createElement('div');
+			const target = document.createElement('div');
+			target.setAttribute('data-element-id', id);
+			const other = document.createElement('div');
+			other.setAttribute('data-element-id', 'other');
+			root.append(other, target);
+			expect(root.querySelector(elementIdSelector(id))).toBe(target);
+		}
 	});
 });

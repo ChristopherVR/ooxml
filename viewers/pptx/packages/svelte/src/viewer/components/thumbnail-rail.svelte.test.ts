@@ -1,3 +1,4 @@
+import { editorThumbnailStep } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -153,6 +154,36 @@ describe('thumbnailRail', () => {
 		};
 		expect(target.querySelector('[data-virtualized="true"]')).toBeTruthy();
 		expect(target.querySelectorAll('.pptx-svelte-thumb').length).toBeLessThan(30);
+	});
+
+	it('follows scrolling in the next frame, building the rows that entered', async () => {
+		const target = document.createElement('div');
+		document.body.appendChild(target);
+		const instance = mount(ThumbnailRail, {
+			target,
+			props: {
+				slides: manySlides(100),
+				canvasSize: { width: 960, height: 540 },
+				mediaDataUrls: new Map(),
+				current: 0,
+				onselect: vi.fn(),
+			},
+		});
+		flushSync();
+		cleanup = () => {
+			unmount(instance);
+			target.remove();
+		};
+		const list = target.querySelector<HTMLElement>('[data-pptx-chrome="slide-list"]')!;
+		expect(target.querySelector('[aria-label="Go to slide 61"]')).toBeNull();
+		list.scrollTop = 59 * editorThumbnailStep(960, 540);
+		list.dispatchEvent(new Event('scroll'));
+		await new Promise<void>((resolve) => {
+			requestAnimationFrame(() => resolve());
+		});
+		flushSync();
+		expect(target.querySelector('[aria-label="Go to slide 61"]')).not.toBeNull();
+		expect(target.querySelector('[aria-label="Go to slide 1"]')).toBeNull();
 	});
 
 	it('renders section headers and forwards section actions', () => {

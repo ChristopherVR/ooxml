@@ -1,4 +1,4 @@
-import type { VisioDocument, VisioShape } from 'ooxml-core/visio';
+import type { VisioDocument, VisioPage, VisioShape } from 'ooxml-core/visio';
 import type { ViewerState } from './controller';
 import { compatibilityNotes, compatibilityText } from 'ooxml-core/visio/ui';
 import type { TextSearchResult } from 'ooxml-core/visio/ui';
@@ -20,12 +20,17 @@ export class ViewerCanvas {
 	#revealed: TextSearchResult | undefined;
 	#inspected: VisioShape | undefined;
 	#warnings: string[] = [];
+	/** The paper and zoom the page was last sized for. */
+	#sized: { svg: SVGSVGElement; zoom: number } | undefined;
 	#dispose: () => void = () => {};
 	constructor(
 		private readonly viewport: HTMLElement,
 		private readonly notes: HTMLUListElement,
 		private readonly notesPanel: HTMLElement,
 		private readonly inspector: HTMLElement,
+		/** Wording for a connector's description, in the viewer's language. */
+		private readonly connectorText: (from: string, to: string) => string = (from, to) =>
+			`Connects ${from} to ${to}`,
 	) {}
 	get warnings(): readonly string[] {
 		return this.#warnings;
@@ -43,6 +48,48 @@ export class ViewerCanvas {
 		this.#selection = null;
 		this.#selections = undefined;
 	}
+	/** The shape holding keyboard focus, so a redraw can hand focus to its replacement. */
+	#focusedShape(): { id: string; pageId: string | undefined } | null {
+		const root = this.viewport.getRootNode() as Document | ShadowRoot;
+		const active = root.activeElement;
+		const shape =
+			active instanceof SVGElement && this.viewport.contains(active)
+				? active.closest<SVGGElement>('[data-shape-id]')
+				: null;
+		return shape ? { id: shape.dataset.shapeId!, pageId: shape.dataset.pageId } : null;
+	}
+	/** Focus the redrawn shape, or the canvas when the shape is gone, so the keyboard stays here. */
+	#restoreFocus(focused: { id: string; pageId: string | undefined }): void {
+		const shape = Array.from(this.viewport.querySelectorAll<SVGGElement>('[data-shape-id]')).find(
+			(node) => node.dataset.shapeId === focused.id && node.dataset.pageId === focused.pageId,
+		);
+		if (shape) shape.setAttribute('tabindex', '0');
+		(shape ?? this.viewport).focus({ preventScroll: true });
+	}
+	/** Tell assistive technology what each connector joins, from the page's connections. */
+	#describeConnectors(page: VisioPage): void {
+		const shapes = new Map(
+			Array.from(this.viewport.querySelectorAll<SVGGElement>('[data-shape-id]'), (node) => [
+				node.dataset.shapeId!,
+				node,
+			]),
+		);
+		const label = (id: string | undefined) =>
+			id ? shapes.get(id)?.getAttribute('aria-label') : null;
+		const ends = new Map<string, { begin?: string; end?: string }>();
+		for (const link of page.connectors) {
+			const entry = ends.get(link.fromShapeId) ?? {};
+			if (/^Begin/iu.test(link.fromCell)) entry.begin = link.toShapeId;
+			else if (/^End/iu.test(link.fromCell)) entry.end = link.toShapeId;
+			ends.set(link.fromShapeId, entry);
+		}
+		for (const [id, { begin, end }] of ends) {
+			const from = label(begin);
+			const to = label(end);
+			if (from && to)
+				shapes.get(id)?.setAttribute('aria-description', this.connectorText(from, to));
+		}
+	}
 	/** Returns true when the page itself was re-rendered. */
 	render(state: ViewerState): boolean {
 		const page = state.document?.pages[state.pageIndex];
@@ -51,6 +98,7 @@ export class ViewerCanvas {
 			this.#document !== state.document ||
 			this.#page !== state.pageIndex ||
 			this.#layers !== state.layerVisibilityOverrides;
+		const focused = changed ? this.#focusedShape() : null;
 		if (changed) {
 			this.#dispose();
 			this.#dispose = () => {};
@@ -65,6 +113,7 @@ export class ViewerCanvas {
 				this.#warnings = result.warnings;
 				this.#dispose = result.dispose;
 				this.viewport.replaceChildren(result.svg);
+				this.#describeConnectors(page);
 			} else {
 				const empty = doc.createElement('div');
 				empty.className = 'empty';
@@ -87,7 +136,9 @@ export class ViewerCanvas {
 			this.notesPanel.hidden = !notes.length;
 		}
 		const svg = this.viewport.querySelector<SVGSVGElement>('svg.paper');
-		if (svg && page) {
+		// Only a new page or zoom resizes: a custom property write restyles every shape.
+		if (svg && page && (changed || svg !== this.#sized?.svg || state.zoom !== this.#sized.zoom)) {
+			this.#sized = { svg, zoom: state.zoom };
 			svg.style.width = `${page.width * 96 * state.zoom}px`;
 			svg.style.height = `${page.height * 96 * state.zoom}px`;
 			// Viewer-only grid spacing: quarter-inch minor and one-inch major lines.
@@ -97,6 +148,7 @@ export class ViewerCanvas {
 			svg.style.setProperty('--vv-hairline', String(1 / (96 * state.zoom)));
 		}
 		this.#mark(state, changed);
+		if (focused) this.#restoreFocus(focused);
 		return changed;
 	}
 	#mark(state: ViewerState, changed: boolean): void {

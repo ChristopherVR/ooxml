@@ -28,6 +28,7 @@ import { drawingShapeFillOpacity, drawingShapeLabelColor } from './smartart-draw
 import type { DrawingViewBox } from './smartart-drawing-viewbox';
 import { styleShadow, styleStroke } from './smartart-layout-helpers';
 import { getPresetShapeVectorGeometry } from './stroke-outline';
+import { svgIdToken } from './svg-id';
 import type { SvgTextLine } from './svg-text-lines';
 import { centeredSvgTextLines } from './svg-text-lines';
 import { smartArtPictureImage, needsSmartArtPictureRefresh } from './smartart-picture-image';
@@ -221,7 +222,7 @@ export function projectDrawingShapes(
 	return shapes.map((shape, i): RenderedShape => {
 		const gradient = shape.fillNone
 			? undefined
-			: resolveDrawingShapeGradient(shape, `${elementId}-dspgrad-${shape.id}-${i}`);
+			: resolveDrawingShapeGradient(shape, svgIdToken(`${elementId}-dspgrad-${shape.id}-${i}`));
 		// Precedence: authored transparency, then gradient, then a pattern's
 		// foreground (the closest flat stand-in for one), then solid, then palette.
 		const fill = shape.fillNone

@@ -20,6 +20,15 @@ export const LOCALES = [
 	['zh-CN', '简体中文'],
 ];
 
+/** Languages written right to left, for the page direction. */
+const RTL_LANGUAGES = new Set(['ar', 'fa', 'he', 'ps', 'ur', 'yi']);
+
+/** The display language of the workspace: `lang` and `dir` for the page and the editor hosts. */
+export function displayLanguage(s = current) {
+	const lang = s.locale === 'auto' ? 'en' : s.locale;
+	return { lang, dir: RTL_LANGUAGES.has(lang.split('-')[0]) ? 'rtl' : 'ltr' };
+}
+
 /** Corner styles: the workspace's control and panel radii, and the editors' radius. */
 export const CORNERS = {
 	square: { control: 0, panel: 0, label: 'Square' },
@@ -42,6 +51,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
 	corners: 'rounded',
 	reduceMotion: false,
 	confirmClose: true,
+	searchShortcut: true,
 });
 
 const choices = {
@@ -155,6 +165,9 @@ export function applyWorkspaceSettings(root = globalThis.document?.documentEleme
 		else root.style.removeProperty(name);
 	root.classList.toggle('reduce-motion', s.reduceMotion);
 	if (s.reduceMotion) root.classList.remove('theme-anim');
+	const { lang, dir } = displayLanguage(s);
+	root.lang = lang;
+	root.dir = dir;
 }
 
 // Another tab of the suite changed a setting.

@@ -242,8 +242,8 @@ describe('buildConnectorGeometry', () => {
 
 	it('sanitises the element id for marker ids', () => {
 		const geo = buildConnectorGeometry(connector({ id: 'cxn 1' }), 0);
-		expect(geo.startMarkerId).toBe('cxn_1-start');
-		expect(geo.endMarkerId).toBe('cxn_1-end');
+		expect(geo.startMarkerId).toBe('cxn_20_1-start');
+		expect(geo.endMarkerId).toBe('cxn_20_1-end');
 	});
 
 	it('returns null markers when no arrows are set', () => {
@@ -262,9 +262,9 @@ describe('buildConnectorGeometry', () => {
 		expect(geo.endMarker).not.toBeNull();
 		expect(geo.endMarker!.shape).toBe('path');
 		expect(geo.endMarkerRef).toContain('url(#');
-		// id is sanitised from the element id ("cxn 1" → "cxn_1")
-		expect(geo.endMarkerId).toBe('cxn_1-end');
-		expect(geo.endMarkerRef).toContain('cxn_1-end');
+		// id is sanitised from the element id ("cxn 1" → "cxn_20_1")
+		expect(geo.endMarkerId).toBe('cxn_20_1-end');
+		expect(geo.endMarkerRef).toContain('cxn_20_1-end');
 	});
 
 	it('omits markers when arrows are "none"', () => {

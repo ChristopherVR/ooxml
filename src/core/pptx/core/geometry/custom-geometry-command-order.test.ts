@@ -4,6 +4,7 @@ import { PptxRuntimeDependencyFactory } from '../core/factories/PptxRuntimeDepen
 import type { XmlObject } from '../types';
 import { customGeometryPathsToXml } from './custom-geometry';
 import {
+	annotateCustomGeometryCommandOrder,
 	orderedPathCommandEntries,
 	readPathListCommandOrder,
 	restorePathListCommandOrder,
@@ -127,5 +128,28 @@ describe('custom geometry command order', () => {
 			expect(readPathListCommandOrder(undefined)).toBeUndefined();
 			expect(readPathListCommandOrder({ 'a:path': { 'a:moveTo': {} } })).toBeUndefined();
 		});
+	});
+});
+
+/** Best of three runs, in milliseconds. */
+function timed(run: () => unknown): number {
+	let best = Number.POSITIVE_INFINITY;
+	for (let attempt = 0; attempt < 3; attempt++) {
+		const start = performance.now();
+		run();
+		best = Math.min(best, performance.now() - start);
+	}
+	return best;
+}
+
+describe('custom geometry source order scan', () => {
+	it('is linear in empty custom geometries that never close', () => {
+		const run = (count: number) => () =>
+			annotateCustomGeometryCommandOrder(
+				`<p:spTree>${'<a:custGeom/>'.repeat(count)}</p:spTree>`,
+				{},
+			);
+		// Four times the input: about four times the time when linear, sixteen when quadratic.
+		expect(timed(run(80_000)) / timed(run(20_000))).toBeLessThan(8);
 	});
 });

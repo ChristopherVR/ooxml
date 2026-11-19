@@ -24,7 +24,7 @@ import {
 	getOleTypeColor,
 	getOleTypeLabel,
 	getPlaceholderStyle,
-	isBrowserOpenableMime,
+	isBrowserOpenableDataUrl,
 	oleActionsVisibleFor,
 	resolveOleType,
 } from './ole-renderer-helpers';
@@ -521,48 +521,50 @@ describe('formatBytes', () => {
 });
 
 // ==========================================================================
-// isBrowserOpenableMime
+// isBrowserOpenableDataUrl
 // ==========================================================================
 
-describe('isBrowserOpenableMime', () => {
+describe('isBrowserOpenableDataUrl', () => {
 	it('returns false for undefined or empty', () => {
-		expect(isBrowserOpenableMime(undefined)).toBeFalsy();
-		expect(isBrowserOpenableMime('')).toBeFalsy();
+		expect(isBrowserOpenableDataUrl(undefined)).toBeFalsy();
+		expect(isBrowserOpenableDataUrl('')).toBeFalsy();
 	});
 
 	it('opens PDF', () => {
-		expect(isBrowserOpenableMime('application/pdf')).toBeTruthy();
+		expect(isBrowserOpenableDataUrl('data:application/pdf,x')).toBeTruthy();
 	});
 
 	it('opens raster image types', () => {
-		expect(isBrowserOpenableMime('image/png')).toBeTruthy();
+		expect(isBrowserOpenableDataUrl('data:image/png,x')).toBeTruthy();
 	});
 
 	it('opens plain text types', () => {
-		expect(isBrowserOpenableMime('text/plain')).toBeTruthy();
+		expect(isBrowserOpenableDataUrl('data:text/plain,x')).toBeTruthy();
 	});
 
 	it('opens common application text formats', () => {
-		expect(isBrowserOpenableMime('application/json')).toBeTruthy();
+		expect(isBrowserOpenableDataUrl('data:application/json,x')).toBeTruthy();
 	});
 
 	it('refuses scriptable types that would run in the opener origin', () => {
-		expect(isBrowserOpenableMime('image/svg+xml')).toBeFalsy();
-		expect(isBrowserOpenableMime('text/html')).toBeFalsy();
-		expect(isBrowserOpenableMime('application/xml')).toBeFalsy();
-		expect(isBrowserOpenableMime('application/xhtml+xml')).toBeFalsy();
+		expect(isBrowserOpenableDataUrl('data:image/svg+xml,x')).toBeFalsy();
+		expect(isBrowserOpenableDataUrl('data:text/html,x')).toBeFalsy();
+		expect(isBrowserOpenableDataUrl('data:application/xml,x')).toBeFalsy();
+		expect(isBrowserOpenableDataUrl('data:application/xhtml+xml,x')).toBeFalsy();
 	});
 
 	it('does not open binary office formats', () => {
 		expect(
-			isBrowserOpenableMime('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+			isBrowserOpenableDataUrl(
+				'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,x',
+			),
 		).toBeFalsy();
-		expect(isBrowserOpenableMime('application/octet-stream')).toBeFalsy();
+		expect(isBrowserOpenableDataUrl('data:application/octet-stream,x')).toBeFalsy();
 	});
 
-	it('is case-insensitive and ignores charset parameters', () => {
-		expect(isBrowserOpenableMime('TEXT/Plain; charset=UTF-8')).toBeTruthy();
-		expect(isBrowserOpenableMime('Application/PDF')).toBeTruthy();
+	it('reads the type from the URL, case-insensitively', () => {
+		expect(isBrowserOpenableDataUrl('data:TEXT/Plain;charset=UTF-8,x')).toBeTruthy();
+		expect(isBrowserOpenableDataUrl('data:Application/PDF,x')).toBeTruthy();
 	});
 });
 

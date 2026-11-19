@@ -14,13 +14,7 @@
  * @module render/canvas-element-node
  */
 
-function idSelector(elementId: string): string {
-	const escaped =
-		typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
-			? CSS.escape(elementId)
-			: elementId.replace(/["\\]/gu, '\\$&');
-	return `[data-element-id="${escaped}"]`;
-}
+import { elementIdSelector } from './css-escape';
 
 /**
  * The main-canvas node for `elementId`, else (unless `canvasOnly`) the first
@@ -33,7 +27,7 @@ export function findCanvasElementNode(
 	elementId: string,
 	options: { canvasOnly?: boolean } = {},
 ): HTMLElement | null {
-	const selector = idSelector(elementId);
+	const selector = elementIdSelector(elementId);
 	const onCanvas = root.querySelector<HTMLElement>(`[data-pptx-viewport] ${selector}`);
 	if (onCanvas || options.canvasOnly) {
 		return onCanvas;

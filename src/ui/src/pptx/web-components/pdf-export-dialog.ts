@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import {
 	initialPdfExportChoice,
 	resolvePdfExportSelection,
@@ -261,5 +262,5 @@ export function definePptxPdfExportDialog(registry: CustomElementRegistry): void
 		}
 	}
 
-	registry.define('pptx-ui-pdf-export-dialog', PdfExportDialog);
+	defineElement(registry, 'pptx-ui-pdf-export-dialog', PdfExportDialog);
 }

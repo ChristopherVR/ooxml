@@ -6,8 +6,8 @@ import { darkTheme, lightTheme } from 'ooxml-core/docx/ui';
 import { THEME_KEYS, themeToCssVars } from 'ooxml-core/docx/ui';
 
 describe('theme tokens', () => {
-	it('mirrors pptx-viewer semantics: 19 color tokens plus radius, set in both presets', () => {
-		expect(THEME_KEYS).toHaveLength(20);
+	it('mirrors pptx-viewer semantics: 20 color tokens plus radius, set in both presets', () => {
+		expect(THEME_KEYS).toHaveLength(21);
 		for (const preset of [lightTheme, darkTheme])
 			for (const key of THEME_KEYS) expect(preset[key], key).toBeTruthy();
 	});
@@ -34,7 +34,7 @@ describe('theme tokens', () => {
 		);
 		expect(themeTokenText).not.toMatch(/--dve-[a-z-]+:/);
 		expect(themeTokenText).not.toMatch(/--office-[a-z-]+:/);
-		expect(themeTokenText).toContain('color-scheme:inherit');
+		expect(themeTokenText).toContain('color-scheme:var(--office-color-scheme, light)');
 	});
 });
 

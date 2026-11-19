@@ -76,7 +76,7 @@ export async function inspectSignaturesFromBuffer(
 		const result: PackageSignatureInfo[] = [];
 		for (const signature of await readSignatures(zip)) {
 			const integrity = await verifySignatureDigests(signature, async (uri) => {
-				const path = resolveReferenceUriToPart(uri.split('?')[0] ?? uri);
+				const path = resolveReferenceUriToPart(uri);
 				const file = path ? zip.file(path) : null;
 				return file ? await file.async('arraybuffer') : undefined;
 			}).catch((): SignatureDigestStatus => 'unverified');

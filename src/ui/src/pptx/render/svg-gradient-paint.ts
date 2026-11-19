@@ -25,6 +25,7 @@ import { buildFocalCircleGradientSvg, buildTrueAngleLinearGradientSvg } from './
 import type { SvgRectPathGradientDef } from './svg-gradient-rect-path';
 import { buildRectPathGradientDef, rectPathGradientMarkup } from './svg-gradient-rect-path';
 import type { SvgPatternDef } from './svg-stroke-pattern-paint';
+import { svgIdToken } from './svg-id';
 import { escapeSvgAttr } from './visual-effects';
 
 // Re-exported so existing `import { buildSvgStrokePatternDef } from
@@ -77,12 +78,10 @@ function round4(value: number): number {
 /**
  * Namespace a gradient id to its owning element. SVG ids are document-global,
  * so two shapes with different gradients would otherwise collide on the first
- * one rendered; element ids carry `/` and `.` (`ppt/slides/slide2.xml-shape-4`),
- * which are not valid in a bare `url(#…)` fragment.
+ * one rendered.
  */
 export function svgGradientId(elementId: string, suffix = 'grad'): string {
-	const seed = String(elementId).replace(/[^a-zA-Z0-9_-]/gu, '_');
-	return `pptx-${suffix}-${seed}`;
+	return `pptx-${suffix}-${svgIdToken(String(elementId))}`;
 }
 
 /** Convert sanitized 0-100 gradient stops into SVG 0-1 offsets. */

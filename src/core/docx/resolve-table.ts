@@ -5,21 +5,7 @@ import type {
 	TableStyleCatalog,
 	TableStyleConditionalFormatting,
 } from './table-model';
-
-function styleChain(styleId: string | undefined, catalog: TableStyleCatalog | undefined) {
-	if (!styleId || !catalog) return [];
-	const chain: TableStyleDefinition[] = [];
-	const visited = new Set<string>();
-	let current: string | undefined = styleId;
-	while (current && !visited.has(current)) {
-		const style: TableStyleDefinition | undefined = catalog.styles[current];
-		if (!style) break;
-		visited.add(current);
-		chain.push(style);
-		current = style.basedOn;
-	}
-	return chain.reverse();
-}
+import { chainResolver } from './style-inheritance';
 
 /** Which conditional regions apply to a cell, in increasing precedence (last wins), per `tblLook`. */
 function applicableRegions(
@@ -53,20 +39,60 @@ export function resolveTableStyleFormatting(
 	colIndex: number,
 	colCount: number,
 ): TableStyleConditionalFormatting {
-	const chain = styleChain(tableStyleId, catalog);
+	if (!tableStyleId || !catalog) return {};
 	const regions = applicableRegions(look, rowIndex, rowCount, colIndex, colCount);
-	const result: TableStyleConditionalFormatting = {};
-	for (const style of chain) {
-		if (style.borders) result.borders = { ...result.borders, ...style.borders };
-		if (style.shadingFill) result.shadingFill = style.shadingFill;
-		for (const region of regions) {
-			const formatting = style.conditional[region as keyof typeof style.conditional];
-			if (!formatting) continue;
-			if (formatting.borders) result.borders = { ...result.borders, ...formatting.borders };
-			if (formatting.shadingFill) result.shadingFill = formatting.shadingFill;
-			if (formatting.shadingThemeFill) result.shadingThemeFill = formatting.shadingThemeFill;
-			if (formatting.run) result.run = { ...result.run, ...formatting.run };
-		}
+	let byRegions = resolvers.get(catalog.styles);
+	if (!byRegions) {
+		byRegions = new Map();
+		resolvers.set(catalog.styles, byRegions);
+	}
+	const key = regions.join(',');
+	let resolve = byRegions.get(key);
+	if (!resolve) {
+		resolve = chainResolver(
+			catalog.styles,
+			(style) => ownFormatting(style, regions),
+			mergeFormatting,
+			{},
+		);
+		byRegions.set(key, resolve);
+	}
+	const resolved = resolve(tableStyleId) ?? {};
+	return {
+		...resolved,
+		...(resolved.borders ? { borders: { ...resolved.borders } } : {}),
+		...(resolved.run ? { run: { ...resolved.run } } : {}),
+	};
+}
+
+type Resolver = (id: string | undefined) => TableStyleConditionalFormatting | undefined;
+/** Resolvers per catalog `styles` record, then per set of applicable regions. */
+const resolvers = new WeakMap<object, Map<string, Resolver>>();
+
+/** Adds one level's formatting over `result`: borders and run properties merge, fills replace. */
+function mergeFormatting(
+	result: TableStyleConditionalFormatting,
+	level: TableStyleConditionalFormatting,
+): TableStyleConditionalFormatting {
+	const next = { ...result };
+	if (level.borders) next.borders = { ...result.borders, ...level.borders };
+	if (level.shadingFill) next.shadingFill = level.shadingFill;
+	if (level.shadingThemeFill) next.shadingThemeFill = level.shadingThemeFill;
+	if (level.run) next.run = { ...result.run, ...level.run };
+	return next;
+}
+
+/** One style's own formatting for a cell: its whole-table values, then each region in order. */
+function ownFormatting(
+	style: TableStyleDefinition,
+	regions: readonly string[],
+): TableStyleConditionalFormatting {
+	let result: TableStyleConditionalFormatting = {};
+	if (style.borders) result.borders = { ...style.borders };
+	if (style.shadingFill) result.shadingFill = style.shadingFill;
+	for (const region of regions) {
+		const formatting = style.conditional[region as keyof typeof style.conditional];
+		if (formatting) result = mergeFormatting(result, formatting);
 	}
 	return result;
 }

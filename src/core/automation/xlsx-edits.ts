@@ -3,6 +3,7 @@ import { createEditSession } from '../xlsx/edit/session';
 import type { ClearWhat, MergeMode } from '../xlsx/edit/types';
 import type { Workbook } from '../xlsx/model';
 import type { StylePatch } from '../xlsx/styles';
+import { cellInputPolicyIssue, formulaPolicyIssue } from '../xlsx/formula/policy';
 import { validateSheetName } from '../xlsx/workbook';
 
 /**
@@ -32,6 +33,31 @@ export type XlsxEdit =
 
 export const XLSX_EDIT_LIMITS = { edits: 1000, cells: 10_000 } as const;
 
+/** Which formulas the automation functions write. */
+export interface XlsxFormulaOptions {
+	/**
+	 * `restricted` (the default) refuses a formula that can reach outside the workbook, sends data
+	 * to an AI service or refers to another workbook or a file, wherever the function appears in it
+	 * (`formulaPolicyIssue` in `ooxml-core/xlsx`). `unrestricted` writes any formula; a host
+	 * passes it only for input it trusts, never for a model's or a document's.
+	 */
+	formulas?: 'restricted' | 'unrestricted';
+}
+
+/**
+ * Why `options` refuse `input` (cell input, or a defined name's formula with `asFormula`), as a
+ * sentence fragment such as "it uses WEBSERVICE, which can reach outside the workbook", or null
+ * when it may be written.
+ */
+export function refusedFormula(
+	input: string,
+	options: XlsxFormulaOptions = {},
+	asFormula = false,
+): string | null {
+	if (options.formulas === 'unrestricted') return null;
+	return (asFormula ? formulaPolicyIssue(input) : cellInputPolicyIssue(input))?.reason ?? null;
+}
+
 const CLEAR: readonly ClearWhat[] = ['all', 'contents', 'formats', 'comments', 'hyperlinks'];
 const MERGE: readonly MergeMode[] = ['merge', 'center', 'across'];
 const STYLE_KEYS = new Set(['font', 'fill', 'border', 'numFmt', 'alignment', 'protection']);
@@ -46,7 +72,11 @@ function fail(index: number, message: string): never {
  * rolled back. Rows and columns are matched by address in a comparison, so an inserted row
  * shows as a change to every cell below it.
  */
-export function applyXlsxEdits(workbook: Workbook, edits: readonly XlsxEdit[]): void {
+export function applyXlsxEdits(
+	workbook: Workbook,
+	edits: readonly XlsxEdit[],
+	options: XlsxFormulaOptions = {},
+): void {
 	if (!Array.isArray(edits)) throw new Error('Edits must be a list');
 	if (edits.length > XLSX_EDIT_LIMITS.edits)
 		throw new Error(`Make at most ${XLSX_EDIT_LIMITS.edits} edits per request`);
@@ -59,13 +89,19 @@ export function applyXlsxEdits(workbook: Workbook, edits: readonly XlsxEdit[]): 
 		throw new Error(`Edit at most ${XLSX_EDIT_LIMITS.cells} cells per request`);
 	const session = createEditSession(workbook);
 	session.batch('Automation edits', () => {
-		edits.forEach((edit, index) => applyEdit(workbook, session, edit, index));
+		edits.forEach((edit, index) => applyEdit(workbook, session, edit, index, options));
 	});
 }
 
 type Session = ReturnType<typeof createEditSession>;
 
-function applyEdit(workbook: Workbook, session: Session, edit: XlsxEdit, index: number) {
+function applyEdit(
+	workbook: Workbook,
+	session: Session,
+	edit: XlsxEdit,
+	index: number,
+	options: XlsxFormulaOptions,
+) {
 	const sheet = (value: unknown) => {
 		if (!Number.isSafeInteger(value) || (value as number) < 0 || !workbook.sheets[value as number])
 			fail(index, 'Sheet does not exist');
@@ -94,6 +130,8 @@ function applyEdit(workbook: Workbook, session: Session, edit: XlsxEdit, index: 
 				const at = parseAddress(String(cell?.address));
 				if (!at) fail(index, `Invalid cell address: ${String(cell?.address)}`);
 				if (typeof cell.input !== 'string') fail(index, 'A cell input must be text');
+				const refused = refusedFormula(cell.input, options);
+				if (refused) fail(index, `${cell.address}: the formula was refused because ${refused}`);
 				session.setCellInput(s, at.row, at.col, cell.input);
 			}
 			return;
@@ -172,6 +210,8 @@ function applyEdit(workbook: Workbook, session: Session, edit: XlsxEdit, index: 
 		}
 		case 'setName': {
 			if (typeof edit.formula !== 'string' || !edit.formula) fail(index, 'A formula is required');
+			const refused = refusedFormula(edit.formula, options, true);
+			if (refused) fail(index, `The name's formula was refused because ${refused}`);
 			session.setDefinedName({
 				name: name(edit.name),
 				formula: edit.formula,

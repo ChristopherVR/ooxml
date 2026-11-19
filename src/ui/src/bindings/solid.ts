@@ -1,7 +1,9 @@
 // `ooxml-ui/bindings/solid`: one Solid component per product, written without JSX so it needs no
 // compiler: the component returns its host <div>, re-applies options reactively and hands the
-// handle to a ref callback prop (`editorRef`).
+// handle to a ref callback prop (`editorRef`). On the server it renders the empty host, which the
+// browser claims while hydrating.
 import { createEffect, createSignal, onCleanup, onMount } from 'solid-js';
+import { getNextElement, isServer, ssrElement } from 'solid-js/web';
 import type { MountedBinding } from './contract';
 import { deferredHandle, type DeferredHandleOptions, type HandleSpec } from './handle';
 
@@ -23,7 +25,14 @@ export function createSolidBinding<
 >(config: SolidBindingConfig<Props, O, B, H>): (props: Props) => HTMLDivElement {
 	const refName = config.ref ?? 'editorRef';
 	return function Binding(props: Props): HTMLDivElement {
-		const host = document.createElement('div');
+		if (isServer)
+			return ssrElement(
+				'div',
+				{ class: props.class },
+				undefined,
+				true,
+			) as unknown as HTMLDivElement;
+		const host = getNextElement(() => document.createElement('div')) as HTMLDivElement;
 		const [binding, setBinding] = createSignal<B>();
 		onMount(() => {
 			const mounted = config.mount(host, config.options(props));

@@ -36,19 +36,23 @@ function loadPackage(key) {
 	return pkg;
 }
 
+/** The git-cliff bun.lock pins, as installed in the root node_modules (never fetched at run time). */
+const GIT_CLIFF = join(
+	ROOT,
+	'node_modules',
+	'.bin',
+	process.platform === 'win32' ? 'git-cliff.exe' : 'git-cliff',
+);
+
 /**
  * Render the git-cliff section for the pending tag, or '' if it fails.
  *
- * Runs `bun x git-cliff ...` via execFileSync with an argument array: `bun` is
- * a real executable on every platform, and passing args as an array means no
- * shell is involved, so no interpolated value can be shell-interpreted. This
- * mirrors the workflow's `bunx git-cliff` invocation without a shell string.
+ * Runs git-cliff via execFileSync with an argument array, so no shell is
+ * involved and no interpolated value can be shell-interpreted.
  */
 function cliffSection(pkg) {
 	const includeArgs = pkg.includePaths.flatMap((p) => ['--include-path', p]);
 	const args = [
-		'x',
-		'git-cliff',
 		'--config',
 		'cliff.toml',
 		'--tag-pattern',
@@ -61,7 +65,7 @@ function cliffSection(pkg) {
 		'all',
 	];
 	try {
-		return execFileSync('bun', args, {
+		return execFileSync(GIT_CLIFF, args, {
 			cwd: ROOT,
 			encoding: 'utf8',
 			stdio: ['ignore', 'pipe', 'ignore'],

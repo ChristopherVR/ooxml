@@ -60,6 +60,11 @@ export function settingsCategories({ profileName = '', assistant = false } = {})
 					title: 'Leaving the app',
 					controls: [toggle('confirmClose', 'Warn me before leaving with unsaved changes')],
 				},
+				{
+					id: 'keyboard',
+					title: 'Keyboard',
+					controls: [toggle('searchShortcut', 'Press / to jump to search')],
+				},
 			],
 		},
 		{

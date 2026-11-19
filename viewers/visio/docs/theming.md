@@ -34,21 +34,22 @@ The default accent changed with this. The viewer used to hard-code `#3955a3`; it
 
 The earlier `--vv-*` tokens still work. Each one, when set, wins over the `--office-*` token it aliases; when unset the viewer falls back to the shared token. Use them to restyle only this viewer without touching the rest of the page.
 
-| Token              | Falls back to                | Role                                  |
-| ------------------ | ---------------------------- | ------------------------------------- |
-| `--vv-font`        | `--office-font`              | Font family                           |
-| `--vv-background`  | `--office-surface`           | Window background                     |
-| `--vv-surface`     | `--office-background`        | Ribbon and panel surface              |
-| `--vv-secondary`   | `--office-surface`           | Secondary surface                     |
-| `--vv-shadow`      | `--office-shadow`            | Page shadow                           |
-| `--vv-ink`         | `--office-foreground`        | Primary text                          |
-| `--vv-muted`       | `--office-muted-foreground`  | Secondary text                        |
-| `--vv-border`      | `--office-border`            | Borders                               |
-| `--vv-accent`      | `--office-accent`            | Accent colour                         |
-| `--vv-accent-soft` | 10% of the accent            | Soft accent surface (hover, selected) |
-| `--vv-accent-ink`  | `--office-accent-foreground` | Text on the accent colour             |
-| `--vv-focus`       | `--office-ring`              | Focus ring                            |
-| `--vv-danger`      | `--office-danger`            | Destructive and error states          |
+| Token              | Falls back to                             | Role                                                                                  |
+| ------------------ | ----------------------------------------- | ------------------------------------------------------------------------------------- |
+| `--vv-font`        | `--office-font`                           | Font family                                                                           |
+| `--vv-background`  | `--office-surface`                        | Window background                                                                     |
+| `--vv-surface`     | `--office-background`                     | Ribbon and panel surface                                                              |
+| `--vv-secondary`   | `--office-surface`                        | Secondary surface                                                                     |
+| `--vv-shadow`      | `--office-shadow`                         | Page shadow                                                                           |
+| `--vv-ink`         | `--office-foreground`                     | Primary text                                                                          |
+| `--vv-muted`       | `--office-muted-foreground`               | Secondary text                                                                        |
+| `--vv-border`      | `--office-border`                         | Borders                                                                               |
+| `--vv-accent`      | `--office-accent`                         | Accent colour                                                                         |
+| `--vv-accent-soft` | 10% of the accent                         | Soft accent surface (hover, selected)                                                 |
+| `--vv-accent-ink`  | `--office-accent-foreground`              | Text on the accent colour                                                             |
+| `--vv-accent-text` | `--vv-accent`, then `--office-accent-ink` | The accent as text (current page tab, accent labels); keep it at 4.5:1 on the surface |
+| `--vv-focus`       | `--office-ring`                           | Focus ring                                                                            |
+| `--vv-danger`      | `--office-danger`                         | Destructive and error states                                                          |
 
 The playground sets `data-theme="light" | "dark"` on the document root and supplies matching `--vv-*` values in `demos/visio/demo/workspace.css` for its own page chrome (start screen, workspace shell); that file keeps working because `--vv-*` overrides still apply.
 

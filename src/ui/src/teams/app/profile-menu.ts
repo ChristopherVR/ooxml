@@ -1,4 +1,6 @@
+import { definer } from '../../registry';
 import { html, nothing, unsafeCSS, type PropertyValues } from 'lit';
+import { withTokens } from '../../base';
 import {
 	type PresenceStatus,
 	type StatusDuration,
@@ -59,7 +61,7 @@ export function untilLabel(at: number | null, i18n: TeamsI18n = teamsI18n()): st
 }
 
 export class TeamsProfileMenu extends TeamsLitElement {
-	static override styles = unsafeCSS(css);
+	static override styles = unsafeCSS(withTokens(css));
 	static override properties = {
 		state: { attribute: false },
 		account: { type: String },
@@ -273,7 +275,4 @@ export class TeamsProfileMenu extends TeamsLitElement {
 	}
 }
 
-export function defineTeamsProfileMenu(): void {
-	if (!customElements.get('teams-profile-menu'))
-		customElements.define('teams-profile-menu', TeamsProfileMenu);
-}
+export const defineTeamsProfileMenu = definer('teams-profile-menu', () => TeamsProfileMenu);

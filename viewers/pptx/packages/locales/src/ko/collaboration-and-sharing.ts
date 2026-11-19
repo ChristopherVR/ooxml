@@ -16,6 +16,14 @@ export const translations = {
 	'pptx.collaboration.status.connecting': '연결 중...',
 	'pptx.collaboration.status.disconnected': '연결 끊김',
 	'pptx.collaboration.status.error': '연결 오류',
+	'pptx.collaboration.refused.tooLarge':
+		'공유 세션의 변경 내용이 너무 커서 여기에 적용할 수 없으므로 공유가 중지되었습니다. 사용자의 사본은 변경되지 않았습니다.',
+	'pptx.collaboration.refused.malformed':
+		'공유 세션의 변경 내용을 읽을 수 없으므로 공유가 중지되었습니다. 사용자의 사본은 변경되지 않았습니다.',
+	'pptx.collaboration.refused.serverRejected':
+		'서버가 최근 변경 내용을 거부했으므로 공유가 중지되었습니다. 사용자의 사본에는 변경 내용이 남아 있습니다.',
+	'pptx.collaboration.refused.serverFull':
+		'공유 문서가 서버의 크기 제한에 도달했으므로 공유가 중지되었습니다. 사용자의 사본에는 최근 변경 내용이 남아 있습니다.',
 	'pptx.collaboration.statusAriaLabel': '공동 작업: {{status}}',
 	'pptx.collaboration.userCount': '사용자 {{count}}명',
 	'pptx.collaboration.youLabel': '{{name}}(나)',

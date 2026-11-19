@@ -83,26 +83,26 @@ import { MediaTrimTimelineComponent } from './media-trim-timeline.component';
 					}
 					@if (duration() > 0) {
 						<div>
-							<span>{{ 'pptx.media.duration' | translate }}</span
-							><span>{{ durationLabel() }}</span>
+							<span>{{ 'pptx.media.duration' | translate }}</span><span>{{ durationLabel() }}</span>
 						</div>
 					}
 					@if (resolution(); as size) {
 						<div>
-							<span>{{ 'pptx.media.resolution' | translate }}</span
-							><span>{{ size }}</span>
+							<span>{{ 'pptx.media.resolution' | translate }}</span><span>{{ size }}</span>
 						</div>
 					}
 					@if (element().metadata?.codecInfo; as codec) {
 						<div>
-							<span>{{ 'pptx.media.format' | translate }}</span
-							><span [title]="codec">{{ codec }}</span>
+							<span>{{ 'pptx.media.format' | translate }}</span><span [title]="codec">{{
+								codec
+							}}</span>
 						</div>
 					}
 					@if (element().mediaPath; as path) {
 						<div>
-							<span>{{ 'pptx.media.filePath' | translate }}</span
-							><span [title]="path">{{ fileName() }}</span>
+							<span>{{ 'pptx.media.filePath' | translate }}</span><span [title]="path">{{
+								fileName()
+							}}</span>
 						</div>
 					}
 				</div>

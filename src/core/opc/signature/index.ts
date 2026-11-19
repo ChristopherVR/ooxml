@@ -29,7 +29,8 @@ export {
 	ENTERPRISE_TRUST_ROOTS_FILE_ENV,
 	ENTERPRISE_TRUST_ROOTS_PEM_ENV,
 	OPC_RELATIONSHIP_TRANSFORM,
-	PPTX_VIEWER_MANIFEST_NS,
+	OPC_DIGITAL_SIGNATURE_NS,
+	OPC_RELATIONSHIPS_NS,
 	SUPPORTED_XML_CANON_TRANSFORMS,
 	XMLDSIG_NS,
 	XML_TRANSFORM_ENVELOPED_SIGNATURE,
@@ -40,10 +41,12 @@ export type {
 	DigitalSignatureVerificationStatus,
 	LoadedSigningMaterial,
 	OfficeSignatureReference,
+	PackageRelationship,
 	ParsedReferenceTransform,
 	ReferenceTransformResult,
 	SignatureCertificateInfo as SignatureNodeCertificateInfo,
 	SignatureDetail,
+	SignatureCoverageGap,
 	SignatureDetailStatus,
 	SignatureReferenceCheck,
 	SignatureValidationPolicy,
@@ -59,7 +62,11 @@ export {
 	extractTagAttribute,
 	isValidBase64,
 } from './xml-utils';
-export { normalizePartPath, resolveReferenceUriToPart } from './reference-utils';
+export {
+	parseReferenceUri,
+	resolveReferenceUriToPart,
+	type ParsedReferenceUri,
+} from './reference-utils';
 export { computeDigestBase64 } from './digest';
 export { computeDetailStatus, computeVerificationStatus } from './inspection-status';
 export {

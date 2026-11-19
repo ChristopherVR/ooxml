@@ -10,6 +10,7 @@ import type {
 import {
 	bindCollaborationHistory,
 	collaborationHistoryReady,
+	collaborationRefusalToast,
 	createCollaborationLivePatcher,
 	createCollaborationSessionController,
 	createRoomJoinTracker,
@@ -254,6 +255,13 @@ export function createCollaborationController(
 		},
 		onOpen: attach,
 		onClose: detach,
+		// Say why sharing stopped, through the viewer's notice stack.
+		onRefused: (code) => {
+			const toast = collaborationRefusalToast(code);
+			store.set({
+				compatToasts: [toast, ...store.get().compatToasts.filter((entry) => entry.id !== toast.id)],
+			});
+		},
 	});
 	session.subscribe(() => setStatus(session.getSnapshot().status));
 

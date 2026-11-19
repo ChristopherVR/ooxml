@@ -1,7 +1,9 @@
 import {
 	armEditorKeyboard,
 	createSaveRevisionController,
+	announceSlideObject,
 	cycleSelectableElement,
+	editSlideObjectText,
 	deliverSavedPresentation,
 	isCleanAfterSave,
 	isDialogAvailable,
@@ -625,8 +627,10 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 			const nextId = cycleSelectableElement(ids, state.selectedElementId, direction);
 			if (nextId) {
 				ops.select(nextId, [nextId]);
+				announceSlideObject(doc, nextId);
 			}
 		},
+		editText: () => editSlideObjectText(doc, store.get().selectedElementId),
 		onPasteSpecial: () => {
 			const customization = deps.getCustomization?.();
 			if (

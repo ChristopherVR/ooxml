@@ -27,6 +27,7 @@
  * @module render/presentation-ole-verb
  */
 
+import { parseDataUrlHeader } from 'ooxml-core/opc';
 import type { PptxSlide } from 'ooxml-core/pptx';
 
 import { flattenSlideElements } from './presentation-action';
@@ -54,7 +55,7 @@ export interface OleVerbTarget {
  * Returns `undefined` when the click carried no element id, the element is
  * not an OLE object (an action can be authored on any shape, but the verb
  * only means something on an embedding), or the embedding could not be
- * recovered at load time (`oleEmbeddedData` unset); the verb is then a
+ * recovered at load time (`oleEmbeddedData` is not a `data:` URL); the verb is then a
  * deliberate no-op, mirroring PowerPoint's own silence on a broken link.
  */
 export function resolveOleVerbTarget(
@@ -66,7 +67,13 @@ export function resolveOleVerbTarget(
 		return undefined;
 	}
 	const element = flattenSlideElements(slide.elements).find((entry) => entry.id === elementId);
-	if (!element || element.type !== 'ole' || !element.oleEmbeddedData) {
+	// Only a recovered embedding is acted on: any other value, such as a link a
+	// collaborator wrote, is never navigated to.
+	if (element?.type !== 'ole') {
+		return undefined;
+	}
+	const url = element.oleEmbeddedData;
+	if (url === undefined || parseDataUrlHeader(url) === undefined) {
 		return undefined;
 	}
 	const action: OleVerbAction =
@@ -77,7 +84,7 @@ export function resolveOleVerbTarget(
 				: 'edit';
 	return {
 		elementId,
-		url: element.oleEmbeddedData,
+		url,
 		...(element.oleEmbeddedFileName ? { fileName: element.oleEmbeddedFileName } : {}),
 		action,
 	};

@@ -103,6 +103,15 @@ const CHROME_CSS = `
 @media (forced-colors: active) {
 	.pptxv :is(button, a, input, select, textarea, [tabindex]):not([data-pptx-search-input]):focus-visible { outline-color: Highlight; }
 	.pptxv [data-pptx-search-surface]:focus-within { outline: 2px solid Highlight; outline-offset: 2px; }
+	/* Contrast themes drop the accent fills that mark a pressed toggle, a selected tab or option and
+	 * the current slide. !important keeps a more specific accent rule from winning over these. */
+	.pptxv :is([aria-pressed='true'], [aria-selected='true']) {
+		forced-color-adjust: none;
+		background: Highlight !important;
+		color: HighlightText !important;
+	}
+	.pptxv :is([aria-pressed='true'], [aria-selected='true']) * { color: inherit !important; }
+	.pptxv [aria-current]:not([aria-current='false']) { outline: 2px solid Highlight !important; outline-offset: -2px; }
 }
 
 /* Ribbon shell layout (primary row + nav row + tab bar + groups) lives in

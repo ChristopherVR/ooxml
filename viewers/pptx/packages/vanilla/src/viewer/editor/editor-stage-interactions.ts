@@ -1,5 +1,6 @@
 import {
 	attachTableCellsPaste,
+	elementIdSelector,
 	isAdditiveSelectionPress,
 	isGroupMember,
 	resolveGroupDoubleClickTarget,
@@ -158,7 +159,7 @@ export function createStageInteractions(deps: StageInteractionsDeps): StageInter
 	 * editor's, which lives in the separate overlay layer).
 	 */
 	const findStageElementNode = (id: string): Element | null =>
-		deps.getStageRoot()?.querySelector(`[data-element-id="${CSS.escape(id)}"]`) ?? null;
+		deps.getStageRoot()?.querySelector(elementIdSelector(id)) ?? null;
 
 	/**
 	 * While the inline text editor is open over an element, hide that one

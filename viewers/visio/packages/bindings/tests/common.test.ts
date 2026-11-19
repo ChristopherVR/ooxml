@@ -16,6 +16,7 @@ describe('complete shared adapter contract', () => {
 		const props: ViewerProps = {
 			canEdit: false,
 			readOnly: true,
+			locale: 'fr',
 			document: null,
 			pageIndex: 0,
 			zoom: 2,

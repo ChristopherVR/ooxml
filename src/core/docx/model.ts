@@ -5,6 +5,7 @@ import { defaultStyleCatalogs } from './default-styles';
 import type { StJcTable, StNumberFormat } from './generated/wml-simple-types';
 import type { ParagraphStyleCatalog } from './model-paragraph';
 import type { NumberingCatalog } from './numbering-model';
+import type { DocxLoadLimits } from './package-limits';
 import type { SignedTwips, Twips } from './units';
 export type { Revision, TextRun } from './model-run';
 export type {
@@ -197,6 +198,11 @@ export interface DocumentModel {
 export interface PendingMediaPart {
 	bytes: Uint8Array;
 	contentType: string;
+}
+/** Options of a load. */
+export interface DocxLoadOptions {
+	/** Size limits on the package and its parts (see {@link DocxLoadLimits}). */
+	limits?: DocxLoadLimits;
 }
 /** Options of a save. */
 export interface SaveOptions {

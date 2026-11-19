@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TriangleAlert } from 'lucide-vue-next';
+import { TriangleAlert } from '@lucide/vue';
 import { useI18n } from 'vue-i18n';
 
 import DialogFooter from './DialogFooter.vue';

@@ -76,7 +76,8 @@ function externalStarExports(files: string[], virtual: Record<string, string> = 
 	}
 }
 
-it('re-exports external modules by name, never with export *', () => {
+// Compiles the whole tree in a separate process, which a busy machine can slow well past the default.
+it('re-exports external modules by name, never with export *', { timeout: 120_000 }, () => {
 	const files = sources(pptxRoot);
 	expect(files.length).toBeGreaterThan(1000);
 	expect(externalStarExports(files)).toEqual([]);

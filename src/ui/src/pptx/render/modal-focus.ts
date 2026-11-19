@@ -1,6 +1,7 @@
 /** Framework-neutral keyboard focus management for modal dialogs. */
 
 import {
+	containsComposed as containsDeep,
 	modalActiveElement as deepActiveElement,
 	modalFocusableElements as focusableElements,
 } from '../../dialog/focus';
@@ -17,18 +18,12 @@ export interface ModalFocusOptions {
 	onEscape?: () => void;
 	/** Restore focus to the opener when the manager is released. */
 	restoreFocus?: boolean;
-}
-
-/** `panel.contains` across shadow boundaries. */
-function containsDeep(panel: HTMLElement, node: Node | null): boolean {
-	let current: Node | null = node;
-	while (current) {
-		if (current === panel) {
-			return true;
-		}
-		current = current.parentNode ?? (current as ShadowRoot).host ?? null;
-	}
-	return false;
+	/**
+	 * Which keys the modal handles. `document` (the default) owns the whole keyboard, for a modal
+	 * that covers the page. `panel` handles only keys pressed inside the panel, for a surface that
+	 * covers just its editor and leaves the page around it usable.
+	 */
+	keyScope?: 'document' | 'panel';
 }
 
 /**
@@ -52,6 +47,9 @@ export function activateModalFocus(
 	function onKeydown(event: KeyboardEvent): void {
 		if (!panel.isConnected) {
 			doc.removeEventListener('keydown', onKeydown, true);
+			return;
+		}
+		if (options.keyScope === 'panel' && !event.composedPath().includes(panel)) {
 			return;
 		}
 		if (event.key === 'Escape' && options.onEscape) {

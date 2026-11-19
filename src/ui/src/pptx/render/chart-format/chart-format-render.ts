@@ -30,6 +30,7 @@ import {
 	withLabelTextEffects,
 } from './chart-format-render-labels';
 import { applyTextFormats } from './chart-format-render-text';
+import { svgIdToken } from '../svg-id';
 
 export { withElementFormatLabelBoxes };
 
@@ -201,7 +202,7 @@ export function applyChartElementFormats(
 	}
 	const images: Images = {
 		defs: [],
-		idFor: (suffix) => `${elementId}-fmt-${suffix}`.replace(/[^A-Za-z0-9_-]/gu, '_'),
+		idFor: (suffix) => svgIdToken(`${elementId}-fmt-${suffix}`),
 		width: vm.svgWidth,
 		height: vm.svgHeight,
 	};

@@ -106,11 +106,7 @@ describe('table style gallery previews follow the table options', () => {
 	});
 
 	it('reads the screenBorder form and skips zero-width and missing lines', () => {
-		expect(
-			tileBorderStroke(
-				'max(1px, var(--pptx-device-px, 0px)) solid #FFFFFF',
-			),
-		).toStrictEqual({
+		expect(tileBorderStroke('max(1px, var(--pptx-device-px, 0px)) solid #FFFFFF')).toStrictEqual({
 			width: 0.5,
 			color: '#FFFFFF',
 		});

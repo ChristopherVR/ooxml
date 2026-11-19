@@ -11,6 +11,7 @@ import {
 import { createWorkerEditor, snapshotEdits, type CancellableEditor } from './worker-editor';
 import {
 	MAX_INPUT_BYTES,
+	editSizeLimit,
 	visioCalloutCommand,
 	visioContainerCommand,
 	visioContainerUpkeep,
@@ -282,14 +283,21 @@ export class ViewerController {
 	#hostReadOnly = false;
 	#roleReadOnly = false;
 	#capabilityReadOnly = false;
-	#applyEditPermission(): void {
-		this.#assertAlive();
-		const value =
+	/** Set while the drawing is too large to edit here (its read says so). */
+	#sizeReadOnly = false;
+	#editPermitted(): boolean {
+		return (
 			this.#hostCanEdit &&
 			!this.#hostReadOnly &&
 			!this.#roleReadOnly &&
 			!this.#capabilityReadOnly &&
-			!this.#fileReadOnly;
+			!this.#fileReadOnly &&
+			!this.#sizeReadOnly
+		);
+	}
+	#applyEditPermission(): void {
+		this.#assertAlive();
+		const value = this.#editPermitted();
 		if (value === this.#state.canEdit) return;
 		if (!value) {
 			this.cancelEdit();
@@ -1593,6 +1601,12 @@ export class ViewerController {
 						}),
 					}
 				: patch;
+		// A drawing too large to edit opens read-only, and one that an edit grew past the limit
+		// turns read-only with it.
+		if (change.document !== undefined && !!editSizeLimit(change.document) !== this.#sizeReadOnly) {
+			this.#sizeReadOnly = !this.#sizeReadOnly;
+			change = { ...change, canEdit: this.#editPermitted() };
+		}
 		if (this.#state.tool !== 'pointer' || (change.tool && change.tool !== 'pointer')) {
 			const merged = { ...this.#state, ...change };
 			if (merged.tool !== 'pointer' && !canEditDiagram(merged))

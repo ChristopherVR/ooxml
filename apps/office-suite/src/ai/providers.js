@@ -4,10 +4,11 @@
  * this page to the chosen endpoint. Keys a user enters stay in this tab's session storage unless
  * they ask to remember them on this device; managed gateways need no key in the browser at all.
  */
+import { checkAiEndpoint, userConnectionRefusal } from 'ooxml-core/ai';
 import { currentProfile } from '../profile-state.js';
 import { offlineReply } from './offline.js';
 import { currentPolicy } from './policy.js';
-import { authHeaders, provider } from './provider-catalog.js';
+import { authHeaders, provider, providers } from './provider-catalog.js';
 
 export { providers, provider } from './provider-catalog.js';
 
@@ -76,21 +77,25 @@ function storeKey(id, key, remember) {
 	}
 }
 
-/** Every model the user may pick, in menu order. */
+/**
+ * Every model the user may pick, in menu order. A connection the user saved earlier is offered
+ * only while the policy still allows it (users may add models, its provider is in
+ * `userProviders` and its endpoint is allowed), whenever it was saved.
+ */
 export function connections() {
 	const policy = currentPolicy();
 	return [
 		...(policy.offline.enabled ? [offline] : []),
 		...policy.connections,
-		...(policy.allowUserConnections
-			? state().user.map((c) => ({
-					...c,
-					models: [],
-					// A user's own model takes the key they entered with it, if any; it never prompts.
-					keyMode: 'own',
-					managed: false,
-				}))
-			: []),
+		...state()
+			.user.filter((c) => !userConnectionRefusal(policy, c, providers))
+			.map((c) => ({
+				...c,
+				models: [],
+				// A user's own model takes the key they entered with it, if any; it never prompts.
+				keyMode: 'own',
+				managed: false,
+			})),
 	];
 }
 /** The selected model with its key, or null when the policy leaves nothing to pick. */
@@ -134,12 +139,18 @@ export function saveUserConnection(
 	key,
 	remember,
 ) {
+	const refused = userConnectionRefusal(
+		currentPolicy(),
+		{ provider: providerId, endpoint },
+		providers,
+	);
+	if (refused) throw new Error(refused);
 	const next = state();
 	const connection = {
 		id: id ?? crypto.randomUUID(),
 		label,
 		provider: providerId,
-		endpoint,
+		endpoint: checkAiEndpoint(endpoint),
 		model,
 	};
 	next.user = [...next.user.filter((c) => c.id !== connection.id), connection];
@@ -159,19 +170,6 @@ export function onConnection(listener) {
 	listeners.add(listener);
 	return () => listeners.delete(listener);
 }
-export function checkEndpoint(value) {
-	const url = new URL(value);
-	if (
-		url.username ||
-		url.password ||
-		url.hash ||
-		(url.protocol !== 'https:' &&
-			!(url.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)))
-	)
-		throw new Error('Use HTTPS, or a local endpoint on localhost.');
-	return url.href;
-}
-
 async function* lines(response) {
 	const reader = response.body.getReader();
 	const decoder = new TextDecoder();

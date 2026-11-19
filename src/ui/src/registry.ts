@@ -1,3 +1,5 @@
+import { adoptEarlyProperties } from './early-properties';
+
 /** Internal UI ABI, independent of package versions. Bump for incompatible contracts. */
 export const CONTRACT_REVISION = 1;
 const CONTRACT_KEY = Symbol.for('office-ui.web-control-contract');
@@ -25,8 +27,20 @@ export function defineOnce(
 ): void {
 	assertContract(registry, tag);
 	if (registry.get(tag)) return;
-	const ctor = make();
+	defineElement(registry, tag, make());
+}
+
+/**
+ * The one way an ooxml-ui class enters a registry: it carries the contract stamp and honours
+ * properties a host set before the definition loaded. The caller has checked the tag is free.
+ */
+export function defineElement(
+	registry: CustomElementRegistry,
+	tag: string,
+	ctor: CustomElementConstructor,
+): void {
 	markContract(ctor);
+	adoptEarlyProperties(ctor);
 	registry.define(tag, ctor);
 }
 

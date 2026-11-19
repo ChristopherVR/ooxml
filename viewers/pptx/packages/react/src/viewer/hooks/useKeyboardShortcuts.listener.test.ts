@@ -238,9 +238,13 @@ describe('useKeyboardShortcuts: the new PowerPoint editor shortcuts', () => {
 		const onCycleSelectionNext = vi.fn();
 		const onCycleSelectionPrev = vi.fn();
 		mount(inputWith(container, { onCycleSelectionNext, onCycleSelectionPrev }));
+		const slide = document.createElement('div');
+		slide.setAttribute('data-pptx-viewport', '');
+		slide.setAttribute('data-pptx-slide-objects', '');
+		container.appendChild(slide);
 
-		container.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
-		container.dispatchEvent(
+		slide.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+		slide.dispatchEvent(
 			new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true }),
 		);
 

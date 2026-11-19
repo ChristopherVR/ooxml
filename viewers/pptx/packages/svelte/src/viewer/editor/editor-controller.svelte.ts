@@ -11,6 +11,7 @@ import type {
 import {
 	armEditorKeyboard,
 	collectConnectorSiteCandidates,
+	elementIdSelector,
 	findConnectorSiteNear,
 	inlineListBodyText,
 	isGroupMember,
@@ -530,7 +531,7 @@ export class EditorController {
 		const targetId = this.#doubleClickTarget(doubleTapId, event);
 		const el = this.#editor.elementById(targetId);
 		if (el?.type === 'table') {
-			const tableHost = this.#deps.getStageRoot()?.querySelector(`[data-element-id="${targetId}"]`);
+			const tableHost = this.#deps.getStageRoot()?.querySelector(elementIdSelector(targetId));
 			const cells = tableHost?.querySelectorAll('td');
 			let closest: HTMLElement | null = null;
 			let minDist = Infinity;

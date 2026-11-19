@@ -34,6 +34,8 @@ export function navigationKey(
 	if (arrow) return ctrl ? arrow[1] : arrow[0];
 	if (event.key === 'Home') return ctrl ? 'ctrlHome' : 'home';
 	if (event.key === 'End') return ctrl ? 'ctrlEnd' : undefined;
+	// Ctrl+PageUp/PageDown switch sheets, so they are left to the workbook's shortcuts.
+	if (ctrl) return undefined;
 	if (event.key === 'PageUp') return 'pageUp';
 	if (event.key === 'PageDown') return 'pageDown';
 	return undefined;

@@ -11,7 +11,12 @@ export interface Vector {
 	/** Full reference length, including omitted trailing blank cells. */
 	logicalLength?: number;
 	get(index: number): Scalar;
+	/** An exact search through the recalculation's shared index; undefined means scan. */
+	indexed?(lookup: Scalar, reverse: boolean): number | undefined;
 }
+
+/** Vectors shorter than this are always scanned: an index could not pay for itself. */
+const MIN_INDEXED_LENGTH = 32;
 
 /** The dimensions of a reference or array argument. */
 export function shape(value: Value): { rows: number; cols: number } {
@@ -33,23 +38,36 @@ export function line(ctx: CallContext, value: Value, axis: 'row' | 'col', index:
 		const area = value.areas[0];
 		if (!area || value.areas.length !== 1) fail(ERR.VALUE);
 		const { start, end } = area.range;
-		const bounds = ctx.frame.host.bounds(area.sheet);
+		const { host } = ctx.frame;
+		const bounds = host.bounds(area.sheet);
+		const refVector = (
+			id: string,
+			length: number,
+			logicalLength: number,
+			get: (i: number) => Scalar,
+		): Vector => ({
+			length,
+			logicalLength,
+			get,
+			indexed: (lookup, reverse) =>
+				host.findExact?.(`${area.sheet}:${id}:${length}`, length, get, lookup, reverse),
+		});
 		if (axis === 'col') {
 			const col = start.col + index;
-			const length = Math.max(0, Math.min(end.row, bounds.rows - 1) - start.row + 1);
-			return {
-				length,
-				logicalLength: end.row - start.row + 1,
-				get: (i) => ctx.readCell(area.sheet, start.row + i, col),
-			};
+			return refVector(
+				`c${col}:${start.row}`,
+				Math.max(0, Math.min(end.row, bounds.rows - 1) - start.row + 1),
+				end.row - start.row + 1,
+				(i) => ctx.readCell(area.sheet, start.row + i, col),
+			);
 		}
 		const row = start.row + index;
-		const length = Math.max(0, Math.min(end.col, bounds.cols - 1) - start.col + 1);
-		return {
-			length,
-			logicalLength: end.col - start.col + 1,
-			get: (i) => ctx.readCell(area.sheet, row, start.col + i),
-		};
+		return refVector(
+			`r${row}:${start.col}`,
+			Math.max(0, Math.min(end.col, bounds.cols - 1) - start.col + 1),
+			end.col - start.col + 1,
+			(i) => ctx.readCell(area.sheet, row, start.col + i),
+		);
 	}
 	const m = value instanceof Matrix ? value : new Matrix([[value as Scalar]]);
 	if (axis === 'col') return { length: m.rows, get: (i) => m.get(i, index) };
@@ -90,15 +108,23 @@ export function findExact(
 	wildcards: boolean,
 	reverse = false,
 ): number {
-	const test = exactMatcher(lookup, wildcards);
 	const logicalLength = vector.logicalLength ?? vector.length;
+	const blankTail = lookup === null && logicalLength > vector.length;
+	if (reverse && blankTail) return logicalLength - 1;
+	const pattern = wildcards && typeof lookup === 'string' && hasWildcards(lookup);
+	const at =
+		(vector.length >= MIN_INDEXED_LENGTH && !pattern
+			? vector.indexed?.(lookup, reverse)
+			: undefined) ?? scanExact(vector, exactMatcher(lookup, wildcards), reverse);
+	return at < 0 && blankTail ? vector.length : at;
+}
+
+function scanExact(vector: Vector, test: (v: Scalar) => boolean, reverse: boolean): number {
 	if (reverse) {
-		if (lookup === null && logicalLength > vector.length) return logicalLength - 1;
 		for (let i = vector.length - 1; i >= 0; i--) if (test(vector.get(i))) return i;
 		return -1;
 	}
 	for (let i = 0; i < vector.length; i++) if (test(vector.get(i))) return i;
-	if (lookup === null && logicalLength > vector.length) return vector.length;
 	return -1;
 }
 

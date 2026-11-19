@@ -25,6 +25,8 @@ import {
 } from './shape-metadata';
 import { readDataRecordsets, type VisioDataRecordset } from './data-recordsets';
 import { VisioPackage, VisioPackageError, type VisioPackageLimits } from './package';
+import { editCellCount, editSizeRefusal, MODEL_HEAP, withOperationMemory } from './memory-budget';
+import { DEFAULTS } from './package-common';
 import { normalizeShapes, type ShapeContext } from './shapes';
 import { normalizeVisioPageGeometry, visioPageGeometryScale } from './page-scale';
 import { readVisioPageSetup } from './page-setup';
@@ -111,7 +113,12 @@ export async function parseVsdx(
 		maxParagraphs = option(options.maxParagraphs, 50_000);
 	const diagnosticState = diagnosticCollector(maxDiagnostics);
 	const report = diagnosticState.report;
-	const pkg = await VisioPackage.open(input, options.limits);
+	// One budget for the package and the model: a read inside an edit shares the edit's.
+	const pkg = await VisioPackage.open(
+		input,
+		withOperationMemory(options.limits, input.byteLength, 'open'),
+	);
+	const chargeHeap = (bytes: number) => pkg.memory.charge(bytes);
 	const types = await pkg.readXml('[Content_Types].xml', 'Types');
 	if (types.namespaceURI !== 'http://schemas.openxmlformats.org/package/2006/content-types')
 		throw new VisioPackageError('INVALID_CONTENT_TYPES', 'Invalid content type namespace.');
@@ -186,6 +193,7 @@ export async function parseVsdx(
 		maxShapes,
 		maxShapeDepth,
 		shapeCount: 0,
+		chargeHeap,
 		checkTime,
 		consumeExpansion: () => {
 			checkTime();
@@ -205,11 +213,13 @@ export async function parseVsdx(
 			checkTime();
 			if (++geometryCount > maxGeometry)
 				throw new VisioPackageError('GEOMETRY_LIMIT', 'Geometry command limit exceeded.');
+			chargeHeap(MODEL_HEAP.geometry);
 		},
 		consumeParagraph: () => {
 			checkTime();
 			if (++paragraphCount > maxParagraphs)
 				throw new VisioPackageError('PARAGRAPH_LIMIT', 'Paragraph count limit exceeded.');
+			chargeHeap(MODEL_HEAP.paragraph);
 		},
 		consumeText: (length) => {
 			checkTime();
@@ -218,6 +228,7 @@ export async function parseVsdx(
 			textCount += length;
 			if (textCount > maxText)
 				throw new VisioPackageError('TEXT_LIMIT', 'Text character limit exceeded.');
+			chargeHeap(MODEL_HEAP.run + length * MODEL_HEAP.char);
 		},
 	};
 	let documentMasters: VisioMaster[];
@@ -271,6 +282,7 @@ export async function parseVsdx(
 	const foreground = pageNodes.filter((page) => !yes(attribute(page, 'Background')));
 	const fieldProperties = await readVisioFieldProperties(pkg);
 	const now = visioWallClock(new Date());
+	let editCells = 0;
 	for (const page of pageNodes) {
 		const id = metadata(attribute(page, 'ID') ?? '', 256, 'Page ID');
 		if (!id || pageIds.has(id))
@@ -279,6 +291,7 @@ export async function parseVsdx(
 		if (only && !only.has(id)) continue;
 		const part = await indexedPart(pkg, pagesPart!, page, 'page');
 		const root = await visioXml(pkg, part, 'PageContents');
+		editCells += editCellCount(root);
 		const localReport: Report = (code, message, extra) =>
 			report(code, message, { part, pageId: id, ...extra });
 		context.report = localReport;
@@ -405,6 +418,13 @@ export async function parseVsdx(
 	}
 	checkTime();
 	if (!only) validateBackgrounds(pages, report);
+	const tooLargeToEdit = only
+		? undefined
+		: editSizeRefusal(
+				pkg.xmlHeap,
+				editCells,
+				options.limits?.maxXmlHeapBytes ?? DEFAULTS.maxXmlHeapBytes,
+			);
 	try {
 		if (!only) comments.push(...(await readVisioComments(pkg, documentPart, report)));
 	} catch (error) {
@@ -428,13 +448,20 @@ export async function parseVsdx(
 		{ severity: 'info' },
 	);
 	const snapGlue = readVisioSnapGlue(documentRoot);
+	// The caller keeps the model, not the XML, unless a document cache holds on to its parts.
+	if (!cache) pkg.releaseXml();
 	return {
 		format: 'vsdx',
 		...(snapGlue ? { snapGlue } : {}),
 		pages,
 		...(documentMasters.length ? { masters: documentMasters } : {}),
 		...(stencils.length ? { stencils } : {}),
-		diagnostics: diagnosticState.finish(),
+		// First and never dropped: a viewer opens such a drawing read-only.
+		diagnostics: diagnosticState.finish(
+			tooLargeToEdit
+				? { code: 'edit-size-limit', severity: 'info', message: tooLargeToEdit }
+				: undefined,
+		),
 		...(dataRecordsets.length ? { dataRecordsets } : {}),
 		fontFamilies: [...new Set(resources.fonts.values())],
 		...(comments.length ? { comments } : {}),

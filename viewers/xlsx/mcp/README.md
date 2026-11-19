@@ -37,6 +37,8 @@ Paths are scoped to the configured root (the current directory by default).
 Creation and save-as never overwrite existing files. Edit tools update the source
 unless `outputPath` names a new file. Files are written atomically after core
 validation. Unsupported features and preservation limitations are returned by core.
+The tools that write formulas refuse ones that reach outside the workbook, call an AI service
+or refer to another workbook or file (see `docs/mcp.md` in the repository).
 
 ## Features
 

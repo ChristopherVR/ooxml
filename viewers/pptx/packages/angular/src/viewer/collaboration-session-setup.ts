@@ -13,6 +13,7 @@ import type {
 	CollaborationConfig,
 	CollaborationHistoryTarget,
 	CollaborationLivePatcher,
+	CompatibilityWarningToast,
 	ConnectionStatus,
 	ExternalCollaborationReadiness,
 	YDocLike,
@@ -33,6 +34,8 @@ export interface ConnectOptions {
 	onRemoteSlides?: (slides: PptxSlide[]) => void;
 	/** The room's slides replaced the open deck: report it as a presentation load. */
 	onRoomReplacedDeck?: () => void;
+	/** Show a notice in the viewer's stack: why sharing stopped, when an update was refused. */
+	onNotice?: (toast: CompatibilityWarningToast) => void;
 	canvasWidth?: number;
 	canvasHeight?: number;
 	getSourceBytes?: () => Uint8Array | null;

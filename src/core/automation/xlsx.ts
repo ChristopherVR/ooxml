@@ -11,8 +11,10 @@ import {
 	formatRange,
 } from '../xlsx/address';
 import { forEachCell, getCell } from '../xlsx/cells';
+import type { Worksheet } from '../xlsx/model';
 import { findAll } from '../xlsx/edit/find';
 import type { FindQuery } from '../xlsx/edit/types-clipboard';
+import { refusedFormula, type XlsxFormulaOptions } from './xlsx-edits';
 import { cellView, definedNameList, rangeCells, sheetSummaries } from './xlsx-read';
 
 /**
@@ -62,6 +64,7 @@ export async function setXlsxCells(
 	bytes: Uint8Array,
 	sheetIndex: number,
 	cells: readonly { address: string; input: string }[],
+	options: XlsxFormulaOptions = {},
 ) {
 	const workbook = await loadXlsx(bytes);
 	if (!Number.isSafeInteger(sheetIndex) || sheetIndex < 0 || !workbook.sheets[sheetIndex])
@@ -70,6 +73,8 @@ export async function setXlsxCells(
 	const positions = cells.map((cell) => {
 		const address = parseAddress(cell.address);
 		if (!address) throw new Error(`Invalid cell address: ${cell.address}`);
+		const refused = refusedFormula(cell.input, options);
+		if (refused) throw new Error(`${cell.address}: the formula was refused because ${refused}`);
 		return { ...address, input: cell.input };
 	});
 	const session = createEditSession(workbook);
@@ -84,7 +89,20 @@ export interface XlsxFilledCellsOptions {
 	maxCells?: number;
 	/** Read only this sheet; every sheet when absent. */
 	sheetIndex?: number;
+	/**
+	 * `include` (the default) reads every cell. `omit` leaves out hidden and very hidden sheets
+	 * (their names too) and the cells of hidden rows and columns, and counts what it left out in
+	 * `hidden`, as an assistant needs so it never sends what the user cannot see.
+	 */
+	hidden?: 'include' | 'omit';
 }
+
+const rowHidden = (sheet: Worksheet, row: number): boolean => {
+	const info = sheet.rowInfo.get(row);
+	return info ? info.hidden === true : sheet.format?.zeroHeight === true;
+};
+const columnHidden = (sheet: Worksheet, col: number): boolean =>
+	sheet.columns.some((c) => c.hidden === true && col >= c.min && col <= c.max);
 
 /**
  * Every filled cell of every sheet (or of `sheetIndex`), in row-major order, up to `maxCells` in
@@ -93,7 +111,7 @@ export interface XlsxFilledCellsOptions {
  */
 export async function readXlsxFilledCells(
 	bytes: Uint8Array,
-	{ maxCells = 5000, sheetIndex }: XlsxFilledCellsOptions = {},
+	{ maxCells = 5000, sheetIndex, hidden = 'include' }: XlsxFilledCellsOptions = {},
 ) {
 	const workbook = await loadXlsx(bytes);
 	if (
@@ -102,14 +120,25 @@ export async function readXlsxFilledCells(
 	)
 		throw new Error('Invalid sheet');
 	let budget = Math.max(0, Math.floor(maxCells));
+	const omit = hidden === 'omit';
+	const left = { sheets: 0, cells: 0 };
 	const chosen = workbook.sheets
 		.map((sheet, index) => ({ sheet, index }))
-		.filter(({ index }) => sheetIndex === undefined || index === sheetIndex);
+		.filter(({ index }) => sheetIndex === undefined || index === sheetIndex)
+		.filter(({ sheet }) => {
+			const visible = !omit || sheet.state === 'visible';
+			if (!visible) left.sheets++;
+			return visible;
+		});
 	const sheets = chosen.map(({ sheet, index }) => {
 		const cells: { address: string; value: unknown; formula?: string }[] = [];
 		let total = 0;
 		forEachCell(sheet, (cell, row, col) => {
 			if (cell.value === null && !cell.formula) return;
+			if (omit && (rowHidden(sheet, row) || columnHidden(sheet, col))) {
+				left.cells++;
+				return;
+			}
 			total++;
 			if (budget <= 0) return;
 			budget--;
@@ -124,6 +153,8 @@ export async function readXlsxFilledCells(
 	return {
 		sheets,
 		truncated: sheets.some((s) => s.omitted > 0),
+		/** With `hidden: 'omit'`: the hidden sheets and the filled cells in hidden rows or columns left out. */
+		...(left.sheets || left.cells ? { hidden: left } : {}),
 		warnings: workbook.warnings,
 	};
 }

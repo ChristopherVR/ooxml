@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Filter, Paintbrush, Plus } from 'lucide-vue-next';
+import { Filter, Paintbrush, Plus } from '@lucide/vue';
 import {
 	applyChartElementToggle,
 	applyChartStylePreset,

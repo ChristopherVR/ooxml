@@ -4,11 +4,11 @@ import type { WorkbookComparison } from '../xlsx/compare/types';
 import { loadXlsx } from '../xlsx/read/load';
 import { saveXlsx } from '../xlsx/write/save';
 import { checkEditProposal, createEditProposal, type EditProposal } from './proposal';
-import { applyXlsxEdits, type XlsxEdit } from './xlsx-edits';
+import { applyXlsxEdits, type XlsxEdit, type XlsxFormulaOptions } from './xlsx-edits';
 
 export type XlsxEditProposal = EditProposal<XlsxEdit>;
 
-export interface XlsxReviewOptions {
+export interface XlsxReviewOptions extends XlsxFormulaOptions {
 	/** Differences to report at most (default 1000); the rest only set `truncated`. */
 	maxDifferences?: number;
 }
@@ -24,7 +24,7 @@ export interface XlsxReview {
 async function review(bytes: Uint8Array, edits: readonly XlsxEdit[], options: XlsxReviewOptions) {
 	const before = await loadXlsx(bytes);
 	const after = await loadXlsx(bytes);
-	applyXlsxEdits(after, edits);
+	applyXlsxEdits(after, edits, options);
 	const comparison = compareWorkbooks(before, after, {
 		maxDifferences: options.maxDifferences ?? 1000,
 	});
