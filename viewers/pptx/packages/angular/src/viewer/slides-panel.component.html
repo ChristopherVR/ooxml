@@ -1,12 +1,10 @@
 <div class="pptx-ng-spanel" data-pptx-chrome="slides" [style.width.px]="railWidth">
 	<!-- Scrollable slide list -->
 	<div
-		#scrollViewport
 		class="pptx-ng-spanel-scroll"
 		data-pptx-chrome="slide-list"
 		role="listbox"
 		[attr.aria-label]="'pptx.sections.slides' | translate"
-		(scroll)="onScroll()"
 	>
 		<div
 			class="pptx-ng-spanel-space"

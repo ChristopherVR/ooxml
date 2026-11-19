@@ -7,7 +7,7 @@
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import EyeOff from '@lucide/svelte/icons/eye-off';
 	import {
-		computeVirtualRange,
+		createVirtualWindow,
 		groupSlidesBySection,
 		HIDDEN_SLIDE_DIM_OPACITY,
 		HIDDEN_SLIDE_LABEL_KEY,
@@ -72,32 +72,30 @@
 	let draggedIndex = $state<number | null>(null);
 	// eslint-disable-next-line prefer-const
 	let railEl = $state<HTMLElement>();
-	let scrollTop = $state(0);
-	let viewportHeight = $state(600);
-	const virtualRange = $derived(
-		computeVirtualRange(slides.length, itemHeight, scrollTop, viewportHeight),
-	);
+	// The shared window reads scroll once per frame and reports only a change of
+	// rendered rows, so the rail re-renders when a row enters, not per scroll event.
+	const virtualWindow = createVirtualWindow({ totalItems: 0, itemHeight: 1 }, (range) => {
+		virtualRange = range;
+	});
+	let virtualRange = $state.raw(virtualWindow.range);
 	const renderedSlides = $derived.by(() => {
 		const start = shouldVirtualize ? virtualRange.startIndex : 0;
 		const end = shouldVirtualize ? virtualRange.endIndex : slides.length - 1;
 		return slides.slice(start, end + 1).map((slide, offset) => ({ slide, index: start + offset }));
 	});
 
-	function onScroll(): void {
-		if (!railEl) {return;}
-		scrollTop = railEl.scrollTop;
-		viewportHeight = railEl.clientHeight || 600;
-	}
-
 	$effect(() => {
-		if (!shouldVirtualize || !railEl) {return;}
-		const top = current * itemHeight;
-		const bottom = top + itemHeight;
-		if (top < railEl.scrollTop) {railEl.scrollTop = top;}
-		else if (bottom > railEl.scrollTop + viewportHeight) {
-			railEl.scrollTop = Math.max(0, bottom - viewportHeight);
+		virtualWindow.setShape({ totalItems: slides.length, itemHeight });
+	});
+	$effect(() => {
+		virtualWindow.attach(railEl ?? null);
+		return () => virtualWindow.attach(null);
+	});
+	$effect(() => () => virtualWindow.destroy());
+	$effect(() => {
+		if (shouldVirtualize && railEl) {
+			virtualWindow.reveal(current);
 		}
-		onScroll();
 	});
 
 	function onDragStart(index: number, event: DragEvent): void {
@@ -221,7 +219,7 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -- Enter here only catches the keydown bubbled up from a focused (interactive) thumbnail button -->
 <nav data-pptx-chrome="slides" style={`width:${fullWidth ? '100%' : `${EDITOR_SLIDE_RAIL_WIDTH}px`}`} class="pptx-svelte-thumbs" aria-label={t('pptx.sections.slides')} onkeydown={onRailKeydown}>
-	<div bind:this={railEl} bind:clientHeight={viewportHeight} class="pptx-svelte-thumbs-scroll" data-pptx-chrome="slide-list" onscroll={onScroll}>
+	<div bind:this={railEl} class="pptx-svelte-thumbs-scroll" data-pptx-chrome="slide-list">
 	{#if hasSections}
 		{#each sectionGroups as group, groupIndex (group.section?.id ?? 'ungrouped')}
 			<section class="pptx-svelte-section" data-section-id={group.section?.id}>

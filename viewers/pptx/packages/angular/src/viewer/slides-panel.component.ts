@@ -1,13 +1,16 @@
 import { NgStyle } from '@angular/common';
 import {
+	afterRenderEffect,
 	ChangeDetectionStrategy,
 	Component,
 	computed,
+	DestroyRef,
 	effect,
 	ElementRef,
 	HostListener,
 	inject,
 	input,
+	NgZone,
 	output,
 	signal,
 	viewChild,
@@ -15,7 +18,7 @@ import {
 import { LucidePlus } from '@lucide/angular';
 import { TranslatePipe } from '@ngx-translate/core';
 import {
-	computeVirtualRange,
+	createVirtualWindow,
 	EDITOR_THUMBNAIL_WIDTH,
 	EDITOR_SLIDE_RAIL_WIDTH,
 	editorThumbnailStep,
@@ -247,9 +250,21 @@ export class SlidesPanelComponent {
 		},
 		this.loader,
 	);
-	private readonly scrollViewport = viewChild<ElementRef<HTMLElement>>('scrollViewport');
-	private readonly scrollTop = signal(0);
-	private readonly viewportHeight = signal(600);
+	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+	/** The rail's scroll container; always rendered, so present after the first render. */
+	private scrollViewport(): HTMLElement | null {
+		return this.host.nativeElement.querySelector<HTMLElement>('[data-pptx-chrome="slide-list"]');
+	}
+	/**
+	 * The shared window reads scroll once per frame, outside the zone, and
+	 * reports only a change of rendered rows, so the rail re-renders when a row
+	 * enters, not on every scroll event.
+	 */
+	private readonly virtualWindow = createVirtualWindow({ totalItems: 0, itemHeight: 1 }, (range) =>
+		this.range.set(range),
+	);
+	private readonly range = signal(this.virtualWindow.range);
+	readonly virtualRange = this.range.asReadonly();
 
 	// ── Resolved deck (inputs, else the enclosing editor) ────────────────────
 
@@ -288,14 +303,6 @@ export class SlidesPanelComponent {
 	readonly shouldVirtualize = computed(
 		() => this.sectionList().length === 0 && this.deck().length >= SLIDE_VIRTUALIZATION_THRESHOLD,
 	);
-	readonly virtualRange = computed(() =>
-		computeVirtualRange(
-			this.deck().length,
-			this.itemHeight(),
-			this.scrollTop(),
-			this.viewportHeight(),
-		),
-	);
 	readonly renderedSlides = computed(() => {
 		const slides = this.deck();
 		if (this.sectionList().length > 0) {
@@ -319,34 +326,26 @@ export class SlidesPanelComponent {
 	});
 
 	constructor() {
+		const zone = inject(NgZone);
 		effect(() => {
-			const viewport = this.scrollViewport()?.nativeElement;
-			const index = this.activeIndex();
-			if (!viewport || !this.shouldVirtualize()) {
-				return;
-			}
-			const itemHeight = this.itemHeight();
-			const top = index * itemHeight;
-			const bottom = top + itemHeight;
-			if (top < viewport.scrollTop) {
-				viewport.scrollTop = top;
-			} else if (bottom > viewport.scrollTop + viewport.clientHeight) {
-				viewport.scrollTop = Math.max(0, bottom - viewport.clientHeight);
-			}
-			this.syncViewport(viewport);
+			this.virtualWindow.setShape({
+				totalItems: this.deck().length,
+				itemHeight: this.itemHeight(),
+			});
 		});
-	}
-
-	onScroll(): void {
-		const viewport = this.scrollViewport()?.nativeElement;
-		if (viewport) {
-			this.syncViewport(viewport);
-		}
-	}
-
-	private syncViewport(viewport: HTMLElement): void {
-		this.scrollTop.set(viewport.scrollTop);
-		this.viewportHeight.set(viewport.clientHeight || 600);
+		// After render, so the first pass already sees the scroll container.
+		afterRenderEffect(() => {
+			const viewport = this.scrollViewport();
+			zone.runOutsideAngular(() => this.virtualWindow.attach(viewport));
+		});
+		afterRenderEffect(() => {
+			const index = this.activeIndex();
+			this.itemHeight();
+			if (this.scrollViewport() && this.shouldVirtualize()) {
+				this.virtualWindow.reveal(index);
+			}
+		});
+		inject(DestroyRef).onDestroy(() => this.virtualWindow.destroy());
 	}
 
 	// ── Drag-to-reorder (the rail's reorder path; there are no per-card buttons) ──

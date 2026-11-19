@@ -1,3 +1,4 @@
+import { editorThumbnailStep } from 'ooxml-ui/pptx';
 /**
  * Thumbnail-rail tests for the display contract: the rail must never carry an
  * inline `display` style, because presentation mode and the mobile layout hide
@@ -95,5 +96,69 @@ describe('thumbnail rail display contract', () => {
 		expect(rail.el.hidden).toBeTruthy();
 		rail.setVisible(true);
 		expect(rail.el.hidden).toBeFalsy();
+	});
+});
+
+describe('thumbnail rail windowing', () => {
+	const STEP = editorThumbnailStep(CANVAS.width, CANVAS.height);
+	const nextFrame = () =>
+		new Promise<void>((resolve) => {
+			requestAnimationFrame(() => resolve());
+		});
+	const rowsOf = (rail: ReturnType<typeof createThumbnailRail>) => [
+		...rail.el.querySelectorAll<HTMLButtonElement>('[data-pptx-chrome="slide-row"]'),
+	];
+	const mount = () => {
+		const renderStage = vi.fn(slideRenderer);
+		const rail = createThumbnailRail(document, createTranslator(), vi.fn());
+		document.body.appendChild(rail.el);
+		rail.render(makeSlides(200), CANVAS, renderStage);
+		const list = rail.el.querySelector<HTMLElement>('[data-pptx-chrome="slide-list"]')!;
+		return { rail, list, renderStage };
+	};
+
+	it('builds only the rows entering the window, once per frame of scrolling', async () => {
+		const { rail, list, renderStage } = mount();
+		const before = rowsOf(rail);
+		renderStage.mockClear();
+		for (const rows of [1, 2, 3]) {
+			list.scrollTop = rows * STEP;
+			list.dispatchEvent(new Event('scroll'));
+		}
+		expect(renderStage).not.toHaveBeenCalled();
+		await nextFrame();
+		expect(renderStage).toHaveBeenCalledTimes(3);
+		// Rows still in the window are the same nodes; three rows were added.
+		const after = rowsOf(rail);
+		expect(after).toHaveLength(before.length + 3);
+		expect(after.slice(0, before.length)).toStrictEqual(before);
+		rail.destroy();
+		rail.el.remove();
+	});
+
+	it('moves the current slide without rebuilding rows while the window holds', () => {
+		const { rail, renderStage } = mount();
+		const before = rowsOf(rail);
+		renderStage.mockClear();
+		rail.setActive(2);
+		expect(renderStage).not.toHaveBeenCalled();
+		expect(rowsOf(rail)).toStrictEqual(before);
+		expect(before[2]?.getAttribute('aria-current')).toBe('true');
+		expect(before[0]?.hasAttribute('aria-current')).toBeFalsy();
+		rail.destroy();
+		rail.el.remove();
+	});
+
+	it('builds only the entering row when the current slide moves the window', () => {
+		const { rail, list, renderStage } = mount();
+		const visible = Math.floor(600 / STEP);
+		renderStage.mockClear();
+		rail.setActive(visible + 1);
+		expect(list.scrollTop).toBeGreaterThan(0);
+		expect(renderStage.mock.calls.length).toBeLessThanOrEqual(2);
+		const current = rail.el.querySelector<HTMLElement>('[aria-current="true"]');
+		expect(current?.dataset.slideIndex).toBe(String(visible + 1));
+		rail.destroy();
+		rail.el.remove();
 	});
 });

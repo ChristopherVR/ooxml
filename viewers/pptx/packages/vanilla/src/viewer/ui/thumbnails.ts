@@ -1,5 +1,6 @@
 import {
 	computeVirtualRange,
+	createVirtualWindow,
 	EDITOR_THUMBNAIL_WIDTH,
 	EDITOR_SLIDE_RAIL_WIDTH,
 	editorThumbnailStep,
@@ -78,7 +79,8 @@ export interface ThumbnailRail {
 
 /**
  * The thumbnail sidebar: a scaled-down live render of every slide; clicking a
- * thumbnail navigates to it. Rebuilt only when the slide list changes.
+ * thumbnail navigates to it. Every row is rebuilt on `render`; scrolling and
+ * selection build only the rows entering the window.
  */
 export function createThumbnailRail(
 	doc: Document,
@@ -139,14 +141,23 @@ export function createThumbnailRail(
 		el.appendChild(footer);
 	}
 	let buttons = new Map<number, HTMLButtonElement>();
+	/** Window rows by slide id; a row is reused while its slide and index hold. */
+	let rows = new Map<string, { slide: PptxSlide; index: number; el: HTMLButtonElement }>();
 	let activeIndex = 0;
 	let sourceSlides: PptxSlide[] = [];
 	let sourceCanvasSize: CanvasSize = { width: 1, height: 1 };
 	let sourceRenderStage: ((slide: PptxSlide, scale: number) => HTMLElement) | null = null;
 	let sourceSections: readonly PptxSection[] = [];
-	let sourceSectionActions: ThumbnailSectionActions | undefined;
 	let itemHeight = 1;
 	let virtualized = false;
+	const space = createEl(doc, 'div', 'pptxv-thumbs-space', { position: 'relative' });
+	const window = createEl(doc, 'div', 'pptxv-thumbs-window', {
+		display: 'flex',
+		flexDirection: 'column',
+	});
+	window.dataset.pptxChrome = 'slide-window';
+	space.appendChild(window);
+	const virtualWindow = createVirtualWindow({ totalItems: 0, itemHeight: 1 }, () => renderWindow());
 
 	const buildButton = (slide: PptxSlide, index: number, scale: number): HTMLButtonElement => {
 		const btn = createThumbnailRow(
@@ -169,38 +180,36 @@ export function createThumbnailRail(
 		return btn;
 	};
 
-	// Keep live 3D thumbnail scenes across selection, edits and scrolling.
-	const renderWindow = (): void => withReusableThreeViews(collectThreeViews(list), renderWindowNow);
+	const markActive = (): void => {
+		buttons.forEach((btn, buttonIndex) => {
+			const active = buttonIndex === activeIndex;
+			btn.classList.toggle('is-active', active);
+			if (active) {
+				btn.setAttribute('aria-current', CURRENT_ROW);
+			} else {
+				btn.removeAttribute('aria-current');
+			}
+		});
+	};
 
-	const renderWindowNow = (): void => {
-		if (!sourceRenderStage) {
-			return;
-		}
+	/** Drop every row, so the next window builds each one again. */
+	const clearRows = (): void => {
 		disposePptxRenderStage(list);
+		rows = new Map();
 		buttons = new Map();
-		const scale = THUMB_STAGE_WIDTH / Math.max(sourceCanvasSize.width, 1);
-		if (sourceSections.length > 0) {
-			list.replaceChildren(
-				...renderThumbnailSections({
-					doc,
-					t,
-					sections: sourceSections,
-					slides: sourceSlides,
-					actions: sourceSectionActions,
-					buildSlide: (slide, index) => buildButton(slide, index, scale),
-				}),
-			);
-			buttons.get(activeIndex)?.classList.add('is-active');
-			buttons.get(activeIndex)?.setAttribute('aria-current', CURRENT_ROW);
+	};
+
+	/**
+	 * Show the rows of the current window: rows still in it stay in place,
+	 * rows that left are released, and only the entering rows are built.
+	 */
+	const renderWindow = (): void => {
+		if (!sourceRenderStage || sourceSections.length > 0) {
 			return;
 		}
+		const scale = THUMB_STAGE_WIDTH / Math.max(sourceCanvasSize.width, 1);
 		const range = virtualized
-			? computeVirtualRange(
-					sourceSlides.length,
-					itemHeight,
-					list.scrollTop,
-					list.clientHeight || 600,
-				)
+			? virtualWindow.range
 			: computeVirtualRange(
 					sourceSlides.length,
 					itemHeight,
@@ -208,41 +217,68 @@ export function createThumbnailRail(
 					sourceSlides.length * itemHeight,
 					0,
 				);
-		const window = createEl(doc, 'div', 'pptxv-thumbs-window', {
-			display: 'flex',
-			flexDirection: 'column',
-		});
-		window.dataset.pptxChrome = 'slide-window';
-		if (virtualized) {
-			window.style.position = 'absolute';
-			window.style.insetInline = '0';
-			window.style.top = `${range.offsetY}px`;
-		}
+		const wanted = new Map<string, number>();
 		for (let index = range.startIndex; index <= range.endIndex; index += 1) {
 			const slide = sourceSlides[index];
 			if (slide) {
-				window.appendChild(buildButton(slide, index, scale));
+				wanted.set(slide.id, index);
 			}
 		}
-		const space = createEl(doc, 'div', 'pptxv-thumbs-space', {
-			position: 'relative',
-			height: virtualized ? `${range.totalHeight}px` : 'auto',
-		});
-		if (virtualized) {
-			space.dataset.virtualized = 'true';
+		const leaving: HTMLButtonElement[] = [];
+		for (const [id, row] of rows) {
+			if (wanted.get(id) !== row.index || sourceSlides[row.index] !== row.slide) {
+				leaving.push(row.el);
+				rows.delete(id);
+			}
 		}
-		space.appendChild(window);
-		list.replaceChildren(space);
-		const active = buttons.get(activeIndex);
-		active?.classList.add('is-active');
-		active?.setAttribute('aria-current', CURRENT_ROW);
+		// Only views of leaving rows may move into entering rows; a kept row's
+		// view must stay where it is.
+		const reusableViews: ReturnType<typeof collectThreeViews> = new Map();
+		for (const row of leaving) {
+			disposePptxRenderStage(row);
+			for (const [spec, view] of collectThreeViews(row)) {
+				if (!reusableViews.has(spec)) {
+					reusableViews.set(spec, view);
+				}
+			}
+		}
+		buttons = new Map();
+		const ordered: HTMLButtonElement[] = [];
+		const build = (): void => {
+			for (const [id, index] of wanted) {
+				let row = rows.get(id);
+				if (!row) {
+					const slide = sourceSlides[index]!;
+					row = { slide, index, el: buildButton(slide, index, scale) };
+					rows.set(id, row);
+				}
+				buttons.set(index, row.el);
+				ordered.push(row.el);
+			}
+		};
+		// With no leaving rows, keep the caller's pool (a full render's views).
+		if (reusableViews.size > 0) {
+			withReusableThreeViews(reusableViews, build);
+		} else {
+			build();
+		}
+		for (const row of leaving) {
+			row.remove();
+		}
+		// Kept rows are already in order; each entering row goes before the
+		// first kept row after it, so no kept row moves.
+		let cursor = window.firstChild;
+		for (const row of ordered) {
+			if (row === cursor) {
+				cursor = cursor.nextSibling;
+			} else {
+				window.insertBefore(row, cursor);
+			}
+		}
+		window.style.top = virtualized ? `${range.offsetY}px` : '';
+		space.style.height = virtualized ? `${range.totalHeight}px` : 'auto';
+		markActive();
 	};
-
-	list.addEventListener('scroll', () => {
-		if (virtualized) {
-			renderWindow();
-		}
-	});
 
 	return {
 		el,
@@ -253,7 +289,6 @@ export function createThumbnailRail(
 			sourceCanvasSize = canvasSize;
 			sourceRenderStage = renderStage;
 			sourceSections = sections ?? [];
-			sourceSectionActions = sectionActions;
 			itemHeight = editorThumbnailStep(canvasSize.width, canvasSize.height);
 			virtualized = !sections?.length && slides.length >= SLIDE_VIRTUALIZATION_THRESHOLD;
 			// Class toggle (not an inline display) so the presenting-mode and
@@ -261,32 +296,56 @@ export function createThumbnailRail(
 			// rail; an inline style would override them and leak thumbnail text
 			// into presentation mode.
 			el.classList.toggle('pptxv-thumbs-virtualized', virtualized);
-			renderWindow();
+			// An explicit render repaints every row: fonts, fields and table
+			// styles reach the thumbnails without changing the slide objects.
+			const views = collectThreeViews(list);
+			const scale = THUMB_STAGE_WIDTH / Math.max(canvasSize.width, 1);
+			withReusableThreeViews(views, () => {
+				clearRows();
+				if (sourceSections.length > 0) {
+					virtualWindow.attach(null);
+					list.replaceChildren(
+						...renderThumbnailSections({
+							doc,
+							t,
+							sections: sourceSections,
+							slides,
+							actions: sectionActions,
+							buildSlide: (slide, index) => buildButton(slide, index, scale),
+						}),
+					);
+					markActive();
+					return;
+				}
+				window.replaceChildren();
+				window.style.position = virtualized ? 'absolute' : '';
+				window.style.insetInline = virtualized ? '0' : '';
+				if (virtualized) {
+					space.dataset.virtualized = 'true';
+				} else {
+					delete space.dataset.virtualized;
+				}
+				if (list.firstChild !== space || list.childNodes.length !== 1) {
+					list.replaceChildren(space);
+				}
+				virtualWindow.attach(virtualized ? list : null);
+				virtualWindow.setShape({ totalItems: slides.length, itemHeight });
+				renderWindow();
+			});
 			this.setActive(activeIndex);
 		},
 		setActive(index) {
+			const changed = index !== activeIndex;
 			activeIndex = index;
 			if (virtualized) {
-				const top = index * itemHeight;
-				const bottom = top + itemHeight;
-				const viewport = list.clientHeight || 600;
-				if (top < list.scrollTop) {
-					list.scrollTop = top;
-				} else if (bottom > list.scrollTop + viewport) {
-					list.scrollTop = Math.max(0, bottom - viewport);
-				}
-				renderWindow();
+				// Builds rows only when the reveal moved the window.
+				virtualWindow.reveal(index);
 			}
-			buttons.forEach((btn, buttonIndex) => {
-				btn.classList.toggle('is-active', buttonIndex === index);
-				if (buttonIndex === index) {
-					btn.setAttribute('aria-current', CURRENT_ROW);
-				} else {
-					btn.removeAttribute('aria-current');
-				}
-			});
+			if (changed || !buttons.get(index)?.hasAttribute('aria-current')) {
+				markActive();
+			}
 			const active = buttons.get(index);
-			if (active && typeof active.scrollIntoView === 'function') {
+			if (!virtualized && active && typeof active.scrollIntoView === 'function') {
 				active.scrollIntoView({ block: 'nearest' });
 			}
 		},
@@ -299,17 +358,17 @@ export function createThumbnailRail(
 		},
 		destroy() {
 			contextMenu?.destroy();
-			disposePptxRenderStage(list);
+			virtualWindow.destroy();
+			clearRows();
 			list.replaceChildren();
-			buttons = new Map();
 			sourceRenderStage = null;
 		},
 		renderMasters(masters, canvasSize, renderStage, select, active) {
 			masterMode = true;
 			applyFooterVisibility();
-			disposePptxRenderStage(list);
+			clearRows();
 			list.replaceChildren();
-			buttons = new Map();
+			virtualWindow.attach(null);
 			virtualized = false;
 			el.classList.remove('pptxv-thumbs-virtualized');
 			list.append(

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { EyeOff, MessageSquare, Plus } from '@lucide/vue';
 import {
-	computeVirtualRange,
+	createVirtualWindow,
 	HIDDEN_SLIDE_LABEL_KEY,
 	HIDDEN_SLIDE_SLASH_GRADIENT,
 	hiddenSlideCue,
@@ -23,7 +23,7 @@ import {
  * and virtualizes decks at the same 50-slide threshold as React.
  */
 import type { PptxSlide } from 'pptx-viewer-core';
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import { cn } from '../../utils';
@@ -75,15 +75,24 @@ const previewHeight = computed(() =>
 	editorThumbnailHeight(props.canvasSize.width, props.canvasSize.height, props.thumbWidth),
 );
 const listEl = ref<HTMLElement | null>(null);
-const scrollTop = ref(0);
-const viewportHeight = ref(600);
 const itemHeight = computed(() =>
 	editorThumbnailStep(props.canvasSize.width, props.canvasSize.height, props.thumbWidth),
 );
 const shouldVirtualize = computed(() => props.slides.length >= SLIDE_VIRTUALIZATION_THRESHOLD);
-const virtualRange = computed(() =>
-	computeVirtualRange(props.slides.length, itemHeight.value, scrollTop.value, viewportHeight.value),
+// The shared window reads scroll once per frame and reports only a change of
+// rendered rows, so the rail re-renders when a row enters, not per scroll event.
+const virtualWindow = createVirtualWindow(
+	{ totalItems: props.slides.length, itemHeight: itemHeight.value },
+	(range) => {
+		virtualRange.value = range;
+	},
 );
+const virtualRange = shallowRef(virtualWindow.range);
+watch([() => props.slides.length, itemHeight], ([totalItems, height]) =>
+	virtualWindow.setShape({ totalItems, itemHeight: height }),
+);
+watch(listEl, (el) => virtualWindow.attach(el), { flush: 'sync' });
+onBeforeUnmount(() => virtualWindow.destroy());
 const renderedSlides = computed(() => {
 	const start = shouldVirtualize.value ? virtualRange.value.startIndex : 0;
 	const end = shouldVirtualize.value ? virtualRange.value.endIndex : props.slides.length - 1;
@@ -91,31 +100,13 @@ const renderedSlides = computed(() => {
 		.slice(start, end + 1)
 		.map((slide, offset) => ({ slide, index: start + offset }));
 });
-function onScroll(): void {
-	const el = listEl.value;
-	if (!el) {
-		return;
-	}
-	scrollTop.value = el.scrollTop;
-	viewportHeight.value = el.clientHeight || 600;
-}
 watch(
 	[() => props.activeIndex, itemHeight],
 	async ([index]) => {
 		await nextTick();
-		const el = listEl.value;
-		if (!el || !shouldVirtualize.value) {
-			return;
+		if (shouldVirtualize.value) {
+			virtualWindow.reveal(index);
 		}
-		const viewport = el.clientHeight || 600;
-		const top = index * itemHeight.value;
-		const bottom = top + itemHeight.value;
-		if (top < el.scrollTop) {
-			el.scrollTop = top;
-		} else if (bottom > el.scrollTop + viewport) {
-			el.scrollTop = Math.max(0, bottom - viewport);
-		}
-		onScroll();
 	},
 	{ immediate: true },
 );
@@ -167,7 +158,6 @@ const {
 			data-pptx-chrome="slide-list"
 			ref="listEl"
 			class="flex-1 overflow-y-auto px-1.5 pb-2 pt-1.5"
-			@scroll="onScroll"
 		>
 			<div
 				:data-virtualized="shouldVirtualize ? 'true' : undefined"
