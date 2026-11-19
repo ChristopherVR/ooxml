@@ -255,6 +255,22 @@ describe('what a recalculation must not reuse', () => {
 		expect(get(wb, 'C1')).toBe(-1);
 	});
 
+	it('lets a lookup computed during a search of the same cells scan on its own', () => {
+		// C2 reaches A5 while extending the index, which computes C3 searching the same cells.
+		const wb = book({
+			C1: '=MATCH(1,INDIRECT("A1:A40"),0)',
+			C2: '=MATCH(TRUE,INDIRECT("A1:A40"),0)',
+			C3: '=MATCH(7,INDIRECT("A1:A40"),0)',
+			A1: 1,
+			A2: 2,
+			A5: '=C3',
+			A10: true,
+			A40: 0,
+		});
+		engine(wb).recalculateAll();
+		expect([get(wb, 'C1'), get(wb, 'C2'), get(wb, 'C3'), get(wb, 'A5')]).toEqual([1, 10, E.NA, 0]);
+	});
+
 	it('drops a total read before a spill arrived in the range', () => {
 		// A1 reads E1:E80 row by row; E10 computes D3 on the way, which spills into E3:E7.
 		const wb = book({

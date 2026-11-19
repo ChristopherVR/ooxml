@@ -29,6 +29,8 @@ function exactKey(value: Scalar): ExactKey | undefined {
 export class ExactSearch {
 	private readonly first = new Map<ExactKey, number>();
 	private visited = 0;
+	/** Set while `find` reads cells: a formula it computes may search the same cells again. */
+	busy = false;
 
 	constructor(
 		private readonly length: number,
@@ -39,6 +41,15 @@ export class ExactSearch {
 		const target = exactKey(lookup);
 		const known = target === undefined ? undefined : this.first.get(target);
 		if (known !== undefined) return known;
+		this.busy = true;
+		try {
+			return this.extend(target, read);
+		} finally {
+			this.busy = false;
+		}
+	}
+
+	private extend(target: ExactKey | undefined, read: (index: number) => Scalar): number {
 		while (this.visited < this.length) {
 			const at = this.reverse ? this.length - 1 - this.visited : this.visited;
 			// Counted after the read: one that unwinds to compute a formula first is repeated.
@@ -107,6 +118,8 @@ export class PassCache {
 			return undefined;
 		}
 		if (!search) this.searches.set(key, (search = new ExactSearch(length, reverse)));
+		// A lookup computed while this index reads its cells scans on its own, as it would alone.
+		else if (search.busy) return undefined;
 		const cycleReads = this.state.cycleReads();
 		try {
 			return search.find(lookup, read);
