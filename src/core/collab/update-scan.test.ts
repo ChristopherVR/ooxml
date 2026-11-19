@@ -31,7 +31,8 @@ function richDoc(): Y.Doc {
 	const element = new Y.XmlElement('p');
 	element.setAttribute('class', 'c');
 	element.insert(0, [new Y.XmlText('inside')]);
-	xml.insert(0, [element, new Y.XmlHook('hook')]);
+	xml.insert(0, [element]);
+	map.set('hook', new Y.XmlHook('hook'));
 	array.push([new Y.Doc({ guid: 'sub' })]);
 	map.delete('number');
 	return doc;
