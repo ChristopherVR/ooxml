@@ -10,25 +10,31 @@ const FIXTURE = fileURLToPath(
 	new URL('../../../__tests__/fixtures/embedded-assets-sample.pptx', import.meta.url),
 );
 const PRESENTATION_RELS = 'ppt/_rels/presentation.xml.rels';
+const BOM_FIXTURE = fileURLToPath(
+	new URL('../../../__tests__/fixtures/e2e/absolute-path-rels.pptx', import.meta.url),
+);
 const SLIDE_TYPE = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide';
+const HYPERLINK_TYPE =
+	'http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink';
 
 interface PackageChange {
 	signed: boolean;
 	/** Added to the presentation relationships, reusing the first slide relationship's `Id`. */
 	relationship?: (id: string) => string;
+	/** Prepended to the presentation relationships. */
+	prefix?: string;
 }
 
-async function loadSlideTargets({ signed, relationship }: PackageChange) {
+async function loadSlideTargets({ signed, relationship, prefix = '' }: PackageChange) {
 	const zip = await JSZip.loadAsync(readFileSync(FIXTURE));
 	const rels = await zip.file(PRESENTATION_RELS)!.async('string');
 	const slide = new RegExp(`<Relationship\\b[^>]*Type="${SLIDE_TYPE}"[^>]*>`).exec(rels)![0];
 	const id = /\bId="([^"]+)"/.exec(slide)![1]!;
-	if (relationship) {
-		zip.file(
-			PRESENTATION_RELS,
-			rels.replace('</Relationships>', `${relationship(id)}</Relationships>`),
-		);
-	}
+	const extra = relationship?.(id) ?? '';
+	zip.file(
+		PRESENTATION_RELS,
+		prefix + rels.replace('</Relationships>', `${extra}</Relationships>`),
+	);
 	if (signed) zip.file('_xmlsignatures/sig1.xml', '<Signature/>');
 	const bytes = await zip.generateAsync({ type: 'arraybuffer' });
 	return new PptxHandler().load(bytes);
@@ -53,6 +59,40 @@ describe('loading a package that carries a signature', () => {
 		await expect(loadSlideTargets({ signed: true, relationship })).rejects.toThrow(
 			/invalid relationships part/,
 		);
+	});
+
+	it.each<[string, PackageChange]>([
+		['a byte order mark on a relationships part', { signed: true, prefix: '\uFEFF' }],
+		[
+			'a relationship with an empty Target',
+			{
+				signed: true,
+				relationship: () =>
+					`<Relationship Id="rIdEmpty" Type="${HYPERLINK_TYPE}" Target="" TargetMode="External"/>`,
+			},
+		],
+		[
+			'relationship Ids that differ only in case',
+			{
+				signed: true,
+				relationship: (id) =>
+					`<Relationship Id="${id.toUpperCase()}" Type="${HYPERLINK_TYPE}" Target="http://example.test/" TargetMode="External"/>`,
+			},
+		],
+	])('loads %s', async (_label, change) => {
+		const unsigned = await loadSlideTargets({ signed: false });
+		const { slides } = await loadSlideTargets(change);
+		expect(slides).toHaveLength(unsigned.slides.length);
+	});
+
+	it('loads a deck whose every relationships part starts with a byte order mark', async () => {
+		const bytes = readFileSync(BOM_FIXTURE);
+		const unsigned = await new PptxHandler().load(new Uint8Array(bytes).buffer);
+		const zip = await JSZip.loadAsync(bytes);
+		zip.file('_xmlsignatures/sig1.xml', '<Signature/>');
+		const signed = await new PptxHandler().load(await zip.generateAsync({ type: 'arraybuffer' }));
+		expect(unsigned.slides.length).toBeGreaterThan(0);
+		expect(signed.slides).toHaveLength(unsigned.slides.length);
 	});
 
 	it('keeps opening unsigned packages with the same defect', async () => {

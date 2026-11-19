@@ -7,16 +7,24 @@
 
 import crypto from 'node:crypto';
 
-import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
 import JSZip from 'jszip';
 import { contentTypeForPart, parseContentTypes } from '../../opc/content-types';
-import { MEDIA_TYPES_ITEM } from '../../opc/part-names';
+import { isPartName, MEDIA_TYPES_ITEM } from '../../opc/part-names';
+import {
+	buildRelationshipsXml,
+	isRelationshipsItem,
+	nextRelationshipId,
+	parseRelationshipsPart,
+	type RelationshipInput,
+} from '../../opc/relationships';
+import { isSignaturePart } from '../../opc/signature/detection';
+import { hasVerifiedIntegrity } from '../../opc/signature/inspection-status';
+import { buildXml, parseXml } from '../../xml/index';
 import { openPptxZip } from '../core/utils/zip-open';
 
 import {
 	DIGITAL_SIGNATURE_ORIGIN_REL_TYPE,
 	DIGITAL_SIGNATURE_REL_TYPE,
-	OPC_RELATIONSHIPS_NS,
 	XMLDSIG_NS,
 } from '../core/utils/signature-constants';
 import type {
@@ -28,6 +36,7 @@ import type {
 import { escapeXmlAttr, escapeXmlText, isValidBase64 } from '../core/utils/signature-xml-utils';
 import { loadSigningMaterialFromBuffer, pemCertificateToBase64 } from './certificate-utils';
 import { inspectPptxDigitalSignatures } from './inspection';
+import { isOutsideCoverage } from './signature-coverage';
 import {
 	canonicalizeNode,
 	canonicalizeSignedInfoXml,
@@ -36,44 +45,58 @@ import {
 	parseStrictXml,
 } from './xml-canonicalization';
 
+const PACKAGE_RELATIONSHIPS_PART = '_rels/.rels';
+
+const storedItemNames = (zip: JSZip): string[] =>
+	Object.keys(zip.files).filter((name) => !zip.files[name]?.dir);
+
+/**
+ * Refuses a package a signature could not describe or the loader would not open once signed: an
+ * item whose name is not a valid part name cannot be referenced, and a signed package with a
+ * relationships part the strict reader rejects does not load.
+ */
+async function assertSignable(zip: JSZip): Promise<void> {
+	for (const name of storedItemNames(zip)) {
+		if (isOutsideCoverage(name)) continue;
+		if (!isPartName(name)) {
+			throw new Error(`"${name}" is not a valid part name.`);
+		}
+		if (!isRelationshipsItem(name)) continue;
+		try {
+			parseRelationshipsPart(await zip.file(name)!.async('string'));
+		} catch (error) {
+			throw new Error(`"${name}" is not a valid relationships part.`, { cause: error });
+		}
+	}
+}
+
+/** Points the package's one origin relationship at the origin part this signer writes. */
 async function upsertRootOriginRelationship(zip: JSZip): Promise<void> {
-	const parser = new DOMParser();
-	const serializer = new XMLSerializer();
-	const relsPath = '_rels/.rels';
-	const xml =
-		(await zip.file(relsPath)?.async('string')) ||
-		'<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>';
-	const doc = parser.parseFromString(xml, 'text/xml');
-	const relationships = doc.documentElement;
-	if (!relationships) {
-		throw new Error('Unable to sign package: invalid _rels/.rels XML.');
-	}
-	const existing = Array.from(relationships.getElementsByTagName('Relationship')).find(
-		(node) => node.getAttribute('Type') === DIGITAL_SIGNATURE_ORIGIN_REL_TYPE,
+	const xml = await zip.file(PACKAGE_RELATIONSHIPS_PART)?.async('string');
+	const relationships = xml === undefined ? [] : parseRelationshipsPart(xml);
+	const id =
+		relationships.find(({ type }) => type === DIGITAL_SIGNATURE_ORIGIN_REL_TYPE)?.id ??
+		nextRelationshipId(new Set(relationships.map((relationship) => relationship.id)));
+	const kept = new Map<string, RelationshipInput>(
+		relationships
+			.filter(({ type }) => type !== DIGITAL_SIGNATURE_ORIGIN_REL_TYPE)
+			.map((relationship) => [relationship.id, relationship]),
 	);
-	if (!existing) {
-		const rel = doc.createElementNS(OPC_RELATIONSHIPS_NS, 'Relationship');
-		rel.setAttribute('Id', 'rIdDigitalSignatureOrigin');
-		rel.setAttribute('Type', DIGITAL_SIGNATURE_ORIGIN_REL_TYPE);
-		rel.setAttribute('Target', '_xmlsignatures/origin.sigs');
-		relationships.appendChild(rel);
-	}
-	zip.file(relsPath, serializer.serializeToString(doc));
+	kept.set(id, {
+		type: DIGITAL_SIGNATURE_ORIGIN_REL_TYPE,
+		target: '_xmlsignatures/origin.sigs',
+		mode: 'Internal',
+	});
+	zip.file(PACKAGE_RELATIONSHIPS_PART, buildRelationshipsXml(kept));
 }
 
 async function upsertContentTypesForSignature(zip: JSZip, signaturePath: string): Promise<void> {
-	const parser = new DOMParser();
-	const serializer = new XMLSerializer();
-	const pathInContentTypes = MEDIA_TYPES_ITEM;
-	const xml = (await zip.file(pathInContentTypes)?.async('string')) || '';
+	const xml = await zip.file(MEDIA_TYPES_ITEM)?.async('string');
 	if (!xml) {
 		return;
 	}
-	const doc = parser.parseFromString(xml, 'text/xml');
+	const doc = parseXml(xml);
 	const types = doc.documentElement;
-	if (!types) {
-		return;
-	}
 	const ensureOverride = (partName: string, contentType: string): void => {
 		const existing = Array.from(types.getElementsByTagName('Override')).find(
 			(node) => node.getAttribute('PartName') === partName,
@@ -95,23 +118,19 @@ async function upsertContentTypesForSignature(zip: JSZip, signaturePath: string)
 		`/${signaturePath}`,
 		'application/vnd.openxmlformats-package.digital-signature-xmlsignature+xml',
 	);
-	zip.file(pathInContentTypes, serializer.serializeToString(doc));
+	zip.file(MEDIA_TYPES_ITEM, buildXml(doc));
 }
 
 async function buildOfficeReferenceList(zip: JSZip): Promise<OfficeSignatureReference[]> {
 	const references: OfficeSignatureReference[] = [];
 	const digestMethod = 'http://www.w3.org/2001/04/xmlenc#sha256';
 	const contentTypes = parseContentTypes(await zip.file(MEDIA_TYPES_ITEM)?.async('string'));
-	for (const entryPath of Object.keys(zip.files)) {
-		const entry = zip.file(entryPath);
-		if (!entry || entry.dir) {
-			continue;
-		}
+	for (const entryPath of storedItemNames(zip)) {
 		// The Media Types stream is not a part; each reference binds its part's type instead.
-		if (entryPath === MEDIA_TYPES_ITEM || entryPath.startsWith('_xmlsignatures/')) {
+		if (isOutsideCoverage(entryPath)) {
 			continue;
 		}
-		const entryBytes = await entry.async('uint8array');
+		const entryBytes = await zip.file(entryPath)!.async('uint8array');
 		const digestValue = crypto
 			.createHash('sha256')
 			.update(Buffer.from(entryBytes))
@@ -200,7 +219,11 @@ function buildOfficeSignatureXml(
  *
  * Removes any existing signatures, creates a new XML-DSig signature
  * covering all non-signature parts, and returns the signed data
- * along with a post-sign verification report.
+ * along with a post-sign verification report. Fails, with no signed data,
+ * for a package that cannot be represented: invalid part names, invalid
+ * relationships parts, or output whose signature does not verify and cover
+ * its content. Trust and policy outcomes do not fail signing; read them
+ * from the report.
  */
 export async function signPptxWithCertificate(
 	data: Uint8Array,
@@ -216,10 +239,11 @@ export async function signPptxWithCertificate(
 		const zip = await openPptxZip(Buffer.from(data));
 
 		for (const entryPath of Object.keys(zip.files)) {
-			if (entryPath.startsWith('_xmlsignatures/')) {
+			if (isSignaturePart(entryPath)) {
 				zip.remove(entryPath);
 			}
 		}
+		await assertSignable(zip);
 
 		const signaturePath = '_xmlsignatures/sig1.xml';
 		await upsertRootOriginRelationship(zip);
@@ -239,6 +263,9 @@ export async function signPptxWithCertificate(
 
 		const signedData = await zip.generateAsync({ type: 'uint8array' });
 		const report = await inspectPptxDigitalSignatures(signedData);
+		if (!report.details?.every(hasVerifiedIntegrity)) {
+			throw new Error(`The signed package does not verify (${report.verificationStatus}).`);
+		}
 		return { success: true, signedData, report };
 	} catch (error) {
 		const errorReport: DigitalSignatureReport = {

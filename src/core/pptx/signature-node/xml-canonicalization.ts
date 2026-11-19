@@ -15,6 +15,8 @@
 import { DOMParser } from '@xmldom/xmldom';
 import { SignedXml } from 'xml-crypto';
 
+import { withoutByteOrderMark } from '../../xml/index';
+
 const ELEMENT_NODE = 1;
 const DOCUMENT_TYPE_NODE = 10;
 
@@ -63,7 +65,8 @@ export interface XmlDocument {
 
 /**
  * Parse XML that decides a security verdict. Malformed markup and document type declarations are
- * errors: entity definitions could make the bytes a signer saw differ from the tree read here.
+ * errors: entity definitions could make the bytes a signer saw differ from the tree read here. A
+ * leading byte order mark is encoding information, so it is ignored.
  */
 export function parseStrictXml(xml: string): XmlDocument {
 	const parser = new DOMParser({
@@ -73,7 +76,10 @@ export function parseStrictXml(xml: string): XmlDocument {
 			}
 		},
 	});
-	const doc = parser.parseFromString(xml, 'text/xml') as unknown as XmlDocument;
+	const doc = parser.parseFromString(
+		withoutByteOrderMark(xml),
+		'text/xml',
+	) as unknown as XmlDocument;
 	if (Array.from(doc.childNodes).some((node) => node.nodeType === DOCUMENT_TYPE_NODE)) {
 		throw new Error('Invalid XML: document type declarations are not allowed.');
 	}

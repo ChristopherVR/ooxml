@@ -1,6 +1,5 @@
 import JSZip from 'jszip';
-import { partNameKey } from '../../../../opc/part-names';
-import { parseRelationshipsPart } from '../../../../opc/relationships';
+import { isRelationshipsItem, parseRelationshipsPart } from '../../../../opc/relationships';
 import { guardZip } from '../../../../opc/zip-limits';
 
 import { XmlObject } from '../../types';
@@ -223,7 +222,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 		const relationshipParts: string[] = [];
 		this.zip.forEach((relativePath, file) => {
-			if (!file.dir && partNameKey(relativePath).endsWith('.rels')) {
+			if (!file.dir && isRelationshipsItem(relativePath)) {
 				relationshipParts.push(relativePath);
 			}
 		});

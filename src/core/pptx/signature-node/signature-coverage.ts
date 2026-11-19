@@ -8,6 +8,11 @@
  * is a gap unless it sits where those unsigned parts live, because a reader may find parts by name
  * without following a relationship.
  *
+ * The exemption is about the part and does not depend on whether its relationship is signed.
+ * ECMA-376 Part 2, 10.3 leaves what to sign to a signature policy and nothing requires the target
+ * of a signed relationship to be signed, so a signed relationship to unsigned custom XML is not a
+ * gap. Such parts are always listed in `uncoveredParts`.
+ *
  * Node-only - reads parts through `jszip`.
  */
 
@@ -55,7 +60,7 @@ const MEDIA_TYPES_KEY = partNameKey(MEDIA_TYPES_ITEM);
 const isNotAPart = (key: string): boolean => key === MEDIA_TYPES_KEY || key.startsWith('[trash]/');
 
 /** The signature machinery itself, which a signature cannot cover, and items that are not parts. */
-const isOutsideCoverage = (name: string): boolean =>
+export const isOutsideCoverage = (name: string): boolean =>
 	isSignaturePart(name) || isNotAPart(partNameKey(name));
 
 export interface SignatureCoverage {
@@ -69,9 +74,14 @@ function sourcePartOf(relationshipsPart: string): string {
 	return match ? `${match[1]}${match[2]}` : '';
 }
 
-/** The part name a relationship targets. Percent-encoding is part of the name. */
-const targetPartOf = (sourcePart: string, relationship: PackageRelationship): string =>
-	resolvePartPath(sourcePart, relationship.target.split(/[?#]/)[0] ?? '');
+/**
+ * The part name a relationship targets. Percent-encoding is part of the name, and a reference with
+ * an empty path, which the schema allows, names its source (RFC 3986, 5.2.2).
+ */
+function targetPartOf(sourcePart: string, relationship: PackageRelationship): string {
+	const path = relationship.target.split(/[?#]/)[0];
+	return path ? resolvePartPath(sourcePart, path) : sourcePart;
+}
 
 function mayStayUnsigned(sourcePart: string, relationship: PackageRelationship): boolean {
 	if (relationship.mode !== 'Internal' || !UNSIGNED_RELATIONSHIP_TYPES.has(relationship.type)) {
@@ -133,11 +143,13 @@ export async function evaluateSignatureCoverage(
 			const target = resolvePartName(pkg, targetPartOf(sourcePart, relationship));
 			if (target === undefined || isOutsideCoverage(target)) continue;
 			if (!coveredParts.has(target)) {
-				coverageGaps.push({
-					kind: 'unsigned-part',
-					part: target,
-					relationshipId: relationship.id,
-				});
+				if (!mayStayUnsigned(sourcePart, relationship)) {
+					coverageGaps.push({
+						kind: 'unsigned-part',
+						part: target,
+						relationshipId: relationship.id,
+					});
+				}
 				continue;
 			}
 			reachedSignedContent = true;

@@ -13,50 +13,68 @@ import type {
 	SignatureValidationPolicy,
 } from './types';
 
+type SignatureIntegrityFields = Pick<
+	SignatureDetail,
+	'signatureValueStatus' | 'missingPartReferences' | 'referenceChecks' | 'coverageGaps'
+>;
+
+/** Why a signature does not protect the package's content, or `undefined` when it does. */
+function integrityFailure(detail: SignatureIntegrityFields): SignatureDetailStatus | undefined {
+	if (detail.signatureValueStatus === 'invalid') {
+		return 'signature-invalid';
+	}
+	if (detail.missingPartReferences.length > 0) {
+		return 'reference-missing';
+	}
+	const hasDigestMismatch = detail.referenceChecks.some(
+		(check) => check.digestStatus === 'mismatch' || check.digestStatus === 'content-type-mismatch',
+	);
+	if (hasDigestMismatch) {
+		return 'digest-mismatch';
+	}
+	const everyReferenceVerified =
+		detail.referenceChecks.length > 0 &&
+		detail.referenceChecks.every((check) => check.digestStatus === 'verified');
+	if (detail.signatureValueStatus !== 'verified' || !everyReferenceVerified) {
+		return 'structural-only';
+	}
+	return detail.coverageGaps.length > 0 ? 'coverage-incomplete' : undefined;
+}
+
+/**
+ * Whether the signature value and every signed reference verified and those references cover the
+ * content. Certificates, revocation, timestamps and policy play no part in this.
+ */
+export const hasVerifiedIntegrity = (detail: SignatureIntegrityFields): boolean =>
+	integrityFailure(detail) === undefined;
+
 /**
  * Compute the overall status for an individual signature detail.
  *
- * `verified` and `certificate-untrusted` both mean the integrity checks passed: the signature
- * value verified, every signed reference verified, and those references cover the content.
+ * Integrity is decided first, so no certificate, timestamp or policy outcome can replace an
+ * integrity failure. Every status those checks produce therefore means integrity held.
  *
  * @param detail - A partial `SignatureDetail` with the fields needed for status computation.
  * @param policy - The validation policy controlling revocation/timestamp strictness.
  * @returns The computed status for this signature detail.
  */
 export function computeDetailStatus(
-	detail: Pick<
-		SignatureDetail,
-		| 'signatureValueStatus'
-		| 'missingPartReferences'
-		| 'referenceChecks'
-		| 'coverageGaps'
-		| 'certificateTrustStatus'
-		| 'certificateRevocationStatus'
-		| 'timestampAuthorityStatus'
-	>,
+	detail: SignatureIntegrityFields &
+		Pick<
+			SignatureDetail,
+			'certificateTrustStatus' | 'certificateRevocationStatus' | 'timestampAuthorityStatus'
+		>,
 	policy: SignatureValidationPolicy,
 ): SignatureDetailStatus {
-	const hasDigestMismatch = detail.referenceChecks.some(
-		(check) => check.digestStatus === 'mismatch' || check.digestStatus === 'content-type-mismatch',
-	);
-	const hasMissingPart = detail.missingPartReferences.length > 0;
-	const everyReferenceVerified =
-		detail.referenceChecks.length > 0 &&
-		detail.referenceChecks.every((check) => check.digestStatus === 'verified');
+	const failure = integrityFailure(detail);
+	if (failure) {
+		return failure;
+	}
 	const revocationUnknown =
 		detail.certificateRevocationStatus === 'unknown' ||
 		detail.certificateRevocationStatus === 'not-checked' ||
 		detail.certificateRevocationStatus === 'error';
 
-	if (detail.signatureValueStatus === 'invalid') {
-		return 'signature-invalid';
-	}
-	if (hasMissingPart) {
-		return 'reference-missing';
-	}
-	if (hasDigestMismatch) {
-		return 'digest-mismatch';
-	}
 	if (detail.certificateRevocationStatus === 'revoked') {
 		return 'certificate-revoked';
 	}
@@ -77,17 +95,26 @@ export function computeDetailStatus(
 	if (detail.timestampAuthorityStatus === 'untrusted') {
 		return 'timestamp-untrusted';
 	}
-	if (detail.signatureValueStatus !== 'verified' || !everyReferenceVerified) {
-		return 'structural-only';
-	}
-	if (detail.coverageGaps.length > 0) {
-		return 'coverage-incomplete';
-	}
 	if (detail.certificateTrustStatus === 'untrusted') {
 		return 'certificate-untrusted';
 	}
 	return detail.certificateTrustStatus === 'trusted' ? 'verified' : 'structural-only';
 }
+
+/** Report status of each failing detail status, most serious first: integrity before the rest. */
+const REPORT_STATUS_PRECEDENCE: readonly (readonly [
+	SignatureDetailStatus,
+	DigitalSignatureReport['verificationStatus'],
+])[] = [
+	['signature-invalid', 'signature-invalid'],
+	['reference-missing', 'reference-missing'],
+	['digest-mismatch', 'digest-mismatch'],
+	['structural-only', 'present-not-verified'],
+	['coverage-incomplete', 'coverage-incomplete'],
+	['certificate-revoked', 'certificate-revoked'],
+	['timestamp-invalid', 'timestamp-invalid'],
+	['timestamp-untrusted', 'timestamp-untrusted'],
+];
 
 /**
  * Compute the overall verification status from all signature details.
@@ -98,14 +125,9 @@ export function computeDetailStatus(
 export function computeVerificationStatus(
 	details: SignatureDetail[],
 ): DigitalSignatureReport['verificationStatus'] {
-	const has = (status: SignatureDetailStatus) => details.some((detail) => detail.status === status);
-	if (has('signature-invalid')) return 'signature-invalid';
-	if (has('certificate-revoked')) return 'certificate-revoked';
-	if (has('timestamp-invalid')) return 'timestamp-invalid';
-	if (has('timestamp-untrusted')) return 'timestamp-untrusted';
-	if (has('reference-missing')) return 'reference-missing';
-	if (has('digest-mismatch')) return 'digest-mismatch';
-	if (has('coverage-incomplete')) return 'coverage-incomplete';
+	for (const [status, reportStatus] of REPORT_STATUS_PRECEDENCE) {
+		if (details.some((detail) => detail.status === status)) return reportStatus;
+	}
 	if (details.length > 0 && details.every((detail) => detail.status === 'verified')) {
 		return 'verified-trusted';
 	}

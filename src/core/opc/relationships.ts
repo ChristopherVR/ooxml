@@ -1,5 +1,5 @@
 import { NS, elements, parseXml, relAttr, type XmlElement } from '../xml/index';
-import { asciiLowerCase } from './part-names';
+import { partNameKey } from './part-names';
 
 export interface Relationship {
 	id: string;
@@ -56,7 +56,7 @@ function readStrictRelationship(element: XmlElement): Relationship {
 	const id = element.getAttribute('Id');
 	const type = element.getAttribute('Type');
 	const target = element.getAttribute('Target');
-	if (!id || !type || !target) {
+	if (!id || !type || target === null) {
 		throw new Error('Relationships part: Id, Type and Target are required.');
 	}
 	const mode = element.getAttribute('TargetMode') ?? 'Internal';
@@ -68,9 +68,10 @@ function readStrictRelationship(element: XmlElement): Relationship {
 
 /**
  * Reads a relationships part for a security decision, in document order. Anything the schema
- * (ECMA-376 Part 2, 6.5.3) does not allow throws, as does an `Id` repeated in any ASCII case, so
- * every reader of an accepted part sees the same relationships. {@link parseRelationships} is the
- * tolerant reader for opening documents.
+ * (ECMA-376 Part 2, 6.5.3) does not allow throws, so every reader of an accepted part sees the same
+ * relationships. As in the schema, `Target` may be empty (`xsd:anyURI`) and `Id`s are unique as
+ * exact strings (`xsd:ID`), so `rId1` and `RID1` are two relationships.
+ * {@link parseRelationships} is the tolerant reader for opening documents.
  */
 export function parseRelationshipsPart(xml: string): Relationship[] {
 	const root = parseXml(xml).documentElement;
@@ -79,12 +80,15 @@ export function parseRelationshipsPart(xml: string): Relationship[] {
 	}
 	assertOnlyAttributes(root, NO_ATTRIBUTES);
 	const relationships = elements(root).map(readStrictRelationship);
-	const ids = new Set(relationships.map(({ id }) => asciiLowerCase(id)));
+	const ids = new Set(relationships.map(({ id }) => id));
 	if (ids.size !== relationships.length) {
 		throw new Error('Relationships part: duplicate Id.');
 	}
 	return relationships;
 }
+
+/** Whether a stored item is read as a relationships part. */
+export const isRelationshipsItem = (name: string): boolean => partNameKey(name).endsWith('.rels');
 
 const escapeAttr = (value: string) =>
 	value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');

@@ -27,6 +27,22 @@ describe('parseRelationshipsPart', () => {
 		expect(parseRelationshipsPart(xml)).toHaveLength(1);
 	});
 
+	it('reads a part that starts with a byte order mark', () => {
+		expect(parseRelationshipsPart(`\uFEFF${part(VALID)}`)).toHaveLength(1);
+	});
+
+	it('accepts an empty Target, which xsd:anyURI allows', () => {
+		const xml = part(relationship(`Id="rId1" Type="${TYPE}" Target="" TargetMode="External"`));
+		expect(parseRelationshipsPart(xml)).toEqual([
+			{ id: 'rId1', type: TYPE, target: '', mode: 'External' },
+		]);
+	});
+
+	it('keeps Ids that differ only in case apart, as xsd:ID does', () => {
+		const xml = part(VALID + relationship(`Id="RID1" Type="${TYPE}" Target="b.xml"`));
+		expect(parseRelationshipsPart(xml).map(({ id }) => id)).toEqual(['rId1', 'RID1']);
+	});
+
 	it.each([
 		['a root in another namespace', `<Relationships xmlns="urn:x">${VALID}</Relationships>`],
 		['an attribute on the root', part(VALID, ' Extra="1"')],
@@ -41,7 +57,6 @@ describe('parseRelationshipsPart', () => {
 		['a child with no namespace', part(`<Relationship xmlns="" Id="r" Type="t" Target="b"/>`)],
 		['another child element', part(`${VALID}<Other/>`)],
 		['a repeated Id', part(VALID + VALID)],
-		['an Id repeated in another case', part(VALID + relationship(`Id="RID1" Type="t" Target="b"`))],
 		['a missing Target', part(relationship(`Id="rId1" Type="${TYPE}"`))],
 		['a missing Type', part(relationship('Id="rId1" Target="a.xml"'))],
 		['a missing Id', part(relationship(`Type="${TYPE}" Target="a.xml"`))],
@@ -62,6 +77,16 @@ describe('canonicalRelationshipsXml', () => {
 		const xml = part(`<!-- note -->\n  ${relationship(`Id="r&#49;" Type="t&amp;u" Target="a"`)}`);
 		expect(parseRelationshipsPart(canonicalRelationshipsXml(xml))).toEqual([
 			{ id: 'r1', type: 't&u', target: 'a', mode: 'Internal' },
+		]);
+	});
+
+	it('keeps an empty Target and both spellings of a case-distinct Id', () => {
+		const xml = part(
+			relationship(`Id="a" Type="t" Target=""`) + relationship(`Id="A" Type="t" Target="b"`),
+		);
+		expect(parseRelationshipsPart(canonicalRelationshipsXml(xml))).toEqual([
+			{ id: 'a', type: 't', target: '', mode: 'Internal' },
+			{ id: 'A', type: 't', target: 'b', mode: 'Internal' },
 		]);
 	});
 });
