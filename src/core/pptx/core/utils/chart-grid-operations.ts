@@ -30,7 +30,7 @@ import {
 export function chartGridAddSeries(data: PptxChartData): PptxChartData {
 	return chartDataAddSeries(data, {
 		name: nextChartSeriesName(data.series.length),
-		values: data.categories.map(() => 0),
+		values: Array.from({ length: chartDataRowCount(data) }, () => 0),
 	});
 }
 
@@ -55,9 +55,9 @@ export function chartGridRemoveSeries(
 	return chartDataRemoveSeries(data, seriesIndex);
 }
 
-/** Append a category named `Cat N`, padding every series with a zero. */
+/** Append a row named `Cat N` after all of the chart's data, with a zero in every series. */
 export function chartGridAddCategory(data: PptxChartData): PptxChartData {
-	return chartDataAddCategory(data, nextChartCategoryName(data.categories.length));
+	return chartDataAddCategory(data, nextChartCategoryName(chartDataRowCount(data)));
 }
 
 /**

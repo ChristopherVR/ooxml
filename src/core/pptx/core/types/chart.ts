@@ -5,6 +5,7 @@
  * @module pptx-types/chart
  */
 
+import type { ChartDataSheetEdit } from '../../../chart/data-sheet';
 import type { ChartManualLayout } from '../../../chart/manual-layout';
 import type {
 	ChartErrorBarDirection,
@@ -32,6 +33,12 @@ export type {
 	PptxChartUserShapeParagraph,
 } from './chart-user-shapes';
 export type { PptxChartStyleDefinition, PptxChartStylePartEntry } from './chart-style-definition';
+
+/** A row or series added to or removed from a chart's data, as its data sheet edits them. */
+export type PptxChartStructureEdit = Extract<
+	ChartDataSheetEdit,
+	{ kind: 'add-series' | 'remove-series' | 'add-category' | 'remove-category' }
+>;
 
 // ==========================================================================
 // Chart types
@@ -1438,6 +1445,14 @@ export interface PptxChartData {
 	chartPartPath?: string;
 	/** Internal: relationship ID linking the graphic frame to the chart part. */
 	chartRelationshipId?: string;
+	/**
+	 * Rows and series added or removed since the part was loaded or saved, in order. The
+	 * `chartData*` and chart grid operations record them, and the save replays them through the
+	 * shared chart operations, so points a view does not show move as the worksheet's do.
+	 */
+	structureEdits?: PptxChartStructureEdit[];
+	/** Internal: the saved state of the part this data was edited from; absent for the part as loaded. */
+	savedRevision?: number;
 	/** `null` explicitly removes an existing ChartML data table. */
 	dataTable?: PptxChartDataTable | null | undefined;
 	/** `null` explicitly removes an existing `c:dropLines` element. */

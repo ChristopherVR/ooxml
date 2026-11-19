@@ -25,8 +25,14 @@ import { openZip } from '../../opc/zip-limits';
 import { parseRelationships, resolvePartPath } from '../../opc/relationships';
 import { buildXml, parseXml } from '../../xml/index';
 import { parseChartFormulaRange, rangeCellAddress } from './cellref';
-import { applyCellWritesToWorksheet, childrenNamed, type ChartCellWrite } from './sheet-cells';
-import { sharedStringTexts, syncWorksheetTables } from './tables';
+import {
+	childrenNamed,
+	restoreWorksheetCells,
+	writeWorksheetCells,
+	type ChartCellChange,
+	type ChartCellWrite,
+} from './sheet-cells';
+import { sharedStringTexts, syncWorksheetTables, worksheetCellText } from './tables';
 import { validateAtomicChartWorkbookWrites } from './validation';
 
 /** One cell of a chart data reference: its position in the range and its new text. */
@@ -51,12 +57,19 @@ export interface ChartWorkbookWrite {
 export const chartWorkbookCells = (values: readonly string[]): ChartWorkbookCell[] =>
 	values.map((value, index) => ({ index, value }));
 
+/** A worksheet cell a write-back changed, to put back with {@link restoreChartWorkbookCells}. */
+export interface ChartWorkbookCellChange extends ChartCellChange {
+	sheetPath: string;
+}
+
 /** Result of applying a batch of writes to an embedded workbook. */
 export interface ChartWorkbookWriteResult {
 	/** Updated xlsx bytes; present only when at least one cell changed. */
 	bytes?: Uint8Array;
 	/** Writes that could not be matched to worksheet cells (see the module comment). */
 	unresolved: number;
+	/** The cells the writes changed, with their markup before and after. */
+	changes?: ChartWorkbookCellChange[];
 }
 
 export interface ChartWorkbookWriteOptions {
@@ -143,7 +156,7 @@ export async function writeChartWorkbookUpdates(
 		bucket.push({ address, cells: write.cells, isNumeric: write.isNumeric });
 		writesBySheet.set(sheetPath, bucket);
 	}
-	let changed = false;
+	const changes: ChartWorkbookCellChange[] = [];
 	const shared = await sharedStringTexts(zip).catch(() => []);
 	for (const [sheetPath, resolved] of writesBySheet) {
 		const file = zip.file(sheetPath);
@@ -156,10 +169,11 @@ export async function writeChartWorkbookUpdates(
 			const cellWrites: ChartCellWrite[] = resolved.flatMap(({ address, cells, isNumeric }) =>
 				cells.map(({ index, value }) => ({ ref: address(index), isNumeric, value })),
 			);
-			if (applyCellWritesToWorksheet(doc, cellWrites, shared)) {
+			const written = writeWorksheetCells(doc, cellWrites, shared);
+			if (written.length > 0) {
 				await syncWorksheetTables(zip, sheetPath, doc, cellWrites, shared);
 				zip.file(sheetPath, buildXml(doc));
-				changed = true;
+				for (const change of written) changes.push({ sheetPath, ...change });
 			}
 		} catch {
 			unresolved += resolved.length;
@@ -167,11 +181,44 @@ export async function writeChartWorkbookUpdates(
 	}
 	if (options.atomic && unresolved > 0)
 		throw new Error('Chart label replacement could not update every source range.');
-	if (!changed) return { unresolved };
-	const bytes = await zip.generateAsync({
+	if (changes.length === 0) return { unresolved };
+	return { bytes: await packed(zip), unresolved, changes };
+}
+
+const packed = (zip: JSZip) =>
+	zip.generateAsync({
 		type: 'uint8array',
 		compression: 'DEFLATE',
 		compressionOptions: { level: 6 },
 	});
-	return { bytes, unresolved };
+
+/**
+ * Puts back the cells a write-back changed (`ChartWorkbookWriteResult.changes`) wherever they still
+ * hold what it wrote, leaving every cell written since as it is. Returns the updated bytes, or
+ * `undefined` when no cell was put back.
+ */
+export async function restoreChartWorkbookCells(
+	xlsxBytes: Uint8Array,
+	changes: readonly ChartWorkbookCellChange[],
+): Promise<Uint8Array | undefined> {
+	if (changes.length === 0) return undefined;
+	const zip = await openEmbeddedPackage(xlsxBytes);
+	const shared = await sharedStringTexts(zip).catch(() => []);
+	let restored = false;
+	for (const sheetPath of new Set(changes.map((change) => change.sheetPath))) {
+		const file = zip.file(sheetPath);
+		if (!file) continue;
+		const doc = parseXml(await file.async('string'), { label: 'Worksheet' });
+		const own = changes.filter((change) => change.sheetPath === sheetPath);
+		const refs = new Set(restoreWorksheetCells(doc, own));
+		if (refs.size === 0) continue;
+		// A restored header names its table column again, as a written one did.
+		const cells = own
+			.filter((change) => refs.has(change.ref) && change.before !== undefined)
+			.map(({ ref }) => ({ ref, isNumeric: false, value: worksheetCellText(doc, ref, shared) }));
+		await syncWorksheetTables(zip, sheetPath, doc, cells, shared);
+		zip.file(sheetPath, buildXml(doc));
+		restored = true;
+	}
+	return restored ? packed(zip) : undefined;
 }

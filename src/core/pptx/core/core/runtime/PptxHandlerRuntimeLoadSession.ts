@@ -115,6 +115,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		this.savedSlideFingerprints.clear();
 		this.chartDataBaselines.clear();
 		this.chartWorkbookDataBaselines.clear();
+		this.chartPartRevisions.clear();
 		this.pendingChartUpdates = undefined;
 		this.layoutCache.clear();
 		this.masterCache.clear();

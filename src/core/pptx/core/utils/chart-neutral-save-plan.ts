@@ -36,7 +36,7 @@ import { planNeutralGroupOptions } from './chart-neutral-save-groups';
 import { planNeutralGroupSubtype } from './chart-neutral-save-subtype';
 import { planNeutralGroupFlags } from './chart-neutral-save-group-flags';
 import { planNeutralSeriesStructure } from './chart-neutral-save-structure';
-import { planNeutralCategoryRows } from './chart-neutral-save-rows';
+import { planNeutralStructureEdits } from './chart-neutral-save-structure-edits';
 import { planNeutralFilteredSeries } from './chart-neutral-save-filtered';
 import { planNeutralChartType } from './chart-neutral-save-type';
 import { planNeutralChartFormats } from './chart-neutral-save-format';
@@ -181,10 +181,16 @@ export function planWithLeftovers(
 	const probe = structuredClone(after);
 	const edits: NeutralChartEdit[] = [];
 	// Chart Filters moves come first: the structure planner then sees no series added or removed.
+	const loaded = before;
 	before = planNeutralFilteredSeries(before, after, edits);
+	// Recorded row and series edits index the data as they found it, before any filter change.
+	if (before !== loaded && after.structureEdits?.length)
+		return { plan: undefined, unclaimed: ['structureEdits'] };
+	before = planNeutralStructureEdits(before, probe, edits);
+	// Edits the data sheet recorded update the workbook cell for cell, as Word's do; series this
+	// planner finds added or removed by their identity get a fresh sheet.
 	const original = before;
 	before = planNeutralSeriesStructure(before, after, edits);
-	before = planNeutralCategoryRows(before, after, edits);
 	planNeutralChartType(before, probe, edits);
 	planNeutralTitleRuns(before, probe, edits);
 	planTitle(before, probe, edits);

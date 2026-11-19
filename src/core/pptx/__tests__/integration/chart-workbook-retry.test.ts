@@ -25,6 +25,42 @@ async function deck(edit?: (chartXml: string) => string): Promise<ArrayBuffer> {
 	return zip.generateAsync({ type: 'arraybuffer' });
 }
 
+/** The deck with a second chart, a copy of the first, reading the same embedded workbook. */
+async function sharedDeck(): Promise<ArrayBuffer> {
+	const zip = await JSZip.loadAsync(readFileSync(FIXTURE));
+	const text = async (name: string) => zip.file(name)!.async('string');
+	zip.file('ppt/charts/chart2.xml', await text(CHART));
+	zip.file('ppt/charts/_rels/chart2.xml.rels', await text('ppt/charts/_rels/chart1.xml.rels'));
+	const slide = await text('ppt/slides/slide1.xml');
+	const frame = /<p:graphicFrame>.*<\/p:graphicFrame>/su.exec(slide)![0];
+	const copy = frame
+		.replace('id="2" name="Chart 1"', 'id="3" name="Chart 2"')
+		.replace('r:id="rId2"', 'r:id="rId3"')
+		.replace(/\{1E9F4A36[^}]*\}/u, '{1E9F4A36-8B0D-12EC-6444-50CB5B6E3EE5}');
+	zip.file('ppt/slides/slide1.xml', slide.replace(frame, frame + copy));
+	zip.file(
+		'ppt/slides/_rels/slide1.xml.rels',
+		(await text('ppt/slides/_rels/slide1.xml.rels')).replace(
+			'</Relationships>',
+			'<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="../charts/chart2.xml"/></Relationships>',
+		),
+	);
+	zip.file(
+		'[Content_Types].xml',
+		(await text('[Content_Types].xml')).replace(
+			'</Types>',
+			'<Override PartName="/ppt/charts/chart2.xml" ContentType="application/vnd.openxmlformats-officedocument.drawingml.chart+xml"/></Types>',
+		),
+	);
+	return zip.generateAsync({ type: 'arraybuffer' });
+}
+
+const chartsOf = (slides: PptxSlide[]) =>
+	slides
+		.flatMap((slide) => slide.elements)
+		.filter((element): element is ChartPptxElement => element.type === 'chart')
+		.map((element) => element.chartData!);
+
 const chartOf = (slides: PptxSlide[]) =>
 	slides
 		.flatMap((slide) => slide.elements)
@@ -95,6 +131,20 @@ describe('PowerPoint chart workbook write-back that only partly lands', () => {
 
 		expect(await cells(await handler.save(structuredClone(original)))).toEqual(loaded);
 		expect(await cells(await handler.save(structuredClone(original)))).toEqual(loaded);
+		handler.dispose();
+	});
+
+	it('keeps what another chart sharing the workbook wrote when it retries', async () => {
+		const handler = new PptxHandler();
+		const data = await handler.load(await sharedDeck());
+		const [first, second] = chartsOf(data.slides);
+		first!.series[0]!.name = 'A-one';
+		first!.series[0]!.values[0] = 4242;
+		second!.series[1]!.name = 'C-two';
+		const saved = await cells(await handler.save(data.slides));
+		expect([saved[B1], saved[D1]]).toEqual(['A-one', 'C-two']);
+		const retried = await cells(await handler.save(data.slides));
+		expect([retried[B1], retried[D1]]).toEqual(['A-one', 'C-two']);
 		handler.dispose();
 	});
 

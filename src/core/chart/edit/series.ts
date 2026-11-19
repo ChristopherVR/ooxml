@@ -6,7 +6,7 @@
 // x values and values to y values there.
 import type { ChartSpace } from '../model';
 import type { ChartShapeProperties, ChartSpaceSeries } from '../model-series';
-import { chartSeriesEntryAt, chartSpaceSeries, editChartSpace } from './draft';
+import { chartSeriesEntries, chartSeriesEntryAt, chartSpaceSeries, editChartSpace } from './draft';
 import type { ChartSeriesValue } from '../data-sheet';
 import { categorySource, numberSource, type ChartCategoryValue } from './series-data';
 import { chartCategoryKey, chartValueKey } from './series-keys';
@@ -69,11 +69,18 @@ export function addChartSeries(space: ChartSpace, input: NewChartSeries): ChartS
 	});
 }
 
-/** Removes the series at a flattened index. */
+/**
+ * Removes the series at a flattened index. The plot order (`c:order`) of every later series moves
+ * up one, as Excel renumbers it; `c:idx`, which formatting and legend entries refer to, is kept.
+ */
 export function removeChartSeries(space: ChartSpace, index: number): ChartSpace {
 	return editChartSpace(space, (draft) => {
 		const { group, position } = chartSeriesEntryAt(draft, index);
-		group.series.splice(position, 1);
+		const [removed] = group.series.splice(position, 1);
+		const order = removed?.order;
+		if (order === undefined) return;
+		for (const { series } of chartSeriesEntries(draft))
+			if (series.order !== undefined && series.order > order) series.order -= 1;
 	});
 }
 

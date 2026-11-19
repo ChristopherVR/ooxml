@@ -9,6 +9,7 @@ import {
 	loadDocx,
 } from '../docx/index';
 import type { DocumentModel } from '../docx/model';
+import { removeChartSeries } from '../pptx/core/builders/sdk/chart-operations';
 import { PptxHandler } from '../pptx/core/PptxHandler';
 import type { ChartPptxElement } from '../pptx/core/types/elements';
 import { chartDataApplySheetEdits } from '../pptx/core/utils/chart-data-sheet';
@@ -131,7 +132,7 @@ async function editInWord(edits: ChartDataSheetEdit[], points = cached): Promise
 	return saved(await loaded.save(model), 'word', 'chart1.xml');
 }
 
-async function editInPowerPoint(edits: ChartDataSheetEdit[], points = cached): Promise<Saved> {
+async function openInPowerPoint(points = cached) {
 	const zip = await JSZip.loadAsync(
 		fixture('../pptx/__tests__/fixtures/embedded-assets-sample.pptx'),
 	);
@@ -163,15 +164,23 @@ async function editInPowerPoint(edits: ChartDataSheetEdit[], points = cached): P
 	const data = await handler.load(
 		bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer,
 	);
-	const chart = data.slides
-		.flatMap((entry) => entry.elements)
-		.find(
-			(element): element is ChartPptxElement =>
-				element.type === 'chart' && element.chartData?.chartPartPath === 'ppt/charts/big.xml',
-		)!;
+	const chartIn = (slides: typeof data.slides) =>
+		slides
+			.flatMap((entry) => entry.elements)
+			.find(
+				(element): element is ChartPptxElement =>
+					element.type === 'chart' && element.chartData?.chartPartPath === 'ppt/charts/big.xml',
+			)!;
+	const save = async (slides: typeof data.slides) =>
+		saved(new Uint8Array(await handler.save(slides)), 'ppt', 'big.xml');
+	return { bytes, slides: data.slides, chartIn, save };
+}
+
+async function editInPowerPoint(edits: ChartDataSheetEdit[], points = cached): Promise<Saved> {
+	const { slides, chartIn, save } = await openInPowerPoint(points);
+	const chart = chartIn(slides);
 	chart.chartData = chartDataApplySheetEdits(chart.chartData!, edits)!;
-	const out = new Uint8Array(await handler.save(data.slides));
-	return saved(out, 'ppt', 'big.xml');
+	return save(slides);
 }
 
 async function editInVisio(edits: ChartDataSheetEdit[], points = cached): Promise<Saved> {
@@ -260,6 +269,76 @@ describe.each([
 		expect(hasPoint(out.xml, 2, LAST - 1)).toBe(true);
 		expect(hasPoint(out.xml, 2, LAST)).toBe(false);
 	}, 60_000);
+
+	it('removes a row that every view shows blank, as deleting the worksheet row does', async () => {
+		// As Excel saves a chart over A:E: ten rows of data, a second column with blank cells and a
+		// point in row 5000, a third with a point in the last row. The views end at 10, 4999 and 11
+		// rows, so row 10 reads blank in every view, like each row after it up to row 4998.
+		const rows = (at: number) =>
+			Array.from({ length: 10 }, (_, row): [number, number] => [row, at]);
+		const out = await edit([{ kind: 'remove-category', category: 10 }], {
+			0: rows(1),
+			1: [...rows(2).filter(([row]) => row % 3 !== 1), [4998, 7]],
+			2: [...rows(3), [LAST, 9]],
+			3: rows(4),
+			4: rows(5),
+		});
+		expect(counts(out.xml).filter((count) => count === FULL)).toHaveLength(5);
+		expect(hasPoint(out.xml, 1, 4997)).toBe(true);
+		expect(hasPoint(out.xml, 1, 4998)).toBe(false);
+		expect(hasPoint(out.xml, 2, LAST - 1)).toBe(true);
+		expect(hasPoint(out.xml, 2, LAST)).toBe(false);
+		expect(hasPoint(out.xml, 2, LAST - 2)).toBe(false);
+		expect(cell(out, 4998, 2)).toBe(7);
+		expect(cell(out, 4999, 2) ?? null).toBeNull();
+		expect(cell(out, FULL - 1, 3)).toBe(9);
+		expect(cell(out, FULL, 3) ?? null).toBeNull();
+	}, 60_000);
+});
+
+describe('PowerPoint undo of a structural edit after a save', () => {
+	it('gives back the range, the cache and the cells of a removed row', async () => {
+		const { bytes, slides, chartIn, save } = await openInPowerPoint();
+		const original = await saved(bytes, 'ppt', 'big.xml');
+		const loaded = structuredClone(slides);
+		const edited = structuredClone(slides);
+		chartIn(edited).chartData = chartDataApplySheetEdits(chartIn(edited).chartData!, [
+			{ kind: 'remove-category', category: 0 },
+		])!;
+		const removed = await save(edited);
+		expect(hasPoint(removed.xml, 2, LAST - 1)).toBe(true);
+		const redo = structuredClone(edited);
+
+		const undone = await save(structuredClone(loaded));
+		expect(undone.xml).toBe(original.xml);
+		for (const [row, col] of [
+			[1, 1],
+			[2, 1],
+			[3, 1],
+			[FULL - 1, 3],
+			[FULL, 3],
+		] as const)
+			expect(cell(undone, row, col)).toEqual(cell(original, row, col));
+
+		expect((await save(redo)).xml).toBe(removed.xml);
+	}, 60_000);
+
+	it('replays rows added and removed before the save it was edited from', async () => {
+		const { slides, chartIn, save } = await openInPowerPoint();
+		const first = structuredClone(slides);
+		chartIn(first).chartData = chartDataApplySheetEdits(chartIn(first).chartData!, [
+			{ kind: 'add-category' },
+		])!;
+		const before = structuredClone(first);
+		const added = await save(first);
+		const second = structuredClone(first);
+		chartIn(second).chartData = chartDataApplySheetEdits(chartIn(second).chartData!, [
+			{ kind: 'remove-category', category: 1 },
+		])!;
+		await save(second);
+		// Back to the data as it was before the first save, with its own recorded row.
+		expect((await save(before)).xml).toBe(added.xml);
+	}, 60_000);
 });
 
 describe('series edits of a chart with a workbook', () => {
@@ -275,6 +354,21 @@ describe('series edits of a chart with a workbook', () => {
 		},
 		60_000,
 	);
+
+	it('removes a series through the PowerPoint SDK as Excel removes it, on the same sheet', async () => {
+		const { slides, chartIn, save } = await openInPowerPoint();
+		removeChartSeries(chartIn(slides), 1);
+		const out = await save(slides);
+		expect(out.book.sheets).toHaveLength(1);
+		expect([...out.xml.matchAll(/<c:order val="(\d+)"/g)].map((m) => m[1])).toEqual([
+			'0',
+			'1',
+			'2',
+			'3',
+		]);
+		expect(out.xml).toContain('<c:f>Sheet1!$D$2:$D$1048576</c:f>');
+		expect(hasPoint(out.xml, 1, LAST)).toBe(true);
+	}, 60_000);
 
 	it('writes a fresh sheet for 200,000 rows without a dense copy', async () => {
 		const { appendChartWorkbookSheet } = await import('./workbook/append-sheet');

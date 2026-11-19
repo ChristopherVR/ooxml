@@ -34,8 +34,12 @@ function grown(end: number, written: ReadonlySet<number>): number {
 	return next;
 }
 
-/** The text a header cell shows. */
-function cellText(doc: XmlDocument, ref: string, shared: readonly string[]): string {
+/** The text a cell shows. */
+export function worksheetCellText(
+	doc: XmlDocument,
+	ref: string,
+	shared: readonly string[],
+): string {
 	for (const row of childrenNamed(worksheetData(doc), 'row'))
 		for (const cell of childrenNamed(row, 'c')) {
 			if (cell.getAttribute('r') !== ref) continue;
@@ -80,7 +84,8 @@ function syncTable(
 	for (let col = next.start.col; col <= next.end.col; col++) {
 		const ref = formatCellAddress({ col, row: next.start.row });
 		let column = list[col - next.start.col];
-		const header = writes.get(ref) ?? column?.getAttribute('name') ?? cellText(doc, ref, shared);
+		const header =
+			writes.get(ref) ?? column?.getAttribute('name') ?? worksheetCellText(doc, ref, shared);
 		// An existing column keeps its name (Word names the category column ' ') unless its header
 		// was written; a new column with an empty header gets Excel's ColumnN.
 		let name =

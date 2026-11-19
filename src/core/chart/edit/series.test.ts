@@ -52,6 +52,16 @@ describe('series edits', () => {
 		expect(() => renameChartSeries(columnChart(), '__proto__' as never, 'x')).toThrow(RangeError);
 	});
 
+	it('moves the plot order of later series up when one is removed, keeping their idx', () => {
+		// Three series, as Excel saves them: idx and order 0, 1, 2.
+		const three = addChartSeries(columnChart(), { name: 'Third', values: [1, 2, 3] });
+		const left = chartSpaceSeries(removeChartSeries(three, 1));
+		expect(left.map((series) => [series.index, series.order])).toEqual([
+			[0, 0],
+			[2, 1],
+		]);
+	});
+
 	it('replaces values keeping the reference and format code', () => {
 		const next = setChartSeriesValues(columnChart(), 0, [5, 6, 7, 8]);
 		const source = chartSpaceSeries(next)[0]!.values!;

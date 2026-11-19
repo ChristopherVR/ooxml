@@ -66,7 +66,8 @@ import type {
 	IPptxTableDataParser,
 } from '../builders';
 import type { IPptxRuntimeDependencyFactory } from '../factories';
-import type { ChartWorkbookBytes } from './chart-external-workbook-save';
+import type { ChartWorkbookCellsWritten } from './chart-external-workbook-save';
+import { ChartPartRevisions } from './chart-part-revisions';
 import { LoadPartReader, readPartText, readPartXml } from './load-part-reader';
 import { TemplateElementBaselineTracker } from './template-element-baselines';
 
@@ -161,13 +162,15 @@ export class PptxHandlerRuntime {
 		| undefined;
 	/**
 	 * Last fully reconciled workbook data. `retry` is set while a write-back did not fully land: the
-	 * chart part and the workbook as they were before it, which the next save restores and writes
-	 * from again, so the workbook always ends up holding what the chart holds.
+	 * chart part as it was before it and the cells it changed, which the next save puts back before
+	 * it writes from that part again, so the workbook always ends up holding what the chart holds.
 	 */
 	protected chartWorkbookDataBaselines = new Map<
 		string,
-		{ signature: string; retry?: { chartXml: string; workbook?: ChartWorkbookBytes } }
+		{ signature: string; retry?: { chartXml: string; written?: ChartWorkbookCellsWritten } }
 	>();
+	/** The states each classic chart part was saved in, for chart data that undo brings back. */
+	protected chartPartRevisions = new ChartPartRevisions();
 
 	/** Per-slide relationship maps: slide path -> (rId -> target path). */
 	protected slideRelsMap: Map<string, Map<string, string>> = new Map();

@@ -123,7 +123,10 @@ import {
 } from './chart-neutral-workbook-save';
 import { xmlChild, xmlPath } from '../../utils/xml-access';
 import { applyChartExUpdate, chartExLayoutChanged } from './chart-cx-update';
-import { saveChartExternalWorkbookUpdates } from './chart-external-workbook-save';
+import {
+	restoreChartWorkbookWrite,
+	saveChartExternalWorkbookUpdates,
+} from './chart-external-workbook-save';
 import {
 	detectChartPartFamily,
 	switchChartPartFamily,
@@ -423,12 +426,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			if (!chartFile) {
 				continue;
 			}
-			// A write-back that did not fully land starts again from the workbook it was applied to.
-			const retryWorkbook = this.chartWorkbookDataBaselines.get(chartPartPath)?.retry?.workbook;
-			if (retryWorkbook) this.zip.file(retryWorkbook.partName, retryWorkbook.bytes);
+			// A write-back that did not fully land puts back the cells it changed and starts again.
+			const retryWrite = this.chartWorkbookDataBaselines.get(chartPartPath)?.retry?.written;
+			if (retryWrite) await restoreChartWorkbookWrite(this.zip, retryWrite);
+			// Data that undo or redo brought back saves from the part it was edited from.
+			const source = this.chartPartRevisions.source(chartPartPath, chartData);
 
 			try {
-				const chartXmlStr = await chartFile.async('string');
+				const chartXmlStr = source?.xml ?? (await chartFile.async('string'));
 				const chartXmlData = this.parser.parse(chartXmlStr) as XmlObject;
 				// What the part authored for each element, read off a pristine copy, so only
 				// format sections the user changed are written back.
@@ -453,13 +458,18 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				) {
 					// Another writer owns the part now and saved the workbook as it found it.
 					this.chartWorkbookDataBaselines.delete(chartPartPath);
+					this.chartPartRevisions.delete(chartPartPath);
+					delete chartData.structureEdits;
 					continue;
 				}
 
 				// An edit the shared chart core can express is saved through it (`writeChartSpace`
 				// keeps every element the neutral model holds as written); anything else falls
 				// through to the object-tree writers below.
-				const baseline = this.chartDataBaselines.get(chartPartPath);
+				const baseline =
+					source === null
+						? undefined
+						: (source?.data ?? this.chartDataBaselines.get(chartPartPath));
 				const baselineData = baseline ? (JSON.parse(baseline) as PptxChartData) : undefined;
 				// Elements PowerPoint's codecs encode and the user shapes drawing part, written once
 				// and shared by whichever path saves the part.
@@ -1386,9 +1396,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				? chartWorkbookDataSignature(JSON.parse(serializedBaseline) as PptxChartData)
 				: undefined);
 		const retry = workbookBaseline?.retry;
+		const previousXml = await this.zip.file(chartPartPath)?.async('string');
 		if (retry || signature !== previousSignature) {
-			const inStep = retry?.chartXml ?? (await this.zip.file(chartPartPath)?.async('string'));
-			const { complete, before } = await saveChartExternalWorkbookUpdates(
+			const inStep = retry?.chartXml ?? previousXml;
+			const { complete, written } = await saveChartExternalWorkbookUpdates(
 				{
 					zip: this.zip,
 					resolveImagePath: (basePath, target) => this.resolveImagePath(basePath, target),
@@ -1404,7 +1415,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				signature: complete ? signature : (previousSignature ?? signature),
 				...(complete || inStep === undefined
 					? {}
-					: { retry: { chartXml: inStep, ...(before ? { workbook: before } : {}) } }),
+					: { retry: { chartXml: inStep, ...(written ? { written } : {}) } }),
 			});
 		}
 		this.zip.file(chartPartPath, xml);
@@ -1420,7 +1431,17 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			}
 		}
 		// Subsequent saves compare against the model now stored in this mutable ZIP.
-		this.chartDataBaselines.set(chartPartPath, JSON.stringify(chartData));
+		this.chartDataBaselines.set(
+			chartPartPath,
+			previousXml === undefined
+				? JSON.stringify(chartData)
+				: this.chartPartRevisions.record(
+						chartPartPath,
+						{ xml: previousXml, data: serializedBaseline },
+						xml,
+						chartData,
+					),
+		);
 	}
 
 	/**
@@ -1476,6 +1497,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				: undefined;
 		if (neutralXml !== undefined) {
 			this.zip.file(chartPartPath, neutralXml);
+			delete chartData.structureEdits;
 			this.chartDataBaselines.set(chartPartPath, JSON.stringify(chartData));
 			return true;
 		}

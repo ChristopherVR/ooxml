@@ -99,6 +99,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       buttons and no link to PivotTable edits.
 - [ ] **P1** Chart Design lacks Add Chart Element and Select Data in Word, Excel and PowerPoint,
       plus Switch Row/Column in Word and Excel and Change Chart Type in PowerPoint.
+- [ ] **P2** Edit Data row removal in Word, PowerPoint and Visio matches Excel's chart (ranges,
+      counts and every point, measured against hidden Excel), but the embedded workbook gets the
+      cells below the row from the chart's cache: a text or formula cell in a value range does not
+      move up with its row, cells outside the chart's ranges stay, and removing a series of a
+      table-layout chart leaves the old last column's cells, which Excel's table clears.
 - [ ] **P1** Equations in Excel text boxes and in Visio (`ooxml-core/math` and
       `src/ui/src/docx/equation-*` are the template).
 - [ ] **P1** SmartArt layouts the preview marks approximate (`src/core/diagram/layout-preview.ts`;

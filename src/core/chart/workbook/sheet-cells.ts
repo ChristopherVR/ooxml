@@ -9,7 +9,7 @@
  *
  * @module chart/workbook/sheet-cells
  */
-import { elements, type XmlDocument, type XmlElement } from '../../xml/index';
+import { buildXml, elements, parseXml, type XmlDocument, type XmlElement } from '../../xml/index';
 import { parseCellAddress } from './cellref';
 
 /** One resolved cell write: a concrete "A1"-style ref plus its new value. */
@@ -164,28 +164,85 @@ function writeCell(cell: XmlElement, isNumeric: boolean, value: string): void {
 	cell.appendChild(is);
 }
 
+/** A cell a write changed, as markup: before the write (absent when it made the cell) and after. */
+export interface ChartCellChange {
+	ref: string;
+	before?: string;
+	after: string;
+}
+
 /**
- * Apply a batch of cell writes to a parsed worksheet. Returns whether any cell changed, so the
+ * Apply a batch of cell writes to a parsed worksheet and return the cells it changed, so the
  * caller only re-serializes a worksheet that differs from what was loaded. `sharedStrings` (the
  * workbook's shared string texts) lets a shared-string cell that already shows the text stay.
  */
-export function applyCellWritesToWorksheet(
+export function writeWorksheetCells(
 	doc: XmlDocument,
 	writes: readonly ChartCellWrite[],
 	sharedStrings: readonly string[] = [],
-): boolean {
+): ChartCellChange[] {
 	const sheetData = worksheetData(doc);
-	if (!sheetData) return false;
+	if (!sheetData) return [];
 	const sheet = indexSheet(sheetData);
-	let changed = false;
+	const changes = new Map<string, { before?: string; cell: XmlElement }>();
 	for (const write of writes) {
 		if (!parseCellAddress(write.ref)) continue;
 		const existing = sheet.cells.get(write.ref);
 		if (existing && holds(existing, write.isNumeric, write.value, sharedStrings)) continue;
+		const before = existing && !changes.has(write.ref) ? buildXml(existing) : undefined;
 		const cell = existing ?? ensureCell(sheet, write.ref);
 		if (!cell) continue;
 		writeCell(cell, write.isNumeric, write.value);
-		changed = true;
+		if (!changes.has(write.ref))
+			changes.set(write.ref, before === undefined ? { cell } : { before, cell });
 	}
-	return changed;
+	return [...changes].map(([ref, { before, cell }]) => ({
+		ref,
+		...(before === undefined ? {} : { before }),
+		after: buildXml(cell),
+	}));
+}
+
+/**
+ * Apply a batch of cell writes to a parsed worksheet. Returns whether any cell changed, so the
+ * caller only re-serializes a worksheet that differs from what was loaded.
+ */
+export const applyCellWritesToWorksheet = (
+	doc: XmlDocument,
+	writes: readonly ChartCellWrite[],
+	sharedStrings: readonly string[] = [],
+): boolean => writeWorksheetCells(doc, writes, sharedStrings).length > 0;
+
+const XMLNS = 'http://www.w3.org/2000/xmlns/';
+
+/**
+ * Puts back each cell of `changes` that still holds what its write left, so cells written since,
+ * by another chart or by hand, stay. Returns the references it restored.
+ */
+export function restoreWorksheetCells(
+	doc: XmlDocument,
+	changes: readonly ChartCellChange[],
+): string[] {
+	const sheetData = worksheetData(doc);
+	if (!sheetData) return [];
+	const sheet = indexSheet(sheetData);
+	const restored: string[] = [];
+	for (const change of changes) {
+		const cell = sheet.cells.get(change.ref);
+		if (!cell || buildXml(cell) !== change.after) continue;
+		if (change.before === undefined) {
+			cell.parentNode?.removeChild(cell);
+		} else {
+			const before = parseXml(change.before, { label: 'Worksheet cell' }).documentElement!;
+			for (const attribute of Array.from(cell.attributes)) cell.removeAttributeNode(attribute);
+			for (const child of Array.from(cell.childNodes)) cell.removeChild(child);
+			for (const attribute of Array.from(before.attributes))
+				if (attribute.namespaceURI !== XMLNS)
+					cell.setAttributeNS(attribute.namespaceURI, attribute.name, attribute.value);
+			for (const child of Array.from(before.childNodes))
+				cell.appendChild(doc.importNode(child, true));
+		}
+		restored.push(change.ref);
+	}
+	return restored;
 }

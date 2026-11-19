@@ -12,6 +12,10 @@
 import type JSZip from 'jszip';
 
 import { saveChartWorkbookUpdates } from '../../../../chart/workbook/package-save';
+import {
+	restoreChartWorkbookCells,
+	type ChartWorkbookCellChange,
+} from '../../../../chart/workbook/writer';
 import type { CompatibilityWarningInput } from '../../services/PptxCompatibilityService';
 import type { PptxExternalData } from '../../types';
 import type { PptxChartWorkbookWrite } from '../../utils/chart-xlsx-writer';
@@ -23,16 +27,29 @@ export interface ChartExternalWorkbookSaveDeps {
 	reportWarning(warning: CompatibilityWarningInput): void;
 }
 
-/** An embedded workbook as it was read before a write-back changed it. */
-export interface ChartWorkbookBytes {
+/** The cells one write-back changed in an embedded workbook. */
+export interface ChartWorkbookCellsWritten {
 	partName: string;
-	bytes: Uint8Array;
+	changes: readonly ChartWorkbookCellChange[];
 }
 
-/** Whether every write landed, and the workbook the writes were applied to, when one was read. */
+/** Whether every write landed, and the cells the writes changed, when any did. */
 export interface ChartExternalWorkbookSaveResult {
 	complete: boolean;
-	before?: ChartWorkbookBytes;
+	written?: ChartWorkbookCellsWritten;
+}
+
+/**
+ * Puts back the cells `written` changed wherever they still hold what it wrote, so a write-back
+ * of another chart sharing the workbook, made since, stays.
+ */
+export async function restoreChartWorkbookWrite(
+	zip: JSZip,
+	written: ChartWorkbookCellsWritten,
+): Promise<void> {
+	const bytes = await zip.file(written.partName)?.async('uint8array');
+	const restored = bytes && (await restoreChartWorkbookCells(bytes, written.changes));
+	if (restored) zip.file(written.partName, restored);
 }
 
 /**
@@ -55,16 +72,13 @@ export async function saveChartExternalWorkbookUpdates(
 				...(externalData.isExternal ? { external: true } : {}),
 			}
 		: undefined;
-	let before: ChartWorkbookBytes | undefined;
+	let written: ChartWorkbookCellsWritten | undefined;
 	const complete = await saveChartWorkbookUpdates(
 		{
-			read: async (partName) => {
-				const bytes = await deps.zip.file(partName)?.async('uint8array');
-				if (bytes) before = { partName, bytes };
-				return bytes;
-			},
-			write: (partName, bytes) => {
+			read: async (partName) => await deps.zip.file(partName)?.async('uint8array'),
+			write: (partName, bytes, changes) => {
 				deps.zip.file(partName, bytes);
+				written = { partName, changes };
 			},
 		},
 		chartPartPath,
@@ -83,5 +97,5 @@ export async function saveChartExternalWorkbookUpdates(
 				}),
 		},
 	);
-	return before ? { complete, before } : { complete };
+	return written ? { complete, written } : { complete };
 }

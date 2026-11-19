@@ -116,12 +116,15 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			onSlidePartsDuplicated: (copies) => {
 				// An unchanged copy must retain the source chart's byte-preserving
 				// save gate. Edited data still differs from this remapped baseline.
-				for (const [source, destination] of copies) {
-					const baseline = this.chartDataBaselines.get(source);
-					if (!baseline) continue;
-					const data: unknown = JSON.parse(baseline);
+				const remapped = (json: string) => {
+					const data: unknown = JSON.parse(json);
 					remapPartPaths(data, copies);
-					this.chartDataBaselines.set(destination, JSON.stringify(data));
+					return JSON.stringify(data);
+				};
+				for (const [source, destination] of copies) {
+					this.chartPartRevisions.copy(source, destination, remapped);
+					const baseline = this.chartDataBaselines.get(source);
+					if (baseline) this.chartDataBaselines.set(destination, remapped(baseline));
 				}
 			},
 		});

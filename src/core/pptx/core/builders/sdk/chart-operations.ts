@@ -10,6 +10,7 @@
  */
 
 import { assertChartModelLabelPosition } from '../../utils/chart-label-positions';
+import { recordChartStructureEdit } from '../../utils/chart-data-utils';
 import type {
 	PptxChartAxisFormatting,
 	PptxChartDataLabel,
@@ -114,6 +115,7 @@ export function addChartSeries(
 		values: series.values,
 		color: series.color,
 	});
+	recordChartStructureEdit(element.chartData, { kind: 'add-series' });
 }
 
 /**
@@ -131,6 +133,7 @@ export function addChartSeries(
 export function removeChartSeries(element: ChartPptxElement, seriesIndex: number): void {
 	validateSeriesIndex(element, seriesIndex);
 	element.chartData!.series.splice(seriesIndex, 1);
+	recordChartStructureEdit(element.chartData!, { kind: 'remove-series', series: seriesIndex });
 }
 
 /**
@@ -588,6 +591,7 @@ export function addChartCategory(element: ChartPptxElement, categoryName: string
 	for (const series of element.chartData.series) {
 		series.values.push(0);
 	}
+	recordChartStructureEdit(element.chartData, { kind: 'add-category' });
 }
 
 /**
@@ -614,6 +618,10 @@ export function removeChartCategory(element: ChartPptxElement, categoryIndex: nu
 	for (const series of element.chartData.series) {
 		series.values.splice(categoryIndex, 1);
 	}
+	recordChartStructureEdit(element.chartData, {
+		kind: 'remove-category',
+		category: categoryIndex,
+	});
 }
 
 /**
