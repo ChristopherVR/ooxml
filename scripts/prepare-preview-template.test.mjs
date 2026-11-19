@@ -16,7 +16,11 @@ test('the fork preview starts and serves its commit-specific suite and binary as
 		join(root, 'suite-dist/docs/index.html'),
 		'<a href="../visio/">Visio</a><a href="../xlsx/getting-started">Excel</a><a href="../?suite">Office</a>',
 	);
-	await cp(new URL('../site/index.html', import.meta.url), join(root, 'suite-dist/index.html'));
+	const site = new URL('../site/', import.meta.url);
+	await cp(new URL('index.html', site), join(root, 'suite-dist/index.html'));
+	// The shell styles, which the build joins into one sheet.
+	for (const name of await readdir(site))
+		if (name.endsWith('.css')) await cp(new URL(name, site), join(root, 'suite-dist', name));
 	const binary = Buffer.from([0, 128, 255, 12]);
 	await writeFile(join(root, 'suite-dist/suite-assets/icon.png'), binary);
 	const source = {
