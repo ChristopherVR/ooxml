@@ -10,7 +10,11 @@
  */
 
 import { assertChartModelLabelPosition } from '../../utils/chart-label-positions';
-import { recordChartStructureEdit } from '../../utils/chart-data-utils';
+import {
+	chartDataAddCategory,
+	chartDataRemoveCategory,
+	recordChartStructureEdit,
+} from '../../utils/chart-data-utils';
 import type {
 	PptxChartAxisFormatting,
 	PptxChartDataLabel,
@@ -587,11 +591,7 @@ export function updateChartDataPoint(
  */
 export function addChartCategory(element: ChartPptxElement, categoryName: string): void {
 	ensureChartData(element);
-	element.chartData.categories.push(categoryName);
-	for (const series of element.chartData.series) {
-		series.values.push(0);
-	}
-	recordChartStructureEdit(element.chartData, { kind: 'add-category' });
+	element.chartData = chartDataAddCategory(element.chartData, categoryName);
 }
 
 /**
@@ -609,19 +609,7 @@ export function addChartCategory(element: ChartPptxElement, categoryName: string
  */
 export function removeChartCategory(element: ChartPptxElement, categoryIndex: number): void {
 	ensureChartData(element);
-	if (categoryIndex < 0 || categoryIndex >= element.chartData.categories.length) {
-		throw new RangeError(
-			`Category index ${categoryIndex} is out of range. Chart has ${element.chartData.categories.length} categories (indices 0\u2013${element.chartData.categories.length - 1}).`,
-		);
-	}
-	element.chartData.categories.splice(categoryIndex, 1);
-	for (const series of element.chartData.series) {
-		series.values.splice(categoryIndex, 1);
-	}
-	recordChartStructureEdit(element.chartData, {
-		kind: 'remove-category',
-		category: categoryIndex,
-	});
+	element.chartData = chartDataRemoveCategory(element.chartData, categoryIndex);
 }
 
 /**

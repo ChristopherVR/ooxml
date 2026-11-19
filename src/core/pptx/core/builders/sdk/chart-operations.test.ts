@@ -668,6 +668,23 @@ describe('removeChartCategory', () => {
 		expect(el.chartData!.categories).toHaveLength(0);
 		expect(at(el.chartData!.series, 0).values).toHaveLength(0);
 	});
+
+	it('keeps blank points on the rows they belong to', () => {
+		const el = makeTestChart();
+		at(el.chartData!.series, 0).blanks = [false, true, false];
+		removeChartCategory(el, 0);
+		expect(at(el.chartData!.series, 0).values).toStrictEqual([200, 300]);
+		expect(at(el.chartData!.series, 0).blanks).toStrictEqual([true, false]);
+		addChartCategory(el, 'Q4');
+		expect(at(el.chartData!.series, 0).blanks).toStrictEqual([true, false, false]);
+	});
+
+	it('removes a row of a chart that has values but no categories', () => {
+		const el = makeTestChart({ categories: [] });
+		removeChartCategory(el, 1);
+		expect(at(el.chartData!.series, 0).values).toStrictEqual([100, 300]);
+		expect(el.chartData!.structureEdits).toStrictEqual([{ kind: 'remove-category', category: 1 }]);
+	});
 });
 
 // ===========================================================================
