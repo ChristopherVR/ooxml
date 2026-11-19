@@ -19,9 +19,20 @@ export interface WebSocketLike {
 }
 export type WebSocketConstructor = new (url: string, protocols?: string[]) => WebSocketLike;
 
-export interface WebSocketTransportOptions {
-	/** Full URL including the room, for example `wss://host/room-id` (see {@link roomUrl}). */
+/** Where one connection attempt goes. */
+export interface WebSocketTarget {
 	url: string;
+	protocols?: string[] | undefined;
+}
+
+export interface WebSocketTransportOptions {
+	/**
+	 * Full URL including the room, for example `wss://host/room-id` (see {@link roomUrl}). Or a
+	 * function called before every attempt, the first and each reconnect, that resolves the URL and
+	 * subprotocols (it then replaces `protocols`), so a short-lived credential is fetched fresh. A
+	 * rejection is reported through `error` and retried with the same backoff as a refused socket.
+	 */
+	url: string | (() => Promise<WebSocketTarget>);
 	WebSocket?: WebSocketConstructor;
 	/** First reconnect delay in ms; doubles up to `maxDelayMs`. Default 250. */
 	baseDelayMs?: number;
@@ -68,20 +79,49 @@ export function createWebSocketTransport(options: WebSocketTransportOptions): Tr
 	let policyCloses = 0;
 	let openedAt = 0;
 	let stopped = true;
+	/** Counts connects and disconnects, so a target resolved for an earlier one is dropped. */
+	let generation = 0;
+
+	const retry = (active: TransportHandlers, delay: number): void => {
+		if (++failures > maxRetries) {
+			stopped = true;
+			return active.error(new Error('WebSocket reconnect attempts exhausted'));
+		}
+		timer = setTimeout(
+			open,
+			Math.max(delay, Math.min(maxDelayMs, baseDelayMs * 2 ** (failures - 1))),
+		);
+	};
 
 	const open = (): void => {
 		if (stopped || !handlers) return;
 		const active = handlers;
+		const { url } = options;
+		if (typeof url === 'string') return dial(active, { url, protocols: options.protocols });
+		const current = generation;
+		url().then(
+			(target) => {
+				if (current === generation && !stopped) dial(active, target);
+			},
+			(error: unknown) => {
+				if (current !== generation || stopped) return;
+				active.error(error instanceof Error ? error : new Error(String(error)));
+				retry(active, 0);
+			},
+		);
+	};
+
+	const dial = (active: TransportHandlers, target: WebSocketTarget): void => {
 		const Impl =
 			options.WebSocket ?? (globalThis as { WebSocket?: WebSocketConstructor }).WebSocket;
 		if (!Impl) return active.error(new Error('No WebSocket implementation available'));
-		if (isMixedContentBlocked(options.url, options.pageProtocol)) {
+		if (isMixedContentBlocked(target.url, options.pageProtocol)) {
 			stopped = true;
 			return active.error(new Error('Insecure ws:// connection blocked from an https page'));
 		}
-		const ws = options.protocols?.length
-			? new Impl(options.url, options.protocols)
-			: new Impl(options.url);
+		const ws = target.protocols?.length
+			? new Impl(target.url, target.protocols)
+			: new Impl(target.url);
 		socket = ws;
 		ws.binaryType = 'arraybuffer';
 		ws.onopen = () => {
@@ -116,28 +156,27 @@ export function createWebSocketTransport(options: WebSocketTransportOptions): Tr
 			const policy = event.code === POLICY_VIOLATION;
 			if (!policy || Date.now() - openedAt > POLICY_RESET_MS) policyCloses = 0;
 			if (policy) policyCloses++;
-			if (++failures > maxRetries) return stop(new Error('WebSocket reconnect attempts exhausted'));
+			// `retry` counts this failure; checking here first puts the reason before the close.
+			if (failures >= maxRetries) return stop(new Error('WebSocket reconnect attempts exhausted'));
 			// The server closed on purpose (rejected update, rate limit, revoked session): say why, and
 			// wait longer each time. A rejected update would be sent again on every reconnect.
 			const reason = event.reason || 'connection refused by the server';
 			if (policy && reason.startsWith('update rejected') && policyCloses >= maxRejectedRetries)
 				return stop(new UpdateRefusedError('server-rejected', reason));
 			active.close(event.reason);
-			let delay = Math.min(maxDelayMs, baseDelayMs * 2 ** (failures - 1));
+			let delay = 0;
 			if (policy) {
 				active.error(new Error(`The server closed the connection: ${reason}`));
-				delay = Math.max(
-					delay,
-					Math.min(POLICY_MAX_DELAY_MS, POLICY_BASE_DELAY_MS * 2 ** (policyCloses - 1)),
-				);
+				delay = Math.min(POLICY_MAX_DELAY_MS, POLICY_BASE_DELAY_MS * 2 ** (policyCloses - 1));
 			}
-			timer = setTimeout(open, delay);
+			retry(active, delay);
 		};
 	};
 
 	return {
 		connect(next) {
 			handlers = next;
+			generation++;
 			stopped = false;
 			failures = 0;
 			if (timer !== null) clearTimeout(timer);
@@ -149,6 +188,7 @@ export function createWebSocketTransport(options: WebSocketTransportOptions): Tr
 			if (socket && socket.readyState === OPEN) socket.send(data);
 		},
 		disconnect() {
+			generation++;
 			stopped = true;
 			if (timer !== null) clearTimeout(timer);
 			timer = null;

@@ -33,8 +33,8 @@ function plainClickEvent(overrides: Partial<{ ctrlKey: boolean; metaKey: boolean
 	};
 }
 
-describe('renderHyperlink - a:hlinkClick/@tgtFrame threading', () => {
-	it('passes the resolved target frame through to onHyperlinkClick', () => {
+describe('renderHyperlink', () => {
+	it('hands only the url to onHyperlinkClick, whatever frame the deck named', () => {
 		const context = ctx();
 		const node = renderHyperlink(
 			run({ url: 'https://example.com', href: 'https://example.com', target: 'contentFrame' }),
@@ -43,19 +43,7 @@ describe('renderHyperlink - a:hlinkClick/@tgtFrame threading', () => {
 			context,
 		);
 		clickProps(node).onClick(plainClickEvent());
-		expect(context.onHyperlinkClick).toHaveBeenCalledWith('https://example.com', 'contentFrame');
-	});
-
-	it('passes undefined target when the run carries none (default _blank downstream)', () => {
-		const context = ctx();
-		const node = renderHyperlink(
-			run({ url: 'https://example.com', href: 'https://example.com' }),
-			<span>Docs</span>,
-			'k1',
-			context,
-		);
-		clickProps(node).onClick(plainClickEvent());
-		expect(context.onHyperlinkClick).toHaveBeenCalledWith('https://example.com', undefined);
+		expect(context.onHyperlinkClick).toHaveBeenCalledExactlyOnceWith('https://example.com');
 	});
 
 	it('renders plain text (no click wrapper) when the run has no url', () => {

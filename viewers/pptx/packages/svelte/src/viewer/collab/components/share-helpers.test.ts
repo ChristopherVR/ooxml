@@ -63,12 +63,13 @@ describe('buildShareConfig', () => {
 		});
 	});
 
-	it('derives the webrtc transport from a blank server url', () => {
+	it('derives the webrtc transport, with a fresh secret, from a blank server url', () => {
 		expect(buildShareConfig({ roomId: 'room-1', userName: 'Ada', serverUrl: '' })).toStrictEqual({
 			roomId: 'room-1',
 			userName: 'Ada',
 			serverUrl: '',
 			transport: 'webrtc',
+			secret: expect.stringMatching(/^[A-Za-z0-9_-]{22}$/u),
 			role: 'collaborator',
 			sessionIntent: 'create',
 		});

@@ -1,6 +1,7 @@
 /* oxlint-disable eslint/one-var -- pre-existing throughout this file; independent concerns, not one statement */
 import type {
 	CollaborationConfig,
+	CollaborationFailure,
 	ConnectionStatus,
 	DialogFooterAction,
 	SanitizedPresence,
@@ -8,7 +9,9 @@ import type {
 import {
 	buildActiveSessionUsers,
 	buildCollaborationShareUrl,
+	collaborationFailureMessageKey,
 	resolveTransportForServerUrl,
+	shareFormFailureKey,
 } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
@@ -45,6 +48,8 @@ export interface ShareDialogHandlers {
 /** Live session state for the active-session view (status/count/connected users). */
 export interface ShareDialogSession {
 	status: ConnectionStatus;
+	/** Why the last start failed while `status` is `error`. */
+	failure?: CollaborationFailure | null;
 	/** Includes the local user (matches the toolbar status pill's contract). */
 	connectedCount: number;
 	/** The config the active session was started with; null while stopped. */
@@ -107,7 +112,13 @@ export function createShareDialog(
 	joinTab.type = 'button';
 	joinTab.textContent = t('pptx.share.joinSession');
 	tabs.append(createTab, joinTab);
-	form.append(tabs, desc);
+	// Why the typed invitation cannot join (a peer-to-peer link without its key),
+	// else why the last attempt failed, shown above the fields until a new start.
+	const failureBanner = createEl(doc, 'p', 'pptxv-share-error');
+	failureBanner.setAttribute('role', 'alert');
+	failureBanner.setAttribute('data-testid', 'collaboration-failure');
+	failureBanner.hidden = true;
+	form.append(tabs, desc, failureBanner);
 
 	const invitationField = createTextField(
 		doc,
@@ -254,6 +265,12 @@ export function createShareDialog(
 	/** Paint the active-session view from the current `session` snapshot. */
 	function renderSession(): void {
 		const config = session.config;
+		const failureKey = shareFormFailureKey(
+			{ mode, invitation },
+			collaborationFailureMessageKey(session.status, session.failure ?? null),
+		);
+		failureBanner.hidden = !failureKey;
+		failureBanner.textContent = failureKey ? t(failureKey) : '';
 		const isP2P = resolveTransportForServerUrl(config?.serverUrl ?? '') === 'webrtc';
 
 		statusDot.className = `pptxv-collab-status-dot is-${session.status}`;

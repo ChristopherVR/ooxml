@@ -8,6 +8,8 @@ Windows produces an NSIS installer; macOS produces an app and DMG when built on 
 
 The editor code is bundled locally. AI and remote Teams connections still require a network and a configured provider/server. Files use the WebView's IndexedDB and are separate from your browser profile. Import and download are explicit; the app does not overwrite arbitrary disk files or synchronize a cloud drive.
 
+The window only ever shows the bundled app (`src-tauri/src/navigation.rs`). A web or `mailto:` link opens in the system's default browser or mail client; navigating the window anywhere else, `file:` and `ftp:` addresses, and new in-app windows (`window.open`) are refused. The app carries the same Content Security Policy as the published site (`scripts/csp.mjs`, kept equal to `tauri.conf.json` by `scripts/csp.test.mjs`).
+
 See [suite integration](../docs/suite-integration.md) for supported workflows and remaining limits.
 
 Folder scans run on a background thread, with bounded traversal. Native folder authorization is renewed with the folder picker after restarting the app. Search is by filename and relative path, not document contents or a system-wide index.

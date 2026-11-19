@@ -31,7 +31,9 @@ export async function followRoom({ convo, people, current, busy, changed, announ
 	const chat = await joinRoom(convo.shared.room);
 	let saving = 0,
 		typing = 0,
-		primed = false;
+		primed = false,
+		// Why the room is not syncing (a refused credential, an unreachable server), until it connects.
+		problem = '';
 	const pull = () => {
 		// A reply being written here owns the message list until it ends, then pulls again.
 		if (busy()) return;
@@ -60,15 +62,26 @@ export async function followRoom({ convo, people, current, busy, changed, announ
 					`<span class="chat-person" style="--person:${escape(p.color)}" title="${escape(p.name)}">${escape(p.name.slice(0, 1).toUpperCase())}</span>`,
 			)
 			.join('')}<span class="chat-people-state">${
-			active
-				? `${escape(active.name)} is ${active.activity === 'asking' ? 'asking the assistant' : 'typing'}...`
-				: others.length
-					? `${others.length} other${others.length === 1 ? '' : 's'} here`
-					: 'Waiting for others to join'
+			problem
+				? escape(problem)
+				: active
+					? `${escape(active.name)} is ${active.activity === 'asking' ? 'asking the assistant' : 'typing'}...`
+					: others.length
+						? `${others.length} other${others.length === 1 ? '' : 's'} here`
+						: 'Waiting for others to join'
 		}</span>`;
 	};
 	const stopRows = chat.store.observe(pull);
 	const stopPeople = chat.onPeople(paint);
+	const stopError = chat.session.on('error', (error) => {
+		problem = error.message;
+		paint();
+	});
+	const stopStatus = chat.session.on('status', (status) => {
+		if (status !== 'connected' || !problem) return;
+		problem = '';
+		paint();
+	});
 	pull();
 	paint();
 	return {
@@ -82,6 +95,8 @@ export async function followRoom({ convo, people, current, busy, changed, announ
 		leave() {
 			stopRows();
 			stopPeople();
+			stopError();
+			stopStatus();
 			clearTimeout(saving);
 			clearTimeout(typing);
 			chat.setActivity('idle');

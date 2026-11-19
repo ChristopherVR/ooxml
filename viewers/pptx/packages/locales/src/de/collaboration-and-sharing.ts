@@ -35,6 +35,22 @@ export const translations = {
 	'pptx.collaboration.peopleHere': '{{count}} Leute hier',
 	'pptx.collaboration.retry': 'Erneut versuchen',
 	'pptx.collaboration.retryConnection': 'Verbindung erneut versuchen',
+	'pptx.collaboration.failure.invalidRoom':
+		'Der Raumname ist ungültig. Verwenden Sie 1 bis 128 Buchstaben, Ziffern, Bindestriche oder Unterstriche.',
+	'pptx.collaboration.failure.missingSecret':
+		'Dieser Peer-to-Peer-Einladung fehlt der Sitzungsschlüssel. Öffnen Sie den vollständigen Freigabelink, den Sie erhalten haben.',
+	'pptx.collaboration.failure.insecurePage':
+		'Peer-to-Peer-Sitzungen benötigen eine sichere Seite. Öffnen Sie diese Seite über https:// (oder auf localhost) und versuchen Sie es erneut.',
+	'pptx.collaboration.failure.moduleUnavailable':
+		'Die Komponenten für die Zusammenarbeit konnten nicht geladen werden. Überprüfen Sie Ihre Netzwerkverbindung und versuchen Sie es erneut.',
+	'pptx.collaboration.failure.insecureServer':
+		'Eine https://-Seite kann keine Verbindung zu einem unsicheren ws://-Server herstellen. Verwenden Sie eine sichere wss://-Server-URL.',
+	'pptx.collaboration.failure.serverUnreachable':
+		'Der Zusammenarbeitsserver ist nicht erreichbar. Prüfen Sie, ob die Server-URL auf einen laufenden y-websocket-Server verweist.',
+	'pptx.collaboration.failure.noBroadcast':
+		'Dieser Browser kann nicht zwischen seinen Fenstern teilen. Verwenden Sie einen Zusammenarbeitsserver oder einen Peer-to-Peer-Link.',
+	'pptx.collaboration.failure.unknown':
+		'Die Verbindung für die Zusammenarbeit ist fehlgeschlagen. Überprüfen Sie den Einladungslink und Ihre Netzwerkverbindung und versuchen Sie es erneut.',
 	'pptx.followMode.following': 'Nachfolgend',
 	'pptx.followMode.stop': 'Stoppen',
 	'pptx.followMode.stopFollowing': 'Hör auf zu folgen',
@@ -72,7 +88,7 @@ export const translations = {
 	'pptx.share.serverHint':
 		'Geben Sie die WebSocket-URL eines y-websocket-Servers ein. Verwenden Sie beim Teilen von einer https://-Seite eine sichere wss://-URL.',
 	'pptx.share.p2pHint':
-		'Peer-to-Peer-Modus: Registerkarten im selben Browser verbinden sich immer; Andere Geräte verbinden sich über öffentliche WebRTC-Signalisierungsserver.',
+		'Peer-to-Peer-Modus: Registerkarten im selben Browser verbinden sich immer; Andere Geräte verbinden sich über öffentliche WebRTC-Signalisierungsserver. Laden Sie andere über den Freigabelink ein: Er enthält den Sitzungsschlüssel, der Raumname allein reicht zum Beitreten nicht aus.',
 	'pptx.share.p2pServerValue': 'Peer-to-Peer (kein Server)',
 	'pptx.share.shareLink': 'Freigabelink',
 	'pptx.share.copyLink': 'Freigabelink kopieren',
@@ -84,8 +100,6 @@ export const translations = {
 	'pptx.share.server': 'Server:',
 	'pptx.share.connectedUsers': 'Verbundene Nutzer',
 	'pptx.share.you': '(Sie)',
-	'pptx.share.connectionError':
-		'Verbindung zum Zusammenarbeitsserver nicht möglich. Überprüfen Sie die Server-URL.',
 	'pptx.broadcast.title': 'Präsentation übertragen',
 	'pptx.broadcast.broadcasting': 'Live-Übertragung',
 	'pptx.broadcast.description':

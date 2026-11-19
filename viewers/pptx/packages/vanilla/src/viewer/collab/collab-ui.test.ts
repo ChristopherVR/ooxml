@@ -1,3 +1,4 @@
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../i18n';
@@ -5,6 +6,7 @@ import { createInitialViewerState, createStore } from '../state';
 import type { ViewerChrome } from '../ui';
 import { createCollabUi } from './collab-ui';
 import type { CollabUiDeps } from './collab-ui';
+import { createCollaborationController } from './collaboration-controller';
 
 /** A minimal fake chrome exposing only what `collab-ui.ts` touches. */
 function fakeChrome(): ViewerChrome {
@@ -33,6 +35,7 @@ function makeDeps(over: Partial<CollabUiDeps> = {}): CollabUiDeps {
 		startCollaboration: vi.fn(() => Promise.resolve()),
 		stopCollaboration: vi.fn(),
 		getStatus: () => 'disconnected',
+		getFailure: () => null,
 		getConfig: () => null,
 		followUser: vi.fn(),
 		...over,
@@ -125,5 +128,63 @@ describe('createCollabUi host events', () => {
 
 		expect(onStopped).toHaveBeenCalledTimes(1);
 		expect(deps.stopCollaboration).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe('createCollabUi start failure', () => {
+	afterEach(() => {
+		document.body.replaceChildren();
+	});
+
+	it('shows why a peer-to-peer session without its secret could not start', async () => {
+		const missingSecret = translationsEn['pptx.collaboration.failure.missingSecret'];
+		const deps = makeDeps();
+		const collab = createCollaborationController({
+			store: deps.store,
+			getHandler: () => null,
+			setEditable: () => {},
+		});
+		const ui = createCollabUi({
+			...deps,
+			startCollaboration: (config) => collab.start(config),
+			stopCollaboration: () => collab.stop(),
+			getStatus: () => collab.getStatus(),
+			getFailure: () => collab.getFailure(),
+			getConfig: () => collab.getConfig(),
+		});
+		await collab.start({ roomId: 'room-1', serverUrl: '', userName: 'Ada', transport: 'webrtc' });
+		ui.onStatusChange(collab.getStatus());
+		expect(collab.getStatus()).toBe('error');
+
+		const pill = deps.getChrome().ribbon?.el.querySelector('[data-testid="collaboration-status"]');
+		expect(pill?.textContent).toContain(translationsEn['pptx.collaboration.status.error']);
+		expect(pill?.getAttribute('title')).toBe(missingSecret);
+
+		ui.openShare();
+		const banner = document.body.querySelector<HTMLElement>(
+			'[data-testid="collaboration-failure"]',
+		);
+		expect(banner?.hidden).toBeFalsy();
+		expect(banner?.textContent).toBe(missingSecret);
+		collab.destroy();
+		ui.destroy();
+	});
+
+	it('says why a peer-to-peer invitation without its key cannot join', () => {
+		const missingSecret = translationsEn['pptx.collaboration.failure.missingSecret'];
+		const ui = createCollabUi(makeDeps());
+		ui.openShare();
+		document.body.querySelectorAll<HTMLButtonElement>('.pptxv-share-tabs button')[1]?.click();
+		const field = Array.from(document.body.querySelectorAll<HTMLInputElement>('input')).find(
+			(input) => input.placeholder === translationsEn['pptx.share.invitationPlaceholder'],
+		);
+		field!.value = 'https://x.test/?room=deck-1&transport=webrtc';
+		field!.dispatchEvent(new Event('input', { bubbles: true }));
+		const banner = document.body.querySelector<HTMLElement>(
+			'[data-testid="collaboration-failure"]',
+		);
+		expect(banner?.hidden).toBeFalsy();
+		expect(banner?.textContent).toBe(missingSecret);
+		ui.destroy();
 	});
 });

@@ -20,6 +20,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { bundleSuite } from './bundle-suite.mjs';
 import { buildPwa } from './build-pwa.mjs';
+import { applyContentSecurityPolicy, assertContentSecurityPolicy } from './csp.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const argv = process.argv.slice(2);
@@ -37,6 +38,8 @@ export const VIEWERS = {
 const only = value('--only')?.split(',');
 const selected = Object.keys(VIEWERS).filter((name) => !only || only.includes(name));
 const out = resolve(ROOT, value('--out') ?? 'pages-dist');
+/** The URL path the site is served from. */
+const SITE_BASE = '/ooxml/';
 
 function run(command, args, cwd) {
 	console.log(`--- ${cwd.slice(ROOT.length + 1) || '.'}: ${command} ${args.join(' ')} ---`);
@@ -55,6 +58,8 @@ mkdirSync(out, { recursive: true });
 // The launcher goes first: it owns the site root, and no viewer directory name collides with it.
 cpSync(join(ROOT, 'site'), out, { recursive: true });
 await bundleSuite(join(out, 'suite.js'));
+// The policy goes in before the PWA build, which copies the shell and hashes every file.
+applyContentSecurityPolicy(out, { base: SITE_BASE });
 await buildPwa(out);
 
 for (const name of selected) {
@@ -68,5 +73,11 @@ for (const name of selected) {
 	}
 	cpSync(built, join(out, name), { recursive: true });
 }
+
+// The origin is shared with every other project site on christophervr.github.io, so every page,
+// the viewers' docs and demos included, carries the suite's script policy (scripts/csp.mjs). Pages
+// already carrying it, the suite's among them, are left as they are.
+applyContentSecurityPolicy(out, { base: SITE_BASE });
+assertContentSecurityPolicy(out);
 
 console.log(`Built the site into ${out}: launcher and ${selected.join(', ')}.`);

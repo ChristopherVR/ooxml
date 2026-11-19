@@ -4,7 +4,12 @@
  * document readiness is shared across bindings; Vue watches and presence have
  * focused composables.
  */
-import type { CollaborationConfig, CollaborationRole, ConnectionStatus } from 'ooxml-ui/pptx';
+import type {
+	CollaborationConfig,
+	CollaborationFailure,
+	CollaborationRole,
+	ConnectionStatus,
+} from 'ooxml-ui/pptx';
 import {
 	bindCollaborationHistory,
 	buildCollaborationState,
@@ -65,6 +70,7 @@ export function useCollaboration(options: UseCollaborationOptions): UseCollabora
 	});
 	const sessionState = useController(session);
 	const status = computed(() => sessionState.value.status) as Ref<ConnectionStatus>;
+	const failure = computed(() => sessionState.value.failure) as Ref<CollaborationFailure | null>;
 	const connected = computed(() => status.value === 'connected');
 	const active = computed(() => sessionState.value.active) as Ref<boolean>;
 	// The host's config stays the identity of the running session (the watcher compares it).
@@ -82,6 +88,7 @@ export function useCollaboration(options: UseCollaborationOptions): UseCollabora
 			sourcePending: toValue(options.sourcePending) ?? false,
 			sourceError: toValue(options.sourceError) ?? false,
 			status: status.value,
+			failure: failure.value,
 			remoteUsers: presence.remoteUsers.value,
 		}),
 	);
@@ -143,6 +150,7 @@ export function useCollaboration(options: UseCollaborationOptions): UseCollabora
 		shellState,
 		activeCollaboration,
 		status,
+		failure,
 		connected,
 		active,
 		activeRole,

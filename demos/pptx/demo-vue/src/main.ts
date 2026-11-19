@@ -1,3 +1,4 @@
+import '../../shared/zod-jitless';
 import { completeDemoSignInPopup } from 'ooxml-demo-onedrive';
 
 // Test-only: `?elementRenderFault=<id>` makes that element's renderer throw (e2e).

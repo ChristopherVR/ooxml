@@ -10,19 +10,29 @@
  *
  *  - `websocket`: `new WebsocketProvider(serverUrl, roomId, doc, { params })`;
  *    status events carry `{ status }`; `wsconnected` reports the live state.
- *  - `webrtc`: `new WebrtcProvider(roomId, doc, { signaling, password })`; needs
- *    no document server. Same-browser tabs meet over BroadcastChannel
+ *  - `webrtc`: `new WebrtcProvider(webrtcRoomName(secret), doc, { signaling,
+ *    password: secret })`; needs no document server. The signaling servers see
+ *    only the hash of the session secret and encrypted signaling, never the
+ *    room name users see. Same-browser tabs meet over BroadcastChannel
  *    immediately, so the handle reports `connectedNow: true`.
  *
  * @module render/collaboration-provider
  */
 import {
 	guardProviderUpdates,
+	isValidShareSecret,
 	type MessageHandlerProviderLike,
 	type UpdateRefusedError,
+	webrtcRoomName,
 } from 'ooxml-core/collab';
+
 import type { CollaborationConfig, CollaborationTransport } from '../types';
 import { createDepartureChannel } from './collaboration-departure';
+import {
+	CollaborationStartError,
+	loadCollaborationModule,
+	requirePeerToPeerCrypto,
+} from './collaboration-failure';
 import type { AwarenessLike } from './collaboration-presence-publisher';
 import { clearLocalAwareness } from './collaboration-teardown';
 
@@ -105,13 +115,25 @@ export async function createCollabProvider(
 	modules: CollabTransportModules,
 ): Promise<CollabProviderHandle> {
 	if (transport === 'webrtc') {
-		const { WebrtcProvider } = (await modules.loadWebrtc()) as YWebrtcModuleLike;
-		const provider = new WebrtcProvider(config.roomId, doc as never, {
+		const { secret } = config;
+		if (!isValidShareSecret(secret)) {
+			throw new CollaborationStartError(
+				'missing-secret',
+				'A peer-to-peer (webrtc) session needs its secret: set CollaborationConfig.secret from the invitation link, or create the session with buildCreateCollaborationConfig.',
+			);
+		}
+		// The provider derives the room key from `password` with Web Crypto.
+		requirePeerToPeerCrypto();
+		const room = webrtcRoomName(secret);
+		const { WebrtcProvider } = (await loadCollaborationModule('y-webrtc', () =>
+			modules.loadWebrtc(),
+		)) as YWebrtcModuleLike;
+		const provider = new WebrtcProvider(room, doc as never, {
 			...(config.signaling?.length ? { signaling: config.signaling } : {}),
-			...(config.authToken ? { password: config.authToken } : {}),
+			password: secret,
 		});
 		const awareness = provider.awareness as AwarenessLike;
-		const departure = createDepartureChannel(config.roomId, awareness as never);
+		const departure = createDepartureChannel(room, awareness as never);
 		return {
 			awareness,
 			onStatus: (cb) =>
@@ -139,7 +161,9 @@ export async function createCollabProvider(
 		};
 	}
 
-	const { WebsocketProvider } = (await modules.loadWebsocket()) as YWebsocketModuleLike;
+	const { WebsocketProvider } = (await loadCollaborationModule('y-websocket', () =>
+		modules.loadWebsocket(),
+	)) as YWebsocketModuleLike;
 	const provider = new WebsocketProvider(
 		config.serverUrl,
 		config.roomId,

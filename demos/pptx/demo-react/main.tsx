@@ -1,3 +1,4 @@
+import '../shared/zod-jitless';
 import { completeDemoSignInPopup } from 'ooxml-demo-onedrive';
 
 // Test-only: `?elementRenderFault=<id>` makes that element's renderer throw (e2e).
@@ -43,6 +44,7 @@ import {
 } from '../../../viewers/pptx/packages/react/src/viewer';
 import type { CollaborationConfig } from '../../../viewers/pptx/packages/react/src/viewer';
 import { installDevViewerHandle } from '../dev-viewer-handle';
+import { sessionFromPage, showSessionInAddressBar } from '../shared/collaboration-link';
 import { currentDemoCustomization } from '../shared/demo-customization';
 import { demoFileProviders } from '../shared/demo-file-providers';
 import { currentDemoRootOptions } from '../shared/demo-root-options';
@@ -124,18 +126,6 @@ function randomCursorColor(): string {
 	const bytes = new Uint8Array(3);
 	crypto.getRandomValues(bytes);
 	return `#${Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')}`;
-}
-
-/** Parse a comma-separated `?signaling=` list into a clean URL array. */
-function parseSignaling(raw: string | null): string[] | undefined {
-	if (!raw) {
-		return undefined;
-	}
-	const list = raw
-		.split(',')
-		.map((s) => s.trim())
-		.filter(Boolean);
-	return list.length > 0 ? list : undefined;
 }
 
 // ── Default collaboration server resolution ─────────────────────────────────
@@ -392,17 +382,13 @@ function App() {
 	// eslint-disable-next-line react/hook-use-state
 	const [urlName] = useState(() => new URLSearchParams(window.location.search).get('name'));
 	// Serverless peer-to-peer join: `?transport=webrtc` (+ optional
-	// `?signaling=a,b`). No server, so no trusted-host check and no file fetch.
+	// `?signaling=a,b` and the `#key=` secret, read by `sessionFromPage`). No
+	// server, so no trusted-host check and no file fetch.
 	// eslint-disable-next-line react/hook-use-state
 	const [urlTransport] = useState(() =>
 		new URLSearchParams(window.location.search).get('transport'),
 	);
-	// eslint-disable-next-line react/hook-use-state
-	const [urlSignaling] = useState(() =>
-		new URLSearchParams(window.location.search).get('signaling'),
-	);
 	const isWebrtcJoin = urlTransport === 'webrtc';
-	const signalingList = useMemo(() => parseSignaling(urlSignaling), [urlSignaling]);
 	// The six opt-in Three.js scenes: on for a person, off under browser
 	// automation unless a `?<flag>=1` query param opts in; see
 	// demos/shared/rendering-3d-flags.ts for the rules and why. Read once for
@@ -471,51 +457,24 @@ function App() {
 	// ordering where the broadcast effect ran after the room effect.
 	const [collaborationConfig, setCollaborationConfig] = useState<CollaborationConfig | null>(() => {
 		let config: CollaborationConfig | null = null;
-		if (urlRoom) {
-			if (isWebrtcJoin) {
-				config = {
-					roomId: urlRoom,
-					serverUrl: '',
-					transport: 'webrtc',
-					signaling: signalingList,
-					userName: urlName ?? autoName,
-					userColor: randomCursorColor(),
-				};
-			} else if (isTrustedServerUrl(urlServer)) {
-				config = {
-					roomId: urlRoom,
-					serverUrl: urlServer,
-					userName: urlName ?? autoName,
-					userColor: randomCursorColor(),
-				};
+		const user = { userName: urlName ?? autoName, userColor: randomCursorColor() };
+		const room = urlRoom ? sessionFromPage('room', urlServer) : null;
+		if (room) {
+			if (room.transport === 'webrtc' || isTrustedServerUrl(room.serverUrl)) {
+				config = { ...room, ...user };
 			} else {
 				console.warn(
-					`Ignoring ?room= auto-connect because ?server=${urlServer} is not in the trusted-host allowlist. Use the Share dialog to connect explicitly.`,
+					`Ignoring ?room= auto-connect because ?server=${room.serverUrl} is not in the trusted-host allowlist. Use the Share dialog to connect explicitly.`,
 				);
 			}
 		}
-		if (urlBroadcast) {
-			if (isWebrtcJoin) {
-				config = {
-					roomId: urlBroadcast,
-					serverUrl: '',
-					transport: 'webrtc',
-					signaling: signalingList,
-					userName: urlName ?? autoName,
-					userColor: randomCursorColor(),
-					role: 'viewer',
-				};
-			} else if (isTrustedServerUrl(urlServer)) {
-				config = {
-					roomId: urlBroadcast,
-					serverUrl: urlServer,
-					userName: urlName ?? autoName,
-					userColor: randomCursorColor(),
-					role: 'viewer',
-				};
+		const broadcast = urlBroadcast ? sessionFromPage('broadcast', urlServer) : null;
+		if (broadcast) {
+			if (broadcast.transport === 'webrtc' || isTrustedServerUrl(broadcast.serverUrl)) {
+				config = { ...broadcast, ...user, role: 'viewer' };
 			} else {
 				console.warn(
-					`Ignoring ?broadcast= auto-connect because ?server=${urlServer} is not in the trusted-host allowlist.`,
+					`Ignoring ?broadcast= auto-connect because ?server=${broadcast.serverUrl} is not in the trusted-host allowlist.`,
 				);
 			}
 		}
@@ -532,20 +491,7 @@ function App() {
 			const webrtc = isP2PConfig(config);
 
 			// Rewrite the URL so it can be copied to invite others.
-			const url = new URL(window.location.href);
-			for (const key of ['room', 'broadcast', 'server', 'transport', 'signaling']) {
-				url.searchParams.delete(key);
-			}
-			url.searchParams.set(isBroadcast ? 'broadcast' : 'room', config.roomId);
-			if (webrtc) {
-				url.searchParams.set('transport', 'webrtc');
-				if (config.signaling?.length) {
-					url.searchParams.set('signaling', config.signaling.join(','));
-				}
-			} else {
-				url.searchParams.set('server', config.serverUrl);
-			}
-			window.history.replaceState({}, '', url.toString());
+			showSessionInAddressBar(config, isBroadcast ? 'broadcast' : 'room');
 
 			if (content && config.sessionIntent !== 'join') {
 				// P2P has no file server, so stash the deck in IndexedDB for
@@ -575,11 +521,10 @@ function App() {
 		setCollaborationConfig(null);
 		setUrlRoom(null);
 		setUrlBroadcast(null);
-		// Remove room/broadcast from URL
+		// Remove room/broadcast (and the name it joined under) from URL
+		showSessionInAddressBar(null);
 		const url = new URL(window.location.href);
-		for (const key of ['room', 'broadcast', 'server', 'transport', 'signaling', 'name']) {
-			url.searchParams.delete(key);
-		}
+		url.searchParams.delete('name');
 		window.history.replaceState({}, '', url.toString());
 	}, []);
 

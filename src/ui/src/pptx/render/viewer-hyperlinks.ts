@@ -140,13 +140,11 @@ export function attachViewerHyperlinks(
 			const index = clampSlideIndex(state.currentSlideIndex + intent.direction, state.slideCount);
 			if (index !== null) navigation.goToSlide(index);
 		} else if (intent.kind === 'openUrl' && !internal) {
-			const target =
-				run?.getAttribute('target') ?? run?.getAttribute('data-pptx-hyperlink-target') ?? '_blank';
 			const answer = navigation.confirmExternalHyperlink?.(intent.url) ?? true;
-			if (answer === true) safeOpenUrl(intent.url, target);
+			if (answer === true) safeOpenUrl(intent.url);
 			else if (answer !== false)
 				void answer.then((confirmed) => {
-					if (confirmed) safeOpenUrl(intent.url, target);
+					if (confirmed) safeOpenUrl(intent.url);
 				});
 		}
 	};

@@ -52,10 +52,11 @@ mounts), for saving, export and everything else.
 room, a new configuration object rejoins, and clearing it leaves; the open deck, its edits and the
 canvas stay. Remote cursors and selections draw on the canvas. `getState()` also carries the shell:
 
-- `shellState`: `{ canEdit, status, remoteUsers, connectedCount }`, the effective edit permission
+- `shellState`: `{ canEdit, status, failure, remoteUsers, connectedCount }`, the effective edit permission
   (your `canEdit` is a ceiling; a `viewer` role or a room that has not synced yet takes it away, and
   `mode` reads `preview` then) and the connection. Pass it to `describeCollaborationShellState` for a
-  localised status line.
+  localised status line; `failure` names why a session in the `error` status could not start
+  (`collaborationFailureMessageKey` maps it to a translation key).
 - `collaborationState`: the shared `CollaborationState` (`active`, `roomId`, `status`, `synced`,
   `people`), `status: 'off'` while not sharing; the value the full viewer's collaboration-change
   event reports.

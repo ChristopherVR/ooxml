@@ -65,6 +65,7 @@ export class ViewerCollaborationShellService {
 			sourcePending: this.sourcePending(),
 			sourceError: Boolean(this.loader.error()),
 			status: this.collaboration.status(),
+			failure: this.collaboration.failure(),
 			remoteUsers: this.collaboration.presence(),
 		});
 	});

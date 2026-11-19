@@ -7,6 +7,7 @@
 import type {
 	CollabLoadOrigin,
 	CollaborationConfig,
+	CollaborationFailure,
 	CollaborationHistoryTarget,
 	CollaborationInput,
 	CollaborationLivePatcher,
@@ -51,6 +52,8 @@ export interface CollaborationController {
 	isReadOnly(): boolean;
 	/** Current connection status. */
 	getStatus(): ConnectionStatus;
+	/** Why the session failed to start while the status is `error`; `null` otherwise. */
+	getFailure(): CollaborationFailure | null;
 	/** The shared `CollaborationState` (the off state when no session is active). */
 	getState(): CollaborationState;
 	/** Publish a cursor move (slide-space px); no-op when no session is active. */

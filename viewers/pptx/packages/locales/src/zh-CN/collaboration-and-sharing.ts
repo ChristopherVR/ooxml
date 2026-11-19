@@ -35,6 +35,20 @@ export const translations = {
 	'pptx.collaboration.peopleHere': '这里有 {{count}} 人',
 	'pptx.collaboration.retry': '重试',
 	'pptx.collaboration.retryConnection': '重试连接',
+	'pptx.collaboration.failure.invalidRoom':
+		'房间名称无效。请使用 1 到 128 个字母、数字、连字符或下划线。',
+	'pptx.collaboration.failure.missingSecret':
+		'此点对点邀请缺少会话密钥。请打开你收到的完整共享链接。',
+	'pptx.collaboration.failure.insecurePage':
+		'点对点会话需要安全页面。请通过 https:// (或在 localhost 上) 打开此页面，然后重试。',
+	'pptx.collaboration.failure.moduleUnavailable': '无法加载协作组件。请检查网络连接，然后重试。',
+	'pptx.collaboration.failure.insecureServer':
+		'https:// 页面无法连接到不安全的 ws:// 服务器。请使用安全的 wss:// 服务器 URL。',
+	'pptx.collaboration.failure.serverUnreachable':
+		'无法访问协作服务器。请检查服务器 URL 是否指向正在运行的 y-websocket 服务器。',
+	'pptx.collaboration.failure.noBroadcast':
+		'此浏览器无法在其窗口之间共享。请使用协作服务器或点对点链接。',
+	'pptx.collaboration.failure.unknown': '协作连接失败。请检查邀请链接和网络连接，然后重试。',
 	'pptx.followMode.following': '正在跟随',
 	'pptx.followMode.stop': '停止',
 	'pptx.followMode.stopFollowing': '停止跟随',
@@ -70,7 +84,7 @@ export const translations = {
 	'pptx.share.serverHint':
 		'输入 y-websocket 服务器的 WebSocket URL（从 https:// 页面共享时需使用安全的 wss://），或留空以使用无需服务器的点对点模式。',
 	'pptx.share.p2pHint':
-		'点对点模式：同一浏览器中的选项卡始终连接；其他设备通过公共 WebRTC 信令服务器连接。',
+		'点对点模式：同一浏览器中的选项卡始终连接；其他设备通过公共 WebRTC 信令服务器连接。请使用共享链接邀请他人：链接包含会话密钥，仅凭房间名称无法加入。',
 	'pptx.share.p2pServerValue': '点对点（无服务器）',
 	'pptx.share.shareLink': '分享链接',
 	'pptx.share.copyLink': '复制分享链接',
@@ -81,8 +95,6 @@ export const translations = {
 	'pptx.share.server': '服务器：',
 	'pptx.share.connectedUsers': '已连接用户',
 	'pptx.share.you': '（你）',
-	'pptx.share.connectionError':
-		'无法访问协作服务器。检查服务器 URL ， 它必须是可访问的 y-websocket 服务器，并且从 https:// 页面共享时必须是安全的 wss:// URL。',
 	'pptx.broadcast.title': '广播幻灯片放映',
 	'pptx.broadcast.broadcasting': '直播',
 	'pptx.broadcast.description':

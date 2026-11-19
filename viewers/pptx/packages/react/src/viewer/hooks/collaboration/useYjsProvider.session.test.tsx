@@ -57,7 +57,13 @@ describe('useYjsProvider over the shared session controller', () => {
 		function Probe({ enabled, userName }: { enabled: boolean; userName: string }): null {
 			useYjsProvider({
 				config: enabled
-					? { roomId: 'room-1', serverUrl: '', transport: 'webrtc', userName }
+					? {
+							roomId: 'room-1',
+							serverUrl: '',
+							transport: 'webrtc',
+							secret: 'AAECAwQFBgcICQoLDA0ODw',
+							userName,
+						}
 					: undefined,
 			});
 			return null;
@@ -79,7 +85,13 @@ describe('useYjsProvider over the shared session controller', () => {
 		let latest: Result | undefined;
 		function Probe(): null {
 			latest = useYjsProvider({
-				config: { roomId: 'room-1', serverUrl: '', transport: 'webrtc', userName: 'Ada' },
+				config: {
+					roomId: 'room-1',
+					serverUrl: '',
+					transport: 'webrtc',
+					secret: 'AAECAwQFBgcICQoLDA0ODw',
+					userName: 'Ada',
+				},
 			});
 			return null;
 		}
@@ -105,7 +117,13 @@ describe('useYjsProvider over the shared session controller', () => {
 				config:
 					roomId === undefined
 						? undefined
-						: { roomId, serverUrl: '', transport: 'webrtc', userName: 'Ada' },
+						: {
+								roomId,
+								serverUrl: '',
+								transport: 'webrtc',
+								secret: 'AAECAwQFBgcICQoLDA0ODw',
+								userName: 'Ada',
+							},
 			});
 			return null;
 		}

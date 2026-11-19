@@ -272,6 +272,7 @@ export function createCollaborationController(
 		isActive: () => active,
 		isReadOnly: editState.isReadOnly,
 		getStatus: () => status,
+		getFailure: () => session.getSnapshot().failure,
 		getState: stateTracker.get,
 		setCursor: (x, y, activeSlideIndex) => presence?.setCursor(x, y, activeSlideIndex),
 		setSelection: (selectedElementId, activeSlideIndex) =>

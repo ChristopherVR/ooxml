@@ -9,7 +9,8 @@ export type {
 	RemoteCursor,
 	SanitizedPresence,
 } from 'ooxml-ui/pptx';
-export { describeCollaborationShellState } from 'ooxml-ui/pptx';
+export { collaborationFailureMessageKey, describeCollaborationShellState } from 'ooxml-ui/pptx';
+export type { CollaborationFailure } from 'ooxml-ui/pptx';
 /**
  * pptx-svelte-viewer: Svelte 5 PowerPoint viewer component.
  *

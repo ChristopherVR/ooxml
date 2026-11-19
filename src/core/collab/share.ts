@@ -4,6 +4,8 @@
 //
 // Generalised from the PowerPoint viewer's `share-session.ts` (now in ooxml-ui/pptx, which
 // delegates here) so Word, Excel and Visio share and join the same way; see PROVENANCE.md.
+import { encodeBase64 } from '../digest/base64';
+import { sha256 } from '../digest/sha256';
 import type { CollaborationOptions } from './embedding';
 import { isValidRoomId } from './validation';
 
@@ -24,16 +26,34 @@ export interface JoinFields {
 }
 
 /**
- * Where a session lives, as an invitation carries it. `webrtc` (only PowerPoint offers it) is
- * peer-to-peer through WebRTC signaling; otherwise a blank `serverUrl` is the products' default
- * without a server, a BroadcastChannel between windows of this browser.
+ * Where a session lives, as an invitation carries it. Without a `transport`, a blank `serverUrl`
+ * is the products' default without a server, a BroadcastChannel between windows of this browser.
  */
-export interface ShareTarget {
+export interface ServerShareTarget {
 	roomId: string;
 	serverUrl: string;
-	transport?: 'webrtc';
-	signaling?: string[];
+	transport?: undefined;
 }
+
+/**
+ * A peer-to-peer session through WebRTC signaling (only PowerPoint offers it). The signaling
+ * servers are third parties, so the session is keyed by `secret` alone: its hash names the
+ * signaling room ({@link webrtcRoomName}) and the secret itself encrypts the signaling. The room
+ * name is only what the users see.
+ */
+export interface WebrtcShareTarget {
+	roomId: string;
+	serverUrl: string;
+	transport: 'webrtc';
+	signaling?: string[];
+	/** A {@link createShareSecret} value. Links carry it in their fragment, never their query. */
+	secret: string;
+}
+
+export type ShareTarget = ServerShareTarget | WebrtcShareTarget;
+
+/** The query parameter that names the session: `room`, or PowerPoint's broadcast follow link. */
+export type ShareLinkParam = 'room' | 'broadcast';
 
 /** The page an invitation link points at; `window.location` fits. */
 export interface ShareLocation {
@@ -51,6 +71,31 @@ export function suggestRoomId(prefix = 'room'): string {
 	return `${prefix}-${suffix}`;
 }
 
+// 16 bytes in unpadded base64url: 21 free characters and a last one holding the final 2 bits.
+const SECRET_PATTERN = /^[A-Za-z0-9_-]{21}[AQgw]$/u;
+const SECRET_FRAGMENT_KEY = 'key';
+const WEBRTC_ROOM_DOMAIN = 'ooxml-webrtc-room:';
+
+/** A fresh 128-bit secret for a peer-to-peer session, in unpadded base64url (22 characters). */
+export function createShareSecret(): string {
+	const bytes = globalThis.crypto.getRandomValues(new Uint8Array(16));
+	return encodeBase64(bytes).replace(/\+/gu, '-').replace(/\//gu, '_').replace(/=+$/u, '');
+}
+
+/** Whether `value` has the shape {@link createShareSecret} produces. */
+export function isValidShareSecret(value: unknown): value is string {
+	return typeof value === 'string' && SECRET_PATTERN.test(value);
+}
+
+/**
+ * The signaling room of a peer-to-peer session: the hex SHA-256 of its secret under a fixed
+ * prefix, so the signaling server learns neither the secret nor the room name users see.
+ */
+export function webrtcRoomName(secret: string): string {
+	const digest = sha256(new TextEncoder().encode(WEBRTC_ROOM_DOMAIN + secret));
+	return Array.from(digest, (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
 /** The start form's fields from optional defaults. */
 export function seedShareFields(defaults?: Partial<ShareFields>): ShareFields {
 	return {
@@ -66,62 +111,87 @@ export function canStartShare(fields: ShareFields): boolean {
 }
 
 /**
- * The target a join form names, or null when it names none: a link's `room`, `server`,
- * `transport` and `signaling` parameters, or a bare room code with the fallback server.
+ * What an invitation names: a session, a peer-to-peer room that cannot be joined because the link
+ * has no valid `#key=` secret (a link in the older format kept its key in the query, or carries
+ * none), or nothing at all (blank, or no valid room name).
  */
-export function parseShareInvitation(
+export type ShareInvitation =
+	| { kind: 'session'; target: ShareTarget }
+	| { kind: 'missing-secret'; roomId: string }
+	| { kind: 'none' };
+
+const NO_INVITATION: ShareInvitation = { kind: 'none' };
+
+/**
+ * Read a join form's invitation: a link's `room` (or `param`), `server`, `transport` and
+ * `signaling` parameters, or a bare room code with the fallback server. A peer-to-peer link names
+ * a session only with a valid secret in its `#key=` fragment; without one it is `missing-secret`.
+ */
+export function readShareInvitation(
 	invitation: string,
 	fallbackServerUrl = '',
-): ShareTarget | null {
+	param: ShareLinkParam = 'room',
+): ShareInvitation {
 	const value = invitation.trim();
-	if (!value) return null;
+	if (!value) return NO_INVITATION;
 	let url: URL | null = null;
 	try {
 		url = new URL(value);
 	} catch {
 		url = null;
 	}
-	const roomId = (url ? (url.searchParams.get('room') ?? '') : value).trim();
-	if (!isValidRoomId(roomId)) return null;
+	const roomId = (url ? (url.searchParams.get(param) ?? '') : value).trim();
+	if (!isValidRoomId(roomId)) return NO_INVITATION;
 	if (url?.searchParams.get('transport') === 'webrtc') {
+		const secret = new URLSearchParams(url.hash.slice(1)).get(SECRET_FRAGMENT_KEY);
+		if (!isValidShareSecret(secret)) return { kind: 'missing-secret', roomId };
 		const signaling = (url.searchParams.get('signaling') ?? '')
 			.split(',')
 			.map((entry) => entry.trim())
 			.filter((entry) => entry.length > 0);
 		return {
-			roomId,
-			serverUrl: '',
-			transport: 'webrtc',
-			...(signaling.length ? { signaling } : {}),
+			kind: 'session',
+			target: {
+				roomId,
+				serverUrl: '',
+				transport: 'webrtc',
+				...(signaling.length ? { signaling } : {}),
+				secret,
+			},
 		};
 	}
-	return { roomId, serverUrl: (url?.searchParams.get('server') ?? fallbackServerUrl).trim() };
+	return {
+		kind: 'session',
+		target: { roomId, serverUrl: (url?.searchParams.get('server') ?? fallbackServerUrl).trim() },
+	};
 }
 
 /** Whether the join form names a session and a display name. */
 export function canJoinShare(fields: JoinFields): boolean {
-	return (
-		fields.userName.trim().length > 0 &&
-		parseShareInvitation(fields.invitation, fields.serverUrl) !== null
-	);
+	return joinShareOptions(fields) !== null;
 }
 
 /**
- * The invitation for `target`: a link to `location` with `room` and `server` (or `transport` and
- * `signaling`) parameters, or the bare room code where no absolute link can be made (no location,
- * or an opaque origin such as `file:` or a sandboxed frame). A room code joins through the
- * recipient's own server, so it carries no server or signaling.
+ * The invitation for `target`: a link to `location` with `room` (or `param`) and `server` (or
+ * `transport` and `signaling`) parameters, a peer-to-peer secret in the `#key=` fragment, which
+ * browsers never send to the page's server, or the bare room code where no absolute link can be
+ * made (no location, or an opaque origin such as `file:` or a sandboxed frame). A room code joins
+ * through the recipient's own server, so it carries no server, signaling or secret.
  */
-export function shareInvitation(target: ShareTarget, location?: ShareLocation): string {
+export function shareInvitation(
+	target: ShareTarget,
+	location?: ShareLocation,
+	param: ShareLinkParam = 'room',
+): string {
 	if (!location || location.origin === 'null' || location.origin === '') return target.roomId;
 	const url = new URL(location.pathname, location.origin);
-	url.searchParams.set('room', target.roomId);
-	const server = target.serverUrl.trim();
+	url.searchParams.set(param, target.roomId);
 	if (target.transport === 'webrtc') {
 		url.searchParams.set('transport', 'webrtc');
 		if (target.signaling?.length) url.searchParams.set('signaling', target.signaling.join(','));
-	} else if (server) {
-		url.searchParams.set('server', server);
+		url.hash = new URLSearchParams({ [SECRET_FRAGMENT_KEY]: target.secret }).toString();
+	} else if (target.serverUrl.trim()) {
+		url.searchParams.set('server', target.serverUrl.trim());
 	}
 	return url.toString();
 }
@@ -158,8 +228,10 @@ export function startShareOptions(fields: ShareFields): CollaborationOptions | n
 /** The options the join form describes, or null while it names no session or no name. */
 export function joinShareOptions(fields: JoinFields): CollaborationOptions | null {
 	if (!fields.userName.trim()) return null;
-	const target = parseShareInvitation(fields.invitation, fields.serverUrl);
-	return target ? shareOptions(target, fields.userName, 'join') : null;
+	const invitation = readShareInvitation(fields.invitation, fields.serverUrl);
+	return invitation.kind === 'session'
+		? shareOptions(invitation.target, fields.userName, 'join')
+		: null;
 }
 
 /**

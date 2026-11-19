@@ -1,11 +1,9 @@
-import '@angular/compiler';
 import { Component, signal } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { TeamsWorkspaceComponent } from 'openteams-angular-viewer';
 import { config, locale, showStaticNotice, userId, userName, workspaceId } from '../../shared';
 import { currentHostClass, onHostClass, recordOpenFile } from '../../test-hooks';
 
-// JIT-compiled in the demo: legacy decorators, no AOT.
 @Component({
 	selector: 'demo-root',
 	standalone: true,

@@ -21,12 +21,14 @@ import type {
 	CollaborationState,
 	CollaborationConfig,
 	CollaborationLivePatcher,
+	CollaborationFailure,
 	CollaborationRole,
 	ConnectionStatus,
 } from 'ooxml-ui/pptx';
 import {
 	bindCollaborationHistory,
 	buildCollaborationState,
+	collaborationFailureMessageKey,
 	collaborationHistoryReady,
 	collaborationRefusalToast,
 	createCollaborationLivePatcher,
@@ -56,6 +58,12 @@ const DEFAULT_CANVAS_BOUND = 100_000;
 export class CollaborationService {
 	// Reactive state
 	readonly status = computed<ConnectionStatus>(() => this.sessionState().status);
+	/** Why the session failed to start while `status` is `error`; `null` otherwise. */
+	readonly failure = computed<CollaborationFailure | null>(() => this.sessionState().failure);
+	/** The translation key explaining an errored session, or `null`. */
+	readonly failureKey = computed(() =>
+		collaborationFailureMessageKey(this.status(), this.failure()),
+	);
 	readonly connected = computed<boolean>(() => this.status() === 'connected');
 	readonly active = computed<boolean>(() => this.sessionState().active);
 	/** Role of the local user in the active session, or undefined when idle. */
