@@ -15,6 +15,7 @@ export type {
 } from './building-blocks-actions';
 export { DOCX_EDITOR_EVENTS } from './events';
 export type { RibbonAction } from './ribbon';
+export type { DocxTextRange } from './text-focus';
 export {
 	RIBBON_ACTION_IDS,
 	RIBBON_ACTION_LABELS,

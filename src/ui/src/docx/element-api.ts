@@ -18,6 +18,7 @@ import {
 	type RibbonActionInput,
 } from 'ooxml-core/docx/ui';
 import { emit } from './events';
+import { focusText, textSelection, type DocxTextRange } from './text-focus';
 import { applyViewOptions } from './view-options';
 import type { WordCustomization } from './customization';
 import { setWordCustomization } from './customization-apply';
@@ -271,6 +272,16 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 	 */
 	async openCloudFile(file: CloudOpenedFile): Promise<void> {
 		await this.core.shell.chrome?.openCloudFile(file);
+	}
+
+	/** The body text selection, or null before a document is shown; `focusText` puts it back. */
+	getTextSelection(): DocxTextRange | null {
+		return textSelection(this.core);
+	}
+
+	/** Focuses the body text, with the selection at `range` (clamped to the document) when given. */
+	focusText(range?: DocxTextRange | null): void {
+		focusText(this.core, range);
 	}
 
 	/** Declares the current content saved, for hosts that persist the result of `save()` themselves. */
