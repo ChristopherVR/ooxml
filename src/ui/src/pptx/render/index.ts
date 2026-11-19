@@ -849,7 +849,6 @@ export * from './hyperlink-security';
 // `a:hlinkClick/@tgtFrame`: the `target`/`rel` a hyperlink `<a>` should carry,
 // decided once so a deck's authored frame name (not just the hardcoded
 // `_blank`) reaches every binding's anchor.
-export * from './hyperlink-target';
 // Real-time collaboration presence: pure validators + sanitisers for inbound
 // Yjs awareness data (room id, username/colour/avatar, cursor clamping, stale
 // drop), deterministic per-user colour, mixed-content (ws:// from https)

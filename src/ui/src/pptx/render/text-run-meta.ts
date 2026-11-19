@@ -18,7 +18,6 @@
 import type { TextSegment, TextStyle } from 'ooxml-core/pptx';
 
 import { isPpactionUrl, resolveHyperlinkHref } from './hyperlink-security';
-import { resolveHyperlinkTargetAttrs } from './hyperlink-target';
 import { sanitizeMathMl } from './mathml-sanitize';
 import { convertOmmlToMathMl } from './omml-to-mathml';
 import type { OmmlNode } from './omml-to-mathml';
@@ -42,12 +41,12 @@ export interface RunHyperlink {
 	/** `a:hlinkClick/@tooltip`, for the anchor's `title`. */
 	tooltip?: string;
 	/**
-	 * `<a target>` for a real (non-`ppaction://`) hyperlink, from
-	 * `a:hlinkClick/@tgtFrame` when authored, else `_blank` (every binding's
-	 * pre-existing hardcoded default). Only meaningful alongside {@link href}.
+	 * `<a target>` for a real (non-`ppaction://`) hyperlink: always `_blank`. The deck's
+	 * `a:hlinkClick/@tgtFrame` is kept for round trip only, so a deck cannot navigate the app or
+	 * its host. Only meaningful alongside {@link href}.
 	 */
 	target?: string;
-	/** `<a rel>` paired with {@link target} (see `resolveHyperlinkTargetAttrs`). */
+	/** `<a rel>` paired with {@link target}: always `noopener noreferrer`. */
 	rel?: string;
 	/** Resolved target slide for an internal slide jump. */
 	targetSlideIndex?: number;
@@ -101,9 +100,9 @@ export function resolveRunHyperlink(style: TextStyle | undefined): RunHyperlink 
 	const href = resolveHyperlinkHref(raw);
 	if (href !== undefined) {
 		link.href = href;
-		const targetAttrs = resolveHyperlinkTargetAttrs(style?.hyperlinkTargetFrame);
-		link.target = targetAttrs.target;
-		link.rel = targetAttrs.rel;
+		// Always a new, isolated tab: `@tgtFrame` round-trips but never decides where a link opens.
+		link.target = '_blank';
+		link.rel = 'noopener noreferrer';
 	}
 	if (style?.hyperlinkTooltip) {
 		link.tooltip = style.hyperlinkTooltip;

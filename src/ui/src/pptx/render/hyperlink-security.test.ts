@@ -114,12 +114,22 @@ describe('safeOpenUrl', () => {
 		},
 	);
 
-	it.each(['ftp://example.com/file', 'file:///c:/report', '/relative', '#slide', 'tel:+1234'])(
+	it.each(['/relative', '#slide', 'tel:+1234'])(
 		'preserves deliberate PowerPoint navigation compatibility for %s',
 		(url) => {
 			expect(safeOpenUrl(url)).toBe(true);
 			expect(window.open).toHaveBeenCalledWith(url, '_blank', 'noopener,noreferrer');
 			expect(resolveHyperlinkHref(url)).toBe(url);
+		},
+	);
+
+	it.each(['ftp://example.com/file', 'file:///c:/report', 'FILE://server/share/report.pptx'])(
+		'keeps %s in the deck but never opens it',
+		(url) => {
+			expect(isUrlSafe(url)).toBe(true);
+			expect(safeOpenUrl(url)).toBe(false);
+			expect(window.open).not.toHaveBeenCalled();
+			expect(resolveHyperlinkHref(url)).toBeUndefined();
 		},
 	);
 
@@ -143,21 +153,6 @@ describe('safeOpenUrl', () => {
 		const result = safeOpenUrl('data:text/html,<script>alert(1)</script>');
 		expect(result).toBeFalsy();
 		expect(window.open).not.toHaveBeenCalled();
-	});
-
-	it('opens into a named target (a:hlinkClick/@tgtFrame) with noopener noreferrer', () => {
-		const result = safeOpenUrl('https://example.com', 'contentFrame');
-		expect(result).toBeTruthy();
-		expect(window.open).toHaveBeenCalledWith(
-			'https://example.com',
-			'contentFrame',
-			'noopener,noreferrer',
-		);
-	});
-
-	it('drops noopener/noreferrer for @tgtFrame="_self" (same-tab navigation)', () => {
-		safeOpenUrl('https://example.com', '_self');
-		expect(window.open).toHaveBeenCalledWith('https://example.com', '_self', '');
 	});
 });
 

@@ -36,5 +36,7 @@ const viewer = createPptxViewer(container, {
 });
 ```
 
-Without a callback, the viewer follows links normally. External links retain the
-deck's target frame, URL safety checks and Trust Center confirmation setting.
+Without a callback, the viewer follows links normally. External links always open in a new tab
+with `noopener` and `noreferrer`, after the URL safety checks and the Trust Center confirmation
+setting. The deck's own target frame (`tgtFrame`) is saved back unchanged but never decides where a
+link opens. Links to `file:` and `ftp:` addresses stay in the deck and are not opened.

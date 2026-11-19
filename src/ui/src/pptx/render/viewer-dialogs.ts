@@ -44,14 +44,13 @@ export async function openExternalHyperlinkConfirmed(
 	options: ViewerOptions,
 	url: string,
 	context: ViewerDialogContext,
-	target?: string,
 ): Promise<boolean> {
 	if (
 		shouldConfirmExternalHyperlink(options, url) &&
 		!(await confirmExternalHyperlinkDialog(url, context))
 	)
 		return false;
-	safeOpenUrl(url, target);
+	safeOpenUrl(url);
 	return true;
 }
 

@@ -122,7 +122,7 @@ describe('viewer hyperlink navigation', () => {
 		expect(view.open).not.toHaveBeenCalled();
 	});
 
-	it('preserves the external target frame and Trust Center gate', () => {
+	it('opens an external link in a new isolated tab whatever frame it names, after the Trust Center gate', () => {
 		const view = mount();
 		view.text.setAttribute('data-pptx-hyperlink', 'https://example.com');
 		view.text.setAttribute('target', '_self');
@@ -130,7 +130,11 @@ describe('viewer hyperlink navigation', () => {
 		view.text.click();
 		expect(view.open).not.toHaveBeenCalled();
 		view.text.click();
-		expect(view.open).toHaveBeenCalledExactlyOnceWith('https://example.com', '_self', '');
+		expect(view.open).toHaveBeenCalledExactlyOnceWith(
+			'https://example.com',
+			'_blank',
+			'noopener,noreferrer',
+		);
 		view.onHyperlinkClick.mockReturnValue(false);
 		view.text.click();
 		expect(view.open).toHaveBeenCalledOnce();

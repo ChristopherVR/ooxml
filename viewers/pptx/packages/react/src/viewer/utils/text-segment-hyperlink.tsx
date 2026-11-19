@@ -28,15 +28,11 @@ export function renderHyperlink(
 	const displayUrl = url.startsWith('ppaction://')
 		? url.replace(/^ppaction:\/\//u, '').split('?')[0]
 		: url;
-	// `a:hlinkClick/@tgtFrame`: which window/frame the link opens into. Only
-	// meaningful for a real (non-`ppaction://`) target, which is exactly when
-	// `run.hyperlink.target` is set (see `resolveRunHyperlink`).
-	const targetFrame = run.hyperlink?.target;
 	const follow = (modified: boolean): boolean => {
 		if (requireCtrlClick && !modified) {
 			return false;
 		}
-		onHyperlinkClick(url, targetFrame);
+		onHyperlinkClick(url);
 		return true;
 	};
 
@@ -45,7 +41,6 @@ export function renderHyperlink(
 			key={`${key}-link`}
 			data-pptx-hyperlink={url}
 			data-pptx-require-ctrl-click={requireCtrlClick ? '' : undefined}
-			data-pptx-hyperlink-target={targetFrame}
 			role='link'
 			tabIndex={0}
 			className={requireCtrlClick ? 'group/link relative' : undefined}
