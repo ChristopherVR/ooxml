@@ -22,4 +22,20 @@ describe('collabStrings', () => {
 		expect(translateCollabText(message, 'zh-CN')).toBe(collabStrings['zh-CN'][message]);
 		expect(translateCollabText('Something else', 'de')).toBe('Something else');
 	});
+
+	it('reads any tag of a shipped language, as the product UIs resolve their locale', () => {
+		const message = UPDATE_REFUSAL_MESSAGES['too-large'];
+		const chinese = collabStrings['zh-CN'][message];
+		for (const tag of ['zh', 'zh-Hans', 'zh-Hans-CN', 'zh_CN', 'ZH-cn', 'zh-SG']) {
+			expect(translateCollabText(message, tag)).toBe(chinese);
+		}
+		expect(translateCollabText(message, 'de-AT')).toBe(collabStrings.de[message]);
+		expect(translateCollabText(message, 'ja-JP')).toBe(collabStrings.ja[message]);
+		expect(translateCollabText(message, 'es-419')).toBe(collabStrings.es[message]);
+		// No product ships Traditional Chinese: English, not Simplified.
+		expect(translateCollabText(message, 'zh-TW')).toBe(message);
+		expect(translateCollabText(message, 'zh-Hant')).toBe(message);
+		expect(translateCollabText(message, undefined)).toBe(message);
+		expect(translateCollabText(message, 'pt-BR')).toBe(message);
+	});
 });

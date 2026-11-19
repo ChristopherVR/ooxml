@@ -5,6 +5,7 @@
  * them into its own dictionary and translates the message it was given.
  */
 import { LEFT_OUT_MESSAGE, UPDATE_REFUSAL_MESSAGES } from '../collab/refusal';
+import { normalizeLocale } from './locale';
 
 export type CollabStrings = Record<string, string>;
 
@@ -99,10 +100,14 @@ export const collabStrings = {
 	ko,
 } as const satisfies Record<string, CollabStrings>;
 
-/** `text` in `locale` when it is one of these strings (base language as a fallback), else `text`. */
+const COLLAB_LOCALES = Object.keys(collabStrings) as (keyof typeof collabStrings)[];
+
+/**
+ * `text` in `locale` when it is one of these strings, else `text`. Any BCP 47 tag resolves the
+ * way the product UIs resolve theirs (`normalizeLocale`): `zh`, `zh-Hans` and `zh_CN` read
+ * Simplified Chinese, `de-AT` reads German, and `zh-TW` or an unsupported tag reads English.
+ */
 export function translateCollabText(text: string, locale: string | undefined): string {
-	const table: CollabStrings | undefined =
-		(collabStrings as Record<string, CollabStrings>)[locale ?? 'en'] ??
-		(collabStrings as Record<string, CollabStrings>)[(locale ?? 'en').split('-')[0]!];
-	return table?.[text] ?? text;
+	const table: CollabStrings = collabStrings[normalizeLocale(locale, COLLAB_LOCALES, 'en')];
+	return table[text] ?? text;
 }
