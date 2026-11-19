@@ -169,6 +169,11 @@ export class DrawingLayer {
 		const doc = view.doc;
 		node.replaceChildren();
 		node.className = 'xg-obj';
+		node.removeAttribute('role');
+		node.removeAttribute('aria-label');
+		// A picture is one image, named by its alt text, else its name.
+		const alt =
+			(drawing.kind === 'image' && (drawing.description || drawing.name)) || view.ctx.t('Picture');
 		if (
 			drawing.kind === 'image' &&
 			(needsPicturePixels(drawing.effects ?? []) ||
@@ -176,25 +181,27 @@ export class DrawingLayer {
 				Object.values(drawing.layout?.fillRect ?? {}).some((value) => value !== 0))
 		) {
 			const url = this.#url(drawing.partName, drawing.contentType);
-			if (url)
-				node.append(
-					pictureSvg(
-						doc,
-						{
-							kind: 'picture',
-							...(drawing.crop ? { crop: drawing.crop } : {}),
-							...(drawing.effects ? { effects: drawing.effects } : {}),
-							...(drawing.layout ? { layout: drawing.layout } : {}),
-						},
-						url,
-						box.w,
-						box.h,
-					),
+			if (url) {
+				const svg = pictureSvg(
+					doc,
+					{
+						kind: 'picture',
+						...(drawing.crop ? { crop: drawing.crop } : {}),
+						...(drawing.effects ? { effects: drawing.effects } : {}),
+						...(drawing.layout ? { layout: drawing.layout } : {}),
+					},
+					url,
+					box.w,
+					box.h,
 				);
+				svg.setAttribute('aria-hidden', 'true');
+				node.append(svg);
+			}
 			node.setAttribute('role', 'img');
+			node.setAttribute('aria-label', alt);
 		} else if (drawing.kind === 'image') {
 			const img = h(doc, 'img', '', {
-				alt: drawing.description ?? drawing.name ?? '',
+				alt,
 				draggable: 'false',
 			});
 			const url = this.#url(drawing.partName, drawing.contentType);
@@ -216,6 +223,7 @@ export class DrawingLayer {
 				const svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
 				svg.setAttribute('width', '0');
 				svg.setAttribute('height', '0');
+				svg.setAttribute('aria-hidden', 'true');
 				const defs = doc.createElementNS(svg.namespaceURI, 'defs') as SVGDefsElement;
 				svg.append(defs);
 				const effects = pictureEffectFilter(doc, defs, drawing.effects);
@@ -224,7 +232,6 @@ export class DrawingLayer {
 				node.append(svg);
 			}
 			node.append(img);
-			node.setAttribute('role', 'img');
 		} else if (drawing.kind === 'chart') {
 			this.#paintChart(node, drawing, box);
 		} else if (drawing.kind === 'slicer') {
