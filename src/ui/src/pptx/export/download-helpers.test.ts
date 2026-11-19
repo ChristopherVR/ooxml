@@ -69,6 +69,7 @@ describe('resolveExportBaseName', () => {
 		expect(resolveExportBaseName('Deck.png')).toBe('Deck');
 		expect(resolveExportBaseName('Deck.gif')).toBe('Deck');
 		expect(resolveExportBaseName('Deck.webm')).toBe('Deck');
+		expect(resolveExportBaseName('Deck.MP4')).toBe('Deck');
 	});
 
 	it('leaves an unrecognised extension untouched', () => {
@@ -124,6 +125,10 @@ describe('downloadBlob / downloadDataUrl', () => {
 		expect(revokeObjectURL).not.toHaveBeenCalled();
 		vi.advanceTimersByTime(200);
 		expect(anchor.remove).toHaveBeenCalledOnce();
+		// iPadOS reads the URL only after the user confirms the download sheet (#290).
+		vi.advanceTimersByTime(30_000);
+		expect(revokeObjectURL).not.toHaveBeenCalled();
+		vi.advanceTimersByTime(30_000);
 		expect(revokeObjectURL).toHaveBeenCalledWith('blob:fake-url');
 	});
 

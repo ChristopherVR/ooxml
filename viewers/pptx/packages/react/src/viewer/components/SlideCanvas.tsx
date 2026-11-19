@@ -385,6 +385,7 @@ function SlideCanvasContent({
 					onMouseDown={handleStageMouseDown}
 					onPointerDown={isEditableCanvas ? handleStagePointerDown : undefined}
 					onContextMenu={handleStageContextMenu}
+					data-pptx-touch-press='menu'
 					onPointerMove={handleStagePointerMove}
 					onPointerUp={handleStagePointerUp}
 				>

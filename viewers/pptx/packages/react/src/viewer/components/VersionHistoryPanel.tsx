@@ -227,7 +227,7 @@ export function VersionHistoryPanel({
 							<div className='text-[10px] text-muted-foreground mt-0.5'>
 								{formatFileSize(version.size)}
 							</div>
-							<div className='flex items-center gap-1 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity'>
+							<div className='flex items-center gap-1 mt-1.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100 transition-opacity'>
 								<button
 									onClick={() => void handleRestore(version)}
 									disabled={restoringKey === version.key}

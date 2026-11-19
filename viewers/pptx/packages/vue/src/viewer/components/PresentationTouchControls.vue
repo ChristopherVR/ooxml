@@ -153,6 +153,7 @@ const counterLabel = computed(() =>
 	font-size: 12px;
 	font-variant-numeric: tabular-nums;
 	pointer-events: none;
+	-webkit-user-select: none;
 	user-select: none;
 }
 </style>

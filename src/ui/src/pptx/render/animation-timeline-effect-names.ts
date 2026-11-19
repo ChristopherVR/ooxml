@@ -106,7 +106,7 @@ export type EffectName =
 	| 'stretchInBottom'
 	| 'newsflashIn'
 	// `p:animEffect/@filter="pixelate"`: a mosaic grid reveal built from
-	// discrete SVG `<filter>` data-URI steps (see `animation-pixelate-filter`).
+	// discrete same-document SVG `<filter>` steps (see `animation-pixelate-filter`).
 	| 'pixelateIn'
 	| 'disappear'
 	| 'fadeOut'

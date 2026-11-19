@@ -203,6 +203,7 @@ export function watermarkElement(
 		justifyContent: 'center',
 		pointerEvents: 'none',
 		userSelect: 'none',
+		WebkitUserSelect: 'none',
 		whiteSpace: 'nowrap',
 		overflow: 'hidden',
 		fontSize: `${Math.max(12, Math.min(220, span / (chars * 0.6)))}px`,

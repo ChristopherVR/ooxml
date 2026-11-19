@@ -32,6 +32,7 @@ export const EDITOR_CONTEXT_MENU_STYLES = `
 			0 4px 12px rgba(0, 0, 0, 0.4),
 			0 1px 3px rgba(0, 0, 0, 0.3);
 		font-size: 13px;
+		-webkit-user-select: none;
 		user-select: none;
 	}
 

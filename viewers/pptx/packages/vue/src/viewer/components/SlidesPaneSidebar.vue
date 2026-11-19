@@ -245,6 +245,7 @@ const {
 							:data-pptx-slide-hidden="hiddenCue(slide.hidden, 'rail', index).marker"
 							@click="onSlideClick($event, index)"
 							@contextmenu="onContextMenu($event, index)"
+							data-pptx-touch-press="menu"
 							@dragstart="onDragStart($event, index)"
 							@dragover.prevent
 							@drop="onDrop(index)"

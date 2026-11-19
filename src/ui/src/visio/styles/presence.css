@@ -6,5 +6,6 @@
 	fill: var(--office-on-accent, #fff);
 	font: 600 11px/1 var(--_vv-font, sans-serif);
 	paint-order: normal;
+	-webkit-user-select: none;
 	user-select: none;
 }

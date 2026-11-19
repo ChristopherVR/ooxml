@@ -110,6 +110,7 @@
 		color: rgb(255 255 255 / 50%);
 		font-family: ui-monospace, monospace;
 		font-size: 12px;
+		-webkit-user-select: none;
 		user-select: none;
 	}
 </style>

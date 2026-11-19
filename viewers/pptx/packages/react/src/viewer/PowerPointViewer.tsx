@@ -73,6 +73,7 @@ import {
 	resolveCollaborationConfig,
 	viewerOptionsToPreferences,
 	writeStoredViewerPrefs,
+	installTouchPress,
 } from 'ooxml-ui/pptx';
 import type { DocumentSaveReason, HistoryTheme } from 'ooxml-ui/pptx';
 import { installSvgIdScope } from 'ooxml-ui/pptx';
@@ -932,22 +933,19 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 					mode === 'present'
 						? (direction) => presentation.movePresentationSlide(direction === 1 ? -1 : 1)
 						: undefined,
-				onLongPress: (clientX, clientY) => {
-					if (mode !== 'edit' || !canEdit) {
-						return;
-					}
-					if (!state.selectedElementId) {
-						return;
-					}
-					state.setContextMenuState({
-						x: clientX,
-						y: clientY,
-						elementId: state.selectedElementId,
-					});
-				},
 			},
 			enabled: isTouchDevice,
 		});
+
+		// ── Touch long-press / double-tap (issue #290) ────────────────
+		// iOS Safari fires no contextmenu on a long-press and no reliable dblclick:
+		// the shared installer turns both into synthetic events on the controls
+		// that opt in with `data-pptx-touch-press` (the canvas, slide pane, sorter,
+		// slide show and charts), so their own handlers run with the touch point.
+		useEffect(() => {
+			const root = containerRef.current;
+			return root ? installTouchPress(root) : undefined;
+		}, [containerRef, loading, error]);
 
 		// ── Dialogs ───────────────────────────────────────────────────
 		const dialogs = useViewerDialogs({

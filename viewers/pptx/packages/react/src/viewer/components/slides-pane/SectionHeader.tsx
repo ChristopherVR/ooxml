@@ -57,6 +57,7 @@ export function SectionHeader({
 		<button
 			type='button'
 			data-pptx-chrome='section-header'
+			data-pptx-touch-press={canEdit ? 'menu dblclick' : undefined}
 			className='flex w-full items-center gap-1 rounded px-1.5 py-1 text-[11px] uppercase tracking-wide text-muted-foreground hover:bg-muted/60 hover:text-foreground'
 			onClick={() => onToggle(sectionId, isCollapsed)}
 			onContextMenu={(e) =>

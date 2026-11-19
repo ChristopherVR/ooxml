@@ -215,6 +215,7 @@ function slideLabel(slide: PptxSlide, index: number): string {
 					@click="onHeaderClick(group)"
 					@contextmenu="openSectionMenu($event, group.section.id)"
 					@dblclick.stop="startRename(group.section.id, group.section.name)"
+					data-pptx-touch-press="menu dblclick"
 				>
 					<!-- Section colour from `p15:sectionPr/@clr`. Core parses and
 					     round-trips it and React's sorter paints it; the Vue rail
@@ -292,6 +293,7 @@ function slideLabel(slide: PptxSlide, index: number): string {
 						:aria-label="t('pptx.slidesPanel.goToSlide', { n: group.slideIndexes[si] + 1 })"
 						@click="onSlideClick($event, group.slideIndexes[si])"
 						@contextmenu="onSlideContextMenu($event, group.slideIndexes[si])"
+						data-pptx-touch-press="menu"
 					>
 						<span
 							class="pptx-vue-section-thumb-num w-[18px] flex-shrink-0 text-right text-[10px] text-muted-foreground"
