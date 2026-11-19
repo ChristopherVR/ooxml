@@ -17,6 +17,10 @@ const WINDOWS_UNSAFE_SEGMENT =
 export const isUnsafePathSegment = (segment: string, platform = process.platform): boolean =>
 	platform === 'win32' ? WINDOWS_UNSAFE_SEGMENT.test(segment) : segment.includes('\0');
 
+/** The segments of `path`; a backslash separates them only on Windows, elsewhere it is a name character. */
+export const pathSegments = (path: string, platform = process.platform): string[] =>
+	path.split(platform === 'win32' ? /[\\/]/ : /\//);
+
 const leavesRoot = (path: string) =>
 	path === '..' || path.startsWith(`..${sep}`) || isAbsolute(path);
 
@@ -34,7 +38,8 @@ function confineLexically(rootDir: string, file: string): string {
 	if (process.platform === 'win32' && root !== '' && !/^[a-z]:[\\/]$/iu.test(root))
 		throw new Error(OUTSIDE_ROOT);
 	const kept: string[] = [];
-	for (const segment of file.slice(root.length).split(/[\\/]/)) {
+	const separators = process.platform === 'win32' ? /[\\/]/ : /\//;
+	for (const segment of file.slice(root.length).split(separators)) {
 		if (segment === '' || segment === '.') continue;
 		if (segment === '..') {
 			if (kept.length === 0) throw new Error(OUTSIDE_ROOT);

@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, readdir, realpath, rm, symlink, writeFile } from 'node:
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { vi } from 'vitest';
-import { createFileOperations, isUnsafePathSegment } from './node';
+import { createFileOperations, isUnsafePathSegment, pathSegments } from './node';
 
 async function withRoot(run: (root: string, outside: string) => Promise<void>) {
 	const root = await mkdtemp(join(tmpdir(), 'ooxml-root-'));
@@ -138,6 +138,20 @@ describe('lexical path refusal', () => {
 			expect(isUnsafePathSegment(name, 'linux')).toBe(false);
 		}
 		expect(isUnsafePathSegment('a\u0000b', 'linux')).toBe(true);
+	});
+
+	test('a backslash separates path segments only on Windows', () => {
+		expect(pathSegments('a\\b/c', 'win32')).toEqual(['a', 'b', 'c']);
+		expect(pathSegments('a\\b/c', 'linux')).toEqual(['a\\b', 'c']);
+	});
+
+	test.runIf(process.platform !== 'win32')('POSIX keeps a backslash in a name', async () => {
+		await withRoot(async (root) => {
+			const files = createFileOperations(root);
+			await writeFile(join(root, 'back\\slash.docx'), new Uint8Array([1]));
+			expect([...(await files.readFile('back\\slash.docx', ['.docx']))]).toEqual([1]);
+			await expect(files.readFile('..\\slash.docx', ['.docx'])).rejects.toThrow();
+		});
 	});
 
 	test.runIf(process.platform !== 'win32')('POSIX keeps names Windows refuses', async () => {
