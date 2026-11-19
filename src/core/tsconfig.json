@@ -22,6 +22,8 @@
 		"pptx/__tests__/**",
 		"pptx/automation/**",
 		"pptx/editor/render/**",
+		// Reaches pptx/editor/render, so it is checked with the relaxed pptx project.
+		"test-support/security-corpus/cases/pptx-collaboration.ts",
 		"scripts/**",
 		"tsup*.config.ts",
 		"tsdown*.config.ts",

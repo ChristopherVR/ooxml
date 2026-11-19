@@ -368,6 +368,21 @@ test('a core test change runs the core tests and its typecheck, no viewer and no
 	assert.equal(result.typecheck.pptx, false);
 });
 
+test('a core test helper or security corpus change runs the core tests and typechecks only', () => {
+	for (const file of [
+		'src/core/test-support/security-corpus/cases/teams.ts',
+		'src/core/pptx/test-support/signature-package.ts',
+		'src/core/xlsx/__fixtures__/build.ts',
+	]) {
+		const result = plan([file], { testFiles: 1 });
+		assert.equal(result.test.run, true, file);
+		assert.deepEqual(result.viewers, [], file);
+		assert.equal(result.pptx.run, false, file);
+		assert.equal(result.build, false, file);
+		assert.deepEqual(result.viewerBrowser, [], file);
+	}
+});
+
 test('teams builds its packages before its typecheck and browser tests', () => {
 	const verify = verifyOf('teams', 'demos/teams/react/main.tsx');
 	assert.equal(verify[0], 'bun run build:packages');
