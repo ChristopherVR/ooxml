@@ -176,7 +176,8 @@ controls follow the product palette.
 
 Importing an entry never touches the DOM (SSR-safe). Elements are defined by the `define*` /
 `register*` functions, which are idempotent, no-ops without a `window`, and refuse to coexist
-with an incompatible build of this package.
+with an incompatible build of this package. A property assigned to an element before its definition
+loads is applied when the element connects, so hosts can set properties and define in either order.
 
 ## Framework binding kit (`ooxml-ui/bindings`)
 

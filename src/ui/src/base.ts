@@ -10,7 +10,7 @@ import {
 	type PropertyDeclaration,
 	type PropertyDeclarations,
 } from 'lit';
-import { emit, present } from './registry';
+import { emit, holdEarlyProperties, present } from './registry';
 import { COMMON_CONTROL_CSS } from './styles';
 import { OFFICE_TOKENS } from './tokens';
 
@@ -100,6 +100,8 @@ export class OfficeElement extends LitElement {
 
 	constructor() {
 		super();
+		// A subclass constructor may render, which must not read a value set before the upgrade.
+		holdEarlyProperties(this);
 		(this as { renderRoot: HTMLElement | DocumentFragment }).renderRoot = this.createRenderRoot();
 		this._ready = true;
 		if ((this.constructor as typeof OfficeElement).syncUpdates)

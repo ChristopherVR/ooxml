@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import {
 	INSERT_CHART_TYPES,
 	INSERT_GROUPS,
@@ -265,5 +266,5 @@ export function definePptxMobileInsert(registry: CustomElementRegistry): void {
 			this.body.replaceChildren(...children);
 		}
 	}
-	registry.define('pptx-ui-mobile-insert', MobileInsert);
+	defineElement(registry, 'pptx-ui-mobile-insert', MobileInsert);
 }

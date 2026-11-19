@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import { normalizeSubtitleSettings, subtitleLanguageLabel, SUBTITLE_LANGUAGES } from '../render';
 import type { SubtitleSettings, SubtitleSettingsLabels } from '../render';
 import { attachControlStyles } from './control-styles';
@@ -159,5 +160,5 @@ export function definePptxSubtitleSettings(registry: CustomElementRegistry): voi
 			);
 		}
 	}
-	registry.define('pptx-ui-subtitle-settings', SubtitleSettingsElement);
+	defineElement(registry, 'pptx-ui-subtitle-settings', SubtitleSettingsElement);
 }

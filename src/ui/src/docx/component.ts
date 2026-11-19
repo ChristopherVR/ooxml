@@ -1,3 +1,4 @@
+import { definer } from '../registry';
 import { installOfficeUiThemeFor } from '../theme';
 import { applyShellLabels } from './shell-labels';
 import { EditorState } from 'prosemirror-state';
@@ -6,6 +7,9 @@ import type { DocumentModel } from 'ooxml-core/docx';
 import { createDocument } from 'ooxml-core/docx';
 import { loadDocument } from 'ooxml-core/docx/load';
 import { setRibbonLocale } from './ribbon';
+import { closeRibbonOverflow } from './ribbon-overflow';
+import { closeRibbonPopover } from './ribbon-popover';
+import { closeWordCount } from './word-count-panel';
 import type { CollaborationConfig, ClientReceiveResult, StepBatch } from 'ooxml-core/docx/ui';
 import { normalizeEditorLocale } from './localization';
 import {
@@ -209,6 +213,11 @@ export class DocxEditorElement extends DocxEditorApi {
 
 	disconnectedCallback() {
 		const { core } = this;
+		// Open popups listen on the document, which would keep this editor alive.
+		closeRibbonPopover();
+		closeRibbonOverflow();
+		closeWordCount();
+		core.shell.contextMenu?.close(false);
 		core.readAloud.stop();
 		core.shell.surfaceNavigation?.();
 		delete core.shell.surfaceNavigation;
@@ -218,6 +227,7 @@ export class DocxEditorElement extends DocxEditorApi {
 		delete core.shell.printFloats;
 		core.shell.printEditing?.destroy();
 		delete core.shell.printEditing;
+		core.shell.printLayout?.disconnect();
 		core.collab.presence?.leave();
 		if (!core.collab.yjs) core.room.suspend();
 		core.detachedState = core.view?.state;
@@ -331,10 +341,11 @@ declare global {
 	}
 }
 
+const defineDocxEditor = definer('docx-editor', () => DocxEditorElement);
+
 export function registerDocxEditor() {
 	registerSmartArt(); // no-op without a DOM and when already defined
-	if (typeof customElements === 'undefined' || typeof HTMLElement === 'undefined') return;
-	if (!customElements.get('docx-editor')) customElements.define('docx-editor', DocxEditorElement);
+	defineDocxEditor();
 }
 
 registerDocxEditor();

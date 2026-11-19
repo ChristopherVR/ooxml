@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import { buildBarActions } from '../render';
 import type { MobileBarId, MobileBarIntent, MobileBarViewState } from '../render';
 import { attachControlStyles } from './control-styles';
@@ -101,5 +102,5 @@ export function definePptxMobileBar(registry: CustomElementRegistry): void {
 			}
 		}
 	}
-	registry.define('pptx-ui-mobile-bar', MobileBar);
+	defineElement(registry, 'pptx-ui-mobile-bar', MobileBar);
 }

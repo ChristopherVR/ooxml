@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import { defineRibbon, type OfficeUiRibbon } from '../../ribbon/ribbon-tabs';
 import type { RibbonTabRowState, RibbonTabSelectDetail } from '../render';
 import { RIBBON_ADD_IN_TAB_ATTR, RIBBON_CONTEXTUAL_TAB_ATTR } from '../render';
@@ -108,5 +109,9 @@ export function definePptxRibbonTabs(registry: CustomElementRegistry): void {
 			}
 		}
 	}
-	registry.define('pptx-ui-ribbon-tabs', PptxRibbonTabs as unknown as CustomElementConstructor);
+	defineElement(
+		registry,
+		'pptx-ui-ribbon-tabs',
+		PptxRibbonTabs as unknown as CustomElementConstructor,
+	);
 }

@@ -33,6 +33,11 @@ export function documentCounts(view: EditorView, language?: string): DocumentCou
 
 let close: (() => void) | undefined;
 
+/** Closes the word count panel, if one is open. */
+export function closeWordCount(): void {
+	close?.();
+}
+
 /** Shows the counts in a small dismissible panel under `anchor`. */
 export function showWordCount(
 	anchor: HTMLElement,

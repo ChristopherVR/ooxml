@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import type { MobileToolbarId, MobileToolbarIntent, MobileToolbarViewState } from '../render';
 import { attachControlStyles } from './control-styles';
 import { MOBILE_TOOLBAR_STYLES } from './mobile-bar-styles';
@@ -133,5 +134,5 @@ export function definePptxMobileToolbar(registry: CustomElementRegistry): void {
 			this.aiSlot.hidden = this.collaborationSlot.hidden = !s.editable;
 		}
 	}
-	registry.define('pptx-ui-mobile-toolbar', MobileToolbar);
+	defineElement(registry, 'pptx-ui-mobile-toolbar', MobileToolbar);
 }

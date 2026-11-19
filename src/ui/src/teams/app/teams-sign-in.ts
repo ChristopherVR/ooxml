@@ -1,3 +1,4 @@
+import { definer } from '../../registry';
 import { html, nothing, unsafeCSS, type PropertyValues } from 'lit';
 import { TeamsLitElement } from '../i18n/lit-element';
 import css from './teams-sign-in.css?raw';
@@ -130,6 +131,4 @@ export class TeamsSignIn extends TeamsLitElement {
 	}
 }
 
-export function defineTeamsSignIn(): void {
-	if (!customElements.get('teams-sign-in')) customElements.define('teams-sign-in', TeamsSignIn);
-}
+export const defineTeamsSignIn = definer('teams-sign-in', () => TeamsSignIn);

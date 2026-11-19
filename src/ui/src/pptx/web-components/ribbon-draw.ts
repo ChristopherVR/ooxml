@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import { canRequestDraw } from '../render';
 import type { RibbonDrawIntent, RibbonDrawViewState } from '../render';
 import { attachRibbonDrawStyles } from './ribbon-draw-styles';
@@ -91,5 +92,5 @@ export function definePptxRibbonDraw(registry: CustomElementRegistry): void {
 			this.view.sync(this.model);
 		}
 	}
-	registry.define('pptx-ui-ribbon-draw', RibbonDraw);
+	defineElement(registry, 'pptx-ui-ribbon-draw', RibbonDraw);
 }

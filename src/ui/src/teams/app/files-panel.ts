@@ -1,3 +1,4 @@
+import { definer } from '../../registry';
 import { html, nothing, unsafeCSS, type PropertyValues } from 'lit';
 import { TeamsLitElement } from '../i18n/lit-element';
 import {
@@ -345,7 +346,4 @@ export class TeamsFilesPanel extends TeamsLitElement {
 	}
 }
 
-export function defineTeamsFilesPanel(): void {
-	if (globalThis.customElements && !customElements.get('teams-files-panel'))
-		customElements.define('teams-files-panel', TeamsFilesPanel);
-}
+export const defineTeamsFilesPanel = definer('teams-files-panel', () => TeamsFilesPanel);

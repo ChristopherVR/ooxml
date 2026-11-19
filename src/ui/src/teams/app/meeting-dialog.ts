@@ -1,3 +1,4 @@
+import { definer } from '../../registry';
 import { html, nothing, type PropertyValues } from 'lit';
 import {
 	type ContactView,
@@ -369,9 +370,4 @@ export class TeamsMeetingDialog extends TeamsDialog {
 	}
 }
 
-export function defineTeamsMeetingDialog(
-	registry: CustomElementRegistry | undefined = globalThis.customElements,
-): void {
-	if (registry && !registry.get('teams-meeting-dialog'))
-		registry.define('teams-meeting-dialog', TeamsMeetingDialog);
-}
+export const defineTeamsMeetingDialog = definer('teams-meeting-dialog', () => TeamsMeetingDialog);

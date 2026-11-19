@@ -21,6 +21,7 @@
  *
  * @module three-view/element
  */
+import { defineOnce } from '../../registry';
 import type { TextStyleAnimationDescriptor } from '../render/animation-text-style-resolve';
 import type { ChartPartRef } from '../render/chart-view-model';
 import type {
@@ -279,8 +280,7 @@ export function defineThreeViewElement(registry?: CustomElementRegistry): void {
 		return;
 	}
 	const target = registry ?? (typeof customElements === 'undefined' ? undefined : customElements);
-	if (!target || target.get(THREE_VIEW_TAG)) {
-		return;
+	if (target) {
+		defineOnce(target, THREE_VIEW_TAG, createElementClass);
 	}
-	target.define(THREE_VIEW_TAG, createElementClass());
 }
