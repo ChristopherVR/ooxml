@@ -1,6 +1,6 @@
 // Scalar operators and Excel's array broadcasting.
 import { compareScalars, toNumber, toText } from './coerce';
-import { ERR, ErrorSignal, isError, Matrix, type Scalar } from './values';
+import { chargeText, ERR, ErrorSignal, isError, Matrix, type Scalar } from './values';
 
 export type ScalarOp = (a: Scalar, b: Scalar) => Scalar;
 
@@ -91,7 +91,7 @@ function concat(x: Scalar, y: Scalar): Scalar {
 	if (isError(x)) return x;
 	if (isError(y)) return y;
 	const text = toText(x) + toText(y);
-	return text.length > MAX_CELL_TEXT ? text.slice(0, MAX_CELL_TEXT) : text;
+	return chargeText(text.length > MAX_CELL_TEXT ? text.slice(0, MAX_CELL_TEXT) : text);
 }
 
 /** Applies a binary operator to two scalars. */

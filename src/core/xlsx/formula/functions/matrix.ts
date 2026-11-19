@@ -1,5 +1,5 @@
 import type { CallContext } from '../context';
-import { ERR, fail, isError, Matrix, type Value } from '../values';
+import { chargeWork, ERR, fail, isError, Matrix, type Value } from '../values';
 import { int, spec } from './helpers';
 import type { FunctionSpec } from './types';
 
@@ -18,6 +18,8 @@ function numbers(ctx: CallContext, value: Value | undefined): number[][] {
 
 function square(m: number[][]): number {
 	const n = m.length;
+	// Elimination is cubic: charged up front, before any of it runs.
+	chargeWork(n * n * n);
 	if (n === 0 || m.some((row) => row.length !== n)) fail(ERR.VALUE);
 	return n;
 }
@@ -81,6 +83,7 @@ export const MATRIX_FUNCTIONS: FunctionSpec[] = [
 			const inner = a[0]?.length ?? 0;
 			if (inner !== b.length) fail(ERR.VALUE);
 			const cols = b[0]?.length ?? 0;
+			chargeWork(a.length * cols * inner);
 			return Matrix.build(a.length, cols, (r, c) => {
 				let total = 0;
 				for (let k = 0; k < inner; k++) total += (a[r]?.[k] ?? 0) * (b[k]?.[c] ?? 0);

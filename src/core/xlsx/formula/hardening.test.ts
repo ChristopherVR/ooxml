@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { hasNestedQuantifier } from './functions/text-regex';
 import { compileWildcard } from './functions/wildcard';
 import { book, calc, E, engine, get } from './test-helpers';
-import { Matrix, resetArrayBudget } from './values';
+import { Matrix, resetCalcBudget } from './values';
 
 describe('defined name work limits', () => {
 	it('evaluates a 31-level doubling chain quickly', () => {
@@ -77,12 +77,37 @@ describe('regex function limits', () => {
 
 describe('total array budget', () => {
 	it('fails once a recalculation has built too many cells', () => {
-		resetArrayBudget();
+		resetCalcBudget();
 		try {
 			for (let i = 0; i < 4; i++) Matrix.build(4000, 3000, () => 0);
 			expect(() => Matrix.build(4000, 3000, () => 0)).toThrow();
 		} finally {
-			resetArrayBudget();
+			resetCalcBudget();
+		}
+	});
+});
+
+describe('recalculation work and text budget', () => {
+	it('stops a cubic matrix product, elimination and text growth with #NUM!', () => {
+		expect(calc('SUM(MMULT(SEQUENCE(1500,1500),SEQUENCE(1500,1500)))')).toEqual(E.NUM);
+		expect(calc('MDETERM(SEQUENCE(1000,1000))')).toEqual(E.NUM);
+		expect(calc('SUM(LEN(MAKEARRAY(2000,2000,LAMBDA(r,c,REPT("a",32767)&r&c))))')).toEqual(E.NUM);
+	});
+
+	it('still computes work of an ordinary size', () => {
+		expect(calc('SUM(MMULT(SEQUENCE(300,300),SEQUENCE(300,300)))')).toBe(
+			calc('SUMPRODUCT(MMULT(SEQUENCE(300,300),SEQUENCE(300,300)))'),
+		);
+		expect(calc('REDUCE(0,SEQUENCE(300,300),LAMBDA(a,b,a+b))')).toBe(4050045000);
+		expect(calc('LEN(CONCAT(MAKEARRAY(100,100,LAMBDA(r,c,REPT("a",3)))))')).toBe(30000);
+	});
+
+	it('gives every recalculation a fresh budget', () => {
+		const wb = book({ A1: '=SUM(MMULT(SEQUENCE(500,500),SEQUENCE(500,500)))' });
+		const calcEngine = engine(wb);
+		for (let i = 0; i < 6; i++) {
+			calcEngine.recalculateAll();
+			expect(typeof get(wb, 'A1')).toBe('number');
 		}
 	});
 });

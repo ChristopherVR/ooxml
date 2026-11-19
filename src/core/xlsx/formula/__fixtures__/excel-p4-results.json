@@ -316,5 +316,15 @@
   {"formula":"=RIGHT(REPT(\"a\",32766)&\"bc\",1)","type":"string","value":"b"},
   {"formula":"=\"œ\"=\"oe\"","type":"boolean","value":true},
   {"formula":"=\"Œ\"=\"OE\"","type":"boolean","value":true},
-  {"formula":"=COUNTIF(F1:F10,\"æ\")","type":"number","value":2.0,"text":"2"}
+  {"formula":"=COUNTIF(F1:F10,\"æ\")","type":"number","value":2.0,"text":"2"},
+  {"formula":"=LEN(TEXT(REPT(\"a\",200),\"@@\"))","type":"error","value":"#VALUE!"},
+  {"formula":"=LEN(TEXT(REPT(\"a\",100),\"@@\"))","type":"number","value":200.0,"text":"200"},
+  {"formula":"=LEN(BASE(1,2,255))","type":"number","value":255.0,"text":"255"},
+  {"formula":"=BASE(1,2,256)","type":"error","value":"#NUM!"},
+  {"formula":"=LEN(ARRAYTOTEXT(SEQUENCE(10000)))","type":"error","value":"#CALC!"},
+  {"formula":"=LEN(ARRAYTOTEXT(SEQUENCE(3000)))","type":"number","value":16891.0,"text":"16891"},
+  {"formula":"=LEN(ARRAYTOTEXT(SEQUENCE(10000),1))","type":"error","value":"#CALC!"},
+  {"formula":"=LET(f,LAMBDA(f,n,IF(n=0,0,1+f(f,n-1))),f(f,100))","type":"number","value":100.0,"text":"100"},
+  {"formula":"=LEN(DEC2BIN(1,10))","type":"number","value":10.0,"text":"10"},
+  {"formula":"=DEC2BIN(1,11)","type":"error","value":"#NUM!"}
 ]

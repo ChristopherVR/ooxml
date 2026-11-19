@@ -45,17 +45,47 @@ export const MAX_ARRAY_CELLS = 16_777_216;
  * `MAX_ARRAY_CELLS` still cannot exhaust memory or time (`#NUM!` past it).
  */
 export const MAX_TOTAL_ARRAY_CELLS = 50_000_000;
-let arrayCellsLeft = MAX_TOTAL_ARRAY_CELLS;
+/**
+ * The work one recalculation may spend where cost grows faster than the cells involved: matrix
+ * products, LAMBDA calls, criteria and lookup scans repeated over arrays, sorting and pattern
+ * matching. A unit is about one multiply-add of MMULT; the budget is about two seconds of work.
+ */
+export const MAX_RECALC_WORK = 500_000_000;
+/** The text characters one recalculation may build with `&` and the text functions. */
+export const MAX_RECALC_TEXT = 268_435_456;
 
-/** Starts a fresh total array-cell budget; the engine calls it at the start of a recalculation. */
-export function resetArrayBudget(): void {
+let arrayCellsLeft = MAX_TOTAL_ARRAY_CELLS;
+let workLeft = MAX_RECALC_WORK;
+let textLeft = MAX_RECALC_TEXT;
+
+/**
+ * Starts a fresh calculation budget (array cells, work and text); the engine calls it at the start
+ * of a recalculation. A formula that exhausts it is `#NUM!`, and so is every formula evaluated
+ * after it in the same recalculation, so a hostile workbook stops quickly instead of hanging.
+ */
+export function resetCalcBudget(): void {
 	arrayCellsLeft = MAX_TOTAL_ARRAY_CELLS;
+	workLeft = MAX_RECALC_WORK;
+	textLeft = MAX_RECALC_TEXT;
 }
 
 /** Spends `cells` of the recalculation budget; `#NUM!` when it is exhausted. */
 export function chargeArrayCells(cells: number): void {
 	arrayCellsLeft -= cells;
 	if (arrayCellsLeft < 0) fail(ERR.NUM);
+}
+
+/** Spends `units` of the recalculation's work budget; `#NUM!` when it is exhausted. */
+export function chargeWork(units: number): void {
+	workLeft -= units;
+	if (workLeft < 0) fail(ERR.NUM);
+}
+
+/** Spends the length of `text` from the recalculation's text budget and returns it. */
+export function chargeText(text: string): string {
+	textLeft -= text.length;
+	if (textLeft < 0) fail(ERR.NUM);
+	return text;
 }
 
 /** `#VALUE!` past the longest side, `#NUM!` past the cell budget. */

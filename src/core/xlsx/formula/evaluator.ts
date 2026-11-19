@@ -15,6 +15,7 @@ import {
 	unionOperator,
 } from './references';
 import {
+	chargeWork,
 	err,
 	ERR,
 	ErrorSignal,
@@ -29,6 +30,8 @@ import {
 } from './values';
 
 const MAX_NAME_DEPTH = 32;
+/** What one LAMBDA call costs of the recalculation's work budget (about 100 multiply-adds). */
+const LAMBDA_CALL_WORK = 100;
 /** Uncached defined-name evaluations one formula may start before it gives up with `#NAME?`. */
 const MAX_NAME_WORK = 100_000;
 /** Names that read the clock or a random source are not memoized (they differ per reference). */
@@ -214,6 +217,7 @@ export function invokeLambda(callee: Value, args: Value[], frame: Frame): Value 
 	if (isError(callee)) return callee;
 	if (!(callee instanceof LambdaValue)) return ERR.VALUE;
 	if (args.length > callee.params.length) return ERR.VALUE;
+	chargeWork(LAMBDA_CALL_WORK);
 	const scope = new Map<string, Value>(callee.scope ?? []);
 	callee.params.forEach((param, i) => {
 		scope.set(param, args[i] ?? null);

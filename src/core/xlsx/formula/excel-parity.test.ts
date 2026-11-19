@@ -51,7 +51,7 @@ function buildWorkbook(lines: readonly string[]) {
 	return { wb, formulas };
 }
 
-describe.each(['excel', 'excel-p4'])('Excel parity corpus %s', (corpus) => {
+describe.each(['excel', 'excel-p4', 'excel-p4-recursion'])('Excel parity corpus %s', (corpus) => {
 	const lines = fixture(`${corpus}-cases.txt`).split(/\r?\n/);
 	const results = JSON.parse(fixture(`${corpus}-results.json`)) as ExcelResult[];
 	const { wb, formulas } = buildWorkbook(lines);
