@@ -1,3 +1,4 @@
+import { xmlTags } from '../../../xml/tags';
 import type { XmlObject } from '../types';
 
 const ORDER_SUFFIX = '#pptx-order-';
@@ -47,20 +48,25 @@ function collectParsedPaths(root: unknown): XmlObject[] {
 	return paths;
 }
 
+/** The command order of every `a:path` of every `a:custGeom` in `xml`, in document order. */
 function extractSourceOrders(xml: string): string[][] {
 	const orders: string[][] = [];
-	const custGeomPattern = /<([A-Za-z_][\w.-]*:)?custGeom\b[^>]*>([\s\S]*?)<\/\1custGeom\s*>/gu;
-	for (const geometryMatch of xml.matchAll(custGeomPattern)) {
-		const geometryXml = geometryMatch[2] ?? '';
-		const pathPattern = /<([A-Za-z_][\w.-]*:)?path\b[^>]*>([\s\S]*?)<\/\1path\s*>/gu;
-		for (const pathMatch of geometryXml.matchAll(pathPattern)) {
-			const order = [
-				...(pathMatch[2] ?? '').matchAll(/<\/?([A-Za-z_][\w.-]*:)?([A-Za-z][\w.-]*)\b[^>]*>/gu),
-			]
-				.map((match) => (match[0][1] !== '/' ? match[2] : undefined))
-				.filter((name): name is string => name !== undefined && PATH_COMMANDS.has(name));
-			orders.push(order);
-		}
+	let geometry: string | undefined;
+	let path: { name: string; order: string[] } | undefined;
+	for (const tag of xmlTags(xml)) {
+		if (geometry === undefined) {
+			if (!tag.closing && !tag.selfClosing && tag.local === 'custGeom') geometry = tag.name;
+		} else if (tag.closing && tag.name === geometry) {
+			geometry = undefined;
+			path = undefined;
+		} else if (path === undefined) {
+			// An empty `<a:path/>` has no commands to order.
+			if (!tag.closing && !tag.selfClosing && tag.local === 'path')
+				path = { name: tag.name, order: [] };
+		} else if (tag.closing && tag.name === path.name) {
+			orders.push(path.order);
+			path = undefined;
+		} else if (!tag.closing && PATH_COMMANDS.has(tag.local)) path.order.push(tag.local);
 	}
 	return orders;
 }

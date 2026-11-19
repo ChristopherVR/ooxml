@@ -8,6 +8,23 @@
 import type { PptxChartData } from '../../types';
 
 /**
+ * Whether {@link applyEmbeddedWorkbookFallback} can change anything: the part caches no
+ * categories, no series values, or (scatter and bubble) no x values for some series.
+ */
+export function needsEmbeddedWorkbook(
+	chartType: PptxChartData['chartType'],
+	categories: readonly string[],
+	series: PptxChartData['series'],
+): boolean {
+	return (
+		categories.length === 0 ||
+		series.every((entry) => entry.values.length === 0) ||
+		((chartType === 'scatter' || chartType === 'bubble') &&
+			series.some((entry) => !entry.xValues || entry.xValues.length === 0))
+	);
+}
+
+/**
  * Fills what the part does not cache from the embedded workbook's rows: the categories when the
  * part has none, every series' values when all are empty, and the x values of scatter and bubble
  * series that cache none (the worksheet reader puts that column in `categories`).

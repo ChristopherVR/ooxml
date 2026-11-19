@@ -38,10 +38,17 @@ describe('heading-linked numbering', () => {
 	it('honors direct numbering, explicit removal and effective level overrides', async () => {
 		const { model } = await loadDocx(await headingNumberingFixture());
 		const paragraph = model.blocks[1] as Paragraph;
-		const resolve = (p: Paragraph) =>
-			resolveParagraphNumbering(p, model.paragraphStyles, model.numberingCatalog);
+		// Style catalogs are values: an edit replaces the styles record, as the editor's do.
+		let styles = model.paragraphStyles!;
+		const setHeading2Numbering = (numbering: { numId: number; level: number }) => {
+			styles = {
+				...styles,
+				styles: { ...styles.styles, Heading2: { ...styles.styles['Heading2']!, numbering } },
+			};
+		};
+		const resolve = (p: Paragraph) => resolveParagraphNumbering(p, styles, model.numberingCatalog);
 		expect(resolve(paragraph)).toEqual({ numId: 1, level: 1 });
-		model.paragraphStyles!.styles['Heading2']!.numbering = { numId: 1, level: 7 };
+		setHeading2Numbering({ numId: 1, level: 7 });
 		expect(resolve(paragraph)).toEqual({ numId: 1, level: 1 });
 		expect(resolve({ ...paragraph, numbering: { numId: 1, level: 0 } })).toEqual({
 			numId: 1,
@@ -52,7 +59,7 @@ describe('heading-linked numbering', () => {
 			1: { lvl: { level: 1, start: 1, numFmt: 'decimal', lvlText: '%2.' } },
 		};
 		expect(resolve(paragraph)).toEqual({ numId: 1, level: 7 });
-		model.paragraphStyles!.styles['Heading2']!.numbering = { numId: 0, level: 0 };
+		setHeading2Numbering({ numId: 0, level: 0 });
 		expect(resolve(paragraph)).toBeUndefined();
 	});
 });

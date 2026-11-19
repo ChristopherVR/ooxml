@@ -1,5 +1,6 @@
 import type { XmlObject } from '../../types';
 import { at } from '../../../../geometry/indexed';
+import { xmlTags } from '../../../../xml/tags';
 
 const childOrder = new WeakMap<XmlObject, string[]>();
 
@@ -49,36 +50,35 @@ function collectParsedParagraphs(root: unknown): XmlObject[] {
 	return paragraphs;
 }
 
-function directChildOrder(xml: string): string[] {
-	const order: string[] = [];
-	let depth = 0;
-	for (const match of xml.matchAll(/<(\/)?([A-Za-z_][\w.-]*:)?([A-Za-z][\w.-]*)\b[^>]*>/gu)) {
-		const closing = Boolean(match[1]);
-		const selfClosing = /\/\s*>$/u.test(match[0]);
-		if (closing) {
-			depth = Math.max(0, depth - 1);
-			continue;
-		}
-		if (depth === 0) {
-			// The local-name group is required, so it is a string once the pattern matched.
-			order.push(match[3] ?? '');
-		}
-		if (!selfClosing) {
-			depth++;
-		}
-	}
-	return order;
-}
-
+/**
+ * The local names of the direct children of every `elementName` element in `xml`, in document
+ * order. An empty element parses to an object only when it has attributes, so only then does it
+ * get an (empty) entry: entries pair with the parsed objects by index.
+ */
 function extractElementOrders(xml: string, elementName: string): string[][] {
 	const orders: string[][] = [];
-	// A word boundary also matches namespace colons and XML name punctuation.
-	const pattern = new RegExp(
-		`<([A-Za-z_][\\w.-]*:)?${elementName}(?=[\\s/>])[^>]*>([\\s\\S]*?)<\\/\\1${elementName}\\s*>`,
-		'gu',
-	);
-	for (const match of xml.matchAll(pattern)) {
-		orders.push(directChildOrder(match[2] ?? ''));
+	let open: string | undefined;
+	let depth = 0;
+	let order: string[] = [];
+	for (const tag of xmlTags(xml)) {
+		if (open === undefined) {
+			if (tag.closing || tag.local !== elementName) continue;
+			if (tag.selfClosing) {
+				if (tag.attributes.trim()) orders.push([]);
+				continue;
+			}
+			open = tag.name;
+			depth = 0;
+			order = [];
+		} else if (tag.closing) {
+			if (tag.name === open) {
+				orders.push(order);
+				open = undefined;
+			} else depth = Math.max(0, depth - 1);
+		} else {
+			if (depth === 0) order.push(tag.local);
+			if (!tag.selfClosing) depth++;
+		}
 	}
 	return orders;
 }

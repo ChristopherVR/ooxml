@@ -7,6 +7,7 @@ import { resolveParagraphFormatting } from './paragraph-styles';
 import { tocSwitches, type TocSwitches } from './toc-switches';
 import { captionParagraphs, tocCaptionLabel } from './table-of-figures';
 import { signedTwips, twips, type Twips } from './units';
+import { cachedResolver, chainResolver } from './style-inheritance';
 import type { Block, DocumentModel, Paragraph, ParagraphStyleCatalog, TextRun } from './model';
 
 export const DEFAULT_TOC_INSTRUCTION = ' TOC \\o "1-3" \\h \\z \\u ';
@@ -20,17 +21,36 @@ export function headingLevel(
 	paragraph: Paragraph,
 	catalog?: ParagraphStyleCatalog,
 ): number | undefined {
-	const seen = new Set<string>();
-	let styleId = paragraph.style;
-	while (styleId && !seen.has(styleId)) {
-		seen.add(styleId);
-		const style = catalog?.styles[styleId];
-		const match = /^heading\s*([1-9])$/i.exec(style?.name ?? styleId);
-		if (match) return Number(match[1]);
-		styleId = style?.basedOn;
-	}
-	return undefined;
+	const styleId = paragraph.style;
+	if (!styleId) return undefined;
+	if (!catalog || !Object.hasOwn(catalog.styles, styleId)) return namedLevel(styleId);
+	const styles = catalog.styles;
+	// A style's own name, then a `basedOn` id the catalog does not define (read as a name).
+	return cachedResolver(headingResolvers, styles, () =>
+		chainResolver<ParagraphStyleCatalog['styles'][string], { level?: number }>(
+			styles,
+			(style, id) => {
+				const parent = style.basedOn;
+				const level =
+					namedLevel(style.name ?? id) ??
+					(parent && !Object.hasOwn(styles, parent) ? namedLevel(parent) : undefined);
+				return level === undefined ? undefined : { level };
+			},
+			(_resolved, nearer) => nearer,
+			{},
+		),
+	)(styleId)?.level;
 }
+
+const headingResolvers = new WeakMap<
+	object,
+	(id: string | undefined) => { level?: number } | undefined
+>();
+
+const namedLevel = (name: string): number | undefined => {
+	const match = /^heading\s*([1-9])$/i.exec(name);
+	return match ? Number(match[1]) : undefined;
+};
 
 /** The outline levels a TOC instruction collects (`\o "1-3"`); Word's default is 1–9. */
 export function tocLevels(instruction: string): { from: number; to: number } {
