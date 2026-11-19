@@ -596,7 +596,8 @@ p:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 	font-size: 9.5px;
 }
 .workspace-caret {
-	color: var(--faint);
+	/* The switcher caret is a glyph: muted text keeps it at 4.5:1 on the sidebar. */
+	color: var(--muted);
 }
 .app-rail {
 	width: 100%;
