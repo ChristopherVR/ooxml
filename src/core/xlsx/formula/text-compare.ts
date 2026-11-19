@@ -58,6 +58,9 @@ const PRINTABLE_ASCII = /^[\x20-\x7e]*$/;
 const MARK = /\p{M}/u;
 const SYMBOLIC = /[\p{P}\p{S}\p{Z}\p{C}]/u;
 
+/** Folded code units outside ASCII, as met: at most one entry per code unit. */
+const FOLDED = new Map<string, string>();
+
 /**
  * The simple case folding of one UTF-16 code unit, which never changes the length: "ẞ" is "ß",
  * "ς" and "Σ" are "σ", "ß" and "ı" stay as they are.
@@ -65,10 +68,14 @@ const SYMBOLIC = /[\p{P}\p{S}\p{Z}\p{C}]/u;
 export function foldChar(ch: string): string {
 	const code = ch.charCodeAt(0);
 	if (code < 0x80) return code >= 0x41 && code <= 0x5a ? String.fromCharCode(code + 32) : ch;
-	if (ch === 'ı') return ch;
-	const upper = ch.toUpperCase();
-	const lower = (upper.length === ch.length ? upper : ch).toLowerCase();
-	return lower.length === ch.length ? lower : ch;
+	let folded = FOLDED.get(ch);
+	if (folded === undefined) {
+		const upper = ch.toUpperCase();
+		const lower = (upper.length === ch.length ? upper : ch).toLowerCase();
+		folded = ch === 'ı' || lower.length !== ch.length ? ch : lower;
+		FOLDED.set(ch, folded);
+	}
+	return folded;
 }
 
 /** {@link foldChar} applied to every code unit: what character-by-character matching compares. */
@@ -123,7 +130,20 @@ interface Levels {
 	variant: number[];
 }
 
+/** Recent texts' levels: a sort or a binary search compares the same texts many times. */
+const LEVELS = new Map<string, Levels>();
+const MAX_CACHED_LEVELS = 50_000;
+
 function levels(text: string): Levels {
+	let out = LEVELS.get(text);
+	if (out) return out;
+	if (LEVELS.size >= MAX_CACHED_LEVELS) LEVELS.clear();
+	out = computeLevels(text);
+	LEVELS.set(text, out);
+	return out;
+}
+
+function computeLevels(text: string): Levels {
 	const out: Levels = { primary: [], marks: [], ignorable: [], variant: [] };
 	for (const ch of linguisticForm(text)) {
 		if (MARK.test(ch)) {
@@ -154,13 +174,31 @@ function compareLists<T>(a: readonly T[], b: readonly T[]): number {
 	return a.length === b.length ? 0 : a.length < b.length ? -1 : 1;
 }
 
-/** Printable ASCII on both sides: the primary level without allocating, or undefined on a tie. */
-function comparePrimaryAscii(a: string, b: string): number | undefined {
+const isAscii = (code: number): boolean => code < 0x80;
+
+/**
+ * The primary level over the ASCII prefix of both texts, without allocating: the order when that
+ * prefix decides it, 0 when both texts are ASCII and tie, undefined when a character outside ASCII
+ * is reached first (accents, expansions and other scripts need the full comparison).
+ */
+function compareAsciiPrefix(a: string, b: string): number | undefined {
 	let i = 0;
 	let j = 0;
 	for (;;) {
-		while (i < a.length && (ASCII_WEIGHT[a.charCodeAt(i)] as number) < 0) i++;
-		while (j < b.length && (ASCII_WEIGHT[b.charCodeAt(j)] as number) < 0) j++;
+		while (
+			i < a.length &&
+			isAscii(a.charCodeAt(i)) &&
+			(ASCII_WEIGHT[a.charCodeAt(i)] as number) < 0
+		)
+			i++;
+		while (
+			j < b.length &&
+			isAscii(b.charCodeAt(j)) &&
+			(ASCII_WEIGHT[b.charCodeAt(j)] as number) < 0
+		)
+			j++;
+		if ((i < a.length && !isAscii(a.charCodeAt(i))) || (j < b.length && !isAscii(b.charCodeAt(j))))
+			return undefined;
 		if (i >= a.length || j >= b.length) break;
 		const wa = ASCII_WEIGHT[a.charCodeAt(i)] as number;
 		const wb = ASCII_WEIGHT[b.charCodeAt(j)] as number;
@@ -170,17 +208,15 @@ function comparePrimaryAscii(a: string, b: string): number | undefined {
 	}
 	if (i < a.length) return 1;
 	if (j < b.length) return -1;
-	return undefined;
+	return 0;
 }
 
 /** Excel's case-insensitive linguistic order of two texts: negative, 0 or positive. */
 export function compareText(a: string, b: string): number {
 	if (a === b) return 0;
-	if (PRINTABLE_ASCII.test(a) && PRINTABLE_ASCII.test(b)) {
-		const primary = comparePrimaryAscii(a, b);
-		if (primary !== undefined) return primary;
-		if (a.toLowerCase() === b.toLowerCase()) return 0;
-	}
+	const prefix = compareAsciiPrefix(a, b);
+	if (prefix) return prefix;
+	if (prefix === 0 && a.toLowerCase() === b.toLowerCase()) return 0;
 	const la = levels(a);
 	const lb = levels(b);
 	return (
