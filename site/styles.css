@@ -897,6 +897,12 @@ body[data-layout='office'] #actions-more {
 	background: var(--surface);
 	color: var(--text);
 }
+/* The browser's own Print never prints the assistant's suggestions before they are applied. */
+@media print {
+	.document-host[data-preview] {
+		display: none;
+	}
+}
 .document-host > docx-editor,
 .document-host > xlsx-editor {
 	display: block;

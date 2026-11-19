@@ -4,6 +4,7 @@ import { onTheme, currentTheme, setThemeMode } from './themes.js';
 import { attachments, attachmentUrl, localAttachmentId, showAttachment } from './attachments.js';
 import { applyOfficeTheme } from './theme-tokens.js';
 import { currentProfile, teamsWorkspace, onProfile } from './profile-state.js';
+import { displayLanguage, onSettings } from './settings.js';
 
 export const documentUrl = (id) => workspaceUrl('file', id);
 // The Teams core is the bulk of the Teams page, so it loads with it, not with every landing page.
@@ -17,10 +18,15 @@ export async function mountTeams(host, store, open, refresh) {
 	teams.toggleAttribute('host-profile', true);
 	teams.setAttribute('host-theme', '');
 	teams.addEventListener('teams-settings-theme', (event) => setThemeMode(event.detail.theme));
-	// The suite has no language preference of its own yet: it shows Teams in the page language
-	// (`<html lang>`) when that is one Teams ships, else English. A host that does set a language
-	// passes it the same way, as the `locale` property of <teams-app>.
-	teams.locale = document.documentElement.lang || '';
+	// Teams shows the display language when it ships it, else English. A host passes its own
+	// language the same way, as the `locale` property of <teams-app>.
+	Object.assign(teams, displayLanguage());
+	teams.locale = teams.lang;
+	onSettings((next, keys) => {
+		if (!keys.includes('locale')) return;
+		Object.assign(teams, displayLanguage(next));
+		teams.locale = teams.lang;
+	});
 	teams.workspaceId = teamsWorkspace();
 	teams.userName = profile.name;
 	teams.userId = profile.userId;

@@ -144,7 +144,11 @@ export interface ParagraphStyleDefinition {
 	/** Numbering inherited by paragraphs using this style through `w:pPr/w:numPr` in `styles.xml`. */
 	numbering?: { numId: number; level: number };
 }
-/** Parsed source style data. It is retained for inheritance and never flattened on save. */
+/**
+ * Parsed source style data. It is retained for inheritance and never flattened on save. A catalog
+ * is a value: what a style inherits is resolved once per `styles` record, so an edit replaces the
+ * record (and the styles it changes) rather than changing a style in place.
+ */
 export interface ParagraphStyleCatalog {
 	docDefaults: ParagraphFormatting;
 	styles: Record<string, ParagraphStyleDefinition>;

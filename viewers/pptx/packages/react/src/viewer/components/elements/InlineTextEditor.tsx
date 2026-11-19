@@ -5,6 +5,7 @@ import {
 	mapInlineTextFormatKey,
 	placeCaretAt,
 	readEditableText,
+	restoreEditorKeyboardFocus,
 	spaceBeforeCaretRange,
 	takePendingCaretPoint,
 } from 'ooxml-ui/pptx';
@@ -269,8 +270,11 @@ export function InlineTextEditor({
 					if (chord === 'suppress' || !list.canCommit()) {
 						return;
 					}
-					handleInput();
-					onCommit();
+					// Back to the slide, as in the other bindings; the blur that causes commits.
+					if (!restoreEditorKeyboardFocus(e.currentTarget)) {
+						handleInput();
+						onCommit();
+					}
 					return;
 				}
 				if (e.key === 'Enter') {

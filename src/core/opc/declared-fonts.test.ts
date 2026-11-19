@@ -64,3 +64,35 @@ describe('readDeclaredFonts', () => {
 		);
 	});
 });
+
+/** Best of three runs, in milliseconds. */
+function timed(run: () => unknown): number {
+	let best = Number.POSITIVE_INFINITY;
+	for (let attempt = 0; attempt < 3; attempt++) {
+		const start = performance.now();
+		run();
+		best = Math.min(best, performance.now() - start);
+	}
+	return best;
+}
+
+describe('readDeclaredFonts on hostile parts', () => {
+	it('is linear in fonts and face names that never close', () => {
+		const run = (count: number) => {
+			const bytes = zip({
+				'word/fontTable.xml': `<w:fonts>${'<w:font w:name="a"/>'.repeat(count)}</w:fonts>`,
+				'visio/document.xml': '<FaceName '.repeat(count),
+			});
+			return () => readDeclaredFonts(bytes);
+		};
+		expect(timed(run(80_000)) / timed(run(20_000))).toBeLessThan(8);
+	});
+
+	it('lists a Word font as embedded only for its own embed elements', () => {
+		const bytes = zip({
+			'word/fontTable.xml':
+				'<w:fonts><w:font w:name="Plain"/><w:font w:name="Kept"><w:embedRegular r:id="rId1"/></w:font><w:font w:name="Other"><w:panose1 w:val="0"/></w:font></w:fonts>',
+		});
+		expect(readDeclaredFonts(bytes)).toEqual({ families: ['Plain', 'Other'], embedded: ['Kept'] });
+	});
+});

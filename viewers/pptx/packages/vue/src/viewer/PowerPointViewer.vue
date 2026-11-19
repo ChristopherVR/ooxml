@@ -1643,6 +1643,7 @@ watch(
 const { showShortcuts, onEditorKeydown, copySelected, cutSelected, selectAllElements } =
 	useEditorKeyboard({
 		canEdit: () => canEditEffective.value,
+		editElementText: (id) => requestElementEdit(id),
 		canPaste: () => clipboard.hasClipboard.value && Boolean(activeSlide.value),
 		hasSelection: selection.hasSelection,
 		presenting: presentation.presenting,

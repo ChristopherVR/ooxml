@@ -189,6 +189,9 @@ describe('regions and capabilities in the resolver', () => {
 		expect(resolved.hiddenRibbonControls.has('home.clipboard.cut')).toBeTruthy();
 		expect(resolved.hiddenRibbonGroups.has('review.comments')).toBeTruthy();
 		expect(resolved.hiddenBackstageCards.has('copyImage')).toBeTruthy();
+		// Save As writes a copy of the deck, so `export: false` removes it with the Export page.
+		expect(resolved.hiddenBackstagePages.has('saveAs')).toBeTruthy();
+		expect(resolved.hiddenBackstageCards.has('saveAsPptx')).toBeTruthy();
 		expect(isEditingAllowed(resolveCustomization({ capabilities: { edit: true } }))).toBeTruthy();
 	});
 

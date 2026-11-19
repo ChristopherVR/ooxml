@@ -83,6 +83,22 @@ describe('restoreEditorKeyboardFocus', () => {
 		expect(document.activeElement).toBe(viewer);
 	});
 
+	it('returns an inline editor on the slide to the slide, past its own tabindex', () => {
+		const { viewer } = pane();
+		const slide = document.createElement('div');
+		slide.setAttribute('data-pptx-viewport', '');
+		slide.tabIndex = 0;
+		const editor = document.createElement('div');
+		editor.contentEditable = 'true';
+		editor.tabIndex = 0;
+		slide.append(editor);
+		viewer.append(slide);
+		editor.focus();
+
+		expect(restoreEditorKeyboardFocus(editor)).toBeTruthy();
+		expect(document.activeElement).toBe(slide);
+	});
+
 	it('reports false when nothing up the tree can take the keyboard', () => {
 		const orphan = document.createElement('input');
 		document.body.append(orphan);

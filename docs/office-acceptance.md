@@ -23,14 +23,24 @@ Not wired:
 
 A step is skipped, with a notice, when a program it needs (`pdfinfo`, `python`, another Office app) is missing. A whole product is skipped when its COM class is absent (typically Visio). Pass `--require` to make a missing app a failure.
 
+## Before registering the runner
+
+The repository is public, and a runner registered on it is reachable by more than this repository's workflows: a pull request from a fork can add its own workflow that asks for the labels `self-hosted`, `windows` and `office`, and it runs under the `pull_request` event before anyone reviews it. A repository-level runner has no setting that keeps such jobs off it. So do not register the runner until all of these hold:
+
+- **Approval for every external contributor.** Settings, Actions, General, "Approval for running fork pull request workflows from contributors": choose "Require approval for all external contributors". A fork's workflow then waits until a maintainer approves the run, after reading what it runs. Approve only runs whose workflow files are unchanged or reviewed.
+- **An ephemeral runner in a disposable VM.** Register with `--ephemeral` (or a just-in-time configuration), so the runner takes one job and unregisters, and revert the VM to a clean checkpoint after every job, so nothing a job leaves behind (a scheduled task, a changed profile, a planted tool on `PATH`) reaches the next one. The checkpoint holds Office installed, licensed and past its first-run prompts. Whatever mints the registration token (a script on the host that calls the `generate-jitconfig` REST endpoint, say) runs outside the VM, and the VM never holds a token that can register runners or write to the repository.
+- **A low-privilege account.** The runner and the interactive session run as a standard local user that is not an administrator, signed in to Office with an account used for nothing else, with no saved credentials for GitHub, npm, cloud storage or mail. The VM reaches the internet but not the host's local network or shares.
+
+These are settings and machines only the maintainer can provide; nothing in this repository registers a runner.
+
 ## Registering the runner
 
-1. A Windows 10 or 11 machine (a dedicated VM is best) with the desktop Office apps installed: Word, Excel and PowerPoint (Microsoft 365 Apps or Office 2019 and later) and optionally Visio. Open each app once, accept the licence prompts and sign in so no first-run dialog blocks automation. Office needs a licence for the machine or user; use one your organisation holds, and do not share the account outside the runner.
+1. A Windows 10 or 11 VM that meets the conditions above, with the desktop Office apps installed: Word, Excel and PowerPoint (Microsoft 365 Apps or Office 2019 and later) and optionally Visio. Open each app once, accept the licence prompts and sign in so no first-run dialog blocks automation. Office needs a licence for the machine or user; use one your organisation holds, and do not share the account outside the runner.
 2. Install Git for Windows (the setup action uses its `bash`), PowerShell 7 (`pwsh`), Node 24 and Bun. For the print checks add Python with `pypdf` and `pymupdf`, and Poppler's `pdfinfo` on `PATH`.
 3. Register a runner for the repository (Settings, Actions, Runners, New self-hosted runner) with the labels `self-hosted`, `windows` and `office`.
-4. Run it in an **interactive session**, not as a service in session 0. Office COM automation fails or hangs without a desktop: sign in as a dedicated user, enable automatic logon and start `run.cmd` at logon (a scheduled task "at log on" works). Disable the screen lock and sleep.
+4. Run it in an **interactive session**, not as a service in session 0. Office COM automation fails or hangs without a desktop: sign in as the low-privilege user, enable automatic logon and start `run.cmd` at logon (a scheduled task "at log on" works). Disable the screen lock and sleep.
 5. Keep the machine free of other Office windows while a run is going; the scripts refuse to start when a Word, Excel or PowerPoint process already exists. The workflow runs one job at a time (`max-parallel: 1` and a `concurrency` group).
-6. Only this repository's workflows should use the runner. Do not enable it for pull requests from forks; the workflow runs only on schedule and manual dispatch.
+6. `office-acceptance.yml` runs only on schedule and manual dispatch, never for a pull request. Any other job that reaches the runner comes from a fork's workflow, which the approval setting above holds for review.
 
 ## Running locally
 

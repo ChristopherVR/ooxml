@@ -1,5 +1,6 @@
 /** Visio ribbon strings for the de locale (text), keyed by the English text. Not reviewed by a native speaker. */
 export const deText: Readonly<Record<string, string>> = {
+	'Connects {from} to {to}': 'Verbindet {from} mit {to}',
 	'This chart contains unsupported content and is read-only. Its original workbook is preserved.':
 		'Dieses Diagramm enthält nicht unterstützte Inhalte und ist schreibgeschützt. Die ursprüngliche Arbeitsmappe bleibt erhalten.',
 	'Diagram controls': 'Diagrammsteuerelemente',

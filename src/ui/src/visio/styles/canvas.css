@@ -7,7 +7,8 @@
 .paper [data-shape-id]:focus-visible {
 	outline: none;
 }
-.paper [data-shape-id]:focus-visible > [data-geometry] {
+.paper [data-shape-id]:focus-visible > [data-geometry],
+.paper [role='group'][data-shape-id]:focus-visible [data-geometry] {
 	stroke: var(--_vv-focus) !important;
 	stroke-width: 0.04 !important;
 	stroke-dasharray: 0.08 0.05;

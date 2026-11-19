@@ -1,5 +1,6 @@
 /** Visio ribbon strings for the zh-CN locale (text), keyed by the English text. Not reviewed by a native speaker. */
 export const zhCNText: Readonly<Record<string, string>> = {
+	'Connects {from} to {to}': '连接 {from} 与 {to}',
 	'This chart contains unsupported content and is read-only. Its original workbook is preserved.':
 		'此图表包含不受支持的内容，只能以只读方式查看。其原始工作簿将予以保留。',
 	'Diagram controls': '图表控件',

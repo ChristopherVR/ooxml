@@ -65,6 +65,25 @@ export function preloadEditor(kind) {
 export const SUITE_FILE_COMMANDS = new Set(['save', 'new', 'open', 'share']);
 
 /**
+ * What an editor showing the assistant's suggestions cannot do: every way its own commands take
+ * the document out of the suite (Save As, Export, Download, Print, Share and Copy, in each
+ * product's File tab, ribbon, menus and shortcuts). Save stays and goes to the suite, which
+ * refuses it while the suggestions show.
+ */
+const PREVIEW_CAPABILITIES = Object.freeze({
+	export: false,
+	print: false,
+	share: false,
+	copy: false,
+});
+
+/** Why a command refused while the assistant's suggestions show. */
+export const previewRefusal = (name) =>
+	new Error(
+		`${name} is showing the assistant's suggestions. Apply or discard them in the suggestions panel first.`,
+	);
+
+/**
  * Mounts the editor for `doc` in `host`. `changed` runs after an edit, `command` takes over the
  * file commands and `moved` runs when the slide or page in view, or the selection's formatting,
  * changes. The returned object carries `view`, what the Simple view command bar drives: `undo`,
@@ -75,6 +94,8 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 	let accessReadOnly = cloudReadOnly(doc);
 	if (doc.kind === 'pptx') {
 		const { createPptxViewer } = await import('pptx-vanilla-viewer');
+		// True while the deck shows the assistant's suggestions (`hold`).
+		let held = false;
 		let loading = true;
 		let loadFailed = false;
 		const googleFonts = googleFontsOption();
@@ -104,8 +125,9 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 			onOpenFile: () => command('open'),
 			storage: {
 				async save(bytes, meta) {
-					if (meta.reason === 'saveAs') download({ bytes, name: meta.fileName });
-					else await command('save');
+					if (meta.reason !== 'saveAs') await command('save');
+					else if (held) throw previewRefusal(doc.name);
+					else download({ bytes, name: meta.fileName });
 				},
 			},
 			onChange: changed,
@@ -164,10 +186,20 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 				}
 				if (loadFailed) throw new Error('The presentation could not be opened.');
 			},
+			/** Notes the slide in view; the returned function goes back to it after a reload. */
+			keep: () => {
+				const slide = viewer.getCurrentSlide();
+				return () => slide < viewer.getSlideCount() && viewer.goToSlide(slide);
+			},
 			readOnly: (on) => viewer.setEditable(!(on || accessReadOnly)),
 			setCloudReadOnly: (on) => {
 				accessReadOnly = on;
 				viewer.setEditable(!on);
+			},
+			hold: (on) => {
+				held = on;
+				for (const id of Object.keys(PREVIEW_CAPABILITIES))
+					viewer.setCapability(id, on ? false : undefined);
 			},
 			/** Shows where a proposed change lands: its slide, with its shape selected. */
 			reveal(change) {
@@ -241,7 +273,12 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 	for (const name of ['document-change', 'workbook-change'])
 		element.addEventListener(name, changed);
 	// Selection and formatting changes that do not edit the document still move the bar's state.
-	if (doc.kind === 'xlsx') element.addEventListener('selection-change', moved);
+	let selection = null;
+	if (doc.kind === 'xlsx')
+		element.addEventListener('selection-change', (event) => {
+			selection = event.detail;
+			moved();
+		});
 	const stopState = doc.kind === 'docx' ? element.subscribeEditorState(moved) : undefined;
 	let stop;
 	if (doc.kind === 'vsdx') {
@@ -284,12 +321,43 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 		focus: () => {
 			if (doc.kind === 'xlsx') element.focusGrid();
 		},
+		/**
+		 * Notes where the user is: the sheet and cells, the caret or the page. The returned function
+		 * goes back there after a reload, and into the document when `focus` says it had focus.
+		 */
+		keep() {
+			if (doc.kind === 'xlsx') {
+				const at = selection;
+				return (focus) => {
+					try {
+						if (at) {
+							element.setActiveSheet(at.sheet);
+							element.select(at.ref);
+						}
+					} catch {
+						// The sheet or cells are gone from the new file; the workbook's own selection stays.
+					}
+					if (focus) element.focusGrid();
+				};
+			}
+			if (doc.kind === 'docx') {
+				const range = element.getTextSelection();
+				return (focus) => focus && element.focusText(range);
+			}
+			const page = element.pageIndex;
+			return () => {
+				if (page < (element.controller.state.document?.pages.length ?? 0)) element.pageIndex = page;
+			};
+		},
 		// While the assistant previews a change the drawing is read-only (Visio's canEdit is off), so
 		// nothing is edited during a review; Discard reloads the stored file and Apply saves the preview.
 		readOnly: (on) => setEditorReadOnly(element, doc.kind, on || accessReadOnly),
 		setCloudReadOnly: (on) => {
 			accessReadOnly = on;
 			setEditorReadOnly(element, doc.kind, on);
+		},
+		hold: (on) => {
+			element.customization = on ? { capabilities: PREVIEW_CAPABILITIES } : null;
 		},
 		/** Shows where a proposed change lands, selected in the editor. Word shows its own redlines. */
 		reveal(change) {
