@@ -30,7 +30,7 @@ svg { flex: none; width: 20px; height: 20px; }
 @media (forced-colors: active) {
 	nav { border-top-color: CanvasText; background: Canvas; color: CanvasText; }
 	button { color: ButtonText; } button[aria-pressed="true"] { color: Highlight; border-top: 2px solid Highlight; }
-	.badge, .pill { background: Highlight; color: HighlightText; }
+	.badge, .pill { forced-color-adjust: none; background: Highlight; color: HighlightText; }
 	button:focus-visible { outline-color: Highlight; }
 }
 `;
@@ -62,7 +62,7 @@ svg { flex: none; width: 20px; height: 20px; }
 @media (forced-colors: active) {
 	.bar { border-bottom-color: CanvasText; background: Canvas; color: CanvasText; }
 	button, button.share, button.present { color: ButtonText; background: ButtonFace; }
-	button:hover:not(:disabled) { background: Highlight; color: HighlightText; }
+	button:hover:not(:disabled) { forced-color-adjust: none; background: Highlight; color: HighlightText; }
 	button:focus-visible { outline-color: Highlight; }
 }
 `;

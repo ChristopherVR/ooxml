@@ -12,7 +12,7 @@ export const GRID_CSS = `
 .xg-q,.xg-hbox{position:absolute;overflow:hidden}
 .xg-plane{position:absolute;left:0;top:0;will-change:transform}
 .xg-cells,.xg-lines,.xg-overlay,.xg-drawings{position:absolute;left:0;top:0}
-.xg-gl{position:absolute;background:var(--xve-grid-line, var(--office-border, #e1e1e1))}
+.xg-gl{position:absolute;background:var(--xve-grid-line, var(--office-canvas-gridline, #e1e1e1))}
 .xg-c{position:absolute;box-sizing:border-box;overflow:visible}
 .xg-c[hidden],.xg-gl[hidden],.xg-hd[hidden]{display:none}
 .xg-c-over{z-index:1}
@@ -50,22 +50,22 @@ export const GRID_CSS = `
 .xg-remote-tag{position:absolute;left:-2px;bottom:100%;max-width:160px;padding:0 4px;height:16px;line-height:16px;
 	font:600 11px/16px var(--xve-font, var(--office-font, system-ui,sans-serif));color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:2px 2px 2px 0}
 .xg-remote[data-tag="inside"] .xg-remote-tag{bottom:auto;top:0;left:0;border-radius:0 0 2px 0}
-.xg-hbox{background:var(--xve-header-bg, var(--office-surface, #f3f3f3));z-index:4}
+.xg-hbox{background:var(--xve-header-bg, var(--office-surface, #f3f3f3));z-index:4;color-scheme:var(--office-color-scheme, light)}
 .xg-hdr-plane{position:absolute;left:0;top:0;will-change:transform}
 .xg-hd{position:absolute;box-sizing:border-box;display:flex;align-items:center;justify-content:center;
 	color:var(--xve-header-fg, var(--office-foreground, #444));border-right:1px solid var(--xve-header-line, var(--office-border, #d4d4d4));border-bottom:1px solid var(--xve-header-line, var(--office-border, #d4d4d4));overflow:hidden;white-space:nowrap}
 .xg-hdr-col .xg-hd{top:0;height:100%}
 .xg-hdr-row .xg-hd{left:0;width:100%}
-.xg-hd-sel{background:var(--xve-header-active-bg, var(--office-selected, #e1e1e1));color:var(--xve-selection-border, var(--office-accent, #217346));font-weight:600}
+.xg-hd-sel{background:var(--xve-header-active-bg, var(--office-selected, #e1e1e1));color:var(--xve-selection-border, var(--office-accent-ink, var(--office-accent, #217346)));font-weight:600}
 .xg-hdr-col .xg-hd-sel{box-shadow:inset 0 -2px 0 var(--xve-selection-border, var(--office-accent, #217346))}
 .xg-hdr-row .xg-hd-sel{box-shadow:inset -2px 0 0 var(--xve-selection-border, var(--office-accent, #217346))}
-.xg-hd-full{background:var(--xve-header-full-bg, var(--office-selected, #cde6d7));color:var(--xve-selection-border, var(--office-accent, #185c37));font-weight:600}
+.xg-hd-full{background:var(--xve-header-full-bg, var(--office-selected, #cde6d7));color:var(--xve-selection-border, var(--office-accent-ink, var(--office-accent, #185c37)));font-weight:600}
 .xg-hdr-col{cursor:s-resize}.xg-hdr-row{cursor:e-resize}
 .xg-hdr-col .xg-hd,.xg-hdr-row .xg-hd{cursor:inherit}
 .xg-corner{position:absolute;left:0;top:0;background:var(--xve-header-bg, var(--office-surface, #f3f3f3));z-index:5;box-sizing:border-box;
 	border-right:1px solid var(--xve-header-line, var(--office-border, #d4d4d4));border-bottom:1px solid var(--xve-header-line, var(--office-border, #d4d4d4));cursor:default}
 .xg-corner::after{content:"";position:absolute;right:3px;bottom:3px;border-left:9px solid transparent;border-bottom:9px solid #b4b4b4}
-.xg-freeze-h,.xg-freeze-v{position:absolute;background:var(--xve-freeze-line, var(--office-border, #9b9b9b));z-index:6;pointer-events:none}
+.xg-freeze-h,.xg-freeze-v{position:absolute;background:var(--xve-freeze-line, #9b9b9b);z-index:6;pointer-events:none}
 .xg-freeze-h.xg-split-bar,.xg-freeze-v.xg-split-bar{pointer-events:auto;background:var(--xve-split-bar, var(--office-border, #b4b4b4));touch-action:none}
 .xg-freeze-h.xg-split-bar{cursor:row-resize}.xg-freeze-v.xg-split-bar{cursor:col-resize}
 .xg-col-resize{cursor:col-resize!important}.xg-row-resize{cursor:row-resize!important}
@@ -186,4 +186,8 @@ export const GRID_CSS = `
 .xg-tl-cell.xg-tl-on{background:var(--sl-sel-bg,#deebf7);border-color:var(--sl-sel-line,#5b9bd5)}
 .xg-timeline button:focus-visible,.xg-timeline select:focus-visible{outline:2px solid var(--xve-selection-border, var(--office-accent, #217346));outline-offset:-2px}
 .xg-live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* Forced colours: the sheet follows the system canvas, so gridlines take the system's muted text colour. */
+@media (forced-colors:active){.xg-gl{background:GrayText}
+.xg-fb-active{border-color:Highlight}.xg-fb-active::before{background:Highlight}
+.xg-sl-selected,.xg-sl-selected:hover{forced-color-adjust:none;background:Highlight;color:HighlightText;border-color:Highlight}}
 `;

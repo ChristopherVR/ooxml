@@ -16,6 +16,8 @@
 	--subtle: #777;
 	--line: #e3e6eb;
 	--line-strong: #c6cbd3;
+	/* Form control boundaries (search, fields): 3:1 on every surface. */
+	--control-line: #8a8886;
 	--hover: #ebebeb;
 	--blue: #0f6cbd;
 	--accent-ink: #0f6cbd;
@@ -38,6 +40,7 @@
 	--subtle: #aaa;
 	--line: #34383f;
 	--line-strong: #4d535d;
+	--control-line: #8a8886;
 	--hover: #2e3138;
 	--blue: #479ef5;
 	--accent-ink: #7ab8ff;

@@ -55,18 +55,19 @@ editor.themeColors = {
 };
 ```
 
-| Token                                  | Role                                          |
-| -------------------------------------- | --------------------------------------------- |
-| `background`, `foreground`             | Application chrome (title bar, window)        |
-| `card`, `cardForeground`               | Ribbon, panel and status-bar surface          |
-| `popover`, `popoverForeground`         | Menus, dialogs and other floating surfaces    |
-| `primary`, `primaryForeground`         | Brand and primary action colour               |
-| `secondary`, `secondaryForeground`     | Secondary surfaces                            |
-| `muted`, `mutedForeground`             | Muted surface, also the area behind the pages |
-| `accent`, `accentForeground`           | Hover and selected highlight                  |
-| `destructive`, `destructiveForeground` | Destructive actions                           |
-| `border`, `input`, `ring`              | Borders, input outlines, focus ring           |
-| `radius`                               | Base corner radius, for example `4px`         |
+| Token                                  | Role                                                                                            |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `background`, `foreground`             | Application chrome (title bar, window)                                                          |
+| `card`, `cardForeground`               | Ribbon, panel and status-bar surface                                                            |
+| `popover`, `popoverForeground`         | Menus, dialogs and other floating surfaces                                                      |
+| `primary`, `primaryForeground`         | Brand and primary action colour                                                                 |
+| `primaryInk`                           | The primary as text on the chrome and on selected fills, at least 4.5:1 (defaults to `primary`) |
+| `secondary`, `secondaryForeground`     | Secondary surfaces                                                                              |
+| `muted`, `mutedForeground`             | Muted surface, also the area behind the pages                                                   |
+| `accent`, `accentForeground`           | Hover and selected highlight                                                                    |
+| `destructive`, `destructiveForeground` | Destructive actions                                                                             |
+| `border`, `input`, `ring`              | Borders, input outlines, focus ring                                                             |
+| `radius`                               | Base corner radius, for example `4px`                                                           |
 
 Pass `undefined` to clear the overrides.
 

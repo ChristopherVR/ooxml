@@ -48,18 +48,19 @@ white. `--office-paper` and the legacy `--xve-sheet-bg` are presentation overrid
 
 `themeColors` remains supported for per-editor overrides. Each key becomes a `--xve-<kebab-key>` custom property on the host element, with the same token set the Word editor uses (`--dve-*` there), so one design system can drive both:
 
-| Key                                    | Used for                                  |
-| -------------------------------------- | ----------------------------------------- |
-| `background`, `foreground`             | Editor canvas and text                    |
-| `card`, `cardForeground`               | Ribbon and panels                         |
-| `popover`, `popoverForeground`         | Menus and dropdowns                       |
-| `primary`, `primaryForeground`         | Accent (title bar, selection, active tab) |
-| `secondary`, `secondaryForeground`     | Secondary buttons                         |
-| `muted`, `mutedForeground`             | Headers, hints, disabled text             |
-| `accent`, `accentForeground`           | Hover and pressed states                  |
-| `destructive`, `destructiveForeground` | Errors                                    |
-| `border`, `input`, `ring`              | Lines, fields and focus rings             |
-| `radius`                               | Corner radius                             |
+| Key                                    | Used for                                                                                        |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `background`, `foreground`             | Editor canvas and text                                                                          |
+| `card`, `cardForeground`               | Ribbon and panels                                                                               |
+| `popover`, `popoverForeground`         | Menus and dropdowns                                                                             |
+| `primary`, `primaryForeground`         | Accent (title bar, selection, active tab)                                                       |
+| `primaryInk`                           | The primary as text on the chrome and on selected fills, at least 4.5:1 (defaults to `primary`) |
+| `secondary`, `secondaryForeground`     | Secondary buttons                                                                               |
+| `muted`, `mutedForeground`             | Headers, hints, disabled text                                                                   |
+| `accent`, `accentForeground`           | Hover and pressed states                                                                        |
+| `destructive`, `destructiveForeground` | Errors                                                                                          |
+| `border`, `input`, `ring`              | Lines, fields and focus rings                                                                   |
+| `radius`                               | Corner radius                                                                                   |
 
 ```ts
 editor.themeColors = { primary: '#1f9d63', ring: '#1f9d63', radius: '6px' };

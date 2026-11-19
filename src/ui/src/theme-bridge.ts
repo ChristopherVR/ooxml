@@ -10,6 +10,7 @@ export const LEGACY_OFFICE_THEME_TOKENS = {
 	'popover-foreground': '--office-popover-foreground',
 	primary: '--office-accent',
 	'primary-foreground': '--office-accent-foreground',
+	'primary-ink': '--office-accent-ink',
 	secondary: '--office-surface',
 	'secondary-foreground': '--office-foreground',
 	muted: '--office-surface',
@@ -19,29 +20,35 @@ export const LEGACY_OFFICE_THEME_TOKENS = {
 	destructive: '--office-danger',
 	'destructive-foreground': '--office-danger-foreground',
 	border: '--office-border',
-	input: '--office-border',
+	input: '--office-control-border',
 	ring: '--office-ring',
 	radius: '--office-radius',
 	font: '--office-font',
 } as const satisfies Record<string, OfficeToken>;
 
-/** Resolve on an outer host; bridge the computed aliases on inner chrome to avoid CSS cycles. */
+/**
+ * Resolve on an outer host; bridge the computed aliases on inner chrome to avoid CSS cycles. The
+ * accent ink follows the product's own primary when a host set only that, so a custom primary
+ * keeps colouring its text; otherwise it is the inherited `--office-accent-ink`.
+ */
 export function legacyThemeAliases(
 	selector: string,
 	prefix: string,
 	privatePrefix: string,
 ): string {
 	return `${selector} {\n${Object.entries(LEGACY_OFFICE_THEME_TOKENS)
-		.map(
-			([name, canonical]) =>
-				`${privatePrefix}${name}: var(${prefix}${name}, var(${canonical}, ${OFFICE_TOKENS[canonical]}));`,
-		)
+		.map(([name, canonical]) => {
+			const inherited = `var(${canonical}, ${OFFICE_TOKENS[canonical]})`;
+			const value = name === 'primary-ink' ? `var(${prefix}primary, ${inherited})` : inherited;
+			return `${privatePrefix}${name}: var(${prefix}${name}, ${value});`;
+		})
 		.join('\n')}\n}`;
 }
 
 export function legacyThemeBridge(selector: string, privatePrefix: string): string {
 	return shadcnBridge(selector, privatePrefix, {
 		extra: {
+			'--office-control-border': `var(${privatePrefix}input)`,
 			'--office-font': `var(${privatePrefix}font)`,
 			'--office-radius': `var(${privatePrefix}radius)`,
 		},
@@ -60,6 +67,12 @@ export function legacyThemeBridge(selector: string, privatePrefix: string): stri
  */
 export type ThemeBridgeMap = Partial<Record<OfficeToken, string>>;
 
+/** Shadcn names a product may leave out, read from a sibling name instead. */
+const SHADCN_FALLBACKS: Readonly<Record<string, string>> = {
+	'popover-foreground': 'foreground',
+	'primary-ink': 'primary',
+};
+
 /** The shadcn token names each `--office-*` colour reads, without the product prefix. */
 const SHADCN_NAMES: ReadonlyArray<readonly [OfficeToken, string, string?]> = [
 	'foreground',
@@ -70,6 +83,7 @@ const SHADCN_NAMES: ReadonlyArray<readonly [OfficeToken, string, string?]> = [
 	'border',
 	'primary',
 	'primary-foreground',
+	'primary-ink',
 	'ring',
 	'popover',
 	'popover-foreground',
@@ -77,44 +91,19 @@ const SHADCN_NAMES: ReadonlyArray<readonly [OfficeToken, string, string?]> = [
 	'destructive-foreground',
 ].map((name) => {
 	const token = LEGACY_OFFICE_THEME_TOKENS[name as keyof typeof LEGACY_OFFICE_THEME_TOKENS];
-	return name === 'popover-foreground' ? [token, name, 'foreground'] : [token, name];
+	const fallbackName = SHADCN_FALLBACKS[name];
+	return fallbackName ? [token, name, fallbackName] : [token, name];
 });
 
-/** The `--office-*` tokens a token's default reads, such as `--office-background` for selects. */
-const reads = (value: string) => [...value.matchAll(/var\((--office-[\w-]+)/g)].map((m) => m[1]!);
-
 /**
- * The tokens whose defaults read (directly or through another default) one of `bridged`. The
- * theme declares those defaults on `:root`, and a `var()` resolves where it is declared, so a
- * bridge that only re-points `--office-background` would leave `--office-select-background`
- * holding the page's colour (black selects on a light viewer when the system is dark).
- */
-function derivedTokens(bridged: ReadonlySet<string>): [string, string][] {
-	const derived = new Map<string, string>();
-	let grew = true;
-	while (grew) {
-		grew = false;
-		for (const [name, value] of Object.entries(OFFICE_TOKENS)) {
-			if (bridged.has(name) || derived.has(name)) continue;
-			if (reads(value).some((token) => bridged.has(token) || derived.has(token))) {
-				derived.set(name, value);
-				grew = true;
-			}
-		}
-	}
-	return [...derived];
-}
-
-/**
- * `selector { --office-x: value; ... }` for a mapping; entries without a value are skipped. The
- * tokens derived from a mapped one are declared again on the selector with their defaults, so they
- * follow the product's colours instead of the page's.
+ * `selector { --office-x: value; ... }` for a mapping; entries without a value are skipped. Tokens
+ * derived from a mapped one (`--office-select-background` from `--office-background`) need no
+ * entry: the theme never declares them, so they resolve where they are read and follow the bridge.
  */
 export function themeBridge(selector: string, map: ThemeBridgeMap): string {
-	const mapped = Object.entries(map).filter((entry): entry is [string, string] => !!entry[1]);
-	const lines = [...mapped, ...derivedTokens(new Set(mapped.map(([name]) => name)))].map(
-		([name, value]) => `\t${name}: ${value};`,
-	);
+	const lines = Object.entries(map)
+		.filter((entry): entry is [string, string] => !!entry[1])
+		.map(([name, value]) => `\t${name}: ${value};`);
 	return `${selector} {\n${lines.join('\n')}\n}\n`;
 }
 

@@ -116,6 +116,7 @@ button:focus-visible {
 		color: ButtonText;
 	}
 	button:hover:not(:disabled) {
+		forced-color-adjust: none;
 		background: Highlight;
 		color: HighlightText;
 	}

@@ -132,3 +132,14 @@
 .dve-styles-pane .style-name {
 	color: #555;
 }
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.styles-popover .style-tile[aria-pressed='true'],
+	.dve-styles-pane .style-tile[aria-pressed='true'] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
+}

@@ -48,7 +48,7 @@ button:hover {
 }
 .modes button[aria-pressed='true'] {
 	background: var(--office-teams-brand-subtle);
-	color: var(--office-teams-brand);
+	color: var(--office-teams-brand-ink);
 	font-weight: var(--office-font-weight-bold);
 }
 .new {
@@ -209,5 +209,15 @@ button:hover {
 	}
 	.modes button {
 		padding-inline: var(--office-space-2);
+	}
+}
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.modes button[aria-pressed='true'] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
 	}
 }

@@ -114,3 +114,13 @@
 .field-dialog label[hidden] {
 	display: none;
 }
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.text-dialog-tabs [role='tab'][aria-selected='true'] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
+}

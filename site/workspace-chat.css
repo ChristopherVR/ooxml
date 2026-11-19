@@ -40,14 +40,14 @@
 	display: flex;
 	align-items: center;
 	gap: 6px;
-	border: 1px solid var(--line);
+	border: 1px solid var(--control-line);
 	border-radius: var(--radius);
 	padding: 0 8px;
 	background: var(--canvas);
 	color: var(--muted);
 }
 .chat-search:focus-within {
-	outline: 2px solid var(--accent);
+	outline: 2px solid var(--blue);
 	outline-offset: 1px;
 }
 .chat-search input {
@@ -186,7 +186,7 @@
 }
 .chat-composer {
 	margin: 0 max(16px, calc((100% - var(--chat-width)) / 2)) 16px;
-	border: 1px solid var(--line-strong);
+	border: 1px solid var(--control-line);
 	border-radius: var(--radius-panel);
 	background: var(--surface);
 	box-shadow: 0 2px 10px #0000000f;
@@ -245,7 +245,7 @@
 	max-width: 220px;
 }
 .chat-model .ui-icon:first-child {
-	color: var(--blue);
+	color: var(--accent-ink);
 }
 .chat-send,
 .chat-stop {
@@ -686,7 +686,7 @@
 .chat-files-badge,
 .chat-badge {
 	background: var(--surface-alt);
-	color: var(--blue);
+	color: var(--accent-ink);
 	border: 1px solid var(--line);
 }
 .chat-badge {
@@ -808,7 +808,7 @@
 	box-shadow: 0 0 0 1px var(--blue);
 }
 #home-ask-symbol {
-	color: var(--blue);
+	color: var(--accent-ink);
 	display: inline-flex;
 }
 .home-ask input {
@@ -825,7 +825,7 @@
 	height: 14px;
 	margin-right: 6px;
 	vertical-align: -2px;
-	color: var(--blue);
+	color: var(--accent-ink);
 }
 
 @media (max-width: 900px) {
@@ -1370,7 +1370,7 @@ body:not([data-ai='on']) .ai-only {
 	place-items: center;
 	border-radius: inherit;
 	background: color-mix(in srgb, var(--surface) 88%, transparent);
-	color: var(--blue);
+	color: var(--accent-ink);
 	font-weight: 600;
 	pointer-events: none;
 }
@@ -1479,4 +1479,19 @@ body:not([data-ai='on']) .ai-only {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 6px;
+}
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.chat-list-item[aria-current='true'],
+	.chat-list-item[aria-current='true'] > button,
+	.chat-mentions button[aria-selected='true'] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
+	.workspace-context-menu [aria-checked='true']::before {
+		background: Highlight;
+	}
 }

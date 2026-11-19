@@ -1,5 +1,5 @@
-import { Injector, runInInjectionContext } from '@angular/core';
-import { describe, expect, it } from 'vitest';
+import { ElementRef, Injector, runInInjectionContext } from '@angular/core';
+import { describe, expect, it, vi } from 'vitest';
 
 import { RibbonFileSectionComponent, visibleMainNav } from './ribbon-file-section.component';
 
@@ -123,5 +123,47 @@ describe('save vs save as (host-owned storage reasons)', () => {
 		internals.run(card!.event);
 		internals.selectPage('save');
 		expect(fired).toStrictEqual(['savePptx', 'save']);
+	});
+});
+
+describe('backstage host containment', () => {
+	it('sits on the viewer host box and closes on Escape pressed inside it', () => {
+		const outside = document.createElement('button');
+		const host = document.createElement('div');
+		host.setAttribute('data-pptx-theme-root', '');
+		const panel = document.createElement('div');
+		const back = document.createElement('button');
+		panel.append(back);
+		host.append(panel);
+		document.body.append(outside, host);
+		vi.spyOn(host, 'getBoundingClientRect').mockReturnValue({
+			left: 160,
+			top: 40,
+			width: 1000,
+			height: 700,
+		} as DOMRect);
+		const file = createFileSection();
+		// The template's `#panel` element, which the component reads through `viewChild`.
+		(file as unknown as { panel: () => ElementRef<HTMLElement> }).panel = () =>
+			new ElementRef(panel);
+		const closes = vi.fn();
+		file.close.subscribe(closes);
+		file.ngAfterViewInit();
+		expect([
+			panel.style.left,
+			panel.style.top,
+			panel.style.width,
+			panel.style.height,
+		]).toStrictEqual(['160px', '40px', '1000px', '700px']);
+		const escape = (target: Element) =>
+			target.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		escape(outside);
+		expect(closes).not.toHaveBeenCalled();
+		escape(back);
+		expect(closes).toHaveBeenCalledOnce();
+		file.ngOnDestroy();
+		host.remove();
+		outside.remove();
+		vi.restoreAllMocks();
 	});
 });

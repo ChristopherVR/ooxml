@@ -59,7 +59,8 @@ it('scopes palette modes without resetting inherited type and layout tokens', ()
 		THEME_CSS.indexOf(':where([data-office-theme="dark"]'),
 	);
 	expect(lightScope).toContain('--office-background: #ffffff');
-	expect(lightScope).toContain('--office-field-background: var(--office-background');
+	// Derived tokens are left to resolve where they are read, so they follow the scope's palette.
+	expect(lightScope).not.toContain('--office-field-background:');
 	expect(lightScope).not.toContain('--office-font:');
 	expect(lightScope).not.toContain('--office-radius:');
 	expect(THEME_CSS).toContain('[data-office-theme="auto"]');

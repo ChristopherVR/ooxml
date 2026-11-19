@@ -38,7 +38,7 @@
 .mode-select {
 	height: var(--office-control-height-md);
 	padding: 0 var(--office-space-1-5) 0 calc(var(--office-space-2) * 2 + var(--office-icon-size-md));
-	border: var(--office-border-width) solid var(--office-border);
+	border: var(--office-border-width) solid var(--office-field-border);
 	border-radius: var(--office-radius-sm);
 	background: var(--office-background);
 	color: var(--office-foreground);
@@ -100,5 +100,15 @@ button:focus-visible {
 	}
 	button {
 		padding: 0 var(--office-space-1-5);
+	}
+}
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.comments[aria-pressed='true'] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
 	}
 }

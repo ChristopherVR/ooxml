@@ -139,6 +139,7 @@
 	}
 	.item:hover:not(:disabled),
 	.item:focus:not(:disabled) {
+		forced-color-adjust: none;
 		background: Highlight;
 		color: HighlightText;
 	}

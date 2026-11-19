@@ -42,7 +42,7 @@ button[aria-expanded='true'] {
 }
 :host([active]) button {
 	background: var(--office-command-active);
-	color: var(--office-accent);
+	color: var(--office-accent-ink);
 }
 button:disabled {
 	opacity: 0.5;
@@ -158,8 +158,19 @@ svg.glyph:not([data-painted]) {
 	}
 	button[aria-pressed='true'],
 	button[aria-expanded='true'],
-	:host([active]) button {
+	:host([active]) button,
+	:host([icon-only][tall][active]) button {
+		/* No text backplate: it would paint Canvas behind the HighlightText label. */
+		forced-color-adjust: none;
+		border-color: Highlight;
 		background: Highlight;
+		color: HighlightText;
+		box-shadow: none;
+	}
+	button[aria-pressed='true'] svg,
+	button[aria-expanded='true'] svg,
+	:host([active]) button svg {
+		forced-color-adjust: none;
 		color: HighlightText;
 	}
 }

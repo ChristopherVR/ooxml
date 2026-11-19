@@ -227,7 +227,11 @@ button:disabled {
 	}
 	.option[aria-selected='true'],
 	.option[data-active],
-	.option:not([aria-disabled='true']):hover {
+	.option:not([aria-disabled='true']):hover,
+	:host([variant^='ribbon-']) .option[aria-selected='true'],
+	:host([variant^='ribbon-']) .option[data-active],
+	:host([variant^='ribbon-']) .option:hover {
+		forced-color-adjust: none;
 		background: Highlight;
 		color: HighlightText;
 	}
