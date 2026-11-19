@@ -201,6 +201,41 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### Calculation
 
+- [x] **P1** Text compares as Excel's does. The comparison operators, criteria (COUNTIF and the
+      other IF and IFS functions), XMATCH, XLOOKUP, UNIQUE, SORT and SWITCH compare
+      linguistically: case-insensitive, accent-, width- and kana-sensitive, "ß" equal to "ss",
+      "æ" and "œ" to their letters, ligatures expanded, final sigma equal to sigma, hyphens and
+      apostrophes only breaking ties, symbols before digits before letters. MATCH, VLOOKUP,
+      HLOOKUP, wildcards and SEARCH compare each character by its simple case folding
+      (`src/core/xlsx/formula/text-compare.ts`). Evidence: `excel-p4-cases.txt`, recorded from
+      Excel 16 through hidden COM (`excel-cases.ps1 -Corpus excel-p4`), run by
+      `excel-parity.test.ts`. Measured with an English locale only.
+- [x] **P1** Exact lookups (MATCH, XMATCH, VLOOKUP, HLOOKUP, XLOOKUP) compare numbers exactly, so
+      `MATCH(0.3,...)` skips `0.1+0.2` while `=`, COUNTIF and SWITCH still find them equal; the
+      General display of `0.1+0.2` is `0.3`. Evidence: the same corpus.
+- [x] **P2** In criteria, `~` is literal unless the criterion holds `*` or `?`; MATCH and SEARCH
+      always read it as an escape, and a trailing `~` escapes nothing. A blank criterion cell
+      matches zeros, not blanks, and DCOUNTA counts empty text. Evidence: the same corpus.
+- [x] **P2** Text limits: `&` and CONCATENATE cut text at 32,767 characters, CONCAT, TEXTJOIN
+      and ARRAYTOTEXT return `#CALC!` past it, TEXT refuses formats and results over 255
+      characters, BASE pads to at most 255 digits, LOWER keeps capital sharp s. Evidence: the same
+      corpus.
+- [x] **P0** A small workbook can no longer hang or crash the editor when it opens: each
+      recalculation has a work budget (matrix products, LAMBDA calls, sorting, scans an array of
+      lookups or criteria repeats), a text budget and an array budget, past which formulas are
+      `#NUM!` (`src/core/xlsx/formula/values.ts`), and the Excel editor reads files and runs the
+      calculation on open in a worker with a ten-second limit
+      (`src/ui/src/xlsx/workbook-opener.ts`). Evidence: `hardening.test.ts`,
+      `workbook-opener.test.ts`.
+- [ ] **P2** Engine limits Excel does not have: the work budget makes MMULT of two arrays larger
+      than about 790 by 790 `#NUM!`; a LAMBDA recursing past the JavaScript stack (about 700
+      levels) is `#NUM!` where Excel still allows 1,000 (`excel-p4-recursion-cases.txt`); a single
+      formula filled down a large column that scans the whole column each time (a rank-style
+      COUNTIF over 50,000 rows) is not budgeted, so after an edit it can still take long on the
+      page.
+- [ ] **P2** Data Sort, the AutoFilter value list and Find still compare text with the browser's
+      accent-insensitive collation (`src/core/xlsx/edit/sort-keys.ts`, `filter-menu.ts`), not the
+      linguistic rule formulas use; Excel's behaviour there has not been measured.
 - [ ] **P2** INFO, ASC, DBCS, JIS, PHONETIC and EUROCONVERT are not implemented
       (no external service needed).
 - [x] **P2** FILTERXML evaluates XPath locally and spills selected values, with Excel's namespace,
