@@ -22,8 +22,11 @@
 		"check": "bun run typecheck && bun run test"
 	},
 	"devDependencies": {
+		"@analogjs/vite-plugin-angular": "^2.9.7",
+		"@angular/build": "^22.3.0",
 		"@angular/common": "^22.3.0",
 		"@angular/compiler": "^22.3.0",
+		"@angular/compiler-cli": "^22.3.0",
 		"@angular/core": "^22.3.0",
 		"@angular/platform-browser": "^22.3.0",
 		"@sveltejs/vite-plugin-svelte": "^7.3.1",
