@@ -31,11 +31,24 @@ function shadowCss(tag: string): string {
 
 /** Strip token references (with their defaults), media queries and keyframe percentages. */
 function outsideTokens(css: string): string {
-	let text = css.replace(/@media[^{]*\{/g, '{');
-	// Remove var(...) including nested parentheses in defaults.
-	for (let i = 0; i < 5; i++)
-		text = text.replace(/var\(--[\w-]+(?:,(?:[^()]|\([^()]*\))*)?\)/g, 'T');
-	return text;
+	const text = css.replace(/@media[^{]*\{/g, '{');
+	// Remove each var(...) with its default, however deeply the default nests parentheses.
+	let out = '';
+	for (let i = 0; i < text.length;) {
+		if (!text.startsWith('var(--', i)) {
+			out += text[i++];
+			continue;
+		}
+		let depth = 0;
+		i += 'var'.length;
+		do {
+			if (text[i] === '(') depth++;
+			else if (text[i] === ')') depth--;
+			i++;
+		} while (depth && i < text.length);
+		out += 'T';
+	}
+	return out;
 }
 
 /** Set inline by the element that draws with them, so they have no theme default. */

@@ -33,7 +33,8 @@ describe('theme tokens', () => {
 		expect(editorStyleText).not.toContain('--xve-background:');
 		expect(themeTokenText).not.toContain('--office-background:');
 		expect(editorStyleText).toContain('.xve-frame {');
-		expect(editorStyleText).toContain('var(--xve-card, var(--office-surface))');
+		// Bare token reads carry the token's default, so derived tokens resolve where they are read.
+		expect(editorStyleText).toContain('var(--xve-card, var(--office-surface, #f3f4f6))');
 	});
 
 	it('falls back to auto for unknown modes', () => {
@@ -44,12 +45,12 @@ describe('theme tokens', () => {
 
 describe('canonical Office tokens', () => {
 	it('reads legacy host overrides before canonical semantic colours', () => {
-		expect(editorStyleText).toContain('var(--xve-foreground, var(--office-foreground))');
+		expect(editorStyleText).toContain('var(--xve-foreground, var(--office-foreground, #1f2937))');
 		expect(themeTokenText).toContain(
 			'--xlsx-theme-primary: var(--xve-primary, var(--office-accent, #2563eb))',
 		);
 		expect(editorStyleText).toContain('--office-accent: var(--xlsx-theme-primary);');
-		expect(editorStyleText).toContain('var(--xve-border, var(--office-border))');
+		expect(editorStyleText).toContain('var(--xve-border, var(--office-border, #d1d5db))');
 	});
 });
 
