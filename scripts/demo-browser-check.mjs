@@ -140,9 +140,13 @@ async function nativeBlocks(page, product, framework, route) {
 	await page.goto(
 		`${base}/${product}/${route}/${word ? `building-blocks.html?framework=${framework}` : '?blocks=1'}`,
 	);
-	if (!word) await page.locator('#blank').click();
-	const toolbar = page.locator('[data-office-block="toolbar"]');
-	await expect(toolbar).toBeVisible();
+	// Status-bar controls are toolbar blocks too; the formatting toolbar comes first.
+	const toolbar = page.locator('[data-office-block="toolbar"]').first();
+	// The button is in the static page, so a click can land before the demo script has wired it.
+	await expect(async () => {
+		if (!word) await page.locator('#blank').click();
+		await expect(toolbar).toBeVisible({ timeout: 2000 });
+	}).toPass({ timeout: 30_000 });
 	const editor = page.locator(word ? 'docx-editor' : 'xlsx-editor');
 	const original = await editor.elementHandle();
 	const bold = page.getByRole('button', { name: 'Bold', exact: true });
