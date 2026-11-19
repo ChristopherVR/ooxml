@@ -128,6 +128,15 @@ function mod(init: { key: string; ctrlKey?: boolean; shiftKey?: boolean }): Keyb
 	});
 }
 
+/** A key press from the slide viewport after the user has gone into the slide. */
+function onEnteredSlide(event: KeyboardEvent): KeyboardEvent {
+	const slide = document.createElement('div');
+	slide.setAttribute('data-pptx-viewport', '');
+	slide.setAttribute('data-pptx-slide-objects', '');
+	Object.defineProperty(event, 'target', { value: slide });
+	return event;
+}
+
 describe('useEditorKeyboard - PowerPoint text and navigation shortcuts', () => {
 	it('ctrl+E aligns the current selection via ribbonUpdateTextStyle', () => {
 		const { onEditorKeydown, input } = setup({ hasSelection: computed(() => true) });
@@ -200,7 +209,7 @@ describe('useEditorKeyboard - PowerPoint text and navigation shortcuts', () => {
 			selectedElementIds: ref(['a']),
 			selectElement,
 		});
-		onEditorKeydown(new KeyboardEvent('keydown', { key: 'Tab', cancelable: true }));
+		onEditorKeydown(onEnteredSlide(new KeyboardEvent('keydown', { key: 'Tab', cancelable: true })));
 		expect(selectElement).toHaveBeenCalledWith('b', false);
 	});
 
@@ -211,7 +220,11 @@ describe('useEditorKeyboard - PowerPoint text and navigation shortcuts', () => {
 			selectedElementIds: ref(['b']),
 			selectElement,
 		});
-		onEditorKeydown(new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, cancelable: true }));
+		onEditorKeydown(
+			onEnteredSlide(
+				new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, cancelable: true }),
+			),
+		);
 		expect(selectElement).toHaveBeenCalledWith('a', false);
 	});
 });
