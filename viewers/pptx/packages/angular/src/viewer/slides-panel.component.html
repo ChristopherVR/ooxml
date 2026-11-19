@@ -75,6 +75,8 @@
 							[attr.data-pptx-slide-hidden]="hidden.marker ?? null"
 							role="option"
 							[attr.aria-selected]="i === activeIndex()"
+							[attr.aria-setsize]="shouldVirtualize() ? deck().length : null"
+							[attr.aria-posinset]="shouldVirtualize() ? i + 1 : null"
 							[attr.aria-label]="'pptx.notes.slideN' | translate: { n: i + 1 }"
 							[attr.draggable]="canEdit()"
 							(contextmenu)="onThumbContextMenu($event, i)"

@@ -6,13 +6,14 @@
  * scroll out, which used to drop focus to the page, after which the keys
  * scrolled the rail instead of changing slides. Thumbnails that scroll into
  * view are drawn once scrolling pauses, so after scrolling the rail shows the
- * slides it scrolled to.
+ * slides it scrolled to. Undoing a New Slide removes the focused thumbnail; focus
+ * moves to the current one, so redo still reaches the editor.
  */
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 import { resetTabSession, slideStage, thumbnail } from './support/deck';
-import { largeDeck } from './support/large-deck';
+import { LARGE_DECK_SLIDES, largeDeck } from './support/large-deck';
 
 const PAGES = 25;
 
@@ -39,6 +40,37 @@ test.describe('large deck thumbnail rail', () => {
 		await expect(current).toBeFocused();
 		await expect(current).toHaveAttribute('aria-current', 'true');
 		await expect(current).toBeInViewport();
+	});
+
+	test('each rendered thumbnail says where it sits in the deck', async ({ page }) => {
+		await openLargeDeck(page);
+		// The rail renders only the rows in view, so the count comes from the rows.
+		const row = thumbnail(page, 3).locator('xpath=..');
+		await expect(row).toHaveAttribute('aria-posinset', '3');
+		await expect(row).toHaveAttribute('aria-setsize', String(LARGE_DECK_SLIDES));
+	});
+
+	test('an undone New Slide leaves focus on a thumbnail, so redo still works', async ({ page }) => {
+		await openLargeDeck(page);
+		await thumbnail(page, 1).click();
+		for (let step = 1; step < 30; step += 1) {
+			await page.keyboard.press('PageDown');
+		}
+		await expect(thumbnail(page, 30)).toBeFocused();
+		const current = page.locator(
+			'[data-pptx-chrome="slide-list"] [data-pptx-chrome="slide-row"][aria-current="true"]',
+		);
+		await page.keyboard.press('ControlOrMeta+m');
+		await expect(thumbnail(page, 32)).toContainText('Large deck slide 31');
+		await expect(current).toBeFocused();
+		// Undo removes the focused thumbnail; focus must stay in the rail, where the
+		// editor's shortcuts still reach, rather than fall to the page.
+		await page.keyboard.press('ControlOrMeta+z');
+		await expect(thumbnail(page, 31)).toContainText('Large deck slide 31');
+		await expect(current).toBeFocused();
+		await page.keyboard.press('ControlOrMeta+y');
+		await expect(thumbnail(page, 32)).toContainText('Large deck slide 31');
+		await expect(current).toBeFocused();
 	});
 
 	test('rows scrolled into view show their slides once scrolling stops', async ({ page }) => {

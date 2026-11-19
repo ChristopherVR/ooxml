@@ -119,6 +119,14 @@
 			void tick().then(() => focusCurrentRow(railEl));
 		}
 	});
+	// A change of slides can remove the focused row (an undone New Slide): focus moves to the
+	// current row rather than falling to the page, where the editor's shortcuts no longer reach.
+	$effect(() => {
+		void slides;
+		if (railHasFocus(railEl)) {
+			focusCurrentRow(railEl);
+		}
+	});
 
 	function onDragStart(index: number, event: DragEvent): void {
 		draggedIndex = index;
@@ -272,9 +280,12 @@
 		{/each}
 	{:else}
 	<div class="pptx-svelte-thumbs-space" data-virtualized={shouldVirtualize ? 'true' : undefined} style={shouldVirtualize ? `height:${virtualRange.totalHeight}px` : undefined}>
-	<div class="pptx-svelte-thumbs-window" data-pptx-chrome="slide-window" style={shouldVirtualize ? `position:absolute;inset-inline:0;top:${virtualRange.offsetY}px` : undefined}>
+	<div class="pptx-svelte-thumbs-window" data-pptx-chrome="slide-window" role={shouldVirtualize ? 'list' : undefined} style={shouldVirtualize ? `position:absolute;inset-inline:0;top:${virtualRange.offsetY}px` : undefined}>
+	<!-- The window holds only some rows, so each says where it sits in the deck. -->
 	{#each renderedSlides as { slide, index } (slide.id)}
-		{@render thumbnail(slide, index)}
+		<div role={shouldVirtualize ? 'listitem' : undefined} aria-setsize={shouldVirtualize ? slides.length : undefined} aria-posinset={shouldVirtualize ? index + 1 : undefined}>
+			{@render thumbnail(slide, index)}
+		</div>
 	{/each}
 	</div>
 	</div>

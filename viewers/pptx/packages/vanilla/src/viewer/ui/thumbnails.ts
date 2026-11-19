@@ -144,7 +144,10 @@ export function createThumbnailRail(
 	}
 	let buttons = new Map<number, HTMLButtonElement>();
 	/** Window rows by slide id; a row is reused while its slide and index hold. */
-	let rows = new Map<string, { slide: PptxSlide; index: number; el: HTMLButtonElement }>();
+	let rows = new Map<
+		string,
+		{ slide: PptxSlide; index: number; el: HTMLElement; button: HTMLButtonElement }
+	>();
 	let activeIndex = 0;
 	let sourceSlides: PptxSlide[] = [];
 	let sourceCanvasSize: CanvasSize = { width: 1, height: 1 };
@@ -195,6 +198,18 @@ export function createThumbnailRail(
 		buttons.set(index, btn);
 		return btn;
 	};
+	/** A row of the window: in a virtualized rail it says where it sits in the deck. */
+	const rowOf = (button: HTMLButtonElement, index: number): HTMLElement => {
+		if (!virtualized) {
+			return button;
+		}
+		const item = createEl(doc, 'div', 'pptxv-thumb-item');
+		item.setAttribute('role', 'listitem');
+		item.setAttribute('aria-setsize', String(sourceSlides.length));
+		item.setAttribute('aria-posinset', String(index + 1));
+		item.appendChild(button);
+		return item;
+	};
 
 	const markActive = (): void => {
 		buttons.forEach((btn, buttonIndex) => {
@@ -243,7 +258,7 @@ export function createThumbnailRail(
 				wanted.set(slide.id, index);
 			}
 		}
-		const leaving: HTMLButtonElement[] = [];
+		const leaving: HTMLElement[] = [];
 		for (const [id, row] of rows) {
 			if (wanted.get(id) !== row.index || sourceSlides[row.index] !== row.slide) {
 				leaving.push(row.el);
@@ -263,16 +278,17 @@ export function createThumbnailRail(
 			}
 		}
 		buttons = new Map();
-		const ordered: HTMLButtonElement[] = [];
+		const ordered: HTMLElement[] = [];
 		const build = (): void => {
 			for (const [id, index] of wanted) {
 				let row = rows.get(id);
 				if (!row) {
 					const slide = sourceSlides[index]!;
-					row = { slide, index, el: buildButton(slide, index, scale) };
+					const button = buildButton(slide, index, scale);
+					row = { slide, index, el: rowOf(button, index), button };
 					rows.set(id, row);
 				}
-				buttons.set(index, row.el);
+				buttons.set(index, row.button);
 				ordered.push(row.el);
 			}
 		};
@@ -311,6 +327,11 @@ export function createThumbnailRail(
 			sourceSections = sections ?? [];
 			itemHeight = editorThumbnailStep(canvasSize.width, canvasSize.height);
 			virtualized = !sections?.length && slides.length >= SLIDE_VIRTUALIZATION_THRESHOLD;
+			if (virtualized) {
+				window.setAttribute('role', 'list');
+			} else {
+				window.removeAttribute('role');
+			}
 			// Class toggle (not an inline display) so the presenting-mode and
 			// mobile-layout `display: none` stylesheet rules can still hide the
 			// rail; an inline style would override them and leak thumbnail text
@@ -355,6 +376,11 @@ export function createThumbnailRail(
 			});
 			deferEntering = true;
 			this.setActive(activeIndex);
+			// Rebuilding the rows drops the focused one: focus moves to the current row rather
+			// than falling to the page.
+			if (railHasFocus(list)) {
+				focusCurrentRow(list);
+			}
 		},
 		setActive(index) {
 			const changed = index !== activeIndex;

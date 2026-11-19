@@ -324,7 +324,11 @@ function SlidesPaneSidebarContent({
 							right: 0,
 						}}
 					>
-						<div className='space-y-1' data-pptx-chrome='slide-window'>
+						<div
+							className='space-y-1'
+							data-pptx-chrome='slide-window'
+							role={showSectionHeaders ? undefined : 'list'}
+						>
 							{visibleItems.map((item) => {
 								if (item.type === 'section') {
 									const section = sectionGroups[item.sectionIndex];
@@ -361,7 +365,7 @@ function SlidesPaneSidebarContent({
 								if (!slide) {
 									return null;
 								}
-								return (
+								const row = (
 									<SlideItem
 										key={slide.id ?? item.slideIndex}
 										slide={slide}
@@ -387,6 +391,19 @@ function SlidesPaneSidebarContent({
 										slideRef={setSlideRef(item.slideIndex)}
 										thumbnailReady={readyRows.has(slide.id)}
 									/>
+								);
+								// The window holds only some rows, so each says where it sits in the deck.
+								return showSectionHeaders ? (
+									row
+								) : (
+									<div
+										key={slide.id ?? item.slideIndex}
+										role='listitem'
+										aria-setsize={slides.length}
+										aria-posinset={item.slideIndex + 1}
+									>
+										{row}
+									</div>
 								);
 							})}
 						</div>

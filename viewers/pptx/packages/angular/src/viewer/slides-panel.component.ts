@@ -364,6 +364,15 @@ export class SlidesPanelComponent {
 				afterNextRender(() => focusCurrentRow(viewport), { injector });
 			}
 		});
+		// A change of slides can remove the focused row (an undone New Slide): focus moves to
+		// the current row rather than falling to the page, where the shortcuts no longer reach.
+		afterRenderEffect(() => {
+			this.deck();
+			const viewport = this.scrollViewport();
+			if (railHasFocus(viewport)) {
+				focusCurrentRow(viewport);
+			}
+		});
 		effect(() => {
 			const rows = this.renderedSlides();
 			this.deferredRows.sync(this.shouldVirtualize() ? rows.map(({ slide }) => slide.id) : []);
