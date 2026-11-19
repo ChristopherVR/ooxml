@@ -1302,6 +1302,7 @@ const comments = useCommentsWiring({
 const collaboration = useCollaborationWiring({
 	slides,
 	history,
+	onNotice: (toast) => compatToasts.notify(toast),
 	slidesPaused: () => deckStyleHeld.value,
 	loadVersion,
 	// A room may replace the host's own deck (a late joiner's bootstrap load),
@@ -2321,8 +2322,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 				>
 					<ShieldAlert class="h-4 w-4 shrink-0 text-amber-400" aria-hidden="true" />
 					<p class="flex-1 text-xs text-amber-200">
-						<strong>{{ t('pptx.security.protectedViewTitle') }}</strong
-						>:
+						<strong>{{ t('pptx.security.protectedViewTitle') }}</strong>:
 						{{ t('pptx.options.trust.protectedViewInfo') }}
 					</p>
 					<button

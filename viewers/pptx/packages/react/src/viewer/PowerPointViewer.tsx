@@ -144,7 +144,10 @@ import { useCollaborationDocumentSync } from './hooks/collaboration/useCollabora
 import { useCollaborationStateReport } from './hooks/collaboration/useCollaborationStateReport';
 import { useAutosaveCacheMaintenance } from './hooks/useAutosaveCacheMaintenance';
 import { useChartFormatCommands } from './hooks/useChartFormatCommands';
-import { useCompatibilityToastsState } from './hooks/useCompatibilityToastsState';
+import {
+	useCompatibilityToastsState,
+	useRemoteValueToast,
+} from './hooks/useCompatibilityToastsState';
 import { useController } from './hooks/useController';
 import { useDeckStyleHost } from './hooks/useDeckStyleHost';
 import { useDerivedSlideState } from './hooks/useDerivedSlideState';
@@ -557,6 +560,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			activeSlide,
 			selectedElement,
 		} = state;
+		useRemoteValueToast(slides, compatToastsState.setToasts);
 
 		// ── Ribbon Display Options (one controller per viewer) ─────────
 		const ribbonDisplayController = useRibbonDisplayController({

@@ -4188,6 +4188,8 @@ export const translationsEn: Record<string, string> = {
 		'An embedded font has a licence that does not allow it to be used, so a substitute font is shown. Its font data is kept in the file.',
 	'pptx.compatibility.embeddedFontNotEmbeddable':
 		'A font was not embedded because its licence does not allow embedding it in an editable presentation.',
+	'pptx.compatibility.collaborationValueRejected':
+		'Content a collaborator sent was left out because it is not allowed here, such as an unsafe link or file type.',
 	'pptx.compatibility.exportBackendUnavailable':
 		'Export to this format is not available in the current environment.',
 
