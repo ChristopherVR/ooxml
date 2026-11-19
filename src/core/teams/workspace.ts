@@ -219,23 +219,24 @@ export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace 
 	session.doc.getMap(META_MAP).observe(() => setSchema(checkSchema(session.doc)));
 	if (schema.state === 'ok' && schema.version === SCHEMA_VERSION) roster.register();
 	const meetings = createMeetingStore(session.doc, user);
-	// A private chat syncs in a room of its own. The server admits only the members listed in the
-	// chat document, so the user id and the first member list ride along as query parameters.
+	// A private chat syncs in a room of its own, and the server admits only the members listed in
+	// the chat document. A 1:1 chat also names its two people, so either of them can create the
+	// room: the server checks them against the chat id.
 	const chat = createChatRooms({
 		doc: session.doc,
 		base: channels,
 		user,
 		...(options.createChatDoc ? { createDoc: options.createChatDoc } : {}),
-		openRoom: (info, doc) => {
+		directorySync: {
+			synced: () => session.synced,
+			onSynced: (listener) => session.on('synced', (synced) => synced && listener()),
+		},
+		openRoom: (info, doc, onSynced) => {
 			const roomId = chatRoomId(options.workspaceId, info.id);
 			const members = info.members.map((m) => m.id).join(',');
+			const query = info.kind === 'direct' ? { user: user.id, members } : { user: user.id };
 			const transport = readOnlyTransport(
-				createSyncTransport(
-					config,
-					roomId,
-					{ WebSocket: wsCtor, BroadcastChannel: bcCtor },
-					{ user: user.id, members },
-				),
+				createSyncTransport(config, roomId, { WebSocket: wsCtor, BroadcastChannel: bcCtor }, query),
 				isReadOnly,
 			);
 			const chatSession = createCollabSession({
@@ -244,7 +245,8 @@ export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace 
 				provider: transportProvider({ transport }),
 				user: { name: user.name },
 			});
-			return { destroy: () => chatSession.destroy() };
+			chatSession.on('synced', (synced) => synced && onSynced());
+			return { synced: () => chatSession.synced, destroy: () => chatSession.destroy() };
 		},
 	});
 

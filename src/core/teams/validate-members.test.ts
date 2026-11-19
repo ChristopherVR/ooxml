@@ -141,14 +141,13 @@ describe('validateTeamsUpdate: chat members', () => {
 		return capture(doc, () => fn(doc.getMap<boolean>('teams:chat-members')));
 	};
 
-	it('lets the first writer seed a new chat that lists them', () => {
+	it('leaves a new room to the server: nobody writes themselves into an empty list', () => {
 		const empty = new Y.Doc();
 		const update = change(empty, (m) => {
 			m.set('ann', true);
 			m.set('bob', true);
 		});
-		expect(validateTeamsUpdate(empty, update, ann)).toEqual({ ok: true });
-		expect(codes(validateTeamsUpdate(empty, update, cy))).toEqual(['not-member', 'not-member']);
+		expect(codes(validateTeamsUpdate(empty, update, ann))).toEqual(['not-member', 'not-member']);
 	});
 
 	it('lets a member add people and refuses a non-member', () => {
@@ -170,6 +169,22 @@ describe('validateTeamsUpdate: chat members', () => {
 	it('refuses a member entry that is not true', () => {
 		const server = seeded();
 		const update = change(server, (m) => (m as Y.Map<unknown>).set('cy', 'yes'));
+		expect(codes(validateTeamsUpdate(server, update, ann))).toEqual(['malformed-row']);
+	});
+
+	it('does not let a false entry remove somebody or count as membership', () => {
+		const server = seeded();
+		const kick = change(server, (m) => m.set('bob', false));
+		expect(codes(validateTeamsUpdate(server, kick, ann))).toEqual(['malformed-row']);
+		expect(codes(validateTeamsUpdate(server, kick, bob))).toEqual(['malformed-row']);
+		server.getMap<boolean>('teams:chat-members').set('cy', false);
+		const add = change(server, (m) => m.set('dan', true));
+		expect(codes(validateTeamsUpdate(server, add, cy))).toEqual(['not-member']);
+	});
+
+	it('refuses a member id the server could not admit', () => {
+		const server = seeded();
+		const update = change(server, (m) => m.set('a,b', true));
 		expect(codes(validateTeamsUpdate(server, update, ann))).toEqual(['malformed-row']);
 	});
 });

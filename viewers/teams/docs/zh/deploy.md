@@ -14,7 +14,7 @@ cd server && node index.mjs          # PORT=8787 HOST=127.0.0.1 by default
 | `PORT`、`HOST`                                          | 监听地址。仅在 TLS 之后才绑定 `0.0.0.0`。                                                                                                                                  |
 | `TEAMS_TOKEN`                                           | 若设置，套接字通过 `Sec-WebSocket-Protocol` 请求头携带它（`?token=` 仅作为备用），文件请求通过 `Authorization: Bearer` 携带它。                                            |
 | `TEAMS_ORIGINS`                                         | 以逗号分隔的、允许访问套接字和文件的 `Origin`。为空时：设置了令牌则允许任意来源；未设置令牌则仅允许回环来源和不发送 `Origin` 的客户端。                                    |
-| `TEAMS_DATA`                                            | 数据目录（默认 `./data`）：`rooms/<room>.bin` 快照和 `files/`。                                                                                                            |
+| `TEAMS_DATA`                                            | 数据目录（默认 `./data`）：`rooms/=<name>.bin` 快照和 `files/`。                                                                                                           |
 | `TEAMS_TRUST_PROXY`、`--trust-proxy[=N]`                | 按 `X-Forwarded-For` 对认证速率限制器和每地址连接数上限进行分组（取第 N 个可信代理追加的条目，默认 1）。默认关闭；仅在前置代理会设置该请求头时启用，否则客户端可以伪造它。 |
 | `--insecure-dev`                                        | 在没有账户、也没有 `authenticate` 函数的情况下启动（选项 `insecureDev`）。不加此选项时，服务器只有设置了 `TEAMS_USERS_FILE` 才会启动。仅用于开发。                         |
 | `TEAMS_INSECURE`                                        | `1`（或 `--insecure`）允许在未设置令牌时使用非回环的 `HOST`。否则服务器拒绝启动。                                                                                          |
@@ -120,10 +120,12 @@ docker run -d --name openteams -p 127.0.0.1:8787:8787 \
 
 | 路径                       | 内容                                                           |
 | -------------------------- | -------------------------------------------------------------- |
-| `rooms/<room>.bin`         | 每个房间一个 Yjs 快照：所有聊天、频道、日历和标签页数据。      |
-| `files/<workspace>/`       | 上传的文件。                                                   |
-| `file-meta/<scope>.json`   | 每个文件的上传者（决定谁可以删除它）。请与 `files/` 一起备份。 |
+| `rooms/=<name>.bin`        | 每个房间一个 Yjs 快照：所有聊天、频道、日历和标签页数据。      |
+| `files/=<name>/`           | 上传的文件。                                                   |
+| `file-meta/=<name>.json`   | 每个文件的上传者（决定谁可以删除它）。请与 `files/` 一起备份。 |
 | `session-revocations.json` | 会话吊销代数（丢失它，已吊销的会话会在过期前重新生效）。       |
+
+存储名称是 `=` 加上房间或范围确切名称的小写 base32 编码，因此仅大小写不同的名称在任何磁盘上都不会混淆。2.0 服务器首次启动时会重命名旧版本存储的内容。请先备份，因为旧版服务器无法读取新名称。如果条目以只有 2.0 才会签发的聊天 ID 命名（`dm-` 加 32 位十六进制数字，或新的 `g-` ID，不区分大小写），则不会迁移：它会被移到旁边的 `.quarantine` 文件夹并记录到日志，服务器永远不会读取它。
 
 另外还要保存不在数据目录中的内容：账户文件（`TEAMS_USERS_FILE`）和 `TEAMS_SESSION_SECRET`。更改或丢失密钥会让所有人登出，这没有危害。
 

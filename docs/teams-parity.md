@@ -677,15 +677,15 @@ and Microsoft-generated reference output, rather than claiming lossless parity.
   The workspace document holds only a directory (who is in which chat, so every client can find its own
   chats) and a roster of everyone who opened the workspace (so New chat can offer people who are
   offline). The client model never opens, reads or writes a chat the person is not in. The reference
-  server admits a socket to a chat room only when its `user` query parameter is in the room's
-  `teams:chat-members` map, creates a room from the first socket's `members` list (a 1:1 room must
-  list exactly the two people its id was derived from), and closes the sockets of people removed
-  from a chat. Honest limits: with no accounts configured (the default) identity is a claim and anyone holding the
+  server admits a socket to a chat room only when its user is `true` in the room's
+  `teams:chat-members` map, creates a 1:1 room only for the two people its id was derived from and a
+  group or meeting room only for the person its id is bound to, never restarts a room that has held
+  anything, and closes the sockets of people removed from a chat. Honest limits: with no accounts configured (the default) identity is a claim and anyone holding the
   shared token can claim another person's id (configure accounts to bind ids to credentials, see viewers/teams/server/README.md); the directory (who chats with whom, and group names)
   is visible to every workspace member; attachments sent in a private chat are stored under that chat's room and the reference server serves
   them only to its members (channel files are readable by every signed-in user); local mode (same-browser tabs) cannot enforce anything below the
-  client model; a group or meeting chat room is created by whoever connects first; people removed
-  from a chat keep what they already synced.
+  client model; a member can add somebody to a chat's room without listing them in the directory, so
+  the member list shown is what members declared; people removed from a chat keep what they already synced.
 - **Calendar app.** Calendar follows Teams in the rail. The week view switches between work week,
   week and day, has Today and previous / next, lays overlapping meetings side by side and marks
   the current time. The side list shows the next two weeks with a Join button when a meeting is

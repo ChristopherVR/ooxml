@@ -214,7 +214,7 @@ describe('workspace and client with a newer schema', () => {
 		const stored = legacyDoc();
 		const storage = new Map<string, string>();
 		storage.set(
-			'teams:doc:schema-v0',
+			'teams:doc:2:schema-v0',
 			Buffer.from(Y.encodeStateAsUpdate(stored)).toString('base64'),
 		);
 		const client = createTeamsClient({
@@ -230,12 +230,33 @@ describe('workspace and client with a newer schema', () => {
 		expect(readSchemaVersion(client.workspace.session.doc)).toBe(1);
 	});
 
+	it('ignores and clears a snapshot from an older protocol', () => {
+		const stored = legacyDoc();
+		stored.getMap('teams:chats').set('g-g-1-1', 'unsent change');
+		const storage = new Map<string, string>();
+		storage.set(
+			'teams:doc:old-proto',
+			Buffer.from(Y.encodeStateAsUpdate(stored)).toString('base64'),
+		);
+		const client = createTeamsClient({
+			workspaceId: 'old-proto',
+			user: { id: 'ada', name: 'Ada' },
+			storage: {
+				getItem: (k) => storage.get(k) ?? null,
+				setItem: (k, v) => void storage.set(k, v),
+			},
+		});
+		clients.push(client);
+		expect(client.workspace.session.doc.getMap('teams:chats').size).toBe(0);
+		expect(storage.get('teams:doc:old-proto')).toBe('');
+	});
+
 	it('surfaces unsupported-schema in the client state and a notice', () => {
 		const stored = legacyDoc();
 		stamp(stored, 7);
 		const storage = new Map<string, string>();
 		storage.set(
-			'teams:doc:schema-v7',
+			'teams:doc:2:schema-v7',
 			Buffer.from(Y.encodeStateAsUpdate(stored)).toString('base64'),
 		);
 		const client = createTeamsClient({

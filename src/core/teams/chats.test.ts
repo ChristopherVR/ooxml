@@ -86,6 +86,7 @@ describe('chat model', () => {
 		const ada = createChatDirectory(new Y.Doc(), { id: 'ada', name: 'Ada' });
 		expect(ada.ensureDirect({ id: 'ada', name: 'Ada' })).toBeNull();
 		const dm = ada.ensureDirect({ id: 'bob', name: 'Bob' })!;
+		expect(dm.id).toBe(directChatId('ada', 'bob'));
 		expect(ada.ensureDirect({ id: 'bob', name: 'Bob' })!.id).toBe(dm.id);
 		expect(ada.rename(dm.id, 'x')).toBe(false);
 		expect(ada.add(dm.id, [{ id: 'cy', name: 'Cy' }])).toEqual([]);

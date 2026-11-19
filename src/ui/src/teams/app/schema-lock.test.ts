@@ -20,7 +20,7 @@ function seedSnapshot(room: string, version?: number): void {
 		name: 'General',
 	});
 	if (version !== undefined) doc.getMap('teams:meta').set('schemaVersion', version);
-	localStorage.setItem(`teams:doc:${room}`, toBase64(Y.encodeStateAsUpdate(doc)));
+	localStorage.setItem(`teams:doc:2:${room}`, toBase64(Y.encodeStateAsUpdate(doc)));
 }
 
 async function mount(room: string): Promise<TeamsApp> {

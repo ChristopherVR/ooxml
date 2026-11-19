@@ -31,7 +31,7 @@ with a warning, for local development. It is configured through the environment 
 | `HOST`          | `127.0.0.1` | Listen address. Bind `0.0.0.0` only behind TLS.                                                                                             |
 | `TEAMS_TOKEN`   | none        | If set, sockets take it in the `Sec-WebSocket-Protocol` header (`?token=` only as a fallback) and file requests as `Authorization: Bearer`. |
 | `TEAMS_ORIGINS` | none        | Comma-separated allowed `Origin`s for sockets and files. None: any origin with a token, loopback only without one.                          |
-| `TEAMS_DATA`    | `./data`    | Data directory: `rooms/<room>.bin` snapshots and `files/<workspace>/`.                                                                      |
+| `TEAMS_DATA`    | `./data`    | Data directory: `rooms/=<name>.bin` snapshots and `files/=<name>/`.                                                                         |
 
 The server reads more variables for accounts (`TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`, `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`) and for limits (`TEAMS_INSECURE`, `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`, `TEAMS_MAX_ROOMS`, `TEAMS_MAX_DOC_MB`, `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`, `TEAMS_FILES_QUOTA_MB`, `TEAMS_WORKSPACE_QUOTA_MB`, `TEAMS_COMPACT_INTERVAL_MIN`, `TEAMS_METRICS_TOKEN`, `TEAMS_LOG_FORMAT`). The [deployment guide](./deploy.md) lists the limits; the server's README is the full reference. The `createTeamsServer` options for them are `users`, `authenticate`, `sessionSecret`, `adminToken`, `sessionRate`, `authorizeSync`, `maxConnections`, `maxRooms`, `messageRate`, `filesQuotaBytes`, `workspaceQuotaBytes`, `metricsToken`, `compactIntervalMs`, `insecure`, `insecureDev` and `trustProxy`.
 
@@ -70,7 +70,7 @@ const config = {
 
 | Endpoint                              | What it does                                                                                                                                      |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ws /sync/<room>`                     | y-websocket compatible sync: one `Y.Doc` and awareness per room, persisted to `rooms/<room>.bin`. Messages up to 32 MB.                           |
+| `ws /sync/<room>`                     | y-websocket compatible sync: one `Y.Doc` and awareness per room, persisted to `rooms/=<name>.bin`. Messages up to 32 MB.                          |
 | `ws /signal/<room>`                   | JSON relay for call signaling: forwards each text message to the room's other sockets. Messages up to 256 KB.                                     |
 | `POST /files/<workspace>/<name>`      | Stores an attachment (25 MB cap) and answers `201 { url, size }`.                                                                                 |
 | `GET /files/<workspace>/<name>`       | Downloads it as an attachment (`Content-Disposition: attachment`, `Referrer-Policy: no-referrer`, `nosniff`).                                     |

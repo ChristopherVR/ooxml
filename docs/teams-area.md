@@ -67,7 +67,7 @@ configured server's `/files` endpoint) and posts the returned URL. `detectOffice
 
 ### Chats
 
-`chats.ts` holds the model: a chat is `direct` (1:1, id derived from the two user ids) or `group`, with a member list. The directory (`teams:chats` in the workspace document) lists who is in which chat so every client can find its own, and `roster.ts` lists everyone who opened the workspace. A chat's messages live in a Y.Doc of their own, synced in a room named `chatRoomId(workspaceId, chatId)`; `chat-rooms.ts` composes the channel store and those documents behind one `ChatStore`, so threads, pins, reactions, mentions, drafts and the activity feed work unchanged in a chat. The room carries a `teams:chat-members` map (kept equal to the directory by every member) that the reference server admits sockets by, and the client never opens, reads or writes a chat the person is not in. Add, remove and leave write a system message (`Message.system`). `chat-view.ts` projects the chat list and the contacts. Honest limits are in `docs/teams-parity.md`.
+`chat-records.ts` holds what a chat is on the wire (ids, room names, directory rows) and `chats.ts` the directory: a chat is `direct` (1:1, id derived from the two user ids) or `group` (a random id bound to its creator), with a member list. The directory (`teams:chats` in the workspace document) lists who is in which chat so every client can find its own, and `roster.ts` lists everyone who opened the workspace. A chat's messages live in a Y.Doc of their own, synced in a room named `chatRoomId(workspaceId, chatId)`; `chat-rooms.ts` composes the channel store and those documents behind one `ChatStore`, so threads, pins, reactions, mentions, drafts and the activity feed work unchanged in a chat. The room carries a `teams:chat-members` map that the reference server admits sockets by. A client writes to it only for its own user's actions (creating a group, adding people, leaving, a moderator's removal). It does not copy it from the directory, with one exception: the creator of a group admits the people the directory lists when the room opens and both documents are in sync, which repairs a crash right after creating the group. It never opens, reads or writes a chat the person is not in. Add, remove and leave write a system message (`Message.system`). `chat-view.ts` projects the chat list and the contacts. Honest limits are in `docs/teams-parity.md`.
 
 ### Calendar and meetings
 
@@ -135,7 +135,17 @@ throws):
    signed for that one file, valid for a few minutes (`?sig=...&exp=...`), so the token never
    appears in a URL.
 
-Private chats add one rule to the sync contract: a room named `chat-<16 hex>-<chat id>` admits a socket only when its `?user=<id>` is in the room's `teams:chat-members` map (a Yjs map of user id to `true`). A room that has no members yet is created by its first socket, which passes `?members=<id>,<id>` and must be one of them; a 1:1 room (`dm-<hash>`) must list exactly the two people the id was derived from. The server closes the sockets of people removed from the map. Identity is a claim unless the server has accounts (see Authentication below).
+Private chats add rules to the sync contract. The server, not the first client to arrive, decides who a chat room starts with:
+
+- A room named `chat-<16 hex>-<chat id>` admits a socket only when its user (the session's, or `?user=<id>` without accounts) is `true` in the room's `teams:chat-members` map, a Yjs map of user id to `true`. Any other value means not a member.
+- A new 1:1 room (`dm-<32 hex>`, `directChatId`) starts with the two people the id was derived from. The socket that opens it passes them as `?members=<id>,<id>` and must be one of them.
+- A new group room (`g-<32 hex>-<24 hex>`, `createGroupChatId`) starts with only the creator the id is bound to (`isGroupChatIdOf`). The creator then adds the others with ordinary updates, which the validator checks. Other people are refused until they are listed, and their clients retry. Meeting chats are group chats. `?members=` is ignored here.
+- Any other id, including the `dm-<16 hex>`, `g-g-...` and `mt-...` ids of earlier versions, cannot start a room. Rooms that already exist under those ids keep working for the people they list.
+- A room that holds anything is never started again, so an emptied member list closes it for good. The server closes the sockets of people removed from the map.
+- Leaving is a change to this map, written by the person who leaves. Someone who leaves while offline stays listed until their client next syncs the room, so the client keeps that room open, and its local copy across a restart, until then (`leavingChats`).
+- A name that differs from a chat room only by letter case (`isChatRoomAlias`) is refused for sync and for files.
+
+Identity is a claim unless the server has accounts (see Authentication below).
 
 Both sockets send the token in the `Sec-WebSocket-Protocol` header (`openteams.token.<token>`) when
 one is configured, with `?token=<token>` as the fallback for values the header cannot carry; enforce it, and an origin allowlist, on the server. Validate room names (`^[\w-]{1,128}$`) and cap message sizes.
@@ -240,9 +250,10 @@ and the **server contract**. Each has a number or a pinned test.
 
 ### Protocol version and room names (`protocol.ts`)
 
-- `PROTOCOL_VERSION` (1) rides as the `proto` query parameter on every sync and signaling
-  connection. The reference server completes the handshake and then closes a client whose value is
-  not its own with code 1008 and the reason `unsupported protocol version N: this server speaks 1`
+- `PROTOCOL_VERSION` (2) rides as the `proto` query parameter on every sync and signaling
+  connection. Version 2 is the chat membership contract above, with its new chat ids. The reference
+  server completes the handshake and then closes a client whose value is
+  not its own with code 1008 and the reason `unsupported protocol version N: this server speaks 2`
   (an HTTP refusal would not show the client a reason). A missing `proto` (a client older than this
   parameter) is still accepted, with a log line. `protocolOfUrl` reads it back.
 - Credentials: the client sends the workspace token and the signed session in the
@@ -250,10 +261,22 @@ and the **server contract**. Each has a number or a pinned test.
   `server-config.ts`), not in the URL. The header only allows token characters, so a credential with
   others (a hand-made token) makes the client fall back to the query string for all of them.
 - Room names are pinned by tests: a workspace room is the workspace id (1 to 128 of `[\w-]`); a chat
-  room is `chat-<16 hex of the workspace id>-<chat id>`; a 1:1 chat id is `dm-<16 hex of the sorted
-  pair>`; a call room is `call-<workspace>-<channel>`; all are cut to 128. The hash (`shortHash`) is
-  duplicated in the reference server's `chat-access.mjs`; a test keeps them equal. Changing any of
-  this orphans stored rooms and needs a protocol bump.
+  room is `chat-<16 hex of the workspace id>-<chat id>`; a 1:1 chat id is `dm-<32 hex>`, from SHA-256
+  of the sorted pair; a group chat id is `g-<32 hex random>-<24 hex>`, the second part from SHA-256 of
+  the random part and the creator; a call room is `call-<workspace>-<channel>`; all are cut to 128.
+  The reference server reads these rules from the generated validator bundle, so there is one copy.
+  Changing any of this orphans stored rooms and needs a protocol bump. A client reuses a 1:1 chat
+  that already exists under its old `dm-<16 hex>` id, so its history stays.
+- The reference server stores a room or file scope under `=` and the lower-case base32 of its exact
+  name (`storageName` in `room-store.mjs`), so names that differ only by case never share a file. It
+  renames entries written by older versions when it starts (`migrateStorageNames`); a run cut short
+  continues on the next start, and an upper-case spelling of a chat room on a case-insensitive disk
+  goes back to the room it was. An entry whose name, in any spelling, is a chat room with a
+  `dm-<32 hex>` or `g-<32 hex>-<24 hex>` id is never migrated: no older version issued those ids, so
+  it moves to a `.quarantine` folder next to it, is logged, and nothing reads it.
+- A client's local snapshots are kept per protocol version (`teams:doc:<version>:<id>`). A snapshot
+  from an older version is cleared, not loaded, because it can hold offline changes the server now
+  refuses, which would be sent again on every connection.
 - The protocol version changes only when an old client or server could misread the other: room
   naming, required query parameters, or message framing. Additive parameters and new optional
   document fields do not change it.
@@ -295,10 +318,29 @@ non-moderator actor (the user id of the **signed session**, never a claimed one)
   the organiser or a moderator edits or cancels it);
 - a `teams:roster` row may be written or removed only under the actor's own id (a moderator may
   also remove one);
-- in `teams:chat-members` a member may be added only by an existing member (the first writer of an
-  empty map must list themselves), and removed only by themselves; a moderator may do both freely.
-  The client therefore lets only moderators remove other people from a chat;
-- message text and reactions per message are capped, see the limits below.
+- in `teams:chat-members` a member may be added only by an existing member, and removed only by
+  themselves; a moderator may do both freely. An entry other than `true` is refused, so setting
+  somebody to `false` neither removes them nor counts as membership. The server seeds a new room, so
+  nobody writes themselves into an empty map. The client therefore lets only moderators remove other
+  people from a chat;
+- a `teams:chats` directory row is created by a member of the chat, naming themselves as `createdBy`,
+  under an id bound to them (their own `createGroupChatId`, or `directChatId` of the pair). `kind`,
+  `members`, `createdAt`, `createdBy` and `meetingId` never change and a row is never removed. A 1:1
+  row is immutable, except that either person may replace it with an equal one (both can open the
+  chat at once). A group keeps the `members` it was created with, and each later change is one field
+  per person, `member:<user id>`: their name, or `null` once they are out. Concurrent adds and leaves
+  therefore merge. A member renames, adds people and removes themselves, and a moderator who is a
+  member removes anyone. Someone who was never in the group is refused. Someone who is or was in it
+  but may not make the change (removed while offline, no longer a moderator) is not refused, because
+  the same update would come back on every reconnect and stop their sync: the verdict is
+  `{ ok: true, reverts }`, and a server applies the update and `applyUpdateReverts(doc, reverts)` in
+  one transaction, which puts those fields back. That transaction's origin must not be the sender's
+  connection, because the sender has to receive the reverts as well;
+- message text and reactions per message are capped, see the limits below;
+- no row may take on a value JSON cannot carry (a big integer): `malformed-row`. One that is already
+  stored stays readable and does not block other changes to its row.
+
+`validateTeamsUpdate` never throws: anything it cannot check is refused as `invalid-update`.
 
 **Client behaviour.** `POST /auth/session` answers `role`; `TeamsSession.role` and
 `TeamsState.moderator` carry it, and `<teams-app>` offers Hide on others' messages, rename and
@@ -308,12 +350,19 @@ WebSocket transport backs off and gives up after three consecutive `update rejec
 
 `validateTeamsSyncMessage(doc, message, actor)` does the same for a raw y-websocket message (sync
 step 2 and update are checked, everything else passes). The reference server
-(`viewers/teams/server`) calls it in the `ws.on('message')` handler of `handleSync` before
-`readSyncMessage`, for every sync room (workspace and private chats), with the room's document and
-the user of the **signed session**; on `{ ok: false }` it logs the violation codes, closes the socket
-with 1008 (`update rejected: <codes>`) and does not apply the message. It applies only to sockets
-that carry a verified identity (a session, from `users` or the `authenticate` hook); without
-accounts the user is a claim and nothing is enforced. `enforceAuthorship: false` (or
+(`viewers/teams/server`) calls it in the `ws.on('message')` handler of `handleSync` before applying
+anything, for every sync room (workspace and private chats), with the room's document and the user
+of the **signed session**; on `{ ok: false }` it logs the violation codes, closes the socket with
+1008 (`update rejected: <codes>`) and does not apply the message. It applies only to sockets that
+carry a verified identity (a session, from `users` or the `authenticate` hook); without accounts the
+user is a claim and nothing is enforced.
+
+Applying is all or nothing, on every socket. A Yjs transaction that throws keeps what it had done,
+so the server first proves the update, and any reverts, on a copy of the room (the validator's copy
+already proves an update without reverts). It then applies them to the room in one transaction, which
+makes one broadcast. If anything fails, the room is unchanged, nobody hears of the update, and the
+socket closes with 1008 (`update rejected: invalid-update`). Messages a socket sent after the one that
+got it closed are ignored. `enforceAuthorship: false` (or
 `TEAMS_ENFORCE_AUTHORSHIP=0`) turns it off. The moderator flag comes from the session (a `users`
 entry `{ "credential": "...", "role": "moderator" }`, or `role: 'moderator'` returned by
 `authenticate`).
@@ -322,7 +371,7 @@ entry `{ "credential": "...", "role": "moderator" }`, or `role: 'moderator'` ret
 large package with its own dependency tree, whose `dist` must be built before the server's tests
 can run) to a small server, `viewers/teams/scripts/bundle-validator.mjs` bundles
 `validate-update.ts` and `protocol.ts` with esbuild into the committed
-`server/validator.generated.mjs` (about 12 KB, `yjs`, `lib0` and `y-protocols` external, which the
+`server/validator.generated.mjs` (about 21 KB, `yjs`, `lib0` and `y-protocols` external, which the
 server already depends on). A script test fails when the committed file is stale, so a change to the
 validator must be followed by `bun run bundle:validator` in `viewers/teams`; the commit then touches
 `server/` and releases `openteams-server`.
@@ -333,9 +382,11 @@ What it does not cover, honestly:
 - **Yjs client ids are not checked.** Content is validated, not which client id wrote a struct; a
   hostile client can still insert structs under another client's id and disturb that client's later
   updates.
-- Everything outside messages, reactions, channels, tabs, pins, meetings, the roster and the chat
-  member map: the chat directory (who talks to whom) is unvalidated, and so is the meeting
-  attendee list beyond the organiser rule (there are no RSVP rows). A channel or tab row is
+- Everything outside messages, reactions, channels, tabs, pins, meetings, the roster, the chat
+  member map and the chat directory: the meeting attendee list is unvalidated beyond the organiser
+  rule (there are no RSVP rows). The directory stays readable by every workspace member, and the
+  server does not compare it with a room's member map: a member can let somebody into the room
+  without listing them. A channel or tab row is
   attributed only through its `createdBy` field, a meeting through `organizerId`; whether the pinned message exists, or the tab content is sensible, is not checked. In a
   workspace room "member" means any authenticated user (there is no workspace member list).
 - Message text is capped (`maxMessageChars`, default 32768) and so are the reactions per message
