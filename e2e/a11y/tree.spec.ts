@@ -4,7 +4,7 @@
  * expected failure owned by the package that adds it (`expected-failures.json`).
  */
 import { EXCEL, POWERPOINT, WORD } from './support/fixtures';
-import { knownGap } from './support/known';
+import { gate } from './support/known';
 import { expect, openSurface, test } from './support/suite';
 import { axTree, nodes, outline } from './support/tree';
 
@@ -22,35 +22,41 @@ test.describe('Word accessibility tree', () => {
 	});
 
 	test('headings are exposed with their levels', async ({ page }) => {
-		knownGap('tree/docx/headings');
-		const tree = await axTree(page);
-		const headings = nodes(tree, 'heading').map((node) => [node.name, node.properties.level]);
-		expect(headings, outline(tree, ['heading', 'paragraph'])).toEqual(
-			expect.arrayContaining([
-				[WORD.heading1, 1],
-				[WORD.heading2, 2],
-			]),
-		);
+		await gate('tree/docx/headings', async () => {
+			const tree = await axTree(page);
+			const headings = nodes(tree, 'heading').map((node) => [node.name, node.properties.level]);
+			const listing = outline(tree, ['heading', 'paragraph']);
+			expect(headings, `headings found: ${headings.length}\n${listing}`).toEqual(
+				expect.arrayContaining([
+					[WORD.heading1, 1],
+					[WORD.heading2, 2],
+				]),
+			);
+		});
 	});
 
 	test('the table header row is exposed as column headers', async ({ page }) => {
-		knownGap('tree/docx/table-headers');
-		const tree = await axTree(page);
-		const headers = nodes(tree, 'columnheader').map((node) => node.name);
-		expect(headers, outline(tree, ['table', 'row', 'columnheader', 'cell'])).toEqual(
-			expect.arrayContaining([...WORD.header]),
-		);
+		await gate('tree/docx/table-headers', async () => {
+			const tree = await axTree(page);
+			const headers = nodes(tree, 'columnheader').map((node) => node.name);
+			const listing = outline(tree, ['table', 'row', 'columnheader', 'cell']);
+			expect(headers, `column headers found: ${headers.length}\n${listing}`).toEqual(
+				expect.arrayContaining([...WORD.header]),
+			);
+		});
 	});
 
 	test('the editing area is a named, multi-line text box', async ({ page }) => {
-		knownGap('tree/docx/editor-name');
-		const tree = await axTree(page);
-		const editors = nodes(tree, 'textbox').filter(
-			(node) => node.properties.editable === 'richtext',
-		);
-		expect(editors.map((node) => [Boolean(node.name), node.properties.multiline])).toEqual([
-			[true, true],
-		]);
+		await gate('tree/docx/editor-name', async () => {
+			const tree = await axTree(page);
+			const editors = nodes(tree, 'textbox').filter(
+				(node) => node.properties.editable === 'richtext',
+			);
+			expect(
+				editors.map((node) => [Boolean(node.name), node.properties.multiline]),
+				`rich-text text boxes found: ${editors.length}`,
+			).toEqual([[true, true]]);
+		});
 	});
 });
 
@@ -72,11 +78,13 @@ test.describe('Excel accessibility tree', () => {
 	});
 
 	test('cells are grid cells in rows', async ({ page }) => {
-		knownGap('tree/xlsx/gridcells');
-		const tree = await axTree(page);
-		const listing = outline(tree, ['grid', 'row', 'gridcell', 'columnheader']);
-		expect(nodes(tree, 'row').length, listing).toBeGreaterThan(0);
-		expect(nodes(tree, 'gridcell', '100'), listing).toHaveLength(1);
+		await gate('tree/xlsx/gridcells', async () => {
+			const tree = await axTree(page);
+			const listing = outline(tree, ['grid', 'row', 'gridcell', 'columnheader']);
+			const rows = nodes(tree, 'row').length;
+			expect(rows, `rows in the grid: ${rows}\n${listing}`).toBeGreaterThan(0);
+			expect(nodes(tree, 'gridcell', '100'), listing).toHaveLength(1);
+		});
 	});
 });
 
@@ -92,10 +100,14 @@ test.describe('PowerPoint accessibility tree', () => {
 	});
 
 	test('the slide is named with its number', async ({ page }) => {
-		knownGap('tree/pptx/slide-name');
-		const slides = (await axTree(page)).filter(
-			(node) => node.properties.roledescription === 'slide',
-		);
-		expect(slides.map((node) => node.name)).toEqual([expect.stringMatching(/^Slide 1\b/u)]);
+		await gate('tree/pptx/slide-name', async () => {
+			const slides = (await axTree(page)).filter(
+				(node) => node.properties.roledescription === 'slide',
+			);
+			const names = slides.map((node) => node.name);
+			expect(names, `slide names: ${JSON.stringify(names)}`).toEqual([
+				expect.stringMatching(/^Slide 1\b/u),
+			]);
+		});
 	});
 });

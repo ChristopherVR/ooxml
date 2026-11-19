@@ -3,7 +3,7 @@
  * scrolls sideways, every control can still be reached, and the document keeps a usable share of
  * the window. A grid or canvas may scroll in two dimensions inside itself; the page may not.
  */
-import { knownGap } from './support/known';
+import { gate } from './support/known';
 import { expect, openSurface, PRODUCTS, test, type Layout, type Surface } from './support/suite';
 
 const SIZES = { '320x256': { width: 320, height: 256 }, '360x225': { width: 360, height: 225 } };
@@ -119,26 +119,33 @@ for (const [size, viewport] of Object.entries(SIZES))
 				test('the page does not scroll sideways and every control can be reached', async ({
 					page,
 				}) => {
-					knownGap(`${key}/controls`);
-					await openSurface(page, surface);
-					const reflow = await measure(page, DOCUMENT[surface]);
-					expect(reflow.pageScrollsSideways, 'the page scrolls sideways').toBe(false);
-					expect(reflow.unreachable, 'controls outside the window that nothing scrolls to').toEqual(
-						[],
-					);
+					await gate(`${key}/controls`, async () => {
+						await openSurface(page, surface);
+						const reflow = await measure(page, DOCUMENT[surface]);
+						expect(reflow.pageScrollsSideways, 'the page scrolls sideways').toBe(false);
+						expect(
+							reflow.unreachable,
+							'controls outside the window that nothing scrolls to',
+						).toEqual([]);
+					});
 				});
 
 				const selector = DOCUMENT[surface];
 				if (selector)
 					test('the document keeps a usable share of the window', async ({ page }) => {
-						knownGap(`${key}/document`);
-						await openSurface(page, surface);
-						const { document } = await measure(page, selector);
-						expect(document, `the document (${selector}) is on the page`).toBeDefined();
-						expect(document?.height ?? 0).toBeGreaterThanOrEqual(
-							viewport.height * MIN_SHARE.height,
-						);
-						expect(document?.width ?? 0).toBeGreaterThanOrEqual(viewport.width * MIN_SHARE.width);
+						await gate(`${key}/document`, async () => {
+							await openSurface(page, surface);
+							const { document } = await measure(page, selector);
+							expect(document, `the document (${selector}) is on the page`).toBeDefined();
+							expect(
+								document?.height ?? 0,
+								'the document is at least a quarter of the window tall',
+							).toBeGreaterThanOrEqual(viewport.height * MIN_SHARE.height);
+							expect(
+								document?.width ?? 0,
+								'the document is at least half the window wide',
+							).toBeGreaterThanOrEqual(viewport.width * MIN_SHARE.width);
+						});
 					});
 			});
 	});

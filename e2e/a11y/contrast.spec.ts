@@ -3,7 +3,7 @@
  * text and indicators with, read as the browser resolves them. Text needs 4.5:1 (WCAG 1.4.3);
  * focus rings, selection indicators and control borders need 3:1 (1.4.11).
  */
-import { knownGap } from './support/known';
+import { gate } from './support/known';
 import { ACCENTS, expect, openHome, test, type Accent, type Mode } from './support/suite';
 
 /** A pair: the colour painted, what it is painted on, and the ratio it needs. */
@@ -97,20 +97,20 @@ test.describe('token contrast', () => {
 	for (const mode of ['light', 'dark'] as Mode[])
 		for (const pair of Object.keys(PAIRS) as Pair[]) {
 			const [fg, bg, needed] = PAIRS[pair];
-			test(`${mode}: ${pair} reaches ${needed}:1 with every accent`, () => {
-				const key = `contrast/${mode}/${pair}`;
-				knownGap(key);
-				const failing = ACCENTS.map((accent: Accent) => {
-					const colours = resolved.get(`${mode}/${accent}`);
-					if (!colours) throw new Error(`no colours for ${mode}/${accent}`);
-					const [a, b] = [colours[fg], colours[bg]] as [Rgb, Rgb];
-					return { accent, value: ratio(a, b), a, b };
-				})
-					.filter(({ value }) => value < needed)
-					.map(
-						({ accent, value, a, b }) => `${accent}: ${value.toFixed(2)} (rgb ${a} on rgb ${b})`,
-					);
-				expect(failing, `${fg} on ${bg}`).toEqual([]);
+			test(`${mode}: ${pair} reaches ${needed}:1 with every accent`, async () => {
+				await gate(`contrast/${mode}/${pair}`, () => {
+					const failing = ACCENTS.map((accent: Accent) => {
+						const colours = resolved.get(`${mode}/${accent}`);
+						if (!colours) throw new Error(`no colours for ${mode}/${accent}`);
+						const [a, b] = [colours[fg], colours[bg]] as [Rgb, Rgb];
+						return { accent, value: ratio(a, b), a, b };
+					})
+						.filter(({ value }) => value < needed)
+						.map(
+							({ accent, value, a, b }) => `${accent}: ${value.toFixed(2)} (rgb ${a} on rgb ${b})`,
+						);
+					expect(failing, `${fg} on ${bg}`).toEqual([]);
+				});
 			});
 		}
 });

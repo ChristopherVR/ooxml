@@ -23,23 +23,28 @@ const AXE = join(HERE, 'baseline', 'axe.json');
 const GAPS = join(HERE, 'expected-failures.json');
 const read = (path) => JSON.parse(readFileSync(path, 'utf8'));
 
-/** The file at `ref`, or undefined when it does not exist there yet. */
-function atRef(ref, path) {
-	const repo = relative(
-		execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: HERE, encoding: 'utf8' }).trim(),
-		path,
-	).replaceAll('\\', '/');
+const git = (...args) =>
+	execFileSync('git', args, { cwd: HERE, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+
+/** The commit `ref` names. A ref git cannot resolve is an error, never an empty base. */
+function commitOf(ref) {
 	try {
-		return JSON.parse(
-			execFileSync('git', ['show', `${ref}:${repo}`], {
-				cwd: HERE,
-				encoding: 'utf8',
-				stdio: ['ignore', 'pipe', 'ignore'],
-			}),
-		);
+		return git('rev-parse', '--verify', '--quiet', `${ref}^{commit}`).trim();
 	} catch {
+		throw new Error(`git cannot find the base ${ref}: fetch it or pass another --base.`);
+	}
+}
+
+/** The file at `commit`, or undefined when it does not exist there yet. */
+function atCommit(commit, path) {
+	const repo = relative(git('rev-parse', '--show-toplevel').trim(), path).replaceAll('\\', '/');
+	try {
+		git('cat-file', '-e', `${commit}:${repo}`);
+	} catch {
+		console.log(`${repo} is new since the base: nothing to compare it with.`);
 		return undefined;
 	}
+	return JSON.parse(git('show', `${commit}:${repo}`));
 }
 
 /** Every way `now` allows more than `before`: a higher count, or a surface or rule it lacked. */
@@ -60,9 +65,22 @@ export const unowned = (baseline) =>
 		(rule) => !baseline.owners?.[rule],
 	);
 
-/** Known gaps `now` lists that `before` did not. */
-export const addedGaps = (before, now) =>
-	Object.keys(now.gaps ?? {}).filter((key) => !(key in (before.gaps ?? {})));
+/**
+ * Every way `now` excuses more than `before`: a known gap the base did not list, one that does not
+ * say which failure it expects, or one that expects a different failure than at the base (which
+ * could match an unrelated one).
+ */
+export function loosenedGaps(before, now) {
+	const problems = [];
+	for (const [key, gap] of Object.entries(now.gaps ?? {})) {
+		const was = before.gaps?.[key];
+		if (!was) problems.push(`${key} is new`);
+		else if (!gap.fails) problems.push(`${key} does not say which failure it expects`);
+		else if (was.fails !== undefined && gap.fails !== was.fails)
+			problems.push(`${key} expects a different failure`);
+	}
+	return problems;
+}
 
 /** The baseline lowered to `observed` ({ key: { rule: nodes } }), raised only with `add`. */
 export function lowered(baseline, observed, add = false) {
@@ -113,14 +131,15 @@ function main(argv) {
 	}
 	const base = value('--base');
 	if (!base) throw new Error('Pass --base <ref> or --update.');
+	const commit = commitOf(base);
 	const problems = unowned(read(AXE)).map((rule) => `baseline/axe.json: ${rule} has no owner`);
-	const axeBefore = atRef(base, AXE);
+	const axeBefore = atCommit(commit, AXE);
 	if (axeBefore)
 		problems.push(...grown(axeBefore, read(AXE)).map((p) => `baseline/axe.json: ${p}`));
-	const gapsBefore = atRef(base, GAPS);
+	const gapsBefore = atCommit(commit, GAPS);
 	if (gapsBefore)
 		problems.push(
-			...addedGaps(gapsBefore, read(GAPS)).map((key) => `expected-failures.json: ${key} is new`),
+			...loosenedGaps(gapsBefore, read(GAPS)).map((p) => `expected-failures.json: ${p}`),
 		);
 	if (problems.length) {
 		console.error(

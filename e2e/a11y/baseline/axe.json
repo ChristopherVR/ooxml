@@ -4,9 +4,9 @@
 		"aria-required-children": "P4 Excel semantics (A11Y-06): the grid has no rows or cells",
 		"aria-required-parent": "P4 Excel semantics (A11Y-06): grid headers have no row parent",
 		"color-contrast": "N11 Canvas and forced-colours fixes (A11Y-13): accents and tags under 4.5:1",
-		"label-content-name-mismatch": "P7 Suite chrome (profile and workspace buttons) and P8 Ribbon navigation (ribbon and status commands): the accessible name does not contain the visible label; new in axe 4.14, not in the audit",
+		"label-content-name-mismatch": "N19 Accessible names contain the visible label (WCAG 2.5.3; STATUS.tsv row added by G2, since the audit predates the axe 4.14 rule): the suite's profile and workspace buttons, PowerPoint's Shadow command and Fit zoom, Excel's formula bar fx",
 		"role-img-alt": "P4 Excel semantics (A11Y-06): the drawing layer is an unnamed image",
-		"target-size": "P8 Ribbon navigation and reflow (A11Y-18d): split-button carets under 24 px"
+		"target-size": "P8 Ribbon navigation and reflow (A11Y-18d): ribbon split-button carets under 24 px in Word, Excel, PowerPoint and Visio. A11Y-18 was N9's; N9 merged without 18d and moved it to P8, which owns the ribbon"
 	},
 	"allowed": {
 		"chat/dark": {

@@ -35,15 +35,24 @@ export function installA11yHelpers(): void {
 		if (!ids.has(element)) ids.set(element, ++next);
 		return ids.get(element) ?? 0;
 	};
+	/** What a stop is to the user: a Visio shape stays itself when an edit draws it again. */
+	const keyOf = (element: Element): string => {
+		const { shapeId, pageId } = (element as SVGElement).dataset ?? {};
+		return shapeId ? `shape ${pageId ?? ''}/${shapeId}` : `element ${idOf(element)}`;
+	};
 	const helpers = {
 		deep,
-		/** One focus stop: a stable element id, a readable label and the first region it is in. */
+		/**
+		 * One focus stop: a stable element id, what it is to the user (`key`), a readable label and
+		 * the first region it is in.
+		 */
 		stop(regions: [string, string][]) {
 			const element = deep();
-			if (!element) return { id: 0, label: 'body', region: null as string | null };
+			if (!element) return { id: 0, key: 'body', label: 'body', region: null as string | null };
 			const role = element.getAttribute('role');
 			return {
 				id: idOf(element),
+				key: keyOf(element),
 				label: `${element.localName}${role ? `[${role}]` : ''} "${name(element)}"`,
 				region: regions.find(([, selector]) => matchesUp(element, selector))?.[0] ?? null,
 			};
@@ -77,6 +86,7 @@ export function installA11yHelpers(): void {
 
 export interface FocusStop {
 	id: number;
+	key: string;
 	label: string;
 	region: string | null;
 }

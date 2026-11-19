@@ -66,6 +66,8 @@ for (const binding of BINDINGS) {
 
 export default defineConfig({
 	testDir: '.',
+	// Only the specs: check-baseline.test.mjs is a node:test file (`bun run test:unit`).
+	testMatch: '**/*.spec.ts',
 	timeout: 90_000,
 	expect: { timeout: 10_000 },
 	fullyParallel: true,
