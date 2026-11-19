@@ -194,6 +194,7 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 				people: $(`${prefix}-people`),
 				current: () => conversation === convo,
 				busy: () => Boolean(abort),
+				announce: (text) => (replyStatus.textContent = text),
 				changed: () => {
 					render();
 					onChange?.(convo);
