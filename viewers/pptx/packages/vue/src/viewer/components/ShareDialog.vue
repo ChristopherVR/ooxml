@@ -8,6 +8,7 @@ import {
 	collaborationFailureMessageKey,
 	getDensePanelTouchTargetPx,
 	resolveTransportForServerUrl,
+	shareFormFailureKey,
 } from 'ooxml-ui/pptx';
 import { computed, inject, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -100,10 +101,14 @@ const isPeerToPeer = computed(() => resolveTransportForServerUrl(serverUrl.value
 
 const status = computed(() => props.collab?.status.value ?? 'disconnected');
 const connectedCount = computed(() => props.collab?.connectedCount.value ?? 0);
-// Why the last attempt failed (a peer-to-peer link without its key, an
-// unreachable server, ...), shown above the form until a new start.
+// Why the typed invitation cannot join (a peer-to-peer link without its key),
+// else why the last attempt failed (an unreachable server, ...), shown above
+// the form until a new start.
 const failureKey = computed(() =>
-	collaborationFailureMessageKey(status.value, props.collab?.failure.value ?? null),
+	shareFormFailureKey(
+		{ mode: mode.value, invitation: invitation.value },
+		collaborationFailureMessageKey(status.value, props.collab?.failure.value ?? null),
+	),
 );
 const activeIsPeerToPeer = computed(
 	() => resolveTransportForServerUrl(props.activeCollaboration?.serverUrl ?? '') === 'webrtc',

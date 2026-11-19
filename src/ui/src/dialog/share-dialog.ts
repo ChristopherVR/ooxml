@@ -5,6 +5,7 @@ import {
 	type CollaborationState,
 	isValidRoomId,
 	joinShareOptions,
+	readShareInvitation,
 	type ShareFields,
 	type ShareLocation,
 	shareInvitation,
@@ -197,6 +198,8 @@ export class OfficeUiShareDialog extends OfficeElement {
 		const t = this.text;
 		const room = this.fields.roomId.trim();
 		const badRoom = this.view === 'create' && room.length > 0 && !isValidRoomId(room);
+		const missingKey =
+			this.view === 'join' && readShareInvitation(this.joinText).kind === 'missing-secret';
 		const ready = this.formOptions() !== null;
 		const tab = (view: View, label: string) =>
 			html`<button
@@ -225,7 +228,9 @@ export class OfficeUiShareDialog extends OfficeElement {
 								@input=${(event: Event) => (this.joinText = (event.target as HTMLInputElement).value)}
 						/></label>`
 					: this.field(t.roomName, 'roomId')
-			}${badRoom ? html`<p class="error" role="alert">${t.invalidRoom}</p>` : nothing}
+			}${badRoom ? html`<p class="error" role="alert">${t.invalidRoom}</p>` : nothing}${
+				missingKey ? html`<p class="error" role="alert">${t.missingKey}</p>` : nothing
+			}
 			${this.field(t.yourName, 'userName')}
 			${
 				this.noServer

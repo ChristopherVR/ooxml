@@ -71,4 +71,17 @@ describe('collaboration start failure (Vue)', () => {
 		expect(pill.text()).toContain(translationsEn['pptx.collaboration.status.error']);
 		expect(pill.attributes('title')).toBe(MISSING_SECRET);
 	});
+
+	it('says why a peer-to-peer invitation without its key cannot join', async () => {
+		const dialog = mount(ShareDialog, {
+			global: { stubs: { teleport: true } },
+			props: { open: true, defaults: { userName: 'Ada' } },
+		});
+		cleanup.push(() => dialog.unmount());
+		await dialog.findAll('[role="tab"]')[1]!.trigger('click');
+		await dialog
+			.get('#pptx-vue-share-invitation')
+			.setValue('https://x.test/?room=deck-1&transport=webrtc');
+		expect(dialog.get('[data-testid="collaboration-failure"]').text()).toBe(MISSING_SECRET);
+	});
 });

@@ -81,4 +81,29 @@ describe('collaboration start failure (Svelte)', () => {
 		expect(status?.textContent).toContain(translationsEn['pptx.collaboration.status.error']);
 		expect(status?.getAttribute('title')).toBe(MISSING_SECRET);
 	});
+
+	it('says why a peer-to-peer invitation without its key cannot join', () => {
+		const dialog = mounted(ShareDialog, {
+			open: true,
+			defaults: { userName: 'Ada' },
+			active: false,
+			status: 'disconnected',
+			failure: null,
+			connectedCount: 0,
+			remotePresences: [],
+			activeCollaboration: null,
+			onstart: () => {},
+			onstop: () => {},
+			onclose: () => {},
+		});
+		document.querySelectorAll<HTMLButtonElement>('[role="tab"]')[1]?.click();
+		flushSync();
+		const field = document.querySelector<HTMLInputElement>('#pptx-svelte-share-invitation');
+		field!.value = 'https://x.test/?room=deck-1&transport=webrtc';
+		field!.dispatchEvent(new Event('input', { bubbles: true }));
+		flushSync();
+		expect(
+			dialog.ownerDocument.querySelector('[data-testid="collaboration-failure"]')?.textContent,
+		).toBe(MISSING_SECRET);
+	});
 });

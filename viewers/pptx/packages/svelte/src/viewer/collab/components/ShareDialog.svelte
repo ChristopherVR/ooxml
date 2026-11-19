@@ -12,6 +12,7 @@
 		buildCollaborationShareUrl,
 		collaborationFailureMessageKey,
 		resolveTransportForServerUrl,
+		shareFormFailureKey,
 	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
@@ -62,8 +63,11 @@
 		}
 	});
 
-	// Why the last attempt failed, shown above the form until a new start.
-	const failureKey = $derived(collaborationFailureMessageKey(status, failure));
+	// Why the typed invitation cannot join (a peer-to-peer link without its key),
+	// else why the last attempt failed, shown above the form until a new start.
+	const failureKey = $derived(
+		shareFormFailureKey({ mode, invitation }, collaborationFailureMessageKey(status, failure)),
+	);
 	const canStart = $derived(canStartShare({ roomId, userName, serverUrl }));
 	const canJoin = $derived(canJoinShare({ invitation, userName, serverUrl }));
 	const isPeerToPeer = $derived(isPeerToPeerShare(serverUrl));

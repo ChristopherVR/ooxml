@@ -4,12 +4,14 @@
  */
 import {
 	createShareSecret,
-	parseShareInvitation,
+	readShareInvitation,
 	shareInvitation,
 	type ShareLinkParam,
 } from 'ooxml-core/collab';
+import type { TranslationKey } from '../i18n';
 import type { CollaborationConfig } from '../types';
 import { resolveTransportForServerUrl } from './broadcast-helpers';
+import { collaborationFailureMessageKey } from './collaboration-failure';
 import { isValidRoomId } from './collaboration-presence';
 
 /** A fresh peer-to-peer session secret (`createShareSecret` in `ooxml-core/collab`). */
@@ -80,10 +82,11 @@ export function buildJoinCollaborationConfig(
 	if (!userName) {
 		return null;
 	}
-	const target = parseShareInvitation(fields.invitation, fields.serverUrl);
-	if (!target) {
+	const invitation = readShareInvitation(fields.invitation, fields.serverUrl);
+	if (invitation.kind !== 'session') {
 		return null;
 	}
+	const { target } = invitation;
 	if (target.transport !== 'webrtc' && !target.serverUrl) {
 		// A room code with no server would mean peer-to-peer, which needs the secret only a
 		// complete invitation link carries.
@@ -107,6 +110,21 @@ export function buildJoinCollaborationConfig(
 
 export function canJoinCollaborationSession(fields: JoinSessionFields): boolean {
 	return buildJoinCollaborationConfig(fields) !== null;
+}
+
+/**
+ * The reason the Share dialog's form shows above its fields: on the join tab, why the typed
+ * invitation cannot join (a peer-to-peer link without its `#key=` secret); otherwise
+ * `sessionFailureKey`, why the last session failed to start.
+ */
+export function shareFormFailureKey<K extends string>(
+	form: { mode: 'create' | 'join'; invitation: string },
+	sessionFailureKey: K | null,
+): TranslationKey | K | null {
+	if (form.mode === 'join' && readShareInvitation(form.invitation).kind === 'missing-secret') {
+		return collaborationFailureMessageKey('error', 'missing-secret');
+	}
+	return sessionFailureKey;
 }
 
 /**

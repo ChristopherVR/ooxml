@@ -111,17 +111,29 @@ export function canStartShare(fields: ShareFields): boolean {
 }
 
 /**
- * The target a join form names, or null when it names none: a link's `room` (or `param`),
- * `server`, `transport` and `signaling` parameters, or a bare room code with the fallback server.
- * A peer-to-peer link names a session only with a valid secret in its `#key=` fragment.
+ * What an invitation names: a session, a peer-to-peer room that cannot be joined because the link
+ * has no valid `#key=` secret (a link in the older format kept its key in the query, or carries
+ * none), or nothing at all (blank, or no valid room name).
  */
-export function parseShareInvitation(
+export type ShareInvitation =
+	| { kind: 'session'; target: ShareTarget }
+	| { kind: 'missing-secret'; roomId: string }
+	| { kind: 'none' };
+
+const NO_INVITATION: ShareInvitation = { kind: 'none' };
+
+/**
+ * Read a join form's invitation: a link's `room` (or `param`), `server`, `transport` and
+ * `signaling` parameters, or a bare room code with the fallback server. A peer-to-peer link names
+ * a session only with a valid secret in its `#key=` fragment; without one it is `missing-secret`.
+ */
+export function readShareInvitation(
 	invitation: string,
 	fallbackServerUrl = '',
 	param: ShareLinkParam = 'room',
-): ShareTarget | null {
+): ShareInvitation {
 	const value = invitation.trim();
-	if (!value) return null;
+	if (!value) return NO_INVITATION;
 	let url: URL | null = null;
 	try {
 		url = new URL(value);
@@ -129,31 +141,34 @@ export function parseShareInvitation(
 		url = null;
 	}
 	const roomId = (url ? (url.searchParams.get(param) ?? '') : value).trim();
-	if (!isValidRoomId(roomId)) return null;
+	if (!isValidRoomId(roomId)) return NO_INVITATION;
 	if (url?.searchParams.get('transport') === 'webrtc') {
 		const secret = new URLSearchParams(url.hash.slice(1)).get(SECRET_FRAGMENT_KEY);
-		if (!isValidShareSecret(secret)) return null;
+		if (!isValidShareSecret(secret)) return { kind: 'missing-secret', roomId };
 		const signaling = (url.searchParams.get('signaling') ?? '')
 			.split(',')
 			.map((entry) => entry.trim())
 			.filter((entry) => entry.length > 0);
 		return {
-			roomId,
-			serverUrl: '',
-			transport: 'webrtc',
-			...(signaling.length ? { signaling } : {}),
-			secret,
+			kind: 'session',
+			target: {
+				roomId,
+				serverUrl: '',
+				transport: 'webrtc',
+				...(signaling.length ? { signaling } : {}),
+				secret,
+			},
 		};
 	}
-	return { roomId, serverUrl: (url?.searchParams.get('server') ?? fallbackServerUrl).trim() };
+	return {
+		kind: 'session',
+		target: { roomId, serverUrl: (url?.searchParams.get('server') ?? fallbackServerUrl).trim() },
+	};
 }
 
 /** Whether the join form names a session and a display name. */
 export function canJoinShare(fields: JoinFields): boolean {
-	return (
-		fields.userName.trim().length > 0 &&
-		parseShareInvitation(fields.invitation, fields.serverUrl) !== null
-	);
+	return joinShareOptions(fields) !== null;
 }
 
 /**
@@ -213,8 +228,10 @@ export function startShareOptions(fields: ShareFields): CollaborationOptions | n
 /** The options the join form describes, or null while it names no session or no name. */
 export function joinShareOptions(fields: JoinFields): CollaborationOptions | null {
 	if (!fields.userName.trim()) return null;
-	const target = parseShareInvitation(fields.invitation, fields.serverUrl);
-	return target ? shareOptions(target, fields.userName, 'join') : null;
+	const invitation = readShareInvitation(fields.invitation, fields.serverUrl);
+	return invitation.kind === 'session'
+		? shareOptions(invitation.target, fields.userName, 'join')
+		: null;
 }
 
 /**
