@@ -2,7 +2,17 @@ import { replaceEmbeddedPackage } from 'ooxml-core/opc';
 import { mountEditor } from './editors.js';
 import { cloudReadOnly } from './cloud-files.js';
 
-/** One live editor per document id. Save operations are serialized per session. */
+/** Why a document showing the assistant's suggestions is neither saved nor downloaded. */
+const reviewing = (session) =>
+	new Error(
+		`${session.doc.name} is showing the assistant's suggestions. Apply or discard them in the suggestions panel first.`,
+	);
+
+/**
+ * One live editor per document id. Save operations are serialized per session. A session whose
+ * editor shows the assistant's suggestions (`preview`, set by ai/review.js) is never saved or
+ * exported until the review applies, discards or keeps them.
+ */
 export class SuiteSessions {
 	constructor(store, host, update, command) {
 		Object.assign(this, { store, host, update, command });
@@ -48,6 +58,8 @@ export class SuiteSessions {
 	async save(id, { cloud = true } = {}) {
 		const s = await this.sessions.get(id)?.ready;
 		if (!s) return this.store.get(id);
+		// The assistant's suggestions on screen are a preview: only their review panel saves them.
+		if (s.preview) throw reviewing(s);
 		const run = async () => {
 			s.editor.flush?.();
 			if (s.version === s.saved) {
@@ -124,6 +136,15 @@ export class SuiteSessions {
 		s.pending = result.catch(() => {});
 		return result;
 	}
+	/**
+	 * The document as a request to the assistant reads it: the user's own edits are saved first,
+	 * while a document showing the assistant's suggestions is read as last saved and its
+	 * suggestions stay unsaved.
+	 */
+	async forContext(id) {
+		const s = await this.sessions.get(id)?.ready;
+		return s?.preview ? this.store.get(id) : this.save(id, { cloud: false });
+	}
 	isDirty(id) {
 		return this.isEdited(id) || Boolean(this.sessions.get(id)?.doc.cloud?.pending);
 	}
@@ -131,6 +152,7 @@ export class SuiteSessions {
 	async export(id) {
 		const session = await this.sessions.get(id)?.ready;
 		if (!session) return this.store.get(id);
+		if (session.preview) throw reviewing(session);
 		const unlock = this.lock([id]);
 		try {
 			session.editor.flush?.();

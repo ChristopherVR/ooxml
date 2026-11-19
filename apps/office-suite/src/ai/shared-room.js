@@ -1,13 +1,14 @@
 /**
  * Following a shared chat's room from one chat view: its messages and title become the
- * conversation's, the history copy is refreshed, and the bar above the composer shows who else is
- * here and what they are doing.
+ * conversation's (this page's own messages keep their local proposals; the others are display
+ * only), the history copy is refreshed, and the bar above the composer shows who else is here and
+ * what they are doing.
  */
 import { escape } from '../ui.js';
 import { icon } from '../icons.js';
 import { conversations } from './conversations.js';
 import { feature } from './policy.js';
-import { fromShared, joinRoom } from './shared.js';
+import { joinRoom, mergeRoom } from './shared.js';
 
 export async function followRoom({ convo, people, current, busy, changed }) {
 	const chat = await joinRoom(convo.shared.room);
@@ -19,7 +20,7 @@ export async function followRoom({ convo, people, current, busy, changed }) {
 		const rows = chat.store.messages();
 		// An empty room that has not synced yet is not an empty chat.
 		if (!rows.length && !chat.session.synced) return;
-		convo.messages = rows.map(fromShared);
+		convo.messages = mergeRoom(rows, convo.messages);
 		convo.title = chat.store.title() || convo.title;
 		clearTimeout(saving);
 		if (feature('history'))

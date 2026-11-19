@@ -23,7 +23,9 @@ export async function reviewInDocument({ ref, items, store, sessions, open, refr
 	await open(ref.id);
 	const session = await sessions.sessions.get(ref.id)?.ready;
 	if (!session) throw new Error(`${ref.name} could not be opened.`);
-	if (sessions.isDirty(ref.id)) throw new Error(`Save ${ref.name} before reviewing suggestions.`);
+	// A review already on screen is replaced; anything else unsaved must be saved first.
+	if (!session.preview && sessions.isDirty(ref.id))
+		throw new Error(`Save ${ref.name} before reviewing suggestions.`);
 	const original = await store.get(ref.id);
 	if (original.revision !== ref.revision)
 		throw new Error(`${ref.name} changed. Ask again using the latest version.`);
@@ -83,7 +85,7 @@ export async function reviewInDocument({ ref, items, store, sessions, open, refr
 		'p',
 		'review-help',
 		word
-			? 'Shown in the document as tracked changes by Assistant. Accept or reject each one from the Review tab, then save, or decide for all of them here.'
+			? 'Shown in the document as tracked changes by Assistant. Accept or reject each one from the Review tab and choose Close to keep the result, or decide for all of them here. Nothing is saved until then.'
 			: 'The document shows these changes in place. Select one to find it; undo any you do not want, then apply the rest.',
 	);
 	const list = el('ol', 'review-list');
@@ -134,6 +136,7 @@ export async function reviewInDocument({ ref, items, store, sessions, open, refr
 	panel.append(head, help, list, effects, actions);
 
 	function finish() {
+		session.preview = false;
 		session.editor.readOnly?.(false);
 		panel.remove();
 	}
@@ -170,7 +173,16 @@ export async function reviewInDocument({ ref, items, store, sessions, open, refr
 			finish();
 		});
 
-	await preview();
+	// Until the panel applies, discards or (Word) keeps the suggestions, the session is a preview:
+	// it is not saved or downloaded, and a request reads the file as last saved.
+	session.preview = true;
+	try {
+		await preview();
+	} catch (error) {
+		await sessions.reload(original);
+		finish();
+		throw error;
+	}
 	session.node.append(panel);
 	if (!word) session.editor.reveal?.(items[0].change);
 	return panel;

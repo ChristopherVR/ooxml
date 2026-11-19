@@ -1,7 +1,9 @@
 /**
  * What a request may read: the attached files, saved first so the assistant sees what is on
- * screen, as bounded text views, text files attached as notes, and optionally the open Teams
- * channel's recent messages.
+ * screen (a file showing the assistant's suggestions is read as last saved, and the suggestions
+ * stay unsaved), as bounded text views without hidden workbook content unless the policy
+ * includes it, text files attached as notes, and optionally the open Teams channel's recent
+ * messages.
  */
 import { inspect } from '../ai-operations.js';
 
@@ -11,6 +13,7 @@ export async function gatherContext({
 	notes = [],
 	teams: client,
 	maxChars = 150000,
+	includeHidden = false,
 }) {
 	const docs = [],
 		files = [];
@@ -21,11 +24,11 @@ export async function gatherContext({
 	if (left < 1000 * list.length && list.length)
 		throw new Error('The attached notes leave no room for the files. Attach fewer files.');
 	for (const [i, id] of list.entries()) {
-		const doc = await sessions.save(id, { cloud: false });
+		const doc = await sessions.forContext(id);
 		if (!doc) continue;
 		const { name, kind, revision, parent } = doc;
 		docs.push({ id, name, kind, revision, parent });
-		const content = await inspect(doc, Math.floor(left / (list.length - i)));
+		const content = await inspect(doc, Math.floor(left / (list.length - i)), { includeHidden });
 		left -= JSON.stringify(content).length;
 		files.push({ id, name, kind, revision, content });
 	}
