@@ -16,6 +16,7 @@ import { openPptxZip } from '../../utils/zip-open';
 import { escAttr } from '../../ppt/pptx/xml-utils';
 import { PptxHandler } from '../../PptxHandler';
 import type { PptxData } from '../../types/presentation';
+import { nextMasterLayoutId } from './master-layout-ids';
 
 // ---------------------------------------------------------------------------
 // Save / reload
@@ -170,9 +171,7 @@ export async function addMasterToPresentation(zip: JSZip, masterPath: string): P
 	if (!presContent) {
 		throw new Error('presentation.xml not found');
 	}
-	const idMatches = [...presContent.matchAll(/sldMasterId\s+id="(\d+)"/g)];
-	const maxId = idMatches.reduce((max, m) => Math.max(max, parseInt(m[1] ?? '', 10)), 2147483647);
-	const newEntry = `    <p:sldMasterId id="${maxId + 1}" r:id="${newRId}"/>`;
+	const newEntry = `    <p:sldMasterId id="${await nextMasterLayoutId(zip)}" r:id="${newRId}"/>`;
 	zip.file(
 		presPath,
 		presContent.replace('</p:sldMasterIdLst>', `${newEntry}\n  </p:sldMasterIdLst>`),
