@@ -10,7 +10,8 @@ const marker: VisioDiagnostic = {
 /** Bound retained strings before constructing deduplication keys. */
 export function diagnosticCollector(maxCount: number): {
 	report: Report;
-	finish: () => VisioDiagnostic[];
+	/** The diagnostics, with `first` (when given) ahead of the others and within the count. */
+	finish: (first?: VisioDiagnostic) => VisioDiagnostic[];
 } {
 	const diagnostics: VisioDiagnostic[] = [],
 		keys = new Set<string>();
@@ -47,7 +48,14 @@ export function diagnosticCollector(maxCount: number): {
 	};
 	return {
 		report,
-		finish: () => {
+		finish: (first) => {
+			if (first) {
+				if (diagnostics.length >= maxCount) {
+					diagnostics.pop();
+					truncated = true;
+				}
+				diagnostics.unshift(first);
+			}
 			if (truncated) {
 				if (diagnostics.length >= maxCount) diagnostics.pop();
 				diagnostics.push({ ...marker });

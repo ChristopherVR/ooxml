@@ -18,6 +18,7 @@ import { hideGestureOverlays } from './viewer-gesture-overlays';
 import { pointerShapeTarget } from './viewer-shape-target';
 import { trackPointerPan } from '../pointer-gesture';
 import { ViewerTouchGestures } from './viewer-touch-gestures';
+import type { ViewerZoomGesture } from './viewer-zoom-gesture';
 import { TOUCH_SLOP } from './viewer-touch-math';
 import { armLongPress, touchRelease } from './viewer-touch-long-press';
 import {
@@ -63,6 +64,10 @@ export class ViewerPointerGestures {
 				this.#cancelClick = true;
 			},
 		});
+	}
+	/** The canvas's interactive zoom (pinch here; the viewer adds the wheel, slider and keys). */
+	get zoom(): ViewerZoomGesture {
+		return this.#touch.zoom;
 	}
 	render(state: ViewerState): void {
 		this.#cancelPan?.();

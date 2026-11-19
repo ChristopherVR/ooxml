@@ -1,4 +1,3 @@
-import { replaceEmbeddedPackage } from 'ooxml-core/opc';
 import { mountEditor, previewRefusal } from './editors.js';
 import { cloudReadOnly } from './cloud-files.js';
 import { isLocked, lockInput, takeComposed, takeQueued } from './session-lock.js';
@@ -94,6 +93,7 @@ export class SuiteSessions {
 					throw new Error('Save the parent document before saving its embedded document.');
 				if (parent.revision !== p.revision)
 					throw new Error('The parent changed. Reopen the embedded document before saving.');
+				const { replaceEmbeddedPackage } = await import('ooxml-core/opc');
 				const bytes = await replaceEmbeddedPackage(parent.bytes, p.path, next.bytes);
 				next.parent = { ...p, revision: parent.revision + 1 };
 				changes.push({ document: next, expected: next.revision - 1 });

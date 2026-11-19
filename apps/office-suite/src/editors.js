@@ -442,10 +442,16 @@ function editorView(element, kind) {
 	};
 }
 
+/** A new empty file, made with the format's own area, which its editor loads anyway. */
 export async function blankDocument(kind) {
-	const api = kind === 'pptx' ? null : await import('ooxml-core/automation');
-	if (kind === 'docx') return api.createDocx(['']);
-	if (kind === 'xlsx') return api.createXlsx(['Sheet1']);
+	if (kind === 'docx') {
+		const { createDocument, saveDocx } = await import('ooxml-core/docx');
+		return saveDocx(createDocument());
+	}
+	if (kind === 'xlsx') {
+		const { createWorkbook, saveXlsx } = await import('ooxml-core/xlsx');
+		return saveXlsx(createWorkbook());
+	}
 	if (kind === 'pptx') {
 		const { PresentationBuilder } = await import('ooxml-core/pptx');
 		const { handler, data } = await PresentationBuilder.create({ initialSlideCount: 1 });

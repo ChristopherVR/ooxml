@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { EyeOff, MessageSquare, Plus } from '@lucide/vue';
 import {
-	computeVirtualRange,
+	createDeferredRows,
+	createVirtualWindow,
+	focusCurrentRow,
+	railHasFocus,
 	HIDDEN_SLIDE_LABEL_KEY,
 	HIDDEN_SLIDE_SLASH_GRADIENT,
 	hiddenSlideCue,
@@ -23,7 +26,7 @@ import {
  * and virtualizes decks at the same 50-slide threshold as React.
  */
 import type { PptxSlide } from 'pptx-viewer-core';
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import { cn } from '../../utils';
@@ -75,15 +78,32 @@ const previewHeight = computed(() =>
 	editorThumbnailHeight(props.canvasSize.width, props.canvasSize.height, props.thumbWidth),
 );
 const listEl = ref<HTMLElement | null>(null);
-const scrollTop = ref(0);
-const viewportHeight = ref(600);
 const itemHeight = computed(() =>
 	editorThumbnailStep(props.canvasSize.width, props.canvasSize.height, props.thumbWidth),
 );
 const shouldVirtualize = computed(() => props.slides.length >= SLIDE_VIRTUALIZATION_THRESHOLD);
-const virtualRange = computed(() =>
-	computeVirtualRange(props.slides.length, itemHeight.value, scrollTop.value, viewportHeight.value),
+// The shared window reads scroll once per frame and reports only a change of
+// rendered rows, so the rail re-renders when a row enters, not per scroll event.
+const virtualWindow = createVirtualWindow(
+	{ totalItems: props.slides.length, itemHeight: itemHeight.value },
+	(range) => {
+		virtualRange.value = range;
+	},
 );
+const virtualRange = shallowRef(virtualWindow.range);
+watch([() => props.slides.length, itemHeight], ([totalItems, height]) =>
+	virtualWindow.setShape({ totalItems, itemHeight: height }),
+);
+watch(listEl, (el) => virtualWindow.attach(el), { flush: 'sync' });
+// Rows new to the window build their thumbnail once scrolling pauses.
+const readyRows = shallowRef<ReadonlySet<string>>(new Set());
+const deferredRows = createDeferredRows(virtualWindow, (ready) => {
+	readyRows.value = ready;
+});
+onBeforeUnmount(() => {
+	deferredRows.destroy();
+	virtualWindow.destroy();
+});
 const renderedSlides = computed(() => {
 	const start = shouldVirtualize.value ? virtualRange.value.startIndex : 0;
 	const end = shouldVirtualize.value ? virtualRange.value.endIndex : props.slides.length - 1;
@@ -91,33 +111,38 @@ const renderedSlides = computed(() => {
 		.slice(start, end + 1)
 		.map((slide, offset) => ({ slide, index: start + offset }));
 });
-function onScroll(): void {
-	const el = listEl.value;
-	if (!el) {
-		return;
-	}
-	scrollTop.value = el.scrollTop;
-	viewportHeight.value = el.clientHeight || 600;
-}
+watch(
+	renderedSlides,
+	(rows) => deferredRows.sync(shouldVirtualize.value ? rows.map(({ slide }) => slide.id) : []),
+	{ immediate: true },
+);
 watch(
 	[() => props.activeIndex, itemHeight],
 	async ([index]) => {
 		await nextTick();
-		const el = listEl.value;
-		if (!el || !shouldVirtualize.value) {
-			return;
+		// Focus stays on the current row, as in PowerPoint's thumbnail pane: read
+		// before the reveal can drop the focused row, moved once the row renders.
+		const keepFocus = railHasFocus(listEl.value);
+		if (shouldVirtualize.value) {
+			virtualWindow.reveal(index);
 		}
-		const viewport = el.clientHeight || 600;
-		const top = index * itemHeight.value;
-		const bottom = top + itemHeight.value;
-		if (top < el.scrollTop) {
-			el.scrollTop = top;
-		} else if (bottom > el.scrollTop + viewport) {
-			el.scrollTop = Math.max(0, bottom - viewport);
+		if (keepFocus) {
+			await nextTick();
+			focusCurrentRow(listEl.value);
 		}
-		onScroll();
 	},
 	{ immediate: true },
+);
+// A change of slides can remove the focused row (an undone New Slide): focus moves to the
+// current row rather than falling to the page, where the editor's shortcuts no longer reach.
+watch(
+	() => props.slides,
+	async () => {
+		await nextTick();
+		if (railHasFocus(listEl.value)) {
+			focusCurrentRow(listEl.value);
+		}
+	},
 );
 
 // ── Drag-to-reorder ──
@@ -167,7 +192,6 @@ const {
 			data-pptx-chrome="slide-list"
 			ref="listEl"
 			class="flex-1 overflow-y-auto px-1.5 pb-2 pt-1.5"
-			@scroll="onScroll"
 		>
 			<div
 				:data-virtualized="shouldVirtualize ? 'true' : undefined"
@@ -180,6 +204,7 @@ const {
 				<div
 					class="space-y-1"
 					data-pptx-chrome="slide-window"
+					:role="shouldVirtualize ? 'list' : undefined"
 					:style="
 						shouldVirtualize
 							? {
@@ -190,87 +215,95 @@ const {
 							: undefined
 					"
 				>
-					<button
+					<!-- The window holds only some rows, so each says where it sits in the deck. -->
+					<div
 						v-for="{ slide, index } in renderedSlides"
 						:key="slide.id ?? index"
-						type="button"
-						:class="
-							cn(
-								'group relative flex w-full items-center gap-1 cursor-pointer border-0 bg-transparent py-0.5 px-1 text-left transition-all',
-								index === activeIndex &&
-									'bg-accent/40 before:absolute before:left-0 before:top-1 before:bottom-1 before:w-[3px] before:bg-primary before:rounded-r',
-								isSelected(slide.id) &&
-									index !== activeIndex &&
-									'bg-accent/20 ring-1 ring-inset ring-primary/50',
-								slide.hidden && 'opacity-50',
-							)
-						"
-						:draggable="canEdit"
-						:data-slide-index="index"
-						:aria-label="t('pptx.slidesPanel.goToSlide', { n: index + 1 })"
-						data-pptx-chrome="slide-row"
-						:aria-current="index === activeIndex ? 'true' : undefined"
-						:aria-describedby="hiddenCue(slide.hidden, 'rail', index).labelId"
-						:data-pptx-slide-hidden="hiddenCue(slide.hidden, 'rail', index).marker"
-						@click="onSlideClick($event, index)"
-						@contextmenu="onContextMenu($event, index)"
-						@dragstart="onDragStart($event, index)"
-						@dragover.prevent
-						@drop="onDrop(index)"
+						:role="shouldVirtualize ? 'listitem' : undefined"
+						:aria-setsize="shouldVirtualize ? slides.length : undefined"
+						:aria-posinset="shouldVirtualize ? index + 1 : undefined"
 					>
-						<div
-							data-pptx-chrome="slide-number"
-							class="flex flex-col items-center gap-0.5 w-5 shrink-0"
-						>
-							<span
-								:class="
-									cn(
-										'text-[10px] tabular-nums text-right select-none w-full',
-										index === activeIndex ? 'text-primary font-medium' : 'text-muted-foreground',
-									)
-								"
-								:style="slide.hidden ? { backgroundImage: slashGradient } : undefined"
-							>
-								{{ index + 1 }}
-							</span>
-						</div>
-
-						<!-- Thumbnail -->
-						<div
+						<button
+							type="button"
 							:class="
 								cn(
-									'relative flex-1 overflow-hidden border transition-colors bg-white',
-									index === activeIndex
-										? 'border-primary/60'
-										: 'border-transparent group-hover:border-border/40',
+									'group relative flex w-full items-center gap-1 cursor-pointer border-0 bg-transparent py-0.5 px-1 text-left transition-all',
+									index === activeIndex &&
+										'bg-accent/40 before:absolute before:left-0 before:top-1 before:bottom-1 before:w-[3px] before:bg-primary before:rounded-r',
+									isSelected(slide.id) &&
+										index !== activeIndex &&
+										'bg-accent/20 ring-1 ring-inset ring-primary/50',
+									slide.hidden && 'opacity-50',
 								)
 							"
-							data-pptx-chrome="slide-frame"
-							:style="{ width: `${thumbWidth}px`, height: `${previewHeight}px`, flex: 'none' }"
+							:draggable="canEdit"
+							:data-slide-index="index"
+							:aria-label="t('pptx.slidesPanel.goToSlide', { n: index + 1 })"
+							data-pptx-chrome="slide-row"
+							:aria-current="index === activeIndex ? 'true' : undefined"
+							:aria-describedby="hiddenCue(slide.hidden, 'rail', index).labelId"
+							:data-pptx-slide-hidden="hiddenCue(slide.hidden, 'rail', index).marker"
+							@click="onSlideClick($event, index)"
+							@contextmenu="onContextMenu($event, index)"
+							@dragstart="onDragStart($event, index)"
+							@dragover.prevent
+							@drop="onDrop(index)"
 						>
-							<SlideStage
-								:slide="slide"
-								:canvas-size="canvasSize"
-								:media-data-urls="mediaDataUrls"
-								:scale="scale"
-							/>
 							<div
-								v-if="(slide.comments?.length ?? 0) > 0"
-								class="absolute top-0.5 right-0.5 flex items-center gap-0.5 rounded bg-amber-500/90 px-1 py-0.5 text-[8px] font-medium text-white leading-none z-10"
+								data-pptx-chrome="slide-number"
+								class="flex flex-col items-center gap-0.5 w-5 shrink-0"
 							>
-								<MessageSquare class="w-2 h-2" />
-								{{ slide.comments?.length }}
+								<span
+									:class="
+										cn(
+											'text-[10px] tabular-nums text-right select-none w-full',
+											index === activeIndex ? 'text-primary font-medium' : 'text-muted-foreground',
+										)
+									"
+									:style="slide.hidden ? { backgroundImage: slashGradient } : undefined"
+								>
+									{{ index + 1 }}
+								</span>
 							</div>
+
+							<!-- Thumbnail -->
 							<div
-								v-if="slide.hidden"
-								:id="hiddenCue(slide.hidden, 'rail', index).labelId"
-								class="absolute bottom-0.5 right-0.5 z-10"
+								:class="
+									cn(
+										'relative flex-1 overflow-hidden border transition-colors bg-white',
+										index === activeIndex
+											? 'border-primary/60'
+											: 'border-transparent group-hover:border-border/40',
+									)
+								"
+								data-pptx-chrome="slide-frame"
+								:style="{ width: `${thumbWidth}px`, height: `${previewHeight}px`, flex: 'none' }"
 							>
-								<EyeOff class="w-3 h-3 text-muted-foreground" />
-								<span class="sr-only">{{ t(hiddenLabelKey) }}</span>
+								<SlideStage
+									v-if="!shouldVirtualize || readyRows.has(slide.id)"
+									:slide="slide"
+									:canvas-size="canvasSize"
+									:media-data-urls="mediaDataUrls"
+									:scale="scale"
+								/>
+								<div
+									v-if="(slide.comments?.length ?? 0) > 0"
+									class="absolute top-0.5 right-0.5 flex items-center gap-0.5 rounded bg-amber-500/90 px-1 py-0.5 text-[8px] font-medium text-white leading-none z-10"
+								>
+									<MessageSquare class="w-2 h-2" />
+									{{ slide.comments?.length }}
+								</div>
+								<div
+									v-if="slide.hidden"
+									:id="hiddenCue(slide.hidden, 'rail', index).labelId"
+									class="absolute bottom-0.5 right-0.5 z-10"
+								>
+									<EyeOff class="w-3 h-3 text-muted-foreground" />
+									<span class="sr-only">{{ t(hiddenLabelKey) }}</span>
+								</div>
 							</div>
-						</div>
-					</button>
+						</button>
+					</div>
 				</div>
 			</div>
 		</div>

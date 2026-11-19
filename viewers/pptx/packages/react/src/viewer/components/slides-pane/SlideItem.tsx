@@ -51,6 +51,8 @@ export interface SlideItemProps {
 	onDragOver: (e: React.DragEvent) => void;
 	onDrop: (e: React.DragEvent, toIndex: number) => void;
 	slideRef: (el: HTMLButtonElement | null) => void;
+	/** Set by a virtualized rail: build the thumbnail once true (see `LazyThumbnail`). */
+	thumbnailReady?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -77,6 +79,7 @@ function SlideItemInner({
 	onDragOver,
 	onDrop,
 	slideRef,
+	thumbnailReady,
 }: SlideItemProps): React.ReactElement {
 	const { t } = useTranslation();
 	const isHidden = Boolean(slide.hidden);
@@ -176,6 +179,7 @@ function SlideItemInner({
 					previewWidth={previewWidth}
 					fieldContext={fieldContext}
 					tableStyleContext={tableStyleContext}
+					ready={thumbnailReady}
 				/>
 				{(slide.comments?.length ?? 0) > 0 && (
 					<div className='absolute top-0.5 right-0.5 flex items-center gap-0.5 rounded bg-amber-500/90 px-1 py-0.5 text-[8px] font-medium text-white leading-none z-10'>

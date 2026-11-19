@@ -20,6 +20,8 @@ export class ViewerCanvas {
 	#revealed: TextSearchResult | undefined;
 	#inspected: VisioShape | undefined;
 	#warnings: string[] = [];
+	/** The paper and zoom the page was last sized for. */
+	#sized: { svg: SVGSVGElement; zoom: number } | undefined;
 	#dispose: () => void = () => {};
 	constructor(
 		private readonly viewport: HTMLElement,
@@ -134,7 +136,9 @@ export class ViewerCanvas {
 			this.notesPanel.hidden = !notes.length;
 		}
 		const svg = this.viewport.querySelector<SVGSVGElement>('svg.paper');
-		if (svg && page) {
+		// Only a new page or zoom resizes: a custom property write restyles every shape.
+		if (svg && page && (changed || svg !== this.#sized?.svg || state.zoom !== this.#sized.zoom)) {
+			this.#sized = { svg, zoom: state.zoom };
 			svg.style.width = `${page.width * 96 * state.zoom}px`;
 			svg.style.height = `${page.height * 96 * state.zoom}px`;
 			// Viewer-only grid spacing: quarter-inch minor and one-inch major lines.

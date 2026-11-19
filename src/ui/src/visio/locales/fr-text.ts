@@ -107,4 +107,26 @@ export const frText: Readonly<Record<string, string>> = {
 	Options: 'Options',
 	Share: 'Partager',
 	'Style {n}': 'Style {n}',
+	'The page has {count} shapes, more than this viewer can open (it reads at most {limit} XML nodes per part).':
+		'La page contient {count} formes, plus que ce que cette visionneuse peut ouvrir (elle lit au plus {limit} nœuds XML par partie).',
+	'A part of this drawing has more than {limit} XML nodes, more than this viewer can open.':
+		'Une partie de ce dessin contient plus de {limit} nœuds XML, plus que ce que cette visionneuse peut ouvrir.',
+	'This drawing has more than {limit} XML nodes in all, more than this viewer can open.':
+		'Ce dessin contient plus de {limit} nœuds XML au total, plus que ce que cette visionneuse peut ouvrir.',
+	'This drawing would need more than {limit} MB of memory to open, more than this viewer allows.':
+		"Ce dessin nécessiterait plus de {limit} Mo de mémoire pour s'ouvrir, plus que ce que cette visionneuse autorise.",
+	'This {size} KB drawing would need more than {limit} MB of memory to open, far more than drawings of its size need.':
+		"Ce dessin de {size} Ko nécessiterait plus de {limit} Mo de mémoire pour s'ouvrir, bien plus que les dessins de cette taille.",
+	'This drawing would need more than {limit} MB of memory to edit, more than this viewer allows.':
+		'Ce dessin nécessiterait plus de {limit} Mo de mémoire pour être modifié, plus que ce que cette visionneuse autorise.',
+	'This {size} KB drawing would need more than {limit} MB of memory to edit, far more than drawings of its size need.':
+		'Ce dessin de {size} Ko nécessiterait plus de {limit} Mo de mémoire pour être modifié, bien plus que les dessins de cette taille.',
+	'This drawing is too large to edit here: its pages hold about {cells} ShapeSheet cells, more than the {limit} an edit can follow.':
+		"Ce dessin est trop volumineux pour être modifié ici : ses pages contiennent environ {cells} cellules ShapeSheet, plus que les {limit} qu'une modification peut suivre.",
+	'This drawing is too large to edit here: an edit would need more than {limit} MB of memory.':
+		'Ce dessin est trop volumineux pour être modifié ici : une modification nécessiterait plus de {limit} Mo de mémoire.',
+	'This drawing is too large to edit: an edit follows at most {limit} ShapeSheet cells.':
+		'Ce dessin est trop volumineux pour être modifié : une modification suit au plus {limit} cellules ShapeSheet.',
+	'It opens read-only.': "Il s'ouvre en lecture seule.",
+	'Edit rejected': 'Modification refusée',
 };

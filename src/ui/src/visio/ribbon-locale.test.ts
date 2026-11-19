@@ -113,3 +113,52 @@ describe('localizeRibbon', () => {
 		expect(translateRibbonText('de', 'Bold: Bold')).toBe('Fett: Fett');
 	});
 });
+
+describe('load refusals', () => {
+	it('tells the user in their language how many shapes a page has that is too large to open', () => {
+		const refusal =
+			'The page has 12000 shapes, more than this viewer can open (it reads at most 1250000 XML nodes per part).';
+		expect(translateRibbonText('de', refusal)).toBe(
+			'Die Seite enthält 12000 Formen, mehr als dieser Viewer öffnen kann (er liest höchstens 1250000 XML-Knoten pro Teil).',
+		);
+		for (const locale of VISIO_LOCALES.filter((locale) => locale !== 'en')) {
+			for (const message of [
+				refusal,
+				'A part of this drawing has more than 1250000 XML nodes, more than this viewer can open.',
+				'This drawing has more than 2000000 XML nodes in all, more than this viewer can open.',
+				'This drawing would need more than 600 MB of memory to open, more than this viewer allows.',
+				'This 48 KB drawing would need more than 189 MB of memory to open, far more than drawings of its size need.',
+			]) {
+				const translated = translateRibbonText(locale, message);
+				expect(translated, locale).not.toBe(message);
+				for (const number of message.match(/\d+/g)!) expect(translated).toContain(number);
+			}
+		}
+	});
+});
+
+describe('edit refusals', () => {
+	it('tells the user in their language why a drawing cannot be edited', () => {
+		expect(
+			translateRibbonText(
+				'de',
+				'Edit rejected: This drawing is too large to edit: an edit follows at most 100000 ShapeSheet cells.',
+			),
+		).toBe(
+			'Bearbeitung abgelehnt: Diese Zeichnung ist zu groß zum Bearbeiten: Eine Bearbeitung folgt höchstens 100000 ShapeSheet-Zellen.',
+		);
+		for (const locale of VISIO_LOCALES.filter((locale) => locale !== 'en')) {
+			for (const message of [
+				'Edit rejected: This drawing is too large to edit: an edit follows at most 100000 ShapeSheet cells.',
+				'Edit rejected: This drawing would need more than 600 MB of memory to edit, more than this viewer allows.',
+				'Edit rejected: This 48 KB drawing would need more than 756 MB of memory to edit, far more than drawings of its size need.',
+				'This drawing is too large to edit here: its pages hold about 260000 ShapeSheet cells, more than the 100000 an edit can follow. It opens read-only.',
+				'This drawing is too large to edit here: an edit would need more than 480 MB of memory. It opens read-only.',
+			]) {
+				const translated = translateRibbonText(locale, message);
+				expect(translated, locale).not.toMatch(/Edit rejected|too large|would need|read-only/);
+				for (const number of message.match(/\d+/g)!) expect(translated).toContain(number);
+			}
+		}
+	});
+});

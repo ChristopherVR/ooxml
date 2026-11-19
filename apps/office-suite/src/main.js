@@ -1,5 +1,4 @@
 import { SuiteDocumentStore } from 'ooxml-ui/suite';
-import { listEmbeddedPackages } from 'ooxml-core/opc';
 import { SuiteSessions } from './session.js';
 import { showVersions, withVersions } from './versions.js';
 import { assistantEnabled, currentPolicy, loadPolicy } from './ai/policy.js';
@@ -311,6 +310,7 @@ async function importFiles(items) {
 }
 async function embeddings() {
 	const doc = await sessions.save(active);
+	const { listEmbeddedPackages } = await import('ooxml-core/opc');
 	const embedded = await listEmbeddedPackages(doc.bytes);
 	const content = document.createElement('div');
 	content.innerHTML =

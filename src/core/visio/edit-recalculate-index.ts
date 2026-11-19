@@ -2,6 +2,7 @@ import { textSizeFormula } from './edit-text-size-formula';
 import { isLocalForeignFrameShape } from './edit-foreign-frame';
 import { children, attribute } from './sheet';
 import { fail } from './package-common';
+import { EDIT_MAX_CELLS } from './memory-budget';
 import { independentTextFieldFormula } from './text-field-independent';
 import { parseVisioFormula, analyzeVisioFormula, type VisioFormulaValue } from './formula';
 import {
@@ -103,12 +104,16 @@ export function indexCells(
 	options: VisioRecalculationOptions,
 ) {
 	const cells = new Map<string, IndexedCell>();
-	const maxCells = bound(options.maxCells, 100_000);
+	const maxCells = bound(options.maxCells, EDIT_MAX_CELLS);
 	const add = (item: IndexedCell) => {
 		const id = key(item);
 		if (cells.has(id)) fail('EDIT_AMBIGUOUS_CELL', 'Duplicate local ShapeSheet cell.');
 		cells.set(id, item);
-		if (cells.size > maxCells) fail('LIMIT_FORMULA_CELLS', 'ShapeSheet cell limit exceeded.');
+		if (cells.size > maxCells)
+			fail(
+				'LIMIT_FORMULA_CELLS',
+				`This drawing is too large to edit: an edit follows at most ${maxCells} ShapeSheet cells.`,
+			);
 	};
 	for (const [pageId, root] of roots) {
 		if (root.hasAttribute('F'))

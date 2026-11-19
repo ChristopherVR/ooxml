@@ -8,12 +8,14 @@
  *
  * @module useVirtualizedSlides
  */
-import { computeVirtualRange, DEFAULT_VIRTUAL_OVERSCAN } from 'ooxml-ui/pptx';
-import type { VirtualizedRange } from 'ooxml-ui/pptx';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { createDeferredRows, createVirtualWindow, DEFAULT_VIRTUAL_OVERSCAN } from 'ooxml-ui/pptx';
+import type { DeferredRows, VirtualizedRange, VirtualWindow } from 'ooxml-ui/pptx';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 export { computeVirtualRange } from 'ooxml-ui/pptx';
 export type { VirtualizedRange } from 'ooxml-ui/pptx';
+
+const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -33,6 +35,14 @@ export interface VirtualizedSlidesResult extends VirtualizedRange {
 	scrollContainerRef: (el: HTMLDivElement | null) => void;
 	/** Call this to scroll a specific index into view. */
 	scrollToIndex: (index: number, behavior?: ScrollBehavior) => void;
+	/**
+	 * Report the keys of the rows now rendered. A row new to the window is
+	 * listed in `readyRows` once scrolling pauses, so its thumbnail is built
+	 * then rather than during the scroll.
+	 */
+	syncRows: (keys: readonly string[]) => void;
+	/** Rendered rows whose deferred thumbnail may be built. */
+	readyRows: ReadonlySet<string>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -44,86 +54,55 @@ export function useVirtualizedSlides({
 	itemHeight,
 	overscan = DEFAULT_VIRTUAL_OVERSCAN,
 }: VirtualizedSlidesOptions): VirtualizedSlidesResult {
-	const containerElRef = useRef<HTMLDivElement | null>(null);
+	// The shared window reads scroll and resize once per frame and reports only
+	// a change of rendered rows, so scrolling re-renders the rail per entering
+	// row rather than per scroll event.
+	const [range, setRange] = useState<VirtualizedRange | null>(null);
+	const viewRef = useRef<VirtualWindow | null>(null);
+	viewRef.current ??= createVirtualWindow({ totalItems, itemHeight, overscan }, setRange);
+	const view = viewRef.current;
+	const [readyRows, setReadyRows] = useState<ReadonlySet<string>>(() => new Set());
+	const rowsRef = useRef<DeferredRows | null>(null);
+	rowsRef.current ??= createDeferredRows(view, setReadyRows);
+	const deferredRows = rowsRef.current;
 	// The container is tracked in state, not only in a ref: the rail renders it
 	// only while open, so it can mount after this hook's first effect. A
 	// mount-once effect then never saw it, the viewport stayed 0 px tall and
 	// the rail never rendered past its first dozen thumbnails.
 	const [container, setContainer] = useState<HTMLDivElement | null>(null);
-	const scrollContainerRef = useCallback((el: HTMLDivElement | null) => {
-		containerElRef.current = el;
-		setContainer(el);
-	}, []);
-	const [scrollTop, setScrollTop] = useState(0);
-	const [viewportHeight, setViewportHeight] = useState(0);
+	const scrollContainerRef = useCallback((el: HTMLDivElement | null) => setContainer(el), []);
 
-	// ── Observe scroll position ──
-	useEffect(() => {
-		if (!container) {
-			return;
-		}
+	useIsomorphicLayoutEffect(() => {
+		view.setShape({ totalItems, itemHeight, overscan });
+	}, [view, totalItems, itemHeight, overscan]);
 
-		const handleScroll = () => {
-			setScrollTop(container.scrollTop);
-		};
+	useIsomorphicLayoutEffect(() => {
+		view.attach(container);
+		return () => view.attach(null);
+	}, [view, container]);
 
-		// Set initial viewport height
-		setViewportHeight(container.clientHeight);
-		setScrollTop(container.scrollTop);
-
-		container.addEventListener('scroll', handleScroll, { passive: true });
-
-		// Observe container resize for accurate viewport height
-		let resizeObserver: ResizeObserver | undefined;
-		if (typeof ResizeObserver !== 'undefined') {
-			resizeObserver = new ResizeObserver((entries) => {
-				for (const entry of entries) {
-					setViewportHeight(entry.contentRect.height);
-				}
-			});
-			resizeObserver.observe(container);
-		}
-
-		return () => {
-			container.removeEventListener('scroll', handleScroll);
-			resizeObserver?.disconnect();
-		};
-	}, [container]);
-
-	// ── Calculate visible range ──
-	const range = computeVirtualRange(totalItems, itemHeight, scrollTop, viewportHeight, overscan);
-
-	const safeItemHeight = Math.max(itemHeight, 1);
-
-	// ── Scroll to index ──
-	const scrollToIndex = useCallback(
-		(index: number, behavior: ScrollBehavior = 'smooth') => {
-			const el = containerElRef.current;
-			if (!el) {
-				return;
-			}
-
-			const targetTop = index * safeItemHeight;
-			const targetBottom = targetTop + safeItemHeight;
-			const containerTop = el.scrollTop;
-			const containerBottom = containerTop + el.clientHeight;
-
-			// Only scroll if the target is not fully visible
-			if (targetTop < containerTop) {
-				el.scrollTo({ top: targetTop, behavior });
-			} else if (targetBottom > containerBottom) {
-				el.scrollTo({
-					top: targetBottom - el.clientHeight,
-					behavior,
-				});
-			}
+	useEffect(
+		() => () => {
+			deferredRows.destroy();
+			view.destroy();
 		},
-		[safeItemHeight],
+		[deferredRows, view],
+	);
+	const syncRows = useCallback(
+		(keys: readonly string[]) => deferredRows.sync(keys),
+		[deferredRows],
+	);
+
+	const scrollToIndex = useCallback(
+		(index: number, behavior: ScrollBehavior = 'smooth') => view.reveal(index, behavior),
+		[view],
 	);
 
 	return {
-		...range,
+		...(range ?? view.range),
 		scrollContainerRef,
 		scrollToIndex,
+		syncRows,
+		readyRows,
 	};
 }

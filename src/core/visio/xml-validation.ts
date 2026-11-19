@@ -1,4 +1,5 @@
 import { fail, type VisioPackageLimits } from './package-common';
+import type { VisioMemoryBudget } from './memory-budget';
 
 const xmlName = '[\\p{L}_:][\\p{L}\\p{N}\\p{M}_.:\\-\\u00b7]*';
 const tagName = new RegExp(`^(${xmlName})`, 'u');
@@ -22,12 +23,33 @@ function lookupNamespace(scope: NamespaceScope | undefined, prefix: string): str
 	}
 	return undefined;
 }
-/** Bound DOM construction first and reject the malformed input that tolerant XML parsers repair. */
+/**
+ * Why a part over the node limit is refused, in words a user can act on: the shapes the part
+ * holds (counted from their start tags, since the part is never parsed), else its node count.
+ */
+export function nodeLimitMessage(xml: string, limit: number): string {
+	const shapes = xml.match(/<(?:[\w.-]+:)?Shape[\s/>]/g)?.length ?? 0;
+	return shapes
+		? `The page has ${shapes} shapes, more than this viewer can open (it reads at most ${limit} XML nodes per part).`
+		: `A part of this drawing has more than ${limit} XML nodes, more than this viewer can open.`;
+}
+/**
+ * Measured V8 heap, in bytes, the shared XML parser keeps for one node of each kind, and for each
+ * character of the part (attribute values and text keep slices of it).
+ */
+const HEAP = { element: 800, attribute: 240, other: 140, char: 1 } as const;
+/**
+ * Bound DOM construction first and reject the malformed input that tolerant XML parsers repair.
+ * With `heap`, the part's estimated heap, `copies` times over, is added to it, or the scan stops
+ * once it would not fit.
+ */
 export function inspectXml(
 	xml: string,
 	limits: VisioPackageLimits,
 	check: () => void,
 	encoding = 'utf-8',
+	heap?: Pick<VisioMemoryBudget, 'used' | 'limit' | 'refuse'>,
+	copies = 1,
 ): number {
 	if (xml.length > limits.maxXmlChars) fail('LIMIT_XML', 'XML character limit exceeded');
 	if (
@@ -39,8 +61,11 @@ export function inspectXml(
 	let nodes = 0,
 		roots = 0,
 		at = 0;
-	const node = () => {
-		if (++nodes > limits.maxXmlNodes) fail('LIMIT_XML', 'XML node limit exceeded');
+	let used = (heap?.used ?? 0) + xml.length * HEAP.char * copies;
+	if (heap && used > heap.limit) heap.refuse();
+	const node = (cost: number) => {
+		if (++nodes > limits.maxXmlNodes) fail('LIMIT_XML', nodeLimitMessage(xml, limits.maxXmlNodes));
+		if (heap && (used += cost * copies) > heap.limit) heap.refuse();
 	};
 	const text = (value: string) => {
 		if (/&(?!(?:amp|lt|gt|apos|quot|#\d+|#x[\da-fA-F]+);)/.test(value))
@@ -70,12 +95,14 @@ export function inspectXml(
 			if ((!stack.length && !xmlWhitespace(value)) || value.includes(']]>'))
 				fail('INVALID_XML', 'Text outside XML root or invalid text');
 			text(value);
-			node();
+			node(HEAP.other);
 			at = end;
 			continue;
 		}
-		node();
-		if (xml.startsWith('<!--', at) || xml.startsWith('<![CDATA[', at) || xml.startsWith('<?', at)) {
+		const markup =
+			xml.startsWith('<!--', at) || xml.startsWith('<![CDATA[', at) || xml.startsWith('<?', at);
+		node(markup ? HEAP.other : xml[at + 1] === '/' ? 0 : HEAP.element);
+		if (markup) {
 			const comment = xml.startsWith('<!--', at),
 				cdata = xml.startsWith('<![CDATA[', at);
 			const start = at + (comment ? 4 : cdata ? 9 : 2),
@@ -130,7 +157,7 @@ export function inspectXml(
 				text(value);
 				if (match[1]?.startsWith('xmlns:'))
 					namespaces.bindings.set(match[1].slice(6), decodeXmlAttribute(value));
-				node();
+				node(HEAP.attribute);
 				cursor = attribute.lastIndex;
 			}
 			const expanded = new Set<string>();
@@ -149,6 +176,7 @@ export function inspectXml(
 		at = end + 1;
 	}
 	if (stack.length || roots !== 1) fail('INVALID_XML', 'Missing or unclosed XML root');
+	if (heap) heap.used = used;
 	return nodes;
 }
 
