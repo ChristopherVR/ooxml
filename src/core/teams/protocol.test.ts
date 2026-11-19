@@ -7,11 +7,14 @@ import {
 	PROTOCOL_PARAM,
 	PROTOCOL_VERSION,
 	callRoomId,
+	chatCallRoomId,
 	chatRoomId,
+	chatRoomOfCall,
 	classifyRoom,
 	directChatId,
 	chatIdOfRoom,
 	isChatRoomAlias,
+	isStrayChatCallRoom,
 	protocolOfUrl,
 	protocolParams,
 } from './protocol';
@@ -72,6 +75,28 @@ describe('protocol version and room names', () => {
 		expect(callRoomId('acme', 'general')).toBe('call-acme-general');
 		expect(callRoomId('acme', 'general')).toMatch(CALL_ROOM_PATTERN);
 		expect(callRoomId('w'.repeat(200), 'c').length).toBe(128);
+	});
+
+	it('names a private chat call after the chat room, so a server can check its members', () => {
+		const chat = createGroupChatId('ann');
+		const room = chatCallRoomId('w'.repeat(128), chat);
+		expect(room).toBe(`call-${chatRoomId('w'.repeat(128), chat)}`);
+		expect(room.length).toBeLessThanOrEqual(128);
+		expect(room).toMatch(CALL_ROOM_PATTERN);
+		expect(chatRoomOfCall(room)).toBe(chatRoomId('w'.repeat(128), chat));
+		expect(chatRoomOfCall(callRoomId('acme', 'general'))).toBeNull();
+		expect(isStrayChatCallRoom(room)).toBe(false);
+		expect(isStrayChatCallRoom(callRoomId('acme', 'general'))).toBe(false);
+	});
+
+	it('marks call rooms no current client opens for a chat', () => {
+		const direct = directChatId('ann', 'bob');
+		// The shape earlier clients used: the chat id after the workspace, with no room to check.
+		expect(isStrayChatCallRoom(callRoomId('acme', direct))).toBe(true);
+		expect(isStrayChatCallRoom(callRoomId('acme', createGroupChatId('ann')))).toBe(true);
+		expect(
+			isStrayChatCallRoom(chatCallRoomId('acme', direct).toUpperCase().replace('CALL', 'call')),
+		).toBe(true);
 	});
 
 	it('classifies rooms', () => {

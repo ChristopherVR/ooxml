@@ -68,6 +68,70 @@ describe('fresh chart workbook sheet allocation', () => {
 		expect(views.map((view) => view.getAttribute('activeTab'))).toEqual(['2', '2']);
 		expect(views[0]!.getAttribute('xWindow')).toBe('42');
 	});
+	it('writes over a reused sheet and removes dropped ones, so replaying a move converges', async () => {
+		const one = await appendChartWorkbookSheet(await source(), () => [['A'], [1]]);
+		const second = await appendChartWorkbookSheet(one.bytes, () => [['B'], [2]]);
+		expect(second.sheetName).toBe('ChartData3');
+		let bytes = second.bytes;
+		const states = [];
+		for (let i = 0; i < 3; i++) {
+			const moved = await appendChartWorkbookSheet(bytes, () => [['C'], [i]], {
+				reuse: 'chartdata3',
+				drop: ['ChartData2', 'ChartData3', 'Missing'],
+			});
+			bytes = moved.bytes;
+			expect(moved.sheetName).toBe('ChartData3');
+			const zip = await JSZip.loadAsync(bytes);
+			states.push(
+				[
+					...Object.keys(zip.files).sort(),
+					await zip.file('xl/workbook.xml')!.async('string'),
+					await zip.file('xl/_rels/workbook.xml.rels')!.async('string'),
+					await zip.file('[Content_Types].xml')!.async('string'),
+				].join('\n'),
+			);
+		}
+		expect(new Set(states).size).toBe(1);
+		const book = await loadXlsx(bytes);
+		expect(book.sheets.map((sheet) => sheet.name)).toEqual(['ChartData1', 'ChartData3']);
+		expect(getCell(book.sheets[1]!, 1, 0)?.value).toBe(2);
+		expect(getCell(book.sheets[0]!, 1, 1)?.value).toBe(2);
+		const zip = await JSZip.loadAsync(bytes);
+		expect(zip.file('xl/worksheets/sheet2.xml')).toBeNull();
+		expect(await zip.file('[Content_Types].xml')!.async('string')).not.toContain('sheet2.xml');
+		const workbook = parseXml(await zip.file('xl/workbook.xml')!.async('string')).documentElement;
+		expect(
+			first(first(workbook, 'bookViews', NS.x)!, 'workbookView', NS.x)?.getAttribute('activeTab'),
+		).toBe('1');
+	});
+	it('moves the names scoped to sheets after a dropped one and drops the names it scoped', async () => {
+		const added = await appendChartWorkbookSheet(await source(), () => [[1]]);
+		const again = await appendChartWorkbookSheet(added.bytes, () => [[2]]);
+		const zip = await JSZip.loadAsync(again.bytes);
+		const path = 'xl/workbook.xml';
+		zip.file(
+			path,
+			(await zip.file(path)!.async('string')).replace(
+				'</sheets>',
+				'</sheets><definedNames><definedName name="a" localSheetId="1">ChartData2!$A$1</definedName><definedName name="b" localSheetId="2">ChartData3!$A$1</definedName><definedName name="c">ChartData1!$A$1</definedName></definedNames>',
+			),
+		);
+		const dropped = await appendChartWorkbookSheet(
+			await zip.generateAsync({ type: 'uint8array' }),
+			() => [[3]],
+			{ reuse: 'ChartData3', drop: ['ChartData2'] },
+		);
+		const workbook = parseXml(
+			await (await JSZip.loadAsync(dropped.bytes)).file(path)!.async('string'),
+		).documentElement;
+		const names = children(first(workbook, 'definedNames', NS.x)!, 'definedName', NS.x);
+		expect(
+			names.map((name) => [name.getAttribute('name'), name.getAttribute('localSheetId')]),
+		).toEqual([
+			['b', '1'],
+			['c', null],
+		]);
+	});
 	it('refuses protected structure and invalid numeric data without modifying the source', async () => {
 		const bytes = await source();
 		const zip = await JSZip.loadAsync(bytes);

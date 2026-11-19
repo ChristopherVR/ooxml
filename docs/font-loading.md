@@ -223,10 +223,11 @@ Options) chooses for every editor it opens:
 The choice is kept in `localStorage` (`ooxml-suite-fonts`) and applies to documents opened after
 it changes. A custom address that is not an absolute http(s) URL without credentials, query or
 fragment is refused in place, and the previous choice holds until it is valid. Settings >
-Privacy lists what the current choice contacts. The site's Content Security Policy (`site/index.html`, `site/404.html`) allows
-`https://fonts.googleapis.com` in `style-src` and `https://fonts.gstatic.com` in `font-src`; a
-deployment that uses its own font server adds it to both (and to the desktop policy in
-`desktop/src-tauri/tauri.conf.json`).
+Privacy lists what the current choice contacts. The Content Security Policy every published page and the desktop app carry (`scripts/csp.mjs`)
+allows `https://fonts.googleapis.com` in `style-src`, and `https://fonts.gstatic.com` and `blob:`
+(fonts embedded in a document) in `font-src`; a deployment that uses its own font server adds it
+to both there, and `scripts/csp.test.mjs` keeps the desktop policy in
+`desktop/src-tauri/tauri.conf.json` equal to it.
 
 ### Self-hosting a mirror
 

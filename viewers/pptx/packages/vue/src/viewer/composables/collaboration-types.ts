@@ -100,6 +100,8 @@ export interface UseCollaborationResult {
 	/** The configuration attached by start() or the reactive collaboration option. */
 	activeCollaboration: Ref<CollaborationConfig | null>;
 	status: Ref<import('ooxml-ui/pptx').ConnectionStatus>;
+	/** Why the session failed to start while `status` is `error`; `null` otherwise. */
+	failure: Ref<import('ooxml-ui/pptx').CollaborationFailure | null>;
 	connected: Ref<boolean>;
 	cursors: Ref<RemoteCursor[]>;
 	remotePresences: Ref<RemotePresence[]>;

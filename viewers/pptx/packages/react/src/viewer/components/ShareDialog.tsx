@@ -13,7 +13,9 @@ import {
 	buildCollaborationShareUrl,
 	buildCreateCollaborationConfig,
 	buildJoinCollaborationConfig,
+	collaborationFailureMessageKey,
 	getDensePanelTouchTargetPx,
+	shareFormFailureKey,
 	shouldStickyActionRow,
 } from 'ooxml-ui/pptx';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -35,7 +37,8 @@ import { ViewerRegion, useRegionRenderer } from './ViewerRegion';
 
 /**
  * Build the shareable join link. A peer-to-peer (webrtc) session carries
- * `transport=webrtc` instead of a `server=` parameter.
+ * `transport=webrtc` instead of a `server=` parameter, and its secret in the
+ * `#key=` fragment.
  */
 function shareUrl(config: CollaborationConfig): string {
 	return buildCollaborationShareUrl(
@@ -230,7 +233,10 @@ export function ShareDialog({
 										onModeChange={setMode}
 										onInvitationChange={setInvitation}
 										preconfigured={preconfigured}
-										connectionFailed={collab?.status === 'error'}
+										connectionFailure={shareFormFailureKey(
+											{ mode, invitation },
+											collab ? collaborationFailureMessageKey(collab.status, collab.failure) : null,
+										)}
 										onRetry={collab?.retry}
 									/>
 								)}

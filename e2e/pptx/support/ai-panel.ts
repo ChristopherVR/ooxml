@@ -2,14 +2,14 @@
  * Driving the AI assistant panel without a real language model.
  *
  * Every demo wires the assistant the same way: an OpenAI-compatible base URL /
- * API key / model id read from localStorage becomes a `{ kind: 'model' }`
+ * API key / model id read from sessionStorage becomes a `{ kind: 'model' }`
  * connection (`@ai-sdk/openai-compatible`), so the whole agent loop runs in the
  * browser and its only network traffic is `POST <baseURL>/chat/completions` in
  * the OpenAI chat-completions wire format. {@link seedMockAiProvider} points
  * that base URL at a path on the demo's own origin and
  * {@link installMockAiModel} answers it with scripted SSE chunks, so a spec can
  * exercise the full round trip - composer, streaming reply, tool call, staged
- * proposal, Apply - deterministically and offline. Both demo localStorage
+ * proposal, Apply - deterministically and offline. Both demo sessionStorage
  * schemes (React/Vue/Angular one JSON key; Svelte/Vanilla three string keys)
  * are seeded so the specs stay framework-neutral.
  *
@@ -45,20 +45,20 @@ export const PANEL_SELECTOR = '[data-pptx-ai-panel]';
 export const PANEL_MARKER_SELECTOR = '[data-pptx-ai-panel]';
 
 /**
- * Seed both demo localStorage schemes before any app script runs, pointing the
+ * Seed both demo sessionStorage schemes before any app script runs, pointing the
  * OpenAI-compatible base URL at {@link MOCK_AI_BASE_PATH} on the page's own
  * origin (so no port ever appears in a spec). Call before the first navigation.
  */
 export async function seedMockAiProvider(page: Page): Promise<void> {
 	await page.addInitScript((basePath: string) => {
 		const base = `${location.origin}${basePath}`;
-		localStorage.setItem(
+		sessionStorage.setItem(
 			'pptx-demo-ai-config',
 			JSON.stringify({ baseURL: base, apiKey: 'mock-key', model: 'mock-model' }),
 		);
-		localStorage.setItem('demo.ai.baseURL', base);
-		localStorage.setItem('demo.ai.apiKey', 'mock-key');
-		localStorage.setItem('demo.ai.model', 'mock-model');
+		sessionStorage.setItem('demo.ai.baseURL', base);
+		sessionStorage.setItem('demo.ai.apiKey', 'mock-key');
+		sessionStorage.setItem('demo.ai.model', 'mock-model');
 	}, MOCK_AI_BASE_PATH);
 }
 

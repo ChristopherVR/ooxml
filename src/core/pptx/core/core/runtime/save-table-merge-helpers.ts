@@ -210,7 +210,15 @@ export function replaceFirstTextValueInTree(
 	return false;
 }
 
-/** Build the `<c:pt>` array for a chart cache from string values. */
-export function buildChartPoints(values: string[]): Array<{ '@_idx': string; 'c:v': string }> {
-	return values.map((val, idx) => ({ '@_idx': String(idx), 'c:v': val }));
+/** Build the `<c:pt>` array for a chart cache from string values; a blank has no point. */
+export function buildChartPoints(
+	values: readonly string[],
+): Array<{ '@_idx': string; 'c:v': string }> {
+	return values.flatMap((val, idx) => (val === '' ? [] : [{ '@_idx': String(idx), 'c:v': val }]));
 }
+
+/** A series' values as cache text, its blanks empty. */
+export const chartSeriesCacheValues = (series: {
+	values: readonly number[];
+	blanks?: readonly boolean[] | undefined;
+}): string[] => series.values.map((value, at) => (series.blanks?.[at] ? '' : String(value)));

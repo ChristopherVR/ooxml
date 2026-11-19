@@ -28,7 +28,8 @@ const OPEN = /<((?:[A-Za-z_][\w.-]*:)?)sheetData(?=[\s/>])/;
 function rootNamespaces(xml: string): LiteNamespaces | undefined {
 	const root = ROOT.exec(xml.slice(0, 8192));
 	if (!root) return undefined;
-	const out: Record<string, string> = {};
+	// No prototype: a prefix is read from the file, and `constructor` must not look declared.
+	const out: Record<string, string> = Object.create(null);
 	for (const match of (root[2] ?? '').matchAll(DECLARATION)) out[match[1] ?? ''] = match[3] ?? '';
 	return out;
 }

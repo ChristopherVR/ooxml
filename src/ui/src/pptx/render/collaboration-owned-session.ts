@@ -1,7 +1,13 @@
 import type { CollabSession, UpdateRefusalCode } from 'ooxml-core/collab';
 
 import type { CollaborationConfig } from '../types';
+import {
+	CollaborationStartError,
+	loadCollaborationModule,
+	requirePeerToPeerCrypto,
+} from './collaboration-failure';
 import { externalSessionFromCollabSession, isSameBrowserRoom } from './collaboration-options';
+import { validateRoomId } from './collaboration-presence';
 
 /** The default author name when the host sets none. */
 export const DEFAULT_OWNED_USER_NAME = 'PowerPoint user';
@@ -31,7 +37,7 @@ export interface OwnedCollaboration {
 	/**
 	 * The config with the owned session as its `externalSession`, or `null` when
 	 * {@link OwnedCollaboration.release} ran first (the session is then already destroyed).
-	 * Rejects with the room or transport error when no session can be opened.
+	 * Rejects with a {@link CollaborationStartError} naming why no session can be opened.
 	 */
 	readonly ready: Promise<CollaborationConfig | null>;
 	/** Destroy the owned session, now or as soon as the lazy runtime import settles. */
@@ -79,29 +85,44 @@ export function openOwnedCollaboration(config: CollaborationConfig): OwnedCollab
 	};
 	const refusals: ((code: UpdateRefusalCode) => void)[] = [];
 	const ready = (async (): Promise<CollaborationConfig | null> => {
-		const { isUpdateRefusal, openCollaborationSession } = await import('ooxml-core/collab');
+		validateRoomId(config.roomId);
+		const { isUpdateRefusal, openCollaborationSession, NO_BROADCAST_MESSAGE } =
+			await loadCollaborationModule('ooxml-core/collab', () => import('ooxml-core/collab'));
 		if (released) {
 			return null;
 		}
-		const opened = openCollaborationSession(
-			{
-				roomId: config.roomId,
-				...(config.provider ? { provider: config.provider } : {}),
-				...(config.webrtc ? { webrtc: config.webrtc } : {}),
-				...(config.serverUrl ? { serverUrl: config.serverUrl } : {}),
-				...(config.authToken ? { authToken: config.authToken } : {}),
-				user: {
-					...(config.userName ? { name: config.userName } : {}),
-					...(config.userColor ? { color: config.userColor } : {}),
-					...(config.userAvatar ? { avatar: config.userAvatar } : {}),
-					...(config.role ? { role: config.role } : {}),
+		if (config.webrtc && (config.webrtc.password ?? config.authToken)) {
+			requirePeerToPeerCrypto();
+		}
+		let opened: { session: CollabSession<object> };
+		try {
+			opened = openCollaborationSession(
+				{
+					roomId: config.roomId,
+					...(config.provider ? { provider: config.provider } : {}),
+					...(config.webrtc ? { webrtc: config.webrtc } : {}),
+					...(config.serverUrl ? { serverUrl: config.serverUrl } : {}),
+					...(config.authToken ? { authToken: config.authToken } : {}),
+					user: {
+						...(config.userName ? { name: config.userName } : {}),
+						...(config.userColor ? { color: config.userColor } : {}),
+						...(config.userAvatar ? { avatar: config.userAvatar } : {}),
+						...(config.role ? { role: config.role } : {}),
+					},
 				},
-			},
-			{
-				defaultName: config.userName || DEFAULT_OWNED_USER_NAME,
-				broadcastPrefix: POWERPOINT_BROADCAST_PREFIX,
-			},
-		);
+				{
+					defaultName: config.userName || DEFAULT_OWNED_USER_NAME,
+					broadcastPrefix: POWERPOINT_BROADCAST_PREFIX,
+				},
+			);
+		} catch (cause) {
+			const broadcast = cause instanceof Error && cause.message === NO_BROADCAST_MESSAGE;
+			throw new CollaborationStartError(
+				broadcast ? 'no-broadcast' : 'unknown',
+				cause instanceof Error ? cause.message : String(cause),
+				{ cause },
+			);
+		}
 		session = opened.session;
 		keepPowerPointPresence(opened.session.awareness);
 		opened.session.on('error', (error) => {

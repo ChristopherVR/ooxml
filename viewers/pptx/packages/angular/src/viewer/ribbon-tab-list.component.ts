@@ -66,25 +66,12 @@ import { ViewerOptionsService } from './viewer-options.service';
 						<span>{{ 'pptx.titleBar.record' | translate }}</span>
 					</button>
 				}
-				<!-- The live region announces a connected session (Angular has no separate
-				     status pill on this row). -->
-				<div
-					role="status"
-					class="flex items-center"
-					[attr.aria-label]="
-						collabConnected()
-							? ('pptx.collaboration.statusAriaLabel'
-								| translate: { status: 'pptx.collaboration.status.connected' | translate })
-							: null
-					"
-				>
-					<pptx-ui-ribbon-actions
-						data-pptx-chrome="tab-row-actions"
-						[state]="actionsState()"
-						(comments-toggle)="toggleComments.emit()"
-						(share-request)="share.emit()"
-					></pptx-ui-ribbon-actions>
-				</div>
+				<pptx-ui-ribbon-actions
+					data-pptx-chrome="tab-row-actions"
+					[state]="actionsState()"
+					(comments-toggle)="toggleComments.emit()"
+					(share-request)="share.emit()"
+				></pptx-ui-ribbon-actions>
 
 				<button
 					type="button"

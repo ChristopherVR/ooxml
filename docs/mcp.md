@@ -31,6 +31,15 @@ edits replace the source atomically unless `outputPath` is given), and
 `filePath` (and `outputPath` for edits), the read-only and destructive hints, JSON text results
 and tool errors. Core types that server structurally and never imports the MCP SDK at runtime.
 
+A path is judged on its text before any filesystem call, so a refused path is never contacted.
+Use a path relative to the root, or an absolute path inside it, in any spelling that resolves there
+(through a link, a Windows short name, or the real path of a linked root). UNC and device paths,
+`..` that leaves the root and, on Windows, drive-relative paths, alternate data streams (any `:` in a
+segment), device names such as `NUL` and segments ending in a dot or space all return the same error,
+`Path is outside the configured root`. POSIX systems allow those names, so they are ordinary files
+there. An absolute path outside the root is resolved on the local disk to decide, and gets the same
+error. Links are then resolved and checked against the root as well.
+
 The standalone packages are therefore thin: each `registerTools` is one call to
 `registerAutomationTools` with its format's list, plus its stdio CLI. A new tool, a schema change
 or a bound belongs in core, with its tests in `src/core/automation/`, never in a package.

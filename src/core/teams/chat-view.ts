@@ -12,7 +12,7 @@ import {
 	combinePresence,
 } from './presence';
 import type { RosterEntry } from './roster';
-import { type PeerLike, callRoomId } from './view';
+import { type PeerLike, chatCallRoomId } from './view';
 
 export interface ChatMemberView {
 	id: string;
@@ -112,7 +112,7 @@ export function chatViews(input: {
 			const messages = messagesOf(chat.id).filter((m) => !m.deleted);
 			const read = lastRead[chat.id] ?? 0;
 			const last = messages[messages.length - 1];
-			const room = callRoomId(workspaceId, chat.id);
+			const room = chatCallRoomId(workspaceId, chat.id);
 			return {
 				id: chat.id,
 				kind: chat.kind,

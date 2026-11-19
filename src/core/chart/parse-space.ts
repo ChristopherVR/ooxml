@@ -21,6 +21,7 @@ import {
 	textProperties,
 	type ChartParseContext,
 } from './parse-util';
+import { chartViewAllowance, type ChartPointBudget } from './point-limit';
 
 const LEGEND = new Set(['legendPos', 'legendEntry', 'layout', 'overlay', 'spPr', 'txPr', 'extLst']);
 
@@ -131,10 +132,14 @@ const SPACE = new Set([
 
 /**
  * Parses a chart part (`c:chartSpace`) from its XML text or root element. Anything the model does
- * not cover is listed in `issues`; the caller keeps the part itself for round-trip.
+ * not cover is listed in `issues`; the caller keeps the part itself for round-trip. A loader
+ * passes one `pointBudget` for all the charts of a package.
  */
-export function parseChartSpace(source: string | XmlElement): ChartSpaceParseResult {
-	const context: ChartParseContext = { issues: [] };
+export function parseChartSpace(
+	source: string | XmlElement,
+	options: { pointBudget?: ChartPointBudget } = {},
+): ChartSpaceParseResult {
+	const context: ChartParseContext = { issues: [], ...options };
 	const root =
 		typeof source === 'string' ? parseXml(source, { label: 'Chart part' }).documentElement : source;
 	if (root.localName !== 'chartSpace' || (root.namespaceURI && root.namespaceURI !== NS.c)) {
@@ -144,6 +149,7 @@ export function parseChartSpace(source: string | XmlElement): ChartSpaceParseRes
 		});
 		return { chartSpace: { plotArea: { groups: [], axes: [] } }, issues: context.issues };
 	}
+	context.viewAllowance = chartViewAllowance(root);
 	reportUnmodelled(context, root, SPACE);
 	const chart = cChild(root, 'chart');
 	if (!chart)

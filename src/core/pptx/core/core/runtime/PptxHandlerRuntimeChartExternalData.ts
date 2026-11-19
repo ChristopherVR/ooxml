@@ -128,7 +128,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			return undefined;
 		}
 		try {
-			return await parseEmbeddedXlsx(externalData.embeddedWorkbookData);
+			return await parseEmbeddedXlsx(externalData.embeddedWorkbookData, this.chartPointBudget);
 		} catch {
 			return undefined;
 		}

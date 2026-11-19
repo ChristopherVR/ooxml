@@ -114,6 +114,7 @@ it.each(['logScale', 'crossesAt'] as const)(
 				writeChartExSpace(source()),
 				before,
 				after,
+				{ allocated: new Map(), held: () => new Set() },
 			),
 		).rejects.toThrow('does not support');
 	},
@@ -131,6 +132,7 @@ it.each([
 			writeChartExSpace(source()),
 			before,
 			after,
+			{ allocated: new Map(), held: () => new Set() },
 		),
 	).rejects.toThrow('cannot hold custom text or a manual position');
 });

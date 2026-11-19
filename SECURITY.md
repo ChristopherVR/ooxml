@@ -16,6 +16,8 @@ Please do **not** open a public issue. Report it through a [private GitHub secur
 
 You will get an acknowledgement as soon as the maintainer can respond, and updates as the issue is investigated and fixed. Fixes ship in a new release with a note in the release description; reporters are credited unless they ask not to be.
 
+Each fix adds a case to the security regression corpus in `src/core/test-support/security-corpus/`, which runs with the unit tests: the smallest generated input that shows the defect's class, held to time and memory limits with the network refused. Its README says how to add one. A case is added only with its fix, so the corpus never describes an open issue.
+
 ## Scope
 
 In scope: the code in this repository (including `src/ui` and `viewers/`) and the packages published from it. Out of scope: vulnerabilities in third-party dependencies (report those upstream; we will update once a fix exists).

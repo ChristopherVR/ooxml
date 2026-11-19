@@ -10,6 +10,7 @@ import { parseChartSpace } from '../../chart/parse-space';
 import { writeChartSpace } from '../../chart/write-space';
 import { chartIssuesLostOnWrite } from '../../chart/keep-source';
 import type { ChartSpace } from '../../chart/model';
+import type { ChartPointBudget } from '../../chart/point-limit';
 import { chartSummaryFromSpace } from '../../chart/render/summary-from-space';
 import type { DrawingColor } from '../../drawingml/types';
 
@@ -108,9 +109,10 @@ export function parseChart(
 	anchor: DrawingAnchor,
 	partName: string,
 	name?: string,
+	pointBudget?: ChartPointBudget,
 ): ChartObject {
 	const root = parseXml(xml, { label: 'XLSX chart' }).documentElement;
-	const { chartSpace, issues } = parseChartSpace(root);
+	const { chartSpace, issues } = parseChartSpace(root, pointBudget ? { pointBudget } : {});
 	const lost = chartIssuesLostOnWrite(issues);
 	const editBlocked = lost.length
 		? `Chart ${partName} has content the editor does not model (${[

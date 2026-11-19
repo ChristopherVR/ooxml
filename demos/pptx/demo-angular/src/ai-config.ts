@@ -4,15 +4,16 @@
  * The pptx-angular-viewer package ships NO model or API key. A host application
  * supplies a `PptxAiConfig` whose `connection` reaches a language model. Here
  * the demo reads an OpenAI-compatible base URL + API key + model id from
- * localStorage and builds an in-browser model with `@ai-sdk/openai-compatible`,
+ * sessionStorage and builds an in-browser model with `@ai-sdk/openai-compatible`,
  * wrapped with `createAiAssistant` (from `pptx-angular-viewer/ai`) and handed to
  * the viewer's `ai` input (`?ai=config` passes the plain config instead).
  *
  * There is deliberately NO configuration UI on the landing screen: the demo must
  * work, and be shippable, without anyone supplying a key. To try the assistant
- * locally, set the `pptx-demo-ai-config` localStorage key by hand:
+ * locally, set the `pptx-demo-ai-config` sessionStorage key by hand (it lasts
+ * until the tab closes):
  *
- *   localStorage.setItem('pptx-demo-ai-config', JSON.stringify({
+ *   sessionStorage.setItem('pptx-demo-ai-config', JSON.stringify({
  *     baseURL: 'https://api.openai.com/v1', apiKey: 'sk-...', model: 'gpt-4o-mini',
  *   }))
  *
@@ -26,6 +27,7 @@ import { createAiAssistant } from 'pptx-angular-viewer/ai';
 import type { PptxAiAssistant } from 'pptx-angular-viewer/ai';
 
 import { demoAiUsesPlainConfig } from '../../shared/demo-ai-path';
+import { readDemoAiSetting } from '../../shared/demo-ai-storage';
 
 const STORAGE_KEY = 'pptx-demo-ai-config';
 
@@ -37,10 +39,10 @@ export interface DemoAiFields {
 
 const EMPTY: DemoAiFields = { baseURL: '', apiKey: '', model: '' };
 
-/** Read the persisted demo AI fields from localStorage (empty on any error). */
+/** Read the tab's demo AI fields from sessionStorage (empty on any error). */
 export function readStoredAiFields(): DemoAiFields {
 	try {
-		const raw = localStorage.getItem(STORAGE_KEY);
+		const raw = readDemoAiSetting(STORAGE_KEY);
 		if (!raw) {
 			return { ...EMPTY };
 		}

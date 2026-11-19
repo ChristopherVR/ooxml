@@ -18,6 +18,8 @@ const inactive: ExternalYjsSessionResult = {
 	doc: null,
 	clientId: null,
 	synced: false,
+	// A host session reports no start reason.
+	failure: null,
 	// An external transport can only be retried, or refuse an update, by its owner.
 	retry: () => {},
 	refusal: null,
@@ -57,6 +59,7 @@ export function useExternalYjsSession(
 							doc: session.doc,
 							awareness: borrowed.awareness,
 							clientId: session.awareness.clientID,
+							failure: null,
 							retry: inactive.retry,
 							refusal: null,
 						},

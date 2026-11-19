@@ -106,8 +106,8 @@ import { applyChartTitleToXml } from '../../utils/chart-title-serializer';
 import { applyChartTitleStyleToXml } from '../../utils/chart-title-style-serializer';
 import { applySeriesTrendlinesToXml } from '../../utils/chart-trendline-serializer';
 import { applyChartUpDownBars } from '../../utils/chart-up-down-bars';
-import type { PptxChartWorkbookWrite } from '../../utils/chart-xlsx-writer';
-import { collectChartWorkbookWrite } from '../../utils/chart-xlsx-writer';
+import { chartCacheOverView } from '../../../../chart/point-limit';
+import { chartPartWorkbookWrites } from '../../../../chart/workbook/space-writes';
 import {
 	ChartExSaveRefusedError,
 	saveChartExPackageThroughNeutral,
@@ -119,11 +119,15 @@ import {
 import { encodeNeutralChartElements } from '../../utils/chart-neutral-package-elements';
 import {
 	prepareNeutralChartWorkbook,
+	rebaseConflictingChartRanges,
 	NeutralChartSaveRefusedError,
 } from './chart-neutral-workbook-save';
 import { xmlChild, xmlPath } from '../../utils/xml-access';
 import { applyChartExUpdate, chartExLayoutChanged } from './chart-cx-update';
-import { saveChartExternalWorkbookUpdates } from './chart-external-workbook-save';
+import {
+	restoreChartWorkbookWrite,
+	saveChartExternalWorkbookUpdates,
+} from './chart-external-workbook-save';
 import {
 	detectChartPartFamily,
 	switchChartPartFamily,
@@ -132,6 +136,7 @@ import {
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeChartUserShapes';
 import {
 	buildChartPoints,
+	chartSeriesCacheValues,
 	replaceFirstTextValueInTree,
 	serializeCellExtraAttributes,
 	serializeCellMergeAttributes,
@@ -337,10 +342,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		if (!chartData.chartPartPath) {
 			return;
 		}
+		this.chartPartRevisions.start(chartData.chartPartPath, chartData);
 		this.chartDataBaselines.set(chartData.chartPartPath, JSON.stringify(chartData));
 		this.chartWorkbookDataBaselines.set(chartData.chartPartPath, {
 			signature: chartWorkbookDataSignature(chartData),
-			pending: false,
 		});
 	}
 
@@ -395,7 +400,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			// sibling, and let the original bytes flow through.
 			if (
 				chartData.chartPartPath &&
-				!this.chartWorkbookDataBaselines.get(chartData.chartPartPath)?.pending &&
+				!this.chartWorkbookDataBaselines.get(chartData.chartPartPath)?.retry &&
 				this.chartDataBaselines.get(chartData.chartPartPath) === JSON.stringify(chartData)
 			) {
 				continue;
@@ -423,21 +428,28 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			if (!chartFile) {
 				continue;
 			}
-
+			// A write-back that did not fully land puts back the cells it changed and starts again.
+			const retryWrite = this.chartWorkbookDataBaselines.get(chartPartPath)?.retry?.written;
+			if (retryWrite) await restoreChartWorkbookWrite(this.zip, retryWrite);
 			try {
-				const chartXmlStr = await chartFile.async('string');
+				// Data that undo or redo brought back saves from the part it was edited from, against
+				// the data that part describes.
+				let source = this.chartPartRevisions.source(chartPartPath, chartData);
+				const sourceData = source
+					? await this.refreshClassicChartFromPart(source, chartData, slidePath)
+					: undefined;
+				if (source && !sourceData) source = null;
+				// That state was released (see `chart-part-revisions`): the data is saved as edited
+				// directly from the part as it is now, so its recorded row and series edits, which
+				// index the released state, are dropped.
+				if (source === null) delete chartData.structureEdits;
+				const chartXmlStr = source ?? (await chartFile.async('string'));
 				const chartXmlData = this.parser.parse(chartXmlStr) as XmlObject;
 				// What the part authored for each element, read off a pristine copy, so only
 				// format sections the user changed are written back.
 				const authoredFormats = chartData.elementFormats
 					? this.readAuthoredChartElementFormats(chartXmlStr, chartData)
 					: undefined;
-				// Collected alongside the cache rewrite below and, once the chart
-				// XML is written back, handed to the embedded-workbook writer so
-				// "Edit Data in Excel" reflects the same edit; see
-				// `saveChartExternalWorkbookUpdates`.
-				const workbookWrites: PptxChartWorkbookWrite[] = [];
-
 				const chartSpace = this.xmlLookupService.getChildByLocalName(chartXmlData, 'chartSpace');
 				if (!chartSpace) {
 					continue;
@@ -454,14 +466,19 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						chartXmlStr,
 					)
 				) {
+					// Another writer owns the part now and saved the workbook as it found it.
+					this.chartWorkbookDataBaselines.delete(chartPartPath);
+					this.chartPartRevisions.delete(chartPartPath);
+					delete chartData.structureEdits;
 					continue;
 				}
 
 				// An edit the shared chart core can express is saved through it (`writeChartSpace`
 				// keeps every element the neutral model holds as written); anything else falls
 				// through to the object-tree writers below.
-				const baseline = this.chartDataBaselines.get(chartPartPath);
-				const baselineData = baseline ? (JSON.parse(baseline) as PptxChartData) : undefined;
+				const latest = this.chartDataBaselines.get(chartPartPath);
+				const baselineData =
+					sourceData ?? (latest ? (JSON.parse(latest) as PptxChartData) : undefined);
 				// Elements PowerPoint's codecs encode and the user shapes drawing part, written once
 				// and shared by whichever path saves the part.
 				const packageElements: NeutralChartPackageElements = baselineData
@@ -479,7 +496,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				if (chartData.userShapes !== undefined) packageElements.userShapes = userShapesReference;
 				const neutralSave = baselineData
 					? saveChartPartThroughNeutral(chartXmlStr, baselineData, chartData, {
-							retryWorkbook: this.chartWorkbookDataBaselines.get(chartPartPath)?.pending,
 							elements: packageElements,
 						})
 					: undefined;
@@ -489,13 +505,15 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						chartData,
 						neutralSave,
 						(base, target) => this.resolveImagePath(base, target),
+						this.chartDataSheetsOfSession(),
 					);
 					await this.commitChartPart(
 						chartPartPath,
 						slidePath,
 						chartData,
-						prepared.workbookWrites,
 						prepared.xml,
+						chartXmlStr,
+						prepared.workbookRebased,
 					);
 					continue;
 				}
@@ -659,7 +677,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					const txNode = this.xmlLookupService.getChildByLocalName(seriesNode, 'tx');
 					if (txNode) {
 						this.updateChartCacheValues(txNode, false, [seriesData.name]);
-						this.pushChartWorkbookWrite(workbookWrites, txNode, false, [seriesData.name]);
 					}
 
 					// Update category labels on every series (not just the first)
@@ -670,8 +687,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						const dateValues = chartData.dateCategories?.values.map(String);
 						const catValues = dateValues ?? chartData.categories;
 						const catIsNumeric = Boolean(dateValues);
-						this.updateChartCacheValues(catNode, catIsNumeric, catValues);
-						this.pushChartWorkbookWrite(workbookWrites, catNode, catIsNumeric, catValues);
+						const catBefore = dateValues
+							? baselineData?.dateCategories?.values.map(String)
+							: baselineData?.categories;
+						this.updateChartCacheValues(catNode, catIsNumeric, catValues, catBefore);
 					}
 
 					// Update values
@@ -679,9 +698,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						this.xmlLookupService.getChildByLocalName(seriesNode, 'val') ||
 						this.xmlLookupService.getChildByLocalName(seriesNode, 'yVal');
 					if (valNode) {
-						const values = seriesData.values.map(String);
-						this.updateChartCacheValues(valNode, true, values);
-						this.pushChartWorkbookWrite(workbookWrites, valNode, true, values);
+						const values = chartSeriesCacheValues(seriesData);
+						const previous = baselineData?.series[si];
+						const before = previous && chartSeriesCacheValues(previous);
+						this.updateChartCacheValues(valNode, true, values, before);
 					}
 
 					// Update series colour. Create `c:spPr` when the loaded series has
@@ -1339,8 +1359,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					chartPartPath,
 					slidePath,
 					chartData,
-					workbookWrites,
 					this.builder.build(chartXmlData),
+					chartXmlStr,
 				);
 			} catch (e) {
 				if (
@@ -1357,25 +1377,28 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		this.pendingChartUpdates = this.pendingChartUpdates.filter(
 			({ chartData }) =>
 				chartData.chartPartPath &&
-				this.chartWorkbookDataBaselines.get(chartData.chartPartPath)?.pending,
+				this.chartWorkbookDataBaselines.get(chartData.chartPartPath)?.retry,
 		);
 	}
 
 	/**
-	 * Write a chart part's new XML, after mirroring a changed series cache into
-	 * its embedded workbook, and record the saved model as the part's baseline.
+	 * Write a chart part's new XML, after mirroring what the edit changed in its caches into the
+	 * embedded workbook, so "Edit Data in Excel" shows the same data. A write that could not fully
+	 * land keeps the part and the workbook it started from: the next save puts that workbook back
+	 * and writes the whole difference again, so cells a partial write changed follow the chart
+	 * through later edits and undo.
+	 * `from` is the part the save started from, and `workbookRebased` means the workbook already
+	 * holds the chart's data on a new sheet.
 	 */
 	private async commitChartPart(
 		chartPartPath: string,
 		slidePath: string,
 		chartData: PptxChartData,
-		workbookWrites: PptxChartWorkbookWrite[],
 		xml: string,
+		from: string,
+		workbookRebased = false,
 	): Promise<void> {
-		// Mirror the same edit into the embedded workbook (`ppt/embeddings/*.xlsx`)
-		// so "Edit Data in Excel" and any Excel recalculation see the new
-		// values too, instead of silently reverting them. Degrades to a
-		// compatibility warning, never throws; see
+		// Degrades to a compatibility warning, never throws; see
 		// `saveChartExternalWorkbookUpdates`.
 		const serializedBaseline = this.chartDataBaselines.get(chartPartPath);
 		const signature = chartWorkbookDataSignature(chartData);
@@ -1385,9 +1408,31 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			(serializedBaseline
 				? chartWorkbookDataSignature(JSON.parse(serializedBaseline) as PptxChartData)
 				: undefined);
-		const workbookDataChanged = workbookBaseline?.pending || signature !== previousSignature;
-		if (workbookDataChanged) {
-			const complete = await saveChartExternalWorkbookUpdates(
+		const retry = workbookBaseline?.retry;
+		const previousXml = await this.zip.file(chartPartPath)?.async('string');
+		const dataChanged = retry !== undefined || signature !== previousSignature;
+		// The part the workbook is in step with.
+		const inStep = retry?.chartXml ?? previousXml;
+		// Changed data whose ranges cannot hold it gets ranges of its own, so the part and the
+		// workbook agree whichever writer produced the part and whichever state the data came from.
+		const rebased =
+			workbookRebased || !dataChanged
+				? undefined
+				: await rebaseConflictingChartRanges(
+						this.zip,
+						chartData,
+						xml,
+						from,
+						inStep,
+						(base, target) => this.resolveImagePath(base, target),
+						this.chartDataSheetsOfSession(),
+					);
+		if (rebased !== undefined) {
+			xml = rebased;
+			workbookRebased = true;
+		}
+		if (dataChanged) {
+			const { complete, written } = await saveChartExternalWorkbookUpdates(
 				{
 					zip: this.zip,
 					resolveImagePath: (basePath, target) => this.resolveImagePath(basePath, target),
@@ -1396,16 +1441,18 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				chartPartPath,
 				slidePath,
 				chartData.externalData,
-				workbookWrites,
+				workbookRebased || inStep === undefined ? [] : chartPartWorkbookWrites(inStep, xml),
 				chartData.dataLabelTextOnly ?? false,
 			);
 			this.chartWorkbookDataBaselines.set(chartPartPath, {
 				signature: complete ? signature : (previousSignature ?? signature),
-				pending: !complete,
+				...(complete || inStep === undefined
+					? {}
+					: { retry: { chartXml: inStep, ...(written ? { written } : {}) } }),
 			});
 		}
 		this.zip.file(chartPartPath, xml);
-		if (!this.chartWorkbookDataBaselines.get(chartPartPath)?.pending) {
+		if (!this.chartWorkbookDataBaselines.get(chartPartPath)?.retry) {
 			const refreshed = await this.refreshClassicChartFromPart(xml, chartData, slidePath);
 			if (refreshed) {
 				for (const key of Object.keys(chartData))
@@ -1413,10 +1460,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				Object.assign(chartData, refreshed);
 				this.chartWorkbookDataBaselines.set(chartPartPath, {
 					signature: chartWorkbookDataSignature(chartData),
-					pending: false,
 				});
 			}
 		}
+		if (previousXml !== undefined)
+			this.chartPartRevisions.record(chartPartPath, previousXml, chartData);
 		// Subsequent saves compare against the model now stored in this mutable ZIP.
 		this.chartDataBaselines.set(chartPartPath, JSON.stringify(chartData));
 	}
@@ -1470,10 +1518,12 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						chartXmlStr,
 						JSON.parse(baseline) as PptxChartData,
 						chartData,
+						this.chartDataSheetsOfSession(),
 					)
 				: undefined;
 		if (neutralXml !== undefined) {
 			this.zip.file(chartPartPath, neutralXml);
+			delete chartData.structureEdits;
 			this.chartDataBaselines.set(chartPartPath, JSON.stringify(chartData));
 			return true;
 		}
@@ -1518,35 +1568,19 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	/**
-	 * Collect a workbook write-back entry for one chart cache container (a
-	 * series' `c:tx`, `c:cat`/`c:xVal`, or `c:val`/`c:yVal`), pushing it onto
-	 * `workbookWrites` when the container names a `c:f` formula reference.
-	 * Call alongside {@link updateChartCacheValues} with the SAME arguments
-	 * so the embedded workbook and the chart cache always agree. A no-op
-	 * when the container has no formula reference (e.g. a brand-new series
-	 * built without one), so it is always safe to call.
-	 */
-	protected pushChartWorkbookWrite(
-		workbookWrites: PptxChartWorkbookWrite[],
-		container: XmlObject | undefined,
-		isNumeric: boolean,
-		values: string[],
-	): void {
-		const write = collectChartWorkbookWrite(this.xmlLookupService, container, isNumeric, values);
-		if (write) {
-			workbookWrites.push(write);
-		}
-	}
-
-	/**
 	 * Update the cached point values in a chart reference node
-	 * (numRef/strRef or numLit/strLit).
+	 * (numRef/strRef or numLit/strLit) from the chart's view of them. `before` is the view as
+	 * loaded: an unchanged view leaves the cache as written.
 	 */
 	protected updateChartCacheValues(
 		container: XmlObject,
 		isNumeric: boolean,
 		values: string[],
+		before?: readonly string[],
 	): void {
+		if (before?.length === values.length && before.every((value, at) => value === values[at])) {
+			return;
+		}
 		const refName = isNumeric ? 'numRef' : 'strRef';
 		const litName = isNumeric ? 'numLit' : 'strLit';
 		const cacheName = isNumeric ? 'numCache' : 'strCache';
@@ -1571,21 +1605,34 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			return;
 		}
 
-		// Update point count
 		const ptCountNode = this.xmlLookupService.getChildByLocalName(cacheNode, 'ptCount');
-		if (ptCountNode) {
-			ptCountNode['@_val'] = String(values.length);
-		}
-
 		// Find the key used for pt elements
 		const ptKey = Object.keys(cacheNode).find(
 			(key) => this.compatibilityService.getXmlLocalName(key) === 'pt',
 		);
+		const declared = Number(ptCountNode?.['@_val']);
+		if (before && declared > before.length) {
+			// The view shows only the start of the declared points: those past it are kept, moved up
+			// with any rows the edit removed, and the count stays.
+			const slotted = (node: XmlObject) => ({ index: Number(node['@_idx']), node });
+			const next = chartCacheOverView(buildChartPoints(values).map(slotted), values.length, {
+				points: this.xmlLookupService.getChildrenArrayByLocalName(cacheNode, 'pt').map(slotted),
+				pointCount: declared,
+				viewLength: before.length,
+			});
+			if (ptCountNode) ptCountNode['@_val'] = String(next.pointCount ?? declared);
+			cacheNode[ptKey ?? 'c:pt'] = next.points.map(({ index, node }) => ({
+				...node,
+				'@_idx': String(index),
+			}));
+			return;
+		}
+		if (ptCountNode) {
+			ptCountNode['@_val'] = String(values.length);
+		}
 		if (!ptKey) {
 			return;
 		}
-
-		// Rebuild point array
 		cacheNode[ptKey] = buildChartPoints(values);
 	}
 
@@ -1948,7 +1995,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					'c:numCache': {
 						'c:formatCode': 'General',
 						'c:ptCount': { '@_val': String(seriesData.values.length) },
-						'c:pt': buildChartPoints(seriesData.values.map(String)),
+						'c:pt': buildChartPoints(chartSeriesCacheValues(seriesData)),
 					},
 				},
 			},

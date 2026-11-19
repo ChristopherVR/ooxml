@@ -1,5 +1,6 @@
 import { EMU_PER_POINT } from '../../../units/index';
 import type { ChartSpaceSeries } from '../../../chart/index';
+import type { ChartPointBudget } from '../../../chart/point-limit';
 import { chartColorFromNeutral, chartGradientFromNeutral } from './chart-from-neutral-paint';
 import type { IPptxXmlLookupService } from '../services/PptxXmlLookupService';
 import type { PptxChartSeries, PptxChartType, XmlObject } from '../types';
@@ -30,6 +31,8 @@ export interface ChartTreeReader {
 	resolveTypeface: (raw: string) => string;
 	localName: (key: string) => string;
 	colorStyleCodec?: ChartGradientCodec;
+	/** Pays for the views of caches kept outside the neutral model. */
+	pointBudget?: ChartPointBudget;
 }
 
 /** The series fields read from the object tree; the structural ones come from the neutral model. */
@@ -75,7 +78,13 @@ export function readSeriesTreeFields(
 	const dataLabels = parseSeriesDataLabels(seriesNode, xml, colorAdapter, reader.resolveTypeface);
 	const labelGroup = xml.getChildByLocalName(seriesNode, 'dLbls');
 	const dataLabelOptions = labelGroup
-		? parseChartDataLabelOptions(labelGroup, xml, colorAdapter, reader.resolveTypeface)
+		? parseChartDataLabelOptions(
+				labelGroup,
+				xml,
+				colorAdapter,
+				reader.resolveTypeface,
+				reader.pointBudget,
+			)
 		: undefined;
 	const picture = parseChartDataPointPicture(seriesNode, xml);
 	const impliedPicture = picture ? undefined : parseImplicitBlipPictureFill(seriesNode, xml);

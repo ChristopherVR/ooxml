@@ -2675,14 +2675,18 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 				"
 			>
 				<!-- Collaboration status in the footer (React parity), replacing the
-				     former floating pill. -->
+				     former floating pill. A session that could not start still says why. -->
 				<template
-					v-if="collaboration.collabActive.value && dialogAvailable('share')"
+					v-if="
+						(collaboration.collabActive.value || collaboration.collab.failure.value) &&
+						dialogAvailable('share')
+					"
 					#collaboration
 				>
 					<CollaborationStatusIndicator
 						:status="collaboration.collab.status.value"
 						:connected-count="collaboration.collab.connectedCount.value"
+						:failure="collaboration.collab.failure.value"
 						@retry="collaboration.collab.retry"
 					/>
 				</template>

@@ -3,9 +3,9 @@
 // stored snapshot and a client from another release must keep agreeing on them (see
 // docs/teams-area.md, "Compatibility policy"). DOM-free. New code.
 import { chatRoomId, directChatId } from './chats';
-import { callRoomId } from './view';
+import { callRoomId, chatCallRoomId } from './view';
 
-export { chatRoomId, directChatId, callRoomId };
+export { chatRoomId, directChatId, callRoomId, chatCallRoomId };
 
 /**
  * Version of the sync and signaling protocol: the room names, the query parameters and the y-websocket
@@ -30,6 +30,8 @@ export const isCurrentChatId = (id: string): boolean =>
 	DIRECT_CHAT_ID_PATTERN.test(id) || GROUP_CHAT_ID_PATTERN.test(id);
 /** `call-<workspace>-<channel>`: the signaling room of a call. */
 export const CALL_ROOM_PATTERN = /^call-[\w-]+$/u;
+/** The end of a call room an earlier client used for a current chat id: `call-<workspace>-<chat id>`. */
+const CHAT_ID_SUFFIX = /-(?:dm-[0-9a-f]{32}|g-[0-9a-f]{32}-[0-9a-f]{24})$/u;
 
 export type RoomKind = 'chat' | 'call' | 'workspace';
 
@@ -45,6 +47,25 @@ export const chatIdOfRoom = (room: string): string | null =>
  */
 export const isChatRoomAlias = (room: string): boolean =>
 	/^chat-[0-9a-f]{16}-/iu.test(room) && !isChatRoom(room);
+
+/**
+ * The chat room whose members may join the call room `room` (`call-chat-<16 hex>-<chat id>`, see
+ * `chatCallRoomId`), or null when `room` is not a private chat's call.
+ */
+export const chatRoomOfCall = (room: string): string | null =>
+	room.startsWith('call-') && isChatRoom(room.slice('call-'.length))
+		? room.slice('call-'.length)
+		: null;
+
+/**
+ * A call room no current client opens for a private chat: a letter-case variant of a chat's call
+ * room, or the `call-<workspace>-<chat id>` form, which names a current chat id but carries no chat
+ * room a server could check members against.
+ */
+export const isStrayChatCallRoom = (room: string): boolean =>
+	room.startsWith('call-') &&
+	chatRoomOfCall(room) === null &&
+	(isChatRoomAlias(room.slice('call-'.length)) || CHAT_ID_SUFFIX.test(room));
 
 /**
  * What a room name is. A workspace room is the workspace id itself (1-128 of `[\w-]`), so a

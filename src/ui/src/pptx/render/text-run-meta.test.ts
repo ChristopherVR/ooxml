@@ -71,28 +71,16 @@ describe('resolveRunHyperlink', () => {
 		});
 	});
 
-	it('maps a:hlinkClick/@tgtFrame onto the anchor target, dropping rel for _self', () => {
-		expect(
-			resolveRunHyperlink({
+	it.each(['_self', '_top', '_parent', '_blank', 'contentFrame', '  ', undefined])(
+		'opens a link authored with tgtFrame %j in a new isolated tab',
+		(frame) => {
+			const link = resolveRunHyperlink({
 				hyperlink: 'https://example.com/a',
-				hyperlinkTargetFrame: '_self',
-			}),
-		).toStrictEqual({
-			url: 'https://example.com/a',
-			href: 'https://example.com/a',
-			target: '_self',
-			rel: '',
-		});
-	});
-
-	it('keeps noopener/noreferrer for a named (non-_self) tgtFrame', () => {
-		const link = resolveRunHyperlink({
-			hyperlink: 'https://example.com/a',
-			hyperlinkTargetFrame: 'contentFrame',
-		});
-		expect(link?.target).toBe('contentFrame');
-		expect(link?.rel).toBe('noopener noreferrer');
-	});
+				...(frame === undefined ? {} : { hyperlinkTargetFrame: frame }),
+			});
+			expect(link).toMatchObject({ target: '_blank', rel: 'noopener noreferrer' });
+		},
+	);
 
 	it('keeps an unsafe target out of the href but still reports the url', () => {
 		const link = resolveRunHyperlink({ hyperlink: `${'javascript'}:alert(1)` });

@@ -127,6 +127,9 @@ export function normalizedNewChart(
 	options: { labelPositionsOnly?: boolean } = {},
 ): { after: PptxChartData; unwritten: string[] } {
 	const after = structuredClone(chart);
+	// A new part is written from the data as it stands, whatever edits made it.
+	delete after.structureEdits;
+	delete after.savedRevision;
 	const unwritten: string[] = [];
 	dropRefusedLabelPositions(after, unwritten);
 	if (options.labelPositionsOnly) return { after, unwritten };

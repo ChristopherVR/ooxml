@@ -52,8 +52,12 @@ export interface AiPolicy {
 	userProviders: string[] | null;
 	offline: { enabled: boolean };
 	features: Record<AiFeature, boolean>;
-	/** Where shared chats sync; without a `syncUrl` they use the Teams server or the browser's tabs. */
-	collaboration: { syncUrl: string; token: string };
+	/**
+	 * Where shared chats sync; without a `syncUrl` they use the Teams server or the browser's tabs.
+	 * A sync server that needs a token gets a short-lived one from `credentialsUrl`, a host
+	 * endpoint. A token never sits in the policy, which is public to everyone who can load the app.
+	 */
+	collaboration: { syncUrl: string; credentialsUrl: string };
 	limits: { maxContextChars: number; historyMessages: number; maxOutputTokens: number };
 	/** What a request may read beyond what the user attached. */
 	context: {
@@ -84,7 +88,7 @@ function defaults(): AiPolicy {
 			AiFeature,
 			boolean
 		>,
-		collaboration: { syncUrl: '', token: '' },
+		collaboration: { syncUrl: '', credentialsUrl: '' },
 		limits: { maxContextChars: 150000, historyMessages: 20, maxOutputTokens: 8192 },
 		context: { includeHidden: false },
 		behaviour: { instructions: '', style: 'balanced', language: '', temperature: null },
@@ -134,11 +138,32 @@ function connection(raw: unknown, providers: readonly AiProviderSpec[]): AiConne
 }
 
 /**
+ * A credentials endpoint resolved against the page: `https:` or the page's own origin, without
+ * user info. Anything else is dropped.
+ */
+function credentialsUrl(value: string, pageUrl: string | undefined): string {
+	if (!value) return '';
+	try {
+		const url = new URL(value, pageUrl);
+		const sameOrigin = pageUrl !== undefined && url.origin === new URL(pageUrl).origin;
+		const allowed = url.protocol === 'https:' || sameOrigin;
+		return allowed && !url.username && !url.password ? url.href : '';
+	} catch {
+		return '';
+	}
+}
+
+/**
  * A deployment's configuration merged over the defaults, ignoring anything malformed field by
  * field. `providers` is the host's provider catalogue; a connection naming another is dropped.
- * Any configuration turns the assistant on unless it says `"enabled": false`.
+ * `pageUrl` is the page the policy runs on, which a relative `collaboration.credentialsUrl`
+ * resolves against. Any configuration turns the assistant on unless it says `"enabled": false`.
  */
-export function normalizeAiPolicy(raw: unknown, providers: readonly AiProviderSpec[]): AiPolicy {
+export function normalizeAiPolicy(
+	raw: unknown,
+	providers: readonly AiProviderSpec[],
+	pageUrl?: string,
+): AiPolicy {
 	const p = defaults();
 	if (!raw || typeof raw !== 'object') return p;
 	const r = raw as Raw;
@@ -178,7 +203,10 @@ export function normalizeAiPolicy(raw: unknown, providers: readonly AiProviderSp
 	const sync = text(collaboration.syncUrl, 500);
 	if (/^wss?:\/\/\S+$/iu.test(sync)) {
 		p.collaboration.syncUrl = sync;
-		p.collaboration.token = text(collaboration.token, 4096);
+		p.collaboration.credentialsUrl = credentialsUrl(
+			text(collaboration.credentialsUrl, 500),
+			pageUrl,
+		);
 	}
 	const ids = ['offline', ...p.connections.map((c) => c.id)];
 	p.defaultConnection =

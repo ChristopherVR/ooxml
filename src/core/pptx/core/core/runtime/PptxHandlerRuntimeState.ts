@@ -66,6 +66,9 @@ import type {
 	IPptxTableDataParser,
 } from '../builders';
 import type { IPptxRuntimeDependencyFactory } from '../factories';
+import type { ChartWorkbookCellsWritten } from './chart-external-workbook-save';
+import { ChartPartRevisions } from './chart-part-revisions';
+import type { ChartDataSheets } from '../../utils/chart-workbook-sheets';
 import { LoadPartReader, readPartText, readPartXml } from './load-part-reader';
 import { TemplateElementBaselineTracker } from './template-element-baselines';
 
@@ -158,8 +161,27 @@ export class PptxHandlerRuntime {
 	protected pendingChartUpdates?:
 		| Array<{ chartData: PptxChartData; slidePath: string }>
 		| undefined;
-	/** Last fully reconciled workbook data plus whether a write-back needs retry. */
-	protected chartWorkbookDataBaselines = new Map<string, { signature: string; pending: boolean }>();
+	/**
+	 * Last fully reconciled workbook data. `retry` is set while a write-back did not fully land: the
+	 * chart part as it was before it and the cells it changed, which the next save puts back before
+	 * it writes from that part again, so the workbook always ends up holding what the chart holds.
+	 */
+	protected chartWorkbookDataBaselines = new Map<
+		string,
+		{ signature: string; retry?: { chartXml: string; written?: ChartWorkbookCellsWritten } }
+	>();
+	/** The states each classic chart part was saved in, for chart data that undo brings back. */
+	protected chartPartRevisions = new ChartPartRevisions();
+	/** Embedded workbook sheets this session allocated for chart data, which it may reuse or remove. */
+	protected chartDataSheets: ChartDataSheets['allocated'] = new Map();
+
+	/** The chart data sheets this session allocated, and those its saved states read. */
+	protected chartDataSheetsOfSession(): ChartDataSheets {
+		return {
+			allocated: this.chartDataSheets,
+			held: (path) => this.chartPartRevisions.sheetsHeld(path),
+		};
+	}
 
 	/** Per-slide relationship maps: slide path -> (rId -> target path). */
 	protected slideRelsMap: Map<string, Map<string, string>> = new Map();

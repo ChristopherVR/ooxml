@@ -25,6 +25,11 @@
  *
  * @module utils/chart-data-labels-range
  */
+import {
+	chartPointBudget,
+	limitChartPointLength,
+	type ChartPointBudget,
+} from '../../../chart/point-limit';
 import type { PptxChartDataLabelsRange, XmlObject } from '../types';
 import {
 	CHART15_EXT_URI,
@@ -64,7 +69,11 @@ function scalar(
 }
 
 /** Dense-array reader for a `c15:dlblRangeCache` (CT_StrData: `ptCount` + `pt[@idx]/v`). */
-function readStrData(cacheNode: XmlObject | undefined, xmlLookup: XmlLookupLike): string[] {
+function readStrData(
+	cacheNode: XmlObject | undefined,
+	xmlLookup: XmlLookupLike,
+	budget: ChartPointBudget,
+): string[] {
 	if (!cacheNode) {
 		return [];
 	}
@@ -88,7 +97,7 @@ function readStrData(cacheNode: XmlObject | undefined, xmlLookup: XmlLookupLike)
 		String(xmlLookup.getChildByLocalName(cacheNode, 'ptCount')?.['@_val'] ?? ''),
 		10,
 	);
-	const length = Number.isFinite(declared) && declared > maxIndex + 1 ? declared : maxIndex + 1;
+	const length = limitChartPointLength(budget, points.length, maxIndex + 1, declared);
 	const out: string[] = [];
 	for (let i = 0; i < length; i++) {
 		out.push(byIndex.get(i) ?? '');
@@ -104,6 +113,7 @@ function readStrData(cacheNode: XmlObject | undefined, xmlLookup: XmlLookupLike)
 export function parseDataLabelsRange(
 	dLblsGroup: XmlObject,
 	xmlLookup: XmlLookupLike,
+	budget: ChartPointBudget = chartPointBudget(),
 ): PptxChartDataLabelsRange | undefined {
 	const ext = findChart15Ext(dLblsGroup, xmlLookup);
 	if (!ext) {
@@ -117,7 +127,11 @@ export function parseDataLabelsRange(
 	if (!formula) {
 		return undefined;
 	}
-	const cache = readStrData(xmlLookup.getChildByLocalName(rangeNode, 'dlblRangeCache'), xmlLookup);
+	const cache = readStrData(
+		xmlLookup.getChildByLocalName(rangeNode, 'dlblRangeCache'),
+		xmlLookup,
+		budget,
+	);
 	return { formula, cache };
 }
 

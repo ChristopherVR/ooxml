@@ -234,7 +234,9 @@ function checkReaction(
 
 /**
  * Check `update` against the current state of `doc` without changing `doc`. The update is applied
- * to a scratch copy; every message row and reaction it touches is compared with the original.
+ * to a scratch copy; every message row and reaction it touches is compared with the original. Each
+ * call copies `doc`; a server checking every update of a room keeps one copy with
+ * `createUpdateChecker` instead.
  * Rules, for a non-moderator actor:
  * - a new message row must have `authorId` equal to the actor;
  * - an existing row may be edited, soft-deleted or removed only by its author, who cannot change
@@ -259,67 +261,107 @@ export function validateTeamsUpdate(
 	actor: UpdateActor,
 	options: ValidateOptions = {},
 ): UpdateVerdict {
+	let scratch: Y.Doc | null = null;
+	try {
+		return checkUpdateOnCopy(
+			doc,
+			() => {
+				scratch = new Y.Doc();
+				Y.applyUpdate(scratch, Y.encodeStateAsUpdate(doc));
+				return scratch;
+			},
+			update,
+			actor,
+			options,
+		);
+	} finally {
+		(scratch as Y.Doc | null)?.destroy();
+	}
+}
+
+/**
+ * {@link validateTeamsUpdate} on a copy of `doc` that `copy` returns (built only once the update
+ * passed the size checks). The update is left applied to the copy, accepted or not. Never throws.
+ */
+export function checkUpdateOnCopy(
+	doc: Y.Doc,
+	copy: () => Y.Doc,
+	update: Uint8Array,
+	actor: UpdateActor,
+	options: ValidateOptions = {},
+): UpdateVerdict {
 	if (!(update instanceof Uint8Array) || update.byteLength > (options.maxBytes ?? MAX_UPDATE_BYTES))
 		return fail({ code: 'invalid-update' });
 	// Before anything is decoded: a small frame must not make Yjs allocate millions of structs.
 	if (!scanUpdate(update, options).ok) return fail({ code: 'invalid-update' });
-	const scratch = new Y.Doc();
-	const touched: Touched = { rows: new Map(), reactions: new Set() };
-	const reverts: RowRevert[] = [];
 	try {
-		Y.applyUpdate(scratch, Y.encodeStateAsUpdate(doc));
-		scratch.on('afterTransaction', (txn: Y.Transaction) => collectTouched(scratch, txn, touched));
-		Y.applyUpdate(scratch, update);
-		if (scratch.store.pendingStructs !== null || scratch.store.pendingDs !== null)
-			return fail({ code: 'incomplete-update' });
-		const violations: UpdateViolation[] = [];
-		for (const [name, rows] of touched.rows) {
-			const beforeMap = mapOf(doc, name);
-			const afterMap = mapOf(scratch, name);
-			for (const rowId of rows) {
-				const was = beforeMap?.get(rowId);
-				const now = afterMap?.get(rowId);
-				let found: UpdateViolation | null;
-				if (writesUnsupportedValue(was, now))
-					found = { code: 'malformed-row', map: name, key: rowId };
-				else if (name.startsWith(MESSAGES_PREFIX))
-					found =
-						checkRow(name, rowId, was, now, actor) ?? checkMessageSize(name, rowId, now, options);
-				else if (name.startsWith(PINS_PREFIX))
-					found = checkPinRow(name, rowId, was, now, actor, doc);
-				else if (name === ROSTER) found = checkRosterRow(rowId, was, now, actor);
-				else if (name === CHAT_MEMBERS) found = checkMemberKey(rowId, beforeMap, afterMap, actor);
-				else if (name === CHATS_MAP) found = checkChatRow(rowId, was, now, actor, reverts);
-				else found = checkOwnedRow(name, rowId, was, now, actor);
-				if (found) violations.push(found);
-			}
-		}
-		const beforeReactions = mapOf(doc, REACTIONS);
-		const afterReactions = mapOf(scratch, REACTIONS);
-		for (const key of touched.reactions) {
-			const found = checkReaction(
-				key,
-				beforeReactions?.has(key) === true,
-				afterReactions?.has(key) === true,
-				actor,
-			);
-			if (found) violations.push(found);
-		}
-		const counted = new Set<string>();
-		for (const key of touched.reactions) {
-			const messageId = key.split(REACTION_SEP)[0] ?? '';
-			if (counted.has(messageId)) continue;
-			counted.add(messageId);
-			const found = checkReactionCount(messageId, afterReactions, options);
-			if (found) violations.push(found);
-		}
-		if (violations.length) return { ok: false, violations };
-		return reverts.length ? { ok: true, reverts } : OK;
+		return compareOnCopy(doc, copy(), update, actor, options);
 	} catch {
 		return fail({ code: 'invalid-update' });
-	} finally {
-		scratch.destroy();
 	}
+}
+
+/** Apply `update` to `scratch`, which holds the state of `doc`, and compare what it touched. */
+function compareOnCopy(
+	doc: Y.Doc,
+	scratch: Y.Doc,
+	update: Uint8Array,
+	actor: UpdateActor,
+	options: ValidateOptions,
+): UpdateVerdict {
+	const touched: Touched = { rows: new Map(), reactions: new Set() };
+	const reverts: RowRevert[] = [];
+	const collect = (txn: Y.Transaction): void => collectTouched(scratch, txn, touched);
+	scratch.on('afterTransaction', collect);
+	try {
+		Y.applyUpdate(scratch, update);
+	} finally {
+		scratch.off('afterTransaction', collect);
+	}
+	if (scratch.store.pendingStructs !== null || scratch.store.pendingDs !== null)
+		return fail({ code: 'incomplete-update' });
+	const violations: UpdateViolation[] = [];
+	for (const [name, rows] of touched.rows) {
+		const beforeMap = mapOf(doc, name);
+		const afterMap = mapOf(scratch, name);
+		for (const rowId of rows) {
+			const was = beforeMap?.get(rowId);
+			const now = afterMap?.get(rowId);
+			let found: UpdateViolation | null;
+			if (writesUnsupportedValue(was, now))
+				found = { code: 'malformed-row', map: name, key: rowId };
+			else if (name.startsWith(MESSAGES_PREFIX))
+				found =
+					checkRow(name, rowId, was, now, actor) ?? checkMessageSize(name, rowId, now, options);
+			else if (name.startsWith(PINS_PREFIX)) found = checkPinRow(name, rowId, was, now, actor, doc);
+			else if (name === ROSTER) found = checkRosterRow(rowId, was, now, actor);
+			else if (name === CHAT_MEMBERS) found = checkMemberKey(rowId, beforeMap, afterMap, actor);
+			else if (name === CHATS_MAP) found = checkChatRow(rowId, was, now, actor, reverts);
+			else found = checkOwnedRow(name, rowId, was, now, actor);
+			if (found) violations.push(found);
+		}
+	}
+	const beforeReactions = mapOf(doc, REACTIONS);
+	const afterReactions = mapOf(scratch, REACTIONS);
+	for (const key of touched.reactions) {
+		const found = checkReaction(
+			key,
+			beforeReactions?.has(key) === true,
+			afterReactions?.has(key) === true,
+			actor,
+		);
+		if (found) violations.push(found);
+	}
+	const counted = new Set<string>();
+	for (const key of touched.reactions) {
+		const messageId = key.split(REACTION_SEP)[0] ?? '';
+		if (counted.has(messageId)) continue;
+		counted.add(messageId);
+		const found = checkReactionCount(messageId, afterReactions, options);
+		if (found) violations.push(found);
+	}
+	if (violations.length) return { ok: false, violations };
+	return reverts.length ? { ok: true, reverts } : OK;
 }
 
 /**

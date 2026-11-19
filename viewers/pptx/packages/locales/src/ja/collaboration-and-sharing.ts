@@ -35,6 +35,22 @@ export const translations = {
 	'pptx.collaboration.peopleHere': '{{count}} 人が参加中',
 	'pptx.collaboration.retry': '再試行',
 	'pptx.collaboration.retryConnection': '接続を再試行',
+	'pptx.collaboration.failure.invalidRoom':
+		'ルーム名が無効です。1 から 128 文字の英数字、ハイフン、アンダースコアを使用してください。',
+	'pptx.collaboration.failure.missingSecret':
+		'このピアツーピア招待にはセッション キーがありません。受け取った共有リンクをすべて開いてください。',
+	'pptx.collaboration.failure.insecurePage':
+		'ピアツーピア セッションには安全なページが必要です。このページを https:// (または localhost) で開いて、もう一度お試しください。',
+	'pptx.collaboration.failure.moduleUnavailable':
+		'共同編集コンポーネントを読み込めませんでした。ネットワーク接続を確認してから再試行してください。',
+	'pptx.collaboration.failure.insecureServer':
+		'https:// のページから安全でない ws:// サーバーには接続できません。安全な wss:// サーバー URL を使用してください。',
+	'pptx.collaboration.failure.serverUnreachable':
+		'共同編集サーバーに接続できませんでした。サーバー URL が実行中の y-websocket サーバーを指していることを確認してください。',
+	'pptx.collaboration.failure.noBroadcast':
+		'このブラウザーではウィンドウ間で共有できません。共同編集サーバーまたはピアツーピア リンクを使用してください。',
+	'pptx.collaboration.failure.unknown':
+		'共同編集の接続に失敗しました。招待リンクとネットワーク接続を確認してから再試行してください。',
 	'pptx.followMode.following': 'フォロー中',
 	'pptx.followMode.stop': '停止',
 	'pptx.followMode.stopFollowing': 'フォローを停止',
@@ -71,7 +87,7 @@ export const translations = {
 	'pptx.share.serverHint':
 		'y-websocket サーバーの WebSocket URL を入力するか (https:// のページから共有する場合はセキュアな wss://)、サーバーを使用しないピアツーピア モードの場合は空欄のままにします。',
 	'pptx.share.p2pHint':
-		'ピアツーピア モード: 同じブラウザーのタブは常に接続されます。他のデバイスは公開 WebRTC シグナリング サーバーを経由して接続します。',
+		'ピアツーピア モード: 同じブラウザーのタブは常に接続されます。他のデバイスは公開 WebRTC シグナリング サーバーを経由して接続します。 共有リンクで招待してください。リンクにはセッション キーが含まれており、ルーム名だけでは参加できません。',
 	'pptx.share.p2pServerValue': 'ピアツーピア (サーバーなし)',
 	'pptx.share.shareLink': '共有リンク',
 	'pptx.share.copyLink': '共有リンクをコピー',
@@ -82,8 +98,6 @@ export const translations = {
 	'pptx.share.server': 'サーバー:',
 	'pptx.share.connectedUsers': '接続中のユーザー',
 	'pptx.share.you': '(自分)',
-	'pptx.share.connectionError':
-		'共同編集サーバーに接続できませんでした。サーバーの URL を確認してください。接続可能な y-websocket サーバーである必要があり、https:// のページから共有する場合はセキュアな wss:// URL が必要です。',
 	'pptx.broadcast.title': 'スライド ショーのブロードキャスト',
 	'pptx.broadcast.broadcasting': 'ライブ ブロードキャスト中',
 	'pptx.broadcast.description':

@@ -35,6 +35,7 @@ describe('supported custom collaboration shell exports', () => {
 		const state: CollaborationShellState = {
 			canEdit: options.canEdit(),
 			status,
+			failure: null,
 			remoteUsers,
 			connectedCount: 0,
 		};

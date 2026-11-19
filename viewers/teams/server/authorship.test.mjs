@@ -78,8 +78,16 @@ describe('session roles', () => {
 		const signer = createSessionSigner({ secret: 's' });
 		const plain = signer.issue('ann');
 		const mod = signer.issue('root', 'moderator');
-		assert.deepEqual(signer.inspect(plain.token), { user: 'ann', role: undefined });
-		assert.deepEqual(signer.inspect(mod.token), { user: 'root', role: 'moderator' });
+		assert.deepEqual(signer.inspect(plain.token), {
+			user: 'ann',
+			role: undefined,
+			expiresAt: plain.expiresAt,
+		});
+		assert.deepEqual(signer.inspect(mod.token), {
+			user: 'root',
+			role: 'moderator',
+			expiresAt: mod.expiresAt,
+		});
 		assert.equal(signer.verify(mod.token), 'root');
 		assert.equal(signer.issue('x', 'admin').token.split('.').length, 3);
 		assert.equal(signer.inspect(signer.issue('x', 'admin').token).role, undefined);

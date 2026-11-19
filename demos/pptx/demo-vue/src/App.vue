@@ -25,6 +25,8 @@ import { useI18n } from 'vue-i18n';
 import 'pptx-vue-viewer/styles';
 
 import { installDevViewerHandle } from '../../dev-viewer-handle';
+import { sessionFromPage, showSessionInAddressBar } from '../../shared/collaboration-link';
+import type { SessionLink } from '../../shared/collaboration-link';
 import { currentDemoCustomization } from '../../shared/demo-customization';
 import { demoFileProviders } from '../../shared/demo-file-providers';
 import { currentDemoRootOptions } from '../../shared/demo-root-options';
@@ -66,9 +68,9 @@ const fileName = ref('');
 const restoreChecked = ref(false);
 
 // Demo AI provider: the host builds an OpenAI-compatible browser model from
-// localStorage-supplied fields and passes it to the viewer's optional `ai`
-// prop. The demo ships no key and no config UI, so this is normally undefined
-// and the assistant simply stays off.
+// fields set by hand in this tab's sessionStorage and passes it to the
+// viewer's optional `ai` prop. The demo ships no key and no config UI, so this
+// is normally undefined and the assistant simply stays off.
 const aiAssistant = useDemoAiAssistant();
 
 const themeKey = ref<string>(readStoredTheme());
@@ -131,11 +133,10 @@ const params = new URLSearchParams(window.location.search);
 const urlRoom = ref(params.get('room'));
 const urlBroadcast = ref(params.get('broadcast'));
 const urlName = params.get('name');
-// Serverless peer-to-peer joins carry `?transport=webrtc` (and optional
-// `?signaling=a,b`); they need no `?server=` and no file server round-trip.
-const urlTransport = params.get('transport');
-const urlSignaling = params.get('signaling')?.split(',').filter(Boolean) ?? [];
-const isWebrtcJoin = urlTransport === 'webrtc';
+// Serverless peer-to-peer joins carry `?transport=webrtc` (optional
+// `?signaling=a,b` and the `#key=` secret, read by `sessionFromPage`); they
+// need no `?server=` and no file server round-trip.
+const isWebrtcJoin = params.get('transport') === 'webrtc';
 // For a webrtc join the server URL is intentionally blank (P2P); otherwise fall
 // back to the configured relay / localhost default.
 const urlServer = isWebrtcJoin ? '' : (params.get('server') ?? resolveDefaultServerUrl());
@@ -161,45 +162,46 @@ const defaultServerUrl = resolveDefaultServerUrl();
 // ── Collaboration state ────────────────────────────────────────────────────
 const collaborationConfig = shallowRef<CollaborationConfig | null>(null);
 
-// A webrtc join is serverless, so it bypasses the trusted-host allowlist (there
-// is no server to trust); a websocket join still requires a trusted server.
-const joinAllowed = isWebrtcJoin || isTrustedServerUrl(urlServer);
+// The sessions the page address names. A webrtc join is serverless, so it
+// bypasses the trusted-host allowlist (there is no server to trust); a
+// websocket join still requires a trusted server.
+const roomLink = urlRoom.value ? sessionFromPage('room', urlServer) : null;
+const broadcastLink = urlBroadcast.value ? sessionFromPage('broadcast', urlServer) : null;
+const joinAllowed = (link: SessionLink): boolean =>
+	link.transport === 'webrtc' || isTrustedServerUrl(link.serverUrl);
 
 // Auto-connect if room is in URL (collaboration mode).
 watchEffect(() => {
-	if (urlRoom.value && !collaborationConfig.value && joinAllowed) {
+	if (urlRoom.value && roomLink && !collaborationConfig.value && joinAllowed(roomLink)) {
 		collaborationConfig.value = {
-			roomId: urlRoom.value,
-			serverUrl: urlServer,
+			...roomLink,
 			userName: urlName ?? autoName,
 			userColor: randomUserColor(),
-			...(isWebrtcJoin
-				? { transport: 'webrtc', signaling: urlSignaling.length ? urlSignaling : undefined }
-				: {}),
 		};
-	} else if (urlRoom.value && !joinAllowed) {
+	} else if (urlRoom.value && roomLink && !joinAllowed(roomLink)) {
 		console.warn(
-			`Ignoring ?room= auto-connect because ?server=${urlServer} is not in the trusted-host allowlist. Use the Share dialog to connect explicitly.`,
+			`Ignoring ?room= auto-connect because ?server=${roomLink.serverUrl} is not in the trusted-host allowlist. Use the Share dialog to connect explicitly.`,
 		);
 	}
 });
 
 // Auto-connect if broadcast is in URL (viewer mode).
 watchEffect(() => {
-	if (urlBroadcast.value && !collaborationConfig.value && joinAllowed) {
+	if (
+		urlBroadcast.value &&
+		broadcastLink &&
+		!collaborationConfig.value &&
+		joinAllowed(broadcastLink)
+	) {
 		collaborationConfig.value = {
-			roomId: urlBroadcast.value,
-			serverUrl: urlServer,
+			...broadcastLink,
 			userName: urlName ?? autoName,
 			userColor: randomUserColor(),
 			role: 'viewer',
-			...(isWebrtcJoin
-				? { transport: 'webrtc', signaling: urlSignaling.length ? urlSignaling : undefined }
-				: {}),
 		};
-	} else if (urlBroadcast.value && !joinAllowed) {
+	} else if (urlBroadcast.value && broadcastLink && !joinAllowed(broadcastLink)) {
 		console.warn(
-			`Ignoring ?broadcast= auto-connect because ?server=${urlServer} is not in the trusted-host allowlist.`,
+			`Ignoring ?broadcast= auto-connect because ?server=${broadcastLink.serverUrl} is not in the trusted-host allowlist.`,
 		);
 	}
 });
@@ -207,29 +209,12 @@ watchEffect(() => {
 function handleStartCollaboration(config: CollaborationConfig): void {
 	collaborationConfig.value = config;
 	const webrtc = config.transport === 'webrtc';
-	// Update URL with room/broadcast info for sharing.
-	const url = new URL(window.location.href);
-	// The viewer's broadcast session is the session owner (role 'owner'); a
-	// regular collaboration session is role 'collaborator'.
-	if (config.role === 'owner') {
-		url.searchParams.set('broadcast', config.roomId);
-	} else {
-		url.searchParams.set('room', config.roomId);
-	}
-	// A serverless webrtc session shares `transport=webrtc` (no server URL);
-	// a websocket session shares its server so joiners fetch the file from it.
-	if (webrtc) {
-		url.searchParams.set('transport', 'webrtc');
-		url.searchParams.delete('server');
-		if (config.signaling?.length) {
-			url.searchParams.set('signaling', config.signaling.join(','));
-		}
-	} else {
-		url.searchParams.set('server', config.serverUrl);
-		url.searchParams.delete('transport');
-		url.searchParams.delete('signaling');
-	}
-	window.history.replaceState({}, '', url.toString());
+	// Update URL with room/broadcast info for sharing. The viewer's broadcast
+	// session is the session owner (role 'owner'); a regular collaboration
+	// session is role 'collaborator'. A serverless webrtc link carries its secret
+	// in the fragment; a websocket link shares its server so joiners fetch the
+	// file from it.
+	showSessionInAddressBar(config, config.role === 'owner' ? 'broadcast' : 'room');
 	// Upload PPTX content to the collab server so joiners can download it.
 	// Restricted to trusted hosts to prevent crafted ?server= URLs from
 	// exfiltrating user content. Serverless webrtc has no file server: joiners
@@ -250,12 +235,8 @@ function handleStopCollaboration(): void {
 	collaborationConfig.value = null;
 	urlRoom.value = null;
 	urlBroadcast.value = null;
+	showSessionInAddressBar(null);
 	const url = new URL(window.location.href);
-	url.searchParams.delete('room');
-	url.searchParams.delete('broadcast');
-	url.searchParams.delete('server');
-	url.searchParams.delete('transport');
-	url.searchParams.delete('signaling');
 	url.searchParams.delete('name');
 	window.history.replaceState({}, '', url.toString());
 }

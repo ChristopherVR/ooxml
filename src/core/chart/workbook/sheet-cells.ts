@@ -9,7 +9,7 @@
  *
  * @module chart/workbook/sheet-cells
  */
-import { elements, type XmlDocument, type XmlElement } from '../../xml/index';
+import { buildXml, elements, parseXml, type XmlDocument, type XmlElement } from '../../xml/index';
 import { parseCellAddress } from './cellref';
 
 /** One resolved cell write: a concrete "A1"-style ref plus its new value. */
@@ -38,38 +38,68 @@ function create(near: XmlElement, name: string): XmlElement {
 	return near.ownerDocument!.createElementNS(near.namespaceURI, qualified);
 }
 
-function findCell(sheetData: XmlElement, ref: string): XmlElement | undefined {
-	for (const row of childrenNamed(sheetData, 'row'))
-		for (const cell of childrenNamed(row, 'c')) if (cell.getAttribute('r') === ref) return cell;
-	return undefined;
+/** The rows and cells of a worksheet by number and reference, kept current as cells are added. */
+interface SheetIndex {
+	sheetData: XmlElement;
+	rows: Map<number, XmlElement>;
+	/** Row numbers in ascending order. */
+	order: number[];
+	cells: Map<string, XmlElement>;
+}
+
+function indexSheet(sheetData: XmlElement): SheetIndex {
+	const rows = new Map<number, XmlElement>();
+	const cells = new Map<string, XmlElement>();
+	for (const row of childrenNamed(sheetData, 'row')) {
+		const number = Number(row.getAttribute('r'));
+		if (!rows.has(number)) rows.set(number, row);
+		for (const cell of childrenNamed(row, 'c')) {
+			const ref = cell.getAttribute('r');
+			if (ref && !cells.has(ref)) cells.set(ref, cell);
+		}
+	}
+	return { sheetData, rows, order: [...rows.keys()].sort((a, b) => a - b), cells };
+}
+
+/** The position of the first row numbered above `number`. */
+function rowAfter(order: readonly number[], number: number): number {
+	let low = 0;
+	let high = order.length;
+	while (low < high) {
+		const middle = (low + high) >> 1;
+		if (order[middle]! > number) high = middle;
+		else low = middle + 1;
+	}
+	return low;
 }
 
 /** Get (creating if necessary) the row and cell for `ref`, each inserted in row or column order. */
-function ensureCell(sheetData: XmlElement, ref: string): XmlElement | undefined {
+function ensureCell(sheet: SheetIndex, ref: string): XmlElement | undefined {
+	const existing = sheet.cells.get(ref);
+	if (existing) return existing;
 	const address = parseCellAddress(ref);
 	if (!address) return undefined;
 	const rowNumber = address.row + 1;
-	const rows = childrenNamed(sheetData, 'row');
-	let row = rows.find((candidate) => Number(candidate.getAttribute('r')) === rowNumber);
+	let row = sheet.rows.get(rowNumber);
 	if (!row) {
-		row = create(sheetData, 'row');
+		row = create(sheet.sheetData, 'row');
 		row.setAttribute('r', String(rowNumber));
-		const after = rows.find((candidate) => Number(candidate.getAttribute('r')) > rowNumber);
-		sheetData.insertBefore(row, after ?? null);
+		const at = rowAfter(sheet.order, rowNumber);
+		const next = sheet.order[at];
+		sheet.sheetData.insertBefore(row, next === undefined ? null : sheet.rows.get(next)!);
+		sheet.order.splice(at, 0, rowNumber);
+		sheet.rows.set(rowNumber, row);
 	}
-	const cells = childrenNamed(row, 'c');
-	let cell = cells.find((candidate) => candidate.getAttribute('r') === ref);
-	if (!cell) {
-		cell = create(row, 'c');
-		cell.setAttribute('r', ref);
-		const after = cells.find((candidate) => {
-			const existing = parseCellAddress(candidate.getAttribute('r') ?? '');
-			return existing !== undefined && existing.col > address.col;
-		});
-		row.insertBefore(cell, after ?? null);
-		// `spans` is an optional hint of the row's column range; a new cell can fall outside it.
-		row.removeAttribute('spans');
-	}
+	const cell = create(row, 'c');
+	cell.setAttribute('r', ref);
+	const after = childrenNamed(row, 'c').find((candidate) => {
+		const other = parseCellAddress(candidate.getAttribute('r') ?? '');
+		return other !== undefined && other.col > address.col;
+	});
+	row.insertBefore(cell, after ?? null);
+	// `spans` is an optional hint of the row's column range; a new cell can fall outside it.
+	row.removeAttribute('spans');
+	sheet.cells.set(ref, cell);
 	return cell;
 }
 
@@ -90,9 +120,10 @@ function holds(
 	sharedStrings: readonly string[],
 ): boolean {
 	const type = cell.getAttribute('t') || 'n';
+	const current = childNamed(cell, 'v')?.textContent ?? undefined;
+	if (value === '') return current === undefined && !childNamed(cell, 'is');
 	if (isNumeric) {
-		const current = childNamed(cell, 'v')?.textContent ?? undefined;
-		if (value === '') return current === undefined && !childNamed(cell, 'is');
+		if (isCellError(value)) return type === 'e' && current === value;
 		if (type !== 'n' || current === undefined) return false;
 		const before = Number.parseFloat(current);
 		const after = Number.parseFloat(value);
@@ -103,15 +134,19 @@ function holds(
 	return type === 'inlineStr' && inlineText(cell) === value;
 }
 
+/** A worksheet error (`#N/A`), which a numeric chart cache holds as its text. */
+const isCellError = (value: string) => value.startsWith('#');
+
 /** Overwrite a cell's type and value to hold `value`, dropping any prior value shape. */
 function writeCell(cell: XmlElement, isNumeric: boolean, value: string): void {
 	for (const child of elements(cell))
 		if (child.localName === 'is' || child.localName === 'v' || child.localName === 'f')
 			cell.removeChild(child);
+	cell.removeAttribute('t');
+	// A blank point empties the cell, as Excel stores a cleared cell.
+	if (value === '') return;
 	if (isNumeric) {
-		cell.removeAttribute('t');
-		// A blank point empties the cell, as Excel stores a cleared cell.
-		if (value === '') return;
+		if (isCellError(value)) cell.setAttribute('t', 'e');
 		const v = create(cell, 'v');
 		v.textContent = value;
 		cell.appendChild(v);
@@ -129,27 +164,85 @@ function writeCell(cell: XmlElement, isNumeric: boolean, value: string): void {
 	cell.appendChild(is);
 }
 
+/** A cell a write changed, as markup: before the write (absent when it made the cell) and after. */
+export interface ChartCellChange {
+	ref: string;
+	before?: string;
+	after: string;
+}
+
 /**
- * Apply a batch of cell writes to a parsed worksheet. Returns whether any cell changed, so the
+ * Apply a batch of cell writes to a parsed worksheet and return the cells it changed, so the
  * caller only re-serializes a worksheet that differs from what was loaded. `sharedStrings` (the
  * workbook's shared string texts) lets a shared-string cell that already shows the text stay.
  */
-export function applyCellWritesToWorksheet(
+export function writeWorksheetCells(
 	doc: XmlDocument,
 	writes: readonly ChartCellWrite[],
 	sharedStrings: readonly string[] = [],
-): boolean {
+): ChartCellChange[] {
 	const sheetData = worksheetData(doc);
-	if (!sheetData) return false;
-	let changed = false;
+	if (!sheetData) return [];
+	const sheet = indexSheet(sheetData);
+	const changes = new Map<string, { before?: string; cell: XmlElement }>();
 	for (const write of writes) {
 		if (!parseCellAddress(write.ref)) continue;
-		const existing = findCell(sheetData, write.ref);
+		const existing = sheet.cells.get(write.ref);
 		if (existing && holds(existing, write.isNumeric, write.value, sharedStrings)) continue;
-		const cell = existing ?? ensureCell(sheetData, write.ref);
+		const before = existing && !changes.has(write.ref) ? buildXml(existing) : undefined;
+		const cell = existing ?? ensureCell(sheet, write.ref);
 		if (!cell) continue;
 		writeCell(cell, write.isNumeric, write.value);
-		changed = true;
+		if (!changes.has(write.ref))
+			changes.set(write.ref, before === undefined ? { cell } : { before, cell });
 	}
-	return changed;
+	return [...changes].map(([ref, { before, cell }]) => ({
+		ref,
+		...(before === undefined ? {} : { before }),
+		after: buildXml(cell),
+	}));
+}
+
+/**
+ * Apply a batch of cell writes to a parsed worksheet. Returns whether any cell changed, so the
+ * caller only re-serializes a worksheet that differs from what was loaded.
+ */
+export const applyCellWritesToWorksheet = (
+	doc: XmlDocument,
+	writes: readonly ChartCellWrite[],
+	sharedStrings: readonly string[] = [],
+): boolean => writeWorksheetCells(doc, writes, sharedStrings).length > 0;
+
+const XMLNS = 'http://www.w3.org/2000/xmlns/';
+
+/**
+ * Puts back each cell of `changes` that still holds what its write left, so cells written since,
+ * by another chart or by hand, stay. Returns the references it restored.
+ */
+export function restoreWorksheetCells(
+	doc: XmlDocument,
+	changes: readonly ChartCellChange[],
+): string[] {
+	const sheetData = worksheetData(doc);
+	if (!sheetData) return [];
+	const sheet = indexSheet(sheetData);
+	const restored: string[] = [];
+	for (const change of changes) {
+		const cell = sheet.cells.get(change.ref);
+		if (!cell || buildXml(cell) !== change.after) continue;
+		if (change.before === undefined) {
+			cell.parentNode?.removeChild(cell);
+		} else {
+			const before = parseXml(change.before, { label: 'Worksheet cell' }).documentElement!;
+			for (const attribute of Array.from(cell.attributes)) cell.removeAttributeNode(attribute);
+			for (const child of Array.from(cell.childNodes)) cell.removeChild(child);
+			for (const attribute of Array.from(before.attributes))
+				if (attribute.namespaceURI !== XMLNS)
+					cell.setAttributeNS(attribute.namespaceURI, attribute.name, attribute.value);
+			for (const child of Array.from(before.childNodes))
+				cell.appendChild(doc.importNode(child, true));
+		}
+		restored.push(change.ref);
+	}
+	return restored;
 }

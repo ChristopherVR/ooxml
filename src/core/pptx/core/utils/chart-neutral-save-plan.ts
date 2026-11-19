@@ -36,6 +36,7 @@ import { planNeutralGroupOptions } from './chart-neutral-save-groups';
 import { planNeutralGroupSubtype } from './chart-neutral-save-subtype';
 import { planNeutralGroupFlags } from './chart-neutral-save-group-flags';
 import { planNeutralSeriesStructure } from './chart-neutral-save-structure';
+import { planNeutralStructureEdits } from './chart-neutral-save-structure-edits';
 import { planNeutralFilteredSeries } from './chart-neutral-save-filtered';
 import { planNeutralChartType } from './chart-neutral-save-type';
 import { planNeutralChartFormats } from './chart-neutral-save-format';
@@ -62,8 +63,6 @@ export interface NeutralChartSavePlan {
 	edits: NeutralChartEdit[];
 	/** Structural edits need fresh workbook ranges, allocated by the package adapter. */
 	rebuildWorkbook?: boolean;
-	/** Whether series names, values or categories changed (the embedded workbook follows them). */
-	seriesData: boolean;
 	/** Elements the package adapter encodes and supplies to the save (print settings...). */
 	packageElements?: NeutralChartPackageElement[];
 }
@@ -116,16 +115,14 @@ function planSeriesData(
 	before: PptxChartData,
 	probe: PptxChartData,
 	edits: NeutralChartEdit[],
-): boolean {
-	if (before.series.length !== probe.series.length) return false;
-	let changed = false;
+): void {
+	if (before.series.length !== probe.series.length) return;
 	probe.series.forEach((series, i) => {
 		const previous = before.series[i]!;
 		if (series.name !== previous.name) {
 			const name = series.name;
 			edits.push((space) => renameChartSeries(space, i, name, { keepReference: true }));
 			series.name = previous.name;
-			changed = true;
 		}
 		if (!same(series.values, previous.values) || !same(series.blanks, previous.blanks)) {
 			const values = series.values.map((value, point) => (series.blanks?.[point] ? null : value));
@@ -133,7 +130,6 @@ function planSeriesData(
 			series.values = previous.values;
 			if (previous.blanks === undefined) delete series.blanks;
 			else series.blanks = previous.blanks;
-			changed = true;
 		}
 	});
 	const textCategories =
@@ -145,9 +141,7 @@ function planSeriesData(
 		const categories = [...probe.categories];
 		edits.push((space) => setChartCategories(space, categories));
 		probe.categories = before.categories;
-		changed = true;
 	}
-	return changed;
 }
 
 /**
@@ -177,6 +171,23 @@ function differingPaths(reference: unknown, value: unknown, path: string): strin
 }
 
 /**
+ * `data` (a copy the caller owns) without the fields that are not edits: the saved state it
+ * describes, and what was read from the embedded workbook when it was read, which data brought
+ * back by undo carries as the workbook was then.
+ */
+function withoutBookkeeping(data: PptxChartData): PptxChartData {
+	delete data.savedRevision;
+	delete data.embeddedWorkbookData;
+	delete data.dataLabelTextEditable;
+	delete data.dataLabelSourceShape;
+	if (data.externalData?.embeddedWorkbookData) {
+		const { embeddedWorkbookData: _workbook, ...link } = data.externalData;
+		data.externalData = link;
+	}
+	return data;
+}
+
+/**
  * {@link planNeutralChartSave}, with the paths of the fields of `after` no family claimed (empty
  * when the plan is defined).
  */
@@ -184,10 +195,18 @@ export function planWithLeftovers(
 	before: PptxChartData,
 	after: PptxChartData,
 ): { plan: NeutralChartSavePlan | undefined; unclaimed: string[] } {
-	const probe = structuredClone(after);
+	const probe = withoutBookkeeping(structuredClone(after));
+	before = withoutBookkeeping({ ...before });
 	const edits: NeutralChartEdit[] = [];
 	// Chart Filters moves come first: the structure planner then sees no series added or removed.
+	const loaded = before;
 	before = planNeutralFilteredSeries(before, after, edits);
+	// Recorded row and series edits index the data as they found it, before any filter change.
+	if (before !== loaded && after.structureEdits?.length)
+		return { plan: undefined, unclaimed: ['structureEdits'] };
+	before = planNeutralStructureEdits(before, probe, edits);
+	// Edits the data sheet recorded update the workbook cell for cell, as Word's do; series this
+	// planner finds added or removed by their identity get a fresh sheet.
 	const original = before;
 	before = planNeutralSeriesStructure(before, after, edits);
 	planNeutralChartType(before, probe, edits);
@@ -202,7 +221,7 @@ export function planWithLeftovers(
 	planNeutralGroupFlags(before, probe, edits);
 	planNeutralChartAnalysis(before, probe, edits);
 	const vectors = planNeutralDataVectors(before, probe, edits);
-	const seriesData = planSeriesData(before, probe, edits) || before !== original || vectors.changed;
+	planSeriesData(before, probe, edits);
 	planNeutralChartLabels(before, probe, edits);
 	planNeutralLabelFormatting(before, probe, edits);
 	planNeutralSeriesNumberFormat(before, probe, edits);
@@ -221,7 +240,6 @@ export function planWithLeftovers(
 	return {
 		plan: {
 			edits,
-			seriesData,
 			...(packageElements.length > 0 ? { packageElements } : {}),
 			...(before !== original || vectors.rebuildWorkbook ? { rebuildWorkbook: true } : {}),
 		},

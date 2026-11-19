@@ -27,7 +27,7 @@ import type { Doc as YDoc } from 'yjs';
 
 import { useController } from '../useController';
 import { collabModules } from './collaboration-modules';
-import type { CollaborationConfig, ConnectionStatus } from './types';
+import type { CollaborationConfig, CollaborationFailure, ConnectionStatus } from './types';
 
 // Re-export the upstream type aliases for downstream consumers.
 export type { YDoc, Awareness };
@@ -66,6 +66,8 @@ export interface UseYjsProviderResult {
 	 * grace period (a lone fresh-room peer never receives a sync event).
 	 */
 	synced: boolean;
+	/** Why the last start failed while `status` is `error`; `null` otherwise. */
+	failure: CollaborationFailure | null;
 	/** Manually retry the connection after a timeout or error. */
 	retry: () => void;
 	/** Why sharing stopped, when an update from the room was refused (status `error`). */
@@ -136,6 +138,7 @@ export function useYjsProvider({ config: inputConfig }: UseYjsProviderInput): Us
 		doc: (session?.doc as YDoc | undefined) ?? null,
 		clientId: state.clientId,
 		synced: state.synced,
+		failure: state.failure,
 		refusal: state.refusal,
 		retry: () => {
 			void controller.retry();

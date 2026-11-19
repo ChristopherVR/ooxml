@@ -247,7 +247,9 @@ function pptxDependents(leg) {
 	return out;
 }
 
-const isTestFile = (path) => /(\.test\.[cm]?[jt]sx?|\/__tests__\/)/.test(path);
+/** Tests, and the fixtures and helpers only tests import: none of them ships or reaches a viewer. */
+const isTestFile = (path) =>
+	/(\.test\.[cm]?[jt]sx?|\/(__tests__|__fixtures__|test-support)\/)/.test(path);
 
 /**
  * What the pptx jobs run for a change. `reaches` is true when the change reaches the viewer at all
@@ -378,6 +380,13 @@ export const A11Y_SHARDS = { withPowerPoint: 2, suiteOnly: 1 };
 const A11Y_REACH =
 	/^(src\/ui\/|apps\/office-suite\/|site\/|viewers\/|demos\/|e2e\/a11y\/|scripts\/(build-suite|bundle-suite|build-pwa|preview-site|browser-performance)\.mjs$)/;
 
+/**
+ * What the byte budgets measure (scripts/perf-budgets.mjs): the built core and ooxml-ui, and the
+ * suite site, its shell and the bundle with the PowerPoint viewer sources it compiles in.
+ */
+const BUDGET_REACH =
+	/^(src\/(core|ui)\/|apps\/office-suite\/|viewers\/pptx\/packages\/|site\/(?!docs\/)|scripts\/(perf-budgets\.json|(perf-budgets|perf-budget-routes|bundle-size|bundle-suite|build-suite|build-pwa|shell-css|preview-site)\.mjs)$)/;
+
 /** The core's writers: what a save writes, which the export round trip (`export.spec.ts`) reads. */
 const CORE_WRITER = /^src\/core\/.*(writ|serializ|save)/i;
 
@@ -394,10 +403,7 @@ export function a11yPlan(files, { everything, pptxReached }) {
 			!(isTestFile(file) && /^(src\/ui|viewers)\//.test(file)) &&
 			!/^viewers\/[^/]+\/(docs|\.github)\//.test(file),
 	);
-	const writers = files.filter(
-		(file) =>
-			CORE_WRITER.test(file) && !isTestFile(file) && !/\/(__fixtures__|test-support)\//.test(file),
-	);
+	const writers = files.filter((file) => CORE_WRITER.test(file) && !isTestFile(file));
 	const all = everything || reached.length > 0;
 	const run = all || writers.length > 0;
 	const pptx =
@@ -623,6 +629,8 @@ export function plan(changed, { full = false, testFiles, reference = false } = {
 	const a11y = a11yPlan(live, { everything, pptxReached });
 	// The pptx typecheck covers the pptx area and the shared areas it compiles against.
 	const pptxTypes = src.some((file) => viewersOfArea(file.split('/')[2]).includes('pptx'));
+	// A test cannot change what ships, so it moves no budget.
+	const budgets = everything || live.some((file) => BUDGET_REACH.test(file) && !isTestFile(file));
 
 	const testsNeeded = everything || core;
 	return {
@@ -648,7 +656,8 @@ export function plan(changed, { full = false, testFiles, reference = false } = {
 			viewerList.length > 0 ||
 			viewerBrowser.length > 0 ||
 			pptx.run ||
-			a11y.run,
+			a11y.run ||
+			budgets,
 		build:
 			everything ||
 			coreCode ||
@@ -656,9 +665,12 @@ export function plan(changed, { full = false, testFiles, reference = false } = {
 			viewerList.length > 0 ||
 			viewerBrowser.length > 0 ||
 			pptx.run ||
-			a11y.run,
+			a11y.run ||
+			budgets,
 		checks: { core: everything || coreCode || uiCode, ui: everything || ui || coreCode },
 		scripts: everything || scripts,
+		// The byte budgets of the entry points and the suite's screens (perf-budgets job).
+		budgets,
 		mcp: everything || mcp,
 		viewers: viewerList.map(({ name, dir, verify }) => ({ name, dir, verify: verify.join('\n') })),
 		viewerBrowser,

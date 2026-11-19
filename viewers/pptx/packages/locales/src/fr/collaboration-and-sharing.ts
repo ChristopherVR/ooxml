@@ -35,6 +35,22 @@ export const translations = {
 	'pptx.collaboration.peopleHere': 'Personnes {{count}} ici',
 	'pptx.collaboration.retry': 'Réessayer',
 	'pptx.collaboration.retryConnection': 'Réessayer la connexion',
+	'pptx.collaboration.failure.invalidRoom':
+		"Le nom de la salle n'est pas valide. Utilisez de 1 à 128 lettres, chiffres, traits d'union ou traits de soulignement.",
+	'pptx.collaboration.failure.missingSecret':
+		'Il manque la clé de session à cette invitation pair à pair. Ouvrez le lien de partage complet que vous avez reçu.',
+	'pptx.collaboration.failure.insecurePage':
+		'Les sessions pair à pair nécessitent une page sécurisée. Ouvrez cette page en https:// (ou sur localhost) et réessayez.',
+	'pptx.collaboration.failure.moduleUnavailable':
+		"Les composants de collaboration n'ont pas pu être chargés. Vérifiez votre connexion réseau, puis réessayez.",
+	'pptx.collaboration.failure.insecureServer':
+		'Une page https:// ne peut pas se connecter à un serveur ws:// non sécurisé. Utilisez une URL de serveur wss:// sécurisée.',
+	'pptx.collaboration.failure.serverUnreachable':
+		"Impossible de joindre le serveur de collaboration. Vérifiez que l'URL du serveur désigne un serveur y-websocket en cours d'exécution.",
+	'pptx.collaboration.failure.noBroadcast':
+		'Ce navigateur ne peut pas partager entre ses fenêtres. Utilisez un serveur de collaboration ou un lien pair à pair.',
+	'pptx.collaboration.failure.unknown':
+		"La connexion de collaboration a échoué. Vérifiez le lien d'invitation et votre connexion réseau, puis réessayez.",
 	'pptx.followMode.following': 'Suivant',
 	'pptx.followMode.stop': 'Arrêt',
 	'pptx.followMode.stopFollowing': 'Arrêtez de suivre',
@@ -72,7 +88,7 @@ export const translations = {
 	'pptx.share.serverHint':
 		"Saisissez l'URL WebSocket d'un serveur y-websocket (wss:// sécurisé lors du partage depuis une page https://), ou laissez le champ vide pour le mode pair à pair sans serveur.",
 	'pptx.share.p2pHint':
-		"Mode peer-to-peer : les onglets du même navigateur se connectent toujours ; d'autres appareils se connectent via des serveurs de signalisation publics WebRTC.",
+		"Mode peer-to-peer : les onglets du même navigateur se connectent toujours ; d'autres appareils se connectent via des serveurs de signalisation publics WebRTC. Invitez d'autres personnes avec le lien de partage : il contient la clé de session, et le nom de la salle seul ne permet pas de rejoindre.",
 	'pptx.share.p2pServerValue': 'Peer-to-peer (pas de serveur)',
 	'pptx.share.shareLink': 'Lien de partage',
 	'pptx.share.copyLink': 'Copier le lien de partage',
@@ -84,8 +100,6 @@ export const translations = {
 	'pptx.share.server': 'Serveur :',
 	'pptx.share.connectedUsers': 'Utilisateurs connectés',
 	'pptx.share.you': '(vous)',
-	'pptx.share.connectionError':
-		"Impossible de joindre le serveur de collaboration. Vérifiez l'URL du serveur : il doit s'agir d'un serveur y-websocket accessible, et d'une URL sécurisée wss:// lors du partage depuis une page https://.",
 	'pptx.broadcast.title': 'Diffuser le diaporama',
 	'pptx.broadcast.broadcasting': 'Diffusion en direct',
 	'pptx.broadcast.description':

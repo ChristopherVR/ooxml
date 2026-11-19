@@ -37,6 +37,7 @@ export const BUILDING_BLOCK_SHELL_IDLE: BuildingBlockShell = Object.freeze({
 	shellState: Object.freeze({
 		canEdit: false,
 		status: 'disconnected',
+		failure: null,
 		remoteUsers: Object.freeze([]) as unknown as CollaborationShellState['remoteUsers'],
 		connectedCount: 0,
 	}) as CollaborationShellState,
@@ -60,6 +61,7 @@ function shellStatesEqual(a: CollaborationShellState, b: CollaborationShellState
 	return (
 		a.canEdit === b.canEdit &&
 		a.status === b.status &&
+		a.failure === b.failure &&
 		a.connectedCount === b.connectedCount &&
 		a.remoteUsers.length === b.remoteUsers.length &&
 		a.remoteUsers.every((user, index) => {

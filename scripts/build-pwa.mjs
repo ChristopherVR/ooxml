@@ -1,5 +1,5 @@
 import { readFile, writeFile, mkdir, readdir } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, posix } from 'node:path';
 import { createHash } from 'node:crypto';
 import { deflateSync } from 'node:zlib';
 import { bundleShellCss } from './shell-css.mjs';
@@ -149,12 +149,39 @@ export async function buildPwa(out) {
 				),
 		);
 	}
-	const cached = files.map((f) => (stamped.has(f) ? `${f}?v=${stamp}` : f));
-	const hash = createHash('sha256');
-	for (const file of files) hash.update(file).update(await readFile(join(out, file)));
+	// Subresource integrity on the shell's own tags, so the browser refuses a script or style that
+	// is not this build's, whoever serves it: the stamped scripts and the content-hashed shell sheet.
+	for (const file of files.filter((f) => f.endsWith('.html'))) {
+		const text = await readFile(join(out, file), 'utf8');
+		let next = text;
+		for (const [tag, src] of text.matchAll(
+			/<(?:script\b|link\b(?=[^>]*\brel="stylesheet"))[^>]*?(?:src|href)="([^"?]+)(?:\?v=\w+)?"[^>]*>/g,
+		)) {
+			const path = posix.join(posix.dirname(file), src);
+			if (!files.includes(path) || /\sintegrity=/.test(tag)) continue;
+			const digest = createHash('sha384')
+				.update(await readFile(join(out, path)))
+				.digest('base64');
+			next = next.replace(
+				tag,
+				tag.replace(/\s*\/?>$/, (end) => ` integrity="sha384-${digest}"${end}`),
+			);
+		}
+		if (next !== text) await writeFile(join(out, file), next);
+	}
+	// The worker serves a saved copy only when it still has the SHA-256 recorded here, because any
+	// page of the origin can rewrite Cache Storage (scripts/pwa/service-worker.js). The version is
+	// the hash of the table itself, so a later worker can check an older build's saved table.
+	const table = {};
+	for (const file of files)
+		table[stamped.has(file) ? `${file}?v=${stamp}` : file] = createHash('sha256')
+			.update(await readFile(join(out, file)))
+			.digest('base64');
+	const json = JSON.stringify(table);
+	const version = createHash('sha256').update(json).digest('hex');
 	const worker = await readFile(new URL('./pwa/service-worker.js', import.meta.url), 'utf8');
 	await writeFile(
 		join(out, 'sw.js'),
-		`const VERSION=${JSON.stringify(hash.digest('hex').slice(0, 16))};\nconst FILES=${JSON.stringify(cached)};\n${worker}`,
+		`const VERSION=${JSON.stringify(version)};\nconst FILES=${json};\n${worker}`,
 	);
 }

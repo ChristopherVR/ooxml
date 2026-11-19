@@ -5,7 +5,11 @@ export * from './cellref';
 export * from './layout';
 export * from './writer';
 export * from './package-save';
-export * from './space-writes';
+export {
+	chartPartWorkbookWrites,
+	chartSpaceRangeConflicts,
+	chartSpaceWorkbookWrites,
+} from './space-writes';
 export * from './create';
 export { applyCellWritesToWorksheet, type ChartCellWrite } from './sheet-cells';
 export { sharedStringTexts, syncWorksheetTables } from './tables';

@@ -1,23 +1,17 @@
-// Series edits: add, remove, reorder, rename, values, categories and single points. Semantics follow
-// PowerPoint's chart operations (`addChartSeries`, `removeChartSeries`, `setChartCategories`,
-// `updateChartSeriesValues`, `updateChartDataPoint`, `addChartCategory`, `removeChartCategory`):
-// the category list is shared, so a category edit applies to every series unless one is named.
+// Series edits: add, remove, reorder, rename, values and categories (single points and category
+// rows are in `series-rows.ts`). Semantics follow PowerPoint's chart operations (`addChartSeries`,
+// `removeChartSeries`, `setChartCategories`, `updateChartSeriesValues`): the category list is
+// shared, so a category edit applies to every series unless one is named.
 // Scatter and bubble series hold their data as x and y values; the operations map categories to
 // x values and values to y values there.
-import type { ChartGroupKind, ChartPlotGroup, ChartSpace } from '../model';
-import type { ChartDataSource, ChartShapeProperties, ChartSpaceSeries } from '../model-series';
-import { chartSourceValues } from '../data-cache';
-import { chartSeriesEntryAt, chartSpaceSeries, editChartSpace } from './draft';
+import type { ChartSpace } from '../model';
+import type { ChartShapeProperties, ChartSpaceSeries } from '../model-series';
+import { chartSeriesEntries, chartSeriesEntryAt, chartSpaceSeries, editChartSpace } from './draft';
 import type { ChartSeriesValue } from '../data-sheet';
 import { categorySource, numberSource, type ChartCategoryValue } from './series-data';
+import { chartCategoryKey, chartValueKey } from './series-keys';
 
-/** Scatter and bubble series plot x and y values instead of categories and values. */
-export const isXYChartKind = (kind: ChartGroupKind): boolean =>
-	kind === 'scatter' || kind === 'bubble';
-
-const valueKey = (group: ChartPlotGroup) => (isXYChartKind(group.kind) ? 'yValues' : 'values');
-const categoryKey = (group: ChartPlotGroup) =>
-	isXYChartKind(group.kind) ? 'xValues' : 'categories';
+export { isXYChartKind } from './series-keys';
 
 export interface NewChartSeries {
 	name?: string;
@@ -63,22 +57,30 @@ export function addChartSeries(space: ChartSpace, input: NewChartSeries): ChartS
 		if (input.spPr) series.spPr = structuredClone(input.spPr);
 		const templateCategories = template?.categories ?? template?.xValues;
 		if (input.categories !== undefined)
-			series[categoryKey(group)] = categorySource(
+			series[chartCategoryKey(group)] = categorySource(
 				input.categories,
 				undefined,
 				input.categoriesFormula,
 			);
-		else if (templateCategories) series[categoryKey(group)] = structuredClone(templateCategories);
-		series[valueKey(group)] = numberSource(input.values, undefined, input.valuesFormula);
+		else if (templateCategories)
+			series[chartCategoryKey(group)] = structuredClone(templateCategories);
+		series[chartValueKey(group)] = numberSource(input.values, undefined, input.valuesFormula);
 		group.series.push(series);
 	});
 }
 
-/** Removes the series at a flattened index. */
+/**
+ * Removes the series at a flattened index. The plot order (`c:order`) of every later series moves
+ * up one, as Excel renumbers it; `c:idx`, which formatting and legend entries refer to, is kept.
+ */
 export function removeChartSeries(space: ChartSpace, index: number): ChartSpace {
 	return editChartSpace(space, (draft) => {
 		const { group, position } = chartSeriesEntryAt(draft, index);
-		group.series.splice(position, 1);
+		const [removed] = group.series.splice(position, 1);
+		const order = removed?.order;
+		if (order === undefined) return;
+		for (const { series } of chartSeriesEntries(draft))
+			if (series.order !== undefined && series.order > order) series.order -= 1;
 	});
 }
 
@@ -140,7 +142,7 @@ export function setChartSeriesValues(
 ): ChartSpace {
 	return editChartSpace(space, (draft) => {
 		const { group, series } = chartSeriesEntryAt(draft, index);
-		const key = valueKey(group);
+		const key = chartValueKey(group);
 		series[key] = numberSource(values, series[key], options.formula);
 	});
 }
@@ -159,79 +161,8 @@ export function setChartCategories(
 					)
 				: [chartSeriesEntryAt(draft, options.series)];
 		for (const { group, series } of entries) {
-			const key = categoryKey(group);
+			const key = chartCategoryKey(group);
 			series[key] = categorySource(categories, series[key], options.formula);
 		}
-	});
-}
-
-const numbersOf = (source: ChartDataSource | undefined): ChartSeriesValue[] =>
-	chartSourceValues(source).map((value) => (typeof value === 'number' ? value : null));
-
-/** Sets one point of a series. */
-export function setChartDataPointValue(
-	space: ChartSpace,
-	index: number,
-	point: number,
-	value: ChartSeriesValue,
-): ChartSpace {
-	return editChartSpace(space, (draft) => {
-		const { group, series } = chartSeriesEntryAt(draft, index);
-		const key = valueKey(group);
-		const values = numbersOf(series[key]);
-		if (!Number.isInteger(point) || point < 0 || point >= values.length)
-			throw new RangeError(`No chart point at index ${String(point)}`);
-		values[point] = value;
-		series[key] = numberSource(values, series[key]);
-	});
-}
-
-/** Appends a category to every series, with `value` (PowerPoint: 0) as each series' point. */
-export function addChartCategory(
-	space: ChartSpace,
-	name: ChartCategoryValue,
-	value: ChartSeriesValue = 0,
-): ChartSpace {
-	return editChartSpace(space, (draft) => {
-		for (const group of draft.plotArea.groups)
-			for (const series of group.series) {
-				const cat = categoryKey(group);
-				const val = valueKey(group);
-				series[cat] = categorySource([...chartSourceValues(series[cat]), name], series[cat]);
-				series[val] = numberSource([...numbersOf(series[val]), value], series[val]);
-			}
-	});
-}
-
-/** Removes a category, and its point, from every series. */
-export function removeChartCategory(space: ChartSpace, category: number): ChartSpace {
-	return editChartSpace(space, (draft) => {
-		for (const group of draft.plotArea.groups)
-			for (const series of group.series) {
-				const cat = categoryKey(group);
-				const val = valueKey(group);
-				const names = chartSourceValues(series[cat]);
-				const values = numbersOf(series[val]);
-				if (
-					!Number.isInteger(category) ||
-					category < 0 ||
-					category >= Math.max(names.length, values.length)
-				)
-					throw new RangeError(`No chart category at index ${String(category)}`);
-				if (series[cat])
-					series[cat] = categorySource(
-						names.filter((_, i) => i !== category),
-						series[cat],
-					);
-				series[val] = numberSource(
-					values.filter((_, i) => i !== category),
-					series[val],
-				);
-				series.dataPoints = series.dataPoints
-					.filter((p) => p.index !== category)
-					.map((p) =>
-						p.index !== undefined && p.index > category ? { ...p, index: p.index - 1 } : p,
-					);
-			}
 	});
 }

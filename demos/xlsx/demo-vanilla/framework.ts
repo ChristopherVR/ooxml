@@ -148,7 +148,6 @@ export async function mountFramework(
 		});
 		return expose(await bindingHandle(host, framework, () => component as unknown as EditorHandle));
 	} else if (framework === 'angular') {
-		await import('@angular/compiler');
 		const [
 			{ createApplication },
 			{ provideZonelessChangeDetection, createComponent },

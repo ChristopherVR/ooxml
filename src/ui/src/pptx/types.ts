@@ -283,13 +283,21 @@ export interface CollaborationConfig {
 	 * sync via BroadcastChannel regardless of signaling availability.
 	 */
 	signaling?: string[];
+	/**
+	 * The session secret of a `'webrtc'` session (`createShareSecret` in `ooxml-core/collab`),
+	 * required there. Its hash names the signaling room and it is the y-webrtc password, so the
+	 * signaling servers see neither `roomId` nor clear signaling data; `roomId` is then only the
+	 * name users see. Invitation links carry it in their `#key=` fragment, and
+	 * `buildCreateCollaborationConfig` and `buildBroadcastConfig` generate one.
+	 */
+	secret?: string;
 	/** Display name for the local user. */
 	userName: string;
 	/** Avatar URL for the local user (optional). */
 	userAvatar?: string;
 	/** Hex colour for the local user's cursor/presence indicator. */
 	userColor?: string;
-	/** Optional authentication token sent with the WebSocket handshake. */
+	/** Optional authentication token sent with the WebSocket handshake; `transport: 'webrtc'` uses `secret`. */
 	authToken?: string;
 	/** Role in the session; defaults to `'collaborator'`. */
 	role?: CollaborationRole;

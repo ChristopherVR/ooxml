@@ -7,7 +7,7 @@
  */
 import type JSZip from 'jszip';
 import { parseXml, type XmlElement } from '../../xml/index';
-import { expandRangeAddresses, parseChartFormulaRange } from './cellref';
+import { parseChartFormulaRange, rangeCellAddress } from './cellref';
 import { childNamed, childrenNamed, worksheetData } from './sheet-cells';
 import type { ChartWorkbookWrite } from './writer';
 
@@ -73,12 +73,12 @@ export async function validateAtomicChartWorkbookWrites(
 			)
 		)
 			unsupported('a source cell lies outside the worksheet limits');
-		const addresses = expandRangeAddresses(range, write.values.length);
+		const addressAt = rangeCellAddress(range, write.cellCount);
 		const path = paths.get(range.sheetName.toLowerCase());
 		const cells = path ? cellsByPath.get(path) : undefined;
-		if (!addresses || !path || !cells) unsupported('a source range cannot be resolved');
-		for (const [index, address] of addresses.entries()) {
-			const value = write.values[index] ?? '';
+		if (!addressAt || !path || !cells) unsupported('a source range cannot be resolved');
+		for (const { index, value } of write.cells) {
+			const address = addressAt(index);
 			const key = `${path}!${address}`;
 			const prior = destinations.get(key);
 			if (prior && (prior.value !== value || prior.numeric !== write.isNumeric))

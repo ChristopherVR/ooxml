@@ -9,6 +9,7 @@ import { createRequire } from 'node:module';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build } from 'vite';
+import { angularAot } from '../../../demos/angular-aot.mjs';
 import { FRAMEWORK_DEMOS } from './framework-demos.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -39,13 +40,12 @@ for (const demo of FRAMEWORK_DEMOS) {
 			? [(await plugin('vite-plugin-solid')).default({ hot: false })]
 			: demo.id === 'svelte'
 				? [(await plugin('@sveltejs/vite-plugin-svelte')).svelte()]
-				: [];
+				: demo.id === 'angular'
+					? // Its tsconfig reaches the binding's source, so the binding is compiled too.
+						await angularAot(resolve(bindings, 'package.json'), resolve(dir, 'tsconfig.json'))
+					: [];
 	const oxc =
-		demo.id === 'angular'
-			? { oxc: { decorator: { legacy: true } } }
-			: demo.id === 'react'
-				? { oxc: { jsx: { runtime: 'automatic', importSource: 'react' } } }
-				: {};
+		demo.id === 'react' ? { oxc: { jsx: { runtime: 'automatic', importSource: 'react' } } } : {};
 	await build({
 		configFile: false,
 		logLevel: 'warn',

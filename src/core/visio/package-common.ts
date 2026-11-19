@@ -1,3 +1,4 @@
+import type { ZipLimitKind, ZipLimits } from '../opc/zip-limits';
 import { defaultXmlHeapBytes } from './heap-limit';
 
 /** Limits apply to declared ZIP sizes and actual streamed output, independently. */
@@ -68,6 +69,27 @@ export const DEFAULTS: VisioPackageLimits = {
 };
 export function fail(code: string, message: string): never {
 	throw new VisioPackageError(code, message);
+}
+
+const ZIP_LIMIT_CODES: Record<ZipLimitKind, string> = {
+	maxInputBytes: 'LIMIT_INPUT',
+	maxEntries: 'LIMIT_ENTRIES',
+	maxEntryBytes: 'LIMIT_ENTRY',
+	maxTotalBytes: 'LIMIT_TOTAL',
+	declaredSize: 'ZIP_MISMATCH',
+	partName: 'UNSAFE_PATH',
+};
+
+/** The zip guard settings for `limits`; a violation is a {@link VisioPackageError}. */
+export function visioZipLimits(limits: VisioPackageLimits): ZipLimits {
+	return {
+		label: 'Visio',
+		maxInputBytes: limits.maxInputBytes,
+		maxEntries: limits.maxEntries,
+		maxEntryBytes: limits.maxEntryBytes,
+		maxTotalBytes: limits.maxTotalBytes,
+		createError: (message, { kind }) => new VisioPackageError(ZIP_LIMIT_CODES[kind], message),
+	};
 }
 export const utf8 = new TextDecoder('utf-8', { fatal: true });
 export { crc32 } from '../digest/crc32';

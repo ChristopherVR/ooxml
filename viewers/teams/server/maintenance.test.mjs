@@ -298,7 +298,9 @@ describe('storage names', () => {
 				const ctx = await boot();
 				try {
 					assert.deepEqual(
-						readdirSync(join(dir, 'rooms')).sort(),
+						readdirSync(join(dir, 'rooms'))
+							.filter((entry) => entry.endsWith('.bin'))
+							.sort(),
 						[`${storageName('acme')}.bin`, `${storageName(chat)}.bin`].sort(),
 					);
 					assert.equal(await (await get(ctx, '/files/acme/a.txt', 'ann')).text(), 'shared');

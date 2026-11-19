@@ -1,11 +1,14 @@
 <script lang="ts">
+	import { sessionFromPage, showSessionInAddressBar } from '../../shared/collaboration-link';
+	import type { SessionLink } from '../../shared/collaboration-link';
 	import { demoFileProviders } from '../../shared/demo-file-providers';
 	/**
 	 * Demo shell for `pptx-svelte-viewer`, mirroring demos/demo-vue/src/App.vue:
 	 * the viewer fills the screen and a landing dropzone handles file open /
 	 * new-deck creation. A
-	 * `?room=<id>` URL param joins a serverless (y-webrtc P2P) collaboration
-	 * session so two tabs on the same URL edit the same deck live.
+	 * `?room=<id>&transport=webrtc#key=<secret>` invitation link joins a
+	 * serverless (y-webrtc P2P) collaboration session so two tabs on the same
+	 * URL edit the same deck live.
 	 */
 	import type {
 		CollaborationConfig,
@@ -73,51 +76,43 @@
 	}
 
 	// ── Collaboration (serverless WebRTC P2P) ────────────────────────────
-	// A `?room=<id>` param auto-joins that room on load (a peer with no local
-	// deck yet still needs the viewer mounted to receive one). Once a deck is
-	// open, the viewer's own toolbar Share/Broadcast buttons (built into
-	// `pptx-svelte-viewer`) start a fresh session directly; `onCollabStart`
-	// below stamps the resulting room id into the URL so the session survives
-	// a refresh and can be copied from the address bar, mirroring `joinRoom`.
+	// A `?room=<id>&transport=webrtc#key=<secret>` link auto-joins that room on
+	// load (a peer with no local deck yet still needs the viewer mounted to
+	// receive one). Once a deck is open, the viewer's own toolbar
+	// Share/Broadcast buttons (built into `pptx-svelte-viewer`) start a fresh
+	// session directly; `onCollabStart` below shows the resulting invitation in
+	// the address bar so the session survives a refresh and can be copied from
+	// there, mirroring `joinRoom`.
 	const autoName = resolveAutoName();
 	const autoColor = randomUserColor();
 	let collaborationConfig = $state<CollaborationConfig | null>(null);
 
-	function joinRoom(roomId: string): void {
+	function joinRoom(link: SessionLink): void {
 		collaborationConfig = {
-			roomId,
-			serverUrl: '',
-			transport: 'webrtc',
+			...link,
 			userName: autoName,
 			userColor: autoColor,
 			role: 'collaborator',
 		};
-		setRoomUrlParam(roomId);
+		showSession(link);
 	}
 
-	function setRoomUrlParam(roomId: string): void {
-		const url = new URL(window.location.href);
-		url.searchParams.set('room', roomId);
-		window.history.replaceState(null, '', url.toString());
-		document.title = `Collaborating: ${roomId} - PPTX Viewer`;
-	}
-
-	function clearRoomUrlParam(): void {
-		const url = new URL(window.location.href);
-		url.searchParams.delete('room');
-		window.history.replaceState(null, '', url.toString());
+	function showSession(link: SessionLink): void {
+		showSessionInAddressBar(link);
+		document.title = `Collaborating: ${link.roomId} - PPTX Viewer`;
 	}
 
 	function onCollabStart(config: CollaborationConfig): void {
-		setRoomUrlParam(config.roomId);
+		showSession(config);
 	}
 
 	function onCollabStop(): void {
 		collaborationConfig = null;
-		clearRoomUrlParam();
+		showSessionInAddressBar(null);
 	}
 
-	const urlRoom = params.get('room');
+	const roomLink = sessionFromPage('room', '');
+	const urlRoom = roomLink?.transport === 'webrtc' ? roomLink : null;
 
 	// Prefilled values for the viewer's built-in Share dialog form.
 	const shareDefaults = { roomId: resolveAutoRoomId(), userName: autoName };

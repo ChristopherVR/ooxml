@@ -6,6 +6,7 @@
  * replies and anything quoted from a file stay in the conversation of the person who asked.
  */
 import { currentProfile } from '../profile-state.js';
+import { roomToken } from './credentials.js';
 import { currentPolicy } from './policy.js';
 
 const rooms = new Map();
@@ -15,11 +16,11 @@ const teamsCore = () => (core ??= import('ooxml-core/teams'));
 /** The server shared chats use, and a sentence saying who can join. */
 export async function collaborationTarget() {
 	const { parseServerConfig, localServerConfig } = await teamsCore();
-	const { syncUrl, token } = currentPolicy().collaboration;
+	const { syncUrl } = currentPolicy().collaboration;
 	let config = localServerConfig();
 	let source = 'browser';
 	if (syncUrl) {
-		config = parseServerConfig({ mode: 'server', syncUrl, ...(token ? { token } : {}) }).config;
+		config = parseServerConfig({ mode: 'server', syncUrl }).config;
 		source = 'organisation';
 	} else
 		try {
@@ -44,12 +45,14 @@ export async function collaborationTarget() {
 export async function joinRoom(room) {
 	if (rooms.has(room)) return rooms.get(room);
 	const { createSharedChat } = await teamsCore();
-	const { config } = await collaborationTarget();
+	const { config, source } = await collaborationTarget();
+	const { credentialsUrl } = currentPolicy().collaboration;
 	const profile = currentProfile();
 	const chat = createSharedChat({
 		roomId: room,
 		user: { id: profile.userId, name: profile.name },
 		config,
+		...(source === 'organisation' && credentialsUrl ? { token: roomToken(credentialsUrl) } : {}),
 	});
 	rooms.set(room, chat);
 	return chat;

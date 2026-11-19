@@ -1,4 +1,4 @@
-import JSZip from 'jszip';
+import type JSZip from 'jszip';
 import {
 	RELATIONSHIP_TYPES,
 	contentTypeForPart,
@@ -8,14 +8,10 @@ import {
 	resolvePartPath,
 	type ContentTypes,
 	type Relationship,
-	guardZip,
+	openZip,
 } from '../../opc/index';
-import {
-	type XlsxLoadLimits,
-	WorkbookTooLargeError,
-	resolveLoadLimits,
-	zipLimitsFor,
-} from './limits';
+import { chartPointBudget } from '../../chart/point-limit';
+import { type XlsxLoadLimits, resolveLoadLimits, zipLimitsFor } from './limits';
 
 /** Content types of the SpreadsheetML parts the reader and writer know. */
 export const CONTENT_TYPES = {
@@ -50,6 +46,8 @@ export class SourceIndex {
 	private readonly textCache = new Map<string, string>();
 	private readonly decoder = new TextDecoder('utf-8');
 	private readonly lowerNames = new Map<string, string>();
+	/** Pays for the blank slots of every chart view of this package. */
+	readonly chartPoints = chartPointBudget();
 
 	constructor(readonly parts: ReadonlyMap<string, Uint8Array>) {
 		for (const name of parts.keys()) this.lowerNames.set(name.toLowerCase(), name);
@@ -119,8 +117,6 @@ export class SourceIndex {
 	}
 }
 
-const mib = (bytes: number): number => Math.round(bytes / 1048576);
-
 /**
  * Opens a package under the input-size limit and guards it, so that every entry inflates under
  * the part-count, part-size and total limits (see {@link readZipParts}).
@@ -129,24 +125,14 @@ export async function openPackage(
 	input: Uint8Array | ArrayBuffer,
 	limits: Required<XlsxLoadLimits>,
 ): Promise<JSZip> {
-	const maxInput = limits.maxInputBytes;
-	const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
-	if (bytes.byteLength > maxInput)
-		throw new WorkbookTooLargeError(
-			`XLSX package exceeds the ${mib(maxInput)} MiB compressed input limit`,
-			'maxInputBytes',
-			maxInput,
-		);
-	let loaded: JSZip;
-	try {
-		loaded = await JSZip.loadAsync(bytes);
-	} catch (error) {
-		throw new Error(
-			`Not a valid XLSX package: ${error instanceof Error ? error.message : String(error)}`,
-			{ cause: error },
-		);
-	}
-	return guardZip(loaded, zipLimitsFor(limits));
+	return openZip(input, {
+		...zipLimitsFor(limits),
+		createOpenError: (cause) =>
+			new Error(
+				`Not a valid XLSX package: ${cause instanceof Error ? cause.message : String(cause)}`,
+				{ cause },
+			),
+	});
 }
 
 /**

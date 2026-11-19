@@ -10,6 +10,7 @@ import {
 	relationshipsPartFor,
 	resolvePartPath,
 } from '../../../../opc/relationships';
+import { loadXlsx } from '../../../../xlsx/read/index';
 import { duplicateSlide as duplicateToolSlide } from '../../../automation/tools/slide-tools';
 import { duplicateSlide } from '../../builders/sdk/slide-operations';
 import { Presentation } from '../../builders/sdk/Presentation';
@@ -270,6 +271,45 @@ describe('duplicated slide package ownership', () => {
 		);
 		await assertResolvedReferences(zip, data.slides.at(-1)!.id);
 		await assertResolvedReferences(zip, copiedPart);
+	});
+
+	it('gives a copied chart its own workbook, so editing either leaves the other alone', async () => {
+		const bytes = readFileSync(
+			new URL('../../../__tests__/fixtures/e2e/chart-data-fidelity.pptx', import.meta.url),
+		);
+		const handler = new PptxHandler();
+		const data = await handler.load(buffer(bytes));
+		const source = at(data.slides, 2);
+		data.slides.push(duplicateSlide(source, data.slides.length + 1));
+		const copy = data.slides.at(-1)!;
+		await handler.save(data.slides);
+		/** The numbers in the first sheet of the workbook each chart reads. */
+		const workbooks = async (saved: ArrayBuffer) => {
+			const zip = await JSZip.loadAsync(saved);
+			return Promise.all(
+				[source, copy].map(async (slide) => {
+					const part = await relatedPart(zip, await relatedPart(zip, slide.id, 'chart'), 'package');
+					const sheet = (await loadXlsx(await zip.file(part)!.async('uint8array'))).sheets[0]!;
+					return [...sheet.rows.values()].flatMap((row) =>
+						[...row.values()]
+							.map((cell) => cell.value)
+							.filter((value) => typeof value === 'number'),
+					);
+				}),
+			);
+		};
+		at(chart(copy).chartData!.series, 0).values[0] = 4242;
+		copy.isDirty = true;
+		const [sourceBook, copyBook] = await workbooks(await handler.save(data.slides));
+		expect(copyBook).toContain(4242);
+		expect(sourceBook).not.toContain(4242);
+		at(chart(source).chartData!.series, 0).values[0] = 777;
+		source.isDirty = true;
+		const [editedSource, keptCopy] = await workbooks(await handler.save(data.slides));
+		expect(editedSource).toContain(777);
+		expect(editedSource).not.toContain(4242);
+		expect(keptCopy).toContain(4242);
+		expect(keptCopy).not.toContain(777);
 	});
 
 	it('reserves copied media names before embedding new media in the same save', async () => {

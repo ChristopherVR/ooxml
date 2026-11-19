@@ -191,7 +191,6 @@ export async function mountNativeBlocks(
 			destroy: () => unmount(component),
 		};
 	} else if (framework === 'angular') {
-		await import('@angular/compiler');
 		const { createApplication } = await import('@angular/platform-browser');
 		const { createComponent, provideZonelessChangeDetection } = await import('@angular/core');
 		const { NativeBlocksHost } =

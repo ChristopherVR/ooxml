@@ -27,7 +27,7 @@ test('automatically follows sent threads with persistent independent settings', 
 	});
 	await expect(feed.getByRole('button', { name: 'Unfollow thread', exact: true })).toHaveCount(0);
 	await expect
-		.poll(() => page.evaluate((room) => localStorage.getItem(`teams:doc:${room}`), room))
+		.poll(() => page.evaluate((room) => localStorage.getItem(`teams:doc:2:${room}`), room))
 		.not.toBeNull();
 	await page.reload();
 	await page.getByRole('button', { name: 'Followed threads', exact: true }).click();

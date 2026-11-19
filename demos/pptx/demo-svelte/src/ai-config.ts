@@ -1,16 +1,16 @@
 /**
  * Demo-only AI wiring: the "host supplies the provider" example. The demo reads
- * an OpenAI-compatible base URL, API key, and model id from localStorage, then
+ * an OpenAI-compatible base URL, API key, and model id from sessionStorage, then
  * builds an in-browser language model via `@ai-sdk/openai-compatible` and hands
  * it to the viewer wrapped with `createAiAssistant` (from `pptx-svelte-viewer/ai`);
  * `?ai=config` passes the plain config instead.
  *
  * There is deliberately NO configuration UI on the landing screen: the demo must
  * work, and be shippable, without anyone supplying a key. To try the assistant
- * locally, set the keys by hand:
+ * locally, set the keys by hand (they last until the tab closes):
  *
- *   localStorage.setItem('demo.ai.apiKey', 'sk-...')
- *   localStorage.setItem('demo.ai.model', 'gpt-4o-mini')
+ *   sessionStorage.setItem('demo.ai.apiKey', 'sk-...')
+ *   sessionStorage.setItem('demo.ai.model', 'gpt-4o-mini')
  *
  * Real apps would normally keep the key server-side and use a `kind: 'endpoint'`
  * connection instead; running the model in the browser here keeps the demo
@@ -24,6 +24,7 @@ import { createAiAssistant } from 'pptx-svelte-viewer/ai';
 import type { PptxAiAssistant } from 'pptx-svelte-viewer/ai';
 
 import { demoAiUsesPlainConfig } from '../../shared/demo-ai-path';
+import { readDemoAiSetting } from '../../shared/demo-ai-storage';
 
 const KEY_BASE_URL = 'demo.ai.baseURL';
 const KEY_API_KEY = 'demo.ai.apiKey';
@@ -35,17 +36,17 @@ export interface AiSettings {
 	model: string;
 }
 
-/** Read the persisted demo AI settings (with sensible OpenAI defaults). */
+/** Read the tab's demo AI settings (with sensible OpenAI defaults). */
 export function readAiSettings(): AiSettings {
 	return {
-		baseURL: localStorage.getItem(KEY_BASE_URL) ?? 'https://api.openai.com/v1',
-		apiKey: localStorage.getItem(KEY_API_KEY) ?? '',
-		model: localStorage.getItem(KEY_MODEL) ?? 'gpt-4o-mini',
+		baseURL: readDemoAiSetting(KEY_BASE_URL) ?? 'https://api.openai.com/v1',
+		apiKey: readDemoAiSetting(KEY_API_KEY) ?? '',
+		model: readDemoAiSetting(KEY_MODEL) ?? 'gpt-4o-mini',
 	};
 }
 
 /**
- * Build the viewer `ai` option from the persisted demo settings, or `undefined`
+ * Build the viewer `ai` option from the tab's demo settings, or `undefined`
  * when the key/model are blank (viewer opens with no assistant).
  */
 export function buildViewerAiConfig(): PptxAiConfig | undefined {

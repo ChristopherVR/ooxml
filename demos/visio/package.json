@@ -6,7 +6,6 @@
 	"type": "module",
 	"dependencies": {
 		"@angular/common": "^22.3.0",
-		"@angular/compiler": "^22.3.0",
 		"@angular/core": "^22.3.0",
 		"@angular/platform-browser": "^22.3.0",
 		"ooxml-core": "*",

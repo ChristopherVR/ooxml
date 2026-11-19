@@ -134,7 +134,8 @@ See the [framework guides](https://christophervr.github.io/ooxml/teams/framework
 ### 3. Run the reference server
 
 ```bash
-TEAMS_USERS_FILE=users.json TEAMS_SESSION_SECRET=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server
+openssl rand -hex 32 > session-secret   # once; keep it outside the repository
+TEAMS_USERS_FILE=users.json TEAMS_SESSION_SECRET="$(cat session-secret)" TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server
 npx openteams-server --insecure-dev   # local development only: no accounts, listens on 127.0.0.1:8787
 ```
 

@@ -67,6 +67,7 @@ async function inspectSignature(
 	signatureXml: string,
 	pkg: SignaturePackage,
 	trustRootsPem: string[],
+	checkRevocation: boolean,
 ): Promise<DetailBase> {
 	const parsed = parseXmlSignature(signatureXml);
 	if (!parsed.ok) {
@@ -105,9 +106,10 @@ async function inspectSignature(
 	const [leafCert, issuerCert] = chain;
 	const leafCertPem = leafCert !== undefined ? certPemFromBase64(leafCert) : undefined;
 	const issuerCertPem = issuerCert !== undefined ? certPemFromBase64(issuerCert) : leafCertPem;
-	const revocation = leafCertPem
-		? await evaluateCertificateRevocation(leafCertPem, issuerCertPem)
-		: NOT_CHECKED_REVOCATION;
+	const revocation =
+		leafCertPem && checkRevocation
+			? await evaluateCertificateRevocation(leafCertPem, issuerCertPem)
+			: NOT_CHECKED_REVOCATION;
 
 	return {
 		...base,
@@ -140,16 +142,26 @@ async function inspectSignatures(
 	zip: JSZip,
 	signaturePaths: string[],
 	policy: SignatureValidationPolicy,
+	checkRevocation: boolean,
 ): Promise<SignatureDetail[]> {
 	const pkg = await openSignaturePackage(zip);
 	const trustRootsPem = await loadEnterpriseTrustRoots();
 	const details: SignatureDetail[] = [];
 	for (const path of signaturePaths) {
 		const signatureXml = (await zip.file(path)?.async('string')) ?? '';
-		const detail = await inspectSignature(path, signatureXml, pkg, trustRootsPem);
+		const detail = await inspectSignature(path, signatureXml, pkg, trustRootsPem, checkRevocation);
 		details.push({ ...detail, status: computeDetailStatus(detail, policy) });
 	}
 	return details;
+}
+
+/** Options of {@link inspectPptxDigitalSignatures}. */
+export interface InspectPptxSignatureOptions {
+	/**
+	 * Ask the OCSP responder named in each signing certificate for its revocation status. Default
+	 * true; with false no request is made and the status is `not-checked`.
+	 */
+	checkRevocation?: boolean;
 }
 
 /**
@@ -163,10 +175,12 @@ async function inspectSignatures(
  * `uncoveredParts`.
  *
  * @param data - The raw PPTX file bytes.
+ * @param options - Set `checkRevocation: false` to make no network request.
  * @returns A comprehensive digital signature report.
  */
 export async function inspectPptxDigitalSignatures(
 	data: Uint8Array,
+	options: InspectPptxSignatureOptions = {},
 ): Promise<DigitalSignatureReport> {
 	try {
 		const zip = await openPptxZip(Buffer.from(data));
@@ -186,7 +200,12 @@ export async function inspectPptxDigitalSignatures(
 			};
 		}
 
-		const details = await inspectSignatures(zip, signaturePaths, getSignatureValidationPolicy());
+		const details = await inspectSignatures(
+			zip,
+			signaturePaths,
+			getSignatureValidationPolicy(),
+			options.checkRevocation !== false,
+		);
 		return {
 			supported: true,
 			hasSignature: true,

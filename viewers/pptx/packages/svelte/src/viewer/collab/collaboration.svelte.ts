@@ -8,6 +8,7 @@
  */
 import type {
 	CollaborationConfig,
+	CollaborationFailure,
 	CollaborationSessionController,
 	CollaborationSessionState,
 	CollaborationState,
@@ -103,6 +104,10 @@ export class CollaborationController {
 	/** A borrowed host session's readiness reports its status here. */
 	set status(next: ConnectionStatus) {
 		this.#session.setStatus(next);
+	}
+	/** Why the session failed to start while `status` is `error` (reactive). */
+	get failure(): CollaborationFailure | null {
+		return this.#state.current.failure;
 	}
 	/** Whether a session is live (reactive). */
 	get active(): boolean {

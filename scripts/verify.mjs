@@ -124,6 +124,7 @@ function buildStep(id, cmd, cwd, dir, { extra = [], needs = [] } = {}) {
 }
 
 add('lint', 'bun run lint');
+add('zip-open', 'node scripts/check-zip-open.mjs');
 
 // Formatting of the changed files, with each viewer's own oxfmt configuration.
 const present = files.filter((file) => FORMATTED.test(file) && existsSync(join(ROOT, file)));
@@ -255,6 +256,14 @@ if (p.a11y?.run) {
 			env: { A11Y_PORT: process.env.A11Y_PORT ?? '4610' },
 		});
 	}
+}
+
+// The byte budgets open the suite in Chromium, so they run with the browser suites.
+if (p.budgets && browser) {
+	const install = steps.some((step) => step.id === 'a11y:install')
+		? 'a11y:install'
+		: add('perf-budgets:install', PLAYWRIGHT_INSTALL, 'e2e/a11y', BUILT);
+	add('perf-budgets', 'node scripts/perf-budgets.mjs check', '.', [...BUILT, install]);
 }
 
 // ---- Running. -------------------------------------------------------------------------------

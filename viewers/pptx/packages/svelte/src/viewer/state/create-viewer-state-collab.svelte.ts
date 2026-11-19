@@ -163,6 +163,7 @@ export function useCollabCluster(deps: CollabClusterDeps): CollabCluster {
 			),
 			sourceError: Boolean(options.getSource()) && Boolean(loader.error || loader.isEncrypted),
 			status: collab.status,
+			failure: collab.failure,
 			remoteUsers: collab.remotePresences,
 		}),
 	);

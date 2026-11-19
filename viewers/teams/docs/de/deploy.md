@@ -22,7 +22,7 @@ Sie `--insecure-dev`, nur für die lokale Entwicklung.
 | `TEAMS_MAX_ROOMS`                                       | Sync-Räume und Anrufräume (Standard je 1000).                                                                                                                                                                                                                                 |
 | `TEAMS_MAX_DOC_MB`                                      | Größtes persistiertes Raumdokument in MB (Standard 64); größere Updates werden abgelehnt.                                                                                                                                                                                     |
 | `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`             | Nachrichten pro Sekunde (Standard 100) und Burst (200) je Socket; ein Socket darüber wird geschlossen.                                                                                                                                                                        |
-| `TEAMS_FILES_QUOTA_MB`                                  | Optionale Obergrenze für das gesamte Dateiverzeichnis in MB (standardmäßig aus); weitere Uploads erhalten 507.                                                                                                                                                                |
+| `TEAMS_FILES_QUOTA_MB`                                  | Obergrenze für das gesamte Dateiverzeichnis in MB (Standard 20480); weitere Uploads erhalten 507. Dazu kommen `TEAMS_USER_QUOTA_MB` pro Person (1024) und `TEAMS_ROOMS_QUOTA_MB`, `TEAMS_MAX_STORED_ROOMS` für gespeicherte Räume (siehe README des Servers).                 |
 | `TEAMS_WORKSPACE_QUOTA_MB`                              | Dateien pro Workspace in MB (Standard 1024; ein privater Chat zählt zu seinem Workspace); weitere Uploads erhalten 507.                                                                                                                                                       |
 | `TEAMS_COMPACT_INTERVAL_MIN`                            | Minuten zwischen den Verdichtungen der Raum-Snapshots (Standard 360, `0` schaltet den Timer ab). Ein Raum wird außerdem beim Laden verdichtet.                                                                                                                                |
 | `TEAMS_METRICS_TOKEN`                                   | Aktiviert `GET /metrics` (Prometheus-Text), nur mit `Authorization: Bearer <dieses Token>`. Ohne Token aus.                                                                                                                                                                   |
@@ -133,7 +133,7 @@ Starten Sie ihn mit eingehängter Kontendatei, gesetztem `TEAMS_SESSION_SECRET` 
 ```bash
 docker run -d --name openteams -p 127.0.0.1:8787:8787 \
   -v openteams-data:/data -v "$PWD/users.json:/config/users.json:ro" \
-  -e TEAMS_SESSION_SECRET=change-me -e TEAMS_ORIGINS=https://app.example.com \
+  -e TEAMS_SESSION_SECRET="$(openssl rand -hex 32)" -e TEAMS_ORIGINS=https://app.example.com \
   openteams-server
 ```
 
@@ -191,8 +191,9 @@ Sicherung fehlt, sodass eine Wiederherstellung keine Arbeit verwirft, die noch i
   temporäre Raumdateien), danach alle 15 Minuten jene, die älter als eine Stunde sind. Hochgeladene, aber nie an eine
   Nachricht angehängte Dateien bleiben, bis sie jemand löscht.
 - **Kontingente.** Das Limit gilt pro Workspace (`TEAMS_WORKSPACE_QUOTA_MB`, Standard 1024) und zählt die Kanaldateien
-  und die Dateien seiner privaten Chats; Löschen gibt Platz frei. `TEAMS_FILES_QUOTA_MB` ist eine optionale Obergrenze
-  für das ganze Verzeichnis.
+  und die Dateien seiner privaten Chats; Löschen gibt Platz frei. Dazu kommen ein Limit pro hochladender Person über alle
+  Workspaces und Chats (`TEAMS_USER_QUOTA_MB`, Standard 1024) und eines für das ganze Verzeichnis (`TEAMS_FILES_QUOTA_MB`,
+  Standard 20480). Mit Konten gehen Uploads nur in einen bestehenden Workspace oder einen privaten Chat.
 - **Verdichtung.** Beim Laden eines Raums und alle `TEAMS_COMPACT_INTERVAL_MIN` Minuten für jeden Raum kodiert der
   Server den Raum als einziges Yjs-Update auf einem frischen Dokument neu und schreibt es nur, wenn es kleiner ist und
   exakt denselben Zustand beschreibt. Geschrieben wird in eine temporäre Datei, auf den Datenträger geschrieben und über

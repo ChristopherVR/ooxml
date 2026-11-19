@@ -16,9 +16,24 @@ import type {
 	PptxChartData,
 	PptxChartDataPoint,
 	PptxChartSeries,
+	PptxChartStructureEdit,
 	PptxChartType,
 } from '../types/chart';
 import { at } from '../../../geometry/indexed';
+
+/** Adds `edit` to the structure edits the save of `chartData` replays, in place. */
+export function recordChartStructureEdit(
+	chartData: PptxChartData,
+	edit: PptxChartStructureEdit,
+): void {
+	chartData.structureEdits = [...(chartData.structureEdits ?? []), edit];
+}
+
+/** `next` (a copy of the chart's data) with `edit` recorded. */
+function recorded(next: PptxChartData, edit: PptxChartStructureEdit): PptxChartData {
+	recordChartStructureEdit(next, edit);
+	return next;
+}
 
 // ---------------------------------------------------------------------------
 // Chart type compatibility mapping
@@ -46,8 +61,8 @@ const GROUPING_SUPPORTED_TYPES = new Set<PptxChartType>([
 /**
  * Add a new data series to chart data, returning a new `PptxChartData`.
  *
- * If the series' `values` array length does not match the category count,
- * values are padded with `0` or truncated to match.
+ * If the series' `values` array length does not match the rows of a chart
+ * with categories, values are padded with `0` or truncated to match.
  *
  * @param chartData - The current chart data.
  * @param series - The new series to add.
@@ -66,15 +81,15 @@ export function chartDataAddSeries(
 	chartData: PptxChartData,
 	series: { name: string; values: number[]; color?: string },
 ): PptxChartData {
-	const categoryCount = chartData.categories.length;
+	const rows = chartData.categories.length > 0 ? chartDataRowCount(chartData) : 0;
 	let values = series.values;
 
-	// Align values to category count for category-based charts
-	if (categoryCount > 0) {
-		if (values.length < categoryCount) {
-			values = [...values, ...Array(categoryCount - values.length).fill(0)];
-		} else if (values.length > categoryCount) {
-			values = values.slice(0, categoryCount);
+	// Align values to the rows of a category-based chart
+	if (rows > 0) {
+		if (values.length < rows) {
+			values = [...values, ...Array(rows - values.length).fill(0)];
+		} else if (values.length > rows) {
+			values = values.slice(0, rows);
 		}
 	}
 
@@ -84,10 +99,13 @@ export function chartDataAddSeries(
 		...(series.color ? { color: series.color } : {}),
 	};
 
-	return {
-		...chartData,
-		series: [...chartData.series, newSeries],
-	};
+	return recorded(
+		{
+			...chartData,
+			series: [...chartData.series, newSeries],
+		},
+		{ kind: 'add-series' },
+	);
 }
 
 // ---------------------------------------------------------------------------
@@ -117,10 +135,13 @@ export function chartDataRemoveSeries(
 		);
 	}
 
-	return {
-		...chartData,
-		series: chartData.series.filter((_, i) => i !== seriesIndex),
-	};
+	return recorded(
+		{
+			...chartData,
+			series: chartData.series.filter((_, i) => i !== seriesIndex),
+		},
+		{ kind: 'remove-series', series: seriesIndex },
+	);
 }
 
 // ---------------------------------------------------------------------------
@@ -164,7 +185,15 @@ export function chartDataUpdatePoint(
 	newValues[pointIndex] = value;
 
 	const newSeries = chartData.series.map((s, i) =>
-		i === seriesIndex ? { ...s, values: newValues } : s,
+		i === seriesIndex
+			? {
+					...s,
+					values: newValues,
+					...(s.blanks?.[pointIndex]
+						? { blanks: s.blanks.map((blank, at) => blank && at !== pointIndex) }
+						: {}),
+				}
+			: s,
 	);
 
 	return { ...chartData, series: newSeries };
@@ -225,10 +254,10 @@ export function chartDataChangeType(
 // ---------------------------------------------------------------------------
 
 /**
- * Add a new category (data point column) to the chart.
+ * Add a new category (data point column) to the chart, in the row after all of its data.
  *
- * A default value of `0` is appended to each series' values array so that
- * data dimensions remain consistent.
+ * Each series gets a `0` in that row; a shorter series is padded with blank points up to it. A
+ * chart whose rows have no category labels gets none, as the shared chart operation writes none.
  *
  * @param chartData - The current chart data.
  * @param categoryName - The label for the new category.
@@ -243,24 +272,43 @@ export function chartDataAddCategory(
 	chartData: PptxChartData,
 	categoryName: string,
 ): PptxChartData {
-	return {
-		...chartData,
-		categories: [...chartData.categories, categoryName],
-		series: chartData.series.map((s) => ({
-			...s,
-			values: [...s.values, 0],
-		})),
-	};
+	const row = chartDataRowCount(chartData);
+	const padded = <T>(items: readonly T[], fill: T) => [
+		...items,
+		...Array.from({ length: row - items.length }, () => fill),
+	];
+	return recorded(
+		{
+			...chartData,
+			categories:
+				chartData.categories.length || row === 0
+					? [...padded(chartData.categories, ''), categoryName]
+					: [],
+			series: chartData.series.map((s) => {
+				const blanks =
+					s.blanks || s.values.length < row
+						? [...padded(s.blanks ?? s.values.map(() => false), true), false]
+						: undefined;
+				return { ...s, values: [...padded(s.values, 0), 0], ...(blanks ? { blanks } : {}) };
+			}),
+		},
+		{ kind: 'add-category' },
+	);
 }
 
 // ---------------------------------------------------------------------------
 // Remove category
 // ---------------------------------------------------------------------------
 
+/** The rows of a chart's data: its categories, or the longest series when it has fewer. */
+export const chartDataRowCount = (chartData: PptxChartData): number =>
+	Math.max(chartData.categories.length, ...chartData.series.map((s) => s.values.length));
+
 /**
  * Remove a category (data point column) by index.
  *
- * The corresponding value is also removed from each series.
+ * The corresponding value, and an X/Y series' X value and bubble size, are also removed
+ * from each series.
  *
  * @param chartData - The current chart data.
  * @param categoryIndex - Zero-based index of the category to remove.
@@ -285,23 +333,32 @@ export function chartDataRemoveCategory(
 	categoryIndex: number,
 	followDataPoint = true,
 ): PptxChartData {
-	if (categoryIndex < 0 || categoryIndex >= chartData.categories.length) {
+	const rows = chartDataRowCount(chartData);
+	if (categoryIndex < 0 || categoryIndex >= rows) {
 		throw new RangeError(
-			`Category index ${categoryIndex} is out of range. Chart has ${chartData.categories.length} categories.`,
+			`Category index ${categoryIndex} is out of range. Chart has ${rows} categories.`,
 		);
 	}
 
-	return {
-		...chartData,
-		categories: chartData.categories.filter((_, i) => i !== categoryIndex),
-		series: chartData.series.map((s) => ({
-			...s,
-			values: s.values.filter((_, i) => i !== categoryIndex),
-			...(s.dataPoints && followDataPoint
-				? { dataPoints: reindexDataPoints(s.dataPoints, categoryIndex) }
-				: {}),
-		})),
-	};
+	return recorded(
+		{
+			...chartData,
+			categories: chartData.categories.filter((_, i) => i !== categoryIndex),
+			series: chartData.series.map((s) => ({
+				...s,
+				values: s.values.filter((_, i) => i !== categoryIndex),
+				...(s.blanks ? { blanks: s.blanks.filter((_, i) => i !== categoryIndex) } : {}),
+				...(s.xValues ? { xValues: s.xValues.filter((_, i) => i !== categoryIndex) } : {}),
+				...(s.bubbleSizes
+					? { bubbleSizes: s.bubbleSizes.filter((_, i) => i !== categoryIndex) }
+					: {}),
+				...(s.dataPoints && followDataPoint
+					? { dataPoints: reindexDataPoints(s.dataPoints, categoryIndex) }
+					: {}),
+			})),
+		},
+		{ kind: 'remove-category', category: categoryIndex },
+	);
 }
 
 /**

@@ -19,6 +19,7 @@ import type {
 import {
 	borrowExternalCollaborationAwareness,
 	createYjsFactories,
+	loadCollaborationModule,
 	openCollaborationYSession,
 } from 'ooxml-ui/pptx';
 
@@ -60,7 +61,7 @@ export const createDefaultSession: CollabSessionFactory = async (transport, conf
 export async function createExternalSession(
 	session: ExternalCollaborationSession,
 ): Promise<CollabYSession> {
-	const Y = (await collabModules.loadYjs()) as YjsModuleLike;
+	const Y = (await loadCollaborationModule('yjs', () => collabModules.loadYjs())) as YjsModuleLike;
 	const borrowed = borrowExternalCollaborationAwareness(session.awareness);
 	return {
 		doc: session.doc,

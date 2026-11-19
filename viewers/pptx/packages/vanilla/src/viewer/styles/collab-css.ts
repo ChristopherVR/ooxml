@@ -71,6 +71,8 @@ export const COLLAB_CSS = `
 .pptxv-modal-desc { margin: 0; font-size: 13px; line-height: 1.5; color: var(--pptx-muted-foreground); }
 .pptxv-modal-hint { margin: 4px 0 0; font-size: 11px; color: var(--pptx-muted-foreground); }
 .pptxv-modal-hint[hidden] { display: none; }
+.pptxv-share-error { margin: 0; padding: 8px 12px; border: 1px solid rgb(239 68 68 / 0.3); border-radius: 4px; background: rgb(239 68 68 / 0.1); font-size: 12px; font-weight: 500; color: #f87171; }
+.pptxv-share-error[hidden] { display: none; }
 .pptxv-modal-field { display: flex; flex-direction: column; gap: 6px; }
 .pptxv-modal-label { font-size: 12px; font-weight: 500; }
 .pptxv-modal-input {

@@ -126,6 +126,11 @@
 						| translate
 				}}
 			</p>
+			@if (bannerKey(); as key) {
+				<p class="pptx-ng-share-error" role="alert" data-testid="collaboration-failure">
+					{{ key | translate }}
+				</p>
+			}
 
 			@if (mode() === 'join') {
 				<div class="pptx-ng-share-field">

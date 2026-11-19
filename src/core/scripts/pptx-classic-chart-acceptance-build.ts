@@ -87,13 +87,13 @@ async function save(
 	const neutral = parseChartSpace(await zip.file(back.chartPartPath!)!.async('string')).chartSpace;
 	const cells = chartSpaceWorkbookWrites(neutral).flatMap((write) => {
 		const range = parseChartFormulaRange(write.formula);
-		const addresses = range ? expandRangeAddresses(range, write.values.length) : undefined;
+		const addresses = range ? expandRangeAddresses(range, write.cellCount) : undefined;
 		if (!range || !addresses)
 			throw new Error('Unsupported native acceptance formula ' + write.formula);
-		return addresses.map((address, index) => ({
+		return write.cells.map(({ index, value }) => ({
 			sheet: range.sheetName,
-			address,
-			value: write.isNumeric ? Number(write.values[index]) : write.values[index]!,
+			address: addresses[index]!,
+			value: write.isNumeric ? Number(value) : value,
 		}));
 	});
 	manifest[name] = {

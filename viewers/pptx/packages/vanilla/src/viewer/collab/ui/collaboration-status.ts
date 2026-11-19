@@ -1,4 +1,5 @@
-import type { ConnectionStatus } from 'ooxml-ui/pptx';
+import type { CollaborationFailure, ConnectionStatus } from 'ooxml-ui/pptx';
+import { collaborationFailureMessageKey } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';
@@ -12,8 +13,15 @@ import { createEl } from '../../render';
 
 export interface CollaborationStatus {
 	el: HTMLElement;
-	/** `connectedCount` includes the local user (matches the Vue contract). */
-	update(status: ConnectionStatus, connectedCount: number): void;
+	/**
+	 * `connectedCount` includes the local user (matches the Vue contract); in the
+	 * error state the pill's tooltip names `failure`.
+	 */
+	update(
+		status: ConnectionStatus,
+		connectedCount: number,
+		failure?: CollaborationFailure | null,
+	): void;
 	destroy(): void;
 }
 
@@ -47,7 +55,7 @@ export function createCollaborationStatus(
 
 	return {
 		el,
-		update(status, connectedCount) {
+		update(status, connectedCount, failure = null) {
 			el.hidden = status === 'disconnected';
 			dot.className = `pptxv-collab-status-dot is-${status}`;
 			text.textContent =
@@ -57,6 +65,12 @@ export function createCollaborationStatus(
 						: t('pptx.collaboration.peopleHere', { count: connectedCount })
 					: t(STATUS_LABEL_KEYS[status]);
 			retry.hidden = status !== 'error';
+			const failureKey = collaborationFailureMessageKey(status, failure);
+			if (failureKey) {
+				el.title = t(failureKey);
+			} else {
+				el.removeAttribute('title');
+			}
 			el.setAttribute(
 				'aria-label',
 				t('pptx.collaboration.statusAriaLabel', {

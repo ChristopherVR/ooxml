@@ -18,7 +18,7 @@
 /* oxlint-disable eslint/one-var -- pre-existing throughout this file; independent concerns, not one statement */
 import { computed, inject, Injectable, signal } from '@angular/core';
 import type { ActiveSessionUserDescriptor } from 'ooxml-ui/pptx';
-import { buildActiveSessionUsers } from 'ooxml-ui/pptx';
+import { buildActiveSessionUsers, buildCollaborationShareUrl } from 'ooxml-ui/pptx';
 import type { CollaborationHistoryTarget, CompatibilityWarningToast } from 'ooxml-ui/pptx';
 import type { PptxHandlerSaveOptions, PptxSlide } from 'pptx-viewer-core';
 
@@ -26,7 +26,6 @@ import type { BroadcastConfig } from './broadcast-helpers';
 import { buildBroadcastViewerUrl } from './broadcast-helpers';
 import { CollaborationService } from './collaboration.service';
 import type { ConnectOptions } from './collaboration.service';
-import { buildShareUrl } from './share-helpers';
 import type { TemplateElementsBySlideId } from './template-mode';
 import type { CollaborationConfig } from './types';
 import { ViewerOptionsService } from './viewer-options.service';
@@ -115,15 +114,13 @@ export class ViewerCollaborationSessionService {
 	/** Shareable join link for the active collaboration session. */
 	readonly shareUrl = computed<string>(() => {
 		const session = this.activeCollaboration();
-		return session ? buildShareUrl(session.roomId, session.serverUrl, this.browserLocation()) : '';
+		return session ? buildCollaborationShareUrl(session, this.browserLocation()) : '';
 	});
 
 	/** Shareable follow link for the active broadcast. */
 	readonly broadcastViewerUrl = computed<string>(() => {
 		const session = this.activeCollaboration();
-		return session
-			? buildBroadcastViewerUrl(session.roomId, session.serverUrl, this.browserLocation())
-			: '';
+		return session ? buildBroadcastViewerUrl(session, this.browserLocation()) : '';
 	});
 
 	/** Whether the active session is serverless (peer-to-peer / webrtc). */
@@ -235,6 +232,7 @@ export class ViewerCollaborationSessionService {
 			roomId: config.roomId,
 			serverUrl: config.serverUrl,
 			transport: config.transport,
+			...(config.secret ? { secret: config.secret } : {}),
 			userName: host.authorName() ?? 'Presenter',
 			role: 'owner',
 		};

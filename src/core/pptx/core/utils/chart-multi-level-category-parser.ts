@@ -1,5 +1,6 @@
 import type { XmlObject } from '../types';
 import { isFiniteNumber } from '../../../units/finite';
+import { chartPointLength } from '../../../chart/point-limit';
 
 interface XmlLookupLike {
 	getChildByLocalName: (parent: XmlObject | undefined, name: string) => XmlObject | undefined;
@@ -92,8 +93,7 @@ function expandCategoryLevel(
 			maxIndex = index;
 		}
 	}
-	const length =
-		isFiniteNumber(declaredCount) && declaredCount > maxIndex + 1 ? declaredCount : maxIndex + 1;
+	const length = chartPointLength(points.length, maxIndex + 1, declaredCount);
 	const dense: string[] = [];
 	for (let index = 0; index < length; index++) {
 		dense.push(byIndex.get(index) ?? '');

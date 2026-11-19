@@ -175,6 +175,11 @@ export interface SharedChatOptions {
 	roomId: string;
 	user: { id?: string; name: string; color?: string };
 	config?: TeamsServerConfig;
+	/**
+	 * Fetches the sync server's token before every connection attempt, in place of `config.token`:
+	 * for hosts that issue short-lived credentials instead of publishing a token.
+	 */
+	token?: () => Promise<string>;
 	/** Use this transport instead of the one the config selects (tests, custom hosts). */
 	transport?: Transport;
 	doc?: Y.Doc;
@@ -205,10 +210,13 @@ export function createSharedChat(options: SharedChatOptions): SharedChat {
 	};
 	const transport =
 		options.transport ??
-		createSyncTransport(config, options.roomId, {
-			WebSocket: options.WebSocket,
-			BroadcastChannel: options.BroadcastChannel,
-		});
+		createSyncTransport(
+			config,
+			options.roomId,
+			{ WebSocket: options.WebSocket, BroadcastChannel: options.BroadcastChannel },
+			undefined,
+			options.token,
+		);
 	const session = createCollabSession<{ activity?: SharedChatActivity }>({
 		roomId: options.roomId,
 		...(options.doc ? { doc: options.doc } : {}),

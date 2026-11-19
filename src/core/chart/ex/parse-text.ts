@@ -2,6 +2,7 @@
 import { NS, attr, elements, relAttr, type XmlElement } from '../../xml/index';
 import type { ChartCachePoint } from '../model-series';
 import { chartTextBody } from '../parse-util';
+import { parsedChartViewLength } from '../point-limit';
 import type {
 	ChartExChartData,
 	ChartExData,
@@ -36,10 +37,12 @@ function parseLevel(context: ChartParseContext, element: XmlElement): ChartExLev
 		if (index !== undefined) point.index = index;
 		return point;
 	});
+	const pointCount = indexAttribute(context, element, 'ptCount');
 	return assignDefined<ChartExLevel>(
 		{ points },
 		{
-			pointCount: indexAttribute(context, element, 'ptCount'),
+			pointCount,
+			viewLength: parsedChartViewLength(context, points, pointCount),
 			formatCode: attribute(element, 'formatCode'),
 			name: attribute(element, 'name'),
 			extLst: extensionList(element),
