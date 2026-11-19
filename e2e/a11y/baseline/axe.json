@@ -10,7 +10,6 @@
 	},
 	"allowed": {
 		"chat/dark": {
-			"color-contrast": 2,
 			"label-content-name-mismatch": 2
 		},
 		"chat/light": {
@@ -20,7 +19,6 @@
 			"label-content-name-mismatch": 1
 		},
 		"docx/dark": {
-			"color-contrast": 3,
 			"label-content-name-mismatch": 2,
 			"target-size": 4
 		},
@@ -32,7 +30,6 @@
 			"label-content-name-mismatch": 1
 		},
 		"files/dark": {
-			"color-contrast": 3,
 			"label-content-name-mismatch": 2
 		},
 		"files/light": {
@@ -42,7 +39,6 @@
 			"label-content-name-mismatch": 1
 		},
 		"pptx/dark": {
-			"color-contrast": 2,
 			"label-content-name-mismatch": 4,
 			"target-size": 2
 		},
@@ -54,7 +50,6 @@
 			"label-content-name-mismatch": 1
 		},
 		"settings/dark": {
-			"color-contrast": 3,
 			"label-content-name-mismatch": 2
 		},
 		"settings/light": {
@@ -66,34 +61,29 @@
 			"label-content-name-mismatch": 1
 		},
 		"teams/dark": {
-			"color-contrast": 5,
 			"label-content-name-mismatch": 2
 		},
 		"teams/light": {
-			"color-contrast": 1,
 			"label-content-name-mismatch": 2
 		},
 		"teams/mobile": {
 			"label-content-name-mismatch": 1
 		},
 		"vsdx/dark": {
-			"color-contrast": 4,
 			"label-content-name-mismatch": 2,
 			"target-size": 2
 		},
 		"vsdx/light": {
-			"color-contrast": 1,
 			"label-content-name-mismatch": 2,
 			"target-size": 2
 		},
 		"vsdx/mobile": {
-			"color-contrast": 1,
 			"label-content-name-mismatch": 1
 		},
 		"xlsx/dark": {
 			"aria-required-children": 1,
 			"aria-required-parent": 47,
-			"color-contrast": 4,
+			"color-contrast": 1,
 			"label-content-name-mismatch": 3,
 			"role-img-alt": 1,
 			"target-size": 7
