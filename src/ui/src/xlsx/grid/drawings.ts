@@ -374,6 +374,11 @@ export class DrawingLayer {
 		});
 	}
 
+	/** Closes an open form control drop-down list. */
+	closeDropDown(): void {
+		this.#setOpen(undefined);
+	}
+
 	/** Opens or closes a form control drop-down list; a press anywhere else closes it. */
 	#setOpen(index: number | undefined): void {
 		if (this.#openDrop === index) return;

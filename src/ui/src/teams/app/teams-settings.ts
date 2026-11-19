@@ -1,5 +1,6 @@
 // Personal preferences and connection settings share one navigable settings surface.
 // Connection changes are validated by the core before the host applies them.
+import { definer } from '../../registry';
 import { html, nothing, unsafeCSS, type PropertyValues } from 'lit';
 import { TeamsLitElement } from '../i18n/lit-element';
 import {
@@ -424,10 +425,4 @@ export class TeamsSettings extends TeamsLitElement {
 	}
 }
 
-export function defineTeamsSettings(
-	registry: CustomElementRegistry | undefined = globalThis.customElements,
-): void {
-	if (!registry) return;
-	defineSwitch(registry);
-	if (!registry.get('teams-settings')) registry.define('teams-settings', TeamsSettings);
-}
+export const defineTeamsSettings = definer('teams-settings', () => TeamsSettings, [defineSwitch]);

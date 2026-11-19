@@ -348,9 +348,9 @@ export function Deck({ bytes }: { bytes: Uint8Array }) {
 
 ```vue [Vue]
 <script setup lang="ts">
-import { ref } from 'vue';
 import { PowerPointViewer } from 'pptx-vue-viewer';
 import type { PowerPointViewerExpose, ViewerCustomization } from 'pptx-vue-viewer';
+import { ref } from 'vue';
 
 defineProps<{ bytes: Uint8Array }>();
 const viewer = ref<PowerPointViewerExpose | null>(null);

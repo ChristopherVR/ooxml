@@ -8,7 +8,7 @@
 		".": "./index.ts"
 	},
 	"dependencies": {
-		"@azure/msal-browser": "5.29.1",
+		"@azure/msal-browser": "5.30.0",
 		"ooxml-core": "workspace:*",
 		"ooxml-ui": "workspace:*"
 	},

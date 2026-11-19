@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import { defineChartPicker } from '../../dialog/chart-picker';
 import type { OfficeChartValue, OfficeUiChartPicker } from '../../dialog/chart-picker';
 import {
@@ -190,5 +191,5 @@ export function definePptxInsertChartDialog(registry: CustomElementRegistry): vo
 		}
 	}
 
-	registry.define('pptx-ui-insert-chart-dialog', InsertChartDialog);
+	defineElement(registry, 'pptx-ui-insert-chart-dialog', InsertChartDialog);
 }

@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import { defineOptionsDialog } from '../../controls';
 import { base, bridged } from './office-aliases';
 
@@ -10,7 +11,8 @@ export function definePptxOptionsDialog(registry: CustomElementRegistry): void {
 	if (registry.get('pptx-ui-options-dialog')) {
 		return;
 	}
-	registry.define(
+	defineElement(
+		registry,
 		'pptx-ui-options-dialog',
 		class extends bridged(
 			base(registry, defineOptionsDialog, 'office-ui-options-dialog'),

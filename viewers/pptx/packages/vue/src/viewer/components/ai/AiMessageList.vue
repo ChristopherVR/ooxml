@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import { Bot, Sparkles, User } from '@lucide/vue';
 /**
  * AiMessageList: scrollable transcript of user / assistant turns. Assistant
  * tool calls render as {@link AiToolCallCard}s inline between prose. Purely
  * presentational; auto-scrolls to the newest message.
  */
 import type { UIMessage } from 'ai';
-import { Bot, Sparkles, User } from 'lucide-vue-next';
 import { toRenderableParts } from 'ooxml-ui/pptx/ai';
 import { nextTick, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';

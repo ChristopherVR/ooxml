@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import { canRequestHome } from '../render';
 import type { RibbonHomeFamily, RibbonHomeIntent, RibbonHomeViewState } from '../render';
 import type { HomeLayoutArtwork } from './ribbon-home-layout';
@@ -83,7 +84,7 @@ export function definePptxRibbonHome(
 			this.view.sync(this.model);
 		}
 	}
-	registry.define(tag, RibbonHome);
+	defineElement(registry, tag, RibbonHome);
 }
 
 export const definePptxRibbonHomeClipboard = (registry: CustomElementRegistry) =>

@@ -15,7 +15,7 @@
 		"test:onedrive": "node --test src/font-downloads.test.js src/settings.test.js src/document-bar.test.js src/cloud-files.test.js src/cloud-options.test.js src/launch-link.test.js"
 	},
 	"dependencies": {
-		"@tauri-apps/api": "^2.12.4",
+		"@tauri-apps/api": "^2.12.5",
 		"ooxml-core": "workspace:*",
 		"ooxml-ui": "workspace:*",
 		"pptx-vanilla-viewer": "workspace:*",

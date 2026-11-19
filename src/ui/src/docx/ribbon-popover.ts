@@ -1,11 +1,13 @@
 import { localeOf, translate } from './localization';
 import { swatchColor } from 'ooxml-core/docx/ui';
+import { composedWithin } from '../composed';
 
 let close: (() => void) | undefined;
+let open: HTMLElement | undefined;
 
-/** Closes whichever ribbon popover is open. */
-export function closeRibbonPopover(): void {
-	close?.();
+/** Closes whichever ribbon popover is open, or only one inside `scope`. */
+export function closeRibbonPopover(scope?: Node): void {
+	if (!scope || composedWithin(open, scope)) close?.();
 }
 
 /**
@@ -33,6 +35,7 @@ export function mountPopover(
 	const limit = window.innerWidth - pop.offsetWidth - 8;
 	if (pop.offsetWidth && left > limit) pop.style.left = `${Math.max(4, limit)}px`;
 	expanded.setAttribute('aria-expanded', 'true');
+	open = pop;
 	const outside = (event: Event) => {
 		if (!event.composedPath().includes(pop) && !event.composedPath().includes(anchor)) close?.();
 	};
@@ -48,7 +51,7 @@ export function mountPopover(
 		document.removeEventListener('keydown', escape, true);
 		pop.remove();
 		expanded.removeAttribute('aria-expanded');
-		close = undefined;
+		close = open = undefined;
 	};
 	return true;
 }
