@@ -163,7 +163,7 @@ export function stopPreviewAnimation(): void {
 	activePreview.styleEl.remove();
 
 	const domEl = document.querySelector(
-		`[data-element-id="${activePreview.elementId}"]`,
+		elementIdSelector(activePreview.elementId),
 	) as HTMLElement | null;
 	if (domEl) {
 		domEl.style.animation = activePreview.originalAnimation;
