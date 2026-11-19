@@ -15,9 +15,12 @@ const uiSource = fileURLToPath(new URL('./src', import.meta.url)).replaceAll(sep
 // - The DOM. A module cached by one file extends that file's `HTMLElement`, so a file pinned to
 //   `// @vitest-environment jsdom` must not share a worker with the happy-dom default (or the
 //   other way round): each environment is its own project, with its own workers and module cache.
-// - The module registry. A file that mocks a module, or asserts the absence of browser globals
-//   (SSR), depends on a fresh one, so it keeps a worker of its own in the `*-isolated` projects.
-const MOCKS = /\bvi\.(?:mock|doMock)\s*[<(]/;
+// - The module registry. A file that mocks a module, resets the registry, depends on module state
+//   (the marker comment `@vitest-fresh-modules`, such as a lazily loaded library) or asserts the
+//   absence of browser globals (SSR), keeps a worker of its own in the `*-isolated` projects. A
+//   reset in a shared worker hands every later file fresh modules while `customElements` keeps
+//   the classes built from the old ones (a registered icon then never reached the button).
+const MOCKS = /\bvi\.(?:mock|doMock|resetModules)\s*[<(]|@vitest-fresh-modules/;
 const ENVIRONMENT = /@vitest-environment\s+([\w-]+)/;
 
 const testFiles = readdirSync(fileURLToPath(new URL('./src', import.meta.url)), {
@@ -99,7 +102,16 @@ const AREAS = {
 				},
 			],
 		},
-		test: { css, globals: true, testTimeout: 30_000, hookTimeout: 30_000 },
+		test: {
+			css,
+			globals: true,
+			testTimeout: 30_000,
+			hookTimeout: 30_000,
+			// The pptx DOM files share workers too, so each starts from the DOM an isolated worker
+			// would give it (a `#stage` one file left in the body was counted by the next).
+			setupFiles: ['./vitest.dom-hygiene.setup.ts'],
+			runner: './vitest.runner.ts',
+		},
 	},
 } as const;
 
