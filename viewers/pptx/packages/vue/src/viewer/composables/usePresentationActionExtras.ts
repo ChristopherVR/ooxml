@@ -1,6 +1,5 @@
 import {
-	downloadDataUrl,
-	openUrlInNewTab,
+	openOrDownloadPayload,
 	resolveOleVerbTarget,
 	safeOpenUrl,
 	toggleStageElementMedia,
@@ -134,11 +133,7 @@ export function usePresentationActionExtras(
 		if (!target) {
 			return;
 		}
-		if (target.action === 'download') {
-			downloadDataUrl(target.url, target.fileName ?? 'download');
-		} else {
-			openUrlInNewTab(target.url);
-		}
+		openOrDownloadPayload(target.url, target.fileName ?? 'download', target.action === 'download');
 	}
 
 	return {

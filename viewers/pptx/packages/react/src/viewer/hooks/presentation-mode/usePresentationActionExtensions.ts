@@ -1,8 +1,7 @@
 import type { RunProgramNotice } from 'ooxml-ui/pptx';
 import {
 	buildRunProgramNotice,
-	downloadDataUrl,
-	openUrlInNewTab,
+	openOrDownloadPayload,
 	resolveOleVerbTarget,
 	safeOpenUrl,
 	toggleStageElementMedia,
@@ -165,11 +164,11 @@ export function usePresentationActionExtensions(
 			// to the same "open the payload" behaviour as 'preview'; only a
 			// generic Package object (no in-place editor at all) forces a real
 			// file download instead of trying to render it inline.
-			if (target.action === 'download') {
-				downloadDataUrl(target.url, target.fileName ?? 'download');
-			} else {
-				openUrlInNewTab(target.url);
-			}
+			openOrDownloadPayload(
+				target.url,
+				target.fileName ?? 'download',
+				target.action === 'download',
+			);
 		},
 		[slides, presentationSlideIndex],
 	);

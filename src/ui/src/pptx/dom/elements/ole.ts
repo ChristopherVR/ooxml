@@ -9,7 +9,7 @@ import {
 	getOleTypeColor,
 	getOleTypeLabel,
 	getPlaceholderStyle,
-	isBrowserOpenableMime,
+	isBrowserOpenableDataUrl,
 	mediaSurfaceOf,
 	oleActionsVisible,
 	openUrlInNewTab,
@@ -285,7 +285,7 @@ function buildActionBar(
 	download.textContent = context.t('pptx.ole.download');
 	bar.appendChild(download);
 
-	if (isBrowserOpenableMime(el.oleEmbeddedMimeType)) {
+	if (isBrowserOpenableDataUrl(el.oleEmbeddedData)) {
 		const open = createEl(doc, 'button', 'pptxv-ole-action', ACTION_STYLE);
 		open.type = 'button';
 		const openTitle = context.t('pptx.ole.openName', { name: downloadName });

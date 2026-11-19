@@ -113,7 +113,7 @@ test.describe('OLE embedded objects', () => {
 		expect(download.suggestedFilename()).toMatch(/report/iu);
 
 		// Open-in-new-tab action: the embedded payload is a real PDF
-		// (`application/pdf`), which `isBrowserOpenableMime` allows, so every
+		// (`application/pdf`), which `isBrowserOpenableDataUrl` allows, so every
 		// binding also renders an "Open" control alongside "Download". Every binding
 		// now normalize it to a `<button>` that routes the recovered `data:` URL
 		// through the shared `openUrlInNewTab` helper (data URL -> Blob object
