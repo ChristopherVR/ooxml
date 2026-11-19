@@ -113,3 +113,24 @@ describe('localizeRibbon', () => {
 		expect(translateRibbonText('de', 'Bold: Bold')).toBe('Fett: Fett');
 	});
 });
+
+describe('load refusals', () => {
+	it('tells the user in their language how many shapes a page has that is too large to open', () => {
+		const refusal =
+			'The page has 12000 shapes, more than this viewer can open (it reads at most 1250000 XML nodes per part).';
+		expect(translateRibbonText('de', refusal)).toBe(
+			'Die Seite enthält 12000 Formen, mehr als dieser Viewer öffnen kann (er liest höchstens 1250000 XML-Knoten pro Teil).',
+		);
+		for (const locale of VISIO_LOCALES.filter((locale) => locale !== 'en')) {
+			for (const message of [
+				refusal,
+				'A part of this drawing has more than 1250000 XML nodes, more than this viewer can open.',
+				'This drawing has more than 2000000 XML nodes in all, more than this viewer can open.',
+			]) {
+				const translated = translateRibbonText(locale, message);
+				expect(translated, locale).not.toBe(message);
+				for (const number of message.match(/\d+/g)!) expect(translated).toContain(number);
+			}
+		}
+	});
+});

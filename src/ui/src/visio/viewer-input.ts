@@ -1,9 +1,12 @@
 import { editErrorMessage, isEditCancellation, visioNudgeCommands } from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
 import { pointerShapeTarget } from './viewer-shape-target';
+import type { ViewerZoomGesture } from './viewer-zoom-gesture';
 interface Controls {
 	viewport: HTMLDivElement;
 	zoomSlider: HTMLElement & { value: number };
+	/** The slider and the + and - keys preview through the canvas's interactive zoom. */
+	zoom: ViewerZoomGesture;
 }
 const targetShape = (event: Event) =>
 	(event.target as Element)?.closest?.<SVGGElement>('[data-shape-id]');
@@ -71,7 +74,7 @@ export function wireViewerInputs(
 	/** Typing a character with one shape selected starts editing its text; true when it did. */
 	typeText: (character: string) => boolean = () => false,
 ): () => void {
-	const { viewport, zoomSlider } = controls;
+	const { viewport, zoomSlider, zoom } = controls;
 	const Abort = viewport.ownerDocument.defaultView?.AbortController ?? AbortController,
 		events = new Abort();
 	const options = { signal: events.signal };
@@ -80,7 +83,9 @@ export function wireViewerInputs(
 		if (shape && additive) controller.toggleShapeSelection(shape);
 		else controller.selectShape(shape);
 	};
-	zoomSlider.addEventListener('input', () => controller.setZoom(zoomSlider.value / 100), options);
+	// Dragging the slider previews; releasing it (or a step button, which emits both) renders.
+	zoomSlider.addEventListener('input', () => zoom.zoomTo(zoomSlider.value / 100), options);
+	zoomSlider.addEventListener('change', () => zoom.settle(), options);
 	viewport.addEventListener(
 		'click',
 		(event) => {
@@ -143,11 +148,11 @@ export function wireViewerInputs(
 			if (event.key === 'Escape') controller.selectShape(null);
 			if (event.key === '+' || event.key === '=') {
 				event.preventDefault();
-				controller.setZoom(controller.state.zoom * 1.25);
+				zoom.zoomTo(zoom.zoom * 1.25);
 			}
 			if (event.key === '-') {
 				event.preventDefault();
-				controller.setZoom(controller.state.zoom / 1.25);
+				zoom.zoomTo(zoom.zoom / 1.25);
 			}
 			if (event.key === '0') {
 				event.preventDefault();

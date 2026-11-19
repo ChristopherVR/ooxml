@@ -101,4 +101,10 @@ export const enText: Readonly<Record<string, string>> = {
 	Options: 'Options',
 	Share: 'Share',
 	'Style {n}': 'Style {n}',
+	'The page has {count} shapes, more than this viewer can open (it reads at most {limit} XML nodes per part).':
+		'The page has {count} shapes, more than this viewer can open (it reads at most {limit} XML nodes per part).',
+	'A part of this drawing has more than {limit} XML nodes, more than this viewer can open.':
+		'A part of this drawing has more than {limit} XML nodes, more than this viewer can open.',
+	'This drawing has more than {limit} XML nodes in all, more than this viewer can open.':
+		'This drawing has more than {limit} XML nodes in all, more than this viewer can open.',
 };

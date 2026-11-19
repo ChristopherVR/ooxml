@@ -107,4 +107,10 @@ export const deText: Readonly<Record<string, string>> = {
 	Options: 'Optionen',
 	Share: 'Freigeben',
 	'Style {n}': 'Stil {n}',
+	'The page has {count} shapes, more than this viewer can open (it reads at most {limit} XML nodes per part).':
+		'Die Seite enthält {count} Formen, mehr als dieser Viewer öffnen kann (er liest höchstens {limit} XML-Knoten pro Teil).',
+	'A part of this drawing has more than {limit} XML nodes, more than this viewer can open.':
+		'Ein Teil dieser Zeichnung hat mehr als {limit} XML-Knoten, mehr als dieser Viewer öffnen kann.',
+	'This drawing has more than {limit} XML nodes in all, more than this viewer can open.':
+		'Diese Zeichnung hat insgesamt mehr als {limit} XML-Knoten, mehr als dieser Viewer öffnen kann.',
 };

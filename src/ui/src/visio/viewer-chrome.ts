@@ -32,6 +32,8 @@ export class ViewerChrome {
 	#inspector: HTMLElement;
 	#panes: Record<TaskPane, HTMLElement>;
 	#view: PaneView = 'selection';
+	/** The page and edit state the page chrome was last written for. */
+	#written: string | undefined;
 	#responsive: MediaQueryList | undefined;
 	#compact: MediaQueryList | undefined;
 	/** Panes the user showed or hid; responsive defaults leave them alone afterwards. */
@@ -159,7 +161,8 @@ export class ViewerChrome {
 	render(state: ViewerState): void {
 		const page = state.document?.pages[state.pageIndex];
 		const doc = this.#root.ownerDocument;
-		if (state.document !== this.#document) {
+		const refreshed = state.document !== this.#document;
+		if (refreshed) {
 			this.#document = state.document;
 			const pages = state.document?.pages ?? [];
 			// The shared tab strip and menu items insert labels as text.
@@ -193,41 +196,38 @@ export class ViewerChrome {
 			remove.setAttribute('label', 'Delete Page...');
 			this.#allPages.append(remove);
 		}
-		this.#pageTabs.selected = page ? String(state.pageIndex) : '';
-		this.#pageTabs.toggleAttribute(
-			'add-disabled',
-			!page || !canEditDiagram(state) || state.edit.busy || state.loading,
-		);
-		this.#pageTabs.toggleAttribute(
-			'reorderable',
-			!!page && canEditDiagram(state) && !state.edit.busy && !state.loading,
-		);
-		this.#pageTabs.setAttribute(
-			'add-title',
-			canEditDiagram(state) ? 'Insert Page' : 'Insert Page: open a .vsdx file to edit pages.',
-		);
-		for (const item of this.#allPages.querySelectorAll('office-ui-menu-item'))
-			item.setAttribute(
-				'checked',
-				String(item.getAttribute('command') === `page-${state.pageIndex}`),
+		// The shared elements re-render synchronously on every write, so write only what changed:
+		// most controller changes (zoom, selection) leave the page chrome as it was.
+		const editable = canEditDiagram(state) && !state.edit.busy && !state.loading;
+		const written = `${page ? state.pageIndex : -1}|${canEditDiagram(state)}|${editable}`;
+		if (written !== this.#written || refreshed) {
+			this.#written = written;
+			this.#pageTabs.selected = page ? String(state.pageIndex) : '';
+			this.#pageTabs.toggleAttribute('add-disabled', !page || !editable);
+			this.#pageTabs.toggleAttribute('reorderable', !!page && editable);
+			this.#pageTabs.setAttribute(
+				'add-title',
+				canEditDiagram(state) ? 'Insert Page' : 'Insert Page: open a .vsdx file to edit pages.',
 			);
-		this.#allPages.disabled = !page;
-		this.#allPages
-			.querySelector('[command="delete-page"]')
-			?.toggleAttribute('disabled', !canEditDiagram(state) || state.edit.busy || state.loading);
-		this.#allPages
-			.querySelector('[command="rename-page"]')
-			?.toggleAttribute('disabled', !canEditDiagram(state) || state.edit.busy || state.loading);
-		this.#allPages
-			.querySelector('[command="reorder-pages"]')
-			?.toggleAttribute('disabled', !canEditDiagram(state) || state.edit.busy || state.loading);
-		this.#root
-			.querySelector('[data-page-status]')!
-			.setAttribute(
-				'value',
-				page ? `Page ${state.pageIndex + 1} of ${state.document!.pages.length}` : '',
-			);
+			for (const item of this.#allPages.querySelectorAll('office-ui-menu-item'))
+				item.setAttribute(
+					'checked',
+					String(item.getAttribute('command') === `page-${state.pageIndex}`),
+				);
+			this.#allPages.disabled = !page;
+			for (const command of ['delete-page', 'rename-page', 'reorder-pages'])
+				this.#allPages
+					.querySelector(`[command="${command}"]`)
+					?.toggleAttribute('disabled', !editable);
+			this.#root
+				.querySelector('[data-page-status]')!
+				.setAttribute(
+					'value',
+					page ? `Page ${state.pageIndex + 1} of ${state.document!.pages.length}` : '',
+				);
+		}
 		// The Shape Data window says so when nothing with data is selected, as in Visio.
-		this.#root.querySelector<HTMLElement>('.selection-hint')!.hidden = !!state.selectedShape;
+		const hint = this.#root.querySelector<HTMLElement>('.selection-hint')!;
+		if (hint.hidden !== !!state.selectedShape) hint.hidden = !!state.selectedShape;
 	}
 }

@@ -362,7 +362,9 @@ export class VisioViewerElement extends BaseElement {
 			this.#root.querySelector('.shape-inspector')!,
 		);
 		this.#chrome = new ViewerChrome(this.#root, this.controller);
-		this.#panZoom = new ViewerPanZoom(this.#root, this.#viewport, this.controller, (open) =>
+		const zoom = this.#pointer.zoom;
+		zoom.onPreview = (value) => (this.#zoomSlider.value = Math.round(value * 100));
+		this.#panZoom = new ViewerPanZoom(this.#root, this.#viewport, this.controller, zoom, (open) =>
 			this.#root.querySelector('[command="pan-zoom"]')?.setAttribute('checked', String(open)),
 		);
 		this.#inlineSize = new ViewerInlineSize(this.#root, this.controller);
@@ -379,6 +381,7 @@ export class VisioViewerElement extends BaseElement {
 			root: this.#root,
 			viewport: this.#viewport,
 			controller: this.controller,
+			zoom,
 			toolChanged: () => {
 				this.#pointer.render(this.controller.state);
 				this.#lineEndpoints.render(this.controller.state);
@@ -634,13 +637,20 @@ export class VisioViewerElement extends BaseElement {
 		this.#assertAlive();
 		const token = ++this.#loadToken;
 		this.#forgetOpenedFile();
-		if (source instanceof Blob) {
-			await this.controller.loadSource(() => {
-				if (source.size > MAX_INPUT_BYTES)
-					throw new Error('This viewer accepts files up to 32 MiB.');
-				return source.arrayBuffer();
-			});
-		} else await this.controller.load(source);
+		try {
+			if (source instanceof Blob) {
+				await this.controller.loadSource(() => {
+					if (source.size > MAX_INPUT_BYTES)
+						throw new Error('This viewer accepts files up to 32 MiB.');
+					return source.arrayBuffer();
+				});
+			} else await this.controller.load(source);
+		} catch (error) {
+			// A host shows the refusal as the viewer does: in the viewer's language.
+			const message = error instanceof Error ? error.message : '';
+			const shown = translateRibbonText(normalizeVisioLocale(this.#locale()), message);
+			throw shown === message ? error : new Error(shown, { cause: error });
+		}
 		// A destroyed or superseded viewer keeps no name from a late load.
 		if (this.#disposed || token !== this.#loadToken) return;
 		this.#fileName = typeof File !== 'undefined' && source instanceof File ? source.name : '';
@@ -1042,6 +1052,7 @@ export class VisioViewerElement extends BaseElement {
 			{
 				viewport: this.#viewport,
 				zoomSlider: this.#zoomSlider,
+				zoom: this.#pointer.zoom,
 			},
 			this.controller,
 			(mode) => this.#fit(mode),
@@ -1151,7 +1162,8 @@ export class VisioViewerElement extends BaseElement {
 			? 'Opening diagram…'
 			: state.edit.busy
 				? 'Updating diagram…'
-				: (state.error?.message ??
+				: ((state.error &&
+						translateRibbonText(normalizeVisioLocale(this.#locale()), state.error.message)) ??
 					(state.edit.error ? `Edit rejected: ${editErrorMessage(state.edit.error)}` : undefined) ??
 					this.#announcement ??
 					'');

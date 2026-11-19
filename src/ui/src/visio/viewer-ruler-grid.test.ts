@@ -3,6 +3,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { createVsdx, editVsdx, parseVsdx, visioPageLayout, type VisioEdit } from 'ooxml-core/visio';
 import { ViewerController } from './controller';
 import { ViewerCommands } from './viewer-commands';
+import { ViewerZoomGesture } from './viewer-zoom-gesture';
 import { createRibbon } from './ribbon';
 import { createRulers } from './viewer-ruler';
 import { registerViewerControls } from './office-ui';
@@ -35,6 +36,7 @@ async function setup(source = true) {
 	const rulers = createRulers(viewport);
 	const commands = new ViewerCommands({
 		root,
+		zoom: new ViewerZoomGesture(viewport, controller),
 		viewport,
 		controller,
 		rulers,
@@ -133,16 +135,18 @@ it('opens from the Show launcher with the page values and saves only what change
 	]);
 	expect(visioPageLayout(ui.page())).toMatchObject({ gridDensityX: 0, gridSpacingX: 0.5 });
 	// The canvas grid and Snap to Grid follow the page.
-	expect(ui.svg().style.getPropertyValue('--_vv-grid-x')).toBe('48px');
-	expect(ui.svg().style.getPropertyValue('--_vv-grid-y')).toBe('24px');
-	expect(ui.svg().style.getPropertyValue('--_vv-grid-origin-y')).toBe('96px');
+	expect(ui.svg().style.getPropertyValue('--_vv-grid-x')).toBe('calc(var(--vv-inch, 96px) * 0.5)');
+	expect(ui.svg().style.getPropertyValue('--_vv-grid-y')).toBe('calc(var(--vv-inch, 96px) * 0.25)');
+	expect(ui.svg().style.getPropertyValue('--_vv-grid-origin-y')).toBe(
+		'calc(var(--vv-inch, 96px) * 1)',
+	);
 	expect(ui.commands.gridStep).toEqual({ x: 0.5, y: 0.25, originX: 0, originY: 1 });
 	ui.commands.run({ type: 'grid' });
 	expect(ui.commands.gridStep).toEqual({ x: 0.5, y: 0.25, originX: 0, originY: 1 });
 	// One undoable step.
 	await ui.controller.undo();
 	expect(ui.page().layout).toBeUndefined();
-	expect(ui.svg().style.getPropertyValue('--_vv-grid-x')).toBe('24px');
+	expect(ui.svg().style.getPropertyValue('--_vv-grid-x')).toBe('calc(var(--vv-inch, 96px) * 0.25)');
 	ui.dispose();
 });
 

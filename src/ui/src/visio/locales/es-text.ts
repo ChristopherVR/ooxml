@@ -103,4 +103,10 @@ export const esText: Readonly<Record<string, string>> = {
 	Options: 'Opciones',
 	Share: 'Compartir',
 	'Style {n}': 'Estilo {n}',
+	'The page has {count} shapes, more than this viewer can open (it reads at most {limit} XML nodes per part).':
+		'La página tiene {count} formas, más de las que este visor puede abrir (lee como máximo {limit} nodos XML por parte).',
+	'A part of this drawing has more than {limit} XML nodes, more than this viewer can open.':
+		'Una parte de este dibujo tiene más de {limit} nodos XML, más de los que este visor puede abrir.',
+	'This drawing has more than {limit} XML nodes in all, more than this viewer can open.':
+		'Este dibujo tiene más de {limit} nodos XML en total, más de los que este visor puede abrir.',
 };

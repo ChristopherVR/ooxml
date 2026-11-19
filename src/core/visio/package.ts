@@ -255,7 +255,10 @@ export class VisioPackage {
 			const xml = new TextDecoder(encoding, { fatal: true }).decode(bytes);
 			this.totalXmlNodes += inspectXml(xml, this.limits, this.check, encoding);
 			if (this.totalXmlNodes > this.limits.maxTotalXmlNodes)
-				fail('LIMIT_XML_TOTAL', 'Aggregate XML node limit exceeded');
+				fail(
+					'LIMIT_XML_TOTAL',
+					`This drawing has more than ${this.limits.maxTotalXmlNodes} XML nodes in all, more than this viewer can open.`,
+				);
 			const root = parseXml(xml, { label: 'VSDX' }).documentElement;
 			inspectNamespaces(root, this.check);
 			this.check();
