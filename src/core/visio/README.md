@@ -356,16 +356,32 @@ options remain unresolved. Nothing is navigated or fetched during parsing.
 Default package limits: 32 MiB input, 2,048 entries, 16 MiB per inflated entry,
 128 MiB total declared/actual inflated bytes, 200:1 compression ratio, 16 MiB XML
 characters, 128 XML nesting depth, 1,250,000 XML nodes per part, two million XML nodes
-across the package, and a ten-second cooperative
-deadline. The node limit admits a 10,000-shape page at 125 nodes a shape (the 90th
-percentile of the page parts in this repository's fixtures, which range from 32 to 170
-nodes a shape; the median is 90). Measured at the limit in V8 on a shared desktop, a page
-of 13,800 plain shapes loaded in 6.1 to 7.0 s with a peak of about 590 MB of heap, and
-the densest XML the limits allow (empty elements and one-letter text) in 3.0 to 5.3 s with
-about 660 MB; a 10,000-shape page took 4.4 to 5.3 s and 465 MB. The deadline is checked
-between steps, not inside the DOM construction of one part, so the viewer's parse worker
-also has a 15-second hard timeout. A refused part reports the shapes it holds ("The page
-has 12000 shapes, more than this viewer can open"), or its node count when it holds none.
+across the package, an XML heap budget, and a ten-second cooperative deadline.
+
+Memory is bounded by the heap budget. Each part is costed while it is scanned, before its
+DOM is built, at the heap the shared XML parser was measured to keep: 800 bytes an
+element, 240 an attribute, 140 any other node and one a character. The parts of a package
+may together cost 600 MiB (`maxXmlHeapBytes`: a 10,000-shape page at the 90th percentile of
+54 KB of heap a shape in this repository's fixtures, plus 64 MiB for masters and other parts), and
+no more than 4,096 bytes for each byte of the file once past 64 MiB
+(`maxXmlHeapPerInputByte`). Drawings Visio saves cost 90 to 145 bytes per input byte, and
+generated pages of identical shapes about 2,100, so only XML far denser than real drawing
+data meets the second bound. A refused package reports `LIMIT_XML_MEMORY` and the memory
+its XML would need.
+
+Measured in Node 24 under a 1 GiB heap cap, one parse per fresh process, three runs each,
+with peak heap read from the garbage collector trace: a 48 KB file holding two parts of the
+densest XML (empty elements and one-letter text) is refused in 0.2 to 0.3 s at 14 to 16 MB
+of heap, where the limits without the budget loaded it in 4.5 to 7.2 s at about 1 GB; a
+page of 10,000 plain shapes (164 KB) loads in 3.8 to 4.7 s at about 500 MB, and one of
+13,800 shapes in 5.2 to 6.6 s at 650 to 685 MB. The heaviest file the budget lets through,
+428 KB of the densest XML, loads in 2.4 to 2.6 s at 730 to 760 MB; with a second such part
+it is refused after the first, in 2.3 to 3.6 s at 750 to 800 MB. The deadline is checked
+between steps, not inside the DOM construction of one part (which the per-part node limit
+bounds), so the viewer's parse worker also has a 15-second hard timeout. A part over the
+node limit reports the shapes it holds ("The page has 16000 shapes, more than this viewer
+can open"), or its node count when it holds none.
+
 ZIP validation checks local and central headers, CRCs, aliases, traversal,
 overlap and unsupported encryption/ZIP64. XML rejects DTD/entity declarations and
 malformed or ambiguous namespace constructs. Internal relationships must resolve

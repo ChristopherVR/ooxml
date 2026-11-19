@@ -126,6 +126,8 @@ describe('load refusals', () => {
 				refusal,
 				'A part of this drawing has more than 1250000 XML nodes, more than this viewer can open.',
 				'This drawing has more than 2000000 XML nodes in all, more than this viewer can open.',
+				'This drawing would need more than 600 MB of memory to open, more than this viewer allows.',
+				'This 48 KB drawing would need more than 189 MB of memory to open, far more than drawings of its size need.',
 			]) {
 				const translated = translateRibbonText(locale, message);
 				expect(translated, locale).not.toBe(message);

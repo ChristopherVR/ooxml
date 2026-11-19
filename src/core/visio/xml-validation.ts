@@ -32,12 +32,41 @@ export function nodeLimitMessage(xml: string, limit: number): string {
 		? `The page has ${shapes} shapes, more than this viewer can open (it reads at most ${limit} XML nodes per part).`
 		: `A part of this drawing has more than ${limit} XML nodes, more than this viewer can open.`;
 }
-/** Bound DOM construction first and reject the malformed input that tolerant XML parsers repair. */
+/**
+ * Measured V8 heap, in bytes, the shared XML parser keeps for one node of each kind, and for each
+ * character of the part (attribute values and text keep slices of it).
+ */
+const HEAP = { element: 800, attribute: 240, other: 140, char: 1 } as const;
+/** Heap a package may spend on parsed XML however small its file (see `maxXmlHeapPerInputByte`). */
+const HEAP_FLOOR = 64 * 1024 * 1024;
+/** Estimated heap the parsed XML of one package has taken, and what it may take. */
+export interface XmlHeapBudget {
+	used: number;
+	readonly limit: number;
+	/** Throws the error that says why the next part does not fit. */
+	readonly refuse: () => never;
+}
+/** The heap budget of a package whose file is `inputBytes` long. */
+export function xmlHeapBudget(limits: VisioPackageLimits, inputBytes: number): XmlHeapBudget {
+	const scaled = Math.max(HEAP_FLOOR, inputBytes * limits.maxXmlHeapPerInputByte);
+	const limit = Math.min(limits.maxXmlHeapBytes, scaled);
+	const mb = Math.round(limit / 1048576);
+	const message =
+		limit < limits.maxXmlHeapBytes
+			? `This ${Math.ceil(inputBytes / 1024)} KB drawing would need more than ${mb} MB of memory to open, far more than drawings of its size need.`
+			: `This drawing would need more than ${mb} MB of memory to open, more than this viewer allows.`;
+	return { used: 0, limit, refuse: () => fail('LIMIT_XML_MEMORY', message) };
+}
+/**
+ * Bound DOM construction first and reject the malformed input that tolerant XML parsers repair.
+ * With `heap`, the part's estimated heap is added to it, or the scan stops once it would not fit.
+ */
 export function inspectXml(
 	xml: string,
 	limits: VisioPackageLimits,
 	check: () => void,
 	encoding = 'utf-8',
+	heap?: XmlHeapBudget,
 ): number {
 	if (xml.length > limits.maxXmlChars) fail('LIMIT_XML', 'XML character limit exceeded');
 	if (
@@ -48,9 +77,12 @@ export function inspectXml(
 	const stack: { name: string; namespaces: NamespaceScope }[] = [];
 	let nodes = 0,
 		roots = 0,
-		at = 0;
-	const node = () => {
+		at = 0,
+		used = (heap?.used ?? 0) + xml.length * HEAP.char;
+	if (heap && used > heap.limit) heap.refuse();
+	const node = (cost: number) => {
 		if (++nodes > limits.maxXmlNodes) fail('LIMIT_XML', nodeLimitMessage(xml, limits.maxXmlNodes));
+		if (heap && (used += cost) > heap.limit) heap.refuse();
 	};
 	const text = (value: string) => {
 		if (/&(?!(?:amp|lt|gt|apos|quot|#\d+|#x[\da-fA-F]+);)/.test(value))
@@ -80,12 +112,14 @@ export function inspectXml(
 			if ((!stack.length && !xmlWhitespace(value)) || value.includes(']]>'))
 				fail('INVALID_XML', 'Text outside XML root or invalid text');
 			text(value);
-			node();
+			node(HEAP.other);
 			at = end;
 			continue;
 		}
-		node();
-		if (xml.startsWith('<!--', at) || xml.startsWith('<![CDATA[', at) || xml.startsWith('<?', at)) {
+		const markup =
+			xml.startsWith('<!--', at) || xml.startsWith('<![CDATA[', at) || xml.startsWith('<?', at);
+		node(markup ? HEAP.other : xml[at + 1] === '/' ? 0 : HEAP.element);
+		if (markup) {
 			const comment = xml.startsWith('<!--', at),
 				cdata = xml.startsWith('<![CDATA[', at);
 			const start = at + (comment ? 4 : cdata ? 9 : 2),
@@ -140,7 +174,7 @@ export function inspectXml(
 				text(value);
 				if (match[1]?.startsWith('xmlns:'))
 					namespaces.bindings.set(match[1].slice(6), decodeXmlAttribute(value));
-				node();
+				node(HEAP.attribute);
 				cursor = attribute.lastIndex;
 			}
 			const expanded = new Set<string>();
@@ -159,6 +193,7 @@ export function inspectXml(
 		at = end + 1;
 	}
 	if (stack.length || roots !== 1) fail('INVALID_XML', 'Missing or unclosed XML root');
+	if (heap) heap.used = used;
 	return nodes;
 }
 

@@ -114,4 +114,8 @@ export const deText: Readonly<Record<string, string>> = {
 		'Ein Teil dieser Zeichnung hat mehr als {limit} XML-Knoten, mehr als dieser Viewer öffnen kann.',
 	'This drawing has more than {limit} XML nodes in all, more than this viewer can open.':
 		'Diese Zeichnung hat insgesamt mehr als {limit} XML-Knoten, mehr als dieser Viewer öffnen kann.',
+	'This drawing would need more than {limit} MB of memory to open, more than this viewer allows.':
+		'Diese Zeichnung würde zum Öffnen mehr als {limit} MB Arbeitsspeicher benötigen, mehr als dieser Viewer zulässt.',
+	'This {size} KB drawing would need more than {limit} MB of memory to open, far more than drawings of its size need.':
+		'Diese Zeichnung mit {size} KB würde zum Öffnen mehr als {limit} MB Arbeitsspeicher benötigen, weit mehr als Zeichnungen dieser Größe brauchen.',
 };

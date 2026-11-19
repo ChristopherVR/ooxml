@@ -106,4 +106,8 @@ export const zhCNText: Readonly<Record<string, string>> = {
 		'此绘图的某个部件有超过 {limit} 个 XML 节点，超出此查看器可打开的范围。',
 	'This drawing has more than {limit} XML nodes in all, more than this viewer can open.':
 		'此绘图总共有超过 {limit} 个 XML 节点，超出此查看器可打开的范围。',
+	'This drawing would need more than {limit} MB of memory to open, more than this viewer allows.':
+		'打开此绘图需要超过 {limit} MB 内存，超出此查看器允许的范围。',
+	'This {size} KB drawing would need more than {limit} MB of memory to open, far more than drawings of its size need.':
+		'打开此 {size} KB 的绘图需要超过 {limit} MB 内存，远超同等大小的绘图所需。',
 };

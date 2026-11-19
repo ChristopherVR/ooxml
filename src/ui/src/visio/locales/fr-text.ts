@@ -113,4 +113,8 @@ export const frText: Readonly<Record<string, string>> = {
 		'Une partie de ce dessin contient plus de {limit} nœuds XML, plus que ce que cette visionneuse peut ouvrir.',
 	'This drawing has more than {limit} XML nodes in all, more than this viewer can open.':
 		'Ce dessin contient plus de {limit} nœuds XML au total, plus que ce que cette visionneuse peut ouvrir.',
+	'This drawing would need more than {limit} MB of memory to open, more than this viewer allows.':
+		"Ce dessin nécessiterait plus de {limit} Mo de mémoire pour s'ouvrir, plus que ce que cette visionneuse autorise.",
+	'This {size} KB drawing would need more than {limit} MB of memory to open, far more than drawings of its size need.':
+		"Ce dessin de {size} Ko nécessiterait plus de {limit} Mo de mémoire pour s'ouvrir, bien plus que les dessins de cette taille.",
 };

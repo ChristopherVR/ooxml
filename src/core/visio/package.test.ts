@@ -464,3 +464,45 @@ describe('aggregate XML output budget', () => {
 		});
 	});
 });
+
+describe('XML heap budget', () => {
+	/** Empty elements and one-letter text: the most nodes, and so the most heap, per XML byte. */
+	const dense = (pairs: number) => {
+		let seed = 7,
+			body = '';
+		for (let i = 0; i < pairs; i++) {
+			seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+			body += (seed >> 8) % 40 ? '<a/>a' : '<a/>b';
+		}
+		return `<PageContents><Shapes/><x>${body}</x></PageContents>`;
+	};
+	it('refuses a small file whose XML would expand into a large heap, before parsing it', async () => {
+		const bytes = archive([{ name: 'visio/document.xml', xml: dense(100_000), deflate: true }]);
+		expect(bytes.length).toBeLessThan(16 * 1024);
+		const pkg = await VisioPackage.open(bytes);
+		await expect(pkg.readXml('visio/document.xml')).rejects.toMatchObject({
+			code: 'LIMIT_XML_MEMORY',
+			message: expect.stringMatching(
+				/^This \d+ KB drawing would need more than 64 MB of memory to open, far more than drawings of its size need\.$/,
+			),
+		});
+	});
+	it('bounds the estimated heap of all parts and charges a cached part once', async () => {
+		// 700 elements estimate 560,800 bytes, so the second part passes 1 MiB.
+		const xml = `<Root>${'<a/>'.repeat(700)}</Root>`;
+		const pkg = await VisioPackage.open(
+			archive([
+				{ name: 'a.xml', xml },
+				{ name: 'b.xml', xml },
+			]),
+			{ maxXmlHeapBytes: 1024 * 1024 },
+		);
+		await pkg.readXml('a.xml');
+		await pkg.readXml('a.xml');
+		await expect(pkg.readXml('b.xml')).rejects.toMatchObject({
+			code: 'LIMIT_XML_MEMORY',
+			message:
+				'This drawing would need more than 1 MB of memory to open, more than this viewer allows.',
+		});
+	});
+});

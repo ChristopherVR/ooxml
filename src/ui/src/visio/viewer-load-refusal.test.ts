@@ -10,7 +10,9 @@ afterEach(() => document.body.replaceChildren());
 /** A page of `count` shapes past the XML node limit, stored uncompressed (no ratio refusal). */
 async function oversizedPage(count: number): Promise<Uint8Array> {
 	const zip = await JSZip.loadAsync(await createVsdxFixture('Movable'));
-	const shape = (id: number) => `<Shape ID="${id}" Type="Shape">${'<C/>'.repeat(80)}</Shape>`;
+	// Mostly attributes, as real shapes are: the page passes the node limit inside the heap budget.
+	const shape = (id: number) =>
+		`<Shape ID="${id}" Type="Shape">${'<C a="" b="" c="" d=""/>'.repeat(16)}</Shape>`;
 	const shapes = Array.from({ length: count }, (_, i) => shape(i + 1)).join('');
 	const xml = await zip.file('visio/pages/page1.xml')!.async('string');
 	zip.file(

@@ -12,7 +12,7 @@ import {
 	type VisioPackageRelationship,
 } from './package-common';
 import { inspectZip } from './zip-validation';
-import { inspectXml, inspectNamespaces } from './xml-validation';
+import { inspectXml, inspectNamespaces, xmlHeapBudget } from './xml-validation';
 export {
 	VisioPackageError,
 	type VisioPackageLimits,
@@ -46,12 +46,15 @@ export class VisioPackage {
 	private noted: Set<string> | undefined;
 	private totalOutput = 0;
 	private totalXmlNodes = 0;
+	private readonly xmlHeap;
 	private constructor(
 		private readonly zip: JSZip,
 		private readonly entries: Map<string, Entry>,
 		private readonly limits: VisioPackageLimits,
 		private readonly deadline: number,
+		inputBytes: number,
 	) {
+		this.xmlHeap = xmlHeapBudget(limits, inputBytes);
 		for (const entry of entries.values())
 			if (!entry.directory) this.decodedNames.set(decodePath(entry.name), entry.name);
 	}
@@ -86,7 +89,7 @@ export class VisioPackage {
 				Object.keys(zip.files).some((name) => !entries.has(name))
 			)
 				fail('ZIP_MISMATCH', 'ZIP loader changed validated entry names');
-			return new VisioPackage(zip, entries, limits, deadline);
+			return new VisioPackage(zip, entries, limits, deadline, bytes.byteLength);
 		} catch (error) {
 			if (error instanceof VisioPackageError) throw error;
 			return fail(
@@ -253,7 +256,7 @@ export class VisioPackage {
 						? 'utf-16be'
 						: 'utf-8';
 			const xml = new TextDecoder(encoding, { fatal: true }).decode(bytes);
-			this.totalXmlNodes += inspectXml(xml, this.limits, this.check, encoding);
+			this.totalXmlNodes += inspectXml(xml, this.limits, this.check, encoding, this.xmlHeap);
 			if (this.totalXmlNodes > this.limits.maxTotalXmlNodes)
 				fail(
 					'LIMIT_XML_TOTAL',

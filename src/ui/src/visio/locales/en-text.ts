@@ -108,4 +108,8 @@ export const enText: Readonly<Record<string, string>> = {
 		'A part of this drawing has more than {limit} XML nodes, more than this viewer can open.',
 	'This drawing has more than {limit} XML nodes in all, more than this viewer can open.':
 		'This drawing has more than {limit} XML nodes in all, more than this viewer can open.',
+	'This drawing would need more than {limit} MB of memory to open, more than this viewer allows.':
+		'This drawing would need more than {limit} MB of memory to open, more than this viewer allows.',
+	'This {size} KB drawing would need more than {limit} MB of memory to open, far more than drawings of its size need.':
+		'This {size} KB drawing would need more than {limit} MB of memory to open, far more than drawings of its size need.',
 };

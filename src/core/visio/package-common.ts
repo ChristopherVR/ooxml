@@ -9,6 +9,17 @@ export interface VisioPackageLimits {
 	maxXmlDepth: number;
 	maxXmlNodes: number;
 	maxTotalXmlNodes: number;
+	/**
+	 * Estimated V8 heap, in bytes, the parsed XML of the whole package may hold. Each part is
+	 * costed while it is scanned, before its DOM is built: 800 bytes an element, 240 an attribute,
+	 * 140 any other node and 1 a character, as measured for the shared XML parser.
+	 */
+	maxXmlHeapBytes: number;
+	/**
+	 * The same estimate per byte of the input file, once it passes 64 MiB, so a small file cannot
+	 * expand into a large heap.
+	 */
+	maxXmlHeapPerInputByte: number;
 	/** Elapsed time from open(), including all subsequent reads. */
 	maxRuntimeMs: number;
 }
@@ -38,12 +49,19 @@ export const DEFAULTS: VisioPackageLimits = {
 	maxCompressionRatio: 200,
 	maxXmlChars: 16 * 1024 * 1024,
 	maxXmlDepth: 128,
-	// A 10,000-shape page at 125 nodes a shape (the 90th percentile of the pages measured). At
-	// this limit a page of plain shapes took about 6.5 s and 600 MB of V8 heap to load, the
-	// densest XML 3 to 5 s and 660 MB: inside `maxRuntimeMs`, which is checked between steps
-	// (DOM construction of one part is not interrupted; the viewer's worker has a hard timeout).
+	// Bounds the DOM construction of one part, which `maxRuntimeMs` cannot interrupt: a
+	// 10,000-shape page at 125 nodes a shape (the 90th percentile of the pages measured).
 	maxXmlNodes: 1_250_000,
 	maxTotalXmlNodes: 2_000_000,
+	// Memory is bounded by the heap estimate, not the node counts: a 10,000-shape page at the
+	// 90th percentile of 54 KB of heap a shape, plus 64 MiB for masters, themes and other parts.
+	// Measured peaks (README, Bounded processing): about 500 MB for 10,000 plain shapes and
+	// 760 MB for the densest XML the budget lets through; a 48 KB file of the densest XML is
+	// refused in 0.2 s at 16 MB, where the node limits alone let it reach 1 GB.
+	maxXmlHeapBytes: 600 * 1024 * 1024,
+	// Drawings Visio saves estimate 90 to 145 bytes per input byte, generated pages of identical
+	// shapes about 2,100; this refuses the densest XML a 50 KB file can hold before it is parsed.
+	maxXmlHeapPerInputByte: 4096,
 	maxRuntimeMs: 10_000,
 };
 export function fail(code: string, message: string): never {

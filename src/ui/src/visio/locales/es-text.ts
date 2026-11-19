@@ -110,4 +110,8 @@ export const esText: Readonly<Record<string, string>> = {
 		'Una parte de este dibujo tiene más de {limit} nodos XML, más de los que este visor puede abrir.',
 	'This drawing has more than {limit} XML nodes in all, more than this viewer can open.':
 		'Este dibujo tiene más de {limit} nodos XML en total, más de los que este visor puede abrir.',
+	'This drawing would need more than {limit} MB of memory to open, more than this viewer allows.':
+		'Este dibujo necesitaría más de {limit} MB de memoria para abrirse, más de lo que permite este visor.',
+	'This {size} KB drawing would need more than {limit} MB of memory to open, far more than drawings of its size need.':
+		'Este dibujo de {size} KB necesitaría más de {limit} MB de memoria para abrirse, mucho más de lo que necesitan los dibujos de su tamaño.',
 };
