@@ -42,10 +42,13 @@ export function createDeferredRows(
 			}
 			for (const key of next) {
 				if (!inWindow.has(key) && !ready.has(key)) {
+					// One row per frame: the binding renders it after this returns.
 					view.defer(key, () => {
-						if (inWindow.has(key)) {
-							publish(new Set(ready).add(key));
+						if (!inWindow.has(key)) {
+							return false;
 						}
+						publish(new Set(ready).add(key));
+						return true;
 					});
 				}
 			}

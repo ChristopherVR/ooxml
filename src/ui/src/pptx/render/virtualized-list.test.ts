@@ -230,11 +230,26 @@ describe('deferred row fills', () => {
 		const rows = createDeferredRows(view, (keys) => ready.push([...keys]));
 		rows.sync(['a', 'b']);
 		rows.sync(['b', 'c']);
+		// One declarative row per frame: its render lands after the fill.
+		clock.frame();
+		expect(ready.at(-1)).toStrictEqual(['b']);
 		clock.frame();
 		expect(ready.at(-1)).toStrictEqual(['b', 'c']);
 		rows.sync(['c']);
 		expect(ready.at(-1)).toStrictEqual(['c']);
 		rows.destroy();
+		view.destroy();
+	});
+});
+
+describe('virtual window scroll container', () => {
+	it('turns scroll anchoring off while attached, so a reveal is not undone', () => {
+		const el = document.createElement('div');
+		const view = createVirtualWindow({ totalItems: 200, itemHeight: 100 }, () => {});
+		view.attach(el);
+		expect(el.style.overflowAnchor).toBe('none');
+		view.attach(null);
+		expect(el.style.overflowAnchor).toBe('');
 		view.destroy();
 	});
 });

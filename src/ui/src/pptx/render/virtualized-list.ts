@@ -121,9 +121,11 @@ export interface VirtualWindow {
 	 * Run `fill` for row `key` once scrolling has paused, a frame's budget at a
 	 * time, so a fast scroll paints row shells at frame rate and fills the rows
 	 * still in view when it stops. A new request for a key replaces its pending
-	 * one.
+	 * one. A fill that returns `true` only schedules its work (a framework
+	 * renders the row later), so it ends the frame's fills: the budget cannot
+	 * see that work.
 	 */
-	defer(key: string, fill: () => void): void;
+	defer(key: string, fill: () => boolean | void): void;
 	/** Drop the pending fill of a row that left the window. */
 	cancelDeferred(key: string): void;
 	/** Stop listening and drop any pending frame and fill. */
@@ -179,7 +181,7 @@ export function createVirtualWindow(
 
 	// ── Deferred row fills ──
 	const now = (): number => frames.now?.() ?? performance.now();
-	const fills = new Map<string, () => void>();
+	const fills = new Map<string, () => boolean | void>();
 	let lastScrollAt = Number.NEGATIVE_INFINITY;
 	let fillFrame: unknown = null;
 	let fillTimer: unknown = null;
@@ -212,8 +214,7 @@ export function createVirtualWindow(
 		const start = now();
 		for (const [key, fill] of fills) {
 			fills.delete(key);
-			fill();
-			if (now() - start >= DEFERRED_FILL_FRAME_BUDGET_MS) {
+			if (fill() === true || now() - start >= DEFERRED_FILL_FRAME_BUDGET_MS) {
 				break;
 			}
 		}
@@ -231,7 +232,11 @@ export function createVirtualWindow(
 		schedule();
 	};
 
+	let anchorBefore = '';
 	const detach = (): void => {
+		if (container) {
+			container.style.overflowAnchor = anchorBefore;
+		}
 		container?.removeEventListener('scroll', onScroll);
 		resizeObserver?.disconnect();
 		resizeObserver = null;
@@ -249,6 +254,10 @@ export function createVirtualWindow(
 			detach();
 			container = el;
 			if (el) {
+				// The window swaps rows above the viewport as it scrolls; scroll
+				// anchoring would then undo a reveal's scroll.
+				anchorBefore = el.style.overflowAnchor;
+				el.style.overflowAnchor = 'none';
 				el.addEventListener('scroll', onScroll, { passive: true });
 				if (typeof ResizeObserver !== 'undefined') {
 					resizeObserver = new ResizeObserver(schedule);
