@@ -258,6 +258,14 @@ if (p.a11y?.run) {
 	}
 }
 
+// The byte budgets open the suite in Chromium, so they run with the browser suites.
+if (p.budgets && browser) {
+	const install = steps.some((step) => step.id === 'a11y:install')
+		? 'a11y:install'
+		: add('perf-budgets:install', PLAYWRIGHT_INSTALL, 'e2e/a11y', BUILT);
+	add('perf-budgets', 'node scripts/perf-budgets.mjs check', '.', [...BUILT, install]);
+}
+
 // ---- Running. -------------------------------------------------------------------------------
 // Commands are written for bash (the planner's commands use bash syntax, as in CI).
 const shell = verificationShell();

@@ -1,24 +1,33 @@
 import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { dirname, relative, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'tsup';
+
+const PACKAGE = dirname(fileURLToPath(import.meta.url));
 
 // Component styles are real .css files imported as text (`import css from './x.css?raw'`), the
 // same spelling Vite and Vitest use.
 export const rawCss = {
 	name: 'raw-css',
 	setup(build: { onResolve: Function; onLoad: Function }) {
-		build.onResolve({ filter: /\.css\?raw$/ }, (args: { resolveDir: string; path: string }) => ({
-			// Keep the ?raw suffix: tsup's own CSS handling matches paths that end in .css.
-			path: resolve(args.resolveDir, args.path),
-			namespace: 'raw-css',
-		}));
-		build.onLoad({ filter: /.*/, namespace: 'raw-css' }, async (args: { path: string }) => ({
-			contents:
-				'export default ' +
-				JSON.stringify(await readFile(args.path.replace(/\?raw$/, ''), 'utf8')) +
-				';',
-			loader: 'js',
-		}));
+		build.onResolve({ filter: /\.css\?raw$/ }, (args: { resolveDir: string; path: string }) => {
+			const file = resolve(args.resolveDir, args.path.replace(/\?raw$/, ''));
+			return {
+				// esbuild writes this path into the bundle as a comment, so it is relative: the
+				// output then does not depend on (or reveal) where the package was built. Keep the
+				// ?raw suffix: tsup's own CSS handling matches paths that end in .css.
+				path: `${relative(PACKAGE, file).replaceAll('\\', '/')}?raw`,
+				namespace: 'raw-css',
+				pluginData: { file },
+			};
+		});
+		build.onLoad(
+			{ filter: /.*/, namespace: 'raw-css' },
+			async (args: { pluginData: { file: string } }) => ({
+				contents: `export default ${JSON.stringify(await readFile(args.pluginData.file, 'utf8'))};`,
+				loader: 'js',
+			}),
+		);
 	},
 };
 

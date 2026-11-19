@@ -150,12 +150,12 @@ export async function buildPwa(out) {
 		);
 	}
 	// Subresource integrity on the shell's own tags, so the browser refuses a script or style that
-	// is not this build's, whoever serves it.
+	// is not this build's, whoever serves it: the stamped scripts and the content-hashed shell sheet.
 	for (const file of files.filter((f) => f.endsWith('.html'))) {
 		const text = await readFile(join(out, file), 'utf8');
 		let next = text;
 		for (const [tag, src] of text.matchAll(
-			/<(?:script|link)\b[^>]*?(?:src|href)="([^"?]+)\?v=\w+"[^>]*>/g,
+			/<(?:script\b|link\b(?=[^>]*\brel="stylesheet"))[^>]*?(?:src|href)="([^"?]+)(?:\?v=\w+)?"[^>]*>/g,
 		)) {
 			const path = posix.join(posix.dirname(file), src);
 			if (!files.includes(path) || /\sintegrity=/.test(tag)) continue;
