@@ -68,7 +68,9 @@ The release workflow writes `chore(release): bump versions and update changelogs
   - a **bundle size** comment when an entry point of `ooxml-core` or `ooxml-ui` changes size
     (`scripts/bundle-size.mjs`, posted by `.github/workflows/bundle-size-comment.yml`);
   - a **pkg.pr.new** comment with install URLs for preview builds of both packages, so a viewer or
-    app can try the change before it is released (`.github/workflows/preview-packages.yml`);
+    app can try the change before it is released (`.github/workflows/preview-packages.yml`). A
+    pull request from a fork gets one only after a maintainer reviews it and adds the
+    `preview-packages` label, and only for the head it had then;
   - a review from **Codex** (its GitHub app; comment `@codex review` to rerun it): suggestions, not a
     required check.
 - `ci-success` also requires no em-dash in the lines you add

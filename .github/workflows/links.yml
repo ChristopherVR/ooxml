@@ -13,11 +13,13 @@ permissions:
   contents: read
 
 jobs:
+  # lychee is third-party code, so it runs with a read-only token and hands its report to `report`.
   check:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      issues: write
+    outputs:
+      exit_code: ${{ steps.lychee.outputs.exit_code }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -39,10 +41,32 @@ jobs:
           fail: false
           token: ${{ github.token }}
 
+      - name: Upload the report
+        if: steps.lychee.outputs.exit_code != '0'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: lychee-report
+          path: lychee/out.md
+          retention-days: 1
+
+  report:
+    needs: [check]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Download the report
+        if: needs.check.outputs.exit_code != '0'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: lychee-report
+          path: lychee
+
       - name: Keep the broken-links issue up to date
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         env:
-          EXIT_CODE: ${{ steps.lychee.outputs.exit_code }}
+          EXIT_CODE: ${{ needs.check.outputs.exit_code }}
         with:
           script: |
             const fs = require('node:fs');
