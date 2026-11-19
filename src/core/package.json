@@ -79,6 +79,11 @@
 			"import": "./dist/i18n/index.mjs",
 			"require": "./dist/i18n/index.cjs"
 		},
+		"./ai": {
+			"types": "./dist/ai/index.d.ts",
+			"import": "./dist/ai/index.mjs",
+			"require": "./dist/ai/index.cjs"
+		},
 		"./ribbon": {
 			"types": "./dist/ribbon/index.d.ts",
 			"import": "./dist/ribbon/index.mjs",
