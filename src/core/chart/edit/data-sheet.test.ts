@@ -47,6 +47,26 @@ describe('the data sheet of a chart part', () => {
 		);
 	});
 
+	it('sizes a series added after removing the longest one as a later save does', () => {
+		const literal = (count: number) =>
+			`<c:val><c:numLit><c:ptCount val="${count}"/>${Array.from(
+				{ length: count },
+				(_, index) => `<c:pt idx="${index}"><c:v>${index + 1}</c:v></c:pt>`,
+			).join('')}</c:numLit></c:val>`;
+		const series = (index: number, count: number) =>
+			`<c:ser><c:idx val="${index}"/><c:order val="${index}"/>${literal(count)}</c:ser>`;
+		const ragged = reload(
+			`<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart"><c:chart><c:plotArea><c:barChart><c:barDir val="col"/><c:grouping val="clustered"/>${series(0, 3)}${series(1, 8)}${series(2, 2)}</c:barChart></c:plotArea></c:chart></c:chartSpace>`,
+		);
+		const remove = { kind: 'remove-series', series: 1 } as const;
+		const add = { kind: 'add-series' } as const;
+		const once = applyChartSpaceDataSheetEdits(ragged, [remove, add]);
+		const saved = reload(writeChartSpace(applyChartSpaceDataSheetEdits(ragged, [remove])));
+		const twice = applyChartSpaceDataSheetEdits(saved, [add]);
+		expect(chartSpaceDataSheet(once)).toEqual(chartSpaceDataSheet(twice));
+		expect(chartSpaceDataSheet(once).series[2]!.values).toEqual([0, 0, 0]);
+	});
+
 	it('ignores edits the sheet refuses and returns the same model', () => {
 		const space = newChartSpace();
 		expect(

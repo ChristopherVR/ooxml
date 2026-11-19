@@ -138,7 +138,9 @@ export function applyChartSpaceDataSheetEdits(
 		const edited = applyChartDataSheetEdit(sheet, edit);
 		if (!edited) continue;
 		next = applyOne(next, sheet, edited, edit, layoutSheet);
-		sheet = edited;
+		// Rows only the removed series reached go with it, as a sheet read from the part afterwards
+		// shows, so the edits after it size new series and rows the same in one save as in several.
+		sheet = edit.kind === 'remove-series' ? chartSpaceDataSheet(next) : edited;
 	}
 	if (next === space || !layoutSheet) return next;
 	const count = sheet.categories.length;
