@@ -149,10 +149,10 @@ export function presentPackages(root, table) {
 	);
 }
 
-/** Files that ship in a published artifact (exclude tests). */
+/** Files that ship in a published artifact (exclude tests and what only tests import). */
 export function isPublishedFile(path) {
 	if (/\.(?:test|spec)\.[cm]?[jt]sx?$/u.test(path)) return false;
-	return !path.includes('/__tests__/') && !path.includes('/e2e/');
+	return !/\/(?:__tests__|__fixtures__|test-support|e2e)\//u.test(path);
 }
 
 /** JSON text with object keys sorted, so reordering a manifest is not a change. */

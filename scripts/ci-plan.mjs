@@ -247,7 +247,9 @@ function pptxDependents(leg) {
 	return out;
 }
 
-const isTestFile = (path) => /(\.test\.[cm]?[jt]sx?|\/__tests__\/)/.test(path);
+/** Tests, and the fixtures and helpers only tests import: none of them ships or reaches a viewer. */
+const isTestFile = (path) =>
+	/(\.test\.[cm]?[jt]sx?|\/(__tests__|__fixtures__|test-support)\/)/.test(path);
 
 /**
  * What the pptx jobs run for a change. `reaches` is true when the change reaches the viewer at all
@@ -401,10 +403,7 @@ export function a11yPlan(files, { everything, pptxReached }) {
 			!(isTestFile(file) && /^(src\/ui|viewers)\//.test(file)) &&
 			!/^viewers\/[^/]+\/(docs|\.github)\//.test(file),
 	);
-	const writers = files.filter(
-		(file) =>
-			CORE_WRITER.test(file) && !isTestFile(file) && !/\/(__fixtures__|test-support)\//.test(file),
-	);
+	const writers = files.filter((file) => CORE_WRITER.test(file) && !isTestFile(file));
 	const all = everything || reached.length > 0;
 	const run = all || writers.length > 0;
 	const pptx =
