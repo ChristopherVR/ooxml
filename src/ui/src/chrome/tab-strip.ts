@@ -81,6 +81,7 @@ export class OfficeUiTabStrip extends OfficeElement {
 		return this.items.map((tab) => ({ ...tab }));
 	}
 	set tabs(value: readonly OfficeTab[]) {
+		const old = this.items;
 		this.items = (Array.isArray(value) ? value : [])
 			.filter((tab) => tab && typeof tab.id === 'string')
 			.map((tab) => ({
@@ -89,16 +90,17 @@ export class OfficeUiTabStrip extends OfficeElement {
 				...(tab.title === undefined ? {} : { title: String(tab.title) }),
 				...(tab.group === undefined ? {} : { group: String(tab.group) }),
 			}));
-		this.requestUpdate('tabs');
+		this.requestUpdate('tabs', old);
 	}
 
 	get selected(): string {
 		return this.picked ?? '';
 	}
 	set selected(id: string | null) {
+		const old = this.selected;
 		this.picked = id === null ? null : String(id);
 		this.reflectAttribute('selected', this.picked, {});
-		this.requestUpdate('selected');
+		this.requestUpdate('selected', old);
 	}
 
 	private index(): number {
@@ -180,7 +182,9 @@ export class OfficeUiTabStrip extends OfficeElement {
 		this.wireDrag();
 	}
 
-	protected override updated(_changed: PropertyValues<this>): void {
+	/** Only a new selection or tab list scrolls the selected tab into view (it forces layout). */
+	protected override updated(changed: PropertyValues): void {
+		if (!changed.has('selected') && !changed.has('tabs')) return;
 		this.renderRoot
 			.querySelector<HTMLElement>('.tab[aria-selected="true"]')
 			?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
