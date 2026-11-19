@@ -35,6 +35,16 @@ describe('diffOpcPackages', () => {
 		await expect(diffOpcPackages(bomb, bomb)).rejects.toBeInstanceOf(ZipLimitError);
 	});
 
+	it('accepts the limits a caller passes', async () => {
+		const small = await pack({ 'a.xml': '<a/>' }, 'STORE');
+		await expect(diffOpcPackages(small, small, { maxInputBytes: 8 })).rejects.toBeInstanceOf(
+			ZipLimitError,
+		);
+		await expect(diffOpcPackages(small, small, { maxEntries: 5 })).resolves.toMatchObject({
+			changed: [],
+		});
+	});
+
 	it('stops at a part that inflates past its declared size', async () => {
 		const bomb = lyingZipOf([{ name: 'a.xml', data: await deflateZeros(8 << 20), declared: 8 }]);
 		await expect(diffOpcPackages(bomb, bomb)).rejects.toThrow(/inflates past/);

@@ -2,6 +2,7 @@ import { SuiteOneDrive } from './cloud-files.js';
 import { mountCloudBrowser } from './cloud-browser.js';
 import { resolveCloudOptions } from './cloud-options.js';
 import { takeLaunchLink } from './launch-link.js';
+import { conflictDetailsHtml } from './onedrive-conflict.js';
 
 let labels;
 /** The shared save progress text (the same as in every product), loaded with the file browser. */
@@ -248,15 +249,6 @@ function openLaunchLink(options, cloud, message) {
 function showConflictDetails(details, conflict) {
 	if (!details) return;
 	const body = details.querySelector('.cloud-conflict-details');
-	const list = (title, names) =>
-		names.length
-			? `<p>${escape(title)}</p><ul>${names.map((name) => `<li><code>${escape(name)}</code></li>`).join('')}</ul>`
-			: '';
-	const describe = (diff) => [
-		...diff.changed.map((n) => `${n} (changed)`),
-		...diff.added.map((n) => `${n} (added)`),
-		...diff.removed.map((n) => `${n} (removed)`),
-	];
 	details.addEventListener(
 		'toggle',
 		() => {
@@ -267,21 +259,9 @@ function showConflictDetails(details, conflict) {
 						diffOpcPackages(conflict.base.bytes, conflict.remote.bytes),
 						diffOpcPackages(conflict.base.bytes, conflict.local),
 					]);
-					const remoteParts = describe(remote);
-					const localParts = describe(local);
-					const both = remoteParts.filter((name) => localParts.includes(name));
-					body.innerHTML = [
-						conflict.issues?.length
-							? list('Why the edits were not combined:', conflict.issues)
-							: '',
-						remoteParts.length
-							? list('Changed in OneDrive since you opened the file:', remoteParts)
-							: '<p>OneDrive reported a newer version, but its content matches what you opened.</p>',
-						list('Changed on this device:', localParts),
-						list('Changed in both:', both),
-					].join('');
+					body.innerHTML = conflictDetailsHtml(conflict.issues, { remote, local }, escape);
 				} catch (error) {
-					body.textContent = `Details are unavailable: ${error instanceof Error ? error.message : String(error)}`;
+					body.innerHTML = conflictDetailsHtml(conflict.issues, { error }, escape);
 				}
 			})();
 		},
