@@ -89,36 +89,12 @@ describe('office-ui-dialog', () => {
 		expect(reasons).toEqual(['close-button']);
 	});
 
-	// Tab order itself is proved in a real browser (e2e/docx/dialog-focus.spec.ts); jsdom has none.
-	it('wraps Tab at the ends of the rendered order: close button first, footer last', () => {
-		const { dialog, ok, cancel } = mount('open');
-		const close = dialog.shadowRoot!.querySelector('.close') as HTMLElement;
-		ok.focus();
-		expect(key(ok, 'Tab')).toBe(false);
-		expect(dialog.shadowRoot!.activeElement).toBe(close);
-		expect(key(close, 'Tab', { shiftKey: true })).toBe(false);
-		expect(document.activeElement).toBe(ok);
-		// Between the ends the browser moves focus.
-		cancel.focus();
-		expect(key(cancel, 'Tab')).toBe(true);
-	});
-
-	it('takes Tab and Escape back when focus has ended up outside', () => {
+	// Tab order only exists in a real browser: e2e/a11y/dialog.spec.ts and e2e/docx/dialog-focus.spec.ts.
+	it('closes on Escape when focus has ended up outside', () => {
 		const { dialog, opener } = mount('open');
-		opener.focus();
-		expect(key(opener, 'Tab')).toBe(false);
-		expect(dialog.shadowRoot!.activeElement).toBe(dialog.shadowRoot!.querySelector('.close'));
 		opener.focus();
 		key(opener, 'Escape');
 		expect(dialog.open).toBe(false);
-	});
-
-	it('brings back a Tab that left past the last predicted stop', () => {
-		const { dialog, opener, cancel } = mount('open');
-		cancel.focus();
-		key(cancel, 'Tab');
-		opener.focus();
-		expect(dialog.shadowRoot!.activeElement).toBe(dialog.shadowRoot!.querySelector('.close'));
 	});
 
 	it('gives the keyboard to the newest of two open dialogs', () => {
@@ -133,30 +109,6 @@ describe('office-ui-dialog', () => {
 		expect(dialog.open).toBe(true);
 		key(document.body, 'Escape');
 		expect(dialog.open).toBe(false);
-	});
-
-	it('finds the controls inside a composite element and moves Tab through them', () => {
-		document.body.innerHTML = '<office-ui-dialog open heading="Pick"></office-ui-dialog>';
-		const dialog = document.querySelector('office-ui-dialog') as Dialog;
-		const picker = document.createElement('div');
-		const inner = picker.attachShadow({ mode: 'open' });
-		inner.innerHTML = '<button id="first">A</button><button id="last">B</button>';
-		const ok = document.createElement('button');
-		ok.slot = 'footer';
-		dialog.append(picker, ok);
-		const [first, last] = [...inner.querySelectorAll('button')] as HTMLElement[];
-		dialog.open = false;
-		dialog.open = true;
-		expect(inner.activeElement).toBe(first);
-		// Inside the picker the browser moves focus; the dialog does not interfere.
-		first!.focus();
-		expect(key(first!, 'Tab')).toBe(true);
-		last!.focus();
-		expect(key(last!, 'Tab')).toBe(true);
-		const close = dialog.shadowRoot!.querySelector('.close') as HTMLElement;
-		close.focus();
-		expect(key(close, 'Tab', { shiftKey: true })).toBe(false);
-		expect(document.activeElement).toBe(ok);
 	});
 
 	it('hides the footer without footer content', () => {
