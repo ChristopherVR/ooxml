@@ -74,8 +74,12 @@ describe('copyElementAsPng', () => {
 			expect.anything(),
 			expect.objectContaining({ scale: 2 }),
 		);
-		expect(clipboardItem).toHaveBeenCalledWith({ 'image/png': png });
-		expect(write).toHaveBeenCalledWith([expect.objectContaining({ data: { 'image/png': png } })]);
+		// The item carries the render as a promise so the write starts inside the
+		// click: Safari rejects a clipboard write made after an await.
+		const data = clipboardItem.mock.calls[0]?.[0] as Record<string, Promise<Blob>>;
+		expect(data['image/png']).toBeInstanceOf(Promise);
+		await expect(data['image/png']).resolves.toBe(png);
+		expect(write).toHaveBeenCalledWith([expect.objectContaining({ data })]);
 	});
 
 	it('falls back to html2canvas when the foreignObject/vector-SVG paths fail', async () => {
@@ -101,7 +105,9 @@ describe('copyElementAsPng', () => {
 		await new ExportService().copyElementAsPng(document.createElement('div'));
 
 		expect(renderToCanvas).toHaveBeenCalledWith(expect.any(HTMLElement), expect.any(Object));
-		expect(write).toHaveBeenCalledWith([expect.objectContaining({ data: { 'image/png': png } })]);
+		const data = clipboardItem.mock.calls[0]?.[0] as Record<string, Promise<Blob>>;
+		await expect(data['image/png']).resolves.toBe(png);
+		expect(write).toHaveBeenCalledWith([expect.objectContaining({ data })]);
 	});
 
 	it('reports when the image clipboard API is unavailable', async () => {
