@@ -7,6 +7,11 @@ installStorage();
 const { forgetRememberedKeys } = await import('./keys.js');
 const { askForKey } = await import('./settings.js');
 const { currentConnection, saveUserConnection } = await import('./providers.js');
+const { loadPolicy } = await import('./policy.js');
+// A configuration turns the assistant on, so users may add their own models.
+globalThis.ooxmlAiConfig = {};
+await loadPolicy();
+delete globalThis.ooxmlAiConfig;
 
 const connection = {
 	id: 'own-1',
