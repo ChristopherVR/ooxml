@@ -173,6 +173,8 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 			view.scroller.scrollTop = 0;
 			view.rebuild();
 			if (ctx.selection.get().sheet !== view.sheetIndex() || !workbook) restoreSelection();
+			// The selection may have moved before the view did; describe the cell on this sheet.
+			else a11y.update(ctx.selection.get(), false);
 			const top = sheet?.view.topLeft;
 			if (top) view.showTopLeft(top);
 			return;

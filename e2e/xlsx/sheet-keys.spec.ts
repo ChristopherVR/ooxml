@@ -4,6 +4,9 @@ import { grid, nameBoxValue, openSample, SAMPLE_SHEETS, sheetTabs } from './help
 const selectedSheet = (page: Parameters<typeof sheetTabs>[0]) =>
 	sheetTabs(page).locator('[role="tab"][aria-selected="true"]');
 
+/** What a screen reader reads for the focused cell: the grid's focus sink label. */
+const cellLabel = (page: Page) => grid(page).locator('textarea').first().getAttribute('aria-label');
+
 test('Ctrl+PageDown and Ctrl+PageUp switch sheets and leave the cell alone', async ({ page }) => {
 	await openSample(page);
 	await expect(selectedSheet(page)).toHaveText(SAMPLE_SHEETS[0]);
@@ -21,6 +24,22 @@ test('Ctrl+PageDown and Ctrl+PageUp switch sheets and leave the cell alone', asy
 	await page.keyboard.press('PageDown');
 	await expect(selectedSheet(page)).toHaveText(SAMPLE_SHEETS[0]);
 	await expect.poll(() => nameBoxValue(page)).not.toBe(cell);
+});
+
+test('the cell label reads the sheet Ctrl+PageDown switched to', async ({ page }) => {
+	await openSample(page);
+	await grid(page).click({ position: { x: 120, y: 60 } });
+	const first = await cellLabel(page);
+	await page.keyboard.press('Control+PageDown');
+	await expect(selectedSheet(page)).toHaveText(SAMPLE_SHEETS[1]);
+	// Moving away and back describes the same cell on the new sheet from scratch.
+	await page.keyboard.press('ArrowDown');
+	await page.keyboard.press('ArrowUp');
+	const fresh = await cellLabel(page);
+	expect(fresh).not.toBe(first);
+	await page.keyboard.press('Control+PageUp');
+	await page.keyboard.press('Control+PageDown');
+	await expect.poll(() => cellLabel(page)).toBe(fresh);
 });
 
 /** The shell region (its shadow part) that holds keyboard focus. */
