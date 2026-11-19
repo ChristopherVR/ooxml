@@ -75,7 +75,7 @@
 		parityUi.outlineViewOpen = false;
 	}}
 	onslidesorter={() => (parityUi.slideSorterOpen = true)}
-	collaborationSlot={collab.active && customization.isDialogAvailable('share') ? collabStatus : undefined}
+	collaborationSlot={(collab.active || collab.failure) && customization.isDialogAvailable('share') ? collabStatus : undefined}
 />
 {/if}
 
