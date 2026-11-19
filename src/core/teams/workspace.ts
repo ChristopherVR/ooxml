@@ -43,6 +43,7 @@ import {
 	readOnlyTransport,
 } from './schema';
 import { createSyncTransport } from './sync-transport';
+import { callRoomId, chatCallRoomId } from './view';
 import {
 	type SignalingChannel,
 	createBroadcastSignaling,
@@ -269,7 +270,9 @@ export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace 
 		call(channelId) {
 			const existing = calls.get(channelId);
 			if (existing && existing.status !== 'left') return existing;
-			const roomId = `call-${options.workspaceId}-${channelId}`.slice(0, 128);
+			const roomId = chat.isChat(channelId)
+				? chatCallRoomId(options.workspaceId, channelId)
+				: callRoomId(options.workspaceId, channelId);
 			const call = createCallSession({
 				roomId,
 				user,

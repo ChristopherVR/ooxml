@@ -9,24 +9,24 @@ cd server && node index.mjs          # PORT=8787 HOST=127.0.0.1 by default
 服务器在没有账户时会拒绝启动：请设置 `TEAMS_USERS_FILE`（见下文），或仅在本地开发时传入
 `--insecure-dev`。
 
-| 变量                                                    | 含义                                                                                                                                                                       |
-| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PORT`、`HOST`                                          | 监听地址。仅在 TLS 之后才绑定 `0.0.0.0`。                                                                                                                                  |
-| `TEAMS_TOKEN`                                           | 若设置，套接字通过 `Sec-WebSocket-Protocol` 请求头携带它（`?token=` 仅作为备用），文件请求通过 `Authorization: Bearer` 携带它。                                            |
-| `TEAMS_ORIGINS`                                         | 以逗号分隔的、允许访问套接字和文件的 `Origin`。为空时：设置了令牌则允许任意来源；未设置令牌则仅允许回环来源和不发送 `Origin` 的客户端。                                    |
-| `TEAMS_DATA`                                            | 数据目录（默认 `./data`）：`rooms/=<name>.bin` 快照和 `files/`。                                                                                                           |
-| `TEAMS_TRUST_PROXY`、`--trust-proxy[=N]`                | 按 `X-Forwarded-For` 对认证速率限制器和每地址连接数上限进行分组（取第 N 个可信代理追加的条目，默认 1）。默认关闭；仅在前置代理会设置该请求头时启用，否则客户端可以伪造它。 |
-| `--insecure-dev`                                        | 在没有账户、也没有 `authenticate` 函数的情况下启动（选项 `insecureDev`）。不加此选项时，服务器只有设置了 `TEAMS_USERS_FILE` 才会启动。仅用于开发。                         |
-| `TEAMS_INSECURE`                                        | `1`（或 `--insecure`）允许在未设置令牌时使用非回环的 `HOST`。否则服务器拒绝启动。                                                                                          |
-| `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP` | 打开的套接字总数（默认 500）和每个远程地址的数量（20）。                                                                                                                   |
-| `TEAMS_MAX_ROOMS`                                       | 同步房间数和通话房间数（默认各 1000）。                                                                                                                                    |
-| `TEAMS_MAX_DOC_MB`                                      | 持久化房间文档的最大体积，单位 MB（默认 64）；超出的更新会被拒绝。                                                                                                         |
-| `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`             | 每个套接字每秒的消息数（默认 100）和突发量（200）；超出的套接字会被关闭。                                                                                                  |
-| `TEAMS_FILES_QUOTA_MB`                                  | 整个文件目录的可选总上限，单位 MB（默认关闭）；超出的上传返回 507。                                                                                                        |
-| `TEAMS_WORKSPACE_QUOTA_MB`                              | 每个工作空间的文件配额，单位 MB（默认 1024；私聊计入其所属工作空间）；超出的上传返回 507。                                                                                 |
-| `TEAMS_COMPACT_INTERVAL_MIN`                            | 房间快照压缩的间隔分钟数（默认 360，`0` 关闭定时器）。房间加载时也会压缩。                                                                                                 |
-| `TEAMS_METRICS_TOKEN`                                   | 启用 `GET /metrics`（Prometheus 文本格式），仅对携带 `Authorization: Bearer <此令牌>` 的请求提供。未设置则关闭。                                                           |
-| `TEAMS_LOG_FORMAT`, `--log-format=json`                 | `text`（默认）或 `json`：每行一个 JSON 对象，含 `time`、`level` 和 `msg`。                                                                                                 |
+| 变量                                                    | 含义                                                                                                                                                                                                    |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PORT`、`HOST`                                          | 监听地址。仅在 TLS 之后才绑定 `0.0.0.0`。                                                                                                                                                               |
+| `TEAMS_TOKEN`                                           | 若设置，套接字通过 `Sec-WebSocket-Protocol` 请求头携带它（`?token=` 仅作为备用），文件请求通过 `Authorization: Bearer` 携带它。                                                                         |
+| `TEAMS_ORIGINS`                                         | 以逗号分隔的、允许访问套接字和文件的 `Origin`。为空时：设置了令牌则允许任意来源；未设置令牌则仅允许回环来源和不发送 `Origin` 的客户端。                                                                 |
+| `TEAMS_DATA`                                            | 数据目录（默认 `./data`）：`rooms/=<name>.bin` 快照和 `files/`。                                                                                                                                        |
+| `TEAMS_TRUST_PROXY`、`--trust-proxy[=N]`                | 按 `X-Forwarded-For` 对认证速率限制器和每地址连接数上限进行分组（取第 N 个可信代理追加的条目，默认 1）。默认关闭；仅在前置代理会设置该请求头时启用，否则客户端可以伪造它。                              |
+| `--insecure-dev`                                        | 在没有账户、也没有 `authenticate` 函数的情况下启动（选项 `insecureDev`）。不加此选项时，服务器只有设置了 `TEAMS_USERS_FILE` 才会启动。仅用于开发。                                                      |
+| `TEAMS_INSECURE`                                        | `1`（或 `--insecure`）允许在未设置令牌时使用非回环的 `HOST`。否则服务器拒绝启动。                                                                                                                       |
+| `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP` | 打开的套接字总数（默认 500）和每个远程地址的数量（20）。                                                                                                                                                |
+| `TEAMS_MAX_ROOMS`                                       | 同步房间数和通话房间数（默认各 1000）。                                                                                                                                                                 |
+| `TEAMS_MAX_DOC_MB`                                      | 持久化房间文档的最大体积，单位 MB（默认 64）；超出的更新会被拒绝。                                                                                                                                      |
+| `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`             | 每个套接字每秒的消息数（默认 100）和突发量（200）；超出的套接字会被关闭。                                                                                                                               |
+| `TEAMS_FILES_QUOTA_MB`                                  | 整个文件目录的总上限，单位 MB（默认 20480）；超出的上传返回 507。另有按人计算的 `TEAMS_USER_QUOTA_MB`（1024），以及存储房间的 `TEAMS_ROOMS_QUOTA_MB` 和 `TEAMS_MAX_STORED_ROOMS`（参见服务器 README）。 |
+| `TEAMS_WORKSPACE_QUOTA_MB`                              | 每个工作空间的文件配额，单位 MB（默认 1024；私聊计入其所属工作空间）；超出的上传返回 507。                                                                                                              |
+| `TEAMS_COMPACT_INTERVAL_MIN`                            | 房间快照压缩的间隔分钟数（默认 360，`0` 关闭定时器）。房间加载时也会压缩。                                                                                                                              |
+| `TEAMS_METRICS_TOKEN`                                   | 启用 `GET /metrics`（Prometheus 文本格式），仅对携带 `Authorization: Bearer <此令牌>` 的请求提供。未设置则关闭。                                                                                        |
+| `TEAMS_LOG_FORMAT`, `--log-format=json`                 | `text`（默认）或 `json`：每行一个 JSON 对象，含 `time`、`level` 和 `msg`。                                                                                                                              |
 
 它提供 `ws /sync/<room>`（兼容 y-websocket，每个房间一个持久化的 `Y.Doc`）、`ws /signal/<room>`（JSON 中继）和 `POST|GET /files/<workspace>/<name>`（上限 25 MB，文件名经过清理，下载以附件形式发送并带有 `Referrer-Policy: no-referrer`）。配置了令牌时，浏览器通过 `POST /files/link/<workspace>/<name>`（令牌放在请求头中）打开文件，该请求返回一个仅针对该文件签名、有效期五分钟的链接。`GET /health` 报告房间数和通话数。
 
@@ -106,7 +106,7 @@ CMD ["node", "bin.mjs"]
 ```bash
 docker run -d --name openteams -p 127.0.0.1:8787:8787 \
   -v openteams-data:/data -v "$PWD/users.json:/config/users.json:ro" \
-  -e TEAMS_SESSION_SECRET=change-me -e TEAMS_ORIGINS=https://app.example.com \
+  -e TEAMS_SESSION_SECRET="$(openssl rand -hex 32)" -e TEAMS_ORIGINS=https://app.example.com \
   openteams-server
 ```
 
@@ -145,7 +145,7 @@ docker run -d --name openteams -p 127.0.0.1:8787:8787 \
 - **清理。** 上传先写入隐藏的 `.part` 文件，上传失败或中止时会将其删除。启动时服务器会删除所有遗留的 `.part` 文件（以及过期的房间临时文件），
   之后每 15 分钟删除超过一小时的 `.part` 文件。已上传但从未附加到消息的文件会保留，直到有人删除。
 - **配额。** 限额按工作空间计算（`TEAMS_WORKSPACE_QUOTA_MB`，默认 1024），统计其频道文件和私聊文件；删除会释放空间。
-  `TEAMS_FILES_QUOTA_MB` 是对整个目录的可选上限。
+  另有按上传者跨所有工作空间和聊天计算的限额（`TEAMS_USER_QUOTA_MB`，默认 1024），以及整个目录的上限（`TEAMS_FILES_QUOTA_MB`，默认 20480）。启用账户时，只能上传到已存在的工作空间或私聊。
 - **压缩。** 加载房间时，以及每隔 `TEAMS_COMPACT_INTERVAL_MIN` 分钟对每个房间，服务器会在新文档上把房间重新编码为单个 Yjs 更新，
   仅当它更小且描述完全相同的状态时才写入。写入先到临时文件，刷新到磁盘后重命名覆盖快照，因此崩溃后留下的要么是旧快照要么是新快照，
   绝不会是损坏的快照；被中断的临时文件在启动时清除。压缩前后的备份都可以恢复。

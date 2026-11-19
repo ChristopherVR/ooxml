@@ -61,7 +61,8 @@ in the client and require server authorization to become enforceable.
 - **Authentication is required by default.** The reference server refuses to start unless it has
   accounts, an `authenticate` hook or `authorizeSync`; `--insecure-dev` opts into an open development
   mode with a warning. With accounts it signs sessions for configured users (or your `authenticate`
-  hook) and takes the user id from the session, and `authorizeSync` can decide access per room. A
+  hook) and takes the user id from the session, and `authorizeSync` can decide access per room (a
+  server with only `authorizeSync` offers sync alone: no sign-in, files or calls). A
   shared `TEAMS_TOKEN` alone is one secret stored in the browser, not per-user authentication, and
   user ids are claims. There is no SSO, password reset or team and channel access control. See [what the reference server does not do](/server#what-the-reference-server-does-not-do).
 - **Presence is advisory and unauthenticated**, like any Yjs awareness: a client can claim any

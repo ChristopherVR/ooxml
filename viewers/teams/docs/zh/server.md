@@ -11,7 +11,7 @@ OpenTeams 没有托管服务。工作空间要么**不使用服务器**运行（
 需要 Node 22 或更高版本。
 
 ```bash
-TEAMS_USERS_FILE=users.json TEAMS_SESSION_SECRET=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server
+TEAMS_USERS_FILE=users.json TEAMS_SESSION_SECRET="$(openssl rand -hex 32)" TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server
 npx openteams-server --insecure-dev     # 仅用于本地开发：监听 127.0.0.1:8787，无账户
 ```
 

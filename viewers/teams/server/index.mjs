@@ -41,15 +41,18 @@ import {
 	isUserId,
 	plainTextUsers,
 	sameSecret as sameCredential,
+	weakSessionSecret,
 } from './auth.mjs';
 import { createSlidingLimiter } from './rate-limit.mjs';
 import {
 	PROTOCOL_PARAM,
 	PROTOCOL_VERSION,
 	applyUpdateReverts,
+	chatRoomOfCall,
+	createUpdateChecker,
+	isStrayChatCallRoom,
 	protocolOfUrl,
 	scanUpdate,
-	validateTeamsSyncMessage,
 } from './validator.generated.mjs';
 import {
 	CHAT_MEMBERS_MAP,
@@ -226,6 +229,11 @@ export function createTeamsServer(options = {}) {
 			'WARNING: INSECURE DEV MODE. No accounts and no authenticate hook: every client may claim any user id and read and write every room. Never expose this server to a network.',
 		);
 	}
+	const weakSecret = weakSessionSecret(sessionSecret);
+	if (weakSecret) throw new Error(`refusing to start: ${weakSecret}`);
+	// Sessions, files and call signaling rest on knowing who is asking. With only an `authorizeSync`
+	// hook nobody can prove that, so those routes are not offered unless this is a dev setup.
+	const identityRoutes = authRequired || insecureDev;
 	if (users) {
 		const plain = plainTextUsers(users).length;
 		if (plain > 0)
@@ -271,6 +279,14 @@ export function createTeamsServer(options = {}) {
 		for (const [ws, owner] of sessionSockets) if (owner === user) ws.close(1008, 'session revoked');
 	};
 	const limits = resolveLimits(options);
+	// Some refusals cost the server work: a join or file request refused after reading a room from
+	// disk, an update refused after it was checked (the checking copy is then rebuilt). A client
+	// with too many of them is turned away for a while before any more of that work. A signed-in
+	// user counts by their id, so people sharing one address are not turned away together.
+	const refusals = createSlidingLimiter({ limit: limits.maxRefusals, windowMs: 60_000 });
+	const refusalKey = (ip, user) => (user ? `user:${user}` : `ip:${ip}`);
+	const refusedTooOften = (ip, user) => refusals.full(refusalKey(ip, user));
+	const noteRefusal = (ip, user) => void refusals.check(refusalKey(ip, user));
 	const roomsDir = join(dataDir, 'rooms');
 	const filesDir = join(dataDir, 'files');
 	mkdirSync(roomsDir, { recursive: true });
@@ -356,16 +372,58 @@ export function createTeamsServer(options = {}) {
 	/** @type {Map<string, any>} */
 	const syncRooms = new Map();
 	const snapshotPath = (name) => join(roomsDir, `${storageName(name)}.bin`);
+	/**
+	 * Rooms that hold content, live or on disk, and their size in bytes (a live room's running
+	 * estimate, a stored one's snapshot), for the storage ceilings.
+	 */
+	const storedRooms = new Map();
+	let storedBytes = 0;
+	const setStored = (name, bytes) => {
+		storedBytes += bytes - (storedRooms.get(name) ?? 0);
+		storedRooms.set(name, bytes);
+	};
+	for (const name of snapshotNames(roomsDir)) setStored(name, quietSize(snapshotPath(name)));
 
 	const send = (ws, message) => {
 		if (ws.readyState === WS_OPEN) ws.send(message, (err) => err && ws.close());
 	};
 
+	/**
+	 * A chat room's member list is also kept beside its snapshot (`<stored name>.members.json`, with
+	 * the snapshot's size), so deciding on a join or a file request for a room that is not loaded reads
+	 * a few bytes instead of the room. Members change only while a room is loaded, and its snapshot
+	 * and list are written together; a list whose size does not match its snapshot is not trusted.
+	 */
+	const membersPath = (name) => join(roomsDir, `${storageName(name)}.members.json`);
+	const writeMemberList = (name, members, size) => {
+		try {
+			writeFileAtomic(
+				membersPath(name),
+				Buffer.from(JSON.stringify({ size, members: [...members] })),
+			);
+		} catch (error) {
+			log(`room ${name}: could not persist its member list (${error.message})`);
+		}
+	};
+	const readMemberList = (name) => {
+		try {
+			const parsed = JSON.parse(readFileSync(membersPath(name), 'utf8'));
+			return Array.isArray(parsed?.members) && Number.isInteger(parsed.size) ? parsed : null;
+		} catch {
+			return null;
+		}
+	};
+
 	/** Write a room snapshot; a full disk or a permission error is logged, never fatal. */
 	function flushRoom(name, room) {
+		// A room nobody wrote to takes no disk.
+		if (room.doc.store.clients.size === 0 && !storedRooms.has(name)) return;
 		const file = snapshotPath(name);
 		try {
-			writeFileAtomic(file, Y.encodeStateAsUpdate(room.doc));
+			const snapshot = Y.encodeStateAsUpdate(room.doc);
+			writeFileAtomic(file, snapshot);
+			setStored(name, snapshot.length);
+			if (isChatRoom(name)) writeMemberList(name, roomMembers(room.doc), snapshot.length);
 		} catch (error) {
 			log(`room ${name}: could not persist snapshot (${error.message})`);
 		}
@@ -374,27 +432,39 @@ export function createTeamsServer(options = {}) {
 	/**
 	 * The members stored for a chat room and whether the room has started, read without keeping a
 	 * room that nobody joined. A snapshot that cannot be read counts as started: it is not a new room.
+	 * `read` is true when this call had to read the whole room from disk.
 	 */
 	function chatRoomState(name) {
 		const live = syncRooms.get(name);
 		if (live) return { members: roomMembers(live.doc), started: live.doc.store.clients.size > 0 };
 		const file = snapshotPath(name);
 		if (!existsSync(file)) return { members: new Set(), started: false };
+		const size = quietSize(file);
+		const listed = readMemberList(name);
+		if (listed?.size === size)
+			return { members: new Set(listed.members.filter(isUserId)), started: true };
 		const doc = new Y.Doc();
 		try {
 			Y.applyUpdate(doc, readFileSync(file));
-			return { members: roomMembers(doc), started: true };
+			const members = roomMembers(doc);
+			writeMemberList(name, members, size);
+			return { members, started: true, read: true };
 		} catch {
-			return { members: new Set(), started: true };
+			return { members: new Set(), started: true, read: true };
 		} finally {
 			doc.destroy();
 		}
 	}
 
-	/** Close the sockets of people who are no longer listed as members of a chat room. */
-	function enforceMembers(room) {
+	/**
+	 * Close the sockets of people who are no longer listed as members of a chat room: its sync
+	 * sockets, and those in the chat's call.
+	 */
+	function enforceMembers(name, room) {
 		const members = roomMembers(room.doc);
 		for (const [ws, user] of room.users) if (!members.has(user)) ws.close(1008, 'not a member');
+		for (const [ws, peer] of signalRooms.get(`call-${name}`) ?? [])
+			if (peer !== null && !members.has(peer)) ws.close(1008, 'not a member');
 	}
 
 	function getRoom(name) {
@@ -428,10 +498,15 @@ export function createTeamsServer(options = {}) {
 		}
 		const awareness = new awarenessProtocol.Awareness(doc);
 		awareness.setLocalState(null);
-		if (isChatRoom(name)) doc.on('update', () => enforceMembers(room));
+		if (isChatRoom(name)) doc.on('update', () => enforceMembers(name, room));
 		room = {
 			doc,
 			awareness,
+			/** A copy of `doc` that updates are checked on, so a check costs the update, not the room. */
+			checker: createUpdateChecker(doc),
+			/** client id -> bytes of its awareness state */
+			presence: new Map(),
+			presenceBytes: 0,
 			conns: new Map(),
 			owners: new Map([[awareness.clientID, SERVER_OWNER]]),
 			/** socket -> the user it joined as (chat rooms only) */
@@ -465,6 +540,10 @@ export function createTeamsServer(options = {}) {
 					if (room.owners.get(id) === origin) room.owners.delete(id);
 				}
 			}
+			for (const id of removed) {
+				room.presenceBytes -= room.presence.get(id) ?? 0;
+				room.presence.delete(id);
+			}
 			const encoder = encoding.createEncoder();
 			encoding.writeVarUint(encoder, MESSAGE_AWARENESS);
 			encoding.writeVarUint8Array(
@@ -490,6 +569,7 @@ export function createTeamsServer(options = {}) {
 				if (room.conns.size > 0) return;
 				clearTimeout(room.timer);
 				flushRoom(name, room);
+				room.checker.destroy();
 				room.awareness.destroy();
 				room.doc.destroy();
 				syncRooms.delete(name);
@@ -499,8 +579,10 @@ export function createTeamsServer(options = {}) {
 	}
 
 	/**
-	 * Throw unless `update` and its reverts apply to a copy of the room. A Yjs transaction that throws
-	 * keeps and broadcasts what it had done, so a failure has to come before the room is touched.
+	 * Throw unless `update` and its reverts apply to a fresh copy of the room. A Yjs transaction that
+	 * throws keeps and broadcasts what it had done, so a failure has to come before the room is
+	 * touched. The room's checking copy proves an update alone; reverts are rare and need a copy that
+	 * the server's own corrections can be tried on and thrown away.
 	 */
 	function rehearseUpdate(doc, update, reverts) {
 		const scratch = new Y.Doc();
@@ -513,17 +595,25 @@ export function createTeamsServer(options = {}) {
 		}
 	}
 
-	function handleSync(ws, name, admission, grant, actor) {
+	/** Close a sync socket whose update the server will not store. */
+	const refuseUpdate = (ws, code, closeCode, reason) => {
+		countRejected({ code });
+		ws.close(closeCode, reason.slice(0, MAX_CLOSE_REASON));
+	};
+
+	function handleSync(ws, name, admission, grant, actor, ip) {
 		const room = getRoom(name);
 		if (grant) room.grants.set(ws, grant);
 		const readOnly = grant?.access === 'read';
 		if (admission) {
 			// Only a room with nothing in it is seeded. The check repeats here because an
 			// `authorizeSync` hook can run between the admission and this point.
-			if (admission.seed.length > 0 && room.doc.store.clients.size === 0)
+			if (admission.seed.length > 0 && room.doc.store.clients.size === 0) {
 				room.doc.transact(() => {
 					for (const id of admission.seed) room.doc.getMap(CHAT_MEMBERS_MAP).set(id, true);
 				});
+				setStored(name, Y.encodeStateAsUpdate(room.doc).length);
+			}
 			if (!roomMembers(room.doc).has(admission.user)) {
 				ws.close(1008, 'not a member');
 				return leaveSync(name, room, ws);
@@ -533,6 +623,10 @@ export function createTeamsServer(options = {}) {
 		room.conns.set(ws, new Set());
 		ws.binaryType = 'arraybuffer';
 		const bucket = createBucket(limits.messageRate, limits.messageBurst);
+		const presenceBudget = createBucket(
+			limits.awarenessByteRate,
+			Math.max(4 * limits.awarenessByteRate, 2 * limits.maxAwarenessBytes),
+		);
 		ws.on('message', (data) => {
 			// A socket being closed was refused: what it sent after that does not count.
 			if (ws.readyState !== WS_OPEN) return;
@@ -564,34 +658,38 @@ export function createTeamsServer(options = {}) {
 						countRejected({ code: 'update_too_complex' });
 						return void ws.close(1009, 'update too complex');
 					}
-					let reverts;
-					if (actor) {
-						const verdict = validateTeamsSyncMessage(
-							room.doc,
-							new Uint8Array(data),
-							actor,
-							contentLimits,
-						);
-						if (!verdict.ok) {
-							const codes = [...new Set(verdict.violations.map((v) => v.code))].join(',');
-							for (const code of new Set(verdict.violations.map((v) => v.code)))
-								countRejected({ code });
-							log(`sync ${name}: update from ${actor.id} rejected (${codes})`);
-							return void ws.close(1008, `update rejected: ${codes}`.slice(0, MAX_CLOSE_REASON));
-						}
-						reverts = verdict.reverts;
-					}
+					// Size and storage limits first: a checked update stays applied to the checking copy.
 					if (room.bytes + data.byteLength > limits.maxDocBytes) {
 						// The running total over-counts (merged and deleted content shrinks); measure once.
 						room.bytes = Y.encodeStateAsUpdate(room.doc).length;
 						if (room.bytes + data.byteLength > limits.maxDocBytes) {
-							countRejected({ code: 'document_too_large' });
 							log(`sync ${name}: document is at its size limit, update rejected`);
-							return void ws.close(1009, 'document too large');
+							return refuseUpdate(ws, 'document_too_large', 1009, 'document too large');
 						}
 					}
-					// The validator has already applied an update without reverts to a copy.
-					if (!actor || reverts) rehearseUpdate(room.doc, update, reverts);
+					if (
+						(!storedRooms.has(name) && storedRooms.size >= limits.maxStoredRooms) ||
+						storedBytes + data.byteLength > limits.roomsQuotaBytes
+					) {
+						log(`sync ${name}: room storage is full, update rejected`);
+						return refuseUpdate(ws, 'storage_full', 1009, 'server storage full');
+					}
+					let reverts;
+					if (actor) {
+						const verdict = room.checker.validate(update, actor, contentLimits);
+						if (!verdict.ok) {
+							const codes = [...new Set(verdict.violations.map((v) => v.code))];
+							for (const code of codes) countRejected({ code });
+							log(`sync ${name}: update from ${actor.id} rejected (${codes.join(',')})`);
+							noteRefusal(ip, actor.id);
+							return void ws.close(
+								1008,
+								`update rejected: ${codes.join(',')}`.slice(0, MAX_CLOSE_REASON),
+							);
+						}
+						reverts = verdict.reverts;
+					} else room.checker.rehearse(update);
+					if (reverts) rehearseUpdate(room.doc, update, reverts);
 					// One transaction, so one broadcast. Reverts must reach the sender too.
 					room.doc.transact(
 						() => {
@@ -601,10 +699,27 @@ export function createTeamsServer(options = {}) {
 						reverts ? null : ws,
 					);
 					room.bytes += data.byteLength;
+					setStored(name, room.bytes);
 				} else if (type === MESSAGE_AWARENESS) {
+					const raw = decoding.readVarUint8Array(decoder);
+					if (!presenceBudget.take(raw.length)) {
+						countRateLimited({ scope: 'presence' });
+						return void ws.close(1008, 'rate limit');
+					}
 					// A connection may only speak for the client ids it announced itself.
-					const update = filterAwareness(decoding.readVarUint8Array(decoder), ws, room.owners);
-					if (update) awarenessProtocol.applyAwarenessUpdate(room.awareness, update, ws);
+					const kept = filterAwareness(raw, ws, room.owners, {
+						maxStateBytes: limits.maxAwarenessBytes,
+					});
+					if (kept.oversized)
+						return refuseUpdate(ws, 'presence_too_large', 1009, 'presence too large');
+					if (!kept.update) return;
+					let total = room.presenceBytes;
+					for (const [id, bytes] of kept.sizes) total += bytes - (room.presence.get(id) ?? 0);
+					if (total > limits.maxRoomAwarenessBytes)
+						return refuseUpdate(ws, 'presence_too_large', 1009, 'presence too large');
+					for (const [id, bytes] of kept.sizes) room.presence.set(id, bytes);
+					room.presenceBytes = total;
+					awarenessProtocol.applyAwarenessUpdate(room.awareness, kept.update, ws);
 				} else if (type === MESSAGE_QUERY_AWARENESS) {
 					const states = [...room.awareness.getStates().keys()];
 					if (states.length) {
@@ -618,9 +733,11 @@ export function createTeamsServer(options = {}) {
 					}
 				}
 			} catch (error) {
-				countRejected({ code: 'invalid-update' });
+				// The checking copy may hold what failed: build it again from the room.
+				room.checker.reset();
+				noteRefusal(ip, actor?.id);
 				log(`sync ${name}: closing a socket whose message failed (${error.message})`);
-				ws.close(1008, 'update rejected: invalid-update');
+				refuseUpdate(ws, 'invalid-update', 1008, 'update rejected: invalid-update');
 			}
 		});
 		ws.on('close', () => leaveSync(name, room, ws));
@@ -645,11 +762,19 @@ export function createTeamsServer(options = {}) {
 	// ---- signaling rooms --------------------------------------------------------------------
 	/** @type {Map<string, Map<any, string | null>>} socket -> the peer id it speaks for */
 	const signalRooms = new Map();
-	function handleSignal(ws, name) {
+	/**
+	 * `user` is the signed-in user, whose id is then the only peer id the socket may use; without
+	 * accounts the first id the socket claims stands. In a private chat's call (`chatRoom`) that id
+	 * must be one of the chat's members.
+	 */
+	function handleSignal(ws, name, user, chatRoom) {
+		ws.on('error', () => ws.close());
 		let peers = signalRooms.get(name);
 		if (!peers) signalRooms.set(name, (peers = new Map()));
-		peers.set(ws, null);
-		let peerId = null;
+		if (user !== null && [...peers.values()].includes(user))
+			return void ws.close(1008, 'peer id in use');
+		peers.set(ws, user);
+		let peerId = user;
 		const bucket = createBucket(limits.messageRate, limits.messageBurst);
 		ws.on('message', (data, isBinary) => {
 			if (!bucket.take()) {
@@ -666,10 +791,14 @@ export function createTeamsServer(options = {}) {
 			}
 			if (!parsed || typeof parsed.from !== 'string') return;
 			if (parsed.to !== undefined && typeof parsed.to !== 'string') return;
-			if (peerId === null) {
+			if (user !== null && parsed.from !== user)
+				return void ws.close(1008, 'peer id is not the signed-in user');
+			if (peers.get(ws) === null) {
 				// A socket speaks for one peer id: the first one it claims, if nobody else holds it.
 				for (const [other, id] of peers)
 					if (other !== ws && id === parsed.from) return void ws.close(1008, 'peer id in use');
+				if (chatRoom && !chatRoomState(chatRoom).members.has(parsed.from))
+					return void ws.close(1008, 'not a member');
 				peerId = parsed.from;
 				peers.set(ws, peerId);
 			}
@@ -680,13 +809,12 @@ export function createTeamsServer(options = {}) {
 			}
 		});
 		ws.on('close', () => {
-			peers.delete(ws);
+			if (!peers.delete(ws)) return;
 			if (peerId)
 				for (const other of peers.keys())
 					send(other, JSON.stringify({ type: 'bye', from: peerId }));
 			if (peers.size === 0) signalRooms.delete(name);
 		});
-		ws.on('error', () => ws.close());
 	}
 
 	// ---- files ------------------------------------------------------------------------------
@@ -740,7 +868,8 @@ export function createTeamsServer(options = {}) {
 		const dir = fileStore.dirOf(scope);
 		const overQuota = (extra) =>
 			fileStore.bytesOf(scope) + extra > limits.workspaceQuotaBytes ||
-			fileStore.totalBytes() + extra > limits.filesQuotaBytes;
+			fileStore.totalBytes() + extra > limits.filesQuotaBytes ||
+			(who.user !== null && fileStore.bytesOfUser(who.user) + extra > limits.userQuotaBytes);
 		const declared = Number(req.headers['content-length']);
 		const refuse = (status) => {
 			plain(res, status, { Connection: 'close' });
@@ -809,6 +938,7 @@ export function createTeamsServer(options = {}) {
 
 	/** POST /auth/session {user, credential}: the workspace token (if any) in Authorization. */
 	function sessionRequest(req, res) {
+		if (!identityRoutes) return plain(res, 404);
 		if (req.method !== 'POST') return plain(res, 405);
 		if (!originAllowed(req.headers.origin ?? '')) return plain(res, 403);
 		const bearer = /^Bearer (.+)$/u.exec(req.headers.authorization ?? '')?.[1];
@@ -946,13 +1076,16 @@ export function createTeamsServer(options = {}) {
 	 * is a workspace id (any signed-in member) or a private chat room name (its members only).
 	 * A valid signed link was issued after this check, so it stands for the file it names.
 	 */
-	function fileAccess(scope, who, signedRead) {
+	function fileAccess(scope, who, signedRead, ip) {
 		if (signedRead) return 0;
 		if (who.bad || (authRequired && !who.verified)) return 401;
 		if (isChatRoomAlias(scope)) return 403;
-		if (isChatRoom(scope) && (who.user === null || !chatRoomState(scope).members.has(who.user)))
-			return 403;
-		return 0;
+		if (!isChatRoom(scope)) return 0;
+		if (refusedTooOften(ip, who.user)) return 429;
+		const state = chatRoomState(scope);
+		if (who.user !== null && state.members.has(who.user)) return 0;
+		if (state.read) noteRefusal(ip, who.user);
+		return 403;
 	}
 
 	/** GET /metrics: Prometheus text, only when a metrics token is configured and presented. */
@@ -1000,6 +1133,7 @@ export function createTeamsServer(options = {}) {
 		const m = link ?? /^\/files\/([\w-]{1,128})\/([^/]{1,200})$/u.exec(url.pathname);
 		const listing = m ? null : /^\/files\/([\w-]{1,128})\/?$/u.exec(url.pathname);
 		if (!m && !listing) return plain(res, 404);
+		if (!identityRoutes) return plain(res, 404);
 		if (!originAllowed(req.headers.origin ?? '')) return plain(res, 403);
 		const bearer = /^Bearer (.+)$/u.exec(req.headers.authorization ?? '')?.[1];
 		const authorised = bearer !== undefined && sameSecret(bearer, token);
@@ -1011,10 +1145,11 @@ export function createTeamsServer(options = {}) {
 		}
 		const scope = (m ?? listing)[1];
 		const who = fileIdentity(req);
-		const denied = fileAccess(scope, who, signedRead);
+		const denied = fileAccess(scope, who, signedRead, clientIp(req));
 		if (denied) {
 			if (denied === 401) countAuthFailure({ kind: 'session' });
-			return plain(res, denied);
+			if (denied === 429) countRateLimited({ scope: 'refusals' });
+			return plain(res, denied, denied === 429 ? { 'Retry-After': '60' } : {});
 		}
 		if (listing) {
 			if (req.method !== 'GET') return plain(res, 405);
@@ -1028,7 +1163,12 @@ export function createTeamsServer(options = {}) {
 			return json(res, 200, { url: signedUrl(path) });
 		}
 		if (req.method === 'GET') return download(res, join(fileStore.dirOf(scope), name));
-		if (req.method === 'POST') return upload(req, res, scope, name, who);
+		if (req.method === 'POST') {
+			// With accounts, files go only to a workspace or chat that exists, so new names do not
+			// open new space.
+			if (authRequired && !isChatRoom(scope) && !storedRooms.has(scope)) return plain(res, 404);
+			return upload(req, res, scope, name, who);
+		}
 		if (req.method === 'DELETE') {
 			if (!existsSync(join(fileStore.dirOf(scope), name))) return plain(res, 404);
 			const owner = fileStore.uploaderOf(scope, name);
@@ -1090,23 +1230,41 @@ export function createTeamsServer(options = {}) {
 			countAuthFailure({ kind: 'session' });
 			return reject(socket, '401 Unauthorized');
 		}
+		const ip = clientIp(req);
 		// Private chats: only the people listed in the room's member map may join.
 		let admission = null;
+		let chatRoom = null;
 		if (m[1] === 'sync' && isChatRoomAlias(name)) return reject(socket, '403 Forbidden');
-		if (m[1] === 'sync' && isChatRoom(name)) {
-			const user = sessionUser ?? url.searchParams.get('user') ?? '';
-			const state = chatRoomState(name);
-			const verdict = authorizeChatJoin({
-				name,
-				user,
-				members: url.searchParams.get('members'),
-				existing: state.members,
-				started: state.started,
-			});
-			if (!verdict.ok) return reject(socket, '403 Forbidden');
-			admission = { seed: verdict.seed, user };
+		if (m[1] === 'signal') {
+			// Calls need someone to call as, and a private chat's call is for that chat's members.
+			if (!identityRoutes) return reject(socket, '404 Not Found');
+			if (isStrayChatCallRoom(name)) return reject(socket, '403 Forbidden');
+			chatRoom = chatRoomOfCall(name);
 		}
-		const ip = clientIp(req);
+		if (m[1] === 'sync' && refusedTooOften(ip, sessionUser)) {
+			countRateLimited({ scope: 'refusals' });
+			return reject(socket, '429 Too Many Requests');
+		}
+		if ((m[1] === 'sync' && isChatRoom(name)) || (chatRoom && sessionUser !== null)) {
+			const user = sessionUser ?? url.searchParams.get('user') ?? '';
+			const state = chatRoomState(chatRoom ?? name);
+			const verdict = chatRoom
+				? { ok: state.members.has(user), seed: [] }
+				: authorizeChatJoin({
+						name,
+						user,
+						members: url.searchParams.get('members'),
+						existing: state.members,
+						started: state.started,
+					});
+			if (!verdict.ok) {
+				if (state.read) noteRefusal(ip, sessionUser);
+				return reject(socket, '403 Forbidden');
+			}
+			if (!chatRoom) admission = { seed: verdict.seed, user };
+			if (admission?.seed.length && storedRooms.size >= limits.maxStoredRooms)
+				return reject(socket, '507 Insufficient Storage');
+		}
 		const open = syncWss.clients.size + signalWss.clients.size;
 		const rooms = m[1] === 'sync' ? syncRooms : signalRooms;
 		if (
@@ -1120,6 +1278,8 @@ export function createTeamsServer(options = {}) {
 			perIp.set(ip, (perIp.get(ip) ?? 0) + 1);
 			upgradeSocket(req, socket, head, m[1], name, admission, sessionUser, ip, grant, {
 				role: sessionRole,
+				expiresAt: claims?.expiresAt ?? null,
+				chatRoom,
 				proto: protocolCheck(url, name),
 			});
 		};
@@ -1150,12 +1310,31 @@ export function createTeamsServer(options = {}) {
 			? null
 			: `unsupported protocol version ${url.searchParams.get(PROTOCOL_PARAM)?.slice(0, 12)}: this server speaks ${PROTOCOL_VERSION}`;
 	}
+	/**
+	 * Close `ws` when its session expires, so it cannot keep writing on a session that a new request
+	 * would refuse. Long waits are taken in steps, because a timer cannot wait past about 24 days.
+	 */
+	function closeAtExpiry(ws, expiresAt) {
+		const handle = { timer: null };
+		const arm = () => {
+			const left = expiresAt - Date.now();
+			if (left <= 0) return void ws.close(1008, 'session expired');
+			handle.timer = setTimeout(arm, Math.min(left, 2 ** 31 - 1));
+			handle.timer.unref?.();
+		};
+		if (typeof expiresAt === 'number') arm();
+		return handle;
+	}
 	function upgradeSocket(req, socket, head, kind, name, admission, sessionUser, ip, grant, extra) {
 		const wss = kind === 'sync' ? syncWss : signalWss;
 		wss.handleUpgrade(req, socket, head, (ws) => {
 			if (sessionUser !== null) {
 				sessionSockets.set(ws, sessionUser);
-				ws.on('close', () => sessionSockets.delete(ws));
+				const expiry = closeAtExpiry(ws, extra.expiresAt);
+				ws.on('close', () => {
+					sessionSockets.delete(ws);
+					clearTimeout(expiry.timer);
+				});
 			}
 			ws.on('close', () => {
 				const left = (perIp.get(ip) ?? 1) - 1;
@@ -1171,8 +1350,8 @@ export function createTeamsServer(options = {}) {
 					? { id: sessionUser, moderator: extra.role === 'moderator' }
 					: null;
 			try {
-				if (kind === 'sync') handleSync(ws, name, admission, grant, actor);
-				else handleSignal(ws, name);
+				if (kind === 'sync') handleSync(ws, name, admission, grant, actor, ip);
+				else handleSignal(ws, name, sessionUser, extra.chatRoom);
 			} catch (error) {
 				log(`${kind} ${name}: setup failed (${error.message})`);
 				ws.terminate();
@@ -1203,10 +1382,14 @@ export function createTeamsServer(options = {}) {
 					if (compact && compact.length < current) {
 						writeFileAtomic(snapshotPath(name), compact);
 						live.bytes = compact.length;
+						if (isChatRoom(name)) writeMemberList(name, roomMembers(live.doc), compact.length);
 						countCompaction();
 						compacted++;
 					}
 				} else if (compactSnapshotFile(snapshotPath(name))) {
+					// Compaction keeps the state, so a list that matched the old snapshot still holds.
+					const listed = isChatRoom(name) ? readMemberList(name) : null;
+					if (listed) writeMemberList(name, listed.members, quietSize(snapshotPath(name)));
 					countCompaction();
 					compacted++;
 				}
@@ -1306,6 +1489,7 @@ export function createTeamsServer(options = {}) {
 					clearTimeout(room.timer);
 					clearTimeout(room.idle);
 					flushRoom(name, room);
+					room.checker.destroy();
 					room.awareness.destroy();
 					room.doc.destroy();
 				}

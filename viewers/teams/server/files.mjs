@@ -1,6 +1,6 @@
 // File storage bookkeeping of the reference server: which scope (a workspace id, or a private chat
-// room name) a file belongs to, who uploaded it, how many bytes each workspace uses, and the sweep
-// of partial uploads. The bytes themselves are streamed by index.mjs.
+// room name) a file belongs to, who uploaded it, how many bytes each workspace and each uploader
+// uses, and the sweep of partial uploads. The bytes themselves are streamed by index.mjs.
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { isChatRoom, shortHash } from './chat-access.mjs';
@@ -36,6 +36,13 @@ export function createFileStore({ filesDir, metaDir, log = () => {} }) {
 	migrateStorageNames(metaDir, '.json', log);
 	/** @type {Map<string, number>} quota key -> bytes stored */
 	const usage = new Map();
+	/** @type {Map<string, number>} uploader -> bytes stored, in every scope */
+	const byUser = new Map();
+	const count = (map, key, delta) => {
+		const next = Math.max(0, (map.get(key) ?? 0) + delta);
+		if (next === 0) map.delete(key);
+		else map.set(key, next);
+	};
 	const dirOf = (scope) => join(filesDir, storageName(scope));
 	const metaPath = (scope) => join(metaDir, `${storageName(scope)}.json`);
 
@@ -67,18 +74,27 @@ export function createFileStore({ filesDir, metaDir, log = () => {} }) {
 
 	for (const scope of scopes()) {
 		const key = quotaKeyOf(scope);
-		for (const name of filesOf(scope)) usage.set(key, (usage.get(key) ?? 0) + sizeOf(scope, name));
+		const owners = readOwners(scope);
+		for (const name of filesOf(scope)) {
+			const size = sizeOf(scope, name);
+			count(usage, key, size);
+			if (typeof owners[name] === 'string') count(byUser, owners[name], size);
+		}
 	}
 
 	return {
 		dirOf,
 		bytesOf: (scope) => usage.get(quotaKeyOf(scope)) ?? 0,
+		/** Bytes `user` uploaded, in every scope. */
+		bytesOfUser: (user) => byUser.get(user) ?? 0,
 		totalBytes: () => [...usage.values()].reduce((a, b) => a + b, 0),
 		/** Record a stored file and who uploaded it. */
 		added(scope, name, size, user) {
-			const key = quotaKeyOf(scope);
-			usage.set(key, (usage.get(key) ?? 0) + size);
-			if (user) writeOwners(scope, { ...readOwners(scope), [name]: user });
+			count(usage, quotaKeyOf(scope), size);
+			if (user) {
+				count(byUser, user, size);
+				writeOwners(scope, { ...readOwners(scope), [name]: user });
+			}
 		},
 		uploaderOf: (scope, name) => readOwners(scope)[name] ?? null,
 		list(scope) {
@@ -101,10 +117,10 @@ export function createFileStore({ filesDir, metaDir, log = () => {} }) {
 			if (!existsSync(file)) return false;
 			const size = sizeOf(scope, name);
 			unlinkSync(file);
-			const key = quotaKeyOf(scope);
-			usage.set(key, Math.max(0, (usage.get(key) ?? 0) - size));
+			count(usage, quotaKeyOf(scope), -size);
 			const owners = readOwners(scope);
 			if (name in owners) {
+				if (typeof owners[name] === 'string') count(byUser, owners[name], -size);
 				delete owners[name];
 				writeOwners(scope, owners);
 			}

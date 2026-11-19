@@ -1,5 +1,6 @@
-// Bundles the core's server-side update validator (src/core/teams/validate-update.ts) and the
-// protocol constants into viewers/teams/server/validator.generated.mjs, so the standalone
+// Bundles the core's server-side update validator (src/core/teams/validate-update.ts, with the
+// per-room copy of update-checker.ts) and the protocol constants into
+// viewers/teams/server/validator.generated.mjs, so the standalone
 // `openteams-server` package can enforce authorship without depending on ooxml-core. `yjs`, `lib0`
 // and `y-protocols` stay external (the server already depends on them). Run
 // `node scripts/bundle-validator.mjs` after changing either source; `--check` fails when the
@@ -18,13 +19,16 @@ const ENTRY = `export {
 	validateTeamsSyncMessage,
 	validateTeamsUpdate,
 } from './validate-update';
+export { createUpdateChecker } from './update-checker';
 export {
 	PROTOCOL_VERSION,
 	PROTOCOL_PARAM,
 	chatIdOfRoom,
+	chatRoomOfCall,
 	isChatRoom,
 	isChatRoomAlias,
 	isCurrentChatId,
+	isStrayChatCallRoom,
 	protocolOfUrl,
 } from './protocol';
 export { directChatId, isGroupChatIdOf, shortHash } from './chat-records';

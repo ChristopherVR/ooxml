@@ -124,8 +124,8 @@ describe('accounts', () => {
 		});
 
 		it('rejects a forged or foreign session even in dev mode', async () => {
-			const a = await start({ sessionSecret: 'one' });
-			const b = await start({ sessionSecret: 'two' });
+			const a = await start({ sessionSecret: 'one-'.padEnd(40, '0123456789abcdef') });
+			const b = await start({ sessionSecret: 'two-'.padEnd(40, '0123456789abcdef') });
 			const { body } = await login(a.port, 'alice');
 			assert.equal(
 				(await open(`ws://127.0.0.1:${b.port}/sync/general?session=${body.session}`)).status,

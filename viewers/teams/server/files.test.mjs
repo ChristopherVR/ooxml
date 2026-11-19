@@ -13,6 +13,7 @@ import * as Y from 'yjs';
 import { createFileStore, quotaKeyOf } from './files.mjs';
 import { createTeamsServer } from './index.mjs';
 import { storageName } from './room-store.mjs';
+import { seedRoom } from './test-support.mjs';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const until = async (fn, ms = 3000) => {
@@ -88,6 +89,8 @@ describe('file permissions, lifecycle and quotas', () => {
 		await login('bob', 'b');
 		await login('eve', 'e');
 		await login('root', 'r');
+		// With accounts, files go only to a workspace that exists.
+		for (const workspace of ['acme', 'other']) await seedRoom(port, sessions.ann, workspace);
 		const req = (path, user, init = {}) =>
 			fetch(`${base}${path}`, {
 				...init,

@@ -40,6 +40,7 @@ export * from './signaling';
 export * from './store';
 export * from './tabs';
 export * from './validate-update';
+export * from './update-checker';
 export * from './tab-conversation';
 export * from './threads';
 export type { ChatDraft, DraftContext, SavedDraft } from './drafts';

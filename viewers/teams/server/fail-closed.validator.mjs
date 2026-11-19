@@ -2,7 +2,7 @@
 // the two entry points the server calls able to fail on request. Not published.
 import {
 	applyUpdateReverts as realApplyUpdateReverts,
-	validateTeamsSyncMessage as realValidateTeamsSyncMessage,
+	createUpdateChecker as realCreateUpdateChecker,
 } from './validator.generated.mjs';
 
 export * from './validator.generated.mjs';
@@ -15,7 +15,13 @@ export function applyUpdateReverts(doc, reverts) {
 	return realApplyUpdateReverts(doc, reverts);
 }
 
-export function validateTeamsSyncMessage(...args) {
-	if (faults.validate) throw new Error('injected validator failure');
-	return realValidateTeamsSyncMessage(...args);
+export function createUpdateChecker(doc) {
+	const checker = realCreateUpdateChecker(doc);
+	return {
+		...checker,
+		validate(...args) {
+			if (faults.validate) throw new Error('injected validator failure');
+			return checker.validate(...args);
+		},
+	};
 }
