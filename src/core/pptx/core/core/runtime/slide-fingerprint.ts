@@ -31,6 +31,12 @@
  *   reason.
  * - `isDirty` is excluded: it is the flag under discussion, not content.
  * - Cycles terminate.
+ * - Time is linear in the distinct objects reachable from the slide. Each object (array, typed
+ *   array or record) is hashed from a fresh state and enters its parent as a 64-bit digest, so its
+ *   contribution depends on its content alone, never on where else it appears. A subtree the
+ *   model shares by reference (one parsed XML node reached from many places) is therefore hashed
+ *   at most twice: its digest is kept from its second visit on. Keeping it only then leaves an
+ *   ordinary, unshared slide no slower than a single walk.
  *
  * @module core/core/runtime/slide-fingerprint
  */
@@ -71,10 +77,13 @@ const POSITION_ONLY_SLIDE_KEYS: readonly string[] = ['isDirty', 'slideNumber'];
  * Not cryptographic: it only has to make an accidental collision between two
  * different slide states implausible.
  */
-class SlideHasher {
-	private h1 = 0xdeadbeef;
+const SEED1 = 0xdeadbeef;
+const SEED2 = 0x41c6ce57;
 
-	private h2 = 0x41c6ce57;
+class SlideHasher {
+	public h1 = SEED1;
+
+	public h2 = SEED2;
 
 	public update(text: string): void {
 		let h1 = this.h1;
@@ -88,14 +97,39 @@ class SlideHasher {
 		this.h2 = h2;
 	}
 
+	/** Folds a nested object's digest into this state. */
+	public mix(d1: number, d2: number): void {
+		// Multipliers other than `update`'s, so a digest never reads as a character.
+		this.h1 = Math.imul(this.h1 ^ d1, 0x85ebca6b);
+		this.h2 = Math.imul(this.h2 ^ d2, 0xc2b2ae35);
+	}
+
+	/** The two finalized 32-bit lanes of the current state. */
+	public final1(): number {
+		return (
+			Math.imul(this.h1 ^ (this.h1 >>> 16), 2246822507) ^
+			Math.imul(this.h2 ^ (this.h2 >>> 13), 3266489909)
+		);
+	}
+
+	public final2(): number {
+		return (
+			Math.imul(this.h2 ^ (this.h2 >>> 16), 2246822507) ^
+			Math.imul(this.h1 ^ (this.h1 >>> 13), 3266489909)
+		);
+	}
+
 	public digest(): string {
-		let h1 = Math.imul(this.h1 ^ (this.h1 >>> 16), 2246822507);
-		h1 ^= Math.imul(this.h2 ^ (this.h2 >>> 13), 3266489909);
-		let h2 = Math.imul(this.h2 ^ (this.h2 >>> 16), 2246822507);
-		h2 ^= Math.imul(this.h1 ^ (this.h1 >>> 13), 3266489909);
+		const h1 = this.final1();
+		const h2 = this.final2();
 		return `${(h2 >>> 0).toString(16).padStart(8, '0')}${(h1 >>> 0).toString(16).padStart(8, '0')}`;
 	}
 }
+
+/** An object being hashed, one hashed once (digest not kept), or a kept digest. */
+const ON_PATH = 1;
+const SEEN_ONCE = 2;
+type Visit = typeof ON_PATH | typeof SEEN_ONCE | { d1: number; d2: number };
 
 function hashString(hasher: SlideHasher, text: string): void {
 	hasher.update(`s${text.length}:`);
@@ -114,7 +148,7 @@ function hashString(hasher: SlideHasher, text: string): void {
 	hasher.update(sampled);
 }
 
-function hashValue(hasher: SlideHasher, value: unknown, path: Set<object>): void {
+function hashValue(hasher: SlideHasher, value: unknown, visits: Map<object, Visit>): void {
 	if (value === undefined) {
 		hasher.update('u');
 		return;
@@ -150,15 +184,34 @@ function hashValue(hasher: SlideHasher, value: unknown, path: Set<object>): void
 	}
 
 	const object = value as object;
-	if (path.has(object)) {
+	const visit = visits.get(object);
+	if (visit === ON_PATH) {
 		hasher.update('c');
 		return;
 	}
-	path.add(object);
+	if (visit !== undefined && visit !== SEEN_ONCE) {
+		hasher.mix(visit.d1, visit.d2);
+		return;
+	}
+	visits.set(object, ON_PATH);
+	const outer1 = hasher.h1;
+	const outer2 = hasher.h2;
+	hasher.h1 = SEED1;
+	hasher.h2 = SEED2;
+	hashContent(hasher, object, visits);
+	const d1 = hasher.final1();
+	const d2 = hasher.final2();
+	hasher.h1 = outer1;
+	hasher.h2 = outer2;
+	hasher.mix(d1, d2);
+	visits.set(object, visit === SEEN_ONCE ? { d1, d2 } : SEEN_ONCE);
+}
+
+function hashContent(hasher: SlideHasher, object: object, visits: Map<object, Visit>): void {
 	if (Array.isArray(object)) {
 		hasher.update(`a${object.length}[`);
 		for (const item of object) {
-			hashValue(hasher, item, path);
+			hashValue(hasher, item, visits);
 			hasher.update(',');
 		}
 		hasher.update(']');
@@ -190,12 +243,11 @@ function hashValue(hasher: SlideHasher, value: unknown, path: Set<object>): void
 				continue;
 			}
 			hasher.update(`${key}=`);
-			hashValue(hasher, entry, path);
+			hashValue(hasher, entry, visits);
 			hasher.update(';');
 		}
 		hasher.update('}');
 	}
-	path.delete(object);
 }
 
 /**
@@ -212,7 +264,7 @@ export function fingerprintSlide(slide: PptxSlide): string {
 		for (const key of POSITION_ONLY_SLIDE_KEYS) {
 			delete content[key];
 		}
-		hashValue(hasher, content, new Set<object>());
+		hashValue(hasher, content, new Map<object, Visit>());
 	} catch {
 		// The walk is recursive, so pathologically deep attacker-supplied XML can
 		// exhaust the stack, and a hostile getter on the model can throw. Either
