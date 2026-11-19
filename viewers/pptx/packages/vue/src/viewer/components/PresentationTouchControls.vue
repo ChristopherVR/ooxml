@@ -17,7 +17,7 @@
  * Mirrors the React `PresentationTouchControls`
  * (`packages/react/src/viewer/components/PresentationTouchControls.tsx`).
  */
-import { ChevronLeft, ChevronRight, X } from 'lucide-vue-next';
+import { ChevronLeft, ChevronRight, X } from '@lucide/vue';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

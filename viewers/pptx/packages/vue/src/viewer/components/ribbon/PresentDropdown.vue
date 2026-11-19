@@ -7,16 +7,7 @@
  * parity: class strings are copied verbatim, callbacks arrive as function props,
  * and the React `useState` + outside-click effect becomes `useDropdown`.
  */
-import {
-	Captions,
-	Check,
-	ChevronDown,
-	Clock,
-	Monitor,
-	Play,
-	Radio,
-	Settings,
-} from 'lucide-vue-next';
+import { Captions, Check, ChevronDown, Clock, Monitor, Play, Radio, Settings } from '@lucide/vue';
 import { useI18n } from 'vue-i18n';
 
 import { cn } from '../../../utils';

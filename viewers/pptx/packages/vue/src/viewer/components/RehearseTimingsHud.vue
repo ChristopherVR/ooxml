@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Pause, Play } from 'lucide-vue-next';
+import { Pause, Play } from '@lucide/vue';
 import { useI18n } from 'vue-i18n';
 
 import { formatRehearseMs } from '../composables/useRehearseTimings';

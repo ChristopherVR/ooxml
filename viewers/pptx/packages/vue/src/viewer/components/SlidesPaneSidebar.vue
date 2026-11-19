@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { EyeOff, MessageSquare, Plus } from 'lucide-vue-next';
+import { EyeOff, MessageSquare, Plus } from '@lucide/vue';
 import {
 	computeVirtualRange,
 	HIDDEN_SLIDE_LABEL_KEY,
@@ -17,7 +17,7 @@ import {
  * gets a left primary bar + accent background), drag-to-reorder, a right-click
  * context menu (Duplicate / Delete / Hide), and a bottom "Add slide" button.
  * Class strings are copied from React's `SlideItem`/`SlidesPaneSidebar` for
- * visual parity; `react-icons/lu` glyphs map to `lucide-vue-next`.
+ * visual parity; `react-icons/lu` glyphs map to `@lucide/vue`.
  *
  * Sectioned decks keep using `SectionList`; this renders the non-sectioned case
  * and virtualizes decks at the same 50-slide threshold as React.

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Check } from 'lucide-vue-next';
+import { Check } from '@lucide/vue';
 /**
  * ThemeThumbnail: the Vue 3 port of React's `toolbar/ThemeThumbnail.tsx`. Renders
  * a single built-in theme as a colour-preview card (accent header bar + dark/light

@@ -238,9 +238,9 @@ export class TeamsPresentationPreview extends TeamsLitElement {
 				<summary>${this.t('pptx.slideText')}</summary>
 				<pre>
 ${slide.elements
-						.filter((element) => 'text' in element && element.text)
-						.map((element) => ('text' in element ? element.text : ''))
-						.join('\n\n')}</pre>
+	.filter((element) => 'text' in element && element.text)
+	.map((element) => ('text' in element ? element.text : ''))
+	.join('\n\n')}</pre>
 			</details>
 			${
 				slide.notes

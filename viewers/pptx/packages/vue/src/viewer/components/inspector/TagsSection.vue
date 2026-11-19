@@ -6,7 +6,7 @@
  * editable in place with per-row delete plus an Add-tag button when editing
  * is allowed).
  */
-import { ChevronDown, ChevronRight, Trash2 } from 'lucide-vue-next';
+import { ChevronDown, ChevronRight, Trash2 } from '@lucide/vue';
 import type { PptxTagCollection } from 'pptx-viewer-core';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';

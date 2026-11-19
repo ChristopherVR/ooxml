@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Play } from 'lucide-vue-next';
+import { Play } from '@lucide/vue';
 import { EFFECT_SOUND_CATALOGUE, getEffectSoundAsset } from 'ooxml-ui/pptx';
 import type { EffectSoundState } from 'ooxml-ui/pptx';
 import { ref } from 'vue';
