@@ -225,6 +225,7 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 		settings: effectiveSettings,
 		persist: () => void persist(),
 		isLast: (message) => message === conversation?.messages.at(-1),
+		me,
 		async edit(message) {
 			if (abort) return;
 			room?.chat.store.truncateFrom(message.id);
