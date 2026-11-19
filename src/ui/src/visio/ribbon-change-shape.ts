@@ -7,6 +7,7 @@ import type {
 import { emitRibbonAction } from './ribbon-action';
 import { DOCUMENT_MASTER_PREFIX, DOCUMENT_STENCIL_NAME } from './shapes-document';
 import { BASIC_SHAPES } from './shapes-window';
+import { setGalleryState } from './ribbon-localize';
 
 const LABEL = 'Change Shape';
 /** The reason shown before a document is open; the viewer replaces it per selection. */
@@ -102,7 +103,7 @@ export function syncChangeShape(
 	masters?: readonly ChangeShapeMaster[],
 	builtIn?: boolean,
 ): void {
-	gallery.state = changeShapeState(reason, masters, builtIn);
+	setGalleryState(gallery, changeShapeState(reason, masters, builtIn));
 	gallery.toggleAttribute('disabled', reason !== undefined);
 	const title = reason === undefined ? LABEL : `${LABEL}: ${reason}`;
 	gallery.setAttribute('title', title);

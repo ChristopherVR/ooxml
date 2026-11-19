@@ -1,5 +1,12 @@
 import type { RibbonIconArtwork } from './types';
 
+/** A bold "S" (x 6.7-14.4, baseline 17), outlined for Text Shadow. */
+const SHADOW_S =
+	'M10.52 5.63L11.53 5.61L12.4 5.67L13.25 5.82L13.9 6.04L13.9 8.34L13.28 8.01L12.58 7.77L11.58 7.59L10.88 7.6L10.13 7.76L9.7 8.02L9.44 8.35L9.36 8.78L9.4 8.98L9.51 9.23L9.93 9.63L10.6 10.03L12.08 10.69L12.68 11.02L13.23 11.39L13.7 11.85L14.08 12.4L14.33 13.15L14.39 14.08L14.31 14.7L14.03 15.43L13.63 15.98L13.05 16.46L12.28 16.83L11.28 17.08L10.3 17.18L8.95 17.13L7.78 16.93L7.15 16.73L6.76 16.55L6.77 14.08L7.43 14.53L8.03 14.83L8.7 15.05L9.5 15.19L10.45 15.16L11 15.01L11.48 14.71L11.71 14.3L11.73 13.95L11.66 13.68L11.51 13.43L11.23 13.14L10.5 12.69L9 12.03L8.48 11.76L7.95 11.41L7.53 11.03L7.05 10.38L6.87 9.98L6.74 9.45L6.72 8.63L6.84 7.93L7.07 7.4L7.5 6.83L8 6.4L8.7 6.02L9.5 5.77Z';
+/** A bold "AV" (x 4-18.4, baseline 16), outlined for Character Spacing. */
+const SPACING_AV =
+	'M6.84 8.3L8.91 8.3L11.63 15.99L9.75 15.98L9.18 14.28L6.48 14.28L5.92 15.98L4.04 15.98ZM11.17 8.3L13.04 8.3L14.63 13.6L14.83 14.41L14.97 13.73L16.59 8.3L18.41 8.3L15.75 15.99L13.79 15.98ZM7.83 9.66L7.68 10.3L6.85 12.94L8.8 12.93L7.97 10.33Z';
+
 export const FONT_ICONS: Record<string, RibbonIconArtwork> = {
 	'home.font.bold': {
 		attrs: {
@@ -61,30 +68,20 @@ export const FONT_ICONS: Record<string, RibbonIconArtwork> = {
 			{ tag: 'line', attrs: { x1: '4', x2: '20', y1: '12', y2: '12' } },
 		],
 	},
-	// Glyphs are drawn as paths, never <text>: text in an icon would become part of the visible
-	// label, and the button's name (Text Shadow) would no longer contain it (WCAG 2.5.3).
+	// Letters are drawn as filled outlines, never <text>: text in an icon would become part of the
+	// button's shown label, which its name (Text Shadow, Character Spacing) would then have to
+	// contain (WCAG 2.5.3). The outlines are the bold system-font letters the icons used to draw.
 	'home.font.shadow': {
-		attrs: {
-			viewBox: '0 0 24 24',
-			fill: 'none',
-			stroke: 'currentColor',
-			'stroke-width': '2.4',
-			'stroke-linecap': 'round',
-		},
+		attrs: { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' },
 		children: [
+			{ tag: 'path', attrs: { d: SHADOW_S, fill: 'currentColor', stroke: 'none' } },
 			{
 				tag: 'path',
 				attrs: {
-					d: 'M15.5 7.6C14.9 6.4 13.6 5.6 12 5.6c-2 0-3.5 1.1-3.5 2.7 0 3.7 7.2 2.1 7.2 5.8 0 1.7-1.6 2.9-3.7 2.9-1.8 0-3.3-.8-4-2.2',
+					d: SHADOW_S,
 					transform: 'translate(1.5 1.5)',
-					'stroke-width': '1',
+					'stroke-width': '0.5',
 					opacity: '0.4',
-				},
-			},
-			{
-				tag: 'path',
-				attrs: {
-					d: 'M15.5 7.6C14.9 6.4 13.6 5.6 12 5.6c-2 0-3.5 1.1-3.5 2.7 0 3.7 7.2 2.1 7.2 5.8 0 1.7-1.6 2.9-3.7 2.9-1.8 0-3.3-.8-4-2.2',
 				},
 			},
 		],
@@ -141,14 +138,7 @@ export const FONT_ICONS: Record<string, RibbonIconArtwork> = {
 	'home.font.characterSpacing': {
 		attrs: { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.5' },
 		children: [
-			{
-				tag: 'path',
-				attrs: {
-					d: 'M4 16 7.5 6l3.5 10M5.2 12.6h4.6M13 6l3.5 10L20 6',
-					'stroke-width': '2',
-					'stroke-linejoin': 'round',
-				},
-			},
+			{ tag: 'path', attrs: { d: SPACING_AV, fill: 'currentColor', stroke: 'none' } },
 			{ tag: 'path', attrs: { d: 'M3 20 L1 20 M3 20 L5 20', 'stroke-width': '1.5' } },
 			{ tag: 'path', attrs: { d: 'M21 20 L19 20 M21 20 L23 20', 'stroke-width': '1.5' } },
 		],

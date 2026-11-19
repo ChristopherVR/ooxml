@@ -21,10 +21,12 @@ import type { LocaleStrings } from './en';
 import { esApp } from './es-app';
 import { esTableProperties } from './table-properties';
 import { esRibbon } from './es-ribbon';
+import { esRibbonNames } from './ribbon-names';
 
 export const es: LocaleStrings = {
 	...esOptions,
 	...esRibbon,
+	...esRibbonNames,
 	...esApp,
 	...esTableProperties,
 	...esLineNumbers,

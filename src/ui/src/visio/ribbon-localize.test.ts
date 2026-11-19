@@ -54,3 +54,22 @@ describe('localizeRibbon', () => {
 		expect(button.getAttribute('label')).toBe('Insert');
 	});
 });
+
+describe('gallery captions (WCAG 2.5.3)', () => {
+	it('shows a dropdown gallery caption in the language of its name', async () => {
+		const { labelNameMismatches } = await import('../test-support/label-in-name');
+		const { backgroundsGroup } = await import('./ribbon-page-setup');
+		registerOfficeUi();
+		const ribbon = document.createElement('div');
+		ribbon.append(backgroundsGroup(document));
+		document.body.append(ribbon);
+		localizeRibbon(ribbon, 'de');
+		const trigger = ribbon.querySelector<HTMLButtonElement>('[data-gallery="backgrounds"]')!;
+		expect(trigger.textContent).toContain('Hintergründe');
+		expect(trigger.getAttribute('aria-label')).toBe('Hintergründe');
+		expect(labelNameMismatches(ribbon)).toEqual([]);
+		localizeRibbon(ribbon, 'en');
+		expect(trigger.textContent).toContain('Backgrounds');
+		expect(trigger.getAttribute('aria-label')).toBe('Backgrounds');
+	});
+});

@@ -24,13 +24,18 @@ function family(face: string): string {
 	return `${escapeSvgText(face.replace(/[;{}<>]/gu, ''))}, Calibri, Arial, sans-serif`;
 }
 
-/** "Aa" in the heading font, then the heading and body font names. */
+/**
+ * "Aa" in the heading font, then the heading and body font names. The texts are separated by a
+ * space, so the tile's shown text reads as words ("Aa Aptos Display Aptos"), which its name, the
+ * `pptx.gallery.themeFonts.scheme` template, starts with (WCAG 2.5.3).
+ */
 export function fontSchemeTileSvg(major: string, minor: string): string {
-	const body =
-		`<rect x="0" y="0" width="${TILE.width}" height="${TILE.height}" fill="#FFFFFF"/>` +
-		`<text x="4" y="26" font-family="${family(major)}" font-size="22" fill="#000000">Aa</text>` +
-		`<text x="38" y="15" font-family="${family(major)}" font-size="11" fill="#000000">${escapeSvgText(major)}</text>` +
-		`<text x="38" y="29" font-family="${family(minor)}" font-size="10" fill="#404040">${escapeSvgText(minor)}</text>`;
+	const body = [
+		`<rect x="0" y="0" width="${TILE.width}" height="${TILE.height}" fill="#FFFFFF"/>`,
+		`<text x="4" y="26" font-family="${family(major)}" font-size="22" fill="#000000">Aa</text>`,
+		`<text x="38" y="15" font-family="${family(major)}" font-size="11" fill="#000000">${escapeSvgText(major)}</text>`,
+		`<text x="38" y="29" font-family="${family(minor)}" font-size="10" fill="#404040">${escapeSvgText(minor)}</text>`,
+	].join(' ');
 	return svgTile(TILE.width, TILE.height, '', body);
 }
 
@@ -71,7 +76,7 @@ function tile(
 				name: { key: `pptx.gallery.themeFonts.name.${schemeSlug(name)}`, fallback: name },
 			},
 		}),
-		label: `${name}: ${major} / ${minor}`,
+		label: `Aa ${major} / ${minor}: ${name}`,
 		previewSvg: fontSchemeTileSvg(major, minor),
 		applied,
 	};

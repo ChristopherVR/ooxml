@@ -1,3 +1,4 @@
+import type { OfficeGalleryState, OfficeUiGallery } from '../ribbon/gallery';
 import { normalizeVisioLocale, translateRibbonText, type VisioLocale } from './ribbon-locale';
 
 /** The attributes that carry user-visible wording on the ribbon's elements. */
@@ -40,6 +41,36 @@ function translateSlot(
 	if (written !== current) write(written);
 }
 
+/** The English state each gallery was given, and the translated state written for it. */
+const galleryStates = new WeakMap<
+	OfficeUiGallery,
+	{ english: OfficeGalleryState; written: OfficeGalleryState }
+>();
+
+/**
+ * Gives a gallery its state with the caption in the ribbon's language. Lit draws a gallery's
+ * caption, name and tooltip from its state, so translating the rendered text would not last, and
+ * the caption would stay English under a translated name.
+ */
+export function setGalleryState(
+	gallery: OfficeUiGallery,
+	english: OfficeGalleryState,
+	locale: VisioLocale = ribbonLocale(gallery.closest('[data-visio-locale]') ?? gallery),
+): void {
+	const t = (text: string) => translateRibbonText(locale, text);
+	const written: OfficeGalleryState = {
+		...english,
+		label: t(english.label),
+		...(english.moreLabel && { moreLabel: t(english.moreLabel) }),
+		...(english.command?.hint && {
+			command: { ...english.command, hint: t(english.command.hint) },
+		}),
+	};
+	gallery.state = written;
+	// An equal state is not set again, so remember the one the gallery kept.
+	galleryStates.set(gallery, { english, written: gallery.state ?? written });
+}
+
 /** The locale of a ribbon last localized with `localizeRibbon`. */
 export function ribbonLocale(ribbon: Element): VisioLocale {
 	return normalizeVisioLocale((ribbon as HTMLElement).dataset.visioLocale);
@@ -53,6 +84,12 @@ export function ribbonLocale(ribbon: Element): VisioLocale {
 export function localizeWording(elements: Iterable<Element>, locale: VisioLocale): void {
 	for (const element of elements) {
 		if (element.closest('[data-add-in], [data-user-text]')) continue;
+		if (element.localName === 'office-ui-gallery') {
+			const gallery = element as OfficeUiGallery;
+			const known = galleryStates.get(gallery);
+			const english = known && known.written === gallery.state ? known.english : gallery.state;
+			if (english) setGalleryState(gallery, english, locale);
+		}
 		for (const name of ATTRIBUTES) {
 			const text = element.getAttribute(name);
 			if (text)

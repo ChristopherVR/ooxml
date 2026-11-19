@@ -31,7 +31,7 @@ const KO: Record<string, string> = {
 	'pptx.gallery.shapeStyles.coloredFill': '색 채우기 - {{color}}',
 	'pptx.gallery.themeColors.name.blue-warm': '따뜻한 파랑',
 	'pptx.gallery.themeFonts.name.office-2013-2022': '오피스 2013 - 2022',
-	'pptx.gallery.themeFonts.scheme': '{{name}}: {{major}} / {{minor}}',
+	'pptx.gallery.themeFonts.scheme': 'Aa {{major}} / {{minor}}: {{name}}',
 	'pptx.insert.actionButton.backPrevious': '뒤로 또는 이전',
 };
 
@@ -168,7 +168,7 @@ describe('gallery tile names built from a translatable name', () => {
 		expect(galleryItemLabel(blueWarm, ko)).toBe('따뜻한 파랑');
 		const fonts = galleryItems('themeFonts');
 		const office = fonts.find((item) => item.labelParams?.name === 'Office 2013 - 2022')!;
-		expect(galleryItemLabel(office, ko)).toBe('오피스 2013 - 2022: Calibri Light / Calibri');
+		expect(galleryItemLabel(office, ko)).toBe('Aa Calibri Light / Calibri: 오피스 2013 - 2022');
 		const calibri = fonts.find((item) => item.labelParams?.name === 'Calibri')!;
 		expect(calibri.labelParamKeys).toBeUndefined();
 		for (const item of [...colors, ...fonts]) {

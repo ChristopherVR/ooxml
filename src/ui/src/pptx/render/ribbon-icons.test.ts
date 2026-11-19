@@ -24,7 +24,11 @@ describe('canonical Home ribbon icons', () => {
 		).toBe('1.5');
 		const layers = createRibbonControlIcon(document, 'home.font.shadow').querySelectorAll('path');
 		expect(layers).toHaveLength(2);
-		expect(layers[0]!.getAttribute('opacity')).toBe('0.4');
+		// A filled bold S, then its outline offset as the shadow.
+		expect(layers[0]!.getAttribute('fill')).toBe('currentColor');
+		expect(layers[1]!.getAttribute('d')).toBe(layers[0]!.getAttribute('d'));
+		expect(layers[1]!.getAttribute('transform')).toBe('translate(1.5 1.5)');
+		expect(layers[1]!.getAttribute('opacity')).toBe('0.4');
 	});
 
 	it('draws no text that a button name would have to contain (WCAG 2.5.3)', () => {

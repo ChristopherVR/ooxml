@@ -56,7 +56,7 @@ export const frTableProperties = fromValues([
 	'Saisissez une mesure dans la plage affichée.',
 ]);
 export const deTableProperties = fromValues([
-	'Eigenschaften der Tabelle',
+	'Tabelleneigenschaften',
 	'Eigenschaften',
 	'Zeile',
 	'Höhe angeben',

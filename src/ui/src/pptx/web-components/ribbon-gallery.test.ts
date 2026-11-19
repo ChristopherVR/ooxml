@@ -2,6 +2,7 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { buildRibbonGallery } from '../render';
+import { labelNameMismatches } from '../../test-support/label-in-name';
 import { registerPptxWebControls } from './index';
 
 beforeAll(registerPptxWebControls);
@@ -214,5 +215,20 @@ describe('shared ribbon gallery command mode', () => {
 		document.body.append(gallery);
 		expect(gallery.hasAttribute('data-command-large')).toBeTruthy();
 		expect(gallery.trigger.classList.contains('command-large')).toBeTruthy();
+	});
+});
+
+describe('Design > Fonts tiles (WCAG 2.5.3)', () => {
+	it('names every font scheme tile by the sample and fonts it shows', async () => {
+		const { createTranslator } = await import('ooxml-core/i18n');
+		const { translationsEn } = await import('../i18n');
+		const gallery = document.createElement('pptx-ui-ribbon-gallery');
+		gallery.translateLabel = createTranslator({}, [translationsEn], { placeholder: 'double' });
+		gallery.descriptor = buildRibbonGallery('themeFonts', { element: null });
+		document.body.append(gallery);
+		gallery.trigger.click();
+		const office = gallery.popup.querySelector('[data-gallery-item="office"]')!;
+		expect(office.getAttribute('aria-label')).toBe('Aa Aptos Display / Aptos: Office');
+		expect(labelNameMismatches(gallery.popup)).toEqual([]);
 	});
 });
