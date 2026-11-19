@@ -91,11 +91,15 @@ describe('remote values at the collaboration boundary', () => {
 			notesShapes: [{ id: 'n1', type: 'image', imageData: 'vbscript:x' }],
 		} as unknown as PptxSlide;
 		const { slides } = receive([slide]);
-		const children = (slides[0]?.elements[0] as { children: PptxElement[] }).children;
+		const [first] = slides;
+		if (!first) throw new Error('no slide');
+		const children = (first.elements[0] as { children: PptxElement[] }).children;
 		expect(children).toHaveLength(1);
 		expect(children[0]?.id).toBe('child%20%221%22');
 		expect((children[0] as Record<string, unknown>).oleEmbeddedData).toBeUndefined();
-		expect((slides[0]?.notesShapes?.[0] as Record<string, unknown>).imageData).toBeUndefined();
+		expect(
+			(first.notesShapes?.[0] as Record<string, unknown> | undefined)?.imageData,
+		).toBeUndefined();
 		expect(rejections(slides[0]).map((warning) => warning.elementId)).toEqual([
 			'child%20%221%22',
 			undefined,
