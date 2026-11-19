@@ -180,6 +180,12 @@ export function spec(
 	return out;
 }
 
+/** `spec` with the work an array lifting it multiplies (see FunctionSpec.liftWork). */
+export const withLiftWork = (
+	liftWork: NonNullable<FunctionSpec['liftWork']>,
+	functionSpec: FunctionSpec,
+): FunctionSpec => ({ ...functionSpec, liftWork });
+
 /** A numeric function of fixed arity whose arguments all coerce to numbers. */
 export function numeric(
 	name: string,

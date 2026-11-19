@@ -111,3 +111,22 @@ describe('recalculation work and text budget', () => {
 		}
 	});
 });
+
+describe('scans an array of lookups or criteria repeats', () => {
+	const spill = (formula: string, n: number) => {
+		const wb = book({ A1: `=SEQUENCE(${n})`, C1: `=${formula}` });
+		engine(wb).recalculateAll();
+		return get(wb, 'C1');
+	};
+
+	it('stops a criteria or nearest-match scan repeated over a long array', () => {
+		expect(spill('SUM(COUNTIF(A1#,">"&SEQUENCE(20000)))', 20000)).toEqual(E.NUM);
+		expect(spill('SUM(XLOOKUP(SEQUENCE(20000)-0.5,A1#,A1#,,1))', 20000)).toEqual(E.NUM);
+	});
+
+	it('still answers short repeated scans and indexed exact lookups', () => {
+		expect(spill('SUM(COUNTIF(A1#,">"&SEQUENCE(200)))', 200)).toBe(19900);
+		expect(spill('SUM(XMATCH(SEQUENCE(20000),A1#))', 20000)).toBe(200010000);
+		expect(spill('SUM(MATCH(SEQUENCE(20000)+0.5,A1#,1))', 20000)).toBe(200010000);
+	});
+});

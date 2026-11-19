@@ -4,6 +4,7 @@ import type { CallContext } from '../context';
 import { pick } from '../operators';
 import {
 	type Area,
+	chargeWork,
 	ERR,
 	ErrorSignal,
 	fail,
@@ -15,8 +16,28 @@ import {
 } from '../values';
 import { equalityKey, positionsOf } from './criteria-index';
 import { makeCriteria, scalar } from './helpers';
+import { CELL_TEST_WORK, linearScanWork } from './scan-work';
 
 const CLIP = 100_000;
+/**
+ * What one call of a lifted IFS function costs: an equality criterion on a reference is answered
+ * from an index, any other criterion tests every scanned cell. Charged only when an array of
+ * criteria repeats the call, the one way a single formula multiplies the scan.
+ */
+/** The lift work of SUMIF, COUNTIF and AVERAGEIF (range first, criterion second). */
+export const criteriaLiftWork = (args: readonly Value[], ctx: CallContext): number =>
+	liftedCallWork(ctx, [{ range: args[0] ?? null, criteria: args[1] ?? null }]);
+
+export function liftedCallWork(ctx: CallContext, pairs: readonly CriteriaPair[]): number {
+	let work = 0;
+	for (const pair of pairs) {
+		const criteria = pair.criteria instanceof Matrix ? pair.criteria.get(0, 0) : pair.criteria;
+		if (pair.range instanceof RefValue && equalityKey(scalar(criteria)) !== undefined)
+			return pairs.length * CELL_TEST_WORK;
+		work += linearScanWork(ctx, pair.range);
+	}
+	return work;
+}
 
 export interface CriteriaPair {
 	range: Value;
@@ -209,6 +230,7 @@ export function liftCriteria(
 			criteria: p.criteria instanceof Matrix ? pick(p.criteria, r, c) : p.criteria,
 		}));
 		try {
+			chargeWork(liftedCallWork(ctx, one));
 			const value = fn(one);
 			return value instanceof Matrix ? value.get(0, 0) : scalar(value);
 		} catch (e) {

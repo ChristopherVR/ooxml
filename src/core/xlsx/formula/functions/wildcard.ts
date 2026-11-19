@@ -14,7 +14,7 @@ export interface Wildcard {
 }
 
 const lower = (ch: string | undefined): string => foldChar(ch ?? '');
-const fold = (text: string): string[] => foldText(text).split('');
+const fold = foldText;
 
 interface Parsed {
 	segments: Segment[];
@@ -50,7 +50,7 @@ function parse(pattern: string): Parsed {
 	return { segments, leadingStar, trailingStar };
 }
 
-function matchesAt(seg: Segment, text: string[], at: number): boolean {
+function matchesAt(seg: Segment, text: string, at: number): boolean {
 	if (at < 0 || at + seg.length > text.length) return false;
 	for (let i = 0; i < seg.length; i++) {
 		const want = seg[i];
@@ -59,7 +59,7 @@ function matchesAt(seg: Segment, text: string[], at: number): boolean {
 	return true;
 }
 
-function find(seg: Segment, text: string[], from: number, limit: number): number {
+function find(seg: Segment, text: string, from: number, limit: number): number {
 	for (let at = from; at + seg.length <= limit; at++) if (matchesAt(seg, text, at)) return at;
 	return -1;
 }
@@ -69,7 +69,7 @@ function place(
 	segments: Segment[],
 	from: number,
 	to: number,
-	text: string[],
+	text: string,
 	pos: number,
 	limit: number,
 ): number {

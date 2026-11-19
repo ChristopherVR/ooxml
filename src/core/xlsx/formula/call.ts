@@ -9,6 +9,7 @@ import { broadcastShape, pick } from './operators';
 import { parseFormula } from './parser';
 import { implicitIntersection, toMatrix } from './references';
 import {
+	chargeWork,
 	ERR,
 	err,
 	ErrorSignal,
@@ -146,7 +147,10 @@ export function applyFunction(spec: FunctionSpec, args: Value[], ctx: CallContex
 			arg instanceof Matrix && paramKind(spec, i) === 'value' ? pick(arg, r, c) : arg,
 		);
 		return toElement(
-			guard(() => fn(element, ctx)),
+			guard(() => {
+				if (spec.liftWork) chargeWork(spec.liftWork(element, ctx));
+				return fn(element, ctx);
+			}),
 			ctx,
 		);
 	});
