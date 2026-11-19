@@ -9,14 +9,16 @@ import crypto from 'node:crypto';
 
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
 import JSZip from 'jszip';
+import { contentTypeForPart, parseContentTypes } from '../../opc/content-types';
+import { MEDIA_TYPES_ITEM } from '../../opc/part-names';
 import { openPptxZip } from '../core/utils/zip-open';
 
 import {
 	DIGITAL_SIGNATURE_ORIGIN_REL_TYPE,
 	DIGITAL_SIGNATURE_REL_TYPE,
+	OPC_RELATIONSHIPS_NS,
 	XMLDSIG_NS,
 } from '../core/utils/signature-constants';
-import { normalizePartPath } from '../core/utils/signature-reference-utils';
 import type {
 	DigitalSignatureReport,
 	OfficeSignatureReference,
@@ -50,7 +52,7 @@ async function upsertRootOriginRelationship(zip: JSZip): Promise<void> {
 		(node) => node.getAttribute('Type') === DIGITAL_SIGNATURE_ORIGIN_REL_TYPE,
 	);
 	if (!existing) {
-		const rel = doc.createElement('Relationship');
+		const rel = doc.createElementNS(OPC_RELATIONSHIPS_NS, 'Relationship');
 		rel.setAttribute('Id', 'rIdDigitalSignatureOrigin');
 		rel.setAttribute('Type', DIGITAL_SIGNATURE_ORIGIN_REL_TYPE);
 		rel.setAttribute('Target', '_xmlsignatures/origin.sigs');
@@ -62,7 +64,7 @@ async function upsertRootOriginRelationship(zip: JSZip): Promise<void> {
 async function upsertContentTypesForSignature(zip: JSZip, signaturePath: string): Promise<void> {
 	const parser = new DOMParser();
 	const serializer = new XMLSerializer();
-	const pathInContentTypes = '[Content_Types].xml';
+	const pathInContentTypes = MEDIA_TYPES_ITEM;
 	const xml = (await zip.file(pathInContentTypes)?.async('string')) || '';
 	if (!xml) {
 		return;
@@ -99,12 +101,14 @@ async function upsertContentTypesForSignature(zip: JSZip, signaturePath: string)
 async function buildOfficeReferenceList(zip: JSZip): Promise<OfficeSignatureReference[]> {
 	const references: OfficeSignatureReference[] = [];
 	const digestMethod = 'http://www.w3.org/2001/04/xmlenc#sha256';
+	const contentTypes = parseContentTypes(await zip.file(MEDIA_TYPES_ITEM)?.async('string'));
 	for (const entryPath of Object.keys(zip.files)) {
 		const entry = zip.file(entryPath);
 		if (!entry || entry.dir) {
 			continue;
 		}
-		if (entryPath.startsWith('_xmlsignatures/')) {
+		// The Media Types stream is not a part; each reference binds its part's type instead.
+		if (entryPath === MEDIA_TYPES_ITEM || entryPath.startsWith('_xmlsignatures/')) {
 			continue;
 		}
 		const entryBytes = await entry.async('uint8array');
@@ -112,8 +116,9 @@ async function buildOfficeReferenceList(zip: JSZip): Promise<OfficeSignatureRefe
 			.createHash('sha256')
 			.update(Buffer.from(entryBytes))
 			.digest('base64');
+		const contentType = contentTypeForPart(contentTypes, entryPath);
 		references.push({
-			uri: `/${normalizePartPath(entryPath)}`,
+			uri: contentType ? `/${entryPath}?ContentType=${contentType}` : `/${entryPath}`,
 			digestMethod,
 			digestValue,
 		});

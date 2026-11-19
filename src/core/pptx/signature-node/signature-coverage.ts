@@ -2,75 +2,86 @@
  * Decides whether verified references cover a package's content.
  *
  * OPC signatures may sign a subset of a package, and Office leaves document properties, thumbnails
- * and a few settings parts out. So coverage is a walk: from the package relationships, follow only
- * relationships the signature protects, and require every part reached, and every relationships
- * part beside it, to be covered. A relationship added beside the signed ones is a gap unless its
- * type is one that signers routinely leave out.
+ * and a few settings parts out. Coverage therefore walks from the package relationships, following
+ * only relationships the signature protects, and requires every part reached, and every
+ * relationships part beside it, to be covered. It then closes the package: any other stored item
+ * is a gap unless it sits where those unsigned parts live, because a reader may find parts by name
+ * without following a relationship.
  *
  * Node-only - reads parts through `jszip`.
  */
 
+import { MEDIA_TYPES_ITEM, partNameKey } from '../../opc/part-names';
 import { relationshipsPartFor, resolvePartPath } from '../../opc/relationships';
+import { isSignaturePart } from '../../opc/signature/detection';
 import type { PackageRelationship, SignatureCoverageGap } from '../core/utils/signature-types';
+import { resolvePartName } from './reference-checks';
 import type { CoveredPart, SignaturePackage } from './reference-checks';
 import { parseRelationshipsPart } from './reference-transforms';
 
 const PACKAGE_RELATIONSHIPS_PART = '_rels/.rels';
-const CONTENT_TYPES_PART = '[Content_Types].xml';
-const SIGNATURE_ORIGIN_PART = '_xmlsignatures/origin.sigs';
+const PACKAGE_TYPES = 'http://schemas.openxmlformats.org/package/2006/relationships';
+const OFFICE_TYPES = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+const STRICT_OFFICE_TYPES = 'http://purl.oclc.org/ooxml/officeDocument/relationships';
 
 /** Relationship types Office leaves unsigned: metadata and viewing state, not document content. */
-const UNSIGNED_RELATIONSHIP_TYPE_SUFFIXES = [
-	'/metadata/core-properties',
-	'/metadata/thumbnail',
-	'/extended-properties',
-	'/custom-properties',
-	'/digital-signature/origin',
-	'/customXml',
-	'/presProps',
-	'/viewProps',
-];
+const UNSIGNED_RELATIONSHIP_TYPES: ReadonlySet<string> = new Set([
+	`${PACKAGE_TYPES}/metadata/core-properties`,
+	`${PACKAGE_TYPES}/metadata/thumbnail`,
+	`${PACKAGE_TYPES}/digital-signature/origin`,
+	`${OFFICE_TYPES}/metadata/core-properties`,
+	`${OFFICE_TYPES}/metadata/thumbnail`,
+	`${OFFICE_TYPES}/extended-properties`,
+	`${OFFICE_TYPES}/custom-properties`,
+	`${OFFICE_TYPES}/customXml`,
+	`${OFFICE_TYPES}/presProps`,
+	`${OFFICE_TYPES}/viewProps`,
+	`${STRICT_OFFICE_TYPES}/metadata/core-properties`,
+	`${STRICT_OFFICE_TYPES}/metadata/thumbnail`,
+	`${STRICT_OFFICE_TYPES}/extendedProperties`,
+	`${STRICT_OFFICE_TYPES}/customProperties`,
+	`${STRICT_OFFICE_TYPES}/customXml`,
+	`${STRICT_OFFICE_TYPES}/presProps`,
+	`${STRICT_OFFICE_TYPES}/viewProps`,
+]);
+
+/** Where the targets of those relationships live, as part name keys. */
+const UNSIGNED_PART_LOCATION =
+	/^(?:docprops\/|customxml\/|ppt\/(?:presprops|viewprops)\.xml$|ppt\/_rels\/(?:presprops|viewprops)\.xml\.rels$)/;
+
+const MEDIA_TYPES_KEY = partNameKey(MEDIA_TYPES_ITEM);
+
+/** ZIP items OPC does not map to parts: the Media Types stream and deleted-part leftovers. */
+const isNotAPart = (key: string): boolean => key === MEDIA_TYPES_KEY || key.startsWith('[trash]/');
+
+/** The signature machinery itself, which a signature cannot cover, and items that are not parts. */
+const isOutsideCoverage = (name: string): boolean =>
+	isSignaturePart(name) || isNotAPart(partNameKey(name));
 
 export interface SignatureCoverage {
 	uncoveredParts: string[];
 	coverageGaps: SignatureCoverageGap[];
 }
 
-const mayStayUnsigned = (relationship: PackageRelationship): boolean =>
-	UNSIGNED_RELATIONSHIP_TYPE_SUFFIXES.some((suffix) => relationship.type.endsWith(suffix));
-
 /** The part whose relationships `relationshipsPart` holds; empty for the package itself. */
 function sourcePartOf(relationshipsPart: string): string {
-	const match = /^(.*?)_rels\/([^/]*)\.rels$/.exec(relationshipsPart);
+	const match = /^(.*?)_rels\/([^/]*)\.rels$/i.exec(relationshipsPart);
 	return match ? `${match[1]}${match[2]}` : '';
 }
 
-function targetPartOf(sourcePart: string, relationship: PackageRelationship): string {
-	const target = relationship.target.split(/[?#]/)[0] ?? '';
-	let decoded = target;
-	try {
-		decoded = decodeURIComponent(target);
-	} catch {
-		// keep the raw target: it then matches no part
+/** The part name a relationship targets. Percent-encoding is part of the name. */
+const targetPartOf = (sourcePart: string, relationship: PackageRelationship): string =>
+	resolvePartPath(sourcePart, relationship.target.split(/[?#]/)[0] ?? '');
+
+function mayStayUnsigned(sourcePart: string, relationship: PackageRelationship): boolean {
+	if (relationship.mode !== 'Internal' || !UNSIGNED_RELATIONSHIP_TYPES.has(relationship.type)) {
+		return false;
 	}
-	return resolvePartPath(sourcePart, decoded);
+	const target = targetPartOf(sourcePart, relationship);
+	return isSignaturePart(target) || UNSIGNED_PART_LOCATION.test(partNameKey(target));
 }
 
-/** The signature machinery itself, which a signature cannot cover. */
-function signatureInfrastructure(signaturePaths: readonly string[]): Set<string> {
-	const parts = new Set([
-		CONTENT_TYPES_PART,
-		SIGNATURE_ORIGIN_PART,
-		relationshipsPartFor(SIGNATURE_ORIGIN_PART),
-	]);
-	for (const path of signaturePaths) {
-		parts.add(path);
-		parts.add(relationshipsPartFor(path));
-	}
-	return parts;
-}
-
-/** The relationships in a part, or `undefined` when it is not a readable relationships part. */
+/** The relationships in a part, or `undefined` when it is not a valid relationships part. */
 async function readRelationships(
 	pkg: SignaturePackage,
 	relationshipsPart: string,
@@ -87,11 +98,9 @@ async function readRelationships(
 export async function evaluateSignatureCoverage(
 	pkg: SignaturePackage,
 	coveredParts: ReadonlyMap<string, CoveredPart>,
-	signaturePaths: readonly string[],
 ): Promise<SignatureCoverage> {
-	const infrastructure = signatureInfrastructure(signaturePaths);
 	const coverageGaps: SignatureCoverageGap[] = [];
-	const pending = [PACKAGE_RELATIONSHIPS_PART];
+	const pending = [resolvePartName(pkg, PACKAGE_RELATIONSHIPS_PART) ?? PACKAGE_RELATIONSHIPS_PART];
 	const visited = new Set<string>();
 	let reachedSignedContent = false;
 
@@ -101,19 +110,16 @@ export async function evaluateSignatureCoverage(
 		visited.add(relationshipsPart);
 
 		const covered = coveredParts.get(relationshipsPart);
-		if (!covered) {
+		const all = covered && (await readRelationships(pkg, relationshipsPart));
+		if (!covered || !all) {
 			coverageGaps.push({ kind: 'unsigned-relationships-part', part: relationshipsPart });
 			continue;
 		}
-		const all = await readRelationships(pkg, relationshipsPart);
-		if (!all) {
-			coverageGaps.push({ kind: 'unsigned-relationships-part', part: relationshipsPart });
-			continue;
-		}
+		const sourcePart = sourcePartOf(relationshipsPart);
 		const selected = covered.selectedRelationships ?? all;
-		const selectedSet = new Set(selected.map((relationship) => relationship.id));
+		const selectedIds = new Set(selected.map((relationship) => relationship.id));
 		for (const relationship of all) {
-			if (!selectedSet.has(relationship.id) && !mayStayUnsigned(relationship)) {
+			if (!selectedIds.has(relationship.id) && !mayStayUnsigned(sourcePart, relationship)) {
 				coverageGaps.push({
 					kind: 'unsigned-relationship',
 					part: relationshipsPart,
@@ -122,11 +128,10 @@ export async function evaluateSignatureCoverage(
 			}
 		}
 
-		const sourcePart = sourcePartOf(relationshipsPart);
 		for (const relationship of selected) {
 			if (relationship.mode === 'External') continue;
-			const target = targetPartOf(sourcePart, relationship);
-			if (infrastructure.has(target) || !pkg.partNames.has(target)) continue;
+			const target = resolvePartName(pkg, targetPartOf(sourcePart, relationship));
+			if (target === undefined || isOutsideCoverage(target)) continue;
 			if (!coveredParts.has(target)) {
 				coverageGaps.push({
 					kind: 'unsigned-part',
@@ -136,8 +141,8 @@ export async function evaluateSignatureCoverage(
 				continue;
 			}
 			reachedSignedContent = true;
-			const targetRelationships = relationshipsPartFor(target);
-			if (pkg.partNames.has(targetRelationships)) pending.push(targetRelationships);
+			const targetRelationships = resolvePartName(pkg, relationshipsPartFor(target));
+			if (targetRelationships !== undefined) pending.push(targetRelationships);
 		}
 	}
 
@@ -145,7 +150,13 @@ export async function evaluateSignatureCoverage(
 		coverageGaps.push({ kind: 'no-signed-content', part: PACKAGE_RELATIONSHIPS_PART });
 	}
 	const uncoveredParts = [...pkg.partNames]
-		.filter((part) => !coveredParts.has(part) && !infrastructure.has(part))
+		.filter((part) => !coveredParts.has(part) && !isOutsideCoverage(part))
 		.sort();
+	const reported = new Set(coverageGaps.map((gap) => gap.part));
+	for (const part of uncoveredParts) {
+		if (!reported.has(part) && !UNSIGNED_PART_LOCATION.test(partNameKey(part))) {
+			coverageGaps.push({ kind: 'unsigned-part', part });
+		}
+	}
 	return { uncoveredParts, coverageGaps };
 }

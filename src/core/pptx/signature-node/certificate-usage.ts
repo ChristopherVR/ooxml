@@ -1,5 +1,5 @@
 /**
- * Whether a certificate may sign documents, from its key usage extensions (RFC 5280).
+ * What a certificate's extensions permit (RFC 5280): signing documents and issuing further CAs.
  *
  * Node-only - depends on `node:crypto` and `node-forge` for ASN.1.
  */
@@ -9,6 +9,7 @@ import type crypto from 'node:crypto';
 import forge from 'node-forge';
 
 const KEY_USAGE_OID = '2.5.29.15';
+const BASIC_CONSTRAINTS_OID = '2.5.29.19';
 const DIGITAL_SIGNATURE_BIT = 0x80;
 const NON_REPUDIATION_BIT = 0x40;
 
@@ -25,8 +26,8 @@ const CONTEXT_SPECIFIC = forge.asn1.Class.CONTEXT_SPECIFIC;
 const children = (node: forge.asn1.Asn1 | undefined): forge.asn1.Asn1[] =>
 	Array.isArray(node?.value) ? node.value : [];
 
-/** The DER contents of the key usage extension, or `undefined` when the certificate has none. */
-function keyUsageExtension(certificate: crypto.X509Certificate): string | undefined {
+/** The DER contents of an extension, or `undefined` when the certificate does not have it. */
+function extensionValue(certificate: crypto.X509Certificate, extensionOid: string) {
 	const der = forge.util.createBuffer(certificate.raw.toString('binary'));
 	const tbs = children(forge.asn1.fromDer(der))[0];
 	const extensionsField = children(tbs).find(
@@ -37,7 +38,7 @@ function keyUsageExtension(certificate: crypto.X509Certificate): string | undefi
 		const oid = fields[0];
 		const value = fields[fields.length - 1];
 		if (typeof oid?.value !== 'string' || typeof value?.value !== 'string') continue;
-		if (forge.asn1.derToOid(oid.value) === KEY_USAGE_OID) return value.value;
+		if (forge.asn1.derToOid(oid.value) === extensionOid) return value.value;
 	}
 	return undefined;
 }
@@ -58,6 +59,15 @@ export function isDocumentSigningCertificate(certificate: crypto.X509Certificate
 	if (extendedUsages && !extendedUsages.some((oid) => DOCUMENT_SIGNING_EKUS.has(oid))) {
 		return false;
 	}
-	const keyUsage = keyUsageExtension(certificate);
+	const keyUsage = extensionValue(certificate, KEY_USAGE_OID);
 	return keyUsage === undefined || keyUsageAllowsSigning(keyUsage);
+}
+
+/** The `pathLenConstraint` of `basicConstraints`; throws when the extension is malformed. */
+export function pathLengthConstraint(certificate: crypto.X509Certificate): number | undefined {
+	const extension = extensionValue(certificate, BASIC_CONSTRAINTS_OID);
+	if (extension === undefined) return undefined;
+	const fields = children(forge.asn1.fromDer(forge.util.createBuffer(extension)));
+	const pathLength = fields.find((field) => field.type === forge.asn1.Type.INTEGER);
+	return pathLength ? forge.asn1.derToInteger(pathLength.value as string) : undefined;
 }

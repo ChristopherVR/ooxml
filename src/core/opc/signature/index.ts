@@ -63,7 +63,6 @@ export {
 	isValidBase64,
 } from './xml-utils';
 export {
-	normalizePartPath,
 	parseReferenceUri,
 	resolveReferenceUriToPart,
 	type ParsedReferenceUri,

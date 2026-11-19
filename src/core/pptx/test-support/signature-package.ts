@@ -28,6 +28,9 @@ const RELS_CONTENT_TYPE = 'application/vnd.openxmlformats-package.relationships+
 export const SLIDE_PART = 'ppt/slides/slide1.xml';
 export const CORE_PROPERTIES_RELATIONSHIP = `${RELS}/metadata/core-properties`;
 export const OFFICE_DOCUMENT_RELATIONSHIP = `${OFFICE_RELS}/officeDocument`;
+export const SLIDE_RELATIONSHIP = `${OFFICE_RELS}/slide`;
+export const CUSTOM_XML_RELATIONSHIP = `${OFFICE_RELS}/customXml`;
+export const SLIDE_CONTENT_TYPE = `${PML}.slide+xml`;
 
 export interface TestParty {
 	cert: forge.pki.Certificate;
@@ -41,11 +44,19 @@ export interface TestPartyOptions {
 	name: string;
 	issuer?: TestParty;
 	ca?: boolean;
+	/** The `pathLenConstraint` of `basicConstraints`. */
+	pathLength?: number;
 	extensions?: object[];
 }
 
 /** Create an RSA certificate, self-signed unless `issuer` is given. */
-export function createTestParty({ name, issuer, ca = false, extensions = [] }: TestPartyOptions) {
+export function createTestParty({
+	name,
+	issuer,
+	ca = false,
+	pathLength,
+	extensions = [],
+}: TestPartyOptions) {
 	const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
 	const keyPem = privateKey.export({ type: 'pkcs1', format: 'pem' }) as string;
 	const key = forge.pki.privateKeyFromPem(keyPem) as forge.pki.rsa.PrivateKey;
@@ -59,7 +70,14 @@ export function createTestParty({ name, issuer, ca = false, extensions = [] }: T
 	const subject = [{ name: 'commonName', value: name }];
 	cert.setSubject(subject);
 	cert.setIssuer(issuer ? issuer.cert.subject.attributes : subject);
-	cert.setExtensions([{ name: 'basicConstraints', cA: ca }, ...extensions]);
+	cert.setExtensions([
+		{
+			name: 'basicConstraints',
+			cA: ca,
+			...(pathLength === undefined ? {} : { pathLenConstraint: pathLength }),
+		},
+		...extensions,
+	]);
 	cert.sign(issuer ? issuer.key : key, forge.md.sha256.create());
 	const der = forge.asn1.toDer(forge.pki.certificateToAsn1(cert)).getBytes();
 	const party: TestParty = {
@@ -89,7 +107,7 @@ export function createTestPackage(): JSZip {
 			`<Default Extension="rels" ContentType="${RELS_CONTENT_TYPE}"/>` +
 			`<Default Extension="xml" ContentType="application/xml"/>` +
 			`<Override PartName="/ppt/presentation.xml" ContentType="${PML}.presentation.main+xml"/>` +
-			`<Override PartName="/${SLIDE_PART}" ContentType="${PML}.slide+xml"/></Types>`,
+			`<Override PartName="/${SLIDE_PART}" ContentType="${SLIDE_CONTENT_TYPE}"/></Types>`,
 	);
 	zip.file(
 		'_rels/.rels',
@@ -102,7 +120,7 @@ export function createTestPackage(): JSZip {
 	zip.file('ppt/presentation.xml', '<presentation/>');
 	zip.file(
 		'ppt/_rels/presentation.xml.rels',
-		relationshipsXml(relationship('rId1', `${OFFICE_RELS}/slide`, 'slides/slide1.xml')),
+		relationshipsXml(relationship('rId1', SLIDE_RELATIONSHIP, 'slides/slide1.xml')),
 	);
 	zip.file(SLIDE_PART, '<sld>original</sld>');
 	return zip;
@@ -118,13 +136,23 @@ const referenceXml = (uri: string, digestValue: string, transforms = '') =>
 	`<Reference URI="${uri}">${transforms}<DigestMethod Algorithm="${SHA256}"/>` +
 	`<DigestValue>${digestValue}</DigestValue></Reference>`;
 
-async function relationshipsReference(zip: JSZip, part: string, sourceIds: string[]) {
-	const parameters = sourceIds.map((id) => `<mdssi:RelationshipReference SourceId="${id}"/>`);
+/** What a relationships transform selects: relationship `Id`s or relationship types. */
+export interface RelationshipSelection {
+	ids?: string[];
+	types?: string[];
+}
+
+async function relationshipsReference(zip: JSZip, part: string, selection: RelationshipSelection) {
+	const { ids = [], types = [] } = selection;
+	const parameters = [
+		...ids.map((id) => `<mdssi:RelationshipReference SourceId="${id}"/>`),
+		...types.map((type) => `<mdssi:RelationshipsGroupReference SourceType="${type}"/>`),
+	];
 	const transforms = [
 		{
 			algorithm: OPC_RELATIONSHIP_TRANSFORM,
-			relationshipReferenceIds: sourceIds,
-			relationshipGroupTypes: [],
+			relationshipReferenceIds: ids,
+			relationshipGroupTypes: types,
 		},
 		{ algorithm: INCLUSIVE_C14N, relationshipReferenceIds: [], relationshipGroupTypes: [] },
 	];
@@ -137,18 +165,36 @@ async function relationshipsReference(zip: JSZip, part: string, sourceIds: strin
 	);
 }
 
-async function partReference(zip: JSZip, part: string, contentType: string) {
+/** A `Manifest` reference to a whole part, under `uri` when it differs from the stored name. */
+export async function partReference(
+	zip: JSZip,
+	part: string,
+	contentType: string,
+	uri = `/${part}`,
+) {
 	const bytes = await zip.file(part)!.async('uint8array');
-	return referenceXml(`/${part}?ContentType=${contentType}`, digest(bytes));
+	return referenceXml(`${uri}?ContentType=${contentType}`, digest(bytes));
 }
 
-/** The `Manifest` references of the test package: everything but core properties. */
-export async function createManifestReferences(zip: JSZip): Promise<string[]> {
+/**
+ * The `Manifest` references of the test package: everything but core properties. Relationships are
+ * selected by `Id`, or by type with `selectBy: 'type'`.
+ */
+export async function createManifestReferences(
+	zip: JSZip,
+	{ selectBy = 'id' }: { selectBy?: 'id' | 'type' } = {},
+): Promise<string[]> {
+	const select = (id: string, type: string): RelationshipSelection =>
+		selectBy === 'id' ? { ids: [id] } : { types: [type] };
 	return [
-		await relationshipsReference(zip, '_rels/.rels', ['rId1']),
-		await relationshipsReference(zip, 'ppt/_rels/presentation.xml.rels', ['rId1']),
+		await relationshipsReference(zip, '_rels/.rels', select('rId1', OFFICE_DOCUMENT_RELATIONSHIP)),
+		await relationshipsReference(
+			zip,
+			'ppt/_rels/presentation.xml.rels',
+			select('rId1', SLIDE_RELATIONSHIP),
+		),
 		await partReference(zip, 'ppt/presentation.xml', `${PML}.presentation.main+xml`),
-		await partReference(zip, SLIDE_PART, `${PML}.slide+xml`),
+		await partReference(zip, SLIDE_PART, SLIDE_CONTENT_TYPE),
 	];
 }
 

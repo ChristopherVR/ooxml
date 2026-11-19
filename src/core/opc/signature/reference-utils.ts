@@ -1,13 +1,10 @@
 // Moved from src/core/pptx/core/utils/signature-reference-utils.ts (see PROVENANCE.md).
 /**
  * Pure string utilities for resolving digital signature reference URIs
- * to ZIP part paths. Platform-agnostic (no Node dependencies).
+ * to part names. Platform-agnostic (no Node dependencies).
  */
 
-/** Normalize a ZIP part path: convert backslashes to forward slashes and strip leading slashes. */
-export function normalizePartPath(partPath: string): string {
-	return partPath.replace(/\\/g, '/').replace(/^\/+/, '');
-}
+import { isPartName } from '../part-names';
 
 /** A signature reference URI that names a package part. */
 export interface ParsedReferenceUri {
@@ -27,9 +24,10 @@ function decodeUriComponentSafe(value: string): string | undefined {
 }
 
 /**
- * Parse a reference URI that names a package part (ECMA-376 Part 2, digital signatures).
+ * Parse a reference URI that names a package part (ECMA-376 Part 2, 10.5.7.3). The path is a part
+ * name, so its percent-encoding is kept: `partPath` is that name without the leading slash.
  * Returns `undefined` for anything that does not name exactly one part: empty URIs, same-document
- * references (`#id`), fragments, unknown queries and paths with `.`, `..` or empty segments.
+ * references (`#id`), fragments, unknown queries and paths that break the part name grammar.
  */
 export function parseReferenceUri(uri: string): ParsedReferenceUri | undefined {
 	const trimmed = uri.trim();
@@ -40,14 +38,10 @@ export function parseReferenceUri(uri: string): ParsedReferenceUri | undefined {
 	if (rest.length > 0 || (query !== undefined && !query.startsWith(CONTENT_TYPE_QUERY))) {
 		return undefined;
 	}
-	const decoded = decodeUriComponentSafe(rawPath);
-	if (!decoded) {
+	if (!isPartName(rawPath)) {
 		return undefined;
 	}
-	const partPath = normalizePartPath(decoded);
-	if (partPath.split('/').some((part) => part === '' || part === '.' || part === '..')) {
-		return undefined;
-	}
+	const partPath = rawPath.replace(/^\//, '');
 	if (query === undefined) {
 		return { partPath };
 	}
@@ -55,7 +49,7 @@ export function parseReferenceUri(uri: string): ParsedReferenceUri | undefined {
 	return contentType ? { partPath, contentType } : undefined;
 }
 
-/** Resolve a signature reference URI to a ZIP part path, or `undefined` if it names no part. */
+/** Resolve a signature reference URI to a part name without its slash, or `undefined` if it names no part. */
 export function resolveReferenceUriToPart(uri: string): string | undefined {
 	return parseReferenceUri(uri)?.partPath;
 }

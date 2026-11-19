@@ -47,11 +47,6 @@ export function computeDetailStatus(
 		detail.certificateRevocationStatus === 'unknown' ||
 		detail.certificateRevocationStatus === 'not-checked' ||
 		detail.certificateRevocationStatus === 'error';
-	const timestampMissingOrUntrusted =
-		detail.timestampAuthorityStatus === 'not-present' ||
-		detail.timestampAuthorityStatus === 'not-checked' ||
-		detail.timestampAuthorityStatus === 'error' ||
-		detail.timestampAuthorityStatus === 'untrusted';
 
 	if (detail.signatureValueStatus === 'invalid') {
 		return 'signature-invalid';
@@ -76,7 +71,7 @@ export function computeDetailStatus(
 	if (detail.timestampAuthorityStatus === 'invalid') {
 		return 'timestamp-invalid';
 	}
-	if (policy.requireTimestamp && timestampMissingOrUntrusted) {
+	if (policy.requireTimestamp && detail.timestampAuthorityStatus !== 'valid') {
 		return 'timestamp-untrusted';
 	}
 	if (detail.timestampAuthorityStatus === 'untrusted') {

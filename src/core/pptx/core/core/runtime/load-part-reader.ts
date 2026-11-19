@@ -21,6 +21,7 @@
  *
  * @module load-part-reader
  */
+import { canonicalRelationshipsXml } from '../../../../opc/relationships';
 import type { XmlObject } from '../../types';
 
 interface TextPartFile {
@@ -47,6 +48,7 @@ const openReaders = new WeakMap<object, LoadPartReader>();
 export class LoadPartReader {
 	private readonly parts = new Map<string, PartEntry>();
 	private closed = false;
+	private strictRelationships = false;
 
 	constructor(readonly zip: TextPartStore) {
 		openReaders.set(zip, this);
@@ -75,6 +77,15 @@ export class LoadPartReader {
 		return entry;
 	}
 
+	/**
+	 * From now on relationship parts reach the parser as the strict reader saw them, so a signed
+	 * package loads exactly the relationships its verifier read.
+	 */
+	useStrictRelationships(): void {
+		this.strictRelationships = true;
+		this.parts.clear();
+	}
+
 	readText(path: string): Promise<string | undefined> {
 		return this.entry(path)?.text ?? Promise.resolve(undefined);
 	}
@@ -91,7 +102,9 @@ export class LoadPartReader {
 		// before Strict detection is not reused after that wrapper is installed.
 		let parsed = entry.relationships.get(parser);
 		if (!parsed) {
-			const pending = entry.text.then((text) => parseText(parser, text));
+			const pending = entry.text.then((text) =>
+				parseText(parser, this.strictRelationships ? canonicalRelationshipsXml(text) : text),
+			);
 			entry.relationships.set(parser, pending);
 			pending.catch(() => {
 				if (entry.relationships.get(parser) === pending) {

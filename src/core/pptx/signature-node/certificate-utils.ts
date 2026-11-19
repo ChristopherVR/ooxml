@@ -13,7 +13,7 @@ import type {
 	LoadedSigningMaterial,
 	SignatureCertificateInfo,
 } from '../core/utils/signature-types';
-import { isDocumentSigningCertificate } from './certificate-usage';
+import { isDocumentSigningCertificate, pathLengthConstraint } from './certificate-usage';
 import { extractFirstPemBlock } from './pem-utils';
 
 const PRIVATE_KEY_PEM_LABELS = [
@@ -64,9 +64,24 @@ function isSignedBy(certificate: crypto.X509Certificate, issuer: crypto.X509Cert
 }
 
 /**
+ * Each CA's `pathLenConstraint` limits the non-self-issued intermediates below it, the leaf aside
+ * (RFC 5280, 4.2.1.9). `path` runs from the leaf to the trust root.
+ */
+function pathLengthsHold(path: readonly crypto.X509Certificate[]): boolean {
+	let intermediatesBelow = 0;
+	for (const [index, certificate] of path.entries()) {
+		if (index === 0) continue;
+		const limit = pathLengthConstraint(certificate);
+		if (limit !== undefined && intermediatesBelow > limit) return false;
+		if (certificate.subject !== certificate.issuer) intermediatesBelow++;
+	}
+	return true;
+}
+
+/**
  * A leaf-first chain is trusted when every certificate is within its validity period, each is
- * signed by the next (which must be a CA), and the last is a trusted root or signed by one.
- * Signatures are verified by OpenSSL through `node:crypto`.
+ * signed by the next (which must be a CA), the last is a trusted root or signed by one, and every
+ * path length constraint on the way holds. Signatures are verified by OpenSSL through `node:crypto`.
  */
 function chainIsTrusted(
 	chain: readonly crypto.X509Certificate[],
@@ -79,11 +94,11 @@ function chainIsTrusted(
 		const issuer = chain[index + 1]!;
 		if (!issuer.ca || !isSignedBy(chain[index]!, issuer)) return false;
 	}
-	return roots.some(
-		(root) =>
-			isWithinValidity(root, now) &&
-			(root.fingerprint256 === top.fingerprint256 || (root.ca && isSignedBy(top, root))),
-	);
+	return roots.some((root) => {
+		if (!isWithinValidity(root, now)) return false;
+		if (root.fingerprint256 === top.fingerprint256) return pathLengthsHold(chain);
+		return root.ca && isSignedBy(top, root) && pathLengthsHold([...chain, root]);
+	});
 }
 
 /**

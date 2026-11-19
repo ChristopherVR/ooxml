@@ -13,6 +13,7 @@ import crypto from 'node:crypto';
 import type JSZip from 'jszip';
 
 import { contentTypeForPart, parseContentTypes } from '../../opc/content-types';
+import { MEDIA_TYPES_ITEM, partNameKey } from '../../opc/part-names';
 import type { ContentTypes } from '../../opc/content-types';
 import {
 	DIGEST_ALGORITHM_TO_HASH,
@@ -38,16 +39,21 @@ import {
 } from './xml-canonicalization';
 import type { XmlElement } from './xml-canonicalization';
 
-const CONTENT_TYPES_PART = '[Content_Types].xml';
-
 /** The package as the verifier reads it. */
 export interface SignaturePackage {
 	zip: JSZip;
 	partNames: ReadonlySet<string>;
+	/** Stored names by {@link partNameKey}, for names that differ from the stored spelling. */
+	namesByKey: ReadonlyMap<string, string>;
 	contentTypes: ContentTypes;
 }
 
-/** A part a verified reference covers. */
+/** The stored name of the part `name` denotes: that exact item, else an equivalent one. */
+export function resolvePartName(pkg: SignaturePackage, name: string): string | undefined {
+	return pkg.partNames.has(name) ? name : pkg.namesByKey.get(partNameKey(name));
+}
+
+/** A part a verified reference covers, keyed by its stored name. */
 export interface CoveredPart {
 	/** Set when a relationships transform limited the reference to these relationships. */
 	selectedRelationships?: PackageRelationship[] | undefined;
@@ -82,13 +88,22 @@ export function computeDigestBase64(
 /** Read what reference checks need from the package once per inspection. */
 export async function openSignaturePackage(zip: JSZip): Promise<SignaturePackage> {
 	const partNames = new Set(Object.keys(zip.files).filter((name) => !zip.files[name]?.dir));
-	let contentTypes = parseContentTypes(undefined);
+	const namesByKey = new Map([...partNames].map((name) => [partNameKey(name), name]));
+	const pkg: SignaturePackage = {
+		zip,
+		partNames,
+		namesByKey,
+		contentTypes: parseContentTypes(undefined),
+	};
+	const mediaTypes = resolvePartName(pkg, MEDIA_TYPES_ITEM);
 	try {
-		contentTypes = parseContentTypes(await zip.file(CONTENT_TYPES_PART)?.async('string'));
+		pkg.contentTypes = parseContentTypes(
+			mediaTypes === undefined ? undefined : await zip.file(mediaTypes)?.async('string'),
+		);
 	} catch {
 		// An unreadable content types part declares nothing, so `?ContentType` references fail.
 	}
-	return { zip, partNames, contentTypes };
+	return pkg;
 }
 
 const isDsigElement = (element: XmlElement, localName: string): boolean =>
@@ -162,10 +177,14 @@ async function checkPartReference(
 	if (!parsed) {
 		return referenceCheck(reference, 'insufficient-data');
 	}
-	const { partPath: resolvedPartPath, contentType } = parsed;
-	const part = pkg.partNames.has(resolvedPartPath) ? pkg.zip.file(resolvedPartPath) : null;
-	if (!part) {
-		return referenceCheck(reference, 'missing-part', { resolvedPartPath, existsInPackage: false });
+	const { partPath, contentType } = parsed;
+	const resolvedPartPath = resolvePartName(pkg, partPath);
+	const part = resolvedPartPath === undefined ? null : pkg.zip.file(resolvedPartPath);
+	if (!part || resolvedPartPath === undefined) {
+		return referenceCheck(reference, 'missing-part', {
+			resolvedPartPath: partPath,
+			existsInPackage: false,
+		});
 	}
 	if (contentType !== undefined) {
 		const declared = contentTypeForPart(pkg.contentTypes, resolvedPartPath);

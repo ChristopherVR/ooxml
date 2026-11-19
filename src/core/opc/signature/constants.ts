@@ -53,7 +53,10 @@ export const ENTERPRISE_REQUIRE_REVOCATION_ENV = 'PPTX_VIEWER_REQUIRE_REVOCATION
 /** Environment variable: fail on unknown revocation status. */
 export const ENTERPRISE_FAIL_ON_REVOCATION_UNKNOWN_ENV = 'PPTX_VIEWER_FAIL_ON_REVOCATION_UNKNOWN';
 
-/** Environment variable: require timestamp authority. */
+/**
+ * Environment variable: require a validated timestamp. Tokens are not validated yet, so with this
+ * set every signature reports `timestamp-untrusted`.
+ */
 export const ENTERPRISE_REQUIRE_TIMESTAMP_ENV = 'PPTX_VIEWER_REQUIRE_TIMESTAMP';
 
 /**

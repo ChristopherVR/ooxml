@@ -5,6 +5,8 @@
  * `xml-crypto` (via xml-canonicalization) for C14N transforms.
  */
 
+import { parseRelationshipsPart } from '../../opc/relationships';
+import { asciiLowerCase } from '../../opc/part-names';
 import {
 	OPC_DIGITAL_SIGNATURE_NS,
 	OPC_RELATIONSHIPS_NS,
@@ -55,43 +57,28 @@ export function extractReferenceTransforms(referenceNode: XmlElement): ParsedRef
 	return transforms;
 }
 
-/** Read the `Relationship` elements of a relationships part, in document order. */
-export function parseRelationshipsPart(xmlText: string): PackageRelationship[] {
-	const root = parseStrictXml(xmlText).documentElement!;
-	if (root.namespaceURI !== OPC_RELATIONSHIPS_NS || getNodeLocalName(root) !== 'Relationships') {
-		throw new Error('Not a relationships part.');
-	}
-	return childElements(root)
-		.filter(
-			(element) =>
-				element.namespaceURI === OPC_RELATIONSHIPS_NS &&
-				getNodeLocalName(element) === 'Relationship',
-		)
-		.map((element) => ({
-			id: element.getAttribute('Id') ?? '',
-			type: element.getAttribute('Type') ?? '',
-			target: element.getAttribute('Target') ?? '',
-			mode: element.getAttribute('TargetMode') === 'External' ? 'External' : 'Internal',
-		}));
-}
+export { parseRelationshipsPart };
 
 const compareCodePoints = (left: string, right: string): number =>
 	left < right ? -1 : left > right ? 1 : 0;
 
 /**
  * The relationships transform of ECMA-376 Part 2: keep the relationships the signer selected by
- * `SourceId` or `SourceType`, sort them by `Id`, state `TargetMode` explicitly and drop everything
- * else from the part. The result is rebuilt from the parsed values, so whitespace and foreign markup
- * in the part cannot change it.
+ * `SourceId` or `SourceType` (matched ASCII case-insensitively), sort them by `Id`, state
+ * `TargetMode` explicitly and drop everything else. The result is rebuilt from the strictly parsed
+ * values, so whitespace cannot change it and a part the strict reader rejects has no output.
  */
 function applyRelationshipTransform(
 	xmlText: string,
 	transform: ParsedReferenceTransform,
 ): { xml: string; selected: PackageRelationship[] } {
-	const ids = new Set(transform.relationshipReferenceIds);
-	const types = new Set(transform.relationshipGroupTypes);
+	const ids = new Set(transform.relationshipReferenceIds.map(asciiLowerCase));
+	const types = new Set(transform.relationshipGroupTypes.map(asciiLowerCase));
 	const selected = parseRelationshipsPart(xmlText)
-		.filter((relationship) => ids.has(relationship.id) || types.has(relationship.type))
+		.filter(
+			(relationship) =>
+				ids.has(asciiLowerCase(relationship.id)) || types.has(asciiLowerCase(relationship.type)),
+		)
 		.sort((left, right) => compareCodePoints(left.id, right.id));
 	const body = selected
 		.map(

@@ -1,5 +1,6 @@
 export * from './relationship-types';
 export * from './relationships';
+export * from './part-names';
 export * from './content-types';
 export * from './package';
 export * from './merge-snapshots';

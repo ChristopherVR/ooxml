@@ -12,6 +12,8 @@
  * - `ds:KeyInfo > ds:X509Data > ds:X509Certificate` (base64-encoded DER cert)
  */
 
+import { partNameKey } from '../part-names';
+
 /** Result of signature detection. */
 export interface SignatureDetectionResult {
 	hasSignatures: boolean;
@@ -68,14 +70,13 @@ export interface SignatureReference {
 
 /** The path prefix for all digital signature parts in an OOXML package. */
 export const SIGNATURE_PART_PREFIX = '_xmlsignatures/';
-const SIGNATURE_PREFIX = SIGNATURE_PART_PREFIX;
 
 /**
  * Whether a package part (a zip entry path, with or without the leading slash, any case) is a
  * digital signature part: the origin, a signature, or their relationships.
  */
 export function isSignaturePart(path: string): boolean {
-	return path.replace(/^\//, '').toLowerCase().startsWith(SIGNATURE_PART_PREFIX);
+	return partNameKey(path).startsWith(SIGNATURE_PART_PREFIX);
 }
 
 /**
@@ -83,7 +84,7 @@ export function isSignaturePart(path: string): boolean {
  */
 export function detectDigitalSignatures(zipEntryPaths: string[]): SignatureDetectionResult {
 	const sigPaths = zipEntryPaths.filter(
-		(p) => p.startsWith(SIGNATURE_PREFIX) && p.endsWith('.xml'),
+		(path) => isSignaturePart(path) && partNameKey(path).endsWith('.xml'),
 	);
 
 	return {
@@ -98,7 +99,7 @@ export function detectDigitalSignatures(zipEntryPaths: string[]): SignatureDetec
  * Includes all `_xmlsignatures/` entries (XML, .sigs, .rels, etc.).
  */
 export function getSignaturePathsToStrip(zipEntryPaths: string[]): string[] {
-	return zipEntryPaths.filter((p) => p.startsWith(SIGNATURE_PREFIX));
+	return zipEntryPaths.filter(isSignaturePart);
 }
 
 // ── XML Signature Parsing ─────────────────────────────────────────────────

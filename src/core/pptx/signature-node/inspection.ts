@@ -10,6 +10,7 @@ import type JSZip from 'jszip';
 
 import { openPptxZip } from '../core/utils/zip-open';
 
+import { detectDigitalSignatures } from '../../opc/signature/detection';
 import { DIGITAL_SIGNATURE_ORIGIN_REL_TYPE } from '../core/utils/signature-constants';
 import {
 	computeDetailStatus,
@@ -65,7 +66,6 @@ async function inspectSignature(
 	path: string,
 	signatureXml: string,
 	pkg: SignaturePackage,
-	signaturePaths: readonly string[],
 	trustRootsPem: string[],
 ): Promise<DetailBase> {
 	const parsed = parseXmlSignature(signatureXml);
@@ -98,7 +98,7 @@ async function inspectSignature(
 		verification.canonicalSignedInfo,
 		pkg,
 	);
-	const coverage = await evaluateSignatureCoverage(pkg, coveredParts, signaturePaths);
+	const coverage = await evaluateSignatureCoverage(pkg, coveredParts);
 
 	const chain = orderCertificateChain(verification.signerCertificate, signature.certificates);
 	const trust = validateCertificateChain(chain, trustRootsPem);
@@ -146,7 +146,7 @@ async function inspectSignatures(
 	const details: SignatureDetail[] = [];
 	for (const path of signaturePaths) {
 		const signatureXml = (await zip.file(path)?.async('string')) ?? '';
-		const detail = await inspectSignature(path, signatureXml, pkg, signaturePaths, trustRootsPem);
+		const detail = await inspectSignature(path, signatureXml, pkg, trustRootsPem);
 		details.push({ ...detail, status: computeDetailStatus(detail, policy) });
 	}
 	return details;
@@ -170,8 +170,8 @@ export async function inspectPptxDigitalSignatures(
 ): Promise<DigitalSignatureReport> {
 	try {
 		const zip = await openPptxZip(Buffer.from(data));
-		const signaturePaths = Object.keys(zip.files).filter(
-			(entryPath) => entryPath.startsWith('_xmlsignatures/') && entryPath.endsWith('.xml'),
+		const { signaturePaths } = detectDigitalSignatures(
+			Object.keys(zip.files).filter((name) => !zip.files[name]?.dir),
 		);
 		const rootRelsXml = await zip.file('_rels/.rels')?.async('string');
 		const hasOriginRelationship = Boolean(rootRelsXml?.includes(DIGITAL_SIGNATURE_ORIGIN_REL_TYPE));

@@ -56,7 +56,6 @@ export {
 } from '../core/utils/signature-xml-utils';
 
 export {
-	normalizePartPath,
 	parseReferenceUri,
 	resolveReferenceUriToPart,
 	type ParsedReferenceUri,

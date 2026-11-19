@@ -381,7 +381,6 @@ export {
 } from './signature-xml-utils';
 
 export {
-	normalizePartPath,
 	parseReferenceUri,
 	resolveReferenceUriToPart,
 	type ParsedReferenceUri,
