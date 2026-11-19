@@ -22,6 +22,11 @@ import { isValidShareSecret, webrtcRoomName } from 'ooxml-core/collab';
 
 import type { CollaborationConfig, CollaborationTransport } from '../types';
 import { createDepartureChannel } from './collaboration-departure';
+import {
+	CollaborationStartError,
+	loadCollaborationModule,
+	requirePeerToPeerCrypto,
+} from './collaboration-failure';
 import type { AwarenessLike } from './collaboration-presence-publisher';
 import { clearLocalAwareness } from './collaboration-teardown';
 
@@ -101,12 +106,17 @@ export async function createCollabProvider(
 	if (transport === 'webrtc') {
 		const { secret } = config;
 		if (!isValidShareSecret(secret)) {
-			throw new Error(
+			throw new CollaborationStartError(
+				'missing-secret',
 				'A peer-to-peer (webrtc) session needs its secret: set CollaborationConfig.secret from the invitation link, or create the session with buildCreateCollaborationConfig.',
 			);
 		}
+		// The provider derives the room key from `password` with Web Crypto.
+		requirePeerToPeerCrypto();
 		const room = webrtcRoomName(secret);
-		const { WebrtcProvider } = (await modules.loadWebrtc()) as YWebrtcModuleLike;
+		const { WebrtcProvider } = (await loadCollaborationModule('y-webrtc', () =>
+			modules.loadWebrtc(),
+		)) as YWebrtcModuleLike;
 		const provider = new WebrtcProvider(room, doc as never, {
 			...(config.signaling?.length ? { signaling: config.signaling } : {}),
 			password: secret,
@@ -140,7 +150,9 @@ export async function createCollabProvider(
 		};
 	}
 
-	const { WebsocketProvider } = (await modules.loadWebsocket()) as YWebsocketModuleLike;
+	const { WebsocketProvider } = (await loadCollaborationModule('y-websocket', () =>
+		modules.loadWebsocket(),
+	)) as YWebsocketModuleLike;
 	const provider = new WebsocketProvider(
 		config.serverUrl,
 		config.roomId,

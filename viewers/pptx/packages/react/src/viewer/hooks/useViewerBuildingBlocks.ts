@@ -318,6 +318,7 @@ export function useViewerBuildingBlocks(
 					sourcePending: Boolean(content) && loading,
 					sourceError: Boolean(error),
 					status: collaboration?.status ?? 'disconnected',
+					failure: collaboration?.failure ?? null,
 					remoteUsers: collaboration?.remoteUsers ?? [],
 				},
 				collaboration: {
@@ -340,6 +341,7 @@ export function useViewerBuildingBlocks(
 			loading,
 			error,
 			collaboration?.status,
+			collaboration?.failure,
 			collaboration?.remoteUsers,
 			collaboration?.config,
 			collaboration?.synced,

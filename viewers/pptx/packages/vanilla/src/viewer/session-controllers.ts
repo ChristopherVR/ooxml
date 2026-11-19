@@ -252,6 +252,7 @@ export function createSessionControllers(deps: SessionControllersDeps): SessionC
 			startCollaboration: (config) => collaboration.start(config),
 			stopCollaboration: () => collaboration.stop(),
 			getStatus: () => collaboration.getStatus(),
+			getFailure: () => collaboration.getFailure(),
 			getConfig: () => collaboration.getConfig(),
 			followUser: (clientId) => collaboration.followUser(clientId),
 			shareDefaults: options.shareDefaults,

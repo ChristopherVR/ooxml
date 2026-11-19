@@ -2032,6 +2032,7 @@ function CollaborationStatusStrip() {
 		<CollaborationStatusIndicator
 			status={collab.status}
 			connectedCount={collab.connectedCount}
+			failure={collab.failure}
 			onRetry={collab.retry}
 		/>
 	);

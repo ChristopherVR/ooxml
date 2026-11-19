@@ -6,9 +6,10 @@
  * (`openOwnedCollaboration`), resolve the transport, refuse a ws:// socket
  * from an https page, build the Y.Doc and provider, drive the connection
  * status (immediately connected for WebRTC, a connect timeout for websocket, a
- * drop back to `disconnected` that re-gates writes), open the first-write gate
- * on the provider's sync, leave the room on `pagehide`, and tear it all down
- * again. This controller is that lifecycle, once.
+ * drop back to `disconnected` that re-gates writes), keep the typed reason a
+ * start failed (`failure`), open the first-write gate on the provider's sync,
+ * leave the room on `pagehide`, and tear it all down again. This controller is
+ * that lifecycle, once.
  *
  * What stays in the binding is the document and presence mapping: it hears
  * {@link CollaborationSessionControllerDeps.onOpen} with the live session and
@@ -22,6 +23,8 @@
 
 import type { CollaborationConfig, CollaborationTransport } from '../../types';
 import { resolveTransportForServerUrl } from '../broadcast-helpers';
+import type { CollaborationFailure } from '../collaboration-failure';
+import { CollaborationStartError, collaborationFailureOf } from '../collaboration-failure';
 import { resolveCollaborationConfig } from '../collaboration-options';
 import type { CollaborationInput } from '../collaboration-options';
 import { needsOwnedSession, openOwnedCollaboration } from '../collaboration-owned-session';
@@ -53,6 +56,8 @@ export interface CollaborationSessionState {
 	readonly clientId: number | null;
 	/** The first-write gate is open (only tracked for the controller's own gate). */
 	readonly synced: boolean;
+	/** Why the last start failed while `status` is `error`; `null` otherwise. */
+	readonly failure: CollaborationFailure | null;
 }
 
 /** Timer seam; defaults to the global timers. */
@@ -117,6 +122,7 @@ const INITIAL: CollaborationSessionState = {
 	transport: null,
 	clientId: null,
 	synced: false,
+	failure: null,
 };
 
 const defaultTimers: CollaborationSessionTimers = {
@@ -191,10 +197,10 @@ export function createCollaborationSessionController(
 		patch(INITIAL);
 	};
 
-	const fail = (token: number): void => {
+	const fail = (token: number, failure: CollaborationFailure): void => {
 		if (token === generation) {
 			stop();
-			setStatus('error');
+			patch({ status: 'error', failure });
 		}
 	};
 
@@ -234,7 +240,7 @@ export function createCollaborationSessionController(
 		connectTimer = timers.setTimeout(() => {
 			connectTimer = null;
 			if (token === generation && store.getSnapshot().status !== 'connected') {
-				fail(token);
+				fail(token, 'server-unreachable');
 			}
 		}, deps.connectTimeoutMs ?? CONNECTION_TIMEOUT_MS);
 	};
@@ -273,7 +279,7 @@ export function createCollaborationSessionController(
 				transport === 'websocket' &&
 				isMixedContentBlocked(config.serverUrl)
 			) {
-				throw new Error('Mixed-content connection blocked');
+				throw new CollaborationStartError('insecure-server', 'Mixed-content connection blocked');
 			}
 			setStatus('connecting');
 			const live = await openSession(config, transport);
@@ -287,8 +293,8 @@ export function createCollaborationSessionController(
 			if (token === generation) {
 				wireProvider(live, transport);
 			}
-		} catch {
-			fail(token);
+		} catch (error) {
+			fail(token, collaborationFailureOf(error));
 		}
 	};
 

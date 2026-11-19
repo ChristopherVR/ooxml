@@ -52,6 +52,7 @@ export function useCollaborativeState({
 	const session = useCollaborationSession({ config: ownedSession.holding ? undefined : config });
 	const { awareness, doc, clientId, synced, retry } = session;
 	const status = ownedSession.status ?? session.status;
+	const failure = ownedSession.status ? ownedSession.failure : session.failure;
 
 	const { remoteUsers, broadcastPresence } = usePresenceTracking({
 		awareness,
@@ -78,6 +79,7 @@ export function useCollaborativeState({
 			config
 				? {
 						status,
+						failure,
 						remoteUsers,
 						broadcastPresence,
 						connectedCount,
@@ -92,6 +94,7 @@ export function useCollaborativeState({
 				: null,
 		[
 			status,
+			failure,
 			remoteUsers,
 			broadcastPresence,
 			connectedCount,

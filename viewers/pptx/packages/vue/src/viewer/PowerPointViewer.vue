@@ -2682,6 +2682,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 					<CollaborationStatusIndicator
 						:status="collaboration.collab.status.value"
 						:connected-count="collaboration.collab.connectedCount.value"
+						:failure="collaboration.collab.failure.value"
 						@retry="collaboration.collab.retry"
 					/>
 				</template>

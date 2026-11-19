@@ -156,7 +156,8 @@ export type {
 	SanitizedPresence,
 	DeckSaveState,
 } from 'ooxml-ui/pptx';
-export { describeCollaborationShellState } from 'ooxml-ui/pptx';
+export { collaborationFailureMessageKey, describeCollaborationShellState } from 'ooxml-ui/pptx';
+export type { CollaborationFailure } from 'ooxml-ui/pptx';
 
 // Comments
 export { CommentMarkersOverlayComponent } from './comment-markers-overlay.component';

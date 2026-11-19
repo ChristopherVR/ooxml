@@ -55,6 +55,7 @@ export function createCollaborationShell(options: CollaborationShellOptions): Co
 			sourcePending: options.getSourcePending?.() ?? false,
 			sourceError: options.getSourceError?.() ?? Boolean(store.get().error),
 			status: controller.getStatus(),
+			failure: controller.getFailure(),
 			remoteUsers: store.get().remotePresences,
 		});
 	const refresh = (): void => {

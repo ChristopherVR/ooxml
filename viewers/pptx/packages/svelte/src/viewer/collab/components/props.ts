@@ -2,6 +2,7 @@ import type {
 	BroadcastConfig,
 	BroadcastDefaults,
 	CollaborationConfig,
+	CollaborationFailure,
 	ConnectionStatus,
 	RemoteCursor,
 	SanitizedPresence,
@@ -43,6 +44,8 @@ export interface ShareDialogProps {
 	active: boolean;
 	/** Live connection status while a session is active. */
 	status: ConnectionStatus;
+	/** Why the last start failed while `status` is `error`. */
+	failure?: CollaborationFailure | null;
 	/** Total connected participants (self + remote peers). */
 	connectedCount: number;
 	/** Remote collaborators' presence, for the connected-users list. */
@@ -101,6 +104,8 @@ export interface CollaborationStatusIndicatorProps {
 	status: ConnectionStatus;
 	/** Number of connected participants (including the local user). */
 	connectedCount: number;
+	/** Why the session failed to start; its sentence is the pill's tooltip in the error state. */
+	failure?: CollaborationFailure | null;
 	/** The user asked to retry after a connection error. */
 	onretry: () => void;
 }

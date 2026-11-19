@@ -7,7 +7,12 @@
 	 * `ShareDialogActiveView.tsx`, built on shared's `buildActiveSessionUsers`.
 	 */
 	import DialogFooter from '../../components/DialogFooter.svelte';
-	import { buildActiveSessionUsers, buildCollaborationShareUrl, resolveTransportForServerUrl } from 'ooxml-ui/pptx';
+	import {
+		buildActiveSessionUsers,
+		buildCollaborationShareUrl,
+		collaborationFailureMessageKey,
+		resolveTransportForServerUrl,
+	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import { useViewerOptions } from '../../state/viewer-options-context';
@@ -29,6 +34,7 @@
 		defaults,
 		active,
 		status,
+		failure = null,
 		connectedCount,
 		remotePresences,
 		activeCollaboration,
@@ -56,6 +62,8 @@
 		}
 	});
 
+	// Why the last attempt failed, shown above the form until a new start.
+	const failureKey = $derived(collaborationFailureMessageKey(status, failure));
 	const canStart = $derived(canStartShare({ roomId, userName, serverUrl }));
 	const canJoin = $derived(canJoinShare({ invitation, userName, serverUrl }));
 	const isPeerToPeer = $derived(isPeerToPeerShare(serverUrl));
@@ -220,6 +228,9 @@
 			<p class="pptx-svelte-share-desc">
 				{t(isJoinMode ? 'pptx.share.joinDescription' : 'pptx.share.formDescription')}
 			</p>
+			{#if failureKey}
+				<p class="pptx-svelte-share-error" role="alert" data-testid="collaboration-failure">{t(failureKey)}</p>
+			{/if}
 			{#if isJoinMode}
 			<div class="pptx-svelte-share-field">
 				<label for="pptx-svelte-share-invitation">{t('pptx.share.invitationLabel')}</label>
@@ -287,6 +298,17 @@
 		font-size: 13px;
 		line-height: 1.5;
 		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
+	}
+
+	.pptx-svelte-share-error {
+		margin: 0;
+		padding: 8px 12px;
+		border: 1px solid rgb(239 68 68 / 0.3);
+		border-radius: 4px;
+		background: rgb(239 68 68 / 0.1);
+		font-size: 12px;
+		font-weight: 500;
+		color: #f87171;
 	}
 
 	.pptx-svelte-share-server-value,

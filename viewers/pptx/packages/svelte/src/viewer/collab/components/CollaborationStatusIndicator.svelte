@@ -7,11 +7,13 @@
 	 * state. Svelte port of the Vue `CollaborationStatusIndicator.vue`.
 	 */
 	import type { ConnectionStatus } from 'ooxml-ui/pptx';
+	import { collaborationFailureMessageKey } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { CollaborationStatusIndicatorProps } from './props';
 
-	const { status, connectedCount, onretry }: CollaborationStatusIndicatorProps = $props();
+	const { status, connectedCount, failure = null, onretry }: CollaborationStatusIndicatorProps =
+		$props();
 
 	const t = useTranslator();
 
@@ -52,6 +54,7 @@
 				: t('pptx.collaboration.peopleHere', { count: connectedCount })
 			: t(style.labelKey),
 	);
+	const failureKey = $derived(collaborationFailureMessageKey(status, failure));
 	const ariaLabel = $derived(
 		t('pptx.collaboration.statusAriaLabel', { status: t(style.labelKey), count: connectedCount }),
 	);
@@ -62,6 +65,7 @@
 	role="status"
 	data-testid="collaboration-status"
 	aria-label={ariaLabel}
+	title={failureKey ? t(failureKey) : undefined}
 >
 	<span class={`pptx-svelte-collab-status-dot ${style.dotClass}`} aria-hidden="true"></span>
 	<span class={`pptx-svelte-collab-status-text ${style.textClass}`}>{text}</span>

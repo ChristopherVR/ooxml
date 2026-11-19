@@ -45,7 +45,7 @@ While a session is active you will see:
 - **Remote cursors** - each collaborator's pointer moves on the canvas with a coloured name label. Cursors appear only for people viewing the same slide as you.
 - **Remote selections** - when someone selects an element, it gets a coloured outline with their name, so you know what they are working on.
 - **Follow bar** - a strip at the top labelled **Follow a collaborator**. Click a person to follow them: your view then switches slides whenever they do. Click **Stop** to go back to browsing on your own.
-- **Connection status** - a dot in the status bar: green **Connected** (with the user count), yellow **Connecting...**, gray **Disconnected**, or red **Connection error** with a **Retry** button.
+- **Connection status** - a dot in the status bar: green **Connected** (with the user count), yellow **Connecting...**, gray **Disconnected**, or red **Connection error** with a **Retry** button. Hover the error to see why the session could not start (for example a peer-to-peer link without its session key, a page that is not served over https, or a server that cannot be reached); the **Share** dialog shows the same reason above its form.
 
 ## How simultaneous editing behaves
 

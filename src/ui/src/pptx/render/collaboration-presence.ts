@@ -21,6 +21,7 @@
  */
 
 import type { CollaborationRole } from '../types';
+import { CollaborationStartError } from './collaboration-failure';
 
 // ---------------------------------------------------------------------------
 // Connection lifecycle
@@ -143,12 +144,13 @@ export function isValidRoomId(roomId: string): boolean {
 }
 
 /**
- * Validate a room id, returning it when valid and throwing otherwise. Mirrors
- * the React `validateRoomId`.
+ * Validate a room id, returning it when valid and throwing an `invalid-room`
+ * {@link CollaborationStartError} otherwise. Mirrors the React `validateRoomId`.
  */
 export function validateRoomId(roomId: string): string {
 	if (!isValidRoomId(roomId)) {
-		throw new Error(
+		throw new CollaborationStartError(
+			'invalid-room',
 			`Invalid collaboration room ID: "${roomId}". Must be 1-128 alphanumeric characters, hyphens, or underscores.`,
 		);
 	}

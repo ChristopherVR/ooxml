@@ -79,6 +79,9 @@ export class ShareDialogComponent {
 	/** Whether the websocket has reported a `connected` status. */
 	readonly connected = input<boolean>(false);
 
+	/** The translation key naming why the last start failed, shown above the form; null when none. */
+	readonly failureKey = input<string | null>(null);
+
 	/** Total connected participants (self + remote peers). */
 	readonly userCount = input<number>(0);
 

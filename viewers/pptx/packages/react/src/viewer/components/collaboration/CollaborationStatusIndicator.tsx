@@ -6,9 +6,10 @@
  *
  * @module collaboration/CollaborationStatusIndicator
  */
+import { collaborationFailureMessageKey } from 'ooxml-ui/pptx';
 import React from 'react';
 
-import type { ConnectionStatus } from '../../hooks/collaboration/types';
+import type { CollaborationFailure, ConnectionStatus } from '../../hooks/collaboration/types';
 import { useTranslation } from '../../i18n/use-translation';
 
 // ---------------------------------------------------------------------------
@@ -20,6 +21,8 @@ export interface CollaborationStatusIndicatorProps {
 	status: ConnectionStatus;
 	/** Number of connected users (including local). */
 	connectedCount: number;
+	/** Why the session failed to start; its sentence is the pill's tooltip in the error state. */
+	failure?: CollaborationFailure | null;
 	/** Callback to retry the connection (shown for error state). */
 	onRetry?: () => void;
 }
@@ -58,16 +61,19 @@ const STATUS_STYLES: Record<ConnectionStatus, { dot: string; text: string; label
 export function CollaborationStatusIndicator({
 	status,
 	connectedCount,
+	failure = null,
 	onRetry,
 }: CollaborationStatusIndicatorProps): React.ReactElement {
 	const { t } = useTranslation();
 	const style = STATUS_STYLES[status];
+	const failureKey = collaborationFailureMessageKey(status, failure);
 
 	return (
 		<div
 			role='status'
 			data-testid='collaboration-status'
 			className='flex items-center gap-1.5'
+			title={failureKey ? t(failureKey) : undefined}
 			aria-label={t('pptx.collaboration.statusAriaLabel', {
 				status: t(`pptx.collaboration.status.${status}`),
 				count: connectedCount,

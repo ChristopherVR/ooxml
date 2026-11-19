@@ -322,6 +322,22 @@ export const translationsEn: Record<string, string> = {
 	'pptx.collaboration.peopleHere': '{{count}} people here',
 	'pptx.collaboration.retry': 'Retry',
 	'pptx.collaboration.retryConnection': 'Retry connection',
+	'pptx.collaboration.failure.invalidRoom':
+		'The room name is not valid. Use 1 to 128 letters, digits, hyphens or underscores.',
+	'pptx.collaboration.failure.missingSecret':
+		'This peer-to-peer invitation is missing its session key. Open the full share link you were sent.',
+	'pptx.collaboration.failure.insecurePage':
+		'Peer-to-peer sessions need a secure page. Open this page over https:// (or on localhost) and try again.',
+	'pptx.collaboration.failure.moduleUnavailable':
+		'The collaboration components could not be loaded. Check your network connection, then retry.',
+	'pptx.collaboration.failure.insecureServer':
+		'An https:// page cannot connect to an insecure ws:// server. Use a secure wss:// server URL.',
+	'pptx.collaboration.failure.serverUnreachable':
+		"Couldn't reach the collaboration server. Check that the server URL is a running y-websocket server.",
+	'pptx.collaboration.failure.noBroadcast':
+		'This browser cannot share between its windows. Use a collaboration server or a peer-to-peer link.',
+	'pptx.collaboration.failure.unknown':
+		'The collaboration connection failed. Check the invitation link and your network connection, then retry.',
 
 	// Follow mode
 	'pptx.followMode.following': 'Following',
@@ -374,8 +390,6 @@ export const translationsEn: Record<string, string> = {
 	'pptx.share.server': 'Server:',
 	'pptx.share.connectedUsers': 'Connected Users',
 	'pptx.share.you': '(you)',
-	'pptx.share.connectionError':
-		"Couldn't reach the collaboration server. Check the server URL — it must be a reachable y-websocket server, and a secure wss:// URL when sharing from an https:// page.",
 
 	// Settings dialog
 	'pptx.settings.title': 'Settings',

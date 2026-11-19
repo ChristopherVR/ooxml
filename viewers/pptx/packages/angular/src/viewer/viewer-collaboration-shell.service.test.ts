@@ -38,6 +38,7 @@ function harness() {
 		activeRole: signal<string | undefined>(undefined),
 		readOnly: signal(false),
 		status: signal('disconnected'),
+		failure: signal(null),
 		presence: signal([]),
 		broadcastSlides: vi.fn(),
 		adoptDocSlidesAfterLoad: vi.fn(),

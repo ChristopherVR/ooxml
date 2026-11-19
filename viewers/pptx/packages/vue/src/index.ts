@@ -7,7 +7,8 @@ export type {
 	ConnectionStatus,
 	SanitizedPresence,
 } from 'ooxml-ui/pptx';
-export { describeCollaborationShellState } from 'ooxml-ui/pptx';
+export { collaborationFailureMessageKey, describeCollaborationShellState } from 'ooxml-ui/pptx';
+export type { CollaborationFailure } from 'ooxml-ui/pptx';
 export type { CollaborationState } from 'ooxml-core/collab';
 // ── Vue 3 PowerPoint viewer/editor ──
 export {

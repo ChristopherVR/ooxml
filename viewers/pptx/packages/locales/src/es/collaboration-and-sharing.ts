@@ -27,6 +27,22 @@ export const translations = {
 	'pptx.collaboration.peopleHere': '{{count}} gente aquí',
 	'pptx.collaboration.retry': 'Reintentar',
 	'pptx.collaboration.retryConnection': 'Reintentar conexión',
+	'pptx.collaboration.failure.invalidRoom':
+		'El nombre de la sala no es válido. Use de 1 a 128 letras, dígitos, guiones o guiones bajos.',
+	'pptx.collaboration.failure.missingSecret':
+		'A esta invitación punto a punto le falta la clave de sesión. Abra el vínculo para compartir completo que recibió.',
+	'pptx.collaboration.failure.insecurePage':
+		'Las sesiones punto a punto necesitan una página segura. Abra esta página mediante https:// (o en localhost) e inténtelo de nuevo.',
+	'pptx.collaboration.failure.moduleUnavailable':
+		'No se pudieron cargar los componentes de colaboración. Compruebe la conexión de red y vuelva a intentarlo.',
+	'pptx.collaboration.failure.insecureServer':
+		'Una página https:// no puede conectarse a un servidor ws:// no seguro. Use una URL de servidor wss:// segura.',
+	'pptx.collaboration.failure.serverUnreachable':
+		'No se pudo conectar con el servidor de colaboración. Compruebe que la URL del servidor corresponde a un servidor y-websocket en ejecución.',
+	'pptx.collaboration.failure.noBroadcast':
+		'Este navegador no puede compartir entre sus ventanas. Use un servidor de colaboración o un vínculo punto a punto.',
+	'pptx.collaboration.failure.unknown':
+		'Se produjo un error en la conexión de colaboración. Compruebe el vínculo de invitación y la conexión de red, y vuelva a intentarlo.',
 	'pptx.followMode.following': 'Siguiente',
 	'pptx.followMode.stop': 'Detener',
 	'pptx.followMode.stopFollowing': 'dejar de seguir',
@@ -75,8 +91,6 @@ export const translations = {
 	'pptx.share.server': 'Servidor:',
 	'pptx.share.connectedUsers': 'Usuarios conectados',
 	'pptx.share.you': '(tú)',
-	'pptx.share.connectionError':
-		'No se pudo conectar con el servidor de colaboración. Compruebe la URL del servidor: debe ser un servidor y-websocket accesible, y una URL segura wss:// al compartir desde una página https://.',
 	'pptx.broadcast.title': 'Transmitir presentación',
 	'pptx.broadcast.broadcasting': 'Transmitiendo en vivo',
 	'pptx.broadcast.description':

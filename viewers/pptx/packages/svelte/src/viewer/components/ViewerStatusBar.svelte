@@ -39,6 +39,7 @@
 	<CollaborationStatusIndicator
 		status={collab.status}
 		connectedCount={dialogs.connectedCount}
+		failure={collab.failure}
 		onretry={() => dialogs.retry(collaboration)}
 	/>
 {/snippet}

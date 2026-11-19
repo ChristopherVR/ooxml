@@ -57,6 +57,7 @@ describe('custom-shell collaboration state', () => {
 		).toStrictEqual({
 			canEdit: true,
 			status: 'disconnected',
+			failure: null,
 			remoteUsers: [],
 			connectedCount: 0,
 		});
@@ -76,5 +77,23 @@ describe('custom-shell collaboration state', () => {
 		).toBe(
 			'pptx.collaboration.status.connecting · pptx.collaboration.usersConnected:0 · pptx.toolbar.readOnly',
 		);
+	});
+
+	it('names why an errored session failed, and only while it is in error', () => {
+		const translate = (key: string, params?: Record<string, string | number>): string =>
+			params ? `${key}:${params.count}` : key;
+		const failed = resolveCollaborationShellState({
+			...input,
+			status: 'error',
+			failure: 'missing-secret',
+		});
+		expect(failed.failure).toBe('missing-secret');
+		expect(describeCollaborationShellState(failed, translate)).toBe(
+			'pptx.collaboration.status.error · pptx.collaboration.failure.missingSecret · pptx.collaboration.usersConnected:0 · pptx.collaboration.editable',
+		);
+		expect(
+			resolveCollaborationShellState({ ...input, status: 'connecting', failure: 'missing-secret' })
+				.failure,
+		).toBeNull();
 	});
 });

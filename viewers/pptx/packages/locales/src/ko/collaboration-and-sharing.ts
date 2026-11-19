@@ -27,6 +27,22 @@ export const translations = {
 	'pptx.collaboration.peopleHere': '{{count}}명이 참여 중',
 	'pptx.collaboration.retry': '다시 시도',
 	'pptx.collaboration.retryConnection': '연결 다시 시도',
+	'pptx.collaboration.failure.invalidRoom':
+		'방 이름이 올바르지 않습니다. 문자, 숫자, 하이픈 또는 밑줄을 1~128자로 사용하세요.',
+	'pptx.collaboration.failure.missingSecret':
+		'이 피어 투 피어 초대에 세션 키가 없습니다. 받은 전체 공유 링크를 여세요.',
+	'pptx.collaboration.failure.insecurePage':
+		'피어 투 피어 세션에는 보안 페이지가 필요합니다. 이 페이지를 https:// (또는 localhost)로 열고 다시 시도하세요.',
+	'pptx.collaboration.failure.moduleUnavailable':
+		'공동 작업 구성 요소를 불러올 수 없습니다. 네트워크 연결을 확인한 다음 다시 시도하세요.',
+	'pptx.collaboration.failure.insecureServer':
+		'https:// 페이지에서는 안전하지 않은 ws:// 서버에 연결할 수 없습니다. 보안 wss:// 서버 URL을 사용하세요.',
+	'pptx.collaboration.failure.serverUnreachable':
+		'공동 작업 서버에 연결할 수 없습니다. 서버 URL이 실행 중인 y-websocket 서버인지 확인하세요.',
+	'pptx.collaboration.failure.noBroadcast':
+		'이 브라우저는 창 간에 공유할 수 없습니다. 공동 작업 서버 또는 피어 투 피어 링크를 사용하세요.',
+	'pptx.collaboration.failure.unknown':
+		'공동 작업 연결에 실패했습니다. 초대 링크와 네트워크 연결을 확인한 다음 다시 시도하세요.',
 	'pptx.followMode.following': '따라가는 중',
 	'pptx.followMode.stop': '중지',
 	'pptx.followMode.stopFollowing': '따라가기 중지',
@@ -74,8 +90,6 @@ export const translations = {
 	'pptx.share.server': '서버:',
 	'pptx.share.connectedUsers': '연결된 사용자',
 	'pptx.share.you': '(나)',
-	'pptx.share.connectionError':
-		'공동 작업 서버에 연결할 수 없습니다. 서버 URL을 확인하세요. 연결 가능한 y-websocket 서버여야 하며, https:// 페이지에서 공유할 때는 보안 wss:// URL이어야 합니다.',
 	'pptx.broadcast.title': '슬라이드 쇼 브로드캐스트',
 	'pptx.broadcast.broadcasting': '라이브 브로드캐스트 중',
 	'pptx.broadcast.description':

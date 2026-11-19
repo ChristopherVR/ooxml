@@ -13,6 +13,7 @@ import type { CollaborationConfig, CollaborationTransport } from '../types';
 import { borrowExternalCollaborationAwareness } from './collaboration-external-session';
 import type { AwarenessLike } from './collaboration-presence-publisher';
 import type { CollabProviderHandle, CollabTransportModules } from './collaboration-provider';
+import { loadCollaborationModule } from './collaboration-failure';
 import { createCollabProvider } from './collaboration-provider';
 import type { YDocLike, YjsFactories } from './collaboration-sync';
 import { createSnapshotTextPositions } from './collaboration-text-snapshot-positions';
@@ -84,7 +85,7 @@ export async function openCollaborationYSession(
 	transport: CollaborationTransport,
 	modules: CollabYjsModules,
 ): Promise<CollabYSession> {
-	const Y = (await modules.loadYjs()) as YjsModuleLike;
+	const Y = (await loadCollaborationModule('yjs', () => modules.loadYjs())) as YjsModuleLike;
 	const external = config.externalSession;
 	if (external) {
 		const borrowed = borrowExternalCollaborationAwareness(external.awareness);

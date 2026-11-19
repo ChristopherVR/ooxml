@@ -46,6 +46,7 @@ export type {
 export type {
 	CollabLoadOrigin,
 	CollaborationLivePatcher,
+	CollaborationFailure,
 	CollaborationShellState,
 	CollaborationState,
 	RemoteCursor,
@@ -57,6 +58,7 @@ export type {
 export {
 	buildInlineTextCommitPatch,
 	canInteractWithElement,
+	collaborationFailureMessageKey,
 	describeCollaborationShellState,
 	overlayInlineTextSnapshot,
 } from 'ooxml-ui/pptx';

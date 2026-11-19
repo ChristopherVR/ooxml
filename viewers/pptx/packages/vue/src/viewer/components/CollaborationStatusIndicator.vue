@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { ConnectionStatus } from 'ooxml-ui/pptx';
+import type { CollaborationFailure, ConnectionStatus } from 'ooxml-ui/pptx';
+import { collaborationFailureMessageKey } from 'ooxml-ui/pptx';
 /**
  * CollaborationStatusIndicator: a small status pill showing the WebSocket
  * connection state and connected-participant count. Presentational only: the
@@ -16,6 +17,8 @@ const props = defineProps<{
 	status: ConnectionStatus;
 	/** Number of connected participants (including the local user). */
 	connectedCount: number;
+	/** Why the session failed to start; its sentence is the pill's tooltip in the error state. */
+	failure?: CollaborationFailure | null;
 }>();
 
 const { t } = useI18n();
@@ -62,6 +65,11 @@ const text = computed<string>(() => {
 	return t(style.value.labelKey);
 });
 
+const failureText = computed<string | undefined>(() => {
+	const key = collaborationFailureMessageKey(props.status, props.failure ?? null);
+	return key ? t(key) : undefined;
+});
+
 const ariaLabel = computed<string>(() =>
 	t('pptx.collaboration.statusAriaLabel', {
 		status: t(style.value.labelKey),
@@ -76,6 +84,7 @@ const ariaLabel = computed<string>(() =>
 		class="pptx-vue-collab-status flex items-center gap-1.5"
 		data-testid="collaboration-status"
 		:aria-label="ariaLabel"
+		:title="failureText"
 	>
 		<span class="inline-block h-2 w-2 rounded-full" :class="style.dot" aria-hidden="true" />
 		<span class="text-[10px]" :class="style.text">{{ text }}</span>

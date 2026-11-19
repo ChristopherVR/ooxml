@@ -17,7 +17,7 @@ export function StartSessionForm({
 	onModeChange,
 	onInvitationChange,
 	preconfigured,
-	connectionFailed,
+	connectionFailure,
 	onRetry,
 }: {
 	mode: 'create' | 'join';
@@ -31,8 +31,8 @@ export function StartSessionForm({
 	onModeChange: (mode: 'create' | 'join') => void;
 	onInvitationChange: (value: string) => void;
 	preconfigured?: boolean;
-	/** True when the last connection attempt ended in an error. */
-	connectionFailed?: boolean;
+	/** The translation key explaining why the last attempt failed, or null while it has not. */
+	connectionFailure?: string | null;
 	/** Retry the failed connection (provided by the collaboration context). */
 	onRetry?: () => void;
 }) {
@@ -66,17 +66,19 @@ export function StartSessionForm({
 						: t('pptx.share.description')}
 			</p>
 
-			{/* Connection error banner: surfaced when a previous attempt failed
-			    (e.g. unreachable server, or a blocked ws:// socket on an https
-			    page). Keeps the failure visible instead of silently resetting. */}
-			{connectionFailed && (
+			{/* Connection error banner: names why the previous attempt failed (a
+			    peer-to-peer link without its key, an unreachable server, a blocked
+			    ws:// socket) instead of silently resetting. */}
+			{connectionFailure && (
 				<div
 					role='alert'
 					className='flex items-start gap-2 rounded border border-red-500/30 bg-red-500/10 px-3 py-2 text-[12px] text-red-400'
 				>
 					<LuWifiOff className='w-4 h-4 mt-0.5 shrink-0' />
 					<div className='flex-1 space-y-1'>
-						<p className='font-medium'>{t('pptx.share.connectionError')}</p>
+						<p className='font-medium' data-testid='collaboration-failure'>
+							{t(connectionFailure)}
+						</p>
 						{onRetry && (
 							<button
 								type='button'

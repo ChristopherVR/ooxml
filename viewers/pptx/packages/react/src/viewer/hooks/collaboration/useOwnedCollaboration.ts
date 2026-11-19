@@ -1,7 +1,7 @@
-import { needsOwnedSession, openOwnedCollaboration } from 'ooxml-ui/pptx';
+import { collaborationFailureOf, needsOwnedSession, openOwnedCollaboration } from 'ooxml-ui/pptx';
 import { useEffect, useMemo, useState } from 'react';
 
-import type { CollaborationConfig, ConnectionStatus } from './types';
+import type { CollaborationConfig, CollaborationFailure, ConnectionStatus } from './types';
 
 export interface OwnedCollaboration {
 	/** The config to run: the input, or with the owned session as its `externalSession`. */
@@ -10,9 +10,13 @@ export interface OwnedCollaboration {
 	holding: boolean;
 	/** `connecting` while opening, `error` when it could not open; otherwise `undefined`. */
 	status: Extract<ConnectionStatus, 'connecting' | 'error'> | undefined;
+	/** Why the session could not open, while `status` is `error`. */
+	failure: CollaborationFailure | null;
 }
 
-type Opened = { source: CollaborationConfig; prepared: CollaborationConfig } | { failed: true };
+type Opened =
+	| { source: CollaborationConfig; prepared: CollaborationConfig }
+	| { failed: CollaborationFailure };
 
 /**
  * Opens the session a `provider` or same-browser (BroadcastChannel) config needs and destroys it
@@ -35,9 +39,9 @@ export function useOwnedCollaboration(config: CollaborationConfig | undefined): 
 					setOpened({ source: config, prepared });
 				}
 			},
-			() => {
+			(error: unknown) => {
 				if (live) {
-					setOpened({ failed: true });
+					setOpened({ failed: collaborationFailureOf(error) });
 				}
 			},
 		);
@@ -61,15 +65,18 @@ export function useOwnedCollaboration(config: CollaborationConfig | undefined): 
 	]);
 	return useMemo((): OwnedCollaboration => {
 		if (!needs) {
-			return { config, holding: false, status: undefined };
+			return { config, holding: false, status: undefined, failure: null };
 		}
 		if (opened && 'prepared' in opened) {
 			return {
 				config: { ...config!, externalSession: opened.prepared.externalSession! },
 				holding: false,
 				status: undefined,
+				failure: null,
 			};
 		}
-		return { config, holding: true, status: opened ? 'error' : 'connecting' };
+		return opened
+			? { config, holding: true, status: 'error', failure: opened.failed }
+			: { config, holding: true, status: 'connecting', failure: null };
 	}, [needs, config, opened]);
 }

@@ -44,6 +44,7 @@
 	defaults={shareDefaults}
 	active={collab.active}
 	status={collab.status}
+	failure={collab.failure}
 	connectedCount={collab.connectedCount}
 	remotePresences={collab.remotePresences}
 	activeCollaboration={collab.activeCollaboration}

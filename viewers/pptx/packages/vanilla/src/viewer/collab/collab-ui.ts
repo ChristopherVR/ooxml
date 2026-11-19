@@ -1,5 +1,10 @@
 /* oxlint-disable eslint/one-var -- pre-existing throughout this file; independent concerns, not one statement */
-import type { CollaborationConfig, ConnectionStatus, ToolbarActionId } from 'ooxml-ui/pptx';
+import type {
+	CollaborationConfig,
+	CollaborationFailure,
+	ConnectionStatus,
+	ToolbarActionId,
+} from 'ooxml-ui/pptx';
 import { buildBroadcastViewerUrl, buildTabRowActionsState, isActionHidden } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
@@ -46,6 +51,8 @@ export interface CollabUiDeps {
 	startCollaboration: (config: CollaborationConfig) => Promise<void>;
 	stopCollaboration: () => void;
 	getStatus: () => ConnectionStatus;
+	/** Why the session failed to start while the status is `error`. */
+	getFailure: () => CollaborationFailure | null;
 	getConfig: () => CollaborationConfig | null;
 	followUser: (clientId: number | null) => void;
 	shareDefaults?: ShareDefaults;
@@ -104,7 +111,10 @@ export function createCollabUi(deps: CollabUiDeps): CollabUiController {
 		{
 			onStart: (config) => {
 				deps.onStarted?.(config);
-				void deps.startCollaboration(config).then(() => shareDialog.setActive(true));
+				// A failed start keeps the form, with the reason, open for another try.
+				void deps
+					.startCollaboration(config)
+					.then(() => shareDialog.setActive(deps.getStatus() !== 'error'));
 			},
 			onStop: () => {
 				deps.stopCollaboration();
@@ -155,7 +165,9 @@ export function createCollabUi(deps: CollabUiDeps): CollabUiController {
 	let shareBtn: HTMLButtonElement | null = null;
 	let mobileShareBtn: HTMLButtonElement | null = null;
 	const openShare = (): void => {
-		shareDialog.open(deps.shareDefaults, deps.getStatus() !== 'disconnected');
+		// An errored session reopens on the form, where its reason is shown.
+		const status = deps.getStatus();
+		shareDialog.open(deps.shareDefaults, status !== 'disconnected' && status !== 'error');
 	};
 	const openBroadcast = (): void => {
 		broadcastDialog.open(
@@ -236,6 +248,7 @@ export function createCollabUi(deps: CollabUiDeps): CollabUiController {
 	function shareSession(state: ViewerState): ShareDialogSession {
 		return {
 			status: deps.getStatus(),
+			failure: deps.getFailure(),
 			connectedCount: connectedCount(state),
 			config: deps.getConfig(),
 			remoteUsers: state.remotePresences,
@@ -252,7 +265,7 @@ export function createCollabUi(deps: CollabUiDeps): CollabUiController {
 			deps.getScale(),
 		);
 		followBar.update(state.remotePresences, state.followedClientId);
-		statusPill.update(deps.getStatus(), connectedCount(state));
+		statusPill.update(deps.getStatus(), connectedCount(state), deps.getFailure());
 		shareDialog.updateSession(shareSession(state));
 		if (tabActions && showShare) {
 			const live = buildTabRowActionsState({
@@ -287,7 +300,7 @@ export function createCollabUi(deps: CollabUiDeps): CollabUiController {
 	return {
 		onStatusChange(status) {
 			render(deps.store.get());
-			if (status === 'disconnected') {
+			if (status === 'disconnected' || status === 'error') {
 				shareDialog.setActive(false);
 				broadcastDialog.setActive(false, '');
 			}

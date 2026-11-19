@@ -1,3 +1,5 @@
+import type { CollaborationFailure } from './collaboration-failure';
+import { collaborationFailureMessageKey } from './collaboration-failure';
 import type { ConnectionStatus, SanitizedPresence } from './collaboration-presence';
 
 export interface CollaborationShellInput {
@@ -10,12 +12,16 @@ export interface CollaborationShellInput {
 	sourcePending: boolean;
 	sourceError: boolean;
 	status: ConnectionStatus;
+	/** Why the session failed to start (the session controller's `failure`). */
+	failure?: CollaborationFailure | null;
 	remoteUsers: readonly SanitizedPresence[];
 }
 
 export interface CollaborationShellState {
 	canEdit: boolean;
 	status: ConnectionStatus;
+	/** Why the session failed while `status` is `error`; `null` otherwise. */
+	failure: CollaborationFailure | null;
 	remoteUsers: readonly SanitizedPresence[];
 	connectedCount: number;
 }
@@ -41,6 +47,7 @@ export function resolveCollaborationShellState(
 	return {
 		canEdit: resolveCollaborationShellEditability(input),
 		status,
+		failure: status === 'error' ? (input.failure ?? null) : null,
 		remoteUsers,
 		connectedCount: remoteUsers.length + (status === 'connected' ? 1 : 0),
 	};
@@ -59,14 +66,18 @@ export type CollaborationShellTranslate = (
  * waits for the shell to become editable (`waitForHostEditing`) reads every
  * binding the same way. Three of five demos once phrased it differently and
  * the helper silently skipped them; on vanilla, that let a peer double-click
- * before its edit gate opened.
+ * before its edit gate opened. An errored session names its reason after the
+ * status.
  */
 export function describeCollaborationShellState(
-	state: Pick<CollaborationShellState, 'canEdit' | 'status' | 'connectedCount'>,
+	state: Pick<CollaborationShellState, 'canEdit' | 'status' | 'connectedCount'> &
+		Partial<Pick<CollaborationShellState, 'failure'>>,
 	translate: CollaborationShellTranslate,
 ): string {
+	const failureKey = collaborationFailureMessageKey(state.status, state.failure ?? null);
 	return [
 		translate(`pptx.collaboration.status.${state.status}`),
+		...(failureKey ? [translate(failureKey)] : []),
 		translate('pptx.collaboration.usersConnected', { count: state.connectedCount }),
 		translate(state.canEdit ? 'pptx.collaboration.editable' : 'pptx.toolbar.readOnly'),
 	].join(' · ');

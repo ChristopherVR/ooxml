@@ -855,6 +855,7 @@ export * from './hyperlink-security';
 // detection, and the `RemoteCursor` projection. The stateful Yjs provider /
 // awareness lifecycle stays in each binding.
 export * from './collaboration-presence';
+export * from './collaboration-failure';
 export * from './collaboration-shell-state';
 export * from './collaboration-external-session';
 export * from './collaboration-options';

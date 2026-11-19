@@ -13,6 +13,7 @@ import {
 	buildCollaborationShareUrl,
 	buildCreateCollaborationConfig,
 	buildJoinCollaborationConfig,
+	collaborationFailureMessageKey,
 	getDensePanelTouchTargetPx,
 	shouldStickyActionRow,
 } from 'ooxml-ui/pptx';
@@ -231,7 +232,9 @@ export function ShareDialog({
 										onModeChange={setMode}
 										onInvitationChange={setInvitation}
 										preconfigured={preconfigured}
-										connectionFailed={collab?.status === 'error'}
+										connectionFailure={
+											collab ? collaborationFailureMessageKey(collab.status, collab.failure) : null
+										}
 										onRetry={collab?.retry}
 									/>
 								)}

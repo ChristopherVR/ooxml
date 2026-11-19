@@ -77,6 +77,7 @@ export async function runShellContract({ harness, expect, until, options, Y, onD
 	expect(harness.state().shellState).toEqual({
 		canEdit: true,
 		status: 'disconnected',
+		failure: null,
 		remoteUsers: [],
 		connectedCount: 0,
 	});
@@ -135,6 +136,7 @@ export async function runShellContract({ harness, expect, until, options, Y, onD
 				expect(harness.state().shellState).toEqual({
 					canEdit: true,
 					status: 'disconnected',
+					failure: null,
 					remoteUsers: [],
 					connectedCount: 0,
 				}),

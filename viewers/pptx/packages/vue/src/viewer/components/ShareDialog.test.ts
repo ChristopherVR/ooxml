@@ -18,6 +18,7 @@ function makeCollab(
 	const remotePresences = overrides.remotePresences ?? ref([]);
 	return {
 		status,
+		failure: ref(null),
 		connected: computed(() => status.value === 'connected'),
 		cursors: ref([]),
 		remotePresences,
