@@ -69,11 +69,11 @@ export function resolveOleVerbTarget(
 	const element = flattenSlideElements(slide.elements).find((entry) => entry.id === elementId);
 	// Only a recovered embedding is acted on: any other value, such as a link a
 	// collaborator wrote, is never navigated to.
-	if (
-		!element ||
-		element.type !== 'ole' ||
-		parseDataUrlHeader(element.oleEmbeddedData) === undefined
-	) {
+	if (element?.type !== 'ole') {
+		return undefined;
+	}
+	const url = element.oleEmbeddedData;
+	if (url === undefined || parseDataUrlHeader(url) === undefined) {
 		return undefined;
 	}
 	const action: OleVerbAction =
@@ -84,7 +84,7 @@ export function resolveOleVerbTarget(
 				: 'edit';
 	return {
 		elementId,
-		url: element.oleEmbeddedData,
+		url,
 		...(element.oleEmbeddedFileName ? { fileName: element.oleEmbeddedFileName } : {}),
 		action,
 	};
