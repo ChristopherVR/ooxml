@@ -74,11 +74,12 @@ const heldEarly = new WeakMap<HTMLElement, [string, unknown][]>();
 /**
  * A value assigned before the definition loaded is an own property hiding the class's accessor.
  * Lifts those values off the element, in assignment order, so that its constructor, first render
- * and connection all see the class's defaults. Safe to call more than once.
+ * and connection all see the class's defaults. Safe to call more than once; returns whether any
+ * value is waiting for {@link releaseEarlyProperties}.
  */
-export function holdEarlyProperties(element: HTMLElement): void {
+export function holdEarlyProperties(element: HTMLElement): boolean {
 	const setters = classSetters(element);
-	if (!setters.size) return;
+	if (!setters.size) return false;
 	const target = element as unknown as Record<string, unknown>;
 	for (const name of Object.keys(element)) {
 		if (!setters.has(name)) continue;
@@ -87,13 +88,14 @@ export function holdEarlyProperties(element: HTMLElement): void {
 		heldEarly.set(element, held);
 		delete target[name];
 	}
+	return heldEarly.has(element);
 }
 
 /**
- * Gives held values to the accessors once the element is connected and its shell exists, the path
- * of any later write. A setter that refuses its value is reported and stops nothing else.
+ * Gives held values to the accessors, the path of any later write. A setter that refuses its value
+ * is reported and stops nothing else.
  */
-function releaseEarlyProperties(element: HTMLElement): void {
+export function releaseEarlyProperties(element: HTMLElement): void {
 	const held = heldEarly.get(element);
 	if (!held) return;
 	heldEarly.delete(element);

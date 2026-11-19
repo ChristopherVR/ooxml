@@ -177,6 +177,29 @@ describe('defineElement', () => {
 		expect(upgraded.shadowRoot!.textContent).toContain('early');
 	});
 
+	it('applies early values to an element upgraded while disconnected', async () => {
+		const tag = unique('detached');
+		const early = document.createElement(tag) as HTMLElement & { label: string };
+		early.label = 'early';
+		class Detached extends OfficeElement {
+			#label = 'default';
+			get label() {
+				return this.#label;
+			}
+			set label(value: string) {
+				this.#label = value;
+			}
+		}
+		defineElement(customElements, tag, Detached);
+		customElements.upgrade(early);
+		await Promise.resolve();
+		expect(Object.hasOwn(early, 'label')).toBe(false);
+		expect(early.label).toBe('early');
+		early.label = 'newer';
+		document.body.append(early);
+		expect(early.label).toBe('newer');
+	});
+
 	it('leaves an element created after the definition alone', () => {
 		const tag = unique('late');
 		let writes = 0;
