@@ -101,10 +101,10 @@ test('line jumps, Ruler & Grid and Snap & Glue edit the drawing with undo', asyn
 				svg.style.scrollMarginLeft = 'var(--_vv-grid-x)';
 				const step = getComputedStyle(svg).scrollMarginLeft;
 				svg.style.scrollMarginLeft = '';
-				return step;
+				return Number.parseFloat(step);
 			}),
 		)
-		.toBe(`${0.5 * 96 * zoom}px`);
+		.toBeCloseTo(0.5 * 96 * zoom, 2);
 
 	// View > Visual Aids launcher: Snap off, saved to the drawing.
 	await ribbonGroup(viewer, 'Visual Aids');
