@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createDocument, type DocumentModel } from 'ooxml-core/docx';
 import { DocxEditorElement } from './component';
 import { defineElement } from '../registry';
+import { mountPopover } from './ribbon-popover';
 
 function longDocument(paragraphs: number): DocumentModel {
 	const model = createDocument();
@@ -114,5 +115,43 @@ describe('<docx-editor> lifecycle', () => {
 		expect(early.fileName).toBe('set-early.docx');
 		const surface = early.shadowRoot!.querySelector('.ProseMirror')!;
 		expect(surface.getAttribute('contenteditable')).toBe('false');
+	});
+	it('builds only the editing surface for a surfaceOnly set before the definition', () => {
+		const tag = 'docx-editor-early-surface';
+		const early = document.createElement(tag) as DocxEditorElement;
+		early.surfaceOnly = true;
+		document.body.append(early);
+		defineElement(customElements, tag, class extends DocxEditorElement {});
+		expect(early.surfaceOnly).toBe(true);
+		expect(early.shadowRoot!.querySelector('.ProseMirror')).not.toBeNull();
+		expect(early.shadowRoot!.querySelector('office-ui-ribbon')).toBeNull();
+	});
+
+	it('keeps an early locale over the locale attribute it was upgraded with', () => {
+		const tag = 'docx-editor-early-locale';
+		const early = document.createElement(tag) as DocxEditorElement;
+		early.setAttribute('locale', 'de');
+		early.locale = 'fr';
+		document.body.append(early);
+		defineElement(customElements, tag, class extends DocxEditorElement {});
+		expect(early.locale).toBe('fr');
+		expect(early.getAttribute('locale')).toBe('fr');
+		early.setAttribute('locale', 'es');
+		expect(early.locale).toBe('es');
+	});
+
+	it('closes only its own ribbon popover when removed', () => {
+		const [first, second] = [0, 1].map(() => {
+			const editor = document.createElement('docx-editor');
+			document.body.append(editor);
+			return editor;
+		});
+		const anchor = second!.shadowRoot!.querySelector<HTMLElement>('button')!;
+		const pop = document.createElement('div');
+		expect(mountPopover(anchor, pop, anchor)).toBe(true);
+		first!.remove();
+		expect(pop.isConnected).toBe(true);
+		second!.remove();
+		expect(pop.isConnected).toBe(false);
 	});
 });

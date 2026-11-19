@@ -63,6 +63,10 @@ export class XlsxCollaboration {
 	/** Bumped by every stop, so a join still loading the runtime is abandoned. */
 	#epoch = 0;
 	#wanted: XlsxCollaborationOptions | undefined;
+	/** The options of the room joined or being joined. */
+	#joined: XlsxCollaborationOptions | undefined;
+	/** The room left by `park`, joined again by `resume`. */
+	#parked: XlsxCollaborationOptions | undefined;
 	#lost = false;
 	#connected = false;
 	readonly #listeners = new Set<() => void>();
@@ -104,10 +108,21 @@ export class XlsxCollaboration {
 		return was;
 	}
 
-	/** Joins the wanted room with the workbook now open. */
+	/**
+	 * Leaves the room while the editor is off the page (the session's timers would otherwise keep it
+	 * alive), remembering it for `resume`. A session the host passed in stays alive.
+	 */
+	park(): void {
+		const joined = this.#joined;
+		this.#leave();
+		this.#parked = joined;
+	}
+
+	/** Joins the wanted room, or the one `park` left, with the workbook now open. */
 	resume(): void {
-		const wanted = this.#wanted;
+		const wanted = this.#wanted ?? this.#parked;
 		if (!wanted || this.busy || !this.host.edit()) return;
+		this.#parked = undefined;
 		this.start(wanted).catch((error: unknown) => {
 			const failure = asError(error);
 			this.host.toast(this.host.t(failure.message), 'error');
@@ -120,9 +135,12 @@ export class XlsxCollaboration {
 		if (this.#active || this.#starting)
 			return Promise.reject(new Error('Stop the current collaboration session first.'));
 		const starting = this.#start(options).finally(() => {
-			if (this.#starting === starting) this.#starting = undefined;
+			if (this.#starting !== starting) return;
+			this.#starting = undefined;
+			if (!this.#active) this.#joined = undefined;
 		});
 		this.#starting = starting;
+		this.#joined = options;
 		return starting;
 	}
 
@@ -172,6 +190,7 @@ export class XlsxCollaboration {
 	#leave(): void {
 		this.#epoch++;
 		this.#starting = undefined;
+		this.#joined = this.#parked = undefined;
 		const active = this.#active;
 		if (!active) return;
 		this.#active = undefined;

@@ -1,6 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { parseRange } from 'ooxml-core/xlsx';
 import { registerRibbonTabs, resetRibbonTabs, ribbonTabs } from 'ooxml-core/xlsx/ui';
+import type { EditorCore } from './editor-core';
+import { mountPopover } from './ribbon/popover';
 import { defineXlsxEditor, XlsxEditorElement } from './component';
 import { defineElement } from '../registry';
 
@@ -64,5 +67,59 @@ describe('<xlsx-editor> lifecycle', () => {
 		expect(early.readOnly).toBe(true);
 		expect(early.fileName).toBe('early.xlsx');
 		expect(early.hasAttribute('read-only')).toBe(true);
+	});
+	it('builds only the grid for a surfaceOnly set before the definition', () => {
+		const tag = 'xlsx-editor-early-surface';
+		const early = document.createElement(tag) as XlsxEditorElement;
+		early.surfaceOnly = true;
+		document.body.append(early);
+		defineElement(customElements, tag, class extends XlsxEditorElement {});
+		builtIn = [...ribbonTabs()];
+		expect(early.surfaceOnly).toBe(true);
+		expect(early.shadowRoot!.querySelector('[part~="grid"]')).not.toBeNull();
+		expect(early.shadowRoot!.querySelector('[part~="ribbon"]')).toBeNull();
+		expect(() => (early.surfaceOnly = false)).toThrow(/before mounting/);
+	});
+
+	it('keeps an early readOnly over the attribute it was upgraded with', () => {
+		const tag = 'xlsx-editor-early-attribute';
+		const early = document.createElement(tag) as XlsxEditorElement;
+		early.setAttribute('read-only', 'false');
+		early.readOnly = true;
+		document.body.append(early);
+		defineElement(customElements, tag, class extends XlsxEditorElement {});
+		builtIn = [...ribbonTabs()];
+		expect(early.readOnly).toBe(true);
+		expect(early.getAttribute('read-only')).toBe('');
+		early.removeAttribute('read-only');
+		expect(early.readOnly).toBe(false);
+	});
+
+	it('closes an open filter menu when removed', () => {
+		const editor = mount();
+		editor.newWorkbook();
+		const core = (editor as unknown as { core: EditorCore }).core;
+		core.session!.setRangeValues(0, { row: 0, col: 0 }, [['Kind'], ['a'], ['b']]);
+		core.session!.setAutoFilter(0, parseRange('A1:A3')!);
+		const menu = () => editor.shadowRoot!.querySelector('.xg-fmenu');
+		editor
+			.shadowRoot!.querySelector('.xg-sink-input')!
+			.dispatchEvent(
+				new KeyboardEvent('keydown', { key: 'ArrowDown', altKey: true, bubbles: true }),
+			);
+		expect(menu()).not.toBeNull();
+		editor.remove();
+		expect(menu()).toBeNull();
+	});
+
+	it('closes only its own ribbon popover when removed', () => {
+		const [first, second] = [mount(), mount()];
+		const anchor = second.shadowRoot!.querySelector<HTMLElement>('button')!;
+		const pop = document.createElement('div');
+		expect(mountPopover(anchor, pop)).toBe(true);
+		first.remove();
+		expect(pop.isConnected).toBe(true);
+		second.remove();
+		expect(pop.isConnected).toBe(false);
 	});
 });

@@ -1,3 +1,5 @@
+import { adoptEarlyProperties } from './early-properties';
+
 /** Internal UI ABI, independent of package versions. Bump for incompatible contracts. */
 export const CONTRACT_REVISION = 1;
 const CONTRACT_KEY = Symbol.for('office-ui.web-control-contract');
@@ -45,90 +47,6 @@ export function defineElement(
 /** Stamp a constructor with this build's contract revision. */
 export function markContract(ctor: CustomElementConstructor): void {
 	Object.defineProperty(ctor, CONTRACT_KEY, { value: CONTRACT_REVISION });
-}
-
-const adopting = new WeakSet<object>();
-const settersOf = new WeakMap<object, ReadonlySet<string>>();
-
-/** Every property the element's own classes implement with a setter, above the platform's. */
-function classSetters(element: HTMLElement): ReadonlySet<string> {
-	const start = Object.getPrototypeOf(element) as object;
-	let names = settersOf.get(start);
-	if (names) return names;
-	const platform = element.ownerDocument.defaultView?.HTMLElement.prototype;
-	const found = new Set<string>();
-	for (
-		let proto: object | null = start;
-		proto && proto !== platform;
-		proto = Object.getPrototypeOf(proto) as object | null
-	)
-		for (const name of Object.getOwnPropertyNames(proto))
-			if (Object.getOwnPropertyDescriptor(proto, name)?.set) found.add(name);
-	names = found;
-	settersOf.set(start, names);
-	return names;
-}
-
-const heldEarly = new WeakMap<HTMLElement, [string, unknown][]>();
-
-/**
- * A value assigned before the definition loaded is an own property hiding the class's accessor.
- * Lifts those values off the element, in assignment order, so that its constructor, first render
- * and connection all see the class's defaults. Safe to call more than once; returns whether any
- * value is waiting for {@link releaseEarlyProperties}.
- */
-export function holdEarlyProperties(element: HTMLElement): boolean {
-	const setters = classSetters(element);
-	if (!setters.size) return false;
-	const target = element as unknown as Record<string, unknown>;
-	for (const name of Object.keys(element)) {
-		if (!setters.has(name)) continue;
-		const held = heldEarly.get(element) ?? [];
-		held.push([name, target[name]]);
-		heldEarly.set(element, held);
-		delete target[name];
-	}
-	return heldEarly.has(element);
-}
-
-/**
- * Gives held values to the accessors, the path of any later write. A setter that refuses its value
- * is reported and stops nothing else.
- */
-export function releaseEarlyProperties(element: HTMLElement): void {
-	const held = heldEarly.get(element);
-	if (!held) return;
-	heldEarly.delete(element);
-	const target = element as unknown as Record<string, unknown>;
-	for (const [name, value] of held) {
-		try {
-			target[name] = value;
-		} catch (error) {
-			queueMicrotask(() => {
-				throw error;
-			});
-		}
-	}
-}
-
-/** Wraps each connection of `ctor`'s elements so early properties take effect. */
-function adoptEarlyProperties(ctor: CustomElementConstructor): void {
-	const proto = ctor.prototype as { connectedCallback?: () => void };
-	if (adopting.has(proto)) return;
-	adopting.add(proto);
-	const connected = proto.connectedCallback;
-	Object.defineProperty(proto, 'connectedCallback', {
-		configurable: true,
-		writable: true,
-		value(this: HTMLElement): void {
-			holdEarlyProperties(this);
-			try {
-				connected?.call(this);
-			} finally {
-				releaseEarlyProperties(this);
-			}
-		},
-	});
 }
 
 export type Definer = ((registry?: CustomElementRegistry) => void) & { readonly tag: string };

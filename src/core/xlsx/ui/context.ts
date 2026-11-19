@@ -52,6 +52,8 @@ export interface GridController {
 	 * selection, scroll and an edit in progress: called when font faces arrive.
 	 */
 	remeasure?(): void;
+	/** Closes the grid's own drop-downs (AutoFilter menu, lists), as when the editor leaves the page. */
+	closePopups?(): void;
 }
 
 export interface EditorContext {

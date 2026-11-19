@@ -53,7 +53,7 @@ test('a removed editor is collected', async ({ page }) => {
 		const element = document.createElement('docx-editor');
 		document.body.append(element);
 		await new Promise((resolve) => setTimeout(resolve, 200));
-		(window as Probe).removedEditor = new WeakRef(element);
+		(window as Probe).removedEditor = new WeakRef(element as HTMLElement);
 		element.remove();
 	});
 	await expectCollected(page);
@@ -73,7 +73,7 @@ test('an editor removed with its context menu open is collected', async ({ page 
 		await new Promise((resolve) => setTimeout(resolve, 100));
 		if (!element.shadowRoot!.querySelector('office-ui-context-menu'))
 			throw new Error('The context menu did not open');
-		(window as Probe).removedEditor = new WeakRef(element);
+		(window as Probe).removedEditor = new WeakRef(element as HTMLElement);
 		element.remove();
 	});
 	await expectCollected(page);
@@ -112,4 +112,67 @@ test('a reconnected editor lays out again when a font arrives', async ({ page })
 		return pages.firstElementChild !== before;
 	});
 	expect(replaced).toBe(true);
+});
+
+type SharedEditor = HTMLElement & {
+	collaboration: unknown;
+	collaborationState: { active: boolean };
+};
+
+/** A second editor of the probe's own, apart from the demo's (which the demo page holds on to). */
+async function addEditor(page: Page) {
+	await page.evaluate(() => {
+		const element = document.createElement('docx-editor');
+		element.id = 'probe';
+		element.style.cssText = 'position:fixed;right:0;bottom:0;width:900px;height:500px;z-index:9999';
+		document.body.append(element);
+	});
+	const probe = page.locator('#probe');
+	await expect(probe.locator('.ProseMirror')).toBeVisible();
+	return probe;
+}
+
+const removeProbe = (page: Page) =>
+	page.locator('#probe').evaluate((element) => {
+		(window as Probe).removedEditor = new WeakRef(element as HTMLElement);
+		element.remove();
+	});
+
+test('an edited editor is collected once removed', async ({ page }) => {
+	await openSample(page);
+	const probe = await addEditor(page);
+	await probe.locator('.ProseMirror').click();
+	await page.keyboard.type('typed text');
+	for (const key of ['ArrowUp', 'ArrowDown', 'Home', 'Backspace', 'ArrowLeft', 'End', 'Delete'])
+		await page.keyboard.press(key);
+	await removeProbe(page);
+	await expectCollected(page);
+});
+
+test('removing an editor leaves the popover of another editor open', async ({ page }) => {
+	await openSample(page);
+	const probe = await addEditor(page);
+	await probe.locator('.ribbon-panel:not([hidden]) [data-split-caret]:visible').first().click();
+	await expect(probe.locator('.ribbon-popover')).toHaveCount(1);
+	await editor(page)
+		.first()
+		.evaluate((element) => element.remove());
+	await expect(probe.locator('.ribbon-popover')).toHaveCount(1);
+});
+
+test('an editor removed while sharing a room it opened is collected', async ({ page }) => {
+	await openSample(page);
+	const probe = await addEditor(page);
+	await probe.evaluate((element) => {
+		(element as SharedEditor).collaboration = {
+			roomId: `lifecycle-${Date.now()}`,
+			intent: 'create',
+			user: { name: 'Ada' },
+		};
+	});
+	await expect
+		.poll(() => probe.evaluate((element) => (element as SharedEditor).collaborationState.active))
+		.toBe(true);
+	await removeProbe(page);
+	await expectCollected(page);
 });

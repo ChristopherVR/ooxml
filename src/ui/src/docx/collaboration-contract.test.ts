@@ -241,3 +241,30 @@ describe('docx-editor collaboration property', () => {
 		expect(textOf(a)).toBe(before);
 	});
 });
+
+describe('docx-editor collaboration while removed', () => {
+	it('stays shared through a move, leaves while removed and rejoins when back', async () => {
+		const hub = createMemoryHub();
+		const a = mount();
+		const b = mount();
+		a.collaboration = { session: hostSession(hub, 'Ada'), intent: 'create' };
+		await wait();
+		viewOf(a).dispatch(viewOf(a).state.tr.insertText('one ', 1));
+		b.collaboration = { session: hostSession(hub, 'Bob'), intent: 'join' };
+		await wait();
+		const other = document.createElement('div');
+		document.body.append(other);
+		other.append(a);
+		await wait();
+		expect(a.collaborationState.active).toBe(true);
+		a.remove();
+		await wait();
+		expect(a.collaborationState.active).toBe(false);
+		viewOf(b).dispatch(viewOf(b).state.tr.insertText('away ', 1));
+		document.body.append(a);
+		await wait(60);
+		expect(a.collaborationState.active).toBe(true);
+		expect(textOf(a)).toBe(textOf(b));
+		expect(textOf(a)).toContain('away');
+	});
+});

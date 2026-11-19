@@ -256,8 +256,8 @@ export function createRibbon(ctx: EditorContext, handlers: RibbonHandlers): Ribb
 			stopListening?.();
 			stopListening = undefined;
 			unobserve();
-			closeRibbonPopover();
-			closeRibbonOverflow();
+			closeRibbonPopover(ctx.host);
+			closeRibbonOverflow(ctx.host);
 		},
 	};
 }

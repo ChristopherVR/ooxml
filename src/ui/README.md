@@ -176,8 +176,14 @@ controls follow the product palette.
 
 Importing an entry never touches the DOM (SSR-safe). Elements are defined by the `define*` /
 `register*` functions, which are idempotent, no-ops without a `window`, and refuse to coexist
-with an incompatible build of this package. A property assigned to an element before its definition
-loads is applied when the element connects, so hosts can set properties and define in either order.
+with an incompatible build of this package. Hosts can set properties and define in either order. A
+property assigned to an element before its definition loads counts as written just after the
+element upgrades: it wins over the attributes the element had then, any later property or attribute
+write wins over it, and it is applied before the element first connects (so mount-time options
+such as `surfaceOnly` hold for the first build), or once the current script ends for an element
+upgraded while detached. Properties Lit declares on the shared elements follow Lit there: on an
+element upgraded while detached, the early value waits for its first render, which overrides a
+write made to the same property in the meantime.
 
 ## Framework binding kit (`ooxml-ui/bindings`)
 
