@@ -1,6 +1,7 @@
-import type { PptxCoreProperties, PptxSlide } from 'ooxml-core/pptx';
+import type { PptxCoreProperties, PptxSlide, PptxTheme } from 'ooxml-core/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
+import { checkPptxAiBridgeReadsItsWrites } from './bridge-contract';
 import type { PptxAiBridgePort } from './bridge-factory';
 import { createPptxAiBridge, pptxAiDeckTitle } from './bridge-factory';
 import { makeSlide, textElement } from './mock-bridge';
@@ -33,6 +34,7 @@ function makePort(overrides: Partial<PptxAiBridgePort> = {}): {
 		getCanvasSize: () => state.canvas,
 		getTheme: () => undefined,
 		getHandler: () => null,
+		getDeckLoad: () => 0,
 		getSections: () => [],
 		getPresentationProperties: () => ({}),
 		getCustomProperties: () => [],
@@ -143,6 +145,45 @@ describe('createPptxAiBridge', () => {
 			getFocusedTargets: () => [{ kind: 'slide', slideIndex: 1 }],
 		});
 		expect(focused.getFocusedTargets?.()).toEqual([{ kind: 'slide', slideIndex: 1 }]);
+	});
+});
+
+/** A port over plain state; with `deferred`, writes only show after {@link flush}. */
+function statefulPort(deferred: boolean) {
+	const { port, state } = makePort({
+		getTheme: () => theme,
+		applyTheme: (updates) => later(() => (theme = { ...theme, ...updates })),
+		updateSlides: (update) => {
+			const next = update(state.slides);
+			later(() => (state.slides = next));
+		},
+		setDocumentProperties: (core) => later(() => (state.core = core)),
+	});
+	let theme: PptxTheme = {};
+	const queued: (() => void)[] = [];
+	function later(write: () => void): void {
+		if (deferred) {
+			queued.push(write);
+		} else {
+			write();
+		}
+	}
+	return { port, flush: () => queued.splice(0).forEach((write) => write()) };
+}
+
+describe('checkPptxAiBridgeReadsItsWrites', () => {
+	it('passes a bridge whose reads see its writes', () => {
+		const { port } = statefulPort(false);
+		expect(checkPptxAiBridgeReadsItsWrites(createPptxAiBridge(port))).toEqual([]);
+	});
+
+	it('names every read that still shows the state from before a write', () => {
+		const { port } = statefulPort(true);
+		const failures = checkPptxAiBridgeReadsItsWrites(createPptxAiBridge(port));
+		expect(failures).toContain('getSlides after a slide write');
+		expect(failures).toContain('getTheme after a colour write');
+		expect(failures).toContain('getTheme after a font write');
+		expect(failures).toContain('getDeckData after a property write');
 	});
 });
 

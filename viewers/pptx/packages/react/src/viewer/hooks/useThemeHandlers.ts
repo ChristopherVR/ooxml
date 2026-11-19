@@ -59,8 +59,16 @@ export interface UseThemeHandlersInput {
 export interface ThemeHandlersResult {
 	handleApplyThemeEdit: (edit: ThemeEditorEdit) => Promise<void>;
 	handleApplyTheme: (themePath: string, applyToAllMasters: boolean) => Promise<void>;
-	handleUpdateThemeColorScheme: (colorScheme: PptxThemeColorScheme) => Promise<void>;
-	handleUpdateThemeFontScheme: (fontScheme: PptxThemeFontScheme) => Promise<void>;
+	/** `previous` is the scheme being replaced, when it is newer than the last render. */
+	handleUpdateThemeColorScheme: (
+		colorScheme: PptxThemeColorScheme,
+		previous?: PptxThemeColorScheme,
+	) => Promise<void>;
+	/** `previous` is the scheme being replaced, when it is newer than the last render. */
+	handleUpdateThemeFontScheme: (
+		fontScheme: PptxThemeFontScheme,
+		previous?: PptxThemeFontScheme,
+	) => Promise<void>;
 	handleUpdateThemeName: (name: string) => Promise<void>;
 	handleApplyThemeToPresentation: () => Promise<void>;
 	handleApplyThemeData: (
@@ -99,14 +107,14 @@ export function useThemeHandlers(input: UseThemeHandlersInput): ThemeHandlersRes
 	const handleApplyTheme = (themePath: string, applyToAllMasters: boolean) =>
 		applyThemePartInPlace(input, themePath, applyToAllMasters);
 
-	const handleUpdateThemeColorScheme = async (colorScheme: PptxThemeColorScheme) => {
+	const handleUpdateThemeColorScheme = async (
+		colorScheme: PptxThemeColorScheme,
+		previous = theme?.colorScheme,
+	) => {
 		const handler = handlerRef.current;
 		if (!handler) {
 			return;
 		}
-		// Update the theme in the underlying archive + colour map so a later save
-		// (and any future parse) carries the new scheme.
-		await queueThemeWrite(handler, () => handler.updateThemeColorScheme(colorScheme));
 		// Re-colour the live slides IN PLACE rather than serialising the whole
 		// deck and feeding it back through the load pipeline. The old round-trip
 		// (`serialize -> setContent -> full re-parse`) is a heavy main-thread
@@ -115,7 +123,7 @@ export function useThemeHandlers(input: UseThemeHandlersInput): ThemeHandlersRes
 		// dragging) it stampeded into a multi-second renderer freeze. A direct
 		// scheme-colour remap is cheap, keeps selection + history intact, and lands
 		// as a single undoable entry.
-		const previousMap = theme?.colorScheme ? buildThemeColorMap(theme.colorScheme) : {};
+		const previousMap = previous ? buildThemeColorMap(previous) : {};
 		setSlides((prev) => reResolveSlideColors(prev, previousMap, colorScheme));
 		if (Object.keys(templateElementsBySlideId).length > 0) {
 			setTemplateElementsBySlideId((prev) => {
@@ -129,17 +137,22 @@ export function useThemeHandlers(input: UseThemeHandlersInput): ThemeHandlersRes
 		setTheme((prev) => (prev ? { ...prev, colorScheme } : { colorScheme }));
 		bumpHistory();
 		history.markDirty();
+		// Update the theme in the underlying archive + colour map so a later save
+		// (and any future parse) carries the new scheme. The state above is queued
+		// first so changes made in one tick land together.
+		await queueThemeWrite(handler, () => handler.updateThemeColorScheme(colorScheme));
 	};
 
-	const handleUpdateThemeFontScheme = async (fontScheme: PptxThemeFontScheme) => {
+	const handleUpdateThemeFontScheme = async (
+		fontScheme: PptxThemeFontScheme,
+		previousFonts = theme?.fontScheme,
+	) => {
 		const handler = handlerRef.current;
 		if (!handler) {
 			return;
 		}
-		await queueThemeWrite(handler, () => handler.updateThemeFontScheme(fontScheme));
 		// Re-resolve the live slides in place, as the colour scheme does: a full
 		// reload would jump back to the first slide and drop the undo history.
-		const previousFonts = theme?.fontScheme;
 		bumpHistory();
 		setSlides((prev) => reResolveSlideFonts(prev, previousFonts, fontScheme));
 		setTemplateElementsBySlideId((prev) =>
@@ -152,6 +165,7 @@ export function useThemeHandlers(input: UseThemeHandlersInput): ThemeHandlersRes
 		);
 		setTheme((prev) => (prev ? { ...prev, fontScheme } : { fontScheme }));
 		history.markDirty();
+		await queueThemeWrite(handler, () => handler.updateThemeFontScheme(fontScheme));
 	};
 
 	const handleUpdateThemeName = async (name: string) => {
@@ -159,9 +173,9 @@ export function useThemeHandlers(input: UseThemeHandlersInput): ThemeHandlersRes
 		if (!handler) {
 			return;
 		}
-		await queueThemeWrite(handler, () => handler.updateThemeName(name));
 		setTheme((prev) => (prev ? { ...prev, name } : { name }));
 		history.markDirty();
+		await queueThemeWrite(handler, () => handler.updateThemeName(name));
 	};
 
 	// Every master on the first master's theme part.

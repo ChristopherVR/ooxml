@@ -896,6 +896,7 @@ export * from './collaboration-sync-gate';
 // Whether a freshly loaded deck yields to the room: only a bootstrap load does,
 // or opening a file mid-session silently loses it (issue: vanilla + room).
 export * from './collaboration-load-origin';
+export * from './collaboration-room-join';
 // Document-teardown listeners (pagehide / beforeunload / host postMessage) so a
 // peer whose document is destroyed (tab close, navigation, or an embedding page
 // removing the viewer iframe) leaves the room instead of lingering as a ghost
@@ -1723,6 +1724,8 @@ export * from './options';
 export * from './customization';
 export * from './ribbon-galleries';
 export * from './deck-style';
+// A theme change re-resolved over the deck state, ready for one undo step.
+export { withThemeUpdates } from './theme-updates';
 // A theme change as an undo step: what each snapshot records, what an undo writes back into the
 // handler's theme parts, and the write queue every save waits for.
 export * from './theme-history';

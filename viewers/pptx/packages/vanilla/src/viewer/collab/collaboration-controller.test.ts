@@ -183,6 +183,46 @@ describe('createCollaborationController', () => {
 		collab.stop();
 	});
 
+	it('reports joining a room whose slides replace the deck as a load, not later peer edits', async () => {
+		store.set({ slides: [slide('mine')] });
+		const collab = build();
+		await collab.start({ ...webrtcConfig, role: 'collaborator' });
+		readSlidesFromYDoc.mockReturnValue([slide('room-1')]);
+		capturedObserve?.(null, { origin: 'peer' });
+		expect(store.get().slides).toStrictEqual([slide('room-1')]);
+		expect(store.get().deckLoad).toBe(1);
+
+		readSlidesFromYDoc.mockReturnValue([slide('room-1'), slide('room-2')]);
+		capturedObserve?.(null, { origin: 'peer' });
+		expect(store.get().slides).toHaveLength(2);
+		expect(store.get().deckLoad).toBe(1);
+		collab.stop();
+	});
+
+	it('still reports a join when the sync gate opened on an empty deck first', async () => {
+		const collab = build();
+		await collab.start({ ...webrtcConfig, role: 'collaborator' });
+		capturedSynced?.();
+		readSlidesFromYDoc.mockReturnValue([slide('room-1')]);
+		capturedObserve?.(null, { origin: 'peer' });
+		expect(store.get().deckLoad).toBe(1);
+		collab.stop();
+	});
+
+	it('keeps the deck load when peers edit a room this editor seeded', async () => {
+		store.set({ slides: [slide('mine')] });
+		const collab = build();
+		await collab.start({ ...webrtcConfig, role: 'collaborator' });
+		capturedSynced?.(); // gate opens -> this editor writes its deck to the room
+		expect(reconcileSlidesInYDoc).toHaveBeenCalledOnce();
+
+		readSlidesFromYDoc.mockReturnValue([slide('mine'), slide('peer')]);
+		capturedObserve?.(null, { origin: 'peer' });
+		expect(store.get().slides).toHaveLength(2);
+		expect(store.get().deckLoad).toBe(0);
+		collab.stop();
+	});
+
 	it('adopts the doc slides over a late-finishing content load (no placeholder write)', async () => {
 		const collab = build();
 		await collab.start({ ...webrtcConfig, role: 'collaborator' });

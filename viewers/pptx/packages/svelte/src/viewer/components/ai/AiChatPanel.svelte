@@ -26,6 +26,7 @@
 	import AiHistoryMenu from './AiHistoryMenu.svelte';
 	import AiMessageList from './AiMessageList.svelte';
 	import AiPendingChanges from './AiPendingChanges.svelte';
+	import AiProposalsDiscarded from './AiProposalsDiscarded.svelte';
 
 	const {
 		bridge,
@@ -54,6 +55,9 @@
 	// viewer state through getters, and `config` is stable), so capturing the
 	// initial prop values here is intentional.
 	const chat = untrack(() => new SvelteAiChat({ bridge, config, onToolTarget }));
+	$effect(() => {
+		chat.followToolCalls();
+	});
 
 	// Applied-edit animation: once the session is ready, subscribe to its change
 	// animator so that when the AI apply path publishes a batch of changed
@@ -168,6 +172,8 @@
 					onacceptall={acceptAllProposals}
 					onreject={(id) => chat.rejectProposal(id)}
 				/>
+			{:else if chat.proposalsDiscarded}
+				<AiProposalsDiscarded />
 			{/if}
 
 			<AiComposer

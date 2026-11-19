@@ -19,6 +19,7 @@ import { createPptxAiBridge } from 'ooxml-ui/pptx/ai/host';
 import type { PptxCoreProperties, PptxHandler, PptxTheme } from 'pptx-viewer-core';
 
 import type { EditorController } from '../editor';
+import { storeTheme } from '../editor/editor-theme-history';
 import type { Store, ViewerState } from '../state';
 
 export interface VanillaAiBridgeDeps {
@@ -30,11 +31,7 @@ export interface VanillaAiBridgeDeps {
 	ensureEditable(): void;
 	/** The loaded core handler, or null when nothing is loaded. */
 	getHandler(): PptxHandler | null;
-	/**
-	 * Apply partial theme updates (colour/font scheme) to the deck and re-render.
-	 * Theme scheme state lives outside the slides history snapshot, so this is a
-	 * best-effort apply rather than a strictly undoable step.
-	 */
+	/** Apply partial theme updates (colours, fonts, name) as one undoable step. */
 	applyThemeUpdates(updates: Partial<PptxTheme>): void;
 	/**
 	 * The assistant's current focus (picks / pin / live selection), owned by the
@@ -60,11 +57,9 @@ export function createVanillaAiBridge(deps: VanillaAiBridgeDeps): PptxAiBridge {
 		getSlides: () => state().slides,
 		getActiveSlideIndex: () => state().currentSlide,
 		getCanvasSize: () => state().canvasSize,
-		getTheme: () => {
-			const { colorScheme } = state();
-			return colorScheme ? { colorScheme } : undefined;
-		},
+		getTheme: () => (state().colorScheme || state().fontScheme ? storeTheme(state()) : undefined),
 		getHandler: () => deps.getHandler(),
+		getDeckLoad: () => state().deckLoad,
 		getSections: () => state().sections,
 		getCustomShows: () => state().customShows,
 		setCustomShows: (shows) => editor.updateCustomShows(shows),
@@ -86,7 +81,10 @@ export function createVanillaAiBridge(deps: VanillaAiBridgeDeps): PptxAiBridge {
 			deps.ensureEditable();
 			editor.commitSlides(next, state().currentSlide);
 		},
-		applyTheme: (updates) => deps.applyThemeUpdates(updates),
+		applyTheme(updates) {
+			deps.ensureEditable();
+			deps.applyThemeUpdates(updates);
+		},
 		setCanvasSize: (size) => editor.getEditActions().updateCanvasSize(size),
 		setSections: (sections) => editor.updateSections(sections),
 		setPresentationProperties: (props) => editor.updatePresentationProperties(props),

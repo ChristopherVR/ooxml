@@ -6,6 +6,7 @@ import type {
 	YTransactionLike,
 } from 'ooxml-ui/pptx';
 import {
+	createRoomJoinTracker,
 	reconcileSlidesInYDoc,
 	LOCAL_SYNC_ORIGIN,
 	readSlidesFromYDoc,
@@ -14,7 +15,7 @@ import {
 } from 'ooxml-ui/pptx';
 /** Synchronize viewer slides with the shared granular Yjs slide schema. */
 import type { PptxElement, PptxHandlerSaveOptions, PptxSlide } from 'pptx-viewer-core';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Doc as YDoc } from 'yjs';
 
 import { useCollaborationWriteBack } from './useCollaborationWriteBack';
@@ -45,6 +46,8 @@ export interface UseYjsDocumentSyncInput {
 	onReadOnlyChange?: (readOnly: boolean) => void;
 	/** Receives the owner's write-back status (undefined when the session ends). */
 	onWriteBackStatus?: (state: CollaborationWriteBackState | undefined) => void;
+	/** The room's slides replaced the open deck (a join): the binding counts it as a presentation load. */
+	onRoomReplacedDeck?: () => void;
 }
 
 export function useYjsDocumentSync(input: UseYjsDocumentSyncInput): void {
@@ -67,6 +70,10 @@ export function useYjsDocumentSync(input: UseYjsDocumentSyncInput): void {
 	latestSlides.current = slides;
 	const lastLoad = useRef(loadVersion);
 	const revision = useRef(0);
+	const [join] = useState(createRoomJoinTracker);
+	const latestInput = useRef(input);
+	latestInput.current = input;
+	const replacedDeck = (): void => latestInput.current.onRoomReplacedDeck?.();
 
 	useEffect(() => {
 		if (external || !doc) {
@@ -75,7 +82,8 @@ export function useYjsDocumentSync(input: UseYjsDocumentSyncInput): void {
 		lastSynced.current = '';
 		superseded.current = null;
 		revision.current++;
-	}, [doc, external]);
+		join.attached();
+	}, [doc, external, join]);
 
 	useEffect(() => {
 		if (external || !doc || !isConnected) {
@@ -94,6 +102,9 @@ export function useYjsDocumentSync(input: UseYjsDocumentSyncInput): void {
 			superseded.current = latestSlides.current;
 			revision.current++;
 			setSlides(remote);
+			if (join.adopted()) {
+				replacedDeck();
+			}
 		};
 		const unobserve = observeYDocSlides(doc, (_events, transaction?: YTransactionLike) => {
 			if (transaction?.origin === LOCAL_SYNC_ORIGIN) {
@@ -110,7 +121,7 @@ export function useYjsDocumentSync(input: UseYjsDocumentSyncInput): void {
 			unobserve();
 			revokeWrites();
 		};
-	}, [external, doc, isConnected, setSlides, scheduleWriteBack]);
+	}, [external, doc, isConnected, setSlides, scheduleWriteBack, join]);
 
 	useEffect(() => {
 		if (external || loadVersion === lastLoad.current) {
@@ -126,6 +137,7 @@ export function useYjsDocumentSync(input: UseYjsDocumentSyncInput): void {
 			superseded.current = latestSlides.current;
 			revision.current++;
 			setSlides(room);
+			replacedDeck();
 		}
 	}, [external, loadVersion, loadOrigin, doc, isConnected, setSlides]);
 
@@ -158,10 +170,21 @@ export function useYjsDocumentSync(input: UseYjsDocumentSyncInput): void {
 				createText: () => new Y.Text(),
 			});
 			lastSynced.current = serialized;
+			join.wrote();
 			scheduleWriteBack();
 		})();
 		return () => {
 			cancelled = true;
 		};
-	}, [external, doc, slides, isConnected, isSynced, config?.role, loadVersion, scheduleWriteBack]);
+	}, [
+		external,
+		doc,
+		slides,
+		isConnected,
+		isSynced,
+		config?.role,
+		loadVersion,
+		scheduleWriteBack,
+		join,
+	]);
 }

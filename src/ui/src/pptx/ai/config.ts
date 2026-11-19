@@ -12,6 +12,7 @@ import type { ChatTransport, LanguageModel, ToolSet, UIMessage } from 'ai';
 
 import type { AiChangeAnimationConfig } from './change-animator';
 import type { AiSdkModule } from './loader';
+import type { PptxAiRunLimits } from './run-limits';
 
 /** The UI message shape exchanged with the assistant. Alias of the SDK type. */
 export type PptxAiUIMessage = UIMessage;
@@ -112,7 +113,17 @@ export type PptxAiConnection =
 	/** Provide a fully-constructed transport (advanced / testing escape hatch). */
 	| { kind: 'transport'; transport: ChatTransport<PptxAiUIMessage> };
 
-/** How writes proposed by the assistant reach the document. */
+/**
+ * How writes proposed by the assistant reach the document. Every write tool
+ * follows it, theme and presentation-level tools included.
+ *
+ * - `'stage'`: held for review; the user can accept each one or accept all.
+ * - `'approve'`: held until the user accepts that one change.
+ * - `'auto'`: applied at once, undoable.
+ *
+ * Under every policy, `delete_slides` and `import_from_json` wait for the user to
+ * accept that one change.
+ */
 export type PptxAiWritePolicy = 'stage' | 'approve' | 'auto';
 
 /** Which deck context is fed to the model with each turn. */
@@ -141,6 +152,8 @@ export interface PptxAiConfig {
 	writePolicy?: PptxAiWritePolicy;
 	/** Default `'outline'`. */
 	contextStrategy?: PptxAiContextStrategy;
+	/** Limits on one run (a user message and the tool loop it starts). */
+	limits?: PptxAiRunLimits;
 	history?: PptxAiHistoryHooks;
 	/**
 	 * How AI edits are animated on the canvas so the user can watch them land
@@ -165,6 +178,8 @@ export interface ResolveTransportOptions {
 	system?: string;
 	/** Max agent tool-loop steps for the `'model'` connection. Default `16`. */
 	maxSteps?: number;
+	/** Checked after each agent step of the `'model'` connection. */
+	shouldStop?: () => boolean;
 }
 
 /**
@@ -193,7 +208,10 @@ export function resolveChatTransport(
 				model: connection.model,
 				instructions: options.system ?? connection.system,
 				tools: options.toolsWithExecute ?? {},
-				stopWhen: sdk.stepCountIs(connection.maxSteps ?? options.maxSteps ?? 16),
+				stopWhen: [
+					sdk.stepCountIs(options.maxSteps ?? connection.maxSteps ?? 16),
+					() => options.shouldStop?.() ?? false,
+				],
 			});
 			return new sdk.DirectChatTransport({
 				agent,

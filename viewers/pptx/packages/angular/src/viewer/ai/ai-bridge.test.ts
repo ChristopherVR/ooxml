@@ -1,4 +1,5 @@
-import { ProposalStore } from 'ooxml-ui/pptx/ai';
+import { DestroyRef, Injector, runInInjectionContext } from '@angular/core';
+import { checkPptxAiBridgeReadsItsWrites, ProposalStore } from 'ooxml-ui/pptx/ai';
 import type { PptxAiBridge } from 'ooxml-ui/pptx/ai';
 import type {
 	ParsedTableStyleMap,
@@ -11,11 +12,16 @@ import type {
 	PptxSection,
 	PptxSlide,
 	PptxTagCollection,
+	PptxTheme,
 	PptxViewProperties,
 } from 'pptx-viewer-core';
+import { PptxHandler } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
 import { EditorStateService } from '../editor-state.service';
+import { LoadContentService } from '../load-content.service';
+import { runMasterViewCrud } from '../master-view-crud-session';
+import { buildSaveSlides } from '../template-mode';
 import { createAngularAiBridge } from './ai-bridge';
 
 function textElement(id: string, text: string): PptxElement {
@@ -29,6 +35,7 @@ function slide(id: string, elements: PptxElement[]): PptxSlide {
 /** Mutable presentation-level deck state the fake bridge deps read/write. */
 interface DeckState {
 	canvas: { width: number; height: number };
+	theme: PptxTheme | undefined;
 	sections: readonly PptxSection[];
 	customShows: readonly PptxCustomShow[];
 	presentationProperties: PptxPresentationProperties;
@@ -42,17 +49,20 @@ interface DeckState {
 }
 
 /** Build a bridge over a real editor, tracking navigation/selection side effects. */
-function setup(): {
+function setup(options: { editor?: EditorStateService; getDeckLoad?: () => number } = {}): {
 	editor: EditorStateService;
 	bridge: PptxAiBridge;
 	nav: { index: number; selected: readonly string[] };
 	deck: DeckState;
 } {
-	const editor = new EditorStateService();
-	editor.setSlides([slide('s1', [textElement('a', 'Hello')])]);
+	const editor = options.editor ?? new EditorStateService();
+	if (!options.editor) {
+		editor.setSlides([slide('s1', [textElement('a', 'Hello')])]);
+	}
 	const nav = { index: 0, selected: [] as readonly string[] };
 	const deck: DeckState = {
 		canvas: { width: 960, height: 540 },
+		theme: undefined,
 		sections: [],
 		customShows: [],
 		presentationProperties: {},
@@ -68,9 +78,10 @@ function setup(): {
 		getSlides: () => editor.slides(),
 		getActiveSlideIndex: () => nav.index,
 		getCanvasSize: () => deck.canvas,
-		getTheme: () => undefined,
+		getTheme: () => deck.theme,
 		getFileName: () => 'Deck.pptx',
 		getHandler: () => undefined,
+		getDeckLoad: options.getDeckLoad ?? (() => 0),
 		goToSlide: (i) => {
 			nav.index = i;
 		},
@@ -80,8 +91,8 @@ function setup(): {
 			editor.select([...ids]);
 		},
 		applySlides: (next, label) => editor.applyReplacement(next, label),
-		applyTheme: () => {
-			/* not exercised here */
+		applyTheme: (updates) => {
+			deck.theme = { ...deck.theme, ...updates };
 		},
 		getSections: () => deck.sections,
 		getCustomShows: () => deck.customShows,
@@ -308,5 +319,91 @@ describe('createAngularAiBridge (shared bridge)', () => {
 	it('scopes the assistant to the whole active slide without a panel focus', () => {
 		const { bridge } = setup();
 		expect(bridge.getFocusedTargets?.()).toEqual([{ kind: 'slide', slideIndex: 0 }]);
+	});
+});
+
+describe('createAngularAiBridge read after write', () => {
+	it('sees each write at once', () => {
+		expect(checkPptxAiBridgeReadsItsWrites(setup().bridge)).toEqual([]);
+	});
+});
+
+/** A one-slide `.pptx` whose text box reads `text`. */
+async function deckBytes(text: string): Promise<ArrayBuffer> {
+	const { handler, data } = await PptxHandler.create({ initialSlideCount: 1 });
+	data.slides[0]!.elements = [
+		{
+			...textElement('a', text),
+			textSegments: [{ text, style: {} }],
+		} as PptxElement,
+	];
+	const bytes = await handler.save(data.slides);
+	handler.dispose();
+	return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+}
+
+const firstText = (editor: EditorStateService): string | undefined =>
+	(editor.slides()[0]?.elements[0] as { text?: string } | undefined)?.text;
+
+/** A loaded deck, the viewer's bridge over it, and one staged proposal that rewrites its text. */
+async function openWithProposal() {
+	const injector = Injector.create({
+		providers: [
+			{ provide: DestroyRef, useValue: { onDestroy: () => () => {} } },
+			{ provide: LoadContentService, useClass: LoadContentService },
+		],
+	});
+	const loader = runInInjectionContext(injector, () => injector.get(LoadContentService));
+	loader.bindHostGoogleFonts(() => false);
+	await loader.load(await deckBytes('Hello'));
+	const editor = new EditorStateService();
+	editor.setSlides(loader.slides());
+	const { bridge } = setup({ editor, getDeckLoad: () => loader.deckLoad() });
+	const store = new ProposalStore(bridge);
+	const staged = store.stage('Rewrite text', (slides) => {
+		(slides[0]!.elements[0] as { text?: string }).text = 'From proposal';
+		return slides;
+	});
+	return { loader, editor, store, staged, load: loader.deckLoad() };
+}
+
+describe('staged proposals across the presentation load', () => {
+	it('keep a staged proposal through Insert Layout, which replaces the handler', async () => {
+		const { loader, editor, store, staged, load } = await openWithProposal();
+		const handler = loader.getHandler();
+
+		const result = await runMasterViewCrud(loader, editor, {
+			id: 'addLayout',
+			target: { tab: 'slides', masterIndex: 0, layoutIndex: null },
+			slides: buildSaveSlides(editor.slides(), editor.templateElementsBySlideId()),
+		});
+
+		expect(result?.ok).toBeTruthy();
+		expect(loader.getHandler()).not.toBe(handler);
+		expect(loader.deckLoad()).toBe(load);
+		expect(store.list().map((proposal) => proposal.id)).toStrictEqual([staged.id]);
+		expect(store.apply(staged.id)).toBeTruthy();
+		expect(firstText(editor)).toBe('From proposal');
+	});
+
+	it('keep a staged proposal through the handler swap a slide paste commits', async () => {
+		const { loader, editor, store, staged, load } = await openWithProposal();
+		const pasted = await PptxHandler.create({ initialSlideCount: 2 });
+
+		loader.adoptMasterViewData(pasted.handler, pasted.data, true);
+
+		expect(loader.deckLoad()).toBe(load);
+		expect(store.apply(staged.id)).toBeTruthy();
+		expect(firstText(editor)).toBe('From proposal');
+	});
+
+	it('drop staged proposals when another presentation loads', async () => {
+		const { loader, store, load } = await openWithProposal();
+
+		await loader.load(await deckBytes('Another deck'));
+
+		expect(loader.deckLoad()).toBe(load + 1);
+		expect(store.list()).toStrictEqual([]);
+		expect(store.discarded).toBeTruthy();
 	});
 });
