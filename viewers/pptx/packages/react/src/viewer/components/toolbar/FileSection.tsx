@@ -13,9 +13,10 @@ import type {
 	HostBackstageRegionId,
 	ViewerRegionId,
 } from 'ooxml-ui/pptx';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { LuArrowLeft, LuFolderOpen, LuSettings } from 'react-icons/lu';
 
+import { useModalFocus } from '../../hooks/useModalFocus';
 import { useToolbarVisibility } from '../../hooks/useToolbarVisibility';
 import { useTranslation } from '../../i18n/use-translation';
 import { useViewerCloudFiles } from '../viewer-cloud-files-context';
@@ -50,6 +51,9 @@ export function FileSection(p: FileSectionProps): React.ReactElement {
 	const cloud = useViewerCloudFiles();
 	const placeLabels = useMemo(() => openPlacesLabels(t), [t]);
 	const [placeId, setPlaceId] = useState<string>();
+	// The backstage covers the editor: focus goes in, stays in, and Escape goes back.
+	const panelRef = useRef<HTMLDivElement>(null);
+	useModalFocus(true, panelRef, p.onClose);
 	useEffect(() => {
 		void listBackstageRecentFiles(t, p.recentPresentationsCount, storage).then(setRecent);
 	}, [t, p.recentPresentationsCount, storage]);
@@ -112,6 +116,7 @@ export function FileSection(p: FileSectionProps): React.ReactElement {
 	);
 	return (
 		<div
+			ref={panelRef}
 			className='fixed inset-0 z-[200] flex bg-background font-[Aptos,Segoe_UI,sans-serif] text-foreground max-md:flex-col'
 			role='dialog'
 			aria-modal='true'

@@ -1,6 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { ParagraphStyleCatalog, TextRun } from './model';
 import type { RunFormatting, RunStyleCatalog } from './run-style-model';
+import { cachedResolver, chainResolver, defaultStyleId, mergeDefined } from './style-inheritance';
 
 /**
  * Word "toggle" run properties (ECMA-376 17.7.3): each level in the formatting
@@ -53,44 +54,45 @@ export const DIRECT_RUN_PROPERTY_KEYS = [
 	'style',
 ] as const satisfies readonly (keyof TextRun)[];
 
-function paragraphStyleRunChain(
+type Resolver = (id: string | undefined) => RunFormatting | undefined;
+const paragraphRunResolvers = new WeakMap<object, WeakMap<RunStyleCatalog, Resolver>>();
+const characterResolvers = new WeakMap<object, Resolver>();
+
+/** The run formatting the paragraph style chain gives (each style's `w:rPr`, nearest defined). */
+function paragraphStyleRun(
 	styleId: string | undefined,
 	paragraphCatalog: ParagraphStyleCatalog | undefined,
 	runCatalog: RunStyleCatalog | undefined,
-): RunFormatting[] {
-	if (!paragraphCatalog) return [];
-	const chain: RunFormatting[] = [];
-	const visited = new Set<string>();
-	let current: string | undefined =
-		styleId || Object.values(paragraphCatalog.styles).find((style) => style.isDefault)?.id;
-	while (current && !visited.has(current)) {
-		const style: ParagraphStyleCatalog['styles'][string] | undefined =
-			paragraphCatalog.styles[current];
-		if (!style) break;
-		visited.add(current);
-		const runDefinition = runCatalog?.styles[current];
-		if (runDefinition) chain.push(runDefinition.formatting);
-		current = style.basedOn;
+): RunFormatting {
+	if (!paragraphCatalog || !runCatalog) return {};
+	let byRunCatalog = paragraphRunResolvers.get(paragraphCatalog.styles);
+	if (!byRunCatalog) {
+		byRunCatalog = new WeakMap();
+		paragraphRunResolvers.set(paragraphCatalog.styles, byRunCatalog);
 	}
-	return chain.reverse();
+	let resolve = byRunCatalog.get(runCatalog);
+	if (!resolve) {
+		resolve = chainResolver(
+			paragraphCatalog.styles,
+			(_style, id) => runCatalog.styles[id]?.formatting,
+			mergeDefined,
+			{},
+		);
+		byRunCatalog.set(runCatalog, resolve);
+	}
+	return resolve(styleId || defaultStyleId(paragraphCatalog.styles)) ?? {};
 }
 
-function characterStyleChain(
+/** The run formatting a character style chain gives, nearest defined. */
+function characterStyleRun(
 	styleId: string | undefined,
 	runCatalog: RunStyleCatalog | undefined,
-): RunFormatting[] {
-	if (!styleId || !runCatalog) return [];
-	const chain: RunFormatting[] = [];
-	const visited = new Set<string>();
-	let current: string | undefined = styleId;
-	while (current && !visited.has(current)) {
-		const style: RunStyleCatalog['styles'][string] | undefined = runCatalog.styles[current];
-		if (!style) break;
-		visited.add(current);
-		chain.push(style.formatting);
-		current = style.basedOn;
-	}
-	return chain.reverse();
+): RunFormatting {
+	if (!styleId || !runCatalog) return {};
+	const resolve = cachedResolver(characterResolvers, runCatalog.styles, () =>
+		chainResolver(runCatalog.styles, (style) => style.formatting, mergeDefined, {}),
+	);
+	return resolve(styleId) ?? {};
 }
 
 export interface RunFormattingContext {
@@ -112,37 +114,29 @@ export function resolveRunFormatting(
 	context: RunFormattingContext = {},
 ): RunFormatting {
 	const docDefaults = context.runCatalog?.docDefaults ?? {};
-	const paragraphChain = paragraphStyleRunChain(
+	const paragraphStyle = paragraphStyleRun(
 		context.paragraphStyleId,
 		context.paragraphCatalog,
 		context.runCatalog,
 	);
-	const characterChain = characterStyleChain(run.style, context.runCatalog);
-	const tableLevels = context.tableStyleRun ? [context.tableStyleRun] : [];
-	const levels: RunFormatting[] = [
-		docDefaults,
-		...paragraphChain,
-		...tableLevels,
-		...characterChain,
-		run,
-	];
+	const characterStyle = characterStyleRun(run.style, context.runCatalog);
+	const tableStyle = context.tableStyleRun ?? {};
+	const levels: RunFormatting[] = [docDefaults, paragraphStyle, tableStyle, characterStyle, run];
 	const result: RunFormatting = {};
 	// Toggle properties (ECMA-376 §17.7.3): each style type (paragraph, table, character) resolves
 	// its value through its own basedOn chain; the types then combine by XOR with the document
 	// default. Direct formatting on the run sets the value outright, including an explicit off.
-	const chainValue = (chain: RunFormatting[], key: (typeof TOGGLE_KEYS)[number]) => {
-		for (let index = chain.length - 1; index >= 0; index--)
-			if (chain[index]?.[key] !== undefined) return Boolean(chain[index]?.[key]);
-		return false;
-	};
+	// Each style level already holds its chain's nearest defined value.
+	const chainValue = (level: RunFormatting, key: (typeof TOGGLE_KEYS)[number]) =>
+		Boolean(level[key]);
 	for (const key of TOGGLE_KEYS) {
 		const direct = run[key];
 		const state =
 			direct !== undefined
 				? Boolean(direct)
 				: Boolean(docDefaults[key]) !==
-					(chainValue(paragraphChain, key) !==
-						(chainValue(tableLevels, key) !== chainValue(characterChain, key)));
+					(chainValue(paragraphStyle, key) !==
+						(chainValue(tableStyle, key) !== chainValue(characterStyle, key)));
 		if (state) result[key] = true;
 	}
 	for (const key of OVERRIDE_KEYS) {

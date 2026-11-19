@@ -70,12 +70,16 @@ function asFocusable(node: unknown): FocusableNode | null {
  * silently ignored. Call this from the commit/cancel handler, while the
  * departing node is still in the document.
  *
- * The target is the nearest ancestor carrying a `tabindex`, which is the viewer
- * root in all five bindings. Returns false when there is no such ancestor (the
- * node is detached, or the host renders a read-only viewer with no tabindex).
+ * The target is the slide when the node sits on it (an inline text editor), so
+ * Tab goes on walking the objects; otherwise the nearest ancestor carrying a
+ * `tabindex`, which is the viewer root in all five bindings. Returns false when
+ * there is no such ancestor (the node is detached, or the host renders a
+ * read-only viewer with no tabindex).
  */
 export function restoreEditorKeyboardFocus(from: Element | null | undefined): boolean {
-	const host = asFocusable(from?.closest('[tabindex]'));
+	const host = asFocusable(
+		from?.closest('[data-pptx-viewport][tabindex]') ?? from?.parentElement?.closest('[tabindex]'),
+	);
 	if (!host) {
 		return false;
 	}

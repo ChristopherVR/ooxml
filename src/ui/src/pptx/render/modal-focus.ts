@@ -1,6 +1,7 @@
 /** Framework-neutral keyboard focus management for modal dialogs. */
 
 import {
+	containsComposed as containsDeep,
 	modalActiveElement as deepActiveElement,
 	modalFocusableElements as focusableElements,
 } from '../../dialog/focus';
@@ -17,18 +18,6 @@ export interface ModalFocusOptions {
 	onEscape?: () => void;
 	/** Restore focus to the opener when the manager is released. */
 	restoreFocus?: boolean;
-}
-
-/** `panel.contains` across shadow boundaries. */
-function containsDeep(panel: HTMLElement, node: Node | null): boolean {
-	let current: Node | null = node;
-	while (current) {
-		if (current === panel) {
-			return true;
-		}
-		current = current.parentNode ?? (current as ShadowRoot).host ?? null;
-	}
-	return false;
 }
 
 /**

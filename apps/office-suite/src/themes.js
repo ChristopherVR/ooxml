@@ -95,6 +95,7 @@ export function mountThemes() {
 	apply();
 	applyWorkspaceSettings();
 	onSettings((next, changed) => {
+		if (changed.includes('locale')) applyWorkspaceSettings(document.documentElement, next);
 		if (changed.some((key) => key === 'corners' || key === 'reduceMotion')) {
 			applyWorkspaceSettings(document.documentElement, next);
 			if (!next.reduceMotion) document.documentElement.classList.add('theme-anim');

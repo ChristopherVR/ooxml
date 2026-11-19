@@ -85,3 +85,36 @@ describe('smartArt text order annotation', () => {
 		]);
 	});
 });
+
+/** Best of three runs, in milliseconds. */
+function timed(run: () => unknown): number {
+	let best = Number.POSITIVE_INFINITY;
+	for (let attempt = 0; attempt < 3; attempt++) {
+		const start = performance.now();
+		run();
+		best = Math.min(best, performance.now() - start);
+	}
+	return best;
+}
+
+describe('smartArt text order scan', () => {
+	it('is linear in empty breaks and paragraphs that never close', () => {
+		const run = (count: number) => () =>
+			annotateSmartArtTextOrder(
+				`<dgm:dataModel><dgm:t><a:p>${'<a:br/>'.repeat(count)}${'<a:r>'.repeat(count)}</a:p></dgm:t></dgm:dataModel>`,
+				{},
+			);
+		expect(timed(run(80_000)) / timed(run(20_000))).toBeLessThan(8);
+	});
+
+	it('gives an empty element an entry only when it parses to an object', () => {
+		const first: XmlObject = { r: { t: 'One' } };
+		const second: XmlObject = { r: [{ t: 'Two' }, { t: 'Three' }], br: '' };
+		annotateSmartArtTextOrder(
+			'<dgm:t><a:p><a:r><a:t>One</a:t></a:r></a:p><a:p/><a:p><a:r><a:t>Two</a:t></a:r><a:br/><a:r><a:t>Three</a:t></a:r></a:p></dgm:t>',
+			{ t: { p: [first, '', second] } },
+		);
+		expect(smartArtChildOrder(first)).toStrictEqual(['r']);
+		expect(smartArtChildOrder(second)).toStrictEqual(['r', 'br', 'r']);
+	});
+});

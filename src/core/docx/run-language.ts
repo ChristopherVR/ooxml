@@ -1,5 +1,12 @@
 import type { TextRun } from './model';
 import type { RunFormattingContext } from './run-formatting';
+import type { RunStyleCatalog } from './run-style-model';
+import { cachedResolver, chainResolver, defaultStyleId } from './style-inheritance';
+
+const languageResolvers = new WeakMap<
+	object,
+	(id: string | undefined) => { eastAsiaLanguage?: string } | undefined
+>();
 
 /**
  * The East Asian language of a run (`w:lang/@w:eastAsia`) through the style hierarchy: direct,
@@ -13,22 +20,23 @@ export function resolveEastAsiaLanguage(
 	if (run.eastAsiaLanguage !== undefined) return run.eastAsiaLanguage;
 	const catalog = context.runCatalog;
 	if (!catalog) return undefined;
-	const chainLanguage = (styleId: string | undefined) => {
-		const visited = new Set<string>();
-		for (let current = styleId; current && !visited.has(current);) {
-			visited.add(current);
-			const style = catalog.styles[current];
-			if (!style) return undefined;
-			if (style.eastAsiaLanguage !== undefined) return style.eastAsiaLanguage;
-			current = style.basedOn;
-		}
-		return undefined;
-	};
+	// The nearest style of the chain that names a language.
+	const resolve = cachedResolver(languageResolvers, catalog.styles, () =>
+		chainResolver<RunStyleCatalog['styles'][string], { eastAsiaLanguage?: string }>(
+			catalog.styles,
+			(style) =>
+				style.eastAsiaLanguage === undefined
+					? undefined
+					: { eastAsiaLanguage: style.eastAsiaLanguage },
+			(_resolved, nearer) => nearer,
+			{},
+		),
+	);
+	const chainLanguage = (styleId: string | undefined) =>
+		resolve(styleId || undefined)?.eastAsiaLanguage;
 	const paragraphStyle =
 		context.paragraphStyleId ||
-		(context.paragraphCatalog
-			? Object.values(context.paragraphCatalog.styles).find((style) => style.isDefault)?.id
-			: undefined);
+		(context.paragraphCatalog ? defaultStyleId(context.paragraphCatalog.styles) : undefined);
 	return (
 		chainLanguage(run.style) ?? chainLanguage(paragraphStyle) ?? catalog.docDefaultsEastAsiaLanguage
 	);

@@ -10,17 +10,39 @@ import { conversations } from './conversations.js';
 import { feature } from './policy.js';
 import { joinRoom, mergeRoom } from './shared.js';
 
-export async function followRoom({ convo, people, current, busy, changed }) {
+/**
+ * What a screen reader hears when messages arrive from the room: each request someone else sent,
+ * and each reply once it is complete (never word by word). `shown` is what this view already had,
+ * its own requests and replies included, so only arrivals are read.
+ */
+export function arrivals(shown, messages) {
+	const before = new Map(shown.map((m) => [m.id, Boolean(m.streaming)]));
+	const out = [];
+	for (const m of messages) {
+		const known = before.has(m.id);
+		if (m.role === 'user' && !known) out.push(`${m.author?.name || 'Someone'}: ${m.content}`);
+		else if (m.role === 'assistant' && !m.streaming && (!known || before.get(m.id)))
+			out.push('Assistant replied');
+	}
+	return out;
+}
+
+export async function followRoom({ convo, people, current, busy, changed, announce }) {
 	const chat = await joinRoom(convo.shared.room);
 	let saving = 0,
-		typing = 0;
+		typing = 0,
+		primed = false;
 	const pull = () => {
 		// A reply being written here owns the message list until it ends, then pulls again.
 		if (busy()) return;
 		const rows = chat.store.messages();
 		// An empty room that has not synced yet is not an empty chat.
 		if (!rows.length && !chat.session.synced) return;
-		convo.messages = mergeRoom(rows, convo.messages);
+		const messages = mergeRoom(rows, convo.messages);
+		// Joining shows the history; only what arrives after that is announced.
+		if (primed && current()) for (const text of arrivals(convo.messages, messages)) announce(text);
+		primed = true;
+		convo.messages = messages;
 		convo.title = chat.store.title() || convo.title;
 		clearTimeout(saving);
 		if (feature('history'))

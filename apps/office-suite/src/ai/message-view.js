@@ -142,6 +142,11 @@ function actionsBar(message, ctx) {
 export function messageNode(message, ctx) {
 	const node = document.createElement('article');
 	node.className = `chat-msg from-${message.role}`;
+	const own = !message.author || message.author.id === ctx.me();
+	node.setAttribute(
+		'aria-label',
+		message.role === 'user' ? (own ? 'You' : message.author.name) : 'Assistant',
+	);
 	if (message.role === 'user') {
 		const bubble = document.createElement('div');
 		bubble.className = 'chat-bubble';

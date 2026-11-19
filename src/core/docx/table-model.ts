@@ -131,7 +131,10 @@ export interface TableStyleDefinition {
 	cellMargins?: TableCellMargins;
 	conditional: Partial<Record<TableConditionalRegion, TableStyleConditionalFormatting>>;
 }
-/** Parsed `styles.xml` table styles; conditional formatting resolves for rendering only. */
+/**
+ * Parsed `styles.xml` table styles; conditional formatting resolves for rendering only. Like the
+ * paragraph catalog, it is a value: an edit replaces the `styles` record.
+ */
 export interface TableStyleCatalog {
 	styles: Record<string, TableStyleDefinition>;
 	warnings: string[];

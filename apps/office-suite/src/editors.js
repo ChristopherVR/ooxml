@@ -186,6 +186,11 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 				}
 				if (loadFailed) throw new Error('The presentation could not be opened.');
 			},
+			/** Notes the slide in view; the returned function goes back to it after a reload. */
+			keep: () => {
+				const slide = viewer.getCurrentSlide();
+				return () => slide < viewer.getSlideCount() && viewer.goToSlide(slide);
+			},
 			readOnly: (on) => viewer.setEditable(!(on || accessReadOnly)),
 			setCloudReadOnly: (on) => {
 				accessReadOnly = on;
@@ -268,7 +273,12 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 	for (const name of ['document-change', 'workbook-change'])
 		element.addEventListener(name, changed);
 	// Selection and formatting changes that do not edit the document still move the bar's state.
-	if (doc.kind === 'xlsx') element.addEventListener('selection-change', moved);
+	let selection = null;
+	if (doc.kind === 'xlsx')
+		element.addEventListener('selection-change', (event) => {
+			selection = event.detail;
+			moved();
+		});
 	const stopState = doc.kind === 'docx' ? element.subscribeEditorState(moved) : undefined;
 	let stop;
 	if (doc.kind === 'vsdx') {
@@ -310,6 +320,34 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 		// Puts the cursor in the active cell, as Excel does when a workbook opens.
 		focus: () => {
 			if (doc.kind === 'xlsx') element.focusGrid();
+		},
+		/**
+		 * Notes where the user is: the sheet and cells, the caret or the page. The returned function
+		 * goes back there after a reload, and into the document when `focus` says it had focus.
+		 */
+		keep() {
+			if (doc.kind === 'xlsx') {
+				const at = selection;
+				return (focus) => {
+					try {
+						if (at) {
+							element.setActiveSheet(at.sheet);
+							element.select(at.ref);
+						}
+					} catch {
+						// The sheet or cells are gone from the new file; the workbook's own selection stays.
+					}
+					if (focus) element.focusGrid();
+				};
+			}
+			if (doc.kind === 'docx') {
+				const range = element.getTextSelection();
+				return (focus) => focus && element.focusText(range);
+			}
+			const page = element.pageIndex;
+			return () => {
+				if (page < (element.controller.state.document?.pages.length ?? 0)) element.pageIndex = page;
+			};
 		},
 		// While the assistant previews a change the drawing is read-only (Visio's canEdit is off), so
 		// nothing is edited during a review; Discard reloads the stored file and Apply saves the preview.

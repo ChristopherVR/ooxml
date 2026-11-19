@@ -3,9 +3,10 @@ import { readPackageInformation } from './package-information';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import { declaredEntrySize, openZip } from '../opc/zip-limits';
 import { inspectPackageSignatures } from '../opc/signature/index';
-import { DOCX_ZIP_LIMITS, MAX_DOCUMENT_PART_BYTES } from './package-limits';
-import type { Block, DocumentModel, LoadedDocument } from './model';
-import { children, first, getW, parseXml, type XmlDocument, WORD_NS } from './xml';
+import { resolveDocxLimits } from './package-limits';
+import type { ZipLimits } from '../opc/zip-limits';
+import type { Block, DocumentModel, DocxLoadOptions, LoadedDocument } from './model';
+import { children, first, getW, parseXml, type XmlDocument } from './xml';
 import { remember, saveDocx } from './save';
 import { parseParagraphStyleCatalog } from './paragraph-styles';
 import { parseBlocksFromContainer } from './block-parser';
@@ -25,7 +26,12 @@ const px = (twips: string | undefined, fallback: number): number =>
 import { type DrawingContext } from './drawing';
 import { parseContentTypes, parseRelationships } from './package-parts';
 import { withParseWarnings } from './parse-diagnostics';
-import { warningsFor, imageAndBookmarkWarnings, forEachParagraph } from './parse-warnings';
+import {
+	forEachParagraph,
+	imageAndBookmarkWarnings,
+	indexWordElements,
+	warningsFor,
+} from './parse-warnings';
 import { diagramWarnings, resolveDocumentDiagrams } from './diagram-document';
 import { documentDrawingBlocks, resolveDocumentCharts } from './chart';
 import { readPlaceholderTexts } from './glossary';
@@ -33,6 +39,8 @@ import { readPackageProperties } from './package-properties';
 
 export interface PackageContext {
 	original: Uint8Array;
+	/** The limits the package was opened under, which its saves reopen it with. */
+	zipLimits: ZipLimits;
 	sourceXml: string;
 	base: DocumentModel;
 }
@@ -50,23 +58,30 @@ function protectionWarning(edit: string): string | undefined {
 	return undefined;
 }
 
-export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
+const sizeText = (bytes: number): string =>
+	bytes % (1024 * 1024) === 0 ? `${bytes / (1024 * 1024)} MiB` : `${bytes} bytes`;
+
+export async function readPackage(
+	input: Uint8Array | ArrayBuffer,
+	options: DocxLoadOptions = {},
+): Promise<{
 	model: DocumentModel;
 	context: PackageContext;
 	media: ReadonlyMap<string, Uint8Array>;
 }> {
+	const limits = resolveDocxLimits(options.limits);
 	const original =
 		input instanceof Uint8Array ? new Uint8Array(input) : new Uint8Array(input.slice(0));
-	const zip = await openZip(original, DOCX_ZIP_LIMITS);
+	const zip = await openZip(original, limits.zip);
 	const file = zip.file('word/document.xml');
 	if (!file) throw new Error('DOCX package has no word/document.xml part');
-	if (declaredEntrySize(file) > MAX_DOCUMENT_PART_BYTES)
-		throw new Error('word/document.xml exceeds the 25 MiB limit');
+	const tooLarge = `word/document.xml exceeds the ${sizeText(limits.maxDocumentPartBytes)} limit (limits.maxDocumentPartBytes)`;
+	if (declaredEntrySize(file) > limits.maxDocumentPartBytes) throw new Error(tooLarge);
 	const sourceXml = await file.async('string');
-	if (sourceXml.length > MAX_DOCUMENT_PART_BYTES)
-		throw new Error('word/document.xml exceeds the 25 MiB limit');
+	if (sourceXml.length > limits.maxDocumentPartBytes) throw new Error(tooLarge);
 	const document: XmlDocument = parseXml(sourceXml);
-	const body = Array.from(document.getElementsByTagNameNS(WORD_NS, 'body'))[0];
+	const scanned = indexWordElements(document);
+	const body = scanned.get('body')?.[0];
 	if (!body) throw new Error('DOCX document.xml has no w:body');
 	const relsFile = zip.file('word/_rels/document.xml.rels');
 	const contentTypesFile = zip.file('[Content_Types].xml');
@@ -95,7 +110,7 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 			marginBottom: px(getW(margins, 'bottom'), 96),
 			marginLeft: px(getW(margins, 'left'), 96),
 		},
-		warnings: warningsFor(document),
+		warnings: warningsFor(scanned),
 	};
 	if ((await inspectPackageSignatures(zip)).hasSignatures)
 		model.warnings.push(
@@ -147,7 +162,7 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 			'Numbering is resolved for decimal, Roman numeral, letter, ordinal, cardinal/ordinal text and bullet formats, including multilevel lvlText and legal numbering. Style-linked numbering and other custom formats fall back to Decimal Number and are not rendered as Word would.',
 			...model.numberingCatalog.warnings,
 		);
-	} else if (document.getElementsByTagNameNS(WORD_NS, 'numPr').length > 0) {
+	} else if (scanned.has('numPr')) {
 		model.warnings.push(
 			'Paragraphs reference list numbering, but the package has no word/numbering.xml part; numbering is preserved as paragraph XML but not rendered.',
 		);
@@ -250,13 +265,16 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 		const part = zip.file(partName);
 		if (part) media.set(partName, await part.async('uint8array'));
 	}
-	const context = { original, sourceXml, base: structuredClone(model) };
+	const context = { original, zipLimits: limits.zip, sourceXml, base: structuredClone(model) };
 	remember(model, context);
 	return { model, context, media };
 }
 
-export async function loadDocx(input: Uint8Array | ArrayBuffer): Promise<LoadedDocument> {
-	const { model, context, media } = await readPackage(input);
+export async function loadDocx(
+	input: Uint8Array | ArrayBuffer,
+	options: DocxLoadOptions = {},
+): Promise<LoadedDocument> {
+	const { model, context, media } = await readPackage(input, options);
 	return {
 		model,
 		media,

@@ -3,20 +3,22 @@ import { OfficeElement, controlStyles, flag } from '../base';
 import { glyph } from '../glyph';
 import { definer } from '../registry';
 import css from './dialog.css?raw';
+import { containsComposed, modalActiveElement, modalFocusableElements } from './focus';
 
 export type OfficeDialogCloseReason = 'escape' | 'close-button' | 'backdrop' | 'api';
 /** Cancelable: `preventDefault()` keeps the dialog open. */
 export type OfficeDialogCloseEvent = CustomEvent<{ reason: OfficeDialogCloseReason }>;
 
-const FOCUSABLE =
-	'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), office-ui-button:not([disabled]), office-ui-select:not([disabled]), office-ui-checkbox:not([disabled]), office-ui-switch:not([disabled])';
+/** Open dialogs, oldest first: only the last one answers the keyboard. */
+const openDialogs: OfficeUiDialog[] = [];
 
 /**
  * Modal dialog shell. `open` and `heading` attributes, `dismissible` (default true; set
  * `dismissible="false"` to ignore Escape and backdrop). Default slot is the body, `slot="footer"`
  * holds actions. `role="dialog"`, `aria-modal`, labelled by the heading. Escape, the close button
- * and the backdrop emit a cancelable `office-dialog-close` and close unless prevented; focus
- * moves in on open, is trapped with Tab, and returns to the previously focused element on close.
+ * and the backdrop emit a cancelable `office-dialog-close` and close unless prevented. Focus moves
+ * in on open and returns to the previously focused element on close. While open, Tab and Shift+Tab
+ * stay inside and Escape works wherever focus has ended up; a nested dialog takes both over.
  */
 export class OfficeUiDialog extends OfficeElement {
 	static override styles = controlStyles(css);
@@ -31,7 +33,9 @@ export class OfficeUiDialog extends OfficeElement {
 	declare dismissible: string | null;
 	/** Name of the close button (English by default), so a product can translate it. */
 	declare closeLabel: string | null;
-	private returnFocus: Element | null = null;
+	private returnFocus: HTMLElement | null = null;
+	/** Direction of the Tab press in progress, to catch a stop the walk did not predict. */
+	private tabbing: 'forward' | 'back' | null = null;
 
 	constructor() {
 		super();
@@ -64,63 +68,98 @@ export class OfficeUiDialog extends OfficeElement {
 		return this.renderRoot.querySelector('.close');
 	}
 
-	/**
-	 * The body's focusable controls in order, including those inside the shadow root of a
-	 * composite element (a picker) that is not itself focusable.
-	 */
-	private focusables(): HTMLElement[] {
-		const found: HTMLElement[] = [];
-		const walk = (root: ParentNode): void => {
-			for (const child of Array.from(root.children)) {
-				if (child.matches(FOCUSABLE)) found.push(child as HTMLElement);
-				else if (child.shadowRoot) walk(child.shadowRoot);
-				else walk(child);
-			}
-		};
-		walk(this);
-		return found;
-	}
-
-	/** The focused element, followed into open shadow roots. */
-	private deepActive(): Element | null {
-		let active = this.ownerDocument.activeElement;
-		while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
-		return active;
+	/** The dialog's Tab stops, in the order Tab visits them. */
+	private tabStops(): HTMLElement[] {
+		return this.box ? modalFocusableElements(this.box) : [];
 	}
 
 	private onOpen(): void {
-		const active = this.ownerDocument.activeElement;
-		this.returnFocus = active && active !== this.ownerDocument.body ? active : null;
-		(this.focusables()[0] ?? this.box)?.focus();
+		const doc = this.ownerDocument;
+		const active = modalActiveElement(doc);
+		this.returnFocus = active instanceof HTMLElement && active !== doc.body ? active : null;
+		this.register();
+		const stops = this.tabStops();
+		// The close button comes first in Tab order; the body's first control is the place to start.
+		(stops.find((stop) => stop !== this.closeButton) ?? stops[0] ?? this.box)?.focus();
 	}
 
 	private onClose(): void {
-		const target = this.returnFocus as HTMLElement | null;
+		this.unregister();
+		const target = this.returnFocus;
 		this.returnFocus = null;
-		target?.focus?.();
+		if (target?.isConnected) target.focus();
+	}
+
+	private register(): void {
+		if (openDialogs.includes(this)) return;
+		openDialogs.push(this);
+		const doc = this.ownerDocument;
+		doc.addEventListener('keydown', this.onDocumentKey);
+		doc.addEventListener('keyup', this.onDocumentKeyUp, true);
+		doc.addEventListener('focusin', this.onDocumentFocus, true);
+	}
+
+	private unregister(): void {
+		const index = openDialogs.indexOf(this);
+		if (index >= 0) openDialogs.splice(index, 1);
+		this.tabbing = null;
+		const doc = this.ownerDocument;
+		doc.removeEventListener('keydown', this.onDocumentKey);
+		doc.removeEventListener('keyup', this.onDocumentKeyUp, true);
+		doc.removeEventListener('focusin', this.onDocumentFocus, true);
+	}
+
+	/** Keys pressed with focus outside the dialog reach it here. */
+	private readonly onDocumentKey = (event: KeyboardEvent): void => this.onKey(event);
+
+	private readonly onDocumentKeyUp = (): void => {
+		this.tabbing = null;
+	};
+
+	/** A Tab that got past the walk (a stop it could not predict) is brought back in. */
+	private readonly onDocumentFocus = (event: FocusEvent): void => {
+		if (!this.tabbing || openDialogs.at(-1) !== this) return;
+		if (containsComposed(this, event.composedPath()[0] as Node)) return;
+		this.focusEnd(this.tabbing);
+	};
+
+	private focusEnd(direction: 'forward' | 'back'): void {
+		const stops = this.tabStops();
+		(direction === 'forward' ? stops[0] : stops.at(-1))?.focus();
+		if (stops.length === 0) this.box?.focus();
 	}
 
 	private onKey(event: KeyboardEvent): void {
-		if (!this.open) return;
+		if (!this.open || event.defaultPrevented || openDialogs.at(-1) !== this) return;
 		if (event.key === 'Escape') {
 			event.preventDefault();
 			event.stopPropagation();
 			this.requestClose('escape');
 		} else if (event.key === 'Tab') {
-			// Cycle over [light-DOM focusables..., close button].
-			const closeButton = this.closeButton;
-			const items: HTMLElement[] = [...this.focusables(), ...(closeButton ? [closeButton] : [])];
-			const current = this.deepActive();
-			const inside = (el: HTMLElement) => el === current || el.contains(current);
-			const index = items.findIndex(inside);
-			const shadowFocus = current !== null && current === closeButton;
-			const at = shadowFocus ? items.length - 1 : index;
-			const last = items.length - 1;
-			if (at < 0 || (!event.shiftKey && at === last) || (event.shiftKey && at === 0)) {
-				event.preventDefault();
-				items[at < 0 || !event.shiftKey ? 0 : last]?.focus();
-			}
+			this.onTab(event);
 		}
+	}
+
+	private onTab(event: KeyboardEvent): void {
+		const direction = event.shiftKey ? 'back' : 'forward';
+		this.tabbing = direction;
+		const stops = this.tabStops();
+		const active = modalActiveElement(this.ownerDocument);
+		const atEnd = active === (event.shiftKey ? stops[0] : stops.at(-1));
+		const outside = active === this.box || !containsComposed(this, active);
+		if (!atEnd && !outside && stops.length > 0) return;
+		event.preventDefault();
+		this.focusEnd(direction);
+	}
+
+	override connectedCallback(): void {
+		super.connectedCallback();
+		if (this.open && this.hasUpdated) this.register();
+	}
+
+	override disconnectedCallback(): void {
+		super.disconnectedCallback();
+		this.unregister();
 	}
 
 	/** Focus moves in when the dialog opens (also when it connects open) and back when it closes. */

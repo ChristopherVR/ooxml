@@ -1,6 +1,13 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { Table } from './model';
-import type { TableCellMargins, TableStyleCatalog, TableStyleDefinition } from './table-model';
+import type { TableCellMargins, TableStyleCatalog } from './table-model';
+import { cachedResolver, chainResolver, defaultStyleId, mergeDefined } from './style-inheritance';
+
+/** Each style's margins through its chain, nearest defined side first, per catalog. */
+const marginResolvers = new WeakMap<
+	object,
+	(id: string | undefined) => TableCellMargins | undefined
+>();
 import { first, getW, type XmlElement } from './xml';
 import { parseSignedTwips } from './simple-types';
 import { signedTwips, type SignedTwips } from './units';
@@ -50,17 +57,6 @@ const UNSTYLED: Margins = {
 	left: signedTwips(10),
 };
 
-/** A style and the styles it is based on, nearest first (a cycle stops the walk). */
-function styleChain(id: string | undefined, catalog: TableStyleCatalog): TableStyleDefinition[] {
-	const chain: TableStyleDefinition[] = [];
-	let style = id ? catalog.styles[id] : undefined;
-	while (style && !chain.includes(style)) {
-		chain.push(style);
-		style = style.basedOn ? catalog.styles[style.basedOn] : undefined;
-	}
-	return chain;
-}
-
 /**
  * A table's default cell margins, side by side: its own `w:tblCellMar`, then its table style and
  * the styles that one is based on, then the document's default table style and its chain
@@ -73,11 +69,13 @@ export function resolveTableCellMargins(
 	catalog: TableStyleCatalog | undefined,
 ): Margins {
 	if (!catalog) return { ...BUILT_IN, ...table.cellMargins };
-	const defaultStyle = Object.values(catalog.styles).find((style) => style.isDefault);
+	const chainMargins = cachedResolver(marginResolvers, catalog.styles, () =>
+		chainResolver(catalog.styles, (style) => style.cellMargins, mergeDefined, {}),
+	);
 	const layers = [
 		table.cellMargins,
-		...styleChain(table.style, catalog).map((style) => style.cellMargins),
-		...styleChain(defaultStyle?.id, catalog).map((style) => style.cellMargins),
+		chainMargins(table.style || undefined),
+		chainMargins(defaultStyleId(catalog.styles)),
 	];
 	const result: Margins = { ...UNSTYLED };
 	for (const side of SIDES) {

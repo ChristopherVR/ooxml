@@ -1,5 +1,7 @@
 import type { ResolvedCustomization } from 'ooxml-ui/pptx';
 import {
+	announceSlideObject,
+	editSlideObjectText,
 	cycleSelectableElement,
 	parentSelection,
 	stepFontSizePt,
@@ -194,6 +196,7 @@ export function useKeyboardShortcutWiring(input: UseKeyboardShortcutWiringInput)
 		onClearFormatting: () => ops.updateSelectedTextStyle({ ...CLEAR_FORMATTING_PATCH }),
 		onCycleSelectionNext: () => cycleSelection(state, activeSlide, ops, 'next'),
 		onCycleSelectionPrev: () => cycleSelection(state, activeSlide, ops, 'prev'),
+		onEditText: () => editSlideObjectText(document, state.selectedElementId),
 		onPasteSpecial,
 	});
 }
@@ -226,5 +229,6 @@ function cycleSelection(
 	const nextId = cycleSelectableElement(ids, state.selectedElementId, direction);
 	if (nextId) {
 		ops.applySelection(nextId, [nextId]);
+		announceSlideObject(document, nextId);
 	}
 }

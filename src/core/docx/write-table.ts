@@ -11,6 +11,7 @@ import {
 } from './write-table-properties';
 import { placeTableControl, unwrapDroppedControls } from './write-table-controls';
 import { syncBlockControls } from './write-block-placement';
+import { replaceSlots } from './write-slots';
 import { children, first, makeW, type XmlDocument, type XmlElement } from './xml';
 
 type ParagraphWriter = (
@@ -19,12 +20,6 @@ type ParagraphWriter = (
 	node: XmlElement,
 	base?: Paragraph,
 ) => XmlElement;
-type SlotsWriter = (
-	doc: XmlDocument,
-	parent: XmlElement,
-	old: XmlElement[],
-	next: XmlElement[],
-) => void;
 
 import { canEditTableStructure, canRestructureTable } from './table-structure-check';
 import { restructured, writeRestructuredTable } from './write-table-structure';
@@ -94,7 +89,6 @@ function writeNestedTables(
 	cell: TableCell,
 	base: TableCell | undefined,
 	writeParagraph: ParagraphWriter,
-	replaceSlots: SlotsWriter,
 ): void {
 	const tables = (blocks: Block[] | undefined) =>
 		(blocks ?? []).filter((block): block is Table => block.type === 'table');
@@ -103,8 +97,7 @@ function writeNestedTables(
 	const nodes = children(tc, 'tbl');
 	next.forEach((table, index) => {
 		const node = nodes[index];
-		if (node && before[index])
-			writeTable(doc, table, node, before[index], writeParagraph, replaceSlots, true);
+		if (node && before[index]) writeTable(doc, table, node, before[index], writeParagraph, true);
 	});
 }
 
@@ -114,7 +107,6 @@ export function writeTable(
 	node: XmlElement,
 	base: Table | undefined,
 	writeParagraph: ParagraphWriter,
-	replaceSlots: SlotsWriter,
 	nested = false,
 ): XmlElement {
 	if (base && JSON.stringify(table) === JSON.stringify(base)) return node;
@@ -129,14 +121,8 @@ export function writeTable(
 		canRestructureTable(node)
 	) {
 		assertNoDescriptorEdits(table, base, true);
-		return writeRestructuredTable(
-			doc,
-			table,
-			node,
-			base,
-			writeParagraph,
-			replaceSlots,
-			(d, tc, cell, before) => writeNestedTables(d, tc, cell, before, writeParagraph, replaceSlots),
+		return writeRestructuredTable(doc, table, node, base, writeParagraph, (d, tc, cell, before) =>
+			writeNestedTables(d, tc, cell, before, writeParagraph),
 		);
 	}
 	assertNoDescriptorEdits(table, base);
@@ -239,13 +225,13 @@ export function writeTable(
 					source?.paragraphs[index],
 				);
 			});
-			replaceSlots(doc, tc, oldParagraphs, nextParagraphs);
+			replaceSlots(tc, oldParagraphs, nextParagraphs);
 			// A block control around a cell's paragraphs follows the model as in the body.
 			syncBlockControls(doc, flatParagraphs, cell.paragraphs, nextParagraphs);
-			writeNestedTables(doc, tc, cell, source?.model, writeParagraph, replaceSlots);
+			writeNestedTables(doc, tc, cell, source?.model, writeParagraph);
 			return tc;
 		});
-		replaceSlots(doc, tr, oldCells, nextCells);
+		replaceSlots(tr, oldCells, nextCells);
 		nextCells.forEach((tc, ci) =>
 			placeTableControl(doc, tc, row[ci]?.contentControl, sources[ci]?.model.contentControl),
 		);
@@ -255,7 +241,7 @@ export function writeTable(
 		);
 		return tr;
 	});
-	replaceSlots(doc, node, oldRows, nextRows);
+	replaceSlots(node, oldRows, nextRows);
 	nextRows.forEach((tr, ri) => {
 		const sourceRow = rowSources[ri];
 		placeTableControl(
@@ -286,7 +272,7 @@ export function writeTable(
 				makeW(doc, 'gridCol')
 			);
 		});
-		replaceSlots(doc, grid, oldColumns, nextColumns);
+		replaceSlots(grid, oldColumns, nextColumns);
 	}
 	return node;
 }

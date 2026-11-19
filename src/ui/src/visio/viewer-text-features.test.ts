@@ -2,6 +2,11 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { setupFormattingViewer } from './__fixtures__/formatting-viewer';
 
 afterEach(() => {
+	// A dialog control can hold focus inside a nested shadow root; happy-dom's `activeElement`
+	// throws when that tree is removed while still focused.
+	let active = document.activeElement;
+	while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+	(active as HTMLElement | null)?.blur?.();
 	document.body.replaceChildren();
 	vi.restoreAllMocks();
 });
