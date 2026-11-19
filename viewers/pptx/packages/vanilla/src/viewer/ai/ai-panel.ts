@@ -52,6 +52,12 @@ export interface AiPanelDeps {
 	createChat?: ChatFactory;
 	/** Chat-history store override for tests; defaults to the shared store. */
 	historyStore?: PptxAiChatStore;
+	/**
+	 * Called back on every viewer state change. Another deck opening drops the
+	 * staged proposals (they belong to the deck they were made on), so the panel
+	 * re-renders when the bridge's handler changed.
+	 */
+	subscribeViewer?(listener: () => void): () => void;
 }
 
 export interface AiPanel {
@@ -265,11 +271,19 @@ export async function createAiPanel(deps: AiPanelDeps): Promise<AiPanel> {
 
 	const unsubscribe = controller.subscribe(render);
 	render(controller.getSnapshot());
+	let deck = deps.bridge.getHandler();
+	const unsubscribeViewer = deps.subscribeViewer?.(() => {
+		if (deps.bridge.getHandler() !== deck) {
+			deck = deps.bridge.getHandler();
+			render(controller.getSnapshot());
+		}
+	});
 
 	return {
 		changeAnimator: controller.changeAnimator,
 		destroy() {
 			unsubscribe();
+			unsubscribeViewer?.();
 			unsubscribeHistory();
 			history.destroy();
 			unsubscribeFocus?.();

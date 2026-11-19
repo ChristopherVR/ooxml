@@ -60,4 +60,21 @@ describe('proposal store', () => {
 		expect(store.apply('nope')).toBeFalsy();
 		expect(store.revert('nope')).toBeFalsy();
 	});
+
+	it('drops what was staged on a deck once another one opens', () => {
+		let handler = {};
+		const bridge = { ...makeMockBridge(), getHandler: () => handler as never };
+		const store = new ProposalStore(bridge);
+		const staged = store.stage('Add slide', addSlideUpdater);
+		const slides = bridge.getSlides();
+
+		handler = {};
+
+		expect(store.list()).toEqual([]);
+		expect(store.apply(staged.id)).toBeFalsy();
+		expect(store.acceptAll()).toBe(0);
+		expect(bridge.getSlides()).toBe(slides);
+		store.stage('Add slide on the new deck', addSlideUpdater);
+		expect(store.size).toBe(1);
+	});
 });

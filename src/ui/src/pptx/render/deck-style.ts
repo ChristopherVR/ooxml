@@ -20,16 +20,10 @@ import type {
 	PptxThemeFormatScheme,
 	StyleReferenceReResolution,
 } from 'ooxml-core/pptx';
-import {
-	buildThemeColorMap,
-	reResolveElementColors,
-	reResolveElementFonts,
-	reResolveSlideColors,
-	reResolveSlideFonts,
-} from 'ooxml-core/pptx';
 
 import type { RibbonGalleryApplyResult } from './ribbon-galleries/gallery-types';
 import { queueThemeWrite } from './theme-history';
+import { withColors, withFonts, withName } from './theme-updates';
 
 /** The state a Design gallery changes. */
 export interface DeckStyleState {
@@ -68,44 +62,6 @@ export interface DeckStyleHandler {
 		scope: BackgroundStyleScope,
 	): BackgroundStyleApplication | undefined;
 	commitMasterBackgroundStyle(index: number): Promise<boolean>;
-}
-
-type Templates = Record<string, PptxElement[]>;
-
-function mapTemplates(
-	templates: Templates,
-	map: (elements: PptxElement[]) => PptxElement[],
-): Templates {
-	return Object.fromEntries(Object.entries(templates).map(([id, elements]) => [id, map(elements)]));
-}
-
-function withColors(state: DeckStyleState, colorScheme: PptxThemeColorScheme): DeckStyleState {
-	const previous = state.theme?.colorScheme ? buildThemeColorMap(state.theme.colorScheme) : {};
-	return {
-		...state,
-		slides: reResolveSlideColors(state.slides, previous, colorScheme),
-		templateElementsBySlideId: mapTemplates(state.templateElementsBySlideId, (elements) =>
-			reResolveElementColors(elements, previous, colorScheme),
-		),
-		theme: { ...state.theme, colorScheme },
-		themeColorMap: buildThemeColorMap(colorScheme),
-	};
-}
-
-function withFonts(state: DeckStyleState, fontScheme: PptxThemeFontScheme): DeckStyleState {
-	const previous = state.theme?.fontScheme;
-	return {
-		...state,
-		slides: reResolveSlideFonts(state.slides, previous, fontScheme),
-		templateElementsBySlideId: mapTemplates(state.templateElementsBySlideId, (elements) =>
-			reResolveElementFonts(elements, previous, fontScheme),
-		),
-		theme: { ...state.theme, fontScheme },
-	};
-}
-
-function withName(state: DeckStyleState, name: string | undefined): DeckStyleState {
-	return name ? { ...state, theme: { ...state.theme, name } } : state;
 }
 
 function backgroundScope(scope: 'all' | 'selected', target: DeckStyleTarget): BackgroundStyleScope {

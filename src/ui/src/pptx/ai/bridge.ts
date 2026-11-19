@@ -103,7 +103,11 @@ export interface PptxAiBridge {
 	getActiveSlideIndex(): number;
 	/** Return the resolved presentation theme, when available. */
 	getTheme(): PptxTheme | undefined;
-	/** Return the underlying core handler, when the binding exposes one. */
+	/**
+	 * Return the underlying core handler, when the binding exposes one. Its identity names the
+	 * open deck: return a new handler for every presentation loaded, and the same one until then.
+	 * Staged proposals are dropped when it changes.
+	 */
 	getHandler(): PptxHandler | undefined;
 
 	// ── navigation ───────────────────────────────────────────────────────────

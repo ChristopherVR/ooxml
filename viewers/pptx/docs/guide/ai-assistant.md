@@ -175,9 +175,17 @@ By default (`writePolicy: 'stage'`) every edit the assistant makes is **staged**
 not applied. The panel shows a proposal card with a short summary of the change
 and Apply / Discard buttons, plus Apply all when more than one change can be
 applied. Applying a slide change records one undo step, so one Ctrl+Z reverts it,
-and Apply all records one step per change. Theme and presentation-level changes
-behave like the same edit made by hand in that viewer. Read tools (reading slides,
-finding text) and navigation run immediately and are never staged.
+and Apply all records one step per change. A theme change re-colours the slides at
+once, is saved with the file and is one undo step in every viewer. Other
+presentation-level changes (document properties, sections, slide size) behave like
+the same edit made by hand in that viewer, so whether Ctrl+Z reverts a document
+property change depends on the viewer. Read tools (reading slides, finding text)
+and navigation run immediately and are never staged.
+
+Proposals belong to the presentation they were made on. Opening another
+presentation discards them, and so does adding or deleting a slide master or
+layout, which rebuilds the package. Nothing the assistant wrote or staged on one
+presentation reaches the next.
 
 `writePolicy` applies to every tool that changes the deck, theme and
 presentation-level tools included:

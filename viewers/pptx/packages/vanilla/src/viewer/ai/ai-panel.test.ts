@@ -129,6 +129,36 @@ describe('createAiPanel', () => {
 		expect(card?.querySelector('.pptxv-ai-proposal-label')?.textContent).toBe('Add a title');
 	});
 
+	it('stops listing the proposals once another deck opens', async () => {
+		host = document.createElement('div');
+		document.body.appendChild(host);
+		let handler = {};
+		const bridge = { ...fakeBridge(), getHandler: () => handler as never };
+		const listeners = new Set<() => void>();
+
+		await createAiPanel({
+			host,
+			doc: document,
+			t: createTranslator('en'),
+			bridge,
+			config,
+			createChat: async () => fakeController(bridge),
+			subscribeViewer: (listener) => {
+				listeners.add(listener);
+				return () => listeners.delete(listener);
+			},
+		});
+		expect(host.querySelector('.pptxv-ai-proposal')).toBeTruthy();
+
+		handler = {};
+		for (const listener of listeners) {
+			listener();
+		}
+
+		expect(host.querySelector('.pptxv-ai-proposal')).toBeNull();
+		expect(host.querySelector<HTMLElement>('.pptxv-ai-proposals')?.hidden).toBeTruthy();
+	});
+
 	it('renders a header "Chats" button that toggles the saved-chat menu', async () => {
 		host = document.createElement('div');
 		document.body.appendChild(host);

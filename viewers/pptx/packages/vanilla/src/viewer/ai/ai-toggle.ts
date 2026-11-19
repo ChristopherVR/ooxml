@@ -142,6 +142,7 @@ export function mountAiChat(deps: MountAiChatDeps): AiChatMount {
 				controller,
 				goToSlide: deps.goToSlide,
 				onClose: () => void setOpen(false),
+				subscribeViewer: (listener) => deps.store.subscribe(listener),
 			});
 			// Once the session exists, play applied AI edits on the canvas: reveal
 			// the changed slide and glide/fade a ghost per changed element.

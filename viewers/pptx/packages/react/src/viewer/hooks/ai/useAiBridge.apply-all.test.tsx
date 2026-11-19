@@ -14,6 +14,7 @@ import type {
 	PptxCustomShow,
 	PptxData,
 	PptxElement,
+	PptxHandler,
 	PptxPresentationProperties,
 	PptxSection,
 	PptxSlide,
@@ -53,9 +54,12 @@ interface Rendered {
 	theme: PptxTheme | undefined;
 	core: PptxCoreProperties | undefined;
 	replaceSlides: (slides: PptxSlide[]) => void;
+	/** What a load does: a new handler, then the new deck's state. */
+	openDeck: (slides: PptxSlide[], core: PptxCoreProperties | undefined) => void;
 }
 
 let rendered: Rendered;
+const handlerRef: { current: PptxHandler | null } = { current: null };
 
 const noop = (): void => {};
 
@@ -110,7 +114,7 @@ function Harness(): null {
 		selectedElementId: null,
 		selectedElementIds: [],
 		pinnedFocus: null,
-		handlerRef: { current: null },
+		handlerRef,
 		sections,
 		customShows,
 		presentationProperties,
@@ -146,6 +150,11 @@ function Harness(): null {
 		theme,
 		core: coreProperties,
 		replaceSlides: setSlides,
+		openDeck(nextSlides, core) {
+			handlerRef.current = {} as PptxHandler;
+			setSlides(nextSlides);
+			setCoreProperties(core);
+		},
 	};
 	return null;
 }
@@ -155,6 +164,7 @@ let root: Root;
 
 beforeEach(() => {
 	globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+	handlerRef.current = {} as PptxHandler;
 	container = document.createElement('div');
 	document.body.appendChild(container);
 	root = createRoot(container);
@@ -194,7 +204,7 @@ function setAccent(deck: PptxData, accent: 'accent1' | 'accent2', color: string)
 }
 
 const textOf = (index: number): unknown =>
-	(rendered.slides[0]?.elements[index] as unknown as { text: string }).text;
+	(rendered.slides[0]?.elements[index] as { text?: string } | undefined)?.text;
 
 describe('useAiBridge Apply all', () => {
 	it('keeps every proposal applied in one tick', () => {
@@ -272,5 +282,22 @@ describe('useAiBridge Apply all', () => {
 		const newer = initialSlides();
 		act(() => rendered.replaceSlides(newer));
 		expect(rendered.bridge.getSlides()).toEqual(newer);
+	});
+
+	it('forgets what it wrote once another deck opens', () => {
+		const store = new ProposalStore(rendered.bridge);
+		act(() => rendered.openDeck(initialSlides(), undefined));
+		propose(store, 'Title', 'deck', (deck) => {
+			deck.coreProperties = { ...deck.coreProperties, title: 'First deck title' };
+		});
+		act(() => {
+			store.acceptAll();
+		});
+		expect(rendered.core).toMatchObject({ title: 'First deck title' });
+
+		act(() => rendered.openDeck(initialSlides(), undefined));
+
+		expect(rendered.core).toBeUndefined();
+		expect(rendered.bridge.getDeckData?.()?.coreProperties?.title).toBeUndefined();
 	});
 });

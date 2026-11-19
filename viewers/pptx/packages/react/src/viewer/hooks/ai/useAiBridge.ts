@@ -108,7 +108,7 @@ export function useAiBridge(input: UseAiBridgeInput): PptxAiBridge {
 
 	return useMemo<PptxAiBridge>(() => {
 		const live = (): UseAiBridgeInput => ref.current;
-		const deck = createPendingDeckWrites(live);
+		const deck = createPendingDeckWrites(live, () => live().handlerRef.current);
 		return createPptxAiBridge({
 			getSlides: () => deck.read('slides'),
 			getActiveSlideIndex: () => live().activeSlideIndex,

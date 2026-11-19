@@ -1711,6 +1711,8 @@ export * from './options';
 export * from './customization';
 export * from './ribbon-galleries';
 export * from './deck-style';
+// A theme change re-resolved over the deck state, ready for one undo step.
+export { withThemeUpdates } from './theme-updates';
 // A theme change as an undo step: what each snapshot records, what an undo writes back into the
 // handler's theme parts, and the write queue every save waits for.
 export * from './theme-history';

@@ -6,6 +6,11 @@
  * proposals and the user's later edits all survive. A proposal whose target has
  * since changed is not applied: it stays listed with a conflict for the user to
  * discard or retry. Each applied proposal is one undoable history entry.
+ *
+ * Proposals belong to the deck they were made on. The bridge's handler is the
+ * deck's identity (every binding loads a presentation into a new one), so once
+ * it changes every staged proposal is dropped: none can be listed or applied
+ * to another presentation.
  */
 
 import type { PptxData, PptxSlide, PptxTheme } from 'ooxml-core/pptx';
@@ -103,12 +108,25 @@ function summarize(write: ProposedWrite, changes: DeckChange[]): string[] {
 }
 
 export class ProposalStore {
-	private readonly proposals = new Map<string, StagedProposal>();
+	private readonly staged = new Map<string, StagedProposal>();
+	private deck: unknown;
 
 	constructor(
 		private readonly bridge: PptxAiBridge,
 		private readonly animator?: AiChangeAnimator,
-	) {}
+	) {
+		this.deck = bridge.getHandler();
+	}
+
+	/** The proposals staged on the open deck; another deck's are dropped first. */
+	private get proposals(): Map<string, StagedProposal> {
+		const deck = this.bridge.getHandler();
+		if (deck !== this.deck) {
+			this.deck = deck;
+			this.staged.clear();
+		}
+		return this.staged;
+	}
 
 	/** Stage a computed write without touching the deck. */
 	propose(write: ProposedWrite): StagedProposal {
