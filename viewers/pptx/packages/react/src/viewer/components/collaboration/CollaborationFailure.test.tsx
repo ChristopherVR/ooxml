@@ -78,4 +78,24 @@ describe('collaboration start failure (React)', () => {
 		expect(pill?.textContent).toContain(translationsEn['pptx.collaboration.status.error']);
 		expect(pill?.getAttribute('title')).toBe(MISSING_SECRET);
 	});
+
+	it('says why a peer-to-peer invitation without its key cannot join', () => {
+		act(() => {
+			root.render(<ShareDialog open onClose={() => {}} defaultUserName='Ada' />);
+		});
+		const joinTab = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="tab"]'))[1];
+		act(() => joinTab?.click());
+		const field = document.querySelector<HTMLInputElement>('#share-invitation');
+		act(() => {
+			// React tracks the value through the native setter; an input event then commits it.
+			Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(
+				field,
+				'https://x.test/?room=deck-1&transport=webrtc',
+			);
+			field?.dispatchEvent(new Event('input', { bubbles: true }));
+		});
+		expect(document.querySelector('[data-testid="collaboration-failure"]')?.textContent).toBe(
+			MISSING_SECRET,
+		);
+	});
 });

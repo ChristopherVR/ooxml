@@ -169,4 +169,22 @@ describe('createCollabUi start failure', () => {
 		collab.destroy();
 		ui.destroy();
 	});
+
+	it('says why a peer-to-peer invitation without its key cannot join', () => {
+		const missingSecret = translationsEn['pptx.collaboration.failure.missingSecret'];
+		const ui = createCollabUi(makeDeps());
+		ui.openShare();
+		document.body.querySelectorAll<HTMLButtonElement>('.pptxv-share-tabs button')[1]?.click();
+		const field = Array.from(document.body.querySelectorAll<HTMLInputElement>('input')).find(
+			(input) => input.placeholder === translationsEn['pptx.share.invitationPlaceholder'],
+		);
+		field!.value = 'https://x.test/?room=deck-1&transport=webrtc';
+		field!.dispatchEvent(new Event('input', { bubbles: true }));
+		const banner = document.body.querySelector<HTMLElement>(
+			'[data-testid="collaboration-failure"]',
+		);
+		expect(banner?.hidden).toBeFalsy();
+		expect(banner?.textContent).toBe(missingSecret);
+		ui.destroy();
+	});
 });

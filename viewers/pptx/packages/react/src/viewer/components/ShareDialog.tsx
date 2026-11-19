@@ -15,6 +15,7 @@ import {
 	buildJoinCollaborationConfig,
 	collaborationFailureMessageKey,
 	getDensePanelTouchTargetPx,
+	shareFormFailureKey,
 	shouldStickyActionRow,
 } from 'ooxml-ui/pptx';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -232,9 +233,10 @@ export function ShareDialog({
 										onModeChange={setMode}
 										onInvitationChange={setInvitation}
 										preconfigured={preconfigured}
-										connectionFailure={
-											collab ? collaborationFailureMessageKey(collab.status, collab.failure) : null
-										}
+										connectionFailure={shareFormFailureKey(
+											{ mode, invitation },
+											collab ? collaborationFailureMessageKey(collab.status, collab.failure) : null,
+										)}
 										onRetry={collab?.retry}
 									/>
 								)}

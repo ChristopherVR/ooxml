@@ -50,6 +50,14 @@ function render<T>(
 	component: new (...args: never[]) => T,
 	inputs: Record<string, unknown>,
 	templateFile?: string,
+): HTMLElement {
+	return renderFixture(component, inputs, templateFile).nativeElement as HTMLElement;
+}
+
+function renderFixture<T>(
+	component: new (...args: never[]) => T,
+	inputs: Record<string, unknown>,
+	templateFile?: string,
 ) {
 	TestBed.resetTestingModule();
 	TestBed.configureTestingModule({
@@ -80,7 +88,7 @@ function render<T>(
 	translate.setTranslation('en', translationsEn);
 	translate.use('en');
 	fixture.detectChanges();
-	return fixture.nativeElement as HTMLElement;
+	return fixture;
 }
 
 describe('collaboration start failure (Angular)', () => {
@@ -108,5 +116,22 @@ describe('collaboration start failure (Angular)', () => {
 			translationsEn['pptx.collaboration.status.error'],
 		);
 		collab.disconnect();
+	});
+
+	it('says why a peer-to-peer invitation without its key cannot join', () => {
+		const fixture = renderFixture(
+			ShareDialogComponent,
+			{ open: true, active: false, failureKey: null },
+			'share-dialog.component.html',
+		);
+		const dialog = fixture.nativeElement as HTMLElement;
+		dialog.querySelectorAll<HTMLButtonElement>('[role="tab"]')[1]?.click();
+		fixture.detectChanges();
+		const field = dialog.querySelector<HTMLInputElement>('#pptx-ng-share-invitation');
+		field!.value = 'https://x.test/?room=deck-1&transport=webrtc';
+		field!.dispatchEvent(new Event('input'));
+		fixture.detectChanges();
+		const banner = dialog.querySelector('[data-testid="collaboration-failure"]');
+		expect(banner?.textContent?.trim()).toBe(MISSING_SECRET);
 	});
 });

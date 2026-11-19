@@ -24,7 +24,11 @@ import {
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import type { ActiveSessionUserDescriptor, CollaborationConfig } from 'ooxml-ui/pptx';
-import { buildCreateCollaborationConfig, buildJoinCollaborationConfig } from 'ooxml-ui/pptx';
+import {
+	buildCreateCollaborationConfig,
+	buildJoinCollaborationConfig,
+	shareFormFailureKey,
+} from 'ooxml-ui/pptx';
 
 import { canUseClipboard } from './broadcast-helpers';
 import type { DialogFooterActionSpec } from './dialog-footer.component';
@@ -137,6 +141,14 @@ export class ShareDialogComponent {
 				}),
 	);
 	readonly canStart = computed(() => this.pendingConfig() !== null);
+
+	/**
+	 * Why the typed invitation cannot join (a peer-to-peer link without its key),
+	 * else `failureKey`, why the last start failed.
+	 */
+	protected readonly bannerKey = computed(() =>
+		shareFormFailureKey({ mode: this.mode(), invitation: this.invitation() }, this.failureKey()),
+	);
 
 	/** Blank server URL selects the serverless peer-to-peer (webrtc) transport. */
 	readonly isP2p = computed(() => this.serverUrl().trim().length === 0);

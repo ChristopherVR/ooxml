@@ -6,6 +6,7 @@ import {
 	buildCollaborationShareUrl,
 	buildCreateCollaborationConfig,
 	buildJoinCollaborationConfig,
+	shareFormFailureKey,
 } from './share-session';
 
 const SECRET = 'AAECAwQFBgcICQoLDA0ODw';
@@ -143,5 +144,29 @@ describe('share session helpers', () => {
 		expect(
 			buildJoinCollaborationConfig({ invitation: link, userName: 'Sam', serverUrl: '' }),
 		).toMatchObject({ roomId: 'deck-3', serverUrl: 'wss://relay.example', sessionIntent: 'join' });
+	});
+
+	it('names why a keyless peer-to-peer invitation cannot join', () => {
+		const keyless = 'https://x.test/?room=deck-4&transport=webrtc';
+		const missingSecret = 'pptx.collaboration.failure.missingSecret';
+		for (const invitation of [keyless, `${keyless}&key=${SECRET}`]) {
+			expect(
+				buildJoinCollaborationConfig({ invitation, userName: 'Sam', serverUrl: '' }),
+			).toBeNull();
+			expect(shareFormFailureKey({ mode: 'join', invitation }, null)).toBe(missingSecret);
+			// The invitation's reason replaces an older session failure on the join tab only.
+			expect(
+				shareFormFailureKey(
+					{ mode: 'join', invitation },
+					'pptx.collaboration.failure.serverUnreachable',
+				),
+			).toBe(missingSecret);
+			expect(shareFormFailureKey({ mode: 'create', invitation }, null)).toBeNull();
+		}
+		const complete = `${keyless}#key=${SECRET}`;
+		expect(shareFormFailureKey({ mode: 'join', invitation: complete }, null)).toBeNull();
+		expect(shareFormFailureKey({ mode: 'join', invitation: 'deck-4' }, 'session-key')).toBe(
+			'session-key',
+		);
 	});
 });

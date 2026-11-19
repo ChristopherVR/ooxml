@@ -32,6 +32,8 @@ export interface OfficeShareDialogLabels {
 	you: string;
 	peopleCount: string;
 	invalidRoom: string;
+	/** A peer-to-peer invitation link without its session key, which cannot be joined. */
+	missingKey: string;
 	statusOff: string;
 	statusConnecting: string;
 	statusConnected: string;
@@ -73,6 +75,8 @@ const en: OfficeShareDialogLabels = {
 	you: '(you)',
 	peopleCount: '{count} in this session',
 	invalidRoom: 'Use 1 to 128 letters, digits, hyphens or underscores for the session name.',
+	missingKey:
+		'This peer-to-peer invitation is missing its session key. Open the full share link you were sent.',
 	statusOff: 'Not sharing.',
 	statusConnecting: 'Connecting...',
 	statusConnected: 'Connected.',
@@ -113,6 +117,8 @@ const fr: OfficeShareDialogLabels = {
 	peopleCount: '{count} dans cette session',
 	invalidRoom:
 		'Utilisez de 1 à 128 lettres, chiffres, traits d’union ou traits de soulignement pour le nom de la session.',
+	missingKey:
+		'Il manque la clé de session à cette invitation pair à pair. Ouvrez le lien de partage complet que vous avez reçu.',
 	statusOff: 'Aucun partage.',
 	statusConnecting: 'Connexion...',
 	statusConnected: 'Connecté.',
@@ -154,6 +160,8 @@ const de: OfficeShareDialogLabels = {
 	peopleCount: '{count} in dieser Sitzung',
 	invalidRoom:
 		'Verwenden Sie für den Sitzungsnamen 1 bis 128 Buchstaben, Ziffern, Binde- oder Unterstriche.',
+	missingKey:
+		'Dieser Peer-to-Peer-Einladung fehlt der Sitzungsschlüssel. Öffnen Sie den vollständigen Freigabelink, den Sie erhalten haben.',
 	statusOff: 'Keine Freigabe.',
 	statusConnecting: 'Verbindung wird hergestellt...',
 	statusConnected: 'Verbunden.',
@@ -195,6 +203,8 @@ const es: OfficeShareDialogLabels = {
 	peopleCount: '{count} en esta sesión',
 	invalidRoom:
 		'Use de 1 a 128 letras, dígitos, guiones o guiones bajos para el nombre de la sesión.',
+	missingKey:
+		'A esta invitación punto a punto le falta la clave de sesión. Abra el vínculo para compartir completo que recibió.',
 	statusOff: 'Sin compartir.',
 	statusConnecting: 'Conectando...',
 	statusConnected: 'Conectado.',
@@ -233,6 +243,7 @@ const zhCN: OfficeShareDialogLabels = {
 	you: '（你）',
 	peopleCount: '此会话中有 {count} 人',
 	invalidRoom: '会话名称请使用 1 到 128 个字母、数字、连字符或下划线。',
+	missingKey: '此点对点邀请缺少会话密钥。请打开你收到的完整共享链接。',
 	statusOff: '未共享。',
 	statusConnecting: '正在连接...',
 	statusConnected: '已连接。',

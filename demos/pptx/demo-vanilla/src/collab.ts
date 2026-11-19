@@ -61,7 +61,8 @@ export function buildRoomConfig(link: SessionLink, userName: string): Collaborat
 
 /**
  * The peer-to-peer session the current URL names (`?room=<id>&transport=webrtc#key=<secret>`),
- * or null.
+ * or null. A link without its secret names the room without one, so the viewer says why it
+ * cannot join.
  */
 export function readRoomFromUrl(): SessionLink | null {
 	const link = sessionFromPage('room', '');

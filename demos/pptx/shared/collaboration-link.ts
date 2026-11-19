@@ -5,7 +5,7 @@
  * peer-to-peer link carries its secret in the `#key=` fragment exactly as every binding's Share
  * dialog link does.
  */
-import { parseShareInvitation, shareInvitation } from 'ooxml-core/collab';
+import { readShareInvitation, shareInvitation } from 'ooxml-core/collab';
 import type { ShareLinkParam, ShareTarget } from 'ooxml-core/collab';
 
 /** The session fields of a binding's `CollaborationConfig` that an invitation carries. */
@@ -21,16 +21,22 @@ const LINK_PARAMS = ['room', 'broadcast', 'server', 'transport', 'signaling'];
 
 /**
  * The session the page address names under `param`, with `fallbackServerUrl` for a link that
- * names no server, or null. A peer-to-peer link without its `#key=` secret names none.
+ * names no server, or null. A peer-to-peer link without its `#key=` secret (an older link kept it
+ * in the query) still names its room, without a secret: the viewer's session then fails to start
+ * and shows its translated missing-key reason instead of the page doing nothing.
  */
 export function sessionFromPage(
 	param: ShareLinkParam,
 	fallbackServerUrl: string,
 ): SessionLink | null {
-	const target = parseShareInvitation(window.location.href, fallbackServerUrl, param);
-	if (!target) {
+	const invitation = readShareInvitation(window.location.href, fallbackServerUrl, param);
+	if (invitation.kind === 'none') {
 		return null;
 	}
+	if (invitation.kind === 'missing-secret') {
+		return { roomId: invitation.roomId, serverUrl: '', transport: 'webrtc' };
+	}
+	const { target } = invitation;
 	if (target.transport !== 'webrtc') {
 		return { roomId: target.roomId, serverUrl: target.serverUrl };
 	}

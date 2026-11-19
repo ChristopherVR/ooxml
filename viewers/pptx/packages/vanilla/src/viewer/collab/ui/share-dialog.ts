@@ -11,6 +11,7 @@ import {
 	buildCollaborationShareUrl,
 	collaborationFailureMessageKey,
 	resolveTransportForServerUrl,
+	shareFormFailureKey,
 } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
@@ -111,7 +112,8 @@ export function createShareDialog(
 	joinTab.type = 'button';
 	joinTab.textContent = t('pptx.share.joinSession');
 	tabs.append(createTab, joinTab);
-	// Why the last attempt failed, shown above the fields until a new start.
+	// Why the typed invitation cannot join (a peer-to-peer link without its key),
+	// else why the last attempt failed, shown above the fields until a new start.
 	const failureBanner = createEl(doc, 'p', 'pptxv-share-error');
 	failureBanner.setAttribute('role', 'alert');
 	failureBanner.setAttribute('data-testid', 'collaboration-failure');
@@ -263,7 +265,10 @@ export function createShareDialog(
 	/** Paint the active-session view from the current `session` snapshot. */
 	function renderSession(): void {
 		const config = session.config;
-		const failureKey = collaborationFailureMessageKey(session.status, session.failure ?? null);
+		const failureKey = shareFormFailureKey(
+			{ mode, invitation },
+			collaborationFailureMessageKey(session.status, session.failure ?? null),
+		);
 		failureBanner.hidden = !failureKey;
 		failureBanner.textContent = failureKey ? t(failureKey) : '';
 		const isP2P = resolveTransportForServerUrl(config?.serverUrl ?? '') === 'webrtc';
