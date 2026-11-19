@@ -18,8 +18,9 @@ const inactive: ExternalYjsSessionResult = {
 	doc: null,
 	clientId: null,
 	synced: false,
-	// An external transport can only be retried by its owner.
+	// An external transport can only be retried, or refuse an update, by its owner.
 	retry: () => {},
+	refusal: null,
 };
 
 /** Attach to host resources without owning their network or lifetime. */
@@ -57,6 +58,7 @@ export function useExternalYjsSession(
 							awareness: borrowed.awareness,
 							clientId: session.awareness.clientID,
 							retry: inactive.retry,
+							refusal: null,
 						},
 					});
 				});

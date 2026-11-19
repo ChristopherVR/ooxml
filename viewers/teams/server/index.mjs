@@ -28,6 +28,7 @@ import {
 } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { getHeapStatistics } from 'node:v8';
 import { WebSocketServer } from 'ws';
 import * as Y from 'yjs';
 import * as syncProtocol from 'y-protocols/sync';
@@ -43,7 +44,6 @@ import {
 } from './auth.mjs';
 import { createSlidingLimiter } from './rate-limit.mjs';
 import {
-	DEFAULT_UPDATE_LIMITS,
 	PROTOCOL_PARAM,
 	PROTOCOL_VERSION,
 	applyUpdateReverts,
@@ -129,6 +129,16 @@ export function syncGrant(verdict, user) {
 const WS_OPEN = 1;
 const SERVER_OWNER = Symbol('server');
 
+/**
+ * The default largest sync message: 32 MiB, or a 64th of the heap when that is smaller. Checking
+ * and applying a first sync of a dense workbook, or a frame at the update budget, takes up to 35
+ * MiB of memory per MiB of message; a 512 MiB heap was measured to survive 8 MiB frames at the
+ * budget but not every 16 MiB one, and a 1 GiB heap 16 MiB frames but not every 30 MiB one.
+ */
+export function defaultMaxSyncBytes(heapBytes = getHeapStatistics().heap_size_limit) {
+	return Math.min(32 * 1024 * 1024, Math.floor(heapBytes / 64));
+}
+
 const sameSecret = sameCredential;
 
 const quietSize = (path) => {
@@ -174,7 +184,7 @@ export function createTeamsServer(options = {}) {
 		sessionTtlMs,
 		adminToken = process.env.TEAMS_ADMIN_TOKEN || '',
 		maxFileBytes = 25 * 1024 * 1024,
-		maxSyncBytes = 32 * 1024 * 1024,
+		maxSyncBytes = defaultMaxSyncBytes(),
 		maxSignalBytes = 256 * 1024,
 		metricsToken = process.env.TEAMS_METRICS_TOKEN || '',
 		log = () => {},
@@ -194,15 +204,12 @@ export function createTeamsServer(options = {}) {
 		contentLimits.maxReactionsPerMessage = maxReactions;
 	// What one update may make Yjs allocate, checked before it is decoded (see "Limits" in the README).
 	const maxUpdateStructs = options.maxUpdateStructs ?? Number(process.env.TEAMS_MAX_UPDATE_STRUCTS);
-	const updateLimits = {
-		maxStructs:
-			Number.isInteger(maxUpdateStructs) && maxUpdateStructs > 0
-				? maxUpdateStructs
-				: DEFAULT_UPDATE_LIMITS.maxStructs,
-		maxDeleteRanges: DEFAULT_UPDATE_LIMITS.maxDeleteRanges,
-	};
-	contentLimits.maxStructs = updateLimits.maxStructs;
-	contentLimits.maxDeleteRanges = updateLimits.maxDeleteRanges;
+	// Unset, the budget is proportional to the update's size (one struct per 4 bytes).
+	const updateLimits =
+		Number.isInteger(maxUpdateStructs) && maxUpdateStructs > 0
+			? { maxStructs: maxUpdateStructs }
+			: {};
+	Object.assign(contentLimits, updateLimits);
 	const authenticate = options.authenticate ?? (users ? authenticateFromUsers(users) : undefined);
 	// Per-room permissions decided by the host (see "Per-room permissions" in the README).
 	const authorizeSync = typeof options.authorizeSync === 'function' ? options.authorizeSync : null;

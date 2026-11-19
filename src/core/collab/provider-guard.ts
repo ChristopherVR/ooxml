@@ -2,10 +2,12 @@
 // applies every sync message it receives inside its own handler, so an update never passes through
 // `applyUpdateSafe`. Its providers keep a per-instance `messageHandlers` table; this replaces the
 // sync entry with one that scans the update first (see `update-scan.ts`) and drops a message over
-// budget before Yjs decodes it. New code.
+// budget before Yjs decodes it. The caller hears each refusal and decides what the session does
+// next; `adaptYjsProvider` and PowerPoint stop syncing. New code.
 import * as decoding from 'lib0/decoding';
 
 import { MAX_UPDATE_BYTES } from './codec';
+import { UpdateRefusedError } from './refusal';
 import { scanUpdate, type UpdateLimits } from './update-scan';
 
 const MESSAGE_SYNC = 0;
@@ -22,8 +24,8 @@ export interface MessageHandlerProviderLike {
 export interface ProviderGuardOptions extends UpdateLimits {
 	/** Largest update accepted. Default {@link MAX_UPDATE_BYTES}. */
 	maxBytes?: number;
-	/** Told about each dropped message. */
-	onRejected?: (reason: string) => void;
+	/** Told about each dropped message, with why it was refused. */
+	onRejected?: (error: UpdateRefusedError) => void;
 }
 
 /**
@@ -41,22 +43,30 @@ export function guardProviderUpdates(
 	const maxBytes = options.maxBytes ?? MAX_UPDATE_BYTES;
 	handlers[MESSAGE_SYNC] = (encoder, decoder, ...rest) => {
 		const peek = decoding.clone(decoder);
-		let reason: string | undefined;
+		let refused: UpdateRefusedError | undefined;
 		try {
 			const kind = decoding.readVarUint(peek);
 			if (kind === SYNC_STEP_2 || kind === SYNC_UPDATE) {
 				const update = decoding.readVarUint8Array(peek);
-				if (update.byteLength > maxBytes) reason = `update exceeds the ${maxBytes} byte limit`;
+				if (update.byteLength > maxBytes)
+					refused = new UpdateRefusedError(
+						'too-large',
+						`update exceeds the ${maxBytes} byte limit`,
+					);
 				else {
 					const scan = scanUpdate(update, options);
-					if (!scan.ok) reason = scan.reason;
+					if (!scan.ok)
+						refused = new UpdateRefusedError(
+							scan.overLimit ? 'too-large' : 'malformed',
+							scan.reason,
+						);
 				}
 			}
 		} catch {
-			reason = 'malformed sync message';
+			refused = new UpdateRefusedError('malformed', 'malformed sync message');
 		}
-		if (reason !== undefined) {
-			options.onRejected?.(reason);
+		if (refused) {
+			options.onRejected?.(refused);
 			return;
 		}
 		sync(encoder, decoder, ...rest);

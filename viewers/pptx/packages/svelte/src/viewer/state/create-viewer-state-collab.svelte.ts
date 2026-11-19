@@ -116,6 +116,7 @@ export function useCollabCluster(deps: CollabClusterDeps): CollabCluster {
 			}
 		},
 		getConfig: () => options.collaboration,
+		onNotice: (toast) => deps.notify?.(toast),
 		getHistory: () => editor.history.controller,
 		getSourceBytes: sourceBytes,
 		// Session-level save options (view properties, table styles, tags, deck

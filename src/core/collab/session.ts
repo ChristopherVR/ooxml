@@ -9,6 +9,7 @@ import { type AwarenessLike, type PresencePublisher, createPresencePublisher } f
 import { Emitter } from './emitter';
 import { type CollaborationRole, assignUserColor, canWrite as roleCanWrite } from './identity';
 import { createDepartureChannel, registerTeardown, type TeardownOptions } from './lifecycle';
+import { isUpdateRefusal, type UpdateRefusalCode } from './refusal';
 import { INITIAL_SYNC_GRACE_MS, createSyncGate, type SyncGate } from './policy';
 import {
 	PRESENCE_HEARTBEAT_MS,
@@ -79,6 +80,11 @@ export interface CollabSession<P extends object = object> {
 	readonly provider: SyncProvider;
 	readonly status: ConnectionStatus;
 	readonly synced: boolean;
+	/**
+	 * Why sync stopped, when an update was refused (see `UpdateRefusedError`); cleared when the
+	 * provider connects again.
+	 */
+	readonly refusal: UpdateRefusalCode | undefined;
 	/** Writes are allowed: the gate opened (synced, or the grace period passed), not a viewer, not destroyed. */
 	canWrite: () => boolean;
 	peers: () => RemotePresence<P>[];
@@ -121,6 +127,7 @@ export function createCollabSession<P extends object = object>(
 	);
 	let destroyed = false;
 	let timeout: ReturnType<typeof setTimeout> | null = null;
+	let refusal: UpdateRefusalCode | undefined;
 
 	const gate = createSyncGate(() => {
 		if (destroyed) return;
@@ -146,13 +153,19 @@ export function createCollabSession<P extends object = object>(
 				events.emit('error', new Error('Collaboration connection timed out'));
 				events.emit('status', 'error');
 			}, options.connectionTimeoutMs ?? CONNECTION_TIMEOUT_MS);
-		if (status === 'connected') gate.arm();
+		if (status === 'connected') {
+			refusal = undefined;
+			gate.arm();
+		}
 	});
 	provider.on('synced', (synced) => {
 		events.emit('synced', synced);
 		if (synced) gate.open();
 	});
-	provider.on('error', (error) => events.emit('error', error));
+	provider.on('error', (error) => {
+		if (isUpdateRefusal(error)) refusal = error.code;
+		events.emit('error', error);
+	});
 
 	const heartbeatMs = options.heartbeatMs ?? PRESENCE_HEARTBEAT_MS;
 	const heartbeat =
@@ -196,6 +209,9 @@ export function createCollabSession<P extends object = object>(
 		},
 		get synced() {
 			return provider.synced;
+		},
+		get refusal() {
+			return refusal;
 		},
 		canWrite: () => !destroyed && gate.isOpen() && roleCanWrite(role),
 		peers,

@@ -1,7 +1,9 @@
+import { isUpdateRefusal, UpdateRefusedError } from 'ooxml-core/collab';
+import { translateCollabText } from 'ooxml-core/i18n';
 import { emit } from './events';
 import type { EditorView } from 'prosemirror-view';
 import type { DocumentModel } from 'ooxml-core/docx';
-import type { EditorLocale } from './localization';
+import { normalizeEditorLocale, type EditorLocale } from './localization';
 
 /** What feature controllers need from the editor element, without reaching into its internals. */
 export interface EditorHost {
@@ -18,7 +20,24 @@ export interface EditorHost {
 	reportError(cause: unknown): void;
 }
 
-/** Raises the editor's `document-error` event for any thrown value. */
+/**
+ * Raises the editor's `document-error` event for any thrown value. A refused collaboration update
+ * says why sharing stopped in the editor's display language.
+ */
 export function dispatchDocumentError(element: HTMLElement, cause: unknown): void {
-	emit(element, 'document-error', cause instanceof Error ? cause : new Error(String(cause)));
+	const error = cause instanceof Error ? cause : new Error(String(cause));
+	emit(
+		element,
+		'document-error',
+		isUpdateRefusal(error)
+			? new UpdateRefusedError(
+					error.code,
+					error.detail,
+					translateCollabText(
+						error.message,
+						normalizeEditorLocale((element as { locale?: string }).locale),
+					),
+				)
+			: error,
+	);
 }

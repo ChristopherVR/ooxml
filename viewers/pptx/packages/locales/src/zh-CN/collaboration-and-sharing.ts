@@ -16,6 +16,14 @@ export const translations = {
 	'pptx.collaboration.status.connecting': '正在连接...',
 	'pptx.collaboration.status.disconnected': '已断开连接',
 	'pptx.collaboration.status.error': '连接错误',
+	'pptx.collaboration.refused.tooLarge':
+		'共享会话中的一项更改太大，无法在此应用，因此共享已停止。你的副本未更改。',
+	'pptx.collaboration.refused.malformed':
+		'无法读取共享会话中的一项更改，因此共享已停止。你的副本未更改。',
+	'pptx.collaboration.refused.serverRejected':
+		'服务器拒绝了你的最新更改，因此共享已停止。你的副本保留了该更改。',
+	'pptx.collaboration.refused.serverFull':
+		'共享文档已达到服务器的大小限制，因此共享已停止。你的副本保留了你的最新更改。',
 	'pptx.collaboration.statusAriaLabel': '协作：{{status}}',
 	'pptx.collaboration.userCount': '{{count}} 位用户',
 	'pptx.collaboration.youLabel': '{{name}}（你）',

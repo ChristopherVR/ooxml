@@ -4,15 +4,18 @@ import type { CollaborationConfig } from '../../types';
 import type { CollabProviderHandle } from '../collaboration-provider';
 import type { CollabYSession } from '../collaboration-yjs-session';
 import { createCollaborationSessionController } from './collaboration-session-controller';
+import { UpdateRefusedError } from 'ooxml-core/collab';
 
 interface FakeProvider extends CollabProviderHandle {
 	emitStatus(connected: boolean): void;
 	emitSynced(): void;
+	emitRefused(error: UpdateRefusedError): void;
 }
 
 function fakeProvider(connectedNow = false): FakeProvider {
 	const status: ((connected: boolean) => void)[] = [];
 	const synced: (() => void)[] = [];
+	const refused: ((error: UpdateRefusedError) => void)[] = [];
 	return {
 		awareness: {
 			clientID: 7,
@@ -22,11 +25,13 @@ function fakeProvider(connectedNow = false): FakeProvider {
 		},
 		onStatus: (cb) => status.push(cb),
 		onSynced: (cb) => synced.push(cb),
+		onRefused: (cb) => refused.push(cb),
 		connectedNow,
 		syncedNow: false,
 		destroy: vi.fn(),
 		emitStatus: (connected) => status.forEach((cb) => cb(connected)),
 		emitSynced: () => synced.forEach((cb) => cb()),
+		emitRefused: (error) => refused.forEach((cb) => cb(error)),
 	};
 }
 
@@ -58,6 +63,29 @@ describe('createCollaborationSessionController', () => {
 	});
 	afterEach(() => {
 		vi.useRealTimers();
+	});
+
+	it('stops at a refused update: status error, writes gated, the reason reported', async () => {
+		const provider = fakeProvider();
+		const onRefused = vi.fn();
+		const controller = createCollaborationSessionController({
+			openSession: async () => fakeSession(provider),
+			onRefused,
+			registerTeardown: false,
+		});
+		await controller.start(ws);
+		provider.emitStatus(true);
+		provider.emitRefused(new UpdateRefusedError('too-large', 'update holds more than 10 structs'));
+		// The provider disconnects after refusing; the drop does not hide why.
+		provider.emitStatus(false);
+		expect(controller.getSnapshot()).toMatchObject({ status: 'error', refusal: 'too-large' });
+		expect(controller.gate.isOpen()).toBe(false);
+		expect(onRefused).toHaveBeenCalledWith('too-large');
+		vi.advanceTimersByTime(60_000);
+		expect(controller.getSnapshot().status).toBe('error');
+		// Retrying starts afresh.
+		await controller.retry();
+		expect(controller.getSnapshot().refusal).toBeNull();
 	});
 
 	it('opens a websocket session: connecting, then connected, then synced', async () => {

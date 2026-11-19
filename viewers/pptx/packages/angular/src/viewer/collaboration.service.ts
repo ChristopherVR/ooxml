@@ -28,6 +28,7 @@ import {
 	bindCollaborationHistory,
 	buildCollaborationState,
 	collaborationHistoryReady,
+	collaborationRefusalToast,
 	createCollaborationLivePatcher,
 	createCollaborationSessionController,
 	writeBackReport,
@@ -97,6 +98,7 @@ export class CollaborationService {
 		onBegin: (config) => this.begin(config),
 		onOpen: (live, config) => this.attach(live, config),
 		onClose: () => this.detach(),
+		onRefused: (code) => this.lastOptions.onNotice?.(collaborationRefusalToast(code)),
 	});
 	private readonly sessionState = controllerSignal(this.sessionCtl);
 	/** The first exchange with the room finished (the first-write gate is open). */

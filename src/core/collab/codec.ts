@@ -3,10 +3,12 @@
 // and never validated what a peer sent.
 import * as Y from 'yjs';
 
+import type { UpdateRefusalCode } from './refusal';
 import { scanUpdate, type UpdateLimits } from './update-scan';
 
 export {
-	DEFAULT_UPDATE_LIMITS,
+	defaultUpdateLimits,
+	MIN_BYTES_PER_STRUCT,
 	scanUpdate,
 	type UpdateLimits,
 	type UpdateScan,
@@ -15,7 +17,13 @@ export {
 /** Default upper bound for one inbound update or snapshot (32 MiB). */
 export const MAX_UPDATE_BYTES = 32 * 1024 * 1024;
 
-export type ApplyResult = { ok: true } | { ok: false; reason: string };
+/** `code` says what kind of refusal it is (see `refusal.ts`); `reason` what exactly, for logs. */
+export type ApplyResult =
+	| { ok: true }
+	| { ok: false; reason: string; code: Extract<UpdateRefusalCode, 'too-large' | 'malformed'> };
+
+const malformed = (reason: string): ApplyResult => ({ ok: false, reason, code: 'malformed' });
+const tooLarge = (reason: string): ApplyResult => ({ ok: false, reason, code: 'too-large' });
 
 export interface ApplyOptions extends UpdateLimits {
 	/** Reject payloads larger than this. Default {@link MAX_UPDATE_BYTES}. */
@@ -50,20 +58,16 @@ export function validateUpdate(
 	maxBytes: number = MAX_UPDATE_BYTES,
 	limits: UpdateLimits = {},
 ): ApplyResult {
-	if (!(update instanceof Uint8Array)) return { ok: false, reason: 'update must be a Uint8Array' };
-	if (update.byteLength === 0) return { ok: false, reason: 'update is empty' };
-	if (update.byteLength > maxBytes)
-		return { ok: false, reason: `update exceeds the ${maxBytes} byte limit` };
+	if (!(update instanceof Uint8Array)) return malformed('update must be a Uint8Array');
+	if (update.byteLength === 0) return malformed('update is empty');
+	if (update.byteLength > maxBytes) return tooLarge(`update exceeds the ${maxBytes} byte limit`);
 	const scan = scanUpdate(update, limits);
-	if (!scan.ok) return { ok: false, reason: scan.reason };
+	if (!scan.ok) return scan.overLimit ? tooLarge(scan.reason) : malformed(scan.reason);
 	try {
 		Y.decodeUpdate(update);
 		return { ok: true };
 	} catch (cause) {
-		return {
-			ok: false,
-			reason: `malformed update: ${cause instanceof Error ? cause.message : String(cause)}`,
-		};
+		return malformed(`malformed update: ${cause instanceof Error ? cause.message : String(cause)}`);
 	}
 }
 
@@ -78,17 +82,16 @@ export function applyUpdateSafe(
 		options.validate === false
 			? update instanceof Uint8Array && update.byteLength <= (options.maxBytes ?? MAX_UPDATE_BYTES)
 				? ({ ok: true } as const)
-				: ({ ok: false, reason: 'invalid or oversized update' } as const)
+				: tooLarge('invalid or oversized update')
 			: validateUpdate(update, options.maxBytes, options);
 	if (!checked.ok) return checked;
 	try {
 		Y.applyUpdate(doc, update as Uint8Array, origin);
 		return { ok: true };
 	} catch (cause) {
-		return {
-			ok: false,
-			reason: `could not apply update: ${cause instanceof Error ? cause.message : String(cause)}`,
-		};
+		return malformed(
+			`could not apply update: ${cause instanceof Error ? cause.message : String(cause)}`,
+		);
 	}
 }
 

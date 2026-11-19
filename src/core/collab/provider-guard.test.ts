@@ -3,7 +3,9 @@ import * as encoding from 'lib0/encoding';
 import { describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
 
+import { adaptYjsProvider } from './external-provider';
 import { guardProviderUpdates } from './provider-guard';
+import { UPDATE_REFUSAL_MESSAGES, UpdateRefusedError } from './refusal';
 
 /** A sync update frame without the outer message type, as y-websocket's handler receives it. */
 function syncUpdate(update: Uint8Array): decoding.Decoder {
@@ -39,7 +41,28 @@ describe('guardProviderUpdates', () => {
 
 		provider.messageHandlers[0]!({}, syncUpdate(manyStructs(1000)));
 		expect(sync).toHaveBeenCalledOnce();
-		expect(onRejected).toHaveBeenCalledWith('update holds more than 100 structs');
+		const [error] = onRejected.mock.calls[0]!;
+		expect(error).toBeInstanceOf(UpdateRefusedError);
+		expect(error).toMatchObject({
+			code: 'too-large',
+			detail: 'update holds more than 100 structs',
+			message: UPDATE_REFUSAL_MESSAGES['too-large'],
+		});
+	});
+
+	it('stops a wrapped provider at the first refused update, with the reason', () => {
+		const sync = vi.fn();
+		const disconnect = vi.fn();
+		const provider = { messageHandlers: [sync], on: () => {}, disconnect, wsconnected: true };
+		const wrapped = adaptYjsProvider(provider);
+		const errors: Error[] = [];
+		wrapped.on('error', (error) => errors.push(error));
+		provider.messageHandlers[0]!({}, syncUpdate(manyStructs(100_000)));
+		expect(sync).not.toHaveBeenCalled();
+		expect(disconnect).toHaveBeenCalledOnce();
+		expect(wrapped.status).toBe('error');
+		expect(errors).toHaveLength(1);
+		expect(errors[0]).toMatchObject({ code: 'too-large' });
 	});
 
 	it('leaves a provider without a handler table alone', () => {

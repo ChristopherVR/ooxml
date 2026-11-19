@@ -9,6 +9,7 @@ import type { CollaborationShellState } from 'ooxml-ui/pptx';
 import { CollaborationService } from './collaboration.service';
 import { EditorStateService } from './editor-state.service';
 import { LoadContentService } from './load-content.service';
+import { LoadNoticesService } from './load-notices.service';
 import { buildSaveSlides } from './template-mode';
 import type { CollaborationInput } from './types';
 import { ViewerCanvasEditingService } from './viewer-canvas-editing.service';
@@ -40,6 +41,7 @@ export class ViewerCollaborationShellService {
 	readonly canvasEditing = inject(ViewerCanvasEditingService);
 	readonly cursor = inject(ViewerCollabCursorService);
 	private readonly session = inject(ViewerCollaborationSessionService);
+	private readonly notices = inject(LoadNoticesService);
 	private readonly options = signal<ViewerCollaborationShellOptions | null>(null);
 	private readonly loadedContent = signal<Uint8Array | ArrayBuffer | null>(null);
 
@@ -73,6 +75,7 @@ export class ViewerCollaborationShellService {
 			shareDefaults: () => undefined,
 			getTemplateElements: () => this.editor.templateElementsBySlideId(),
 			applyRemoteSlides: (slides) => this.editor.applyRemoteSlides(slides),
+			notify: (toast) => this.notices.notify(toast),
 			history: this.editor,
 			canvasSize: () => this.loader.canvasSize(),
 			getSourceBytes: () => {

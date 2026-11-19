@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 
 import { applyUpdateSafe, validateUpdate } from './codec';
-import { scanUpdate } from './update-scan';
+import { MIN_BYTES_PER_STRUCT, scanUpdate } from './update-scan';
 
 /** A document using every kind of content Yjs encodes. */
 function richDoc(): Y.Doc {
@@ -76,7 +76,7 @@ describe('scanUpdate', () => {
 		expect(bomb.byteLength).toBeLessThan(7 * 1024 * 1024);
 		expect(scanUpdate(bomb)).toEqual({
 			ok: false,
-			reason: 'update holds more than 2000000 structs',
+			reason: `update holds more than ${Math.ceil(bomb.byteLength / MIN_BYTES_PER_STRUCT)} structs`,
 			overLimit: true,
 		});
 		expect(validateUpdate(bomb).ok).toBe(false);
@@ -89,7 +89,7 @@ describe('scanUpdate', () => {
 		const doc = new Y.Doc();
 		doc.getArray('a').insert(
 			0,
-			Array.from({ length: 50 }, (_, i) => i),
+			Array.from({ length: 50 }, (_, i) => ({ i })),
 		);
 		const update = Y.encodeStateAsUpdate(doc);
 		expect(scanUpdate(update, { maxStructs: 20 }).ok).toBe(false);
@@ -98,6 +98,16 @@ describe('scanUpdate', () => {
 		t.insert(0, 'x'.repeat(200));
 		for (let i = 0; i < 50; i++) t.delete(i * 2, 1);
 		expect(scanUpdate(Y.encodeStateAsUpdate(text), { maxDeleteRanges: 10 }).ok).toBe(false);
+	});
+
+	it('admits long lists of primitive values', () => {
+		// Primitive values cost no budget: a long list of small numbers is about one byte each.
+		const numbers = new Y.Doc();
+		numbers.getArray('a').insert(
+			0,
+			Array.from({ length: 100_000 }, (_, i) => i % 50),
+		);
+		expect(scanUpdate(Y.encodeStateAsUpdate(numbers)).ok).toBe(true);
 	});
 
 	it('refuses truncated or malformed encodings', () => {

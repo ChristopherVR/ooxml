@@ -145,6 +145,8 @@ import { useCollaborationStateReport } from './hooks/collaboration/useCollaborat
 import { useAutosaveCacheMaintenance } from './hooks/useAutosaveCacheMaintenance';
 import { useChartFormatCommands } from './hooks/useChartFormatCommands';
 import {
+	type UseCompatibilityToastsStateResult,
+	useCollaborationRefusalToast,
 	useCompatibilityToastsState,
 	useRemoteValueToast,
 } from './hooks/useCompatibilityToastsState';
@@ -1942,6 +1944,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 													<CollaborationStateReporter
 														onChange={onCollaborationChange}
 														onStatus={onCollaborationStatus}
+														setToasts={compatToastsState.setToasts}
 													/>
 													<CollaborationDocumentSync
 														history={history}
@@ -2048,12 +2051,16 @@ function CollaborationStatusStrip() {
 function CollaborationStateReporter({
 	onChange,
 	onStatus,
+	setToasts,
 }: {
 	onChange: PowerPointViewerProps['onCollaborationChange'];
 	onStatus: PowerPointViewerProps['onCollaborationStatus'];
+	setToasts: UseCompatibilityToastsStateResult['setToasts'];
 }) {
 	const collab = useCollaboration();
 	useCollaborationStateReport(collab, onChange);
+	// Say why sharing stopped, when the room sent an update this viewer refused.
+	useCollaborationRefusalToast(collab?.refusal, setToasts);
 	useReportOnChange<ConnectionStatus>(collab?.status ?? 'disconnected', onStatus, 'disconnected');
 	return null;
 }

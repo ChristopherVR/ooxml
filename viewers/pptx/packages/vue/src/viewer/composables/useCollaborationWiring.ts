@@ -126,6 +126,7 @@ export function useCollaborationWiring(
 				input.onNotice?.(toast);
 			}
 		},
+		...(input.onNotice ? { onNotice: input.onNotice } : {}),
 		getTemplateElements,
 		...(input.slidesPaused ? { slidesPaused: input.slidesPaused } : {}),
 		getSourceBytes,

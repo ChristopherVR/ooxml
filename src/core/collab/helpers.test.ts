@@ -1,6 +1,7 @@
 import * as Y from 'yjs';
 import { describe, expect, it, vi } from 'vitest';
 import { createAssetSync } from './assets';
+import { UPDATE_REFUSAL_MESSAGES, UpdateRefusedError } from './refusal';
 import {
 	createPresencePublisher,
 	borrowAwareness,
@@ -528,11 +529,38 @@ describe('websocket transport', () => {
 		vi.advanceTimersByTime(1);
 		expect(FakeSocket.instances).toHaveLength(3);
 		refuse();
-		expect(handlers.error.mock.calls.at(-1)![0].message).toContain('sync stopped');
+		expect(handlers.error.mock.calls.at(-1)![0]).toMatchObject({
+			code: 'server-rejected',
+			detail: 'update rejected: foreign-row',
+			message: UPDATE_REFUSAL_MESSAGES['server-rejected'],
+		});
 		vi.advanceTimersByTime(600_000);
 		expect(FakeSocket.instances).toHaveLength(3);
 		transport.disconnect();
 		vi.useRealTimers();
+	});
+	it('stops at once when the server will not take a change (1009), with the reason', () => {
+		for (const [reason, code] of [
+			['update too complex', 'server-rejected'],
+			['document too large', 'server-full'],
+			['', 'server-rejected'],
+		] as const) {
+			vi.useFakeTimers();
+			FakeSocket.instances = [];
+			const transport = createWebSocketTransport({ url: 'wss://h/c/r', WebSocket: FakeSocket });
+			const handlers = { open: vi.fn(), close: vi.fn(), message: vi.fn(), error: vi.fn() };
+			transport.connect(handlers);
+			const socket = FakeSocket.instances[0]!;
+			socket.readyState = 1;
+			socket.onopen!({});
+			socket.onclose!({ code: 1009, reason });
+			expect(handlers.error).toHaveBeenCalledOnce();
+			expect(handlers.error.mock.calls[0]![0]).toBeInstanceOf(UpdateRefusedError);
+			expect(handlers.error.mock.calls[0]![0].code).toBe(code);
+			vi.advanceTimersByTime(600_000);
+			expect(FakeSocket.instances).toHaveLength(1);
+			vi.useRealTimers();
+		}
 	});
 	it('fails fast on mixed content', () => {
 		const handlers = { open: vi.fn(), close: vi.fn(), message: vi.fn(), error: vi.fn() };

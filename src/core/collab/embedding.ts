@@ -8,6 +8,7 @@ import { canBroadcast, createBroadcastTransport } from './broadcast-transport';
 import type { ExternalSession, ExternalSnapshot } from './external-provider';
 import type { CollaborationRole } from './identity';
 import type { ConnectionStatus, ProviderFactory } from './provider';
+import type { UpdateRefusalCode } from './refusal';
 import { type CollabSession, createCollabSession } from './session';
 import { transportProvider } from './transport-provider';
 import { isValidRoomId } from './validation';
@@ -72,6 +73,8 @@ export interface CollaborationState {
 	status: ConnectionStatus | 'off';
 	/** The first exchange with the room finished. */
 	synced: boolean;
+	/** Why sharing stopped, when an update was refused; the status is then `error`. */
+	refusal?: UpdateRefusalCode;
 	people: Collaborator[];
 	/**
 	 * The owner's write-back (`onWriteBack`), present only in the window that writes back. `saved`
@@ -177,6 +180,7 @@ export function collaborationStateOf(session: CollabSession<object>): Collaborat
 		roomId: session.roomId,
 		status: session.status,
 		synced: session.synced,
+		...(session.refusal && { refusal: session.refusal }),
 		people: [
 			{
 				clientId: session.clientId,

@@ -17,6 +17,7 @@
  * Framework-agnostic: no React, Vue, Angular, Svelte or DOM imports.
  */
 
+import type { UpdateRefusalCode } from 'ooxml-core/collab';
 import { REMOTE_VALUE_REJECTED } from 'ooxml-core/pptx/editor/render/collaboration-sync';
 
 /** The `PptxCompatibilityWarning` fields this module reads. Declared structurally. */
@@ -178,4 +179,27 @@ export function remoteValueWarnings(
 	return slides.flatMap((slide) =>
 		(slide.warnings ?? []).filter((warning) => warning.code === REMOTE_VALUE_REJECTED),
 	);
+}
+
+/** Toast code of a refused collaboration update; one toast at a time, whatever the reason. */
+export const COLLABORATION_REFUSED = 'COLLABORATION_UPDATE_REFUSED';
+
+const REFUSAL_MESSAGE_KEYS: Readonly<Record<UpdateRefusalCode, string>> = {
+	'too-large': 'pptx.collaboration.refused.tooLarge',
+	malformed: 'pptx.collaboration.refused.malformed',
+	'server-rejected': 'pptx.collaboration.refused.serverRejected',
+	'server-full': 'pptx.collaboration.refused.serverFull',
+};
+
+/**
+ * The toast that says why sharing stopped, when an update was refused (the collaboration session
+ * controller's `refusal`). Every binding adds it to its notice stack through its usual path.
+ */
+export function collaborationRefusalToast(code: UpdateRefusalCode): CompatibilityWarningToast {
+	return {
+		id: COLLABORATION_REFUSED,
+		code: COLLABORATION_REFUSED,
+		severity: 'warning',
+		messageKey: REFUSAL_MESSAGE_KEYS[code],
+	};
 }

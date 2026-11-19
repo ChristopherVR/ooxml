@@ -33,9 +33,18 @@ export interface YjsProviderLike {
  * the provider: `destroy` destroys it.
  */
 export function adaptYjsProvider(provider: YjsProviderLike): SyncProvider {
-	// A y-websocket provider applies sync messages itself; scan each update before it does.
-	guardProviderUpdates(provider as MessageHandlerProviderLike);
 	const events = new Emitter<ProviderEvents>();
+	// A y-websocket provider applies sync messages itself; scan each update before it does. A refused
+	// update stops the sync, as it does for `transportProvider`.
+	guardProviderUpdates(provider as MessageHandlerProviderLike, {
+		onRejected: (error) => {
+			if (destroyed) return;
+			events.emit('error', error);
+			provider.disconnect?.();
+			setSynced(false);
+			setStatus('error');
+		},
+	});
 	let destroyed = false;
 	let status: ConnectionStatus =
 		provider.wsconnected || provider.connected

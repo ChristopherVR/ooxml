@@ -149,16 +149,19 @@ export const linkSpec: PartSpec<Hyperlink> = {
 		return { r: formatRange(range), ...rest };
 	},
 	// A peer wrote these fields: keep only text, and only a target the hyperlink policy lets a
-	// document hold (no script or disguised schemes); the sinks check again before opening.
-	decode: (raw) => {
+	// document hold (every target the loader keeps, but no script or disguised schemes); the sinks
+	// check again before opening. A target left out is reported.
+	decode: (raw, refuse) => {
 		if (!isRecord(raw) || !isText(raw.r, 24)) return undefined;
 		const range = parseRange(raw.r);
 		if (!range) return undefined;
 		const link: Hyperlink = { range };
-		if (isText(raw.target, 8192) && isStorableHyperlinkHref(raw.target)) link.target = raw.target;
+		if (isText(raw.target) && isStorableHyperlinkHref(raw.target)) link.target = raw.target;
+		else if (raw.target !== undefined) refuse?.('target');
 		for (const field of ['location', 'tooltip', 'display'] as const) {
 			const value = raw[field];
 			if (isText(value)) link[field] = value;
+			else if (value !== undefined) refuse?.(field);
 		}
 		return link;
 	},

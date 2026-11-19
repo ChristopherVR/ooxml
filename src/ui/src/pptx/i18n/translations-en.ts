@@ -311,6 +311,14 @@ export const translationsEn: Record<string, string> = {
 	'pptx.collaboration.status.connecting': 'Connecting...',
 	'pptx.collaboration.status.disconnected': 'Disconnected',
 	'pptx.collaboration.status.error': 'Connection error',
+	'pptx.collaboration.refused.tooLarge':
+		'A change from the shared session is too large to apply here, so sharing stopped. Your copy is unchanged.',
+	'pptx.collaboration.refused.malformed':
+		'A change from the shared session could not be read, so sharing stopped. Your copy is unchanged.',
+	'pptx.collaboration.refused.serverRejected':
+		'The server refused your latest change, so sharing stopped. Your copy keeps the change.',
+	'pptx.collaboration.refused.serverFull':
+		'The shared document has reached the size limit of the server, so sharing stopped. Your copy keeps your latest change.',
 	'pptx.collaboration.statusAriaLabel': 'Collaboration: {{status}}',
 	'pptx.collaboration.userCount': '{{count}} user(s)',
 	'pptx.collaboration.youLabel': '{{name}} (you)',

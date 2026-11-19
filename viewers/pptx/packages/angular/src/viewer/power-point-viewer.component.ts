@@ -3119,6 +3119,7 @@ export class PowerPointViewerComponent
 					this.loadNotices.notify(toast);
 				}
 			},
+			notify: (toast) => this.loadNotices.notify(toast),
 			history: this.editor,
 			canvasSize: () => this.loader.canvasSize(),
 			getSourceBytes: () => this.fileIO.sourceBytes(),

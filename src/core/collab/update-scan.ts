@@ -1,28 +1,41 @@
 // A bounded structure scan of a Yjs (v1) update, run before Yjs decodes it.
 //
-// Yjs allocates one object per struct, per value of a JSON or `any` content and per delete range
-// while it decodes an update, and a struct can be two bytes long. A byte limit alone therefore lets
-// a frame of a few megabytes allocate millions of objects. This walks the encoding with nothing but
-// a cursor, counts what Yjs would allocate and stops at the first limit crossed, so an update over
-// budget is refused before any of it is decoded. The layout read here is the one Yjs writes with
+// Yjs allocates one object per struct, per delete range and per object, array or byte array inside
+// a JSON or `any` content while it decodes an update, and a struct can be two bytes long. A byte
+// limit alone therefore lets a frame of a few megabytes allocate millions of objects. This walks
+// the encoding with nothing but a cursor, counts those objects and stops at the first limit
+// crossed, so an update over budget is refused before any of it is decoded. Primitive values are
+// not counted: each takes at least one byte of the update and allocates little more than that. The layout read here is the one Yjs writes with
 // its v1 update encoder (`writeStructs`, `writeDeleteSet`) and lib0's `writeAny`. New code.
 
-/** What one update may make Yjs allocate. See `docs/collab-area.md` for how these were chosen. */
+/**
+ * What one update may make Yjs allocate. Each limit left out is proportional to the update's size
+ * ({@link defaultUpdateLimits}); see `docs/collab-area.md` for how it was chosen.
+ */
 export interface UpdateLimits {
-	/** Structs plus the values inside JSON and `any` contents. */
-	maxStructs?: number;
+	/** Structs plus the objects, arrays and byte arrays inside JSON and `any` contents. */
+	maxStructs?: number | undefined;
 	/** Ranges of the delete set. */
-	maxDeleteRanges?: number;
+	maxDeleteRanges?: number | undefined;
 }
 
 /**
- * Default allocation budget of one update. The largest legitimate updates measured (the first sync
- * of a large deck, document, workbook or chat room) stay far below it; see `docs/collab-area.md`.
+ * Bytes of update per struct (and per delete range) the default budget allows. The densest
+ * legitimate first sync measured, an Excel sheet of boolean cells, spends 8.6 bytes per struct, so
+ * an update a real document produces uses less than half its budget whatever its size; a frame of
+ * two-byte structs holds twice its budget and is refused before it is decoded. A frame at the
+ * budget costs about as much memory to decode as a legitimate update of the same size.
  */
-export const DEFAULT_UPDATE_LIMITS: Readonly<Required<UpdateLimits>> = {
-	maxStructs: 2_000_000,
-	maxDeleteRanges: 1_000_000,
-};
+export const MIN_BYTES_PER_STRUCT = 4;
+
+/** The default budget of an update of `bytes` bytes: one struct and one delete range per 4 bytes. */
+export function defaultUpdateLimits(bytes: number): {
+	maxStructs: number;
+	maxDeleteRanges: number;
+} {
+	const budget = Math.ceil(bytes / MIN_BYTES_PER_STRUCT);
+	return { maxStructs: budget, maxDeleteRanges: budget };
+}
 
 export type UpdateScan =
 	| { ok: true; structs: number; deleteRanges: number; bytesRead: number }
@@ -86,7 +99,7 @@ class Cursor {
 class Budget {
 	structs = 0;
 	deleteRanges = 0;
-	constructor(private readonly limits: Required<UpdateLimits>) {}
+	constructor(private readonly limits: { maxStructs: number; maxDeleteRanges: number }) {}
 
 	addStructs(count: number): void {
 		this.structs += count;
@@ -122,12 +135,14 @@ function skipAny(cursor: Cursor, budget: Budget, depth: number): void {
 		case 122: // bigint64
 			return cursor.skip(8);
 		case 119: // string
-		case 116: // Uint8Array
+			return cursor.skipBuffer();
+		case 116: // Uint8Array: a view object of its own
+			budget.addStructs(1);
 			return cursor.skipBuffer();
 		case 118: {
 			// object: key, value pairs
 			const length = cursor.uint();
-			budget.addStructs(length);
+			budget.addStructs(1);
 			for (let i = 0; i < length; i++) {
 				cursor.skipBuffer();
 				skipAny(cursor, budget, depth + 1);
@@ -136,7 +151,7 @@ function skipAny(cursor: Cursor, budget: Budget, depth: number): void {
 		}
 		case 117: {
 			const length = cursor.uint();
-			budget.addStructs(length);
+			budget.addStructs(1);
 			for (let i = 0; i < length; i++) skipAny(cursor, budget, depth + 1);
 			return;
 		}
@@ -178,8 +193,9 @@ function skipContent(cursor: Cursor, budget: Budget, ref: number): void {
 			if (NAMED_TYPE_REFS.has(cursor.uint())) cursor.skipBuffer();
 			return;
 		case 8: {
+			// any: one array of values
 			const length = cursor.uint();
-			budget.addStructs(length);
+			budget.addStructs(1);
 			for (let i = 0; i < length; i++) skipAny(cursor, budget, 0);
 			return;
 		}
@@ -223,7 +239,11 @@ function skipStruct(cursor: Cursor, budget: Budget): void {
  * one pass over the bytes and allocates nothing in proportion to them.
  */
 export function scanUpdate(update: Uint8Array, limits: UpdateLimits = {}): UpdateScan {
-	const budget = new Budget({ ...DEFAULT_UPDATE_LIMITS, ...limits });
+	const defaults = defaultUpdateLimits(update.byteLength);
+	const budget = new Budget({
+		maxStructs: limits.maxStructs ?? defaults.maxStructs,
+		maxDeleteRanges: limits.maxDeleteRanges ?? defaults.maxDeleteRanges,
+	});
 	const cursor = new Cursor(update);
 	try {
 		const clients = cursor.uint();

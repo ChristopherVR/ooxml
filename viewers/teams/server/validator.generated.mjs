@@ -8,10 +8,11 @@ import * as Y7 from "yjs";
 import * as Y from "yjs";
 
 // ../../src/core/collab/update-scan.ts
-var DEFAULT_UPDATE_LIMITS = {
-  maxStructs: 2e6,
-  maxDeleteRanges: 1e6
-};
+var MIN_BYTES_PER_STRUCT = 4;
+function defaultUpdateLimits(bytes) {
+  const budget = Math.ceil(bytes / MIN_BYTES_PER_STRUCT);
+  return { maxStructs: budget, maxDeleteRanges: budget };
+}
 var MAX_ANY_DEPTH = 64;
 var Overrun = class extends Error {
   constructor(message, overLimit = false) {
@@ -100,12 +101,13 @@ function skipAny(cursor, budget, depth) {
     case 122:
       return cursor.skip(8);
     case 119:
-    // string
+      return cursor.skipBuffer();
     case 116:
+      budget.addStructs(1);
       return cursor.skipBuffer();
     case 118: {
       const length = cursor.uint();
-      budget.addStructs(length);
+      budget.addStructs(1);
       for (let i = 0; i < length; i++) {
         cursor.skipBuffer();
         skipAny(cursor, budget, depth + 1);
@@ -114,7 +116,7 @@ function skipAny(cursor, budget, depth) {
     }
     case 117: {
       const length = cursor.uint();
-      budget.addStructs(length);
+      budget.addStructs(1);
       for (let i = 0; i < length; i++) skipAny(cursor, budget, depth + 1);
       return;
     }
@@ -154,7 +156,7 @@ function skipContent(cursor, budget, ref) {
       return;
     case 8: {
       const length = cursor.uint();
-      budget.addStructs(length);
+      budget.addStructs(1);
       for (let i = 0; i < length; i++) skipAny(cursor, budget, 0);
       return;
     }
@@ -187,7 +189,11 @@ function skipStruct(cursor, budget) {
   skipContent(cursor, budget, ref);
 }
 function scanUpdate(update, limits = {}) {
-  const budget = new Budget({ ...DEFAULT_UPDATE_LIMITS, ...limits });
+  const defaults = defaultUpdateLimits(update.byteLength);
+  const budget = new Budget({
+    maxStructs: limits.maxStructs ?? defaults.maxStructs,
+    maxDeleteRanges: limits.maxDeleteRanges ?? defaults.maxDeleteRanges
+  });
   const cursor = new Cursor(update);
   try {
     const clients = cursor.uint();
@@ -846,7 +852,6 @@ function protocolOfUrl(url) {
   return raw !== null && /^[1-9]\d{0,5}$/u.test(raw) ? Number(raw) : null;
 }
 export {
-  DEFAULT_UPDATE_LIMITS,
   PROTOCOL_PARAM,
   PROTOCOL_VERSION,
   applyUpdateReverts,

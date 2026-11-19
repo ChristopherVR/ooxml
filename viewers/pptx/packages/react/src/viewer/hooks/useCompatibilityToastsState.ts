@@ -1,5 +1,6 @@
+import type { UpdateRefusalCode } from 'ooxml-core/collab';
 import type { CompatibilityWarningToast } from 'ooxml-ui/pptx';
-import { createRemoteValueNotifier } from 'ooxml-ui/pptx';
+import { collaborationRefusalToast, createRemoteValueNotifier } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -45,4 +46,21 @@ export function useRemoteValueToast(
 			setToasts((prev) => [toast, ...prev.filter((entry) => entry.id !== toast.id)]);
 		}
 	}, [notice, slides, setToasts]);
+}
+
+/**
+ * Add the toast that says why sharing stopped whenever the collaboration
+ * session reports a refused update (it replaces an earlier one).
+ */
+export function useCollaborationRefusalToast(
+	refusal: UpdateRefusalCode | null | undefined,
+	setToasts: UseCompatibilityToastsStateResult['setToasts'],
+): void {
+	useEffect(() => {
+		if (!refusal) {
+			return;
+		}
+		const toast = collaborationRefusalToast(refusal);
+		setToasts((prev) => [toast, ...prev.filter((entry) => entry.id !== toast.id)]);
+	}, [refusal, setToasts]);
 }
