@@ -339,6 +339,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	): Promise<PptxData> {
 		await this.detectAndPreserveVbaProject();
 		this.detectDigitalSignatureParts();
+		await this.enforceSignedPackageRelationships();
 		await this.parseCustomXmlParts();
 		const presentationState = await this.loadPresentationState();
 		const slideMasters = await this.parseSlideMasters();

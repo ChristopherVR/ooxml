@@ -1,4 +1,5 @@
 import JSZip from 'jszip';
+import { isRelationshipsItem, parseRelationshipsPart } from '../../../../opc/relationships';
 import { guardZip } from '../../../../opc/zip-limits';
 
 import { XmlObject } from '../../types';
@@ -208,6 +209,33 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			entryPaths.push(relativePath);
 		});
 		this.signatureDetection = detectDigitalSignatures(entryPaths);
+	}
+
+	/**
+	 * Refuses a signed package with a relationships part the strict reader rejects, and has the
+	 * load read the others through that reader. Signature verification uses the same reader, so a
+	 * signed package never loads relationships its verifier did not see.
+	 */
+	protected async enforceSignedPackageRelationships(): Promise<void> {
+		if (!this.signatureDetection?.hasSignatures) {
+			return;
+		}
+		const relationshipParts: string[] = [];
+		this.zip.forEach((relativePath, file) => {
+			if (!file.dir && isRelationshipsItem(relativePath)) {
+				relationshipParts.push(relativePath);
+			}
+		});
+		for (const path of relationshipParts) {
+			try {
+				parseRelationshipsPart((await this.readPartText(path)) ?? '');
+			} catch (error) {
+				throw new Error(`Signed package has an invalid relationships part: ${path}`, {
+					cause: error,
+				});
+			}
+		}
+		this.loadPartReader?.useStrictRelationships();
 	}
 
 	/**

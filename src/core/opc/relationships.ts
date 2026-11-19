@@ -1,4 +1,5 @@
 import { NS, elements, parseXml, relAttr, type XmlElement } from '../xml/index';
+import { partNameKey } from './part-names';
 
 export interface Relationship {
 	id: string;
@@ -28,11 +29,78 @@ export function parseRelationships(xml: string | undefined): Map<string, Relatio
 	return map;
 }
 
+const RELATIONSHIP_ATTRIBUTES: ReadonlySet<string> = new Set([
+	'Id',
+	'Type',
+	'Target',
+	'TargetMode',
+]);
+const NO_ATTRIBUTES: ReadonlySet<string> = new Set();
+
+const isNamespaceDeclaration = (name: string): boolean =>
+	name === 'xmlns' || name.startsWith('xmlns:');
+
+function assertOnlyAttributes(element: XmlElement, allowed: ReadonlySet<string>): void {
+	for (const { name } of Array.from(element.attributes)) {
+		if (!allowed.has(name) && !isNamespaceDeclaration(name)) {
+			throw new Error(`Relationships part: unexpected attribute ${name}.`);
+		}
+	}
+}
+
+function readStrictRelationship(element: XmlElement): Relationship {
+	if (element.namespaceURI !== NS.rels || element.localName !== 'Relationship') {
+		throw new Error(`Relationships part: unexpected element ${element.nodeName}.`);
+	}
+	assertOnlyAttributes(element, RELATIONSHIP_ATTRIBUTES);
+	const id = element.getAttribute('Id');
+	const type = element.getAttribute('Type');
+	const target = element.getAttribute('Target');
+	if (!id || !type || target === null) {
+		throw new Error('Relationships part: Id, Type and Target are required.');
+	}
+	const mode = element.getAttribute('TargetMode') ?? 'Internal';
+	if (mode !== 'Internal' && mode !== 'External') {
+		throw new Error(`Relationships part: invalid TargetMode ${mode}.`);
+	}
+	return { id, type, target, mode };
+}
+
+/**
+ * Reads a relationships part for a security decision, in document order. Anything the schema
+ * (ECMA-376 Part 2, 6.5.3) does not allow throws, so every reader of an accepted part sees the same
+ * relationships. As in the schema, `Target` may be empty (`xsd:anyURI`) and `Id`s are unique after
+ * `xsd:ID` whitespace collapse: `rId1` and `RID1` are two relationships, `rId1` and `rId1 ` are one.
+ * {@link parseRelationships} is the tolerant reader for opening documents.
+ */
+export function parseRelationshipsPart(xml: string): Relationship[] {
+	const root = parseXml(xml).documentElement;
+	if (root.namespaceURI !== NS.rels || root.localName !== 'Relationships') {
+		throw new Error('Not a relationships part.');
+	}
+	assertOnlyAttributes(root, NO_ATTRIBUTES);
+	const relationships = elements(root).map(readStrictRelationship);
+	const ids = new Set(relationships.map(({ id }) => id.replace(/[\t\n\r ]+/gu, ' ').trim()));
+	if (ids.size !== relationships.length) {
+		throw new Error('Relationships part: duplicate Id.');
+	}
+	return relationships;
+}
+
+/** Whether a stored item is read as a relationships part. */
+export const isRelationshipsItem = (name: string): boolean => partNameKey(name).endsWith('.rels');
+
 const escapeAttr = (value: string) =>
 	value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
 /** A relationship to serialize; its id is the key of the map it is stored in. */
 export type RelationshipInput = Omit<Relationship, 'id'> & { id?: string };
+
+/** A relationships part rewritten to exactly what {@link parseRelationshipsPart} accepted. */
+export function canonicalRelationshipsXml(xml: string): string {
+	const relationships = parseRelationshipsPart(xml);
+	return buildRelationshipsXml(new Map(relationships.map((item) => [item.id, item])));
+}
 
 /** Serializes relationships into a `.rels` part, using each map key as the relationship id. */
 export function buildRelationshipsXml(

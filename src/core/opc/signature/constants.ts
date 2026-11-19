@@ -15,11 +15,15 @@ export const DIGITAL_SIGNATURE_ORIGIN_REL_TYPE =
 export const DIGITAL_SIGNATURE_REL_TYPE =
 	'http://schemas.openxmlformats.org/package/2006/relationships/digital-signature/signature';
 
-/** Custom pptx-viewer manifest namespace for extended signature references. */
-export const PPTX_VIEWER_MANIFEST_NS = 'urn:pptx-viewer:ooxml-signature:v1';
-
 /** W3C XML Digital Signature namespace. */
 export const XMLDSIG_NS = 'http://www.w3.org/2000/09/xmldsig#';
+
+/** OPC digital signature namespace (`mdssi`): transform parameters and signing time. */
+export const OPC_DIGITAL_SIGNATURE_NS =
+	'http://schemas.openxmlformats.org/package/2006/digital-signature';
+
+/** OPC relationships part namespace. */
+export const OPC_RELATIONSHIPS_NS = 'http://schemas.openxmlformats.org/package/2006/relationships';
 
 /** OPC relationship transform algorithm URI. */
 export const OPC_RELATIONSHIP_TRANSFORM =
@@ -35,7 +39,6 @@ export const SUPPORTED_XML_CANON_TRANSFORMS = new Set<string>([
 	'http://www.w3.org/TR/2001/REC-xml-c14n-20010315#WithComments',
 	'http://www.w3.org/2001/10/xml-exc-c14n#',
 	'http://www.w3.org/2001/10/xml-exc-c14n#WithComments',
-	XML_TRANSFORM_ENVELOPED_SIGNATURE,
 ]);
 
 /** Environment variable: path to file containing enterprise trust root PEM certificates. */
@@ -50,7 +53,10 @@ export const ENTERPRISE_REQUIRE_REVOCATION_ENV = 'PPTX_VIEWER_REQUIRE_REVOCATION
 /** Environment variable: fail on unknown revocation status. */
 export const ENTERPRISE_FAIL_ON_REVOCATION_UNKNOWN_ENV = 'PPTX_VIEWER_FAIL_ON_REVOCATION_UNKNOWN';
 
-/** Environment variable: require timestamp authority. */
+/**
+ * Environment variable: require a validated timestamp. Tokens are not validated yet, so with this
+ * set every signature reports `timestamp-untrusted`.
+ */
 export const ENTERPRISE_REQUIRE_TIMESTAMP_ENV = 'PPTX_VIEWER_REQUIRE_TIMESTAMP';
 
 /**

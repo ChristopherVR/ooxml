@@ -9,6 +9,11 @@ import {
 } from './detection';
 
 describe('detectDigitalSignatures', () => {
+	it('recognises signature parts under an equivalent part name', () => {
+		const result = detectDigitalSignatures(['_XMLSignatures/SIG1.XML', 'ppt/presentation.xml']);
+		expect(result.signaturePaths).toEqual(['_XMLSignatures/SIG1.XML']);
+	});
+
 	it('should detect no signatures when there are no _xmlsignatures entries', () => {
 		const paths = ['ppt/presentation.xml', 'ppt/slides/slide1.xml', '[Content_Types].xml'];
 		const result = detectDigitalSignatures(paths);
