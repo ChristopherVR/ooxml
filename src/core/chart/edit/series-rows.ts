@@ -151,7 +151,8 @@ export function setChartDataPointValue(
 /**
  * Appends a category to every series, in the row after all the chart's data (or in `row`), with
  * `value` (PowerPoint: 0) as each series' point. A series that already has a point in that row
- * keeps it, and a declared range that reaches the row keeps its count.
+ * keeps it, and a declared range that reaches the row keeps its count. The row's x value of a
+ * scatter or bubble series is left blank, as a new worksheet row is, and so is a bubble size.
  */
 export function addChartCategory(
 	space: ChartSpace,
@@ -161,8 +162,14 @@ export function addChartCategory(
 ): ChartSpace {
 	return editChartSpace(space, (draft) => {
 		for (const { group, series } of chartSeriesEntries(draft)) {
-			const names = series[chartCategoryKey(group)];
-			if (names) series[chartCategoryKey(group)] = withCategoryRow(names, row, name);
+			const key = chartCategoryKey(group);
+			const names = series[key];
+			// A label is no x value: the row's x stays blank rather than turning the x values to text.
+			if (names) series[key] = withCategoryRow(names, row, key === 'xValues' ? null : name);
+			if (series.bubbleSizes)
+				series.bubbleSizes = withCaches(series.bubbleSizes, (cache) =>
+					chartCacheWithRow(cache, row, undefined),
+				);
 			const source = numericSource(series[chartValueKey(group)]);
 			series[chartValueKey(group)] = {
 				...source,
@@ -172,13 +179,13 @@ export function addChartCategory(
 	});
 }
 
-/** Removes a category row from every series, with its points and per-point formatting. */
+/** Removes a category row from every series, with its points, bubble sizes and point formatting. */
 export function removeChartCategory(space: ChartSpace, category: number): ChartSpace {
 	if (!Number.isInteger(category) || category < 0 || category >= chartRowCount(space))
 		throw new RangeError(`No chart category at index ${String(category)}`);
 	return editChartSpace(space, (draft) => {
 		for (const { group, series } of chartSeriesEntries(draft)) {
-			for (const key of [chartCategoryKey(group), chartValueKey(group)]) {
+			for (const key of [chartCategoryKey(group), chartValueKey(group), 'bubbleSizes'] as const) {
 				const source = series[key];
 				if (source) series[key] = withoutRow(source, category);
 			}

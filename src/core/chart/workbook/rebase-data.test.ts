@@ -28,6 +28,18 @@ describe('fresh classic chart data ranges', () => {
 				.values,
 		).toEqual(first.values);
 	});
+	it('gives an empty cache the one cell its range names', () => {
+		const source = columnChart();
+		source.plotArea.groups[0]!.series[0]!.categories = {
+			kind: 'strRef',
+			formula: 'Sheet1!$A$2:$A$4',
+			cache: { type: 'string', points: [] },
+		};
+		const categories = rebaseChartData(source, 'Data').chartSpace.plotArea.groups[0]!.series[0]!
+			.categories!;
+		expect(categories.formula).toBe('Data!$A$2:$A$2');
+		expect(categories.cache!.pointCount).toBe(1);
+	});
 	it('writes hierarchy columns outermost first and keeps per-level cache order', () => {
 		const source = columnChart();
 		source.plotArea.groups[0]!.series[0]!.categories = {

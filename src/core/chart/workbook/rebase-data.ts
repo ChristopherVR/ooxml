@@ -38,6 +38,8 @@ export function rebaseChartData(
 		}
 		if (count > 1048575 || column > 16384)
 			throw new RangeError('Chart data exceeds worksheet bounds');
+		// A range names one cell at least, and the cache declares the cells its range names.
+		if (count === 0) cache.pointCount = count = 1;
 		return { col, count };
 	};
 	const source = (data: ChartDataSource | undefined, heading: string) => {
