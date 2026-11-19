@@ -15,7 +15,7 @@ La collaboration est une fonctionnalité optionnelle. Si vous ne voyez pas de bo
 
 1. Cliquez sur le bouton **Partager** à l'extrémité droite de la rangée d'onglets du ruban (ou **Fichier > Partager > Partager avec des personnes**). La boîte de dialogue **Partager la présentation** s'ouvre sur son onglet **Créer une session**.
 2. Renseignez :
-   - **Nom de la session** - l'identifiant de la salle (lettres, chiffres, traits d'union, tirets bas). Les collaborateurs ont besoin de ce nom.
+   - **Nom de la session** - l'identifiant de la salle (lettres, chiffres, traits d'union, tirets bas). Les collaborateurs ont besoin de ce nom, ou du lien de partage pour une session pair-à-pair.
    - **Votre nom d'affichage** - la façon dont vous apparaissez aux autres.
    - **Serveur de collaboration** - optionnel. Laissez-le vide pour une session pair-à-pair, ou saisissez l'adresse du serveur de collaboration de votre organisation (une URL `wss://...`).
 3. Cliquez sur **Démarrer le partage**.
@@ -34,6 +34,8 @@ Ouvrez un lien de partage qu'on vous a envoyé, ou rejoignez manuellement :
 2. Collez le lien d'invitation, ou saisissez l'identifiant de la salle, dans **Lien d'invitation ou identifiant de salle**.
 3. Saisissez votre nom d'affichage et, si la session en utilise un, l'adresse du serveur de collaboration.
 4. Cliquez sur **Rejoindre une session**.
+
+Une session pair-à-pair (sans serveur de collaboration) ne se rejoint que par son lien de partage : le lien contient la clé de session après son `#`, et l'identifiant de la salle seul ne suffit pas.
 
 ## Indicateurs de présence
 
@@ -61,7 +63,7 @@ La fusion vous protège des modifications perdues, pas des surprises. Supprimer 
 
 Le champ **Serveur de collaboration** décide de la façon dont les participants se connectent :
 
-- **Vide (pair-à-pair)** - les onglets du navigateur sur un même appareil se retrouvent toujours, et les personnes sur d'autres appareils se connectent directement à vous via des serveurs de signalisation WebRTC publics. C'est le moyen le plus rapide d'essayer la collaboration ; la démo hébergée fonctionne ainsi.
+- **Vide (pair-à-pair)** - les onglets du navigateur sur un même appareil se retrouvent toujours, et les personnes sur d'autres appareils se connectent directement à vous via des serveurs de signalisation WebRTC publics. Ces serveurs ne voient qu'un hachage de la clé de session du lien de partage et des données de connexion chiffrées, jamais le nom de la session. C'est le moyen le plus rapide d'essayer la collaboration ; la démo hébergée fonctionne ainsi.
 - **Adresse de serveur renseignée** - tout le monde passe par un serveur de collaboration dédié. Utilisez-le lorsque votre organisation en exploite un : il fonctionne à travers les pare-feu stricts et le NAT là où les connexions directes échouent, garde la salle disponible tant qu'un participant est connecté, et l'application hôte peut y associer une authentification et une persistance côté serveur.
 
 ::: warning Utilisez wss:// sur les pages sécurisées

@@ -2,7 +2,7 @@
 /**
  * Framework-neutral real-time collaboration sync.
  *
- * Every demo accepts `?room=<id>&transport=webrtc` and mounts the same shared
+ * Every demo accepts `?room=<id>&transport=webrtc#key=<secret>` and mounts the same shared
  * Yjs collaboration model. Two pages in one browser context join a unique
  * serverless room and expose the same connected-presence state. This keeps
  * the product test independent from the
@@ -28,6 +28,7 @@ import {
 	waitForCollaborativeEditing,
 } from './support/host-owned-session';
 import { extractElementBlock, readZipPartText } from './support/pptx-xml';
+import { webrtcRoomPath } from './support/webrtc-room';
 
 async function paragraphFormattingDeck() {
 	const zip = await JSZip.loadAsync(await readFile(fixture('text-layout.pptx')));
@@ -100,9 +101,7 @@ async function openCollaborativeDeck(
 	sample = false,
 ): Promise<void> {
 	const sampleParam = sample ? 'sample=1&' : '';
-	await page.goto(
-		`/?${sampleParam}room=${encodeURIComponent(roomId)}&transport=webrtc&name=${name}`,
-	);
+	await page.goto(webrtcRoomPath(roomId, `${sampleParam}name=${name}&`));
 	await page.locator('[aria-roledescription="slide"]').first().waitFor({ timeout: 20_000 });
 }
 

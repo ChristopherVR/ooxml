@@ -97,6 +97,7 @@ describe('shareDialog', () => {
 			userName: 'Grace',
 			serverUrl: '',
 			transport: 'webrtc',
+			secret: expect.stringMatching(/^[A-Za-z0-9_-]{22}$/u),
 			role: 'collaborator',
 			sessionIntent: 'create',
 		});

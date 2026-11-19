@@ -64,7 +64,7 @@ export const translations = {
 	'pptx.share.serverHint':
 		"Saisissez l'URL WebSocket d'un serveur y-websocket (wss:// sécurisé lors du partage depuis une page https://), ou laissez le champ vide pour le mode pair à pair sans serveur.",
 	'pptx.share.p2pHint':
-		"Mode peer-to-peer : les onglets du même navigateur se connectent toujours ; d'autres appareils se connectent via des serveurs de signalisation publics WebRTC.",
+		"Mode peer-to-peer : les onglets du même navigateur se connectent toujours ; d'autres appareils se connectent via des serveurs de signalisation publics WebRTC. Invitez d'autres personnes avec le lien de partage : il contient la clé de session, et le nom de la salle seul ne permet pas de rejoindre.",
 	'pptx.share.p2pServerValue': 'Peer-to-peer (pas de serveur)',
 	'pptx.share.shareLink': 'Lien de partage',
 	'pptx.share.copyLink': 'Copier le lien de partage',

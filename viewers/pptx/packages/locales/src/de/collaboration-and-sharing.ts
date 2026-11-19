@@ -64,7 +64,7 @@ export const translations = {
 	'pptx.share.serverHint':
 		'Geben Sie die WebSocket-URL eines y-websocket-Servers ein. Verwenden Sie beim Teilen von einer https://-Seite eine sichere wss://-URL.',
 	'pptx.share.p2pHint':
-		'Peer-to-Peer-Modus: Registerkarten im selben Browser verbinden sich immer; Andere Geräte verbinden sich über öffentliche WebRTC-Signalisierungsserver.',
+		'Peer-to-Peer-Modus: Registerkarten im selben Browser verbinden sich immer; Andere Geräte verbinden sich über öffentliche WebRTC-Signalisierungsserver. Laden Sie andere über den Freigabelink ein: Er enthält den Sitzungsschlüssel, der Raumname allein reicht zum Beitreten nicht aus.',
 	'pptx.share.p2pServerValue': 'Peer-to-Peer (kein Server)',
 	'pptx.share.shareLink': 'Freigabelink',
 	'pptx.share.copyLink': 'Freigabelink kopieren',

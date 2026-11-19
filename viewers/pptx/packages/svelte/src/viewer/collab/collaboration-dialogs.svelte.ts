@@ -55,11 +55,7 @@ export class CollaborationDialogsState {
 		if (!this.#broadcastConfig || typeof window === 'undefined') {
 			return undefined;
 		}
-		return buildBroadcastViewerUrl(
-			this.#broadcastConfig.roomId,
-			this.#broadcastConfig.serverUrl,
-			window.location,
-		);
+		return buildBroadcastViewerUrl(this.#broadcastConfig, window.location);
 	}
 
 	openShare(): void {

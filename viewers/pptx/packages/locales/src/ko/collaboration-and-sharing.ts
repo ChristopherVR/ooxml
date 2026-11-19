@@ -63,7 +63,7 @@ export const translations = {
 	'pptx.share.serverHint':
 		'y-websocket 서버의 WebSocket URL을 입력하거나(https:// 페이지에서 공유할 때는 보안 wss:// 사용) 서버 없는 P2P 모드를 사용하려면 비워 두세요.',
 	'pptx.share.p2pHint':
-		'P2P 모드: 같은 브라우저의 탭은 항상 연결되고, 다른 장치는 공용 WebRTC 신호 서버를 통해 연결됩니다.',
+		'P2P 모드: 같은 브라우저의 탭은 항상 연결되고, 다른 장치는 공용 WebRTC 신호 서버를 통해 연결됩니다. 공유 링크로 다른 사람을 초대하세요. 링크에는 세션 키가 포함되어 있으며 방 이름만으로는 참가할 수 없습니다.',
 	'pptx.share.p2pServerValue': 'P2P(서버 없음)',
 	'pptx.share.shareLink': '공유 링크',
 	'pptx.share.copyLink': '공유 링크 복사',

@@ -1,24 +1,67 @@
 import { describe, expect, it } from 'vitest';
 
+import { webrtcRoomName } from 'ooxml-core/collab';
+
 import {
 	buildCollaborationShareUrl,
 	buildCreateCollaborationConfig,
 	buildJoinCollaborationConfig,
 } from './share-session';
 
+const SECRET = 'AAECAwQFBgcICQoLDA0ODw';
+
 describe('share session helpers', () => {
-	it('joins the opaque-origin room code with the recipient default WebRTC settings', () => {
+	it('cannot join a peer-to-peer session from a bare room code', () => {
 		const config = { roomId: 'p2p-room', serverUrl: '', transport: 'webrtc' as const };
-		const invitation = buildCollaborationShareUrl(config, { origin: 'null', pathname: '/' });
+		const invitation = buildCollaborationShareUrl(
+			{ ...config, secret: SECRET },
+			{ origin: 'null', pathname: '/' },
+		);
 		expect(invitation).toBe(config.roomId);
 		expect(
 			buildJoinCollaborationConfig({ invitation, userName: 'Guest', serverUrl: '' }),
-		).toMatchObject({
-			roomId: config.roomId,
-			serverUrl: '',
-			transport: 'webrtc',
-			sessionIntent: 'join',
+		).toBeNull();
+	});
+	it('creates a peer-to-peer session with a fresh secret whose link round-trips', () => {
+		const created = buildCreateCollaborationConfig({
+			roomId: 'quarterly-board-deck',
+			userName: 'Ada',
+			serverUrl: '  ',
 		});
+		expect(created).toMatchObject({ transport: 'webrtc', sessionIntent: 'create' });
+		expect(created?.secret).toMatch(/^[A-Za-z0-9_-]{22}$/u);
+		const again = buildCreateCollaborationConfig({
+			roomId: 'quarterly-board-deck',
+			userName: 'Ada',
+			serverUrl: '',
+		});
+		expect(again?.secret).not.toBe(created?.secret);
+		const link = buildCollaborationShareUrl(created!, {
+			origin: 'https://app.test',
+			pathname: '/viewer',
+		});
+		const url = new URL(link);
+		expect(url.search).toBe('?room=quarterly-board-deck&transport=webrtc');
+		expect(url.hash).toBe(`#key=${created?.secret}`);
+		expect(
+			buildJoinCollaborationConfig({ invitation: link, userName: 'Bo', serverUrl: '' }),
+		).toMatchObject({ roomId: 'quarterly-board-deck', secret: created?.secret });
+		expect(webrtcRoomName(created!.secret!)).not.toContain('quarterly');
+	});
+	it('refuses a peer-to-peer link without its secret', () => {
+		expect(
+			buildJoinCollaborationConfig({
+				invitation: 'https://app.test/?room=deck-1&transport=webrtc',
+				userName: 'Bo',
+				serverUrl: 'wss://fallback',
+			}),
+		).toBeNull();
+		expect(
+			buildCollaborationShareUrl(
+				{ roomId: 'deck-1', serverUrl: '', transport: 'webrtc' },
+				{ origin: 'https://app.test', pathname: '/' },
+			),
+		).toBe('deck-1');
 	});
 	it('retains the absent-location room code and exposes malformed nonopaque locations', () => {
 		const config = { roomId: 'external-room', serverUrl: 'wss://relay.example' };
@@ -53,8 +96,7 @@ describe('share session helpers', () => {
 
 	it('joins a URL created by another binding and preserves WebRTC signaling', () => {
 		const config = buildJoinCollaborationConfig({
-			invitation:
-				'https://react.example/viewer?room=deck-1&transport=webrtc&signaling=wss%3A%2F%2Fa%2Cwss%3A%2F%2Fb',
+			invitation: `https://react.example/viewer?room=deck-1&transport=webrtc&signaling=wss%3A%2F%2Fa%2Cwss%3A%2F%2Fb#key=${SECRET}`,
 			userName: 'Grace',
 			serverUrl: 'wss://fallback',
 		});
@@ -64,6 +106,7 @@ describe('share session helpers', () => {
 			serverUrl: '',
 			transport: 'webrtc',
 			signaling: ['wss://a', 'wss://b'],
+			secret: SECRET,
 			role: 'collaborator',
 			sessionIntent: 'join',
 		});

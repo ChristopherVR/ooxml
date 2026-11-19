@@ -363,7 +363,7 @@ export const translationsEn: Record<string, string> = {
 	'pptx.share.serverHint':
 		'Enter the WebSocket URL of a y-websocket server (secure wss:// when sharing from an https:// page), or leave empty for serverless peer-to-peer mode.',
 	'pptx.share.p2pHint':
-		'Peer-to-peer mode: tabs in the same browser always connect; other devices connect through public WebRTC signaling servers.',
+		'Peer-to-peer mode: tabs in the same browser always connect; other devices connect through public WebRTC signaling servers. Invite others with the share link: it carries the session key, and the room name alone cannot join.',
 	'pptx.share.p2pServerValue': 'Peer-to-peer (no server)',
 	'pptx.share.shareLink': 'Share Link',
 	'pptx.share.copyLink': 'Copy share link',

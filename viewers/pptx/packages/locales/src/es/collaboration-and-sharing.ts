@@ -63,7 +63,7 @@ export const translations = {
 	'pptx.share.serverHint':
 		'Introduzca la URL WebSocket de un servidor y-websocket (use wss:// al compartir desde una página https://), o déjelo vacío para el modo peer-to-peer sin servidor.',
 	'pptx.share.p2pHint':
-		'Modo peer-to-peer: las pestañas del mismo navegador siempre se conectan; otros dispositivos se conectan a través de servidores públicos de señalización WebRTC.',
+		'Modo peer-to-peer: las pestañas del mismo navegador siempre se conectan; otros dispositivos se conectan a través de servidores públicos de señalización WebRTC. Invite a otras personas con el vínculo para compartir: contiene la clave de la sesión, y el nombre de la sala por sí solo no permite unirse.',
 	'pptx.share.p2pServerValue': 'Punto a punto (sin servidor)',
 	'pptx.share.shareLink': 'Enlace para compartir',
 	'pptx.share.copyLink': 'Copiar enlace para compartir',

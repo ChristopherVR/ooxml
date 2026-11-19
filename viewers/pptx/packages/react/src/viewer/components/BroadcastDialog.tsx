@@ -1,8 +1,8 @@
 import {
 	DEFAULT_BROADCAST_SERVER_URL,
+	buildBroadcastConfig,
 	buildBroadcastViewerUrl,
 	generateBroadcastRoomId,
-	resolveTransportForServerUrl,
 } from 'ooxml-ui/pptx';
 /**
  * BroadcastDialog: Modal dialog for starting / managing a live broadcast.
@@ -95,12 +95,10 @@ export function BroadcastDialog({
 		}
 	}, [open, isBroadcasting, defaultRoomId, defaultUserName, defaultServerUrl]);
 
-	const activeRoomId = isBroadcasting ? collab.config.roomId : roomId;
-	const activeServerUrl = isBroadcasting ? collab.config.serverUrl : serverUrl;
 	const broadcastUrl =
-		typeof window !== 'undefined'
-			? buildBroadcastViewerUrl(activeRoomId, activeServerUrl, window.location)
-			: activeRoomId;
+		isBroadcasting && typeof window !== 'undefined'
+			? buildBroadcastViewerUrl(collab.config, window.location)
+			: roomId;
 
 	const handleCopyUrl = useCallback(() => {
 		void navigator.clipboard.writeText(broadcastUrl).then(() => {
@@ -111,18 +109,12 @@ export function BroadcastDialog({
 	}, [broadcastUrl]);
 
 	const handleStartBroadcast = useCallback(() => {
-		if (!roomId.trim() || !userName.trim()) {
+		// A blank server broadcasts over the serverless peer-to-peer transport.
+		const config = buildBroadcastConfig({ roomId, serverUrl });
+		if (!config || !userName.trim()) {
 			return;
 		}
-		const trimmedServer = serverUrl.trim();
-		onStartBroadcast?.({
-			roomId: roomId.trim(),
-			serverUrl: trimmedServer,
-			userName: userName.trim(),
-			role: 'owner',
-			// A blank server broadcasts over the serverless peer-to-peer transport.
-			transport: resolveTransportForServerUrl(trimmedServer),
-		});
+		onStartBroadcast?.({ ...config, userName: userName.trim(), role: 'owner' });
 		// Enter presentation mode after a short delay for connection
 		setTimeout(() => {
 			onStartPresenting?.();

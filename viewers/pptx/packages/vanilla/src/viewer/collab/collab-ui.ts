@@ -80,17 +80,15 @@ export function createCollabUi(deps: CollabUiDeps): CollabUiController {
 	const t = deps.getTranslator();
 	const chrome = deps.getChrome();
 
-	let broadcastRoomId = '';
-	let broadcastServerUrl = '';
+	let broadcast: BroadcastConfig | null = null;
 
 	function viewerUrl(): string {
-		if (!broadcastRoomId) {
+		if (!broadcast) {
 			return '';
 		}
 		const location = doc.defaultView?.location;
 		return buildBroadcastViewerUrl(
-			broadcastRoomId,
-			broadcastServerUrl,
+			broadcast,
 			location ? { origin: location.origin, pathname: location.pathname } : undefined,
 		);
 	}
@@ -125,8 +123,7 @@ export function createCollabUi(deps: CollabUiDeps): CollabUiController {
 		t,
 		{
 			onStart: (config: BroadcastConfig) => {
-				broadcastRoomId = config.roomId;
-				broadcastServerUrl = config.serverUrl;
+				broadcast = config;
 				const session = buildBroadcastSessionConfig(
 					config,
 					deps.getAuthorName?.() ?? deps.shareDefaults?.userName,
@@ -139,8 +136,7 @@ export function createCollabUi(deps: CollabUiDeps): CollabUiController {
 			onStop: () => {
 				deps.stopCollaboration();
 				deps.onStopped?.();
-				broadcastRoomId = '';
-				broadcastServerUrl = '';
+				broadcast = null;
 				broadcastDialog.setActive(false, '');
 				broadcastDialog.close();
 			},
@@ -163,7 +159,7 @@ export function createCollabUi(deps: CollabUiDeps): CollabUiController {
 	};
 	const openBroadcast = (): void => {
 		broadcastDialog.open(
-			{ roomId: broadcastRoomId, serverUrl: broadcastServerUrl },
+			{ roomId: broadcast?.roomId ?? '', serverUrl: broadcast?.serverUrl ?? '' },
 			deps.getStatus() !== 'disconnected',
 			viewerUrl(),
 		);

@@ -5,7 +5,9 @@
  * A broadcast is a one-way collaboration session: the presenter drives slide
  * navigation and viewers follow along via a shareable link. These helpers
  * cover the testable, framework-agnostic parts of each binding's broadcast
- * dialog: room-id generation, form validation, and the viewer-link builder.
+ * dialog: room-id generation and form validation. The viewer follow-link is
+ * `buildBroadcastViewerUrl` in `share-session.ts`, beside the invitation link
+ * it shares its format with.
  *
  * No `any`; all regexes use the `/u` flag; no `String.prototype.replaceAll`,
  * no regex named-capture-groups (Angular vendors this source under its
@@ -13,6 +15,8 @@
  * (cryptographically strong), read inside the generator at call time, never
  * at module eval.
  */
+
+import { createShareSecret } from 'ooxml-core/collab';
 
 import type { CollaborationTransport } from '../types';
 import { secureRandomToken } from './secure-random';
@@ -32,6 +36,8 @@ export interface BroadcastConfig {
 	serverUrl: string;
 	/** Derived from serverUrl: empty server means peer-to-peer (webrtc). */
 	transport?: CollaborationTransport;
+	/** A peer-to-peer broadcast's session secret (see `CollaborationConfig.secret`). */
+	secret?: string;
 }
 
 /**
@@ -70,75 +76,21 @@ export function canStartBroadcast(fields: BroadcastConfig): boolean {
 
 /**
  * Assemble a {@link BroadcastConfig} from the (trimmed) form fields, or `null`
- * when incomplete. A blank server URL yields `transport: 'webrtc'`.
+ * when incomplete. A blank server URL yields `transport: 'webrtc'` with a fresh
+ * session secret.
  */
 export function buildBroadcastConfig(fields: BroadcastConfig): BroadcastConfig | null {
 	if (!canStartBroadcast(fields)) {
 		return null;
 	}
 	const serverUrl = fields.serverUrl.trim();
+	const transport = resolveTransportForServerUrl(serverUrl);
 	return {
 		roomId: fields.roomId.trim(),
 		serverUrl,
-		transport: resolveTransportForServerUrl(serverUrl),
+		transport,
+		...(transport === 'webrtc' ? { secret: createShareSecret() } : {}),
 	};
-}
-
-/**
- * Build a shareable link that carries a session id under `paramName`: either
- * `?<paramName>=<id>&transport=webrtc` (blank server URL, peer-to-peer) or
- * `?<paramName>=<id>&server=<url>`. Returns just the id when no
- * `origin`/`pathname` are available (non-browser environments).
- *
- * The one query-link builder behind both {@link buildBroadcastViewerUrl}
- * (`paramName: 'broadcast'`) and Angular's `buildShareUrl`
- * (`paramName: 'room'`, re-exported here) - the two diverged only in that one
- * literal, so a room/broadcast link cannot drift apart on the query shape.
- */
-export function buildQueryLinkUrl(
-	id: string,
-	serverUrl: string,
-	location: { origin: string; pathname: string } | undefined,
-	paramName: string,
-): string {
-	if (!location) {
-		return id;
-	}
-	const encodedId = encodeURIComponent(id);
-	const trimmed = serverUrl.trim();
-	if (trimmed.length === 0) {
-		return `${location.origin}${location.pathname}?${paramName}=${encodedId}&transport=webrtc`;
-	}
-	const server = encodeURIComponent(trimmed);
-	return `${location.origin}${location.pathname}?${paramName}=${encodedId}&server=${server}`;
-}
-
-/**
- * Build the shareable viewer follow-link for a broadcast. Returns just the
- * room id when no `origin`/`pathname` are available (non-browser environments).
- * A blank server URL produces a `transport=webrtc` link instead of a
- * `server=` parameter.
- */
-export function buildBroadcastViewerUrl(
-	roomId: string,
-	serverUrl: string,
-	location?: { origin: string; pathname: string },
-): string {
-	return buildQueryLinkUrl(roomId, serverUrl, location, 'broadcast');
-}
-
-/**
- * Build a shareable join URL for a (non-broadcast) collaboration session.
- * Identical shape to {@link buildBroadcastViewerUrl}, but under the `room=`
- * query key Angular's Share dialog uses. Returns just the room id when no
- * `origin`/`pathname` are available (e.g. non-browser environments).
- */
-export function buildShareUrl(
-	roomId: string,
-	serverUrl: string,
-	location?: { origin: string; pathname: string },
-): string {
-	return buildQueryLinkUrl(roomId, serverUrl, location, 'room');
 }
 
 /** Whether the runtime exposes a usable async clipboard write API. */

@@ -9,15 +9,13 @@ import { describe, expect, it } from 'vitest';
 import {
 	DEFAULT_BROADCAST_SERVER_URL,
 	buildBroadcastConfig,
-	buildBroadcastViewerUrl,
-	buildQueryLinkUrl,
-	buildShareUrl,
 	canStartBroadcast,
 	canUseClipboard,
 	generateBroadcastRoomId,
 	resolveTransportForServerUrl,
 	seedBroadcastFields,
 } from './broadcast-helpers';
+import { buildBroadcastViewerUrl } from './share-session';
 
 describe('generateBroadcastRoomId', () => {
 	it('produces a "broadcast-<suffix>" id', () => {
@@ -78,12 +76,17 @@ describe('buildBroadcastConfig', () => {
 		});
 	});
 
-	it('selects the webrtc transport when the server URL is blank', () => {
-		expect(buildBroadcastConfig({ roomId: 'room', serverUrl: '  ' })).toStrictEqual({
+	it('selects the webrtc transport with a fresh secret when the server URL is blank', () => {
+		const config = buildBroadcastConfig({ roomId: 'room', serverUrl: '  ' });
+		expect(config).toStrictEqual({
 			roomId: 'room',
 			serverUrl: '',
 			transport: 'webrtc',
+			secret: expect.stringMatching(/^[A-Za-z0-9_-]{22}$/u),
 		});
+		expect(buildBroadcastConfig({ roomId: 'room', serverUrl: '' })?.secret).not.toBe(
+			config?.secret,
+		);
 	});
 
 	it('returns null when incomplete', () => {
@@ -92,66 +95,22 @@ describe('buildBroadcastConfig', () => {
 });
 
 describe('buildBroadcastViewerUrl', () => {
+	const location = { origin: 'https://app.test', pathname: '/' };
+
 	it('builds a ?broadcast=&server= link from a location', () => {
-		const url = buildBroadcastViewerUrl('room-1', 'ws://x', {
-			origin: 'https://app.test',
-			pathname: '/',
-		});
+		const url = buildBroadcastViewerUrl({ roomId: 'room-1', serverUrl: 'ws://x' }, location);
 		expect(url).toBe('https://app.test/?broadcast=room-1&server=ws%3A%2F%2Fx');
 	});
 
-	it('builds a ?broadcast=&transport=webrtc link when the server URL is blank', () => {
-		const url = buildBroadcastViewerUrl('room-1', '  ', {
-			origin: 'https://app.test',
-			pathname: '/',
-		});
-		expect(url).toBe('https://app.test/?broadcast=room-1&transport=webrtc');
+	it('carries a peer-to-peer broadcast secret in the fragment only', () => {
+		const config = buildBroadcastConfig({ roomId: 'room-1', serverUrl: '  ' });
+		const url = buildBroadcastViewerUrl(config!, location);
+		expect(url).toBe(`https://app.test/?broadcast=room-1&transport=webrtc#key=${config?.secret}`);
 	});
 
-	it('falls back to the room id without a location', () => {
-		expect(buildBroadcastViewerUrl('room-1', 'ws://x')).toBe('room-1');
-	});
-});
-
-describe('buildQueryLinkUrl', () => {
-	it('builds a ?<paramName>=&server= link from a location', () => {
-		const url = buildQueryLinkUrl(
-			'room-1',
-			'ws://x',
-			{ origin: 'https://app.test', pathname: '/' },
-			'foo',
-		);
-		expect(url).toBe('https://app.test/?foo=room-1&server=ws%3A%2F%2Fx');
-	});
-
-	it('builds a ?<paramName>=&transport=webrtc link when the server URL is blank', () => {
-		const url = buildQueryLinkUrl(
-			'room-1',
-			'  ',
-			{ origin: 'https://app.test', pathname: '/' },
-			'foo',
-		);
-		expect(url).toBe('https://app.test/?foo=room-1&transport=webrtc');
-	});
-
-	it('falls back to the id without a location', () => {
-		expect(buildQueryLinkUrl('room-1', 'ws://x', undefined, 'foo')).toBe('room-1');
-	});
-});
-
-describe('buildShareUrl', () => {
-	it('builds a ?room=&server= link (Angular Share dialog shape)', () => {
-		const url = buildShareUrl('room-1', 'ws://x', { origin: 'https://app.test', pathname: '/' });
-		expect(url).toBe('https://app.test/?room=room-1&server=ws%3A%2F%2Fx');
-	});
-
-	it('builds a ?room=&transport=webrtc link when the server URL is blank', () => {
-		const url = buildShareUrl('room-1', '  ', { origin: 'https://app.test', pathname: '/' });
-		expect(url).toBe('https://app.test/?room=room-1&transport=webrtc');
-	});
-
-	it('falls back to the room id without a location', () => {
-		expect(buildShareUrl('room-1', 'ws://x')).toBe('room-1');
+	it('falls back to the room id without a location or a peer-to-peer secret', () => {
+		expect(buildBroadcastViewerUrl({ roomId: 'room-1', serverUrl: 'ws://x' })).toBe('room-1');
+		expect(buildBroadcastViewerUrl({ roomId: 'room-1', serverUrl: '' }, location)).toBe('room-1');
 	});
 });
 

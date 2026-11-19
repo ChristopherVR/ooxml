@@ -271,12 +271,7 @@ export {
 	buildPropertiesPatch,
 } from './properties-dialog-helpers';
 export type { DocumentProperties, PropertiesDraft } from './properties-dialog-helpers';
-export {
-	seedShareFields,
-	canStartShare,
-	buildCollaborationConfig,
-	buildShareUrl,
-} from './share-helpers';
+export { seedShareFields, canStartShare, buildCollaborationConfig } from './share-helpers';
 export type { ShareDefaults, ShareFormFields } from './share-helpers';
 export {
 	hasExistingLink,

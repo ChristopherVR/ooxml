@@ -62,8 +62,10 @@ describe('join helpers', () => {
 	});
 
 	it('buildJoinConfig assembles a join config from a room id', () => {
-		const config = buildJoinConfig({ invitation: 'room-9', userName: 'Ada', serverUrl: '' });
+		const config = buildJoinConfig({ invitation: 'room-9', userName: 'Ada', serverUrl: 'wss://s' });
 		expect(config).not.toBeNull();
 		expect(config?.roomId).toBe('room-9');
+		// Without a server a room code would mean peer-to-peer, which needs a link's secret.
+		expect(buildJoinConfig({ invitation: 'room-9', userName: 'Ada', serverUrl: '' })).toBeNull();
 	});
 });

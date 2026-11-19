@@ -2,10 +2,18 @@
  * Framework-neutral Share dialog form, invitation-link, and join parsing.
  * Every UI binding emits the same CollaborationConfig shape from these helpers.
  */
-import { parseShareInvitation, shareInvitation } from 'ooxml-core/collab';
+import {
+	createShareSecret,
+	parseShareInvitation,
+	shareInvitation,
+	type ShareLinkParam,
+} from 'ooxml-core/collab';
 import type { CollaborationConfig } from '../types';
 import { resolveTransportForServerUrl } from './broadcast-helpers';
 import { isValidRoomId } from './collaboration-presence';
+
+/** A fresh peer-to-peer session secret (`createShareSecret` in `ooxml-core/collab`). */
+export { createShareSecret } from 'ooxml-core/collab';
 
 export interface ShareSessionDefaults {
 	roomId?: string;
@@ -46,11 +54,13 @@ export function buildCreateCollaborationConfig(
 		return null;
 	}
 	const serverUrl = fields.serverUrl.trim();
+	const transport = resolveTransportForServerUrl(serverUrl);
 	return {
 		roomId: fields.roomId.trim(),
 		userName: fields.userName.trim(),
 		serverUrl,
-		transport: resolveTransportForServerUrl(serverUrl),
+		transport,
+		...(transport === 'webrtc' ? { secret: createShareSecret() } : {}),
 		role: 'collaborator',
 		sessionIntent: 'create',
 	};
@@ -59,8 +69,9 @@ export function buildCreateCollaborationConfig(
 /**
  * Parse an invitation produced by any framework binding (or any product: the links are the
  * shared `ooxml-core/collab` format). Complete links carry the standard `room`, `server`,
- * `transport`, and optional `signaling` query parameters. A bare room ID uses the supplied
- * fallback server.
+ * `transport`, and optional `signaling` query parameters, and a peer-to-peer link its secret in
+ * the `#key=` fragment (without one it names no session). A bare room ID uses the supplied
+ * fallback server, and names no session without one.
  */
 export function buildJoinCollaborationConfig(
 	fields: JoinSessionFields,
@@ -73,14 +84,22 @@ export function buildJoinCollaborationConfig(
 	if (!target) {
 		return null;
 	}
-	const transport =
-		target.transport === 'webrtc' ? 'webrtc' : resolveTransportForServerUrl(target.serverUrl);
+	if (target.transport !== 'webrtc' && !target.serverUrl) {
+		// A room code with no server would mean peer-to-peer, which needs the secret only a
+		// complete invitation link carries.
+		return null;
+	}
 	return {
 		roomId: target.roomId,
 		userName,
-		serverUrl: transport === 'webrtc' ? '' : target.serverUrl,
-		transport,
-		...(target.signaling?.length ? { signaling: target.signaling } : {}),
+		serverUrl: target.serverUrl,
+		transport: target.transport ?? 'websocket',
+		...(target.transport === 'webrtc'
+			? {
+					...(target.signaling?.length ? { signaling: target.signaling } : {}),
+					secret: target.secret,
+				}
+			: {}),
 		role: 'collaborator',
 		sessionIntent: 'join',
 	};
@@ -90,21 +109,44 @@ export function canJoinCollaborationSession(fields: JoinSessionFields): boolean 
 	return buildJoinCollaborationConfig(fields) !== null;
 }
 
+/**
+ * The invitation link for `config` (under `param`, `room` or a broadcast's `broadcast`). A session
+ * without a server is peer-to-peer in PowerPoint, so its link says so and carries the secret in
+ * its fragment; without a secret there is no session to join, so only the room code is returned.
+ */
 export function buildCollaborationShareUrl(
-	config: Pick<CollaborationConfig, 'roomId' | 'serverUrl' | 'transport' | 'signaling'>,
+	config: Pick<CollaborationConfig, 'roomId' | 'serverUrl' | 'transport' | 'signaling' | 'secret'>,
+	location?: { origin: string; pathname: string },
+	param: ShareLinkParam = 'room',
+): string {
+	const webrtc = config.transport === 'webrtc' || !config.serverUrl.trim();
+	if (!webrtc) {
+		return shareInvitation({ roomId: config.roomId, serverUrl: config.serverUrl }, location, param);
+	}
+	if (!config.secret) {
+		return config.roomId;
+	}
+	return shareInvitation(
+		{
+			roomId: config.roomId,
+			serverUrl: '',
+			transport: 'webrtc',
+			...(config.signaling?.length ? { signaling: config.signaling } : {}),
+			secret: config.secret,
+		},
+		location,
+		param,
+	);
+}
+
+/**
+ * The shareable viewer follow-link for a broadcast: its invitation link under the `broadcast`
+ * parameter. Returns just the room id when no `origin`/`pathname` are available (non-browser
+ * environments) or a peer-to-peer broadcast has no secret.
+ */
+export function buildBroadcastViewerUrl(
+	config: Pick<CollaborationConfig, 'roomId' | 'serverUrl' | 'transport' | 'signaling' | 'secret'>,
 	location?: { origin: string; pathname: string },
 ): string {
-	// A session without a server is peer-to-peer in PowerPoint, so its link says so.
-	const webrtc = config.transport === 'webrtc' || !config.serverUrl.trim();
-	return shareInvitation(
-		webrtc
-			? {
-					roomId: config.roomId,
-					serverUrl: '',
-					transport: 'webrtc',
-					...(config.signaling?.length ? { signaling: config.signaling } : {}),
-				}
-			: { roomId: config.roomId, serverUrl: config.serverUrl },
-		location,
-	);
+	return buildCollaborationShareUrl(config, location, 'broadcast');
 }

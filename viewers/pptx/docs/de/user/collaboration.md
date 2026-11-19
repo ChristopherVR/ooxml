@@ -15,7 +15,7 @@ Zusammenarbeit ist eine optionale Funktion. Sehen Sie keine Schaltfläche **Teil
 
 1. Klicken Sie auf die Schaltfläche **Teilen** am rechten Ende der Registerkartenzeile des Menübands (oder **Datei > Freigeben > Mit Personen teilen**). Der Dialog **Präsentation teilen** öffnet sich auf seiner Registerkarte **Sitzung erstellen**.
 2. Füllen Sie aus:
-   - **Sitzungsname** - die Raumkennung (Buchstaben, Zahlen, Bindestriche, Unterstriche). Mitarbeitende brauchen diesen Namen.
+   - **Sitzungsname** - die Raumkennung (Buchstaben, Zahlen, Bindestriche, Unterstriche). Mitarbeitende brauchen diesen Namen, bei einer Peer-to-Peer-Sitzung den Freigabelink.
    - **Ihr Anzeigename** - wie Sie für andere erscheinen.
    - **Zusammenarbeitsserver** - optional. Lassen Sie ihn leer für eine Peer-to-Peer-Sitzung, oder geben Sie die Adresse des Zusammenarbeitsservers Ihrer Organisation ein (eine `wss://...`-URL).
 3. Klicken Sie auf **Teilen starten**.
@@ -34,6 +34,8 @@ Um die Sitzung zu beenden, öffnen Sie den Dialog erneut und klicken Sie auf **T
 2. Fügen Sie den Einladungslink oder die Raum-ID in **Einladungslink oder Raum-ID** ein.
 3. Geben Sie Ihren Anzeigenamen ein und, falls die Sitzung einen verwendet, die Adresse des Zusammenarbeitsservers.
 4. Klicken Sie auf **Sitzung beitreten**.
+
+Einer Peer-to-Peer-Sitzung (ohne Zusammenarbeitsserver) treten Sie nur über ihren Freigabelink bei: Der Link enthält nach dem `#` den Sitzungsschlüssel, die Raum-ID allein reicht nicht.
 
 ## Anwesenheitsanzeigen
 
@@ -61,7 +63,7 @@ Das Zusammenführen schützt Sie vor verlorenen Änderungen, nicht vor Überrasc
 
 Das Feld **Zusammenarbeitsserver** entscheidet, wie sich Teilnehmer verbinden:
 
-- **Leer (Peer-to-Peer)** - Browser-Tabs auf demselben Gerät finden sich immer, und Personen auf anderen Geräten verbinden sich über öffentliche WebRTC-Signalisierungsserver direkt mit Ihnen. Das ist der schnellste Weg, die Zusammenarbeit auszuprobieren; die gehostete Demo funktioniert so.
+- **Leer (Peer-to-Peer)** - Browser-Tabs auf demselben Gerät finden sich immer, und Personen auf anderen Geräten verbinden sich über öffentliche WebRTC-Signalisierungsserver direkt mit Ihnen. Diese Server sehen nur einen Hash des Sitzungsschlüssels aus dem Freigabelink und verschlüsselte Verbindungsdaten, nie den Sitzungsnamen. Das ist der schnellste Weg, die Zusammenarbeit auszuprobieren; die gehostete Demo funktioniert so.
 - **Serveradresse gesetzt** - alle übertragen über einen dedizierten Zusammenarbeitsserver. Verwenden Sie das, wenn Ihre Organisation einen betreibt: Es funktioniert auch durch strenge Firewalls und NAT, wo direkte Peer-Verbindungen scheitern, hält den Raum verfügbar, solange ein Teilnehmer verbunden ist, und kann von der Host-Anwendung mit Authentifizierung und serverseitiger Speicherung kombiniert werden.
 
 ::: warning wss:// auf sicheren Seiten verwenden

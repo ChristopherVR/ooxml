@@ -102,10 +102,12 @@ Sessions start only when the user (or host) starts one.
 - With the server field left blank, the viewer uses serverless WebRTC (`y-webrtc`). Peers find
   each other through the library's default public signaling server, `wss://y-webrtc-eu.fly.dev`,
   operated by a third party, and through public STUN servers (`stun.l.google.com`,
-  `global.stun.twilio.com`) to learn their network addresses. The signaling server sees the
-  room id (hashed), the participants' IP addresses and the connection offers; document content
-  then flows directly between peers, encrypted by WebRTC. Pass a `signaling` list (or
-  `?signaling=` in a share link) to use your own server.
+  `global.stun.twilio.com`) to learn their network addresses. Each session has a random 128-bit
+  secret that its invitation link carries in the `#key=` fragment, which browsers never send to
+  a server. The signaling server sees a SHA-256 hash of that secret (never the room name), the
+  participants' IP addresses and signaling messages encrypted with the secret; document content
+  then flows directly between peers, encrypted by WebRTC and by the same secret. Pass a
+  `signaling` list (or `?signaling=` in a share link) to use your own server.
 - Sessions within one browser use `BroadcastChannel`, which never leaves the device.
 
 ### Digital signature inspection (Node only)

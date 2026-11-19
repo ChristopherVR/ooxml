@@ -35,7 +35,8 @@ import { ViewerRegion, useRegionRenderer } from './ViewerRegion';
 
 /**
  * Build the shareable join link. A peer-to-peer (webrtc) session carries
- * `transport=webrtc` instead of a `server=` parameter.
+ * `transport=webrtc` instead of a `server=` parameter, and its secret in the
+ * `#key=` fragment.
  */
 function shareUrl(config: CollaborationConfig): string {
 	return buildCollaborationShareUrl(

@@ -102,10 +102,11 @@ tears the session down. A `viewer` role makes the local user read-only.
 | `serverUrl`           | `string`                                       | yes      | `y-websocket` server URL; may be `''` when `transport: 'webrtc'`.                                                                                                            |
 | `transport`           | `'websocket' \| 'webrtc'`                      | no       | `'websocket'` (default) or `'webrtc'` (serverless P2P).                                                                                                                      |
 | `signaling`           | `string[]`                                     | no       | y-webrtc signaling URLs; defaults to y-webrtc's public list.                                                                                                                 |
+| `secret`              | `string`                                       | webrtc   | Session secret from `createShareSecret()`; hashed into the signaling room and used as the y-webrtc password.                                                                 |
 | `userName`            | `string`                                       | yes      | Local user's display name.                                                                                                                                                   |
 | `userAvatar`          | `string`                                       | no       | Avatar URL for the local user.                                                                                                                                               |
 | `userColor`           | `string`                                       | no       | Hex colour for the user's cursor/presence indicator.                                                                                                                         |
-| `authToken`           | `string`                                       | no       | Sent with the WebSocket handshake / used as the webrtc room password.                                                                                                        |
+| `authToken`           | `string`                                       | no       | Sent with the WebSocket handshake (webrtc uses `secret`).                                                                                                                    |
 | `role`                | `CollaborationRole`                            | no       | `'owner'`, `'collaborator'` (default), or `'viewer'` (read-only).                                                                                                            |
 | `sessionIntent`       | `'create' \| 'join'`                           | no       | Whether this client created or joined the room; hosts can use it to avoid publishing local bytes on join.                                                                    |
 | `onWriteBack`         | `(bytes: Uint8Array) => void \| Promise<void>` | no       | Elected-writer persistence: only the `'owner'` peer receives debounced PPTX snapshots; a returned promise is the acknowledgement (status in `collaborationState.writeBack`). |
@@ -119,6 +120,13 @@ WebRTC, and tabs in the **same browser** connect through BroadcastChannel even w
 at all. Cross-device sessions meet through WebRTC signaling servers (metadata only; document
 data never passes through them); supply your own via `signaling` for production use. In the
 built-in Share/Broadcast dialogs, leaving the server URL empty selects this transport.
+
+A `'webrtc'` session needs `secret`, a fresh 128-bit value from `createShareSecret()` (exported
+by `ooxml-core/collab` and `ooxml-ui/pptx`). A SHA-256 hash of the secret names the signaling
+room and the secret is the y-webrtc password, so the signaling servers see neither `roomId` nor
+clear signaling data. The built-in dialogs generate one, invitation links carry it in their
+`#key=` fragment (which browsers never send to a server), and a `'webrtc'` config without it
+fails to connect.
 
 ## Your own provider, or sharing in one browser
 

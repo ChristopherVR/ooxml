@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import {
 	DEFAULT_BROADCAST_SERVER_URL,
+	buildBroadcastConfig,
 	generateBroadcastRoomId,
 	resolveTransportForServerUrl,
 } from 'ooxml-ui/pptx';
-import type { CollaborationTransport } from 'ooxml-ui/pptx';
+import type { BroadcastConfig } from 'ooxml-ui/pptx';
 /**
  * BroadcastDialog: start / stop a one-way live broadcast for the Vue viewer.
  *
@@ -24,7 +25,7 @@ import type { CollaborationTransport } from 'ooxml-ui/pptx';
  *  - `viewerUrl` : the shareable follow link (shown while `active`).
  *
  * Emits:
- *  - `start` : `{ roomId, serverUrl }`, the presenter started a broadcast.
+ *  - `start` : the `buildBroadcastConfig` result, the presenter started a broadcast.
  *  - `stop`  : the presenter stopped the active broadcast.
  *  - `close` : the dialog was dismissed.
  */
@@ -37,12 +38,6 @@ import ModalDialog from './ModalDialog.vue';
 interface BroadcastDefaults {
 	roomId?: string;
 	serverUrl?: string;
-}
-
-interface BroadcastConfig {
-	roomId: string;
-	serverUrl: string;
-	transport?: CollaborationTransport;
 }
 
 const props = defineProps<{
@@ -95,12 +90,10 @@ function onStart(): void {
 	if (!canStart.value) {
 		return;
 	}
-	const trimmedServer = serverUrl.value.trim();
-	emit('start', {
-		roomId: roomId.value.trim(),
-		serverUrl: trimmedServer,
-		transport: resolveTransportForServerUrl(trimmedServer),
-	});
+	const config = buildBroadcastConfig({ roomId: roomId.value, serverUrl: serverUrl.value });
+	if (config) {
+		emit('start', config);
+	}
 }
 
 function onStop(): void {

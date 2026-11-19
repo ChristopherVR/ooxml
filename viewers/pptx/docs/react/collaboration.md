@@ -61,13 +61,15 @@ interface CollaborationConfig {
 	transport?: CollaborationTransport;
 	/** WebRTC signaling server URLs (webrtc transport only). */
 	signaling?: string[];
+	/** Session secret, required for webrtc (see "Serverless peer-to-peer mode"). */
+	secret?: string;
 	/** Display name for the local user. */
 	userName: string;
 	/** Avatar URL for the local user (optional). */
 	userAvatar?: string;
 	/** Hex colour for the local user's cursor / presence indicator. */
 	userColor?: string;
-	/** Optional auth token sent with the WebSocket handshake / used as the webrtc room password. */
+	/** Optional auth token sent with the WebSocket handshake (webrtc uses `secret`). */
 	authToken?: string;
 	/** Session role - defaults to 'collaborator'. */
 	role?: CollaborationRole;
@@ -86,10 +88,11 @@ interface CollaborationConfig {
 | `serverUrl`           | `string`                                                          | yes      | `y-websocket` server URL; may be `''` when `transport: 'webrtc'`.                                                                                               |
 | `transport`           | `CollaborationTransport`                                          | no       | `'websocket'` (default) or `'webrtc'` (serverless P2P).                                                                                                         |
 | `signaling`           | `string[]`                                                        | no       | y-webrtc signaling URLs; defaults to y-webrtc's public list.                                                                                                    |
+| `secret`              | `string`                                                          | webrtc   | Session secret from `createShareSecret()`; hashed into the signaling room and used as the y-webrtc password.                                                    |
 | `userName`            | `string`                                                          | yes      | Local user's display name; also used as comment/annotation author when `authorName` is unset.                                                                   |
 | `userAvatar`          | `string`                                                          | no       | Validated avatar URL.                                                                                                                                           |
 | `userColor`           | `string`                                                          | no       | Hex colour for the user's cursor ring.                                                                                                                          |
-| `authToken`           | `string`                                                          | no       | WebSocket handshake param / webrtc room password.                                                                                                               |
+| `authToken`           | `string`                                                          | no       | WebSocket handshake param (webrtc uses `secret`).                                                                                                               |
 | `role`                | `CollaborationRole`                                               | no       | `'owner'`, `'collaborator'` (default), or `'viewer'`.                                                                                                           |
 | `onWriteBack`         | `(bytes) => void \| Promise<void>`                                | no       | Only fires for the `'owner'` peer: debounced serialized PPTX snapshots. A returned promise is the acknowledgement; status is in `collaborationState.writeBack`. |
 | `writeBackDebounceMs` | `number`                                                          | no       | Default 5000 ms.                                                                                                                                                |
@@ -103,6 +106,13 @@ all. This is how the hosted GitHub Pages demos collaborate. Cross-device session
 WebRTC signaling servers (metadata only - document data never passes through them); supply your own
 via `signaling` for production use. In the built-in Share/Broadcast dialogs, leaving the server URL
 empty selects this transport.
+
+A `'webrtc'` session needs `secret`, a fresh 128-bit value from `createShareSecret()` (exported
+by `ooxml-core/collab` and `ooxml-ui/pptx`). A SHA-256 hash of the secret names the signaling
+room and the secret is the y-webrtc password, so the signaling servers see neither `roomId` nor
+clear signaling data. The built-in dialogs generate one, invitation links carry it in their
+`#key=` fragment (which browsers never send to a server), and a `'webrtc'` config without it
+fails to connect.
 
 ::: warning Input is sanitized
 Room ids, user names, avatar URLs, cursor positions, and presence data pass through sanitization in

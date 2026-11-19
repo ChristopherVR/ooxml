@@ -1733,9 +1733,8 @@ export * from './ribbon-add-ins';
 // small helper extractions (wave 2)
 // OLE placeholder icon SVG-fragment primitives (rect/line/text builders +
 // the per-type shape table), shared by every binding's OLE renderer.
-// (`buildSmartArtPreviewElement` + its constants, and `buildQueryLinkUrl` /
-// `buildShareUrl`, are new exports of the already-star-exported
-// `preview-elements` / `broadcast-helpers` above; `modelDataToBlobUrl` /
+// (`buildSmartArtPreviewElement` + its constants are new exports of the
+// already-star-exported `preview-elements` above; `modelDataToBlobUrl` /
 // `DEFAULT_MODEL_MIME` likewise ride the existing `model3d-scene` export.)
 export * from './ole-icon-primitives';
 // The one `hexToRgbUnit` for render/'s SVG duotone `<filter>` builders.

@@ -2,8 +2,8 @@ import type {
 	CollabLoadOrigin,
 	CollaborationConfig,
 	CollaborationHistoryTarget,
+	BroadcastConfig,
 	CollaborationInput,
-	CollaborationTransport,
 } from 'ooxml-ui/pptx';
 import { buildBroadcastViewerUrl, shouldAutoFollowBroadcaster } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxHandlerSaveOptions, PptxSlide } from 'pptx-viewer-core';
@@ -65,11 +65,7 @@ export interface UseCollaborationWiringResult {
 	onCollabPointerMove: (event: PointerEvent) => void;
 	broadcastOpen: Ref<boolean>;
 	broadcastViewerUrl: ComputedRef<string>;
-	onBroadcastStart: (config: {
-		roomId: string;
-		serverUrl: string;
-		transport?: CollaborationTransport;
-	}) => void;
+	onBroadcastStart: (config: BroadcastConfig) => void;
 	onBroadcastStop: () => void;
 }
 
@@ -200,24 +196,15 @@ export function useCollaborationWiring(
 	// oxlint-disable-next-line eslint/one-var -- distinct concerns, forcing one statement hurts readability
 	const broadcastOpen = ref(false);
 	// oxlint-disable-next-line eslint/one-var -- distinct concerns, forcing one statement hurts readability
-	const broadcastConfig = ref<{
-		roomId: string;
-		serverUrl: string;
-		transport?: CollaborationTransport;
-	} | null>(null);
+	const broadcastConfig = ref<BroadcastConfig | null>(null);
 	// oxlint-disable-next-line eslint/one-var -- distinct concerns, forcing one statement hurts readability
 	const broadcastViewerUrl = computed(() => {
 		if (!broadcastConfig.value || typeof window === 'undefined') {
 			return '';
 		}
-		const { roomId, serverUrl } = broadcastConfig.value;
-		return buildBroadcastViewerUrl(roomId, serverUrl, window.location);
+		return buildBroadcastViewerUrl(broadcastConfig.value, window.location);
 	});
-	function onBroadcastStart(config: {
-		roomId: string;
-		serverUrl: string;
-		transport?: CollaborationTransport;
-	}): void {
+	function onBroadcastStart(config: BroadcastConfig): void {
 		broadcastConfig.value = config;
 		// One-way broadcast: the presenter owns navigation; viewers auto-follow via
 		// `broadcasterSlideIndex`. The presenter joins with the `owner` role.

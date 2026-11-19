@@ -63,7 +63,7 @@ export const translations = {
 	'pptx.share.serverHint':
 		'y-websocket サーバーの WebSocket URL を入力するか (https:// のページから共有する場合はセキュアな wss://)、サーバーを使用しないピアツーピア モードの場合は空欄のままにします。',
 	'pptx.share.p2pHint':
-		'ピアツーピア モード: 同じブラウザーのタブは常に接続されます。他のデバイスは公開 WebRTC シグナリング サーバーを経由して接続します。',
+		'ピアツーピア モード: 同じブラウザーのタブは常に接続されます。他のデバイスは公開 WebRTC シグナリング サーバーを経由して接続します。 共有リンクで招待してください。リンクにはセッション キーが含まれており、ルーム名だけでは参加できません。',
 	'pptx.share.p2pServerValue': 'ピアツーピア (サーバーなし)',
 	'pptx.share.shareLink': '共有リンク',
 	'pptx.share.copyLink': '共有リンクをコピー',

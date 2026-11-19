@@ -584,7 +584,12 @@ describe('useCollaboration', () => {
 		const collab = scope.run(() => useCollaboration({ slides, onRemoteSlides: vi.fn() }))!;
 
 		// A blank server URL selects webrtc; the provider reports connected at once.
-		await collab.start({ roomId: 'p2p-room', serverUrl: '', userName: 'Ada' });
+		await collab.start({
+			roomId: 'p2p-room',
+			serverUrl: '',
+			userName: 'Ada',
+			secret: 'AAECAwQFBgcICQoLDA0ODw',
+		});
 		expect(state.webrtcCreated).toBe(1);
 		expect(collab.status.value).toBe('connected');
 		expect(collab.active.value).toBeTruthy();

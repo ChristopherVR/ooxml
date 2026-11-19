@@ -62,7 +62,7 @@ export const translations = {
 	'pptx.share.serverHint':
 		'输入 y-websocket 服务器的 WebSocket URL（从 https:// 页面共享时需使用安全的 wss://），或留空以使用无需服务器的点对点模式。',
 	'pptx.share.p2pHint':
-		'点对点模式：同一浏览器中的选项卡始终连接；其他设备通过公共 WebRTC 信令服务器连接。',
+		'点对点模式：同一浏览器中的选项卡始终连接；其他设备通过公共 WebRTC 信令服务器连接。请使用共享链接邀请他人：链接包含会话密钥，仅凭房间名称无法加入。',
 	'pptx.share.p2pServerValue': '点对点（无服务器）',
 	'pptx.share.shareLink': '分享链接',
 	'pptx.share.copyLink': '复制分享链接',
