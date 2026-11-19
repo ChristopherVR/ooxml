@@ -1,4 +1,5 @@
 import type { ViewerController } from './controller';
+import type { ViewerZoomGesture } from './viewer-zoom-gesture';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -45,6 +46,7 @@ export class ViewerPanZoom {
 		root: ShadowRoot,
 		private readonly viewport: HTMLElement,
 		private readonly controller: ViewerController,
+		private readonly zoom: ViewerZoomGesture,
 		private readonly checked: (open: boolean) => void,
 	) {
 		this.#pane = root.querySelector('.pan-zoom')!;
@@ -90,6 +92,7 @@ export class ViewerPanZoom {
 			'pointerdown',
 			(event) => {
 				if (event.button !== 0) return;
+				this.zoom.settle();
 				dragging = true;
 				this.#view.setPointerCapture?.(event.pointerId);
 				panTo(event);
@@ -104,8 +107,8 @@ export class ViewerPanZoom {
 			(event) => {
 				if (!event.ctrlKey && !event.metaKey) return;
 				event.preventDefault();
-				const zoom = this.controller.state.zoom;
-				this.controller.setZoom(event.deltaY < 0 ? zoom * 1.1 : zoom / 1.1);
+				const zoom = this.zoom.zoom;
+				this.zoom.zoomTo(event.deltaY < 0 ? zoom * 1.1 : zoom / 1.1);
 			},
 			{ ...options, passive: false },
 		);
@@ -121,6 +124,7 @@ export class ViewerPanZoom {
 				const step = steps[event.key];
 				if (!step) return;
 				event.preventDefault();
+				this.zoom.settle();
 				this.viewport.scrollBy({ left: step[0] * 48, top: step[1] * 48 });
 			},
 			options,

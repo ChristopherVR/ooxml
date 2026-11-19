@@ -81,6 +81,7 @@ export async function pointerViewer(
 		{
 			viewport,
 			zoomSlider: document.createElement('input') as HTMLInputElement & { value: number },
+			zoom: tool.zoom,
 		},
 		controller,
 		vi.fn(),

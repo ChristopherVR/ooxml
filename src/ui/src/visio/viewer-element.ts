@@ -362,7 +362,9 @@ export class VisioViewerElement extends BaseElement {
 			this.#root.querySelector('.shape-inspector')!,
 		);
 		this.#chrome = new ViewerChrome(this.#root, this.controller);
-		this.#panZoom = new ViewerPanZoom(this.#root, this.#viewport, this.controller, (open) =>
+		const zoom = this.#pointer.zoom;
+		zoom.onPreview = (value) => (this.#zoomSlider.value = Math.round(value * 100));
+		this.#panZoom = new ViewerPanZoom(this.#root, this.#viewport, this.controller, zoom, (open) =>
 			this.#root.querySelector('[command="pan-zoom"]')?.setAttribute('checked', String(open)),
 		);
 		this.#inlineSize = new ViewerInlineSize(this.#root, this.controller);
@@ -379,6 +381,7 @@ export class VisioViewerElement extends BaseElement {
 			root: this.#root,
 			viewport: this.#viewport,
 			controller: this.controller,
+			zoom,
 			toolChanged: () => {
 				this.#pointer.render(this.controller.state);
 				this.#lineEndpoints.render(this.controller.state);
@@ -1042,6 +1045,7 @@ export class VisioViewerElement extends BaseElement {
 			{
 				viewport: this.#viewport,
 				zoomSlider: this.#zoomSlider,
+				zoom: this.#pointer.zoom,
 			},
 			this.controller,
 			(mode) => this.#fit(mode),

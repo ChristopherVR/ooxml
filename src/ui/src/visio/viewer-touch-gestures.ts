@@ -4,11 +4,11 @@ import {
 	MIN_ZOOM,
 	pinchDistance,
 	pinchMidpoint,
-	pinchScrollDelta,
 	pointFraction,
 	pinchZoom,
 	type TouchPoint,
 } from './viewer-touch-math';
+import { ViewerZoomGesture } from './viewer-zoom-gesture';
 
 interface Pinch {
 	ids: [number, number];
@@ -20,17 +20,21 @@ interface Pinch {
 /**
  * Two-finger pinch zoom around the midpoint with simultaneous two-finger pan. It runs before the
  * one-pointer shape and marquee gestures and, once a second finger lands, takes the pointers over.
+ * The pinch previews through `zoom`, the canvas's interactive zoom, and renders when it ends.
  */
 export class ViewerTouchGestures {
 	readonly #touches = new Map<number, TouchPoint>();
 	/** Pointers consumed by a pinch stay ignored until they lift, so no finger starts a pan after it. */
 	readonly #spent = new Set<number>();
 	#pinch: Pinch | undefined;
+	readonly zoom: ViewerZoomGesture;
 	constructor(
 		private readonly viewport: HTMLElement,
 		private readonly controller: ViewerController,
 		private readonly options: { active(): boolean; cancelSingle(): void },
-	) {}
+	) {
+		this.zoom = new ViewerZoomGesture(viewport, controller);
+	}
 	get pinching(): boolean {
 		return !!this.#pinch;
 	}
@@ -40,12 +44,14 @@ export class ViewerTouchGestures {
 		const events = new Abort();
 		const options = { signal: events.signal, capture: true };
 		const viewport = this.viewport;
+		const disposeZoom = this.zoom.wire();
 		viewport.addEventListener('pointerdown', (event) => this.#down(event), options);
 		viewport.addEventListener('pointermove', (event) => this.#move(event), options);
 		for (const type of ['pointerup', 'pointercancel'] as const)
 			viewport.addEventListener(type, (event) => this.#up(event), options);
 		return () => {
 			events.abort();
+			disposeZoom();
 			this.#touches.clear();
 			this.#spent.clear();
 			this.#pinch = undefined;
@@ -66,6 +72,7 @@ export class ViewerTouchGestures {
 		const distance = pinchDistance(a, b);
 		if (!(distance > 0)) return;
 		this.options.cancelSingle();
+		this.zoom.settle();
 		const paper = this.viewport.querySelector('svg.paper') ?? this.viewport;
 		this.#pinch = {
 			ids: [first, second],
@@ -93,25 +100,17 @@ export class ViewerTouchGestures {
 			MIN_ZOOM,
 			MAX_ZOOM,
 		);
-		this.controller.setZoom(next);
-		// Rendering is synchronous: measure the resized paper and scroll its pinch point back under
-		// the fingers, which also follows the two-finger pan.
-		const paper = this.viewport.querySelector('svg.paper');
-		if (paper) {
-			const delta = pinchScrollDelta(
-				pinch.fraction,
-				paper.getBoundingClientRect(),
-				pinchMidpoint(a, b),
-			);
-			this.viewport.scrollLeft += delta.x;
-			this.viewport.scrollTop += delta.y;
-		}
+		// The pinch point stays under the fingers, which also follows the two-finger pan.
+		this.zoom.zoomTo(next, { kind: 'point', fraction: pinch.fraction, point: pinchMidpoint(a, b) });
 		event.preventDefault();
 	}
 	#up(event: PointerEvent): void {
 		if (event.pointerType !== 'touch') return;
 		this.#touches.delete(event.pointerId);
-		if (this.#pinch?.ids.includes(event.pointerId)) this.#pinch = undefined;
+		if (this.#pinch?.ids.includes(event.pointerId)) {
+			this.#pinch = undefined;
+			this.zoom.settle();
+		}
 		if (this.#spent.delete(event.pointerId)) event.stopImmediatePropagation();
 	}
 }
