@@ -142,7 +142,10 @@ export function parseDrawing(
 			const chartXml = target ? source.text(target) : undefined;
 			if (target && chartXml) {
 				try {
-					const chart = parseChart(chartXml, anchor, target, name);
+					const cuts = source.chartPoints.cuts;
+					const chart = parseChart(chartXml, anchor, target, name, source.chartPoints);
+					if (source.chartPoints.cuts > cuts)
+						warn(`Chart ${target} shows fewer blank points than it declares; all are saved.`);
 					const id = readChartPaletteId(source, target);
 					if (id !== undefined) chart.colorPalette = id;
 					const style = readChartStylePart(source, target, warn);

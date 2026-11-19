@@ -32,6 +32,8 @@ export interface ChartExLevel {
 	name?: string;
 	/** Cached points (`cx:pt`), text exactly as written. */
 	points: ChartCachePoint[];
+	/** Slots the dense views show, when the blank-point budget could not cover them all. */
+	viewLength?: number;
 	extLst?: string;
 }
 

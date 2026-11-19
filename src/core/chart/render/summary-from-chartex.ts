@@ -8,7 +8,7 @@ import { parseXml, type XmlElement } from '../../xml/index';
 import type { ChartExData, ChartExDimension, ChartExSeries, ChartExSpace } from '../ex/model';
 import { isChartExRoot, parseChartExSpace } from '../ex/parse';
 import { histogramBinsLimited } from '../histogram-binning';
-import { CHART_POINTS_LIMITED, chartDensePoints } from '../point-limit';
+import { CHART_POINTS_LIMITED, chartDensePoints, type ChartPointBudget } from '../point-limit';
 import type { ChartSummary, ChartSummarySeries, HistogramSummaryOptions } from './summary';
 
 /** The data of a series: its own `cx:data`, else the shared one named by `cx:dataId`. */
@@ -31,7 +31,7 @@ const findDimension = (
 
 /** The points of one level by index, trimmed, holes as `''`. */
 const levelPoints = (level: ChartExDimension['levels'][number]): string[] =>
-	chartDensePoints(level.points, level.pointCount, (point) => point.value.trim(), '');
+	chartDensePoints(level, (point) => point.value.trim(), '');
 
 /** One dimension's formula and its first level of cached points, holes as `''`. */
 function dimension(data: ChartExData | undefined, kind: ChartExDimension['kind'], type: string) {
@@ -90,18 +90,21 @@ export interface ChartExSummary {
 	summary?: ChartSummary;
 	/** The histogram asks for more bins than are drawn (see `MAX_HISTOGRAM_BINS`). */
 	histogramBinsLimited?: boolean;
-	/** The part declares more blank points than are read (see `MAX_CHART_BLANK_POINTS`). */
+	/** A view of the part is shorter than its declared points (see `MAX_CHART_BLANK_POINTS`). */
 	pointsLimited?: boolean;
 }
 
 const LEGEND_POSITIONS = ['r', 'l', 't', 'b', 'tr'];
 
 /** The summary of a `cx:chartSpace`, or undefined when the part is not an extended chart. */
-export function chartExSummary(source: string | XmlElement): ChartExSummary | undefined {
+export function chartExSummary(
+	source: string | XmlElement,
+	options: { pointBudget?: ChartPointBudget } = {},
+): ChartExSummary | undefined {
 	const root =
 		typeof source === 'string' ? parseXml(source, { label: 'Chart part' }).documentElement : source;
 	if (!isChartExRoot(root)) return undefined;
-	const { chartExSpace, issues } = parseChartExSpace(root);
+	const { chartExSpace, issues } = parseChartExSpace(root, options);
 	const summary = chartExSummaryFromModel(chartExSpace);
 	return issues.some((issue) => issue.code === CHART_POINTS_LIMITED)
 		? { ...summary, pointsLimited: true }

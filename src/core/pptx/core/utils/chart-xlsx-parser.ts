@@ -16,7 +16,11 @@ import { openNestedZip } from './zip-open';
 import type { PptxEmbeddedWorkbookData } from '../types';
 import { preservesSpreadsheetXmlWhitespace } from './xml-whitespace';
 import { at } from '../../../geometry/indexed';
-import { MAX_CHART_BLANK_POINTS } from '../../../chart/point-limit';
+import {
+	chartPointBudget,
+	spendChartPointBlanks,
+	type ChartPointBudget,
+} from '../../../chart/point-limit';
 import { isFiniteNumber } from '../../../units/finite';
 
 /** Represents a single parsed cell from the worksheet. */
@@ -271,6 +275,7 @@ function resolveCellValue(cell: ParsedCell, sharedStrings: string[]): string | n
  */
 export async function parseEmbeddedXlsx(
 	xlsxData: Uint8Array,
+	pointBudget: ChartPointBudget = chartPointBudget(),
 ): Promise<PptxEmbeddedWorkbookData | undefined> {
 	try {
 		const xlsxZip = await openNestedZip(xlsxData);
@@ -341,7 +346,7 @@ export async function parseEmbeddedXlsx(
 		}
 
 		// A cell reference is a claim like any other: a sheet this sparse falls back to the cached data.
-		if ((maxRow + 1) * (maxCol + 1) > cells.length + MAX_CHART_BLANK_POINTS) {
+		if (!spendChartPointBlanks(pointBudget, (maxRow + 1) * (maxCol + 1) - cells.length)) {
 			return undefined;
 		}
 

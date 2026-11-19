@@ -5,7 +5,8 @@ import {
 	type ChartDataSheetEdit,
 } from '../data-sheet';
 import type { ChartExData, ChartExDimension, ChartExLevel, ChartExSpace } from '../ex/model';
-import { chartDensePoints } from '../point-limit';
+import type { ChartCachePoint } from '../model-series';
+import { chartCacheOverView, chartDensePoints } from '../point-limit';
 import { chartExSeriesAt, editChartExSpace, renameChartExSeries } from './chartex';
 import { chartExValueType } from './chartex-data';
 import { addChartExSeries, removeChartExSeries } from './chartex-structure';
@@ -36,7 +37,7 @@ export function chartExSeriesDimension(
 	);
 }
 export const chartExLevelValues = (level: ChartExLevel | undefined): string[] =>
-	chartDensePoints(level?.points ?? [], level?.pointCount, (point) => point.value, '');
+	chartDensePoints(level ?? { points: [] }, (point) => point.value, '');
 /**
  * The plot positions of the series that own data, in sheet order. A series drawn from another one
  * (a pareto line, `@ownerIdx`) has no data of its own and no row in the data sheet.
@@ -73,9 +74,15 @@ export function chartExSpaceDataSheet(space: ChartExSpace): ChartExDataSheet {
 	};
 }
 function rewrite(level: ChartExLevel, values: readonly (string | number | null)[]): void {
-	level.pointCount = values.length;
-	level.points = values.flatMap((value, index) =>
-		value === null || value === '' ? [] : [{ index, value: String(value) }],
+	Object.assign(
+		level,
+		chartCacheOverView<ChartCachePoint>(
+			values.flatMap((value, index) =>
+				value === null || value === '' ? [] : [{ index, value: String(value) }],
+			),
+			values.length,
+			level,
+		),
 	);
 }
 /** Apply ordinary grid edits; row edits move all category levels and point overrides together. */

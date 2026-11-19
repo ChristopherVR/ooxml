@@ -34,12 +34,20 @@ export function collectChartWorkbookWrite(
 	xmlLookupService: IPptxXmlLookupService,
 	container: XmlObject | undefined,
 	isNumeric: boolean,
-	values: string[],
+	values: readonly (string | null)[],
 ): PptxChartWorkbookWrite | undefined {
 	if (!container) {
 		return undefined;
 	}
 	const refNode = xmlLookupService.getChildByLocalName(container, isNumeric ? 'numRef' : 'strRef');
 	const formula = refNode ? xmlLookupService.getScalarChildByLocalName(refNode, 'f') : undefined;
-	return formula ? { formula, isNumeric, values } : undefined;
+	if (!formula) return undefined;
+	const cache = xmlLookupService.getChildByLocalName(refNode, isNumeric ? 'numCache' : 'strCache');
+	const declared = Number(xmlLookupService.getChildByLocalName(cache, 'ptCount')?.['@_val']);
+	return {
+		formula,
+		isNumeric,
+		values,
+		...(declared > values.length ? { cellCount: declared } : {}),
+	};
 }

@@ -7,13 +7,16 @@
 // from the cached values by the shared chart painter (`chart-paint.ts`).
 import {
 	chartColorStyleId,
-	chartExSummary,
+	chartExSummaryFromModel,
+	chartPointBudget,
 	chartSpacePictureSources,
+	isChartExRoot,
 	parseChartExSpace,
 	type ChartExSpace,
 	parseChartSpace,
 	readChartFormatting,
 	type ChartParseIssue,
+	type ChartPointBudget,
 	type ChartSpace,
 	type ChartStyleDefinition,
 	type ChartSummary,
@@ -130,6 +133,7 @@ export async function resolveChartPart(
 	chart: DocxChart,
 	readText: (partName: string) => Promise<string | undefined>,
 	readBytes?: (partName: string) => Promise<Uint8Array | undefined>,
+	pointBudget: ChartPointBudget = chartPointBudget(),
 ): Promise<void> {
 	if (!chart.partName) return;
 	try {
@@ -142,9 +146,9 @@ export async function resolveChartPart(
 			return;
 		}
 		const root = parseXml(xml, { label: 'Chart part' }).documentElement;
-		const extended = chartExSummary(root);
-		if (extended) {
-			const parsed = parseChartExSpace(root);
+		if (isChartExRoot(root)) {
+			const parsed = parseChartExSpace(root, { pointBudget });
+			const extended = chartExSummaryFromModel(parsed.chartExSpace);
 			chart.chartExSpace = parsed.chartExSpace;
 			chart.issues.push(...parsed.issues);
 			const rels = parseRelationships(await readText(relationshipsPartFor(chart.partName)));
@@ -163,7 +167,7 @@ export async function resolveChartPart(
 				});
 			return;
 		}
-		const { chartSpace, issues } = parseChartSpace(root);
+		const { chartSpace, issues } = parseChartSpace(root, { pointBudget });
 		chart.chartSpace = chartSpace;
 		chart.issues.push(...issues);
 		const title = chartSpace.autoTitleDeleted ? undefined : chartSpace.title?.text;
@@ -225,5 +229,7 @@ export async function resolveDocumentCharts(
 	readText: (partName: string) => Promise<string | undefined>,
 	readBytes?: (partName: string) => Promise<Uint8Array | undefined>,
 ): Promise<void> {
-	for (const chart of chartsIn(blocks)) await resolveChartPart(chart, readText, readBytes);
+	const pointBudget = chartPointBudget();
+	for (const chart of chartsIn(blocks))
+		await resolveChartPart(chart, readText, readBytes, pointBudget);
 }

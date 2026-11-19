@@ -109,24 +109,26 @@ export function expandRangeAddresses(
 	range: ChartFormulaRange,
 	count: number,
 ): string[] | undefined {
+	const address = rangeCellAddress(range, count);
+	return address && Array.from({ length: count }, (_, index) => address(index));
+}
+
+/** The address of each cell of a one-row or one-column range of exactly `count` cells. */
+export function rangeCellAddress(
+	range: ChartFormulaRange,
+	count: number,
+): ((index: number) => string) | undefined {
 	const { start, end } = range;
-	if (count <= 0) {
-		return undefined;
-	}
-	if (start.col === end.col && start.row === end.row) {
-		return count === 1 ? [formatCellAddress(start)] : undefined;
-	}
-	if (start.col === end.col) {
-		const length = end.row - start.row + 1;
-		return length === count
-			? Array.from({ length }, (_, i) => formatCellAddress({ col: start.col, row: start.row + i }))
+	if (count <= 0) return undefined;
+	if (start.col === end.col && start.row === end.row)
+		return count === 1 ? () => formatCellAddress(start) : undefined;
+	if (start.col === end.col)
+		return end.row - start.row + 1 === count
+			? (index) => formatCellAddress({ col: start.col, row: start.row + index })
 			: undefined;
-	}
-	if (start.row === end.row) {
-		const length = end.col - start.col + 1;
-		return length === count
-			? Array.from({ length }, (_, i) => formatCellAddress({ col: start.col + i, row: start.row }))
+	if (start.row === end.row)
+		return end.col - start.col + 1 === count
+			? (index) => formatCellAddress({ col: start.col + index, row: start.row })
 			: undefined;
-	}
 	return undefined;
 }

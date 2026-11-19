@@ -8,8 +8,12 @@
  *
  * @module chart-part-repair
  */
-import { parseChartSpace, type ChartParseIssue, type ChartSpace } from '../../../chart/index';
-import { CHART_POINTS_LIMITED } from '../../../chart/point-limit';
+import {
+	parseChartSpace,
+	type ChartParseIssue,
+	type ChartPointBudget,
+	type ChartSpace,
+} from '../../../chart/index';
 
 /** The standard namespaces of the Office chart prefixes the repair may declare. */
 export const OFFICE_CHART_PREFIXES: Readonly<Record<string, string>> = {
@@ -78,15 +82,11 @@ export interface ChartPartModel {
 	chartSpace?: ChartSpace | undefined;
 	/** `CHART_PREFIX_REPAIRED` when the part only parsed after the repair. */
 	repairIssue?: ChartParseIssue;
-	/** `CHART_POINTS_LIMITED` when the part declares more blank points than are read. */
-	pointLimitIssue?: ChartParseIssue;
 }
 
-function parseClassic(text: string): ChartPartModel {
-	const { chartSpace, issues } = parseChartSpace(text);
-	if (issues.some((issue) => issue.code === 'CHART_ROOT_UNEXPECTED')) return {};
-	const pointLimitIssue = issues.find((issue) => issue.code === CHART_POINTS_LIMITED);
-	return { chartSpace, ...(pointLimitIssue ? { pointLimitIssue } : {}) };
+function parseClassic(text: string, pointBudget?: ChartPointBudget): ChartPartModel {
+	const { chartSpace, issues } = parseChartSpace(text, pointBudget ? { pointBudget } : {});
+	return issues.some((issue) => issue.code === 'CHART_ROOT_UNEXPECTED') ? {} : { chartSpace };
 }
 
 /**
@@ -94,14 +94,14 @@ function parseClassic(text: string): ChartPartModel {
  * fails, repaired once ({@link repairChartPartPrefixes}) and parsed again. A part still malformed
  * after the repair is unreadable.
  */
-export function readChartPartModel(text: string): ChartPartModel {
+export function readChartPartModel(text: string, pointBudget?: ChartPointBudget): ChartPartModel {
 	try {
-		return parseClassic(text);
+		return parseClassic(text, pointBudget);
 	} catch {
 		const repair = repairChartPartPrefixes(text);
 		if (!repair) return {};
 		try {
-			const parsed = parseClassic(repair.text);
+			const parsed = parseClassic(repair.text, pointBudget);
 			const what = [
 				...(repair.declared.length ? [`declared ${repair.declared.join(', ')}`] : []),
 				...(repair.rewroteOwnOutput ? ['rewrote xmlns elements and c15:v'] : []),

@@ -4,6 +4,6 @@ import type { PptxChartData } from '../types';
 export function chartWorkbookDataSignature(data: PptxChartData): string {
 	return JSON.stringify({
 		categories: data.dateCategories?.values ?? data.categories,
-		series: data.series.map((series) => ({ name: series.name, values: series.values })),
+		series: data.series.map(({ name, values, blanks }) => ({ name, values, blanks })),
 	});
 }

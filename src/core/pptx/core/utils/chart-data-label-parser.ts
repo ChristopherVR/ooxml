@@ -4,7 +4,7 @@ import type {
 	PptxChartDataLabelOptions,
 	XmlObject,
 } from '../types';
-import type { ChartPointLimit } from '../../../chart/point-limit';
+import type { ChartPointBudget } from '../../../chart/point-limit';
 import { parseDataLabelBox } from './chart-data-label-box';
 import {
 	findChart15Ext,
@@ -242,7 +242,7 @@ export function parseChartDataLabelOptions(
 	xmlLookup: XmlLookupLike,
 	colorParser?: ColorParserLike,
 	resolveTypeface?: (raw: string) => string,
-	pointLimit?: ChartPointLimit,
+	pointBudget?: ChartPointBudget,
 ): PptxChartDataLabelOptions {
 	const result: PptxChartDataLabelOptions = {};
 	const fields = [
@@ -274,7 +274,7 @@ export function parseChartDataLabelOptions(
 	}
 	// PowerPoint 2013+ "Value From Cells", series-wide form: one cell range
 	// supplies every label in this group (see chart-data-labels-range.ts).
-	const dataLabelsRange = parseDataLabelsRange(group, xmlLookup, pointLimit);
+	const dataLabelsRange = parseDataLabelsRange(group, xmlLookup, pointBudget);
 	if (dataLabelsRange) {
 		result.dataLabelsRange = dataLabelsRange;
 		result.showDataLabelsRange = groupShowsDataLabelsRange(group, xmlLookup);

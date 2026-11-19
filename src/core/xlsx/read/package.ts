@@ -10,6 +10,7 @@ import {
 	type Relationship,
 	openZip,
 } from '../../opc/index';
+import { chartPointBudget } from '../../chart/point-limit';
 import { type XlsxLoadLimits, resolveLoadLimits, zipLimitsFor } from './limits';
 
 /** Content types of the SpreadsheetML parts the reader and writer know. */
@@ -45,6 +46,8 @@ export class SourceIndex {
 	private readonly textCache = new Map<string, string>();
 	private readonly decoder = new TextDecoder('utf-8');
 	private readonly lowerNames = new Map<string, string>();
+	/** Pays for the blank slots of every chart view of this package. */
+	readonly chartPoints = chartPointBudget();
 
 	constructor(readonly parts: ReadonlyMap<string, Uint8Array>) {
 		for (const name of parts.keys()) this.lowerNames.set(name.toLowerCase(), name);

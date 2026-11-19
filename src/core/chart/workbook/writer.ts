@@ -24,7 +24,7 @@ import type JSZip from 'jszip';
 import { openZip } from '../../opc/zip-limits';
 import { parseRelationships, resolvePartPath } from '../../opc/relationships';
 import { buildXml, parseXml } from '../../xml/index';
-import { expandRangeAddresses, parseChartFormulaRange } from './cellref';
+import { parseChartFormulaRange, rangeCellAddress } from './cellref';
 import { applyCellWritesToWorksheet, childrenNamed, type ChartCellWrite } from './sheet-cells';
 import { sharedStringTexts, syncWorksheetTables } from './tables';
 import { validateAtomicChartWorkbookWrites } from './validation';
@@ -34,8 +34,10 @@ export interface ChartWorkbookWrite {
 	/** The `c:f` formula naming the source cells (e.g. `"Sheet1!$B$2:$B$4"`). */
 	formula: string;
 	isNumeric: boolean;
-	/** Values in on-sheet order, one per cell the formula range names. */
-	values: string[];
+	/** Values in on-sheet order from the first cell; `null` leaves a cell as it is. */
+	values: readonly (string | null)[];
+	/** The cells the formula names, when `values` reaches only the first of them. */
+	cellCount?: number;
 }
 
 /** Result of applying a batch of writes to an embedded workbook. */
@@ -84,8 +86,8 @@ export async function worksheetPathsByName(zip: JSZip): Promise<Map<string, stri
 }
 
 interface ResolvedWrite {
-	refs: string[];
-	values: string[];
+	address: (index: number) => string;
+	values: readonly (string | null)[];
 	isNumeric: boolean;
 }
 
@@ -121,13 +123,15 @@ export async function writeChartWorkbookUpdates(
 	for (const write of writes) {
 		const range = parseChartFormulaRange(write.formula);
 		const sheetPath = range ? sheetPathByName.get(range.sheetName.toLowerCase()) : undefined;
-		const refs = range ? expandRangeAddresses(range, write.values.length) : undefined;
-		if (!range || !sheetPath || !refs) {
+		const address = range
+			? rangeCellAddress(range, write.cellCount ?? write.values.length)
+			: undefined;
+		if (!range || !sheetPath || !address) {
 			unresolved += 1;
 			continue;
 		}
 		const bucket = writesBySheet.get(sheetPath) ?? [];
-		bucket.push({ refs, values: write.values, isNumeric: write.isNumeric });
+		bucket.push({ address, values: write.values, isNumeric: write.isNumeric });
 		writesBySheet.set(sheetPath, bucket);
 	}
 	let changed = false;
@@ -140,8 +144,10 @@ export async function writeChartWorkbookUpdates(
 		}
 		try {
 			const doc = parseXml(await file.async('string'), { label: 'Worksheet' });
-			const cellWrites: ChartCellWrite[] = resolved.flatMap(({ refs, values, isNumeric }) =>
-				refs.map((ref, index) => ({ ref, isNumeric, value: values[index] ?? '' })),
+			const cellWrites: ChartCellWrite[] = resolved.flatMap(({ address, values, isNumeric }) =>
+				values.flatMap((value, index) =>
+					value === null ? [] : [{ ref: address(index), isNumeric, value }],
+				),
 			);
 			if (applyCellWritesToWorksheet(doc, cellWrites, shared)) {
 				await syncWorksheetTables(zip, sheetPath, doc, cellWrites, shared);

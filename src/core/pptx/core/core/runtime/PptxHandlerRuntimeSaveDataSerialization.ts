@@ -106,6 +106,7 @@ import { applyChartTitleToXml } from '../../utils/chart-title-serializer';
 import { applyChartTitleStyleToXml } from '../../utils/chart-title-style-serializer';
 import { applySeriesTrendlinesToXml } from '../../utils/chart-trendline-serializer';
 import { applyChartUpDownBars } from '../../utils/chart-up-down-bars';
+import { chartWorkbookValues } from '../../../../chart/workbook/space-writes';
 import type { PptxChartWorkbookWrite } from '../../utils/chart-xlsx-writer';
 import { collectChartWorkbookWrite } from '../../utils/chart-xlsx-writer';
 import {
@@ -132,6 +133,7 @@ import {
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeChartUserShapes';
 import {
 	buildChartPoints,
+	chartSeriesCacheValues,
 	replaceFirstTextValueInTree,
 	serializeCellExtraAttributes,
 	serializeCellMergeAttributes,
@@ -670,8 +672,17 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						const dateValues = chartData.dateCategories?.values.map(String);
 						const catValues = dateValues ?? chartData.categories;
 						const catIsNumeric = Boolean(dateValues);
-						this.updateChartCacheValues(catNode, catIsNumeric, catValues);
-						this.pushChartWorkbookWrite(workbookWrites, catNode, catIsNumeric, catValues);
+						const catBefore = dateValues
+							? baselineData?.dateCategories?.values.map(String)
+							: baselineData?.categories;
+						this.updateChartCacheValues(catNode, catIsNumeric, catValues, catBefore);
+						this.pushChartWorkbookWrite(
+							workbookWrites,
+							catNode,
+							catIsNumeric,
+							catValues,
+							catBefore,
+						);
 					}
 
 					// Update values
@@ -679,9 +690,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						this.xmlLookupService.getChildByLocalName(seriesNode, 'val') ||
 						this.xmlLookupService.getChildByLocalName(seriesNode, 'yVal');
 					if (valNode) {
-						const values = seriesData.values.map(String);
-						this.updateChartCacheValues(valNode, true, values);
-						this.pushChartWorkbookWrite(workbookWrites, valNode, true, values);
+						const values = chartSeriesCacheValues(seriesData);
+						const previous = baselineData?.series[si];
+						const before = previous && chartSeriesCacheValues(previous);
+						this.updateChartCacheValues(valNode, true, values, before);
+						this.pushChartWorkbookWrite(workbookWrites, valNode, true, values, before);
 					}
 
 					// Update series colour. Create `c:spPr` when the loaded series has
@@ -1531,8 +1544,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		container: XmlObject | undefined,
 		isNumeric: boolean,
 		values: string[],
+		before: readonly string[] = [],
 	): void {
-		const write = collectChartWorkbookWrite(this.xmlLookupService, container, isNumeric, values);
+		const write = collectChartWorkbookWrite(
+			this.xmlLookupService,
+			container,
+			isNumeric,
+			chartWorkbookValues(values, before),
+		);
 		if (write) {
 			workbookWrites.push(write);
 		}
@@ -1540,13 +1559,19 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 	/**
 	 * Update the cached point values in a chart reference node
-	 * (numRef/strRef or numLit/strLit).
+	 * (numRef/strRef or numLit/strLit) from the chart's view of them. `before` is the view as
+	 * loaded: an unchanged view leaves the cache as written, and a view that shows only the start of
+	 * the declared points keeps the count and the points past its end.
 	 */
 	protected updateChartCacheValues(
 		container: XmlObject,
 		isNumeric: boolean,
 		values: string[],
+		before?: readonly string[],
 	): void {
+		if (before?.length === values.length && before.every((value, at) => value === values[at])) {
+			return;
+		}
 		const refName = isNumeric ? 'numRef' : 'strRef';
 		const litName = isNumeric ? 'numLit' : 'strLit';
 		const cacheName = isNumeric ? 'numCache' : 'strCache';
@@ -1571,9 +1596,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			return;
 		}
 
-		// Update point count
 		const ptCountNode = this.xmlLookupService.getChildByLocalName(cacheNode, 'ptCount');
-		if (ptCountNode) {
+		const cutView =
+			before?.length === values.length && Number(ptCountNode?.['@_val']) > values.length;
+		if (ptCountNode && !cutView) {
 			ptCountNode['@_val'] = String(values.length);
 		}
 
@@ -1585,8 +1611,12 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			return;
 		}
 
-		// Rebuild point array
-		cacheNode[ptKey] = buildChartPoints(values);
+		const pastView = cutView
+			? this.xmlLookupService
+					.getChildrenArrayByLocalName(cacheNode, 'pt')
+					.filter((point) => Number(point['@_idx']) >= values.length)
+			: [];
+		cacheNode[ptKey] = [...buildChartPoints(values), ...pastView];
 	}
 
 	/** Replace the first text value found deep in the node tree. */
@@ -1948,7 +1978,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					'c:numCache': {
 						'c:formatCode': 'General',
 						'c:ptCount': { '@_val': String(seriesData.values.length) },
-						'c:pt': buildChartPoints(seriesData.values.map(String)),
+						'c:pt': buildChartPoints(chartSeriesCacheValues(seriesData)),
 					},
 				},
 			},

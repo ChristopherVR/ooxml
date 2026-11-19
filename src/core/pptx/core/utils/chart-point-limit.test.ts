@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-	CHART_POINTS_LIMITED,
-	MAX_CHART_BLANK_POINTS,
-	chartPointLimit,
-	chartPointLimitOfXml,
-} from '../../../chart/point-limit';
+import { MAX_CACHE_BLANK_POINTS, chartPointBudget } from '../../../chart/point-limit';
 import { PptxXmlLookupService } from '../services/PptxXmlLookupService';
 import type { XmlObject } from '../types';
 import { extractSeriesNumbersWithBlanks } from './chart-blank-values';
@@ -28,17 +23,15 @@ const part = (count: number, index = 0) =>
 	`<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart"><c:chart><c:plotArea><c:barChart><c:barDir val="col"/><c:ser><c:idx val="0"/><c:order val="0"/><c:val><c:numRef><c:f>S!$A$1</c:f><c:numCache><c:ptCount val="${count}"/><c:pt idx="${index}"><c:v>1</c:v></c:pt></c:numCache></c:numRef></c:val></c:ser></c:barChart></c:plotArea></c:chart></c:chartSpace>`;
 
 describe('PowerPoint chart readers and declared point counts', () => {
-	it('reports an oversized part and builds a bounded series from it', () => {
-		const { chartSpace, pointLimitIssue } = readChartPartModel(part(HUGE));
-		expect(pointLimitIssue?.code).toBe(CHART_POINTS_LIMITED);
-		const values = neutralNumbersWithBlanks(chartSpace!.plotArea.groups[0]!.series[0]!.values);
-		expect(values[0]).toBe(1);
-		expect(values.length).toBeLessThanOrEqual(MAX_CHART_BLANK_POINTS + 1);
+	it('keeps the declared count of an oversized part and builds a bounded series from it', () => {
+		const { chartSpace } = readChartPartModel(part(HUGE));
+		const source = chartSpace!.plotArea.groups[0]!.series[0]!.values!;
+		expect(source.cache!.pointCount).toBe(HUGE);
+		expect(neutralNumbersWithBlanks(source)).toEqual([1]);
 	});
 
 	it('leaves a sparse part alone', () => {
-		const { chartSpace, pointLimitIssue } = readChartPartModel(part(4, 2));
-		expect(pointLimitIssue).toBeUndefined();
+		const { chartSpace } = readChartPartModel(part(4, 2));
 		expect(neutralNumbersWithBlanks(chartSpace!.plotArea.groups[0]!.series[0]!.values)).toEqual([
 			null,
 			null,
@@ -47,15 +40,26 @@ describe('PowerPoint chart readers and declared point counts', () => {
 		]);
 	});
 
-	it('counts the caches of a part from its text', () => {
-		const xml = `${part(1)}<c15:dlblRangeCache/><cx:lvl ptCount="1"/>`;
-		expect(chartPointLimitOfXml(xml).blanks).toBe(Math.floor(MAX_CHART_BLANK_POINTS / 3));
+	it('spends one budget across the parts of a presentation', () => {
+		const budget = chartPointBudget();
+		const lengths = Array.from({ length: 6 }, () => {
+			const { chartSpace } = readChartPartModel(part(MAX_CACHE_BLANK_POINTS), budget);
+			return neutralNumbersWithBlanks(chartSpace!.plotArea.groups[0]!.series[0]!.values).length;
+		});
+		expect(lengths).toEqual([
+			MAX_CACHE_BLANK_POINTS,
+			MAX_CACHE_BLANK_POINTS,
+			MAX_CACHE_BLANK_POINTS,
+			MAX_CACHE_BLANK_POINTS,
+			1,
+			1,
+		]);
 	});
 
 	it('bounds the object-tree readers', () => {
 		const numeric = { 'c:numRef': { 'c:numCache': cache(HUGE, [0, '1']) } };
 		expect(extractSeriesNumbersWithBlanks(numeric, lookup).length).toBeLessThanOrEqual(
-			MAX_CHART_BLANK_POINTS + 1,
+			MAX_CACHE_BLANK_POINTS + 1,
 		);
 		const levels = {
 			'c:multiLvlStrRef': {
@@ -66,7 +70,7 @@ describe('PowerPoint chart readers and declared point counts', () => {
 			},
 		};
 		const categories = extractMultiLevelCategoryValues(levels, lookup)!.categories;
-		expect(categories.length).toBeLessThanOrEqual(2 * MAX_CHART_BLANK_POINTS + 1);
+		expect(categories.length).toBeLessThanOrEqual(MAX_CACHE_BLANK_POINTS + 1);
 	});
 
 	it('bounds hidden series and records the cut', () => {
@@ -83,11 +87,10 @@ describe('PowerPoint chart readers and declared point counts', () => {
 				},
 			},
 		};
-		const limit = chartPointLimit(4);
-		const [series] = parseFilteredSeries(container, lookup, limit)!;
-		expect(series!.categories![0]).toBe('a');
-		expect(series!.categories!.length).toBeLessThanOrEqual(limit.blanks + 1);
-		expect(limit.limited).toBe(true);
+		const budget = chartPointBudget();
+		const [series] = parseFilteredSeries(container, lookup, budget)!;
+		expect(series!.categories).toEqual(['a']);
+		expect(budget.cuts).toBe(1);
 	});
 
 	it('bounds a label range cache and records the cut', () => {
@@ -102,10 +105,9 @@ describe('PowerPoint chart readers and declared point counts', () => {
 				},
 			},
 		};
-		const limit = chartPointLimit(2);
-		const range = parseDataLabelsRange(group, lookup, limit)!;
-		expect(range.cache.slice(0, 2)).toEqual(['', 'x']);
-		expect(range.cache.length).toBeLessThanOrEqual(limit.blanks + 2);
-		expect(limit.limited).toBe(true);
+		const budget = chartPointBudget();
+		const range = parseDataLabelsRange(group, lookup, budget)!;
+		expect(range.cache).toEqual(['', 'x']);
+		expect(budget.cuts).toBe(1);
 	});
 });

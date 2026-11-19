@@ -2,7 +2,7 @@
 import { NS, attr, elements, relAttr, type XmlElement } from '../../xml/index';
 import type { ChartCachePoint } from '../model-series';
 import { chartTextBody } from '../parse-util';
-import { limitParsedChartPoints } from '../point-limit';
+import { parsedChartViewLength } from '../point-limit';
 import type {
 	ChartExChartData,
 	ChartExData,
@@ -31,20 +31,18 @@ const LEVEL = new Set(['pt', 'extLst']);
 
 function parseLevel(context: ChartParseContext, element: XmlElement): ChartExLevel {
 	reportUnmodelled(context, element, LEVEL);
-	const { points, pointCount } = limitParsedChartPoints(
-		context,
-		cxChildren(element, 'pt').map((pt) => {
-			const point: ChartCachePoint = { value: pt.textContent ?? '' };
-			const index = indexAttribute(context, pt, 'idx');
-			if (index !== undefined) point.index = index;
-			return point;
-		}),
-		indexAttribute(context, element, 'ptCount'),
-	);
+	const points = cxChildren(element, 'pt').map((pt) => {
+		const point: ChartCachePoint = { value: pt.textContent ?? '' };
+		const index = indexAttribute(context, pt, 'idx');
+		if (index !== undefined) point.index = index;
+		return point;
+	});
+	const pointCount = indexAttribute(context, element, 'ptCount');
 	return assignDefined<ChartExLevel>(
 		{ points },
 		{
 			pointCount,
+			viewLength: parsedChartViewLength(context, points, pointCount),
 			formatCode: attribute(element, 'formatCode'),
 			name: attribute(element, 'name'),
 			extLst: extensionList(element),

@@ -62,12 +62,14 @@ export function saveChartPartThroughNeutral(
 	const elements = options.elements ?? {};
 	// An element the plan needs and the package adapter did not encode leaves the object-tree path.
 	if (plan.packageElements?.some((name) => !Object.hasOwn(elements, name))) return undefined;
+	let loaded: ChartSpace;
 	let space: ChartSpace;
 	let written: string;
 	try {
 		const parsed = parseChartSpace(xml);
 		if (chartIssuesLostOnWrite(parsed.issues).length > 0) return undefined;
-		space = parsed.chartSpace;
+		loaded = parsed.chartSpace;
+		space = loaded;
 		for (const edit of plan.edits) space = edit(space);
 		for (const name of plan.packageElements ?? []) {
 			if (name === 'printSettings')
@@ -85,7 +87,8 @@ export function saveChartPartThroughNeutral(
 	}
 	return {
 		xml: written,
-		workbookWrites: plan.seriesData || options.retryWorkbook ? chartSpaceWorkbookWrites(space) : [],
+		workbookWrites:
+			plan.seriesData || options.retryWorkbook ? chartSpaceWorkbookWrites(space, loaded) : [],
 		...(plan.rebuildWorkbook ? { workbookModel: space } : {}),
 	};
 }

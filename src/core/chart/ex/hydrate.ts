@@ -25,7 +25,8 @@ function dimensionLevels(dimension: ChartExDimension, read: ChartExReferenceRead
 				? []
 				: [{ index, value: String(value) }];
 		}).flat();
-		return { ...previous, pointCount: count, points };
+		const { viewLength: _cut, ...kept } = previous ?? {};
+		return { ...kept, pointCount: count, points };
 	});
 	dimension.levels = levels;
 }

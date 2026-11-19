@@ -6,6 +6,7 @@
 import type { DrawingColor, DrawingFill } from '../../drawingml/types';
 import { chartPaletteSeriesColorChoice, findChartColorPalette } from '../color-palettes';
 import { chartCachePointCount } from '../data-cache';
+import { chartPointSlots } from '../point-limit';
 import { findChartStylePreset } from '../style-presets';
 import type { ChartSpace } from '../model';
 import type { ChartShapeProperties } from '../model-series';
@@ -114,9 +115,9 @@ export function applyChartStylePreset(space: ChartSpace, id: string): ChartSpace
 			const radial =
 				(group.kind === 'pie' || group.kind === 'doughnut') && group.varyColors !== false;
 			if (radial) {
-				const count = chartCachePointCount(series.values?.cache);
+				const cache = series.values?.cache;
 				const points = new Map(series.dataPoints.map((point) => [point.index ?? 0, point]));
-				for (let at = 0; at < count; at++) {
+				for (const at of cache ? chartPointSlots(cache) : []) {
 					const point = points.get(at) ?? { index: at };
 					point.spPr = paintShape(point.spPr, srgb(colors[at % colors.length]!), false);
 					points.set(at, point);

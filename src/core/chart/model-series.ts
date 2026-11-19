@@ -82,6 +82,11 @@ export interface ChartDataCache {
 	/** `c:formatCode` of a number cache. */
 	formatCode?: string;
 	points: ChartCachePoint[];
+	/**
+	 * Slots the dense views show, when the package's blank-point budget could not cover them all.
+	 * Never written: `points` and `pointCount` stay as the file has them.
+	 */
+	viewLength?: number;
 }
 
 /** How a data source is written. */

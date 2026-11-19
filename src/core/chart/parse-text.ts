@@ -29,7 +29,7 @@ import {
 	textProperties,
 	type ChartParseContext,
 } from './parse-util';
-import { limitParsedChartPoints } from './point-limit';
+import { parsedChartViewLength } from './point-limit';
 
 /** `@val` of a `c:ptCount` child, when it is a count. */
 function declaredCount(node: XmlElement): number | undefined {
@@ -37,24 +37,28 @@ function declaredCount(node: XmlElement): number | undefined {
 	return Number.isInteger(count) && count >= 0 ? count : undefined;
 }
 
-function parseCache(context: ChartParseContext, node: XmlElement): ChartDataCache {
-	const { points, pointCount } = limitParsedChartPoints(
-		context,
-		children(node, 'pt', NS.c).map((pt) => {
-			const point: ChartCachePoint = { value: cChild(pt, 'v')?.textContent ?? '' };
-			const index = Number(attribute(pt, 'idx') ?? Number.NaN);
-			if (Number.isInteger(index) && index >= 0) point.index = index;
-			const formatCode = attribute(pt, 'formatCode');
-			if (formatCode !== undefined) point.formatCode = formatCode;
-			return point;
-		}),
-		declaredCount(node),
-	);
+/** A cache; `slots` is what its view covers when the count is declared on its parent. */
+function parseCache(
+	context: ChartParseContext,
+	node: XmlElement,
+	slots = declaredCount(node),
+): ChartDataCache {
+	const pointCount = declaredCount(node);
+	const points = children(node, 'pt', NS.c).map((pt) => {
+		const point: ChartCachePoint = { value: cChild(pt, 'v')?.textContent ?? '' };
+		const index = Number(attribute(pt, 'idx') ?? Number.NaN);
+		if (Number.isInteger(index) && index >= 0) point.index = index;
+		const formatCode = attribute(pt, 'formatCode');
+		if (formatCode !== undefined) point.formatCode = formatCode;
+		return point;
+	});
 	const cache: ChartDataCache = {
 		type: node.localName === 'numCache' || node.localName === 'numLit' ? 'number' : 'string',
 		points,
 	};
 	if (pointCount !== undefined) cache.pointCount = pointCount;
+	const viewLength = parsedChartViewLength(context, points, slots);
+	if (viewLength !== undefined) cache.viewLength = viewLength;
 	const formatCode = cChild(node, 'formatCode')?.textContent;
 	if (formatCode) cache.formatCode = formatCode;
 	return cache;
@@ -77,10 +81,11 @@ export function parseDataSource(
 		if (cache) source.cache = parseCache(context, cache);
 		const levels = cChild(ref, 'multiLvlStrCache');
 		if (levels) {
-			source.levels = children(levels, 'lvl', NS.c).map((level) => parseCache(context, level));
 			const count = declaredCount(levels);
-			if (count !== undefined)
-				source.levelPointCount = limitParsedChartPoints(context, [], count).pointCount!;
+			source.levels = children(levels, 'lvl', NS.c).map((level) =>
+				parseCache(context, level, count),
+			);
+			if (count !== undefined) source.levelPointCount = count;
 		}
 		return source;
 	}

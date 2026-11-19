@@ -13,6 +13,7 @@ import {
 	CHART_MEDIA_FOLDERS,
 	embedChartPartPictures,
 	embedChartSpacePictures,
+	parseChartSpace,
 	writeChartSpaceOverSource,
 	chartSpaceWorkbookWrites,
 	saveChartWorkbookUpdates,
@@ -77,7 +78,7 @@ async function saveEditedChart(
 				? { partName: chart.workbookPartName }
 				: { external: true }
 			: undefined,
-		chartSpaceWorkbookWrites(chart.chartSpace),
+		chartSpaceWorkbookWrites(chart.chartSpace, parseChartSpace(source).chartSpace),
 		{ report },
 	);
 }

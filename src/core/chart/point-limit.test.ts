@@ -8,10 +8,18 @@ import { writeChartExSpace } from './ex/write';
 import { writeChartExSpaceOverSource } from './ex/keep-source';
 import { chartIssuesLostOnWrite, writeChartSpaceOverSource } from './keep-source';
 import { parseChartSpace } from './parse-space';
-import { CHART_POINTS_LIMITED, MAX_CHART_BLANK_POINTS } from './point-limit';
+import { applyChartStylePreset } from './edit/style';
+import { addChartCategory, setChartSeriesValues } from './edit/series';
+import {
+	CHART_POINTS_LIMITED,
+	MAX_CACHE_BLANK_POINTS,
+	MAX_CHART_BLANK_POINTS,
+	chartPointBudget,
+} from './point-limit';
 import { chartExSummary } from './render/summary-from-chartex';
 import { renderChartSummarySvg } from './render/render-space';
 import { chartSummaryFromSpace } from './render/summary-from-space';
+import { chartSpaceWorkbookWrites } from './workbook/space-writes';
 import { writeChartSpace } from './write-space';
 
 const HUGE = 2_000_000_000;
@@ -60,61 +68,104 @@ describe('classic chart caches', () => {
 
 	it('does not expand a declared count or an index from a hand-built cache', () => {
 		const counted = chartCacheValues({ type: 'number', pointCount: HUGE, points: [] });
-		expect(counted.length).toBeLessThanOrEqual(MAX_CHART_BLANK_POINTS);
+		expect(counted.length).toBeLessThanOrEqual(MAX_CACHE_BLANK_POINTS);
 		const indexed = chartCacheValues({ type: 'string', points: [{ index: HUGE, value: 'x' }] });
-		expect(indexed.length).toBeLessThanOrEqual(MAX_CHART_BLANK_POINTS + 1);
+		expect(indexed.length).toBeLessThanOrEqual(MAX_CACHE_BLANK_POINTS + 1);
 	});
 
-	it('reports a declared count past the limit and bounds what it expands to', () => {
+	it('shows a large sparse range in full and keeps it editable', () => {
+		const xml = barChart(
+			series(
+				0,
+				'<c:ptCount val="199999"/><c:pt idx="0"><c:v>1</c:v></c:pt><c:pt idx="4998"><c:v>7</c:v></c:pt>',
+			),
+		);
+		const { chartSpace, issues } = parseChartSpace(xml);
+		expect(issues).toEqual([]);
+		const values = chartCacheValues(chartSpace.plotArea.groups[0]!.series[0]!.values!.cache);
+		expect(values).toHaveLength(199_999);
+		expect(values[4998]).toBe(7);
+		expect(chartIssuesLostOnWrite(issues)).toEqual([]);
+	});
+
+	it('keeps a huge declared count and shows only what fits', () => {
 		const xml = barChart(series(0, `<c:ptCount val="${HUGE}"/><c:pt idx="0"><c:v>1</c:v></c:pt>`));
 		const { chartSpace, issues } = parseChartSpace(xml);
-		expect(codes(issues)).toContain(CHART_POINTS_LIMITED);
-		expect(chartIssuesLostOnWrite(issues).map((issue) => issue.code)).toContain(
-			CHART_POINTS_LIMITED,
-		);
-		const summary = chartSummaryFromSpace(chartSpace)!;
-		expect(summary.series[0]!.values[0]).toBe(1);
-		expect(summary.series[0]!.values.length).toBeLessThanOrEqual(MAX_CHART_BLANK_POINTS + 1);
+		expect(codes(issues)).toEqual([CHART_POINTS_LIMITED]);
+		expect(chartIssuesLostOnWrite(issues)).toEqual([]);
+		expect(firstValues(xml).cache!.pointCount).toBe(HUGE);
+		expect(chartSummaryFromSpace(chartSpace)!.series[0]!.values).toEqual([1]);
+		expect(writeChartSpace(chartSpace)).toContain(`<c:ptCount val="${HUGE}"/>`);
 	});
 
-	it('drops a point whose index is past the limit and reports it', () => {
+	it('keeps a point past the view in the model and in the saved part', () => {
 		const xml = barChart(
 			series(
 				0,
 				`<c:ptCount val="2"/><c:pt idx="0"><c:v>1</c:v></c:pt><c:pt idx="${HUGE}"><c:v>2</c:v></c:pt>`,
 			),
 		);
-		const { issues } = parseChartSpace(xml);
-		expect(codes(issues)).toContain(CHART_POINTS_LIMITED);
-		expect(chartCacheValues(firstValues(xml).cache)).toEqual([1, '']);
+		const values = firstValues(xml);
+		expect(codes(parseChartSpace(xml).issues)).toEqual([CHART_POINTS_LIMITED]);
+		expect(chartCacheValues(values.cache)).toEqual([1, '']);
+		expect(values.cache!.points).toHaveLength(2);
+		expect(writeChartSpace(parseChartSpace(xml).chartSpace)).toContain(`<c:pt idx="${HUGE}">`);
 	});
 
-	it('shares the allowance among the caches of a part, so series cannot multiply it', () => {
+	it('shares one budget among the caches of a part', () => {
 		const count = 2000;
 		const xml = barChart(
 			Array.from({ length: count }, (_, index) =>
 				series(
 					index,
-					`<c:ptCount val="${MAX_CHART_BLANK_POINTS}"/><c:pt idx="0"><c:v>1</c:v></c:pt>`,
+					`<c:ptCount val="${MAX_CACHE_BLANK_POINTS}"/><c:pt idx="0"><c:v>1</c:v></c:pt>`,
 				),
 			).join(''),
 		);
 		const { chartSpace, issues } = parseChartSpace(xml);
-		expect(codes(issues)).toContain(CHART_POINTS_LIMITED);
-		const sheet = chartSpaceDataSheet(chartSpace);
-		expect(sheet.series).toHaveLength(count);
-		expect(sheet.categories.length * count).toBeLessThanOrEqual(2 * MAX_CHART_BLANK_POINTS + count);
+		expect(codes(issues)).toEqual([CHART_POINTS_LIMITED]);
+		const lengths = chartSpace.plotArea.groups[0]!.series.map(
+			(entry) => chartCacheValues(entry.values!.cache).length,
+		);
+		expect(lengths.reduce((sum, length) => sum + length, 0)).toBeLessThanOrEqual(
+			MAX_CHART_BLANK_POINTS + count,
+		);
+		expect(lengths.at(-1)).toBe(1);
+		expect(chartSpaceDataSheet(chartSpace).categories).toHaveLength(1);
 	});
 
-	it('bounds the count a multi-level category cache declares for every level', () => {
+	it('shares one budget among the parts of a package', () => {
+		const pointBudget = chartPointBudget();
+		const part = barChart(
+			series(0, `<c:ptCount val="${MAX_CACHE_BLANK_POINTS}"/><c:pt idx="0"><c:v>1</c:v></c:pt>`),
+		);
+		const lengths = Array.from({ length: 10 }, () => {
+			const { chartSpace } = parseChartSpace(part, { pointBudget });
+			return chartCacheValues(chartSpace.plotArea.groups[0]!.series[0]!.values!.cache).length;
+		});
+		expect(lengths.filter((length) => length === 1)).toHaveLength(6);
+		expect(pointBudget.cuts).toBe(6);
+	});
+
+	it('does not depend on how the chart namespace is prefixed', () => {
+		const xml = barChart(series(0, `<c:ptCount val="${HUGE}"/><c:pt idx="0"><c:v>1</c:v></c:pt>`))
+			.replaceAll('<c:', '<é:')
+			.replaceAll('</c:', '</é:')
+			.replace('xmlns:c=', 'xmlns:é=');
+		expect(firstValues(xml).cache!.pointCount).toBe(HUGE);
+		expect(chartCacheValues(firstValues(xml).cache)).toEqual([1]);
+	});
+
+	it('keeps the declared count of a multi-level category cache and bounds its levels', () => {
 		const levels = '<c:lvl><c:pt idx="0"><c:v>a</c:v></c:pt></c:lvl>'.repeat(50);
 		const categories = `<c:cat><c:multiLvlStrRef><c:f>S!$A$1</c:f><c:multiLvlStrCache><c:ptCount val="${HUGE}"/>${levels}</c:multiLvlStrCache></c:multiLvlStrRef></c:cat>`;
 		const { chartSpace, issues } = parseChartSpace(
 			barChart(series(0, '<c:ptCount val="1"/><c:pt idx="0"><c:v>1</c:v></c:pt>', categories)),
 		);
 		const source = chartSpace.plotArea.groups[0]!.series[0]!.categories!;
-		expect(codes(issues)).toContain(CHART_POINTS_LIMITED);
-		expect(source.levelPointCount! * 50).toBeLessThanOrEqual(MAX_CHART_BLANK_POINTS + 50);
+		expect(codes(issues)).toEqual([CHART_POINTS_LIMITED]);
+		expect(source.levelPointCount).toBe(HUGE);
+		expect(source.levels!.every((level) => level.viewLength === 1)).toBe(true);
 	});
 
 	it('keeps a legitimate multi-level count as written', () => {
@@ -128,21 +179,102 @@ describe('classic chart caches', () => {
 	});
 });
 
-describe('saving a limited part', () => {
-	it('keeps the classic source bytes and refuses to rewrite them from the shortened model', () => {
-		const xml = barChart(series(0, `<c:ptCount val="${HUGE}"/><c:pt idx="0"><c:v>1</c:v></c:pt>`));
-		const { chartSpace } = parseChartSpace(xml);
-		expect(writeChartSpaceOverSource(xml, chartSpace)).toBe(xml);
-		expect(() => writeChartSpaceOverSource(xml, { ...chartSpace, roundedCorners: true })).toThrow();
+describe('saving a chart whose view is cut', () => {
+	const cutPart = barChart(
+		series(
+			0,
+			`<c:ptCount val="${HUGE}"/><c:pt idx="0"><c:v>1</c:v></c:pt><c:pt idx="${HUGE - 1}"><c:v>9</c:v></c:pt>`,
+		),
+	);
+
+	it('keeps the source bytes when nothing changed, under any budget', () => {
+		const { chartSpace } = parseChartSpace(cutPart, { pointBudget: chartPointBudget(0) });
+		expect(writeChartSpaceOverSource(cutPart, chartSpace)).toBe(cutPart);
 	});
 
-	it('keeps the ChartEx source bytes and refuses to rewrite them', () => {
+	it('keeps the count and every point through a formatting edit', () => {
+		const { chartSpace } = parseChartSpace(cutPart);
+		const saved = writeChartSpaceOverSource(cutPart, { ...chartSpace, roundedCorners: true });
+		expect(saved).toContain(`<c:ptCount val="${HUGE}"/>`);
+		expect(saved).toContain(`<c:pt idx="${HUGE - 1}">`);
+		expect(saved.match(/<c:pt /g)).toHaveLength(2);
+	});
+
+	it('applies a value edit to the view and keeps what lies past it', () => {
+		const { chartSpace } = parseChartSpace(cutPart);
+		const view = chartSpaceDataSheet(chartSpace).series[0]!.values;
+		const edited = setChartSeriesValues(
+			chartSpace,
+			0,
+			view.map(() => 5),
+		);
+		const cache = edited.plotArea.groups[0]!.series[0]!.values!.cache!;
+		expect(cache.pointCount).toBe(HUGE);
+		expect(cache.points).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({ index: 0, value: '5' }),
+				expect.objectContaining({ index: HUGE - 1, value: '9' }),
+			]),
+		);
+	});
+
+	it('refuses to change the length of a cut view', () => {
+		const { chartSpace } = parseChartSpace(cutPart);
+		expect(() => addChartCategory(chartSpace, 'New')).toThrow(RangeError);
+	});
+
+	it('keeps the ChartEx source bytes, and its count through an edit', () => {
 		const xml = chartEx(`<cx:lvl ptCount="${HUGE}"><cx:pt idx="0">1</cx:pt></cx:lvl>`);
 		const { chartExSpace } = parseChartExSpace(xml);
 		expect(writeChartExSpaceOverSource(xml, chartExSpace)).toBe(xml);
-		expect(() =>
-			writeChartExSpaceOverSource(xml, { ...chartExSpace, title: { tx: { value: 'New' } } }),
-		).toThrow();
+		const saved = writeChartExSpaceOverSource(xml, {
+			...chartExSpace,
+			title: { tx: { value: 'New' } },
+		});
+		expect(saved).toContain(`ptCount="${HUGE}"`);
+	});
+
+	it('adds format overrides only for points that exist', () => {
+		const pie = barChart(series(0, '<c:ptCount val="100000"/><c:pt idx="7"><c:v>1</c:v></c:pt>'))
+			.replace('<c:barChart><c:barDir val="col"/><c:grouping val="clustered"/>', '<c:pieChart>')
+			.replace('<c:axId val="1"/><c:axId val="2"/></c:barChart>', '</c:pieChart>');
+		const styled = applyChartStylePreset(parseChartSpace(pie).chartSpace, 'colorful');
+		expect(styled.plotArea.groups[0]!.series[0]!.dataPoints.map((point) => point.index)).toEqual([
+			7,
+		]);
+	});
+});
+
+describe('embedded workbook writes of a sparse chart', () => {
+	const part = barChart(
+		series(
+			0,
+			'<c:ptCount val="8"/><c:pt idx="0"><c:v>1</c:v></c:pt><c:pt idx="2"><c:v>3</c:v></c:pt>',
+		),
+	);
+	const space = () => parseChartSpace(part).chartSpace;
+
+	it('leaves the blank cells of a range alone', () => {
+		const [write] = chartSpaceWorkbookWrites(space(), space());
+		expect(write).toMatchObject({ formula: 'S!$B$2:$B$9' });
+		expect(write!.values).toEqual(['1', null, '3', null, null, null, null, null]);
+	});
+
+	it('empties the cell of a point the edit removed', () => {
+		const edited = setChartSeriesValues(space(), 0, [1, null, null, null, null, null, null, null]);
+		expect(chartSpaceWorkbookWrites(edited, space())[0]!.values.slice(0, 3)).toEqual([
+			'1',
+			null,
+			'',
+		]);
+	});
+
+	it('names every cell of the range when a cut view reaches only the first', () => {
+		const xml = part.replace('<c:ptCount val="8"/>', '<c:ptCount val="8"/>');
+		const { chartSpace } = parseChartSpace(xml, { pointBudget: chartPointBudget(0) });
+		const [write] = chartSpaceWorkbookWrites(chartSpace, chartSpace);
+		expect(write!.cellCount).toBe(8);
+		expect(write!.values).toEqual(['1', null]);
 	});
 });
 
@@ -178,40 +310,40 @@ describe('ChartEx levels', () => {
 		expect(chartExSummary(xml)!.summary!.series[0]!.values).toEqual([null, 2, null, 4, null]);
 	});
 
-	it('reports a huge declared count and stays within the limit', () => {
+	it('keeps a huge declared count and shows only what fits', () => {
 		const xml = chartEx(`<cx:lvl ptCount="${HUGE}"><cx:pt idx="0">1</cx:pt></cx:lvl>`);
 		const result = chartExSummary(xml)!;
 		expect(result.pointsLimited).toBe(true);
-		expect(result.summary!.series[0]!.values[0]).toBe(1);
-		expect(result.summary!.series[0]!.values.length).toBeLessThanOrEqual(
-			MAX_CHART_BLANK_POINTS + 1,
-		);
-		expect(codes(parseChartExSpace(xml).issues)).toContain(CHART_POINTS_LIMITED);
+		expect(result.summary!.series[0]!.values).toEqual([1]);
+		const { chartExSpace, issues } = parseChartExSpace(xml);
+		expect(codes(issues)).toEqual([CHART_POINTS_LIMITED]);
+		expect(chartExSpace.chartData.data[0]!.dimensions[0]!.levels[0]!.pointCount).toBe(HUGE);
 	});
 
-	it('drops a point whose index is past the limit', () => {
+	it('keeps a point past the view', () => {
 		const xml = chartEx(
 			`<cx:lvl ptCount="1"><cx:pt idx="0">1</cx:pt><cx:pt idx="${HUGE}">2</cx:pt></cx:lvl>`,
 		);
 		const result = chartExSummary(xml)!;
 		expect(result.pointsLimited).toBe(true);
-		expect(result.summary!.series[0]!.values).toEqual([1]);
+		expect(result.summary!.series[0]!.values).toEqual([1, null]);
+		expect(writeChartExSpace(parseChartExSpace(xml).chartExSpace)).toContain(`idx="${HUGE}"`);
 	});
 
-	it('bounds the data sheet and a new series of an oversized level', () => {
+	it('gives a new series zeros only where the level has points', () => {
 		const { chartExSpace } = parseChartExSpace(
 			chartEx(`<cx:lvl ptCount="${HUGE}"><cx:pt idx="0">1</cx:pt></cx:lvl>`),
 		);
-		const sheet = chartExSpaceDataSheet(chartExSpace);
-		expect(sheet.categories.length).toBeLessThanOrEqual(MAX_CHART_BLANK_POINTS + 1);
+		expect(chartExSpaceDataSheet(chartExSpace).categories).toHaveLength(1);
 		const added = addChartExSeries(chartExSpace, 'Copy');
 		const level = added.chartData.data.at(-1)!.dimensions[0]!.levels[0]!;
-		expect(level.points.length).toBeLessThanOrEqual(MAX_CHART_BLANK_POINTS + 1);
+		expect(level.points).toEqual([{ index: 0, value: '0' }]);
+		expect(level.pointCount).toBe(HUGE);
 	});
 
 	it('does not expand a hand-built level', () => {
 		expect(chartExLevelValues({ pointCount: HUGE, points: [] }).length).toBeLessThanOrEqual(
-			MAX_CHART_BLANK_POINTS,
+			MAX_CACHE_BLANK_POINTS,
 		);
 	});
 });

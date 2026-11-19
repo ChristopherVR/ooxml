@@ -3,10 +3,13 @@ import type { PptxChartData } from '../../types';
 import { extractMultiLevelCategoryValues } from '../../utils/chart-multi-level-category-parser';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSmartArt';
 import { isFiniteNumber } from '../../../../units/finite';
-import { chartPointLength } from '../../../../chart/point-limit';
+import { chartPointBudget, chartPointLength } from '../../../../chart/point-limit';
 import { at } from '../../../../geometry/indexed';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
+	/** Pays for the blank slots of every chart view of the presentation being loaded. */
+	protected chartPointBudget = chartPointBudget();
+
 	protected detectChartType(plotArea: XmlObject | undefined): PptxChartData['chartType'] {
 		if (!plotArea) {
 			return 'unknown';

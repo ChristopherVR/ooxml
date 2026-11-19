@@ -9,8 +9,7 @@ export function chartCacheValues(cache: ChartDataCache | undefined): (string | n
 	if (!cache) return [];
 	const numeric = cache.type === 'number';
 	return chartDensePoints<ChartDataCache['points'][number], string | number>(
-		cache.points,
-		cache.pointCount,
+		cache,
 		({ value }) =>
 			numeric && value.trim() !== '' && Number.isFinite(Number(value)) ? Number(value) : value,
 		'',
@@ -19,7 +18,7 @@ export function chartCacheValues(cache: ChartDataCache | undefined): (string | n
 
 /** How many slots {@link chartCacheValues} returns, without building them. */
 export const chartCachePointCount = (cache: ChartDataCache | undefined): number =>
-	cache ? chartPointsLength(cache.points, cache.pointCount) : 0;
+	cache ? chartPointsLength(cache) : 0;
 
 /** The cached values of a data source: its cache or literal, else the innermost category level. */
 export const chartSourceValues = (source: ChartDataSource | undefined): (string | number)[] =>

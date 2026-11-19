@@ -1,3 +1,4 @@
+import { chartPointBudget } from '../../../../chart/point-limit';
 import { openZip } from '../../../../opc/zip-limits';
 
 import { XmlObject } from '../../types';
@@ -96,6 +97,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		});
 		this.loadLimits = limits;
 		this.loadedShapeCount = 0;
+		this.chartPointBudget = chartPointBudget();
 		try {
 			this.documentPropertiesUpdater = this.dependencyFactory.createDocumentPropertiesUpdater(
 				this.zip,

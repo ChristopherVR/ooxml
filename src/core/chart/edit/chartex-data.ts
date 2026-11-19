@@ -4,7 +4,9 @@
 // cached levels; a series that draws no data gets a new `cx:data` with the next free id. Blank
 // values (`null`) are written as missing points, as Office writes an empty cell.
 import type { ChartSeriesValue } from '../data-sheet';
+import type { ChartCachePoint } from '../model-series';
 import type { ChartExData, ChartExDimension, ChartExLevel, ChartExSpace } from '../ex/model';
+import { chartCacheOverView } from '../point-limit';
 import { chartExSeriesAt, editChartExSpace } from './chartex';
 
 /** The numeric dimension type a layout draws: `size` (treemap, sunburst), `colorVal`, `val`. */
@@ -21,12 +23,13 @@ function freshLevel(
 	previous: ChartExLevel | undefined,
 	numeric: boolean,
 ): ChartExLevel {
-	const level: ChartExLevel = {
-		pointCount: values.length,
-		points: values.flatMap((value, index) =>
+	const level: ChartExLevel = chartCacheOverView<ChartCachePoint>(
+		values.flatMap((value, index) =>
 			value === null || value === '' ? [] : [{ index, value: String(value) }],
 		),
-	};
+		values.length,
+		previous,
+	);
 	if (numeric) level.formatCode = previous?.formatCode ?? 'General';
 	if (previous?.name !== undefined) level.name = previous.name;
 	return level;
