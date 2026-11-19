@@ -14,7 +14,7 @@
 		"versions": true,
 		"sharedChats": true
 	},
-	"collaboration": { "syncUrl": "" },
+	"collaboration": { "syncUrl": "", "credentialsUrl": "" },
 	"limits": { "maxContextChars": 150000, "historyMessages": 20, "maxOutputTokens": 8192 },
 	"behaviour": { "instructions": "", "style": "balanced", "language": "" },
 	"userControls": { "style": true, "language": true, "instructions": true, "temperature": false },

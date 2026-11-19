@@ -29,6 +29,7 @@ network request must update this file in the same commit.
 | Teams: calls                                     | `stun:stun.l.google.com:19302`, then peers  | Yes, when a call starts           | `iceServers` (your own STUN/TURN, or `[]`)                         |
 | Teams: website tabs                              | The URL a member added                      | When the tab is opened            | Do not add or open website tabs                                    |
 | Suite: AI assistant                              | The provider the user or policy selects     | No (offline by default)           | `ai-config.json`                                                   |
+| Suite: shared AI chat credentials                | The policy's `collaboration.credentialsUrl` | No (host must configure it)       | Leave `collaboration.credentialsUrl` empty                         |
 | Suite: OneDrive                                  | `graph.microsoft.com`, Microsoft sign-in    | No (host must enable it)          | Do not configure it                                                |
 | Suite: app updates                               | The suite's own origin (`sw.js`)            | Yes                               | Not applicable (same origin)                                       |
 | Any product: hyperlinks, help links              | The link target, in a new tab               | Only when clicked                 | Not applicable                                                     |
@@ -175,7 +176,12 @@ The suite uses the editors above, so their sections apply. In addition:
 - **OneDrive:** off unless the host configures it. Files and the access token then go to
   Microsoft Graph. See [docs/onedrive-integration.md](docs/onedrive-integration.md).
 - **Shared AI chats:** sync over the configured collaboration or Teams server, otherwise stay in
-  this browser.
+  this browser. When the deployment's `ai-config.json` sets `collaboration.credentialsUrl` (off by
+  default), the suite sends a `GET` with the user's cookies to that URL right before a shared chat
+  connects, and again before each reconnect or once the token expires, to get a short-lived token
+  for the sync server. No document or chat content is sent, and the token is kept in memory only.
+  Leave the field empty to turn the request off; a sync server that needs a token then cannot be
+  used.
 - **Updates:** the installed app checks its own origin for a new `sw.js` at start, on focus and
   hourly. The service worker caches only the app's own files, and serves a saved copy only while
   it matches the SHA-256 the build recorded for it; a copy that does not is deleted and fetched

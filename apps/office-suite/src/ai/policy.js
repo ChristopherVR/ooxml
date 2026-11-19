@@ -32,9 +32,12 @@ const defaults = {
 	},
 	/**
 	 * Where shared chats sync. Without a `syncUrl` they use the Teams server the user connected,
-	 * or, with none, the other tabs of this browser. The token is sent as `?token=` on the socket.
+	 * or, with none, the other tabs of this browser. A server that needs a token gets it from
+	 * `credentialsUrl`, a host endpoint that issues a short-lived one (see credentials.js); the token
+	 * travels in the socket's `Sec-WebSocket-Protocol` header. A token never sits in the policy,
+	 * which is public to everyone who can load the app.
 	 */
-	collaboration: { syncUrl: '', token: '' },
+	collaboration: { syncUrl: '', credentialsUrl: '' },
 	limits: { maxContextChars: 150000, historyMessages: 20, maxOutputTokens: 8192 },
 	/** Request settings; `instructions` is added to the suite's own system prompt. */
 	behaviour: { instructions: '', style: 'balanced', language: '', temperature: null },
@@ -84,6 +87,18 @@ function normalizeConnection(raw) {
 	};
 }
 
+/** An `https:` or same-origin URL, resolved against the page; anything else is dropped. */
+function credentialsUrl(value) {
+	if (!value) return '';
+	try {
+		const url = new URL(value, globalThis.location?.href);
+		const allowed = url.protocol === 'https:' || url.origin === globalThis.location?.origin;
+		return allowed && !url.username && !url.password ? url.href : '';
+	} catch {
+		return '';
+	}
+}
+
 /** Merges a deployment's configuration over the defaults, ignoring anything malformed. */
 export function normalizePolicy(raw) {
 	const p = structuredClone(defaults);
@@ -125,7 +140,7 @@ export function normalizePolicy(raw) {
 	const sync = text(raw.collaboration?.syncUrl, 500);
 	if (/^wss?:\/\/[^\s]+$/iu.test(sync)) {
 		p.collaboration.syncUrl = sync;
-		p.collaboration.token = text(raw.collaboration?.token, 4096);
+		p.collaboration.credentialsUrl = credentialsUrl(text(raw.collaboration?.credentialsUrl, 500));
 	}
 	const ids = ['offline', ...p.connections.map((c) => c.id)];
 	p.defaultConnection = ids.includes(raw.defaultConnection)
