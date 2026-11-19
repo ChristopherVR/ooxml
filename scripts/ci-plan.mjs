@@ -365,6 +365,43 @@ export function pptxPlan(files, { everything, reaches, reference = false }) {
 	};
 }
 
+/**
+ * The accessibility gates (`e2e/a11y`): the keyboard contract, axe, accessibility tree, token
+ * contrast, reflow and export checks, run against the built suite and the PowerPoint demos.
+ * Measured locally at two workers (the hosted runner's count): 151 tests in 2.6 minutes, 125 of
+ * them in the suite project. Hosted runners are slower; allowing three times that, two shards keep
+ * a job with the PowerPoint demos near four minutes of tests, and one does for the suite alone.
+ * Revisit with the first CI timings.
+ */
+export const A11Y_SHARDS = { withPowerPoint: 2, suiteOnly: 1 };
+/** What the gates run against: the suite's sources and shell, the viewers and their demos. */
+const A11Y_REACH =
+	/^(src\/ui\/|apps\/office-suite\/|site\/|viewers\/|demos\/|e2e\/a11y\/|scripts\/(build-suite|bundle-suite|build-pwa|preview-site|browser-performance)\.mjs$)/;
+
+/**
+ * Whether the gates run, with which Playwright projects and on how many shards. A change to the
+ * suite, the shared UI, a viewer or the gates themselves runs the suite project; the five
+ * PowerPoint demo projects join when the change also reaches PowerPoint.
+ */
+export function a11yPlan(files, { everything, pptxReached }) {
+	const reached = files.filter(
+		(file) =>
+			A11Y_REACH.test(file) &&
+			!(isTestFile(file) && /^(src\/ui|viewers)\//.test(file)) &&
+			!/^viewers\/[^/]+\/(docs|\.github)\//.test(file),
+	);
+	const run = everything || reached.length > 0;
+	const pptx =
+		run && (everything || pptxReached || reached.some((file) => file.startsWith('e2e/a11y/')));
+	const total = !run ? 0 : pptx ? A11Y_SHARDS.withPowerPoint : A11Y_SHARDS.suiteOnly;
+	return {
+		run,
+		pptx,
+		projects: pptx ? ['suite', ...PPTX_BINDINGS.map((binding) => `pptx-${binding}`)] : ['suite'],
+		matrix: Array.from({ length: total }, (_, i) => ({ shard: i + 1, total })),
+	};
+}
+
 /** The product editors in `src/ui/src/<product>/`; each belongs to one viewer only. */
 const UI_PRODUCT = /^src\/ui\/src\/(docx|xlsx|visio|teams|pptx)\//;
 /** The groups a change to a viewer's (or its engine's) source reaches. */
@@ -559,6 +596,7 @@ export function plan(changed, { full = false, testFiles, reference = false } = {
 				(file.startsWith('src/core/') && viewersOfArea(file.split('/')[2]).includes('pptx')),
 		);
 	const pptx = pptxPlan(live, { everything, reaches: pptxReached, reference });
+	const a11y = a11yPlan(live, { everything, pptxReached });
 	// The pptx typecheck covers the pptx area and the shared areas it compiles against.
 	const pptxTypes = src.some((file) => viewersOfArea(file.split('/')[2]).includes('pptx'));
 
@@ -580,9 +618,21 @@ export function plan(changed, { full = false, testFiles, reference = false } = {
 		// package smoke tests, the core/UI boundary and the UI's own tests); a viewer-only change just
 		// builds them.
 		ui:
-			everything || ui || coreCode || viewerList.length > 0 || viewerBrowser.length > 0 || pptx.run,
+			everything ||
+			ui ||
+			coreCode ||
+			viewerList.length > 0 ||
+			viewerBrowser.length > 0 ||
+			pptx.run ||
+			a11y.run,
 		build:
-			everything || coreCode || ui || viewerList.length > 0 || viewerBrowser.length > 0 || pptx.run,
+			everything ||
+			coreCode ||
+			ui ||
+			viewerList.length > 0 ||
+			viewerBrowser.length > 0 ||
+			pptx.run ||
+			a11y.run,
 		checks: { core: everything || coreCode || uiCode, ui: everything || ui || coreCode },
 		scripts: everything || scripts,
 		mcp: everything || mcp,
@@ -590,6 +640,8 @@ export function plan(changed, { full = false, testFiles, reference = false } = {
 		viewerBrowser,
 		// What the pptx jobs in ci.yml run (see VIEWERS.pptx and pptxPlan).
 		pptx,
+		// The accessibility gates' shards (a11yPlan); their PowerPoint demos come from pptx-build.
+		a11y,
 	};
 }
 

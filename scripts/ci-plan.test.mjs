@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 
 import {
+	A11Y_SHARDS,
 	PPTX_BINDINGS,
 	PPTX_E2E_SHARDS,
 	VIEWER_BROWSER_SHARDS,
@@ -695,4 +696,48 @@ test('shared browser runtime changes reach the configs that import them', () => 
 		assert.equal(result.viewerBrowser.length, 0);
 	}
 	assert.equal(plan(['scripts/browser-shards.test.mjs']).pptx.run, false);
+});
+
+test('the accessibility gates run for the suite, the shared UI, the viewers and the gates', () => {
+	const suiteOnly = ['suite'];
+	const all = ['suite', ...PPTX_BINDINGS.map((binding) => `pptx-${binding}`)];
+	const gates = (files) => plan(files).a11y;
+	for (const file of [
+		'apps/office-suite/src/session.js',
+		'site/index.html',
+		'src/ui/src/docx/schema.ts',
+		'viewers/docx/packages/react/src/index.ts',
+		'demos/xlsx/src/main.ts',
+	]) {
+		assert.equal(gates([file]).run, true, file);
+		assert.deepEqual(gates([file]).projects, suiteOnly, file);
+		assert.equal(gates([file]).matrix.length, A11Y_SHARDS.suiteOnly, file);
+	}
+	// A change PowerPoint can see adds the five demo projects, built once by pptx-build.
+	for (const file of [
+		'src/ui/src/ribbon/ribbon.ts',
+		'src/ui/src/pptx/render/editor-keymap.ts',
+		'viewers/pptx/packages/vue/src/index.ts',
+		'e2e/a11y/keyboard.spec.ts',
+	]) {
+		assert.deepEqual(gates([file]).projects, all, file);
+		assert.equal(gates([file]).matrix.length, A11Y_SHARDS.withPowerPoint, file);
+		assert.equal(plan([file]).build, true, file);
+	}
+	assert.deepEqual(gates(['package.json']).projects, all);
+	// The suite shell alone still builds the core and the UI the gates run on.
+	assert.equal(plan(['site/index.html']).build, true);
+	assert.equal(plan(['site/index.html']).ui, true);
+});
+
+test('the accessibility gates skip core-only, test-only and docs changes', () => {
+	for (const file of [
+		'src/core/docx/model.ts',
+		'src/ui/src/dialog/dialog.test.ts',
+		'viewers/docx/docs/index.md',
+		'docs/accessibility.md',
+		'README.md',
+	])
+		assert.equal(plan([file]).a11y.run, false, file);
+	assert.deepEqual(plan(['docs/accessibility.md']).a11y.matrix, []);
 });
