@@ -2,7 +2,8 @@
 // formula is read with the formula tokenizer and parser, never matched as text, so a function
 // is found wherever its name appears: called, passed bare to MAP, LET or LAMBDA, or written with
 // the storage prefixes Excel uses (`_xlfn._xlws.WEBSERVICE`). Text inside string literals is data,
-// not a reference, and never matches.
+// not a reference, and never matches. A call to an XLL add-in (`_xll.Name`) runs code outside the
+// workbook, so every one is restricted.
 import { parseCellInput } from '../numfmt/input';
 import { normalizeFunctionName } from './ast';
 import { parseTokens } from './parser';
@@ -29,7 +30,9 @@ export interface FormulaPolicyIssue {
 
 /**
  * The restricted functions, by upper-case name. Spreadsheet applications other than Excel read
- * the same files, so their network and AI functions are listed too.
+ * the same files, so their network and AI functions are listed too. The Excel 4.0 macro functions
+ * that a defined name can call are listed where they evaluate text as a formula (`EVALUATE`), run
+ * code or programs, use DDE, or read and write files.
  */
 export const RESTRICTED_FORMULA_FUNCTIONS: ReadonlyMap<
 	string,
@@ -60,11 +63,28 @@ export const RESTRICTED_FORMULA_FUNCTIONS: ReadonlyMap<
 		'IMPORTRANGE',
 		'IMPORTXML',
 		'GOOGLEFINANCE',
+		// Excel 4.0 macro functions.
+		'EVALUATE',
+		'EXEC',
+		'EXECUTE',
+		'RUN',
+		'INITIATE',
+		'REQUEST',
+		'POKE',
+		'FOPEN',
+		'FREAD',
+		'FREADLN',
+		'FWRITE',
+		'FWRITELN',
+		'FILES',
 	].map((name) => [name, 'external-function'] as const),
 	...['COPILOT', 'AI', 'TRANSLATE', 'DETECTLANGUAGE', 'GOOGLETRANSLATE'].map(
 		(name) => [name, 'ai-function'] as const,
 	),
 ]);
+
+/** How a file stores a call to a function of an XLL add-in, upper-cased. */
+const ADD_IN_PREFIX = '_XLL.';
 
 /** Characters a sheet name cannot hold; in a reference prefix they mean a path or a workbook. */
 const NOT_IN_SHEET_NAMES = /[\\/[\]:?*]/u;
@@ -107,6 +127,12 @@ export function formulaPolicyIssue(formula: string): FormulaPolicyIssue | null {
 		if (issue) return issue;
 		if (token.kind !== 'func' && token.kind !== 'name') continue;
 		const name = normalizeFunctionName(String(token.value));
+		if (name.startsWith(ADD_IN_PREFIX))
+			return {
+				concern: 'external-function',
+				name: token.text,
+				reason: `it calls the add-in function ${token.text}, which runs code outside the workbook`,
+			};
 		const concern = RESTRICTED_FORMULA_FUNCTIONS.get(name);
 		if (concern)
 			return {

@@ -75,9 +75,12 @@ Word, Excel or Visio parity or lossless export.
 `xlsx_set_cells`, `xlsx_propose_edits` and `xlsx_apply_proposal` (schema version 2) refuse a
 formula, in a cell or a defined name, that can reach outside the workbook (`WEBSERVICE`,
 `FILTERXML`, `HYPERLINK`, `IMAGE`, `RTD`, `CALL`, `REGISTER`, `STOCKHISTORY`, the `CUBE`
-functions, `PY` and the import functions of other spreadsheet applications), sends cell data to an
-AI service (`COPILOT`, `TRANSLATE`, `DETECTLANGUAGE`) or refers to another workbook or a file
-path, and one the formula parser cannot read (a DDE link, for example). The check reads the
+functions, `PY` and the import functions of other spreadsheet applications), calls an XLL add-in
+function (`_xll.Name`), evaluates text as a formula or runs code, DDE or file access through the
+Excel 4.0 macro functions a defined name can call (`EVALUATE`, `EXEC`, `RUN`, `INITIATE`,
+`FOPEN`, `FWRITE` and similar), sends cell data to an AI service (`COPILOT`, `TRANSLATE`,
+`DETECTLANGUAGE`) or refers to another workbook or a file path, and one the formula parser cannot
+read (a DDE link, for example). The check reads the
 formula with the core's parser (`formulaPolicyIssue` in `ooxml-core/xlsx`), so a function is found
 wherever its name appears: called, passed by name to `MAP`, `LET` or `LAMBDA`, or written with a
 storage prefix such as `_xlfn._xlws.`. Text inside a string literal is never a match. The same

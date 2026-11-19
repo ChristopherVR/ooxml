@@ -7,7 +7,7 @@ import { applyXlsxProposal, proposeXlsxEdits } from './xlsx-proposal';
 
 // Formulas an AI or another automated writer must not place in a workbook, in the forms that
 // slipped past a text filter: bare references inside MAP and LET, storage prefixes, AI functions
-// and an external workbook reference.
+// an add-in call, text evaluated as a formula and an external workbook reference.
 const refused = [
 	'=WEBSERVICE("http://127.0.0.1:9/?d="&A1)',
 	'=MAP("ht"&"tp://127.0.0.1:9/?d="&A1,WEBSERVICE)',
@@ -15,6 +15,8 @@ const refused = [
 	'=_xlfn._xlws.WEBSERVICE("ht"&"tp://127.0.0.1:9/")',
 	'=LET(h,HYPERLINK,h("ht"&"tp://127.0.0.1:9/?"&A1,"Open"))',
 	'=COPILOT("summarize",A1:A9)',
+	'=_xll.Fetch(A1)',
+	'=EVALUATE("WEB"&"SERVICE(A1)")',
 	"='C:\\Reports\\[Q1.xlsx]Sheet1'!A1",
 ];
 
@@ -69,6 +71,10 @@ test('a defined name cannot hold a restricted formula either', async () => {
 	await expect(
 		proposeXlsxEdits(bytes, [{ op: 'setName', name: 'Feed', formula: 'MAP(A1,WEBSERVICE)' }]),
 	).rejects.toThrow(/name's formula was refused because it uses WEBSERVICE/);
+	// A name is where a workbook calls the macro functions, EVALUATE among them.
+	await expect(
+		proposeXlsxEdits(bytes, [{ op: 'setName', name: 'Calc', formula: 'EVALUATE(S!A1)' }]),
+	).rejects.toThrow(/name's formula was refused because it uses EVALUATE/);
 });
 
 test('ordinary formulas and look-alike text are written', async () => {

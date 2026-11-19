@@ -26,6 +26,18 @@ describe('formulaPolicyIssue', () => {
 		['=TRANSLATE(A1,"en","fr")', 'ai-function', 'TRANSLATE'],
 		['=DETECTLANGUAGE(A1)', 'ai-function', 'DETECTLANGUAGE'],
 		['=IF(A1>0,MAP(A1:A2,LAMBDA(x,COPILOT(x))),0)', 'ai-function', 'COPILOT'],
+		// Text evaluated as a formula, and the macro functions a defined name can call.
+		['=EVALUATE("WEB"&"SERVICE(A1)")', 'external-function', 'EVALUATE'],
+		['=_xlfn.evaluate(A1)', 'external-function', 'EVALUATE'],
+		['=LET(e,EVALUATE,e(A1))', 'external-function', 'EVALUATE'],
+		['=EXEC("program")', 'external-function', 'EXEC'],
+		['=FOPEN("data.txt")', 'external-function', 'FOPEN'],
+		['=INITIATE("app","topic")', 'external-function', 'INITIATE'],
+		// XLL add-in functions, called or passed by name, in any case or storage form.
+		['=_xll.Fetch(A1)', 'external-function', '_xll.Fetch'],
+		['=_XLL.Contoso.Lookup(A1)', 'external-function', '_XLL.Contoso.Lookup'],
+		['=MAP(A1:A2,_xll.Fetch)', 'external-function', '_xll.Fetch'],
+		['=_xlfn._xll.Fetch(1)', 'external-function', '_xlfn._xll.Fetch'],
 	])('%s uses a restricted function', (formula, concern, name) => {
 		expect(formulaPolicyIssue(formula)).toMatchObject({ concern, name });
 	});
@@ -59,6 +71,8 @@ describe('formulaPolicyIssue', () => {
 		'=LET(rate,0.2,A1*rate)',
 		'=MYIMAGE(A1)',
 		'=Revenue*2',
+		'="_xll.Fetch(A1)"&EVALUATE_RATE',
+		'=INDIRECT("Sheet2!A"&B1)',
 	])('%s is ordinary calculation', (formula) => {
 		expect(formulaPolicyIssue(formula)).toBeNull();
 	});
