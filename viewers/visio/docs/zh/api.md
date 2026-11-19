@@ -32,6 +32,7 @@ viewer.destroy(); // idempotent; later commands reject
 - `canEdit`（布尔值）是编辑权限。完整查看器默认可编辑，`canEdit: false` 使其只读；[构建模块](/building-blocks)在宿主传入 `true` 之前是只读的。没有包字节的图纸（作为 `document` 传入的模型、旧版 `.vsd`）无论 `canEdit` 取何值都是只读的。
 - `document-change` 携带 `{ document, dirty, kind }`。`kind` 对本窗口自己的更改为 `edit`、`undo` 或 `redo`，应用协作者的更改时为 `remote`，`markClean()` 之后为 `save`。
 - `markClean()`（位于 `viewer.controller` 和构建模块上）声明当前内容已保存。自行保存 `exportVsdx()` 结果的宿主在保存后调用它：`edit.dirty` 变为 `false`，触发一次 `kind` 为 `save` 的 `document-change`，之后的编辑和撤销步骤以该点为基准计算。对无法回存的图纸，它不执行任何操作。
+- 交互式缩放期间（Ctrl+滚轮、双指缩放、缩放滑块、+ 和 - 键），绘图以预览方式缩放；当输入暂停 300 毫秒、手势结束，或指针按下或滚动需要已渲染的页面时，才应用缩放。此时触发 `zoom-change`（新的缩放值），每个手势一次，值为手势结束时的缩放；在此之前，`zoom` 属性和控制器状态仍是手势开始时的缩放，最多比用户看到的滞后 300 毫秒。
 - `collaboration`（`VisioCollaborationOptions | null`）在设置期间于房间中共享已打开的图纸。共享开始或结束，以及状态、同步或参与者发生变化时，`collaboration-change` 会携带一个 `CollaborationState`。在元素上（句柄的 `viewer.element`），`collaborationState` 读取当前状态，`reconnectCollaboration()` 和 `stopCollaboration()` 对其起作用。参见[协作](/zh/collaboration)。
 
 ## 选择形状 {#select-shapes}

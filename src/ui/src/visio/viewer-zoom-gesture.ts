@@ -98,7 +98,10 @@ export function settledOrigin(
  * those the immediate zoom reached.
  */
 export class ViewerZoomGesture {
-	/** Shows the previewed zoom elsewhere (the status bar's zoom slider). */
+	/**
+	 * Shows the previewed zoom elsewhere (the status bar's zoom slider) and moves what is drawn
+	 * outside the paper with it, after each preview frame.
+	 */
 	onPreview: ((zoom: number) => void) | undefined;
 	#gesture: Gesture | undefined;
 	#frame = 0;
@@ -171,7 +174,7 @@ export class ViewerZoomGesture {
 		const Abort = this.viewport.ownerDocument.defaultView?.AbortController ?? AbortController;
 		const events = new Abort();
 		// Pointer input works on the rendered page, so it settles the zoom first.
-		this.viewport.addEventListener('pointerdown', () => this.settle(), {
+		this.viewport.addEventListener('pointerdown', (event) => this.#press(event), {
 			signal: events.signal,
 			capture: true,
 		});
@@ -180,6 +183,23 @@ export class ViewerZoomGesture {
 			unsubscribe();
 			this.#end();
 		};
+	}
+	/**
+	 * Settles a pending zoom before a press reaches the page. Rendering can replace the element
+	 * pressed (a selection handle), so the press then goes to the element now under the pointer:
+	 * the preview showed the page where it settles, so that is the same handle or shape.
+	 */
+	#press(event: PointerEvent): void {
+		if (!this.#gesture) return;
+		const pressed = event.composedPath()[0] as Node | undefined;
+		this.settle();
+		if (!pressed || pressed.isConnected) return;
+		const root = this.viewport.getRootNode() as Document | ShadowRoot;
+		const now = root.elementFromPoint?.(event.clientX, event.clientY);
+		const View = this.viewport.ownerDocument.defaultView;
+		if (!now || !this.viewport.contains(now) || !View?.PointerEvent) return;
+		event.stopImmediatePropagation();
+		if (!now.dispatchEvent(new View.PointerEvent(event.type, event))) event.preventDefault();
 	}
 	#start(): Gesture | undefined {
 		const paper = this.viewport.querySelector<SVGSVGElement>('svg.paper');

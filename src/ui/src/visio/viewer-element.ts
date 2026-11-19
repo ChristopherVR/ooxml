@@ -367,7 +367,11 @@ export class VisioViewerElement extends BaseElement {
 		);
 		this.#chrome = new ViewerChrome(this.#root, this.controller);
 		const zoom = this.#pointer.zoom;
-		zoom.onPreview = (value) => (this.#zoomSlider.value = Math.round(value * 100));
+		zoom.onPreview = (value) => {
+			this.#zoomSlider.value = Math.round(value * 100);
+			// The rotation handle sits over the drawing window, not on the scaled paper.
+			this.#rotationHandle.render(this.controller.state);
+		};
 		this.#panZoom = new ViewerPanZoom(this.#root, this.#viewport, this.controller, zoom, (open) =>
 			this.#root.querySelector('[command="pan-zoom"]')?.setAttribute('checked', String(open)),
 		);

@@ -123,6 +123,35 @@ describe('interactive zoom', () => {
 		);
 		viewer.destroy();
 	});
+
+	it('gives a press on a handle the settled render replaced to the handle now under the pointer', () => {
+		const { viewer, root, viewport, paper, wheel } = laidOut();
+		// A selection handle: drawn again, as a new element, whenever the zoom changes.
+		const draw = () =>
+			paper().appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'circle'));
+		let handle = draw();
+		viewer.controller.subscribe(() => {
+			handle.remove();
+			handle = draw();
+		});
+		Object.defineProperty(root, 'elementFromPoint', { configurable: true, value: () => handle });
+		const presses: [EventTarget | null, number][] = [];
+		viewport.addEventListener(
+			'pointerdown',
+			(event) => presses.push([event.target, event.pointerId]),
+			{ capture: true },
+		);
+		wheel(-120);
+		vi.advanceTimersByTime(16);
+		const pressed = handle;
+		pressed.dispatchEvent(
+			new PointerEvent('pointerdown', { bubbles: true, composed: true, pointerId: 3 }),
+		);
+		expect(viewer.controller.state.zoom).toBeCloseTo(1.1);
+		expect(handle).not.toBe(pressed);
+		expect(presses).toEqual([[handle, 3]]);
+		viewer.destroy();
+	});
 });
 
 describe('zoom preview geometry', () => {

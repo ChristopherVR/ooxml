@@ -61,6 +61,12 @@ The callback map uses `document-load`, `document-change` (`{ document, dirty, ki
 `load(File | Blob | Uint8Array | ArrayBuffer)` handle; `document` is not a file URL.
 Provide a height for the viewer host. Mount and load files in the browser.
 
+During an interactive zoom (Ctrl+wheel, a pinch, the zoom slider, the + and - keys) the drawing is
+scaled as a preview, and the zoom is applied once input pauses for 300 ms, the gesture ends, or a
+pointer press or scroll needs the rendered page. `zoom-change` fires then, once per gesture, with
+the zoom the gesture ended at; until then the `zoom` property and the controller state still hold
+the zoom the gesture started from, up to 300 ms behind what the user sees.
+
 The handle supports `fit()`, `replacePlainText(pageId, shapeId, text)`,
 `applyEdits(edits)`, `undo()`, `redo()` and `exportVsdx()`.
 `exportVsdx()` returns `{ bytes, dirty, diagnostics }`; saving or downloading those
