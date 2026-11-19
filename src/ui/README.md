@@ -428,6 +428,12 @@ Override any token on `:root` or on any container to retheme or resize the suite
   it under `color-scheme: dark`), `--office-teams-brand-ink` (the same for the Teams brand)
   and `--office-control-border` (form control boundaries, at least 3:1; decorative dividers keep
   `--office-border`). `contrastRatio` and `readableTextColor` in `ooxml-core/color` check a pair;
+- colour scheme: `--office-color-scheme` (`light` by default, `dark` in the theme's dark scopes)
+  is the scheme as a value. The Word, Excel and Visio editors set their own `color-scheme` from
+  it, so the accent ink inside them is read with the scheme of the theme rather than of the page.
+  A page that sets only CSS `color-scheme: dark` on a container therefore gets light editors in
+  it; set `--office-color-scheme: dark` there as well, or use `data-office-theme="dark"`, which
+  sets both;
 - document canvas: `--office-canvas-gridline` (Excel gridlines, `#e1e1e1`) and
   `--office-canvas-link` (hyperlinks on paper, `#0563c1`). Themes never remap these, so a theme
   cannot change how a document looks. In forced-colours mode Word's paper and Excel's sheet
