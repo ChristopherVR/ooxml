@@ -1,3 +1,4 @@
+import { activateModalFocus } from 'ooxml-ui/pptx';
 import type { ViewerDialogRegionId } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
@@ -60,22 +61,18 @@ export function createParityDialogShell(
 	dialog.append(header, body, footer);
 	doc.body.append(backdrop, dialog);
 	let region: RegionHandle | null = null;
+	let releaseFocus = (): void => {};
 	const close = ownOverlay(binding?.regions, (): void => {
-		doc.removeEventListener('keydown', onKeyDown);
 		region?.destroy();
 		region = null;
 		backdrop.remove();
 		dialog.remove();
+		releaseFocus();
 	});
-	const onKeyDown = (event: KeyboardEvent): void => {
-		if (event.key === 'Escape') {
-			close();
-		}
-	};
-	doc.addEventListener('keydown', onKeyDown);
 	backdrop.addEventListener('click', close);
 	closeButton.addEventListener('click', close);
-	queueMicrotask(() => closeButton.focus());
+	// Focus goes in and stays in, Escape closes, and focus returns to the opener.
+	releaseFocus = activateModalFocus(dialog, { initialFocus: closeButton, onEscape: close });
 	// The frame (backdrop, title, close button, Escape) stays; the host fills the body.
 	region = binding?.region ? binding.regions.mount(binding.region, dialog, { close }) : null;
 	if (region) {

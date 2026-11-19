@@ -43,7 +43,8 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 		abort = null,
 		room = null;
 	root.classList.add('chat');
-	root.innerHTML = `<div class="chat-thread" id="${prefix}-messages" aria-live="polite"></div>
+	root.innerHTML = `<div class="chat-thread" id="${prefix}-messages" role="group" aria-label="Conversation"></div>
+<div class="sr-only" id="${prefix}-reply-status" role="status"></div>
 <div class="chat-people" id="${prefix}-people" hidden></div>
 <form class="chat-composer" id="${prefix}-form">
 	<div class="chat-attachments" id="${prefix}-scope"></div>
@@ -57,6 +58,7 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 	</div>
 </form>`;
 	const thread = $(`${prefix}-messages`);
+	const replyStatus = $(`${prefix}-reply-status`);
 	const input = $(`${prefix}-input`);
 	const state = $(`${prefix}-state`);
 	const showModel = () => (state.textContent = connectionLabel());
@@ -192,6 +194,7 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 				people: $(`${prefix}-people`),
 				current: () => conversation === convo,
 				busy: () => Boolean(abort),
+				announce: (text) => (replyStatus.textContent = text),
 				changed: () => {
 					render();
 					onChange?.(convo);
@@ -297,6 +300,9 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 		const content = node.querySelector('.md');
 		content.innerHTML = '<span class="chat-typing"><i></i><i></i><i></i></span>';
 		abort = new AbortController();
+		// A reply is announced when it starts and when it ends, never word by word.
+		thread.setAttribute('aria-busy', 'true');
+		replyStatus.textContent = 'Assistant is replying';
 		$(`${prefix}-send`).hidden = true;
 		$(`${prefix}-stop`).hidden = false;
 		let partial = '',
@@ -372,6 +378,12 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 		} finally {
 			cancelAnimationFrame(frame);
 			shared?.setActivity('idle');
+			replyStatus.textContent = message.error
+				? 'Assistant could not reply'
+				: abort.signal.aborted
+					? 'Reply stopped'
+					: 'Assistant replied';
+			thread.removeAttribute('aria-busy');
 			abort = null;
 			$(`${prefix}-send`).hidden = false;
 			$(`${prefix}-stop`).hidden = true;

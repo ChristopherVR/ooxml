@@ -50,6 +50,7 @@ import {
 	createPlainNotesSegments,
 	defaultRichEnabled,
 	handleEditorAnchorClick,
+	handleNotesFieldKey,
 	insertHyperlinkAtSelection,
 	normalizeNotesLinkUrl,
 	readEditorSegments,
@@ -223,16 +224,7 @@ export class NotesPanelComponent {
 	}
 
 	onRichKeydown(event: KeyboardEvent): void {
-		event.stopPropagation();
-		if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
-			this.emitNow(this.draftText);
-			this.richEditor()?.nativeElement.blur();
-			return;
-		}
-		if (event.key === 'Tab') {
-			event.preventDefault();
-			this.paragraphCommand(event.shiftKey ? 'outdent' : 'indent');
-		}
+		handleNotesFieldKey(event, () => this.emitNow(this.draftText));
 	}
 
 	onEditorClick(event: MouseEvent): void {
@@ -255,6 +247,10 @@ export class NotesPanelComponent {
 	}
 
 	/* --- Plain textarea --- */
+
+	onPlainKeydown(event: KeyboardEvent): void {
+		handleNotesFieldKey(event);
+	}
 
 	onPlainCommit(event: Event): void {
 		const value = (event.target as HTMLTextAreaElement).value;

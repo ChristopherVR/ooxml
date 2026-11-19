@@ -45,3 +45,4 @@ export {
 	handleEditorAnchorClick,
 } from './notes-editor';
 export { buildNotesPrintHtml } from './notes-print';
+export { handleNotesFieldKey } from './notes-keys';

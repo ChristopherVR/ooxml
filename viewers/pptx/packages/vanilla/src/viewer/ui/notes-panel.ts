@@ -4,6 +4,7 @@ import {
 	buildNotesPrintHtml,
 	createPlainNotesSegments,
 	defaultRichEnabled,
+	handleNotesFieldKey,
 	insertHyperlinkAtSelection,
 	registerPptxWebControls,
 	readEditorSegments,
@@ -220,6 +221,8 @@ export function createNotesPanel(
 	textarea.addEventListener('change', commit);
 	textarea.addEventListener('blur', commit);
 	richEditor.addEventListener('blur', commitRich);
+	textarea.addEventListener('keydown', (event) => handleNotesFieldKey(event));
+	richEditor.addEventListener('keydown', (event) => handleNotesFieldKey(event, commitRich));
 
 	const applyExpanded = (): void => {
 		el.dataset.collapsed = expanded ? 'false' : 'true';

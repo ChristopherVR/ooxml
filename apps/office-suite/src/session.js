@@ -1,18 +1,27 @@
 import { replaceEmbeddedPackage } from 'ooxml-core/opc';
 import { mountEditor } from './editors.js';
 import { cloudReadOnly } from './cloud-files.js';
+import { isLocked, lockInput, takeComposed } from './session-lock.js';
+import { deepActive, focusPlace, holds, returnFocus } from './focus-place.js';
+import { displayLanguage, onSettings } from './settings.js';
 
 /** One live editor per document id. Save operations are serialized per session. */
 export class SuiteSessions {
 	constructor(store, host, update, command) {
 		Object.assign(this, { store, host, update, command });
 		this.sessions = new Map();
+		// The editors show the display language, whatever the workspace around them is written in.
+		onSettings((_settings, keys) => {
+			if (!keys.includes('locale')) return;
+			for (const { node } of this.sessions.values()) Object.assign(node, displayLanguage());
+		});
 	}
 	async open(doc) {
 		if (this.sessions.has(doc.id)) return this.sessions.get(doc.id).ready;
 		const node = document.createElement('section');
 		node.className = 'document-host';
 		node.setAttribute('aria-label', doc.name);
+		Object.assign(node, displayLanguage());
 		this.host.append(node);
 		const session = { doc, node, version: 0, saved: 0, loading: true, pending: Promise.resolve() };
 		this.sessions.set(doc.id, session);
@@ -168,16 +177,31 @@ export class SuiteSessions {
 			unlock();
 		}
 	}
+	/** Refuse input to these documents until the returned function runs; focus stays put. */
 	lock(ids) {
-		const nodes = ids.map((id) => this.sessions.get(id)?.node).filter(Boolean);
-		const states = nodes.map((node) => node.inert);
-		nodes.forEach((node) => {
-			node.inert = true;
-		});
+		const locked = ids.map((id) => this.sessions.get(id)).filter(Boolean);
+		const unlocks = locked.map((s) => lockInput(s.node));
 		return () =>
-			nodes.forEach((node, index) => {
-				node.inert = states[index];
+			locked.forEach((s, index) => {
+				if (unlocks[index]()) this.settleComposed(s);
 			});
+	}
+	/**
+	 * Accounts for what an input method wrote while the document was locked. Text a reload threw
+	 * away is typed again where the caret is; text still in the editor is an unsaved edit, so the
+	 * tab shows it and the next save keeps it.
+	 */
+	settleComposed(s) {
+		const lost = s.lostComposition;
+		s.lostComposition = '';
+		if (lost) {
+			if (!holds(s.node, deepActive())) s.editor.focus?.();
+			if (holds(s.node, deepActive())) document.execCommand('insertText', false, lost);
+		}
+		if (takeComposed(s.node)) {
+			s.version++;
+			this.update();
+		}
 	}
 	async reload(doc) {
 		const s = this.sessions.get(doc.id);
@@ -193,9 +217,16 @@ export class SuiteSessions {
 						doc.bytes.some((value, i) => value !== doc.cloud.baseline[i]),
 				},
 			};
+		// The user stays on the same cells, caret, slide or page, and keeps keyboard focus.
+		const place = focusPlace(s.node);
+		const back = s.editor.keep?.();
 		s.loading = true;
 		try {
 			await s.editor.load(doc.bytes);
+			back?.(Boolean(place));
+			if (place && !returnFocus(s.node, place)) s.editor.focus?.();
+			// The new content lacks what an input method wrote during the lock: type it again.
+			s.lostComposition = (s.lostComposition ?? '') + takeComposed(s.node);
 			s.doc = doc;
 			s.version = 0;
 			s.saved = 0;
@@ -204,6 +235,7 @@ export class SuiteSessions {
 		} finally {
 			s.loading = false;
 		}
+		if (!isLocked(s.node)) this.settleComposed(s);
 	}
 	/** Moves a tab to `index` among the open documents; tab order is the map's order. */
 	move(id, index) {

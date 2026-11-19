@@ -408,24 +408,52 @@ describe('mapEditorKey clear formatting', () => {
 });
 
 describe('mapEditorKey selection cycling (Tab)', () => {
-	it('maps Tab and Shift+Tab when nothing is being typed into', () => {
-		expect(mapEditorKey(press('Tab')).action).toBe('cycleSelectionNext');
-		expect(mapEditorKey(press('Tab', { shiftKey: true })).action).toBe('cycleSelectionPrev');
+	const INSIDE = { slideFocus: 'objects' } as const;
+
+	it('maps Tab and Shift+Tab inside the slide', () => {
+		expect(mapEditorKey(press('Tab'), INSIDE).action).toBe('cycleSelectionNext');
+		expect(mapEditorKey(press('Tab', { shiftKey: true }), INSIDE).action).toBe(
+			'cycleSelectionPrev',
+		);
 	});
 
 	it('cycles with or without an existing selection', () => {
-		expect(mapEditorKey(press('Tab'), SELECTED).action).toBe('cycleSelectionNext');
+		expect(mapEditorKey(press('Tab'), { ...SELECTED, ...INSIDE }).action).toBe(
+			'cycleSelectionNext',
+		);
 	});
 
 	it('leaves Ctrl+Tab and Cmd+Tab to the browser/OS tab switcher', () => {
-		expect(mapEditorKey(press('Tab', { ctrlKey: true })).action).toBeNull();
-		expect(mapEditorKey(press('Tab', { metaKey: true })).action).toBeNull();
+		expect(mapEditorKey(press('Tab', { ctrlKey: true }), INSIDE).action).toBeNull();
+		expect(mapEditorKey(press('Tab', { metaKey: true }), INSIDE).action).toBeNull();
 	});
 
 	it('stands down while editing text, drawing, or in a foreign text field', () => {
-		expect(mapEditorKey(press('Tab'), { isEditingText: true }).action).toBeNull();
-		expect(mapEditorKey(press('Tab'), { isDrawing: true }).action).toBeNull();
-		expect(mapEditorKey(press('Tab'), { isTextInputTarget: true }).action).toBeNull();
+		expect(mapEditorKey(press('Tab'), { ...INSIDE, isEditingText: true }).action).toBeNull();
+		expect(mapEditorKey(press('Tab'), { ...INSIDE, isDrawing: true }).action).toBeNull();
+		expect(mapEditorKey(press('Tab'), { ...INSIDE, isTextInputTarget: true }).action).toBeNull();
+	});
+});
+
+describe('mapEditorKey Enter on the slide', () => {
+	it('goes in from the slide pane and edits the selected object once inside', () => {
+		expect(mapEditorKey(press('Enter'), { slideFocus: 'pane' }).action).toBe('cycleSelectionNext');
+		expect(mapEditorKey(press('Enter'), { ...SELECTED, slideFocus: 'objects' }).action).toBe(
+			'editText',
+		);
+		expect(mapEditorKey(press('Enter'), { slideFocus: 'objects' }).action).toBeNull();
+	});
+
+	it('leaves Enter alone outside the slide and while typing', () => {
+		expect(mapEditorKey(press('Enter'), SELECTED).action).toBeNull();
+		expect(
+			mapEditorKey(press('Enter'), { ...SELECTED, slideFocus: 'objects', isEditingText: true })
+				.action,
+		).toBeNull();
+		expect(
+			mapEditorKey(press('Enter', { shiftKey: true }), { ...SELECTED, slideFocus: 'objects' })
+				.action,
+		).toBeNull();
 	});
 });
 

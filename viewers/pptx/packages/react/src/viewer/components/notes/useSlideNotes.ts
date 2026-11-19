@@ -1,4 +1,4 @@
-import { defaultRichEnabled } from 'ooxml-ui/pptx';
+import { defaultRichEnabled, handleNotesFieldKey } from 'ooxml-ui/pptx';
 import type { PptxSlide, PptxTextStyleLevels, TextSegment } from 'pptx-viewer-core';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -149,11 +149,10 @@ export function useSlideNotes({
 
 	const handleKeyDownPlain = useCallback(
 		(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-			e.stopPropagation();
-			if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+			handleNotesFieldKey(e.nativeEvent, () => {
 				flush(draft, draftSegments);
 				onToggle();
-			}
+			});
 		},
 		[draft, draftSegments, flush, onToggle],
 	);
@@ -239,22 +238,12 @@ export function useSlideNotes({
 
 	const handleKeyDownRich = useCallback(
 		(e: React.KeyboardEvent<HTMLDivElement>) => {
-			e.stopPropagation();
-			if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+			handleNotesFieldKey(e.nativeEvent, () => {
 				flush(draft, draftSegments);
 				onToggle();
-				return;
-			}
-			if (e.key === 'Tab') {
-				e.preventDefault();
-				if (e.shiftKey) {
-					handleOutdent();
-				} else {
-					handleIndent();
-				}
-			}
+			});
 		},
-		[draft, draftSegments, flush, onToggle, handleIndent, handleOutdent],
+		[draft, draftSegments, flush, onToggle],
 	);
 
 	const handleInsertLink = useCallback(

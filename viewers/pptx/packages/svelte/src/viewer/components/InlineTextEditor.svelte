@@ -20,6 +20,7 @@
 		mapInlineEditorChord,
 		markInsertedParagraph,
 		readListActivationSelection,
+		restoreEditorKeyboardFocus,
 		restoreInlineListBodySelection,
 		placeCaretAt,
 		seedPlainInlineText,
@@ -140,6 +141,10 @@
 			commitText = snapshot.text;
 		}
 		closed = true;
+		// Back to the slide while the editor still has its viewer ancestor, as vanilla does.
+		if (el?.contains(document.activeElement)) {
+			restoreEditorKeyboardFocus(el);
+		}
 		if (commitText !== null && (snapshot ? buildInlineTextCommitPatch(element, commitText, snapshot) : commitText !== initialText)) {
 			oncommit(commitText, snapshot);
 		}

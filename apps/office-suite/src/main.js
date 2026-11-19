@@ -129,18 +129,23 @@ function renderTabs() {
 	$('tabs').hidden = !teamsTabOpen && !chatTabOpen && !sessions.sessions.size;
 	$('tabs').innerHTML =
 		(chatTabOpen
-			? `<button role="tab" aria-selected="${view === 'chat'}" data-chat>${icon('spark')}Chat</button>`
+			? `<button role="tab" id="tab-chat" aria-selected="${view === 'chat'}" data-chat>${icon('spark')}Chat</button>`
 			: '') +
-		`<button role="tab" aria-selected="${view === 'home'}" data-home>Home</button>` +
+		`<button role="tab" id="tab-home" aria-selected="${view === 'home'}" data-home>Home</button>` +
 		(teamsTabOpen
-			? `<button role="tab" aria-selected="${view === 'teams'}" data-teams>Teams</button>`
+			? `<button role="tab" id="tab-teams" aria-selected="${view === 'teams'}" data-teams>Teams</button>`
 			: '') +
 		[...sessions.sessions.values()]
 			.map(
 				(s) =>
-					`<span class="file-tab" draggable="true" data-tab="${s.doc.id}" title="Drag to reorder, or onto a chat to attach it"><button role="tab" aria-selected="${s.doc.id === active && view === 'editor'}" data-open="${s.doc.id}">${badge(s.doc.kind)}<span class="tab-name">${escape(s.doc.name)}</span>${sessions.isDirty(s.doc.id) ? ' •' : ''}</button><button data-close="${s.doc.id}" aria-label="Close ${escape(s.doc.name)}">×</button></span>`,
+					`<span class="file-tab" draggable="true" data-tab="${s.doc.id}" title="Drag to reorder, or onto a chat to attach it"><button role="tab" id="tab-${s.doc.id}" aria-selected="${s.doc.id === active && view === 'editor'}" data-open="${s.doc.id}">${badge(s.doc.kind)}<span class="tab-name">${escape(s.doc.name)}</span>${sessions.isDirty(s.doc.id) ? ' •' : ''}</button><button data-close="${s.doc.id}" aria-label="Close ${escape(s.doc.name)}">×</button></span>`,
 			)
 			.join('');
+	// The tabs sit beside their close buttons, which a tablist may not contain, so the list owns them.
+	$('tabs-list').setAttribute(
+		'aria-owns',
+		[...$('tabs').querySelectorAll('[role=tab]')].map((tab) => tab.id).join(' '),
+	);
 	const activeSession = sessions.sessions.get(active);
 	const activeDoc = activeSession?.doc;
 	$('save').disabled = !activeSession || activeSession.cloudReadOnly;
@@ -529,6 +534,7 @@ document.addEventListener('keydown', (event) => {
 	// "/" focuses the search from anywhere in the shell, as the hint beside it says.
 	if (
 		event.key === '/' &&
+		settings().searchShortcut &&
 		!event.ctrlKey &&
 		!event.metaKey &&
 		!event.altKey &&
