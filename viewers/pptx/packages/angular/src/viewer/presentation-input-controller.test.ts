@@ -132,7 +132,26 @@ describe('presentationInputController show-runner verbs', () => {
 		expect(deps.navigator.navigate).not.toHaveBeenCalled();
 	});
 
-	it('openFile opens a safe target in a new tab', () => {
+	it('openFile opens a web target in a new tab', () => {
+		const slide = slideWithAction({
+			action: 'ppaction://hlinkfile',
+			url: 'https://example.test/report.pdf',
+		});
+		const openSpy = vi.spyOn(window, 'open').mockReturnValue(null);
+		const { controller } = makeController(slide);
+		controller.handleBodyClick({
+			button: 0,
+			target: stageClickTarget('el-1'),
+		} as unknown as MouseEvent);
+		expect(openSpy).toHaveBeenCalledWith(
+			'https://example.test/report.pdf',
+			'_blank',
+			'noopener,noreferrer',
+		);
+		openSpy.mockRestore();
+	});
+
+	it('openFile leaves a file: target in the deck without opening it', () => {
 		const slide = slideWithAction({ action: 'ppaction://hlinkfile', url: 'file:///report.pdf' });
 		const openSpy = vi.spyOn(window, 'open').mockReturnValue(null);
 		const { controller } = makeController(slide);
@@ -140,7 +159,7 @@ describe('presentationInputController show-runner verbs', () => {
 			button: 0,
 			target: stageClickTarget('el-1'),
 		} as unknown as MouseEvent);
-		expect(openSpy).toHaveBeenCalledWith('file:///report.pdf', '_blank', 'noopener,noreferrer');
+		expect(openSpy).not.toHaveBeenCalled();
 		openSpy.mockRestore();
 	});
 
