@@ -4,13 +4,13 @@ import type { Cell, CellValue, DrawingObject, Workbook, Worksheet } from '../mod
 import { isCellError } from '../model';
 import type { CalcEngine, CellPosition } from './deps';
 export { displayText } from '../display-text';
-import type { CalcHint, EditScope } from './history';
+import type { CalcHint, EditScope, StepStructure } from './history';
 import type { WorkbookChangeKind } from './types';
 
 export interface RunInfo {
 	sheet?: number;
 	ranges?: CellRange[];
-	structural?: boolean;
+	structural?: StepStructure;
 	/** Lets the calc engine follow this structural edit in place (see `CalcHint`). */
 	calc?: CalcHint;
 }

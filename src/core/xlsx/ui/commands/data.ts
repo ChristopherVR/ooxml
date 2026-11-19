@@ -2,7 +2,7 @@
 // and ungroup rows or columns). Sort & Filter commands live in sort-filter.ts.
 import type { Command } from '../commands';
 import { icon } from './icons';
-import { editing, rowsOf, target, wholeColumns, wholeRows } from './util';
+import { editing, hasOutlinedRow, target, wholeColumns, wholeRows } from './util';
 
 export function dataCommands(): Command[] {
 	return [
@@ -36,7 +36,7 @@ export function dataCommands(): Command[] {
 					if (mode === 'group') return true;
 					const r = t.range;
 					return (
-						rowsOf(t.ranges).some((row) => (t.ws.rowInfo.get(row)?.outlineLevel ?? 0) > 0) ||
+						hasOutlinedRow(t.ws, t.ranges) ||
 						t.ws.columns.some(
 							(c) => (c.outlineLevel ?? 0) > 0 && c.max >= r.start.col && c.min <= r.end.col,
 						)
