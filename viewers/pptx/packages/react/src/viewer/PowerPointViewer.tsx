@@ -78,7 +78,7 @@ import type { DocumentSaveReason, HistoryTheme } from 'ooxml-ui/pptx';
 import { installSvgIdScope } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSaveFormat, PptxSlide, PptxTheme } from 'pptx-viewer-core';
 import { buildThemeColorMap } from 'pptx-viewer-core';
-import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
 import {
 	THEME_CATALOG,
@@ -1364,6 +1364,9 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			selectedElementIds,
 			selectedElement,
 		});
+		// The bridge's deck load: each completed load, File > New and each room join that replaced
+		// the slides.
+		const [deckReplacements, countDeckReplacement] = useReducer((count: number) => count + 1, 0);
 		const aiBridge = useAiBridge({
 			slides,
 			activeSlideIndex,
@@ -1375,6 +1378,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			pinnedFocus: aiPanel.pinnedFocus,
 			pickedFocus: aiPanel.pickTargets.length > 0 ? aiPanel.pickTargets : null,
 			handlerRef,
+			deckLoad: loadVersion + deckReplacements,
 			sections: state.sections,
 			customShows: state.customShows,
 			setCustomShows: state.setCustomShows,
@@ -1498,6 +1502,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 									{mode !== 'present' && rootOptions.showToolbar && (
 										<ViewerToolbarSection
 											mode={mode}
+											onNewPresentation={countDeckReplacement}
 											canEdit={canEdit}
 											state={state}
 											selectedElement={selectedElement}
@@ -1955,6 +1960,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 														loadOrigin={loadOrigin}
 														livePatcher={state.livePatcher}
 														onReadOnlyChange={setCollaborationReadOnly}
+														onRoomReplacedDeck={countDeckReplacement}
 														deckSaveState={{
 															headerFooter: state.headerFooter,
 															presentationProperties: state.presentationProperties,
@@ -2071,6 +2077,7 @@ function CollaborationDocumentSync({
 	livePatcher,
 	deckSaveState,
 	onReadOnlyChange,
+	onRoomReplacedDeck,
 	history,
 }: {
 	history: CollaborationHistoryTarget;
@@ -2082,6 +2089,7 @@ function CollaborationDocumentSync({
 	loadOrigin: CollabLoadOrigin;
 	livePatcher: CollaborationLivePatcher;
 	onReadOnlyChange: (readOnly: boolean) => void;
+	onRoomReplacedDeck: () => void;
 	/**
 	 * Session-level save-option state (view properties, table styles, tags,
 	 * deck properties, ...), snapshotted fresh every render. Read through a
@@ -2103,6 +2111,7 @@ function CollaborationDocumentSync({
 		livePatcher,
 		deckSaveState,
 		onReadOnlyChange,
+		onRoomReplacedDeck,
 	});
 	return null;
 }

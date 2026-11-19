@@ -10,6 +10,7 @@ import type {
 } from 'ooxml-ui/pptx';
 import {
 	createCollaborationLivePatcher,
+	createRoomJoinTracker,
 	createSyncGate,
 	createWriteBackScheduler,
 	observeExternalCollaborationReadiness,
@@ -32,6 +33,9 @@ export class CollaborationDocument {
 	synced = $state(false);
 	/** The owner's write-back status, as the scheduler reports it (reactive). */
 	writeBack = $state<CollaborationWriteBackState | undefined>(undefined);
+	/** How many times a room's slides replaced the open deck (a join), reactive. */
+	roomJoins = $state(0);
+	#join = createRoomJoinTracker();
 	readonly #baseGate = createSyncGate(() => {
 		this.synced = true;
 		this.flush();
@@ -87,6 +91,9 @@ export class CollaborationDocument {
 					this.#adopt(slides);
 					this.#writeBack.schedule(config);
 				},
+				onRoomReplacedDeck: () => {
+					this.roomJoins += 1;
+				},
 				onReady: ({ seedEmptyRoom }) => {
 					if (seedEmptyRoom) {
 						this.#lastSynced = '';
@@ -101,6 +108,7 @@ export class CollaborationDocument {
 			return;
 		}
 		this.livePatcher.configure(config.role === 'viewer' ? null : doc, factories);
+		this.#join.attached();
 		this.#unobserve = observeRemoteSlides(doc, config, this.#remoteDeps());
 		const initial = readSlidesFromYDoc(doc);
 		if (initial.length) {
@@ -116,7 +124,7 @@ export class CollaborationDocument {
 			setLastSynced: (value: string) => {
 				this.#lastSynced = value;
 			},
-			applyRemoteSlides: (slides: PptxSlide[]) => this.#deps.applyRemoteSlides(slides),
+			applyRemoteSlides: (slides: PptxSlide[]) => this.#applyRoomSlides(slides),
 			scheduleWriteBack: (config: CollaborationConfig) => this.#writeBack.schedule(config),
 		};
 	}
@@ -124,9 +132,15 @@ export class CollaborationDocument {
 		this.#lastSynced = JSON.stringify(slides);
 		this.#applyingRemote = true;
 		try {
-			this.#deps.applyRemoteSlides(slides);
+			this.#applyRoomSlides(slides);
 		} finally {
 			this.#applyingRemote = false;
+		}
+	}
+	#applyRoomSlides(slides: PptxSlide[]): void {
+		this.#deps.applyRemoteSlides(slides);
+		if (slides.length > 0 && this.#join.adopted()) {
+			this.roomJoins += 1;
 		}
 	}
 	adoptAfterLoad(origin: CollabLoadOrigin): void {
@@ -155,6 +169,7 @@ export class CollaborationDocument {
 			return;
 		}
 		this.#lastSynced = published;
+		this.#join.wrote();
 		if (this.#config) {
 			this.#writeBack.schedule(this.#config);
 		}
@@ -173,6 +188,7 @@ export class CollaborationDocument {
 		this.#config = null;
 		this.#applyingRemote = false;
 		this.#lastSynced = '';
+		this.#join = createRoomJoinTracker();
 		this.readOnly = false;
 	}
 }

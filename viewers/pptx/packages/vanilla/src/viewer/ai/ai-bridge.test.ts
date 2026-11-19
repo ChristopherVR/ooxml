@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { EditorController } from '../editor';
 import { createDeckActions } from '../editor/editor-deck-actions';
 import type { EditActions } from '../editor/editor-edit-ops';
+import { createLoadingController } from '../loading-controller';
 import { createInitialViewerState, createStore } from '../state';
 import type { Store, ViewerState } from '../state';
 import { createVanillaAiBridge } from './ai-bridge';
@@ -307,5 +308,40 @@ describe('vanilla AI bridge read after write', () => {
 		expect(store.get().colorScheme?.accent1).toBe('#000001');
 		expect(bridge.getTheme()?.fontScheme?.majorFont?.latin).toBe('Georgia');
 		expect(pushHistory).toHaveBeenCalledOnce();
+	});
+});
+
+describe('vanilla AI bridge deck load', () => {
+	it('names each presentation load and keeps it when an edit replaces the handler', async () => {
+		const { PptxHandler } = await import('pptx-viewer-core');
+		const { handler, data } = await PptxHandler.create({ initialSlideCount: 1 });
+		const bytes = await handler.save(data.slides);
+		const store = createStore(createInitialViewerState());
+		const loader = createLoadingController({
+			options: {},
+			store,
+			getTranslator: () => (key) => key,
+			getEditor: () => undefined,
+		});
+		const bridge = createVanillaAiBridge({
+			store,
+			editor: fakeEditor(store).editor,
+			goToSlide: vi.fn(),
+			ensureEditable: vi.fn(),
+			getHandler: () => loader.getHandler(),
+			applyThemeUpdates: vi.fn(),
+		});
+		try {
+			await loader.load(bytes);
+			const first = bridge.getDeckLoad();
+			// Slide Master view commands and slide paste adopt a rebuilt handler this way.
+			loader.setHandler(handler, true);
+			bridge.applySlidesUpdate((slides) => slides.slice(0, 1), 'Edit');
+			expect(bridge.getDeckLoad()).toBe(first);
+			await loader.load(bytes);
+			expect(bridge.getDeckLoad()).not.toBe(first);
+		} finally {
+			loader.releaseLoaded();
+		}
 	});
 });

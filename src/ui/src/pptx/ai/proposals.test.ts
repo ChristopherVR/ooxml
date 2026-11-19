@@ -61,20 +61,65 @@ describe('proposal store', () => {
 		expect(store.revert('nope')).toBeFalsy();
 	});
 
-	it('drops what was staged on a deck once another one opens', () => {
-		let handler = {};
-		const bridge = { ...makeMockBridge(), getHandler: () => handler as never };
+	it('drops what was staged on a deck once another one loads, and says so', () => {
+		let load = 0;
+		const bridge = { ...makeMockBridge(), getDeckLoad: () => load };
 		const store = new ProposalStore(bridge);
 		const staged = store.stage('Add slide', addSlideUpdater);
 		const slides = bridge.getSlides();
 
-		handler = {};
+		load = 1;
 
 		expect(store.list()).toEqual([]);
+		expect(store.discarded).toBe(true);
 		expect(store.apply(staged.id)).toBeFalsy();
 		expect(store.acceptAll()).toBe(0);
 		expect(bridge.getSlides()).toBe(slides);
 		store.stage('Add slide on the new deck', addSlideUpdater);
 		expect(store.size).toBe(1);
+		expect(store.discarded).toBe(false);
+	});
+
+	it('keeps proposals applicable when an edit replaces the handler', () => {
+		let handler = {};
+		const bridge = { ...makeMockBridge(), getHandler: () => handler as never };
+		const store = new ProposalStore(bridge);
+		const staged = store.stage('Add slide', addSlideUpdater);
+		const before = bridge.getSlides().length;
+
+		handler = {};
+
+		expect(store.list().map((view) => view.id)).toEqual([staged.id]);
+		expect(store.discarded).toBe(false);
+		expect(store.apply(staged.id)).toBe(true);
+		expect(bridge.getSlides()).toHaveLength(before + 1);
+	});
+
+	it('reports nothing discarded when a load finds nothing staged', () => {
+		let load = 0;
+		const store = new ProposalStore({ ...makeMockBridge(), getDeckLoad: () => load });
+
+		load = 1;
+
+		expect(store.discarded).toBe(false);
+	});
+
+	it('tells a store rebuilt on the same bridge what a load dropped', () => {
+		let load = 0;
+		const bridge = { ...makeMockBridge(), getDeckLoad: () => load };
+		new ProposalStore(bridge).stage('Add slide', addSlideUpdater);
+
+		load = 1;
+		const rebuilt = new ProposalStore(bridge);
+
+		expect(rebuilt.list()).toEqual([]);
+		expect(rebuilt.discarded).toBe(true);
+	});
+
+	it('keeps staged proposals for a store rebuilt on the same load', () => {
+		const bridge = makeMockBridge();
+		const staged = new ProposalStore(bridge).stage('Add slide', addSlideUpdater);
+
+		expect(new ProposalStore(bridge).list().map((view) => view.id)).toEqual([staged.id]);
 	});
 });

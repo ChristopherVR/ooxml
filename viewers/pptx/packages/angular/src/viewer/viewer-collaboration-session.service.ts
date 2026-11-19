@@ -45,6 +45,8 @@ interface CollaborationSessionHost {
 	readonly getTemplateElements: () => TemplateElementsBySlideId;
 	/** Apply a remote peer's slide set to the editable deck (echo-guarded in the service). */
 	readonly applyRemoteSlides: (slides: PptxSlide[]) => void;
+	/** A joined room's slides replaced the open deck: count it as a presentation load. */
+	readonly onRoomReplacedDeck: () => void;
 	/** The editor history, so Undo and Redo reach only this user's edits in a room. */
 	readonly history: CollaborationHistoryTarget;
 	/** Current slide-canvas size (presence bounds). */
@@ -154,6 +156,7 @@ export class ViewerCollaborationSessionService {
 		return {
 			history: host.history,
 			onRemoteSlides: (slides) => host.applyRemoteSlides(slides),
+			onRoomReplacedDeck: () => host.onRoomReplacedDeck(),
 			canvasWidth: size.width,
 			canvasHeight: size.height,
 			getSourceBytes: () => host.getSourceBytes(),

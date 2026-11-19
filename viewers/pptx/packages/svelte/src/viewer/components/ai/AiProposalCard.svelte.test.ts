@@ -26,6 +26,7 @@ function fakeBridge(): PptxAiBridge & { applied: string[] } {
 		getActiveSlideIndex: () => 0,
 		getTheme: () => undefined,
 		getHandler: () => undefined,
+		getDeckLoad: () => 1,
 		goToSlide: () => undefined,
 		selectElements: () => undefined,
 		applySlidesUpdate: (_updater, label) => {

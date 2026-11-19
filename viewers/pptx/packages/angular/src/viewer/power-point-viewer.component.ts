@@ -2541,6 +2541,7 @@ export class PowerPointViewerComponent
 		getTheme: () => this.loader.theme(),
 		getFileName: () => this.fileName(),
 		getHandler: () => this.loader.getHandler(),
+		getDeckLoad: () => this.loader.deckLoad(),
 		goToSlide: (index) => this.goTo(index),
 		selectElements: (slideIndex, ids) => {
 			if (slideIndex !== this.activeSlideIndex()) {
@@ -3111,6 +3112,7 @@ export class PowerPointViewerComponent
 			shareDefaults: () => this.shareDefaults(),
 			getTemplateElements: () => this.editor.templateElementsBySlideId(),
 			applyRemoteSlides: (slides) => this.editor.applyRemoteSlides(slides),
+			onRoomReplacedDeck: () => this.loader.markDeckLoad(),
 			history: this.editor,
 			canvasSize: () => this.loader.canvasSize(),
 			getSourceBytes: () => this.fileIO.sourceBytes(),
@@ -3762,6 +3764,7 @@ export class PowerPointViewerComponent
 	protected onCreatePresentation(templateId: string): void {
 		// A new presentation is not the cloud file: it saves to the host storage again.
 		this.fileIO.clearCloudFile();
+		this.loader.markDeckLoad();
 		this.editor.setSlides(createBackstagePresentation(templateId));
 		this.activeSlideIndex.set(0);
 	}

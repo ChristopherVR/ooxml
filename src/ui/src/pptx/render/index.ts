@@ -899,6 +899,7 @@ export * from './collaboration-sync-gate';
 // Whether a freshly loaded deck yields to the room: only a bootstrap load does,
 // or opening a file mid-session silently loses it (issue: vanilla + room).
 export * from './collaboration-load-origin';
+export * from './collaboration-room-join';
 // Document-teardown listeners (pagehide / beforeunload / host postMessage) so a
 // peer whose document is destroyed (tab close, navigation, or an embedding page
 // removing the viewer iframe) leaves the room instead of lingering as a ghost

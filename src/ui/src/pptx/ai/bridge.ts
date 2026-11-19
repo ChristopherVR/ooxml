@@ -103,12 +103,16 @@ export interface PptxAiBridge {
 	getActiveSlideIndex(): number;
 	/** Return the resolved presentation theme, when available. */
 	getTheme(): PptxTheme | undefined;
+	/** Return the underlying core handler, when the binding exposes one. */
+	getHandler(): PptxHandler | undefined;
 	/**
-	 * Return the underlying core handler, when the binding exposes one. Its identity names the
-	 * open deck: return a new handler for every presentation loaded, and the same one until then.
+	 * Name the presentation load the deck comes from. Return a new value each time the binding
+	 * loads a presentation (open, reopen, File > New, recovery restore, or a collaboration join
+	 * whose room replaces the slides) and the same value through everything else: edits, slide
+	 * master and layout changes and slide paste keep it, even when they replace the handler.
 	 * Staged proposals are dropped when it changes.
 	 */
-	getHandler(): PptxHandler | undefined;
+	getDeckLoad(): number;
 
 	// ── navigation ───────────────────────────────────────────────────────────
 	/** Navigate the viewer to a slide by zero-based index. */

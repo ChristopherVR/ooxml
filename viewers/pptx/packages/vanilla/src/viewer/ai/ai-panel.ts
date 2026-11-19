@@ -53,11 +53,11 @@ export interface AiPanelDeps {
 	/** Chat-history store override for tests; defaults to the shared store. */
 	historyStore?: PptxAiChatStore;
 	/**
-	 * Called back on every viewer state change. Another deck opening drops the
-	 * staged proposals (they belong to the deck they were made on), so the panel
-	 * re-renders when the bridge's handler changed.
+	 * Called back when the bridge's deck load changes. A load drops the staged
+	 * proposals (they belong to the load they were made on), so the panel
+	 * re-renders to remove their cards and say why.
 	 */
-	subscribeViewer?(listener: () => void): () => void;
+	subscribeDeckLoad?(listener: () => void): () => void;
 }
 
 export interface AiPanel {
@@ -199,24 +199,31 @@ export async function createAiPanel(deps: AiPanelDeps): Promise<AiPanel> {
 		if (snapshot.messages.length === 0) {
 			messages.appendChild(empty);
 		}
-		renderProposals(doc, proposals, controller.proposals.list(), t, {
-			accept: (id) => {
-				// Applying a suggestion enables the canvas colour tween briefly so the
-				// edit fades in rather than snapping (proposals apply outside the loop).
-				focusController?.flashToolTarget(null);
-				controller.proposals.apply(id);
-				render(controller.getSnapshot());
+		renderProposals(
+			doc,
+			proposals,
+			controller.proposals.list(),
+			t,
+			{
+				accept: (id) => {
+					// Applying a suggestion enables the canvas colour tween briefly so the
+					// edit fades in rather than snapping (proposals apply outside the loop).
+					focusController?.flashToolTarget(null);
+					controller.proposals.apply(id);
+					render(controller.getSnapshot());
+				},
+				reject: (id) => {
+					controller.proposals.revert(id);
+					render(controller.getSnapshot());
+				},
+				acceptAll: () => {
+					focusController?.flashToolTarget(null);
+					controller.proposals.acceptAll();
+					render(controller.getSnapshot());
+				},
 			},
-			reject: (id) => {
-				controller.proposals.revert(id);
-				render(controller.getSnapshot());
-			},
-			acceptAll: () => {
-				focusController?.flashToolTarget(null);
-				controller.proposals.acceptAll();
-				render(controller.getSnapshot());
-			},
-		});
+			controller.proposals.discarded,
+		);
 		const busy = snapshot.status === 'submitted' || snapshot.status === 'streaming';
 		host.classList.toggle('is-busy', busy);
 		sendBtn.setAttribute('aria-label', t(busy ? 'pptx.ai.stop' : 'pptx.ai.send'));
@@ -271,19 +278,13 @@ export async function createAiPanel(deps: AiPanelDeps): Promise<AiPanel> {
 
 	const unsubscribe = controller.subscribe(render);
 	render(controller.getSnapshot());
-	let deck = deps.bridge.getHandler();
-	const unsubscribeViewer = deps.subscribeViewer?.(() => {
-		if (deps.bridge.getHandler() !== deck) {
-			deck = deps.bridge.getHandler();
-			render(controller.getSnapshot());
-		}
-	});
+	const unsubscribeDeckLoad = deps.subscribeDeckLoad?.(() => render(controller.getSnapshot()));
 
 	return {
 		changeAnimator: controller.changeAnimator,
 		destroy() {
 			unsubscribe();
-			unsubscribeViewer?.();
+			unsubscribeDeckLoad?.();
 			unsubscribeHistory();
 			history.destroy();
 			unsubscribeFocus?.();

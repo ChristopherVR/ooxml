@@ -141,6 +141,8 @@ export const translationsEn: Record<string, string> = {
 		'This part of the deck changed after the proposal, so it was not applied. Discard it or try again.',
 	'pptx.ai.proposalNeedsApproval': 'Needs your approval',
 	'pptx.ai.pendingChanges': 'Suggested changes ({{count}})',
+	'pptx.ai.proposalsDiscarded':
+		'Suggested changes were discarded because another presentation was loaded or the slides were replaced.',
 	'pptx.ai.moreChanges': '+{{count}} more',
 	// Canvas -> Ask AI affordances
 	'pptx.ai.askAboutElement': 'Ask AI about this',

@@ -121,6 +121,7 @@ export class CollaborationService {
 	});
 
 	private onRemoteSlides: ((slides: PptxSlide[]) => void) | null = null;
+	private onRoomReplacedDeck: (() => void) | null = null;
 	private canvasWidth = DEFAULT_CANVAS_BOUND;
 	private canvasHeight = DEFAULT_CANVAS_BOUND;
 	private getSourceBytes: (() => Uint8Array | null) | null = null;
@@ -183,6 +184,7 @@ export class CollaborationService {
 	private begin(config: CollaborationConfig): void {
 		const options = this.lastOptions;
 		this.onRemoteSlides = options.onRemoteSlides ?? null;
+		this.onRoomReplacedDeck = options.onRoomReplacedDeck ?? null;
 		this.canvasWidth = options.canvasWidth ?? DEFAULT_CANVAS_BOUND;
 		this.canvasHeight = options.canvasHeight ?? DEFAULT_CANVAS_BOUND;
 		this.getSourceBytes = options.getSourceBytes ?? null;
@@ -202,6 +204,7 @@ export class CollaborationService {
 			slideSync: this.slideSync,
 			livePatcher: this.livePatcher,
 			onRemoteSlides: this.onRemoteSlides,
+			onRoomReplacedDeck: this.onRoomReplacedDeck,
 			refreshPresence: this.refreshPresence,
 			scheduleWriteBack: () => this.scheduleWriteBack(),
 			cancelWriteBack: () => this.writeBack.cancel(),
@@ -234,6 +237,7 @@ export class CollaborationService {
 		this.session = null;
 		this.livePatcher.configure(null, null);
 		this.onRemoteSlides = null;
+		this.onRoomReplacedDeck = null;
 		this.currentConfig = null;
 		this.activeConfig.set(null);
 		this.clientId.set(null);

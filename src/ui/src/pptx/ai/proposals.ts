@@ -7,10 +7,13 @@
  * since changed is not applied: it stays listed with a conflict for the user to
  * discard or retry. Each applied proposal is one undoable history entry.
  *
- * Proposals belong to the deck they were made on. The bridge's handler is the
- * deck's identity (every binding loads a presentation into a new one), so once
- * it changes every staged proposal is dropped: none can be listed or applied
- * to another presentation.
+ * Proposals belong to the presentation load they were made on
+ * ({@link PptxAiBridge.getDeckLoad}). Editing the deck, slide masters and
+ * layouts included, keeps them; once another load replaces the deck every
+ * staged proposal is dropped, so none can be listed or applied to another
+ * presentation, and {@link ProposalStore.discarded} tells the panel to say so.
+ * Every store on one bridge shares what is staged, so a panel rebuilt on the
+ * same bridge keeps the proposals, or says that a load dropped them.
  */
 
 import type { PptxData, PptxSlide, PptxTheme } from 'ooxml-core/pptx';
@@ -107,25 +110,59 @@ function summarize(write: ProposedWrite, changes: DeckChange[]): string[] {
 	return shown.length > 0 ? shown : [write.label];
 }
 
+/** What is staged on one bridge, and the presentation load it was staged on. */
+interface Staging {
+	load: number;
+	readonly proposals: Map<string, StagedProposal>;
+	/** A load dropped staged proposals and none was staged since. */
+	dropped: boolean;
+}
+
+/**
+ * Staging belongs to the bridge, not to one store: a panel that a load
+ * re-creates builds a new store on the same bridge, and still has to say what
+ * that load dropped.
+ */
+const stagingByBridge = new WeakMap<PptxAiBridge, Staging>();
+
+function stagingOf(bridge: PptxAiBridge): Staging {
+	let staging = stagingByBridge.get(bridge);
+	if (!staging) {
+		staging = { load: bridge.getDeckLoad(), proposals: new Map(), dropped: false };
+		stagingByBridge.set(bridge, staging);
+	}
+	return staging;
+}
+
 export class ProposalStore {
-	private readonly staged = new Map<string, StagedProposal>();
-	private deck: unknown;
+	private readonly staging: Staging;
 
 	constructor(
 		private readonly bridge: PptxAiBridge,
 		private readonly animator?: AiChangeAnimator,
 	) {
-		this.deck = bridge.getHandler();
+		this.staging = stagingOf(bridge);
 	}
 
-	/** The proposals staged on the open deck; another deck's are dropped first. */
+	/** The proposals staged on the open deck; an earlier load's are dropped first. */
 	private get proposals(): Map<string, StagedProposal> {
-		const deck = this.bridge.getHandler();
-		if (deck !== this.deck) {
-			this.deck = deck;
-			this.staged.clear();
+		const staging = this.staging;
+		const load = this.bridge.getDeckLoad();
+		if (load !== staging.load) {
+			staging.load = load;
+			staging.dropped = staging.proposals.size > 0;
+			staging.proposals.clear();
 		}
-		return this.staged;
+		return staging.proposals;
+	}
+
+	/**
+	 * Whether loading another presentation (or joining a room that replaced the
+	 * slides) dropped staged proposals. It stays set until a proposal is staged
+	 * or the store is cleared, so a panel can show why its list emptied.
+	 */
+	get discarded(): boolean {
+		return this.proposals.size === 0 && this.staging.dropped;
 	}
 
 	/** Stage a computed write without touching the deck. */
@@ -141,6 +178,7 @@ export class ProposalStore {
 			changes,
 		};
 		this.proposals.set(proposal.id, proposal);
+		this.staging.dropped = false;
 		return proposal;
 	}
 
@@ -257,5 +295,6 @@ export class ProposalStore {
 	/** Drop all staged proposals without applying them. */
 	clear(): void {
 		this.proposals.clear();
+		this.staging.dropped = false;
 	}
 }

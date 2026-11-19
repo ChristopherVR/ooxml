@@ -27,6 +27,7 @@ function fakeBridge(): PptxAiBridge & { applied: string[] } {
 		getActiveSlideIndex: () => 0,
 		getTheme: () => undefined,
 		getHandler: () => undefined,
+		getDeckLoad: () => 0,
 		goToSlide: () => undefined,
 		selectElements: () => undefined,
 		applySlidesUpdate: (_updater, label) => {
@@ -129,11 +130,11 @@ describe('createAiPanel', () => {
 		expect(card?.querySelector('.pptxv-ai-proposal-label')?.textContent).toBe('Add a title');
 	});
 
-	it('stops listing the proposals once another deck opens', async () => {
+	it('drops the cards and says why once another presentation loads', async () => {
 		host = document.createElement('div');
 		document.body.appendChild(host);
-		let handler = {};
-		const bridge = { ...fakeBridge(), getHandler: () => handler as never };
+		let deckLoad = 1;
+		const bridge = { ...fakeBridge(), getDeckLoad: () => deckLoad };
 		const listeners = new Set<() => void>();
 
 		await createAiPanel({
@@ -143,20 +144,26 @@ describe('createAiPanel', () => {
 			bridge,
 			config,
 			createChat: async () => fakeController(bridge),
-			subscribeViewer: (listener) => {
+			subscribeDeckLoad: (listener) => {
 				listeners.add(listener);
 				return () => listeners.delete(listener);
 			},
 		});
 		expect(host.querySelector('.pptxv-ai-proposal')).toBeTruthy();
+		expect(host.querySelector('[data-testid="pptx-ai-proposals-discarded"]')).toBeNull();
 
-		handler = {};
+		deckLoad = 2;
 		for (const listener of listeners) {
 			listener();
 		}
 
 		expect(host.querySelector('.pptxv-ai-proposal')).toBeNull();
-		expect(host.querySelector<HTMLElement>('.pptxv-ai-proposals')?.hidden).toBeTruthy();
+		const notice = host.querySelector('[data-testid="pptx-ai-proposals-discarded"]');
+		expect(notice?.getAttribute('role')).toBe('status');
+		expect(notice?.textContent).toBe(
+			'Suggested changes were discarded because another presentation was loaded or the slides were replaced.',
+		);
+		expect(host.querySelector<HTMLElement>('.pptxv-ai-proposals')?.hidden).toBeFalsy();
 	});
 
 	it('renders a header "Chats" button that toggles the saved-chat menu', async () => {

@@ -17,6 +17,7 @@ const bridge = {
 	getActiveSlideIndex: () => 0,
 	getTheme: () => undefined,
 	getHandler: () => undefined,
+	getDeckLoad: () => 0,
 	goToSlide: () => undefined,
 	selectElements: () => undefined,
 	applySlidesUpdate: () => undefined,

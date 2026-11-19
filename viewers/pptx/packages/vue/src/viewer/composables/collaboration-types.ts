@@ -73,6 +73,8 @@ export interface UseCollaborationOptions {
 	loadVersion?: Ref<number>;
 	/** Why the last content load ran; see `shouldRoomSlidesReplaceLoad`. */
 	getLoadOrigin?: () => CollabLoadOrigin;
+	/** The room's slides replaced the open deck (a join); a peer's edit never calls it. */
+	onRoomReplacedDeck?: () => void;
 }
 
 /**

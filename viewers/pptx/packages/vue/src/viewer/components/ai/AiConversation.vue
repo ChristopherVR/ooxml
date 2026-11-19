@@ -59,6 +59,7 @@ const {
 	error,
 	isStreaming,
 	proposals,
+	proposalsDiscarded,
 	send,
 	stop,
 	clearError,
@@ -66,6 +67,7 @@ const {
 	rejectProposal,
 	acceptAllProposals,
 } = useAiConversation(useChat, props.session, props.config, {
+	deckLoad: () => props.bridge.getDeckLoad(),
 	// Live "AI as a collaborator" focus: as each tool runs, navigate to and
 	// highlight the slide / element(s) it touches so the canvas mirrors the
 	// assistant in real time (and colour edits tween while it is active).
@@ -225,6 +227,14 @@ function onAcceptAll(): void {
 				@reject="rejectProposal"
 			/>
 		</div>
+		<p
+			v-else-if="proposalsDiscarded"
+			role="status"
+			data-testid="pptx-ai-proposals-discarded"
+			class="border-t border-border bg-background px-3 py-2 text-[11px] text-muted-foreground"
+		>
+			{{ t('pptx.ai.proposalsDiscarded') }}
+		</p>
 
 		<AiComposer
 			:is-streaming="isStreaming"

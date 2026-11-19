@@ -56,6 +56,9 @@ export function useAiCluster(deps: AiClusterDeps): AiCluster {
 		getCanvasSize: () => loader.canvasSize,
 		getTheme: () => loader.presentationTheme,
 		getHandler: () => loader.handler,
+		// Every presentation load (and File > New) reseeds the editor, and a room join replaces
+		// its slides; master and layout changes and slide paste only swap the handler.
+		getDeckLoad: () => editor.seedNonce + collab.roomJoins,
 		getFileName: () => options.getFileName?.(),
 		goToSlide: (index) => viewer.goTo(index),
 		// Picks, then a pin, then the live selection: the same scope the focus

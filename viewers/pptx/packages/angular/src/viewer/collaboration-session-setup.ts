@@ -31,6 +31,8 @@ export interface ConnectOptions {
 	/** The editor history; Undo and Redo go through the room's own history while it is writable. */
 	history?: CollaborationHistoryTarget;
 	onRemoteSlides?: (slides: PptxSlide[]) => void;
+	/** The room's slides replaced the open deck: report it as a presentation load. */
+	onRoomReplacedDeck?: () => void;
 	canvasWidth?: number;
 	canvasHeight?: number;
 	getSourceBytes?: () => Uint8Array | null;
@@ -65,6 +67,7 @@ export interface ActivateSessionDeps {
 	slideSync: SlideSyncEngine;
 	livePatcher: CollaborationLivePatcher;
 	onRemoteSlides: ((slides: PptxSlide[]) => void) | null;
+	onRoomReplacedDeck: (() => void) | null;
 	/** Recompute the presence signal from awareness (bound in the service). */
 	refreshPresence: () => void;
 	/** Schedule an owner-role write-back after a doc mutation. */
@@ -94,6 +97,7 @@ export function activateSession(
 		factories: live.factories,
 		readOnly: viewer,
 		onRemoteSlides: deps.onRemoteSlides,
+		onRoomReplacedDeck: deps.onRoomReplacedDeck,
 		scheduleWriteBack: deps.scheduleWriteBack,
 	});
 

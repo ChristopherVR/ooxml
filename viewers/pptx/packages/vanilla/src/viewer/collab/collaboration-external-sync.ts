@@ -15,6 +15,8 @@ interface ExternalSyncDeps {
 	livePatcher: CollaborationLivePatcher;
 	gate: SyncGate;
 	adoptSlides(slides: PptxSlide[]): void;
+	/** The adopted room slides replaced the open deck (a join): a presentation load. */
+	onRoomReplacedDeck(): void;
 	flushLocal(): void;
 	resetBaseline(): void;
 	cancelWriteBack(): void;
@@ -40,6 +42,7 @@ export function createExternalSessionSync(
 		role: config.role,
 		sessionIntent: config.sessionIntent,
 		adoptSlides: deps.adoptSlides,
+		onRoomReplacedDeck: deps.onRoomReplacedDeck,
 		onStatus: deps.setStatus,
 		onReadOnlyChange: deps.setReadOnly,
 		onSuspend: deps.cancelWriteBack,

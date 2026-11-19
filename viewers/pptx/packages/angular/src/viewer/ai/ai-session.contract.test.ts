@@ -25,6 +25,7 @@ const bridge = {
 	getActiveSlideIndex: () => 0,
 	getTheme: () => undefined,
 	getHandler: () => undefined,
+	getDeckLoad: () => 0,
 	goToSlide: () => undefined,
 	selectElements: () => undefined,
 	applySlidesUpdate: () => undefined,
@@ -54,7 +55,8 @@ describe('angular AI session wiring', () => {
 		const service = runInInjectionContext(injector, () => new AiChatService());
 
 		service.init(bridge, { connection: { kind: 'transport', transport } });
-		await vi.waitFor(() => expect(service.state()).toBe('ready'));
+		// The first import of the chat runtime and the `ai` SDK takes more than waitFor's default second.
+		await vi.waitFor(() => expect(service.state()).toBe('ready'), { timeout: 15_000 });
 		service.send('hello');
 
 		await vi.waitFor(() => expect(requests).toHaveLength(1));
@@ -67,6 +69,17 @@ describe('angular AI session wiring', () => {
 		const card = readSource('ai-proposal-card.component.ts');
 		expect(card).toContain('pptx.ai.proposalConflict');
 		expect(card).toContain('pptx.ai.proposalNeedsApproval');
+	});
+
+	it('says the suggested changes were discarded where they were listed', () => {
+		const panel = readSource('ai-chat-panel.component.ts');
+		const notice = panel.slice(panel.indexOf('@else if (chat.discarded())'));
+		expect(notice).toMatch(
+			/^@else if \(chat\.discarded\(\)\) \{\s*<p\s+role="status"\s+data-testid="pptx-ai-proposals-discarded"[^>]*>\s*\{\{ 'pptx\.ai\.proposalsDiscarded' \| translate \}\}/u,
+		);
+		expect(panel.indexOf('@if (chat.proposals().length > 0)')).toBeLessThan(
+			panel.indexOf('@else if (chat.discarded())'),
+		);
 	});
 
 	it('offers Accept all only for changes it can apply', () => {

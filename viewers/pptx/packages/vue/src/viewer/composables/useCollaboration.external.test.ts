@@ -96,6 +96,7 @@ function mount(
 	const slides = ref(initial);
 	const loadVersion = ref(0);
 	let loadOrigin: CollabLoadOrigin = 'bootstrap';
+	const onRoomReplacedDeck = vi.fn();
 	const collab = scope.run(() =>
 		useCollaboration({
 			slides,
@@ -104,6 +105,7 @@ function mount(
 			},
 			loadVersion,
 			getLoadOrigin: () => loadOrigin,
+			onRoomReplacedDeck,
 			getSourceBytes,
 			serialize,
 		}),
@@ -119,6 +121,7 @@ function mount(
 		slides,
 		collab,
 		config,
+		onRoomReplacedDeck,
 		load: (next: PptxSlide[], origin: CollabLoadOrigin) => {
 			slides.value = next;
 			loadOrigin = origin;
@@ -311,6 +314,20 @@ describe('useCollaboration external sessions', () => {
 		await nextTick();
 		expect(m.slides.value[0].id).toBe('room');
 		expect(h.read()[0].id).toBe('room');
+	});
+
+	it('reports joining a room that replaced the open deck, not a peer edit after it', async () => {
+		const h = host([slide('room')]);
+		const m = mount(h);
+		await m.collab.start(m.config);
+		await nextTick();
+		expect(m.slides.value[0].id).toBe('room');
+		expect(m.onRoomReplacedDeck).toHaveBeenCalledOnce();
+
+		reconcileSlidesInYDoc([slide('room', 30)], h.doc, factories, 'peer');
+		await nextTick();
+		expect(m.slides.value[0].elements[0].x).toBe(30);
+		expect(m.onRoomReplacedDeck).toHaveBeenCalledOnce();
 	});
 
 	it('adopts an already-synced room before publishing and keeps the host alive on stop', async () => {

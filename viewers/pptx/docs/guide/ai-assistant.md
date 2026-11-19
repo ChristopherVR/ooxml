@@ -182,10 +182,13 @@ the same edit made by hand in that viewer, so whether Ctrl+Z reverts a document
 property change depends on the viewer. Read tools (reading slides, finding text)
 and navigation run immediately and are never staged.
 
-Proposals belong to the presentation they were made on. Opening another
-presentation discards them, and so does adding or deleting a slide master or
-layout, which rebuilds the package. Nothing the assistant wrote or staged on one
-presentation reaches the next.
+Proposals belong to the presentation they were made on. Editing the deck keeps
+them, Slide Master view commands and slide paste included, and they still apply
+afterwards. Loading a presentation discards them: opening a file (the same file
+again too), starting a new presentation, restoring a recovered version, or
+joining a collaboration session whose room replaces the slides. The panel then
+says the suggested changes were discarded.
+Nothing the assistant wrote or staged on one presentation reaches the next.
 
 `writePolicy` applies to every tool that changes the deck, theme and
 presentation-level tools included:
@@ -209,7 +212,10 @@ The viewers' bridges let each applied change read what the previous one wrote,
 even before the framework re-renders. If you implement `PptxAiBridge` yourself,
 `checkPptxAiBridgeReadsItsWrites(bridge)` from `ooxml-ui/pptx/ai/host` reports any
 read that misses a write. Run it on a throwaway deck, because it edits the deck.
-A proposal passes `applyTheme` only the theme parts it changed.
+A proposal passes `applyTheme` only the theme parts it changed. A bridge's
+`getDeckLoad()` names the presentation load: return a new value whenever your host
+loads a presentation, and the same value through every edit, even one that
+replaces the handler.
 
 The assistant's tool arguments are checked against each tool's schema before the
 tool runs. A call that does not match is returned to the model as an error and

@@ -25,6 +25,8 @@ export const translations = {
 		'Esta parte de la presentación cambió después de la propuesta, por lo que no se aplicó. Recházala o inténtalo de nuevo.',
 	'pptx.ai.proposalNeedsApproval': 'Requiere tu aprobación',
 	'pptx.ai.pendingChanges': 'Cambios pendientes ({{count}})',
+	'pptx.ai.proposalsDiscarded':
+		'Los cambios sugeridos se descartaron porque se cargó otra presentación o se reemplazaron las diapositivas.',
 	'pptx.ai.moreChanges': '+{{count}} más',
 	'pptx.ai.applied': 'Aplicado',
 	'pptx.ai.askAboutElement': 'Preguntar a la IA sobre esto',

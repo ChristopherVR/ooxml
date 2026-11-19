@@ -1,7 +1,7 @@
 import { useChat } from '@ai-sdk/vue';
 import { mount } from '@vue/test-utils';
 import type { ChatTransport } from 'ai';
-import { createAiChatSession } from 'ooxml-ui/pptx/ai';
+import { createAiChatSession, ProposalStore } from 'ooxml-ui/pptx/ai';
 import type {
 	PptxAiBridge,
 	PptxAiChatSession,
@@ -25,6 +25,7 @@ const bridge = {
 	getActiveSlideIndex: () => 0,
 	getTheme: () => undefined,
 	getHandler: () => undefined,
+	getDeckLoad: () => 0,
 	goToSlide: () => undefined,
 	selectElements: () => undefined,
 	applySlidesUpdate: () => undefined,
@@ -32,7 +33,7 @@ const bridge = {
 	applyTheme: () => undefined,
 } satisfies PptxAiBridge;
 
-function mountWithChatStub(session: PptxAiChatSession) {
+function mountWithChatStub(session: PptxAiChatSession, deckLoad: () => number = () => 0) {
 	let options: Record<string, unknown> = {};
 	const messages = ref<PptxAiUIMessage[]>([]);
 	const useChatStub = ((init: Record<string, unknown>) => {
@@ -43,12 +44,17 @@ function mountWithChatStub(session: PptxAiChatSession) {
 	mount(
 		defineComponent({
 			setup() {
-				conversation = useAiConversation(useChatStub, session, {} as PptxAiConfig);
+				conversation = useAiConversation(useChatStub, session, {} as PptxAiConfig, { deckLoad });
 				return () => h('div');
 			},
 		}),
 	);
-	return { options, messages, proposals: () => conversation?.proposals.value };
+	return {
+		options,
+		messages,
+		proposals: () => conversation?.proposals.value,
+		discarded: () => conversation?.proposalsDiscarded.value,
+	};
 }
 
 function stubSession(clientExecutesTools: boolean): PptxAiChatSession {
@@ -85,6 +91,22 @@ describe('useAiConversation', () => {
 		expect(proposals()).toEqual(staged);
 	});
 
+	it('drops the listed proposals as soon as another deck loads, and says so', async () => {
+		const deckLoad = ref(0);
+		const proposals = new ProposalStore({ ...bridge, getDeckLoad: () => deckLoad.value });
+		proposals.stage('Edit', (deck) => deck.slice(1));
+		const session = { ...stubSession(false), proposals } as PptxAiChatSession;
+		const conversation = mountWithChatStub(session, () => deckLoad.value);
+		expect(conversation.proposals()).toHaveLength(1);
+		expect(conversation.discarded()).toBeFalsy();
+
+		deckLoad.value += 1;
+		await nextTick();
+
+		expect(conversation.proposals()).toStrictEqual([]);
+		expect(conversation.discarded()).toBeTruthy();
+	});
+
 	it('sends the deck context the session adds to every request', async () => {
 		const requests: PptxAiUIMessage[][] = [];
 		const transport = {
@@ -106,7 +128,7 @@ describe('useAiConversation', () => {
 		mount(
 			defineComponent({
 				setup() {
-					send = useAiConversation(useChat, session, config).send;
+					send = useAiConversation(useChat, session, config, { deckLoad: () => 0 }).send;
 					return () => h('div');
 				},
 			}),

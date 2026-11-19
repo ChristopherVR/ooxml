@@ -19,17 +19,28 @@ export interface ProposalCallbacks {
 	acceptAll(): void;
 }
 
-/** Replace the container's children with the staged-proposal cards. */
+/**
+ * Replace the container's children with the staged-proposal cards, or, when a
+ * load dropped them (`discarded`), with a notice saying so.
+ */
 export function renderProposals(
 	doc: Document,
 	container: HTMLElement,
 	proposals: ProposalView[],
 	t: Translator,
 	callbacks: ProposalCallbacks,
+	discarded = false,
 ): void {
 	container.replaceChildren();
-	container.hidden = proposals.length === 0;
+	container.hidden = proposals.length === 0 && !discarded;
 	if (proposals.length === 0) {
+		if (discarded) {
+			const notice = createEl(doc, 'p', 'pptxv-ai-proposals-discarded');
+			notice.setAttribute('role', 'status');
+			notice.dataset.testid = 'pptx-ai-proposals-discarded';
+			notice.textContent = t('pptx.ai.proposalsDiscarded');
+			container.appendChild(notice);
+		}
 		return;
 	}
 

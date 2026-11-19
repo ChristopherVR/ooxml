@@ -59,6 +59,8 @@ export interface UseAiConversationResult {
 	error: Ref<Error | undefined>;
 	isStreaming: ComputedRef<boolean>;
 	proposals: Ref<ProposalView[]>;
+	/** Loading another presentation dropped the staged proposals (`ProposalStore.discarded`). */
+	proposalsDiscarded: Ref<boolean>;
 	send: (text: string) => void;
 	stop: () => void;
 	clearError: () => void;
@@ -67,8 +69,10 @@ export interface UseAiConversationResult {
 	acceptAllProposals: () => void;
 }
 
-/** Optional hooks the panel wires in (e.g. to drive the live on-canvas focus). */
+/** What the panel wires in: the deck load, and hooks such as the live on-canvas focus. */
 export interface UseAiConversationOptions {
+	/** The bridge's deck load: proposals are re-read when it changes, since a load drops them. */
+	deckLoad: () => number;
 	/**
 	 * Called as each tool call starts, with the slide / element(s) it references
 	 * (or `null` for deck-wide tools). Lets the panel navigate + highlight the
@@ -84,12 +88,15 @@ export function useAiConversation(
 	useChat: UseChatFn,
 	session: PptxAiChatSession,
 	config: PptxAiConfig,
-	options: UseAiConversationOptions = {},
+	options: UseAiConversationOptions,
 ): UseAiConversationResult {
 	const proposals = ref<ProposalView[]>(session.proposals.list());
+	const proposalsDiscarded = ref(session.proposals.discarded);
 	const refreshProposals = (): void => {
 		proposals.value = session.proposals.list();
+		proposalsDiscarded.value = session.proposals.discarded;
 	};
+	watch(options.deckLoad, refreshProposals);
 
 	// `useChat` is a parameter, resolved once by `AiConversation.vue` when the
 	// optional `@ai-sdk/vue` peer loads (see this file's doc comment above), so it
@@ -176,6 +183,7 @@ export function useAiConversation(
 		error: chat.error,
 		isStreaming,
 		proposals,
+		proposalsDiscarded,
 		send,
 		stop: () => void chat.stop(),
 		clearError: () => chat.clearError(),

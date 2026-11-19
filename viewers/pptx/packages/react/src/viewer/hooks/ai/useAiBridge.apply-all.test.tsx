@@ -54,8 +54,10 @@ interface Rendered {
 	theme: PptxTheme | undefined;
 	core: PptxCoreProperties | undefined;
 	replaceSlides: (slides: PptxSlide[]) => void;
-	/** What a load does: a new handler, then the new deck's state. */
+	/** What a load does: a new deck load and handler, then the new deck's state. */
 	openDeck: (slides: PptxSlide[], core: PptxCoreProperties | undefined) => void;
+	/** What a Slide Master view command or a slide paste does: a new handler on the same load. */
+	swapHandler: () => void;
 }
 
 let rendered: Rendered;
@@ -83,6 +85,7 @@ function Harness(): null {
 		Record<string, PptxElement[]>
 	>({});
 	const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+	const [deckLoad, setDeckLoad] = useState(1);
 	const history = useEditorHistory({
 		slides,
 		canvasSize,
@@ -115,6 +118,7 @@ function Harness(): null {
 		selectedElementIds: [],
 		pinnedFocus: null,
 		handlerRef,
+		deckLoad,
 		sections,
 		customShows,
 		presentationProperties,
@@ -152,8 +156,12 @@ function Harness(): null {
 		replaceSlides: setSlides,
 		openDeck(nextSlides, core) {
 			handlerRef.current = {} as PptxHandler;
+			setDeckLoad((load) => load + 1);
 			setSlides(nextSlides);
 			setCoreProperties(core);
+		},
+		swapHandler() {
+			handlerRef.current = {} as PptxHandler;
 		},
 	};
 	return null;
@@ -282,6 +290,27 @@ describe('useAiBridge Apply all', () => {
 		const newer = initialSlides();
 		act(() => rendered.replaceSlides(newer));
 		expect(rendered.bridge.getSlides()).toEqual(newer);
+	});
+
+	it('keeps what it wrote, and staged proposals, when an edit replaces the handler', () => {
+		const store = new ProposalStore(rendered.bridge);
+		propose(store, 'Author', 'deck', (deck) => {
+			deck.coreProperties = { ...deck.coreProperties, creator: 'Staged author' };
+		});
+		act(() => {
+			rendered.bridge.applyDeckData?.((deck) => {
+				deck.coreProperties = { ...deck.coreProperties, title: 'Written title' };
+				return deck;
+			}, 'Title');
+			rendered.swapHandler();
+			expect(rendered.bridge.getDeckData?.()?.coreProperties?.title).toBe('Written title');
+		});
+
+		expect(store.list().map((view) => view.label)).toStrictEqual(['Author']);
+		act(() => {
+			store.acceptAll();
+		});
+		expect(rendered.core).toMatchObject({ title: 'Written title', creator: 'Staged author' });
 	});
 
 	it('forgets what it wrote once another deck opens', () => {

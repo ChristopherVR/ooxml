@@ -1162,6 +1162,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	createPresentation(templateId: string): void {
 		this.clearCloudFile();
 		this.editor.commitSlides(createBackstagePresentation(templateId), 0);
+		this.store.set({ deckLoad: this.store.get().deckLoad + 1 });
 	}
 
 	async loadUrl(url: string): Promise<void> {

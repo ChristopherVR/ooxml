@@ -26,6 +26,7 @@
 	import AiHistoryMenu from './AiHistoryMenu.svelte';
 	import AiMessageList from './AiMessageList.svelte';
 	import AiPendingChanges from './AiPendingChanges.svelte';
+	import AiProposalsDiscarded from './AiProposalsDiscarded.svelte';
 
 	const {
 		bridge,
@@ -171,6 +172,8 @@
 					onacceptall={acceptAllProposals}
 					onreject={(id) => chat.rejectProposal(id)}
 				/>
+			{:else if chat.proposalsDiscarded}
+				<AiProposalsDiscarded />
 			{/if}
 
 			<AiComposer

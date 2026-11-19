@@ -59,6 +59,7 @@ export function createVanillaAiBridge(deps: VanillaAiBridgeDeps): PptxAiBridge {
 		getCanvasSize: () => state().canvasSize,
 		getTheme: () => (state().colorScheme || state().fontScheme ? storeTheme(state()) : undefined),
 		getHandler: () => deps.getHandler(),
+		getDeckLoad: () => state().deckLoad,
 		getSections: () => state().sections,
 		getCustomShows: () => state().customShows,
 		setCustomShows: (shows) => editor.updateCustomShows(shows),

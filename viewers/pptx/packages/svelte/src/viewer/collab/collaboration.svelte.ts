@@ -110,6 +110,10 @@ export class CollaborationController {
 	get readOnly(): boolean {
 		return this.#document.readOnly;
 	}
+	/** How many times a room's slides replaced the open deck, across sessions (reactive). */
+	get roomJoins(): number {
+		return this.#document.roomJoins;
+	}
 	/** Remote cursors on the current slide (reactive). */
 	get cursors(): RemoteCursor[] {
 		return this.#presence.cursors;

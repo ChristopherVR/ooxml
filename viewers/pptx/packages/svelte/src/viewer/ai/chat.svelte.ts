@@ -81,6 +81,8 @@ export class SvelteAiChat {
 	initError = $state<Error | undefined>(undefined);
 	/** Mirror of the session's staged proposals (refreshed imperatively). */
 	proposals = $state<ProposalView[]>([]);
+	/** Loading another presentation dropped the staged proposals (see `ProposalStore.discarded`). */
+	proposalsDiscarded = $state(false);
 
 	#chat = $state.raw<ChatType<PptxAiUIMessage> | undefined>(undefined);
 	// Reactive so a consumer `$effect` (the panel's change-animator subscription)
@@ -184,7 +186,9 @@ export class SvelteAiChat {
 	/**
 	 * Follow the message stream, which works in every connection mode: report each
 	 * new tool call to `onToolTarget` once, as soon as its input is known, and show
-	 * the proposals the agent has staged. The panel runs this from an effect.
+	 * the proposals the agent has staged. The panel runs this from an effect, which
+	 * also re-runs on every presentation load: listing reads the bridge's deck load,
+	 * so proposals a load dropped leave the panel at once.
 	 */
 	followToolCalls(): void {
 		this.refreshProposals();
@@ -213,6 +217,7 @@ export class SvelteAiChat {
 
 	refreshProposals(): void {
 		this.proposals = this.#session?.proposals.list() ?? [];
+		this.proposalsDiscarded = this.#session?.proposals.discarded ?? false;
 	}
 
 	applyProposal(id: string): void {

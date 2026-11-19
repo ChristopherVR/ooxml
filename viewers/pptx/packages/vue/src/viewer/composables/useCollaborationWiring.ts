@@ -25,6 +25,8 @@ export interface UseCollaborationWiringInput {
 	loadVersion?: Ref<number>;
 	/** Why the last content load ran; see `shouldRoomSlidesReplaceLoad`. */
 	getLoadOrigin?: () => CollabLoadOrigin;
+	/** The room's slides replaced the open deck (a join); a peer's edit never calls it. */
+	onRoomReplacedDeck?: () => void;
 	getTemplateElements: () => Record<string, PptxElement[]>;
 	/** True while a gallery hover preview shows over the slides. */
 	slidesPaused?: () => boolean;
@@ -110,6 +112,7 @@ export function useCollaborationWiring(
 		...(input.history ? { history: input.history } : {}),
 		loadVersion,
 		getLoadOrigin,
+		onRoomReplacedDeck: input.onRoomReplacedDeck,
 		onRemoteSlides: (remote) => {
 			// oxlint-disable-next-line react/immutability -- Vue ref write, not a React prop mutation
 			slides.value = remote;

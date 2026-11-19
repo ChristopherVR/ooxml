@@ -58,6 +58,8 @@ export interface UseAiBridgeInput {
 	 */
 	pickedFocus?: PptxAiFocusedTarget[] | null;
 	handlerRef: RefObject<PptxHandler | null>;
+	/** Changes on every presentation load (and room join) and only then: the bridge's `getDeckLoad`. */
+	deckLoad: number;
 	// Presentation-level state, exposed so the AI's `getDeckData`/`applyDeckData`
 	// seam can read and commit metadata / sections / canvas size / presentation
 	// properties (the pptx-viewer-mcp "deck" tools). Slide + theme tools do not
@@ -108,13 +110,15 @@ export function useAiBridge(input: UseAiBridgeInput): PptxAiBridge {
 
 	return useMemo<PptxAiBridge>(() => {
 		const live = (): UseAiBridgeInput => ref.current;
-		const deck = createPendingDeckWrites(live, () => live().handlerRef.current);
+		const deckLoad = (): number => live().deckLoad;
+		const deck = createPendingDeckWrites(live, deckLoad);
 		return createPptxAiBridge({
 			getSlides: () => deck.read('slides'),
 			getActiveSlideIndex: () => live().activeSlideIndex,
 			getCanvasSize: () => deck.read('canvasSize'),
 			getTheme: () => deck.read('theme'),
 			getHandler: () => live().handlerRef.current,
+			getDeckLoad: deckLoad,
 			getFileName: () => live().fileName,
 			getSections: () => deck.read('sections'),
 			getCustomShows: () => deck.read('customShows'),

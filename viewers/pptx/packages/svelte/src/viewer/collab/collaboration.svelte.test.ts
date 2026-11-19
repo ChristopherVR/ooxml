@@ -859,3 +859,102 @@ describe('collaborationController state (the shared CollaborationState)', () => 
 		host.doc.destroy();
 	});
 });
+
+describe('collaborationController room joins (the deck load the assistant keys on)', () => {
+	function peerEdit(doc: Y.Doc, slides: PptxSlide[]): void {
+		reconcileSlidesInYDoc(slides, doc as unknown as YDocLike, realFactories(), 'remote-peer');
+	}
+
+	it('counts a join whose room replaces the open deck, not a later peer edit', async () => {
+		const doc = new Y.Doc();
+		const { factory, emitSynced } = statusDrivenSessionFactory(doc, false);
+		await inRoot(async () => {
+			const editor = makeEditor([slide('mine', [shape('m1')])]);
+			const collab = new CollaborationController({
+				getSlides: () => editor.slides,
+				applyRemoteSlides: (s) => editor.applyRemoteSlides(s),
+				getConfig: () => CONFIG,
+				createSession: factory,
+			});
+			await collab.start(CONFIG);
+			expect(collab.roomJoins).toBe(0);
+
+			peerEdit(doc, [slide('room', [shape('r1')])]);
+			emitSynced();
+			flushSync();
+			expect(editor.slides.map((s) => s.id)).toStrictEqual(['room']);
+			expect(collab.roomJoins).toBe(1);
+
+			peerEdit(doc, [slide('room', [shape('r1'), shape('r2')])]);
+			flushSync();
+			expect(editor.slides[0]?.elements).toHaveLength(2);
+			expect(collab.roomJoins).toBe(1);
+			collab.stop();
+		});
+	});
+
+	it('counts a room that already held slides when the session attached', async () => {
+		const doc = new Y.Doc();
+		peerEdit(doc, [slide('room', [shape('r1')])]);
+		await inRoot(async () => {
+			const editor = makeEditor([slide('mine', [shape('m1')])]);
+			const collab = new CollaborationController({
+				getSlides: () => editor.slides,
+				applyRemoteSlides: (s) => editor.applyRemoteSlides(s),
+				getConfig: () => CONFIG,
+				createSession: fakeSessionFactory(doc, true),
+			});
+			await collab.start(CONFIG);
+			expect(editor.slides.map((s) => s.id)).toStrictEqual(['room']);
+			expect(collab.roomJoins).toBe(1);
+			collab.stop();
+		});
+	});
+
+	it('does not count peer edits in a room this editor seeded', async () => {
+		const doc = new Y.Doc();
+		await inRoot(async () => {
+			const editor = makeEditor([slide('mine', [shape('m1')])]);
+			const collab = new CollaborationController({
+				getSlides: () => editor.slides,
+				applyRemoteSlides: (s) => editor.applyRemoteSlides(s),
+				getConfig: () => CONFIG,
+				createSession: fakeSessionFactory(doc, true),
+			});
+			await collab.start(CONFIG);
+			expect(readSlidesFromYDoc(doc as unknown as YDocLike).map((s) => s.id)).toStrictEqual([
+				'mine',
+			]);
+
+			peerEdit(doc, [slide('mine', [shape('m1'), shape('peer')])]);
+			flushSync();
+			expect(editor.slides[0]?.elements).toHaveLength(2);
+			expect(collab.roomJoins).toBe(0);
+			collab.stop();
+		});
+	});
+
+	it('counts a host session join once, and not its peer edits', async () => {
+		const host = externalHost([slide('room', [shape('r1')])]);
+		await inRoot(async () => {
+			const config = { ...CONFIG, externalSession: host.session };
+			const editor = makeEditor([slide('bootstrap', [])]);
+			const collab = new CollaborationController({
+				getSlides: () => editor.slides,
+				applyRemoteSlides: (slides) => editor.applyRemoteSlides(slides),
+				getConfig: () => config,
+			});
+			await collab.start(config);
+			flushSync();
+			expect(editor.slides.map((s) => s.id)).toStrictEqual(['room']);
+			expect(collab.roomJoins).toBe(1);
+
+			peerEdit(host.doc, [slide('room', [shape('r1'), shape('r2')])]);
+			flushSync();
+			expect(editor.slides[0]?.elements).toHaveLength(2);
+			expect(collab.roomJoins).toBe(1);
+			collab.stop();
+		});
+		host.doc.destroy();
+	});
+});

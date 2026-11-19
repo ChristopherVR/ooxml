@@ -46,6 +46,7 @@ function baseInput(overrides: Partial<UseAiBridgeInput> = {}): UseAiBridgeInput 
 		selectedElementIds: [],
 		pinnedFocus: null,
 		handlerRef: { current: null },
+		deckLoad: 0,
 		sections: [],
 		customShows: [],
 		presentationProperties: {},

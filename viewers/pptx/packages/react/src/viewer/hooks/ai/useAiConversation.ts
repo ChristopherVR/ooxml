@@ -62,6 +62,8 @@ export interface UseAiConversationResult {
 	/** Replace the whole transcript (used to resume / start a stored chat). */
 	setMessages: (messages: PptxAiUIMessage[]) => void;
 	proposals: ProposalView[];
+	/** Loading another presentation dropped the staged proposals (`ProposalStore.discarded`). */
+	proposalsDiscarded: boolean;
 	applyProposal: (id: string) => void;
 	rejectProposal: (id: string) => void;
 	acceptAllProposals: () => void;
@@ -212,6 +214,7 @@ export function useAiConversation(
 		setMessages,
 		clearError: () => chat.clearError(),
 		proposals: session.proposals.list(),
+		proposalsDiscarded: session.proposals.discarded,
 		applyProposal,
 		rejectProposal,
 		acceptAllProposals,

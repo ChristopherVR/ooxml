@@ -185,6 +185,11 @@ export const AI_CSS = `
 	margin-bottom: 6px;
 }
 .pptxv-ai-proposals-title { font-size: 0.75rem; font-weight: 700; }
+.pptxv-ai-proposals-discarded {
+	margin: 0;
+	color: var(--pptx-muted-foreground);
+	font-size: 0.75rem;
+}
 .pptxv-ai-proposal {
 	margin-bottom: 8px;
 	padding: 8px;

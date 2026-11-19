@@ -50,6 +50,7 @@ function makeBridge(goToSlide: (index: number) => void): PptxAiBridge {
 		getActiveSlideIndex: () => 0,
 		getTheme: () => undefined,
 		getHandler: () => undefined,
+		getDeckLoad: () => 0,
 		goToSlide,
 		selectElements: () => {},
 		applySlidesUpdate: () => {},

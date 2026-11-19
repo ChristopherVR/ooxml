@@ -20,6 +20,11 @@ export interface ExternalCollaborationReadinessOptions {
 	onStatus: (status: ConnectionStatus) => void;
 	/** Apply the authoritative slides and update the binding's echo baseline. */
 	adoptSlides: (slides: PptxSlide[]) => void;
+	/**
+	 * The adopted room slides replaced the deck the user had open (a join, or a room that
+	 * replaced a bootstrap load): the binding reports it as a presentation load.
+	 */
+	onRoomReplacedDeck?: () => void;
 	/** Publish the latest local deck; discard a startup echo baseline when seeding. */
 	onReady?: (state: { seedEmptyRoom: boolean }) => void;
 	/** Revoke pending asynchronous writes before the host can become ready again. */
@@ -119,9 +124,13 @@ export function observeExternalCollaborationReadiness(
 		lastAdopted = undefined;
 		const slides = readSlidesFromYDoc(session.doc);
 		if (slides.length > 0) {
+			const joined = !established;
 			established = true;
 			awaitingJoin = false;
 			adopt(slides);
+			if (joined) {
+				options.onRoomReplacedDeck?.();
+			}
 		} else if (established) {
 			adopt(slides);
 		} else if (awaitingJoin) {
@@ -144,11 +153,13 @@ export function observeExternalCollaborationReadiness(
 			return;
 		}
 		const slides = readSlidesFromYDoc(session.doc);
+		const local = transaction?.origin === LOCAL_SYNC_ORIGIN;
+		const joined = slides.length > 0 && !established && !local;
 		if (slides.length > 0) {
 			established = true;
 			awaitingJoin = false;
 		}
-		if (transaction?.origin === LOCAL_SYNC_ORIGIN) {
+		if (local) {
 			// A no-op reconciliation of [] must not establish room ownership.
 			lastAdopted = JSON.stringify(slides);
 			return;
@@ -157,6 +168,9 @@ export function observeExternalCollaborationReadiness(
 			refresh();
 		} else if (slides.length > 0 || established) {
 			adopt(slides);
+		}
+		if (joined) {
+			options.onRoomReplacedDeck?.();
 		}
 		scheduleDuplicateCleanup();
 	});
@@ -190,6 +204,7 @@ export function observeExternalCollaborationReadiness(
 				if (slides.length > 0) {
 					lastAdopted = undefined;
 					adopt(slides);
+					options.onRoomReplacedDeck?.();
 					return true;
 				}
 			}

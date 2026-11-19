@@ -35,6 +35,7 @@ function makeDeps(overrides: Partial<SvelteAiBridgeDeps> = {}): SvelteAiBridgeDe
 		getCanvasSize: () => ({ width: 960, height: 540 }),
 		getTheme: () => undefined as PptxTheme | undefined,
 		getHandler: () => null as PptxHandler | null,
+		getDeckLoad: () => 1,
 		getFileName: () => undefined,
 		goToSlide: vi.fn(),
 		selectElements: vi.fn(),

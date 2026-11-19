@@ -7,10 +7,11 @@
  * for as long as the render still shows the value it replaced; the first render
  * that shows anything else is newer and wins.
  *
- * Writes belong to the deck they were made on: `loadedDeck` names the open deck
- * (the handler a load creates), and a change of it drops every pending write.
- * Without that, a field that is empty in both decks would still look unchanged
- * and serve the first deck's write in the second.
+ * Writes belong to the presentation load they were made on (`deckLoad`, the
+ * bridge's `getDeckLoad`), and a new load drops every pending write. Without
+ * that, a field that is empty in both decks would still look unchanged and serve
+ * the first deck's write in the second. Edits that swap the handler (slide
+ * master and layout commands, slide paste) keep the load, so they keep the writes.
  */
 export interface PendingDeckWrites<State> {
 	read<Key extends keyof State>(key: Key): State[Key];
@@ -19,12 +20,12 @@ export interface PendingDeckWrites<State> {
 
 export function createPendingDeckWrites<State>(
 	rendered: () => State,
-	loadedDeck: () => unknown,
+	deckLoad: () => number,
 ): PendingDeckWrites<State> {
 	const pending = new Map<keyof State, { replaced: unknown; value: unknown }>();
-	let deck = loadedDeck();
+	let deck = deckLoad();
 	const writesOnThisDeck = (): typeof pending => {
-		const now = loadedDeck();
+		const now = deckLoad();
 		if (now !== deck) {
 			deck = now;
 			pending.clear();

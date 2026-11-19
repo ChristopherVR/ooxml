@@ -1,8 +1,9 @@
 /* oxlint-disable vitest/prefer-importing-vitest-globals -- Playwright spec, `test`/`expect` come from @playwright/test */
 /**
  * What an assistant change does to the deck, through the real panel, in every binding: a theme
- * change re-colours the slides, saves and undoes as one step, and nothing the assistant wrote or
- * staged on one presentation reaches the next one opened.
+ * change re-colours the slides, saves and undoes as one step, a staged change survives Slide
+ * Master view edits and slide paste and still applies, and nothing the assistant wrote or staged
+ * on one presentation reaches the next one opened.
  *
  * The model is mocked (`support/ai-panel`); the deck is read back through the assistant's own
  * read tools and the bytes a save produces.
@@ -76,7 +77,11 @@ interface Assistant {
 	/** What the assistant's read tools report: the theme mark and the title. */
 	read(): Promise<{ theme: boolean; title: boolean }>;
 	pendingCount(): Promise<number>;
+	/** Whether the panel says staged changes were discarded by a load. */
+	discardedNotice(): Promise<boolean>;
 	applyFirst(): Promise<void>;
+	/** Reopen the panel when a view change closed it. */
+	ensureOpen(): Promise<void>;
 }
 
 async function openAssistant(page: Page, origin: string, deck: string): Promise<Assistant> {
@@ -116,12 +121,18 @@ async function openAssistant(page: Page, origin: string, deck: string): Promise<
 			}
 			return Number(/\((\d+)\)/u.exec((await label.textContent()) ?? '')?.[1]);
 		},
+		discardedNotice: () => appears(panel.getByTestId('pptx-ai-proposals-discarded').first(), 1_500),
 		async applyFirst() {
 			await panel
 				.getByRole('button', { name: /^apply$/iu })
 				.first()
 				.click();
 			await page.waitForTimeout(800);
+		},
+		async ensureOpen() {
+			if (!(await appears(panel.locator('textarea').first(), 1_500))) {
+				await openAiPanel(page);
+			}
 		},
 	};
 }
@@ -188,9 +199,68 @@ async function openThroughFileTab(page: Page, path: string, slides: number): Pro
 	);
 	await page.waitForTimeout(1_500);
 	await backstage.waitFor({ state: 'hidden', timeout: 5_000 }).catch(() => undefined);
-	if (!(await appears(aiPanel(page).locator('textarea').first(), 1_500))) {
-		await openAiPanel(page);
+}
+
+/** The Slide Master view sidebar, found through its master tablist. */
+function masterSidebar(page: Page): Locator {
+	return page
+		.getByRole('tablist')
+		.filter({ has: page.getByRole('tab', { name: 'Handout', exact: true }) })
+		.first()
+		.locator('..');
+}
+
+/**
+ * Insert a layout, then a slide master, then duplicate that master in Slide Master view, and close
+ * it. Each command reloads the package into a new handler; none of them loads a presentation.
+ */
+async function editSlideMasters(page: Page): Promise<void> {
+	await page.getByRole('tab', { name: 'View', exact: true }).first().click();
+	await page
+		.getByRole('toolbar')
+		.first()
+		.getByRole('button', { name: 'Slide Master', exact: true })
+		.click();
+	const sidebar = masterSidebar(page);
+	await sidebar.waitFor({ timeout: 15_000 });
+	const rail = sidebar.locator('button:not([role="tab"]):not([data-testid^="pptx-master-crud-"])');
+	for (const command of ['addLayout', 'addMaster', 'duplicateMaster']) {
+		const before = await rail.count();
+		await sidebar.getByTestId(`pptx-master-crud-${command}`).click();
+		await expect(rail).not.toHaveCount(before, { timeout: 15_000 });
 	}
+	await sidebar.getByRole('button').first().click();
+	await expect(masterSidebar(page)).toHaveCount(0);
+}
+
+/** Copy the first slide to the system clipboard in Slide Sorter (View tab) and paste it. */
+async function pasteSlide(page: Page): Promise<void> {
+	await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+	await page.getByRole('tab', { name: 'View', exact: true }).first().click();
+	await page
+		.getByRole('toolbar')
+		.first()
+		.getByRole('button', { name: 'Slide Sorter', exact: true })
+		.click();
+	const tiles = page.locator('[data-pptx-chrome="sorter-tile"]');
+	const before = await tiles.count();
+	await tiles.nth(0).click();
+	await page.getByRole('button', { name: 'Copy slides to system clipboard', exact: true }).click();
+	await page.getByText('Slides copied', { exact: true }).first().waitFor({ timeout: 10_000 });
+	await page
+		.getByRole('button', { name: 'Paste slides from system clipboard', exact: true })
+		.click();
+	await expect(tiles).toHaveCount(before + 1, { timeout: 20_000 });
+	await page.keyboard.press('Escape');
+	await expect(tiles).toHaveCount(0);
+}
+
+/** Whether the slides on screen hold the staged text. */
+function slidesHoldText(page: Page): Promise<boolean> {
+	return page.evaluate(
+		(text) => JSON.stringify(window.__pptxViewer.getSlides()).includes(text),
+		TEXT,
+	);
 }
 
 /** `source` without `docProps/core.xml`, so the deck has no title for a stale one to hide behind. */
@@ -307,18 +377,78 @@ test.describe('cross-binding AI deck changes', () => {
 					// A render passes with no assistant read between the write and the next deck.
 					await page.waitForTimeout(1_200);
 					await openThroughFileTab(page, second, secondSlides);
+					await assistant.ensureOpen();
 					const left = await assistant.pendingCount();
+					const notice = await assistant.discardedNotice();
 					const read = await assistant.read();
 					const save = await saved(page);
-					return { staged, left, title: read.title, saved: save };
+					return { staged, left, notice, title: read.title, saved: save };
 				},
 				{ concurrency: 'sequential', viewport: VIEWPORT },
 			);
 			expectAgreement(results, {
 				staged: 1,
 				left: 0,
+				notice: true,
 				title: false,
 				saved: { theme: false, title: false, text: false },
+			});
+		},
+	);
+
+	test(
+		'a staged change survives Slide Master edits and slide paste, then applies',
+		{ tag: '@cross-binding' },
+		async ({ browser }, info) => {
+			const results = await acrossFrameworks(
+				browser,
+				info,
+				async (page, origin) => {
+					const assistant = await openAssistant(page, origin, fixture('master-views.pptx'));
+					assistant.scripts.zztext = [
+						{
+							name: 'update_element',
+							input: { slideIndex: 0, elementId: assistant.elementId, text: TEXT },
+						},
+					];
+					await assistant.exchange('zztext');
+					const staged = await assistant.pendingCount();
+					await editSlideMasters(page);
+					await assistant.ensureOpen();
+					const afterMasters = await assistant.pendingCount();
+					await pasteSlide(page);
+					await assistant.ensureOpen();
+					const afterPaste = await assistant.pendingCount();
+					const notice = await assistant.discardedNotice();
+					await assistant.applyFirst();
+					const conflict = await assistant.panel
+						.getByText(/changed after this was proposed/iu)
+						.count();
+					const left = await assistant.pendingCount();
+					const applied = await slidesHoldText(page);
+					const save = await saved(page);
+					return {
+						staged,
+						afterMasters,
+						afterPaste,
+						notice,
+						conflict,
+						left,
+						applied,
+						saved: save.text,
+					};
+				},
+				{ concurrency: 'sequential', viewport: VIEWPORT },
+			);
+			expectAgreement(results, {
+				staged: 1,
+				afterMasters: 1,
+				afterPaste: 1,
+				notice: false,
+				conflict: 0,
+				left: 0,
+				applied: true,
+				saved: true,
 			});
 		},
 	);

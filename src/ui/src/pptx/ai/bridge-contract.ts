@@ -3,7 +3,8 @@
  * write tools: a read made right after a write returns that write, with no
  * render, tick or await in between. "Apply all" replays several proposals in one
  * tick, each on the deck the previous one left, so a bridge that serves the last
- * rendered state silently drops all but the final write to each field.
+ * rendered state silently drops all but the final write to each field. Writes
+ * also keep the deck load, or every staged proposal would be dropped.
  *
  * @module ai/bridge-contract
  */
@@ -50,6 +51,7 @@ export function checkPptxAiBridgeReadsItsWrites(bridge: PptxAiBridge): string[] 
 		}
 	};
 
+	const load = bridge.getDeckLoad();
 	const moveFirstElement = (patch: { x?: number; y?: number }, label: string): void => {
 		bridge.applySlidesUpdate((slides) => {
 			const element = slides[0]?.elements[0];
@@ -110,5 +112,6 @@ export function checkPptxAiBridgeReadsItsWrites(bridge: PptxAiBridge): string[] 
 		'a second property write keeps the first',
 		core?.title === TITLE && core?.creator === AUTHOR,
 	);
+	check('the deck load after writes', bridge.getDeckLoad() === load);
 	return failures;
 }

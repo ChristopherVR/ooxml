@@ -34,6 +34,7 @@ function makePort(overrides: Partial<PptxAiBridgePort> = {}): {
 		getCanvasSize: () => state.canvas,
 		getTheme: () => undefined,
 		getHandler: () => null,
+		getDeckLoad: () => 0,
 		getSections: () => [],
 		getPresentationProperties: () => ({}),
 		getCustomProperties: () => [],

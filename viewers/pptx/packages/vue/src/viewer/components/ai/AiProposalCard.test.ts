@@ -36,6 +36,7 @@ function makeBridge(slides: PptxSlide[]): { bridge: PptxAiBridge; applied: { lab
 		getActiveSlideIndex: () => 0,
 		getTheme: () => undefined,
 		getHandler: () => undefined,
+		getDeckLoad: () => 0,
 		goToSlide: () => {},
 		selectElements: () => {},
 		applySlidesUpdate: (updater: (s: PptxSlide[]) => PptxSlide[], label: string) => {

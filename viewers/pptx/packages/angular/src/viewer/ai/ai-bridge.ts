@@ -47,6 +47,8 @@ export interface BridgeDeps {
 	getFileName(): string | undefined;
 	/** The loaded core handler, when a deck is open. */
 	getHandler(): PptxHandler | undefined;
+	/** The presentation load the deck comes from ({@link PptxAiBridge.getDeckLoad}). */
+	getDeckLoad(): number;
 	/** Navigate the viewer to a slide by zero-based index. */
 	goToSlide(index: number): void;
 	/** Select the given elements on a slide (empty clears selection). */
@@ -128,6 +130,7 @@ export function createAngularAiBridge(deps: BridgeDeps): PptxAiBridge {
 		getCanvasSize: () => deps.getCanvasSize(),
 		getTheme: () => deps.getTheme(),
 		getHandler: () => deps.getHandler(),
+		getDeckLoad: () => deps.getDeckLoad(),
 		getFileName: () => deps.getFileName(),
 		getSections: () => deps.getSections(),
 		getCustomShows: () => deps.getCustomShows(),
