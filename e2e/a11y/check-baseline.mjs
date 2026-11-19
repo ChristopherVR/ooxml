@@ -4,8 +4,11 @@
  *
  *   node check-baseline.mjs --base <ref>    fail if baseline/axe.json allows more than at <ref>, or
  *                                           expected-failures.json lists a gap <ref> did not
- *   node check-baseline.mjs --update        lower baseline/axe.json to what the last run found
- *                                           (test-results/**\/axe.json); never raises an entry
+ *   node check-baseline.mjs --update [--from <dir>]
+ *                                           lower baseline/axe.json to what a run found (its
+ *                                           axe.json files); never raises an entry. The counts are
+ *                                           CI's: off Linux, pass --from with the unpacked
+ *                                           a11y-report artifact of a CI run
  *   node check-baseline.mjs --update --add  also record violations the baseline does not list yet:
  *                                           only for a new surface or rule, and the --base check
  *                                           still refuses it against the base branch
@@ -96,9 +99,13 @@ function observations(dir) {
 function main(argv) {
 	const value = (flag) => (argv.includes(flag) ? argv[argv.indexOf(flag) + 1] : undefined);
 	if (argv.includes('--update')) {
-		const observed = observations(join(HERE, 'test-results'));
+		const from = value('--from');
+		// Fonts differ by platform and move some counts, so the baseline follows CI's runner.
+		if (!from && process.platform !== 'linux')
+			throw new Error('Lower the baseline from a CI run: --update --from <unpacked a11y-report>.');
+		const observed = observations(from ?? join(HERE, 'test-results'));
 		if (!Object.keys(observed).length)
-			throw new Error('No axe results in test-results: run axe.spec.ts first.');
+			throw new Error('No axe results found: run axe.spec.ts first.');
 		const next = lowered(read(AXE), observed, argv.includes('--add'));
 		writeFileSync(AXE, `${JSON.stringify(next, null, '\t')}\n`);
 		console.log(`baseline/axe.json updated from ${Object.keys(observed).length} surfaces.`);
