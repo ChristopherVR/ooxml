@@ -203,6 +203,14 @@ export function createCollaborationSessionController(
 		patch(INITIAL);
 	};
 
+	/** A refused update ended the sync: writes stay gated and the status stays `error`. */
+	const refused = (code: UpdateRefusalCode): void => {
+		cancelConnectTimer();
+		gate.reset();
+		patch({ status: 'error', refusal: code });
+		deps.onRefused?.(code);
+	};
+
 	const fail = (token: number): void => {
 		if (token === generation) {
 			stop();
@@ -217,15 +225,10 @@ export function createCollaborationSessionController(
 			return;
 		}
 		provider.onSynced(() => gate.open());
-		// A refused update ends the sync: writes stay gated and the status stays `error`.
 		provider.onRefused?.((error) => {
-			if (session !== live) {
-				return;
+			if (session === live) {
+				refused(error.code);
 			}
-			cancelConnectTimer();
-			gate.reset();
-			patch({ status: 'error', refusal: error.code });
-			deps.onRefused?.(error.code);
 		});
 		if (provider.syncedNow) {
 			gate.open();
@@ -281,6 +284,11 @@ export function createCollaborationSessionController(
 				setStatus('connecting');
 				const owned = openOwnedCollaboration(requested);
 				releaseOwned = owned.release;
+				owned.onRefused((code) => {
+					if (token === generation) {
+						refused(code);
+					}
+				});
 				const prepared = await owned.ready;
 				if (token !== generation || !prepared) {
 					return;

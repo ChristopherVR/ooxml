@@ -4,7 +4,7 @@ import type { CollaborationConfig } from '../../types';
 import type { CollabProviderHandle } from '../collaboration-provider';
 import type { CollabYSession } from '../collaboration-yjs-session';
 import { createCollaborationSessionController } from './collaboration-session-controller';
-import { UpdateRefusedError } from 'ooxml-core/collab';
+import { createMemoryHub, transportProvider, UpdateRefusedError } from 'ooxml-core/collab';
 
 interface FakeProvider extends CollabProviderHandle {
 	emitStatus(connected: boolean): void;
@@ -86,6 +86,28 @@ describe('createCollaborationSessionController', () => {
 		// Retrying starts afresh.
 		await controller.retry();
 		expect(controller.getSnapshot().refusal).toBeNull();
+	});
+
+	it('stops a session it owns when that session refuses an update', async () => {
+		const onRefused = vi.fn();
+		const controller = createCollaborationSessionController({
+			openSession: async () => fakeSession(),
+			onRefused,
+			registerTeardown: false,
+		});
+		vi.useRealTimers();
+		const hub = createMemoryHub();
+		await controller.start({
+			roomId: 'room-1',
+			provider: transportProvider({ transport: hub.createTransport('room-1') }),
+			user: { name: 'Ada' },
+		});
+		const evil = hub.createTransport('room-1');
+		evil.connect({ open: () => {}, close: () => {}, message: () => {}, error: () => {} });
+		evil.send(new Uint8Array([0, 2, 5, 1, 1, 1, 0, 0x1f]));
+		expect(controller.getSnapshot()).toMatchObject({ status: 'error', refusal: 'malformed' });
+		expect(onRefused).toHaveBeenCalledWith('malformed');
+		controller.destroy();
 	});
 
 	it('opens a websocket session: connecting, then connected, then synced', async () => {
