@@ -20,35 +20,53 @@ export function safeDecode(value) {
 	}
 }
 
-/** Token bucket: `take()` is true while the caller stays under `rate` per second (burst `burst`). */
+/**
+ * Token bucket: `take(n)` is true while the caller stays under `rate` per second (burst `burst`).
+ * `n` defaults to 1, one message; a byte budget takes the size of each message.
+ */
 export function createBucket(rate, burst, now = () => Date.now()) {
 	let tokens = burst;
 	let last = now();
 	return {
-		take() {
+		take(n = 1) {
 			const t = now();
 			tokens = Math.min(burst, tokens + ((t - last) / 1000) * rate);
 			last = t;
-			if (tokens < 1) return false;
-			tokens -= 1;
+			if (tokens < n) return false;
+			tokens -= n;
 			return true;
 		},
 	};
 }
 
+const utf8 = new TextEncoder();
+
 /**
  * Keep only the awareness entries a connection may speak for: ids it already owns, or ids nobody
  * owns yet (which it then claims). `owners` maps client id to the owning connection. Returns the
- * re-encoded update, or null when nothing is left.
+ * re-encoded update (null when nothing is left) and the size in bytes of each kept state, or
+ * `{ oversized: true }`, claiming nothing, when one state is longer than `maxStateBytes`.
  */
-export function filterAwareness(update, conn, owners, maxOwned = 8) {
+export function filterAwareness(
+	update,
+	conn,
+	owners,
+	{ maxOwned = 8, maxStateBytes = Number.POSITIVE_INFINITY } = {},
+) {
 	const decoder = decoding.createDecoder(update);
 	const count = decoding.readVarUint(decoder);
-	const kept = [];
+	const entries = [];
 	for (let i = 0; i < count; i++) {
 		const id = decoding.readVarUint(decoder);
 		const clock = decoding.readVarUint(decoder);
 		const state = decoding.readVarString(decoder);
+		const bytes = utf8.encode(state).length;
+		if (bytes > maxStateBytes) return { oversized: true };
+		entries.push({ id, clock, state, bytes });
+	}
+	const kept = [];
+	for (const entry of entries) {
+		const { id } = entry;
 		const owner = owners.get(id);
 		if (owner !== undefined && owner !== conn) continue;
 		if (owner === undefined) {
@@ -57,9 +75,9 @@ export function filterAwareness(update, conn, owners, maxOwned = 8) {
 			if (owned >= maxOwned) continue;
 			owners.set(id, conn);
 		}
-		kept.push({ id, clock, state });
+		kept.push(entry);
 	}
-	if (kept.length === 0) return null;
+	if (kept.length === 0) return { update: null, sizes: new Map() };
 	const encoder = encoding.createEncoder();
 	encoding.writeVarUint(encoder, kept.length);
 	for (const { id, clock, state } of kept) {
@@ -67,7 +85,10 @@ export function filterAwareness(update, conn, owners, maxOwned = 8) {
 		encoding.writeVarUint(encoder, clock);
 		encoding.writeVarString(encoder, state);
 	}
-	return encoding.toUint8Array(encoder);
+	return {
+		update: encoding.toUint8Array(encoder),
+		sizes: new Map(kept.map(({ id, bytes }) => [id, bytes])),
+	};
 }
 
 /** Total size in bytes of every file below `dir` (0 when it does not exist). */
@@ -92,7 +113,9 @@ const int = (value, fallback) => {
 	const n = Number(value);
 	return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback;
 };
-const MB = 1024 * 1024;
+const KB = 1024;
+const MB = 1024 * KB;
+const GB = 1024 * MB;
 
 /** Resolve the abuse limits from options, then the environment, then the defaults. */
 export function resolveLimits(options = {}, env = process.env) {
@@ -108,10 +131,27 @@ export function resolveLimits(options = {}, env = process.env) {
 			options.workspaceQuotaBytes ?? Number(env.TEAMS_WORKSPACE_QUOTA_MB) * MB,
 			1024 * MB,
 		),
-		// Optional ceiling on the whole files directory; off unless set.
-		filesQuotaBytes: int(
-			options.filesQuotaBytes ?? Number(env.TEAMS_FILES_QUOTA_MB) * MB,
-			Number.POSITIVE_INFINITY,
+		// Per uploader, across every scope, so new scope names do not add room.
+		userQuotaBytes: int(options.userQuotaBytes ?? Number(env.TEAMS_USER_QUOTA_MB) * MB, 1 * GB),
+		// The whole files directory.
+		filesQuotaBytes: int(options.filesQuotaBytes ?? Number(env.TEAMS_FILES_QUOTA_MB) * MB, 20 * GB),
+		// Every stored room snapshot together, and how many rooms may be stored.
+		roomsQuotaBytes: int(options.roomsQuotaBytes ?? Number(env.TEAMS_ROOMS_QUOTA_MB) * MB, 10 * GB),
+		maxStoredRooms: int(options.maxStoredRooms ?? env.TEAMS_MAX_STORED_ROOMS, 10_000),
+		// Presence: one client's state, every state of a room, and the bytes a socket sends per second.
+		maxAwarenessBytes: int(
+			options.maxAwarenessBytes ?? Number(env.TEAMS_MAX_AWARENESS_KB) * KB,
+			64 * KB,
 		),
+		maxRoomAwarenessBytes: int(
+			options.maxRoomAwarenessBytes ?? Number(env.TEAMS_MAX_ROOM_AWARENESS_KB) * KB,
+			4 * MB,
+		),
+		awarenessByteRate: int(
+			options.awarenessByteRate ?? Number(env.TEAMS_AWARENESS_RATE_KB) * KB,
+			256 * KB,
+		),
+		// Refused joins, refused file requests and refused updates per client per minute.
+		maxRefusals: int(options.maxRefusals ?? env.TEAMS_MAX_REFUSALS_PER_MIN, 30),
 	};
 }

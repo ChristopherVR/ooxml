@@ -146,6 +146,10 @@ Hyperlinks and in-product help links open only when the reader follows them.
   `stun:stun.l.google.com:19302`, which learns each participant's IP address. Set `iceServers`
   to your own STUN/TURN servers, or to `[]` to use none. Audio and video flow between peers or
   through the TURN server you configure.
+- **Call signaling:** offers, answers and network candidates (which carry each participant's IP
+  addresses) go through the `signalingUrl` server to the other people in the call. With accounts the
+  reference server relays them only between signed-in users speaking as themselves, and a private
+  chat's call only between that chat's members; a server with only `authorizeSync` relays none.
 - **Website tabs:** a website tab loads the URL a member added, in a frame, for everyone who
   opens it.
 

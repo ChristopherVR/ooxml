@@ -15,6 +15,23 @@ export const isRole = (value) => typeof value === 'string' && ROLES.includes(val
 
 export const isUserId = (value) => typeof value === 'string' && USER.test(value);
 
+/** The shortest session secret the server accepts, and how many distinct characters it needs. */
+export const MIN_SESSION_SECRET_CHARS = 32;
+const MIN_SECRET_DISTINCT_CHARS = 8;
+
+/**
+ * Why a configured session secret is too weak to sign sessions with, or null when it will do. An
+ * empty secret is fine: the signer then draws a random one per process. Anyone who learns or guesses
+ * the secret can sign a session for any user and role, so a short or repetitive value is refused.
+ */
+export function weakSessionSecret(secret) {
+	if (secret === undefined || secret === '') return null;
+	const text = String(secret);
+	if (text.length >= MIN_SESSION_SECRET_CHARS && new Set(text).size >= MIN_SECRET_DISTINCT_CHARS)
+		return null;
+	return `the session secret (TEAMS_SESSION_SECRET, sessionSecret) is too weak: use at least ${MIN_SESSION_SECRET_CHARS} random characters, for example the output of \`openssl rand -hex 32\`, or leave it unset for a random secret per process`;
+}
+
 /** Constant-time string comparison that does not leak the length. */
 export function sameSecret(a, b) {
 	const ha = createHash('sha256').update(String(a)).digest();
@@ -69,7 +86,10 @@ export function createSessionSigner({
 		verify(token) {
 			return this.inspect(token)?.user ?? null;
 		},
-		/** `{ user, role }` of a valid token (role is undefined for an ordinary member), else null. */
+		/**
+		 * `{ user, role, expiresAt }` of a valid token (role is undefined for an ordinary member), else
+		 * null.
+		 */
 		inspect(token) {
 			if (typeof token !== 'string' || token.length > 1024) return null;
 			const parts = token.split('.');
@@ -84,7 +104,11 @@ export function createSessionSigner({
 					return null;
 				if ((typeof claims.g === 'number' ? claims.g : 0) !== currentGeneration(claims.u))
 					return null;
-				return { user: claims.u, role: isRole(claims.r) ? claims.r : undefined };
+				return {
+					user: claims.u,
+					role: isRole(claims.r) ? claims.r : undefined,
+					expiresAt: claims.exp,
+				};
 			} catch {
 				return null;
 			}

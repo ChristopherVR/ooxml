@@ -127,7 +127,11 @@ throws):
    A server that keeps a `Y.Doc` per room and persists it gives history to late joiners.
 2. **Signaling**: `ws(s)://host/<base>/<room>` forwards each JSON text message to the **other**
    sockets of the room, and sends `{ "type": "bye", "from": <id> }` to them when a socket closes. A
-   socket speaks for one peer id (the first `from` it uses). It does not need to understand the
+   socket speaks for one peer id: with accounts the signed-in user's id, which a server must check
+   against every `from` (the reference server closes a socket that uses another); without accounts
+   the first `from` it uses. The peer id of a call is the user id. A private chat's call room is
+   `call-` and the chat's room name (`chatCallRoomId`), so a server can admit only the chat's
+   members (`chatRoomOfCall` gives the chat room back). It does not need to understand the
    messages (`signaling.ts` defines them).
 3. **Files** (optional): `POST|GET|DELETE <origin>/files/<scope>/<name>` and `GET <origin>/files/<scope>` (a scope is the workspace id, or a private chat's room name whose files only that chat's members reach; the client sends `X-Teams-Session`, or `X-Teams-User` without accounts), with the token in an
    `Authorization: Bearer` header. To open a file in a browser tab the client calls
@@ -263,7 +267,10 @@ and the **server contract**. Each has a number or a pinned test.
 - Room names are pinned by tests: a workspace room is the workspace id (1 to 128 of `[\w-]`); a chat
   room is `chat-<16 hex of the workspace id>-<chat id>`; a 1:1 chat id is `dm-<32 hex>`, from SHA-256
   of the sorted pair; a group chat id is `g-<32 hex random>-<24 hex>`, the second part from SHA-256 of
-  the random part and the creator; a call room is `call-<workspace>-<channel>`; all are cut to 128.
+  the random part and the creator; a call room is `call-<workspace>-<channel>`, cut to 128, and a
+  private chat's call room is `call-<chat room>` (86 characters at most for a current chat id). A call room
+  of the form `call-<workspace>-<chat id>` for a current chat id, which no client of this version
+  opens, is refused (`isStrayChatCallRoom`).
   The reference server reads these rules from the generated validator bundle, so there is one copy.
   Changing any of this orphans stored rooms and needs a protocol bump. A client reuses a 1:1 chat
   that already exists under its old `dm-<16 hex>` id, so its history stays.
@@ -350,7 +357,7 @@ WebSocket transport backs off and gives up after three consecutive `update rejec
 
 `validateTeamsSyncMessage(doc, message, actor)` does the same for a raw y-websocket message (sync
 step 2 and update are checked, everything else passes). The reference server
-(`viewers/teams/server`) calls it in the `ws.on('message')` handler of `handleSync` before applying
+(`viewers/teams/server`) runs the same check, through one `createUpdateChecker` per room, in the `ws.on('message')` handler of `handleSync` before applying
 anything, for every sync room (workspace and private chats), with the room's document and the user
 of the **signed session**; on `{ ok: false }` it logs the violation codes, closes the socket with
 1008 (`update rejected: <codes>`) and does not apply the message. It applies only to sockets that
@@ -358,8 +365,8 @@ carry a verified identity (a session, from `users` or the `authenticate` hook); 
 user is a claim and nothing is enforced.
 
 Applying is all or nothing, on every socket. A Yjs transaction that throws keeps what it had done,
-so the server first proves the update, and any reverts, on a copy of the room (the validator's copy
-already proves an update without reverts). It then applies them to the room in one transaction, which
+so the server first proves the update on the room's checking copy (`createUpdateChecker`), and any
+reverts on a fresh copy of the room. It then applies them to the room in one transaction, which
 makes one broadcast. If anything fails, the room is unchanged, nobody hears of the update, and the
 socket closes with 1008 (`update rejected: invalid-update`). Messages a socket sent after the one that
 got it closed are ignored. `enforceAuthorship: false` (or
@@ -370,7 +377,7 @@ entry `{ "credential": "...", "role": "moderator" }`, or `role: 'moderator'` ret
 **Packaging.** `openteams-server` is a standalone `.mjs` package. Rather than add `ooxml-core` (a
 large package with its own dependency tree, whose `dist` must be built before the server's tests
 can run) to a small server, `viewers/teams/scripts/bundle-validator.mjs` bundles
-`validate-update.ts` and `protocol.ts` with esbuild into the committed
+`validate-update.ts`, `update-checker.ts` and `protocol.ts` with esbuild into the committed
 `server/validator.generated.mjs` (about 21 KB, `yjs`, `lib0` and `y-protocols` external, which the
 server already depends on). A script test fails when the committed file is stale, so a change to the
 validator must be followed by `bun run bundle:validator` in `viewers/teams`; the commit then touches
@@ -397,8 +404,12 @@ What it does not cover, honestly:
   has its whole update refused: Yjs updates cannot be filtered struct by struct.
 - Concurrent writes of the same tab discussion root (`tab:...`) are allowed as the writer, because
   clients create it with a deterministic id; so any member can overwrite a tab's boilerplate root.
-- Cost: each check copies the room state, so it is O(document size) per update. Cache or rate-limit
-  on busy rooms.
+- Cost: each `validateTeamsUpdate` call copies the room state, so it is O(document size) per
+  update. A server checking every update of a room keeps one copy with `createUpdateChecker(doc)`
+  instead: the copy follows the room, an accepted update stays applied to it (the room then applies
+  the same update, which the copy ignores), and a refused one drops it, to be built again on the next
+  check. A check then costs the update, plus one copy of the room per refusal; the reference server
+  counts those refusals per client (see its README, "Limits").
 
 ## Honest limits
 

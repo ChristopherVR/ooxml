@@ -51,7 +51,7 @@ test('preserves post and thread drafts, finds them centrally and requires restor
 	await thread.getByRole('button', { name: 'Send message', exact: true }).click();
 	await expect(thread.getByText('Unsent thread reply', { exact: true })).toBeVisible();
 	await expect
-		.poll(() => page.evaluate((room) => localStorage.getItem(`teams:doc:${room}`), room))
+		.poll(() => page.evaluate((room) => localStorage.getItem(`teams:doc:2:${room}`), room))
 		.not.toBeNull();
 	await page.reload();
 	await expect(page.getByRole('textbox', { name: 'Message', exact: true })).toHaveValue(

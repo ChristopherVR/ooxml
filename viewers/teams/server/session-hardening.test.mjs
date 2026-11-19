@@ -98,7 +98,7 @@ describe('session hardening', () => {
 	it('sign-out revokes the user sessions and drops open sockets', async () => {
 		const { port } = await start({
 			users: { frank: 'pw' },
-			sessionSecret: 'fixed',
+			sessionSecret: 'fixed-'.padEnd(40, '0123456789abcdef'),
 		});
 		const first = (await login(port, 'frank', 'pw')).body;
 		const second = (await login(port, 'frank', 'pw')).body;
@@ -125,11 +125,18 @@ describe('session hardening', () => {
 	});
 
 	it('keeps a revocation across a restart with the same secret and data dir', async () => {
-		const { server, port, dir } = await start({ users: { gina: 'pw' }, sessionSecret: 'keep' });
+		const { server, port, dir } = await start({
+			users: { gina: 'pw' },
+			sessionSecret: 'keep-'.padEnd(40, '0123456789abcdef'),
+		});
 		const old = (await login(port, 'gina', 'pw')).body;
 		server.revokeSessions('gina');
 		await server.close();
-		const next = await start({ users: { gina: 'pw' }, sessionSecret: 'keep', dataDir: dir });
+		const next = await start({
+			users: { gina: 'pw' },
+			sessionSecret: 'keep-'.padEnd(40, '0123456789abcdef'),
+			dataDir: dir,
+		});
 		assert.equal(
 			(await status(`ws://127.0.0.1:${next.port}/sync/general?session=${old.session}`)).status,
 			401,

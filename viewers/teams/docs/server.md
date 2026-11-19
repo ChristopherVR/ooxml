@@ -15,7 +15,8 @@ relay cannot decrypt it, but signaling passes through the server.
 Needs Node 22 or later.
 
 ```bash
-TEAMS_USERS_FILE=users.json TEAMS_SESSION_SECRET=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server
+openssl rand -hex 32 > session-secret   # once; keep it outside the repository
+TEAMS_USERS_FILE=users.json TEAMS_SESSION_SECRET="$(cat session-secret)" TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server
 npx openteams-server --insecure-dev     # local development only: listens on 127.0.0.1:8787, no accounts
 ```
 
@@ -33,7 +34,7 @@ with a warning, for local development. It is configured through the environment 
 | `TEAMS_ORIGINS` | none        | Comma-separated allowed `Origin`s for sockets and files. None: any origin with a token, loopback only without one.                          |
 | `TEAMS_DATA`    | `./data`    | Data directory: `rooms/=<name>.bin` snapshots and `files/=<name>/`.                                                                         |
 
-The server reads more variables for accounts (`TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`, `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`) and for limits (`TEAMS_INSECURE`, `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`, `TEAMS_MAX_ROOMS`, `TEAMS_MAX_DOC_MB`, `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`, `TEAMS_FILES_QUOTA_MB`, `TEAMS_WORKSPACE_QUOTA_MB`, `TEAMS_COMPACT_INTERVAL_MIN`, `TEAMS_METRICS_TOKEN`, `TEAMS_LOG_FORMAT`). The [deployment guide](./deploy.md) lists the limits; the server's README is the full reference. The `createTeamsServer` options for them are `users`, `authenticate`, `sessionSecret`, `adminToken`, `sessionRate`, `authorizeSync`, `maxConnections`, `maxRooms`, `messageRate`, `filesQuotaBytes`, `workspaceQuotaBytes`, `metricsToken`, `compactIntervalMs`, `insecure`, `insecureDev` and `trustProxy`.
+The server reads more variables for accounts (`TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`, `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`) and for limits (`TEAMS_INSECURE`, `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`, `TEAMS_MAX_ROOMS`, `TEAMS_MAX_DOC_MB`, `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`, `TEAMS_FILES_QUOTA_MB`, `TEAMS_WORKSPACE_QUOTA_MB`, `TEAMS_USER_QUOTA_MB`, `TEAMS_ROOMS_QUOTA_MB`, `TEAMS_MAX_STORED_ROOMS`, `TEAMS_MAX_AWARENESS_KB`, `TEAMS_MAX_ROOM_AWARENESS_KB`, `TEAMS_AWARENESS_RATE_KB`, `TEAMS_MAX_REFUSALS_PER_MIN`, `TEAMS_COMPACT_INTERVAL_MIN`, `TEAMS_METRICS_TOKEN`, `TEAMS_LOG_FORMAT`). The [deployment guide](./deploy.md) lists the limits; the server's README is the full reference. The `createTeamsServer` options for them are `users`, `authenticate`, `sessionSecret`, `adminToken`, `sessionRate`, `authorizeSync`, `maxConnections`, `maxRooms`, `messageRate`, `filesQuotaBytes`, `workspaceQuotaBytes`, `metricsToken`, `compactIntervalMs`, `insecure`, `insecureDev` and `trustProxy`.
 
 Or embed it:
 

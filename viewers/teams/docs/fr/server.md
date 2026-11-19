@@ -18,7 +18,7 @@ passe par le serveur.
 Nécessite Node 22 ou ultérieur.
 
 ```bash
-TEAMS_USERS_FILE=users.json TEAMS_SESSION_SECRET=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server
+TEAMS_USERS_FILE=users.json TEAMS_SESSION_SECRET="$(openssl rand -hex 32)" TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server
 npx openteams-server --insecure-dev     # développement local uniquement : écoute sur 127.0.0.1:8787, sans comptes
 ```
 
