@@ -51,6 +51,7 @@ svg {
 		forced-color-adjust: auto;
 	}
 	:host([checked]) {
+		forced-color-adjust: none;
 		border-color: Highlight;
 		background: Highlight;
 		color: HighlightText;

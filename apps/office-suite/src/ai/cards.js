@@ -191,7 +191,7 @@ export function proposalCard({
 	async function current(docs) {
 		const latest = [];
 		for (const doc of docs) {
-			sessions.sessions.get(doc.id)?.editor?.flush?.();
+			await sessions.sessions.get(doc.id)?.editor?.flush?.();
 			const stored = await store.get(doc.id);
 			if (!stored || sessions.isDirty(doc.id) || stored.revision !== doc.revision)
 				throw new Error(`${doc.name} changed. Ask again using the latest version.`);

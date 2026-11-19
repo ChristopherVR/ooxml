@@ -200,7 +200,7 @@ blockquote strong {
 	display: inline-flex;
 	align-items: center;
 	gap: var(--office-space-1);
-	color: var(--office-teams-brand);
+	color: var(--office-teams-brand-ink);
 	font-size: var(--office-font-size-xs);
 }
 .pin-mark svg {
@@ -216,7 +216,7 @@ blockquote strong {
 
 /* @mentions: the name in the brand colour; a mention of you (or of everyone) gets a chip. */
 .mention {
-	color: var(--office-teams-brand);
+	color: var(--office-teams-brand-ink);
 	font-weight: 600;
 }
 .mention[data-self='true'] {
@@ -277,7 +277,7 @@ blockquote strong {
 	height: 2.2em;
 	border-radius: var(--office-radius);
 	background: var(--office-teams-brand-subtle);
-	color: var(--office-teams-brand);
+	color: var(--office-teams-brand-ink);
 }
 .meeting-meta {
 	display: grid;
@@ -316,5 +316,15 @@ blockquote strong {
 	.meeting-join {
 		grid-column: 1 / -1;
 		min-height: 2.75em;
+	}
+}
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.pill[aria-pressed='true'] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
 	}
 }

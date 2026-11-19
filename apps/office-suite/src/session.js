@@ -1,7 +1,7 @@
 import { replaceEmbeddedPackage } from 'ooxml-core/opc';
 import { mountEditor, previewRefusal } from './editors.js';
 import { cloudReadOnly } from './cloud-files.js';
-import { isLocked, lockInput, takeComposed } from './session-lock.js';
+import { isLocked, lockInput, takeComposed, takeQueued } from './session-lock.js';
 import { deepActive, focusPlace, holds, returnFocus } from './focus-place.js';
 import { displayLanguage, onSettings } from './settings.js';
 
@@ -64,7 +64,7 @@ export class SuiteSessions {
 		// The assistant's suggestions on screen are a preview: only their review panel saves them.
 		if (s.preview) throw previewRefusal(s.doc.name);
 		const run = async () => {
-			s.editor.flush?.();
+			await s.editor.flush?.();
 			if (s.version === s.saved) {
 				const latest = await this.store.get(id);
 				if (latest.revision !== s.doc.revision) await this.reload(latest);
@@ -168,7 +168,7 @@ export class SuiteSessions {
 		if (session.preview) throw previewRefusal(session.doc.name);
 		const unlock = this.lock([id]);
 		try {
-			session.editor.flush?.();
+			await session.editor.flush?.();
 			return { ...session.doc, bytes: await session.editor.save() };
 		} finally {
 			unlock();
@@ -203,13 +203,20 @@ export class SuiteSessions {
 			unlock();
 		}
 	}
-	/** Refuse input to these documents until the returned function runs; focus stays put. */
+	/**
+	 * Refuse input to these documents until the returned function runs; focus stays put. A save
+	 * asked for meanwhile runs once the last lock on its document is released.
+	 */
 	lock(ids) {
 		const locked = ids.map((id) => this.sessions.get(id)).filter(Boolean);
 		const unlocks = locked.map((s) => lockInput(s.node));
 		return () =>
 			locked.forEach((s, index) => {
-				if (unlocks[index]()) this.settleComposed(s);
+				if (!unlocks[index]()) return;
+				this.settleComposed(s);
+				// The suite's command callback reports a failure itself.
+				for (const command of takeQueued(s.node))
+					void this.command(command, s.doc.id).catch(() => {});
 			});
 	}
 	/**

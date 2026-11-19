@@ -50,6 +50,7 @@ svg:not([data-painted]) {
 
 @media (forced-colors: active) {
 	button:focus-visible {
+		forced-color-adjust: none;
 		background: Highlight;
 		color: HighlightText;
 	}

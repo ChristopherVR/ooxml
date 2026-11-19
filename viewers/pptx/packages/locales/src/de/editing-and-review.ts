@@ -332,6 +332,8 @@ export const translations = {
 		'Die Lizenz einer eingebetteten Schriftart erlaubt ihre Verwendung nicht, daher wird eine Ersatzschrift angezeigt. Ihre Schriftdaten bleiben in der Datei.',
 	'pptx.compatibility.embeddedFontNotEmbeddable':
 		'Eine Schriftart wurde nicht eingebettet, weil ihre Lizenz das Einbetten in eine bearbeitbare Präsentation nicht erlaubt.',
+	'pptx.compatibility.collaborationValueRejected':
+		'Inhalte, die ein Mitbearbeiter gesendet hat, wurden ausgelassen, weil sie hier nicht zulässig sind, etwa ein unsicherer Link oder Dateityp.',
 	'pptx.compatibility.exportBackendUnavailable':
 		'Der Export in dieses Format ist in der aktuellen Umgebung nicht verfügbar.',
 } as const;

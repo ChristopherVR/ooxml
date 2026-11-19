@@ -9,6 +9,7 @@ import {
 	bindCollaborationHistory,
 	buildCollaborationState,
 	collaborationHistoryReady,
+	collaborationRefusalToast,
 	createCollaborationSessionController,
 	resolveCollaborationConfig,
 	resolveCollaborationShellState,
@@ -60,6 +61,7 @@ export function useCollaboration(options: UseCollaborationOptions): UseCollabora
 			document.stop();
 			presence.stop();
 		},
+		onRefused: (code) => options.onNotice?.(collaborationRefusalToast(code)),
 	});
 	const sessionState = useController(session);
 	const status = computed(() => sessionState.value.status) as Ref<ConnectionStatus>;

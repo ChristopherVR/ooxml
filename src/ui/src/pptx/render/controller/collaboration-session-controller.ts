@@ -20,6 +20,7 @@
  * @module render/controller/collaboration-session-controller
  */
 
+import type { UpdateRefusalCode } from 'ooxml-core/collab';
 import type { CollaborationConfig, CollaborationTransport } from '../../types';
 import { resolveTransportForServerUrl } from '../broadcast-helpers';
 import { resolveCollaborationConfig } from '../collaboration-options';
@@ -53,6 +54,11 @@ export interface CollaborationSessionState {
 	readonly clientId: number | null;
 	/** The first-write gate is open (only tracked for the controller's own gate). */
 	readonly synced: boolean;
+	/**
+	 * Why sharing stopped, when an update from the room was refused: the status is then `error`
+	 * until {@link CollaborationSessionController.retry} or a new start.
+	 */
+	readonly refusal: UpdateRefusalCode | null;
 }
 
 /** Timer seam; defaults to the global timers. */
@@ -87,6 +93,11 @@ export interface CollaborationSessionControllerDeps {
 	): void;
 	/** The session is ending (also on every restart): detach before it is disposed. */
 	onClose?(): void;
+	/**
+	 * An update from the room was refused and sharing stopped (see `refusal` in the state). The
+	 * binding shows `collaborationRefusalToast` for it.
+	 */
+	onRefused?(code: UpdateRefusalCode): void;
 	/** Leave the room on `pagehide` and rejoin from bfcache (default true). */
 	registerTeardown?: boolean;
 	connectTimeoutMs?: number;
@@ -117,6 +128,7 @@ const INITIAL: CollaborationSessionState = {
 	transport: null,
 	clientId: null,
 	synced: false,
+	refusal: null,
 };
 
 const defaultTimers: CollaborationSessionTimers = {
@@ -191,6 +203,14 @@ export function createCollaborationSessionController(
 		patch(INITIAL);
 	};
 
+	/** A refused update ended the sync: writes stay gated and the status stays `error`. */
+	const refused = (code: UpdateRefusalCode): void => {
+		cancelConnectTimer();
+		gate.reset();
+		patch({ status: 'error', refusal: code });
+		deps.onRefused?.(code);
+	};
+
 	const fail = (token: number): void => {
 		if (token === generation) {
 			stop();
@@ -205,13 +225,18 @@ export function createCollaborationSessionController(
 			return;
 		}
 		provider.onSynced(() => gate.open());
+		provider.onRefused?.((error) => {
+			if (session === live) {
+				refused(error.code);
+			}
+		});
 		if (provider.syncedNow) {
 			gate.open();
 		} else {
 			gate.arm();
 		}
 		provider.onStatus((connected) => {
-			if (session !== live) {
+			if (session !== live || store.getSnapshot().refusal) {
 				return;
 			}
 			if (connected) {
@@ -259,6 +284,11 @@ export function createCollaborationSessionController(
 				setStatus('connecting');
 				const owned = openOwnedCollaboration(requested);
 				releaseOwned = owned.release;
+				owned.onRefused((code) => {
+					if (token === generation) {
+						refused(code);
+					}
+				});
 				const prepared = await owned.ready;
 				if (token !== generation || !prepared) {
 					return;
@@ -303,6 +333,7 @@ export function createCollaborationSessionController(
 			? () => {}
 			: registerCollaborationTeardown({
 					leaveOnBeforeUnload: () => !store.getSnapshot().prepared?.externalSession,
+					leaveMessageOrigin: () => store.getSnapshot().config?.leaveMessageOrigin,
 					leave: stop,
 					rejoin: () => void retry(),
 				});

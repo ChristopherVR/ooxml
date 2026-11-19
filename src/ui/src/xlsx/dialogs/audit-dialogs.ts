@@ -18,7 +18,7 @@ import { selectOn } from './go-to';
 const evalBox = (ctx: EditorContext): HTMLDivElement => {
 	const box = el(ctx, 'div', 'xve-eval-box');
 	box.style.cssText =
-		'font-family:Consolas,monospace;border:1px solid var(--xve-input,var(--office-border,#c8c6c4));padding:6px 8px;min-height:3em;white-space:pre-wrap;word-break:break-all';
+		'font-family:Consolas,monospace;border:1px solid var(--xve-input,var(--office-control-border,#8a8886));padding:6px 8px;min-height:3em;white-space:pre-wrap;word-break:break-all';
 	return box;
 };
 

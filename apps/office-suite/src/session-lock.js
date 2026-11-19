@@ -10,6 +10,9 @@
  * the page does. The lock records the text each composition commits instead (`takeComposed`), so
  * the session can type it again when a reload replaced the editor's content, or count it as an
  * unsaved edit when the content stayed.
+ *
+ * Save is not lost either: Ctrl+S (or Cmd+S) pressed during the lock is refused like any key, and
+ * the lock remembers it (`takeQueued`), so the session saves once the write is done.
  */
 const REFUSED = [
 	'beforeinput',
@@ -27,15 +30,25 @@ const REFUSED = [
 	'touchstart',
 ];
 
+const CAPTURE = { capture: true };
+const held = new WeakMap();
+const composed = new WeakMap();
+const queued = new WeakMap();
+
+/** The suite command a refused key asks for, as the shell maps it when nothing is locked. */
+const commandOf = (event) =>
+	event.type === 'keydown' && (event.ctrlKey || event.metaKey) && event.key === 's'
+		? 'save'
+		: undefined;
+
 function refuse(event) {
 	event.stopPropagation();
 	if (event.type === 'keydown' && event.key === 'Tab') return;
 	event.preventDefault();
+	const command = commandOf(event);
+	if (command)
+		queued.set(event.currentTarget, new Set(queued.get(event.currentTarget)).add(command));
 }
-
-const CAPTURE = { capture: true };
-const held = new WeakMap();
-const composed = new WeakMap();
 
 function record(event) {
 	if (event.data)
@@ -76,4 +89,11 @@ export function takeComposed(node) {
 	const text = composed.get(node) ?? '';
 	composed.delete(node);
 	return text;
+}
+
+/** The commands asked for inside `node` while it was locked, each once, since the last call. */
+export function takeQueued(node) {
+	const commands = [...(queued.get(node) ?? [])];
+	queued.delete(node);
+	return commands;
 }

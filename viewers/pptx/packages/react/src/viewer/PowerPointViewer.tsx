@@ -144,7 +144,12 @@ import { useCollaborationDocumentSync } from './hooks/collaboration/useCollabora
 import { useCollaborationStateReport } from './hooks/collaboration/useCollaborationStateReport';
 import { useAutosaveCacheMaintenance } from './hooks/useAutosaveCacheMaintenance';
 import { useChartFormatCommands } from './hooks/useChartFormatCommands';
-import { useCompatibilityToastsState } from './hooks/useCompatibilityToastsState';
+import {
+	type UseCompatibilityToastsStateResult,
+	useCollaborationRefusalToast,
+	useCompatibilityToastsState,
+	useRemoteValueToast,
+} from './hooks/useCompatibilityToastsState';
 import { useController } from './hooks/useController';
 import { useDeckStyleHost } from './hooks/useDeckStyleHost';
 import { useDerivedSlideState } from './hooks/useDerivedSlideState';
@@ -557,6 +562,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			activeSlide,
 			selectedElement,
 		} = state;
+		useRemoteValueToast(slides, compatToastsState.setToasts);
 
 		// ── Ribbon Display Options (one controller per viewer) ─────────
 		const ribbonDisplayController = useRibbonDisplayController({
@@ -1938,6 +1944,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 													<CollaborationStateReporter
 														onChange={onCollaborationChange}
 														onStatus={onCollaborationStatus}
+														setToasts={compatToastsState.setToasts}
 													/>
 													<CollaborationDocumentSync
 														history={history}
@@ -2044,12 +2051,16 @@ function CollaborationStatusStrip() {
 function CollaborationStateReporter({
 	onChange,
 	onStatus,
+	setToasts,
 }: {
 	onChange: PowerPointViewerProps['onCollaborationChange'];
 	onStatus: PowerPointViewerProps['onCollaborationStatus'];
+	setToasts: UseCompatibilityToastsStateResult['setToasts'];
 }) {
 	const collab = useCollaboration();
 	useCollaborationStateReport(collab, onChange);
+	// Say why sharing stopped, when the room sent an update this viewer refused.
+	useCollaborationRefusalToast(collab?.refusal, setToasts);
 	useReportOnChange<ConnectionStatus>(collab?.status ?? 'disconnected', onStatus, 'disconnected');
 	return null;
 }

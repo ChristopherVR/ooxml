@@ -14,7 +14,7 @@ import {
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
-	activateModalFocus,
+	activateBackstage,
 	BACKSTAGE_NAV,
 	BACKSTAGE_TEMPLATES,
 	backstageCardsFor,
@@ -267,18 +267,18 @@ export class RibbonFileSectionComponent implements AfterViewInit, OnDestroy {
 			))();
 	}
 
-	private releaseFocus = (): void => {};
+	private releaseBackstage = (): void => {};
 
-	/** The backstage covers the editor: focus goes in, stays in, and Escape goes back. */
+	/** The backstage covers the viewer: focus goes in, stays in, and Escape goes back to File. */
 	ngAfterViewInit(): void {
 		const panel = this.panel()?.nativeElement;
 		if (panel) {
-			this.releaseFocus = activateModalFocus(panel, { onEscape: () => this.close.emit() });
+			this.releaseBackstage = activateBackstage(panel, () => this.close.emit());
 		}
 	}
 
 	ngOnDestroy(): void {
-		this.releaseFocus();
+		this.releaseBackstage();
 	}
 
 	protected date(timestamp: number): string {

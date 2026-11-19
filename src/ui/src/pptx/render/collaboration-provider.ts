@@ -16,6 +16,11 @@
  *
  * @module render/collaboration-provider
  */
+import {
+	guardProviderUpdates,
+	type MessageHandlerProviderLike,
+	type UpdateRefusedError,
+} from 'ooxml-core/collab';
 import type { CollaborationConfig, CollaborationTransport } from '../types';
 import { createDepartureChannel } from './collaboration-departure';
 import type { AwarenessLike } from './collaboration-presence-publisher';
@@ -41,6 +46,11 @@ export interface CollabProviderHandle {
 	onSynced: (cb: () => void) => void;
 	/** Whether the provider already reports its initial sync as complete. */
 	syncedNow: boolean;
+	/**
+	 * Subscribe to refused updates. The provider has dropped the update and stopped syncing
+	 * when the callback runs (websocket only: y-webrtc applies peer messages with no hook).
+	 */
+	onRefused?: (cb: (error: UpdateRefusedError) => void) => void;
 	/** Tear the provider down (departure, awareness withdrawal, disconnect, destroy). */
 	destroy: () => void;
 }
@@ -136,6 +146,15 @@ export async function createCollabProvider(
 		doc as never,
 		config.authToken ? { params: { token: config.authToken } } : undefined,
 	);
+	// y-websocket applies sync messages itself: scan each update before it does. A refused update
+	// would leave this copy without it and every later change that builds on it, so sync stops.
+	const refusals: ((error: UpdateRefusedError) => void)[] = [];
+	guardProviderUpdates(provider as MessageHandlerProviderLike, {
+		onRejected: (error) => {
+			for (const cb of refusals) cb(error);
+			provider.disconnect();
+		},
+	});
 	const awareness = provider.awareness as AwarenessLike;
 	const departure = createDepartureChannel(config.roomId, awareness as never);
 	return {
@@ -156,6 +175,7 @@ export async function createCollabProvider(
 				}
 			}) as never),
 		syncedNow: provider.synced,
+		onRefused: (cb) => refusals.push(cb),
 		destroy: () => {
 			departure.announce();
 			departure.dispose();

@@ -1,10 +1,9 @@
 import type { PresentationActionRunner } from 'ooxml-ui/pptx';
 import {
 	applyMediaCommandVerb,
-	downloadDataUrl,
 	findMediaElementByElementId,
 	firstShowSlideIndex,
-	openUrlInNewTab,
+	openOrDownloadPayload,
 	resolveOleVerbTarget,
 	resolveShowSlideIndexes,
 	safeOpenUrl,
@@ -88,11 +87,11 @@ export function buildWaveFourActionCallbacks(
 			if (!target) {
 				return;
 			}
-			if (target.action === 'download') {
-				downloadDataUrl(target.url, target.fileName ?? 'download');
-			} else {
-				openUrlInNewTab(target.url);
-			}
+			openOrDownloadPayload(
+				target.url,
+				target.fileName ?? 'download',
+				target.action === 'download',
+			);
 		},
 	};
 }

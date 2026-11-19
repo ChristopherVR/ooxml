@@ -114,7 +114,7 @@ export const imageNodeSpec: NodeSpec = {
 							...inlineRunPropertiesDomAttrs(node),
 							...(node.attrs.diagram ? { 'data-docx-smartart': '1' } : {}),
 							class: 'dve-image-placeholder',
-							style: `width:${node.attrs.widthPx}px;height:${node.attrs.heightPx}px`,
+							style: `width:${cssPixels(node.attrs.widthPx)}px;height:${cssPixels(node.attrs.heightPx)}px`,
 						},
 						node.attrs.unsupported,
 						...textBoxLines(node.attrs.textBoxText),
@@ -144,6 +144,15 @@ export const imageNodeSpec: NodeSpec = {
 						},
 					],
 };
+
+/**
+ * A size attribute as a number of CSS pixels. Node attributes can come from a collaboration peer,
+ * so anything that is not a finite number becomes 0 instead of reaching the style text.
+ */
+function cssPixels(value: unknown): number {
+	const pixels = Number(value);
+	return Number.isFinite(pixels) ? pixels : 0;
+}
 
 /** Only these schemes are ever placed in a rendered `href`; other targets stay in the model only. */
 export function isNavigableHref(href: unknown): href is string {

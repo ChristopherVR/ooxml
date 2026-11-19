@@ -15,7 +15,7 @@
 	border-bottom: 0;
 	font-size: 21px;
 	font-weight: 300;
-	color: var(--_vv-accent);
+	color: var(--_vv-accent-text);
 }
 .pane-collapse {
 	min-height: 28px;
@@ -35,7 +35,7 @@
 	top: 50%;
 	right: 8px;
 	translate: 0 -50%;
-	color: var(--_vv-accent);
+	color: var(--_vv-accent-text);
 	font-size: 15px;
 	pointer-events: none;
 }
@@ -198,7 +198,7 @@
 	border-right: 1px solid var(--_vv-border);
 	border-radius: 0;
 	background: var(--_vv-secondary);
-	color: var(--_vv-accent);
+	color: var(--_vv-accent-text);
 	font-size: 16px;
 }
 .shapes-strip[hidden] {

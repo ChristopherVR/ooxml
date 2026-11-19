@@ -1,29 +1,7 @@
 import { $, notify } from './ui.js';
-import { applyOfficeTheme, applyPowerPointTheme } from './theme-tokens.js';
+import { accents, applyOfficeTheme, applyPowerPointTheme, resolveTheme } from './theme-tokens.js';
 import { applyWorkspaceSettings, onSettings, settings } from './settings.js';
 
-/** Each accent: its name, the light-mode value and the dark-mode value. */
-export const accents = {
-	blue: ['Office blue', '#0f6cbd', '#479ef5'],
-	purple: ['Violet', '#5b5fc7', '#a3a5f0'],
-	teal: ['Teal', '#03787c', '#4cc2c7'],
-	green: ['Forest', '#107c41', '#54b054'],
-	orange: ['Amber', '#a84b00', '#f7924a'],
-	rose: ['Rose', '#b4126e', '#f27ac2'],
-	cranberry: ['Cranberry', '#a4262c', '#f1707b'],
-	graphite: ['Graphite', '#525252', '#a8a8a8'],
-};
-/** The accent as text on the canvas: the same in light mode, lifted for contrast in dark mode. */
-const accentInk = {
-	blue: ['#0f6cbd', '#7ab8ff'],
-	purple: ['#5b5fc7', '#bdbef8'],
-	teal: ['#03787c', '#7ad8dc'],
-	green: ['#107c41', '#7ccf8a'],
-	orange: ['#a84b00', '#ffae73'],
-	rose: ['#b4126e', '#f7a3d6'],
-	cranberry: ['#a4262c', '#f7a1a8'],
-	graphite: ['#525252', '#c4c4c4'],
-};
 export const DEFAULT_THEME = Object.freeze({ mode: 'dark', accent: 'blue' });
 /** A first visit opens in dark mode; the appearance settings remember any other choice. */
 let preferences = { ...DEFAULT_THEME };
@@ -37,7 +15,7 @@ const listeners = new Set();
 export function currentTheme() {
 	const mode =
 		preferences.mode === 'system' ? (media.matches ? 'dark' : 'light') : preferences.mode;
-	return { mode, accent: accents[preferences.accent][mode === 'dark' ? 2 : 1] };
+	return resolveTheme(mode, preferences.accent);
 }
 export function onTheme(listener) {
 	listeners.add(listener);
@@ -52,16 +30,7 @@ function apply() {
 	root.dataset.theme = theme.mode;
 	root.dataset.officeTheme = theme.mode;
 	root.style.setProperty('--blue', theme.accent);
-	root.style.setProperty(
-		'--accent-ink',
-		accentInk[preferences.accent][theme.mode === 'dark' ? 1 : 0],
-	);
-	root.style.setProperty('--office-accent', theme.accent);
-	root.style.setProperty('--office-accent-hover', theme.accent);
-	root.style.setProperty(
-		'--office-accent-foreground',
-		theme.mode === 'dark' ? '#141414' : '#ffffff',
-	);
+	root.style.setProperty('--accent-ink', theme.accentInk);
 	root.style.colorScheme = theme.mode;
 	for (const listener of listeners) listener(theme);
 }

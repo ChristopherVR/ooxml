@@ -27,7 +27,7 @@ button:focus-visible { outline: 2px solid var(--pptx-ring, #6366f1); outline-off
 	.strip { border-bottom-color: CanvasText; background: Canvas; color: CanvasText; }
 	button { background: ButtonFace; color: ButtonText; border: 1px solid ButtonText; }
 	button[aria-pressed="true"] { border: 2px solid Highlight; }
-	button:hover:not(:disabled) { background: Highlight; color: HighlightText; }
+	button:hover:not(:disabled) { forced-color-adjust: none; background: Highlight; color: HighlightText; }
 	button:focus-visible { outline-color: Highlight; }
 	.divider { background: CanvasText; }
 }

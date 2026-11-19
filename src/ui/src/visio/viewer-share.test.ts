@@ -3,8 +3,10 @@ import {
 	createCollabSession,
 	createMemoryHub,
 	transportProvider,
+	UPDATE_REFUSAL_MESSAGES,
 	type CollaborationState,
 } from 'ooxml-core/collab';
+import { collabStrings } from 'ooxml-core/i18n';
 import { createBackstage } from './backstage';
 import { ViewerController } from './controller';
 import { createVsdx, editVsdx, parseVsdx, type VisioEdit } from 'ooxml-core/visio';
@@ -192,6 +194,28 @@ describe('the collaboration contract on the share controller', () => {
 		expect(destroyed[0]).not.toHaveBeenCalled();
 		expect(destroyed[1]).not.toHaveBeenCalled();
 		for (const session of sessions) session.destroy();
+	});
+
+	it('says why sharing stopped when an update is refused, in the display language', async () => {
+		const hub = createMemoryHub();
+		const session = hostSession(hub, 'Ada');
+		const a = window('Ada');
+		a.share.locale = () => 'es';
+		const errors: Error[] = [];
+		a.share.onError = (error) => errors.push(error);
+		await a.controller.load(await createVsdx());
+		a.share.want({ session });
+		await until(() => a.share.active);
+		const evil = hub.createTransport('contract');
+		evil.connect({ open: () => {}, close: () => {}, message: () => {}, error: () => {} });
+		// A whole sync update whose struct has an unknown content type.
+		evil.send(new Uint8Array([0, 2, 5, 1, 1, 1, 0, 0x1f]));
+		const spanish = collabStrings.es[UPDATE_REFUSAL_MESSAGES.malformed];
+		expect(a.root.querySelector('.share-status')!.textContent).toBe(spanish);
+		expect(errors).toMatchObject([{ code: 'malformed', message: spanish }]);
+		expect(a.share.state).toMatchObject({ status: 'error', refusal: 'malformed' });
+		a.share.stop();
+		session.destroy();
 	});
 
 	it('keeps a panel-started room reported and owned by the controller', async () => {

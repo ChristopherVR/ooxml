@@ -17,12 +17,22 @@ export const LEGACY_PPTX_DEPARTURE_CHANNEL = 'pptx-viewer:collab-departures';
 export interface TeardownEventLike {
 	readonly persisted?: boolean;
 	readonly data?: unknown;
+	/** `message` only: the sender's origin. */
+	readonly origin?: string;
+	/** `message` only: the sending window. */
+	readonly source?: unknown;
 }
 export type TeardownListener = (event: TeardownEventLike) => void;
 export interface TeardownWindowLike {
 	addEventListener: (type: string, listener: TeardownListener) => void;
 	removeEventListener: (type: string, listener: TeardownListener) => void;
+	/** The embedding window; the window itself when it is not in a frame. */
+	readonly parent?: unknown;
+	readonly location?: { readonly origin?: string };
 }
+
+/** One allowed origin, several, or `'*'` for any. */
+export type LeaveMessageOrigin = string | readonly string[];
 
 export interface TeardownOptions {
 	/** Clear local awareness and destroy the transport. Called at most once per departure. */
@@ -35,6 +45,34 @@ export interface TeardownOptions {
 	target?: TeardownWindowLike;
 	/** The leave `postMessage` payload type; defaults to {@link COLLAB_LEAVE_MESSAGE}. */
 	leaveMessage?: string;
+	/**
+	 * Origins whose leave message is obeyed, for a host that embeds the frame from another origin.
+	 * Defaults to the frame's own origin; `'*'` accepts any origin. Whatever the origin, only the
+	 * embedding window (or the window itself) may send it. A function is read on every message, for
+	 * a session whose configuration arrives after the listeners are registered.
+	 */
+	leaveMessageOrigin?: LeaveMessageOrigin | (() => LeaveMessageOrigin | undefined);
+}
+
+/**
+ * Whether a `message` event is a leave request this window should obey: the right payload, sent
+ * by the embedding window or the window itself, from an allowed origin. Any other page can post to
+ * a window it holds a reference to, so the payload alone proves nothing.
+ */
+function isTrustedLeaveRequest(
+	event: TeardownEventLike,
+	target: TeardownWindowLike,
+	options: TeardownOptions,
+): boolean {
+	if (!isLeaveMessage(event.data, options.leaveMessage ?? COLLAB_LEAVE_MESSAGE)) return false;
+	if (event.source !== target && event.source !== (target.parent ?? target)) return false;
+	const configured =
+		typeof options.leaveMessageOrigin === 'function'
+			? options.leaveMessageOrigin()
+			: options.leaveMessageOrigin;
+	const allowed = configured ?? target.location?.origin;
+	const origins = typeof allowed === 'string' ? [allowed] : (allowed ?? []);
+	return origins.includes('*') || (event.origin !== undefined && origins.includes(event.origin));
 }
 
 function isLeaveMessage(data: unknown, expected: string): boolean {
@@ -54,7 +92,6 @@ export function registerTeardown(options: TeardownOptions): () => void {
 	const target = options.target ?? (globalThis as { window?: TeardownWindowLike }).window;
 	if (!target) return () => {};
 	const { leave, rejoin } = options;
-	const leaveMessage = options.leaveMessage ?? COLLAB_LEAVE_MESSAGE;
 	let left = false;
 	const doLeave = (): void => {
 		if (left) return;
@@ -79,7 +116,7 @@ export function registerTeardown(options: TeardownOptions): () => void {
 		rejoin();
 	};
 	const onMessage: TeardownListener = (event) => {
-		if (isLeaveMessage(event.data, leaveMessage)) doLeave();
+		if (isTrustedLeaveRequest(event, target, options)) doLeave();
 	};
 	const listeners = {
 		pagehide: onPageHide,

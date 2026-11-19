@@ -1667,6 +1667,7 @@ export * from './autosave-recovery-acknowledgement';
 // In-progress inline text counts as an autosave edit and reaches the snapshot.
 export * from './autosave-inline-draft';
 export * from './backstage';
+export * from './backstage-frame';
 export * from './cloud-open';
 export * from './read-only-badge';
 export * from './backstage-cards';

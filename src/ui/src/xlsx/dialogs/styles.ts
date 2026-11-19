@@ -20,7 +20,7 @@ export const DIALOG_CSS = `
 .xve-field { display: grid; grid-template-columns: minmax(110px, auto) 1fr; align-items: center; gap: 8px; }
 .xve-field-label { color: var(--xve-muted-foreground, var(--office-muted-foreground, #605e5c)); }
 .xve-input { box-sizing: border-box; min-height: 28px; padding: 3px 6px; border-radius: var(--xve-radius, var(--office-radius, 4px));
-	border: 1px solid var(--xve-input, var(--office-border, #c8c6c4)); background: var(--xve-background, var(--office-background, #fff)); color: inherit; font: inherit; min-width: 0; }
+	border: 1px solid var(--xve-input, var(--office-control-border, #8a8886)); background: var(--xve-background, var(--office-background, #fff)); color: inherit; font: inherit; min-width: 0; }
 textarea.xve-input { resize: vertical; }
 .xve-input[aria-invalid="true"] { border-color: var(--xve-destructive, var(--office-danger, #c50f1f)); }
 .xve-check { display: flex; align-items: center; gap: 6px; }
@@ -37,7 +37,7 @@ textarea.xve-input { resize: vertical; }
 .xve-tab[aria-selected="true"] { border-bottom-color: var(--xve-primary, var(--office-accent, #217346)); font-weight: 600; }
 .xve-tabpanel { padding-top: 10px; display: flex; flex-direction: column; gap: 10px; }
 .xve-tabpanel[hidden] { display: none; }
-.xve-listbox { border: 1px solid var(--xve-input, var(--office-border, #c8c6c4)); border-radius: var(--xve-radius, var(--office-radius, 4px));
+.xve-listbox { border: 1px solid var(--xve-input, var(--office-control-border, #8a8886)); border-radius: var(--xve-radius, var(--office-radius, 4px));
 	min-height: 120px; max-height: 220px; overflow: auto; background: var(--xve-background, var(--office-background, #fff)); }
 .xve-option { padding: 3px 8px; cursor: default; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .xve-option[aria-selected="true"] { background: var(--xve-selection, var(--office-selected, #cce8d6)); color: inherit; }
@@ -59,4 +59,9 @@ textarea.xve-input { resize: vertical; }
 .xve-border-box { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .xve-border-preview { width: 120px; height: 80px; position: relative; background: #fff; border: 1px dashed #c8c6c4; }
 @media (max-width: 600px) { .xve-field { grid-template-columns: 1fr; } .xve-symbols { grid-template-columns: repeat(8, 28px); } }
+@media (forced-colors: active) {
+.xve-tab[aria-selected="true"] { border-bottom-color: Highlight; }
+.xve-option[aria-selected="true"], .xve-tile[aria-pressed="true"], .xve-results tr[aria-selected="true"] td {
+	forced-color-adjust: none; border-color: Highlight; background: Highlight; color: HighlightText; }
+}
 `;

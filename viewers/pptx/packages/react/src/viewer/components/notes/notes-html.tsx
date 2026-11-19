@@ -1,7 +1,7 @@
+import { resolveHyperlinkHref, safeOpenUrl } from 'ooxml-ui/pptx';
 import type { TextSegment } from 'pptx-viewer-core';
 import React from 'react';
 
-import { isUrlSafe, safeOpenUrl } from '../../utils/hyperlink-security';
 import { INDENT_PX, segmentsToParagraphs } from './notes-utils';
 
 /* ------------------------------------------------------------------ */
@@ -76,8 +76,8 @@ export function renderRichNotesSegments(segments: TextSegment[]): React.ReactNod
 				style.fontFamily = segment.style.fontFamily;
 			}
 
-			if (segment.style.hyperlink && isUrlSafe(segment.style.hyperlink)) {
-				const safeHref = segment.style.hyperlink;
+			const safeHref = resolveHyperlinkHref(segment.style.hyperlink);
+			if (safeHref) {
 				style.color = '#4a9eff';
 				style.textDecoration = 'underline';
 				style.cursor = 'pointer';

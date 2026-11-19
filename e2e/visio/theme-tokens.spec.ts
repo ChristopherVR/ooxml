@@ -55,8 +55,9 @@ const officeLight: Paint = {
 	surface: 'rgb(255, 255, 255)',
 	ink: 'rgb(31, 41, 55)',
 };
+// Accent text is the accent ink: in a dark scheme a lighter tint of the accent, for 4.5:1.
 const officeDark: Paint = {
-	accent: 'rgb(99, 102, 241)',
+	accent: 'color(srgb 0.632941 0.64 0.967059)',
 	surface: 'rgb(17, 24, 39)',
 	ink: 'rgb(249, 250, 251)',
 };
@@ -111,3 +112,55 @@ for (const theme of ['light', 'dark'] as const) {
 		await expect.poll(() => paint(page)).toEqual(officeDark);
 	});
 }
+
+/** The current page tab's label and the shapes search field's boundary. */
+async function pageBar(page: Page) {
+	return page.evaluate(() => {
+		const root = document.querySelector('visio-viewer')!.shadowRoot!;
+		const tab = root
+			.querySelector('office-ui-tab-strip')!
+			.shadowRoot!.querySelector('button.tab[aria-selected="true"]')!;
+		const search = root.querySelector('.shapes-search-field');
+		return {
+			tab: getComputedStyle(tab).color,
+			search: search ? getComputedStyle(search).borderBottomColor : 'missing',
+		};
+	});
+}
+
+test('host overrides reach the current page tab in order: --vv-accent-text, --vv-accent, a container accent', async ({
+	page,
+}) => {
+	await openThemedDemo(page, 'light');
+	await page.addStyleTag({ content: unsetHostTokens });
+	await page.evaluate(() => (document.documentElement.dataset.officeTheme = 'light'));
+	await expect.poll(async () => (await pageBar(page)).tab).toBe(officeLight.accent);
+
+	// A container's accent reaches the label: the accent ink is resolved where it is read.
+	const container = () =>
+		page.evaluate((value) => {
+			document
+				.querySelector('visio-viewer')!
+				.parentElement!.style.setProperty('--office-accent', value);
+		}, 'rgb(170, 0, 0)');
+	await container();
+	await expect.poll(async () => (await pageBar(page)).tab).toBe('rgb(170, 0, 0)');
+
+	const host = (name: string, value: string) =>
+		page.evaluate(
+			([n, v]) => document.querySelector<HTMLElement>('visio-viewer')!.style.setProperty(n!, v!),
+			[name, value],
+		);
+	await host('--vv-accent', 'rgb(0, 100, 0)');
+	await expect.poll(async () => (await pageBar(page)).tab).toBe('rgb(0, 100, 0)');
+	await host('--vv-accent-text', 'rgb(0, 0, 160)');
+	await expect.poll(async () => (await pageBar(page)).tab).toBe('rgb(0, 0, 160)');
+
+	// Form fields take the control boundary, which a container can override too.
+	await page.evaluate(() =>
+		document
+			.querySelector('visio-viewer')!
+			.parentElement!.style.setProperty('--office-control-border', 'rgb(0, 0, 255)'),
+	);
+	await expect.poll(async () => (await pageBar(page)).search).toBe('rgb(0, 0, 255)');
+});

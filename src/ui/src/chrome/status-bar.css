@@ -134,7 +134,7 @@
 	color: var(--office-foreground);
 }
 .bar button[aria-pressed='true'] {
-	color: var(--office-accent);
+	color: var(--office-accent-ink);
 }
 .bar button:active {
 	opacity: 0.8;
@@ -184,6 +184,7 @@
 		color: ButtonText;
 	}
 	.bar button:hover {
+		forced-color-adjust: none;
 		background: Highlight;
 		color: HighlightText;
 	}

@@ -1,6 +1,7 @@
 import { needsPicturePixels } from '../../picture-pixels';
 import { pictureSvg } from '../../picture-view';
 import { imageContentType } from 'ooxml-core/drawingml';
+import { pictureUrl } from 'ooxml-core/opc';
 import { pictureEffectFilter } from '../../picture-effects';
 import { imageRectFromCrop } from 'ooxml-core/geometry';
 // Pictures, charts and SmartArt over the grid, positioned from their anchors in the quadrant of their
@@ -75,7 +76,8 @@ export class DrawingLayer {
 		const bytes = this.#view.workbook()?.source?.parts.get(partName);
 		const win = viewOf(this.#view.root);
 		if (!bytes || !win?.URL?.createObjectURL) return undefined;
-		const url = win.URL.createObjectURL(new Blob([bytes.slice().buffer], { type: contentType }));
+		// An SVG picture gets an opaque-origin data: URL, so opening it in a tab runs nothing here.
+		const url = pictureUrl(bytes, contentType, (blob) => win.URL.createObjectURL(blob));
 		this.#urls.set(partName, url);
 		return url;
 	}

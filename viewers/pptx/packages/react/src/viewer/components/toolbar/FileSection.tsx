@@ -1,4 +1,5 @@
 import {
+	activateBackstage,
 	BACKSTAGE_BACK_CLASSES,
 	BACKSTAGE_NAV,
 	BACKSTAGE_NAV_CLASSES,
@@ -16,7 +17,6 @@ import type {
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { LuArrowLeft, LuFolderOpen, LuSettings } from 'react-icons/lu';
 
-import { useModalFocus } from '../../hooks/useModalFocus';
 import { useToolbarVisibility } from '../../hooks/useToolbarVisibility';
 import { useTranslation } from '../../i18n/use-translation';
 import { useViewerCloudFiles } from '../viewer-cloud-files-context';
@@ -51,9 +51,17 @@ export function FileSection(p: FileSectionProps): React.ReactElement {
 	const cloud = useViewerCloudFiles();
 	const placeLabels = useMemo(() => openPlacesLabels(t), [t]);
 	const [placeId, setPlaceId] = useState<string>();
-	// The backstage covers the editor: focus goes in, stays in, and Escape goes back.
+	// The backstage covers the viewer: focus goes in, stays in, and Escape goes back to File.
+	// `onClose` is usually inline; reading it through a ref keeps the backstage armed once.
 	const panelRef = useRef<HTMLDivElement>(null);
-	useModalFocus(true, panelRef, p.onClose);
+	const onCloseRef = useRef(p.onClose);
+	useEffect(() => {
+		onCloseRef.current = p.onClose;
+	}, [p.onClose]);
+	useEffect(() => {
+		const panel = panelRef.current;
+		return panel ? activateBackstage(panel, () => onCloseRef.current()) : undefined;
+	}, []);
 	useEffect(() => {
 		void listBackstageRecentFiles(t, p.recentPresentationsCount, storage).then(setRecent);
 	}, [t, p.recentPresentationsCount, storage]);

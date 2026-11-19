@@ -3,6 +3,7 @@
 // `startYjsCollaboration` exposes. Also reports the state of any Yjs binding, however started.
 import {
 	collaborationStateOf,
+	isUpdateRefusal,
 	onCollaborationStateChange,
 	openCollaborationSession,
 	sanitizeUserName,
@@ -14,6 +15,7 @@ import type { WordYjsOptions } from 'ooxml-core/docx/ui';
 import type { EditorCore } from './editor-core';
 import { renderDocument } from './editor-render';
 import { emit } from './events';
+import { dispatchDocumentError } from './editor-host';
 import {
 	OFF_STATE,
 	type DocxCollaborationOptions,
@@ -184,7 +186,13 @@ export class DocxRoom {
 		if (this.#watching?.session === session) return;
 		this.#unwatch();
 		const stops = [onCollaborationStateChange(session, () => this.#changed())];
-		if (reportErrors) stops.push(session.on('error', (error) => this.host.error(error)));
+		// A refused update stops sharing, so it is reported whoever owns the session (the bound
+		// document leaves refusals to this, since one can come before the document is bound).
+		stops.push(
+			session.on('error', (error) => {
+				if (reportErrors || isUpdateRefusal(error)) this.host.error(error);
+			}),
+		);
 		this.#watching = {
 			session,
 			stop: () => {
@@ -239,7 +247,7 @@ export function roomFor(core: EditorCore): DocxRoom {
 		author: () => core.reviewAuthor,
 		join: (session, options) => joinYjs(core, session, options),
 		leave: () => leaveYjs(core),
-		error: (error) => emit(core.element, 'document-error', error),
+		error: (error) => dispatchDocumentError(core.element, error),
 		changed: (state) => emit(core.element, 'collaboration-change', state),
 	});
 }

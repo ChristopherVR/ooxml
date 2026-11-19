@@ -103,3 +103,14 @@
 		display: none !important;
 	}
 }
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.dve-page-thumb[aria-selected='true'],
+	.dve-page-thumb[aria-selected='true'] .dve-page-thumb-number {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
+}

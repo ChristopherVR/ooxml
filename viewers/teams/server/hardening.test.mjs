@@ -6,8 +6,9 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, describe, it } from 'node:test';
+import * as encoding from 'lib0/encoding';
 import { WebSocket } from 'ws';
-import { createTeamsServer } from './index.mjs';
+import { createTeamsServer, defaultMaxSyncBytes } from './index.mjs';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const until = async (fn, ms = 4000) => {
@@ -71,6 +72,51 @@ describe('teams server hardening', () => {
 		});
 	after(() => {
 		for (const dir of dirs) rmSync(dir, { recursive: true, force: true });
+	});
+
+	it('closes a socket whose update would allocate too many structs, before decoding it', async () => {
+		const { server, port } = await start({ maxUpdateStructs: 1000 });
+		const sync = await open(port, '/sync/bomb');
+		assert.equal(sync.ok, true);
+		// One client declaring 5000 two-byte structs, framed as a sync update.
+		const body = encoding.createEncoder();
+		for (const n of [1, 5000, 42, 0]) encoding.writeVarUint(body, n);
+		for (let i = 0; i < 5000; i++) {
+			encoding.writeUint8(body, 0);
+			encoding.writeVarUint(body, 1);
+		}
+		encoding.writeVarUint(body, 0);
+		const frame = encoding.createEncoder();
+		encoding.writeVarUint(frame, 0);
+		encoding.writeVarUint(frame, 2);
+		encoding.writeVarUint8Array(frame, encoding.toUint8Array(body));
+		sync.ws.send(encoding.toUint8Array(frame));
+		assert.equal(await sync.closed, 1009);
+		assert.equal(await raw(port, '/health'), 200);
+		await server.close();
+	});
+
+	it('budgets structs by update size by default, and sizes sync messages to the heap', async () => {
+		const { server, port } = await start();
+		const sync = await open(port, '/sync/bomb');
+		// 100,000 two-byte structs: twice what a 200 kB update may hold by default.
+		const body = encoding.createEncoder();
+		for (const n of [1, 100_000, 42, 0]) encoding.writeVarUint(body, n);
+		for (let i = 0; i < 100_000; i++) {
+			encoding.writeUint8(body, 0);
+			encoding.writeVarUint(body, 1);
+		}
+		encoding.writeVarUint(body, 0);
+		const frame = encoding.createEncoder();
+		encoding.writeVarUint(frame, 0);
+		encoding.writeVarUint(frame, 2);
+		encoding.writeVarUint8Array(frame, encoding.toUint8Array(body));
+		sync.ws.send(encoding.toUint8Array(frame));
+		assert.equal(await sync.closed, 1009);
+		await server.close();
+		const MiB = 1024 * 1024;
+		assert.equal(defaultMaxSyncBytes(512 * MiB), 8 * MiB);
+		assert.equal(defaultMaxSyncBytes(4096 * MiB), 32 * MiB);
 	});
 
 	it('answers bad percent-encoding with 400 instead of crashing', async () => {

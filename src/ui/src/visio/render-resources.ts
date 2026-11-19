@@ -1,3 +1,4 @@
+import { pictureUrl } from 'ooxml-core/opc';
 import type { VisioImage } from 'ooxml-core/visio';
 import { svgElement } from './render-svg';
 
@@ -43,10 +44,10 @@ export class RenderResources {
 				symbol.append(node);
 				this.definitions.append(symbol);
 				url = `#${symbol.id}`;
-			} else
-				url = URL.createObjectURL(
-					new Blob([Uint8Array.from(image.bytes)], { type: image.mimeType }),
-				);
+			} else {
+				// An SVG picture gets an opaque-origin data: URL, so opening it in a tab runs nothing here.
+				url = pictureUrl(image.bytes, image.mimeType);
+			}
 			types.set(image.mimeType, url);
 		}
 		return url;

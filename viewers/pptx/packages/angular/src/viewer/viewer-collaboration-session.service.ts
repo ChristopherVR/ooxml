@@ -19,7 +19,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import type { ActiveSessionUserDescriptor } from 'ooxml-ui/pptx';
 import { buildActiveSessionUsers } from 'ooxml-ui/pptx';
-import type { CollaborationHistoryTarget } from 'ooxml-ui/pptx';
+import type { CollaborationHistoryTarget, CompatibilityWarningToast } from 'ooxml-ui/pptx';
 import type { PptxHandlerSaveOptions, PptxSlide } from 'pptx-viewer-core';
 
 import type { BroadcastConfig } from './broadcast-helpers';
@@ -45,6 +45,8 @@ interface CollaborationSessionHost {
 	readonly getTemplateElements: () => TemplateElementsBySlideId;
 	/** Apply a remote peer's slide set to the editable deck (echo-guarded in the service). */
 	readonly applyRemoteSlides: (slides: PptxSlide[]) => void;
+	/** Show a notice in the viewer's stack (why sharing stopped, when an update was refused). */
+	readonly notify: (toast: CompatibilityWarningToast) => void;
 	/** The editor history, so Undo and Redo reach only this user's edits in a room. */
 	readonly history: CollaborationHistoryTarget;
 	/** Current slide-canvas size (presence bounds). */
@@ -154,6 +156,7 @@ export class ViewerCollaborationSessionService {
 		return {
 			history: host.history,
 			onRemoteSlides: (slides) => host.applyRemoteSlides(slides),
+			onNotice: (toast) => host.notify(toast),
 			canvasWidth: size.width,
 			canvasHeight: size.height,
 			getSourceBytes: () => host.getSourceBytes(),

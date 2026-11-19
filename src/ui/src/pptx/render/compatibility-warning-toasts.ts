@@ -17,6 +17,9 @@
  * Framework-agnostic: no React, Vue, Angular, Svelte or DOM imports.
  */
 
+import type { UpdateRefusalCode } from 'ooxml-core/collab';
+import { REMOTE_VALUE_REJECTED } from 'ooxml-core/pptx/editor/render/collaboration-sync';
+
 /** The `PptxCompatibilityWarning` fields this module reads. Declared structurally. */
 export interface CompatibilityWarningSource {
 	readonly code: string;
@@ -99,6 +102,9 @@ const CODE_MESSAGE_KEYS: Readonly<Record<string, string>> = {
 	EXPORT_BACKEND_UNAVAILABLE: 'pptx.compatibility.exportBackendUnavailable',
 	EMBEDDED_FONT_RESTRICTED: 'pptx.compatibility.embeddedFontRestricted',
 	EMBEDDED_FONT_NOT_EMBEDDABLE: 'pptx.compatibility.embeddedFontNotEmbeddable',
+	// Recorded as slides are read from a collaboration room, not at load (core's
+	// `collaboration-remote-values.ts`); see {@link createRemoteValueNotifier}.
+	[REMOTE_VALUE_REJECTED]: 'pptx.compatibility.collaborationValueRejected',
 };
 
 /** Fallback key for a warning code with no entry in {@link CODE_MESSAGE_KEYS}. */
@@ -133,4 +139,67 @@ export function compatibilityWarningToasts(
 		});
 	}
 	return [...seen.values()];
+}
+
+/** A slide's own warnings, structurally. */
+interface SlideWarningsSource {
+	readonly id?: string;
+	readonly warnings?: readonly (CompatibilityWarningSource & { readonly message?: string })[];
+}
+
+/**
+ * Watch the slides a binding adopts from a collaboration room for values a
+ * peer sent that were left out (`COLLABORATION_REMOTE_VALUE_REJECTED`).
+ * Returns a function to call with each newly adopted slide list: it gives the
+ * toast to show when the list carries a rejection not reported before, and
+ * `undefined` otherwise, so a dismissed toast only returns for new content.
+ * Every binding adds the toast to its stack through its usual notice path.
+ */
+export function createRemoteValueNotifier(): (
+	slides: readonly SlideWarningsSource[],
+) => CompatibilityWarningToast | undefined {
+	const reported = new Set<string>();
+	return (slides) => {
+		let fresh: CompatibilityWarningSource | undefined;
+		for (const warning of remoteValueWarnings(slides)) {
+			const key = `${warning.slideId ?? ''}|${warning.elementId ?? ''}|${warning.message ?? ''}`;
+			if (!reported.has(key)) {
+				reported.add(key);
+				fresh ??= warning;
+			}
+		}
+		return fresh ? compatibilityWarningToasts([fresh])[0] : undefined;
+	};
+}
+
+/** Every collaboration rejection warning `slides` carry. */
+export function remoteValueWarnings(
+	slides: readonly SlideWarningsSource[],
+): (CompatibilityWarningSource & { readonly message?: string })[] {
+	return slides.flatMap((slide) =>
+		(slide.warnings ?? []).filter((warning) => warning.code === REMOTE_VALUE_REJECTED),
+	);
+}
+
+/** Toast code of a refused collaboration update; one toast at a time, whatever the reason. */
+export const COLLABORATION_REFUSED = 'COLLABORATION_UPDATE_REFUSED';
+
+const REFUSAL_MESSAGE_KEYS: Readonly<Record<UpdateRefusalCode, string>> = {
+	'too-large': 'pptx.collaboration.refused.tooLarge',
+	malformed: 'pptx.collaboration.refused.malformed',
+	'server-rejected': 'pptx.collaboration.refused.serverRejected',
+	'server-full': 'pptx.collaboration.refused.serverFull',
+};
+
+/**
+ * The toast that says why sharing stopped, when an update was refused (the collaboration session
+ * controller's `refusal`). Every binding adds it to its notice stack through its usual path.
+ */
+export function collaborationRefusalToast(code: UpdateRefusalCode): CompatibilityWarningToast {
+	return {
+		id: COLLABORATION_REFUSED,
+		code: COLLABORATION_REFUSED,
+		severity: 'warning',
+		messageKey: REFUSAL_MESSAGE_KEYS[code],
+	};
 }

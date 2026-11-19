@@ -10,8 +10,11 @@ import { isRecord, jsonEqual } from './schema';
 export interface PartSpec<T extends object> {
 	/** The plain JSON of an item; undefined leaves the item out of the shared state. */
 	encode: (item: T) => unknown;
-	/** The item of an entry, or undefined when the entry is malformed. */
-	decode: (raw: unknown) => T | undefined;
+	/**
+	 * The item of an entry, or undefined when the entry is malformed. A field left out of an item
+	 * that is otherwise kept is named to `refuse`.
+	 */
+	decode: (raw: unknown, refuse?: (field: string) => void) => T | undefined;
 	/** When set, the entry key is derived from the content (at most one entry per key). */
 	fixedKey?: (encoded: unknown) => string;
 	/** Matches a copy to its entry when neither identity nor content do. */
@@ -116,6 +119,9 @@ function positions(keys: readonly (string | undefined)[], known: Map<string, num
 	return out;
 }
 
+/** Told about each value a peer wrote that reading left out: a field, or `entry` for a whole item. */
+export type RefuseValue = (field: string) => void;
+
 /** Writes `items` into `map` where they differ; keys of vanished items are deleted. */
 export function writeKeyed<T extends object>(
 	map: PrefixStore,
@@ -218,6 +224,7 @@ export function readKeyed<T extends object>(
 	local: readonly T[],
 	ids: PartIds,
 	spec: PartSpec<T>,
+	refuse?: RefuseValue,
 ): T[] | undefined {
 	const entries = [...map.entries()]
 		.filter((pair): pair is [string, Entry] => isEntry(pair[1]))
@@ -264,8 +271,11 @@ export function readKeyed<T extends object>(
 		let item: T | undefined;
 		if (counterpart && jsonEqual(encode(counterpart), entry.d)) item = counterpart;
 		else {
-			item = spec.decode(entry.d);
-			if (!item) continue;
+			item = spec.decode(entry.d, refuse);
+			if (!item) {
+				refuse?.('entry');
+				continue;
+			}
 			spec.adopt?.(item, counterpart);
 		}
 		if (counterpart) unclaimed.delete(counterpart);

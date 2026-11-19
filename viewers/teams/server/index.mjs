@@ -28,6 +28,7 @@ import {
 } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { getHeapStatistics } from 'node:v8';
 import { WebSocketServer } from 'ws';
 import * as Y from 'yjs';
 import * as syncProtocol from 'y-protocols/sync';
@@ -47,6 +48,7 @@ import {
 	PROTOCOL_VERSION,
 	applyUpdateReverts,
 	protocolOfUrl,
+	scanUpdate,
 	validateTeamsSyncMessage,
 } from './validator.generated.mjs';
 import {
@@ -127,6 +129,16 @@ export function syncGrant(verdict, user) {
 const WS_OPEN = 1;
 const SERVER_OWNER = Symbol('server');
 
+/**
+ * The default largest sync message: 32 MiB, or a 64th of the heap when that is smaller. Checking
+ * and applying a first sync of a dense workbook, or a frame at the update budget, takes up to 35
+ * MiB of memory per MiB of message; a 512 MiB heap was measured to survive 8 MiB frames at the
+ * budget but not every 16 MiB one, and a 1 GiB heap 16 MiB frames but not every 30 MiB one.
+ */
+export function defaultMaxSyncBytes(heapBytes = getHeapStatistics().heap_size_limit) {
+	return Math.min(32 * 1024 * 1024, Math.floor(heapBytes / 64));
+}
+
 const sameSecret = sameCredential;
 
 const quietSize = (path) => {
@@ -151,7 +163,7 @@ const unlinkQuiet = (path) => {
  *   sessionRate?: { windowMs?: number, perIp?: number, perUser?: number }, maxFileBytes?: number, maxSyncBytes?: number, maxSignalBytes?: number,
  *   maxConnections?: number, maxConnectionsPerIp?: number, maxRooms?: number, maxDocBytes?: number,
  *   metricsToken?: string, compactIntervalMs?: number, sweepIntervalMs?: number, workspaceQuotaBytes?: number,
- *   messageRate?: number, messageBurst?: number, filesQuotaBytes?: number, enforceAuthorship?: boolean, maxMessageChars?: number, maxReactionsPerMessage?: number,
+ *   messageRate?: number, messageBurst?: number, filesQuotaBytes?: number, enforceAuthorship?: boolean, maxMessageChars?: number, maxReactionsPerMessage?: number, maxUpdateStructs?: number,
  *   authorizeSync?: (request: { room: string, user: string | null, url: URL,
  *   headers: Record<string, string | string[] | undefined> }) => SyncVerdict | Promise<SyncVerdict>,
  *   log?: (m: string) => void }} [options]
@@ -172,7 +184,7 @@ export function createTeamsServer(options = {}) {
 		sessionTtlMs,
 		adminToken = process.env.TEAMS_ADMIN_TOKEN || '',
 		maxFileBytes = 25 * 1024 * 1024,
-		maxSyncBytes = 32 * 1024 * 1024,
+		maxSyncBytes = defaultMaxSyncBytes(),
 		maxSignalBytes = 256 * 1024,
 		metricsToken = process.env.TEAMS_METRICS_TOKEN || '',
 		log = () => {},
@@ -190,6 +202,14 @@ export function createTeamsServer(options = {}) {
 		options.maxReactionsPerMessage ?? Number(process.env.TEAMS_MAX_REACTIONS_PER_MESSAGE);
 	if (Number.isInteger(maxReactions) && maxReactions > 0)
 		contentLimits.maxReactionsPerMessage = maxReactions;
+	// What one update may make Yjs allocate, checked before it is decoded (see "Limits" in the README).
+	const maxUpdateStructs = options.maxUpdateStructs ?? Number(process.env.TEAMS_MAX_UPDATE_STRUCTS);
+	// Unset, the budget is proportional to the update's size (one struct per 4 bytes).
+	const updateLimits =
+		Number.isInteger(maxUpdateStructs) && maxUpdateStructs > 0
+			? { maxStructs: maxUpdateStructs }
+			: {};
+	Object.assign(contentLimits, updateLimits);
 	const authenticate = options.authenticate ?? (users ? authenticateFromUsers(users) : undefined);
 	// Per-room permissions decided by the host (see "Per-room permissions" in the README).
 	const authorizeSync = typeof options.authorizeSync === 'function' ? options.authorizeSync : null;
@@ -535,6 +555,15 @@ export function createTeamsServer(options = {}) {
 					if (readOnly) return;
 					if (kind !== syncProtocol.messageYjsSyncStep2 && kind !== syncProtocol.messageYjsUpdate)
 						throw new Error(`unknown sync message ${kind}`);
+					const update = decoding.readVarUint8Array(decoder);
+					// Counted without decoding, so a small frame cannot allocate millions of structs.
+					const scan = scanUpdate(update, updateLimits);
+					if (!scan.ok) {
+						log(`sync ${name}: update refused before decoding (${scan.reason})`);
+						if (!scan.overLimit) throw new Error(scan.reason);
+						countRejected({ code: 'update_too_complex' });
+						return void ws.close(1009, 'update too complex');
+					}
 					let reverts;
 					if (actor) {
 						const verdict = validateTeamsSyncMessage(
@@ -561,7 +590,6 @@ export function createTeamsServer(options = {}) {
 							return void ws.close(1009, 'document too large');
 						}
 					}
-					const update = decoding.readVarUint8Array(decoder);
 					// The validator has already applied an update without reverts to a copy.
 					if (!actor || reverts) rehearseUpdate(room.doc, update, reverts);
 					// One transaction, so one broadcast. Reverts must reach the sender too.

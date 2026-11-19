@@ -19,6 +19,8 @@ export interface PartHost {
 	store: (part: ListPart) => PrefixStore;
 	ids: (part: ListPart) => PartIds;
 	mint: () => string;
+	/** Told about each value a peer wrote that reading left out. */
+	refuse?: (part: ListPart, field: string) => void;
 }
 
 type Reply = NonNullable<Comment['replies']>[number];
@@ -69,6 +71,7 @@ export function applySheetParts(
 	const wants = (part: ListPart): PrefixStore | undefined =>
 		!parts || parts.has(part) ? host.store(part) : undefined;
 	let changed = false;
+	const refuse = (part: ListPart) => (field: string) => host.refuse?.(part, field);
 	const swap = <T extends object>(
 		part: ListPart,
 		list: T[],
@@ -76,7 +79,7 @@ export function applySheetParts(
 		rebuild: (next: T[]) => void,
 	): void => {
 		const shared = wants(part);
-		const next = shared && readKeyed(shared, list, host.ids(part), spec);
+		const next = shared && readKeyed(shared, list, host.ids(part), spec, refuse(part));
 		if (!next) return;
 		rebuild(next);
 		changed = true;
@@ -93,12 +96,24 @@ export function applySheetParts(
 		const local = allReplies(sheet.comments);
 		let commentsNext: Comment[] | undefined;
 		if (commentsShared) {
-			commentsNext = readKeyed(commentsShared, sheet.comments, host.ids('comments'), commentSpec);
+			commentsNext = readKeyed(
+				commentsShared,
+				sheet.comments,
+				host.ids('comments'),
+				commentSpec,
+				refuse('comments'),
+			);
 			if (commentsNext) sheet.comments.splice(0, sheet.comments.length, ...commentsNext);
 		}
 		const decoded = new Map<object, string>();
 		const repliesNext = repliesShared
-			? readKeyed(repliesShared, local, host.ids('replies'), replySpec(owners, decoded))
+			? readKeyed(
+					repliesShared,
+					local,
+					host.ids('replies'),
+					replySpec(owners, decoded),
+					refuse('replies'),
+				)
 			: undefined;
 		if (commentsNext || repliesNext) {
 			const grouped = new Map<string, Reply[]>();

@@ -1,4 +1,9 @@
 export const EDITOR_INSPECTOR_CSS = `
+@media (forced-colors: active) {
+  [data-pptx-editor-chrome] [data-pptx-chrome="inspector-tabs"] button[aria-selected="true"] {
+    forced-color-adjust: none; background: Highlight; color: HighlightText;
+  }
+}
 @media (min-width: 768px) {
   [data-pptx-editor-chrome] [data-pptx-chrome="inspector"] {
     background: var(--pptx-background); color: var(--pptx-foreground);
@@ -57,7 +62,7 @@ export const EDITOR_INSPECTOR_CSS = `
     width: 64px; height: 22.5px; min-height: 22.5px;
   }
   [data-pptx-editor-chrome] :is([data-pptx-chrome="inspector-card"], .pptx-editor-card) :is(input:not([type="checkbox"]):not([type="color"]), select) {
-    box-sizing: border-box; max-width: 100%; border: 1px solid var(--pptx-border);
+    box-sizing: border-box; max-width: 100%; border: 1px solid var(--pptx-input);
     border-radius: 4px; padding: 2px 6px; font-size: 11px; line-height: 16.5px;
     background: var(--pptx-muted); color: var(--pptx-foreground);
   }

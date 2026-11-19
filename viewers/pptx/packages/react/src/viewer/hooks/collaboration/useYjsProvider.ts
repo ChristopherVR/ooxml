@@ -1,3 +1,4 @@
+import type { UpdateRefusalCode } from 'ooxml-core/collab';
 /**
  * useYjsProvider: the React adapter of the shared collaboration session
  * controller (`createCollaborationSessionController` in `ooxml-ui/pptx`).
@@ -67,6 +68,8 @@ export interface UseYjsProviderResult {
 	synced: boolean;
 	/** Manually retry the connection after a timeout or error. */
 	retry: () => void;
+	/** Why sharing stopped, when an update from the room was refused (status `error`). */
+	refusal: UpdateRefusalCode | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -107,6 +110,7 @@ export function useYjsProvider({ config: inputConfig }: UseYjsProviderInput): Us
 		const disposeTeardown = registerCollaborationTeardown({
 			leave: () => controller.stop(),
 			rejoin: () => void controller.retry(),
+			leaveMessageOrigin: () => controller.getSnapshot().config?.leaveMessageOrigin,
 		});
 		return () => {
 			disposeTeardown();
@@ -132,6 +136,7 @@ export function useYjsProvider({ config: inputConfig }: UseYjsProviderInput): Us
 		doc: (session?.doc as YDoc | undefined) ?? null,
 		clientId: state.clientId,
 		synced: state.synced,
+		refusal: state.refusal,
 		retry: () => {
 			void controller.retry();
 		},

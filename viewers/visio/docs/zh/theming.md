@@ -34,21 +34,22 @@ visio-viewer {
 
 早期的 `--vv-*` 令牌仍然有效。每个令牌一旦设置，就会优先于它所别名的 `--office-*` 令牌；未设置时，查看器则回退到共享令牌。若只想重新设置本查看器的外观而不影响页面的其他部分，可以使用它们。
 
-| 令牌               | 回退到                       | 作用                         |
-| ------------------ | ---------------------------- | ---------------------------- |
-| `--vv-font`        | `--office-font`              | 字体系列                     |
-| `--vv-background`  | `--office-surface`           | 窗口背景                     |
-| `--vv-surface`     | `--office-background`        | 功能区和面板表面             |
-| `--vv-secondary`   | `--office-surface`           | 次要表面                     |
-| `--vv-shadow`      | `--office-shadow`            | 页面阴影                     |
-| `--vv-ink`         | `--office-foreground`        | 主要文本                     |
-| `--vv-muted`       | `--office-muted-foreground`  | 次要文本                     |
-| `--vv-border`      | `--office-border`            | 边框                         |
-| `--vv-accent`      | `--office-accent`            | 强调色                       |
-| `--vv-accent-soft` | 强调色的 10%                 | 柔和的强调表面（悬停、选中） |
-| `--vv-accent-ink`  | `--office-accent-foreground` | 强调色上的文本               |
-| `--vv-focus`       | `--office-ring`              | 焦点环                       |
-| `--vv-danger`      | `--office-danger`            | 破坏性操作和错误状态         |
+| 令牌               | 回退到                                    | 作用                                                             |
+| ------------------ | ----------------------------------------- | ---------------------------------------------------------------- |
+| `--vv-font`        | `--office-font`                           | 字体系列                                                         |
+| `--vv-background`  | `--office-surface`                        | 窗口背景                                                         |
+| `--vv-surface`     | `--office-background`                     | 功能区和面板表面                                                 |
+| `--vv-secondary`   | `--office-surface`                        | 次要表面                                                         |
+| `--vv-shadow`      | `--office-shadow`                         | 页面阴影                                                         |
+| `--vv-ink`         | `--office-foreground`                     | 主要文本                                                         |
+| `--vv-muted`       | `--office-muted-foreground`               | 次要文本                                                         |
+| `--vv-border`      | `--office-border`                         | 边框                                                             |
+| `--vv-accent`      | `--office-accent`                         | 强调色                                                           |
+| `--vv-accent-soft` | 强调色的 10%                              | 柔和的强调表面（悬停、选中）                                     |
+| `--vv-accent-ink`  | `--office-accent-foreground`              | 强调色上的文本                                                   |
+| `--vv-accent-text` | `--vv-accent`，然后 `--office-accent-ink` | 作为文本的强调色（当前页标签、强调标签）；与表面对比度至少 4.5:1 |
+| `--vv-focus`       | `--office-ring`                           | 焦点环                                                           |
+| `--vv-danger`      | `--office-danger`                         | 破坏性操作和错误状态                                             |
 
 演示环境会在文档根元素上设置 `data-theme="light" | "dark"`，并在 `demos/visio/demo/workspace.css` 中为其自身的页面外壳（起始界面、工作区外壳）提供相应的 `--vv-*` 值；该文件仍然有效，因为 `--vv-*` 覆盖项依然生效。
 

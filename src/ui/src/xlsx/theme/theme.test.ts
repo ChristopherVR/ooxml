@@ -8,7 +8,7 @@ import { normalizeThemeMode } from 'ooxml-core/xlsx/ui';
 
 describe('theme tokens', () => {
 	it('defines the docx token set plus the grid tokens in both presets', () => {
-		expect(THEME_KEYS).toHaveLength(27);
+		expect(THEME_KEYS).toHaveLength(28);
 		for (const preset of [lightTheme, darkTheme])
 			for (const key of THEME_KEYS) expect(preset[key], key).toBeTruthy();
 	});
@@ -28,11 +28,13 @@ describe('theme tokens', () => {
 	});
 
 	it('inherits shared Office theme values without shadow-local defaults', () => {
-		expect(themeTokenText).toContain(':host{color-scheme:inherit;');
+		// The editor reads the accent ink in the Office palette's scheme, not the host page's.
+		expect(themeTokenText).toContain(':host{color-scheme:var(--office-color-scheme, light);');
 		expect(editorStyleText).not.toContain('--xve-background:');
 		expect(themeTokenText).not.toContain('--office-background:');
 		expect(editorStyleText).toContain('.xve-frame {');
-		expect(editorStyleText).toContain('var(--xve-card, var(--office-surface))');
+		// Bare token reads carry the token's default, so derived tokens resolve where they are read.
+		expect(editorStyleText).toContain('var(--xve-card, var(--office-surface, #f3f4f6))');
 	});
 
 	it('falls back to auto for unknown modes', () => {
@@ -43,12 +45,12 @@ describe('theme tokens', () => {
 
 describe('canonical Office tokens', () => {
 	it('reads legacy host overrides before canonical semantic colours', () => {
-		expect(editorStyleText).toContain('var(--xve-foreground, var(--office-foreground))');
+		expect(editorStyleText).toContain('var(--xve-foreground, var(--office-foreground, #1f2937))');
 		expect(themeTokenText).toContain(
 			'--xlsx-theme-primary: var(--xve-primary, var(--office-accent, #2563eb))',
 		);
 		expect(editorStyleText).toContain('--office-accent: var(--xlsx-theme-primary);');
-		expect(editorStyleText).toContain('var(--xve-border, var(--office-border))');
+		expect(editorStyleText).toContain('var(--xve-border, var(--office-border, #d1d5db))');
 	});
 });
 

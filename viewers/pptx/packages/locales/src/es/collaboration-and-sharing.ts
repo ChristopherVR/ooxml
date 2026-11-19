@@ -16,6 +16,14 @@ export const translations = {
 	'pptx.collaboration.status.connecting': 'Conectando...',
 	'pptx.collaboration.status.disconnected': 'Desconectado',
 	'pptx.collaboration.status.error': 'Error de conexión',
+	'pptx.collaboration.refused.tooLarge':
+		'Un cambio de la sesión compartida es demasiado grande para aplicarlo aquí, por lo que se detuvo el uso compartido. Su copia no ha cambiado.',
+	'pptx.collaboration.refused.malformed':
+		'No se pudo leer un cambio de la sesión compartida, por lo que se detuvo el uso compartido. Su copia no ha cambiado.',
+	'pptx.collaboration.refused.serverRejected':
+		'El servidor rechazó su último cambio, por lo que se detuvo el uso compartido. Su copia conserva el cambio.',
+	'pptx.collaboration.refused.serverFull':
+		'El documento compartido alcanzó el límite de tamaño del servidor, por lo que se detuvo el uso compartido. Su copia conserva su último cambio.',
 	'pptx.collaboration.statusAriaLabel': 'Colaboración: {{status}}',
 	'pptx.collaboration.userCount': '{{count}} usuario(s)',
 	'pptx.collaboration.youLabel': '{{name}} (tú)',

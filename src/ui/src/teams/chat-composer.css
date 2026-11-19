@@ -12,7 +12,7 @@
 .box {
 	position: relative;
 	border: var(--office-border-width) solid var(--office-teams-divider);
-	border-block-end: var(--office-border-width-thick) solid var(--office-teams-divider);
+	border-block-end: var(--office-border-width-thick) solid var(--office-field-border);
 	border-radius: var(--office-radius-md);
 	background: var(--office-field-background);
 }
@@ -76,7 +76,7 @@ textarea {
 	cursor: not-allowed;
 }
 .bar .send:not(:disabled) {
-	color: var(--office-teams-brand);
+	color: var(--office-teams-brand-ink);
 }
 .pending {
 	display: flex;
@@ -204,11 +204,21 @@ textarea:focus-visible {
 	height: 2em;
 	border-radius: 50%;
 	background: var(--office-teams-brand-subtle);
-	color: var(--office-teams-brand);
+	color: var(--office-teams-brand-ink);
 	font-weight: 700;
 }
 @media (pointer: coarse) {
 	.mentions li {
 		min-height: var(--office-touch-target, 44px);
+	}
+}
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.mentions li[aria-selected='true'] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
 	}
 }

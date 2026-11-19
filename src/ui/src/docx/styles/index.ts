@@ -27,7 +27,8 @@ import pasteOptions from './paste-options.css?raw';
 // Legacy custom properties remain inputs, never defaults that hide an inherited Office theme.
 // Resolve at the host before mapping onto inner shared controls to avoid CSS variable cycles.
 export const themeTokenText =
-	legacyThemeAliases(':host', '--dve-', '--_dve-') + ':host{color-scheme:inherit;}';
+	legacyThemeAliases(':host', '--dve-', '--_dve-') +
+	':host{color-scheme:var(--office-color-scheme, light);}';
 
 export const editorStyleText = [
 	themeTokenText,

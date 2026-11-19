@@ -30,7 +30,7 @@ import { useLayoutEffect, useRef } from 'react';
 import type { PowerPointViewerHandle } from '../types';
 import type { ViewerMode } from '../types-core';
 import type { AutosaveStatus } from './useAutosave';
-import { useCompatibilityToastsState } from './useCompatibilityToastsState';
+import { useCompatibilityToastsState, useRemoteValueToast } from './useCompatibilityToastsState';
 import type { EditorOperationsResult } from './useEditorOperations';
 import { useEditorOperations } from './useEditorOperations';
 import type { ExportHandlersResult } from './useExportHandlers';
@@ -216,6 +216,7 @@ export function useViewerBuildingBlocksState(
 	// still needs somewhere to put the per-load setters.
 	const readOnlyRec = useReadOnlyRecommendationState(content);
 	const compatToastsState = useCompatibilityToastsState();
+	useRemoteValueToast(slides, compatToastsState.setToasts);
 
 	// ── Clear selection on slide change (same hook PowerPointViewer runs) ──
 	useClearSelectionOnSlideChange(state, activeSlideIndex);
