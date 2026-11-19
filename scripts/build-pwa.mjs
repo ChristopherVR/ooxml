@@ -2,6 +2,7 @@ import { readFile, writeFile, mkdir, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { deflateSync } from 'node:zlib';
+import { bundleShellCss } from './shell-css.mjs';
 
 const products = [
 	['office', 'OOXML Office', '', '#0f6cbd'],
@@ -52,6 +53,7 @@ function icon(size, color) {
 	]);
 }
 export async function buildPwa(out) {
+	const shellCss = await bundleShellCss(out);
 	const template = await readFile(join(out, 'index.html'), 'utf8');
 	await mkdir(join(out, 'icons'), { recursive: true });
 	for (const [slug, name, product, color] of products) {
@@ -91,7 +93,7 @@ export async function buildPwa(out) {
 				.replace('<title>OOXML Office</title>', `<title>${name}</title>`)
 				.replace('name="ooxml-root" content="./"', 'name="ooxml-root" content="../../"')
 				.replace(
-					/(src|href)="(appearance-init\.js|favicon\.svg|styles\.css|themes\.css|workspace\.css|suite\.js)"/g,
+					/(src|href)="(appearance-init\.js|favicon\.svg|shell-[0-9a-f]+\.css|suite\.js)"/g,
 					`$1="../../$2"`,
 				)
 				.replace('href="icons/office-192.png"', `href="../../icons/${slug}-192.png"`);
@@ -120,9 +122,9 @@ export async function buildPwa(out) {
 	}
 	await walk(out);
 	files.sort();
-	// The shell's scripts and styles keep fixed names, so every reference to one from a page or
-	// from workspace.css gets ?v=<hash of every asset>: a deploy changes the URL, which bypasses
-	// the HTTP cache and any older service worker. Chunks in suite-assets are content-hashed.
+	// The shell's scripts keep fixed names, so every reference to one from a page gets
+	// ?v=<hash of every asset>: a deploy changes the URL, which bypasses the HTTP cache and any
+	// older service worker. The shell stylesheet and the chunks in suite-assets are content-hashed.
 	const assets = createHash('sha256');
 	for (const file of files.filter((f) => !f.endsWith('.html')))
 		assets.update(file).update(await readFile(join(out, file)));
@@ -130,25 +132,21 @@ export async function buildPwa(out) {
 	const stamped = new Set();
 	const versioned = (text, pattern) =>
 		text.replace(pattern, (match, before, path, name, after) => {
-			if (!files.includes(name)) return match;
+			if (!files.includes(name) || name === shellCss) return match;
 			stamped.add(name);
 			return `${before}${path}${name}?v=${stamp}${after}`;
 		});
-	for (const file of files.filter((f) => f.endsWith('.html') || f === 'workspace.css')) {
+	for (const file of files.filter((f) => f.endsWith('.html'))) {
 		const text = await readFile(join(out, file), 'utf8');
 		await writeFile(
 			join(out, file),
-			file.endsWith('.html')
-				? versioned(
-						text,
-						/((?:src|href)=")((?:\.\.\/\.\.\/)?)([\w-]+\.(?:js|css))(")/g,
-						// The app shows this as its version (apps/office-suite/src/updates.js).
-					).replace(
-						'<meta name="ooxml-root"',
-						`<meta name="ooxml-build" content="${stamp}" />
+			versioned(text, /((?:src|href)=")((?:\.\.\/\.\.\/)?)([\w-]+\.(?:js|css))(")/g)
+				// The app shows this as its version (apps/office-suite/src/updates.js).
+				.replace(
+					'<meta name="ooxml-root"',
+					`<meta name="ooxml-build" content="${stamp}" />
 		<meta name="ooxml-root"`,
-					)
-				: versioned(text, /(@import url\(')(\.\/)([\w-]+\.css)('\))/g),
+				),
 		);
 	}
 	const cached = files.map((f) => (stamped.has(f) ? `${f}?v=${stamp}` : f));
