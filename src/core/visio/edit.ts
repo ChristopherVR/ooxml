@@ -1,4 +1,5 @@
 import { DEFAULTS, fail, VisioPackageError, type VisioPackageLimits } from './package-common';
+import { operationStep, withOperationMemory } from './memory-budget';
 import { visioXml, related } from './parts';
 import { openEditablePackage, writeEditedPackage } from './edit-package';
 import { prepareVisioPackageForEdit } from './package-kind';
@@ -174,7 +175,22 @@ function positive(value: number): number {
 export async function editVsdx(
 	input: Uint8Array | ArrayBuffer,
 	edits: readonly VisioEdit[],
-	options: EditVsdxOptions = {},
+	given: EditVsdxOptions = {},
+): Promise<EditVsdxResult> {
+	// Every package the edit opens, and every read it makes, share one memory budget, which the
+	// nested transactions below are given with these options.
+	const options = {
+		...given,
+		limits: withOperationMemory(given.limits, input.byteLength, 'edit'),
+	};
+	// An edit nested in another (a later transaction of it) gives its memory back once it settles.
+	return operationStep(options.limits, () => editVsdxWith(input, edits, options));
+}
+
+async function editVsdxWith(
+	input: Uint8Array | ArrayBuffer,
+	edits: readonly VisioEdit[],
+	options: EditVsdxOptions,
 ): Promise<EditVsdxResult> {
 	const clock = {
 		deadline: 0,
@@ -247,23 +263,29 @@ async function editVisioPrepared(
 	const limits = { ...DEFAULTS, ...options.limits };
 	// Resizing, deleting or copying a shape with a data graphic: the graphic is off while the edit
 	// runs and written again for the shape afterwards.
-	const guarded = await stripDataGraphics(
-		input,
-		edits,
-		limits,
-		positive(options.maxOutputBytes ?? limits.maxInputBytes),
-		Date.now() + limits.maxRuntimeMs,
+	// Each step below opens packages of its own and keeps none of them.
+	const step = <T>(run: () => Promise<T>) => operationStep(options.limits, run);
+	const guarded = await step(() =>
+		stripDataGraphics(
+			input,
+			edits,
+			limits,
+			positive(options.maxOutputBytes ?? limits.maxInputBytes),
+			Date.now() + limits.maxRuntimeMs,
+		),
 	);
 	if (guarded) {
 		const done = await editVisioPrepared(guarded.bytes, edits, options, clock);
 		const restored = guarded.restore.length
-			? await editVsdxDataGraphics(
-					done.bytes,
-					guarded.restore,
-					limits,
-					positive(options.maxOutputBytes ?? limits.maxInputBytes),
-					Date.now() + limits.maxRuntimeMs,
-					() => undefined,
+			? await step(() =>
+					editVsdxDataGraphics(
+						done.bytes,
+						guarded.restore,
+						limits,
+						positive(options.maxOutputBytes ?? limits.maxInputBytes),
+						Date.now() + limits.maxRuntimeMs,
+						() => undefined,
+					),
 				)
 			: done;
 		return {
@@ -275,12 +297,14 @@ async function editVisioPrepared(
 	// A new cross-functional flowchart is built from Visio's hidden flowchart masters, which the
 	// drawing gets first (and keeps), so the chart's parts can be instances of them.
 	const cff = edits.some((edit) => edit.type === 'create-swimlanes')
-		? await ensureCffMasters(
-				input,
-				limits,
-				positive(options.maxOutputBytes ?? limits.maxInputBytes),
-				Date.now() + limits.maxRuntimeMs,
-				() => undefined,
+		? await step(() =>
+				ensureCffMasters(
+					input,
+					limits,
+					positive(options.maxOutputBytes ?? limits.maxInputBytes),
+					Date.now() + limits.maxRuntimeMs,
+					() => undefined,
+				),
 			)
 		: undefined;
 	const first = await editVsdxTransaction(cff?.bytes ?? input, edits, options, clock);
@@ -288,15 +312,13 @@ async function editVisioPrepared(
 		? { ...first, changedParts: [...new Set([...cff.changedParts, ...first.changedParts])] }
 		: first;
 	// Shapes that size themselves from their text follow it, as far as it can be measured.
-	const resized = await refreshTextSizes(clock.textSizes, edited, options, clock.deadline);
-	const result = await refreshLineJumpCaches(
-		clock.jumpPages,
-		clock.jumpSource,
-		resized,
-		options,
-		clock.deadline,
+	const resized = await step(() =>
+		refreshTextSizes(clock.textSizes, edited, options, clock.deadline),
 	);
-	const grown = await growAutoSizePages(clock.autoSize, result, (bytes, growth) =>
+	const result = await step(() =>
+		refreshLineJumpCaches(clock.jumpPages, clock.jumpSource, resized, options, clock.deadline),
+	);
+	const grown = await growAutoSizePages(clock.autoSize, result, options.limits, (bytes, growth) =>
 		editVsdxTransaction(bytes, growth, {
 			...options,
 			limits: { ...options.limits, maxRuntimeMs: Math.max(1, clock.deadline - Date.now()) },
@@ -304,18 +326,30 @@ async function editVisioPrepared(
 	);
 	// Data graphic callouts follow the Shape Data they show.
 	if (!edits.some((edit) => changesDataGraphicValues(edit.type))) return grown;
-	return refreshDataGraphics(
-		grown,
-		edits.some((edit) => isVisioDataEdit(edit))
-			? 'all'
-			: new Set(edits.flatMap((edit) => ('pageId' in edit ? [edit.pageId] : []))),
-		limits,
-		positive(options.maxOutputBytes ?? limits.maxInputBytes),
-		Date.now() + limits.maxRuntimeMs,
+	return step(() =>
+		refreshDataGraphics(
+			grown,
+			edits.some((edit) => isVisioDataEdit(edit))
+				? 'all'
+				: new Set(edits.flatMap((edit) => ('pageId' in edit ? [edit.pageId] : []))),
+			limits,
+			positive(options.maxOutputBytes ?? limits.maxInputBytes),
+			Date.now() + limits.maxRuntimeMs,
+		),
 	);
 }
 
-async function editVsdxTransaction(
+/** One transaction: what its packages charged is given back once it settles. */
+function editVsdxTransaction(
+	input: Uint8Array | ArrayBuffer,
+	edits: readonly VisioEdit[],
+	options: EditVsdxOptions,
+	clock?: Parameters<typeof runTransaction>[3],
+): Promise<EditVsdxResult> {
+	return operationStep(options.limits, () => runTransaction(input, edits, options, clock));
+}
+
+async function runTransaction(
 	input: Uint8Array | ArrayBuffer,
 	edits: readonly VisioEdit[],
 	options: EditVsdxOptions,
@@ -361,31 +395,34 @@ async function editVsdxTransaction(
 			original,
 			allCommands,
 			options,
-			async (bytes, instance, info) => {
-				const opened = await openEditablePackage(bytes, limits, check);
-				return editVsdxMasterInstance(
-					opened.pkg,
-					opened.parts,
-					opened.pages,
-					instance,
-					limits,
-					maxOutput,
-					deadline,
-					check,
-					info,
-				);
-			},
+			(bytes, instance, info) =>
+				operationStep(options.limits, async () => {
+					const opened = await openEditablePackage(bytes, limits, check);
+					return editVsdxMasterInstance(
+						opened.pkg,
+						opened.parts,
+						opened.pages,
+						instance,
+						limits,
+						maxOutput,
+						deadline,
+						check,
+						info,
+					);
+				}),
 			(bytes, rest) => editVsdx(bytes, rest, options),
 		);
 	if (allCommands.some(isVisioDataGraphicEdit)) {
 		// The graphic is written first, as a transaction of its own; the other edits follow it.
-		const graphic = await editVsdxDataGraphics(
-			original,
-			allCommands.filter(isVisioDataGraphicEdit),
-			limits,
-			maxOutput,
-			deadline,
-			check,
+		const graphic = await operationStep(options.limits, () =>
+			editVsdxDataGraphics(
+				original,
+				allCommands.filter(isVisioDataGraphicEdit),
+				limits,
+				maxOutput,
+				deadline,
+				check,
+			),
 		);
 		const rest = allCommands.filter((command) => !isVisioDataGraphicEdit(command));
 		if (!rest.length) return graphic;

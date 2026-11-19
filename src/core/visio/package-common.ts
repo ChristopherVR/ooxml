@@ -1,3 +1,5 @@
+import { defaultXmlHeapBytes } from './heap-limit';
+
 /** Limits apply to declared ZIP sizes and actual streamed output, independently. */
 export interface VisioPackageLimits {
 	maxInputBytes: number;
@@ -10,9 +12,12 @@ export interface VisioPackageLimits {
 	maxXmlNodes: number;
 	maxTotalXmlNodes: number;
 	/**
-	 * Estimated V8 heap, in bytes, the parsed XML of the whole package may hold. Each part is
-	 * costed while it is scanned, before its DOM is built: 800 bytes an element, 240 an attribute,
-	 * 140 any other node and 1 a character, as measured for the shared XML parser.
+	 * Estimated V8 heap, in bytes, one read or edit may hold: the parsed XML of every package it
+	 * opens (twice over for an edit, which may copy what it reads) and, for a read, the model.
+	 * Each part is costed while it is scanned, before its DOM is built: 800 bytes an element, 240
+	 * an attribute, 140 any other node and 1 a character, as measured for the shared XML parser.
+	 * By default, the host's heap limit less 256 MiB, divided by 1.6 (the peak heap measured per
+	 * byte charged), or 480 MiB where the runtime reports no limit.
 	 */
 	maxXmlHeapBytes: number;
 	/**
@@ -50,16 +55,13 @@ export const DEFAULTS: VisioPackageLimits = {
 	maxXmlChars: 16 * 1024 * 1024,
 	maxXmlDepth: 128,
 	// Bounds the DOM construction of one part, which `maxRuntimeMs` cannot interrupt: a
-	// 10,000-shape page at 125 nodes a shape (the 90th percentile of the pages measured).
-	maxXmlNodes: 1_250_000,
+	// 10,000-shape page at 150 nodes a shape (Visio saves 128 for a Basic Shapes rectangle).
+	maxXmlNodes: 1_500_000,
 	maxTotalXmlNodes: 2_000_000,
-	// Memory is bounded by the heap estimate, not the node counts: a 10,000-shape page at the
-	// 90th percentile of 54 KB of heap a shape, plus 64 MiB for masters, themes and other parts.
-	// Measured peaks (README, Bounded processing): about 500 MB for 10,000 plain shapes and
-	// 810 MB for the densest XML the budget lets through; a 48 KB file of the densest XML is
-	// refused in 0.2 s at 16 MB, where the node limits alone let it reach 1 GB.
-	maxXmlHeapBytes: 600 * 1024 * 1024,
-	// Drawings Visio saves estimate 90 to 145 bytes per input byte, generated pages of identical
+	// Memory is bounded by the heap estimate, not the node counts, and the estimate follows the
+	// host's heap so no drawing can exhaust it (README, Bounded processing).
+	maxXmlHeapBytes: defaultXmlHeapBytes(),
+	// Drawings Visio saves estimate 90 to 3,100 bytes per input byte, generated pages of identical
 	// shapes about 2,100; this refuses the densest XML a 50 KB file can hold before it is parsed.
 	maxXmlHeapPerInputByte: 4096,
 	maxRuntimeMs: 10_000,

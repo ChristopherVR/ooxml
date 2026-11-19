@@ -41,10 +41,10 @@ describe('large pages', () => {
 	);
 	it('refuses a larger page with its shape count', { timeout: 120_000 }, async () => {
 		await expect(
-			parseVsdx(await largePage(15_000), { limits: { maxRuntimeMs: 120_000 } }),
+			parseVsdx(await largePage(18_000), { limits: { maxRuntimeMs: 120_000 } }),
 		).rejects.toMatchObject({
 			code: 'LIMIT_XML',
-			message: expect.stringMatching(/^The page has 15000 shapes, more than this viewer can open/),
+			message: expect.stringMatching(/^The page has 18000 shapes, more than this viewer can open/),
 		});
 	});
 });

@@ -12,6 +12,7 @@ import { shapeConnections } from './shape-connections';
 import { shapeSections } from './shape-sections';
 import { readConnectorJumps } from './connector-jumps';
 import { VisioPackageError } from './package';
+import { MODEL_HEAP } from './memory-budget';
 import { shapeStyle, shapeText, type Resources } from './style';
 import {
 	emptySheet,
@@ -36,6 +37,8 @@ export interface ShapeContext extends StyleContext {
 	/** A master without page dimensions uses its local box for infinite-line thumbnails. */
 	clipToShape?: boolean;
 	shapeCount: number;
+	/** Charges the heap a part of the model will take to the read's memory budget. */
+	chargeHeap: (bytes: number) => void;
 	consumeExpansion: () => void;
 	consumeGeometry: () => void;
 	consumeCurveWork: (units: number) => void;
@@ -102,6 +105,7 @@ export function normalizeShapes(
 			context.checkTime();
 			if (++context.shapeCount > context.maxShapes)
 				throw new VisioPackageError('SHAPE_LIMIT', 'Shape count limit exceeded.');
+			context.chargeHeap(MODEL_HEAP.shape);
 			const report: Report = (code, message, extra) =>
 				context.report(code, message, { ...extra, shapeId: original.id });
 			let shape = original;

@@ -12,7 +12,8 @@ export async function openEditablePackage(
 	limits: VisioPackageLimits,
 	check: () => void,
 ): Promise<{ pkg: VisioPackage; parts: Map<string, Uint8Array>; pages: Map<string, string> }> {
-	const pkg = await VisioPackage.open(bytes, limits);
+	// An edit copies the parts it changes, so each part it reads is charged twice.
+	const pkg = await VisioPackage.open(bytes, limits, 2);
 	const types = await pkg.readXml('[Content_Types].xml', 'Types');
 	if (types.namespaceURI !== 'http://schemas.openxmlformats.org/package/2006/content-types')
 		fail('INVALID_CONTENT_TYPES', 'Invalid content type namespace.');

@@ -1,4 +1,5 @@
 import { fail, type VisioPackageLimits } from './package-common';
+import type { VisioMemoryBudget } from './memory-budget';
 
 const xmlName = '[\\p{L}_:][\\p{L}\\p{N}\\p{M}_.:\\-\\u00b7]*';
 const tagName = new RegExp(`^(${xmlName})`, 'u');
@@ -37,36 +38,18 @@ export function nodeLimitMessage(xml: string, limit: number): string {
  * character of the part (attribute values and text keep slices of it).
  */
 const HEAP = { element: 800, attribute: 240, other: 140, char: 1 } as const;
-/** Heap a package may spend on parsed XML however small its file (see `maxXmlHeapPerInputByte`). */
-const HEAP_FLOOR = 64 * 1024 * 1024;
-/** Estimated heap the parsed XML of one package has taken, and what it may take. */
-export interface XmlHeapBudget {
-	used: number;
-	readonly limit: number;
-	/** Throws the error that says why the next part does not fit. */
-	readonly refuse: () => never;
-}
-/** The heap budget of a package whose file is `inputBytes` long. */
-export function xmlHeapBudget(limits: VisioPackageLimits, inputBytes: number): XmlHeapBudget {
-	const scaled = Math.max(HEAP_FLOOR, inputBytes * limits.maxXmlHeapPerInputByte);
-	const limit = Math.min(limits.maxXmlHeapBytes, scaled);
-	const mb = Math.round(limit / 1048576);
-	const message =
-		limit < limits.maxXmlHeapBytes
-			? `This ${Math.ceil(inputBytes / 1024)} KB drawing would need more than ${mb} MB of memory to open, far more than drawings of its size need.`
-			: `This drawing would need more than ${mb} MB of memory to open, more than this viewer allows.`;
-	return { used: 0, limit, refuse: () => fail('LIMIT_XML_MEMORY', message) };
-}
 /**
  * Bound DOM construction first and reject the malformed input that tolerant XML parsers repair.
- * With `heap`, the part's estimated heap is added to it, or the scan stops once it would not fit.
+ * With `heap`, the part's estimated heap, `copies` times over, is added to it, or the scan stops
+ * once it would not fit.
  */
 export function inspectXml(
 	xml: string,
 	limits: VisioPackageLimits,
 	check: () => void,
 	encoding = 'utf-8',
-	heap?: XmlHeapBudget,
+	heap?: Pick<VisioMemoryBudget, 'used' | 'limit' | 'refuse'>,
+	copies = 1,
 ): number {
 	if (xml.length > limits.maxXmlChars) fail('LIMIT_XML', 'XML character limit exceeded');
 	if (
@@ -77,12 +60,12 @@ export function inspectXml(
 	const stack: { name: string; namespaces: NamespaceScope }[] = [];
 	let nodes = 0,
 		roots = 0,
-		at = 0,
-		used = (heap?.used ?? 0) + xml.length * HEAP.char;
+		at = 0;
+	let used = (heap?.used ?? 0) + xml.length * HEAP.char * copies;
 	if (heap && used > heap.limit) heap.refuse();
 	const node = (cost: number) => {
 		if (++nodes > limits.maxXmlNodes) fail('LIMIT_XML', nodeLimitMessage(xml, limits.maxXmlNodes));
-		if (heap && (used += cost) > heap.limit) heap.refuse();
+		if (heap && (used += cost * copies) > heap.limit) heap.refuse();
 	};
 	const text = (value: string) => {
 		if (/&(?!(?:amp|lt|gt|apos|quot|#\d+|#x[\da-fA-F]+);)/.test(value))
