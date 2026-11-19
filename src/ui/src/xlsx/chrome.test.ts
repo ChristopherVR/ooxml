@@ -50,6 +50,36 @@ describe('status bar', () => {
 		);
 	});
 
+	it('fills in the statistics of a large sheet after the selection paints', async () => {
+		const workbook = createWorkbook();
+		const ws = workbook.sheets[0]!;
+		for (let row = 0; row < 30_000; row++) ws.rows.set(row, new Map([[0, { value: 1 }]]));
+		const { core } = shellFixture(workbook);
+		const frames: (() => void)[] = [];
+		const view = document.defaultView!;
+		const original = view.requestAnimationFrame;
+		view.requestAnimationFrame = (paint) => frames.push(() => paint(0));
+		try {
+			const bar = createStatusBar(core.ctx, {
+				showNotes: () => undefined,
+				setZoom: () => undefined,
+			});
+			const text = () => bar.element.querySelector('.xve-status-stats')!.textContent;
+			core.selection.set({
+				ranges: [{ start: { row: 0, col: 0 }, end: { row: 1_048_575, col: 0 } }],
+			});
+			bar.refresh();
+			bar.refresh();
+			expect(frames).toHaveLength(1);
+			expect(text()).toBe('');
+			frames[0]!();
+			await new Promise((done) => setTimeout(done, 0));
+			expect(text()).toBe('Average: 1    Count: 30,000    Sum: 30000');
+		} finally {
+			view.requestAnimationFrame = original;
+		}
+	});
+
 	it('shows the mode, read-only badge, notes button and zoom', async () => {
 		const { core } = shellFixture(numbers());
 		const notes: string[] = [];
