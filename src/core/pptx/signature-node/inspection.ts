@@ -109,7 +109,7 @@ async function inspectSignature(
 	const revocation =
 		leafCertPem && checkRevocation
 			? await evaluateCertificateRevocation(leafCertPem, issuerCertPem)
-		: NOT_CHECKED_REVOCATION;
+			: NOT_CHECKED_REVOCATION;
 
 	return {
 		...base,
