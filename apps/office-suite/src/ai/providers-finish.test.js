@@ -27,7 +27,9 @@ const sse = (events) =>
 				const encoder = new TextEncoder();
 				for (const event of events)
 					controller.enqueue(
-						encoder.encode(`data: ${typeof event === 'string' ? event : JSON.stringify(event)}\n\n`),
+						encoder.encode(
+							`data: ${typeof event === 'string' ? event : JSON.stringify(event)}\n\n`,
+						),
 					);
 				controller.close();
 			},
