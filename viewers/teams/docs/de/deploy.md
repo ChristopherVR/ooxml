@@ -157,7 +157,7 @@ Alles, was der Server speichert, liegt unter `TEAMS_DATA` (Standard `./data`):
 | `file-meta/=<name>.json`   | Wer welche Datei hochgeladen hat (bestimmt, wer sie löschen darf). Zusammen mit `files/` sichern.              |
 | `session-revocations.json` | Widerrufsgenerationen der Sitzungen (fehlt sie, werden widerrufene Sitzungen wieder gültig, bis sie ablaufen). |
 
-Ein gespeicherter Name besteht aus `=` und dem base32-Code (Kleinbuchstaben) des genauen Raum- oder Bereichsnamens, sodass sich Namen, die sich nur in der Schreibweise unterscheiden, auf jedem Datenträger nicht vermischen. Beim ersten Start benennt ein 2.0-Server um, was eine ältere Version gespeichert hat. Sichern Sie vorher, denn ein älterer Server kann die neuen Namen nicht lesen.
+Ein gespeicherter Name besteht aus `=` und dem base32-Code (Kleinbuchstaben) des genauen Raum- oder Bereichsnamens, sodass sich Namen, die sich nur in der Schreibweise unterscheiden, auf jedem Datenträger nicht vermischen. Beim ersten Start benennt ein 2.0-Server um, was eine ältere Version gespeichert hat. Sichern Sie vorher, denn ein älterer Server kann die neuen Namen nicht lesen. Ein Eintrag, der nach einer Chat-ID benannt ist, die erst 2.0 vergibt (`dm-` mit 32 Hexziffern oder eine neue `g-`-ID, in beliebiger Schreibweise), wird nicht migriert: Er wandert in einen Ordner `.quarantine` daneben, wird protokolliert und vom Server nie gelesen.
 
 Bewahren Sie außerdem auf, was nicht im Datenverzeichnis liegt: Ihre Kontendatei (`TEAMS_USERS_FILE`) und
 `TEAMS_SESSION_SECRET`. Ein geändertes oder verlorenes Geheimnis meldet alle ab, was harmlos ist.

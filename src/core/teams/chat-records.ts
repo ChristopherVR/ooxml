@@ -26,6 +26,7 @@ export interface ChatInfo {
 
 export const MAX_CHAT_MEMBERS = 50;
 export const CHATS_MAP = 'teams:chats';
+const MEMBER_KEY = 'member:';
 const SAFE_USER = /^[\w.@:+-]{1,64}$/u;
 const SAFE_CHAT = /^[\w-]{1,64}$/u;
 const GROUP_CHAT = /^g-([0-9a-f]{32})-([0-9a-f]{24})$/u;
@@ -96,6 +97,41 @@ export function sanitizeMembers(raw: unknown): ChatMember[] {
 	return out;
 }
 
+/**
+ * The row field holding one person's place in a group: their name, or null once they are out. A
+ * group row keeps the `members` it was created with and never rewrites them, so people added and
+ * leaving at the same time touch different fields and Yjs merges them.
+ */
+export const memberKey = (userId: string): string => `${MEMBER_KEY}${userId}`;
+
+/** The user id of a {@link memberKey} field, or null for any other field. */
+export const userOfMemberKey = (key: string): string | null =>
+	key.startsWith(MEMBER_KEY) ? key.slice(MEMBER_KEY.length) : null;
+
+/** Whether someone is in a group row now, was in it once, or never was. */
+export function memberStanding(
+	row: Y.Map<unknown>,
+	userId: string,
+): 'member' | 'former' | 'stranger' {
+	const entry = row.get(memberKey(userId));
+	if (entry !== undefined) return typeof entry === 'string' ? 'member' : 'former';
+	return sanitizeMembers(row.get('members')).some((m) => m.id === userId) ? 'member' : 'stranger';
+}
+
+/** The people of a group row, in an order every client computes alike. */
+function groupMembers(row: Y.Map<unknown>): ChatMember[] {
+	const members = new Map(sanitizeMembers(row.get('members')).map((m) => [m.id, m]));
+	for (const key of [...row.keys()].sort()) {
+		const id = userOfMemberKey(key);
+		if (id === null || !isChatUserId(id)) continue;
+		const name = row.get(key);
+		if (typeof name === 'string')
+			members.set(id, { id, name: sanitizeChannelName(name) || 'Unknown' });
+		else members.delete(id);
+	}
+	return [...members.values()].slice(0, MAX_CHAT_MEMBERS);
+}
+
 const isDirectRow = (id: string, members: readonly ChatMember[]): boolean => {
 	const [a, b] = members;
 	return (
@@ -111,7 +147,7 @@ export function readChatRow(id: string, raw: unknown): ChatInfo | null {
 	if (!(raw instanceof Y.Map) || !SAFE_CHAT.test(id)) return null;
 	const kind = raw.get('kind');
 	if (kind !== 'direct' && kind !== 'group') return null;
-	const members = sanitizeMembers(raw.get('members'));
+	const members = kind === 'group' ? groupMembers(raw) : sanitizeMembers(raw.get('members'));
 	if (members.length === 0 || (kind === 'direct' && !isDirectRow(id, members))) return null;
 	const meetingId = raw.get('meetingId');
 	return {

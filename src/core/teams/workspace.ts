@@ -227,7 +227,11 @@ export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace 
 		base: channels,
 		user,
 		...(options.createChatDoc ? { createDoc: options.createChatDoc } : {}),
-		openRoom: (info, doc) => {
+		directorySync: {
+			synced: () => session.synced,
+			onSynced: (listener) => session.on('synced', (synced) => synced && listener()),
+		},
+		openRoom: (info, doc, onSynced) => {
 			const roomId = chatRoomId(options.workspaceId, info.id);
 			const members = info.members.map((m) => m.id).join(',');
 			const query = info.kind === 'direct' ? { user: user.id, members } : { user: user.id };
@@ -241,6 +245,7 @@ export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace 
 				provider: transportProvider({ transport }),
 				user: { name: user.name },
 			});
+			chatSession.on('synced', (synced) => synced && onSynced());
 			return { destroy: () => chatSession.destroy() };
 		},
 	});

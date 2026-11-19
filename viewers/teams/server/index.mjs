@@ -45,6 +45,7 @@ import { createSlidingLimiter } from './rate-limit.mjs';
 import {
 	PROTOCOL_PARAM,
 	PROTOCOL_VERSION,
+	applyUpdateReverts,
 	protocolOfUrl,
 	validateTeamsSyncMessage,
 } from './validator.generated.mjs';
@@ -507,6 +508,7 @@ export function createTeamsServer(options = {}) {
 					// A read-only socket may ask for the document (step 1), never change it.
 					if (readOnly && decoding.peekVarUint(decoder) !== syncProtocol.messageYjsSyncStep1)
 						return;
+					let reverts;
 					if (actor && decoding.peekVarUint(decoder) !== syncProtocol.messageYjsSyncStep1) {
 						const verdict = validateTeamsSyncMessage(
 							room.doc,
@@ -521,6 +523,7 @@ export function createTeamsServer(options = {}) {
 							log(`sync ${name}: update from ${actor.id} rejected (${codes})`);
 							return void ws.close(1008, `update rejected: ${codes}`);
 						}
+						reverts = verdict.reverts;
 					}
 					if (room.bytes + data.byteLength > limits.maxDocBytes) {
 						// The running total over-counts (merged and deleted content shrinks); measure once.
@@ -535,6 +538,7 @@ export function createTeamsServer(options = {}) {
 					const encoder = encoding.createEncoder();
 					encoding.writeVarUint(encoder, MESSAGE_SYNC);
 					syncProtocol.readSyncMessage(decoder, encoder, room.doc, ws);
+					if (reverts) applyUpdateReverts(room.doc, reverts);
 					if (encoding.length(encoder) > 1) send(ws, encoding.toUint8Array(encoder));
 				} else if (type === MESSAGE_AWARENESS) {
 					// A connection may only speak for the client ids it announced itself.

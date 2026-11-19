@@ -177,6 +177,7 @@ function sanitizeChannelName(name) {
 // ../../src/core/teams/chat-records.ts
 var MAX_CHAT_MEMBERS = 50;
 var CHATS_MAP = "teams:chats";
+var MEMBER_KEY = "member:";
 var SAFE_USER = /^[\w.@:+-]{1,64}$/u;
 var SAFE_CHAT = /^[\w-]{1,64}$/u;
 var GROUP_CHAT = /^g-([0-9a-f]{32})-([0-9a-f]{24})$/u;
@@ -217,6 +218,25 @@ function sanitizeMembers(raw) {
   }
   return out;
 }
+var memberKey = (userId) => `${MEMBER_KEY}${userId}`;
+var userOfMemberKey = (key) => key.startsWith(MEMBER_KEY) ? key.slice(MEMBER_KEY.length) : null;
+function memberStanding(row, userId) {
+  const entry = row.get(memberKey(userId));
+  if (entry !== void 0) return typeof entry === "string" ? "member" : "former";
+  return sanitizeMembers(row.get("members")).some((m) => m.id === userId) ? "member" : "stranger";
+}
+function groupMembers(row) {
+  const members = new Map(sanitizeMembers(row.get("members")).map((m) => [m.id, m]));
+  for (const key of [...row.keys()].sort()) {
+    const id = userOfMemberKey(key);
+    if (id === null || !isChatUserId(id)) continue;
+    const name = row.get(key);
+    if (typeof name === "string")
+      members.set(id, { id, name: sanitizeChannelName(name) || "Unknown" });
+    else members.delete(id);
+  }
+  return [...members.values()].slice(0, MAX_CHAT_MEMBERS);
+}
 var isDirectRow = (id, members) => {
   const [a, b] = members;
   return members.length === 2 && a !== void 0 && b !== void 0 && (id === directChatId(a.id, b.id) || id === legacyDirectChatId(a.id, b.id));
@@ -225,7 +245,7 @@ function readChatRow(id, raw) {
   if (!(raw instanceof Y3.Map) || !SAFE_CHAT.test(id)) return null;
   const kind = raw.get("kind");
   if (kind !== "direct" && kind !== "group") return null;
-  const members = sanitizeMembers(raw.get("members"));
+  const members = kind === "group" ? groupMembers(raw) : sanitizeMembers(raw.get("members"));
   if (members.length === 0 || kind === "direct" && !isDirectRow(id, members)) return null;
   const meetingId = raw.get("meetingId");
   return {
@@ -288,14 +308,28 @@ function checkPinRow(map, rowId, before, after, actor, doc) {
 }
 
 // ../../src/core/teams/validate-chats.ts
-var IMMUTABLE_FIELDS = ["kind", "createdAt", "createdBy", "meetingId"];
+var ROW_FIELDS = /* @__PURE__ */ new Set(["kind", "name", "members", "createdAt", "createdBy", "meetingId"]);
+function applyUpdateReverts(doc, reverts) {
+  const chats = doc.getMap(CHATS_MAP);
+  doc.transact(() => {
+    for (const { chat, key, value } of reverts) {
+      const row = chats.get(chat);
+      if (!(row instanceof Y5.Map)) continue;
+      if (value === void 0) row.delete(key);
+      else row.set(key, value);
+    }
+  });
+}
 function strictChat(id, row) {
   const chat = readChatRow(id, row);
   const raw = row.get("members");
-  return chat && Array.isArray(raw) && raw.length === chat.members.length ? chat : null;
+  if (!chat || !Array.isArray(raw) || raw.length !== chat.members.length) return null;
+  return [...row.keys()].every((key) => ROW_FIELDS.has(key)) ? chat : null;
 }
 var memberIds = (chat) => new Set(chat.members.map((m) => m.id));
 var sameIds = (a, b) => a.size === b.size && [...a].every((id) => b.has(id));
+var sameValue = (a, b) => a === b || JSON.stringify(a) === JSON.stringify(b);
+var isCleanName = (value) => typeof value === "string" && sanitizeChannelName(value) === value;
 function checkNewRow(id, row, actor, at) {
   const chat = strictChat(id, row);
   if (!chat) return { code: "malformed-row", ...at };
@@ -306,31 +340,51 @@ function checkNewRow(id, row, actor, at) {
   const [a, b] = chat.members;
   return a && b && id === directChatId(a.id, b.id) ? null : { code: "malformed-row", ...at };
 }
-function checkChatRow(id, before, after, actor) {
-  const at = { map: CHATS_MAP, key: id };
-  if (after !== void 0 && !(after instanceof Y5.Map)) return { code: "malformed-row", ...at };
-  const next = after;
-  if (before === void 0) return next ? checkNewRow(id, next, actor, at) : null;
-  if (!next) return { code: "foreign-row", ...at };
-  const prior = before instanceof Y5.Map ? before : void 0;
-  if (prior && isSameRow(prior, next)) return null;
-  const was = prior ? readChatRow(id, prior) : null;
-  if (!prior || !was) return { code: "foreign-row", ...at };
+function checkDirectEdit(id, prior, next, actor, at) {
+  const was = readChatRow(id, prior);
+  if (!was) return { code: "foreign-row", ...at };
   const had = memberIds(was);
   if (!had.has(actor.id)) return { code: "not-member", ...at };
   const now = strictChat(id, next);
   if (!now || now.kind !== was.kind) return { code: "malformed-row", ...at };
-  const has = memberIds(now);
-  if (was.kind === "direct") {
-    const replaced = !(next._item && prior._item && Y5.compareIDs(next._item.id, prior._item.id));
-    return replaced && next.get("createdBy") === actor.id && sameIds(had, has) ? null : { code: "foreign-row", ...at };
-  }
-  if (IMMUTABLE_FIELDS.some((field) => next.get(field) !== prior.get(field)))
+  const replaced = !(next._item && prior._item && Y5.compareIDs(next._item.id, prior._item.id));
+  return replaced && next.get("createdBy") === actor.id && sameIds(had, memberIds(now)) ? null : { code: "foreign-row", ...at };
+}
+function mayWriteGroupField(key, value, actor, isMember) {
+  if (key === "name") return isCleanName(value) ? isMember : null;
+  const userId = userOfMemberKey(key);
+  if (userId === null || !isChatUserId(userId)) return null;
+  if (value === null) return userId === actor.id || isMember && actor.moderator === true;
+  return isCleanName(value) && value !== "" ? isMember : null;
+}
+function checkGroupEdit(id, prior, next, actor, at, reverts) {
+  if (!(next._item && prior._item && Y5.compareIDs(next._item.id, prior._item.id)))
     return { code: "foreign-row", ...at };
-  for (const member of had)
-    if (!has.has(member) && member !== actor.id && actor.moderator !== true)
-      return { code: "foreign-row", ...at };
+  const isMember = memberStanding(prior, actor.id) === "member";
+  const undo = [];
+  for (const key of /* @__PURE__ */ new Set([...prior.keys(), ...next.keys()])) {
+    const value = prior.get(key);
+    const written = next.get(key);
+    if (sameValue(value, written)) continue;
+    if (key !== "name" && ROW_FIELDS.has(key)) return { code: "foreign-row", ...at };
+    const may = mayWriteGroupField(key, written, actor, isMember);
+    if (may === null) return { code: "malformed-row", ...at };
+    if (!may) undo.push({ chat: id, key, value });
+  }
+  reverts.push(...undo);
   return null;
+}
+function checkChatRow(id, before, after, actor, reverts) {
+  const at = { map: CHATS_MAP, key: id };
+  if (after !== void 0 && !(after instanceof Y5.Map)) return { code: "malformed-row", ...at };
+  const next = after;
+  if (before === void 0) return next ? checkNewRow(id, next, actor, at) : null;
+  if (!next || !(before instanceof Y5.Map)) return { code: "foreign-row", ...at };
+  const prior = before;
+  if (isSameRow(prior, next)) return null;
+  if (prior.get("kind") !== "group") return checkDirectEdit(id, prior, next, actor, at);
+  if (memberStanding(prior, actor.id) === "stranger") return { code: "not-member", ...at };
+  return checkGroupEdit(id, prior, next, actor, at, reverts);
 }
 
 // ../../src/core/teams/validate-members.ts
@@ -470,6 +524,7 @@ function validateTeamsUpdate(doc, update, actor, options = {}) {
     return fail({ code: "invalid-update" });
   const scratch = new Y7.Doc();
   const touched = { rows: /* @__PURE__ */ new Map(), reactions: /* @__PURE__ */ new Set() };
+  const reverts = [];
   try {
     Y7.applyUpdate(scratch, Y7.encodeStateAsUpdate(doc));
     scratch.on("afterTransaction", (txn) => collectTouched(scratch, txn, touched));
@@ -495,7 +550,7 @@ function validateTeamsUpdate(doc, update, actor, options = {}) {
           found = checkPinRow(name, rowId, was, now, actor, doc);
         else if (name === ROSTER) found = checkRosterRow(rowId, was, now, actor);
         else if (name === CHAT_MEMBERS2) found = checkMemberKey(rowId, beforeMap, afterMap, actor);
-        else if (name === CHATS_MAP) found = checkChatRow(rowId, was, now, actor);
+        else if (name === CHATS_MAP) found = checkChatRow(rowId, was, now, actor, reverts);
         else found = checkOwnedRow(name, rowId, was, now, actor);
         if (found) violations.push(found);
       }
@@ -519,7 +574,8 @@ function validateTeamsUpdate(doc, update, actor, options = {}) {
       const found = checkReactionCount(messageId, afterReactions, options);
       if (found) violations.push(found);
     }
-    return violations.length ? { ok: false, violations } : OK;
+    if (violations.length) return { ok: false, violations };
+    return reverts.length ? { ok: true, reverts } : OK;
   } finally {
     scratch.destroy();
   }
@@ -542,6 +598,9 @@ function validateTeamsSyncMessage(doc, message, actor, options = {}) {
 var PROTOCOL_VERSION = 2;
 var PROTOCOL_PARAM = "proto";
 var CHAT_ROOM_PATTERN = /^chat-[0-9a-f]{16}-[\w-]+$/u;
+var DIRECT_CHAT_ID_PATTERN = /^dm-[0-9a-f]{32}$/u;
+var GROUP_CHAT_ID_PATTERN = /^g-[0-9a-f]{32}-[0-9a-f]{24}$/u;
+var isCurrentChatId = (id) => DIRECT_CHAT_ID_PATTERN.test(id) || GROUP_CHAT_ID_PATTERN.test(id);
 var isChatRoom = (room) => CHAT_ROOM_PATTERN.test(room);
 var chatIdOfRoom = (room) => isChatRoom(room) ? room.slice("chat-".length + 16 + 1) : null;
 var isChatRoomAlias = (room) => /^chat-[0-9a-f]{16}-/iu.test(room) && !isChatRoom(room);
@@ -552,10 +611,12 @@ function protocolOfUrl(url) {
 export {
   PROTOCOL_PARAM,
   PROTOCOL_VERSION,
+  applyUpdateReverts,
   chatIdOfRoom,
   directChatId,
   isChatRoom,
   isChatRoomAlias,
+  isCurrentChatId,
   isGroupChatIdOf,
   protocolOfUrl,
   shortHash,

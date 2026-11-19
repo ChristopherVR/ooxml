@@ -67,7 +67,7 @@ configured server's `/files` endpoint) and posts the returned URL. `detectOffice
 
 ### Chats
 
-`chat-records.ts` holds what a chat is on the wire (ids, room names, directory rows) and `chats.ts` the directory: a chat is `direct` (1:1, id derived from the two user ids) or `group` (a random id bound to its creator), with a member list. The directory (`teams:chats` in the workspace document) lists who is in which chat so every client can find its own, and `roster.ts` lists everyone who opened the workspace. A chat's messages live in a Y.Doc of their own, synced in a room named `chatRoomId(workspaceId, chatId)`; `chat-rooms.ts` composes the channel store and those documents behind one `ChatStore`, so threads, pins, reactions, mentions, drafts and the activity feed work unchanged in a chat. The room carries a `teams:chat-members` map that the reference server admits sockets by. A client writes to it only for its own user's actions (creating a group, adding people, leaving, a moderator's removal) and never copies it from the directory, and it never opens, reads or writes a chat the person is not in. Add, remove and leave write a system message (`Message.system`). `chat-view.ts` projects the chat list and the contacts. Honest limits are in `docs/teams-parity.md`.
+`chat-records.ts` holds what a chat is on the wire (ids, room names, directory rows) and `chats.ts` the directory: a chat is `direct` (1:1, id derived from the two user ids) or `group` (a random id bound to its creator), with a member list. The directory (`teams:chats` in the workspace document) lists who is in which chat so every client can find its own, and `roster.ts` lists everyone who opened the workspace. A chat's messages live in a Y.Doc of their own, synced in a room named `chatRoomId(workspaceId, chatId)`; `chat-rooms.ts` composes the channel store and those documents behind one `ChatStore`, so threads, pins, reactions, mentions, drafts and the activity feed work unchanged in a chat. The room carries a `teams:chat-members` map that the reference server admits sockets by. A client writes to it only for its own user's actions (creating a group, adding people, leaving, a moderator's removal). It does not copy it from the directory, with one exception: the creator of a group admits the people the directory lists when the room opens and both documents are in sync, which repairs a crash right after creating the group. It never opens, reads or writes a chat the person is not in. Add, remove and leave write a system message (`Message.system`). `chat-view.ts` projects the chat list and the contacts. Honest limits are in `docs/teams-parity.md`.
 
 ### Calendar and meetings
 
@@ -270,7 +270,12 @@ and the **server contract**. Each has a number or a pinned test.
   name (`storageName` in `room-store.mjs`), so names that differ only by case never share a file. It
   renames entries written by older versions when it starts (`migrateStorageNames`); a run cut short
   continues on the next start, and an upper-case spelling of a chat room on a case-insensitive disk
-  goes back to the room it was.
+  goes back to the room it was. An entry whose name, in any spelling, is a chat room with a
+  `dm-<32 hex>` or `g-<32 hex>-<24 hex>` id is never migrated: no older version issued those ids, so
+  it moves to a `.quarantine` folder next to it, is logged, and nothing reads it.
+- A client's local snapshots are kept per protocol version (`teams:doc:<version>:<id>`). A snapshot
+  from an older version is cleared, not loaded, because it can hold offline changes the server now
+  refuses, which would be sent again on every connection.
 - The protocol version changes only when an old client or server could misread the other: room
   naming, required query parameters, or message framing. Additive parameters and new optional
   document fields do not change it.
@@ -318,11 +323,17 @@ non-moderator actor (the user id of the **signed session**, never a claimed one)
   nobody writes themselves into an empty map. The client therefore lets only moderators remove other
   people from a chat;
 - a `teams:chats` directory row is created by a member of the chat, naming themselves as `createdBy`,
-  under an id bound to them (their own `createGroupChatId`, or `directChatId` of the pair). Only a
-  current member changes a row. `kind`, `createdAt`, `createdBy` and `meetingId` never change and a
-  row is never removed. A 1:1 row is immutable, except that either person may replace it with an equal
-  one (both can open the chat at once). In a group a member renames, adds people and removes
-  themselves, and a moderator who is a member removes anyone;
+  under an id bound to them (their own `createGroupChatId`, or `directChatId` of the pair). `kind`,
+  `members`, `createdAt`, `createdBy` and `meetingId` never change and a row is never removed. A 1:1
+  row is immutable, except that either person may replace it with an equal one (both can open the
+  chat at once). A group keeps the `members` it was created with, and each later change is one field
+  per person, `member:<user id>`: their name, or `null` once they are out. Concurrent adds and leaves
+  therefore merge. A member renames, adds people and removes themselves, and a moderator who is a
+  member removes anyone. Someone who was never in the group is refused. Someone who is or was in it
+  but may not make the change (removed while offline, no longer a moderator) is not refused, because
+  the same update would come back on every reconnect and stop their sync: the verdict is
+  `{ ok: true, reverts }`, and a server applies the update and then `applyUpdateReverts(doc, reverts)`,
+  which puts those fields back;
 - message text and reactions per message are capped, see the limits below.
 
 **Client behaviour.** `POST /auth/session` answers `role`; `TeamsSession.role` and

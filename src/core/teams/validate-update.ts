@@ -9,7 +9,7 @@ import * as Y from 'yjs';
 import { MAX_UPDATE_BYTES } from '../collab/codec';
 import { MESSAGE_SYNC } from '../collab/transport-provider';
 import { CHATS_MAP } from './chat-records';
-import { checkChatRow } from './validate-chats';
+import { type RowRevert, checkChatRow } from './validate-chats';
 import { checkOwnedRow, checkPinRow, isOwnedMap } from './validate-owned';
 import {
 	CHAT_MEMBERS,
@@ -66,7 +66,16 @@ export interface UpdateViolation {
 /** Size limits of an update, a message's text and the reactions of one message. */
 export type ValidateOptions = ContentLimits & { maxBytes?: number };
 
-export type UpdateVerdict = { ok: true } | { ok: false; violations: UpdateViolation[] };
+/**
+ * `reverts` lists what an accepted update changed but its sender may no longer change. Refusing it
+ * would refuse it again on every reconnect, so a server applies the update and then passes this
+ * list to {@link applyUpdateReverts}.
+ */
+export type UpdateVerdict =
+	| { ok: true; reverts?: RowRevert[] }
+	| { ok: false; violations: UpdateViolation[] };
+
+export { applyUpdateReverts, type RowRevert } from './validate-chats';
 
 const OK: UpdateVerdict = { ok: true };
 const fail = (...violations: UpdateViolation[]): UpdateVerdict => ({ ok: false, violations });
@@ -228,7 +237,8 @@ function checkReaction(
  * Channels and tabs (rows with a `createdBy`) and pins follow the rules of `validate-owned.ts`.
  * Meetings follow the same owner rule (`organizerId`). A roster row may be written only under the
  * actor's own id. A chat member may be added only by a member and removed only by themselves or a
- * moderator, and the chat directory follows `validate-chats.ts`. Message text and the reactions
+ * moderator. The chat directory follows `validate-chats.ts`, which answers an out-of-date edit with
+ * `reverts` on an accepted verdict. Message text and the reactions
  * per message are capped (`maxMessageChars`, `maxReactionsPerMessage`). Everything else passes;
  * see the coverage list in docs/teams-area.md.
  *
@@ -245,6 +255,7 @@ export function validateTeamsUpdate(
 		return fail({ code: 'invalid-update' });
 	const scratch = new Y.Doc();
 	const touched: Touched = { rows: new Map(), reactions: new Set() };
+	const reverts: RowRevert[] = [];
 	try {
 		Y.applyUpdate(scratch, Y.encodeStateAsUpdate(doc));
 		scratch.on('afterTransaction', (txn: Y.Transaction) => collectTouched(scratch, txn, touched));
@@ -271,7 +282,7 @@ export function validateTeamsUpdate(
 					found = checkPinRow(name, rowId, was, now, actor, doc);
 				else if (name === ROSTER) found = checkRosterRow(rowId, was, now, actor);
 				else if (name === CHAT_MEMBERS) found = checkMemberKey(rowId, beforeMap, afterMap, actor);
-				else if (name === CHATS_MAP) found = checkChatRow(rowId, was, now, actor);
+				else if (name === CHATS_MAP) found = checkChatRow(rowId, was, now, actor, reverts);
 				else found = checkOwnedRow(name, rowId, was, now, actor);
 				if (found) violations.push(found);
 			}
@@ -295,7 +306,8 @@ export function validateTeamsUpdate(
 			const found = checkReactionCount(messageId, afterReactions, options);
 			if (found) violations.push(found);
 		}
-		return violations.length ? { ok: false, violations } : OK;
+		if (violations.length) return { ok: false, violations };
+		return reverts.length ? { ok: true, reverts } : OK;
 	} finally {
 		scratch.destroy();
 	}

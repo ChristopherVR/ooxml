@@ -11,11 +11,12 @@ import {
 	directChatId,
 	isChatRoom,
 	isChatRoomAlias,
+	isCurrentChatId,
 	isGroupChatIdOf,
 	shortHash,
 } from './validator.generated.mjs';
 
-export { directChatId, isChatRoom, isChatRoomAlias, shortHash };
+export { chatIdOfRoom, directChatId, isChatRoom, isChatRoomAlias, isCurrentChatId, shortHash };
 
 export const CHAT_MEMBERS_MAP = 'teams:chat-members';
 const USER = /^[\w.@:+-]{1,64}$/u;

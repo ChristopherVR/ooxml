@@ -9,10 +9,12 @@ import {
 	type ChatInfo,
 	type ChatKind,
 	type ChatMember,
+	MAX_CHAT_MEMBERS,
 	createGroupChatId,
 	directChatId,
 	isChatUserId,
 	legacyDirectChatId,
+	memberKey,
 	readChatRow,
 	sanitizeMembers,
 } from './chat-records';
@@ -135,17 +137,20 @@ export function createChatDirectory(
 		add(id, people) {
 			const found = mine(id);
 			if (!found || found.info.kind !== 'group') return [];
-			const merged = sanitizeMembers([...found.info.members, ...people]);
-			const added = merged.filter((m) => !isChatMember(found.info, m.id));
-			if (added.length) found.row.set('members', merged);
+			const room = Math.max(0, MAX_CHAT_MEMBERS - found.info.members.length);
+			const added = sanitizeMembers(people)
+				.filter((m) => !isChatMember(found.info, m.id))
+				.slice(0, room);
+			doc.transact(() => {
+				for (const m of added) found.row.set(memberKey(m.id), m.name);
+			});
 			return added;
 		},
 		remove(id, userId) {
 			const found = mine(id);
 			if (!found || found.info.kind !== 'group' || !isChatMember(found.info, userId)) return false;
-			const rest = found.info.members.filter((m) => m.id !== userId);
-			if (rest.length === 0) return false;
-			found.row.set('members', rest);
+			if (found.info.members.length === 1) return false;
+			found.row.set(memberKey(userId), null);
 			return true;
 		},
 	};

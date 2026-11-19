@@ -2,8 +2,14 @@ import * as Y from 'yjs';
 import { describe, expect, it } from 'vitest';
 import { createChatStore } from './chat';
 import { createChatRooms } from './chat-rooms';
-import { type ChatMember, createChatDirectory, directChatId, legacyDirectChatId } from './chats';
-import { type UpdateActor, validateTeamsUpdate } from './validate-update';
+import {
+	type ChatMember,
+	createChatDirectory,
+	createGroupChatId,
+	directChatId,
+	legacyDirectChatId,
+} from './chats';
+import { type UpdateActor, applyUpdateReverts, validateTeamsUpdate } from './validate-update';
 
 const person = (id: string): ChatMember => ({ id, name: id });
 const [ann, bob, cy, eve] = ['ann', 'bob', 'cy', 'eve'].map(person) as [
@@ -170,7 +176,8 @@ describe('validateTeamsUpdate: changing directory rows', () => {
 		const { server, group } = serverWithChats();
 		const change = (fn: (row: Y.Map<unknown>) => void): string[] =>
 			codes(verdict(server, actor('ann'), (doc) => fn(rowOf(doc, group))));
-		expect(change((row) => row.set('kind', 'direct'))).toEqual(['malformed-row']);
+		expect(change((row) => row.set('kind', 'direct'))).toEqual(['foreign-row']);
+		expect(change((row) => row.set('members', [ann]))).toEqual(['foreign-row']);
 		expect(change((row) => row.set('createdBy', 'bob'))).toEqual(['foreign-row']);
 		expect(change((row) => row.set('createdAt', 5))).toEqual(['foreign-row']);
 		expect(change((row) => row.set('meetingId', 'm-2'))).toEqual(['foreign-row']);
@@ -196,19 +203,44 @@ describe('validateTeamsUpdate: changing directory rows', () => {
 		expect(validateTeamsUpdate(server, update, actor('bob'))).toEqual({ ok: true });
 	});
 
-	it('lets a member rename, add people and leave, but not remove others', () => {
+	it('lets a member rename, add people and leave, and a moderator remove others', () => {
 		const { server, group } = serverWithChats();
 		const by = (who: ChatMember, fn: (d: ReturnType<typeof createChatDirectory>) => void) =>
 			verdict(server, actor(who.id), (doc) => fn(createChatDirectory(doc, who)));
 		expect(by(bob, (d) => d.rename(group, 'Renamed'))).toEqual({ ok: true });
 		expect(by(bob, (d) => d.add(group, [cy]))).toEqual({ ok: true });
 		expect(by(bob, (d) => d.remove(group, 'bob'))).toEqual({ ok: true });
-		expect(codes(by(bob, (d) => d.remove(group, 'ann')))).toEqual(['foreign-row']);
 		expect(
 			verdict(server, actor('bob', true), (doc) =>
 				createChatDirectory(doc, bob).remove(group, 'ann'),
 			),
 		).toEqual({ ok: true });
+	});
+
+	it('refuses member fields no client writes', () => {
+		const { server, group } = serverWithChats();
+		const change = (fn: (row: Y.Map<unknown>) => void): string[] =>
+			codes(verdict(server, actor('bob'), (doc) => fn(rowOf(doc, group))));
+		expect(change((row) => row.set('member:a,b', 'Bad'))).toEqual(['malformed-row']);
+		expect(change((row) => row.set('member:cy', 7))).toEqual(['malformed-row']);
+		expect(change((row) => row.set('member:cy', ''))).toEqual(['malformed-row']);
+		expect(change((row) => row.set('member:cy', ' <b>x</b> '))).toEqual(['malformed-row']);
+		expect(change((row) => row.set('extra', 1))).toEqual(['malformed-row']);
+		expect(
+			codes(
+				verdict(server, actor('eve'), (doc) => {
+					const id = createGroupChatId('eve');
+					writeRow(doc, id, {
+						kind: 'group',
+						name: '',
+						members: [eve, ann],
+						createdAt: 1,
+						createdBy: 'eve',
+						'member:bob': 'Bob',
+					});
+				}),
+			),
+		).toEqual(['malformed-row']);
 	});
 
 	it('leaves rows from before these rules alone until somebody changes them', () => {
@@ -223,6 +255,125 @@ describe('validateTeamsUpdate: changing directory rows', () => {
 		expect(
 			verdict(server, actor('bob'), (doc) => rowOf(doc, 'g-g-1-1').set('name', 'New')),
 		).toEqual({ ok: true });
+	});
+});
+
+describe('changing a group from several clients at once', () => {
+	/** Send `client`'s changes to `server` as the reference server would take them. */
+	function push(server: Y.Doc, client: Y.Doc, by: UpdateActor): void {
+		const update = Y.encodeStateAsUpdate(client, Y.encodeStateVector(server));
+		const result = validateTeamsUpdate(server, update, by);
+		if (!result.ok) throw new Error(`refused: ${codes(result).join()}`);
+		Y.applyUpdate(server, update);
+		if (result.reverts) applyUpdateReverts(server, result.reverts);
+	}
+	const pull = (server: Y.Doc, client: Y.Doc): void =>
+		Y.applyUpdate(client, Y.encodeStateAsUpdate(server, Y.encodeStateVector(client)));
+	const ids = (doc: Y.Doc, id: string): string[] =>
+		createChatDirectory(doc, ann)
+			.get(id)!
+			.members.map((m) => m.id)
+			.sort();
+
+	/** Every order of client ids, because the older of two rewrites used to win by client id. */
+	function scenarios(run: (clients: { annDoc: Y.Doc; bobDoc: Y.Doc }) => void): void {
+		for (const [annId, bobId] of [
+			[10, 20],
+			[20, 10],
+		] as const) {
+			const annDoc = new Y.Doc();
+			const bobDoc = new Y.Doc();
+			annDoc.clientID = annId;
+			bobDoc.clientID = bobId;
+			run({ annDoc, bobDoc });
+		}
+	}
+	function start(annDoc: Y.Doc, bobDoc: Y.Doc): { server: Y.Doc; group: string } {
+		const server = new Y.Doc();
+		const group = createChatDirectory(annDoc, ann).createGroup({ others: [bob] })!.id;
+		push(server, annDoc, actor('ann'));
+		pull(server, bobDoc);
+		return { server, group };
+	}
+
+	it('keeps both of two people added at once', () =>
+		scenarios(({ annDoc, bobDoc }) => {
+			const { server, group } = start(annDoc, bobDoc);
+			createChatDirectory(annDoc, ann).add(group, [cy]);
+			createChatDirectory(bobDoc, bob).add(group, [eve]);
+			push(server, annDoc, actor('ann'));
+			push(server, bobDoc, actor('bob'));
+			pull(server, annDoc);
+			pull(server, bobDoc);
+			for (const doc of [server, annDoc, bobDoc])
+				expect(ids(doc, group)).toEqual(['ann', 'bob', 'cy', 'eve']);
+		}));
+
+	it('keeps an addition and a departure made at once', () =>
+		scenarios(({ annDoc, bobDoc }) => {
+			const { server, group } = start(annDoc, bobDoc);
+			createChatDirectory(annDoc, ann).add(group, [cy]);
+			createChatDirectory(bobDoc, bob).remove(group, 'bob');
+			push(server, bobDoc, actor('bob'));
+			push(server, annDoc, actor('ann'));
+			pull(server, annDoc);
+			pull(server, bobDoc);
+			for (const doc of [server, annDoc, bobDoc]) expect(ids(doc, group)).toEqual(['ann', 'cy']);
+		}));
+
+	it('undoes what someone removed while offline changed, and keeps syncing them', () =>
+		scenarios(({ annDoc, bobDoc }) => {
+			const { server, group } = start(annDoc, bobDoc);
+			createChatDirectory(annDoc, { ...ann }).remove(group, 'bob');
+			push(server, annDoc, actor('ann', true));
+			const directory = createChatDirectory(bobDoc, bob);
+			directory.rename(group, 'Taken over');
+			directory.add(group, [eve]);
+			bobDoc.getMap('later').set('note', 'written offline too');
+			push(server, bobDoc, actor('bob'));
+			pull(server, annDoc);
+			pull(server, bobDoc);
+			for (const doc of [server, annDoc, bobDoc]) {
+				expect(ids(doc, group)).toEqual(['ann']);
+				expect(rowOf(doc, group).get('name')).toBe('');
+			}
+			expect(server.getMap('later').get('note')).toBe('written offline too');
+			bobDoc.getMap('later').set('note', 'still syncing');
+			push(server, bobDoc, actor('bob'));
+			expect(server.getMap('later').get('note')).toBe('still syncing');
+		}));
+
+	it('undoes a removal by someone who is no longer a moderator', () => {
+		const { server, group } = serverWithChats();
+		const result = verdict(server, actor('bob'), (doc) =>
+			createChatDirectory(doc, bob).remove(group, 'ann'),
+		);
+		expect(result).toEqual({
+			ok: true,
+			reverts: [{ chat: group, key: 'member:ann', value: undefined }],
+		});
+	});
+
+	it('still refuses someone who was never in the group', () =>
+		scenarios(({ annDoc, bobDoc }) => {
+			const { server, group } = start(annDoc, bobDoc);
+			const update = capture(bobDoc, () => rowOf(bobDoc, group).set('member:eve', 'eve'));
+			expect(codes(validateTeamsUpdate(server, update, actor('eve')))).toEqual(['not-member']);
+		}));
+
+	it('reads the same people everywhere, whatever order the fields arrived in', () => {
+		const { server, group } = serverWithChats();
+		const first = copy(server);
+		const second = copy(server);
+		const added = capture(first, () => {
+			const directory = createChatDirectory(first, ann);
+			directory.add(group, [eve]);
+			directory.add(group, [cy]);
+		});
+		Y.applyUpdate(second, added);
+		const list = (doc: Y.Doc) => createChatDirectory(doc, ann).get(group)!.members;
+		expect(list(second)).toEqual(list(first));
+		expect(list(first).map((m) => m.id)).toEqual(['ann', 'bob', 'cy', 'eve']);
 	});
 });
 
@@ -260,12 +411,70 @@ describe('the client and the room member list', () => {
 		const creator = createChatDirectory(doc, ann);
 		const group = creator.createGroup({ others: [bob] })!;
 		const direct = creator.ensureDirect(bob)!;
-		const row = rowOf(doc, group.id);
-		row.set('members', [...(row.get('members') as ChatMember[]), eve]);
+		creator.add(group.id, [eve]);
 		expect(rooms.chat(group.id)?.members.map((m) => m.id)).toContain('eve');
 		expect(members(group.id)).toEqual([]);
 		expect(members(direct.id)).toEqual([]);
 		rooms.destroy();
+	});
+
+	describe('after the creator crashed before admitting anyone', () => {
+		function reopen(user: ChatMember, doc: Y.Doc) {
+			const chatDocs = new Map<string, Y.Doc>();
+			const roomSynced = new Map<string, () => void>();
+			const directoryListeners = new Set<() => void>();
+			let directorySynced = false;
+			const rooms = createChatRooms({
+				doc,
+				base: createChatStore(doc, user),
+				user,
+				directorySync: {
+					synced: () => directorySynced,
+					onSynced: (listener) => {
+						directoryListeners.add(listener);
+						return () => directoryListeners.delete(listener);
+					},
+				},
+				openRoom: (chat, chatDoc, onSynced) => {
+					chatDocs.set(chat.id, chatDoc);
+					roomSynced.set(chat.id, onSynced);
+					return { destroy: () => undefined };
+				},
+			});
+			return {
+				rooms,
+				members: (id: string): string[] =>
+					[...(chatDocs.get(id)?.getMap<boolean>('teams:chat-members').keys() ?? [])].sort(),
+				roomSynced: (id: string) => roomSynced.get(id)!(),
+				directorySynced: () => {
+					directorySynced = true;
+					for (const listener of directoryListeners) listener();
+				},
+			};
+		}
+
+		it('admits the listed people once the room and the directory are current', () => {
+			const doc = new Y.Doc();
+			const id = createChatDirectory(doc, ann).createGroup({ others: [bob, cy] })!.id;
+			createChatDirectory(doc, ann).remove(id, 'cy');
+			const client = reopen(ann, doc);
+			expect(client.members(id)).toEqual([]);
+			client.roomSynced(id);
+			expect(client.members(id)).toEqual([]);
+			client.directorySynced();
+			expect(client.members(id)).toEqual(['ann', 'bob']);
+			client.rooms.destroy();
+		});
+
+		it('leaves it to the creator', () => {
+			const doc = new Y.Doc();
+			const id = createChatDirectory(doc, ann).createGroup({ others: [bob] })!.id;
+			const client = reopen(bob, doc);
+			client.roomSynced(id);
+			client.directorySynced();
+			expect(client.members(id)).toEqual([]);
+			client.rooms.destroy();
+		});
 	});
 
 	it('keeps using a 1:1 chat made before the id changed', () => {

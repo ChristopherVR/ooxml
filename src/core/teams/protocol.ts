@@ -25,6 +25,9 @@ export const CHAT_ROOM_PATTERN = /^chat-[0-9a-f]{16}-[\w-]+$/u;
 export const DIRECT_CHAT_ID_PATTERN = /^dm-[0-9a-f]{32}$/u;
 /** `g-<32 hex>-<24 hex>`: a group chat id, random and bound to the person who created it. */
 export const GROUP_CHAT_ID_PATTERN = /^g-[0-9a-f]{32}-[0-9a-f]{24}$/u;
+/** Whether a chat id has a format only protocol 2 issues: no older room can rightly carry it. */
+export const isCurrentChatId = (id: string): boolean =>
+	DIRECT_CHAT_ID_PATTERN.test(id) || GROUP_CHAT_ID_PATTERN.test(id);
 /** `call-<workspace>-<channel>`: the signaling room of a call. */
 export const CALL_ROOM_PATTERN = /^call-[\w-]+$/u;
 

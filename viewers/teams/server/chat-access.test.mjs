@@ -329,6 +329,44 @@ describe('private chats with accounts', () => {
 		assert.equal((await connect(room, 'eve')).status, 403);
 	});
 
+	it('merges concurrent group changes and undoes those of someone already removed', async () => {
+		const chat = createGroupChatId('ada');
+		const open = async (user) => {
+			const peer = await connect('acct-5', user);
+			assert.ok(await until(() => peer.doc.getMap('teams:chats').has(chat) || user === 'ada'));
+			return peer;
+		};
+		const ada = await open('ada');
+		const person = (id) => ({ id, name: id });
+		ada.doc.transact(() => {
+			const row = new Y.Map();
+			row.set('kind', 'group');
+			row.set('name', 'Crew');
+			row.set('members', [person('ada'), person('bob')]);
+			row.set('createdAt', 1);
+			row.set('createdBy', 'ada');
+			ada.doc.getMap('teams:chats').set(chat, row);
+		});
+		const bob = await open('bob');
+		const rowOf = (peer) => peer.doc.getMap('teams:chats').get(chat);
+		// Written at the same moment: neither has seen the other's change.
+		rowOf(ada).set('member:cy', 'cy');
+		rowOf(bob).set('member:bob', null);
+		const settled = (peer) =>
+			until(() => rowOf(peer).get('member:cy') === 'cy' && rowOf(peer).get('member:bob') === null);
+		assert.ok(await settled(ada));
+		assert.ok(await settled(bob));
+		// bob is out now, and his client has not noticed.
+		rowOf(bob).set('name', 'Mine');
+		rowOf(bob).set('member:eve', 'eve');
+		assert.ok(await until(() => rowOf(bob).get('name') === 'Crew'));
+		assert.ok(await until(() => rowOf(ada).get('name') === 'Crew'));
+		assert.equal(rowOf(ada).has('member:eve'), false);
+		assert.equal(bob.closed, null, 'he stays connected');
+		bob.doc.getMap('teams:roster').set('bob', new Y.Map());
+		assert.ok(await until(() => ada.doc.getMap('teams:roster').has('bob')));
+	});
+
 	it('closes the socket of someone who rewrites a directory row they are not in', async () => {
 		const ada = await connect('acct-4', 'ada');
 		const row = new Y.Map();

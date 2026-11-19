@@ -158,7 +158,7 @@ Tout ce que le serveur conserve se trouve sous `TEAMS_DATA` (`./data` par défau
 | `file-meta/=<name>.json`   | Qui a envoyé chaque fichier (décide qui peut le supprimer). À sauvegarder avec `files/`.                                    |
 | `session-revocations.json` | Les générations de révocation des sessions (sans lui, les sessions révoquées redeviennent valides jusqu’à leur expiration). |
 
-Un nom stocké est `=` suivi du base32 en minuscules du nom exact de la salle ou de la portée : des noms qui ne diffèrent que par la casse restent distincts sur tout disque. À son premier démarrage, un serveur 2.0 renomme ce qu'une version antérieure a stocké. Faites d'abord une sauvegarde, car un serveur antérieur ne peut pas lire les nouveaux noms.
+Un nom stocké est `=` suivi du base32 en minuscules du nom exact de la salle ou de la portée : des noms qui ne diffèrent que par la casse restent distincts sur tout disque. À son premier démarrage, un serveur 2.0 renomme ce qu'une version antérieure a stocké. Faites d'abord une sauvegarde, car un serveur antérieur ne peut pas lire les nouveaux noms. Une entrée portant un identifiant de discussion que seule la version 2.0 attribue (`dm-` et 32 chiffres hexadécimaux, ou un nouvel identifiant `g-`, quelle que soit la casse) n'est pas migrée : elle part dans un dossier `.quarantine` à côté d'elle, est journalisée et le serveur ne la lit jamais.
 
 Conservez aussi ce qui ne se trouve pas dans le répertoire de données : votre fichier de comptes (`TEAMS_USERS_FILE`) et `TEAMS_SESSION_SECRET`.
 Modifier ou perdre le secret déconnecte tout le monde, ce qui est sans gravité.

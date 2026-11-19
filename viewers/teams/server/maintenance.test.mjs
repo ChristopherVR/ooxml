@@ -15,11 +15,13 @@ import { join } from 'node:path';
 import { after, describe, it } from 'node:test';
 import { WebSocket } from 'ws';
 import * as Y from 'yjs';
+import { directChatId } from './chat-access.mjs';
 import { createTeamsServer } from './index.mjs';
 import { createLogger, createMetrics } from './metrics.mjs';
 import {
 	compactSnapshotFile,
 	compactUpdate,
+	QUARANTINE_DIR,
 	migrateStorageNames,
 	nameFromStorage,
 	storageName,
@@ -159,6 +161,79 @@ describe('storage names', () => {
 			assert.equal(migrateStorageNames(dir, '.bin'), 1);
 			assert.deepEqual(readdirSync(dir), [`${storageName(caseInsensitive ? real : alias)}.bin`]);
 		} finally {
+			rmSync(dir, { recursive: true, force: true });
+		}
+	});
+
+	it('never lets an old entry become a chat id of the current format', () => {
+		const hash = '0123456789abcdef';
+		const direct = `dm-${'a'.repeat(32)}`;
+		const group = `g-${'b'.repeat(32)}-${'c'.repeat(24)}`;
+		for (const raw of [
+			`chat-${hash}-${direct}`,
+			`chat-${hash}-${group}`,
+			`CHAT-${hash}-${direct}`.toUpperCase(),
+			`chat-${hash.toUpperCase()}-${direct}`,
+			`Chat-${hash}-${group}`,
+		]) {
+			const dir = tmp();
+			try {
+				writeFileSync(join(dir, `${raw}.bin`), 'planted');
+				const logs = [];
+				assert.equal(
+					migrateStorageNames(dir, '.bin', (m) => logs.push(m)),
+					0,
+					raw,
+				);
+				assert.deepEqual(readdirSync(dir), [QUARANTINE_DIR], raw);
+				assert.equal(readFileSync(join(dir, QUARANTINE_DIR, `${raw}.bin`), 'utf8'), 'planted');
+				assert.match(logs.join(), /quarantined/u);
+				assert.equal(migrateStorageNames(dir, '.bin'), 0, 'a second start changes nothing');
+				assert.deepEqual(readdirSync(dir), [QUARANTINE_DIR], raw);
+			} finally {
+				rmSync(dir, { recursive: true, force: true });
+			}
+		}
+	});
+
+	it("keeps an old server's squatter out of the new chat it prepared, rooms and files alike", async () => {
+		const dir = tmp();
+		const hash = '0123456789abcdef';
+		const dm = directChatId('ann', 'bob');
+		const room = `chat-${hash}-${dm}`;
+		const alias = room.toUpperCase();
+		const planted = new Y.Doc();
+		for (const user of ['eve', 'ann', 'bob']) planted.getMap('teams:chat-members').set(user, true);
+		mkdirSync(join(dir, 'rooms'));
+		mkdirSync(join(dir, 'files', alias), { recursive: true });
+		mkdirSync(join(dir, 'file-meta'));
+		writeFileSync(join(dir, 'rooms', `${alias}.bin`), Y.encodeStateAsUpdate(planted));
+		writeFileSync(join(dir, 'files', alias, 'planted.txt'), 'planted');
+		writeFileSync(
+			join(dir, 'file-meta', `${alias}.json`),
+			JSON.stringify({ 'planted.txt': 'eve' }),
+		);
+		const server = createTeamsServer({ dataDir: dir, insecureDev: true, log: () => {} });
+		const { port } = await server.listen(0, '127.0.0.1');
+		const dial = (user, query = '') =>
+			new Promise((resolve) => {
+				const ws = new WebSocket(`ws://127.0.0.1:${port}/sync/${room}?user=${user}${query}`);
+				ws.on('open', () => (ws.close(), resolve('open')));
+				ws.on('unexpected-response', (_q, res) => resolve(res.statusCode));
+				ws.on('error', () => {});
+			});
+		try {
+			assert.equal(await dial('eve'), 403);
+			assert.equal(await dial('ann', '&members=ann,bob'), 'open');
+			assert.equal(await dial('eve'), 403, 'the new room lists only its two people');
+			const file = await fetch(`http://127.0.0.1:${port}/files/${room}/planted.txt`, {
+				headers: { 'X-Teams-User': 'ann' },
+			});
+			assert.equal(file.status, 404);
+			for (const area of ['rooms', 'files', 'file-meta'])
+				assert.equal(readdirSync(join(dir, area, QUARANTINE_DIR)).length, 1, area);
+		} finally {
+			await server.close();
 			rmSync(dir, { recursive: true, force: true });
 		}
 	});

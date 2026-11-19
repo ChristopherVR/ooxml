@@ -6,6 +6,7 @@ import {
 	closeSync,
 	existsSync,
 	fsyncSync,
+	mkdirSync,
 	openSync,
 	readdirSync,
 	readFileSync,
@@ -17,13 +18,15 @@ import {
 import { randomBytes } from 'node:crypto';
 import { join } from 'node:path';
 import * as Y from 'yjs';
-import { isChatRoomAlias } from './chat-access.mjs';
+import { chatIdOfRoom, isChatRoomAlias, isCurrentChatId } from './chat-access.mjs';
 
 const realFs = { openSync, writeSync, fsyncSync, closeSync, renameSync, unlinkSync };
 const TEMP = /\.[0-9a-f]{8}\.tmp$/u;
 const STORED_PREFIX = '=';
 const BASE32 = 'abcdefghijklmnopqrstuvwxyz234567';
 const LEGACY_NAME = /^[\w-]{1,128}$/u;
+/** Where migration sets entries aside. The dot keeps it apart from every room and scope name. */
+export const QUARANTINE_DIR = '.quarantine';
 
 /**
  * The on-disk name of a room or file scope: `=` and the lower-case base32 of its exact name. Two
@@ -77,10 +80,21 @@ const sameFile = (a, b) => {
 };
 
 /**
+ * A name that is, in any spelling, the room of a chat id only the current protocol issues. No older
+ * server had such a chat, so what sits under the name was put there to wait for the real one.
+ */
+const claimsCurrentChat = (raw) => {
+	const chatId = chatIdOfRoom(raw.toLowerCase());
+	return chatId !== null && isCurrentChatId(chatId);
+};
+
+/**
  * Rename the entries of `dir` that still carry a raw name (`<name><suffix>`) to their stored
  * name. Run once at start-up, before anything is served; a run that is cut short continues on the
  * next start. On a case-insensitive disk an upper-case spelling of a chat room was that chat room,
- * so it is stored under the real, lower-case name. Returns how many entries moved.
+ * so it is stored under the real, lower-case name. An entry that claims a chat id of the current
+ * format never becomes that room: it moves, untouched, to {@link QUARANTINE_DIR} and is logged.
+ * Returns how many entries got a stored name.
  */
 export function migrateStorageNames(dir, suffix, log = () => {}) {
 	let entries = [];
@@ -93,10 +107,18 @@ export function migrateStorageNames(dir, suffix, log = () => {}) {
 		const raw = entry.slice(0, entry.length - suffix.length);
 		if (!LEGACY_NAME.test(raw)) continue;
 		const from = join(dir, entry);
-		const lower = raw.toLowerCase();
-		const isSpelling = isChatRoomAlias(raw) && sameFile(join(dir, lower + suffix), from);
-		const to = join(dir, storageName(isSpelling ? lower : raw) + suffix);
 		try {
+			if (claimsCurrentChat(raw)) {
+				const aside = join(dir, QUARANTINE_DIR, entry);
+				mkdirSync(join(dir, QUARANTINE_DIR), { recursive: true });
+				if (existsSync(aside)) throw new Error('its quarantine name is already taken');
+				renameSync(from, aside);
+				log(`storage: quarantined ${entry} in ${dir}: it claims a chat that did not exist yet`);
+				continue;
+			}
+			const lower = raw.toLowerCase();
+			const isSpelling = isChatRoomAlias(raw) && sameFile(join(dir, lower + suffix), from);
+			const to = join(dir, storageName(isSpelling ? lower : raw) + suffix);
 			if (existsSync(to)) throw new Error('its new name is already taken');
 			renameSync(from, to);
 			moved++;

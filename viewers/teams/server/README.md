@@ -266,6 +266,9 @@ uses all of this for collaborative PowerPoint review.
 - **Stored names.** Rooms, file scopes and uploader records are stored under `=` and the lower-case
   base32 of their exact name, so names that differ only by case stay apart on every disk. The first
   start of this version renames what an older one stored; an older server cannot read the result.
+  An entry named after a chat id only this version issues (`dm-` and 32 hex digits, or a new `g-`
+  id, in any spelling) is not migrated: it moves to a `.quarantine` folder beside it, is logged, and
+  is never read.
 - **Cleanup and quotas.** Uploads stream to a hidden `.part` file that failed uploads remove; start-up removes
   every leftover and a timer (`sweepIntervalMs`) those older than an hour. The quota is per workspace
   (`TEAMS_WORKSPACE_QUOTA_MB`).

@@ -13,13 +13,18 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const core = path.resolve(here, '../../../src/core/teams');
 export const OUTPUT = path.resolve(here, '../server/validator.generated.mjs');
 
-const ENTRY = `export { validateTeamsSyncMessage, validateTeamsUpdate } from './validate-update';
+const ENTRY = `export {
+	applyUpdateReverts,
+	validateTeamsSyncMessage,
+	validateTeamsUpdate,
+} from './validate-update';
 export {
 	PROTOCOL_VERSION,
 	PROTOCOL_PARAM,
 	chatIdOfRoom,
 	isChatRoom,
 	isChatRoomAlias,
+	isCurrentChatId,
 	protocolOfUrl,
 } from './protocol';
 export { directChatId, isGroupChatIdOf, shortHash } from './chat-records';

@@ -166,7 +166,7 @@ Everything the server keeps is under `TEAMS_DATA` (default `./data`):
 | `file-meta/=<name>.json`   | Who uploaded each file (decides who may delete it). Back it up with `files/`.           |
 | `session-revocations.json` | Session revocation generations (lose it and revoked sessions revive until they expire). |
 
-A stored name is `=` followed by the lower-case base32 of the exact room or scope name, so names that differ only by case stay apart on every disk. On its first start a 2.0 server renames what an older version stored; back up first, because an older server cannot read the new names.
+A stored name is `=` followed by the lower-case base32 of the exact room or scope name, so names that differ only by case stay apart on every disk. On its first start a 2.0 server renames what an older version stored; back up first, because an older server cannot read the new names. An entry named after a chat id that only 2.0 issues (`dm-` and 32 hex digits, or a new `g-` id, in any spelling) is not migrated: it moves to a `.quarantine` folder beside it and is logged, and the server never reads it.
 
 Also keep what is not in the data directory: your accounts file (`TEAMS_USERS_FILE`) and
 `TEAMS_SESSION_SECRET`. Changing or losing the secret signs everyone out, which is harmless.

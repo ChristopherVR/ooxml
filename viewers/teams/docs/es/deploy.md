@@ -142,7 +142,7 @@ Todo lo que guarda el servidor está bajo `TEAMS_DATA` (por defecto `./data`):
 | `file-meta/=<name>.json`   | Quién subió cada archivo (decide quién puede borrarlo). Cópialo junto con `files/`.                          |
 | `session-revocations.json` | Generaciones de revocación de sesiones (si se pierde, las sesiones revocadas vuelven a valer hasta caducar). |
 
-Un nombre almacenado es `=` seguido del base32 en minúsculas del nombre exacto de la sala o del ámbito, de modo que los nombres que solo difieren en mayúsculas no se mezclan en ningún disco. En su primer arranque, un servidor 2.0 renombra lo que guardó una versión anterior. Haz antes una copia, porque un servidor anterior no puede leer los nombres nuevos.
+Un nombre almacenado es `=` seguido del base32 en minúsculas del nombre exacto de la sala o del ámbito, de modo que los nombres que solo difieren en mayúsculas no se mezclan en ningún disco. En su primer arranque, un servidor 2.0 renombra lo que guardó una versión anterior. Haz antes una copia, porque un servidor anterior no puede leer los nombres nuevos. Una entrada con el nombre de un id de chat que solo emite 2.0 (`dm-` y 32 dígitos hexadecimales, o un id `g-` nuevo, en cualquier grafía) no se migra: pasa a una carpeta `.quarantine` junto a ella, queda registrada y el servidor nunca la lee.
 
 Guarda también lo que no está en el directorio de datos: tu archivo de cuentas (`TEAMS_USERS_FILE`) y `TEAMS_SESSION_SECRET`.
 Cambiar o perder el secreto cierra la sesión de todos, lo cual no es grave.

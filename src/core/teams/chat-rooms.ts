@@ -3,8 +3,9 @@
 // so people who are not members never receive its messages: the reference server refuses them the
 // room, and this model never opens, reads or writes a chat the person is not a member of. The
 // room's member list changes only through this person's own actions (creating a group, adding
-// people, leaving), never by copying what somebody else wrote in the directory. The returned
-// object is a drop-in `ChatStore`, so everything built on channels (threads, pins, reactions,
+// people, leaving), never by copying what somebody else wrote in the directory. One repair: the
+// creator of a group admits its listed people again when the room opens, in case a crash came
+// between creating the group and admitting them. The returned object is a drop-in `ChatStore`, so everything built on channels (threads, pins, reactions,
 // mentions, drafts, activity) works unchanged in a chat. DOM-free. New code.
 import * as Y from 'yjs';
 import type { ChatStore, ChatUser } from './chat';
@@ -16,6 +17,7 @@ import {
 	chatTitle,
 	createChatDirectory,
 	isChatMember,
+	isGroupChatIdOf,
 } from './chats';
 import type { Channel, Message } from './model';
 import type { PinnedMessage } from './pins';
@@ -35,9 +37,12 @@ export interface ChatRoomsOptions {
 	user: ChatUser;
 	/**
 	 * Start syncing a chat's own document. Called once per chat the person belongs to, with a
-	 * document the caller may seed from storage. Return a handle that stops the sync.
+	 * document the caller may seed from storage. Call `onSynced` when the document has caught up
+	 * with the server. Return a handle that stops the sync.
 	 */
-	openRoom: (chat: ChatInfo, doc: Y.Doc) => ChatRoomHandle;
+	openRoom: (chat: ChatInfo, doc: Y.Doc, onSynced: () => void) => ChatRoomHandle;
+	/** Whether the workspace document has caught up with the server, and news of it doing so. */
+	directorySync?: { synced: () => boolean; onSynced: (listener: () => void) => () => void };
 	/** A document for a chat, for example restored from a local snapshot. */
 	createDoc?: (chat: ChatInfo) => Y.Doc;
 }
@@ -95,12 +100,28 @@ export function createChatRooms(options: ChatRoomsOptions): ChatRooms {
 		});
 	};
 
+	/** Group rooms this person created and has not re-admitted people to since opening them. */
+	const toReadmit = new Set<string>();
+	const syncedRooms = new Set<string>();
+	/** Waits until both documents are current, so nobody who has left is let back in. */
+	const readmit = (id: string): void => {
+		if (!toReadmit.has(id) || !syncedRooms.has(id) || !options.directorySync?.synced()) return;
+		toReadmit.delete(id);
+		const chat = directory.get(id);
+		if (chat && isChatMember(chat, user.id)) admit(id, chat.members);
+	};
+	const stopDirectorySync = options.directorySync?.onSynced(() => {
+		for (const id of [...toReadmit]) readmit(id);
+	});
+
 	const sync = (): void => {
 		const wanted = new Map(mineNow().map((c) => [c.id, c]));
 		for (const [id, entry] of open)
 			if (!wanted.has(id)) {
 				// Let a last notice and member list change flush before the room closes.
 				open.delete(id);
+				toReadmit.delete(id);
+				syncedRooms.delete(id);
 				entry.off();
 				const close = (): void => {
 					closing.delete(close);
@@ -117,8 +138,13 @@ export function createChatRooms(options: ChatRoomsOptions): ChatRooms {
 			const chatDoc = options.createDoc?.(chat) ?? new Y.Doc();
 			const store = createChatStore(chatDoc, user);
 			store.createChannel({ id, name: 'Chat', kind: 'direct' });
-			const handle = openRoom(chat, chatDoc);
+			if (chat.kind === 'group' && isGroupChatIdOf(id, user.id)) toReadmit.add(id);
+			const handle = openRoom(chat, chatDoc, () => {
+				syncedRooms.add(id);
+				readmit(id);
+			});
 			open.set(id, { doc: chatDoc, store, handle, off: store.observe(notify) });
+			readmit(id);
 			changed = true;
 		}
 		if (changed) notify();
@@ -281,6 +307,7 @@ export function createChatRooms(options: ChatRoomsOptions): ChatRooms {
 		},
 		destroy() {
 			stopBase();
+			stopDirectorySync?.();
 			for (const close of [...closing]) close();
 			for (const entry of open.values()) {
 				entry.off();
