@@ -42,12 +42,19 @@ function walk(dir: string, out: string[] = []): string[] {
 	return out;
 }
 
+const scanned = new Map<string, string>();
+
 /** Drop comment-only lines so prose that mentions `<select>` does not trip the scan. */
 function code(file: string): string {
-	return readFileSync(file, 'utf8')
-		.split('\n')
-		.filter((line) => !/^\s*(\/\/|\/\*|\*|<!--)/u.test(line))
-		.join('\n');
+	let text = scanned.get(file);
+	if (text === undefined) {
+		text = readFileSync(file, 'utf8')
+			.split('\n')
+			.filter((line) => !/^\s*(\/\/|\/\*|\*|<!--)/u.test(line))
+			.join('\n');
+		scanned.set(file, text);
+	}
+	return text;
 }
 
 describe('native select, checkbox and radio drift (#342)', () => {

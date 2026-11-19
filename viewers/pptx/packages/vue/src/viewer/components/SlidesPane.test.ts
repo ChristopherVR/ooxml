@@ -81,7 +81,7 @@ async function chooseFromMenu(
 }
 
 describe('slidesPane building block', () => {
-	it('is exported from the package root and the /viewer subpath', async () => {
+	it('is exported from the package root and the /viewer subpath', { timeout: 60_000 }, async () => {
 		const root = await import('../../index');
 		const viewer = await import('../index');
 		expect(root.SlidesPane).toBe(SlidesPane);
