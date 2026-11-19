@@ -122,7 +122,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					return JSON.stringify(data);
 				};
 				for (const [source, destination] of copies) {
-					this.chartPartRevisions.copy(source, destination, remapped);
+					this.chartPartRevisions.copy(source, destination);
 					const baseline = this.chartDataBaselines.get(source);
 					if (baseline) this.chartDataBaselines.set(destination, remapped(baseline));
 				}

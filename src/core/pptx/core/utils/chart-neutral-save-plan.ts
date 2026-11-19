@@ -171,6 +171,23 @@ function differingPaths(reference: unknown, value: unknown, path: string): strin
 }
 
 /**
+ * `data` (a copy the caller owns) without the fields that are not edits: the saved state it
+ * describes, and what was read from the embedded workbook when it was read, which data brought
+ * back by undo carries as the workbook was then.
+ */
+function withoutBookkeeping(data: PptxChartData): PptxChartData {
+	delete data.savedRevision;
+	delete data.embeddedWorkbookData;
+	delete data.dataLabelTextEditable;
+	delete data.dataLabelSourceShape;
+	if (data.externalData?.embeddedWorkbookData) {
+		const { embeddedWorkbookData: _workbook, ...link } = data.externalData;
+		data.externalData = link;
+	}
+	return data;
+}
+
+/**
  * {@link planNeutralChartSave}, with the paths of the fields of `after` no family claimed (empty
  * when the plan is defined).
  */
@@ -178,7 +195,8 @@ export function planWithLeftovers(
 	before: PptxChartData,
 	after: PptxChartData,
 ): { plan: NeutralChartSavePlan | undefined; unclaimed: string[] } {
-	const probe = structuredClone(after);
+	const probe = withoutBookkeeping(structuredClone(after));
+	before = withoutBookkeeping({ ...before });
 	const edits: NeutralChartEdit[] = [];
 	// Chart Filters moves come first: the structure planner then sees no series added or removed.
 	const loaded = before;

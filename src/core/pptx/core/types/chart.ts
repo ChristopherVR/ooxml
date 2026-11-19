@@ -40,6 +40,15 @@ export type PptxChartStructureEdit = Extract<
 	{ kind: 'add-series' | 'remove-series' | 'add-category' | 'remove-category' }
 >;
 
+/**
+ * Internal: the saved state of a chart part that chart data was edited from. The handler sets it;
+ * copies that keep the object (`cloneSlide`) keep the state alive for undo, copies made with
+ * `structuredClone` or JSON keep only its `id`.
+ */
+export interface PptxChartSavedRevision {
+	readonly id: number;
+}
+
 // ==========================================================================
 // Chart types
 // ==========================================================================
@@ -1451,8 +1460,8 @@ export interface PptxChartData {
 	 * shared chart operations, so points a view does not show move as the worksheet's do.
 	 */
 	structureEdits?: PptxChartStructureEdit[];
-	/** Internal: the saved state of the part this data was edited from; absent for the part as loaded. */
-	savedRevision?: number;
+	/** Internal: the saved state of the part this data was edited from. */
+	savedRevision?: PptxChartSavedRevision;
 	/** `null` explicitly removes an existing ChartML data table. */
 	dataTable?: PptxChartDataTable | null | undefined;
 	/** `null` explicitly removes an existing `c:dropLines` element. */

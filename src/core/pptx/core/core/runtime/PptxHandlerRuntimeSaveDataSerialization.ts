@@ -341,6 +341,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		if (!chartData.chartPartPath) {
 			return;
 		}
+		this.chartPartRevisions.start(chartData.chartPartPath, chartData);
 		this.chartDataBaselines.set(chartData.chartPartPath, JSON.stringify(chartData));
 		this.chartWorkbookDataBaselines.set(chartData.chartPartPath, {
 			signature: chartWorkbookDataSignature(chartData),
@@ -429,11 +430,19 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			// A write-back that did not fully land puts back the cells it changed and starts again.
 			const retryWrite = this.chartWorkbookDataBaselines.get(chartPartPath)?.retry?.written;
 			if (retryWrite) await restoreChartWorkbookWrite(this.zip, retryWrite);
-			// Data that undo or redo brought back saves from the part it was edited from.
-			const source = this.chartPartRevisions.source(chartPartPath, chartData);
-
 			try {
-				const chartXmlStr = source?.xml ?? (await chartFile.async('string'));
+				// Data that undo or redo brought back saves from the part it was edited from, against
+				// the data that part describes.
+				let source = this.chartPartRevisions.source(chartPartPath, chartData);
+				const sourceData = source
+					? await this.refreshClassicChartFromPart(source, chartData, slidePath)
+					: undefined;
+				if (source && !sourceData) source = null;
+				// That state was released (see `chart-part-revisions`): the data is saved as edited
+				// directly from the part as it is now, so its recorded row and series edits, which
+				// index the released state, are dropped.
+				if (source === null) delete chartData.structureEdits;
+				const chartXmlStr = source ?? (await chartFile.async('string'));
 				const chartXmlData = this.parser.parse(chartXmlStr) as XmlObject;
 				// What the part authored for each element, read off a pristine copy, so only
 				// format sections the user changed are written back.
@@ -466,11 +475,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// An edit the shared chart core can express is saved through it (`writeChartSpace`
 				// keeps every element the neutral model holds as written); anything else falls
 				// through to the object-tree writers below.
-				const baseline =
-					source === null
-						? undefined
-						: (source?.data ?? this.chartDataBaselines.get(chartPartPath));
-				const baselineData = baseline ? (JSON.parse(baseline) as PptxChartData) : undefined;
+				const latest = this.chartDataBaselines.get(chartPartPath);
+				const baselineData =
+					sourceData ?? (latest ? (JSON.parse(latest) as PptxChartData) : undefined);
 				// Elements PowerPoint's codecs encode and the user shapes drawing part, written once
 				// and shared by whichever path saves the part.
 				const packageElements: NeutralChartPackageElements = baselineData
@@ -1430,18 +1437,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				});
 			}
 		}
+		if (previousXml !== undefined)
+			this.chartPartRevisions.record(chartPartPath, previousXml, chartData);
 		// Subsequent saves compare against the model now stored in this mutable ZIP.
-		this.chartDataBaselines.set(
-			chartPartPath,
-			previousXml === undefined
-				? JSON.stringify(chartData)
-				: this.chartPartRevisions.record(
-						chartPartPath,
-						{ xml: previousXml, data: serializedBaseline },
-						xml,
-						chartData,
-					),
-		);
+		this.chartDataBaselines.set(chartPartPath, JSON.stringify(chartData));
 	}
 
 	/**
