@@ -2,6 +2,7 @@ import { localeOf, translate } from './localization';
 import { swatchColor } from 'ooxml-core/docx/ui';
 
 let close: (() => void) | undefined;
+let popoverIds = 0;
 
 /** Closes whichever ribbon popover is open. */
 export function closeRibbonPopover(): void {
@@ -32,7 +33,10 @@ export function mountPopover(
 	const left = parseFloat(pop.style.left) || 0;
 	const limit = window.innerWidth - pop.offsetWidth - 8;
 	if (pop.offsetWidth && left > limit) pop.style.left = `${Math.max(4, limit)}px`;
+	const wasExpanded = expanded.getAttribute('aria-expanded');
 	expanded.setAttribute('aria-expanded', 'true');
+	pop.id ||= `ribbon-popover-${++popoverIds}`;
+	expanded.setAttribute('aria-controls', pop.id);
 	const outside = (event: Event) => {
 		if (!event.composedPath().includes(pop) && !event.composedPath().includes(anchor)) close?.();
 	};
@@ -47,7 +51,9 @@ export function mountPopover(
 		document.removeEventListener('pointerdown', outside, true);
 		document.removeEventListener('keydown', escape, true);
 		pop.remove();
-		expanded.removeAttribute('aria-expanded');
+		if (wasExpanded === null) expanded.removeAttribute('aria-expanded');
+		else expanded.setAttribute('aria-expanded', wasExpanded);
+		expanded.removeAttribute('aria-controls');
 		close = undefined;
 	};
 	return true;
