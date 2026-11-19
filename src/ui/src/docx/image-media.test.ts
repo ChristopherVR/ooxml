@@ -169,7 +169,21 @@ describe('ImageMediaCache', () => {
 		const cache = new ImageMediaCache(() => new Uint8Array([1, 2, 3]));
 		cache.urlFor('word/media/a.png', 'image/png');
 		cache.urlFor('word/media/b.png', 'text/html');
-		cache.urlFor('word/media/c.bin', 'application/xhtml+xml');
-		expect(types).toEqual(['image/png', 'image/png', 'application/octet-stream']);
+		// Neither a page-origin blob nor the claimed type: an opaque data URL of the part's type.
+		expect(cache.urlFor('word/media/c.bin', 'application/xhtml+xml')).toBe(
+			'data:application/octet-stream;base64,AQID',
+		);
+		expect(types).toEqual(['image/png', 'image/png']);
+	});
+
+	it('gives an SVG picture an opaque-origin data URL, never a blob of this origin', () => {
+		const created = vi.fn(() => 'blob:svg');
+		URL.createObjectURL = created;
+		const svg = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"/>');
+		const cache = new ImageMediaCache(() => svg);
+		const url = cache.urlFor('word/media/image1.svg', 'image/svg+xml')!;
+		expect(created).not.toHaveBeenCalled();
+		expect(url.startsWith('data:image/svg+xml;base64,')).toBe(true);
+		expect(atob(url.slice(url.indexOf(',') + 1))).toBe('<svg xmlns="http://www.w3.org/2000/svg"/>');
 	});
 });
