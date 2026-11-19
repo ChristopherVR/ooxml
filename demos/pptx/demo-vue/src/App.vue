@@ -68,9 +68,9 @@ const fileName = ref('');
 const restoreChecked = ref(false);
 
 // Demo AI provider: the host builds an OpenAI-compatible browser model from
-// localStorage-supplied fields and passes it to the viewer's optional `ai`
-// prop. The demo ships no key and no config UI, so this is normally undefined
-// and the assistant simply stays off.
+// fields set by hand in this tab's sessionStorage and passes it to the
+// viewer's optional `ai` prop. The demo ships no key and no config UI, so this
+// is normally undefined and the assistant simply stays off.
 const aiAssistant = useDemoAiAssistant();
 
 const themeKey = ref<string>(readStoredTheme());

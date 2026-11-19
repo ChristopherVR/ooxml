@@ -183,9 +183,9 @@ export class AppComponent {
 	readonly collaborationConfig = signal<CollaborationConfig | null>(null);
 
 	/**
-	 * Viewer `ai` config built from localStorage-supplied fields, or undefined
-	 * when nothing is stored. The demo ships no key and no config UI, so this is
-	 * normally undefined and the assistant simply stays off.
+	 * Viewer `ai` config built from fields set by hand in this tab's sessionStorage,
+	 * or undefined when nothing is stored. The demo ships no key and no config UI,
+	 * so this is normally undefined and the assistant simply stays off.
 	 */
 	readonly aiConfig = signal<PptxAiAssistant | PptxAiConfig | undefined>(
 		buildDemoAi(readStoredAiFields()),
