@@ -1,9 +1,18 @@
 import { isStorableHyperlinkHref, isOpenableHyperlinkHref } from 'ooxml-core/opc';
 
-// PowerPoint also opens `tel:` and relative links. `file:` and `ftp:` links stay in the deck
-// (the OPC policy stores them) but never open: a browser or desktop shell would hand them to the
-// local file system or a legacy client.
-const PPTX_HYPERLINK_POLICY = { additionalOpenSchemes: ['tel'], openRelative: true };
+// PowerPoint also opens `tel:` links. `file:` and `ftp:` links stay in the deck (the OPC policy
+// stores them) but never open: a browser or desktop shell would hand them to the local file system
+// or a legacy client. Relative links stay in the deck as well and open only once a host opts in,
+// since they resolve against the host page's address rather than the deck's.
+const PPTX_HYPERLINK_POLICY = { additionalOpenSchemes: ['tel'], openRelative: false };
+
+/**
+ * Lets deck links without a scheme (`notes.html`, `/docs/`, `#part`) open, resolved against the
+ * host page's address. Off by default; it applies to every viewer on the page.
+ */
+export function setOpenRelativeHyperlinks(enabled: boolean): void {
+	PPTX_HYPERLINK_POLICY.openRelative = enabled;
+}
 
 /** Authoring policy: stored references may include relative and file paths; browser navigation is narrower. */
 export function isUrlSafe(url: string | undefined): boolean {

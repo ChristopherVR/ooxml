@@ -8,6 +8,7 @@ import {
 	isPpactionUrl,
 	parsePpactionUrl,
 	resolveHyperlinkHref,
+	setOpenRelativeHyperlinks,
 } from './hyperlink-security';
 
 describe('isUrlSafe', () => {
@@ -114,12 +115,27 @@ describe('safeOpenUrl', () => {
 		},
 	);
 
-	it.each(['/relative', '#slide', 'tel:+1234'])(
-		'preserves deliberate PowerPoint navigation compatibility for %s',
+	it('opens tel: links as PowerPoint does', () => {
+		expect(safeOpenUrl('tel:+1234')).toBe(true);
+		expect(window.open).toHaveBeenCalledWith('tel:+1234', '_blank', 'noopener,noreferrer');
+		expect(resolveHyperlinkHref('tel:+1234')).toBe('tel:+1234');
+	});
+
+	it.each(['/relative', 'notes.html', '#slide'])(
+		'keeps relative link %s in the deck and opens it only once the host opts in',
 		(url) => {
-			expect(safeOpenUrl(url)).toBe(true);
-			expect(window.open).toHaveBeenCalledWith(url, '_blank', 'noopener,noreferrer');
-			expect(resolveHyperlinkHref(url)).toBe(url);
+			expect(isUrlSafe(url)).toBe(true);
+			expect(safeOpenUrl(url)).toBe(false);
+			expect(window.open).not.toHaveBeenCalled();
+			expect(resolveHyperlinkHref(url)).toBeUndefined();
+			setOpenRelativeHyperlinks(true);
+			try {
+				expect(safeOpenUrl(url)).toBe(true);
+				expect(window.open).toHaveBeenCalledWith(url, '_blank', 'noopener,noreferrer');
+				expect(resolveHyperlinkHref(url)).toBe(url);
+			} finally {
+				setOpenRelativeHyperlinks(false);
+			}
 		},
 	);
 
