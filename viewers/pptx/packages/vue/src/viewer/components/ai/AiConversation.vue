@@ -24,7 +24,7 @@
  * `pptx-svelte-viewer`). This makes `AiConversation` an async-setup
  * component, hence the `<Suspense>` boundary around it in `AiChatPanel.vue`.
  */
-import { History, MessageSquarePlus, Trash2, TriangleAlert } from 'lucide-vue-next';
+import { History, MessageSquarePlus, Trash2, TriangleAlert } from '@lucide/vue';
 import type {
 	PptxAiBridge,
 	PptxAiChatSession,

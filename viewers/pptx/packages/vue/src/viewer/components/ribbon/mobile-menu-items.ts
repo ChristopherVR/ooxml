@@ -11,7 +11,7 @@ import {
 	TextCursorInput,
 	Type,
 	Wand,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 import type { RibbonContextualTabId } from 'ooxml-ui/pptx';
 import type { Component } from 'vue';
 

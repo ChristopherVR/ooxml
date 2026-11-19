@@ -137,4 +137,16 @@ describe('shape-following shadow (vue)', () => {
 		expect(wrapper.html()).toContain('data-pptx-silhouette-fill');
 		wrapper.unmount();
 	});
+
+	it('keeps a hostile element id inside the text of its style element', () => {
+		const element = {
+			...triangle(),
+			id: 'x"]{}</style><i data-injected="1">',
+			text: 'hello',
+		} as unknown as PptxElement;
+		const wrapper = mount(ShapeEffectOverlay, { props: { element } });
+		expect(wrapper.find('[data-injected]').exists()).toBe(false);
+		expect(wrapper.find('style').element.textContent).toContain('pointer-events:auto');
+		wrapper.unmount();
+	});
 });

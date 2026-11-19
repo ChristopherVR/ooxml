@@ -1,44 +1,32 @@
 // Room access for private chats. A chat's messages live in a sync room of their own,
 // `chat-<workspace hash>-<chat id>`, whose Yjs document carries a `teams:chat-members` map
-// (user id -> true). A socket may join only when its `user` query parameter is in that map. A room
-// that has no members yet is created by its first socket, which must list the members in the
-// `members` query parameter and be one of them; a 1:1 chat (`dm-<hash>`) must also list exactly the
-// two people its id was derived from, so nobody can create somebody else's 1:1 room first.
-// Identity is a claim (there are no accounts): this keeps out workspace members who are not on the
-// list, not someone who holds the token and claims another person's id. Pure helpers, no I/O.
+// (user id -> true). A socket may join only when its user is `true` in that map. Nobody names the
+// members of a new room: a 1:1 room is created for the two people its id was derived from, a group
+// room for the one person its id is bound to, who then adds the others through validated updates.
+// A room that already has content never starts again, even when its member list is empty.
+// Without accounts the user is a claim: this keeps out workspace members who are not on the list,
+// not someone who holds the token and claims another person's id. Pure helpers, no I/O.
+import {
+	chatIdOfRoom,
+	directChatId,
+	isChatRoom,
+	isChatRoomAlias,
+	isCurrentChatId,
+	isGroupChatIdOf,
+	shortHash,
+} from './validator.generated.mjs';
+
+export { chatIdOfRoom, directChatId, isChatRoom, isChatRoomAlias, isCurrentChatId, shortHash };
 
 export const CHAT_MEMBERS_MAP = 'teams:chat-members';
-const CHAT_ROOM = /^chat-[0-9a-f]{16}-([\w-]+)$/u;
 const USER = /^[\w.@:+-]{1,64}$/u;
-export const MAX_CHAT_MEMBERS = 50;
+const DIRECT_CHAT = /^dm-[0-9a-f]{32}$/u;
 
-export const isChatRoom = (name) => CHAT_ROOM.test(name);
-
-/** The same 16-hex hash as `shortHash` in ooxml-core/teams (chats.ts); a test keeps them equal. */
-export function shortHash(value) {
-	let a = 0x811c9dc5;
-	let b = 0x01000193 ^ value.length;
-	for (let i = 0; i < value.length; i++) {
-		const c = value.charCodeAt(i);
-		a = Math.imul(a ^ c, 0x01000193) >>> 0;
-		b = Math.imul(b ^ (c + i), 0x85ebca6b) >>> 0;
-	}
-	return a.toString(16).padStart(8, '0') + b.toString(16).padStart(8, '0');
-}
-
-export const directChatId = (a, b) => `dm-${shortHash([a, b].sort().join('\n'))}`;
-
-/** Valid, unique user ids from a comma-separated query parameter. */
-export function parseMembers(param) {
-	if (typeof param !== 'string' || param.length > 4096) return [];
-	return [
-		...new Set(
-			param
-				.split(',')
-				.filter((id) => USER.test(id))
-				.slice(0, MAX_CHAT_MEMBERS),
-		),
-	];
+/** The two valid, distinct user ids of a `members` query parameter, or null. */
+function parsePair(param) {
+	if (typeof param !== 'string' || param.length > 256) return null;
+	const ids = param.split(',');
+	return ids.length === 2 && ids[0] !== ids[1] && ids.every((id) => USER.test(id)) ? ids : null;
 }
 
 /** The user ids currently listed in a chat document. */
@@ -50,20 +38,24 @@ export function roomMembers(doc) {
 	return out;
 }
 
+/** Who a new room starts with when `user` opens it, or null when they may not create it. */
+function newRoomMembers(chatId, user, members) {
+	if (isGroupChatIdOf(chatId, user)) return [user];
+	if (!DIRECT_CHAT.test(chatId)) return null;
+	const pair = parsePair(members);
+	return pair?.includes(user) && directChatId(pair[0], pair[1]) === chatId ? pair : null;
+}
+
 /**
- * Decide whether a socket may join a chat room.
- * `existing` is the set of members already stored for the room (empty for a new room).
- * Returns `{ ok: false }`, or `{ ok: true, seed }` where `seed` lists the members to store for a
- * new room (empty when the room already has members).
+ * Decide whether a socket may join a chat room. `existing` is the set of members stored for the
+ * room and `started` whether the room holds anything at all. Returns `{ ok: false }`, or
+ * `{ ok: true, seed }` where `seed` lists the members to store for a new room.
  */
-export function authorizeChatJoin({ name, user, members, existing }) {
-	if (!CHAT_ROOM.test(name) || !USER.test(user ?? '')) return { ok: false };
-	if (existing.size > 0) return existing.has(user) ? { ok: true, seed: [] } : { ok: false };
-	const listed = parseMembers(members);
-	if (!listed.includes(user)) return { ok: false };
-	const chatId = CHAT_ROOM.exec(name)[1];
-	if (chatId.startsWith('dm-')) {
-		if (listed.length !== 2 || directChatId(listed[0], listed[1]) !== chatId) return { ok: false };
-	}
-	return { ok: true, seed: listed };
+export function authorizeChatJoin({ name, user, members, existing, started }) {
+	const chatId = chatIdOfRoom(name);
+	if (chatId === null || !USER.test(user ?? '')) return { ok: false };
+	if (existing.has(user)) return { ok: true, seed: [] };
+	if (started || existing.size > 0) return { ok: false };
+	const seed = newRoomMembers(chatId, user, members);
+	return seed ? { ok: true, seed } : { ok: false };
 }

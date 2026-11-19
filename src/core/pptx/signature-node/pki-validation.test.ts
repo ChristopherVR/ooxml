@@ -107,6 +107,13 @@ describe('evaluateTimestampAuthority', () => {
 		});
 	});
 
+	it('never reports a parseable token as valid', () => {
+		const xml = '<Object><EncapsulatedTimeStamp>MAMCAQE=</EncapsulatedTimeStamp></Object>';
+		return expect(evaluateTimestampAuthority(xml)).resolves.toMatchObject({
+			status: 'not-checked',
+		});
+	});
+
 	it('returns "not-present" for XML with unrelated elements', () => {
 		const xml = '<Root><Child>data</Child></Root>';
 		return expect(evaluateTimestampAuthority(xml)).resolves.toStrictEqual({

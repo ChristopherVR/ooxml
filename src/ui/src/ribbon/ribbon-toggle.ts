@@ -78,7 +78,9 @@ export class OfficeUiRibbonToggle extends OfficeElement {
 					?disabled=${present(this.disabled)}
 					@input=${(event: Event) => event.stopPropagation()}
 					@change=${this.onChange}
-				></${tag}>${this.label}</label>
+				></${tag}
+				>${this.label}</label
+			>
 		`;
 	}
 }

@@ -1,6 +1,7 @@
 // Reference bring-your-own server for the teams viewers. One process, three jobs:
 //   ws  /sync/<room>      y-websocket compatible Yjs document + awareness server (persisted to disk);
-//                         chat-* rooms (private chats) admit only the members listed in the room
+//                         chat-* rooms (private chats) admit only the members listed in the room,
+//                         and only the people a chat id names can create one
 //   ws  /signal/<room>    WebRTC signaling relay (forwards JSON to the other sockets of the room)
 //   http POST|GET /files/<id>/<name>   plain file storage for attachments
 //   http POST /files/link/<id>/<name>  short-lived signed download link (token in Authorization)
@@ -44,16 +45,25 @@ import { createSlidingLimiter } from './rate-limit.mjs';
 import {
 	PROTOCOL_PARAM,
 	PROTOCOL_VERSION,
+	applyUpdateReverts,
 	protocolOfUrl,
 	validateTeamsSyncMessage,
 } from './validator.generated.mjs';
-import { authorizeChatJoin, isChatRoom, roomMembers } from './chat-access.mjs';
+import {
+	CHAT_MEMBERS_MAP,
+	authorizeChatJoin,
+	isChatRoom,
+	isChatRoomAlias,
+	roomMembers,
+} from './chat-access.mjs';
 import { createFileStore } from './files.mjs';
 import { createLogger, createMetrics } from './metrics.mjs';
 import {
 	compactSnapshotFile,
 	compactUpdate,
+	migrateStorageNames,
 	snapshotNames,
+	storageName,
 	sweepRoomTemps,
 	writeFileAtomic,
 } from './room-store.mjs';
@@ -73,6 +83,8 @@ const MESSAGE_QUERY_AWARENESS = 3;
 const ROOM = /^[\w-]{1,128}$/u;
 /** WebSocket subprotocol marker: `openteams`, plus `openteams.session.<token>` to carry a credential. */
 const SUBPROTOCOL = 'openteams';
+/** The longest reason a WebSocket close frame can carry, in bytes. */
+const MAX_CLOSE_REASON = 123;
 
 /** TEAMS_TRUST_PROXY: `1`/`true` trusts one proxy hop, a number N trusts N hops, anything else none. */
 function parseTrustProxy(value) {
@@ -244,8 +256,10 @@ export function createTeamsServer(options = {}) {
 	mkdirSync(roomsDir, { recursive: true });
 	mkdirSync(filesDir, { recursive: true });
 	const fileStore = createFileStore({ filesDir, metaDir: join(dataDir, 'file-meta'), log });
-	// Nothing is in flight yet: drop what interrupted writes left behind.
+	// Nothing is in flight yet: drop what interrupted writes left behind, then bring room names
+	// from older versions over to the case-safe form.
 	sweepRoomTemps(roomsDir);
+	migrateStorageNames(roomsDir, '.bin', log);
 	fileStore.sweep(0);
 
 	// ---- metrics ------------------------------------------------------------------------------
@@ -321,7 +335,7 @@ export function createTeamsServer(options = {}) {
 	// ---- sync rooms -------------------------------------------------------------------------
 	/** @type {Map<string, any>} */
 	const syncRooms = new Map();
-	const snapshotPath = (name) => join(roomsDir, `${name}.bin`);
+	const snapshotPath = (name) => join(roomsDir, `${storageName(name)}.bin`);
 
 	const send = (ws, message) => {
 		if (ws.readyState === WS_OPEN) ws.send(message, (err) => err && ws.close());
@@ -337,18 +351,21 @@ export function createTeamsServer(options = {}) {
 		}
 	}
 
-	/** The members stored for a chat room, read without keeping a room that nobody joined. */
-	function membersOf(name) {
+	/**
+	 * The members stored for a chat room and whether the room has started, read without keeping a
+	 * room that nobody joined. A snapshot that cannot be read counts as started: it is not a new room.
+	 */
+	function chatRoomState(name) {
 		const live = syncRooms.get(name);
-		if (live) return roomMembers(live.doc);
+		if (live) return { members: roomMembers(live.doc), started: live.doc.store.clients.size > 0 };
 		const file = snapshotPath(name);
-		if (!existsSync(file)) return new Set();
+		if (!existsSync(file)) return { members: new Set(), started: false };
 		const doc = new Y.Doc();
 		try {
 			Y.applyUpdate(doc, readFileSync(file));
-			return roomMembers(doc);
+			return { members: roomMembers(doc), started: true };
 		} catch {
-			return new Set();
+			return { members: new Set(), started: true };
 		} finally {
 			doc.destroy();
 		}
@@ -357,7 +374,6 @@ export function createTeamsServer(options = {}) {
 	/** Close the sockets of people who are no longer listed as members of a chat room. */
 	function enforceMembers(room) {
 		const members = roomMembers(room.doc);
-		if (members.size === 0) return;
 		for (const [ws, user] of room.users) if (!members.has(user)) ws.close(1008, 'not a member');
 	}
 
@@ -462,22 +478,44 @@ export function createTeamsServer(options = {}) {
 		}
 	}
 
+	/**
+	 * Throw unless `update` and its reverts apply to a copy of the room. A Yjs transaction that throws
+	 * keeps and broadcasts what it had done, so a failure has to come before the room is touched.
+	 */
+	function rehearseUpdate(doc, update, reverts) {
+		const scratch = new Y.Doc();
+		try {
+			Y.applyUpdate(scratch, Y.encodeStateAsUpdate(doc));
+			Y.applyUpdate(scratch, update);
+			if (reverts) applyUpdateReverts(scratch, reverts);
+		} finally {
+			scratch.destroy();
+		}
+	}
+
 	function handleSync(ws, name, admission, grant, actor) {
 		const room = getRoom(name);
 		if (grant) room.grants.set(ws, grant);
 		const readOnly = grant?.access === 'read';
 		if (admission) {
-			// A new chat room starts with the members its first socket listed.
-			if (admission.seed.length > 0 && roomMembers(room.doc).size === 0)
+			// Only a room with nothing in it is seeded. The check repeats here because an
+			// `authorizeSync` hook can run between the admission and this point.
+			if (admission.seed.length > 0 && room.doc.store.clients.size === 0)
 				room.doc.transact(() => {
-					for (const id of admission.seed) room.doc.getMap('teams:chat-members').set(id, true);
+					for (const id of admission.seed) room.doc.getMap(CHAT_MEMBERS_MAP).set(id, true);
 				});
+			if (!roomMembers(room.doc).has(admission.user)) {
+				ws.close(1008, 'not a member');
+				return leaveSync(name, room, ws);
+			}
 			room.users.set(ws, admission.user);
 		}
 		room.conns.set(ws, new Set());
 		ws.binaryType = 'arraybuffer';
 		const bucket = createBucket(limits.messageRate, limits.messageBurst);
 		ws.on('message', (data) => {
+			// A socket being closed was refused: what it sent after that does not count.
+			if (ws.readyState !== WS_OPEN) return;
 			if (!bucket.take()) {
 				countRateLimited({ scope: 'socket' });
 				return void ws.close(1008, 'rate limit');
@@ -486,10 +524,19 @@ export function createTeamsServer(options = {}) {
 				const decoder = decoding.createDecoder(new Uint8Array(data));
 				const type = decoding.readVarUint(decoder);
 				if (type === MESSAGE_SYNC) {
+					const kind = decoding.readVarUint(decoder);
+					if (kind === syncProtocol.messageYjsSyncStep1) {
+						const encoder = encoding.createEncoder();
+						encoding.writeVarUint(encoder, MESSAGE_SYNC);
+						syncProtocol.readSyncStep1(decoder, encoder, room.doc);
+						return send(ws, encoding.toUint8Array(encoder));
+					}
 					// A read-only socket may ask for the document (step 1), never change it.
-					if (readOnly && decoding.peekVarUint(decoder) !== syncProtocol.messageYjsSyncStep1)
-						return;
-					if (actor && decoding.peekVarUint(decoder) !== syncProtocol.messageYjsSyncStep1) {
+					if (readOnly) return;
+					if (kind !== syncProtocol.messageYjsSyncStep2 && kind !== syncProtocol.messageYjsUpdate)
+						throw new Error(`unknown sync message ${kind}`);
+					let reverts;
+					if (actor) {
 						const verdict = validateTeamsSyncMessage(
 							room.doc,
 							new Uint8Array(data),
@@ -501,8 +548,9 @@ export function createTeamsServer(options = {}) {
 							for (const code of new Set(verdict.violations.map((v) => v.code)))
 								countRejected({ code });
 							log(`sync ${name}: update from ${actor.id} rejected (${codes})`);
-							return void ws.close(1008, `update rejected: ${codes}`);
+							return void ws.close(1008, `update rejected: ${codes}`.slice(0, MAX_CLOSE_REASON));
 						}
+						reverts = verdict.reverts;
 					}
 					if (room.bytes + data.byteLength > limits.maxDocBytes) {
 						// The running total over-counts (merged and deleted content shrinks); measure once.
@@ -513,11 +561,18 @@ export function createTeamsServer(options = {}) {
 							return void ws.close(1009, 'document too large');
 						}
 					}
+					const update = decoding.readVarUint8Array(decoder);
+					// The validator has already applied an update without reverts to a copy.
+					if (!actor || reverts) rehearseUpdate(room.doc, update, reverts);
+					// One transaction, so one broadcast. Reverts must reach the sender too.
+					room.doc.transact(
+						() => {
+							Y.applyUpdate(room.doc, update, ws);
+							if (reverts) applyUpdateReverts(room.doc, reverts);
+						},
+						reverts ? null : ws,
+					);
 					room.bytes += data.byteLength;
-					const encoder = encoding.createEncoder();
-					encoding.writeVarUint(encoder, MESSAGE_SYNC);
-					syncProtocol.readSyncMessage(decoder, encoder, room.doc, ws);
-					if (encoding.length(encoder) > 1) send(ws, encoding.toUint8Array(encoder));
 				} else if (type === MESSAGE_AWARENESS) {
 					// A connection may only speak for the client ids it announced itself.
 					const update = filterAwareness(decoding.readVarUint8Array(decoder), ws, room.owners);
@@ -535,7 +590,9 @@ export function createTeamsServer(options = {}) {
 					}
 				}
 			} catch (error) {
-				log(`sync ${name}: dropped malformed message (${error.message})`);
+				countRejected({ code: 'invalid-update' });
+				log(`sync ${name}: closing a socket whose message failed (${error.message})`);
+				ws.close(1008, 'update rejected: invalid-update');
 			}
 		});
 		ws.on('close', () => leaveSync(name, room, ws));
@@ -864,7 +921,9 @@ export function createTeamsServer(options = {}) {
 	function fileAccess(scope, who, signedRead) {
 		if (signedRead) return 0;
 		if (who.bad || (authRequired && !who.verified)) return 401;
-		if (isChatRoom(scope) && (who.user === null || !membersOf(scope).has(who.user))) return 403;
+		if (isChatRoomAlias(scope)) return 403;
+		if (isChatRoom(scope) && (who.user === null || !chatRoomState(scope).members.has(who.user)))
+			return 403;
 		return 0;
 	}
 
@@ -1005,13 +1064,16 @@ export function createTeamsServer(options = {}) {
 		}
 		// Private chats: only the people listed in the room's member map may join.
 		let admission = null;
+		if (m[1] === 'sync' && isChatRoomAlias(name)) return reject(socket, '403 Forbidden');
 		if (m[1] === 'sync' && isChatRoom(name)) {
 			const user = sessionUser ?? url.searchParams.get('user') ?? '';
+			const state = chatRoomState(name);
 			const verdict = authorizeChatJoin({
 				name,
 				user,
 				members: url.searchParams.get('members'),
-				existing: membersOf(name),
+				existing: state.members,
+				started: state.started,
 			});
 			if (!verdict.ok) return reject(socket, '403 Forbidden');
 			admission = { seed: verdict.seed, user };

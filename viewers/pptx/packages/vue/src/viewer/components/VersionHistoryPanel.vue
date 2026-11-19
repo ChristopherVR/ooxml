@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDown, ChevronRight, X } from 'lucide-vue-next';
+import { ChevronDown, ChevronRight, X } from '@lucide/vue';
 import { formatVersionTimestamp as formatTimestamp } from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';

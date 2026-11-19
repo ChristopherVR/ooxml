@@ -38,8 +38,6 @@ export interface MeetingActionDeps {
 	now?: () => number;
 }
 
-export const meetingChatId = (meetingId: string): string => `mt-${meetingId}`.slice(0, 64);
-
 export function createMeetingActions(deps: MeetingActionDeps): MeetingActions {
 	const { ws, meetings, notice, refresh } = deps;
 	const attendees = (ids: readonly string[] = []): ChatMember[] => {
@@ -83,7 +81,6 @@ export function createMeetingActions(deps: MeetingActionDeps): MeetingActions {
 				const chat = ws.chat.createGroup({
 					others: meeting.attendees,
 					name: meeting.title,
-					id: meetingChatId(meeting.id),
 					meetingId: meeting.id,
 				});
 				if (chat) {

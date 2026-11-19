@@ -23,6 +23,7 @@ import type { ChartSeriesLike } from './chart-datapoint-style';
 import { shade, tint } from './chart-palette';
 import { buildPictureFillPatternDef, polygonBoundingBox } from './chart-picture-pattern-def';
 import type { ChartSvgDef, SvgRect } from './chart-view-model-types';
+import { svgIdToken } from './svg-id';
 
 /**
  * A `bar3D` chart's series data, threaded through the depth pass so its
@@ -108,7 +109,7 @@ export function resolveExtrusionFaceFill(
 		face,
 	);
 	if (resolved) {
-		const patternId = `${picture.elementId}-${resolved.patternId}`;
+		const patternId = svgIdToken(`${picture.elementId}-${resolved.patternId}`);
 		defs.push(
 			buildPictureFillPatternDef(
 				patternId,

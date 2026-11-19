@@ -121,6 +121,11 @@ export const translationsEs: Partial<Record<TranslationKey, string>> = {
 	'pptx.shortcuts.action.nextSlide': 'Diapositiva siguiente (sin selección)',
 	'pptx.shortcuts.action.prevSlide': 'Diapositiva anterior (sin selección)',
 	'pptx.shortcuts.action.selectAll': 'Seleccionar todos los elementos',
+	'pptx.shortcuts.action.enterSlide': 'Entrar en la diapositiva (seleccionar su primer objeto)',
+	'pptx.shortcuts.action.editObjectText': 'Editar el texto del objeto seleccionado',
+	'pptx.shortcuts.action.cycleObjects': 'Objeto siguiente o anterior de la diapositiva',
+	'pptx.shortcuts.action.leaveSlide': 'Borrar la selección y salir de la diapositiva',
+	'pptx.shortcuts.action.movePane': 'Moverse entre paneles',
 	'pptx.shortcuts.group.editing': 'Edición',
 	'pptx.shortcuts.group.navigation': 'Navegación',
 

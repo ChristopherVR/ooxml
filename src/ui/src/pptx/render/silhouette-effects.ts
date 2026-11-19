@@ -38,6 +38,7 @@ import { resolveBaseShapeGeometry } from './shape-geometry-base';
 import { silhouetteMorphFor } from './silhouette-morph-registry';
 import { getSubpathGeometry } from './subpath-geometry';
 import { escapeSvgAttr } from './svg-attr-escape';
+import { svgIdToken } from './svg-id';
 
 /** One outer shadow layer, in the units of the box-shadow it replaces. */
 export interface SilhouetteShadowLayer {
@@ -111,7 +112,7 @@ function finite(value: number | undefined): value is number {
 
 /** The id of the filter a shape's silhouette effects are painted with. */
 export function getSilhouetteFilterId(elementId: string): string {
-	return `shape-fx-${elementId.replace(/[^A-Za-z0-9_.-]/gu, '_')}`;
+	return `shape-fx-${svgIdToken(elementId)}`;
 }
 
 /**

@@ -7,6 +7,7 @@ import {
 	cropModeKeyAction,
 	cropSessionChanged,
 	cropToAspectRatio,
+	elementIdSelector,
 	startCropSession,
 } from 'ooxml-ui/pptx';
 /**
@@ -74,11 +75,11 @@ const CROP_KEEP_SELECTOR = [
 
 /** The rendered bitmap's natural size, when the picture is on screen. */
 function naturalSizeOf(elementId: string): NaturalImageSize | undefined {
-	if (typeof document === 'undefined' || typeof CSS === 'undefined') {
+	if (typeof document === 'undefined') {
 		return undefined;
 	}
 	const img = document.querySelector<HTMLImageElement>(
-		`[data-element-id="${CSS.escape(elementId)}"][data-pptx-element="true"] img`,
+		`${elementIdSelector(elementId)}[data-pptx-element="true"] img`,
 	);
 	return img && img.naturalWidth > 0 && img.naturalHeight > 0
 		? { width: img.naturalWidth, height: img.naturalHeight }

@@ -1,7 +1,15 @@
 import { describe, it, expect } from 'vitest';
 
 import { computeDetailStatus, computeVerificationStatus } from './inspection-status';
-import type { SignatureDetail, SignatureValidationPolicy, SignatureReferenceCheck } from './types';
+import type {
+	CertificateRevocationStatus,
+	DigitalSignatureVerificationStatus,
+	SignatureDetail,
+	SignatureDetailStatus,
+	SignatureReferenceCheck,
+	SignatureValidationPolicy,
+	TimestampAuthorityStatus,
+} from './types';
 
 const defaultPolicy: SignatureValidationPolicy = {
 	requireRevocationCheck: false,
@@ -33,6 +41,7 @@ function mockDetail(
 			| 'signatureValueStatus'
 			| 'missingPartReferences'
 			| 'referenceChecks'
+			| 'coverageGaps'
 			| 'certificateTrustStatus'
 			| 'certificateRevocationStatus'
 			| 'timestampAuthorityStatus'
@@ -43,6 +52,7 @@ function mockDetail(
 	| 'signatureValueStatus'
 	| 'missingPartReferences'
 	| 'referenceChecks'
+	| 'coverageGaps'
 	| 'certificateTrustStatus'
 	| 'certificateRevocationStatus'
 	| 'timestampAuthorityStatus'
@@ -51,6 +61,7 @@ function mockDetail(
 		signatureValueStatus: 'verified',
 		missingPartReferences: [],
 		referenceChecks: [mockReferenceCheck()],
+		coverageGaps: [],
 		certificateTrustStatus: 'trusted',
 		certificateRevocationStatus: 'good',
 		timestampAuthorityStatus: 'valid',
@@ -66,6 +77,8 @@ function mockFullDetail(overrides: Partial<SignatureDetail> = {}): SignatureDeta
 		missingPartReferences: [],
 		unsupportedTransforms: [],
 		referenceChecks: [mockReferenceCheck()],
+		uncoveredParts: [],
+		coverageGaps: [],
 		signatureValueStatus: 'verified',
 		certificateTrustStatus: 'trusted',
 		certificateRevocationStatus: 'good',
@@ -118,6 +131,36 @@ describe('computeDetailStatus', () => {
 		expect(computeDetailStatus(detail, defaultPolicy)).toBe('structural-only');
 	});
 
+	it('does not verify when any signed reference is unverified', () => {
+		const detail = mockDetail({
+			referenceChecks: [
+				mockReferenceCheck(),
+				mockReferenceCheck({ uri: '#idPackageObject', digestStatus: 'insufficient-data' }),
+			],
+		});
+		expect(computeDetailStatus(detail, defaultPolicy)).toBe('structural-only');
+	});
+
+	it('does not verify a signature without references', () => {
+		const detail = mockDetail({ referenceChecks: [] });
+		expect(computeDetailStatus(detail, defaultPolicy)).toBe('structural-only');
+	});
+
+	it('reports a content type mismatch as a digest mismatch', () => {
+		const detail = mockDetail({
+			referenceChecks: [mockReferenceCheck({ digestStatus: 'content-type-mismatch' })],
+		});
+		expect(computeDetailStatus(detail, defaultPolicy)).toBe('digest-mismatch');
+	});
+
+	it('reports coverage gaps ahead of certificate trust', () => {
+		const detail = mockDetail({
+			coverageGaps: [{ kind: 'unsigned-part', part: 'ppt/slides/slide1.xml' }],
+			certificateTrustStatus: 'untrusted',
+		});
+		expect(computeDetailStatus(detail, defaultPolicy)).toBe('coverage-incomplete');
+	});
+
 	it('returns certificate-untrusted when trust is untrusted but signature is verified', () => {
 		const detail = mockDetail({
 			signatureValueStatus: 'verified',
@@ -129,11 +172,6 @@ describe('computeDetailStatus', () => {
 	it('returns timestamp-untrusted when timestampAuthorityStatus is untrusted', () => {
 		const detail = mockDetail({
 			timestampAuthorityStatus: 'untrusted',
-			// Set trust to trusted so we don't hit certificate-untrusted first
-			certificateTrustStatus: 'trusted',
-			// Set signature to not-checked so we don't hit verified first
-			signatureValueStatus: 'not-checked',
-			referenceChecks: [mockReferenceCheck({ digestStatus: 'insufficient-data' })],
 		});
 		expect(computeDetailStatus(detail, defaultPolicy)).toBe('timestamp-untrusted');
 	});
@@ -217,6 +255,22 @@ describe('computeVerificationStatus', () => {
 		expect(computeVerificationStatus(details)).toBe('verified-untrusted');
 	});
 
+	it('does not report verified-untrusted beside an unverifiable signature', () => {
+		const details = [
+			mockFullDetail({ status: 'certificate-untrusted' }),
+			mockFullDetail({ status: 'structural-only' }),
+		];
+		expect(computeVerificationStatus(details)).toBe('present-not-verified');
+	});
+
+	it('returns coverage-incomplete ahead of a verified signature', () => {
+		const details = [
+			mockFullDetail({ status: 'verified' }),
+			mockFullDetail({ status: 'coverage-incomplete' }),
+		];
+		expect(computeVerificationStatus(details)).toBe('coverage-incomplete');
+	});
+
 	it('returns present-not-verified for structural-only details', () => {
 		const details = [mockFullDetail({ status: 'structural-only' })];
 		expect(computeVerificationStatus(details)).toBe('present-not-verified');
@@ -264,5 +318,222 @@ describe('computeVerificationStatus', () => {
 			mockFullDetail({ status: 'timestamp-invalid' }),
 		];
 		expect(computeVerificationStatus(details)).toBe('certificate-revoked');
+	});
+});
+
+describe('integrity comes before policy, certificates and timestamps', () => {
+	type Fields = Parameters<typeof mockDetail>[0];
+
+	const flags = [false, true];
+	const POLICIES: SignatureValidationPolicy[] = flags.flatMap((requireRevocationCheck) =>
+		flags.flatMap((failOnRevocationUnknown) =>
+			flags.map((requireTimestamp) => ({
+				requireRevocationCheck,
+				failOnRevocationUnknown,
+				requireTimestamp,
+			})),
+		),
+	);
+	const TRUST: SignatureDetail['certificateTrustStatus'][] = [
+		'trusted',
+		'untrusted',
+		'not-checked',
+	];
+	const REVOCATION: CertificateRevocationStatus[] = [
+		'good',
+		'revoked',
+		'unknown',
+		'not-checked',
+		'error',
+	];
+	const TIMESTAMP: TimestampAuthorityStatus[] = [
+		'valid',
+		'invalid',
+		'not-present',
+		'not-checked',
+		'error',
+		'untrusted',
+	];
+	/** Every certificate, revocation, timestamp and policy state a signature can be in. */
+	const OUTSIDE_INTEGRITY = POLICIES.flatMap((policy) =>
+		TRUST.flatMap((certificateTrustStatus) =>
+			REVOCATION.flatMap((certificateRevocationStatus) =>
+				TIMESTAMP.map((timestampAuthorityStatus) => ({
+					policy,
+					fields: { certificateTrustStatus, certificateRevocationStatus, timestampAuthorityStatus },
+				})),
+			),
+		),
+	);
+	const reference = (digestStatus: SignatureReferenceCheck['digestStatus']) => [
+		mockReferenceCheck({ digestStatus }),
+	];
+	const FAILURES: [string, Fields, SignatureDetailStatus, DigitalSignatureVerificationStatus][] = [
+		[
+			'an invalid signature value',
+			{ signatureValueStatus: 'invalid', referenceChecks: [] },
+			'signature-invalid',
+			'signature-invalid',
+		],
+		[
+			'a missing part',
+			{ missingPartReferences: ['/a.xml'], referenceChecks: reference('missing-part') },
+			'reference-missing',
+			'reference-missing',
+		],
+		[
+			'a digest mismatch',
+			{ referenceChecks: reference('mismatch') },
+			'digest-mismatch',
+			'digest-mismatch',
+		],
+		[
+			'a content type mismatch',
+			{ referenceChecks: reference('content-type-mismatch') },
+			'digest-mismatch',
+			'digest-mismatch',
+		],
+		[
+			'an unsupported transform',
+			{ referenceChecks: reference('unsupported-transform') },
+			'structural-only',
+			'present-not-verified',
+		],
+		[
+			'an unsupported digest',
+			{ referenceChecks: reference('unsupported-algorithm') },
+			'structural-only',
+			'present-not-verified',
+		],
+		[
+			'a reference without a digest',
+			{ referenceChecks: reference('insufficient-data') },
+			'structural-only',
+			'present-not-verified',
+		],
+		['no references', { referenceChecks: [] }, 'structural-only', 'present-not-verified'],
+		[
+			'an unchecked signature value',
+			{ signatureValueStatus: 'not-checked', referenceChecks: [] },
+			'structural-only',
+			'present-not-verified',
+		],
+		[
+			'a coverage gap',
+			{ coverageGaps: [{ kind: 'unsigned-part', part: 'ppt/slides/slide2.xml' }] },
+			'coverage-incomplete',
+			'coverage-incomplete',
+		],
+	];
+	const PASSED_INTEGRITY: SignatureDetailStatus[] = [
+		'verified',
+		'certificate-untrusted',
+		'certificate-revoked',
+		'timestamp-invalid',
+		'timestamp-untrusted',
+	];
+
+	it.each(FAILURES)('keeps %s whatever else holds', (_label, failure, status) => {
+		for (const { policy, fields } of OUTSIDE_INTEGRITY) {
+			expect(computeDetailStatus(mockDetail({ ...fields, ...failure }), policy)).toBe(status);
+		}
+	});
+
+	it.each(FAILURES)('reports %s beside any other signature', (_label, _failure, status, report) => {
+		expect(computeVerificationStatus([mockFullDetail({ status })])).toBe(report);
+		for (const other of PASSED_INTEGRITY) {
+			const details = [mockFullDetail({ status }), mockFullDetail({ status: other })];
+			expect(computeVerificationStatus(details)).toBe(report);
+			expect(computeVerificationStatus(details.reverse())).toBe(report);
+		}
+	});
+
+	const STRICT: SignatureValidationPolicy = {
+		requireRevocationCheck: true,
+		failOnRevocationUnknown: true,
+		requireTimestamp: true,
+	};
+	const REVOCATION_ONLY = { ...defaultPolicy, requireRevocationCheck: true };
+	const TIMESTAMP_ONLY = { ...defaultPolicy, requireTimestamp: true };
+
+	it.each<[string, Fields, SignatureValidationPolicy, SignatureDetailStatus]>([
+		['nothing wrong', {}, STRICT, 'verified'],
+		[
+			'no policy and nothing checked',
+			{ certificateRevocationStatus: 'unknown', timestampAuthorityStatus: 'not-present' },
+			defaultPolicy,
+			'verified',
+		],
+		[
+			'a revoked signer',
+			{ certificateRevocationStatus: 'revoked' },
+			defaultPolicy,
+			'certificate-revoked',
+		],
+		[
+			'unknown revocation under the policy',
+			{ certificateRevocationStatus: 'unknown' },
+			REVOCATION_ONLY,
+			'certificate-untrusted',
+		],
+		[
+			'a failed revocation check under the policy',
+			{ certificateRevocationStatus: 'error' },
+			REVOCATION_ONLY,
+			'certificate-untrusted',
+		],
+		[
+			'an unchecked signer under the policy',
+			{ certificateRevocationStatus: 'not-checked' },
+			REVOCATION_ONLY,
+			'certificate-untrusted',
+		],
+		[
+			'an invalid timestamp',
+			{ timestampAuthorityStatus: 'invalid' },
+			defaultPolicy,
+			'timestamp-invalid',
+		],
+		[
+			'an untrusted timestamp',
+			{ timestampAuthorityStatus: 'untrusted' },
+			defaultPolicy,
+			'timestamp-untrusted',
+		],
+		[
+			'no timestamp under the policy',
+			{ timestampAuthorityStatus: 'not-present' },
+			TIMESTAMP_ONLY,
+			'timestamp-untrusted',
+		],
+		[
+			'an untrusted signer',
+			{ certificateTrustStatus: 'untrusted' },
+			defaultPolicy,
+			'certificate-untrusted',
+		],
+		[
+			'an unchecked chain',
+			{ certificateTrustStatus: 'not-checked' },
+			defaultPolicy,
+			'structural-only',
+		],
+	])('gives an intact signature its own status: %s', (_label, fields, policy, status) => {
+		expect(computeDetailStatus(mockDetail(fields), policy)).toBe(status);
+	});
+
+	it('only reports a verified package when integrity holds', () => {
+		const states: [Fields, boolean][] = [
+			[{}, true],
+			...FAILURES.map(([, failure]): [Fields, boolean] => [failure, false]),
+		];
+		for (const [integrity, intact] of states) {
+			for (const { policy, fields } of OUTSIDE_INTEGRITY) {
+				const status = computeDetailStatus(mockDetail({ ...fields, ...integrity }), policy);
+				const report = computeVerificationStatus([mockFullDetail({ status })]);
+				if (!intact) expect(report).not.toMatch(/^verified-/);
+				if (report === 'verified-trusted') expect(fields.certificateTrustStatus).toBe('trusted');
+			}
+		}
 	});
 });

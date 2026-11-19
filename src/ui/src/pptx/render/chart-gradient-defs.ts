@@ -20,6 +20,7 @@ export { buildGradientDef };
 
 import type { ChartSvgGradientDef } from './chart-svg-def-types';
 import type { ChartViewModel, SvgPrimitive } from './chart-view-model-types';
+import { svgIdToken } from './svg-id';
 
 /** The series a line stroke (polyline or smoothed path) belongs to, if it is one. */
 function lineSeriesOf(primitive: SvgPrimitive): number | undefined {
@@ -106,7 +107,7 @@ export function withGradientFills(
 	elementId: string,
 ): ChartViewModel {
 	const defs: ChartSvgGradientDef[] = [];
-	const idFor = (suffix: string) => `${elementId}-grad-${suffix}`.replace(/[^A-Za-z0-9_-]/gu, '_');
+	const idFor = (suffix: string) => svgIdToken(`${elementId}-grad-${suffix}`);
 	let next = vm;
 	const area = chartData.style?.chartAreaGradient;
 	if (area) {

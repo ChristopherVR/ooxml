@@ -1,6 +1,8 @@
 // Browser checks for the assistant's workspace features: the assistant stays off without an AI
 // configuration, files upload from the Attach menu, a tab dropped on the chat is attached, tabs
-// reorder, and a shared chat syncs between two pages. Run against a preview of suite-dist:
+// reorder, a shared chat syncs between two users without cards or file text reaching the other,
+// and a document showing suggestions is neither downloaded nor saved by a follow-up message.
+// Run against a preview of suite-dist:
 //   SUITE_URL=http://localhost:8123 node scripts/suite-chat-check.mjs
 import { createRequire } from 'node:module';
 import { join, resolve } from 'node:path';
@@ -34,6 +36,19 @@ try {
 
 	const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
 	await context.addInitScript(ribbonLayoutInit);
+	// Every page records what it posts to the shared-chat room (same-browser rooms sync over
+	// BroadcastChannel), so the check can show what reaches the room.
+	await context.addInitScript(() => {
+		const Native = globalThis.BroadcastChannel;
+		const wire = (globalThis.__roomWire = []);
+		globalThis.BroadcastChannel = class extends Native {
+			postMessage(message) {
+				const bytes = message?.data;
+				if (bytes instanceof Uint8Array) wire.push(new TextDecoder('latin1').decode(bytes));
+				super.postMessage(message);
+			}
+		};
+	});
 	const page = await context.newPage();
 	watch(page);
 	await page.goto(base);
@@ -100,9 +115,39 @@ try {
 	assert.ok(dropped);
 	console.log('Dropping a tab on the assistant attaches it');
 
-	// Share a chat, then join it from a second page and watch a request arrive.
+	// Share a chat with a proposal for a file holding private text, then join it as someone else.
+	const canary = 'canary clause 7741 stays private';
 	await page.goto(`${base}/#/chat`);
 	await page.locator('[data-chat-new]').click();
+	const detachAll = async () => {
+		for (let i = 0; i < 40; i++) {
+			const left = await page.evaluate(() => {
+				const chip = document.querySelector('#chat-scope [data-detach]');
+				chip?.click();
+				return Boolean(chip);
+			});
+			if (!left) return;
+			await page.waitForTimeout(100);
+		}
+		throw new Error('The attachments could not be removed');
+	};
+	await detachAll();
+	const contract = page.waitForEvent('filechooser');
+	await page.locator('#chat-context').click();
+	await page.getByRole('menuitem', { name: 'Upload from this device...' }).click();
+	await (
+		await contract
+	).setFiles({
+		name: 'Contract.docx',
+		mimeType: 'application/octet-stream',
+		buffer: Buffer.from(await createDocx(['payment terms', canary])),
+	});
+	await page.locator('#chat-scope .chat-chip', { hasText: 'Contract.docx' }).waitFor();
+	await page.locator('#chat-input').fill('Title-case this document');
+	await page.locator('#chat-send').click();
+	await page.locator('.chat-msg.from-assistant .ai-proposal').waitFor();
+	// A reply describing an attached file quotes it, as replies may; this one attaches nothing.
+	await detachAll();
 	await page.locator('#chat-input').fill('Create a presentation about our product launch');
 	await page.locator('#chat-send').click();
 	await page.locator('.chat-msg.from-assistant .ai-create-card').waitFor();
@@ -112,18 +157,88 @@ try {
 	await page.locator('#dialog-close').click();
 	await page.locator('#chat-people').waitFor();
 
+	// The guest is another profile (another user) in the same browser, so the room syncs.
 	const guest = await context.newPage();
 	watch(guest);
+	await guest.addInitScript(() => {
+		const key = 'ooxml-suite-profiles-v1';
+		const state = JSON.parse(localStorage.getItem(key));
+		if (!state.profiles.some((p) => p.id === 'guest'))
+			state.profiles.push({
+				id: 'guest',
+				userId: 'guest-user',
+				name: 'Guest',
+				email: '',
+				organization: 'Personal workspace',
+				title: '',
+				photo: '',
+			});
+		state.active = 'guest';
+		localStorage.setItem(key, JSON.stringify(state));
+	});
 	await guest.goto(link);
-	await guest.locator('.chat-msg.from-user', { hasText: 'product launch' }).waitFor();
-	await guest.locator('.chat-msg.from-assistant .ai-create-card').waitFor();
+	const guestReply = guest.locator('.chat-msg.from-assistant', { hasText: 'title-case' });
+	await guestReply.locator('.chat-note', { hasText: 'Only they can review and apply' }).waitFor();
+	await guest
+		.locator('.chat-msg.from-assistant .chat-note', { hasText: 'new file was proposed' })
+		.waitFor();
+	await guest.locator('.chat-msg.from-user', { hasText: 'Contract.docx' }).waitFor();
+	assert.equal(await guest.locator('.ai-proposal, .ai-create-card').count(), 0, 'no cards');
+	assert.doesNotMatch(await guest.locator('#chat-messages').innerText(), /canary/u);
 	await page.locator('#chat-people', { hasText: 'other' }).waitFor();
+	// Joining reads none of the history aloud; what arrives afterwards is announced politely.
+	assert.equal(await guest.locator('#chat-reply-status').textContent(), '');
+	await page.evaluate(() => {
+		const status = document.getElementById('chat-reply-status');
+		globalThis.heard = [];
+		new MutationObserver(() => globalThis.heard.push(status.textContent)).observe(status, {
+			childList: true,
+			characterData: true,
+			subtree: true,
+		});
+	});
 	await guest.locator('#chat-input').fill('Make a budget workbook for the launch');
 	await guest.locator('#chat-send').click();
-	await page.locator('.chat-msg.from-user', { hasText: 'budget workbook' }).waitFor();
-	await page.locator('.chat-msg.from-assistant', { hasText: 'budget.xlsx' }).waitFor();
-	console.log('A shared chat synced requests and replies between two pages');
+	await guest.locator('.chat-msg.from-assistant .ai-create-card').waitFor();
+	const hostSees = page.locator('.chat-msg.from-assistant', { hasText: 'budget.xlsx' });
+	await hostSees.locator('.chat-note', { hasText: 'new file was proposed' }).waitFor();
+	assert.equal(
+		await hostSees.locator('.ai-create-card').count(),
+		0,
+		"no card for the guest's file",
+	);
+	// The asker keeps their own cards, and nothing in the room quotes the file.
+	assert.ok(await page.locator('.chat-msg.from-assistant .ai-proposal').isVisible());
+	// Each page posts only its own messages.
+	for (const [who, tab, own] of [
+		['host', page, /Title-case this document/u],
+		['guest', guest, /Make a budget workbook/u],
+	]) {
+		const wire = await tab.evaluate(() => globalThis.__roomWire.join(''));
+		assert.match(wire, own, `${who} posted its messages to the room`);
+		if (who === 'guest')
+			assert.doesNotMatch(wire, /Title-case this document/u, 'guest rewrote rows');
+		assert.doesNotMatch(wire, /canary/iu, `${who} leaked file text`);
+	}
+	const heard = await page.waitForFunction(
+		() => globalThis.heard.includes('Assistant replied') && globalThis.heard,
+	);
+	const said = await heard.jsonValue();
+	assert.equal(await page.locator('#chat-reply-status').getAttribute('role'), 'status');
+	assert.ok(
+		said.some((text) => /: Make a budget workbook for the launch$/u.test(text)),
+		said.join(' | '),
+	);
+	console.log(
+		'A shared chat synced between two users and announced arrivals; only the asker saw cards; no file text reached the room',
+	);
 	await guest.close();
+	await page.evaluate(() => {
+		const key = 'ooxml-suite-profiles-v1';
+		const state = JSON.parse(localStorage.getItem(key));
+		state.active = 'default';
+		localStorage.setItem(key, JSON.stringify(state));
+	});
 
 	// Suggestions show inside the document: Word as tracked changes, PowerPoint in place.
 	await page.locator('#rail [data-home]').click();
@@ -148,6 +263,24 @@ try {
 	await redline.waitFor();
 	await page.locator('docx-editor .dve-revision-delete').first().waitFor();
 	await page.screenshot({ path: join(process.env.TEMP ?? root, 'ooxml-suite-review-word.png') });
+	// While the suggestions show, the file is neither downloaded nor saved by a follow-up message.
+	const refusesWhileReviewing = async () => {
+		await page.evaluate(() => {
+			document.getElementById('status').textContent = '';
+			document.getElementById('download').click();
+		});
+		await page.locator('#status', { hasText: "showing the assistant's suggestions" }).waitFor();
+	};
+	await refusesWhileReviewing();
+	await page.locator('#ai-input').fill('Describe the attached files');
+	await page.locator('#ai-send').click();
+	const described = pane.locator('.chat-msg.from-assistant:not(.streaming)', {
+		hasText: 'Here is what I can see',
+	});
+	await described.waitFor();
+	assert.match(await described.innerText(), /launch brief/u, 'the follow-up read the saved file');
+	assert.doesNotMatch(await described.innerText(), /Launch Brief/u, 'the preview was not saved');
+	await redline.waitFor();
 	await page.locator('.review-panel').getByRole('button', { name: 'Accept all' }).click();
 	await page.locator('.review-panel').waitFor({ state: 'detached' });
 	await page.locator('docx-editor', { hasText: 'Ships In November.' }).waitFor();
@@ -172,6 +305,7 @@ try {
 	await panel.locator('.review-toggle').first().click();
 	await panel.locator('.review-item.skipped').waitFor();
 	await page.screenshot({ path: join(process.env.TEMP ?? root, 'ooxml-suite-review-deck.png') });
+	await refusesWhileReviewing();
 	await panel.getByRole('button', { name: 'Apply kept changes' }).click();
 	await panel.waitFor({ state: 'detached' });
 	await pane.getByText(`Applied ${count - 1} suggestion`).waitFor();

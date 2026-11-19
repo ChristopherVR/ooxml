@@ -10,6 +10,7 @@ export {
 	type TabMenuState,
 } from 'ooxml-core/xlsx/ui';
 export {
+	closeContextMenu,
 	currentContextMenu,
 	openContextMenu,
 	type ContextMenuHandle,

@@ -82,6 +82,19 @@ export const VIEWER_SHORTCUT_REFERENCE: readonly ShortcutReferenceItem[] = [
 		shortcut: 'Shift+Arrow keys',
 		group: 'editing',
 	},
+	{ actionKey: 'pptx.shortcuts.action.enterSlide', shortcut: 'Enter', group: 'navigation' },
+	{
+		actionKey: 'pptx.shortcuts.action.editObjectText',
+		shortcut: 'Enter',
+		group: 'editing',
+	},
+	{
+		actionKey: 'pptx.shortcuts.action.cycleObjects',
+		shortcut: 'Tab, Shift+Tab',
+		group: 'navigation',
+	},
+	{ actionKey: 'pptx.shortcuts.action.leaveSlide', shortcut: 'Escape', group: 'navigation' },
+	{ actionKey: 'pptx.shortcuts.action.movePane', shortcut: 'F6, Shift+F6', group: 'navigation' },
 	{
 		actionKey: 'pptx.shortcuts.action.prevSlide',
 		shortcut: 'Left or Up arrow, Page Up',

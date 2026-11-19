@@ -55,12 +55,12 @@ export const VISIO_CAPABILITY_BACKSTAGE_PAGES: CapabilityActionMap<VisioCapabili
  * menu, the API).
  */
 export const VISIO_CAPABILITY_COMMANDS: CapabilityActionMap<VisioCapabilityId, string> = {
-	copy: ['cut', 'copy', 'ctx-cut', 'ctx-copy'],
+	copy: ['cut', 'copy', 'ctx-cut', 'ctx-copy', 'shape-report-copy'],
 	comment: ['new-comment', 'ctx-comment', 'ctx-page-comment'],
 	find: ['find', 'find-item', 'replace'],
 	open: ['open', 'new-blank'],
 	save: ['download'],
-	export: ['export-svg', 'export-png', 'export-pdf'],
+	export: ['export-svg', 'export-png', 'export-pdf', 'shape-report-export-csv'],
 	print: ['print'],
 	share: ['email'],
 };

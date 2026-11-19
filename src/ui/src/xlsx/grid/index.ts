@@ -173,6 +173,8 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 			view.scroller.scrollTop = 0;
 			view.rebuild();
 			if (ctx.selection.get().sheet !== view.sheetIndex() || !workbook) restoreSelection();
+			// The selection may have moved before the view did; describe the cell on this sheet.
+			else a11y.update(ctx.selection.get(), false);
 			const top = sheet?.view.topLeft;
 			if (top) view.showTopLeft(top);
 			return;
@@ -215,6 +217,11 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 		setZoom: (percent) => view.setZoom(percent),
 		splitAt: (active) => view.splitAt(active),
 		mode: () => editor.bridge.state().mode,
+		closePopups: () => {
+			list.close();
+			filters.close();
+			drawings.closeDropDown();
+		},
 	};
 	ctx.attachGrid(controller);
 	if (ctx.selection.get().sheet !== view.sheetIndex()) restoreSelection();

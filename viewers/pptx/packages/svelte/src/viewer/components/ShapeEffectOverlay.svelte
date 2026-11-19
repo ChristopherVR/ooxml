@@ -170,7 +170,8 @@
 {/if}
 
 {#if hollowHit?.textCss}
-	{@html `<style>${hollowHit.textCss}</style>`}
+	<!-- Text content, not {@html}: the rule holds the element id. -->
+	<svelte:element this={'style'}>{hollowHit.textCss}</svelte:element>
 {/if}
 {#if hollowHit}
 	<svg

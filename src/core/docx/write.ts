@@ -2,6 +2,7 @@
 import type { Block, DocumentModel, Paragraph, SectionProperties } from './model';
 import { flatBlocks } from './parse-content-control';
 import { placeBlocksById } from './write-block-placement';
+import { replaceSlots } from './write-slots';
 import { children, first, makeW, type XmlDocument, type XmlElement, WORD_NS } from './xml';
 import { commentContinuations } from './comment-spans';
 import { annotationIdAllocator, newMoveRangeIds, type CommentSpans } from './write-ranges';
@@ -66,29 +67,6 @@ function createTable(
 	return node;
 }
 
-function replaceSlots(
-	doc: XmlDocument,
-	parent: XmlElement,
-	oldNodes: XmlElement[],
-	nextNodes: XmlElement[],
-	insertionAnchor: XmlElement | null = null,
-): void {
-	// Old nodes may sit inside content controls: each slot is replaced in its own parent.
-	const placeholders = oldNodes.map((old) => {
-		const marker = doc.createComment('docx-block-slot');
-		(old.parentNode ?? parent).replaceChild(marker, old);
-		return marker;
-	});
-	const shared = Math.min(placeholders.length, nextNodes.length);
-	for (const [i, marker] of placeholders.slice(0, shared).entries()) {
-		const next = nextNodes[i];
-		if (next) (marker.parentNode ?? parent).replaceChild(next, marker);
-	}
-	for (const marker of placeholders.slice(shared))
-		(marker.parentNode ?? parent).removeChild(marker);
-	for (const node of nextNodes.slice(shared)) parent.insertBefore(node, insertionAnchor);
-}
-
 function baseMap(blocks: Block[]): Map<string, Block> {
 	return new Map(blocks.map((block) => [block.id, block]));
 }
@@ -147,14 +125,13 @@ export function applyBlocks(
 							old,
 							base?.type === 'table' ? base : undefined,
 							boundWriteParagraph,
-							replaceSlots,
 						)
 					: createTable(doc, block, allocator, contentWidthTwips, spans),
 			);
 	}
 	const nested = flat.some((entry) => entry.sdt) || blocks.some((block) => block.contentControl);
 	if (nested && placeBlocksById(doc, container, flat, blocks, output, anchor)) return;
-	replaceSlots(doc, container, oldNodes, output, anchor);
+	replaceSlots(container, oldNodes, output, anchor);
 }
 
 export interface ApplyModelResult {

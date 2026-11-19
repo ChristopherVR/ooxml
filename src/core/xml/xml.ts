@@ -107,11 +107,17 @@ export function checkXmlLimits(xml: string, label: string, limits: XmlParseLimit
 const CRLF_DECLARATION = /^<\?xml[^>]*\?>\r\n/;
 const crlfDeclarations = new WeakSet<XmlNode>();
 
+/** `text` without the byte order mark that may open a decoded document; it is not markup. */
+export const withoutByteOrderMark = (text: string): string =>
+	text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
+
 /**
- * Parses an XML part into a DOM document. Parse errors throw (warnings do not), a missing root
- * throws, and DTD or entity declarations are rejected outright (no external or expanded entities).
+ * Parses an XML part into a DOM document. A leading byte order mark is ignored. Parse errors throw
+ * (warnings do not), a missing root throws, and DTD or entity declarations are rejected outright
+ * (no external or expanded entities).
  */
-export function parseXml(xml: string, options: ParseOptions = {}): XmlDocument {
+export function parseXml(source: string, options: ParseOptions = {}): XmlDocument {
+	const xml = withoutByteOrderMark(source);
 	const label = options.label ?? 'OOXML';
 	if (/<!DOCTYPE|<!ENTITY/i.test(xml))
 		throw new Error(`${label} XML with DTD or entity declarations is not supported`);

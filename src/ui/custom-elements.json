@@ -2082,7 +2082,7 @@
 					"name": "OfficeUiDialog",
 					"tagName": "office-ui-dialog",
 					"customElement": true,
-					"description": "Modal dialog shell. `open` and `heading` attributes, `dismissible` (default true; set `dismissible=\"false\"` to ignore Escape and backdrop). Default slot is the body, `slot=\"footer\"` holds actions. `role=\"dialog\"`, `aria-modal`, labelled by the heading. Escape, the close button and the backdrop emit a cancelable `office-dialog-close` and close unless prevented; focus moves in on open, is trapped with Tab, and returns to the previously focused element on close.",
+					"description": "Modal dialog shell. `open` and `heading` attributes, `dismissible` (default true; set `dismissible=\"false\"` to ignore Escape and backdrop). Default slot is the body, `slot=\"footer\"` holds actions. `role=\"dialog\"`, `aria-modal`, labelled by the heading. Escape, the close button and the backdrop emit a cancelable `office-dialog-close` and close unless prevented. Focus moves in on open and returns to the previously focused element on close. While open, Tab and Shift+Tab stay inside and Escape works wherever focus has ended up; a nested dialog takes both over.",
 					"attributes": [
 						{
 							"name": "close-label"

@@ -1,4 +1,5 @@
 <div
+	#panel
 	class="bs"
 	role="dialog"
 	aria-modal="true"
@@ -99,8 +100,9 @@
 					<h2>{{ 'pptx.backstage.recentHeading' | translate }}</h2>
 					<div class="recent">
 						<header>
-							<span>{{ 'pptx.backstage.columnName' | translate }}</span
-							><span>{{ 'pptx.backstage.columnModified' | translate }}</span
+							<span>{{ 'pptx.backstage.columnName' | translate }}</span><span>{{
+								'pptx.backstage.columnModified' | translate
+							}}</span
 							><span>{{ 'pptx.backstage.columnSize' | translate }}</span>
 						</header>
 						@for (file of visibleRecent(); track file.key) {
@@ -124,8 +126,7 @@
 				<div class="actions">
 					@for (action of actions(); track action.titleKey) {
 						<button type="button" (click)="run(action.event)">
-							<b aria-hidden="true">{{ action.icon }}</b
-							><span
+							<b aria-hidden="true">{{ action.icon }}</b><span
 								><strong>{{ action.titleKey | translate }}</strong
 								><small>{{ action.bodyKey | translate }}</small></span
 							>

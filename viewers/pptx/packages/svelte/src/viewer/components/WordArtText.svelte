@@ -10,6 +10,7 @@
 		resolveWarpRunPaint,
 		shouldUseSvgWarp,
 		substituteFieldText,
+		svgIdToken,
 		warpParagraphLayouts,
 	} from 'ooxml-ui/pptx';
 
@@ -53,7 +54,7 @@
 	);
 	const width = $derived(Math.max(element.width, 1));
 	const height = $derived(Math.max(element.height, 1));
-	const pathPrefix = $derived(`warp-${element.id.replace(/[^a-zA-Z0-9_-]/gu, '_')}`);
+	const pathPrefix = $derived(`warp-${svgIdToken(element.id)}`);
 	const alignment = $derived.by(() => {
 		switch (textElement?.textStyle?.align ?? 'center') {
 			case 'center': return { offset: '50%', anchor: 'middle' as const };

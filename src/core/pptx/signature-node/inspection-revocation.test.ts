@@ -1,6 +1,12 @@
-import JSZip from 'jszip';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import {
+	createManifestReferences,
+	createOfficeSignatureXml,
+	createTestPackage,
+	createTestParty,
+	withSignature,
+} from '../test-support/signature-package';
 import { inspectPptxDigitalSignatures } from './inspection';
 import { evaluateCertificateRevocation } from './ocsp';
 
@@ -12,12 +18,13 @@ vi.mock('./ocsp', () => ({
 	})),
 }));
 
+/** A deck whose signature value verifies, so inspection goes on to the revocation check. */
 async function signedDeck(): Promise<Uint8Array> {
-	const zip = new JSZip();
-	zip.file(
-		'_xmlsignatures/sig1.xml',
-		'<Signature xmlns="http://www.w3.org/2000/09/xmldsig#"><KeyInfo><X509Data>' +
-			'<X509Certificate>QUJD</X509Certificate></X509Data></KeyInfo></Signature>',
+	const zip = createTestPackage();
+	const signer = createTestParty({ name: 'Signer' });
+	await withSignature(
+		zip,
+		createOfficeSignatureXml({ signer, manifestReferences: await createManifestReferences(zip) }),
 	);
 	return zip.generateAsync({ type: 'uint8array' });
 }

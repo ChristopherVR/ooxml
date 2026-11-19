@@ -23,8 +23,10 @@
 
 import { inject, Injectable } from '@angular/core';
 import {
+	announceSlideObject,
 	cycleSelectableElement,
 	dispatchEditorKey,
+	editSlideObjectText,
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	isFeatureEnabled,
 } from 'ooxml-ui/pptx';
@@ -164,6 +166,7 @@ export class ViewerKeyboardService {
 				}),
 			cycleSelectionNext: () => this.cycleSelection(idx, 'next'),
 			cycleSelectionPrev: () => this.cycleSelection(idx, 'prev'),
+			editText: () => editSlideObjectText(document, this.editor.selectedIds()[0]),
 			pasteSpecial: () => this.editor.isPasteSpecialDialogOpen.set(true),
 		};
 	}
@@ -199,6 +202,7 @@ export class ViewerKeyboardService {
 		const nextId = cycleSelectableElement(ids, this.editor.selectedIds()[0] ?? null, direction);
 		if (nextId) {
 			this.editor.select([nextId]);
+			announceSlideObject(document, nextId);
 		}
 	}
 

@@ -16,8 +16,15 @@
 
 import type { ResolvedKeyboardCustomization } from './customization/customization-keymap';
 import { mapCustomizedEditorKey } from './customization/customization-keymap';
-import { isEditorControlTarget, isEditorTextInputTarget } from './editor-key-target';
+import { isEditorTextInputTarget } from './editor-key-target';
 import type { EditorKeyActionName, EditorKeyGuard, EditorKeyInput } from './editor-keymap';
+import {
+	editorKeyEventTarget,
+	enterSlideObjects,
+	leaveSlideObjects,
+	isInsideModal,
+	slideKeyFocus,
+} from './slide-keyboard-focus';
 import { mapSlideShowStartKey } from './slide-show-start-keymap';
 
 /** The one named handler interface: one optional callback per keymap action. */
@@ -35,12 +42,13 @@ export type EditorKeyHandlers = {
 /** The event fields the dispatcher reads (a DOM `KeyboardEvent` satisfies it). */
 export interface EditorKeyDispatchEvent extends EditorKeyInput {
 	target?: EventTarget | null;
+	composedPath?: () => EventTarget[];
 	preventDefault(): void;
 }
 
 /**
- * The binding state the keymap gates on. The two target flags are read from
- * the event when omitted.
+ * The binding state the keymap gates on. The target flags are read from the
+ * event when omitted.
  */
 export interface EditorKeyDispatchState extends Partial<EditorKeyGuard> {
 	/** The host's keyboard customisation (disabled / remapped commands). */
@@ -102,13 +110,18 @@ function startShow(
  * which the editor keymap gates against. Every other resolved action is claimed
  * (`preventDefault`) even when its handler is omitted, so a chord the editor
  * owns never leaks to the browser; list an action in `passThrough` to leave it
- * to another listener instead.
+ * to another listener instead. Selection cycling goes into the slide, and
+ * Escape with nothing selected comes back out (`slide-keyboard-focus`).
  */
 export function dispatchEditorKey(
 	event: EditorKeyDispatchEvent,
 	state: EditorKeyDispatchState,
 	handlers: EditorKeyHandlers,
 ): EditorKeyDispatchResult {
+	// An open dialog keeps the keyboard: Delete on its button must not delete the selection.
+	if (isInsideModal(event)) {
+		return null;
+	}
 	const started = startShow(event, state, handlers);
 	if (started !== null) {
 		return started;
@@ -121,12 +134,13 @@ export function dispatchEditorKey(
 		...guard
 	} = state;
 	const target = event.target ?? null;
+	const origin = editorKeyEventTarget(event);
 	const { action, dx, dy } = mapCustomizedEditorKey(
 		event,
 		{
 			...guard,
 			isTextInputTarget: guard.isTextInputTarget ?? isEditorTextInputTarget(target),
-			isControlTarget: guard.isControlTarget ?? isEditorControlTarget(target),
+			slideFocus: guard.slideFocus ?? slideKeyFocus(origin),
 		},
 		keyboard,
 	);
@@ -134,6 +148,11 @@ export function dispatchEditorKey(
 		return null;
 	}
 	event.preventDefault();
+	if (action === 'cycleSelectionNext' || action === 'cycleSelectionPrev') {
+		enterSlideObjects(origin);
+	} else if (action === 'escape' && !guard.hasSelection) {
+		leaveSlideObjects(origin);
+	}
 	if (action === 'nudge') {
 		handlers.nudge?.(dx ?? 0, dy ?? 0);
 	} else {

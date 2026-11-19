@@ -1,6 +1,7 @@
 // The calc engine's view of the workbook: formula nodes, cell reads that compute pending
 // formulas on demand, and the dependency indexes.
 import { cellKey, type CellRange, normalizeRange } from '../address';
+import { forEachCellInRange } from '../cells';
 import type { Cell, Workbook } from '../model';
 import { FormulaError, type FormulaAst } from './ast';
 import type { EvalHost } from './context';
@@ -9,9 +10,10 @@ import type { FormulaOrder } from './engine-order';
 import { analyze, type FormulaNode } from './graph';
 import { AreaIndex, ColumnIndex, ReverseIndex } from './graph-index';
 import { ParseCache } from './parse-cache';
-import { scanRange, sheetBounds } from './sheet-scan';
+import { PassCache } from './pass-cache';
+import { sheetBounds } from './sheet-scan';
 import { clearFootprint, isSpilledCell } from './spill';
-import { type Area, err, Matrix, type Scalar } from './values';
+import { type Area, err, Matrix, type Scalar, type Value } from './values';
 
 /**
  * Thrown to unwind evaluation when formulas computed on demand nest too deeply (a long chain of
@@ -39,9 +41,13 @@ export abstract class EngineHost implements EvalHost {
 	protected columnIndex: ColumnIndex | undefined;
 	protected reverseIndex: ReverseIndex | undefined;
 	protected footprintIndex: AreaIndex<FormulaNode> | undefined;
+	protected volatileNodes: FormulaNode[] | undefined;
 	protected fullOrder: FormulaOrder | undefined;
-	/** Range reads cached for one evaluation pass (see `readBlock`). */
-	protected readonly blockCache = new Map<string, Matrix>();
+	protected readonly passCache = new PassCache({
+		// Iteration keeps changing what a read returns, so nothing is kept while it runs.
+		active: () => !!this.pending && !this.iterating,
+		cycleReads: () => this.cycleReads,
+	});
 	/** Counts reads that hit a formula still being evaluated (a circular reference). */
 	protected cycleReads = 0;
 	protected computeDepth = 0;
@@ -82,6 +88,8 @@ export abstract class EngineHost implements EvalHost {
 				.get(sheet)
 				?.get(cellKey(cell.spillAnchor.row, cell.spillAnchor.col));
 			if (anchor && pending.has(anchor)) this.computeNested(anchor);
+			// The anchor is about to replace this value, so what was read here must not be kept.
+			else if (anchor && this.inProgress.has(anchor)) this.cycleReads++;
 		}
 		if (!cell.formula) return;
 		const node = this.nodes.get(sheet)?.get(cellKey(row, col));
@@ -114,15 +122,28 @@ export abstract class EngineHost implements EvalHost {
 	 */
 	readBlock(sheet: number, range: CellRange): Matrix {
 		const { start, end } = range;
-		const key = `${sheet}:${start.row}:${start.col}:${end.row}:${end.col}`;
-		const cached = this.pending ? this.blockCache.get(key) : undefined;
-		if (cached) return cached;
-		const before = this.cycleReads;
-		const block = Matrix.build(end.row - start.row + 1, end.col - start.col + 1, (r, c) =>
-			this.readCell(sheet, start.row + r, start.col + c),
+		return this.passCache.remember(
+			this.passCache.blocks,
+			`${sheet}:${start.row}:${start.col}:${end.row}:${end.col}`,
+			() =>
+				Matrix.build(end.row - start.row + 1, end.col - start.col + 1, (r, c) =>
+					this.readCell(sheet, start.row + r, start.col + c),
+				),
 		);
-		if (this.pending && this.cycleReads === before) this.blockCache.set(key, block);
-		return block;
+	}
+
+	memoized(key: string, compute: () => Value): Value {
+		return this.passCache.remember(this.passCache.results, key, compute);
+	}
+
+	findExact(
+		vector: string,
+		length: number,
+		read: (index: number) => Scalar,
+		lookup: Scalar,
+		reverse: boolean,
+	): number | undefined {
+		return this.passCache.findExact(vector, length, read, lookup, reverse);
 	}
 
 	forEachStored(
@@ -132,7 +153,7 @@ export abstract class EngineHost implements EvalHost {
 	): void {
 		const ws = this.workbook.sheets[sheet];
 		if (!ws) return;
-		scanRange(ws, range, (cell, row, col) => {
+		forEachCellInRange(ws, range, (cell, row, col) => {
 			if (this.pending) this.ensureComputed(sheet, row, col, cell);
 			const value = this.dynamicCycleHit ? 0 : (ws.rows.get(row)?.get(col)?.value ?? null);
 			this.dynamicCycleHit = false;
@@ -231,6 +252,7 @@ export abstract class EngineHost implements EvalHost {
 
 	protected graphChanged(): void {
 		this.fullOrder = undefined;
+		this.volatileNodes = undefined;
 		this.columnIndex = undefined;
 		this.reverseIndex = undefined;
 		this.footprintIndex = undefined;
@@ -254,6 +276,10 @@ export abstract class EngineHost implements EvalHost {
 		const out: FormulaNode[] = [];
 		for (const map of this.nodes.values()) for (const node of map.values()) out.push(node);
 		return out;
+	}
+
+	protected volatiles(): FormulaNode[] {
+		return (this.volatileNodes ??= this.allNodes().filter((node) => node.volatile));
 	}
 
 	protected columns(): ColumnIndex {

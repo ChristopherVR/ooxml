@@ -3,7 +3,7 @@ import {
 	acceptsPresentationInput,
 	createPresentationKeyBuffer,
 	createWheelStepBuffer,
-	isEditorControlTarget,
+	eventOwnsSpaceKey,
 	isEditorTextInputTarget,
 	mapPresentationKey,
 	mapPresentationWheel,
@@ -246,7 +246,7 @@ export function createViewportHandlers(deps: ViewportHandlersDeps): ViewportHand
 			// zoomed slide that took it to pan (`attachViewportNavigation` prevents its default);
 			// the paging keys still reach the slide list.
 			const spaceOnControl =
-				event.key === ' ' && (event.defaultPrevented || isEditorControlTarget(event.target));
+				event.key === ' ' && (event.defaultPrevented || eventOwnsSpaceKey(event));
 			if (!spaceOnControl && deps.viewer.handleNavigationKey(event.key)) {
 				event.preventDefault();
 			}

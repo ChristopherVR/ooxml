@@ -8,8 +8,14 @@ name: Preview packages
 # Needs the pkg.pr.new GitHub App installed on the repository (https://github.com/apps/pkg-pr-new);
 # it authenticates the upload from this workflow run, so no token or secret is involved. Previews
 # are not npm releases: nothing here touches npm, tags or the release flow.
+#
+# A preview carries this repository's name, so only reviewed code gets one. Pull requests from
+# branches of this repository publish on every push. A fork's pull request publishes only when a
+# maintainer adds the `preview-packages` label, and then only the head it has at that moment: a
+# later push does not publish, so remove and re-add the label after reviewing the new head.
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
     paths:
       - 'src/core/**'
       - 'src/ui/**'
@@ -37,6 +43,10 @@ concurrency:
 jobs:
   publish:
     name: Publish previews
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.head.repo.full_name == github.repository && github.event.action != 'labeled') ||
+      (github.event.action == 'labeled' && github.event.label.name == 'preview-packages')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -71,12 +81,11 @@ jobs:
       # Until the app is installed the upload is refused with "is not installed on or does not have
       # access to"; that is a missing setup step, not a broken change, so it warns instead of failing
       # the pull request. Any other error still fails.
-      # TODO(supply-chain): pkg-pr-new is pinned by version only; `bunx` records no integrity hash.
-      # Make it a root devDependency (so bun.lock holds its integrity) and run it from there.
+      # pkg-pr-new is the root devDependency bun.lock pins, run from node_modules.
       - name: Publish to pkg.pr.new
         run: |
           set +e
-          bunx pkg-pr-new@0.0.88 publish --no-compact --comment=update --commentWithSha --template ./preview-template ./suite-dist ./src/core ./src/ui 2>&1 | tee "$RUNNER_TEMP/pkg-pr-new.log"
+          node_modules/.bin/pkg-pr-new publish --no-compact --comment=update --commentWithSha --template ./preview-template ./suite-dist ./src/core ./src/ui 2>&1 | tee "$RUNNER_TEMP/pkg-pr-new.log"
           status=${PIPESTATUS[0]}
           set -e
           if [ "$status" -ne 0 ] && grep -q 'is not installed on or does not have access to' "$RUNNER_TEMP/pkg-pr-new.log"; then

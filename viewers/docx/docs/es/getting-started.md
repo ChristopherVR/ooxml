@@ -60,6 +60,8 @@ Los demás frameworks usan las mismas opciones: consulte las [guías por framewo
 
 La referencia al componente (o el manejador de la versión vanilla) expone `load(bytes)` y `save()`. La carga detecta DOCX y el formato `.doc` heredado. Los archivos protegidos con contraseña solo se abren mediante `loadDocument(bytes, { password })` de `ooxml-core/docx/load`; el `load()` del elemento no admite contraseña, así que informa de ese archivo como `document-error`.
 
+La carga está acotada por límites de tamaño que protegen frente a bombas zip: 50 MiB comprimido, 5.000 partes, 200 MiB descomprimido y 25 MiB para `word/document.xml`. Un host que espera documentos mayores pasa `limits` a `loadDocx(bytes, { limits })` o `loadDocument(bytes, { limits })`, por ejemplo `{ maxDocumentPartBytes: 100 * 1024 * 1024 }`; `DEFAULT_DOCX_LOAD_LIMITS` enumera los valores predeterminados, y al guardar se mantienen los límites con los que se cargó el documento.
+
 ```ts
 const bytes = new Uint8Array(await file.arrayBuffer());
 await editor.load(bytes);

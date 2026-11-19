@@ -1,3 +1,4 @@
+import { definer } from '../../registry';
 import { html, nothing, unsafeCSS, type PropertyValues } from 'lit';
 import { TeamsLitElement } from '../i18n/lit-element';
 import {
@@ -108,9 +109,7 @@ export class TeamsCreateChannelDialog extends TeamsLitElement {
 		</dialog>`;
 	}
 }
-export function defineTeamsCreateChannelDialog(
-	registry: CustomElementRegistry | undefined = globalThis.customElements,
-): void {
-	if (registry && !registry.get('teams-create-channel-dialog'))
-		registry.define('teams-create-channel-dialog', TeamsCreateChannelDialog);
-}
+export const defineTeamsCreateChannelDialog = definer(
+	'teams-create-channel-dialog',
+	() => TeamsCreateChannelDialog,
+);

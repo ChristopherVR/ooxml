@@ -5,10 +5,14 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, describe, it } from 'node:test';
-import { shortHash } from 'ooxml-core/teams';
+import { createGroupChatId, shortHash } from 'ooxml-core/teams';
+import * as encoding from 'lib0/encoding';
 import { WebSocket } from 'ws';
+import * as syncProtocol from 'y-protocols/sync';
+import * as Y from 'yjs';
 import { createFileStore, quotaKeyOf } from './files.mjs';
 import { createTeamsServer } from './index.mjs';
+import { storageName } from './room-store.mjs';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const until = async (fn, ms = 3000) => {
@@ -29,16 +33,17 @@ describe('file store bookkeeping', () => {
 	it('sweeps partial uploads and stale uploader records, keeping real files', () => {
 		const dir = mkdtempSync(join(tmpdir(), 'teams-filestore-'));
 		try {
-			mkdirSync(join(dir, 'files', 'ws'), { recursive: true });
-			writeFileSync(join(dir, 'files', 'ws', '.abc.part'), 'half');
-			writeFileSync(join(dir, 'files', 'ws', 'keep.txt'), 'data');
+			const stored = join(dir, 'files', storageName('ws'));
+			mkdirSync(stored, { recursive: true });
+			writeFileSync(join(stored, '.abc.part'), 'half');
+			writeFileSync(join(stored, 'keep.txt'), 'data');
 			const store = createFileStore({ filesDir: join(dir, 'files'), metaDir: join(dir, 'meta') });
 			assert.equal(store.bytesOf('ws'), 4, 'partial uploads do not count');
 			store.added('ws', 'keep.txt', 0, 'ann');
 			store.added('ws', 'gone.txt', 0, 'ann');
 			assert.equal(store.sweep(60_000), 0, 'a fresh partial upload may still be in flight');
 			assert.equal(store.sweep(0), 1);
-			assert.deepEqual(readdirSync(join(dir, 'files', 'ws')), ['keep.txt']);
+			assert.deepEqual(readdirSync(stored), ['keep.txt']);
 			assert.deepEqual(
 				store.list('ws').map((f) => [f.name, f.uploader]),
 				[['keep.txt', 'ann']],
@@ -90,19 +95,43 @@ describe('file permissions, lifecycle and quotas', () => {
 			});
 		return { dir, port, base, sessions, as, req };
 	};
-	const chatRoom = `chat-${shortHash('acme')}-g-1`;
+	const chatRoom = `chat-${shortHash('acme')}-${createGroupChatId('ann')}`;
+	/** Ann creates the room and, as its first member, adds Bob. */
 	const createChat = async (ctx) => {
-		const ws = new WebSocket(`ws://127.0.0.1:${ctx.port}/sync/${chatRoom}?members=ann,bob`, [
+		const ws = new WebSocket(`ws://127.0.0.1:${ctx.port}/sync/${chatRoom}`, [
 			'openteams',
 			`openteams.session.${ctx.sessions.ann}`,
 		]);
 		sockets.push(ws);
 		await new Promise((ok, fail) => (ws.on('open', ok), ws.on('error', fail)));
+		const doc = new Y.Doc();
+		doc.getMap('teams:chat-members').set('bob', true);
+		const encoder = encoding.createEncoder();
+		encoding.writeVarUint(encoder, 0);
+		syncProtocol.writeUpdate(encoder, Y.encodeStateAsUpdate(doc));
+		ws.send(encoding.toUint8Array(encoder));
 		assert.ok(
-			await until(async () => (await ctx.req(`/files/${chatRoom}`, 'ann')).status === 200),
-			'the chat room exists',
+			await until(async () => (await ctx.req(`/files/${chatRoom}`, 'bob')).status === 200),
+			'the chat room exists and lists Bob',
 		);
 	};
+
+	it('refuses a case variant of a chat room, whatever the disk', async () => {
+		const ctx = await start();
+		await createChat(ctx);
+		await ctx.req(`/files/${chatRoom}/plan.txt`, 'ann', { method: 'POST', body: 'secret' });
+		const alias = chatRoom.toUpperCase();
+		assert.equal((await ctx.req(`/files/${alias}`, 'eve')).status, 403);
+		assert.equal((await ctx.req(`/files/${alias}/PLAN.TXT`, 'eve')).status, 403);
+		assert.equal((await ctx.req(`/files/${alias}`, 'ann')).status, 403);
+	});
+
+	it('keeps scopes that differ only by case apart', async () => {
+		const ctx = await start();
+		await ctx.req('/files/Acme/a.txt', 'ann', { method: 'POST', body: 'upper' });
+		assert.equal((await ctx.req('/files/acme/a.txt', 'ann')).status, 404);
+		assert.deepEqual((await (await ctx.req('/files/acme', 'ann')).json()).files, []);
+	});
 
 	it('needs a signed session when identities are verified', async () => {
 		const ctx = await start();
@@ -145,7 +174,7 @@ describe('file permissions, lifecycle and quotas', () => {
 		).json();
 		assert.equal(await (await fetch(`${ctx.base}${link.url}`)).text(), 'secret');
 		// A room nobody created has no members, so nobody may use it.
-		const unknown = `chat-${shortHash('acme')}-g-2`;
+		const unknown = `chat-${shortHash('acme')}-${createGroupChatId('ann')}`;
 		assert.equal(
 			(await ctx.req(`/files/${unknown}/a.txt`, 'ann', { method: 'POST', body: 'x' })).status,
 			403,
@@ -182,7 +211,8 @@ describe('file permissions, lifecycle and quotas', () => {
 	it('removes partial uploads left by a crash at start-up', async () => {
 		const ctx = await start();
 		await ctx.req('/files/acme/a.txt', 'ann', { method: 'POST', body: 'one' });
-		const part = join(ctx.dir, 'files', 'acme', '.deadbeef.part');
+		const stored = join(ctx.dir, 'files', storageName('acme'));
+		const part = join(stored, '.deadbeef.part');
 		writeFileSync(part, 'torn');
 		await servers.pop().close();
 		const again = createTeamsServer({
@@ -192,7 +222,7 @@ describe('file permissions, lifecycle and quotas', () => {
 		});
 		servers.push(again);
 		assert.equal(existsSync(part), false);
-		assert.equal(existsSync(join(ctx.dir, 'files', 'acme', 'a.txt')), true);
+		assert.equal(existsSync(join(stored, 'a.txt')), true);
 	});
 
 	it('cleans up an upload that is cut short', async () => {
@@ -203,7 +233,7 @@ describe('file permissions, lifecycle and quotas', () => {
 		});
 		assert.equal(res.status, 413);
 		await sleep(50);
-		const stored = join(ctx.dir, 'files', 'acme');
+		const stored = join(ctx.dir, 'files', storageName('acme'));
 		assert.deepEqual(existsSync(stored) ? readdirSync(stored) : [], []);
 	});
 
@@ -234,7 +264,7 @@ describe('file permissions, lifecycle and quotas', () => {
 		const server = createTeamsServer({ dataDir: dir, insecureDev: true, log: () => {} });
 		servers.push(server);
 		const { port } = await server.listen(0, '127.0.0.1');
-		const ws = new WebSocket(`ws://127.0.0.1:${port}/sync/${chatRoom}?user=ann&members=ann,bob`);
+		const ws = new WebSocket(`ws://127.0.0.1:${port}/sync/${chatRoom}?user=ann`);
 		sockets.push(ws);
 		await new Promise((ok, fail) => (ws.on('open', ok), ws.on('error', fail)));
 		const url = `http://127.0.0.1:${port}/files/${chatRoom}`;

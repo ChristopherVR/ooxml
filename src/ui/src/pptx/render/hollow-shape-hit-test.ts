@@ -25,6 +25,7 @@
 import type { PptxElement } from 'ooxml-core/pptx';
 import { getElementTextContent, hasShapeProperties } from 'ooxml-core/pptx';
 
+import { elementIdSelector } from './css-escape';
 import { getResolvedShapeClipPath } from './shape-geometry';
 import { usesSilhouetteEffects } from './silhouette-effects';
 import { outlinePathData } from './stroke-outline';
@@ -148,7 +149,7 @@ function buildSilhouetteHitArea(element: PptxElement): HollowHitOutline | undefi
 	// A pointer-events:none container passes that to its text body, whose caret
 	// and links then could not be reached: re-enable the text itself (spans and
 	// the editable surface, not the box around them).
-	const scope = `[data-element-id="${element.id.replace(/["\\]/gu, '\\$&')}"]`;
+	const scope = elementIdSelector(element.id);
 	return {
 		...hit,
 		textCss: `${scope} span,${scope} [contenteditable],${scope} [contenteditable] *{pointer-events:auto}`,

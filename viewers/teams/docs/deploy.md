@@ -14,7 +14,7 @@ The server refuses to start without accounts: set `TEAMS_USERS_FILE` (see below)
 | `PORT`, `HOST`                                          | Listen address. Bind `0.0.0.0` only behind TLS.                                                                                                                                                                     |
 | `TEAMS_TOKEN`                                           | If set, sockets take it in the `Sec-WebSocket-Protocol` header (`?token=` only as a fallback) and file requests as `Authorization: Bearer`.                                                                         |
 | `TEAMS_ORIGINS`                                         | Comma-separated allowed `Origin`s for sockets and files. Empty: any origin when a token is set; without a token only loopback origins and clients that send no `Origin`.                                            |
-| `TEAMS_DATA`                                            | Data directory (default `./data`): `rooms/<room>.bin` snapshots and `files/`.                                                                                                                                       |
+| `TEAMS_DATA`                                            | Data directory (default `./data`): `rooms/=<name>.bin` snapshots and `files/`.                                                                                                                                      |
 | `TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`              | Path to a JSON object of user id to credential, or `{ credential, role }` (enables accounts); the secret that signs sessions.                                                                                       |
 | `TEAMS_ENFORCE_AUTHORSHIP`                              | `0` turns off the authorship checks for signed-in users (default on).                                                                                                                                               |
 | `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`                | Enables `POST /auth/revoke`; the `/auth/session` rate limit (window, per address, per user).                                                                                                                        |
@@ -161,10 +161,12 @@ Everything the server keeps is under `TEAMS_DATA` (default `./data`):
 
 | Path                       | Holds                                                                                   |
 | -------------------------- | --------------------------------------------------------------------------------------- |
-| `rooms/<room>.bin`         | One Yjs snapshot per room: all chat, channels, calendars and tab data.                  |
-| `files/<workspace>/`       | Uploaded files.                                                                         |
-| `file-meta/<scope>.json`   | Who uploaded each file (decides who may delete it). Back it up with `files/`.           |
+| `rooms/=<name>.bin`        | One Yjs snapshot per room: all chat, channels, calendars and tab data.                  |
+| `files/=<name>/`           | Uploaded files.                                                                         |
+| `file-meta/=<name>.json`   | Who uploaded each file (decides who may delete it). Back it up with `files/`.           |
 | `session-revocations.json` | Session revocation generations (lose it and revoked sessions revive until they expire). |
+
+A stored name is `=` followed by the lower-case base32 of the exact room or scope name, so names that differ only by case stay apart on every disk. On its first start a 2.0 server renames what an older version stored; back up first, because an older server cannot read the new names. An entry named after a chat id that only 2.0 issues (`dm-` and 32 hex digits, or a new `g-` id, in any spelling) is not migrated: it moves to a `.quarantine` folder beside it and is logged, and the server never reads it.
 
 Also keep what is not in the data directory: your accounts file (`TEAMS_USERS_FILE`) and
 `TEAMS_SESSION_SECRET`. Changing or losing the secret signs everyone out, which is harmless.

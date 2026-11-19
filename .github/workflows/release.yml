@@ -84,14 +84,163 @@ jobs:
             echo "blocked=true" >> "$GITHUB_OUTPUT"
           fi
 
-  release:
+  # Everything that runs third-party code: the install, the build, the smoke tests and git-cliff.
+  # Its token is read-only and nothing here can push, tag or release. What the writing `release`
+  # job needs from it (changelogs, release notes, the lockfile with its bumped workspace versions)
+  # travels as an artifact.
+  prepare:
     needs: [ci-gate]
     # Full release on schedule, or on manual dispatch without a tag input. Dispatch WITH a tag
-    # skips straight to the publish job (re-publish mode). Held back while CI on main is red.
+    # skips straight to the publish jobs (re-publish mode). Held back while CI on main is red.
     if: |
       needs.ci-gate.outputs.blocked != 'true' && (
         github.event_name == 'schedule' ||
         (github.event_name == 'workflow_dispatch' && inputs.tag == '')
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      any_changed: ${{ steps.plan.outputs.any_changed || 'false' }}
+      any_adopt: ${{ steps.adopt.outputs.any_adopt || 'false' }}
+    steps:
+      - name: Refuse to run off main
+        if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          echo "::error::Release runs only from refs/heads/main (this run is on $REF)."
+          exit 1
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.4
+
+      # Plan FIRST (before installing or building): it only reads git history and the npm registry.
+      # It is the first of two early-exit gates, so a quiet hour is a cheap no-op.
+      - name: Plan release
+        id: plan
+        run: node scripts/release-plan.mjs --write
+
+      # A package published by hand (the manual first publish of ooxml-ui) has no tag yet; the
+      # `release` job pushes its baseline tag, so it runs even when nothing else changed.
+      - name: Look for baseline tags to adopt
+        id: adopt
+        run: |
+          any=$(node -p "Object.values(require('./release-plan.json').packages).some((p) => p.adopt)")
+          echo "any_adopt=$any" >> "$GITHUB_OUTPUT"
+
+      # Publishing is switched on per repository, so a release is never tagged that cannot be
+      # published afterwards. Set the NPM_PUBLISH repository variable to 'true' to enable.
+      - name: Verify publishing is enabled
+        if: steps.plan.outputs.any_changed == 'true' && vars.NPM_PUBLISH != 'true'
+        run: |
+          echo "::error::NPM_PUBLISH repository variable is not 'true': a release was planned but npm publishing is disabled."
+          echo "Set the NPM_PUBLISH repository variable to 'true' (Settings > Secrets and variables > Actions > Variables)."
+          exit 1
+
+      # `release-plan.mjs --write` bumped the package.json versions, and bun.lock records every
+      # workspace's version, so `--frozen-lockfile` would refuse the install. Install normally,
+      # then fail unless the lockfile changed ONLY in workspace package versions: a new or moved
+      # third-party resolution must never ship in a release commit unreviewed. The `release` job
+      # checks the lockfile it receives again.
+      - name: Install dependencies
+        if: steps.plan.outputs.any_changed == 'true'
+        run: |
+          bun install
+          node scripts/check-lockfile-drift.mjs
+
+      # All-or-nothing: a build or smoke-test failure fails the run before anything is committed,
+      # tagged or published, and the next run retries from the same baseline. Typecheck and the
+      # unit tests are not repeated here: `main` is protected by the `ci-success` check.
+      - name: Build and smoke-test the package
+        if: steps.plan.outputs.any_changed == 'true'
+        run: |
+          node scripts/publish-released.mjs --plan release-plan.json --verify
+          bun run build
+          bun run test:package
+          node scripts/build-released.mjs --smoke
+          node scripts/publish-released.mjs --plan release-plan.json --entry-points
+
+      # Prepend the new release section to CHANGELOG.md. Prepend (rather than regeneration) means
+      # shipped sections are never rewritten, so old tags can be culled by prune-releases without
+      # corrupting changelog history. git-cliff is the version bun.lock pins, run from
+      # node_modules; cliff.toml has no `[remote.github]` block, so it needs no token.
+      - name: Generate the changelog
+        if: steps.plan.outputs.any_changed == 'true'
+        run: |
+          # `$inc` holds git-cliff glob PATTERNS ("src/**") and must stay unquoted so its words
+          # split into separate arguments; disable filename expansion so the shell does not expand
+          # the globs first (that silently produced heading-only changelog sections).
+          set -f
+          cliff=node_modules/.bin/git-cliff
+          field() { node -p "require('./release-plan.json').packages['$1']$2"; }
+          for key in $(node -p "const p=require('./release-plan.json');p.order.filter(k=>p.packages[k].release).join(' ')"); do
+            npm=$(field "$key" .npm)
+            tag=$(field "$key" .tag)
+            changelog=$(field "$key" .changelog)
+            inc=$(node -e "console.log(require('./release-plan.json').packages['$key'].includePaths.map(p => '--include-path ' + p).join(' '))")
+            echo "Changelog for $npm -> $tag ($changelog)"
+            if [ -f "$changelog" ]; then
+              "$cliff" --config cliff.toml --tag-pattern "^${npm}@" $inc --unreleased --tag "$tag" --prepend "$changelog"
+            else
+              "$cliff" --config cliff.toml --tag-pattern "^${npm}@" $inc --tag "$tag" --output "$changelog"
+            fi
+          done
+
+      # Each viewer's root changelog gets one dated section naming the viewer packages released
+      # today, built from the package sections git-cliff just wrote (a second run on the same day
+      # extends that day's section).
+      - name: Update the viewer changelogs
+        if: steps.plan.outputs.any_changed == 'true'
+        run: node scripts/viewer-changelogs.mjs --plan release-plan.json
+
+      # The GitHub release body of each package, rendered here because it runs git-cliff too.
+      - name: Write the release notes
+        if: steps.plan.outputs.any_changed == 'true'
+        run: |
+          mkdir -p "$RUNNER_TEMP/prepared/notes"
+          for key in $(node -p "const p=require('./release-plan.json');p.order.filter(k=>p.packages[k].release).join(' ')"); do
+            node scripts/release-notes.mjs "$key" > "$RUNNER_TEMP/prepared/notes/${key}.md"
+          done
+
+      - name: Collect the prepared release
+        if: steps.plan.outputs.any_changed == 'true'
+        run: |
+          # shellcheck disable=SC2046
+          cp --parents release-plan.json bun.lock $(node -p "const p=require('./release-plan.json');p.order.filter(k=>p.packages[k].release).map(k=>p.packages[k].changelog).join(' ')") "$RUNNER_TEMP/prepared/"
+          for changelog in viewers/*/CHANGELOG.md; do
+            if [ -f "$changelog" ]; then cp --parents "$changelog" "$RUNNER_TEMP/prepared/"; fi
+          done
+
+      - name: Upload the prepared release
+        if: steps.plan.outputs.any_changed == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: release-prepared-${{ github.run_id }}
+          path: ${{ runner.temp }}/prepared
+          retention-days: 1
+          if-no-files-found: error
+
+  # The only job that writes to the repository: it pushes baseline tags and the release commit,
+  # and creates the GitHub releases. It runs no third-party code (no Bun, no install, no build, no
+  # third-party action; `scripts/workflow-lint.mjs` enforces that), so nothing else in the job can
+  # reach its token. It plans the release again itself, so the versions and manifests it commits
+  # never come from the artifact, and it takes from the artifact only the files its own plan names.
+  release:
+    needs: [ci-gate, prepare]
+    if: |
+      needs.prepare.result == 'success' && (
+        needs.prepare.outputs.any_changed == 'true' || needs.prepare.outputs.any_adopt == 'true'
       )
     runs-on: ubuntu-latest
     # Commits the version bump and pushes the tags.
@@ -115,26 +264,18 @@ jobs:
       # accepting direct pushes from GitHub Actions. If a ruleset is ever added to `main`, it must
       # let this workflow push, or the release commit is rejected.
       #
-      # Credentials are NOT persisted in .git/config: `bun install`, the build and the package
-      # smoke tests run third-party code, so the write token must not sit on disk while they run.
-      # The two steps that push (adopt tags, commit the release) receive it as PUSH_TOKEN and
-      # authenticate that one git command with it.
+      # Credentials are NOT persisted in .git/config. The steps that push (adopt tags, commit the
+      # release) receive the token as PUSH_TOKEN and authenticate that one git command with it.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
-          token: ${{ github.token }}
           persist-credentials: false
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24
 
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version: 1.4.2
-
-      # Plan FIRST (before installing or building): it only reads git history and the npm registry.
-      # It is the first of two early-exit gates, so a quiet hour is a cheap no-op.
+      # The same commit and registry as `prepare`, so the same plan; the next step checks that.
       - name: Plan release
         id: plan
         run: node scripts/release-plan.mjs --write
@@ -155,71 +296,35 @@ jobs:
             git push "$remote" "refs/tags/$tag"
           done
 
-      # Publishing is switched on per repository, so a release is never tagged that cannot be
-      # published afterwards. Set the NPM_PUBLISH repository variable to 'true' to enable.
-      - name: Verify publishing is enabled
-        if: steps.plan.outputs.any_changed == 'true' && vars.NPM_PUBLISH != 'true'
-        run: |
-          echo "::error::NPM_PUBLISH repository variable is not 'true': a release was planned but npm publishing is disabled."
-          echo "Set the NPM_PUBLISH repository variable to 'true' (Settings > Secrets and variables > Actions > Variables)."
-          exit 1
+      - name: Download the prepared release
+        if: steps.plan.outputs.any_changed == 'true'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: release-prepared-${{ github.run_id }}
+          path: ${{ runner.temp }}/prepared
 
-      # `release-plan.mjs --write` bumped the package.json versions, and bun.lock records every
-      # workspace's version, so `--frozen-lockfile` would refuse the install. Install normally,
-      # then fail unless the lockfile changed ONLY in workspace package versions: a new or moved
-      # third-party resolution must never ship in a release commit unreviewed.
-      - name: Install dependencies
+      # The artifact was written by a job that ran third-party code, so it is data: the two plans
+      # must agree, only the lockfile and the changelogs this job's plan names are copied, and the
+      # lockfile may differ from HEAD only in workspace versions.
+      - name: Take the prepared changelogs and lockfile
         if: steps.plan.outputs.any_changed == 'true'
         run: |
-          bun install
+          prepared="$RUNNER_TEMP/prepared"
+          if ! cmp -s release-plan.json "$prepared/release-plan.json"; then
+            echo "::error::The prepare job planned a different release; re-run the workflow."
+            diff "$prepared/release-plan.json" release-plan.json || true
+            exit 1
+          fi
+          cp "$prepared/bun.lock" bun.lock
           node scripts/check-lockfile-drift.mjs
-
-      # All-or-nothing: a build or smoke-test failure fails the run before anything is committed,
-      # tagged or published, and the next run retries from the same baseline. Typecheck and the
-      # unit tests are not repeated here: `main` is protected by the `ci-success` check.
-      - name: Build and smoke-test the package
-        if: steps.plan.outputs.any_changed == 'true'
-        run: |
-          node scripts/publish-released.mjs --plan release-plan.json --verify
-          bun run build
-          bun run test:package
-          node scripts/build-released.mjs --smoke
-          node scripts/publish-released.mjs --plan release-plan.json --entry-points
-
-      # Prepend the new release section to CHANGELOG.md. Prepend (rather than regeneration) means
-      # shipped sections are never rewritten, so old tags can be culled by prune-releases without
-      # corrupting changelog history.
-      - name: Generate the changelog
-        if: steps.plan.outputs.any_changed == 'true'
-        # cliff.toml has no `[remote.github]` block (it rate-limited the release), so git-cliff
-        # makes no GitHub API calls; the token is kept only for any future enrichment.
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # `$inc` holds git-cliff glob PATTERNS ("src/**") and must stay unquoted so its words
-          # split into separate arguments; disable filename expansion so the shell does not expand
-          # the globs first (that silently produced heading-only changelog sections).
-          set -f
-          field() { node -p "require('./release-plan.json').packages['$1']$2"; }
-          for key in $(node -p "const p=require('./release-plan.json');p.order.filter(k=>p.packages[k].release).join(' ')"); do
-            npm=$(field "$key" .npm)
-            tag=$(field "$key" .tag)
-            changelog=$(field "$key" .changelog)
-            inc=$(node -e "console.log(require('./release-plan.json').packages['$key'].includePaths.map(p => '--include-path ' + p).join(' '))")
-            echo "Changelog for $npm -> $tag ($changelog)"
-            if [ -f "$changelog" ]; then
-              bunx git-cliff --config cliff.toml --tag-pattern "^${npm}@" $inc --unreleased --tag "$tag" --prepend "$changelog"
-            else
-              bunx git-cliff --config cliff.toml --tag-pattern "^${npm}@" $inc --tag "$tag" --output "$changelog"
+          for changelog in $(node -p "const p=require('./release-plan.json');p.order.filter(k=>p.packages[k].release).map(k=>p.packages[k].changelog).join(' ')"); do
+            cp "$prepared/$changelog" "$changelog"
+          done
+          for viewer in viewers/*/; do
+            if [ -f "$prepared/${viewer}CHANGELOG.md" ]; then
+              cp "$prepared/${viewer}CHANGELOG.md" "${viewer}CHANGELOG.md"
             fi
           done
-
-      # Each viewer's root changelog gets one dated section naming the viewer packages released
-      # today, built from the package sections git-cliff just wrote (a second run on the same day
-      # extends that day's section).
-      - name: Update the viewer changelogs
-        if: steps.plan.outputs.any_changed == 'true'
-        run: node scripts/viewer-changelogs.mjs --plan release-plan.json
 
       - name: Commit version bumps and changelogs
         if: steps.plan.outputs.any_changed == 'true'
@@ -227,8 +332,6 @@ jobs:
           # Authenticates the push and fetch below only; it is not stored in .git/config.
           PUSH_TOKEN: ${{ github.token }}
         run: |
-          # The build and smoke tests ran since the install check; re-check before staging bun.lock.
-          node scripts/check-lockfile-drift.mjs
           remote="https://x-access-token:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -250,7 +353,6 @@ jobs:
               fi
               echo "Push attempt $attempt was rejected; rebasing onto origin/main"
               git fetch "$remote" +refs/heads/main:refs/remotes/origin/main
-              # Preserve temporary build/smoke-test changes while replaying the release commit.
               if ! git rebase --autostash origin/main; then
                 git rebase --abort || true
                 echo "::error::Release commit conflicts with origin/main; resolve by hand and re-run."
@@ -267,15 +369,13 @@ jobs:
           fi
 
       # Cut the tag + GitHub release. The tag points at the (pushed) release commit; the
-      # release body is that package's newest changelog section. No tarball assets: npm (with
+      # release body is that package's notes from the prepare job. No tarball assets: npm (with
       # provenance) is the artifact registry. GITHUB_TOKEN-created tags do not trigger workflows.
       - name: Tag and release changed packages
         id: tagged
         if: steps.plan.outputs.any_changed == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # release-notes.mjs shells out to git-cliff, which reads GITHUB_TOKEN for [remote.github].
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           COMMIT=$(git rev-parse HEAD)
           field() { node -p "require('./release-plan.json').packages['$1']$2"; }
@@ -286,7 +386,7 @@ jobs:
               echo "Release $tag already exists, skipping"
               continue
             fi
-            node scripts/release-notes.mjs "$key" > "${RUNNER_TEMP}/notes.md"
+            cp "$RUNNER_TEMP/prepared/notes/${key}.md" "${RUNNER_TEMP}/notes.md"
             changelog=$(field "$key" .changelog)
             {
               echo ""
@@ -320,7 +420,7 @@ jobs:
       - name: Prune superseded releases
         if: steps.tagged.outputs.any_released == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: node scripts/prune-releases.mjs --keep 1
 
   # Publish to npm, in two modes:
@@ -475,7 +575,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: 1.4.2
+          bun-version: 1.4.4
 
       - run: bun install --frozen-lockfile
 
@@ -545,7 +645,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: 1.4.2
+          bun-version: 1.4.4
 
       - run: bun install --frozen-lockfile
 
@@ -718,18 +818,75 @@ jobs:
           node-version: 24
       - run: node scripts/check-published.mjs --wait-minutes 20
 
-  # Attaches each published tarball and a keyless sigstore bundle to its GitHub release, so the
-  # release assets are signed (OpenSSF Scorecard "Signed-Releases"). It runs after the packages are
-  # verifiable on the registry and never gates publishing: a failure here leaves the npm release
-  # intact and only the signatures missing. Re-run it with a `tag` dispatch.
+  # Signs each published tarball with a keyless sigstore bundle, so the release assets are signed
+  # (OpenSSF Scorecard "Signed-Releases"). It runs after the packages are verifiable on the registry
+  # and never gates publishing: a failure here leaves the npm release intact and only the signatures
+  # missing. Re-run it with a `tag` dispatch. cosign is third-party code, so this job's token is
+  # read-only and its signing step gets none; `attach-release-assets` uploads what it signed.
   sign-release:
     name: sign release assets
     needs: [release, publish, verify-published]
     if: always() && !cancelled() && needs.publish.result == 'success'
     runs-on: ubuntu-latest
     permissions:
-      contents: write # uploads the release assets
+      contents: read
       id-token: write # keyless sigstore signing with the workflow identity
+    steps:
+      - name: Refuse to run off main
+        if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          echo "::error::Release runs only from refs/heads/main (this run is on $REF)."
+          exit 1
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.tag == '' && needs.release.outputs.release_sha || github.sha }}
+          persist-credentials: false
+
+      - name: Download release plan
+        if: inputs.tag == ''
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: release-plan-${{ github.run_id }}
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+
+      - uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
+
+      - name: Sign the release assets
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          if [ -n "$INPUT_TAG" ]; then
+            node scripts/sign-release-assets.mjs --tag "$INPUT_TAG" --dir "$RUNNER_TEMP/release-assets"
+          else
+            node scripts/sign-release-assets.mjs --plan release-plan.json --dir "$RUNNER_TEMP/release-assets"
+          fi
+
+      # Uploaded even when one package failed to sign, so the others are still attached.
+      - name: Upload the signed assets
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: release-assets-${{ github.run_id }}
+          path: ${{ runner.temp }}/release-assets
+          retention-days: 1
+          if-no-files-found: ignore
+
+  # Uploads the signed tarballs and bundles to their GitHub releases. It can write releases, so it
+  # runs only first-party steps, and `attach-release-assets.mjs` uploads a tarball only when it is
+  # the one the npm registry serves.
+  attach-release-assets:
+    name: attach release assets
+    needs: [release, sign-release]
+    if: always() && !cancelled() && (needs.sign-release.result == 'success' || needs.sign-release.result == 'failure')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # uploads the release assets
     steps:
       - name: Refuse to run off main
         if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
@@ -750,21 +907,25 @@ jobs:
         with:
           name: release-plan-${{ github.run_id }}
 
+      - name: Download the signed assets
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: release-assets-${{ github.run_id }}
+          path: ${{ runner.temp }}/release-assets
+
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24
 
-      - uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
-
-      - name: Sign and attach the release assets
+      - name: Attach the release assets
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           INPUT_TAG: ${{ inputs.tag }}
         run: |
           if [ -n "$INPUT_TAG" ]; then
-            node scripts/sign-release-assets.mjs --tag "$INPUT_TAG"
+            node scripts/attach-release-assets.mjs --tag "$INPUT_TAG" --dir "$RUNNER_TEMP/release-assets"
           else
-            node scripts/sign-release-assets.mjs --plan release-plan.json
+            node scripts/attach-release-assets.mjs --plan release-plan.json --dir "$RUNNER_TEMP/release-assets"
           fi
 
   # Tells the Discord server what shipped: one message per release run (not one per package), with

@@ -2,6 +2,7 @@ import type { PptxElement, ShapeStyle } from 'ooxml-core/pptx';
 import { hasShapeProperties } from 'ooxml-core/pptx';
 
 import { markerPath, normalizeArrow } from './connector-markers';
+import { svgIdToken } from './svg-id';
 import { escapeSvgAttr } from './visual-effects';
 import { hasStrokePaint } from './stroke-paint';
 
@@ -32,8 +33,7 @@ export function buildCustomPathMarkers(
 ): CustomPathMarkers | undefined {
 	if (!isArrowedCustomPath(element) || !hasShapeProperties(element)) return undefined;
 	const style: ShapeStyle = element.shapeStyle ?? {};
-	// Encode each code point so distinct shape IDs cannot collapse to the same SVG ID.
-	const seed = [...element.id].map((char) => char.codePointAt(0)!.toString(16)).join('-');
+	const seed = svgIdToken(element.id);
 	const markup: string[] = [];
 	const add = (end: 'Start' | 'End'): string | undefined => {
 		const arrow = normalizeArrow(style[`connector${end}Arrow`]);

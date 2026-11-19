@@ -3,6 +3,7 @@ import {
 	applyPasteSpecialFormat,
 	buildRasterPictureElement,
 	cloneElementForPaste,
+	elementIdSelector,
 } from 'ooxml-ui/pptx';
 /**
  * usePasteSpecial: Paste Special (Ctrl+Alt+V) + the Paste Options mini-toolbar
@@ -55,7 +56,7 @@ export interface UsePasteSpecialResult {
 /** The mounted DOM node for `elementId`, matching the "Save as Picture" lookup. */
 function findMountedElementNode(elementId: string): HTMLElement | null {
 	return document.querySelector<HTMLElement>(
-		`[data-element-id="${elementId}"][data-pptx-element="true"]`,
+		`${elementIdSelector(elementId)}[data-pptx-element="true"]`,
 	);
 }
 

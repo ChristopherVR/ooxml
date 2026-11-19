@@ -28,6 +28,7 @@
 		buildNotesPrintHtml,
 		defaultRichEnabled,
 		handleEditorAnchorClick,
+		handleNotesFieldKey,
 		insertHyperlinkAtSelection,
 		observeElementHeight,
 		readEditorSegments,
@@ -178,9 +179,9 @@
 			<NotesFormattingToolbar {rich} disabled={!hasSlide} oninline={inline} onparagraph={paragraph} onlink={link} onprint={printNotes} ontogglemode={toggleMode} />
 		{/if}
 		{#if rich && !readonly}
-			<div class="pptx-svelte-notes-rich" bind:this={editorEl} contenteditable={hasSlide} role="textbox" tabindex="0" aria-multiline="true" aria-label={t('pptx.presenter.speakerNotes')} spellcheck="true" oninput={commitRich} onblur={commitRich} onclick={(event) => handleEditorAnchorClick(event.target, event.ctrlKey || event.metaKey)} onkeydown={(event) => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') commitRich(); }}></div>
+			<div class="pptx-svelte-notes-rich" bind:this={editorEl} contenteditable={hasSlide} role="textbox" tabindex="0" aria-multiline="true" aria-label={t('pptx.presenter.speakerNotes')} spellcheck="true" oninput={commitRich} onblur={commitRich} onclick={(event) => handleEditorAnchorClick(event.target, event.ctrlKey || event.metaKey)} onkeydown={(event) => handleNotesFieldKey(event, commitRich)}></div>
 		{:else}
-			<textarea class="pptx-svelte-notes-textarea" name="slide-notes" value={text} disabled={!hasSlide} {readonly} placeholder={hasSlide ? t('pptx.notes.addSpeakerNotes') : t('pptx.notes.noSlide')} aria-label={t('pptx.presenter.speakerNotes')} spellcheck="true" onchange={commit} onblur={commit}></textarea>
+			<textarea class="pptx-svelte-notes-textarea" name="slide-notes" value={text} disabled={!hasSlide} {readonly} placeholder={hasSlide ? t('pptx.notes.addSpeakerNotes') : t('pptx.notes.noSlide')} aria-label={t('pptx.presenter.speakerNotes')} spellcheck="true" onchange={commit} onblur={commit} onkeydown={(event) => handleNotesFieldKey(event)}></textarea>
 		{/if}
 	</div>
 </section>

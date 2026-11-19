@@ -46,6 +46,10 @@
 	background: var(--canvas);
 	color: var(--muted);
 }
+.chat-search:focus-within {
+	outline: 2px solid var(--accent);
+	outline-offset: 1px;
+}
 .chat-search input {
 	border: 0;
 	background: none;

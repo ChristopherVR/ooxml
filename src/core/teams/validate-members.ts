@@ -2,6 +2,7 @@
 // member map (`teams:chat-members`, user id to true, the list the server admits sockets by), plus
 // the content limits of message rows and reactions. DOM-free. New code.
 import * as Y from 'yjs';
+import { isChatUserId } from './chat-records';
 import type { UpdateActor, UpdateViolation } from './validate-update';
 
 export const ROSTER = 'teams:roster';
@@ -35,9 +36,10 @@ export function checkRosterRow(
 }
 
 /**
- * The member map of a private chat. Adding a member needs the actor to be a member already (the
- * first writer of an empty map must list themselves). A member may remove only themselves; a
- * moderator may remove anyone.
+ * The member map of a private chat. A person is a member only while their entry is `true`, so
+ * any other value is refused rather than read as a removal. Adding a member needs the actor to be
+ * a member already: the server seeds a new room before anybody can write to it. A member may
+ * remove only themselves; a moderator may add and remove anyone.
  */
 export function checkMemberKey(
 	userId: string,
@@ -46,15 +48,16 @@ export function checkMemberKey(
 	actor: UpdateActor,
 ): UpdateViolation | null {
 	const at = { map: CHAT_MEMBERS, key: userId };
-	const was = before?.has(userId) === true;
-	const now = after?.has(userId) === true;
+	if (after?.has(userId) === true && after.get(userId) !== true)
+		return { code: 'malformed-row', ...at };
+	const was = before?.get(userId) === true;
+	const now = after?.get(userId) === true;
 	if (was === now) return null;
 	if (now) {
-		if (after?.get(userId) !== true) return { code: 'malformed-row', ...at };
-		if (actor.moderator === true) return null;
-		const existing = before !== undefined && before.size > 0;
-		const allowed = existing ? before.has(actor.id) : after?.has(actor.id) === true;
-		return allowed ? null : { code: 'not-member', ...at };
+		if (!isChatUserId(userId)) return { code: 'malformed-row', ...at };
+		return actor.moderator === true || before?.get(actor.id) === true
+			? null
+			: { code: 'not-member', ...at };
 	}
 	return userId === actor.id || actor.moderator === true ? null : { code: 'foreign-row', ...at };
 }

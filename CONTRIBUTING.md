@@ -50,7 +50,7 @@ Commits **must** follow [Conventional Commits](https://www.conventionalcommits.o
 ```
 
 - **type**: `feat` (minor bump); `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `ci`, `style`, `chore`, `revert` (patch bump). A `!` after the type/scope, or a `BREAKING CHANGE:` footer, bumps major.
-- **scope**: the area: `units`, `color`, `geometry`, `xml`, `opc`, `docx`, `pptx`, `xlsx`, `visio`, `drawingml`, `chart`, `math`, `text`, `i18n`, `ribbon`, `teams`, `automation`, `collab`, `ui`, `site`, `ci`, `deps`, `docs`.
+- **scope**: the area: `units`, `color`, `geometry`, `xml`, `opc`, `docx`, `pptx`, `xlsx`, `visio`, `drawingml`, `chart`, `math`, `text`, `i18n`, `ribbon`, `teams`, `automation`, `ai`, `collab`, `ui`, `site`, `ci`, `deps`, `docs`.
 - **subject**: imperative, lower-case, no trailing period, header at most 72 characters.
 
 Whether a commit releases at all is decided by the **paths it touches**, not its type: only changes to a package's published files release a new version of that package (for `ooxml-core`: `src/core/` outside tests, the bundler and declaration configs, the manifest's shipping fields, the licence files; for `ooxml-ui`: everything under `src/ui/` outside tests). Tests, docs, CI and fixtures never do, whatever their type, and a test-only `feat` does not raise the bump level. See [docs/releasing.md](docs/releasing.md).
@@ -68,7 +68,9 @@ The release workflow writes `chore(release): bump versions and update changelogs
   - a **bundle size** comment when an entry point of `ooxml-core` or `ooxml-ui` changes size
     (`scripts/bundle-size.mjs`, posted by `.github/workflows/bundle-size-comment.yml`);
   - a **pkg.pr.new** comment with install URLs for preview builds of both packages, so a viewer or
-    app can try the change before it is released (`.github/workflows/preview-packages.yml`);
+    app can try the change before it is released (`.github/workflows/preview-packages.yml`). A
+    pull request from a fork gets one only after a maintainer reviews it and adds the
+    `preview-packages` label, and only for the head it had then;
   - a review from **Codex** (its GitHub app; comment `@codex review` to rerun it): suggestions, not a
     required check.
 - `ci-success` also requires no em-dash in the lines you add

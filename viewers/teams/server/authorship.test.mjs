@@ -127,7 +127,7 @@ describe('authorship and protocol checks', () => {
 			});
 			return res.json();
 		};
-		const open = async (user, credential, query = 'proto=1', room = 'team') => {
+		const open = async (user, credential, query = 'proto=2', room = 'team') => {
 			const { session } = await login(user, credential);
 			const client = connect(`ws://127.0.0.1:${port}/sync/${room}?${query}`, session);
 			sockets.push(client.ws);
@@ -159,14 +159,14 @@ describe('authorship and protocol checks', () => {
 
 	it('lets a moderator hide a message and refuses an ordinary member', async () => {
 		const { open } = await start();
-		const ann = await open('ann', 'a', 'proto=1', 'team2');
+		const ann = await open('ann', 'a', 'proto=2', 'team2');
 		ann.doc.getMap(MESSAGES).set('m1', row('ann'));
-		const root = await open('root', 'r', 'proto=1', 'team2');
+		const root = await open('root', 'r', 'proto=2', 'team2');
 		assert.ok(await until(() => root.doc.getMap(MESSAGES).has('m1')));
 		root.doc.getMap(MESSAGES).get('m1').set('deleted', true);
 		assert.ok(await until(() => ann.doc.getMap(MESSAGES).get('m1').get('deleted') === true));
 		ann.doc.getMap(MESSAGES).get('m1').set('deleted', false);
-		const bob = await open('bob', 'b', 'proto=1', 'team2');
+		const bob = await open('bob', 'b', 'proto=2', 'team2');
 		assert.ok(await until(() => bob.doc.getMap(MESSAGES).has('m1')));
 		bob.doc.getMap(MESSAGES).get('m1').set('text', 'defaced');
 		assert.equal((await bob.closed).code, 1008);
@@ -174,18 +174,18 @@ describe('authorship and protocol checks', () => {
 
 	it('does not enforce when enforceAuthorship is off', async () => {
 		const { open } = await start({ enforceAuthorship: false });
-		const ann = await open('ann', 'a', 'proto=1', 'team3');
-		const bob = await open('bob', 'b', 'proto=1', 'team3');
+		const ann = await open('ann', 'a', 'proto=2', 'team3');
+		const bob = await open('bob', 'b', 'proto=2', 'team3');
 		bob.doc.getMap(MESSAGES).set('m1', row('ann', 'forged'));
 		assert.ok(await until(() => ann.doc.getMap(MESSAGES).has('m1')));
 	});
 
 	it('refuses an unsupported protocol version with a reason', async () => {
 		const { open } = await start();
-		const client = await open('ann', 'a', 'proto=2', 'team4');
+		const client = await open('ann', 'a', 'proto=3', 'team4');
 		const closed = await client.closed;
 		assert.equal(closed.code, 1008);
-		assert.match(closed.reason, /unsupported protocol version 2.*speaks 1/);
+		assert.match(closed.reason, /unsupported protocol version 3.*speaks 2/);
 		const junk = await open('ann', 'a', 'proto=abc', 'team4');
 		assert.equal((await junk.closed).code, 1008);
 	});
@@ -194,7 +194,7 @@ describe('authorship and protocol checks', () => {
 		const { open } = await start();
 		logs.length = 0;
 		const ann = await open('ann', 'a', '', 'team5');
-		const bob = await open('bob', 'b', 'proto=1', 'team5');
+		const bob = await open('bob', 'b', 'proto=2', 'team5');
 		ann.doc.getMap(MESSAGES).set('m1', row('ann'));
 		assert.ok(await until(() => bob.doc.getMap(MESSAGES).has('m1')));
 		assert.ok(logs.some((l) => /announced no protocol version/.test(l)));

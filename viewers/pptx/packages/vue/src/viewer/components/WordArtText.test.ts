@@ -99,12 +99,12 @@ describe('wordArtText', () => {
 		const wrapper = mount(WordArtText, { props: { element: warpedText(), zIndex: 5 } });
 		expect(wrapper.find('svg.pptx-vue-wordart').exists()).toBeTruthy();
 		expect(wrapper.find('textPath').exists()).toBeTruthy();
-		// One defs path per paragraph, id sanitised from the element id ("wa 1" → "wa_1").
+		// One defs path per paragraph, id sanitised from the element id ("wa 1" → "wa_20_1").
 		const path = wrapper.find('defs path');
 		expect(path.exists()).toBeTruthy();
-		expect(path.attributes('id')).toBe('warp-wa_1-0');
+		expect(path.attributes('id')).toBe('warp-wa_20_1-0');
 		expect(path.attributes('d')?.startsWith('M')).toBeTruthy();
-		expect(wrapper.find('textPath').attributes('href')).toBe('#warp-wa_1-0');
+		expect(wrapper.find('textPath').attributes('href')).toBe('#warp-wa_20_1-0');
 	});
 
 	it('applies element-level base font + fill on the <text>', () => {

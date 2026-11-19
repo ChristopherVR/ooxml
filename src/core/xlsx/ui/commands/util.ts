@@ -96,6 +96,14 @@ export function colsOf(ranges: CellRange[]): number[] {
 	return [...new Set(ranges.flatMap((r) => span(r.start.col, r.end.col)))].sort((a, b) => a - b);
 }
 
+/** Whether a row inside the ranges is grouped; the sheet's row list is usually far shorter. */
+export function hasOutlinedRow(ws: Worksheet, ranges: readonly CellRange[]): boolean {
+	for (const [row, info] of ws.rowInfo)
+		if ((info.outlineLevel ?? 0) > 0 && ranges.some((r) => row >= r.start.row && row <= r.end.row))
+			return true;
+	return false;
+}
+
 /** The selection, or its current region when only one cell is selected (Excel's sort / filter). */
 export function regionOf(t: Target): CellRange {
 	const r = t.range;

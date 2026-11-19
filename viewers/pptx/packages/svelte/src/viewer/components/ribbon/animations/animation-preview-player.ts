@@ -1,4 +1,8 @@
-import { buildAnimationRibbonPreview, playAnimationRibbonPreview } from 'ooxml-ui/pptx';
+import {
+	buildAnimationRibbonPreview,
+	elementIdSelector,
+	playAnimationRibbonPreview,
+} from 'ooxml-ui/pptx';
 /**
  * Thin wrapper around `pptx-viewer-shared`'s `animation-ribbon-preview`
  * module (itself lifted from this file and vanilla's identical copy): the
@@ -10,9 +14,7 @@ import { buildAnimationRibbonPreview, playAnimationRibbonPreview } from 'ooxml-u
 import type { PptxElementAnimation } from 'pptx-viewer-core';
 
 export function previewElementAnimation(animation: PptxElementAnimation): boolean {
-	const target = document.querySelector<HTMLElement>(
-		`[data-element-id="${CSS.escape(animation.elementId)}"]`,
-	);
+	const target = document.querySelector<HTMLElement>(elementIdSelector(animation.elementId));
 	if (!target || !buildAnimationRibbonPreview(animation, target)) {
 		return false;
 	}

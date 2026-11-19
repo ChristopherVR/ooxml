@@ -1,3 +1,4 @@
+import { definer } from '../../registry';
 import { html, nothing, unsafeCSS, type PropertyValues } from 'lit';
 import { TeamsLitElement } from '../i18n/lit-element';
 import { contentUrl, readContent, type FileEntry, type TeamsClient } from 'ooxml-core/teams';
@@ -166,7 +167,4 @@ export class TeamsFileActions extends TeamsLitElement {
 			</div>`;
 	}
 }
-export function defineTeamsFileActions(): void {
-	if (!customElements.get('teams-file-actions'))
-		customElements.define('teams-file-actions', TeamsFileActions);
-}
+export const defineTeamsFileActions = definer('teams-file-actions', () => TeamsFileActions);

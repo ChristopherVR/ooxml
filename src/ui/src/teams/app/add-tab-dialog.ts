@@ -1,3 +1,4 @@
+import { definer } from '../../registry';
 import { html, nothing, unsafeCSS, type PropertyValues } from 'lit';
 import { TeamsLitElement } from '../i18n/lit-element';
 import {
@@ -300,7 +301,4 @@ export class TeamsAddTabDialog extends TeamsLitElement {
 		</dialog>`;
 	}
 }
-export function defineTeamsAddTabDialog(): void {
-	if (!customElements.get('teams-add-tab-dialog'))
-		customElements.define('teams-add-tab-dialog', TeamsAddTabDialog);
-}
+export const defineTeamsAddTabDialog = definer('teams-add-tab-dialog', () => TeamsAddTabDialog);

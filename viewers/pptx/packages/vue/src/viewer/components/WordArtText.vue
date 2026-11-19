@@ -8,6 +8,7 @@ import {
 	resolveWarpRunPaint,
 	shouldUseSvgWarp,
 	substituteFieldText,
+	svgIdToken,
 	warpParagraphLayouts,
 } from 'ooxml-ui/pptx';
 import type { EnvelopeGlyphPlacement, WarpParagraph } from 'ooxml-ui/pptx';
@@ -96,7 +97,7 @@ const paragraphs = computed<WarpParagraph[]>(() => {
 	});
 });
 
-const pathIdPrefix = computed(() => `warp-${props.element.id.replace(/[^a-zA-Z0-9_-]/gu, '_')}`);
+const pathIdPrefix = computed(() => `warp-${svgIdToken(props.element.id)}`);
 
 const warpAdj = computed(() => textEl.value?.textStyle?.textWarpAdj);
 const warpAdj2 = computed(() => textEl.value?.textStyle?.textWarpAdj2);

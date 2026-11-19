@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import {
 	DEFAULT_SETTINGS,
 	authorName,
+	displayLanguage,
 	editorLocale,
 	editorRadius,
 	externalContentOption,
@@ -86,4 +87,11 @@ test('every row of the dialog edits a real setting, and Assistant shows only whe
 	);
 	assert.match(JSON.stringify(categories), /profile name \(Ada\)/);
 	assert.equal(settingsCategories({ assistant: true }).at(-1).id, 'assistant');
+});
+
+test('the display language gives the page language and direction', () => {
+	assert.deepEqual(displayLanguage({ locale: 'auto' }), { lang: 'en', dir: 'ltr' });
+	assert.deepEqual(displayLanguage({ locale: 'fr' }), { lang: 'fr', dir: 'ltr' });
+	assert.deepEqual(displayLanguage({ locale: 'zh-CN' }), { lang: 'zh-CN', dir: 'ltr' });
+	assert.deepEqual(displayLanguage({ locale: 'ar' }), { lang: 'ar', dir: 'rtl' });
 });

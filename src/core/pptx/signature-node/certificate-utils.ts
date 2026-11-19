@@ -1,25 +1,20 @@
 /**
  * Certificate handling utilities for digital signature processing.
  *
- * Node-only — depends on `node:crypto`, `node:tls`, `node-forge`, `@xmldom/xmldom`.
+ * Node-only - depends on `node:crypto` and `node-forge`.
  */
 
 import crypto from 'node:crypto';
 import path from 'node:path';
-import tls from 'node:tls';
 
-import { DOMParser } from '@xmldom/xmldom';
 import forge from 'node-forge';
 
-import { XMLDSIG_NS } from '../core/utils/signature-constants';
 import type {
 	LoadedSigningMaterial,
 	SignatureCertificateInfo,
 } from '../core/utils/signature-types';
+import { isDocumentSigningCertificate, pathLengthConstraint } from './certificate-usage';
 import { extractFirstPemBlock } from './pem-utils';
-import { certPemFromBase64 } from './pki-validation';
-import { canonicalizeNode } from './xml-canonicalization';
-import type { XmlDocument } from './xml-canonicalization';
 
 const PRIVATE_KEY_PEM_LABELS = [
 	'RSA PRIVATE KEY',
@@ -46,8 +41,6 @@ export function certificateInfoFromBase64(
 	}
 }
 
-let cachedSystemRoots: crypto.X509Certificate[] | undefined;
-
 /** The parseable certificates among `pems`; a malformed one is skipped, never trusted. */
 function parseCertificates(pems: readonly string[]): crypto.X509Certificate[] {
 	const parsed: crypto.X509Certificate[] = [];
@@ -61,11 +54,6 @@ function parseCertificates(pems: readonly string[]): crypto.X509Certificate[] {
 	return parsed;
 }
 
-function systemRoots(): crypto.X509Certificate[] {
-	cachedSystemRoots ??= parseCertificates(tls.rootCertificates);
-	return cachedSystemRoots;
-}
-
 function isWithinValidity(certificate: crypto.X509Certificate, now: number): boolean {
 	return now >= Date.parse(certificate.validFrom) && now <= Date.parse(certificate.validTo);
 }
@@ -76,9 +64,24 @@ function isSignedBy(certificate: crypto.X509Certificate, issuer: crypto.X509Cert
 }
 
 /**
+ * Each CA's `pathLenConstraint` limits the non-self-issued intermediates below it, the leaf aside
+ * (RFC 5280, 4.2.1.9). `path` runs from the leaf to the trust root.
+ */
+function pathLengthsHold(path: readonly crypto.X509Certificate[]): boolean {
+	let intermediatesBelow = 0;
+	for (const [index, certificate] of path.entries()) {
+		if (index === 0) continue;
+		const limit = pathLengthConstraint(certificate);
+		if (limit !== undefined && intermediatesBelow > limit) return false;
+		if (certificate.subject !== certificate.issuer) intermediatesBelow++;
+	}
+	return true;
+}
+
+/**
  * A leaf-first chain is trusted when every certificate is within its validity period, each is
- * signed by the next (which must be a CA), and the last is a trusted root or signed by one.
- * Signatures are verified by OpenSSL through `node:crypto`.
+ * signed by the next (which must be a CA), the last is a trusted root or signed by one, and every
+ * path length constraint on the way holds. Signatures are verified by OpenSSL through `node:crypto`.
  */
 function chainIsTrusted(
 	chain: readonly crypto.X509Certificate[],
@@ -91,19 +94,49 @@ function chainIsTrusted(
 		const issuer = chain[index + 1]!;
 		if (!issuer.ca || !isSignedBy(chain[index]!, issuer)) return false;
 	}
-	return roots.some(
-		(root) =>
-			isWithinValidity(root, now) &&
-			(root.fingerprint256 === top.fingerprint256 || (root.ca && isSignedBy(top, root))),
-	);
+	return roots.some((root) => {
+		if (!isWithinValidity(root, now)) return false;
+		if (root.fingerprint256 === top.fingerprint256) return pathLengthsHold(chain);
+		return root.ca && isSignedBy(top, root) && pathLengthsHold([...chain, root]);
+	});
 }
 
 /**
- * Validate a certificate chain against system trust roots and optional additional roots.
+ * Order `KeyInfo` certificates leaf first, from the certificate that verified the signature.
+ * `KeyInfo` is unsigned: certificates that do not extend the path are dropped, not trusted.
+ */
+export function orderCertificateChain(
+	signerBase64: string,
+	certBase64List: readonly string[],
+): string[] {
+	const parsed = (value: string) => new crypto.X509Certificate(Buffer.from(value, 'base64'));
+	const chain = [signerBase64];
+	const remaining = certBase64List.filter((value) => value !== signerBase64);
+	let current = parsed(signerBase64);
+	while (remaining.length > 0) {
+		const next = remaining.findIndex((value) => {
+			try {
+				return isSignedBy(current, parsed(value));
+			} catch {
+				return false;
+			}
+		});
+		if (next < 0) break;
+		const [issuer] = remaining.splice(next, 1);
+		chain.push(issuer!);
+		current = parsed(issuer!);
+	}
+	return chain;
+}
+
+/**
+ * Validate a leaf-first certificate chain for document signing. The leaf must permit document
+ * signing and the chain must end at one of `trustRootsPem`. No roots are trusted by default: the
+ * platform's TLS roots say who may serve a website, not who may sign a document.
  */
 export function validateCertificateChain(
 	certBase64List: string[],
-	additionalRootsPem: string[],
+	trustRootsPem: string[],
 ): {
 	status: 'trusted' | 'untrusted' | 'not-checked';
 	error?: string;
@@ -115,8 +148,13 @@ export function validateCertificateChain(
 		const chain = certBase64List.map(
 			(value) => new crypto.X509Certificate(Buffer.from(value, 'base64')),
 		);
-		const roots = [...systemRoots(), ...parseCertificates(additionalRootsPem)];
-		const verified = chainIsTrusted(chain, roots, Date.now());
+		if (!isDocumentSigningCertificate(chain[0]!)) {
+			return {
+				status: 'untrusted',
+				error: 'The signing certificate does not permit document signing.',
+			};
+		}
+		const verified = chainIsTrusted(chain, parseCertificates(trustRootsPem), Date.now());
 		return verified
 			? { status: 'trusted' }
 			: {
@@ -128,76 +166,6 @@ export function validateCertificateChain(
 			status: 'untrusted',
 			error: `Certificate trust validation failed: ${String(error)}`,
 		};
-	}
-}
-
-function signatureAlgorithmToVerifyAlgorithm(
-	signatureMethod: string | undefined,
-): string | undefined {
-	switch (signatureMethod) {
-		case 'http://www.w3.org/2000/09/xmldsig#rsa-sha1':
-			return 'RSA-SHA1';
-		case 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256':
-			return 'RSA-SHA256';
-		case 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha384':
-			return 'RSA-SHA384';
-		case 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha512':
-			return 'RSA-SHA512';
-		default:
-			return undefined;
-	}
-}
-
-/**
- * Cryptographically verify the SignatureValue in an XML signature
- * using the embedded certificate.
- */
-export function verifySignatureValue(
-	signatureXml: string,
-	certBase64List: string[],
-): 'verified' | 'invalid' | 'not-checked' {
-	try {
-		const parser = new DOMParser();
-		const doc = parser.parseFromString(signatureXml, 'text/xml') as unknown as XmlDocument;
-		const signatureNode = doc.getElementsByTagNameNS(XMLDSIG_NS, 'Signature')[0];
-		if (!signatureNode) {
-			return 'not-checked';
-		}
-		const [leafCertBase64] = certBase64List;
-		const certPem = leafCertBase64 !== undefined ? certPemFromBase64(leafCertBase64) : undefined;
-		if (!certPem) {
-			return 'not-checked';
-		}
-		const signedInfoNode = doc.getElementsByTagNameNS(XMLDSIG_NS, 'SignedInfo')[0];
-		const signatureValueNode = doc.getElementsByTagNameNS(XMLDSIG_NS, 'SignatureValue')[0];
-		if (!signedInfoNode || !signatureValueNode) {
-			return 'invalid';
-		}
-		const canonicalizationMethod =
-			doc
-				.getElementsByTagNameNS(XMLDSIG_NS, 'CanonicalizationMethod')
-				.item(0)
-				?.getAttribute('Algorithm') ?? 'http://www.w3.org/2001/10/xml-exc-c14n#';
-		const signatureMethod = doc
-			.getElementsByTagNameNS(XMLDSIG_NS, 'SignatureMethod')
-			.item(0)
-			?.getAttribute('Algorithm');
-		const verifyAlgorithm = signatureAlgorithmToVerifyAlgorithm(signatureMethod ?? undefined);
-		if (!verifyAlgorithm) {
-			return 'invalid';
-		}
-		const canonicalSignedInfo = canonicalizeNode(signedInfoNode, canonicalizationMethod);
-		const signatureValueBase64 = signatureValueNode.textContent?.replace(/\s+/g, '').trim() ?? '';
-		if (signatureValueBase64.length === 0) {
-			return 'invalid';
-		}
-		const verifier = crypto.createVerify(verifyAlgorithm);
-		verifier.update(Buffer.from(canonicalSignedInfo, 'utf8'));
-		verifier.end();
-		const isValid = verifier.verify(certPem, Buffer.from(signatureValueBase64, 'base64'));
-		return isValid ? 'verified' : 'invalid';
-	} catch {
-		return 'invalid';
 	}
 }
 

@@ -1256,7 +1256,11 @@ export * from './viewer-store';
 // The canvas zoom slice, first vertical slice on that runtime.
 export * from './viewer-zoom-store';
 // Zoom at the pointer and drag to pan in the slide viewport, shared by every binding.
-export { attachViewportNavigation, resetViewportScroll } from './viewport-navigation';
+export {
+	attachViewportNavigation,
+	eventOwnsSpaceKey,
+	resetViewportScroll,
+} from './viewport-navigation';
 export type { ViewportNavigationOptions } from './viewport-navigation';
 // No-op-write guards for the hot state paths (presenter snapshot, presence
 // list). Shared so a write that carries no new information is dropped once,
@@ -1322,6 +1326,13 @@ export * from './editor-keymap';
 // keymap's own action names (`dispatchEditorKey` + `EditorKeyHandlers`).
 export * from './editor-key-dispatch';
 export * from './selection-cycle';
+export {
+	announceSlideObject,
+	editSlideObjectText,
+	editorKeyEventTarget,
+	slideKeyFocus,
+} from './slide-keyboard-focus';
+export type { SlideKeyFocus } from './slide-keyboard-focus';
 // Start-a-show keys (F5 / Shift+F5): kept apart from the editor keymap because
 // they must fire on a read-only host and from inside a text field, which the
 // editor gates forbid.
@@ -1421,6 +1432,7 @@ export * from './element-aria-attributes';
 export * from './element-non-visual-description';
 // `[data-element-id="..."]` selector escaping with a safe non-`CSS.escape` fallback.
 export * from './css-escape';
+export * from './svg-id';
 export * from './svg-id-scope';
 export * from './silhouette-morph-refresh';
 // Pointer-to-element hit-test: a click on a grouped child selects the GROUP
