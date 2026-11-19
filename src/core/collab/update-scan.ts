@@ -26,12 +26,20 @@ export const DEFAULT_UPDATE_LIMITS: Readonly<Required<UpdateLimits>> = {
 
 export type UpdateScan =
 	| { ok: true; structs: number; deleteRanges: number; bytesRead: number }
-	| { ok: false; reason: string };
+	/** `overLimit` is true when the update is well formed so far but over budget. */
+	| { ok: false; reason: string; overLimit: boolean };
 
 /** Nesting depth of an `any` value that lib0 can read without exhausting the stack. */
 const MAX_ANY_DEPTH = 64;
 
-class Overrun extends Error {}
+class Overrun extends Error {
+	constructor(
+		message: string,
+		readonly overLimit = false,
+	) {
+		super(message);
+	}
+}
 
 class Cursor {
 	pos = 0;
@@ -83,13 +91,16 @@ class Budget {
 	addStructs(count: number): void {
 		this.structs += count;
 		if (this.structs > this.limits.maxStructs)
-			throw new Overrun(`update holds more than ${this.limits.maxStructs} structs`);
+			throw new Overrun(`update holds more than ${this.limits.maxStructs} structs`, true);
 	}
 
 	addDeleteRanges(count: number): void {
 		this.deleteRanges += count;
 		if (this.deleteRanges > this.limits.maxDeleteRanges)
-			throw new Overrun(`update holds more than ${this.limits.maxDeleteRanges} deleted ranges`);
+			throw new Overrun(
+				`update holds more than ${this.limits.maxDeleteRanges} deleted ranges`,
+				true,
+			);
 	}
 }
 
@@ -237,7 +248,8 @@ export function scanUpdate(update: Uint8Array, limits: UpdateLimits = {}): Updat
 			bytesRead: cursor.pos,
 		};
 	} catch (cause) {
-		if (cause instanceof Overrun) return { ok: false, reason: cause.message };
+		if (cause instanceof Overrun)
+			return { ok: false, reason: cause.message, overLimit: cause.overLimit };
 		throw cause;
 	}
 }

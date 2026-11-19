@@ -14,6 +14,11 @@ var DEFAULT_UPDATE_LIMITS = {
 };
 var MAX_ANY_DEPTH = 64;
 var Overrun = class extends Error {
+  constructor(message, overLimit = false) {
+    super(message);
+    this.overLimit = overLimit;
+  }
+  overLimit;
 };
 var Cursor = class {
   constructor(bytes) {
@@ -63,12 +68,15 @@ var Budget = class {
   addStructs(count) {
     this.structs += count;
     if (this.structs > this.limits.maxStructs)
-      throw new Overrun(`update holds more than ${this.limits.maxStructs} structs`);
+      throw new Overrun(`update holds more than ${this.limits.maxStructs} structs`, true);
   }
   addDeleteRanges(count) {
     this.deleteRanges += count;
     if (this.deleteRanges > this.limits.maxDeleteRanges)
-      throw new Overrun(`update holds more than ${this.limits.maxDeleteRanges} deleted ranges`);
+      throw new Overrun(
+        `update holds more than ${this.limits.maxDeleteRanges} deleted ranges`,
+        true
+      );
   }
 };
 function skipAny(cursor, budget, depth) {
@@ -204,7 +212,8 @@ function scanUpdate(update, limits = {}) {
       bytesRead: cursor.pos
     };
   } catch (cause) {
-    if (cause instanceof Overrun) return { ok: false, reason: cause.message };
+    if (cause instanceof Overrun)
+      return { ok: false, reason: cause.message, overLimit: cause.overLimit };
     throw cause;
   }
 }

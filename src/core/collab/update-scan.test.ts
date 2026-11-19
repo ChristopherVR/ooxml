@@ -76,6 +76,7 @@ describe('scanUpdate', () => {
 		expect(scanUpdate(bomb)).toEqual({
 			ok: false,
 			reason: 'update holds more than 2000000 structs',
+			overLimit: true,
 		});
 		expect(validateUpdate(bomb).ok).toBe(false);
 		const doc = new Y.Doc();
@@ -104,7 +105,10 @@ describe('scanUpdate', () => {
 			const scan = scanUpdate(update.subarray(0, cut));
 			if (scan.ok) expect(scan.bytesRead).toBeLessThanOrEqual(cut);
 		}
-		expect(scanUpdate(new Uint8Array([1, 1, 1, 0, 0x1f]))).toMatchObject({ ok: false });
+		expect(scanUpdate(new Uint8Array([1, 1, 1, 0, 0x1f]))).toMatchObject({
+			ok: false,
+			overLimit: false,
+		});
 		expect(
 			scanUpdate(new Uint8Array([0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff])),
 		).toMatchObject({ ok: false });

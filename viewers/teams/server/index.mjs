@@ -552,8 +552,9 @@ export function createTeamsServer(options = {}) {
 					// Counted without decoding, so a small frame cannot allocate millions of structs.
 					const scan = scanUpdate(update, updateLimits);
 					if (!scan.ok) {
-						countRejected({ code: 'update_too_complex' });
 						log(`sync ${name}: update refused before decoding (${scan.reason})`);
+						if (!scan.overLimit) throw new Error(scan.reason);
+						countRejected({ code: 'update_too_complex' });
 						return void ws.close(1009, 'update too complex');
 					}
 					let reverts;
