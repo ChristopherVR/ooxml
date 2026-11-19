@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+	existsSync,
+	mkdirSync,
+	mkdtempSync,
+	readFileSync,
+	readdirSync,
+	rmSync,
+	writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, before, test } from 'node:test';
@@ -11,6 +19,7 @@ const SHELL = `<!doctype html><html><head><meta charset="utf-8" />
 <meta name="ooxml-root" content="./" />
 <script src="appearance-init.js"></script>
 <link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="themes.css" />
 <link rel="stylesheet" href="workspace.css" />
 <script type="module" src="suite.js"></script>
 </head><body></body></html>`;
@@ -25,7 +34,9 @@ async function deploy(boot) {
 		'index.html': SHELL,
 		'appearance-init.js': 'document.documentElement.dataset.theme = "light";',
 		'styles.css': 'body { margin: 0 }',
-		'workspace.css': "@import url('./styles.css');",
+		'themes.css': ':root { color-scheme: light }',
+		'workspace.css': "@import url('./panes.css');",
+		'panes.css': '.pane { display: grid }',
 		'suite.js': `import './suite-assets/${boot}';\n`,
 		[`suite-assets/${boot}`]: `globalThis.booted = ${JSON.stringify(boot)};`,
 	};
@@ -55,13 +66,14 @@ const offline = () => {
 };
 
 test('every shell script and style tag carries the integrity of the file it loads', () => {
+	const shell = readdirSync(builds.A).find((name) => /^shell-[0-9a-f]+\.css$/u.test(name));
 	for (const page of ['index.html', 'apps/word/index.html']) {
 		const html = read(builds.A, page).toString();
-		for (const name of ['appearance-init.js', 'styles.css', 'workspace.css', 'suite.js']) {
-			const tag = html.match(new RegExp(`<[^>]*${name.replace('.', '\\.')}\\?v=[^>]*>`, 'u'))?.[0];
-			assert.ok(tag, `${page} loads ${name}`);
-			assert.ok(tag.includes(`integrity="${sri(builds.A, name)}"`), `${page}: ${tag}`);
-		}
+		const tags = [...html.matchAll(/<(?:script\b|link rel="stylesheet")[^>]*>/gu)].map((m) => m[0]);
+		const loads = tags.map((tag) => tag.match(/(?:src|href)="(?:\.\.\/\.\.\/)?([^"?]+)/u)[1]);
+		assert.deepEqual(loads, ['appearance-init.js', shell, 'suite.js'], page);
+		for (const [i, tag] of tags.entries())
+			assert.ok(tag.includes(`integrity="${sri(builds.A, loads[i])}"`), `${page}: ${tag}`);
 	}
 });
 
@@ -277,7 +289,8 @@ test('an install with a missing or stale file fails and the working build stays 
 	let a;
 	const index = `${ORIGIN}index.html`;
 	const failures = {
-		missing: (href) => (href.includes('styles.css') ? new Response('', { status: 500 }) : null),
+		// The entry script: its stamped address is new in B, so A's saved copy cannot stand in.
+		missing: (href) => (href.includes('suite.js') ? new Response('', { status: 500 }) : null),
 		// An edge still serving the previous deploy's copy of a file.
 		stale: (href) => (href === index ? site(builds.A)(href) : null),
 	};
