@@ -1,3 +1,4 @@
+import { partNameToken } from '../../../opc/part-name';
 import { EMU_PER_PX } from '../constants';
 import type { PptxElement, XmlObject } from '../types';
 import type { PlaceholderIdentity } from './placeholder-remap';
@@ -156,7 +157,7 @@ export function createEmptyPlaceholderElement(
 
 	return {
 		type: 'text',
-		id: `ph-${target.type || 'content'}-${target.idx ?? '0'}-${uniqueId}`,
+		id: `ph-${partNameToken(`${target.type || 'content'}-${target.idx ?? '0'}`)}-${uniqueId}`,
 		x: Math.round(xEmu / EMU_PER_PX),
 		y: Math.round(yEmu / EMU_PER_PX),
 		width: Math.round(cxEmu / EMU_PER_PX),
